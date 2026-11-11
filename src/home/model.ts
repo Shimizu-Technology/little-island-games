@@ -11,7 +11,7 @@ import { freeFloor } from "./freeFloor";
 import { roomDefaultTheme } from "./art/roomDefaults";
 import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
-import { undoPast, validUndoShape, type HomeUndo } from "./undoHistory";
+import { applyUndoStep, validUndoShape, type HomeUndo } from "./undoHistory";
 import {
   badgeIds,
   floorThemes,
@@ -294,18 +294,21 @@ export function validHome(v: unknown): v is HomeSave {
     return false;
   if (s.version === 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
   // Every saved undo step must rebuild a valid earlier home; one bad step makes the save invalid.
-  // A step only changes the rooms it names, so only those rooms are validated again.
+  // A step only changes the rooms it names, so only those rooms are validated again. Each rebuilt
+  // home is checked before it becomes the input to the next older step, and nothing a corrupt
+  // step contains can throw out of this validator (R6).
   if (s.version === 4 && s.undo !== undefined) {
     if (!validUndoShape(s.undo)) return false;
-    const steps = s.undo.steps;
-    let past: HomeStateV2[];
-    try {
-      past = undoPast({ version: 4, current: s.current, rooms: s.rooms }, s.undo);
-    } catch {
-      return false;
+    let cursor: HomeStateV2 = { version: 4, current: s.current, rooms: s.rooms };
+    for (let i = s.undo.steps.length - 1; i >= 0; i--) {
+      const step = s.undo.steps[i];
+      try {
+        cursor = applyUndoStep(cursor, step);
+        if (!exact(cursor.rooms, [...roomIds]) || !validRooms(cursor, Object.keys(step) as RoomId[])) return false;
+      } catch {
+        return false;
+      }
     }
-    if (!past.every((state, i) => exact(state.rooms, [...roomIds]) && validRooms(state, Object.keys(steps[i]) as RoomId[])))
-      return false;
   }
   return true;
 }

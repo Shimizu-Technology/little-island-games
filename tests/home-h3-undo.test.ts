@@ -5,7 +5,8 @@ import {
   HOME_UNDO_BYTES,
   HOME_UNDO_STEPS,
   applyUndoStep,
-  boundedUndo,
+  undoAdmits,
+  undoEntry,
   undoBytes,
   undoPast,
   undoStep,
@@ -84,9 +85,12 @@ describe("HM-18 saved undo history", () => {
     const older = { ...saved, version: 3 };
     expect(validHome(older)).toBe(false);
   });
-  it("an over-large single step is dropped instead of breaking the save", () => {
+  it("an over-large single step is refused, never saved half-way (R1)", () => {
     const huge = { home: { room: { instances: Array.from({ length: 200 }, (_, n) => instance(`x${n}`, "plant", 0, 0)), characters: [], theme: starterHome().rooms.home.theme } } };
-    expect(boundedUndo([huge as never])).toBeUndefined();
+    const entry = undoEntry(huge as never, starterHome());
+    expect(entry.removal).toBe(true);
+    expect(undoAdmits([entry])).toBe(false);
+    expect(undoAdmits([{ ...entry, removal: false }])).toBe(false);
   });
   it("redo is not saved, and navigation is not an undo step", () => {
     let history = play();

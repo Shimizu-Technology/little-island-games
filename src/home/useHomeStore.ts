@@ -10,25 +10,33 @@ import {
   type HomeStateV2,
   type Ownership,
 } from "./model";
-import { boundedUndo, HOME_UNDO_STEPS, undoPast, undoStep, type UndoStep } from "./undoHistory";
+import { boundedUndo, HOME_UNDO_STEPS, undoAdmits, undoEntry, undoPast, undoStep, type UndoEntry } from "./undoHistory";
 export type History = { present: HomeStateV2; past: HomeStateV2[]; future: HomeStateV2[] };
 /** History states are immutable and reused, so each adjacent pair is diffed once. */
-const stepCache = new WeakMap<HomeStateV2, WeakMap<HomeStateV2, UndoStep>>();
-function cachedStep(before: HomeStateV2, after: HomeStateV2): UndoStep {
+const stepCache = new WeakMap<HomeStateV2, WeakMap<HomeStateV2, UndoEntry>>();
+function cachedEntry(before: HomeStateV2, after: HomeStateV2): UndoEntry {
   let inner = stepCache.get(before);
   if (!inner) stepCache.set(before, (inner = new WeakMap()));
-  let step = inner.get(after);
-  if (!step) inner.set(after, (step = undoStep(before, after)));
-  return step;
+  let entry = inner.get(after);
+  if (!entry) inner.set(after, (entry = undoEntry(undoStep(before, after), after)));
+  return entry;
 }
 const bare = (state: HomeStateV2): HomeStateV2 => ({ version: state.version, current: state.current, rooms: state.rooms });
+function savedEntries(history: History): UndoEntry[] {
+  const states = [...history.past.slice(-HOME_UNDO_STEPS), history.present];
+  return states
+    .slice(1)
+    .map((after, i) => cachedEntry(states[i], after))
+    .filter((entry) => Object.keys(entry.step).length);
+}
 /** HM-18: what the save holds. The present plus the last 20 undo steps, bounded in bytes. */
 export function savedHistory(history: History, access?: HomeAccess): HomeStateV2 {
-  const states = [...history.past.slice(-HOME_UNDO_STEPS), history.present];
-  const steps = states.slice(1).map((after, i) => cachedStep(states[i], after)).filter((step) => Object.keys(step).length);
-  const undo = history.present.version === 4 ? boundedUndo(steps) : undefined;
+  const undo = history.present.version === 4 ? boundedUndo(savedEntries(history)) : undefined;
   return { ...bare(history.present), ...(access ? { access } : {}), ...(undo ? { undo } : {}) };
 }
+/** R1: an edit is kept only if the saved undo can still bring back everything it promised. */
+export const historyAdmits = (history: History) => history.present.version !== 4 || undoAdmits(savedEntries(history));
+export const UNDO_FULL_MESSAGE = "That's too much to change at once. Undo couldn't bring it all back.";
 /** Rebuilds the saved undo steps after a relaunch. Never mutates `saved`. */
 export function restoredHistory(saved: HomeStateV2): History {
   const present = bare(saved);
@@ -96,6 +104,12 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
         ? homeReducer(current.history.present, action as HomeAction, ownership)
         : undefined;
     const history = editHistory(current.history, action, ownership, result);
+    if (history !== current.history && action.type !== "undo" && action.type !== "redo" && !historyAdmits(history)) {
+      const next = { ...current, message: UNDO_FULL_MESSAGE, serial: current.serial + 1 };
+      live.current = next;
+      setSession(next);
+      return;
+    }
     if (history !== current.history && persist && !persist(savedHistory(history, current.access))) {
       const next = { ...current, message: "Your room could not be updated. Please try again.", serial: current.serial + 1 };
       live.current = next;
@@ -127,6 +141,12 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
       past: [...current.history.past, current.history.present].slice(-60),
       future: [],
     };
+    if (!historyAdmits(history)) {
+      const next = { ...current, message: UNDO_FULL_MESSAGE, serial: current.serial + 1 };
+      live.current = next;
+      setSession(next);
+      return undefined;
+    }
     if (persist && !persist(savedHistory(history, current.access))) {
       const next = { ...current, message: "Your room could not be updated. Please try again.", serial: current.serial + 1 };
       live.current = next;
