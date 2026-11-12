@@ -1,0 +1,90 @@
+[
+  {
+    "descriptor": {
+      "level": {
+        "id": "mud-3",
+        "pace": "medium",
+        "skill": "think.sequence",
+        "rows": [
+          "CmmmH",
+          "..S..",
+          "#####",
+          "#####",
+          "#####"
+        ],
+        "facing": 1,
+        "tier": 1
+      },
+      "budget": 6,
+      "starter": [],
+      "lesson": "The shell is near the mud. Plan where to return to the top row."
+    },
+    "witness": [
+      "turn-right",
+      "forward",
+      "turn-left",
+      "forward",
+      "forward",
+      "forward",
+      "forward",
+      "turn-left",
+      "forward"
+    ],
+    "cards": 9,
+    "steps": 6,
+    "minimumSteps": 6,
+    "flatCards": 9,
+    "commands": [
+      "forward",
+      "turn-left",
+      "turn-right"
+    ]
+  },
+  {
+    "descriptor": {
+      "level": {
+        "id": "mud-6",
+        "pace": "medium",
+        "skill": "think.sequence",
+        "rows": [
+          "C#m.H",
+          ".m#..",
+          ".S#..",
+          "..m..",
+          "....."
+        ],
+        "facing": 1,
+        "tier": 2
+      },
+      "budget": 11,
+      "starter": [],
+      "lesson": "Collect the shell on the way. Plan your way back around the sandcastles."
+    },
+    "witness": [
+      "turn-right",
+      "forward",
+      "forward",
+      "turn-left",
+      "forward",
+      "turn-right",
+      "forward",
+      "turn-left",
+      "forward",
+      "forward",
+      "forward",
+      "turn-left",
+      "forward",
+      "forward",
+      "forward"
+    ],
+    "cards": 15,
+    "steps": 11,
+    "minimumSteps": 11,
+    "flatCards": 15,
+    "commands": [
+      "forward",
+      "turn-left",
+      "turn-right"
+    ]
+  }
+]

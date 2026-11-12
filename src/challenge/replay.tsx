@@ -31,10 +31,14 @@ const metrics = ['cards','steps','placements','loads','turns'];
 /** Replay-only kit. Checkpoint engines register their bounded exact codecs separately. */
 export function defineReplayGame<D,P,A,S>(config: {
   game: string; codec: string; context: string; cove: boolean; budget: SessionBudget;
+  planningDaresHideSupport?: boolean;
+  prefilledStart?: (payload: ReplayPayload<P,A>) => boolean;
   completionText?: (ref: ChallengeSession['puzzle'], result: Terminal, facts: CompletionFacts | null) => string;
   helpUI?: 'board';
-  /** Worst-case full help sequence, including terminal result overhead, certified by each adopter. */
-  assistance?: { bytes: number; actions: number; idempotentHelp: true; isAction: (action: A) => boolean };
+  /** Worst-case full help sequence, including terminal result overhead, certified by each adopter.
+   * `idempotentHelp: true` certifies that repeated Help only records assistance, so it is coalesced.
+   * A stateful ladder (each press reveals more) declares `false` and every press is kept. */
+  assistance?: { bytes: number; actions: number; idempotentHelp: boolean; isAction: (action: A) => boolean };
   puzzles: readonly Puzzle<D>[]; objectives?: readonly string[]; engine: ReplayEngine<D,P,A,S>;
   Board: ComponentType<ChallengeViewProps<S,A>>; controls: { help: () => A; reset: () => A };
   packed?: PackedReplay<D>;
@@ -72,8 +76,12 @@ export function defineReplayGame<D,P,A,S>(config: {
     const puzzle=find(session), p=session.payload;
     if (!puzzle || !plain(p) || !exactKeys(p,['version','initial','options','firstSolutions','actions']) || p.version !== 1 || !plain(p.options) || !exactKeys(p.options,['supportOff','ownRead']) || typeof p.options.supportOff !== 'boolean' || typeof p.options.ownRead !== 'boolean' || !dense(p.firstSolutions,32) || !p.firstSolutions.every(hashId) || new Set(p.firstSolutions).size !== p.firstSolutions.length || !engine.validInitial(p.initial,puzzle.descriptor) || !dense(p.actions,512) || !p.actions.every(engine.validAction)) return null;
     const payload=p as ReplayPayload<P,A>;
+    if(config.planningDaresHideSupport&&!payload.options.supportOff&&puzzle.dares.some(d=>session.selectedDares.includes(d.slot)&&d.rule.kind==='plan'))return null;
     let state=engine.create(puzzle.descriptor,payload.initial,payload.options);
-    let helpUsed=false, heard=false, failed=false, runs=0, checks=0, resets=0;
+    // A continued attempt carries its earlier runs and misses, never only its help.
+    const prior=engine.prior?.(payload.initial)??null;
+    if(prior!==null && (!plain(prior) || !exactKeys(prior,['runs','failed']) || !uint(prior.runs,65535) || typeof prior.failed!=='boolean'))return null;
+    let helpUsed=false, heard=false, failed=prior?.failed??false, runs=prior?.runs??0, checks=0, resets=0;
     for (const action of payload.actions) {
       // A terminal board cannot accumulate post-win evidence or assistance-free replays.
       if (engine.inspect(state,puzzle.descriptor).solved) return null;
@@ -88,7 +96,7 @@ export function defineReplayGame<D,P,A,S>(config: {
       state=next.state;
     }
     const result=engine.inspect(state,puzzle.descriptor);
-    if (typeof result.solved !== 'boolean' || !plain(result.metrics) || Object.entries(result.metrics).some(([k,v])=>!metrics.includes(k) || !uint(v)) || !uint(result.edits) || !(result.solution === null || hashId(result.solution)) || !dense(result.objectives,8) || !result.objectives.every(id=>asciiId(id)&&objectiveIds.has(id)) || new Set(result.objectives).size !== result.objectives.length) return null;
+    if (result.dareEligible!==undefined&&typeof result.dareEligible!=='boolean' || typeof result.solved !== 'boolean' || !plain(result.metrics) || Object.entries(result.metrics).some(([k,v])=>!metrics.includes(k) || !uint(v)) || !uint(result.edits) || !(result.solution === null || hashId(result.solution)) || !dense(result.objectives,8) || !result.objectives.every(id=>asciiId(id)&&objectiveIds.has(id)) || new Set(result.objectives).size !== result.objectives.length) return null;
     return {state,evidence:{...result,...payload.options,helpUsed,heard,failed,runs,checks,resets,firstSolutions:payload.firstSolutions}};
     } catch { return null; }
   }
@@ -96,7 +104,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     const round=replay(session), puzzle=find(session); if (!round?.evidence.solved || !puzzle) return null;
     const e=round.evidence, together=session.partner !== null;
     const event=together?'together':e.helpUsed || e.failed?'helped':'independent';
-    const dares=session.selectedDares.filter(slot=>{const dare=puzzle.dares.find(d=>d.slot===slot);return !!dare && proves(dare.rule,e,dare.help,together);}).sort((a,b)=>a-b);
+    const dares=session.selectedDares.filter(slot=>{const dare=puzzle.dares.find(d=>d.slot===slot);return e.dareEligible!==false && !!dare && proves(dare.rule,e,dare.help,together);}).sort((a,b)=>a-b);
     const awards=puzzle.awards.reduce<number>((bits,rule,i)=>bits | (rule && proves(rule.rule,e,rule.help,together) ? 1<<i : 0),0);
     return {event,awards,dares,cost:puzzle.par ? e.metrics[puzzle.par.metric] ?? null : null,solution:e.solution};
   }
@@ -119,7 +127,7 @@ export function defineReplayGame<D,P,A,S>(config: {
   }
   const bandOf = (bank: number) => packedBanks.find(b => b.slot === bank);
   const codec={game:config.game,cove:config.cove,budget:config.budget,validate:(s:ChallengeSession)=>replay(s)!==null,evaluate,
-    canStart:(s:ChallengeSession)=>replay(s)!==null && (s.payload as ReplayPayload<P,A>).actions.length===0 && s.result===null,
+    canStart:(s:ChallengeSession)=>replay(s)!==null && ((s.payload as ReplayPayload<P,A>).actions.length===0 || config.prefilledStart?.(s.payload as ReplayPayload<P,A>)===true) && s.result===null,
     extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return (q.actions.length>p.actions.length || q.actions.length===p.actions.length && config.assistance?.idempotentHelp===true && !!replay(a)?.evidence.helpUsed) && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
   const catalog:SaveCatalog={banks,dares,codecs:new Map([[config.codec,codec]]),contexts:new Set([...config.puzzles,...packedBanks].map(p=>`${config.context}-${p.tier}`))};
   const packed: PackedChallenge | undefined = config.packed && (() => {
@@ -167,7 +175,8 @@ export function defineReplayGame<D,P,A,S>(config: {
     ...(packed ? { packed } : {}),
     start:(ref,owner,id,progress,options,selectedDares)=>{
       const puzzle=config.puzzles.find(p=>sameRef(p.ref,ref)) ?? (config.packed ? packedFind(ref) : undefined); if(!puzzle)throw new Error('Unknown puzzle.');
-      const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
+      if(selectedDares.some(slot=>puzzle.dares.find(d=>d.slot===slot)?.retired))throw new Error('Retired dares cannot start.');
+      const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options,supportOff:options.supportOff||!!config.planningDaresHideSupport&&puzzle.dares.some(d=>selectedDares.includes(d.slot)&&d.rule.kind==='plan')},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
       const s:ChallengeSession={version:1,owner,game:config.game,id,ordinal:progress.nextOrdinal,revision:0,puzzle:ref,codec:config.codec,payload,selectedDares:[...selectedDares],partner:null,result:null,credited:false};
       if(jsonBytes(s)>4096-reserve.bytes || !validChallengeSession(s,owner,catalog,owner.startsWith('cove-')) || !codec.canStart(s))throw new Error('Invalid launch.');return s;
     },
@@ -176,7 +185,7 @@ export function defineReplayGame<D,P,A,S>(config: {
       if(bandOf(s.puzzle.bank)){try{return moveOn(s,action);}catch{return null;}}
       return moveOn(s,action);
     },
-    render:(s,dispatch,active,width,host)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width} onFresh={host?.onFresh} sessionKey={host?.key} commit={host?async(action,expectedKey)=>{const accepted=await host.commit(action,expectedKey);if(!accepted)return null;const restored=replay(accepted.session);return restored?{key:accepted.key,state:restored.state}:null;}:undefined}/> : null;},
+    render:(s,dispatch,active,width,host)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width} onFresh={host?.onFresh} sessionKey={host?.key} onSettled={host?.onSettled} header={host?.header} footer={host?.footer} commit={host?async(action,expectedKey)=>{const accepted=await host.commit(action,expectedKey);if(!accepted)return null;const restored=replay(accepted.session);return restored?{key:accepted.key,state:restored.state}:null;}:undefined}/> : null;},
   };
   function moveOn(s: ChallengeSession, action: unknown): ChallengeSession | null {if(!engine.validAction(action) || !validChallengeSession(s,s.owner,catalog,s.owner.startsWith('cove-')) || s.result || s.credited)return null;
       const payload=s.payload as ReplayPayload<P,A>;
