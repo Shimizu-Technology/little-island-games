@@ -44,12 +44,13 @@ const longestAt = (text: string, size: number, scale: number) => Math.max(...tex
 const inside = (n: ReactTestInstance, parent: ReactTestInstance) => { for (let p: ReactTestInstance | null = n; p; p = p.parent) if (p === parent) return true; return false; };
 let root: ReactTestRenderer | undefined;
 function Probe({ id }: { id: LearnId }) { const s = useStore(); useLayoutEffect(() => {}, [s]); return s.ready ? <LearnFrame id={id} /> : null; }
+const scrolls = vi.hoisted(() => [] as number[]);
 async function mount(id: LearnId, round = true, level: LearningLevel = 1) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const save = migrateProfiles(emptySave());
   if (round) save.learn = { [id]: { ...startSession(id, { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, level) }, {}, 7), learner: 'family' } };
   db.raw = encodeSave(save);
-  await act(async () => { root = create(<StoreProvider><Probe id={id} /></StoreProvider>); });
+  await act(async () => { root = create(<StoreProvider><Probe id={id} /></StoreProvider>, { createNodeMock: () => ({ scrollTo: ({ y }: { y: number }) => scrolls.push(y) }) }); });
   return root!;
 }
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.unstubAllGlobals(); Object.assign(viewport, { width: 393, height: 852, fontScale: 3.12 }); });
@@ -135,4 +136,14 @@ it('AX5 setup and help sheets: the name never breaks a word, and Play this level
   const r = await mount('slip-tide');
   await act(async () => { byType(r, 'GameHeader')[0].props.onHelp(); });
   for (const label of ['Show me how', 'Choose a fresh round']) expect(r.root.find(n => String(n.type) === 'Button' && textOf(n) === label).props.maxFontSizeMultiplier, label).toBe(2);
+});
+
+it.each([[3.12, 892], [1, 0]])('next question in the same round at text scale %s returns the page to y=%s (the board top at large text)', async (fontScale, expected) => {
+  Object.assign(viewport, { fontScale });
+  const r = await mount('times-tide');
+  await act(async () => { r.root.find(n => n.props.testID === 'learn-board').props.onLayout({ nativeEvent: { layout: { x: 0, y: 900, width: 361, height: 700 } } }); });
+  scrolls.length = 0;
+  const board = byType(r, 'Board')[0], state = board.props.session.state as { index: number };
+  await act(async () => { board.props.update({ ...state, index: state.index + 1 }); });
+  expect(scrolls).toEqual([expected]);
 });

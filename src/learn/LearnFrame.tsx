@@ -65,9 +65,17 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const [held, setHeld] = useState(false);
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
+  const large = fontScale >= LARGE_TEXT;
+  // The board's top within the page, measured on layout.
+  const boardTop = useRef<number | null>(null), stepRound = useRef(saved?.id);
   useLayoutEffect(() => {
-    if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
-  }, [growthStep, saved?.id]);
+    if (growthStep === undefined) return;
+    // The next question of the same round. At accessibility sizes the header alone can fill the screen, so the page
+    // returns to the top of the board rather than above the header, and the answers stay a short scroll away.
+    const sameRound = stepRound.current === saved?.id;
+    stepRound.current = saved?.id;
+    scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current - 8) : 0, animated: false });
+  }, [growthStep, saved?.id, large]);
   const learner = activeLearner(store.save.learning);
   const comfort = learningComfort(store.save, learner.id);
   const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
@@ -277,7 +285,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
     (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "") : "";
 
-  const phone = width < 600, large = fontScale >= LARGE_TEXT;
+  const phone = width < 600;
   const lineWidth = width - insets.left - insets.right - 32;
   const levelLine = levelTitle(id, levelOf(saved?.options ?? options)), levelSize = phone ? 19 : 25, artSize = phone ? 36 : 48;
   const companionShown = phone && !!saved && !finished && store.save.settings.learningIslander !== false;
@@ -337,7 +345,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
-        {saved && !finished && (
+        {saved && !finished && <View testID="learn-board" onLayout={e => { boardTop.current = e.nativeEvent.layout.y; }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
@@ -360,7 +368,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             />
           </View>
           </LearningCompanion>
-        )}
+        </View>}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
             {finished && (
