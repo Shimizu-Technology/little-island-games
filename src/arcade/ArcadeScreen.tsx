@@ -19,6 +19,7 @@ import { PlayTeaching } from "./PlayTeaching";
 import { router } from "expo-router";
 import { Button, Chip, Copy, Heading, IconButton, PressableScale, Sheet, ToggleRow, styles } from "../components/ui";
 import { Settings } from "../components/Settings";
+import { wordFitMultiplier } from "../components/wordFit";
 import { SaveStatus } from "../components/SaveStatus";
 import { Icon } from "../components/Icon";
 import Svg, { Rect } from "react-native-svg";
@@ -170,8 +171,9 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const goal = level ? play.goal?.(level, together) ?? (level === "endless" ? "Make it your own." : level.goals[0]) : "";
   const onTeachPlay = () => { if (lastIdentity.current !== identity) return; arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); };
   const onHear = () => sound.say(play.speech(isLearning, together));
-  // Crab and Lagoon draw under a translucent header; Lagoon places its HUD below the header's measured height.
-  // Header text stops growing at 2x: at the largest sizes it otherwise fills the screen and hides the map or the round.
+  // Crab and Lagoon draw under a translucent header and place their HUDs below its measured height.
+  // Header and start-dock text stop growing at 2x: at the largest sizes they otherwise fill the screen and leave the
+  // start card, with its Helper and Dare choices, only a sliver to scroll in.
   const overlaid = (game.id === "crab-crossing" || game.id === "lagoon-run") && playing, headerTextMax = 2;
   const board = level && playing ? <play.Board key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || __DEV__} {...arena} overlayTop={overlaid ? headerHeight : 0} family={family}/> : null;
   return <View style={{ flex: 1, backgroundColor: game.color }}>
@@ -205,7 +207,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
       </View> : !playing ? <View style={{ flexGrow: 1, minHeight: Math.max(0, height - insets.top - insets.bottom - 162), justifyContent: "center", alignItems: "center", paddingHorizontal: 16, paddingBottom: 10 }}>
         <Hero game={game.id} size={132} outfit={p.outfit} active={foreground && !sheet}/>
         <View style={{ width: "100%", maxWidth: 480, backgroundColor: "#FFF4DA", borderRadius: 32, borderWidth: 3, borderColor: "#DCC28F", padding: 22, gap: 16, alignItems: "center", boxShadow: "0 8px 0 #285B70" }}>
-          <Copy style={{ color: game.color, fontSize: 14, textAlign: "center" }}>{level === "endless" ? "Free play" : `${game.worlds.find(w => w.id === level.world)?.name} · Level ${level.index}`}</Copy><Heading style={{ textAlign: "center", fontSize: 29 }}>{level === "endless" ? "Make it your own" : level.name}</Heading>
+          <Copy maxFontSizeMultiplier={headerTextMax} style={{ color: game.color, fontSize: 14, textAlign: "center" }}>{level === "endless" ? "Free play" : `${game.worlds.find(w => w.id === level.world)?.name} · Level\u00a0${level.index}`}</Copy><Heading maxFontSizeMultiplier={wordFitMultiplier(level === "endless" ? "Make it your own" : level.name, 29, Math.min(480, width - insets.left - insets.right - 32) - 50)} style={{ textAlign: "center", fontSize: 29 }}>{level === "endless" ? "Make it your own" : level.name}</Heading>
           <Heading style={{ textAlign: "center", fontSize: 20 }}>{goal}</Heading>{person.session?.game === game.id && <Copy style={{ textAlign: "center", fontSize: 14 }}>Starting a new round replaces your saved reef. Use Map to continue it instead.</Copy>}
           <View style={{ width: "100%", gap: 9 }}>{level === "endless" ? <Copy style={{ textAlign: "center" }}>Your own pace. Finish whenever you like.</Copy> : level.goals.map((goal, i) => <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><StarDisplay stars={i + 1} size={17}/><Copy style={{ flex: 1, color: "#345A61", fontSize: i === 0 ? 19 : 14, fontWeight: i === 0 ? "800" : "500" }}>{goal}</Copy></View>)}</View>
           <View style={{ width: "100%" }}><ToggleRow label="Helper" detail={level === "endless" ? game.id === "fruit-bat-flight" ? "Slower flight. One heart in free play. No level stars." : "Slower play. No level stars in free play." : play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/></View>
@@ -216,7 +218,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         </View>
       </View> : board}
     </ScrollView>}
-    {!playing && level && !result && <View testID="arcade-start-dock" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#FFF4DA", borderTopWidth: 2, borderColor: "#DCC28F" }}><View style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}><Button onPress={() => { if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button></View></View>}
+    {!playing && level && !result && <View testID="arcade-start-dock" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#FFF4DA", borderTopWidth: 2, borderColor: "#DCC28F" }}><View style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}><Button maxFontSizeMultiplier={headerTextMax} onPress={() => { if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button></View></View>}
 
     <Sheet visible={paused && !sheet} title={finishError ? "Keep your result" : "Your game is paused"} onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View>{finishError ? <><Copy>{finishError}</Copy>{!invalidResult&&<Button onPress={() => { const pending = failedResult.current; if (pending) onResult(pending.result,pending.helped,pending.winner); }}>Try saving again</Button>}</> : <Button onPress={() => setPaused(false)}>Resume play</Button>}<ToggleRow label="Helper" detail={level === "endless" ? game.id === "fruit-bat-flight" ? "Slower flight. One heart in free play. No level stars." : "Slower play. No level stars in free play." : play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { failedResult.current = null; setFinishError(""); setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
     <Sheet visible={sheet === "leave"} title="Back to the map?" onClose={() => setSheet(null)}><Copy>{person.session?.round === round ? "Your reef is saved. Continue this round from the map next time." : "This round will start fresh next time. Your earned stars and stickers are saved."}</Copy><Button onPress={() => { setSheet(null); setPlaying(false); setLevel(null); setResult(null); }}>Leave round · back to map</Button><Button quiet onPress={() => setSheet(null)}>Keep playing</Button></Sheet>

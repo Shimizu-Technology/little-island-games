@@ -5,6 +5,7 @@ import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, wi
 import Svg, { Path } from "react-native-svg";
 import { Button, Copy, Heading, PressableScale } from "../components/ui";
 import { Text } from "../components/Text";
+import { wordFitMultiplier } from "../components/wordFit";
 import { useReducedMotion } from "../components/motion";
 import { StarDisplay } from "./Art";
 import { Hero, HudPill } from "./Juice";
@@ -25,7 +26,7 @@ export function LevelMap({ game, person, levels, onLevel, onOutfits, onChest, fr
   const [selectedWorld, setSelectedWorld] = useState(next?.world ?? game.worlds[0].id);
   return <View style={{ gap: 18, paddingBottom: 24 }}>
     <View style={{ paddingHorizontal: 16 }}>{learnerChip}</View>
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16 }}><Hero game={game.id} size={110} outfit={p.outfit} active={active}/><View style={{ flex: 1, gap: 9 }}><Heading style={{ color: "#FFF8E4", fontSize: 29 }}>{game.name}</Heading><HudPill><Text style={{ color: "#8D6027" }}>★</Text> {starCount(p.stars)} · {person.stickers.length} stickers</HudPill><Button quiet compact onPress={onOutfits}>Dress {game.hero.split(" the ")[0]}</Button></View></View>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16 }}><Hero game={game.id} size={110} outfit={p.outfit} active={active}/><View style={{ flex: 1, gap: 9 }}><Heading maxFontSizeMultiplier={wordFitMultiplier(game.name, 29, width - 32 - 116)} style={{ color: "#FFF8E4", fontSize: 29 }}>{game.name}</Heading><HudPill><Text style={{ color: "#8D6027" }}>★</Text> {starCount(p.stars)} · {person.stickers.length} stickers</HudPill><Button quiet compact onPress={onOutfits}>Dress {game.hero.split(" the ")[0]}</Button></View></View>
     {person.chest?.game === game.id && <PressableScale accessibilityRole="button" accessibilityLabel="Your sticker chest is waiting" onPress={onChest} style={{ marginHorizontal: 16, padding: 9, borderRadius: 26, backgroundColor: "#FFF0C8", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 14 }}><ChestArt sticker={person.chest.sticker} size={90} active={active}/><Heading style={{ fontSize: 20, color: "#65452F" }}>Your sticker chest →</Heading></PressableScale>}
     <View style={{ paddingHorizontal: 16, gap: 10 }}>
       {next && <Button quiet compact onPress={() => onLevel(next.id)}>Current level · {next.world === "learn" ? "Discover" : next.world.toUpperCase()}-{next.index}</Button>}
