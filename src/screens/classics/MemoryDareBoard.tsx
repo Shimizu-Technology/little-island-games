@@ -7,7 +7,7 @@ import { MemoryCards } from "./MemoryCards";
 export function MemoryDareBoard({ state: s, dispatch, active, width }: ChallengeViewProps<State, Action>) {
   const preview = s.phase === "preview", offer = s.phase === "offer", mismatch = s.round.open.length === 2;
   return <View style={{ gap: 12 }}>
-    <Copy style={{ color: C.ink }}>{offer ? "Would you like to preview this deal? Look as long as you like. The preview target needs a preview." : preview ? "Look and read as long as you like. Hide the cards when you are ready." : "Match the pairs. A turn is two cards; there is no timer."}</Copy>
+    <Copy style={{ color: C.ink }}>{offer ? "Would you like to preview this deal? Look as long as you like. The preview target needs a preview." : preview ? "Look and read as long as you like. Hide the cards when you are ready." : "Match the pairs. Every two card reveals use a turn; there is no timer."}</Copy>
     {offer && <><Button disabled={!active} onPress={() => dispatch(["p"])}>Preview this deal</Button><Button quiet disabled={!active} onPress={() => dispatch(["g"])}>Play without preview</Button></>}
     {preview && <Button disabled={!active} onPress={() => dispatch(["g"])}>Hide cards and play</Button>}
     <Copy style={{ color: C.ink }}>Turns used: {s.spent} · Pairs: {s.round.matched.length / 2} of {s.round.cards.length / 2}. Undo and Start again keep turns used.</Copy>

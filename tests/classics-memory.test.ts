@@ -58,6 +58,15 @@ describe("Memory suggested dares and cross-modal cards", () => {
     for (const p of groups(d.cards)) for (const j of p) helped = registration.move(helped, ["f", j])!;
     expect(helped.result).toMatchObject({ event: "helped", dares: [] });
   });
+  it("first-card undo/reset cannot reveal the no-preview deal for free", () => {
+    const d = memoryDareDescriptors[1]; let s = memoryDareEngine.create(d, { version: 1 }, options);
+    for (let i = 0; i < d.cards.length; i++) {
+      s = memoryDareEngine.step(s, ["f", i], d)!.state;
+      s = memoryDareEngine.step(s, i % 2 ? ["u"] : ["z"], d)!.state;
+    }
+    expect(s.spent).toBe(d.cards.length / 2);
+    expect(s.seen).toHaveLength(d.cards.length);
+  });
   it("hint reads only seen faces, including a hidden-layout counterfactual", () => {
     const d = memoryDareDescriptors[1], s = memoryDareEngine.create(d, { version: 1 }, options);
     expect(seenPair(s)).toEqual([]);

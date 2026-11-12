@@ -6,7 +6,7 @@ import type { ReplayEngine } from "../../challenge/types";
 export type Descriptor = { version: 1; cards: string[]; pack: MemoryPack; preview: boolean; suggested: number };
 export type Initial = { version: 1 };
 export type Action = ["f", number] | ["n"] | ["p"] | ["g"] | ["h"] | ["u"] | ["z"];
-export type State = { round: MemoryState; phase: "offer" | "preview" | "play"; previewed: boolean; spent: number; seen: number[]; hint: number[] | null };
+export type State = { round: MemoryState; phase: "offer" | "preview" | "play"; previewed: boolean; flips: number; spent: number; seen: number[]; hint: number[] | null };
 export const memoryDareDescriptors: readonly Descriptor[] = (["pictures", "words", "chamoru"] as const).flatMap((pack, p) =>
   ([6, 8, 12] as const).flatMap((pairs, size) => [true, false].map(preview => ({ version: 1 as const, cards: memoryDeck(pairs, pack, 410 + p * 31 + size), pack, preview, suggested: preview ? pairs * 1.5 : [14, 19, 28][size] }))));
 export function seenPair(s: State): number[] {
@@ -19,7 +19,7 @@ export const memoryDareEngine: ReplayEngine<Descriptor, Initial, Action, State> 
   initial: () => ({ version: 1 }),
   validInitial: (v): v is Initial => plain(v) && exactKeys(v, ["version"]) && v.version === 1,
   validAction: (v): v is Action => Array.isArray(v) && (v.length === 2 && v[0] === "f" && Number.isInteger(v[1]) && v[1] >= 0 && v[1] < 24 || v.length === 1 && ["n", "p", "g", "h", "u", "z"].includes(v[0])),
-  create: d => ({ round: freshRound(d), phase: d.preview ? "offer" : "play", previewed: false, spent: 0, seen: [], hint: null }),
+  create: d => ({ round: freshRound(d), phase: d.preview ? "offer" : "play", previewed: false, flips: 0, spent: 0, seen: [], hint: null }),
   step: (s, a, d) => {
     if (a[0] === "p") return s.phase !== "offer" ? null : { state: { ...s, phase: "preview", previewed: true, seen: d.cards.map((_, i) => i) }, event: "edit" };
     if (a[0] === "g") return s.phase === "play" ? null : { state: { ...s, phase: "play" }, event: "edit" };
@@ -34,8 +34,8 @@ export const memoryDareEngine: ReplayEngine<Descriptor, Initial, Action, State> 
     }
     const round = flipCard(s.round, a[1]);
     if (round === s.round) return null;
-    const spent = s.spent + Number(round.turns > s.round.turns), seen = [...new Set([...s.seen, a[1]])];
-    return { state: { ...s, round, spent, seen, hint: null }, event: memoryDone(round) ? "check" : "edit", ...(memoryDone(round) ? { correct: true } : {}) };
+    const flips = s.flips + 1, spent = Math.ceil(flips / 2), seen = [...new Set([...s.seen, a[1]])];
+    return { state: { ...s, round, flips, spent, seen, hint: null }, event: memoryDone(round) ? "check" : "edit", ...(memoryDone(round) ? { correct: true } : {}) };
   },
   inspect: (s, d) => ({ solved: memoryDone(s.round), metrics: { turns: s.spent }, edits: s.spent, solution: null, objectives: s.spent <= d.suggested && (!d.preview || s.previewed) ? ["suggested-target"] : [] }),
 };
