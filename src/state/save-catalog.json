@@ -630,7 +630,6 @@
       "slot": 200,
       "engine": "beep-bot",
       "rules": 1,
-      "cove": false,
       "entries": [
         {
           "ordinal": 204800,
@@ -714,13 +713,13 @@
         1,
         1,
         1
-      ]
+      ],
+      "cove": false
     },
     {
       "slot": 201,
       "engine": "beep-bot",
       "rules": 1,
-      "cove": false,
       "entries": [
         {
           "ordinal": 205824,
@@ -804,13 +803,13 @@
         1,
         1,
         1
-      ]
+      ],
+      "cove": false
     },
     {
       "slot": 202,
       "engine": "beep-bot",
       "rules": 1,
-      "cove": false,
       "entries": [
         {
           "ordinal": 206848,
@@ -894,7 +893,8 @@
         1,
         1,
         1
-      ]
+      ],
+      "cove": false
     },
     {
       "slot": 298,
