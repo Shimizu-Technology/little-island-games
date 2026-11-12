@@ -53,8 +53,11 @@ export const EntityArt = memo(function EntityArt({
   faceOverride,
   tilt = 0,
   limbLag = 0,
+  blink = false,
 }: {
   entity: SceneEntity;
+  /** HM-11: the closed-eye copy a resting friend swaps to by opacity. */
+  blink?: boolean;
   tilt?: number;
   limbLag?: number;
   carry?: boolean;
@@ -91,6 +94,8 @@ export const EntityArt = memo(function EntityArt({
     tilt,
     limbLag,
     reduced,
+    // Every rig accepts RigLife; the route's renderer spreads input into it.
+    ...(blink ? { blink: true } : {}),
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
@@ -99,7 +104,7 @@ export const EntityArt = memo(function EntityArt({
   );
 }, (a, b) => a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
-  a.faceOverride === b.faceOverride && a.tilt === b.tilt && a.limbLag === b.limbLag &&
+  a.faceOverride === b.faceOverride && a.blink === b.blink && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && a.entity.action === b.entity.action &&
   a.entity.character?.slot === b.entity.character?.slot && a.entity.children.length === b.entity.children.length &&
   JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));

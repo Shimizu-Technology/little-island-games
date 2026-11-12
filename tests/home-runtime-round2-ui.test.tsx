@@ -1,7 +1,8 @@
 import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
-import { layoutToken } from "../src/home/runtime/layout";
+import { poseAckKey } from "../src/home/runtime/poseAck";
+import { poseToken } from "../src/home/runtime/poseBank";
 import { SettleArt } from "../src/home/runtime/SettleArt";
 import { HomeChrome } from "../src/home/runtime/HomeChrome";
 import { HomePanels } from "../src/home/runtime/HomePanels";
@@ -35,7 +36,9 @@ describe("round 2 pose and chrome", () => {
     const destination = { ...source, base: "lie" as const };
     const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0, proposal: { base: "lie", facing: "front" } },
       clock = { value: 1000 };
-    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { 0: layoutToken(destination) } } } as unknown as Interaction;
+    // R4/F1: the carry hands off once this actor's requested pose has its own acknowledgement.
+    const lie = poseToken("lie", "front", destination.action);
+    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { [poseAckKey(source.id, lie)]: 1 } } } as unknown as Interaction;
     let tree!: TestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = TestRenderer.create(
@@ -115,11 +118,12 @@ describe("round 2 pose and chrome", () => {
       tree = TestRenderer.create(<HomePanels {...props} />);
     });
     expect(tree.toJSON()).toBeNull();
+    // HR-01: the friend picker is now the friends drawer (tests/home-h3-drawer.test.tsx); this panel stays More only.
     await act(async () => tree.update(<HomePanels {...props} friends />));
-    const button = tree.root.findByProps({ accessibilityLabel: "Bring Islander here" });
-    button.props.onPress();
-    expect(onBring).toHaveBeenCalledWith("character/0", 0);
-    expect(JSON.stringify(tree.toJSON())).toContain("↓ here");
+    expect(tree.toJSON()).toBeNull();
+    await act(async () => tree.update(<HomePanels {...props} more />));
+    tree.root.findByProps({ accessibilityLabel: "Friends drawer" });
+    expect(onBring).not.toHaveBeenCalled();
     await act(async () => tree.unmount());
   });
 });

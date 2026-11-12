@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BANK_CAPS, assertFamilyAppendOnly, assertRootAppendOnly, catalogIssues, emptyRoot, encodePack, manifestAsset, packAsset, parsePack, validFamily, validRoot, type DailyPool, type FamilyManifest, type PackHeader, type PackRow, type RootFamily, type RootIndex } from '../../src/puzzles/bank';
@@ -204,6 +206,11 @@ const hashFiles = (files: readonly string[]) => {
   return h.digest('hex');
 };
 function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, previous: FamilyManifest | null, accepted: Record<string, CertifiedEntry<P>[]>, facts: BakeFacts, beforeCommit?: () => void): number[] {
+  // Validate decoded answers before staging or publishing a word-family pack.
+  if ([spec.id, spec.adapter.engine].some(id => /(?:^|-)(?:word-search|crossword|fill-in|word-ladder|word-scramble|word-builder)(?:$|-)/.test(id))) {
+    const admission = spawnSync(process.execPath, [fileURLToPath(new URL('../words/puzzle-admission.mjs', import.meta.url))], { input: JSON.stringify({ family: spec.id, engine: spec.adapter.engine, cores: Object.values(accepted).flat().map(e => e.core) }), encoding: 'utf8' });
+    if (admission.status !== 0) throw new Error('Puzzle vocabulary admission failed.');
+  }
   const staging = join(dirs.content, `.staging-${process.pid}`);
   const bands = previous?.bands ?? spec.bands.map(b => b.id);
   let nextSlot = root.nextSlot, nextOrdinal = root.nextOrdinal;

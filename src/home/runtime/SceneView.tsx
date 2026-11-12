@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { useAnimatedStyle, useDerivedValue, type SharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
-import { roomIds, roomNames } from "../catalogMore";
+import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
 import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
@@ -16,10 +16,11 @@ import { SeatRimCue, TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
-import { pickupTransform } from "./handFeel";
-import { isPortion } from "./portions";
+import { anyIn, firstFollow, firstRest } from "./restingState";
+import { BREATH_SCALE, lifeBlink, lifeBreath, lifeSeed, nextLifeTick } from "./life";
+import { isPortion, SHORE_TOP } from "./portions";
 import { entityLabels } from "../scene/labels";
-import type { Interaction, Pickup, DragSlot } from "./useInteraction";
+import type { Interaction, Pickup } from "./useInteraction";
 import type { Viewport } from "./CameraController";
 
 function ancestors(entity: SceneEntity, scene: Scene): string[] {
@@ -36,12 +37,9 @@ const RestingEntity = memo(function RestingEntity({
   sceneRevision,
   name,
   ownerKey,
-  slots,
-  controller,
-  camera,
+  restingFlags,
+  restingMotion,
   landingKey,
-  fixtureNudges,
-  clock,
   acknowledgeLayout,
   reduced,
   renderCharacter,
@@ -53,19 +51,19 @@ const RestingEntity = memo(function RestingEntity({
   sleeping,
   front = false,
   onNode,
+  life,
 }: {
+  /** HM-11: the shared life clock, given only to friends at rest in the room on screen. */
+  life?: SharedValue<number>;
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
   sceneRevision: string;
   /** Accessible name; numbered when the room holds several of the same thing. */
   name: string;
   ownerKey: string;
-  slots: SharedValue<DragSlot[]>;
-  controller?: Interaction["controller"];
-  camera: Interaction["camera"];
+  restingFlags: Interaction["restingFlags"];
+  restingMotion: Interaction["restingMotion"];
   landingKey: string;
-  fixtureNudges: Interaction["fixtureNudges"];
-  clock: Interaction["clock"];
   acknowledgeLayout: Interaction["acknowledgeLayout"];
   reduced: boolean;
   renderCharacter?: CharacterRender;
@@ -90,45 +88,34 @@ const RestingEntity = memo(function RestingEntity({
   if (stamp.token !== token) setStamp({ token, value: stamp.value + 1 });
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
-  const visible = useDerivedValue(() => {
-    if (front && slots.value.some((s) => s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
-      (s.proposal?.attachment ?? s.subject?.attachment)?.kind === "socket" &&
-      ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id)) return 0;
-    for (const slot of slots.value) if (slot.id && owners.includes(slot.restId ?? slot.id))
-      return !slot.revealFrame && slot.ready && slot.painted !== false && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
-    return 1;
-  });
-  const wobble = useDerivedValue(() => {
-    const at = fixtureNudges.value[entity.id];
-    if (!at || reduced) return 0;
-    const elapsed = clock.value - at;
-    return elapsed < 0 || elapsed >= 220 ? 0 : Math.sin(elapsed / 220 * Math.PI * 4) * 1.5 * (1 - elapsed / 220);
-  });
   const landingTargets = useMemo(() => landingKey.split("|"), [landingKey]);
-  const landing = useDerivedValue(() => slots.value.some(s => s.id && s.phase === "dragging" && s.proposal?.target && landingTargets.includes(s.proposal.target)));
-  const motion = useDerivedValue(() => {
-    const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
-    return slot && !(slot.committed && slot.revision === sceneRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false)
-      ? pickupTransform(slot, slot.subject ?? entity, camera.value.a, clock.value, reduced) : undefined;
-  });
+  // HM-13: one shared resting state, changed only on pickup, press, target and front edges.
+  // The motion channel carries per-frame values only while art follows before its overlay
+  // is ready, or while something wobbles; otherwise nothing here runs during a drag.
+  const seed = entity.character ? lifeSeed(entity.character.slot) : 0;
   const style = useAnimatedStyle(() => {
-    const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
-    const moving = slot && !(slot.committed && slot.revision === sceneRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
-    const transform = motion.value;
-    const pressed = controller?.value.pointers.some(p => p.phase === "pending" && p.entity && owners.includes(p.entity));
-    return { opacity: visible.value,
-      transformOrigin: [slot ? slot.gripX - frame.left : -frame.left, slot ? slot.gripY - frame.top : -frame.top, 0],
+    const flags = restingFlags.value, motion = restingMotion.value;
+    const rest = firstRest(flags, owners);
+    const follow = firstFollow(motion, owners);
+    const pressed = anyIn(flags.pressed, owners);
+    const landing = anyIn(flags.dragTargets, landingTargets);
+    const wobble = reduced ? 0 : motion.wobble[entity.id] ?? 0;
+    const hidden = (front && flags.fronts.includes(entity.id)) || (rest?.hide ?? false);
+    return { opacity: hidden ? 0 : 1,
+      transformOrigin: [rest ? rest.gx - frame.left : -frame.left, rest ? rest.gy - frame.top : -frame.top, 0],
       transform: [
-        { translateX: moving ? slot.x - slot.sourceX : 0 },
-        { translateY: moving ? slot.y - slot.sourceY - (transform?.lift ?? 0) : landing.value && !reduced ? -3 : 0 },
-        { rotate: `${transform?.tilt ?? wobble.value}deg` },
-        { scaleX: transform?.scaleX ?? (pressed || landing.value ? 1.02 : 1) },
-        { scaleY: transform?.scaleY ?? (pressed ? entity.character ? .99 : 1.02 : landing.value ? 1.02 : 1) },
+        { translateX: follow ? follow.dx : 0 },
+        { translateY: follow ? follow.dy : landing && !reduced ? -3 : 0 },
+        { rotate: `${follow ? follow.tilt : wobble}deg` },
+        { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
+        { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
+          life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) },
       ] };
   });
-  const rimStyle = useAnimatedStyle(() => ({ opacity: landing.value ? 1 : 0 }));
-  const anticipating = useDerivedValue(() => entity.character &&
-    slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target)) ? 1 : 0);
+  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }));
+  const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
+  const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
+  const anticipating = useDerivedValue(() => entity.character && anyIn(restingFlags.value.targets, anticipationTargets) ? 1 : 0);
   const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   return (
@@ -211,14 +198,21 @@ const RestingEntity = memo(function RestingEntity({
         style={[{ position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "4%", borderRadius: 18,
           borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
       <Animated.View style={normal}>
-        <EntityArt
-          entity={entity}
-          actionOverride={action}
-          faceOverride={sleeping ? "sleepy" : undefined}
-          front={front}
-          reduced={reduced}
-          renderCharacter={renderCharacter}
-        />
+        <Animated.View style={life ? open : undefined}>
+          <EntityArt
+            entity={entity}
+            actionOverride={action}
+            faceOverride={sleeping ? "sleepy" : undefined}
+            front={front}
+            reduced={reduced}
+            renderCharacter={renderCharacter}
+          />
+        </Animated.View>
+        {life && (
+          <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
+            <EntityArt entity={entity} actionOverride={action} reduced={reduced} renderCharacter={renderCharacter} blink />
+          </Animated.View>
+        )}
       </Animated.View>
       {entity.character && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
@@ -248,7 +242,10 @@ export function SceneView({
   badges = [],
   onBadges,
   debugLayer,
+  liveRoom,
 }: {
+  /** HM-11: friends at rest in this room blink and breathe. None in the overview. */
+  liveRoom?: string;
   /** Lab-only layer in house space, under the carried object. */
   debugLayer?: React.ReactNode;
   badges?: readonly BadgeId[];
@@ -270,6 +267,25 @@ export function SceneView({
   onMove: (id: string, action: string) => void;
 }) {
   const { camera } = interaction;
+  // One UI-thread clock for every friend on screen; nothing re-renders an SVG.
+  const lifeClock = useSharedValue(0);
+  // R3: the clock runs only while a friend on screen actually blinks and breathes with it.
+  const alive = (entity: SceneEntity) => !!entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
+    !reactions[entity.id] && !entity.action && restingVisible(entity, scene);
+  const living = !reduced && !!liveRoom && Object.values(scene.rooms[liveRoom as RoomId]?.entities ?? {}).some(alive);
+  React.useEffect(() => {
+    if (!living) return;
+    // A timer that wakes only at blink edges and breath steps, not a per-frame animation.
+    const start = Date.now(), seeds = [0, 1, 2].map(lifeSeed);
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const clock = Date.now() - start;
+      lifeClock.set(clock);
+      timer = setTimeout(tick, nextLifeTick(clock, seeds));
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, [living, lifeClock]);
   const cameraStyle = useAnimatedStyle(() => ({
     transformOrigin: "left top",
     transform: [{ translateX: camera.value.tx }, { translateY: camera.value.ty }, { scale: camera.value.a }],
@@ -280,8 +296,12 @@ export function SceneView({
         testID={Platform.OS === "web" ? "house-viewport" : undefined}
         accessible={false}
         collapsable={false}
-        style={{ width: viewport.width, height: viewport.height, overflow: "hidden", backgroundColor: "#BEE4DD" }}
+        style={{ width: viewport.width, height: viewport.height }}
       >
+        {/* The rooms are clipped to the play area; the carried layer below is not, so a thing
+            carried onto a room button or the Friends button stays visible above the bar. */}
+        <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height,
+          overflow: "hidden", backgroundColor: "#BEE4DD" }}>
         <Animated.View
           testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}
@@ -294,10 +314,39 @@ export function SceneView({
           {roomIds.map((roomId, index) => {
             const origin = roomOrigin(index, building),
               room = state.rooms[roomId];
-            const entities = Object.values(scene.rooms[roomId].entities)
+            const all = Object.values(scene.rooms[roomId].entities)
               .filter((e) => restingVisible(e, scene))
               .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
-            const names = entityLabels(entities);
+            // HC-02: beach shells lie on the sand, outside the room's clip.
+            const entities = all.filter((e) => e.contact.y <= SHORE_TOP), shore = all.filter((e) => e.contact.y > SHORE_TOP);
+            const names = entityLabels(all);
+            const resting = (entity: SceneEntity, front: boolean) => (
+              <RestingEntity
+                key={front ? `front:${entity.id}` : entity.id}
+                front={front}
+                entity={entity}
+                sceneRevision={scene.revision}
+                name={names[entity.id]}
+                onNode={onNode}
+                action={reactions[entity.id]}
+                sleeping={!!sleeping[entity.id]}
+                ownerKey={ancestors(entity, scene).join("|")}
+                targetKey={scene.rooms[roomId].targets
+                  .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
+                  .map((t) => t.id)
+                  .join("|")}
+                restingFlags={interaction.restingFlags}
+                restingMotion={interaction.restingMotion}
+                landingKey={scene.rooms[roomId].targets.filter(t => t.owner === entity.id && t.kind !== "mouth" && t.kind !== "hand").map(t => t.id).join("|")}
+                acknowledgeLayout={interaction.acknowledgeLayout}
+                reduced={reduced}
+                renderCharacter={renderCharacter}
+                selected={!front && selected === entity.id}
+                onSelect={onSelect}
+                onMove={onMove}
+                life={living && !front && alive(entity) ? lifeClock : undefined}
+              />
+            );
             return (
               <View
                 key={roomId}
@@ -329,35 +378,9 @@ export function SceneView({
                       ...(order === entries.findIndex((entry) => entry.entity.item?.layer !== "ground")
                         ? scene.rooms[roomId].targets.filter((target) => target.rim).map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
                         : []),
-                      <RestingEntity
-                        key={front ? `front:${entity.id}` : entity.id}
-                        front={front}
-                        entity={entity}
-                        sceneRevision={scene.revision}
-                        name={names[entity.id]}
-                        onNode={onNode}
-                        action={reactions[entity.id]}
-                        sleeping={!!sleeping[entity.id]}
-                        ownerKey={ancestors(entity, scene).join("|")}
-                        targetKey={scene.rooms[roomId].targets
-                          .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
-                          .map((t) => t.id)
-                          .join("|")}
-                        slots={interaction.slots}
-                        controller={interaction.controller}
-                        camera={interaction.camera}
-                        landingKey={scene.rooms[roomId].targets.filter(t => t.owner === entity.id && t.kind !== "mouth" && t.kind !== "hand").map(t => t.id).join("|")}
-                        fixtureNudges={interaction.fixtureNudges}
-                        clock={interaction.clock}
-                        acknowledgeLayout={interaction.acknowledgeLayout}
-                        reduced={reduced}
-                        renderCharacter={renderCharacter}
-                        selected={!front && selected === entity.id}
-                        onSelect={onSelect}
-                        onMove={onMove}
-                      />,
+                      resting(entity, front),
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim).map((target) => (
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {stress && roomId === "home" && (
@@ -370,6 +393,11 @@ export function SceneView({
                     )}
                   </View>
                 </View>
+                {shore.length > 0 && (
+                  <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0 }}>
+                    {shore.map((entity) => resting(entity, false))}
+                  </View>
+                )}
               </View>
             );
           })}
@@ -377,6 +405,10 @@ export function SceneView({
             <BuildingTrim building={building} />
           </View>
           {debugLayer}
+        </Animated.View>
+        </View>
+        <Animated.View accessible={false} importantForAccessibility="no" pointerEvents="none"
+          style={[{ position: "absolute", width: building.width, height: building.height }, cameraStyle]}>
           <DragOverlay
             activeRoom={state.current}
             scene={scene}

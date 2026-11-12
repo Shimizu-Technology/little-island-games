@@ -1,5 +1,7 @@
-import { Base, Options, CheckersRules, base } from "./types";
+import { Base, Options, CheckersRules, base, random } from "./types";
 import { Match, Seat, RoundResult, newMatch, settle, nextStarter } from "./match";
+import { checkersPolicyById, currentCheckersPolicy, type CheckersPolicy } from "../playPolicies/policies";
+import type { SearchBudget } from "../playPolicies/types";
 export type Side = 1 | -1;
 export type CheckersMove = { from: number; path: number[]; captured: number[] };
 export type Position = {
@@ -17,7 +19,13 @@ export type CheckersState = Base & {
   history: Position[];
   lesson: number | null;
   lessonBackup: { position: Position; history: Position[] } | null;
+  /**
+   * The computer's policy, frozen when the round begins. Rounds saved without one
+   * finish on revision 1, the 3.0 timed search.
+   */
+  policy?: `checkers/${"gentle" | "growing" | "challenge"}@${number}`;
 };
+export const checkersStrength = { easy: "gentle", medium: "growing", hard: "challenge" } as const;
 // Missing rules belong to pre-variant saves and retain Classic behavior.
 export const checkersRules = (s: CheckersState): CheckersRules =>
   s.lesson !== null ? "classic" : (s.options.checkersRules ?? "classic");
@@ -115,10 +123,13 @@ export function applyCheckers(p: Position, move: CheckersMove, rules: CheckersRu
   next.outcome = checkersResult(next, rules);
   return next;
 }
+export const checkersHeadStartSquare = 60;
 export function createCheckers(options: Options): CheckersState {
   const board = Array<number>(64).fill(0);
   for (let i = 0; i < 64; i++)
     if ((row(i) + col(i)) % 2 === 1) board[i] = row(i) < 3 ? 1 : row(i) > 4 ? -1 : 0;
+  // The computer plays blue; its head-start piece comes from the middle of its back row.
+  if (options.mode === "solo" && options.checkersHeadStart === 1) board[checkersHeadStartSquare] = 0;
   return {
     ...base("checkers", options),
     game: "checkers",
@@ -126,7 +137,12 @@ export function createCheckers(options: Options): CheckersState {
     history: [],
     lesson: null,
     lessonBackup: null,
+    policy: currentCheckersPolicy(checkersStrength[options.difficulty]).id as CheckersState["policy"],
   };
+}
+/** The policy this round plays under: the one saved with it, or revision 1 for older saves. */
+export function checkersPolicy(s: CheckersState): CheckersPolicy {
+  return checkersPolicyById(s.policy ?? `checkers/${checkersStrength[s.options.difficulty]}@1`)!;
 }
 export function checkersMove(s: CheckersState, move: CheckersMove): CheckersState {
   if (s.position.outcome) return s;
@@ -162,8 +178,121 @@ function evaluate(p: Position, player: Side, rules: CheckersRules): number {
     0
   );
 }
-// Yield between root branches; each recursive slice also has a strict time/node budget.
+/**
+ * The computer's move, under the round's frozen policy. Revision 2 searches in slices of
+ * at most `sliceMs`; the clock only decides when to yield, never how far it searches.
+ */
 export async function checkersChoice(
+  s: CheckersState,
+  cancelled: () => boolean = () => false,
+  sliceMs = 8
+): Promise<CheckersMove | null> {
+  const policy = checkersPolicy(s);
+  if (policy.revision === 1) return archivedCheckersChoice(s, cancelled);
+  if (s.position.outcome) return null;
+  const rules = checkersRules(s),
+    moves = checkersMoves(s.position, rules);
+  if (!moves.length) return null;
+  if (!policy.limits) return moves[Math.floor(checkersRandom(s)() * moves.length)];
+  const search = new CheckersSearch(s.position, rules, policy.limits);
+  while (!search.done) {
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    if (cancelled()) return null;
+    // At least one step per slice, so even a clock that jumps ahead still finishes.
+    const start = Date.now();
+    do search.step(32);
+    while (!search.done && Date.now() - start < sliceMs);
+  }
+  return cancelled() ? null : search.move();
+}
+/** Gentle's pick, from public round facts so a replayed position picks the same move. */
+export function checkersRandom(s: CheckersState): () => number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.id.length; i++) h = Math.imul(h ^ s.id.charCodeAt(i), 0x01000193);
+  return random((h ^ Math.imul(s.history.length + 1, 0x9e3779b1)) >>> 0);
+}
+type Frame = { p: Position; remaining: number; alpha: number; beta: number; children: CheckersMove[]; i: number; score: number };
+/**
+ * Revision 2: the 3.0 Checkers search, move for move, with an explicit stack so it can
+ * pause between slices, and no clock. Each root move gets a full window; the node cap
+ * is shared, and once it is reached the search stops after the current root move.
+ */
+export class CheckersSearch {
+  nodes = 0;
+  private readonly limits: SearchBudget;
+  private readonly player: Side;
+  private readonly moves: CheckersMove[];
+  private stack: Frame[] = [];
+  private root = 0;
+  private best: CheckersMove | null;
+  private bestScore = -Infinity;
+  private finished: boolean;
+  constructor(
+    private readonly position: Position,
+    private readonly rules: CheckersRules,
+    limits: SearchBudget
+  ) {
+    this.limits = Object.freeze({ depth: limits.depth, nodes: limits.nodes });
+    this.player = position.turn;
+    this.moves = position.outcome ? [] : checkersMoves(position, rules);
+    this.best = this.moves[0] ?? null;
+    this.finished = !this.moves.length;
+  }
+  get done() {
+    return this.finished;
+  }
+  move(): CheckersMove | null {
+    if (!this.finished) throw new Error("Search has not finished.");
+    return this.best;
+  }
+  /** A leaf's value, or null once its frame is pushed. */
+  private enter(p: Position, remaining: number, alpha: number, beta: number): number | null {
+    this.nodes++;
+    if (!remaining || p.outcome || this.nodes >= this.limits.nodes) return evaluate(p, this.player, this.rules);
+    const children = checkersMoves(p, this.rules);
+    if (!children.length) return evaluate(p, this.player, this.rules);
+    this.stack.push({ p, remaining, alpha, beta, children, i: 0, score: p.turn === this.player ? -Infinity : Infinity });
+    return null;
+  }
+  /** Searches about `quota` more positions. True when the decision is made. */
+  step(quota: number): boolean {
+    const stop = this.nodes + quota;
+    while (!this.finished && this.nodes < stop) {
+      const top = this.stack[this.stack.length - 1];
+      let value = top
+        ? this.enter(applyCheckers(top.p, top.children[top.i], this.rules), top.remaining - 1, top.alpha, top.beta)
+        : this.enter(applyCheckers(this.position, this.moves[this.root], this.rules), this.limits.depth - 1, -Infinity, Infinity);
+      // Hand values back up until a frame needs its next child.
+      while (value !== null) {
+        const f = this.stack[this.stack.length - 1];
+        if (!f) {
+          if (value > this.bestScore) {
+            this.bestScore = value;
+            this.best = this.moves[this.root];
+          }
+          this.root++;
+          if (this.nodes >= this.limits.nodes || this.root >= this.moves.length) this.finished = true;
+          break;
+        }
+        if (f.p.turn === this.player) {
+          f.score = Math.max(f.score, value);
+          f.alpha = Math.max(f.alpha, f.score);
+        } else {
+          f.score = Math.min(f.score, value);
+          f.beta = Math.min(f.beta, f.score);
+        }
+        f.i++;
+        if (f.beta <= f.alpha || this.nodes >= this.limits.nodes || f.i >= f.children.length) {
+          this.stack.pop();
+          value = f.score;
+        } else value = null;
+      }
+    }
+    return this.finished;
+  }
+}
+/** Revision 1, the 3.0 search, unchanged: it yields between root branches and each branch stops after 8 ms. */
+export async function archivedCheckersChoice(
   s: CheckersState,
   cancelled: () => boolean = () => false
 ): Promise<CheckersMove | null> {

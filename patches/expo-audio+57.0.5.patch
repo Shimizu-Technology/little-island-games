@@ -1,0 +1,544 @@
+diff --git a/node_modules/expo-audio/ios/AudioPlayer.swift b/node_modules/expo-audio/ios/AudioPlayer.swift
+index 0742943..ef3bf50 100644
+--- a/node_modules/expo-audio/ios/AudioPlayer.swift
++++ b/node_modules/expo-audio/ios/AudioPlayer.swift
+@@ -18,6 +18,8 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+     }
+   }
+   let interval: Double
++  // Little Island patch: owns this player's status events; see AudioStatusQueue.swift.
++  let statusQueue = AudioStatusQueue()
+   var wasPlaying = false
+   var isPaused: Bool {
+     ref.rate == 0.0
+@@ -131,25 +133,36 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+   }
+ 
+   func currentStatus() -> [String: Any?] {
+-    let currentDuration = ref.status == .readyToPlay ? duration : 0.0
+-    let rate = isPlaying ? ref.rate : currentRate
++    currentStatus(of: statusQueue.locked { ref })
++  }
++
++  // Little Island patch: reads one player and one item, so a status never mixes a replaced player or item.
++  func currentStatus(of player: AVPlayer) -> [String: Any?] {
++    let item = player.currentItem
++    let playing = player.timeControlStatus == .playing
++    let itemDuration = item?.duration.seconds ?? 0.0
++    let itemTime = item?.currentTime().seconds ?? 0.0
++    let buffering = !playing && (player.timeControlStatus == .waitingToPlayAtSpecifiedRate
++      || (item.map { !$0.isPlaybackLikelyToKeepUp && $0.isPlaybackBufferEmpty } ?? true))
++    let currentDuration = player.status == .readyToPlay && !itemDuration.isNaN ? itemDuration : 0.0
++    let rate = playing ? player.rate : currentRate
+     return [
+       "id": id,
+-      "currentTime": currentTime,
+-      "playbackState": statusToString(status: ref.status),
+-      "timeControlStatus": timeControlStatusString(status: ref.timeControlStatus),
+-      "reasonForWaitingToPlay": reasonForWaitingToPlayString(status: ref.reasonForWaitingToPlay),
+-      "mute": ref.isMuted,
++      "currentTime": itemTime.isNaN ? 0.0 : itemTime,
++      "playbackState": statusToString(status: player.status),
++      "timeControlStatus": timeControlStatusString(status: player.timeControlStatus),
++      "reasonForWaitingToPlay": reasonForWaitingToPlayString(status: player.reasonForWaitingToPlay),
++      "mute": player.isMuted,
+       "duration": currentDuration,
+-      "playing": isPlaying,
++      "playing": playing,
+       "loop": isLooping,
+       "didJustFinish": false,
+-      "isLoaded": isLoaded,
++      "isLoaded": item?.status == .readyToPlay,
+       "playbackRate": rate,
+       "shouldCorrectPitch": shouldCorrectPitch,
+-      "isBuffering": isBuffering,
+-      "isLive": isLive,
+-      "currentOffsetFromLive": currentOffsetFromLive,
++      "isBuffering": buffering,
++      "isLive": item?.duration.isIndefinite ?? false,
++      "currentOffsetFromLive": item?.currentDate().map { Date().timeIntervalSince1970 - $0.timeIntervalSince1970 },
+       "error": nil
+     ]
+   }
+@@ -164,14 +177,28 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+     }
+   }
+ 
+-  func updateStatus(with dict: [String: Any]) {
+-    var arguments = currentStatus()
+-    arguments.merge(dict) { _, new in
+-      new
++  // Little Island patch: queues the status on statusQueue from any thread; `completion` runs there afterwards.
++  func updateStatus(with dict: [String: Any], kind: AudioStatusQueue.Kind = .event, completion: (() -> Void)? = nil) {
++    statusQueue.async { [weak self] generation in
++      self?.deliverStatus(with: dict, kind: kind, generation: generation)
++      completion?()
+     }
+-    self.emit(event: AudioConstants.playbackStatus, payload: arguments)
++  }
+ 
+-    if isActiveForLockScreen {
++  private func deliverStatus(with dict: [String: Any], kind: AudioStatusQueue.Kind, generation: Int) {
++    let emitted = statusQueue.deliver(kind, generation: generation) {
++      self.ref
++    } build: { player in
++      var arguments = self.currentStatus(of: player)
++      arguments.merge(dict) { _, new in
++        new
++      }
++      return arguments
++    } emit: { arguments in
++      self.emit(event: AudioConstants.playbackStatus, payload: arguments)
++    }
++
++    if emitted && isActiveForLockScreen {
+       MediaController.shared.updateNowPlayingInfo(for: self)
+     }
+   }
+@@ -187,12 +214,14 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+ 
+     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+       ref.seek(to: time, toleranceBefore: toleranceBefore, toleranceAfter: toleranceAfter) { [weak self] _ in
+-        if let self {
+-          self.updateStatus(with: [
+-            "currentTime": self.currentTime
+-          ])
++        // Little Island patch: AVFoundation calls this on the main queue. The status (with the current time)
++        // is read on statusQueue, and JS resumes after it.
++        guard let self else {
++          return continuation.resume()
++        }
++        self.updateStatus(with: [:]) {
++          continuation.resume()
+         }
+-        continuation.resume()
+       }
+     }
+   }
+@@ -310,7 +339,14 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+   private func replacePlayer(with source: AudioSource, restoreSampling: Bool) {
+     teardownPlayer()
+ 
+-    ref = AudioUtils.createAVPlayer(from: source)
++    let player = AudioUtils.createAVPlayer(from: source)
++    let oldPlayer = ref
++    // Little Island patch: swap the player under the status snapshot lock and drop the old player's status work.
++    // The old player is released after the lock.
++    statusQueue.invalidate {
++      self.ref = player
++    }
++    withExtendedLifetime(oldPlayer) {}
+     setupPublisher()
+ 
+     if restoreSampling {
+@@ -413,6 +449,8 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+     } else {
+       ref.replaceCurrentItem(with: item)
+     }
++    // Little Island patch: status work for the old item is dropped.
++    statusQueue.invalidate()
+   }
+ 
+   private func enqueueNextLoopItem() {
+@@ -454,7 +492,7 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+         return
+       }
+ 
+-      guard let queuePlayer = self.ref as? AVQueuePlayer,
++      guard let queuePlayer = self.statusQueue.locked({ self.ref }) as? AVQueuePlayer,
+         finishedItem == queuePlayer.currentItem || queuePlayer.items().contains(finishedItem) else {
+         return
+       }
+@@ -465,7 +503,7 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+           "playing": false,
+           "currentTime": currentTime.isNaN ? 0.0 : currentTime,
+           "didJustFinish": true
+-        ])
++        ], kind: .terminal)
+         self.onPlaybackComplete?()
+       }
+     }
+@@ -479,14 +517,17 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+     let updateInterval = interval / 1000
+     let interval = CMTime(seconds: updateInterval, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+ 
+-    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: nil) { [weak self] time in
++    // Little Island patch: each play() starts a status generation, so callbacks from a removed observer that are
++    // still in flight are dropped. The observer is delivered on statusQueue, not the main queue.
++    let generation = statusQueue.invalidate()
++    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: statusQueue.queue) { [weak self] time in
+       guard let self else {
+         return
+       }
+ 
+-      self.updateStatus(with: [
++      self.deliverStatus(with: [
+         "currentTime": time.seconds
+-      ])
++      ], kind: .periodic, generation: generation)
+     }
+   }
+ 
+@@ -504,6 +545,8 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+   }
+ 
+   public override func sharedObjectWillRelease() {
++    // Little Island patch: no status is emitted after release, including from seeks cancelled below.
++    statusQueue.close()
+     ref.currentItem?.cancelPendingSeeks()
+     owningRegistry?.remove(self)
+ 
+diff --git a/node_modules/expo-audio/ios/AudioPlaylist.swift b/node_modules/expo-audio/ios/AudioPlaylist.swift
+index 98dabcf..68c6ae4 100644
+--- a/node_modules/expo-audio/ios/AudioPlaylist.swift
++++ b/node_modules/expo-audio/ios/AudioPlaylist.swift
+@@ -14,18 +14,48 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+ 
+   var loopMode: LoopMode = .none
+   var wasPlaying = false
++  // Little Island patch: owns this playlist's status events; see AudioStatusQueue.swift. The track list that
++  // statuses read is guarded by its lock. Replaced values are released after the lock.
++  let statusQueue = AudioStatusQueue()
++
++  private var guardedSources: [AudioSource] = []
++  private var guardedPlayerItems: [AVPlayerItem?] = []
++  private var guardedPreviousTrackIndex = 0
++
++  private(set) var sources: [AudioSource] {
++    get { statusQueue.locked { guardedSources } }
++    set {
++      var value = newValue
++      statusQueue.locked { swap(&guardedSources, &value) }
++    }
++  }
+ 
+-  private(set) var sources: [AudioSource] = []
++  private var playerItems: [AVPlayerItem?] {
++    get { statusQueue.locked { guardedPlayerItems } }
++    set {
++      var value = newValue
++      statusQueue.locked { swap(&guardedPlayerItems, &value) }
++    }
++  }
+ 
+-  private var playerItems: [AVPlayerItem?] = []
+-  private var previousTrackIndex = 0
++  private var previousTrackIndex: Int {
++    get { statusQueue.locked { guardedPreviousTrackIndex } }
++    set { statusQueue.locked { guardedPreviousTrackIndex = newValue } }
++  }
+ 
+   var currentTrackIndex: Int {
+-    guard let current = ref.currentItem,
+-          let index = playerItems.firstIndex(where: { $0 === current }) else {
+-      return min(max(previousTrackIndex, 0), max(sources.count - 1, 0))
++    trackSnapshot().index
++  }
++
++  // Little Island patch: one current item and one consistent read of the track list.
++  private func trackSnapshot() -> (item: AVPlayerItem?, index: Int, count: Int) {
++    let (items, previous, count) = statusQueue.locked { (guardedPlayerItems, guardedPreviousTrackIndex, guardedSources.count) }
++    let current = ref.currentItem
++    guard let current,
++          let index = items.firstIndex(where: { $0 === current }) else {
++      return (current, min(max(previous, 0), max(count - 1, 0)), count)
+     }
+-    return index
++    return (current, index, count)
+   }
+ 
+   func getSourceInfo() -> [AudioSource] {
+@@ -66,8 +96,8 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+   init(_ ref: AVQueuePlayer, sources: [AudioSource], items: [AVPlayerItem?], interval: Double, loopMode: LoopMode) {
+     self.interval = interval
+     self.loopMode = loopMode
+-    self.sources = sources
+-    self.playerItems = items
++    self.guardedSources = sources
++    self.guardedPlayerItems = items
+     super.init(ref)
+ 
+     ref.actionAtItemEnd = loopMode == .single ? .pause : .advance
+@@ -121,10 +151,13 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+     let time = CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+       ref.seek(to: time) { [weak self] _ in
+-        if let self {
+-          self.updateStatus(with: ["currentTime": self.currentTime])
++        // Little Island patch: the status (with the current time) is read on statusQueue, and JS resumes after it.
++        guard let self else {
++          return continuation.resume()
++        }
++        self.updateStatus(with: [:]) {
++          continuation.resume()
+         }
+-        continuation.resume()
+       }
+     }
+   }
+@@ -136,6 +169,7 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+       ref.insert(item, after: nil)
+     }
+     playerItems.append(item)
++    trackListChanged()
+     updateStatus(with: ["trackCount": trackCount])
+   }
+ 
+@@ -190,6 +224,11 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+       }
+       playerItems.remove(at: index)
+     }
++    // Little Island patch: the branches above that rebuild already started a new generation, before play()
++    // registered its observer.
++    if index > current {
++      trackListChanged()
++    }
+ 
+     updateStatus(with: ["trackCount": trackCount])
+   }
+@@ -201,6 +240,7 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+     playerItems.removeAll()
+     previousTrackIndex = 0
+ 
++    trackListChanged()
+     updateStatus(with: [
+       "trackCount": 0,
+       "currentIndex": 0,
+@@ -223,16 +263,21 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+   }
+ 
+   func currentStatus() -> [String: Any] {
++    let (item, index, count) = trackSnapshot()
++    let playing = ref.timeControlStatus == .playing
++    let itemDuration = item?.duration.seconds ?? 0.0
++    let buffering = !playing && (ref.timeControlStatus == .waitingToPlayAtSpecifiedRate
++      || (item.map { !$0.isPlaybackLikelyToKeepUp && $0.isPlaybackBufferEmpty } ?? true))
+     return [
+       "id": id,
+-      "currentIndex": currentTrackIndex,
+-      "trackCount": trackCount,
+-      "currentTime": currentTime,
+-      "duration": duration,
+-      "playing": isPlaying,
+-      "isBuffering": isBuffering,
+-      "isLoaded": isLoaded,
+-      "playbackRate": isPlaying ? ref.rate : currentRate,
++      "currentIndex": index,
++      "trackCount": count,
++      "currentTime": item?.currentTime().seconds ?? 0.0,
++      "duration": itemDuration.isNaN ? 0.0 : itemDuration,
++      "playing": playing,
++      "isBuffering": buffering,
++      "isLoaded": item?.status == .readyToPlay,
++      "playbackRate": playing ? ref.rate : currentRate,
+       "muted": ref.isMuted,
+       "volume": ref.volume,
+       "loop": loopMode.rawValue,
+@@ -240,10 +285,25 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+     ]
+   }
+ 
+-  func updateStatus(with dict: [String: Any]) {
+-    var arguments = currentStatus()
+-    arguments.merge(dict) { _, new in new }
+-    self.emit(event: PlaylistConstants.playlistStatusUpdate, payload: arguments)
++  // Little Island patch: queues the status on statusQueue from any thread; `completion` runs there afterwards.
++  func updateStatus(with dict: [String: Any], kind: AudioStatusQueue.Kind = .event, completion: (() -> Void)? = nil) {
++    statusQueue.async { [weak self] generation in
++      self?.deliverStatus(with: dict, kind: kind, generation: generation)
++      completion?()
++    }
++  }
++
++  // The playlist never replaces its player, so the snapshot is taken in currentStatus (trackSnapshot).
++  private func deliverStatus(with dict: [String: Any], kind: AudioStatusQueue.Kind, generation: Int) {
++    statusQueue.deliver(kind, generation: generation) {
++      ()
++    } build: { _ in
++      var arguments = self.currentStatus()
++      arguments.merge(dict) { _, new in new }
++      return arguments
++    } emit: { arguments in
++      self.emit(event: PlaylistConstants.playlistStatusUpdate, payload: arguments)
++    }
+   }
+ 
+   private func validIndex(_ index: Int) -> Bool {
+@@ -251,10 +311,19 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+   }
+ 
+   private func emitTrackChanged(previousIndex: Int, currentIndex: Int) {
+-    self.emit(event: PlaylistConstants.trackChanged, payload: [
+-      "previousIndex": previousIndex,
+-      "currentIndex": currentIndex
+-    ])
++    // Little Island patch: queued behind any status already in flight for the previous track.
++    statusQueue.async { [weak self] generation in
++      guard let self else {
++        return
++      }
++      self.statusQueue.deliver(.event, generation: generation) {
++        ()
++      } build: { _ -> [String: Any] in
++        ["previousIndex": previousIndex, "currentIndex": currentIndex]
++      } emit: { payload in
++        self.emit(event: PlaylistConstants.trackChanged, payload: payload)
++      }
++    }
+     updateStatus(with: [:])
+   }
+ 
+@@ -271,6 +340,18 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+         ref.insert(item, after: nil)
+       }
+     }
++    trackListChanged()
++  }
++
++  // Little Island patch: status work for the old track list is dropped. Periodic callbacks belong to the
++  // generation their observer was registered in, so a registered observer is re-registered for the new one and
++  // continuing playback keeps reporting progress. Callbacks from the removed observer stay rejected.
++  private func trackListChanged() {
++    if timeToken != nil {
++      registerTimeObserver()
++    } else {
++      statusQueue.invalidate()
++    }
+   }
+ 
+   private func setupPublisher() {
+@@ -331,7 +412,7 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+           self.updateStatus(with: [
+             "playing": false,
+             "didJustFinish": true
+-          ])
++          ], kind: .terminal)
+         }
+       }
+     }
+@@ -345,11 +426,13 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+     let updateInterval = interval / 1000
+     let interval = CMTime(seconds: updateInterval, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+ 
+-    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: nil) { [weak self] time in
++    // Little Island patch: see registerTimeObserver in AudioPlayer.swift.
++    let generation = statusQueue.invalidate()
++    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: statusQueue.queue) { [weak self] time in
+       guard let self else {
+         return
+       }
+-      self.updateStatus(with: ["currentTime": time.seconds])
++      self.deliverStatus(with: ["currentTime": time.seconds], kind: .periodic, generation: generation)
+     }
+   }
+ 
+@@ -363,6 +446,8 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+   }
+ 
+   public override func sharedObjectWillRelease() {
++    // Little Island patch: no status is emitted after release, including from seeks cancelled below.
++    statusQueue.close()
+     ref.currentItem?.cancelPendingSeeks()
+     owningRegistry?.remove(self)
+     cancellables.removeAll()
+diff --git a/node_modules/expo-audio/ios/AudioStatusQueue.swift b/node_modules/expo-audio/ios/AudioStatusQueue.swift
+new file mode 100644
+index 0000000..203ae0b
+--- /dev/null
++++ b/node_modules/expo-audio/ios/AudioStatusQueue.swift
+@@ -0,0 +1,95 @@
++import Foundation
++
++// Little Island patch (expo-audio 57.0.5): the serial queue that owns one player's or playlist's status events.
++// Reading -[AVPlayerItem currentTime] can wait on MediaToolbox's item lock while playback starts; on the main
++// queue that wait stalled UI frames on every short sound on iOS 18. Every status producer (periodic observer,
++// seek completion, playback end, KVO, loop and playlist changes, media-services reset) builds and emits its
++// status on this queue instead, in the order the producers queued it.
++//
++// The generation advances on play, item or player replacement and playlist changes, and status work from an
++// older generation is dropped. After a terminal (didJustFinish) status, the periodic observer of that generation
++// emits nothing more. Release closes the queue for good: nothing queued, in flight or submitted afterwards is
++// emitted, though queued work still runs, so seek continuations still resume. Anything a snapshot reads is
++// replaced inside `invalidate` or `locked`, under the lock the snapshot takes; AVFoundation reads, which can
++// block, run in `build` after that lock is released.
++final class AudioStatusQueue {
++  enum Kind {
++    case periodic
++    case event
++    case terminal
++  }
++
++  let queue = DispatchQueue(label: "expo.modules.audio.status", qos: .userInitiated)
++  // A leaf lock: no AVFoundation call, and no other lock, is ever taken while it is held.
++  private let lock = NSLock()
++  private var generation = 0
++  private var ended = false
++  private var closed = false
++
++  var current: Int {
++    locked { generation }
++  }
++
++  func locked<T>(_ body: () throws -> T) rethrows -> T {
++    lock.lock()
++    defer { lock.unlock() }
++    return try body()
++  }
++
++  /// Starts a new generation, applying `change` under the snapshot lock. Returns the new generation.
++  @discardableResult
++  func invalidate(_ change: () -> Void = {}) -> Int {
++    locked {
++      change()
++      generation &+= 1
++      ended = false
++      return generation
++    }
++  }
++
++  /// On release, before cancellation and teardown: rejects every status from now on, whatever its generation.
++  /// Later invalidations don't reopen the queue.
++  func close() {
++    locked {
++      closed = true
++      generation &+= 1
++    }
++  }
++
++  /// Runs `work` on the queue with the generation that is current now, from any thread.
++  func async(_ work: @escaping (_ generation: Int) -> Void) {
++    let generation = current
++    queue.async { work(generation) }
++  }
++
++  /// On the queue: takes `snapshot` under the lock (it must not block), builds the status from it without the
++  /// lock, then emits it only if its generation is still current. Returns whether it was emitted.
++  @discardableResult
++  func deliver<Snapshot, Status>(
++    _ kind: Kind,
++    generation expected: Int,
++    snapshot: () -> Snapshot?,
++    build: (Snapshot) -> Status,
++    emit: (Status) -> Void
++  ) -> Bool {
++    dispatchPrecondition(condition: .onQueue(queue))
++    guard let input = locked({ isCurrent(kind, expected) ? snapshot() : nil }) else {
++      return false
++    }
++    let status = build(input)
++    return locked {
++      guard isCurrent(kind, expected) else {
++        return false
++      }
++      emit(status)
++      if kind == .terminal {
++        ended = true
++      }
++      return true
++    }
++  }
++
++  private func isCurrent(_ kind: Kind, _ expected: Int) -> Bool {
++    !closed && generation == expected && !(kind == .periodic && ended)
++  }
++}

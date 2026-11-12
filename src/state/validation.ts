@@ -10,7 +10,9 @@ import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from 
 import { ExploreProgress } from "../explore/progress";
 import { validLibraryData, validLegacyExplore, type LibraryData } from "../library/state";
 import { GameId, GameState, gameIds } from "../games";
-import { checkersResult } from "../games/checkers";
+import { checkersResult, checkersStrength } from "../games/checkers";
+import { checkersPolicyById } from "../playPolicies/policies";
+import type { Difficulty } from "../games/types";
 import { ticOutcome, lines } from "../games/tic";
 import { memoryKey, validMemoryCard } from "../games/memory";
 import { WordRecords, validWordRecords } from "./wordRecords";
@@ -125,7 +127,9 @@ export function validSession(v: unknown): v is GameState {
     typeof v.options.computerFirst !== "boolean" ||
     (v.options.checkersRules !== undefined &&
       !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
-    (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string))
+    (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string)) ||
+    // Only a solo Checkers round acts on it; elsewhere it is a harmless remembered choice.
+    (v.options.checkersHeadStart !== undefined && v.options.checkersHeadStart !== 1)
   )
     return false;
   if (
@@ -251,6 +255,9 @@ export function validSession(v: unknown): v is GameState {
     }
     case "checkers":
       return (
+        // A frozen policy must be a known Checkers revision for this round's own strength.
+        (v.policy === undefined ||
+          checkersPolicyById(v.policy)?.strength === checkersStrength[v.options.difficulty as Difficulty]) &&
         validPosition(v.position) &&
         Array.isArray(v.history) &&
         v.history.length <= 160 &&

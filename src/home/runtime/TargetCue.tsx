@@ -1,12 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import type { Target } from "../scene/types";
 import type { Interaction } from "./useInteraction";
+/** Reads the shared resting state (HM-13): it changes when the proposal's target changes, not per frame. */
 function useCueStyle(target: Target, interaction: Interaction) {
-  const { slots } = interaction;
-  const visible = useDerivedValue(() => slots.value.some((s) => s.id && s.phase === "dragging" && s.proposal?.target === target.id) ? 1 : 0);
-  return useAnimatedStyle(() => ({ opacity: visible.value }));
+  const { restingFlags } = interaction;
+  return useAnimatedStyle(() => ({ opacity: restingFlags.value.dragTargets.includes(target.id) ? 1 : 0 }));
 }
 /** A floor seat lights up under whoever is about to sit, with a small seated figure beside it. Painted just above the rug. */
 export function SeatRimCue({ target, interaction }: { target: Target; interaction: Interaction }) {
