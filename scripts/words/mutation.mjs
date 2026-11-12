@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','generated-admission','preview','ci'];
+const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','puzzle-admission','preview','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
 for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':file==='preview'?'scripts/ios-preview-bundle.mjs':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
@@ -227,7 +227,7 @@ const r5Edges=[
  ['artifact-views','object record key unit',"values.every(v=>v && !Array.isArray(v) && typeof v==='object' && JSON.stringify(Object.keys(v).sort())===JSON.stringify(Object.keys(values[0]).sort()))",'false',['R5 object record key structure']],
  ['guard','compact mixed share','compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)','compactBroadShare(remaining,broad)>=0.5',['R5 mixed filenames','R5 mixed ids']],
  ['guard','export map provenance',"if(mapKeys.some(key=>broadNames(normalizedText(key)).size && !admitted(key)))","if(false)",['R5 diluted map 7600 plus 300']],
- ['guard','export file provenance',"if(broadNames(normalizedText(stem)).size && !admitted(stem))","if(false)",['R5 diluted 300 audio files']],
+ ['guard','export file provenance',"if(broadNames(normalizedText(wordTokens(stem).join(' '))).size && !admitted(stem))","if(false)",['R5 diluted 300 audio files']],
  ['density','camel case tokens',"text.replace(/([a-z])([A-Z])/g,'$1 $2')",'text',['R5 camelCase density']],
  ['check','CI any truthy value',"!isCI(process.env.CI)","process.env.CI!=='true'",['R5 CI 1 missing policy']],
  ['generated-admission','exclude output sources',' || outputPath.test(name)','',['R5 generator rejects output self admission']],
@@ -237,6 +237,29 @@ const r5Edges=[
 for(const [file,label,before,after,tests] of r5Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R5 mutation target '+label);custom(file,'R5 '+label,original.replace(before,after),tests);}
 custom('text-views','R4 UTF16 text decoding',sources.get('text-views').replace("if(bom==='fffe'||bom==='feff')",'if(false)').replace('if(sample.length>=4 && Math.max(...zero)>sample.length/8)','if(false)'),['R4 UTF16 le density','R4 UTF16 core']);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
+const r6Edges=[
+ ['generated-admission','speech inputs cannot admit themselves',"const authoredRoots=['src'];", "const authoredRoots=['src','scripts/learn'];",['R6 speech input cannot admit scripts/learn/spelling.json']],
+ ['generated-admission','reachable src only',"if(name.startsWith('src/') && !reachable.has(name))return;",'', ['R6 graph excludes unimported']],
+ ['generated-admission','type-only import exclusion',"!n.importClause?.isTypeOnly",'true',['R6 graph excludes type-only']],
+ ['generated-admission','sentence tokens cannot admit words',"// Add identifiers only after validation. Do not add transcript tokens.","tokens.forEach(word=>words.set(word,source));",['R6 sentence is prose but cannot donate vocabulary']],
+ ['generated-admission','frozen key identity','row.keySha256===sha256(key)','true',['R6 published inherited key and word frozen']],
+ ['generated-admission','frozen transcript identity','row.transcriptSha256===sha256(text)','true',['R6 published inherited key and word frozen']],
+ ['guard','source literal check','if(view.literalHits.size || view.hardHermesFailure)','if(false)',['R6 source scan scripts/learn/spelling.json core','R6 source scan scripts/quality-audio.json exact']],
+ ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
+ ['guard','source density check','if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)','if(false)',['R6 source scan scripts/learn/spelling.json density']],
+ ['guard','camel word file tokens',"normalizedText(wordTokens(stem).join(' '))",'normalizedText(stem)',['R6 word asset camel']],
+ ['text-views','validated font required','if(validFont(bytes))',"if(bytes.subarray(0,4).toString()==='true' || validFont(bytes))",['R6 debug dump regression']],
+ ['media-structure','PNG CRC','crc32(b.subarray(at+4,end-4))!==b.readUInt32BE(end-4)','false',['R6 invalid media PNG CRC']],
+ ['media-structure','PNG IHDR',"kind!=='IHDR'","false",['R6 invalid media PNG IHDR']],
+ ['media-structure','RIFF length','b.readUInt32LE(4)+8!==b.length','false',['R6 invalid media RIFF size']],
+ ['media-structure','MP4 box size','at+size>b.length','false',['R6 invalid media M4A size']],
+ ['media-structure','ID3 version','[2,3,4].includes(b[3])','true',['R6 invalid media ID3 version']],
+ ['media-structure','ID3 size','10+((b[6]<<21)|(b[7]<<14)|(b[8]<<7)|b[9])+(b[3]===4 && (b[5]&16)?10:0)<=b.length','true',['R6 invalid media ID3 size']],
+ ['media-structure','sfnt table count','12+count*16>b.length','false',['R6 invalid media sfnt count']],
+ ['media-structure','sfnt table range','offset+size>b.length','false',['R6 invalid media sfnt range']],
+ ['puzzle-admission','word family coverage',"if(!wordFamily(family) && !wordFamily(engine))return undefined;",'return undefined;',['R6 word family pack word-search']],
+];
+for(const [file,label,before,after,tests] of r6Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R6 mutation target '+label);custom(file,'R6 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});

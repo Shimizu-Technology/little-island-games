@@ -203,26 +203,52 @@ or empty policy fails. Local policy-free export checks explicitly print
 ## Generated-word admission and text decoding
 
 `generated-admission.mjs` inventories speech maps/manifests, pictures, Library
-search, and admitted word banks. Each generator validates before writing output.
-Speech generation validates again before publishing its maps. W1 banks retain
-full detached rebake/review admission. Authored app literals and transcripts have
-traceable repository paths and SHA-256 hashes; generated tables, imports, require
-paths, and map property keys cannot admit themselves. Generated growth/Arcade
-transcripts must trace every spoken token to authored inputs. The frozen inherited
-bank keeps its existing byte hash. No new policy exception is involved.
+search, admitted word banks and `scripts/puzzles/pipeline.ts`. A word puzzle
+family must expose its decoded vocabulary and pass admission before staging any
+pack. Word families with no exposed answers fail closed. Exported pack grids
+retain the independent decoded-grid checks.
 
-The export guard creates admission receipts from the exporting source companion,
-including source paths/hashes and every traced broad map key or asset basename.
-Unknown entries fail, including terms diluted across thousands of map entries or
-hundreds of separate files. Receipts stay outside the export/repository, beside
-private advisories. They establish derivation, not content or family approval.
+Vocabulary sources are admitted W1 banks, the byte-frozen legacy bank, the picture
+allowlist, real Library input records, and app literals reachable through runtime
+imports from the app entry. Expo Router routes seed that import graph. Unimported
+`src` files, type-only imports, generated tables, import/require paths and map
+property names supply no admission. All `src` content literals (including
+unimported modules), speech JSON inputs and actual Library source records receive
+core/exact, list-shape and density checks. Generated outputs are checked through
+their exporting artifacts rather than used as authored sources.
 
-Binary classification uses known media/font/Hermes magic numbers. Every other
-file receives UTF-8 decoding, Windows-1252/Latin-1 fallback when needed, BOM and
-alternating-NUL UTF-16 handling, ANSI CSI/OSC stripping, and control cleanup.
-Decoding failure never classifies a file as binary. ZIP/gzip assets fail closed;
-there is no approved compressed-asset list. A future compressed format needs an
-explicit bounded extraction design and tests before it can ship.
+Speech JSON files and generator literals cannot supply vocabulary for themselves
+or other transcripts. A single-word or short word-like transcript must trace to
+an admitted source; bare-word and `spell-<word>` keys must agree with it. Multiword
+speech is authored prose and receives the normal source checks. Growth/Arcade
+lines retain their stronger every-token derivation check. Validated speech IDs
+supply only exact identifier provenance, never a vocabulary donation.
+
+`published-speech.json` is a hash-only snapshot read from main commit
+`0f428c2fef43a821bbea782823f7548b5d514971`, with its own pinned byte digest.
+Per the lead's inherited-content decision, an otherwise untraced single-word
+entry can use that frozen bank only if its source path, key and transcript match
+the published pair exactly. New or changed entries still need authored sources.
+The branch's speech files cannot extend the inherited bank. Receipts report the
+masked inherited-entry count. This is inherited admission, not a policy exception.
+
+Speech inputs are `scripts/learn/**/*.json`, the four named speech JSONs and the
+literal `speech.update` maps in `generate-audio.py`. `library.json` is a retained
+transcript input with no writer in this repository; its external producer remains
+unidentified. Item speech bindings are validated by the Library pipeline.
+
+The export guard creates detached admission receipts from its exact source
+companion, including source paths/hashes and every traced broad map key or asset
+basename. Unknown entries fail even when diluted across thousands of entries.
+The receipts establish derivation, not family or distribution approval.
+
+Binary classification validates media structure: PNG chunks/IHDR/CRC, complete
+RIFF sizes/chunks, MP4/M4A boxes and `ftyp`, full ID3 headers, sfnt table ranges,
+font container headers and Hermes tables. Other supported image/audio formats
+also validate their container structure. A tag alone cannot skip text checks.
+Text receives UTF-8 and Windows-1252/Latin-1 fallback, UTF-16 handling, ANSI
+stripping and control cleanup. ZIP/gzip assets fail closed. Structural validation
+does not establish media decoding quality or the safety of arbitrary metadata.
 
 For preview IPA delivery, first run `npm run ios:preview-bundle-prep`, keep
 `EXPO_PUBLIC_LIBRARY_PREVIEW=1` set for `npm run deliver:ios -- <command>`, then

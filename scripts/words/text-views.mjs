@@ -1,15 +1,17 @@
 import { Buffer, isUtf8 } from 'node:buffer';
 import { requireThat } from './core.mjs';
+import { hermesStrings } from './artifact-views.mjs';
+import { validPNG, validRIFF, validMP4, validID3, validFont, validGIF, validJPEG, validOgg, validMPEG } from './media-structure.mjs';
 
 // Extensions and decoding errors never determine whether content is binary.
 export function binaryKind(bytes) {
-  const hex=bytes.subarray(0,12).toString('hex'),ascii=bytes.subarray(0,12).toString('latin1');
+  const hex=bytes.subarray(0,12).toString('hex');
   if(/^(?:504b0304|504b0506|504b0708|1f8b)/.test(hex))return 'archive';
-  if(hex.startsWith('c61fbc03c103191f'))return 'hermes';
-  if(hex.startsWith('89504e470d0a1a0a') || hex.startsWith('ffd8ff') || /^GIF8[79]a/.test(ascii))return 'image';
-  if(ascii.startsWith('RIFF') && /^(?:WAVE|WEBP)$/.test(ascii.slice(8,12)))return 'media';
-  if(ascii.slice(4,8)==='ftyp' || ascii.startsWith('OggS') || ascii.startsWith('ID3') || bytes[0]===255 && (bytes[1]&0xe6)===0xe2)return 'audio';
-  if(/^(?:00010000|4f54544f|74727565|74746366|774f4646|774f4632)/.test(hex))return 'font';
+  if(hex.startsWith('c61fbc03c103191f')){try{hermesStrings(bytes);return 'hermes';}catch{return undefined;}}
+  if(validPNG(bytes) || validJPEG(bytes) || validGIF(bytes))return 'image';
+  if(validRIFF(bytes))return 'media';
+  if(validMP4(bytes) || validID3(bytes) || validOgg(bytes) || validMPEG(bytes))return 'audio';
+  if(validFont(bytes))return 'font';
   return undefined;
 }
 export function cleanText(text) {

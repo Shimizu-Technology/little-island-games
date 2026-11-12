@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { Buffer } from 'node:buffer';
-import { admissionSources, generatedReceipts, wordMapKeys, admitGenerated } from './generated-admission.mjs';
+import ts from 'typescript';
+import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts, wordMapKeys, admitGenerated } from './generated-admission.mjs';
 import { exportTextViews } from './text-views.mjs';
 import { tmpdir } from 'node:os';
 import { privatePath } from './paths.mjs';
@@ -146,7 +147,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const broadNames=rawTermMatcher(policy.scan.map(normalizedText));
   let admission;
   function admitted(entry) {
-    if(!admission){const sources=admissionSources(sourceRoot);admission={sources,receipts:generatedReceipts(sourceRoot,sources),exports:[]};}
+    if(!admission){const sources=admissionSources(sourceRoot);admission={sources,receipts:[],exports:[]};}
     try {const receipt=admitGenerated(sourceRoot,'speech',[entry],admission.sources);admission.exports.push(...receipt.entries);return true;}catch{return false;}
   }
   const sensitive=rawTermMatcher((policy.chamoruSensitive??[]).map(sensitiveText));
@@ -227,6 +228,18 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     const view=scan(Buffer.from(JSON.stringify({language:'en',text})),'source.json');
     if(view.literalHits.size || [...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))findings.push('content/library:blocked-source-text');
   }
+  // Admission inputs get the same literal, list and density rules as exports,
+  // including unreachable src files. A pasted list fails before generation.
+  for(const [name,bytes] of admissionSourceFiles(sourceRoot)) {
+    const code=/\.[cm]?[jt]sx?$/.test(name);
+    const text=name.endsWith('.py')?JSON.stringify(Object.fromEntries(speechInputs(sourceRoot).find(input=>input.path===name).entries)):code?ts.transpileModule(bytes.toString('utf8'),{fileName:name,compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText:bytes;
+    const view=scan(Buffer.from(text),code?'source.js':name.endsWith('.py')?'source.json':name);
+    if(view.literalHits.size || view.hardHermesFailure)findings.push(name+':blocked-source-literal');
+    if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
+    if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
+  }
+  // Validate all speech inputs even when an export has only prefixed identifiers.
+  if(!findings.length){const sources=admissionSources(sourceRoot);admission={sources,receipts:generatedReceipts(sourceRoot,sources),exports:[]};}
   const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name));
   if(packs.length) {
     const runner=fileURLToPath(new URL('./decode-packs.mjs',import.meta.url));
@@ -250,7 +263,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(scanned.hardHermesFailure)findings.push(`${name}:blocked-literal`);
       if(literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       const stem=name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'');
-      if(broadNames(normalizedText(stem)).size && !admitted(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
+      if(broadNames(normalizedText(wordTokens(stem).join(' '))).size && !admitted(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
       if(/\.(?:[cm]?js|bundle|json)$/.test(name)) {
         const mapKeys=wordMapKeys(bytes.toString('utf8'),name);
         if(mapKeys.some(key=>broadNames(normalizedText(key)).size && !admitted(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
