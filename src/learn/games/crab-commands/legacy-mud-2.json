@@ -1,0 +1,91 @@
+[
+  {
+    "descriptor": {
+      "level": {
+        "id": "mud-3",
+        "pace": "medium",
+        "skill": "think.sequence",
+        "rows": [
+          "CmmmH",
+          ".....",
+          "##S##",
+          "#####",
+          "#####"
+        ],
+        "facing": 1,
+        "tier": 1
+      },
+      "budget": 8,
+      "starter": [],
+      "lesson": "The shell sits in a little pocket. Visit it, then find a dry way home."
+    },
+    "witness": [
+      "turn-right",
+      "forward",
+      "turn-left",
+      "forward",
+      "forward",
+      "turn-right",
+      "forward",
+      "turn-left",
+      "turn-left",
+      "forward",
+      "turn-right",
+      "forward",
+      "forward",
+      "turn-left",
+      "forward"
+    ],
+    "cards": 15,
+    "steps": 8,
+    "minimumSteps": 8,
+    "flatCards": 15,
+    "commands": [
+      "forward",
+      "turn-left",
+      "turn-right"
+    ]
+  },
+  {
+    "descriptor": {
+      "level": {
+        "id": "mud-6",
+        "pace": "medium",
+        "skill": "think.sequence",
+        "rows": [
+          "H..#C",
+          "m.mSm",
+          ".m#.#",
+          ".#...",
+          "....#"
+        ],
+        "facing": 1,
+        "tier": 2
+      },
+      "budget": 8,
+      "starter": [],
+      "lesson": "The shortest plan costs 9 steps. You have 8. Find one extra card that avoids a muddy step."
+    },
+    "witness": [
+      "turn-right",
+      "forward",
+      "turn-right",
+      "forward",
+      "forward",
+      "forward",
+      "turn-right",
+      "forward",
+      "turn-left",
+      "forward"
+    ],
+    "cards": 10,
+    "steps": 8,
+    "minimumSteps": 8,
+    "flatCards": 10,
+    "commands": [
+      "forward",
+      "turn-left",
+      "turn-right"
+    ]
+  }
+]

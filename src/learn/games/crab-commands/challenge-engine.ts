@@ -66,8 +66,12 @@ export function solution(d: Descriptor, prefix: readonly Command[] = []): Comman
 }
 export type Repair = {op:'change'|'insert'|'remove';at:number;card?:Command};
 export type Hint = {keep:number;plan:Command[];next:Command|null;edit?:Repair};
-/** Minimum edit alignment to the certified repair. Insert/remove stay distinct from replacement. */
-export function repairStep(program:readonly Command[], plan:Command[]):Repair|undefined {
+/** Both editors hold at most this many cards; a hint never asks for an edit they would refuse. */
+export const PLAN_CAPACITY = 80;
+/** Minimum edit alignment to the certified repair. Insert/remove stay distinct from replacement.
+ * A full plan cannot take an insertion first, so the hint names a removal that lies on an optimal
+ * alignment instead; the remaining edits still reach the same target in the same number of steps. */
+export function repairStep(program:readonly Command[], plan:Command[], capacity=PLAN_CAPACITY):Repair|undefined {
  const dp=Array.from({length:program.length+1},()=>Array(plan.length+1).fill(0) as number[]);
  for(let i=program.length;i>=0;i--)for(let j=plan.length;j>=0;j--){
   dp[i][j]=i===program.length?plan.length-j:j===plan.length?program.length-i:program[i]===plan[j]?dp[i+1][j+1]:1+Math.min(dp[i+1][j+1],dp[i][j+1],dp[i+1][j]);
@@ -75,8 +79,19 @@ export function repairStep(program:readonly Command[], plan:Command[]):Repair|un
  let at=0;while(at<program.length&&at<plan.length&&program[at]===plan[at])at++;
  if(at===program.length&&at===plan.length)return;
  if(at<program.length&&at<plan.length&&dp[at][at]===1+dp[at+1][at+1])return {op:'change',at,card:plan[at]};
- if(at<plan.length&&dp[at][at]===1+dp[at][at+1])return {op:'insert',at,card:plan[at]};
+ const full=program.length>=capacity;
+ if(!full&&at<plan.length&&dp[at][at]===1+dp[at][at+1])return {op:'insert',at,card:plan[at]};
  if(at<program.length&&dp[at][at]===1+dp[at+1][at])return {op:'remove',at};
+ if(full){
+  // Follow an optimal alignment past the insertions it needs and name its first removal.
+  let i=at,j=at;
+  while(i<program.length||j<plan.length){
+   if(i<program.length&&j<plan.length&&program[i]===plan[j]&&dp[i][j]===dp[i+1][j+1]){i++;j++;continue;}
+   if(i<program.length&&dp[i][j]===1+dp[i+1][j])return {op:'remove',at:i};
+   if(i<program.length&&j<plan.length&&dp[i][j]===1+dp[i+1][j+1]){i++;j++;continue;}
+   j++;
+  }
+ }
  return {op:'change',at,card:plan[at]};
 }
 type Node = { walker: Walker; cost: number; next: [Command, number][] };
@@ -156,64 +171,22 @@ function* nearestWinner(d: Descriptor, program: readonly Command[]): Generator<v
   }
   return plan;
 }
-/** Editors that can only take a card out or add one at the end (the School board). The nearest
- * card-optimal winner keeps the longest run of the child's cards that starts one, in order. */
-function* nearestAppendWinner(d: Descriptor, program: readonly Command[]): Generator<void, {plan: Command[]; remove: number | null} | null> {
-  const graph=yield* winnerGraph(d);if(!graph)return null;
-  const {layers}=graph, n=program.length, L=layers.length-1, cards=program.map(c=>cardCodes.indexOf(c));
-  const table:(Row|undefined)[][]=layers.map(()=>[]);
-  at(table[0],0,n).cost[0]=0;
-  let best:[number,number]|null=null, bestCost=Infinity;
-  for(let k=0;k<=L;k++)for(let u=0;u<layers[k].length;u++) {
-    const r=table[k][u];if(!r)continue;
-    yield;
-    // The first edge for each card, as a lookup per program card.
-    const edge=new Int32Array(cardCodes.length).fill(-1);
-    for(const [c,v] of layers[k][u].next){const card=cardCodes.indexOf(c);if(edge[card]<0)edge[card]=v;}
-    const cost=r.cost;
-    for(let i=0;i<n;i++) {
-      if(cost[i]>=INF)continue;
-      if(cost[i]+1<cost[i+1]){cost[i+1]=cost[i]+1;r.from[i+1]=-2;}
-      const v=edge[cards[i]];
-      if(v>=0){const t=at(table[k+1],v,n);if(cost[i]<t.cost[i+1]){t.cost[i+1]=cost[i];t.from[i+1]=u;}}
-      if((i&31)===31)yield;
-    }
-    // Every alive node still reaches a goal in exactly the remaining cards, added at the end.
-    if(cost[n]<INF&&cost[n]+L-k<bestCost){bestCost=cost[n]+L-k;best=[k,u];}
-  }
-  if(!best)return null;
-  const kept:Command[]=[];let remove:number|null=null;
-  for(let k=best[0],u=best[1],i=n;;) {
-    const from=table[k][u]!.from[i];
-    if(from===-1)break;
-    if(from===-2)remove=i-1;else{kept.unshift(program[i-1]);k--;u=from;}
-    i--;
-  }
-  const plan=[...kept];for(let k=best[0],u=best[1];k<L;k++){const [c,v]=layers[k][u].next[0];plan.push(c);u=v;}
-  return {plan,remove};
-}
-export type HintEdits = 'any' | 'append';
-function* hintWork(d: Descriptor, program: readonly Command[], edits: HintEdits = 'any'):Generator<void,Hint> {
+/** Both Crab editors can Replace, Insert before, Remove and Add at end, so a hint is one of those edits. */
+function* hintWork(d: Descriptor, program: readonly Command[]):Generator<void,Hint> {
   if(execute(d,program).won)return {keep:program.length,plan:[...program],next:null};
-  if(edits==='append') {
-    const found=yield* nearestAppendWinner(d,program);
-    if(!found)return {keep:0,plan:[] as Command[],next:null};
-    const edit:Repair=found.remove!==null?{op:'remove',at:found.remove}:{op:'insert',at:program.length,card:found.plan[program.length]};
-    return {keep:edit.at,plan:found.plan,next:edit.card??null,edit};
-  }
   const target=yield* nearestWinner(d,program);
   if(!target)return {keep:0,plan:[] as Command[],next:null};
   const edit=repairStep(program,target);
   return {keep:edit?.at??program.length,plan:target,next:edit?.card??null,edit};
 }
-export function nextHint(d: Descriptor, program: readonly Command[], edits: HintEdits = 'any'):Hint {
-  const work=hintWork(d,program,edits);let result=work.next();while(!result.done)result=work.next();return result.value;
+export function nextHint(d: Descriptor, program: readonly Command[]):Hint {
+  const work=hintWork(d,program);let result=work.next();while(!result.done)result=work.next();return result.value;
 }
 /** Hint work is cancellable and returns to the event loop at most every 8 ms. Each step of the
  * search is one node or one edge, so a slice pauses early when its longest step so far would
  * carry it past the budget. */
-export async function nextHintSliced(d:Descriptor,program:readonly Command[], options:{cancelled:()=>boolean;now?:()=>number;pause?:()=>Promise<void>;budgetMs?:number;edits?:HintEdits}):Promise<Hint|null> {
- const now=options.now??(()=>performance.now()), pause=options.pause??(()=>new Promise<void>(resolve=>setTimeout(resolve,0))), budget=Math.min(8,options.budgetMs??8), work=hintWork(d,program,options.edits);
+export async function nextHintSliced(d:Descriptor,program:readonly Command[], options:{cancelled:()=>boolean;now?:()=>number;pause?:()=>Promise<void>;budgetMs?:number}):Promise<Hint|null> {
+ const now=options.now??(()=>performance.now()), pause=options.pause??(()=>new Promise<void>(resolve=>setTimeout(resolve,0))), budget=Math.min(8,options.budgetMs??8), work=hintWork(d,program);
  let began=now(), last=began, longest=0;
  while(!options.cancelled()) {
   const result=work.next();if(result.done)return options.cancelled()?null:result.value;

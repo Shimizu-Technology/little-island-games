@@ -211,6 +211,26 @@
       "cove": false
     },
     {
+      "slot": 11,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 11264,
+          "hash": "7a79cb9c10c58fc49f1a1e8327da8fda7b3c81b422bc578739cc5d979e640885"
+        },
+        {
+          "ordinal": 11265,
+          "hash": "4517de0ad56f48ca1722dddbec09773e68bdd97dc87574b3706b798e2fdf4753"
+        }
+      ],
+      "awards": [
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
       "slot": 40,
       "engine": "sudoku",
       "rules": 1,

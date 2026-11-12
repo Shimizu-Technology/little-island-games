@@ -191,7 +191,7 @@ export const engine: LearnEngine<CrabState> = {
   island: "coding",
   tagline: "Plan the crab's path, then Go!",
   description: "Tap arrow cards to lead the crab to its shell and home. Footprints show the path before you press Go.",
-  help: "Tap arrow cards to plan the crab's walk. Footprints on the sand show where it will go, and a red mark shows where it would bump. Press Go to watch it walk. Tap a card in your plan to take it out. Gentle uses arrows that point the way. Growing uses Walk and Turn: the crab walks the way it faces. Challenge adds Again ×2, which does the card before it two more times. With a grown-up, take turns adding cards. The first beach is short and later ones grow. No timer and no move limit.",
+  help: "Tap arrow cards to plan the crab's walk. Footprints on the sand show where it will go, and a red mark shows where it would bump. Press Go to watch it walk. Tap a card in your plan to replace it, insert a card before it, or remove it. Gentle uses arrows that point the way. Growing uses Walk and Turn: the crab walks the way it faces. Challenge adds Again ×2, which does the card before it two more times. With a grown-up, take turns adding cards. The first beach is short and later ones grow. No timer and no move limit.",
   helpAudio: "crab-commands-help",
   introAudio: "crab-commands-intro",
   modes: ["solo", "together"],

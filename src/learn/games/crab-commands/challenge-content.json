@@ -804,40 +804,33 @@
           "pace": "medium",
           "skill": "think.sequence",
           "rows": [
-            "CmmmH",
-            ".....",
-            "##S##",
+            "C.S##",
+            "Hmm##",
+            "#####",
             "#####",
             "#####"
           ],
           "facing": 1,
           "tier": 1
         },
-        "budget": 8,
+        "budget": 5,
         "starter": [],
         "lesson": "The shell sits in a little pocket. Visit it, then find a dry way home."
       },
       "witness": [
-        "turn-right",
         "forward",
-        "turn-left",
-        "forward",
-        "forward",
-        "turn-right",
         "forward",
         "turn-left",
         "turn-left",
-        "forward",
-        "turn-right",
         "forward",
         "forward",
         "turn-left",
         "forward"
       ],
-      "cards": 15,
-      "steps": 8,
-      "minimumSteps": 8,
-      "flatCards": 15,
+      "cards": 8,
+      "steps": 5,
+      "minimumSteps": 5,
+      "flatCards": 8,
       "commands": [
         "forward",
         "turn-left",
@@ -946,7 +939,7 @@
         },
         "budget": 8,
         "starter": [],
-        "lesson": "The shortest plan costs 9 steps. You have 8. Find one extra card that avoids a muddy step."
+        "lesson": "The plan with the fewest cards costs 9 steps. You have 8. Can you find another way to the shell and home?"
       },
       "witness": [
         "turn-right",

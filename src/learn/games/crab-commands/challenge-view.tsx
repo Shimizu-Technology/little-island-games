@@ -11,10 +11,11 @@ import { useCrabHint } from './useCrabHint';
 import { hintText } from './hint-text';
 import { lessonAudio } from './lesson-audio';
 import { useReducedMotion } from '../../../components/motion';
+import { commandActionLabel, EDIT_TEXT_MAX, HINTED, hintedCard, PlanEditChoices, planCardLabel, type EditMode } from './plan-edit';
 
 export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer}:ChallengeViewProps<State,Action>) {
   const prefs=useContext(AudioPreferences), {play,stop}=useSoundControls(prefs.sound??true), reduced=useReducedMotion();
-  const [selected,setSelected]=useState<number|null>(null), [mode,setMode]=useState<'replace'|'insert'>('replace');
+  const [selected,setSelected]=useState<number|null>(null), [mode,setMode]=useState<EditMode>('replace');
   const [playback,setPlayback]=useState({run:s.runs,cursor:s.cursor,playing:false});
   const [alreadyHome]=useState(s.won);
   const observed=useRef(s.runs);
@@ -42,8 +43,10 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const send=(a:Action)=>{if(!active)return;play('tap',true);dispatch(a);};
   const disabled=!active||running||s.won;
   const over=d.budget!==null&&result.cost>d.budget;
-  const message=running?'Watch your plan.':result.walker.bump?'Bump. Your plan is kept. Change a card and try again.':over?'That route costs too many walking steps. Try a drier path.':s.cursor>0?'Not home yet. Your plan is kept: add or change a card.':d.starter.length?'Find the bug. Tap any card to change it.':'Collect every shell, then go home.';
+  const goal='Collect every shell, then reach home.';
+  const message=running?'Watch your plan.':result.walker.bump?'Bump. Your plan is kept. Change a card and try again.':over?'That route costs too many walking steps. Try a drier path.':s.cursor>0?'Not home yet. Your plan is kept: add or change a card.':d.starter.length?'Find the bug. Tap any card to change it.':goal;
   const stepText=hint?hintText(hint,s.program.length,cardLabel):'';
+  const hinted=hint&&s.hintStage<3?hintedCard(hint.edit,s.program.length):null;
   const lessonKey=lessonAudio(d.lesson);
   const feedbackAudio=over?'c1-crab-budget':'c1-crab-retry';
   return <View style={{gap:8,flex:1,minHeight:0}}>
@@ -54,33 +57,26 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{result.won?'Home! Every shell collected.':message}</Copy>
     </View></View>
     <Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
-    {!s.won&&<ScrollView horizontal style={{flexGrow:0,maxHeight:94}} contentContainerStyle={{flexDirection:'row',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:80}} accessibilityLabel="Your program editor">
-      {!s.program.length&&<Copy>Tap a command below to add it.</Copy>}
-      {s.program.map((c,i)=><PressableScale key={i} disabled={disabled} accessibilityRole="button" accessibilityState={{selected:selected===i}} accessibilityLabel={`Card ${i+1}: ${cardLabel[c]}. Select to change, insert before, or remove.`} onPress={()=>{setSelected(selected===i?null:i);setMode('replace');}} style={{minWidth:48,minHeight:60,padding:4,alignItems:'center',justifyContent:'center',borderWidth:2,borderColor:selected===i?C.teal:running&&cursor===i?'#B0563A':C.line,borderRadius:10,backgroundColor:selected===i?C.soft:C.cream}}>
+    {/* The empty prompt wraps at any text size; inside the horizontal strip it ran off the edge. */}
+    {!s.won&&!s.program.length&&<View style={{padding:12,borderRadius:12,backgroundColor:C.paper}}><Copy maxFontSizeMultiplier={1.5}>Tap a command below to add it.</Copy></View>}
+    {!s.won&&s.program.length>0&&<ScrollView horizontal style={{flexGrow:0,maxHeight:94}} contentContainerStyle={{flexDirection:'row',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:80}} accessibilityLabel="Your program editor">
+      {s.program.map((c,i)=><PressableScale key={i} disabled={disabled} accessibilityRole="button" accessibilityState={{selected:selected===i}} accessibilityLabel={planCardLabel(i,cardLabel[c],hinted===i?HINTED:'')} onPress={()=>{setSelected(selected===i?null:i);setMode('replace');}} style={{minWidth:48,minHeight:60,padding:4,alignItems:'center',justifyContent:'center',borderWidth:2,borderStyle:hinted===i&&selected!==i?'dashed':'solid',borderColor:selected===i||hinted===i?C.teal:running&&cursor===i?'#B0563A':C.line,borderRadius:10,backgroundColor:selected===i?C.soft:C.cream}}>
         <Copy maxFontSizeMultiplier={1.3} style={{fontSize:12}}>{i+1}</Copy><ArrowArt command={c}/>
       </PressableScale>)}
     </ScrollView>}
     {!s.won&&<ScrollView style={{flex:1,minHeight:0}} contentContainerStyle={{gap:10,paddingBottom:8}} accessibilityLabel="Plan and commands">
     {header}
-    <Copy>{result.won?'Home! Every shell collected.':message}</Copy>
     {d.budget!==null&&<Copy>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
-    <Copy>{d.lesson}</Copy>
+    {/* The goal already shows beside the beach; a lesson that only repeats it is left out. */}
+    {d.lesson!==goal&&<Copy>{d.lesson}</Copy>}
     {lessonKey&&learnSources[lessonKey]&&<Button compact quiet disabled={!active} onPress={()=>play(lessonKey)}>Hear this puzzle</Button>}
     {learnSources[rulesAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(rulesAudio)}>Hear rules</Button>}
     {s.runs>0&&learnSources[feedbackAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(feedbackAudio)}>Hear feedback</Button>}
     {s.supportOff&&learnSources['c1-crab-footprints']&&<Button compact quiet disabled={!active} onPress={()=>play('c1-crab-footprints')}>Hear about footprints</Button>}
-    {selected!==null&&selected<s.program.length&&<View style={{gap:8}}>
-      <Copy>Card {selected+1}: {cardLabel[s.program[selected]]}. Choose a command to {mode==='replace'?'replace it':'insert before it'}.</Copy>
-      <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
-        <Button compact quiet selected={mode==='replace'} disabled={disabled} onPress={()=>setMode('replace')}>Replace</Button>
-        <Button compact quiet selected={mode==='insert'} disabled={disabled} onPress={()=>setMode('insert')}>Insert before</Button>
-        <Button compact quiet disabled={disabled} onPress={()=>{send(['x',selected]);setSelected(null);}}>Remove card</Button>
-        <Button compact quiet disabled={disabled} onPress={()=>setSelected(null)}>Add at end</Button>
-      </View>
-    </View>}
+    {selected!==null&&selected<s.program.length&&<PlanEditChoices at={selected} label={cardLabel[s.program[selected]]} mode={mode} setMode={setMode} disabled={disabled} onRemove={()=>{send(['x',selected]);setSelected(null);}} onAddAtEnd={()=>setSelected(null)}/>}
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
-      {commands(d.level.pace).map(c=><PressableScale key={c} accessibilityRole="button" accessibilityLabel={`${selected===null?'Add':mode==='replace'?'Replace with':'Insert'} ${cardLabel[c]}`} disabled={disabled||s.program.length>=80&&(selected===null||mode==='insert')} onPress={()=>{if(selected===null||mode==='insert'||s.program[selected]!==c)send(selected===null?['a',cardCodes.indexOf(c)]:[mode==='replace'?'r':'i',selected,cardCodes.indexOf(c)]);setSelected(null);}} style={{minWidth:64,minHeight:72,flexGrow:1,padding:8,gap:4,alignItems:'center',justifyContent:'center',backgroundColor:C.paper,borderRadius:12,borderWidth:2,borderColor:C.line,opacity:disabled?0.5:1}}>
-        <ArrowArt command={c}/><Copy style={{fontSize:14,fontWeight:'700'}}>{cardLabel[c]}</Copy>
+      {commands(d.level.pace).map(c=><PressableScale key={c} accessibilityRole="button" accessibilityLabel={commandActionLabel(selected,mode,cardLabel[c])} disabled={disabled||s.program.length>=80&&(selected===null||mode==='insert')} onPress={()=>{if(selected===null||mode==='insert'||s.program[selected]!==c)send(selected===null?['a',cardCodes.indexOf(c)]:[mode==='replace'?'r':'i',selected,cardCodes.indexOf(c)]);setSelected(null);}} style={{minWidth:64,minHeight:72,flexGrow:1,padding:8,gap:4,alignItems:'center',justifyContent:'center',backgroundColor:C.paper,borderRadius:12,borderWidth:2,borderColor:C.line,opacity:disabled?0.5:1}}>
+        <ArrowArt command={c}/><Copy maxFontSizeMultiplier={EDIT_TEXT_MAX} style={{fontSize:14,fontWeight:'700'}}>{cardLabel[c]}</Copy>
       </PressableScale>)}
     </View>
     {d.level.pace==='hard'&&<Copy>Again ×2 does the card before it two more times.</Copy>}
