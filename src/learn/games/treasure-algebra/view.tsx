@@ -99,7 +99,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, wid
     cheer("right"); setFeedback(""); setHint(false);
     update({ ...state, index: state.index + 1, value: initialValue(state.tasks[state.index + 1]), offset: 0, divided: false });
   };
-  const title = task.kind === "steps" || task.kind === "depth" ? `Start at ${task.a}. ${task.b > 0 ? "Climb" : "Dive"} ${Math.abs(task.b)} steps.`
+  const title = task.kind === "steps" || task.kind === "depth" ? `Start at ${task.a}. ${task.b > 0 ? "Climb" : "Dive"} ${Math.abs(task.b)} ${Math.abs(task.b) === 1 ? "step" : "steps"}.`
     : task.kind === "missing" ? `□ + ${task.b} = ${task.a}`
     : task.kind === "balance" ? `x + ${task.a} = ${task.b}`
     : task.kind === "two-step" ? `${task.extra}x + ${task.a} = ${task.b}`

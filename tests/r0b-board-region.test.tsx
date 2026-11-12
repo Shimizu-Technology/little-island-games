@@ -45,6 +45,10 @@ it('inside the board region, text without its own cap stops at 2x, or where its 
   expect(fittedTextProps(own, region)).toBe(own);
   const off = { allowFontScaling: false, children: 'Hi' };
   expect(fittedTextProps(off, region)).toBe(off);
+  // A region's largest size: a 32-pt heading stops at 44 pt, and text already larger keeps its default size.
+  expect(fittedTextProps({ style: { fontSize: 32 }, children: 'Start at 5.' }, { ...region, maxSize: 44 }).maxFontSizeMultiplier).toBe(1.37);
+  expect(fittedTextProps({ style: { fontSize: 18 }, children: 'Go' }, { ...region, maxSize: 44 }).maxFontSizeMultiplier).toBe(2);
+  expect(fittedTextProps({ style: { fontSize: 56 }, children: '4 + 2' }, { ...region, maxSize: 44 }).maxFontSizeMultiplier).toBe(1);
   const plain = { children: 'Hi' };
   expect(fittedTextProps(plain, null)).toBe(plain);
 });

@@ -69,18 +69,19 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   const large = fontScale >= LARGE_TEXT;
   // The board's top within the page, measured on layout.
-  const boardTop = useRef<number | null>(null), stepRound = useRef(saved?.id);
+  // The board's own top inside its card: below the card's padding and the celebration cell once a burst has shown.
+  const boardTop = useRef<number | null>(null), boardInset = useRef(0), stepRound = useRef(saved?.id);
   useLayoutEffect(() => {
     if (growthStep === undefined) return;
     // The next question of the same round. At accessibility sizes the header alone can fill the screen, so the page
     // returns to the top of the board rather than above the header, and the answers stay a short scroll away.
     const sameRound = stepRound.current === saved?.id;
     stepRound.current = saved?.id;
-    scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current - 8) : 0, animated: false });
+    scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current + boardInset.current - 8) : 0, animated: false });
   }, [growthStep, saved?.id, large]);
   // Other step games (a story page, the next question) ask for the same return through `useStepReveal`.
   const reveal = useCallback(() => {
-    if (large && boardTop.current !== null) scroll.current?.scrollTo({ y: Math.max(0, boardTop.current - 8), animated: false });
+    if (large && boardTop.current !== null) scroll.current?.scrollTo({ y: Math.max(0, boardTop.current + boardInset.current - 8), animated: false });
   }, [large]);
   const learner = activeLearner(store.save.learning);
   const comfort = learningComfort(store.save, learner.id);
@@ -287,9 +288,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // At accessibility sizes, board text without a cap of its own (prompts, answers, results) stops at 2x, or where its
   // longest word still fits the board. Reading is never timed and Hear stays available, so it stays large without
   // filling the screen. Default sizes never change.
-  const boardFit = useMemo(() => large ? { width: boardInner, ceiling: 2 } : null, [large, boardInner]);
+  // A 32-pt heading would reach 64 pt at 2x, so nothing in a board is drawn above 44 pt (about a 22-pt line at 2x).
+  const boardFit = useMemo(() => large ? { width: boardInner, ceiling: 2, maxSize: 44 } : null, [large, boardInner]);
   // The result card ("You did it!") follows the same rule inside its 20-pt padding and 3-pt border.
-  const resultFit = useMemo(() => large ? { width: width - insets.left - insets.right - 32 - 46, ceiling: 2 } : null, [large, width, insets.left, insets.right]);
+  const resultFit = useMemo(() => large ? { width: width - insets.left - insets.right - 32 - 46, ceiling: 2, maxSize: 44 } : null, [large, width, insets.left, insets.right]);
   const Board = saved && isGrowth(saved.state) ? GrowthBoard : view.Board;
   const island = id === "hafa-adai" ? "reading" : engine.island;
   const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
@@ -386,6 +388,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
             <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}>
+            <View testID="learn-board-inset" onLayout={e => { boardInset.current = e.nativeEvent.layout.y; }}>
             <Board
               key={saved.id}
               session={saved}
@@ -403,6 +406,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               coach={{ active: coachActive && boardActive, done: coachDone }}
               cheer={cheer}
             />
+            </View>
             </TextFit.Provider></StepReveal.Provider>
           </View>
           </LearningCompanion>

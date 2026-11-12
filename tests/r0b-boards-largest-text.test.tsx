@@ -283,6 +283,24 @@ it('Beep Bot at AX5: the instruction gets the full width with Hear Beep under it
 it('Tide Logic at AX5: the two bucket labels each fit half the belt, so they never run together ("LEFT BUCKETRIGHT")', async () => {
   const r = await mount('tide-logic', sessionFor('tide-logic'));
   const labels = r.root.find(n => n.props.testID === 'tide-buckets').findAll(n => String(n.type) === 'Text');
-  expect(labels.map(textOf)).toEqual(['← LEFT BUCKET', 'RIGHT BUCKET →']);
-  for (const l of labels) { expect(flat(l.props.style).flexShrink).toBe(1); expect(longest(l), textOf(l)).toBeLessThanOrEqual((W - 32) / 2); }
+  // The arrows are joined to their words with no-break spaces, so neither is ever left alone on a line.
+  expect(labels.map(textOf)).toEqual(['←\u00a0LEFT BUCKET', 'RIGHT BUCKET\u00a0→']);
+  for (const l of labels) { expect(flat(l.props.style).flexShrink).toBe(1); expect(wordWidth('BUCKET→') * drawnSize(l), textOf(l)).toBeLessThanOrEqual((W - 32) / 2); }
+});
+
+it('Beep Bot at AX5 reads in play order: board, plan, arrow keys, then Go (keys are never below the fold under Go)', async () => {
+  const r = await mount('beep-bot', sessionFor('beep-bot'));
+  const board = r.root.children[0] as ReactTestInstance;
+  const order = board.children.filter((c): c is ReactTestInstance => typeof c !== 'string');
+  const go = order.findIndex(c => c.props.testID === 'beep-go'), keys = order.findIndex(c => c.findAll(n => String(n.props.accessibilityLabel ?? '') === 'Add up card').length > 0);
+  expect(keys).toBeGreaterThan(0);expect(go).toBeGreaterThan(keys);
+});
+
+it('Treasure Algebra says "Climb 1 step", and a 32-pt board heading stops at 44 pt in the board region', async () => {
+  type Tasks = { tasks: { kind: string; a: number; b: number }[] };
+  const one = sessionFor('treasure-algebra', 1, (st: Tasks) => ({ ...st, tasks: [{ ...st.tasks[0], kind: 'steps', a: 5, b: 1 }, ...st.tasks.slice(1)] }));
+  const r = await mount('treasure-algebra', one, {}, { width: W, ceiling: 2, maxSize: 44 } as typeof region);
+  const heading = r.root.findAll(n => String(n.type) === 'Text' && n.props.accessibilityRole === 'header')[0];
+  expect(textOf(heading)).toBe('Start at 5. Climb 1 step.');
+  expect(drawnSize(heading)).toBeLessThanOrEqual(44);
 });

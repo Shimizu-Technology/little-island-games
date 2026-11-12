@@ -68,7 +68,7 @@ const byType = (r: ReactTestRenderer, type: string) => r.root.findAll(n => Strin
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 const inside = (n: ReactTestInstance, parent: ReactTestInstance) => { for (let p: ReactTestInstance | null = n; p; p = p.parent) if (p === parent) return true; return false; };
 
-it.each([[3.12, { width: 337, ceiling: 2 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
+it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
   Object.assign(viewport, { fontScale });
   const r = await mount('turtle-tales');
   expect(byType(r, 'Board')[0].props.fit).toEqual(fit);
@@ -78,7 +78,7 @@ it('an iPad board region is the board width beside the companion', async () => {
   Object.assign(viewport, { width: 1133, height: 744 });
   const r = await mount('turtle-tales');
   // 1133 - 56, less the 88-pt companion column on a wide screen.
-  expect(byType(r, 'Board')[0].props.fit).toEqual({ width: 900 - 88, ceiling: 2 });
+  expect(byType(r, 'Board')[0].props.fit).toEqual({ width: 900 - 88, ceiling: 2, maxSize: 44 });
 });
 
 it.each([[3.12, [892]], [1, []]])('a step game asking for the board at text scale %s scrolls the page to %o', async (fontScale, expected) => {
@@ -125,4 +125,13 @@ it.each([[1133, 744, 3.12], [874, 402, 1], [393, 852, 3.12]])('at %sx%s, text sc
   const journeys = byType(r, 'RoundProgress');
   expect(journeys).toHaveLength(1);
   expect(journeys[0].props.inline).toBeUndefined();
+});
+
+it('the step reveal lands on the board itself, below the card padding and a celebration cell above it', async () => {
+  const r = await mount('turtle-tales');
+  await act(async () => { r.root.find(n => n.props.testID === 'learn-board').props.onLayout({ nativeEvent: { layout: { x: 0, y: 900, width: 361, height: 700 } } }); });
+  await act(async () => { r.root.find(n => n.props.testID === 'learn-board-inset').props.onLayout({ nativeEvent: { layout: { x: 14, y: 78, width: 333, height: 600 } } }); });
+  scrolls.length = 0;
+  await act(async () => { byType(r, 'Board')[0].props.reveal(); });
+  expect(scrolls).toEqual([970]);
 });
