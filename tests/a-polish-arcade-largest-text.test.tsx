@@ -60,9 +60,12 @@ it.each([[393,852],[320,568],[852,393]])('level map title wraps only between wor
   const {LevelMap}=await import('../src/arcade/LevelMap');
   for(const game of arcadeGames){
     await act(async()=>{root=TestRenderer.create(<LevelMap game={game} person={emptyArcadeLearner()} levels={crabLevels} onLevel={()=>{}} onOutfits={()=>{}} onChest={()=>{}} active={false}/>);});
-    const title=root!.root.findAll(n=>n.type==='Heading'&&textOf(n)===game.name)[0];
+    const title=root!.root.findAll(n=>String(n.type)==='Heading'&&textOf(n)===game.name)[0];
     // The title column sits beside the 110-pt hero inside 16-pt page padding.
     expect(fits(title,width-32-116),`${game.name} at ${width}`).toBe(true);
+    // The stars pill under it ("★ 0 · 0 stickers") wraps between words too, inside its 13-pt padding and border.
+    const pill=root!.root.find(n=>String(n.type)==='HudPill'), scale=Math.min(LARGEST,pill.props.maxFontSizeMultiplier??Infinity);
+    expect(Math.max(...'★ 0 · 0 stickers'.split(' ').map(w=>wordWidth(w)*17*scale)),`${game.name} pill at ${width}`).toBeLessThanOrEqual(width-32-116-30);
     await act(async()=>{root!.unmount();});root=undefined;
   }
 });
@@ -77,20 +80,20 @@ it('start card: Start sits in a compact dock below a scrolling card that holds t
   const crab=arcadeGames.find(g=>g.id==='crab-crossing')!;
   await act(async()=>{root=TestRenderer.create(<StoreProvider><ArcadeGameScreen game={crab}/></StoreProvider>);});
   // Open W2-2, which carries a dare, from the real level map.
-  await act(async()=>{root!.root.findAll(n=>n.type==='Button'&&textOf(n)==='World 2')[0].props.onPress();});
-  await act(async()=>{root!.root.find(n=>n.type==='PressableScale'&&n.props.testID==='level-w2-2').props.onPress();});
-  const scroll=root!.root.findAll(n=>n.type==='ScrollView')[0], dock=root!.root.find(n=>n.props.testID==='arcade-start-dock'&&n.type==='View');
+  await act(async()=>{root!.root.findAll(n=>String(n.type)==='Button'&&textOf(n)==='World 2')[0].props.onPress();});
+  await act(async()=>{root!.root.find(n=>String(n.type)==='PressableScale'&&n.props.testID==='level-w2-2').props.onPress();});
+  const scroll=root!.root.findAll(n=>String(n.type)==='ScrollView')[0], dock=root!.root.find(n=>n.props.testID==='arcade-start-dock'&&String(n.type)==='View');
   const inside=(n:ReactTestInstance,parent:ReactTestInstance)=>{for(let p:ReactTestInstance|null=n;p;p=p.parent)if(p===parent)return true;return false;};
-  const helper=root!.root.find(n=>n.type==='ToggleRow'&&n.props.label==='Helper'), dares=root!.root.find(n=>n.props.testID==='arcade-dares'&&n.type==='View');
+  const helper=root!.root.find(n=>String(n.type)==='ToggleRow'&&n.props.label==='Helper'), dares=root!.root.find(n=>n.props.testID==='arcade-dares'&&String(n.type)==='View');
   expect(inside(helper,scroll)).toBe(true);expect(inside(dares,scroll)).toBe(true);expect(inside(dock,scroll)).toBe(false);
   expect(scroll.props.scrollEnabled).not.toBe(false);
   // The dock's Start label stops at 2x, like the header, so the card keeps most of the height to scroll in.
-  const start=dock.findAll(n=>n.type==='Button')[0];
+  const start=dock.findAll(n=>String(n.type)==='Button')[0];
   expect(textOf(start)).toBe('Show me & play');expect(start.props.maxFontSizeMultiplier).toBe(2);
   // The card's level name and its world/level line never break a word.
-  const name=root!.root.find(n=>n.type==='Heading'&&textOf(n)===crabLevel('w2-2').name);
+  const name=root!.root.find(n=>String(n.type)==='Heading'&&textOf(n)===crabLevel('w2-2').name);
   expect(fits(name,Math.min(480,393-32)-50)).toBe(true);
-  const where=root!.root.find(n=>n.type==='Copy'&&textOf(n).startsWith('Canoe Lagoon'));
+  const where=root!.root.find(n=>String(n.type)==='Copy'&&textOf(n).startsWith('Canoe Lagoon'));
   expect(where.props.maxFontSizeMultiplier).toBe(2);expect(textOf(where)).toContain('Level 2');
 });
 
@@ -99,10 +102,10 @@ it.each([0,62,171])('Crab HUD starts below the measured header (%s pt) with HUD 
   const {CrabBoard}=await import('../src/arcade/games/crab-crossing/View');
   await act(async()=>{root=TestRenderer.create(<CrabBoard initial={createCrab(crabLevel('w2-2'),7,false)} active={false} helper={false} outfit={'classic' as never} onResult={()=>{}} onTone={()=>{}} size={393} height={700} wide={false} debug={false} overlayTop={overlayTop}/>);});
   // The HUD is the absolutely placed group around the burrow count.
-  let hud=root!.root.find(n=>n.type==='Text'&&textOf(n).startsWith('BURROWS'));
-  while(!(hud.type==='View'&&hud.props.style?.position==='absolute'))hud=hud.parent!;
+  let hud=root!.root.find(n=>String(n.type)==='Text'&&textOf(n).startsWith('BURROWS'));
+  while(!(String(hud.type)==='View'&&hud.props.style?.position==='absolute'))hud=hud.parent!;
   expect(hud.props.style.position).toBe('absolute');expect(hud.props.style.top).toBeGreaterThanOrEqual(overlayTop+4);
-  for(const t of hud.findAll(n=>n.type==='Text'))expect(t.props.maxFontSizeMultiplier,textOf(t)).toBeLessThanOrEqual(1.5);
-  const hint=root!.root.find(n=>n.type==='Copy'&&textOf(n)==='Tap to hop · swipe to steer');
+  for(const t of hud.findAll(n=>String(n.type)==='Text'))expect(t.props.maxFontSizeMultiplier,textOf(t)).toBeLessThanOrEqual(1.5);
+  const hint=root!.root.find(n=>String(n.type)==='Copy'&&textOf(n)==='Tap to hop · swipe to steer');
   expect(hint.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
 });
