@@ -3,7 +3,7 @@ import { projectTrack } from '../src/arcade/games/lagoon-run/camera';
 import { createRun, rowSafe, runStep, shellHeight, surfaceHeight, type RunState } from '../src/arcade/games/lagoon-run/engine';
 import { RAMP_SECTIONS } from '../src/arcade/games/lagoon-run/surface';
 import { runLevels } from '../src/arcade/games/scrolling/content';
-import { INCLINE_START, INCLINE_STRIDE, runPoses } from '../src/arcade/games/scrolling/render';
+import { INCLINE_START, INCLINE_STRIDE, heroContactY, runPoses } from '../src/arcade/games/scrolling/render';
 
 const idle = { type: 'idle' } as const;
 function rampState(z: number, length = .64): RunState {
@@ -29,7 +29,7 @@ describe('Lagoon Run shared ramp surface', () => {
       s.elevation = height;
       const p = runPoses(s), y = drawnContact(s);
       expect(Math.abs(projectTrack(1,1).y-height*85-y), `support z=${z}`).toBeLessThan(2);
-      expect(Math.abs(p[0].y+130-y), `feet z=${z}`).toBeLessThan(2);
+      expect(Math.abs(heroContactY(p[0])-y), `feet z=${z}`).toBeLessThan(2);
       expect(p[50].y+7, `ground shadow z=${z}`).toBeCloseTo(projectTrack(1,1).y);
     }
   });
@@ -37,7 +37,7 @@ describe('Lagoon Run shared ramp surface', () => {
     let s = rampState(.80);
     for (let i=0;i<220;i++) {
       s = runStep(s,idle,1/60);
-      if (s.rows[0].z >= .82 && s.rows[0].z <= 1.64+.015) expect(Math.abs(runPoses(s)[0].y+130-drawnContact(s))).toBeLessThan(2);
+      if (s.rows[0].z >= .82 && s.rows[0].z <= 1.64+.015) expect(Math.abs(heroContactY(runPoses(s)[0])-drawnContact(s))).toBeLessThan(2);
     }
     expect(s.elevation).toBe(0);
   });

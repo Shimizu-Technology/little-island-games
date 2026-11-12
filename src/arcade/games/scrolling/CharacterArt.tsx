@@ -15,10 +15,14 @@ export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, look, size =
   const joints=backPoses[frame].joints, shoulder=joints.rightShoulder,elbow=joints.rightElbow,head=joints.head;
   return <Svg {...islanderSurface({width:80,height:132},size/132)} accessible={false}><IslanderShape pose={front ? resolvePose('front', frame === 15 ? 'cheer' : frame === 14 ? 'try-again' : 'idle') : backPoses[frame]} look={look}/>{!front&&<Path d={`M${head[0]+15} ${head[1]-14}q5 6 4 14 M${shoulder[0]+3} ${shoulder[1]-2}L${elbow[0]+3} ${elbow[1]-2}`} fill="none" stroke="#FFE8A3" strokeWidth={1.3} strokeLinecap="round" opacity={.7}/>}</Svg>;
 });
-/** One depth root and the same 24 opacity-switched frames; no limb worklets. */
-export const RunnerRig = memo(function RunnerRig({ poses }: { poses: SharedValue<SpritePose[]> }) {
+/** One depth root and the same 24 opacity-switched frames; no limb worklets.
+ * `sample` draws the vector frames larger and scales them back down, so a camera or arena zoom
+ * never upscales the rasterized runner (Lagoon LG-S3, iPad stage). */
+export const RunnerRig = memo(function RunnerRig({ poses, sample = 1, wrap }: { poses: SharedValue<SpritePose[]>; sample?: number; /** Scales the larger frames back down (supplied by the board). */ wrap?: (frames: React.ReactNode) => React.ReactNode }) {
   const look = useActiveIslanderLook();
-  return <ArcadeSprite poses={poses} index={0} width={80} height={132}>{backPoses.map((_,i) => <ArcadeSprite key={i} poses={poses} index={i<16?80+i:RUN_EXTRA+i-16} width={80} height={132}><RunnerFrameArt frame={i} look={look}/></ArcadeSprite>)}</ArcadeSprite>;
+  const k = wrap ? sample : 1;
+  const frames = backPoses.map((_,i) => <ArcadeSprite key={i} poses={poses} index={i<16?80+i:RUN_EXTRA+i-16} width={80*k} height={132*k}><RunnerFrameArt frame={i} look={look} size={132*k}/></ArcadeSprite>);
+  return <ArcadeSprite poses={poses} index={0} width={80} height={132}>{sample === 1 || !wrap ? frames : wrap(frames)}</ArcadeSprite>;
 });
 function BatBody({ outfit, happy = false }: { outfit: OutfitId; happy?: boolean }) {
   return <G stroke="#392D45" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">

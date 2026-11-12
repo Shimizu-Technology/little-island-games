@@ -1,17 +1,44 @@
 import type { SpritePose } from '../../src/arcade/poses';
-export function canoePath(p: SpritePose[],index:number,part:string) {
+/**
+ * Outrigger canoe in its projected quad (LG-S3 redraw). It lies across its lane, so the runner sees
+ * its whole side: a slim hull with upturned ends, the float behind it on two short booms, round
+ * sacks lashed amidships. It stays inside its own lane (±0.39 lanes). a=near-left, b=near-right, c=far-right,
+ * d=far-left.
+ */
+type P = { x: number; y: number };
+export function canoePath(p: SpritePose[], index: number, part: string) {
   'worklet';
-  const a=p[index],b=p[index+1],c=p[index+2],d=p[index+3];
-  if(!a||a.opacity===0||!b||!c||!d)return 'M0 0';
-  const near=(a.x+b.x)/2,far=(c.x+d.x)/2,ns=a.scale??1,fs=d.scale??1,ny=a.y-34*ns,fy=d.y-23*fs;
-  if(part==='shadow')return `M${a.x-3*ns} ${a.y+4*ns}Q${near} ${a.y+15*ns} ${b.x+16*ns} ${b.y+4*ns}L${c.x+15*fs} ${c.y+3*fs}L${d.x} ${d.y}Z`;
-  if(part==='hull')return `M${a.x} ${ny}Q${near} ${ny+21*ns} ${b.x} ${ny}L${c.x} ${fy}L${far} ${fy-16*fs}L${d.x} ${fy}Z M${a.x} ${ny}Q${near} ${a.y+12*ns} ${b.x} ${ny}L${b.x-6*ns} ${b.y-3*ns}Q${near} ${a.y+10*ns} ${a.x+6*ns} ${a.y-3*ns}Z`;
-  if(part==='inside')return `M${a.x+5*ns} ${ny}Q${near} ${ny+12*ns} ${b.x-5*ns} ${ny}L${c.x-3*fs} ${fy+3*fs}L${far} ${fy-8*fs}L${d.x+3*fs} ${fy+3*fs}Z`;
-  if(part==='rail')return `M${a.x} ${ny}Q${near} ${ny+21*ns} ${b.x} ${ny}L${c.x} ${fy}L${far} ${fy-16*fs}L${d.x} ${fy}Z M${a.x+7*ns} ${ny+12*ns}L${d.x+4*fs} ${fy+7*fs} M${b.x-6*ns} ${ny+14*ns}L${c.x-4*fs} ${fy+7*fs}`;
-  if(part==='cargo') {
-    const x=near+(far-near)*.4,y=ny+(fy-ny)*.4,w=19*ns,h=24*ns;
-    return `M${x-w} ${y}v${-h}l${w*1.5} ${-6*ns}l${w*.5} ${7*ns}v${h}l${-w*1.5} ${6*ns}Z M${x-w} ${y-h}l${w*.5} ${7*ns}l${w*1.5} ${-6*ns} M${x-w*.5} ${y-h+7*ns}v${h} M${x-w*.8} ${y-h+8*ns}l${w*1.1} ${h*.6} M${x+w*.3} ${y-h+7*ns}l${-w*1.1} ${h*.7}`;
+  const a = p[index], b = p[index + 1], c = p[index + 2], d = p[index + 3];
+  if (!a || a.opacity === 0 || !b || !c || !d) return 'M0 0';
+  const ns = a.scale ?? 1, fs = d.scale ?? 1;
+  const lerp = (u: P, v: P, t: number) => ({ x: u.x + (v.x - u.x) * t, y: u.y + (v.y - u.y) * t });
+  // t: along the hull, left (0) to right (1); u: near (0) to far (1); up: lift in track pixels.
+  const at = (t: number, u: number, up: number) => { const m = lerp(lerp(a, d, u), lerp(b, c, u), t), s = ns + (fs - ns) * u; return { x: m.x, y: m.y - up * s }; };
+  const f = (q: P) => `${q.x.toFixed(2)} ${q.y.toFixed(2)}`;
+  const ts = Array.from({ length: 13 }, (_, i) => -.15 + 1.3 * i / 12);
+  // Upturned bow and stern: the gunwale rises toward both tips.
+  const sheer = (t: number) => 17 + 11 * Math.pow(Math.abs(t - .5) / .65, 2.4);
+  const keelDepth = (t: number) => 2 + 15 * Math.pow(Math.abs(t - .5) / .65, 1.6);
+  const near = (t: number) => at(t, .3, sheer(t)), far = (t: number) => at(t, .55, sheer(t) - 1);
+  const keel = (t: number) => at(t, .32, keelDepth(t));
+  const line = (pts: P[]) => pts.map((q, i) => `${i ? 'L' : 'M'}${f(q)}`).join('');
+  if (part === 'shadow') { const r = (t: number) => .5 * Math.sqrt(Math.max(0, 1 - Math.pow((t - .5) / .68, 2))); return `${line(ts.map(t => at(t, .62 - r(t), -1)))}${ts.slice().reverse().map(t => `L${f(at(t, .62 + r(t) * 1.4, -1))}`).join('')}Z`; }
+  if (part === 'hull') return `${line(ts.map(near))}${ts.slice().reverse().map(t => `L${f(keel(t))}`).join('')}Z`;
+  if (part === 'side') return `${line(ts.slice(2, -2).map(t => at(t, .31, sheer(t) - 6)))}${ts.slice(2, -2).reverse().map(t => `L${f(keel(t))}`).join('')}Z`;
+  if (part === 'inside') return `${line(ts.slice(1, -1).map(near))}${ts.slice(1, -1).reverse().map(t => `L${f(far(t))}`).join('')}Z`;
+  if (part === 'rail') return `${line(ts.map(near))} ${line(ts.slice(1, -1).map(far))}`;
+  if (part === 'cargo') {
+    // Three round sacks lashed amidships: tall enough to say "go around", never a box or a cabin.
+    const sack = (t: number, u: number, up: number, rx: number, ry: number) => { const c = at(t, u, up), s = ns + (fs - ns) * u; return `M${(c.x - rx * s).toFixed(2)} ${c.y.toFixed(2)}a${(rx * s).toFixed(2)} ${(ry * s).toFixed(2)} 0 1 0 ${(2 * rx * s).toFixed(2)} 0a${(rx * s).toFixed(2)} ${(ry * s).toFixed(2)} 0 1 0 ${(-2 * rx * s).toFixed(2)} 0Z`; };
+    return `${sack(.4, .44, 24, 11, 9)} ${sack(.6, .44, 24, 11, 9)} ${sack(.5, .44, 38, 10, 8)}`;
   }
-  if(part==='float')return `M${b.x-2*ns} ${ny+4*ns}L${b.x+17*ns} ${ny+8*ns} M${c.x-2*fs} ${fy+8*fs}L${c.x+14*fs} ${fy+13*fs} M${b.x+16*ns} ${a.y-8*ns}Q${b.x+30*ns} ${a.y-4*ns} ${b.x+25*ns} ${a.y-19*ns}L${c.x+18*fs} ${fy+12*fs}Q${c.x+12*fs} ${fy+4*fs} ${c.x+11*fs} ${fy+17*fs}Z`;
-  return `M${a.x-8*ns} ${a.y-5*ns}Q${a.x-18*ns} ${a.y+2*ns} ${a.x-10*ns} ${a.y+13*ns} M${b.x+30*ns} ${b.y-9*ns}q${18*ns} ${8*ns} ${7*ns} ${22*ns} M${a.x-10*ns} ${a.y-48*ns}l${-4*ns} ${25*ns} M${b.x+37*ns} ${b.y-50*ns}l${5*ns} ${26*ns}`;
+  if (part === 'float') {
+    // Float behind the hull, joined by two booms.
+    const fts = ts.slice(2, -2), ama = (t: number, up: number) => at(t, .95, up + 4);
+    const body = `${line(fts.map(t => ama(t, 7 + 3 * Math.pow(Math.abs(t - .5) / .5, 2))))}${fts.slice().reverse().map(t => `L${f(ama(t, 1))}`).join('')}Z`;
+    const booms = [.22, .74].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, .95, 10))}L${f(at(t + .03, .95, 10))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
+    return `${booms} ${body}`;
+  }
+  // Wake curls off both tips, only on the moving canoe.
+  return `M${f(at(-.18, .1, 0))}q${-10 * ns} ${2 * ns} ${-22 * ns} ${12 * ns} M${f(at(-.1, .2, 0))}q${-6 * ns} ${4 * ns} ${-12 * ns} ${12 * ns} M${f(at(1.18, .1, 0))}q${10 * ns} ${2 * ns} ${22 * ns} ${12 * ns} M${f(at(1.1, .2, 0))}q${6 * ns} ${4 * ns} ${12 * ns} ${12 * ns}`;
 }
