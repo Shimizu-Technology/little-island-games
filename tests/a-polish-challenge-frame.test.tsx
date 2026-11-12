@@ -38,13 +38,13 @@ function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return n
 // Slip's board is lazily required on device; here the same props render it directly.
 const slipEntry:ChallengeEntry={...slip,render:(session,dispatch,active,width,host)=>{const el=slip.render(session,dispatch,active,width,host) as React.ReactElement<ChallengeViewProps<SlipState,SlipAction>>|null;return el?<ChallengeBoard {...el.props}/>:null;}};
 afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;vi.unstubAllGlobals();});
-async function mount(entry:ChallengeEntry,session?:ChallengeSession){
+async function mount(entry:ChallengeEntry,session?:ChallengeSession,nodeMock?:(el:React.ReactElement)=>unknown){
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
   let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
   if(session)save=putProgress(save,'a',{...emptyChallenge(),nextOrdinal:session.ordinal+1,paused:[session]});
   db.raw=encodeSave(save);
   function Ready(){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={entry}/>:null;}
-  await act(async()=>{root=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});
+  await act(async()=>{root=create(<StoreProvider><Probe/><Ready/></StoreProvider>,nodeMock?{createNodeMock:nodeMock}:undefined);});
   await vi.waitFor(()=>expect(store?.ready).toBe(true),{timeout:5000,interval:20});
 }
 const chips=()=>root!.root.findAll(n=>n.props.testID==='chosen-dare'&&typeof n.type==='string');
@@ -93,4 +93,14 @@ it('the Challenge heading never breaks mid-word at the largest text ("Challe/nge
   expect(fitsAtLargest(heading)).toBe(true);
   // It still grows well past default: about 2x on an iPhone in portrait.
   expect(heading.props.maxFontSizeMultiplier).toBeGreaterThanOrEqual(1.8);
+});
+
+it('a pinned board starts at the top of the page, never in the empty space a long picker scrolled to',async()=>{
+  const scrollTo=vi.fn();
+  await mount(crab,undefined,el=>el.type==='section'?{scrollTo}:null);
+  const start=await vi.waitFor(()=>{const b=root!.root.findAllByType('button' as never).find(n=>textOf(n)==='Start this puzzle');expect(b).toBeDefined();return b!;},{timeout:5000,interval:20});
+  expect(scrollTo).not.toHaveBeenCalled();
+  await act(async()=>{await start.props.onPress();});
+  await vi.waitFor(()=>expect(store.save.challenge?.paused).toHaveLength(1),{timeout:5000,interval:20});
+  expect(scrollTo).toHaveBeenCalledWith({y:0,animated:false});
 });

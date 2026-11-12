@@ -134,12 +134,16 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const back=()=>router.canGoBack()?router.back():router.replace('/');
   const keepPlan='Keep my plan in a new attempt';
   const pinned=!!entry.animatedRuns&&!picking&&!!round&&(!round.result||settling);
+  // A pinned board fills the page with scrolling off. Return to the top first: a page left scrolled far down the
+  // picker (likely at the largest text) would otherwise keep showing empty space below the board.
+  const page=useRef<ScrollView>(null);
+  useLayoutEffect(()=>{if(pinned)page.current?.scrollTo({y:0,animated:false});},[pinned]);
   // Large titles stop growing where their longest word still fits the line, so none breaks mid-word.
   const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right);
   const dare=round&&!round.result?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[])[0]:undefined;
   const title=currentCard?.title??'';
   const solved=round?.result?.event==='together'?'You solved it together!':'Puzzle solved!';
-  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView scrollEnabled={!pinned&&!held} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
+  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView ref={page} scrollEnabled={!pinned&&!held} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact maxFontSizeMultiplier={pinned?1.3:undefined} onPress={back}>Back</Button>{!pinned&&<Heading maxFontSizeMultiplier={fit('Challenge',32)}>Challenge</Heading>}<LearnerChip compact/></View>
     {!pinned&&<><Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy></>}
     {!pinned&&<SaveStatus/>}
