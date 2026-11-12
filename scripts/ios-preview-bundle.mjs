@@ -8,6 +8,7 @@
 //   node scripts/ios-preview-bundle.mjs prep            regenerate + assert (leaves preview files on disk)
 //   node scripts/ios-preview-bundle.mjs restore         git checkout the committed default files
 //   node scripts/ios-preview-bundle.mjs build -- <cmd>  prep, run <cmd>, restore (also on failure or Ctrl-C)
+import { captureNativeBuild } from "./words/compiler.mjs";
 import { spawnSync } from "node:child_process";
 import { gateDelivery } from "./words/delivery.mjs";
 import { requireCleanSource } from "./words/check.mjs";
@@ -88,11 +89,7 @@ export function build(command, cwd = process.cwd(), env = process.env) {
   try {
     const catalog = prep(cwd, env);
     console.log(`preview catalog: ${catalog.items.length} items, ${catalog.index.length} index entries`);
-    const result = spawnSync(command[0], command.slice(1), {
-      cwd,
-      stdio: "inherit",
-      env: { ...env, EXPO_PUBLIC_LIBRARY_PREVIEW: "1" },
-    });
+    const result = captureNativeBuild(command,cwd,{...env,EXPO_PUBLIC_LIBRARY_PREVIEW:"1"});
     if(result.status!==0) return result.status ?? 1;
     gateDelivery(cwd,{...env,EXPO_PUBLIC_LIBRARY_PREVIEW:"1"});
     putBack();

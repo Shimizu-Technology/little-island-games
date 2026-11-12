@@ -44,7 +44,13 @@ const {registrySource}=await import(pathToFileURL(join(root,'scripts/words/regis
 const {checkShippingTree}=await import(pathToFileURL(join(root,'scripts/words/shipping.mjs')));
 const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mjs')));
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
-const {checkExport,checkRelease:realCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const {checkExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const {prepareCompilerCapture,compilerIdentity,bytecodeFiles}=await import(pathToFileURL(join(root,'scripts/words/compiler.mjs')));
+const compilerCapture=prepareCompilerCapture(root);after(()=>compilerCapture.cleanup());let nativeFixture=0;
+function realCheckRelease(...args) {
+ if(bytecodeFiles(args[2]).length){const file=join(scratch,`compiler-${nativeFixture++}.private.json`);compilerCapture.finish(args[2],file);process.env.LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT=file;}
+ return rawCheckRelease(...args);
+}
 function syntheticIOSExport(command,args,options) {
  assert.equal(command,process.execPath);assert.deepEqual(args.slice(1,7),['export','--platform','ios','--no-bytecode','--no-minify','--output-dir']);assert.equal(options.cwd,root);
  writeFileSync(join(args.at(-1),'native.js'),'var global; hello; globalThis.safe="Native platform fixture";');
@@ -119,9 +125,7 @@ test('surface uses honored',()=>assert.throws(()=>checkSurfaces({words:[{...word
 test('independent bent and wheel verifier',()=>{for(const board of [{id:'b',kind:'builder',cells:[['C','Q','D'],['Q','O','L']]},{id:'w',kind:'wheel',letters:'DLOCQ'}])assert.throws(()=>independentlyVerify([board],policy.scan,policy.core),/verification failed/);});
 for(const [name,contents] of [['partial-array','["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"]'],['newlines','ALPHANONSENSE BETANONSENSE GAMMANONSENSE'],['core','COLD'],['canary','PRIVATECANARYNONWORD'],['scan-hash',lock.scanListSha256]])test(`guard ${name}`,()=>{const dir=join(scratch,'guard');mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'app.bin'),contents);assert.throws(()=>guardTree(dir,policy),/leaked/);rmSync(dir,{recursive:true});});
 for(const name of ['receipt.private.json','safety-policy.private.json','tiers.queue.json','reconcile.pending.json'])test(`guard filename ${name}`,()=>{const dir=join(scratch,'names');mkdirSync(dir);writeFileSync(join(dir,name),'{}');assert.throws(()=>guardTree(dir,policy),/leaked/);rmSync(dir,{recursive:true});});
-const hermesPlatform={darwin:'osx-bin',linux:'linux64-bin',win32:'win64-bin'}[process.platform];
-assert.ok(hermesPlatform,`Unsupported Hermes test platform: ${process.platform}`);
-const hermesc=resolve('node_modules/hermes-compiler/hermesc',hermesPlatform,process.platform==='win32'?'hermesc.exe':'hermesc');
+const hermesc=compilerCapture.executable;
 test('Hermes bytecode raw string scan',()=>{const dir=join(scratch,'hbc');mkdirSync(dir);writeFileSync(join(scratch,'leak.js'),'globalThis.leak='+JSON.stringify(policy.scan));const r=spawnSync(hermesc,['-emit-binary','-out',join(dir,'main.hbc'),join(scratch,'leak.js')],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);assert.throws(()=>guardTree(dir,policy),/leaked/);});
 for(const path of ['content/words/banks/x.ts','content/words/banks/x.JSON','content/words/bank.json','content/clues/x.json','src/games/words/bank.json','assets/words/bank.json'])test(`admission ${path}`,()=>{const dir=join(scratch,'admission');mkdirSync(join(dir,path,'..'),{recursive:true});writeFileSync(join(dir,path),'{}');assert.throws(()=>checkShippingTree(dir),/bank|admi|manifest/i);rmSync(dir,{recursive:true});});
 for(const source of ["import '../../scripts/words/core.mjs';","const x=require(`../../scripts/words/core.mjs`);","export * from '../../scripts/words/core.mjs';"])for(const prefix of ['src','modules','content/library'])test(`private import ${prefix} ${source}`,()=>{const dir=join(scratch,'imports');mkdirSync(join(dir,prefix),{recursive:true});writeFileSync(join(dir,prefix,'x.ts'),source);assert.throws(()=>checkShippingTree(dir),/Private word dependency/);rmSync(dir,{recursive:true});});

@@ -6,7 +6,8 @@ import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdtempSync, rmSyn
 import { fileURLToPath } from 'node:url';
 import { resolve, relative, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings } from './artifact-views.mjs';
+import { compilerIdentity,verifyCompilerCapture } from './compiler.mjs';
 import { guardTree } from './guard.mjs';
 import { checkShippingTree } from './shipping.mjs';
 import { lockedPolicy } from './policy.mjs';
@@ -44,27 +45,42 @@ export function checkRelease(root, web, ios, output, run=execFileSync) {
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   let hbc=false;const embeddedStrings=[];
-  function find(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in iOS artifact');if(e.isDirectory())find(p);else {const bytes=readFileSync(p);if(bytes.subarray(0,8).equals(hermesMagic)){hbc=true;embeddedStrings.push(...hermesStrings(bytes,{identifiers:false}));}}}}
+  function find(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in iOS artifact');if(e.isDirectory())find(p);else {const bytes=readFileSync(p);if(bytes.subarray(0,8).equals(hermesMagic)){hbc=true;embeddedStrings.push(...hermesStrings(bytes));}}}}
   find(ios);requireThat(hbc,'Real embedded Hermes iOS bundle required');
+  const nativeCompiler=verifyCompilerCapture(root,ios);
   const temporary=mkdtempSync(join(tmpdir(),'li-word-ios-js-'));
   let iosJavaScript;
   try {
     run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--no-minify','--output-dir',temporary],{cwd:root,stdio:'pipe',env:{...process.env,CI:'1'},maxBuffer:64*1024*1024});
-    let js=false;const exportedStrings=new Set();
-    function findJS(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())findJS(p);else if(/\.(?:js|bundle)$/.test(e.name)){js=true;const text=readFileSync(p,'utf8'),view=javascriptStrings(text);for(const value of [...view.strings,...view.keys,...(text.match(/[\p{L}_$][\p{L}\p{N}_$]*/gu)??[])])exportedStrings.add(value);}}}
-    findJS(temporary);requireThat(js,'Native platform JavaScript export required');
+    const jsFiles=[];
+    function findJS(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const path=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in native JavaScript export');if(e.isDirectory())findJS(path);else if(/\.(?:js|bundle)$/.test(e.name))jsFiles.push({path,name:relative(temporary,path),sha256:sha256(readFileSync(path))});}}
+    findJS(temporary);requireThat(jsFiles.length>0,'Native platform JavaScript export required');
     iosJavaScript={sha256:treeHash(temporary),...guardTree(temporary,policy,[lock],{sourceRoot:root})};
-    requireThat(embeddedStrings.every(value=>exportedStrings.has(value)), 'Hermes strings diverge from native JavaScript export');
-    iosJavaScript.hermesStringsMatched=true;
+    const derived=mkdtempSync(join(tmpdir(),'li-word-derived-hbc-')),exportedStrings=new Set();
+    try {
+      for(const [index,file] of jsFiles.entries()) {
+        requireThat(sha256(readFileSync(file.path))===file.sha256,'Scanned JavaScript changed before compilation');
+        const output=join(derived,index+'.hbc');
+        execFileSync(nativeCompiler.compiler.executablePath,['-emit-binary','-out',output,file.path,'-O'],{stdio:'pipe',maxBuffer:64*1024*1024});
+        requireThat(sha256(readFileSync(file.path))===file.sha256,'Compiled JavaScript differs from scanned bytes');
+        for(const value of hermesStrings(readFileSync(output)))exportedStrings.add(value);
+      }
+      requireThat(digest(compilerIdentity(root))===digest(nativeCompiler.compiler),'Hermes compiler changed during verification');
+      requireThat(embeddedStrings.every(value=>exportedStrings.has(value)), 'Hermes strings diverge from native JavaScript export');
+      iosJavaScript.hermesStringsMatched=true;
+      iosJavaScript.scannedJs=jsFiles.map(({name,sha256})=>({path:name,sha256}));
+      iosJavaScript.scannedJsSha256=digest(iosJavaScript.scannedJs);
+      iosJavaScript.compiler=nativeCompiler.compiler;
+    } finally {rmSync(derived,{recursive:true,force:true});}
     requireCleanSource(root);
   } finally {rmSync(temporary,{recursive:true,force:true});}
-  const receipt={schemaVersion:2,iosJavaScript,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
+  const receipt={schemaVersion:3,nativeCompiler,iosJavaScript,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
   writeFileSync(privatePath(output),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 export function verifyReleaseReceipt(root,file,web,ios) {
   requireCleanSource(root);
   const r=JSON.parse(readFileSync(privatePath(file),'utf8')),{lock}=lockedPolicy();
-  requireThat(r.schemaVersion===2 && r.iosJavaScript?.hermesStringsMatched===true && r.iosJavaScript?.passed===true && /^[a-f0-9]{64}$/.test(r.iosJavaScript.sha256) && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed===true && r.web?.passed===true && r.ios?.passed===true && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
+  requireThat(r.schemaVersion===3 && r.nativeCompiler?.sha256===verifyCompilerCapture(root,ios,r.nativeCompiler?.path).sha256 && r.iosJavaScript?.compiler && digest(r.iosJavaScript.compiler)===digest(compilerIdentity(root)) && /^[a-f0-9]{64}$/.test(r.iosJavaScript?.scannedJsSha256) && r.iosJavaScript.scannedJsSha256===digest(r.iosJavaScript.scannedJs) && r.iosJavaScript?.hermesStringsMatched===true && r.iosJavaScript?.passed===true && /^[a-f0-9]{64}$/.test(r.iosJavaScript.sha256) && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed===true && r.web?.passed===true && r.ios?.passed===true && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
   return {passed:true};
 }
 if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.url)) {
