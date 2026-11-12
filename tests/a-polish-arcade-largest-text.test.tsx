@@ -97,6 +97,11 @@ it('start card: Start sits in a compact dock below a scrolling card that holds t
   expect(name.props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
   const where=root!.root.find(n=>String(n.type)==='Copy'&&textOf(n).startsWith('Canoe Lagoon'));
   expect(where.props.maxFontSizeMultiplier).toBe(2);expect(textOf(where)).toContain('Level 2');
+  expect(root!.root.find(n=>String(n.type)==='View'&&n.props.testID==='arcade-start-card').props.style.maxWidth).toBe(480);
+  // Landscape: the card and dock widen so large text wraps into fewer lines.
+  Object.assign(viewport,{width:852,height:393});
+  await act(async()=>{root!.update(<StoreProvider><ArcadeGameScreen game={crab}/></StoreProvider>);});
+  expect(root!.root.find(n=>String(n.type)==='View'&&n.props.testID==='arcade-start-card').props.style.maxWidth).toBe(640);
 });
 
 it.each([0,62,171])('Crab HUD starts below the measured header (%s pt) with HUD text capped like Lagoon',async(overlayTop)=>{
