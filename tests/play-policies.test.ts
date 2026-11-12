@@ -54,12 +54,17 @@ describe("policy IDs", () => {
       ["hidden-canoes/gentle@2", 2, true, null],
       ["hidden-canoes/growing@2", 2, true, null],
       ["hidden-canoes/challenge@2", 2, true, null],
+      ["fishing-nets/challenge@2", 2, true, { depth: 14, nodes: 16384 }],
+      ["hidden-canoes/challenge@3", 3, true, null],
     ]);
     expect(Object.isFrozen(boardPolicies)).toBe(true);
     for (const p of boardPolicies) expect(p.id).toBe(`${p.game}/${p.strength}@${p.revision}`);
-    // Only Shell Pits Challenge and the Hidden Canoes chart reader changed; everything else is 3.0's.
+    // Shell Pits Challenge, the Hidden Canoes chart reader, Nets' exact ending and the Canoes heatmap
+    // changed; everything else is 3.0's.
     expect(currentPolicy("coconut-drop", "challenge").id).toBe("coconut-drop/challenge@1");
-    expect(currentPolicy("fishing-nets", "challenge").id).toBe("fishing-nets/challenge@1");
+    expect(currentPolicy("fishing-nets", "challenge").id).toBe("fishing-nets/challenge@2");
+    expect(currentPolicy("fishing-nets", "growing").id).toBe("fishing-nets/growing@1");
+    expect(currentPolicy("hidden-canoes", "challenge").id).toBe("hidden-canoes/challenge@3");
     expect(currentPolicy("shell-pits", "gentle").id).toBe("shell-pits/gentle@1");
     expect(currentPolicy("shell-pits", "growing").id).toBe("shell-pits/growing@1");
     expect(currentPolicy("shell-pits", "challenge").id).toBe("shell-pits/challenge@2");

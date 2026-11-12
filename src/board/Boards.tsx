@@ -23,8 +23,13 @@ type Props = {
   still?: boolean;
   flag?: boolean;
   speak: (key: string) => unknown;
+  /** Who plays circle and square, for puzzles: the legend and score then say who is who. */
+  names?: readonly [string, string];
+  /** The other side's latest move, ringed: Coconut Drop cells or Fishing Nets ropes. */
+  recent?: readonly number[];
 };
 const tone = ["#805538", "#286B69"];
+const netWord = (n: number) => (n === 1 ? "net" : "nets");
 function NumberText({
   children,
   size = 22,
@@ -51,7 +56,7 @@ export function Boards(props: Props) {
     <Reef {...props} />
   );
 }
-function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
+function Coconuts({ state: s, width, onMove, locked, hint, names, recent = [] }: Props) {
   const cell = Math.min(width, 490) / 7,
     available = engines["coconut-drop"].legal(s);
   const winning =
@@ -78,7 +83,7 @@ function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
             }}
           >
             <NumberText size={20} color={available.includes(c) ? C.teal : C.muted}>
-              {hint === c ? "↓" : c + 1}
+              {hint === c ? `↓${c + 1}` : c + 1}
             </NumberText>
             {Array.from({ length: 6 }, (_, r) => {
               const owner = s.board[r * 7 + c];
@@ -93,8 +98,8 @@ function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: winning.includes(r * 7 + c) ? "#F4D58F" : C.cream,
-                    borderWidth: winning.includes(r * 7 + c) ? 3 : 1,
-                    borderColor: winning.includes(r * 7 + c) ? "#96601E" : "#B5CBB2",
+                    borderWidth: winning.includes(r * 7 + c) || recent.includes(r * 7 + c) ? 3 : 1,
+                    borderColor: winning.includes(r * 7 + c) ? "#96601E" : recent.includes(r * 7 + c) ? C.teal : "#B5CBB2",
                   }}
                 >
                   {owner !== -1 && <Piece kind="coconut" seat={owner} size={cell - 8} />}
@@ -104,11 +109,14 @@ function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
           </PressableScale>
         ))}
       </View>
-      <Copy style={{ textAlign: "center", fontSize: 12 }}>Circle coconuts · pointed leaf coconuts</Copy>
+      <Copy style={{ textAlign: "center", fontSize: 12 }}>
+        {names ? `${names[0]}: brown circle coconuts · ${names[1]}: teal leaf coconuts` : "Circle coconuts · pointed leaf coconuts"}
+        {recent.length > 0 && names ? ` · ${names[1]}'s last drop has a ring` : ""}
+      </Copy>
     </View>
   );
 }
-function Nets({ state: s, width, onMove, locked, hint, still }: Props) {
+function Nets({ state: s, width, onMove, locked, hint, still, names, recent = [] }: Props) {
   const [dot, setDot] = useState<number | null>(null),
     [notice, setNotice] = useState("");
   const n = s.size,
@@ -189,8 +197,8 @@ function Nets({ state: s, width, onMove, locked, hint, still }: Props) {
                 x2={q.x}
                 y2={q.y}
                 stroke={e === hint ? "#BD7C28" : owner < 0 ? "#A5C6B9" : tone[owner]}
-                strokeWidth={owner < 0 ? 2 : 5}
-                strokeDasharray={owner < 0 ? "3 5" : undefined}
+                strokeWidth={e === hint ? 6 : owner < 0 ? 2 : recent.includes(e) ? 11 : 5}
+                strokeDasharray={owner < 0 && e !== hint ? "3 5" : undefined}
                 strokeLinecap="round"
               />
             );
@@ -234,8 +242,9 @@ function Nets({ state: s, width, onMove, locked, hint, still }: Props) {
         })}
       </View>
       <Copy style={{ fontSize: 14 }}>
-        ● {s.scores[0]}{edgeOf(s)[0] ? ` + ${edgeOf(s)[0]} head start` : ""} nets · ■ {s.scores[1]}
-        {edgeOf(s)[1] ? ` + ${edgeOf(s)[1]} head start` : ""} nets
+        {names
+          ? `${names[0]} ● brown ropes: ${s.scores[0]} ${s.scores[0] === 1 ? "box" : "boxes"} · ${names[1]} ■ teal ropes: ${s.scores[1]} ${s.scores[1] === 1 ? "box" : "boxes"}`
+          : <>● {s.scores[0]}{edgeOf(s)[0] ? ` + ${edgeOf(s)[0]} head start` : ""} {netWord(s.scores[0] + edgeOf(s)[0])} · ■ {s.scores[1]}{edgeOf(s)[1] ? ` + ${edgeOf(s)[1]} head start` : ""} {netWord(s.scores[1] + edgeOf(s)[1])}</>}
       </Copy>
     </View>
   );
