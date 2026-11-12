@@ -101,6 +101,11 @@ it('start card: Start sits in a compact dock below a scrolling card that holds t
   expect(root!.root.find(n=>String(n.type)==='Heading'&&n.props.style?.fontSize===20).props.maxFontSizeMultiplier).toBe(2);
   const row=root!.root.find(n=>String(n.type)==='View'&&typeof n.props.testID==='string'&&n.props.testID.startsWith('dare-'));
   expect(row.props.style.flexDirection).toBe('column');
+  // Turning a dare on tints its whole row, so the choice shows even when the switch has scrolled away.
+  const before=row.props.style.backgroundColor;
+  await act(async()=>{row.findByType('Switch' as never).props.onValueChange(true);});
+  const on=root!.root.find(n=>String(n.type)==='View'&&n.props.testID===row.props.testID);
+  expect(on.props.style.backgroundColor).not.toBe(before);expect(on.props.style.borderColor).toBe('#C98D33');
   expect(root!.root.find(n=>String(n.type)==='View'&&n.props.testID==='arcade-start-card').props.style.maxWidth).toBe(480);
   // Landscape: the card and dock widen so large text wraps into fewer lines.
   Object.assign(viewport,{width:852,height:393});

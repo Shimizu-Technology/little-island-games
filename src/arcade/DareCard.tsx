@@ -30,7 +30,7 @@ export function DareChoice({ dares, selected, marked, onSelect }: { dares: reado
         <Copy style={{ fontSize: 13, lineHeight: 18 }}>{d.detail}{earned ? " You already have this mark." : ""}</Copy>
       </View>;
       const toggle = <Switch accessibilityLabel={`${label}. ${d.detail}`} value={on} onValueChange={value => onSelect(value ? d.slot : null)} trackColor={{ true: "#B9792C", false: "#CBD3CA" }} thumbColor="#FFFFFF" ios_backgroundColor="#CBD3CA"/>;
-      return <View key={d.slot} testID={`dare-${d.slot}`} style={{ flexDirection: stacked ? "column" : "row", alignItems: stacked ? "stretch" : "flex-start", gap: stacked ? 8 : 12, padding: 14, borderRadius: 16, borderWidth: on ? 2 : 1, borderColor: on ? "#C98D33" : C.line, backgroundColor: C.paper }}>
+      return <View key={d.slot} testID={`dare-${d.slot}`} style={{ flexDirection: stacked ? "column" : "row", alignItems: stacked ? "stretch" : "flex-start", gap: stacked ? 8 : 12, padding: 14, borderRadius: 16, borderWidth: on ? 2 : 1, borderColor: on ? "#C98D33" : C.line, backgroundColor: on ? "#F9E2AE" : C.paper }}>
         {stacked ? <><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><DareMark earned={earned} size={32}/>{toggle}</View>{words}</> : <><DareMark earned={earned} size={32}/>{words}{toggle}</>}
       </View>;
     })}
