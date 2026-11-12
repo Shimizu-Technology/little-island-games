@@ -1,12 +1,19 @@
 import { boxOf, colOf, rowOf, type Group, type LatinPuzzle } from './core';
-import type { HintPlan, Step, Technique } from './solver';
+import type { ClashRule, HintPlan, Step, Technique } from './solver';
 
-/** Short, plain names for the named techniques, as a person would say them. */
+/**
+ * Short, plain names for the named techniques, as a person would say them. Internal ids such as
+ * `naked-pair` are never shown: the person sees "A matching pair".
+ */
 export const techniqueNames: Record<Technique, string> = {
   single: 'One number left', 'hidden-single': 'Only one place', inequality: 'Greater and smaller', 'cage-sum': 'Cage totals', 'skyline-line': 'Counting roofs',
-  'locked-candidates': 'Pointing and claiming', 'naked-pair': 'A pair', 'hidden-pair': 'A hidden pair', 'naked-triple': 'A triple', 'hidden-triple': 'A hidden triple',
+  'locked-candidates': 'Pointing and claiming', 'naked-pair': 'A matching pair', 'hidden-pair': 'A hidden pair', 'naked-triple': 'A matching triple', 'hidden-triple': 'A hidden triple',
   'x-wing': 'X-Wing', swordfish: 'Swordfish', 'xy-wing': 'XY-Wing', 'simple-coloring': 'Colour chain',
 };
+/** The displayed name of a technique id, or nothing for an id this version does not know. */
+export const techniqueName = (id: string): string => (techniqueNames as Record<string, string>)[id] ?? '';
+/** How the two colours of a chain are marked on the board, so they never rely on colour alone. */
+export const chainMarks = ['●', '○'] as const;
 const boxNames = (p: Pick<LatinPuzzle, 'size' | 'box'>) => {
   const across = p.box ? p.size / (p.size / p.box) : 0, down = p.box ? p.size / p.box : 0;
   return (b: number) => {
@@ -41,20 +48,40 @@ export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: str
       return { look: `Look for ${v} in ${list(lines.map(x => groupName(p, x)))}.`, think: `In those lines ${v} only fits in ${list(crossing.map(x => groupName(p, x)))}. Each of those takes its ${v} from them, so ${v} leaves the rest of ${crossing.length === 2 ? 'both' : 'those'}.` };
     }
     case 'xy-wing': return { look: `Look at the three shaded cells, each with two numbers.`, think: `Whichever number the middle cell takes, one of the other two becomes ${s.digits[2]}. A cell that sees both of them cannot be ${s.digits[2]}.` };
-    case 'simple-coloring': return { look: `Follow the chain of ${v}s that come in pairs.`, think: `Along the chain, ${v} alternates: if one end is ${v}, the next is not. A cell that sees both colours cannot be ${v}.` };
+    case 'simple-coloring': {
+      const look = `Follow the lines through the squares where ${v} could go, marked with dots ${chainMarks[0]} and rings ${chainMarks[1]}. Each line joins the only two places for ${v} in a row, column or box: one of them is ${v} and the other is not.`;
+      const turns = `Dots and rings take turns along the lines, so either every dot is ${v} or every ring is.`, proof = s.chain?.proof ?? [];
+      // `wrap`: two dots see each other, so every dot is false. `trap`: an outside square sees both marks.
+      if (s.chain?.kind === 'wrap') return { look, think: `${turns} The dots at ${list(proof.map(i => cellName(p, i)))} see each other and cannot both be ${v}, so no dot is ${v}. The ${v}s go on the rings.` };
+      if (!proof.length) return { look, think: `${turns} A square that sees both a dot and a ring cannot be ${v}.` };
+      const who = list(proof.map(i => cellName(p, i)));
+      return { look, think: `${turns} ${who[0].toUpperCase()}${who.slice(1)} ${proof.length > 1 ? 'each see' : 'sees'} both a dot and a ring, so ${proof.length > 1 ? 'none of them' : 'it'} can be ${v}.` };
+    }
   }
 }
-/** `target` is the square the move changes, so the person can be taken there to try it. */
-export type Cue = { look: string; think: string; show: string; focus: number[]; target?: number; technique: Technique | 'clash' | 'mistake' | null };
+/**
+ * `target` is the square the move changes, so the person can be taken there to try it. `marks` are a
+ * colour chain's two colours, drawn with `chainMarks`; `links` are the pairs that join it and `proof` the squares the Why step names.
+ */
+export type Cue = { look: string; think: string; show: string; focus: number[]; target?: number; technique: Technique | 'clash' | 'mistake' | null; marks?: [number[], number[]]; links?: [number, number][]; proof?: number[] };
+const opWords: Record<string, (t: number) => string> = { '+': t => `add up to ${t}`, '-': t => `have a difference of ${t}`, '*': t => `multiply to ${t}`, '/': t => `have one ${t} times the other`, '=': t => `be ${t}` };
+/** What a clash breaks, in words that fit the rule. The squares named are the gold ones on the board. */
+export function clashWords(p: LatinPuzzle, rule: ClashRule): string {
+  if (rule.kind === 'repeat') return `${rule.value} is in ${groupName(p, rule.group)} twice. Each number goes once in a ${rule.group.kind === 'cage' ? 'cage' : rule.group.kind}.`;
+  if (rule.kind === 'cage') { const c = p.cages[rule.cage]; return `The numbers in this cage must ${opWords[c.op](c.target)}, and they do not.`; }
+  if (rule.kind === 'less') return 'The arrow points at the smaller number, but the number it points at is bigger.';
+  return `From that edge exactly ${rule.clue} ${rule.clue === 1 ? 'roof' : 'roofs'} should be seen, and this line shows a different number.`;
+}
 /** Three rungs of help for one board: where to look, why, then the move itself. */
 export function cueFor(p: LatinPuzzle, plan: HintPlan): Cue {
-  if (plan.kind === 'clash') return { look: 'Look at the cells marked in red.', think: 'Two of them break a rule: the same number twice, or a total that does not match.', show: `Clear ${cellName(p, plan.erase)} and look again.`, focus: plan.cells, target: plan.erase, technique: 'clash' };
+  // The gold hint focus shows these squares whether or not clashes are shown in red.
+  if (plan.kind === 'clash') return { look: 'Look at the gold squares.', think: clashWords(p, plan.rule), show: `Clear ${cellName(p, plan.erase)} and look again.`, focus: plan.cells, target: plan.erase, technique: 'clash' };
   if (plan.kind === 'mistake') return { look: `Look at ${cellName(p, plan.cell)}.`, think: 'Following the starting numbers, this number cannot stay here. Nothing breaks yet, but it will.', show: `Clear ${cellName(p, plan.cell)} and look again.`, focus: [plan.cell], target: plan.cell, technique: 'mistake' };
   if (plan.kind === 'none') return { look: 'Every number is in place.', think: '', show: '', focus: [], technique: null };
   const key = plan.steps.at(-1);
   const named = key ? explainStep(p, key) : explainStep(p, { technique: 'single', focus: [plan.cell], groups: [], digits: [plan.value], remove: [] });
   const focus = key ? [...new Set([...key.focus, plan.cell])] : [plan.cell];
   const lead = plan.steps.length > 1 ? ' That leaves one place.' : '';
-  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, target: plan.cell, technique: plan.technique };
+  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, target: plan.cell, technique: plan.technique, ...(key?.chain ? { marks: key.chain.colours, links: key.chain.links, proof: key.chain.proof } : {}) };
 }
 export const boxLabel = (p: LatinPuzzle, i: number) => boxNames(p)(boxOf(p, i));

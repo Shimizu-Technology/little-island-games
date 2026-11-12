@@ -12,6 +12,8 @@ import { encodeSave } from '../src/state/profiles';
 import type { ChallengeExpected } from '../src/state/challengeDrafts';
 import { installFixture, moved, session } from './helpers/save-contract';
 
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
+
 // The Store uses each production adapter. Only Expo's transport is replaced by real Node SQL.
 const sql = await vi.hoisted(async () => {
   const { DatabaseSync } = await import('node:sqlite');

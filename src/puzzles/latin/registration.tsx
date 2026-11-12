@@ -3,6 +3,7 @@ import type { ChallengeCard, PackedBand, PackedChallenge, TypedRegistration } fr
 import type { ChallengeProgress, ChallengeSession, PuzzleRef, SaveCatalog, SessionCodec, Terminal } from '../../state/challenge';
 import { validChallengeSession } from '../../state/challenge';
 import { prepareSessionContent } from '../../state/sessionContent';
+import { packedBank } from '../../state/bankFacts';
 import { asciiId, exactKeys, hashId, jsonBytes, plain, uint, unpack } from '../../state/saveBits';
 import { bankLoader } from '../catalog';
 import { BankError, type BankLoader } from '../loader';
@@ -14,6 +15,8 @@ import { latinAdapter } from './adapter';
 import { cellsOf, maxValue, shapeOf, solved, type LatinKind, type LatinPuzzle } from './core';
 import { planHint } from './solver';
 import { rungFor } from './rungs';
+import type { PackedOpen } from '../../cove/catalog';
+type PackedExtras = Omit<Required<PackedOpen>, 'describe'>;
 
 /** Board events. Help records assistance without changing the board; Hint applies one taught move. */
 export type LatinEvent = GridAction | { type: 'help' } | { type: 'hint' } | { type: 'reset' } | { type: 'fill-notes' };
@@ -142,21 +145,49 @@ export function defineLatinGame(config: {
     while (resident.size > RESIDENT) resident.delete(resident.keys().next().value!);
     return got;
   }
-  const packed: PackedChallenge & { open: (bank: number, index: number) => Promise<PuzzleRef>; teaches: (ref: PuzzleRef) => string | undefined } = {
+  /** Row hashes per bank, read lazily the first time a hidden puzzle has to be found in it. */
+  const rowHashes = new Map<number, readonly string[]>();
+  async function hashesOf(bank: number): Promise<readonly string[]> {
+    const hit = rowHashes.get(bank);
+    if (hit) return hit;
+    const facts = catalog.banks.get(bank), l = loader();
+    if (!facts || !packedBank(facts) || !factsOf(bank)) throw new BankError('unknown', 'Unknown packed bank.');
+    // The loader checks the pack against its manifest once and keeps it warm for the rest.
+    const hashes: string[] = [];
+    for (let i = 0; i < facts.count; i++) hashes.push(await l.savedHash(facts, i));
+    rowHashes.set(bank, hashes);
+    return hashes;
+  }
+  /** Unopened entries first, then unfinished ones, in bank order from just after the last one played. Hidden ones are skipped. */
+  const pickIn = (b: PackedBand, progress: ChallengeProgress, avoid?: PuzzleRef, skip: ReadonlySet<number> = new Set()) => {
+    const states = unpack(progress.banks.find(r => r[0] === b.bank)?.[1] ?? '', b.count, 3) ?? Array<number>(b.count).fill(0);
+    const recent = progress.recent.filter(([s]) => s === b.bank).map(([, p]) => p), last = recent.at(-1) ?? -1;
+    const around = Array.from({ length: b.count }, (_, i) => (last + 1 + i) % b.count).filter(i => b.count === 1 || i !== avoid?.puzzle || avoid.bank !== b.bank);
+    // Every entry hidden: deal as if none were, rather than nothing.
+    const order = around.some(i => !skip.has(i)) ? around.filter(i => !skip.has(i)) : around;
+    return order.find(i => !states[i]) ?? order.find(i => states[i] === 1) ?? order.find(i => !recent.includes(i)) ?? order[0];
+  };
+  const packed: PackedChallenge & PackedExtras = {
     bands,
     card: ref => { const b = bandOf(ref.bank); return b && ref.engine === game && ref.rules === factsOf(ref.bank)!.rules && uint(ref.puzzle, b.count - 1) ? cardOf(ref, b) : undefined; },
     prepare: async ref => { if (bandOf(ref.bank)) await resolve(ref); },
     open: (bank, index) => resolve({ bank, puzzle: index }),
     teaches: ref => lookup(ref)?.descriptor.teaches[0],
-    /** Unopened entries first, then unfinished ones, in bank order from just after the last one played. */
     choose: async (bank: number, progress: ChallengeProgress, avoid?: PuzzleRef) => {
       const b = bandOf(bank);
       if (!b) throw new BankError('unknown', 'Unknown packed bank.');
-      const states = unpack(progress.banks.find(r => r[0] === bank)?.[1] ?? '', b.count, 3) ?? Array<number>(b.count).fill(0);
-      const recent = progress.recent.filter(([s]) => s === bank).map(([, p]) => p), last = recent.at(-1) ?? -1;
-      const order = Array.from({ length: b.count }, (_, i) => (last + 1 + i) % b.count).filter(i => b.count === 1 || i !== avoid?.puzzle || avoid.bank !== bank);
-      const pick = order.find(i => !states[i]) ?? order.find(i => states[i] === 1) ?? order.find(i => !recent.includes(i)) ?? order[0];
-      return resolve({ bank, puzzle: pick });
+      return resolve({ bank, puzzle: pickIn(b, progress, avoid) });
+    },
+    hiddenRows: async (bank, hidden) => {
+      if (!hidden.length) return new Set();
+      const want = new Set(hidden), out = new Set<number>();
+      (await hashesOf(bank)).forEach((h, i) => { if (want.has(h)) out.add(i); });
+      return out;
+    },
+    chooseVisible: async (bank, progress, skip, avoid) => {
+      const b = bandOf(bank);
+      if (!b) throw new BankError('unknown', 'Unknown packed bank.');
+      return resolve({ bank, puzzle: pickIn(b, progress, avoid, skip) });
     },
   };
   const Board = config.Board;

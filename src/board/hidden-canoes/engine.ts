@@ -1,8 +1,12 @@
 import { other, Seat } from "../../games/match";
-import { blank, integer, Position, replayValidator, shuffle, Strength } from "../types";
+import { blank, Edge, edgeOf, integer, Position, replayValidator, shuffle, Strength } from "../types";
 export const fleet = [3, 2, 2];
 export const coordinate = (i: number) => `${"ABCDEF"[i % 6]}${Math.floor(i / 6) + 1}`;
-export function create(seed = 1, _size = 6, starter: Seat = 0): Position {
+/** Head start: canoe spaces counted as found for that seat. Nothing hidden is shown. */
+export const maxEdge = 2;
+/** Spaces a seat must find, after its declared head start. */
+export const target = (s: Position, seat: Seat) => 7 - edgeOf(s)[seat];
+export function create(seed = 1, _size = 6, starter: Seat = 0, edge?: Edge): Position {
   const board = Array(72).fill(0);
   for (const seat of [0, 1])
     for (const [id, length] of fleet.entries()) {
@@ -17,7 +21,7 @@ export function create(seed = 1, _size = 6, starter: Seat = 0): Position {
         }
       for (const p of shuffle(options, seed + seat * 177 + id * 37)[0]) board[seat * 36 + p] = id + 1;
     }
-  return blank(seed, 6, starter, board, Array(72).fill(0));
+  return blank(seed, 6, starter, board, Array(72).fill(0), edge);
 }
 /** marks[seat*36+cell] is that seat's search of the other lagoon; boards stay private. */
 export function legal(s: Position): number[] {
@@ -36,7 +40,7 @@ export function move(s: Position, cell: number): Position {
     scores,
     moves: [...s.moves, cell],
     turn: other(s.turn),
-    outcome: scores[s.turn] === 7 ? s.turn : null,
+    outcome: scores[s.turn] === target(s, s.turn) ? s.turn : null,
   };
 }
 /** Decisions use only the searching player's marks, never private canoe positions. */
@@ -67,4 +71,4 @@ export function choose(s: Position, strength: Strength): number | null {
     null
   );
 }
-export const validate = replayValidator(create, move, [6], 71);
+export const validate = replayValidator(create, move, [6], 71, maxEdge);

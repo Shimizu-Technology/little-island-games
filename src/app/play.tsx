@@ -37,6 +37,7 @@ import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles, ToggleRow } from "../components/ui";
 import { useSounds } from "../components/Audio";
 import { useRoundPractice } from "../practice/useRoundPractice";
+import { headStarts, rivalFor } from "../playPolicies/rivals";
 import { Recovery } from "../components/Recovery";
 import {
   CheckersBoard,
@@ -46,6 +47,7 @@ import {
   TicBoard,
   WordBoard,
 } from "../screens/GameBoards";
+const checkersRival = { easy: "gentle", medium: "growing", hard: "challenge" } as const;
 export default function Play() {
   const store = useStore();
   const params = useLocalSearchParams<{ game?: string }>(),
@@ -351,10 +353,35 @@ function Game({ id }: { id: GameId }) {
                 >
                   {id === "word-rescue"
                     ? { easy: "Short words", medium: "Longer words", hard: "Big words" }[d]
-                    : difficultyLabel[d]}
+                    : id === "checkers"
+                      ? `${rivalFor("checkers", checkersRival[d]).name} · ${difficultyLabel[d]}`
+                      : difficultyLabel[d]}
                 </Chip>
               ))}
             </View>
+            {id === "checkers" && (
+              <>
+                <Copy style={{ fontSize: 14 }}>
+                  {rivalFor("checkers", checkersRival[options.difficulty]).name} is{" "}
+                  {rivalFor("checkers", checkersRival[options.difficulty]).who}.{" "}
+                  {rivalFor("checkers", checkersRival[options.difficulty]).plays}
+                </Copy>
+                <Heading style={{ fontSize: 18 }}>Head start</Heading>
+                <View style={[styles.row, { flexWrap: "wrap" }]}>
+                  <Chip selected={options.checkersHeadStart !== 1} onPress={() => setOptions({ ...options, checkersHeadStart: undefined })}>
+                    Even game
+                  </Chip>
+                  <Chip selected={options.checkersHeadStart === 1} onPress={() => setOptions({ ...options, checkersHeadStart: 1 })}>
+                    {headStarts("checkers")[0].label}
+                  </Chip>
+                </View>
+                <Copy style={{ fontSize: 14 }}>
+                  {options.checkersHeadStart === 1
+                    ? `${headStarts("checkers")[0].detail} It still plays its best.`
+                    : "No head start. The rival plays its best either way."}
+                </Copy>
+              </>
+            )}
           </>
         )}
         {id === "word-rescue" && (

@@ -4,7 +4,9 @@ import * as nets from "./fishing-nets/engine";
 import * as canoes from "./hidden-canoes/engine";
 import * as pits from "./shell-pits/engine";
 import * as reef from "./reef-sweep/engine";
-import { Engine, object, Position, Strength, strengths } from "./types";
+import { Edge, Engine, integer, object, Position, Strength, strengths } from "./types";
+import { archivedPolicy, currentPolicy, policyById } from "../playPolicies/policies";
+import type { BoardPolicy, PolicyId } from "../playPolicies/types";
 export * from "./types";
 export const boardIds = ["coconut-drop", "fishing-nets", "hidden-canoes", "shell-pits", "reef-sweep"] as const;
 export type BoardId = (typeof boardIds)[number];
@@ -68,7 +70,8 @@ export const catalog: Record<
   },
 };
 export type BoardSession = {
-  version: 1;
+  /** Version 1 rounds were saved before policies were recorded; they finish on revision 1. */
+  version: 1 | 2;
   id: string;
   game: BoardId;
   mode: "solo" | "together";
@@ -76,6 +79,10 @@ export type BoardSession = {
   position: Position;
   match: Match;
   taught: boolean;
+  /** Version 2: the computer's policy, frozen for this round. Null when no computer plays. */
+  policy?: PolicyId | null;
+  /** Version 2: a public tie-break salt for the computer, never derived from the seed. */
+  salt?: number;
 };
 export type BoardSessions = Partial<Record<BoardId, BoardSession>>;
 export function createSession(
@@ -88,38 +95,70 @@ export function createSession(
     starter?: Seat;
     names?: [string, string];
     alternate?: boolean;
+    /** A declared head start for seat 0 or seat 1, in the game's own units. */
+    edge?: Edge;
+    salt?: number;
   } = {}
 ): BoardSession {
-  const seed = config.seed ?? Date.now() >>> 0;
+  const seed = config.seed ?? Date.now() >>> 0,
+    mode = game === "reef-sweep" ? "solo" : (config.mode ?? "solo"),
+    strength = config.strength ?? "gentle";
   return {
-    version: 1,
+    version: 2,
     id: `board-${seed}-${Math.random().toString(36).slice(2, 10)}`,
     game,
-    mode: game === "reef-sweep" ? "solo" : (config.mode ?? "solo"),
-    strength: config.strength ?? "gentle",
-    position: engines[game].create(seed, config.size, config.starter),
+    mode,
+    strength,
+    position: engines[game].create(seed, config.size, config.starter, engines[game].maxEdge ? config.edge : undefined),
     match: newMatch(config.names, config.alternate),
     taught: false,
+    policy: computerPlays(game, mode) ? currentPolicy(game as PolicyBoard, strength).id : null,
+    salt: (config.salt ?? Math.floor(Math.random() * 0x100000000)) >>> 0,
   };
 }
-export function playAgain(s: BoardSession, seed: number): BoardSession {
+type PolicyBoard = Exclude<BoardId, "reef-sweep">;
+const computerPlays = (game: BoardId, mode: BoardSession["mode"]) => game !== "reef-sweep" && mode === "solo";
+/** The policy this round plays with: recorded in version 2, implied for version 1. */
+export function sessionPolicy(s: BoardSession): BoardPolicy | null {
+  if (!computerPlays(s.game, s.mode)) return null;
+  return s.version === 1 ? archivedPolicy(s.game as PolicyBoard, s.strength) : (policyById(s.policy) ?? null);
+}
+/** A new round takes the current policy revision and keeps the declared head start. */
+export function playAgain(s: BoardSession, seed: number, salt = Math.floor(Math.random() * 0x100000000)): BoardSession {
   const position = engines[s.game].create(
     seed,
     s.position.size,
-    s.game === "reef-sweep" ? 0 : nextStarter(s.match, s.position.starter)
+    s.game === "reef-sweep" ? 0 : nextStarter(s.match, s.position.starter),
+    s.position.edge
   );
   return {
     ...s,
+    version: 2,
     id: `board-${seed}-${Math.random().toString(36).slice(2, 10)}`,
     position,
     match: s.game === "reef-sweep" ? s.match : settle(s.match, s.position.outcome),
+    policy: computerPlays(s.game, s.mode) ? currentPolicy(s.game as PolicyBoard, s.strength).id : null,
+    salt: salt >>> 0,
   };
 }
 export function validBoardSession(v: unknown): v is BoardSession {
+  if (!object(v)) return false;
+  const keys = Object.keys(v).sort().join();
+  if (v.version === 1) {
+    if (keys !== "game,id,match,mode,position,strength,taught,version" || (object(v.position) && "edge" in v.position))
+      return false;
+  } else if (v.version === 2) {
+    if (keys !== "game,id,match,mode,policy,position,salt,strength,taught,version" || !integer(v.salt, 0, 0xffffffff))
+      return false;
+    const policy = policyById(v.policy);
+    if (
+      computerPlays(v.game as BoardId, v.mode as BoardSession["mode"])
+        ? !policy || policy.game !== v.game || policy.strength !== v.strength || !policy.publicOnly
+        : v.policy !== null
+    )
+      return false;
+  } else return false;
   return (
-    object(v) &&
-    Object.keys(v).sort().join() === "game,id,match,mode,position,strength,taught,version" &&
-    v.version === 1 &&
     typeof v.id === "string" &&
     v.id.length > 0 &&
     v.id.length <= 100 &&
@@ -139,7 +178,7 @@ export function undo(s: BoardSession): BoardSession {
   if (!s.position.moves.length || s.game === "hidden-canoes" || (s.mode === "together" && s.game !== "reef-sweep"))
     return s;
   const engine = engines[s.game],
-    states = [engine.create(s.position.seed, s.position.size, s.position.starter)];
+    states = [engine.create(s.position.seed, s.position.size, s.position.starter, s.position.edge)];
   for (const m of s.position.moves) states.push(engine.move(states[states.length - 1], m));
   for (let i = states.length - 2; i >= 0; i--) if (states[i].turn === 0) return { ...s, position: states[i] };
   return s;

@@ -1,0 +1,33 @@
+// Produced once on 10 November 2026 against unmodified shipped 3.0.0 source,
+// git archive 0f428c2fef43a821bbea782823f7548b5d514971 (src, content, modules).
+// Run: AUDIT_SOURCE_ROOT=<archive> AUDIT_COMPILER_ROOT=<checkout> node --loader <v3 play-spec loader.mjs> PRODUCER.ts
+// Every write goes through the shipped arcadeTransition, so locks, outfit thresholds
+// and chest rules are the old ones. Do not regenerate with newer engines.
+import fs from 'node:fs';
+import { arcadeTransition, emptyArcade, validArcade, levelOpen, gameProgress, arcadeLearner } from '@app/arcade/progress';
+import { allLevelIds } from '@app/arcade/types';
+import { defaultPracticeSettings } from '@app/practice/types';
+let a = emptyArcade(), n = 0;
+const finish = (owner: string, game: string, level: string, stars: number, score = 100) => { a = arcadeTransition(a, owner, { type: 'finish', game, level, stars, score, round: `frozen-${n++}`, name: owner } as any); };
+const skip = (owner: string) => { const c = arcadeLearner(a, owner).chest; if (c) a = arcadeTransition(a, owner, { type: 'skip-chest', round: c.round }); };
+const claim = (owner: string) => { const c = arcadeLearner(a, owner).chest; if (c) a = arcadeTransition(a, owner, { type: 'claim-chest', round: c.round, result: { skill: 'num.add-10', helped: false }, config: defaultPracticeSettings }); };
+// Learner "a": earned 3 stars on W1–W5 of Canoe Cargo by playing in order (120 stars, all four outfits), claiming
+// every sticker chest it was offered, then wears Starlight.
+for (const id of allLevelIds.filter(id => /^w[1-5]-/.test(id))) { if (!levelOpen(gameProgress(arcadeLearner(a, 'a'), 'canoe-cargo'), id as any)) throw new Error(`shipped lock refused ${id}`); finish('a', 'canoe-cargo', id, 3); claim('a'); }
+a = arcadeTransition(a, 'a', { type: 'outfit', game: 'canoe-cargo', outfit: 'starlight' });
+// Learner "a" also has a pending chest from Reef Builder, unclaimed.
+finish('a', 'reef-builder', 'w1-1', 2);
+// Learner "b": mixed stars in two games, World 1 incomplete, Sun hat earned and worn.
+for (const id of ['w1-1', 'w1-2', 'w1-3', 'w1-4', 'w1-5'] as const) { finish('b', 'shell-song', id, 3); skip('b'); }
+finish('b', 'shell-song', 'w1-6', 1); skip('b');
+a = arcadeTransition(a, 'b', { type: 'outfit', game: 'shell-song', outfit: 'sunhat' });
+for (const id of ['w1-1', 'w1-2'] as const) { finish('b', 'fruit-bat-flight', id, 2); skip('b'); }
+// Shipped Endless was locked until all of World 1 had a star, so this finish is refused.
+finish('b', 'fruit-bat-flight', 'endless', 0, 4321);
+// Family: the old grown-up unlock was on, and a World 6 finish was earned through it.
+a = arcadeTransition(a, 'family', { type: 'preferences', unlockAll: true });
+finish('family', 'lagoon-run', 'w6-8', 3);
+finish('family', 'lagoon-run', 'endless', 0, 2468);
+if (arcadeLearner(a, 'b').games['fruit-bat-flight']!.best !== 100 || a.scores.length !== 1 || a.scores[0].game !== 'lagoon-run') throw new Error('expected the shipped Endless lock');
+if (!validArcade(a)) throw new Error('invalid shipped arcade');
+fs.writeFileSync(process.argv[2] ?? 'arcade-d1-shipped.json', JSON.stringify(a));

@@ -77,7 +77,7 @@ export function generateCages(kind: 'cage-math' | 'killer', rung: VariantRung, s
   if (newest !== '+' && !p.cages.some(c => c.op === newest || newest === '*' && c.op === '/')) return null;
   p.cages = canonicalCages(p.cages);
   const g = grade(p, 2_000_000);
-  if (g.status !== 'complete' || rank(g.ceiling) > rank(rung.max)) return null;
+  if (g.status !== 'complete' || rank(g.ceiling) < rank(rung.min) || rank(g.ceiling) > rank(rung.max)) return null;
   return { seed, puzzle: p, template: cageStyles[seed % 4], grade: g };
 }
 const cageStyles = ['across', 'down', 'blocks', 'winding'], markStyles = ['rows', 'columns', 'mixed', 'edge'], cityStyles = ['north', 'west', 'scatter', 'corners'];
@@ -101,7 +101,7 @@ export function generateGreater(rung: VariantRung, seed: number): Candidate | nu
   }
   if (p.givens.filter(Boolean).length > (rung.givens ?? n)) return null;
   const g = grade(p, 2_000_000);
-  if (g.status !== 'complete' || rank(g.ceiling) < rank(rung.min)) return null;
+  if (g.status !== 'complete' || rank(g.ceiling) < rank(rung.min) || rank(g.ceiling) > rank(rung.max)) return null;
   return { seed, puzzle: { ...p, less: [...p.less].sort((a, b) => a[0] - b[0] || a[1] - b[1]) }, template: style, grade: g };
 }
 /** One Skyline candidate: every edge clue, then remove clues while the city stays unique. */
@@ -127,7 +127,7 @@ export function generateSkyline(rung: VariantRung, seed: number): Candidate | nu
   }
   if (p.givens.filter(Boolean).length > (rung.givens ?? 2) || p.sights.length > Math.round(4 * n * (rung.clues ?? 1))) return null;
   const g = grade(p, 2_000_000);
-  if (g.status !== 'complete') return null;
+  if (g.status !== 'complete' || rank(g.ceiling) < rank(rung.min) || rank(g.ceiling) > rank(rung.max)) return null;
   return { seed, puzzle: { ...p, sights: [...p.sights].sort((a, b) => a[0] - b[0]) }, template: style, grade: g };
 }
 const weights: Partial<Record<Technique, number>> = { 'hidden-single': 1, inequality: 1, 'cage-sum': 1, 'skyline-line': 2, 'locked-candidates': 4, 'naked-pair': 6, 'hidden-pair': 7, 'naked-triple': 9, 'hidden-triple': 10, 'x-wing': 14, swordfish: 18, 'xy-wing': 16, 'simple-coloring': 18 };
@@ -155,6 +155,7 @@ export const cageMathGenerator = variantGenerator('cage-math', {
 export const greaterGenerator = variantGenerator('greater-than', {
   gentle: { clues: 0.45, givens: 5, target: 160, floor: 64 },
   tall: { clues: 0.4, givens: 7, target: 160, floor: 64 },
+  steep: { clues: 0.35, givens: 7, target: 160, floor: 64 },
 });
 export const skylineGenerator = variantGenerator('skyline', {
   low: { givens: 2, target: 160, floor: 64 },

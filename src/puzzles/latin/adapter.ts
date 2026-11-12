@@ -1,5 +1,5 @@
 import { exactKeys, plain, uint } from '../../state/saveBits';
-import { relabel, smallest, squareSymmetries } from '../semantic';
+import { smallest, squareSymmetries } from '../semantic';
 import { sha256Hex } from '../sha256';
 import type { DescriptorCore, PuzzleAdapter } from '../types';
 import { cellsOf, decodePuzzle, encodePuzzle, maxValue, shapeOf, sightCells, solved, validPuzzle, type LatinKind, type LatinPuzzle } from './core';
@@ -11,39 +11,64 @@ export type LatinState = { values: number[]; edits: number };
 export type LatinDescriptor = DescriptorCore<LatinPuzzle>;
 
 const permutations = <T,>(items: readonly T[]): T[][] => items.length <= 1 ? [[...items]] : items.flatMap((x, i) => permutations([...items.slice(0, i), ...items.slice(i + 1)]).map(rest => [x, ...rest]));
-/** Row orders that keep every box intact: bands in any order, rows within each band reordered. */
-function lineOrders(n: number, block: number, full: boolean): number[][] {
-  const bands = permutations(Array.from({ length: n / block }, (_, i) => i));
-  const inner = full ? permutations(Array.from({ length: block }, (_, i) => i)) : [Array.from({ length: block }, (_, i) => i), Array.from({ length: block }, (_, i) => block - 1 - i)];
-  const out: number[][] = [];
-  // Full inner orders per band would be inner^bands; on 4×4 and 6×6 that is still small.
-  const choices = full ? inner.length ** (n / block) : inner.length;
-  for (const order of bands) for (let pick = 0; pick < choices; pick++) {
-    const rows: number[] = [];
-    let code = pick;
-    for (const band of order) { const within = full ? inner[code % inner.length] : inner[pick]; if (full) code = Math.floor(code / inner.length); for (const r of within) rows.push(band * block + r); }
-    out.push(rows);
-  }
+/** Every line order that keeps boxes whole: blocks of `block` lines in any order, and any order inside each block. */
+function lineOrders(n: number, block: number): number[][] {
+  const blocks = permutations(Array.from({ length: n / block }, (_, i) => i)), inner = permutations(Array.from({ length: block }, (_, i) => i)), out: number[][] = [];
+  const walk = (order: readonly number[], at: number, lines: number[]) => {
+    if (at === order.length) { out.push(lines); return; }
+    for (const within of inner) walk(order, at + 1, [...lines, ...within.map(r => order[at] * block + r)]);
+  };
+  for (const order of blocks) walk(order, 0, []);
   return out;
 }
-const sudokuMaps = new Map<number, number[][]>();
+const columnOrders = new Map<string, number[][]>();
 /**
- * Cell maps that keep Sudoku's rules: band/stack orders, line orders inside them and, when boxes are
- * square, transposition. Complete for 4×4 and 6×6; 9×9 keeps whole-band reversals (288 maps).
+ * The smallest row-major reading of a Sudoku clue grid over its whole rule-keeping class: band and
+ * stack orders, any row order inside a band, any column order inside a stack, transposition when
+ * boxes are square, and digit renaming. That class has 3,359,232 cell maps on 9×9, so rows are
+ * chosen one at a time and only the column orders that tie for the smallest prefix survive.
  */
-export function sudokuSymmetries(n: number): number[][] {
-  const hit = sudokuMaps.get(n);
-  if (hit) return hit;
-  const h = n === 9 ? 3 : 2, w = n / h, full = n < 9;
-  const rows = lineOrders(n, h, full), cols = lineOrders(n, w, full), maps: number[][] = [];
-  for (const transpose of h === w ? [false, true] : [false]) for (const r of rows) for (const c of cols)
-    maps.push(Array.from({ length: n * n }, (_, i) => { const y = r.indexOf(Math.floor(i / n)), x = c.indexOf(i % n); return transpose ? x * n + y : y * n + x; }));
-  sudokuMaps.set(n, maps);
-  return maps;
+export function sudokuCanonical(p: Pick<LatinPuzzle, 'size' | 'box' | 'givens'>): string {
+  const n = p.size, h = p.box, w = n / h, key = `${n}:${w}`;
+  const cols = columnOrders.get(key) ?? lineOrders(n, w);
+  columnOrders.set(key, cols);
+  const grids: number[][] = [[...p.givens], ...(h === w ? [p.givens.map((_, i) => p.givens[(i % n) * n + Math.floor(i / n)])] : [])];
+  type Branch = { grid: number[]; used: number; band: number; cols: number; names: number[]; next: number };
+  let live: Branch[] = grids.flatMap(grid => cols.map((_, c) => ({ grid, used: 0, band: -1, cols: c, names: Array<number>(n + 1).fill(0), next: 1 })));
+  const out: number[] = [];
+  for (let k = 0; k < n; k++) {
+    let best: number[] | null = null, kept: Branch[] = [];
+    const seen = new Set<string>();
+    for (const b of live) {
+      // A band's first row may come from any band not used yet; later rows stay in that band.
+      const free = (r: number) => !((b.used >> r) & 1), all = Array.from({ length: n }, (_, r) => r);
+      const rows = k % h === 0 ? all.filter(r => all.every(q => Math.floor(q / h) !== Math.floor(r / h) || free(q))) : all.filter(r => Math.floor(r / h) === b.band && free(r));
+      for (const r of rows) {
+        const names = [...b.names], order = cols[b.cols], line: number[] = [];
+        let next = b.next, cmp = best ? 0 : -1;
+        for (let j = 0; j < n; j++) {
+          const v = b.grid[r * n + order[j]];
+          let named = 0;
+          if (v) { if (!names[v]) names[v] = next++; named = names[v]; }
+          line.push(named);
+          if (cmp === 0) { const d = named - best![j]; if (d) cmp = d; if (cmp > 0) break; }
+        }
+        if (cmp > 0) continue;
+        const branch: Branch = { grid: b.grid, used: b.used | (1 << r), band: Math.floor(r / h), cols: b.cols, names, next };
+        if (cmp < 0) { best = line; kept = []; seen.clear(); }
+        // Branches that reach the same rows, band, columns and names have the same future.
+        const id = `${grids.indexOf(b.grid)}|${branch.used}|${branch.band}|${branch.cols}|${names.join(',')}`;
+        if (!seen.has(id)) { seen.add(id); kept.push(branch); }
+      }
+    }
+    out.push(...best!);
+    live = kept;
+  }
+  return out.join('');
 }
 /** Mirrors, turns, rule-keeping line swaps and digit renamings are not extra supply. Arithmetic keeps numeric meaning. */
 export function semanticKey(p: LatinPuzzle): string {
-  if (p.kind === 'sudoku') return `${p.size}:${smallest(sudokuSymmetries(p.size).map(map => { const a = p.givens.map(() => 0); p.givens.forEach((v, i) => { a[map[i]] = v; }); return relabel(a).join(''); }))}`;
+  if (p.kind === 'sudoku') return `${p.size}:${sudokuCanonical(p)}`;
   const n = p.size, maps = p.kind === 'killer' && n === 6 ? squareSymmetries(n).filter((_, i) => [0, 2, 4, 5].includes(i)) : squareSymmetries(n);
   const flips = p.kind === 'greater-than' ? [false, true] : [false];
   return smallest(maps.flatMap(map => flips.map(flip => {

@@ -32,21 +32,46 @@ export const gameInfo: Record<string, CoveInfo> = {
 export const infoFor = (game: string): CoveInfo => gameInfo[game] ?? { name: game.replace(/(^|-)(\w)/g, (_, gap: string, c: string) => `${gap ? ' ' : ''}${c.toUpperCase()}`), row: 'Logic', provenance: null };
 /** Packed banks count whole; their entries load only when one is opened. */
 export const packedCount = (e: ChallengeEntry) => e.packed?.bands.reduce((n, b) => n + b.count, 0) ?? 0;
-export const shownCount = (e: ChallengeEntry, hidden: readonly string[] = []) => e.puzzles.filter(p => !hidden.includes(p.ref.hash)).length + packedCount(e);
+/** `packedHidden` is how many packed entries are hidden (see hiddenPackedCount); it is found lazily. */
+export const shownCount = (e: ChallengeEntry, hidden: readonly string[] = [], packedHidden = 0) => e.puzzles.filter(p => !hidden.includes(p.ref.hash)).length + Math.max(0, packedCount(e) - packedHidden);
 export const coveEntries = (entries: readonly ChallengeEntry[] = challengeEntries) => entries.filter(e => { if (!e.cove || !e.puzzles.length && !packedCount(e)) return false; if (!infoFor(e.game).provenance) throw new Error(`Missing Cove provenance: ${e.game}`); return true; });
 export const sameRef = (a: PuzzleRef, b: PuzzleRef) => a.bank === b.bank && a.puzzle === b.puzzle && a.engine === b.engine && a.rules === b.rules && a.hash === b.hash;
 export const cardFor = (ref: PuzzleRef, entries = coveEntries()) => entries.flatMap(e => e.puzzles).find(p => sameRef(p.ref, ref)) ?? entries.find(e => e.game === ref.engine)?.packed?.card(ref);
-/** An extra the Latin registration offers: open one exact entry of a packed bank by index. */
-export type PackedOpen = { open?: (bank: number, index: number) => Promise<PuzzleRef>; teaches?: (ref: PuzzleRef) => string | undefined; describe?: (bank: number) => { size: string; summary: string } | undefined };
+/**
+ * Extras a packed registration offers: open one exact entry of a packed bank by index, describe a
+ * rung, and find puzzles hidden on this device (stored by hash) so browsing, counts and dealing can skip them.
+ */
+export type PackedOpen = {
+  open?: (bank: number, index: number) => Promise<PuzzleRef>; teaches?: (ref: PuzzleRef) => string | undefined;
+  describe?: (bank: number) => { size: string; summary: string } | undefined;
+  hiddenRows?: (bank: number, hidden: readonly string[]) => Promise<ReadonlySet<number>>;
+  chooseVisible?: (bank: number, progress: ChallengeProgress, skip: ReadonlySet<number>, avoid?: PuzzleRef) => Promise<PuzzleRef>;
+};
 export const packedOpen = (e: ChallengeEntry) => (e.packed as (ChallengeEntry['packed'] & PackedOpen) | undefined);
-/** The packed counterpart of `suggested`: the saved attempt, otherwise the next entry of a bank at or nearest this tier. */
-export async function suggestedPacked(entry: ChallengeEntry, progress: ChallengeProgress, tier = 1): Promise<ChallengeCard | undefined> {
+/** Indexes of a bank's entries hidden on this device. Reads the bank only when something is hidden. */
+export async function hiddenIn(entry: ChallengeEntry, bank: number, hidden: readonly string[]): Promise<ReadonlySet<number>> {
+  const opener = packedOpen(entry);
+  return hidden.length && opener?.hiddenRows ? opener.hiddenRows(bank, hidden) : new Set();
+}
+/** The next entry of a bank, never one hidden on this device unless every entry is. */
+export async function dealPacked(entry: ChallengeEntry, bank: number, progress: ChallengeProgress, hidden: readonly string[] = [], avoid?: PuzzleRef): Promise<ChallengeCard | undefined> {
+  const packed = entry.packed!, opener = packedOpen(entry), skip = await hiddenIn(entry, bank, hidden);
+  return packed.card(skip.size && opener?.chooseVisible ? await opener.chooseVisible(bank, progress, skip, avoid) : await packed.choose(bank, progress, avoid));
+}
+/** How many of a packed game's entries are hidden on this device. */
+export async function hiddenPackedCount(entry: ChallengeEntry, hidden: readonly string[]): Promise<number> {
+  let n = 0;
+  for (const b of entry.packed?.bands ?? []) n += (await hiddenIn(entry, b.bank, hidden)).size;
+  return n;
+}
+/** The packed counterpart of `suggested`: the saved attempt (even if hidden: it is Continue), otherwise the next visible entry of a bank at or nearest this tier. */
+export async function suggestedPacked(entry: ChallengeEntry, progress: ChallengeProgress, tier = 1, hidden: readonly string[] = []): Promise<ChallengeCard | undefined> {
   const packed = entry.packed;
   if (!packed?.bands.length) return undefined;
   const saved = progress.paused.find(s => s.game === entry.game && !s.result && !s.credited);
   if (saved) { await packed.prepare(saved.puzzle); return packed.card(saved.puzzle); }
   const band = [...packed.bands].sort((a, b) => Math.abs(a.tier - tier) - Math.abs(b.tier - tier) || a.tier - b.tier)[0];
-  return packed.card(await packed.choose(band.bank, progress));
+  return dealPacked(entry, band.bank, progress, hidden);
 }
 /** Decode once per bank for an immutable render snapshot. */
 export function completionLookup(progress: ChallengeProgress, entry: ChallengeEntry): (ref: PuzzleRef) => number {

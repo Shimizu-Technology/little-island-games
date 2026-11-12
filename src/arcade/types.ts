@@ -7,7 +7,9 @@ export type Stars = 1 | 2 | 3;
 export type ArcadeLevel = { id: LevelId; world: WorldId; index: number; name: string; goals: readonly [string, string, string] };
 export type ArcadeWorld = { id: WorldId; name: string; detail: string; stars: number; palette?: readonly [string, string, string]; learning?: boolean };
 export type ArcadeGame = { id: ArcadeId; name: string; tagline: string; color: string; surface: string; subject: "math" | "reading"; twoPlayer: boolean; worlds: readonly ArcadeWorld[]; hero: string };
-export type ArcadeResult = { cleared: boolean; /** Omitted by legacy adapters; false then means game over. */ outcome?: "cleared" | "game-over" | "stopped"; stars: 0 | Stars; score: number; detail: string };
+/** `facts` is the engine's own count of things a dare can ask for (AR-10). It is published with the terminal result, never saved as a frame log. */
+export type ArcadeFacts = Partial<Record<"fish" | "replays" | "streak" | "clean" | "aim" | "rally" | "fruit" | "shells" | "powers" | "rows", number>>;
+export type ArcadeResult = { cleared: boolean; /** Omitted by legacy adapters; false then means game over. */ outcome?: "cleared" | "game-over" | "stopped"; stars: 0 | Stars; score: number; detail: string; facts?: ArcadeFacts };
 /** Engines are deterministic. dt is seconds; a real-time game consumes exactly 1/60 per step. */
 export type ArcadeEngine<State, Input, Level extends ArcadeLevel = ArcadeLevel> = {
   create: (level: Level | "endless", seed: number, helper: boolean) => State;

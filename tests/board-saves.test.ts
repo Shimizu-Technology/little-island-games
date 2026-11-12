@@ -44,7 +44,10 @@ describe("board sessions and integration", () => {
     expect(() => parseSave(JSON.stringify({ ...save, board: { [s.game]: bad } }))).toThrow(/original has been kept/);
     expect(validBoardSessions({ other: s })).toBe(false);
     for (const patch of [
-      { version: 2 },
+      { version: 3 },
+      { version: 1 },
+      { policy: "shell-pits/challenge@2" },
+      { salt: -1 },
       { strength: "impossible" },
       { mode: "anything" },
       { match: { ...s.match, wins: [-1, 0] } },
@@ -75,8 +78,9 @@ describe("board sessions and integration", () => {
     expect(undo(s)).toBe(s);
     expect(validBoardSession({ ...s, visible: true })).toBe(false);
     expect(Object.keys(s).sort()).toEqual(
-      ["version", "id", "game", "mode", "strength", "position", "match", "taught"].sort()
+      ["version", "id", "game", "mode", "strength", "position", "match", "taught", "policy", "salt"].sort()
     );
+    expect(s.policy).toBe(null);
   });
   it("Reef Sweep undo restores its exact generated board and can undo an urchin", () => {
     let s = createSession("reef-sweep", { seed: 1 });
