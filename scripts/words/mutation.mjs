@@ -213,7 +213,6 @@ r4Edges.push(
  ['check','receipt compiler identity', 'digest(r.iosJavaScript.compiler)===digest(compilerIdentity(root))', 'true', ['R4 receipt compiler binding iosJavaScript.compiler.packageVersion']]
 );
 r4Edges.push(
- ['text-views','UTF16 text decoding',"if(bom==='fffe'||bom==='feff')",'if(false)',['R4 UTF16 le density','R4 UTF16 core']],
  ['text-views','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
 );
 const r5Edges=[
@@ -234,6 +233,7 @@ const r5Edges=[
  ['generated-admission','source required','!!source','true',['R5 generator rejects untraced word']],
 ];
 for(const [file,label,before,after,tests] of r5Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R5 mutation target '+label);custom(file,'R5 '+label,original.replace(before,after),tests);}
+custom('text-views','R4 UTF16 text decoding',sources.get('text-views').replace("if(bom==='fffe'||bom==='feff')",'if(false)').replace('if(sample.length>=4 && Math.max(...zero)>sample.length/8)','if(false)'),['R4 UTF16 le density','R4 UTF16 core']);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
