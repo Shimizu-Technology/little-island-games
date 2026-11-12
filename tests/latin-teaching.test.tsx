@@ -2,7 +2,7 @@ import React, { createContext } from 'react';
 import { readFileSync } from 'node:fs';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { LatinPuzzle } from '../src/puzzles/latin/core';
+import { decodePuzzle, type LatinPuzzle } from '../src/puzzles/latin/core';
 import { latinRungs } from '../src/puzzles/latin/rungs';
 import { grade, planHint, techniques, type Step } from '../src/puzzles/latin/solver';
 import { chainMarks, cueFor, explainStep, techniqueName, techniqueNames } from '../src/puzzles/latin/teach';
@@ -81,6 +81,42 @@ describe('colour-chain hints explain the deduction they made (review R6)', () =>
       // The chain's links are drawn: one line per linked pair.
       expect(cue.links!.length).toBeGreaterThan(1);
       expect(screen.root.findAllByType('path').some(n => (n.props.d as string)?.split('M').length - 1 === cue.links!.length)).toBe(true);
+    } finally { await act(async () => screen.unmount()); }
+  });
+});
+
+describe('a colour trap rules out the candidate it removes (review 2, F3)', () => {
+  const traps = corpus.filter(r => r[3] === 'simple-coloring').flatMap(r => { const p = sudokuOf(r[1], r[2]); return grade(p).steps.filter(s => s.chain?.kind === 'trap').map(s => ({ p, s })); });
+  it('one proof square "cannot be" the number; several "none of them can be" it', () => {
+    const one = traps.find(t => t.s.chain!.proof.length === 1)!;
+    const [i] = one.s.chain!.proof, v = one.s.digits[0], at = `Row ${Math.floor(i / 9) + 1}, column ${i % 9 + 1}`;
+    expect(explainStep(one.p, one.s).think).toContain(`${at} sees both a dot and a ring, so it cannot be ${v}.`);
+    // A trap proved by two squares (the same chain, with a second outside square named).
+    const two: Step = { ...one.s, chain: { ...one.s.chain!, proof: [i, i === 0 ? 1 : 0] } };
+    expect(explainStep(one.p, two).think).toMatch(new RegExp(`each see both a dot and a ring, so none of them can be ${v}\\.$`));
+    for (const { p, s } of traps) {
+      const t = explainStep(p, s).think;
+      expect(t).toMatch(new RegExp(`so (it cannot|none of them can) be ${s.digits[0]}\\.$`));
+      expect(t).not.toMatch(/so it can be/);
+    }
+  });
+  it('the reviewer\'s Trench 8 board: Why says row 8, column 1 cannot be 4', async () => {
+    const lines = readFileSync('src/content/puzzles/assets/p47.lipuzzle', 'utf8').trim().split('\n');
+    const p = decodePuzzle(JSON.parse(lines[8])[3])!;
+    // After 28 hinted placements on Trench 8 (bank 47, index 7).
+    const values = [...'381972645267451839549800271003007508070590312005308704030209150052000980916785423'].map(Number);
+    const plan = planHint(p, values);
+    if (plan.kind !== 'place') throw new Error('expected a placement');
+    expect(plan.steps.at(-1)!.chain!.kind).toBe('trap');
+    expect(plan.steps.at(-1)!.remove).toEqual([[63, 8]]); // candidate 4's bit at row 8, column 1
+    expect([plan.cell, plan.value]).toEqual([63, 7]);
+    const screen = await board(p, values);
+    try {
+      await act(async () => { (screen.root.findAllByType('button').find(b => b.props.label === 'Hint: where should I look?')!.props.onPress as () => void)(); });
+      await screen.helped();
+      await act(async () => { (screen.root.findAllByType('button').find(b => b.children.includes('Why?'))!.props.onPress as () => void)(); });
+      expect(text(screen)).toContain('Row 8, column 1 sees both a dot and a ring, so it cannot be 4.');
+      expect(text(screen)).not.toContain('so it can be 4');
     } finally { await act(async () => screen.unmount()); }
   });
 });

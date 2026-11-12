@@ -12,8 +12,8 @@ if (command === 'verify') {
   const { errors, stats } = verifyCatalog(productionDirs, families, { shipping: has('shipping') });
   const history = verifyHistory();
   if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
-  const exempt = history.unpublished ? ` (${history.unpublished} unpublished branch generations may still be replaced; published refs: ${history.refs.join(', ')})` : '';
-  console.log(`Puzzle catalog ok: ${stats.families} families, ${stats.packs} packs, ${stats.entries} entries replayed through their engines, ${history.checked} root generations append-only${exempt}.`);
+  const exempt = history.unpublished ? `; ${history.unpublished} unpublished families may still be replaced` : '';
+  console.log(`Puzzle catalog ok: ${stats.families} families, ${stats.packs} packs, ${stats.entries} entries replayed through their engines; append-only from ${history.checked} published roots (${history.refs.join(', ')}: ${history.published.join(', ') || 'no families'})${exempt}.`);
 } else if (command === 'bake') {
   const id = flag('family');
   const spec = families.find(f => f.id === id);

@@ -1,25 +1,24 @@
 /**
  * Takes G3 families out of the working catalog so they can be baked again in place:
  * `node --import ./scripts/puzzles/register.mjs scripts/puzzles/latin/unpublish.ts <family…>`.
- * Allowed only for a family no published ref contains (see scripts/puzzles/history.ts); it refuses
- * otherwise, because a published pack is immutable. Counters keep their values, except that slots
+ * Allowed only for a family that neither the root nor the save catalog at any published tip holds
+ * (scripts/published-refs.mjs); it refuses otherwise, because a published pack is immutable, and
+ * stops if a published ref is missing or unreadable. Counters keep their values, except that slots
  * and ordinals this branch alone took above every published root are handed back.
  */
-import { execFileSync } from 'node:child_process';
 import { existsSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { packAsset, validRoot, type RootIndex } from '../../../src/puzzles/bank';
-import { publishedRefs } from '../history';
+import { publishedJson } from '../../published-refs.mjs';
 import { generatedAssets, productionDirs, readCatalog } from '../pipeline';
 
 const ids = process.argv.slice(2), dirs = productionDirs, file = `${dirs.content}/root.json`;
-const show = (ref: string) => { try { return execFileSync('git', ['show', `${ref}:${file}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; } };
-const refs = publishedRefs.filter(ref => { try { execFileSync('git', ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], { stdio: 'ignore' }); return true; } catch { return false; } });
-if (!refs.length) throw new Error('No published ref is present, so nothing can be shown to be unpublished.');
-const published = refs.map(show).filter((x): x is string => x !== null).map(text => JSON.parse(text) as unknown).filter(validRoot) as RootIndex[];
+const published = publishedJson(file).map(({ ref, value }) => { if (!validRoot(value)) throw new Error(`The published root at ${ref} is invalid.`); return value; });
+const savedFamilies = new Set(publishedJson('src/state/save-catalog.json').flatMap(s => (s.value as { banks: { family?: string }[] }).banks.map(b => b.family)));
 const { root, families } = readCatalog(dirs);
 for (const id of ids) {
   if (published.some(r => r.families.some(f => f[0] === id))) throw new Error(`${id} is in a published root and is immutable.`);
+  if (savedFamilies.has(id)) throw new Error(`${id} has a published save-catalog bank and is immutable.`);
   const manifest = families.get(id);
   if (!manifest) continue;
   for (const p of manifest.packs) rmSync(join(dirs.content, 'assets', `${packAsset(p[0])}.lipuzzle`), { force: true });
