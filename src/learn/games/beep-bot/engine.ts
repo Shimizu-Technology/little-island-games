@@ -5,7 +5,8 @@ import content from './content.json';
 import { dirs, trace, solves, type Arrow, type Puzzle } from './movement';
 export { cardEffect, execution, solves, step, trace, type Arrow, type Puzzle } from './movement';
 export type BotState={version:1|2;level:number;puzzles:Puzzle[];done:number;completed:Arrow[][];program:Arrow[];cursor:number;running:boolean;attempts:number;helped:boolean};
-export const bank=content as {puzzle:Puzzle;proof:{minimum:number;solutions:number;unique:boolean;flatMinimum:number;winners:Arrow[][]}}[][];
+// Named plan records distinguish programs from letter matrices in exported data.
+export const bank=content.map(rows=>rows.map(({puzzle,proof})=>({puzzle:puzzle as Puzzle,proof:{...proof,winners:proof.winners.map(plan=>plan.cards as Arrow[])}})));
 export function makePuzzle(level:number,seed:number):Puzzle {const p=bank[level-1][seed%bank[level-1].length].puzzle;return {...p,seed,rocks:[...p.rocks],answer:[...p.answer]};}
 export function initialProgram(p:Puzzle,level:number):Arrow[]{if(level!==4)return [];const program=[...p.answer],at=Math.floor(p.seed/16)%program.length;program[at]=dirs[(dirs.indexOf(program[at])+2)%4];return program;}
 export function advance(s:BotState):BotState {const done=s.done+1;return {...s,done,completed:[...s.completed,s.program.slice(0,s.cursor)],program:done<4?initialProgram(s.puzzles[done],s.level):[],cursor:0,running:false,helped:false};}

@@ -16,7 +16,7 @@ for(let level=1;level<=5;level++){
   const base:Puzzle={start:0,shell:0,rocks,answer,seed:rows.length};base.shell=trace(base,answer).at(-1)!;
   const p:Puzzle={start:turn(0,r),shell:turn(base.shell,r),rocks:rocks.map(i=>turn(i,r)).sort((a,b)=>a-b),answer:answer.map(a=>rotate(a,r)),seed:rows.length};
   const plans=winners(p,level),flat=winners(p,4);if(!plans.length)throw new Error('Unsolved');
-  rows.push({puzzle:{...p,answer:plans[0]},proof:{minimum:plans[0].length,solutions:plans.length,unique:plans.length===1,flatMinimum:flat[0].length,winners:plans}});
+  rows.push({puzzle:{...p,answer:plans[0]},proof:{minimum:plans[0].length,solutions:plans.length,unique:plans.length===1,flatMinimum:flat[0].length,winners:plans.map(cards=>({cards}))}});
  }
  bank.push(rows);
 }
