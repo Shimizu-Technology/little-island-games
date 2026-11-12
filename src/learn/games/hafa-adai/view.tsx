@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, View } from "react-native";
+import { Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
 import { chamoruWord, type ChamoruWord } from "../../content/chamoru";
 import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
@@ -94,7 +95,11 @@ export function Board({
   // The scene has a 1px border on each side.
   const slot = Math.floor((width - 2 - pad * 2 - gap * (columns - 1)) / columns);
   const pictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
-  const rowHeight = pictureSize + (spy ? 14 : 28);
+  // Captions share one size, the largest (at most 1.5x) at which every word of every caption, English or CHamoru,
+  // fits its picture's slot. At accessibility sizes each row makes room for two caption lines, so labels never overlap.
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  const captionMax = large && !spy ? Math.min(...s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]).map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
+  const rowHeight = pictureSize + (spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28);
   const tableTop = 30;
   const promptKey = p.done
     ? "hafa-adai-done"
@@ -185,7 +190,7 @@ export function Board({
               word’s picture
             </Copy>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Heading style={{ fontSize: 32, flex: 1 }}>{target.term}</Heading>
+              <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(target.term, 32, width - 24 - (gentle ? 0 : 118), 2) : undefined} style={{ fontSize: 32, flex: 1 }}>{target.term}</Heading>
               {!gentle && (
                 <Button
                   quiet
@@ -255,7 +260,7 @@ export function Board({
               >
                 <WordPicture word={word} size={pictureSize} caption={false} />
                 {!spy && (
-                  <Copy style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
+                  <Copy numberOfLines={captionMax ? 2 : undefined} maxFontSizeMultiplier={captionMax} style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
                     {visited ? word.term : first(word.english)}
                   </Copy>
                 )}
@@ -308,7 +313,7 @@ export function Board({
         >
           <WordPicture word={shown} size={54} caption={false} />
           <View style={{ flex: 1 }}>
-            <Heading style={{ fontSize: 22 }}>{shown.term}</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(shown.term, 22, width - 20 - 54 - 10, 2) : undefined} style={{ fontSize: 22 }}>{shown.term}</Heading>
             {spy ? (
               <Copy style={{ fontSize: 14, color: C.ink }}>That picture’s word. Try again!</Copy>
             ) : (

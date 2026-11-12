@@ -3,6 +3,7 @@ import { Animated, View } from "react-native";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
+import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { Scene, PictureObject } from "../../art/Objects";
 import { ReadingText } from "../../kit/ReadingText";
@@ -100,6 +101,8 @@ export function Board({
   // Pictures already tried on this sentence step back (the save keeps only the latest).
   const [out, setOut] = useState<{ index: number; picks: number[] }>({ index: s.index, picks: [] });
   const tried = out.index === s.index ? out.picks : [];
+  // The next sentence opens at the top of the board, above the pictures she just chose from.
+  useStepReveal(s.index);
 
   // After a right answer, a short pause to enjoy it, then the next sentence.
   useEffect(() => {

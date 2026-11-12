@@ -18,6 +18,8 @@ import { useSoundControls } from "../components/Audio";
 import { SaveStatus } from "../components/SaveStatus";
 import { Button, C, Chip, Copy, GameHeader, Heading, Sheet, ToggleRow, styles } from "../components/ui";
 import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
+import { TextFit } from "../components/Text";
+import { StepReveal } from "./stepReveal";
 import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
@@ -76,6 +78,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
     stepRound.current = saved?.id;
     scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current - 8) : 0, animated: false });
   }, [growthStep, saved?.id, large]);
+  // Other step games (a story page, the next question) ask for the same return through `useStepReveal`.
+  const reveal = useCallback(() => {
+    if (large && boardTop.current !== null) scroll.current?.scrollTo({ y: Math.max(0, boardTop.current - 8), animated: false });
+  }, [large]);
   const learner = activeLearner(store.save.learning);
   const comfort = learningComfort(store.save, learner.id);
   const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
@@ -277,6 +283,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
+  const boardInner = boardWidth - (width >= 768 && height >= 600 && store.save.settings.learningIslander !== false ? 88 : 0);
+  // At accessibility sizes, board text without a cap of its own (prompts, answers, results) stops at 2x, or where its
+  // longest word still fits the board. Reading is never timed and Hear stays available, so it stays large without
+  // filling the screen. Default sizes never change.
+  const boardFit = useMemo(() => large ? { width: boardInner, ceiling: 2 } : null, [large, boardInner]);
+  // The result card ("You did it!") follows the same rule inside its 20-pt padding and 3-pt border.
+  const resultFit = useMemo(() => large ? { width: width - insets.left - insets.right - 32 - 46, ceiling: 2 } : null, [large, width, insets.left, insets.right]);
   const Board = saved && isGrowth(saved.state) ? GrowthBoard : view.Board;
   const island = id === "hafa-adai" ? "reading" : engine.island;
   const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
@@ -319,7 +332,19 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // A phone pins its header above the board. At accessibility sizes only the one-row bar stays pinned; the learner,
   // level and mode lines scroll with the page, so the board gets the screen and everything stays reachable.
   // Wider screens (landscape, iPad) scroll the whole header, with the learner chip sharing the mode line.
-  const largeLines = <View testID="learn-header-scrolled" style={{ gap: 4 }}>
+  // A short landscape phone has about 400 pt: the level line shares one wrapping row with the learner chip, the mode
+  // and a one-line journey, so the header takes about a third of the screen before it scrolls away.
+  const shortLandscape = !phone && large && height < 500;
+  const largeLines = shortLandscape ? <View testID="learn-header-scrolled" style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 16, rowGap: 4 }}>
+        <View style={{ flexGrow: 1, flexBasis: 320, minWidth: 0 }}>{level}</View>
+        <View testID="learn-header-cluster" style={{ flexGrow: 1, flexBasis: 260, gap: 4 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+            <LearnerChip compact/>
+            {saved && <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>}
+          </View>
+          {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished} inline/>}
+        </View>
+      </View> : <View testID="learn-header-scrolled" style={{ gap: 4 }}>
         {level}
         {saved && <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           <LearnerChip compact/>
@@ -353,13 +378,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
               (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "")}
           </Copy>
         )}
-        {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
+        {saved && !shortLandscape && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
         {saved && !finished && <View testID="learn-board" onLayout={e => { boardTop.current = e.nativeEvent.layout.y; }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
+            <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}>
             <Board
               key={saved.id}
               session={saved}
@@ -371,18 +397,20 @@ export function LearnFrame({ id }: { id: LearnId }) {
               sound={boardSound}
               stopSound={stopSound}
               soundOn={soundOn}
-              width={boardWidth - (width >= 768 && height >= 600 && store.save.settings.learningIslander !== false ? 88 : 0)}
+              width={boardInner}
               height={height - insets.top - insets.bottom}
               active={boardActive}
               coach={{ active: coachActive && boardActive, done: coachDone }}
               cheer={cheer}
             />
+            </TextFit.Provider></StepReveal.Provider>
           </View>
           </LearningCompanion>
         </View>}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
             {finished && (
+              <TextFit.Provider value={resultFit}>
               <View
                 accessibilityLiveRegion="polite"
                 style={{ alignItems: "center", justifyContent: "center", gap: 14, padding: 20, borderRadius: 28, backgroundColor: theme.sky, alignSelf: "stretch", minHeight: Math.max(430, height - insets.top - insets.bottom - 190), borderWidth: 3, borderColor: theme.accent }}
@@ -411,6 +439,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                   Keep going
                 </Button>
               </View>
+              </TextFit.Provider>
             )}
             {finished && <BadgeResultCard round={saved.id}/>}
             {finished && <LevelPath game={id} level={levelOf(saved.options)} progress={store.save.school} onChoose={level => { chooseLevel(level, saved.options); setSetup(true); }}/>}
