@@ -1,0 +1,2964 @@
+[
+  [
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 1,
+        "rocks": [],
+        "answer": [
+          "right"
+        ],
+        "seed": 0
+      },
+      "proof": {
+        "minimum": 1,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 1,
+        "winners": [
+          [
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 2,
+        "rocks": [],
+        "answer": [
+          "right",
+          "right"
+        ],
+        "seed": 1
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 3,
+        "rocks": [],
+        "answer": [
+          "right",
+          "right",
+          "right"
+        ],
+        "seed": 2
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "right",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 9,
+        "rocks": [],
+        "answer": [
+          "down"
+        ],
+        "seed": 3
+      },
+      "proof": {
+        "minimum": 1,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 1,
+        "winners": [
+          [
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 14,
+        "rocks": [],
+        "answer": [
+          "down",
+          "down"
+        ],
+        "seed": 4
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 19,
+        "rocks": [],
+        "answer": [
+          "down",
+          "down",
+          "down"
+        ],
+        "seed": 5
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "down",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 23,
+        "rocks": [],
+        "answer": [
+          "left"
+        ],
+        "seed": 6
+      },
+      "proof": {
+        "minimum": 1,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 1,
+        "winners": [
+          [
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 22,
+        "rocks": [],
+        "answer": [
+          "left",
+          "left"
+        ],
+        "seed": 7
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "left",
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 21,
+        "rocks": [],
+        "answer": [
+          "left",
+          "left",
+          "left"
+        ],
+        "seed": 8
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "left",
+            "left",
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 15,
+        "rocks": [],
+        "answer": [
+          "up"
+        ],
+        "seed": 9
+      },
+      "proof": {
+        "minimum": 1,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 1,
+        "winners": [
+          [
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 10,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up"
+        ],
+        "seed": 10
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 5,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "up"
+        ],
+        "seed": 11
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "up",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    }
+  ],
+  [
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 6,
+        "rocks": [],
+        "answer": [
+          "right",
+          "down"
+        ],
+        "seed": 0
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 11,
+        "rocks": [],
+        "answer": [
+          "right",
+          "down",
+          "down"
+        ],
+        "seed": 1
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "right",
+            "down",
+            "down"
+          ],
+          [
+            "down",
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "down",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 7,
+        "rocks": [],
+        "answer": [
+          "right",
+          "right",
+          "down"
+        ],
+        "seed": 2
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "right",
+            "right",
+            "down"
+          ],
+          [
+            "right",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 12,
+        "rocks": [],
+        "answer": [
+          "right",
+          "right",
+          "down",
+          "down"
+        ],
+        "seed": 3
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 6,
+        "unique": false,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "right",
+            "right",
+            "down",
+            "down"
+          ],
+          [
+            "right",
+            "down",
+            "right",
+            "down"
+          ],
+          [
+            "right",
+            "down",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "right",
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "right",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 8,
+        "rocks": [],
+        "answer": [
+          "down",
+          "left"
+        ],
+        "seed": 4
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 7,
+        "rocks": [],
+        "answer": [
+          "down",
+          "left",
+          "left"
+        ],
+        "seed": 5
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "down",
+            "left",
+            "left"
+          ],
+          [
+            "left",
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 13,
+        "rocks": [],
+        "answer": [
+          "down",
+          "down",
+          "left"
+        ],
+        "seed": 6
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "down",
+            "down",
+            "left"
+          ],
+          [
+            "down",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 12,
+        "rocks": [],
+        "answer": [
+          "down",
+          "down",
+          "left",
+          "left"
+        ],
+        "seed": 7
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 6,
+        "unique": false,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "down",
+            "down",
+            "left",
+            "left"
+          ],
+          [
+            "down",
+            "left",
+            "down",
+            "left"
+          ],
+          [
+            "down",
+            "left",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "down",
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "down",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 18,
+        "rocks": [],
+        "answer": [
+          "up",
+          "left"
+        ],
+        "seed": 8
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "up",
+            "left"
+          ],
+          [
+            "left",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 13,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "left"
+        ],
+        "seed": 9
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left"
+          ],
+          [
+            "up",
+            "left",
+            "up"
+          ],
+          [
+            "left",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 17,
+        "rocks": [],
+        "answer": [
+          "up",
+          "left",
+          "left"
+        ],
+        "seed": 10
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "up",
+            "left",
+            "left"
+          ],
+          [
+            "left",
+            "up",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 12,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "left",
+          "left"
+        ],
+        "seed": 11
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 6,
+        "unique": false,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "left",
+            "up",
+            "left"
+          ],
+          [
+            "up",
+            "left",
+            "left",
+            "up"
+          ],
+          [
+            "left",
+            "up",
+            "up",
+            "left"
+          ],
+          [
+            "left",
+            "up",
+            "left",
+            "up"
+          ],
+          [
+            "left",
+            "left",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 16,
+        "rocks": [],
+        "answer": [
+          "up",
+          "right"
+        ],
+        "seed": 12
+      },
+      "proof": {
+        "minimum": 2,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 2,
+        "winners": [
+          [
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 17,
+        "rocks": [],
+        "answer": [
+          "up",
+          "right",
+          "right"
+        ],
+        "seed": 13
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "up",
+            "right",
+            "right"
+          ],
+          [
+            "right",
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "right",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 11,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "right"
+        ],
+        "seed": 14
+      },
+      "proof": {
+        "minimum": 3,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 3,
+        "winners": [
+          [
+            "up",
+            "up",
+            "right"
+          ],
+          [
+            "up",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 12,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "right",
+          "right"
+        ],
+        "seed": 15
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 6,
+        "unique": false,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "up",
+            "up",
+            "right",
+            "right"
+          ],
+          [
+            "up",
+            "right",
+            "up",
+            "right"
+          ],
+          [
+            "up",
+            "right",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "up",
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "up",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    }
+  ],
+  [
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 12,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right"
+        ],
+        "seed": 0
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 13,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right",
+          "right"
+        ],
+        "seed": 1
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 17,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right",
+          "down"
+        ],
+        "seed": 2
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "down",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 18,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right",
+          "right",
+          "down"
+        ],
+        "seed": 3
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "down",
+            "right",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "down",
+            "right",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 12,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down"
+        ],
+        "seed": 4
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 17,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down",
+          "down"
+        ],
+        "seed": 5
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 11,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down",
+          "left"
+        ],
+        "seed": 6
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "left",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 16,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down",
+          "down",
+          "left"
+        ],
+        "seed": 7
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "left",
+            "down",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "left",
+            "down",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 12,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "left",
+          "left"
+        ],
+        "seed": 8
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left",
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 11,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "left",
+          "left",
+          "left"
+        ],
+        "seed": 9
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 7,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "up",
+          "left",
+          "left"
+        ],
+        "seed": 10
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "up",
+            "up",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "up",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 6,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "up",
+          "left",
+          "left",
+          "left"
+        ],
+        "seed": 11
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "up",
+            "up",
+            "up",
+            "left",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "up",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "up",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "left",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 12,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up"
+        ],
+        "seed": 12
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 7,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up",
+          "up"
+        ],
+        "seed": 13
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 13,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up",
+          "right"
+        ],
+        "seed": 14
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "right",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 8,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up",
+          "up",
+          "right"
+        ],
+        "seed": 15
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "right",
+            "up",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "right",
+            "up",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    }
+  ],
+  [
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 12,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right"
+        ],
+        "seed": 0
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 13,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right",
+          "right"
+        ],
+        "seed": 1
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 17,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right",
+          "down"
+        ],
+        "seed": 2
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "down",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 18,
+        "rocks": [
+          1,
+          6
+        ],
+        "answer": [
+          "down",
+          "down",
+          "right",
+          "right",
+          "right",
+          "down"
+        ],
+        "seed": 3
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "right",
+            "down"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "right",
+            "down",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "down",
+            "right",
+            "right"
+          ],
+          [
+            "down",
+            "down",
+            "down",
+            "right",
+            "right",
+            "right"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 12,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down"
+        ],
+        "seed": 4
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 17,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down",
+          "down"
+        ],
+        "seed": 5
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 11,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down",
+          "left"
+        ],
+        "seed": 6
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "left",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 16,
+        "rocks": [
+          8,
+          9
+        ],
+        "answer": [
+          "left",
+          "left",
+          "down",
+          "down",
+          "down",
+          "left"
+        ],
+        "seed": 7
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "down",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "down",
+            "left",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "left",
+            "down",
+            "down"
+          ],
+          [
+            "left",
+            "left",
+            "left",
+            "down",
+            "down",
+            "down"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 12,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "left",
+          "left"
+        ],
+        "seed": 8
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left",
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 11,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "left",
+          "left",
+          "left"
+        ],
+        "seed": 9
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "left"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 7,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "up",
+          "left",
+          "left"
+        ],
+        "seed": 10
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "up",
+            "up",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "up",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 6,
+        "rocks": [
+          18,
+          23
+        ],
+        "answer": [
+          "up",
+          "up",
+          "up",
+          "left",
+          "left",
+          "left"
+        ],
+        "seed": 11
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "up",
+            "up",
+            "up",
+            "left",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "up",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "up",
+            "left"
+          ],
+          [
+            "up",
+            "up",
+            "left",
+            "left",
+            "left",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 12,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up"
+        ],
+        "seed": 12
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 4,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 7,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up",
+          "up"
+        ],
+        "seed": 13
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 13,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up",
+          "right"
+        ],
+        "seed": 14
+      },
+      "proof": {
+        "minimum": 5,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "right",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 8,
+        "rocks": [
+          15,
+          16
+        ],
+        "answer": [
+          "right",
+          "right",
+          "up",
+          "up",
+          "up",
+          "right"
+        ],
+        "seed": 15
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 4,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "up",
+            "right"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "up",
+            "right",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "right",
+            "up",
+            "up"
+          ],
+          [
+            "right",
+            "right",
+            "right",
+            "up",
+            "up",
+            "up"
+          ]
+        ]
+      }
+    }
+  ],
+  [
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 17,
+        "rocks": [],
+        "answer": [
+          "right",
+          "right",
+          "down",
+          "repeat3"
+        ],
+        "seed": 0
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "right",
+            "right",
+            "down",
+            "repeat3"
+          ],
+          [
+            "right",
+            "down",
+            "repeat3",
+            "right"
+          ],
+          [
+            "right",
+            "repeat2",
+            "down",
+            "repeat3"
+          ],
+          [
+            "down",
+            "repeat3",
+            "right",
+            "right"
+          ],
+          [
+            "down",
+            "repeat3",
+            "right",
+            "repeat2"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 13,
+        "rocks": [],
+        "answer": [
+          "right",
+          "repeat3",
+          "down",
+          "down"
+        ],
+        "seed": 1
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "right",
+            "repeat3",
+            "down",
+            "down"
+          ],
+          [
+            "right",
+            "repeat3",
+            "down",
+            "repeat2"
+          ],
+          [
+            "down",
+            "right",
+            "repeat3",
+            "down"
+          ],
+          [
+            "down",
+            "down",
+            "right",
+            "repeat3"
+          ],
+          [
+            "down",
+            "repeat2",
+            "right",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 18,
+        "rocks": [],
+        "answer": [
+          "right",
+          "repeat3",
+          "down",
+          "repeat3"
+        ],
+        "seed": 2
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "right",
+            "repeat3",
+            "down",
+            "repeat3"
+          ],
+          [
+            "down",
+            "repeat3",
+            "right",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 18,
+        "rocks": [
+          1
+        ],
+        "answer": [
+          "down",
+          "repeat3",
+          "right",
+          "repeat3"
+        ],
+        "seed": 3
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "down",
+            "repeat3",
+            "right",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 11,
+        "rocks": [],
+        "answer": [
+          "down",
+          "down",
+          "left",
+          "repeat3"
+        ],
+        "seed": 4
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "down",
+            "down",
+            "left",
+            "repeat3"
+          ],
+          [
+            "down",
+            "left",
+            "repeat3",
+            "down"
+          ],
+          [
+            "down",
+            "repeat2",
+            "left",
+            "repeat3"
+          ],
+          [
+            "left",
+            "repeat3",
+            "down",
+            "down"
+          ],
+          [
+            "left",
+            "repeat3",
+            "down",
+            "repeat2"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 17,
+        "rocks": [],
+        "answer": [
+          "down",
+          "repeat3",
+          "left",
+          "left"
+        ],
+        "seed": 5
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "down",
+            "repeat3",
+            "left",
+            "left"
+          ],
+          [
+            "down",
+            "repeat3",
+            "left",
+            "repeat2"
+          ],
+          [
+            "left",
+            "down",
+            "repeat3",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "down",
+            "repeat3"
+          ],
+          [
+            "left",
+            "repeat2",
+            "down",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 16,
+        "rocks": [],
+        "answer": [
+          "down",
+          "repeat3",
+          "left",
+          "repeat3"
+        ],
+        "seed": 6
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "down",
+            "repeat3",
+            "left",
+            "repeat3"
+          ],
+          [
+            "left",
+            "repeat3",
+            "down",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 4,
+        "shell": 16,
+        "rocks": [
+          9
+        ],
+        "answer": [
+          "left",
+          "repeat3",
+          "down",
+          "repeat3"
+        ],
+        "seed": 7
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "left",
+            "repeat3",
+            "down",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 7,
+        "rocks": [],
+        "answer": [
+          "up",
+          "repeat3",
+          "left",
+          "left"
+        ],
+        "seed": 8
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "repeat3",
+            "left",
+            "left"
+          ],
+          [
+            "up",
+            "repeat3",
+            "left",
+            "repeat2"
+          ],
+          [
+            "left",
+            "up",
+            "repeat3",
+            "left"
+          ],
+          [
+            "left",
+            "left",
+            "up",
+            "repeat3"
+          ],
+          [
+            "left",
+            "repeat2",
+            "up",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 11,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "left",
+          "repeat3"
+        ],
+        "seed": 9
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "up",
+            "left",
+            "repeat3"
+          ],
+          [
+            "up",
+            "left",
+            "repeat3",
+            "up"
+          ],
+          [
+            "up",
+            "repeat2",
+            "left",
+            "repeat3"
+          ],
+          [
+            "left",
+            "repeat3",
+            "up",
+            "up"
+          ],
+          [
+            "left",
+            "repeat3",
+            "up",
+            "repeat2"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 6,
+        "rocks": [],
+        "answer": [
+          "up",
+          "repeat3",
+          "left",
+          "repeat3"
+        ],
+        "seed": 10
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "up",
+            "repeat3",
+            "left",
+            "repeat3"
+          ],
+          [
+            "left",
+            "repeat3",
+            "up",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 24,
+        "shell": 6,
+        "rocks": [
+          23
+        ],
+        "answer": [
+          "up",
+          "repeat3",
+          "left",
+          "repeat3"
+        ],
+        "seed": 11
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "up",
+            "repeat3",
+            "left",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 13,
+        "rocks": [],
+        "answer": [
+          "up",
+          "up",
+          "right",
+          "repeat3"
+        ],
+        "seed": 12
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "up",
+            "right",
+            "repeat3"
+          ],
+          [
+            "up",
+            "right",
+            "repeat3",
+            "up"
+          ],
+          [
+            "up",
+            "repeat2",
+            "right",
+            "repeat3"
+          ],
+          [
+            "right",
+            "repeat3",
+            "up",
+            "up"
+          ],
+          [
+            "right",
+            "repeat3",
+            "up",
+            "repeat2"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 7,
+        "rocks": [],
+        "answer": [
+          "up",
+          "repeat3",
+          "right",
+          "right"
+        ],
+        "seed": 13
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 5,
+        "unique": false,
+        "flatMinimum": 5,
+        "winners": [
+          [
+            "up",
+            "repeat3",
+            "right",
+            "right"
+          ],
+          [
+            "up",
+            "repeat3",
+            "right",
+            "repeat2"
+          ],
+          [
+            "right",
+            "up",
+            "repeat3",
+            "right"
+          ],
+          [
+            "right",
+            "right",
+            "up",
+            "repeat3"
+          ],
+          [
+            "right",
+            "repeat2",
+            "up",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 8,
+        "rocks": [],
+        "answer": [
+          "up",
+          "repeat3",
+          "right",
+          "repeat3"
+        ],
+        "seed": 14
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 2,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "up",
+            "repeat3",
+            "right",
+            "repeat3"
+          ],
+          [
+            "right",
+            "repeat3",
+            "up",
+            "repeat3"
+          ]
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 8,
+        "rocks": [
+          15
+        ],
+        "answer": [
+          "right",
+          "repeat3",
+          "up",
+          "repeat3"
+        ],
+        "seed": 15
+      },
+      "proof": {
+        "minimum": 4,
+        "solutions": 1,
+        "unique": true,
+        "flatMinimum": 6,
+        "winners": [
+          [
+            "right",
+            "repeat3",
+            "up",
+            "repeat3"
+          ]
+        ]
+      }
+    }
+  ]
+]
