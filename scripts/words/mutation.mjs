@@ -63,6 +63,7 @@ custom('guard','canary detector',sources.get('guard').replace('if(uppers.some(up
 custom('guard','word-search grid detector',sources.get('guard').replace('if(grids.some(', 'if(false && grids.some('),['guard actual word grid','guard decoded packed word grid']);
 custom('guard','private hash detector',sources.get('guard').replaceAll('[...hashes].some(h=>upper.includes(h.toUpperCase()))','false'),['guard scan-hash']);
 custom('guard','private blob detector',sources.get('guard').replaceAll('blobs.some(b=>upper.includes(b.toUpperCase()))','false'),['guard private blob despite exceptions']);
+custom('guard','non-list occurrence accounting',sources.get('guard').replace('if(hit.listShaped)seen.set(hit.sha256,occurrence);','seen.set(hit.sha256,occurrence);'),['R4 non-list view preserves reviewed occurrence 1']);
 custom('guard','reviewed string occurrence cap',sources.get('guard').replace('occurrence<=item.occurrences','true'),['guard additional reviewed occurrence rejected','guard additional broad array despite reviewed words']);
 custom('guard','reviewed string identity',sources.get('guard').replace('scoped.get(hit.sha256)??[]','[...scoped.values()].flat()'),['guard changed reviewed string rejected']);
 custom('artifact-views','Hermes string content detector',sources.get('artifact-views').replace('  return strings;','  return [];'),['guard Hermes whole word','guard Hermes three broad words']);

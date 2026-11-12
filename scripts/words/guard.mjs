@@ -256,10 +256,10 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
           const rows=scoped.get(item.sha256)??[];rows.push(item);scoped.set(item.sha256,rows);
         }
         for(const hit of [...stringHits,...unitHits]) {
-          const occurrence=(seen.get(hit.sha256)??0)+1;seen.set(hit.sha256,occurrence);
+          const occurrence=(seen.get(hit.sha256)??0)+1;if(hit.listShaped)seen.set(hit.sha256,occurrence);
           const reviewed={broad:new Set(),literal:new Set()};
           for(const item of scoped.get(hit.sha256)??[]) {
-            if(occurrence<=item.occurrences) for(const e of item.terms) reviewed[e.check].add(e.term.toUpperCase());
+            if(hit.listShaped && occurrence<=item.occurrences) for(const e of item.terms) reviewed[e.check].add(e.term.toUpperCase());
           }
           for(const [check,hits] of [['broad',broadHits],['literal',literalHits]]) for(const term of hit[check]) {
             if(reviewed[check].has(term)) {termExceptionsUsed++;hit[check]=hit[check].filter(t=>t!==term);} else hits.add(term);

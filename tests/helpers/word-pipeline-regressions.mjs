@@ -903,3 +903,6 @@ for(const [label,text] of [
 ])test(`R4 original Hermes hard term ${label}`,()=>{
  const dir=join(scratch,'hermes-hard-'+label.replaceAll(' ','-'));mkdirSync(dir);const input=join(dir,'input.js'),output=join(dir,'main.hbc');writeFileSync(input,'globalThis.label='+JSON.stringify(text)+';');assert.equal(spawnSync(hermesc,['-emit-binary','-out',output,input],{encoding:'utf8'}).status,0);rmSync(input);assert.throws(()=>guardTree(dir,{...policy,exact:[...policy.exact,'ZIP']}),/blocked-literal/);
 });
+for(const copies of [1,2])test(`R4 non-list view preserves reviewed occurrence ${copies}`,()=>{
+ const dir=join(scratch,'non-list-occurrence-'+copies),path='_expo/static/js/ios/entry-test.js';mkdirSync(join(dir,path,'..'),{recursive:true});const branches='switch(value){'+reviewedTableKeys.map(key=>'case '+JSON.stringify(key)+':break;').join('')+'}';writeFileSync(join(dir,path),branches+Array.from({length:copies},(_,i)=>`globalThis.table${i}=${JSON.stringify(reviewedTable)};`).join(''));if(copies===1)assert.equal(guardTree(dir,nativeTablePolicy).passed,true);else assert.throws(()=>guardTree(dir,nativeTablePolicy),/partial-list/);
+});
