@@ -26,6 +26,13 @@ import { coordinate, target as canoeTarget } from "./hidden-canoes/engine";
 import { hintReason as coconutHintReason } from "./coconut-drop/engine";
 import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
+/** Each board's Challenge puzzles, reached from its setup, and the Challenge ID they're registered under. */
+const puzzleLinks = {
+  "shell-pits": { game: "shell-pits", label: "Endgame puzzles · win in a few sows" },
+  "coconut-drop": { game: "drop-puzzles", label: "Puzzles · win, block and fork" },
+  "fishing-nets": { game: "fishing-nets", label: "Chain endings · keep control of the nets" },
+  "hidden-canoes": { game: "hidden-canoes", label: "Chart puzzles · find canoes by thinking" },
+} as const;
 const back = () =>
   router.canGoBack() ? router.back() : router.replace({ pathname: "/shelf", params: { island: "classic" } });
 export function BoardScreen({ game }: { game: BoardId }) {
@@ -113,9 +120,9 @@ function Setup({
           <Copy style={{ textAlign: "center" }}>{info.description}</Copy>
         </View>
         <Copy>{info.rule}</Copy>
-        {game === "shell-pits" && (
-          <Button quiet onPress={() => router.push({ pathname: "/challenge", params: { game: "shell-pits" } })}>
-            Endgame puzzles · win in a few sows
+        {game in puzzleLinks && (
+          <Button quiet onPress={() => router.push({ pathname: "/challenge", params: { game: puzzleLinks[game as keyof typeof puzzleLinks].game } })}>
+            {puzzleLinks[game as keyof typeof puzzleLinks].label}
           </Button>
         )}
         {game !== "reef-sweep" && (
@@ -253,7 +260,8 @@ function Round({
     token = `${store.epoch}:${s.id}:${p.moves.length}:${p.turn}`;
   const secret = s.game === "hidden-canoes" && p.outcome === null,
     ai = s.mode === "solo" && p.turn === 1 && s.game !== "reef-sweep" && p.outcome === null;
-  const concealed = secret && !ai && visible !== token,
+  // Only two players sharing the device need the handover; against the computer nobody else looks.
+  const concealed = secret && !ai && s.mode === "together" && visible !== token,
     locked = teaching || ai || concealed;
   const conceal = useCallback(() => setVisible(null), []);
   useFocusEffect(

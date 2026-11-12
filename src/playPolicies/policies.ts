@@ -5,6 +5,8 @@ import * as nets from "../board/fishing-nets/engine";
 import * as canoes from "../board/hidden-canoes/engine";
 import * as pits from "../board/shell-pits/engine";
 import { IterativeSearch, type SearchRules } from "./search";
+import { CanoesHeatmap, likeliest } from "./canoesHeatmap";
+import { NetsExact } from "./netsExact";
 import { finished, type BoardPolicy, type SearchBudget, type CanoesView, type OpenView, type PolicyGame, type PolicyId, type PolicyTask, type PublicView } from "./types";
 import { openPosition } from "./views";
 
@@ -32,6 +34,12 @@ export const pitsRules: Readonly<SearchRules<Position>> = Object.freeze({
   order: pitsOrder,
 });
 export const pitsChallengeLimits: SearchBudget = Object.freeze({ depth: 8, nodes: 50_000 });
+/**
+ * Fishing Nets Challenge revision 2 solves the ending exactly once this many ropes or
+ * fewer are open (`depth`). The memo visits each set of tied ropes at most once, so
+ * `nodes` (2^14) is the most it can search.
+ */
+export const netsEndgameLimits: SearchBudget = Object.freeze({ depth: 14, nodes: 1 << 14 });
 
 const openOnly = (v: PublicView): OpenView => {
   if (v.game === "hidden-canoes") throw new Error("This policy reads an open board.");
@@ -97,6 +105,85 @@ export function canoesChoice(v: CanoesView, strength: Strength, random: () => nu
   );
 }
 
+/**
+ * Fishing Nets Challenge revision 2. With more than 14 ropes open it plays exactly as
+ * revision 1. From 14 down it searches the whole ending: closing a box keeps the turn,
+ * so the same seat chooses again, and it picks a rope that wins the most of the boxes
+ * still open. Ties are broken by the round's public salt.
+ */
+function netsEndgameTask(v: OpenView, random: () => number): PolicyTask {
+  const p = openPosition(v),
+    open = nets.legal(p);
+  if (open.length > netsEndgameLimits.depth) return finished(nets.choose(p, "challenge"));
+  const exact = new NetsExact({ ...p, moves: [] }, netsEndgameLimits.nodes, netsEndgameLimits.depth);
+  let chosen: number | null = null,
+    settled = false;
+  const settle = () => {
+    if (settled || !exact.done) return;
+    settled = true;
+    if (!exact.solved) {
+      chosen = nets.choose(p, "challenge");
+      return;
+    }
+    const values = open.map((r) => exact.valueOf(r) ?? -Infinity),
+      top = Math.max(...values),
+      best = open.filter((_, i) => values[i] === top);
+    chosen = best[Math.floor(random() * best.length)] ?? null;
+  };
+  return {
+    get done() {
+      return exact.done;
+    },
+    get nodes() {
+      return exact.nodes;
+    },
+    step: (quota) => {
+      const over = exact.step(quota);
+      settle();
+      return over;
+    },
+    move: () => {
+      settle();
+      return chosen;
+    },
+  };
+}
+/**
+ * Hidden Canoes Challenge revision 3: the placement heatmap. It counts every fleet layout
+ * that fits its own chart and searches the open cell most of them cover. Ties are broken
+ * by the caller's random source, which never reads the seed.
+ */
+function canoesHeatmapTask(v: CanoesView, random: () => number): PolicyTask {
+  const map = new CanoesHeatmap(v.searched);
+  let chosen: number | null = null,
+    settled = false;
+  const settle = () => {
+    if (settled || !map.done) return;
+    settled = true;
+    const best = likeliest(map, v.searched),
+      open = Array.from({ length: 36 }, (_, i) => i).filter((i) => !v.searched[i]),
+      from = best.length ? best : open;
+    chosen = from[Math.floor(random() * from.length)] ?? null;
+  };
+  return {
+    get done() {
+      return map.done;
+    },
+    get nodes() {
+      return map.work;
+    },
+    step: (quota) => {
+      const over = map.step(quota);
+      settle();
+      return over;
+    },
+    move: () => {
+      settle();
+      return chosen;
+    },
+  };
+}
+
 type Plays = Record<Strength, string>;
 const coconutPlays: Plays = {
   gentle: "Looks one drop ahead. Takes four in a row when it can.",
@@ -118,6 +205,8 @@ const pitsPlays: Plays = {
   growing: "Looks three sows ahead.",
   challenge: "Looks eight sows ahead. A greedy grab for extra turns won’t fool it.",
 };
+const netsEndgamePlays = "Also counts chains, and gives you the shortest one. With 14 ropes or fewer left, it works out the whole ending.";
+const canoesHeatmapPlays = "Counts every way the canoes could fit its chart, then searches where the most of them could be.";
 const archivedPitsChallenge = "Looks six sows ahead. Kept only to finish rounds saved before 4.0.";
 const archivedCanoes = "The 3.0 searcher, kept only to finish rounds saved before 4.0.";
 
@@ -185,6 +274,26 @@ export const boardPolicies: readonly BoardPolicy[] = Object.freeze(([
       choose: (view, random) => finished(canoesChoice(canoesOnly(view), s, random)),
     })
   ),
+  {
+    id: "fishing-nets/challenge@2" as const,
+    game: "fishing-nets",
+    strength: "challenge",
+    revision: 2,
+    publicOnly: true,
+    limits: netsEndgameLimits,
+    plays: netsEndgamePlays,
+    choose: (view, random) => netsEndgameTask(openOnly(view), random),
+  },
+  {
+    id: "hidden-canoes/challenge@3" as const,
+    game: "hidden-canoes",
+    strength: "challenge",
+    revision: 3,
+    publicOnly: true,
+    limits: null,
+    plays: canoesHeatmapPlays,
+    choose: (view, random) => canoesHeatmapTask(canoesOnly(view), random),
+  },
 ] satisfies BoardPolicy[]).map(seal));
 /** Revision 1 of Hidden Canoes needs the saved position, exactly as 3.0 read it. */
 export function archivedChoice(policy: BoardPolicy, p: Position): number | null {
