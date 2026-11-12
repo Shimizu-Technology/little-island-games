@@ -1,0 +1,23 @@
+{
+ "format": 1,
+ "family": "loop",
+ "seedBase": 1,
+ "attempts": 1360,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "pebble": 240,
+  "cove": 240,
+  "reef": 240,
+  "kelp": 240,
+  "current": 240,
+  "abyss": 160
+ },
+ "sourceSha": "1600a77cd220cc3b9555d71cf0f16928d6b3b544",
+ "status": "complete"
+}

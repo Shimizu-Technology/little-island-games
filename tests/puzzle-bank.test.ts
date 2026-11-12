@@ -119,7 +119,7 @@ describe('pack layout rules', () => {
 });
 describe('byte model', () => {
   it('matches the ledger counts and stays inside the catalog cap', () => {
-    expect(modelEntries()).toBe(62647);
+    expect(modelEntries()).toBe(62983);
     expect(modelFloor()).toBe(12839);
     expect(BYTE_MODEL.length).toBeLessThanOrEqual(70);
     expect(modelBytes()).toBeLessThanOrEqual(BANK_CAPS.catalogBytes);

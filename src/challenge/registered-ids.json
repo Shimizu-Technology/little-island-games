@@ -1,8 +1,11 @@
 [
+  "bridges",
   "cage-math",
   "crab-commands",
   "greater-than",
   "killer",
+  "loop",
+  "pearl-loop",
   "shell-pits",
   "skyline",
   "slip-tide",
