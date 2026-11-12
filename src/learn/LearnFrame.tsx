@@ -298,11 +298,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
           // Back, Sound and Help are three 44-pt icons; the title wraps between words beside them.
           titleMax={large ? wordFitMultiplier(gameName, 21, lineWidth - 3 * 44 - 3 * 8, 1.5) : undefined}
         />;
-  // At accessibility sizes the header text stops growing where its words still fit: the level title at 2x (1.5x on a
-  // short landscape screen), the small lines (mode, cheer) at 1.5x like compact chrome. Default sizes never change.
+  // At accessibility sizes the header text stops growing where its words still fit: the level title at 1.5x, so it is
+  // never larger than the game name in the bar, and the small lines (mode, cheer) at 1.5x like compact chrome. Default sizes never change.
   const level = <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <view.Art size={artSize} />
-          <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), height < 600 ? 1.5 : 2) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
+          <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), 1.5) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
           {phone && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
         </View>;
   const small = large ? 1.5 : undefined, big = large ? 2 : undefined;
@@ -323,13 +323,21 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {level}
         {saved && <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           <LearnerChip compact/>
-          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 4 }}>{modeText}</Copy>
+          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>
         </View>}
         {!saved && <LearnerChip compact/>}
         {phone && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
       </View>;
   const pinned = phone ? (large ? bar : header) : null;
   const scrolled = phone ? (large ? largeLines : null) : large ? <View style={{ gap: 4 }}>{bar}{largeLines}</View> : header;
+
+  const helpText = <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>;
+  const hear = !(saved && isGrowth(saved.state)) && engine.helpAudio ? <>
+            <Button icon="sound-on" maxFontSizeMultiplier={big} onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
+              Hear a quick guide
+            </Button>
+            {!soundOn && <Copy maxFontSizeMultiplier={big}>Turn sound on to hear the instructions.</Copy>}
+          </> : null;
 
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
@@ -426,7 +434,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <View testID="learn-setup-card" style={{ flexDirection: large ? "column" : "row", alignItems: large ? "flex-start" : "center", gap: large ? 4 : 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={large ? 56 : 72}/><View style={large ? { alignSelf: "stretch" } : { flex: 1 }}><Heading maxFontSizeMultiplier={large ? wordFitMultiplier(engine.name, 21, sheetLine - 24, 2) : undefined} style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy maxFontSizeMultiplier={big} style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
         {id==='code-lab'&&<Copy>Ages 9–14, with the top challenges for older learners and grown-ups.</Copy>}
-        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
+        <Copy maxFontSizeMultiplier={big}>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} progress={store.save.school} />
         {challenge&&!comfort.youngChild&&<Button quiet maxFontSizeMultiplier={big} onPress={()=>openChallenge()}>Challenge</Button>}
         {engine.modes.length > 1 && (
@@ -483,15 +491,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
-        <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
-        {!(saved && isGrowth(saved.state)) && engine.helpAudio && (
-          <>
-            <Button icon="sound-on" maxFontSizeMultiplier={big} onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
-              Hear a quick guide
-            </Button>
-            {!soundOn && <Copy>Turn sound on to hear the instructions.</Copy>}
-          </>
-        )}
+        {/* At accessibility sizes the instructions run several screens, so Hear comes first for a child who can't read them yet. */}
+        {!large && helpText}
+        {hear}
+        {large && helpText}
         {saved && !finished && (
           <Button
             icon="help"

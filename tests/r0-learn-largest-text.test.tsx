@@ -70,8 +70,9 @@ it('AX5 phone portrait: only the one-row bar stays pinned; level, learner and mo
   // The board follows the header in the same scrolling page.
   expect(inside(byType(r, 'Board')[0], scroll)).toBe(true);
   // The level title stops at 2x, where "Level 2 of 5 · Walk and turn" still wraps only between words.
+  // The level title stops at 1.5x, the same ceiling as the game name in the bar.
   const levelMax = level.props.maxFontSizeMultiplier as number;
-  expect(levelMax).toBeLessThanOrEqual(2);expect(levelMax).toBeGreaterThan(1);
+  expect(levelMax).toBeLessThanOrEqual(1.5);expect(levelMax).toBeGreaterThan(1);
   expect(longestAt(textOf(level), 19, levelMax)).toBeLessThanOrEqual(393 - 32 - 36 - 8 - 72);
   // Small lines are compact chrome: the mode line, the "New round" button's note.
   const mode = r.root.find(n => String(n.type) === 'Copy' && textOf(n) === 'On my own');
@@ -150,4 +151,18 @@ it.each([[3.12, 892], [1, 0]])('next question in the same round at text scale %s
   const board = byType(r, 'Board')[0], state = board.props.session.state as { index: number };
   await act(async () => { board.props.update({ ...state, index: state.index + 1 }); });
   expect(scrolls).toEqual([expected]);
+});
+
+it.each([[3.12, true], [1, false]])('Help at text scale %s puts Hear a quick guide before the instructions: %s', async (fontScale, first) => {
+  Object.assign(viewport, { fontScale });
+  const r = await mount('slip-tide');
+  await act(async () => { byType(r, 'GameHeader')[0].props.onHelp(); });
+  const sheet = r.root.findAll(n => String(n.type) === 'SheetBody').at(-1)!;
+  const order = sheet.findAll(n => (String(n.type) === 'Button' && textOf(n).trim() === 'Hear a quick guide') || (String(n.type) === 'Copy' && textOf(n) === engines['slip-tide'].help)).map(n => String(n.type));
+  expect(order).toEqual(first ? ['Button', 'Copy'] : ['Copy', 'Button']);
+});
+
+it('AX5 setup sheet description stops at 2x so the level stones are near', async () => {
+  const r = await mount('pattern-path', false);
+  expect(r.root.find(n => String(n.type) === 'Copy' && textOf(n) === engines['pattern-path'].description).props.maxFontSizeMultiplier).toBe(2);
 });
