@@ -154,7 +154,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   function admittedFilename(stem) {
     if(admitted(stem))return true;
     const parts=wordTokens(stem);
-    return /[a-z][A-Z]/.test(stem) && parts.length>1 && parts.every(part=>admitted(part));
+    return parts.length>1 && parts.every(part=>admitted(part));
   }
   const sensitive=rawTermMatcher((policy.chamoruSensitive??[]).map(sensitiveText));
   const sourceRoot=resolve(options.sourceRoot??process.cwd());
