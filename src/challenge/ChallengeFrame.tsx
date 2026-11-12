@@ -142,7 +142,8 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // A pinned board's chrome stays compact (Back stops at 1.3x), so its title and dare line stop at 1.5x.
   const PINNED_MAX=1.5;
   const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right,pinned?PINNED_MAX:undefined);
-  const dare=round&&!round.result?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[])[0]:undefined;
+  // Young-child choices hide dares everywhere, including a dare saved before the setting was turned on.
+  const dare=round&&!round.result&&!comfort.youngChild?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[])[0]:undefined;
   const title=currentCard?.title??'';
   const solved=round?.result?.event==='together'?'You solved it together!':'Puzzle solved!';
   return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView ref={page} scrollEnabled={!pinned&&!held} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
