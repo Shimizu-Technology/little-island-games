@@ -255,11 +255,11 @@ describe('private data stays outside app and source exports', () => {
     const dir=mkdtempSync(join(tmpdir(),'li-word-guard-'));
     try {
       writeFileSync(join(dir,'app.js'),'const greeting = "Hello";');
-      expect(guardTree(dir,policy).passed).toBe(true);
+      expect(guardTree(dir,policy,[],{sourceRoot:dir}).passed).toBe(true);
       writeFileSync(join(dir,'leak.json'),JSON.stringify(policy.scan));
-      expect(()=>guardTree(dir,policy)).toThrow('leaked');
+      expect(()=>guardTree(dir,policy,[],{sourceRoot:dir})).toThrow('leaked');
       writeFileSync(join(dir,'leak.json'),digest([...policy.scan].sort()));
-      expect(()=>guardTree(dir,policy)).toThrow('leaked');
+      expect(()=>guardTree(dir,policy,[],{sourceRoot:dir})).toThrow('leaked');
     } finally { rmSync(dir,{recursive:true,force:true}); }
   });
   it('refuses private CLI output inside the repository', () => {

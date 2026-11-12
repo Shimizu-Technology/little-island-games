@@ -33762,7 +33762,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "fruit-ripens",
     "type": "topic",
     "title": "Why does fruit change as it ripens?",
@@ -33772,8 +33772,7 @@
       "ripening",
       "banana",
       "mango",
-      "ethylene",
-      "sweetness"
+      "ethylene"
     ],
     "tags": [
       "food",

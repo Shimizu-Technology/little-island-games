@@ -12,7 +12,7 @@ export const digest = value => sha256(canonical(value));
 export function requireThat(ok, message) { if (!ok) throw new Error(message); }
 export const nonempty = s => typeof s === 'string' && s.trim().length > 0;
 export const isDate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(s) && Number.isFinite(Date.parse(s));
-export const foldScan = s => s.normalize('NFD').replace(/\p{M}/gu, '').replace(/['’\s-]/g, '').toUpperCase();
+export const foldScan = s => s.normalize('NFD').replace(/\p{M}/gu, '').replace(/['ʼ’\s-]/g, '').toUpperCase();
 export const englishKey = s => s.trim().toUpperCase();
 export const CHAMORU_ALPHABET = ["'", 'A', 'Å', 'B', 'CH', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'Ñ', 'NG', 'O', 'P', 'R', 'S', 'T', 'U', 'Y'];
 export function cellsFor(spelling, language = 'en') {

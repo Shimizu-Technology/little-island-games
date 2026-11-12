@@ -456,3 +456,17 @@ it('R2-5 can replace retired quota with a complete verifier-clean active band',(
   expect(verify(d,[spec]).errors).toEqual([]);expect(readCatalog(d).families.get('toy')!.retired).toEqual([0]);
  }finally{rmSync(join(d.content,'..'),{recursive:true,force:true});}
 });
+
+it('rejects unadmitted vocabulary before a word-family pack is written', () => {
+  const d = dirs();
+  try {
+    const base = toy(16);
+    const spec = { ...base, id: 'word-search', knownSpeech: () => true, generate: (seed: number, band: Parameters<typeof base.generate>[1]) => {
+      const core = base.generate(seed, band);
+      return core ? { ...core, speech: { template: 'test-line', numbers: [], terms: ['zqunadmittedwordx'] } } : null;
+    } };
+    expect(() => bakeFamily(spec, { dirs: d, maxAttempts: 100 })).toThrow('Puzzle vocabulary admission failed');
+    expect(existsSync(join(d.content, 'root.json'))).toBe(false);
+    expect(existsSync(join(d.content, 'assets'))).toBe(false);
+  } finally { rmSync(join(d.content, '..'), { recursive: true, force: true }); }
+});
