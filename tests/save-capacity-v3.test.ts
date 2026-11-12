@@ -9,6 +9,8 @@ import { encodeSave, migrateProfiles, projectProfile } from '../src/state/profil
 import { addCovePerson } from '../src/state/covePeople';
 import { parseSave, MAX_SAVE_BYTES } from '../src/state/validation';
 import { newLibraryChild, validLibraryData } from '../src/library/state';
+import { instance, validHome, type HomeStateV2 } from '../src/home/model';
+import { HOME_UNDO_BYTES, HOME_UNDO_STEPS, undoBytes } from '../src/home/undoHistory';
 // Capacity fixtures occupy bank slots 312–511 and every dare slot; isolate them from the shipped registrations.
 vi.mock('../src/arcade/dares',async original=>({...await original<typeof import('../src/arcade/dares')>(),arcadeDareCatalog:()=>({banks:new Map(),dares:new Map(),codecs:new Map(),contexts:new Set()})}));
 vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
@@ -31,11 +33,9 @@ function paused(owner:string,i:number):ChallengeSession{
 function dense(owner:string,cove=false):ChallengeProgress{
  const included=banks.filter(b=>!cove||b.cove),last=included.at(-1)!;return {...emptyChallenge(cove),banks:included.map(b=>[b.slot,pack(Array<number>(b.entries.length).fill(6),3),pack(Array<number>(b.entries.length).fill(3),2)]),dares:cove?'':pack(Array<number>(4096).fill(1),1),nextOrdinal:2147483647,paused:Array.from({length:cove?4:8},(_,i)=>paused(owner,i)),bests:Array.from({length:cove?128:256},(_,i)=>[last.slot,1023-i,0xffffffff]),signals:Array.from({length:cove?8:32},(_,i)=>[[...catalog.contexts][i],'chfcf',999,'hard',true]),recent:Array.from({length:cove?32:64},(_,i)=>[last.slot,1023-i]),cursors:Array.from({length:cove?64:128},(_,i)=>[included[included.length-1-i].slot,0xffffffff]),practice:Array.from({length:cove?16:64},(_,i)=>[[...catalog.contexts][i],0xffffffff,0xffffffff]),solutions:Array.from({length:cove?16:32},(_,i)=>[last.slot,1023-i,hash]),choice:[banks[0].engine,'endless',6]};
 }
-it('FND-16 measures real canonical contract encodings, five learners, four adults, full Library and a dense valid legacy save',()=>{
- expect(ordinal).toBe(62647);
+/** Five dense learners, four dense adults and a full Library: the supported capacity envelope. */
+function denseSave(){
  const frozen=parseSave(readFileSync('tests/fixtures/save-v3/main-envelope-2.json','utf8'));let save=migrateProfiles(frozen);
- const learner=dense('family'),adult=dense('cove-0',true);
- expect(validChallengeProgress(learner,'family')).toBe(true);expect(validChallengeProgress(adult,'cove-0',undefined,true)).toBe(true);expect(jsonBytes(learner)).toBeLessThanOrEqual(104000);expect(jsonBytes(adult)).toBeLessThan(72000-100);
  for(const p of save.learning!.people)save.profiles!.people[p.id].challenge=dense(p.id);
  save=projectProfile(save);
  for(let i=0;i<4;i++){save=addCovePerson(save,`Adult ${i}`,`cove-${i}`);save.cove!.people[`cove-${i}`].challenge=dense(`cove-${i}`,true);}
@@ -49,11 +49,48 @@ it('FND-16 measures real canonical contract encodings, five learners, four adult
  }
  // Use the exact remaining budget on an allowed sentences field.
  first.sentences='a'.repeat(Math.min(4000,999900-jsonBytes(save.library)));
+ return save;
+}
+/** H3 F2: every learner's Home holds a full saved undo history, as close to HOME_UNDO_BYTES as
+ * whole basket things allow, in 20 valid room snapshots that each rebuild a valid earlier home. */
+function withFullUndo(save:ReturnType<typeof denseSave>){
+ for(const person of Object.values(save.personalization!.people)){
+  const home=person.home as HomeStateV2;
+  // As many whole-room steps as fit (at most 20), then basket things until no more fit.
+  const one=JSON.stringify({home:{room:home.rooms.home}}).length+1;
+  const sizes=Array<number>(Math.min(HOME_UNDO_STEPS,Math.floor((HOME_UNDO_BYTES-24)/one))).fill(0);
+  const steps=()=>sizes.map((k,n)=>({home:{room:{...home.rooms.home,instances:[...home.rooms.home.instances,...Array.from({length:k},(_,i)=>({...instance(`shell-${n}-${i}`,'shell',0,0),staged:true as const}))]}}}));
+  const bytes=()=>undoBytes({version:1,steps:steps()});
+  expect(sizes.length).toBeGreaterThan(0);expect(bytes()).toBeLessThanOrEqual(HOME_UNDO_BYTES);
+  for(let n=0;;n=(n+1)%sizes.length){sizes[n]++;if(bytes()>HOME_UNDO_BYTES){sizes[n]--;break;}}
+  person.home={...home,undo:{version:1,steps:steps()}} as HomeStateV2;
+  expect(validHome(person.home)).toBe(true);
+  expect(HOME_UNDO_BYTES-bytes()).toBeLessThan(100);
+ }
+ return save;
+}
+it('FND-16 measures real canonical contract encodings, five learners, four adults, full Library and a dense valid legacy save',()=>{
+ expect(ordinal).toBe(62647);
+ const learner=dense('family'),adult=dense('cove-0',true);
+ expect(validChallengeProgress(learner,'family')).toBe(true);expect(validChallengeProgress(adult,'cove-0',undefined,true)).toBe(true);expect(jsonBytes(learner)).toBeLessThanOrEqual(104000);expect(jsonBytes(adult)).toBeLessThan(72000-100);
+ const save=denseSave();
  expect(validLibraryData(save.library)).toBe(true);expect(jsonBytes(save.library)).toBe(999900);
  const raw=encodeSave(save);expect(Buffer.byteLength(raw)).toBeLessThan(MAX_SAVE_BYTES);expect(()=>parseSave(raw)).not.toThrow();
  const near=migrateProfiles(parseSave(readFileSync('tests/fixtures/save-v3/main-near-limit-2.json','utf8')));const nearOriginal=encodeSave(near);
  near.profiles!.people.family.challenge=learner;const oversized=encodeSave(projectProfile(near));expect(Buffer.byteLength(oversized)).toBeGreaterThan(MAX_SAVE_BYTES);expect(()=>parseSave(oversized)).toThrow(/large/);expect(nearOriginal.length).toBeLessThan(MAX_SAVE_BYTES);
  const sessionBytes=Object.fromEntries(kinds.map(kind=>[kind,jsonBytes(largest(kind))]));
- const report={catalogEntries:ordinal,coveEntries:54000,bankCount:200,learnerBytes:jsonBytes(learner),adultChallengeBytes:jsonBytes(adult),adultRecordBytes:jsonBytes(save.cove!.people['cove-0']),sessionBytes,pausedSessionBytes:learner.paused.map(s=>({game:s.game,bytes:jsonBytes(s)})),fiveLearnersChallengeBytes:Object.values(save.profiles!.people).reduce((n,p)=>n+jsonBytes(p.challenge),0),fourAdultRecordBytes:Object.values(save.cove!.people).reduce((n,p)=>n+jsonBytes(p),0),libraryBytes:jsonBytes(save.library),drawingCount:80,wholeSaveBytes:Buffer.byteLength(raw),remainingBytes:MAX_SAVE_BYTES-Buffer.byteLength(raw),nearLimitMigratedBytes:Buffer.byteLength(nearOriginal),nearLimitPlusDenseChallengeBytes:Buffer.byteLength(oversized),limits:{save:2000000,library:1000000,learner:104000,adult:72000},coverage:'Actual canonical production storage primitives and validators, test-only structural codecs. Not proof of future game-engine reachability, future Home storage/delta formats or device timing.'};
+ const undone=withFullUndo(denseSave()),undoRaw=encodeSave(undone),headroom=MAX_SAVE_BYTES-Buffer.byteLength(raw);
+ const homeUndo={capBytes:HOME_UNDO_BYTES,maxSteps:HOME_UNDO_STEPS,stepsPerLearner:Object.values(undone.personalization!.people).map(p=>(p.home as HomeStateV2).undo!.steps.length),perLearnerBytes:Object.values(undone.personalization!.people).map(p=>undoBytes((p.home as HomeStateV2).undo!)),wholeSaveBytes:Buffer.byteLength(undoRaw),addedBytes:Buffer.byteLength(undoRaw)-Buffer.byteLength(raw),remainingBytes:MAX_SAVE_BYTES-Buffer.byteLength(undoRaw),marginOfHeadroom:Number(((MAX_SAVE_BYTES-Buffer.byteLength(undoRaw))/headroom).toFixed(3))};
+ const report={catalogEntries:ordinal,coveEntries:54000,bankCount:200,learnerBytes:jsonBytes(learner),adultChallengeBytes:jsonBytes(adult),adultRecordBytes:jsonBytes(save.cove!.people['cove-0']),sessionBytes,pausedSessionBytes:learner.paused.map(s=>({game:s.game,bytes:jsonBytes(s)})),fiveLearnersChallengeBytes:Object.values(save.profiles!.people).reduce((n,p)=>n+jsonBytes(p.challenge),0),fourAdultRecordBytes:Object.values(save.cove!.people).reduce((n,p)=>n+jsonBytes(p),0),libraryBytes:jsonBytes(save.library),drawingCount:80,wholeSaveBytes:Buffer.byteLength(raw),remainingBytes:MAX_SAVE_BYTES-Buffer.byteLength(raw),nearLimitMigratedBytes:Buffer.byteLength(nearOriginal),nearLimitPlusDenseChallengeBytes:Buffer.byteLength(oversized),homeUndo,limits:{save:2000000,library:1000000,learner:104000,adult:72000},coverage:'Actual canonical production storage primitives and validators, test-only structural codecs. Not proof of future game-engine reachability, future Home storage/delta formats or device timing. homeUndo: five full Home undo histories (valid room snapshots at the cap) added to the same envelope.'};
  if(process.env.F1_SIZE_REPORT)writeFileSync(process.env.F1_SIZE_REPORT,JSON.stringify(report,null,2)+'\n');
+});
+it('H3 F2: five learners with full Home undo histories still save and load, leaving 10% of the headroom spare',()=>{
+ const base=Buffer.byteLength(encodeSave(denseSave())),headroom=MAX_SAVE_BYTES-base;
+ const save=withFullUndo(denseSave()),raw=encodeSave(save),bytes=Buffer.byteLength(raw);
+ expect(Object.values(save.personalization!.people)).toHaveLength(5);
+ const loaded=parseSave(raw);
+ for(const [id,person] of Object.entries(loaded.personalization!.people))expect((person.home as HomeStateV2).undo).toEqual((save.personalization!.people[id].home as HomeStateV2).undo);
+ // At least 10% of what the dense envelope leaves stays unused, even with every history at exactly the cap.
+ const slack=Object.values(save.personalization!.people).reduce((n,p)=>n+HOME_UNDO_BYTES-undoBytes((p.home as HomeStateV2).undo!),0);
+ expect(MAX_SAVE_BYTES-bytes-slack).toBeGreaterThanOrEqual(headroom*0.1);
 });

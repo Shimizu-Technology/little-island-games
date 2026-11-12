@@ -40,6 +40,6 @@ export function ShoreArt({ depth = 215 }: { depth?: number }) {
     <Path d="M712 23Q669-3 646 30Q681 17 712 23Q748-10 780 20Q746 16 712 23Q668 31 667 65Q689 44 712 23Q751 22 776 61Q740 41 712 23" fill="#649B77" stroke="#4C7861" strokeWidth={2}/>
     <G fill="none" stroke="#D7B889" strokeWidth={3}><Path d="M95 102l20-4M310 144l15 3M528 82l20-3M620 126l12 4"/></G>
     <G fill="#C5A476" opacity={.65}>{Array.from({length:38},(_,n)=><Circle key={n} cx={31+(n*103)%739} cy={31+(n*47)%Math.max(70,depth-95)} r={n%5===0?2:1}/>)}</G>
-    {[ [160,99],[361,66],[570,116] ].map(([x,y],i)=><G key={x} transform={`translate(${x} ${y}) rotate(${i*29})`}><Path d="M-12 8Q-16-9-5-10Q0-16 5-10Q16-9 12 8Z" fill={i%2?'#F1C0AA':'#FFF2D6'} stroke="#B8997D" strokeWidth={2}/><Path d="M0 6V-8M-8 5l5-10M8 5L3-5" stroke="#D0A994" strokeWidth={1.2}/></G>)}
+    {/* HC-02: the beach shells are real objects (runtime/portions shoreShells), drawn above this art. */}
   </Svg>;
 }
