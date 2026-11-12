@@ -44,13 +44,14 @@ function padText(seed: number, bytes: number) {
 }
 const bandNames = ['paddling', 'shallows', 'lagoon', 'reef', 'deep', 'trench', 'band-7', 'band-8'];
 export function fixtureSpec(model: ByteModelRow): FamilySpec<Pad> {
+  const fixtureId = `sizing${createHash('sha256').update(model.family).digest('hex').slice(0, 8)}`;
   const share = Math.floor(model.target / model.bands);
   const bands = Array.from({ length: model.bands }, (_, i) => {
     const target = i === model.bands - 1 ? model.target - share * (model.bands - 1) : share;
     return { id: bandNames[i], target, floor: 0, advanced: false };
   });
   return {
-    id: model.family, adapter: {...padAdapter,engine:model.family}, bands, maxRowBytes: model.rowBytes, requiresUnique: false, requiresTrace: false, hiddenInformation: false, sources: [],
+    id: fixtureId, adapter: {...padAdapter,engine:fixtureId}, bands, maxRowBytes: model.rowBytes, requiresUnique: false, requiresTrace: false, hiddenInformation: false, sources: [],
     provenance: { source: 'original', note: 'Sizing fixture only.' }, review: { ids: [], complete: false },
     generate(seed: number, band: BandQuota): DescriptorCore<Pad> {
       const overhead = `[${seed},"l${seed % 5}","t${seed % 8}","",["steps",1,1]]`.length;
@@ -129,7 +130,9 @@ export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean
     const packCount = [...families.values()].reduce((n, m) => n + m.packs.length, 0);
     const entries = [...families.values()].reduce((n, m) => n + m.packs.reduce((c, p) => c + p[2], 0), 0);
     const packBytes = [...families.values()].reduce((n, m) => n + m.packs.reduce((c, p) => c + p[3], 0), 0);
-    const actual = [...families.values()].map(m => familyActual(dirs, m));
+    // These are padding fixtures, not the registered content families. Map names
+    // back only for comparison with the byte model.
+    const actual = [...families.values()].map(m => ({ ...familyActual(dirs, m), family: models[specs.findIndex(spec => spec.id === m.family)].family }));
     const modelIssues = verifyByteModel(actual);
     const saveFragment = saveCatalogBanks(dirs, () => ({awards:0,cove:true}));
     const launchText=JSON.stringify({version:2,banks:saveFragment,dares:[],contexts:[]});
@@ -178,7 +181,7 @@ export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean
       await loader.pack(m, p);
       warm.push(performance.now() - c);
     }
-    const verified = options.verify === false ? null : verifyCatalog(dirs, specs as unknown as FamilySpec<unknown>[]);
+    const verified = options.verify === false ? null : verifyCatalog(dirs, specs as unknown as FamilySpec<unknown>[], { byteModel: false });
     return {
       fixture: 'synthetic rows at modelled sizes, not the real catalog',
       entries, modelEntries: modelEntries(), packs: packCount, slotsFree: BANK_CAPS.slots - packCount, packBytes, catalogBytes: root.families.reduce((n, f) => n + f[5], 0), buildMs,

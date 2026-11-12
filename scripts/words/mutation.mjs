@@ -238,6 +238,7 @@ for(const [file,label,before,after,tests] of r5Edges){const original=sources.get
 custom('text-views','R4 UTF16 text decoding',sources.get('text-views').replace("if(bom==='fffe'||bom==='feff')",'if(false)').replace('if(sample.length>=4 && Math.max(...zero)>sample.length/8)','if(false)'),['R4 UTF16 le density','R4 UTF16 core']);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 const r6Edges=[
+ ['generated-admission','Library item identity','items.find(item=>item.id===row.id)','items[0]',['R6 Library normalized token stays item bound']],
  ['generated-admission','speech inputs cannot admit themselves',"const authoredRoots=['src'];", "const authoredRoots=['src','scripts/learn'];",['R6 speech input cannot admit scripts/learn/spelling.json']],
  ['generated-admission','reachable src only',"if(name.startsWith('src/') && !reachable.has(name))return;",'', ['R6 graph excludes unimported']],
  ['generated-admission','type-only import exclusion',"!n.importClause?.isTypeOnly",'true',['R6 graph excludes type-only']],
@@ -248,17 +249,18 @@ const r6Edges=[
  ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
  ['guard','source density check','if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)','if(false)',['R6 source scan scripts/learn/spelling.json density']],
  ['guard','camel word file tokens',"normalizedText(wordTokens(stem).join(' '))",'normalizedText(stem)',['R6 word asset camel']],
+ ['text-views','Hermes header validation','try{hermesStrings(bytes);', 'try{', ['R6 Hermes magic needs header']],
  ['text-views','validated font required','if(validFont(bytes))',"if(bytes.subarray(0,4).toString()==='true' || validFont(bytes))",['R6 debug dump regression']],
  ['media-structure','PNG CRC','crc32(b.subarray(at+4,end-4))!==b.readUInt32BE(end-4)','false',['R6 invalid media PNG CRC']],
  ['media-structure','PNG IHDR',"kind!=='IHDR'","false",['R6 invalid media PNG IHDR']],
  ['media-structure','RIFF length','b.readUInt32LE(4)+8!==b.length','false',['R6 invalid media RIFF size']],
- ['media-structure','MP4 box size','at+size>b.length','false',['R6 invalid media M4A size']],
  ['media-structure','ID3 version','[2,3,4].includes(b[3])','true',['R6 invalid media ID3 version']],
  ['media-structure','ID3 size','10+((b[6]<<21)|(b[7]<<14)|(b[8]<<7)|b[9])+(b[3]===4 && (b[5]&16)?10:0)<=b.length','true',['R6 invalid media ID3 size']],
- ['media-structure','sfnt table count','12+count*16>b.length','false',['R6 invalid media sfnt count']],
+ ['media-structure','sfnt table count','!count || count>4096','count>4096',['R6 invalid media sfnt zero']],
  ['media-structure','sfnt table range','offset+size>b.length','false',['R6 invalid media sfnt range']],
  ['puzzle-admission','word family coverage',"if(!wordFamily(family) && !wordFamily(engine))return undefined;",'return undefined;',['R6 word family pack word-search']],
 ];
+custom('media-structure','R6 MP4 complete box bounds',sources.get('media-structure').replace('at+size>b.length','false').replace('return ftyp && at===b.length;','return ftyp;'),['R6 invalid media M4A size']);
 for(const [file,label,before,after,tests] of r6Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R6 mutation target '+label);custom(file,'R6 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');

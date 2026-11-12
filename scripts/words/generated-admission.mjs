@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { existsSync, readFileSync, readdirSync, lstatSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -5,6 +6,7 @@ import ts from 'typescript';
 import { spawnSync } from 'node:child_process';
 import { digest, requireThat, sha256 } from './core.mjs';
 import { privatePath } from './paths.mjs';
+import { libraryNormalize } from './artifact-views.mjs';
 import { normalizedText, wordTokens } from './density.mjs';
 
 // Output tables cannot supply their own admission. Keep this inventory explicit;
@@ -27,9 +29,6 @@ function walk(root,path,visit) {
   else if(/\.(?:[cm]?[jt]sx?|json|py)$/.test(path))visit(relative(root,path).replaceAll('\\','/'),readFileSync(path));
 }
 function literals(text,name) {
-  if(/\.py$/.test(name)) {
-    const result=spawnSync('python3',['-c',"import ast,json,sys; print(json.dumps([n.value for n in ast.walk(ast.parse(sys.stdin.read())) if isinstance(n,ast.Constant) and isinstance(n.value,str)]))"],{input:text,encoding:'utf8'});requireThat(result.status===0,'Cannot parse authored speech literals');return JSON.parse(result.stdout);
-  }
   if(/\.json$/.test(name)) {
     const out=[];function visit(v){if(typeof v==='string')out.push(v);else if(v && typeof v==='object')for(const [key,value] of Object.entries(v)){if(!Array.isArray(v))out.push(key);visit(value);}}visit(JSON.parse(text));return out;
   }
@@ -161,7 +160,22 @@ export function admitGenerated(root,generator,entries,sources=admissionSources(r
     requireThat(!!source,'Generated word has no admitted authored source: '+generator+' '+entry.length+':'+sha256(entry).slice(0,10));
     rows.push({word:key,source});
   }
-  return {schemaVersion:1,generator,entries:rows,sourceSha256:sources.sourceSha256};
+  return {schemaVersion:1,generator,entries:rows,inheritedSpeechCount:sources.inheritedEntries?.length??0,sourceSha256:sources.sourceSha256};
+}
+// Library search normalization differs from display-word tokenization (notably
+// camelCase). Bind derived search tokens to that exact authored item, not a pool.
+export function admitLibraryIndex(root,index,sources=admissionSources(root)) {
+  const path='content/library/items.json',file=join(root,path),bytes=existsSync(file)?readFileSync(file):Buffer.from('[]'),items=JSON.parse(bytes),entries=[];
+  function strings(value){if(typeof value==='string')return [value];if(value && typeof value==='object')return Object.entries(value).filter(([key])=>!['terms','sounds'].includes(key)).flatMap(([,child])=>strings(child));return [];}
+  for(const row of index) {
+    const item=items.find(item=>item.id===row.id),tokens=new Set(item?strings(item).flatMap(text=>libraryNormalize(text).split(' ')):[]);
+    for(const term of row.terms??[]) {
+      requireThat(!item || tokens.has(term),'Library search token has no source in its authored item');
+      if(item)entries.push({word:normalizedText(term),itemId:row.id,source:{path,sha256:sha256(bytes)}});
+      else entries.push(...admitGenerated(root,'library',[term],sources).entries);
+    }
+  }
+  return {schemaVersion:1,generator:'library',entries,inheritedSpeechCount:sources.inheritedEntries?.length??0,sourceSha256:sources.sourceSha256};
 }
 export function wordMapKeys(text,name='artifact.js') {
   const keys=[];
@@ -174,7 +188,7 @@ export function wordMapKeys(text,name='artifact.js') {
 export function generatedReceipts(root,sources=admissionSources(root)) {
   const receipts=[];
   for(const generator of generatorInventory) {
-    const entries=[];
+    const entries=[];let libraryIndex;
     for(const path of generator.paths)walk(root,join(root,path),(name,bytes)=>{
       if(/\.[cm]?[jt]s$/.test(name)) {
         const text=bytes.toString('utf8');
@@ -183,7 +197,7 @@ export function generatedReceipts(root,sources=admissionSources(root)) {
       } else if(name==='content/pictures/manifest.json')entries.push(...JSON.parse(bytes).pictures.map(p=>p.word));
       else if(name==='src/library/catalog.generated.json') {
         // Item-bound phonetic derivation is independently checked by library-source.
-        const catalog=JSON.parse(bytes);for(const item of catalog.index??[])entries.push(...(item.terms??[]));
+        const catalog=JSON.parse(bytes);libraryIndex=catalog.index??[];
       } else if(/^content\/words\/banks\//.test(name))entries.push(...JSON.parse(bytes).words.map(w=>w.spelling));
     });
     // Paths are identifiers. Their exact authored literal must supply provenance.
@@ -193,7 +207,7 @@ export function generatedReceipts(root,sources=admissionSources(root)) {
       const audio=entry.match(/(?:^|\/)assets\/audio\/(?:calm\/)?([^/]+)\.m4a$/);
       return audio?audio[1]:entry;
     });
-    receipts.push(admitGenerated(root,generator.id,[...new Set(resolved)],sources));
+    receipts.push(generator.id==='library' && libraryIndex?admitLibraryIndex(root,libraryIndex,sources):admitGenerated(root,generator.id,[...new Set(resolved)],sources));
   }
   return receipts;
 }
