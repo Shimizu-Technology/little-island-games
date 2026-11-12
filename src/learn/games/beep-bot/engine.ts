@@ -9,7 +9,7 @@ export const bank=content as {puzzle:Puzzle;proof:{minimum:number;solutions:numb
 export function makePuzzle(level:number,seed:number):Puzzle {const p=bank[level-1][seed%bank[level-1].length].puzzle;return {...p,seed,rocks:[...p.rocks],answer:[...p.answer]};}
 export function initialProgram(p:Puzzle,level:number):Arrow[]{if(level!==4)return [];const program=[...p.answer],at=Math.floor(p.seed/16)%program.length;program[at]=dirs[(dirs.indexOf(program[at])+2)%4];return program;}
 export function advance(s:BotState):BotState {const done=s.done+1;return {...s,done,completed:[...s.completed,s.program.slice(0,s.cursor)],program:done<4?initialProgram(s.puzzles[done],s.level):[],cursor:0,running:false,helped:false};}
-export function tick(s:BotState):BotState {if(!s.running)return s;const cursor=s.cursor+1,p=s.puzzles[s.done],path=trace(p,s.program.slice(0,cursor));return {...s,cursor,running:cursor<s.program.length&&path.at(-1)!>=0&&path.at(-1)!==p.shell};}
+export function tick(s:BotState):BotState {if(!s.running)return s;const cursor=s.cursor+1,p=s.puzzles[s.done],path=trace(p,s.program.slice(0,cursor));return {...s,cursor,running:cursor<s.program.length&&path.at(-1)!>=0&&(s.version===2||path.at(-1)!==p.shell)};}
 const keys=['version','level','puzzles','done','completed','program','cursor','running','attempts','helped'].sort().join();
 export const engine:LearnEngine<BotState>={...legacyEngine,outcome:s=>s.done===4?'done':null,turn:s=>s.done%2 as 0|1,notWon:()=>null,
  helpAudio:'c2a-beep-help',

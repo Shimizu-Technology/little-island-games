@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {bank,engine,copySavedRound,initialProgram,makePuzzle,type Arrow} from '../src/learn/games/beep-bot/engine';
+import {bank,engine,tick,copySavedRound,initialProgram,makePuzzle,type Arrow} from '../src/learn/games/beep-bot/engine';
 import {engine as legacy} from '../src/learn/games/beep-bot/legacy';
 import {solves} from '../src/learn/games/beep-bot/movement';
 import {nearestHint,nearestHintSliced,winners} from '../src/learn/games/beep-bot/solver';
@@ -32,3 +32,5 @@ it('every picture dare replays, rejects tampering, help, undo/reset workarounds 
  }});
 it('reset and undo never erase edit, run or help evidence',()=>{const d=beepPuzzles[16].descriptor;let s=challengeEngine.create(d,{version:1},{supportOff:false,ownRead:false});for(const a of [['g'],['h'],['a',0],['u'],['a',1],['z']] as Action[])s=challengeEngine.step(s,a,d)!.state;expect(s.runs).toBe(1);expect(s.hints).toBe(1);expect(s.edits).toBe(4);expect(s.hintStage).toBe(0);expect(s.program).toEqual(d.starter);expect(challengeEngine.step(s,['a',5],d)).toBeNull();});
 it('the full Help ladder and winning Go fit the reserved replay envelope at the ordinary edit wall',()=>{for(const p of beepPuzzles){const slot=p.dares[0].slot;let s=registration.start(p.ref,'a','capacity-proof',emptyChallenge(),{supportOff:true,ownRead:false},[slot]);if(p.descriptor.level===4){const h=nearestHint(p.descriptor.winners,p.descriptor.starter);s=move(s,['r',h.edit!.at,codes.indexOf(h.edit!.card!)]);}else for(const c of p.descriptor.winners[0])s=move(s,['a',codes.indexOf(c)]);for(let i=0;i<512;i++){const a=registration.move(s,['a',0]);if(!a)break;const b=registration.move(a,['x',p.descriptor.winners[0].length]);if(!b)break;s=b;}s=move(s,['h']);s=move(s,['h']);s=move(s,['h']);s=move(s,['g']);expect(s.result?.event).toBe('helped');expect(s.result?.dares).toEqual([]);expect(new TextEncoder().encode(JSON.stringify(s)).length).toBeLessThanOrEqual(4096);}});
+
+it('new rounds read the whole plan; archived rounds keep their original early-arrival playback',()=>{const o=optionsAtLevel({mode:'solo',pace:'easy'},1);let s=engine.create(o,{skills:{},rng:()=>0,starter:0,today:1});s={...s,program:['right','down'],running:true};s=tick(s);expect(s.cursor).toBe(1);expect(s.running).toBe(true);s=tick(s);expect(s.running).toBe(false);expect(solves(s.puzzles[0],s.program)).toBe(false);const archived={...s,version:1 as const,cursor:0,running:true};expect(tick(archived).running).toBe(false);});

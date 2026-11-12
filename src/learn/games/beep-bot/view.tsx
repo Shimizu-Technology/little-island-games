@@ -13,7 +13,7 @@ export {Art} from './art';
 export function Board({session,update,practice,assistance,cheer,sound,soundOn,width,active,coach}:BoardProps<BotState>){
  const s=session.state,p=s.puzzles[Math.min(s.done,3)],reduced=useReducedMotion();
  const [history,setHistory]=useState<Arrow[][]>([]),[edits,setEdits]=useState(0),[hintStage,setHintStage]=useState(0);
- const won=s.done<4&&s.cursor>0&&solves(p,s.program.slice(0,s.cursor));
+ const won=s.done<4&&!s.running&&s.cursor>0&&(s.version===1?solves(p,s.program.slice(0,s.cursor)):s.cursor===s.program.length&&solves(p,s.program));
  const plans=useMemo(()=>s.version===2?bank[s.level-1][p.seed%bank[s.level-1].length].proof.winners:winners(p,s.level),[p,s.level,s.version]);
  useEffect(()=>{if(!active||!s.running)return;const timer=setTimeout(()=>{const n=tick(s);update(n);if(!n.running){const right=solves(p,n.program.slice(0,n.cursor));practice(s.level===5?'think.loops':s.level===4?'think.debug':'think.sequence',right);if(right)cheer(s.done===3?'big':'right','beep-bot-shell');else sound('beep-bot-bump',true);}},reduced?140:420);return()=>clearTimeout(timer);},[s,p,active,reduced,update,practice,cheer,sound]);
  const send=(a:Action)=>{
