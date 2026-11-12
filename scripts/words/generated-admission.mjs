@@ -81,10 +81,10 @@ export function admitGenerated(root,generator,entries,sources=admissionSources(r
 export function wordMapKeys(text,name='artifact.js') {
   const keys=[];
   if(/\.json$/.test(name)) {
-    function visit(v){if(!v || typeof v!=='object')return;if(!Array.isArray(v)){const names=Object.keys(v);if(names.length>=3 && names.filter(n=>/^\p{L}+$/u.test(n)).length>=3 && Object.values(v).every(x=>x && typeof x==='object' || typeof x==='string' && /\.(?:m4a|mp3|wav|png|svg)$/.test(x)))keys.push(...names.filter(n=>/^\p{L}+$/u.test(n)));}Object.values(v).forEach(visit);}visit(JSON.parse(text));return keys;
+    function visit(v){if(!v || typeof v!=='object')return;if(!Array.isArray(v)){const names=Object.keys(v);if(names.length>=3 && names.filter(n=>/^\p{L}+$/u.test(n)).length>=3 && Object.values(v).every(x=>x && typeof x==='object' || typeof x==='string') && !Object.values(v).every(x=>typeof x==='string' && /^#[a-f0-9]{3,8}$/i.test(x)))keys.push(...names.filter(n=>/^\p{L}+$/u.test(n)));}Object.values(v).forEach(visit);}visit(JSON.parse(text));return keys;
   }
   const tree=ts.createSourceFile(name,text,ts.ScriptTarget.Latest,true);
-  function visit(n){if(ts.isObjectLiteralExpression(n) && n.properties.length>=3 && n.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression(p.initializer) || ts.isObjectLiteralExpression(p.initializer) || ts.isStringLiteralLike(p.initializer) && /\.(?:m4a|mp3|wav|png|svg)$/.test(p.initializer.text))))keys.push(...n.properties.map(p=>p.name.text).filter(name=>/^\p{L}+$/u.test(name)));ts.forEachChild(n,visit);}visit(tree);return keys;
+  function visit(n){if(ts.isObjectLiteralExpression(n) && n.properties.length>=3 && n.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression(p.initializer) || ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer) || ts.isObjectLiteralExpression(p.initializer) || ts.isStringLiteralLike(p.initializer))) && !n.properties.every(p=>ts.isStringLiteralLike(p.initializer) && /^#[a-f0-9]{3,8}$/i.test(p.initializer.text)))keys.push(...n.properties.map(p=>p.name.text).filter(name=>/^\p{L}+$/u.test(name)));ts.forEachChild(n,visit);}visit(tree);return keys;
 }
 export function generatedReceipts(root,sources=admissionSources(root)) {
   const receipts=[];

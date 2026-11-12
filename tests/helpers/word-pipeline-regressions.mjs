@@ -986,3 +986,5 @@ test('R5 malformed BOMless UTF16',async()=>{const {exportTextViews}=await import
 test('R5 authored numeric search tokens',async()=>{const {module,dir}=await admissionFixture('numeric');writeFileSync(join(dir,'src/content/authored.ts'),'export const label="In 1944, on 21 July";');assert.equal(module.admitGenerated(dir,'library',['1944','21']).entries.length,2);});
 
 test('R5 diluted map with mixed ids',()=>{const dir=join(scratch,'diluted-mixed-map');mkdirSync(dir);writeFileSync(join(dir,'entry.js'),'globalThis.audio={"instructions-plain":require("safe.m4a"),'+diluted.map((w,i)=>JSON.stringify(w)+':r(d['+i+'])').join(',')+'};');assert.throws(()=>guardTree(dir,dilutedPolicy),/untraced-word-map/);});
+
+for(const shape of ['lazy','dictionary'])test('R5 diluted '+shape+' map',()=>{const dir=join(scratch,'diluted-'+shape);mkdirSync(dir);writeFileSync(join(dir,'entry.js'),'globalThis.words={'+diluted.map((word,i)=>JSON.stringify(word)+':'+(shape==='lazy'?'()=>r(d['+i+'])':JSON.stringify('Safe authored explanation.'))).join(',')+'};');assert.throws(()=>guardTree(dir,dilutedPolicy),/untraced-word-map/);});

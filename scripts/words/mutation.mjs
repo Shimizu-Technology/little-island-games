@@ -216,6 +216,8 @@ r4Edges.push(
  ['text-views','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
 );
 const r5Edges=[
+ ['generated-admission','lazy map admission',' || ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer)','',['R5 diluted lazy map']],
+ ['generated-admission','dictionary map admission'," || ts.isStringLiteralLike(p.initializer)))"," || ts.isStringLiteralLike(p.initializer) && /\\.(?:m4a|mp3|wav|png|svg)$/.test(p.initializer.text)))",['R5 diluted dictionary map']],
  ['generated-admission','mixed map key admission',"(ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression","(ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && /^\\p{L}+$/u.test(p.name.text) && (ts.isCallExpression",['R5 diluted map with mixed ids']],
  ['text-views','lenient fallback',"else views.push(new TextDecoder('windows-1252').decode(bytes),bytes.toString('latin1'),bytes.toString('utf8'));","else views.push(bytes.toString('utf8'));",['R5 encoded Latin1 JSON literal','R5 encoded Latin1 text literal']],
  ['text-views','known magic only','const kind=binaryKind(bytes);',"const kind='media';",['R5 text CSV cp1252','R5 text XML latin1','R5 text ANSI core']],
