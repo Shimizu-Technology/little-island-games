@@ -8,6 +8,7 @@ import { buildScene } from "../src/home/scene/graph";
 import { apply } from "../src/home/scene/proposal";
 vi.mock("react-native-svg", () => ({ default: "Svg", Path: "Path" }));
 vi.mock("react-native", () => ({ Pressable: "Pressable", ScrollView: "ScrollView", Text: "Text", View: "View" }));
+vi.mock("react-native-reanimated", () => ({ default: { View: "AnimatedView" }, useAnimatedStyle: () => ({}) }));
 vi.mock("../src/home/runtime/EntityArt", () => ({ EntityArt: () => null, artFrame: () => ({ width: 1, height: 1 }) }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 describe("tap tray destinations", () => {

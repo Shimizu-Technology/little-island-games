@@ -1,33 +1,41 @@
-import React, { memo, useEffect, useMemo } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, View } from "react-native";
-import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 import { paintedBounds } from "../art/silhouettes";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
 import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";
 import { settleProgress } from "./settle";
-import type { Scene, SceneEntity } from "../scene/types";
+import type { CharacterBase, Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
 import { LandingPreview } from "./LandingPreview";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
-import { emptyDragSlot, type Interaction, type Pickup } from "./useInteraction";
+import { emptyDragSlot, zoneAt, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
 import { pickupTransform, footprintShadow } from "./handFeel";
 
+export type SocketBases = Record<string, readonly CharacterBase[]>;
+/** Character bases each room's furniture offers; standing is always reachable. */
+export function socketBasesOf(scene: Scene): SocketBases {
+  return Object.fromEntries(Object.entries(scene.rooms).map(([room, index]) =>
+    [room, [...new Set(index.targets.filter((t) => t.kind === "socket").map((t) => t.base))].sort()]));
+}
 const OverlayGroup = memo(function OverlayGroup({
   pickup,
   interaction,
   building,
   reduced,
   renderCharacter,
+  socketBases,
 }: {
   pickup: Pickup;
   interaction: Interaction;
   building: Building;
   reduced: boolean;
   renderCharacter?: CharacterRender;
+  socketBases?: SocketBases;
 }) {
   const { scene, id } = pickup;
   const unready = interaction.unready;
@@ -45,6 +53,15 @@ const OverlayGroup = memo(function OverlayGroup({
     return slot ? [{ ...slot }, idle[1]] : idle;
   });
   const channelClock = useDerivedValue(() => channel.value[index].id ? globalClock.value : 0);
+  // HM-13: a friend keeps target poses mounted only for the rooms a drag can reach now.
+  // Entering another room (edge pan or a room button) mounts its poses mid-carry.
+  const [rooms, setRooms] = useState<readonly string[]>([root.room]);
+  const reach = useCallback((room: string) => setRooms((current) => current.includes(room) ? current : [...current, room]), []);
+  useAnimatedReaction(() => root.character ? channel.value[index].proposal?.room ?? "" : "", (room, previous) => {
+    if (room && room !== previous) runOnJS(reach)(room);
+  });
+  const bases = useMemo(() => !root.character ? undefined : [...new Set<CharacterBase>(["stand", root.base,
+    ...rooms.flatMap((room) => socketBases?.[room] ?? (["sit", "lie", "bathe"] as const))])], [root.character, root.base, rooms, socketBases]);
   const visualInteraction = { ...interaction, slots: channel, clock: channelClock } as Interaction;
   const { slots, camera, clock } = visualInteraction;
   const origin = roomOrigin(roomIds.indexOf(root.room), building);
@@ -70,9 +87,16 @@ const OverlayGroup = memo(function OverlayGroup({
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
     interaction.ready(interaction.slots.value.findIndex(s => s.id === id), id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y }, pickup.generation);
   };
+  // Only the shared value goes into the worklet; the interaction object holds the native recognizer.
+  const dropZones = interaction.dropZones as Interaction["dropZones"] | undefined;
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const motion = pickupTransform(slot, root, camera.value.a, clock.value, reduced);
+    // Over a room button or the Friends button, the carried thing shrinks and rises above the
+    // finger so the button can be seen taking it.
+    const over = slot.phase === "dragging" && !slot.catalog && !!zoneAt(dropZones?.value ?? [], slot.absoluteX, slot.absoluteY);
+    const k = over ? 0.62 : 1, rise = over ? -44 / Math.max(0.1, camera.value.a) : 0;
+    const shrink = reduced ? k : withTiming(k, { duration: 120 }), up = reduced ? rise : withTiming(rise, { duration: 120 });
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
@@ -85,9 +109,11 @@ const OverlayGroup = memo(function OverlayGroup({
             root.contact.y -
             motion.lift,
         },
+        { translateY: up as unknown as number },
         { rotate: `${motion.tilt}deg` },
         { scaleX: motion.scaleX },
         { scaleY: motion.scaleY },
+        { scale: shrink as unknown as number },
       ],
     };
   });
@@ -184,6 +210,7 @@ const OverlayGroup = memo(function OverlayGroup({
                 index={index}
                 reduced={reduced}
                 renderCharacter={renderCharacter}
+                bases={bases}
               />
             );
           return (
@@ -217,7 +244,7 @@ const OverlayGroup = memo(function OverlayGroup({
       </Animated.View>
     </>
   );
-}, (previous, next) => previous.pickup === next.pickup && previous.building === next.building &&
+}, (previous, next) => previous.pickup === next.pickup && previous.building === next.building && previous.socketBases === next.socketBases &&
   previous.reduced === next.reduced && previous.renderCharacter === next.renderCharacter &&
   previous.interaction.slots === next.interaction.slots && previous.interaction.camera === next.interaction.camera);
 
@@ -303,6 +330,9 @@ export function DragOverlay(props: {
     .filter(e => e.item && e.body?.small && e.room === (props.activeRoom ?? "home") && e.attachment.kind !== "staging")
     .slice(0, 16).map(entity => ({ id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 })),
     [props.scene, props.activeRoom]);
+  // A stable identity unless a room's furniture offer changes.
+  const basesKey = JSON.stringify(socketBasesOf(props.scene));
+  const socketBases = useMemo(() => JSON.parse(basesKey) as SocketBases, [basesKey]);
   const items: Pickup[] = warm.map(p => props.pickups.find(active => active?.id === p.id) ?? p);
   for (const pickup of props.pickups) if (pickup && !pickup.scene.entities[pickup.id]?.character &&
     !items.some(p => p.id === pickup.id)) items.push(pickup);
@@ -313,10 +343,11 @@ export function DragOverlay(props: {
       pointerEvents="none"
       style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%" }}
     >
-      {Object.values(props.scene.entities).filter((e) => e.character).map((entity) => {
+      {Object.values(props.scene.entities).filter((e) => e.character &&
+        (e.room === (props.activeRoom ?? "home") || props.pickups.some((p) => p?.id === e.id))).map((entity) => {
         const pickup = props.pickups.find((p) => p?.id === entity.id) ??
           { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 };
-        return <OverlayGroup key={entity.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />;
+        return <OverlayGroup key={entity.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} socketBases={socketBases} />;
       })}
       {items.map(pickup => <OverlayGroup key={pickup.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />)}
       <SupportFronts scene={props.scene} interaction={props.interaction} building={props.building} reduced={props.reduced} />
@@ -338,13 +369,8 @@ function SupportFront({ entity, interaction, building, reduced }: {
   entity: SceneEntity; interaction: Interaction; building: Building; reduced: boolean;
 }) {
   const frame = artFrame(entity), origin = roomOrigin(roomIds.indexOf(entity.room), building);
-  const { slots } = interaction;
-  const visible = useDerivedValue(() => slots.value.some((s) => {
-      const attachment = s.proposal?.attachment ?? s.subject?.attachment;
-      return s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
-        attachment?.kind === "socket" && attachment.item === entity.id;
-    }) ? 1 : 0);
-  const style = useAnimatedStyle(() => ({ opacity: visible.value }));
+  const { restingFlags } = interaction;
+  const style = useAnimatedStyle(() => ({ opacity: restingFlags.value.fronts.includes(entity.id) ? 1 : 0 }));
   return <Animated.View pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={[{ position: "absolute", left: origin.x + entity.contact.x + frame.left,
       top: origin.y + entity.contact.y + frame.top }, style]}>

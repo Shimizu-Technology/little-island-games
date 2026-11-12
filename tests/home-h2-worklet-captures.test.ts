@@ -26,3 +26,23 @@ it('native Home worklets never serialize the recognizer-bearing interaction obje
  expect(closures.length).toBeGreaterThan(0);
  for (const captures of closures) for (const name of interactionNames) expect(captures).not.toContain(name);
 });
+
+it('no Home runtime worklet captures a whole interaction object (it holds the native recognizer)', async () => {
+ const { readdirSync } = await import('node:fs');
+ const files = readdirSync('src/home/runtime').filter((f) => f.endsWith('.tsx')).map((f) => `src/home/runtime/${f}`);
+ const offenders: string[] = [];
+ for (const file of files) {
+  const result = babel.transformSync(readFileSync(file, 'utf8'), {
+   filename: file, configFile: false, babelrc: false, ast: true,
+   plugins: ['react-native-worklets/plugin', ['@babel/plugin-transform-typescript', { isTSX: true }]],
+  });
+  const walk = (node: any) => {
+   if (!node || typeof node !== 'object') return;
+   if (node.type === 'AssignmentExpression' && node.left?.property?.name === '__closure' && node.right.type === 'ObjectExpression')
+    for (const p of node.right.properties) if (/^(interaction|visualInteraction|runtime)$/.test(p.key?.name ?? '')) offenders.push(`${file}: ${p.key.name}`);
+   for (const value of Object.values(node)) { if (Array.isArray(value)) value.forEach(walk); else if (value && typeof value === 'object') walk(value); }
+  };
+  walk(result.ast);
+ }
+ expect(offenders).toEqual([]);
+});
