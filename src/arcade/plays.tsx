@@ -46,6 +46,8 @@ export type ArcadeBoardProps = {
   /** Measured space below the shared top bar, excluding native safe areas. */
   width: number;
   height: number;
+  /** Height of the shared top bar when it overlays the arena (Crab, Lagoon); otherwise 0. */
+  overlayTop?: number;
   family: ArcadeFamily;
 };
 export type ArcadePlay = {
@@ -135,7 +137,8 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     levels: runLevels,
     level: runLevel,
     speech: learning => learning ? "arcade-run-math" : "arcade-run-intro",
-    clearedTitle: "What a run!", fullBleed: true, worldNote: stormNote,
+    // Lagoon draws no storm trails (LG-S3 decision): no note advertises them.
+    clearedTitle: "What a run!", fullBleed: true,
     goal: level => level !== "endless" && level.world === "learn" ? "Run into the answer lane." : "Swipe to steer. Jump up. Duck down.",
     Scene: p => <Scenery game="lagoon-run" world={p.world}/>,
     Teach: p => <Rehearsal game="lagoon-run" learning={p.learning} onTone={p.onTone}/>,
