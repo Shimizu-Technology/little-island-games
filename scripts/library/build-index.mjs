@@ -45,7 +45,7 @@ const entries = [
   })),
 ];
 const index = buildIndex(entries);
-admitLibraryIndex(process.cwd(), index);
+admitLibraryIndex(process.cwd(), index, undefined, items.map(item => item.id));
 const files = new Set();
 const images = new Set();
 const sentences = items.flatMap((item) => [

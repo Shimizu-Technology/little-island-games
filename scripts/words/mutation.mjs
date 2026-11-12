@@ -238,7 +238,7 @@ for(const [file,label,before,after,tests] of r5Edges){const original=sources.get
 custom('text-views','R4 UTF16 text decoding',sources.get('text-views').replace("if(bom==='fffe'||bom==='feff')",'if(false)').replace('if(sample.length>=4 && Math.max(...zero)>sample.length/8)','if(false)'),['R4 UTF16 le density','R4 UTF16 core']);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 const r6Edges=[
- ['generated-admission','Library item identity','items.find(item=>item.id===row.id)','items[0]',['R6 Library normalized token stays item bound']],
+ ['generated-admission','Library item identity','items.find(item=>item.id===row.id && (!activeIds || activeIds.includes(item.id)))','items[0]',['R6 Library normalized token stays item bound']],
  ['generated-admission','speech inputs cannot admit themselves',"const authoredRoots=['src'];", "const authoredRoots=['src','scripts/learn'];",['R6 speech input cannot admit scripts/learn/spelling.json']],
  ['generated-admission','reachable src only',"if(name.startsWith('src/') && !reachable.has(name))return;",'', ['R6 graph excludes unimported']],
  ['generated-admission','type-only import exclusion',"!n.importClause?.isTypeOnly",'true',['R6 graph excludes type-only']],
