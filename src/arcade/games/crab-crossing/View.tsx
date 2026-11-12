@@ -36,6 +36,8 @@ import {
 /** Same cap as Lagoon's HUD: numbers and hints stop growing at 1.5x so the largest text keeps the road in view. */
 const HUD_TEXT_MAX = 1.5;
 const tick: CrabInput = { type: "tick" };
+/** The hint stays left of the arrow keys (three 44-pt keys, 4-pt gaps, 10 pt from the edge, 8-pt clearance). */
+const ARROWS_RIGHT = 10 + 44 * 3 + 4 * 2 + 8;
 export function CrabBoard({
   initial,
   active,
@@ -228,7 +230,7 @@ export function CrabBoard({
           <OverlayArrow label="Move right" glyph="→" onPress={() => move("right")} active={active}/>
         </View>
       </View>
-      {s.hops < 3 && <View pointerEvents="none" style={{ position: "absolute", bottom: 12, left: 10, backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }}><Copy maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ color: "#FFF4C7", fontSize: 13, lineHeight: 18 }}>Tap to hop · swipe to steer</Copy></View>}
+      {s.hops < 3 && <View testID="crab-hint" pointerEvents="none" style={{ position: "absolute", bottom: 12, left: 10, right: ARROWS_RIGHT, alignItems: "flex-start" }}><View style={{ backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }}><Copy maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ color: "#FFF4C7", fontSize: 13, lineHeight: 18 }}>Tap to hop · swipe to steer</Copy></View></View>}
       {s.level === "endless" && <View style={{ position: "absolute", left: 10, bottom: 48 }}><Button quiet compact maxFontSizeMultiplier={HUD_TEXT_MAX} disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish crossing</Button></View>}
       {debug && <View pointerEvents="none" style={{ position: "absolute", left: 10, bottom: 4 }}><GridBudget budget={budget}/></View>}
     </View>

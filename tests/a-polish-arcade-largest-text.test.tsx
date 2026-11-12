@@ -110,4 +110,7 @@ it.each([0,62,171])('Crab HUD starts below the measured header (%s pt) with HUD 
   for(const t of hud.findAll(n=>String(n.type)==='Text'))expect(t.props.maxFontSizeMultiplier,textOf(t)).toBeLessThanOrEqual(1.5);
   const hint=root!.root.find(n=>String(n.type)==='Copy'&&textOf(n)==='Tap to hop · swipe to steer');
   expect(hint.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
+  // The hint never runs under the arrow keys at the bottom right.
+  const hintBox=root!.root.find(n=>String(n.type)==='View'&&n.props.testID==='crab-hint');
+  expect(hintBox.props.style.right).toBeGreaterThanOrEqual(10+44*3+4*2);
 });
