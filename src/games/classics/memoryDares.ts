@@ -1,4 +1,5 @@
-import { closeMismatch, flipCard, memoryDone, memoryKey, type MemoryState, type MemoryPack, memoryDeck } from "../memory";
+import authored from "./memory-deals.json";
+import { closeMismatch, flipCard, memoryDone, memoryKey, type MemoryState, type MemoryPack } from "../memory";
 import { defaultOptions } from "../types";
 import { exactKeys, plain } from "../../state/saveBits";
 import type { ReplayEngine } from "../../challenge/types";
@@ -7,8 +8,8 @@ export type Descriptor = { version: 1; cards: string[]; pack: MemoryPack; previe
 export type Initial = { version: 1 };
 export type Action = ["f", number] | ["n"] | ["p"] | ["g"] | ["h"] | ["u"] | ["z"];
 export type State = { round: MemoryState; phase: "offer" | "preview" | "play"; previewed: boolean; flips: number; spent: number; seen: number[]; hint: number[] | null };
-export const memoryDareDescriptors: readonly Descriptor[] = (["pictures", "words", "chamoru"] as const).flatMap((pack, p) =>
-  ([6, 8, 12] as const).flatMap((pairs, size) => [true, false].map(preview => ({ version: 1 as const, cards: memoryDeck(pairs, pack, 410 + p * 31 + size), pack, preview, suggested: preview ? pairs * 1.5 : [14, 19, 28][size] }))));
+/** Authored offline; these exact cards are supplied by the immutable bank, never shuffled on device. */
+export const memoryDareDescriptors: readonly Descriptor[] = authored as Descriptor[];
 export function seenPair(s: State): number[] {
   const known = s.seen.filter(i => !s.round.matched.includes(i));
   for (const i of known) for (const j of known) if (i < j && memoryKey(s.round.cards[i]) === memoryKey(s.round.cards[j])) return [i, j];
