@@ -10,6 +10,8 @@ export type EdgeGenerator<P, R extends EdgeRung = EdgeRung> = {
   family: string;
   rungs: readonly (R & { target: number; floor: number })[];
   generate(rung: R, seed: number): EdgeCandidate<P> | null;
+  /** Grades a board again (a cached pool entry) and keeps it only if it still fits the rung. */
+  judge(rung: R, seed: number, puzzle: P, template: string): EdgeCandidate<P> | null;
 };
 /** The rung's hardest idea is what the bank teaches. Par is omitted: bridge or line counts are not a goal. */
 export const describe = <P,>(c: EdgeCandidate<P>, band: string): DescriptorCore<P> => ({

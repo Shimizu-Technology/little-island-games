@@ -105,11 +105,14 @@ export function generateLine(kind: LinePuzzle['kind'], rung: LineRung, seed: num
   if (kind === 'pearl-loop' && (full as { pearls: number[] }).pearls.filter(Boolean).length < 4) return null;
   const upTo = rank(kind, rung.max) + 1;
   if (grade(full, undefined, 4000, kind === 'loop' ? upTo : techniquesOf(kind).length).status !== 'complete') return null;
-  const puzzle = thin(rng, full, upTo, style.pairs, Math.ceil(rows * cols * rung.keep));
+  return judgeLine(kind, rung, seed, thin(rng, full, upTo, style.pairs, Math.ceil(rows * cols * rung.keep)), style.id);
+}
+/** Grades one board and keeps it only inside the rung's window, with its named idea used. */
+export function judgeLine(kind: LinePuzzle['kind'], rung: LineRung, seed: number, puzzle: LinePuzzle, template: string): LineCandidate | null {
   const g = grade(puzzle);
   if (g.status !== 'complete' || rank(kind, g.ceiling) < rank(kind, rung.min) || rank(kind, g.ceiling) > rank(kind, rung.max)) return null;
   if (rung.needs && !g.steps.some(s => s.technique === rung.needs)) return null;
-  return { seed, puzzle, template: style.id, grade: g };
+  return { seed, puzzle, template, grade: g };
 }
 /** Effort per step, by technique, one weight per technique (checked by the banks test). */
 export const lineWeights = { loop: [0.3, 1, 2, 3, 6, 12], 'pearl-loop': [0.3, 1.5, 5, 10] } as const;
@@ -119,10 +122,12 @@ export const lineWorkload = (kind: LinePuzzle['kind'], g: Extract<Grade, { statu
 };
 const loopSupply: Record<string, [number, number]> = { pebble: [240, 100], cove: [240, 100], reef: [240, 100], kelp: [240, 100], current: [240, 100], abyss: [160, 64] };
 const pearlSupply: Record<string, [number, number]> = { seed: [48, 32], string: [48, 32], deep: [32, 24] };
+const candidate = (kind: LinePuzzle['kind'], c: LineCandidate | null) => c ? { seed: c.seed, puzzle: c.puzzle, template: c.template, ceiling: c.grade.ceiling, workload: lineWorkload(kind, c.grade) } : null;
 const lineGenerator = (kind: LinePuzzle['kind'], rungs: readonly LineRung[], supply: Record<string, [number, number]>): EdgeGenerator<LinePuzzle, LineRung> => ({
   family: kind,
   rungs: rungs.map(r => ({ ...r, target: supply[r.id][0], floor: supply[r.id][1] })),
-  generate: (rung, seed) => { const c = generateLine(kind, rung, seed); return c ? { seed, puzzle: c.puzzle, template: c.template, ceiling: c.grade.ceiling, workload: lineWorkload(kind, c.grade) } : null; },
+  generate: (rung, seed) => candidate(kind, generateLine(kind, rung, seed)),
+  judge: (rung, seed, puzzle, template) => candidate(kind, judgeLine(kind, rung, seed, puzzle, template)),
 });
 export const loopGenerator = lineGenerator('loop', loopRungs, loopSupply);
 export const pearlGenerator = lineGenerator('pearl-loop', pearlRungs, pearlSupply);

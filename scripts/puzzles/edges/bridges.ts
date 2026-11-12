@@ -79,18 +79,24 @@ export function drawBridges(rung: BridgesRung, seed: number): { puzzle: BridgesP
 export function generateBridges(rung: BridgesRung, seed: number): BridgesCandidate | null {
   const drawn = drawBridges(rung, seed);
   if (!drawn) return null;
-  const { puzzle, style } = drawn, g = grade(puzzle);
+  return judgeBridges(rung, seed, drawn.puzzle, drawn.style);
+}
+/** Grades one board and keeps it only inside the rung's window, with its named idea used. */
+export function judgeBridges(rung: BridgesRung, seed: number, puzzle: BridgesPuzzle, style: string): BridgesCandidate | null {
+  const g = grade(puzzle);
   if (g.status !== 'complete' || rank(g.ceiling) < rank(rung.min) || rank(g.ceiling) > rank(rung.max)) return null;
   if (rung.needs && !g.steps.some(s => s.technique === rung.needs)) return null;
   if (rung.trials && g.steps.filter(s => rank(s.technique) >= rank('what-if')).length < rung.trials) return null;
   return { seed, puzzle, template: style, grade: g };
 }
+const edgeCandidate = (c: BridgesCandidate | null) => c ? { seed: c.seed, puzzle: c.puzzle, template: c.template, ceiling: c.grade.ceiling, workload: bridgesWorkload(c.grade, c.puzzle) } : null;
 /** Bank sizes per rung, and the stop-and-tell floors. */
 const supply: Record<string, [number, number]> = { ripple: [240, 100], shallows: [300, 100], stepping: [300, 100], sandbar: [300, 100], archipelago: [300, 100], atoll: [300, 100], channel: [300, 100] };
 export const bridgesGenerator: EdgeGenerator<BridgesPuzzle, BridgesRung> = {
   family: 'bridges',
   rungs: bridgesRungs.map(r => ({ ...r, target: supply[r.id][0], floor: supply[r.id][1] })),
-  generate: (rung, seed) => { const c = generateBridges(rung, seed); return c ? { seed, puzzle: c.puzzle, template: c.template, ceiling: c.grade.ceiling, workload: bridgesWorkload(c.grade, c.puzzle) } : null; },
+  generate: (rung, seed) => edgeCandidate(generateBridges(rung, seed)),
+  judge: (rung, seed, puzzle, template) => edgeCandidate(judgeBridges(rung, seed, puzzle, template)),
 };
 export const ceilingOf = (c: BridgesCandidate): Technique => c.grade.ceiling;
 export { bridgesRungs };

@@ -14,9 +14,9 @@ import { bridgesWeights, bridgesWorkload } from '../scripts/puzzles/edges/bridge
 import { lineWeights, lineWorkload } from '../scripts/puzzles/lines/loops';
 import type { BridgesPuzzle } from '../src/puzzles/edges/core';
 import type { LinePuzzle } from '../src/puzzles/lines/core';
+import { worstBack } from '../scripts/puzzles/order';
 
 const catalog = JSON.parse(readFileSync('src/state/save-catalog.json', 'utf8')) as { banks: { slot: number; family?: string; packHash?: string; first?: number; count?: number }[]; contexts: string[] };
-const mean = (xs: number[]) => xs.reduce((a, x) => a + x, 0) / xs.length;
 function rows(family: string, slot: number, band: string) {
   const { families } = readCatalog(productionDirs), manifest = families.get(family)!, row = manifest.packs.find(p => p[0] === slot)!;
   const adapter = family === 'bridges' ? bridgesAdapter() : lineAdapter(family as LinePuzzle['kind']);
@@ -42,7 +42,10 @@ describe('G5 banks', () => {
     expect(facts.loop.map(b => b.band)).toEqual(loopRungs.map(r => r.id));
     expect(facts['pearl-loop'].map(b => b.band)).toEqual(pearlRungs.map(r => r.id));
   });
-  it('Bridges: every board re-grades inside its rung, and each rung runs gentle to hard', { timeout: 600_000 }, () => {
+  // One pass over every packaged row (every one, the 10×10 Abyss included): decode, re-grade, weigh.
+  type Rung = { family: string; id: string; tier: number; area: number; min: number; max: number; loads: number[] };
+  let banks: Rung[] = [];
+  it('Bridges: every board re-grades inside its rung, with its named idea used', { timeout: 600_000 }, () => {
     for (const b of edgeFacts().bridges) {
       const rung = bridgesRungs.find(r => r.id === b.band)!, load: number[] = [];
       for (const d of rows('bridges', b.slot, b.band)) {
@@ -55,26 +58,43 @@ describe('G5 banks', () => {
         if (rung.needs) expect(g.steps.some(s => s.technique === rung.needs)).toBe(true);
         load.push(bridgesWorkload(g, p));
       }
-      const third = Math.floor(load.length / 3);
-      expect(mean(load.slice(-third)), b.band).toBeGreaterThan(mean(load.slice(0, third)));
+      banks.push({ family: 'bridges', id: b.band, tier: rung.tier, area: rung.width * rung.height, min: rankBridges(rung.min), max: rankBridges(rung.max), loads: load });
     }
   });
-  it('Loop and Pearl Loop: every board (every fifth on the 10×10 rung) re-grades inside its rung, gentle to hard', { timeout: 1_200_000 }, () => {
+  it('Loop and Pearl Loop: every board re-grades inside its rung, with its named idea used', { timeout: 1_800_000 }, () => {
     for (const kind of ['loop', 'pearl-loop'] as const) for (const b of edgeFacts()[kind]) {
-      const rung = (kind === 'loop' ? loopRungs : pearlRungs).find(r => r.id === b.band)!, all = rows(kind, b.slot, b.band), step = rung.rows >= 10 ? 5 : 1, load: number[] = [];
-      all.forEach((d, i) => {
-        if (i % step) return;
+      const rung = (kind === 'loop' ? loopRungs : pearlRungs).find(r => r.id === b.band)!, load: number[] = [];
+      for (const d of rows(kind, b.slot, b.band)) {
         const p = d.payload as LinePuzzle, g = gradeLine(p);
         expect(p.rows).toBe(rung.rows); expect(p.cols).toBe(rung.cols);
         expect(g.status).toBe('complete');
-        if (g.status !== 'complete') return;
+        if (g.status !== 'complete') continue;
         expect(g.ceiling).toBe(d.teaches[0]);
         expect(rankLine(kind, g.ceiling)).toBeGreaterThanOrEqual(rankLine(kind, rung.min)); expect(rankLine(kind, g.ceiling)).toBeLessThanOrEqual(rankLine(kind, rung.max));
         if (rung.needs) expect(g.steps.some(s => s.technique === rung.needs)).toBe(true);
         load.push(lineWorkload(kind, g));
-      });
-      const third = Math.floor(load.length / 3);
-      expect(mean(load.slice(-third)), `${kind} ${b.band}`).toBeGreaterThan(mean(load.slice(0, third)));
+      }
+      banks.push({ family: kind, id: b.band, tier: rung.tier, area: rung.rows * rung.cols, min: rankLine(kind, rung.min), max: rankLine(kind, rung.max), loads: load });
+    }
+  });
+  it('R3: each published rung runs gentle to hard, with no step back beyond the stated policy (no rest beats)', () => {
+    expect(banks.length).toBe(16);
+    for (const b of banks) {
+      const { worst, allowed } = worstBack(b.loads);
+      expect(worst, `${b.family}/${b.id}: worst step back ${worst} > ${allowed}`).toBeLessThanOrEqual(allowed);
+      for (let k = 1; k < b.loads.length; k++) expect(b.loads[k - 1] - b.loads[k], `${b.family}/${b.id} ${k}→${k + 1}`).toBeLessThanOrEqual(allowed);
+    }
+  });
+  it('R3: across rungs, tiers and technique windows never go back, and on one board size the median workload never does', () => {
+    const median = (xs: number[]) => [...xs].sort((a, c) => a - c)[Math.floor(xs.length / 2)];
+    for (const family of ['bridges', 'loop', 'pearl-loop']) {
+      const ladder = banks.filter(b => b.family === family);
+      for (let k = 1; k < ladder.length; k++) {
+        const [a, b] = [ladder[k - 1], ladder[k]];
+        expect(b.tier).toBeGreaterThanOrEqual(a.tier);
+        expect(b.min, `${family} ${a.id}→${b.id}`).toBeGreaterThanOrEqual(a.min); expect(b.max).toBeGreaterThanOrEqual(a.max);
+        if (b.area === a.area) expect(median(b.loads), `${family} ${a.id}→${b.id}`).toBeGreaterThanOrEqual(median(a.loads));
+      }
     }
   });
 });
