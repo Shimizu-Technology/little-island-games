@@ -63,7 +63,10 @@ export function validateClue(c) {
   requireThat(c?.schemaVersion === 1 && nonempty(c.id) && nonempty(c.wordId) && nonempty(c.answer) && nonempty(c.meaning) && nonempty(c.text) && TIERS.includes(c.tier), 'Invalid clue');
   requireThat(c.candidates?.length === 3 && new Set(c.candidates).size === 3 && c.candidates.includes(c.text) && c.candidates.every(nonempty), 'Keep three distinct draft candidates');
   requireThat(nonempty(c.provenance?.model) && isDate(c.provenance?.date) && nonempty(c.provenance?.promptVersion) && /^[a-f0-9]{64}$/.test(c.provenance?.promptSha256), 'Missing drafting provenance');
-  requireThat(c.provenance.webUsed === false && c.provenance.inputs === 'answer,meaning,tier,tone', 'Clean-room drafting required');
+  // Clean-room drafting sees only the answer, meaning, tier and tone. A blind reviewer's revision also saw our
+  // own original clue (never published clues or the web); it is labelled as such and names the clue it revises.
+  const revision=c.provenance.inputs === 'answer,meaning,tier,tone,own-original-clue' && nonempty(c.provenance.revisionOf) && c.provenance.revisionOf !== c.id;
+  requireThat(c.provenance.webUsed === false && (c.provenance.inputs === 'answer,meaning,tier,tone' || revision), 'Clean-room drafting required');
   return c;
 }
 
