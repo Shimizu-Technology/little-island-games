@@ -23,9 +23,9 @@ import { GridInteraction } from '../puzzles/grid/preferences';
 type Choice = ChallengeCard | PackedBand;
 const isBand = (c: Choice | undefined): c is PackedBand => !!c && 'kind' in c && c.kind === 'band';
 /** The dare chosen at Start stays named, quietly, through the round: no pressure wording and no clock. */
-export function ChosenDare({dare}:{dare:RegisteredDare}) {
+export function ChosenDare({dare,maxScale=2}:{dare:RegisteredDare;maxScale?:number}) {
   const help=dare.help==='allowed'?'Help welcome':'On my own';
-  return <View testID="chosen-dare" accessible accessibilityRole="text" accessibilityLabel={`Your chosen dare: ${dare.label}. ${help}.`} style={{alignSelf:'flex-start',maxWidth:'100%',paddingHorizontal:12,paddingVertical:5,borderRadius:16,backgroundColor:'#F0F1E8'}}><Copy maxFontSizeMultiplier={2} style={{fontSize:14,lineHeight:20}}>Dare: {dare.label} · {help}</Copy></View>;
+  return <View testID="chosen-dare" accessible accessibilityRole="text" accessibilityLabel={`Your chosen dare: ${dare.label}. ${help}.`} style={{alignSelf:'flex-start',maxWidth:'100%',paddingHorizontal:12,paddingVertical:5,borderRadius:16,backgroundColor:'#F0F1E8'}}><Copy maxFontSizeMultiplier={maxScale} style={{fontSize:14,lineHeight:20}}>Dare: {dare.label} · {help}</Copy></View>;
 }
 const gameName = (game: string) => shelfGames.find(item=>item.id===game)?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
@@ -139,7 +139,9 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const page=useRef<ScrollView>(null);
   useLayoutEffect(()=>{if(pinned)page.current?.scrollTo({y:0,animated:false});},[pinned]);
   // Large titles stop growing where their longest word still fits the line, so none breaks mid-word.
-  const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right);
+  // A pinned board's chrome stays compact (Back stops at 1.3x), so its title and dare line stop at 1.5x.
+  const PINNED_MAX=1.5;
+  const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right,pinned?PINNED_MAX:undefined);
   const dare=round&&!round.result?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[])[0]:undefined;
   const title=currentCard?.title??'';
   const solved=round?.result?.event==='together'?'You solved it together!':'Puzzle solved!';
@@ -167,7 +169,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
       {(!round.result||entry.animatedRuns)&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
-          header:<><Heading maxFontSizeMultiplier={fit(title,22)} style={{fontSize:22}}>{title}</Heading>{dare&&<ChosenDare dare={dare}/>}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
+          header:<><Heading maxFontSizeMultiplier={fit(title,22)} style={{fontSize:22}}>{title}</Heading>{dare&&<ChosenDare dare={dare} maxScale={PINNED_MAX}/>}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
           footer:<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
         }:{})})}
         {entry.helpUI!=='board'&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}

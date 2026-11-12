@@ -68,6 +68,9 @@ it('Crab Commands (pinned board header): the chosen dare is named, quietly, thro
   expect(chips()[0].props.accessibilityLabel).toBe(`Your chosen dare: ${dare.label}. ${help}.`);
   // Quiet: no clock, countdown or pressure wording.
   expect(textOf(chips()[0])).not.toMatch(/time|second|hurry|quick|fast|left|\d+:\d/i);
+  // Pinned chrome stays compact at the largest text, so the board and its plan keep the room.
+  expect(root!.root.findAllByType('p' as never).find(n=>textOf(n).startsWith('Dare:'))!.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
+  expect(headings().find(h=>textOf(h)===p.title)!.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
 });
 
 it('Slip Tide (unpinned frame): the chosen dare stays named under the puzzle title',async()=>{
