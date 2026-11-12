@@ -18,20 +18,22 @@ const debug=['m7','m2','m4','m8'].map((id,i)=>{
 const mudRows=[
  ['CmH##','#####','#####','#####','#####'],
  ['CmmmH','.....','#####','#####','#####'],
- ['CmmmH','.....','##S##','#####','#####'],
+ // C1b: the shell pocket now sits beside the start (8 cards, was 15), so Mud 3 stays a Tide 2 development.
+ ['C.S##','Hmm##','#####','#####','#####'],
  ['Cmm#H','...m.','.....','#####','#####'],
  ['#..mH','#S...','#mC..','m....','...m.'],
  ['H..#C','m.mSm','.m#.#','.#...','....#'],
  ['C.mH#','....#','#####','#####','#####'],
 ];
-const budgets=[3,6,8,8,6,8,5];
+const budgets=[3,6,5,8,6,8,5];
 const lessons=[
  'Mud costs 2 walking steps. Sand costs 1. Turns cost no steps. Walk across this patch to try it.',
  'The straight path costs 7 steps. You have 6. Can a longer plan walk around the mud?',
  'The shell sits in a little pocket. Visit it, then find a dry way home.',
  'A sandcastle blocks the straight path. Look for a dry crossing.',
  'Cards and walking steps are different. A short plan can cost more steps.',
- 'The shortest plan costs 9 steps. You have 8. Find one extra card that avoids a muddy step.',
+ // C1b: a question, so the card-for-steps trade is left to discover.
+ 'The plan with the fewest cards costs 9 steps. You have 8. Can you find another way to the shell and home?',
  'One small patch to finish. The budget is roomy: choose your own route.',
 ];
 const mud=mudRows.map((rows,i)=>descriptor({id:`mud-${i+1}`,pace:'medium',skill:'think.sequence',rows,facing:1,tier:Math.min(2,Math.floor(i/2)) as 0|1|2},budgets[i],[],lessons[i]));

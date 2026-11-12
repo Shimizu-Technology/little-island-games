@@ -1,5 +1,6 @@
 import authored from './challenge-content.json';
 import legacyMud from './legacy-mud.json';
+import legacyMud2 from './legacy-mud-2.json';
 import type { Descriptor } from './challenge-engine';
 import type { Puzzle, RegisteredDare } from '../../../challenge/types';
 import { sha256Hex } from '../../../puzzles/sha256';
@@ -24,12 +25,14 @@ const debug: Puzzle<Descriptor>[]=authored.debug.map((p,i)=>{
 });
 const mud: Puzzle<Descriptor>[]=authored.mud.map((p,i)=>{
  const d=descriptor(p.descriptor);
- return {ref:{bank:[2,5].includes(i)?10:9,puzzle:[2,5].includes(i)?[2,5].indexOf(i):i,engine:'crab-commands',rules:1,hash:sha256Hex(JSON.stringify(d))},source:{kind:'deep-water',collection:9,puzzle:i},path:'deep-water',tier:i===6?1:i<1?1:i<3?2:i<4?3:i<5?4:5,title:`Mud ${i+1} of 7 · ${['Try a patch','Walk around','Shell stop','Dry crossing','Cards or steps?','Shell and sandcastles','Home stretch'][i]}`,descriptor:d,dares:[],awards:[clean,null],par:{metric:'steps',lower:p.minimumSteps,upper:p.minimumSteps}};
+ return {ref:{bank:[2,5].includes(i)?11:9,puzzle:[2,5].includes(i)?[2,5].indexOf(i):i,engine:'crab-commands',rules:1,hash:sha256Hex(JSON.stringify(d))},source:{kind:'deep-water',collection:9,puzzle:i},path:'deep-water',tier:i===6?1:i<1?1:i<3?2:i<4?3:i<5?4:5,title:`Mud ${i+1} of 7 · ${['Try a patch','Walk around','Shell stop','Dry crossing','Cards or steps?','Shell and sandcastles','Home stretch'][i]}`,descriptor:d,dares:[],awards:[clean,null],par:{metric:'steps',lower:p.minimumSteps,upper:p.minimumSteps}};
 });
-// Keep immutable pre-fix bank 9 entries available to saved refs, outside the picker.
-const legacy: Puzzle<Descriptor>[]=legacyMud.map((p,j)=>{
+// Keep immutable earlier Mud 3 and Mud 6 entries available to saved refs, outside the picker:
+// the pre-fix bank 9 pair, then the C1 bank 10 pair that C1b replaced (bank 11).
+const retire=(entries:typeof legacyMud,bank:number,puzzle:(i:number,j:number)=>number):Puzzle<Descriptor>[]=>entries.map((p,j)=>{
  const i=[2,5][j],d=descriptor(p.descriptor),current=mud[i];
- return {...current,retired:true,ref:{...current.ref,bank:9,puzzle:i,hash:sha256Hex(JSON.stringify(d))},descriptor:d,par:{metric:'steps',lower:p.minimumSteps,upper:p.minimumSteps}};
+ return {...current,retired:true,ref:{...current.ref,bank,puzzle:puzzle(i,j),hash:sha256Hex(JSON.stringify(d))},descriptor:d,par:{metric:'steps',lower:p.minimumSteps,upper:p.minimumSteps}};
 });
+const legacy=[...retire(legacyMud,9,i=>i),...retire(legacyMud2,10,(_,j)=>j)];
 // Small authored proof sets use the replay kit. Bulk Endless banks are a later slice.
 export const crabPuzzles:readonly Puzzle<Descriptor>[]=[...mud,...debug,...replays,...legacy];
