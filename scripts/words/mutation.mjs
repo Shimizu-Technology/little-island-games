@@ -203,6 +203,13 @@ r4Edges.push(
 r4Edges.push(
  ['artifact-views','prose before inline enumeration','if(sentence)return false;','',['R4 prose before inline enum']]
 );
+r4Edges.push(
+ ['compiler','native version mismatch', 'digest(record.compiler)===digest(current)', 'digest({...record.compiler,packageVersion:current.packageVersion})===digest(current)', ['R4 native compiler mismatch packageVersion']],
+ ['check','identifier entries cannot skip', 'embeddedStrings.push(...hermesStrings(bytes))', 'embeddedStrings.push(...hermesStrings(bytes,{identifiers:false}))', ['R4 binding includes identifier entries']],
+ ['check','scanned JS digest binding', 'r.iosJavaScript.scannedJsSha256===digest(r.iosJavaScript.scannedJs)', 'true', ['R4 scanned source hash in receipt']],
+ ['check','receipt native compiler hash', 'r.nativeCompiler?.sha256===verifyCompilerCapture(root,ios,r.nativeCompiler?.path).sha256', 'true', ['R4 receipt compiler binding nativeCompiler.sha256']],
+ ['check','receipt compiler identity', 'digest(r.iosJavaScript.compiler)===digest(compilerIdentity(root))', 'true', ['R4 receipt compiler binding iosJavaScript.compiler.packageVersion']]
+);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');

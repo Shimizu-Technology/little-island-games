@@ -90,7 +90,11 @@ Normal `npm test` checks all `src/`, `content/`, `assets/` and `modules/` roots.
 
 `npm run check` ends with `check:words:export`. Every export guard performs full detached admission, so a matching manifest alone cannot ship a bank. CI runs `check:source`, then the export guard on actual `dist`, exposing the private policy only to that guard step. Locally it uses the external policy lock. CI can provision a gzip/base64 policy through the versioned `LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64` secret, mapped in the workflow onto the existing `LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64` environment variable (optional `_V2_GZIP_BASE64_2` through `_V2_GZIP_BASE64_16` secrets continue the same gzip/base64 string in numeric order when it exceeds one secret; expose each required chunk only in the guard step; plain `LITTLE_ISLAND_WORD_POLICY_JSON` is also supported): the CLI writes mode-0600 external scratch files and removes them on exit. Before any bank exists, a policy-free structural export check reports `policyDataChecked:false`; the first registered bank requires the private policy and fails without it. Once banks exist, CI must be provisioned with detached review/source evidence via `LITTLE_ISLAND_WORD_RECEIPTS` and the pinned source paths referenced by those inputs. Missing evidence fails closed; manifest/hash checks alone are insufficient.
 
-Before native delivery, run `npm run check:words:release -- <web-dist> <embedded-ios-directory> <new-private-receipt>`. This performs the full local rebake, requires Hermes bytecode and independently exports iOS JavaScript from the same clean HEAD with `expo export --platform ios --no-bytecode`. The JavaScript export receives full literal, array, key-table and grid checks, including native-only modules. Hermes retains its own string-table and unconditional byte checks. A schema-2 external receipt binds HEAD, policy bytes, the JavaScript export hash and both supplied artifact trees. The temporary JavaScript export is removed on success or failure; export failure rejects delivery. The delivery lane must run `npm run check:words:receipt -- <private-receipt> <web-dist> <embedded-ios-directory>` immediately before delivery; changed trees or source HEAD invalidate it. These commands do not build, sign, submit or publish anything. `npm run ios:preview-build -- <build command>` now runs full admission before building, restores default generated files, then creates and verifies that receipt before returning success. Set `LITTLE_ISLAND_WORD_WEB_ARTIFACT`, `LITTLE_ISLAND_WORD_IOS_ARTIFACT` and a new external `LITTLE_ISLAND_WORD_RELEASE_RECEIPT` path. `npm run deliver:web -- <delivery command>` and `npm run deliver:ios -- <delivery command>` repeat release admission and verify the receipt immediately before invoking the delivery action. Use these wrappers for web publication and IPA submission; do not invoke a delivery command directly. Both receipt operations refuse a dirty source tree. These commands grant no new release authorization.
+Before native delivery, run `npm run check:words:release -- <web-dist> <embedded-ios-directory> <new-private-receipt>`. The build must first produce a private compiler-capture receipt on the actual build host. Set `LITTLE_ISLAND_WORD_WEB_ARTIFACT`, `LITTLE_ISLAND_WORD_IOS_ARTIFACT`, a new `LITTLE_ISLAND_WORD_RELEASE_RECEIPT` path, and a new `LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT` path. `npm run ios:preview-build -- <build command>` prepares the preview, runs the build through a recording compiler shim, validates admission while preview files remain in place, and restores the four default generated files in `finally`. The shim invokes the pinned `hermes-compiler` executable and records the hashes of its actual outputs. No observed matching invocation means no compiler receipt. The wrapper must run where compilation actually occurs; a remote build needs capture and admission on that host.
+
+The release gate exports iOS JavaScript with `--no-bytecode --no-minify` and the same preview environment. It runs the full structural, normalized-content and density checks on that export, then compiles those exact hashed JS bytes with the captured compiler. Every shipped Hermes string-table entry, including identifiers, must exist in the compiler-derived table. Compiler-synthesized names and optimized string fragments therefore have a source-backed compiler view; no entries are skipped and no exceptions are introduced. The compiler package path, package version, executable hash and version output must match the native build capture, and any change during verification fails closed.
+
+A schema-3 external receipt binds HEAD, policy bytes, both artifact trees, the native compiler capture, every scanned JS file hash, their aggregate digest and the compiler identity. Temporary exports and derived bytecode are removed on success or failure. `npm run check:words:receipt -- <private-receipt> <web-dist> <embedded-ios-directory>` verifies these bindings immediately before delivery. `deliver:web` and `deliver:ios` repeat admission and verification before invoking their delivery command. A dirty tree is accepted only for the four known preview-generated files, reproduced byte-for-byte in scratch. These checks do not build a native executable, sign, submit or publish an app and grant no new release authorization.
 
 The guard keeps unconditional raw-byte checks for canaries, complete policy/list blobs, private hashes, filenames and symlinks. It checks Latin-1, UTF-8 and both UTF-16LE alignments, plus decoded strings, before accepting an artifact. Malformed JavaScript/JSON, unsupported Hermes bytecode and undecodable puzzle packs fail closed. These are build checks; they never approve vocabulary.
 
@@ -156,9 +160,10 @@ and exclusion of the CHamoru-sensitive-only group. Two moving windows count
 The cap passes; cap+1 fails. Repetition does not increase the count. There is no
 density exception or Library-provenance bypass. The ten-snapshot calibration
 records every real exported file and all its text views in the private worker
-evidence. JavaScript views preserve source positions while decoding literals. The real
-long-window peak is 11 and the short-window peak is 8, leaving 45% and 50%
-headroom at the respective caps. Earlier string-pool concatenations are
+evidence. JavaScript views preserve source positions while decoding literals. The historical web matrix
+peaks at 11 in the long window and 8 in the short window, leaving 45% and 50%
+headroom there. Current preview and native measurements are recorded separately
+in the worker evidence. Earlier string-pool concatenations are
 superseded by these source-order measurements.
 The complete broad set, including short everyday words, reaches 42 in raw code;
 the minimum length applies only to the broad detectors.
@@ -183,14 +188,13 @@ word when its suffix is not an English contraction, or word-final after a letter
 other than `s`; ordinary English contractions and plural possessives stay English.
 
 The iOS preview wrapper validates **before restoring** the default generated
-Library files. The release gate accepts changes only to the four known generated
-files and regenerates them to scratch for byte equality. Its fresh iOS JavaScript
-export inherits preview mode and uses `--no-minify` to preserve the compiler input
-function names; Expo skips Terser when producing Hermes bytecode. Every non-identifier Hermes string-table entry must
-also exist in that JavaScript export's decoded strings, keys or identifier tokens;
-compiler function names can occupy string entries. Mismatches fail closed and the
-receipt explicitly records the successful binding. Hermes still receives all its
-usual checks, including identifier strings in the leak view.
+Library files. The gate regenerates the four known preview files to scratch for
+byte equality, exports and scans iOS JavaScript, and compiles the exact scanned
+bytes with the native build's captured compiler. Every Hermes entry must appear
+in that compiler-derived table, with no skips. The receipt records compiler
+identity and source hashes. Hermes still receives per-entry core/exact/lemma and
+density checks. **Hermes proximity is enforced through the bound JavaScript
+export, not the compiler's deduplicated and reordered string table.**
 
 `CI=true` requires a nonempty, valid locked policy for `check:words:export`. Missing
 or empty policy fails. Local policy-free export checks explicitly print

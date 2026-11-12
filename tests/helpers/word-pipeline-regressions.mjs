@@ -1,8 +1,9 @@
+import { syncBuiltinESMExports } from 'node:module';
 import { Buffer } from 'node:buffer';
 // Synthetic gate proof only. No content, reviewer or family approval is created.
 import { test as nodeTest, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { appendFileSync, cpSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import fs, { appendFileSync, cpSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -45,7 +46,7 @@ const {checkShippingTree}=await import(pathToFileURL(join(root,'scripts/words/sh
 const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mjs')));
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
 const {checkExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
-const {prepareCompilerCapture,compilerIdentity,bytecodeFiles}=await import(pathToFileURL(join(root,'scripts/words/compiler.mjs')));
+const {prepareCompilerCapture,compilerIdentity,bytecodeFiles,verifyCompilerCapture,captureNativeBuild}=await import(pathToFileURL(join(root,'scripts/words/compiler.mjs')));
 const compilerCapture=prepareCompilerCapture(root);after(()=>compilerCapture.cleanup());let nativeFixture=0;
 function realCheckRelease(...args) {
  if(bytecodeFiles(args[2]).length){const file=join(scratch,`compiler-${nativeFixture++}.private.json`);compilerCapture.finish(args[2],file);process.env.LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT=file;}
@@ -788,16 +789,17 @@ test('R4 Hermes divergence closes release',()=>{
  assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),ios,join(scratch,'divergent-receipt'),syntheticIOSExport),/Hermes strings diverge/);
 });
 test('R4 receipt requires Hermes binding',()=>{initGit();const web=join(scratch,'release-web'),ios=join(scratch,'release-ios'),file=join(scratch,'hermes-binding.private.json');checkRelease(root,web,ios,file);const receipt=JSON.parse(readFileSync(file));delete receipt.iosJavaScript.hermesStringsMatched;writeFileSync(file,JSON.stringify(receipt));assert.throws(()=>verifyReleaseReceipt(root,file,web,ios),/receipt/);});
+const syntheticDefaultGenerated=file=>file.endsWith('.json')?JSON.stringify({items:[],index:[],preview:false,bytes:0,fixtures:false}):'export const generated="Default fixture";';
 for(const changed of [false,true])test(`R4 preview generated reproducibility ${changed}`,async()=>{
  const {requireCleanSource,previewGeneratedFiles}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
  const generator=join(root,'scripts/library/build-index.mjs');mkdirSync(join(root,'scripts/library'),{recursive:true});mkdirSync(join(root,'src/library'),{recursive:true});
  const values=Object.fromEntries(previewGeneratedFiles.map(file=>[file.split('/').at(-1),file.endsWith('.json')?JSON.stringify({preview:true,items:[]}):'export const generated="Preview";']));
  writeFileSync(generator,'import {writeFileSync} from "node:fs";import {join} from "node:path";const output=process.argv.at(-1);for(const [file,text] of Object.entries('+JSON.stringify(values)+'))writeFileSync(join(output,file),text);');
- for(const file of previewGeneratedFiles)writeFileSync(join(root,file),'Default fixture');initGit();
+ for(const file of previewGeneratedFiles)writeFileSync(join(root,file),syntheticDefaultGenerated(file));initGit();
  try {
   for(const file of previewGeneratedFiles)writeFileSync(join(root,file),values[file.split('/').at(-1)]);
   if(changed){writeFileSync(join(root,previewGeneratedFiles[0]),'Changed fixture');assert.throws(()=>requireCleanSource(root,true),/differ from reproducible source/);}else assert.doesNotThrow(()=>requireCleanSource(root,true));
- }finally{for(const file of previewGeneratedFiles)writeFileSync(join(root,file),'Default fixture');}
+ }finally{for(const file of previewGeneratedFiles)writeFileSync(join(root,file),syntheticDefaultGenerated(file));}
 });
 test('R4 preview-only list checked before restore',async()=>{
  const {previewGeneratedFiles}=await import(pathToFileURL(join(root,'scripts/words/check.mjs'))),old=process.env.EXPO_PUBLIC_LIBRARY_PREVIEW;
@@ -808,7 +810,7 @@ test('R4 preview-only list checked before restore',async()=>{
  try {
   for(const name of previewGeneratedFiles)writeFileSync(join(root,name),name.endsWith('.json')?preview:'export const generated="Preview";');process.env.EXPO_PUBLIC_LIBRARY_PREVIEW='1';
   assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),previewIOS,join(scratch,'preview-only-receipt'),(cmd,args,opts)=>{assert.equal(opts.env.EXPO_PUBLIC_LIBRARY_PREVIEW,'1');const value=JSON.parse(readFileSync(file));assert.equal(value.preview,true);writeFileSync(join(args.at(-1),'native.js'),'globalThis.words='+JSON.stringify(value.w)+';');}),/partial-list/);
- }finally{for(const name of previewGeneratedFiles)writeFileSync(join(root,name),'Default fixture');if(old===undefined)delete process.env.EXPO_PUBLIC_LIBRARY_PREVIEW;else process.env.EXPO_PUBLIC_LIBRARY_PREVIEW=old;}
+ }finally{for(const name of previewGeneratedFiles)writeFileSync(join(root,name),syntheticDefaultGenerated(name));if(old===undefined)delete process.env.EXPO_PUBLIC_LIBRARY_PREVIEW;else process.env.EXPO_PUBLIC_LIBRARY_PREVIEW=old;}
 });
 for(const field of ['overflow','coverage'])test(`R4 Hermes kind ${field}`,()=>{
  const input=join(scratch,'kind.js'),out=join(scratch,'kind.hbc');writeFileSync(input,'globalThis.label="Fixture";');const r=spawnSync(hermesc,['-emit-binary','-out',out,input],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);const bytes=readFileSync(out),offset=128+bytes.readUInt32LE(40)*12,run=bytes.readUInt32LE(offset),count=bytes.readUInt32LE(52);bytes.writeUInt32LE((run&0x80000000)+(field==='overflow'?count+1:0),offset);assert.throws(()=>hermesStrings(bytes),/Invalid Hermes string kind/);
@@ -851,3 +853,39 @@ for(const single of [false,true])test(`R4 Hermes entry density ${single?'single 
 exportCase('R4 decoded JavaScript source proximity','data.js',r4words.map((word,i)=>`globalThis.x${i}="${[...word].map(c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')).join('')}";`).join('\n'),r4policy,true);
 exportCase('R4 prose before inline enum','data.js','/** Use one of API.{ALPHANONSENSE, BETANONSENSE, GAMMANONSENSE}.\n * The operation is available on the device and it does return a value. */\nglobalThis.safe=1;',policy);
 exportCase('R4 comment list remains strict','data.js','/*\nALPHANONSENSE\nBETANONSENSE\nGAMMANONSENSE\n*/\nglobalThis.safe=1;',policy,true);
+for(const field of ['packageVersion','packagePath','executableSha256'])test(`R4 native compiler mismatch ${field}`,()=>{
+ initGit();const ios=join(scratch,'release-ios'),file=join(scratch,'compiler-mismatch-'+field+'.private.json');const record=structuredClone(compilerCapture.finish(ios,file));record.compiler[field]='SYNTHETIC-MISMATCH';writeFileSync(file,JSON.stringify(record));assert.throws(()=>verifyCompilerCapture(root,ios,file),/identity\/version mismatch/);
+});
+test('R4 compiler artifact binding',()=>{const ios=join(scratch,'release-ios'),file=join(scratch,'compiler-artifact.private.json'),record=compilerCapture.finish(ios,file);record.bytecodeFiles[0].sha256='e'.repeat(64);writeFileSync(file,JSON.stringify(record));assert.throws(()=>verifyCompilerCapture(root,ios,file),/artifact mismatch/);});
+test('R4 compiler capture required',()=>{const saved=process.env.LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT;delete process.env.LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT;try{assert.throws(()=>verifyCompilerCapture(root,join(scratch,'release-ios')),/capture required/);}finally{process.env.LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT=saved;}});
+test('R4 compiler override fails closed',()=>{const saved=process.env.REACT_NATIVE_OVERRIDE_HERMES_DIR;process.env.REACT_NATIVE_OVERRIDE_HERMES_DIR=join(scratch,'override');try{assert.throws(()=>compilerIdentity(root),/pinned package/);}finally{if(saved===undefined)delete process.env.REACT_NATIVE_OVERRIDE_HERMES_DIR;else process.env.REACT_NATIVE_OVERRIDE_HERMES_DIR=saved;}});
+test('R4 native build metadata required',()=>assert.throws(()=>captureNativeBuild(['SYNTHETIC'],root,{},()=>({status:0})),/Native build requires/));
+test('R4 native capture cannot attest an unobserved compiler',()=>{
+ const ios=join(scratch,'uncaptured-ios');mkdirSync(ios);writeFileSync(join(ios,'main.hbc'),readFileSync(join(scratch,'release-ios/main.hbc')));
+ assert.throws(()=>captureNativeBuild(['SYNTHETIC'],root,{LITTLE_ISLAND_WORD_IOS_ARTIFACT:ios,LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT:join(scratch,'uncaptured.private.json')},()=>({status:0})),/lacks matching compiler capture/);
+});
+test('R4 compiler capture rejects symlinks',()=>{const ios=join(scratch,'compiler-symlink');mkdirSync(ios);symlinkSync(join(scratch,'release-ios/main.hbc'),join(ios,'main.hbc'));assert.throws(()=>bytecodeFiles(ios),/Symlink/);});
+test('R4 binding includes identifier entries',()=>{
+ initGit();const ios=join(scratch,'identifier-only-ios');mkdirSync(ios);const input=join(scratch,'identifier-only.js');writeFileSync(input,'globalThis.nativeOnlyIdentifier=1;');assert.equal(spawnSync(hermesc,['-emit-binary','-out',join(ios,'main.hbc'),input],{encoding:'utf8'}).status,0);assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),ios,join(scratch,'identifier-only-receipt'),syntheticIOSExport),/Hermes strings diverge/);
+});
+test('R4 scanned source hash in receipt',()=>{
+ initGit();const file=join(scratch,'scanned-source.private.json');const receipt=checkRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),file);assert.equal(receipt.iosJavaScript.scannedJs[0].sha256,sha256('var global; hello; globalThis.safe="Native platform fixture";'));receipt.iosJavaScript.scannedJs[0].sha256='e'.repeat(64);writeFileSync(file,JSON.stringify(receipt));assert.throws(()=>verifyReleaseReceipt(root,file,join(scratch,'release-web'),join(scratch,'release-ios')),/receipt/);
+});
+test('R4 compiled bytes must match scanned bytes',()=>{
+ initGit();assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'changed-compiled-source'),syntheticIOSExport,(command,args,options)=>{const r=spawnSync(command,args,{...options,encoding:'utf8'});assert.equal(r.status,0,r.stderr);writeFileSync(args[3],'globalThis.changed="Different fixture";');}),/Compiled JavaScript differs from scanned bytes/);
+});
+test('R4 scanned bytes cannot change before compilation',()=>{
+ initGit();const original=fs.readFileSync;let reads=0;
+ fs.readFileSync=function(path,...args){const bytes=original.call(this,path,...args);if(String(path).endsWith('/native.js')&&++reads===2)fs.writeFileSync(path,'globalThis.changed="Different fixture";');return bytes;};syncBuiltinESMExports();
+ try{assert.throws(()=>checkRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'changed-before-compilation')),/Scanned JavaScript changed before compilation/);}finally{fs.readFileSync=original;syncBuiltinESMExports();}
+});
+for(const field of ['nativeCompiler.sha256','iosJavaScript.scannedJsSha256','iosJavaScript.compiler.packageVersion'])test(`R4 receipt compiler binding ${field}`,()=>{
+ initGit();const web=join(scratch,'release-web'),ios=join(scratch,'release-ios'),file=join(scratch,'compiler-receipt-'+field+'.private.json'),r=checkRelease(root,web,ios,file),keys=field.split('.');let target=r;for(const key of keys.slice(0,-1))target=target[key];target[keys.at(-1)]='e'.repeat(64);writeFileSync(file,JSON.stringify(r));assert.throws(()=>verifyReleaseReceipt(root,file,web,ios),/receipt|compiler|identity/);
+});
+test('R4 compiler cannot change during verification',()=>{
+ initGit();const original=fs.readFileSync,packageFile=join(compilerCapture.compiler.packagePath,'package.json');
+ try{assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'changed-compiler'),syntheticIOSExport,(command,args,options)=>{const r=spawnSync(command,args,{...options,encoding:'utf8'});assert.equal(r.status,0,r.stderr);fs.readFileSync=function(path,...rest){if(String(path)===packageFile){const value=JSON.parse(original.call(this,path,'utf8'));value.version='SYNTHETIC-MISMATCH';return JSON.stringify(value);}return original.call(this,path,...rest);};syncBuiltinESMExports();}),/Hermes compiler changed during verification/);}finally{fs.readFileSync=original;syncBuiltinESMExports();}
+});
+test('R4 native JavaScript export rejects symlinks',()=>{
+ initGit();const source=join(scratch,'linked-native.js');writeFileSync(source,'var global;hello;');assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'native-js-symlink'),(_command,args)=>symlinkSync(source,join(args.at(-1),'native.js'))),/Symlink in native JavaScript export/);
+});

@@ -40,7 +40,7 @@ export function checkExport(root, directory) {
   // A bank can only reach here after full rebake with the operator policy lock.
   return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[],{sourceRoot:root})};
 }
-export function checkRelease(root, web, ios, output, run=execFileSync) {
+export function checkRelease(root, web, ios, output, run=execFileSync, compile=execFileSync) {
   requireCleanSource(root);
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
@@ -61,7 +61,7 @@ export function checkRelease(root, web, ios, output, run=execFileSync) {
       for(const [index,file] of jsFiles.entries()) {
         requireThat(sha256(readFileSync(file.path))===file.sha256,'Scanned JavaScript changed before compilation');
         const output=join(derived,index+'.hbc');
-        execFileSync(nativeCompiler.compiler.executablePath,['-emit-binary','-out',output,file.path,'-O'],{stdio:'pipe',maxBuffer:64*1024*1024});
+        compile(nativeCompiler.compiler.executablePath,['-emit-binary','-out',output,file.path,'-O'],{stdio:'pipe',maxBuffer:64*1024*1024});
         requireThat(sha256(readFileSync(file.path))===file.sha256,'Compiled JavaScript differs from scanned bytes');
         for(const value of hermesStrings(readFileSync(output)))exportedStrings.add(value);
       }
@@ -74,7 +74,7 @@ export function checkRelease(root, web, ios, output, run=execFileSync) {
     } finally {rmSync(derived,{recursive:true,force:true});}
     requireCleanSource(root);
   } finally {rmSync(temporary,{recursive:true,force:true});}
-  const receipt={schemaVersion:3,nativeCompiler,iosJavaScript,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
+  const receipt={schemaVersion:3,nativeCompiler:{path:nativeCompiler.path,sha256:nativeCompiler.sha256},iosJavaScript,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
   writeFileSync(privatePath(output),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 export function verifyReleaseReceipt(root,file,web,ios) {
