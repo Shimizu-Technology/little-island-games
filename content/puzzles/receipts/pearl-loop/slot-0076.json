@@ -2,16 +2,16 @@
  "format": 1,
  "family": "pearl-loop",
  "slot": 76,
- "catalogRevision": 8,
+ "catalogRevision": 15,
  "band": "deep",
  "ordinals": [
   75872,
   32
  ],
- "sourceSha": "1aec8888cc0e23323a1946acebe817b19278cb1a",
+ "sourceSha": "1600a77cd220cc3b9555d71cf0f16928d6b3b544",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "19fd183614dfbcbee3d0bd2f055c4ead1bcf2a3543c71ad337e4a61bbbaf4b0a"
+  "family": "e101fa2850d9a542d2c9b79b48a47b16f9720a182f8fc543731db779edff0729"
  },
  "rng": 1,
  "rules": 1,
@@ -19,38 +19,38 @@
   "base": 1,
   "attempts": 128,
   "kept": [
-   50343262,
-   50335654,
-   50341866,
    50334810,
-   50344570,
-   50337005,
+   50332553,
+   50360027,
+   50368732,
    50345653,
+   50349274,
+   50341866,
+   50370528,
+   50361823,
+   50345137,
+   50368105,
+   50361382,
+   50347082,
+   50333741,
+   50368059,
    50337539,
-   50336032,
-   50337631,
    50331695,
-   50333775,
-   50333813,
-   50335906,
+   50350271,
+   50361998,
+   50367086,
    50336003,
-   50334127,
-   50340121,
+   50352362,
    50333684,
-   50331930,
-   50336047,
+   50365034,
+   50352792,
+   50354549,
+   50341979,
    50335809,
-   50339860,
-   50336215,
-   50332764,
-   50336245,
-   50332202,
-   50341848,
+   50362131,
+   50348265,
    50336527,
-   50334480,
-   50339051,
-   50338491,
-   50337265
+   50353215
   ]
  },
  "rejects": {
@@ -66,18 +66,16 @@
    "chain": 32
   },
   "template": {
-   "blob": 4,
-   "coral": 7,
-   "open": 7,
+   "coral": 8,
+   "open": 8,
    "twin": 8,
-   "wiggle": 6
+   "wiggle": 8
   },
   "layout": {
-   "blob": 4,
-   "coral": 7,
-   "open": 7,
+   "coral": 8,
+   "open": 8,
    "twin": 8,
-   "wiggle": 6
+   "wiggle": 8
   }
  },
  "solve": {
@@ -87,13 +85,13 @@
   "timedOut": false,
   "bounds": [
    20,
-   46
+   38
   ],
   "exact": 32
  },
  "proofHashes": {
-  "witness": "eabe981b226074ec8db7b6ec6cad5e06c8c9c126c2c9018863f06d91ba172d30",
-  "trace": "a4740d093c1858501d4e2c4de1086f70f696fa51cd744a7f2ceb24a70ab559a8",
+  "witness": "4a1d5e7dcd62b6b941b4926b4d8b83336630e594f1c87310539d54d7917dc82b",
+  "trace": "13be8dc09217b4d9fa385be6789c5af9a44cb7c1ec3bbbe45ec1138b8cc12f43",
   "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  },
  "bots": {
@@ -116,10 +114,10 @@
  },
  "speech": 0,
  "bytes": {
-  "raw": 3787,
-  "gzip": 790
+  "raw": 3797,
+  "gzip": 803
  },
- "sha256": "2ca1cf752cd0e64d28bc4839dd45dc8a56cabe91971f152dac12af95032bd528",
+ "sha256": "33324977a6942caa251d77df851a7f4ed9031e3a016ecef08c38524a50830576",
  "native": [],
  "machineGates": true,
  "allShippingGates": false
