@@ -8,7 +8,7 @@ import {Plan} from './Plan';
 export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer}:ChallengeViewProps<State,Action>){
  const preferences=useContext(AudioPreferences),{play,stop}=useSoundControls(preferences.sound??true),reduced=useReducedMotion();
  const programKey=JSON.stringify(s.program);
- const [playback,setPlayback]=useState({run:s.runs,key:programKey,cursor:0,playing:false}),observed=useRef(s.runs),[alreadyWon]=useState(s.won);
+ const [playback,setPlayback]=useState({run:s.runs,key:programKey,cursor:s.won?s.program.length:0,playing:false}),observed=useRef(s.runs),[alreadyWon]=useState(s.won);
  useEffect(()=>{if(alreadyWon)onSettled?.();},[alreadyWon,onSettled]);
  useEffect(()=>{if(observed.current!==s.runs){observed.current=s.runs;setPlayback({run:s.runs,key:programKey,cursor:0,playing:true});}},[s.runs,programKey]);
  const result=execution(s.descriptor.puzzle,s.program),limit=result.failedCard===null?s.program.length:result.failedCard+1;
