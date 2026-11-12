@@ -17,6 +17,7 @@ import { useStore } from "../state/Store";
 import { useSoundControls } from "../components/Audio";
 import { SaveStatus } from "../components/SaveStatus";
 import { Button, C, Chip, Copy, GameHeader, Heading, Sheet, ToggleRow, styles } from "../components/ui";
+import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
 import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
@@ -55,7 +56,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const store = useStore(),
     focused = useIsFocused(),
     insets = useSafeAreaInsets(),
-    { width, height } = useWindowDimensions();
+    { width, height, fontScale } = useWindowDimensions();
   const engine = engines[id],
     view = views[id];
   const saved = store.save.learn?.[id];
@@ -276,33 +277,56 @@ export function LearnFrame({ id }: { id: LearnId }) {
     (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
     (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "") : "";
 
-  const header = <View style={{ gap: 4 }}>
-        <LearnerChip compact/>
-        <GameHeader
-          title={id === "hafa-adai" && width < 600 ? "Håfa Adai" : engine.name}
+  const phone = width < 600, large = fontScale >= LARGE_TEXT;
+  const lineWidth = width - insets.left - insets.right - 32;
+  const levelLine = levelTitle(id, levelOf(saved?.options ?? options)), levelSize = phone ? 19 : 25, artSize = phone ? 36 : 48;
+  const companionShown = phone && !!saved && !finished && store.save.settings.learningIslander !== false;
+  const gameName = id === "hafa-adai" && phone ? "Håfa Adai" : engine.name;
+  const bar = <GameHeader
+          title={gameName}
           onBack={back}
           sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
           onHelp={() => setHelp(true)}
-        />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <view.Art size={width < 600 ? 36 : 48} />
-          <Heading style={{ fontSize: width < 600 ? 19 : 25, flex: 1, minWidth: 0, color: theme.ink }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
-          {width < 600 && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
-        </View>
-        {width < 600 && saved && <Copy style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>}
-        {width < 600 && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
+          // Back, Sound and Help are three 44-pt icons; the title wraps between words beside them.
+          titleMax={large ? wordFitMultiplier(gameName, 21, lineWidth - 3 * 44 - 3 * 8, 1.5) : undefined}
+        />;
+  // At accessibility sizes the header text stops growing where its words still fit: the level title at 2x, the
+  // small lines (mode, cheer) at 1.5x like compact chrome. Default sizes never change.
+  const level = <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <view.Art size={artSize} />
+          <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), 2) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
+          {phone && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
+        </View>;
+  const small = large ? 1.5 : undefined;
+  const header = <View style={{ gap: 4 }}>
+        <LearnerChip compact/>
+        {bar}
+        {level}
+        {phone && saved && <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>}
+        {phone && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
 
   </View>;
+  // A phone pins its header above the board. At accessibility sizes only the one-row bar stays pinned; the learner,
+  // level and mode lines scroll with the page, so the board gets the screen and everything stays reachable.
+  const pinned = phone ? (large ? bar : header) : null, scrolled = !phone ? header : large ? <View testID="learn-header-scrolled" style={{ gap: 4 }}>
+        {level}
+        {saved && <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          <LearnerChip compact/>
+          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 4 }}>{modeText}</Copy>
+        </View>}
+        {!saved && <LearnerChip compact/>}
+        {cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
+      </View> : null;
 
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
       <IslandBackdrop island={island} colors={theme}/>
-      {width < 600 && <View style={{ paddingHorizontal: 16 }}>{header}</View>}
+      {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16 }}>{pinned}</View>}
       <GridInteraction.Provider value={setHeld}>
       <ScrollView key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
-        {width >= 600 && header}
+        {scrolled}
         {width >= 600 && saved && (
-          <Copy style={{ fontSize: 12, marginBottom: 8 }}>
+          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, marginBottom: 8 }}>
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
               (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
               (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "")}
@@ -371,10 +395,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
             {finished && <LevelPath game={id} level={levelOf(saved.options)} progress={store.save.school} onChoose={level => { chooseLevel(level, saved.options); setSetup(true); }}/>}
             {(saved.learner ?? "family") !== learner.id && <Copy style={{ textAlign: "center" }}>This saved round belongs to {store.save.learning?.people.find(p => p.id === (saved.learner ?? "family"))?.name ?? "Family practice"}. New rounds use {learner.name}.</Copy>}
             {/* Options are for grown-ups and changing modes; kept small so it's never the obvious tap mid-game. */}
-            <Button compact quiet onPress={openSetup}>
+            <Button compact quiet maxFontSizeMultiplier={large ? 2 : undefined} onPress={openSetup}>
               New round & options
             </Button>
-            <Copy style={{ fontSize: 12, marginTop: 4, textAlign: "center" }}>Your round saves on this device.</Copy>
+            <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, marginTop: 4, textAlign: "center" }}>Your round saves on this device.</Copy>
           </View>
         )}
       </ScrollView>

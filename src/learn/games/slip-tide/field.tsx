@@ -1,8 +1,9 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useReducedMotion } from '../../../components/motion';
+import { LARGE_TEXT } from '../../../components/wordFit';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import type { HintCue } from '../../../puzzles/hints';
 import { GridInteraction } from '../../../puzzles/grid/preferences';
@@ -123,7 +124,7 @@ export type PlayfieldProps = {
   cue?: HintCue | null;
 };
 export function Playfield({ puzzle, crabs, title, steps, active, width, height, together = false, names, coach, canUndo, canReset, onMove, onUndo, onReset, onAnother, notice, finished, help, cue = null }: PlayfieldProps) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotion(), large = useWindowDimensions().fontScale >= LARGE_TEXT;
   const n = puzzle.size, solved = !!finished;
   const cell = boardCell(width, height, n, together);
   const apply = useCallback((d: Dir) => {
@@ -169,16 +170,17 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
   const boardSize = cell * n + boardPad * 2;
   const caption = coach?.active && !steps ? (together ? 'Each person has two arrows. Talk it through.' : 'Swipe the water to slide every crab.') : notice || title;
   return <View style={{ gap: 12, alignItems: 'center' }}>
-    {/* At the largest text sizes Undo and Reset wrap below the caption instead of squeezing it out. */}
-    <View testID="board-header" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignSelf: 'stretch', gap: 8, paddingHorizontal: 2, minHeight: 46 }}>
-      <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 150, minWidth: 150 }}>
-        <Copy numberOfLines={2} style={{ fontWeight: '900', color: C.ink, fontSize: 15, lineHeight: 19 }}>{caption}</Copy>
-        <Copy accessibilityLabel={steps === 1 ? '1 swipe so far' : `${steps} swipes so far`} style={{ color: C.ink, fontSize: 13, lineHeight: 17 }}>{steps === 1 ? '1 swipe' : `${steps} swipes`}</Copy>
+    {/* At accessibility text sizes the caption gets the full width over its own line of Undo and Reset, and this
+        compact board chrome stops at 1.5x, so no word is squeezed onto a line of its own beside the buttons. */}
+    <View testID="board-header" style={large ? { alignSelf: 'stretch', gap: 8, paddingHorizontal: 2 } : { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignSelf: 'stretch', gap: 8, paddingHorizontal: 2, minHeight: 46 }}>
+      <View style={large ? undefined : { flexGrow: 1, flexShrink: 1, flexBasis: 150, minWidth: 150 }}>
+        <Copy numberOfLines={large ? undefined : 2} maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', color: C.ink, fontSize: 15, lineHeight: large ? undefined : 19 }}>{caption}</Copy>
+        <Copy maxFontSizeMultiplier={1.5} accessibilityLabel={steps === 1 ? '1 swipe so far' : `${steps} swipes so far`} style={{ color: C.ink, fontSize: 13, lineHeight: large ? undefined : 17 }}>{steps === 1 ? '1 swipe' : `${steps} swipes`}</Copy>
       </View>
-      {!finished && <>
-        <Button quiet compact disabled={!active || !canUndo} onPress={onUndo}>Undo</Button>
-        <Button compact disabled={!active || !canReset} onPress={onReset}>Reset</Button>
-      </>}
+      {!finished && <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active || !canUndo} onPress={onUndo}>Undo</Button>
+        <Button compact maxFontSizeMultiplier={1.5} disabled={!active || !canReset} onPress={onReset}>Reset</Button>
+      </View>}
     </View>
     <CoachSpot active={!!coach?.active} handAt="none" style={{ borderRadius: 26 }}>
       <GestureDetector gesture={pan}>
