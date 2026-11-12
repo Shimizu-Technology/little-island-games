@@ -89,8 +89,14 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     else if(/\.html$/i.test(name)) ({strings,keys,units,grids,sensitiveStrings,sensitiveGrids}=htmlViews(views[1],teachings));
     else {
       // Sniff every unrecognized extension. Only non-text bytes are skipped.
-      if(isUtf8(bytes) && !/[\x00-\x08\x0e-\x1f]/.test(views[1])) {
-        try {const value=JSON.parse(views[1]);requireGridLanguages(value);strings=jsonStrings(value);units=jsonUnits(value);grids=letterGrids(value);sensitiveStrings=chamoruValues(value,false,teachings);} catch(e) {if(e.message.includes('language'))throw e;const lines=views[1].split(/\r?\n/);strings=lines.length>1?[views[1],...lines]:lines;}
+      const bom=bytes.subarray(0,2).toString('hex');
+      let text=views[1];
+      if(bom==='fffe'||bom==='feff') {
+        requireThat(bytes.length%2===0,'Malformed UTF-16 text export');
+        const content=Buffer.from(bytes.subarray(2));if(bom==='feff')content.swap16();text=content.toString('utf16le');
+      }
+      if((isUtf8(bytes)||bom==='fffe'||bom==='feff') && !/[\x00-\x08\x0e-\x1f]/.test(text)) {
+        try {const value=JSON.parse(text);requireGridLanguages(value);strings=jsonStrings(value);units=jsonUnits(value);grids=letterGrids(value);sensitiveStrings=chamoruValues(value,false,teachings);} catch(e) {if(e.message.includes('language'))throw e;const lines=text.split(/\r?\n/);strings=lines.length>1?[text,...lines]:lines;}
       }
     }
     strings.push(...decodedTextViews(strings));

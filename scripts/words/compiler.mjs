@@ -20,6 +20,7 @@ export function compilerIdentity(root) {
 export function bytecodeFiles(directory) {
   const files=[];
   function visit(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const path=join(dir,e.name);requireThat(!lstatSync(path).isSymbolicLink(),'Symlink in native compiler artifact');if(e.isDirectory())visit(path);else {const bytes=readFileSync(path);if(bytes.subarray(0,8).equals(hermesMagic))files.push({path:relative(directory,path),sha256:sha256(bytes)});}}}
+  requireThat(!lstatSync(directory).isSymbolicLink(),'Symlink in native compiler artifact');
   visit(directory);return files.sort((a,b)=>a.path.localeCompare(b.path));
 }
 

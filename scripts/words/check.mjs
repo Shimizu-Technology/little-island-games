@@ -6,8 +6,8 @@ import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdtempSync, rmSyn
 import { fileURLToPath } from 'node:url';
 import { resolve, relative, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { hermesMagic, hermesStrings } from './artifact-views.mjs';
-import { compilerIdentity,verifyCompilerCapture } from './compiler.mjs';
+import { hermesStrings } from './artifact-views.mjs';
+import { compilerIdentity,verifyCompilerCapture,bytecodeFiles } from './compiler.mjs';
 import { guardTree } from './guard.mjs';
 import { checkShippingTree } from './shipping.mjs';
 import { lockedPolicy } from './policy.mjs';
@@ -44,9 +44,8 @@ export function checkRelease(root, web, ios, output, run=execFileSync, compile=e
   requireCleanSource(root);
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
-  let hbc=false;const embeddedStrings=[];
-  function find(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in iOS artifact');if(e.isDirectory())find(p);else {const bytes=readFileSync(p);if(bytes.subarray(0,8).equals(hermesMagic)){hbc=true;embeddedStrings.push(...hermesStrings(bytes));}}}}
-  find(ios);requireThat(hbc,'Real embedded Hermes iOS bundle required');
+  const nativeFiles=bytecodeFiles(ios);requireThat(nativeFiles.length>0,'Real embedded Hermes iOS bundle required');
+  const embeddedStrings=nativeFiles.flatMap(file=>hermesStrings(readFileSync(join(ios,file.path))));
   const nativeCompiler=verifyCompilerCapture(root,ios);
   const temporary=mkdtempSync(join(tmpdir(),'li-word-ios-js-'));
   let iosJavaScript;

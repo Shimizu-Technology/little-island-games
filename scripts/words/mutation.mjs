@@ -90,7 +90,7 @@ const edges=[
  ['artifact-views','empty language array is not a declaration','value.length>0 && value.every','value.every',['R3 empty language array fails closed']],
  ['artifact-views','blank language is not a declaration','value.trim().length>0','true',['R3 blank language fails closed']],
  ['artifact-views','trimmed CHamoru language tag','/i.test(value.trim())','/i.test(value)',['R3 spaced CHamoru language tag']],
- ['guard','valid replacement character remains text',"!/[\\x00-\\x08\\x0e-\\x1f]/.test(views[1])","!/[\\x00-\\x08\\x0e-\\x1f\\ufffd]/.test(views[1])",['R3 valid UTF8 replacement remains text']],
+ ['guard','valid replacement character remains text',"!/[\\x00-\\x08\\x0e-\\x1f]/.test(text)","!/[\\x00-\\x08\\x0e-\\x1f\\ufffd]/.test(text)",['R3 valid UTF8 replacement remains text']],
  ['guard','invalid UTF8 is binary','isUtf8(bytes)','true',['R3 invalid UTF8 binary remains binary']],
  ['guard','only complete vectors get XML views','const vector=isSvgDocument;',"const vector=text=>/^\\s*<svg\\b/i.test(text);",['R3 SVG construction prefix']],
  ['density','CHamoru accent normalization',".normalize('NFD').replace(/\\p{M}/gu,'')",'',['R3 accented CHamoru sensitive surface']],
@@ -100,7 +100,7 @@ const edges=[
  ['guard','SVG displayed labels','displayStrings.push(...parsed.strings);','',['R3 SVG visible core label']],
  ['guard','decoded SVG unconditional leak view','...originalStrings.map(text=>text.toUpperCase()),','',['R3 SVG decoded canary retained']],
  ['artifact-views','SVG language declaration','if(chamoru(language))parsed.sensitiveStrings.push(...parsed.strings);','',['R3 SVG CHamoru visible label']],
- ['guard','structured text file list unit','strings=lines.length>1?[views[1],...lines]:lines;','strings=lines;',['R3 standalone TSV list']],
+ ['guard','structured text file list unit','strings=lines.length>1?[text,...lines]:lines;','strings=lines;',['R3 standalone TSV list']],
  ['artifact-views','authored metadata keeps strict residual','return unit.filter(text=>{const entry=[text];entry.library=unit.library;return !tracedLibraryUnit(entry,library);});','return [];',['R3 authored aliases cannot contribute traced search tokens']],
  ['artifact-views','complete provenance required before body residual',"if(!unit.every(text=>libraryNormalize(text).split(' ').filter(Boolean).every(token=>all.has(token))))return unit;",'',['guard Library planted untraceable token']],
  ['library-source','only body supplies token provenance','strings(item,true,!authored.some(row=>row.id===id)).flatMap','source.flatMap',['R3 authored aliases cannot contribute traced search tokens']],
@@ -129,7 +129,7 @@ const edges=[
  ['artifact-views','odd entries','return values.flatMap(value=>{','if(!values.every(shortWords))return [];return values.flatMap(value=>{',['R4 legacy sparse odd array']],
  ['artifact-views','language recognizer',"/^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim())",'false',['R3 source constant','R3 source spread']],
  ['artifact-views','language characters',"/[åʼ]/iu.test(text.normalize('NFC'))",'false',['R3 characters 72 229']],
- ['guard','unknown extension fallback',"if(isUtf8(bytes) && !/[\\x00-\\x08\\x0e-\\x1f]/.test(views[1]))",'if(false)',['R3 text extension md']],
+ ['guard','unknown extension fallback',"if((isUtf8(bytes)||bom==='fffe'||bom==='feff') && !/[\\x00-\\x08\\x0e-\\x1f]/.test(text))",'if(false)',['R3 text extension md']],
  ['guard','technical list view'," || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)",'',['R3 list snake']],
  ['guard','literal string scope','literal:contentStrings.has(text)','literal:false',['guard blocked visible string']],
  ['guard','source scan roots',"['src','content','scripts/learn']","['src']",['R3 source content root','R3 source speech root']],
@@ -205,10 +205,14 @@ r4Edges.push(
 );
 r4Edges.push(
  ['compiler','native version mismatch', 'digest(record.compiler)===digest(current)', 'digest({...record.compiler,packageVersion:current.packageVersion})===digest(current)', ['R4 native compiler mismatch packageVersion']],
- ['check','identifier entries cannot skip', 'embeddedStrings.push(...hermesStrings(bytes))', 'embeddedStrings.push(...hermesStrings(bytes,{identifiers:false}))', ['R4 binding includes identifier entries']],
+ ['check','identifier entries cannot skip', 'hermesStrings(readFileSync(join(ios,file.path)))', 'hermesStrings(readFileSync(join(ios,file.path)),{identifiers:false})', ['R4 binding includes identifier entries']],
  ['check','scanned JS digest binding', 'r.iosJavaScript.scannedJsSha256===digest(r.iosJavaScript.scannedJs)', 'true', ['R4 scanned source hash in receipt']],
  ['check','receipt native compiler hash', 'r.nativeCompiler?.sha256===verifyCompilerCapture(root,ios,r.nativeCompiler?.path).sha256', 'true', ['R4 receipt compiler binding nativeCompiler.sha256']],
  ['check','receipt compiler identity', 'digest(r.iosJavaScript.compiler)===digest(compilerIdentity(root))', 'true', ['R4 receipt compiler binding iosJavaScript.compiler.packageVersion']]
+);
+r4Edges.push(
+ ['guard','UTF16 text decoding',"if(bom==='fffe'||bom==='feff')",'if(false)',['R4 UTF16 le density','R4 UTF16 core']],
+ ['guard','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
 );
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}

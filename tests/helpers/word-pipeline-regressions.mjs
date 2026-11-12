@@ -282,7 +282,7 @@ test('artifact exceptions cannot exempt case-folded hashes or full lists',()=>{c
 // W-guard: placeholder terms only. These cases describe exported meanings,
 // never the actual private lists or a content approval.
 function exportCase(name, file, text, p=policy, rejected=false) {
- test(name,()=>{const dir=join(scratch,name.replaceAll(' ','-'));mkdirSync(dir);writeFileSync(join(dir,file),text);if(rejected)assert.throws(()=>guardTree(dir,p),/leaked|forbidden|exception|language/);else assert.equal(guardTree(dir,p).passed,true);});
+ test(name,()=>{const dir=join(scratch,name.replaceAll(' ','-'));mkdirSync(dir);writeFileSync(join(dir,file),text);if(rejected)assert.throws(()=>guardTree(dir,p),/leaked|forbidden|exception|language|UTF-16/);else assert.equal(guardTree(dir,p).passed,true);});
 }
 exportCase('guard longer visible word','app.js','globalThis.label="COLDER";');
 exportCase('guard minified identifiers','app.js','function COLD(a){const ALPHANONSENSE=1,BETANONSENSE=2,GAMMANONSENSE=3;return a+ALPHANONSENSE+BETANONSENSE+GAMMANONSENSE;}');
@@ -889,3 +889,9 @@ test('R4 compiler cannot change during verification',()=>{
 test('R4 native JavaScript export rejects symlinks',()=>{
  initGit();const source=join(scratch,'linked-native.js');writeFileSync(source,'var global;hello;');assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'native-js-symlink'),(_command,args)=>symlinkSync(source,join(args.at(-1),'native.js'))),/Symlink in native JavaScript export/);
 });
+for(const endian of ['le','be']){
+ const text=Buffer.from(r4words.join(' '),'utf16le');if(endian==='be')text.swap16();exportCase(`R4 UTF16 ${endian} density`,'data.txt',Buffer.concat([Buffer.from(endian==='le'?'fffe':'feff','hex'),text]),r4policy,true);
+}
+exportCase('R4 UTF16 core','data.txt',Buffer.concat([Buffer.from('fffe','hex'),Buffer.from('Tap COLD now','utf16le')]),policy,true);
+exportCase('R4 malformed UTF16','data.txt',Buffer.from([255,254,0]),policy,true);
+test('R4 compiler capture rejects root symlink',()=>{const dir=join(scratch,'compiler-root-symlink');symlinkSync(join(scratch,'release-ios'),dir);assert.throws(()=>bytecodeFiles(dir),/Symlink/);});
