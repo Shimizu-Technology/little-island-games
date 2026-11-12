@@ -298,11 +298,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
           // Back, Sound and Help are three 44-pt icons; the title wraps between words beside them.
           titleMax={large ? wordFitMultiplier(gameName, 21, lineWidth - 3 * 44 - 3 * 8, 1.5) : undefined}
         />;
-  // At accessibility sizes the header text stops growing where its words still fit: the level title at 2x, the
-  // small lines (mode, cheer) at 1.5x like compact chrome. Default sizes never change.
+  // At accessibility sizes the header text stops growing where its words still fit: the level title at 2x (1.5x on a
+  // short landscape screen), the small lines (mode, cheer) at 1.5x like compact chrome. Default sizes never change.
   const level = <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <view.Art size={artSize} />
-          <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), 2) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
+          <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), height < 600 ? 1.5 : 2) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
           {phone && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
         </View>;
   const small = large ? 1.5 : undefined, big = large ? 2 : undefined;
@@ -318,15 +318,18 @@ export function LearnFrame({ id }: { id: LearnId }) {
   </View>;
   // A phone pins its header above the board. At accessibility sizes only the one-row bar stays pinned; the learner,
   // level and mode lines scroll with the page, so the board gets the screen and everything stays reachable.
-  const pinned = phone ? (large ? bar : header) : null, scrolled = !phone ? header : large ? <View testID="learn-header-scrolled" style={{ gap: 4 }}>
+  // Wider screens (landscape, iPad) scroll the whole header, with the learner chip sharing the mode line.
+  const largeLines = <View testID="learn-header-scrolled" style={{ gap: 4 }}>
         {level}
         {saved && <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           <LearnerChip compact/>
           <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 4 }}>{modeText}</Copy>
         </View>}
         {!saved && <LearnerChip compact/>}
-        {cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
-      </View> : null;
+        {phone && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
+      </View>;
+  const pinned = phone ? (large ? bar : header) : null;
+  const scrolled = phone ? (large ? largeLines : null) : large ? <View style={{ gap: 4 }}>{bar}{largeLines}</View> : header;
 
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
@@ -335,8 +338,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
       <GridInteraction.Provider value={setHeld}>
       <ScrollView key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {scrolled}
-        {width >= 600 && saved && (
-          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, marginBottom: 8 }}>
+        {width >= 600 && !large && saved && (
+          <Copy style={{ fontSize: 12, marginBottom: 8 }}>
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
               (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
               (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "")}

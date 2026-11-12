@@ -102,8 +102,12 @@ it('AX5 phone landscape: the header scrolls with the page, with the same compact
   expect(r.root.findAll(n => n.props.testID === 'learn-header-pinned')).toHaveLength(0);
   const scroll = byType(r, 'ScrollView')[0], bar = byType(r, 'GameHeader')[0];
   expect(inside(bar, scroll)).toBe(true);expect(bar.props.titleMax).toBeLessThanOrEqual(1.5);
+  // A short landscape screen keeps the level title at 1.5x, and the learner chip shares the one mode line.
   const level = r.root.find(n => String(n.type) === 'Heading' && textOf(n).startsWith('Level 1 of 5'));
-  expect(level.props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
+  expect(level.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
+  const mode = r.root.findAll(n => String(n.type) === 'Copy' && textOf(n) === 'On my own');
+  expect(mode).toHaveLength(1);expect(mode[0].props.maxFontSizeMultiplier).toBe(1.5);
+  expect(mode[0].parent!.findAll(n => String(n.type) === 'LearnerChip')).toHaveLength(1);
   expect(inside(byType(r, 'Board')[0], scroll)).toBe(true);
 });
 
