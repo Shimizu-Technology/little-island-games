@@ -1049,3 +1049,5 @@ test('R6 Library catalog binds active authored items',async()=>{const {module,di
 
 packedCase('R6 guard word pack vocabulary admission','numeric-code',{language:'en',answers:['ZQUNKNOWNX']},true,0,'word-search');
 packedCase('R6 guard word pack authored control','numeric-code',{language:'en',answers:['REEF']},false,0,'word-search',['REEF']);
+
+test('R6 authored camel filename parts',async()=>{const {dir}=await admissionFixture('r6-camel-known'),out=join(dir,'dist');writeFileSync(join(dir,'src/content/authored.ts'),'export const label="Reef Clip";');mkdirSync(out);writeFileSync(join(out,'reefClip.m4a'),validM4a);assert.equal(guardTree(out,{...policy,scan:['REEF'],chamoruSensitive:[]},[],{sourceRoot:dir}).passed,true);});

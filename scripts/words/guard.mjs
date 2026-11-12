@@ -151,6 +151,11 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     if(!admission){const sources=admissionSources(sourceRoot);admission={sources,receipts:[],exports:[]};}
     try {const receipt=admitGenerated(sourceRoot,'speech',[entry],admission.sources);admission.exports.push(...receipt.entries);return true;}catch{return false;}
   }
+  function admittedFilename(stem) {
+    if(admitted(stem))return true;
+    const parts=wordTokens(stem);
+    return /[a-z][A-Z]/.test(stem) && parts.length>1 && parts.every(part=>admitted(part));
+  }
   const sensitive=rawTermMatcher((policy.chamoruSensitive??[]).map(sensitiveText));
   const sourceRoot=resolve(options.sourceRoot??process.cwd());
   let sourceFiles=0;
@@ -264,7 +269,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(scanned.hardHermesFailure)findings.push(`${name}:blocked-literal`);
       if(literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       const stem=name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'');
-      if(broadNames(normalizedText(wordTokens(stem).join(' '))).size && !admitted(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
+      if(broadNames(normalizedText(wordTokens(stem).join(' '))).size && !admittedFilename(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
       if(/\.(?:[cm]?js|bundle|json)$/.test(name)) {
         const mapKeys=wordMapKeys(bytes.toString('utf8'),name);
         if(mapKeys.some(key=>broadNames(normalizedText(key)).size && !admitted(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
