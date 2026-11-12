@@ -1095,3 +1095,11 @@ test('R7 frozen transcripts supply words but keys cannot',async()=>{
  const bank=JSON.parse(snapshot),row=bank.entries.find(r=>{try{return Object.entries(JSON.parse(readFileSync(resolve(r.path)))).some(([k,t])=>sha256(k)===r.keySha256 && sha256(t)===r.transcriptSha256);}catch{return false;}}),[key,text]=Object.entries(JSON.parse(readFileSync(resolve(row.path)))).find(([k])=>sha256(k)===row.keySha256);mkdirSync(join(dir,row.path,'..'),{recursive:true});writeFileSync(join(dir,row.path),JSON.stringify({[key]:text}));const sources=module.admissionSources(dir);for(const word of densityTools.wordTokens(text))assert.match(sources.words.get(word).path,/^published:/);
  const out=join(dir,'dist');mkdirSync(out);writeFileSync(join(out,'clue-'+densityTools.wordTokens(text)[0].toLowerCase()+'-1.m4a'),validM4a);assert.equal(guardTree(out,{scan:densityTools.wordTokens(text),core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]},[],{sourceRoot:dir}).passed,true);
 });
+
+for(const group of ['core','exact','lemmas'])for(const surface of ['file','js','json','registry'])test(`R7 camel policy group ${group} ${surface}`,async()=>{
+ const {dir}=await admissionFixture('r7-camel-group-'+group+'-'+surface),out=join(dir,'dist'),key='clueZqunknownx-1';mkdirSync(out);mkdirSync(join(dir,'scripts/learn'),{recursive:true});writeFileSync(join(dir,'scripts/learn/lines.json'),JSON.stringify({[key]:'Say the next word now.'}));
+ if(surface==='file')writeFileSync(join(out,key+'.m4a'),validM4a);
+ else if(surface==='registry'){writeFileSync(join(dir,'src/content/neuralAudio.ts'),`export const audio={${JSON.stringify(key)}:require('clip.m4a')};`);writeFileSync(join(out,'entry.js'),'hello');}
+ else {const map=JSON.stringify({[key]:'clip.m4a','ordinary-1':'other.m4a','ordinary-2':'last.m4a'});writeFileSync(join(out,'entry.'+(surface==='js'?'js':'json')),surface==='js'?'globalThis.audio='+map+';':map);}
+ const p={scan:[],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[],[group]:['ZQUNKNOWNX']};assert.throws(()=>guardTree(out,p,[],{sourceRoot:dir}),/untraced-word/);
+});
