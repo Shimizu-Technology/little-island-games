@@ -1,13 +1,16 @@
 [
   "bridges",
   "cage-math",
+  "checkers",
   "crab-commands",
   "greater-than",
   "killer",
   "loop",
+  "memory",
   "pearl-loop",
   "shell-pits",
   "skyline",
   "slip-tide",
-  "sudoku"
+  "sudoku",
+  "tic-tac-toe"
 ]

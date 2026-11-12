@@ -92,7 +92,7 @@ it.each([false,true])('P1-2/P2-5: replacement is atomic (storage failure %s)',as
     if(fail){expect(store.save.challenge!.paused[0]).toEqual(old);expect(db.raw).toBe(raw);}else{expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.challengeRefusal).toBeNull();}
   }finally{db.fail=false;await act(async()=>root.unmount());vi.unstubAllGlobals();}
 });
-it.each([['blind',3003,'supportOff'],['own-read',3007,'ownRead']] as const)('P2-1: selecting %s sets its launch option',async(label,slot,option)=>{
+it.each([['blind',83,'supportOff'],['own-read',87,'ownRead']] as const)('P2-1: selecting %s sets its launch option',async(label,slot,option)=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let root!:ReactTestRenderer;
   try{await act(async()=>{root=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});const chip=root.root.findAllByType('button').find(n=>n.children[0]===label)!;await act(async()=>chip.props.onPress());await press(root,'Start this puzzle');const s=store.save.challenge!.paused[0];expect(s.selectedDares).toEqual([slot]);expect((s.payload as {options:Record<string,boolean>}).options[option]).toBe(true);
   }finally{await act(async()=>root.unmount());vi.unstubAllGlobals();}

@@ -20,20 +20,20 @@ import { registerSaveContent } from '../src/state/challenge';
 
 describe('replay evidence, never caller results',()=>{
   it.each(rules.map((rule,i)=>[rule.kind,i] as const))('%s earns only its registered evidence',(_kind,i)=>{
-    const s=solve(launch([3000+i]));expect(validChallengeSession(s,'a',registration.catalog)).toBe(true);expect(s.result?.dares).toEqual([3000+i]);
-    const forged={...s,result:{...s.result!,dares:[3000+(i+1)%9]}};expect(validChallengeSession(forged,'a',registration.catalog)).toBe(false);
+    const s=solve(launch([80+i]));expect(validChallengeSession(s,'a',registration.catalog)).toBe(true);expect(s.result?.dares).toEqual([80+i]);
+    const forged={...s,result:{...s.result!,dares:[80+(i+1)%9]}};expect(validChallengeSession(forged,'a',registration.catalog)).toBe(false);
   });
   it('keeps failed runs, help, checks and resets across edits, reload and reset',()=>{
-    let s=move(launch([3001,3002,3004]),{type:'check'});s=move(s,{type:'help'});s=move(s,{type:'reset'});
+    let s=move(launch([81,82,84]),{type:'check'});s=move(s,{type:'help'});s=move(s,{type:'reset'});
     s=solve(JSON.parse(JSON.stringify(s)));expect(s.result).toMatchObject({event:'helped',dares:[],awards:0});
     const erased={...s,payload:{...s.payload as Payload,actions:(s.payload as Payload).actions.slice(3)}};
     expect(registration.catalog.codecs.get('maze-proof-v1')!.extends(s,erased)).toBe(false);
   });
   it('launch support and first solutions cannot be changed or borrowed after play',()=>{
-    const s=launch([3003,3005,3007]);const q=move(s,{type:'read-aloud'});
-    expect(solve(q).result?.dares).toEqual([3003,3005]);
-    expect(solve(launch([3003],{supportOff:false,ownRead:true})).result?.dares).toEqual([]);
-    const first=solve(launch([3005]));expect(solve(launch([3005],undefined,[first.result!.solution!])).result?.dares).toEqual([]);
+    const s=launch([83,85,87]);const q=move(s,{type:'read-aloud'});
+    expect(solve(q).result?.dares).toEqual([83,85]);
+    expect(solve(launch([83],{supportOff:false,ownRead:true})).result?.dares).toEqual([]);
+    const first=solve(launch([85]));expect(solve(launch([85],undefined,[first.result!.solution!])).result?.dares).toEqual([]);
     const changed={...q,payload:{...q.payload as Payload,options:{supportOff:false,ownRead:false}}};
     expect(registration.catalog.codecs.get('maze-proof-v1')!.extends(q,changed)).toBe(false);
   });
@@ -43,15 +43,15 @@ describe('replay evidence, never caller results',()=>{
     expect(registration.move(solve(s),{type:'help'})).toBeNull();
   });
   it('Together cannot earn clean, whole or own-read; permanent facts and marks never regress',()=>{
-    const s=launch([3001,3004,3007]), together=solve({...s,partner:'b'});expect(together.result?.dares).toEqual([]);expect(together.result?.event).toBe('together');
-    const win=solve(launch([3000])), p=creditProgress(emptyChallenge(),puzzle.ref,win.result!,registration.catalog);
+    const s=launch([81,84,87]), together=solve({...s,partner:'b'});expect(together.result?.dares).toEqual([]);expect(together.result?.event).toBe('together');
+    const win=solve(launch([80])), p=creditProgress(emptyChallenge(),puzzle.ref,win.result!,registration.catalog);
     const helped=creditProgress(p,puzzle.ref,{event:'helped',awards:0,dares:[],cost:null,solution:null},registration.catalog);
     expect(helped.banks).toEqual(p.banks);expect(helped.dares).toBe(p.dares);expect(mergeProgressFacts(p,helped,registration.catalog).banks).toEqual(p.banks);
   });
   it('uses the frozen Store transition contract for start, terminal, credit and duplicate rejection',()=>{
     registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
     let save=migrateProfiles({...emptySave(),learning:addLearner(familyLearners(),'A','a')});
-    const s=launch([3000]);const expected={owner:'a',game:s.game,epoch:1,id:null,revision:null};
+    const s=launch([80]);const expected={owner:'a',game:s.game,epoch:1,id:null,revision:null};
     save=challengeTransition(save,s,expected,1,registration.catalog);expect(save.challenge?.paused[0]).toEqual(s);
     let current=s;
     const solved=solve(s), actions=(solved.payload as Payload).actions;

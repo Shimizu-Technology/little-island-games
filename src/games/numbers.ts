@@ -83,3 +83,10 @@ export function numberAdvice(s: NumbersState): { choices: number[][]; text: stri
   const target = numberTarget(s), first = choices[0].join(" + "), second = choices[1]?.join(" + ");
   return { choices, text: second ? `${first} = ${target}, or ${second} = ${target}. Closing fewer, larger numbers often keeps small numbers for flexible future sums. Closing a group removes more numbers now. Either is legal; neither guarantees the next roll.` : `${first} = ${target}. This is the only open combination for this roll.` };
 }
+export const numberGoal = (s: NumbersState) => s.gentlePractice
+  ? "Close every number. If no combination fits, roll again and keep practicing."
+  : "Aim for the lowest total left. Lower is better. Closing everything is very rare; the dice bring luck as well as choices.";
+export function numberResultDetail(s: NumbersState): string {
+  if (!s.available.length) return "0 left! You found a combination for every number.";
+  return `${remainingTotal(s)} left. No open combination makes ${numberTarget(s)}. That is this round's total. Undo to explore another choice, or play again.`;
+}

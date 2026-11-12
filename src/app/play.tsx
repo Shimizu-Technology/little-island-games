@@ -1,3 +1,6 @@
+import { classicPaceLabel } from "../games/classics/labels";
+import { learnSources } from "../content/learnAudio";
+import { numberLimit, numbersStatus } from "../games/numbers";
 import { BadgeResultCard } from '../badges/ResultCard';
 import { useActiveIslanderLook } from "../islander/active";
 import { Companion, IslanderPortrait } from "../islander/Companion";
@@ -5,7 +8,7 @@ import { classicEvent } from "../islander/reactions";
 import { PlayerNames } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { Mark, replayTic } from "../games/tic";
-import { createMemory, replayMemory } from "../games/memory";
+import { createMemory, replayMemory, type MemoryPack } from "../games/memory";
 import { SaveStatus } from "../components/SaveStatus";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
@@ -71,7 +74,7 @@ function Game({ id }: { id: GameId }) {
     [xSeat, setXSeat] = useState<Seat>(0),
     [alternate, setAlternate] = useState(true),
     [human, setHuman] = useState<Mark>("X");
-  const [memoryPack, setMemoryPack] = useState<"pictures" | "chamoru">(s?.game === "memory" ? s.pack ?? "pictures" : "pictures");
+  const [memoryPack, setMemoryPack] = useState<MemoryPack>(s?.game === "memory" ? s.pack ?? "pictures" : "pictures");
   const [showSecret, setShowSecret] = useState(false),
     [clue, setClue] = useState("");
   const [setup, setSetup] = useState(false),
@@ -101,6 +104,13 @@ function Game({ id }: { id: GameId }) {
   }, [s?.id, store.epoch, finished, sound, lostWord]);
   const update = store.update;
   const commit = useCallback((next: GameState) => update(id, next, s), [id, s, update]);
+  function openChallenge() {
+    setSetup(false);
+    router.push({ pathname: "/challenge", params: { game: id } });
+  }
+  const instructions = id === "numbers" ? "p3a-numbers-rules" : `instructions-${id}`;
+  const hasInstructions = id !== "numbers" || !!(learnSources as Record<string, number>)[instructions];
+  const challengeLabel = id === "tic-tac-toe" ? "Fork puzzles · spot two winning threats" : id === "checkers" ? "Capture puzzles · plan a whole jump" : id === "memory" ? "Memory dares · suggested turn targets" : null;
   function start() {
     let next: GameState;
     let remembered: string[] | null = null;
@@ -220,7 +230,7 @@ function Game({ id }: { id: GameId }) {
               ? s.custom
                 ? ""
                 : `${{ easy: "Short words", medium: "Longer words", hard: "Big words" }[s.options.difficulty]} · `
-              : `${(s.game === "tic-tac-toe" || s.game === "checkers") && s.options.mode === "together" ? "" : `${difficultyLabel[s.options.difficulty]} · `}`}
+              : `${(s.game === "tic-tac-toe" || s.game === "checkers") && s.options.mode === "together" ? "" : `${classicPaceLabel(id, s.options.difficulty)} · `}`}
             {s.options.mode === "together" ? g.together : g.solo}
             {s.game === "word-rescue" &&
               ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
@@ -267,7 +277,7 @@ function Game({ id }: { id: GameId }) {
           ) : s?.game === "maze" ? (
             <MazeBoard key={`${s.id}:${s.path.join()}`} {...boardProps} state={s} commit={commit} />
           ) : s?.game === "numbers" ? (
-            <NumbersBoard {...boardProps} state={s} commit={commit} />
+            <NumbersBoard {...boardProps} state={s} commit={commit} personalBest={store.save.numberRecords?.bestRemaining[numberLimit(s)]} />
           ) : null}
         </View>
         {s?.game === "word-rescue" && store.save.wordRecords && (
@@ -292,12 +302,13 @@ function Game({ id }: { id: GameId }) {
             }}
           >
             {finished && <BadgeResultCard round={s.id}/>}
-            {finished && <Companion event={classicEvent(s)} active={focused && active && !setup && !help}/> }
+            {finished && <Companion event={s.game === "numbers" && numbersStatus(s) === "stuck" ? "complete" : classicEvent(s)} active={focused && active && !setup && !help}/> }
             {finished && (
               <Button onPress={replay}>
                 {s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}
               </Button>
             )}
+            {challengeLabel && <Button quiet compact onPress={openChallenge}>{challengeLabel}</Button>}
             {/* Kept small and quiet so it's never the obvious tap mid-game; Play again is the main action. */}
             <Button compact quiet onPress={newRound}>
               New round & options
@@ -309,7 +320,7 @@ function Game({ id }: { id: GameId }) {
         )}
       </ScrollView>
       <Sheet
-        visible={setup || !s}
+        visible={focused && (setup || !s)}
         onClose={() => practice.pending ? practice.cancel() : (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
         title={practice.pending ? "A little practice, then play" : s ? "A fresh little round" : `Let’s play ${g.name}`}
         footer={practice.pending ? undefined : <Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
@@ -320,6 +331,7 @@ function Game({ id }: { id: GameId }) {
             ? "Starting a new round replaces this game’s current round. Your other games stay saved."
             : g.description}
         </Copy>
+        {challengeLabel && <Button quiet onPress={openChallenge}>{challengeLabel}</Button>}
         {id !== "maze" && id !== "numbers" && (
           <>
             <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
@@ -355,7 +367,7 @@ function Game({ id }: { id: GameId }) {
                     ? { easy: "Short words", medium: "Longer words", hard: "Big words" }[d]
                     : id === "checkers"
                       ? `${rivalFor("checkers", checkersRival[d]).name} · ${difficultyLabel[d]}`
-                      : difficultyLabel[d]}
+                      : classicPaceLabel(id, d)}
                 </Chip>
               ))}
             </View>
@@ -556,12 +568,13 @@ function Game({ id }: { id: GameId }) {
           <Heading style={{ fontSize: 18 }}>Cards</Heading>
           <View style={[styles.row, { flexWrap: "wrap" }]}>
             <Chip selected={memoryPack === "pictures"} onPress={() => setMemoryPack("pictures")}>Pictures</Chip>
+            <Chip selected={memoryPack === "words"} onPress={() => setMemoryPack("words")}>Picture + English word</Chip>
             <Chip selected={memoryPack === "chamoru"} onPress={() => setMemoryPack("chamoru")}>CHamoru words</Chip>
           </View>
           {memoryPack === "chamoru" && <Copy>Match each picture with its CHamoru word. Small English words help you compare. CHamoru words are text only.</Copy>}
           <Copy>
             {options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"}{" "}
-            {memoryPack === "chamoru" ? "picture and word pairs." : "picture pairs."}{" "}
+            {memoryPack !== "pictures" ? "picture and word pairs." : "picture pairs."}{" "}
             {options.mode === "solo"
               ? "Practice with a peek whenever you need one."
               : "Two-player match: no peeks. Most pairs wins; equal pairs is a tie."}
@@ -573,8 +586,8 @@ function Game({ id }: { id: GameId }) {
             {options.difficulty === "easy"
               ? "Gentle: one die and numbers 1–6. Roll again whenever no combination fits."
               : options.difficulty === "medium"
-                ? "Growing: two dice and numbers 1–9."
-                : "Challenge: two dice and numbers 1–12. Plan which totals to save."}{" "}
+                ? "Growing: two dice and numbers 1–9. Aim for the lowest total left."
+                : "Challenge: two dice and numbers 1–12. Aim for the lowest total left. Closing everything is very rare; dice bring luck as well as choices."}{" "}
             You can use a combination hint whenever you like.
           </Copy>
         )}
@@ -583,9 +596,9 @@ function Game({ id }: { id: GameId }) {
       </Sheet>
       <Sheet visible={help} onClose={() => setHelp(false)} title={`How to play ${g.name}`}>
         <Copy>{g.help}</Copy>
-        <Button onPress={() => sound(`instructions-${id}`)} disabled={!store.save.settings.sound}>
+        {hasInstructions && <Button onPress={() => sound(instructions)} disabled={!store.save.settings.sound}>
           Listen to the instructions
-        </Button>
+        </Button>}
         {!store.save.settings.sound && <Copy>Turn sound on to hear the instructions.</Copy>}
         {s?.game === "word-rescue" && (
           <>

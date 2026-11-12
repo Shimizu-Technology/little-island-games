@@ -1,3 +1,4 @@
+import { migrateNumberRecords, validNumberRecords } from "./numberRecords";
 import { emptyChallenge, validChallengeProgress, type ChallengeProgress } from './challenge';
 import { emptyCove } from './covePeople';
 import { engines as learningEngines } from "../learn/engines";
@@ -15,10 +16,10 @@ import type { LearnId, SkillProgress } from '../learn/types';
 import { arcadeIds } from '../arcade/types';
 
 /** Top-level game fields are the active learner's view. Only these canonical slots are encoded. */
-export type ProfileProgress = Pick<Save, 'sessions' | 'recent' | 'learn' | 'board' | 'activities' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'favoriteGames' | 'coached' | 'wordRecords' | 'raceRecords'> & { challenge?: ChallengeProgress; recentArcade?: import('../arcade').ArcadeId | null; school?: SchoolProgress };
+export type ProfileProgress = Pick<Save, 'sessions' | 'recent' | 'learn' | 'board' | 'activities' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'favoriteGames' | 'coached' | 'wordRecords' | 'raceRecords' | 'numberRecords'> & { challenge?: ChallengeProgress; recentArcade?: import('../arcade').ArcadeId | null; school?: SchoolProgress };
 export type EarlierWork = { rounds: ProfileProgress; explore?: LegacyExplore; exploreUntouched?: string[]; skills?: SkillProgress; preferences?: Pick<ProfileProgress, 'favoriteGames' | 'coached' | 'recent' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'recentArcade'> };
 export type Profiles = { version: 1 | 2; people: Record<string, ProfileProgress>; earlier: { wordRecords?: Save['wordRecords']; raceRecords?: Save['raceRecords'] }; unassigned: EarlierWork };
-const fields = ['sessions','recent','learn','board','activities','recentLearn','recentBoard','recentActivity','favoriteGames','coached','wordRecords','raceRecords','school','challenge'] as const;
+const fields = ['sessions','recent','learn','board','activities','recentLearn','recentBoard','recentActivity','favoriteGames','coached','wordRecords','raceRecords','numberRecords','school','challenge'] as const;
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 export const emptyProfile = (): ProfileProgress => ({ sessions: {}, recent: null });
 export function captureProfile(save: Save): ProfileProgress {
@@ -95,18 +96,19 @@ function migrateLegacyProfiles(save: Save): Save {
 export function migrateProfiles(save: Save): Save {
   if (![1,2,3].includes(save.version) || save.version === 3 && save.profiles?.version !== 2 || save.version === 2 && save.profiles?.version !== 1) throw new Error('Unsupported save contract. Your original has been kept.');
   const validated = parseSave(encodeSave(save));
-  if (save.version === 3 && save.profiles?.version === 2) return projectProfile(validated);
+  if (save.version === 3 && save.profiles?.version === 2) return projectProfile(migrateNumberRecords(validated));
   const legacy = migrateLegacyProfiles(clone(validated));
   const profiles: Profiles = { ...legacy.profiles!, version: 2, people: Object.fromEntries(Object.entries(legacy.profiles!.people).map(([id, p]) => [id, { ...p, challenge: emptyChallenge() }])) };
-  return projectProfile({ ...legacy, version: 3, saveRevision: 'migrated-v3', cove: emptyCove(), profiles });
+  return projectProfile(migrateNumberRecords({ ...legacy, version: 3, saveRevision: 'migrated-v3', cove: emptyCove(), profiles }));
 }
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
 /** Reuse every real engine validator through a legacy envelope, without recursive profile data. */
 function validProgress(v: unknown, learning: Learners, owner?: string, challenge = false): v is ProfileProgress {
   if (!object(v) || Object.keys(v).some(k => ![...fields,'recentArcade'].includes(k as typeof fields[number])) || !Object.hasOwn(v,'sessions') || !Object.hasOwn(v,'recent') || (v.school !== undefined && !validSchool(v.school)) || (v.recentArcade !== undefined && v.recentArcade !== null && !arcadeIds.includes(v.recentArcade as import('../arcade').ArcadeId))) return false;
+  if (v.numberRecords !== undefined && (!challenge || !validNumberRecords(v.numberRecords))) return false;
   if (challenge ? !owner || !validChallengeProgress(v.challenge, owner) : v.challenge !== undefined) return false;
   try {
-    const { challenge: _challenge, ...legacy } = v;
+    const { challenge: _challenge, numberRecords: _numberRecords, ...legacy } = v;
     const test = parseSave(JSON.stringify({ version: 1, settings: {sound:true,help:true}, ...legacy, learning }));
     return !owner || Object.values(test.learn ?? {}).every(round => (round?.learner ?? 'family') === owner);
   } catch { return false; }
