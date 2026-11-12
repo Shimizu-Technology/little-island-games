@@ -23,7 +23,7 @@ import { jsonBytes } from '../src/state/saveBits';
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { db.raw = raw; }, preserve: async () => {}, writeDraft: async () => {}, discardSession: async () => {} } }));
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 320, height: 667 }), AppState: { addEventListener: () => ({ remove() {} }) } }));
-vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
+vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main', useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: { canGoBack: () => false, replace: vi.fn() } }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', ToggleRow: 'switch', styles: {} }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {} }) }));

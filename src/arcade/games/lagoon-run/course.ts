@@ -5,6 +5,13 @@ export const HAZARDS = {
   canoe: 'lane', rock: 'lane', wall: 'lane', 'moving-canoe': 'lane',
 } as const;
 export type HazardKind = keyof typeof HAZARDS;
+/** Drawn size of a hazard actor in track units (before depth scale). The bake renders each hazard
+ * PNG at this box, and the runtime draws it at the same box. */
+export function hazardBox(kind: string) {
+  "worklet";
+  const action = HAZARDS[kind as HazardKind];
+  return { width: action === 'duck' ? 112 : 72, height: action === 'jump' ? 72 : 129.6 };
+}
 export type PowerKind = 'none' | 'magnet' | 'kite' | 'sandals' | 'shield';
 export const POWER_SECONDS = { magnet: 8, kite: 6, sandals: 10, shield: 1 } as const;
 export const POWER_LABELS = { magnet: 'Shell Magnet', kite: 'Kite Glide', sandals: 'Spring Sandals', shield: 'Turtle Shield' } as const;

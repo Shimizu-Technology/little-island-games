@@ -4,6 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { LearnFrame } from '../src/learn/LearnFrame';
 import * as storeModule from '../src/state/Store';
 import { StoreProvider, useStore } from '../src/state/Store';
+import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { addLearner } from '../src/learn/learners';
@@ -11,12 +12,14 @@ import { startSession } from '../src/learn/session';
 import { schoolContext } from '../src/challenge/catalog';
 import { completedSignal } from '../src/challenge/offers';
 import { optionsAtLevel } from '../src/learn/levels';
+import { router } from 'expo-router';
+const route=vi.hoisted(()=>({focused:true}));
 const db=vi.hoisted(()=>({raw:null as string|null}));const sound=vi.hoisted(()=>vi.fn());
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(s:string)=>{db.raw=s;},preserve:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:320,height:667}),AppState:{addEventListener:()=>({remove(){}})}}));
 vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'main',useSafeAreaInsets:()=>({top:0,bottom:0,left:0,right:0})}));
-vi.mock('expo-router',()=>({useIsFocused:()=>true,router:{canGoBack:()=>false,replace:vi.fn(),push:vi.fn()}}));
-vi.mock('../src/components/ui',()=>({Button:'button',Chip:'button',Heading:'h2',Copy:'p',ToggleRow:'switch',Sheet:()=>null,GameHeader:()=>null,C:{},styles:{}}));
+vi.mock('expo-router',()=>({useIsFocused:()=>route.focused,router:{canGoBack:()=>false,replace:vi.fn(),push:vi.fn()}}));
+vi.mock('../src/components/ui',()=>({Button:'button',Chip:'button',Heading:'h2',Copy:'p',ToggleRow:'switch',Sheet:({visible,children,footer}:{visible:boolean;children:React.ReactNode;footer:React.ReactNode})=>visible?<section>{children}{footer}</section>:null,GameHeader:()=>null,C:{},styles:{}}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play:sound,stop:vi.fn()})}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
 vi.mock('../src/components/Match',()=>({Scoreboard:()=>null,PlayerNames:()=>null}));
@@ -59,6 +62,33 @@ it.each(['family','a'])('P2-4: bridge works for %s and dismissal survives anothe
 });
 it('P2-7: School invitation retains its recorded Hear action',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReactTestRenderer;try{r=await mount('a','a','solo',2);await press(r,'Hear the invitation');expect(sound).toHaveBeenCalledWith('learning-try-level-3');}finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+function CrabProbe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return s.ready?<LearnFrame id="crab-commands"/>:null;}
+it.each([false,true])('Crab entry dismisses setup without changing a School draft (saved %s)',async hasDraft=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);route.focused=true;vi.mocked(router.push).mockClear();
+ let save=migrateProfiles(emptySave());
+ if(hasDraft){const round=startSession('crab-commands',{options:{mode:'solo',pace:'easy'}},{},42);save.learn={'crab-commands':{...round,state:{...round.state as object,program:['right'],cards:1},learner:'family'}};}
+ db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ try{
+  await act(async()=>{r=create(<StoreProvider><CrabProbe/></StoreProvider>);});
+  const before=JSON.stringify(store.save.learn?.['crab-commands']);
+  if(hasDraft)await press(r,'New round & options');
+  await press(r,'Challenge');expect(router.push).toHaveBeenCalledWith({pathname:'/challenge',params:{game:'crab-commands'}});
+  if(hasDraft)expect(JSON.stringify(r.toJSON())).not.toContain('Starting a new round replaces this round.');
+  route.focused=false;await act(async()=>r.update(<StoreProvider><CrabProbe/></StoreProvider>));
+  expect(r.root.findByProps({title:hasDraft?'A fresh round':'Let’s play Crab Commands'}).props.visible).toBe(false);
+  expect(JSON.stringify(store.save.learn?.['crab-commands'])).toBe(before);
+ }finally{route.focused=true;if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+it.each(['e7','e6'])('Crab P2-7: finished %s beach offers same-puzzle only when registered',async id=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.mocked(router.push).mockClear();route.focused=true;
+ const {levels,solve}=await import('../src/learn/games/crab-commands/engine');
+ let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});const round=startSession('crab-commands',{options:{mode:'solo',pace:'easy'}},{},42),ids=['ea1','eb1',id];
+ const completed=ids.map(id=>solve(levels.find(l=>l.id===id)!));save.learn={'crab-commands':{...round,learner:'a',state:{...round.state as object,levels:ids,completed,program:[],cursor:0,running:false,cards:completed.flat().length}}};
+ let progress=completedSignal(emptyChallenge(),schoolContext('crab-commands',1),true,true);progress=completedSignal(progress,schoolContext('crab-commands',1),true,true);progress.signals[0][3]='easy';save.challenge=progress;save.profiles!.people.a.challenge=progress;db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><CrabProbe/></StoreProvider>);});await press(r,id==='e7'?'Try this beach with a dare':'Try a related challenge');expect(router.push).toHaveBeenCalledWith({pathname:'/challenge',params:{game:'crab-commands',...(id==='e7'?{puzzle:'7:3'}:{})}});
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
 
 // Integration rehearsal: a page scroll that started on the Slip Tide board also moved the crabs. A board that owns a

@@ -1,4 +1,5 @@
 /** Run with npm exec --yes --package=tsx@4.20.6 -- tsx scripts/export-growth-audio.ts */
+import { admitGenerated } from "./words/generated-admission.mjs";
 import { writeFileSync } from "node:fs";
 import { levelSpeech } from "../src/learn/levelSpeech";
 import { growthTracks } from "../src/learn/growth/content";
@@ -13,5 +14,6 @@ for (const [game, stages] of Object.entries(growthTracks)) for (const [stage, tr
   speech[`${key}-prompt`] = [q.context, q.prompt].filter(Boolean).join(" ");
   speech[`${key}-explanation`] = q.explanation;
 }
+admitGenerated(process.cwd(), "speech", Object.values(speech).flatMap(text => text.match(/\p{L}+/gu) ?? []));
 writeFileSync("scripts/learn/growth.json", JSON.stringify(speech, null, 2) + "\n");
 console.log(`Exported ${Object.keys(speech).length} offline growth lines`);

@@ -3,7 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { frontPoses, backPoses } from '../src/islander/rig/poses';
 import { Islander } from '../src/islander/rig/Islander';
-import { RunHazard } from '../src/arcade/games/lagoon-run/Art';
+import { readFileSync } from 'node:fs';
+import { runPoses } from '../src/arcade/games/scrolling/render';
+import { decodePng, duckClearance, obstructionProfile, runtimeHazardFiles } from './helpers/lagoon-baked';
 import { defaultLook, hairStyles, hats, outfits, accessories } from '../src/islander/look';
 import { garmentFor } from '../src/islander/rig/Clothes';
 import { createRun, rowSafe, SLIDE_SECONDS } from '../src/arcade/games/lagoon-run/engine';
@@ -51,23 +53,21 @@ function artTop(markup: string) {
  return top;
 }
 describe('Islander authored art',()=>{
- it('keeps every wardrobe combination below the duck beam through safe entry/recovery samples',()=>{
-  const s=createRun(runLevels[0],42), row={...s.rows[0],kind:'net' as const,lane:1,second:-1,third:false,surface:'sand' as const};
-  const frames=new Set<number>();
-  for(let sample=0;sample<72;sample++){const state={...s,duck:SLIDE_SECONDS-sample/120,elevation:DUCK_MAX_ELEVATION-1e-6};if(rowSafe(state,row))frames.add(runnerFrame(state));}
-  expect([...frames].sort()).toEqual([11,12,13]);
-  // Read actual hazard art, including outline, rather than assuming a beam height.
-  const clearance = Math.min(...(['net','banner','frond','line'] as const).map(kind => {
-    const paths = [...renderToStaticMarkup(<RunHazard kind={kind}/>).matchAll(/<path\b[^>]*>/g)].map(m => m[0]);
-    const beam = paths.find(tag => attr(tag,'d')?.startsWith('M4 27L12'))!;
-    const highlight = paths.find(tag => attr(tag,'d') === 'M4 27H96M12 101H88')!;
-    const bottom = Math.max(...pathYs(attr(beam,'d')!),...pathYs(attr(highlight,'d')!)) + 2.5;
-    return (180 - bottom) * 129.6 / 180;
-  }));
+ it('keeps every wardrobe combination below the shipped duck art through safe entry/recovery samples',()=>{
+  // The baked PNGs the runtime maps, against the runner drawn through its real pose (HERO_SCALE, lift).
+  const files=runtimeHazardFiles(),profiles=(['net','banner','frond','line'] as const).map(kind=>obstructionProfile(decodePng(readFileSync(files[kind])),kind));
+  const s=createRun(runLevels[0],42), row={...s.rows[0],z:1,kind:'net' as const,secondKind:'net' as const,lane:1,second:-1,third:false,shellLane:1,surface:'sand' as const,power:'none' as const};
+  const samples=new Map<number,ReturnType<typeof runPoses>[]>();
+  for(let sample=0;sample<72;sample++){
+   const state={...s,lane:1,poseLane:1,duck:SLIDE_SECONDS-sample/120,elevation:DUCK_MAX_ELEVATION-1e-6,rows:s.rows.map((r,i)=>i?{...r,z:-3}:row)};
+   if(!rowSafe(state,row))continue;
+   const frame=runnerFrame(state);samples.set(frame,[...samples.get(frame)??[],runPoses(state)]);
+  }
+  expect([...samples.keys()].sort()).toEqual([11,12,13]);
   const looks=[...hairStyles.flatMap(hairStyle=>hats.map(hat=>({...defaultLook,hairStyle,hat}))),...outfits.flatMap(outfit=>accessories.map(accessory=>({...defaultLook,outfit,accessory})))];
-  for(const frame of frames) for(const look of looks){
+  for(const [frame,poses] of samples) for(const look of looks){
    const top=artTop(renderToStaticMarkup(<Islander view="back" pose={frame} look={look}/>));
-   expect(130-top+DUCK_MAX_ELEVATION*85,`${frame} ${look.hairStyle} ${look.hat} ${look.outfit} ${look.accessory}`).toBeLessThan(clearance);
+   for(const p of poses) for(const profile of profiles) expect(duckClearance(profile,p[1],p[0],top),`${frame} ${look.hairStyle} ${look.hat} ${look.outfit} ${look.accessory}`).toBeGreaterThan(1);
   }
  }, artFixtureTimeout);
  it('keeps the busiest wardrobe silhouettes inside the vector budget', () => {

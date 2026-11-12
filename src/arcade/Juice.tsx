@@ -41,8 +41,8 @@ export function StarReveal({ stars, onTone, active = true }: { stars: number; on
   }, [stars, reduced, active]);
   return <View accessibilityLabel={`${stars} of 3 stars earned`} style={{ flexDirection: "row", gap: 9 }}>{[0, 1, 2].map(i => <RevealStar key={i} filled={i < shown} index={0} reduced={reduced}/>)}</View>;
 }
-export function HudPill({ icon, children, label }: { icon?: React.ReactNode; children: React.ReactNode; label?: string }) {
-  return <View accessibilityLabel={label} style={{ minHeight: 44, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 24, backgroundColor: "#FFF6DF", borderWidth: 2, borderColor: "#D9C69C", flexDirection: "row", alignItems: "center", gap: 7 }}>{icon}<Copy style={{ color: "#244C55", fontWeight: "800", fontSize: 17 }}>{children}</Copy></View>;
+export function HudPill({ icon, children, label, maxFontSizeMultiplier }: { icon?: React.ReactNode; children: React.ReactNode; label?: string; maxFontSizeMultiplier?: number }) {
+  return <View accessibilityLabel={label} style={{ minHeight: 44, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 24, backgroundColor: "#FFF6DF", borderWidth: 2, borderColor: "#D9C69C", flexDirection: "row", alignItems: "center", gap: 7 }}>{icon}<Copy maxFontSizeMultiplier={maxFontSizeMultiplier} style={{ color: "#244C55", fontWeight: "800", fontSize: 17 }}>{children}</Copy></View>;
 }
 export function MiniStars({ stars }: { stars: number }) { return <StarDisplay stars={stars} size={20}/>; }
 function Particle({ index, fish, reduced, originY }: { index: number; fish: boolean; reduced: boolean; originY?: number }) {

@@ -1,0 +1,1009 @@
+{
+  "version": 1,
+  "replays": [
+    {
+      "descriptor": {
+        "level": {
+          "id": "ea5",
+          "rows": [
+            "C....",
+            "S....",
+            ".H...",
+            ".....",
+            "....."
+          ],
+          "tier": 0,
+          "pace": "easy",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "down",
+        "right",
+        "down"
+      ],
+      "cards": 3,
+      "steps": 3,
+      "minimumSteps": 3,
+      "flatCards": 3,
+      "commands": [
+        "up",
+        "right",
+        "down",
+        "left"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "eb1",
+          "rows": [
+            "C.S..",
+            "...H.",
+            ".....",
+            ".....",
+            "....."
+          ],
+          "tier": 1,
+          "pace": "easy",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "right",
+        "right",
+        "right",
+        "down"
+      ],
+      "cards": 4,
+      "steps": 4,
+      "minimumSteps": 4,
+      "flatCards": 4,
+      "commands": [
+        "up",
+        "right",
+        "down",
+        "left"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "e5",
+          "rows": [
+            "C.#..",
+            "..#..",
+            "S.S.H",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "easy",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "down",
+        "down",
+        "right",
+        "right",
+        "right",
+        "right"
+      ],
+      "cards": 6,
+      "steps": 6,
+      "minimumSteps": 6,
+      "flatCards": 6,
+      "commands": [
+        "up",
+        "right",
+        "down",
+        "left"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "e7",
+          "rows": [
+            "C#S.H",
+            ".#.#.",
+            "...S.",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "easy",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "down",
+        "down",
+        "right",
+        "right",
+        "right",
+        "left",
+        "up",
+        "up",
+        "right",
+        "right"
+      ],
+      "cards": 10,
+      "steps": 10,
+      "minimumSteps": 10,
+      "flatCards": 10,
+      "commands": [
+        "up",
+        "right",
+        "down",
+        "left"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mb1",
+          "rows": [
+            "C.S..",
+            "..#H.",
+            ".....",
+            ".....",
+            "....."
+          ],
+          "tier": 1,
+          "pace": "medium",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward"
+      ],
+      "cards": 5,
+      "steps": 4,
+      "minimumSteps": 4,
+      "flatCards": 5,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "m2",
+          "rows": [
+            "C#...",
+            ".#S..",
+            "...#H",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.debug",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward"
+      ],
+      "cards": 13,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 13,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "m4",
+          "rows": [
+            "C.S..",
+            ".#.#.",
+            "...S.",
+            ".###.",
+            "....H"
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward"
+      ],
+      "cards": 11,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 11,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "m7",
+          "rows": [
+            "C.S#H",
+            ".#.#.",
+            "...S.",
+            ".###.",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward"
+      ],
+      "cards": 11,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 11,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "hb1",
+          "rows": [
+            "C...S",
+            "....H",
+            ".....",
+            ".....",
+            "....."
+          ],
+          "tier": 1,
+          "pace": "hard",
+          "skill": "think.loops",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "repeat",
+        "turn-right",
+        "forward"
+      ],
+      "cards": 5,
+      "steps": 5,
+      "minimumSteps": 5,
+      "flatCards": 6,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right",
+        "repeat"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "h1",
+          "rows": [
+            "C...S",
+            "####.",
+            "H....",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "hard",
+          "skill": "think.loops",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "repeat",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "repeat"
+      ],
+      "cards": 10,
+      "steps": 10,
+      "minimumSteps": 10,
+      "flatCards": 12,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right",
+        "repeat"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "h5",
+          "rows": [
+            "C.S..",
+            ".###.",
+            "S...H",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "hard",
+          "skill": "think.loops",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "turn-left",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "repeat"
+      ],
+      "cards": 13,
+      "steps": 10,
+      "minimumSteps": 10,
+      "flatCards": 14,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right",
+        "repeat"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "h7",
+          "rows": [
+            "C...S",
+            "##.#.",
+            "H..S.",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "hard",
+          "skill": "think.loops",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [],
+        "lesson": "Collect every shell, then reach home."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "repeat",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "repeat"
+      ],
+      "cards": 10,
+      "steps": 10,
+      "minimumSteps": 10,
+      "flatCards": 12,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right",
+        "repeat"
+      ]
+    }
+  ],
+  "debug": [
+    {
+      "descriptor": {
+        "level": {
+          "id": "m7",
+          "rows": [
+            "C.S#H",
+            ".#.#.",
+            "...S.",
+            ".###.",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [
+          "forward",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward"
+        ],
+        "lesson": "A turn points the wrong way. Tap a card, then Replace it."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward"
+      ],
+      "cards": 11,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 11,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "m2",
+          "rows": [
+            "C#...",
+            ".#S..",
+            "...#H",
+            ".....",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.debug",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [
+          "turn-right",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward",
+          "turn-left",
+          "forward",
+          "turn-right",
+          "forward",
+          "forward",
+          "turn-right",
+          "forward"
+        ],
+        "lesson": "A card is missing. Tap a card, then Insert before."
+      },
+      "witness": [
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward"
+      ],
+      "cards": 13,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 13,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "m4",
+          "rows": [
+            "C.S..",
+            ".#.#.",
+            "...S.",
+            ".###.",
+            "....H"
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [
+          "forward",
+          "turn-right",
+          "forward",
+          "turn-right",
+          "forward",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward",
+          "turn-right",
+          "forward",
+          "forward"
+        ],
+        "lesson": "One extra card sends the crab away. Tap it, then Remove."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward"
+      ],
+      "cards": 11,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 11,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "m8",
+          "rows": [
+            "C#..H",
+            ".#.#.",
+            "S..S.",
+            ".#.#.",
+            "....."
+          ],
+          "tier": 2,
+          "pace": "medium",
+          "skill": "think.sequence",
+          "facing": 1
+        },
+        "budget": null,
+        "starter": [
+          "forward",
+          "turn-right",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward",
+          "forward",
+          "forward",
+          "turn-left",
+          "forward",
+          "forward"
+        ],
+        "lesson": "Two neighbouring cards traded places. Replace them, then Go."
+      },
+      "witness": [
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward"
+      ],
+      "cards": 11,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 11,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    }
+  ],
+  "mud": [
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-1",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "CmH##",
+            "#####",
+            "#####",
+            "#####",
+            "#####"
+          ],
+          "facing": 1,
+          "tier": 0
+        },
+        "budget": 3,
+        "starter": [],
+        "lesson": "Mud costs 2 walking steps. Sand costs 1. Turns cost no steps. Walk across this patch to try it."
+      },
+      "witness": [
+        "forward",
+        "forward"
+      ],
+      "cards": 2,
+      "steps": 3,
+      "minimumSteps": 3,
+      "flatCards": 2,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-2",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "CmmmH",
+            ".....",
+            "#####",
+            "#####",
+            "#####"
+          ],
+          "facing": 1,
+          "tier": 0
+        },
+        "budget": 6,
+        "starter": [],
+        "lesson": "The straight path costs 7 steps. You have 6. Can a longer plan walk around the mud?"
+      },
+      "witness": [
+        "turn-right",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward"
+      ],
+      "cards": 9,
+      "steps": 6,
+      "minimumSteps": 6,
+      "flatCards": 9,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-3",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "CmmmH",
+            ".....",
+            "##S##",
+            "#####",
+            "#####"
+          ],
+          "facing": 1,
+          "tier": 1
+        },
+        "budget": 8,
+        "starter": [],
+        "lesson": "The shell sits in a little pocket. Visit it, then find a dry way home."
+      },
+      "witness": [
+        "turn-right",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "turn-left",
+        "turn-left",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward"
+      ],
+      "cards": 15,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 15,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-4",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "Cmm#H",
+            "...m.",
+            ".....",
+            "#####",
+            "#####"
+          ],
+          "facing": 1,
+          "tier": 1
+        },
+        "budget": 8,
+        "starter": [],
+        "lesson": "A sandcastle blocks the straight path. Look for a dry crossing."
+      },
+      "witness": [
+        "forward",
+        "turn-right",
+        "forward",
+        "turn-left",
+        "forward",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward"
+      ],
+      "cards": 9,
+      "steps": 8,
+      "minimumSteps": 7,
+      "flatCards": 9,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-5",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "#..mH",
+            "#S...",
+            "#mC..",
+            "m....",
+            "...m."
+          ],
+          "facing": 1,
+          "tier": 2
+        },
+        "budget": 6,
+        "starter": [],
+        "lesson": "Cards and walking steps are different. A short plan can cost more steps."
+      },
+      "witness": [
+        "turn-left",
+        "forward",
+        "turn-left",
+        "forward",
+        "turn-left",
+        "turn-left",
+        "forward",
+        "forward",
+        "forward",
+        "turn-left",
+        "forward"
+      ],
+      "cards": 11,
+      "steps": 6,
+      "minimumSteps": 6,
+      "flatCards": 11,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-6",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "H..#C",
+            "m.mSm",
+            ".m#.#",
+            ".#...",
+            "....#"
+          ],
+          "facing": 1,
+          "tier": 2
+        },
+        "budget": 8,
+        "starter": [],
+        "lesson": "The shortest plan costs 9 steps. You have 8. Find one extra card that avoids a muddy step."
+      },
+      "witness": [
+        "turn-right",
+        "forward",
+        "turn-right",
+        "forward",
+        "forward",
+        "forward",
+        "turn-right",
+        "forward",
+        "turn-left",
+        "forward"
+      ],
+      "cards": 10,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 10,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    },
+    {
+      "descriptor": {
+        "level": {
+          "id": "mud-7",
+          "pace": "medium",
+          "skill": "think.sequence",
+          "rows": [
+            "C.mH#",
+            "....#",
+            "#####",
+            "#####",
+            "#####"
+          ],
+          "facing": 1,
+          "tier": 2
+        },
+        "budget": 5,
+        "starter": [],
+        "lesson": "One small patch to finish. The budget is roomy: choose your own route."
+      },
+      "witness": [
+        "forward",
+        "forward",
+        "forward"
+      ],
+      "cards": 3,
+      "steps": 4,
+      "minimumSteps": 4,
+      "flatCards": 3,
+      "commands": [
+        "forward",
+        "turn-left",
+        "turn-right"
+      ]
+    }
+  ]
+}

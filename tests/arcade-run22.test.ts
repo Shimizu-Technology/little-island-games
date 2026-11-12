@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRun, runTransition, shellHeight, validRun } from '../src/arcade/games/lagoon-run/engine';
-import { CAMERA_SLOT } from '../src/arcade/games/lagoon-run/camera';
+import { CAMERA_SLOT, HERO_ZOOM } from '../src/arcade/games/lagoon-run/camera';
 import { runLevels } from '../src/arcade/games/scrolling/content';
 import { runPoses, RUN_SLOTS } from '../src/arcade/games/scrolling/render';
 import { interpolatePoses } from '../src/arcade/poses';
@@ -49,8 +49,9 @@ it('uses the existing landing lifetime for dust and removes it for Reduce Motion
 it('keeps the enlarged hero inside both outer lanes with optical camera follow',()=>{
  for(const lane of [0,1,2]){
   const s={...createRun(runLevels[0],42),lane,poseLane:lane},p=runPoses(s);
-  const centre=195+(p[0].x+40-195)*1.7+p[CAMERA_SLOT].x;
-  expect(centre-40*1.7).toBeGreaterThan(0);
-  expect(centre+40*1.7).toBeLessThan(390);
+  // Camera zoom about x=195 (LG-S3: 1.25) and the drawn hero half-width after HERO_SCALE.
+  const centre=195+(p[0].x+40-195)*HERO_ZOOM+p[CAMERA_SLOT].x,half=40*(p[0].scale??1)*HERO_ZOOM;
+  expect(centre-half).toBeGreaterThan(0);
+  expect(centre+half).toBeLessThan(390);
  }
 });

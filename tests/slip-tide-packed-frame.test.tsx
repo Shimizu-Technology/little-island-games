@@ -27,7 +27,7 @@ vi.mock('../src/puzzles/bankAssets', async () => {
   return { bankTransport: { read: async (name: string) => read(`src/content/puzzles/assets/${name}.lipuzzle`, 'utf8') } };
 });
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 390, height: 844 }), AppState: { addEventListener: () => ({ remove() {} }) } }));
-vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
+vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main', useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: { canGoBack: () => false, replace: vi.fn() } }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', ToggleRow: 'switch', styles: {} }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {} }) }));

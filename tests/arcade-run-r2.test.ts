@@ -3,7 +3,7 @@ import { CANOE_DEPTH, deckDepthFraction, visualRunHeight } from '../src/arcade/g
 import { createRun, runStep, runTransition, type RunState } from '../src/arcade/games/lagoon-run/engine';
 import { projectTrack } from '../src/arcade/games/lagoon-run/camera';
 import { runLevels } from '../src/arcade/games/scrolling/content';
-import { CANOE_START, runPoses } from '../src/arcade/games/scrolling/render';
+import { CANOE_START, heroContactY, runPoses } from '../src/arcade/games/scrolling/render';
 const idle={type:'idle'} as const;
 function hull(kind: 'canoe'|'moving-canoe',z:number) {
  const s=createRun(runLevels[0],42);
@@ -48,7 +48,7 @@ describe('Run round 2 art and collision agreement',()=>{
   const s={...hull('canoe',.93),kite:6};s.rows[0].shellLane=1;s.rows[0].sky=true;
   const p=runPoses(s),h=visualRunHeight(2.7),shell=p[12];
   expect(p[0].y).toBeGreaterThan(150);expect(p[172].y).toBeGreaterThan(150);
-  expect(p[0].y+130).toBeCloseTo(projectTrack(1,1).y-h*85);
+  expect(heroContactY(p[0])).toBeCloseTo(projectTrack(1,1).y-h*85);
   expect(shell.y+15+15*(shell.scale??1)).toBeCloseTo(projectTrack(1,1).y-h*85);
   expect(p[50].y+7).toBeCloseTo(projectTrack(1,1).y);
   expect(runStep(s,idle,1/60).rows[0].shellTaken&2).toBe(2);
