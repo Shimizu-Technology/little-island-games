@@ -22,7 +22,7 @@ vi.mock('../src/components/motion', () => ({ easeOut: 0, nativeDriver: true, use
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 const flat = (style: unknown): Record<string, unknown> => Array.isArray(style) ? Object.assign({}, ...style.map(flat)) : (style && typeof style === 'object' ? style as Record<string, unknown> : {});
 let root: ReactTestRenderer | undefined;
-afterEach(() => { if (root) act(() => root!.unmount()); root = undefined; Object.assign(viewport, { fontScale: 3.12 }); });
+afterEach(() => { if (root) act(() => root!.unmount()); root = undefined; Object.assign(viewport, { width: 393, fontScale: 3.12 }); });
 
 it.each([[3.12, true], [1.8, true], [1.35, false], [1, false]])('ToggleRow at text scale %s stacks the switch under its words: %s', async (fontScale, stacked) => {
   Object.assign(viewport, { fontScale });
@@ -61,4 +61,22 @@ it('School journey labels are compact chrome and stop at 1.5x', async () => {
   expect(label.props.maxFontSizeMultiplier).toBe(1.5);
   const count = root!.root.find(n => String(n.type) === 'Text' && /^\d+\/\d+$/.test(textOf(n)));
   expect(count.props.maxFontSizeMultiplier).toBe(1.5);
+});
+
+it.each([[393, 3.12], [320, 3.12], [852, 3.12], [393, 1]])('LevelPath at %s pt, text scale %s: stones stay compact and the headings wrap between words', async (width, fontScale) => {
+  Object.assign(viewport, { width, fontScale });
+  const { LevelPath } = await import('../src/learn/LevelPath');
+  const { wordWidth } = await import('../src/components/wordFit');
+  const { levelTitle } = await import('../src/learn/levels');
+  act(() => { root = create(<LevelPath game="crab-commands" level={2} onChoose={() => {}} />); });
+  const radios = root!.root.findAll(n => String(n.type) === 'Pressable' && n.props.accessibilityRole === 'radio');
+  expect(radios).toHaveLength(5);
+  for (const stone of radios) for (const t of stone.findAll(n => String(n.type) === 'Text')) expect(t.props.maxFontSizeMultiplier).toBe(1.5);
+  const line = (width >= 600 ? Math.min(560, width - 48) : width) - 44 - 32;
+  for (const [text, size] of [['Your island path', 22], [levelTitle('crab-commands', 2), 19]] as const) {
+    const h = root!.root.find(n => String(n.type) === 'Text' && n.props.accessibilityRole === 'header' && textOf(n) === text);
+    if (fontScale === 1) { expect(h.props.maxFontSizeMultiplier).toBeUndefined(); continue; }
+    expect(h.props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
+    expect(Math.max(...text.split(' ').map(w => wordWidth(w) * size * Math.min(fontScale, h.props.maxFontSizeMultiplier))), text).toBeLessThanOrEqual(line);
+  }
 });

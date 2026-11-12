@@ -297,7 +297,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
           <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), 2) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
           {phone && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
         </View>;
-  const small = large ? 1.5 : undefined;
+  const small = large ? 1.5 : undefined, big = large ? 2 : undefined;
+  // Sheet text runs across the sheet (a 560-pt card on wide screens) inside its 22-pt padding.
+  const sheetLine = (width >= 600 ? Math.min(560, width - 48) : width) - 44;
   const header = <View style={{ gap: 4 }}>
         <LearnerChip compact/>
         {bar}
@@ -407,17 +409,18 @@ export function LearnFrame({ id }: { id: LearnId }) {
         visible={focused && (setup || !saved)}
         onClose={() => (saved ? setSetup(false) : back())}
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
-        footer={<Button onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
+        footer={<Button maxFontSizeMultiplier={big} onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
+        {/* At accessibility sizes the art sits above the name, so the name has the card's width and never breaks a word. */}
+        <View testID="learn-setup-card" style={{ flexDirection: large ? "column" : "row", alignItems: large ? "flex-start" : "center", gap: large ? 4 : 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={large ? 56 : 72}/><View style={large ? { alignSelf: "stretch" } : { flex: 1 }}><Heading maxFontSizeMultiplier={large ? wordFitMultiplier(engine.name, 21, sheetLine - 24, 2) : undefined} style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy maxFontSizeMultiplier={big} style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
         {id==='code-lab'&&<Copy>Ages 9–14, with the top challenges for older learners and grown-ups.</Copy>}
         <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} progress={store.save.school} />
-        {challenge&&!comfort.youngChild&&<Button quiet onPress={()=>openChallenge()}>Challenge</Button>}
+        {challenge&&!comfort.youngChild&&<Button quiet maxFontSizeMultiplier={big} onPress={()=>openChallenge()}>Challenge</Button>}
         {engine.modes.length > 1 && (
           <>
-            <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("How shall we play?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>How shall we play?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {engine.modes.map((mode) => (
                 <Chip key={mode} selected={options.mode === mode} onPress={() => setOptions({ ...options, mode })}>
@@ -430,7 +433,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {twoPlayer && (
           <>
             <PlayerNames names={names} onChange={setNames} remembered={remembered} labels={["First player", "Second player"]} />
-            <Heading style={{ fontSize: 18 }}>Who goes first?</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("Who goes first?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>Who goes first?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {([0, 1] as const).map((seat) => (
                 <Chip key={seat} selected={starter === seat} onPress={() => setStarter(seat)}>
@@ -445,7 +448,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         {!options.stage && engine.mathControls && (
           <>
-            <Heading style={{ fontSize: 18 }}>What shall we practise?</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("What shall we practise?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>What shall we practise?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {(["add", "subtract", "mixed"] as const).map((operation) => (
                 <Chip key={operation} selected={(options.mathOperation ?? "add") === operation} onPress={() => setOptions({ ...options, mathOperation: operation })}>
@@ -457,7 +460,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         {!options.stage && engine.languages && engine.languages.length > 1 && (
           <>
-            <Heading style={{ fontSize: 18 }}>Words in</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("Words in", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>Words in</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {engine.languages.map((language) => (
                 <Chip key={language} selected={options.language === language} onPress={() => setOptions({ ...options, language })}>
@@ -472,7 +475,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
         {!(saved && isGrowth(saved.state)) && engine.helpAudio && (
           <>
-            <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
+            <Button icon="sound-on" maxFontSizeMultiplier={big} onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
               Hear a quick guide
             </Button>
             {!soundOn && <Copy>Turn sound on to hear the instructions.</Copy>}
@@ -481,6 +484,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && !finished && (
           <Button
             icon="help"
+            maxFontSizeMultiplier={big}
             onPress={() => {
               stopSound();
               setHelp(false);
@@ -493,6 +497,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         <Button
           quiet
+          maxFontSizeMultiplier={big}
           onPress={() => {
             stopSound();
             setHelp(false);

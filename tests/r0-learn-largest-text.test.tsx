@@ -115,3 +115,24 @@ it('default text size keeps the phone header pinned and unchanged', async () => 
   expect(byType(r, 'LearnerChip').filter(n => inside(n, pinned))).toHaveLength(1);
   expect(r.root.find(n => String(n.type) === 'Heading' && textOf(n) === levelTitle('crab-commands', 2)).props.maxFontSizeMultiplier).toBeUndefined();
 });
+
+it('AX5 setup and help sheets: the name never breaks a word, and Play this level and the help buttons stop at 2x', async () => {
+  for (const [width, height] of [[393, 852], [320, 568], [852, 393]]) {
+    Object.assign(viewport, { width, height });
+    for (const id of ids) {
+      const r = await mount(id, false);
+      const sheetLine = (width >= 600 ? Math.min(560, width - 48) : width) - 44;
+      const card = r.root.find(n => n.props.testID === 'learn-setup-card');
+      expect(card.props.style.flexDirection, id).toBe('column');
+      const name = card.findAll(n => String(n.type) === 'Heading')[0];
+      expect(name.props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
+      expect(longestAt(textOf(name), 21, name.props.maxFontSizeMultiplier), `${id} at ${width}`).toBeLessThanOrEqual(sheetLine - 24);
+      expect(r.root.find(n => String(n.type) === 'Button' && textOf(n) === 'Play this level').props.maxFontSizeMultiplier).toBe(2);
+      await act(async () => root!.unmount()); root = undefined;
+    }
+  }
+  Object.assign(viewport, { width: 393, height: 852 });
+  const r = await mount('slip-tide');
+  await act(async () => { byType(r, 'GameHeader')[0].props.onHelp(); });
+  for (const label of ['Show me how', 'Choose a fresh round']) expect(r.root.find(n => String(n.type) === 'Button' && textOf(n) === label).props.maxFontSizeMultiplier, label).toBe(2);
+});
