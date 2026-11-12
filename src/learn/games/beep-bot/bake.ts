@@ -12,6 +12,7 @@ for(let level=1;level<=5;level++){
   if(level===1)answer=Array(v+1).fill('right');
   else if(level===2)answer=([['right','down'],['right','down','down'],['right','right','down'],['right','down','right','down']] as Arrow[][])[v];
   else if(level===5){const x=v===0?2:3,y=v===1?2:3;rocks=v===3?[1]:[];answer=v===3?['down','repeat3','right','repeat3']:['right',x===2?'repeat2':'repeat3','down',y===2?'repeat2':'repeat3'];}
+  else if(level===4){const x=3+v%2,y=2+Math.floor(v/2);answer=['down',...Array(x).fill('right'),...Array(y-1).fill('down')];rocks=[1,11];}
   else {const x=2+v%2,y=2+Math.floor(v/2);answer=[...Array(y).fill('down'),...Array(x).fill('right')];rocks=[1,6];}
   const base:Puzzle={start:0,shell:0,rocks,answer,seed:rows.length};base.shell=trace(base,answer).at(-1)!;
   const p:Puzzle={start:turn(0,r),shell:turn(base.shell,r),rocks:rocks.map(i=>turn(i,r)).sort((a,b)=>a-b),answer:answer.map(a=>rotate(a,r)),seed:rows.length};

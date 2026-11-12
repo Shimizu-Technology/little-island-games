@@ -1,6 +1,6 @@
 import type { LearnEngine } from '../../types';
 import { levelOf } from '../../levelOptions';
-import { engine as legacyEngine } from './legacy';
+import { advance as legacyAdvance, tick as legacyTick, initialProgram as legacyStarter, engine as legacyEngine } from './legacy';
 import content from './content.json';
 import { dirs, trace, solves, type Arrow, type Puzzle } from './movement';
 export { cardEffect, execution, solves, step, trace, type Arrow, type Puzzle } from './movement';
@@ -9,13 +9,13 @@ export type BotState={version:1|2;level:number;puzzles:Puzzle[];done:number;comp
 export const bank=content.map(rows=>rows.map(({puzzle,proof})=>({puzzle:puzzle as Puzzle,proof:{...proof,winners:proof.winners.map(plan=>plan.cards as Arrow[])}})));
 export function makePuzzle(level:number,seed:number):Puzzle {const p=bank[level-1][seed%bank[level-1].length].puzzle;return {...p,seed,rocks:[...p.rocks],answer:[...p.answer]};}
 export function initialProgram(p:Puzzle,level:number):Arrow[]{if(level!==4)return [];const program=[...p.answer],at=Math.floor(p.seed/16)%program.length;program[at]=dirs[(dirs.indexOf(program[at])+2)%4];return program;}
-export function advance(s:BotState):BotState {const done=s.done+1;return {...s,done,completed:[...s.completed,s.program.slice(0,s.cursor)],program:done<4?initialProgram(s.puzzles[done],s.level):[],cursor:0,running:false,helped:false};}
-export function tick(s:BotState):BotState {if(!s.running)return s;const cursor=s.cursor+1,p=s.puzzles[s.done],path=trace(p,s.program.slice(0,cursor));return {...s,cursor,running:cursor<s.program.length&&path.at(-1)!>=0&&(s.version===2||path.at(-1)!==p.shell)};}
+export function advance(s:BotState):BotState {if(s.version===1)return legacyAdvance({...s,version:1});const done=s.done+1;return {...s,done,completed:[...s.completed,s.program.slice(0,s.cursor)],program:done<4?initialProgram(s.puzzles[done],s.level):[],cursor:0,running:false,helped:false};}
+export function tick(s:BotState):BotState {if(s.version===1)return legacyTick({...s,version:1});if(!s.running)return s;const cursor=s.cursor+1,p=s.puzzles[s.done],path=trace(p,s.program.slice(0,cursor));return {...s,cursor,running:cursor<s.program.length&&path.at(-1)!>=0};}
 const keys=['version','level','puzzles','done','completed','program','cursor','running','attempts','helped'].sort().join();
 export const engine:LearnEngine<BotState>={...legacyEngine,outcome:s=>s.done===4?'done':null,turn:s=>s.done%2 as 0|1,notWon:()=>null,
- helpAudio:'c2a-beep-help',
+ helpAudio:'beep-bot-help',
  help:'Tap arrows to build a plan. Tap a card to change it, insert before it, or remove it. Go follows your plan. If Beep bumps, your plan stays. Help gives one next edit. Level 4 has one wrong arrow. Level 5 adds Again cards.',
- create:(o,c)=>{const level=levelOf(o),seed=Math.floor(c.rng()*10000);const puzzles=Array.from({length:4},(_,i)=>makePuzzle(level,(seed+i)%10000));return {version:2,level,puzzles,done:0,completed:[],program:initialProgram(puzzles[0],level),cursor:0,running:false,attempts:0,helped:false};},
+ create:(o,c)=>{const level=levelOf(o),seed=Math.floor(c.rng()*10000);const variants=bank[level-1].length/4,rotation=seed%4,variant=Math.floor(seed/4)%variants;const puzzles=Array.from({length:4},(_,i)=>makePuzzle(level,Math.floor(seed/16)*bank[level-1].length+((rotation+i)%4)*variants+(variant+i)%variants));return {version:2,level,puzzles,done:0,completed:[],program:initialProgram(puzzles[0],level),cursor:0,running:false,attempts:0,helped:false};},
  validate:(x,o):x is BotState=>{
   if(!x||typeof x!=='object'||Array.isArray(x))return false;
   const s=x as BotState;if(s.version===1)return legacyEngine.validate(x,o);
@@ -24,5 +24,5 @@ export const engine:LearnEngine<BotState>={...legacyEngine,outcome:s=>s.done===4
   return (!s.running||s.done<4&&s.cursor<s.program.length)&&(s.done<4||s.program.length===0);
  }
 };
-/** Existing version-1 rounds remain exactly version 1: their stored maps are never regenerated. */
-export function copySavedRound(s:BotState):BotState {return structuredClone(s);}
+/** Reset uses the same generator as the starter shown by advance. */
+export const roundStarter=(s:BotState):Arrow[]=>s.done===4?[]:(s.version===1?legacyStarter:initialProgram)(s.puzzles[s.done],s.level);

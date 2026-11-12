@@ -1817,98 +1817,30 @@
     {
       "puzzle": {
         "start": 0,
-        "shell": 12,
-        "rocks": [
-          1,
-          6
-        ],
-        "answer": [
-          "down",
-          "down",
-          "right",
-          "right"
-        ],
-        "seed": 0
-      },
-      "proof": {
-        "minimum": 4,
-        "solutions": 1,
-        "unique": true,
-        "flatMinimum": 4,
-        "winners": [
-          {
-            "cards": [
-              "down",
-              "down",
-              "right",
-              "right"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "puzzle": {
-        "start": 0,
         "shell": 13,
         "rocks": [
           1,
-          6
+          11
         ],
         "answer": [
           "down",
-          "down",
           "right",
-          "right",
-          "right"
-        ],
-        "seed": 1
-      },
-      "proof": {
-        "minimum": 5,
-        "solutions": 1,
-        "unique": true,
-        "flatMinimum": 5,
-        "winners": [
-          {
-            "cards": [
-              "down",
-              "down",
-              "right",
-              "right",
-              "right"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "puzzle": {
-        "start": 0,
-        "shell": 17,
-        "rocks": [
-          1,
-          6
-        ],
-        "answer": [
-          "down",
-          "down",
           "right",
           "right",
           "down"
         ],
-        "seed": 2
+        "seed": 0
       },
       "proof": {
         "minimum": 5,
-        "solutions": 3,
+        "solutions": 2,
         "unique": false,
         "flatMinimum": 5,
         "winners": [
           {
             "cards": [
               "down",
-              "down",
+              "right",
               "right",
               "right",
               "down"
@@ -1917,7 +1849,54 @@
           {
             "cards": [
               "down",
+              "right",
+              "right",
               "down",
+              "right"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 0,
+        "shell": 14,
+        "rocks": [
+          1,
+          11
+        ],
+        "answer": [
+          "down",
+          "right",
+          "right",
+          "right",
+          "right",
+          "down"
+        ],
+        "seed": 1
+      },
+      "proof": {
+        "minimum": 6,
+        "solutions": 3,
+        "unique": false,
+        "flatMinimum": 6,
+        "winners": [
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
+              "right",
+              "right",
+              "down"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
               "right",
               "down",
               "right"
@@ -1926,7 +1905,8 @@
           {
             "cards": [
               "down",
-              "down",
+              "right",
+              "right",
               "down",
               "right",
               "right"
@@ -1941,17 +1921,17 @@
         "shell": 18,
         "rocks": [
           1,
-          6
+          11
         ],
         "answer": [
           "down",
+          "right",
+          "right",
+          "right",
           "down",
-          "right",
-          "right",
-          "right",
           "down"
         ],
-        "seed": 3
+        "seed": 2
       },
       "proof": {
         "minimum": 6,
@@ -1962,9 +1942,19 @@
           {
             "cards": [
               "down",
+              "right",
+              "right",
+              "right",
+              "down",
+              "down"
+            ]
+          },
+          {
+            "cards": [
               "down",
               "right",
               "right",
+              "down",
               "right",
               "down"
             ]
@@ -1972,20 +1962,10 @@
           {
             "cards": [
               "down",
-              "down",
               "right",
               "right",
               "down",
-              "right"
-            ]
-          },
-          {
-            "cards": [
               "down",
-              "down",
-              "right",
-              "down",
-              "right",
               "right"
             ]
           },
@@ -2004,32 +1984,104 @@
     },
     {
       "puzzle": {
-        "start": 4,
-        "shell": 12,
+        "start": 0,
+        "shell": 19,
         "rocks": [
-          8,
-          9
+          1,
+          11
         ],
         "answer": [
-          "left",
-          "left",
+          "down",
+          "right",
+          "right",
+          "right",
+          "right",
           "down",
           "down"
         ],
-        "seed": 4
+        "seed": 3
       },
       "proof": {
-        "minimum": 4,
-        "solutions": 1,
-        "unique": true,
-        "flatMinimum": 4,
+        "minimum": 7,
+        "solutions": 7,
+        "unique": false,
+        "flatMinimum": 7,
         "winners": [
           {
             "cards": [
-              "left",
-              "left",
+              "down",
+              "right",
+              "right",
+              "right",
+              "right",
               "down",
               "down"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
+              "right",
+              "down",
+              "right",
+              "down"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
+              "right",
+              "down",
+              "down",
+              "right"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
+              "down",
+              "right",
+              "right",
+              "down"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
+              "down",
+              "right",
+              "down",
+              "right"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "right",
+              "right",
+              "down",
+              "down",
+              "right",
+              "right"
+            ]
+          },
+          {
+            "cards": [
+              "down",
+              "down",
+              "down",
+              "right",
+              "right",
+              "right",
+              "right"
             ]
           }
         ]
@@ -2040,30 +2092,39 @@
         "start": 4,
         "shell": 17,
         "rocks": [
-          8,
+          7,
           9
         ],
         "answer": [
           "left",
-          "left",
           "down",
           "down",
-          "down"
+          "down",
+          "left"
         ],
-        "seed": 5
+        "seed": 4
       },
       "proof": {
         "minimum": 5,
-        "solutions": 1,
-        "unique": true,
+        "solutions": 2,
+        "unique": false,
         "flatMinimum": 5,
         "winners": [
           {
             "cards": [
               "left",
+              "down",
+              "down",
+              "down",
+              "left"
+            ]
+          },
+          {
+            "cards": [
               "left",
               "down",
               "down",
+              "left",
               "down"
             ]
           }
@@ -2073,30 +2134,32 @@
     {
       "puzzle": {
         "start": 4,
-        "shell": 11,
+        "shell": 22,
         "rocks": [
-          8,
+          7,
           9
         ],
         "answer": [
           "left",
-          "left",
+          "down",
+          "down",
           "down",
           "down",
           "left"
         ],
-        "seed": 6
+        "seed": 5
       },
       "proof": {
-        "minimum": 5,
+        "minimum": 6,
         "solutions": 3,
         "unique": false,
-        "flatMinimum": 5,
+        "flatMinimum": 6,
         "winners": [
           {
             "cards": [
               "left",
-              "left",
+              "down",
+              "down",
               "down",
               "down",
               "left"
@@ -2105,7 +2168,8 @@
           {
             "cards": [
               "left",
-              "left",
+              "down",
+              "down",
               "down",
               "left",
               "down"
@@ -2114,7 +2178,8 @@
           {
             "cards": [
               "left",
-              "left",
+              "down",
+              "down",
               "left",
               "down",
               "down"
@@ -2128,18 +2193,18 @@
         "start": 4,
         "shell": 16,
         "rocks": [
-          8,
+          7,
           9
         ],
         "answer": [
           "left",
+          "down",
+          "down",
+          "down",
           "left",
-          "down",
-          "down",
-          "down",
           "left"
         ],
-        "seed": 7
+        "seed": 6
       },
       "proof": {
         "minimum": 6,
@@ -2150,9 +2215,19 @@
           {
             "cards": [
               "left",
+              "down",
+              "down",
+              "down",
+              "left",
+              "left"
+            ]
+          },
+          {
+            "cards": [
               "left",
               "down",
               "down",
+              "left",
               "down",
               "left"
             ]
@@ -2160,20 +2235,10 @@
           {
             "cards": [
               "left",
-              "left",
               "down",
               "down",
               "left",
-              "down"
-            ]
-          },
-          {
-            "cards": [
               "left",
-              "left",
-              "down",
-              "left",
-              "down",
               "down"
             ]
           },
@@ -2192,32 +2257,104 @@
     },
     {
       "puzzle": {
-        "start": 24,
-        "shell": 12,
+        "start": 4,
+        "shell": 21,
         "rocks": [
-          18,
-          23
+          7,
+          9
         ],
         "answer": [
-          "up",
-          "up",
+          "left",
+          "down",
+          "down",
+          "down",
+          "down",
           "left",
           "left"
         ],
-        "seed": 8
+        "seed": 7
       },
       "proof": {
-        "minimum": 4,
-        "solutions": 1,
-        "unique": true,
-        "flatMinimum": 4,
+        "minimum": 7,
+        "solutions": 7,
+        "unique": false,
+        "flatMinimum": 7,
         "winners": [
           {
             "cards": [
-              "up",
-              "up",
+              "left",
+              "down",
+              "down",
+              "down",
+              "down",
               "left",
               "left"
+            ]
+          },
+          {
+            "cards": [
+              "left",
+              "down",
+              "down",
+              "down",
+              "left",
+              "down",
+              "left"
+            ]
+          },
+          {
+            "cards": [
+              "left",
+              "down",
+              "down",
+              "down",
+              "left",
+              "left",
+              "down"
+            ]
+          },
+          {
+            "cards": [
+              "left",
+              "down",
+              "down",
+              "left",
+              "down",
+              "down",
+              "left"
+            ]
+          },
+          {
+            "cards": [
+              "left",
+              "down",
+              "down",
+              "left",
+              "down",
+              "left",
+              "down"
+            ]
+          },
+          {
+            "cards": [
+              "left",
+              "down",
+              "down",
+              "left",
+              "left",
+              "down",
+              "down"
+            ]
+          },
+          {
+            "cards": [
+              "left",
+              "left",
+              "left",
+              "down",
+              "down",
+              "down",
+              "down"
             ]
           }
         ]
@@ -2228,31 +2365,40 @@
         "start": 24,
         "shell": 11,
         "rocks": [
-          18,
+          13,
           23
         ],
         "answer": [
           "up",
+          "left",
+          "left",
           "up",
-          "left",
-          "left",
           "left"
         ],
-        "seed": 9
+        "seed": 8
       },
       "proof": {
         "minimum": 5,
-        "solutions": 1,
-        "unique": true,
+        "solutions": 2,
+        "unique": false,
         "flatMinimum": 5,
         "winners": [
           {
             "cards": [
               "up",
+              "left",
+              "left",
+              "up",
+              "left"
+            ]
+          },
+          {
+            "cards": [
               "up",
               "left",
               "left",
-              "left"
+              "left",
+              "up"
             ]
           }
         ]
@@ -2261,30 +2407,32 @@
     {
       "puzzle": {
         "start": 24,
-        "shell": 7,
+        "shell": 10,
         "rocks": [
-          18,
+          13,
           23
         ],
         "answer": [
           "up",
-          "up",
+          "left",
+          "left",
           "up",
           "left",
           "left"
         ],
-        "seed": 10
+        "seed": 9
       },
       "proof": {
-        "minimum": 5,
+        "minimum": 6,
         "solutions": 3,
         "unique": false,
-        "flatMinimum": 5,
+        "flatMinimum": 6,
         "winners": [
           {
             "cards": [
               "up",
-              "up",
+              "left",
+              "left",
               "up",
               "left",
               "left"
@@ -2293,7 +2441,8 @@
           {
             "cards": [
               "up",
-              "up",
+              "left",
+              "left",
               "left",
               "up",
               "left"
@@ -2302,7 +2451,8 @@
           {
             "cards": [
               "up",
-              "up",
+              "left",
+              "left",
               "left",
               "left",
               "up"
@@ -2316,7 +2466,7 @@
         "start": 24,
         "shell": 6,
         "rocks": [
-          18,
+          13,
           23
         ],
         "answer": [
@@ -2327,7 +2477,7 @@
           "left",
           "left"
         ],
-        "seed": 11
+        "seed": 10
       },
       "proof": {
         "minimum": 6,
@@ -2348,19 +2498,9 @@
           {
             "cards": [
               "up",
-              "up",
-              "left",
-              "up",
-              "left",
-              "left"
-            ]
-          },
-          {
-            "cards": [
-              "up",
-              "up",
               "left",
               "left",
+              "up",
               "up",
               "left"
             ]
@@ -2368,10 +2508,20 @@
           {
             "cards": [
               "up",
+              "left",
+              "left",
+              "up",
+              "left",
+              "up"
+            ]
+          },
+          {
+            "cards": [
               "up",
               "left",
               "left",
               "left",
+              "up",
               "up"
             ]
           }
@@ -2380,30 +2530,102 @@
     },
     {
       "puzzle": {
-        "start": 20,
-        "shell": 12,
+        "start": 24,
+        "shell": 5,
         "rocks": [
-          15,
-          16
+          13,
+          23
         ],
         "answer": [
-          "right",
-          "right",
           "up",
-          "up"
+          "up",
+          "up",
+          "left",
+          "left",
+          "left",
+          "left"
         ],
-        "seed": 12
+        "seed": 11
       },
       "proof": {
-        "minimum": 4,
-        "solutions": 1,
-        "unique": true,
-        "flatMinimum": 4,
+        "minimum": 7,
+        "solutions": 7,
+        "unique": false,
+        "flatMinimum": 7,
         "winners": [
           {
             "cards": [
-              "right",
-              "right",
+              "up",
+              "up",
+              "up",
+              "left",
+              "left",
+              "left",
+              "left"
+            ]
+          },
+          {
+            "cards": [
+              "up",
+              "left",
+              "left",
+              "up",
+              "up",
+              "left",
+              "left"
+            ]
+          },
+          {
+            "cards": [
+              "up",
+              "left",
+              "left",
+              "up",
+              "left",
+              "up",
+              "left"
+            ]
+          },
+          {
+            "cards": [
+              "up",
+              "left",
+              "left",
+              "up",
+              "left",
+              "left",
+              "up"
+            ]
+          },
+          {
+            "cards": [
+              "up",
+              "left",
+              "left",
+              "left",
+              "up",
+              "up",
+              "left"
+            ]
+          },
+          {
+            "cards": [
+              "up",
+              "left",
+              "left",
+              "left",
+              "up",
+              "left",
+              "up"
+            ]
+          },
+          {
+            "cards": [
+              "up",
+              "left",
+              "left",
+              "left",
+              "left",
               "up",
               "up"
             ]
@@ -2417,29 +2639,38 @@
         "shell": 7,
         "rocks": [
           15,
-          16
+          17
         ],
         "answer": [
           "right",
-          "right",
           "up",
           "up",
-          "up"
+          "up",
+          "right"
         ],
-        "seed": 13
+        "seed": 12
       },
       "proof": {
         "minimum": 5,
-        "solutions": 1,
-        "unique": true,
+        "solutions": 2,
+        "unique": false,
         "flatMinimum": 5,
         "winners": [
           {
             "cards": [
               "right",
+              "up",
+              "up",
+              "up",
+              "right"
+            ]
+          },
+          {
+            "cards": [
               "right",
               "up",
               "up",
+              "right",
               "up"
             ]
           }
@@ -2449,30 +2680,32 @@
     {
       "puzzle": {
         "start": 20,
-        "shell": 13,
+        "shell": 2,
         "rocks": [
           15,
-          16
+          17
         ],
         "answer": [
           "right",
-          "right",
+          "up",
+          "up",
           "up",
           "up",
           "right"
         ],
-        "seed": 14
+        "seed": 13
       },
       "proof": {
-        "minimum": 5,
+        "minimum": 6,
         "solutions": 3,
         "unique": false,
-        "flatMinimum": 5,
+        "flatMinimum": 6,
         "winners": [
           {
             "cards": [
               "right",
-              "right",
+              "up",
+              "up",
               "up",
               "up",
               "right"
@@ -2481,7 +2714,8 @@
           {
             "cards": [
               "right",
-              "right",
+              "up",
+              "up",
               "up",
               "right",
               "up"
@@ -2490,7 +2724,8 @@
           {
             "cards": [
               "right",
-              "right",
+              "up",
+              "up",
               "right",
               "up",
               "up"
@@ -2505,17 +2740,17 @@
         "shell": 8,
         "rocks": [
           15,
-          16
+          17
         ],
         "answer": [
           "right",
+          "up",
+          "up",
+          "up",
           "right",
-          "up",
-          "up",
-          "up",
           "right"
         ],
-        "seed": 15
+        "seed": 14
       },
       "proof": {
         "minimum": 6,
@@ -2526,8 +2761,110 @@
           {
             "cards": [
               "right",
+              "up",
+              "up",
+              "up",
+              "right",
+              "right"
+            ]
+          },
+          {
+            "cards": [
               "right",
               "up",
+              "up",
+              "right",
+              "up",
+              "right"
+            ]
+          },
+          {
+            "cards": [
+              "right",
+              "up",
+              "up",
+              "right",
+              "right",
+              "up"
+            ]
+          },
+          {
+            "cards": [
+              "right",
+              "right",
+              "right",
+              "up",
+              "up",
+              "up"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "puzzle": {
+        "start": 20,
+        "shell": 3,
+        "rocks": [
+          15,
+          17
+        ],
+        "answer": [
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right"
+        ],
+        "seed": 15
+      },
+      "proof": {
+        "minimum": 7,
+        "solutions": 7,
+        "unique": false,
+        "flatMinimum": 7,
+        "winners": [
+          {
+            "cards": [
+              "right",
+              "up",
+              "up",
+              "up",
+              "up",
+              "right",
+              "right"
+            ]
+          },
+          {
+            "cards": [
+              "right",
+              "up",
+              "up",
+              "up",
+              "right",
+              "up",
+              "right"
+            ]
+          },
+          {
+            "cards": [
+              "right",
+              "up",
+              "up",
+              "up",
+              "right",
+              "right",
+              "up"
+            ]
+          },
+          {
+            "cards": [
+              "right",
+              "up",
+              "up",
+              "right",
               "up",
               "up",
               "right"
@@ -2536,8 +2873,9 @@
           {
             "cards": [
               "right",
-              "right",
               "up",
+              "up",
+              "right",
               "up",
               "right",
               "up"
@@ -2546,8 +2884,9 @@
           {
             "cards": [
               "right",
-              "right",
               "up",
+              "up",
+              "right",
               "right",
               "up",
               "up"
@@ -2558,6 +2897,7 @@
               "right",
               "right",
               "right",
+              "up",
               "up",
               "up",
               "up"

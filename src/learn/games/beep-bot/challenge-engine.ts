@@ -28,5 +28,5 @@ export const challengeEngine:ReplayEngine<Descriptor,Initial,Action,State>={
   const program=a[0]==='u'?s.history.at(-1)??null:editProgram(s.program,a,d.starter);if(!program)return null;
   return {state:{...s,program:[...program],history:a[0]==='u'?s.history.slice(0,-1):[...s.history.slice(-15),[...s.program]],edits:s.edits+1,hintStage:0},event:a[0]==='z'?'reset':'edit'};
  },
- inspect:s=>({solved:s.won,metrics:{cards:s.program.length},edits:s.edits,solution:s.won?sha256Hex(JSON.stringify(s.program)):null,objectives:[],dareEligible:!s.hints&&(s.descriptor.level!==4||s.edits===1&&s.runs===1)})
+ inspect:s=>({solved:s.won,metrics:{cards:s.program.length},edits:s.edits,solution:s.won?sha256Hex(JSON.stringify(s.program)):null,objectives:s.edits===1&&s.runs===1?['one-fix-one-go']:[],dareEligible:!s.hints&&(s.descriptor.level!==4||s.edits===1&&s.runs===1)})
 };

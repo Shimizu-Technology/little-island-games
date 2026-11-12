@@ -1,4 +1,4 @@
-import { dirs, cardEffect, type Arrow, type Puzzle } from './movement';
+import { dirs, cardEffect, solves, type Arrow, type Puzzle } from './movement';
 export const cardsFor=(level:number):Arrow[]=>level===5?[...dirs,'repeat2','repeat3']:[...dirs];
 /** Shortest paths in the real interpreter's (position, previous arrow) graph. Shell is terminal. */
 export function winners(p:Puzzle,level:number):Arrow[][] {
@@ -19,7 +19,8 @@ export function winners(p:Puzzle,level:number):Arrow[][] {
 export type Edit={op:'replace'|'insert'|'remove';at:number;card?:Arrow};
 export type Hint={plan:Arrow[];edit:Edit|null;distance:number};
 /** Align against every shortest winner, preserving a valid alternate plan or prefix. */
-function* hintWork(plans:Arrow[][],program:readonly Arrow[],appendOnly:boolean):Generator<void,Hint> {
+function* hintWork(plans:Arrow[][],program:readonly Arrow[],appendOnly:boolean,puzzle?:Puzzle):Generator<void,Hint> {
+ if(puzzle&&solves(puzzle,[...program]))return {plan:[...program],edit:null,distance:0};
  let best:Hint={plan:[],edit:null,distance:Infinity};
  for(const plan of plans){
   const rows=Array.from({length:program.length+1},()=>new Uint8Array(plan.length+1));
@@ -39,8 +40,8 @@ function* hintWork(plans:Arrow[][],program:readonly Arrow[],appendOnly:boolean):
  }
  return best;
 }
-export function nearestHint(plans:Arrow[][],program:readonly Arrow[],appendOnly=false):Hint {const work=hintWork(plans,program,appendOnly);let r=work.next();while(!r.done)r=work.next();return r.value;}
-export async function nearestHintSliced(plans:Arrow[][],program:readonly Arrow[],cancel:()=>boolean,appendOnly=false):Promise<Hint|null>{
- const work=hintWork(plans,program,appendOnly);let start=performance.now();
+export function nearestHint(plans:Arrow[][],program:readonly Arrow[],appendOnly=false,puzzle?:Puzzle):Hint {const work=hintWork(plans,program,appendOnly,puzzle);let r=work.next();while(!r.done)r=work.next();return r.value;}
+export async function nearestHintSliced(plans:Arrow[][],program:readonly Arrow[],cancel:()=>boolean,appendOnly=false,puzzle?:Puzzle):Promise<Hint|null>{
+ const work=hintWork(plans,program,appendOnly,puzzle);let start=performance.now();
  for(;;){if(cancel())return null;const r=work.next();if(r.done)return cancel()?null:r.value;if(performance.now()-start>=4){await new Promise<void>(resolve=>setTimeout(resolve,0));start=performance.now();}}
 }

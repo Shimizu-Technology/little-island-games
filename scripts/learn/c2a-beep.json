@@ -1,7 +1,7 @@
 {
  "c2a-beep-help":"Tap arrows to build Beep’s plan. Tap a plan card to replace it, insert before it, or remove it. Press Go to follow the plan. Help shows one next edit. Your plan stays if Beep bumps.",
  "c2a-beep-dare-three":"Try the picture dare: no bumps or missed runs. Help keeps your finish, without a dare mark.",
- "c2a-beep-dare-four":"Try the picture dare: one fix, one Go. Help keeps your finish, without a dare mark.",
- "c2a-beep-dare-five":"Try the picture dare: use only four cards. Help keeps your finish, without a dare mark.",
+ "c2a-beep-dare-four":"Try the picture dare: one fix, one Go, first try with no Help. Help keeps your finish, without a dare mark.",
+ "c2a-beep-dare-five":"Try the picture dare: use only four cards, first try with no Help. Help keeps your finish, without a dare mark.",
  "c2a-beep-again":"Again times two makes two moves total with the arrow before it. Again times three makes three moves total."
 }
