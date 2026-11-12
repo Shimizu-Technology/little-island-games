@@ -895,3 +895,11 @@ for(const endian of ['le','be']){
 exportCase('R4 UTF16 core','data.txt',Buffer.concat([Buffer.from('fffe','hex'),Buffer.from('Tap COLD now','utf16le')]),policy,true);
 exportCase('R4 malformed UTF16','data.txt',Buffer.from([255,254,0]),policy,true);
 test('R4 compiler capture rejects root symlink',()=>{const dir=join(scratch,'compiler-root-symlink');symlinkSync(join(scratch,'release-ios'),dir);assert.throws(()=>bytecodeFiles(dir),/Symlink/);});
+for(const [label,text] of [
+ ['technical','COLD_LABEL'],
+ ['worklet','function(){ COLD(); }'],
+ ['vector','<svg id="COLD"><text>Safe</text></svg>'],
+ ['short exact','ZIP_LABEL'],
+])test(`R4 original Hermes hard term ${label}`,()=>{
+ const dir=join(scratch,'hermes-hard-'+label.replaceAll(' ','-'));mkdirSync(dir);const input=join(dir,'input.js'),output=join(dir,'main.hbc');writeFileSync(input,'globalThis.label='+JSON.stringify(text)+';');assert.equal(spawnSync(hermesc,['-emit-binary','-out',output,input],{encoding:'utf8'}).status,0);rmSync(input);assert.throws(()=>guardTree(dir,{...policy,exact:[...policy.exact,'ZIP']}),/blocked-literal/);
+});

@@ -99,6 +99,7 @@ export function artifactScanner(policy, library=[], teachings=[]) {
         try {const value=JSON.parse(text);requireGridLanguages(value);strings=jsonStrings(value);units=jsonUnits(value);grids=letterGrids(value);sensitiveStrings=chamoruValues(value,false,teachings);} catch(e) {if(e.message.includes('language'))throw e;const lines=text.split(/\r?\n/);strings=lines.length>1?[text,...lines]:lines;}
       }
     }
+    const hardHermesFailure=isHermes && strings.some(text=>literal(normalizedText(text)).size>0);
     strings.push(...decodedTextViews(strings));
     const densityEntries=[...strings];
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle)$/i.test(name)) {
@@ -128,7 +129,7 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     const contentStrings=new Set(strings);
     const stringHits=leakStrings.filter(text=>!technicalString(text) || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)).map(text=>({sha256:sha256(text),advisory:contentStrings.has(text)&&!technicalString(text),listShaped:listString(text,excluded),broad:[...broad(normalizedText(text))],literal:contentStrings.has(text)&&!technicalString(text)?[...literal(normalizedText(text))]:[]}));
     const unitHits=units.map(unit=>{const remaining=untracedLibraryUnit(unit,library);return {sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(remaining,excluded) && (!unit.compact || compactBroadShare(remaining,broad)>=0.5),broad:remaining.filter(text=>!technicalString(text)).flatMap(text=>[...broad(normalizedText(text))]),literal:[]};});
-    return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,densityMaximum,shortDensityMaximum,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
+    return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,hardHermesFailure,densityMaximum,shortDensityMaximum,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
   };
 }
 
@@ -243,6 +244,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       densityMaximum=Math.max(densityMaximum,scanned.densityMaximum);
       shortDensityMaximum=Math.max(shortDensityMaximum,scanned.shortDensityMaximum);
       if(scanned.densityMaximum>densityThreshold || scanned.shortDensityMaximum>shortDensityThreshold)findings.push(`${name}:broad-density`);
+      if(scanned.hardHermesFailure)findings.push(`${name}:blocked-literal`);
       if(literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       if(sensitiveStrings.some(text=>sensitive(sensitiveText(text)).size)) findings.push(`${name}:blocked-chamoru`);
       if(grids.some(grid=>scanGrid(grid,grid.supplemental?hardGridTerms:gridTerms).length) || sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)) findings.push(`${name}:blocked-grid`);
