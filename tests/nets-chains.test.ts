@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as nets from "../src/board/fishing-nets/engine";
-import { chainRopes, defend, lesson, NetsTable, positionOf, replay, tableFor, validDescriptor, winningTotals, type Descriptor } from "../src/board/fishing-nets/chains";
+import { chainRopes, defend, lesson, lessonAt, NetsTable, positionOf, replay, tableFor, validDescriptor, winningTotals, type Descriptor, type Lesson } from "../src/board/fishing-nets/chains";
 import { ideas, netsChainsEngine, netsFacts, netsPuzzles, type Action, type State } from "../src/board/fishing-nets/challenge";
 import { registration } from "../src/challenge/registrations/fishing-nets";
 import { buildCatalog } from "../src/challenge/catalog";
@@ -52,6 +52,35 @@ function helpedLine(d: Descriptor): Action[] {
   return actions;
 }
 
+/** The checks behind each idea's words, by plain search on the board where it is shown. */
+function claimsHold(taught: Lesson, d: Descriptor) {
+  const q = taught.at,
+    after = nets.move(q, taught.rope),
+    memo = new Map<string, number>();
+  // The idea's rope passes the turn and closes nothing.
+  expect(after.turn).toBe(1);
+  expect(after.scores).toEqual(q.scores);
+  const touched = q.marks.flatMap((v, b) => (v === -1 && nets.boxEdges(q.size, b).includes(taught.rope) ? [b] : []));
+  if (taught.theme === "leave-two") {
+    // A box was there to take, and the rope leaves two boxes with three sides each for Ray.
+    expect(nets.scoring(q).length).toBeGreaterThan(0);
+    const threeSided = after.marks.flatMap((v, b) => (v === -1 && nets.boxEdges(q.size, b).filter((e) => after.board[e] !== -1).length >= 3 ? [b] : []));
+    expect(threeSided.length).toBeGreaterThanOrEqual(1);
+  } else {
+    // Every rope gave something away; the rope runs between two boxes, each left with three sides.
+    expect(nets.scoring(q)).toEqual([]);
+    expect(nets.safe(q)).toEqual([]);
+    expect(touched).toHaveLength(2);
+    for (const b of touched) expect(nets.boxEdges(q.size, b).filter((e) => after.board[e] !== -1).length).toBe(3);
+  }
+  // Ray takes exactly two, then has to open the next chain: circle has a box to close.
+  const { position } = defend(after, tableFor(d));
+  expect(position.scores[1] - after.scores[1]).toBe(2);
+  expect(position.outcome === null && nets.scoring(position).length > 0).toBe(true);
+  // The idea is strictly better than the tempting rope, by plain search.
+  expect(taught.tempting.length).toBeGreaterThan(0);
+  for (const e of taught.tempting) expect(plainMargin(nets.move(q, e), memo)).toBeLessThan(plainMargin(after, memo));
+}
 describe("Fishing Nets chain endings (BD-04)", () => {
   it("12 endings, each a legal game replayed rope by rope, circle to move with 12 ropes or fewer", () => {
     expect(netsPuzzles.length).toBe(12);
@@ -120,35 +149,32 @@ describe("Fishing Nets chain endings (BD-04)", () => {
   });
   it("every explanation's claims hold on the board, checked by plain search", () => {
     netsPuzzles.forEach(({ descriptor: d }, i) => {
-      const taught = lesson(d)!,
-        q = taught.at,
-        after = nets.move(q, taught.rope),
-        memo = new Map<string, number>();
-      // The idea's rope passes the turn and closes nothing.
-      expect(after.turn).toBe(1);
-      expect(after.scores).toEqual(q.scores);
-      const touched = q.marks.flatMap((v, b) => (v === -1 && nets.boxEdges(q.size, b).includes(taught.rope) ? [b] : []));
-      if (netsFacts[i].theme === "leave-two") {
-        // A box was there to take, and the rope leaves two boxes with three sides each for Ray.
-        expect(nets.scoring(q).length).toBeGreaterThan(0);
-        const threeSided = after.marks.flatMap((v, b) => (v === -1 && nets.boxEdges(q.size, b).filter((e) => after.board[e] !== -1).length >= 3 ? [b] : []));
-        expect(threeSided.length).toBeGreaterThanOrEqual(1);
-      } else {
-        // Every rope gave something away; the rope runs between two boxes, each left with three sides.
-        expect(nets.scoring(q)).toEqual([]);
-        expect(nets.safe(q)).toEqual([]);
-        expect(touched).toHaveLength(2);
-        for (const b of touched) expect(nets.boxEdges(q.size, b).filter((e) => after.board[e] !== -1).length).toBe(3);
-      }
-      // Ray takes exactly two, then has to open the next chain: circle has a box to close.
-      const { position } = defend(after, tableFor(d));
-      expect(position.scores[1] - after.scores[1]).toBe(2);
-      expect(position.outcome === null && nets.scoring(position).length > 0).toBe(true);
-      // The idea is strictly better than the tempting rope, by plain search.
-      expect(taught.tempting.length).toBeGreaterThan(0);
-      for (const e of taught.tempting) expect(plainMargin(nets.move(q, e), memo)).toBeLessThan(plainMargin(after, memo));
+      const taught = lesson(d)!;
+      expect(taught.theme).toBe(netsFacts[i].theme);
+      claimsHold(taught, d);
     });
     for (const text of Object.values(ideas)) expect(text).toMatch(/open the next chain of boxes for you/);
+  });
+  it("on every winning route, an idea beside Help's rope is true on that board (review P2-1)", () => {
+    let shown = 0;
+    netsPuzzles.forEach(({ descriptor: d }) => {
+      const table = tableFor(d),
+        seen = new Set<string>();
+      const walk = (s: State) => {
+        const key = s.position.board.join(",");
+        if (s.missed || s.position.outcome !== null || seen.has(key)) return;
+        seen.add(key);
+        const hint = netsChainsEngine.step(s, ["h"], d)!.state.hint!;
+        const taught = lessonAt(s.position, hint, table);
+        if (taught) {
+          shown++;
+          claimsHold(taught, d);
+        }
+        for (const e of nets.legal(s.position)) walk(netsChainsEngine.step(s, ["r", e], d)!.state);
+      };
+      walk(netsChainsEngine.create(d, { version: 1 }, { supportOff: false, ownRead: false }));
+    });
+    expect(shown).toBeGreaterThan(12);
   });
   it("Help wins every ending, gets the most boxes, and a habit line is a lost try", () => {
     for (const { descriptor: d } of netsPuzzles) {

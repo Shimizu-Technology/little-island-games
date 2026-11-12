@@ -217,6 +217,25 @@ describe("board puzzles on screen", () => {
     expect(text(r)).toContain("The idea: Every rope gives Ray something.");
     await act(() => r.unmount());
   });
+  it("after a different winning route, Help's idea describes the board in front of the child (review P2-1)", async () => {
+    // Chain 6 teaches the middle-rope pair on its best line. Ropes 14 then 12 still win, but reach a board where the
+    // right rope (9) leaves two boxes instead, so the middle-rope advice would be false here.
+    const d = netsPuzzles[5].descriptor;
+    let s = netsChainsEngine.create(d, { version: 1 }, opts);
+    for (const rope of [14, 12]) {
+      s = netsChainsEngine.step(s, ["r", rope], d)!.state;
+      expect(s.missed).toBe(false);
+    }
+    s = netsChainsEngine.step(s, ["h"], d)!.state;
+    expect(s.hint).toBe(9);
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<ChainsBoard state={s} dispatch={() => {}} active width={390} />);
+    });
+    expect(text(r)).not.toContain("Give Ray two boxes by tying the rope between them");
+    expect(text(r)).toContain("The idea: Don't take the last two boxes of this chain.");
+    await act(() => r.unmount());
+  });
   it("a Hidden Canoes round against the computer has no pass-the-device screen; two players still do", async () => {
     const solo: BoardSession = { ...createSession("hidden-canoes", { seed: 4, strength: "challenge", starter: 0, names: ["You", "Ray"] }), taught: true };
     fixture.store.save.board = { "hidden-canoes": solo };

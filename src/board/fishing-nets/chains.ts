@@ -142,19 +142,32 @@ export function lesson(d: Descriptor): Lesson | null {
       q = after;
       continue;
     }
-    const taken = defend(after, table).position.scores[1] - after.scores[1],
-      value = table.ropeValue(q, rope),
-      closers = legal(q).filter((e) => move(q, e).turn === 0);
-    if (closers.length && taken === 2) {
-      const tempting = closers.filter((e) => table.ropeValue(q, e) < value);
-      return tempting.length === closers.length ? { theme: "leave-two", at: q, rope, tempting } : null;
-    }
-    const pair = touching(q, rope);
-    if (!closers.length && taken === 2 && pair.length === 2 && pair.every((b) => sidesOf(q, b) === 2)) {
-      const ends = pair.flatMap((b) => boxEdges(q.size, b).filter((e) => e !== rope && q.board[e] === -1));
-      return ends.length && ends.every((e) => table.ropeValue(q, e) < value) ? { theme: "middle-two", at: q, rope, tempting: ends } : null;
-    }
-    return null;
+    return lessonAt(q, rope, table);
+  }
+  return null;
+}
+/**
+ * The idea, if any, that one circle rope at one position teaches: the same two tests `lesson` applies on the best
+ * line plus the ending both ideas promise, so a hint on a different but still winning route only names an idea that
+ * is true on the board in front of the child.
+ */
+export function lessonAt(q: Position, rope: number, table: NetsTable): Lesson | null {
+  const after = move(q, rope);
+  if (q.outcome !== null || q.turn !== 0 || after.turn === 0) return null;
+  const next = defend(after, table).position,
+    taken = next.scores[1] - after.scores[1],
+    value = table.ropeValue(q, rope),
+    closers = legal(q).filter((e) => move(q, e).turn === 0);
+  // Both ideas end "then Ray has to open the next chain of boxes for you": a box must be waiting for circle.
+  if (next.outcome !== null || !legal(next).some((e) => move(next, e).turn === 0)) return null;
+  if (closers.length && taken === 2) {
+    const tempting = closers.filter((e) => table.ropeValue(q, e) < value);
+    return tempting.length === closers.length ? { theme: "leave-two", at: q, rope, tempting } : null;
+  }
+  const pair = touching(q, rope);
+  if (!closers.length && taken === 2 && pair.length === 2 && pair.every((b) => sidesOf(q, b) === 2)) {
+    const ends = pair.flatMap((b) => boxEdges(q.size, b).filter((e) => e !== rope && q.board[e] === -1));
+    return ends.length && ends.every((e) => table.ropeValue(q, e) < value) ? { theme: "middle-two", at: q, rope, tempting: ends } : null;
   }
   return null;
 }

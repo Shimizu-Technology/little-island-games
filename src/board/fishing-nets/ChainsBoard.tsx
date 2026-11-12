@@ -6,6 +6,7 @@ import { useStore } from "../../state/Store";
 import type { ChallengeViewProps } from "../../challenge/types";
 import { Boards } from "../Boards";
 import { ideas, netsFacts, netsPuzzles, type Action, type State } from "./challenge";
+import { lessonAt, tableFor } from "./chains";
 import { move } from "./engine";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -44,16 +45,18 @@ export function ChainsBoard({ state: s, dispatch, active, width }: ChallengeView
             : last
               ? "You closed a box, so you get another turn."
               : "Win from here: finish with more boxes than Ray. You are the circle side. Ray answers every rope with a strong one.";
-  // The idea is about a rope that hands Ray boxes, so it shows beside such a rope, or after a miss.
-  const showIdea = !!idea && (won || s.missed || (s.hint !== undefined && s.hint !== null && !closes));
+  // The idea is about a rope that hands Ray boxes. Beside a hinted rope it must hold on this board, which a different
+  // winning route can change, so it is worked out again here; after a win or a miss the ending's own idea shows.
+  const hinted = s.hint !== undefined && s.hint !== null && !closes ? lessonAt(p, s.hint, tableFor(s.descriptor)) : null,
+    shown = won || s.missed ? idea : hinted ? ideas[hinted.theme] : null;
   return (
     <View style={{ gap: 10 }}>
       <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 15 }}>
         {message}
       </Copy>
-      {showIdea && (
+      {shown && (
         <Copy testID="chain-idea" style={{ fontSize: 15 }}>
-          The idea: {idea}
+          The idea: {shown}
         </Copy>
       )}
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
