@@ -4,3 +4,5 @@ export declare function publishedFile(path: string, commit: string, cwd?: string
 export declare function publishedSnapshots(path: string, cwd?: string, wanted?: readonly string[]): { ref: string; commit: string; text: string | null }[];
 export declare function publishedJson(path: string, cwd?: string, wanted?: readonly string[]): { ref: string; commit: string; value: unknown }[];
 export declare function publishedTexts(path: string, cwd?: string, wanted?: readonly string[]): string[];
+export type PublishedBank = { ref: string; commit: string; text: string };
+export declare function publishedBanks(path: string, cwd?: string, wanted?: readonly string[]): Map<number, PublishedBank[]>;

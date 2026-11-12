@@ -1,5 +1,5 @@
 // What has been published, decided by contents rather than commit ancestry. Shared by the puzzle
-// catalog and save catalog history gates, the Latin save-catalog writer and the unpublish tool.
+// catalog and save catalog history gates, the Latin and edge save-catalog writers and the unpublish tool.
 // The published set is the union of each catalog file as it stands at the tip of every published
 // ref (`git show <ref>:<path>`). An entry any tip holds is immutable however it got there (merge,
 // squash or rebase). Anything else is a branch's own work and may still be replaced by it.
@@ -46,4 +46,26 @@ export function publishedJson(path, cwd = process.cwd(), wanted = publishedRefs)
 /** A file's text at each published tip that has it. */
 export function publishedTexts(path, cwd = process.cwd(), wanted = publishedRefs) {
   return publishedSnapshots(path, cwd, wanted).flatMap(s => s.text === null ? [] : [s.text]);
+}
+/**
+ * Every published definition of each save-catalog bank, by slot: one `{ ref, commit, text }` per tip
+ * that holds it, `text` being the bank's JSON. Shared by the save-catalog writers, so each compares a
+ * generated bank with every published definition rather than the last one read. Two tips (or one tip
+ * twice) defining a slot differently throw: no single bank could then keep both, so the writer must
+ * stop before it changes anything and the published catalogs must be reconciled first.
+ */
+export function publishedBanks(path, cwd = process.cwd(), wanted = publishedRefs) {
+  const out = new Map();
+  for (const { ref, commit, value } of publishedJson(path, cwd, wanted)) {
+    const where = `${ref} (${commit.slice(0, 8)})`;
+    if (!value || !Array.isArray(value.banks)) throw new Error(`${path} at ${where} has no bank list.`);
+    for (const bank of value.banks) {
+      if (!bank || !Number.isInteger(bank.slot)) throw new Error(`${path} at ${where} has a bank without a slot.`);
+      const text = JSON.stringify(bank), seen = out.get(bank.slot) ?? [], other = seen.find(d => d.text !== text);
+      if (other) throw new Error(`Slot ${bank.slot} is published differently at ${other.ref} (${other.commit.slice(0, 8)}) and ${where}, so no bank can match both. Reconcile the published catalogs first.`);
+      seen.push({ ref, commit, text });
+      out.set(bank.slot, seen);
+    }
+  }
+  return out;
 }

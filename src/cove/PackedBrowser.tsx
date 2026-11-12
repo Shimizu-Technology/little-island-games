@@ -8,7 +8,8 @@ import { latinRungs } from '../puzzles/latin/rungs';
 import type { LatinKind } from '../puzzles/latin/core';
 import { bands as bandNames, dealPacked, hiddenIn, infoFor, isSolved, packedOpen } from './catalog';
 
-const summaryOf = (game: string, b: PackedBand) => (latinRungs as Partial<Record<string, readonly { title: string; summary: string; size: number }[]>>)[game as LatinKind]?.find(r => r.title === b.title);
+const latinOf = (game: string, b: PackedBand) => (latinRungs as Partial<Record<string, readonly { title: string; summary: string; size: number }[]>>)[game as LatinKind]?.find(r => r.title === b.title);
+const summaryOf = (entry: ChallengeEntry, b: PackedBand) => { const own = packedOpen(entry)?.describe?.(b.bank); if (own) return own; const l = latinOf(entry.game, b); return l && { size: `${l.size}×${l.size}`, summary: l.summary }; };
 /** Bands and banks of a packed game. Every bank is open; entries load only when one is chosen. */
 export function PackedBrowser({ entry, progress, initialBand, hidden = [], onChoose, onBand, onBack }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden?: readonly string[]; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void; onBack: () => void }) {
   const packed = entry.packed!, opener = packedOpen(entry);
@@ -47,8 +48,8 @@ export function PackedBrowser({ entry, progress, initialBand, hidden = [], onCho
     {current && <><Heading style={{ fontSize: 22 }}>{current.title} · {shown(current)} puzzles · {finished(current.bank)} finished</Heading>
       {hiddenAt(current.bank).size > 0 && <Copy>{hiddenAt(current.bank).size} hidden by a grown-up on this device, so their numbers are skipped.</Copy>}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Chip selected={!list!.album} onPress={() => setList({ bank: current.bank, album: false })}>All puzzles</Chip><Chip selected={list!.album} onPress={() => setList({ bank: current.bank, album: true })}>Album · finished puzzles</Chip></View></>}
-    {!current && (banks.length ? banks.map(b => { const info = summaryOf(entry.game, b); return <View key={b.bank} style={{ gap: 8, paddingVertical: 6 }}>
-      <Heading style={{ fontSize: 22 }}>{b.title}{info ? ` · ${info.size}×${info.size}` : ''}</Heading>
+    {!current && (banks.length ? banks.map(b => { const info = summaryOf(entry, b); return <View key={b.bank} style={{ gap: 8, paddingVertical: 6 }}>
+      <Heading style={{ fontSize: 22 }}>{b.title}{info ? ` · ${info.size}` : ''}</Heading>
       {info && <Copy>{info.summary}</Copy>}
       <Copy>{shown(b)} puzzles · {finished(b.bank)} finished{hiddenAt(b.bank).size ? ` · ${hiddenAt(b.bank).size} hidden on this device` : ''}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button disabled={busy} onPress={() => void next(b.bank)}>Next {b.title} puzzle</Button><Button quiet disabled={busy} onPress={() => setList({ bank: b.bank, album: false })}>All {shown(b)}</Button></View>

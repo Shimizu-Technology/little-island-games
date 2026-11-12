@@ -19,8 +19,8 @@ export const BYTE_MODEL: readonly ByteModelRow[] = [
   r('turtle-tales', 40, 24, 5, 2048),
   r('rope-pairs', 2048, 372, 6, 384), r('rectangles', 1024, 186, 6, 320), r('two-shells', 2048, 372, 6, 320), r('one-in-each-cove', 1024, 186, 6, 320),
   r('tents', 1024, 186, 6, 320), r('charts', 1024, 186, 6, 320), r('greater-than', 1024, 186, 6, 320), r('skyline', 1024, 186, 6, 320), r('killer', 1024, 188, 6, 512),
-  r('harbor-jam', 1024, 240, 6, 256), r('loop', 1024, 240, 6, 320), r('shell-stacks', 512, 120, 6, 256), r('word-builder', 512, 120, 6, 256),
-  r('secret-code', 256, 60, 4, 512), r('logic-grid', 256, 60, 4, 640), r('pentomino', 512, 120, 6, 320), r('packs', 512, 60, 4, 320), r('old-toys', 12, 4, 1, 512),
+  r('harbor-jam', 1024, 240, 6, 256), r('loop', 1360, 240, 6, 320), r('pearl-loop', 128, 32, 3, 256), r('shell-stacks', 512, 120, 6, 256), r('word-builder', 512, 120, 6, 256),
+  r('secret-code', 256, 60, 4, 512), r('logic-grid', 256, 60, 4, 640), r('pentomino', 512, 120, 6, 320), r('packs', 384, 28, 4, 320), r('old-toys', 12, 4, 1, 512),
   r('known-rolls', 256, 80, 3, 256), r('coconut', 24, 8, 1, 256), r('tic', 24, 8, 1, 128), r('checkers', 64, 22, 2, 256), r('nets', 64, 22, 2, 256),
   r('canoes', 64, 20, 2, 256), r('reef', 60, 20, 2, 256), r('cargo', 24, 10, 1, 256), r('dash', 24, 10, 1, 256),
 ];
