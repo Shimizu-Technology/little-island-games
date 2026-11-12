@@ -93,6 +93,8 @@ it('start card: Start sits in a compact dock below a scrolling card that holds t
   // The card's level name and its world/level line never break a word.
   const name=root!.root.find(n=>String(n.type)==='Heading'&&textOf(n)===crabLevel('w2-2').name);
   expect(fits(name,Math.min(480,393-32)-50)).toBe(true);
+  // A decorative title like the header: it stops at 2x so the goals, Helper and Dare stay close.
+  expect(name.props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
   const where=root!.root.find(n=>String(n.type)==='Copy'&&textOf(n).startsWith('Canoe Lagoon'));
   expect(where.props.maxFontSizeMultiplier).toBe(2);expect(textOf(where)).toContain('Level 2');
 });
