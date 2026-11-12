@@ -72,6 +72,10 @@ it('a step game asks for the board when its step changes, never on its first ren
   expect(reveal).toHaveBeenCalledTimes(1);
   act(() => turn(2));
   expect(reveal).toHaveBeenCalledTimes(2);
+  // A text-size change gives the frame a new reveal; the same step never moves the page.
+  const next = vi.fn();
+  act(() => root!.update(<StepReveal.Provider value={next}><Story /></StepReveal.Provider>));
+  expect(next).not.toHaveBeenCalled();
 });
 
 const puzzle = { size: 4, rocks: [5], crabs: [15, 3], pools: [0, 12], route: 'LU' };

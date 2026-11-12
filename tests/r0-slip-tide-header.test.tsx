@@ -45,4 +45,8 @@ it('at the default size the header keeps the caption beside Undo and Reset', () 
   const header = root!.root.find(n => n.props.testID === 'board-header');
   expect(header.props.style.flexDirection).toBe('row');
   expect(header.findAll(n => String(n.type) === 'Copy')[0].props.numberOfLines).toBe(2);
+  // Undo and Reset stay direct, separately wrapping items of the header row, as before R0.
+  const buttons = header.findAll(n => String(n.type) === 'Button');
+  for (const b of buttons) expect(b.parent).toBe(header);
+  expect(root!.root.findAll(n => n.props.testID === 'board-actions')).toHaveLength(0);
 });

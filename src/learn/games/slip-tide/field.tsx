@@ -180,10 +180,14 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
         <Copy numberOfLines={large ? undefined : 2} maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', color: C.ink, fontSize: 15, lineHeight: large ? undefined : 19 }}>{caption}</Copy>
         <Copy maxFontSizeMultiplier={1.5} accessibilityLabel={steps === 1 ? '1 swipe so far' : `${steps} swipes so far`} style={{ color: C.ink, fontSize: 13, lineHeight: large ? undefined : 17 }}>{steps === 1 ? '1 swipe' : `${steps} swipes`}</Copy>
       </View>
-      {!finished && <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active || !canUndo} onPress={onUndo}>Undo</Button>
-        <Button compact maxFontSizeMultiplier={1.5} disabled={!active || !canReset} onPress={onReset}>Reset</Button>
-      </View>}
+      {!finished && (() => {
+        const actions = <>
+          <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active || !canUndo} onPress={onUndo}>Undo</Button>
+          <Button compact maxFontSizeMultiplier={1.5} disabled={!active || !canReset} onPress={onReset}>Reset</Button>
+        </>;
+        // Large text groups Undo and Reset on their own line; standard sizes keep them as wrapping row items, as before.
+        return large ? <View testID="board-actions" style={{ flexDirection: 'row', gap: 8 }}>{actions}</View> : actions;
+      })()}
     </View>
   </>;
   const board = <>

@@ -70,9 +70,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const large = fontScale >= LARGE_TEXT;
   // The board's top within the page, measured on layout.
   // The board's own top inside its card: below the card's padding and the celebration cell once a burst has shown.
-  const boardTop = useRef<number | null>(null), boardInset = useRef(0), stepRound = useRef(saved?.id);
+  const boardTop = useRef<number | null>(null), boardInset = useRef(0), stepRound = useRef(saved?.id), lastStep = useRef<number | undefined>(undefined);
   useLayoutEffect(() => {
     if (growthStep === undefined) return;
+    // Only a real move to another question or round repositions the page. A text-size change alone (crossing the
+    // large threshold mid-answer) must leave the child where they are.
+    if (lastStep.current === growthStep && stepRound.current === saved?.id) return;
+    lastStep.current = growthStep;
     // The next question of the same round. At accessibility sizes the header alone can fill the screen, so the page
     // returns to the top of the board rather than above the header, and the answers stay a short scroll away.
     const sameRound = stepRound.current === saved?.id;
