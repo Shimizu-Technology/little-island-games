@@ -9,6 +9,8 @@ import { degree, overfull, shapeOf, type BridgesPuzzle } from './core';
 import type { MarkEvent } from './marks';
 import type { EdgeBoardProps } from './registration';
 import { cueFor, techniqueNames, type Cue } from './teach';
+import { releaseOffset, startOf, type TouchStart } from './touch';
+import { PRESS_SLOP } from '../../components/stillPress';
 
 const SEA = '#D4ECEE', DOT = '#A9D2D7', SAND = '#F7E8C4', SHORE = '#B48A55', PLANK = '#8E5F3A', DONE = '#D3EBCF', OVER = '#F8D3C8';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -63,38 +65,52 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
     const c = islands[island];
     return shape.around[island].find(e => { const o = islands[links[e].a === island ? links[e].b : links[e].a]; return Math.abs(dx) >= Math.abs(dy) ? o.y === c.y && Math.sign(o.x - c.x) === Math.sign(dx) : o.x === c.x && Math.sign(o.y - c.y) === Math.sign(dy); }) ?? -1;
   };
-  const drag = useRef<{ x: number; y: number; island: number; link: number; moved: boolean } | null>(null);
+  // `wandered`: a water touch that went past the tap slop, which is a scroll attempt, never a bridge.
+  const drag = useRef<(TouchStart & { x: number; y: number; island: number; link: number; moved: boolean; wandered: boolean }) | null>(null);
+  /** An island drag's link from the finger's offset; within the island it is no link. */
+  const aim = (d: NonNullable<typeof drag.current>, dx: number, dy: number) => {
+    const c = at(d.island), ox = d.x + dx - c.x, oy = d.y + dy - c.y;
+    if (Math.max(Math.abs(ox), Math.abs(oy)) < cell * 0.55) return null;
+    return linkToward(d.island, ox, oy);
+  };
   // eslint-disable-next-line react-hooks/refs -- PanResponder stores these event handlers; creation never reads the refs.
   const responder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => live.current.active,
     onMoveShouldSetPanResponder: () => live.current.active,
-    onPanResponderTerminationRequest: () => false,
+    // An island drag owns its touch. A touch that began on the water gives itself up, so the page can scroll.
+    onPanResponderTerminationRequest: () => !drag.current || drag.current.island < 0,
     onPanResponderGrant: e => {
-      interaction(true);
       const x = e.nativeEvent.locationX, y = e.nativeEvent.locationY, island = nearestIsland(x, y);
-      drag.current = { x, y, island, link: island < 0 ? nearestLink(x, y) : -1, moved: false };
+      // Only an island drag holds the page still; a swipe that starts on the water may scroll it.
+      if (island >= 0) interaction(true);
+      drag.current = { ...startOf(e), x, y, island, link: island < 0 ? nearestLink(x, y) : -1, moved: false, wandered: false };
     },
     onPanResponderMove: (_e, g) => {
       const d = drag.current;
-      if (!d || d.island < 0) return;
-      const c = at(d.island), dx = d.x + g.dx - c.x, dy = d.y + g.dy - c.y;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < cell * 0.55) { if (d.link >= 0) { d.link = -1; setPreview(null); } return; }
+      if (!d) return;
+      if (d.island < 0) { if (Math.hypot(g.dx, g.dy) > PRESS_SLOP) d.wandered = true; return; }
+      const link = aim(d, g.dx, g.dy);
+      if (link === null) { if (d.link >= 0) { d.link = -1; setPreview(null); } return; }
       d.moved = true;
-      const link = linkToward(d.island, dx, dy);
       if (link !== d.link) { d.link = link; setPreview(link >= 0 ? { link, blocked: live.current.marks[link] < 2 ? blockersOf(link, live.current.marks) : [], to: links[link].a === d.island ? links[link].b : links[link].a } : null); }
     },
-    onPanResponderRelease: () => {
+    onPanResponderRelease: (e, g) => {
       const d = drag.current;
       drag.current = null; setPreview(null); interaction(false);
       if (!d) return;
-      if (d.island >= 0 && d.moved) { if (d.link >= 0) cycle(d.link); return; }
+      // Where the finger let go decides, not the last move sample, which can stop short.
+      const { dx, dy } = releaseOffset(e, d, g);
       if (d.island >= 0) {
+        const link = aim(d, dx, dy);
+        if (link !== null) { d.moved = true; d.link = link; } else if (d.moved) d.link = -1;
+        if (d.moved) { if (d.link >= 0) cycle(d.link); return; }
         // Two taps: an island, then a neighbour it can see.
-        const from = live.current.selected, link = from !== null && from !== d.island ? linkBetween(from, d.island) : -1;
-        if (link >= 0) { cycle(link); setSelected(null); } else setSelected(from === d.island ? null : d.island);
+        const from = live.current.selected, two = from !== null && from !== d.island ? linkBetween(from, d.island) : -1;
+        if (two >= 0) { cycle(two); setSelected(null); } else setSelected(from === d.island ? null : d.island);
         return;
       }
-      if (d.link >= 0) cycle(d.link);
+      // The water answers only a tap: the finger stayed within the slop the whole time.
+      if (d.link >= 0 && !d.wandered && Math.hypot(dx, dy) <= PRESS_SLOP) cycle(d.link);
       else setSelected(null);
     },
     onPanResponderTerminate: () => { drag.current = null; setPreview(null); interaction(false); },

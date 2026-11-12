@@ -1,5 +1,7 @@
 import React, { type ComponentType } from 'react';
 import type { ChallengeCard, PackedBand, PackedChallenge, TypedRegistration } from '../../challenge/types';
+import type { PackedOpen } from '../../cove/catalog';
+import { packedBank } from '../../state/bankFacts';
 import type { ChallengeProgress, ChallengeSession, PuzzleRef, SaveCatalog, SessionCodec, Terminal } from '../../state/challenge';
 import { validChallengeSession } from '../../state/challenge';
 import { prepareSessionContent } from '../../state/sessionContent';
@@ -15,8 +17,8 @@ export type BankFacts = { slot: number; first: number; count: number; packHash: 
 export type RungLabel = { id: string; tier: 1 | 2 | 3 | 4 | 5 | 6; title: string; summary: string; size: string };
 export type EdgeView<P> = { puzzle: P; board: Marks; helps: number; resets: number; title: string; teaches: string; rung: RungLabel | undefined };
 export type EdgeBoardProps<P> = { view: EdgeView<P>; dispatch: (event: MarkEvent) => void; active: boolean; width: number };
-/** The extras the Cove's packed browser reads: open one exact entry, and describe a bank. */
-export type EdgePacked = PackedChallenge & { open: (bank: number, index: number) => Promise<PuzzleRef>; teaches: (ref: PuzzleRef) => string | undefined; describe: (bank: number) => { size: string; summary: string } | undefined };
+/** The extras the Cove's packed browser reads: open one exact entry, describe a bank, and skip entries hidden on this device. */
+export type EdgePacked = PackedChallenge & Required<PackedOpen>;
 
 export function viewOf<P>(p: P, rules: MarkRules<P>, payload: unknown, title = '', teaches = '', rung?: RungLabel): EdgeView<P> | null {
   if (!validShape(payload)) return null;
@@ -87,6 +89,28 @@ export function defineEdgeGame<P>(config: {
     while (resident.size > RESIDENT) resident.delete(resident.keys().next().value!);
     return got;
   }
+  const rowHashes = new Map<number, readonly string[]>();
+  /** Every entry's saved hash in one bank, read only when something is hidden; the loader verifies the pack once. */
+  async function hashesOf(bank: number): Promise<readonly string[]> {
+    const hit = rowHashes.get(bank);
+    if (hit) return hit;
+    const b = catalog.banks.get(bank), l = loader();
+    if (!b || !packedBank(b)) throw new BankError('unknown', 'Unknown packed bank.');
+    const hashes: string[] = [];
+    for (let i = 0; i < b.count; i++) hashes.push(await l.savedHash(b, i));
+    rowHashes.set(bank, hashes);
+    return hashes;
+  }
+  /** Unopened entries first, then unfinished ones, in bank order from just after the last one played. Hidden ones are skipped unless all are. */
+  const pickIn = (bank: number, progress: ChallengeProgress, avoid?: PuzzleRef, skip: ReadonlySet<number> = new Set()) => {
+    const b = bandOf(bank);
+    if (!b) throw new BankError('unknown', 'Unknown packed bank.');
+    const states = unpack(progress.banks.find(r => r[0] === bank)?.[1] ?? '', b.count, 3) ?? Array<number>(b.count).fill(0);
+    const recent = progress.recent.filter(([s]) => s === bank).map(([, p]) => p), last = recent.at(-1) ?? -1;
+    const around = Array.from({ length: b.count }, (_, i) => (last + 1 + i) % b.count).filter(i => b.count === 1 || i !== avoid?.puzzle || avoid.bank !== bank);
+    const order = around.some(i => !skip.has(i)) ? around.filter(i => !skip.has(i)) : around;
+    return order.find(i => !states[i]) ?? order.find(i => states[i] === 1) ?? order.find(i => !recent.includes(i)) ?? order[0];
+  };
   const packed: EdgePacked = {
     bands,
     card: ref => { const b = bandOf(ref.bank); return b && ref.engine === game && ref.rules === factsOf(ref.bank)!.rules && uint(ref.puzzle, b.count - 1) ? cardOf(ref, b) : undefined; },
@@ -94,16 +118,14 @@ export function defineEdgeGame<P>(config: {
     open: (bank, index) => resolve({ bank, puzzle: index }),
     teaches: ref => lookup(ref)?.descriptor.teaches[0],
     describe: bank => { const r = rungOfBank(bank); return r ? { size: r.size, summary: r.summary } : undefined; },
-    /** Unopened entries first, then unfinished ones, in bank order from just after the last one played. */
-    choose: async (bank: number, progress: ChallengeProgress, avoid?: PuzzleRef) => {
-      const b = bandOf(bank);
-      if (!b) throw new BankError('unknown', 'Unknown packed bank.');
-      const states = unpack(progress.banks.find(r => r[0] === bank)?.[1] ?? '', b.count, 3) ?? Array<number>(b.count).fill(0);
-      const recent = progress.recent.filter(([s]) => s === bank).map(([, p]) => p), last = recent.at(-1) ?? -1;
-      const order = Array.from({ length: b.count }, (_, i) => (last + 1 + i) % b.count).filter(i => b.count === 1 || i !== avoid?.puzzle || avoid.bank !== bank);
-      const pick = order.find(i => !states[i]) ?? order.find(i => states[i] === 1) ?? order.find(i => !recent.includes(i)) ?? order[0];
-      return resolve({ bank, puzzle: pick });
+    choose: async (bank: number, progress: ChallengeProgress, avoid?: PuzzleRef) => resolve({ bank, puzzle: pickIn(bank, progress, avoid) }),
+    hiddenRows: async (bank, hidden) => {
+      if (!hidden.length) return new Set();
+      const want = new Set(hidden), out = new Set<number>();
+      (await hashesOf(bank)).forEach((h, i) => { if (want.has(h)) out.add(i); });
+      return out;
     },
+    chooseVisible: async (bank, progress, skip, avoid) => resolve({ bank, puzzle: pickIn(bank, progress, avoid, skip) }),
   };
   const Board = config.Board;
   const render = (s: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number) => {

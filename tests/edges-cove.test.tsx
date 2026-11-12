@@ -153,16 +153,7 @@ describe('Loop in the Cove', () => {
       await gesture(screen, pad + cell / 2, pad + 3);
       await waitFor(() => marksOf('loop')[0] === '0');
       expect(l.edges[0]).toEqual([0, 1]);
-      // Regression (iOS 18.5 run): the last move sample can stop short of where the finger lets go.
-      await press(screen, 'Start over');
-      await waitFor(() => /^0+$/.test(marksOf('loop')));
-      await act(async () => {
-        const h = surface(screen).props;
-        h.onPanResponderGrant({ nativeEvent: { locationX: pad, locationY: pad } });
-        for (let x = 10; x <= cell * 2.2; x += 10) h.onPanResponderMove({}, { dx: x, dy: 0 });
-        h.onPanResponderRelease({}, { dx: cell * 3, dy: 0 });
-      });
-      await waitFor(() => marksOf('loop').slice(0, 3) === '111');
+      // The iOS 18.5 short-stroke regression runs against React Native's own PanResponder in edges-fix-round.test.tsx.
     } finally { if (screen) await act(async () => screen.unmount()); }
   });
   it('G5-04: hints solve a board; the solo finish saves at once and survives relaunch', async () => {

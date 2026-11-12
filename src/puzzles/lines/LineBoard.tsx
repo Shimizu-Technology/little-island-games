@@ -8,6 +8,7 @@ import type { MarkEvent } from '../edges/marks';
 import type { EdgeBoardProps } from '../edges/registration';
 import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
+import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
 
 const CROSSMARK = '#7E968F', DONEDISC = '#D3EBCF', PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -51,7 +52,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
     return best;
   };
   const edgeBetween = (a: number, b: number) => l.around[a].find(e => l.edges[e][0] === b || l.edges[e][1] === b) ?? -1;
-  type Drag = { x: number; y: number; at: number; path: number[]; mode: number | null; changes: Map<number, number>; moved: boolean };
+  type Drag = TouchStart & { x: number; y: number; at: number; path: number[]; mode: number | null; changes: Map<number, number>; moved: boolean };
   const drag = useRef<Drag | null>(null);
   /** Walk from the current dot toward `to` one step at a time along a row or column. */
   const walk = (d: Drag, to: number) => {
@@ -84,7 +85,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
     onPanResponderGrant: e => {
       interaction(true);
       const x = e.nativeEvent.locationX, y = e.nativeEvent.locationY, v = nearestDot(x, y, cell * 0.75);
-      drag.current = { x, y, at: v, path: v >= 0 ? [v] : [], mode: null, changes: new Map(), moved: false };
+      drag.current = { ...startOf(e), x, y, at: v, path: v >= 0 ? [v] : [], mode: null, changes: new Map(), moved: false };
     },
     onPanResponderMove: (_e, g) => {
       const d = drag.current;
@@ -93,15 +94,17 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
       if (d.at < 0) { if (v >= 0 && Math.hypot(g.dx, g.dy) > cell * 0.3) { d.at = v; d.path = [v]; } return; }
       if (v >= 0 && v !== d.at) walk(d, v);
     },
-    onPanResponderRelease: (_e, g) => {
+    onPanResponderRelease: (e, g) => {
       const d = drag.current;
       drag.current = null; interaction(false);
       if (!d) return;
       const { active: on, dispatch: send, marks: m } = live.current;
-      // The last move sample can land short of where the finger stopped: finish the walk to that dot.
-      if (d.at >= 0 && d.moved) { const end = nearestDot(d.x + g.dx, d.y + g.dy, cell * 0.5); if (end >= 0 && end !== d.at) walk(d, end); }
+      // Where the finger let go, not the last move sample (which can be short, or missing on a quick
+      // one-edge drag): a stroke that left the tap zone finishes its walk to the dot under the finger.
+      const { dx, dy } = releaseOffset(e, d, g), far = Math.hypot(dx, dy);
+      if (d.at >= 0 && far >= cell * 0.35) { const end = nearestDot(d.x + dx, d.y + dy, cell * 0.5); if (end >= 0 && end !== d.at) walk(d, end); }
       if (on && d.moved && d.changes.size) send({ type: 'set', changes: [...d.changes] });
-      else if (on && !d.moved && Math.hypot(g.dx, g.dy) < cell * 0.35) {
+      else if (on && !d.moved && far < cell * 0.35) {
         const e = nearestEdge(d.x, d.y);
         if (e >= 0) send({ type: 'set', changes: [[e, (m[e] + 1) % 3]] });
       }

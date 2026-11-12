@@ -75,7 +75,26 @@ export function decodeMarks<P>(payload: unknown, p: P, rules: MarkRules<P>): Mar
   const undo = decodeHistory(payload.undo, n, rules.max), redo = decodeHistory(payload.redo, n, rules.max);
   const marks = [...payload.marks].map(Number);
   if (!undo || !redo || payload.undo.length + payload.redo.length > HISTORY || !rules.legal(p, marks)) return null;
+  if (!replays(p, rules, marks, undo, 'undo') || !replays(p, rules, marks, redo, 'redo')) return null;
   return { marks, undo, redo, edits: payload.edits };
+}
+/**
+ * Whether a saved history fits the saved board: undo walks back from the marks, newest stroke first,
+ * each change finding its `after` value and restoring `before`; redo walks forward the same way from
+ * `before` to `after`. Every board on the way must be legal. Trimming drops only the oldest strokes,
+ * so a real history always replays.
+ */
+function replays<P>(p: P, rules: MarkRules<P>, marks: readonly number[], list: readonly Stroke[], kind: 'undo' | 'redo'): boolean {
+  const board = [...marks];
+  for (let k = list.length - 1; k >= 0; k--) {
+    for (const [i, b, a] of list[k]) {
+      const [from, to] = kind === 'undo' ? [a, b] : [b, a];
+      if (board[i] !== from) return false;
+      board[i] = to;
+    }
+    if (!rules.legal(p, board)) return false;
+  }
+  return true;
 }
 export const validShape = (x: unknown): x is MarksPayload => plain(x) && exactKeys(x, ['version', 'marks', 'undo', 'redo', 'edits', 'audit']) && x.version === 1
   && typeof x.marks === 'string' && x.marks.length <= 1024 && typeof x.undo === 'string' && typeof x.redo === 'string' && uint(x.edits, MAX_AUDIT) && validAudit(x.audit);
