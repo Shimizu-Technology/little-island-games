@@ -1,5 +1,10 @@
 [
+  "cage-math",
   "crab-commands",
+  "greater-than",
+  "killer",
   "shell-pits",
-  "slip-tide"
+  "skyline",
+  "slip-tide",
+  "sudoku"
 ]

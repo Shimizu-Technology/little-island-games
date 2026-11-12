@@ -26,7 +26,7 @@ vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDi
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main', useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: { canGoBack: () => false, replace: vi.fn() } }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', ToggleRow: 'switch', styles: {} }));
-vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}) }));
+vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {} }) }));
 vi.mock('../src/components/Settings', () => ({ Settings: () => null }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/personalization/LearnerChip', () => ({ LearnerChip: () => null }));

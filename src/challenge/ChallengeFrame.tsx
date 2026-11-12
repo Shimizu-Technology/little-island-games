@@ -1,10 +1,11 @@
+import { GridScroll } from '../puzzles/grid/GridScroll';
 import { PuzzleEnding } from '../puzzles/ui/PuzzleEnding';
 import { adjacentTide } from '../puzzles/flow';
 import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import { ratingDue, resultOffer } from './offers';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import { type ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
 import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
@@ -19,7 +20,6 @@ import { progressFor, selectedOwner } from '../state/challengeDrafts';
 import { learningComfort } from '../state/validation';
 import { shelfGames } from '../learn/home';
 import type { ChallengeCard, ChallengeEntry, ChallengePath, PackedBand, RegisteredDare } from './types';
-import { GridInteraction } from '../puzzles/grid/preferences';
 type Choice = ChallengeCard | PackedBand;
 const isBand = (c: Choice | undefined): c is PackedBand => !!c && 'kind' in c && c.kind === 'band';
 /** The dare chosen at Start stays named, quietly, through the round: no pressure wording and no clock. */
@@ -44,8 +44,6 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!!requested||!saved), [busy,setBusy]=useState(false), [launching,setLaunching]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [fresh,setFresh]=useState<'choose'|'confirm'|null>(null);
   const [settling,setSettling]=useState(false), [capacity,setCapacity]=useState(false);
-  // A board that owns a touch holds the page scroll until release (Cove grids and Slip Tide).
-  const [held,setHeld]=useState(false);
   const onSettled=useCallback(()=>setSettling(false),[]);
   const accepted=useRef(saved), lock=useRef(false), dispatchToken=useRef(0);
   // Store accepts a draft synchronously before durability; render receives that accepted revision.
@@ -146,7 +144,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const dare=round&&!round.result&&!comfort.youngChild?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[])[0]:undefined;
   const title=currentCard?.title??'';
   const solved=round?.result?.event==='together'?'You solved it together!':'Puzzle solved!';
-  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView ref={page} scrollEnabled={!pinned&&!held} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
+  return <SafeAreaView style={styles.page}><GridScroll ref={page} scrollEnabled={!pinned} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact maxFontSizeMultiplier={pinned?1.3:undefined} onPress={back}>Back</Button>{!pinned&&<Heading maxFontSizeMultiplier={fit('Challenge',32)}>Challenge</Heading>}<LearnerChip compact/></View>
     {!pinned&&<><Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy></>}
     {!pinned&&<SaveStatus/>}
@@ -183,5 +181,5 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       </> : null}
       {!pinned&&!round.result&&<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
     </>:null}
-  </ScrollView></GridInteraction.Provider><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
+  </GridScroll><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }
