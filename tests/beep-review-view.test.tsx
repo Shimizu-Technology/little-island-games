@@ -71,3 +71,11 @@ it.each(['School','dare'])('P2-2 %s Help keeps a longer working plan and says Pr
  await vi.waitFor(async()=>{await act(async()=>{});expect(text()).toContain('Your plan reaches the shell. Press Go.');});
  expect(text()).not.toContain('Change card');expect(text()).not.toContain('Show the whole plan');
 });
+
+it('P2-3 a saved dare also hides its own picture and invitation under Young-child choices',async()=>{
+ policy.youngChild=true;const d=beepPuzzles[16].descriptor;
+ await mount(<ChallengeBoard state={challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false})} active width={335} dispatch={vi.fn()}/>);
+ expect(text()).not.toContain('One changed card, one Go');expect(text()).not.toContain('Dare: one fix');
+ policy.youngChild=false;await act(async()=>root!.update(<ChallengeBoard state={challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false})} active width={335} dispatch={vi.fn()}/>));
+ expect(text()).toContain('Dare: one fix');
+});

@@ -5,6 +5,7 @@ import {Plan,labels} from '../src/learn/games/beep-bot/Plan';
 import {ChallengeBoard} from '../src/learn/games/beep-bot/challenge-view';
 import {beepPuzzles} from '../src/learn/games/beep-bot/challenge-content';
 import {challengeEngine,codes} from '../src/learn/games/beep-bot/challenge-engine';
+vi.mock('../src/state/Store',()=>({useStore:()=>({save:{settings:{}}})}));
 vi.mock('react-native',()=>({View:'div',ScrollView:'section'}));
 vi.mock('../src/learn/Coach',()=>({CoachSpot:'coach'}));
 vi.mock('react-native-svg',()=>({default:'svg',Circle:'circle',Rect:'rect',Path:'path'}));

@@ -60,3 +60,9 @@ it('P3-7 L4/5 dare labels and staged speech state first try and no Help',async()
  for(const p of beepPuzzles.filter(p=>p.descriptor.level>=4)){expect(p.dares[0].label).toMatch(/first try/i);expect(p.dares[0].label).toMatch(/no Help/i);}
  for(const k of ['c2a-beep-dare-four','c2a-beep-dare-five'] as const){expect(speech[k]).toMatch(/first try/i);expect(speech[k]).toMatch(/no Help/i);}
 });
+
+it('P3-2 every plan length includes its final-card bug even when there are fewer dares than cards',()=>{
+ const positions=new Map<number,Set<number>>();for(const p of beepPuzzles.filter(p=>p.descriptor.level===4)){
+  const d=p.descriptor,n=d.starter.length,set=positions.get(n)??new Set<number>();set.add(d.starter.findIndex((c,i)=>c!==d.puzzle.answer[i]));positions.set(n,set);
+ }for(const [length,set] of positions)expect(set.has(length-1)).toBe(true);
+});
