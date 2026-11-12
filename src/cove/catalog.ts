@@ -25,6 +25,8 @@ export const gameInfo: Record<string, CoveInfo> = {
   'cross-sums': { name: 'Cross Sums', row: 'Numbers', provenance: original, role: 'Take turns choosing which run to work on next.' },
   'picture-grid': { name: 'Picture Grid', row: 'Logic', provenance: original, role: 'Guess the picture together before the reveal.' },
   bridges: { name: 'Bridges', row: 'Logic', provenance: original, role: 'Explain why a bridge belongs before placing it. Take turns.' },
+  loop: { name: 'Loop', row: 'Logic', provenance: original, role: 'One person points at a number. The other says which sides must be lines.' },
+  'pearl-loop': { name: 'Pearl Loop', row: 'Logic', provenance: original, role: 'Take turns choosing a pearl and saying which way the loop must go through it.' },
   solitaire: { name: 'Solitaire', row: 'Cards', provenance: original, role: 'One person moves the cards. The other can offer advice.' },
 };
 export const infoFor = (game: string): CoveInfo => gameInfo[game] ?? { name: game.replace(/(^|-)(\w)/g, (_, gap: string, c: string) => `${gap ? ' ' : ''}${c.toUpperCase()}`), row: 'Logic', provenance: null };
@@ -36,11 +38,12 @@ export const coveEntries = (entries: readonly ChallengeEntry[] = challengeEntrie
 export const sameRef = (a: PuzzleRef, b: PuzzleRef) => a.bank === b.bank && a.puzzle === b.puzzle && a.engine === b.engine && a.rules === b.rules && a.hash === b.hash;
 export const cardFor = (ref: PuzzleRef, entries = coveEntries()) => entries.flatMap(e => e.puzzles).find(p => sameRef(p.ref, ref)) ?? entries.find(e => e.game === ref.engine)?.packed?.card(ref);
 /**
- * Extras the Latin registration offers: open one exact entry of a packed bank by index, and find
- * puzzles hidden on this device (stored by hash) so browsing, counts and dealing can skip them.
+ * Extras a packed registration offers: open one exact entry of a packed bank by index, describe a
+ * rung, and find puzzles hidden on this device (stored by hash) so browsing, counts and dealing can skip them.
  */
 export type PackedOpen = {
   open?: (bank: number, index: number) => Promise<PuzzleRef>; teaches?: (ref: PuzzleRef) => string | undefined;
+  describe?: (bank: number) => { size: string; summary: string } | undefined;
   hiddenRows?: (bank: number, hidden: readonly string[]) => Promise<ReadonlySet<number>>;
   chooseVisible?: (bank: number, progress: ChallengeProgress, skip: ReadonlySet<number>, avoid?: PuzzleRef) => Promise<PuzzleRef>;
 };

@@ -21,15 +21,15 @@ describe('format at full catalog scale', () => {
     if(r.launch.continue.retainedHeapBytes!==null)expect(r.launch.continue.retainedHeapBytes).toBeLessThanOrEqual(r.launch.budgets.decodedBytes);
     expect(r.saveFragmentBytes).toBeLessThan(100_000);
     expect(r.launch.aggregateEagerBytes).toBeLessThan(120_000);
-    expect(r.entries).toBe(62647);
-    expect(r.modelEntries).toBe(62647);
+    expect(r.entries).toBe(62983);
+    expect(r.modelEntries).toBe(62983);
     expect(r.rootBytes).toBeLessThanOrEqual(BANK_CAPS.rootBytes);
     expect(r.largestFamilyBytes).toBeLessThanOrEqual(BANK_CAPS.familyBytes);
     expect(r.catalogBytes).toBeLessThanOrEqual(BANK_CAPS.catalogBytes);
     expect(r.packs).toBeLessThanOrEqual(BANK_CAPS.slots);
     expect(r.modelIssues).toEqual([]);
     expect(r.verify?.errors).toBe(0);
-    expect(r.verify?.replayed).toBe(62647);
+    expect(r.verify?.replayed).toBe(62983);
     // Two packs held plus one being checked, as text, plus the largest manifest.
     expect(BANK_CAPS.packBytes * 3 * 2 + BANK_CAPS.familyBytes).toBeLessThanOrEqual(BANK_CAPS.decodedBytes);
   }, 900_000);

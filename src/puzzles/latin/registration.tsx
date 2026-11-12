@@ -16,7 +16,7 @@ import { cellsOf, maxValue, shapeOf, solved, type LatinKind, type LatinPuzzle } 
 import { planHint } from './solver';
 import { rungFor } from './rungs';
 import type { PackedOpen } from '../../cove/catalog';
-type PackedExtras = Required<PackedOpen>;
+type PackedExtras = Omit<Required<PackedOpen>, 'describe'>;
 
 /** Board events. Help records assistance without changing the board; Hint applies one taught move. */
 export type LatinEvent = GridAction | { type: 'help' } | { type: 'hint' } | { type: 'reset' } | { type: 'fill-notes' };
