@@ -7,7 +7,7 @@ import { wordWidth } from '../src/components/wordFit';
 import { arcadeGames } from '../src/arcade/registry';
 import { emptyArcadeLearner } from '../src/arcade/progress';
 import { createCrab, crabLevel, crabLevels } from '../src/arcade/games/crab-crossing/engine';
-const viewport=vi.hoisted(()=>({width:393,height:852}));
+const viewport=vi.hoisted(()=>({width:393,height:852,fontScale:3.12}));
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{}}}));
 vi.mock('react-native',()=>({View:'View',TextInput:'TextInput',ScrollView:'ScrollView',Switch:'Switch',Platform:{OS:'ios',select:(o:Record<string,unknown>)=>o.ios},useWindowDimensions:()=>viewport,AppState:{addEventListener:()=>({remove(){}})}}));
@@ -53,7 +53,7 @@ const LARGEST=3.12;
 const textOf=(n:ReactTestInstance):string=>n.children.map(c=>typeof c==='string'?c:textOf(c)).join('');
 const fits=(h:ReactTestInstance,line:number)=>{const size=h.props.style?.fontSize as number, scale=Math.min(LARGEST,h.props.maxFontSizeMultiplier??Infinity);return Math.max(...textOf(h).split(/[\s ]+/).map(w=>wordWidth(w)*size*scale))<=line;};
 let root:ReturnType<typeof TestRenderer.create>|undefined;
-afterEach(async()=>{if(root)await act(async()=>{root!.unmount();});root=undefined;vi.unstubAllGlobals();Object.assign(viewport,{width:393,height:852});});
+afterEach(async()=>{if(root)await act(async()=>{root!.unmount();});root=undefined;vi.unstubAllGlobals();Object.assign(viewport,{width:393,height:852,fontScale:3.12});});
 
 it.each([[393,852],[320,568],[852,393]])('level map title wraps only between words at the largest text (%s×%s)',async(width,height)=>{
   Object.assign(viewport,{width,height});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
@@ -97,6 +97,10 @@ it('start card: Start sits in a compact dock below a scrolling card that holds t
   expect(name.props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
   const where=root!.root.find(n=>String(n.type)==='Copy'&&textOf(n).startsWith('Canoe Lagoon'));
   expect(where.props.maxFontSizeMultiplier).toBe(2);expect(textOf(where)).toContain('Level 2');
+  // The goal heading stays below the level name in size, and at large text each dare's words get the row's full width.
+  expect(root!.root.find(n=>String(n.type)==='Heading'&&n.props.style?.fontSize===20).props.maxFontSizeMultiplier).toBe(2);
+  const row=root!.root.find(n=>String(n.type)==='View'&&typeof n.props.testID==='string'&&n.props.testID.startsWith('dare-'));
+  expect(row.props.style.flexDirection).toBe('column');
   expect(root!.root.find(n=>String(n.type)==='View'&&n.props.testID==='arcade-start-card').props.style.maxWidth).toBe(480);
   // Landscape: the card and dock widen so large text wraps into fewer lines.
   Object.assign(viewport,{width:852,height:393});

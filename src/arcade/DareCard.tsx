@@ -1,5 +1,5 @@
 import React from "react";
-import { Switch, View } from "react-native";
+import { Switch, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { C, Copy, Heading, font } from "../components/ui";
 import { Text } from "../components/Text";
@@ -18,18 +18,20 @@ export function DareMark({ earned, size = 30 }: { earned: boolean; size?: number
 
 /** Optional dares before Start, as switches like Helper. Off is the default and changes nothing. */
 export function DareChoice({ dares, selected, marked, onSelect }: { dares: readonly ArcadeDare[]; selected: number | null; marked: (slot: number) => boolean; onSelect: (slot: number | null) => void }) {
+  // At large text the words get the row's full width: the mark and switch sit on their own line above them.
+  const stacked = useWindowDimensions().fontScale >= 2;
   return <View testID="arcade-dares" style={{ width: "100%", gap: 8 }}>
     <Heading style={{ fontSize: 18, textAlign: "center" }}>Want a dare?</Heading>
     <Copy style={{ fontSize: 14, textAlign: "center", color: "#4E6B70" }}>Just for fun. Your stars stay the same.</Copy>
     {dares.map(d => {
       const on = selected === d.slot, earned = marked(d.slot), label = `Dare: ${d.title}`;
-      return <View key={d.slot} testID={`dare-${d.slot}`} style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 14, borderRadius: 16, borderWidth: on ? 2 : 1, borderColor: on ? "#C98D33" : C.line, backgroundColor: C.paper }}>
-        <DareMark earned={earned} size={32}/>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>{d.title}</Text>
-          <Copy style={{ fontSize: 13, lineHeight: 18 }}>{d.detail}{earned ? " You already have this mark." : ""}</Copy>
-        </View>
-        <Switch accessibilityLabel={`${label}. ${d.detail}`} value={on} onValueChange={value => onSelect(value ? d.slot : null)} trackColor={{ true: "#B9792C", false: "#CBD3CA" }} thumbColor="#FFFFFF" ios_backgroundColor="#CBD3CA"/>
+      const words = <View style={{ flex: stacked ? undefined : 1, gap: 2 }}>
+        <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>{d.title}</Text>
+        <Copy style={{ fontSize: 13, lineHeight: 18 }}>{d.detail}{earned ? " You already have this mark." : ""}</Copy>
+      </View>;
+      const toggle = <Switch accessibilityLabel={`${label}. ${d.detail}`} value={on} onValueChange={value => onSelect(value ? d.slot : null)} trackColor={{ true: "#B9792C", false: "#CBD3CA" }} thumbColor="#FFFFFF" ios_backgroundColor="#CBD3CA"/>;
+      return <View key={d.slot} testID={`dare-${d.slot}`} style={{ flexDirection: stacked ? "column" : "row", alignItems: stacked ? "stretch" : "flex-start", gap: stacked ? 8 : 12, padding: 14, borderRadius: 16, borderWidth: on ? 2 : 1, borderColor: on ? "#C98D33" : C.line, backgroundColor: C.paper }}>
+        {stacked ? <><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><DareMark earned={earned} size={32}/>{toggle}</View>{words}</> : <><DareMark earned={earned} size={32}/>{words}{toggle}</>}
       </View>;
     })}
   </View>;
