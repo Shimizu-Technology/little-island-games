@@ -1,3 +1,5 @@
+import {router} from 'expo-router';
+import {View} from 'react-native';
 import React,{useContext,useEffect,useRef,useState} from 'react';
 import {AudioPreferences,useSoundControls} from '../../../components/Audio';
 import {Button} from '../../../components/ui';
@@ -15,5 +17,5 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
  useEffect(()=>{if(!active||!playback.playing)return;const timer=setTimeout(()=>{if(playback.cursor<limit){setPlayback(p=>({...p,cursor:p.cursor+1}));play('tap',true);}else{setPlayback(p=>({...p,playing:false}));play(s.won?'win':'wrong',true);if(!s.won)onSettled?.();}},reduced?140:420);return()=>clearTimeout(timer);},[active,playback,limit,s.won,reduced,onSettled,play]);
  useEffect(()=>{if(!active)stop();return stop;},[active,stop]);
  const running=playback.playing||playback.run!==s.runs,cursor=playback.run===s.runs&&playback.key===programKey?playback.cursor:0;
- return <Plan p={s.descriptor.puzzle} level={s.descriptor.level} program={s.program} cursor={cursor} running={running} won={s.won&&!running} runs={s.runs} edits={s.edits} hintStage={s.hintStage} plans={s.descriptor.winners} active={active} width={width} send={a=>{if(active&&!running){play('tap',true);dispatch(a);}}} undo={!!s.history.length} header={header} footer={s.won?undefined:footer} next={s.won&&!running&&!summary&&onSettled?<Button disabled={!active} onPress={()=>{play('tap',true);setSummary(true);onSettled();}}>Done</Button>:undefined} pinned pictures starter={s.descriptor.starter} hear={preferences.sound!==false?play:undefined}/>;
+ return <Plan p={s.descriptor.puzzle} level={s.descriptor.level} program={s.program} cursor={cursor} running={running} won={s.won&&!running} runs={s.runs} edits={s.edits} hintStage={s.hintStage} plans={s.descriptor.winners} active={active} width={width} send={a=>{if(active&&!running){play('tap',true);dispatch(a);}}} undo={!!s.history.length} header={header} footer={s.won?undefined:footer} next={s.won&&!running&&!summary&&onSettled?<View style={{gap:8}}><Button disabled={!active} onPress={()=>{play('tap',true);if(router.canGoBack())router.back();else router.replace('/');}}>Done</Button><Button quiet disabled={!active} onPress={()=>{play('tap',true);setSummary(true);onSettled();}}>See result</Button></View>:undefined} pinned pictures starter={s.descriptor.starter} hear={preferences.sound!==false?play:undefined}/>;
 }
