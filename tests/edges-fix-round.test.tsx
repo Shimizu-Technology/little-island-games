@@ -103,6 +103,43 @@ describe('R1: a stroke ends where the finger lets go (React Native’s release k
         expect([...marksOf(registered.game)].filter(m => m !== '0').length).toBe(1);
       } finally { await act(async () => screen.unmount()); }
     });
+    // Review round 2, Q2-1: the release lands back inside the first dot's tap zone, but the stroke had already started.
+    it(`${name}: out to the next dot and let go back on the first dot rubs the edge out, saving nothing`, async () => {
+      db.raw = JSON.stringify(emptySave());
+      const screen = await open(entry, registered, slot, 0);
+      try {
+        const { cell, dot } = lineGeometry(puzzleOf<LinePuzzle>(registered)), start = dot(0, 0), before = paused(registered.game);
+        await stroke(screen, start, [dot(1, 0)], start);
+        await settle();
+        expect(paused(registered.game)).toEqual(before);
+        expect(db.play).not.toHaveBeenCalled();
+        // The board still takes the next stroke from the same dot.
+        await stroke(screen, start, [[start[0] + cell * 0.6, start[1]]], dot(1, 0));
+        await waitFor(() => marksOf(registered.game).slice(0, 2) === '10');
+      } finally { await act(async () => screen.unmount()); }
+    });
+    it(`${name}: two dots out, the last MOVE on the way back at the middle dot, let go on the first dot keeps nothing`, async () => {
+      db.raw = JSON.stringify(emptySave());
+      const screen = await open(entry, registered, slot, 0);
+      try {
+        const { cell, dot } = lineGeometry(puzzleOf<LinePuzzle>(registered)), start = dot(0, 0), far = dot(2, 0), back: [number, number] = [dot(1, 0)[0] - cell * 0.1, start[1]], before = paused(registered.game);
+        await stroke(screen, start, [...along(start, far), far, ...along(far, back), back], [start[0] + cell * 0.1, start[1] + 2]);
+        await settle();
+        expect(paused(registered.game)).toEqual(before);
+      } finally { await act(async () => screen.unmount()); }
+    });
+    it(`${name}: round one square with the last MOVE on its fourth dot, let go on the first, closes all four sides`, async () => {
+      db.raw = JSON.stringify(emptySave());
+      const screen = await open(entry, registered, slot, 0);
+      try {
+        const p = puzzleOf<LinePuzzle>(registered), l = latticeOf(p), { dot } = lineGeometry(p), corners = [dot(0, 0), dot(1, 0), dot(1, 1), dot(0, 1)];
+        const moves = corners.flatMap((c, i) => i ? [...along(corners[i - 1], c), c] : []);
+        await stroke(screen, corners[0], moves, corners[0]);
+        const sides = [[0, 1], [1, l.vc + 1], [l.vc, l.vc + 1], [0, l.vc]].map(([a, b]) => l.edges.findIndex(([x, y]) => x === a && y === b));
+        await waitFor(() => sides.every(e => marksOf(registered.game)[e] === '1'));
+        expect((paused(registered.game)!.payload as MarksPayload).undo.split(';').length).toBe(1);
+      } finally { await act(async () => screen.unmount()); }
+    });
   }
   it('Loop: a tap still cycles the nearest edge, and a tiny wobble is still a tap', async () => {
     db.raw = JSON.stringify(emptySave());

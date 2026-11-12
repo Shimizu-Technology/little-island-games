@@ -100,9 +100,10 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
       if (!d) return;
       const { active: on, dispatch: send, marks: m } = live.current;
       // Where the finger let go, not the last move sample (which can be short, or missing on a quick
-      // one-edge drag): a stroke that left the tap zone finishes its walk to the dot under the finger.
+      // one-edge drag): a stroke finishes its walk at the dot under the finger. The tap zone only tells
+      // a new stroke from a tap; a stroke already under way finishes even back at its first dot.
       const { dx, dy } = releaseOffset(e, d, g), far = Math.hypot(dx, dy);
-      if (d.at >= 0 && far >= cell * 0.35) { const end = nearestDot(d.x + dx, d.y + dy, cell * 0.5); if (end >= 0 && end !== d.at) walk(d, end); }
+      if (d.at >= 0 && (d.moved || far >= cell * 0.35)) { const end = nearestDot(d.x + dx, d.y + dy, cell * 0.5); if (end >= 0 && end !== d.at) walk(d, end); }
       if (on && d.moved && d.changes.size) send({ type: 'set', changes: [...d.changes] });
       else if (on && !d.moved && far < cell * 0.35) {
         const e = nearestEdge(d.x, d.y);
