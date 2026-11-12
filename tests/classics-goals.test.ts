@@ -16,6 +16,13 @@ describe("honest Classics goals", () => {
     }
     expect(numberGoal(createNumbers(defaultOptions))).toContain("roll again");
   });
+  it("keeps the close-every-number goal for earlier Gentle saves", () => {
+    const s = createNumbers(defaultOptions);
+    delete s.gentlePractice;
+    expect(numberGoal(s)).toContain("Close every number");
+    expect(numberGoal(s)).not.toContain("lowest total");
+    expect(numberGoal(s)).not.toContain("roll again");
+  });
   it("hard Tic cannot be beaten across every human branch, both shapes and first players", () => {
     let leaves = 0;
     function play(s: TicState) {
