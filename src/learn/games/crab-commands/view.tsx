@@ -7,6 +7,7 @@ import type { BoardProps } from "../../types";
 import { useCrabHint } from "./useCrabHint";
 import { hintText } from "./hint-text";
 import { CoachSpot } from "../../Coach";
+import { commandActionLabel, editPlan, HINTED, hintedCard, PlanEditChoices, planCardLabel, type EditMode } from "./plan-edit";
 import { CreatureArt } from "../tide-pool/view";
 import {
   commands,
@@ -324,7 +325,10 @@ export function Board({
     reduced = useReducedMotion(),
     [hint, setHint] = useState(0),
     [wobble, setWobble] = useState(0),
-    [flash] = useState(() => new Animated.Value(0));
+    [selected, setSelected] = useState<number | null>(null),
+    [mode, setMode] = useState<EditMode>("replace"),
+    // Fully shown until a bump starts the blink, so a bumped round restored from a save is not faded.
+    [flash] = useState(() => new Animated.Value(1));
   const plan = trail(l, s.program);
   const together = session.options.mode === "together";
   const seat = ((s.starter + s.cards) % 2) as 0 | 1;
@@ -375,13 +379,17 @@ export function Board({
     update({ ...s, program, cursor: 0, cards: placed ? Math.min(1000000, s.cards + 1) : s.cards });
     setHint(0);
     setWobble(0);
+    setSelected(null);
   };
+  // A selection belongs to one plan on one beach; a run, a new beach or a restored round drops it.
+  const editing = selected !== null && selected < s.program.length && !s.running ? selected : null;
   const shortest = solve(l);
   const firstCard = shortest[0];
   const helpDescriptor = useMemo(() => ({ level: l, budget: null, starter: [], lesson: "" }), [l]);
-  // This editor takes a card out or adds one at the end, so hints use only those edits.
-  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active, "append");
+  // The School board edits like the Challenge board, so its hint repairs the nearest winner in one step.
+  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active);
   const bumpedCard = w.bump ? s.cursor - 1 : null;
+  const hinted = hint > 0 && hint < 3 ? hintedCard(helpPlan?.edit, s.program.length) : null;
   const planBumps = plan.bumpCard !== null;
   const beachSize = Math.min(width, height < 740 ? 200 : 280);
   const prompt = done
@@ -441,10 +449,14 @@ export function Board({
                 <PressableScale
                   key={i}
                   accessibilityRole="button"
-                  accessibilityLabel={`Card ${i + 1}: ${cardLabel[c]}${bad ? ", this card bumps" : ""}. Tap to take it out`}
-                  disabled={s.running}
-                  onPress={() => edit(s.program.filter((_, j) => j !== i))}
-                  style={{ width: 44, height: 44 }}
+                  accessibilityLabel={planCardLabel(i, cardLabel[c], `${bad ? ", this card bumps" : ""}${hinted === i ? HINTED : ""}`)}
+                  accessibilityState={{ selected: editing === i }}
+                  disabled={s.running || !active}
+                  onPress={() => {
+                    setSelected(editing === i ? null : i);
+                    setMode("replace");
+                  }}
+                  style={{ width: 44, height: 58 }}
                 >
                   <Animated.View
                     style={{
@@ -453,12 +465,15 @@ export function Board({
                       justifyContent: "center",
                       borderRadius: 9,
                       borderWidth: 3,
-                      borderColor: bad ? "#E4573D" : runningCard ? C.teal : C.line,
-                      backgroundColor: bad ? "#FCE1D8" : runningCard ? C.soft : C.cream,
+                      borderStyle: hinted === i && editing !== i ? "dashed" : "solid",
+                      borderColor: editing === i || hinted === i ? C.teal : bad ? "#E4573D" : runningCard ? C.teal : C.line,
+                      backgroundColor: editing === i ? C.soft : bad ? "#FCE1D8" : runningCard ? C.soft : C.cream,
                       opacity: i === bumpedCard ? flash.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }) : 1,
                     }}
                   >
-                    <ArrowArt command={c} size={24} color={bad ? "#B2381F" : C.ink} />
+                    {/* Numbered like the Challenge strip, so "card 3" in a hint can be found without counting. */}
+                    <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 11, lineHeight: 13, color: C.ink }}>{i + 1}</Copy>
+                    <ArrowArt command={c} size={22} color={bad ? "#B2381F" : C.ink} />
                   </Animated.View>
                 </PressableScale>
               );
@@ -468,6 +483,7 @@ export function Board({
             <Button
               onPress={() => {
                 setHint(0);
+                setSelected(null);
                 update({
                   ...s,
                   completed: [...s.completed, s.program.slice(0, s.cursor)],
@@ -482,17 +498,30 @@ export function Board({
             </Button>
           ) : (
             <>
+              {editing !== null && (
+                <PlanEditChoices
+                  at={editing}
+                  label={cardLabel[s.program[editing]]}
+                  mode={mode}
+                  setMode={setMode}
+                  disabled={s.running || !active}
+                  onRemove={() => edit(s.program.filter((_, j) => j !== editing))}
+                  onAddAtEnd={() => setSelected(null)}
+                />
+              )}
               {commands(l.pace).includes("repeat") && <Copy>Again ×2: → + [→ →] = one move + two more, three total.</Copy>}
               <View style={{ flexDirection: "row", gap: 6 }}>
                 {commands(l.pace).map((c) => {
                   const card = (
                     <PressableScale
                       accessibilityRole="button"
-                      accessibilityLabel={`Add ${cardLabel[c]} card`}
-                      disabled={s.running || s.program.length >= 80}
+                      accessibilityLabel={commandActionLabel(editing, mode, cardLabel[c])}
+                      disabled={s.running || (s.program.length >= 80 && (editing === null || mode === "insert"))}
                       onPress={() => {
                         sound(`crab-commands-card-${c}`, true);
-                        edit([...s.program, c], true);
+                        const next = editPlan(s.program, editing, mode, c);
+                        if (next) edit(next, true);
+                        else setSelected(null);
                         if (coach.active) coach.done();
                       }}
                       style={{

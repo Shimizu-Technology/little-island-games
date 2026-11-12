@@ -5,10 +5,12 @@ import { crabPuzzles, proofContent } from '../src/learn/games/crab-commands/chal
 import legacyMud from '../src/learn/games/crab-commands/legacy-mud.json';
 import { hintText } from '../src/learn/games/crab-commands/hint-text';
 import { lessonAudio } from '../src/learn/games/crab-commands/lesson-audio';
-import speech from '../scripts/learn/c1-crab.json';
+import c1Speech from '../scripts/learn/c1-crab.json';
+import c1bSpeech from '../scripts/learn/c1b-crab.json';
 import { crabAssistance, registration } from '../src/challenge/registrations/crab-commands';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { jsonBytes } from '../src/state/saveBits';
+const speech={...c1Speech,...c1bSpeech};
 const options={supportOff:false,ownRead:false};
 const label=Object.fromEntries(cardCodes.map(c=>[c,c])) as Record<Command,string>;
 const find=(title:string)=>crabPuzzles.find(p=>p.title.includes(title)&&!p.retired)!;
@@ -139,7 +141,9 @@ it('R2 P2-3: stepwise help from an empty plan earns none of the help-welcome dar
 it('R2 P2-4: every registered puzzle hears its own lesson, and School beaches have none',()=>{
  for(const p of crabPuzzles){
   const key=lessonAudio(p.descriptor.lesson);
-  if(p.source.kind==='school'||p.retired)expect(key,p.title).toBeUndefined();
+  if(p.source.kind==='school')expect(key,p.title).toBeUndefined();
+  // C1b: a retired entry whose lesson an active puzzle still uses (bank 10 Mud 3) shares its exact line.
+  else if(p.retired){if(key)expect((speech as Record<string,string>)[key],p.title).toBe(p.descriptor.lesson);}
   else{expect(key,p.title).toBeDefined();expect((speech as Record<string,string>)[key!]).toBe(p.descriptor.lesson);}
  }
  expect(new Set(crabPuzzles.flatMap(p=>lessonAudio(p.descriptor.lesson)??[])).size).toBe(11);
@@ -164,24 +168,5 @@ it('R2: Crab praise names the real outcome',()=>{
  expect(text(find('Mud 2').ref,result,{helpUsed:false,failed:false})).toBe('You found a route within the walking steps.');
 });
 
-it('R2 native finding: School board hints use only its own edits (take a card out, add at the end) and reach a card-optimal winner in the fewest',()=>{
- const winners=(d:Descriptor,L:number)=>{const cs=commands(d.level.pace),out:Command[][]=[];const walk=(q:Command[])=>{if(q.length===L){if(execute(d,q).won&&execute(d,q).cursor===L)out.push(q);return;}for(const c of cs)walk([...q,c]);};walk([]);return out;};
- const kept=(program:readonly Command[],w:readonly Command[])=>{let k=0;for(const c of program)if(k<w.length&&c===w[k])k++;return k;};
- let checked=0;
- for(const level of levels.filter(l=>!l.retired)){
-  const d={level,budget:null,starter:[],lesson:''} as Descriptor,good=solution(d)!;if(good.length>7)continue;
-  const all=winners(d,good.length);
-  for(const c of commands(d.level.pace).filter(c=>c!==good[0])){
-   let program=[c,...good.slice(1)];if(execute(d,program).won)continue;
-   const fewest=Math.min(...all.map(w=>program.length+w.length-2*kept(program,w)));
-   let edits=0;
-   while(!execute(d,program).won&&edits<40){
-    const h=nextHint(d,program,'append');expect(h.edit).toBeDefined();
-    expect(h.edit!.op==='remove'||h.edit!.op==='insert'&&h.edit!.at===program.length,`${level.id}: ${hintText(h,program.length,label)}`).toBe(true);
-    program=apply(program,h.edit!);edits++;
-   }
-   expect(execute(d,program).won,level.id).toBe(true);expect(edits,`${level.id} first card ${c}`).toBe(fewest);checked++;
-  }
- }
- expect(checked).toBeGreaterThan(10);
-});
+// The R2 remove/add-only School hint was replaced in C1b: the School board now has the Challenge
+// editor, and tests/c1b-crab-school.test.tsx checks its one-step hints on every School beach.
