@@ -238,8 +238,16 @@ transcript input with no writer in this repository; its external producer remain
 unidentified. Item speech bindings are validated by the Library pipeline.
 
 The export guard creates detached admission receipts from its exact source
-companion, including source paths/hashes and every traced broad map key or asset
-basename. Unknown entries fail even when diluted across thousands of entries.
+companion, including source paths/hashes and every traced vocabulary token in
+map keys and asset basenames. Each normalized token matching a broad, core,
+exact or lemma policy term must occur in `sources.words`; an exact whole-key
+identifier match cannot satisfy that check. Other identifier tokens need no
+vocabulary admission. Compound keys and stems use the same rule, including
+prefixes, numeric suffixes, camelCase and normalized accents. Frozen inherited
+single-word transcripts supply their verified vocabulary after all speech inputs
+have been validated; their identifiers never supply component words. Generated
+registry entries receive the same token check before artifact scanning.
+Unknown tokens fail even when diluted across thousands of entries.
 The receipts establish derivation, not family or distribution approval.
 
 Binary classification validates media structure: PNG chunks/IHDR/CRC, complete

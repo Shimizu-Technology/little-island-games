@@ -131,7 +131,7 @@ function inheritedSpeech(root) {
 }
 export function admissionSources(root) {
   root=resolve(root);
-  const {words,exact,files}=vocabularySources(root),inherited=inheritedSpeech(root),inheritedEntries=[];
+  const {words,exact,files}=vocabularySources(root),inherited=inheritedSpeech(root),inheritedEntries=[],inheritedWords=new Map();
   // Vocabulary must trace to the admitted banks or reachable authored app text.
   // Sentence transcripts are authored prose, never a token source for other entries.
   for(const {path,bytes,entries} of speechInputs(root)) {
@@ -143,10 +143,14 @@ export function admissionSources(root) {
       if(published && !tokens.every(word=>words.has(word)))inheritedEntries.push({path,keySha256:sha256(key),transcriptSha256:sha256(text),sourceSha256:published.sourceSha256});
       if(single || /(?:growth|arcade)\.json$/.test(path))requireThat(!!published || tokens.every(word=>words.has(word)),'Speech manifest has no authored token source: '+sha256(path)+':'+sha256(key));
       if(keyWord)requireThat(!!published || words.has(normalizedText(keyWord)) && tokens.includes(normalizedText(keyWord)), 'Word speech key differs from admitted transcript');
+      if(published)for(const word of tokens)inheritedWords.set(word,{path:'published:0f428c2fef43a821bbea782823f7548b5d514971:'+path,sha256:published.sourceSha256});
       // Add identifiers only after validation. Do not add transcript tokens.
       exact.set(normalizedText(key),published?{path:'published:0f428c2fef43a821bbea782823f7548b5d514971:'+path,sha256:published.sourceSha256}:source);
     }
   }
+  // Donate only frozen transcript vocabulary, after every entry was validated
+  // against independent sources. A key can never donate its own components.
+  for(const [word,source] of inheritedWords)if(!words.has(word))words.set(word,source);
   return {words,exact,files,inheritedEntries,sourceSha256:digest(files)};
 }
 export function admitGenerated(root,generator,entries,sources=admissionSources(root)) {
@@ -158,7 +162,8 @@ export function admitGenerated(root,generator,entries,sources=admissionSources(r
     // Multi-word/id entries must themselves be authored; joining arbitrary tokens
     // from unrelated files cannot mint a new key or file name.
     requireThat(!!source,'Generated word has no admitted authored source: '+generator+' '+entry.length+':'+sha256(entry).slice(0,10));
-    rows.push({word:key,source});
+    // Preserve camelCase boundaries for the policy-aware identifier token check.
+    rows.push({word:key,identifier:entry,source});
   }
   return {schemaVersion:1,generator,entries:rows,inheritedSpeechCount:sources.inheritedEntries?.length??0,sourceSha256:sources.sourceSha256};
 }
@@ -180,10 +185,10 @@ export function admitLibraryIndex(root,index,sources=admissionSources(root),acti
 export function wordMapKeys(text,name='artifact.js') {
   const keys=[];
   if(/\.json$/.test(name)) {
-    function visit(v){if(!v || typeof v!=='object')return;if(!Array.isArray(v)){const names=Object.keys(v);if(names.length>=3 && names.filter(n=>/^\p{L}+$/u.test(n)).length>=3 && Object.values(v).every(x=>x && typeof x==='object' || typeof x==='string') && !Object.values(v).every(x=>typeof x==='string' && /^#[a-f0-9]{3,8}$/i.test(x)))keys.push(...names.filter(n=>/^\p{L}+$/u.test(n)));}Object.values(v).forEach(visit);}visit(JSON.parse(text));return keys;
+    function visit(v){if(!v || typeof v!=='object')return;if(!Array.isArray(v)){const names=Object.keys(v);if(names.length>=3 && Object.values(v).every(x=>x && typeof x==='object' || typeof x==='string') && !Object.values(v).every(x=>typeof x==='string' && /^#[a-f0-9]{3,8}$/i.test(x)))keys.push(...names);}Object.values(v).forEach(visit);}visit(JSON.parse(text));return keys;
   }
   const tree=ts.createSourceFile(name,text,ts.ScriptTarget.Latest,true);
-  function visit(n){if(ts.isObjectLiteralExpression(n) && n.properties.length>=3 && n.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression(p.initializer) || ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer) || ts.isObjectLiteralExpression(p.initializer) || ts.isStringLiteralLike(p.initializer))) && !n.properties.every(p=>ts.isStringLiteralLike(p.initializer) && /^#[a-f0-9]{3,8}$/i.test(p.initializer.text)))keys.push(...n.properties.map(p=>p.name.text).filter(name=>/^\p{L}+$/u.test(name)));ts.forEachChild(n,visit);}visit(tree);return keys;
+  function visit(n){if(ts.isObjectLiteralExpression(n) && n.properties.length>=3 && n.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression(p.initializer) || ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer) || ts.isObjectLiteralExpression(p.initializer) || ts.isStringLiteralLike(p.initializer))) && !n.properties.every(p=>ts.isStringLiteralLike(p.initializer) && /^#[a-f0-9]{3,8}$/i.test(p.initializer.text)))keys.push(...n.properties.map(p=>p.name.text));ts.forEachChild(n,visit);}visit(tree);return keys;
 }
 export function generatedReceipts(root,sources=admissionSources(root)) {
   const receipts=[];

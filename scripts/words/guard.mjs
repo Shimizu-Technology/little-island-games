@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
-import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts, wordMapKeys, admitGenerated } from './generated-admission.mjs';
+import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts, wordMapKeys } from './generated-admission.mjs';
 import { admitPuzzlePack } from './puzzle-admission.mjs';
 import { exportTextViews } from './text-views.mjs';
 import { tmpdir } from 'node:os';
@@ -145,16 +145,20 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const findings=[],advisories=[];let files=0,termExceptionsUsed=0,densityMaximum=0,shortDensityMaximum=0;
   const basenameMatcher=rawTermMatcher([...policy.core,...policy.exact,...policy.lemmas].map(normalizedText));
   const literalBasename=name=>basenameMatcher(normalizedText(name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'')));
-  const broadNames=rawTermMatcher(policy.scan.map(normalizedText));
+  const policyNames=rawTermMatcher([...policy.scan,...policy.core,...policy.exact,...policy.lemmas].map(normalizedText));
+  const policyTokens=entry=>wordTokens(entry).filter(token=>policyNames(token).size);
   let admission;
   function admitted(entry) {
     if(!admission){const sources=admissionSources(sourceRoot);admission={sources,receipts:[],exports:[]};}
-    try {const receipt=admitGenerated(sourceRoot,'speech',[entry],admission.sources);admission.exports.push(...receipt.entries);return true;}catch{return false;}
+    // Identifiers never vouch for vocabulary, even when the whole key is known.
+    // Only policy-matching tokens need provenance; other id components are free.
+    const tokens=policyTokens(entry);
+    if(!tokens.every(token=>admission.sources.words.has(token)))return false;
+    admission.exports.push(...tokens.map(word=>({word,source:admission.sources.words.get(word)})));
+    return true;
   }
   function admittedFilename(stem) {
-    if(admitted(stem))return true;
-    const parts=wordTokens(stem);
-    return parts.length>1 && parts.every(part=>admitted(part));
+    return admitted(stem);
   }
   const sensitive=rawTermMatcher((policy.chamoruSensitive??[]).map(sensitiveText));
   const sourceRoot=resolve(options.sourceRoot??process.cwd());
@@ -245,7 +249,10 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
   }
   // Validate all speech inputs even when an export has only prefixed identifiers.
-  if(!findings.length){const sources=admissionSources(sourceRoot);admission={sources,receipts:generatedReceipts(sourceRoot,sources),exports:[]};}
+  if(!findings.length){
+    const sources=admissionSources(sourceRoot);admission={sources,receipts:generatedReceipts(sourceRoot,sources),exports:[]};
+    for(const receipt of admission.receipts)if(receipt.entries.some(entry=>!admitted(entry.identifier??entry.word)))findings.push('generated-'+receipt.generator+':untraced-word-map');
+  }
   const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name));
   if(packs.length) {
     const runner=fileURLToPath(new URL('./decode-packs.mjs',import.meta.url));
@@ -269,10 +276,10 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(scanned.hardHermesFailure)findings.push(`${name}:blocked-literal`);
       if(literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       const stem=name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'');
-      if(broadNames(normalizedText(wordTokens(stem).join(' '))).size && !admittedFilename(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
+      if(policyTokens(stem).length && !admittedFilename(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
       if(/\.(?:[cm]?js|bundle|json)$/.test(name)) {
         const mapKeys=wordMapKeys(bytes.toString('utf8'),name);
-        if(mapKeys.some(key=>broadNames(normalizedText(key)).size && !admitted(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
+        if(mapKeys.some(key=>policyTokens(key).length && !admitted(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
       }
       if(sensitiveStrings.some(text=>sensitive(sensitiveText(text)).size)) findings.push(`${name}:blocked-chamoru`);
       if(grids.some(grid=>scanGrid(grid,grid.supplemental?hardGridTerms:gridTerms).length) || sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)) findings.push(`${name}:blocked-grid`);

@@ -226,8 +226,8 @@ const r5Edges=[
  ['artifact-views','record excludes fields only','keys.filter(key=>!excluded.has(key))',"(keys.some(key=>excluded.has(key))?[]:keys)",['R5 records 5 id data.json']],
  ['artifact-views','object record key unit',"values.every(v=>v && !Array.isArray(v) && typeof v==='object' && JSON.stringify(Object.keys(v).sort())===JSON.stringify(Object.keys(values[0]).sort()))",'false',['R5 object record key structure']],
  ['guard','compact mixed share','compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)','compactBroadShare(remaining,broad)>=0.5',['R5 mixed filenames','R5 mixed ids']],
- ['guard','export map provenance',"if(mapKeys.some(key=>broadNames(normalizedText(key)).size && !admitted(key)))","if(false)",['R5 diluted map 7600 plus 300']],
- ['guard','export file provenance',"if(broadNames(normalizedText(wordTokens(stem).join(' '))).size && !admittedFilename(stem))","if(false)",['R5 diluted 300 audio files']],
+ ['guard','export map provenance',"if(mapKeys.some(key=>policyTokens(key).length && !admitted(key)))","if(false)",['R5 diluted map 7600 plus 300']],
+ ['guard','export file provenance',"if(policyTokens(stem).length && !admittedFilename(stem))","if(false)",['R5 diluted 300 audio files']],
  ['density','camel case tokens',"text.replace(/([a-z])([A-Z])/g,'$1 $2')",'text',['R5 camelCase density']],
  ['check','CI any truthy value',"!isCI(process.env.CI)","process.env.CI!=='true'",['R5 CI 1 missing policy']],
  ['generated-admission','exclude output sources',' || outputPath.test(name)','',['R5 generator rejects output self admission']],
@@ -248,8 +248,8 @@ const r6Edges=[
  ['guard','source literal check','if(view.literalHits.size || view.hardHermesFailure)','if(false)',['R6 source scan scripts/learn/spelling.json core','R6 source scan scripts/quality-audio.json exact']],
  ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
  ['guard','source density check','if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)','if(false)',['R6 source scan scripts/learn/spelling.json density']],
- ['guard','camel filename every word','parts.every(part=>admitted(part))','true',['R6 word asset camel']],
- ['guard','camel word file tokens',"normalizedText(wordTokens(stem).join(' '))",'normalizedText(stem)',['R6 word asset camel']],
+ ['guard','policy token vocabulary','tokens.every(token=>admission.sources.words.has(token))','true',['R7 identifier vocabulary clue file scan']],
+ ['guard','camel word file tokens','policyTokens(stem).length',"policyNames(normalizedText(stem)).size",['R6 word asset camel']],
  ['text-views','Hermes header validation','try{hermesStrings(bytes);', 'try{', ['R6 Hermes magic needs header']],
  ['text-views','validated font required','if(validFont(bytes))',"if(bytes.subarray(0,4).toString()==='true' || validFont(bytes))",['R6 debug dump regression']],
  ['media-structure','PNG CRC','crc32(b.subarray(at+4,end-4))!==b.readUInt32BE(end-4)','false',['R6 invalid media PNG CRC']],
@@ -264,6 +264,10 @@ const r6Edges=[
 custom('guard','R6 decoded word pack admission',sources.get('guard').replace("admitPuzzlePack(sourceRoot,pack.metadata?.header?.family??'',pack.metadata?.engine??'',pack.rows??[])",'undefined'),['R6 guard word pack vocabulary admission']);
 custom('media-structure','R6 MP4 complete box bounds',sources.get('media-structure').replace('at+size>b.length','false').replace('return ftyp && at===b.length;','return ftyp;'),['R6 invalid media M4A size']);
 for(const [file,label,before,after,tests] of r6Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R6 mutation target '+label);custom(file,'R6 '+label,original.replace(before,after),tests);}
+custom('guard','R7 whole-key admission bypass',sources.get('guard').replace('const tokens=policyTokens(entry);',"if(admission.sources.exact.has(normalizedText(entry)))return true;const tokens=policyTokens(entry);"),['R7 identifier vocabulary clue file scan','R7 identifier vocabulary clue js scan','R7 identifier vocabulary clue registry scan']);
+custom('guard','R7 every matching component required',sources.get('guard').replace('tokens.every(token=>admission.sources.words.has(token))','tokens.some(token=>admission.sources.words.has(token))'),['R7 every matching component file','R7 token control ordinary']);
+custom('guard','R7 all policy groups in identifiers',sources.get('guard').replace('[...policy.scan,...policy.core,...policy.exact,...policy.lemmas].map(normalizedText)','policy.scan.map(normalizedText)'),['R7 identifier vocabulary clue js core','R7 identifier vocabulary clue js exact','R7 identifier vocabulary clue js lemmas']);
+custom('generated-admission','R7 preserve original identifier tokens',sources.get('generated-admission').replace('identifier:entry','identifier:key'),['R7 registry preserves camel token boundaries']);
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});

@@ -1051,3 +1051,47 @@ packedCase('R6 guard word pack vocabulary admission','numeric-code',{language:'e
 packedCase('R6 guard word pack authored control','numeric-code',{language:'en',answers:['REEF']},false,0,'word-search',['REEF']);
 
 for(const filename of ['reefClip.m4a','reef-clip.m4a','reef_clip.m4a'])test('R6 authored compound filename '+filename,async()=>{const {dir}=await admissionFixture('r6-compound-known-'+filename),out=join(dir,'dist');writeFileSync(join(dir,'src/content/authored.ts'),'export const label="Reef Clip";');mkdirSync(out);writeFileSync(join(out,filename),validM4a);assert.equal(guardTree(out,{...policy,scan:['REEF'],chamoruSensitive:[]},[],{sourceRoot:dir}).passed,true);});
+
+const r7Shapes={spell:w=>'spell-word-'+w,clue:w=>'clue-'+w,word:w=>'word-'+w,say:w=>'say-'+w,suffix:w=>w+'-1'};
+for(const [shape,keyFor] of Object.entries(r7Shapes))for(const surface of ['file','js','json','registry'])for(const group of ['scan','core','exact','lemmas'])test(`R7 identifier vocabulary ${shape} ${surface} ${group}`,async()=>{
+ const {module,dir}=await admissionFixture(`r7-${shape}-${surface}-${group}`),out=join(dir,'dist'),key=keyFor('zqunknownx');mkdirSync(out);mkdirSync(join(dir,'scripts/learn'),{recursive:true});
+ writeFileSync(join(dir,'scripts/learn/lines.json'),JSON.stringify({[key]:'Say the next word now.'}));
+ assert.ok(module.admissionSources(dir).exact.has(densityTools.normalizedText(key)));
+ const p={scan:[],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[],[group]:['ZQUNKNOWNX']};
+ if(surface==='file')writeFileSync(join(out,key+'.'+'a'.repeat(32)+'.m4a'),validM4a);
+ else if(surface==='registry'){writeFileSync(join(dir,'src/content/neuralAudio.ts'),`export const audio={${JSON.stringify(key)}:require('clip.m4a')};`);writeFileSync(join(out,'entry.js'),'hello');}
+ else {const map=JSON.stringify({[key]:'clip.m4a','ordinary-1':'other.m4a','ordinary-2':'last.m4a'});writeFileSync(join(out,'entry.'+(surface==='js'?'js':'json')),surface==='js'?'globalThis.audio='+map+';':map);}
+ assert.throws(()=>guardTree(out,p,[],{sourceRoot:dir}),/untraced-word|blocked-(?:source-)?literal/);
+});
+for(const [name,key,admitted] of [['ordinary','a-very-long-ordinary-identifier-123',false],['traced','clue-reef-unusual-identifier',true],['normalized','clue-zqúnknownx',false],['camel','clueZqunknownx-1',false]])test('R7 token control '+name,async()=>{
+ const {dir}=await admissionFixture('r7-control-'+name),out=join(dir,'dist');mkdirSync(out);mkdirSync(join(dir,'scripts/learn'),{recursive:true});writeFileSync(join(dir,'scripts/learn/lines.json'),JSON.stringify({[key]:'Say the next word now.'}));
+ writeFileSync(join(out,key+'.m4a'),validM4a);const p={...policy,scan:['REEF','ZQUNKNOWNX'],core:[],exact:[],lemmas:[],chamoruSensitive:[]};
+ if(admitted || name==='ordinary')assert.equal(guardTree(out,p,[],{sourceRoot:dir}).passed,true);else assert.throws(()=>guardTree(out,p,[],{sourceRoot:dir}),/untraced-word-file/);
+});
+for(const [shape,keyFor] of Object.entries(r7Shapes))test('R7 CLI realistic sentence slice 1000+40 '+shape,async()=>{
+ const {dir}=await admissionFixture('r7-cli-'+shape),out=join(dir,'dist');mkdirSync(out);mkdirSync(join(dir,'scripts/learn'),{recursive:true});
+ const alphabet='abcdefghijklmnopqrstuvwxyz',bad=dilutedWords.slice(0,40).map((word,i)=>alphabet[(i*7)%26]+word),plain=Array.from({length:1000},(_,i)=>alphabet[i%26]+alphabet[Math.floor(i/26)%26]+'plain'+alphabet[Math.floor(i/676)%26]),words=[...plain,...bad].sort(),keys=words.map(keyFor);
+ writeFileSync(join(dir,'scripts/learn/lines.json'),JSON.stringify(Object.fromEntries(words.map(w=>[keyFor(w),`Say ${w} now.`]))));
+ writeFileSync(join(out,'entry.js'),'globalThis.audio={'+keys.map((key,i)=>JSON.stringify(key)+':r(d['+i+'])').join(',')+'};');
+ for(const key of keys)writeFileSync(join(out,key+'.'+'a'.repeat(32)+'.m4a'),validM4a);
+ cpSync(join(root,'scripts/words'),join(dir,'scripts/words'),{recursive:true});symlinkSync(resolve('node_modules'),join(dir,'node_modules'));
+ const env={...process.env,CI:'true',LITTLE_ISLAND_WORD_POLICY_JSON:JSON.stringify({scan:bad,core:['ZQCOREONLYX'],exact:['ZQEXACTONLYX'],lemmas:['ZQLEMMAONLYX'],chamoruSensitive:[],canaries:['ZQCANARYONLYX']})};for(const name of Object.keys(env))if(name==='LITTLE_ISLAND_WORD_POLICY_LOCK' || name.startsWith('LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64'))delete env[name];
+ const r=spawnSync(process.execPath,[join(dir,'scripts/words/check.mjs'),'export',out],{cwd:dir,env,encoding:'utf8',maxBuffer:8*1024*1024});assert.equal(r.status,1,r.stderr);assert.match(r.stderr,/untraced-word-file|untraced-word-map/);
+});
+
+for(const surface of ['file','js','json','registry'])test('R7 every matching component '+surface,async()=>{
+ const {dir}=await admissionFixture('r7-every-'+surface),out=join(dir,'dist'),key='clue-reef-zqunknownx';mkdirSync(out);mkdirSync(join(dir,'scripts/learn'),{recursive:true});writeFileSync(join(dir,'scripts/learn/lines.json'),JSON.stringify({[key]:'Say the next word now.'}));
+ const p={...policy,scan:['REEF','ZQUNKNOWNX'],core:[],exact:[],lemmas:[],chamoruSensitive:[]};
+ if(surface==='file')writeFileSync(join(out,key+'.m4a'),validM4a);
+ else if(surface==='registry'){writeFileSync(join(dir,'src/content/neuralAudio.ts'),`export const audio={${JSON.stringify(key)}:require('clip.m4a')};`);writeFileSync(join(out,'entry.js'),'hello');}
+ else {const map=JSON.stringify({[key]:'clip.m4a','ordinary-1':'other.m4a','ordinary-2':'last.m4a'});writeFileSync(join(out,'entry.'+(surface==='js'?'js':'json')),surface==='js'?'globalThis.audio='+map+';':map);}
+ assert.throws(()=>guardTree(out,p,[],{sourceRoot:dir}),/untraced-word/);
+});
+test('R7 registry preserves camel token boundaries',async()=>{
+ const {dir}=await admissionFixture('r7-camel-registry'),out=join(dir,'dist'),key='clueZqunknownx-1';mkdirSync(out);mkdirSync(join(dir,'scripts/learn'),{recursive:true});writeFileSync(join(dir,'scripts/learn/lines.json'),JSON.stringify({[key]:'Say the next word now.'}));writeFileSync(join(dir,'src/content/neuralAudio.ts'),`export const audio={${JSON.stringify(key)}:require('clip.m4a')};`);writeFileSync(join(out,'entry.js'),'hello');assert.throws(()=>guardTree(out,{...policy,scan:['ZQUNKNOWNX'],core:[],exact:[],lemmas:[],chamoruSensitive:[]},[],{sourceRoot:dir}),/untraced-word-map/);
+});
+test('R7 frozen transcripts supply words but keys cannot',async()=>{
+ const {module,dir}=await admissionFixture('r7-inherited'),snapshot=readFileSync(join(root,'scripts/words/published-speech.json'));mkdirSync(join(dir,'scripts/words'),{recursive:true});writeFileSync(join(dir,'scripts/words/published-speech.json'),snapshot);
+ const bank=JSON.parse(snapshot),row=bank.entries.find(r=>{try{return Object.entries(JSON.parse(readFileSync(resolve(r.path)))).some(([k,t])=>sha256(k)===r.keySha256 && sha256(t)===r.transcriptSha256);}catch{return false;}}),[key,text]=Object.entries(JSON.parse(readFileSync(resolve(row.path)))).find(([k])=>sha256(k)===row.keySha256);mkdirSync(join(dir,row.path,'..'),{recursive:true});writeFileSync(join(dir,row.path),JSON.stringify({[key]:text}));const sources=module.admissionSources(dir);for(const word of densityTools.wordTokens(text))assert.match(sources.words.get(word).path,/^published:/);
+ const out=join(dir,'dist');mkdirSync(out);writeFileSync(join(out,'clue-'+densityTools.wordTokens(text)[0].toLowerCase()+'-1.m4a'),validM4a);assert.equal(guardTree(out,{scan:densityTools.wordTokens(text),core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]},[],{sourceRoot:dir}).passed,true);
+});
