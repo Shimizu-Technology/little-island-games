@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { Playfield, boardCell, type PlayfieldProps } from '../src/learn/games/slip-tide/field';
 
 const motion = vi.hoisted(() => ({ reduced: false, animated: [] as number[] }));
-vi.mock('react-native', () => ({ View: 'View' }));
+vi.mock('react-native', () => ({ View: 'View', useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
 vi.mock('react-native-gesture-handler', () => ({ Gesture: { Pan: () => { const g: Record<string, () => unknown> = {}; for (const key of ['enabled', 'maxPointers', 'minDistance', 'onBegin', 'onUpdate', 'onFinalize']) g[key] = () => g; return g; } }, GestureDetector: 'GestureDetector' }));
 vi.mock('react-native-reanimated', async () => {
   const { useRef } = await import('react');

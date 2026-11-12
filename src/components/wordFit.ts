@@ -21,3 +21,8 @@ export function wordFitMultiplier(text: string, fontSize: number, width: number,
   if (!widest) return ceiling;
   return Math.max(1, Math.min(ceiling, Math.floor(Math.max(0,width)*MARGIN/widest*100)/100));
 }
+/**
+ * `fontScale` at and above which iOS is at an accessibility text size (AX1 and up; the standard sizes end near 1.35).
+ * Shared chrome switches to its large-text layout here: switches stack under their words, and bars collapse.
+ */
+export const LARGE_TEXT = 1.5;

@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, IconName } from "./Icon";
 import { easeOut, nativeDriver, useReducedMotion } from "./motion";
 import { useSheetPresence } from "./sheetPresence";
+import { LARGE_TEXT } from "./wordFit";
 export const C = {
   ink: "#183F39",
   muted: "#64716C",
@@ -251,13 +252,16 @@ export function ToggleRow({
   disabled?: boolean;
   onChange: (value: boolean) => void;
 }) {
+  // At accessibility text sizes a switch beside the words leaves them a word or two per line, so it moves below.
+  const stacked = useWindowDimensions().fontScale >= LARGE_TEXT;
   return (
-    <View style={[styles.row, { backgroundColor: C.paper, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 14, gap: 12 }]}>
-      <View style={{ flex: 1 }}>
+    <View testID="toggle-row" style={[stacked ? { gap: 10 } : styles.row, { backgroundColor: C.paper, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 14 }, !stacked && { gap: 12 }]}>
+      <View style={stacked ? undefined : { flex: 1 }}>
         <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>{label}</Text>
         {detail && <Copy style={{ fontSize: 13, lineHeight: 18 }}>{detail}</Copy>}
       </View>
       <Switch
+        style={stacked ? { alignSelf: "flex-start" } : undefined}
         accessibilityLabel={label}
         value={value}
         disabled={disabled}
@@ -280,6 +284,7 @@ export function GameHeader({
   sound,
   onHelp,
   children,
+  titleMax,
 }: {
   title: string;
   onBack: () => void;
@@ -287,15 +292,23 @@ export function GameHeader({
   sound?: { on: boolean; toggle: () => void };
   onHelp?: () => void;
   children?: React.ReactNode;
+  /**
+   * Large-text bar: Back becomes an icon like Sound and Help, and the title stops growing at this multiplier
+   * (where its longest word still fits) and wraps between words onto two lines instead of shrinking to "Crab Com…".
+   */
+  titleMax?: number;
 }) {
+  const backName = backLabel === "Leave" ? "Leave this round" : backLabel === "Back" ? "Go back" : `Back to ${backLabel.toLowerCase()}`;
   return (
     <View style={[styles.row, { paddingVertical: 8, gap: 8 }]}>
-      <Button compact quiet icon="back" label={backLabel === "Leave" ? "Leave this round" : backLabel === "Back" ? "Go back" : `Back to ${backLabel.toLowerCase()}`} onPress={onBack} style={{ paddingLeft: 9 }}>
+      {titleMax ? <IconButton icon="back" label={backName} onPress={onBack} /> : <Button compact quiet icon="back" label={backName} onPress={onBack} style={{ paddingLeft: 9 }}>
         {backLabel}
-      </Button>
-      <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
+      </Button>}
+      {titleMax ? <Text accessibilityRole="header" numberOfLines={2} maxFontSizeMultiplier={titleMax} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
         {title}
-      </Text>
+      </Text> : <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
+        {title}
+      </Text>}
       {children}
       {sound && (
         <IconButton
