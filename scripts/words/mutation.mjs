@@ -260,6 +260,7 @@ const r6Edges=[
  ['media-structure','sfnt table range','offset+size>b.length','false',['R6 invalid media sfnt range']],
  ['puzzle-admission','word family coverage',"if(!wordFamily(family) && !wordFamily(engine))return undefined;",'return undefined;',['R6 word family pack word-search']],
 ];
+custom('guard','R6 decoded word pack admission',sources.get('guard').replace("admitPuzzlePack(sourceRoot,pack.metadata?.header?.family??'',pack.metadata?.engine??'',pack.rows??[])",'undefined'),['R6 guard word pack vocabulary admission']);
 custom('media-structure','R6 MP4 complete box bounds',sources.get('media-structure').replace('at+size>b.length','false').replace('return ftyp && at===b.length;','return ftyp;'),['R6 invalid media M4A size']);
 for(const [file,label,before,after,tests] of r6Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R6 mutation target '+label);custom(file,'R6 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}

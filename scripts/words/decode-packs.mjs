@@ -25,7 +25,7 @@ try {
       if (!value) throw new Error();
       return value;
     });
-    result.push({rows:decoded,payloads:decoded.map(row=>row.payload),speech:decoded.map(row=>row.speech),metadata:{header,rows:decoded.map(({payload,speech,...identifiers})=>identifiers)}});
+    result.push({rows:decoded,payloads:decoded.map(row=>row.payload),speech:decoded.map(row=>row.speech),metadata:{header,engine:family.adapter.engine,rows:decoded.map(({payload,speech,...identifiers})=>identifiers)}});
   }
   process.stdout.write(JSON.stringify(result));
 } catch {

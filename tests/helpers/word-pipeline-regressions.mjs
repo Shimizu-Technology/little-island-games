@@ -313,16 +313,17 @@ for(const [name,source,fail] of [
 
 // Synthetic codec uses the real row decoder, with isolated family bindings.
 // Its symbol string stands for numeric cells, like cage IDs in numeric packs.
-function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='synthetic') {
+function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='synthetic',authored=[]) {
  test(name,()=>{
   const source=join(scratch,`pack-source-${name.replaceAll(' ','-')}`),dir=join(source,'dist');
   mkdirSync(join(source,'scripts/puzzles/families'),{recursive:true});mkdirSync(join(source,'src/puzzles'),{recursive:true});mkdirSync(join(source,'src/state'));mkdirSync(dir);
   symlinkSync(resolve('node_modules'),join(source,'node_modules'));
   for(const file of ['scripts/puzzles/register.mjs','scripts/puzzles/hooks.mjs','src/puzzles/descriptor.ts','src/puzzles/bank.ts','src/puzzles/types.ts','src/state/saveBits.ts']) cpSync(resolve(file),join(source,file));
   writeFileSync(join(source,'scripts/puzzles/families/index.ts'),`export const families=[{id:${JSON.stringify(family)},bands:[{id:'a'}],adapter:{rules:1,decodePayload:x=>x===${JSON.stringify(encoded)}?${JSON.stringify(decoded)}:null,isPayload:x=>!!x}}];`);
+  if(authored.length){mkdirSync(join(source,'src/app'),{recursive:true});writeFileSync(join(source,'src/app/index.ts'),'export const words='+JSON.stringify(authored)+';');}
   const header={format:1,family,slot:0,first:0,count:1,band:'a',rules:1,rng:1};
   writeFileSync(join(dir,'p0.lipuzzle'),JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded,0,objectives]));
-  const original=process.cwd();try{process.chdir(source);if(rejected)assert.throws(()=>guardTree(dir,policy),/leaked/);else assert.equal(guardTree(dir,policy).passed,true);}finally{process.chdir(original);}
+  const original=process.cwd();try{process.chdir(source);if(rejected)assert.throws(()=>guardTree(dir,policy),/leaked|no admitted authored source/);else assert.equal(guardTree(dir,policy).passed,true);}finally{process.chdir(original);}
  });
 }
 packedCase('guard numeric encoded pack collision','COLD',{values:[2,14,11,3]});
@@ -1045,3 +1046,6 @@ test('R6 Library normalized token stays item bound',async()=>{const {module,dir}
 
 packedCase('R6 guard registered word family pack','numeric-code',{language:'en',answers:['COLD']},true,0,'word-search');
 test('R6 Library catalog binds active authored items',async()=>{const {module,dir}=await admissionFixture('r6-library-active');mkdirSync(join(dir,'content/library'),{recursive:true});writeFileSync(join(dir,'content/library/items.json'),'[{"id":"one","title":"ZQotherTermX"}]');const sources=module.admissionSources(dir);assert.equal(module.admitLibraryIndex(dir,[{id:'one',terms:['reef']}],sources,[]).entries.length,1);assert.throws(()=>module.admitLibraryIndex(dir,[{id:'one',terms:['reef']}],sources,['one']),/no source in its authored item/);});
+
+packedCase('R6 guard word pack vocabulary admission','numeric-code',{language:'en',answers:['ZQUNKNOWNX']},true,0,'word-search');
+packedCase('R6 guard word pack authored control','numeric-code',{language:'en',answers:['REEF']},false,0,'word-search',['REEF']);

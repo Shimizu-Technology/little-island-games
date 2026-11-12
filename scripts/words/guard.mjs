@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSyn
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
 import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts, wordMapKeys, admitGenerated } from './generated-admission.mjs';
+import { admitPuzzlePack } from './puzzle-admission.mjs';
 import { exportTextViews } from './text-views.mjs';
 import { tmpdir } from 'node:os';
 import { privatePath } from './paths.mjs';
@@ -246,7 +247,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     const result=spawnSync(process.execPath,['--import',resolve(sourceRoot,'scripts/puzzles/register.mjs'),runner],{input:JSON.stringify(packs.map(e=>e.bytes.toString('utf8'))),encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000,cwd:sourceRoot});
     requireThat(result.status===0,'Cannot decode exported puzzle packs');
     const decoded=JSON.parse(result.stdout);
-    packs.forEach((e,i)=>{e.decoded=decoded[i];});
+    packs.forEach((e,i)=>{e.decoded=decoded[i];const pack=e.decoded,receipt=admitPuzzlePack(sourceRoot,pack.metadata?.header?.family??'',pack.metadata?.engine??'',pack.rows??[]);if(receipt)admission?.receipts.push(receipt);});
   }
   for(const {name,bytes,decoded} of entries) {
       files++;
