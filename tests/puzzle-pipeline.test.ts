@@ -430,7 +430,8 @@ describe('committed catalog', () => {
   it('holds only the families owner slices have registered, each verifying clean', () => {
     expect(readCatalog(productionDirs).root.families.map(f => f[0]).sort()).toEqual(families.map(f => f.id).sort());
     expect(verifyCatalog(productionDirs, families).errors).toEqual([]);
-  }, 900_000);
+  // Keep the normal deadline; the existing slow-host mode only adds harness waiting time.
+  }, process.env.LITTLE_ISLAND_SLOW_HOST === '1' ? 1_800_000 : 900_000);
 });
 
 it('R2-5 excludes retired rows from active bake quotas and preserves a below-floor append',()=>{
