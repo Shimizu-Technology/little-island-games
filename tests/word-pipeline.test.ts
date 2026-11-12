@@ -19,9 +19,9 @@ const word = (spelling = 'REEF') => ({ schemaVersion:1,id:spelling.toLowerCase()
 const clue = (i = 0) => ({schemaVersion:1,id:`cal-${i}`,wordId:'reef',answer:'REEF',meaning:'A ridge of coral in the sea',tier:'Little',text:`Coral grows here under the sea${i ? `, clue ${i}` : ''}.`,candidates:[`Coral grows here under the sea${i ? `, clue ${i}` : ''}.`,'A coral ridge under the waves.','A home for fish made of coral.'],provenance:{model:'fixture-author',date:'2026-11-08T00:00:00Z',promptVersion:'test-v1',promptSha256:'c'.repeat(64),webUsed:false,inputs:'answer,meaning,tier,tone'}});
 const policy = {scan:['COLD'],core:['COLD'],exact:['COLD'],lemmas:['COLD']};
 const options = {id:'TEST-ONLY-250',fixture:true,vocabularySha256:'d'.repeat(64),scanListSha256:'e'.repeat(64)};
-function reviewed(packet: any, family: string, verdict = 'keep') {
-  const transcript=`TEST FIXTURE ONLY: synthetic ${family} transport; no content approval`;
-  const result={schemaVersion:1,batchSha256:packet.batchSha256,packetSha256:digest(packet),slot:packet.slot,fixture:true,reviewer:{id:`fixture-${family}`,family,model:'TEST-ONLY'},runId:`test-${family}`,startedAt:'2026-11-08T00:00:00Z',finishedAt:'2026-11-08T00:01:00Z',transcriptSha256:sha256(transcript),items:packet.items.map((c: any) => ({id:c.id,verdict,reason:'Synthetic fixture exercises transport only',...(verdict === 'revise'?{replacement:'Fixture replacement'}:{})}))};
+function reviewed(packet: any, family: string, verdict = 'keep', model = `TEST-ONLY-${family}`) {
+  const transcript=`TEST FIXTURE ONLY: synthetic ${family} ${model} transport; no content approval`;
+  const result={schemaVersion:1,batchSha256:packet.batchSha256,packetSha256:digest(packet),slot:packet.slot,fixture:true,reviewer:{id:`fixture-${family}-${model}`,family,model},runId:`test-${family}-${model}`,startedAt:'2026-11-08T00:00:00Z',finishedAt:'2026-11-08T00:01:00Z',transcriptSha256:sha256(transcript),items:packet.items.map((c: any) => ({id:c.id,verdict,reason:'Synthetic fixture exercises transport only',...(verdict === 'revise'?{replacement:'Fixture replacement'}:{})}))};
   return validateReview(packet,result,sha256(transcript));
 }
 
@@ -225,15 +225,21 @@ describe('blind review transport, reconciliation and no fabricated approvals', (
     const a=reviewed(prepared.packets[0],'openai'),b=reviewed(prepared.packets[1],'anthropic');
     expect(()=>reconcile(prepared,a,b)).toThrow('projection');
   });
-  it('fails partial, duplicate, stale, same-family, edited and transcript-free results', () => {
+  it('accepts two different models from one family (Leon, 13 Nov 2026) and rejects the same model twice', () => {
+    const prepared=prepareBatch([clue()],options), [pa,pb]=prepared.packets;
+    const a=reviewed(pa,'openai','keep','TEST-ONLY-model-1'), b=reviewed(pb,'openai','keep','TEST-ONLY-model-2');
+    expect(()=>reconcile(prepared,a,b)).not.toThrow();
+    expect(()=>reconcile(prepared,a,reviewed(pb,'openai','keep','TEST-ONLY-model-1'))).toThrow('independent');
+  });
+  it('fails partial, duplicate, stale, same-model, edited and transcript-free results', () => {
     const prepared=prepareBatch([clue()],options), [pa,pb]=prepared.packets;
     const a=reviewed(pa,'openai'), b=reviewed(pb,'anthropic');
     expect(()=>validateReview(pa,{...a,items:[]},a.transcriptSha256)).toThrow('Empty/duplicate IDs');
     expect(()=>validateReview(pa,{...a,items:[...a.items,...a.items]},a.transcriptSha256)).toThrow('Empty/duplicate IDs');
     expect(()=>validateReview(pa,{...a,packetSha256:'f'.repeat(64)},a.transcriptSha256)).toThrow('stale');
     expect(()=>validateReview(pa,a,'f'.repeat(64))).toThrow('transcript');
-    const sameFamily={...b,reviewer:{...b.reviewer,family:'openai'}};
-    const {id:_id,elapsedSeconds:_elapsed,...raw}=sameFamily;
+    const sameModel={...b,reviewer:{...b.reviewer,family:'openai',model:a.reviewer.model}};
+    const {id:_id,elapsedSeconds:_elapsed,...raw}=sameModel;
     expect(()=>reconcile(prepared,a,{...raw,id:digest(raw),elapsedSeconds:60})).toThrow('independent');
     expect(()=>reconcile(prepared,a,{...b,items:[{...b.items[0],verdict:'reject'}]})).toThrow('integrity');
   });
