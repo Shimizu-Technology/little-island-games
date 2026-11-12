@@ -66,8 +66,12 @@ export function solution(d: Descriptor, prefix: readonly Command[] = []): Comman
 }
 export type Repair = {op:'change'|'insert'|'remove';at:number;card?:Command};
 export type Hint = {keep:number;plan:Command[];next:Command|null;edit?:Repair};
-/** Minimum edit alignment to the certified repair. Insert/remove stay distinct from replacement. */
-export function repairStep(program:readonly Command[], plan:Command[]):Repair|undefined {
+/** Both editors hold at most this many cards; a hint never asks for an edit they would refuse. */
+export const PLAN_CAPACITY = 80;
+/** Minimum edit alignment to the certified repair. Insert/remove stay distinct from replacement.
+ * A full plan cannot take an insertion first, so the hint names a removal that lies on an optimal
+ * alignment instead; the remaining edits still reach the same target in the same number of steps. */
+export function repairStep(program:readonly Command[], plan:Command[], capacity=PLAN_CAPACITY):Repair|undefined {
  const dp=Array.from({length:program.length+1},()=>Array(plan.length+1).fill(0) as number[]);
  for(let i=program.length;i>=0;i--)for(let j=plan.length;j>=0;j--){
   dp[i][j]=i===program.length?plan.length-j:j===plan.length?program.length-i:program[i]===plan[j]?dp[i+1][j+1]:1+Math.min(dp[i+1][j+1],dp[i][j+1],dp[i+1][j]);
@@ -75,8 +79,19 @@ export function repairStep(program:readonly Command[], plan:Command[]):Repair|un
  let at=0;while(at<program.length&&at<plan.length&&program[at]===plan[at])at++;
  if(at===program.length&&at===plan.length)return;
  if(at<program.length&&at<plan.length&&dp[at][at]===1+dp[at+1][at+1])return {op:'change',at,card:plan[at]};
- if(at<plan.length&&dp[at][at]===1+dp[at][at+1])return {op:'insert',at,card:plan[at]};
+ const full=program.length>=capacity;
+ if(!full&&at<plan.length&&dp[at][at]===1+dp[at][at+1])return {op:'insert',at,card:plan[at]};
  if(at<program.length&&dp[at][at]===1+dp[at+1][at])return {op:'remove',at};
+ if(full){
+  // Follow an optimal alignment past the insertions it needs and name its first removal.
+  let i=at,j=at;
+  while(i<program.length||j<plan.length){
+   if(i<program.length&&j<plan.length&&program[i]===plan[j]&&dp[i][j]===dp[i+1][j+1]){i++;j++;continue;}
+   if(i<program.length&&dp[i][j]===1+dp[i+1][j])return {op:'remove',at:i};
+   if(i<program.length&&j<plan.length&&dp[i][j]===1+dp[i+1][j+1]){i++;j++;continue;}
+   j++;
+  }
+ }
  return {op:'change',at,card:plan[at]};
 }
 type Node = { walker: Walker; cost: number; next: [Command, number][] };
