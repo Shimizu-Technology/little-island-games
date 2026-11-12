@@ -33,7 +33,11 @@ import {
   type CrabInput,
   type CrabState,
 } from "./engine";
+/** Same cap as Lagoon's HUD: numbers and hints stop growing at 1.5x so the largest text keeps the road in view. */
+const HUD_TEXT_MAX = 1.5;
 const tick: CrabInput = { type: "tick" };
+/** The hint stays left of the arrow keys (three 44-pt keys, 4-pt gaps, 10 pt from the edge, 8-pt clearance). */
+const ARROWS_RIGHT = 10 + 44 * 3 + 4 * 2 + 8;
 export function CrabBoard({
   initial,
   active,
@@ -43,6 +47,7 @@ export function CrabBoard({
   onTone,
   size: allottedSize,
   height: availableHeight,
+  overlayTop = 0,
   debug,
 }: {
   initial: CrabState;
@@ -54,6 +59,8 @@ export function CrabBoard({
   size: number;
   height: number;
   wide: boolean;
+  /** Measured height of the shared header drawn over the world; the HUD starts below it. */
+  overlayTop?: number;
   debug: boolean;
 }) {
   const touch = useGridTouch();
@@ -192,7 +199,7 @@ export function CrabBoard({
             </View>)}
             {learning && l.numbers.map((n, i) => <React.Fragment key={i}>
               {[l.stones[i], (l.stones[i] + 3) % 9].map((x, j) => <View key={j} style={{ position: "absolute", top: (9 - i) * unit + 2, left: x * unit + 1, width: unit - 2, height: unit - 4, borderRadius: unit / 3, backgroundColor: i < s.cursor ? "#AEDCBA" : "#FFF0C7", borderWidth: 2, borderBottomWidth: 6, borderColor: i === s.cursor && j === 0 && helper ? "#E6A149" : "#7A9A91", justifyContent: "center", alignItems: "center" }}>
-                <Text style={{ color: "#2E5558", fontSize: unit * 0.42, fontWeight: "900" }}>{j ? n + (n === 1 ? 2 : 1) : n}</Text>
+                <Text maxFontSizeMultiplier={1.2} style={{ color: "#2E5558", fontSize: unit * 0.42, fontWeight: "900" }}>{j ? n + (n === 1 ? 2 : 1) : n}</Text>
               </View>)}
             </React.Fragment>)}
             <CrabTraffic poses={poses} unit={unit} lanes={lanes} debug={debug}/>
@@ -205,14 +212,14 @@ export function CrabBoard({
           </Animated.View>
         </View>
       </Shake>
-      <View pointerEvents="box-none" style={{ position: "absolute", top: 72, left: 10, right: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <View testID="crab-hud" pointerEvents="box-none" style={{ position: "absolute", top: overlayTop + 10, left: 10, right: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
         <View style={compactChip} accessibilityLabel={`Score ${s.score}. ${s.crossed} of ${s.level === "endless" ? "endless" : l.target} burrows`}>
-          <Text style={{ fontSize: 36, lineHeight: 42, fontWeight: "900", color: "#FFF4C7", textShadowColor: "#183B44", textShadowRadius: 2, textShadowOffset: { width: 2, height: 3 } }}>{learning ? l.numbers[s.cursor] ?? "HOME" : s.score}</Text>
-          <Text style={{ fontSize: 12, fontWeight: "900", color: "#FFF4C7" }}>{learning ? "NEXT STONE" : `BURROWS ${s.crossed}/${s.level === "endless" ? "∞" : l.target}`}</Text>
+          <Text maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ fontSize: 36, lineHeight: 42, fontWeight: "900", color: "#FFF4C7", textShadowColor: "#183B44", textShadowRadius: 2, textShadowOffset: { width: 2, height: 3 } }}>{learning ? l.numbers[s.cursor] ?? "HOME" : s.score}</Text>
+          <Text maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ fontSize: 12, fontWeight: "900", color: "#FFF4C7" }}>{learning ? "NEXT STONE" : `BURROWS ${s.crossed}/${s.level === "endless" ? "∞" : l.target}`}</Text>
         </View>
         <View style={{ gap: 5, alignItems: "flex-end" }}>
           {!learning && <View style={compactChip}><HeartsHud lives={s.lives}/></View>}
-          <View style={compactChip}><Text style={{ color: "#FFF4C7", fontWeight: "900", fontSize: 15 }}>⌂ {s.crossed}/{s.level === "endless" ? "∞" : l.target}</Text></View>
+          <View style={compactChip}><Text maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ color: "#FFF4C7", fontWeight: "900", fontSize: 15 }}>⌂ {s.crossed}/{s.level === "endless" ? "∞" : l.target}</Text></View>
         </View>
       </View>
       <View pointerEvents="box-none" style={{ position: "absolute", right: 10, bottom: 12, gap: 4, alignItems: "center" }}>
@@ -223,15 +230,15 @@ export function CrabBoard({
           <OverlayArrow label="Move right" glyph="→" onPress={() => move("right")} active={active}/>
         </View>
       </View>
-      {s.hops < 3 && <View pointerEvents="none" style={{ position: "absolute", bottom: 12, left: 10, backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }}><Copy style={{ color: "#FFF4C7", fontSize: 13 }}>Tap to hop · swipe to steer</Copy></View>}
-      {s.level === "endless" && <View style={{ position: "absolute", left: 10, bottom: 48 }}><Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish crossing</Button></View>}
+      {s.hops < 3 && <View testID="crab-hint" pointerEvents="none" style={{ position: "absolute", bottom: 12, left: 10, right: ARROWS_RIGHT, alignItems: "flex-start" }}><View style={{ backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }}><Copy maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ color: "#FFF4C7", fontSize: 13, lineHeight: 18 }}>Tap to hop · swipe to steer</Copy></View></View>}
+      {s.level === "endless" && <View style={{ position: "absolute", left: 10, bottom: 48 }}><Button quiet compact maxFontSizeMultiplier={HUD_TEXT_MAX} disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish crossing</Button></View>}
       {debug && <View pointerEvents="none" style={{ position: "absolute", left: 10, bottom: 4 }}><GridBudget budget={budget}/></View>}
     </View>
   );
 }
 
 function OverlayArrow({ label, glyph, onPress, active }: { label: string; glyph: string; onPress: () => void; active: boolean }) {
-  return <PressableScale accessibilityRole="button" accessibilityLabel={label} disabled={!active} onPress={onPress} style={{ width: 44, height: 44, borderRadius: 13, justifyContent: "center", alignItems: "center", backgroundColor: "#102F39B8", borderWidth: 1, borderColor: "#DDF3D2A8" }}><Text style={{ color: "#FFF7D9", fontSize: 27, fontWeight: "900" }}>{glyph}</Text></PressableScale>;
+  return <PressableScale accessibilityRole="button" accessibilityLabel={label} disabled={!active} onPress={onPress} style={{ width: 44, height: 44, borderRadius: 13, justifyContent: "center", alignItems: "center", backgroundColor: "#102F39B8", borderWidth: 1, borderColor: "#DDF3D2A8" }}><Text maxFontSizeMultiplier={1} style={{ color: "#FFF7D9", fontSize: 27, fontWeight: "900" }}>{glyph}</Text></PressableScale>;
 }
 
 const CrabActor = memo(function CrabActor({
