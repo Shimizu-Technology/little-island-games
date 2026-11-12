@@ -1,11 +1,12 @@
 import React from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
-import type { SceneEntity } from "../scene/types";
+import type { CharacterBase, SceneEntity } from "../scene/types";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { CarriedCharacter } from "./CarriedCharacter";
 import { carryBinding, renderAnchors, limbBottom } from "./rigGeometry";
 import { poseToken, poseVariants } from "./poseBank";
+import { nextPoseMount, poseLaidOut } from "./poseAck";
 import { settleProgress } from "./settle";
 import { poseHandoff, type SupportPlane } from "./poseHandoff";
 import type { Interaction } from "./useInteraction";
@@ -13,13 +14,18 @@ import type { Interaction } from "./useInteraction";
 /** Destination trees mount before release. A single opaque art swap happens
  * during continuous travel, without waiting for a JS proposal render. */
 export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 }, interaction, index, reduced, supportPlanes,
-  renderCharacter }: {
+  renderCharacter, bases }: {
   source: SceneEntity; destination?: SceneEntity; grip?: { x: number; y: number };
+  /** HM-13: mount target poses only for bases the reachable rooms offer. Geometry covers all. */
+  bases?: readonly CharacterBase[];
   interaction: Interaction; index: number; reduced: boolean; supportPlanes?: Record<string, SupportPlane>; renderCharacter?: CharacterRender;
 }) {
-  const { slots, clock } = interaction;
+  const { slots, clock, poseLayouts } = interaction;
+  const actor = source.id;
   const start = carryBinding(source, grip), head = renderAnchors(source, true).head;
   const variants = poseVariants({ ...source, action: destination.action });
+  const mounted = variants.filter((v) => !bases || bases.includes(v.base));
+  const mountedTokens = mounted.map((v) => poseToken(v.base, v.facing, v.action));
   const poses = Object.fromEntries(variants.map((v) => [poseToken(v.base, v.facing, v.action), {
     head: renderAnchors(v).head, bottom: limbBottom(v), angle: v.base === "lie" ? (v.facing === "left" ? 90 : -90) : 0,
   }]));
@@ -28,12 +34,17 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
     const active = (s.phase === "settling" && s.settleAt > 0) || (s.phase === "pending" && s.pausedElapsed > 0);
     const p = active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced, s.duration) : 0;
     const base = s.proposal?.base ?? source.base, facing = s.proposal?.facing ?? source.facing;
-    const pose = poses[poseToken(base, facing, destination.action)];
+    const requested = poseToken(base, facing, destination.action);
+    const pose = poses[requested] ?? poses[poseToken("stand", "front", destination.action)];
+    // R4: the carried art stays until the requested pose is mounted and natively laid out. A room
+    // reached mid-carry mounts its poses through JS, which can lag the UI-thread proposal.
+    // F1: the acknowledgement must be this actor's own, not another friend's on the same slot.
+    const landed = mountedTokens.includes(requested) && poseLaidOut(poseLayouts?.value, actor, requested);
     const attachment = s.proposal?.attachment;
     const support = attachment?.kind === "socket" ? supportPlanes?.[attachment.item] : undefined;
     const sample = poseHandoff(p, { x: s.releaseX, y: s.releaseY }, { x: s.targetX, y: s.targetY },
       { x: head.x + start.x, y: head.y + start.y }, pose.head, pose.bottom, pose.angle, support);
-    return { opacity: active ? sample.carryOpacity : 1, transformOrigin: [head.x, head.y, 0], transform: [
+    return { opacity: active && landed ? sample.carryOpacity : 1, transformOrigin: [head.x, head.y, 0], transform: [
       { translateX: start.x + (pose.head.x - head.x - start.x) * p },
       { translateY: start.y + (pose.head.y - head.y - start.y) * p }, { rotate: "0deg" },
     ] };
@@ -42,7 +53,7 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
     <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, from]}>
       <CarriedCharacter entity={source} interaction={interaction} index={index} reduced={reduced} renderCharacter={renderCharacter} />
     </Animated.View>
-    {variants.map((entity) => <TargetPose key={poseToken(entity.base, entity.facing, entity.action)}
+    {mounted.map((entity) => <TargetPose key={poseToken(entity.base, entity.facing, entity.action)}
       entity={entity} source={source} startHead={{ x: head.x + start.x, y: head.y + start.y }}
       interaction={interaction} index={index} reduced={reduced} supportPlanes={supportPlanes} renderCharacter={renderCharacter} />)}
   </>;
@@ -55,6 +66,21 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, su
   const token = poseToken(entity.base, entity.facing, entity.action);
   const bottom = limbBottom(entity);
   const angle = entity.base === "lie" ? (entity.facing === "left" ? 90 : -90) : 0;
+  // F1: this mount's own identity. Its native layout acknowledgement is keyed by the actor and
+  // pose, and only this mount can clear it: another friend unmounting leaves it alone.
+  const actor = source.id;
+  const [mount] = React.useState(nextPoseMount);
+  const laid = React.useRef(false);
+  // Forget only when this pose unmounts; a re-render hands out new function identities.
+  const forget = React.useRef(interaction.forgetPose);
+  const acknowledge = React.useRef(interaction.acknowledgePose);
+  React.useLayoutEffect(() => { forget.current = interaction.forgetPose; acknowledge.current = interaction.acknowledgePose; });
+  React.useEffect(() => {
+    // An already laid-out view that changes owner keeps its layout; nothing re-lays it out.
+    if (laid.current) acknowledge.current?.(actor, token, mount);
+    return () => forget.current?.(actor, token, mount);
+  }, [actor, token, mount]);
+  const onLayout = () => { laid.current = true; interaction.acknowledgePose(actor, token, mount); };
   const selected = useDerivedValue(() => {
     const s = slots.value[index];
     return poseToken(s.proposal?.base ?? source.base, s.proposal?.facing ?? source.facing, entity.action) === token;
@@ -79,7 +105,7 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, su
 
   });
   return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: frame.left, top: frame.top }, style]}>
-    <View collapsable={false} onLayout={() => interaction.acknowledgePose(index, token)} style={{ width: frame.width, height: frame.height }}>
+    <View collapsable={false} onLayout={onLayout} style={{ width: frame.width, height: frame.height }}>
       <EntityArt entity={entity} reduced={reduced} renderCharacter={renderCharacter} />
     </View>
   </Animated.View>;

@@ -148,3 +148,21 @@ npm run ios:restore-generated     # git checkout the four generated files; asser
   ```
 
   If ExpoSQLite still fails to compile, clear its stale build outputs under `build/dd` and rebuild.
+
+## Launch recovery and save status (program 4.0)
+
+How launch, the error boundaries and save status behave is described in [PROFILE_SAVES.md](PROFILE_SAVES.md#launch-notices-and-error-boundaries-program-40). Evidence for the rows below is in the sibling `little-island-games-artifacts/v4/f-launch-recover/` and `v4/f-followups/` folders. Simulator checks are not family-device acceptance, and none of these rows has been run on a physical iPhone or iPad yet.
+
+| Journey | Expected outcome | Status |
+| --- | --- | --- |
+| Save naming content this build lacks | Launch reaches the map; only those rounds and marks rows are set aside; original kept in Previous saves; only that person sees one line with OK | PASSED on simulator (F launch-recover round 1, G5 container) |
+| Notices row read fails | Retried once; a second failure opens Recovery and changes neither the save nor the row; Try opening again keeps every notice | Component tests only |
+| Restore or Start fresh with notices showing | The row clears in the same write as the replacement; a failed replacement keeps save and notices and shows the error | Component and SQLite adapter tests |
+| A screen fails to render mid-write | Only that screen shows "Little Island needs another try."; Try again re-renders it with the held save still pending; the save lands and a relaunch keeps it; Back to the map works | PASSED on iOS 26.5 simulator (probe builds, F launch-recover fix rounds 2 and 3) |
+| The navigator fails mid-write (UI boundary) | Same error screen; the Store isn't remounted or reloaded; Try again opens the map and reopens the child's screen with its board; the held save lands; relaunch keeps it. Failing again on the reopened screen goes to the map | PASSED on iOS 26.5 and 18.5 simulators for reopen; repeat-failure-to-map by component tests only |
+| The Store fails | "Little Island needs a restart." with no buttons and how to close and reopen; nothing new written; accepted writes drain; a cold start opens the last durable save | PASSED on iOS 26.5 simulator |
+| First load hangs | "Getting your island ready…", then the 15 s timeout Recovery; Try opening again opens the map; a late load writes nothing | PASSED on iOS 26.5 simulator |
+| Per-key draft status | One game's saved move never clears another game's unsaved one; a successful full save (Try saving again, discard, Cove person change, a Challenge start or finish) clears all draft debt; Library pause then saves without asking again; a refused Library change still shows | Component tests (`launch-recover-store-above`, `launch-followups`) |
+| Fast Refresh or a development double effect | The same Store keeps accepted changes, its queue and ownership, reads storage once, and never writes stale settings over a newer save | Component tests through the real React Refresh runtime and a replayed effect (`launch-followups-refresh`, `launch-followups`). Development only; not run in Metro on a device |
+
+Still open: the launch-log ring is best effort; reopening restores one screen, not the whole stack; a Store-failure restart can't wait for a write still draining.

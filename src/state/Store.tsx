@@ -141,6 +141,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const unsaved = () => lastWriteFailed.current || failedDrafts.current.size > 0;
   /** A full envelope reached storage. It holds every accepted move, so earlier draft failures are covered. */
   const envelopeSaved = () => { lastWriteFailed.current = false; failedDrafts.current.clear(); };
+  /** The error line clears only when nothing is outstanding. A refused admission or Library write stays. */
+  const allSaved = () => !lastWriteFailed.current && failedDrafts.current.size === 0 && !libraryRejected.current && !admissionRejected.current;
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
@@ -154,6 +156,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     restoring = useRef(false);
   // Every write this Store makes, refused once a newer Store has mounted. Ones already running finish.
   const owner = useRef(0);
+  // When this Store first hydrated. Set once; an effect replay never hydrates again.
+  const bootStarted = useRef<number | null>(null);
   // eslint-disable-next-line react-hooks/refs -- The check runs at write time, never during render.
   const [disk] = useState(() => fencedStorage(() => owner.current !== 0 && owner.current === liveStore));
   // Each load is one attempt. A retry, restore or newer load supersedes it, and its writes are refused.
@@ -181,8 +185,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {})
       .then(() => disk.set(encoded,envelopeWrite(durable)))
       .then(() => {
-        envelopeSaved();
-        if (mounted.current && !libraryRejected.current && !admissionRejected.current) setError(null);
+        envelopeSaved(); if (mounted.current && allSaved()) setError(null);
       })
       .catch(() => {
         writeFailures.current++; lastWriteFailed.current = true;
@@ -202,7 +205,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, saved:() => {
     // The newest draft for this game holds all of its moves; other games keep their own status.
     failedDrafts.current.delete(key);
-    if (mounted.current && !unsaved() && !libraryRejected.current && !admissionRejected.current) setError(null);
+    if (mounted.current && allSaved()) setError(null);
   }, failed:() => {
     writeFailures.current++; failedDrafts.current.add(key);
     if (mounted.current) setError('Your latest moves could not be saved. Keep the app open and try again, or export a backup of the accepted moves.');
@@ -276,16 +279,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
   useEffect(() => {
-    mounted.current = true; owner.current = ++liveStore;
-    // Hydrates asynchronously from external device storage.
-    void load();
+    mounted.current = true;
+    // A fast refresh (or a development double effect) reruns this on the same Store, with its refs and
+    // state kept. Only the first run takes ownership and hydrates. A replay keeps the accepted snapshot,
+    // its queue and ownership, and lets a load already running finish. Recovery reloads through retry.
+    if (bootStarted.current === null) {
+      bootStarted.current = Date.now(); owner.current = ++liveStore;
+      // Hydrates asynchronously from external device storage.
+      void load();
+    }
     // A load that never settles must not leave a blank or waiting screen. The load keeps running and
     // still publishes if it finishes; until then nothing is writable, so nothing can overwrite the save.
-    const guard = setTimeout(() => {
+    const guard = settled.current ? undefined : setTimeout(() => {
       if (settled.current || !mounted.current) return;
       noteLaunch('timeout', `Saved games did not open within ${BOOT_TIMEOUT_MS / 1000} seconds.`);
-      setRecovery(bootTimeoutMessage); setReady(true);
-    }, BOOT_TIMEOUT_MS);
+      settled.current = true; setRecovery(bootTimeoutMessage); setReady(true);
+    }, Math.max(0, BOOT_TIMEOUT_MS - (Date.now() - bootStarted.current!)));
     return () => {
       mounted.current = false;
       clearTimeout(guard);
@@ -742,15 +751,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         catch { uncertainWrite.current = true; setRaw(encodeSave(latest.current)); setRecovery('The saved state could not be confirmed. Keep the app open and export before retrying.'); throw error; }
         if (head !== encoded) throw error;
       }
-      admittedBytes.current = utf8Bytes(encoded);
-      latest.current = next; if(session.result)challengeTerminal.current={epoch:generation.current,session}; publishContent(); setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current) setError(null); return true;
+      admittedBytes.current = utf8Bytes(encoded); envelopeSaved();
+      latest.current = next; if(session.result)challengeTerminal.current={epoch:generation.current,session}; publishContent(); setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current && allSaved()) setError(null); return true;
     } catch {
       setError('This change could not be saved. Your saved work is kept. Keep the app open and try again, or export a backup.'); return false;
     } finally { restoring.current = false; }
   },[ready,recovery,writeDraft,refuseChallenge,disk]);
   const challengeDiscard = useCallback(async (expected: ChallengeExpected) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current || expected.epoch !== generation.current) return false;
-    restoring.current = true;
+    boundaryRefused.current = false; restoring.current = true;
     try {
       await queue.current;
       const before = latest.current, progress = progressFor(before,expected.owner), slot = progress?.paused.find(s => s.game === expected.game);
@@ -762,7 +771,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await disk.discardSession(JSON.stringify(slot));
       const meta = envelopeWrite(next);
       await disk.set(encoded,{ ...meta, folded:[...meta.folded,slot] });
-      admittedBytes.current = utf8Bytes(encoded); generation.current++; setEpoch(generation.current);
+      // The envelope holds every accepted move, so draft debt it folded is paid.
+      admittedBytes.current = utf8Bytes(encoded); envelopeSaved(); if (mounted.current && !boundaryRefused.current && allSaved()) setError(null); generation.current++; setEpoch(generation.current);
       latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); return true;
     } catch {
       setError('This paused game could not be removed. Your saved work is kept. Please try again.'); return false;
@@ -772,7 +782,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // A blur cleanup waits for the current boundary, then rechecks its captured epoch.
     if (action.type === 'select' && action.id === null) while (restoring.current && mounted.current && expectedEpoch === generation.current) await new Promise(resolve => setTimeout(resolve, 25));
     if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
-    restoring.current = true;
+    boundaryRefused.current = false; restoring.current = true;
     try {
       await queue.current;
       const before = latest.current;
@@ -782,7 +792,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const encoded = encodeSave(next); parseSave(encoded);
       if (action.type === 'remove') await preserveAndReplace(disk,encoded,encodeSave(before),envelopeWrite(next));
       else await disk.set(encoded,envelopeWrite(next));
-      admittedBytes.current = utf8Bytes(encoded);
+      admittedBytes.current = utf8Bytes(encoded); envelopeSaved(); if (mounted.current && !boundaryRefused.current && allSaved()) setError(null);
       generation.current++; setEpoch(generation.current);
       latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); return true;
     } catch {

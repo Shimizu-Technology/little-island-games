@@ -3,11 +3,14 @@ import { instance } from "../src/home/model";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
+import { poseToken } from "../src/home/runtime/poseBank";
+import { poseLaidOut } from "../src/home/runtime/poseAck";
 import { useInteraction, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, screenPoint, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
+const poseOf = (e: SceneEntity) => poseToken(e.base, e.facing, e.action);
 const harness = vi.hoisted(() => ({
   deferUI: false,
   pickups: [] as Pickup[],
@@ -165,7 +168,7 @@ function Probe({ scene, layout = true, designing = false, reduced = false }: { s
       const slot = current.slots.get()[pickup.slot];
       if (slot.id === pickup.id && slot.generation === pickup.generation && slot.epoch === pickup.epoch)
         { current.ready(pickup.slot, pickup.id);
-          current.acknowledgePose(pickup.slot, layoutToken(pickup.scene.entities[pickup.id])); }
+          current.acknowledgePose(pickup.id, poseOf(pickup.scene.entities[pickup.id]), 0); }
     },
     onTap: () => {},
     onClear: noop,
@@ -180,7 +183,7 @@ function Probe({ scene, layout = true, designing = false, reduced = false }: { s
       interaction.acknowledgeLayout(entity.id, layoutToken(entity));
     if (layout) for (const slot of interaction.slots.get()) {
       const entity = scene.entities[slot.restId ?? slot.id];
-      if (entity) interaction.acknowledgePose(interaction.slots.get().indexOf(slot), layoutToken(entity));
+      if (entity) interaction.acknowledgePose(slot.id, poseOf(entity), 0);
     }
   });
   return null;
@@ -296,9 +299,9 @@ describe("actual runtime callback sequencing", () => {
     await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
     harness.deferUI = true;
     const tokens = ["stand:front:none", "sit:front:none", "lie:front:none", "bathe:front:none"];
-    for (const token of tokens) current.acknowledgePose(0, token);
+    for (const token of tokens) current.acknowledgePose(entity.id, token, 1);
     while (harness.ui.length) harness.ui.shift()!();
-    for (const token of tokens) expect(current.poseLayouts.get()[`0:${token}`]).toBe(token);
+    for (const token of tokens) expect(poseLaidOut(current.poseLayouts.get(), entity.id, token)).toBe(true);
     harness.deferUI = false;
     await act(async () => renderer.unmount()); vi.useRealTimers();
   });
@@ -440,7 +443,7 @@ describe("actual runtime callback sequencing", () => {
     current.acknowledgeLayout(entity.id, layoutToken(final.entities[entity.id]));
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     expect(current.slots.get()[0].id).toBe(entity.id); // overlay final art has not laid out yet
-    current.acknowledgePose(0, layoutToken(final.entities[entity.id]));
+    current.acknowledgePose(entity.id, poseOf(final.entities[entity.id]), 0);
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     expect(current.slots.get()[0].id).toBe("");
     expect(current.slots.get()[0].x).toBe(settled.x); expect(current.slots.get()[0].y).toBe(settled.y);

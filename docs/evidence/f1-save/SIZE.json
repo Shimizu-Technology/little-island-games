@@ -2,12 +2,12 @@
   "catalogEntries": 62647,
   "coveEntries": 54000,
   "bankCount": 200,
-  "learnerBytes": 100579,
-  "adultChallengeBytes": 69601,
-  "adultRecordBytes": 69632,
+  "learnerBytes": 103600,
+  "adultChallengeBytes": 70592,
+  "adultRecordBytes": 70623,
   "sessionBytes": {
     "digits": 1287,
-    "paint": 1667,
+    "paint": 2347,
     "cells": 847,
     "letters": 1029,
     "edges": 931,
@@ -16,51 +16,73 @@
   },
   "pausedSessionBytes": [
     {
-      "game": "capacity-0",
+      "game": "capacity-0-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-1",
+      "game": "capacity-1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-2",
+      "game": "capacity-2-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-3",
+      "game": "capacity-3-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-4",
+      "game": "capacity-4-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-5",
+      "game": "capacity-5-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-6",
+      "game": "capacity-6-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     },
     {
-      "game": "capacity-7",
+      "game": "capacity-7-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "bytes": 4096
     }
   ],
-  "fiveLearnersChallengeBytes": 502895,
-  "fourAdultRecordBytes": 278528,
+  "fiveLearnersChallengeBytes": 518000,
+  "fourAdultRecordBytes": 282492,
   "libraryBytes": 999900,
   "drawingCount": 80,
-  "wholeSaveBytes": 1896524,
-  "remainingBytes": 103476,
-  "nearLimitMigratedBytes": 1985398,
-  "nearLimitPlusDenseChallengeBytes": 2085138,
+  "wholeSaveBytes": 1915593,
+  "remainingBytes": 84407,
+  "nearLimitMigratedBytes": 1981978,
+  "nearLimitPlusDenseChallengeBytes": 2085423,
+  "homeUndo": {
+    "capBytes": 15000,
+    "maxSteps": 20,
+    "stepsPerLearner": [
+      16,
+      16,
+      16,
+      16,
+      16
+    ],
+    "perLearnerBytes": [
+      14910,
+      14910,
+      14910,
+      14910,
+      14910
+    ],
+    "wholeSaveBytes": 1990183,
+    "addedBytes": 74590,
+    "remainingBytes": 9817,
+    "marginOfHeadroom": 0.116
+  },
   "limits": {
     "save": 2000000,
     "library": 1000000,
     "learner": 104000,
     "adult": 72000
   },
-  "coverage": "Actual canonical production storage primitives and validators, test-only structural codecs. Not proof of future game-engine reachability, arbitrary multi-cell undo, Home storage/delta formats or device timing."
+  "coverage": "Actual canonical production storage primitives and validators, test-only structural codecs. Not proof of future game-engine reachability, future Home storage/delta formats or device timing. homeUndo: five full Home undo histories (valid room snapshots at the cap) added to the same envelope."
 }

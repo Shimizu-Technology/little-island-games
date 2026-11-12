@@ -39,6 +39,15 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
   "catalog-busy": () => reviewRoom(Array.from({ length: 47 }, (_, n) =>
     ({ ...instance(`busy-${n}`, "chair", n % 8 * 2, Math.floor(n / 8) * 2),
       at: roomPoint(100 + n % 8 * 86, 380 + Math.floor(n / 8) * 26) }))),
+  // HM-18: a room at the 48-thing limit, with its floor still open; the beach shell below it is the next thing.
+  full: () => {
+    const state = migrateHome(starterHome())!;
+    const room = state.rooms.home;
+    const extra = Array.from({ length: Math.max(0, 48 - room.instances.length) }, (_, n) =>
+      ({ ...instance(`full-${n}`, "mango", 0, 0), at: roomPoint(60 + (n % 12) * 56, 300 + Math.floor(n / 12) * 22) }));
+    room.instances = [...room.instances, ...extra];
+    return migrateHome(state) ?? state;
+  },
   crowded: () => {
     const state = starterHome();
     const room = state.rooms.home;
