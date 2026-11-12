@@ -20,7 +20,9 @@ import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
 import { Board as B9 } from '../src/learn/games/sound-boat/view';
 import { Board as B10 } from '../src/learn/games/reef-race/view';
 import { Board as B11 } from '../src/learn/games/logic-lagoon/view';
-const boards: Partial<Record<LearnId, unknown>> = { 'code-lab': B0, 'hafa-adai': B1, 'fraction-feast': B2, 'pattern-path': B3, 'crab-commands': B4, 'tide-pool': B5, 'float-sink': B6, 'weather-watch': B7, 'treasure-algebra': B8, 'sound-boat': B9, 'reef-race': B10, 'logic-lagoon': B11 };
+import { Board as B12 } from '../src/learn/games/beep-bot/view';
+import { Board as B13 } from '../src/learn/games/tide-logic/view';
+const boards: Partial<Record<LearnId, unknown>> = { 'code-lab': B0, 'hafa-adai': B1, 'fraction-feast': B2, 'pattern-path': B3, 'crab-commands': B4, 'tide-pool': B5, 'float-sink': B6, 'weather-watch': B7, 'treasure-algebra': B8, 'sound-boat': B9, 'reef-race': B10, 'logic-lagoon': B11, 'beep-bot': B12, 'tide-logic': B13 };
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 vi.mock('react-native', () => {
@@ -185,7 +187,8 @@ it('Treasure Algebra at AX5: the six step buttons are three to a row and "-10" n
   const keys = steps.findAll(n => String(n.type) === 'PressableScale');
   expect(keys).toHaveLength(6);
   const key = flat(keys[0].props.style).width as number;
-  expect(key * 3 + 16).toBeLessThanOrEqual(W);expect(key).toBeGreaterThan(48);
+  // The card is 4 pt narrower than the board width it reports (its 2-pt border), so three keys fit inside that.
+  expect(key * 3 + 16).toBeLessThanOrEqual(W - 4);expect(key).toBeGreaterThan(48);
   for (const k of keys) expect(longest(k.findByType('Text' as never)), textOf(k)).toBeLessThanOrEqual(key - 8);
 });
 
@@ -264,4 +267,22 @@ it('the board region is what caps an uncapped prompt: without it the Crab prompt
   const r = await mount('crab-commands', sessionFor('crab-commands'), {}, null);
   expect(textNode(r, "Plan the crab's path, then Go!").props.maxFontSizeMultiplier).toBeUndefined();
   expect(inside(textNode(r, 'Up'), r.root)).toBe(true);
+});
+
+it('Beep Bot at AX5: the instruction gets the full width with Hear Beep under it, not a one-word column beside it', async () => {
+  const r = await mount('beep-bot', sessionFor('beep-bot'));
+  const row = r.root.find(n => n.props.testID === 'beep-message');
+  expect(row.props.style.flexDirection).toBe('column');
+  expect(flat(row.findAll(n => String(n.type) === 'Text')[0].props.style).flex).toBeUndefined();
+  await act(async () => root!.unmount()); root = undefined;
+  Object.assign(viewport, { fontScale: 1 });
+  const d = await mount('beep-bot', sessionFor('beep-bot'), {}, null);
+  expect(d.root.find(n => n.props.testID === 'beep-message').props.style.flexDirection).toBe('row');
+});
+
+it('Tide Logic at AX5: the two bucket labels each fit half the belt, so they never run together ("LEFT BUCKETRIGHT")', async () => {
+  const r = await mount('tide-logic', sessionFor('tide-logic'));
+  const labels = r.root.find(n => n.props.testID === 'tide-buckets').findAll(n => String(n.type) === 'Text');
+  expect(labels.map(textOf)).toEqual(['← LEFT BUCKET', 'RIGHT BUCKET →']);
+  for (const l of labels) { expect(flat(l.props.style).flexShrink).toBe(1); expect(longest(l), textOf(l)).toBeLessThanOrEqual((W - 32) / 2); }
 });

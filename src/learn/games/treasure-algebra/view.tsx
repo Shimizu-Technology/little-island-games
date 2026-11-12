@@ -81,7 +81,7 @@ function BalanceBoard({ task, state, remove, divide }: { task: AlgebraTask; stat
 const steps = [-10, -5, -1, 1, 5, 10], stepLabel = (step: number) => `${step > 0 ? "+" : ""}${step}`;
 /** At accessibility sizes the six steps are three to a row, wide enough that "−10" never stacks digit by digit. */
 function StepControls({ value, balance, change, width }: { value: number; balance: boolean; change: (v: number) => void; width: number }) {
-  const large = useWindowDimensions().fontScale >= LARGE_TEXT, key = large ? Math.floor((width - 16) / 3) : 48;
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT, key = large ? Math.floor((width - 28) / 3) : 48;
   const max = large ? Math.min(...steps.map(step => wordFitMultiplier(stepLabel(step), 18, key - 8, 2))) : undefined;
   return <View testID="algebra-steps" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>{steps.map(step => <PressableScale key={step} accessibilityRole="button" accessibilityLabel={`${step > 0 ? "Add" : "Subtract"} ${Math.abs(step)} ${balance ? "from x" : "steps"}`} onPress={() => change(Math.max(-20, Math.min(100, value + step)))} style={{ width: key, minHeight: 52, borderRadius: 13, backgroundColor: C.paper, borderWidth: 2, borderColor: navy, alignItems: "center", justifyContent: "center" }}><Copy maxFontSizeMultiplier={max} style={{ color: navy, fontSize: 18, fontWeight: "900" }}>{stepLabel(step)}</Copy></PressableScale>)}</View>;
 }

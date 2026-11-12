@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading } from "../../../components/ui";
 import { GameIcon } from "../../../components/GameIcon";
 import type { BoardProps } from "../../types";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import { advance, counterAt, choices, complete, correct, ready, route, taskAt, type Item, type TideState } from "./engine";
 
 function Cargo({ item, size = 56 }: { item: Item; size?: number }) {
@@ -16,6 +17,8 @@ function Cargo({ item, size = 56 }: { item: Item; size?: number }) {
 const bucketLabel = (value: string) => value === "left" ? "← left bucket" : value === "right" ? "right bucket →" : value === "count left" ? "← left bucket + count" : "choose bucket";
 function BucketPicture({ side }: { side: "left" | "right" }) { return <Svg width={30} height={30} viewBox="0 0 32 32" accessible accessibilityLabel={`${side} bucket picture`}><Path d="M5 8H27L24 27H8Z" fill={side === "left" ? "#5AAAB5" : "#EB9A79"} stroke={C.ink} strokeWidth="2"/><Path d="M4 8Q16 -2 28 8" fill="none" stroke={C.ink} strokeWidth="2"/></Svg>; }
 export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<TideState>) {
+  // Each bucket label has half the belt (12-pt padding, 8-pt gap); at large text its words stop where they fit it.
+  const bucketMax = useWindowDimensions().fontScale >= LARGE_TEXT ? wordFitMultiplier("RIGHT BUCKET →", 16, (width - 32) / 2, 2) : undefined;
   const s = session.state, done = complete(s), t = done ? null : taskAt(s.level, s.seed, s.index, s.version);
   const [editing, setEditing] = useState<keyof TideState["rule"] | null>(null);
   const [message, setMessage] = useState("");
@@ -53,7 +56,8 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
           {t.items.map((item, i) => <View key={i} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: i === failure || s.running === i ? 3 : 0, borderColor: i === failure ? "#B74431" : "#287A82", borderRadius: 12, backgroundColor: i === failure ? "#FFE0D8" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? 64 : 49}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{item.size}</Copy></View>)}
         </View>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
-        <View style={{ flexDirection: "row", justifyContent: "space-around" }}><Copy>← LEFT BUCKET</Copy><Copy>RIGHT BUCKET →</Copy></View>
+        {/* The bucket labels shrink and wrap between words at large text, never running into each other or off the board. */}
+        <View testID="tide-buckets" style={{ flexDirection: "row", justifyContent: "space-around", gap: 8 }}><Copy maxFontSizeMultiplier={bucketMax} style={{ flexShrink: 1 }}>← LEFT BUCKET</Copy><Copy maxFontSizeMultiplier={bucketMax} style={{ flexShrink: 1, textAlign: "right" }}>RIGHT BUCKET →</Copy></View>
         {s.level === 4 && <View accessibilityLiveRegion="polite" style={{padding:10,borderRadius:12,backgroundColor:"#FFF2BA"}}><Copy style={{fontSize:22,fontWeight:"800"}}>Counter: {counterAt(s)}</Copy><Copy>{s.running >= 0 && s.running < t.items.length ? route(t.items[s.running],s.rule)==="left" && s.rule.action==="count left" ? "Next catch: +1 when you tap Next catch" : "Next catch: counter stays the same" : s.running < 0 ? "Starts at 0. Count matching bell catches." : "Final count · every matching bell catch counted once"}</Copy></View>}
         {s.running >= 0 && <Copy style={{ textAlign: "center", fontWeight: "700" }}>{s.running < t.items.length ? `Catch ${s.running + 1}: ${route(t.items[s.running], s.rule).toUpperCase()} ${s.rule.action === "count left" && route(t.items[s.running], s.rule) === "left" ? " · counter +1" : ""}` : `All sorted! ${t.items.filter((item) => route(item, s.rule) === "left").length} left · ${t.items.filter((item) => route(item, s.rule) === "right").length} right`}</Copy>}
         {failure !== null && <Copy style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>Look at the outlined catch: the sorter found a bug.</Copy>}
