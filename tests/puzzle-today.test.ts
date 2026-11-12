@@ -108,7 +108,8 @@ describe('house rules for puzzle banks', () => {
     ['a daily completion record', /lastPlayed|last_played|playedOn|dailyDone|dayCount/i],
     ['a missed-day idea', /\bmissed\b/i],
     ['a countdown or waiting timer', /countdown|comeBack|come back tomorrow/i],
-    ['a lock', /\b(locked|isLocked|unlockAt|paywall)\b/i],
+    // "Locked candidates" is the name of a Sudoku technique, not a gate on content.
+    ['a lock', /\b(locked(?!-candidates)|isLocked|unlockAt|paywall)\b/i],
     ['currency or loot', /\b(coins?|gems?|lootbox|currency)\b/i],
     ['network calls', /\bfetch\(/],
   ])('has no %s in the kit, outside the web asset read', (name, pattern) => {

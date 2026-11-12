@@ -33,10 +33,10 @@ describe('Cove shelves, bands, packs and neutral history', () => {
   });
   it('offers three date-only shortcuts, gentler Monday, invalid date fails closed', () => {
     const picks = tideTable('2026-11-09', [entry]);
-    expect(picks.map(p => p.size)).toEqual(['Small', 'Medium', 'Large']); expect(picks[0].card.tier).toBe(1);
+    expect(picks.map(p => p.size)).toEqual(['Small', 'Medium', 'Large']); expect(picks[0].card!.tier).toBe(1);
     expect(tideTable('2026-11-09', [entry])).toEqual(picks);
     expect(tideTable('2026-02-29', [entry])).toEqual([]); expect(tideTable('2026-11-09', [])).toEqual([]);
-    expect(picks.every(p => entry.puzzles.includes(p.card))).toBe(true);
+    expect(picks.every(p => p.card && entry.puzzles.includes(p.card))).toBe(true);
   });
   it('builds a varied mixed replay only from solved refs with two techniques and four templates', () => {
     const progress = solvedProgress(), before = JSON.stringify(progress), metadata = (p: ChallengeCard) => ({ technique: String(p.ref.puzzle % 2), template: String(p.ref.puzzle % 4) });

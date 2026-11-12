@@ -1,0 +1,19 @@
+{
+ "format": 1,
+ "family": "skyline",
+ "seedBase": 1,
+ "attempts": 320,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "low": 160,
+  "high": 160
+ },
+ "sourceSha": "c2c943581a7e84d33d1f55c6ecd9ab25b2ec05a0",
+ "status": "complete"
+}

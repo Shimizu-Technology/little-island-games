@@ -1,0 +1,172 @@
+{
+ "sudoku": [
+  {
+   "slot": 40,
+   "first": 40960,
+   "count": 212,
+   "packHash": "b90ef608cee084be653bc794df1255ac66d499cd7d2275c18dab30ac151973d6",
+   "rules": 1,
+   "band": "sprout"
+  },
+  {
+   "slot": 41,
+   "first": 41172,
+   "count": 300,
+   "packHash": "3bb721de019287d1f31dff8affba0da8aaf87c36c132fbb9d126f262ac814d22",
+   "rules": 1,
+   "band": "shell"
+  },
+  {
+   "slot": 42,
+   "first": 41472,
+   "count": 300,
+   "packHash": "6dc925724de8a23f238929171943571378594685c6e9f9a8e7d8a3889cccf929",
+   "rules": 1,
+   "band": "coral"
+  },
+  {
+   "slot": 43,
+   "first": 41772,
+   "count": 365,
+   "packHash": "1e5eee8f5b3b94f5b4324f818a06b538039a4372826220946bf70f69f5a7e98b",
+   "rules": 1,
+   "band": "lagoon"
+  },
+  {
+   "slot": 44,
+   "first": 42137,
+   "count": 364,
+   "packHash": "56a58c3c0f49b525fee2d805a1c6d81842500ce9512049c9e4d778bb134889fd",
+   "rules": 1,
+   "band": "tidepool"
+  },
+  {
+   "slot": 45,
+   "first": 42501,
+   "count": 364,
+   "packHash": "b4a4d52f2a59f7f90d4db0de6614a077e43d3638f11999b9b277ee7444fb0d0d",
+   "rules": 1,
+   "band": "reef"
+  },
+  {
+   "slot": 46,
+   "first": 42865,
+   "count": 344,
+   "packHash": "394ae8e4cadeff24d4b7490ed670b171b863e7d987e409d0523b24f5887f875d",
+   "rules": 1,
+   "band": "deep"
+  },
+  {
+   "slot": 47,
+   "first": 43209,
+   "count": 364,
+   "packHash": "727c04a3dca63b443f1111022c1a61b284826baf57c769c9d5d5cb141a79f794",
+   "rules": 1,
+   "band": "trench"
+  }
+ ],
+ "cage-math": [
+  {
+   "slot": 48,
+   "first": 49152,
+   "count": 200,
+   "packHash": "b532b1e674153354d080308541fc212b5bb39a8924468a2cfc2cd414b131056c",
+   "rules": 1,
+   "band": "add"
+  },
+  {
+   "slot": 49,
+   "first": 49352,
+   "count": 200,
+   "packHash": "0544b8f2c9195e0ddb957810f7be8aed80e63b0fbca568bb413810f34c4e71cd",
+   "rules": 1,
+   "band": "take"
+  },
+  {
+   "slot": 50,
+   "first": 49552,
+   "count": 200,
+   "packHash": "fe795e7b4e61104899b43c5d03f3da3c08668b33dfbba9685781191b3b3b2c1c",
+   "rules": 1,
+   "band": "times"
+  },
+  {
+   "slot": 51,
+   "first": 49752,
+   "count": 200,
+   "packHash": "b89f1f4ffcc7d05581e40668539333b74da7971f39118de2105944c02fa4ed23",
+   "rules": 1,
+   "band": "seven"
+  },
+  {
+   "slot": 52,
+   "first": 49952,
+   "count": 160,
+   "packHash": "c01234da9e211abc9dc6758232d39d6a1a5ad2b136caa6d70c8b9846ed5e20d5",
+   "rules": 1,
+   "band": "nine"
+  }
+ ],
+ "greater-than": [
+  {
+   "slot": 53,
+   "first": 54272,
+   "count": 160,
+   "packHash": "3a3ea7b343df2629b8422605335f8c11391d6cae3c5cba5c798b04a36b6abb04",
+   "rules": 1,
+   "band": "gentle"
+  },
+  {
+   "slot": 54,
+   "first": 54432,
+   "count": 160,
+   "packHash": "7566156668a468078cc100059afb6a81d8213d70269a03b283826f75e313729a",
+   "rules": 1,
+   "band": "tall"
+  },
+  {
+   "slot": 55,
+   "first": 54592,
+   "count": 160,
+   "packHash": "5973b7ac616a2c66223ac46918d7dd3a8ac5cf329d4f339bafd3e0061895c597",
+   "rules": 1,
+   "band": "steep"
+  }
+ ],
+ "skyline": [
+  {
+   "slot": 56,
+   "first": 57344,
+   "count": 160,
+   "packHash": "746342e1fed85d28e56f5dc4d1a802fd49116b7259c46fd7b416c437a7ed03cc",
+   "rules": 1,
+   "band": "low"
+  },
+  {
+   "slot": 57,
+   "first": 57504,
+   "count": 160,
+   "packHash": "3117d212c85862f5512fda99f940d6cb90353172be3dcd106704c7ab22ed5149",
+   "rules": 1,
+   "band": "high"
+  }
+ ],
+ "killer": [
+  {
+   "slot": 58,
+   "first": 59392,
+   "count": 160,
+   "packHash": "79b9a70c8f6972434b7f99743e463d8fafb87c0d834671f41f13e1167a461940",
+   "rules": 1,
+   "band": "small"
+  },
+  {
+   "slot": 59,
+   "first": 59552,
+   "count": 144,
+   "packHash": "ad20895f3c2fb09eaa692b8c9ea6c869bd29cd3d502e89c117974974777464bd",
+   "rules": 1,
+   "band": "full"
+  }
+ ]
+}
