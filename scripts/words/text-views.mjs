@@ -33,7 +33,7 @@ export function exportTextViews(bytes) {
       const content=Buffer.from(bytes);if(zero[0]>zero[1])content.swap16();views.push(content.toString('utf16le'));
     }
     if(isUtf8(bytes))views.push(bytes.toString('utf8'));
-    else views.push(new TextDecoder('windows-1252').decode(bytes),bytes.toString('latin1'),bytes.toString('utf8')); 
+    else views.push(new TextDecoder('windows-1252').decode(bytes),bytes.toString('latin1'),bytes.toString('utf8'));
   }
   return [...new Set(views.map(cleanText))];
 }

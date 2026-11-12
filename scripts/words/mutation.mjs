@@ -217,6 +217,7 @@ r4Edges.push(
  ['text-views','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
 );
 const r5Edges=[
+ ['generated-admission','mixed map key admission',"(ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression","(ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && /^\\p{L}+$/u.test(p.name.text) && (ts.isCallExpression",['R5 diluted map with mixed ids']],
  ['text-views','lenient fallback',"else views.push(new TextDecoder('windows-1252').decode(bytes),bytes.toString('latin1'),bytes.toString('utf8'));","else views.push(bytes.toString('utf8'));",['R5 encoded Latin1 JSON literal','R5 encoded Latin1 text literal']],
  ['text-views','known magic only','const kind=binaryKind(bytes);',"const kind='media';",['R5 text CSV cp1252','R5 text XML latin1','R5 text ANSI core']],
  ['text-views','ANSI stripping',".replace(/\\x1b\\[[0-?]*[ -/]*[@-~]/g,'')",'', ['R5 ANSI middle word']],
