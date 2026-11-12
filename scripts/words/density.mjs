@@ -2,11 +2,11 @@
 export function normalizedText(text) {
   return text.normalize('NFKC').replace(/\p{Default_Ignorable_Code_Point}/gu,'').normalize('NFD').replace(/\p{M}/gu,'').toUpperCase();
 }
-export const wordTokens = text => normalizedText(text).match(/\p{L}+/gu)??[];
+export const wordTokens = text => normalizedText(text.replace(/([a-z])([A-Z])/g,'$1 $2')).match(/\p{L}+/gu)??[];
 export const densityWindow = 1000;
-export const densityThreshold = 16; // Calibrated against the historical export matrix; see README.
+export const densityThreshold = 15; // Calibrated against the historical export matrix; see README.
 export const shortDensityWindow = 200;
-export const shortDensityThreshold = 12; // Historical text-view peak 9; 33% margin, checked again on current exports.
+export const shortDensityThreshold = 12; // Historical text-view peak 8; 50% margin, checked again on current exports.
 export function densityScanner(terms, window=densityWindow) {
   const vocabulary=new Set(terms.map(normalizedText));
   return text=>{

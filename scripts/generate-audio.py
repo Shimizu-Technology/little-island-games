@@ -8,7 +8,7 @@ import concurrent.futures, json, math, re, subprocess, tempfile, wave, struct, a
 
 ROOT=Path(__file__).resolve().parent.parent
 OUT=ROOT/'assets/audio'
-OUT.mkdir(parents=True,exist_ok=True)
+
 # The inherited registry pack is a JSON-compatible literal; do not silently erase mappings if its format changes.
 source=(ROOT/'content/words/legacy-word-rescue.ts').read_text()
 match=re.search(r'export const legacyWordRescue = (\[.*?\]) as const;', source, re.S)
@@ -51,6 +51,12 @@ for learn_file in sorted((ROOT/"scripts/learn").glob("*.json")):
     learn_maps[learn_file.stem]=learn_map
     speech.update(learn_map)
 speech.update(json.loads((ROOT/"scripts/quality-audio.json").read_text()))
+
+# Validate the complete input before writing any asset or mapping.
+subprocess.run(['node', str(ROOT/'scripts/words/generated-admission.mjs'), 'speech'],
+               input=json.dumps(list(speech)), text=True, check=True, cwd=ROOT,
+               stdout=subprocess.DEVNULL)
+OUT.mkdir(parents=True,exist_ok=True)
 
 if args.manifest:
     print(json.dumps(speech,ensure_ascii=False,sort_keys=True))

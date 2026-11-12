@@ -144,37 +144,36 @@ node scripts/words/mutation.mjs
 ### Normalized density backstop and preview binding
 
 Every exported text file also receives a structure-independent density pass over
-its raw UTF-8 text, parsed/decoded strings (including each Hermes entry), and
+its leniently decoded text, parsed/decoded strings (including each Hermes entry), and
 the source-ordered decoded string sequence for JavaScript. Hermes entries are
 scanned individually: the compiler deduplicates and reorders its string table,
 so joining it creates artificial adjacency. Hermes proximity is enforced through
 the bound iOS JavaScript export, not the string table. Binary media is content-sniffed and
 keeps the raw blob/hash/canary checks. Text is NFKC-normalized, default-ignorable
 characters are removed, case and diacritics are folded, and tokens split at every
-non-letter. Core/exact/lemma content checks use the same normalization and whole
+non-letter and lower-to-upper camelCase boundary. Core/exact/lemma content checks use the same normalization and whole
 word boundaries; they remain unconditional and cannot be excepted.
 
 The broad leak vocabulary retains the existing minimum length of five letters
 and exclusion of the CHamoru-sensitive-only group. Two moving windows count
-**distinct** terms: a cap of **16 per 1,000 tokens** and **12 per 200 tokens**.
+**distinct** terms: a cap of **15 per 1,000 tokens** and **12 per 200 tokens**.
 The cap passes; cap+1 fails. Repetition does not increase the count. There is no
 density exception or Library-provenance bypass. The ten-snapshot calibration
 records every real exported file and all its text views in the private worker
 evidence. JavaScript views preserve source positions while decoding literals. The historical web matrix
-peaks at 11 in the long window and 8 in the short window, leaving 45% and 50%
-headroom there. Current preview and native measurements are recorded separately
-in the worker evidence. Earlier string-pool concatenations are
+peaks at 11 in the long window and 8 in the short window, leaving 36% and 50%
+headroom there. The family preview previously peaked at 12/8: against caps 15/12, this leaves 3/4 additional terms (25%/50% above the measured peaks). Round-5 measurements for each build are recorded in the worker report. Earlier string-pool concatenations are
 superseded by these source-order measurements.
 The complete broad set, including short everyday words, reaches 42 in raw code;
 the minimum length applies only to the broad detectors.
 
-The long window guarantees detection of **17 qualifying distinct terms within
+The long window guarantees detection of **16 qualifying distinct terms within
 1,000 normalized letter tokens**; the short window guarantees **13 within 200**.
 Neither guarantees an arbitrary five- or ten-term leak, padding beyond the window,
 or an unrecognized runtime cipher. Synthetic five-, ten- and 25-term probes also
 exercise structural rules for tuples, filenames, encoded JSON, regexes, record
 maps, branch labels, enums and templates. New encoding units require at least
-half their letter tokens to be broad vocabulary; sparse ordinary catalogs retain
+one quarter of their letter tokens to be broad vocabulary. Homogeneous record/object catalogs retain the measured 50% share to avoid treating UI metadata as word lists; sparse ordinary catalogs retain
 the density check. Existing strict list units keep their original rule. Prose
 requires interleaved function words and either content diversity or a finite verb.
 Supplemental uppercase tile/row candidates receive hard core/exact/lemma scans;
@@ -199,3 +198,34 @@ export, not the compiler's deduplicated and reordered string table.**
 `CI=true` requires a nonempty, valid locked policy for `check:words:export`. Missing
 or empty policy fails. Local policy-free export checks explicitly print
 `policy not checked`; they do not establish private-policy acceptance.
+
+
+## Generated-word admission and text decoding
+
+`generated-admission.mjs` inventories speech maps/manifests, pictures, Library
+search, and admitted word banks. Each generator validates before writing output.
+Speech generation validates again before publishing its maps. W1 banks retain
+full detached rebake/review admission. Authored app literals and transcripts have
+traceable repository paths and SHA-256 hashes; generated tables, imports, require
+paths, and map property keys cannot admit themselves. Generated growth/Arcade
+transcripts must trace every spoken token to authored inputs. The frozen inherited
+bank keeps its existing byte hash. No new policy exception is involved.
+
+The export guard creates admission receipts from the exporting source companion,
+including source paths/hashes and every traced broad map key or asset basename.
+Unknown entries fail, including terms diluted across thousands of map entries or
+hundreds of separate files. Receipts stay outside the export/repository, beside
+private advisories. They establish derivation, not content or family approval.
+
+Binary classification uses known media/font/Hermes magic numbers. Every other
+file receives UTF-8 decoding, Windows-1252/Latin-1 fallback when needed, BOM and
+alternating-NUL UTF-16 handling, ANSI CSI/OSC stripping, and control cleanup.
+Decoding failure never classifies a file as binary. ZIP/gzip assets fail closed;
+there is no approved compressed-asset list. A future compressed format needs an
+explicit bounded extraction design and tests before it can ship.
+
+For preview IPA delivery, first run `npm run ios:preview-bundle-prep`, keep
+`EXPO_PUBLIC_LIBRARY_PREVIEW=1` set for `npm run deliver:ios -- <command>`, then
+run `npm run ios:restore-generated` after completion. The wrapper verifies fresh
+preview JavaScript against embedded Hermes before any delivery command. A default
+export does not validate a preview IPA. This worker does not authorize delivery.

@@ -1,3 +1,4 @@
+import { admitGenerated } from "../words/generated-admission.mjs";
 import { createHash } from "node:crypto";
 import { admittedItems } from "./admission.mjs";
 import { Buffer } from "node:buffer";
@@ -44,6 +45,7 @@ const entries = [
   })),
 ];
 const index = buildIndex(entries);
+admitGenerated(process.cwd(), "library", index.flatMap(item => item.terms));
 const files = new Set();
 const images = new Set();
 const sentences = items.flatMap((item) => [

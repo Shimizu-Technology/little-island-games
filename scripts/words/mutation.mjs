@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','preview','ci'];
+const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','generated-admission','preview','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
 for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':file==='preview'?'scripts/ios-preview-bundle.mjs':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
@@ -92,8 +92,8 @@ const edges=[
  ['artifact-views','empty language array is not a declaration','value.length>0 && value.every','value.every',['R3 empty language array fails closed']],
  ['artifact-views','blank language is not a declaration','value.trim().length>0','true',['R3 blank language fails closed']],
  ['artifact-views','trimmed CHamoru language tag','/i.test(value.trim())','/i.test(value)',['R3 spaced CHamoru language tag']],
- ['guard','valid replacement character remains text',"!/[\\x00-\\x08\\x0e-\\x1f]/.test(text)","!/[\\x00-\\x08\\x0e-\\x1f\\ufffd]/.test(text)",['R3 valid UTF8 replacement remains text']],
- ['guard','invalid UTF8 is binary','isUtf8(bytes)','true',['R3 invalid UTF8 binary remains binary']],
+ ['text-views','replacement text remains scanned',"if(isUtf8(bytes))views.push(bytes.toString('utf8'));","if(isUtf8(bytes))views.push(bytes.toString('utf8').includes('\\ufffd')?'':bytes.toString('utf8'));",['R3 valid UTF8 replacement remains text']],
+ ['text-views','invalid UTF8 text must not skip','if(kind)return [];','if(kind || !isUtf8(bytes))return [];',['R3 invalid UTF8 remains scanned text']],
  ['guard','only complete vectors get XML views','const vector=isSvgDocument;',"const vector=text=>/^\\s*<svg\\b/i.test(text);",['R3 SVG construction prefix']],
  ['density','CHamoru accent normalization',".normalize('NFD').replace(/\\p{M}/gu,'')",'',['R3 accented CHamoru sensitive surface']],
  ['guard','CHamoru glottal normalization',".replace(/['ʼ’]/g,'')",'',['R3 glottal CHamoru sensitive surface']],
@@ -102,7 +102,7 @@ const edges=[
  ['guard','SVG displayed labels','displayStrings.push(...parsed.strings);','',['R3 SVG visible core label']],
  ['guard','decoded SVG unconditional leak view','...originalStrings.map(text=>text.toUpperCase()),','',['R3 SVG decoded canary retained']],
  ['artifact-views','SVG language declaration','if(chamoru(language))parsed.sensitiveStrings.push(...parsed.strings);','',['R3 SVG CHamoru visible label']],
- ['guard','structured text file list unit','strings=lines.length>1?[text,...lines]:lines;','strings=lines;',['R3 standalone TSV list']],
+ ['guard','structured text file list unit','strings.push(...(lines.length>1?[text,...lines]:lines));','strings.push(...lines);',['R3 standalone TSV list']],
  ['artifact-views','authored metadata keeps strict residual','return unit.filter(text=>{const entry=[text];entry.library=unit.library;return !tracedLibraryUnit(entry,library);});','return [];',['R3 authored aliases cannot contribute traced search tokens']],
  ['artifact-views','complete provenance required before body residual',"if(!unit.every(text=>libraryNormalize(text).split(' ').filter(Boolean).every(token=>all.has(token))))return unit;",'',['guard Library planted untraceable token']],
  ['library-source','only body supplies token provenance','strings(item,true,!authored.some(row=>row.id===id)).flatMap','source.flatMap',['R3 authored aliases cannot contribute traced search tokens']],
@@ -131,7 +131,7 @@ const edges=[
  ['artifact-views','odd entries','return values.flatMap(value=>{','if(!values.every(shortWords))return [];return values.flatMap(value=>{',['R4 legacy sparse odd array']],
  ['artifact-views','language recognizer',"/^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim())",'false',['R3 source constant','R3 source spread']],
  ['artifact-views','language characters',"/[åʼ]/iu.test(text.normalize('NFC'))",'false',['R3 characters 72 229']],
- ['guard','unknown extension fallback',"if((isUtf8(bytes)||bom==='fffe'||bom==='feff') && !/[\\x00-\\x08\\x0e-\\x1f]/.test(text))",'if(false)',['R3 text extension md']],
+ ['guard','unknown extension fallback','for(const text of decodedViews)','for(const text of [])',['R3 text extension md']],
  ['guard','technical list view'," || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)",'',['R3 list snake']],
  ['guard','literal string scope','literal:contentStrings.has(text)','literal:false',['guard blocked visible string']],
  ['guard','source scan roots',"['src','content','scripts/learn']","['src']",['R3 source content root','R3 source speech root']],
@@ -152,7 +152,7 @@ const r4Edges=[
  ['density','normalization NFKC',".normalize('NFKC')",'', ['R4 normalised core fullwidth']],
  ['density','normalization invisibles',".replace(/\\p{Default_Ignorable_Code_Point}/gu,'')",'', ['R4 normalised core soft hyphen','R4 normalised core zero width']],
  ['density','normalization diacritics',".normalize('NFD').replace(/\\p{M}/gu,'')",'', ['R4 normalised core decomposed']],
- ['density','threshold','densityThreshold = 16','densityThreshold = 17',['R4 density threshold 17']],
+ ['density','threshold','densityThreshold = 15','densityThreshold = 16',['R4 density threshold 16']],
  ['density','window eviction','counts.delete(word)','counts.set(word,1)',['R4 density sliding boundary']],
  ['guard','density gate','if(scanned.densityMaximum>densityThreshold || scanned.shortDensityMaximum>shortDensityThreshold)','if(false)',['R4 density threshold 17']],
  ['guard','JSON teaching source','teachingJSON(JSON.parse(text))',"{strings:[],grids:[]}",['R4 teaching JSON source']],
@@ -178,7 +178,7 @@ r4Edges.push(
  ['artifact-views','row strings any key','active || supplemental ||','active ||',['R4 unknown row strings']]
 );
 r4Edges.push(
- ['density','long cap lower boundary','densityThreshold = 16','densityThreshold = 15',['R4 density threshold 16']],
+ ['density','long cap lower boundary','densityThreshold = 15','densityThreshold = 14',['R4 density threshold 15']],
  ['density','short cap upper boundary','shortDensityThreshold = 12','shortDensityThreshold = 13',['R4 short density boundary 13']],
  ['density','short cap lower boundary','shortDensityThreshold = 12','shortDensityThreshold = 11',['R4 short density boundary 12']],
  ['guard','short density independent gate','scanned.shortDensityMaximum>shortDensityThreshold','false',['R4 short density boundary 13']],
@@ -190,7 +190,7 @@ r4Edges.push(
 );
 r4Edges.push(
  ['guard','JSON teaching shape'," || /src\\/learn\\//.test(name) && teachingRecordData(JSON.parse(text))",'', ['R4 teaching record shape words.json']],
- ['artifact-views','TS teaching shape',"||/src\\/learn\\//.test(name) && /[\"']?term[\"']?\\s*:/.test(text) && /[\"']?english[\"']?\\s*:/.test(text)",'',['R4 teaching record shape words.ts']]
+ ['artifact-views','TS teaching shape',"teaching || /src\\/learn\\//.test(name) && ['term','english'].every(key=>n.properties.some(p=>p.name?.getText(tree).replace(/^['\\\"]|['\\\"]$/g,'')===key))",'teaching',['R4 teaching record shape words.ts','R5 shorthand teaching identity']]
 );
 r4Edges.push(
  ['guard','Hermes individual density entries','...densityEntries,...strings,...keys,',"...(isHermes?[]:densityEntries),...(isHermes?[]:strings),...keys,",['R4 Hermes entry density single list']],
@@ -213,9 +213,26 @@ r4Edges.push(
  ['check','receipt compiler identity', 'digest(r.iosJavaScript.compiler)===digest(compilerIdentity(root))', 'true', ['R4 receipt compiler binding iosJavaScript.compiler.packageVersion']]
 );
 r4Edges.push(
- ['guard','UTF16 text decoding',"if(bom==='fffe'||bom==='feff')",'if(false)',['R4 UTF16 le density','R4 UTF16 core']],
- ['guard','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
+ ['text-views','UTF16 text decoding',"if(bom==='fffe'||bom==='feff')",'if(false)',['R4 UTF16 le density','R4 UTF16 core']],
+ ['text-views','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
 );
+const r5Edges=[
+ ['text-views','lenient fallback',"else views.push(new TextDecoder('windows-1252').decode(bytes),bytes.toString('latin1'),bytes.toString('utf8'));","else views.push(bytes.toString('utf8'));",['R5 encoded Latin1 JSON literal','R5 encoded Latin1 text literal']],
+ ['text-views','known magic only','const kind=binaryKind(bytes);',"const kind='media';",['R5 text CSV cp1252','R5 text XML latin1','R5 text ANSI core']],
+ ['text-views','ANSI stripping',".replace(/\\x1b\\[[0-?]*[ -/]*[@-~]/g,'')",'', ['R5 ANSI middle word']],
+ ['text-views','control stripping',".replace(/[\\x00-\\x08\\x0b-\\x1f\\x7f-\\x9f]/g,' ')",'',['R5 controls normalized']],
+ ['artifact-views','record excludes fields only','keys.filter(key=>!excluded.has(key))',"(keys.some(key=>excluded.has(key))?[]:keys)",['R5 records 5 id data.json']],
+ ['artifact-views','object record key unit',"values.every(v=>v && !Array.isArray(v) && typeof v==='object' && JSON.stringify(Object.keys(v).sort())===JSON.stringify(Object.keys(values[0]).sort()))",'false',['R5 object record key structure']],
+ ['guard','compact mixed share','compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)','compactBroadShare(remaining,broad)>=0.5',['R5 mixed filenames','R5 mixed ids']],
+ ['guard','export map provenance',"if(mapKeys.some(key=>broadNames(normalizedText(key)).size && !admitted(key)))","if(false)",['R5 diluted map 7600 plus 300']],
+ ['guard','export file provenance',"if(broadNames(normalizedText(stem)).size && !admitted(stem))","if(false)",['R5 diluted 300 audio files']],
+ ['density','camel case tokens',"text.replace(/([a-z])([A-Z])/g,'$1 $2')",'text',['R5 camelCase density']],
+ ['check','CI any truthy value',"!isCI(process.env.CI)","process.env.CI!=='true'",['R5 CI 1 missing policy']],
+ ['generated-admission','exclude output sources',' || outputPath.test(name)','',['R5 generator rejects output self admission']],
+ ['generated-admission','exclude word map property keys',"if(ts.isStringLiteralLike(n) && n.parent?.name===n)return;",'', ['R5 generator rejects unknown map self admission']],
+ ['generated-admission','source required','!!source','true',['R5 generator rejects untraced word']],
+];
+for(const [file,label,before,after,tests] of r5Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R5 mutation target '+label);custom(file,'R5 '+label,original.replace(before,after),tests);}
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');

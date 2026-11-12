@@ -82,6 +82,7 @@ def main():
         speech = json.loads((ROOT/'scripts/learn/library.json').read_text())
     else:
         speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    subprocess.run(['node', str(ROOT/'scripts/words/generated-admission.mjs'), 'speech'], input=json.dumps(list(speech)), text=True, check=True, cwd=ROOT, stdout=subprocess.DEVNULL)
     voices = {'warm': VOICES['warm']} if args.slice else VOICES
     receipt = Path(args.receipt) if args.receipt else Path(args.model_dir)/'generated.json'
     if args.slice and receipt.resolve() == (Path(args.model_dir)/'generated.json').resolve():
@@ -178,6 +179,7 @@ def main():
     tmp=receipt.with_suffix('.tmp');tmp.write_text(json.dumps(records,sort_keys=True));tmp.replace(receipt)
     if args.limit: return
     latest=json.loads((ROOT/'scripts/learn/library.json').read_text()) if args.slice else json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    subprocess.run(['node', str(ROOT/'scripts/words/generated-admission.mjs'), 'speech'], input=json.dumps(list(speech)), text=True, check=True, cwd=ROOT, stdout=subprocess.DEVNULL)
     if latest != speech: raise RuntimeError('Speech manifest changed during generation; rerun before publication')
     if hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()!=model_hash or hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()!=voice_hash:
         raise RuntimeError('Inference files changed during generation; refusing publication')

@@ -5,6 +5,7 @@
 //   content/pictures/approvals.json    empty person-review fields, bound to each file's hash
 //   src/content/pictures/assets.generated.ts   lazy require table
 // `node scripts/art/pictures/build.mjs` writes; `--check` only compares.
+import { admitGenerated } from '../../words/generated-admission.mjs';
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -20,6 +21,7 @@ const json = value => `${JSON.stringify(value, null, 2)}\n`;
 
 /** Every output file, keyed by repository path. Pure: the check compares this with the tree. */
 export function buildOutputs(defs = definitions()) {
+  admitGenerated(ROOT,'pictures',defs.map(d=>d.word));
   const files = new Map();
   const pictures = [], sources = [], approvals = [];
   const previous = existsSync(join(OUT, 'approvals.json')) ? JSON.parse(readFileSync(join(OUT, 'approvals.json'), 'utf8')) : { pictures: [] };

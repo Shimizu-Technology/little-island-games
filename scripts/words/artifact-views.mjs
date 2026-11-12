@@ -263,14 +263,14 @@ export function puzzleStrings(value) {
 function objectUnits(value) {
   if(!value || Array.isArray(value) || typeof value!=='object')return [];
   const keys=Object.keys(value),values=Object.values(value);
-  return [...(keys.length>=3 && keys.every(shortWords) && values.every(v=>typeof v===typeof values[0] && typeof v==='string')?[keys]:[]),...(values.length>=3 && !keys.some(key=>['id','label','title','description','text'].includes(key)) && values.every(shortWords)?[values]:[])];
+  return [...(keys.length>=3 && keys.every(shortWords) && (values.every(v=>typeof v==='string') || values.every(v=>v && !Array.isArray(v) && typeof v==='object' && JSON.stringify(Object.keys(v).sort())===JSON.stringify(Object.keys(values[0]).sort())))?[keys]:[]),...(values.length>=3 && !keys.some(key=>['id','label','title','description','text'].includes(key)) && values.every(shortWords)?[values]:[])].map(unit=>{unit.catalog=true;return unit;});
 }
 function recordUnits(values) {
   if(values.length<3 || !values.every(v=>v && !Array.isArray(v) && typeof v==='object'))return [];
   const keys=Object.keys(values[0]).sort();
-  if(keys.some(key=>['id','label','title','description','text','terms','sounds'].includes(key)))return [];
+  const excluded=new Set(['id','label','title','description','text','terms','sounds']);
   if(!values.every(v=>JSON.stringify(Object.keys(v).sort())===JSON.stringify(keys)))return [];
-  return keys.map(key=>values.map(v=>v[key])).filter(unit=>unit.every(shortWords) && new Set(unit).size===unit.length);
+  return keys.filter(key=>!excluded.has(key)).map(key=>values.map(v=>v[key])).filter(unit=>unit.every(shortWords) && new Set(unit).size===unit.length).map(unit=>{unit.catalog=true;return unit;});
 }
 export function jsonUnits(value, context={ids:[],scope:false}) {
   if (!value || typeof value !== 'object') return [];
@@ -332,10 +332,10 @@ export function chamoruSource(text, name) {
     return unknown;
   }
   const namedTeaching=/src\/learn\/content\/chamoru[^/]*\.[jt]sx?$/.test(name);
-  const teaching=namedTeaching||/\bChamoruWord\b/.test(text)||/src\/learn\//.test(name) && /["']?term["']?\s*:/.test(text) && /["']?english["']?\s*:/.test(text);
+  const teaching=namedTeaching||/\bChamoruWord\b/.test(text);
   function visit(n) {
     if(namedTeaching && ts.isPropertyAssignment(n))requireThat(ts.isStringLiteral(n.initializer), 'blocked CHamoru teaching fields must be plain string literals');
-    if(teaching && ts.isObjectLiteralExpression(n)) {
+    if(ts.isObjectLiteralExpression(n) && (teaching || /src\/learn\//.test(name) && ['term','english'].every(key=>n.properties.some(p=>p.name?.getText(tree).replace(/^['\"]|['\"]$/g,'')===key)))) {
       const fields=data(n);if('term' in fields) {
         requireThat(typeof fields.term==='string','CHamoru teaching term must be static text');
         requireThat(n.properties.every(p=>ts.isPropertyAssignment(p) && ts.isStringLiteral(p.initializer)), 'blocked CHamoru teaching fields must be plain string literals');

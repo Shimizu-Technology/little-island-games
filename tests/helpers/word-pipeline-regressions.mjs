@@ -282,7 +282,7 @@ test('artifact exceptions cannot exempt case-folded hashes or full lists',()=>{c
 // W-guard: placeholder terms only. These cases describe exported meanings,
 // never the actual private lists or a content approval.
 function exportCase(name, file, text, p=policy, rejected=false) {
- test(name,()=>{const dir=join(scratch,name.replaceAll(' ','-'));mkdirSync(dir);writeFileSync(join(dir,file),text);if(rejected)assert.throws(()=>guardTree(dir,p),/leaked|forbidden|exception|language|UTF-16/);else assert.equal(guardTree(dir,p).passed,true);});
+ test(name,()=>{const dir=join(scratch,name.replaceAll(' ','-'));mkdirSync(dir);writeFileSync(join(dir,file),text);if(rejected)assert.throws(()=>guardTree(dir,p,[],{sourceRoot:root}),/leaked|forbidden|exception|language|UTF-16/);else assert.equal(guardTree(dir,p,[],{sourceRoot:root}).passed,true);});
 }
 exportCase('guard longer visible word','app.js','globalThis.label="COLDER";');
 exportCase('guard minified identifiers','app.js','function COLD(a){const ALPHANONSENSE=1,BETANONSENSE=2,GAMMANONSENSE=3;return a+ALPHANONSENSE+BETANONSENSE+GAMMANONSENSE;}');
@@ -682,7 +682,7 @@ teachingCase('R3 exact accented teaching allowance',{policy:{chamoruTeachingAllo
 exportCase('R3 SVG construction prefix','data.js','globalThis.prefix='+JSON.stringify('<svg xmlns="http://www.w3.org/2000/svg">')+';');
 exportCase('R3 self-closing SVG','data.js','globalThis.vector="<svg/>";');
 exportCase('R3 valid UTF8 replacement remains text','data.unknown','Tap COLD \uFFFD now',policy,true);
-exportCase('R3 invalid UTF8 binary remains binary','data.unknown',Buffer.concat([Buffer.from([255]),Buffer.from('Tap COLD now')]));
+exportCase('R3 invalid UTF8 remains scanned text','data.unknown',Buffer.concat([Buffer.from([255]),Buffer.from('Tap COLD now')]),policy,true);
 exportCase('R3 empty language array fails closed','data.json',JSON.stringify({languages:[],rows:['KAPSENSE']}),sensitivePolicy,true);
 exportCase('R3 blank language fails closed','data.json',JSON.stringify({language:'  ',rows:['KAPSENSE']}),sensitivePolicy,true);
 exportCase('R3 spaced CHamoru language tag','data.json',JSON.stringify({language:' ch-GU ',rows:['KAPSENSE']}),sensitivePolicy,true);
@@ -746,11 +746,11 @@ const r4shapes={
 };
 for(const size of [5,10,25])for(const [shape,encode] of Object.entries(r4shapes))exportCase(`R4 fragment ${size} ${shape}`,'data.js','globalThis.value='+encode(r4words.slice(0,size))+';',r4policy,true);
 for(const shape of Object.keys(r4shapes))test(`R4 density 25 ${shape}`,()=>assert.ok(densityTools.densityScanner(r4words)(r4shapes[shape](r4words))>=densityTools.densityThreshold));
-for(const size of [5,10,16,17,25])test(`R4 density threshold ${size}`,()=>{
+for(const size of [5,10,15,16,17,25])test(`R4 density threshold ${size}`,()=>{
  const dir=join(scratch,'density-'+size);mkdirSync(dir);
  // Each term lives in a separate statement; no structure-aware list unit exists.
  writeFileSync(join(dir,'data.js'),r4words.slice(0,size).map((word,i)=>`globalThis.x${i}=${JSON.stringify(word)};`+'globalThis.padding='+JSON.stringify('filler '.repeat(30))+';').join('\n'));
- if(size>16)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
+ if(size>15)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
 });
 test('R4 density distinct count',()=>assert.equal(densityTools.densityScanner(r4words)(Array(100).fill(r4words[0]).join(' ')),1));
 test('R4 density sliding boundary',()=>assert.equal(densityTools.densityScanner(r4words)(r4words.slice(0,15).join(' ')+' filler'.repeat(1000)+' '+r4words.slice(15).join(' ')),15));
@@ -906,3 +906,81 @@ for(const [label,text] of [
 for(const copies of [1,2])test(`R4 non-list view preserves reviewed occurrence ${copies}`,()=>{
  const dir=join(scratch,'non-list-occurrence-'+copies),path='_expo/static/js/ios/entry-test.js';mkdirSync(join(dir,path,'..'),{recursive:true});const branches='switch(value){'+reviewedTableKeys.map(key=>'case '+JSON.stringify(key)+':break;').join('')+'}';writeFileSync(join(dir,path),branches+Array.from({length:copies},(_,i)=>`globalThis.table${i}=${JSON.stringify(reviewedTable)};`).join(''));if(copies===1)assert.equal(guardTree(dir,nativeTablePolicy).passed,true);else assert.throws(()=>guardTree(dir,nativeTablePolicy),/partial-list/);
 });
+
+// Round 5: placeholders only. These are accidental generator/export shapes.
+for(const [kind,bytes] of [
+ ['CSV cp1252',Buffer.from(r4words.join(',\n')+',café','latin1')],
+ ['XML latin1',Buffer.from('<?xml version="1.0" encoding="ISO-8859-1"?><words>'+r4words.join(' ')+' COLD café</words>','latin1')],
+ ['ANSI log',Buffer.from('\x1b[32m'+r4words.join('\n')+'\x1b[0m')],
+ ['ANSI yaml',Buffer.from('words: [\x1b[32m'+r4words.join(', ')+'\x1b[0m]')],
+ ['ANSI core',Buffer.from('Tap \x1b[32mCOLD\x1b[0m now')],
+ ['OSC core',Buffer.from('\x1b]0;terminal\x07Tap COLD now')],
+ ['control core',Buffer.from('Tap COLD now\x01')],
+ ['latin1 core',Buffer.from('Tap COLD now. Café','latin1')],
+ ['UTF16 no BOM',Buffer.from(r4words.join(' '),'utf16le')],
+ ['UTF16BE no BOM',Buffer.from(r4words.join(' '),'utf16le').swap16()],
+])exportCase('R5 text '+kind,'words.'+(kind.startsWith('XML')?'xml':kind.includes('CSV')?'csv':'txt'),bytes,r4policy,true);
+for(const ext of ['zip','gz'])test('R5 reject archive '+ext,()=>{const dir=join(scratch,'archive-'+ext);mkdirSync(dir);writeFileSync(join(dir,'words.'+ext),ext==='gz'?Buffer.from('1f8b0800000000000003','hex'):Buffer.from('504b030400000000','hex'));assert.throws(()=>guardTree(dir,r4policy),/archives are forbidden/);});
+for(const [format,magic] of Object.entries({png:'89504e470d0a1a0a',jpeg:'ffd8ff',gif:'474946383961',webp:'524946460000000057454250',wav:'524946460000000057415645',mp3:'494433',mp4:'0000002066747970',ogg:'4f676753',ttf:'00010000',otf:'4f54544f',woff:'774f4646',woff2:'774f4632'}))exportCase('R5 binary magic '+format,'media.unknown',Buffer.concat([Buffer.from(magic,'hex'),Buffer.from(' COLD ')]));
+for(const size of [5,6,7,8,9,10,11,12])for(const field of ['id','label'])for(const file of ['data.json','data.js']) {
+ const rows=r4words.slice(0,size).map((word,i)=>({[field]:'card'+i,word,level:1}));
+ exportCase(`R5 records ${size} ${field} ${file}`,file,(file.endsWith('js')?'globalThis.bank=':'')+JSON.stringify({words:rows}),r4policy,true);
+}
+for(const size of [16,60])for(const file of ['cards.json','cards.js']) {
+ const words=Array.from({length:size},(_,i)=>'ZQ'+String.fromCharCode(65+Math.floor(i/26),65+i%26)+'WORDX'),p={...policy,scan:words};
+ const rows=words.map((word,i)=>({id:'w'+i,word,definition:'filler '.repeat(size===60?65:20),example:'filler '.repeat(20),hint:'filler '.repeat(12),image:'image'+i,audio:'audio'+i}));
+ exportCase(`R5 rich cards ${size} ${file}`,file,(file.endsWith('js')?'globalThis.cards=':'')+JSON.stringify(rows),p,true);
+}
+for(const size of [5,10])exportCase(`R5 object records ${size}`,'data.json',JSON.stringify(Object.fromEntries(r4words.slice(0,size).map(word=>[word,{level:1,category:'plain'}]))),r4policy,true);
+exportCase('R5 mixed filenames','data.json',JSON.stringify([...r4words.slice(0,4).map(w=>w+'.m4a'),...Array.from({length:6},(_,i)=>'plain'+String.fromCharCode(65+i)+'.m4a')]),r4policy,true);
+exportCase('R5 mixed ids','data.json',JSON.stringify([...r4words.slice(0,4).map(w=>'w:'+w),...Array.from({length:6},(_,i)=>'plain'+String.fromCharCode(65+i))]),r4policy,true);
+test('R5 camelCase density',()=>assert.equal(densityTools.densityScanner(r4words)(r4words.map(w=>w.toLowerCase()+'Audio').join(' ')),25));
+for(const value of ['1','yes','TRUE',' true ','false','0','',undefined])test('R5 CI '+String(value),async()=>{const {isCI}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));assert.equal(isCI(value),['1','yes','TRUE',' true '].includes(value));});
+test('R5 duplicate teaching identity',()=>{
+ const sourceRoot=join(scratch,'duplicate-teaching'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const rows=[{id:"same",term:"Plain",english:"Safe"},{id:"same",term:"Plain",english:"Other"}];');writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/Duplicate CHamoru teaching id/);
+});
+test('R5 shorthand teaching identity',()=>{
+ const sourceRoot=join(scratch,'shorthand-teaching'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const rows=[];');writeFileSync(join(sourceRoot,'src/learn/content/fino.ts'),'const term="KAPSENSE",english="Safe";export const rows=[{id:"x",term,english}];');writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/plain string literals|blocked-chamoru-source/);
+});
+const letters='abcdefghijklmnopqrstuvwxyz';
+const dilutedWords=Array.from({length:300},(_,i)=>'zq'+letters[Math.floor(i/26)]+letters[i%26]+'wordx');
+const plainWords=Array.from({length:7600},(_,i)=>'plain'+letters[Math.floor(i/676)]+letters[Math.floor(i/26)%26]+letters[i%26]);
+const diluted=plainWords.flatMap((word,i)=>[word,...(i%25===0 && i/25<300?[dilutedWords[i/25]]:[])]),dilutedPolicy={...policy,scan:dilutedWords,chamoruSensitive:[]};
+// A generated map and asset registry at Metro scale. The terms are dispersed.
+test('R5 diluted map 7600 plus 300',()=>{
+ const dir=join(scratch,'diluted-map');mkdirSync(dir);writeFileSync(join(dir,'entry.js'),'__d(function(g,r,i,a,m,e,d){m.exports={'+diluted.map((w,i)=>JSON.stringify(w)+':r(d['+i+'])').join(',')+'}},1,[]);');
+ assert.throws(()=>guardTree(dir,dilutedPolicy),/untraced-word-map/);
+});
+test('R5 diluted 300 audio files',()=>{
+ const dir=join(scratch,'diluted-files');mkdirSync(dir);for(const word of dilutedWords)writeFileSync(join(dir,word+'.'+'a'.repeat(32)+'.m4a'),Buffer.from('00000020667479704d3441200001','hex'));
+ assert.throws(()=>guardTree(dir,dilutedPolicy),/untraced-word-file/);
+});
+async function admissionFixture(name) {
+ const module=await import(pathToFileURL(join(root,'scripts/words/generated-admission.mjs'))),dir=join(scratch,'admission-'+name);mkdirSync(join(dir,'src/content'),{recursive:true});writeFileSync(join(dir,'src/content/authored.ts'),'export const label="Plain reef beach";');return {module,dir};
+}
+test('R5 generator admits authored source',async()=>{const {module,dir}=await admissionFixture('positive');const r=module.admitGenerated(dir,'speech',['REEF']);assert.equal(r.entries[0].source.path,'src/content/authored.ts');assert.equal(r.entries[0].source.sha256,sha256(readFileSync(join(dir,'src/content/authored.ts'))));});
+test('R5 generator rejects untraced word',async()=>{const {module,dir}=await admissionFixture('unknown');assert.throws(()=>module.admitGenerated(dir,'speech',['ZQUNKNOWNX']),/no admitted authored source/);});
+test('R5 generator rejects output self admission',async()=>{const {module,dir}=await admissionFixture('self');writeFileSync(join(dir,'src/content/neuralAudio.ts'),'const hidden="ZQUNKNOWNX";export const bank={"ZQUNKNOWNX":require("../../assets/audio/ZQUNKNOWNX.m4a")};');assert.throws(()=>module.generatedReceipts(dir),/no admitted authored source/);});
+test('R5 generator rejects unknown map self admission',async()=>{const {module,dir}=await admissionFixture('unknown-self');writeFileSync(join(dir,'src/content/accidental.ts'),'export const bank={"ZQUNKNOWNX":require("../../assets/audio/ZQUNKNOWNX.m4a")};');assert.throws(()=>module.admitGenerated(dir,'speech',['ZQUNKNOWNX']),/no admitted authored source/);});
+test('R5 generator rejects unknown generator',async()=>{const {module,dir}=await admissionFixture('bad-generator');assert.throws(()=>module.admitGenerated(dir,'unknown',['REEF']),/Unknown word generator/);});
+test('R5 generator rejects empty word',async()=>{const {module,dir}=await admissionFixture('empty');assert.throws(()=>module.admitGenerated(dir,'speech',['']),/Invalid generated word/);});
+test('R5 guard admits traced word assets',async()=>{const {dir}=await admissionFixture('guard');const out=join(dir,'dist');mkdirSync(out);writeFileSync(join(out,'reef.'+'a'.repeat(32)+'.m4a'),Buffer.from('00000020667479704d3441200001','hex'));const p={...policy,scan:['REEF'],chamoruSensitive:[]};assert.equal(guardTree(out,p,[],{sourceRoot:dir}).passed,true);});
+
+exportCase('R5 ANSI middle word','data.txt','Tap CO\x1b[32mLD now',policy,true);
+test('R5 CI 1 missing policy',()=>{const env={...process.env,CI:'1'};for(const key of Object.keys(env))if(key.startsWith('LITTLE_ISLAND_WORD_POLICY_'))delete env[key];const dir=join(scratch,'ci-one-policy');mkdirSync(dir);const result=spawnSync(process.execPath,[join(root,'scripts/words/check.mjs'),'export',dir],{cwd:root,env,encoding:'utf8'});assert.notEqual(result.status,0);assert.match(result.stderr,/CI export requires a nonempty private policy/);});
+test('R5 controls normalized',async()=>{const {exportTextViews}=await import(pathToFileURL(join(root,'scripts/words/text-views.mjs')));assert.deepEqual(exportTextViews(Buffer.from('one\x01two\nthree')),['one two\nthree']);});
+test('R5 admission rejects source symlink',async()=>{const {module,dir}=await admissionFixture('symlink');symlinkSync(join(dir,'src/content/authored.ts'),join(dir,'src/content/linked.ts'));assert.throws(()=>module.admissionSources(dir),/Symlink/);});
+test('R5 admission rejects malformed Python',async()=>{const {module,dir}=await admissionFixture('python');mkdirSync(join(dir,'scripts'));writeFileSync(join(dir,'scripts/generate-audio.py'),'this = (');assert.throws(()=>module.admissionSources(dir),/Cannot parse authored speech literals/);});
+test('R5 admission rejects modified inherited bank',async()=>{const {module,dir}=await admissionFixture('legacy');mkdirSync(join(dir,'content/words'),{recursive:true});writeFileSync(join(dir,'content/words/legacy-word-rescue.ts'),'export const words=["REEF"];');assert.throws(()=>module.admissionSources(dir),/Unadmitted inherited source/);});
+for(const bad of ['path','hash'])test('R5 admission rejects bank '+bad,async()=>{const {module,dir}=await admissionFixture('bank-'+bad);mkdirSync(join(dir,'content/words/banks'),{recursive:true});writeFileSync(join(dir,'content/words/banks/sample.json'),'{"words":[],"accept":[]}');writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify({banks:[{path:bad==='path'?'../sample.json':'content/words/banks/sample.json',sha256:'0'.repeat(64)}]}));assert.throws(()=>module.admissionSources(dir),bad==='path'?/Invalid admission bank path/:/Stale admitted bank/);});
+for(const bad of ['text','key'])test('R5 admission rejects generated speech '+bad,async()=>{const {module,dir}=await admissionFixture('speech-'+bad);mkdirSync(join(dir,'scripts/learn'),{recursive:true});writeFileSync(join(dir,'scripts/learn/growth.json'),JSON.stringify(bad==='text'?{'id-1':'ZQUNKNOWNX'}:{beach:'reef'}));assert.throws(()=>module.admissionSources(dir),bad==='text'?/no authored token source/:/key differs/);});
+
+test('R5 object record key structure',async()=>{const {jsonUnits}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const keys=r4words.slice(0,5);assert.ok(jsonUnits(Object.fromEntries(keys.map(word=>[word,{level:1,category:'plain'}]))).some(unit=>JSON.stringify(unit)===JSON.stringify(keys)));});
+exportCase('R5 encoded Latin1 JSON literal','data.json',Buffer.from('{"label":"Café"}','latin1'),{...policy,core:['CAFÉ'],exact:[],lemmas:[]},true);
+exportCase('R5 encoded Latin1 text literal','data.txt',Buffer.from('Tap Café now','latin1'),{...policy,core:['CAFÉ'],exact:[],lemmas:[]},true);
+test('R5 malformed BOMless UTF16',async()=>{const {exportTextViews}=await import(pathToFileURL(join(root,'scripts/words/text-views.mjs')));assert.throws(()=>exportTextViews(Buffer.concat([Buffer.from('Plain','utf16le'),Buffer.from('X')])),/Malformed BOM-less UTF-16/);});
+test('R5 authored numeric search tokens',async()=>{const {module,dir}=await admissionFixture('numeric');writeFileSync(join(dir,'src/content/authored.ts'),'export const label="In 1944, on 21 July";');assert.equal(module.admitGenerated(dir,'library',['1944','21']).entries.length,2);});

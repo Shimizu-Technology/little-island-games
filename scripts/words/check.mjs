@@ -8,6 +8,7 @@ import { resolve, relative, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { hermesStrings } from './artifact-views.mjs';
 import { compilerIdentity,verifyCompilerCapture,bytecodeFiles } from './compiler.mjs';
+import { generatedReceipts } from './generated-admission.mjs';
 import { guardTree } from './guard.mjs';
 import { checkShippingTree } from './shipping.mjs';
 import { lockedPolicy } from './policy.mjs';
@@ -30,11 +31,13 @@ export function requireCleanSource(root, preview=process.env.EXPO_PUBLIC_LIBRARY
     requireThat(previewGeneratedFiles.every(file=>readFileSync(resolve(root,file)).equals(readFileSync(join(temporary,file.split('/').at(-1))))), 'Preview generated files differ from reproducible source');
   } finally {rmSync(temporary,{recursive:true,force:true});}
 }
+export const isCI = value => !!value?.trim() && !/^(?:0|false)$/i.test(value.trim());
 export function checkExport(root, directory) {
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
+  generatedReceipts(root);
   // CI receives the private policy lock via an operator-provisioned secret file.
   // Before the first bank, a policy-free structural check is explicit in the receipt.
-  requireThat(process.env.CI!=='true' || !!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK?.trim(), 'CI export requires a nonempty private policy');
+  requireThat(!isCI(process.env.CI) || !!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK?.trim(), 'CI export requires a nonempty private policy');
   const configuration=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK ? lockedPolicy() : undefined;
   if(!configuration)console.error('policy not checked: local export has no private policy');
   // A bank can only reach here after full rebake with the operator policy lock.
@@ -44,6 +47,7 @@ export function checkRelease(root, web, ios, output, run=execFileSync, compile=e
   requireCleanSource(root);
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
+  generatedReceipts(root);
   const nativeFiles=bytecodeFiles(ios);requireThat(nativeFiles.length>0,'Real embedded Hermes iOS bundle required');
   const embeddedStrings=nativeFiles.flatMap(file=>hermesStrings(readFileSync(join(ios,file.path))));
   const nativeCompiler=verifyCompilerCapture(root,ios);
