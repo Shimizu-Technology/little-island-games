@@ -11,7 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # Save catalog meanings are checked against every committed generation.
+          fetch-depth: 0 # Full history, so the shallow-repository guard passes.
+      # The catalog gates compare against what is published at these tips and stop if either is missing.
+      - name: Fetch the published refs
+        run: git fetch --no-tags origin +refs/heads/program/4.0:refs/remotes/origin/program/4.0 +refs/heads/main:refs/remotes/origin/main
       - uses: actions/setup-node@v7
         with:
           node-version: 22.22.3

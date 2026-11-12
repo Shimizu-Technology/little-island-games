@@ -3,13 +3,13 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { assertFrozenCatalog } from '../src/state/catalogManifest.ts';
-import { publishedHistory } from './published-refs.mjs';
+import { publishedJson } from './published-refs.mjs';
 if (execFileSync('git',['rev-parse','--is-shallow-repository'],{encoding:'utf8'}).trim() === 'true') throw new Error('Save catalog validation needs full Git history. Fetch with --unshallow before checking.');
 const file='src/state/save-catalog.json', current=JSON.parse(readFileSync(file,'utf8'));
-// Every committed generation a published ref contains is a constraint, including additions after the
-// first freeze. A branch-only generation may still be replaced by its branch (scripts/published-refs.mjs).
-const history=publishedHistory();
-const all=execFileSync('git',['log','--full-history','--format=%H','--',file],{encoding:'utf8'}).trim().split('\n').filter(Boolean), commits=all.filter(history.published);
+// The catalog at the tip of every published ref is a constraint, however its commits got there
+// (merge, squash or rebase). A bank no published tip holds may still be replaced by its branch.
+// A missing ref or an unreadable published catalog stops the check (scripts/published-refs.mjs).
+const published=publishedJson(file);
 const sha=text=>createHash('sha256').update(text).digest('hex');
 const entries=bank=>{
  if('entries' in bank)return bank.entries;
@@ -28,5 +28,10 @@ const entries=bank=>{
 };
 // Resolve every packed bank at build time as well as any old inline-to-range conversion.
 for(const bank of current.banks)entries(bank);
-for (const commit of commits) assertFrozenCatalog(JSON.parse(execFileSync('git',['show',`${commit}:${file}`],{encoding:'utf8'})),current,entries);
-console.log(`Save catalog immutable history: ${commits.length} generations checked${all.length>commits.length?` (${all.length-commits.length} unpublished branch generations may still be replaced; published refs: ${history.refs.join(', ')})`:''}.`);
+const slots=new Set();
+for (const {ref,commit,value} of published){
+ try{assertFrozenCatalog(value,current,entries);}catch(e){throw new Error(`Save catalog published at ${ref} (${commit.slice(0,8)}): ${e instanceof Error?e.message:String(e)}`);}
+ for(const bank of value.banks)slots.add(bank.slot);
+}
+const own=current.banks.filter(b=>!slots.has(b.slot)).length;
+console.log(`Save catalog immutable: ${published.length} published catalog${published.length===1?"":"s"} checked (${published.map(p=>p.ref).join(', ')}; ${slots.size} published banks)${own?`; ${own} unpublished banks may still be replaced`:''}.`);

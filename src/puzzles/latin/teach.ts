@@ -55,7 +55,7 @@ export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: str
       if (s.chain?.kind === 'wrap') return { look, think: `${turns} The dots at ${list(proof.map(i => cellName(p, i)))} see each other and cannot both be ${v}, so no dot is ${v}. The ${v}s go on the rings.` };
       if (!proof.length) return { look, think: `${turns} A square that sees both a dot and a ring cannot be ${v}.` };
       const who = list(proof.map(i => cellName(p, i)));
-      return { look, think: `${turns} ${who[0].toUpperCase()}${who.slice(1)} ${proof.length > 1 ? 'each see' : 'sees'} both a dot and a ring, so ${proof.length > 1 ? 'none of them' : 'it'} can be ${v}.` };
+      return { look, think: `${turns} ${who[0].toUpperCase()}${who.slice(1)} ${proof.length > 1 ? 'each see' : 'sees'} both a dot and a ring, so ${proof.length > 1 ? 'none of them can' : 'it cannot'} be ${v}.` };
     }
   }
 }
