@@ -1,8 +1,10 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { ItemArt } from "../art/Items";
+import type { RoomHover } from "./useInteraction";
 const ink = "#284F4B";
 export function Tool({
   label,
@@ -10,12 +12,15 @@ export function Tool({
   onPress,
   selected,
   disabled,
+  large = false,
 }: {
   label: string;
   symbol: string;
   onPress: () => void;
   selected?: boolean;
   disabled?: boolean;
+  /** HR-03: 64 pt in the grown-ups' larger-target mode. */
+  large?: boolean;
 }) {
   return (
     <Pressable
@@ -26,11 +31,13 @@ export function Tool({
       onPress={onPress}
       style={({ pressed }) => [
         styles.tool,
+        // In the larger mode every button shows its shape, so a 64 pt target looks like one.
+        large && { minWidth: 64, minHeight: 64, borderRadius: 32, backgroundColor: "#F1E6CF" },
         selected && { backgroundColor: "#D6E9C8" },
         { opacity: disabled ? 0.35 : pressed ? 0.65 : 1 },
       ]}
     >
-      <Text allowFontScaling={false} style={{ fontSize: 25, color: ink }}>
+      <Text allowFontScaling={false} style={{ fontSize: large ? 30 : 25, color: ink }}>
         {symbol}
       </Text>
     </Pressable>
@@ -65,7 +72,80 @@ function FindIcon() {
     </Svg>
   );
 }
-export function HomeChrome({
+export type WindowRect = { x: number; y: number; width: number; height: number };
+/** A room button is also a drop target (HM-14): it fills while a carried thing waits on it. */
+function RoomButton({ id, selected, onRoom, onFriends, hover, onRect, size, token }: {
+  token: number;
+  id: RoomId; selected: boolean; onRoom: (room: RoomId) => void; onFriends: () => void;
+  hover?: SharedValue<RoomHover | null>; onRect?: (room: RoomId, rect: WindowRect) => void; size: number;
+}) {
+  const ref = React.useRef<View>(null);
+  const measure = React.useCallback(() => ref.current?.measureInWindow((x, y, width, height) => onRect?.(id, { x, y, width, height })), [id, onRect]);
+  React.useEffect(() => { if (token) measure(); }, [token, measure]);
+  const ring = useAnimatedStyle(() => {
+    const on = hover?.value?.room === id;
+    return { opacity: on ? 1 : 0, transform: [{ scale: on ? 1.22 : 1 }] };
+  });
+  const fill = useAnimatedStyle(() => ({ height: `${(hover?.value?.room === id ? hover.value.progress : 0) * 100}%` }));
+  return (
+    <Pressable
+      ref={ref}
+      onLayout={measure}
+      accessibilityRole="button"
+      accessibilityLabel={`Go to ${roomNames[id]}`}
+      accessibilityHint="Hold to bring friends here. Carry something here to move it."
+      accessibilityState={{ selected }}
+      onPress={() => onRoom(id)}
+      onLongPress={() => {
+        onRoom(id);
+        onFriends();
+      }}
+      style={[styles.room, { width: size, height: size }, size > 48 && { backgroundColor: "#F1E6CF" }, selected && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
+    >
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 15, borderWidth: 3, borderColor: "#477D60",
+        backgroundColor: "#FFF8E9", overflow: "hidden", justifyContent: "flex-end" }, ring]}>
+        <Animated.View style={[{ width: "100%", backgroundColor: "#8FC48A" }, fill]} />
+      </Animated.View>
+      <ItemArt
+        item={({ home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const)[id]}
+        size={Math.round(size * 0.8)}
+        reduced
+      />
+    </Pressable>
+  );
+}
+/** HR-01: opens the friends drawer; a carried friend let go on it waits there. */
+function FriendsButton({ open, onPress, hover, onRect, size, token }: {
+  open: boolean; onPress: () => void; hover?: SharedValue<boolean>; onRect?: (rect: WindowRect) => void; size: number; token: number;
+}) {
+  const ref = React.useRef<View>(null);
+  const measure = React.useCallback(() => ref.current?.measureInWindow((x, y, width, height) => onRect?.({ x, y, width, height })), [onRect]);
+  React.useEffect(() => { if (token) measure(); }, [token, measure]);
+  const ring = useAnimatedStyle(() => ({ opacity: hover?.value ? 1 : 0, transform: [{ scale: hover?.value ? 1.22 : 1 }] }));
+  return (
+    <Pressable
+      ref={ref}
+      onLayout={measure}
+      testID="friends-button"
+      accessibilityRole="button"
+      accessibilityLabel="Friends"
+      accessibilityHint="Opens the friends drawer. Carry a friend here to let them wait."
+      accessibilityState={{ expanded: open }}
+      onPress={onPress}
+      style={[styles.tool, { minWidth: size, minHeight: size, borderRadius: size / 2 }, size > 48 && { backgroundColor: "#F1E6CF" }, open && { backgroundColor: "#D6E9C8" }]}
+    >
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: size / 2, borderWidth: 3, borderColor: "#477D60",
+        backgroundColor: "#8FC48A" }, ring]} />
+      <FriendsIcon />
+    </Pressable>
+  );
+}
+export function HomeChrome(props: Parameters<typeof HomeChromeView>[0]) {
+  // Room buttons are drop targets in window space; re-measure after the bar scrolls.
+  const [token, setToken] = React.useState(0);
+  return <HomeChromeView {...props} measureToken={token} onScrolled={() => setToken((n) => n + 1)} />;
+}
+function HomeChromeView({
   room,
   overview,
   designing,
@@ -85,7 +165,30 @@ export function HomeChrome({
   onHeaderLayout,
   title,
   saveStatus,
+  roomHover,
+  onRoomRect,
+  showRedo = false,
+  large = false,
+  measureToken = 0,
+  onScrolled,
+  friendsOpen = false,
+  drawerHover,
+  onDrawerRect,
+  width = 1024,
 }: {
+  /** Window width; decides whether the larger-target bar needs two rows. */
+  width?: number;
+  friendsOpen?: boolean;
+  drawerHover?: SharedValue<boolean>;
+  onDrawerRect?: (rect: WindowRect) => void;
+  measureToken?: number;
+  onScrolled?: () => void;
+  roomHover?: SharedValue<RoomHover | null>;
+  /** HM-18: Redo stays reachable in Play for 10 s after an Undo. */
+  showRedo?: boolean;
+  onRoomRect?: (room: RoomId, rect: WindowRect) => void;
+  /** HR-03: the grown-ups' larger-target mode. */
+  large?: boolean;
   room: RoomId;
   overview: boolean;
   designing: boolean;
@@ -106,67 +209,71 @@ export function HomeChrome({
   onDesign: () => void;
   onRoom: (room: RoomId) => void;
 }) {
+  const barHeight = navigationHeightFor(large, width), wrap = large && width < LARGE_ROW;
   return (
     <>
       <View
         onLayout={(event) => onHeaderLayout(event.nativeEvent.layout.height)}
         style={[styles.header, { paddingTop: top }]}
       >
-        <Tool label="Back to island" symbol="‹" onPress={onBack} />
+        <Tool label="Back to island" symbol="‹" onPress={onBack} large={large} />
         <Text maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
           {title ?? (overview ? "Our house" : roomNames[room])}
         </Text>
-        <Tool label="Undo" symbol="↶" disabled={!canUndo} onPress={onUndo} />
-        {designing && <Tool label="Redo" symbol="↷" disabled={!canRedo} onPress={onRedo} />}
+        <Tool label="Undo" symbol="↶" disabled={!canUndo} onPress={onUndo} large={large} />
+        {(designing || showRedo) && <Tool label="Redo" symbol="↷" disabled={!canRedo} onPress={onRedo} large={large} />}
         <Tool
           label={designing ? "Done designing" : "Design"}
           symbol={designing ? "✓" : "✎"}
           selected={designing}
           onPress={onDesign}
+          large={large}
         />
+        <Tool label="More home controls" symbol="···" onPress={onMore} large={large} />
       </View>
-      <View testID="home-bottom-bar" style={[styles.navigation, { bottom }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}>
-          <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} />
+      <View testID="home-bottom-bar" style={[styles.navigation, { bottom, height: barHeight }]}>
+        <Bar wrap={wrap} onScrolled={onScrolled}>
+          <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} large={large} />
           {roomIds.map((id) => (
-            <Pressable
-              key={id}
-              accessibilityRole="button"
-              accessibilityLabel={`Go to ${roomNames[id]}`}
-              accessibilityHint="Hold to bring friends here."
-              accessibilityState={{ selected: room === id && !overview }}
-              onPress={() => onRoom(id)}
-              onLongPress={() => {
-                onRoom(id);
-                onFriends();
-              }}
-              style={[styles.room, room === id && !overview && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
-            >
-              <ItemArt
-                item={({ home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const)[id]}
-                size={38}
-                reduced
-              />
-            </Pressable>
+            <RoomButton key={id} id={id} selected={room === id && !overview} onRoom={onRoom} onFriends={onFriends}
+              hover={roomHover} onRect={onRoomRect} size={large ? 64 : 48} token={measureToken} />
           ))}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Find my Islander"
             onPress={onFind}
-            style={styles.tool}
+            style={[styles.tool, large && { minWidth: 64, minHeight: 64, borderRadius: 32, backgroundColor: "#F1E6CF" }]}
           >
             <FindIcon />
           </Pressable>
-          <Tool label="More home controls" symbol="···" onPress={onMore} />
-        </ScrollView>
+          <FriendsButton open={friendsOpen} onPress={onFriends} hover={drawerHover} onRect={onDrawerRect} size={large ? 64 : 48} token={measureToken} />
+        </Bar>
       </View>
       {saveStatus && (
-        <View style={{ position: "absolute", right: 8, bottom: bottom + navigationHeight }}>{saveStatus}</View>
+        <View style={{ position: "absolute", right: 8, bottom: bottom + barHeight }}>{saveStatus}</View>
       )}
     </>
   );
 }
 export const navigationHeight = 60;
+/** HR-03: the bottom bar with 64 pt buttons. */
+export const largeNavigationHeight = 76;
+const LARGE_ROW = 7 * 64 + 6 * 3 + 12;
+/** HR-03: the 64 pt bar wraps to two rows when one row would hide buttons off-screen. */
+export function navigationHeightFor(large: boolean, width: number): number {
+  return !large ? navigationHeight : width >= LARGE_ROW ? largeNavigationHeight : 2 * 64 + 3 + 2 * 6 + 4;
+}
+function Bar({ wrap, onScrolled, children }: { wrap: boolean; onScrolled?: () => void; children: React.ReactNode }) {
+  // Four columns: the second row lines up under the first instead of floating between them.
+  if (wrap) return <View testID="home-bottom-bar-wrapped" style={[styles.navigationItems, { flexDirection: "row", flexWrap: "wrap",
+    justifyContent: "flex-start", alignSelf: "center", flexGrow: 0, width: 4 * 64 + 3 * 3 + 12 }]}>{children}</View>;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}
+      onScrollEndDrag={onScrolled} onMomentumScrollEnd={onScrolled}>
+      {children}
+    </ScrollView>
+  );
+}
 const styles = StyleSheet.create({
   navigation: {
     position: "absolute",

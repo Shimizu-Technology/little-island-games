@@ -47,6 +47,8 @@ export class ContentLoadError extends Error {
   constructor(cause:unknown){super('This puzzle could not open. Your saved work is kept. Try again, or choose another puzzle.',{cause});this.name='ContentLoadError';}
 }
 export const contentMessage = 'This puzzle could not open. Your saved work is kept. Try again, or choose another puzzle.';
+/** The content opened but no longer matches the paused board, so retrying can't help. */
+export const resumeMessage = 'This puzzle couldn’t be resumed. Your marks and stars are kept. You can start it fresh.';
 export type SessionOpenResult = {ok:true}|{ok:false;kind:'stale'|'content-unavailable'|'invalid-session';message:string};
 export type ContentOptions = { live?: () => boolean; loader?: Pick<BankLoader,'savedHash'> };
 export function assertContentLive(options:ContentOptions):void {if(options.live && !options.live())throw new BankError('cancelled','Puzzle load was cancelled.');}

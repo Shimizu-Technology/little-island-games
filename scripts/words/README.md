@@ -1,6 +1,6 @@
 # Word pipeline (W1)
 
-Build tooling only. No service, account, network call, list scan, clue model or generation runs in the app. `content/words/runtime.ts` is the small on-device interface for G6. No new bank is approved or registered by this slice.
+Build tooling only. No service, account, network call, list scan, clue model or generation runs in the app. `content/words/runtime.ts` is the small on-device interface for G6. No new bank is approved or registered by this slice. The lead-approved Library alias correction is recorded separately; it creates no guard exception.
 
 ## Sources and boundaries
 
@@ -88,15 +88,39 @@ Normal `npm test` checks all `src/`, `content/`, `assets/` and `modules/` roots.
 
 `npm run check:words` is the local full gate: it requires the private policy lock and matching bank inputs under `LITTLE_ISLAND_WORD_RECEIPTS`, rebakes each registered bank and compares the runtime digest. It does not change the manifest or approve a record.
 
-`npm run check` ends with `check:words:export`. Every export guard performs full detached admission, so a matching manifest alone cannot ship a bank. CI runs `check:source`, then the export guard on actual `dist`, exposing the private policy only to that guard step. Locally it uses the external policy lock. CI can provision a gzip/base64 policy through the `LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64` secret (the optional `_2` secret continues the same gzip/base64 string when it exceeds one secret; plain `LITTLE_ISLAND_WORD_POLICY_JSON` is also supported): the CLI writes mode-0600 external scratch files and removes them on exit. Before any bank exists, a policy-free structural export check reports `policyDataChecked:false`; the first registered bank requires the private policy and fails without it. Once banks exist, CI must be provisioned with detached review/source evidence via `LITTLE_ISLAND_WORD_RECEIPTS` and the pinned source paths referenced by those inputs. Missing evidence fails closed; manifest/hash checks alone are insufficient.
+`npm run check` ends with `check:words:export`. Every export guard performs full detached admission, so a matching manifest alone cannot ship a bank. CI runs `check:source`, then the export guard on actual `dist`, exposing the private policy only to that guard step. Locally it uses the external policy lock. CI can provision a gzip/base64 policy through the versioned `LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64` secret, mapped in the workflow onto the existing `LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64` environment variable (optional `_V2_GZIP_BASE64_2` through `_V2_GZIP_BASE64_16` secrets continue the same gzip/base64 string in numeric order when it exceeds one secret; expose each required chunk only in the guard step; plain `LITTLE_ISLAND_WORD_POLICY_JSON` is also supported): the CLI writes mode-0600 external scratch files and removes them on exit. Before any bank exists, a policy-free structural export check reports `policyDataChecked:false`; the first registered bank requires the private policy and fails without it. Once banks exist, CI must be provisioned with detached review/source evidence via `LITTLE_ISLAND_WORD_RECEIPTS` and the pinned source paths referenced by those inputs. Missing evidence fails closed; manifest/hash checks alone are insufficient.
 
-Before native delivery, run `npm run check:words:release -- <web-dist> <embedded-ios-directory> <new-private-receipt>`. This performs the full local rebake, requires Hermes bytecode, scans raw bundle bytes and writes an external receipt bound to HEAD, policy bytes and both artifact trees. The delivery lane must run `npm run check:words:receipt -- <private-receipt> <web-dist> <embedded-ios-directory>` immediately before delivery; changed trees or source HEAD invalidate it. These commands do not build, sign, submit or publish anything. `npm run ios:preview-build -- <build command>` now runs full admission before building, restores default generated files, then creates and verifies that receipt before returning success. Set `LITTLE_ISLAND_WORD_WEB_ARTIFACT`, `LITTLE_ISLAND_WORD_IOS_ARTIFACT` and a new external `LITTLE_ISLAND_WORD_RELEASE_RECEIPT` path. `npm run deliver:web -- <delivery command>` and `npm run deliver:ios -- <delivery command>` repeat release admission and verify the receipt immediately before invoking the delivery action. Use these wrappers for web publication and IPA submission; do not invoke a delivery command directly. Both receipt operations refuse a dirty source tree. These commands grant no new release authorization.
+Before native delivery, run `npm run check:words:release -- <web-dist> <embedded-ios-directory> <new-private-receipt>`. The build must first produce a private compiler-capture receipt on the actual build host. Set `LITTLE_ISLAND_WORD_WEB_ARTIFACT`, `LITTLE_ISLAND_WORD_IOS_ARTIFACT`, a new `LITTLE_ISLAND_WORD_RELEASE_RECEIPT` path, and a new `LITTLE_ISLAND_WORD_NATIVE_COMPILER_RECEIPT` path. `npm run ios:preview-build -- <build command>` prepares the preview, runs the build through a recording compiler shim, validates admission while preview files remain in place, and restores the four default generated files in `finally`. The shim invokes the pinned `hermes-compiler` executable and records the hashes of its actual outputs. No observed matching invocation means no compiler receipt. The wrapper must run where compilation actually occurs; a remote build needs capture and admission on that host.
 
-The guard scans single-byte, UTF-8 and both aligned UTF-16LE views, covering Hermes strings that contain non-ASCII characters. Canary, complete-list blob, private hash, private filename and symlink checks are unconditional. Three distinct broad terms of five or more letters or any core/sensitive literal fail in an unexcepted file.
+The release gate exports iOS JavaScript with `--no-bytecode --no-minify` and the same preview environment. It runs the full structural, normalized-content and density checks on that export, then compiles those exact hashed JS bytes with the captured compiler. Every shipped Hermes string-table entry, including identifiers, must exist in the compiler-derived table. Compiler-synthesized names and optimized string fragments therefore have a source-backed compiler view; no entries are skipped and no exceptions are introduced. The compiler package path, package version, executable hash and version output must match the native build capture, and any change during verification fails closed.
 
-Known harmless collisions can be recorded externally as `artifactTermExceptions:[{path:"_expo/static/js/ios/entry-*.hbc",terms:[{term,check:"broad"|"literal",reason,evidence}]}]`. Paths are anchored; `*` matches within one path segment. Each exception identifies one check and term, explains the harmless context, and links to its reviewed evidence. It never exempts a whole file. All new distinct broad terms fail when a path has a reviewed broad baseline, and all unexcepted core/sensitive terms fail. New bank assets have no inherited exception. Changing an app bundle leaves these checks active. Legacy whole-file hashes have no effect. Neither artifact exceptions nor legacy hashes enter the content-policy digest used for bake; the operator lock and release receipt still bind exact policy bytes. Exception updates therefore do not stale an unchanged review or bank input.
+A schema-3 external receipt binds HEAD, policy bytes, both artifact trees, the native compiler capture, every scanned JS file hash, their aggregate digest and the compiler identity. Temporary exports and derived bytecode are removed on success or failure. `npm run check:words:receipt -- <private-receipt> <web-dist> <embedded-ios-directory>` verifies these bindings immediately before delivery. `deliver:web` and `deliver:ios` repeat admission and verification before invoking their delivery command. A dirty tree is accepted only for the four known preview-generated files, reproduced byte-for-byte in scratch. These checks do not build a native executable, sign, submit or publish an app and grant no new release authorization.
 
-A term baseline cannot distinguish a second occurrence of the same ordinary term from an inherited occurrence. Complete lists, canaries and hashes remain detectable even when their terms have exceptions. Keep this limit separate from answer admission. Never create exceptions by accepting whatever a new export flags: establish the inherited source and bytes, inspect each collision, and record the evidence first. `export-public.mjs` excludes private word tooling, drafts and dependent tests. Passing a scan does not authorize public export or publication.
+The guard keeps unconditional raw-byte checks for canaries, complete policy/list blobs, private hashes, filenames and symlinks. It checks Latin-1, UTF-8 and both UTF-16LE alignments, plus decoded strings, before accepting an artifact. Malformed JavaScript/JSON, unsupported Hermes bytecode and undecodable puzzle packs fail closed. These are build checks; they never approve vocabulary.
+
+Blocked-word checks use Unicode letter/combining-mark boundaries. JavaScript is parsed with the pinned TypeScript parser: literals and templates supply word checks. Comments, regex patterns and homogeneous key tables also receive list-shaped partial-list checks; mixed UI keys remain advisory; variable names remain excluded. Regex patterns and unquoted property keys do not supply displayed-word checks; quoted keys are parsed as literals. Serialized Reanimated functions are parsed as code too. The [Hermes string-table format](https://github.com/facebook/hermes/blob/static_h/include/hermes/BCGen/HBC/BytecodeFileFormat.h) supplies each string's own length and encoding; v98 is supported, including overflow and UTF-16 strings. Identifiers remain in that table view because a displayed literal can share an identifier ID. Whole-word matching prevents longer identifier/style-key collisions and does not join adjacent storage entries. HTML checks visible text, accessible labels, metadata content, form values and both inline-script data views. SVG files and inline SVG literals expose visible labels and accessible text as separate strings; attribute lists and comments retain the partial-list check. The complete decoded vector remains in the unconditional hash/blob/canary view. Other printable UTF-8 files receive the same text checks, regardless of extension, including structured lists spanning CSV/TSV lines. Only content-sniffed binary media skips word checks. Generated Metro asset URIs and digest identifiers stay in the raw leak view, outside vocabulary checks. Binary media is scanned for private data rather than treated as displayed words.
+
+The partial-list detector never accumulates terms across a file, bundle, sibling UI record or separate decoded row. Three distinct broad terms of at least five letters fail inside one list-shaped unit. Arrays contribute their plain-word entries even beside empty strings, counts, nulls and longer entries. Single-field record arrays, JSON-encoded lists, CSV, TSV, pipes, numbered lists and underscore-separated constants receive list checks. Nested containers are checked independently. Ordinary sentences require interleaved function words; a token array additionally needs at least 12 tokens, at least 25% function words, at least five content/function transitions and fewer than 20% broad hits among its content tokens. Prefix/suffix padding and repeated article affixes cannot establish prose.
+
+Generated Library `terms` and `sounds` may trace to one source item. The exact catalog root must include `items`, `index`, `preview`, `bytes` and `fixtures`; a matching ID in a foreign feature is insufficient. Only the nearest directly attached item supplies provenance. The source bridge imports the exporting generator's `normalize`/`phonetic`, checks normalization parity and checks authored arrays as strict units before deriving tokens. Authored tags and aliases never exempt their own arrays. A mixed search array must still contain only tokens from that item’s authored fields. Only its body-derived tokens leave the list view; remaining metadata tokens stay strict. One unknown token keeps the whole original array strict. Legacy catalog tags that the existing generator uses to carry body paragraphs retain their body meaning. Another item's vocabulary, unattached/nested records, untraceable tokens or tokenizer drift retain strict rejection. Derived arrays never bypass hard literal checks. This is a derivation check, not a policy exception.
+
+The public function-word vocabulary is disjoint from private broad/core lists; runtime subtraction also excludes every current private policy group so later policy changes cannot turn a blocked word into prose evidence. Core, exact and lemma terms still fail as whole words in displayed strings.
+
+Broad matches in ordinary UI/prose are written to a mode-0600 `advisories.private.json` outside the repository and export, deduplicated by exact string hash, with the first artifact path and matched terms. Comments and code keys do not create advisories. Guard receipts contain only the advisory count and private path. Set `LITTLE_ISLAND_WORD_ADVISORY_DIR` to retain them with the private QA evidence; otherwise the guard uses an external temporary review directory. A passing build does not constitute content review.
+
+Sensitive CHamoru headwords apply to statically tagged CHamoru surfaces and strings containing å or the modifier-letter glottal stop U+02BC. A typographic U+2019 apostrophe does not mark English contractions as CHamoru. Once a surface is CHamoru, sensitive matching folds accents and glottal marks consistently with the engine while preserving word boundaries. This repository scan found no raw ñ occurrences, so ñ is not a marker. Tags include `language`, `lang`, `locale`, `languages`, `ch-*`, `cha`, `chamoru` and `chamorro`. Source inspection resolves static constants, shorthand and spreads, rejects unresolved content-language tags and unknown spreads in tagged records, and scans every field of CHamoru teaching modules (including modules using `ChamoruWord`). Source, content and speech roots are inspected; English ASCII homographs remain allowed. Bundle scans require the exporting source companion. `checkExport`/`checkRelease` supply that exact source root; direct callers can pass `{sourceRoot}`.
+
+Grids are case-insensitive, include CH/NG digraph cells, blank cells and rectangular row strings, and use all eight scan directions without word boundaries. Nested cell matrices count anywhere. Row-string matrices count under `cells`, `grid`, `board` or `rows`, or beneath a language declaration. Other flat word arrays retain strict list checks. A 1×1 single-letter matrix stays scanned but needs no declaration unless a puzzle discriminator identifies it. Digraphs, longer single-cell strings and every larger cell matrix still require a recognized container or language. Every puzzle grid must have a recognized container or a language declaration; a word-search/puzzle discriminator cannot hide a row-string grid under an unknown key. Unknown nested-grid containers without a language fail closed. Untagged recognized grids receive the sensitive-headword check as well as the normal grid check; explicitly English grids retain the English homograph rule. Numeric-only puzzle formats have no language surface. JavaScript literal grids receive the same word scan, with native grids covered by the independent iOS JavaScript export. Packs decode through the exporting tree's registered family adapters and `decodeRow`; unknown families, rules and encodings fail. Codec identifiers receive list checks while payload/speech values receive literal checks. No runtime codec or pack bytes change. An approved teaching allowance is separate: `chamoruTeachingAllowances:[{entryId,terms,reason}]` binds an exact entry ID and term string in `src/learn/content/chamoru.ts`. It applies only to that entry’s own teaching fields. Exported teaching records must match all approved source fields exactly. Other source modules, changed IDs/terms/fields, word banks, word-search generation, scramble and grids remain blocked. Hermes language-sensitive context comes from the source companion and mandatory native JavaScript export, because its deduplicated table cannot identify a teaching record’s field ownership.
+
+Previously reviewed collisions may be narrowed in the **external** policy as:
+
+```text
+artifactStringExceptions: [{path, strings: [{sha256, occurrences, terms: [{term, check, reason, evidence}]}]}]
+```
+
+`sha256` binds the exact UTF-8 string, `occurrences` caps its count in one file, and paths are anchored (`*` matches within one segment). A changed string, an extra occurrence, another path or another term receives the full check. The reviewed 150-key library colour table uses the same exact unit hash and one occurrence per file on the two anchored paths `_expo/static/js/web/entry-*.js` and `_expo/static/js/ios/entry-*.js`; no other path or changed table is covered. Only broad terms are eligible; core, exact and lemma terms and `check:"literal"` are rejected. These rules never exempt grids, complete blobs, canaries, hashes or private filenames. A policy containing the legacy `artifactTermExceptions` field is rejected. Legacy whole-file hashes have no effect. Artifact exception metadata stays outside the content-policy digest, while the operator lock/release receipt bind the complete policy bytes. Updating artifact metadata therefore does not invalidate unchanged bank reviews.
+
+Policy migration must use previously inspected W1 collision evidence and verified inherited artifacts. Do not whitelist a new failing export or count a real content hit as an encoding collision. Keep the new policy, context hashes, transport chunks and receipts outside Git/export; provision CI privately. The bounded decoder accepts at most 4 MiB after expansion. Whole-word matching requires policy authors to list every blocked inflection explicitly; there is no suffix fold. JavaScript comments, regexes and property keys receive leak checks but no literal word check; Hermes identifiers remain visible because they may share a literal string ID. A byte-identical string reused within its reviewed occurrence allowance is indistinguishable from the inherited string; Hermes also deduplicates its string table. Content admission and the separate reviews remain mandatory. `export-public.mjs` excludes this tooling and its tests. No guard result authorizes public export or publication.
 
 ## Surface rules and limits
 
@@ -116,3 +140,126 @@ node scripts/words/mutation.mjs
 ```
 
 `smoke.mjs` labels every synthetic reviewer result, transcript and receipt TEST ONLY, sets `fixture:true`, and proves that it cannot ship. Its synthetic times/disagreement rate are transport assertions, not measured reviewer throughput. It never calls a reviewer. `probe.mjs` checks the actual 87-word policy probe and 32 unapproved scan-clean QA boards with both implementations. It does not reproduce the audit's 600,000-grid experiment. Real review/reconcile throughput remains unmeasured until the lead runs the calibration.
+
+### Normalized density backstop and preview binding
+
+Every exported text file also receives a structure-independent density pass over
+its leniently decoded text, parsed/decoded strings (including each Hermes entry), and
+the source-ordered decoded string sequence for JavaScript. Hermes entries are
+scanned individually: the compiler deduplicates and reorders its string table,
+so joining it creates artificial adjacency. Hermes proximity is enforced through
+the bound iOS JavaScript export, not the string table. Binary media is content-sniffed and
+keeps the raw blob/hash/canary checks. Text is NFKC-normalized, default-ignorable
+characters are removed, case and diacritics are folded, and tokens split at every
+non-letter and lower-to-upper camelCase boundary. Core/exact/lemma content checks use the same normalization and whole
+word boundaries; they remain unconditional and cannot be excepted.
+
+The broad leak vocabulary retains the existing minimum length of five letters
+and exclusion of the CHamoru-sensitive-only group. Two moving windows count
+**distinct** terms: a cap of **15 per 1,000 tokens** and **12 per 200 tokens**.
+The cap passes; cap+1 fails. Repetition does not increase the count. There is no
+density exception or Library-provenance bypass. The ten-snapshot calibration
+records every real exported file and all its text views in the private worker
+evidence. JavaScript views preserve source positions while decoding literals. The historical web matrix
+peaks at 11 in the long window and 8 in the short window, leaving 36% and 50%
+headroom there. The family preview previously peaked at 12/8: against caps 15/12, this leaves 3/4 additional terms (25%/50% above the measured peaks). Round-5 measurements for each build are recorded in the worker report. Earlier string-pool concatenations are
+superseded by these source-order measurements.
+The complete broad set, including short everyday words, reaches 42 in raw code;
+the minimum length applies only to the broad detectors.
+
+The long window guarantees detection of **16 qualifying distinct terms within
+1,000 normalized letter tokens**; the short window guarantees **13 within 200**.
+Neither guarantees an arbitrary five- or ten-term leak, padding beyond the window,
+or an unrecognized runtime cipher. Synthetic five-, ten- and 25-term probes also
+exercise structural rules for tuples, filenames, encoded JSON, regexes, record
+maps, branch labels, enums and templates. New encoding units require at least
+one quarter of their letter tokens to be broad vocabulary. Homogeneous record/object catalogs retain the measured 50% share to avoid treating UI metadata as word lists; sparse ordinary catalogs retain
+the density check. Existing strict list units keep their original rule. Prose
+requires interleaved function words and either content diversity or a finite verb.
+Supplemental uppercase tile/row candidates receive hard core/exact/lemma scans;
+existing declared puzzle grids retain their full scans and declaration rules.
+
+Teaching entries require plain string literals in every field, including files
+using the teaching type and the named JSON teaching sources. Unresolved or
+computed fields and spreads fail closed. Tagged record keys are sensitive text.
+NFD characters are recognized. A curly apostrophe marks CHamoru only inside a
+word when its suffix is not an English contraction, or word-final after a letter
+other than `s`; ordinary English contractions and plural possessives stay English.
+
+The iOS preview wrapper validates **before restoring** the default generated
+Library files. The gate regenerates the four known preview files to scratch for
+byte equality, exports and scans iOS JavaScript, and compiles the exact scanned
+bytes with the native build's captured compiler. Every Hermes entry must appear
+in that compiler-derived table, with no skips. The receipt records compiler
+identity and source hashes. Hermes still receives per-entry core/exact/lemma and
+density checks. **Hermes proximity is enforced through the bound JavaScript
+export, not the compiler's deduplicated and reordered string table.**
+
+`CI=true` requires a nonempty, valid locked policy for `check:words:export`. Missing
+or empty policy fails. Local policy-free export checks explicitly print
+`policy not checked`; they do not establish private-policy acceptance.
+
+
+## Generated-word admission and text decoding
+
+`generated-admission.mjs` inventories speech maps/manifests, pictures, Library
+search, admitted word banks and `scripts/puzzles/pipeline.ts`. A word puzzle
+family must expose its decoded vocabulary and pass admission before staging any
+pack. Word families with no exposed answers fail closed. Exported pack grids
+retain the independent decoded-grid checks.
+
+Vocabulary sources are admitted W1 banks, the byte-frozen legacy bank, the picture
+allowlist, real Library input records, and app literals reachable through runtime
+imports from the app entry. Expo Router routes seed that import graph. Unimported
+`src` files, type-only imports, generated tables, import/require paths and map
+property names supply no admission. All `src` content literals (including
+unimported modules), speech JSON inputs and actual Library source records receive
+core/exact, list-shape and density checks. Generated outputs are checked through
+their exporting artifacts rather than used as authored sources.
+
+Speech JSON files and generator literals cannot supply vocabulary for themselves
+or other transcripts. A single-word or short word-like transcript must trace to
+an admitted source; bare-word and `spell-<word>` keys must agree with it. Multiword
+speech is authored prose and receives the normal source checks. Growth/Arcade
+lines retain their stronger every-token derivation check. Validated speech IDs
+supply only exact identifier provenance, never a vocabulary donation.
+
+`published-speech.json` is a hash-only snapshot read from main commit
+`0f428c2fef43a821bbea782823f7548b5d514971`, with its own pinned byte digest.
+Per the lead's inherited-content decision, an otherwise untraced single-word
+entry can use that frozen bank only if its source path, key and transcript match
+the published pair exactly. New or changed entries still need authored sources.
+The branch's speech files cannot extend the inherited bank. Receipts report the
+masked inherited-entry count. This is inherited admission, not a policy exception.
+
+Speech inputs are `scripts/learn/**/*.json`, the four named speech JSONs and the
+literal `speech.update` maps in `generate-audio.py`. `library.json` is a retained
+transcript input with no writer in this repository; its external producer remains
+unidentified. Item speech bindings are validated by the Library pipeline.
+
+The export guard creates detached admission receipts from its exact source
+companion, including source paths/hashes and every traced vocabulary token in
+map keys and asset basenames. Each normalized token matching a broad, core,
+exact or lemma policy term must occur in `sources.words`; an exact whole-key
+identifier match cannot satisfy that check. Other identifier tokens need no
+vocabulary admission. Compound keys and stems use the same rule, including
+prefixes, numeric suffixes, camelCase and normalized accents. Frozen inherited
+single-word transcripts supply their verified vocabulary after all speech inputs
+have been validated; their identifiers never supply component words. Generated
+registry entries receive the same token check before artifact scanning.
+Unknown tokens fail even when diluted across thousands of entries.
+The receipts establish derivation, not family or distribution approval.
+
+Binary classification validates media structure: PNG chunks/IHDR/CRC, complete
+RIFF sizes/chunks, MP4/M4A boxes and `ftyp`, full ID3 headers, sfnt table ranges,
+font container headers and Hermes tables. Other supported image/audio formats
+also validate their container structure. A tag alone cannot skip text checks.
+Text receives UTF-8 and Windows-1252/Latin-1 fallback, UTF-16 handling, ANSI
+stripping and control cleanup. ZIP/gzip assets fail closed. Structural validation
+does not establish media decoding quality or the safety of arbitrary metadata.
+
+For preview IPA delivery, first run `npm run ios:preview-bundle-prep`, keep
+`EXPO_PUBLIC_LIBRARY_PREVIEW=1` set for `npm run deliver:ios -- <command>`, then
+run `npm run ios:restore-generated` after completion. The wrapper verifies fresh
+preview JavaScript against embedded Hermes before any delivery command. A default
+export does not validate a preview IPA. This worker does not authorize delivery.

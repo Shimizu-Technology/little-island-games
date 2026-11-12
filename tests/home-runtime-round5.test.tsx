@@ -33,7 +33,8 @@ describe("round5 opaque pose handoff", () => {
    const support = hull && { ...hull, base: hull.top + hull.height };
    const slot = { phase: "settling", settleAt: 1000, releaseX: contact.x, releaseY: contact.y + 60,
      targetX: contact.x, targetY: contact.y, proposal: { base, facing: target?.facing ?? "front", attachment: owner ? { kind: "socket", item: owner.id } : { kind: "floor" } } };
-   const interaction = { slots: { value: [slot] }, clock, acknowledgePose: () => {} } as unknown as Interaction;
+   // Every mounted pose has its native layout (R4 gates the carry on it).
+   const interaction = { slots: { value: [slot] }, clock, acknowledgePose: () => {}, poseLayouts: { value: new Proxy({}, { get: (_t: object, k: string | symbol) => String(k).split(':').slice(1).join(':') }) } } as unknown as Interaction;
    let tree!: TestRenderer.ReactTestRenderer;
    await act(async () => { tree = TestRenderer.create(<SettleArt source={source} interaction={interaction} index={0} reduced={reduced}
      supportPlanes={owner && support ? { [owner.id]: support } : undefined}/>); });

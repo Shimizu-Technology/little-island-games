@@ -1,7 +1,11 @@
-import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { EntityArt, artFrame } from "./EntityArt";
-import { roomNames } from "../catalogMore";
+import React, { useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
+import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
+import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
+import { roomIds, roomNames } from "../catalogMore";
+import { roomOrigin, type Building } from "../camera";
+import type { CameraMatrix } from "../scene/camera";
+import { PosePicture, posePlan, trayLift } from "./PosePicture";
 import { resolve, type DropProposal } from "../scene/proposal";
 import type { Scene } from "../scene/types";
 import { BasketPicture } from "./BasketPicture";
@@ -18,7 +22,21 @@ export function Destinations({
   onChoose,
   onSelect,
   bottom,
+  camera,
+  building,
+  canvasTop = 0,
+  windowHeight = 0,
+  renderCharacter,
+  large = false,
 }: {
+  /** HM-17: the tray reads the camera on the UI thread and moves up off the selected thing. */
+  camera?: SharedValue<CameraMatrix>;
+  building?: Building;
+  canvasTop?: number;
+  windowHeight?: number;
+  renderCharacter?: CharacterRender;
+  /** HR-03: 72 pt cells in the grown-ups' larger-target mode. */
+  large?: boolean;
   scene: Scene;
   selected?: string;
   designing?: boolean;
@@ -28,6 +46,24 @@ export function Destinations({
   bottom: number;
 }) {
   const subject = selected ? scene.entities[selected] : undefined;
+  const [trayHeight, setTrayHeight] = useState(large ? 88 : 80);
+  // The selected thing and what it carries, in house units, for the tray's lift.
+  const extent = (() => {
+    if (!subject || !building) return { top: 0, bottom: 0 };
+    let top = Infinity, bottom = -Infinity;
+    for (const e of [subject, ...subject.children.map((id) => scene.entities[id]).filter((e) => !!e)]) {
+      const origin = roomOrigin(roomIds.indexOf(e.room), building), f = artFrame(e);
+      top = Math.min(top, origin.y + e.contact.y + f.top);
+      bottom = Math.max(bottom, origin.y + e.contact.y + f.top + f.height);
+    }
+    return { top, bottom };
+  })();
+  const lift = useAnimatedStyle(() => {
+    if (!camera || !building || !windowHeight) return { transform: [{ translateY: 0 }] };
+    const c = camera.value;
+    const thing = { top: canvasTop + extent.top * c.a + c.ty, bottom: canvasTop + extent.bottom * c.a + c.ty };
+    return { transform: [{ translateY: trayLift({ top: windowHeight - bottom - trayHeight, height: trayHeight }, thing, canvasTop) }] };
+  });
   if (!subject || (!designing && subject.item && !capabilityOf(subject.item.item).moveInPlay)) return null;
   const choices = Object.values(scene.rooms).flatMap((index) =>
     index.targets
@@ -64,31 +100,32 @@ export function Destinations({
       ? `${plain}, ${ownerNames[choices[index].target.owner] ?? ""}`
       : plain;
   };
-  const symbols = { hand: "✋", mouth: "◡", socket: "◠", surface: "▱", container: "▣" };
+  const cell = large ? 72 : 60;
   return (
-    <View
+    <Animated.View
       testID="tap-destinations"
-      style={{
+      onLayout={(event) => setTrayHeight(event.nativeEvent.layout.height)}
+      style={[{
         position: "absolute",
         bottom,
-        left: 72,
-        right: 72,
-        maxHeight: 80,
+        alignSelf: "center",
+        maxWidth: "94%",
+        maxHeight: cell + 16,
         borderRadius: 18,
         backgroundColor: "#FFF8E9F5",
         padding: 6,
         zIndex: 35,
-      }}
+      }, lift]}
     >
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxWidth: "100%" }} contentContainerStyle={{ gap: 8 }}>
         {store && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Put in tray"
             onPress={() => onChoose(store)}
             style={{
-              width: 58,
-              minHeight: 64,
+              width: cell,
+              minHeight: cell,
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 14,
@@ -107,7 +144,7 @@ export function Destinations({
               accessibilityRole="button"
               accessibilityLabel={`Choose ${entity.item ? contentNames[entity.id] : "friend"}`}
               onPress={() => onSelect(entity.id)}
-              style={{ width: 58, height: 56, padding: 6, backgroundColor: "#EEDDBA", borderRadius: 14 }}
+              style={{ width: cell, height: cell, padding: 6, backgroundColor: "#EEDDBA", borderRadius: 14 }}
             >
               <View pointerEvents="none" style={{ transform: [{ scale: size }], transformOrigin: "left top" }}>
                 <EntityArt entity={entity} reduced />
@@ -122,33 +159,21 @@ export function Destinations({
             accessibilityLabel={choiceLabel(choiceIndex)}
             onPress={() => onChoose(proposal)}
             style={{
-              minWidth: 58,
-              minHeight: 64,
+              width: cell,
+              height: cell,
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 14,
               backgroundColor: "#DDEACB",
             }}
           >
-            {scene.entities[target.owner] &&
-              (() => {
-                const owner = scene.entities[target.owner],
-                  frame = artFrame(owner),
-                  size = Math.min(36 / frame.width, 36 / frame.height);
-                return (
-                  <View pointerEvents="none" style={{ width: 36, height: 36 }}>
-                    <View style={{ transform: [{ scale: size }], transformOrigin: "left top" }}>
-                      <EntityArt entity={owner} reduced />
-                    </View>
-                  </View>
-                );
-              })()}
-            <Text allowFontScaling={false} style={{ fontSize: 18, color: "#284F4B" }}>
-              {symbols[target.kind]}
-            </Text>
+            {scene.entities[target.owner] && (
+              <PosePicture plan={posePlan(scene.entities[target.owner], subject, target, proposal)} size={cell - 6}
+                renderCharacter={renderCharacter} />
+            )}
           </Pressable>
         ))}
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }
