@@ -1,6 +1,6 @@
-# Board policies, rivals and Shell Pits tactics
+# Board policies, rivals and board puzzles
 
-Little Island 4.0, slice P1a: ledger rows PP-00, BD-06, BD-07 and PP-01. This covers the computer players in Coconut Drop, Fishing Nets, Hidden Canoes, Shell Pits and Checkers, and the Shell Pits endgame puzzles. Tic-tac-toe is untouched. Coconut Drop and Fishing Nets play exactly as they did in 3.0. Checkers plays the 3.0 search without its clock (revision 2, below).
+Little Island 4.0, slice P1a: ledger rows PP-00, BD-06, BD-07 and PP-01. Slice P1b adds BD-02, BD-04 and BD-05 (below): Coconut Drop puzzles, the Fishing Nets exact ending and chain endings, and the Hidden Canoes heatmap and deduction charts. This covers the computer players in Coconut Drop, Fishing Nets, Hidden Canoes, Shell Pits and Checkers, and the Shell Pits endgame puzzles. Tic-tac-toe is untouched. Coconut Drop and Fishing Nets play exactly as they did in 3.0. Checkers plays the 3.0 search without its clock (revision 2, below).
 
 ## Policy contract (PP-00)
 
@@ -19,6 +19,8 @@ Little Island 4.0, slice P1a: ledger rows PP-00, BD-06, BD-07 and PP-01. This co
 | Policy | Change |
 | --- | --- |
 | `shell-pits/challenge@2` | New. See BD-06. `@1` (depth 6, 9,000 positions) is kept for version 1 rounds. |
+| `fishing-nets/challenge@2` | New in P1b. See BD-04. `@1` is kept for rounds saved under it. |
+| `hidden-canoes/challenge@3` | New in P1b. See BD-05. `@2` is kept for rounds saved under it. |
 | `hidden-canoes/*@2` | Same rules of thumb as 3.0. The search order now comes from the caller's random source. Revision 1 shuffled with `seed + moves`, and the seed also lays out the fleets. The same chart could get a different choice (test: 31 of 40 seeds differed). `@1` is marked `publicOnly: false` and only finishes version 1 rounds. |
 | Hints | Board hints use the strongest current policy from the hinted seat's own view. Shell Pits hints now look 8 sows ahead. Hidden Canoes hints no longer read the seed. Reef Sweep keeps its own solo hint. |
 
@@ -64,6 +66,40 @@ There are 16 endgames in tiers 1–4, with par 2, 3, 4 and 5–6 sows, registere
 - **The strongest bot punishes the exploit but isn't a forced loss.** Greedy loses all four opening cases (above). A depth-14 search beats revision 2 from every starter and seat; the four winning lines are replayed move by move in `tests/shell-pits-tactics.test.ts`.
 - Reach the endgames from Shell Pits setup: *Endgame puzzles · win in a few sows*. The frame's way back reads *Back to Shell Pits* through the new optional `backLabel`.
 
+## Coconut Drop puzzles (BD-02)
+
+24 puzzles in three tiers: 8 *win* (one drop finishes four), 8 *block* (Ray could finish four next turn, in exactly one column) and 8 *fork* (one drop makes two fours at once; Ray can block only one). Challenge ID `drop-puzzles`, bank 461, codec `coconut-tactics-v1`, contexts `coconut-1` to `coconut-3`, dares 3264–3311. (Not `coconut-drop`: the Challenge ID ledger is a word list the export guard scans, and that ID tipped it over the guard's list threshold.) You are the circle coconuts and move first.
+
+- **Replayed from a legal opening.** A puzzle is the list of drops that leads to it, played from an empty board through the real engine. Every drop must be legal, nobody may have won, and circle must be next. `scripts/boards/coconut-puzzles.ts` finds the openings by seeded family-style play (take a four, block a four, don't drop under the other side's four) and keeps only positions with exactly one answer.
+- **Certified.** A plain search with no memo checks every answer: the win column is the only four; the block column is the only drop after which Ray has no four, and circle has no four of its own; the fork column is the only drop that forces a win in two, circle has no win in one, and the drop leaves at least two fours open.
+- **One answer, no detours.** A try may use exactly par drops (1, or 2 for a fork). Any other drop is a lost try, even when a slower win is still possible, so the clean mark always means the puzzle's own drop was found. Ray answers a fork by blocking one four, or plays its own Challenge move when nothing can stop circle.
+- **Dares.** *No help and no lost tries* on every puzzle; *Win in 2 drops* on the forks. Help shows the column.
+
+## Fishing Nets: exact ending and chain endings (BD-04)
+
+**`fishing-nets/challenge@2`.** With more than 14 ropes open it makes revision 1's move exactly. From 14 down it solves the ending with `NetsExact`: a negamax over the set of tied ropes, where closing a box adds the box and the same seat chooses again, and any other rope passes the turn. Values count only the boxes still open, relative to the side to move, so a set of tied ropes stands for every turn and score that reaches it; a test checks the move against a plain search whose key is the board, the turn and both scores. The memo visits each set at most once, so it never searches more than 2^14 positions (`limits: { depth: 14, nodes: 16384 }`). Ties between equally good ropes are broken by the round's public salt. It runs in the same 8 ms slices as every policy.
+
+Against revision 1 (`p1b-boards/evidence/benchmark.json`, both starters and seats, seeded openings): 122 wins and 26 losses of 148 on 3×3, 110 / 14 drawn / 24 on 4×4, 112 / 36 on 5×5. Host time per decision at 14 ropes or fewer: p95 3.3 ms, worst 14 ms on Node's JIT; interpreted (`--jitless`, standing in for Hermes, on a loaded host) p95 80 ms, worst 162 ms, in steps whose p95 is 4.3 ms. **The iPad mini (6th generation) time is unmeasured.**
+
+**Chain endings.** 12 endings, bank 462, codec `nets-chains-v1`, contexts `nets-1` to `nets-4`, dares 3312–3335. Each is a legal game through the real engine (3×3 or 4×4) that leaves circle to move with 12 ropes or fewer and no safe rope. Circle can win with best play, while the 3.0 Challenge habit (take every box, then hand over the shortest chain) and plain greed both lose against Ray's exact defence. Ray reads one exact table per ending, built once (at most 2^12 sets) and cached, so replaying a saved try costs lookups only.
+
+Each ending teaches one of two ideas, read from its best line and checked by plain search:
+
+- *Leave two* (6 endings): a box is there to take, but the best rope closes nothing and leaves the last two boxes as a pair. Ray takes the two, then has to open the next chain. Taking the box is strictly worse.
+- *The middle rope* (6 endings): every rope gives Ray something. The best rope runs between two boxes that each have two sides, so Ray gets both and can't hand them back. Tying either outer rope of the pair is strictly worse.
+
+The idea appears with Help and after a lost try, on the board itself. (A win goes straight to the shared Challenge ending, which doesn't show it.) Dares: *No help and no lost tries* on every ending; *Win with all N boxes you can* on the 5 endings where a smaller win exists, certified by listing every winning line against Ray's replies.
+
+## Hidden Canoes: heatmap and deduction charts (BD-05)
+
+**`hidden-canoes/challenge@3`.** `CanoesHeatmap` counts every layout of the 3, 2 and 2 canoes that fits the searching seat's own chart: misses stay open water, and every find is covered. It reads only `view.searched`, so the hidden fleet can't change it. It searches an open space covered by the most layouts; ties go to the round's public salt. The count runs in slices of 128 placement pairs. Tests check the count against an independent enumeration, and a counterfactual test lays out every other rival fleet that fits the chart (more than 500 cases) and gets the same view, move and hint each time.
+
+Against revision 2 on 120 boards, both starters and seats: 342 wins, 138 losses. Alone, it finds all seven spaces of a fleet in 19.0 searches on average (worst 26), against 22.2 (worst 29) for revision 2. Host time per decision: p95 1 ms on JIT; interpreted p95 20 ms, worst 53 ms.
+
+**Deduction charts.** 12 charts, bank 463, codec `canoes-charts-v1`, contexts `canoes-1` to `canoes-4`, dares 3336–3347. A chart is public information only: searched spaces and finds, with no fleet and no seed. Three ask *find the space that must hold a canoe*, three *find the space that can't hold a canoe*, three *find the space most likely to hold a canoe* (never a sure space), and three ask for two or three sure spaces. At least two layouts fit every chart. A tap is right only when the chart proves it, so **no mark can come from luck**: the one dare, *No help and no wrong taps*, needs only reading the chart. Help points to an answer and says why in plain words, for example "C3 must hold a canoe: there's no way to fit the canoes without it." A wrong tap is explained the same way ("D3 might be open water: the canoes can fit without it"). The exact counts stay in the tests; a child doesn't need them.
+
+**A round against the computer has no pass-the-device screen.** Hidden Canoes used to cover the chart and ask "Pass to You" before every turn, even against Ray. Only two players sharing the device need that handover now; their rounds are unchanged.
+
 ## Rivals, head starts and See the best move (PP-01)
 
 **Rivals.** Pebble the hermit crab (Gentle), Coral the sea turtle (Growing) and Ray the manta ray (Challenge). Each game describes its rival's play in words taken from the policy itself, and tests check the claims. For example, Coral blocks a four you could finish next, and Ray in Fishing Nets hands over the shortest chain. The rival's name appears in the score, the turn line and the result.
@@ -74,13 +110,13 @@ There are 16 endgames in tiers 1–4, with par 2, 3, 4 and 5–6 sows, registere
 | --- | --- | --- |
 | Shell Pits | none / 4 / 8 shells counted at the end | 22 / 40 / 64 of 144 |
 | Coconut Drop | none / one extra coconut in the middle column | 10 / 32 of 64 |
-| Fishing Nets 3×3 | none / 1 / 2 boxes | 46 / 46 / 62 of 144 |
-| Fishing Nets 4×4 | none / 2 / 3 boxes | 20 / 32 / 40 of 144 |
-| Fishing Nets 5×5 | none / 2 / 3 boxes | 26 / 30 / 30 of 144 |
-| Hidden Canoes | none / find 6 / find 5 | 88 / 124 / 184 of 240 |
+| Fishing Nets 3×3 | none / 1 / 2 boxes | 46 / 46 / 62 of 144 against `@1`; 19 / 19 (31 drawn) / 50 against `@2` |
+| Fishing Nets 4×4 | none / 2 / 3 boxes | 20 / 32 / 40 of 144 against `@1`; 8 / 10 / 16 against `@2` |
+| Fishing Nets 5×5 | none / 2 / 3 boxes | 26 / 30 / 30 of 144 against `@1`; 10 / 10 / 10 against `@2` |
+| Hidden Canoes | none / find 6 / find 5 | 88 / 124 / 184 of 240 against `@2`; 54 / 76 / 156 against `@3` |
 | Checkers (Growing stand-in plays red) | none / the rival starts without one back-row piece | 6 / 5 of 40 won, 21 / 10 lost, the rest drawn or past 200 plies |
 
-With 8 shells ahead, the greedy grab still wins only 20 of 144 Shell Pits games. A head start makes a close game likelier; none makes a win certain. Fishing Nets 5×5 gains little, and the Checkers head start halves losses without adding wins; both are recorded rather than tuned away.
+With 8 shells ahead, the greedy grab still wins only 20 of 144 Shell Pits games. A head start makes a close game likelier; none makes a win certain. Fishing Nets 5×5 gains little, and nothing at all against the exact ending of `fishing-nets/challenge@2` (P1b), whose head starts are now worth less on every board; the Canoes heatmap rival likewise wins more against every head start. The Checkers head start halves losses without adding wins; both are recorded rather than tuned away.
 
 **See the best move** appears only after a game ends, so nothing hidden can show early. It looks back in slices of at most 8 ms:
 

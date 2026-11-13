@@ -13,6 +13,7 @@ vi.mock("../src/islander/active", async () => {
   return { useActiveIslanderLook: () => defaultLook };
 });
 vi.mock("react-native", () => ({
+  useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
   TextInput: "input",
   View: ({ children, style, accessibilityLabel }: { children: React.ReactNode; style?: React.CSSProperties; accessibilityLabel?: string }) => <div data-label={accessibilityLabel} style={style}>{children}</div>,
 }));

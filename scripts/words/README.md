@@ -40,7 +40,7 @@ Queue outputs are `tiers.queue.json`, `local.queue.json`, `themes.queue.json`, `
 
 ## Blind review and reconciliation
 
-Give reviewer A only `review-a.packet.json` and reviewer B only `review-b.packet.json`, in independent sessions from different model families. Each packet has its own deterministic ordering. Do not give either reviewer the prepared bundle, pending sheet, lint report, raw drafting candidates, another review or existing approval state. The packet embeds the family context and a strict content projection. Word packets include British variants, lemma, form, proper-noun status, canonical ID, allowed uses, audio, word lengths and abbreviation/living-person fields. Each variant needs its own `{spelling,verdict,relation:"spelling-variant",reason}` in both review results. A keep on the parent word alone does not admit a variant.
+Give reviewer A only `review-a.packet.json` and reviewer B only `review-b.packet.json`, in independent, blind sessions on two different models (they may share a model family, by Leon's decision of 13 Nov 2026). Each packet has its own deterministic ordering. Do not give either reviewer the prepared bundle, pending sheet, lint report, raw drafting candidates, another review or existing approval state. The packet embeds the family context and a strict content projection. Word packets include British variants, lemma, form, proper-noun status, canonical ID, allowed uses, audio, word lengths and abbreviation/living-person fields. Each variant needs its own `{spelling,verdict,relation:"spelling-variant",reason}` in both review results. A keep on the parent word alone does not admit a variant.
 
 Keep the actual provider/model/run transcript. A raw result must contain:
 

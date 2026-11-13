@@ -28,7 +28,7 @@ try {
     const packetPath=join(batch,`review-${slot}.packet.json`),packet=read(packetPath);
     const transcript=`TEST FIXTURE ONLY. Synthetic ${family} review result to exercise CLI import and reconciliation. No model was called. No review or approval took place.`;
     const transcriptFile=join(out,`transcript-${slot}.TEST-ONLY.txt`);writeFileSync(transcriptFile,transcript,{flag:'wx'});
-    const result={schemaVersion:1,fixture:true,batchSha256:packet.batchSha256,packetSha256:digest(packet),slot,reviewer:{id:`TEST-ONLY-${family}`,family,model:'SYNTHETIC-TRANSPORT-FIXTURE'},runId:`TEST-ONLY-run-${slot}`,startedAt:'2026-11-08T00:00:00.000Z',finishedAt:slot==='a'?'2026-11-08T00:02:00.000Z':'2026-11-08T00:03:00.000Z',transcriptSha256:sha256(transcript),items:packet.items.map((item,i)=>({id:item.id,verdict:slot==='b' && i%5===0?'call':'keep',reason:'TEST FIXTURE ONLY: synthetic decision, no actual review'}))};
+    const result={schemaVersion:1,fixture:true,batchSha256:packet.batchSha256,packetSha256:digest(packet),slot,reviewer:{id:`TEST-ONLY-${family}`,family,model:`SYNTHETIC-TRANSPORT-FIXTURE-${slot}`},runId:`TEST-ONLY-run-${slot}`,startedAt:'2026-11-08T00:00:00.000Z',finishedAt:slot==='a'?'2026-11-08T00:02:00.000Z':'2026-11-08T00:03:00.000Z',transcriptSha256:sha256(transcript),items:packet.items.map((item,i)=>({id:item.id,verdict:slot==='b' && i%5===0?'call':'keep',reason:'TEST FIXTURE ONLY: synthetic decision, no actual review'}))};
     const resultFile=join(out,`review-${slot}.TEST-ONLY.json`);write(resultFile,result);
     logs.push(run(['import',packetPath,resultFile,transcriptFile,join(out,`review-${slot}.import.TEST-ONLY.json`)]));
   }

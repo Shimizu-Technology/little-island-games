@@ -1157,6 +1157,276 @@
       "cove": false
     },
     {
+      "slot": 461,
+      "engine": "drop-puzzles",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 472064,
+          "hash": "140d1616c6b16b04b95dfc456ae05819971e2a848794c0e8cd23de37c273b3a4"
+        },
+        {
+          "ordinal": 472065,
+          "hash": "e703525b03a485d3f2508befb3e4cf6b3c52209ef6424f437bbf37fa0b7d9a84"
+        },
+        {
+          "ordinal": 472066,
+          "hash": "e2b3c47c44b9667455b02115345a6497cdf0054bd8fd6bc93553ff9b59f9cc09"
+        },
+        {
+          "ordinal": 472067,
+          "hash": "1f8f1053ff8639669c07250fad84d87e294733911ba18b24974e040d0897d378"
+        },
+        {
+          "ordinal": 472068,
+          "hash": "f18b412877eae77f0c8e05d7629681365df67d4dfb75b5b411bcfa3f431f4213"
+        },
+        {
+          "ordinal": 472069,
+          "hash": "ad50d831a7b6c57d42ec36abb5a83c8c51b0311446a95848c79d2ffc470e048e"
+        },
+        {
+          "ordinal": 472070,
+          "hash": "48031dd0469d89fb14f757447486673462992c2deaf083c9d425cd608c7629aa"
+        },
+        {
+          "ordinal": 472071,
+          "hash": "c010482d69b277c201ca3f8015bd480e1c69c70480dc097313396ea7e7e430e2"
+        },
+        {
+          "ordinal": 472072,
+          "hash": "33754744a1460cbafeed4bd2631afd514b5cf4fd72ee47f2da009835aaabbf26"
+        },
+        {
+          "ordinal": 472073,
+          "hash": "614d0487416aba4493dab63178b6d2ce722da13b05e80840ab619eb2ba476944"
+        },
+        {
+          "ordinal": 472074,
+          "hash": "cc54d01ac4e4ba84c59f88c67cdc83c7939b54248b0ae6ead7b3a1eb796a4899"
+        },
+        {
+          "ordinal": 472075,
+          "hash": "31a8763a7d1a21c5ae993d89e15e4ca3009938b1d16e45994ce55c838a3a161a"
+        },
+        {
+          "ordinal": 472076,
+          "hash": "7009e676cc5bdac334e54d9f9f89884d620c7d8cdb4121707ff54c3d7a1c9fdf"
+        },
+        {
+          "ordinal": 472077,
+          "hash": "1366c55b1e26f941a87bf30f6d32f8fe831f31e78b6fd8341c3a6cb82cd052c8"
+        },
+        {
+          "ordinal": 472078,
+          "hash": "c00f67fc4f7b822d3f8bec4003fe4193f3fda61d875ff448d8ac3b420404bc68"
+        },
+        {
+          "ordinal": 472079,
+          "hash": "d9809563eff87028060a7ca65b6bbfcb06f9b31ce0f45948e592d81f9b219b0a"
+        },
+        {
+          "ordinal": 472080,
+          "hash": "9bc436f956250b84638b2c104c1580b3eb8b995f6e73d63255bb4713902e9258"
+        },
+        {
+          "ordinal": 472081,
+          "hash": "1bbdb3873fddbc53c09e4abcf2ec83bd78fcde313014f820f5619f19e8e64d9f"
+        },
+        {
+          "ordinal": 472082,
+          "hash": "ca4877730e32d37a82106d8f64de874e138f71d6ceb92df5e6c3af351ff0c943"
+        },
+        {
+          "ordinal": 472083,
+          "hash": "ccac0af60b31e2938f5ec2044bb932378de3db2770b223d0641615141ac72e4e"
+        },
+        {
+          "ordinal": 472084,
+          "hash": "8d798253c6eb2ffd3cca766a6d241dcbcd3231c1d6547ae2c769a1dba4040e66"
+        },
+        {
+          "ordinal": 472085,
+          "hash": "baf862a12e6d8e077e2320a5968d3628d418e37a80d1bad607b18c92b6396d75"
+        },
+        {
+          "ordinal": 472086,
+          "hash": "138566b224e8adf8281c862bf137aa8da77d543d904ff9bcc411bfeca8eb1ac1"
+        },
+        {
+          "ordinal": 472087,
+          "hash": "ce4ccfef76a9477facfbeec2a62feaa143c1f113a165e76658241bd6adca3a76"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "cove": false
+    },
+    {
+      "slot": 462,
+      "engine": "fishing-nets",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 473088,
+          "hash": "5df27ebeb14901e2fcdebf9a0018c71a38afd31f238871722b527ea4094c44c0"
+        },
+        {
+          "ordinal": 473089,
+          "hash": "36a8e8867838a33b3e971f0806f0d5fb15e82c7fb4a34efcacee5b3d1dfe19b4"
+        },
+        {
+          "ordinal": 473090,
+          "hash": "614f0ef0218b5e9895c9baac72a6ccf58e60f452779aabc8c7049169c609bd2e"
+        },
+        {
+          "ordinal": 473091,
+          "hash": "9d91afbcb871add512879d080957fed5e7a0b8fbfaec1cff8606ac36e0119efa"
+        },
+        {
+          "ordinal": 473092,
+          "hash": "606929274952df23e93c4ea71d304301240626905dd4c7205afdfabd6577528d"
+        },
+        {
+          "ordinal": 473093,
+          "hash": "c23270c18be384b76a2b7b199b2a84ef01104931cb54236457115927af3cace6"
+        },
+        {
+          "ordinal": 473094,
+          "hash": "2dda14ce7963670d9d5ffc621d9ac4838265dff2e368b72f3fd4d355cc3d3366"
+        },
+        {
+          "ordinal": 473095,
+          "hash": "cac2bdfd24e407b09f8cd533daf94f0cf6d288f93696e325ab6ea2279f28315e"
+        },
+        {
+          "ordinal": 473096,
+          "hash": "dde1e9e23659f7c9fb82b1db7482af2ba960a12ae08fe1a92008fd391403d26c"
+        },
+        {
+          "ordinal": 473097,
+          "hash": "9c00de7711cbf55f04184c643ca072bd7fbe64b0ab4c0cfd16144a04fd404208"
+        },
+        {
+          "ordinal": 473098,
+          "hash": "8c95c321e1f20bd29a4f9710565e9ccd81218f30dc08f1bda3022f7cf47caca1"
+        },
+        {
+          "ordinal": 473099,
+          "hash": "d8051f1ce62ad7d1c067c9ffc44b8482f0d0b3dcaa325526940d23bc992d5984"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        3,
+        3,
+        1,
+        3,
+        1,
+        3
+      ],
+      "cove": false
+    },
+    {
+      "slot": 463,
+      "engine": "hidden-canoes",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 474112,
+          "hash": "9fbf445e7fdfc3306b5ddd19e6958929dda15ca9795946a0ea0b87fa5fe963bf"
+        },
+        {
+          "ordinal": 474113,
+          "hash": "32a84b472a619004198b3a26802cc0fd62b5fa5ca5d2290c8228941eefbe5726"
+        },
+        {
+          "ordinal": 474114,
+          "hash": "da46b516dad98d1c91e7ac35908042f2437b56f666df859008065c64560429cc"
+        },
+        {
+          "ordinal": 474115,
+          "hash": "7259012dcbeea57ccd9fc3a1391261104246f64f92ae28755207ba04606972f0"
+        },
+        {
+          "ordinal": 474116,
+          "hash": "aa180f519fefe142965b09f9774c8c512d557083659e36c5d5095905becee1d7"
+        },
+        {
+          "ordinal": 474117,
+          "hash": "cb27f73eb5e1cba277d741e3b177dc4a0e690b7c0e77ee5938322f42057e8ac3"
+        },
+        {
+          "ordinal": 474118,
+          "hash": "030818dc6937a6a1fdfc920b11f158afc6b1e39ff6f5821690d0e886f64aec6f"
+        },
+        {
+          "ordinal": 474119,
+          "hash": "7f1dd3525e84f3ac99e3d28426a77b11a8d750fd898a87455800b92200e88062"
+        },
+        {
+          "ordinal": 474120,
+          "hash": "9d00605f70c262efbdb751ce7b45c3dfe0a83aa380179413b1324f9af465f563"
+        },
+        {
+          "ordinal": 474121,
+          "hash": "18512d6ce238f72ae1b4fab409a384a21519bda8c2f7dd10d5469d6c1ecc4222"
+        },
+        {
+          "ordinal": 474122,
+          "hash": "c5a94becea3d56e3549a7b1d15fb9e90508369ba7bd625a061b27c96d4fad84d"
+        },
+        {
+          "ordinal": 474123,
+          "hash": "c365dec4fb6b19c55eac239d7d88acd78a7e61ca25dc08682fddcf0cb34225b4"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
       "slot": 500,
       "engine": "reef-builder",
       "rules": 1,
@@ -2950,6 +3220,555 @@
       }
     ],
     [
+      3264,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 0
+      }
+    ],
+    [
+      3266,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 1
+      }
+    ],
+    [
+      3268,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 2
+      }
+    ],
+    [
+      3270,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 3
+      }
+    ],
+    [
+      3272,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 4
+      }
+    ],
+    [
+      3274,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 5
+      }
+    ],
+    [
+      3276,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 6
+      }
+    ],
+    [
+      3278,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 7
+      }
+    ],
+    [
+      3280,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 8
+      }
+    ],
+    [
+      3282,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 9
+      }
+    ],
+    [
+      3284,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 10
+      }
+    ],
+    [
+      3286,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 11
+      }
+    ],
+    [
+      3288,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 12
+      }
+    ],
+    [
+      3290,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 13
+      }
+    ],
+    [
+      3292,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 14
+      }
+    ],
+    [
+      3294,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 15
+      }
+    ],
+    [
+      3296,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 16
+      }
+    ],
+    [
+      3297,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 16
+      }
+    ],
+    [
+      3298,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 17
+      }
+    ],
+    [
+      3299,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 17
+      }
+    ],
+    [
+      3300,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 18
+      }
+    ],
+    [
+      3301,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 18
+      }
+    ],
+    [
+      3302,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 19
+      }
+    ],
+    [
+      3303,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 19
+      }
+    ],
+    [
+      3304,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 20
+      }
+    ],
+    [
+      3305,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 20
+      }
+    ],
+    [
+      3306,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 21
+      }
+    ],
+    [
+      3307,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 21
+      }
+    ],
+    [
+      3308,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 22
+      }
+    ],
+    [
+      3309,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 22
+      }
+    ],
+    [
+      3310,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 461,
+        "puzzle": 23
+      }
+    ],
+    [
+      3311,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 461,
+        "puzzle": 23
+      }
+    ],
+    [
+      3312,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 0
+      }
+    ],
+    [
+      3314,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 1
+      }
+    ],
+    [
+      3316,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 2
+      }
+    ],
+    [
+      3318,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 3
+      }
+    ],
+    [
+      3320,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 4
+      }
+    ],
+    [
+      3321,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 462,
+        "puzzle": 4
+      }
+    ],
+    [
+      3322,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 5
+      }
+    ],
+    [
+      3324,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 6
+      }
+    ],
+    [
+      3325,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 462,
+        "puzzle": 6
+      }
+    ],
+    [
+      3326,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 7
+      }
+    ],
+    [
+      3327,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 462,
+        "puzzle": 7
+      }
+    ],
+    [
+      3328,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 8
+      }
+    ],
+    [
+      3330,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 9
+      }
+    ],
+    [
+      3331,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 462,
+        "puzzle": 9
+      }
+    ],
+    [
+      3332,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 10
+      }
+    ],
+    [
+      3334,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 462,
+        "puzzle": 11
+      }
+    ],
+    [
+      3335,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 462,
+        "puzzle": 11
+      }
+    ],
+    [
+      3336,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 0
+      }
+    ],
+    [
+      3337,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 1
+      }
+    ],
+    [
+      3338,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 2
+      }
+    ],
+    [
+      3339,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 3
+      }
+    ],
+    [
+      3340,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 4
+      }
+    ],
+    [
+      3341,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 5
+      }
+    ],
+    [
+      3342,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 6
+      }
+    ],
+    [
+      3343,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 7
+      }
+    ],
+    [
+      3344,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 8
+      }
+    ],
+    [
+      3345,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 9
+      }
+    ],
+    [
+      3346,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 10
+      }
+    ],
+    [
+      3347,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 463,
+        "puzzle": 11
+      }
+    ],
+    [
       4000,
       {
         "kind": "pick-up",
@@ -3306,6 +4125,17 @@
     "pearl-loop-3",
     "pearl-loop-4",
     "pearl-loop-5",
+    "coconut-1",
+    "coconut-2",
+    "coconut-3",
+    "nets-1",
+    "nets-2",
+    "nets-3",
+    "nets-4",
+    "canoes-1",
+    "canoes-2",
+    "canoes-3",
+    "canoes-4",
     "beep-3",
     "beep-4",
     "beep-5"

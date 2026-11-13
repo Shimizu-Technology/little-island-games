@@ -63,13 +63,14 @@ export function roundProgress(session: LearnSession): { current: number; total: 
   return total && typeof s.index === "number" ? { current: Math.min(s.index, total), total } : null;
 }
 
+/** The journey bar is compact chrome above the board: its labels stop at 1.5x so the board keeps the screen. */
 export function RoundProgress({ session, island, finished, colors }: { session: LearnSession; island: Island; finished: boolean; colors?: typeof subjectTheme[Island] }) {
   const progress = roundProgress(session);
   if (!progress) return null;
   const t = colors ?? subjectTheme[island];
   const count = Math.min(progress.total, 12);
   return <View accessibilityLabel={`${finished ? progress.total : progress.current} of ${progress.total} parts complete`} style={{ gap: 7, marginVertical: 7 }}>
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Copy style={{ color: t.ink, fontSize: 13, fontWeight: "900" }}>YOUR JOURNEY</Copy><Copy style={{ color: t.ink, fontSize: 13, fontWeight: "800", marginLeft: "auto" }}>{finished ? progress.total : progress.current}/{progress.total}</Copy></View>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Copy maxFontSizeMultiplier={1.5} style={{ color: t.ink, fontSize: 13, fontWeight: "900" }}>YOUR JOURNEY</Copy><Copy maxFontSizeMultiplier={1.5} style={{ color: t.ink, fontSize: 13, fontWeight: "800", marginLeft: "auto" }}>{finished ? progress.total : progress.current}/{progress.total}</Copy></View>
     <View style={{ flexDirection: "row", gap: 4 }}>{Array.from({ length: count }, (_, i) => <View key={i} style={{ flex: 1, height: 10, borderRadius: 8, backgroundColor: (finished || i < progress.current * count / progress.total) ? t.accent : C.paper, borderWidth: 1, borderColor: t.accent }}/>)}</View>
   </View>;
 }

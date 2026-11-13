@@ -427,10 +427,20 @@ describe('R9: an append keeps the whole band inside its template share', () => {
   });
 });
 describe('committed catalog', () => {
-  it('holds only the families owner slices have registered, each verifying clean', () => {
+  it('holds only the families owner slices have registered', () => {
     expect(readCatalog(productionDirs).root.families.map(f => f[0]).sort()).toEqual(families.map(f => f.id).sort());
-    expect(verifyCatalog(productionDirs, families).errors).toEqual([]);
-  }, 900_000);
+  });
+  // Replaying every committed entry (10,009 across 9 families by 13 Nov 2026) is the gate's own `puzzles:verify`
+  // step, run once and alone before the tests. Repeating it here beside the other test workers outgrew its 15-minute
+  // limit on a loaded machine, so the gate instead proves that step can't be dropped or moved after the tests.
+  it('is replayed in full by the gate before the tests run', () => {
+    const scripts = (JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as { scripts: Record<string, string> }).scripts,
+      steps = scripts['check:source'].split('&&').map(x => x.trim());
+    expect(scripts.check).toMatch(/^npm run check:source\b/);
+    expect(steps).toContain('npm run puzzles:verify');
+    expect(steps.indexOf('npm run puzzles:verify')).toBeLessThan(steps.indexOf('npm test'));
+    expect(scripts['puzzles:verify']).toBe('npm run puzzles -- verify');
+  });
 });
 
 it('R2-5 excludes retired rows from active bake quotas and preserves a below-floor append',()=>{
