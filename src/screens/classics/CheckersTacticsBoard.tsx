@@ -6,9 +6,10 @@ import { checkersMoves, row, col } from "../../games/checkers";
 import { coords, Cell } from "./shared";
 import type { ChallengeViewProps } from "../../challenge/types";
 import type { Action, State } from "../../games/classics/checkersTactics";
-export function CheckersTacticsBoard({ state: s, dispatch, active, width }: ChallengeViewProps<State, Action>) {
-  const [selection, setSelection] = useState<{ from: number; path: number[]; at: State } | null>(null);
-  const chosen = selection?.at === s ? selection : null;
+export function CheckersTacticsBoard({ state: s, dispatch, active, width, sessionKey }: ChallengeViewProps<State, Action>) {
+  const selectionKey = `${sessionKey ?? ""}:${s.revision}:${s.position.turn}:${s.position.board.join(",")}`;
+  const [selection, setSelection] = useState<{ from: number; path: number[]; at: string } | null>(null);
+  const chosen = selection?.at === selectionKey ? selection : null;
   const moves = checkersMoves(s.position, "classic"), candidates = chosen ? moves.filter(m => m.from === chosen.from && chosen.path.every((v, i) => m.path[i] === v)) : [];
   const destinations = candidates.map(m => m.path[chosen!.path.length]);
   const display = [...s.position.board];
@@ -19,7 +20,7 @@ export function CheckersTacticsBoard({ state: s, dispatch, active, width }: Chal
     if (chosen && destinations.includes(i)) {
       const path = [...chosen.path, i], done = candidates.find(m => m.path.join() === path.join());
       if (done) { dispatch(["m", done.from, done.path]); setSelection(null); } else setSelection({ ...chosen, path });
-    } else if (!chosen?.path.length && moves.some(m => m.from === i)) setSelection({ from: i, path: [], at: s });
+    } else if (!chosen?.path.length && moves.some(m => m.from === i)) setSelection({ from: i, path: [], at: selectionKey });
   }
   return <View style={{ gap: 12 }}>
     <Copy style={{ color: C.ink }}>{s.correct ? "You found the winning capture!" : s.tried ? "That capture leaves the other side a move. Start again and try a different route." : `${s.position.turn === 1 ? "Red" : "Blue"} to move. Win this position with one complete capture turn. Classic rules: jumps are required; finish the same piece's chain.`}</Copy>

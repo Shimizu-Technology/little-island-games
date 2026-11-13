@@ -4,7 +4,7 @@ import type { ReplayEngine } from "../../challenge/types";
 export type Descriptor = { version: 1; pieces: [number, number][]; turn: Side; title: string };
 export type Initial = { version: 1 };
 export type Action = ["m", number, number[]] | ["h"] | ["z"];
-export type State = { position: Position; tried: boolean; correct: boolean; hint: CheckersMove | null };
+export type State = { revision: number; position: Position; tried: boolean; correct: boolean; hint: CheckersMove | null };
 export function tacticsPosition(d: Descriptor): Position {
   const board = Array<number>(64).fill(0);
   for (const [square, piece] of d.pieces) board[square] = piece;
@@ -30,15 +30,15 @@ export const checkersTacticsEngine: ReplayEngine<Descriptor, Initial, Action, St
   initial: () => ({ version: 1 }),
   validInitial: (v): v is Initial => plain(v) && exactKeys(v, ["version"]) && v.version === 1,
   validAction: (v): v is Action => Array.isArray(v) && (v.length === 1 && ["h", "z"].includes(v[0]) || v.length === 3 && v[0] === "m" && Number.isInteger(v[1]) && v[1] >= 0 && v[1] < 64 && Array.isArray(v[2]) && v[2].length > 0 && v[2].length <= 12 && v[2].every(i => Number.isInteger(i) && i >= 0 && i < 64)),
-  create: d => ({ position: tacticsPosition(d), tried: false, correct: false, hint: null }),
+  create: d => ({ revision: 0, position: tacticsPosition(d), tried: false, correct: false, hint: null }),
   step: (s, a, d) => {
-    if (a[0] === "z") return { state: { position: tacticsPosition(d), tried: false, correct: false, hint: null }, event: "reset" };
-    if (a[0] === "h") return { state: { ...s, position: tacticsPosition(d), tried: false, hint: winningCaptures(tacticsPosition(d))[0] ?? null }, event: "help" };
+    if (a[0] === "z") return { state: { revision: s.revision + 1, position: tacticsPosition(d), tried: false, correct: false, hint: null }, event: "reset" };
+    if (a[0] === "h") return { state: { ...s, revision: s.revision + 1, position: tacticsPosition(d), tried: false, hint: winningCaptures(tacticsPosition(d))[0] ?? null }, event: "help" };
     if (s.tried) return null;
     const move = checkersMoves(s.position, "classic").find(m => m.from === a[1] && m.path.join() === a[2].join());
     if (!move) return null;
     const after = applyCheckers(s.position, move, "classic"), correct = after.outcome === (d.turn === 1 ? "red" : "blue");
-    return { state: { ...s, position: after, tried: true, correct }, event: "check", correct };
+    return { state: { ...s, revision: s.revision + 1, position: after, tried: true, correct }, event: "check", correct };
   },
   inspect: s => ({ solved: s.correct, metrics: {}, edits: Number(s.tried), solution: null, objectives: [] }),
 };

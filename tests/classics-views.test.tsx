@@ -60,13 +60,24 @@ describe("Classics native view controls", () => {
   });
   it("Checkers taps every hop of a chain before dispatching the complete turn", async () => {
     const d = checkersTacticsDescriptors[1], state = checkersTacticsEngine.create(d, { version: 1 }, options), dispatch = vi.fn(); let r!: ReactTestRenderer;
-    await act(() => { r = create(<CheckersTacticsBoard state={state} dispatch={dispatch} active width={320}/>); });
+    await act(() => { r = create(<CheckersTacticsBoard state={state} dispatch={dispatch} active width={320} sessionKey="capture-session"/>); });
     expect(words(r.root)).toContain("ABCDEFGH");
     await act(() => button(r, "B6, red piece").props.onPress());
     await act(() => button(r, "D4, empty, legal destination").props.onPress());
     expect(dispatch).not.toHaveBeenCalled();
+    // Rotation/parent updates replay the same accepted session into a fresh state object.
+    await act(() => r.update(<CheckersTacticsBoard state={structuredClone(state)} dispatch={dispatch} active width={520} sessionKey="capture-session"/>));
     await act(() => button(r, "F2, empty, legal destination").props.onPress());
     expect(dispatch).toHaveBeenCalledWith(["m", 17, [35, 53]]);
+    await act(() => button(r, "B6, red piece").props.onPress());
+    await act(() => button(r, "D4, empty, legal destination").props.onPress());
+    const reset = checkersTacticsEngine.step(state, ["z"], d)!.state;
+    await act(() => r.update(<CheckersTacticsBoard state={reset} dispatch={dispatch} active width={520} sessionKey="capture-session"/>));
+    expect(r.root.findAll(n => n.type === "button" && n.props.accessibilityLabel === "F2, empty, legal destination")).toHaveLength(0);
+    await act(() => button(r, "B6, red piece").props.onPress());
+    await act(() => button(r, "D4, empty, legal destination").props.onPress());
+    await act(() => r.update(<CheckersTacticsBoard state={structuredClone(reset)} dispatch={dispatch} active width={520} sessionKey="another-session"/>));
+    expect(r.root.findAll(n => n.type === "button" && n.props.accessibilityLabel === "F2, empty, legal destination")).toHaveLength(0);
     await act(() => r.unmount());
   });
   it("face-down cross-modal cards do not expose their hidden words", async () => {
