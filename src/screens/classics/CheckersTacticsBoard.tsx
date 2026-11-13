@@ -42,6 +42,7 @@ export function CheckersTacticsBoard({ state: s, dispatch, active, width, sessio
       </View>
     </View>
     {!!chosen?.path.length && <Button quiet disabled={!active} onPress={() => setSelection(null)}>Start this turn over</Button>}
+    {s.tried && !s.correct && <Button quiet disabled={!active} onPress={() => dispatch(["z"])}>Start again</Button>}
     <Copy style={{ color: C.ink }}>Red moves down the board; Blue moves up. Kings have a K and can jump both ways. Each puzzle is a composed legal endgame, separate from your saved match.</Copy>
   </View>;
 }

@@ -7,6 +7,7 @@ import { easeOut, nativeDriver, useReducedMotion } from "../../components/motion
 import { chamoruCard, englishCard, type MemoryPack } from "../../games/memory";
 import { WordPicture } from "../../learn/games/hafa-adai/pictures";
 import { Cell } from "./shared";
+import { wordFitMultiplier } from "../../components/wordFit";
 function MemoryFace({ open, children }: { open: boolean; children: React.ReactNode }) {
   const reduced = useReducedMotion(), [value] = useState(() => new Animated.Value(open ? 1 : 0));
   useEffect(() => {
@@ -28,7 +29,7 @@ export function MemoryCards({ cards, pack = "pictures", matched, open, peek = fa
       const ch = chamoruCard(card), en = englishCard(card);
       const label = ch ? ch.face === "picture" ? `picture of ${ch.word.english}` : `${ch.word.term}${showEnglish ? `, ${ch.word.english}` : ""}` : en ? en.face === "picture" ? `picture of ${en.symbol}` : `word ${en.symbol}` : card;
       return <Cell key={i} label={`Card ${i + 1}, ${visible ? label : "face down"}${found ? ", matched" : ""}${hint.includes(i) ? ", remembered pair" : ""}`} disabled={disabled || found || open.includes(i) || peek} onPress={() => onFlip(i)} style={{ width: cardSize, minHeight: cardSize * (reading ? 1.35 : 1.06), paddingVertical: 5, borderRadius: 16, borderWidth: hint.includes(i) ? 3 : 2, borderColor: hint.includes(i) ? C.ink : found ? "#BED3B7" : visible ? "#D5CBDD" : "#74719B", backgroundColor: visible ? found ? "#E6F0DD" : C.paper : "#817BA6" }}>
-        <MemoryFace open={visible}>{visible ? ch ? ch.face === "picture" ? <WordPicture word={ch.word} size={cardSize * 0.8}/> : <View style={{ padding: 4, gap: 3 }}><Text style={{ fontSize: 14, lineHeight: 17, fontWeight: "700", color: C.ink, textAlign: "center" }}>{ch.word.term}</Text>{showEnglish && <Text style={{ fontSize: 10, lineHeight: 12, color: C.ink, textAlign: "center" }}>{ch.word.english.split(" / ")[0]}</Text>}</View> : en?.face === "word" ? <Text style={{ padding: 4, fontSize: 16, lineHeight: 20, fontWeight: "700", color: C.ink, textAlign: "center" }}>{en.symbol}</Text> : <Symbol name={en?.symbol ?? card} size={cardSize * 0.68}/> : <Text style={{ color: "#FFF8DE", fontSize: 29, fontWeight: "700" }}>?</Text>}</MemoryFace>
+        <MemoryFace open={visible}>{visible ? ch ? ch.face === "picture" ? <WordPicture word={ch.word} size={cardSize * 0.8}/> : <View style={{ width: cardSize - 4, padding: 4, gap: 3 }}><Text maxFontSizeMultiplier={wordFitMultiplier(ch.word.term, 14, cardSize - 12)} style={{ fontSize: 14, lineHeight: 17, fontWeight: "700", color: C.ink, textAlign: "center" }}>{ch.word.term}</Text>{showEnglish && <Text maxFontSizeMultiplier={wordFitMultiplier(ch.word.english.split(" / ")[0], 10, cardSize - 12)} style={{ fontSize: 10, lineHeight: 12, color: C.ink, textAlign: "center" }}>{ch.word.english.split(" / ")[0]}</Text>}</View> : en?.face === "word" ? <Text maxFontSizeMultiplier={wordFitMultiplier(en.symbol, 16, cardSize - 12)} style={{ width: cardSize - 4, padding: 4, fontSize: 16, lineHeight: 20, fontWeight: "700", color: C.ink, textAlign: "center" }}>{en.symbol}</Text> : <Symbol name={en?.symbol ?? card} size={cardSize * 0.68}/> : <Text style={{ color: "#FFF8DE", fontSize: 29, fontWeight: "700" }}>?</Text>}</MemoryFace>
       </Cell>;
     })}
   </View>;

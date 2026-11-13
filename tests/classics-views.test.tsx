@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { TicForkBoard } from "../src/screens/classics/TicForkBoard";
 import { MemoryDareBoard } from "../src/screens/classics/MemoryDareBoard";
 import { CheckersTacticsBoard } from "../src/screens/classics/CheckersTacticsBoard";
+import { wordWidth } from "../src/components/wordFit";
+import { chamoruWords } from "../src/learn/content/chamoru";
 import { MemoryCards } from "../src/screens/classics/MemoryCards";
 import { ticForkDescriptors, ticForkEngine } from "../src/games/classics/ticForks";
 import { checkersTacticsDescriptors, checkersTacticsEngine } from "../src/games/classics/checkersTactics";
@@ -88,4 +90,52 @@ describe("Classics native view controls", () => {
     expect(labels).toEqual(["Card 1, face down", "Card 2, face down"]);
     await act(() => r.unmount());
   });
+  it("retries a wrong Checkers capture without taking help", async () => {
+    const d = checkersTacticsDescriptors[11]; let s = checkersTacticsEngine.create(d, { version: 1 }, options), r!: ReactTestRenderer;
+    const events: string[] = [];
+    const dispatch = (a: Parameters<typeof checkersTacticsEngine.step>[1]) => { const next = checkersTacticsEngine.step(s, a, d)!; events.push(next.event!); s = next.state; r.update(render()); };
+    const render = () => <CheckersTacticsBoard state={s} dispatch={dispatch} active width={320} sessionKey="retry"/>;
+    s = checkersTacticsEngine.step(s, ["m", 8, [26, 40]], d)!.state;
+    await act(() => { r = create(render()); });
+    expect(words(r.root)).toContain("Start again and try a different route");
+    await act(() => button(r, "Start again").props.onPress());
+    expect(s.tried).toBe(false);
+    expect(s.hint).toBeNull();
+    expect(s.position).toEqual(checkersTacticsEngine.create(d, { version: 1 }, options).position);
+    await act(() => button(r, "E5, red king").props.onPress());
+    await act(() => button(r, "C3, empty, legal destination").props.onPress());
+    await act(() => button(r, "A5, empty, legal destination").props.onPress());
+    await act(() => button(r, "C7, empty, legal destination").props.onPress());
+    expect(s.correct).toBe(true);
+    expect(events).toEqual(["reset", "check"]);
+    await act(() => r.unmount());
+  });
+  it("offers Memory Start again and keeps spent reveals", async () => {
+    const d = memoryDareDescriptors[7]; let s = memoryDareEngine.create(d, { version: 1 }, options), r!: ReactTestRenderer;
+    const dispatch = (a: Parameters<typeof memoryDareEngine.step>[1]) => { s = memoryDareEngine.step(s, a, d)!.state; r.update(render()); };
+    const render = () => <MemoryDareBoard state={s} dispatch={dispatch} active width={320}/>;
+    await act(() => { r = create(render()); });
+    await act(() => button(r, "Card 1, face down").props.onPress());
+    expect(s.spent).toBe(1);
+    await act(() => button(r, "Start again").props.onPress());
+    expect(s.spent).toBe(1);
+    expect(s.round.open).toEqual([]);
+    expect(button(r, "Card 1, face down").props.disabled).toBe(false);
+    await act(() => r.unmount());
+  });
+  it("keeps every reading-card word intact at maximum text size", async () => {
+    let r!: ReactTestRenderer;
+    const cards = [...chamoruWords.map(w => `ch:${w.id}:word`), "en:shell:word"];
+    await act(() => { r = create(<MemoryCards cards={cards} pack="chamoru" matched={[]} open={[]} peek width={680} disabled={false} onFlip={() => {}}/>); });
+    const faces = r.root.findAll(n => n.type === "span" && typeof n.children[0] === "string");
+    expect(faces.length).toBeGreaterThan(20);
+    for (const face of faces) {
+      const text = words(face), size = face.props.style.fontSize;
+      const scale = Math.min(3.1, face.props.maxFontSizeMultiplier ?? 3.1);
+      const longest = Math.max(...text.split(/\s+/).map(wordWidth));
+      expect(longest * size * scale, text).toBeLessThanOrEqual(128);
+    }
+    await act(() => r.unmount());
+  });
+
 });
