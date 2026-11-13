@@ -1,6 +1,7 @@
 import React,{createContext} from 'react';
 import {act,create,type ReactTestRenderer} from 'react-test-renderer';
 import {afterEach,expect,it,vi} from 'vitest';
+import {Grid} from '../src/learn/games/beep-bot/art';
 import {Plan,labels} from '../src/learn/games/beep-bot/Plan';
 import {ChallengeBoard} from '../src/learn/games/beep-bot/challenge-view';
 import {beepPuzzles} from '../src/learn/games/beep-bot/challenge-content';
@@ -39,4 +40,17 @@ it.each([0,1,2])('formats card, Go and edit labels at count %i',async count=>{
  const text=root!.root.findAllByType('p').map(p=>p.children.join(''));
  expect(text).toContain(summary);
  expect(text).toContain(`Plan · ${count} ${count===1?'card':'cards'}`);
+});
+
+it.each([false,true])('Go remains beside the map when the plan grows (pinned %s)',async pinned=>{
+ const d=beepPuzzles[16].descriptor,send=vi.fn();
+ const render=(program:typeof d.starter)=><Plan p={d.puzzle} level={4} program={program} cursor={0} running={false} won={false} runs={0} edits={0} hintStage={0} plans={d.winners} active width={335} send={send} undo={false} pinned={pinned}/>;
+ await mount(render([]));
+ const mapRow=()=>root!.root.findAllByType('div').find(v=>v.children.some(c=>typeof c!=='string'&&c.type===Grid))!;
+ const run=()=>mapRow().findAllByType('button').find(b=>b.children.join('')==='Go!');
+ expect(run(),'Go stays with the visible map before commands expand').toBeDefined();expect(run()!.props.disabled).toBe(true);
+ await act(async()=>root!.update(render(d.starter)));
+ expect(run(),'adding cards keeps Go beside the map').toBeDefined();expect(run()!.props.disabled).toBe(false);
+ await press('Go!');expect(send).toHaveBeenCalledWith(['g']);
+ if(pinned)expect(root!.root.findByProps({accessibilityLabel:'Beep commands and help'}).findAllByType('button').some(b=>b.children.join('')==='Go!')).toBe(false);
 });
