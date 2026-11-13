@@ -32,9 +32,11 @@ it('idle reset is disabled and choosing the same replacement never sends a refus
 it('hint text and small card labels use ink on their colored surfaces',async()=>{const d=beepPuzzles[16].descriptor;let s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});s=challengeEngine.step(s,['h'],d)!.state;await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>);await vi.waitFor(async()=>{await act(async()=>{});expect(root!.root.findAllByType('p').some(p=>p.children.join('').startsWith('Change card'))).toBe(true);});const text=root!.root.findAllByType('p').find(p=>p.children.join('').startsWith('Change card'))!;expect(text.props.style.color).toBe('#183F39');const card=root!.root.findAllByType('button').find(b=>b.props.accessibilityLabel==='Add Down card')!;for(const p of card.findAllByType('p'))expect(p.props.style.color).toBe('#183F39');});
 it('playback identifies the active card visually and by its accessible name',async()=>{const d=beepPuzzles[16].descriptor;await mount(<Plan p={d.puzzle} level={4} program={d.starter} cursor={1} running won={false} runs={1} edits={0} hintStage={0} plans={d.winners} active width={335} send={vi.fn()} undo={false}/>);const card=root!.root.findAllByType('button').find(b=>b.props.accessibilityLabel===`Card 2: ${labels[d.starter[1]]}. Tap to edit, Beep is following this card`);expect(card).toBeDefined();expect(card!.props.style.backgroundColor).toBe('#F7CB72');expect(card!.findAllByType('p')[0].children.join('')).toBe('▶ 2');});
 
-it.each([0,1,2])('uses singular and plural summary labels for %i runs and edits',async count=>{
+it.each([0,1,2])('formats card, Go and edit labels at count %i',async count=>{
  const d=beepPuzzles[16].descriptor;
- await mount(<Plan p={d.puzzle} level={4} program={d.starter} cursor={0} running={false} won={false} runs={count} edits={count} hintStage={0} plans={d.winners} active width={335} send={vi.fn()} undo={false}/>);
+ await mount(<Plan p={d.puzzle} level={4} program={d.starter.slice(0,count)} cursor={0} running={false} won={false} runs={count} edits={count} hintStage={0} plans={d.winners} active width={335} send={vi.fn()} undo={false}/>);
  const summary=`${count} ${count===1?'Go':'Goes'} · ${count} ${count===1?'edit':'edits'}`;
- expect(root!.root.findAllByType('p').some(p=>p.children.join('')===summary)).toBe(true);
+ const text=root!.root.findAllByType('p').map(p=>p.children.join(''));
+ expect(text).toContain(summary);
+ expect(text).toContain(`Plan · ${count} ${count===1?'card':'cards'}`);
 });
