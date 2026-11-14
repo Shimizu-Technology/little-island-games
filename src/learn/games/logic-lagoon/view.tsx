@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { C, Copy, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { LARGE_TEXT } from "../../../components/wordFit";
 import { ScaleGlyph, SeaGlyph } from "../thinkingArt";
 import { enter, hint, taskAt, valueAt, type LogicState } from "./engine";
 
@@ -14,6 +15,9 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const s = session.state, task = taskAt(s);
   const [selected, setSelected] = useState<number | null>(null), [message, setMessage] = useState("");
   const [reveal, setReveal] = useState<string | null>(null);
+  // At accessibility sizes the "tap a square / choose a value" line sits above the grid, so the values follow the
+  // grid directly and a child picks a square, then its value, without scrolling in between.
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
   const choose = (value: number) => {
     setReveal(null);
     if (selected === null) return;
@@ -29,19 +33,21 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const step = size + 2;
   // Cells never shrink below a 44pt target; a board wider than the card scrolls sideways.
   const scroll = task.kind === "grid" && step * task.size + 14 > width - 20;
+  const status = <Copy testID="logic-status" style={{ color: C.ink, fontWeight: "800" }}>{selected === null ? "Tap an empty square" : "Choose a value for the glowing square"}</Copy>;
   return <View style={{ gap: 14, paddingVertical: 8 }}>
     <Copy style={{ fontSize: 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
     <Copy style={{ color: C.ink, fontWeight: "800" }}>PUZZLE {s.index + 1} OF 4</Copy>
     {task.kind === "grid" ? <>
       <Copy style={{ color: C.ink }}>{task.cages.length ? "Purple dashed pairs add to their Σ total. Use 1–4 once in each row, column and box." : `One of each ${s.level <= 2 || s.level === 3 && s.index < 2 ? "picture" : "number"} in every row and column.${task.boxRows > 1 ? " Each outlined box also needs one of each." : ""}`}</Copy>
       {task.writtenClue && <Copy style={{ color: C.ink, fontWeight: "800", backgroundColor: "#FFF4D6", padding: 12, borderRadius: 12 }}>{task.writtenClue.text}</Copy>}
+      {large && status}
       <ScrollView horizontal scrollEnabled={scroll} showsHorizontalScrollIndicator={scroll} style={{ alignSelf: scroll ? "stretch" : "center", flexGrow: 0 }} contentContainerStyle={{ flexGrow: scroll ? 0 : 1, justifyContent: "center" }}><View style={{ alignSelf: "center", padding: 7, borderRadius: 18, backgroundColor: "#E8EFDA" }}>
         {Array.from({ length: task.size }, (_, r) => <View key={r} style={{ flexDirection: "row" }}>{Array.from({ length: task.size }, (_, c) => { const i = r * task.size + c, v = valueAt(s, i), given = !!task.givens[i]; return <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Row ${r + 1}, column ${c + 1}: ${v ? task.symbols[v - 1] : "empty"}${given ? ", clue" : ""}`} disabled={!active || given} onPress={() => setSelected(i)} style={{ width: size, height: size, margin: 1, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: selected === i ? "#FFE8A5" : given ? "#D8EACD" : "#FFFDF3", borderWidth: 2, borderColor: task.cages.length ? "#D1D8C5" : c % task.boxCols === 0 || r % task.boxRows === 0 ? "#668A66" : "#B6CCAB" }}>{v ? <Symbol value={task.symbols[v - 1]} size={task.size === 6 ? 31 : 38} /> : null}</PressableScale>; })}</View>)}
         {task.cages.length > 0 && <Svg width={step * task.size} height={step * task.size} style={{ position: "absolute", left: 7, top: 7 }} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{task.cages.map((cage, i) => { const cell = cage.cells[0], r = Math.floor(cell / task.size), c = cell % task.size; return <Rect key={i} x={c * step + 1} y={r * step + 1} width={step * 2 - 2} height={step - 2} rx={8} fill="none" stroke="#86619A" strokeWidth={3} strokeDasharray="6 4" />; })}</Svg>}
         {task.cages.map((cage, i) => { const cell = cage.cells[0], r = Math.floor(cell / task.size), c = cell % task.size; return <View key={i} pointerEvents="none" style={{ position: "absolute", left: 10 + c * step, top: 9 + r * step, backgroundColor: "#FFF6E6", borderRadius: 4, paddingHorizontal: 2 }}><Copy style={{ fontSize: 11, fontWeight: "900", color: "#664574" }}>Σ{cage.sum}</Copy></View>; })}
       </View></ScrollView>
-      <Copy style={{ color: C.ink, fontWeight: "800" }}>{selected === null ? "Tap an empty square" : "Choose a value for the glowing square"}</Copy>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 9 }}>{task.symbols.map((symbol, i) => <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Place ${symbol}`} disabled={!active || selected === null} onPress={() => choose(i + 1)} style={{ minWidth: 54, minHeight: 56, padding: 7, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#FDF6DF", borderWidth: 2, borderColor: "#87AA72" }}><Symbol value={symbol} size={41} /></PressableScale>)}</View>
+      {!large && status}
+      <View testID="logic-values" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 9 }}>{task.symbols.map((symbol, i) => <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Place ${symbol}`} disabled={!active || selected === null} onPress={() => choose(i + 1)} style={{ minWidth: 54, minHeight: 56, padding: 7, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#FDF6DF", borderWidth: 2, borderColor: "#87AA72" }}><Symbol value={symbol} size={41} /></PressableScale>)}</View>
     </> : <>
       <Copy style={{ color: C.ink, fontSize: 17 }}>The left scale holds {task.left} shells. The right holds {task.right} shells plus a mystery bag. How many shells are in the bag?</Copy>
       <View style={{ alignItems: "center", padding: 16, backgroundColor: "#E5F0E0", borderRadius: 20 }}><ScaleGlyph /><View style={{ flexDirection: "row", justifyContent: "space-around", alignSelf: "stretch" }}><Copy style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{task.left} shells</Copy><Copy style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{task.right} + bag</Copy></View></View>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
 import { easeInOut, nativeDriver, useReducedMotion } from "../../../components/motion";
@@ -9,6 +9,7 @@ import { hintText } from "./hint-text";
 import { CoachSpot } from "../../Coach";
 import { commandActionLabel, editPlan, HINTED, hintedCard, PlanEditChoices, planCardLabel, type EditMode } from "./plan-edit";
 import { CreatureArt } from "../tide-pool/view";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import {
   commands,
   currentLevel,
@@ -391,7 +392,12 @@ export function Board({
   const bumpedCard = w.bump ? s.cursor - 1 : null;
   const hinted = hint > 0 && hint < 3 ? hintedCard(helpPlan?.edit, s.program.length) : null;
   const planBumps = plan.bumpCard !== null;
-  const beachSize = Math.min(width, height < 740 ? 200 : 280);
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  // At accessibility sizes the beach gives up some size so it, the plan and the command cards fit one phone screen.
+  const beachSize = large ? Math.max(150, Math.min(width, 220, Math.floor(height * 0.3))) : Math.min(width, height < 740 ? 200 : 280);
+  // Command cards share the row; their labels stop where every word still fits a card (2-pt borders, 4-pt inset).
+  const cards = commands(l.pace), cardInner = (width - 6 * (cards.length - 1)) / cards.length - 12;
+  const labelMax = large ? Math.min(...cards.map(c => wordFitMultiplier(cardLabel[c], 12, cardInner, 2))) : undefined;
   const prompt = done
     ? "Every crab is home!"
     : won
@@ -411,7 +417,7 @@ export function Board({
         <IconButton icon="sound-on" label="Hear this instruction" onPress={() => sound(promptKey)} />
       </View>
       {!done && (
-        <Copy style={{ fontSize: 13, color: C.ink }}>
+        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ fontSize: 13, color: C.ink }}>
           Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
         </Copy>
       )}
@@ -440,7 +446,7 @@ export function Board({
             }}
           >
             {s.program.length === 0 && (
-              <Copy style={{ fontSize: 14, padding: 6, color: C.ink }}>Your plan: tap arrows below</Copy>
+              <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ fontSize: 14, padding: 6, color: C.ink }}>Your plan: tap arrows below</Copy>
             )}
             {s.program.map((c, i) => {
               const bad = i === bumpedCard || (!s.running && s.cursor === 0 && planBumps && plan.bumpCard === i);
@@ -510,8 +516,8 @@ export function Board({
                 />
               )}
               {commands(l.pace).includes("repeat") && <Copy>Again ×2: → + [→ →] = one move + two more, three total.</Copy>}
-              <View style={{ flexDirection: "row", gap: 6 }}>
-                {commands(l.pace).map((c) => {
+              <View testID="crab-command-cards" style={{ flexDirection: "row", gap: 6 }}>
+                {cards.map((c) => {
                   const card = (
                     <PressableScale
                       accessibilityRole="button"
@@ -526,6 +532,7 @@ export function Board({
                       }}
                       style={{
                         minHeight: 66,
+                        paddingHorizontal: 4,
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: C.paper,
@@ -536,7 +543,7 @@ export function Board({
                       }}
                     >
                       <ArrowArt command={c} size={34} />
-                      <Copy style={{ fontSize: 12, color: C.ink, fontWeight: "700" }}>{cardLabel[c]}</Copy>
+                      <Copy maxFontSizeMultiplier={labelMax} style={{ fontSize: 12, color: C.ink, fontWeight: "700", textAlign: "center" }}>{cardLabel[c]}</Copy>
                     </PressableScale>
                   );
                   return (
@@ -552,11 +559,13 @@ export function Board({
                   );
                 })}
               </View>
-              <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              {/* At accessibility sizes Go! keeps a full-width line of its own, and Clear and Hint share the next one,
+                  so Go! never shrinks to an arrow and Hint never runs past the card. */}
+              <View testID="crab-run-row" style={large ? { gap: 8 } : { flexDirection: "row", gap: 8, alignItems: "center" }}>
                 <Button
                   icon="right"
                   disabled={s.running || s.program.length === 0 || !active}
-                  style={{ flex: 1 }}
+                  style={large ? { alignSelf: "stretch" } : { flex: 1 }}
                   onPress={() => {
                     setWobble(0);
                     practice("think.sequence", solved(l, run(l, s.program)));
@@ -566,13 +575,15 @@ export function Board({
                 >
                   Go!
                 </Button>
-                <Button compact quiet disabled={s.running || s.program.length === 0} onPress={() => edit([])}>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                <Button compact quiet disabled={s.running || s.program.length === 0} style={large ? { flex: 1 } : undefined} onPress={() => edit([])}>
                   Clear
                 </Button>
                 <Button
                   compact
                   quiet
                   disabled={s.running}
+                  style={large ? { flex: 1 } : undefined}
                   onPress={() => {
                     if (!hint) assistance?.();
                     setHint(hint ? 0 : 1);
@@ -581,6 +592,7 @@ export function Board({
                 >
                   Hint
                 </Button>
+                </View>
               </View>
               {hint > 0 && (
                 <View style={{ gap: 4 }}>

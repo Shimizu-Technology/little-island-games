@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Animated, Platform, View } from "react-native";
+import { Animated, Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
 import { useReducedMotion } from "../../../components/motion";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import { initialValue, solved, workedHint, seaLineRange, type AlgebraState, type AlgebraTask } from "./engine";
 
 const navy = "#315D88", teal = "#217B8A", coral = "#D66E57", sand = "#FFF1C8";
@@ -77,11 +78,15 @@ function BalanceBoard({ task, state, remove, divide }: { task: AlgebraTask; stat
   </View>;
 }
 
-function StepControls({ value, balance, change }: { value: number; balance: boolean; change: (v: number) => void }) {
-  return <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>{[-10,-5,-1,1,5,10].map(step => <PressableScale key={step} accessibilityRole="button" accessibilityLabel={`${step > 0 ? "Add" : "Subtract"} ${Math.abs(step)} ${balance ? "from x" : "steps"}`} onPress={() => change(Math.max(-20, Math.min(100, value + step)))} style={{ width: 48, minHeight: 52, borderRadius: 13, backgroundColor: C.paper, borderWidth: 2, borderColor: navy, alignItems: "center", justifyContent: "center" }}><Copy style={{ color: navy, fontSize: 18, fontWeight: "900" }}>{step > 0 ? "+" : ""}{step}</Copy></PressableScale>)}</View>;
+const steps = [-10, -5, -1, 1, 5, 10], stepLabel = (step: number) => `${step > 0 ? "+" : ""}${step}`;
+/** At accessibility sizes the six steps are three to a row, wide enough that "−10" never stacks digit by digit. */
+function StepControls({ value, balance, change, width }: { value: number; balance: boolean; change: (v: number) => void; width: number }) {
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT, key = large ? Math.floor((width - 28) / 3) : 48;
+  const max = large ? Math.min(...steps.map(step => wordFitMultiplier(stepLabel(step), 18, key - 8, 2))) : undefined;
+  return <View testID="algebra-steps" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>{steps.map(step => <PressableScale key={step} accessibilityRole="button" accessibilityLabel={`${step > 0 ? "Add" : "Subtract"} ${Math.abs(step)} ${balance ? "from x" : "steps"}`} onPress={() => change(Math.max(-20, Math.min(100, value + step)))} style={{ width: key, minHeight: 52, borderRadius: 13, backgroundColor: C.paper, borderWidth: 2, borderColor: navy, alignItems: "center", justifyContent: "center" }}><Copy maxFontSizeMultiplier={max} style={{ color: navy, fontSize: 18, fontWeight: "900" }}>{stepLabel(step)}</Copy></PressableScale>)}</View>;
 }
 
-export function Board({ session, update, practice, assistance, cheer, coach }: BoardProps<AlgebraState>) {
+export function Board({ session, update, practice, assistance, cheer, coach, width }: BoardProps<AlgebraState>) {
   const state = session.state, task = state.tasks[state.index];
   const [feedback, setFeedback] = useState(""), [hint, setHint] = useState(false);
   if (!task) return null;
@@ -94,7 +99,7 @@ export function Board({ session, update, practice, assistance, cheer, coach }: B
     cheer("right"); setFeedback(""); setHint(false);
     update({ ...state, index: state.index + 1, value: initialValue(state.tasks[state.index + 1]), offset: 0, divided: false });
   };
-  const title = task.kind === "steps" || task.kind === "depth" ? `Start at ${task.a}. ${task.b > 0 ? "Climb" : "Dive"} ${Math.abs(task.b)} steps.`
+  const title = task.kind === "steps" || task.kind === "depth" ? `Start at ${task.a}. ${task.b > 0 ? "Climb" : "Dive"} ${Math.abs(task.b)} ${Math.abs(task.b) === 1 ? "step" : "steps"}.`
     : task.kind === "missing" ? `□ + ${task.b} = ${task.a}`
     : task.kind === "balance" ? `x + ${task.a} = ${task.b}`
     : task.kind === "two-step" ? `${task.extra}x + ${task.a} = ${task.b}`
@@ -108,7 +113,7 @@ export function Board({ session, update, practice, assistance, cheer, coach }: B
     {balance && <BalanceBoard task={task} state={state} remove={() => change({ offset: -task.a, divided: false })} divide={() => change({ divided: true })}/>}
     {!balance && task.kind === "substitution" && <View style={{ backgroundColor: "#E6F1E4", borderRadius: 20, padding: 15, alignItems: "center" }}><Copy style={{ color: navy, fontSize: 26, fontWeight: "900" }}>{task.a} + {task.b} × {task.extra} = ?</Copy></View>}
     <SeaLine value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>
-    <StepControls value={state.value} balance={balance} change={value => change({ value })}/>
+    <StepControls value={state.value} balance={balance} change={value => change({ value })} width={width}/>
     {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 13, padding: 12 }}><Copy style={{ fontWeight: "700" }}>{workedHint(task)}</Copy></View>}
     {!!feedback && <Copy style={{ color: C.error, fontWeight: "800" }}>{feedback}</Copy>}
     <View style={{ flexDirection: "row", gap: 8 }}><Button style={{ flex: 1 }} onPress={check}>Open chest</Button><Button quiet compact onPress={() => { if (!hint) assistance?.(); setHint(!hint); update({ ...state, helped: true }); }}>Hint</Button></View>

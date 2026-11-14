@@ -1,13 +1,31 @@
 import React, { createContext, forwardRef, useContext } from "react";
 import { Text as NativeText, StyleSheet, TextProps, TextStyle, useWindowDimensions } from "react-native";
+import { wordFitMultiplier } from "./wordFit";
 
 const LayoutScale = createContext(1);
 export function TextLayoutProvider({ children }: { children: React.ReactNode }) {
   const { fontScale } = useWindowDimensions();
   return <LayoutScale.Provider value={fontScale}>{children}</LayoutScale.Provider>;
 }
+/**
+ * A text ceiling for a region, such as a School game board at accessibility sizes: text that names no cap of its own
+ * stops at `ceiling` (and at `maxSize` points), or earlier where its longest word would no longer fit `width`, so prompts, answers and results
+ * stay large without filling the screen or breaking a word. Text with its own cap keeps it. Absent (null), nothing changes.
+ */
+export type TextRegion = { width: number; ceiling: number; /** The largest drawn size, in points, a region's text reaches (never below its default size). */ maxSize?: number };
+export const TextFit = createContext<TextRegion | null>(null);
 /** React Native's default text size when a style names none. */
 const DEFAULT_SIZE = 14;
+const plainText = (children: React.ReactNode): string => React.Children.toArray(children).map(child =>
+  typeof child === "string" || typeof child === "number" ? String(child)
+    : React.isValidElement(child) ? plainText((child.props as { children?: React.ReactNode }).children) : "").join("");
+/** The region's ceiling for text without a cap of its own (see `TextFit`). */
+export function fittedTextProps(props: TextProps, fit: TextRegion | null): TextProps {
+  if (!fit || props.maxFontSizeMultiplier != null || props.allowFontScaling === false) return props;
+  const size = (StyleSheet.flatten(props.style) as TextStyle | undefined)?.fontSize ?? DEFAULT_SIZE;
+  const ceiling = fit.maxSize ? Math.max(1, Math.min(fit.ceiling, Math.floor(fit.maxSize / size * 100) / 100)) : fit.ceiling;
+  return { ...props, maxFontSizeMultiplier: wordFitMultiplier(plainText(props.children), size, fit.width, ceiling) };
+}
 /**
  * React Native's native text measure cache (TextMeasureCache.h) compares font size, the system text multiplier, letter
  * spacing and line height, but not `maxFontSizeMultiplier`. The same words capped at 1.5x in landscape and 2x in
@@ -27,6 +45,6 @@ export function cappedTextProps(props: TextProps, fontScale: number): TextProps 
 }
 /** Refresh native text measurement after a live Dynamic Type change without remounting routes or game state. */
 export const Text = forwardRef<NativeText, TextProps>(function Text(props, ref) {
-  const fontScale = useContext(LayoutScale);
-  return <NativeText key={fontScale} ref={ref} {...cappedTextProps(props, fontScale)} />;
+  const fontScale = useContext(LayoutScale), fit = useContext(TextFit);
+  return <NativeText key={fontScale} ref={ref} {...cappedTextProps(fittedTextProps(props, fit), fontScale)} />;
 });
