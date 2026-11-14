@@ -1,0 +1,787 @@
+{
+  "schemaVersion": 1,
+  "source": "PLAN §10; WORK-LEDGER §§5–9,12,14–16; PLAN §15 overrides device assumptions",
+  "games": [
+    {
+      "id": "reef-race",
+      "name": "Reef Race",
+      "family": "school"
+    },
+    {
+      "id": "island-market",
+      "name": "Island Market",
+      "family": "school"
+    },
+    {
+      "id": "sound-boat",
+      "name": "Sound Boat",
+      "family": "school"
+    },
+    {
+      "id": "turtle-tales",
+      "name": "Turtle Tales",
+      "family": "school"
+    },
+    {
+      "id": "which-one",
+      "name": "Which One",
+      "family": "school"
+    },
+    {
+      "id": "tide-pool",
+      "name": "Tide Pool",
+      "family": "school"
+    },
+    {
+      "id": "float-sink",
+      "name": "Float Sink",
+      "family": "school"
+    },
+    {
+      "id": "crab-commands",
+      "name": "Crab Commands",
+      "family": "school"
+    },
+    {
+      "id": "hafa-adai",
+      "name": "Håfa Adai",
+      "family": "school"
+    },
+    {
+      "id": "shell-math",
+      "name": "Shell Math",
+      "family": "school"
+    },
+    {
+      "id": "number-hop",
+      "name": "Number Hop",
+      "family": "school"
+    },
+    {
+      "id": "quick-practice",
+      "name": "Quick Practice",
+      "family": "school"
+    },
+    {
+      "id": "beep-bot",
+      "name": "Beep Bot",
+      "family": "school"
+    },
+    {
+      "id": "turtle-draw",
+      "name": "Turtle Draw",
+      "family": "school"
+    },
+    {
+      "id": "tide-logic",
+      "name": "Tide Logic",
+      "family": "school"
+    },
+    {
+      "id": "code-lab",
+      "name": "Code Lab",
+      "family": "school"
+    },
+    {
+      "id": "pattern-path",
+      "name": "Pattern Path",
+      "family": "school"
+    },
+    {
+      "id": "shape-shift",
+      "name": "Shape Shift",
+      "family": "school"
+    },
+    {
+      "id": "logic-lagoon",
+      "name": "Logic Lagoon",
+      "family": "school"
+    },
+    {
+      "id": "weather-watch",
+      "name": "Weather Watch",
+      "family": "school"
+    },
+    {
+      "id": "food-web",
+      "name": "Food Web",
+      "family": "school"
+    },
+    {
+      "id": "space-station",
+      "name": "Star Station",
+      "family": "school"
+    },
+    {
+      "id": "times-tide",
+      "name": "Times Tide",
+      "family": "school"
+    },
+    {
+      "id": "fraction-feast",
+      "name": "Fraction Feast",
+      "family": "school"
+    },
+    {
+      "id": "treasure-algebra",
+      "name": "Treasure Algebra",
+      "family": "school"
+    },
+    {
+      "id": "letter-lagoon",
+      "name": "Letter Lagoon",
+      "family": "school"
+    },
+    {
+      "id": "word-workshop",
+      "name": "Word Workshop",
+      "family": "school"
+    },
+    {
+      "id": "story-studio",
+      "name": "Story Studio",
+      "family": "school"
+    },
+    {
+      "id": "slip-tide",
+      "name": "Slip Tide",
+      "family": "original"
+    },
+    {
+      "id": "canoe-seats",
+      "name": "Canoe Seats",
+      "family": "original"
+    },
+    {
+      "id": "gate-crab",
+      "name": "Gate Crab",
+      "family": "original"
+    },
+    {
+      "id": "every-stone",
+      "name": "Every Stone",
+      "family": "original"
+    },
+    {
+      "id": "shell-scale",
+      "name": "Shell Scale",
+      "family": "original"
+    },
+    {
+      "id": "sail-fold",
+      "name": "Sail Fold",
+      "family": "original"
+    },
+    {
+      "id": "reef-builder",
+      "name": "Reef Builder",
+      "family": "arcade"
+    },
+    {
+      "id": "shell-song",
+      "name": "Shell Song",
+      "family": "arcade"
+    },
+    {
+      "id": "rail-parade",
+      "name": "Rail Parade",
+      "family": "arcade"
+    },
+    {
+      "id": "crab-crossing",
+      "name": "Crab Crossing",
+      "family": "arcade"
+    },
+    {
+      "id": "palm-patrol",
+      "name": "Palm Patrol",
+      "family": "arcade"
+    },
+    {
+      "id": "beach-ball",
+      "name": "Beach Ball",
+      "family": "arcade"
+    },
+    {
+      "id": "fruit-bat-flight",
+      "name": "Fruit Bat Flight",
+      "family": "arcade"
+    },
+    {
+      "id": "lagoon-run",
+      "name": "Lagoon Run",
+      "family": "arcade"
+    },
+    {
+      "id": "canoe-cargo",
+      "name": "Canoe Cargo",
+      "family": "arcade"
+    },
+    {
+      "id": "tic-tac-toe",
+      "name": "Tic Tac Toe",
+      "family": "hall"
+    },
+    {
+      "id": "word-rescue",
+      "name": "Hangman / Word Rescue",
+      "family": "hall"
+    },
+    {
+      "id": "memory",
+      "name": "Memory",
+      "family": "hall"
+    },
+    {
+      "id": "checkers",
+      "name": "Checkers",
+      "family": "hall"
+    },
+    {
+      "id": "maze",
+      "name": "Maze",
+      "family": "hall"
+    },
+    {
+      "id": "numbers",
+      "name": "Number Island",
+      "family": "hall"
+    },
+    {
+      "id": "coconut-drop",
+      "name": "Coconut Drop",
+      "family": "hall"
+    },
+    {
+      "id": "fishing-nets",
+      "name": "Fishing Nets",
+      "family": "hall"
+    },
+    {
+      "id": "hidden-canoes",
+      "name": "Hidden Canoes",
+      "family": "hall"
+    },
+    {
+      "id": "shell-pits",
+      "name": "Shell Pits",
+      "family": "hall"
+    },
+    {
+      "id": "reef-sweep",
+      "name": "Reef Sweep",
+      "family": "hall"
+    },
+    {
+      "id": "go-fish",
+      "name": "Go Fish",
+      "family": "hall"
+    },
+    {
+      "id": "crazy-eights",
+      "name": "Crazy Eights",
+      "family": "hall"
+    },
+    {
+      "id": "racer",
+      "name": "Island Dash",
+      "family": "hall"
+    },
+    {
+      "id": "word-imposter",
+      "name": "Secret Word",
+      "family": "hall"
+    },
+    {
+      "id": "island-mystery",
+      "name": "Picnic Mystery",
+      "family": "hall"
+    },
+    {
+      "id": "word-search",
+      "name": "Word Search",
+      "family": "cove"
+    },
+    {
+      "id": "sudoku",
+      "name": "Sudoku",
+      "family": "cove"
+    },
+    {
+      "id": "picture-grid",
+      "name": "Picture Grid",
+      "family": "cove"
+    },
+    {
+      "id": "crossword",
+      "name": "Crossword",
+      "family": "cove"
+    },
+    {
+      "id": "bridges",
+      "name": "Bridges",
+      "family": "cove"
+    },
+    {
+      "id": "cage-math",
+      "name": "Cage Math",
+      "family": "cove"
+    },
+    {
+      "id": "word-ladder",
+      "name": "Word Ladder",
+      "family": "cove"
+    },
+    {
+      "id": "solitaire",
+      "name": "Solitaire",
+      "family": "cove"
+    },
+    {
+      "id": "rope-pairs",
+      "name": "Rope Pairs",
+      "family": "cove"
+    },
+    {
+      "id": "rectangles",
+      "name": "Rectangles",
+      "family": "cove"
+    },
+    {
+      "id": "two-shells",
+      "name": "Two Shells",
+      "family": "cove"
+    },
+    {
+      "id": "one-in-each-cove",
+      "name": "One In Each Cove",
+      "family": "cove"
+    },
+    {
+      "id": "tents",
+      "name": "Tents",
+      "family": "cove"
+    },
+    {
+      "id": "hidden-canoes-charts",
+      "name": "Hidden Canoes: Charts",
+      "family": "cove"
+    },
+    {
+      "id": "harbor-jam",
+      "name": "Harbor Jam",
+      "family": "cove"
+    },
+    {
+      "id": "loop",
+      "name": "Loop",
+      "family": "cove"
+    },
+    {
+      "id": "jigsaw",
+      "name": "Jigsaw",
+      "family": "cove"
+    },
+    {
+      "id": "shell-stacks",
+      "name": "Shell Stacks",
+      "family": "cove"
+    },
+    {
+      "id": "word-scramble",
+      "name": "Word Scramble",
+      "family": "cove"
+    },
+    {
+      "id": "word-builder",
+      "name": "Word Builder",
+      "family": "cove"
+    },
+    {
+      "id": "fill-in",
+      "name": "Fill In",
+      "family": "cove"
+    },
+    {
+      "id": "secret-code",
+      "name": "Secret Code",
+      "family": "cove"
+    },
+    {
+      "id": "greater-than",
+      "name": "Greater Than",
+      "family": "cove"
+    },
+    {
+      "id": "skyline",
+      "name": "Skyline",
+      "family": "cove"
+    },
+    {
+      "id": "killer",
+      "name": "Cage Sudoku",
+      "family": "cove"
+    },
+    {
+      "id": "cross-sums",
+      "name": "Cross Sums",
+      "family": "cove"
+    },
+    {
+      "id": "logic-grid",
+      "name": "Logic Grid",
+      "family": "cove"
+    },
+    {
+      "id": "pentomino-packing",
+      "name": "Pentomino Packing",
+      "family": "cove"
+    },
+    {
+      "id": "odd-one-out",
+      "name": "Odd One Out",
+      "family": "cove"
+    },
+    {
+      "id": "lamps",
+      "name": "Lamps",
+      "family": "cove"
+    },
+    {
+      "id": "carve-the-islands",
+      "name": "Carve The Islands",
+      "family": "cove"
+    },
+    {
+      "id": "pearl-loop",
+      "name": "Pearl Loop",
+      "family": "cove"
+    },
+    {
+      "id": "old-toys",
+      "name": "Old Toys (peg solitaire, tower, sliding 8 and 15)",
+      "family": "cove"
+    }
+  ],
+  "mechanics": [
+    {
+      "id": "M01",
+      "name": "cell and big pad",
+      "games": [
+        "sudoku",
+        "cage-math",
+        "greater-than",
+        "skyline",
+        "killer",
+        "logic-lagoon",
+        "cross-sums"
+      ]
+    },
+    {
+      "id": "M02",
+      "name": "notes",
+      "games": [
+        "sudoku",
+        "killer",
+        "logic-lagoon"
+      ]
+    },
+    {
+      "id": "M03",
+      "name": "drag paint with line lock",
+      "games": [
+        "picture-grid"
+      ]
+    },
+    {
+      "id": "M04",
+      "name": "zoom with magnified line",
+      "games": [
+        "picture-grid",
+        "word-search"
+      ]
+    },
+    {
+      "id": "M05",
+      "name": "tap-to-cycle cells",
+      "games": [
+        "two-shells",
+        "tents",
+        "hidden-canoes-charts",
+        "odd-one-out",
+        "lamps",
+        "carve-the-islands",
+        "one-in-each-cove"
+      ]
+    },
+    {
+      "id": "M06",
+      "name": "rectangle drag",
+      "games": [
+        "rectangles"
+      ]
+    },
+    {
+      "id": "M07",
+      "name": "word snap drag",
+      "games": [
+        "word-search"
+      ]
+    },
+    {
+      "id": "M08",
+      "name": "crossword keyboard and clue bar",
+      "games": [
+        "crossword",
+        "fill-in"
+      ]
+    },
+    {
+      "id": "M09",
+      "name": "CHamoru letters and keyboard",
+      "games": [
+        "hafa-adai",
+        "word-search"
+      ]
+    },
+    {
+      "id": "M10",
+      "name": "letter tap (Ladder, Code)",
+      "games": [
+        "word-ladder",
+        "secret-code"
+      ]
+    },
+    {
+      "id": "M11",
+      "name": "tile arrange",
+      "games": [
+        "word-scramble"
+      ]
+    },
+    {
+      "id": "M12",
+      "name": "letter wheel and trace",
+      "games": [
+        "word-builder"
+      ]
+    },
+    {
+      "id": "M13",
+      "name": "bridge drag",
+      "games": [
+        "bridges"
+      ]
+    },
+    {
+      "id": "M14",
+      "name": "edge drag",
+      "games": [
+        "loop",
+        "pearl-loop"
+      ]
+    },
+    {
+      "id": "M15",
+      "name": "path drag",
+      "games": [
+        "every-stone",
+        "rope-pairs"
+      ]
+    },
+    {
+      "id": "M16",
+      "name": "swipe-all",
+      "games": [
+        "slip-tide"
+      ]
+    },
+    {
+      "id": "M17",
+      "name": "block slide",
+      "games": [
+        "harbor-jam",
+        "old-toys"
+      ]
+    },
+    {
+      "id": "M18",
+      "name": "seat and clue cards",
+      "games": [
+        "canoe-seats",
+        "logic-grid"
+      ]
+    },
+    {
+      "id": "M19",
+      "name": "shell row builder",
+      "games": [
+        "shell-scale"
+      ]
+    },
+    {
+      "id": "M20",
+      "name": "scale pans",
+      "games": [
+        "shell-scale"
+      ]
+    },
+    {
+      "id": "M21",
+      "name": "fold",
+      "games": [
+        "sail-fold"
+      ]
+    },
+    {
+      "id": "M22",
+      "name": "handover screens",
+      "games": [
+        "sail-fold",
+        "word-imposter"
+      ]
+    },
+    {
+      "id": "M23",
+      "name": "cards",
+      "games": [
+        "go-fish",
+        "crazy-eights",
+        "solitaire"
+      ]
+    },
+    {
+      "id": "M24",
+      "name": "tile stacks",
+      "games": [
+        "shell-stacks"
+      ]
+    },
+    {
+      "id": "M25",
+      "name": "jigsaw with two hands",
+      "games": [
+        "jigsaw"
+      ]
+    },
+    {
+      "id": "M26",
+      "name": "piece rotate and place",
+      "games": [
+        "pentomino-packing",
+        "shape-shift"
+      ]
+    },
+    {
+      "id": "M27",
+      "name": "program editor with loops, songs and condition",
+      "games": [
+        "crab-commands",
+        "beep-bot",
+        "turtle-draw",
+        "tide-logic"
+      ]
+    },
+    {
+      "id": "M28",
+      "name": "code arrange, predict and build",
+      "games": [
+        "code-lab"
+      ]
+    },
+    {
+      "id": "M29",
+      "name": "predict-then-model science",
+      "games": [
+        "space-station",
+        "food-web",
+        "weather-watch",
+        "tide-pool",
+        "float-sink"
+      ]
+    },
+    {
+      "id": "M30",
+      "name": "number pad and builder",
+      "games": [
+        "shell-math",
+        "number-hop",
+        "quick-practice",
+        "island-market",
+        "reef-race",
+        "times-tide",
+        "fraction-feast",
+        "treasure-algebra"
+      ]
+    },
+    {
+      "id": "M31",
+      "name": "reader and evidence tap",
+      "games": [
+        "turtle-tales",
+        "word-workshop",
+        "sound-boat",
+        "story-studio"
+      ]
+    },
+    {
+      "id": "M32",
+      "name": "existing picture choice and trace",
+      "games": [
+        "which-one",
+        "letter-lagoon",
+        "pattern-path",
+        "shape-shift",
+        "hafa-adai"
+      ]
+    },
+    {
+      "id": "M33",
+      "name": "board opponents",
+      "games": [
+        "tic-tac-toe",
+        "checkers",
+        "coconut-drop",
+        "fishing-nets",
+        "hidden-canoes",
+        "shell-pits"
+      ]
+    },
+    {
+      "id": "M34",
+      "name": "Arcade touch",
+      "games": [
+        "reef-builder",
+        "shell-song",
+        "rail-parade",
+        "crab-crossing",
+        "palm-patrol",
+        "beach-ball",
+        "fruit-bat-flight",
+        "lagoon-run",
+        "canoe-cargo"
+      ]
+    },
+    {
+      "id": "M35",
+      "name": "Home gestures",
+      "games": []
+    },
+    {
+      "id": "M36",
+      "name": "Hall activities",
+      "games": [
+        "maze",
+        "memory",
+        "numbers",
+        "word-rescue",
+        "racer",
+        "word-imposter",
+        "island-mystery"
+      ]
+    }
+  ],
+  "registrationAliases": {
+    "drop-puzzles": "coconut-drop"
+  }
+}

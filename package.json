@@ -77,7 +77,8 @@
     "check:source": "npm run registry:check && npm run save:catalog && npm run puzzles:verify && npm run typecheck && npm run lint && npm test && npm run export:web",
     "arcade:boundaries": "LITTLE_ISLAND_WRITE_ARCADE_TABLE=1 vitest run tests/arcade-boundaries.test.ts",
     "arcade:dares": "node --import ./scripts/puzzles/register.mjs scripts/arcade/dare-catalog.ts",
-    "boards:catalog": "node --import ./scripts/puzzles/register.mjs scripts/boards/pits-catalog.ts"
+    "boards:catalog": "node --import ./scripts/puzzles/register.mjs scripts/boards/pits-catalog.ts",
+    "qa:matrix": "node --experimental-strip-types scripts/qa/render.mjs"
   },
   "private": true,
   "engines": {
