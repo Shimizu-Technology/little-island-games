@@ -85,9 +85,9 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
   const selection = selected ? listAt(program, selected.location)?.[selected.at] : null;
   return <View testID="program-editor" style={{ alignSelf: 'stretch', gap: 8 }}>
     <Copy maxFontSizeMultiplier={cap} style={{ fontWeight: '800', color: C.ink }}>Blocks · {nodeCost(program)} of 80</Copy>
-    <Copy maxFontSizeMultiplier={cap}>Tap a repeat, then add cards inside. Drag sideways onto a dashed place to move a card.</Copy>
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14 }}>Tap ↻, then cards inside. Drag sideways to move.</Copy>
     {currentPath && <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">Step: block {blockName(currentPath)}{iteration?.length ? ` · repeat ${iteration.map(i => i + 1).join(', ')}` : ''}</Copy>}
-    <ScrollView nestedScrollEnabled scrollEnabled={!dragging} style={{ maxHeight: fontScale >= 1.5 ? 190 : 240 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
+    <ScrollView nestedScrollEnabled scrollEnabled={!dragging} style={{ maxHeight: fontScale >= 1.5 ? 140 : 160 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
       {render(program.body, main)}{dropZone(main, program.body.length, '＋ End of plan')}
       {program.songs.map((song, i) => <View key={i} style={{ padding: 6, gap: 5, borderWidth: 2, borderColor: C.teal, borderRadius: 12 }}><Copy maxFontSizeMultiplier={cap}>♫ Song {i + 1}</Copy>{render(song, { song: i, path: [] })}{dropZone({ song: i, path: [] }, song.length, `＋ Inside Song ${i + 1}`)}</View>)}
     </ScrollView>

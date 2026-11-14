@@ -29,6 +29,7 @@ it('K7 pre-reader tap journey places a repeat, nests cards, undoes/redoes, and e
   expect(paragraphs.every(p => p.props.maxFontSizeMultiplier <= 1.5)).toBe(true);
   const targets = tree!.root.findAllByType('button').filter(b => b.props.style?.minHeight);
   expect(targets.every(b => b.props.style.minHeight >= 44)).toBe(true);
+  expect(tree!.root.findByType('scroll').props.style.maxHeight).toBeLessThanOrEqual(140);
 });
 
 it('K7 refused edits retain the accepted tree and do not enter undo history', async () => {
