@@ -1,0 +1,6 @@
+{
+  "p3a-numbers-rules": "Roll the dice. Tap open numbers that add up to your roll, then close them. In Growing and Challenge, aim for the lowest total left. Lower is better. Closing everything is very rare, and the dice bring luck as well as choices. Gentle lets you roll again if no combination fits. Your best is saved for this learner and board size.",
+  "p3a-tic-fork-rules": "Find a fork: a move that makes two different winning squares for your next turn. Choose a square, then check your fork. Helped finishes count too.",
+  "p3a-checkers-tactic-rules": "Win this endgame in one complete capture turn. Classic rules: take a jump, then finish the same piece's jump chain. Kings have a K and can jump both ways.",
+  "p3a-memory-dare-rules": "Match every pair at your own pace. The turn targets are suggested, not a proved best score. A preview target needs a preview. No-preview deals have a roomier target. Undo and Start again keep the turns already used. Finishing always counts."
+}

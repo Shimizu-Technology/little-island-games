@@ -28,6 +28,7 @@ import { changingWritesSettled, fencedStorage } from "./writeFence";
 import { noteLaunch } from "./launchLog";
 import type { StorageAdapter } from "./storage";
 import { applySessionAction } from "./sessionAction";
+import { recordNumberRound } from "./numberRecords";
 import { recordWordRound } from "./wordRecords";
 import { ActivityId, ActivitySession } from "./activities";
 import { ActivityExpected, applyActivitySave } from "./activityAction";
@@ -331,6 +332,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         next.wordRecords
       );
       if (records !== next.wordRecords) next = { ...next, wordRecords: records };
+      const previousNumbers = previous.sessions.numbers, nextNumbers = next.sessions.numbers;
+      const numberRecords = recordNumberRound(previousNumbers?.game === "numbers" ? previousNumbers : undefined, nextNumbers?.game === "numbers" ? nextNumbers : undefined, next.numberRecords);
+      if (numberRecords !== next.numberRecords) next = { ...next, numberRecords };
       const before = latest.current;
       next = rewardTransitions(before, next, mirrorLibraryLabs);
       const owner = next.learning?.active ?? "family", previousBadges = badgesFor(personFor(before, owner).milestones);

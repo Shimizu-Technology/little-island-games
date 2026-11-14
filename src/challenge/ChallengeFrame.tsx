@@ -91,7 +91,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   async function dispatch(action:unknown):Promise<ChallengeSession|null> {
     const current=accepted.current;if(!current || lock.current || !focused || picking)return null;
     const next=entry.move(current,action);
-    if(!next){const full=!!entry.restart&&!!entry.full?.(current);setCapacity(full);setMessage(full?'This attempt is full. Choose Keep my plan in a new attempt to keep trying. Your marks stay kept.':'This draft is kept. Try Help or choose another puzzle.');return null;}
+    if(!next){const full=!!entry.restart&&!!entry.full?.(current);setCapacity(full);setMessage(full&&entry.game==='memory'?'This attempt is full. Start the same board again. Your turns and help stay counted.':full?'This attempt is full. Choose Keep my plan in a new attempt to keep trying. Your marks stay kept.':'This draft is kept. Try Help or choose another puzzle.');return null;}
     if(next.result){setCompleted(next);if(entry.animatedRuns)setSettling(true);}
     const token=++dispatchToken.current;
     lock.current=true;setBusy(next.result!==null);setMessage('');
@@ -110,9 +110,9 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
     try {
       const next=entry.restart(current,`challenge-${owner}-${progress.nextOrdinal}`,progress);
       if(await store.challengeSave(next,{...expected(current),replace:{game:current.game,id:current.id,revision:current.revision}})){
-        accepted.current=next;setCapacity(false);setMessage('A fresh attempt. Your plan is kept.');setCompleted(undefined);
-      }else setMessage('Your original plan is kept. Retry saving before starting fresh.');
-    }catch{setMessage('Your original plan is kept. Try saving again before starting fresh.');}
+        accepted.current=next;setCapacity(false);setMessage(entry.game==='memory'?'Your board is ready. You can still finish, but it cannot earn the suggested-turns mark now.':'A fresh attempt. Your plan is kept.');setCompleted(undefined);
+      }else setMessage(entry.game==='memory'?'Your board is kept. Try saving again before restarting.':'Your original plan is kept. Retry saving before starting fresh.');
+    }catch{setMessage(entry.game==='memory'?'Your board is kept. Try saving again before restarting.':'Your original plan is kept. Try saving again before starting fresh.');}
     finally{lock.current=false;setBusy(false);}
   }
   const round=saved??completed, full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
@@ -199,7 +199,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
     {open&&!barChip&&!pinned&&<LearnerChip compact/>}
     {!pinned&&<SaveStatus/>}
     {!pinned&&!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
-    {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}
+    {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}
     {picking ? <>
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>every.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(choices(path)[0]);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
       {choices(selection.path).map(p=>isBand(p)?<Button quiet key={`band-${p.bank}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{`${p.title} · Tide ${p.tier} · ${p.count} puzzles`}</Button>:<Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
@@ -219,7 +219,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
           After a solve the finished board stays on the page, above the result, and takes no more moves. */}
       {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><GridChromeContext.Provider value={chrome}><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling)&&(!round.result||!!entry.animatedRuns),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
-          header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
+          header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}</>,
           footer:<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
         }:{})})}
         {entry.helpUI!=='board'&&!round.result&&<Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}

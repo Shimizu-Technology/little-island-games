@@ -2,6 +2,7 @@
   "beep-bot",
   "bridges",
   "cage-math",
+  "checkers",
   "crab-commands",
   "drop-puzzles",
   "fishing-nets",
@@ -9,9 +10,11 @@
   "hidden-canoes",
   "killer",
   "loop",
+  "memory",
   "pearl-loop",
   "shell-pits",
   "skyline",
   "slip-tide",
-  "sudoku"
+  "sudoku",
+  "tic-tac-toe"
 ]

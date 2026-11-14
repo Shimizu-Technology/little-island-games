@@ -188,6 +188,7 @@ it('the solved screen keeps the finished board above the result, takes no more m
 });
 
 it('dares: a child can choose several (up to three); each is named through the round and each is earned on its own',async()=>{
+  const expectedSlots=['par','pick-up','edits'].map(kind=>mazePuzzle.dares.find(d=>d.rule.kind===kind)!.slot);
   await mount(mazeEntry);
   await vi.waitFor(()=>expect(all('h2').map(textOf)).toContain('Optional dares'),{timeout:5000,interval:20});
   expect(all('p').map(textOf).some(t=>t.startsWith('Choose up to three, or none.'))).toBe(true);
@@ -201,14 +202,14 @@ it('dares: a child can choose several (up to three); each is named through the r
   await act(async()=>{fourth.props.onPress();});
   await press('Start this puzzle');
   const started=store.save.challenge!.paused[0];
-  expect(started.selectedDares).toEqual([3000,3006,3008]);
+  expect(started.selectedDares).toEqual(expectedSlots);
   expect(root!.root.findAll(n=>n.props.testID==='chosen-dare'&&n.type==='div')).toHaveLength(3);
   // The save keeps its existing shape and validates on reload.
   expect(parseSave(db.raw!)).not.toBeNull();
   for(let i=0;i<40&&!all('h2').some(h=>textOf(h)==='Puzzle solved!');i++)await press('Next maze step');
   await vi.waitFor(()=>expect(all('h2').map(textOf)).toContain('Puzzle solved!'),{timeout:5000,interval:20});
   const bits=dareBits(store.save.challenge!.dares)!;
-  expect(bits.flatMap((bit,slot)=>bit?[slot]:[])).toEqual([3000,3006,3008]);
+  expect(bits.flatMap((bit,slot)=>bit?[slot]:[])).toEqual(expectedSlots);
 });
 
 it('dares: a puzzle with one dare still reads as one optional dare',async()=>{

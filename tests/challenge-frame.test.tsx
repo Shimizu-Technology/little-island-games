@@ -93,7 +93,7 @@ it.each([false,true])('P1-2/P2-5: replacement is atomic (storage failure %s)',as
     if(fail){expect(store.save.challenge!.paused[0]).toEqual(old);expect(db.raw).toBe(raw);}else{expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.challengeRefusal).toBeNull();}
   }finally{db.fail=false;await act(async()=>root.unmount());vi.unstubAllGlobals();}
 });
-it.each([['blind',3003,'supportOff'],['own-read',3007,'ownRead']] as const)('P2-1: selecting %s sets its launch option',async(label,slot,option)=>{
+it.each([['blind',83,'supportOff'],['own-read',87,'ownRead']] as const)('P2-1: selecting %s sets its launch option',async(label,slot,option)=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let root!:ReactTestRenderer;
   try{await act(async()=>{root=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});const chip=root.root.findAllByType('button').find(n=>n.children[0]===label)!;await act(async()=>chip.props.onPress());await press(root,'Start this puzzle');const s=store.save.challenge!.paused[0];expect(s.selectedDares).toEqual([slot]);expect((s.payload as {options:Record<string,boolean>}).options[option]).toBe(true);
   }finally{await act(async()=>root.unmount());vi.unstubAllGlobals();}
@@ -226,5 +226,19 @@ it('a board that owns a touch holds the Challenge page scroll until release',asy
   expect(board.hold).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
   await act(async()=>board.hold!(true));expect(page().props.scrollEnabled).toBe(false);
   await act(async()=>board.hold!(false));expect(page().props.scrollEnabled).toBe(true);
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it('Memory capacity offers a board restart and honestly explains the target mark',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const memory=(await import('../src/challenge/registrations/memory')).registration;
+ registerSaveContent(memory.catalog,catalogManifest(memory.catalog));
+ const selectedEntry={...memory,move:()=>null,full:()=>true,render:(_s:unknown,dispatch:(a:unknown)=>void)=><button onClick={()=>dispatch(['f',0])}>Reveal test card</button>};
+ db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});
+ await press(r,'Start this puzzle');await press(r,'Reveal test card');
+ expect(JSON.stringify(r.toJSON())).toContain('same board');
+ await press(r,'Restart this board (keep spent turns)');
+ const text=JSON.stringify(r.toJSON());expect(text).toContain('You can still finish');expect(text).toContain('suggested-turns mark');expect(text).not.toContain('Your plan is kept');
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
