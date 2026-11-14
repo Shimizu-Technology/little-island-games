@@ -139,3 +139,15 @@ describe("Classics native view controls", () => {
   });
 
 });
+
+it('Help in the Memory offer and preview visibly explains what Help does',async()=>{
+ const d=memoryDareDescriptors.find(d=>d.preview)!;
+ for(const preview of [false,true]){
+  let state=memoryDareEngine.create(d,{version:1},options);
+  if(preview)state=memoryDareEngine.step(state,['p'],d)!.state;
+  state=memoryDareEngine.step(state,['h'],d)!.state;
+  let r!:ReactTestRenderer;await act(()=>{r=create(<MemoryDareBoard state={state} dispatch={()=>{}} active width={320}/>);});
+  expect(words(r.root)).toContain('Help shows a pair you have seen once you start playing.');
+  await act(()=>r.unmount());
+ }
+});

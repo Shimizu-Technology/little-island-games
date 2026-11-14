@@ -7,7 +7,7 @@ import type { ReplayEngine } from "../../challenge/types";
 export type Descriptor = { version: 1; cards: string[]; pack: MemoryPack; preview: boolean; suggested: number };
 export type Initial = { version: 1; prior?: { runs: number; failed: boolean; flips: number; previewed: boolean; seen: number[] } };
 export type Action = ["f", number] | ["n"] | ["p"] | ["g"] | ["h"] | ["u"] | ["z"];
-export type State = { round: MemoryState; phase: "offer" | "preview" | "play"; previewed: boolean; flips: number; spent: number; seen: number[]; hint: number[] | null };
+export type State = { restarted: boolean; round: MemoryState; phase: "offer" | "preview" | "play"; previewed: boolean; flips: number; spent: number; seen: number[]; hint: number[] | null };
 /** Authored offline; these exact cards are supplied by the immutable bank, never shuffled on device. */
 export const memoryDareDescriptors: readonly Descriptor[] = authored as Descriptor[];
 export function seenPair(s: State): number[] {
@@ -21,7 +21,7 @@ export const memoryDareEngine: ReplayEngine<Descriptor, Initial, Action, State> 
   validInitial: (v): v is Initial => plain(v) && exactKeys(v, v.prior === undefined ? ["version"] : ["version", "prior"]) && v.version === 1 && (v.prior === undefined || plain(v.prior) && exactKeys(v.prior, ["runs", "failed", "flips", "previewed", "seen"]) && uint(v.prior.runs, 65535) && typeof v.prior.failed === "boolean" && uint(v.prior.flips, 65535) && typeof v.prior.previewed === "boolean" && Array.isArray(v.prior.seen) && v.prior.seen.length <= 24 && new Set(v.prior.seen).size === v.prior.seen.length && v.prior.seen.every(i => uint(i, 23))),
   validAction: (v): v is Action => Array.isArray(v) && (v.length === 2 && v[0] === "f" && Number.isInteger(v[1]) && v[1] >= 0 && v[1] < 24 || v.length === 1 && ["n", "p", "g", "h", "u", "z"].includes(v[0])),
   prior: initial => initial.prior ? { runs: initial.prior.runs, failed: initial.prior.failed } : null,
-  create: (d, initial) => ({ round: freshRound(d), phase: initial.prior ? "play" : d.preview ? "offer" : "play", previewed: initial.prior?.previewed ?? false, flips: initial.prior?.flips ?? 0, spent: Math.ceil((initial.prior?.flips ?? 0) / 2), seen: initial.prior?.seen ?? [], hint: null }),
+  create: (d, initial) => ({ restarted: !!initial.prior, round: freshRound(d), phase: initial.prior ? "play" : d.preview ? "offer" : "play", previewed: initial.prior?.previewed ?? false, flips: initial.prior?.flips ?? 0, spent: Math.ceil((initial.prior?.flips ?? 0) / 2), seen: initial.prior?.seen ?? [], hint: null }),
   step: (s, a, d) => {
     if (a[0] === "p") return s.phase !== "offer" ? null : { state: { ...s, phase: "preview", previewed: true, seen: d.cards.map((_, i) => i) }, event: "edit" };
     if (a[0] === "g") return s.phase === "play" ? null : { state: { ...s, phase: "play" }, event: "edit" };
@@ -39,5 +39,5 @@ export const memoryDareEngine: ReplayEngine<Descriptor, Initial, Action, State> 
     const flips = s.flips + 1, spent = Math.ceil(flips / 2), seen = [...new Set([...s.seen, a[1]])];
     return { state: { ...s, round, flips, spent, seen, hint: null }, event: memoryDone(round) ? "check" : "edit", ...(memoryDone(round) ? { correct: true } : {}) };
   },
-  inspect: (s, d) => ({ solved: memoryDone(s.round), metrics: { turns: s.spent }, edits: s.spent, solution: null, objectives: s.spent <= d.suggested && (!d.preview || s.previewed) ? ["suggested-target"] : [] }),
+  inspect: (s, d) => ({ solved: memoryDone(s.round), metrics: { turns: s.spent }, edits: s.spent, solution: null, objectives: !s.restarted && s.spent <= d.suggested && (!d.preview || s.previewed) ? ["suggested-target"] : [] }),
 };

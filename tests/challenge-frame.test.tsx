@@ -228,3 +228,17 @@ it('a board that owns a touch holds the Challenge page scroll until release',asy
   await act(async()=>board.hold!(false));expect(page().props.scrollEnabled).toBe(true);
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
+
+it('Memory capacity offers a board restart and honestly explains the target mark',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const memory=(await import('../src/challenge/registrations/memory')).registration;
+ registerSaveContent(memory.catalog,catalogManifest(memory.catalog));
+ const selectedEntry={...memory,move:()=>null,full:()=>true,render:(_s:unknown,dispatch:(a:unknown)=>void)=><button onClick={()=>dispatch(['f',0])}>Reveal test card</button>};
+ db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});
+ await press(r,'Start this puzzle');await press(r,'Reveal test card');
+ expect(JSON.stringify(r.toJSON())).toContain('same board');
+ await press(r,'Restart this board (keep spent turns)');
+ const text=JSON.stringify(r.toJSON());expect(text).toContain('You can still finish');expect(text).toContain('suggested-turns mark');expect(text).not.toContain('Your plan is kept');
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});

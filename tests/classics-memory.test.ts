@@ -158,3 +158,11 @@ it("repeated new attempts retain Help and preview evidence and can start durably
   for (const pair of groups(d.cards)) for (const i of pair) s = registration.move(s, ["f", i])!;
   expect(s.result).toMatchObject({ event: "helped", dares: [] });
 });
+
+it('a restarted board can finish but cannot regain the suggested-turns mark even with few spent turns',()=>{
+ const d=memoryDareDescriptors[1];const initial={version:1 as const,prior:{runs:0,failed:false,flips:0,previewed:false,seen:[]}};
+ let s=memoryDareEngine.create(d,initial,options);
+ for(const pair of groups(d.cards))for(const j of pair)s=memoryDareEngine.step(s,['f',j],d)!.state;
+ expect(memoryDareEngine.inspect(s,d).solved).toBe(true);
+ expect(memoryDareEngine.inspect(s,d).objectives).toEqual([]);
+});

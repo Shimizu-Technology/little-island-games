@@ -15,7 +15,7 @@ export function MemoryDareBoard({ state: s, dispatch, active, width }: Challenge
     {mismatch && <Button disabled={!active} onPress={() => dispatch(["n"])}>Turn them over</Button>}
     {s.phase === "play" && <Button quiet disabled={!active || !s.round.history?.length} onPress={() => dispatch(["u"])}>Undo my turn</Button>}
     {s.phase === "play" && <Button quiet disabled={!active} onPress={() => dispatch(["z"])}>Start again</Button>}
-    {s.hint !== null && !s.hint.length && <Copy accessibilityLiveRegion="polite" style={{ color: C.ink }}>No remembered pair yet. Turn a face-down card and notice where it is.</Copy>}
+    {s.hint !== null && !s.hint.length && <Copy accessibilityLiveRegion="polite" style={{ color: C.ink }}>{s.phase !== "play" ? "Help shows a pair you have seen once you start playing." : "No remembered pair yet. Turn a face-down card and notice where it is."}</Copy>}
     {!!s.hint?.length && <Copy accessibilityLiveRegion="polite" style={{ color: C.ink }}>You have seen a pair at cards {s.hint.map(i => i + 1).join(" and ")}.</Copy>}
     <Copy style={{ color: C.ink }}>Targets are suggested, not a proved best score. Help uses only cards already shown. Finishing always counts, even if you go past the target.</Copy>
   </View>;

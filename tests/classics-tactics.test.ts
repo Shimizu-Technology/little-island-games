@@ -103,3 +103,22 @@ it("every clean Checkers mark requires a real choice", () => {
     expect(legal.length, d.title).toBeGreaterThan(wins.length);
   }
 });
+
+it('keeps twelve distinct positions under all square symmetries and colour swaps', () => {
+  const keys=checkersTacticsDescriptors.map(d=>{
+    const variants:string[]=[];
+    for(let transform=0;transform<8;transform++)for(const colour of [1,-1]){
+      const pieces=d.pieces.map(([i,p])=>{let r=i>>3,c=i%8;if(transform&4)[r,c]=[c,r];for(let n=0;n<(transform&3);n++)[r,c]=[c,7-r];return [r*8+c,p*colour];}).sort((a,b)=>a[0]-b[0]);
+      variants.push(JSON.stringify([d.turn*colour,pieces]));
+    }
+    return variants.sort()[0];
+  });
+  expect(new Set(keys).size).toBe(12);
+});
+it('ramps from single captures with a decoy through two-hop men to king chains',()=>{
+  const hops=checkersTacticsDescriptors.map(d=>Math.min(...winningCaptures(tacticsPosition(d)).map(m=>m.captured.length)));
+  expect(hops.slice(0,3)).toEqual([1,1,1]);
+  expect(hops.slice(3,8)).toEqual([2,2,2,2,2]);
+  expect(hops).toEqual([...hops].sort((a,b)=>a-b));
+  for(const d of checkersTacticsDescriptors.slice(0,3)) {expect(d.pieces.every(([,p])=>Math.abs(p)===1)).toBe(true);expect(checkersMoves(tacticsPosition(d),'classic')).toHaveLength(2);}
+});
