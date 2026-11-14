@@ -1,9 +1,9 @@
 import { gameDestination } from '../learn/destinations';
 import { GameIcon as ShelfArt } from "./GameIcon";
 import React from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
-import { Text } from "./Text";
+import { Text, TextFit, entryRegion } from "./Text";
 import { C, Copy, Heading, IconButton, PressableScale, font } from "./ui";
 import { LearnId, learnIds } from "../learn/types";
 import { ongoing, shelfLevel, ShelfGame, ShelfId } from "../learn/home";
@@ -16,8 +16,10 @@ export function openShelfGame(id: ShelfId) {
 // Compatibility name for existing shelves; all listings share the same tile.
 export { GameIcon as ShelfArt } from "./GameIcon";
 export function GameCards({ games, width }: { games: ShelfGame[]; width: number }) {
-  const store = useStore();
-  return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+  const store = useStore(), { fontScale } = useWindowDimensions();
+  // A card's words stop at 1.5x at accessibility sizes and fit the card's text column (12-pt padding each side, 2-pt border).
+  const region = entryRegion(fontScale, width - 28);
+  return <TextFit.Provider value={region}><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
     {games.map(g => {
       const live = ongoing(store.save, g.id), favorite = (store.save.favoriteGames ?? []).includes(g.id);
       const level = learnIds.includes(g.id as LearnId) ? shelfLevel(store.save, g.id as LearnId) : undefined;
@@ -40,5 +42,5 @@ export function GameCards({ games, width }: { games: ShelfGame[]; width: number 
         <View style={{ position: "absolute", top: 8, right: 8 }}><IconButton icon={favorite ? "star-filled" : "star"} selected={favorite} size={44} label={`${favorite ? "Remove favorite" : "Favorite"} ${g.name}`} onPress={() => store.toggleGameFavorite(g.id)} /></View>
       </View>;
     })}
-  </View>;
+  </View></TextFit.Provider>;
 }

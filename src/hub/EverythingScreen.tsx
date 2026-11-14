@@ -3,6 +3,7 @@ import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Button, C, Copy, Heading, IconButton, PressableScale } from '../components/ui';
+import { TextFit, entryRegion } from '../components/Text';
 import { GameIcon } from '../components/GameIcon';
 import { SaveStatus } from '../components/SaveStatus';
 import { Recovery } from '../components/Recovery';
@@ -17,6 +18,8 @@ import { CoveLists } from '../cove/HubCove';
 export default function EverythingScreen() {
  const { section } = useLocalSearchParams<{ section?: string }>(), store = useStore();
  const { width, fontScale } = useWindowDimensions(), narrow = width < 340 || fontScale > 1.5;
+ // At accessibility sizes every title, game name and sentence stops at 1.5x and fits its line (the list text sits beside a 52-pt star).
+ const region = entryRegion(fontScale, Math.min(width, 760) - 40 - 52);
  const [shuffle, setShuffle] = useState(0), [settings, setSettings] = useState(false);
  const favorites = store.save.favoriteGames ?? [], resume = homeContinue(store.save);
  const ideas = dailySuggestions(store.save, undefined, shuffle).map(id => shelfGames.find(game => game.id === id)!);
@@ -29,7 +32,7 @@ export default function EverythingScreen() {
  const pocket = section === 'favorites' || section === 'ideas';
  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Heading>Getting your island ready…</Heading></SafeAreaView>;
  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Recovery/></SafeAreaView>;
- return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+ return <TextFit.Provider value={region}><SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
   <View style={{ padding: 16, gap: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')} label="Back to map">← Map</Button><Heading style={{ fontSize: 26, flex: 1, ...(narrow ? { flexBasis: '100%' as const } : {}) }}>{pocket ? 'Your pocket' : 'Everything'}</Heading></View>
   <SaveStatus/>
   <ScrollView contentContainerStyle={{ width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, gap: 28 }}>
@@ -44,5 +47,5 @@ export default function EverythingScreen() {
    <Copy style={{ fontSize: 13, textAlign: 'center' }}>Offline · No ads · Made for little moments together.</Copy>
    <Copy style={{ fontSize: 13, textAlign: 'center' }}>Made with aloha by Shimizu Technology</Copy>
   </ScrollView><Settings visible={settings} onClose={() => setSettings(false)}/>
- </SafeAreaView>;
+ </SafeAreaView></TextFit.Provider>;
 }

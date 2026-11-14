@@ -171,7 +171,9 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const openedKey=open?`${owner}:${store.epoch}:${round.id}`:null;
   const resetBoard=useRef<string|null>(null);
   useLayoutEffect(()=>{resetBoard.current=openedKey;},[openedKey]);
-  const boardReady=()=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:0,animated:false});}};
+  // A short large-text landscape window scrolls the bar away with the page, so a board that opens at the top would leave its
+  // keys below the fold. There the ready board's own top (its status line, board and keys) becomes the top of the page.
+  const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:large&&height<500&&!barPinned?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
   const bar=open?<View testID="challenge-bar" style={{flexDirection:'row',alignItems:'center',gap:8,width:'100%',maxWidth:1080,alignSelf:'center',paddingHorizontal:12,paddingTop:6,paddingBottom:4}}>
     <Button quiet compact maxFontSizeMultiplier={1.3} onPress={back}>Back</Button>
     <View style={{flex:1}}><Heading maxFontSizeMultiplier={wordFitMultiplier(title,BAR_TITLE,barTitleWidth,PINNED_MAX)} style={{fontSize:BAR_TITLE}}>{title}</Heading></View>

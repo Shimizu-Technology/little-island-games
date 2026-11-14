@@ -12,7 +12,7 @@ vi.mock('react-native-gesture-handler', () => ({ GestureHandlerRootView: 'div' }
 vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 vi.mock('expo-router', () => ({ Stack: Object.assign(() => null, { Screen: () => null }), Redirect: () => null, router: { replace: fixture.replace }, useNavigationContainerRef: () => ({ isReady: () => false, addListener: () => () => {} }), useFocusEffect: () => {}, useLocalSearchParams: () => fixture.params, useIsFocused: () => true }));
 vi.mock('../src/components/ui', () => ({ Button: ({ children, onPress, disabled }: { children: React.ReactNode; onPress?: () => void; disabled?: boolean }) => <button onClick={onPress} disabled={disabled}>{children}</button>, Chip: 'button', Copy: 'p', Heading: 'h2', IconButton: 'button', PressableScale: 'button', Sheet: () => null, ToggleRow: 'switch', C: { cream: '#FCFAF4' }, font: undefined, styles: { content: {} } }));
-vi.mock('../src/components/Text', () => ({ TextLayoutProvider: 'div' }));
+vi.mock('../src/components/Text', async () => ({ ...await vi.importActual<object>('../src/components/Text'), TextLayoutProvider: 'div' }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
 vi.mock('../src/components/Settings', () => ({ Settings: () => null }));
 vi.mock('../src/hub/Landmarks', () => ({ Landmark: () => null }));

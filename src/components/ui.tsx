@@ -223,11 +223,13 @@ export function Chip({
   onPress,
   selected = false,
   disabled = false,
+  maxFontSizeMultiplier,
 }: {
   children: React.ReactNode;
   onPress: () => void;
   selected?: boolean;
   disabled?: boolean;
+  maxFontSizeMultiplier?: number;
 }) {
   return (
     <Button
@@ -235,6 +237,7 @@ export function Chip({
       quiet
       selected={selected}
       disabled={disabled}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
       style={{ borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: 0 }}
     >
       {children}

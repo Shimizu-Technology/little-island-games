@@ -9,6 +9,7 @@ import type { EdgeBoardProps } from '../edges/registration';
 import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
+import { PuzzleStatus, STATUS_MAX } from '../ui/PuzzleStatus';
 
 const CROSSMARK = '#7E968F', DONEDISC = '#D3EBCF', PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -182,15 +183,12 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   });
 
   return <View style={{ gap: 12 }}>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, rowGap: 6 }}>
-      <Copy style={{ flexShrink: 1, fontWeight: '700' }}>{view.title}</Copy>
-      {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· skill: ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
-      <Copy accessibilityLabel={`${done} of ${total} ${pearl ? 'pearls' : 'numbers'} done`}>{`· ${done}/${total}`}</Copy>
-      <Button quiet compact selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
+    <PuzzleStatus title={view.title} skill={view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined} count={`${done}/${total}`} countLabel={`${done} of ${total} ${pearl ? 'pearls' : 'numbers'} done`}>
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
       {/* Always present, so opening the card never re-wraps this row and moves the board. */}
-      <Button quiet compact disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
-    </View>
-    {rules && <Copy style={{ color: C.ink }}>{rulesText[p.kind]}</Copy>}
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
+    </PuzzleStatus>
+    {rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{rulesText[p.kind]}</Copy>}
     <View style={{ alignSelf: 'center', width: W, height: H }} {...responder.panHandlers}>
       <Svg width={W} height={H} pointerEvents="none">
         {background}
@@ -205,19 +203,19 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
     {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
     <View style={{ minHeight: 24 }}>
       {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
-      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A MARK TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
-      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
+      <Text maxFontSizeMultiplier={STATUS_MAX} style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A MARK TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
+      <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(x => ({ ...x, stage: 2 }))}>Why?</Button>}
-        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
-        <Button quiet compact onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
+        {stage === 1 && <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active} onPress={() => setLadder(x => ({ ...x, stage: 2 }))}>Why?</Button>}
+        <Button compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
+        <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
       </View>
     </View> : trouble ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{trouble}</Copy> : placed ? <Copy accessibilityLiveRegion="polite">{placed}</Copy> : null}
     </View>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      <Button quiet compact disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
-      <Button quiet compact disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
-      <Button quiet compact disabled={!active || marks.every(v => v === EMPTY)} onPress={() => send({ type: 'reset' })}>Start over</Button>
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || marks.every(v => v === EMPTY)} onPress={() => send({ type: 'reset' })}>Start over</Button>
     </View>
   </View>;
 }

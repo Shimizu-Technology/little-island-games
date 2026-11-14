@@ -259,3 +259,21 @@ it('AX5 nonanimated Start, Continue and next puzzle reset only once the board la
   const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
   await act(async()=>board.props.onLayout());expect(scrolls).toEqual([]);
 });
+
+// R0c: where a ready board puts the page. A short large-text landscape window has scrolled its bar away with the page,
+// so the board's own top (status line, board, number keys) becomes the top; everywhere else the page returns to y 0.
+it.each([
+  ['a short landscape window at the largest text', {width:852,height:393,fontScale:3.12}, 210],
+  ['a portrait phone at the largest text', {width:393,height:852,fontScale:3.12}, 0],
+  ['a short landscape window at default size', {width:852,height:393,fontScale:1}, 0],
+  ['an iPad at the largest text', {width:1133,height:744,fontScale:3.12}, 0],
+])('R0c: a ready board in %s puts the page at y %s',async(_name,size,y)=>{
+  Object.assign(viewport,size);
+  await mount(slipEntry);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')).toHaveLength(1));
+  const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
+  scrolls.length=0;
+  await act(async()=>board.props.onLayout({nativeEvent:{layout:{x:0,y:210,width:353,height:500}}}));
+  expect(scrolls.at(-1)).toEqual({y,animated:false});
+});

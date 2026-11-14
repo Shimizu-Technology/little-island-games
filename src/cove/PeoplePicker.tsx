@@ -25,7 +25,7 @@ export function PeoplePicker() {
       else setMessage('Choose a different name, up to 24 characters. There is room for four Cove-only people.');
     } finally { setBusy(false); }
   }
-  return <><Button quiet compact style={{ maxWidth: '100%' }} textStyle={{ flexShrink: 1 }} onPress={() => setOpen(true)} label={`Who is solving: ${people.find(p => p.id === owner)?.name ?? 'Family practice'}`}>{people.find(p => p.id === owner)?.name ?? 'Family practice'} ▾</Button>
+  return <><Button quiet compact maxFontSizeMultiplier={1.3} style={{ maxWidth: '100%' }} textStyle={{ flexShrink: 1 }} onPress={() => setOpen(true)} label={`Who is solving: ${people.find(p => p.id === owner)?.name ?? 'Family practice'}`}>{people.find(p => p.id === owner)?.name ?? 'Family practice'} ▾</Button>
     <Sheet visible={open} title="Who is solving?" onClose={() => setOpen(false)}><Copy>Each person keeps their own puzzles. Family practice is here for shared play.</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{people.map(p => <Button quiet compact style={{ maxWidth: '100%' }} key={p.id} selected={p.id === owner} onPress={() => { if (!busy) void select(p.id); }}>{p.name}</Button>)}</View>
       <Copy>Add a Cove-only person. They won’t appear in School or get a house.</Copy><TextInput accessibilityLabel="New Cove person's name" value={name} maxLength={24} onChangeText={setName} style={{ minHeight: 48, borderWidth: 1, borderColor: C.teal, borderRadius: 12, padding: 12, fontFamily: font, fontSize: 18, color: C.ink }}/><Button disabled={busy || Object.keys(store.save.cove?.people ?? {}).length >= 4 || !name.trim()} onPress={() => void add()}>Add person</Button>{!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}

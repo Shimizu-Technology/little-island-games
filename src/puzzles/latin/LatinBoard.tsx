@@ -6,6 +6,7 @@ import { Text } from '../../components/Text';
 import { GridShell, type GridTint } from '../grid/GridShell';
 import { gridAction, type GridAction } from '../grid/model';
 import { GridPreferences } from '../grid/preferences';
+import { PuzzleStatus, STATUS_MAX } from '../ui/PuzzleStatus';
 import { conflicts, type LatinPuzzle } from './core';
 import { planHint } from './solver';
 import { cueFor, techniqueName, type Cue } from './teach';
@@ -111,22 +112,19 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   // Wider than the page padding on phones, so a 9×9 cell stays about 42 points.
   const bleed = width < 520 ? 14 : 0, boardWidth = width + bleed * 2;
   return <View style={{ gap: 12 }}>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, rowGap: 6 }}>
-      <Copy style={{ flexShrink: 1, fontWeight: '700' }}>{view.title}</Copy>
-      {!!techniqueName(view.teaches) && <Copy style={{ flexShrink: 1 }}>{`· skill: ${techniqueName(view.teaches)}`}</Copy>}
-      <Copy accessibilityLabel={`${solvedCount} of ${total} cells filled`}>{`· ${solvedCount}/${total}`}</Copy>
-      {!!rules && <Button quiet compact selected={howTo} onPress={() => setHowTo(on => !on)}>How to play</Button>}
-      {!shown && <Button quiet compact disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
-    </View>
-    {howTo && !!rules && <Copy style={{ color: C.ink }}>{rules}</Copy>}
-    {!!placed && !shown && <Copy accessibilityLiveRegion="polite">{placed}</Copy>}
+    <PuzzleStatus title={view.title} skill={techniqueName(view.teaches) || undefined} count={`${solvedCount}/${total}`} countLabel={`${solvedCount} of ${total} cells filled`}>
+      {!!rules && <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} selected={howTo} onPress={() => setHowTo(on => !on)}>How to play</Button>}
+      {!shown && <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
+    </PuzzleStatus>
+    {howTo && !!rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{rules}</Copy>}
+    {!!placed && !shown && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{placed}</Copy>}
     {shown && <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
-      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A NUMBER TO FIX' : techniqueName(ladder.cue!.technique ?? '').toUpperCase()}</Text>
-      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
+      <Text maxFontSizeMultiplier={STATUS_MAX} style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A NUMBER TO FIX' : techniqueName(ladder.cue!.technique ?? '').toUpperCase()}</Text>
+      <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
-        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button>
-        <Button quiet compact onPress={() => { const target = ladder.cue?.target; setLadder(closed(state.edits, view.helps)); if (target !== undefined && target !== state.selected) send({ type: 'select', cell: target }); }}>I'll try it</Button>
+        {stage === 1 && <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
+        <Button compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button>
+        <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} onPress={() => { const target = ladder.cue?.target; setLadder(closed(state.edits, view.helps)); if (target !== undefined && target !== state.selected) send({ type: 'select', cell: target }); }}>I'll try it</Button>
       </View>
     </View>}
     <View style={{ marginHorizontal: -bleed }}>
@@ -134,8 +132,8 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     </View>
     {!!words && p.kind !== 'sudoku' && <Copy accessibilityRole="text" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{words}</Copy>}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      <Button quiet compact selected={clashes} disabled={!active} onPress={() => setClashes(on => !on)} label={`Show clashes ${clashes ? 'on' : 'off'}`}>{clashes ? 'Clashes shown' : 'Clashes hidden'}</Button>
-      <Button quiet compact disabled={!active || state.values.every((v, i) => v === p.givens[i])} onPress={() => send({ type: 'reset' })}>Start over</Button>
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} selected={clashes} disabled={!active} onPress={() => setClashes(on => !on)} label={`Show clashes ${clashes ? 'on' : 'off'}`}>{clashes ? 'Clashes shown' : 'Clashes hidden'}</Button>
+      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || state.values.every((v, i) => v === p.givens[i])} onPress={() => send({ type: 'reset' })}>Start over</Button>
     </View>
   </View>;
 }

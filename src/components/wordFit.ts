@@ -28,3 +28,11 @@ export const wordsFit = (text: string, fontSize: number, width: number) => text.
  * Shared chrome switches to its large-text layout here: switches stack under their words, and bars collapse.
  */
 export const LARGE_TEXT = 1.5;
+/**
+ * Chrome text (titles, intros, section headings) on entry screens stops here at accessibility sizes, so a page of tiles
+ * stays reachable; a large decorative title may reach `TITLE_MAX`. Both stop earlier where their longest word would break.
+ */
+export const CHROME_MAX = 1.5, TITLE_MAX = 2;
+/** One multiplier for several texts of the same size, so a row of tiles shares a size and none of them breaks a word. */
+export const sharedWordFit = (texts: readonly string[], fontSize: number, width: number, ceiling = TITLE_MAX) =>
+  Math.min(ceiling, ...texts.map(text => wordFitMultiplier(text, fontSize, width, ceiling)));
