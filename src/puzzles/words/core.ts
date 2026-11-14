@@ -31,13 +31,17 @@ export function snapRay(start: number, end: number, columns: number, rows: numbe
 export function dragRay(start: number, origin: { x: number; y: number }, point: { x: number; y: number }, size: number, columns: number, rows: number, previous: Direction | null = null): { direction: Direction | null; cells: number[] } {
   const dx = point.x - origin.x, dy = point.y - origin.y;
   if (Math.hypot(dx, dy) < size * .65) return { direction: null, cells: [start] };
-  const angle = Math.atan2(dy, dx), sector = Math.round(angle / (Math.PI / 4));
+  const x = point.x - (start % columns + .5) * size, y = point.y - (Math.floor(start / columns) + .5) * size;
+  // Early intent follows the finger vector. On a longer trace, remove the landing
+  // offset from its angle too: opposite cell edges must still name the same ray.
+  const angle = Math.hypot(x, y) >= size * 1.5 ? Math.atan2(y, x) : Math.atan2(dy, dx), sector = Math.round(angle / (Math.PI / 4));
   let direction: Direction = [Math.round(Math.sin(sector * Math.PI / 4)), Math.round(Math.cos(sector * Math.PI / 4))];
   if (previous) {
     const old = Math.atan2(previous[0], previous[1]), difference = Math.abs(Math.atan2(Math.sin(angle - old), Math.cos(angle - old)));
     if (difference < Math.PI / 8 + 7 * Math.PI / 180) direction = previous;
   }
-  const [dr, dc] = direction, length = Math.max(0, Math.round((dx * dc + dy * dr) / (size * (dr * dr + dc * dc))));
+  // The landing point controls intent, but cell distance starts at the letter's centre.
+  const [dr, dc] = direction, length = Math.max(0, Math.round((x * dc + y * dr) / (size * (dr * dr + dc * dc))));
   const cells: number[] = [];
   for (let n = 0; n <= length; n++) { const r = Math.floor(start / columns) + n * dr, c = start % columns + n * dc; if (r < 0 || c < 0 || r >= rows || c >= columns) break; cells.push(r * columns + c); }
   return { direction, cells };

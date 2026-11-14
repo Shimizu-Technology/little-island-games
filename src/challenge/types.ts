@@ -79,7 +79,7 @@ export type PackedChallenge = {
 export type ChallengeEntry = {
   game: string; codec: string; cove: boolean; serializeMoves?: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession;
   /** True when a rejected move was refused because the attempt's log is full, so restart is the way on. */
-  full?: (session: ChallengeSession) => boolean;
+  full?: (session: ChallengeSession, action?: unknown) => boolean;
   /** Game-specific line in the dare picker about how help affects dare marks. */
   dareHelp?: string;
   contextFor: (ref: PuzzleRef) => string; puzzles: readonly ChallengeCard[]; catalog: SaveCatalog;

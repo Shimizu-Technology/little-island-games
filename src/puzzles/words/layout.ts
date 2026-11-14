@@ -12,8 +12,8 @@ export function searchLayout(width: number, height: number, fontScale: number, c
   const overhead = short ? 42 + 33 + 24 : 66 + 38 + 33 + (together ? 94 : 0) + 48 + (beside ? 0 : listRow);
   let room = large ? Math.max(48, height - chrome.top - chrome.bottom - chrome.bar - overhead) : Infinity;
   // Dense boards keep their enlargement/pan mode row above the viewport, within the same budget.
-  const tools = large && Math.floor(Math.min(boardWidth / columns, room / rows)) < 44;
+  const tools = large && Math.floor(Math.min((boardWidth - 2) / columns, room / rows)) < 44;
   if (tools) room = Math.max(32, room - 54);
-  const size = Math.max(2, Math.floor(Math.min(boardWidth / columns, room / rows)));
+  const size = Math.max(2, Math.floor(Math.min((boardWidth - 2) / columns, (room - 2) / rows)));
   return { large, short, tools, beside, listWidth, boardWidth, size, room };
 }

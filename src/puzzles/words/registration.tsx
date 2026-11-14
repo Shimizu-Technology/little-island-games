@@ -13,7 +13,7 @@ export function defineWordSearch(banks: readonly SearchBank[], puzzles: readonly
   const entry = defineReplayGame<SearchPuzzle, Initial, Action, State>({
     game: 'word-search', codec, context: 'word-search', cove: true,
     budget: { wrapper: 700, draft: 3396, undo: 0, audit: 0 },
-    helpUI: 'board', assistance: { bytes: 768, actions: 24, idempotentHelp: false, isAction: a => a[0] === 'help' || a[0] === 'hear' },
+    helpUI: 'board', assistance: { bytes: 768, actions: 24, idempotentHelp: false, isAction: a => a[0] === 'help' },
     puzzles, objectives: ['all-found'], engine: searchEngine,
     packed: banks.length ? { family: 'word-search', banks: banks.map(b => ({ ...b, path: 'endless' })), awards: 0,
       open: async (l, ordinal) => { const d = await l.entry(wordSearchAdapter(), 'word-search', ordinal); return { ref: d.ref, descriptor: d.payload }; },
@@ -38,7 +38,11 @@ export function defineWordSearch(banks: readonly SearchBank[], puzzles: readonly
     },
   } satisfies PackedOpen);
   return { ...entry, serializeMoves: true,
-    full: (s: Parameters<typeof entry.move>[0]) => jsonBytes(s) > 4096 - 768 - 40 || (s.payload as ReplayPayload<Initial, Action>).actions.length >= 512 - 24,
+    full: (s: Parameters<typeof entry.move>[0], action: unknown = ['undo']) => {
+      const payload = s.payload as ReplayPayload<Initial, Action>;
+      const next = { ...s, revision: s.revision + 1, payload: { ...payload, actions: [...payload.actions, action] } };
+      return jsonBytes(next) > 4096 - 768 || next.payload.actions.length > 512 - 24;
+    },
     // Legacy replays may contain repeated hearing. Coalesce only NEW input, preserving those saves.
     move: (s: Parameters<typeof entry.move>[0], a: unknown) => Array.isArray(a) && a[0] === 'hear' && (s.payload as ReplayPayload<Initial, Action>).actions.some(a => a[0] === 'hear') ? null : entry.move(s, a), ...(packed?{packed}:{}), render: (...args: Parameters<typeof entry.render>) => {
     const element = entry.render(...args) as React.ReactElement<ChallengeViewProps<State, Action> & { together?: boolean; resetKey?: string }> | null;

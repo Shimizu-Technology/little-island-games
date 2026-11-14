@@ -4,11 +4,12 @@ import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { WordSearchBoard } from '../src/puzzles/words/WordSearchBoard';
 import { searchEngine } from '../src/puzzles/words/game';
 import * as core from '../src/puzzles/words/core';
-import { fixtureRegistration } from './fixtures/word-search/registration';
+import { defineWordSearch } from '../src/puzzles/words/registration';
+import { fixtureRegistration, fixturePuzzles } from './fixtures/word-search/registration';
 import { emptyChallenge } from '../src/state/challenge';
 import fixture from './fixtures/word-search/bank.json';
-const env=vi.hoisted(()=>({width:744,height:1133,fontScale:1,announce:vi.fn(),play:vi.fn(()=>true)}));
-vi.mock('react-native',()=>({AccessibilityInfo:{isScreenReaderEnabled:async()=>true,addEventListener:()=>({remove(){}}),announceForAccessibility:env.announce},ScrollView:'scroll',View:'view',TextInput:'input',Platform:{OS:'ios'},useWindowDimensions:()=>env}));
+const env=vi.hoisted(()=>({width:744,height:1133,fontScale:1,reader:true,blur:vi.fn(),top:undefined as number|undefined,announce:vi.fn(),play:vi.fn(()=>true)}));
+vi.mock('react-native',()=>({AccessibilityInfo:{isScreenReaderEnabled:async()=>env.reader,addEventListener:()=>({remove(){}}),announceForAccessibility:env.announce},ScrollView:'scroll',View:'view',TextInput:'input',Platform:{OS:'ios'},useWindowDimensions:()=>env}));
 vi.mock('react-native-svg',()=>({default:'svg',Circle:'circle',Line:'line',SvgXml:'picture'}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'copy',Heading:'heading',C:{}}));
 vi.mock('../src/components/Text',()=>({Text:'text'}));
@@ -17,12 +18,12 @@ vi.mock('../src/puzzles/words/picture-context',()=>({SearchPicturesContext:creat
 let screen:ReactTestRenderer;
 const p=fixture.puzzles[0] as core.SearchPuzzle;
 const initial=()=>searchEngine.create(p,{version:1},{ownRead:false,supportOff:false});
-const mount=async(props={})=>{const dispatch=vi.fn();await act(async()=>{screen=create(<WordSearchBoard state={initial()} dispatch={dispatch} active width={353} together {...props}/>);});return dispatch;};
+const mount=async(props={})=>{const dispatch=vi.fn();await act(async()=>{screen=create(<WordSearchBoard state={initial()} dispatch={dispatch} active width={353} together {...props}/>,{createNodeMock:()=>({focus(){},blur:env.blur,clear(){},measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>{if(env.top!==undefined)cb(0,env.top,353,0);}})});});return dispatch;};
 const surface=()=>screen.root.findAll(n=>!!n.props.onResponderGrant)[0];
 
 const press=async(label:string)=>{await act(async()=>{const b=screen.root.findAllByType('button').find(n=>n.children.includes(label));expect(b).toBeDefined();b!.props.onPress();});};
 const tap=async(i:number)=>{await act(async()=>{const n=screen.root.findAll(n=>n.props.accessibilityRole==='button'&&n.props.accessibilityLabel?.startsWith(`Row ${Math.floor(i/6)+1}, column ${i%6+1},`))[0];n.props.onAccessibilityTap();});};
-beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);env.width=744;env.height=1133;env.fontScale=1;env.announce.mockClear();});
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);env.width=744;env.height=1133;env.fontScale=1;env.reader=true;env.blur.mockClear();env.top=undefined;env.announce.mockClear();});
 afterEach(async()=>{if(screen)await act(async()=>screen.unmount());vi.unstubAllGlobals();});
 it('off-centre curved finger paths lock correctly at every speed and cell size',()=>{
  let seed=79;const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
@@ -128,4 +129,109 @@ it('shares one fitted size across long answers, reserving the found mark too',as
  const answers=screen.root.findAllByProps({testID:'search-answer'}),sizes=answers.map(n=>n.props.style.fontSize),caps=answers.map(n=>n.props.maxFontSizeMultiplier);
  expect(new Set(sizes).size).toBe(1);expect(new Set(caps).size).toBe(1);
  expect(wordWidth(`✓ ${long.words[0].spelling}`)*sizes[0]*caps[0]).toBeLessThanOrEqual(168*.92+.01);
+});
+
+it('Hear preserves independent completion and solo Clean credit in the real registration, but forbids own-read',()=>{
+ const base=fixturePuzzles[0],card={...base,dares:[
+  {slot:1500,id:'synthetic-clean',label:'Clean',rule:{kind:'clean' as const},help:'independent' as const},
+  {slot:1501,id:'synthetic-read',label:'Read',rule:{kind:'own-read' as const},help:'independent' as const}]};
+ const entry=defineWordSearch([],[card]);
+ for(const hear of [false,true]){
+  let s=entry.start(card.ref,'family',`hearing-${hear}`,emptyChallenge(),{ownRead:true,supportOff:false},[1500,1501]);
+  if(hear)s=entry.move(s,['hear',0])!;
+  for(const w of p.words)s=entry.move(s,['find',w.cells[0],w.cells.at(-1),0])!;
+  expect(s.result?.event).toBe('independent');expect(s.result?.dares).toEqual(hear?[1500]:[1500,1501]);
+ }
+});
+it('realistic curved traces finish on the intended start, direction AND end, including edge landings',()=>{
+ let seed=913;const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ for(const size of [35,44,58])for(const [dy,dx] of core.directions){let correct=0;
+  for(let n=0;n<600;n++){
+   const row=dy<0?9:6,col=dx<0?9:6,start=row*16+col,length=2+n%6;
+   const origin={x:(col+.02+rand()*.96)*size,y:(row+.02+rand()*.96)*size};
+   const target={x:(col+dx*length+.15+rand()*.7)*size,y:(row+dy*length+.15+rand()*.7)*size};
+   let ray:ReturnType<typeof core.dragRay>={direction:null,cells:[start]};const distance=Math.hypot(target.x-origin.x,target.y-origin.y),steps=Math.ceil(distance/(2+rand()*5));
+   for(let k=1;k<=steps;k++){
+    const t=k/steps,curve=Math.sin(t*Math.PI)*size*.12,wobble=Math.sin(t*Math.PI*4)*(1-t)*size*.04;
+    ray=core.dragRay(start,origin,{x:origin.x+(target.x-origin.x)*t+curve+wobble,y:origin.y+(target.y-origin.y)*t-curve+wobble},size,16,16,ray.direction);
+   }
+   if(ray.cells[0]===start&&ray.direction?.[0]===dy&&ray.direction?.[1]===dx&&ray.cells.at(-1)===start+length*(dy*16+dx))correct++;
+  }expect(correct/600).toBeGreaterThanOrEqual(.99);
+ }
+});
+const touch=(x:number,y:number,id=0)=>({nativeEvent:{changedTouches:[{identifier:id,locationX:x,locationY:y}]}});
+it('board follows the finger vector rather than snapping to the first neighbour cell (M1)',async()=>{
+ env.reader=false;const dispatch=await mount(),size=(surface().props.style.width-2)/6;
+ // The first sample is in the horizontal neighbour, but the true diagonal then curves down.
+ const a=touch(size*4.08,size*4.50),b=touch(size*3.88,size*4.35),c=touch(size*1.52,size*1.55);
+ await act(async()=>surface().props.onResponderGrant(a));await act(async()=>surface().props.onResponderMove(b));
+ await act(async()=>surface().props.onResponderMove(c));await act(async()=>surface().props.onResponderRelease(c));
+ expect(dispatch).toHaveBeenLastCalledWith(['find-many',[[28,7,0]]]);
+});
+it('second simultaneous pointer gets the other hunter even when purple was chosen first (M2)',async()=>{
+ env.reader=false;const dispatch=await mount();await press('Purple hunter · dotted');const size=(surface().props.style.width-2)/6;
+ const at=(i:number,id:number)=>touch((i%6+.5)*size,(Math.floor(i/6)+.5)*size,id);
+ await act(async()=>surface().props.onResponderGrant(at(p.words[0].cells[0],11)));
+ await act(async()=>surface().props.onResponderStart(at(p.words[1].cells[0],12)));
+ const both={nativeEvent:{changedTouches:[...at(p.words[0].cells.at(-1)!,11).nativeEvent.changedTouches,...at(p.words[1].cells.at(-1)!,12).nativeEvent.changedTouches]}};
+ await act(async()=>surface().props.onResponderMove(both));await act(async()=>surface().props.onResponderRelease(both));
+ expect(dispatch).toHaveBeenLastCalledWith(['find-many',[[p.words[0].cells[0],p.words[0].cells.at(-1),1],[p.words[1].cells[0],p.words[1].cells.at(-1),0]]]);
+});
+it('keeps focus separate from selection, with no default cursor or completed-find selection',async()=>{
+ await mount();const cells=()=>screen.root.findAll(n=>n.props.accessibilityRole==='button'&&n.props.accessibilityLabel?.startsWith('Row '));
+ expect(cells().some(n=>n.props.accessibilityState.selected)).toBe(false);
+ expect(cells().some(n=>n.props.style.borderStyle==='dashed'&&n.props.style.borderWidth)).toBe(false);
+ await tap(p.words[0].cells[0]);expect(cells().filter(n=>n.props.accessibilityState.selected)).toHaveLength(1);
+ await tap(p.words[0].cells.at(-1)!);expect(cells().some(n=>n.props.accessibilityState.selected)).toBe(false);
+ await act(async()=>screen.root.findByType('input').props.onKeyPress({nativeEvent:{key:'ArrowRight'}}));
+ expect(cells().some(n=>n.props.style.borderStyle==='dashed'&&n.props.style.borderWidth)).toBe(true);
+ expect(cells().some(n=>n.props.accessibilityState.selected)).toBe(false);
+});
+it('a tiny edge-crossing tap retains its starting cell and pending first letter',async()=>{
+ env.reader=false;const dispatch=await mount(),size=(surface().props.style.width-2)/6;
+ await tap(p.words[0].cells[0]);const end=p.words[0].cells.at(-1)!,x=(end%6+1)*size-1,y=(Math.floor(end/6)+.5)*size;
+ await act(async()=>surface().props.onResponderGrant(touch(x,y)));await act(async()=>surface().props.onResponderMove(touch(x+3,y)));await act(async()=>surface().props.onResponderRelease(touch(x+3,y)));
+ expect(dispatch).toHaveBeenLastCalledWith(['find',p.words[0].cells[0],end,0]);
+});
+it('uses its measured window position to budget the actual host chrome at AX5',async()=>{
+ env.width=393;env.height=852;env.fontScale=3.12;env.top=230;await mount();
+ const root=screen.root.findByProps({testID:'word-search-keyboard'});await act(async()=>root.props.onLayout({nativeEvent:{layout:{y:100,width:353}}}));
+ // board, title/instructions/status/gaps, full picture/audio card and bottom inset.
+ expect(surface().props.style.height+66+38+33+48+118+env.top+34).toBeLessThanOrEqual(852);
+});
+it('includes the full frame border within the iPad viewport at default text',async()=>{
+ await mount({width:704});expect(surface().props.style.width).toBeLessThanOrEqual(660);
+});
+
+it('reports capacity using the attempted two-find action, with no byte estimate',()=>{
+ const ref=fixtureRegistration.puzzles[0].ref,base=fixtureRegistration.start(ref,'family','capacity',emptyChallenge(),{ownRead:false,supportOff:false},[]);
+ const action=['find-many',[[28,7,0],[32,17,1]]];
+ for(let n=0;n<3330;n++){
+  const s={...base,id:'x'.repeat(n)},payload=s.payload as import('../src/challenge/types').ReplayPayload<unknown,unknown>;
+  const next={...s,revision:s.revision+1,payload:{...payload,actions:[...payload.actions,action]}};
+  expect(fixtureRegistration.full(s,action)).toBe(new TextEncoder().encode(JSON.stringify(next)).length>3328);
+ }
+});
+
+it('keeps the short-window theme compact enough for the measured Cove chrome and Hear card',async()=>{
+ env.width=852;env.height=393;env.fontScale=3.12;env.top=126;await mount({width:694});
+ expect(screen.root.findByType('heading' as React.ElementType).props.maxFontSizeMultiplier).toBe(1);
+});
+
+it('blurs the hidden native keyboard when the round becomes inactive',async()=>{
+ const dispatch=await mount();await act(async()=>screen.update(<WordSearchBoard state={initial()} dispatch={dispatch} active={false} width={353} together/>));expect(env.blur).toHaveBeenCalled();
+});
+it('the selected purple hunter keeps purple colour and a dotted pattern',async()=>{
+ await mount();await press('Purple hunter · dotted');const b=screen.root.findAllByType('button').find(n=>n.children.includes('Purple hunter · dotted'))!;
+ expect(b.props.style.backgroundColor).toBe('#8A4D81');expect(b.props.style.borderStyle).toBe('dotted');
+});
+
+it('projects from the first cell centre for lifts anywhere inside the last cell',()=>{
+ let seed=19;const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ for(const size of [35,44,58])for(const direction of core.directions)for(let i=0;i<1000;i++){
+  const [dy,dx]=direction,row=dy<0?9:6,col=dx<0?9:6,start=row*16+col,length=2+i%6;
+  const origin={x:(col+.01+rand()*.98)*size,y:(row+.01+rand()*.98)*size};
+  const point={x:(col+dx*length+.01+rand()*.98)*size,y:(row+dy*length+.01+rand()*.98)*size};
+  expect(core.dragRay(start,origin,point,size,16,16,direction).cells.at(-1)).toBe(start+length*(dy*16+dx));
+ }
 });

@@ -18,22 +18,27 @@ function WordPicture({ spelling, size = 64 }: { spelling: string; size?: number 
   useEffect(() => { let live = true; if (id) void pictures.load(id).then(xml => { if (live) setLoaded({id,xml}); }).catch(() => {}); return () => { live = false; }; }, [id, pictures]);
   return loaded && loaded.id===id ? <SvgXml xml={loaded.xml} width={size} height={size} accessible={false}/> : <View accessible accessibilityLabel="Picture unavailable. Use Hear word." style={{ width: size, height: size, borderRadius: 12, backgroundColor: C.sand, alignItems: 'center', justifyContent: 'center' }}><Text maxFontSizeMultiplier={1}>◇</Text></View>;
 }
-const LetterCell = memo(function LetterCell({ letter, index, size, selected, tap, described }: { letter: string; index: number; size: number; selected: boolean; tap: (i: number) => void; described: string }) {
-  return <View accessible accessibilityRole="button" accessibilityLabel={described} accessibilityState={{ selected }} onAccessibilityTap={() => tap(index)} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', borderWidth: selected ? 2 : 0, borderColor: C.gold }}><Text maxFontSizeMultiplier={1.15} style={{ color: C.ink, fontSize: size * (letter.length > 1 ? .42 : .5), fontWeight: '700' }}>{letter}</Text></View>;
+const LetterCell = memo(function LetterCell({ letter, index, size, selected, focused, tap, described }: { letter: string; index: number; size: number; selected: boolean; focused: boolean; tap: (i: number) => void; described: string }) {
+  return <View accessible accessibilityRole="button" accessibilityLabel={described} accessibilityState={{ selected }} onAccessibilityTap={() => tap(index)} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', borderWidth: selected || focused ? 2 : 0, borderColor: selected ? C.gold : C.blue, borderStyle: selected ? 'solid' : 'dashed' }}><Text maxFontSizeMultiplier={1.15} style={{ color: C.ink, fontSize: size * (letter.length > 1 ? .42 : .5), fontWeight: '700' }}>{letter}</Text></View>;
 });
 type Pointer = { start: number; last: number; direction: Direction | null; cells: number[]; hunter: 0 | 1; moved: boolean; origin: { x: number; y: number } };
 export type WordSearchBoardProps = { state: State; dispatch: (a: Action) => void; active: boolean; width: number; together?: boolean; resetKey?: string };
 /** Each native pointer has its own ray and hunter. No score or race is computed. */
 export function WordSearchBoard({ state, dispatch, active, width, together = false, resetKey }: WordSearchBoardProps) {
   const p = state.puzzle, { width: screenWidth, height, fontScale = 1 } = useWindowDimensions(), tablet = Math.min(screenWidth, height) >= 600;
-  const chrome = useContext(SearchChrome), [hunter, setHunter] = useState<0 | 1>(0), [panning, setPanning] = useState(false), [cursor, setCursor] = useState(0);
-  const keyboard = useRef<TextInput>(null);
+  const chrome = useContext(SearchChrome), [hunter, setHunter] = useState<0 | 1>(0), [panning, setPanning] = useState(false), [cursor, setCursor] = useState(0), [keyboardMode, setKeyboardMode] = useState(false), [windowTop, setWindowTop] = useState<number>();
+  const keyboard = useRef<TextInput>(null), container = useRef<View>(null), previousLayout = useRef('');
+  const measureHost = useCallback(() => {
+    container.current?.measureInWindow((_x, y) => { if (Number.isFinite(y)) setWindowTop(Math.max(0, y)); });
+  }, []);
+  useLayoutEffect(() => { measureHost(); }, [measureHost, width, height, fontScale, resetKey]);
+  useEffect(() => { if (!active) keyboard.current?.blur(); }, [active]);
   const cap = atLarge(fontScale, 1.3), copyCap = atLarge(fontScale, 1.5);
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), sound = useSoundControls(active);
   const [first, setFirst] = useState<[number | null, number | null]>([null, null]), [previews, setPreviews] = useState<Pointer[]>([]), [zoom, setZoom] = useState(false), [notice, setNotice] = useState(''), [screenReader, setScreenReader] = useState(false);
   const pointers = useRef(new Map<string, Pointer>()), frame = useRef<View>(null), accepted = useRef(state.edits), firstRef = useRef(first);
   const rows = p.cells.length, columns = p.cells[0].length;
-  const layout = searchLayout(width, height, fontScale, columns, rows, p.list === 'pictures', together, chrome, p.words.some(w => w.audio !== null));
+  const layout = searchLayout(width, height, fontScale, columns, rows, p.list === 'pictures', together, windowTop === undefined ? chrome : { top: windowTop, bottom: chrome.bottom, bar: 0 }, p.words.some(w => w.audio !== null));
   const size = zoom ? Math.max(44, layout.size) : layout.size, needsZoom = layout.size < 44;
   const currentHunter = together ? tablet ? hunter : state.turn : 0;
   const interactionRef = useRef(interaction);
@@ -68,6 +73,8 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   }, [spoken, screenReader, state.found, p]);
   const keyAction = useCallback((key: string) => {
     if (!active) return false;
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Enter', 'Escape'].includes(key)) return false;
+    setKeyboardMode(true);
     const delta: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
     if (key in delta) { setCursor(c => Math.max(0, Math.min(rows * columns - 1, c + delta[key]))); return true; }
     if (key === ' ' || key === 'Enter') { tap(cursor); return true; }
@@ -85,6 +92,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const cellAt = (t: NativeTouchEvent) => nearestCell(t.locationX, t.locationY, size, { rows, columns });
   function begin(e: GestureResponderEvent) {
     if (!active || screenReader || panning) return;
+    setKeyboardMode(false);
     for (const t of e.nativeEvent.changedTouches) {
       if (pointers.current.has(String(t.identifier)) || pointers.current.size >= (tablet && together ? 2 : 1)) continue;
       const start = cellAt(t), occupied = new Set([...pointers.current.values()].map(x => x.hunter));
@@ -108,7 +116,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
       const pointer = pointers.current.get(String(t.identifier)); if (!pointer) continue;
       const ray = dragRay(pointer.start, pointer.origin, { x: t.locationX, y: t.locationY }, size, columns, rows, pointer.direction);
       pointers.current.delete(String(t.identifier));
-      if (pointer.moved || ray.cells.length > 1) { if (ray.cells.length > 1) finds.push([pointer.start, ray.cells.at(-1)!, pointer.hunter]); chooseFirst(pointer.hunter, null); }
+      if (ray.direction !== null && (pointer.moved || ray.cells.length > 1)) { if (ray.cells.length > 1) finds.push([pointer.start, ray.cells.at(-1)!, pointer.hunter]); chooseFirst(pointer.hunter, null); }
       else tap(pointer.start, pointer.hunter);
     }
     if (finds.length) {const fresh=finds.filter(([start,end])=>{const i=foundIndex(p,start,end);return i>=0 && !state.found.some(([j])=>j===i);});if(fresh.length){dispatch(['find-many',fresh]);setNotice('');}else setNotice(finds.some(([a,b])=>foundIndex(p,a,b)>=0) ? 'That word is already found.' : 'Try another straight line.');}
@@ -122,7 +130,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const title = themes.find(t => t.id === p.theme)?.title ?? p.theme;
   const instruction = <Copy maxFontSizeMultiplier={copyCap} numberOfLines={layout.large ? 1 : undefined} adjustsFontSizeToFit={layout.large}>{layout.large ? zoom ? panning ? 'Move the grid, then choose letters' : 'Drag to select. Use Move grid to pan.' : 'Drag or tap first and last letters' : 'Find the words in a straight line. Drag, or choose the first and last letters.'}</Copy>;
   const cue = together && <Copy maxFontSizeMultiplier={copyCap}>{tablet ? 'Choose your hunter. Keep your colour between turns.' : `Take turns. ${state.turn === 0 ? 'Green solid' : 'Purple dotted'} trail goes next.`}</Copy>;
-  const hunters = together && tablet && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{(['Green hunter · solid', 'Purple hunter · dotted'] as const).map((name,h) => <Button key={name} maxFontSizeMultiplier={cap} quiet compact selected={hunter===h} onPress={() => setHunter(h as 0 | 1)}>{name}</Button>)}</View>;
+  const hunters = together && tablet && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{(['Green hunter · solid', 'Purple hunter · dotted'] as const).map((name,h) => <Button key={name} maxFontSizeMultiplier={cap} quiet compact selected={hunter===h} style={{ backgroundColor: hunter === h ? colors[h] : C.cream, borderColor: colors[h], borderStyle: h ? 'dotted' : 'solid', borderWidth: 2 }} textStyle={{ color: hunter === h ? C.paper : colors[h] }} onPress={() => setHunter(h as 0 | 1)}>{name}</Button>)}</View>;
   const viewportTools = needsZoom && <View testID="search-viewport-tools" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button maxFontSizeMultiplier={cap} quiet compact selected={zoom} onPress={() => { cancel(); setZoom(!zoom); setPanning(false); }}>{zoom ? 'Fit whole grid' : 'Enlarge letters'}</Button>{zoom && <Button maxFontSizeMultiplier={cap} quiet compact selected={panning} onPress={() => { cancel(); setPanning(!panning); }}>{panning ? 'Choose letters' : 'Move grid'}</Button>}</View>;
   const answerWidth = layout.large ? (layout.beside ? layout.listWidth - 24 : Math.min(width - 24, 240)) : width - 24;
   const pictureRow = layout.large && list === 'pictures', fitWidth = Math.max(32, answerWidth - (pictureRow ? 72 : 0));
@@ -132,7 +140,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const board = <ScrollView keyboardShouldPersistTaps="handled" horizontal scrollEnabled={zoom && panning} style={{ maxWidth: layout.boardWidth, flexGrow: 0 }}>
     <ScrollView keyboardShouldPersistTaps="handled" scrollEnabled={zoom && panning} style={{ maxHeight: zoom ? layout.size * rows + 2 : undefined }}>
     <View ref={frame} testID="search-grid" onStartShouldSetResponder={() => active && !screenReader && !panning} onMoveShouldSetResponder={() => active && !screenReader && !panning} onResponderGrant={begin} onResponderStart={begin} onResponderMove={move} onResponderEnd={end} onResponderRelease={end} onResponderTerminate={cancel} onResponderTerminationRequest={() => false} style={{ width: size * columns + 2, height: size * rows + 2, backgroundColor: '#FFFDF5', borderRadius: 12, borderWidth: 1, borderColor: '#D7DBCC', overflow: 'hidden' }}>
-      <View pointerEvents={screenReader ? 'auto' : 'none'} style={{ width: size * columns, flexDirection: 'row', flexWrap: 'wrap' }}>{p.cells.flat().map((letter, i) => <LetterCell key={i} letter={letter} index={i} size={size} selected={first.includes(i) || cursor === i} tap={tap} described={`Row ${Math.floor(i / columns) + 1}, column ${i % columns + 1}, ${letter}${state.found.some(([w]) => p.words[w].cells.includes(i)) ? ', found trail' : ''}`}/>)}</View>
+      <View pointerEvents={screenReader ? 'auto' : 'none'} style={{ width: size * columns, flexDirection: 'row', flexWrap: 'wrap' }}>{p.cells.flat().map((letter, i) => <LetterCell key={i} letter={letter} index={i} size={size} selected={first.includes(i)} focused={keyboardMode && cursor === i} tap={tap} described={`Row ${Math.floor(i / columns) + 1}, column ${i % columns + 1}, ${letter}${state.found.some(([w]) => p.words[w].cells.includes(i)) ? ', found trail' : ''}`}/>)}</View>
       <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 1, top: 1 }}><Svg width={size * columns} height={size * rows}>{state.found.map(([w, h]) => path(p.words[w].cells, h, `found-${w}`))}{previews.map((v, i) => path(v.cells, v.hunter, `pointer-${i}`, true))}{first.flatMap((cell,h) => cell === null ? [] : [path([cell], h as 0 | 1, `first-${h}`, true)])}</Svg></View>
     </View></ScrollView>
   </ScrollView>;
@@ -142,9 +150,13 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
       {w.audio && <Button maxFontSizeMultiplier={cap} quiet compact disabled={!active} label={`Hear ${w.spelling}`} onPress={() => { if (sound.play(w.audio!)) { if (!state.heard) dispatch(['hear', i]); } else setNotice('The recording could not play. Your puzzle is kept.'); }}>Hear word</Button>}</View>
     </View>; });
   const wordList = list !== 'hidden' ? layout.large ? <ScrollView keyboardShouldPersistTaps="handled" horizontal={!layout.beside} style={{ maxWidth: layout.listWidth, maxHeight: layout.beside ? Math.max(layout.size * rows + 2, 180) : undefined, flexGrow: 0 }} contentContainerStyle={{ flexDirection: layout.beside ? 'column' : 'row', gap: 8 }}>{answers}</ScrollView> : <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{answers}</View> : <Copy maxFontSizeMultiplier={copyCap} style={{ maxWidth: layout.listWidth }}>The list is hidden. Use the theme to hunt. Help is always here.</Copy>;
-  return <View testID="word-search-keyboard" style={{ gap: layout.large ? 8 : 12 }}>
+  return <View ref={container} testID="word-search-keyboard" onLayout={e => {
+    // A height change alone (including scrolling) must not resize a live board.
+    const { y, width } = e.nativeEvent.layout, key = `${y}:${width}`;
+    if (key !== previousLayout.current) { previousLayout.current = key; measureHost(); }
+  }} style={{ gap: layout.large ? 8 : 12 }}>
     {Platform.OS === 'ios' && <TextInput ref={keyboard} testID="search-native-keyboard" accessible={false} importantForAccessibility="no-hide-descendants" showSoftInputOnFocus={false} caretHidden contextMenuHidden autoCorrect={false} autoCapitalize="none" value="" onKeyPress={e => keyAction(e.nativeEvent.key)} onChangeText={() => keyboard.current?.clear()} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, fontSize: 18 }}/>}
-    <Heading maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier(title, 24, width, layout.short ? 1.25 : 2))} style={{ fontSize: 24 }}>{title}</Heading>
+    <Heading maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier(title, 24, width, layout.short ? 1 : 2))} style={{ fontSize: 24 }}>{title}</Heading>
     {!layout.short && <>{instruction}{cue}{hunters}</>}
     {layout.large && <Copy maxFontSizeMultiplier={cap} accessibilityLabel={spoken} accessibilityLiveRegion="polite" numberOfLines={1} adjustsFontSizeToFit style={{ height: 33 }}>{notice || (allFound ? 'Every word found.' : `${state.found.length} of ${p.words.length} words found.`)}</Copy>}
     {layout.large && viewportTools}

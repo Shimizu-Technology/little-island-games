@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { registerRootComponent } from 'expo';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Copy, Heading, C } from '../../src/components/ui';
+import { Button, Heading, C } from '../../src/components/ui';
 import { WordSearchBoard } from '../../src/puzzles/words/WordSearchBoard';
 import { SearchChrome } from '../../src/puzzles/words/layout';
 import { searchEngine, type Action } from '../../src/puzzles/words/game';
