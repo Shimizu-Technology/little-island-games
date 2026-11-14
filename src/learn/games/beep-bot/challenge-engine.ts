@@ -1,3 +1,4 @@
+import { projectionEdits } from '../../program/edit';
 import { decodeProgram, type PackedProgram } from '../../program/codec';
 import { nodeCost } from '../../program/model';
 import { readBeepDraft } from './program';
@@ -25,7 +26,7 @@ export const challengeEngine:ReplayEngine<Descriptor,Initial,Action,State>={
  validAction:(v):v is Action=>Array.isArray(v)&&v[0]==='b'?v.length===2&&Object.keys(v).length===2&&!!decodeProgram(v[1]):Array.isArray(v)&&Object.keys(v).length===v.length&&(v.length===1&&['u','z','g','h'].includes(v[0])||v.length===2&&['a','x'].includes(v[0])&&uint(v[1],v[0]==='a'?5:31)||v.length===3&&['r','i'].includes(v[0])&&uint(v[1],31)&&uint(v[2],5)),
  step:(s,a,d)=>{
   if(s.won)return null;
-  if(a[0]==='b'){const decoded=readBeepDraft(a[1],d.puzzle,d.level);if(!decoded||JSON.stringify(a[1])===JSON.stringify(s.blockDraft))return null;return {state:{...s,blockDraft:a[1],program:decoded.plan,history:[...s.history.slice(-15),s.program],blockHistory:[...s.blockHistory.slice(-15),s.blockDraft??null],edits:s.edits+1,hintStage:0},event:'edit'};}
+  if(a[0]==='b'){const decoded=readBeepDraft(a[1],d.puzzle,d.level);if(!decoded||JSON.stringify(a[1])===JSON.stringify(s.blockDraft))return null;return {state:{...s,blockDraft:a[1],program:decoded.plan,history:[...s.history.slice(-15),s.program],blockHistory:[...s.blockHistory.slice(-15),s.blockDraft??null],edits:s.edits+projectionEdits(s.program,decoded.plan),hintStage:0},event:'edit'};}
 
   if((a[0]==='a'&&a[1]>=4||['r','i'].includes(a[0])&&a.length===3&&a[2]>=4)&&d.level!==5)return null;
   if(a[0]==='h')return s.hintStage>=3?null:{state:{...s,hintStage:s.hintStage+1,hints:s.hints+1},event:'help'};

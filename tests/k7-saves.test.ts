@@ -14,7 +14,8 @@ import { migrateProfiles, encodeSave } from '../src/state/profiles';
 import { validLearnSession } from '../src/learn/session';
 import { registration as crabEntry } from '../src/challenge/registrations/crab-commands';
 import { registration as beepEntry } from '../src/learn/games/beep-bot/challenge';
-import { crabPuzzles } from '../src/learn/games/crab-commands/challenge-content';
+import { crabPuzzles, proofContent } from '../src/learn/games/crab-commands/challenge-content';
+import { challengeEngine as crabReplay, type Descriptor } from '../src/learn/games/crab-commands/challenge-engine';
 import { beepPuzzles } from '../src/learn/games/beep-bot/challenge-content';
 import { emptyChallenge, validChallengeSession } from '../src/state/challenge';
 import { fromFlat, type Program } from '../src/learn/program/model';
@@ -114,4 +115,11 @@ it('K7 80-node School drafts fit the unchanged session budget; nested replay edi
   for (let i = 0; i < 3; i++) { const next = crabEntry.move(s, ['h']); expect(next).not.toBeNull(); s = next!; }
   expect(crabEntry.move(s, ['g'])).not.toBeNull(); expect(sessionBytes(s)).toBeLessThanOrEqual(4096);
   expect(JSON.stringify(s)).not.toBe(accepted); expect((s.payload as { actions: unknown[] }).actions.length).toBeLessThanOrEqual(512);
+});
+
+it('K7 two-card debug repairs still cost two edits when supplied as one nested draft', () => {
+  const d = proofContent.debug[3].descriptor as Descriptor, initial = crabReplay.create(d, { version: 1 }, { supportOff: false, ownRead: false });
+  const repaired = crabProgram(proofContent.debug[3].witness as Parameters<typeof crabProgram>[0]);
+  const next = crabReplay.step(initial, ['b', encodeProgram(repaired)], d)!.state;
+  expect(next.edits).toBe(2); expect(crabReplay.step(next, ['g'], d)!.state.won).toBe(true);
 });

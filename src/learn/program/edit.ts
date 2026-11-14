@@ -45,3 +45,15 @@ export function moveNode(program: Program, source: Location, at: number, target:
 }
 export type EditHistory = { past: Program[]; future: Program[] };
 export const historyEdit = (history: EditHistory, old: Program): EditHistory => ({ past: [...history.past.slice(-15), clone(old)], future: [] });
+
+/** A whole-draft replay edit cannot claim that replacing several executable cards was one
+ * repair. Shape-only edits still count once; current flat-game edit dares keep their meaning. */
+export function projectionEdits<T>(before: readonly T[], after: readonly T[]): number {
+  let row = Array.from({ length: after.length + 1 }, (_, i) => i);
+  for (let i = 0; i < before.length; i++) {
+    const next = [i + 1];
+    for (let j = 0; j < after.length; j++) next.push(before[i] === after[j] ? row[j] : 1 + Math.min(row[j], row[j + 1], next[j]));
+    row = next;
+  }
+  return Math.max(1, row[after.length]);
+}

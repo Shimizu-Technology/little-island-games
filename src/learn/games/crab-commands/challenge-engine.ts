@@ -1,3 +1,4 @@
+import { projectionEdits } from '../../program/edit';
 import { nodeCost } from '../../program/model';
 import { decodeProgram as readProgram, type PackedProgram } from '../../program/codec';
 import { readCrabDraft } from './program';
@@ -216,7 +217,7 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
     if(a[0]==='b') {
       const decoded=readCrabDraft(a[1],d.level);
       if(!decoded||JSON.stringify(a[1])===JSON.stringify(s.blockDraft))return null;
-      return {state:{...s,blockDraft:a[1],program:decoded.plan,history:[...s.history,s.program],blockHistory:[...s.blockHistory,s.blockDraft??null],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'edit'};
+      return {state:{...s,blockDraft:a[1],program:decoded.plan,history:[...s.history,s.program],blockHistory:[...s.blockHistory,s.blockDraft??null],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+projectionEdits(s.program,decoded.plan)},event:'edit'};
     }
     if(a[0]==='h') {
       // Each press reveals more; once the whole plan shows, another press would only grow the log.

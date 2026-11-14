@@ -3,7 +3,7 @@ import { emptyProgram, fromFlat, nodeCost, validProgram, type Node, type Program
 import { decodeProgram, encodeProgram, sessionBytes } from '../src/learn/program/codec';
 import { interpret } from '../src/learn/program/interpreter';
 import { compress, solvePrograms } from '../src/learn/program/solver';
-import { insertNode, main, moveNode, removeNode, replaceNode } from '../src/learn/program/edit';
+import { insertNode, main, moveNode, projectionEdits, removeNode, replaceNode } from '../src/learn/program/edit';
 const c = (command: number): Node => ({ kind: 'command', command });
 const program = (body: Node[], songs: Node[][] = []): Program => ({ version: 1, body, songs });
 const machine = { step: (n: number, code: number) => n + code, blocked: (n: number) => n % 2 === 0 };
@@ -63,4 +63,10 @@ it('K7 bounded solver verifies witnesses on the same machine, costs every block 
   expect(finish(solvePrograms([emptyProgram(), p], 0, machine, n => n === 9))).toEqual({ status: 'solved', program: p, cost: 3 });
   expect(finish(solvePrograms([p], 0, machine, () => false, 0))).toEqual({ status: 'budget-exhausted' });
   expect(finish(solvePrograms([p], 0, machine, () => false))).toEqual({ status: 'unsolved' });
+});
+
+it('K7 whole-draft replay edits cannot hide several card repairs inside one action', () => {
+  expect(projectionEdits(['left', 'up'], ['right', 'down'])).toBe(2);
+  expect(projectionEdits(['left'], ['right'])).toBe(1);
+  expect(projectionEdits(['right'], ['right'])).toBe(1);
 });
