@@ -112,6 +112,8 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
 }
 function Tile({ size, surface, children }: { size: number; surface: string; children: React.ReactNode }) { return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Rect x={3} y={3} width={94} height={94} rx={23} fill={surface} stroke={ink} strokeWidth={3}/><G stroke={ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">{children}</G></Svg>; }
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
+/** Whether a game has its own picture here; the rest show a plain "?" tile, so a caller can choose another motif. */
+export const hasGameArt = (id: string) => !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
 export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) { const Art=!surfaces[id]&&learnIds.includes(id as LearnId)?additionalArt[id as LearnId]:undefined;return Art?<Art size={size}/>:<Tile size={size} surface={surfaces[id]??cream}><Scene id={id}/></Tile>; }
 export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?: number }) {
   const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "pattern-path", coding: "beep-bot", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };

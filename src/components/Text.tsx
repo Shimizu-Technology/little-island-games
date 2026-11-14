@@ -1,6 +1,6 @@
 import React, { createContext, forwardRef, useContext } from "react";
 import { Text as NativeText, StyleSheet, TextProps, TextStyle, useWindowDimensions } from "react-native";
-import { wordFitMultiplier } from "./wordFit";
+import { CHROME_MAX, LARGE_TEXT, wordFitMultiplier } from "./wordFit";
 
 const LayoutScale = createContext(1);
 export function TextLayoutProvider({ children }: { children: React.ReactNode }) {
@@ -14,6 +14,8 @@ export function TextLayoutProvider({ children }: { children: React.ReactNode }) 
  */
 export type TextRegion = { width: number; ceiling: number; /** The largest drawn size, in points, a region's text reaches (never below its default size). */ maxSize?: number };
 export const TextFit = createContext<TextRegion | null>(null);
+/** Entry screens at accessibility sizes: their text stops at 1.5x (and 44 pt), earlier where its longest word would break. Null at every other size. */
+export const entryRegion = (fontScale: number, width: number): TextRegion | null => fontScale >= LARGE_TEXT ? { width, ceiling: CHROME_MAX, maxSize: 44 } : null;
 /** React Native's default text size when a style names none. */
 const DEFAULT_SIZE = 14;
 const plainText = (children: React.ReactNode): string => React.Children.toArray(children).map(child =>

@@ -42,6 +42,7 @@ vi.mock('../src/learn/games/slip-tide/field',()=>({Playfield:()=>React.createEle
 
 let store:ReturnType<typeof useStore>, root:ReactTestRenderer|undefined;
 const scrolls:unknown[]=[];
+let rerender=()=>{};
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
 afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;scrolls.length=0;vi.unstubAllGlobals();Object.assign(viewport,{width:393,height:852,fontScale:1});});
 async function mount(entry:ChallengeEntry,session?:ChallengeSession){
@@ -49,7 +50,7 @@ async function mount(entry:ChallengeEntry,session?:ChallengeSession){
   let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'WWWWWWWWWWWWWWWWWWWWWWWW','a')});
   if(session)save=putProgress(save,'a',{...emptyChallenge(),nextOrdinal:session.ordinal+1,paused:[session]});
   db.raw=encodeSave(save);
-  function Ready(){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={entry}/>:null;}
+  function Ready(){const s=useStore(),[,tick]=React.useState(0);useLayoutEffect(()=>{rerender=()=>tick(n=>n+1);},[]);return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={entry}/>:null;}
   await act(async()=>{root=create(<StoreProvider><Probe/><Ready/></StoreProvider>,{createNodeMock:el=>el.type==='section'?{scrollTo:(to:unknown)=>scrolls.push(to)}:null});});
   await vi.waitFor(()=>expect(store?.ready).toBe(true),{timeout:5000,interval:20});
 }
@@ -187,6 +188,7 @@ it('the solved screen keeps the finished board above the result, takes no more m
 });
 
 it('dares: a child can choose several (up to three); each is named through the round and each is earned on its own',async()=>{
+  const expectedSlots=['par','pick-up','edits'].map(kind=>mazePuzzle.dares.find(d=>d.rule.kind===kind)!.slot);
   await mount(mazeEntry);
   await vi.waitFor(()=>expect(all('h2').map(textOf)).toContain('Optional dares'),{timeout:5000,interval:20});
   expect(all('p').map(textOf).some(t=>t.startsWith('Choose up to three, or none.'))).toBe(true);
@@ -200,14 +202,14 @@ it('dares: a child can choose several (up to three); each is named through the r
   await act(async()=>{fourth.props.onPress();});
   await press('Start this puzzle');
   const started=store.save.challenge!.paused[0];
-  expect(started.selectedDares).toEqual([3000,3006,3008]);
+  expect(started.selectedDares).toEqual(expectedSlots);
   expect(root!.root.findAll(n=>n.props.testID==='chosen-dare'&&n.type==='div')).toHaveLength(3);
   // The save keeps its existing shape and validates on reload.
   expect(parseSave(db.raw!)).not.toBeNull();
   for(let i=0;i<40&&!all('h2').some(h=>textOf(h)==='Puzzle solved!');i++)await press('Next maze step');
   await vi.waitFor(()=>expect(all('h2').map(textOf)).toContain('Puzzle solved!'),{timeout:5000,interval:20});
   const bits=dareBits(store.save.challenge!.dares)!;
-  expect(bits.flatMap((bit,slot)=>bit?[slot]:[])).toEqual([3000,3006,3008]);
+  expect(bits.flatMap((bit,slot)=>bit?[slot]:[])).toEqual(expectedSlots);
 });
 
 it('dares: a puzzle with one dare still reads as one optional dare',async()=>{
@@ -258,4 +260,83 @@ it('AX5 nonanimated Start, Continue and next puzzle reset only once the board la
   await act(async()=>{await store.challengeSave({...current,revision:current.revision+1},{owner:'a',game:current.game,epoch:store.epoch,id:current.id,revision:current.revision});});
   const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
   await act(async()=>board.props.onLayout());expect(scrolls).toEqual([]);
+});
+
+// R0c: where a ready board puts the page. A short large-text landscape window has scrolled its bar away with the page,
+// so the board's own top (status line, board, number keys) becomes the top; everywhere else the page returns to y 0.
+it.each([
+  ['a short landscape window at the largest text', {width:852,height:393,fontScale:3.12}, 210],
+  ['a portrait phone at the largest text', {width:393,height:852,fontScale:3.12}, 0],
+  ['a short landscape window at default size', {width:852,height:393,fontScale:1}, 0],
+  ['an iPad at the largest text', {width:1133,height:744,fontScale:3.12}, 0],
+])('R0c: a ready board in %s puts the page at y %s',async(_name,size,y)=>{
+  Object.assign(viewport,size);
+  await mount(slipEntry);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')).toHaveLength(1));
+  const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
+  scrolls.length=0;
+  await act(async()=>board.props.onLayout({nativeEvent:{layout:{x:0,y:210,width:353,height:500}}}));
+  expect(scrolls.at(-1)).toEqual({y,animated:false});
+});
+
+it('R0c: buttons under an open board stop at 1.3x at the largest text, so the board keeps the screen',async()=>{
+  Object.assign(viewport,{fontScale:3.12});
+  await mount(crab);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(buttonNamed('Another puzzle')).toBeDefined());
+  expect(buttonNamed('Another puzzle')!.props.maxFontSizeMultiplier).toBe(1.3);
+  expect(all('button').find(n=>textOf(n)===(crab.backLabel??'Easier choice · Levels 1–5'))!.props.maxFontSizeMultiplier).toBe(1.3);
+});
+
+// R0c fix round 1. P1-1: an animated (pinned) board's outer page cannot scroll, so a ready board never moves it off y 0.
+it('R0c: a pinned Crab board in a short landscape window at the largest text stays at y 0, with Back still on the page',async()=>{
+  Object.assign(viewport,{width:852,height:393,fontScale:3.12});
+  await mount(crab);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')).toHaveLength(1));
+  const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
+  expect(page().props.scrollEnabled).toBe(false);
+  scrolls.length=0;
+  await act(async()=>board.props.onLayout({nativeEvent:{layout:{x:0,y:60,width:828,height:300}}}));
+  expect(scrolls.at(-1)).toEqual({y:0,animated:false});
+  // The bar holds Back and is on the (unscrollable) page at its top, ahead of the board.
+  expect(bar()).toBeDefined();
+  expect(inside(bar(),page())).toBe(true);
+  expect(order(bar())).toBeLessThan(order(board));
+  expect(inside(all('button').find(n=>textOf(n)==='Back')!,bar())).toBe(true);
+});
+
+// P2-3: turning the device between the page's two layouts arms the ready board once more; moves and repeated layouts do not.
+it('R0c: rotating an open puzzle lands the board where a fresh open does, in both directions, and ordinary layouts leave the page alone',async()=>{
+  Object.assign(viewport,{width:393,height:852,fontScale:3.12});
+  await mount(slipEntry);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')).toHaveLength(1));
+  const ready=()=>root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
+  const layout=async(y:number)=>{scrolls.length=0;await act(async()=>ready().props.onLayout({nativeEvent:{layout:{x:0,y,width:353,height:500}}}));};
+  await layout(0);
+  expect(scrolls.at(-1)).toEqual({y:0,animated:false});
+  await layout(40);
+  expect(scrolls).toEqual([]);
+  Object.assign(viewport,{width:852,height:393});
+  await act(async()=>rerender());
+  await layout(210);
+  expect(scrolls.at(-1)).toEqual({y:210,animated:false});
+  await layout(215);
+  expect(scrolls).toEqual([]);
+  Object.assign(viewport,{width:393,height:852});
+  await act(async()=>rerender());
+  await layout(90);
+  expect(scrolls.at(-1)).toEqual({y:0,animated:false});
+});
+
+// P2-1: below the accessibility threshold the frame's new caps are absent, so its buttons draw at the system size.
+it.each([1,1.3,1.35])('R0c: the frame\'s buttons under an open board are uncapped at text scale %s',async fontScale=>{
+  Object.assign(viewport,{fontScale});
+  await mount(crab);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(buttonNamed('Another puzzle')).toBeDefined());
+  expect(buttonNamed('Another puzzle')!.props.maxFontSizeMultiplier).toBeUndefined();
+  expect(all('button').find(n=>textOf(n)===(crab.backLabel??'Easier choice · Levels 1–5'))!.props.maxFontSizeMultiplier).toBeUndefined();
 });

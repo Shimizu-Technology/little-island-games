@@ -3,7 +3,7 @@ import { Text } from "../../components/Text";
 import React, { useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 
-import { NumbersState, numberAdvice, remainingTotal, needsPracticeRoll, closeNumbers, numberChoices, numberLimit, numberTarget, numbersStatus, rollNumbers, selectNumber, undoNumbers } from "../../games/numbers";
+import { NumbersState, numberGoal, numberResultDetail, numberAdvice, remainingTotal, needsPracticeRoll, closeNumbers, numberChoices, numberLimit, numberTarget, numbersStatus, rollNumbers, selectNumber, undoNumbers } from "../../games/numbers";
 import { Button, C, Controls, Copy, Status } from "../../components/ui";
 
 import { type Props, Cell, BoardArea, BoardLayout } from "./shared";
@@ -46,7 +46,7 @@ function Die({ value, size = 72 }: { value: number; size?: number }) {
     </View>
   );
 }
-export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersState>) {
+export function NumbersBoard({ state: s, commit, width, sound, personalBest }: Props<NumbersState> & { personalBest?: number }) {
   const [compare, setCompare] = useState(false);
   const { fontScale } = useWindowDimensions();
   const status = numbersStatus(s),
@@ -68,14 +68,11 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
                 : "Ready to roll?"
         }
         detail={
-          status === "won"
-            ? "You found a combination for every number."
-            : status === "stuck"
-              ? `No open numbers can make ${target}. Undo or try a fresh round.`
-              : "Close one number or a group that adds up to your roll."
+          status !== "playing" ? numberResultDetail(s) : "Close one number or a group that adds up to your roll."
         }
         success={status === "won"}
       />
+      <Copy style={{ textAlign: "center", color: C.ink }}>{numberGoal(s)}</Copy>
       <BoardArea>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 14, marginVertical: 12 }}>
           {s.dice.length ? (
@@ -124,7 +121,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
           })}
         </View>
       </BoardArea>
-      <Copy style={{ textAlign: "center" }}>Remaining total: {remainingTotal(s)} · Personal best: {Math.min(s.bestRemaining ?? remainingTotal(s), remainingTotal(s))} (lower is better)</Copy>
+      <Copy style={{ textAlign: "center" }}>Remaining total: {remainingTotal(s)} · {personalBest === undefined ? "Finish a round to set your best" : `Your best on 1–${max}: ${personalBest}`} (lower is better)</Copy>
       {compare && !!s.dice.length && <View accessibilityLiveRegion="polite" style={{ gap: 8 }}><Copy>{numberAdvice(s).text}</Copy>{numberAdvice(s).choices.map(choice => <Button quiet key={choice.join()} onPress={() => commit({ ...s, selected: choice })}>Choose {choice.join(" + ")}</Button>)}</View>}
       {s.gentlePractice && <Copy>Keep small numbers for flexible combinations. If no combination fits, roll again and keep practicing.</Copy>}
       {needsPracticeRoll(s) && <Copy>No open numbers make {target}. Try a new roll; your closed numbers stay closed.</Copy>}

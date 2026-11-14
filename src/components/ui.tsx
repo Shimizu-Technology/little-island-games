@@ -223,11 +223,18 @@ export function Chip({
   onPress,
   selected = false,
   disabled = false,
+  maxFontSizeMultiplier,
+  numberOfLines,
+  label,
 }: {
   children: React.ReactNode;
   onPress: () => void;
   selected?: boolean;
   disabled?: boolean;
+  maxFontSizeMultiplier?: number;
+  /** A person's name or any text of unknown length: one line within the chip's column, ending in an ellipsis. Give `label` the full text. */
+  numberOfLines?: number;
+  label?: string;
 }) {
   return (
     <Button
@@ -235,7 +242,11 @@ export function Chip({
       quiet
       selected={selected}
       disabled={disabled}
-      style={{ borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: 0 }}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+      numberOfLines={numberOfLines}
+      label={label}
+      textStyle={numberOfLines ? { flexShrink: 1 } : undefined}
+      style={{ borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: numberOfLines ? 1 : 0, ...(numberOfLines ? { maxWidth: "100%" } : {}) }}
     >
       {children}
     </Button>

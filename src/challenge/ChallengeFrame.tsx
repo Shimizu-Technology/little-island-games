@@ -4,12 +4,13 @@ import { adjacentTide } from '../puzzles/flow';
 import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import { ratingDue, resultOffer } from './offers';
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { type ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
 import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
-import { LARGE_TEXT, wordFitMultiplier } from '../components/wordFit';
+import { LARGE_TEXT, atLarge, wordFitMultiplier } from '../components/wordFit';
+import { GridChromeContext, challengeChrome } from '../puzzles/grid/budget';
 import { Settings } from '../components/Settings';
 import type { ChallengeSession, PuzzleRef } from '../state/challenge';
 import { SaveStatus } from '../components/SaveStatus';
@@ -90,7 +91,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   async function dispatch(action:unknown):Promise<ChallengeSession|null> {
     const current=accepted.current;if(!current || lock.current || !focused || picking)return null;
     const next=entry.move(current,action);
-    if(!next){const full=!!entry.restart&&!!entry.full?.(current);setCapacity(full);setMessage(full?'This attempt is full. Choose Keep my plan in a new attempt to keep trying. Your marks stay kept.':'This draft is kept. Try Help or choose another puzzle.');return null;}
+    if(!next){const full=!!entry.restart&&!!entry.full?.(current);setCapacity(full);setMessage(full&&entry.game==='memory'?'This attempt is full. Start the same board again. Your turns and help stay counted.':full?'This attempt is full. Choose Keep my plan in a new attempt to keep trying. Your marks stay kept.':'This draft is kept. Try Help or choose another puzzle.');return null;}
     if(next.result){setCompleted(next);if(entry.animatedRuns)setSettling(true);}
     const token=++dispatchToken.current;
     lock.current=true;setBusy(next.result!==null);setMessage('');
@@ -109,9 +110,9 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
     try {
       const next=entry.restart(current,`challenge-${owner}-${progress.nextOrdinal}`,progress);
       if(await store.challengeSave(next,{...expected(current),replace:{game:current.game,id:current.id,revision:current.revision}})){
-        accepted.current=next;setCapacity(false);setMessage('A fresh attempt. Your plan is kept.');setCompleted(undefined);
-      }else setMessage('Your original plan is kept. Retry saving before starting fresh.');
-    }catch{setMessage('Your original plan is kept. Try saving again before starting fresh.');}
+        accepted.current=next;setCapacity(false);setMessage(entry.game==='memory'?'Your board is ready. You can still finish, but it cannot earn the suggested-turns mark now.':'A fresh attempt. Your plan is kept.');setCompleted(undefined);
+      }else setMessage(entry.game==='memory'?'Your board is kept. Try saving again before restarting.':'Your original plan is kept. Retry saving before starting fresh.');
+    }catch{setMessage(entry.game==='memory'?'Your board is kept. Try saving again before restarting.':'Your original plan is kept. Try saving again before starting fresh.');}
     finally{lock.current=false;setBusy(false);}
   }
   const round=saved??completed, full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
@@ -157,6 +158,8 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // Large titles stop growing where their longest word still fits the line, so none breaks mid-word.
   // A pinned board's chrome stays compact (Back stops at 1.3x), so its dare line stops at 1.5x.
   const PINNED_MAX=1.5;
+  // Buttons under an open board stop at 1.3x, so the board and its keys keep the screen.
+  const BELOW_MAX=atLarge(fontScale,1.3);
   const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right,pinned?PINNED_MAX:undefined);
   // Young-child choices hide dares everywhere, including a dare saved before the setting was turned on.
   const chosen=round&&!round.result&&!comfort.youngChild?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[]):[];
@@ -167,11 +170,20 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // window scrolls the bar with the page.
   const open=!picking&&!!round, large=(fontScale??1)>=LARGE_TEXT, barPinned=open&&!(large&&height<500), barChip=!large;
   const BAR_TITLE=19, barTitleWidth=width-24-insets.left-insets.right-(large?86:72)-(barChip?132:0)-16;
-  // The ready board consumes this once per open/session transition, after content verification and layout.
-  const openedKey=open?`${owner}:${store.epoch}:${round.id}`:null;
+  // A short large-text landscape window scrolls the bar away with the page, so a board that opens at the top would leave its
+  // keys below the fold. There the ready board's own top (its status line, board and keys) becomes the top of the page.
+  // A pinned (animated) board never scrolls: its outer page is fixed at y 0 so the bar and Back stay in view.
+  const shortLarge=large&&height<500, reveal=shortLarge&&!pinned;
+  // The ready board consumes this once per open/session transition, after content verification and layout. Turning the
+  // device between the page's two layouts (bar pinned above, or scrolling with the page) arms it once more, so a puzzle that
+  // is already open lands where a fresh open does. Ordinary moves and layout callbacks never re-arm it.
+  const openedKey=open?`${owner}:${store.epoch}:${round.id}:${shortLarge?'short':'tall'}`:null;
   const resetBoard=useRef<string|null>(null);
   useLayoutEffect(()=>{resetBoard.current=openedKey;},[openedKey]);
-  const boardReady=()=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:0,animated:false});}};
+  const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:reveal?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
+  // What a grid board shares the screen with, measured once for all of them: safe areas, the page's own padding, the bar
+  // (when it stays above the page) and the learner chip (when large text moves it into the page).
+  const chrome=useMemo(()=>challengeChrome({insets:{top:insets.top,bottom:insets.bottom,left:insets.left,right:insets.right},barPinned,short:shortLarge,chip:open&&!barChip&&!pinned}),[insets.top,insets.bottom,insets.left,insets.right,barPinned,shortLarge,open,barChip,pinned]);
   const bar=open?<View testID="challenge-bar" style={{flexDirection:'row',alignItems:'center',gap:8,width:'100%',maxWidth:1080,alignSelf:'center',paddingHorizontal:12,paddingTop:6,paddingBottom:4}}>
     <Button quiet compact maxFontSizeMultiplier={1.3} onPress={back}>Back</Button>
     <View style={{flex:1}}><Heading maxFontSizeMultiplier={wordFitMultiplier(title,BAR_TITLE,barTitleWidth,PINNED_MAX)} style={{fontSize:BAR_TITLE}}>{title}</Heading></View>
@@ -180,14 +192,14 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const dareLines=chosen.map(d=><ChosenDare key={d.slot} dare={d} maxScale={pinned?PINNED_MAX:undefined}/>);
   const darable=!isBand(selection)?selection.dares.filter(d=>!d.retired):[];
   const toggleDare=(slot:number)=>setDares(dares.includes(slot)?dares.filter(n=>n!==slot):dares.length<MAX_DARES?[...dares,slot].sort((a,b)=>a-b):dares);
-  const marksLine=<Copy>Your marks: {marks}. Marks are kept and never spent.</Copy>;
+  const marksLine=<Copy maxFontSizeMultiplier={1.5}>Your marks: {marks}. Marks are kept and never spent.</Copy>;
   return <SafeAreaView style={styles.page}>{barPinned&&bar}<GridScroll ref={page} scrollEnabled={!pinned} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(open?{paddingTop:barPinned?6:10}:{}),...(pinned?{flex:1,paddingHorizontal:12,paddingTop:4,paddingBottom:10}: {})}]}>
     {open?!barPinned&&bar:<View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact onPress={back}>Back</Button><Heading maxFontSizeMultiplier={fit('Challenge',32)}>Challenge</Heading><LearnerChip compact/></View>}
     {!open&&<><Copy>{challengeIntro(entry)}</Copy>{marksLine}</>}
     {open&&!barChip&&!pinned&&<LearnerChip compact/>}
     {!pinned&&<SaveStatus/>}
     {!pinned&&!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
-    {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}
+    {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}
     {picking ? <>
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>every.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(choices(path)[0]);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
       {choices(selection.path).map(p=>isBand(p)?<Button quiet key={`band-${p.bank}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{`${p.title} · Tide ${p.tier} · ${p.count} puzzles`}</Button>:<Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
@@ -205,20 +217,20 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       {!pinned&&dareLines}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it.
           After a solve the finished board stays on the page, above the result, and takes no more moves. */}
-      {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
+      {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><GridChromeContext.Provider value={chrome}><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling)&&(!round.result||!!entry.animatedRuns),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
-          header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
-          footer:<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
+          header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}</>,
+          footer:<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
         }:{})})}
-        {entry.helpUI!=='board'&&!round.result&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
-      </View>}/>}
+        {entry.helpUI!=='board'&&!round.result&&<Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
+      </View></GridChromeContext.Provider>}/>}
       {round.result&&!settling ? <><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>
       </> : null}
-      {!pinned&&!round.result&&<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
+      {!pinned&&!round.result&&<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
       {!pinned&&marksLine}
     </>:null}
   </GridScroll><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;

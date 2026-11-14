@@ -11,10 +11,12 @@ const fixture = vi.hoisted(() => ({ local: {} as ReturnType<typeof import('../sr
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', TextInput: 'input', useWindowDimensions: () => ({ width: 320, height: 667, fontScale: 1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
 vi.mock('expo-router', async () => { const { useEffect } = await import('react'); return { useFocusEffect: (effect: () => void | (() => void)) => useEffect(effect, [effect]), useLocalSearchParams: () => ({ game: 'sudoku' }), router: {} }; });
-vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) => visible ? <aside>{children}</aside> : null, ToggleRow: 'switch', C: {}, font: undefined }));
+vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', IconButton: 'button', PressableScale: 'button', Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) => visible ? <aside>{children}</aside> : null, ToggleRow: 'switch', C: {}, font: undefined }));
 vi.mock('../src/components/Recovery', () => ({ Recovery: () => null }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/hub/Landmarks', () => ({ Landmark: () => null }));
+vi.mock('../src/components/GameIcon', () => ({ GameIcon: () => null, hasGameArt: () => false }));
+vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/cove/PeoplePicker', () => ({ PeoplePicker: () => null, solvingPeople: () => [{ id: 'family', name: 'Family practice' }] }));
 vi.mock('../src/cove/CoveRound', () => ({ CoveRound: ({ card }: { card: ChallengeCard }) => { const hold = useContext(GridInteraction); return <section data-tier={card.tier} data-hash={card.ref.hash}><button onClick={() => hold(true)}>Grid touch down</button><button onClick={() => hold(false)}>Grid release</button></section>; } }));
 vi.mock('../src/cove/useCoveLocal', () => ({ useCoveLocal: () => fixture.local }));

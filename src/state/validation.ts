@@ -15,6 +15,7 @@ import { checkersPolicyById } from "../playPolicies/policies";
 import type { Difficulty } from "../games/types";
 import { ticOutcome, lines } from "../games/tic";
 import { memoryKey, validMemoryCard } from "../games/memory";
+import { validNumberRecords, type NumberRecords } from "./numberRecords";
 import { WordRecords, validWordRecords } from "./wordRecords";
 import { Activities, ActivityId, activityIds, validActivities, validActivityRecords } from "./activities";
 import type { RaceRecords } from "../racer/engine";
@@ -53,6 +54,7 @@ export type Save = {
   board?: BoardSessions;
   recentBoard?: BoardId | null;
   wordRecords?: WordRecords;
+  numberRecords?: NumberRecords;
   activities?: Activities;
   recentActivity?: ActivityId | null;
   raceRecords?: RaceRecords;
@@ -199,7 +201,7 @@ export function validSession(v: unknown): v is GameState {
       );
     }
     case "memory": {
-      if (v.pack !== undefined && v.pack !== "pictures" && v.pack !== "chamoru") return false;
+      if (v.pack !== undefined && v.pack !== "pictures" && v.pack !== "words" && v.pack !== "chamoru") return false;
       if (
         v.history !== undefined &&
         (!Array.isArray(v.history) ||
@@ -430,6 +432,7 @@ export function parseSave(raw: string): Save {
       (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length + boardIds.length + arcadeIds.length ||
         !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds, ...boardIds, ...arcadeIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
+    (v.numberRecords !== undefined && (v.version !== 3 || !validNumberRecords(v.numberRecords))) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&
       v.recentActivity !== null &&

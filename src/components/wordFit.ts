@@ -23,11 +23,26 @@ export function wordFitMultiplier(text: string, fontSize: number, width: number,
 }
 /** Whether every word of `text` fits on one line of `width` points at `fontSize`, with the same safety margin. */
 export const wordsFit = (text: string, fontSize: number, width: number) => text.split(/[\s\u00a0]+/).every(word=>wordWidth(word)*fontSize <= Math.max(0,width)*MARGIN);
+/** A name that fits one line of `width` points at `fontSize` (words of it are never broken): whole when it fits, else cut short with an ellipsis. The full name belongs in the spoken label. */
+export function ellipsize(name: string, fontSize: number, width: number) {
+  const fits = (text: string) => wordWidth(text) * fontSize <= Math.max(0, width) * MARGIN;
+  if (fits(name)) return name;
+  const letters = [...name];
+  while (letters.length > 1 && !fits(`${letters.join('').trimEnd()}…`)) letters.pop();
+  return `${letters.join('').trimEnd()}…`;
+}
 /**
  * `fontScale` at and above which iOS is at an accessibility text size (AX1 and up; the standard sizes end near 1.35).
  * Shared chrome switches to its large-text layout here: switches stack under their words, and bars collapse.
  */
 export const LARGE_TEXT = 1.5;
-
-/** Caps are inert below the accessibility threshold, including standard 1.35x text. */
-export const atLarge = (fontScale: number, cap: number): number | undefined => fontScale >= LARGE_TEXT ? cap : undefined;
+/** A text cap that applies only at accessibility sizes. Below them it is undefined (no cap), so text is drawn exactly as it was before the cap existed. */
+export const atLarge = <T,>(fontScale: number | undefined, cap: T): T | undefined => (fontScale ?? 1) >= LARGE_TEXT ? cap : undefined;
+/**
+ * Chrome text (titles, intros, section headings) on entry screens stops here at accessibility sizes, so a page of tiles
+ * stays reachable; a large decorative title may reach `TITLE_MAX`. Both stop earlier where their longest word would break.
+ */
+export const CHROME_MAX = 1.5, TITLE_MAX = 2;
+/** One multiplier for several texts of the same size, so a row of tiles shares a size and none of them breaks a word. */
+export const sharedWordFit = (texts: readonly string[], fontSize: number, width: number, ceiling = TITLE_MAX) =>
+  Math.min(ceiling, ...texts.map(text => wordFitMultiplier(text, fontSize, width, ceiling)));

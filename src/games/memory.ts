@@ -1,5 +1,5 @@
 import { chamoruWords, chamoruWord } from "../learn/content/chamoru";
-import { Base, Options, base, shuffle } from "./types";
+import { Base, Options, base, random, shuffle } from "./types";
 import { Match, Seat, RoundResult, newMatch, settle, nextStarter } from "./match";
 export const memorySymbols = [
   "shell",
@@ -15,11 +15,12 @@ export const memorySymbols = [
   "kite",
   "tree",
 ];
+export type MemoryPack = "pictures" | "words" | "chamoru";
 export type MemoryState = Base & {
   game: "memory";
   cards: string[];
   /** Absent in legacy rounds: identical picture pairs. */
-  pack?: "pictures" | "chamoru";
+  pack?: MemoryPack;
   matched: number[];
   open: number[];
   turns: number;
@@ -29,15 +30,15 @@ export type MemoryState = Base & {
   match?: Match;
   starter?: Seat;
 };
-export function createMemory(options: Options, starter: Seat = 0, pack: "pictures" | "chamoru" = "pictures"): MemoryState {
+export function createMemory(options: Options, starter: Seat = 0, pack: MemoryPack = "pictures"): MemoryState {
   const count = options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 8 : 12;
   const symbols = shuffle(memorySymbols).slice(0, count);
   const words = pack === "chamoru" ? shuffle(chamoruWords).slice(0, count) : [];
   return {
     ...base("memory", options),
     game: "memory",
-    cards: pack === "chamoru" ? shuffle(words.flatMap(w => [`ch:${w.id}:picture`, `ch:${w.id}:word`])) : shuffle([...symbols, ...symbols]),
-    ...(pack === "chamoru" ? { pack } : {}),
+    cards: pack === "chamoru" ? shuffle(words.flatMap(w => [`ch:${w.id}:picture`, `ch:${w.id}:word`])) : pack === "words" ? shuffle(symbols.flatMap(w => [`en:${w}:picture`, `en:${w}:word`])) : shuffle([...symbols, ...symbols]),
+    ...(pack !== "pictures" ? { pack } : {}),
     matched: [],
     open: [],
     turns: 0,
@@ -100,5 +101,15 @@ export function chamoruCard(card: string) {
   const word = match && chamoruWord(match[1]);
   return word ? { word, face: match![2] as "picture" | "word" } : null;
 }
-export const memoryKey = (card: string) => chamoruCard(card)?.word.id ?? card;
-export const validMemoryCard = (card: string, pack: unknown) => pack === "chamoru" ? !!chamoruCard(card) : memorySymbols.includes(card);
+export function englishCard(card: string) {
+  const m = /^en:([a-z]+):(picture|word)$/.exec(card);
+  return m && memorySymbols.includes(m[1]) ? { symbol: m[1], face: m[2] as "picture" | "word" } : null;
+}
+export const memoryKey = (card: string) => chamoruCard(card)?.word.id ?? englishCard(card)?.symbol ?? card;
+/** Small deterministic authored deals, frozen by each Challenge descriptor's hash. */
+export function memoryDeck(pairs: 6 | 8 | 12, pack: MemoryPack, seed: number): string[] {
+  const rng = random(seed);
+  const words = shuffle(chamoruWords, rng).slice(0, pairs), symbols = shuffle(memorySymbols, rng).slice(0, pairs);
+  return shuffle(pack === "chamoru" ? words.flatMap(w => [`ch:${w.id}:picture`, `ch:${w.id}:word`]) : pack === "words" ? symbols.flatMap(w => [`en:${w}:picture`, `en:${w}:word`]) : [...symbols, ...symbols], rng);
+}
+export const validMemoryCard = (card: string, pack: unknown) => pack === "chamoru" ? !!chamoruCard(card) : pack === "words" ? !!englishCard(card) : memorySymbols.includes(card);

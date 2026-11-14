@@ -19,7 +19,8 @@ import { PlayTeaching } from "./PlayTeaching";
 import { router } from "expo-router";
 import { Button, Chip, Copy, Heading, IconButton, PressableScale, Sheet, ToggleRow, styles } from "../components/ui";
 import { Settings } from "../components/Settings";
-import { wordFitMultiplier } from "../components/wordFit";
+import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
+import { TextFit, entryRegion } from "../components/Text";
 import { SaveStatus } from "../components/SaveStatus";
 import { Icon } from "../components/Icon";
 import Svg, { Rect } from "react-native-svg";
@@ -41,20 +42,33 @@ import { arcadeShelfGames } from "./registry";
 import { arcadePlays } from "./plays";
 import { arcadeLearner, gameProgress, levelOpen, endlessOpen, reefSessionHelped, withReefHelp, type ChestOffer } from "./progress";
 import { allLevelIds, type ArcadeGame, type ArcadeLevel, type ArcadeResult, type LevelId, starCount } from "./types";
+/**
+ * Who is playing, and their stickers. A valid name can be 24 wide letters, wider than a phone's line, so the name keeps to one
+ * line in its column and ends in an ellipsis rather than breaking mid-word; the full sentence stays in the spoken label.
+ * At accessibility sizes the sticker count sits on its own line under the name.
+ */
+function LearnerSentence({ name, stickers, large }: { name: string; stickers: number; large: boolean }) {
+  const color = "#FFF4D6", words = `${stickers} island stickers`;
+  return <View testID="arcade-learner" accessible accessibilityRole="text" accessibilityLabel={`${name} · ${words}`} style={{ flexDirection: large ? "column" : "row", alignItems: large ? "stretch" : "center", maxWidth: "100%", backgroundColor: "#24536A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 }}>
+    <Copy numberOfLines={1} style={{ color, flexShrink: 1 }}>{name}</Copy><Copy style={{ color, flexShrink: 0 }}>{large ? words : ` · ${words}`}</Copy>
+  </View>;
+}
 export function ArcadeLobby() {
   const store = useStore(), person = arcadeLearner(store.save.arcade, activeLearner(store.save.learning).id);
   const [sheet, setSheet] = useState<"book" | "settings" | null>(null);
-  return <View style={{ flex: 1, backgroundColor: "#077C91" }}><ArcadeScene game="reef-builder" active={!sheet}/><ScrollView contentContainerStyle={[styles.content, { padding: 20, gap: 20, maxWidth: 1000 }]}>
-    <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}><Button quiet compact icon="back" onPress={() => router.replace("/")}>Home</Button><Button quiet compact onPress={() => setSheet("settings")}>Settings</Button></View>
-    <View style={{ alignItems: "center", gap: 8 }}><ArcadeIsland size={166}/><Heading style={{ fontSize: 38, color: "#FFF4D6" }}>Island Arcade</Heading><Copy style={{ textAlign: "center", color: "#FFF4D6", backgroundColor: "#24536A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 }}>Pick a world. Let’s play.</Copy><Copy style={{ color: "#FFF4D6", backgroundColor: "#24536A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 }}>{activeLearner(store.save.learning).name} · {person.stickers.length} island stickers</Copy></View>
+  // At accessibility sizes the lobby's words stop at 1.5x and fit their line; each world's card stacks its picture over its words.
+  const { width, fontScale } = useWindowDimensions(), large = fontScale >= LARGE_TEXT, line = Math.min(width, 1000) - 40;
+  return <TextFit.Provider value={entryRegion(fontScale, line)}><View style={{ flex: 1, backgroundColor: "#077C91" }}><ArcadeScene game="reef-builder" active={!sheet}/><ScrollView contentContainerStyle={[styles.content, { padding: 20, gap: 20, maxWidth: 1000 }]}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}><Button quiet compact icon="back" onPress={() => router.replace("/")}>Home</Button><Button quiet compact onPress={() => setSheet("settings")}>Settings</Button></View>
+    <View style={{ alignItems: "center", gap: 8 }}><ArcadeIsland size={166}/><Heading style={{ fontSize: 38, color: "#FFF4D6" }}>Island Arcade</Heading><Copy style={{ textAlign: "center", color: "#FFF4D6", backgroundColor: "#24536A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 }}>Pick a world. Let’s play.</Copy><LearnerSentence name={activeLearner(store.save.learning).name} stickers={person.stickers.length} large={large}/></View>
     <SaveStatus/>
-    {arcadeShelfGames().map(game => <View key={game.id} style={{ borderRadius: 28, overflow: "hidden", backgroundColor: game.surface, borderWidth: 3, borderColor: "#D9EACD" }}>
-      <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}, open level map`} onPress={() => router.push({ pathname: "/arcade", params: { game: game.id } })} style={{ padding: 20, gap: 14, flexDirection: "row", alignItems: "center" }}>
-        <GameIcon id={game.id} size={110}/><View style={{ flex: 1, gap: 7 }}><Heading style={{ fontSize: 25, paddingRight: 32 }}>{game.name}</Heading><Copy>{game.tagline}</Copy><Copy style={{ fontSize: 14, color: game.color }}>{starCount(gameProgress(person, game.id).stars)} stars · 7 worlds</Copy><Heading style={{ fontSize: 18, color: game.color }}>Let’s play →</Heading></View>
+    <TextFit.Provider value={entryRegion(fontScale, line - 78)}>{arcadeShelfGames().map(game => <View key={game.id} style={{ borderRadius: 28, overflow: "hidden", backgroundColor: game.surface, borderWidth: 3, borderColor: "#D9EACD" }}>
+      <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}, open level map`} onPress={() => router.push({ pathname: "/arcade", params: { game: game.id } })} style={{ padding: 20, gap: 14, flexDirection: large ? "column" : "row", alignItems: "center" }}>
+        <GameIcon id={game.id} size={110}/><View style={{ flex: 1, gap: 7, ...(large ? { alignSelf: "stretch" as const } : {}) }}><Heading style={{ fontSize: 25, paddingRight: 32 }}>{game.name}</Heading><Copy>{game.tagline}</Copy><Copy style={{ fontSize: 14, color: game.color }}>{starCount(gameProgress(person, game.id).stars)} stars · 7 worlds</Copy><Heading style={{ fontSize: 18, color: game.color }}>Let’s play →</Heading></View>
       </PressableScale><View style={{ position: "absolute", right: 8, top: 8 }}><IconButton label={`${(store.save.favoriteGames ?? []).includes(game.id) ? "Remove favorite" : "Favorite"} ${game.name}`} icon={(store.save.favoriteGames ?? []).includes(game.id) ? "star-filled" : "star"} onPress={() => store.toggleGameFavorite(game.id)}/></View>
-    </View>)}
+    </View>)}</TextFit.Provider>
     <Button quiet onPress={() => setSheet("book")}>Open my sticker book</Button><Copy style={{ textAlign: "center", fontSize: 13, color: "#FFF4D6" }}>No timers to wait for. No purchases. Your own little island.</Copy>
-  </ScrollView><Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet><Settings visible={sheet === "settings"} onClose={() => setSheet(null)}/></View>;
+  </ScrollView><Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet><Settings visible={sheet === "settings"} onClose={() => setSheet(null)}/></View></TextFit.Provider>;
 }
 export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; debug?: boolean }) {
   const { width, height, fontScale } = useWindowDimensions(), insets = useSafeAreaInsets(), play = arcadePlays[game.id];
