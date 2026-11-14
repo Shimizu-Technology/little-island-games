@@ -25,7 +25,7 @@ vi.mock('../src/components/ui', async () => {
   return { Button: 'Button', Chip: 'Chip', Heading, Copy: 'Copy', ToggleRow: 'ToggleRow', GameHeader: 'GameHeader', C: {}, styles: {},
     Sheet: ({ visible, children, footer }: { visible: boolean; children: React.ReactNode; footer: React.ReactNode }) => visible ? React.createElement('SheetBody', null, children, footer) : null };
 });
-vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {}, stop: () => {} }) }));
+vi.mock('../src/components/Audio', () => ({ hasSpeech: () => true, AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {}, stop: () => {} }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/components/Match', () => ({ Scoreboard: () => null, PlayerNames: () => null }));
 vi.mock('../src/components/feel', () => ({ feel: () => {} }));

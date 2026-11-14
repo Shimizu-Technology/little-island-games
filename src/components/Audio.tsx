@@ -8,6 +8,8 @@ import type { Settings } from "../state/validation";
 import { feel, toneFeel } from "./feel";
 export const AudioPreferences = createContext<Partial<Settings> & { epoch?: number }>({});
 const sources: Record<string, number> = { ...baseSources, ...learnSources };
+/** True when `key` has a shipped spoken source in this voice, the same lookup `play` uses, so a Hear button never plays silence. */
+export const hasSpeech = (key: string, voice: "warm" | "calm" = "warm") => !!(voiceSources[voice]?.[key] ?? sources[key]);
 // expo-audio's web player calls HTMLMediaElement.play() without handling its promise. A quick
 // second tone can reject with AbortError; autoplay policy can reject with NotAllowedError.
 // Both are expected media failures: visible instructions and feedback remain available.
