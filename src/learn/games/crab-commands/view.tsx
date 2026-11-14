@@ -1,3 +1,6 @@
+import { ProgramEditor } from '../../program/ProgramEditor';
+import { encodeProgram, sessionBytes } from '../../program/codec';
+import { crabProgram, programCodes, readCrabDraft, withCrabProgram } from './program';
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
@@ -306,6 +309,7 @@ export function Beach({
     </View>
   );
 }
+const withoutDraft = (s: CrabState): CrabState => { const {blockDraft: _, ...legacy} = s; return legacy; };
 export function Board({
   session,
   update,
@@ -322,6 +326,7 @@ export function Board({
     l = currentLevel(s),
     w = run(l, s.program.slice(0, s.cursor)),
     done = s.completed.length === 3,
+    [blocks, setBlocks] = useState(!!s.blockDraft),
     won = !done && solved(l, w),
     reduced = useReducedMotion(),
     [hint, setHint] = useState(0),
@@ -331,6 +336,7 @@ export function Board({
     // Fully shown until a bump starts the blink, so a bumped round restored from a save is not faded.
     [flash] = useState(() => new Animated.Value(1));
   const plan = trail(l, s.program);
+  const draft = s.blockDraft ? readCrabDraft(s.blockDraft, l) : null;
   const together = session.options.mode === "together";
   const seat = ((s.starter + s.cards) % 2) as 0 | 1;
   const name = session.names?.[seat] || `Player ${seat + 1}`;
@@ -377,7 +383,8 @@ export function Board({
   }, [wobble, reduced, flash]);
   const edit = (program: Command[], placed = false) => {
     if (!active || s.running) return;
-    update({ ...s, program, cursor: 0, cards: placed ? Math.min(1000000, s.cards + 1) : s.cards });
+    const { blockDraft: _draft, ...legacy } = s;
+    update({ ...legacy, program, cursor: 0, cards: placed ? Math.min(1000000, s.cards + 1) : s.cards });
     setHint(0);
     setWobble(0);
     setSelected(null);
@@ -432,7 +439,12 @@ export function Board({
       />
       {!done && (
         <>
-          <View
+          <Button compact quiet maxFontSizeMultiplier={1.5} disabled={s.running || !active} onPress={() => setBlocks(!blocks)}>{blocks ? 'Arrow editor' : 'Block editor'}</Button>
+          {blocks && <ProgramEditor key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
+            onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
+            onStep={() => { if (!s.program.length || s.cursor >= s.program.length || w.bump || won) return; const n = tick({...s,running:true}); update({...n,running:false,blockDraft:s.blockDraft??encodeProgram(crabProgram(s.program))}); sound('tap',true); }}
+            onRestart={() => update({...s,cursor:0,running:false})} />}
+          {!blocks && <View
             accessibilityLabel={`Your plan: ${s.program.length ? s.program.map((c) => cardLabel[c]).join(", ") : "empty"}`}
             style={{
               flexDirection: "row",
@@ -457,7 +469,7 @@ export function Board({
                   accessibilityRole="button"
                   accessibilityLabel={planCardLabel(i, cardLabel[c], `${bad ? ", this card bumps" : ""}${hinted === i ? HINTED : ""}`)}
                   accessibilityState={{ selected: editing === i }}
-                  disabled={s.running || !active}
+                  disabled={blocks || s.running || !active}
                   onPress={() => {
                     setSelected(editing === i ? null : i);
                     setMode("replace");
@@ -485,13 +497,14 @@ export function Board({
               );
             })}
           </View>
+          }
           {won ? (
             <Button
               onPress={() => {
                 setHint(0);
                 setSelected(null);
                 update({
-                  ...s,
+                  ...withoutDraft(s),
                   completed: [...s.completed, s.program.slice(0, s.cursor)],
                   program: [],
                   cursor: 0,
@@ -504,7 +517,7 @@ export function Board({
             </Button>
           ) : (
             <>
-              {editing !== null && (
+              {!blocks && editing !== null && (
                 <PlanEditChoices
                   at={editing}
                   label={cardLabel[s.program[editing]]}
@@ -516,7 +529,7 @@ export function Board({
                 />
               )}
               {commands(l.pace).includes("repeat") && <Copy>Again ×2: → + [→ →] = one move + two more, three total.</Copy>}
-              <View testID="crab-command-cards" style={{ flexDirection: "row", gap: 6 }}>
+              {!blocks && <View testID="crab-command-cards" style={{ flexDirection: "row", gap: 6 }}>
                 {cards.map((c) => {
                   const card = (
                     <PressableScale
@@ -559,6 +572,7 @@ export function Board({
                   );
                 })}
               </View>
+              }
               {/* At accessibility sizes Go! keeps a full-width line of its own, and Clear and Hint share the next one,
                   so Go! never shrinks to an arrow and Hint never runs past the card. */}
               <View testID="crab-run-row" style={large ? { gap: 8 } : { flexDirection: "row", gap: 8, alignItems: "center" }}>

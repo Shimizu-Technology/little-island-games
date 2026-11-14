@@ -1,3 +1,5 @@
+import { decodeProgram as readProgram, sessionBytes, type PackedProgram } from '../../program/codec';
+import { crabProgram, projectCrab, readCrabDraft } from './program';
 import type { LearnEngine, Pace } from "../../types";
 import { pickItems } from "../../skills";
 import { exact, integer, prediction } from "../../kit/science";
@@ -141,7 +143,7 @@ export function trail(l: Level, program: Command[]): Trail {
 }
 export const solved = (l: Level, w: Walker) =>
   !w.bump && cell(l, w.pos) === "H" && w.shells === (1 << shellCells(l).length) - 1;
-export const run = (l: Level, program: Command[]) => program.reduce((w, c) => step(l, w, c), start(l));
+export const run = (l: Level, program: Command[]) => projectCrab(crabProgram(program), l)?.state ?? start(l);
 /** Breadth first search uses exactly the same step/loop semantics as Go. */
 export function solve(l: Level): Command[] {
   const queue = [{ w: start(l), path: [] as Command[] }],
@@ -162,6 +164,7 @@ export function solve(l: Level): Command[] {
   return [];
 }
 export type CrabState = {
+  blockDraft?: PackedProgram;
   levels: string[];
   completed: Command[][];
   program: Command[];
@@ -228,6 +231,18 @@ export const engine: LearnEngine<CrabState> = {
     debugging: false,
   }),
   validate: (x, o): x is CrabState => {
+    if (x && typeof x === 'object' && 'blockDraft' in x) {
+      const { blockDraft, ...fields } = x;
+      const legacy = fields as CrabState;
+      if (!readProgram(blockDraft) || typeof legacy.running !== 'boolean') return false;
+      // A stopped prefix is a deliberate single-step pause only in the K7 draft form.
+      const manual = Array.isArray(legacy.program) && Number.isInteger(legacy.cursor) && legacy.cursor > 0 && legacy.cursor < legacy.program.length && Array.isArray(legacy.levels) && levels.some(l => l.id === legacy.levels[Math.min(Array.isArray(legacy.completed) ? legacy.completed.length : 0, 2)]);
+      let validation = legacy;
+      if (manual) { const walker = run(currentLevel(legacy as CrabState), legacy.program.slice(0, legacy.cursor)); if (!walker.bump && !solved(currentLevel(legacy as CrabState), walker)) validation = {...legacy,running:true}; }
+      if (!engine.validate(validation, o)) return false;
+      const decoded = readCrabDraft(blockDraft, currentLevel(legacy));
+      return !!decoded && JSON.stringify(decoded.plan) === JSON.stringify(legacy.program) && sessionBytes(x) <= 4096;
+    }
     if (!exact(x, ["levels", "completed", "program", "cursor", "running", "starter", "cards", "debugging"]))
       return false;
     const s = x as CrabState,

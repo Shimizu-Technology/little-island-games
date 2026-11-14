@@ -1,3 +1,6 @@
+import { ProgramEditor } from '../../program/ProgramEditor';
+import { encodeProgram } from '../../program/codec';
+import { crabProgram, programCodes, readCrabDraft } from './program';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { ArrowArt, Beach, cardLabel } from './view';
@@ -15,6 +18,8 @@ import { commandActionLabel, EDIT_TEXT_MAX, HINTED, hintedCard, PlanEditChoices,
 
 export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer}:ChallengeViewProps<State,Action>) {
   const prefs=useContext(AudioPreferences), {play,stop}=useSoundControls(prefs.sound??true), reduced=useReducedMotion();
+  const [blocks,setBlocks]=useState(!!s.blockDraft);
+  const draft=s.blockDraft?readCrabDraft(s.blockDraft,s.descriptor.level):null;
   const [selected,setSelected]=useState<number|null>(null), [mode,setMode]=useState<EditMode>('replace');
   const [playback,setPlayback]=useState({run:s.runs,cursor:s.cursor,playing:false});
   const [alreadyHome]=useState(s.won);
@@ -66,6 +71,8 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     </ScrollView>}
     {!s.won&&<ScrollView style={{flex:1,minHeight:0}} contentContainerStyle={{gap:10,paddingBottom:8}} accessibilityLabel="Plan and commands">
     {header}
+    <Button compact quiet maxFontSizeMultiplier={1.5} disabled={disabled} onPress={()=>setBlocks(!blocks)}>{blocks?'Arrow editor':'Block editor'}</Button>
+    {blocks&&<ProgramEditor program={draft?.program??crabProgram(s.program)} cards={commands(d.level.pace).map(command=>({code:programCodes.indexOf(command),name:cardLabel[command],icon:<ArrowArt command={command} size={24}/>,speech:`crab-commands-card-${command}`}))} disabled={disabled} hear={key=>play(key,true)} condition="rock ahead" currentPath={cursor>0?draft?.frames[cursor-1]?.path:undefined} iteration={cursor>0?draft?.frames[cursor-1]?.iteration:undefined} onChange={program=>{send(['b',encodeProgram(program)]);return true;}}/>}
     {d.budget!==null&&<Copy>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
     {/* The goal already shows beside the beach; a lesson that only repeats it is left out. */}
     {d.lesson!==goal&&<Copy>{d.lesson}</Copy>}

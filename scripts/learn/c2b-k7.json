@@ -1,0 +1,17 @@
+{
+  "k7-repeat": "Repeat. Put cards inside. The number tells you how many times to run the whole group.",
+  "k7-song": "Song. Keep a group of cards here, then call the song from your plan.",
+  "k7-condition": "If blocked. Choose one group when the way shown on the card is blocked, and the other group when the way is clear.",
+  "k7-turtle-0": "Forward sixty.",
+  "k7-turtle-1": "Forward seventy.",
+  "k7-turtle-2": "Forward eighty.",
+  "k7-turtle-3": "Forward ninety.",
+  "k7-turtle-4": "Forward one hundred.",
+  "k7-turtle-5": "Turn forty five degrees.",
+  "k7-turtle-6": "Turn sixty degrees.",
+  "k7-turtle-7": "Turn ninety degrees.",
+  "k7-turtle-8": "Turn one hundred twenty degrees.",
+  "k7-turtle-9": "Coral pen.",
+  "k7-turtle-10": "Teal pen.",
+  "k7-turtle-11": "Gold pen."
+}
