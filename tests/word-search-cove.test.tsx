@@ -23,8 +23,7 @@ vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',Heading:'h2',Chip:
 vi.mock('../src/components/Text',()=>({Text:'span'}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play:db.played})}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
-vi.mock('../src/content/pictures',()=>({pictureForWord:()=>({id:'test'}),createPictureLoader:()=>({load:async()=>'<svg/>'})}));
-vi.mock('../src/content/pictures/transport',()=>({pictureTransport:{}}));
+vi.mock('../src/puzzles/words/picture-context',()=>({SearchPicturesContext:createContext({idFor:()=> 'test',load:async()=>'<svg/>'})}));
 let store:ReturnType<typeof useStore>,send:(a:Action)=>void;
 const entry={...fixtureRegistration,render:(s:ChallengeSession,dispatch:(a:unknown)=>void,active:boolean,width:number)=>{
  send=dispatch;

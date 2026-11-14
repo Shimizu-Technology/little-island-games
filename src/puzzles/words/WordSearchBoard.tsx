@@ -4,18 +4,16 @@ import Svg, { Circle, Line, SvgXml } from 'react-native-svg';
 import { Button, C, Copy, Heading } from '../../components/ui';
 import { Text } from '../../components/Text';
 import { useSoundControls } from '../../components/Audio';
-import { pictureForWord, createPictureLoader } from '../../content/pictures';
-import { pictureTransport } from '../../content/pictures/transport';
+import { SearchPicturesContext } from './picture-context';
 import { GridFeedback, GridInteraction } from '../grid/preferences';
 import { nearestCell } from '../grid/model';
 import { foundIndex, snapRay, type Direction } from './core';
 import type { Action, State } from './game';
 import { themes } from './themes.json';
-const loader = createPictureLoader(pictureTransport);
 const colors = ['#28796B', '#8A4D81'];
 function WordPicture({ spelling }: { spelling: string }) {
-  const id = pictureForWord(spelling)?.id, [loaded, setLoaded] = useState<{id:string;xml:string}>();
-  useEffect(() => { let live = true; if (id) void loader.load(id).then(xml => { if (live) setLoaded({id,xml}); }).catch(() => {}); return () => { live = false; }; }, [id]);
+  const pictures = useContext(SearchPicturesContext), id = pictures.idFor(spelling), [loaded, setLoaded] = useState<{id:string;xml:string}>();
+  useEffect(() => { let live = true; if (id) void pictures.load(id).then(xml => { if (live) setLoaded({id,xml}); }).catch(() => {}); return () => { live = false; }; }, [id, pictures]);
   return loaded && loaded.id===id ? <SvgXml xml={loaded.xml} width={64} height={64} accessible={false}/> : null;
 }
 const LetterCell = memo(function LetterCell({ letter, index, size, selected, tap, described }: { letter: string; index: number; size: number; selected: boolean; tap: (i: number) => void; described: string }) {

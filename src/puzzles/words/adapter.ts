@@ -20,7 +20,11 @@ export const wordSearchAdapter = (): PuzzleAdapter<SearchPuzzle, SearchState, Se
       const path = straightPath(w[2],w[3],cells[0].length);if (!path) return null;
       words.push({id:w[0]===0?w[1]:w[0],spelling:w[1],cells:path,audio:w[4]===0?w[1].toLowerCase():w[4]});
     }
-    const p = {language:x[0],cells,words,theme:x[3],list:x[4],message:x[5]};
+    if (x[0] !== 'en' && x[0] !== 'ch') return null;
+    // Keep the content language explicit for W1's static source admission.
+    const p = x[0] === 'ch'
+      ? {language:'ch',cells,words,theme:x[3],list:x[4],message:x[5]}
+      : {language:'en',cells,words,theme:x[3],list:x[4],message:x[5]};
     return validSearch(p) ? p : null;
   },
   create: () => initialSearch(), validState: (x, d): x is SearchState => validSearchState(x, d.payload),

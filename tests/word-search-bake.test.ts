@@ -8,11 +8,16 @@ import { generateSurface } from '../scripts/puzzles/words/generate.mjs';
 import { checkSurfaces, bakeBank } from '../scripts/words/bake.mjs';
 import { checkShippingTree } from '../scripts/words/shipping.mjs';
 import { bakeSearch } from '../scripts/puzzles/words/bake.mjs';
+import { chamoruSource } from '../scripts/words/artifact-views.mjs';
 const policy={scan:['QZX'],core:['QZX'],exact:['QZX'],lemmas:['QZX']};
 const source=JSON.parse(readFileSync('scripts/words/sources.lock.json','utf8')).sources.find((s:{id:string})=>s.id==='scowl');
 const words=fixture.puzzles[0].words.map(w=>({...w,schemaVersion:1,language:'en',sense:'Synthetic interaction proof only.',lemma:w.spelling,readerLevel:'Little',knownBand:1,readBand:1,spellBand:1,clueBand:1,theme:'island',topic:'nature',guamFit:1,source,form:'lemma',properNoun:false,abbreviation:false,british:[],locale:'en-US'}));
 
 describe('deterministic Word Search bake and checker',()=>{
+ it('G6-05 keeps decoded language tags statically auditable by the unchanged W1 reader',()=>{
+  const path='src/puzzles/words/adapter.ts';
+  expect(()=>chamoruSource(readFileSync(path,'utf8'),path)).not.toThrow();
+ });
  it('G6-05 produces repeatable original grids, one occurrence per answer, checked independently',()=>{
   const args={words,policy,seed:706,size:6,count:4,directionCount:8,id:'scan-proof'};
   const first=generateSurface(args),second=generateSurface(args);expect(second).toEqual(first);
