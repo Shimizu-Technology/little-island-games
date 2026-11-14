@@ -10,9 +10,11 @@ import {editProgram,type Action} from './challenge-engine';
 import {winners} from './solver';
 import {cardSpeech} from './speech';
 import {DarePicture,Plan} from './Plan';
+import {useStepReveal} from '../../stepReveal';
 export {Art} from './art';
 export function Board({session,update,practice,assistance,cheer,sound,soundOn,width,active,coach}:BoardProps<BotState>){
  const comfort=useBeepComfort();
+ useStepReveal(session.state.done);
  const s=session.state,p=s.puzzles[Math.min(s.done,3)],reduced=useReducedMotion();
  const [history,setHistory]=useState<Arrow[][]>([]),[edits,setEdits]=useState(0),[hintStage,setHintStage]=useState(0);
  const won=s.done<4&&!s.running&&s.cursor>0&&(s.version===1?solves(p,s.program.slice(0,s.cursor)):s.cursor===s.program.length&&solves(p,s.program));

@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Platform, View } from "react-native";
+import { Animated, Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
 import { easeInOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
 import { CoachSpot } from "../../Coach";
 import { AnswerTile } from "../../AnswerTile";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
+import { useStepReveal } from "../../stepReveal";
 import {
   answer,
   current,
@@ -578,6 +580,9 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     m = current(s);
   const [p] = useState(() => new Animated.Value(s.watched ? 1 : 0));
   const [playing, setPlaying] = useState(false);
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  // The next question opens at the top of the board, above the answers the child just used.
+  useStepReveal(s.index);
   const name = (seat: number) => session.names?.[seat] || `Player ${seat + 1}`;
   const right = m?.kind === "guess" && s.guesses.length > 0 && s.guesses.every((g) => g === m.right);
   // Speak the question when a mission opens. On a brand-new round, wait for the frame's spoken intro.
@@ -649,6 +654,10 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     : m.kind === "guess" && s.guesses.length === need
       ? `tide-pool-do-${m.id}`
       : `tide-pool-q-${m.id}`;
+  // Answer labels share one size: the largest at which every word fits its tile (6-pt padding, 2-pt border).
+  const answerMax = large && m.kind === "guess" ? Math.min(...m.answers.map(a => wordFitMultiplier(a.label, 14, (width - 8 * (m.answers.length - 1)) / m.answers.length - 16, 2))) : undefined;
+  // At accessibility sizes each control is a row of its two choices, picture above words, so long labels get the room.
+  const controlInner = (width - 8) / 2 - 14;
   const answers = (
     <View style={{ flexDirection: "row", gap: 8 }}>
       {m.answers.map((a, i) => {
@@ -674,7 +683,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
             }}
           >
             <AnswerArt picture={a.picture} size={58} />
-            <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink, textAlign: "center" }}>{a.label}</Copy>
+            <Copy maxFontSizeMultiplier={answerMax} style={{ fontSize: 14, fontWeight: "700", color: C.ink, textAlign: "center" }}>{a.label}</Copy>
           </AnswerTile>
         );
       })}
@@ -695,9 +704,9 @@ export function Board({ session, update, practice, sound, width, active, coach, 
       <PoolScene mission={m.id} watched={s.watched} look={s.pool} p={p} width={width} />
       {m.kind === "fix" ? (
         <CoachSpot active={coach.active && !s.watched} handAt="none">
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View testID="tide-controls" style={{ flexDirection: large ? "column" : "row", gap: 8 }}>
             {(["sun", "cool", "high"] as const).map((control) => (
-              <View key={control} style={{ flex: 1, gap: 4 }}>
+              <View key={control} style={large ? { flexDirection: "row", gap: 8 } : { flex: 1, gap: 4 }}>
                 {[true, false].map((on) => {
                   const selected = s.pool[control] === on;
                   const [good, bad, goodLabel, badLabel] = controlArt[control];
@@ -711,8 +720,10 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                       onPress={() => flip(control)}
                       style={{
                         minHeight: control === "cool" ? 90 : 56,
+                        flex: large ? 1 : undefined,
+                        padding: large ? 4 : undefined,
                         borderRadius: 14,
-                        flexDirection: control === "cool" ? "column" : "row",
+                        flexDirection: control === "cool" || large ? "column" : "row",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 4,
@@ -722,7 +733,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                       }}
                     >
                       {on ? good : bad}
-                      <Copy style={{ fontSize: 13, fontWeight: "700", color: C.ink, textAlign: "center", flexShrink: 1 }}>{on ? goodLabel : badLabel}</Copy>
+                      <Copy maxFontSizeMultiplier={large ? wordFitMultiplier(on ? goodLabel : badLabel, 13, controlInner, 2) : undefined} style={{ fontSize: 13, fontWeight: "700", color: C.ink, textAlign: "center", flexShrink: 1 }}>{on ? goodLabel : badLabel}</Copy>
                     </PressableScale>
                   );
                 })}

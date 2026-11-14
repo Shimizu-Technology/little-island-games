@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextInput, View, useWindowDimensions } from "react-native";
-import { LARGE_TEXT } from "../../../components/wordFit";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText } from "react-native-svg";
 import { Button, Copy, PressableScale, font } from "../../../components/ui";
 import type { BoardProps } from "../../types";
@@ -714,14 +714,17 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
     eclipse: [{ name: "Orbit offset (0 = aligned)", max: 1 }],
   };
   const numericSlots = q.kind === "eclipse" ? [1] : [0, 1];
+  // Choice labels share one size: the largest at which every word fits the narrowest tile (8-pt padding, 2-pt border).
+  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, props.width * (q.labels.length > 4 ? 0.29 : 0.44) - 20, 2))) : undefined;
   const ready = s.tested && correct(q, s.values);
   return (
     <View style={{ gap: 14 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Copy style={{ color: green, fontWeight: "900", fontSize: 13 }}>
+      {/* At accessibility sizes the step count and "Build · Test · Notice" stack, so neither runs off the card. */}
+      <View testID="science-steps" style={large ? { gap: 2 } : { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: green, fontWeight: "900", fontSize: 13 }}>
           DISCOVERY {s.index + 1} / {tasks(game, s.level, s.seed).length}
         </Copy>
-        <Copy style={{ color: ink, fontSize: 13 }}>Build · Test · Notice</Copy>
+        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: ink, fontSize: 13 }}>Build · Test · Notice</Copy>
       </View>
       <Copy style={{ fontSize: 23, fontWeight: "900", color: ink }}>{q.title}</Copy>
       <Copy style={{ fontSize: 16, lineHeight: 23 }}>{q.goal}</Copy>
@@ -767,7 +770,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
                       }}
                     >
                       <TokenArt text={name} />
-                      <Copy style={{ fontSize: 13, textAlign: "center", fontWeight: "800", color: ink }}>{name}</Copy>
+                      <Copy maxFontSizeMultiplier={labelMax} style={{ fontSize: 13, textAlign: "center", fontWeight: "800", color: ink }}>{name}</Copy>
                     </PressableScale>
                   );
                 })}

@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
 import { easeInOut, easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
+import { useStepReveal } from "../../stepReveal";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
 import type { Prediction } from "../../kit/science";
 import { act, capacity, dock, objects, shapesFor, truth, type FloatState, type Shape } from "./engine";
@@ -183,6 +185,9 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     d = dock(s, o)!,
     reduced = useReducedMotion();
   const [moving, setMoving] = useState<{ id: string; sinks: boolean } | null>(null);
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  // After a guess the page returns to the water, so she watches the object drop, then the next one.
+  useStepReveal(`${d.phase}:${d.boat}:${d.shelf.length}`);
   // The result shows (and is said) once the object has landed, so she watches first.
   const [landed, setLanded] = useState(true);
   const landing = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -379,7 +384,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                   alignItems: "center",
                 }}
               >
-                <Copy style={{ fontSize: 30, lineHeight: 34, fontWeight: "700", color: C.ink }}>
+                <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 30, lineHeight: 34, fontWeight: "700", color: C.ink }}>
                   {sank ? max : d.pebbles}
                 </Copy>
               </View>
@@ -423,7 +428,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                 }}
               >
                 <GuessPicture id={moving?.id ?? object!.id} sink={p === 1} />
-                <Copy style={{ fontSize: 20, fontWeight: "700", color: C.ink }}>{p === 0 ? "Float" : "Sink"}</Copy>
+                <Copy maxFontSizeMultiplier={large ? Math.min(...["Float", "Sink"].map(w => wordFitMultiplier(w, 20, (width - 10) / 2 - 10, 2))) : undefined} style={{ fontSize: 20, fontWeight: "700", color: C.ink }}>{p === 0 ? "Float" : "Sink"}</Copy>
               </PressableScale>
             ))}
           </View>

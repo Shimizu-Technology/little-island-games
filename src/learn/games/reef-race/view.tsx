@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import { Text } from "../../../components/Text";
 import { C, IconButton, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
 import {
   FlagIcon,
@@ -46,13 +47,16 @@ function BiggerCard({ n, onPress, disabled, wrong }: { n: number; onPress: () =>
         }}
       >
         <ShellIcon size={34} />
-        <Text style={{ fontSize: 44, fontWeight: "900", color: ink }}>{n}</Text>
+        <Text maxFontSizeMultiplier={1.5} style={{ fontSize: 44, fontWeight: "900", color: ink }}>{n}</Text>
       </PressableScale>
     </Animated.View>
   );
 }
 
-function PlayerChip({ token, toGo, narrow }: { token: Token; toGo: number; narrow: boolean }) {
+function PlayerChip({ token, toGo, narrow, width }: { token: Token; toGo: number; narrow: boolean; width: number }) {
+  // At accessibility sizes the name wraps between words onto two lines and stops where each word fits the card
+  // (38-pt turtle, 6-pt gap, 8-pt padding and 3-pt border each side), so "Your turtle" is never cut to "Yo…".
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT, room = width - 38 - 6 - 22;
   return (
     <View
       accessibilityLabel={`${token.label}: ${toGo} to go${token.active ? ", playing now" : ""}`}
@@ -72,12 +76,12 @@ function PlayerChip({ token, toGo, narrow }: { token: Token; toGo: number; narro
     >
       {token.kind === "tide" ? <Tide size={38} /> : <Turtle size={38} coral={token.kind === "coral"} />}
       <View style={{ flex: 1 }}>
-        <Text numberOfLines={1} style={{ fontSize: narrow ? 12.5 : 14, fontWeight: "900", color: ink }}>
+        <Text numberOfLines={large ? 2 : 1} maxFontSizeMultiplier={large ? wordFitMultiplier(token.label, narrow ? 12.5 : 14, room, 1.5) : undefined} style={{ fontSize: narrow ? 12.5 : 14, fontWeight: "900", color: ink }}>
           {token.label}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
           <FlagIcon size={14} />
-          <Text style={{ fontSize: 13, fontWeight: "800", color: ink }}>{toGo} to go</Text>
+          <Text maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ fontSize: 13, fontWeight: "800", color: ink }}>{toGo} to go</Text>
         </View>
       </View>
     </View>
@@ -369,7 +373,7 @@ export function Board({ session, update, practice, sound, active, width, height,
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", gap: 6 }}>
         {tokens.map((t, i) => (
-          <PlayerChip key={i} token={t} toGo={end - t.at} narrow={width < 340} />
+          <PlayerChip key={i} token={t} toGo={end - t.at} narrow={width < 340} width={(width - 6) / 2} />
         ))}
       </View>
       {multi && <RaceBar end={end} tokens={tokens} width={width} />}
@@ -390,10 +394,10 @@ export function Board({ session, update, practice, sound, active, width, height,
             <CoachSpot active={showCoach && humanRoll}>{spinner}</CoachSpot>
             <View style={{ minWidth: 120, alignItems: "flex-start", gap: 4 }}>
               {humanRoll ? (
-                <Text style={{ fontSize: 30, fontWeight: "900", color: C.teal }}>{thing === "spinner" ? "Spin!" : "Roll!"}</Text>
+                <Text maxFontSizeMultiplier={1.5} style={{ fontSize: 30, fontWeight: "900", color: C.teal }}>{thing === "spinner" ? "Spin!" : "Roll!"}</Text>
               ) : moving && !spinning ? (
                 <>
-                  <Text style={{ fontSize: 30, fontWeight: "900", color: r.direction < 0 ? C.coral : C.teal }}>
+                  <Text maxFontSizeMultiplier={1.5} style={{ fontSize: 30, fontWeight: "900", color: r.direction < 0 ? C.coral : C.teal }}>
                     {r.direction < 0 ? "Back " : ""}
                     {r.remaining}
                   </Text>

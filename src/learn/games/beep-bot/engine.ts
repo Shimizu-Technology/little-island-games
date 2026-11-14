@@ -15,7 +15,7 @@ const keys=['version','level','puzzles','done','completed','program','cursor','r
 export const engine:LearnEngine<BotState>={...legacyEngine,outcome:s=>s.done===4?'done':null,turn:s=>s.done%2 as 0|1,notWon:()=>null,
  helpAudio:'beep-bot-help',
  help:'Tap arrows to build a plan. Tap a card to change it, insert before it, or remove it. Go follows your plan. If Beep bumps, your plan stays. Help gives one next edit. Level 4 has one wrong arrow. Level 5 adds Again cards.',
- create:(o,c)=>{const level=levelOf(o),seed=Math.floor(c.rng()*10000);const variants=bank[level-1].length/4,rotation=seed%4,variant=Math.floor(seed/4)%variants;const puzzles=Array.from({length:4},(_,i)=>makePuzzle(level,Math.floor(seed/16)*bank[level-1].length+((rotation+i)%4)*variants+(variant+i)%variants));return {version:2,level,puzzles,done:0,completed:[],program:initialProgram(puzzles[0],level),cursor:0,running:false,attempts:0,helped:false};},
+ create:(o,c)=>{const level=levelOf(o),seed=Math.floor(c.rng()*10000);const variants=bank[level-1].length/4,rotation=seed%4,variant=Math.floor(seed/4)%variants;const puzzles=Array.from({length:4},(_,i)=>makePuzzle(level,((Math.floor(seed/16)+i*3)%625)*bank[level-1].length+((rotation+i)%4)*variants+(variant+i)%variants));return {version:2,level,puzzles,done:0,completed:[],program:initialProgram(puzzles[0],level),cursor:0,running:false,attempts:0,helped:false};},
  validate:(x,o):x is BotState=>{
   if(!x||typeof x!=='object'||Array.isArray(x))return false;
   const s=x as BotState;if(s.version===1)return legacyEngine.validate(x,o);

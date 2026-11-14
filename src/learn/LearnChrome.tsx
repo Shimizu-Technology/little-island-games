@@ -64,11 +64,16 @@ export function roundProgress(session: LearnSession): { current: number; total: 
 }
 
 /** The journey bar is compact chrome above the board: its labels stop at 1.5x so the board keeps the screen. */
-export function RoundProgress({ session, island, finished, colors }: { session: LearnSession; island: Island; finished: boolean; colors?: typeof subjectTheme[Island] }) {
+/** The round's journey. `inline` is one line, bars and count without the label, for a short landscape header. */
+export function RoundProgress({ session, island, finished, colors, inline = false }: { session: LearnSession; island: Island; finished: boolean; colors?: typeof subjectTheme[Island]; inline?: boolean }) {
   const progress = roundProgress(session);
   if (!progress) return null;
   const t = colors ?? subjectTheme[island];
   const count = Math.min(progress.total, 12);
+  if (inline) return <View testID="round-progress-inline" accessibilityLabel={`Your journey: ${finished ? progress.total : progress.current} of ${progress.total} parts complete`} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+    <View style={{ flex: 1, flexDirection: "row", gap: 4 }}>{Array.from({ length: count }, (_, i) => <View key={i} style={{ flex: 1, height: 10, borderRadius: 8, backgroundColor: (finished || i < progress.current * count / progress.total) ? t.accent : C.paper, borderWidth: 1, borderColor: t.accent }}/>)}</View>
+    <Copy maxFontSizeMultiplier={1.5} style={{ color: t.ink, fontSize: 13, fontWeight: "800" }}>{finished ? progress.total : progress.current}/{progress.total}</Copy>
+  </View>;
   return <View accessibilityLabel={`${finished ? progress.total : progress.current} of ${progress.total} parts complete`} style={{ gap: 7, marginVertical: 7 }}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Copy maxFontSizeMultiplier={1.5} style={{ color: t.ink, fontSize: 13, fontWeight: "900" }}>YOUR JOURNEY</Copy><Copy maxFontSizeMultiplier={1.5} style={{ color: t.ink, fontSize: 13, fontWeight: "800", marginLeft: "auto" }}>{finished ? progress.total : progress.current}/{progress.total}</Copy></View>
     <View style={{ flexDirection: "row", gap: 4 }}>{Array.from({ length: count }, (_, i) => <View key={i} style={{ flex: 1, height: 10, borderRadius: 8, backgroundColor: (finished || i < progress.current * count / progress.total) ? t.accent : C.paper, borderWidth: 1, borderColor: t.accent }}/>)}</View>

@@ -1,5 +1,5 @@
-import {expect,it} from 'vitest';
-import {advance,bank,engine,initialProgram,tick,type BotState,type Arrow} from '../src/learn/games/beep-bot/engine';
+import {expect,it,expectTypeOf} from 'vitest';
+import {advance,bank,engine,initialProgram,roundStarter,tick,type BotState,type Arrow} from '../src/learn/games/beep-bot/engine';
 import {advance as legacyAdvance,engine as legacy,tick as legacyTick,initialProgram as legacyStarter} from '../src/learn/games/beep-bot/legacy';
 import {optionsAtLevel,type LearningLevel} from '../src/learn/levelOptions';
 import {nearestHint,nearestHintSliced} from '../src/learn/games/beep-bot/solver';
@@ -49,7 +49,7 @@ it('P3-2 Level 4 dare bugs are balanced within each plan length',()=>{
 it('P3-3 L4 awards and dares both require one edit, one Go, no Help',()=>{
  for(const p of beepPuzzles.filter(p=>p.descriptor.level===4))for(const extra of [false,true]){
   let s=registration.start(p.ref,'a','review-fix',emptyChallenge(),{supportOff:true,ownRead:false},[p.dares[0].slot]);
-  const h=nearestHint(p.descriptor.winners,p.descriptor.starter);const actions:Action[]=extra?[['a',0],['x',p.descriptor.starter.length]]:[];
+  const h=nearestHint(p.descriptor.winners,p.descriptor.starter,false,p.descriptor.puzzle);const actions:Action[]=extra?[['a',0],['x',p.descriptor.starter.length]]:[];
   actions.push(['r',h.edit!.at,codes.indexOf(h.edit!.card!)],['g']);
   for(const a of actions){const n=registration.move(s,a);expect(n).not.toBeNull();s=n!;}
   expect(s.result?.awards).toBe(extra?0:1);expect(s.result?.dares).toEqual(extra?[]:[p.dares[0].slot]);
@@ -65,4 +65,36 @@ it('P3-2 every plan length includes its final-card bug even when there are fewer
  const positions=new Map<number,Set<number>>();for(const p of beepPuzzles.filter(p=>p.descriptor.level===4)){
   const d=p.descriptor,n=d.starter.length,set=positions.get(n)??new Set<number>();set.add(d.starter.findIndex((c,i)=>c!==d.puzzle.answer[i]));positions.set(n,set);
  }for(const [length,set] of positions)expect(set.has(length-1)).toBe(true);
+});
+
+const deepFreeze=<T,>(o:T):T=>{if(o&&typeof o==='object'){Object.freeze(o);for(const v of Object.values(o as object))deepFreeze(v);}return o;};
+it('v1 early arrival, frozen inputs, all levels',()=>{
+ let rounds=0,steps=0;
+ for(let l=1;l<=5;l++)for(let seed=0;seed<10000;seed+=101){const o=opts(l);let s=legacy.create(o,{skills:{},rng:()=>seed/10000,starter:0,today:1}) as BotState;rounds++;
+  while(s.done<4){const p=s.puzzles[s.done];const extra:Arrow=p.answer.find(a=>!a.startsWith('repeat'))!;
+   // early arrival: one card past the shell
+   s=deepFreeze({...s,program:[...p.answer,extra],cursor:0,running:true});
+   expect(engine.validate(s,o)).toBe(true);
+   while(s.running){const n=tick(s),m=legacyTick(s as never);expect(n).toEqual(m);s=deepFreeze(n);steps++;}
+   expect(solves(p,s.program.slice(0,s.cursor))).toBe(true);
+   const r=roundStarter(s);const n=advance(s);expect(n).toEqual(legacyAdvance(s as never));expect(engine.validate(n,o)).toBe(true);s=deepFreeze(n);
+   if(s.done<4)expect(s.program).toEqual(roundStarter(s));void r;
+  }}
+ expect(rounds).toBe(500);expect(steps).toBeGreaterThan(6000);
+});
+
+it('P3-4 task offsets avoid an identical bug position throughout a School round',()=>{
+ let identical=0;
+ for(let seed=0;seed<10000;seed++){
+  const s=engine.create(opts(4),{skills:{},rng:()=>seed/10000,starter:0,today:1});
+  expect(engine.validate(s,opts(4))).toBe(true);
+  const indices=s.puzzles.map(p=>initialProgram(p,4).findIndex((c,i)=>c!==p.answer[i]));
+  if(new Set(indices).size===1)identical++;
+ }
+ expect(identical).toBe(0);
+});
+
+it('P3-6 public hint APIs require a puzzle',()=>{
+ expectTypeOf<Parameters<typeof nearestHint>>().toEqualTypeOf<[Arrow[][],readonly Arrow[],boolean,import('../src/learn/games/beep-bot/movement').Puzzle]>();
+ expectTypeOf<Parameters<typeof nearestHintSliced>>().toEqualTypeOf<[Arrow[][],readonly Arrow[],()=>boolean,boolean,import('../src/learn/games/beep-bot/movement').Puzzle]>();
 });

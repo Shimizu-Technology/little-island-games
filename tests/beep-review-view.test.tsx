@@ -10,7 +10,7 @@ import {optionsAtLevel} from '../src/learn/levelOptions';
 import {challengeEngine} from '../src/learn/games/beep-bot/challenge-engine';
 import {beepPuzzles} from '../src/learn/games/beep-bot/challenge-content';
 import type {BoardProps} from '../src/learn/types';
-vi.mock('react-native',()=>({View:'div',ScrollView:'section'}));
+vi.mock('react-native',()=>({View:'div',ScrollView:'section',useWindowDimensions:()=>({fontScale:3.12})}));
 vi.mock('react-native-svg',()=>({default:'svg',Circle:'circle',Rect:'rect',Path:'path'}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',PressableScale:'button',C:{ink:'#183F39',soft:'#E5EFE5',teal:'#246858',line:'#DBE3DA'}}));
 vi.mock('../src/components/motion',()=>({useReducedMotion:()=>true}));
@@ -78,4 +78,24 @@ it('P2-3 a saved dare also hides its own picture and invitation under Young-chil
  expect(text()).not.toContain('One changed card, one Go');expect(text()).not.toContain('Dare: one fix');
  policy.youngChild=false;await act(async()=>root!.update(<ChallengeBoard state={challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false})} active width={335} dispatch={vi.fn()}/>));
  expect(text()).toContain('Dare: one fix');
+});
+
+it('P2-1 School AX5 keeps selected-card editing and keys before the message',async()=>{
+ await mount(school(4).element);const card=root!.root.findAllByType('button').find(n=>String(n.props.accessibilityLabel).startsWith('Card 1:'))!;await act(async()=>card.props.onPress());
+ const nodes=root!.root.findAll(n=>typeof n.type==='string');
+ expect(nodes.findIndex(n=>n.props.testID==='beep-keys')).toBeLessThan(nodes.findIndex(n=>n.props.testID==='beep-message'));
+ const copy=nodes.find(n=>n.children.join('').includes('Choose an arrow to'))!;
+ expect(copy.props.maxFontSizeMultiplier).toBe(1.5);
+});
+it('P3-2 empty dare placeholder is capped at AX5',async()=>{
+ const d=beepPuzzles[0].descriptor;await mount(<ChallengeBoard state={challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false})} active width={335} dispatch={vi.fn()}/>);
+ expect(root!.root.find(n=>n.props.testID==='beep-placeholder').props.maxFontSizeMultiplier).toBe(1.5);
+});
+it('P3-3 long programs wrap so running and bumped cards stay in the row',async()=>{
+ const f=school(4);await mount(school(4,{...f.s,program:Array(8).fill('left'),cursor:7}).element);
+ const row=root!.root.find(n=>n.props.testID==='beep-program');
+ expect(row.props.style.flexWrap).toBe('wrap');expect(row.findAllByType('button')).toHaveLength(8);
+});
+it('P3-5 Hear rules plays the shipped intro while new help is absent',async()=>{
+ await mount(school(1).element);await press('Hear rules');expect(audio.play).toHaveBeenLastCalledWith('beep-bot-intro');
 });
