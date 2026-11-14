@@ -126,7 +126,10 @@ export type PlayfieldProps = {
 export function Playfield({ puzzle, crabs, title, steps, active, width, height, together = false, names, coach, canUndo, canReset, onMove, onUndo, onReset, onAnother, notice, finished, help, cue = null }: PlayfieldProps) {
   const reduced = useReducedMotion(), large = useWindowDimensions().fontScale >= LARGE_TEXT;
   const n = puzzle.size, solved = !!finished;
-  const cell = boardCell(width, height, n, together);
+  // A landscape phone (about 400 pt tall) cannot show the board and the arrows stacked, so the arrows, the caption and
+  // help sit beside the board, with the arrows as an up / left-right / down pad.
+  const side = width >= 520 && height < 500, sideColumn = 236;
+  const cell = boardCell(side ? width - sideColumn : width, height, n, together);
   const apply = useCallback((d: Dir) => {
     if (!active) return false;
     const moved = onMove(d);
@@ -162,14 +165,14 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
   const focus = solved ? { crab: null, stop: null, blocker: null } : focusOf(cue);
   const atXY = (c: number) => cellXY(c, n, cell);
   const nameA = names?.[0] ?? 'Player 1', nameB = names?.[1] ?? 'Player 2';
-  const arrowSize = Math.min(72, Math.floor((Math.min(width, 440) - 24) / 4));
+  const arrowSize = Math.min(72, Math.floor((Math.min(side ? sideColumn - 16 : width, 440) - 24) / (side ? 2 : 4)));
   const arrowsFor = (group: Dir[], label?: string) => <View key={group.join()} style={{ alignItems: 'center', gap: 4 }}>
     {label && <Copy style={{ fontSize: 13, fontWeight: '800', color: C.ink }}>{label}</Copy>}
     <View style={{ flexDirection: 'row', gap: 8 }}>{group.map(d => <PressableScale key={d} accessibilityRole="button" accessibilityLabel={`Slide all crabs ${names_[d]}`} disabled={!active || solved} onPress={() => { if (!apply(d)) nudge(d); }} style={{ width: arrowSize, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: together ? (d % 2 === 0 ? '#CFEDE6' : '#FAD9C7') : '#E8F2DF', borderWidth: together ? 3 : 2, borderColor: together ? (d % 2 === 0 ? '#2F8C7C' : '#D2693F') : '#7C9C75', opacity: solved ? 0.45 : 1 }}><Arrow dir={d} size={32} color={together ? (d % 2 === 0 ? '#3D9B8C' : '#DE7F5A') : '#3D7F73'} /></PressableScale>)}</View>
   </View>;
   const boardSize = cell * n + boardPad * 2;
   const caption = coach?.active && !steps ? (together ? 'Each person has two arrows. Talk it through.' : 'Swipe the water to slide every crab.') : notice || title;
-  return <View style={{ gap: 12, alignItems: 'center' }}>
+  const header = <>
     {/* At accessibility text sizes the caption gets the full width over its own line of Undo and Reset, and this
         compact board chrome stops at 1.5x, so no word is squeezed onto a line of its own beside the buttons. */}
     <View testID="board-header" style={large ? { alignSelf: 'stretch', gap: 8, paddingHorizontal: 2 } : { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignSelf: 'stretch', gap: 8, paddingHorizontal: 2, minHeight: 46 }}>
@@ -186,6 +189,8 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
         return large ? <View testID="board-actions" style={{ flexDirection: 'row', gap: 8 }}>{actions}</View> : actions;
       })()}
     </View>
+  </>;
+  const board = <>
     <CoachSpot active={!!coach?.active} handAt="none" style={{ borderRadius: 26 }}>
       <GestureDetector gesture={pan}>
         <View accessible accessibilityRole="image" accessibilityLabel={describeBoard(slipView(puzzle, crabs))} style={{ width: boardSize, height: boardSize, padding: boardPad, borderRadius: 24, backgroundColor: '#F2DFA9', borderWidth: 2, borderColor: '#A98F58', overflow: 'hidden' }}>
@@ -208,12 +213,17 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
         </View>
       </GestureDetector>
     </CoachSpot>
-    {finished ?? <>
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-        {together ? <>{arrowsFor([0, 2], `${nameA}: up and down`)}{arrowsFor([3, 1], `${nameB}: left and right`)}</> : arrowsFor([3, 0, 2, 1])}
+  </>;
+  const controls = finished ?? <>
+      <View testID="slip-arrows" style={side ? { alignItems: 'center', gap: 12 } : { flexDirection: 'row', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+        {together ? <>{arrowsFor([0, 2], `${nameA}: up and down`)}{arrowsFor([3, 1], `${nameB}: left and right`)}</> : side ? <View style={{ alignItems: 'center', gap: 8 }}>{arrowsFor([0])}{arrowsFor([3, 1])}{arrowsFor([2])}</View> : arrowsFor([3, 0, 2, 1])}
       </View>
       {help && <View style={{ alignSelf: 'stretch' }}>{help}</View>}
       {onAnother && <Button quiet compact disabled={!active} onPress={onAnother}>Try another</Button>}
-    </>}
+    </>;
+  if (side) return <View testID="slip-side" style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start', justifyContent: 'center' }}>
+    {board}
+    <View style={{ flex: 1, maxWidth: 360, gap: 12, alignItems: 'center' }}>{header}{controls}</View>
   </View>;
+  return <View style={{ gap: 12, alignItems: 'center' }}>{header}{board}{controls}</View>;
 }

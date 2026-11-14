@@ -21,7 +21,7 @@ vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'SafeAreaView',
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: { canGoBack: () => false, replace: vi.fn(), push: vi.fn() } }));
 vi.mock('../src/components/ui', () => ({ Button: 'Button', Chip: 'Chip', Heading: 'Heading', Copy: 'Copy', ToggleRow: 'ToggleRow', GameHeader: 'GameHeader', C: {}, styles: {},
   Sheet: ({ visible, children, footer }: { visible: boolean; children: React.ReactNode; footer: React.ReactNode }) => visible ? React.createElement('SheetBody', null, children, footer) : null }));
-vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {}, stop: () => {} }) }));
+vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => {}, stop: () => {} }), hasSpeech: () => true }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/components/Match', () => ({ Scoreboard: () => null, PlayerNames: () => null }));
 vi.mock('../src/components/feel', () => ({ feel: () => {} }));

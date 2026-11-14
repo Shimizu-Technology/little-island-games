@@ -20,7 +20,7 @@ vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions
 vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'main',useSafeAreaInsets:()=>({top:0,bottom:0,left:0,right:0})}));
 vi.mock('expo-router',()=>({useIsFocused:()=>route.focused,router:{canGoBack:()=>false,replace:vi.fn(),push:vi.fn()}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Chip:'button',Heading:'h2',Copy:'p',ToggleRow:'switch',Sheet:({visible,children,footer}:{visible:boolean;children:React.ReactNode;footer:React.ReactNode})=>visible?<section>{children}{footer}</section>:null,GameHeader:()=>null,C:{},styles:{}}));
-vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play:sound,stop:vi.fn()})}));
+vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play:sound,stop:vi.fn()}),hasSpeech:()=>true}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
 vi.mock('../src/components/Match',()=>({Scoreboard:()=>null,PlayerNames:()=>null}));
 vi.mock('../src/components/feel',()=>({feel:()=>{}}));

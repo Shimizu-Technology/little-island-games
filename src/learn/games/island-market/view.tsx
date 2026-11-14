@@ -3,6 +3,7 @@ import { Animated, View } from "react-native";
 import { Text } from "../../../components/Text";
 import { Button, C, IconButton, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { BasketShape, Crate, Customer, Mango, MarketArt, ShellCoin, ShellIcon, customerName, useShake } from "../../kit/NumberParts";
 import { COINS, pieceTotal, splitNumber, type Pieces } from "../../kit/numbers";
@@ -285,6 +286,8 @@ export function Board({ session, update, practice, sound, active, width, coach, 
     money = order?.kind === "change";
   const total = pieceTotal(s.pieces, money);
   const who = s.index % 4;
+  // The next customer's order opens at the top of the board.
+  useStepReveal(s.index);
   const [feedback, setFeedback] = useState<"under" | "over" | null>(null);
   const [pickWrong, setPickWrong] = useState({ n: 0, key: 0 });
   const [bump, setBump] = useState(0);

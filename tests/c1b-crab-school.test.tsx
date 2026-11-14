@@ -13,7 +13,7 @@ vi.mock('react-native', () => {
   class Value { v: number; constructor(v: number) { this.v = v; } setValue(v: number) { this.v = v; } interpolate({ inputRange: [a, b], outputRange: [x, y] }: { inputRange: number[]; outputRange: number[] }) { return x + ((this.v - a) / (b - a)) * (y - x); } }
   class ValueXY { x = new Value(0); y = new Value(0); setValue() {} }
   const animation = { start: (done?: () => void) => done?.(), stop: () => {} };
-  return { View: 'div', Animated: { View: 'div', Value, ValueXY, timing: () => animation, sequence: () => animation, loop: () => animation } };
+  return { View: 'div', useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }), Animated: { View: 'div', Value, ValueXY, timing: () => animation, sequence: () => animation, loop: () => animation } };
 });
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Text: 'text' }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'p', IconButton: 'button', PressableScale: 'button', C: { ink: '#183F39', teal: '#0F7C70', soft: '#E5EFE5', paper: '#FFF', cream: '#FFF8EA', line: '#DDD' } }));

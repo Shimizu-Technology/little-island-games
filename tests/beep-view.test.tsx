@@ -1,0 +1,56 @@
+import React,{createContext} from 'react';
+import {act,create,type ReactTestRenderer} from 'react-test-renderer';
+import {afterEach,expect,it,vi} from 'vitest';
+import {Grid} from '../src/learn/games/beep-bot/art';
+import {Plan,labels} from '../src/learn/games/beep-bot/Plan';
+import {ChallengeBoard} from '../src/learn/games/beep-bot/challenge-view';
+import {beepPuzzles} from '../src/learn/games/beep-bot/challenge-content';
+import {challengeEngine,codes} from '../src/learn/games/beep-bot/challenge-engine';
+vi.mock('../src/state/Store',()=>({useStore:()=>({save:{settings:{}}})}));
+vi.mock('react-native',()=>({View:'div',ScrollView:'section',useWindowDimensions:()=>({fontScale:1})}));
+vi.mock('../src/learn/Coach',()=>({CoachSpot:'coach'}));
+vi.mock('react-native-svg',()=>({default:'svg',Circle:'circle',Rect:'rect',Path:'path'}));
+vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',PressableScale:'button',C:{ink:'#183F39',soft:'#E5EFE5',teal:'#246858',line:'#DBE3DA'}}));
+vi.mock('../src/components/motion',()=>({useReducedMotion:()=>true}));
+vi.mock('../src/content/learnAudio',async()=>({learnSources:Object.fromEntries(Object.keys((await import('../scripts/learn/c2a-beep.json')).default).map(k=>[k,1]))}));
+const navigation=vi.hoisted(()=>({back:vi.fn(),replace:vi.fn(),canGoBack:vi.fn(()=>true)}));
+vi.mock('expo-router',()=>({router:navigation}));
+const sound=vi.hoisted(()=>({play:vi.fn(),stop:vi.fn()}));
+vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({sound:true}),useSoundControls:()=>sound}));
+let root:ReactTestRenderer|undefined;
+afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;vi.useRealTimers();navigation.back.mockClear();navigation.replace.mockClear();navigation.canGoBack.mockReturnValue(true);});
+const mount=async(element:React.ReactElement)=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);await act(async()=>{root=create(element);});};
+const press=async(text:string)=>act(async()=>{const button=root!.root.findAllByType('button').find(b=>b.props.accessibilityLabel===text||b.children.join('')===text);expect(button,text).toBeDefined();button!.props.onPress();});
+it('select, replace, insert, remove and explicit add-at-end use the real editor actions',async()=>{const p=beepPuzzles[16],d=p.descriptor,send=vi.fn();await mount(<Plan p={d.puzzle} level={4} program={d.starter} cursor={0} running={false} won={false} runs={0} edits={0} hintStage={0} plans={d.winners} active width={335} send={send} undo/>);const label=`Card 1: ${labels[d.starter[0]]}. Tap to edit`;await press(label);await press('Replace with Right card');expect(send).toHaveBeenLastCalledWith(['r',0,1]);await press(label);await press('Insert before');await press('Insert Right card');expect(send).toHaveBeenLastCalledWith(['i',0,1]);await press(label);await press('Remove card');expect(send).toHaveBeenLastCalledWith(['x',0]);});
+it('Help keeps its exact next edit through More help; full plan needs a third explicit press',async()=>{const d=beepPuzzles[16].descriptor;let s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});s=challengeEngine.step(s,['h'],d)!.state;await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>);await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Change card ');});expect(JSON.stringify(root!.toJSON())).not.toContain('One working plan:');s=challengeEngine.step(s,['h'],d)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));expect(JSON.stringify(root!.toJSON())).toContain('Change card ');expect(JSON.stringify(root!.toJSON())).toContain('Show the whole plan');s=challengeEngine.step(s,['h'],d)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));expect(JSON.stringify(root!.toJSON())).toContain('One working plan:');});
+it('board and program remain outside scrolling full-size instructions and commands',async()=>{const d=beepPuzzles[16].descriptor,s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335} header={<p>Full puzzle title</p>} footer={<button>Exit</button>}/>);const program=root!.root.findByProps({accessibilityLabel:'Your program editor'}),controls=root!.root.findByProps({accessibilityLabel:'Beep commands and help'});expect(program.props.style.flexWrap).toBe('wrap');expect(controls.parent).toBe(program.parent);expect(controls.findAllByType('p').some(p=>p.children.includes('Full puzzle title'))).toBe(true);expect(controls.findAllByType('button').some(b=>b.children.includes('Exit'))).toBe(true);});
+it('Go animates arrival before settling, plays feedback, and saves no timer actions',async()=>{vi.useFakeTimers();const d=beepPuzzles[0].descriptor;let s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});for(const c of d.winners[0])s=challengeEngine.step(s,['a',codes.indexOf(c)],d)!.state;const dispatch=vi.fn(),settled=vi.fn();await mount(<ChallengeBoard state={s} dispatch={dispatch} active width={335} onSettled={settled}/>);s=challengeEngine.step(s,['g'],d)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={dispatch} active width={335} onSettled={settled}/>));expect(settled).not.toHaveBeenCalled();for(let i=0;i<=s.program.length;i++)await act(async()=>{vi.advanceTimersByTime(140);});expect(settled).toHaveBeenCalledOnce();expect(dispatch).not.toHaveBeenCalled();expect(sound.play).toHaveBeenCalledWith('win',true);expect(JSON.stringify(root!.toJSON())).toContain('Shell found!');});
+it('all staged speech has reachable callers',async()=>{const d=beepPuzzles[32].descriptor,s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>);for(const [label,key] of [['Hear rules','c2a-beep-help'],['Hear dare','c2a-beep-dare-five'],['Hear Again cards','c2a-beep-again']]){await press(label);expect(sound.play).toHaveBeenLastCalledWith(key);}});
+
+it('a reopened completed replay keeps Beep at the shell',async()=>{const d=beepPuzzles[0].descriptor;let s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});for(const c of d.winners[0])s=challengeEngine.step(s,['a',codes.indexOf(c)],d)!.state;s=challengeEngine.step(s,['g'],d)!.state;await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>);const grid=root!.root.findAllByType('svg').find(n=>String(n.props.accessibilityLabel).startsWith('Robot grid.'));expect(grid!.props.accessibilityLabel).toContain(`Beep at row ${Math.floor(d.puzzle.shell/5)+1}, column ${d.puzzle.shell%5+1}`);});
+
+it('idle reset is disabled and choosing the same replacement never sends a refused move',async()=>{const d=beepPuzzles[16].descriptor,dispatch=vi.fn();const s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});await mount(<ChallengeBoard state={s} dispatch={dispatch} active width={335}/>);const reset=root!.root.findAllByType('button').find(b=>b.children.join('')==='Reset plan');expect(reset!.props.disabled).toBe(true);await press(`Card 1: ${labels[d.starter[0]]}. Tap to edit`);await press(`Replace with ${labels[d.starter[0]]} card`);expect(dispatch).not.toHaveBeenCalled();});
+it('hint text and small card labels use ink on their colored surfaces',async()=>{const d=beepPuzzles[16].descriptor;let s=challengeEngine.create(d,{version:1},{supportOff:true,ownRead:false});s=challengeEngine.step(s,['h'],d)!.state;await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>);await vi.waitFor(async()=>{await act(async()=>{});expect(root!.root.findAllByType('p').some(p=>p.children.join('').startsWith('Change card'))).toBe(true);});const text=root!.root.findAllByType('p').find(p=>p.children.join('').startsWith('Change card'))!;expect(text.props.style.color).toBe('#183F39');const card=root!.root.findAllByType('button').find(b=>b.props.accessibilityLabel==='Add Down card')!;for(const p of card.findAllByType('p'))expect(p.props.style.color).toBe('#183F39');});
+it('playback identifies the active card visually and by its accessible name',async()=>{const d=beepPuzzles[16].descriptor;await mount(<Plan p={d.puzzle} level={4} program={d.starter} cursor={1} running won={false} runs={1} edits={0} hintStage={0} plans={d.winners} active width={335} send={vi.fn()} undo={false}/>);const card=root!.root.findAllByType('button').find(b=>b.props.accessibilityLabel===`Card 2: ${labels[d.starter[1]]}. Tap to edit, Beep is following this card`);expect(card).toBeDefined();expect(card!.props.style.backgroundColor).toBe('#F7CB72');expect(card!.findAllByType('p')[0].children.join('')).toBe('▶ 2');});
+
+it.each([0,1,2])('formats card, Go and edit labels at count %i',async count=>{
+ const d=beepPuzzles[16].descriptor;
+ await mount(<Plan p={d.puzzle} level={4} program={d.starter.slice(0,count)} cursor={0} running={false} won={false} runs={count} edits={count} hintStage={0} plans={d.winners} active width={335} send={vi.fn()} undo={false}/>);
+ const summary=`${count} ${count===1?'Go':'Goes'} · ${count} ${count===1?'edit':'edits'}`;
+ const text=root!.root.findAllByType('p').map(p=>p.children.join(''));
+ expect(text).toContain(summary);
+ expect(text).toContain(`Plan · ${count} ${count===1?'card':'cards'}`);
+});
+
+it.each([false,true])('Go remains beside the map when the plan grows (pinned %s)',async pinned=>{
+ const d=beepPuzzles[16].descriptor,send=vi.fn();
+ const render=(program:typeof d.starter)=><Plan p={d.puzzle} level={4} program={program} cursor={0} running={false} won={false} runs={0} edits={0} hintStage={0} plans={d.winners} active width={335} send={send} undo={false} pinned={pinned}/>;
+ await mount(render([]));
+ const mapRow=()=>root!.root.findAllByType('div').find(v=>v.children.some(c=>typeof c!=='string'&&c.type===Grid))!;
+ const run=()=>mapRow().findAllByType('button').find(b=>b.children.join('')==='Go!');
+ expect(run(),'Go stays with the visible map before commands expand').toBeDefined();expect(run()!.props.disabled).toBe(true);
+ await act(async()=>root!.update(render(d.starter)));
+ expect(run(),'adding cards keeps Go beside the map').toBeDefined();expect(run()!.props.disabled).toBe(false);
+ await press('Go!');expect(send).toHaveBeenCalledWith(['g']);
+ if(pinned)expect(root!.root.findByProps({accessibilityLabel:'Beep commands and help'}).findAllByType('button').some(b=>b.children.join('')==='Go!')).toBe(false);
+});

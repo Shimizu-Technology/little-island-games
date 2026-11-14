@@ -222,16 +222,19 @@ export function Chip({
   children,
   onPress,
   selected = false,
+  disabled = false,
 }: {
   children: React.ReactNode;
   onPress: () => void;
   selected?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Button
       onPress={onPress}
       quiet
       selected={selected}
+      disabled={disabled}
       style={{ borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: 0 }}
     >
       {children}

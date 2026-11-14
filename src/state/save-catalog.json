@@ -627,6 +627,276 @@
       "cove": true
     },
     {
+      "slot": 200,
+      "engine": "beep-bot",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 204800,
+          "hash": "05f8de602aecbf886784e931cfd8e50acdefc385107f7d1e4bf1ebce76266910"
+        },
+        {
+          "ordinal": 204801,
+          "hash": "c4c12addbe39742377cfb67a576430d69c7a01206c675a172f88310b4bdce582"
+        },
+        {
+          "ordinal": 204802,
+          "hash": "00c9f536350294ca5a42d1f487d4dba381f81234b61a6e84defebd321f84dfda"
+        },
+        {
+          "ordinal": 204803,
+          "hash": "3d62a66fabb4b443605ba6e20c853547a724702cdfe4a1ffe6d08badeffdb67d"
+        },
+        {
+          "ordinal": 204804,
+          "hash": "5ab1131ddd0e894a4fc1cdc89d46d55808718b605953f79fc17e6a6f6e96f063"
+        },
+        {
+          "ordinal": 204805,
+          "hash": "640ab2f914b1d51708061f104729145bb77fa1d4f8476a8d207bff54c71dd9ce"
+        },
+        {
+          "ordinal": 204806,
+          "hash": "dd2c4c608eb92b9e9fb2adf0502c38b4d0b4cc07c7b7e38c79b2882aa72a5fe0"
+        },
+        {
+          "ordinal": 204807,
+          "hash": "4e4257b17a7fb63bb48560eac54d9b6eebff366b37ef30e423faad98ac878eb8"
+        },
+        {
+          "ordinal": 204808,
+          "hash": "2d0baff840d912fe3a3fccded5cdd83603fe277e15896012f2a1d1a23d357163"
+        },
+        {
+          "ordinal": 204809,
+          "hash": "0f84d056e03141e9cbf408d598710c74e1319517263e5b5b0dda53575b330cae"
+        },
+        {
+          "ordinal": 204810,
+          "hash": "f3ddccd5acd266674055077eba88fab70cb4253d4954b03288b017ee7c9041f5"
+        },
+        {
+          "ordinal": 204811,
+          "hash": "f01d2738cfac30d019ae211fae37ce5c80c6c0a6b21fe71b029799679a61639c"
+        },
+        {
+          "ordinal": 204812,
+          "hash": "89c917e7bb2190cc29f875e5a4bfe6016a7eb5432616c2f4359e0b85fd4e87a0"
+        },
+        {
+          "ordinal": 204813,
+          "hash": "51ed1b015cccadce61f02b3a1fa7b5768b4b349328ea6e06b72ec230b63549e6"
+        },
+        {
+          "ordinal": 204814,
+          "hash": "2e55ac95f60f91961323f2bebe19129e873481daf2956e34ff9d3e86aa3cc29e"
+        },
+        {
+          "ordinal": 204815,
+          "hash": "bdd386849271e6f4f6a6ba69d252b23da07f416a9304eb9cbeb1e90123fa395d"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 201,
+      "engine": "beep-bot",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 205824,
+          "hash": "e1fddd00389c8b5d1a682e72ae36e0dd5a34dbd0762bda37c54e4702fea50a7f"
+        },
+        {
+          "ordinal": 205825,
+          "hash": "17b92ba0c517369d303f59a6102fb598de6dddcdb77098a3d51169a3fbd4563e"
+        },
+        {
+          "ordinal": 205826,
+          "hash": "5d6a01ff93490bd9284effc9300dd30d62c742a1b701486877a47aee2166b90d"
+        },
+        {
+          "ordinal": 205827,
+          "hash": "29a32d2c4466d833b0c10c1703550d76f8a81e243aeead11752a98540919f952"
+        },
+        {
+          "ordinal": 205828,
+          "hash": "470dd9acd00fa7ac17ba00111ca43b94d65950b75b9e7e253752c2f7dc6071c6"
+        },
+        {
+          "ordinal": 205829,
+          "hash": "701608eb72a15f161f094d1675f3eb61b44483cd94cbdf4ef806bbd1b405fa5c"
+        },
+        {
+          "ordinal": 205830,
+          "hash": "a850bb7c26ce9acea8d30931cc915f67ed6a7402ade268286eeb4596273d06e6"
+        },
+        {
+          "ordinal": 205831,
+          "hash": "e1cd8308c72e1df5c2bc285847d4f59d3572a5e468129f951ab5922cc7a7158c"
+        },
+        {
+          "ordinal": 205832,
+          "hash": "6d4e4c19b2ef4c8f04b501b2b3e667884547b7d79848c6b59526169e1fb22b03"
+        },
+        {
+          "ordinal": 205833,
+          "hash": "6b6e02dac0fa84b6aed2a960905168fa1f5e7387a98cedd94128f43c6c504bd0"
+        },
+        {
+          "ordinal": 205834,
+          "hash": "61a3d7d953a04eceab03590f9579895acc36a4d01fe8be00ad871ed4e1aca0cd"
+        },
+        {
+          "ordinal": 205835,
+          "hash": "72a048cc351df694ce5cef03d95d1f68b7cf68e504b641fb553ac726bc1c1580"
+        },
+        {
+          "ordinal": 205836,
+          "hash": "1dc43818ff33a702545ecddf7e79290b789d74c643e84c7bf1964d085eaebe32"
+        },
+        {
+          "ordinal": 205837,
+          "hash": "cc2941fad31c9e6efe8c7f4fa7dd5f1e6fdd7bbbe895e4d7ce29c125912f4f08"
+        },
+        {
+          "ordinal": 205838,
+          "hash": "7f8434235716283dcbb2c945da2624b2b81958f2ad2a64a42ecaa4f0090864df"
+        },
+        {
+          "ordinal": 205839,
+          "hash": "46615db0ea3b8f8acd4743206add1fe49f503c57449f2164715abbe5f90457f9"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 202,
+      "engine": "beep-bot",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 206848,
+          "hash": "aea8fd9de03a128ae36b70acf7301266c0748a94d4f46d857873c37be2cf54f8"
+        },
+        {
+          "ordinal": 206849,
+          "hash": "2ac371abf6723cb67eb8dee3e993f311fde20b7a27a4296a4d216b374c0189e5"
+        },
+        {
+          "ordinal": 206850,
+          "hash": "672e39005300adc9926a0eb537ff6f6524020334d3ae7f7791bf390b632d99c8"
+        },
+        {
+          "ordinal": 206851,
+          "hash": "78f9c00553ce1a49c5858697cc218dba8201d2b969006f7e8d0d907d9480313e"
+        },
+        {
+          "ordinal": 206852,
+          "hash": "3f80778807d8ff2ae945c4f94eb1b4ef2c748a8e8f4cb3d176a50a1d50577b2b"
+        },
+        {
+          "ordinal": 206853,
+          "hash": "f243e92da87d7b460b22cf719e0d45d4a9f5f05863937fac083d3866c2cccb3f"
+        },
+        {
+          "ordinal": 206854,
+          "hash": "da87e0579a0afc2da8dd9c04fb1bae51b6343ee1672d536a475898d46efae76f"
+        },
+        {
+          "ordinal": 206855,
+          "hash": "088e5de024ce0e3c8b9ac54e83a194a70e858eb9422f92e81e80f6bcecde2234"
+        },
+        {
+          "ordinal": 206856,
+          "hash": "ad172cc77a1df03392970a26bcfecbc1520d4f2603aa98cdf2386c86ad7f77ca"
+        },
+        {
+          "ordinal": 206857,
+          "hash": "8e3a71765b51c0f1b55c20e486f69758971bd9ca11c6a55aad1db117d6b412cf"
+        },
+        {
+          "ordinal": 206858,
+          "hash": "1223a02c97c703369bd8eb8f5bd8d4c84c09567f77dae5d32491ed796f4963dc"
+        },
+        {
+          "ordinal": 206859,
+          "hash": "fd1b22af75d9eee4254884b186d0034bda8905c24d3814ee39c9b2182812bc00"
+        },
+        {
+          "ordinal": 206860,
+          "hash": "f7b34af6a5c92c0bac5a7acc35ab0c8a8a776d29925bc587e9601f837e0c2893"
+        },
+        {
+          "ordinal": 206861,
+          "hash": "d4791f87c63fafb7f50b1a8f6e3ec2871332b0451f8478d63db4b37a800ebb93"
+        },
+        {
+          "ordinal": 206862,
+          "hash": "9a8e2219820e0d4f41a160fc79b88107b77888979785386d213156b96bd2656f"
+        },
+        {
+          "ordinal": 206863,
+          "hash": "fe14874fbee3eaf504a22625da14585aa757ae69527c79f1f53831228595ba81"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
       "slot": 298,
       "engine": "slip-tide",
       "rules": 1,
@@ -1570,6 +1840,438 @@
         "help": "allowed",
         "bank": 7,
         "puzzle": 7
+      }
+    ],
+    [
+      256,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 0
+      }
+    ],
+    [
+      257,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 1
+      }
+    ],
+    [
+      258,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 2
+      }
+    ],
+    [
+      259,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 3
+      }
+    ],
+    [
+      260,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 4
+      }
+    ],
+    [
+      261,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 5
+      }
+    ],
+    [
+      262,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 6
+      }
+    ],
+    [
+      263,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 7
+      }
+    ],
+    [
+      264,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 8
+      }
+    ],
+    [
+      265,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 9
+      }
+    ],
+    [
+      266,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 10
+      }
+    ],
+    [
+      267,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 11
+      }
+    ],
+    [
+      268,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 12
+      }
+    ],
+    [
+      269,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 13
+      }
+    ],
+    [
+      270,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 14
+      }
+    ],
+    [
+      271,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 200,
+        "puzzle": 15
+      }
+    ],
+    [
+      272,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 0
+      }
+    ],
+    [
+      273,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 1
+      }
+    ],
+    [
+      274,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 2
+      }
+    ],
+    [
+      275,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 3
+      }
+    ],
+    [
+      276,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 4
+      }
+    ],
+    [
+      277,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 5
+      }
+    ],
+    [
+      278,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 6
+      }
+    ],
+    [
+      279,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 7
+      }
+    ],
+    [
+      280,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 8
+      }
+    ],
+    [
+      281,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 9
+      }
+    ],
+    [
+      282,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 10
+      }
+    ],
+    [
+      283,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 11
+      }
+    ],
+    [
+      284,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 12
+      }
+    ],
+    [
+      285,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 13
+      }
+    ],
+    [
+      286,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 14
+      }
+    ],
+    [
+      287,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 201,
+        "puzzle": 15
+      }
+    ],
+    [
+      288,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 0
+      }
+    ],
+    [
+      289,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 1
+      }
+    ],
+    [
+      290,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 2
+      }
+    ],
+    [
+      291,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 3
+      }
+    ],
+    [
+      292,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 4
+      }
+    ],
+    [
+      293,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 5
+      }
+    ],
+    [
+      294,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 6
+      }
+    ],
+    [
+      295,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 7
+      }
+    ],
+    [
+      296,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 8
+      }
+    ],
+    [
+      297,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 9
+      }
+    ],
+    [
+      298,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 10
+      }
+    ],
+    [
+      299,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 11
+      }
+    ],
+    [
+      300,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 12
+      }
+    ],
+    [
+      301,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 13
+      }
+    ],
+    [
+      302,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 14
+      }
+    ],
+    [
+      303,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 202,
+        "puzzle": 15
       }
     ],
     [
@@ -3433,6 +4135,9 @@
     "canoes-1",
     "canoes-2",
     "canoes-3",
-    "canoes-4"
+    "canoes-4",
+    "beep-3",
+    "beep-4",
+    "beep-5"
   ]
 }

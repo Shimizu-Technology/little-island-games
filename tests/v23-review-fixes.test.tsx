@@ -12,7 +12,7 @@ import * as feastView from "../src/learn/games/fraction-feast/view";
 const { renderToStaticMarkup } = createRequire(import.meta.url)("react-dom/server");
 const { div } = vi.hoisted(() => ({ div: ({ children }: { children?: unknown }) => children as never }));
 vi.mock("react-native", () => ({
-  View: div, ScrollView: div, Platform: { OS: "ios", select: (o: Record<string, unknown>) => o.ios },
+  View: div, ScrollView: div, Platform: { OS: "ios", select: (o: Record<string, unknown>) => o.ios }, useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
   Animated: { View: div, Value: class { setValue() {} stopAnimation() {} }, timing: () => ({ start() {}, stop() {} }) },
 }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));

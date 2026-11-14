@@ -4,6 +4,7 @@ import Svg, { Ellipse, Path } from "react-native-svg";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import { easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
+import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { PictureObject, Scene } from "../../art/Objects";
 import { ReadingText } from "../../kit/ReadingText";
@@ -176,6 +177,8 @@ function Read({
     t = tale(s),
     small = height < 730;
   const done = taleDone(s);
+  // When the page turns by itself, the next sentence comes into view at the top of the board.
+  useStepReveal(s.page);
 
   // After a right pick, the turtle swims and the page turns by itself.
   useEffect(() => {
