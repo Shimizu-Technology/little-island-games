@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fixture from './fixtures/word-search/bank.json';
 import { certify } from '../src/puzzles/checks';
 import { wordSearch } from '../scripts/puzzles/families/word-search';
+import { families } from '../scripts/puzzles/families';
 import { directions, findWord, foundIndex, initialSearch, letters, searchSolved, snapRay, validSearch, type SearchPuzzle } from '../src/puzzles/words/core';
 import { searchEngine } from '../src/puzzles/words/game';
 import { wordSearchAdapter } from '../src/puzzles/words/adapter';
@@ -77,6 +78,7 @@ describe('baked Word Search rules', () => {
   it('G6-06 keeps fixtures, bands and dares unpublished in the shipping catalog', () => {
     expect(fixture.fixture).toBe(true);expect(registration.puzzles).toEqual([]);expect(registration.packed?.bands ?? []).toEqual([]);
     expect(registration.catalog.banks.size).toBe(0);expect(registration.catalog.dares.size).toBe(0);
+    expect(families.some(f=>f.id==='word-search')).toBe(false);
     expect(challengeFor('word-search')).toBeUndefined();expect(coveEntries().some(e => e.game === 'word-search')).toBe(false);
   });
 });

@@ -6,6 +6,13 @@ import {fileURLToPath} from 'node:url';
 import {privatePath} from '../../words/paths.mjs';
 import {requireThat} from '../../words/core.mjs';
 import {audioFor} from './audio.mjs';
+/** Keep the real template-family cap after filtering picture/audio coverage. */
+export function spreadPacks(packs,total) {
+  const groups=new Map();for(const p of packs)groups.set(p.family,[...(groups.get(p.family)??[]),p]);
+  requireThat(groups.size>=4,'At least four theme families are required in a band');
+  const families=[...groups.values()];
+  return Array.from({length:total},(_,i)=>{const group=families[i%families.length];return group[Math.floor(i/families.length)%group.length];});
+}
 export function makePlan(input,packs) {
   requireThat(input.fixture===false && packs.schemaVersion===1,'Real W2 input required');
   const authored=JSON.parse(readFileSync(new URL('../../../src/puzzles/words/themes.json',import.meta.url))),themes=authored.themes;
@@ -16,7 +23,7 @@ export function makePlan(input,packs) {
   return {schemaVersion:1,banks:specs.map(([band,size,count,directionCount,total,list],j)=>{
     const eligible=packs.packs.map((p,themeIndex)=>({...p,theme:themes[themeIndex].id,wordIds:p.wordIds.filter(id=>{const w=input.words.find(w=>w.id===id);return w && w.spelling.length<=size && (list!=='pictures' || audioFor(w)!==null && pictures.some(p=>p.word===w.spelling.toUpperCase()));})})).filter(p=>p.wordIds.length>=count);
     requireThat(eligible.length>=4,'Not enough reviewed picture/audio or theme coverage for this band');
-    const grids=Array.from({length:total},(_,i)=>{const p=eligible[i%eligible.length];return{id:`search-${band}-${i}`,family:p.family,wordIds:p.wordIds,theme:p.theme,seed:(j+1)*100000+i,size,count,directionCount,distractors:j>=4?2:0};});
+    const grids=spreadPacks(eligible,total).map((p,i)=>{return{id:`search-${band}-${i}`,family:p.family,wordIds:p.wordIds,theme:p.theme,seed:(j+1)*100000+i,size,count,directionCount,distractors:j>=4?2:0};});
     return{slot:80+j,id:`search-${band}`,band,tier:j+1,theme:band,list,wordIds:[...new Set(eligible.flatMap(p=>p.wordIds))],grids};
   })};
 }

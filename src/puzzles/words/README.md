@@ -1,6 +1,6 @@
 # Word Search (G6a)
 
-This is an offline, baked-only Cove game. The production registration has no banks until W1 admits real content. `challengeFor` and `coveEntries` therefore omit it; fixture dares never enter the production catalog. Slots 80–99 and dare specifications 1500–1501 are reserved within G6's ranges.
+This is an offline, baked-only Cove game. The production registration has no banks until W1 admits real content. The build family also remains inactive until the root manifest contains admitted Word Search packs; its real content floors are unchanged. `challengeFor` and `coveEntries` therefore omit it; fixture dares never enter the production catalog. Slots 80–99 and dare specifications 1500–1501 are reserved within G6's ranges.
 
 `core.ts` owns straight paths, eight-direction snapping, one-find semantics, digraph cells and hidden-message leftovers. `game.ts` adds replay evidence, hearing versus help, undo and redo. `adapter.ts` binds the same rules to the packed puzzle kit. Its compact tuple stores row strings (lowercase c/g encode CH/NG cells), endpoint pairs and display spelling; duplicate answer IDs and matching recording keys use compact sentinels; decoding restores explicit cells and validates them. No generator or private policy is imported by the application.
 

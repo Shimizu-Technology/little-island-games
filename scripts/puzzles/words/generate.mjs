@@ -5,6 +5,7 @@ const directions = [[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]];
 const alphabets = { en: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'], ch: ["'",'A','Å','B','CH','D','E','F','G','H','I','K','L','M','N','Ñ','NG','O','P','R','S','T','U','Y'] };
 function random(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s,1664525)+1013904223) >>> 0) / 4294967296); }
 const shuffle = (array, rnd) => { const a = [...array]; for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; };
+/** @param {{words:{id:string,spelling:string,language:string}[],policy:{scan:string[]},seed:number,size:number,count:number,directionCount?:number,id:string,message?:string|null,distractors?:number,attempts?:number}} options */
 export function generateSurface({ words, policy, seed, size, count, directionCount = 8, id, message = null, distractors = 0, attempts = 2000 }) {
   requireThat(Number.isInteger(seed) && Number.isInteger(size) && size >= 4 && size <= 16 && Number.isInteger(count) && count > 0 && count <= 24 && [2,4,8].includes(directionCount) && Number.isInteger(distractors) && distractors>=0 && distractors<=8, 'Invalid Word Search bake options');
   requireThat(new Set(words.map(w=>w.language)).size===1,'A grid needs one language');
@@ -34,8 +35,10 @@ export function generateSurface({ words, policy, seed, size, count, directionCou
     const fixed=new Set();for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(cells[r][c]!==null)fixed.add(`${r},${c}`);
     const free=[];for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(cells[r][c]===null)free.push([r,c]);
     if(message!==null) {
-      const chars=cellsFor(message,language);if(chars.length!==free.length)continue;
-      free.forEach(([r,c],i)=>{cells[r][c]=chars[i];});
+      const used=new Set(listed.flatMap(w=>w.cells.map(([r,c])=>`${r},${c}`))),leftovers=[];
+      for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!used.has(`${r},${c}`))leftovers.push([r,c]);
+      const chars=cellsFor(message,language);if(chars.length!==leftovers.length || leftovers.some(([r,c],i)=>cells[r][c]!==null && cells[r][c]!==chars[i]))continue;
+      leftovers.forEach(([r,c],i)=>{cells[r][c]=chars[i];});
     } else free.forEach(([r,c])=>{cells[r][c]=alphabet[Math.floor(rnd()*alphabet.length)];});
     // Repair filler only. Answers and look-alike trails are fixed, with no scan exemptions added.
     let clean=false;
