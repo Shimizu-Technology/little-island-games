@@ -1099,7 +1099,9 @@
       "evidence": [],
       "gate": "RC",
       "status": "not run",
-      "mechanics": [],
+      "mechanics": [
+        "M32"
+      ],
       "source": "PLAN §10 every game; WORK-LEDGER game row"
     },
     {
@@ -1779,7 +1781,9 @@
       "evidence": [],
       "gate": "RC",
       "status": "not run",
-      "mechanics": [],
+      "mechanics": [
+        "M05"
+      ],
       "source": "PLAN §10 every game; WORK-LEDGER game row"
     },
     {
@@ -2968,7 +2972,8 @@
         "odd-one-out",
         "lamps",
         "carve-the-islands",
-        "one-in-each-cove"
+        "one-in-each-cove",
+        "reef-sweep"
       ],
       "availability": "planned",
       "dimensions": [
@@ -3698,7 +3703,8 @@
         "letter-lagoon",
         "pattern-path",
         "shape-shift",
-        "hafa-adai"
+        "hafa-adai",
+        "gate-crab"
       ],
       "availability": "registered",
       "dimensions": [

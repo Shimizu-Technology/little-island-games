@@ -69,7 +69,7 @@ export function discoverInventory(root = process.cwd(), scope = readScope(root))
   return { games, challenge, cove, banks, mechanics: scope.mechanics.map(m => m.id) };
 }
 export function validateMatrix(matrix: Matrix, scope: Scope, inventory: Inventory): void {
-  const fail = (message: string): never => { throw new Error(`QA matrix: ${message}`); };
+  function fail(message: string): never { throw new Error(`QA matrix: ${message}`); }
   if (matrix.schemaVersion !== 1 || scope.schemaVersion !== 1 || matrix.passesRequired !== 2 || !/^[a-f0-9]{40}$/.test(matrix.baseline)) fail('invalid schema, baseline or pass contract');
   const groups: Record<string, number | undefined> = { games: 92, mechanics: 36, journeys: 34, play: 11, 'real-device': 11, home: 10, 'bank-sampling': undefined };
   const ids = matrix.rows.map(r => r.id), games = new Set(scope.games.map(g => g.id)), registered = new Set(inventory.games);
@@ -81,6 +81,7 @@ export function validateMatrix(matrix: Matrix, scope: Scope, inventory: Inventor
   for (const mechanic of scope.mechanics) {
     const row = matrix.rows.find(r => r.group === 'mechanics' && r.id === mechanic.id);
     if (!row || row.title !== mechanic.name || row.executionCases !== 3 || row.dimensions.length !== 3) fail(`missing or incomplete mechanic: ${mechanic.id}`);
+    if (JSON.stringify([...row.games].sort()) !== JSON.stringify([...mechanic.games].sort())) fail(`mechanic game mapping drift: ${mechanic.id}`);
     if (mechanic.games.some(game => !gameRow(game)?.mechanics?.includes(mechanic.id))) fail(`missing game-to-mechanic coverage: ${mechanic.id}`);
   }
   for (const id of inventory.mechanics) if (!matrix.rows.some(r => r.group === 'mechanics' && r.id === id)) fail(`missing registered mechanic: ${id}`);
@@ -95,6 +96,7 @@ export function validateMatrix(matrix: Matrix, scope: Scope, inventory: Inventor
     for (const game of row.games) if (!games.has(game)) fail(`unknown game ${game}: ${row.id}`);
     if (row.group === 'games') {
       const game = row.games[0];
+      if (!row.mechanics?.length) fail(`missing game-to-mechanic coverage: ${row.id}`);
       if (row.games.length !== 1 || row.availability !== (registered.has(game) ? 'registered' : 'planned')) fail(`registration availability drift: ${row.id}`);
       if (!registered.has(game) && row.status !== 'not run') fail(`unbuilt game cannot be executed: ${row.id}`);
       for (const id of row.mechanics ?? []) if (!scope.mechanics.some(m => m.id === id && m.games.includes(game))) fail(`unknown mechanic mapping: ${row.id}/${id}`);
