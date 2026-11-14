@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "fixture": true,
-  "label": "TEST / DEV ONLY — no family approval",
+  "label": "TEST / DEV ONLY \u2014 no family approval",
   "puzzles": [
     {
       "language": "en",
@@ -644,50 +644,50 @@
       "cells": [
         [
           "C",
+          "R",
+          "A",
           "B",
+          "K",
+          "T"
+        ],
+        [
+          "B",
+          "E",
+          "A",
+          "R",
+          "W",
+          "M"
+        ],
+        [
           "C",
-          "J",
+          "N",
+          "X",
           "I",
+          "T",
+          "B"
+        ],
+        [
+          "J",
+          "W",
+          "C",
+          "W",
+          "K",
           "E"
         ],
         [
-          "R",
-          "E",
-          "N",
-          "W",
-          "O",
-          "V"
-        ],
-        [
-          "A",
-          "A",
-          "X",
-          "C",
-          "E",
-          "V"
-        ],
-        [
-          "B",
-          "R",
           "I",
-          "W",
-          "C",
-          "X"
-        ],
-        [
-          "K",
-          "W",
-          "T",
-          "K",
-          "S",
-          "N"
-        ],
-        [
-          "T",
-          "M",
-          "B",
+          "O",
           "E",
-          "H",
+          "C",
+          "S",
+          "H"
+        ],
+        [
+          "E",
+          "V",
+          "V",
+          "X",
+          "N",
           "R"
         ]
       ],
@@ -697,9 +697,9 @@
           "spelling": "CRAB",
           "cells": [
             0,
-            6,
-            12,
-            18
+            1,
+            2,
+            3
           ],
           "audio": "crab"
         },
@@ -707,10 +707,10 @@
           "id": "bear",
           "spelling": "BEAR",
           "cells": [
-            1,
+            6,
             7,
-            13,
-            19
+            8,
+            9
           ],
           "audio": "bear"
         }
