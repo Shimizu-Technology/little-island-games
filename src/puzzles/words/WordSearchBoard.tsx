@@ -22,9 +22,9 @@ const LetterCell = memo(function LetterCell({ letter, index, size, selected, tap
   return <View accessible accessibilityRole="button" accessibilityLabel={described} accessibilityState={{ selected }} onAccessibilityTap={() => tap(index)} accessibilityActions={[{ name: 'activate', label: 'Choose this letter' }]} onAccessibilityAction={() => tap(index)} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', borderWidth: selected ? 2 : 0, borderColor: C.gold }}><Text maxFontSizeMultiplier={1.15} style={{ color: C.ink, fontSize: size * (letter.length > 1 ? .42 : .5), fontWeight: '700' }}>{letter}</Text></View>;
 });
 type Pointer = { start: number; last: number; direction: Direction | null; cells: number[]; hunter: 0 | 1; moved: boolean };
-export type WordSearchBoardProps = { state: State; dispatch: (a: Action) => void; active: boolean; width: number; together?: boolean };
+export type WordSearchBoardProps = { state: State; dispatch: (a: Action) => void; active: boolean; width: number; together?: boolean; resetKey?: string };
 /** Each native pointer has its own ray and hunter. No score or race is computed. */
-export function WordSearchBoard({ state, dispatch, active, width, together = false }: WordSearchBoardProps) {
+export function WordSearchBoard({ state, dispatch, active, width, together = false, resetKey }: WordSearchBoardProps) {
   const p = state.puzzle, { width: screenWidth } = useWindowDimensions(), tablet = screenWidth >= 700;
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), sound = useSoundControls(active);
   const [first, setFirst] = useState<number | null>(null), [previews, setPreviews] = useState<Pointer[]>([]), [zoom, setZoom] = useState(false), [notice, setNotice] = useState(''), [screenReader, setScreenReader] = useState(false);
@@ -37,7 +37,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const cancel = () => { pointers.current.clear(); setPreviews([]); interaction(false); };
   // Geometry/identity changes cancel native touches before another endpoint can be accepted.
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize the external touch session at this boundary.
-  useEffect(() => { pointers.current.clear(); firstRef.current=null; setPreviews([]); setFirst(null); interaction(false); }, [width, active, interaction, p]);
+  useEffect(() => { pointers.current.clear(); firstRef.current=null; setPreviews([]); setFirst(null); setNotice(''); interaction(false); }, [resetKey, width, active, interaction, p]);
   useEffect(() => () => { interactionRef.current(false); }, []);
   const tap = useCallback((i: number, hunter = state.turn) => {
     if (!active) return;

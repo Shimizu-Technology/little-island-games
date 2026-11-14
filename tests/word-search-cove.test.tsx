@@ -13,7 +13,7 @@ import { fixtureRegistration, fixturePuzzles } from './fixtures/word-search/regi
 import { WordSearchBoard } from '../src/puzzles/words/WordSearchBoard';
 import type { WordSearchBoardProps } from '../src/puzzles/words/WordSearchBoard';
 import type { ChallengeSession } from '../src/state/challenge';
-import type { Action } from '../src/puzzles/words/game';
+import { searchEngine, type Action } from '../src/puzzles/words/game';
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], width: 393, played: vi.fn(() => true), fail: false }));
 vi.mock('../src/state/storage', () => ({storage:{get:async()=>db.raw,set:async(raw:string)=>{if(db.fail)throw Error('disk');db.raw=raw;},preserve:async()=>{},writeDraft:async(raw:string)=>{await new Promise(r=>setTimeout(r,5));db.rows.push(raw);},readDrafts:async()=>db.rows,discardSession:async()=>{}}}));
 vi.mock('react-native', () => ({AccessibilityInfo:{isScreenReaderEnabled:async()=>false,addEventListener:()=>({remove(){}})},ScrollView:'section',View:'div',TextInput:'input',Pressable:'button',Platform:{OS:'ios'},useWindowDimensions:()=>({width:db.width,height:852}),AppState:{addEventListener:()=>({remove(){}})}}));
@@ -91,4 +91,15 @@ describe('Word Search through the real Cove Store',()=>{
    await press(screen,'Hear word');await settle();expect(JSON.stringify(paused().payload)).toContain('hear');expect(JSON.stringify(paused().payload)).not.toContain('help');
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
+ it('clears a pending first-letter instruction at a new round identity',async()=>{
+  const p=fixturePuzzles[0].descriptor,state=searchEngine.create(p,{version:1},{ownRead:false,supportOff:false});let screen!:ReactTestRenderer;
+  try{
+   await act(async()=>{screen=create(<WordSearchBoard state={state} dispatch={()=>{}} active width={353} resetKey="before"/>);});
+   await act(async()=>{const h=surface(screen).props;h.onResponderGrant(event(0));h.onResponderRelease(event(0));});
+   expect(JSON.stringify(screen.toJSON())).toContain('Now choose the last letter.');
+   await act(async()=>screen.update(<WordSearchBoard state={state} dispatch={()=>{}} active width={353} resetKey="after"/>));
+   expect(JSON.stringify(screen.toJSON())).not.toContain('Now choose the last letter.');
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+
 });

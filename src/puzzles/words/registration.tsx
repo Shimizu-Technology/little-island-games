@@ -18,7 +18,7 @@ export function defineWordSearch(banks: readonly SearchBank[], puzzles: readonly
     packed: banks.length ? { family: 'word-search', banks: banks.map(b => ({ ...b, path: 'endless' })), awards: 0,
       open: async (l, ordinal) => { const d = await l.entry(wordSearchAdapter(), 'word-search', ordinal); return { ref: d.ref, descriptor: d.payload }; },
       describe: () => ({ awards: [null, null] }), ...(loader ? { loader } : {}) } : undefined,
-    Board: (props: ChallengeViewProps<State, Action> & { together?: boolean }) => <Suspense fallback={null}><Board {...props} together={props.together}/></Suspense>,
+    Board: (props: ChallengeViewProps<State, Action> & { together?: boolean; resetKey?: string }) => <Suspense fallback={null}><Board {...props} together={props.together}/></Suspense>,
     controls: { help: () => ['help'], reset: () => ['undo'] },
     completionText: (_ref, result, facts) => result.event === 'together' ? 'You found every word together.' : facts?.helpUsed ? 'Every word found, with help along the way.' : 'You found every word.',
   });
@@ -38,7 +38,7 @@ export function defineWordSearch(banks: readonly SearchBank[], puzzles: readonly
     },
   } satisfies PackedOpen);
   return { ...entry, ...(packed?{packed}:{}), render: (...args: Parameters<typeof entry.render>) => {
-    const element = entry.render(...args) as React.ReactElement<ChallengeViewProps<State, Action> & { together?: boolean }> | null;
-    return element ? React.cloneElement(element, { together: args[0].partner !== null }) : null;
+    const element = entry.render(...args) as React.ReactElement<ChallengeViewProps<State, Action> & { together?: boolean; resetKey?: string }> | null;
+    return element ? React.cloneElement(element, { together: args[0].partner !== null, resetKey: `${args[0].owner}:${args[0].id}` }) : null;
   } };
 }

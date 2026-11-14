@@ -638,6 +638,86 @@
       "theme": "Island hunt",
       "list": "hidden",
       "message": null
+    },
+    {
+      "language": "en",
+      "cells": [
+        [
+          "C",
+          "B",
+          "C",
+          "J",
+          "I",
+          "E"
+        ],
+        [
+          "R",
+          "E",
+          "N",
+          "W",
+          "O",
+          "V"
+        ],
+        [
+          "A",
+          "A",
+          "X",
+          "C",
+          "E",
+          "V"
+        ],
+        [
+          "B",
+          "R",
+          "I",
+          "W",
+          "C",
+          "X"
+        ],
+        [
+          "K",
+          "W",
+          "T",
+          "K",
+          "S",
+          "N"
+        ],
+        [
+          "T",
+          "M",
+          "B",
+          "E",
+          "H",
+          "R"
+        ]
+      ],
+      "words": [
+        {
+          "id": "crab",
+          "spelling": "CRAB",
+          "cells": [
+            0,
+            6,
+            12,
+            18
+          ],
+          "audio": "crab"
+        },
+        {
+          "id": "bear",
+          "spelling": "BEAR",
+          "cells": [
+            1,
+            7,
+            13,
+            19
+          ],
+          "audio": "bear"
+        }
+      ],
+      "theme": "Two hunters",
+      "list": "pictures",
+      "message": null
     }
   ]
 }
