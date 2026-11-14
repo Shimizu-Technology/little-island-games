@@ -73,7 +73,7 @@ it.each([[393,852],[852,393],[744,1133],[1133,744]])('budgets board plus first l
 });
 it('zoom has an explicit pan mode so native scrolling never steals word selection',async()=>{
  const large={...p,cells:Array.from({length:16},()=>Array(16).fill('A'))};await mount({state:{...initial(),puzzle:large}});await press('Enlarge letters');
- expect(screen.root.findAllByType('scroll' as React.ElementType).filter(n=>n.props.scrollEnabled).length).toBe(0);await press('Move enlarged grid');expect(surface().props.onStartShouldSetResponder()).toBe(false);
+ expect(screen.root.findAllByType('scroll' as React.ElementType).filter(n=>n.props.scrollEnabled).length).toBe(0);await press('Move grid');expect(surface().props.onStartShouldSetResponder()).toBe(false);
 });
 it('keeps the full board and first list row within one height budget, including the host bar',async()=>{
  const {searchLayout}=await import('../src/puzzles/words/layout');
@@ -95,4 +95,11 @@ it('never reveals unfound teaching spellings in a hidden-list round',async()=>{
 it('provides a neutral picture fallback with Hear still available when loading fails',async()=>{
  await mount();expect(screen.root.findAll(n=>n.props.accessibilityLabel==='Picture unavailable. Use Hear word.').length).toBe(p.words.length);
  expect(screen.root.findAllByType('button').filter(n=>n.children.includes('Hear word')).length).toBe(p.words.length);
+});
+it('keeps enlargement and pan mode visible ahead of a dense AX5 board',async()=>{
+ env.fontScale=3.12;const large={...p,cells:Array.from({length:16},()=>Array(16).fill('A'))};await mount({state:{...initial(),puzzle:large}});
+ const container=screen.root.findByProps({testID:'word-search-keyboard'}),children=container.children as import('react-test-renderer').ReactTestInstance[];
+ const tools=children.findIndex(n=>n.props?.testID==='search-viewport-tools'),board=children.findIndex(n=>n.props?.testID==='search-board-list');
+ expect(tools).toBeGreaterThanOrEqual(0);expect(tools).toBeLessThan(board);
+ await press('Enlarge letters');expect(screen.root.findByProps({testID:'search-viewport-tools'}).findAllByType('button').some(n=>n.children.includes('Move grid'))).toBe(true);
 });

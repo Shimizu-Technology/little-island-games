@@ -10,7 +10,10 @@ export function searchLayout(width: number, height: number, fontScale: number, c
   // plus one complete list card below the board (beside layouts share its height).
   const listRow = pictures ? 64 + 38 + 44 + 28 : 58;
   const overhead = short ? 38 + 33 + 24 : 58 + 30 + 33 + (together ? 86 : 0) + 48 + (beside ? 0 : listRow);
-  const room = large ? Math.max(48, height - chrome.top - chrome.bottom - chrome.bar - overhead) : Infinity;
+  let room = large ? Math.max(48, height - chrome.top - chrome.bottom - chrome.bar - overhead) : Infinity;
+  // Dense boards keep their enlargement/pan mode row above the viewport, within the same budget.
+  const tools = large && Math.floor(Math.min(boardWidth / columns, room / rows)) < 44;
+  if (tools) room = Math.max(32, room - 52);
   const size = Math.max(2, Math.floor(Math.min(boardWidth / columns, room / rows)));
-  return { large, short, beside, listWidth, boardWidth, size, room };
+  return { large, short, tools, beside, listWidth, boardWidth, size, room };
 }

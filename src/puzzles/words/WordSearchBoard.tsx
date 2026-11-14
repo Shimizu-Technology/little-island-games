@@ -116,9 +116,10 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   };
   const list = p.list, allFound = state.found.length === p.words.length;
   const title = themes.find(t => t.id === p.theme)?.title ?? p.theme;
-  const instruction = <Copy maxFontSizeMultiplier={copyCap} numberOfLines={layout.large ? 1 : undefined} adjustsFontSizeToFit={layout.large}>{layout.large ? 'Drag or tap first and last letters' : 'Find the words in a straight line. Drag, or choose the first and last letters.'}</Copy>;
+  const instruction = <Copy maxFontSizeMultiplier={copyCap} numberOfLines={layout.large ? 1 : undefined} adjustsFontSizeToFit={layout.large}>{layout.large ? zoom ? panning ? 'Move the grid, then choose letters' : 'Drag to select. Use Move grid to pan.' : 'Drag or tap first and last letters' : 'Find the words in a straight line. Drag, or choose the first and last letters.'}</Copy>;
   const cue = together && <Copy maxFontSizeMultiplier={copyCap}>{tablet ? 'Choose your hunter. Keep your colour between turns.' : `Take turns. ${state.turn === 0 ? 'Green solid' : 'Purple dotted'} trail goes next.`}</Copy>;
   const hunters = together && tablet && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{(['Green hunter · solid', 'Purple hunter · dotted'] as const).map((name,h) => <Button key={name} maxFontSizeMultiplier={cap} quiet compact selected={hunter===h} onPress={() => setHunter(h as 0 | 1)}>{name}</Button>)}</View>;
+  const viewportTools = needsZoom && <View testID="search-viewport-tools" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button maxFontSizeMultiplier={cap} quiet compact selected={zoom} onPress={() => { cancel(); setZoom(!zoom); setPanning(false); }}>{zoom ? 'Fit whole grid' : 'Enlarge letters'}</Button>{zoom && <Button maxFontSizeMultiplier={cap} quiet compact selected={panning} onPress={() => { cancel(); setPanning(!panning); }}>{panning ? 'Choose letters' : 'Move grid'}</Button>}</View>;
   const answerWidth = layout.large ? (layout.beside ? layout.listWidth - 24 : Math.min(width - 24, 240)) : width - 24;
   const answerMax = atLarge(fontScale, Math.min(1.5, ...p.words.map(w => wordFitMultiplier(w.spelling, 16, answerWidth, 1.5))));
   const board = <ScrollView horizontal scrollEnabled={zoom && panning} style={{ maxWidth: layout.boardWidth, flexGrow: 0 }}>
@@ -139,11 +140,11 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
     <Heading maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier(title, 24, width, layout.short ? 1.3 : 2))} style={{ fontSize: 24 }}>{title}</Heading>
     {!layout.short && <>{instruction}{cue}{hunters}</>}
     {layout.large && <Copy maxFontSizeMultiplier={cap} accessibilityLabel={spoken} accessibilityLiveRegion="polite" numberOfLines={1} adjustsFontSizeToFit style={{ height: 33 }}>{notice || (allFound ? 'Every word found.' : `${state.found.length} of ${p.words.length} words found.`)}</Copy>}
+    {layout.large && viewportTools}
     <View testID="search-board-list" style={{ flexDirection: layout.beside ? 'row' : 'column', alignItems: 'flex-start', gap: 8 }}>{board}{layout.large && wordList}</View>
     {layout.short && <>{instruction}{cue}{hunters}</>}
-    {needsZoom && <Button maxFontSizeMultiplier={cap} quiet compact selected={zoom} onPress={() => { cancel(); setZoom(!zoom); setPanning(false); }}>{zoom ? 'Fit whole grid' : 'Enlarge letters'}</Button>}
-    {zoom && <Button maxFontSizeMultiplier={cap} quiet compact selected={panning} onPress={() => { cancel(); setPanning(!panning); }}>{panning ? 'Choose letters' : 'Move enlarged grid'}</Button>}
-    {zoom && panning && <Copy maxFontSizeMultiplier={copyCap}>Move the grid, then choose letters to resume hunting.</Copy>}
+    {!layout.large && viewportTools}
+    {zoom && panning && !layout.large && <Copy maxFontSizeMultiplier={copyCap}>Move the grid, then choose letters to resume hunting.</Copy>}
     {p.language === 'ch' && state.found.length > 0 && <View style={{ gap: 6 }}><Copy maxFontSizeMultiplier={copyCap}>Teaching spelling · CH and NG each share one cell.</Copy>{state.found.map(([i]) => <Copy maxFontSizeMultiplier={copyCap} key={p.words[i].id}>{p.words[i].spelling}</Copy>)}</View>}
     {!layout.large && <Copy accessibilityLabel={spoken} accessibilityLiveRegion="polite">{spoken}</Copy>}
     {!layout.large && wordList}
