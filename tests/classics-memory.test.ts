@@ -90,3 +90,71 @@ describe("Memory suggested dares and cross-modal cards", () => {
     expect(memoryDareEngine.validAction(["f", 24])).toBe(false);
   });
 });
+
+it("Help is accepted before and during preview", () => {
+  let s = launch(0);
+  expect(registration.move(s, ["h"])).not.toBeNull();
+  s = registration.move(s, ["p"])!;
+  expect(registration.move(s, ["h"])).not.toBeNull();
+});
+it("adversarial undo play offers an explicit bounded restart without laundering turns", () => {
+  let s = launch(5);
+  const d = memoryDareDescriptors[5], pair = groups(d.cards)[0];
+  for (let i = 0; i < 1000; i++) {
+    const n = registration.move(s, ["f", pair[0]]);
+    if (!n) break;
+    s = n;
+    const u = registration.move(s, ["u"]); if (!u) break; s = u;
+  }
+  expect(registration.full?.(s)).toBe(true);
+  expect(JSON.stringify(s).length).toBeLessThanOrEqual(4096);
+  const next = registration.restart!(s, "continued-memory", emptyChallenge());
+  const payload = next.payload as { initial: { prior: { flips: number } } };
+  expect(payload.initial.prior.flips).toBeGreaterThan(100);
+  expect(registration.move(next, ["f", pair[0]])).not.toBeNull();
+  expect(validChallengeSession(next, "family", registration.catalog)).toBe(true);
+});
+it("120 no-memory 12-pair simulations finish or offer an honest restart", () => {
+  let finished = 0, capacity = 0;
+  for (const idx of [5, 11, 17, 4, 10, 16]) for (let seed = 1; seed <= 20; seed++) {
+    const d = memoryDareDescriptors[idx], rng = random(seed * 97 + idx);
+    let s = launch(idx);
+    if (d.preview) s = registration.move(s, ["g"])!;
+    const matched = new Set<number>();
+    let stopped = false;
+    for (let turns = 0; turns < 2000 && !s.result && !stopped; turns++) {
+      const hidden = d.cards.map((_, i) => i).filter(i => !matched.has(i));
+      const a = hidden[Math.floor(rng() * hidden.length)];
+      const rest = hidden.filter(i => i !== a), b = rest[Math.floor(rng() * rest.length)];
+      const actions: Action[] = [["f", a], ["f", b]];
+      const match = memoryKey(d.cards[a]) === memoryKey(d.cards[b]);
+      if (!match) actions.push(["n"]);
+      for (const action of actions) {
+        const n = registration.move(s, action);
+        if (!n) {
+          expect(registration.full?.(s)).toBe(true);
+          const next = registration.restart!(s, "memory-capacity-restart", emptyChallenge());
+          expect(validChallengeSession(next, "family", registration.catalog)).toBe(true);
+          expect(registration.move(next, ["f", 0])).not.toBeNull();
+          capacity++; stopped = true; break;
+        }
+        s = n;
+        expect(JSON.stringify(s).length).toBeLessThanOrEqual(4096);
+      }
+      if (match) { matched.add(a); matched.add(b); }
+    }
+    if (s.result) finished++;
+    expect(!!s.result || stopped).toBe(true);
+  }
+  expect(finished + capacity).toBe(120);
+});
+it("repeated new attempts retain Help and preview evidence and can start durably", () => {
+  const d = memoryDareDescriptors[4];
+  let s = registration.move(launch(4), ["p"])!;
+  s = registration.move(s, ["h"])!;
+  s = registration.restart!(s, "memory-next-one", emptyChallenge());
+  s = registration.restart!(s, "memory-next-two", emptyChallenge());
+  expect(registration.catalog.codecs.get(s.codec)!.canStart(s)).toBe(true);
+  for (const pair of groups(d.cards)) for (const i of pair) s = registration.move(s, ["f", i])!;
+  expect(s.result).toMatchObject({ event: "helped", dares: [] });
+});

@@ -18,6 +18,7 @@ describe("Classics authored tactics", () => {
       let s = createTic(defaultOptions);
       for (const i of d.prefix) { expect(ticOutcome(s.board)).toBeNull(); const next = ticMove(s, i); expect(next).not.toBe(s); s = next; }
       const player = ticTurn(s.board), other = player === "X" ? "O" : "X", answers = forkSquares(s.board, player);
+      expect(s.board.flatMap((v, i) => { if (v) return []; const b = [...s.board]; b[i] = player; return ticOutcome(b) === player ? [i] : []; }), d.title).toEqual([]);
       expect(answers.length, d.title).toBeGreaterThan(0);
       // Independent engine proof: after any legal defence, at least one immediate winning move remains.
       const actual: number[] = [];
@@ -93,4 +94,12 @@ describe("Classics authored tactics", () => {
     }
     expect(ticForkEngine.validAction(["s", 9])).toBe(false);
   });
+});
+
+it("every clean Checkers mark requires a real choice", () => {
+  for (const d of checkersTacticsDescriptors) {
+    const p = tacticsPosition(d), legal = checkersMoves(p, "classic"), wins = winningCaptures(p);
+    expect(legal.length, d.title).toBeGreaterThan(1);
+    expect(legal.length, d.title).toBeGreaterThan(wins.length);
+  }
 });

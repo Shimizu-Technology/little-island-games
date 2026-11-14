@@ -31,10 +31,10 @@ export const ticForkDescriptors: readonly Descriptor[] = [
   { version: 1, prefix: [0, 1, 4, 8], title: "Across the middle" },
   { version: 1, prefix: [0, 2, 3, 6], title: "Look along the edges" },
   { version: 1, prefix: [0, 1, 2, 7], title: "From the centre" },
-  { version: 1, prefix: [0, 4, 2, 3], title: "A second way through" },
+  { version: 1, prefix: [0, 1, 7, 4], title: "A second way through" },
   { version: 1, prefix: [0, 1, 5, 3], title: "Side by side" },
-  { version: 1, prefix: [0, 1, 2, 4, 8], title: "O has a turn" },
-  { version: 1, prefix: [0, 1, 3, 4, 5], title: "Watch both diagonals" },
+  { version: 1, prefix: [0, 1, 8, 2, 5], title: "O has a turn" },
+  { version: 1, prefix: [0, 2, 1, 7, 4], title: "Watch both diagonals" },
 ];
 export const ticForkEngine: ReplayEngine<Descriptor, Initial, Action, State> = {
   initial: () => ({ version: 1 }),

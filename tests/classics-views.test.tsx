@@ -61,7 +61,7 @@ describe("Classics native view controls", () => {
     await act(() => r.unmount());
   });
   it("Checkers taps every hop of a chain before dispatching the complete turn", async () => {
-    const d = checkersTacticsDescriptors[1], state = checkersTacticsEngine.create(d, { version: 1 }, options), dispatch = vi.fn(); let r!: ReactTestRenderer;
+    const d: (typeof checkersTacticsDescriptors)[number] = { version: 1, pieces: [[17,1],[26,-1],[44,-1]], turn: 1, title: "Chain control fixture" }, state = checkersTacticsEngine.create(d, { version: 1 }, options), dispatch = vi.fn(); let r!: ReactTestRenderer;
     await act(() => { r = create(<CheckersTacticsBoard state={state} dispatch={dispatch} active width={320} sessionKey="capture-session"/>); });
     expect(words(r.root)).toContain("ABCDEFGH");
     await act(() => button(r, "B6, red piece").props.onPress());

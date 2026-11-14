@@ -13,14 +13,14 @@ export function tacticsPosition(d: Descriptor): Position {
 /** Exact one-turn search of every legal full jump chain, including crowning and blocked opponents. */
 export const winningCaptures = (p: Position) => checkersMoves(p, "classic").filter(m => m.captured.length > 0 && applyCheckers(p, m, "classic").outcome === (p.turn === 1 ? "red" : "blue"));
 export const checkersTacticsDescriptors: readonly Descriptor[] = [
-  { version: 1, pieces: [[17,1],[26,-1]], turn: 1, title: "The first hop" },
-  { version: 1, pieces: [[17,1],[26,-1],[44,-1]], turn: 1, title: "Keep jumping" },
-  { version: 1, pieces: [[21,1],[28,-1],[42,-1]], turn: 1, title: "Across the board" },
-  { version: 1, pieces: [[42,-1],[35,1],[21,1]], turn: -1, title: "Blue looks ahead" },
-  { version: 1, pieces: [[42,2],[35,-1],[21,-1]], turn: 1, title: "A king turns back" },
-  { version: 1, pieces: [[17,-2],[26,1],[44,1]], turn: -1, title: "A blue king's route" },
-  { version: 1, pieces: [[40,1],[49,-1]], turn: 1, title: "The last hop crowns" },
-  { version: 1, pieces: [[23,-1],[14,1]], turn: -1, title: "Blue reaches the far row" },
+  { version: 1, pieces: [[28,-2],[58,-2],[51,2],[53,2],[37,2]], turn: -1, title: "Choose the winning route" },
+  { version: 1, pieces: [[33,-2],[12,-2],[42,-2],[35,2],[19,2],[51,2]], turn: -1, title: "Look through the chain" },
+  { version: 1, pieces: [[8,-2],[28,-2],[23,-2],[33,2],[17,2],[35,2]], turn: -1, title: "Follow the turning king" },
+  { version: 1, pieces: [[51,-2],[55,-2],[35,-2],[46,2],[30,2],[28,2]], turn: -1, title: "Find the finishing jump" },
+  { version: 1, pieces: [[35,-2],[5,-2],[12,2],[10,2],[26,2]], turn: -1, title: "Choose the winning route again" },
+  { version: 1, pieces: [[30,-2],[51,-2],[21,-2],[28,2],[44,2],[12,2]], turn: -1, title: "Look through the chain again" },
+  { version: 1, pieces: [[55,-2],[35,-2],[40,-2],[30,2],[46,2],[28,2]], turn: -1, title: "Follow the turning king again" },
+  { version: 1, pieces: [[12,-2],[8,-2],[28,-2],[17,2],[33,2],[35,2]], turn: -1, title: "Find the finishing jump again" },
   { version: 1, pieces: [[35,2],[5,2],[12,-2],[10,-2],[26,-2]], turn: 1, title: "Choose your starting king" },
   { version: 1, pieces: [[30,2],[51,2],[21,2],[28,-2],[44,-2],[12,-2]], turn: 1, title: "Three hops home" },
   { version: 1, pieces: [[55,2],[35,2],[40,2],[30,-2],[46,-2],[28,-2]], turn: 1, title: "The long way round" },

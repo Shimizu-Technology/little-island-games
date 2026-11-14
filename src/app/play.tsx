@@ -599,7 +599,7 @@ function Game({ id }: { id: GameId }) {
         {hasInstructions && <Button onPress={() => sound(instructions)} disabled={!store.save.settings.sound}>
           Listen to the instructions
         </Button>}
-        {!store.save.settings.sound && <Copy>Turn sound on to hear the instructions.</Copy>}
+        {hasInstructions && !store.save.settings.sound && <Copy>Turn sound on to hear the instructions.</Copy>}
         {s?.game === "word-rescue" && (
           <>
             <Heading style={{ fontSize: 18 }}>

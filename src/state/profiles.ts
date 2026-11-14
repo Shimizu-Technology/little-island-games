@@ -151,7 +151,7 @@ export function assignEarlier(save: Save, key: string, owner: string | null): Sa
     if (key.includes(':')) { const [field, game] = key.split(':') as ['learn'|'sessions'|'board'|'activities', string]; delete (u.rounds[field] as Record<string, unknown>)[game]; }
     else if (key === 'explore') { delete u.explore; delete u.exploreUntouched; }
     else delete u[key as 'skills' | 'preferences'];
-    return projectProfile(next);
+    return projectProfile(migrateNumberRecords(next));
   }
   const target = profiles.people[owner];
   if (key.includes(':')) {
@@ -184,5 +184,5 @@ export function assignEarlier(save: Save, key: string, owner: string | null): Sa
     for (const field of ['recent','recentLearn','recentBoard','recentActivity','recentArcade'] as const) if (target[field] == null && prefs[field] != null) Object.assign(target,{[field]:prefs[field]});
     delete u.preferences;
   }
-  return projectProfile(next);
+  return projectProfile(migrateNumberRecords(next));
 }

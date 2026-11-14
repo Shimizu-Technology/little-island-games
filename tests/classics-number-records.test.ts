@@ -3,7 +3,7 @@ import { createNumbers, type NumbersState } from "../src/games/numbers";
 import { defaultOptions } from "../src/games/types";
 import { recordNumberRound, validNumberRecords, migrateNumberRecords } from "../src/state/numberRecords";
 import { emptySave, parseSave } from "../src/state/validation";
-import { encodeSave, migrateProfiles, projectProfile, syncProfile } from "../src/state/profiles";
+import { assignEarlier, encodeSave, migrateProfiles, projectProfile, syncProfile } from "../src/state/profiles";
 import { addLearner } from "../src/learn/learners";
 
 const round = (id: string, maxNumber: 6 | 9 | 12, available: number[], dice: number[]): NumbersState => ({
@@ -45,4 +45,14 @@ describe("Number Island learner records", () => {
     expect(unowned.numberRecords).toBeUndefined();
     expect(unowned.profiles?.unassigned.rounds.sessions.numbers).toEqual(s);
   });
+});
+
+it("assigns a finished earlier round with an immediate record and accepts missing optional records", () => {
+  const s = round("earlier", 9, [9], [1, 1]);
+  const old = migrateProfiles({ ...emptySave(), sessions: { numbers: s } });
+  const original = JSON.stringify(old);
+  expect(parseSave(encodeSave(old)).profiles?.people.family.numberRecords).toBeUndefined();
+  const assigned = assignEarlier(old, "sessions:numbers", "family");
+  expect(assigned.numberRecords?.bestRemaining[9]).toBe(9);
+  expect(JSON.stringify(old)).toBe(original);
 });
