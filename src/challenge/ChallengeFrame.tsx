@@ -157,6 +157,8 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // Large titles stop growing where their longest word still fits the line, so none breaks mid-word.
   // A pinned board's chrome stays compact (Back stops at 1.3x), so its dare line stops at 1.5x.
   const PINNED_MAX=1.5;
+  // Buttons under an open board stop at 1.3x, so the board and its keys keep the screen.
+  const BELOW_MAX=1.3;
   const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right,pinned?PINNED_MAX:undefined);
   // Young-child choices hide dares everywhere, including a dare saved before the setting was turned on.
   const chosen=round&&!round.result&&!comfort.youngChild?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[]):[];
@@ -182,7 +184,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const dareLines=chosen.map(d=><ChosenDare key={d.slot} dare={d} maxScale={pinned?PINNED_MAX:undefined}/>);
   const darable=!isBand(selection)?selection.dares.filter(d=>!d.retired):[];
   const toggleDare=(slot:number)=>setDares(dares.includes(slot)?dares.filter(n=>n!==slot):dares.length<MAX_DARES?[...dares,slot].sort((a,b)=>a-b):dares);
-  const marksLine=<Copy>Your marks: {marks}. Marks are kept and never spent.</Copy>;
+  const marksLine=<Copy maxFontSizeMultiplier={1.5}>Your marks: {marks}. Marks are kept and never spent.</Copy>;
   return <SafeAreaView style={styles.page}>{barPinned&&bar}<GridScroll ref={page} scrollEnabled={!pinned} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(open?{paddingTop:barPinned?6:10}:{}),...(pinned?{flex:1,paddingHorizontal:12,paddingTop:4,paddingBottom:10}: {})}]}>
     {open?!barPinned&&bar:<View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact onPress={back}>Back</Button><Heading maxFontSizeMultiplier={fit('Challenge',32)}>Challenge</Heading><LearnerChip compact/></View>}
     {!open&&<><Copy>{challengeIntro(entry)}</Copy>{marksLine}</>}
@@ -210,9 +212,9 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling)&&(!round.result||!!entry.animatedRuns),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
           header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
-          footer:<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
+          footer:<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
         }:{})})}
-        {entry.helpUI!=='board'&&!round.result&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
+        {entry.helpUI!=='board'&&!round.result&&<Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </View>}/>}
       {round.result&&!settling ? <><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
@@ -220,7 +222,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>
       </> : null}
-      {!pinned&&!round.result&&<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
+      {!pinned&&!round.result&&<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
       {!pinned&&marksLine}
     </>:null}
   </GridScroll><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;

@@ -277,3 +277,12 @@ it.each([
   await act(async()=>board.props.onLayout({nativeEvent:{layout:{x:0,y:210,width:353,height:500}}}));
   expect(scrolls.at(-1)).toEqual({y,animated:false});
 });
+
+it('R0c: buttons under an open board stop at 1.3x at the largest text, so the board keeps the screen',async()=>{
+  Object.assign(viewport,{fontScale:3.12});
+  await mount(crab);
+  await press('Start this puzzle');
+  await vi.waitFor(()=>expect(buttonNamed('Another puzzle')).toBeDefined());
+  expect(buttonNamed('Another puzzle')!.props.maxFontSizeMultiplier).toBe(1.3);
+  expect(all('button').find(n=>textOf(n)===(crab.backLabel??'Easier choice · Levels 1–5'))!.props.maxFontSizeMultiplier).toBe(1.3);
+});
