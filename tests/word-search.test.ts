@@ -66,6 +66,8 @@ describe('baked Word Search rules', () => {
   it('round-trips the adapter and replays its complete witness without mutations', () => {
     const a = wordSearchAdapter(), before = JSON.stringify(p), d = {format: 1 as const, seed: 1, rng: 1 as const, band: 'paddling', layout: 'island', template: 'island', payload: p, objectives: [], limits: [], par: null, teaches: [], speech: null};
     expect(a.decodePayload(a.encodePayload(p))).toEqual(p);
+    expect(((a.encodePayload(p) as [string,string[],unknown[][]])[2][0][4])).toBe(0);
+    expect(a.decodePayload(['en',['AB','CD'],[[0,null,0,1,0]],'Theme','words',null])).toBeNull();
     const proof=certify(wordSearch,wordSearch.bands[0],d,{budget:10000,seenExact:new Set(),seenSemantic:new Set()});expect(proof.ok).toBe(true);
     const solved = a.solve(d, 1000);expect(solved.status).toBe('solved');
     if (solved.status !== 'solved') return;

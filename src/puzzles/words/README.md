@@ -2,7 +2,7 @@
 
 This is an offline, baked-only Cove game. The production registration has no banks until W1 admits real content. `challengeFor` and `coveEntries` therefore omit it; fixture dares never enter the production catalog. Slots 80–99 and dare specifications 1500–1501 are reserved within G6's ranges.
 
-`core.ts` owns straight paths, eight-direction snapping, one-find semantics, digraph cells and hidden-message leftovers. `game.ts` adds replay evidence, hearing versus help, undo and redo. `adapter.ts` binds the same rules to the packed puzzle kit. Its compact tuple stores row strings (lowercase c/g encode CH/NG cells), endpoint pairs and display spelling; decoding restores explicit cells and validates them. No generator or private policy is imported by the application.
+`core.ts` owns straight paths, eight-direction snapping, one-find semantics, digraph cells and hidden-message leftovers. `game.ts` adds replay evidence, hearing versus help, undo and redo. `adapter.ts` binds the same rules to the packed puzzle kit. Its compact tuple stores row strings (lowercase c/g encode CH/NG cells), endpoint pairs and display spelling; duplicate answer IDs and matching recording keys use compact sentinels; decoding restores explicit cells and validates them. No generator or private policy is imported by the application.
 
 Each iPad pointer owns a locked ray and a green solid or purple dotted trail. A phone admits one pointer and alternates hunters after a find. `CoveRound` serializes rapid accepted gestures while storage writes finish. A duplicate path is never a second find. Together uses the existing Store's atomic credit table; hearing a word does not set help. Finding with Help does.
 

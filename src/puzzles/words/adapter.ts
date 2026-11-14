@@ -9,16 +9,16 @@ export const wordSearchAdapter = (): PuzzleAdapter<SearchPuzzle, SearchState, Se
   engine: 'word-search', rules: 1, needsCheck: false,
   isPayload: validSearch,
   isAction: (x): x is SearchAction => Array.isArray(x) && x.length === 3 && uint(x[0], 255) && uint(x[1], 255) && uint(x[2], 1),
-  encodePayload: p => [p.language, p.cells.map(row => row.map(c => c === 'CH' ? 'c' : c === 'NG' ? 'g' : c).join('')), p.words.map(w => [w.id === w.spelling ? 0 : w.id, w.spelling, w.cells[0], w.cells.at(-1), w.audio]), p.theme, p.list, p.message],
+  encodePayload: p => [p.language, p.cells.map(row => row.map(c => c === 'CH' ? 'c' : c === 'NG' ? 'g' : c).join('')), p.words.map(w => [w.id === w.spelling ? 0 : w.id, w.spelling, w.cells[0], w.cells.at(-1), w.audio === w.spelling.toLowerCase() ? 0 : w.audio]), p.theme, p.list, p.message],
   decodePayload: x => {
     if (!Array.isArray(x) || x.length !== 6 || !Array.isArray(x[1]) || !x[1].every(r => typeof r === 'string') || !Array.isArray(x[2])) return null;
     const cells = x[1].map((r: string) => [...r].map(c => c === 'c' ? 'CH' : c === 'g' ? 'NG' : c));
     if (!cells.length || !cells[0].length) return null;
     const words = [];
     for (const w of x[2]) {
-      if (!Array.isArray(w) || w.length !== 5 || !uint(w[2],255) || !uint(w[3],255)) return null;
+      if (!Array.isArray(w) || w.length !== 5 || typeof w[1] !== 'string' || !uint(w[2],255) || !uint(w[3],255)) return null;
       const path = straightPath(w[2],w[3],cells[0].length);if (!path) return null;
-      words.push({id:w[0]===0?w[1]:w[0],spelling:w[1],cells:path,audio:w[4]});
+      words.push({id:w[0]===0?w[1]:w[0],spelling:w[1],cells:path,audio:w[4]===0?w[1].toLowerCase():w[4]});
     }
     const p = {language:x[0],cells,words,theme:x[3],list:x[4],message:x[5]};
     return validSearch(p) ? p : null;
