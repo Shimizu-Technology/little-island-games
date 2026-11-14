@@ -46,7 +46,7 @@ const heading = (text: string) => root!.root.find(n => String(n.type) === 'Text'
 const viewAbove = (n: ReactTestInstance, nth: number) => { let p = n.parent, seen = 0; while (p) { if (String(p.type) === 'View' && ++seen === nth) return p; p = p.parent; } throw new Error('no View'); };
 const widest = (text: string, size: number, multiplier: number) => Math.max(...text.split(/[\s ]+/).map(w => wordWidth(w) * size * multiplier));
 
-it.each([[393, 3.12], [320, 3.12], [393, 1.5], [852, 3.12], [393, 1.35]])('School subject names at %s pt, text scale %s: every name fits its tile and stops by 2x (44 pt)', async (width, fontScale) => {
+it.each([[393, 3.12], [320, 3.12], [393, 1.5], [852, 3.12]])('School subject names at %s pt, text scale %s: every name fits its tile and stops by 2x (44 pt)', async (width, fontScale) => {
   Object.assign(viewport, { width, fontScale });
   const { default: School } = await import('../src/hub/SchoolScreen');
   await act(async () => { root = create(<School />); });
@@ -134,4 +134,22 @@ it('Puzzle Cove at default size keeps its header, intro and tiles as they were',
   expect(flat(viewAbove(heading('Think as long as you like.'), 2).props.style).flexDirection).toBe('row');
   expect(root!.root.findAll(n => flat(n.props.style).width === 110 && flat(n.props.style).height === 90).length).toBeGreaterThan(0);
   expect(flat(root!.root.findAll(n => String(n.type) === 'Pressable' && /^Open Small · /.test(n.props.accessibilityLabel ?? ''))[0].props.style).width).toBe(260);
+});
+
+// Fix round 1 (P2-1): below the accessibility threshold (text scale 1.5) every new cap is absent, so no text draws smaller than the system size.
+const belowAx = [1, 1.3, 1.35];
+/** Texts whose cap would draw them smaller than the system scale: none may exist below the accessibility sizes. */
+const shrunk = () => root!.root.findAll(n => String(n.type) === 'Text' && !inSheet(n) && typeof n.props.maxFontSizeMultiplier === 'number' && n.props.maxFontSizeMultiplier < viewport.fontScale).map(n => `${textOf(n).slice(0, 40)} @${n.props.maxFontSizeMultiplier}`);
+it.each(belowAx)('School at text scale %s draws every text at the system size (no cap, so nothing shrinks)', async fontScale => {
+  Object.assign(viewport, { fontScale });
+  const { default: School } = await import('../src/hub/SchoolScreen');
+  await act(async () => { root = create(<School />); });
+  expect(shrunk()).toEqual([]);
+  // The shared name size in particular: 28.35 pt at 1.35, not the 25.83 pt a 1.23 cap drew.
+  for (const { name } of subjects) expect(heading(name).props.maxFontSizeMultiplier, name).toBeUndefined();
+});
+it.each(belowAx)('Puzzle Cove at text scale %s draws every text at the system size, today cards and buttons included', async fontScale => {
+  Object.assign(viewport, { fontScale });
+  await mountCove(['sudoku', 'cage-math', 'bridges']);
+  expect(shrunk()).toEqual([]);
 });

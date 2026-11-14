@@ -1,9 +1,9 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { C, Copy, PressableScale, font } from '../components/ui';
 import { Text } from '../components/Text';
 import { GameIcon, hasGameArt } from '../components/GameIcon';
-import { CHROME_MAX, wordFitMultiplier } from '../components/wordFit';
+import { CHROME_MAX, atLarge, wordFitMultiplier } from '../components/wordFit';
 import { Landmark } from '../hub/Landmarks';
 import type { ShelfId } from '../learn/home';
 import type { RowName } from './catalog';
@@ -23,7 +23,8 @@ export function CoveMotif({ game, size = MOTIF_SIZE }: { game: string; size?: nu
 /** A Today card in the hub's tile style: the family's picture over its name and the puzzle's title. */
 export function TodayTile({ name, detail, game, row, width, onPress }: { name: string; detail: string; game: string; row: RowName; width: number; onPress: () => void }) {
   const inner = width - 2 * TILE_PADDING - 2;
-  const nameMax = wordFitMultiplier(name, 16, inner, CHROME_MAX), detailMax = wordFitMultiplier(detail, 14, inner, CHROME_MAX);
+  const { fontScale } = useWindowDimensions();
+  const nameMax = atLarge(fontScale, wordFitMultiplier(name, 16, inner, CHROME_MAX)), detailMax = atLarge(fontScale, wordFitMultiplier(detail, 14, inner, CHROME_MAX));
   return <PressableScale accessibilityRole="button" accessibilityLabel={`Open ${name}. ${detail}`} onPress={onPress} style={{ width, minHeight: 118, padding: TILE_PADDING, gap: 6, alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: familySurface[row], borderColor: '#C7CFBA', borderWidth: 1, boxShadow: '0px 4px 0px rgba(68,89,62,.12)' }}>
     <CoveMotif game={game}/>
     <Text maxFontSizeMultiplier={nameMax} style={{ fontFamily: font, fontSize: 16, fontWeight: '700', color: C.ink, textAlign: 'center' }}>{name}</Text>

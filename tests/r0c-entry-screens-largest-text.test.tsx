@@ -4,6 +4,7 @@ import React from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { emptySave } from '../src/state/validation';
+import { addLearner } from '../src/learn/learners';
 import { shelfGames } from '../src/learn/home';
 import { wordWidth } from '../src/components/wordFit';
 
@@ -148,4 +149,34 @@ it.each([[3.12, true], [1, false]])('Everything at text scale %s: the title bar 
   const title = texts().find(t => textOf(t) === 'Everything' && t.props.accessibilityRole === 'header')!;
   expect(inside(title, 'ScrollView')).toBe(scrolls);
   expect(root!.root.findAll(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Back to map')).toHaveLength(1);
+});
+
+// Fix round 1 (P2-1): below the accessibility threshold the entry screens draw every text at the system size.
+const shrunk = () => root!.root.findAll(n => String(n.type) === 'Text' && !inSheet(n) && typeof n.props.maxFontSizeMultiplier === 'number' && n.props.maxFontSizeMultiplier < viewport.fontScale).map(n => `${textOf(n).slice(0, 40)} @${n.props.maxFontSizeMultiplier}`);
+it.each([1, 1.3, 1.35])('Everything, Game Hall and the Arcade lobby at text scale %s draw every text at the system size', async fontScale => {
+  Object.assign(viewport, { fontScale }); fixture.params = {}; fixture.store.save = emptySave();
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  for (const [params, load] of [[{}, () => import('../src/hub/EverythingScreen')], [{ island: 'classic' }, () => import('../src/app/shelf')], [{}, async () => ({ default: (await import('../src/arcade/ArcadeScreen')).ArcadeLobby })]] as const) {
+    fixture.params = params;
+    const { default: Screen } = await load();
+    await act(async () => { root = create(<Screen />); });
+    expect(shrunk()).toEqual([]);
+    await act(async () => root!.unmount()); root = undefined;
+  }
+});
+
+// Fix round 1 (P2-2): the Arcade learner sentence with a valid 24-character wide name.
+it.each([[3.12, 'column'], [1, 'row']])('Island Arcade lobby at text scale %s: a 24-wide learner name keeps to one line in the sentence, which stays whole for VoiceOver', async (fontScale, direction) => {
+  const NAME = 'W'.repeat(24);
+  Object.assign(viewport, { fontScale }); fixture.store.save = { ...emptySave(), learning: addLearner(undefined, NAME, 'wide') };
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const { ArcadeLobby } = await import('../src/arcade/ArcadeScreen');
+  await act(async () => { root = create(<ArcadeLobby />); });
+  const sentence = root!.root.find(n => n.props.testID === 'arcade-learner' && String(n.type) === 'View');
+  expect(sentence.props.accessibilityLabel).toMatch(new RegExp(`^${NAME} · \\d+ island stickers$`));
+  expect(flat(sentence.props.style).maxWidth).toBe('100%');
+  expect(flat(sentence.props.style).flexDirection).toBe(direction);
+  const name = sentence.find(n => String(n.type) === 'Text' && textOf(n) === NAME);
+  expect(name.props.numberOfLines).toBe(1);
+  expect(flat(name.props.style).flexShrink).toBe(1);
 });

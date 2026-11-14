@@ -4,12 +4,13 @@ import Svg, { Circle, G, Line, Rect, Text as SvgText } from 'react-native-svg';
 import { Button, C, Copy } from '../../components/ui';
 import { Text } from '../../components/Text';
 import { GridFeedback, GridInteraction } from '../grid/preferences';
+import { GridChromeContext, boardRoom, edgeBoardHeight, loopCell } from '../grid/budget';
 import type { MarkEvent } from '../edges/marks';
 import type { EdgeBoardProps } from '../edges/registration';
 import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
-import { PuzzleStatus, STATUS_MAX } from '../ui/PuzzleStatus';
+import { PuzzleStatus, useStatusMax } from '../ui/PuzzleStatus';
 
 const CROSSMARK = '#7E968F', DONEDISC = '#D3EBCF', PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -22,11 +23,14 @@ const rulesText: Record<LinePuzzle['kind'], string> = {
 /** Loop and Pearl Loop: drag along the dots (or cell centres); the nearest edge answers a tap. */
 export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<LinePuzzle>) {
   const p = view.puzzle, l = useMemo(() => latticeOf(p), [p]), marks = view.board.marks, pearl = p.kind === 'pearl-loop';
-  const { height } = useWindowDimensions(), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
+  const statusMax = useStatusMax();
+  const { width: windowWidth, height, fontScale } = useWindowDimensions(), chrome = useContext(GridChromeContext), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
+  // At accessibility sizes the board shares one height budget with the safe areas, bar and status line; below them it is as it always was.
+  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false }), Math.max(300, height * 0.6));
   // Loop dots sit on cell corners; Pearl Loop dots sit at cell centres.
   const span = pearl ? 0.5 : 0, cellsX = p.cols, cellsY = p.rows;
   // The board, its rim included, fits the column: no side overhang on a phone.
-  const cell = Math.max(22, Math.min(88, Math.floor(Math.min(width / (cellsX + 0.64), Math.max(300, height * 0.6) / (cellsY + 0.64))))), pad = Math.round(cell * 0.32);
+  const cell = loopCell(width, cellsX, cellsY, room), pad = Math.round(cell * 0.32);
   const W = cell * cellsX + pad * 2, H = cell * cellsY + pad * 2;
   const pos = (v: number) => ({ x: pad + (v % l.vc + span) * cell, y: pad + (Math.floor(v / l.vc) + span) * cell });
   const [pending, setPending] = useState<Map<number, number> | null>(null), [rules, setRules] = useState(false);
@@ -184,9 +188,9 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
 
   return <View style={{ gap: 12 }}>
     <PuzzleStatus title={view.title} skill={view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined} count={`${done}/${total}`} countLabel={`${done} of ${total} ${pearl ? 'pearls' : 'numbers'} done`}>
-      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
       {/* Always present, so opening the card never re-wraps this row and moves the board. */}
-      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
     </PuzzleStatus>
     {rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{rulesText[p.kind]}</Copy>}
     <View style={{ alignSelf: 'center', width: W, height: H }} {...responder.panHandlers}>
@@ -203,19 +207,19 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
     {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
     <View style={{ minHeight: 24 }}>
       {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
-      <Text maxFontSizeMultiplier={STATUS_MAX} style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A MARK TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
+      <Text maxFontSizeMultiplier={statusMax} style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A MARK TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
       <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {stage === 1 && <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active} onPress={() => setLadder(x => ({ ...x, stage: 2 }))}>Why?</Button>}
-        <Button compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
-        <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
+        {stage === 1 && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active} onPress={() => setLadder(x => ({ ...x, stage: 2 }))}>Why?</Button>}
+        <Button compact maxFontSizeMultiplier={statusMax} disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
+        <Button quiet compact maxFontSizeMultiplier={statusMax} onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
       </View>
     </View> : trouble ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{trouble}</Copy> : placed ? <Copy accessibilityLiveRegion="polite">{placed}</Copy> : null}
     </View>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
-      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
-      <Button quiet compact maxFontSizeMultiplier={STATUS_MAX} disabled={!active || marks.every(v => v === EMPTY)} onPress={() => send({ type: 'reset' })}>Start over</Button>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || marks.every(v => v === EMPTY)} onPress={() => send({ type: 'reset' })}>Start over</Button>
     </View>
   </View>;
 }

@@ -28,6 +28,8 @@ export const wordsFit = (text: string, fontSize: number, width: number) => text.
  * Shared chrome switches to its large-text layout here: switches stack under their words, and bars collapse.
  */
 export const LARGE_TEXT = 1.5;
+/** A text cap that applies only at accessibility sizes. Below them it is undefined (no cap), so text is drawn exactly as it was before the cap existed. */
+export const atLarge = <T,>(fontScale: number | undefined, cap: T): T | undefined => (fontScale ?? 1) >= LARGE_TEXT ? cap : undefined;
 /**
  * Chrome text (titles, intros, section headings) on entry screens stops here at accessibility sizes, so a page of tiles
  * stays reachable; a large decorative title may reach `TITLE_MAX`. Both stop earlier where their longest word would break.

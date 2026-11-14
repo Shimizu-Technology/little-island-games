@@ -4,12 +4,13 @@ import { adjacentTide } from '../puzzles/flow';
 import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import { ratingDue, resultOffer } from './offers';
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { type ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
 import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
-import { LARGE_TEXT, wordFitMultiplier } from '../components/wordFit';
+import { LARGE_TEXT, atLarge, wordFitMultiplier } from '../components/wordFit';
+import { GridChromeContext, challengeChrome } from '../puzzles/grid/budget';
 import { Settings } from '../components/Settings';
 import type { ChallengeSession, PuzzleRef } from '../state/challenge';
 import { SaveStatus } from '../components/SaveStatus';
@@ -158,7 +159,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // A pinned board's chrome stays compact (Back stops at 1.3x), so its dare line stops at 1.5x.
   const PINNED_MAX=1.5;
   // Buttons under an open board stop at 1.3x, so the board and its keys keep the screen.
-  const BELOW_MAX=1.3;
+  const BELOW_MAX=atLarge(fontScale,1.3);
   const fit=(text:string,size:number)=>wordFitMultiplier(text,size,width-(pinned?24:40)-insets.left-insets.right,pinned?PINNED_MAX:undefined);
   // Young-child choices hide dares everywhere, including a dare saved before the setting was turned on.
   const chosen=round&&!round.result&&!comfort.youngChild?round.selectedDares.flatMap(slot=>currentCard?.dares.filter(d=>d.slot===slot&&!d.retired)??[]):[];
@@ -169,13 +170,20 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // window scrolls the bar with the page.
   const open=!picking&&!!round, large=(fontScale??1)>=LARGE_TEXT, barPinned=open&&!(large&&height<500), barChip=!large;
   const BAR_TITLE=19, barTitleWidth=width-24-insets.left-insets.right-(large?86:72)-(barChip?132:0)-16;
-  // The ready board consumes this once per open/session transition, after content verification and layout.
-  const openedKey=open?`${owner}:${store.epoch}:${round.id}`:null;
-  const resetBoard=useRef<string|null>(null);
-  useLayoutEffect(()=>{resetBoard.current=openedKey;},[openedKey]);
   // A short large-text landscape window scrolls the bar away with the page, so a board that opens at the top would leave its
   // keys below the fold. There the ready board's own top (its status line, board and keys) becomes the top of the page.
-  const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:large&&height<500?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
+  // A pinned (animated) board never scrolls: its outer page is fixed at y 0 so the bar and Back stay in view.
+  const shortLarge=large&&height<500, reveal=shortLarge&&!pinned;
+  // The ready board consumes this once per open/session transition, after content verification and layout. Turning the
+  // device between the page's two layouts (bar pinned above, or scrolling with the page) arms it once more, so a puzzle that
+  // is already open lands where a fresh open does. Ordinary moves and layout callbacks never re-arm it.
+  const openedKey=open?`${owner}:${store.epoch}:${round.id}:${shortLarge?'short':'tall'}`:null;
+  const resetBoard=useRef<string|null>(null);
+  useLayoutEffect(()=>{resetBoard.current=openedKey;},[openedKey]);
+  const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:reveal?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
+  // What a grid board shares the screen with, measured once for all of them: safe areas, the page's own padding, the bar
+  // (when it stays above the page) and the learner chip (when large text moves it into the page).
+  const chrome=useMemo(()=>challengeChrome({insets:{top:insets.top,bottom:insets.bottom},barPinned,short:shortLarge,chip:open&&!barChip&&!pinned}),[insets.top,insets.bottom,barPinned,shortLarge,open,barChip,pinned]);
   const bar=open?<View testID="challenge-bar" style={{flexDirection:'row',alignItems:'center',gap:8,width:'100%',maxWidth:1080,alignSelf:'center',paddingHorizontal:12,paddingTop:6,paddingBottom:4}}>
     <Button quiet compact maxFontSizeMultiplier={1.3} onPress={back}>Back</Button>
     <View style={{flex:1}}><Heading maxFontSizeMultiplier={wordFitMultiplier(title,BAR_TITLE,barTitleWidth,PINNED_MAX)} style={{fontSize:BAR_TITLE}}>{title}</Heading></View>
@@ -209,13 +217,13 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       {!pinned&&dareLines}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it.
           After a solve the finished board stays on the page, above the result, and takes no more moves. */}
-      {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
+      {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><GridChromeContext.Provider value={chrome}><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling)&&(!round.result||!!entry.animatedRuns),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
           header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
           footer:<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
         }:{})})}
         {entry.helpUI!=='board'&&!round.result&&<Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
-      </View>}/>}
+      </View></GridChromeContext.Provider>}/>}
       {round.result&&!settling ? <><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}

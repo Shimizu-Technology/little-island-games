@@ -2,10 +2,12 @@ import React from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { Copy } from '../../components/ui';
 import { Text } from '../../components/Text';
-import { LARGE_TEXT } from '../../components/wordFit';
+import { LARGE_TEXT, atLarge } from '../../components/wordFit';
 
 /** The largest a puzzle's status words and buttons grow, so the board and its keys can share a screen. */
 export const STATUS_MAX = 1.3;
+/** The cap for the buttons and cue words around a board: `STATUS_MAX` at accessibility sizes, none below them (text is drawn exactly as before). */
+export function useStatusMax() { const { fontScale } = useWindowDimensions(); return atLarge(fontScale, STATUS_MAX); }
 /**
  * The line above a grid board: the puzzle's name, the skill it teaches, how many squares are filled, and the Help and Hint
  * buttons. At accessibility sizes the three facts become one wrapping line at `STATUS_MAX` (still one spoken sentence with

@@ -71,7 +71,8 @@ it('default size: the status stays three separate facts in one row, and the Eras
   expect(facts[2].props.accessibilityLabel).toBe('2 of 16 cells filled');
   const erase = buttons().find(b => b.props.label === 'Enter Erase')!;
   expect(erase.props.style.paddingHorizontal).toBeUndefined();
-  expect(erase.props.maxFontSizeMultiplier).toBe(1.3);
+  // Below the accessibility sizes nothing is capped, so every key is drawn as it always was.
+  expect(erase.props.maxFontSizeMultiplier).toBeUndefined();
   expect(erase.props.style.minWidth).toBe(52);
 });
 
