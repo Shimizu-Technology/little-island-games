@@ -24,6 +24,7 @@ import { Board as B12 } from '../src/learn/games/beep-bot/view';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
 const boards: Partial<Record<LearnId, unknown>> = { 'code-lab': B0, 'hafa-adai': B1, 'fraction-feast': B2, 'pattern-path': B3, 'crab-commands': B4, 'tide-pool': B5, 'float-sink': B6, 'weather-watch': B7, 'treasure-algebra': B8, 'sound-boat': B9, 'reef-race': B10, 'logic-lagoon': B11, 'beep-bot': B12, 'tide-logic': B13 };
 
+vi.mock('expo-router',()=>({router:{push:vi.fn()}}));
 vi.mock('../src/content/learnAudio',()=>({learnSources:{'beep-bot-intro':1}}));
 vi.mock('../src/state/Store',()=>({useStore:()=>({save:{learning:{active:'a',people:[{id:'a',name:'A'}]},settings:{}}})}));
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
