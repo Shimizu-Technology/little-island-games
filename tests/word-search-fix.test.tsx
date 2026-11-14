@@ -235,3 +235,10 @@ it('projects from the first cell centre for lifts anywhere inside the last cell'
   expect(core.dragRay(start,origin,point,size,16,16,direction).cells.at(-1)).toBe(start+length*(dy*16+dx));
  }
 });
+
+it('returning a real drag to its origin cancels quietly rather than choosing a first letter',async()=>{
+ env.reader=false;const dispatch=await mount(),size=(surface().props.style.width-2)/6;
+ const start=touch(size*4.5,size*4.5),far=touch(size*1.5,size*1.5);
+ await act(async()=>surface().props.onResponderGrant(start));await act(async()=>surface().props.onResponderMove(far));await act(async()=>surface().props.onResponderMove(start));await act(async()=>surface().props.onResponderRelease(start));
+ expect(dispatch).not.toHaveBeenCalled();expect(JSON.stringify(screen.toJSON())).not.toContain('Now choose the last letter.');
+});

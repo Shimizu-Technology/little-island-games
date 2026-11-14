@@ -104,8 +104,8 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   function move(e: GestureResponderEvent) {
     for (const t of e.nativeEvent.changedTouches) {
       const pointer = pointers.current.get(String(t.identifier)); if (!pointer) continue;
-      const end = cellAt(t), ray = dragRay(pointer.start, pointer.origin, { x: t.locationX, y: t.locationY }, size, columns, rows, pointer.direction);
-      if (end !== pointer.start) pointer.moved = true;
+      const ray = dragRay(pointer.start, pointer.origin, { x: t.locationX, y: t.locationY }, size, columns, rows, pointer.direction);
+      if (ray.direction !== null) pointer.moved = true;
       pointer.direction = ray.direction; pointer.cells = ray.cells; pointer.last = ray.cells.at(-1)!;
     }
     setPreviews([...pointers.current.values()]);
@@ -116,7 +116,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
       const pointer = pointers.current.get(String(t.identifier)); if (!pointer) continue;
       const ray = dragRay(pointer.start, pointer.origin, { x: t.locationX, y: t.locationY }, size, columns, rows, pointer.direction);
       pointers.current.delete(String(t.identifier));
-      if (ray.direction !== null && (pointer.moved || ray.cells.length > 1)) { if (ray.cells.length > 1) finds.push([pointer.start, ray.cells.at(-1)!, pointer.hunter]); chooseFirst(pointer.hunter, null); }
+      if (pointer.moved || ray.cells.length > 1) { if (ray.cells.length > 1) finds.push([pointer.start, ray.cells.at(-1)!, pointer.hunter]); chooseFirst(pointer.hunter, null); }
       else tap(pointer.start, pointer.hunter);
     }
     if (finds.length) {const fresh=finds.filter(([start,end])=>{const i=foundIndex(p,start,end);return i>=0 && !state.found.some(([j])=>j===i);});if(fresh.length){dispatch(['find-many',fresh]);setNotice('');}else setNotice(finds.some(([a,b])=>foundIndex(p,a,b)>=0) ? 'That word is already found.' : 'Try another straight line.');}
