@@ -93,3 +93,25 @@ it('K7 replay codecs recompute nested wins and costs; reject forged results and 
   expect(validChallengeSession({ ...b, result: { ...b.result!, cost: 0 } }, 'family', beepEntry.catalog)).toBe(false);
   expect(beepEntry.move(beepEntry.start(bp.ref, 'family', 'bad', emptyChallenge(), opts, []), ['b', encodeProgram(fromFlat([4]))])).toBeNull();
 });
+
+it('K7 80-node School drafts fit the unchanged session budget; nested replay edits preserve the help reserve', () => {
+  const options = optionsAtLevel({ mode: 'solo', pace: 'easy' }, 1);
+  const c = crab.create(options, context), b = beep.create(options, context), t = turtle.create(options, context);
+  // Definitions count, even unused: one main command + a definition + 78 song commands.
+  const eighty = (code: number): Program => ({ version: 1, body: [{ kind: 'command', command: code }], songs: [Array.from({ length: 78 }, () => ({ kind: 'command' as const, command: code }))] });
+  const states = [withCrabProgram(c, eighty(0), currentLevel(c))!, { ...b, program: ['up'], blockDraft: encodeProgram(eighty(0)) }, { ...t, program: [{ kind: 'forward', n: 60 }], blockDraft: encodeProgram(eighty(0)) }];
+  for (const [i, e] of [crab, beep, turtle].entries()) {
+    expect(e.validate(states[i], options)).toBe(true);
+    expect(sessionBytes({ game: e.id, version: 1, id: 'x'.repeat(120), revision: 1000000, options, state: states[i] })).toBeLessThanOrEqual(4096);
+  }
+  const p = crabPuzzles.find(p => p.descriptor.level.pace === 'easy')!;
+  let s = crabEntry.start(p.ref, 'family', 'k7-reserve', emptyChallenge(), { supportOff: false, ownRead: false }, []), refused = false;
+  for (let i = 0; i < 512; i++) {
+    const next = crabEntry.move(s, ['b', encodeProgram({ version: 1, body: [{ kind: 'repeat', times: i % 2 ? 2 : 3, body: [{ kind: 'command', command: 0 }] }], songs: [] })]);
+    if (!next) { refused = true; break; } s = next;
+  }
+  expect(refused).toBe(true); const accepted = JSON.stringify(s);
+  for (let i = 0; i < 3; i++) { const next = crabEntry.move(s, ['h']); expect(next).not.toBeNull(); s = next!; }
+  expect(crabEntry.move(s, ['g'])).not.toBeNull(); expect(sessionBytes(s)).toBeLessThanOrEqual(4096);
+  expect(JSON.stringify(s)).not.toBe(accepted); expect((s.payload as { actions: unknown[] }).actions.length).toBeLessThanOrEqual(512);
+});
