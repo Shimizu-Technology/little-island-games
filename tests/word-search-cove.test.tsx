@@ -102,3 +102,11 @@ describe('Word Search through the real Cove Store',()=>{
  });
 
 });
+it('reports a full log without promising that another game can always finish with Help',async()=>{
+ let screen!:ReactTestRenderer;const full=vi.spyOn(entry,'full').mockReturnValue(true),move=vi.spyOn(entry,'move').mockReturnValue(null);
+ try{
+  await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});await settle();
+  await act(async()=>send(['help']));await settle();const text=JSON.stringify(screen.toJSON());
+  expect(text).toContain('move log is full');expect(text).not.toContain('Help can still finish');
+ }finally{full.mockRestore();move.mockRestore();if(screen)await act(async()=>screen.unmount());}
+});

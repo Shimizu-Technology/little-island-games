@@ -65,7 +65,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     let accepted = false;
     try {
       const next = entry.move(before, action);
-      if (!next) { setMessage(entry.full?.(before) ? 'This attempt’s move log is full. Help can still finish the puzzle; your accepted draft is kept.' : 'That change could not be made. Your accepted draft is kept.'); return; }
+      if (!next) { setMessage(entry.full?.(before) ? 'This attempt’s move log is full. Your accepted draft is kept.' : 'That change could not be made. Your accepted draft is kept.'); return; }
       if (next.result && !next.partner && solvingPeople(store.save).some(p => p.id !== owner)) { setPending(next); return; }
       if (next.result) { boundary.current = true; setBusy(true); }
       if (await store.challengeSave(next, expected(before))) {
