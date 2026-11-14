@@ -9,7 +9,7 @@ import {
 } from "../../../math/kit";
 import { useStepReveal } from "../../stepReveal";
 import type { BoardProps } from "../../types";
-import { hintLine, routeLines, routeName, solvedLine, stepPrompt } from "./copy";
+import { hintLine, routeLines, routeName, solvedLine, stepPrompt, tileCap } from "./copy";
 import { pictureFor } from "./picture";
 import { progress, shellMove, type RoundAct, type ShellRound } from "./round2";
 import { HelpRow } from "./HelpRow";
@@ -30,7 +30,8 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
   const [note, setNote] = useState<string | null>(null);
   const [hidePicture, setHidePicture] = useState(false);
   const [way, setWay] = useState<number | null>(null);
-  useStepReveal(s.index);
+  // At accessibility sizes the prompt of the next step can sit above the visible page: bring the board's top back after each step.
+  useStepReveal(`${s.index}:${prog?.work.at ?? 0}`);
   useLayoutEffect(() => {
     live.current = s;
     context.current = { active, id: session.id };
@@ -111,7 +112,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
       onPickOnes={step.kind === "fill" && problem.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}
       onTradeMake={step.kind === "trade" && step.dir === "make" && active ? () => { press(); act(["t"]); } : undefined}
       onTradeOpen={step.kind === "trade" && step.dir === "open" && active ? () => { press(); act(["t"]); } : undefined} />
-    <StepInput step={step} work={work} typed={typed} tiles={step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, problem) : stepChoices) : []}
+    <StepInput step={step} work={work} typed={typed} tiles={step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, problem, tileCap(level)) : stepChoices) : []}
       width={width} active={active} coachActive={coach.active} resetKey={stepKey} addVerb={problem.op === "add" ? "on" : "back"} press={press} onAct={act}
       soundOn={soundOn} sound={sound} prompt={typedStepLabel} />
     <View accessibilityLiveRegion="polite" style={{ minHeight: 24 }}>

@@ -5,6 +5,8 @@ import { answerOf, equationText, giveTakeParts, hintFor, levelRoute, placeValue,
  * looking at; cues name what to look at; neither ever contains the answer to the step before stage 2 of help.
  */
 const minus = "−";
+/** Answer tiles stay on the number line a level works on: 10 at Level 1, 20 through Level 4, 99 beyond. */
+export const tileCap = (level: Level) => (level <= 1 ? 10 : level <= 4 ? 20 : 99);
 const sign = (p: Problem) => (p.op === "add" ? "+" : minus);
 
 export function stepPrompt(level: Level, p: Problem, plan: readonly Step[], at: number, route: RouteId = levelRoute(level, p)): string {

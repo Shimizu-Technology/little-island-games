@@ -31,12 +31,12 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
   return <View style={{ alignItems: "center", gap: 8 }}>
     {pic.pair && <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
       <View style={{ alignItems: "center", gap: 4 }}>
-        <TenFrame cell={cell} filled={pic.pair.a} label={`First group: ${pic.pair.a} shells${pic.pair.fullA ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(1, k) : undefined} />
+        <TenFrame cell={cell} filled={pic.pair.a} label={`First group: ${pic.pair.a} shells${pic.pair.fullA ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(1, k) : undefined} pickLabel={(k) => `Move ${k} ${k === 1 ? "shell" : "shells"} from the first group to the second`} />
         <Text maxFontSizeMultiplier={1.4} style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{pic.pair.a}</Text>
       </View>
       <Text maxFontSizeMultiplier={1.4} style={{ fontSize: 26, fontWeight: "900", color: C.ink }}>+</Text>
       <View style={{ alignItems: "center", gap: 4 }}>
-        <TenFrame cell={cell} filled={0} second={pic.pair.b} tone="blue" label={`Second group: ${pic.pair.b} shells${pic.pair.fullB ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(0, k) : undefined} />
+        <TenFrame cell={cell} filled={0} second={pic.pair.b} tone="blue" label={`Second group: ${pic.pair.b} shells${pic.pair.fullB ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(0, k) : undefined} pickLabel={(k) => `Move ${k} ${k === 1 ? "shell" : "shells"} from the second group to the first`} />
         <Text maxFontSizeMultiplier={1.4} style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{pic.pair.b}</Text>
       </View>
     </View>}
@@ -50,7 +50,7 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
         // The ones frame is the last one that holds any gold shell: that is where take-away shells are chosen.
         const lastGold = Math.ceil(G / 10) - 1;
         return <TenFrame key={k} cell={cell} filled={gold} second={blue} ghost={ghost} struck={struckInFrame} label={`Frame ${k + 1}: ${gold + blue} shells${ghost ? `, ${ghost} waiting` : ""}${struckInFrame ? `, ${struckInFrame} taken away` : ""}`}
-          onPick={onPickOnes && k === lastGold && pic.frames!.gold % 10 !== 0 ? onPickOnes : undefined} />;
+          onPick={onPickOnes && k === lastGold && pic.frames!.gold % 10 !== 0 ? onPickOnes : undefined} pickLabel={(n) => `Take away ${n} ${n === 1 ? "shell" : "shells"}`} />;
       })}
     </View>}
     {pic.blocks && <Blocks unit={Math.max(10, Math.min(18, Math.floor((w - 60) / (pic.blocks.tens + 7))))} tens={pic.blocks.tens} ones={pic.blocks.ones} ghostOnes={pic.blocks.ghostOnes}

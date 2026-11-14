@@ -53,6 +53,17 @@ describe("K4 model", () => {
   });
 });
 
+describe("K4 choices on a short number line", () => {
+  it("stay inside the cap the level works in, still three distinct tiles with the answer", () => {
+    for (const cap of [10, 20, 99]) for (const p of every()) {
+      const a = answerOf(p);
+      if (a > cap) continue;
+      const c = choicesFor(a, p, cap);
+      if (new Set(c).size !== 3 || !c.includes(a) || c.some((n) => n < 0 || n > cap)) throw new Error(`cap ${cap} ${JSON.stringify(p)} ${c}`);
+    }
+  });
+});
+
 describe("K4 plans", () => {
   const solves = (plan: Step[]) => replay(plan, solveActs(plan));
   it("every route that fits ends on the problem's answer, and a perfect player solves it", () => {

@@ -29,11 +29,13 @@ export type TenFrameProps = {
   label: string;
   /** When set, shell number k (from 1) can be touched to choose "move k shells". */
   onPick?: (k: number) => void;
+  /** What a touched shell is called for VoiceOver, e.g. which way the shells would go. */
+  pickLabel?: (k: number) => string;
   /** Ring the frame once it holds exactly ten. */
   celebrateFull?: boolean;
 };
 /** Two rows of five cells. Static, so a ten-frame costs one render when it changes. */
-export function TenFrame({ cell, filled, second = 0, ghost = 0, struck = 0, tone = "gold", cells = 10, label, onPick, celebrateFull = true }: TenFrameProps) {
+export function TenFrame({ cell, filled, second = 0, ghost = 0, struck = 0, tone = "gold", cells = 10, label, onPick, celebrateFull = true, pickLabel }: TenFrameProps) {
   const cols = Math.min(5, cells), rows = Math.ceil(cells / cols), pad = Math.max(2, Math.round(cell * 0.06));
   const full = celebrateFull && filled + second === cells && ghost === 0 && struck === 0;
   return <View accessible={!onPick} accessibilityLabel={label} style={{ borderRadius: 10, borderWidth: 2.5, borderColor: full ? C.teal : C.ink, backgroundColor: full ? "#EAF4EC" : C.paper, padding: 3 }}>
@@ -47,7 +49,7 @@ export function TenFrame({ cell, filled, second = 0, ghost = 0, struck = 0, tone
           {(on || waiting) ? <ShellCounter size={cell - pad * 2 - 2} tone={blue ? "blue" : tone} muted={waiting || gone} struck={gone} /> : null}
         </View>;
         return onPick && on && !gone
-          ? <Pressable key={c} accessibilityRole="button" accessibilityLabel={`Move ${i + 1} ${i === 0 ? "shell" : "shells"}`} hitSlop={2} onPress={() => onPick(i + 1)}>{body}</Pressable>
+          ? <Pressable key={c} accessibilityRole="button" accessibilityLabel={pickLabel ? pickLabel(i + 1) : `Move ${i + 1} ${i === 0 ? "shell" : "shells"}`} hitSlop={2} onPress={() => onPick(i + 1)}>{body}</Pressable>
           : <View key={c}>{body}</View>;
       })}
     </View>)}

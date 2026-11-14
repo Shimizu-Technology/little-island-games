@@ -11,7 +11,7 @@ import { Bridge } from "../../../math/kit/ui/Bridge";
 import { deepHint, deepPrompt, deepSpoken, deepTitle } from "./challenge-copy";
 import type { Action, State } from "./challenge-engine";
 import { waysOf } from "./challenge-task";
-import { hintLine, routeBlurb, routeName, stepPrompt } from "./copy";
+import { hintLine, routeBlurb, routeName, stepPrompt, tileCap } from "./copy";
 import { pictureFor } from "./picture";
 import { HelpRow } from "./HelpRow";
 import { problemOf } from "./round2";
@@ -66,7 +66,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     const pic = pictureFor(level, p, route, plan, w);
     const heading = solved ? `${equationText(p, true)}. Well done.` : stepPrompt(level, p, plan, w.at, route);
     const hint = hintLine(level, p, plan, w);
-    const tiles = step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, p) : choicesAround(step.value, w.at)) : [];
+    const tiles = step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, p, tileCap(level)) : choicesAround(step.value, w.at)) : [];
     return <View style={{ gap: 10, alignSelf: "center", width: "100%", maxWidth: 700 }}>
       <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
       <Text accessibilityLabel={equationText(p, solved)} style={{ fontSize: width < 350 ? 34 : 42, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(p, solved)}</Text>

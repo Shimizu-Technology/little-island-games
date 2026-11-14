@@ -11,6 +11,7 @@ import { mathAnswer } from "../src/math/questions";
 import { engine as shellEngine, isShellRound } from "../src/learn/games/shell-math/engine";
 import { HISTORY_CAP, createShell, problemOf, progress, shellMove, validShell, type RoundAct, type ShellRound } from "../src/learn/games/shell-math/round2";
 import { emptySave, parseSave } from "../src/state/validation";
+import { readFileSync } from "node:fs";
 import { LEVELS, ROUND_LENGTH, fitsLevel, candidates, solveActs, type Level } from "../src/math/kit";
 import { finishShell } from "./helpers/shell-rounds";
 
@@ -198,6 +199,17 @@ describe("Shell Math v2 rounds", () => {
     expect(validLearnSession(next)).toBe(true);
     expect(next.options).toEqual(options);
     expect(next.state).toMatchObject({ version: 2, level: 5, index: 0, history: [] });
+  });
+});
+
+describe("Shell Math speech", () => {
+  it("the help the engine shows is the line staged for the audio batch, and the old recordings are not claimed for it", () => {
+    const staged = JSON.parse(readFileSync("scripts/learn/n1a-numbers.json", "utf8")) as Record<string, string>;
+    expect(shellEngine.helpAudio).toBe("shell-math-help-v2");
+    expect(staged["shell-math-help-v2"]).toBe(shellEngine.help);
+    expect(JSON.parse(readFileSync("scripts/learn/n1a-numbers.stage", "utf8"))).toEqual({ status: "design-only", shipping: false });
+    // The older recording says "Join one shell"; it stays with the older rounds and is never offered for this text.
+    expect(shellEngine.help).not.toContain("Join one shell");
   });
 });
 

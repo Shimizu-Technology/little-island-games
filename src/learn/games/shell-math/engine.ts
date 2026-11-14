@@ -41,6 +41,7 @@ export const engine: LearnEngine<ShellState> = {
   ...(legacy as LearnEngine<ShellState>),
   ...shellText,
   helpAudio: "shell-math-help-v2",
+  paceLabels: { easy: "Count on", medium: "Ten and ones", hard: "Bridge a ten" },
   nativeStages: true,
   skills: { ...legacy.skills, ...skillNames },
   levelNames: [
