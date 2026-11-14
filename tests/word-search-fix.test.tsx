@@ -103,3 +103,12 @@ it('keeps enlargement and pan mode visible ahead of a dense AX5 board',async()=>
  expect(tools).toBeGreaterThanOrEqual(0);expect(tools).toBeLessThan(board);
  await press('Enlarge letters');expect(screen.root.findByProps({testID:'search-viewport-tools'}).findAllByType('button').some(n=>n.children.includes('Move grid'))).toBe(true);
 });
+it('keeps grid and list taps handled while the native hardware-key input is focused',async()=>{
+ env.fontScale=3.12;await mount();const scrolls=screen.root.findAllByType('scroll' as React.ElementType);
+ expect(scrolls.length).toBeGreaterThan(1);for(const scroll of scrolls)expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+});
+it('speaks the newly found answer as well as the updated count on iOS',async()=>{
+ const dispatch=await mount(),s=initial(),w=p.words[0],next=searchEngine.step(s,['find',w.cells[0],w.cells.at(-1)!,0],p)!.state;
+ await act(async()=>screen.update(<WordSearchBoard state={next} dispatch={dispatch} active width={353} together/>));
+ expect(env.announce).toHaveBeenLastCalledWith(expect.stringContaining(w.spelling));expect(env.announce).toHaveBeenLastCalledWith(expect.stringContaining('1 of'));
+});
