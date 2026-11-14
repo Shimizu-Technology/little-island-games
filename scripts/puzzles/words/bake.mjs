@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { safeReason } from './diagnostics.mjs';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +7,7 @@ import { bakeBank, checkSurfaces } from '../../words/bake.mjs';
 import { lockedPolicy } from '../../words/policy.mjs';
 import { digest, requireThat } from '../../words/core.mjs';
 import { privatePath } from '../../words/paths.mjs';
+import { validateProjection } from './validate.mjs';
 import { audioFor } from './audio.mjs';
 import { generateSurface } from './generate.mjs';
 
@@ -44,6 +46,7 @@ export function bakeSearch(input, plan, out) {
       writeFileSync(join(staging,'private',`${r.bank.id}.receipt.private.json`),JSON.stringify(r.baked.receipt)+'\n',{mode:0o600});
     }
     const project=results.flatMap(r=>r.baked.asset.surfaces.map((s,i)=>({bank:r.bank.slot,band:r.bank.band,tier:r.bank.tier,title:r.bank.theme,family:r.bank.grids[i].family,id:s.id,seed:r.bank.grids[i].seed,payload:{language:r.baked.asset.words[0].language,cells:s.cells,words:s.listed.map(w=>({id:w.answer,spelling:w.answer,cells:w.cells.map(([y,x])=>y*s.cells[0].length+x),audio:audioFor(r.baked.asset.words.find(a=>a.id===w.wordId))})),theme:r.bank.grids[i].theme??r.bank.theme,list:r.bank.list,message:r.surfaces[i].meta.message}})));
+    project.forEach(row => validateProjection(row.payload));
     requireThat(project.length>=512 && project.length<=2048 && new Set(project.map(p=>digest(p.payload))).size===project.length,'Word Search needs 512–2048 distinct grids');
     for(const band of new Set(project.map(p=>p.band))) {
       const rows=project.filter(p=>p.band===band), families=new Set(rows.map(p=>p.family));
@@ -58,5 +61,5 @@ export function bakeSearch(input, plan, out) {
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   try { const [input,plan,out]=process.argv.slice(2);requireThat(out,'bake <W2-input.private.json> <plan.json> <new-external-output>');console.log(JSON.stringify(bakeSearch(JSON.parse(readFileSync(input,'utf8')),JSON.parse(readFileSync(plan,'utf8')),resolve(out)))); }
-  catch(e) { if(e.message==='Actual family sample required before shipping') console.error(e.message);console.error('Word Search bake stopped. No content was published. See the unchanged W1 gates and private input evidence.');process.exitCode=1; }
+  catch(e) { console.error(safeReason(e));console.error('Word Search bake stopped. No content was published. See the unchanged W1 gates and private input evidence.');process.exitCode=1; }
 }

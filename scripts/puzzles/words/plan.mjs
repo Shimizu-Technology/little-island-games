@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { safeReason } from './diagnostics.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync,writeFileSync,existsSync} from 'node:fs';
 import {resolve} from 'node:path';
@@ -29,5 +30,5 @@ export function makePlan(input,packs) {
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   try {const [input,packs,out]=process.argv.slice(2);privatePath(out);requireThat(!existsSync(out),'Output exists');const plan=makePlan(JSON.parse(readFileSync(input)),JSON.parse(readFileSync(packs)));writeFileSync(out,JSON.stringify(plan)+'\n',{mode:0o600,flag:'wx'});console.log(JSON.stringify({banks:plan.banks.length,grids:plan.banks.reduce((n,b)=>n+b.grids.length,0)}));}
-  catch{console.error('Cannot prepare a real Word Search plan; review picture/audio and theme coverage.');process.exitCode=1;}
+  catch(e){console.error(safeReason(e));console.error('Cannot prepare a real Word Search plan; review picture/audio and theme coverage.');process.exitCode=1;}
 }

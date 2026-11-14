@@ -58,3 +58,16 @@ describe('deterministic Word Search bake and checker',()=>{
  });
 
 });
+
+it('rejects duplicate cell-set answers through the app validator before publishing a bake',async()=>{
+ const {validateProjection}=await import('../scripts/puzzles/words/validate.mjs');
+ const p=fixture.puzzles[0], same={...p,words:[p.words[0],{...p.words[0],id:'synthetic-reversed'}]};
+ expect(()=>validateProjection(same)).toThrow('Runtime puzzle validation failed');
+ expect(()=>validateProjection(p)).not.toThrow();
+});
+it('reports only fixed safe diagnostics, preserving actionable plan and slot failures',async()=>{
+ const {safeReason}=await import('../scripts/puzzles/words/diagnostics.mjs');
+ expect(safeReason(Error('Output exists'))).toBe('Output exists');
+ expect(safeReason(Error('G6 slots already occupied.'))).toBe('G6 slots already occupied.');
+ expect(safeReason(Error('synthetic private record details'))).not.toContain('record details');
+});

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { safeReason } from './diagnostics.mjs';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,5 +31,5 @@ export function checkSearch(out) {
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   try {const result=checkSearch(resolve(process.argv[2]));console.log(JSON.stringify({passed:true,banks:result.banks.length,puzzles:result.puzzles.length,implementations:2}));}
-  catch{console.error('Word Search verification failed; no content was published.');process.exitCode=1;}
+  catch(e){console.error(safeReason(e));console.error('Word Search verification failed; no content was published.');process.exitCode=1;}
 }

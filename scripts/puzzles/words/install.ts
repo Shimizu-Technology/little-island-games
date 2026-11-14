@@ -1,3 +1,4 @@
+import { safeReason } from './diagnostics.mjs';
 /** Lead-only adoption after the real family sample. This never manufactures approval. */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, copyFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -59,8 +60,10 @@ try {
     for(const p of family.packs){const name=`slot-${String(p[0]).padStart(4,'0')}.json`;copy(join(dirs.receipts,'word-search',name),join('content/puzzles/receipts/word-search',name));}
     const frozen=JSON.parse(readFileSync('src/state/save-catalog.json','utf8'));frozen.banks.push(...saveCatalogBanks(dirs,()=>({awards:0,cove:true})));frozen.contexts=[...new Set([...frozen.contexts,...facts.map(f=>`word-search-${f.tier}`)])];
     put('src/puzzles/words/packs.generated.json',JSON.stringify(facts,null,2)+'\n');
-    put('src/puzzles/words/pictures.generated.ts',pictureBindingsSource(pictureBindings(rows.map(r=>r.payload))));
+    const pictures=pictureBindings(rows.map(r=>r.payload));
+    put('src/puzzles/words/pictures.generated.ts',pictureBindingsSource(pictures));
+    if(pictures.length) put('src/puzzles/words/picture-context.ts',"import { createContext } from 'react';\nimport { pictureTransport } from '../../content/pictures/transport';\nimport { createSearchPictures } from './pictures';\nimport { searchPictureEntries, searchPictureAssets } from './pictures.generated';\nexport const SearchPicturesContext = createContext(createSearchPictures(searchPictureEntries, searchPictureAssets, pictureTransport));\n");
     put('src/content/puzzles/assets.generated.ts',generatedAssets(root,families));put('src/state/save-catalog.json',JSON.stringify(frozen,null,2)+'\n');put('src/content/puzzles/root.json',JSON.stringify(root)+'\n');
     console.log(JSON.stringify({published:true,puzzles:rows.length,slots:report.slots,detachedEvidence:receipts}));
   } catch(e) {for(const [path,bytes] of [...changed].reverse()){if(bytes===null)rmSync(path,{force:true});else writeFileSync(path,bytes);}throw e;}
-} catch {console.error('Word Search adoption stopped. No approval was invented; inspect the bake, slot and byte gates.');process.exitCode=1;}
+} catch(e) {console.error(safeReason(e));console.error('Word Search adoption stopped. No approval was invented; inspect the bake, slot and byte gates.');process.exitCode=1;}

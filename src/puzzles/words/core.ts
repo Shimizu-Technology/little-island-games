@@ -26,6 +26,22 @@ export function snapRay(start: number, end: number, columns: number, rows: numbe
   for (let i = 0; i <= length; i++) { const r = sr + i * dy, c = sc + i * dx; if (r < 0 || c < 0 || r >= rows || c >= columns) break; cells.push(r * columns + c); }
   return { direction, cells };
 }
+/** Finger-space octants. A 0.65-cell dead zone ignores entry-edge noise; a 7-degree
+ * hysteresis margin prevents sector chatter while still allowing a curved drag to re-snap. */
+export function dragRay(start: number, origin: { x: number; y: number }, point: { x: number; y: number }, size: number, columns: number, rows: number, previous: Direction | null = null): { direction: Direction | null; cells: number[] } {
+  const dx = point.x - origin.x, dy = point.y - origin.y;
+  if (Math.hypot(dx, dy) < size * .65) return { direction: null, cells: [start] };
+  const angle = Math.atan2(dy, dx), sector = Math.round(angle / (Math.PI / 4));
+  let direction: Direction = [Math.round(Math.sin(sector * Math.PI / 4)), Math.round(Math.cos(sector * Math.PI / 4))];
+  if (previous) {
+    const old = Math.atan2(previous[0], previous[1]), difference = Math.abs(Math.atan2(Math.sin(angle - old), Math.cos(angle - old)));
+    if (difference < Math.PI / 8 + 7 * Math.PI / 180) direction = previous;
+  }
+  const [dr, dc] = direction, length = Math.max(0, Math.round((dx * dc + dy * dr) / (size * (dr * dr + dc * dc))));
+  const cells: number[] = [];
+  for (let n = 0; n <= length; n++) { const r = Math.floor(start / columns) + n * dr, c = start % columns + n * dc; if (r < 0 || c < 0 || r >= rows || c >= columns) break; cells.push(r * columns + c); }
+  return { direction, cells };
+}
 export function straightPath(start: number, end: number, columns: number): number[] | null {
   const dr = Math.floor(end / columns) - Math.floor(start / columns), dc = end % columns - start % columns;
   if (!dr && !dc || dr && dc && Math.abs(dr) !== Math.abs(dc)) return null;

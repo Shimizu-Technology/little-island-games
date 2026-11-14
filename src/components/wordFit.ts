@@ -28,3 +28,6 @@ export const wordsFit = (text: string, fontSize: number, width: number) => text.
  * Shared chrome switches to its large-text layout here: switches stack under their words, and bars collapse.
  */
 export const LARGE_TEXT = 1.5;
+
+/** Caps are inert below the accessibility threshold, including standard 1.35x text. */
+export const atLarge = (fontScale: number, cap: number): number | undefined => fontScale >= LARGE_TEXT ? cap : undefined;

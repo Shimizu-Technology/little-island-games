@@ -22,10 +22,10 @@ After Leon attaches actual family evidence to each adopted W2 review batch, run 
 export LITTLE_ISLAND_WORD_POLICY_LOCK=/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v4/w2-words/private/policy/policy-lock.private.json
 W2=/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v4/w2-words
 G6=/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v4/g6-words
-node scripts/puzzles/words/plan.mjs "$W2/private/g6/theme-bank-input.private.json" "$W2/private/g6/theme-packs.json" "$G6/real-plan.private.json"
-node scripts/puzzles/words/bake.mjs "$W2/private/g6/theme-bank-input.private.json" "$G6/real-plan.private.json" "$G6/real-bake"
-node scripts/puzzles/words/check.mjs "$G6/real-bake"
-node --import ./scripts/puzzles/register.mjs scripts/puzzles/words/install.ts "$G6/real-bake"
+node scripts/puzzles/words/plan.mjs "$W2/private/g6/theme-bank-input.private.json" "$W2/private/g6/theme-packs.json" "$G6/real-plan-family.private.json"
+node scripts/puzzles/words/bake.mjs "$W2/private/g6/theme-bank-input.private.json" "$G6/real-plan-family.private.json" "$G6/real-bake-family"
+node scripts/puzzles/words/check.mjs "$G6/real-bake-family"
+node --import ./scripts/puzzles/register.mjs scripts/puzzles/words/install.ts "$G6/real-bake-family"
 ```
 
 Use new plan/output paths on retries. `plan.mjs` proposes 2,040 grids across six bands and the actual W2 theme families. Its picture rung uses only existing pictures and recordings. The authored `themes.json` catalog binds the W2 pack order; six labels use a generic title pending the lead’s label review. New hidden-message phrases must also be present in an authored runtime source before packed vocabulary admission can accept them. Insufficient reviewed coverage fails. Reading level stays independent of the engine band. Plans can set an exact hidden message on a grid; the leftover cells must spell that exact message in row order. Adult bands request two fixed look-alike trails, and both scanners still check their letters.
@@ -34,8 +34,8 @@ The baker calls W1's `checkSurfaces` and `bakeBank` unchanged. Every final grid 
 
 `check.mjs` rebakes the detached admissions. `install.ts` validates them again, admits the W1 word assets, certifies packed rows with the shared kit, checks slots and the existing byte budget, and then adopts the catalog and frozen refs. It rolls repository files back on error. The real bank's packed receipts provide semantic counts, template histograms and replay evidence; the earlier bake receipt's `distinctPayloads` is not a symmetry proof. The install refuses an existing Word Search family; subsequent append plans need a separate review.
 
-After adoption the lead must retain `real-bake/admission` outside Git as `LITTLE_ISLAND_WORD_RECEIPTS`, regenerate/reconcile shared registries with the integration branch, activate only dares bound to actual refs, rotate W2's CI policy secret, run both full gates, and repeat native and family acceptance. No real bank has been baked by this slice. No sample or approval field has been filled by an agent.
+After adoption the lead must retain `real-bake-family/admission` outside Git as `LITTLE_ISLAND_WORD_RECEIPTS`, regenerate/reconcile shared registries with the integration branch, activate only dares bound to actual refs, rotate W2's CI policy secret, run both full gates, and repeat native and family acceptance. No real bank has been baked by this slice. No sample or approval field has been filled by an agent.
 
 Picture bindings are scoped to the admitted picture answers. Adoption writes `pictures.generated.ts` with those assets and their byte/hash bindings; the unpublished runtime table is empty. The test entry uses its own four-picture table. Loads verify the SVG bytes and use a bounded cache. The dictionary vocabulary index is build-time input.
 
-For both full gates, also set `LITTLE_ISLAND_PICTURE_W1_QUEUES` to W1's private authoritative queue directory. The existing dictionary reachability check uses it to verify membership; keep the directory outside Git. Both gates retain `LITTLE_ISLAND_WORD_POLICY_LOCK` and the unchanged W1 export guard.
+When adopted picture banks exist, set `LITTLE_ISLAND_PICTURE_W1_QUEUES` to W1's private authoritative queue directory. The existing dictionary reachability check uses it to verify membership; keep the directory outside Git. Both gates retain `LITTLE_ISLAND_WORD_POLICY_LOCK` and the unchanged W1 export guard.

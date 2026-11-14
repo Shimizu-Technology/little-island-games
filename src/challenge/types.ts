@@ -77,7 +77,7 @@ export type PackedChallenge = {
 };
 /** Erasure happens only after a typed registration validates its own payload. No action bags. */
 export type ChallengeEntry = {
-  game: string; codec: string; cove: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession;
+  game: string; codec: string; cove: boolean; serializeMoves?: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession;
   /** True when a rejected move was refused because the attempt's log is full, so restart is the way on. */
   full?: (session: ChallengeSession) => boolean;
   /** Game-specific line in the dare picker about how help affects dare marks. */
