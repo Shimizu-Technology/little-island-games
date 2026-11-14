@@ -9,10 +9,10 @@ describe('Coding island engines',()=>{
  for(const level of [1,2,3,4,5] as const)it(`Beep Bot level ${level} solves four distinct tasks, validates, and finishes`,()=>{
   const o=options(level);let s=beep.create(o,ctx);expect(beep.validate(s,o)).toBe(true);expect(beep.validate(JSON.parse(JSON.stringify(s)),o)).toBe(true);
   expect(new Set(s.puzzles.map(p=>JSON.stringify({start:p.start,shell:p.shell,rocks:p.rocks,answer:p.answer}))).size).toBe(4);
-  for(const p of s.puzzles){expect(botSolves(p,p.answer)).toBe(true);expect(trace(p,p.answer).at(-1)).toBe(p.shell);if(level>=3)expect(p.rocks.length).toBeGreaterThan(0);}
+  for(const p of s.puzzles){expect(botSolves(p,p.answer)).toBe(true);expect(trace(p,p.answer).at(-1)).toBe(p.shell);if(level>=3&&level<=4)expect(p.rocks.length).toBeGreaterThan(0);}
   if(level===4)expect(botSolves(s.puzzles[0],s.program)).toBe(false);
   for(let i=0;i<4;i++){s={...s,program:s.puzzles[i].answer,cursor:s.puzzles[i].answer.length};s=advance(s);expect(beep.validate(s,o)).toBe(true);}
-  expect(beep.outcome(s,o)).toBe('done');expect(beep.validate({...s,version:2},o)).toBe(false);
+  expect(beep.outcome(s,o)).toBe('done');expect(beep.validate({...s,version:3},o)).toBe(false);
  });
  for(const level of [1,2,3,4,5] as const)it(`Turtle Draw level ${level} traces four goals with valid blocks`,()=>{
   const o=options(level);let s=turtle.create(o,ctx);expect(turtle.validate(s,o)).toBe(true);expect(turtle.validate(JSON.parse(JSON.stringify(s)),o)).toBe(true);
@@ -51,7 +51,7 @@ describe('Coding island engines',()=>{
  });
  it('difficulty rises and malformed programs fail',()=>{
   expect(makePuzzle(1,1).answer.length).toBeLessThan(makePuzzle(4,1).answer.length);
-  expect(makePuzzle(5,1).answer).toContain('repeat2');
+  expect(makePuzzle(5,1).answer.some(card=>card.startsWith('repeat'))).toBe(true);
   expect(task(5,1).limit).toBeLessThan(task(2,1).limit);
   expect(task(4,1).target[0].kind).toBe('repeat');
   expect(validBlock({kind:'repeat',times:999,body:[]})).toBe(false);

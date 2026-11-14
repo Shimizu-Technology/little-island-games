@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, View } from "react-native";
+import { Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { LARGE_TEXT, wordFitMultiplier, wordsFit } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
 import { chamoruWord, type ChamoruWord } from "../../content/chamoru";
 import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
@@ -87,14 +88,23 @@ export function Board({
     shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
   const spy = s.activity === "spy",
     gentle = options.pace === "easy";
-  const columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
-  const rows = Math.ceil(s.items.length / columns);
   const gap = 6,
     pad = 8;
   // The scene has a 1px border on each side.
-  const slot = Math.floor((width - 2 - pad * 2 - gap * (columns - 1)) / columns);
+  const slotFor = (n: number) => Math.floor((width - 2 - pad * 2 - gap * (n - 1)) / n);
+  const captions = spy ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
+  // A caption word wider than its slot even at the default size ("Grandmother" in four columns) would break mid-word,
+  // so the picnic drops a column until every word fits. Rounds whose words already fit keep their layout.
+  let columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
+  while (columns > 2 && !captions.every(text => wordsFit(text, 12, slotFor(columns) - 8))) columns--;
+  const rows = Math.ceil(s.items.length / columns);
+  const slot = slotFor(columns);
   const pictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
-  const rowHeight = pictureSize + (spy ? 14 : 28);
+  // Captions share one size, the largest (at most 1.5x) at which every word of every caption, English or CHamoru,
+  // fits its picture's slot. At accessibility sizes each row makes room for two caption lines, so labels never overlap.
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
+  const rowHeight = pictureSize + (spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28);
   const tableTop = 30;
   const promptKey = p.done
     ? "hafa-adai-done"
@@ -185,7 +195,7 @@ export function Board({
               word’s picture
             </Copy>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Heading style={{ fontSize: 32, flex: 1 }}>{target.term}</Heading>
+              <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(target.term, 32, width - 24 - (gentle ? 0 : 118), 2) : undefined} style={{ fontSize: 32, flex: 1 }}>{target.term}</Heading>
               {!gentle && (
                 <Button
                   quiet
@@ -255,7 +265,7 @@ export function Board({
               >
                 <WordPicture word={word} size={pictureSize} caption={false} />
                 {!spy && (
-                  <Copy style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
+                  <Copy numberOfLines={captionMax ? 2 : undefined} maxFontSizeMultiplier={captionMax} style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
                     {visited ? word.term : first(word.english)}
                   </Copy>
                 )}
@@ -308,7 +318,7 @@ export function Board({
         >
           <WordPicture word={shown} size={54} caption={false} />
           <View style={{ flex: 1 }}>
-            <Heading style={{ fontSize: 22 }}>{shown.term}</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(shown.term, 22, width - 20 - 54 - 10, 2) : undefined} style={{ fontSize: 22 }}>{shown.term}</Heading>
             {spy ? (
               <Copy style={{ fontSize: 14, color: C.ink }}>That picture’s word. Try again!</Copy>
             ) : (

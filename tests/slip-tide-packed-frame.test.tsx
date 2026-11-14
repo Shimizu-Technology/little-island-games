@@ -138,7 +138,8 @@ async function solvePackedLagoon(progress = emptyChallenge()) {
 }
 async function expectDareCardChosen(root: ReactTestRenderer) {
   const text = JSON.stringify(root.toJSON());
-  expect(text).toContain('An optional dare');
+  // F-frame: a card with several dares offers them together (the child may choose up to three).
+  expect(text).toContain(lagoonCard.dares.filter(d => !d.retired).length > 1 ? 'Optional dares' : 'An optional dare');
   const selected = root.root.findAllByType('button' as never).filter(b => b.props.selected === true).map(label);
   expect(selected).toContain(`${lagoonCard.title} · Tide 3`);
   const dare = lagoonCard.dares[0];

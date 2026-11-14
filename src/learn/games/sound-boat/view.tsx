@@ -4,6 +4,8 @@ import Svg, { Ellipse, Path } from "react-native-svg";
 import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
 import { easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
+import { wordFitMultiplier } from "../../../components/wordFit";
+import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { Icon } from "../../../components/Icon";
 import { ObjectGlyph, PictureObject } from "../../art/Objects";
@@ -135,12 +137,15 @@ function Tile({
           shadowOffset: { width: 0, height: 3 },
         }}
       >
-        <Copy style={{ fontSize: size * 0.5, lineHeight: size * 0.62, color: ink, fontWeight: "700" }}>{label}</Copy>
+        {/* The tile keeps its height at every text size (it widens for its letters), so they stop where they fit its height. */}
+        <Copy maxFontSizeMultiplier={letterFit(label, size * 0.5, Infinity, (size - 8) / (size * 0.62))} style={{ fontSize: size * 0.5, lineHeight: size * 0.62, color: ink, fontWeight: "700" }}>{label}</Copy>
       </PressableScale>
     </Animated.View>
   );
 }
 
+/** Letters in a fixed box stop growing where they fit its width and height (never below the default size). */
+const letterFit = (text: string, size: number, width: number, height: number) => Math.max(1, Math.min(wordFitMultiplier(text, size, width, 2), Math.floor(height * 100) / 100));
 /** One box on the boat. Pops when a letter lands in it. */
 function Box({
   letter,
@@ -189,6 +194,7 @@ function Box({
       }}
     >
       <Copy
+        maxFontSizeMultiplier={letterFit(letter, size * 0.55, (wide ? size * 1.45 : size) - 8, (size * 1.12 - 8) / (size * 0.7))}
         style={{
           fontSize: size * 0.55,
           lineHeight: size * 0.7,
@@ -244,6 +250,8 @@ function Play({
   const [shakes, setShakes] = useState<Record<string, number>>({});
   const [rock] = useState(() => new Animated.Value(0));
   const done = s.index >= WORDS_PER_ROUND;
+  // Each new word opens at the top of the board: the picture, then the boat and its letters.
+  useStepReveal(s.index);
   const word = boatWord(s),
     complete = boatComplete(s);
 
@@ -350,14 +358,14 @@ function Play({
                     justifyContent: "center",
                   }}
                 >
-                  <Copy style={{ fontSize: 18, lineHeight: 22, color: ink, fontWeight: "600" }}>{tileLabel(t)}</Copy>
+                  <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 18, lineHeight: 22, color: ink, fontWeight: "600" }}>{tileLabel(t)}</Copy>
                 </View>
               ))}
               {/_e$/.test(wordEntry(previous)!.tiles.join(" ")) && (
-                <Copy style={{ fontSize: 18, lineHeight: 32, color: C.muted }}>e</Copy>
+                <Copy maxFontSizeMultiplier={1} style={{ fontSize: 18, lineHeight: 32, color: C.muted }}>e</Copy>
               )}
             </View>
-            <Copy style={{ fontSize: 26, lineHeight: 28, color: ink }}>↓</Copy>
+            <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 26, lineHeight: 28, color: ink }}>↓</Copy>
           </View>
         )}
         <View style={{ alignItems: "center" }}>
