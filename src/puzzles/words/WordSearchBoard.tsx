@@ -1,4 +1,4 @@
-import React, { memo, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ScrollView, View, useWindowDimensions, type GestureResponderEvent, type NativeTouchEvent } from 'react-native';
 import Svg, { Circle, Line, SvgXml } from 'react-native-svg';
 import { Button, C, Copy, Heading } from '../../components/ui';
@@ -39,11 +39,11 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize the external touch session at this boundary.
   useEffect(() => { pointers.current.clear(); firstRef.current=null; setPreviews([]); setFirst(null); interaction(false); }, [width, active, interaction, p]);
   useEffect(() => () => { interactionRef.current(false); }, []);
-  function tap(i: number, hunter = state.turn) {
+  const tap = useCallback((i: number, hunter = state.turn) => {
     if (!active) return;
     if (firstRef.current === null) { firstRef.current = i; setFirst(i); setNotice('Now choose the last letter.'); }
     else { const start = firstRef.current; firstRef.current = null; setFirst(null); const word=foundIndex(p,start,i);if(word<0)setNotice('Try another straight line.');else if(state.found.some(([j])=>j===word))setNotice('That word is already found.');else {dispatch(['find', start, i, together ? hunter : 0]);setNotice('');} }
-  }
+  },[active,state,p,together,dispatch]);
   const cellAt = (t: NativeTouchEvent) => nearestCell(t.locationX, t.locationY, size, { rows, columns });
   function begin(e: GestureResponderEvent) {
     if (!active || screenReader) return;
