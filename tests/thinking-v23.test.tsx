@@ -11,7 +11,7 @@ import { Board as LogicBoard } from '../src/learn/games/logic-lagoon/view';
 import type { BoardProps, LearnOptions } from '../src/learn/types';
 const { Pass } = vi.hoisted(() => ({ Pass: ({ children }: { children?: unknown }) => children as never }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => true }));
-vi.mock('react-native', () => ({ View: Pass, ScrollView: Pass, Platform: { OS: 'web' } }));
+vi.mock('react-native', () => ({ View: Pass, ScrollView: Pass, Platform: { OS: 'web' }, useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
 vi.mock('react-native-svg', () => ({ default: Pass, Circle: Pass, Ellipse: Pass, Path: Pass, Rect: Pass }));
 vi.mock('../src/components/ui', () => ({ C: { ink: '#123' }, Copy: Pass, PressableScale: Pass }));
 const base: LearnOptions={mode:'solo',pace:'easy'};

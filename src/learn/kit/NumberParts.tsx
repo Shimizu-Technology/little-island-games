@@ -6,6 +6,14 @@ import { C, PressableScale } from "../../components/ui";
 import { easeInOut, easeOut, nativeDriver, useReducedMotion } from "../../components/motion";
 import { winding } from "./numbers";
 import { CoachSpot } from "../Coach";
+import { wordFitMultiplier } from "../../components/wordFit";
+
+/**
+ * A stone's number stops growing where it fits its circle (a 4-pt ring at most): across the inner width, and a line
+ * no taller than it. Every stone uses at most the two-digit size, so numbers on one path match.
+ */
+export const stoneTextMax = (n: number, r: number) =>
+  Math.max(1, Math.min(...[String(n), "88"].map(t => wordFitMultiplier(t, Math.round(r * 0.8), r * 2 - 8, 2)), Math.floor((r * 2 - 8) / (Math.round(r * 0.8) * 1.25) * 100) / 100));
 
 const ink = C.ink;
 
@@ -244,7 +252,8 @@ function Stone({
             shadowOffset: { width: 0, height: 2 },
           }}
         >
-          <Text style={{ fontSize: Math.round(r * 0.8), fontWeight: "900", color: ink }}>{n}</Text>
+          {/* The stone keeps its size at every text size, so its number stops where it fits the circle. */}
+          <Text maxFontSizeMultiplier={stoneTextMax(n, r)} style={{ fontSize: Math.round(r * 0.8), fontWeight: "900", color: ink }}>{n}</Text>
         </View>
         {special && (
           <View pointerEvents="none" style={{ position: "absolute", right: -4, top: -6 }}>

@@ -7,12 +7,15 @@ import { mathAnswer, mathEquation, mathSkill, mathSpeechKey } from "../../../mat
 import { CoachSpot } from "../../Coach";
 import { AnswerTile } from "../../AnswerTile";
 import type { BoardProps } from "../../types";
+import { useStepReveal } from "../../stepReveal";
 import { mathConfig, mathMove, questionOf, type MathAction, type MathGame, type MathRound } from "./round";
 
 /** Shared controls keep retries, assistance and completion accounting identical. */
 export function MathBoard(props: BoardProps<MathRound> & { game: MathGame }) {
   const { session, game, active, update, practice, notePractice, stopSound, sound, soundOn, cheer, coach, width } = props;
   const s = session.state, q = questionOf(s), config = mathConfig(session.options, game);
+  // The next question opens at the top of the board.
+  useStepReveal(s.index);
   // Advance the local guard before any external callback. A rapid second tap cannot
   // complete the same question twice, even before the saved props come back.
   const live = useRef(s);
