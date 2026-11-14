@@ -27,6 +27,8 @@ import { registration as r12 } from './registrations/slip-tide';
 import type { Payload as P12, Action as A12, State as S12 } from './registrations/slip-tide';
 import { registration as r13 } from './registrations/sudoku';
 import type { Payload as P13, Action as A13, State as S13 } from './registrations/sudoku';
+import { registration as r14 } from './registrations/word-search';
+import type { Payload as P14, Action as A14, State as S14 } from './registrations/word-search';
 import type { ChallengeEntry, TypedRegistration } from "./types";
 export type Registry = Record<never, never> & {
   'bridges': { Payload: P0; Action: A0; State: S0 };
@@ -43,5 +45,6 @@ export type Registry = Record<never, never> & {
   'skyline': { Payload: P11; Action: A11; State: S11 };
   'slip-tide': { Payload: P12; Action: A12; State: S12 };
   'sudoku': { Payload: P13; Action: A13; State: S13 };
+  'word-search': { Payload: P14; Action: A14; State: S14 };
 };
-export const challengeEntries: readonly ChallengeEntry[] = [r0 satisfies TypedRegistration<P0, A0, S0>, r1 satisfies TypedRegistration<P1, A1, S1>, r2 satisfies TypedRegistration<P2, A2, S2>, r3 satisfies TypedRegistration<P3, A3, S3>, r4 satisfies TypedRegistration<P4, A4, S4>, r5 satisfies TypedRegistration<P5, A5, S5>, r6 satisfies TypedRegistration<P6, A6, S6>, r7 satisfies TypedRegistration<P7, A7, S7>, r8 satisfies TypedRegistration<P8, A8, S8>, r9 satisfies TypedRegistration<P9, A9, S9>, r10 satisfies TypedRegistration<P10, A10, S10>, r11 satisfies TypedRegistration<P11, A11, S11>, r12 satisfies TypedRegistration<P12, A12, S12>, r13 satisfies TypedRegistration<P13, A13, S13>];
+export const challengeEntries: readonly ChallengeEntry[] = [r0 satisfies TypedRegistration<P0, A0, S0>, r1 satisfies TypedRegistration<P1, A1, S1>, r2 satisfies TypedRegistration<P2, A2, S2>, r3 satisfies TypedRegistration<P3, A3, S3>, r4 satisfies TypedRegistration<P4, A4, S4>, r5 satisfies TypedRegistration<P5, A5, S5>, r6 satisfies TypedRegistration<P6, A6, S6>, r7 satisfies TypedRegistration<P7, A7, S7>, r8 satisfies TypedRegistration<P8, A8, S8>, r9 satisfies TypedRegistration<P9, A9, S9>, r10 satisfies TypedRegistration<P10, A10, S10>, r11 satisfies TypedRegistration<P11, A11, S11>, r12 satisfies TypedRegistration<P12, A12, S12>, r13 satisfies TypedRegistration<P13, A13, S13>, r14 satisfies TypedRegistration<P14, A14, S14>];

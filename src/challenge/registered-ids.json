@@ -12,5 +12,6 @@
   "shell-pits",
   "skyline",
   "slip-tide",
-  "sudoku"
+  "sudoku",
+  "word-search"
 ]

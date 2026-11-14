@@ -45,21 +45,27 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   useEffect(() => {
     if (focused && !auto.current && !saved && !full) { auto.current = true; void launch(); }
   });
+  // Word Search can finish two independent native pointers while a draft write is pending.
+  // Serialize those gestures against the latest accepted revision; identity/unmount cancels the queue.
+  const hunterQueue = useRef<unknown[]>([]);
   async function dispatch(action: unknown) {
+    if (entry.game === 'word-search' && focused && mounted.current && lock.current && !boundary.current && !pending && !current.current?.result && hunterQueue.current.length < 8) { hunterQueue.current.push(action); return; }
     const before = current.current;
     if (!focused || !before || lock.current || before.result || pending) { if (focused && !before?.result) setMessage('Wait for this change to finish, then try again. Your accepted work is kept.'); return; }
     const token = ++dispatchToken.current;
     lock.current = true; setMessage('');
+    let accepted = false;
     try {
       const next = entry.move(before, action);
-      if (!next) { setMessage('That change could not be saved. Your accepted draft is kept.'); return; }
+      if (!next) { setMessage(entry.game === 'word-search' ? 'That word may already be found. Try another straight line.' : 'That change could not be saved. Your accepted draft is kept.'); return; }
       if (next.result && !next.partner && solvingPeople(store.save).some(p => p.id !== owner)) { setPending(next); return; }
       if (next.result) { boundary.current = true; setBusy(true); }
       if (await store.challengeSave(next, expected(before))) {
+        accepted = true;
         if (!current.current || current.current.id === next.id && current.current.revision <= next.revision) current.current = next;
         if (next.result && mounted.current) setFinished(next);
       } else if (mounted.current) setMessage('Keep the app open. Retry saving or export your accepted work in Settings.');
-    } catch { if (mounted.current) setMessage('This change could not be made. Your accepted draft is kept. Try again.'); } finally { if (token === dispatchToken.current) { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); } }
+    } catch { if (mounted.current) setMessage('This change could not be made. Your accepted draft is kept. Try again.'); } finally { if (token === dispatchToken.current) { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); if (!accepted || !mounted.current || !focused || current.current?.result) hunterQueue.current = []; else { const next = hunterQueue.current.shift(); if (next !== undefined) void dispatch(next); } } }
   }
   async function confirmFinish(withPerson: string | null): Promise<boolean> {
     if (!pending || lock.current || !current.current || !focused) return false;

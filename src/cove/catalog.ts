@@ -14,7 +14,7 @@ export type CoveInfo = { name: string; row: RowName; provenance: 'Original level
 const original = 'Original levels, clues and pictures' as const;
 /** Metadata only: a game appears only after its real Challenge adapter is registered. */
 export const gameInfo: Record<string, CoveInfo> = {
-  'word-search': { name: 'Word Search', row: 'Words', provenance: original },
+  'word-search': { name: 'Word Search', row: 'Words', provenance: original, role: 'Hunt together on the iPad, or take turns on a phone. Green solid and purple dotted trails show each hunter. There is no score.' },
   crossword: { name: 'Crossword', row: 'Words', provenance: original },
   'word-ladder': { name: 'Word Ladder', row: 'Words', provenance: original, role: 'Say the next word aloud together, then type it.' },
   sudoku: { name: 'Sudoku', row: 'Numbers', provenance: original, role: 'Spotter says where to look. Placer decides what to put there. Swap when you like.' },
