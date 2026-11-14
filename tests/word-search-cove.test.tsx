@@ -29,7 +29,7 @@ let store:ReturnType<typeof useStore>,send:(a:Action)=>void;
 const entry={...fixtureRegistration,render:(s:ChallengeSession,dispatch:(a:unknown)=>void,active:boolean,width:number)=>{
  send=dispatch;
  const el=fixtureRegistration.render(s,dispatch,active,width) as React.ReactElement<WordSearchBoardProps>;
- return el ? <WordSearchBoard {...el.props} together={s.partner!==null}/> : null;
+ return el ? <WordSearchBoard {...el.props}/> : null;
 }};
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
 function Ready({partner=null}:{partner?:string|null}){const s=useStore();return s.ready?<CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={entry.puzzles[0]} partner={partner} width={353} onBrowse={()=>{}} onClose={()=>{}}/>:null;}

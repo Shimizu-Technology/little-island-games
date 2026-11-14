@@ -70,6 +70,7 @@ describe('baked Word Search rules', () => {
     expect(((a.encodePayload(p) as [string,string[],unknown[][]])[2][0][4])).toBe(0);
     expect(a.decodePayload(['en',['AB','CD'],[[0,null,0,1,0]],'Theme','words',null])).toBeNull();
     const proof=certify(wordSearch,wordSearch.bands[0],d,{budget:10000,seenExact:new Set(),seenSemantic:new Set()});expect(proof.ok).toBe(true);
+    expect(a.semanticKey({...d,payload:{...p,list:'words',theme:'Another theme'}})).toBe(a.semanticKey(d));
     const solved = a.solve(d, 1000);expect(solved.status).toBe('solved');
     if (solved.status !== 'solved') return;
     let s = a.create(d);for (const action of solved.witness) s = a.reduce(s, action, d);
