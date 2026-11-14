@@ -9,7 +9,7 @@ import { GridFeedback, GridInteraction } from '../grid/preferences';
 import { nearestCell } from '../grid/model';
 import { foundIndex, dragRay, type Direction } from './core';
 import type { Action, State } from './game';
-import { atLarge, wordFitMultiplier } from '../../components/wordFit';
+import { atLarge, wordFitMultiplier, wordWidth } from '../../components/wordFit';
 import { SearchChrome, searchLayout } from './layout';
 import { themes } from './themes.json';
 const colors = ['#28796B', '#8A4D81'];
@@ -33,7 +33,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const [first, setFirst] = useState<[number | null, number | null]>([null, null]), [previews, setPreviews] = useState<Pointer[]>([]), [zoom, setZoom] = useState(false), [notice, setNotice] = useState(''), [screenReader, setScreenReader] = useState(false);
   const pointers = useRef(new Map<string, Pointer>()), frame = useRef<View>(null), accepted = useRef(state.edits), firstRef = useRef(first);
   const rows = p.cells.length, columns = p.cells[0].length;
-  const layout = searchLayout(width, height, fontScale, columns, rows, p.list === 'pictures', together, chrome);
+  const layout = searchLayout(width, height, fontScale, columns, rows, p.list === 'pictures', together, chrome, p.words.some(w => w.audio !== null));
   const size = zoom ? Math.max(44, layout.size) : layout.size, needsZoom = layout.size < 44;
   const currentHunter = together ? tablet ? hunter : state.turn : 0;
   const interactionRef = useRef(interaction);
@@ -125,7 +125,10 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const hunters = together && tablet && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{(['Green hunter · solid', 'Purple hunter · dotted'] as const).map((name,h) => <Button key={name} maxFontSizeMultiplier={cap} quiet compact selected={hunter===h} onPress={() => setHunter(h as 0 | 1)}>{name}</Button>)}</View>;
   const viewportTools = needsZoom && <View testID="search-viewport-tools" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button maxFontSizeMultiplier={cap} quiet compact selected={zoom} onPress={() => { cancel(); setZoom(!zoom); setPanning(false); }}>{zoom ? 'Fit whole grid' : 'Enlarge letters'}</Button>{zoom && <Button maxFontSizeMultiplier={cap} quiet compact selected={panning} onPress={() => { cancel(); setPanning(!panning); }}>{panning ? 'Choose letters' : 'Move grid'}</Button>}</View>;
   const answerWidth = layout.large ? (layout.beside ? layout.listWidth - 24 : Math.min(width - 24, 240)) : width - 24;
-  const answerMax = atLarge(fontScale, Math.min(1.5, ...p.words.map(w => wordFitMultiplier(w.spelling, 16, answerWidth, 1.5))));
+  const pictureRow = layout.large && list === 'pictures', fitWidth = Math.max(32, answerWidth - (pictureRow ? 72 : 0));
+  const answerSize = layout.large ? Math.min(16, ...p.words.map(w => fitWidth * .92 / Math.max(1, wordWidth(`✓ ${w.spelling}`)))) : 16;
+  const ceiling = layout.short ? 1.3 : 1.5;
+  const answerMax = atLarge(fontScale, Math.min(ceiling, ...p.words.map(w => Math.max(1, Math.floor(fitWidth * .92 / (wordWidth(`✓ ${w.spelling}`) * answerSize) * 100) / 100))));
   const board = <ScrollView keyboardShouldPersistTaps="handled" horizontal scrollEnabled={zoom && panning} style={{ maxWidth: layout.boardWidth, flexGrow: 0 }}>
     <ScrollView keyboardShouldPersistTaps="handled" scrollEnabled={zoom && panning} style={{ maxHeight: zoom ? layout.size * rows + 2 : undefined }}>
     <View ref={frame} testID="search-grid" onStartShouldSetResponder={() => active && !screenReader && !panning} onMoveShouldSetResponder={() => active && !screenReader && !panning} onResponderGrant={begin} onResponderStart={begin} onResponderMove={move} onResponderEnd={end} onResponderRelease={end} onResponderTerminate={cancel} onResponderTerminationRequest={() => false} style={{ width: size * columns + 2, height: size * rows + 2, backgroundColor: '#FFFDF5', borderRadius: 12, borderWidth: 1, borderColor: '#D7DBCC', overflow: 'hidden' }}>
@@ -133,15 +136,15 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
       <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 1, top: 1 }}><Svg width={size * columns} height={size * rows}>{state.found.map(([w, h]) => path(p.words[w].cells, h, `found-${w}`))}{previews.map((v, i) => path(v.cells, v.hunter, `pointer-${i}`, true))}{first.flatMap((cell,h) => cell === null ? [] : [path([cell], h as 0 | 1, `first-${h}`, true)])}</Svg></View>
     </View></ScrollView>
   </ScrollView>;
-  const answers = p.words.map((w, i) => { const found = state.found.find(([j]) => j === i); return <View key={w.id} style={{ padding: 10, borderRadius: 14, backgroundColor: '#F1EDDF', borderWidth: found ? 2 : 0, borderStyle: found?.[1] === 1 ? 'dotted' : 'solid', borderColor: colors[found?.[1] ?? 0], gap: 4, width: layout.large ? answerWidth + 20 : undefined, maxWidth: layout.large ? layout.listWidth : width }}>
+  const answers = p.words.map((w, i) => { const found = state.found.find(([j]) => j === i); return <View key={w.id} style={{ padding: 10, borderRadius: 14, backgroundColor: '#F1EDDF', borderWidth: found ? 2 : 0, borderStyle: found?.[1] === 1 ? 'dotted' : 'solid', borderColor: colors[found?.[1] ?? 0], gap: pictureRow ? 8 : 4, flexDirection: pictureRow ? 'row' : 'column', alignItems: pictureRow ? 'center' : undefined, width: layout.large ? answerWidth + 20 : undefined, maxWidth: layout.large ? layout.listWidth : width }}>
       {list === 'pictures' && <WordPicture spelling={w.spelling} size={layout.large ? Math.max(64, 16 * Math.min(fontScale, answerMax ?? 1.5) * 2) : 64}/>}
-      <Copy testID="search-answer" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.4} maxFontSizeMultiplier={answerMax} accessibilityLabel={`${found ? 'Found. ' : ''}${w.spelling}`}>{found ? '✓ ' : ''}{w.spelling}</Copy>
-      {w.audio && <Button maxFontSizeMultiplier={cap} quiet compact disabled={!active} label={`Hear ${w.spelling}`} onPress={() => { if (sound.play(w.audio!)) { if (!state.heard) dispatch(['hear', i]); } else setNotice('The recording could not play. Your puzzle is kept.'); }}>Hear word</Button>}
+      <View style={{ gap: 4, flex: pictureRow ? 1 : undefined }}><Copy style={layout.large ? { fontSize: answerSize } : undefined} testID="search-answer" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.4} maxFontSizeMultiplier={answerMax} accessibilityLabel={`${found ? 'Found. ' : ''}${w.spelling}`}>{found ? '✓ ' : ''}{w.spelling}</Copy>
+      {w.audio && <Button maxFontSizeMultiplier={cap} quiet compact disabled={!active} label={`Hear ${w.spelling}`} onPress={() => { if (sound.play(w.audio!)) { if (!state.heard) dispatch(['hear', i]); } else setNotice('The recording could not play. Your puzzle is kept.'); }}>Hear word</Button>}</View>
     </View>; });
   const wordList = list !== 'hidden' ? layout.large ? <ScrollView keyboardShouldPersistTaps="handled" horizontal={!layout.beside} style={{ maxWidth: layout.listWidth, maxHeight: layout.beside ? Math.max(layout.size * rows + 2, 180) : undefined, flexGrow: 0 }} contentContainerStyle={{ flexDirection: layout.beside ? 'column' : 'row', gap: 8 }}>{answers}</ScrollView> : <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{answers}</View> : <Copy maxFontSizeMultiplier={copyCap} style={{ maxWidth: layout.listWidth }}>The list is hidden. Use the theme to hunt. Help is always here.</Copy>;
   return <View testID="word-search-keyboard" style={{ gap: layout.large ? 8 : 12 }}>
     {Platform.OS === 'ios' && <TextInput ref={keyboard} testID="search-native-keyboard" accessible={false} importantForAccessibility="no-hide-descendants" showSoftInputOnFocus={false} caretHidden contextMenuHidden autoCorrect={false} autoCapitalize="none" value="" onKeyPress={e => keyAction(e.nativeEvent.key)} onChangeText={() => keyboard.current?.clear()} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, fontSize: 18 }}/>}
-    <Heading maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier(title, 24, width, layout.short ? 1.3 : 2))} style={{ fontSize: 24 }}>{title}</Heading>
+    <Heading maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier(title, 24, width, layout.short ? 1.25 : 2))} style={{ fontSize: 24 }}>{title}</Heading>
     {!layout.short && <>{instruction}{cue}{hunters}</>}
     {layout.large && <Copy maxFontSizeMultiplier={cap} accessibilityLabel={spoken} accessibilityLiveRegion="polite" numberOfLines={1} adjustsFontSizeToFit style={{ height: 33 }}>{notice || (allFound ? 'Every word found.' : `${state.found.length} of ${p.words.length} words found.`)}</Copy>}
     {layout.large && viewportTools}

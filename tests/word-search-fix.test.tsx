@@ -112,3 +112,20 @@ it('speaks the newly found answer as well as the updated count on iOS',async()=>
  await act(async()=>screen.update(<WordSearchBoard state={next} dispatch={dispatch} active width={353} together/>));
  expect(env.announce).toHaveBeenLastCalledWith(expect.stringContaining(w.spelling));expect(env.announce).toHaveBeenLastCalledWith(expect.stringContaining('1 of'));
 });
+it('reserves the complete first answer card, including Hear, in both phone orientations',async()=>{
+ const {searchLayout}=await import('../src/puzzles/words/layout');
+ for(const [width,height] of [[393,852],[852,393]])for(const pictures of [false,true])for(const n of [4,6,16]){
+  const short=height<500,chrome={top:short?0:59,bottom:short?21:34,bar:110};
+  const l=searchLayout(width-40,height,3.12,n,n,pictures,false,chrome,true);
+  const card=short?108:118,other=short?99:66+38+33+48,tools=l.size<44?54:0;
+  const region=l.beside?Math.max(l.size*n,card):l.size*n+card;
+  expect(region+chrome.top+chrome.bottom+chrome.bar+other+tools).toBeLessThanOrEqual(height);
+ }
+});
+it('shares one fitted size across long answers, reserving the found mark too',async()=>{
+ const {wordWidth}=await import('../src/components/wordFit');env.fontScale=3.12;
+ const long={...p,words:p.words.map((w,i)=>({...w,spelling:i===0?'W'.repeat(16):w.spelling}))};await mount({state:{...initial(),puzzle:long}});
+ const answers=screen.root.findAllByProps({testID:'search-answer'}),sizes=answers.map(n=>n.props.style.fontSize),caps=answers.map(n=>n.props.maxFontSizeMultiplier);
+ expect(new Set(sizes).size).toBe(1);expect(new Set(caps).size).toBe(1);
+ expect(wordWidth(`✓ ${long.words[0].spelling}`)*sizes[0]*caps[0]).toBeLessThanOrEqual(168*.92+.01);
+});
