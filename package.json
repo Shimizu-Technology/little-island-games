@@ -78,7 +78,9 @@
     "arcade:boundaries": "LITTLE_ISLAND_WRITE_ARCADE_TABLE=1 vitest run tests/arcade-boundaries.test.ts",
     "arcade:dares": "node --import ./scripts/puzzles/register.mjs scripts/arcade/dare-catalog.ts",
     "boards:catalog": "node --import ./scripts/puzzles/register.mjs scripts/boards/pits-catalog.ts",
-    "qa:matrix": "node --experimental-strip-types scripts/qa/render.mjs"
+    "qa:matrix": "node --experimental-strip-types scripts/qa/render.mjs",
+    "qa:matrix:generate": "node --experimental-strip-types scripts/qa/render.mjs",
+    "qa:evidence:verify": "node --experimental-strip-types scripts/qa/verify-evidence.mjs"
   },
   "private": true,
   "engines": {

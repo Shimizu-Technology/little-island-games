@@ -26,7 +26,14 @@
     {
       "path": "v4/a2-audio/FIX-REPORT.md",
       "sha256": "9d29aac53bf45b54a4517da3d731861f1194a95ce86133cdf57dbcd2a1474d44",
-      "bytes": 17782
+      "bytes": 17782,
+      "testedHeads": [
+        {
+          "sha": "a11e1020b5f40880bd32ef05f1fe7f8cb26f9cce",
+          "recordedHead": "a11e1020b5f40880bd32ef05f1fe7f8cb26f9cce",
+          "record": "Branch `p4/audio-tones` (PR #41, not merged), from `origin/p4/audio-tones` at 98137a96. Worked on a local branch in my own worktree and pushed with `git push origin HEAD:refs/heads/p4/audio-tones`. Head **a11e1020b5f40880bd32ef05f1fe7f8cb26f9cce**. The remote is the private `Shimizu-Technology/little-island-games`. I made no merge, version, build-number, release, Apple or EAS change."
+        }
+      ]
     },
     {
       "path": "v4/a2-audio/REPORT.md",
@@ -66,12 +73,26 @@
     {
       "path": "v4/c1-crab/REPORT.md",
       "sha256": "68c858cda14ef0edf6cf9e56ce94310c651c74d318e125f1c71f9870cb170093",
-      "bytes": 9324
+      "bytes": 9324,
+      "testedHeads": [
+        {
+          "sha": "c967b580123eae82ef84a6b95d2523ed2c5e56d3",
+          "recordedHead": "c967b580123eae82ef84a6b95d2523ed2c5e56d3",
+          "record": "Branch `p4/c1-crab`, final pushed head `9c77859216832e5f4e1706b771a60f035ec5af20`. Implementation head `c967b580123eae82ef84a6b95d2523ed2c5e56d3`; the report-only pushed head is recorded in `evidence/push-receipt.json`. Evidence references in this report point to `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v4/c1-crab/evidence/`. Started from and refreshed against `origin/program/4.0` at `8be501bd`. Verified private remote: `https://github.com/Shimizu-Technology/little-island-games.git`. No PR, integration merge, version/build change, release script, Apple account or EAS action. The lead integrates this branch."
+        }
+      ]
     },
     {
       "path": "v4/c1b-crab/REPORT.md",
       "sha256": "a0073162d3b06753b239473f5702152035bc73e34acf6c64d62a5c47eed63743",
-      "bytes": 18411
+      "bytes": 18411,
+      "testedHeads": [
+        {
+          "sha": "6260c850111168c0995f94bbc6d4b05c6d83be41",
+          "recordedHead": "6260c850",
+          "record": "**Branch:** `p4/c1b-crab` on `Shimizu-Technology/little-island-games` (private; remote checked). **Head: `6260c850`**:"
+        }
+      ]
     },
     {
       "path": "v4/c2a-beep/FIX-REPORT-2.md",
@@ -81,12 +102,26 @@
     {
       "path": "v4/c2a-beep/FIX-REPORT.md",
       "sha256": "9fe06d33e17725394038b36188aeeb32330bb3d1b062b9fc6e5cfaf67dfc80a4",
-      "bytes": 11906
+      "bytes": 11906,
+      "testedHeads": [
+        {
+          "sha": "55116f822a9375972c6be776f6ac4d6ededaf4ea",
+          "recordedHead": "55116f822a9375972c6be776f6ac4d6ededaf4ea",
+          "record": "Pushed **p4/c2a-beep** at **55116f822a9375972c6be776f6ac4d6ededaf4ea**. Both locked full gates pass. All five affected-flow cases pass on iOS 18.5/iPhone 15 and iOS 26.5/iPhone 17 Pro. The fresh capture recheck approves the shown work with nonblocking polish notes. The lead’s fresh Claude code review round 2 and integration remain pending."
+        }
+      ]
     },
     {
       "path": "v4/c2a-beep/REPORT.md",
       "sha256": "21fb75dbf2f1d4fd01f1679ed41d62d7010188075aee0ff05066de7c3a802983",
-      "bytes": 8806
+      "bytes": 8806,
+      "testedHeads": [
+        {
+          "sha": "6922e4cc922d1374ea1e1638ef7b8e853016124b",
+          "recordedHead": "6922e4cc",
+          "record": "Native execution was agent-owned, using only the specified iPhone 15/iOS 18.5 and iPhone 17 Pro/iOS 26.5 simulators, isolated dev bundle `com.shimizutechnology.littleisland.dev`, embedded bundle and no Metro. Functional B01–B07 were executed on `6922e4cc` on both phones. The sole subsequent production change is the play marker beside the card number; its playback, held outcome, Done and saved marks were retested at normal/largest text on final head `440cb832`. The normal iOS 26 final clip also covers both Again cards. Both final installations have identical verified JS hashes. Source/build/install mapping is in `evidence/native-final-receipt.json`; complete case detail is in [QA.md](QA.md)."
+        }
+      ]
     },
     {
       "path": "v4/f-followups/REPORT.md",
@@ -106,7 +141,14 @@
     {
       "path": "v4/f-launch-recover/FIX-REPORT-2.md",
       "sha256": "6b4c6f6f61991e9be687d02a9967fc33f18a27aea81b81572e497be392399e88",
-      "bytes": 17326
+      "bytes": 17326,
+      "testedHeads": [
+        {
+          "sha": "f5b680014994d0a29cd54b2f3e64cd9e6021a9dd",
+          "recordedHead": "f5b680014994d0a29cd54b2f3e64cd9e6021a9dd",
+          "record": "Head: **f5b680014994d0a29cd54b2f3e64cd9e6021a9dd**. Commits:"
+        }
+      ]
     },
     {
       "path": "v4/f-launch-recover/FIX-REPORT.md",
@@ -121,12 +163,26 @@
     {
       "path": "v4/f1-save/FIX-REPORT.md",
       "sha256": "b3be9edacd541c82dd795d01ce9e7d9e562e947160788cf485acafc233e46e64",
-      "bytes": 20836
+      "bytes": 20836,
+      "testedHeads": [
+        {
+          "sha": "c7321b0c5476700bff31b3de3355defca083d03e",
+          "recordedHead": "c7321b0c",
+          "record": "8 November 2026. Branch `p4/f1-save`; implementation commits `c7321b0c` and `6ce8eba8`. All three P1s and all seven P2 source findings are fixed. Both full gates and Doctor passed; physical acceptance remains separate. A documentation/evidence commit completes this branch publication. Changes stay on the private `Shimizu-Technology/little-island-games` repository. No PR, integration merge, Apple/EAS action, version/build change or public release."
+        }
+      ]
     },
     {
       "path": "v4/f1-save/REPORT.md",
       "sha256": "9eaada987e28ea91583a2ddb13dd6ef0a67cbf89330814288faab52adad21c5c",
-      "bytes": 10745
+      "bytes": 10745,
+      "testedHeads": [
+        {
+          "sha": "c540c7ea8ba56ab72683d4edb281daa09ea862ed",
+          "recordedHead": "c540c7ea8ba56ab72683d4edb281daa09ea862ed",
+          "record": "Published branch head: `62bd085fd4b0896c9d438606264d5e84e726321c`. Remote `origin/p4/f1-save` was verified at the same commit. The final commit adds reports/evidence only; runtime gates ran on `c540c7ea8ba56ab72683d4edb281daa09ea862ed`. Worktree is clean; lifecycle reports no active owned resources."
+        }
+      ]
     },
     {
       "path": "v4/f2-challenge/FIX-REPORT.md",
@@ -196,7 +252,14 @@
     {
       "path": "v4/g3-latin/REPORT.md",
       "sha256": "a1504155401052682c43be17cb8bec74e8b6776284cfebcf223986d4487a8e32",
-      "bytes": 16528
+      "bytes": 16528,
+      "testedHeads": [
+        {
+          "sha": "ef7a404f0a987aa7d141f2c4a83f18f018762c96",
+          "recordedHead": "ef7a404f0a987aa7d141f2c4a83f18f018762c96",
+          "record": "Branch `p4/g3-latin` @ `ef7a404f0a987aa7d141f2c4a83f18f018762c96` (pushed from local branch `g3-latin-claude`), 11 commits on `origin/program/4.0` @ 71c46a0d, which had not moved. No PR, merge, version, release, Apple or EAS action."
+        }
+      ]
     },
     {
       "path": "v4/g5-edges/FIX-REPORT-2.md",
@@ -216,7 +279,14 @@
     {
       "path": "v4/g5-edges/REPORT.md",
       "sha256": "da6fbf22a589c5030dff0a9561f7edb904507556939431f430a8f3b95fee8140",
-      "bytes": 17318
+      "bytes": 17318,
+      "testedHeads": [
+        {
+          "sha": "215b7230b0ed002389028ab013d8b197c492b71a",
+          "recordedHead": "215b7230b0ed002389028ab013d8b197c492b71a",
+          "record": "## Gates (at 215b7230b0ed002389028ab013d8b197c492b71a)"
+        }
+      ]
     },
     {
       "path": "v4/g6-words/FIX-REPORT-2.md",
@@ -231,7 +301,14 @@
     {
       "path": "v4/g6-words/MERGE-REPORT.md",
       "sha256": "bad0f17d7ac519d77d919a2222512e2a0707385c3178bfa2ee544ab2e24a717e",
-      "bytes": 7954
+      "bytes": 7954,
+      "testedHeads": [
+        {
+          "sha": "34b36ac9fe7e256da5abe23ee1a899e9063783bc",
+          "recordedHead": "34b36ac9fe7e256da5abe23ee1a899e9063783bc",
+          "record": "15 November 2026 (Guam). Pushed `p4/g6-words` at `34b36ac9fe7e256da5abe23ee1a899e9063783bc` to the verified private Shimizu-Technology repository. Existing [PR #57](https://github.com/Shimizu-Technology/little-island-games/pull/57) remains open into `program/4.0`; no second PR was created. The lead owns review and integration. Local branch: `merge/g6-words-program`, worktree `/Users/leonshimizu/.t3/worktrees/little-island-games/t3-3f263cc9-0eefe9fd374e0488`."
+        }
+      ]
     },
     {
       "path": "v4/g6-words/REPORT.md",
@@ -241,7 +318,14 @@
     {
       "path": "v4/h1-home/FIX-REPORT.md",
       "sha256": "6a12daf158d451c89bdc346cf6c774ca249e9a66e28f5cf78a45d90bd4ad5550",
-      "bytes": 7282
+      "bytes": 7282,
+      "testedHeads": [
+        {
+          "sha": "4f83680d67c691dc1de109327568cb69c11de8f5",
+          "recordedHead": "4f83680d67c691dc1de109327568cb69c11de8f5",
+          "record": "All five review findings are fixed and pushed only to `p4/h1-home` at **`4f83680d67c691dc1de109327568cb69c11de8f5`**, from reviewed head `a39f1f0542e830ae923cde8a01fb4405f57c455e`. Both full gates, Doctor, the fresh Release build and the requested iOS 26.5 recorded checks passed. The additional iOS 18.5 smoke attempt was blocked by the device tool. Work ran directly, without delegation, on 8–9 November 2026."
+        }
+      ]
     },
     {
       "path": "v4/h1-home/REPORT.md",
@@ -261,7 +345,14 @@
     {
       "path": "v4/h3-home/FIX-REPORT-2.md",
       "sha256": "5d1a4fb93e8aa2d8589a2503a10575f64ccd53e176272e280bf4ab98313789a2",
-      "bytes": 13005
+      "bytes": 13005,
+      "testedHeads": [
+        {
+          "sha": "63d1810ad9686971d2aaf949edd5994ed4489fe1",
+          "recordedHead": "63d1810ad9686971d2aaf949edd5994ed4489fe1",
+          "record": "**Branch:** `p4/h3-home` (PR #42), head **63d1810ad9686971d2aaf949edd5994ed4489fe1**, pushed from local branch `p4/h3-home-fix2` in worktree `t3-2c9a3ceb`. Private remote `Shimizu-Technology/little-island-games`, verified. Started from `origin/p4/h3-home` @ `0b5ca92b` and first merged `origin/program/4.0` @ `b62a7489` (Slip Tide, Arcade, audio patch) cleanly as `10d0caa3`. No PR edits, merges to other branches, version, app config, release, Apple or EAS actions. Evidence for this round is in `fix2/` (frames, rec, results, logs, tools)."
+        }
+      ]
     },
     {
       "path": "v4/h3-home/FIX-REPORT-3.md",
@@ -276,7 +367,14 @@
     {
       "path": "v4/h3-home/REPORT.md",
       "sha256": "0acfed588071179da41b2666c11e50b217f36172cd1534ae2dfd4ba2245895c5",
-      "bytes": 15213
+      "bytes": 15213,
+      "testedHeads": [
+        {
+          "sha": "4cb0f58338fd68a73e2282ec2b24d01d41a8e54e",
+          "recordedHead": "4cb0f58338fd68a73e2282ec2b24d01d41a8e54e",
+          "record": "**Branch:** `p4/h3-home`, head `4cb0f58338fd68a73e2282ec2b24d01d41a8e54e`, verified with `git ls-remote`. Private remote `Shimizu-Technology/little-island-games`. Work was done on local `p4/h3-home-cont` in worktree `t3-5d8ad51a`; the first worker's checkout (`t3-febc8709`) was not touched. Base `origin/program/4.0` @ `71c46a0d`; `program/4.0` has not moved since, so no merge was needed. No PR, merge, version, app config, release, Apple or EAS action."
+        }
+      ]
     },
     {
       "path": "v4/l1-lagoon/FIX-REPORT.md",
@@ -296,7 +394,14 @@
     {
       "path": "v4/l2-lagoon/REPORT.md",
       "sha256": "249a2deac1dfada6dd9e50a4123336ffeae68f6c9e1e7e7692184519ae20cf98",
-      "bytes": 14453
+      "bytes": 14453,
+      "testedHeads": [
+        {
+          "sha": "b131d2fb3fb33c921be9c57d718136f9faf44765",
+          "recordedHead": "b131d2fb3fb33c921be9c57d718136f9faf44765",
+          "record": "Branch `p4/l2-lagoon`, from `origin/program/4.0` at 71c46a0d (no newer program/4.0 commits at the last fetch). Head b131d2fb3fb33c921be9c57d718136f9faf44765, pushed and verified. The remote is the private `Shimizu-Technology/little-island-games`. I opened no PR and made no merge, version, build-number, release, Apple or EAS change."
+        }
+      ]
     },
     {
       "path": "v4/main-expo-patch/REPORT.md",
@@ -306,7 +411,14 @@
     {
       "path": "v4/o1-slip/FIX-REPORT-2.md",
       "sha256": "45dd4a567b9283b55006354dbb037d38a5a06aabb7c6243ea47e7dc8b9835c91",
-      "bytes": 15160
+      "bytes": 15160,
+      "testedHeads": [
+        {
+          "sha": "1e2bb18e1e597467b53e2408e729fd80f11140bd",
+          "recordedHead": "1e2bb18e1e597467b53e2408e729fd80f11140bd",
+          "record": "Branch `p4/o1-slip` (PR #37 into `program/4.0`, not merged). Built from `origin/p4/o1-slip` @ `6dad4c88` on a local branch in a separate worktree. `origin/program/4.0` is still `71c46a0d`, already in the branch, so no merge was needed. Head **`1e2bb18e1e597467b53e2408e729fd80f11140bd`**. It was pushed to the private repo only, and the remote ref was confirmed. There was no PR change, merge, version or build change, release script, or Apple/EAS action."
+        }
+      ]
     },
     {
       "path": "v4/o1-slip/FIX-REPORT.md",
@@ -331,7 +443,14 @@
     {
       "path": "v4/p1b-boards/REPORT.md",
       "sha256": "177aa6839ce7effd5c256ca0c2b3927bda9e688ca9a59da8c848e3a8267e14ab",
-      "bytes": 21991
+      "bytes": 21991,
+      "testedHeads": [
+        {
+          "sha": "280dcd1e02692afde313efaa2e078ee1f063c439",
+          "recordedHead": "280dcd1e02692afde313efaa2e078ee1f063c439",
+          "record": "Branch **`p4/p1b-boards`**, created from `origin/program/4.0` @ `65a1faaf`, which is still its newest commit. Head **`280dcd1e02692afde313efaa2e078ee1f063c439`**, pushed only to the private repo `Shimizu-Technology/little-island-games` (remote checked). No PR, merge, version, build number, release script, or Apple or EAS action."
+        }
+      ]
     },
     {
       "path": "v4/p3a-classics/FIX-REPORT-2.md",
@@ -351,17 +470,38 @@
     {
       "path": "v4/p3a-classics/REPORT.md",
       "sha256": "20928fbfb47aedb9439ef403baf9436e56fde36ae3daed2ebc40bed8f2974315",
-      "bytes": 13198
+      "bytes": 13198,
+      "testedHeads": [
+        {
+          "sha": "b8c59dacb1a4d3452dc2660bc8884f00c956caba",
+          "recordedHead": "b8c59dacb1a4d3452dc2660bc8884f00c956caba",
+          "record": "Pushed branch **p4/p3a-classics**, head **b8c59dacb1a4d3452dc2660bc8884f00c956caba**, private remote `https://github.com/Shimizu-Technology/little-island-games.git`. Worktree: `/Users/leonshimizu/.t3/worktrees/little-island-games/t3-0d8277df`. Started from fetched `origin/program/4.0` at `65a1faaffecf76ede9537a9bcb0cb20f50a689c0`. No PR, merge, history rewrite, release/version/build change, Apple account or EAS action. The lead owns integration and independent final-code review."
+        }
+      ]
     },
     {
       "path": "v4/q1-rehearsal/REPORT.md",
       "sha256": "e4a7f15cbffaaa662cd3ac0c51d9bf24cae2669f06067d95b289dc90e05ff3ad",
-      "bytes": 20553
+      "bytes": 20553,
+      "testedHeads": [
+        {
+          "sha": "ab685bd475cac8a5316f1e1bcc13bb89dbc72241",
+          "recordedHead": "ab685bd475cac8a5316f1e1bcc13bb89dbc72241",
+          "record": "Head: **ab685bd4** (`ab685bd475cac8a5316f1e1bcc13bb89dbc72241`, merge 11/11), pushed and matching `origin/rehearsal/4.0-all`. Every gate and the native smoke ran on this commit. Evidence and logs live in this artifacts folder, not in the repo."
+        }
+      ]
     },
     {
       "path": "v4/r0-learn-ax/REPORT.md",
       "sha256": "7a55be57b1fcbf96ccfbdcc133e3c4d4c377d667398d7fb6fe95d61bb040cba0",
-      "bytes": 15236
+      "bytes": 15236,
+      "testedHeads": [
+        {
+          "sha": "50988fa96472f23733c97617b7f6eacfcc04891a",
+          "recordedHead": "50988fa9",
+          "record": "- **Head:** `50988fa9` (pushed). No PRs, merges to program/4.0, version or build changes, release scripts, Apple or EAS actions."
+        }
+      ]
     },
     {
       "path": "v4/r0b-boards-ax/REPORT.md",
@@ -371,7 +511,14 @@
     {
       "path": "v4/r0c-entry-ax/FIX-REPORT-2.md",
       "sha256": "10500ab07e23128dbb5b1d658bdc8473d2c3bde824eeed9b7abdfcada20fdfe4",
-      "bytes": 8357
+      "bytes": 8357,
+      "testedHeads": [
+        {
+          "sha": "2838a7c0ebc9465464a6fa7344f130c9293c17ff",
+          "recordedHead": "2838a7c0",
+          "record": "- **Branch / head:** `p4/entry-ax` (private `Shimizu-Technology/little-island-games`, PR #58), fix commit **`2838a7c0`** on top of the reviewed `daf1429c`. JavaScript only: no version, build, release script, speech, asset, save-engine or registry changes."
+        }
+      ]
     },
     {
       "path": "v4/r0c-entry-ax/FIX-REPORT.md",
