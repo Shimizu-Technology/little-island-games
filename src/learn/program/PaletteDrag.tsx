@@ -1,0 +1,26 @@
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { PanResponder, View } from 'react-native';
+
+type Props = { children: React.ReactNode; disabled: boolean; start: () => void; move: (x: number, y: number) => void; drop: (x: number, y: number) => void; cancel: () => void; tap: () => void };
+/** Own palette touches before the host ScrollView can claim them. Keep one responder for
+ * the whole gesture, even while target highlighting rerenders the editor. Plan cards stay
+ * ordinary pressables so their scroll pane remains scrollable. */
+export function PaletteDrag(props: Props) {
+  const latest = useRef(props);
+  useLayoutEffect(() => { latest.current = props; });
+  // PanResponder.create stores handlers; these ref reads happen only when a touch arrives.
+  // eslint-disable-next-line react-hooks/refs
+  const [responder] = useState(() => PanResponder.create({
+    onStartShouldSetPanResponderCapture: () => !latest.current.disabled,
+    onPanResponderGrant: () => latest.current.start(),
+    onPanResponderMove: (_, gesture) => latest.current.move(gesture.moveX, gesture.moveY),
+    onPanResponderRelease: (_, gesture) => {
+      latest.current.cancel();
+      if (Math.abs(gesture.dx) < 8 && Math.abs(gesture.dy) < 8) latest.current.tap();
+      else latest.current.drop(gesture.moveX, gesture.moveY);
+    },
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderTerminate: () => latest.current.cancel(),
+  }));
+  return <View testID="program-palette-drag" {...responder.panHandlers}>{props.children}</View>;
+}

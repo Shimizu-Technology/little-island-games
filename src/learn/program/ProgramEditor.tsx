@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { PanResponder, ScrollView, View, useWindowDimensions } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Button, C, Copy, PressableScale } from '../../components/ui';
 import { atLarge } from '../../components/wordFit';
 import { GridInteraction } from '../../puzzles/grid/preferences';
 import { nodeCost, validProgram, type Node, type Program } from './model';
-import { address, clone, historyEdit, insertNode, listAt, main, moveNode, removeNode, replaceNode, type EditHistory, type Location } from './edit';
+import { address, clone, historyEdit, insertNode, listAt, main, removeNode, replaceNode, type EditHistory, type Location } from './edit';
+import { PaletteDrag } from './PaletteDrag';
 
 type Card = { code: number; name: string; icon: React.ReactNode; speech?: string };
 type Target = { location: Location; before: number; x: number; y: number; width: number; height: number };
@@ -41,19 +42,7 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
   };
   const measure = () => { registry.targets.clear(); for (const [id, ref] of registry.views) ref.measureInWindow((x, y, width, height) => { const entry = JSON.parse(id) as { location: Location; before: number }; registry.targets.set(id, { ...entry, x, y, width, height }); }); };
   const hit = (x: number, y: number) => [...registry.targets.entries()].filter(([, t]) => x >= t.x && x <= t.x + t.width && y >= t.y && y <= t.y + t.height).sort((a, b) => a[1].width * a[1].height - b[1].width * b[1].height)[0];
-  const drag = (node: Node, selection?: Selection) => PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_, g) => !disabled && Math.abs(g.dx) > 10,
-    onPanResponderGrant: () => { measure(); setDragging(true); },
-    onPanResponderMove: (_, g) => setOver(hit(g.moveX, g.moveY)?.[0] ?? null),
-    onPanResponderRelease: (_, g) => {
-      const found = hit(g.moveX, g.moveY)?.[1]; setDragging(false); setOver(null);
-      if (!found) { setMessage('Drop on a dashed place in the plan.'); return; }
-      if (selection) accept(moveNode(program, selection.location, selection.at, found.location, found.before));
-      else insert(node, found, node.kind === 'repeat' ? 'k7-repeat' : undefined);
-    },
-    onPanResponderTerminate: () => { setDragging(false); setOver(null); },
-  }).panHandlers;
+  const palette = (node: Node, tap: () => void, child: React.ReactNode) => <PaletteDrag disabled={disabled} tap={tap} start={() => { measure(); setDragging(true); }} move={(x, y) => setOver(hit(x, y)?.[0] ?? null)} cancel={() => { setDragging(false); setOver(null); }} drop={(x, y) => { const found = hit(x, y)?.[1]; if (found) insert(node, found, node.kind === 'repeat' ? 'k7-repeat' : undefined); else setMessage('Drop on a dashed place in the plan.'); }}>{child}</PaletteDrag>;
   const dropZone = (location: Location, before: number, label: string) => {
     const id = JSON.stringify({ location, before });
     return <View key={`drop-${id}`} ref={ref => { if (ref) registry.views.set(id, ref); else registry.views.delete(id); }} collapsable={false}>
@@ -69,8 +58,8 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
       const path = address(location, at), name = node.kind === 'command' ? cards.find(c => c.code === node.command)?.name ?? 'Card' : node.kind === 'repeat' ? `Repeat ${node.times}` : node.kind === 'call' ? `Song ${node.song + 1}` : node.kind === 'if' ? `If ${condition ?? 'blocked'}` : 'Together';
       const chosen = selected && address(selected.location, selected.at) === path, current = currentPath === path;
       return <View key={path} style={{ padding: 6, gap: 5, borderRadius: 12, backgroundColor: node.kind === 'repeat' ? '#F8E7BB' : C.paper, borderWidth: current ? 3 : 1, borderColor: current ? '#B2381F' : C.line }}>
-        <View {...drag(node, { location, at })}>
-          <PressableScale accessibilityRole="button" accessibilityLabel={`Block ${blockName(path)}: ${name}${current ? ', current step' : ''}. Tap to change; drag sideways to move.`} accessibilityState={{ selected: !!chosen }} disabled={disabled}
+        <View>
+          <PressableScale accessibilityRole="button" accessibilityLabel={`Block ${blockName(path)}: ${name}${current ? ', current step' : ''}. Tap to change.`} accessibilityState={{ selected: !!chosen }} disabled={disabled}
             onPress={() => { setSelected(chosen ? null : { location, at }); announce(node.kind === 'command' ? cards.find(c => c.code === node.command)?.speech ?? 'tap' : node.kind === 'repeat' ? 'k7-repeat' : node.kind === 'call' ? 'k7-song' : 'k7-condition'); }}
             style={{ minHeight: 48, padding: 6, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: chosen ? C.soft : 'transparent', borderRadius: 8 }}>
             {node.kind === 'command' ? cards.find(c => c.code === node.command)?.icon : <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 24 }}>{node.kind === 'repeat' ? '↻' : node.kind === 'call' ? '♫' : '?'}</Copy>}
@@ -85,7 +74,7 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
   const selection = selected ? listAt(program, selected.location)?.[selected.at] : null;
   return <View testID="program-editor" style={{ alignSelf: 'stretch', gap: 8 }}>
     <Copy maxFontSizeMultiplier={cap} style={{ fontWeight: '800', color: C.ink }}>Blocks · {nodeCost(program)} of 80</Copy>
-    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14 }}>Tap ↻, then cards inside. Drag sideways to move.</Copy>
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14 }}>Tap ↻, then cards inside. Drag new cards onto a dashed place.</Copy>
     {currentPath && <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">Step: block {blockName(currentPath)}{iteration?.length ? ` · repeat ${iteration.map(i => i + 1).join(', ')}` : ''}</Copy>}
     <ScrollView nestedScrollEnabled scrollEnabled={!dragging} style={{ maxHeight: fontScale >= 1.5 ? 140 : 160 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
       {render(program.body, main)}{dropZone(main, program.body.length, '＋ End of plan')}
@@ -98,8 +87,8 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
       <Button compact quiet maxFontSizeMultiplier={cap} onPress={() => setSelected(null)}>Keep block</Button>
     </View></View>}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-      {cards.map(card => <View key={card.code} {...drag({ kind: 'command', command: card.code })}><PressableScale accessibilityRole="button" accessibilityLabel={`${selected ? 'Replace with' : 'Add'} ${card.name} block`} disabled={disabled} onPress={() => insert({ kind: 'command', command: card.code }, undefined, card.speech)} style={{ minHeight: 56, minWidth: 64, borderWidth: 2, borderColor: C.teal, borderRadius: 12, padding: 8, gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: C.paper }}>{card.icon}<Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 13 }}>{card.name}</Copy></PressableScale></View>)}
-      <View {...drag({ kind: 'repeat', times: 2, body: [] })}><Button compact maxFontSizeMultiplier={cap} disabled={disabled} onPress={() => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat')}>↻ Repeat ×2</Button></View>
+      {cards.map(card => <React.Fragment key={card.code}>{palette({ kind: 'command', command: card.code }, () => insert({ kind: 'command', command: card.code }, undefined, card.speech), <PressableScale accessibilityRole="button" accessibilityLabel={`${selected ? 'Replace with' : 'Add'} ${card.name} block`} disabled={disabled} onPress={() => insert({ kind: 'command', command: card.code }, undefined, card.speech)} style={{ minHeight: 56, minWidth: 64, borderWidth: 2, borderColor: C.teal, borderRadius: 12, padding: 8, gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: C.paper }}>{card.icon}<Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 13 }}>{card.name}</Copy></PressableScale>)}</React.Fragment>)}
+      {palette({ kind: 'repeat', times: 2, body: [] }, () => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat'), <Button compact maxFontSizeMultiplier={cap} disabled={disabled} onPress={() => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat')}>↻ Repeat ×2</Button>)}
       {condition && <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled} onPress={() => insert({ kind: 'if', yes: [], no: [] }, undefined, 'k7-condition')}>? If blocked</Button>}
       {program.songs.map((_, i) => <Button key={i} compact quiet maxFontSizeMultiplier={cap} disabled={disabled} onPress={() => insert({ kind: 'call', song: i }, undefined, 'k7-song')}>♫ Song {i + 1}</Button>)}
     </View>
