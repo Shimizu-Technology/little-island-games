@@ -138,3 +138,14 @@ it('Island Arcade lobby at default size keeps each world as a row and caps nothi
   for (const w of root!.root.findAll(n => String(n.type) === 'Pressable' && /^Play .*open level map$/.test(n.props.accessibilityLabel ?? ''))) expect(flat(w.props.style).flexDirection).toBe('row');
   expect(texts().filter(t => t.props.maxFontSizeMultiplier !== undefined).map(t => [textOf(t), t.props.maxFontSizeMultiplier])).toEqual([]);
 });
+
+const inside = (n: ReactTestInstance, type: string) => { for (let p = n.parent; p; p = p.parent) if (String(p.type) === type) return true; return false; };
+it.each([[3.12, true], [1, false]])('Everything at text scale %s: the title bar scrolls with the page: %s', async (fontScale, scrolls) => {
+  Object.assign(viewport, { fontScale }); fixture.params = {}; fixture.store.save = emptySave();
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const { default: Everything } = await import('../src/hub/EverythingScreen');
+  await act(async () => { root = create(<Everything />); });
+  const title = texts().find(t => textOf(t) === 'Everything' && t.props.accessibilityRole === 'header')!;
+  expect(inside(title, 'ScrollView')).toBe(scrolls);
+  expect(root!.root.findAll(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Back to map')).toHaveLength(1);
+});
