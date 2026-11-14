@@ -167,10 +167,15 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   // window scrolls the bar with the page.
   const open=!picking&&!!round, large=(fontScale??1)>=LARGE_TEXT, barPinned=open&&!(large&&height<500), barChip=!large;
   const BAR_TITLE=19, barTitleWidth=width-24-insets.left-insets.right-(large?86:72)-(barChip?132:0)-16;
+  // The ready board consumes this once per open/session transition, after content verification and layout.
+  const openedKey=open?`${owner}:${store.epoch}:${round.id}`:null;
+  const resetBoard=useRef<string|null>(null);
+  useLayoutEffect(()=>{resetBoard.current=openedKey;},[openedKey]);
+  const boardReady=()=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:0,animated:false});}};
   const bar=open?<View testID="challenge-bar" style={{flexDirection:'row',alignItems:'center',gap:8,width:'100%',maxWidth:1080,alignSelf:'center',paddingHorizontal:12,paddingTop:6,paddingBottom:4}}>
     <Button quiet compact maxFontSizeMultiplier={1.3} onPress={back}>Back</Button>
     <View style={{flex:1}}><Heading maxFontSizeMultiplier={wordFitMultiplier(title,BAR_TITLE,barTitleWidth,PINNED_MAX)} style={{fontSize:BAR_TITLE}}>{title}</Heading></View>
-    {barChip&&<LearnerChip compact/>}
+    {barChip&&<View testID="challenge-learner-slot" style={{width:132,maxWidth:132,flexShrink:1}}><LearnerChip compact/></View>}
   </View>:null;
   const dareLines=chosen.map(d=><ChosenDare key={d.slot} dare={d} maxScale={pinned?PINNED_MAX:undefined}/>);
   const darable=!isBand(selection)?selection.dares.filter(d=>!d.retired):[];
@@ -200,13 +205,13 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       {!pinned&&dareLines}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it.
           After a solve the finished board stays on the page, above the result, and takes no more moves. */}
-      {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><>
+      {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling)&&(!round.result||!!entry.animatedRuns),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
           header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
           footer:<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>,
         }:{})})}
         {entry.helpUI!=='board'&&!round.result&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
-      </>}/>}
+      </View>}/>}
       {round.result&&!settling ? <><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}

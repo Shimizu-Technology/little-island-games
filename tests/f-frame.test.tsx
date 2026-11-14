@@ -29,12 +29,13 @@ vi.mock('../src/puzzles/bankAssets',async()=>{const {readFileSync:read}=await im
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>viewport,AppState:{addEventListener:()=>({remove(){}})}}));
 vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'main',useSafeAreaInsets:()=>({top:59,bottom:34,left:0,right:0})}));
 vi.mock('expo-router',()=>({useIsFocused:()=>true,router:{canGoBack:()=>false,replace:vi.fn()}}));
-vi.mock('../src/components/ui',()=>({Button:'button',Chip:'button',Heading:'h2',Copy:'p',ToggleRow:'switch',PressableScale:'button',C:{},styles:{}}));
+vi.mock('../src/components/ui',()=>({Button:'button',Chip:'button',Heading:'h2',Copy:'p',ToggleRow:'switch',PressableScale:'button',Sheet:()=>null,C:{},styles:{}}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({sound:false}),useSoundControls:()=>({play:vi.fn(),stop:vi.fn()})}));
 vi.mock('../src/components/motion',()=>({useReducedMotion:()=>true}));
 vi.mock('../src/components/Settings',()=>({Settings:()=>null}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
-vi.mock('../src/personalization/LearnerChip',()=>({LearnerChip:'learner-chip'}));
+vi.mock('../src/personalization/Portrait',()=>({Portrait:()=>null}));
+vi.mock('../src/islander',()=>({Islander:()=>null}));
 vi.mock('../src/content/learnAudio',()=>({learnSources:{}}));
 vi.mock('../src/learn/games/crab-commands/view',()=>({ArrowArt:()=>null,Beach:'beach',cardLabel:{up:'Up',right:'Right',down:'Down',left:'Left',forward:'Walk','turn-left':'Turn left','turn-right':'Turn right',repeat:'Again ×2'}}));
 vi.mock('../src/learn/games/slip-tide/field',()=>({Playfield:()=>React.createElement('slip-board')}));
@@ -45,7 +46,7 @@ function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return n
 afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;scrolls.length=0;vi.unstubAllGlobals();Object.assign(viewport,{width:393,height:852,fontScale:1});});
 async function mount(entry:ChallengeEntry,session?:ChallengeSession){
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
-  let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
+  let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'WWWWWWWWWWWWWWWWWWWWWWWW','a')});
   if(session)save=putProgress(save,'a',{...emptyChallenge(),nextOrdinal:session.ordinal+1,paused:[session]});
   db.raw=encodeSave(save);
   function Ready(){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={entry}/>:null;}
@@ -108,9 +109,9 @@ it('header: once a puzzle is open, one compact bar is pinned above the page and 
   // The bar is outside the scrolling page: Back, the puzzle's name and the learner chip, in one row.
   expect(bar()).toBeDefined();expect(inside(bar(),page())).toBe(false);
   expect(bar().props.style.flexDirection).toBe('row');
-  expect(bar().findAll(n=>n.type==='button').map(textOf)).toEqual(['Back']);
+  expect(bar().findAll(n=>n.type==='button')[0] && textOf(bar().findAll(n=>n.type==='button')[0])).toBe('Back');
   expect(bar().findAll(n=>n.type==='h2').map(textOf)).toEqual([p.title]);
-  expect(bar().findAll(n=>String(n.type)==='learner-chip')).toHaveLength(1);
+  expect(bar().findAll(n=>n.type==='button'&&!!n.props.accessibilityLabel?.startsWith('Who is playing:'))).toHaveLength(1);
   // Nothing tall sits between the bar and the board: no page heading, intro or marks line above it.
   expect(all('h2').some(h=>textOf(h)==='Challenge')).toBe(false);
   const above=all('p').filter(n=>inside(n,page())&&order(n)<order(board)).map(textOf);
@@ -135,8 +136,8 @@ it('header at the largest text: the bar stays one row (learner chip moves into t
   await mount(slipEntry,slip.start(p.ref,'a','ax-slip',emptyChallenge(),{supportOff:false,ownRead:false},[]));
   await vi.waitFor(()=>expect(all('slip-board')).toHaveLength(1),{timeout:5000,interval:20});
   expect(inside(bar(),page())).toBe(false);
-  expect(bar().findAll(n=>String(n.type)==='learner-chip')).toHaveLength(0);
-  expect(all('learner-chip').filter(n=>inside(n,page()))).toHaveLength(1);
+  expect(bar().findAll(n=>n.type==='button'&&!!n.props.accessibilityLabel?.startsWith('Who is playing:'))).toHaveLength(0);
+  expect(all('button').filter(n=>n.props.accessibilityLabel?.startsWith('Who is playing:')).filter(n=>inside(n,page()))).toHaveLength(1);
   expect(bar().findAll(n=>n.type==='button')[0].props.maxFontSizeMultiplier).toBe(1.3);
   const title=bar().findAll(n=>n.type==='h2')[0], max=title.props.maxFontSizeMultiplier as number, size=title.props.style.fontSize as number;
   expect(max).toBeLessThanOrEqual(1.5);expect(max).toBeGreaterThanOrEqual(1);
@@ -215,4 +216,46 @@ it('dares: a puzzle with one dare still reads as one optional dare',async()=>{
   await mount(one);
   await vi.waitFor(()=>expect(all('h2').map(textOf)).toContain('An optional dare'),{timeout:5000,interval:20});
   expect(all('p').map(textOf).some(t=>t.startsWith('Choose'))).toBe(false);
+});
+
+for(const width of [393,744])for(const fontScale of [1,3.12])it(`real learner chip is bounded at ${width} / ${fontScale}`,async()=>{
+  Object.assign(viewport,{width,fontScale});
+  const p=slip.puzzles.find(c=>!c.retired)!;
+  await mount(slipEntry,slip.start(p.ref,'a','wide-name',emptyChallenge(),{supportOff:false,ownRead:false},[]));
+  const chip=all('button').find(n=>n.props.accessibilityLabel?.startsWith('Who is playing:'))!;
+  expect(chip.props.accessibilityLabel).toContain('WWWWWWWWWWWWWWWWWWWWWWWW');
+  expect(chip.props.style.maxWidth).toBe('100%');
+  expect(chip.findAll(n=>n.type==='p')[0].props.style.flexShrink).toBe(1);
+  if(fontScale===1){const slot=root!.root.findAll(n=>n.type==='div'&&n.props.testID==='challenge-learner-slot')[0];expect(inside(chip,slot)).toBe(true);expect(slot.props.style).toMatchObject({width:132,maxWidth:132,flexShrink:1});}
+  else expect(inside(chip,page())).toBe(true);
+});
+
+it('AX5 nonanimated Start, Continue and next puzzle reset only once the board lays out, never on moves',async()=>{
+  Object.assign(viewport,{fontScale:3.12});
+  await mount(slipEntry);
+  const ready=async()=>{
+    await vi.waitFor(()=>expect(root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')).toHaveLength(1));
+    const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
+    await act(async()=>board.props.onLayout());
+    expect(scrolls.at(-1)).toEqual({y:0,animated:false});
+    scrolls.length=0;
+    await act(async()=>board.props.onLayout());expect(scrolls).toEqual([]);
+  };
+  // Model a picker offset retained by the native scroll view.
+  scrolls.push({y:600,animated:false});
+  await press('Start this puzzle');await ready();
+  await press('Another puzzle');scrolls.push({y:600,animated:false});
+  await press('Continue saved puzzle');await ready();
+  await press('Another puzzle');scrolls.push({y:600,animated:false});
+  const prior=store.save.challenge!.paused[0];
+  const next=slip.puzzles.find(p=>!p.retired&&p.path==='deep-water'&&p.ref.puzzle!==prior.puzzle.puzzle)!;
+  await press('Deep Water · A big stretch');
+  await press(`${next.title} · Tide ${next.tier}`);
+  const toggle=root!.root.findByType('switch' as never);await act(async()=>toggle.props.onChange(true));
+  await press('Start this puzzle');await ready();
+  expect(store.save.challenge!.paused[0].puzzle).toEqual(next.ref);
+  const current=store.save.challenge!.paused[0];
+  await act(async()=>{await store.challengeSave({...current,revision:current.revision+1},{owner:'a',game:current.game,epoch:store.epoch,id:current.id,revision:current.revision});});
+  const board=root!.root.findAll(n=>n.props.testID==='challenge-board-ready'&&n.type==='div')[0];
+  await act(async()=>board.props.onLayout());expect(scrolls).toEqual([]);
 });
