@@ -14,6 +14,22 @@ import {
 } from "../../kit/reading";
 import { LEGACY_WARMUP_WORDS, PICTURE_WORDS } from "../../content/reading/clues";
 import { LADDERS } from "../../content/reading/ladders";
+import { TILE_FAMILIES, TILE_TWINS, tileLabel } from "../../reading/graphemes";
+import { partsSkills } from "../../reading/scope";
+import { admittedParts } from "../../reading/admitted";
+import type { PartsWord } from "../../reading/records";
+import { levelOf } from "../../levelOptions";
+import {
+  createParts,
+  isParts,
+  partsOutcome,
+  partsTurn,
+  playable,
+  tasksOf,
+  validParts,
+  type PartsLevel,
+  type PartsState,
+} from "./parts";
 
 /**
  * Sound Boat: hear (and see) a word, then tap letter tiles into the boat's boxes, left to right.
@@ -81,23 +97,8 @@ export function boatBoxes(s: BoatState): string[] {
 export const boatCurrent = (s: BoatState) => boatBlanks(s)[s.filled] ?? -1;
 export const boatExpected = (s: BoatState) => boatWord(s).tiles[boatCurrent(s)];
 
-// Tiles that sound alike are never offered against each other, so a wrong tile is really wrong.
-const twins = [
-  ["c", "k", "ck"],
-  ["ee", "ea"],
-  ["ai", "a_e"],
-  ["oa", "o_e"],
-  ["s", "ss", "z"],
-  ["l", "ll"],
-  ["oo", "u"],
-];
-const families = [
-  ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "x", "z"],
-  ["a", "e", "i", "o", "u"],
-  ["sh", "ch", "th", "ck", "ng", "ll"],
-  ["a_e", "i_e", "o_e"],
-  ["ee", "ea", "ai", "oa", "oo", "ar", "or"],
-];
+const twins = TILE_TWINS;
+const families = TILE_FAMILIES;
 const hashWord = (word: string, salt: number) =>
   [...word].reduce((h, ch) => (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0, 2166136261 ^ salt);
 /** The letter tiles on offer: the right ones plus a few look-alikes, in a fixed order for this word. */
@@ -135,8 +136,7 @@ export function boatChoices(s: BoatState): string[] {
   }
   return tiles;
 }
-/** How a tile is written on screen: a silent-e vowel shows just its vowel (the e already sits at the end). */
-export const tileLabel = (tile: string) => tile.replace(/_e$/, "");
+export { tileLabel };
 export const silentE = (s: BoatState) => boatWord(s).tiles.some((t) => /_e$/.test(t));
 
 export type BoatAction = { type: "tile"; tile: string } | { type: "help" } | { type: "next" };
@@ -291,55 +291,70 @@ export function boatFromLegacy(s: LegacyBoatState, o: LearnOptions, skills: Skil
   return createBoat(o, { skills, rng: random(seed), starter: s.starter, today });
 }
 
-export const engine: LearnEngine<BoatState | LegacyBoatState> = {
-  id: "sound-boat",
-  name: "Sound Boat",
-  island: "reading",
-  tagline: "Spell a word, sail to the island.",
-  description:
-    "Hear a word and see its picture, then tap letters into the boat to spell it. Later, change one letter to make a new word.",
-  help: "Listen to the word and look at the picture. Tap a letter to fill the glowing box, left to right. A wrong letter wiggles and waits on the side; try another. Each finished word sails the boat closer to the island. Wide boxes hold two letters that make one sound, like sh in ship. In words like cake, the e at the end is already there: it is silent and helps the a say its name. In the second half, change one letter to make the new word, like cat to cot. The help button lights the right letter. Together, take turns word by word. Take turns with a score: a word built without help or a wrong letter earns a point. There is no clock.",
-  helpAudio: "sound-boat-help",
-  introAudio: "sound-boat-intro",
-  color: "#386C9A",
-  surface: "#E3EEF8",
-  modes: ["solo", "together", "versus"],
-  skills: readingSkills,
-  paceHelp: {
-    easy: "Short vowel words: cat, hen, pig, dog, sun.",
-    medium: "Two letters, one sound, and blends: fish, duck, crab, kite.",
-    hard: "Vowel teams: sheep, boat, moon, star.",
-  },
-  create: (o, c) => createBoat(o, c),
-  validate(v, o): v is BoatState | LegacyBoatState {
-    if (isLegacyBoat(v)) return validLegacy(v, o);
-    if (!exact(v, ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"]))
-      return false;
-    if (!validPictures(v.pictures, o.pace) || !validLadders(v.ladders, o.pace)) return false;
-    if (
-      !seat(v.starter) ||
-      !integer(v.index, WORDS_PER_ROUND) ||
-      !bools(v.clean, v.index) ||
-      typeof v.hint !== "boolean" ||
-      typeof v.assisted !== "boolean" ||
-      !Array.isArray(v.out) ||
-      v.out.length > 7 ||
-      !v.out.every((t) => typeof t === "string") ||
-      new Set(v.out).size !== v.out.length ||
-      !integer(v.filled, 5)
-    )
-      return false;
-    const s = v as BoatState;
-    if (s.index === WORDS_PER_ROUND) return s.filled === 0 && s.out.length === 0 && !s.hint && !s.assisted;
-    if (s.filled > boatBlanks(s).length || ((s.hint || s.out.length > 0) && !s.assisted)) return false;
-    if (boatComplete(s)) return s.out.length === 0 && !s.hint;
-    const choices = boatChoices(s),
-      expected = boatExpected(s);
-    return s.out.every((t) => choices.includes(t) && t !== expected);
-  },
-  outcome(s, o) {
-    const finished = isLegacyBoat(s) ? s.stage === "done" : s.index === WORDS_PER_ROUND;
-    return !finished ? null : o.mode === "versus" ? familyResult(s.clean, s.starter) : "done";
-  },
-  turn: boatTurn,
-};
+export type SoundBoatState = BoatState | LegacyBoatState | PartsState;
+/**
+ * The Sound Boat engine over a set of reviewed word-part records. Levels 1-3 always use the words that have shipped
+ * since 3.0.0. Levels 4-5 use the new board only when the records supplied are enough to play (a reviewed bank has
+ * been admitted); otherwise they stay on the older growth quiz, so nothing unreviewed is ever reachable.
+ */
+export function createSoundBoat(parts: readonly PartsWord[]): LearnEngine<SoundBoatState> {
+  const tasks = tasksOf(parts);
+  const native = playable(tasks);
+  return {
+    id: "sound-boat",
+    name: "Sound Boat",
+    island: "reading",
+    tagline: "Spell a word, sail to the island.",
+    description:
+      "Hear a word and see its picture, then tap letters into the boat to spell it. Later, change one letter to make a new word.",
+    help: "Listen to the word and look at the picture. Tap a letter to fill the glowing box, left to right. A wrong letter wiggles and waits on the side; try another. Each finished word sails the boat closer to the island. Wide boxes hold two letters that make one sound, like sh in ship. In words like cake, the e at the end is already there: it is silent and helps the a say its name. In the second half, change one letter to make the new word, like cat to cot. The help button lights the right letter. Together, take turns word by word. Take turns with a score: a word built without help or a wrong letter earns a point. There is no clock.",
+    helpAudio: "sound-boat-help",
+    introAudio: "sound-boat-intro",
+    color: "#386C9A",
+    surface: "#E3EEF8",
+    modes: ["solo", "together", "versus"],
+    skills: { ...readingSkills, ...partsSkills },
+    nativeStages: native,
+    paceHelp: {
+      easy: "Short vowel words: cat, hen, pig, dog, sun.",
+      medium: "Two letters, one sound, and blends: fish, duck, crab, kite.",
+      hard: "Vowel teams: sheep, boat, moon, star.",
+    },
+    create: (o, c) => (o.stage && native ? createParts(levelOf(o) as PartsLevel, tasks, c) : createBoat(o, c)),
+    validate(v, o): v is SoundBoatState {
+      if (o.stage) return native && isParts(v) && validParts(v, levelOf(o) as PartsLevel, tasks);
+      if (isParts(v)) return false;
+      if (isLegacyBoat(v)) return validLegacy(v, o);
+      if (!exact(v, ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"]))
+        return false;
+      if (!validPictures(v.pictures, o.pace) || !validLadders(v.ladders, o.pace)) return false;
+      if (
+        !seat(v.starter) ||
+        !integer(v.index, WORDS_PER_ROUND) ||
+        !bools(v.clean, v.index) ||
+        typeof v.hint !== "boolean" ||
+        typeof v.assisted !== "boolean" ||
+        !Array.isArray(v.out) ||
+        v.out.length > 7 ||
+        !v.out.every((t) => typeof t === "string") ||
+        new Set(v.out).size !== v.out.length ||
+        !integer(v.filled, 5)
+      )
+        return false;
+      const s = v as BoatState;
+      if (s.index === WORDS_PER_ROUND) return s.filled === 0 && s.out.length === 0 && !s.hint && !s.assisted;
+      if (s.filled > boatBlanks(s).length || ((s.hint || s.out.length > 0) && !s.assisted)) return false;
+      if (boatComplete(s)) return s.out.length === 0 && !s.hint;
+      const choices = boatChoices(s),
+        expected = boatExpected(s);
+      return s.out.every((t) => choices.includes(t) && t !== expected);
+    },
+    outcome(s, o) {
+      if (isParts(s)) return partsOutcome(s, o.mode === "versus");
+      const finished = isLegacyBoat(s) ? s.stage === "done" : s.index === WORDS_PER_ROUND;
+      return !finished ? null : o.mode === "versus" ? familyResult(s.clean, s.starter) : "done";
+    },
+    turn: (s, o) => (isParts(s) ? partsTurn(s) : boatTurn(s, o)),
+  };
+}
+export const engine = createSoundBoat(admittedParts);

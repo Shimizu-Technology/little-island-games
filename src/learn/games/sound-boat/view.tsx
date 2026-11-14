@@ -2,16 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import Svg, { Ellipse, Path } from "react-native-svg";
 import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
-import { easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
+import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
-import { wordFitMultiplier } from "../../../components/wordFit";
 import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { Icon } from "../../../components/Icon";
 import { ObjectGlyph, PictureObject } from "../../art/Objects";
+import { Voyage, glow, ink, letterFit } from "./shared";
 import { pictureFor } from "../../content/reading/clues";
 import { dayNumber } from "../../skills";
 import { wordAudio, wordEntry } from "../../kit/reading";
+import { TapWords } from "../../reading/TapWords";
+import { admittedParts } from "../../reading/admitted";
+import { PartsBoard } from "./parts-view";
+import { isParts, tasksOf, type PartsState } from "./parts";
 import {
   WORDS_PER_ROUND,
   boatBlanks,
@@ -31,53 +35,9 @@ import {
   tileLabel,
   type BoatAction,
   type BoatState,
-  type LegacyBoatState,
+  type SoundBoatState,
 } from "./engine";
 
-const ink = C.ink;
-const glow = "#F9EDC9";
-
-/** Boat on the water, sailing one step toward the island for each finished word. */
-function Voyage({ step, width }: { step: number; width: number }) {
-  const reduced = useReducedMotion();
-  const w = Math.min(width, 380),
-    room = w - 92;
-  const [x] = useState(() => new Animated.Value((step / WORDS_PER_ROUND) * room));
-  useEffect(() => {
-    const to = (step / WORDS_PER_ROUND) * room;
-    if (reduced) x.setValue(to);
-    else Animated.timing(x, { toValue: to, duration: 700, easing: easeOut, useNativeDriver: nativeDriver }).start();
-  }, [step, room, reduced, x]);
-  return (
-    <View
-      accessible
-      accessibilityLabel={`The boat has sailed ${step} of ${WORDS_PER_ROUND} steps to the island`}
-      style={{ width: w, height: 46 }}
-    >
-      <Svg width={w} height={46} viewBox={`0 0 ${w} 46`} style={{ position: "absolute" }}>
-        <Path
-          d={`M4 38 Q20 32 36 38 T68 38 T100 38 T132 38 T164 38 T196 38 T228 38 T260 38 T292 38 T324 38 T356 38 T388 38`}
-          fill="none"
-          stroke="#91C6D3"
-          strokeWidth={3}
-        />
-        <Ellipse cx={w - 26} cy={38} rx={24} ry={7} fill="#E6D3AC" stroke={ink} strokeWidth={2} />
-        <Path
-          d={`M${w - 24} 35 L${w - 24} 12 M${w - 24} 12 Q${w - 42} 6 ${w - 38} 18 M${w - 24} 12 Q${w - 8} 5 ${w - 8} 18`}
-          stroke={C.teal}
-          fill="none"
-          strokeWidth={3}
-          strokeLinecap="round"
-        />
-      </Svg>
-      <Animated.View style={{ position: "absolute", left: 0, top: 4, transform: [{ translateX: x }] }}>
-        <Svg width={44} height={38} viewBox="0 0 100 100">
-          <ObjectGlyph name="boat" color="coral" />
-        </Svg>
-      </Animated.View>
-    </View>
-  );
-}
 
 /** A letter tile that wiggles when it is the wrong one and then waits on the side. */
 function Tile({
@@ -144,8 +104,6 @@ function Tile({
   );
 }
 
-/** Letters in a fixed box stop growing where they fit its width and height (never below the default size). */
-const letterFit = (text: string, size: number, width: number, height: number) => Math.max(1, Math.min(wordFitMultiplier(text, size, width, 2), Math.floor(height * 100) / 100));
 /** One box on the boat. Pops when a letter lands in it. */
 function Box({
   letter,
@@ -219,7 +177,12 @@ function Finished() {
   );
 }
 
-export function Board(props: BoardProps<BoatState | LegacyBoatState>) {
+const admittedTasks = tasksOf(admittedParts);
+export function Board(props: BoardProps<SoundBoatState>) {
+  const s = props.session.state;
+  return isParts(s) ? <PartsBoard {...props} session={{ ...props.session, state: s as PartsState }} tasks={admittedTasks} /> : <Letters {...props} />;
+}
+function Letters(props: BoardProps<SoundBoatState>) {
   const { session, update, skills } = props;
   const s = session.state;
   const legacy = isLegacyBoat(s) ? s : null;
@@ -243,7 +206,7 @@ function Play({
   active,
   coach,
   cheer,
-}: BoardProps<BoatState | LegacyBoatState> & { session: { state: BoatState } }) {
+}: BoardProps<SoundBoatState> & { session: { state: BoatState } }) {
   const s = session.state;
   const reduced = useReducedMotion(),
     compact = height < 730;
@@ -275,13 +238,6 @@ function Play({
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Speaks once per word; later renders must not repeat it.
   }, [active, soundOn, s.index, session.id, done]);
-
-  // A built word sails on by itself after a short cheer.
-  useEffect(() => {
-    if (!complete || !active) return;
-    const timer = setTimeout(() => update(boatMove(s, { type: "next" })), 1400);
-    return () => clearTimeout(timer);
-  }, [complete, active, s, update]);
 
   if (done) return <Finished />;
 
@@ -331,7 +287,7 @@ function Play({
     ),
     tileSize = compact ? 50 : 58,
     pictureSize = compact ? 84 : 116;
-  const prompt = complete ? `${word.word}!` : previous ? "Change one letter." : "Spell it! Tap the letters.";
+  const prompt = previous ? "Change one letter." : "Spell it! Tap the letters.";
 
   return (
     <View style={{ gap: compact ? 6 : 10, alignItems: "center" }}>
@@ -402,11 +358,11 @@ function Play({
           />
         )}
       </View>
-      <Copy
-        style={{ color: ink, fontSize: complete ? 26 : 19, fontWeight: complete ? "800" : "600", textAlign: "center" }}
-      >
-        {prompt}
-      </Copy>
+      {complete ? (
+        <TapWords text={`${word.word}!`} sound={sound} soundOn={soundOn} />
+      ) : (
+        <Copy style={{ color: ink, fontSize: 19, fontWeight: "600", textAlign: "center" }}>{prompt}</Copy>
+      )}
       <Animated.View
         style={{
           transform: [{ rotate: rock.interpolate({ inputRange: [-1, 0, 1], outputRange: ["-3deg", "0deg", "3deg"] }) }],
@@ -478,7 +434,9 @@ function Play({
           );
         })}
       </View>
-      {!complete && (
+      {complete ? (
+        <Button onPress={() => move({ type: "next" })}>{s.index === WORDS_PER_ROUND - 1 ? "Reach the island" : "Sail on"}</Button>
+      ) : (
         <Button
           compact
           quiet
