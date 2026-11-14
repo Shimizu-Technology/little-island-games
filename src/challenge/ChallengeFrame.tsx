@@ -27,7 +27,9 @@ export function ChosenDare({dare,maxScale=2}:{dare:RegisteredDare;maxScale?:numb
   const help=dare.help==='allowed'?'Help welcome':'On my own';
   return <View testID="chosen-dare" accessible accessibilityRole="text" accessibilityLabel={`Your chosen dare: ${dare.label}. ${help}.`} style={{alignSelf:'flex-start',maxWidth:'100%',paddingHorizontal:12,paddingVertical:5,borderRadius:16,backgroundColor:'#F0F1E8'}}><Copy maxFontSizeMultiplier={maxScale} style={{fontSize:14,lineHeight:20}}>Dare: {dare.label} · {help}</Copy></View>;
 }
-const gameName = (game: string) => shelfGames.find(item=>item.id===game)?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
+/** Challenge IDs that differ from the shelf game a child knows: Coconut Drop's puzzles register as "drop-puzzles". */
+const shelfIdOf: Record<string,string> = {'drop-puzzles':'coconut-drop'};
+const gameName = (game: string) => shelfGames.find(item=>item.id===(shelfIdOf[game]??game))?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
 export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;requestedPuzzle?:string}) {
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width}=useWindowDimensions(), insets=useSafeAreaInsets();

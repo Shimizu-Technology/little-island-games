@@ -17,6 +17,7 @@ import { useStore } from "../state/Store";
 import { useSoundControls } from "../components/Audio";
 import { SaveStatus } from "../components/SaveStatus";
 import { Button, C, Chip, Copy, GameHeader, Heading, Sheet, ToggleRow, styles } from "../components/ui";
+import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
 import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
@@ -55,7 +56,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const store = useStore(),
     focused = useIsFocused(),
     insets = useSafeAreaInsets(),
-    { width, height } = useWindowDimensions();
+    { width, height, fontScale } = useWindowDimensions();
   const engine = engines[id],
     view = views[id];
   const saved = store.save.learn?.[id];
@@ -64,9 +65,21 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const [held, setHeld] = useState(false);
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
+  const large = fontScale >= LARGE_TEXT;
+  // The board's top within the page, measured on layout.
+  const boardTop = useRef<number | null>(null), stepRound = useRef(saved?.id), lastStep = useRef<number | undefined>(undefined);
   useLayoutEffect(() => {
-    if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
-  }, [growthStep, saved?.id]);
+    if (growthStep === undefined) return;
+    // Only a real move to another question or round repositions the page. A text-size change alone (crossing the
+    // large threshold mid-answer) must leave the child where they are.
+    if (lastStep.current === growthStep && stepRound.current === saved?.id) return;
+    lastStep.current = growthStep;
+    // The next question of the same round. At accessibility sizes the header alone can fill the screen, so the page
+    // returns to the top of the board rather than above the header, and the answers stay a short scroll away.
+    const sameRound = stepRound.current === saved?.id;
+    stepRound.current = saved?.id;
+    scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current - 8) : 0, animated: false });
+  }, [growthStep, saved?.id, large]);
   const learner = activeLearner(store.save.learning);
   const comfort = learningComfort(store.save, learner.id);
   const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
@@ -276,32 +289,68 @@ export function LearnFrame({ id }: { id: LearnId }) {
     (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
     (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "") : "";
 
-  const header = <View style={{ gap: 4 }}>
-        <LearnerChip compact/>
-        <GameHeader
-          title={id === "hafa-adai" && width < 600 ? "Håfa Adai" : engine.name}
+  const phone = width < 600;
+  const lineWidth = width - insets.left - insets.right - 32;
+  const levelLine = levelTitle(id, levelOf(saved?.options ?? options)), levelSize = phone ? 19 : 25, artSize = phone ? 36 : 48;
+  const companionShown = phone && !!saved && !finished && store.save.settings.learningIslander !== false;
+  const gameName = id === "hafa-adai" && phone ? "Håfa Adai" : engine.name;
+  const bar = <GameHeader
+          title={gameName}
           onBack={back}
           sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
           onHelp={() => setHelp(true)}
-        />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <view.Art size={width < 600 ? 36 : 48} />
-          <Heading style={{ fontSize: width < 600 ? 19 : 25, flex: 1, minWidth: 0, color: theme.ink }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
-          {width < 600 && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
-        </View>
-        {width < 600 && saved && <Copy style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>}
-        {width < 600 && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
+          // Back, Sound and Help are three 44-pt icons; the title wraps between words beside them.
+          titleMax={large ? wordFitMultiplier(gameName, 21, lineWidth - 3 * 44 - 3 * 8, 1.5) : undefined}
+        />;
+  // At accessibility sizes the header text stops growing where its words still fit: the level title at 1.5x, so it is
+  // never larger than the game name in the bar, and the small lines (mode, cheer) at 1.5x like compact chrome. Default sizes never change.
+  const level = <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <view.Art size={artSize} />
+          <Heading maxFontSizeMultiplier={large ? wordFitMultiplier(levelLine, levelSize, lineWidth - artSize - 8 - (companionShown ? 72 : 0), 1.5) : undefined} style={{ fontSize: levelSize, flex: 1, minWidth: 0, color: theme.ink }}>{levelLine}</Heading>
+          {phone && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
+        </View>;
+  const small = large ? 1.5 : undefined, big = large ? 2 : undefined;
+  // Sheet text runs across the sheet (a 560-pt card on wide screens) inside its 22-pt padding.
+  const sheetLine = (width >= 600 ? Math.min(560, width - 48) : width) - 44;
+  const header = <View style={{ gap: 4 }}>
+        <LearnerChip compact/>
+        {bar}
+        {level}
+        {phone && saved && <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>}
+        {phone && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
 
   </View>;
+  // A phone pins its header above the board. At accessibility sizes only the one-row bar stays pinned; the learner,
+  // level and mode lines scroll with the page, so the board gets the screen and everything stays reachable.
+  // Wider screens (landscape, iPad) scroll the whole header, with the learner chip sharing the mode line.
+  const largeLines = <View testID="learn-header-scrolled" style={{ gap: 4 }}>
+        {level}
+        {saved && <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          <LearnerChip compact/>
+          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>
+        </View>}
+        {!saved && <LearnerChip compact/>}
+        {phone && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
+      </View>;
+  const pinned = phone ? (large ? bar : header) : null;
+  const scrolled = phone ? (large ? largeLines : null) : large ? <View style={{ gap: 4 }}>{bar}{largeLines}</View> : header;
+
+  const helpText = <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>;
+  const hear = !(saved && isGrowth(saved.state)) && engine.helpAudio ? <>
+            <Button icon="sound-on" maxFontSizeMultiplier={big} onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
+              Hear a quick guide
+            </Button>
+            {!soundOn && <Copy maxFontSizeMultiplier={big}>Turn sound on to hear the instructions.</Copy>}
+          </> : null;
 
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
       <IslandBackdrop island={island} colors={theme}/>
-      {width < 600 && <View style={{ paddingHorizontal: 16 }}>{header}</View>}
+      {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16 }}>{pinned}</View>}
       <GridInteraction.Provider value={setHeld}>
       <ScrollView key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
-        {width >= 600 && header}
-        {width >= 600 && saved && (
+        {scrolled}
+        {width >= 600 && !large && saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
               (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
@@ -311,7 +360,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
-        {saved && !finished && (
+        {saved && !finished && <View testID="learn-board" onLayout={e => { boardTop.current = e.nativeEvent.layout.y; }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
@@ -334,7 +383,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             />
           </View>
           </LearningCompanion>
-        )}
+        </View>}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
             {finished && (
@@ -371,10 +420,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
             {finished && <LevelPath game={id} level={levelOf(saved.options)} progress={store.save.school} onChoose={level => { chooseLevel(level, saved.options); setSetup(true); }}/>}
             {(saved.learner ?? "family") !== learner.id && <Copy style={{ textAlign: "center" }}>This saved round belongs to {store.save.learning?.people.find(p => p.id === (saved.learner ?? "family"))?.name ?? "Family practice"}. New rounds use {learner.name}.</Copy>}
             {/* Options are for grown-ups and changing modes; kept small so it's never the obvious tap mid-game. */}
-            <Button compact quiet onPress={openSetup}>
+            <Button compact quiet maxFontSizeMultiplier={large ? 2 : undefined} onPress={openSetup}>
               New round & options
             </Button>
-            <Copy style={{ fontSize: 12, marginTop: 4, textAlign: "center" }}>Your round saves on this device.</Copy>
+            <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, marginTop: 4, textAlign: "center" }}>Your round saves on this device.</Copy>
           </View>
         )}
       </ScrollView>
@@ -383,17 +432,18 @@ export function LearnFrame({ id }: { id: LearnId }) {
         visible={focused && (setup || !saved)}
         onClose={() => (saved ? setSetup(false) : back())}
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
-        footer={<Button onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
+        footer={<Button maxFontSizeMultiplier={big} onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
+        {/* At accessibility sizes the art sits above the name, so the name has the card's width and never breaks a word. */}
+        <View testID="learn-setup-card" style={{ flexDirection: large ? "column" : "row", alignItems: large ? "flex-start" : "center", gap: large ? 4 : 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={large ? 56 : 72}/><View style={large ? { alignSelf: "stretch" } : { flex: 1 }}><Heading maxFontSizeMultiplier={large ? wordFitMultiplier(engine.name, 21, sheetLine - 24, 2) : undefined} style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy maxFontSizeMultiplier={big} style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
         {id==='code-lab'&&<Copy>Ages 9–14, with the top challenges for older learners and grown-ups.</Copy>}
-        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
+        <Copy maxFontSizeMultiplier={big}>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} progress={store.save.school} />
-        {challenge&&!comfort.youngChild&&<Button quiet onPress={()=>openChallenge()}>Challenge</Button>}
+        {challenge&&!comfort.youngChild&&<Button quiet maxFontSizeMultiplier={big} onPress={()=>openChallenge()}>Challenge</Button>}
         {engine.modes.length > 1 && (
           <>
-            <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("How shall we play?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>How shall we play?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {engine.modes.map((mode) => (
                 <Chip key={mode} selected={options.mode === mode} onPress={() => setOptions({ ...options, mode })}>
@@ -406,7 +456,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {twoPlayer && (
           <>
             <PlayerNames names={names} onChange={setNames} remembered={remembered} labels={["First player", "Second player"]} />
-            <Heading style={{ fontSize: 18 }}>Who goes first?</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("Who goes first?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>Who goes first?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {([0, 1] as const).map((seat) => (
                 <Chip key={seat} selected={starter === seat} onPress={() => setStarter(seat)}>
@@ -421,7 +471,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         {!options.stage && engine.mathControls && (
           <>
-            <Heading style={{ fontSize: 18 }}>What shall we practise?</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("What shall we practise?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>What shall we practise?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {(["add", "subtract", "mixed"] as const).map((operation) => (
                 <Chip key={operation} selected={(options.mathOperation ?? "add") === operation} onPress={() => setOptions({ ...options, mathOperation: operation })}>
@@ -433,7 +483,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         {!options.stage && engine.languages && engine.languages.length > 1 && (
           <>
-            <Heading style={{ fontSize: 18 }}>Words in</Heading>
+            <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("Words in", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>Words in</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {engine.languages.map((language) => (
                 <Chip key={language} selected={options.language === language} onPress={() => setOptions({ ...options, language })}>
@@ -445,18 +495,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
-        <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
-        {!(saved && isGrowth(saved.state)) && engine.helpAudio && (
-          <>
-            <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
-              Hear a quick guide
-            </Button>
-            {!soundOn && <Copy>Turn sound on to hear the instructions.</Copy>}
-          </>
-        )}
+        {/* At accessibility sizes the instructions run several screens, so Hear comes first for a child who can't read them yet. */}
+        {!large && helpText}
+        {hear}
+        {large && helpText}
         {saved && !finished && (
           <Button
             icon="help"
+            maxFontSizeMultiplier={big}
             onPress={() => {
               stopSound();
               setHelp(false);
@@ -469,6 +515,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         <Button
           quiet
+          maxFontSizeMultiplier={big}
           onPress={() => {
             stopSound();
             setHelp(false);

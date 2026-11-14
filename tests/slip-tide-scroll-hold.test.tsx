@@ -8,7 +8,7 @@ import { GridInteraction } from '../src/puzzles/grid/preferences';
 // the page scroll from touch-down to release, the arbitration Cove grids use, so a drag on the water is only a swipe.
 type Handlers = { enabled?: boolean; onBegin?: () => void; onUpdate?: (e: { translationX: number; translationY: number }) => void; onFinalize?: () => void };
 const pan = vi.hoisted(() => ({ last: {} as Handlers }));
-vi.mock('react-native', () => ({ View: 'View' }));
+vi.mock('react-native', () => ({ View: 'View', useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
 vi.mock('react-native-gesture-handler', () => ({
   Gesture: { Pan: () => { const h: Handlers = {}; pan.last = h; const g: Record<string, (x: unknown) => unknown> = {};
     for (const key of ['maxPointers', 'minDistance']) g[key] = () => g;

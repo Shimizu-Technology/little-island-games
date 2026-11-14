@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { TextInput, View } from "react-native";
+import { TextInput, View, useWindowDimensions } from "react-native";
+import { LARGE_TEXT } from "../../../components/wordFit";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText } from "react-native-svg";
 import { Button, Copy, PressableScale, font } from "../../../components/ui";
 import type { BoardProps } from "../../types";
@@ -681,6 +682,9 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
     s = session.state,
     q = currentTask(game, s);
   const [hint, setHint] = useState(false);
+  // At accessibility text sizes Reset and Hint fill the row, so Test model takes its own full-width line below
+  // instead of being pushed off the right edge.
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
   if (!q) return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your discovery journal is complete!</Copy>;
   const send = (a: Parameters<typeof move>[2]) => {
     if (active) {
@@ -772,7 +776,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
           </View>
         </CoachSpot>
       )}
-      <View style={{ flexDirection: "row", gap: 8 }}>
+      <View testID="science-actions" style={{ flexDirection: "row", flexWrap: large ? "wrap" : "nowrap", gap: 8 }}>
         <Button
           quiet
           compact
@@ -797,7 +801,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
         </Button>
         {!ready && (
           <Button
-            style={{ flex: 1 }}
+            style={large ? { flexBasis: "100%" } : { flex: 1 }}
             disabled={!active || s.actions === 0}
             onPress={() => {
               const ok = correct(q, s.values);

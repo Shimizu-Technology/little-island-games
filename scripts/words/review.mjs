@@ -49,7 +49,9 @@ export function reconcile(prepared, a, b) {
     const {id,elapsedSeconds,...original} = r;
     requireThat(id === digest(original) && elapsedSeconds > 0, 'Imported review integrity mismatch');
   }
-  requireThat(a.reviewer.id !== b.reviewer.id && a.reviewer.family !== b.reviewer.family && a.runId !== b.runId && a.transcriptSha256 !== b.transcriptSha256, 'Two independent model families and runs required');
+  // Leon's decision (13 Nov 2026): two blind reviewers on different models are enough; they may share a
+  // model family. Each must be its own reviewer, model, run and transcript.
+  requireThat(a.reviewer.id !== b.reviewer.id && a.reviewer.model !== b.reviewer.model && a.runId !== b.runId && a.transcriptSha256 !== b.transcriptSha256, 'Two independent models and runs required');
   const rows = prepared.batch.records.map(c => {
     const left = a.items.find(x => x.id === c.id), right = b.items.find(x => x.id === c.id);
     const same = left.verdict === right.verdict && (left.verdict !== 'revise' || left.replacement === right.replacement);

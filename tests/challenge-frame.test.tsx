@@ -35,8 +35,9 @@ const entry={...registration,render:(session:Parameters<typeof registration.move
 const press=async(root:ReactTestRenderer,label:string)=>act(async()=>{const button=root.root.findAllByType('button').find(n=>n.children.filter(c=>typeof c==='string').join('')===label);expect(button,label).toBeDefined();(button!.props.onPress??button!.props.onClick)();});
 it('R2 P2-1: a stretch invitation clears a dare from the completed puzzle before Start',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
- const first={...puzzle,par:undefined,ref:{...puzzle.ref,engine:'stretch-proof',bank:430},source:{kind:'endless' as const,bank:430,puzzle:0},dares:puzzle.dares.map((d,i)=>({...d,slot:3300+i,id:`stretch-dare-${i}`}))};
- const puzzles=[first,{...first,title:'A higher test maze',tier:2 as const,ref:{...first.ref,puzzle:1,hash:'b'.repeat(64)},source:{kind:'endless' as const,bank:430,puzzle:1},dares:[{...puzzle.dares[0],slot:3400,id:'higher-par'}]}];
+ const first={...puzzle,par:undefined,ref:{...puzzle.ref,engine:'stretch-proof',bank:430},source:{kind:'endless' as const,bank:430,puzzle:0},dares:puzzle.dares.map((d,i)=>({...d,slot:100+i,id:`stretch-dare-${i}`}))};
+ // Test-only dare slots come from the lead/tests range (0–127) in the slot register, clear of every shipped game.
+ const puzzles=[first,{...first,title:'A higher test maze',tier:2 as const,ref:{...first.ref,puzzle:1,hash:'b'.repeat(64)},source:{kind:'endless' as const,bank:430,puzzle:1},dares:[{...puzzle.dares[0],slot:120,id:'higher-par'}]}];
  const registered=defineReplayGame({game:'stretch-proof',codec:'stretch-proof-v1',context:'stretch',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},puzzles,engine,Board:()=>null,controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}});
  const selectedEntry={...registered,render:entry.render};
  registerSaveContent(registered.catalog,catalogManifest(registered.catalog));
@@ -44,7 +45,7 @@ it('R2 P2-1: a stretch invitation clears a dare from the completed puzzle before
  db.raw=encodeSave(putProgress(migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')}),'a',completedSignal(emptyChallenge(),'stretch-1',true,true)));
  const spy=vi.spyOn(challengeCatalog,'challengeFor').mockReturnValue(selectedEntry);let r!:ReactTestRenderer;
  try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});
-  await press(r,'blind · Help welcome');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].selectedDares).toEqual([3303]);
+  await press(r,'blind · Help welcome');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].selectedDares).toEqual([103]);
   for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
   await press(r,'Try a stretch');await press(r,'Start this puzzle');
   expect(store.challengeRefusal).toBeNull();expect(store.save.challenge!.paused).toHaveLength(1);
