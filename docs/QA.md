@@ -1,5 +1,7 @@
 # Acceptance ledger
 
+For the program/4.0 required coverage, execution protocol and historical observations, use [QA_MATRIX.md](QA_MATRIX.md). Its machine source is checked by `npm test`; this historical ledger does not replace the two-pass program matrix.
+
 The learning-growth/build13 implementation and its remaining device/audio acceptance are recorded in [LEARNING_GROWTH.md](LEARNING_GROWTH.md). This is the historical first-release ledger. Current V2 source/build evidence, remaining integration gates and physical family checks are recorded in [V2_QA.md](V2_QA.md). Leon has explicitly authorized reviewed source integration and an internal beta; physical/child and public-release acceptance remain separate.
 
 Executor: agent for automated/browser/simulator checks; Leon/Stassie for physical-device usability. Comprehensive first-release scope. Record exact source/build and evidence before calling a scenario passed. Case status includes every required device dimension; browser-only coverage remains partial until native acceptance is recorded.

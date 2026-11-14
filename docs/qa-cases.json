@@ -1,0 +1,1074 @@
+{
+  "source": "PLAN §10 static journeys/physical checks; Play SPEC P01–P11; Toca SPEC A1–A10. Actions retain original acceptance text.",
+  "cases": [
+    {
+      "id": "J01",
+      "group": "journeys",
+      "title": "Door: school",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open school, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J02",
+      "group": "journeys",
+      "title": "Door: library",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open library, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J03",
+      "group": "journeys",
+      "title": "Door: arcade",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open arcade, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J04",
+      "group": "journeys",
+      "title": "Door: hall",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open hall, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J05",
+      "group": "journeys",
+      "title": "Door: home",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open home, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J06",
+      "group": "journeys",
+      "title": "Door: locker",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open locker, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J07",
+      "group": "journeys",
+      "title": "Door: badges",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open badges, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J08",
+      "group": "journeys",
+      "title": "Door: cove",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "From cold island map open cove, perform a meaningful action, Back and reopen; confirm all registered destinations reachable within three taps.",
+      "savedOutcome": "Correct person and prior destination/context restored; accepted work unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 all eight doors"
+    },
+    {
+      "id": "J09",
+      "group": "journeys",
+      "title": "Challenge",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Open from L1 with zero stars; visit each tier, Back and resume.",
+      "savedOutcome": "Legacy stars unchanged; choices and own paused round retained.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J10",
+      "group": "journeys",
+      "title": "Deep Water",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Open every registered idea without unlocks; finish a teaching example and return.",
+      "savedOutcome": "Correct idea/ref, help state and one completion retained.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J11",
+      "group": "journeys",
+      "title": "Endless Tide",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Select a band, open, finish and deal another; revisit Continue.",
+      "savedOutcome": "Immutable ref and permutation cursor retained without repeats until pool exhausted.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J12",
+      "group": "journeys",
+      "title": "Cove picker",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Choose child, Family and Cove-only adult; leave and return.",
+      "savedOutcome": "Adult stays out of child pickers; choices, drafts and records stay with owner.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J13",
+      "group": "journeys",
+      "title": "Create Cove person",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Create up to four adults; cancel and reject overflow; reopen.",
+      "savedOutcome": "Only accepted adults added; no School, Home or Locker assigned; existing children intact.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J14",
+      "group": "journeys",
+      "title": "Together credit",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Two eligible people finish, use Help, replay and interrupt award.",
+      "savedOutcome": "Together/solo/help state merges monotonically for eligible owners exactly once.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J15",
+      "group": "journeys",
+      "title": "Pin to a person",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Pin, switch recipient, open pinned ref and return.",
+      "savedOutcome": "Correct sender/ref retained; pin does not copy marks or overwrite draft.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J16",
+      "group": "journeys",
+      "title": "Today",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Cross date, timezone, leap day and midnight offline with active puzzle; open All puzzles.",
+      "savedOutcome": "Active ref unchanged; shortcut reproducible; no expiry, wait, penalty or exclusive content.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J17",
+      "group": "journeys",
+      "title": "Offers",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Finish clean, helped and repeated rounds; accept or dismiss offer, reopen.",
+      "savedOutcome": "At most one offer, dismissal retained; no speed/day inference or lost marks.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J18",
+      "group": "journeys",
+      "title": "Too-easy face",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Choose face, change tier, return and cancel.",
+      "savedOutcome": "Bounded signal and comfort choice belongs to owner; no automatic lock.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J19",
+      "group": "journeys",
+      "title": "Force-close at start",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Terminate immediately after explicit Start and reopen.",
+      "savedOutcome": "Either prior accepted round or exactly one newly durable attempt; no partial award.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J20",
+      "group": "journeys",
+      "title": "Force-close mid-draft",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Make several accepted moves and terminate during draft write; reopen.",
+      "savedOutcome": "Last durable exact draft and action counters; no stale-base replay or cross-owner state.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J21",
+      "group": "journeys",
+      "title": "Force-close after Check",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Wrong and right whole-answer Check, terminate before/after durable write.",
+      "savedOutcome": "Retained wrong draft, one failed-Check count; right result consistent with durable attempt.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J22",
+      "group": "journeys",
+      "title": "Force-close after result",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Terminate before/after credit, then replay result.",
+      "savedOutcome": "One accepted completion and award; no mark loss or duplicate credit.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J23",
+      "group": "journeys",
+      "title": "Upgrade from 3.0.x",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Install over frozen real build-28 fixture; inspect all old game, School, Library, Home, badges.",
+      "savedOutcome": "Original bytes preserved before envelope 3/profiles 2; old rounds and records intact; repeat load writes nothing.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J24",
+      "group": "journeys",
+      "title": "Rollback rehearsal",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Keep pre-update backup, reinstall stable refresh, preserve newer save and restore older copy.",
+      "savedOutcome": "3.0.x rejects/preserves future save; restored 3.0 data matches original; newer work retained separately.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J25",
+      "group": "journeys",
+      "title": "Backup",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Export with outstanding drafts and multiple people.",
+      "savedOutcome": "Validated backup includes flushed envelope and drafts, all owner data; source remains intact.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J26",
+      "group": "journeys",
+      "title": "Restore",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Confirm valid replacement; inject preserve/write/publish failures; try corrupt, future and oversized files.",
+      "savedOutcome": "Atomic replacement or accepted state unchanged; originals kept, stale callbacks invalidated; whole-device warning shown.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J27",
+      "group": "journeys",
+      "title": "Full-save admission",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Use five learners/four adults, near-limit save and maximum drafts; attempt another write.",
+      "savedOutcome": "Readable admission/retry path; accepted save and original bytes intact; no silently refused edits.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J28",
+      "group": "journeys",
+      "title": "Rotation",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Rotate while editing maximum board, input pad open, and result visible.",
+      "savedOutcome": "Same draft/ref and scroll context; reachable controls, no duplicate input or lost work.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J29",
+      "group": "journeys",
+      "title": "VoiceOver tree",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Navigate maximum boards and controls with labels/actions, perform edit/help/undo and finish.",
+      "savedOutcome": "Announced state matches visible/saved action; draft retained; physical acceptance tracked RD07.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J30",
+      "group": "journeys",
+      "title": "Sound off",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Turn sound off mid-queue, play, reopen and switch people.",
+      "savedOutcome": "Setting retained, stale clips stop, essential feedback remains visible, no returning clip.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J31",
+      "group": "journeys",
+      "title": "Young-child option",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Hide dares before/after selecting one, reopen and switch person.",
+      "savedOutcome": "Saved comfort applies to intended owner; dare remains hidden without losing earned marks.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J32",
+      "group": "journeys",
+      "title": "Math timer",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Adult enables, child explicitly starts eligible facts; stop/skip, miss, background at 59s, change clock.",
+      "savedOutcome": "Only completed eligible own fact run updates own best; reading/mixed untimed; no stars/marks changed.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J33",
+      "group": "journeys",
+      "title": "Hide a puzzle",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Hide active and unseen puzzle; deal again, Continue, then unhide.",
+      "savedOutcome": "Local hidden hash retained; marks unchanged; no hidden redeal while visible alternatives exist; own Continue preserved.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "J34",
+      "group": "journeys",
+      "title": "Draw a puzzle",
+      "games": [],
+      "dimensions": [
+        "iPhone / iOS 18.5 / default text",
+        "iPhone / iOS 26.5 / default text",
+        "iPad mini / iOS 26.5 / portrait and landscape"
+      ],
+      "executor": "Lead, Release simulator",
+      "steps": "Create Picture Grid freely, share locally, solve, leave and reopen.",
+      "savedOutcome": "Original creation retained; no grade/mark for free creation; solver checks shared task without mutating original.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "PLAN §10 cross-cutting journeys"
+    },
+    {
+      "id": "P01",
+      "group": "play",
+      "title": "Challenge entry and School retention",
+      "games": [],
+      "dimensions": [
+        "iPhone compact portrait, iPad portrait/landscape, largest supported text; agent native then family device."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "From Level1 open Challenge without any stars; choose every tier and Back; reopen a paused School round. No lock, five old stars untouched, explicit Start and separate remembered choices.",
+      "savedOutcome": "Challenge opens without locks; old School stars/draft remain and tier choices stay separate.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P02",
+      "group": "play",
+      "title": "Crab interruption and award",
+      "games": [],
+      "dimensions": [
+        "iOS simulator plus physical iPad cold relaunch; agent/operator."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Run Crab wrong, edit, hint, finish, retry a dare, force-close at each point. Exact draft/attempt counters resume; helped completion succeeds; dare marks never decrease; one accepted award only.",
+      "savedOutcome": "Exact draft/counters resume; helped completion succeeds; one award and monotonic dare marks.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P03",
+      "group": "play",
+      "title": "Person isolation and stale callbacks",
+      "games": [],
+      "dimensions": [
+        "Native plus Files round trip; agent/operator."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "ChildA pauses; childB solves same puzzle; delayed A hint/result fires after switch/restore. B sees only B work, A's own draft remains, no cross-credit/audio. DeleteA and confirmB/Family intact.",
+      "savedOutcome": "Each owner retains only their draft, credit and audio; deleting A preserves B/Family.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P04",
+      "group": "play",
+      "title": "Upgrade, backup and rollback",
+      "games": [],
+      "dimensions": [
+        "Simulator supports seeded adapters; **physical Files/low-disk/update** operator required. Whole-device restore warning visible."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Upgrade installed v2 build with real saves; inspect old game/School/Library/house/badges; export/import new backup; reject future/corrupt/oversized backup; restore pre-update copy using documented rollback. Original bytes preserved; rejected replacement changes no accepted work.",
+      "savedOutcome": "Old accepted work and original bytes remain; rejected backup changes nothing; documented rollback restores the pre-update copy.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P05",
+      "group": "play",
+      "title": "Offline audible speech",
+      "games": [],
+      "dimensions": [
+        "**Physical phone+iPad**, operator; simulator audio decode does not pass audible comfort/Bluetooth."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Airplane mode, app fully terminated and no Metro; play new bank, ask every new template/number narration, change voice/sound, interrupt with lock/headphones, switch learner. Assets play offline; stale clips stop and don't return.",
+      "savedOutcome": "Assets play offline; voice/sound settings persist; stale interrupted clips never return.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P06",
+      "group": "play",
+      "title": "Voluntary stretch and return",
+      "games": [],
+      "dimensions": [
+        "**Family hardware/child**, operator. At least one session now and a separate voluntary return; no compulsory second-day reward."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Stassie independently chooses a stretch, uses/ignores a dare, gets stuck, finds one-step help, changes puzzle, returns to her draft and finishes. Leon records what she said/did, not inferred ability.",
+      "savedOutcome": "Written voluntary observation of what the child said/did and whether her own draft returned; no inferred skill score.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "Observation",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P07",
+      "group": "play",
+      "title": "Board and card policies",
+      "games": [],
+      "dimensions": [
+        "Native phone/tablet + family shared device."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Play Shell Pits both starters; change next-round strength; complete/reload Go Fish and Eights at each policy; hide hands on interruption/hand-off. Rivals differ where expected, no peeking, saved policy stays fixed.",
+      "savedOutcome": "Saved policy fixed for the current round; no hand leaks; rivals differ as specified.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P08",
+      "group": "play",
+      "title": "Arcade progression and interruption",
+      "games": [],
+      "dimensions": [
+        "Native plus **physical oldest iPad** for W6 timing, heat and control reach. All nine game mechanics; Lagoon visual work separately."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Enter each changed world boundary; lose a heart, turn Helper on/off, finish/replay; compare W6 touch input with replay feasibility; force-close. No sudden unexplained reset, fair visible gap/hit, stars retained, current real-time no-resume behavior honest.",
+      "savedOutcome": "Accepted stars/best retained, real-time restart honest, fair visible gaps/hits.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P09",
+      "group": "play",
+      "title": "Maximum grids and accessibility",
+      "games": [],
+      "dimensions": [
+        "Native iPhone/iPad incl landscape/large text; **real VoiceOver** operator."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Complete max-size logic/grid task with whole submission; rotate mid-draft; VoiceOver traverses cells/controls; switch puzzle during bank load; cancel hint. No correctness scanning, no clipped board, accessible feedback, draft retained, cancellation takes effect.",
+      "savedOutcome": "Exact draft retained; no correctness scanning or clipped board; accessible feedback and cancelled hint stays cancelled.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P10",
+      "group": "play",
+      "title": "Today without pressure",
+      "games": [],
+      "dimensions": [
+        "Native; agent/date fixtures plus operator normal use."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Change date/zone offline while puzzle is active, use All puzzles, switch child/tier, cross midnight/update. Active puzzle unchanged; daily shortcut reproducible; no waiting/penalty; both can play any puzzle.",
+      "savedOutcome": "Active puzzle unchanged; shortcut reproducible; every puzzle remains available without waiting or penalty.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "P11",
+      "group": "play",
+      "title": "Optional math timer",
+      "games": [],
+      "dimensions": [
+        "Native plus **family opt-in observation**."
+      ],
+      "executor": "Lead native, then Leon/operator where specified",
+      "steps": "Adult enables; child explicitly starts; Skip/Stop; wrong answer; background at59s; clock change; narration replay; reading/mixed warm-up. Only completed eligible fact runs update own best; reading never timed; no star/mark impact.",
+      "savedOutcome": "Only completed eligible fact runs update the owner’s best; reading untimed and marks/stars unchanged.",
+      "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
+      "gate": "RC + family observation",
+      "source": "Play SPEC required scenarios P01–P11 (verbatim actions and acceptance)"
+    },
+    {
+      "id": "RD01",
+      "group": "real-device",
+      "title": "Lagoon protocol",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Three 60 s W1-8 runs; Low Power on/off; iPad; 240 fps swipe video. Apply Lagoon report protocol."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Three 60 s W1-8 runs; Low Power on/off; iPad; 240 fps swipe video. Apply Lagoon report protocol.",
+      "savedOutcome": "Stable 60 Hz and repeatable input response; saved records match accepted clear.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD02",
+      "group": "real-device",
+      "title": "Skia comparison",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Identical complete scenes, baked views vs Skia; LG-S4 pass table."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Identical complete scenes, baked views vs Skia; LG-S4 pass table.",
+      "savedOutcome": "Renderer choice supported by physical frame/CPU/memory results; no state loss.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD03",
+      "group": "real-device",
+      "title": "Home P1–P6",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Input-to-display p95 ≤50 ms; ≥19/20 correct planned touches adult then voluntary Stassie; 10 min heat."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Input-to-display p95 ≤50 ms; ≥19/20 correct planned touches adult then voluntary Stassie; 10 min heat.",
+      "savedOutcome": "Committed room matches intended targets; timing and thermal traces meet Home table.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD04",
+      "group": "real-device",
+      "title": "Ten-minute thermal run",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Oldest iPad; 10 min warm maximum-load play."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Oldest iPad; 10 min warm maximum-load play.",
+      "savedOutcome": "No throttling; p95 one 16.7 ms refresh, p99 two; work survives interruption.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD05",
+      "group": "real-device",
+      "title": "Touch accuracy",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "9×9 phone and 9.5 mm child targets, real thumbs."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "9×9 phone and 9.5 mm child targets, real thumbs.",
+      "savedOutcome": "Intended cells/actions match saved edits; no accidental neighbours.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD06",
+      "group": "real-device",
+      "title": "Audible offline audio",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Speech/token joins, Bluetooth, lock, interruptions, airplane mode, no Metro."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Speech/token joins, Bluetooth, lock, interruptions, airplane mode, no Metro.",
+      "savedOutcome": "Comfortable audible output, queue cancelled across owner changes, sound choice retained.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD07",
+      "group": "real-device",
+      "title": "Real VoiceOver",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Maximum boards and controls on both family devices."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Maximum boards and controls on both family devices.",
+      "savedOutcome": "Actions/announcements match saved edits and completion; no trapped focus.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD08",
+      "group": "real-device",
+      "title": "Files, low disk, installed update",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Export/import via Files, storage pressure, installed 3.0.x→candidate update."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Export/import via Files, storage pressure, installed 3.0.x→candidate update.",
+      "savedOutcome": "Exact originals and accepted saves preserved; errors recoverable and no cross-owner loss.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD09",
+      "group": "real-device",
+      "title": "Hint, AI and redraw timing",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Oldest iPad private Release; frozen ≥100 seeds/configuration and 30 load/resume trials; airplane/no Metro."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Oldest iPad private Release; frozen ≥100 seeds/configuration and 30 load/resume trials; airplane/no Metro.",
+      "savedOutcome": "Hint/AI ≤100 ms, round start <150 ms, bank ≤100 ms warm/250 ms cold; ≤8 ms search slices; recorded redraw budget/fallback and exact resumed draft.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD10",
+      "group": "real-device",
+      "title": "Simultaneous hands",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Word Search two hunters and Jigsaw two hands on real iPad."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Word Search two hunters and Jigsaw two hands on real iPad.",
+      "savedOutcome": "Independent contacts/colours, one found-word credit, correct final piece/draft saved.",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "RD11",
+      "group": "real-device",
+      "title": "CHamoru legibility and input",
+      "games": [],
+      "dimensions": [
+        "iPhone 15 / iOS 18; iPad mini 6 / iOS 26; separate dev app first, then RC",
+        "Å, Ñ, glota in small cells; CH/NG as one cell; keyboard."
+      ],
+      "executor": "Leon or named adult; Stassie only voluntarily",
+      "steps": "Å, Ñ, glota in small cells; CH/NG as one cell; keyboard.",
+      "savedOutcome": "Exact source-backed display and saved text; no folding å; no fluent-reader approval inferred (D3).",
+      "evidenceRequired": "Video or written physical result, exact tested SHA/build, device/OS, frozen fixture and saved diff; simulator/host evidence is context only.",
+      "gate": "RC physical",
+      "source": "PLAN §10 real-device table; §15 device overrides"
+    },
+    {
+      "id": "H-A1",
+      "group": "home",
+      "title": "A1 crowded pickup",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "20 planned hits across hands, props, hats, furniture fronts and expanded shapes select the intended entity; no retarget mid-drag. Include taps in transparent/occluded regions.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A2",
+      "group": "home",
+      "title": "A2 drag and camera",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "60 s drag, edge pan, reversal, pinch/button zoom and rotation keep grip drift ≤2 pt after camera change; no stolen object/camera gesture.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A3",
+      "group": "home",
+      "title": "A3 semantic sweep",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "At each zoom, sample target core and entry/exit ring around both hands, mouth, seats, tubs and surfaces; preview equals final resolver. Cross a mouth without releasing and retain food.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A4",
+      "group": "home",
+      "title": "A4 conflict/recovery",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Two fingers contend for one seat, cross objects, release in reverse order; OS cancels one. Exactly one occupant, one copy of every object, no orphan attachments.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A5",
+      "group": "home",
+      "title": "A5 pose/depth matrix",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Short/tall actors, each outfit, occupied chair/bed/crib/tub/highchair/vehicle/elevator; no exposed hidden limbs or props behind the wrong face/front layer.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A6",
+      "group": "home",
+      "title": "A6 travel/save",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Carry a filled basket through all rooms, elevator and location portal; force-close at precommit/postcommit/arrival; restore one complete ownership graph and previous room camera.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A7",
+      "group": "home",
+      "title": "A7 design/undo",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Move occupied bed/table, rotate against wall, fill room, remove support, duplicate group, undo/redo; retain every actor/prop and a reachable exit.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A8",
+      "group": "home",
+      "title": "A8 access",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Complete give/eat/sit/store/travel without dragging, with sound off and reduced motion, then with actual VoiceOver/switch access and large text.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A9",
+      "group": "home",
+      "title": "A9 performance",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Rule 44 load on real family phone/iPad, cold offline launch, 60 s two-touch interaction, then 10 min warm use; record frame times, memory, thermal behavior and interrupted-save recovery.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Verify the visible acceptance in Actions and compare the saved room after reopen.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "RC",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    },
+    {
+      "id": "H-A10",
+      "group": "home",
+      "title": "A10 child control",
+      "games": [],
+      "dimensions": [
+        "family iPhone 15 and iPad mini 6; Release, default/large text, Reduced Motion where relevant"
+      ],
+      "executor": "Leon / named adult on family hardware; lead simulator rehearsal is context only; A10 voluntary child observation",
+      "steps": "Stassie independently stages breakfast, seats family, feeds one character, carries a basket to another room, changes lamp, decorates and undoes a mistake. Record observed confusion and recovery; do not score reading speed. Younger sibling access requires later age-appropriate observation with a caregiver.",
+      "savedOutcome": "One complete ownership graph; intended entity, attachment, room camera and accepted transaction survive reopen; no duplication, orphan or lost prop. Record voluntary observation only; no skill or reading-speed score.",
+      "evidenceRequired": "Video of the complete Home acceptance, tested SHA/build, physical device/OS, fixture and independently read saved room.",
+      "gate": "Observation",
+      "source": "v3-research/toca/SPEC.md A1–A10; PLAN §10; Home REPORT. Unsupported fixtures remain planned, not silently omitted."
+    }
+  ]
+}
