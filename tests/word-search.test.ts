@@ -9,6 +9,7 @@ import { wordSearchAdapter } from '../src/puzzles/words/adapter';
 import { registration } from '../src/challenge/registrations/word-search';
 import { challengeFor } from '../src/challenge/catalog';
 import { coveEntries } from '../src/cove/catalog';
+import adoptedBanks from '../src/puzzles/words/packs.generated.json';
 const puzzles = fixture.puzzles as SearchPuzzle[], p = puzzles[0];
 
 describe('baked Word Search rules', () => {
@@ -76,10 +77,12 @@ describe('baked Word Search rules', () => {
     let s = a.create(d);for (const action of solved.witness) s = a.reduce(s, action, d);
     expect(a.solved(s, d)).toBe(true);expect(JSON.stringify(p)).toBe(before);
   });
-  it('G6-06 keeps fixtures, bands and dares unpublished in the shipping catalog', () => {
-    expect(fixture.fixture).toBe(true);expect(registration.puzzles).toEqual([]);expect(registration.packed?.bands ?? []).toEqual([]);
-    expect(registration.catalog.banks.size).toBe(0);expect(registration.catalog.dares.size).toBe(0);
-    expect(families.some(f=>f.id==='word-search')).toBe(false);
-    expect(challengeFor('word-search')).toBeUndefined();expect(coveEntries().some(e => e.game === 'word-search')).toBe(false);
+  it('G6-06 keeps fixtures out and publishes only adopted banks', () => {
+    const banks=adoptedBanks as {slot:number}[], published=banks.length>0;
+    expect(fixture.fixture).toBe(true);expect(registration.puzzles).toEqual([]);
+    expect([...registration.catalog.banks.keys()]).toEqual(banks.map(b=>b.slot));
+    if(!published){expect(registration.packed?.bands ?? []).toEqual([]);expect(registration.catalog.dares.size).toBe(0);}
+    expect(families.some(f=>f.id==='word-search')).toBe(published);
+    expect(Boolean(challengeFor('word-search'))).toBe(published);expect(coveEntries().some(e => e.game === 'word-search')).toBe(published);
   });
 });

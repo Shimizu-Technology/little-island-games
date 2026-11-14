@@ -4,13 +4,15 @@ import fixture from './fixtures/word-search/bank.json';
 import { pictureBindings } from '../scripts/puzzles/words/picture-bindings.mjs';
 import { createSearchPictures, type PictureBinding } from '../src/puzzles/words/pictures';
 import { searchPictureEntries as adopted } from '../src/puzzles/words/pictures.generated';
+import adoptedBanks from '../src/puzzles/words/packs.generated.json';
 
 const entries: PictureBinding[] = pictureBindings(fixture.puzzles), assets = Object.fromEntries(entries.map(p=>[p.id,()=>1]));
 const xmlFor = (id: string) => readFileSync(`content/pictures/svg/${id}.svg`,'utf8');
 describe('admitted Word Search pictures',()=>{
   it('projects only pictured answers and leaves the unpublished runtime empty',()=>{
     const wanted = new Set(fixture.puzzles.filter(p=>p.list==='pictures').flatMap(p=>p.words.map(w=>w.spelling)));
-    expect(new Set(entries.map(p=>p.spelling))).toEqual(wanted);expect(entries).toHaveLength(4);expect(adopted).toEqual([]);
+    expect(new Set(entries.map(p=>p.spelling))).toEqual(wanted);expect(entries).toHaveLength(4);
+    if(!adoptedBanks.length)expect(adopted).toEqual([]);
   });
   it('verifies real SVG bytes and rejects unknown or altered assets',async()=>{
     const p=entries[0], xml=xmlFor(p.id), good=createSearchPictures(entries,assets,{read:async()=>xml});
