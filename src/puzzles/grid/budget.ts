@@ -1,13 +1,37 @@
 import { createContext } from 'react';
-import { LARGE_TEXT } from '../../components/wordFit';
+import { LARGE_TEXT, wordWidth } from '../../components/wordFit';
 
 /** The page chrome around a board that a screen knows and the board does not: safe areas, the frame's bar and its padding. */
-export type GridChrome = { top: number; bottom: number; bar: number };
+export type GridChrome = { top: number; bottom: number; bar: number; /** The left and right safe areas, which narrow the status line in a landscape window. */ side?: number };
 /** Absent (no provider), nothing is reserved, so a board outside the Challenge frame sizes itself as it always did. */
 export const GridChromeContext = createContext<GridChrome>({ top: 0, bottom: 0, bar: 0 });
 
 /** A status line at the capped 1.3x: the Copy's 25-pt line height scaled; a row of compact buttons is 44 pt. */
 export const STATUS_LINE = 33, BUTTON_ROW = 44, SECTION_GAP = 12, PAD_GAP = 10, PAD_ROW = 56;
+/** The page's side padding, the status row's column gap, and the widest its reserved button column gets ("How to play" and "Getting a hint…" at the 1.3x cap). */
+export const PAGE_PAD = 20, STATUS_GAP = 6, STATUS_BUTTONS = 340;
+/** The status sentence's size at the cap: Copy is 16 pt, drawn at 1.3x. */
+const STATUS_FONT = 16 * 1.3;
+/** Lines a status sentence takes in `width` points, wrapping at word boundaries with the (wide) AvenirNext-Heavy advances; a word wider than the line breaks, and is counted by the rows it needs. */
+export function statusLines(text: string, width: number) {
+  let lines = 1, used = 0;
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const w = wordWidth(word) * STATUS_FONT, space = used ? 0.3 * STATUS_FONT : 0;
+    if (used && used + space + w > width) { lines += 1; used = 0; }
+    if (w > width) { lines += Math.ceil(w / Math.max(1, width)) - 1; used = w % Math.max(1, width); } else used += (used ? space : 0) + w;
+  }
+  return lines;
+}
+/**
+ * The status row's height at accessibility sizes. On a narrow window the sentence takes up to three lines and the buttons a row of
+ * their own. On a wide one the buttons keep a reserved column (`STATUS_BUTTONS`) and the sentence wraps in the width that is left,
+ * so its height is measured from the real sentence and the safe content width (two lines when the sentence is not known).
+ */
+export function statusHeight(windowWidth: number, side: number, sentence?: string) {
+  if (windowWidth < 600) return 3 * STATUS_LINE + 6 + BUTTON_ROW;
+  const column = windowWidth - 2 * PAGE_PAD - 2 * side - STATUS_BUTTONS - STATUS_GAP;
+  return Math.max(BUTTON_ROW, (sentence === undefined ? 2 : statusLines(sentence, column)) * STATUS_LINE);
+}
 /** The board's height before any budget: the share of the window it has always had. */
 export const baseBoardHeight = (windowHeight: number) => Math.min(windowHeight * .55, 620);
 
@@ -17,10 +41,9 @@ export const baseBoardHeight = (windowHeight: number) => Math.min(windowHeight *
  * the pad's first row. What is left is the room for the board's whole drawing, clue gutters or rim included.
  * Returns null below the accessibility threshold, where no budget applies and drawn sizes equal the base exactly.
  */
-export function boardRoom({ windowWidth, windowHeight, fontScale, chrome, pad }: { windowWidth: number; windowHeight: number; fontScale: number; chrome: GridChrome; pad: boolean }): number | null {
+export function boardRoom({ windowWidth, windowHeight, fontScale, chrome, pad, sentence }: { windowWidth: number; windowHeight: number; fontScale: number; chrome: GridChrome; pad: boolean; sentence?: string }): number | null {
   if ((fontScale ?? 1) < LARGE_TEXT) return null;
-  // On a narrow window the status line takes up to three lines and its buttons a row of their own; on a wide one the buttons sit beside it.
-  const status = windowWidth < 600 ? 3 * STATUS_LINE + 6 + BUTTON_ROW : 2 * STATUS_LINE;
+  const status = statusHeight(windowWidth, chrome.side ?? 0, sentence);
   return windowHeight - chrome.top - chrome.bottom - chrome.bar - status - SECTION_GAP - (pad ? PAD_GAP + PAD_ROW : 0);
 }
 /** The tallest a lettered or numbered grid's cells (the viewport inside any clue gutters) may be, in points. */
@@ -42,7 +65,7 @@ export const BAR_HEIGHT = 64, CHIP_ROW = 58;
  * What the Challenge frame puts around a grid board, for the budget. A short large-text landscape window scrolls the bar away
  * and the board's own top becomes the page's top, so no bar is reserved there.
  */
-export function challengeChrome({ insets, barPinned, short, chip }: { insets: { top: number; bottom: number }; barPinned: boolean; short: boolean; chip: boolean }): GridChrome {
+export function challengeChrome({ insets, barPinned, short, chip }: { insets: { top: number; bottom: number; left?: number; right?: number }; barPinned: boolean; short: boolean; chip: boolean }): GridChrome {
   // Only what must stay in view counts: the page's top padding sits above a pinned bar, and nothing below the keys' first row matters.
-  return { top: insets.top + (barPinned ? 6 : 0), bottom: insets.bottom, bar: short ? 0 : BAR_HEIGHT + (chip ? CHIP_ROW : 0) };
+  return { top: insets.top + (barPinned ? 6 : 0), bottom: insets.bottom, bar: short ? 0 : BAR_HEIGHT + (chip ? CHIP_ROW : 0), side: Math.max(insets.left ?? 0, insets.right ?? 0) };
 }

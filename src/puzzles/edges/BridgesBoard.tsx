@@ -12,7 +12,7 @@ import type { EdgeBoardProps } from './registration';
 import { cueFor, techniqueNames, type Cue } from './teach';
 import { releaseOffset, startOf, type TouchStart } from './touch';
 import { PRESS_SLOP } from '../../components/stillPress';
-import { PuzzleStatus, useStatusMax } from '../ui/PuzzleStatus';
+import { PuzzleStatus, statusSentence, useStatusMax } from '../ui/PuzzleStatus';
 
 const SEA = '#D4ECEE', DOT = '#A9D2D7', SAND = '#F7E8C4', SHORE = '#B48A55', PLANK = '#8E5F3A', DONE = '#D3EBCF', OVER = '#F8D3C8';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -25,7 +25,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
   const statusMax = useStatusMax();
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), chrome = useContext(GridChromeContext), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
   // At accessibility sizes the board shares one height budget with the safe areas, bar and status line; below them it is as it always was.
-  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false }), Math.max(300, height * 0.62));
+  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false, sentence: statusSentence(view.title, view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined, `${islands.length}/${islands.length}`) }), Math.max(300, height * 0.62));
   // A rim of water around the grid keeps rings and edge islands whole.
   const cell = bridgesCell(width, p.width, p.height, room), rim = Math.round(cell * 0.2);
   const W = cell * p.width + rim * 2, H = cell * p.height + rim * 2, r = cell * (cell < 40 ? 0.44 : 0.4);

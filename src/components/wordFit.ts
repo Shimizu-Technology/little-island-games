@@ -23,6 +23,14 @@ export function wordFitMultiplier(text: string, fontSize: number, width: number,
 }
 /** Whether every word of `text` fits on one line of `width` points at `fontSize`, with the same safety margin. */
 export const wordsFit = (text: string, fontSize: number, width: number) => text.split(/[\s\u00a0]+/).every(word=>wordWidth(word)*fontSize <= Math.max(0,width)*MARGIN);
+/** A name that fits one line of `width` points at `fontSize` (words of it are never broken): whole when it fits, else cut short with an ellipsis. The full name belongs in the spoken label. */
+export function ellipsize(name: string, fontSize: number, width: number) {
+  const fits = (text: string) => wordWidth(text) * fontSize <= Math.max(0, width) * MARGIN;
+  if (fits(name)) return name;
+  const letters = [...name];
+  while (letters.length > 1 && !fits(`${letters.join('').trimEnd()}…`)) letters.pop();
+  return `${letters.join('').trimEnd()}…`;
+}
 /**
  * `fontScale` at and above which iOS is at an accessibility text size (AX1 and up; the standard sizes end near 1.35).
  * Shared chrome switches to its large-text layout here: switches stack under their words, and bars collapse.

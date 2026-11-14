@@ -36,6 +36,8 @@ export type GridShellProps = {
   tints?: ReadonlyMap<number, GridTint>;
   /** Extra words a screen reader hears for a cell, such as the cage it belongs to. */
   cellWords?: (index: number) => string;
+  /** The status sentence above the board (see `statusSentence`), so the height budget can measure how it wraps. */
+  status?: string;
   /** A static layer above the cells and lines (cage sums, inequality marks). Never input. */
   overlay?: (cell: number) => React.ReactNode;
   /** Edge clues outside the board: a gutter `size` cells wide on every side, drawn by `layer`. */
@@ -43,13 +45,13 @@ export type GridShellProps = {
 };
 export type GridTint = 0 | 1 | 2 | 3 | 4;
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
-export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords }: GridShellProps) {
+export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, status }: GridShellProps) {
   // A clue frame takes its share of the width, so the board's cells stay square and centred.
   const width = frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer;
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), large = (fontScale ?? 1) >= LARGE_TEXT, chrome = useContext(GridChromeContext);
   // At accessibility sizes the board, its clue gutters and the keys share one height budget; below them it is the base share of the window.
-  const viewportMax = gridViewportMax(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: true }), height, spec.rows, frame?.size ?? 0);
+  const viewportMax = gridViewportMax(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: true, sentence: status }), height, spec.rows, frame?.size ?? 0);
   const [zoom, setZoom] = useState(() => spec.kind !== 'digits' && gridGeometry(width, viewportMax, spec, false).needsZoom), [first, setFirst] = useState(numberFirst), [line, setLine] = useState<number[]>([]);
   const [screenReader, setScreenReader] = useState(false);
   useEffect(() => { let live = true; void AccessibilityInfo?.isScreenReaderEnabled().then(on => { if (live) setScreenReader(on); }); const subscription = AccessibilityInfo?.addEventListener('screenReaderChanged', setScreenReader); return () => { live = false; subscription?.remove(); }; }, []);

@@ -90,6 +90,6 @@ it.each([[393, 'full row'], [852, 'beside the buttons']])('PuzzleStatus at AX5 a
   const { PuzzleStatus } = await import('../src/puzzles/ui/PuzzleStatus');
   await act(async () => { screen = create(<PuzzleStatus title="Harbour 3" skill="Only one place" count="13/36" countLabel="13 of 36 cells filled"><span>buttons</span></PuzzleStatus>); });
   const line = screen!.root.findByProps({ testID: 'puzzle-status-line' });
-  expect(line.props.style).toEqual(width === 393 ? { width: '100%' } : { flexShrink: 1 });
+  expect(line.props.style).toEqual(width === 393 ? { width: '100%' } : { flex: 1, minWidth: 0 });
   expect(textOf(line)).toBe('Harbour 3 · skill: Only one place · 13/36');
 });

@@ -183,7 +183,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:reveal?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
   // What a grid board shares the screen with, measured once for all of them: safe areas, the page's own padding, the bar
   // (when it stays above the page) and the learner chip (when large text moves it into the page).
-  const chrome=useMemo(()=>challengeChrome({insets:{top:insets.top,bottom:insets.bottom},barPinned,short:shortLarge,chip:open&&!barChip&&!pinned}),[insets.top,insets.bottom,barPinned,shortLarge,open,barChip,pinned]);
+  const chrome=useMemo(()=>challengeChrome({insets:{top:insets.top,bottom:insets.bottom,left:insets.left,right:insets.right},barPinned,short:shortLarge,chip:open&&!barChip&&!pinned}),[insets.top,insets.bottom,insets.left,insets.right,barPinned,shortLarge,open,barChip,pinned]);
   const bar=open?<View testID="challenge-bar" style={{flexDirection:'row',alignItems:'center',gap:8,width:'100%',maxWidth:1080,alignSelf:'center',paddingHorizontal:12,paddingTop:6,paddingBottom:4}}>
     <Button quiet compact maxFontSizeMultiplier={1.3} onPress={back}>Back</Button>
     <View style={{flex:1}}><Heading maxFontSizeMultiplier={wordFitMultiplier(title,BAR_TITLE,barTitleWidth,PINNED_MAX)} style={{fontSize:BAR_TITLE}}>{title}</Heading></View>

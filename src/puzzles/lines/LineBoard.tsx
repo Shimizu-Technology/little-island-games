@@ -10,7 +10,7 @@ import type { EdgeBoardProps } from '../edges/registration';
 import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
-import { PuzzleStatus, useStatusMax } from '../ui/PuzzleStatus';
+import { PuzzleStatus, statusSentence, useStatusMax } from '../ui/PuzzleStatus';
 
 const CROSSMARK = '#7E968F', DONEDISC = '#D3EBCF', PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -26,7 +26,8 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const statusMax = useStatusMax();
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), chrome = useContext(GridChromeContext), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
   // At accessibility sizes the board shares one height budget with the safe areas, bar and status line; below them it is as it always was.
-  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false }), Math.max(300, height * 0.6));
+  const clueCount = p.kind === 'loop' ? p.clues.filter(n => n >= 0).length : p.pearls.filter(Boolean).length;
+  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false, sentence: statusSentence(view.title, view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined, `${clueCount}/${clueCount}`) }), Math.max(300, height * 0.6));
   // Loop dots sit on cell corners; Pearl Loop dots sit at cell centres.
   const span = pearl ? 0.5 : 0, cellsX = p.cols, cellsY = p.rows;
   // The board, its rim included, fits the column: no side overhang on a phone.
@@ -135,7 +136,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const met = (marks2: readonly number[], c: number) => { if (p.kind !== 'loop') return false; const n = p.clues[c], four = l.sides[c]; return n > 0 ? four.filter(e => marks2[e] === LINE).length === n : n === 0 && four.every(e => marks2[e] === CROSS); };
   const threaded = (v: number) => p.kind === 'pearl-loop' && p.pearls[v] > 0 && l.around[v].filter(e => shownMarks[e] === LINE).length === 2 && !broken.has(v);
   const done = p.kind === 'loop' ? p.clues.filter((n, c) => n >= 0 && met(marks, c)).length : p.pearls.filter((k, v) => k && threaded(v)).length;
-  const total = p.kind === 'loop' ? p.clues.filter(n => n >= 0).length : p.pearls.filter(Boolean).length;
+  const total = clueCount;
   const firstBroken = [...broken][0];
   const trouble = branches.size ? 'Three lines meet at one place. The loop never branches.' : firstBroken === undefined ? '' : p.kind === 'loop' ? `This ${p.clues[firstBroken]} doesn’t fit its lines.` : p.pearls[firstBroken] === BLACK ? 'A black pearl turns, then goes straight on through the next cell on both sides.' : 'A white pearl goes straight through, and the line turns just before or after it.';
   const thick = Math.max(3.5, cell * 0.13), finished = !pending && solved(p, marks.map(m => m === CROSS ? EMPTY : m)), lineColour = finished ? C.teal : INK;
