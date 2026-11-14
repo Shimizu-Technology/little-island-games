@@ -405,6 +405,22 @@ export function Board({
   // Command cards share the row; their labels stop where every word still fits a card (2-pt borders, 4-pt inset).
   const cards = commands(l.pace), cardInner = (width - 6 * (cards.length - 1)) / cards.length - 12;
   const labelMax = large ? Math.min(...cards.map(c => wordFitMultiplier(cardLabel[c], 12, cardInner, 2))) : undefined;
+  const go = () => {
+    if (!active || s.running || !s.program.length) return;
+    setWobble(0); practice('think.sequence', solved(l, run(l, s.program)));
+    if (s.program.includes('repeat') || draft?.program.body.some(n => n.kind === 'repeat')) practice('think.loops', solved(l, run(l, s.program)));
+    update({...s,cursor:0,running:true});
+  };
+  const stepOne = () => {
+    if (!active || s.running || !s.program.length || s.cursor >= s.program.length || w.bump || won) return;
+    const n = tick({...s,running:true}), walker = run(l,n.program.slice(0,n.cursor));
+    const next={...n,running:false,blockDraft:s.blockDraft??encodeProgram(crabProgram(s.program))};
+    if(sessionBytes({...session,state:next})>4096)return;
+    update(next);
+    if(walker.bump){practice('think.debug',false);sound('crab-commands-bump',true);setWobble(v=>v+1);}
+    else if(solved(l,walker)){practice(l.skill,true);cheer('right','crab-commands-home');}
+    else sound('tap',true);
+  };
   const prompt = done
     ? "Every crab is home!"
     : won
@@ -428,22 +444,28 @@ export function Board({
           Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
         </Copy>
       )}
+      <View style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
       <Beach
         level={l}
         walker={w}
-        size={beachSize}
+        size={blocks ? Math.max(140,Math.min(width*0.48,180)) : beachSize}
         plan={done ? undefined : plan}
         showBump={!s.running}
         facingHint={l.pace !== "easy"}
         wobble={wobble}
       />
+      {blocks&&!done&&<View testID="crab-block-run" style={{flex:1,gap:6}}>
+        <Button compact maxFontSizeMultiplier={1.5} disabled={!active||s.running||won||!s.program.length} onPress={go}>Go!</Button>
+        <Button compact quiet maxFontSizeMultiplier={1.5} disabled={!active||s.running||won||w.bump||s.cursor>=s.program.length} onPress={stepOne}>Step</Button>
+        <Button compact quiet maxFontSizeMultiplier={1.5} disabled={!active||s.running||!s.cursor} onPress={()=>update({...s,cursor:0,running:false})}>Rewind run</Button>
+      </View>}
+      </View>
       {!done && (
         <>
           <Button compact quiet maxFontSizeMultiplier={1.5} disabled={s.running || !active} onPress={() => setBlocks(!blocks)}>{blocks ? 'Arrow editor' : 'Block editor'}</Button>
           {blocks && <ProgramEditor key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
             onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
-            onStep={() => { if (!s.program.length || s.cursor >= s.program.length || w.bump || won) return; const n = tick({...s,running:true}); update({...n,running:false,blockDraft:s.blockDraft??encodeProgram(crabProgram(s.program))}); sound('tap',true); }}
-            onRestart={() => update({...s,cursor:0,running:false})} />}
+ />}
           {!blocks && <View
             accessibilityLabel={`Your plan: ${s.program.length ? s.program.map((c) => cardLabel[c]).join(", ") : "empty"}`}
             style={{
@@ -575,7 +597,8 @@ export function Board({
               }
               {/* At accessibility sizes Go! keeps a full-width line of its own, and Clear and Hint share the next one,
                   so Go! never shrinks to an arrow and Hint never runs past the card. */}
-              <View testID="crab-run-row" style={large ? { gap: 8 } : { flexDirection: "row", gap: 8, alignItems: "center" }}>
+              {blocks&&<Button quiet compact maxFontSizeMultiplier={1.5} disabled={s.running||!active} onPress={()=>{if(!hint)assistance?.();setHint(hint?0:1);}}>Hint</Button>}
+              {!blocks&&<View testID="crab-run-row" style={large ? { gap: 8 } : { flexDirection: "row", gap: 8, alignItems: "center" }}>
                 <Button
                   icon="right"
                   disabled={s.running || s.program.length === 0 || !active}
@@ -608,6 +631,7 @@ export function Board({
                 </Button>
                 </View>
               </View>
+              }
               {hint > 0 && (
                 <View style={{ gap: 4 }}>
                   <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? hintText(helpPlan, s.program.length, cardLabel) : hint === 2 ? hintText(helpPlan, s.program.length, cardLabel, "Try this step, or ask for the whole plan.") : "One plan that works:"}</Copy>
