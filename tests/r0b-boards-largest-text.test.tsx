@@ -244,6 +244,28 @@ it('Håfa Adai at AX5: captions fit their slots on at most two lines, and each r
   }
 });
 
+it('Håfa Adai: no caption word is wider than its picture, on any level or seed, at AX5 or the default size (review P2)', async () => {
+  // Level 2 seed 5 has "Grandmother": four columns left 69 pt for a word about 78 pt wide even at 12 pt.
+  const { engine } = await import('../src/learn/games/hafa-adai/engine');
+  const captionsOf = (r: ReactTestRenderer) => r.root.findAll(n => String(n.type) === 'Text' && flat(n.props.style).fontSize === 12 && flat(n.props.style).lineHeight === 14);
+  const room = (n: ReactTestInstance) => { let tile = n; while (String(tile.type) !== 'PressableScale') tile = tile.parent!; const st = flat(tile.props.style); return (st.width as number) - 2 * (st.borderWidth as number); };
+  let checked = 0;
+  for (const level of [1, 2, 3]) for (let seed = 1; seed <= 20; seed++) {
+    const options = optionsAtLevel({ mode: 'solo', pace: 'easy' }, level as 1);
+    const session = startSession('hafa-adai', { options }, {}, seed);
+    expect(engine.validate(session.state as never, options)).toBe(true);
+    const r = await mount('hafa-adai', session);
+    for (const c of captionsOf(r)) { expect(longest(c), `level ${level} seed ${seed}: ${textOf(c)}`).toBeLessThanOrEqual(room(c)); checked++; }
+    await act(async () => root!.unmount()); root = undefined;
+  }
+  expect(checked).toBeGreaterThan(300);
+  Object.assign(viewport, { fontScale: 1 });
+  const options = optionsAtLevel({ mode: 'solo', pace: 'easy' }, 2);
+  const r = await mount('hafa-adai', startSession('hafa-adai', { options }, {}, 5), {}, null);
+  const grandmother = textNode(r, 'Grandmother');
+  expect(wordWidth('Grandmother') * 12).toBeLessThanOrEqual(room(grandmother));
+});
+
 it('Logic Lagoon at AX5: the values follow the grid directly, with the "tap a square" line above the grid', async () => {
   const r = await mount('logic-lagoon', sessionFor('logic-lagoon'));
   const board = r.root.children[0] as ReactTestInstance;

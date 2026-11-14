@@ -3,7 +3,7 @@ import { Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../../components/ui";
 import type { BoardProps } from "../../types";
-import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
+import { LARGE_TEXT, wordFitMultiplier, wordsFit } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
 import { chamoruWord, type ChamoruWord } from "../../content/chamoru";
 import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
@@ -88,17 +88,22 @@ export function Board({
     shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
   const spy = s.activity === "spy",
     gentle = options.pace === "easy";
-  const columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
-  const rows = Math.ceil(s.items.length / columns);
   const gap = 6,
     pad = 8;
   // The scene has a 1px border on each side.
-  const slot = Math.floor((width - 2 - pad * 2 - gap * (columns - 1)) / columns);
+  const slotFor = (n: number) => Math.floor((width - 2 - pad * 2 - gap * (n - 1)) / n);
+  const captions = spy ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
+  // A caption word wider than its slot even at the default size ("Grandmother" in four columns) would break mid-word,
+  // so the picnic drops a column until every word fits. Rounds whose words already fit keep their layout.
+  let columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
+  while (columns > 2 && !captions.every(text => wordsFit(text, 12, slotFor(columns) - 8))) columns--;
+  const rows = Math.ceil(s.items.length / columns);
+  const slot = slotFor(columns);
   const pictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
   // Captions share one size, the largest (at most 1.5x) at which every word of every caption, English or CHamoru,
   // fits its picture's slot. At accessibility sizes each row makes room for two caption lines, so labels never overlap.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
-  const captionMax = large && !spy ? Math.min(...s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]).map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
+  const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
   const rowHeight = pictureSize + (spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28);
   const tableTop = 30;
   const promptKey = p.done
