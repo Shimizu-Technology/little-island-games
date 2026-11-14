@@ -110,3 +110,16 @@ it('reports a full log without promising that another game can always finish wit
   expect(text).toContain('move log is full');expect(text).not.toContain('Help can still finish');
  }finally{full.mockRestore();move.mockRestore();if(screen)await act(async()=>screen.unmount());}
 });
+
+it('keeps a resumed round finish visible instead of automatically starting another attempt',async()=>{
+ let screen!:ReactTestRenderer;
+ try {
+  await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});await settle();
+  for(const i of [0,1,2]){await act(async()=>send(action(i)));await settle();}
+  await act(async()=>{await store.backup();screen.unmount();});
+  await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});await settle();
+  await act(async()=>{send(action(3));await new Promise(r=>setTimeout(r,40));});await settle();
+  expect(progressFor(store.save,'family')!.paused).toEqual([]);
+  expect(JSON.stringify(screen.toJSON())).toContain('Puzzle solved');
+ }finally{if(screen)await act(async()=>screen.unmount());}
+});

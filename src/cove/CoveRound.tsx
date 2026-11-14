@@ -49,7 +49,9 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   }
   // One launch per mounted owner/epoch/ref. Parent keys this component at every identity boundary.
   useEffect(() => {
-    if (focused && !auto.current && !saved && !full) { auto.current = true; void launch(); }
+    // A resumed round already owns an attempt. Crediting it removes `saved`,
+    // but must never be mistaken for an empty first mount that needs a deal.
+    if (focused && !auto.current && !saved && !current.current && !full) { auto.current = true; void launch(); }
   });
   // Word Search can finish two independent native pointers while a draft write is pending.
   // Serialize those gestures against the latest accepted revision; identity/unmount cancels the queue.
