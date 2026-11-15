@@ -27,7 +27,7 @@ export function judge(seed:number,r:Rung):Candidate|null {
  if(tier!==r.tier)return null;
  const t=built.template,teaches=r.mode==='freecell'?`search-${r.tier}`:`plan-${depth}`;
  const core:DescriptorCore<Deal>={format:1,seed,rng:1,band:r.id,layout:t,template:t,payload:d,objectives:[],limits:[{metric:'turns',max:1024}],par:null,teaches:[teaches],speech:null};
- return {core,seed,template:t,nodes:solved.nodes,branches:solved.branches,moves:solved.moves.length,depth,workload:r.mode==='freecell'?solved.nodes:depth*1000+solved.branches/100};
+ return {core,seed,template:t,nodes:solved.nodes,branches:solved.branches,moves:solved.moves.length,depth,workload:r.mode==='freecell'?solved.nodes:depth};
 }
 export const family=(free:boolean):FamilySpec<Deal>=>({
  id:free?'freecell':'solitaire',adapter:solitaireAdapter(!free),bands:rungs.filter(r=>(r.mode==='freecell')===free).map(r=>({id:r.id,target:r.target,floor:r.floor,advanced:r.tier>=3})),
