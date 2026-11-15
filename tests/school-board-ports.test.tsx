@@ -295,10 +295,10 @@ it.each([1,3.12])('Weather gauge tick labels stay legible at text scale %s',asyn
  expect(ticks.every(n=>Number(n.props.fontSize)*scale>=floor-.01)).toBe(true);
  if(fontScale>=1.5)expect(Number(svg.props.height)/235*30).toBeGreaterThanOrEqual(floor);
 });
-it('Logic Lagoon cage totals retain a 13-pt School clue floor',async()=>{
- const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale:1},5);
+it.each([1,3.12])('Logic Lagoon cage totals retain the School clue floor at text scale %s',async fontScale=>{
+ const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale},5);
  const clues=r.root.findAll(n=>String(n.type)==='Text'&&n.children.some(c=>typeof c==='string'&&c.startsWith('Σ')));
- expect(clues.length).toBeGreaterThan(0);expect(clues.every(n=>Number(flat(n.props.style).fontSize)>=13)).toBe(true);
+ expect(clues.length).toBeGreaterThan(0);expect(clues.every(n=>Number(flat(n.props.style).fontSize)*Math.min(fontScale,n.props.maxFontSizeMultiplier??fontScale)>=13*(fontScale>=1.5?1.5:1))).toBe(true);
 });
 it('Crab fits AX command words using the actual School label font',async()=>{
  const r=await mountPort('crab-commands',B1,600,{width:393,height:852,fontScale:3.12});
