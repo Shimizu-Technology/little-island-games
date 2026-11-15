@@ -1,0 +1,1774 @@
+{
+  "schemaVersion": 1,
+  "source": "PLAN §10; WORK-LEDGER §§5–9,12,14–16; PLAN §15 overrides device assumptions",
+  "games": [
+    {
+      "id": "reef-race",
+      "name": "Reef Race",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "island-market",
+      "name": "Island Market",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "sound-boat",
+      "name": "Sound Boat",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Longest supported story with all evidence choices",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "turtle-tales",
+      "name": "Turtle Tales",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Longest supported story with all evidence choices",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "which-one",
+      "name": "Which One",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level picture choices and full trace; Gate Crab F",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "tide-pool",
+      "name": "Tide Pool",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Science last School level with full prediction/model controls",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "float-sink",
+      "name": "Float Sink",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Science last School level with full prediction/model controls",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "crab-commands",
+      "name": "Crab Commands",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Crab two-crab par; Beep largest loop plan; Turtle song; Tide condition",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "hafa-adai",
+      "name": "Håfa Adai",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term; Last School level picture choices and full trace; Gate Crab F",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "shell-math",
+      "name": "Shell Math",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "number-hop",
+      "name": "Number Hop",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "quick-practice",
+      "name": "Quick Practice",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "beep-bot",
+      "name": "Beep Bot",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Crab two-crab par; Beep largest loop plan; Turtle song; Tide condition",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "turtle-draw",
+      "name": "Turtle Draw",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Crab two-crab par; Beep largest loop plan; Turtle song; Tide condition",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "tide-logic",
+      "name": "Tide Logic",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Crab two-crab par; Beep largest loop plan; Turtle song; Tide condition",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "code-lab",
+      "name": "Code Lab",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Code Lab Deep Water longest arrange/predict/build program",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "pattern-path",
+      "name": "Pattern Path",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level picture choices and full trace; Gate Crab F",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "shape-shift",
+      "name": "Shape Shift",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Pentomino largest tray; Shape Shift last School level; Last School level picture choices and full trace; Gate Crab F",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "logic-lagoon",
+      "name": "Logic Lagoon",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run; Filled 9×9 with every candidate note visible",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "weather-watch",
+      "name": "Weather Watch",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Science last School level with full prediction/model controls",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "food-web",
+      "name": "Food Web",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Science last School level with full prediction/model controls",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "space-station",
+      "name": "Star Station",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Science last School level with full prediction/model controls",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "times-tide",
+      "name": "Times Tide",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "fraction-feast",
+      "name": "Fraction Feast",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "treasure-algebra",
+      "name": "Treasure Algebra",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level; largest number pad/builder and missing operand",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "letter-lagoon",
+      "name": "Letter Lagoon",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Last School level picture choices and full trace; Gate Crab F",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "word-workshop",
+      "name": "Word Workshop",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Longest supported story with all evidence choices",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "story-studio",
+      "name": "Story Studio",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "Longest supported story with all evidence choices",
+      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+    },
+    {
+      "id": "slip-tide",
+      "name": "Slip Tide",
+      "family": "original",
+      "strata": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ],
+      "door": "School",
+      "maxBoard": "Slip Tide top G board; all pieces and longest swipe",
+      "firstAction": "Start the teaching band; make one legal swipe-all action"
+    },
+    {
+      "id": "canoe-seats",
+      "name": "Canoe Seats",
+      "family": "original",
+      "strata": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H"
+      ],
+      "door": "Cove",
+      "maxBoard": "Canoe Seats H plus fib; Logic Grid largest clue/seat set",
+      "firstAction": "Start the teaching band; make one legal seat and clue cards action"
+    },
+    {
+      "id": "gate-crab",
+      "name": "Gate Crab",
+      "family": "original",
+      "strata": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "door": "Cove",
+      "maxBoard": "Last School level picture choices and full trace; Gate Crab F",
+      "firstAction": "Start the teaching band; make one legal existing picture choice and trace action"
+    },
+    {
+      "id": "every-stone",
+      "name": "Every Stone",
+      "family": "original",
+      "strata": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest Every Stone/Rope Pairs board; full-board path",
+      "firstAction": "Start the teaching band; make one legal path drag action"
+    },
+    {
+      "id": "shell-scale",
+      "name": "Shell Scale",
+      "family": "original",
+      "strata": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "door": "Cove",
+      "maxBoard": "Shell Scale longest six-in-ten shell row; Shell Scale six-in-ten, both full pans",
+      "firstAction": "Start the teaching band; make one legal shell row builder action"
+    },
+    {
+      "id": "sail-fold",
+      "name": "Sail Fold",
+      "family": "original",
+      "strata": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ],
+      "door": "Cove",
+      "maxBoard": "Sail Fold G final fold with full crease overlay; Sail Fold G / Secret Word maximum supported people; interrupt secret handover",
+      "firstAction": "Start the teaching band; make one legal fold action"
+    },
+    {
+      "id": "reef-builder",
+      "name": "Reef Builder",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "shell-song",
+      "name": "Shell Song",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "rail-parade",
+      "name": "Rail Parade",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "crab-crossing",
+      "name": "Crab Crossing",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "palm-patrol",
+      "name": "Palm Patrol",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "beach-ball",
+      "name": "Beach Ball",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "fruit-bat-flight",
+      "name": "Fruit Bat Flight",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "lagoon-run",
+      "name": "Lagoon Run",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "canoe-cargo",
+      "name": "Canoe Cargo",
+      "family": "arcade",
+      "strata": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "Learn"
+      ],
+      "door": "Arcade",
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress",
+      "firstAction": "Open W1 Learn, make one touch input, then open W6 last scored level"
+    },
+    {
+      "id": "tic-tac-toe",
+      "name": "Tic Tac Toe",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "word-rescue",
+      "name": "Hangman / Word Rescue",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "memory",
+      "name": "Memory",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "checkers",
+      "name": "Checkers",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "maze",
+      "name": "Maze",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "numbers",
+      "name": "Number Island",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "coconut-drop",
+      "name": "Coconut Drop",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "fishing-nets",
+      "name": "Fishing Nets",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "hidden-canoes",
+      "name": "Hidden Canoes",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "shell-pits",
+      "name": "Shell Pits",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "reef-sweep",
+      "name": "Reef Sweep",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "go-fish",
+      "name": "Go Fish",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Solitaire full Klondike/FreeCell tall stacks; Go Fish/Eights maximum legal hands",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "crazy-eights",
+      "name": "Crazy Eights",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Solitaire full Klondike/FreeCell tall stacks; Go Fish/Eights maximum legal hands",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "racer",
+      "name": "Island Dash",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "word-imposter",
+      "name": "Secret Word",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Sail Fold G / Secret Word maximum supported people; interrupt secret handover; Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "island-mystery",
+      "name": "Picnic Mystery",
+      "family": "hall",
+      "strata": [
+        "Gentle",
+        "Growing",
+        "Challenge"
+      ],
+      "door": "Hall",
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity",
+      "firstAction": "Start Gentle, perform one legal turn or activity action"
+    },
+    {
+      "id": "word-search",
+      "name": "Word Search",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Picture Grid 25×25 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal zoom with magnified line action"
+    },
+    {
+      "id": "sudoku",
+      "name": "Sudoku",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run; Filled 9×9 with every candidate note visible",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cell and big pad action"
+    },
+    {
+      "id": "picture-grid",
+      "name": "Picture Grid",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Picture Grid 15×15 and 25×25; longest row/column stroke; Picture Grid 25×25 and Word Search 16×16, zoomed line at edge",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal drag paint with line lock action"
+    },
+    {
+      "id": "crossword",
+      "name": "Crossword",
+      "family": "cove",
+      "strata": [
+        "Picture",
+        "Simple",
+        "Growing",
+        "Grown-up",
+        "Mixed-tier"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest Crossword/Fill-In board, longest clue and full keyboard",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal crossword keyboard and clue bar action"
+    },
+    {
+      "id": "bridges",
+      "name": "Bridges",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published Bridges board; longest double bridge at edge",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal bridge drag action"
+    },
+    {
+      "id": "cage-math",
+      "name": "Cage Math",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cell and big pad action"
+    },
+    {
+      "id": "word-ladder",
+      "name": "Word Ladder",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Word Ladder longest word; Secret Code longest sentence",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal letter tap (Ladder, Code) action"
+    },
+    {
+      "id": "solitaire",
+      "name": "Solitaire",
+      "family": "cove",
+      "strata": [
+        "Klondike / Paddling",
+        "Klondike / Shallows",
+        "Klondike / Lagoon",
+        "Klondike / Reef",
+        "Klondike / Deep",
+        "Klondike / Trench",
+        "FreeCell / Paddling",
+        "FreeCell / Shallows",
+        "FreeCell / Lagoon",
+        "FreeCell / Reef",
+        "FreeCell / Deep",
+        "FreeCell / Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Solitaire full Klondike/FreeCell tall stacks; Go Fish/Eights maximum legal hands",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cards action"
+    },
+    {
+      "id": "rope-pairs",
+      "name": "Rope Pairs",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest Every Stone/Rope Pairs board; full-board path",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal path drag action"
+    },
+    {
+      "id": "rectangles",
+      "name": "Rectangles",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest Rectangles board, corner-to-corner rectangle",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal rectangle drag action"
+    },
+    {
+      "id": "two-shells",
+      "name": "Two Shells",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "one-in-each-cove",
+      "name": "One In Each Cove",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "tents",
+      "name": "Tents",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "hidden-canoes-charts",
+      "name": "Hidden Canoes: Charts",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "harbor-jam",
+      "name": "Harbor Jam",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Harbor Jam largest board; Old Toys sliding 15",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal block slide action"
+    },
+    {
+      "id": "loop",
+      "name": "Loop",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published Loop/Pearl Loop board; longest edge chain",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal edge drag action"
+    },
+    {
+      "id": "jigsaw",
+      "name": "Jigsaw",
+      "family": "cove",
+      "strata": [
+        "phone ≤48 pieces",
+        "iPad ≤200 pieces"
+      ],
+      "door": "Cove",
+      "maxBoard": "Jigsaw ≤48 phone / 200 iPad pieces, two pointers",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal jigsaw with two hands action"
+    },
+    {
+      "id": "shell-stacks",
+      "name": "Shell Stacks",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Shell Stacks tallest published stack",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tile stacks action"
+    },
+    {
+      "id": "word-scramble",
+      "name": "Word Scramble",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Word Scramble longest published word with all tiles",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tile arrange action"
+    },
+    {
+      "id": "word-builder",
+      "name": "Word Builder",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Word Builder largest letter wheel and longest trace",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal letter wheel and trace action"
+    },
+    {
+      "id": "fill-in",
+      "name": "Fill In",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest Crossword/Fill-In board, longest clue and full keyboard",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal crossword keyboard and clue bar action"
+    },
+    {
+      "id": "secret-code",
+      "name": "Secret Code",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Word Ladder longest word; Secret Code longest sentence",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal letter tap (Ladder, Code) action"
+    },
+    {
+      "id": "greater-than",
+      "name": "Greater Than",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cell and big pad action"
+    },
+    {
+      "id": "skyline",
+      "name": "Skyline",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cell and big pad action"
+    },
+    {
+      "id": "killer",
+      "name": "Cage Sudoku",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run; Filled 9×9 with every candidate note visible",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cell and big pad action"
+    },
+    {
+      "id": "cross-sums",
+      "name": "Cross Sums",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal cell and big pad action"
+    },
+    {
+      "id": "logic-grid",
+      "name": "Logic Grid",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Canoe Seats H plus fib; Logic Grid largest clue/seat set",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal seat and clue cards action"
+    },
+    {
+      "id": "pentomino-packing",
+      "name": "Pentomino Packing",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Pentomino largest tray; Shape Shift last School level",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal piece rotate and place action"
+    },
+    {
+      "id": "odd-one-out",
+      "name": "Odd One Out",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "lamps",
+      "name": "Lamps",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "carve-the-islands",
+      "name": "Carve The Islands",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal tap-to-cycle cells action"
+    },
+    {
+      "id": "pearl-loop",
+      "name": "Pearl Loop",
+      "family": "cove",
+      "strata": [
+        "Paddling",
+        "Shallows",
+        "Lagoon",
+        "Reef",
+        "Deep",
+        "Trench"
+      ],
+      "door": "Cove",
+      "maxBoard": "Largest published Loop/Pearl Loop board; longest edge chain",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal edge drag action"
+    },
+    {
+      "id": "old-toys",
+      "name": "Old Toys (peg solitaire, tower, sliding 8 and 15)",
+      "family": "cove",
+      "strata": [
+        "peg solitaire",
+        "tower",
+        "sliding 8",
+        "sliding 15"
+      ],
+      "door": "Cove",
+      "maxBoard": "Harbor Jam largest board; Old Toys sliding 15",
+      "firstAction": "Choose Paddling (or first supported mode); make one legal block slide action"
+    }
+  ],
+  "mechanics": [
+    {
+      "id": "M01",
+      "name": "cell and big pad",
+      "games": [
+        "sudoku",
+        "cage-math",
+        "greater-than",
+        "skyline",
+        "killer",
+        "logic-lagoon",
+        "cross-sums"
+      ],
+      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run"
+    },
+    {
+      "id": "M02",
+      "name": "notes",
+      "games": [
+        "sudoku",
+        "killer",
+        "logic-lagoon"
+      ],
+      "maxBoard": "Filled 9×9 with every candidate note visible"
+    },
+    {
+      "id": "M03",
+      "name": "drag paint with line lock",
+      "games": [
+        "picture-grid"
+      ],
+      "maxBoard": "Picture Grid 15×15 and 25×25; longest row/column stroke"
+    },
+    {
+      "id": "M04",
+      "name": "zoom with magnified line",
+      "games": [
+        "picture-grid",
+        "word-search"
+      ],
+      "maxBoard": "Picture Grid 25×25 and Word Search 16×16, zoomed line at edge"
+    },
+    {
+      "id": "M05",
+      "name": "tap-to-cycle cells",
+      "games": [
+        "two-shells",
+        "tents",
+        "hidden-canoes-charts",
+        "odd-one-out",
+        "lamps",
+        "carve-the-islands",
+        "one-in-each-cove",
+        "reef-sweep"
+      ],
+      "maxBoard": "Largest published two-state/three-state grid; Reef Sweep hardest board"
+    },
+    {
+      "id": "M06",
+      "name": "rectangle drag",
+      "games": [
+        "rectangles"
+      ],
+      "maxBoard": "Largest Rectangles board, corner-to-corner rectangle"
+    },
+    {
+      "id": "M07",
+      "name": "word snap drag",
+      "games": [
+        "word-search"
+      ],
+      "maxBoard": "Word Search 16×16; longest diagonal and reverse word"
+    },
+    {
+      "id": "M08",
+      "name": "crossword keyboard and clue bar",
+      "games": [
+        "crossword",
+        "fill-in"
+      ],
+      "maxBoard": "Largest Crossword/Fill-In board, longest clue and full keyboard"
+    },
+    {
+      "id": "M09",
+      "name": "CHamoru letters and keyboard",
+      "games": [
+        "hafa-adai",
+        "word-search"
+      ],
+      "maxBoard": "Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term"
+    },
+    {
+      "id": "M10",
+      "name": "letter tap (Ladder, Code)",
+      "games": [
+        "word-ladder",
+        "secret-code"
+      ],
+      "maxBoard": "Word Ladder longest word; Secret Code longest sentence"
+    },
+    {
+      "id": "M11",
+      "name": "tile arrange",
+      "games": [
+        "word-scramble"
+      ],
+      "maxBoard": "Word Scramble longest published word with all tiles"
+    },
+    {
+      "id": "M12",
+      "name": "letter wheel and trace",
+      "games": [
+        "word-builder"
+      ],
+      "maxBoard": "Word Builder largest letter wheel and longest trace"
+    },
+    {
+      "id": "M13",
+      "name": "bridge drag",
+      "games": [
+        "bridges"
+      ],
+      "maxBoard": "Largest published Bridges board; longest double bridge at edge"
+    },
+    {
+      "id": "M14",
+      "name": "edge drag",
+      "games": [
+        "loop",
+        "pearl-loop"
+      ],
+      "maxBoard": "Largest published Loop/Pearl Loop board; longest edge chain"
+    },
+    {
+      "id": "M15",
+      "name": "path drag",
+      "games": [
+        "every-stone",
+        "rope-pairs"
+      ],
+      "maxBoard": "Largest Every Stone/Rope Pairs board; full-board path"
+    },
+    {
+      "id": "M16",
+      "name": "swipe-all",
+      "games": [
+        "slip-tide"
+      ],
+      "maxBoard": "Slip Tide top G board; all pieces and longest swipe"
+    },
+    {
+      "id": "M17",
+      "name": "block slide",
+      "games": [
+        "harbor-jam",
+        "old-toys"
+      ],
+      "maxBoard": "Harbor Jam largest board; Old Toys sliding 15"
+    },
+    {
+      "id": "M18",
+      "name": "seat and clue cards",
+      "games": [
+        "canoe-seats",
+        "logic-grid"
+      ],
+      "maxBoard": "Canoe Seats H plus fib; Logic Grid largest clue/seat set"
+    },
+    {
+      "id": "M19",
+      "name": "shell row builder",
+      "games": [
+        "shell-scale"
+      ],
+      "maxBoard": "Shell Scale longest six-in-ten shell row"
+    },
+    {
+      "id": "M20",
+      "name": "scale pans",
+      "games": [
+        "shell-scale"
+      ],
+      "maxBoard": "Shell Scale six-in-ten, both full pans"
+    },
+    {
+      "id": "M21",
+      "name": "fold",
+      "games": [
+        "sail-fold"
+      ],
+      "maxBoard": "Sail Fold G final fold with full crease overlay"
+    },
+    {
+      "id": "M22",
+      "name": "handover screens",
+      "games": [
+        "sail-fold",
+        "word-imposter"
+      ],
+      "maxBoard": "Sail Fold G / Secret Word maximum supported people; interrupt secret handover"
+    },
+    {
+      "id": "M23",
+      "name": "cards",
+      "games": [
+        "go-fish",
+        "crazy-eights",
+        "solitaire"
+      ],
+      "maxBoard": "Solitaire full Klondike/FreeCell tall stacks; Go Fish/Eights maximum legal hands"
+    },
+    {
+      "id": "M24",
+      "name": "tile stacks",
+      "games": [
+        "shell-stacks"
+      ],
+      "maxBoard": "Shell Stacks tallest published stack"
+    },
+    {
+      "id": "M25",
+      "name": "jigsaw with two hands",
+      "games": [
+        "jigsaw"
+      ],
+      "maxBoard": "Jigsaw ≤48 phone / 200 iPad pieces, two pointers"
+    },
+    {
+      "id": "M26",
+      "name": "piece rotate and place",
+      "games": [
+        "pentomino-packing",
+        "shape-shift"
+      ],
+      "maxBoard": "Pentomino largest tray; Shape Shift last School level"
+    },
+    {
+      "id": "M27",
+      "name": "program editor with loops, songs and condition",
+      "games": [
+        "crab-commands",
+        "beep-bot",
+        "turtle-draw",
+        "tide-logic"
+      ],
+      "maxBoard": "Crab two-crab par; Beep largest loop plan; Turtle song; Tide condition"
+    },
+    {
+      "id": "M28",
+      "name": "code arrange, predict and build",
+      "games": [
+        "code-lab"
+      ],
+      "maxBoard": "Code Lab Deep Water longest arrange/predict/build program"
+    },
+    {
+      "id": "M29",
+      "name": "predict-then-model science",
+      "games": [
+        "space-station",
+        "food-web",
+        "weather-watch",
+        "tide-pool",
+        "float-sink"
+      ],
+      "maxBoard": "Science last School level with full prediction/model controls"
+    },
+    {
+      "id": "M30",
+      "name": "number pad and builder",
+      "games": [
+        "shell-math",
+        "number-hop",
+        "quick-practice",
+        "island-market",
+        "reef-race",
+        "times-tide",
+        "fraction-feast",
+        "treasure-algebra"
+      ],
+      "maxBoard": "Last School level; largest number pad/builder and missing operand"
+    },
+    {
+      "id": "M31",
+      "name": "reader and evidence tap",
+      "games": [
+        "turtle-tales",
+        "word-workshop",
+        "sound-boat",
+        "story-studio"
+      ],
+      "maxBoard": "Longest supported story with all evidence choices"
+    },
+    {
+      "id": "M32",
+      "name": "existing picture choice and trace",
+      "games": [
+        "which-one",
+        "letter-lagoon",
+        "pattern-path",
+        "shape-shift",
+        "hafa-adai",
+        "gate-crab"
+      ],
+      "maxBoard": "Last School level picture choices and full trace; Gate Crab F"
+    },
+    {
+      "id": "M33",
+      "name": "board opponents",
+      "games": [
+        "tic-tac-toe",
+        "checkers",
+        "coconut-drop",
+        "fishing-nets",
+        "hidden-canoes",
+        "shell-pits"
+      ],
+      "maxBoard": "Checkers 8×8 chain; largest Nets/Canoes boards; Shell Pits full position"
+    },
+    {
+      "id": "M34",
+      "name": "Arcade touch",
+      "games": [
+        "reef-builder",
+        "shell-song",
+        "rail-parade",
+        "crab-crossing",
+        "palm-patrol",
+        "beach-ball",
+        "fruit-bat-flight",
+        "lagoon-run",
+        "canoe-cargo"
+      ],
+      "maxBoard": "W6 last scored level, Helper on/off; Lagoon W1-8 rain stress"
+    },
+    {
+      "id": "M35",
+      "name": "Home gestures",
+      "games": [],
+      "maxBoard": "Rule 44 dense Home room, two pointers, full ownership graph"
+    },
+    {
+      "id": "M36",
+      "name": "Hall activities",
+      "games": [
+        "maze",
+        "memory",
+        "numbers",
+        "word-rescue",
+        "racer",
+        "word-imposter",
+        "island-mystery"
+      ],
+      "maxBoard": "Maximum supported people/hand/track in every Hall activity"
+    }
+  ],
+  "registrationAliases": {
+    "drop-puzzles": "coconut-drop"
+  }
+}
