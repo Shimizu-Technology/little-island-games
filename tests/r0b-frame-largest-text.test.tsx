@@ -144,8 +144,8 @@ it('measures actual card width and space below the real header instead of passin
   const r = await mount('turtle-tales');
   await act(async () => {
     byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640 } } });
-    r.root.findAll(n => n.type === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
-    r.root.findAll(n => n.type === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
+    r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
+    r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
   });
   expect(byType(r, 'Board')[0].props.width).toBe(333);
   expect(byType(r, 'Board')[0].props.boardSpace).toMatchObject({ width: 333, height: 526, large: false, ready: true });

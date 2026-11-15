@@ -41,7 +41,7 @@ it('Crab filled-plan regression: uses the measured 500-pt inner space instead of
   });
   expect(beach().props.size + 288).toBeLessThanOrEqual(500);
   expect(beach().props.size).toBeGreaterThanOrEqual(150);
-  const plan=tree!.root.findAllByType('scroll').find(n=>n.props.accessibilityLabel==='Your plan cards');
+  const plan=tree!.root.findAllByType('scroll' as never).find(n=>n.props.accessibilityLabel==='Your plan cards');
   expect(plan).toBeDefined();
   expect(plan!.findAllByType('button').filter(n=>n.props.accessibilityLabel?.startsWith('Card ')).every(n=>n.props.style.width>=44&&n.props.style.height>=44)).toBe(true);
 });
