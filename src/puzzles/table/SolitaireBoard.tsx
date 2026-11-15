@@ -19,7 +19,7 @@ const pileName=(i:number,free:boolean)=>i<8?`Column ${i+1}`:i<12?`${['Clubs','Di
 export function SolitaireBoard({view,dispatch,active:routeActive,width}:SolitaireBoardProps){
  const [foreground,setForeground]=useState(()=>AppState.currentState!=='background'&&AppState.currentState!=='inactive'),active=routeActive&&foreground;
  const {bottom}=useSafeAreaInsets();
- const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,cap=atLarge(fontScale,1.5),read=readTable(view.payload,view.deal)!;
+ const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,short=large&&height<500,cap=atLarge(fontScale,1.5),controlCap=short?atLarge(fontScale,1.3):cap,read=readTable(view.payload,view.deal)!;
  const historyFull=read.history.length===1024,inputActive=active&&!historyFull;
  const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(76,(width-12)/cols-gap)),cardH=large?96:86,overlap=large?54:32;
  const boardW=Math.max(width,cols*(cardW+gap)+12),boardX=(boardW-cols*cardW-(cols-1)*gap)/2,tableY=cardH+30;
@@ -109,12 +109,24 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const hintLabel=thinking?'Looking…':!cueReady?'Hint':help.stage===1?'Think':help.stage===2?'One step':help.stage===3?'Show me':'Next step';
  const scrollHeight=Math.max(minimumTableHeight,Math.min(440,height*(large?0.42:0.55),room??440));
  const detail=rules||memory||message||cueReady||advice;
- return <View style={{gap:7}}>
-  <Copy maxFontSizeMultiplier={cap}>{view.title}</Copy>
+
+ const status=won(s)?'Every card is home.':selected?`${cardWords(s.piles[selected.pile][selected.index])} selected.`:`${s.piles.slice(8,12).reduce((n,p)=>n+p.length,0)} of 52 cards home.`;
+ const drawControl=!free&&<Button maxFontSizeMultiplier={controlCap} quiet compact disabled={!inputActive||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>;
+ const navigation=<View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
+   {boardH>scrollHeight&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="Top of table" onPress={()=>vertical.current?.scrollTo({y:0,animated:false})}>Top</Button><Button maxFontSizeMultiplier={controlCap} quiet compact onPress={()=>vertical.current?.scrollToEnd({animated:false})}>Lower cards</Button></>}
+   {boardW>width+1&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="First columns" onPress={()=>horizontal.current?.scrollTo({x:0,animated:false})}>←</Button><Button maxFontSizeMultiplier={controlCap} quiet compact label="Last columns" onPress={()=>horizontal.current?.scrollToEnd({animated:false})}>→</Button></>}
+  </View>;
+ const headings=<View style={{flexDirection:'row',justifyContent:'space-between',gap:8}}>
+   <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>{free?'Free cells':'Stock · waste'}</Text>
+   <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>Foundations</Text>
+  </View>;
+ return <View style={{gap:short?3:7}}>
+  <Copy maxFontSizeMultiplier={short?controlCap:cap} style={short?{fontSize:14,lineHeight:20}:undefined}>{view.title}{short?` · ${status}`:''}</Copy>
   <View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
-   <Button maxFontSizeMultiplier={cap} compact quiet disabled={!active||!read.history.length} onPress={()=>dispatch({type:'undo'})}>Undo</Button>
-   <Button maxFontSizeMultiplier={cap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
-   <Button maxFontSizeMultiplier={cap} compact quiet label="How to play" onPress={()=>setRules(v=>!v)}>Rules</Button>
+   <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!active||!read.history.length} onPress={()=>dispatch({type:'undo'})}>Undo</Button>
+   <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
+   <Button maxFontSizeMultiplier={controlCap} compact quiet label="How to play" onPress={()=>setRules(v=>!v)}>Rules</Button>
+   {short&&drawControl}
   </View>
    {historyFull&&<Copy maxFontSizeMultiplier={cap}>This table has had lots of moves. Undo to keep going, or start this deal again.</Copy>}
   {detail&&<ScrollView nestedScrollEnabled style={{maxHeight:large?100:110}} accessibilityLabel="Table instructions and hint">
@@ -124,17 +136,11 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
    {cueReady&&<Copy maxFontSizeMultiplier={cap}>{help.stage===1?'Look for the next low card in a suit, or a card covering another card.':help.stage===2?'Think about which card a move will free. Spare columns and cells let you plan more than one move.':'One move at a time. Tap Next step for another, or keep playing yourself.'}</Copy>}
    {advice&&advice.kind!=='move'&&<Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">{advice.kind==='dead-end'?'This position cannot finish. Undo can take you back.':'I have not proved a way forward from here yet. You can keep exploring.'}</Copy>}
   </ScrollView>}
-  <Copy maxFontSizeMultiplier={cap}>{won(s)?'Every card is home.':selected?`${cardWords(s.piles[selected.pile][selected.index])} selected.`:`${s.piles.slice(8,12).reduce((n,p)=>n+p.length,0)} of 52 cards home.`}</Copy>
-  <View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
-   {boardH>scrollHeight&&<><Button maxFontSizeMultiplier={cap} quiet compact label="Top of table" onPress={()=>vertical.current?.scrollTo({y:0,animated:false})}>Top</Button><Button maxFontSizeMultiplier={cap} quiet compact onPress={()=>vertical.current?.scrollToEnd({animated:false})}>Lower cards</Button></>}
-   {boardW>width+1&&<><Button maxFontSizeMultiplier={cap} quiet compact label="First columns" onPress={()=>horizontal.current?.scrollTo({x:0,animated:false})}>←</Button><Button maxFontSizeMultiplier={cap} quiet compact label="Last columns" onPress={()=>horizontal.current?.scrollToEnd({animated:false})}>→</Button></>}
-  </View>
+  {!short&&<Copy maxFontSizeMultiplier={cap}>{status}</Copy>}
+  {!short&&navigation}
   {view.payload.audit.length===128&&<Copy maxFontSizeMultiplier={cap}>This attempt’s help log is full. You can keep playing and undoing, or start this deal again.</Copy>}
-  {!free&&<Button maxFontSizeMultiplier={cap} quiet compact disabled={!inputActive||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>}
-  <View style={{flexDirection:'row',justifyContent:'space-between',gap:8}}>
-   <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>{free?'Free cells':'Stock · waste'}</Text>
-   <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>Foundations</Text>
-  </View>
+  {!short&&drawControl}
+  {short?<View style={{flexDirection:'row',alignItems:'center',gap:12}}>{navigation}<View style={{flex:1}}>{headings}</View></View>:headings}
   <View ref={tableFrame} testID="solitaire-table-viewport" collapsable={false} onLayout={measureRoom}><ScrollView ref={horizontal} horizontal nestedScrollEnabled scrollEnabled={!dragging} style={{maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, horizontal scroll">
    <ScrollView ref={vertical} nestedScrollEnabled scrollEnabled={!dragging} style={{width:boardW,maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, vertical scroll">
     <View {...pan.panHandlers} style={{width:boardW,height:boardH,backgroundColor:'#D4E7DC',borderRadius:12}}>

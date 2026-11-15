@@ -7,12 +7,18 @@ import {lineFromProof} from '../src/puzzles/table/proof';
 import {solve} from '../src/puzzles/table/solver';
 import {solitaireAdapter} from '../src/puzzles/table/adapter';
 import {decodeRow} from '../src/puzzles/descriptor';
+import reviewSamples from './fixtures/solitaire/review-offline-samples.json';
 const rows=(slot:number)=>readFileSync(`src/content/puzzles/assets/p${slot}.lipuzzle`,'utf8').trim().split('\n').slice(1).map(l=>JSON.parse(l));
 const deal=(row:ReturnType<typeof rows>[number]):Deal=>({mode:'freecell',cards:row[3][1],proof:row[3][2]});
 describe('Solitaire review regressions',()=>{
+ it('names the Solitaire-only exception at the codec boundary',()=>{
+  const header=readFileSync('src/puzzles/table/checkpoint.ts','utf8').split('\n')[0];
+  expect(header).toContain('Solitaire-only');expect(header).toContain('docs/SAVE_CONTRACT.md');
+ });
  it('hints off the certified FreeCell line wherever the 10,000-node engine solves the reviewer sample',()=>{
   let solved=0;
-  for(const slot of [107,108,109])for(const row of rows(slot).slice(0,12)){
+  for(const sample of reviewSamples)for(const row of sample.rows){
+   const slot=sample.slot;
    const d=deal(row),line=lineFromProof(d)!;let s=opening(d);for(const a of line.slice(0,3))s=apply(s,d.mode,a);
    const off=legalMoves(s,d.mode).find(a=>a[0]!==line[3][0]||a[1]!==line[3][1]);if(!off)continue;s=apply(s,d.mode,off);
    // Ask before running solve: a successful solve primes the hint cache.

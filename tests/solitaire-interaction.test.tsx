@@ -10,10 +10,10 @@ import {readTable} from '../src/puzzles/table/checkpoint';
 import {legalMoves,opening,type Deal,type Mode} from '../src/puzzles/table/solitaire';
 import * as publicHints from '../src/puzzles/table/publicSolver';
 import {cardWords} from '../src/puzzles/table/solver';
-const fake=vi.hoisted(()=>({descriptor:null as unknown,scale:1,feedback:vi.fn(),held:[] as boolean[],session:null as ChallengeSession|null,appState:undefined as ((state:string)=>void)|undefined}));
+const fake=vi.hoisted(()=>({descriptor:null as unknown,scale:1,height:852,feedback:vi.fn(),held:[] as boolean[],session:null as ChallengeSession|null,appState:undefined as ((state:string)=>void)|undefined}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>({entry:async()=>fake.descriptor,savedHash:async()=> 'a'.repeat(64)})}));
 vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})}));
-vi.mock('react-native',()=>({AppState:{currentState:'active',addEventListener:(_type:string,listener:(state:string)=>void)=>{fake.appState=listener;return{remove(){if(fake.appState===listener)fake.appState=undefined;}};}},View:'div',Pressable:'button',ScrollView:'section',useWindowDimensions:()=>({width:393,height:852,fontScale:fake.scale}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{v={x:0,y:0};setValue(v:{x:number;y:number}){this.v=v;}getTranslateTransform(){return[{translateX:this.v.x},{translateY:this.v.y}];}}}}));
+vi.mock('react-native',()=>({AppState:{currentState:'active',addEventListener:(_type:string,listener:(state:string)=>void)=>{fake.appState=listener;return{remove(){if(fake.appState===listener)fake.appState=undefined;}};}},View:'div',Pressable:'button',ScrollView:'section',useWindowDimensions:()=>({width:fake.height<500?852:393,height:fake.height,fontScale:fake.scale}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{v={x:0,y:0};setValue(v:{x:number;y:number}){this.v=v;}getTranslateTransform(){return[{translateX:this.v.x},{translateY:this.v.y}];}}}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',C:{gold:'#E1B251',teal:'#246858',ink:'#183F39'}}));
 vi.mock('../src/components/Text',()=>({Text:'span'}));
 async function fixture(mode:Mode='freecell'){
@@ -22,7 +22,7 @@ async function fixture(mode:Mode='freecell'){
  const fact:BankFacts={family:mode==='freecell'?'freecell':'solitaire',slot:100,first:102400,count:1,packHash:'b'.repeat(64),rules:1,band:'f1',tier:1,title:'FreeCell · Paddling',summary:'Foundation building'};
  const entry=defineSolitaire([fact]);await entry.packed!.prepare(ref);
  const initial=entry.start(ref,'family','cove-family-1',emptyChallenge(),{supportOff:false,ownRead:false},[]);
- function Harness({saved=initial}:{saved?:ChallengeSession}){const[s,set]=useState(saved);useEffect(()=>{fake.session=s;},[s]);return <GridFeedback.Provider value={fake.feedback}><GridInteraction.Provider value={held=>fake.held.push(held)}><SolitaireBoard view={{deal,payload:readTable(s.payload,deal)!.payload,title:'FreeCell · Paddling 1',summary:'Foundation building'}} dispatch={(a:TableAction)=>set(before=>entry.move(before,a)??before)} active={!s.result} width={353}/></GridInteraction.Provider></GridFeedback.Provider>;}
+ function Harness({saved=initial}:{saved?:ChallengeSession}){const[s,set]=useState(saved);useEffect(()=>{fake.session=s;},[s]);return <GridFeedback.Provider value={fake.feedback}><GridInteraction.Provider value={held=>fake.held.push(held)}><SolitaireBoard view={{deal,payload:readTable(s.payload,deal)!.payload,title:'FreeCell · Paddling 1',summary:'Foundation building'}} dispatch={(a:TableAction)=>set(before=>entry.move(before,a)??before)} active={!s.result} width={fake.height<500?734:353}/></GridInteraction.Provider></GridFeedback.Provider>;}
  return {deal,Harness};
 }
 const text=(screen:ReactTestRenderer)=>JSON.stringify(screen.toJSON());
@@ -32,7 +32,7 @@ const card=(screen:ReactTestRenderer,pile:number,id:number)=>screen.root.findAll
 const blank=(screen:ReactTestRenderer)=>screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel==='Free cell 1, empty')!;
 const surface=(screen:ReactTestRenderer)=>screen.root.findAll(n=>typeof n.props.onPanResponderGrant==='function')[0];
 const board=(d:Deal)=>readTable(fake.session!.payload,d)!;
-beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);fake.scale=1;fake.feedback.mockClear();fake.held=[];fake.session=null;});
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);fake.scale=1;fake.height=852;fake.feedback.mockClear();fake.held=[];fake.session=null;});
 describe('Solitaire card interaction',()=>{
  it('tap alternatives, drag, undo and serialized resume keep the exact accepted table',async()=>{
   const{deal,Harness}=await fixture();let screen!:ReactTestRenderer;
@@ -116,6 +116,14 @@ describe('Solitaire card interaction',()=>{
   const{Harness}=await fixture('draw-three');let screen!:ReactTestRenderer;
   try{fake.scale=3.5;await act(async()=>{screen=create(<Harness/>);});const all=screen.root.findAll(()=>true),draw=all.findIndex(n=>n.type==='button'&&n.children.join('').startsWith('Draw three')),table=all.findIndex(n=>n.props.testID==='solitaire-table-viewport');expect(draw).toBeLessThan(table);
    const heading=screen.root.findAllByType('span').find(n=>n.children.includes('Foundations'))!;expect(heading.props.style.position).not.toBe('absolute');
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+ it('keeps Draw with the primary actions and a card-high viewport at AX5 phone landscape',async()=>{
+  const{Harness}=await fixture('draw-three');let screen!:ReactTestRenderer;
+  try{fake.scale=3.5;fake.height=393;await act(async()=>{screen=create(<Harness/>,{createNodeMock:n=>(n.props as {testID?:string}).testID==='solitaire-table-viewport'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,270,734,104)}:null});});
+   const buttons=screen.root.findAllByType('button'),draw=buttons.find(n=>n.children.join('').startsWith('Draw three'))!,undo=buttons.find(n=>n.children.includes('Undo'))!;
+   expect(draw.parent).toBe(undo.parent);expect(draw.props.maxFontSizeMultiplier).toBe(1.3);
+   expect(screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!.props.style.maxHeight).toBe(104);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
  it('keeps budget-exhausted advice honest without asking a child to undo',async()=>{

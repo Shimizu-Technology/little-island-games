@@ -10,7 +10,7 @@ import{readCatalog,readPackText,productionDirs}from'../pipeline';
 import{receiptBody}from'../receipts';
 import{klondike,freecell}from'./family';
 const catalog=readCatalog(productionDirs),sourceSha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
-for(const spec of[klondike,freecell]){
+for(const spec of(process.argv[2]==='freecell'?[freecell]:[klondike,freecell])){
  const m=catalog.families.get(spec.id);if(!m)throw new Error(`Missing ${spec.id}.`);
  const hash=createHash('sha256');for(const file of spec.sources)hash.update(file).update(readFileSync(file));const familyHash=hash.digest('hex');
  const ctx:CertifyContext={budget:10000,seenExact:new Set(),seenSemantic:new Set()};
