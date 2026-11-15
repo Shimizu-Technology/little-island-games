@@ -60,6 +60,24 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     ];
     return migrateHome(state) ?? state;
   },
+  // H4: five snacks on the kitchen floor in front of the Islander (the fifth meal burps).
+  "delight-feast": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances.push(...(["banana", "mango", "rice-ball", "cupcake", "banana"] as const).map((item, n) =>
+      ({ ...instance(`snack-${n}`, item, 0, 0), at: roomPoint(160 + n * 110, 500) })));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 8, y: 5 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4: the beach hut, with the Islander standing beside the bubble bath.
+  "delight-beach": () => {
+    const state = starterHome();
+    state.current = "beach";
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.beach.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 9, y: 6 }];
+    return migrateHome(state) ?? state;
+  },
   // H4: a friend asleep in bed, a lit lamp with a friend beside it.
   "delight-rest": () => {
     const state = starterHome();
