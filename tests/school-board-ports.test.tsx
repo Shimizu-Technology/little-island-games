@@ -21,7 +21,7 @@ import { ProgramEditor } from '../src/learn/program/ProgramEditor';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
 
 
-import { BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
+import { BoardPrimary, BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
 
 vi.mock('../src/components/feel',()=>({feel:()=>{}}));
 vi.mock('expo-router',()=>({router:{push:vi.fn()}}));
@@ -70,16 +70,18 @@ vi.mock('../src/components/ui', async () => {
 });
 const Pressable = 'Pressable' as unknown as React.ComponentType<Record<string, unknown>>;
 const frames = new Map<number, FrameRequestCallback>(); let next = 0;
+let boundary={y:0,height:500}, rowBox={y:0,height:500};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
 async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}) {
+  boundary={y:0,height:500};rowBox={y:0,height:500};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
   vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
   Object.assign(viewport,window);
   const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,0,333,500),scrollTo:vi.fn(),measureInWindow:()=>{}})});});
+  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,['school-drawing-row','slip-side'].includes((element.props as {testID:string}).testID)?rowBox.y:boundary.y,333,['school-drawing-row','slip-side'].includes((element.props as {testID:string}).testID)?rowBox.height:boundary.height),scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -112,17 +114,56 @@ it('Tide Logic reserves the measured cargo labels and row gaps rather than treat
  expect(glyphs[0].props.width * 49 / 64).toBeGreaterThanOrEqual(56);
 });
 
+const realComponent=(name:string)=>root!.root.findAll(n=>typeof n.type==='function'&&n.type.name===name)[0];
+function renderedDrawingHeight(id:LearnId):number {
+ const drawing=view(`school-${id}-drawing`), component=(name:string)=>drawing.findAll(n=>typeof n.type==='function'&&n.type.name===name)[0];
+ if(id==='crab-commands')return component('Beach').props.size;
+ if(id==='beep-bot')return component('Grid').props.size;
+ if(id==='hafa-adai'){const p=component('Picnic').props;return p.rows*p.rowHeight+44;}
+ if(id==='reef-race')return component('ReefBoard').props.height;
+ if(id==='weather-watch')return drawing.findAll(n=>String(n.type)==='Svg')[0].props.height;
+ if(id==='shell-math')return 2*component('TenFrame').props.cell+16;
+ if(id==='tide-logic')return Math.max(...drawing.findAll(n=>typeof n.type==='function'&&n.type.name==='Cargo').map(n=>Number(n.props.size)))*2;
+ if(id==='logic-lagoon'){const cells=drawing.findAll(n=>String(n.type)==='PressableScale');return Math.sqrt(cells.length)*(Number(flat(cells[0].props.style).height)+2)+14;}
+ if(id==='slip-tide')return Number(flat(drawing.findAll(n=>n.props.accessibilityRole==='image')[0].props.style).height);
+ return Number(flat(drawing.props.style).height);
+}
 const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B2],['hafa-adai',B3],['reef-race',B4],['weather-watch',B7],['shell-math',B5],['tide-pool',B6],['float-sink',B9],['tide-logic',B13],['logic-lagoon',B10],['slip-tide',B11],['treasure-algebra',B8]];
 const configurations = [[393,852],[375,667],[744,1133],[1133,744],[852,393]];
 it.each(ports)('%s renders its actual drawing, primary boundary and touch targets in each measured window',async(id,Board)=>{
  for(const [width,height] of configurations)for(const fontScale of [1,3.12]){
-  const r=await mountPort(id,Board,height-160,{width,height,fontScale});
+  boundary={y:0,height:500};rowBox={y:0,height:500};
+  const available=height-160, r=await mountPort(id,Board,available,{width,height,fontScale});
   const drawings=r.root.findAll(n=>String(n.type)==='View'&&n.props.testID===`school-${id}-drawing`);
   expect(drawings.length).toBeGreaterThan(0);
   expect(drawings[0].props.onLayout).toBeTypeOf('function');
   expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='school-primary').length).toBe(1);
   const columns=r.root.findAll(n=>String(n.type)==='View'&&['school-drawing-row','slip-side'].includes(n.props.testID));
   expect(columns.length).toBe(width>height || id==='treasure-algebra'&&width-60>=304&&width-60<600?1:0);
+  const natural=renderedDrawingHeight(id), reserve=fontScale>=1.5?264:176;
+  const side=columns.length>0;
+  // Mock a native layout pass, including the row's *actual* max-of-columns
+  // shape. The inputs are synthetic controls, while the drawing and its
+  // response are read from each real board component, not supplied to fit().
+  rowBox={y:reserve,height:Math.max(natural,320)};
+  boundary={y:0,height:side?reserve+rowBox.height:natural+reserve};
+  await act(async()=>{
+   view('content').props.onLayout({nativeEvent:{layout:{height:boundary.height+200}}});
+   drawings[0].props.onLayout({nativeEvent:{layout:{height:natural}}});
+   const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));
+  });
+  const actual=renderedDrawingHeight(id);
+  if(actual+reserve>available){
+   // A physical limit must keep content at its declared legibility/touch
+   // floor. These assertions inspect the rendered input, not a test constant.
+   if(id==='hafa-adai')expect(realComponent('WordPicture').props.size).toBe(width-60>=600?64:56);
+   else if(id==='tide-logic')expect(realComponent('Cargo').props.size).toBeGreaterThanOrEqual(width-60>=600?64:56);
+   else if(id==='shell-math')expect(realComponent('TenFrame').props.cell).toBeGreaterThanOrEqual(24);
+   else expect(actual).toBe(({ 'crab-commands':150,'beep-bot':160,'reef-race':260,'weather-watch':150,'tide-pool':90,'float-sink':width-60>=600?138:120,'logic-lagoon':106,'slip-tide':156,'treasure-algebra':250 } as Partial<Record<LearnId,number>>)[id]);
+  }else expect(actual+reserve).toBeLessThanOrEqual(available);
+  const target=drawings[0].findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityRole==='button');
+  for(const t of target){const s=flat(t.props.style);if(typeof s.width==='number')expect(s.width).toBeGreaterThanOrEqual(44);if(typeof s.height==='number')expect(s.height).toBeGreaterThanOrEqual(44);}
+
   await act(async()=>r.unmount());root=undefined;
  }
 });
@@ -131,7 +172,8 @@ it.each([1,3.12])('K7 at text scale %s preserves its base allocation, two plan r
   Object.assign(viewport,{width,height,fontScale});
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
   const editor=<ProgramEditor schoolGeometry program={{version:1,body:[{kind:'repeat',times:2,body:[{kind:'command',command:0}]}],songs:[]}} cards={[{code:0,name:'Right',icon:null}]} onChange={()=>true} disabled={false} hear={()=>{}} maxHeight={Math.max(180,Math.min(340,height-493))}/>;
-  await act(async()=>{root=create(<BoardSpaceProvider space={{width:width-60,height:height-160,large:fontScale>=1.5}}><BoardSpaceContent>{editor}</BoardSpaceContent></BoardSpaceProvider>);});
+  await act(async()=>{root=create(<BoardSpaceProvider space={{width:width-60,height:height-160,large:fontScale>=1.5}}><BoardSpaceContent testID="editor-content"><BoardPrimary>{editor}</BoardPrimary></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:()=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,0,333,1000)})});});
+  await act(async()=>{view('editor-content').props.onLayout({nativeEvent:{layout:{height:1000}}});view('program-editor').props.onLayout({nativeEvent:{layout:{height:Math.max(180,Math.min(340,height-493))}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
   const allocation=flat(view('program-editor').props.style).maxHeight as number;
   expect(allocation).toBeGreaterThanOrEqual(Math.max(180,Math.min(340,height-493)));
   const plan=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Nested program cards')[0];
@@ -204,4 +246,11 @@ it('Float/Sink header art keeps its original aspect ratio outside the measured h
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
  await act(async()=>{root=create(<FloatArt size={70}/>);});
  expect(flat(view('water-contents').props.style).transform).toEqual([{scaleY:1}]);
+});
+it('ProgramEditor leaves Turtle and other unported hosts at their original allocation',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ await act(async()=>{root=create(<BoardSpaceProvider space={{width:333,height:100,large:false}}><BoardSpaceContent><ProgramEditor program={{version:1,body:[],songs:[]}} cards={[]} onChange={()=>true} disabled={false} hear={()=>{}} maxHeight={180}/></BoardSpaceContent></BoardSpaceProvider>);});
+ expect(view('program-editor').props.onLayout).toBeUndefined();expect(flat(view('program-editor').props.style).maxHeight).toBe(180);
+ const tools=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Block tools')[0];
+ expect(flat(tools.props.style).minHeight).toBeUndefined();
 });
