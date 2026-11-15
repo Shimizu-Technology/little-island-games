@@ -142,3 +142,14 @@ it('C1d fix P1-1: the visible help ladder walks every Songs and Foggy puzzle fro
   expect(challengeEngine.inspect(won.state, d).dareEligible).toBe(false);
  }
 });
+it('C1d fix: on a block puzzle the help ladder shows beside the beach with Go!, never inside the strip under the editor', async () => {
+ const p = crabPuzzles.find(c => c.ref.bank === 15)!;
+ let s = challengeEngine.create(p.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+ s = challengeEngine.step(s, ['h'], p.descriptor)!.state;
+ await mount(s);
+ const hintText = (node: { findAllByType: (t: never) => { children: unknown[] }[] }) => node.findAllByType('p' as never).map(n => n.children.join('')).filter(t => t.startsWith('Tap “'));
+ expect(hintText(root!.root as never)).toHaveLength(1);
+ const strip = root!.root.findAll(n => n.props.accessibilityLabel === 'Plan and commands');
+ for (const section of strip) expect(hintText(section as never)).toHaveLength(0);
+ expect(root!.root.findAllByType('button').some(b => b.children.join('') === 'More help')).toBe(true);
+});
