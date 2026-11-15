@@ -11,6 +11,6 @@ Bridges, Loop and Pearl Loop share one saved-board model and one packed Cove reg
 - `BridgesBoard.tsx`, `teach.ts`: the board (drag from an island toward a neighbour, tap the water between two islands, or tap two islands; 0 → 1 → 2 → 0; a bridge that would cross another is refused, shown in red and named) and the hint words.
 - `rungs.ts`: the Bridges ladder. One rung is one packed bank.
 
-Banks: `node --import ./scripts/puzzles/register.mjs scripts/puzzles/edges/bake.ts <bridges|loop|pearl-loop>`, in that order (each family's slots start at its own base, and the catalog's slot counter only moves forward). Then `scripts/puzzles/edges/facts.ts`, `scripts/puzzles/edges/save-catalog.ts` and `npm run registry:generate`. G5 owns banks 60–79; no dares.
+Banks: `node --import ./scripts/puzzles/register.mjs scripts/puzzles/edges/bake.ts <bridges|loop|pearl-loop>`, each claiming its own run from its base (`--range first-last` claims a free tail such as 77–79; see `docs/PUZZLE_BANKS.md` "Slot allocation"). Then `scripts/puzzles/edges/facts.ts`, `scripts/puzzles/edges/save-catalog.ts` and `npm run registry:generate`. G5 owns banks 60–79; no dares.
 
 Packs are immutable once published: changing grader output or a pack tuple breaks verification of shipped packs.

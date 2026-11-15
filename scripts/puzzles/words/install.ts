@@ -14,6 +14,7 @@ import type { DescriptorCore, FamilySpec } from '../../../src/puzzles/types';
 import type { SearchPuzzle } from '../../../src/puzzles/words/core';
 import type { SearchBank } from '../../../src/puzzles/words/registration';
 import { verifyByteModel } from '../byte-model';
+import { slotClaim } from '../slots';
 import { pictureBindings, pictureBindingsSource } from './picture-bindings.mjs';
 
 const out = resolve(process.argv[2] ?? '');
@@ -21,7 +22,8 @@ try {
   const checked = checkSearch(out), rows = checked.puzzles as {bank:number;band:string;tier:SearchBank['tier'];title:string;id:string;family:string;seed:number;payload:SearchPuzzle}[];
   const existing = readCatalog({content:'src/content/puzzles',receipts:'content/puzzles/receipts'});
   if (existing.families.has('word-search')) throw Error('Existing immutable Word Search banks require a new append plan.');
-  if ([...existing.families.values()].some(f=>f.packs.some(p=>p[0]>=80 && p[0]<=99))) throw Error('G6 slots already occupied.');
+  // G6's packs claim 80 onward: each slot free in every catalog and save catalog, published or not.
+  const claim=slotClaim({content:'src/content/puzzles',receipts:'content/puzzles/receipts'},existing.families.values(),{first:80,last:99},'g6-word-search');
   const manifestFile='content/words/banks.manifest.json', registryFile='content/words/registry.generated.ts';
   const beforeManifest=readFileSync(manifestFile);
   const changed=new Map<string,Buffer|null>();
@@ -42,11 +44,11 @@ try {
     checkShippingTree(process.cwd(),receipts,{full:true});
     const dirs={content:join(out,'catalog'),receipts:join(out,'catalog-receipts')};
     if(existsSync(dirs.content))throw Error('Catalog output exists; use a fresh bake output.');
-    mkdirSync(dirs.content);writeFileSync(join(dirs.content,'root.json'),JSON.stringify({...emptyRoot(),nextSlot:80,nextOrdinal:80*1024}));
+    mkdirSync(dirs.content);writeFileSync(join(dirs.content,'root.json'),JSON.stringify(emptyRoot()));
     const bands=[...new Set(rows.map(p=>p.band))].map(id=>({id,target:rows.filter(p=>p.band===id).length,floor:rows.filter(p=>p.band===id).length,advanced:false}));
     const spec:FamilySpec<SearchPuzzle>={...wordSearch,adapter:wordSearch.adapter as FamilySpec<SearchPuzzle>['adapter'],bands,
       generate:(seed,band)=> {const candidates=rows.filter(p=>p.band===band.id),r=candidates[seed-1-bands.findIndex(b=>b.id===band.id)*0x1000000];return r?{format:1,seed:r.seed,rng:1,band:r.band,layout:r.family,template:r.family,payload:r.payload,objectives:[],limits:[],par:null,teaches:['scan'],speech:null} satisfies DescriptorCore<SearchPuzzle>:null;}};
-    const report=bakeFamily(spec,{dirs,maxAttempts:Math.max(...bands.map(b=>b.target)),sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()});
+    const report=bakeFamily(spec,{dirs,claim,maxAttempts:Math.max(...bands.map(b=>b.target)),sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()});
     if(!report.published || report.slots.some(s=>s<80 || s>99))throw Error('Packed bake did not fit the reserved slots.');
     const baked=readCatalog(dirs),family=baked.families.get('word-search')!;
     const rowBytes=family.packs.reduce((n,p)=>n+Buffer.byteLength(readPackText(dirs,p[0]).split('\n').slice(1).join('\n')),0);

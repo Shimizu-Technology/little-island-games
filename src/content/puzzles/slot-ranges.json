@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "source": "Bank slots from the lead's slot register (SLOTS.md), 15 Nov 2026. Only the lead edits this file; a slice claims only inside its own range.",
+  "banks": [
+    { "owner": "o1-slip-tide", "first": 0, "last": 6, "note": "Packed 0-6. Packs 0-2 (School bands a-c, not save banks) were published before the register, which lists 3-6 and reserves 1-2 for lead/tests." },
+    { "owner": "c1-crab", "first": 7, "last": 19, "note": "Inline 7-11; C1d adds 12-16." },
+    { "owner": "lead-spare", "first": 20, "last": 39 },
+    { "owner": "g3-latin", "first": 40, "last": 59 },
+    { "owner": "g5-edges", "first": 60, "last": 79, "note": "73 and 77-79 unused; claimable with an explicit range." },
+    { "owner": "g6-word-search", "first": 80, "last": 99 },
+    { "owner": "other-cove", "first": 100, "last": 199, "note": "G4, G7, G8: assigned per slice." },
+    { "owner": "g7a-solitaire", "first": 100, "last": 109 },
+    { "owner": "c2a-beep", "first": 200, "last": 219 },
+    { "owner": "school-coding", "first": 220, "last": 259, "note": "C2b-C4: assigned per slice." },
+    { "owner": "thinking", "first": 260, "last": 297, "note": "T1/T2; T2 not yet assigned." },
+    { "owner": "t1-logic-lagoon", "first": 260, "last": 279 },
+    { "owner": "o1-slip-tide-inline", "first": 298, "last": 299 },
+    { "owner": "other-originals", "first": 300, "last": 399, "note": "O2-O6: assigned per slice." },
+    { "owner": "science", "first": 400, "last": 419, "note": "S1-S3: assigned per slice." },
+    { "owner": "numbers", "first": 420, "last": 439, "note": "N1-N4: assigned per slice." },
+    { "owner": "n1a", "first": 420, "last": 429 },
+    { "owner": "reading", "first": 440, "last": 459, "note": "R1-R3: assigned per slice." },
+    { "owner": "r1a", "first": 440, "last": 449 },
+    { "owner": "p1-boards", "first": 460, "last": 479 },
+    { "owner": "p3a-classics", "first": 480, "last": 489 },
+    { "owner": "classics-cards-activities", "first": 490, "last": 499, "note": "P3b, P2 and activities: assigned per slice." },
+    { "owner": "a1-arcade", "first": 500, "last": 511 }
+  ]
+}

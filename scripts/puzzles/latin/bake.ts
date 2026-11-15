@@ -7,12 +7,13 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parsePack, validRoot } from '../../../src/puzzles/bank';
+import { parsePack } from '../../../src/puzzles/bank';
 import { certify, type CertifyContext } from '../../../src/puzzles/checks';
 import type { LatinPuzzle } from '../../../src/puzzles/latin/core';
 import type { DescriptorCore, FamilySpec } from '../../../src/puzzles/types';
 import { families } from '../families';
 import { bakeFamily, productionDirs, readCatalog, readPackText, type CatalogDirs } from '../pipeline';
+import { assertClaimable, parseRange, slotClaim, type ClaimSources, type SlotClaim } from '../slots';
 import { arrangeBy, worstBack } from '../order';
 import { decodeRow } from '../../../src/puzzles/descriptor';
 import { grade } from '../../../src/puzzles/latin/solver';
@@ -20,8 +21,8 @@ import { describe, type Candidate, type LatinGenerator } from './family';
 import { generators } from './generators';
 
 /**
- * SLOTS.md reserves banks 40–59 for G3 (and 100–109, unused). Each family starts at its own slot;
- * ordinals at slot × 1024. Cross Sums has no slot until it passes its stop rule.
+ * SLOTS.md reserves banks 40–59 for G3. Each family claims its own run from its base; a claimed pack's
+ * ordinals start at slot × 1024. Cross Sums has no slot until it passes its stop rule.
  */
 export const slotBase: Record<string, number> = { sudoku: 40, 'cage-math': 48, 'greater-than': 53, skyline: 56, killer: 58 };
 export const SLOT_END = 60;
@@ -52,18 +53,23 @@ export function buildPool(gen: LatinGenerator, spec: FamilySpec<LatinPuzzle>, ru
 }
 /** The shipped rung in publishing order: see `arrangeBy`. */
 export const arrange = (gen: LatinGenerator, pool: readonly Candidate[], count: number): Candidate[] => arrangeBy(gen.workload, pool, count);
-/** Moves the catalog's counters up to this family's reserved range. Nothing else changes. */
-export function reserve(dirs: CatalogDirs, family: string): void {
-  const file = join(dirs.content, 'root.json'), root: unknown = JSON.parse(readFileSync(file, 'utf8'));
-  if (!validRoot(root)) throw new Error('Root index is invalid.');
-  const base = slotBase[family];
-  if (root.nextSlot > base) throw new Error(`Slot ${base} for ${family} is already behind the catalog's next slot ${root.nextSlot}.`);
-  writeFileSync(file, `${JSON.stringify({ ...root, nextSlot: base, nextOrdinal: Math.max(root.nextOrdinal, base * 1024) })}\n`);
+/**
+ * This family's claim: its own run from its base up to the next family's base, or `--range first-last`
+ * (for example to append in a free tail). The register and every catalog are checked before any search.
+ */
+export function familyClaim(dirs: CatalogDirs, family: string, range?: string, sources?: ClaimSources): SlotClaim {
+  const bases = Object.values(slotBase).sort((a, b) => a - b), first = slotBase[family], end = bases.find(b => b > first) ?? SLOT_END;
+  if (first === undefined) throw new Error(`${family} has no reserved slots.`);
+  const claim = slotClaim(dirs, readCatalog(dirs).families.values(), range ? parseRange(range) : { first, last: end - 1 }, 'g3-latin', sources);
+  assertClaimable(claim, claim.range.first);
+  return claim;
 }
 
 if (process.argv[1]?.endsWith('bake.ts')) {
   const kind = process.argv[2], dry = process.argv.includes('--dry'), gen = generators[kind], spec = families.find(f => f.id === kind) as FamilySpec<LatinPuzzle> | undefined;
   if (!gen || !spec) throw new Error(`Unknown Latin family ${kind}.`);
+  // A dry run only searches; a real bake checks its claim before the search starts.
+  const at = process.argv.indexOf('--range'), claim = dry ? null : familyClaim(productionDirs, kind, at < 0 ? undefined : process.argv[at + 1]);
   const factor = Number(process.env.LATIN_POOL ?? 2), tries = Number(process.env.LATIN_TRIES ?? 60000);
   const ctx: CertifyContext = { budget: 200_000, seenExact: new Set(), seenSemantic: new Set() };
   const chosen = gen.rungs.map((rung, i) => {
@@ -79,14 +85,13 @@ if (process.argv[1]?.endsWith('bake.ts')) {
   const steep = gen.rungs.filter((_, i) => { const b = worstBack(chosen[i].map(gen.workload)); return b.worst > b.allowed; });
   if (steep.length) { console.error(`Order steps back too far, nothing published: ${steep.map(r => r.id).join(', ')}.`); process.exitCode = 1; }
   else if (short.length) { console.error(`Below floor, nothing published: ${short.map(r => r.id).join(', ')}.`); process.exitCode = 1; }
-  else if (!dry) {
-    reserve(productionDirs, kind);
+  else if (claim) {
     const listed: FamilySpec<LatinPuzzle> = { ...spec, bands: spec.bands.map((b, i) => ({ ...b, target: chosen[i].length })),
       generate: (seed, band) => { const i = spec.bands.findIndex(b => b.id === band.id), k = seed - 1 - i * 0x1000000, c = chosen[i]?.[k]; return c ? describe(c, band.id) as DescriptorCore<LatinPuzzle> : null; } };
-    const report = bakeFamily(listed, { dirs: productionDirs, seedBase: 1, maxAttempts: Math.max(...chosen.map(c => c.length)), sourceSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() });
+    const report = bakeFamily(listed, { dirs: productionDirs, seedBase: 1, maxAttempts: Math.max(...chosen.map(c => c.length)), claim, sourceSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() });
     console.log(JSON.stringify(report));
     const slots = report.slots;
-    if (!report.published || slots.some(s => s < slotBase[kind] || s >= SLOT_END)) { console.error('Bake did not publish inside the reserved slots.'); process.exitCode = 1; }
+    if (!report.published || slots.some(s => s < claim.range.first || s > claim.range.last)) { console.error('Bake did not publish inside the reserved slots.'); process.exitCode = 1; }
     // The packs must hold exactly the arranged order, row for row.
     const manifest = readCatalog(productionDirs).families.get(kind)!;
     spec.bands.forEach((band, i) => {
