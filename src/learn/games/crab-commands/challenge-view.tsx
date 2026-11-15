@@ -82,7 +82,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
       {learnSources[s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help']&&<Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled} onPress={()=>play(s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help')}>Hear help</Button>}
   </>;
   const helpPanel=<>{hintVisible&&!hint&&!blockHelp&&<Copy maxFontSizeMultiplier={cap}>Finding one step…</Copy>}{(hint||blockHelp)&&(blocks?
-    <ScrollView testID="crab-challenge-help" nestedScrollEnabled style={{flexGrow:0,maxHeight:116,backgroundColor:C.soft,borderRadius:12}} contentContainerStyle={{gap:4,padding:8}} accessibilityLiveRegion="polite">{helpBody}</ScrollView>:
+    <ScrollView testID="crab-challenge-help" nestedScrollEnabled style={{flexGrow:0,flexShrink:1,minHeight:72,maxHeight:116,backgroundColor:C.soft,borderRadius:12}} contentContainerStyle={{gap:4,padding:8}} accessibilityLiveRegion="polite">{helpBody}</ScrollView>:
     <View style={{gap:8,padding:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">{helpBody}{nextHelp}</View>)}</>;
   return <View style={{gap:8,flex:1,minHeight:0}}>
     <View style={{flexDirection:d.fog?'column':'row',gap:10,alignItems:d.fog?'stretch':'center'}}>

@@ -184,6 +184,8 @@ it('C1d fix: on a block puzzle the help text scrolls in a bounded box and More h
    const box = root!.root.findByProps({ testID: 'crab-challenge-help' });
    expect(box.type).toBe('section');
    expect(box.props.style.maxHeight).toBeLessThanOrEqual(116);
+   // A ScrollView shrinks by default; on the pinned screen it would vanish without a floor.
+   expect(box.props.style.minHeight).toBeGreaterThanOrEqual(64);
    for (const t of box.findAllByType('p' as never)) expect(t.props.maxFontSizeMultiplier).toBe(1.5);
    s = challengeEngine.step(s, ['h'], p.descriptor)!.state;
   }
