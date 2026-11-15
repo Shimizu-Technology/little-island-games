@@ -2,16 +2,16 @@
  "format": 1,
  "family": "freecell",
  "slot": 106,
- "catalogRevision": 19,
+ "catalogRevision": 21,
  "band": "f1",
  "ordinals": [
   108544,
   32
  ],
- "sourceSha": "38853f15891218abb421d99ce326f412907f7193",
+ "sourceSha": "d2856c26f347fd55b4be3196f8be21661193c1ca",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "da0470cb780fdd7f258e92cc085d93d48e6c3a745d8f5e86c0390d2f5be281cb"
+  "family": "a188b95ffd7a38c403377376f322223d59fa73256b4633c349150d224d9c008b"
  },
  "rng": 1,
  "rules": 1,
@@ -63,7 +63,9 @@
  },
  "histograms": {
   "technique": {
-   "search-1": 32
+   "build-and-uncover + reserve-space": 12,
+   "build-and-uncover + reserve-space + sequence-transfer": 18,
+   "build-and-uncover + sequence-transfer": 2
   },
   "template": {
    "bursts": 8,
@@ -105,7 +107,7 @@
  },
  "provenance": {
   "source": "original",
-  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating."
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating. Exact ordered install of 9532ba72 via scripts/puzzles/solitaire/install.ts. Curation scripts, source pool/checkpoint hashes and every selected row in scripts/puzzles/solitaire/selected-rows.json (sha256 dcdc5a1df121e8a25931f201454357c2479e76cd0b06840ce49dbfa97f80c637). 106: recurate-paddling.ts, 0x7000000+i; 107–109: recurate-advanced.ts, original/regraded rows + regenerated advanced-pools checkpoint + new 0x400000-offset candidates. Historical search totals unavailable. Receipt attempts/rejects describe this exact-row certification, not historical candidate curation."
  },
  "review": {
   "ids": [],
@@ -115,7 +117,7 @@
  "speech": 0,
  "bytes": {
   "raw": 8999,
-  "gzip": 3227
+  "gzip": 3317
  },
  "sha256": "9664fb0a06032810ea35a902d129f4802cfdc56f226f299c2e3fddda0d29ac88",
  "native": [],

@@ -2,16 +2,16 @@
  "format": 1,
  "family": "solitaire",
  "slot": 104,
- "catalogRevision": 18,
+ "catalogRevision": 20,
  "band": "t3",
  "ordinals": [
-  102544,
+  106496,
   48
  ],
- "sourceSha": "b787a3d2d52e197f512a4dea8bf743fe298d4db2",
+ "sourceSha": "d2856c26f347fd55b4be3196f8be21661193c1ca",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "8ccb98ac603a8cd2829c27c8e38698ec9e25c255fe731e7e87400a9da90ff691"
+  "family": "a188b95ffd7a38c403377376f322223d59fa73256b4633c349150d224d9c008b"
  },
  "rng": 1,
  "rules": 1,
@@ -122,7 +122,7 @@
  },
  "provenance": {
   "source": "original",
-  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating."
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating. Exact ordered install of 9532ba72 via scripts/puzzles/solitaire/install.ts. Curation scripts, source pool/checkpoint hashes and every selected row in scripts/puzzles/solitaire/selected-rows.json (sha256 dcdc5a1df121e8a25931f201454357c2479e76cd0b06840ce49dbfa97f80c637). Receipt attempts/rejects describe this exact-row certification, not historical candidate curation."
  },
  "review": {
   "ids": [],
@@ -132,9 +132,9 @@
  "speech": 0,
  "bytes": {
   "raw": 10276,
-  "gzip": 3128
+  "gzip": 3177
  },
- "sha256": "dea40ee7f1ddf1645caa89d9760e19ba6c3ce98577d2d29c112dc84afb403416",
+ "sha256": "d0b8310c0a84476c43b899d52a4e34675d7300e0fdeb238a8ad61be2ba9dbe6c",
  "native": [],
  "machineGates": true,
  "allShippingGates": false

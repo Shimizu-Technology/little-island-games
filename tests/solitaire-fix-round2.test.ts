@@ -18,6 +18,9 @@ it('keeps all 512 selected rows byte-identical to 9532ba72 and in their original
   expect(JSON.parse(installed[0]).first).toBe(b.slot*1024);count+=old.length;
  }
  expect(count).toBe(512);
+ const root=JSON.parse(readFileSync('src/content/puzzles/root.json','utf8'));expect(root.nextSlot).toBeGreaterThanOrEqual(110);expect(root.nextOrdinal).toBeGreaterThanOrEqual(111712);
+ const slots=root.families.flatMap((f:string[])=>JSON.parse(readFileSync(`src/content/puzzles/assets/${f[1]}.lipuzzle`,'utf8')).packs.map((p:number[])=>p[0]));
+ expect(new Set(slots).size).toBe(slots.length);expect(slots.filter((n:number)=>n>=100&&n<=109).sort((a:number,b:number)=>a-b)).toEqual(Array.from({length:10},(_,i)=>100+i));
 });
 it('re-asking after every single hint step wins all 256 Klondike deals, including the reviewer\'s 45 cycles',()=>{
  let wins=0;

@@ -21,7 +21,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const {bottom}=useSafeAreaInsets();
  const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,short=large&&height<500,cap=atLarge(fontScale,1.5),controlCap=short?atLarge(fontScale,1.3):cap,read=readTable(view.payload,view.deal)!;
  const historyFull=read.history.length===1024,inputActive=active&&!historyFull;
- const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(short?64:76,(width-12)/cols-gap)),cardH=short?56:large?96:86,overlap=short?32:large?54:32;
+ const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(short?64:76,(width-12)/cols-gap)),cardH=short?56:large?96:86,overlap=short?46:large?54:32;
  // Short AX landscape places the reserve row beside the columns. Covered cards
  // need only a back edge; every opening face-up card stays in the same viewport.
  const reserveCols=free?4:3,tableX=short?reserveCols*(cardW+gap)+12:0;
@@ -121,7 +121,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const status=won(s)?'Every card is home.':selected?`${cardWords(s.piles[selected.pile][selected.index])} selected.`:`${s.piles.slice(8,12).reduce((n,p)=>n+p.length,0)} of 52 cards home.`;
  const drawControl=!free&&<Button maxFontSizeMultiplier={controlCap} quiet compact disabled={!inputActive||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>;
  const navigation=<View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
-   {boardH>scrollHeight&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="Top of table" onPress={()=>vertical.current?.scrollTo({y:0,animated:false})}>Top</Button><Button maxFontSizeMultiplier={controlCap} quiet compact onPress={()=>vertical.current?.scrollToEnd({animated:false})}>Lower cards</Button></>}
+   {boardH>scrollHeight+(short?12:0)&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="Top of table" onPress={()=>vertical.current?.scrollTo({y:0,animated:false})}>{short?'↑':'Top'}</Button><Button maxFontSizeMultiplier={controlCap} quiet compact label="Lower cards" onPress={()=>vertical.current?.scrollToEnd({animated:false})}>{short?'↓':'Lower cards'}</Button></>}
    {boardW>width+1&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="First columns" onPress={()=>horizontal.current?.scrollTo({x:0,animated:false})}>←</Button><Button maxFontSizeMultiplier={controlCap} quiet compact label="Last columns" onPress={()=>horizontal.current?.scrollToEnd({animated:false})}>→</Button></>}
   </View>;
  const headings=<View style={{flexDirection:'row',justifyContent:'space-between',gap:8}}>
@@ -135,6 +135,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
    <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
    <Button maxFontSizeMultiplier={controlCap} compact quiet label="How to play" onPress={()=>setRules(v=>!v)}>Rules</Button>
    {short&&drawControl}
+   {short&&navigation}
   </View>
    {historyFull&&<Copy maxFontSizeMultiplier={cap}>This table has had lots of moves. Undo to keep going, or start this deal again.</Copy>}
   {detail&&<ScrollView nestedScrollEnabled style={{maxHeight:large?100:110}} accessibilityLabel="Table instructions and hint">
@@ -148,7 +149,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   {!short&&navigation}
   {view.payload.audit.length===128&&<Copy maxFontSizeMultiplier={cap}>This attempt’s help log is full. You can keep playing and undoing, or start this deal again.</Copy>}
   {!short&&drawControl}
-  {short?navigation:headings}
+  {!short&&headings}
   <View ref={tableFrame} testID="solitaire-table-viewport" collapsable={false} onLayout={measureRoom}><ScrollView ref={horizontal} horizontal nestedScrollEnabled scrollEnabled={!dragging} style={{maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, horizontal scroll">
    <ScrollView ref={vertical} nestedScrollEnabled scrollEnabled={!dragging} style={{width:boardW,maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, vertical scroll">
     <View {...pan.panHandlers} style={{width:boardW,height:boardH,backgroundColor:'#D4E7DC',borderRadius:12}}>

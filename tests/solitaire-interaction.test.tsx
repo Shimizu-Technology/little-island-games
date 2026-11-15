@@ -129,6 +129,17 @@ describe('Solitaire card interaction',()=>{
    for(const label of ['Stock,','Waste,','Clubs foundation,','Diamonds foundation,','Spades foundation,','Hearts foundation,']){const n=buttons.find(n=>n.props.accessibilityLabel?.startsWith(label))!;expect(n).toBeDefined();expect(n.props.style.top+n.props.style.height).toBeLessThanOrEqual(maxHeight);}
    await press(screen,'Draw three · 24 in stock');expect(board(deal).position.piles[12]).toHaveLength(21);
    await press(screen,'Rules');expect(text(screen)).toContain('Build columns down');
+   await press(screen,'Remembered cards');expect(text(screen)).not.toContain('Previously seen covered cards');expect(text(screen)).not.toContain('face-down, previously seen');
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+ it('drags from an exposed tableau card into the reserve area at AX5 phone landscape',async()=>{
+  const{Harness,deal}=await fixture('draw-three');let screen!:ReactTestRenderer;
+  try{fake.scale=3.5;fake.height=393;await act(async()=>{screen=create(<Harness/>);});
+   const initial=opening(deal),move=legalMoves(initial,deal.mode).find(a=>a[0]<7&&a[1]>=8&&a[1]<12)!,c=initial.piles[move[0]].at(-1)!;
+   const from=card(screen,move[0],c),to=screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel===`${['Clubs','Diamonds','Spades','Hearts'][move[1]-8]} foundation, empty`)!;
+   const dx=to.props.style.left-from.props.style.left,dy=to.props.style.top-from.props.style.top;
+   await act(async()=>{const p=surface(screen).props;p.onPanResponderGrant({nativeEvent:{locationX:from.props.style.left+20,locationY:from.props.style.top+16}});p.onPanResponderMove({}, {dx,dy});p.onPanResponderRelease({}, {dx,dy});});
+   expect(board(deal).position.piles[move[1]]).toEqual([c]);expect(board(deal).payload.edits).toBe(1);expect(fake.held).toContain(true);expect(fake.held.at(-1)).toBe(false);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
  it('keeps budget-exhausted advice honest without asking a child to undo',async()=>{
