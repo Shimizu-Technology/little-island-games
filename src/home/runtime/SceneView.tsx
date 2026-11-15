@@ -133,7 +133,9 @@ const RestingEntity = memo(function RestingEntity({
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
-  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }));
+  // The open-eyed art always keeps this style. Dropping it when the clock goes (a friend falls
+  // asleep) left the last native value behind: asleep mid-blink, the friend vanished for good.
+  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed]);
   const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
   const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
@@ -227,7 +229,7 @@ const RestingEntity = memo(function RestingEntity({
           borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
       {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
       <Animated.View style={normal}>
-        <Animated.View style={life ? open : undefined}>
+        <Animated.View style={open}>
           <EntityArt
             entity={entity}
             actionOverride={action}

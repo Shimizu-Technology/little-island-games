@@ -20,7 +20,7 @@ vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, u
   withTiming: (x: any) => x, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
   useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }), useAnimatedReaction: () => {}, runOnJS: (f: any) => f, runOnUI: (f: any) => f }));
 vi.mock('react-native-gesture-handler', () => ({ GestureDetector: 'GestureDetector' }));
-vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: (props: any) => React.createElement('EntityArt', { face: props.faceOverride, carry: !!props.carry, entityId: props.entity.id }), artFrame: (e: any) => e.bounds }));
+vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: (props: any) => React.createElement('EntityArt', { face: props.faceOverride, carry: !!props.carry, entityId: props.entity.id, preview: !!props.preview, blink: !!props.blink }), artFrame: (e: any) => e.bounds }));
 vi.mock('../src/home/runtime/SettleArt', () => ({ SettleArt: () => null }));
 vi.mock('../src/home/art/Room', () => ({ RoomArt: () => null, ShoreArt: () => null }));
 vi.mock('../src/home/art/More', () => ({ RoomShellArt: () => null, MoreItemArt: () => null }));
@@ -92,6 +92,32 @@ describe('H4 resting friends: moods, the food notice and lamp shadows', () => {
     expect(crab.findAll((n) => String(n.type) === 'AnimatedView' && n.props.style?.[0]?.backgroundColor === '#284F4B')).toHaveLength(1);
     void scene;
     expect(tree.root.findAll((n) => n.props.p && n.props.progress).length).toBeGreaterThan(0);
+    await act(async () => tree.unmount());
+  });
+});
+
+describe('a friend who falls asleep never vanishes (found natively during H4)', () => {
+  it('the open-eyed art keeps its animated style, and it reads fully visible once the life clock is gone', async () => {
+    const state = labFixtures['delight-rest'](), scene = withPortions(buildScene(state));
+    const sleeper = Object.values(scene.entities).find((e) => e.character?.slot === 0)!;
+    const interaction: any = { slots: { value: [{}, {}] }, camera: { value: { a: 1 } }, acknowledgeLayout: () => {}, acknowledgePose: () => {}, ready: () => {} };
+    interaction.restingFlags = { value: restingFlagsOf([], []) };
+    interaction.restingMotion = { value: restingMotionOf([], scene.revision, 1, 0, false, {}, null) };
+    const props = { state, scene, building: buildingLayout(4), viewport: { width: 402, height: 650 }, interaction: interaction as Interaction, pickups: [],
+      reduced: false, reactions: {}, onNode: () => {}, onSelect: () => {}, onMove: () => {}, liveRoom: 'home' };
+    let tree!: TestRenderer.ReactTestRenderer;
+    await act(async () => { tree = TestRenderer.create(<SceneView {...props} sleeping={{}} />); });
+    // The parent of the open-eyed copy (not the closed-eye blink copy, not the anticipating copy).
+    const openWrap = () => tree.root.findAll((n) => n.props.testID === 'character-0' && typeof n.type === 'string')[0]
+      .findAll((n) => String(n.type) === 'EntityArt' && !n.props.preview && !n.props.blink)
+      .map((n) => { let p = n.parent; while (p && String(p.type) !== 'AnimatedView') p = p.parent; return p!; })[0];
+    // Awake, mid-blink: the open-eyed copy is hidden by the life clock.
+    const life = tree.root.findAll((n) => n.props.life && n.props.entity?.id === sleeper.id)[0].props.life;
+    life.value = 7950;
+    expect(openWrap().props.style.evaluate().opacity).toBe(0);
+    // Asleep: no clock any more. The style must still be there and must show the friend.
+    await act(async () => tree.update(<SceneView {...props} sleeping={{ [sleeper.id]: true }} />));
+    expect(openWrap().props.style?.evaluate?.().opacity).toBe(1);
     await act(async () => tree.unmount());
   });
 });
