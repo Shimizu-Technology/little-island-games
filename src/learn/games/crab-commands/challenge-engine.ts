@@ -239,6 +239,11 @@ export async function nextHintSliced(d:Descriptor,program:readonly Command[], op
  return null;
 }
 /** A tray puzzle refuses plans over its tray, and block tools it does not offer. */
+/** A restored, replayed or carried-over draft meets the same tray and tool limits as an edit. */
+function admitted(d: Descriptor, draft: unknown): boolean {
+  const decoded = readCrabDraft(draft, d.level);
+  return !!decoded && allowed(d, decoded.program);
+}
 function allowed(d: Descriptor, program: Program): boolean {
   if (d.tray === undefined) return true;
   if (nodeCost(program) > d.tray) return false;
@@ -252,7 +257,7 @@ const make = (d: Descriptor, o: LaunchOptions, initial: Initial): State => ({des
 const validPrior = (v: unknown): v is Prior => !!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===3&&integer((v as Prior).runs,65535)&&typeof (v as Prior).failed==='boolean'&&integer((v as Prior).steps,255);
 export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
   initial:()=>({version:1}),
-  validInitial:(v,d):v is Initial=>!!v&&typeof v==='object'&&!Array.isArray(v)&&(v as Initial).version===1&&Object.keys(v).every(k=>['version','prior','draft'].includes(k))&&(!('prior' in v)||validPrior((v as Initial).prior))&&(!('draft' in v)||d.blockEditor===true&&!!readCrabDraft((v as Initial).draft,d.level)),
+  validInitial:(v,d):v is Initial=>!!v&&typeof v==='object'&&!Array.isArray(v)&&(v as Initial).version===1&&Object.keys(v).every(k=>['version','prior','draft'].includes(k))&&(!('prior' in v)||validPrior((v as Initial).prior))&&(!('draft' in v)||d.blockEditor===true&&admitted(d,(v as Initial).draft)),
   create:(d,initial,o)=>make(d,o,initial),
   prior:initial=>initial.prior?{runs:initial.prior.runs,failed:initial.prior.failed}:null,
   validAction:(v):v is Action=>Array.isArray(v)&&v[0]==='e'?v.length===2&&Object.keys(v).length===2&&validOperations(v[1]):Array.isArray(v)&&Object.keys(v).length===v.length&&(

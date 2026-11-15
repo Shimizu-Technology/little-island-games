@@ -8,7 +8,7 @@ import { ArrowArt, Beach, cardLabel } from './view';
 import { commands, trail } from './engine';
 import { cardCodes, execute, fogLevels, runPlan, type Action, type State } from './challenge-engine';
 import { blockSolutions } from './challenge-content';
-import { describeOperation, describeProgram, nearestBlocks } from './block-hint';
+import { describeProgram, describeStep, nearestBlocks } from './block-hint';
 import { decodeProgram } from '../../program/codec';
 import type { ChallengeViewProps } from '../../../challenge/types';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
@@ -45,7 +45,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     if(d.tray===undefined||!hintVisible)return null;
     const current=(s.blockDraft&&decodeProgram(s.blockDraft))||crabProgram(s.program), near=nearestBlocks(current,blockSolutions(d)), name=(code:number)=>cardLabel[programCodes[code]];
     if(!near)return null;
-    return {step:near.first?describeOperation(near.first,current,name):'Your blocks reach home. Press Go to try them.',whole:`One working plan: ${describeProgram(near.target,name)}${near.target.songs.length?`. Song 1: ${near.target.songs.map(song=>describeProgram({version:1,body:song,songs:[]},name)).join('; ')}`:''}.`};
+    return {step:near.first?describeStep(near.first,current,name):'Your blocks reach home. Press Go to try them.',whole:`One working plan: ${describeProgram(near.target,name)}.`};
   },[d,hintVisible,s.blockDraft,s.program]);
   useEffect(()=>{if(!active)stop();return stop;},[active,stop]);
   useEffect(()=>{

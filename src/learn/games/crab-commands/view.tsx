@@ -3,7 +3,7 @@ import { ProgramEditor } from '../../program/ProgramEditor';
 import { decodeProgram, encodeProgram, sessionBytes } from '../../program/codec';
 import { nodeCost } from '../../program/model';
 import { crabProgram, programCodes, readCrabDraft, withCrabProgram } from './program';
-import { describeOperation, describeProgram, nearestBlocks } from './block-hint';
+import { describeProgram, describeStep, nearestBlocks } from './block-hint';
 import { loopSolutions } from './proofs';
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
@@ -459,7 +459,7 @@ export function Board({
     if (!near) return null;
     const bump = plan.bumpCard !== null ? draft?.frames[plan.bumpCard] : undefined;
     const where = bump ? `Your plan bumps at ${blockPosition(bump.path)}${bump.iteration.length ? ` (repeat turn ${bump.iteration.map(n => n + 1).join(", ")})` : ""}. ` : "";
-    return { step: near.first ? `${where}${describeOperation(near.first, current, name)}` : "Your blocks reach home. Press Go to try them.", whole: `One plan that works: ${describeProgram(near.target, name)}.` };
+    return { step: near.first ? `${where}${describeStep(near.first, current, name)}` : "Your blocks reach home. Press Go to try them.", whole: `One plan that works: ${describeProgram(near.target, name)}.` };
   }, [l, hint, s.blockDraft, s.program, plan.bumpCard, draft]);
   const bumpedCard = w.bump ? s.cursor - 1 : null;
   const hinted = hint > 0 && hint < 3 ? hintedCard(helpPlan?.edit, s.program.length) : null;

@@ -169,3 +169,36 @@ describe('C1d block puzzles through the real Challenge registration', () => {
     expect(registration.completionText!(flat.ref, { event: "independent" } as never, null)).toContain(`best possible is ${flat.par!.lower} cards`);
   });
 });
+
+describe('C1d fix P2-1: initial drafts meet the same tray and tool limits as edits', () => {
+  const song = () => deepPuzzles.find(p => p.ref.bank === 14 && p.ref.puzzle === 0)!;
+  const fogP = () => deepPuzzles.find(p => p.ref.bank === 15 && p.ref.puzzle === 0)!;
+  it('refuses an over-tray flat winner and a banned tool in a restored draft; old descriptors keep their drafts', () => {
+    const d = song().descriptor, witness = blockSolutions(d)[0];
+    // The same winning route as single cards: more blocks than the tray holds.
+    const songPlan = decodeProgram(encodeProgram(witness))!;
+    const route = songPlan.body.flatMap(n => n.kind === 'call' ? songPlan.songs[n.song] : [n]);
+    const overTray = encodeProgram({ version: 1, body: route, songs: [] });
+    expect(runPlan(d, { program: [], blockDraft: overTray }).won).toBe(true);
+    expect(challengeEngine.validInitial({ version: 1, draft: overTray }, d)).toBe(false);
+    const withRepeat = encodeProgram({ version: 1, body: [{ kind: 'repeat', times: 2, body: [{ kind: 'command', command: 4 }] }], songs: [] });
+    expect(challengeEngine.validInitial({ version: 1, draft: withRepeat }, d)).toBe(false);
+    const withSong = encodeProgram({ version: 1, body: [{ kind: 'call', song: 0 }], songs: [[{ kind: 'command', command: 4 }]] });
+    expect(challengeEngine.validInitial({ version: 1, draft: withSong }, fogP().descriptor)).toBe(false);
+    expect(challengeEngine.validInitial({ version: 1, draft: encodeProgram(witness) }, d)).toBe(true);
+    // A descriptor without a tray keeps accepting drafts that only need to decode.
+    const open = { ...fogP().descriptor, tray: undefined };
+    expect(challengeEngine.validInitial({ version: 1, draft: withSong }, open)).toBe(true);
+  });
+  it('carries a valid block plan into a new attempt', async () => {
+    const { registration } = await import('../src/challenge/registrations/crab-commands');
+    const { emptyChallenge, validChallengeSession } = await import('../src/state/challenge');
+    const p = fogP(), witness = blockSolutions(p.descriptor)[0];
+    let s = registration.start(p.ref, 'a', 'carry', emptyChallenge(), options, []);
+    s = registration.move(s, ['e', programOperations({ version: 1, body: [], songs: [] }, witness)])!;
+    const next = registration.restart!(s, 'carry-2', { ...emptyChallenge(), nextOrdinal: 2 });
+    expect((next.payload as { initial: { draft?: unknown } }).initial.draft).toEqual(encodeProgram(witness));
+    expect(validChallengeSession(next, next.owner, registration.catalog)).toBe(true);
+    expect(registration.move(next, ['g'])!.result).not.toBeNull();
+  });
+});

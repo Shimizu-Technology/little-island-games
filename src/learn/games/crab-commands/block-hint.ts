@@ -1,51 +1,98 @@
-import type { Code } from '../../program/codec';
 import { blockPosition } from '../../program/hints';
+import { clone, insertNode, listAt, main, removeNode, replaceNode, address, type Location } from '../../program/edit';
 import type { Node, Program } from '../../program/model';
-import { programOperations, type Operation, type Path } from '../../program/operations';
 
-/** An operation path as the editor's block address (main.1.body.0), so hints name blocks the way the plan does. */
-export function addressOf(path: Path, withIndex = true): string {
-  let out = path[0] === -1 ? 'main' : `song${path[0]}`;
-  const end = withIndex ? path.length : path.length - 1;
-  for (let i = 1; i < end; i++) out += i % 2 ? `.${path[i]}` : `.${['body', 'yes', 'no'][path[i]]}`;
-  return out;
-}
-const container = (path: Path) => {
-  const parent = addressOf(path, false);
-  return parent === 'main' ? 'the plan' : parent.startsWith('song') && !parent.includes('.') ? `song ${Number(parent.slice(4)) + 1}` : `${blockPosition(parent.replace(/\.(body|yes|no)$/, ''))}`;
-};
-const nodeName = (code: Code, name: (command: number) => string) => code[0] === 0 ? name(code[1]) : code[0] === 2 ? `a Repeat ${code[1]} block` : code[0] === 3 ? `Song ${code[1] + 1}` : 'a block';
-const listLength = (program: Program, path: Path): number => {
-  let list: Node[] | undefined = path[0] === -1 ? program.body : program.songs[path[0]];
-  for (let i = 1; list && i < path.length - 1; i += 2) { const n: Node | undefined = list[path[i]]; list = n && (n.kind === 'repeat' || n.kind === 'sequence') ? n.body : undefined; }
-  return list?.length ?? 0;
-};
-/** One structural edit in words. Inserting a Repeat names only the block, so its cards stay for the next step. */
-export function describeOperation(op: Operation, program: Program, name: (command: number) => string): string {
-  if (op[0] === 0) {
-    // The editor adds Repeat ×2; the count is changed after, so a Repeat hint says both steps.
-    const at = op[1].at(-1)!, inside = container(op[1]), what = op[2][0] === 2 ? 'a Repeat block' : nodeName(op[2], name), then = op[2][0] === 2 && op[2][1] !== 2 ? ` Then set it to ${op[2][1]} times.` : '';
-    if (at >= listLength(program, op[1])) return (inside === 'the plan' ? `Add ${what} at the end of the plan.` : `Add ${what} inside ${inside}.`) + then;
-    return `Insert ${what} before ${blockPosition(addressOf(op[1]))}.${then}`;
+/** One thing a child can do in the block editor, in the editor's own controls. A hint never names anything else. */
+export type BlockStep =
+  | { kind: 'add'; location: Location; node: Node }
+  | { kind: 'count'; location: Location; at: number; times: number }
+  | { kind: 'replace'; location: Location; at: number; command: number }
+  | { kind: 'remove'; location: Location; at: number }
+  | { kind: 'make-song' };
+type Name = (command: number) => string;
+
+const child = (location: Location, at: number, branch: 'body' | 'yes' | 'no'): Location => ({ ...location, path: [...location.path, at, branch] });
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** What a palette button puts in the plan: Repeat always arrives as ×2 and empty, an If with both branches empty. */
+const fromPalette = (n: Node): Node => n.kind === 'repeat' ? { kind: 'repeat', times: 2, body: [] } : n.kind === 'if' ? { kind: 'if', condition: { kind: 'blocked' }, yes: [], no: [] } : n;
+
+/** The first difference between a list in the child's plan and the same list in the target. Cards are only ever added at
+ * the end of a list (where the editor's dashed place adds them); a wrong block is replaced or removed. */
+function listStep(list: readonly Node[], target: readonly Node[], location: Location): BlockStep | null {
+  for (let at = 0; at < Math.max(list.length, target.length); at++) {
+    const a = list[at], b = target[at];
+    if (!a) return { kind: 'add', location, node: fromPalette(b) };
+    if (!b) return { kind: 'remove', location, at };
+    if (a.kind === 'command' && b.kind === 'command') { if (a.command !== b.command) return { kind: 'replace', location, at, command: b.command }; continue; }
+    if (a.kind === 'call' && b.kind === 'call' && a.song === b.song) continue;
+    if (a.kind === 'repeat' && b.kind === 'repeat') {
+      const inner = listStep(a.body, b.body, child(location, at, 'body'));
+      if (inner) return inner;
+      if (a.times !== b.times) return { kind: 'count', location, at, times: b.times };
+      continue;
+    }
+    if (a.kind === 'if' && b.kind === 'if') {
+      const inner = listStep(a.yes, b.yes, child(location, at, 'yes')) ?? listStep(a.no, b.no, child(location, at, 'no'));
+      if (inner) return inner;
+      continue;
+    }
+    return { kind: 'remove', location, at };
   }
-  if (op[0] === 1) return `Remove ${blockPosition(addressOf(op[1]))}.`;
-  if (op[0] === 6) return `Change ${blockPosition(addressOf(op[1]))} to ${name(op[2])}.`;
-  if (op[0] === 3) return `Set the Repeat at ${blockPosition(addressOf(op[1]))} to ${op[2]} times.`;
-  if (op[0] === 2) return `Move ${blockPosition(addressOf(op[1]))} to ${blockPosition(addressOf(op[2]))}.`;
-  return 'Change one block.';
+  return null;
 }
-/** The whole plan in words, for the last help step. */
-export function describeProgram(program: Program, name: (command: number) => string): string {
-  const say = (nodes: Node[]): string => nodes.map(n => n.kind === 'command' ? name(n.command) : n.kind === 'repeat' ? `Repeat ${n.times} times [${say(n.body)}]` : n.kind === 'call' ? `Song ${n.song + 1}` : 'a block').join(', ');
-  return say(program.body);
+/** The next editor action from the child's plan toward one certified winner, or null when the plan already is that winner.
+ * A song is built the only way the editor allows: put its cards in the plan, then Make plan a song. */
+export function nextStep(program: Program, target: Program): BlockStep | null {
+  if (target.songs.length && !program.songs.length) return same(program.body, target.songs[0]) ? { kind: 'make-song' } : listStep(program.body, target.songs[0], main);
+  return listStep(program.body, target.body, main) ?? target.songs.map((song, i) => listStep(program.songs[i] ?? [], song, { song: i, path: [] })).find(Boolean) ?? null;
 }
-/** The certified winner fewest structural edits away, and its first edit. Ties keep the cheaper winner. */
-export function nearestBlocks(program: Program, solutions: readonly Program[]): { target: Program; first: Operation | null; edits: number } | null {
-  let best: { target: Program; first: Operation | null; edits: number } | null = null;
+/** The same pure edits the editor makes for these controls. */
+export function applyStep(program: Program, step: BlockStep): Program | null {
+  if (step.kind === 'make-song') { const next = clone(program), song = next.songs.length; next.songs.push(next.body); next.body = [{ kind: 'call', song }]; return next; }
+  if (step.kind === 'add') { const list = listAt(program, step.location); return list ? insertNode(program, step.location, list.length, step.node) : null; }
+  if (step.kind === 'remove') return removeNode(program, step.location, step.at);
+  const node = listAt(program, step.location)?.[step.at];
+  if (!node) return null;
+  if (step.kind === 'count') return node.kind === 'repeat' ? replaceNode(program, step.location, step.at, { ...node, times: step.times }) : null;
+  return replaceNode(program, step.location, step.at, { kind: 'command', command: step.command });
+}
+const paletteLabel = (n: Node, name: Name) => n.kind === 'command' ? name(n.command) : n.kind === 'repeat' ? '↻ Repeat ×2' : n.kind === 'if' ? '? If blocked' : n.kind === 'call' ? `♫ Song ${n.song + 1}` : 'a block';
+const blockName = (n: Node | undefined, name: Name) => !n ? 'block' : n.kind === 'command' ? name(n.command) : n.kind === 'repeat' ? `Repeat ${n.times}` : n.kind === 'if' ? 'If blocked' : n.kind === 'call' ? `Song ${n.song + 1}` : 'block';
+/** The dashed place to tap first, named as the editor names it. */
+function place(location: Location): string {
+  if (!location.path.length) return location.song === null ? '“＋ End of plan”' : `“＋ Inside Song ${location.song + 1}”`;
+  const branch = location.path.at(-1), owner = blockPosition(address({ ...location, path: location.path.slice(0, -2) }, location.path.at(-2) as number));
+  return branch === 'yes' ? `“＋ When blocked” in the If at ${owner}` : branch === 'no' ? `“＋ Otherwise” in the If at ${owner}` : `“＋ Inside repeat” in ${owner}`;
+}
+/** One step in words, each naming a real control. */
+export function describeStep(step: BlockStep, program: Program, name: Name): string {
+  if (step.kind === 'make-song') return 'Your group of cards is ready. Tap “Make plan a song”: the group becomes Song 1, and the plan calls it once.';
+  if (step.kind === 'add') {
+    const then = step.node.kind === 'repeat' ? ' The Repeat starts at ×2.' : step.node.kind === 'if' ? ' Its two branches start empty.' : '';
+    return `Tap ${place(step.location)}, then tap ${paletteLabel(step.node, name)}.${then}`;
+  }
+  const at = blockPosition(address(step.location, step.at)), here = blockName(listAt(program, step.location)?.[step.at], name);
+  if (step.kind === 'count') return `Tap the Repeat at ${at}, then tap ×${step.times}.`;
+  if (step.kind === 'replace') return `Tap ${at} (${here}), then tap ${name(step.command)} to replace it.`;
+  return `Tap ${at} (${here}), then tap Remove block.`;
+}
+/** The whole plan in words for the last help step, with every branch and the song spelled out. */
+export function describeProgram(program: Program, name: Name): string {
+  const say = (nodes: Node[]): string => nodes.map(n => n.kind === 'command' ? name(n.command) : n.kind === 'repeat' ? `Repeat ${n.times} times [${say(n.body)}]` : n.kind === 'call' ? `♫ Song ${n.song + 1}` : n.kind === 'if' ? `If blocked [${say(n.yes) || 'nothing'}] otherwise [${say(n.no) || 'nothing'}]` : say(n.body)).join(', ');
+  const songs = program.songs.map((song, i) => `Song ${i + 1} is [${say(song)}]`).join('. ');
+  return `${songs ? `${songs}. Plan: ` : ''}${say(program.body)}`;
+}
+const stepsTo = (program: Program, target: Program) => {
+  let p: Program | null = program, n = 0;
+  for (let step = p && nextStep(p, target); step && p && n < 200; step = p && nextStep(p, target)) { p = applyStep(p, step); n++; }
+  return p ? n : Infinity;
+};
+/** The certified winner the fewest editor actions away, and the first action toward it. Ties keep the cheaper winner. */
+export function nearestBlocks(program: Program, solutions: readonly Program[]): { target: Program; first: BlockStep | null; steps: number } | null {
+  let best: { target: Program; first: BlockStep | null; steps: number } | null = null;
   for (const target of solutions) {
-    let ops: Operation[];
-    try { ops = programOperations(program, target); } catch { continue; }
-    if (!best || ops.length < best.edits) best = { target, first: ops[0] ?? null, edits: ops.length };
+    const steps = stepsTo(program, target);
+    if (steps < (best?.steps ?? Infinity)) best = { target, first: nextStep(program, target), steps };
   }
   return best;
 }

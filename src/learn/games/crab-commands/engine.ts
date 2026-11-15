@@ -3,7 +3,7 @@ import { crabProgram, projectCrab, readCrabDraft } from './program';
 import type { LearnEngine, LearnOptions, Pace } from "../../types";
 import { pickItems } from "../../skills";
 import { exact, integer, prediction } from "../../kit/science";
-import { nodeCost } from "../../program/model";
+import { nodeCost, type Program } from "../../program/model";
 import schoolContent from "./school-content.json";
 export type Command = "up" | "right" | "down" | "left" | "forward" | "turn-left" | "turn-right" | "repeat";
 export type Level = {
@@ -273,13 +273,15 @@ export const engine: LearnEngine<CrabState> = {
       if (manual) { const walker = run(currentLevel(legacy as CrabState), legacy.program.slice(0, legacy.cursor)); if (!walker.bump && !solved(currentLevel(legacy as CrabState), walker)) validation = {...legacy,running:true}; }
       if (!validRound(validation, o, true)) return false;
       const level = currentLevel(legacy), decoded = readCrabDraft(blockDraft, level);
-      return !!decoded && JSON.stringify(decoded.plan) === JSON.stringify(legacy.program) && (level.tray === undefined || nodeCost(decoded.program) <= level.tray) && sessionBytes(x) <= 4096;
+      return !!decoded && JSON.stringify(decoded.plan) === JSON.stringify(legacy.program) && (level.tray === undefined || (nodeCost(decoded.program) <= level.tray && trayTools(decoded.program))) && sessionBytes(x) <= 4096;
     }
     return validRound(x, o, false);
   },
   outcome: (s) => (s.completed.length === 3 ? "done" : null),
   turn: (s) => ((s.starter + s.cards) % 2) as 0 | 1,
 };
+/** A Level 5 board offers cards and Repeat only: no songs and no condition. */
+const trayTools = (p: Program): boolean => !p.songs.length && !JSON.stringify(p.body).includes('"call"') && !JSON.stringify(p.body).includes('"if"');
 /** The flat fields of a round. A tray beach's flat plan is a block plan of single cards, so it fits the tray too. */
 function validRound(x: unknown, o: LearnOptions, drafted: boolean): x is CrabState {
     if (!exact(x, ["levels", "completed", "program", "cursor", "running", "starter", "cards", "debugging"]))

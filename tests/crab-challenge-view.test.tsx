@@ -103,3 +103,42 @@ it('C1d: on a foggy tray puzzle the board opens in blocks with Go! and Help besi
  await act(async () => run.findAllByType('button')[1].props.onPress());
  expect(dispatch).toHaveBeenLastCalledWith(['h']);
 });
+it('C1d fix P1-1: the visible help ladder walks every Songs and Foggy puzzle from an empty plan to a helped win, in the editor\'s own words', async () => {
+ const { readFileSync } = await import('node:fs');
+ const { blockSolutions } = await import('../src/learn/games/crab-commands/challenge-content');
+ const { applyStep, describeStep, nearestBlocks } = await import('../src/learn/games/crab-commands/block-hint');
+ const { programOperations } = await import('../src/learn/program/operations');
+ const { programCodes } = await import('../src/learn/games/crab-commands/program');
+ // Every control a hint names exists, with that exact label, in the shared block editor.
+ const editor = readFileSync('src/learn/program/ProgramEditor.tsx', 'utf8');
+ for (const control of ['＋ End of plan', '＋ Inside ', '＋ ${branch === \'yes\' ? \'When blocked\' : \'Otherwise\'}', 'Make plan a song', '↻ Repeat ×2', '? If blocked', '♫ Song', 'Remove block', '×{times}']) expect(editor, control).toContain(control);
+ const labels: Record<string, string> = { forward: 'Walk', 'turn-left': 'Turn left', 'turn-right': 'Turn right' }, name = (c: number) => labels[programCodes[c]];
+ const words = /^(Tap “＋ (End of plan|Inside repeat|When blocked|Otherwise|Inside Song \d)”( in [^,]+(, [^,]+)*)?, then tap (Walk|Turn left|Turn right|↻ Repeat ×2|\? If blocked|♫ Song \d)\.( The Repeat starts at ×2\.| Its two branches start empty\.)?|Tap the Repeat at .+, then tap ×(2|3|4|6|8)\.|Tap .+ \(.+\), then tap (Walk|Turn left|Turn right) to replace it\.|Tap .+ \(.+\), then tap Remove block\.|Your group of cards is ready\. Tap “Make plan a song”: .+)$/;
+ const shown = () => root!.root.findAllByType('p').map(p => p.children.join('')).find(t => /^(Tap (“|the Repeat|plan|song)|Your group|Your blocks reach home|One working plan)/.test(t));
+ for (const p of crabPuzzles.filter(c => c.ref.bank === 14 || c.ref.bank === 15)) {
+  const d = p.descriptor;
+  let s = challengeEngine.create(d, { version: 1 }, { supportOff: false, ownRead: false }), program = { version: 1 as const, body: [], songs: [] } as import('../src/learn/program/model').Program;
+  // The last step shows the whole plan, every branch and song spelled out.
+  let whole = s; for (let i = 0; i < 3; i++) whole = challengeEngine.step(whole, ['h'], d)!.state;
+  if (root) await act(async () => root!.unmount()); await mount(whole);
+  expect(shown(), p.title).toMatch(/^One working plan: /);
+  expect(shown()).not.toContain('a block');
+  expect(shown()).toContain(p.ref.bank === 15 ? 'If blocked [' : 'Song 1 is [');
+  let steps = 0;
+  for (; steps < 40; steps++) {
+   s = challengeEngine.step(s, ['h'], d)!.state;
+   await act(async () => root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));
+   const line = shown()!;
+   if (line.startsWith('Your blocks reach home')) break;
+   expect(line, `${p.title} step ${steps}`).toMatch(words);
+   const near = nearestBlocks(program, blockSolutions(d))!;
+   expect(describeStep(near.first!, program, name)).toBe(line);
+   const next = applyStep(program, near.first!)!;
+   s = challengeEngine.step(s, ['e', programOperations(program, next)], d)!.state; program = next;
+  }
+  expect(steps, p.title).toBeGreaterThan(2);
+  const won = challengeEngine.step(s, ['g'], d)!;
+  expect(won.state.won, p.title).toBe(true);
+  expect(challengeEngine.inspect(won.state, d).dareEligible).toBe(false);
+ }
+});

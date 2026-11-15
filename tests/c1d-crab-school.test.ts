@@ -5,7 +5,7 @@ import { codes, crabSim, flatCards, gradeLoops, loopSolutions } from '../src/lea
 import { blockBest, runNodes } from '../src/learn/games/crab-commands/search';
 import { execute, nextHint } from '../src/learn/games/crab-commands/challenge-engine';
 import { greedyBot } from '../src/learn/games/crab-commands/deep-proofs';
-import { describeOperation, nearestBlocks } from '../src/learn/games/crab-commands/block-hint';
+import { applyStep, describeStep, nearestBlocks, nextStep } from '../src/learn/games/crab-commands/block-hint';
 import { encodeProgram } from '../src/learn/program/codec';
 import { nodeCost, type Program } from '../src/learn/program/model';
 import { applyOperations } from '../src/learn/program/operations';
@@ -117,18 +117,20 @@ describe('C1d Level 5: block loops, tray below the flat optimum', () => {
   it('a flat greedy player with no loops fails every Level 5 beach', () => {
     for (const l of loops) expect(greedyBot({ level: l, budget: null, starter: [], lesson: '', tray: l.tray }).won, l.id).toBe(false);
   });
-  it('the block hint names one structural edit toward a certified winner, from empty to home', () => {
-    const name = (c: number) => String(c);
+  it('the block hint names one editor action at a time toward a certified winner, from empty to home', () => {
+    const name = (c: number) => ['Up', 'Right', 'Down', 'Left', 'Walk', 'Turn left', 'Turn right'][c];
     for (const l of loops) {
       let program: Program = { version: 1, body: [], songs: [] };
+      const near = nearestBlocks(program, loopSolutions(l))!;
       for (let guard = 0; guard < 40; guard++) {
-        const near = nearestBlocks(program, loopSolutions(l))!;
-        if (!near.first) break;
-        expect(describeOperation(near.first, program, name).length).toBeGreaterThan(5);
-        const next = applyOperations(program, [near.first]);
+        const step = nextStep(program, near.target);
+        if (!step) break;
+        expect(describeStep(step, program, name), l.id).toMatch(/^Tap /);
+        expect(step.kind === 'count' ? [2, 3, 4, 6, 8] : [step.kind]).toContain(step.kind === 'count' ? step.times : step.kind);
+        const next = applyStep(program, step)!;
         expect(next, l.id).not.toBeNull();
-        expect(nearestBlocks(next!, loopSolutions(l))!.edits, l.id).toBeLessThan(near.edits);
-        program = next!;
+        expect(nodeCost(next), l.id).toBeLessThanOrEqual(l.tray!);
+        program = next;
       }
       expect(runNodes(crabSim(l), crabSim(l).start, program.body)?.won, l.id).toBe(true);
     }
@@ -198,6 +200,21 @@ describe('C1d School rounds: new rounds use the new beaches; saved rounds and st
 });
 
 it('a Repeat hint matches the editor: add Repeat ×2, then set the count', () => {
-  const op: [0, number[], [2, number, []]] = [0, [-1, 0], [2, 4, []]];
-  expect(describeOperation(op as never, { version: 1, body: [], songs: [] }, String)).toBe('Add a Repeat block at the end of the plan. Then set it to 4 times.');
+  const empty: Program = { version: 1, body: [], songs: [] }, target: Program = { version: 1, body: [{ kind: 'repeat', times: 4, body: [{ kind: 'command', command: 4 }] }], songs: [] };
+  const first = nextStep(empty, target)!;
+  expect(describeStep(first, empty, String)).toBe('Tap “＋ End of plan”, then tap ↻ Repeat ×2. The Repeat starts at ×2.');
+  const added = applyStep(applyStep(empty, first)!, nextStep(applyStep(empty, first)!, target)!)!;
+  expect(describeStep(nextStep(added, target)!, added, String)).toBe('Tap the Repeat at plan, block 1, then tap ×4.');
+});
+
+it('fix P2-1: a saved Level 5 draft with a song or a condition is refused, even inside the tray', () => {
+  const o = at(5), s = crab.create(o, context), l = currentLevel(s);
+  const songDraft: Program = { version: 1, body: [{ kind: 'call', song: 0 }], songs: [[{ kind: 'command', command: 4 }]] };
+  const ifDraft: Program = { version: 1, body: [{ kind: 'if', condition: { kind: 'blocked' }, yes: [{ kind: 'command', command: 6 }], no: [{ kind: 'command', command: 4 }] }], songs: [] };
+  for (const p of [songDraft, ifDraft]) {
+    expect(nodeCost(p)).toBeLessThanOrEqual(l.tray!);
+    const drafted = withCrabProgram(s, p, l);
+    expect(drafted && crab.validate(drafted, o)).toBeFalsy();
+  }
+  expect(crab.validate(withCrabProgram(s, loopSolutions(l)[0], l)!, o)).toBe(true);
 });
