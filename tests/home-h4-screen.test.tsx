@@ -138,6 +138,28 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.played).toContain('burp');
     expect(harness.played.filter((s) => s === 'burp')).toHaveLength(1);
   });
+  it('fix round 1 (P2): the latest meal wins; an earlier meal\'s smile never lands on the next one', async () => {
+    const state = labFixtures.delight();
+    state.rooms.kitchen.instances.push(...Array.from({ length: 2 }, (_, n) => ({ ...instance(`snack-${n}`, 'banana', 0, 0), at: { x: 120 + n * 60, y: 470 } })));
+    await open(state);
+    const eaterId = Object.values(buildScene(state).entities).find((e) => e.character?.slot === 0)!.id;
+    const feed = async (n: number) => {
+      const scene = harness.scene.scene, index = scene.rooms.kitchen, mouth = index.targets.find((t: any) => t.id === `${eaterId}/mouth`)!;
+      const proposal = resolve({ ...index, entities: scene.entities }, scene.entities[`kitchen/item/snack-${n}`], mouth.contact, { scale: .5, aim: roomPoint(mouth.face!.x, mouth.face!.y), release: true });
+      expect(proposal.kind).toBe('mouth');
+      const origin = roomOrigin(roomIds.indexOf('kitchen'), building);
+      await act(async () => harness.options.onCommit(0, proposal, { x: proposal.contact.x + origin.x, y: proposal.contact.y + origin.y }, {}));
+    };
+    await feed(0);
+    await act(async () => { vi.advanceTimersByTime(400); });
+    await feed(1);
+    await act(async () => { vi.advanceTimersByTime(400); }); // the first meal's moment has passed
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+    expect(harness.cues.some(([id, kind]) => id === eaterId && kind === 'happy')).toBe(false);
+    await act(async () => { vi.advanceTimersByTime(400); }); // the second meal's moment
+    expect(harness.scene.moods[eaterId]).toBe('happy');
+    expect(harness.cues.filter(([id, kind]) => id === eaterId && kind === 'happy')).toHaveLength(1);
+  });
   it('HD-07: tap the stove to light it; food in its pan sizzles and cooks; taken off early, it stays raw', async () => {
     const state = labFixtures.delight();
     const persist = await open(state);

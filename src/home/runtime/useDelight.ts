@@ -71,11 +71,17 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () 
     });
   }, [later]);
   const meals = useRef<Record<string, number>>({});
+  // Fix round 1: one action token per friend. Every delayed flourish checks it when it fires,
+  // so a newer meal, a pickup or a tap always wins over an older meal's crumbs, smile or burp.
+  const actions = useRef<Record<string, number>>({});
+  const newAction = useCallback((id: string) => { const token = ++serial.current; actions.current[id] = token; return token; }, []);
+  const current = useCallback((id: string, token: number) => actions.current[id] === token, []);
 
   const pickedUp = useCallback((subject?: SceneEntity) => {
+    if (subject?.character) newAction(subject.id);
     feedback.haptic("pickup");
     feedback.play(subject?.character ? "lift" : "pick");
-  }, [feedback]);
+  }, [feedback, newAction]);
 
   const landed = useCallback((proposal: DropProposal, subject: SceneEntity | undefined, before: Scene, after: Scene, landedId?: string) => {
     // A catalog piece has no scene entity yet; its instance says what it is made of.
@@ -103,28 +109,31 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () 
   /** HD-05: a bite or a sip, crumbs, then a happy wiggle; now and then a small burp. */
   const ate = useCallback((owner: SceneEntity, consume: "eat" | "drink") => {
     feedback.play(consume === "eat" ? "munch" : "bubbles");
-    const mouth = friendPoint(owner, "mouth");
-    if (consume === "eat") later(180, () => effect("crumbs", owner.room, mouth.x, mouth.y));
-    const meal = (meals.current[owner.id] ?? 0) + 1;
-    meals.current[owner.id] = meal;
+    const id = owner.id, token = newAction(id);
+    // Positions are read when each part is shown, from the friend as they are then.
+    const now = () => { const latest = sceneNow().entities[id]; return current(id, token) && latest?.character ? latest : undefined; };
+    if (consume === "eat") later(180, () => { const f = now(); if (f) { const m = friendPoint(f, "mouth"); effect("crumbs", f.room, m.x, m.y); } });
+    const meal = (meals.current[id] ?? 0) + 1;
+    meals.current[id] = meal;
     later(AFTER_EAT_MS, () => {
-      const latest = sceneNow().entities[owner.id];
-      if (!latest?.character) return;
+      if (!now()) return;
       if (consume === "eat" && burps(meal)) {
-        mood(owner.id, "surprised", 260);
-        cueOn(owner.id, "burp");
+        mood(id, "surprised", 260);
+        cueOn(id, "burp");
         later(200, () => {
-          const point = friendPoint(latest, "mouth");
-          effect("burp", latest.room, point.x, point.y);
+          const f = now();
+          if (!f) return;
+          const point = friendPoint(f, "mouth");
+          effect("burp", f.room, point.x, point.y);
           feedback.play("burp");
-          mood(owner.id, "happy", 700);
+          mood(id, "happy", 700);
         });
       } else {
-        mood(owner.id, "happy", 800);
-        cueOn(owner.id, "happy");
+        mood(id, "happy", 800);
+        cueOn(id, "happy");
       }
     });
-  }, [cueOn, effect, feedback, sceneNow, later, mood]);
+  }, [cueOn, current, effect, feedback, sceneNow, later, mood, newAction]);
 
   /** A touch on something in the room. Toggles have already been dispatched by the screen. */
   const tapped = useCallback((entity: SceneEntity, sleeping: Record<string, boolean>) => {
@@ -140,7 +149,8 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () 
         effect("zzz", entity.room, head.x, head.y);
         feedback.play("rustle");
       } else {
-        // Rule 42: a short greeting. It never changes where the friend is.
+        // Rule 42: a short greeting. It never changes where the friend is. It is the newest action.
+        newAction(entity.id);
         cueOn(entity.id, "hop");
         mood(entity.id, "happy", 500);
         feedback.play("lift");
@@ -168,7 +178,7 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () 
     // table or shelf holding things answers with the sound alone, so nothing slides off it.
     if (!entity.children.length) cueOn(entity.id, "tap");
     feedback.play(materialOf(item.item));
-  }, [cueOn, effect, feedback, mood, sceneNow]);
+  }, [cueOn, effect, feedback, mood, newAction, sceneNow]);
 
   const touchedPiece = useCallback((room: RoomId, piece: StagePiece) => {
     setPoke((current) => ({ id: piece.id, serial: (current?.serial ?? 0) + 1 }));
