@@ -50,6 +50,8 @@ it.each([1, 3.12].flatMap(scale => [[32,9], [36,6], [40,9], [42,9], [56,6], [68,
     const st=note.props.style, oldHeight=Math.ceil(n/3)*st.lineHeight;
     const box={left:st.left??0,top:st.top??(actual-oldHeight)/2,width:st.width??actual,height:st.height??oldHeight};
     expect(intersects(box,captionBox)).toBe(false);
+    expect(box.left).toBeGreaterThanOrEqual(Math.max(3,actual*.08)+1-1e-5);
+    expect(box.left+box.width).toBeLessThanOrEqual(actual-Math.max(3,actual*.08)-1+1e-5);
     expect(box.top).toBeGreaterThanOrEqual(0);expect(box.top+box.height).toBeLessThanOrEqual(actual+1e-5);
     expect(st.fontSize).toBeGreaterThanOrEqual(Math.max(10,actual*.19));
     expect(note.props.maxFontSizeMultiplier).toBe(1);

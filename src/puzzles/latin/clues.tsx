@@ -15,7 +15,8 @@ export function cageCorners(p: LatinPuzzle): CornerClues {
     const inset = Math.max(3, cell * .08), text = cageLabel(c);
     const fontSize = Math.max(11, Math.min(16, cell * .27)) * Math.min(fontScale, 1.2);
     return [Math.min(...c.cells), { text, left: inset + (p.kind === 'killer' ? 2 : 0), top: p.kind === 'killer' ? inset + 1 : 2,
-      fontSize, lineHeight: fontSize * 1.15, width: text.length * .7 * fontSize + 1 }];
+      fontSize, lineHeight: fontSize * 1.15, width: text.length * .7 * fontSize + 1,
+      notesInset: p.kind === 'killer' ? inset + 1 : 2, notesBottomInset: p.kind === 'killer' ? inset - .2 : 1 }];
   }));
 }
 /** Cage totals sit in each cage's first cell; Cage Sudoku also draws its cages as dashed outlines. */
