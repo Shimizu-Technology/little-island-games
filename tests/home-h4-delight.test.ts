@@ -15,6 +15,8 @@ import { editHistory } from '../src/home/useHomeStore';
 import { capabilityOf } from '../src/home/world';
 import { itemIds } from '../src/home/catalog';
 import { entityName } from '../src/home/scene/labels';
+import { panCell, panFloorPoint, panSeatPoint } from '../src/home/scene/pan';
+import { decorSpec } from '../src/home/catalog';
 import type { DropProposal } from '../src/home/scene/resolve';
 import type { SceneEntity } from '../src/home/scene/types';
 vi.mock('react-native', () => ({ AppState: { addEventListener: () => ({ remove() {} }), currentState: 'active' }, Platform: { OS: 'ios' }, View: 'View' }));
@@ -213,9 +215,13 @@ describe('HD-05 / HD-06 / HD-09 resting reactions', () => {
 
 describe('HD-07 stove and pan (rules 48, 49)', () => {
   const kitchen = () => labFixtures.delight();
-  const withFood = (state: HomeStateV2, lit: boolean, food = 'mango') => ({ ...state, rooms: { ...state.rooms, kitchen: { ...state.rooms.kitchen,
-    instances: [...state.rooms.kitchen.instances.filter((i) => i.id !== 'mango').map((i) => i.item === 'stove' ? { ...i, powered: lit } : i),
-      { ...instance('pan-food', food as never, state.rooms.kitchen.instances.find((i) => i.item === 'stove')!.x, state.rooms.kitchen.instances.find((i) => i.item === 'stove')!.y), on: state.rooms.kitchen.instances.find((i) => i.item === 'stove')!.id }] } } }) as HomeStateV2;
+  // Food in the pan is saved on the floor cell in front of the stove (scene/pan), never `on` it.
+  const withFood = (state: HomeStateV2, lit: boolean, food = 'mango') => {
+    const stove = state.rooms.kitchen.instances.find((i) => i.item === 'stove')!, cell = panCell(stove);
+    return { ...state, rooms: { ...state.rooms, kitchen: { ...state.rooms.kitchen,
+      instances: [...state.rooms.kitchen.instances.filter((i) => i.id !== 'mango').map((i) => i.item === 'stove' ? { ...i, powered: lit } : i),
+        instance('pan-food', food as never, cell.x, cell.y)] } } } as HomeStateV2;
+  };
   it('a tap lights the stove and a second tap turns it off; it stays put in Play', () => {
     const state = kitchen(), stove = state.rooms.kitchen.instances.find((i) => i.item === 'stove')!;
     expect(capabilityOf('stove')).toMatchObject({ toggle: 'power', moveInPlay: false });
@@ -224,11 +230,21 @@ describe('HD-07 stove and pan (rules 48, 49)', () => {
     const off = homeReducer(on, { type: 'toggle', id: stove.id, roomId: 'kitchen' }).state;
     expect(off.rooms.kitchen.instances.find((i) => i.id === stove.id)!.powered).toBe(false);
   });
-  it('the pan takes food: the stove is a surface, and food in it is a valid save', () => {
+  it('the pan takes food without a saved attachment: the stove is not a surface, the food is saved on the floor in front and drawn in the pan', () => {
+    expect(decorSpec('stove').surface).toBeFalsy();
     const state = withFood(kitchen(), false);
     expect(validHome(state)).toBe(true);
-    const scene = buildScene(state);
-    expect(scene.rooms.kitchen.surfaces.some((t) => scene.entities[t.owner]?.item?.item === 'stove')).toBe(true);
+    const food = state.rooms.kitchen.instances.find((i) => i.id === 'pan-food')!;
+    expect(food.on).toBeUndefined();
+    const scene = buildScene(state), stove = Object.values(scene.entities).find((e) => e.item?.item === 'stove')!;
+    const entity = scene.entities['kitchen/item/pan-food'];
+    expect(entity.pan).toBe(stove.id);
+    expect(entity.attachment).toMatchObject({ kind: 'floor', at: panFloorPoint(stove.item!) });
+    expect(entity.contact).toEqual(panSeatPoint(stove.item!));
+    expect(scene.rooms.kitchen.surfaces.filter((t) => t.owner === stove.id).map((t) => t.id)).toEqual([`${stove.id}/pan`]);
+    // Only food: a toy at the same spot is just on the floor.
+    const toy = buildScene(withFood(kitchen(), false, 'teddy'));
+    expect(toy.entities['kitchen/item/pan-food'].pan).toBeUndefined();
   });
   it('raw food on a lit stove cooks; off the heat or on a cold stove nothing happens; cooked food stays cooked', () => {
     const hot = withFood(kitchen(), true), cold = withFood(kitchen(), false);

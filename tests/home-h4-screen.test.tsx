@@ -145,10 +145,10 @@ describe('H4 on the Island Home screen', () => {
     await tap(stove.id);
     expect(harness.played).toContain('knob');
     expect(persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.item === 'stove')!.powered).toBe(true);
-    const pan = harness.scene.scene.rooms.kitchen.surfaces.find((t: any) => t.owner === stove.id)!;
+    const pan = harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!;
     const mango = harness.scene.scene.entities['kitchen/item/mango'];
     await drop(state, mango.id, 'kitchen', pan.contact, { target: pan.id });
-    expect(harness.scene.scene.entities['kitchen/item/mango'].attachment).toMatchObject({ kind: 'surface', parent: stove.id });
+    expect(harness.scene.scene.entities['kitchen/item/mango'].pan).toBe(stove.id);
     expect(harness.played).toContain('sizzle');
     expect(harness.scene.effects.some((e: any) => e.kind === 'steam')).toBe(true);
     await act(async () => { vi.advanceTimersByTime(COOK_MS + 10); });
@@ -156,10 +156,10 @@ describe('H4 on the Island Home screen', () => {
     expect(saved.rooms.kitchen.instances.find((i: any) => i.id === 'mango')!.powered).toBe(true);
     // Serve the cooked mango, then put raw rice in the pan and take it off before it is done.
     await drop(saved, 'kitchen/item/mango', 'kitchen', { x: 250, y: 480 });
-    const empty = harness.scene.scene.rooms.kitchen.surfaces.find((t: any) => t.owner === stove.id)!;
+    const empty = harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!;
     expect(empty.occupied).toBeUndefined();
     await drop(saved, 'kitchen/item/rice', 'kitchen', empty.contact, { target: empty.id });
-    expect(harness.scene.scene.entities['kitchen/item/rice'].attachment).toMatchObject({ kind: 'surface', parent: stove.id });
+    expect(harness.scene.scene.entities['kitchen/item/rice'].pan).toBe(stove.id);
     await act(async () => { vi.advanceTimersByTime(COOK_MS / 2); });
     await drop(saved, 'kitchen/item/rice', 'kitchen', { x: 330, y: 480 });
     await act(async () => { vi.advanceTimersByTime(COOK_MS * 2); });

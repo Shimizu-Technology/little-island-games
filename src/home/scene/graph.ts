@@ -6,6 +6,7 @@ import { capabilityOf, visualBox } from "../world";
 import { canHold, retiredSeat, socketPoint, socketsOf } from "../interactions";
 import { itemShapes, occluderBounds, paintedBounds, unionBounds } from "../art/silhouettes";
 import { characterFrame, characterPoint, furnitureDepth, itemPoint, itemSize, surfacePoint } from "../geometry";
+import { panCell, panFloorPoint, panSeatPoint, panStoveOf } from "./pan";
 import { anchorsFor, species } from "./species";
 import { characterEntityId, gridCell, gridToRoom, itemEntityId, roomPoint } from "./types";
 import type {
@@ -48,6 +49,9 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
   const point = itemPoint(item, instances);
   const box = visualBox(item.item, item.rotation, item.mirrored);
   const parent = item.on && instances.find((i) => i.id === item.on);
+  // HD-07: food saved on the floor in front of a stove is drawn seated in its pan.
+  const stove = panStoveOf(item, instances);
+  const shown = stove ? panSeatPoint(stove) : point;
   const attachment: Attachment = item.staged
     ? { kind: "staging", room }
     : item.in
@@ -59,17 +63,18 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
     id: itemEntityId(room, item.id),
     room,
     attachment,
-    contact: roomPoint(point.x, point.y),
+    contact: roomPoint(shown.x, shown.y),
     bounds: box,
     ...surveyed(itemShapes(item, box.width), box),
     base: "stand",
     facing: item.mirrored !== item.rotation >= 180 ? "left" : "front",
     action: null,
     children: [],
-    depth: furnitureDepth(item),
+    depth: stove ? furnitureDepth(stove) + 1 : furnitureDepth(item),
     band: item.layer === "wall" || item.layer === "ground" ? "background" : "furniture-back",
     hitProxies: [box],
     item,
+    ...(stove ? { pan: itemEntityId(room, stove.id) } : {}),
     body: {
       w: item.rotation % 180 ? b * 2 : a * 2,
       h: item.rotation % 180 ? a * 2 : b * 2,
@@ -287,6 +292,31 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
           closed: children.length >= capacity,
         });
       }
+    }
+    if (item.item === "stove") {
+      // HD-07: the pan takes one food. It lands on the floor cell in front of the stove (what
+      // the save keeps) and is drawn in the pan. A blocked cell closes the pan.
+      const cell = panCell(item), floorAt = panFloorPoint(item), seat = panSeatPoint(item);
+      const occupant = Object.values(entities).find((e) => e.pan === entity.id)?.id;
+      let blocked = cell.y + 2 > 12;
+      for (let y = cell.y; y < cell.y + 2 && !blocked; y++) for (let x = cell.x; x < cell.x + 2; x++)
+        if ((occupancy[`furniture:${x}:${y}`] ?? []).some((id) => id !== occupant)) blocked = true;
+      const box = { left: seat.x - 36, top: seat.y - 18, width: 72, height: 32 };
+      targets.push({
+        id: `${entity.id}/pan`,
+        kind: "surface",
+        owner: entity.id,
+        attachment: { kind: "floor", room, at: floorAt },
+        contact: seat,
+        core: box,
+        support: box,
+        base: "stand",
+        facing: "front",
+        occupied: occupant,
+        closed: !!occupant || blocked,
+        pan: true,
+        cell,
+      });
     }
     if (capabilityOf(item.item).toggle === "open") {
       targets.push({

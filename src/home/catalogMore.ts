@@ -77,7 +77,7 @@ export const moreCatalog: Record<string, MoreItemSpec> = {
   "side-table": entry("Side table", "tables-storage", [1, 1], {itemSize: 105, surface: true}),
   "coffee-table": entry("Coffee table", "tables-storage", [2, 1], {itemSize: 115, surface: true}),
   "fridge": entry("Fridge", "kitchen", [1, 1], {itemSize: 285, rooms: ["kitchen"], interactive: "The fridge is open"}),
-  "stove": entry("Stove", "kitchen", [1, 1], {itemSize: 185, surface: true, rooms: ["kitchen"], interactive: "The burner is on"}),
+  "stove": entry("Stove", "kitchen", [1, 1], {itemSize: 185, rooms: ["kitchen"], interactive: "The burner is on"}),
   "sink-counter": entry("Sink counter", "kitchen", [2, 1], {itemSize: 190, surface: true, rooms: ["kitchen"], interactive: "The water is running"}),
   "kitchen-table": entry("Kitchen table", "kitchen", [2, 1], {itemSize: 145, surface: true, rooms: ["kitchen"]}),
   "cake-stand": entry("Cake stand", "kitchen", [1, 1], {itemSize: 68, small: true, rooms: ["kitchen"]}),

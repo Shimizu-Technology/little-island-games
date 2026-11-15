@@ -204,10 +204,10 @@ export const burps = (meal: number) => meal >= FIRST_BURP && (meal - FIRST_BURP)
 
 // HD-07 (rule 49): food in the pan on a lit stove cooks. Removal or turning it off stops it.
 export const COOK_MS = 700;
+/** The stove whose pan this food is in. The save keeps it on the floor in front (see scene/pan). */
 export function stoveOf(scene: Scene, entity: SceneEntity): SceneEntity | undefined {
-  if (entity.attachment.kind !== "surface") return undefined;
-  const parent = scene.entities[entity.attachment.parent];
-  return parent?.item?.item === "stove" ? parent : undefined;
+  const stove = entity.pan ? scene.entities[entity.pan] : undefined;
+  return stove?.item?.item === "stove" ? stove : undefined;
 }
 export const isCooked = (entity: SceneEntity) => !!entity.item && capabilityOf(entity.item.item).edible === "food" && !!entity.item.powered;
 /** Raw food sitting on a burning stove: these cook. */
