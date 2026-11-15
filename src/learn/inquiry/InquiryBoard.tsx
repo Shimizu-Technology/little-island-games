@@ -4,7 +4,7 @@ import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from "
 import type { SchoolBoard } from "../boardGeometry";
 import { Button, Copy, PressableScale } from "../../components/ui";
 import { hasSpeech } from "../../components/Audio";
-import { LARGE_TEXT, wordFitMultiplier } from "../../components/wordFit";
+import { CHROME_MAX, LARGE_TEXT, atLarge, wordFitMultiplier } from "../../components/wordFit";
 import { CoachSpot } from "../Coach";
 import { useStepReveal } from "../stepReveal";
 import type { BoardProps } from "../types";
@@ -28,7 +28,7 @@ export function InquiryBoard({
   const s = session.state, p = useMemo(() => replay(qs, s.history), [qs, s.history]);
   const [earlier, setEarlier] = useState<Earlier[]>([]);
   const { fontScale } = useWindowDimensions();
-  const large = fontScale >= LARGE_TEXT;
+  const large = fontScale >= LARGE_TEXT, cap = atLarge(fontScale, CHROME_MAX);
   const space = useBoardSpace(), side = useBoardColumns();
   const geometry = useBoardGeometry(board, side ? 190 : 210, floor);
   // At large text the frame brings the board back into view for each new step: a new investigation, and its result.
@@ -74,7 +74,8 @@ export function InquiryBoard({
   };
   // Columns per row: short spot and number rows stay on one or two lines so Test stays in view at large text.
   const columns = (n: number) => {
-    const wanted = n >= 6 ? 4 : large ? 2 : n === 5 ? 3 : n;
+    // At large text three short choices still share a row when each tile keeps 96 pt.
+    const wanted = n >= 6 ? 4 : n === 5 ? (large ? 2 : 3) : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
     return Math.max(1, Math.min(wanted, Math.floor(width / 78)));
   };
   const choices = (labels: readonly string[], selected: (i: number) => boolean, onPress: (i: number) => void, verb: string, off?: (i: number) => boolean) => {
@@ -115,10 +116,11 @@ export function InquiryBoard({
   </View>;
   return (
     <View style={{ gap: 10 }}>
-      <View testID="inquiry-steps" style={large ? { gap: 2 } : { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: theme.accent, fontWeight: "900", fontSize: 13 }}>INVESTIGATION {p.index + 1} / {qs.length}</Copy>
+      {/* At large text the step line names only the current step, so it stays one line. */}
+      <View testID="inquiry-steps" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: theme.accent, fontWeight: "900", fontSize: 13 }}>{large ? "" : "INVESTIGATION "}{p.index + 1} / {qs.length}</Copy>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} accessibilityLabel={`Step: ${steps[now]}`} style={{ color: theme.ink, fontSize: 13 }}>
-          {steps.map((step, i) => (i === now ? `▸${step}` : step)).join(" · ")}
+          {large ? `▸${steps[now]}` : steps.map((step, i) => (i === now ? `▸${step}` : step)).join(" · ")}
         </Copy>
       </View>
       <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
@@ -127,8 +129,9 @@ export function InquiryBoard({
       </View>}>
         {/* Once tested, the result and the reasons sit right under the drawing the child is watching. */}
         {p.phase !== "setup" && result}
-        <Copy style={{ fontSize: 21, fontWeight: "900", color: theme.ink }}>{q.title}</Copy>
-        <Copy style={{ fontSize: 16, lineHeight: 22 }}>{q.question}</Copy>
+        {/* Title, question and prompts stop at 1.5× so the drawing and Test stay in view together; Hear it reads them. */}
+        <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 21, fontWeight: "900", color: theme.ink }}>{q.title}</Copy>
+        <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 16, lineHeight: 22 }}>{q.question}</Copy>
         {p.phase === "setup" && <CoachSpot active={coach.active}>
           <View style={{ gap: 8 }}>
             {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 4 }}>
@@ -136,7 +139,7 @@ export function InquiryBoard({
               {choices(c.options, (j) => s.draft[i] === j, (j) => send({ type: "set", control: i, value: j }), `Set ${c.name}`)}
             </View>)}
             {q.kind === "observe" && <>
-              <Copy style={{ fontSize: 14, fontWeight: "800" }}>What do you predict?</Copy>
+              <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14, fontWeight: "800" }}>What do you predict?</Copy>
               {choices(q.outcomes, (i) => s.guess === i, (i) => send({ type: "predict", outcome: i }), "Predict")}
             </>}
           </View>
