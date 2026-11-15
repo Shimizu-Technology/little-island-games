@@ -67,3 +67,13 @@ it('uses real viewport, board position, card inset and bottom padding once each'
   expect(measuredBoardSpace(700, 70, 14, 14)).toBe(602);
   expect(measuredBoardSpace(300, 400, 14, 14)).toBe(0);
 });
+
+it('the lead-approved landscape threshold is strict: 499 reveals, 500 does not', async () => {
+  const { revealBoardOnEntry } = await import('../src/learn/boardGeometry');
+  expect(revealBoardOnEntry(false, 499)).toBe(true);
+  expect(revealBoardOnEntry(false, 500)).toBe(false);
+  expect(revealBoardOnEntry(false, 744)).toBe(false);
+  expect(revealBoardOnEntry(false, 852)).toBe(false);
+  expect(revealBoardOnEntry(true, 500)).toBe(true);
+  expect(revealBoardOnEntry(true, 852)).toBe(true);
+});

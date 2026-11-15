@@ -66,7 +66,7 @@ async function mountPort(id: LearnId, Board: React.ElementType, available=472) {
   await act(async()=>{root=create(<BoardSpaceProvider space={{width:333,height:available,large:false}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>);});
   return root!;
 }
-const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s:{};
+const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
 const view=(id:string)=>root!.root.findAll(n=>String(n.type)==='View'&&n.props.testID===id)[0];
 it('Weather keeps the three default clothes choices in one full-size row in measured phone space',async()=>{
  const r=await mountPort('weather-watch',B7);

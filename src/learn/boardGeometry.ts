@@ -1,7 +1,7 @@
 import { BUTTON_ROW } from '../puzzles/grid/budget';
 
 /** Real inner card dimensions, after the safe areas, pinned header and card inset. */
-export type BoardSpace = { width: number; height: number; large: boolean };
+export type BoardSpace = { width: number; height: number; large: boolean; reveal?: boolean; layoutKey?: string };
 export type BoardGeometry = { height: number; chrome: number; overflow: number; fits: boolean };
 
 /**
@@ -30,3 +30,6 @@ export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 export function measuredBoardSpace(viewport: number, top: number, inset: number, bottom: number) {
   return Math.max(0, viewport - top - inset - bottom);
 }
+
+/** Lead-approved 15 Nov: short landscape uses the same non-animated reveal as AX. */
+export const revealBoardOnEntry = (large: boolean, windowHeight: number) => large || windowHeight < 500;

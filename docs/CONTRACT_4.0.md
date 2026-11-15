@@ -6,6 +6,17 @@ The rule (program plan §5): contract changes go through the lead, one at a time
 
 ## Lead-change log
 
+- **15 November 2026 — F-frame-2, lead-approved:** extend the existing non-animated
+  board-entry/rotation reveal to short landscape windows with window height **< 500 pt**,
+  and measure their board space from the revealed 8-pt top, as the AX path does.
+  Header structure, pinning, text caps and the Challenge grid budget are unchanged.
+  Scrolling up must still expose Back, sound, Help and the learner switch in their
+  existing VoiceOver order. Windows **>= 500 pt** retain their existing behavior.
+  Rotation preserves the round and triggers at most one reveal per rotation;
+  no animated scroll is introduced. Required proof: 499/500 threshold tests,
+  portrait/landscape/portrait round preservation and iPhone 15 landscape frames
+  at default and AX5 text sizes.
+
 - **15 November 2026 — K7, pre-authorized by `c2b-k7/BRIEF.md`:** additive
   revision-1 nested program drafts for Crab, Beep and Turtle, plus compact structural
   edit operations in Crab/Beep replay codecs. Shared AST includes sequences, whole-body

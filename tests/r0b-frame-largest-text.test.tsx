@@ -54,6 +54,7 @@ vi.mock('../src/learn/views', async () => {
 
 let root: ReactTestRenderer | undefined;
 const scrolls = vi.hoisted(() => [] as number[]);
+const scrollOptions = vi.hoisted(() => [] as {y:number;animated:boolean}[]);
 function Probe({ id }: { id: LearnId }) { const s = useStore(); useLayoutEffect(() => {}, [s]); return s.ready ? <LearnFrame id={id} /> : null; }
 async function mount(id: LearnId, patch?: (s: LearnSession) => LearnSession) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -61,10 +62,10 @@ async function mount(id: LearnId, patch?: (s: LearnSession) => LearnSession) {
   const round = { ...startSession(id, { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, 1) }, {}, 7), learner: 'family' };
   save.learn = { [id]: patch ? patch(round) : round };
   db.raw = encodeSave(save);
-  await act(async () => { root = create(<StoreProvider><Probe id={id} /></StoreProvider>, { createNodeMock: () => ({ scrollTo: ({ y }: { y: number }) => scrolls.push(y) }) }); });
+  await act(async () => { root = create(<StoreProvider><Probe id={id} /></StoreProvider>, { createNodeMock: () => ({ scrollTo: (options: { y: number; animated: boolean }) => { scrolls.push(options.y); scrollOptions.push(options); } }) }); });
   return root!;
 }
-afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.unstubAllGlobals(); scrolls.length = 0; Object.assign(viewport, { width: 393, height: 852, fontScale: 3.12 }); });
+afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.unstubAllGlobals(); scrolls.length = 0; scrollOptions.length = 0; Object.assign(viewport, { width: 393, height: 852, fontScale: 3.12 }); });
 const byType = (r: ReactTestRenderer, type: string) => r.root.findAll(n => String(n.type) === type);
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 const inside = (n: ReactTestInstance, parent: ReactTestInstance) => { for (let p: ReactTestInstance | null = n; p; p = p.parent) if (p === parent) return true; return false; };
@@ -149,4 +150,50 @@ it('measures actual card width and space below the real header instead of passin
   });
   expect(byType(r, 'Board')[0].props.width).toBe(333);
   expect(byType(r, 'Board')[0].props.boardSpace).toMatchObject({ width: 333, height: 526, large: false, ready: true });
+});
+
+async function measureFrame(r: ReactTestRenderer, height=556, top=56, inset=14, width=333) {
+  await act(async()=>{
+    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height}}});
+    r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board')[0].props.onLayout({nativeEvent:{layout:{y:top}}});
+    r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board-inset')[0].props.onLayout({nativeEvent:{layout:{y:inset,width,height:400}}});
+  });
+}
+it.each([499,500,744,852])('default window height %s uses only the approved short-landscape reveal',async height=>{
+ Object.assign(viewport,{width:852,height,fontScale:1});
+ const frames=new Map<number,FrameRequestCallback>();let n=0;
+ vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++n,f);return n;});
+ vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ const r=await mount('turtle-tales');scrolls.length=0;scrollOptions.length=0;
+ await measureFrame(r,height-93,180,24,654);
+ await act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
+ expect(scrolls).toEqual(height<500?[196]:[]);
+ const b=byType(r,'Board')[0];
+ expect(b.props.boardSpace.height).toBe(height-93-(height<500?8:204)-24);
+ expect(byType(r,'GameHeader')).toHaveLength(1);
+ expect(byType(r,'LearnerChip').length).toBeGreaterThan(0);
+ if(height<500)expect(scrollOptions).toEqual([{y:196,animated:false}]);
+});
+it('portrait-landscape-portrait preserves the round and reveals once per rotation, with no animation',async()=>{
+ Object.assign(viewport,{width:393,height:852,fontScale:1});
+ const frames=new Map<number,FrameRequestCallback>();let n=0;
+ vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++n,f);return n;});
+ vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ const flush=async()=>act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
+ const r=await mount('turtle-tales');await measureFrame(r);await flush();
+ const round=byType(r,'Board')[0].props.session;
+ scrolls.length=0;scrollOptions.length=0;
+ const rotate=async(width:number,height:number)=>{
+  Object.assign(viewport,{width,height});
+  await act(async()=>r.update(<StoreProvider><Probe id="turtle-tales"/></StoreProvider>));
+  await measureFrame(r,width===393?556:372,width===393?56:247,width===393?14:24,width===393?333:654);
+  await flush();
+ };
+ await rotate(852,393);expect(scrolls).toEqual([263]);
+ await act(async()=>byType(r,'Board')[0].props.reveal());expect(scrolls).toEqual([263]);
+ await measureFrame(r,372,247,24,654);await flush();expect(scrolls).toEqual([263]);
+ await rotate(393,852);expect(scrolls).toEqual([263]);
+ await rotate(852,393);expect(scrolls).toEqual([263,263]);
+ expect(byType(r,'Board')[0].props.session).toBe(round);
+ expect(scrollOptions.every(o=>o.animated===false)).toBe(true);
 });
