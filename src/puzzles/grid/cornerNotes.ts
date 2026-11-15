@@ -39,11 +39,20 @@ export function cornerNoteLayout(cell: number, symbols: readonly string[], clue:
   return { fits: false as const, caption, ...font, lineHeight };
 }
 export const cornersNeedEnlarging = (cell: number, symbols: readonly string[], notes: readonly number[], clues?: ReadonlyMap<number, CornerClue>) =>
-  !!clues && [...clues].some(([i, clue]) => !!notes[i] && !cornerNoteLayout(cell, symbols, clue, notes[i]).fits);
+  !!clues && notes.some(Boolean) && [...clues].some(([i, clue]) => notes[i] ? !cornerNoteLayout(cell, symbols, clue, notes[i]).fits : clue.left + clue.width > cell || clue.top + clue.lineHeight > cell);
 
-/** Apply the existing 44-pt enlarged-cell path only when corner notes cannot fit. */
-export function cornerGridGeometry(width: number, height: number, spec: GridSpec, zoom: boolean, notes: readonly number[], fitCorners?: ReadonlyMap<number, CornerClue>) {
+/** Start with the existing enlarged path, then remeasure captions at each candidate size. */
+export function cornerGridGeometry(width: number, height: number, spec: GridSpec, zoom: boolean, notes: readonly number[], fitCorners?: ReadonlyMap<number, CornerClue>, measureCorners?: (cell: number) => ReadonlyMap<number, CornerClue> | undefined) {
   const fit = gridGeometry(width, height, spec, false), noteZoom = cornersNeedEnlarging(fit.cell, spec.symbols, notes, fitCorners);
-  const base = gridGeometry(width, height, spec, zoom || noteZoom), cell = noteZoom ? Math.max(44, base.cell) : base.cell;
+  const base = gridGeometry(width, height, spec, zoom || noteZoom);
+  let cell = noteZoom ? Math.max(44, base.cell) : base.cell;
+  // Real nine-wide Cage Math has four-digit products (e.g. 3024×). Its AX caption
+  // grows with the cell until the caption font cap, so a fixed 44pt retry is not enough.
+  if (noteZoom) for (let attempt = 0; attempt < 128; attempt++) {
+    const clues = measureCorners?.(cell) ?? fitCorners;
+    if (!clues || !cornersNeedEnlarging(cell, spec.symbols, notes, clues)) break;
+    // Jump to the measured width, rather than walking every point up to it.
+    cell = Math.ceil(Math.max(cell + 1, ...[...clues].map(([i, clue]) => clue.width + (notes[i] ? 0 : clue.left))));
+  }
   return { noteZoom, geometry: noteZoom ? { ...base, cell, width: cell * spec.columns, height: cell * spec.rows, needsZoom: true } : base };
 }

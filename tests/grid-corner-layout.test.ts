@@ -10,13 +10,16 @@ const caption = (cell: number, scale: number, text: string, kind: 'killer'|'cage
   return { text, left: 5, top: 4, width: text.length * fontSize * .7 + 1, fontSize, lineHeight: fontSize * 1.15, notesInset: kind === 'killer' ? inset + 1 : 2, notesBottomInset: kind === 'killer' ? inset - .2 : 1 };
 };
 
-it.each([1, 3.12].flatMap(scale => [26, 32, 36, 40, 42, 50.667, 56, 68].flatMap(cell => [4, 6, 9].flatMap(n => (['killer','cage-math'] as const).map(kind => ({ scale, cell, n, kind }))))))('reserves every caption and keeps all notes legible for $kind at $cell pt / $n symbols / scale $scale', ({ scale, cell, n, kind }) => {
+it.each([1, 3.12].flatMap(scale => [26, 32, 36, 40, 42, 50.667, 56, 68].flatMap(cell => [3, 4, 5, 6, 7, 9].flatMap(n => (['killer','cage-math'] as const).map(kind => ({ scale, cell, n, kind }))))))('reserves every caption and keeps all notes legible for $kind at $cell pt / $n symbols / scale $scale', ({ scale, cell, n, kind }) => {
   const symbols = Array.from({ length: n }, (_, i) => String(i + 1));
   const spec: GridSpec = { rows: n, columns: n, symbols, givens: Array(n * n).fill(0), kind: 'digits' };
-  for (const text of ['=6', '10+', '17−', '120×', '12÷']) {
+  for (const text of ['=6', '10+', '17−', '120×', '12÷', '3024×', '5184×']) {
     const clues = new Map([[0, caption(cell, scale, text, kind)]]), notes = [(1 << n) - 1];
     const enlarge = cornersNeedEnlarging(cell, symbols, notes, clues);
-    const actual = (noteGeometry.cornerGridGeometry?.(cell * n, 1400, spec, false, notes, clues).geometry ?? gridGeometry(cell * n, 1400, spec, enlarge)).cell;
+    const actual = (noteGeometry.cornerGridGeometry?.(cell * n, 1400, spec, false, notes, clues, c => new Map([[0, caption(c, scale, text, kind)]])).geometry ?? gridGeometry(cell * n, 1400, spec, enlarge)).cell;
+    // The required Killer/Lagoon frames use these shorter captions: preserve
+    // their previous cell size while extending support to real four-digit products.
+    if (text.length <= 4) expect(actual).toBe(enlarge ? Math.max(44, cell) : cell);
     const layout = cornerNoteLayout(actual, symbols, caption(actual, scale, text, kind));
     expect(layout.fits, `${text} at ${actual}`).toBe(true);
     if (!layout.fits) throw new Error();
@@ -35,6 +38,16 @@ it.each([1, 3.12].flatMap(scale => [26, 32, 36, 40, 42, 50.667, 56, 68].flatMap(
       for (const other of layout.boxes.slice(i + 1)) expect(overlaps(box, other)).toBe(false);
     }
   }
+});
+
+it('contains a long unnoted caption so it cannot cover notes in the next cell', () => {
+  const symbols=['1','2','3','4','5','6','7','8','9'], notes=[0,511];
+  const spec:GridSpec={rows:9,columns:9,kind:'digits',symbols,givens:Array(81).fill(0)};
+  const measure=(cell:number)=>new Map([[0,caption(cell,3.12,'3024×','cage-math')]]);
+  const {geometry}=noteGeometry.cornerGridGeometry(36*9,1400,spec,false,notes,measure(36),measure);
+  const clue=measure(geometry.cell).get(0)!;
+  expect(clue.left+clue.width).toBeLessThanOrEqual(geometry.cell);
+  expect(clue.top+clue.lineHeight).toBeLessThanOrEqual(geometry.cell);
 });
 
 it.each([26, 32, 36, 40, 42, 56, 68])('plain Sudoku has exactly its previous geometry at %s pt', cell => {

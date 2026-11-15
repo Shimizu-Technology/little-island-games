@@ -1,10 +1,11 @@
 import React from 'react';
+import { readFileSync } from 'node:fs';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { GridShell } from '../src/puzzles/grid/GridShell';
 import { createGrid, type GridSpec } from '../src/puzzles/grid/model';
 import * as clues from '../src/puzzles/latin/clues';
-import type { LatinPuzzle } from '../src/puzzles/latin/core';
+import { decodePuzzle, type LatinPuzzle } from '../src/puzzles/latin/core';
 import { LatinBoard } from '../src/puzzles/latin/LatinBoard';
 const counts = vi.hoisted(() => ({ cells: 0, svg: 0 }));
 const dims = vi.hoisted(() => ({ width: 744, height: 1400, fontScale: 1 }));
@@ -70,6 +71,24 @@ it.each([1,3.12])('plain Sudoku cells keep their original notes and geometry at 
  expect(first.findByType('span').props.style).toEqual({color:undefined,fontSize:8,lineHeight:10.5,fontVariant:['tabular-nums'],textAlign:'center'});
  await act(async()=>screen!.update(render({cornerClues:()=>new Map()})));
  expect(JSON.stringify(screen!.toJSON())).toEqual(before);
+});
+
+it.each([1,3.12].flatMap(scale=>[51,52].map(bank=>({scale,bank}))))('real Cage Math products in bank $bank reserve all notes at scale $scale',async ({scale,bank})=>{
+ dims.fontScale=scale;
+ const entries=readFileSync(`src/content/puzzles/assets/p${bank}.lipuzzle`,'utf8').trimEnd().split('\n').slice(1);
+ const p=entries.map(line=>decodePuzzle(JSON.parse(line)[3])!).find(p=>p.cages.some(c=>c.op==='*'&&c.target>=1000))!;
+ expect(p).toBeDefined();
+ const anchor=Math.min(...p.cages.find(c=>c.op==='*'&&c.target>=1000)!.cells), n=p.size;
+ const spec:GridSpec={rows:n,columns:n,kind:'digits',symbols:Array.from({length:n},(_,i)=>String(i+1)),givens:p.givens};
+ const state={...createGrid(spec),notes:Array(n*n).fill((1<<n)-1)};
+ await act(async()=>{screen=create(<GridShell spec={spec} state={state} dispatch={()=>{}} active width={n*36} cornerClues={clues.cageCorners(p)} overlay={clues.cageLayer(p,{labels:false})}/>);});
+ const first=screen!.root.findAllByType('button').find(b=>b.props.accessibilityLabel?.startsWith('Row 1, column 1,'))!;
+ const cell=first.props.style.width, cap=screen!.root.findAllByType('span').find(t=>t.props.testID===`corner-clue-${anchor}`)!.props.style;
+ const box={...cap,left:cap.left-anchor%n*cell,top:cap.top-Math.floor(anchor/n)*cell};
+ expect(box.left+box.width).toBeLessThanOrEqual(cell);
+ const notes=screen!.root.findAllByType('span').filter(t=>t.props.testID?.startsWith(`corner-note-${anchor}-`));
+ expect(notes).toHaveLength(n);
+ for(const note of notes){expect(intersects(box,note.props.style)).toBe(false);expect(note.props.style.fontSize).toBeGreaterThanOrEqual(Math.max(10,cell*.19));}
 });
 
 it.each(['killer','cage-math','greater-than','sudoku'] as const)('wires the shared caption reservation for %s only when there are corner clues', async kind => {
