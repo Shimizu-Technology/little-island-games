@@ -388,10 +388,12 @@ export function HomeScreen({
           restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
         }
         delightLanded(result.proposal, before.entities[proposal.id], before, destination, result.identities[result.proposal.id]);
+        // Rule 49: food dropped into a hot pan starts sizzling with the commit, not a render later.
+        watchCooking(destination);
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- showReaction reads refs; the delight callbacks are stable.
-    [building, commitAt, delightLanded, delightAte, buildRuntimeScene, trace]
+    [building, commitAt, delightLanded, delightAte, watchCooking, buildRuntimeScene, trace]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {
