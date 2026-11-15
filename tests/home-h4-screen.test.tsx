@@ -296,8 +296,16 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.played).not.toContain('sizzle');
     await act(async () => { vi.advanceTimersByTime(COOK_MS * 3); });
     expect(saved().powered).toBeUndefined();
-    // The pan is still free for a pan drop.
-    expect(harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!.occupied).toBeUndefined();
+    // The mango holds the pan's cell: no other food can go in, but the mango itself can, and then it cooks.
+    const pan = harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!;
+    expect(pan.occupied).toBe('kitchen/item/mango');
+    const scene = harness.scene.scene;
+    expect(resolve({ ...scene.rooms.kitchen, entities: scene.entities }, scene.entities['kitchen/item/rice'], pan.contact, { scale: .5, release: true, target: pan.id }).target).not.toBe(pan.id);
+    const into = await drop(state, 'kitchen/item/mango', 'kitchen', pan.contact, { target: pan.id });
+    expect(into.target).toBe(pan.id);
+    expect(harness.scene.scene.entities['kitchen/item/mango'].pan).toBe(stove.id);
+    await act(async () => { vi.advanceTimersByTime(COOK_MS + 10); });
+    expect(saved().powered).toBe(true);
   });
   it('fix round 2: food lifted out of the pan and set on that same floor cell leaves the pan: same save, floor, cooking stops', async () => {
     const state = labFixtures.delight();

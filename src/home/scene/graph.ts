@@ -299,7 +299,11 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       // HD-07: the pan takes one food. It lands on the floor cell in front of the stove (what
       // the save keeps) and is drawn in the pan. A blocked cell closes the pan.
       const cell = panCell(item), floorAt = panFloorPoint(item), seat = panSeatPoint(item);
-      const occupant = Object.values(entities).find((e) => e.pan === entity.id)?.id;
+      // Fix round 2: food set on the floor at the pan's own spot isn't in the pan, but it holds the
+      // pan's cell. It is the one thing that may still go in (same saved spot); nothing else can.
+      const waiting = Object.values(entities).find((e) => !e.pan && e.item && e.attachment.kind === "floor" && !e.children.length &&
+        panStoveOf(e.item, state.instances)?.id === item.id)?.id;
+      const occupant = Object.values(entities).find((e) => e.pan === entity.id)?.id ?? waiting;
       let blocked = cell.y + 2 > 12;
       for (let y = cell.y; y < cell.y + 2 && !blocked; y++) for (let x = cell.x; x < cell.x + 2; x++)
         if ((occupancy[`furniture:${x}:${y}`] ?? []).some((id) => id !== occupant)) blocked = true;
