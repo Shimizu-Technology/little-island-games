@@ -38,7 +38,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const [help,setHelp]=useState<{stage:1|2|3|4;edits:number;audit:number}|null>(null);
  const search=useRef<AbortController|null>(null),vertical=useRef<ScrollView>(null),horizontal=useRef<ScrollView>(null),demonstration=useRef<{expected:string;edits:number;remaining:Move[];stage:3|4;text:string}|null>(null);
  const tableFrame=useRef<View>(null),[room,setRoom]=useState<number|null>(null);
- const measureRoom=useCallback(()=>tableFrame.current?.measureInWindow((_x,y,w)=>{if(Number.isFinite(w)&&w>0)setViewport(before=>before?.width===w&&before.height===height?before:{width:w,height});if(Number.isFinite(y))setRoom(Math.max(minimumTableHeight,height-y-bottom-12));}),[height,bottom,minimumTableHeight]);
+ const measureRoom=useCallback(()=>tableFrame.current?.measureInWindow((_x,y,w)=>{if(Number.isFinite(w)&&w>0)setViewport(before=>before?.width===w&&before.height===height?before:{width:w,height});if(Number.isFinite(y))setRoom(Math.max(minimumTableHeight,height-y-bottom-12));}),[height,bottom,minimumTableHeight,setViewport]);
  useLayoutEffect(()=>{measureRoom();},[measureRoom]);
  const [translation]=useState(()=>new Animated.ValueXY());
  const places=useMemo(()=>{
