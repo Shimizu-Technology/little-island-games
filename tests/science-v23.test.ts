@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { engine as weather } from "../src/learn/games/weather-watch/engine";
 import { engine as food } from "../src/learn/games/food-web/engine";
-import { engine as space } from "../src/learn/games/space-station/engine";
+// Saved version-1 Star Station rounds keep the shared science engine; fresh rounds are K6 inquiry rounds (tests/s1a-inquiry.test.ts).
+import { legacyEngine as space } from "../src/learn/games/space-station/engine";
 import {
   move,
   tasks,
@@ -120,7 +121,8 @@ it("owned upper levels record learner completion without reading a shared-quiz h
     for (const level of [4, 5] as const) {
       const options = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
       const game = engine.id as Game;
-      const session = { ...startSession(game, { options }, {}, 123), learner: "a" };
+      // Star Station's fresh rounds are K6 inquiry rounds; this covers the shared science journal a saved round keeps.
+      const session = { ...startSession(game, { options }, {}, 123), learner: "a", state: engine.create(options, { skills: {}, rng: random(123), starter: 0, today: 0 }) };
       let state = session.state as ScienceState,
         beforeLast = state;
       for (const q of tasks(game, level, state.seed)) {

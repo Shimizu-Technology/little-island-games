@@ -230,10 +230,18 @@ it('layout events arriving before the rotation dimensions still provide measured
  expect(byType(r,'Board')[0].props.boardSpace).toMatchObject({width:654,ready:true});
 });
 
-it.each(['food-web','space-station','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
+// Star Station became a measured board in S1a (K6); see the measured case below.
+it.each(['food-web','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
  Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
  vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
  const r=await mount(id);await measureFrame(r,620,180,24,943);
  const board=byType(r,'Board')[0];
  expect(board.props.boardSpace).toBeNull();expect(board.props.width).toBe(812);expect(board.props.fit.width).toBe(812);
+});
+it('space-station is a measured School board after S1a, using the measured inner width',async()=>{
+ Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
+ vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ const r=await mount('space-station');await measureFrame(r,620,180,24,943);
+ const board=byType(r,'Board')[0];
+ expect(board.props.boardSpace).toMatchObject({width:943,ready:true,large:true});expect(board.props.width).toBe(943);expect(board.props.fit.width).toBe(943);
 });

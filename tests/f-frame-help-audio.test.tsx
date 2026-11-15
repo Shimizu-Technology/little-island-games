@@ -20,7 +20,8 @@ const voices = { warm: keysIn(neural.slice(0, calmAt)), calm: keysIn(neural.slic
 const shared = new Set([...keysIn(readFileSync('src/content/audioSources.ts', 'utf8')), ...readdirSync('src/content/learnAudio').flatMap(f => [...keysIn(readFileSync(`src/content/learnAudio/${f}`, 'utf8'))])]);
 const shipped = (key: string, voice: 'warm' | 'calm' = 'warm') => voices[voice].has(key) || shared.has(key);
 // Owner: lead's audio batch (the lines are staged in scripts/learn/f-frame.json and n1a-numbers.json). Remove an entry as soon as it ships.
-const knownMissing = ['slip-help', 'shell-math-help-v2'];
+// S1a's inquiry help line is in scripts/learn/s1a-inquiry.json until the lead voices it.
+const knownMissing = ['slip-help', 'shell-math-help-v2', 'space-station-help-v4'];
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));
