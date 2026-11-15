@@ -71,7 +71,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     const next = shellMove(s, a);
     if (next === s) {
       // A miss in the reserved tail of a long round is not saved, but the child still gets the same gentle answer.
-      if (verdict === "wrong") { feel("warning"); assistance?.(); setNote("Not quite. Look at the picture and try again, or tap Help."); }
+      if (verdict === "wrong") { feel("warning"); assistance?.(); setNote("Not quite. Try again, or tap Help."); }
       return;
     }
     live.current = next;
@@ -81,7 +81,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     update(next);
     const after = progress(next);
     if (!after) return;
-    if (verdict === "wrong") { feel("warning"); setNote("Not quite. Look at the picture and try again, or tap Help."); return; }
+    if (verdict === "wrong") { feel("warning"); setNote("Not quite. Try again, or tap Help."); return; }
     if (verdict === "ok" && a[0] !== "x") {
       if (after.work.solved && !prog.work.solved) {
         const skill = LEVEL_SKILL[level - 1];
@@ -93,7 +93,8 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
   }
   const press = () => { if (soundOn) sound("tap"); };
 
-  const heading = work.solved ? solvedLine(problem, work.helped) : stepPrompt(level, problem, plan, work.at);
+  // A hint takes the question's place, so help never pushes the pad down the page.
+  const heading = work.solved ? solvedLine(problem, work.helped) : note ? stepPrompt(level, problem, plan, work.at) : hint ?? stepPrompt(level, problem, plan, work.at);
   const seconds = work.solved ? secondWays(level, problem) : [];
   const typedStepLabel = step.kind === "number" ? (step.role === "final" ? "Your answer" : "This step") : "";
   const stepChoices = step.kind === "number" ? choicesAround(step.value, s.index * 7 + work.at) : [];
@@ -110,8 +111,8 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     </View>
     <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
     <Text accessibilityLabel={equationText(problem, work.solved)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(problem, work.solved)}</Text>
-    {/* Hints and gentle misses sit with the question, above the picture and the pad, where they are never below the fold. */}
-    {!work.solved && (note || hint) ? <View accessibilityLiveRegion="polite"><Copy style={{ color: C.ink, textAlign: "center", fontWeight: note ? "400" : "700" }}>{note ?? hint}</Copy></View> : null}
+    {/* A gentle miss is one short line with the question, above the picture and the pad. */}
+    {!work.solved && note ? <View accessibilityLiveRegion="polite"><Copy style={{ color: C.ink, textAlign: "center" }}>{note}</Copy></View> : null}
     <Workspace pic={pic} width={width} hidePicture={hidePicture && level >= 2}
       onPick={step.kind === "fill" && problem.op === "add" && active ? (side, k) => { press(); act(["m", side, k]); } : undefined}
       onPickOnes={step.kind === "fill" && problem.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}
