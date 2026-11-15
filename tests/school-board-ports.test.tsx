@@ -81,7 +81,7 @@ async function mountPort(id: LearnId, Board: React.ElementType, available=472, w
   Object.assign(viewport,window);
   const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,['school-drawing-row','slip-side'].includes((element.props as {testID:string}).testID)?rowBox.y:boundary.y,333,['school-drawing-row','slip-side'].includes((element.props as {testID:string}).testID)?rowBox.height:boundary.height),scrollTo:vi.fn(),measureInWindow:()=>{}})});});
+  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,['school-drawing-row','slip-side','beep-map-row'].includes((element.props as {testID:string}).testID)?rowBox.y:boundary.y,333,['school-drawing-row','slip-side','beep-map-row'].includes((element.props as {testID:string}).testID)?rowBox.height:boundary.height),scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -255,4 +255,10 @@ it('ProgramEditor leaves Turtle and other unported hosts at their original alloc
  expect(view('program-editor').props.onLayout).toBeUndefined();expect(flat(view('program-editor').props.style).maxHeight).toBe(180);
  const tools=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Block tools')[0];
  expect(flat(tools.props.style).minHeight).toBeUndefined();
+});
+it('Beep keeps its map size when its AX Go column sets the map-row height',async()=>{
+ await mountPort('beep-bot',B2,500,{width:393,height:852,fontScale:3.12});
+ const natural=renderedDrawingHeight('beep-bot');boundary={y:0,height:700};rowBox={y:0,height:700};
+ await act(async()=>{view('content').props.onLayout({nativeEvent:{layout:{height:900}}});view('school-beep-bot-drawing').props.onLayout({nativeEvent:{layout:{height:natural}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ expect(renderedDrawingHeight('beep-bot')).toBe(natural);
 });
