@@ -22,6 +22,8 @@ const root=join(scratch,'repo'), sources=join(scratch,'sources');
 mkdirSync(join(root,'scripts'),{recursive:true});mkdirSync(join(root,'content/words'),{recursive:true});mkdirSync(sources);
 mkdirSync(join(root,'src/learn/content'),{recursive:true});
 writeFileSync(join(root,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
+// Lead contract change: W1 reading records. The tooling loads the kit's shared word-parts validator from the tree.
+mkdirSync(join(root,'src/learn/reading'),{recursive:true});cpSync(resolve(process.env.WORD_TEST_MORPHOLOGY_FILE ?? 'src/learn/reading/morphology.ts'),join(root,'src/learn/reading/morphology.ts'));
 symlinkSync(resolve('node_modules'),join(root,'node_modules'));
 cpSync(resolve(process.env.WORD_TEST_TOOL_ROOT ?? 'scripts/words'),join(root,'scripts/words'),{recursive:true});
 writeFileSync(join(root,'content/words/supplement.draft.json'),'{"entries":[]}');
@@ -37,12 +39,15 @@ const {digest,sha256}=core;
 const sourceRecords=['scowl','hafagpt-canonical'].map((id,i)=>{const file=i?'canonical-vocabulary.json':'scowl-release.tar.gz',bytes=readFileSync(join(sources,file));return {id,file,revision:'SYNTHETIC-ONLY',sha256:sha256(bytes),bytes:bytes.length,ship:true,notice:null};});
 writeFileSync(join(root,'scripts/words/sources.lock.json'),JSON.stringify({sources:sourceRecords}));
 const {bakeBank,checkSurfaces,independentlyVerify}=await import(pathToFileURL(join(root,'scripts/words/bake.mjs')));
+const {bakeReadingBank}=await import(pathToFileURL(join(root,'scripts/words/bake-reading.mjs')));
 const review=await import(pathToFileURL(join(root,'scripts/words/review.mjs')));
 const {guardTree:rawGuardTree}=await import(pathToFileURL(join(root,'scripts/words/guard.mjs')));
 const testWorkingDirectory=process.cwd();
 const guardTree=(directory,p,receipts=[],options={})=>rawGuardTree(directory,p,receipts,{sourceRoot:process.cwd()===testWorkingDirectory?root:process.cwd(),...options});
 const {registrySource}=await import(pathToFileURL(join(root,'scripts/words/registry.mjs')));
-const {checkShippingTree}=await import(pathToFileURL(join(root,'scripts/words/shipping.mjs')));
+const {checkShippingTree,checkReadingPayloads}=await import(pathToFileURL(join(root,'scripts/words/shipping.mjs')));
+const generatedAdmission=await import(pathToFileURL(join(root,'scripts/words/generated-admission.mjs')));
+const {scanTexts}=await import(pathToFileURL(join(root,'scripts/words/scan.mjs')));
 const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mjs')));
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
 const {checkExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
@@ -69,7 +74,7 @@ const word=(spelling='REEF')=>({schemaVersion:1,id:spelling.toLowerCase(),spelli
 const canonicalTerms=JSON.parse(readFileSync(join(sources,'canonical-vocabulary.json'))).entries;
 function seal(r){const {id,elapsedSeconds,...raw}=r;return {...raw,id:digest(raw),elapsedSeconds:60};}
 function evidenceFor(records,words=records,kind='word',fromCLI){
- const prepare=kind==='word'?review.prepareWordBatch:review.prepareBatch;
+ const prepare=kind==='word'?review.prepareWordBatch:kind==='reading'?review.prepareReadingBatch:review.prepareBatch;
  const prepared=fromCLI??prepare(records,{id:'SYNTHETIC-ONLY',fixture:false,vocabularySha256:digest(words),scanListSha256:lock.scanListSha256,canonicalTerms});
  const transcriptPaths=['a','b'].map(s=>{const p=join(scratch,`transcript-${kind}-${s}.txt`);writeFileSync(p,`SYNTHETIC gate test; no actual review: ${s}`);return p;});
  const reviews=prepared.packets.map((packet,i)=>{const raw={schemaVersion:1,batchSha256:packet.batchSha256,packetSha256:digest(packet),slot:packet.slot,fixture:false,reviewer:{id:`SYNTHETIC-${i}`,family:i?'anthropic':'openai',model:`TEST-ONLY-${i}`},runId:`SYNTHETIC-${i}`,startedAt:'2026-11-08T00:00:00Z',finishedAt:'2026-11-08T00:01:00Z',transcriptSha256:sha256(readFileSync(transcriptPaths[i])),items:records.map(w=>({id:w.id,verdict:'keep',reason:'SYNTHETIC test only',variants:(w.british??[]).map(spelling=>({spelling,verdict:'keep',relation:'spelling-variant',reason:'SYNTHETIC test only'}))}))};return review.validateReview(packet,raw,raw.transcriptSha256);});
@@ -161,6 +166,45 @@ assert m['sensitive_headword']('AB')=='AB'
 assert m['sensitive_headword']('AB CD')=='ABCD'
 `],{encoding:'utf8'});assert.equal(r.status,0,r.stdout+r.stderr);});
 test('runtime accepts adult multiword spelling exactly',()=>{const runtime=process.env.WORD_TEST_RUNTIME ?? resolve('content/words/runtime.ts');const r=spawnSync(process.execPath,['--experimental-strip-types','--input-type=module','-e',`import {acceptsWord} from ${JSON.stringify(pathToFileURL(runtime).href)};if(!acceptsWord(' trade wind ',['TRADE WIND'])||acceptsWord('TRADE  WIND',['TRADE WIND']))process.exit(1);`],{encoding:'utf8'});assert.equal(r.status,0,r.stdout+r.stderr);});
+// Lead contract change: W1 reading records. Synthetic gate proof only; no content, reviewer or family approval is created.
+const reading=(w='sunset',over={})=>({id:'r-'+w,word:w,level:4,kind:'compound',chunks:['sun','set'],distractors:['sin','sit'],...over});
+function readingInput(records=[reading()]){const ev=evidenceFor(records,records,'reading');return {fixture:false,records,policy:structuredClone(policy),evidence:Object.fromEntries(records.map(r=>[r.id,ev]))};}
+function readingFails(name,change,message){test(name,()=>{const data=readingInput();change(data);assert.throws(()=>bakeReadingBank(data),message);});}
+test('reading records bake through the same detached admission, with an exact safe projection',()=>{
+ const {asset,receipt}=bakeReadingBank(readingInput());
+ assert.deepEqual(Object.keys(asset).sort(),['kind','schemaVersion','words']);
+ assert.deepEqual(Object.keys(asset.words[0]).sort(),['chunks','distractors','id','kind','level','word']);
+ const bytes=JSON.stringify(asset);for(const t of [...policy.scan,lock.scanListSha256,'status','review','familySample','transcript'])assert.ok(!bytes.includes(t),t);
+ assert.equal(receipt.kind,'reading-parts');assert.equal(receipt.counts.words,1);assert.equal(receipt.reviewIds.length,2);
+});
+test('a reading packet shows the reviewer the pieces and the tray, not a family-word clue',()=>{
+ const p=review.prepareReadingBatch([reading()],{id:'SYNTHETIC-ONLY',fixture:false,vocabularySha256:'d'.repeat(64),scanListSha256:lock.scanListSha256}).packets[0];
+ assert.equal(p.promptVersion,'reading-parts-blind-v1');assert.deepEqual(p.items[0].chunks,['sun','set']);assert.deepEqual(p.items[0].distractors,['sin','sit']);assert.match(p.context,/Sound Boat/);
+ assert.deepEqual(Object.keys(p.items[0]).sort(),['affix','alternates','base','change','chunks','distractors','family','gloss','id','kind','level','word']);
+});
+readingFails('reading fixture shipping denied',d=>d.fixture=true,/fixtures/i);
+readingFails('reading needs the family sample',d=>delete d.evidence['r-sunset'].familySample,/family sample/i);
+readingFails('reading family evidence hash required',d=>d.evidence['r-sunset'].familySample.evidenceSha256='f'.repeat(64),/family.*evidence/i);
+readingFails('reading transcript bytes required',d=>d.evidence['r-sunset'].transcriptPaths[0]=join(scratch,'absent-reading-transcript'),/transcript bytes/i);
+readingFails('reading needs the lead decision',d=>d.evidence['r-sunset'].lead.items[0].decision='revise',/fresh blind review/i);
+readingFails('reading evidence from a word batch is refused',d=>{d.evidence['r-sunset']=evidenceFor([word()]);},/reading review batch/i);
+readingFails('reading evidence must cover the current content',d=>{d.records=[{...d.records[0],distractors:['sin','sag']}];},/current content/i);
+readingFails('reading scan hash binding',d=>{d.evidence['r-sunset'].prepared.batch.scanListSha256='e'.repeat(64);},/scan.*binding/i);
+readingFails('reading policy lock verified',d=>{d.policy={...policy,scan:['ZZZ'],core:['ZZZ'],exact:['ZZZ'],lemmas:['ZZZ']};},/policy.*lock/i);
+readingFails('reading text on the exact block is refused',d=>{d.records=[reading('coldly',{kind:'ending',chunks:['cold','ly'],distractors:['bold','sly'],base:'cold',affix:'ly',change:'none',gloss:'in that way',id:'r-coldly'})];d.evidence={'r-coldly':evidenceFor(d.records,d.records,'reading')};},/blocked/i);
+readingFails('reading text that hits the private scan is refused',d=>{d.records=[reading('coldly',{kind:'syllables',chunks:['co','ldly'],distractors:['bo','ly'],id:'r-coldly'})];d.evidence={'r-coldly':evidenceFor(d.records,d.records,'reading')};},/private scan/i);
+test('a reading record cannot carry its own approval',()=>{
+ for(const extra of [{status:'reviewed'},{review:{}},{fixture:false},{approved:true}])assert.throws(()=>review.prepareReadingBatch([{...reading(),...extra}],{id:'SYNTHETIC-ONLY',fixture:false,vocabularySha256:'d'.repeat(64),scanListSha256:lock.scanListSha256}),/unexpected fields/i);
+});
+function stagedReading(){const dir=join(scratch,'registered-reading'),data=readingInput(),{asset}=bakeReadingBank(data),name='content/words/banks/reading-test.json',bytes=JSON.stringify(asset);mkdirSync(join(dir,'content/words/banks'),{recursive:true});writeFileSync(join(dir,name),bytes);const manifest={schemaVersion:1,banks:[{path:name,kind:'reading-parts',sha256:sha256(bytes),bytes:Buffer.byteLength(bytes),words:asset.words.length}]};writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify(manifest));writeFileSync(join(dir,'content/words/registry.generated.ts'),registrySource(manifest));return {dir,data,name,asset,manifest};}
+const rewriteReading=(staged,change)=>{const {dir,name,manifest}=staged,asset=JSON.parse(readFileSync(join(dir,name)));change(asset);const bytes=JSON.stringify(asset);writeFileSync(join(dir,name),bytes);manifest.banks[0].sha256=sha256(bytes);manifest.banks[0].bytes=Buffer.byteLength(bytes);manifest.banks[0].words=asset.words.length;writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify(manifest));writeFileSync(join(dir,'content/words/registry.generated.ts'),registrySource(manifest));};
+test('a registered reading bank passes the shipping tree, and the local gate rebakes it from detached evidence',()=>{const {dir,data}=stagedReading();try{assert.equal(checkShippingTree(dir).banks,1);const ev=join(scratch,'reading-admission-evidence');mkdirSync(ev);writeFileSync(join(ev,'reading-test.json'),JSON.stringify(data));assert.equal(checkShippingTree(dir,ev,{full:true}).banks,1);}finally{rmSync(dir,{recursive:true,force:true});}});
+test('the generated registry loads reading banks through their own table',()=>{const {dir}=stagedReading();try{const text=readFileSync(join(dir,'content/words/registry.generated.ts'),'utf8');assert.match(text,/readingBankLoaders[^]*"reading-test": \(\) => require\("\.\/banks\/reading-test\.json"\) as ReadingBank/);assert.doesNotMatch(text.split('readingBankLoaders')[0],/reading-test/);}finally{rmSync(dir,{recursive:true,force:true});}});
+test('a reading bank with no detached evidence cannot pass the full gate',()=>{const {dir}=stagedReading();try{assert.throws(()=>checkShippingTree(dir,undefined,{full:true}),/detached admission evidence/);const ev=join(scratch,'reading-no-evidence');mkdirSync(ev);assert.throws(()=>checkShippingTree(dir,ev,{full:true}),/Missing detached/);}finally{rmSync(dir,{recursive:true,force:true});}});
+test('a hand-written reading bank, edited after its bake, differs from the reviewed bake',()=>{const staged=stagedReading();try{const ev=join(scratch,'reading-bad-evidence');mkdirSync(ev);writeFileSync(join(ev,'reading-test.json'),JSON.stringify(staged.data));rewriteReading(staged,a=>{a.words[0].distractors[1]='sip';});assert.throws(()=>checkShippingTree(staged.dir,ev,{full:true}),/differs from reviewed/);}finally{rmSync(staged.dir,{recursive:true,force:true});}});
+for(const field of ['status','review','policy'])test(`reading runtime shape rejects injected ${field}`,()=>{const staged=stagedReading();try{rewriteReading(staged,a=>{if(field==='policy')a.policy=policy;else a.words[0][field]=field==='status'?'reviewed':{};});assert.throws(()=>checkShippingTree(staged.dir),/shape|unexpected/i);}finally{rmSync(staged.dir,{recursive:true,force:true});}});
+test('a reading bank outside the manifest is refused as an unadmitted word bank',()=>{const {dir,name}=stagedReading();try{writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify({schemaVersion:1,banks:[]}));writeFileSync(join(dir,'content/words/registry.generated.ts'),registrySource({schemaVersion:1,banks:[]}));assert.throws(()=>checkShippingTree(dir),/Unadmitted word\/clue bank/);}finally{rmSync(dir,{recursive:true,force:true});}});
+test('a reading bank filed as a word bank, or an unknown kind, is refused',()=>{const staged=stagedReading();try{const m=staged.manifest;delete m.banks[0].kind;writeFileSync(join(staged.dir,'content/words/banks.manifest.json'),JSON.stringify(m));writeFileSync(join(staged.dir,'content/words/registry.generated.ts'),registrySource(m));assert.throws(()=>checkShippingTree(staged.dir),/shape/i);m.banks[0].kind='other';writeFileSync(join(staged.dir,'content/words/banks.manifest.json'),JSON.stringify(m));assert.throws(()=>registrySource(m),/Unknown word bank kind/);assert.throws(()=>checkShippingTree(staged.dir),/Invalid word bank manifest/);}finally{rmSync(staged.dir,{recursive:true,force:true});}});
 function initGit(){spawnSync('git',['init','-q',root]);writeFileSync(join(root,'.gitignore'),'node_modules/\n');spawnSync('git',['-C',root,'add','.']);const r=spawnSync('git',['-C',root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','--allow-empty','-qm','Synthetic gate fixture']);assert.equal(r.status,0,r.stderr);}
 test('real-export gate checks bytes and requires policy once a bank exists',()=>{const dir=join(scratch,'real-export');mkdirSync(dir);writeFileSync(join(dir,'app.js'),'PRIVATECANARYNONWORD');assert.throws(()=>checkExport(root,dir),/leaked/);const staged=stagedBank();delete process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;try{assert.throws(()=>checkExport(staged.dir,dir),/policy lock|admission evidence/);}finally{process.env.LITTLE_ISLAND_WORD_POLICY_LOCK=lockFile;rmSync(staged.dir,{recursive:true,force:true});}});
 test('release gate requires Hermes and checks current receipt artifacts',()=>{const web=join(scratch,'release-web'),ios=join(scratch,'release-ios');mkdirSync(web);mkdirSync(ios);writeFileSync(join(web,'index.html'),'hello');writeFileSync(join(ios,'main.js'),'hello');initGit();assert.throws(()=>checkRelease(root,web,ios,join(scratch,'bad-receipt')),/Hermes/);const r=spawnSync(hermesc,['-emit-binary','-out',join(ios,'main.hbc'),join(ios,'main.js')],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);const receipt=join(scratch,'release-receipt.private.json');const git=spawnSync('git',['init','-q',root]);assert.equal(git.status,0);writeFileSync(join(root,'.gitignore'),'node_modules/\n');spawnSync('git',['-C',root,'add','.']);spawnSync('git',['-C',root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','--allow-empty','-qm','Synthetic gate fixture']);assert.equal(checkRelease(root,web,ios,receipt).ios.passed,true);assert.equal(verifyReleaseReceipt(root,receipt,web,ios).passed,true);writeFileSync(join(web,'index.html'),'changed');assert.throws(()=>verifyReleaseReceipt(root,receipt,web,ios),/receipt/);});
@@ -1104,3 +1148,157 @@ for(const group of ['core','exact','lemmas'])for(const surface of ['file','js','
  else {const map=JSON.stringify({[key]:'clip.m4a','ordinary-1':'other.m4a','ordinary-2':'last.m4a'});writeFileSync(join(out,'entry.'+(surface==='js'?'js':'json')),surface==='js'?'globalThis.audio='+map+';':map);}
  const p={scan:[],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[],[group]:['ZQUNKNOWNX']};assert.throws(()=>guardTree(out,p,[],{sourceRoot:dir}),/untraced-word/);
 });
+// ---- R1a fix 2, lead contract change: W1 reading records. Synthetic gate proof only; no content, reviewer or family
+// approval is created, and every policy term below is the synthetic fixture policy.
+const readingTree=name=>{const dir=join(scratch,name);rmSync(dir,{recursive:true,force:true});mkdirSync(join(dir,'src/learn/content'),{recursive:true});writeFileSync(join(dir,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');return dir;};
+const exportTree=(name,files)=>{const dir=join(scratch,name);rmSync(dir,{recursive:true,force:true});mkdirSync(dir);for(const [file,text] of Object.entries(files)){mkdirSync(join(dir,file,'..'),{recursive:true});writeFileSync(join(dir,file),text);}return dir;};
+const readingLiteral=r=>`globalThis.boat=${JSON.stringify(r)};`;
+const cleanup=(...dirs)=>dirs.forEach(d=>rmSync(d,{recursive:true,force:true}));
+function withReceipts(dir,fn){const before=process.env.LITTLE_ISLAND_WORD_RECEIPTS;process.env.LITTLE_ISLAND_WORD_RECEIPTS=dir;try{return fn();}finally{if(before===undefined)delete process.env.LITTLE_ISLAND_WORD_RECEIPTS;else process.env.LITTLE_ISLAND_WORD_RECEIPTS=before;}}
+// Exact/lemma-only synthetic terms (not in the scan list), so a check that only the exact block covers is proved alone.
+function withPolicy(change,fn){const p=structuredClone(policy);change(p);writeFileSync(policyFile,JSON.stringify(p));writeFileSync(lockFile,JSON.stringify({...lock,policySha256:sha256(readFileSync(policyFile))}));try{return fn(p);}finally{writeFileSync(policyFile,JSON.stringify(policy));writeFileSync(lockFile,JSON.stringify(lock));}}
+const prepareReading=records=>review.prepareReadingBatch(records,{id:'SYNTHETIC-ONLY',fixture:false,vocabularySha256:'d'.repeat(64),scanListSha256:lock.scanListSha256});
+const jumping=(over={})=>({id:'r-jumping',word:'jumping',level:4,kind:'ending',chunks:['jump','ing'],distractors:['jum','ed'],base:'jump',affix:'ing',change:'none',gloss:'doing it now',...over});
+const banana=(over={})=>({id:'r-banana',word:'banana',level:4,kind:'syllables',chunks:['ba','na','na'],distractors:['bo','ni'],...over});
+function bakeFails(name,records,message,policyChange){test(name,()=>{const run=p=>{const d=readingInput(records);if(p)d.policy=p;assert.throws(()=>bakeReadingBank(d),message);};policyChange?withPolicy(policyChange,run):run();});}
+
+// R2-1: reading data anywhere in the tree is unadmitted unless it is the registered, detached-admitted projection.
+const strayRecords=()=>({schemaVersion:1,fixture:true,records:[{...reading(),status:'fixture'}]});
+test('reading stray JSON imported by a route fails shipping and export',()=>{
+ const dir=readingTree('stray-reading');mkdirSync(join(dir,'src/learn/reading'),{recursive:true});mkdirSync(join(dir,'src/app'),{recursive:true});
+ writeFileSync(join(dir,'src/learn/reading/extra.json'),JSON.stringify(strayRecords()));
+ writeFileSync(join(dir,'src/app/index.tsx'),"import extra from '../learn/reading/extra.json';\nexport default function Route() { return extra.records[0].word; }\n");
+ const artifact=exportTree('stray-reading-export',{'app.js':`var e=${JSON.stringify(strayRecords())};globalThis.route=()=>e.records[0].word;`});
+ try{assert.throws(()=>checkShippingTree(dir,undefined,{full:true}),/Unadmitted word\/clue bank: src\/learn\/reading\/extra\.json/);assert.throws(()=>checkExport(dir,artifact),/Unadmitted word\/clue bank: src\/learn\/reading\/extra\.json/);}finally{cleanup(dir,artifact);}
+});
+test('reading stray JSON nested under another key fails shipping',()=>{const dir=readingTree('stray-nested-json');writeFileSync(join(dir,'src/learn/extra.json'),JSON.stringify({data:{boat:{word:'sunset',chunks:['sun','set']}}}));try{assert.throws(()=>checkShippingTree(dir),/Unadmitted word\/clue bank: src\/learn\/extra\.json/);}finally{cleanup(dir);}});
+for(const [label,source] of [
+ ['object',"export const extra = { word: 'sunset', chunks: ['sun', 'set'], distractors: ['sin', 'sit'] };"],
+ ['quoted keys','export const extra = { "word": "sunset", "chunks": ["sun", "set"] };'],
+ ['computed keys',"export const extra = { ['word']: 'sunset', ['distractors']: ['sin', 'sit'] };"],
+ ['nested',"export const boat = { level: 4, next: [{ chunks: ['sun', 'set'], distractors: ['sin', 'sit'] }] };"],
+])test(`reading stray source literal fails shipping ${label}`,()=>{const dir=readingTree('stray-literal');mkdirSync(join(dir,'src/learn/reading'),{recursive:true});writeFileSync(join(dir,'src/learn/reading/extra.ts'),source);try{assert.throws(()=>checkShippingTree(dir),/Unadmitted word\/clue bank: src\/learn\/reading\/extra\.ts/);}finally{cleanup(dir);}});
+test('reading detector leaves code with one reading field alone',()=>{const dir=readingTree('reading-code');mkdirSync(join(dir,'src/learn/reading'),{recursive:true});writeFileSync(join(dir,'src/learn/reading/build.ts'),'export const task = (r: {word: string}) => ({ word: r.word, tray: [], alternates: [] });');try{assert.equal(checkShippingTree(dir).banks,0);}finally{cleanup(dir);}});
+test('reading payload in an export fails even when the source tree is clean',()=>{const dir=readingTree('payload-clean'),artifact=exportTree('payload-export',{'app.js':readingLiteral(reading())});try{assert.throws(()=>checkExport(dir,artifact),/Unadmitted reading payload in export: app\.js/);}finally{cleanup(dir,artifact);}});
+test('reading payload in exported JSON fails',()=>{const dir=readingTree('payload-json'),artifact=exportTree('payload-json-export',{'assets/boat.json':JSON.stringify({records:[reading()]})});try{assert.throws(()=>checkExport(dir,artifact),/Unadmitted reading payload in export: assets\/boat\.json/);}finally{cleanup(dir,artifact);}});
+test('reading payload that cannot be read statically fails',()=>{const dir=readingTree('payload-dynamic');for(const text of ['globalThis.boat={word:w,chunks:["sun","set"]};','var word="x";globalThis.boat={word,chunks:["sun","set"]};']){const artifact=exportTree('payload-dynamic-export',{'app.js':text});try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Unverifiable reading payload in export: app\.js/);}finally{cleanup(artifact);}}cleanup(dir);});
+test('reading payload in malformed export JSON fails closed',()=>{const dir=readingTree('payload-bad-json'),artifact=exportTree('payload-bad-json-export',{'boat.json':'{"word":"sunset","chunks":'});try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Unreadable JSON in export: boat\.json/);}finally{cleanup(dir,artifact);}});
+test('reading payload export walk refuses symlinks',()=>{const dir=readingTree('payload-link'),artifact=exportTree('payload-link-export',{'real.txt':readingLiteral(reading())});symlinkSync(join(artifact,'real.txt'),join(artifact,'link.js'));try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Symlink in export/);}finally{cleanup(dir,artifact);}});
+function readingRelease(name){const web=exportTree(name+'-web',{'index.html':'hello'}),ios=exportTree(name+'-ios',{'main.js':'hello'});const r=spawnSync(hermesc,['-emit-binary','-out',join(ios,'main.hbc'),join(ios,'main.js')],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return {web,ios};}
+test('reading payload in a release web export fails',()=>{initGit();const {web,ios}=readingRelease('reading-release');writeFileSync(join(web,'payload.js'),readingLiteral(reading()));try{assert.throws(()=>checkRelease(root,web,ios,join(scratch,'reading-web-receipt.private.json')),/Unadmitted reading payload in export: payload\.js/);}finally{cleanup(web,ios);}});
+test('reading payload in a release native JavaScript export fails',()=>{initGit();const {web,ios}=readingRelease('reading-native');try{assert.throws(()=>realCheckRelease(root,web,ios,join(scratch,'reading-ios-receipt.private.json'),(command,args,options)=>{syntheticIOSExport(command,args,options);writeFileSync(join(args.at(-1),'payload.js'),readingLiteral(reading()));}),/Unadmitted reading payload in export: payload\.js/);}finally{cleanup(web,ios);}});
+
+// R2-2: a correctly registered, detached-admitted bank passes the complete export gate (Word Search as the control).
+test('a registered reading bank passes the complete export gate with detached evidence',()=>{
+ const staged=stagedReading(),ev=join(scratch,'reading-export-evidence');cleanup(ev);mkdirSync(ev);writeFileSync(join(ev,'reading-test.json'),JSON.stringify(staged.data));
+ mkdirSync(join(staged.dir,'src/learn/content'),{recursive:true});writeFileSync(join(staged.dir,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
+ const artifact=exportTree('reading-export',{'app.js':`globalThis.bank=${JSON.stringify(staged.asset)};`});
+ try{
+  const r=withReceipts(ev,()=>checkExport(staged.dir,artifact));
+  assert.equal(r.admission.banks,1);assert.equal(r.admission.full,true);assert.equal(r.admission.readingPayloads.records,1);assert.equal(r.guard.passed,true);assert.equal(r.guard.policyDataChecked,true);
+  const vocabulary=generatedAdmission.vocabularySources(staged.dir).words;for(const w of ['SUNSET','SUN','SET','SIN','SIT'])assert.ok(vocabulary.has(w),w);
+  assert.deepEqual(generatedAdmission.generatedReceipts(staged.dir).find(x=>x.generator==='banks').entries.map(e=>e.word).sort(),['SET','SIN','SIT','SUN','SUNSET']);
+ }finally{cleanup(staged.dir,artifact,ev);}
+});
+test('a registered word bank passes the complete export gate with detached evidence',()=>{
+ const staged=stagedBank(),ev=join(scratch,'word-export-evidence');cleanup(ev);mkdirSync(ev);writeFileSync(join(ev,'test.json'),JSON.stringify(staged.data));
+ mkdirSync(join(staged.dir,'src/learn/content'),{recursive:true});writeFileSync(join(staged.dir,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
+ const artifact=exportTree('word-export',{'app.js':`globalThis.bank=${JSON.stringify(staged.asset)};`});
+ try{const r=withReceipts(ev,()=>checkExport(staged.dir,artifact));assert.equal(r.admission.banks,1);assert.equal(r.admission.readingPayloads.records,0);assert.equal(r.guard.passed,true);assert.equal(r.guard.policyDataChecked,true);}finally{cleanup(staged.dir,artifact,ev);}
+});
+test('generated admission reads a bank by its manifest kind',()=>{
+ const words=bakeBank(input()).asset,parts=bakeReadingBank(readingInput()).asset;
+ assert.deepEqual(generatedAdmission.bankVocabulary('reading-parts',parts),['sunset','sun','set','sin','sit']);assert.ok(generatedAdmission.bankVocabulary(undefined,words).includes('REEF'));
+ for(const [kind,data] of [['reading-parts',words],['reading-parts',{kind:'reading-parts',words:{}}],['words',parts],['words',{...parts,accept:[]}],[undefined,{words:{},accept:[]}],[undefined,{words:[]}]])assert.throws(()=>generatedAdmission.bankVocabulary(kind,data),/differs from its manifest kind/,JSON.stringify([kind,Object.keys(data)]));
+});
+test('the banks generator inventories the reading bake',()=>assert.ok(generatedAdmission.generatorInventory.find(g=>g.id==='banks').scripts.includes('scripts/words/bake-reading.mjs')));
+
+// R2-3: every text a child can build from the tray is scanned, not only the answer and each piece.
+test('reading constructions use each tray piece once, up to the box count',()=>{
+ const two=core.readingConstructions(reading());assert.equal(two.length,16);for(const t of ['sun','sinsit','setsun'])assert.ok(two.includes(t),t);for(const t of ['sunsun','sunsetsin'])assert.ok(!two.includes(t),t);
+ const three=core.readingConstructions(banana());for(const t of ['banana','nana','bona','nibana'])assert.ok(three.includes(t),t);assert.ok(!three.includes('nanana'));
+});
+bakeFails('reading tray pieces that build a blocked term are refused',[reading('sunset',{distractors:[policy.scan[0].toLowerCase().slice(0,2),policy.scan[0].toLowerCase().slice(2)]})],/can be built from the reading tray/);
+bakeFails('reading tray scan finds a scan-only term built forwards',[reading('sunset',{distractors:['alphanon','sense']})],/Text built from the reading tray hits the private scan/);
+bakeFails('reading tray scan reads built text backwards',[reading('sunset',{distractors:['esnes','nonahpla']})],/Text built from the reading tray hits the private scan/);
+bakeFails('reading tray exact block on a shorter build',[banana()],/Exact\/lemma-blocked text can be built from the reading tray/,p=>p.exact.push('BONA'));
+bakeFails('reading tray lemma block on a shorter build',[banana()],/Exact\/lemma-blocked text can be built from the reading tray/,p=>p.lemmas.push('BONA'));
+// R3-2: a scan-only term inside a two-piece build, with harmless letters before and after it. Each piece is clean on
+// its own and within the piece limit, so only a scan that starts at every offset of the built text finds it.
+bakeFails('reading tray scan finds a scan-only term inside a build',[reading('sunset',{distractors:['x'+policy.scan[1].toLowerCase().slice(0,7),policy.scan[1].toLowerCase().slice(7)+'x']})],/Text built from the reading tray hits the private scan list/);
+test('reading tray scan reports a term at any offset, in both directions',()=>{for(const t of ['xcoldx','xxcold','xdlocx','dlocxx'])assert.equal(scanTexts([t],['COLD']).length,1,t);});
+// R3-2: the export backstop descends JSON arrays and objects, export subdirectories and the whole JavaScript tree.
+test('reading payload in a top-level JSON array fails',()=>{const dir=readingTree('payload-json-array'),artifact=exportTree('payload-json-array-export',{'boat.json':JSON.stringify([1,[reading()]])});try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Unadmitted reading payload in export: boat\.json/);}finally{cleanup(dir,artifact);}});
+test('reading payload nested in JSON objects fails',()=>{const dir=readingTree('payload-json-object'),artifact=exportTree('payload-json-object-export',{'boat.json':JSON.stringify({a:{b:{c:reading()}}})});try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Unadmitted reading payload in export: boat\.json/);}finally{cleanup(dir,artifact);}});
+test('reading payload in an export subdirectory fails',()=>{const dir=readingTree('payload-subdir'),artifact=exportTree('payload-subdir-export',{'_expo/static/js/web/deep/app.js':readingLiteral(reading())});try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Unadmitted reading payload in export: _expo\/static\/js\/web\/deep\/app\.js/);}finally{cleanup(dir,artifact);}});
+test('reading payload deep in a JavaScript tree fails',()=>{const dir=readingTree('payload-deep-js'),artifact=exportTree('payload-deep-js-export',{'app.js':`(function(){return [function(){if(x){globalThis.boat=${JSON.stringify(reading())};}}];})();`});try{assert.throws(()=>checkReadingPayloads(dir,artifact),/Unadmitted reading payload in export: app\.js/);}finally{cleanup(dir,artifact);}});
+test('reading tray scan reports hits in both directions only for the terms given',()=>{assert.equal(scanTexts(['xxdloc'],['COLD']).length,1);assert.equal(scanTexts(['coldxx'],['COLD']).length,1);assert.equal(scanTexts(['coxld'],['COLD']).length,0);});
+// Shown text that is never on the tray: the gloss, the family word and alternate pieces.
+bakeFails('reading family text is checked',[jumping({family:'cold'})],/Exact\/lemma-blocked reading text/);
+bakeFails('reading gloss text is checked',[jumping({gloss:'a cold day'})],/Exact\/lemma-blocked reading text/);
+bakeFails('reading gloss scan-only text is checked',[jumping({gloss:'an alphanonsense'})],/Reading text hits the private scan list/);
+bakeFails('reading alternate pieces are checked',[reading('sunset',{alternates:[['s','unset']]})],/Exact\/lemma-blocked reading text/,p=>p.exact.push('UNSET'));
+test('a clean tray with every record kind bakes',()=>{const records=[reading(),banana(),jumping(),{id:'r-making',word:'making',level:5,kind:'ending',chunks:['mak','ing'],distractors:['make','ed'],base:'make',affix:'ing',change:'drop-e',gloss:'doing it now'},{id:'r-undo',word:'undo',level:5,kind:'prefix',chunks:['un','do'],distractors:['re','did'],base:'do',affix:'un',change:'none',gloss:'take it back'}];assert.equal(bakeReadingBank(readingInput(records)).asset.words.length,5);});
+
+// R2-4: one validator. Shipping and prepare run the kit's own rules, so nothing that passes can fail the app loader.
+test('reading bake runs the shared kit rules',()=>{const d=readingInput();d.records=[reading('sunset',{chunks:['s','unset']})];assert.throws(()=>bakeReadingBank(d),/Invalid reading record: a compound is two whole words/);});
+test('reading shipping shape runs the shared kit rules',()=>{const staged=stagedReading();try{rewriteReading(staged,a=>{a.words[0].chunks=['s','unset'];});assert.throws(()=>checkShippingTree(staged.dir),/Invalid reading record: a compound is two whole words/);}finally{cleanup(staged.dir);}});
+for(const [name,record,message] of [
+ ['id slug',reading('sunset',{id:'Bad Id'}),/plain slug/],
+ ['id type',reading('sunset',{id:123}),/plain slug/],
+ ['word length',reading('sunsetsunsetsun',{chunks:['sunsetsu','nsetsun']}),/4-14/],
+ ['word type',reading('sunset',{word:['sunset']}),/4-14/],
+ ['kind',reading('sunset',{kind:'other'}),/unknown kind/],
+ ['chunk count',reading('sunset',{chunks:['sunset']}),/2-4 lowercase pieces/],
+ ['chunk type',reading('sunset',{chunks:[['sun'],['set']]}),/2-4 lowercase pieces/],
+ ['chunks spell',reading('sunset',{chunks:['sun','sat']}),/do not spell/],
+ ['level',reading('sunset',{level:5}),/level should be 4/],
+ ['compound two whole words',reading('sunset',{chunks:['s','unset']}),/two whole words/],
+ ['syllable vowel',{id:'r-rhythm',word:'rhythm',level:4,kind:'syllables',chunks:['rh','ythm'],distractors:['ra','yo']},/vowel sound/],
+ ['ending base',(({base,...r})=>r)(jumping()),/base word and a known affix/],
+ ['base type',jumping({base:['jump']}),/base word and a known affix/],
+ ['affix known',jumping({affix:'zz'}),/base word and a known affix/],
+ ['spelling change',jumping({change:'double',level:5}),/spelling change does not make/],
+ ['base piece and affix',jumping({chunks:['jum','ping'],distractors:['jump','ed']}),/base piece and the affix/],
+ ['unchanged base on tray',{id:'r-making',word:'making',level:5,kind:'ending',chunks:['mak','ing'],distractors:['ma','ed'],base:'make',affix:'ing',change:'drop-e',gloss:'doing it now'},/unchanged base word/],
+ ['gloss',(({gloss,...r})=>r)(jumping()),/gloss must be/],
+ ['compound gloss',reading('sunset',{gloss:'a time of day'}),/only an ending or a start/],
+ ['family',reading('sunset',{family:'X'}),/family must be a base word/],
+ ['family type',reading('sunset',{family:['sun']}),/family must be a base word/],
+ ['distractor repeat',reading('sunset',{distractors:['sin','sin']}),/2-4 distinct wrong pieces/],
+ ['distractor is a chunk',reading('sunset',{distractors:['sun','sit']}),/2-4 distinct wrong pieces/],
+ ['distractor count',reading('sunset',{distractors:['sin']}),/2-4 distinct wrong pieces/],
+ ['alternates shape',reading('sunset',{alternates:['sunset']}),/alternates must be lists/],
+ ['alternate repeats the answer',reading('sunset',{alternates:[['sun','set']]}),/different way/],
+ ['alternate spelling',reading('sunset',{alternates:[['su','nsit']]}),/different way/],
+ ['tray spells unaccepted',reading('sunset',{distractors:['su','nset']}),/not accepted/],
+])test(`reading rule ${name}`,()=>assert.throws(()=>prepareReading([record]),new RegExp('Invalid reading record: .*'+message.source)));
+test('reading record must be a plain object',()=>{for(const r of [[],null,'r-sunset'])assert.throws(()=>core.validateReadingRecord(r),/unexpected fields/);});
+
+// R2-5: a rejecting case for every new gate line.
+test('reading bank needs a list of records',()=>{const d=readingInput();d.records={length:1};assert.throws(()=>bakeReadingBank(d),/Empty reading bank/);});
+test('reading bank cannot be empty',()=>{const d=readingInput();d.records=[];assert.throws(()=>bakeReadingBank(d),/Empty reading bank/);});
+test('reading bank duplicate ids',()=>{const d=readingInput();d.records=[reading(),{...reading('sundog',{chunks:['sun','dog'],distractors:['sin','dig']}),id:'r-sunset'}];assert.throws(()=>bakeReadingBank(d),/Duplicate reading records/);});
+test('reading bank duplicate words',()=>{const d=readingInput();d.records=[reading(),{...reading(),id:'r-sunset-2'}];assert.throws(()=>bakeReadingBank(d),/Duplicate reading records/);});
+const readingShape=(name,change,message=/Invalid reading bank shape/)=>test(name,()=>{const staged=stagedReading();try{rewriteReading(staged,change);assert.throws(()=>checkShippingTree(staged.dir),message);}finally{cleanup(staged.dir);}});
+readingShape('reading shape schema version',a=>{a.schemaVersion=2;});
+readingShape('reading shape kind',a=>{a.kind='words';});
+readingShape('reading shape words list',a=>{a.words={length:1};});
+readingShape('reading shape empty',a=>{a.words=[];});
+readingShape('reading shape duplicate id',a=>{a.words.push({...reading('sundog',{chunks:['sun','dog'],distractors:['sin','dig']}),id:'r-sunset'});},/Duplicate reading record/);
+readingShape('reading shape duplicate word',a=>{a.words.push({...a.words[0],id:'r-sunset-2'});},/Duplicate reading record/);
+const manifestCase=(name,staging,change,message=/manifest hash\/count mismatch/)=>test(name,()=>{const staged=staging();try{const m=JSON.parse(readFileSync(join(staged.dir,'content/words/banks.manifest.json')));change(m,staged);writeFileSync(join(staged.dir,'content/words/banks.manifest.json'),JSON.stringify(m));if(Array.isArray(m.banks))writeFileSync(join(staged.dir,'content/words/registry.generated.ts'),registrySource(m));assert.throws(()=>checkShippingTree(staged.dir),message);}finally{cleanup(staged.dir);}});
+test('reading clause manifest same-length edit hash',()=>{const staged=stagedReading();try{const file=join(staged.dir,staged.name);writeFileSync(file,readFileSync(file,'utf8').replace('"sin"','"sip"'));assert.throws(()=>checkShippingTree(staged.dir),/manifest hash/);}finally{cleanup(staged.dir);}});
+manifestCase('reading clause manifest bytes',stagedReading,m=>{m.banks[0].bytes++;});
+manifestCase('reading clause manifest words',stagedReading,m=>{m.banks[0].words++;});
+manifestCase('reading clause manifest clues',stagedReading,m=>{m.banks[0].clues=0;});
+manifestCase('reading clause manifest surfaces',stagedReading,m=>{m.banks[0].surfaces=0;});
+manifestCase('clause manifest bytes',stagedBank,m=>{m.banks[0].bytes++;});
+manifestCase('clause manifest words',stagedBank,m=>{m.banks[0].words++;});
+manifestCase('clause manifest clues',stagedBank,m=>{m.banks[0].clues++;});
+manifestCase('clause manifest surfaces',stagedBank,m=>{m.banks[0].surfaces++;});
+manifestCase('manifest schema version',stagedReading,m=>{m.schemaVersion=2;},/Invalid word bank manifest/);
+manifestCase('manifest bank list',stagedReading,m=>{m.banks={};},/Invalid word bank manifest/);
+manifestCase('manifest duplicate path',stagedReading,m=>{m.banks.push({...m.banks[0]});},/Invalid word bank manifest/);
+for(const [label,second] of [['id',{...reading('sundog',{chunks:['sun','dog'],distractors:['sin','dig']}),id:'r-sunset'}],['word',{...reading(),id:'r-sunset-2'}]])test(`reading banks repeat a record ${label} across banks`,()=>{const staged=stagedReading();try{const bytes=JSON.stringify({schemaVersion:1,kind:'reading-parts',words:[second]}),name='content/words/banks/reading-two.json';writeFileSync(join(staged.dir,name),bytes);const m=staged.manifest;m.banks.push({path:name,kind:'reading-parts',sha256:sha256(bytes),bytes:Buffer.byteLength(bytes),words:1});writeFileSync(join(staged.dir,'content/words/banks.manifest.json'),JSON.stringify(m));writeFileSync(join(staged.dir,'content/words/registry.generated.ts'),registrySource(m));assert.throws(()=>checkShippingTree(staged.dir),/Reading banks repeat a record/);}finally{cleanup(staged.dir);}});
+test('reading and word registries reject an unsafe bank path',()=>{for(const kind of ['reading-parts',undefined])assert.throws(()=>registrySource({schemaVersion:1,banks:[{path:'content/words/banks/../x.json',kind}]}),/Invalid bank registry path/);});

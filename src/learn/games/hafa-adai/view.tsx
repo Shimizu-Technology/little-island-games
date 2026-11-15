@@ -7,7 +7,9 @@ import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../..
 import type { BoardProps } from "../../types";
 import { LARGE_TEXT, wordFitMultiplier, wordsFit } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
-import { chamoruWord, type ChamoruWord } from "../../content/chamoru";
+import { chamoruRecord as chamoruWord, type ChamoruRecord as ChamoruWord } from "../../reading/provenance";
+import { admittedReading } from "../../reading/admit";
+import { ReadingRefused } from "../../kit/ReadingRefused";
 import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
 import { WordPicture } from "./pictures";
 export const wordAudioKey = (id: string) => `hafa-adai-word-${id.replaceAll(".", "-").replaceAll("_", "-")}`;
@@ -15,7 +17,7 @@ const first = (english: string) => english.split(" / ")[0];
 /** Keep the sixth discovery visible when the round replaces its picture grid. */
 export function LastPicnicWord({ state }: { state: IslandState }) {
   const word = state.activity === "explore" && chamoruWord(state.taps.at(-1) ?? "");
-  return word ? <View accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
+  return word && admittedReading(word, "Håfa Adai's last word") ? <View accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
     <WordPicture word={word} size={54} caption={false} />
     <Heading style={{ fontSize: 24, textAlign: "center" }}>{word.term}</Heading>
     <Copy>{word.english}</Copy>
@@ -86,6 +88,9 @@ export function Board({
     options = session.options;
   const [selected, setSelected] = useState<string | null>(null),
     [peek, setPeek] = useState(false);
+  // Every word on the picnic is the pinned inherited record for its saved id. Anything else is refused before a word
+  // or picture is shown, spoken or credited.
+  const admitted = s.items.every((id) => admittedReading(chamoruWord(id), "Håfa Adai Island"));
   const target = chamoruWord(s.items[p.cursor]),
     shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
   const spy = s.activity === "spy",
@@ -96,7 +101,7 @@ export function Board({
     pad = 8;
   // The scene has a 1px border on each side.
   const slotFor = (n: number) => Math.floor((pictureWidth - 2 - pad * 2 - gap * (n - 1)) / n);
-  const captions = spy ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
+  const captions = spy || !admitted ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
   // A caption word wider than its slot even at the default size ("Grandmother" in four columns) would break mid-word,
   // so the picnic drops a column until every word fits. Rounds whose words already fit keep their layout.
   let columns = s.items.length === 6 ? 3 : pictureWidth >= 600 ? 6 : 4;
@@ -129,12 +134,13 @@ export function Board({
     // available; only auto-play after a gesture, so browsers never reject initial speech.
     const canAutoPlay =
       Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
-    if (!active || !soundOn || !canAutoPlay) return;
+    if (!admitted || !active || !soundOn || !canAutoPlay) return;
     const wait = fresh.current ? 3700 : 0;
     fresh.current = false;
     const timer = setTimeout(() => sound(promptKey, true), wait);
     return () => clearTimeout(timer);
-  }, [active, soundOn, sound, promptKey]);
+  }, [admitted, active, soundOn, sound, promptKey]);
+  if (!admitted) return <ReadingRefused />;
   function select(id: string) {
     if (!active) return;
     if (coach.active) coach.done();

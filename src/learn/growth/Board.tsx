@@ -3,6 +3,9 @@ import { View } from "react-native";
 import { Button, C, Chip, Copy, Heading, styles } from "../../components/ui";
 import type { BoardProps } from "../types";
 import { growthDraft, growthMove, growthProgress, growthQuestions } from "./engine";
+import { readingGrowth } from "./content";
+import { admittedReading } from "../reading/admit";
+import { ReadingRefused } from "../kit/ReadingRefused";
 import type { GrowthAction, GrowthState } from "./types";
 import { CoachSpot } from "../Coach";
 import { AnswerTile } from "../AnswerTile";
@@ -14,15 +17,18 @@ export const growthSpeechKey = (game: string, stage: string, id: string, part: "
 export function GrowthBoard({ session, update, active, width, sound, stopSound, soundOn, cheer, coach }: BoardProps<unknown>) {
   const state = session.state as GrowthState, questions = growthQuestions(session.game, session.options, state), progress = growthProgress(state, questions);
   const q = questions[progress.index];
+  // A reading track's questions are inherited reading content: each must be a branded record from the snapshot.
+  const admitted = !readingGrowth(session.game) || questions.every((x) => admittedReading(x, "The growth reading board"));
   const draft = state.draft ?? [];
   const setDraft = (next: number[]) => { if (active) update(growthDraft(state, next, questions)); };
   const spoken = useRef<string | null>(null);
   useEffect(() => {
-    if (!q || !active || !soundOn || spoken.current === q.id) return;
+    if (!admitted || !q || !active || !soundOn || spoken.current === q.id) return;
     spoken.current = q.id;
     // Marked automatic: tap-to-hear mode keeps this silent.
     sound(growthSpeechKey(session.game, session.options.stage!, q.id, "prompt"), true);
-  }, [q, active, soundOn, session.game, session.options.stage, sound]);
+  }, [admitted, q, active, soundOn, session.game, session.options.stage, sound]);
+  if (!admitted) return <ReadingRefused />;
   if (!q) return <Copy style={{ textAlign: "center" }}>Your ideas are explored and your practice is saved.</Copy>;
   function move(action: GrowthAction) {
     if (!active) return;

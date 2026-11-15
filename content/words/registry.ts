@@ -1,4 +1,4 @@
-import { bankLoaders } from './registry.generated';
+import { bankLoaders, readingBankLoaders } from './registry.generated';
 export { legacyWordRescue } from './legacy-word-rescue';
 
 export type WordBank = {
@@ -20,4 +20,22 @@ export type WordBank = {
 export function loadWordBank(id: string): WordBank {
   if (!Object.hasOwn(bankLoaders, id)) throw new Error('Unknown admitted word bank');
   return bankLoaders[id]();
+}
+
+/** Lead contract change: W1 reading records. Runtime projection of a detached-admitted Sound Boat word-parts bank. */
+export type ReadingBank = {
+  schemaVersion: 1;
+  kind: 'reading-parts';
+  words: {
+    id: string; word: string; level: 4 | 5; kind: 'compound' | 'syllables' | 'ending' | 'prefix';
+    chunks: string[]; distractors: string[];
+    base?: string; affix?: string; change?: 'none' | 'drop-e' | 'double' | 'y-to-i'; gloss?: string; family?: string;
+    alternates?: string[][];
+  }[];
+};
+/** Ids of the reading banks the manifest admits, in manifest order. Empty until the lead admits one. */
+export const readingBankIds: readonly string[] = Object.keys(readingBankLoaders).sort();
+export function loadReadingBank(id: string): ReadingBank {
+  if (!Object.hasOwn(readingBankLoaders, id)) throw new Error('Unknown admitted reading bank');
+  return readingBankLoaders[id]();
 }

@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  createPracticeRound, createPracticeSession, practiceAnswer, practiceConfigKey, practiceTransition,
+  createPracticeRound, createPracticeSession, practiceAnswer, practiceConfigKey, practiceText, practiceTransition,
   type PracticeRound,
 } from "../src/practice/engine";
 import { defaultPracticeSettings, type PracticeSettings, type PracticeSummary } from "../src/practice/types";
@@ -40,17 +40,19 @@ describe("three-question practice selection", () => {
                 expect(mathEquation(q.question)).toContain("?");
                 if (operation !== "mixed") expect(q.question.operation).toBe(operation);
               } else {
-                expect(checkDecodability(q.text, "easy")).toEqual([]);
+                if (q.kind === "growth") throw new Error("no growth stage in these settings");
+                const text = practiceText(q);
+                expect(checkDecodability(text, "easy")).toEqual([]);
                 expect(q.choices).toHaveLength(3);
                 if (q.kind === "word") {
-                  expect(q.choices[q.answer]).toBe(q.text);
-                  expect(q.skill).toBe(wordEntry(q.text)!.skill);
-                  expect(q.speech).toBe(wordAudio(q.text));
+                  expect(q.choices[q.answer]).toBe(text);
+                  expect(q.skill).toBe(wordEntry(text)!.skill);
+                  expect(q.speech).toBe(wordAudio(text));
                   expect(q.choices.every(word => pictureFor(word) === word && wordEntry(word)!.pace === "easy")).toBe(true);
                 } else {
                   const source = SENTENCES.find(item => `sentence-${item.id}` === q.id)!;
                   expect(q.choices[q.answer]).toEqual(source.scenes[0]);
-                  expect(q.text).toBe(source.text);
+                  expect(text).toBe(source.text);
                   expect(q.speech).toBe(`which-one-sentence-${source.id}`);
                 }
               }
@@ -63,9 +65,9 @@ describe("three-question practice selection", () => {
     const kinds = new Set<string>();
     for (let seed = 0; seed < 40; seed++) {
       for (const q of createPracticeRound(config("reading"), seed).questions) {
-        if (q.kind === "math") continue;
+        if (q.kind === "math" || q.kind === "growth") continue;
         kinds.add(q.kind);
-        expect(speech[q.speech]).toBe(q.text);
+        expect(speech[q.speech]).toBe(practiceText(q));
         expect(existsSync(new URL(`../assets/audio/${q.speech}.m4a`, import.meta.url))).toBe(true);
       }
     }

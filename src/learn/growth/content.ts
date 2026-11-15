@@ -1,10 +1,16 @@
 import type { LearnId } from "../types";
 import { numberTracks } from "./numbers";
-import { literacyTracks } from "./literacy";
 import { discoveryTracks } from "./discovery";
+import { readingGrowthTracks } from "../reading/provenance";
 import type { GrowthStage, GrowthTracks } from "./types";
-export const growthTracks: GrowthTracks = { ...numberTracks, ...literacyTracks, ...discoveryTracks };
+/** The reading tracks are the inherited snapshot's branded, frozen questions (`reading/provenance.ts`), never the live source. */
+export const growthTracks: GrowthTracks = { ...numberTracks, ...readingGrowthTracks(), ...discoveryTracks };
 export const growthTrack = (game: LearnId, stage: GrowthStage) => growthTracks[game]?.[stage];
+/**
+ * Every growth track that is not maths or discovery is reading, and its questions must be branded records. Failing
+ * closed: a new game's track counts as reading until it is named in one of those two sets.
+ */
+export const readingGrowth = (game: LearnId) => !Object.hasOwn(numberTracks, game) && !Object.hasOwn(discoveryTracks, game);
 
 /** The label names a skill, while the persisted pace remains backward compatible. */
 export const foundationLabels: Partial<Record<LearnId, readonly string[]>> = {

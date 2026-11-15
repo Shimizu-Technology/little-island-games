@@ -15,6 +15,8 @@ export type Task = {
   completedAudio?: string;
   trace?: [number, number][];
 };
+/** A game's five levels of tasks, as `reading/provenance.ts` gives them. */
+export type Bank = readonly (readonly Task[])[];
 export type State = {
   version: 1;
   level: LearningLevel;
@@ -34,11 +36,11 @@ export type Action =
   | { type: "undo" }
   | { type: "next" }
   | { type: "trace"; points: [number, number][] };
-export const current = (s: State, bank: readonly Task[][]) =>
+export const current = (s: State, bank: Bank) =>
   bank[s.level - 1][s.ids[Math.min(s.index, s.ids.length - 1)]];
-export const complete = (s: State, bank: readonly Task[][]) =>
+export const complete = (s: State, bank: Bank) =>
   s.index < s.ids.length && s.placed.length === current(s, bank).answer.length;
-export function choices(s: State, bank: readonly Task[][]) {
+export function choices(s: State, bank: Bank) {
   const t = current(s, bank);
   const tiles = [...new Set([...t.answer, ...t.extras])];
   const seed = [...t.prompt].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 71 + s.ids[s.index]);
@@ -73,7 +75,7 @@ export function traces(points: [number, number][], path: [number, number][]) {
   }
   return next === path.length;
 }
-export function move(s: State, a: Action, bank: readonly Task[][]): State {
+export function move(s: State, a: Action, bank: Bank): State {
   if (s.index === s.ids.length) return s;
   const t = current(s, bank),
     done = complete(s, bank);
@@ -108,7 +110,7 @@ export function makeEngine(
   name: string,
   ages: readonly [number, number],
   names: readonly { name: string; description: string }[],
-  bank: readonly Task[][]
+  bank: Bank
 ): LearnEngine<State> {
   return {
     id,
