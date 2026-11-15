@@ -4,7 +4,13 @@ import { C } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { MathBoard } from "../shell-math/MathBoard";
 import type { MathRound } from "../shell-math/round";
-export const Board = (props: BoardProps<MathRound>) => <MathBoard {...props} game="number-hop" />;
+import { isHopRound, type HopState } from "./engine";
+import { HopBoard } from "./HopBoard";
+import type { HopRound } from "./round2";
+/** Fresh rounds are version 2; a saved version-1 round keeps the board it was started on. */
+export const Board = (props: BoardProps<HopState>) => isHopRound(props.session.state)
+  ? <HopBoard {...(props as BoardProps<HopRound>)} />
+  : <MathBoard {...(props as BoardProps<MathRound>)} game="number-hop" />;
 export function Art({ size }: { size: number }) {
   return <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
     <Line x1="10" y1="63" x2="90" y2="63" stroke={C.ink} strokeWidth="3" />

@@ -3,7 +3,7 @@ import {resolve,dirname} from 'node:path';
 import {expect,it} from 'vitest';
 import {engines} from '../src/learn/engines';
 // Owner: lead — Slip Tide help audio and the Shell Math help (scripts/learn/n1a-numbers.json). Remove an entry as soon as audio ships.
-const knownMissing = ['slip-help', 'shell-math-help-v2'];
+const knownMissing = ['slip-help', 'shell-math-help-v2', 'quick-practice-help-v2', 'number-hop-help-v2'];
 /** Inspect the shipped require table without loading native audio assets into Node. */
 it('P2-6 every learning engine helpAudio resolves to a shipped source in both voices',()=>{
  const file=resolve('src/content/neuralAudio.ts'),text=readFileSync(file,'utf8');

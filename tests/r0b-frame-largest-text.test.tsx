@@ -5,6 +5,7 @@ import React, { createContext, useLayoutEffect } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { LearnFrame } from '../src/learn/LearnFrame';
+import { finishMathRound } from './helpers/shell-rounds';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { emptySave } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
@@ -93,10 +94,7 @@ it.each([[3.12, [892]], [1, []]])('a step game asking for the board at text scal
 it.each([[3.12, 2], [1, undefined]])('the result card at text scale %s draws its words inside a region capped at %s', async (fontScale, ceiling) => {
   Object.assign(viewport, { fontScale });
   // A finished Quick practice round: every question answered.
-  const r = await mount('quick-practice', s => {
-    const st = s.state as { questions: unknown[]; index: number; completed: boolean[] };
-    return { ...s, state: { ...st, index: st.questions.length, completed: st.questions.map(() => false) } };
-  });
+  const r = await mount('quick-practice', s => ({ ...s, state: finishMathRound(s.state, 'quick-practice') }));
   const result = r.root.find(n => String(n.type) === 'Heading' && textOf(n) === 'You did it!');
   expect(result.props.fit?.ceiling).toBe(ceiling);
   if (ceiling) expect(result.props.fit.width).toBe(393 - 32 - 46);
