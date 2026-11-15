@@ -113,8 +113,8 @@ it('C1d fix P1-1: the visible help ladder walks every Songs and Foggy puzzle fro
  const editor = readFileSync('src/learn/program/ProgramEditor.tsx', 'utf8');
  for (const control of ['＋ End of plan', '＋ Inside ', '＋ ${branch === \'yes\' ? \'When blocked\' : \'Otherwise\'}', 'Make plan a song', '↻ Repeat ×2', '? If blocked', '♫ Song', 'Remove block', '×{times}']) expect(editor, control).toContain(control);
  const labels: Record<string, string> = { forward: 'Walk', 'turn-left': 'Turn left', 'turn-right': 'Turn right' }, name = (c: number) => labels[programCodes[c]];
- const words = /^(Tap “＋ (End of plan|Inside repeat|When blocked|Otherwise|Inside Song \d)”( in [^,]+(, [^,]+)*)?, then tap (Walk|Turn left|Turn right|↻ Repeat ×2|\? If blocked|♫ Song \d)\.( The Repeat starts at ×2\.| Its two branches start empty\.)?|Tap the Repeat at .+, then tap ×(2|3|4|6|8)\.|Tap .+ \(.+\), then tap (Walk|Turn left|Turn right) to replace it\.|Tap .+ \(.+\), then tap Remove block\.|Your group of cards is ready\. Tap “Make plan a song”: .+)$/;
- const shown = () => root!.root.findAllByType('p').map(p => p.children.join('')).find(t => /^(Tap (“|the Repeat|plan|song)|Your group|Your blocks reach home|One working plan)/.test(t));
+ const words = /^(Build the group for Song 1 in the plan first\. )?(Tap “＋ (End of plan|Inside repeat|When blocked|Otherwise|Inside Song \d)”( in [^,]+(, [^,]+)*)?, then tap (Walk|Turn left|Turn right|↻ Repeat ×2|\? If blocked|♫ Song \d)\.( The Repeat starts at ×2\.| Its two branches start empty\.)?|Tap the Repeat at .+, then tap ×(2|3|4|6|8)\.|Tap .+ \(.+\), then tap (Walk|Turn left|Turn right) to replace it\.|Tap .+ \(.+\), then tap Remove block\.|Your group of cards is ready\. Tap “Make plan a song”: .+)$/;
+ const shown = () => root!.root.findAllByType('p').map(p => p.children.join('')).find(t => /^(Build the group|Tap (“|the Repeat|plan|song)|Your group|Your blocks reach home|One working plan)/.test(t));
  for (const p of crabPuzzles.filter(c => c.ref.bank === 14 || c.ref.bank === 15)) {
   const d = p.descriptor;
   let s = challengeEngine.create(d, { version: 1 }, { supportOff: false, ownRead: false }), program = { version: 1 as const, body: [], songs: [] } as import('../src/learn/program/model').Program;
@@ -131,6 +131,7 @@ it('C1d fix P1-1: the visible help ladder walks every Songs and Foggy puzzle fro
    const line = shown()!;
    if (line.startsWith('Your blocks reach home')) break;
    expect(line, `${p.title} step ${steps}`).toMatch(words);
+   if (steps === 0 && p.ref.bank === 14) expect(line).toMatch(/^Build the group for Song 1 in the plan first\. Tap “＋ End of plan”/);
    const near = nearestBlocks(program, blockSolutions(d))!;
    expect(describeStep(near.first!, program, name)).toBe(line);
    const next = applyStep(program, near.first!)!;

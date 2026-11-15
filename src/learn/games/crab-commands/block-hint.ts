@@ -4,7 +4,7 @@ import type { Node, Program } from '../../program/model';
 
 /** One thing a child can do in the block editor, in the editor's own controls. A hint never names anything else. */
 export type BlockStep =
-  | { kind: 'add'; location: Location; node: Node }
+  | { kind: 'add'; location: Location; node: Node; songGroup?: true }
   | { kind: 'count'; location: Location; at: number; times: number }
   | { kind: 'replace'; location: Location; at: number; command: number }
   | { kind: 'remove'; location: Location; at: number }
@@ -43,7 +43,12 @@ function listStep(list: readonly Node[], target: readonly Node[], location: Loca
 /** The next editor action from the child's plan toward one certified winner, or null when the plan already is that winner.
  * A song is built the only way the editor allows: put its cards in the plan, then Make plan a song. */
 export function nextStep(program: Program, target: Program): BlockStep | null {
-  if (target.songs.length && !program.songs.length) return same(program.body, target.songs[0]) ? { kind: 'make-song' } : listStep(program.body, target.songs[0], main);
+  if (target.songs.length && !program.songs.length) {
+    if (same(program.body, target.songs[0])) return { kind: 'make-song' };
+    const step = listStep(program.body, target.songs[0], main);
+    // While the plan is still the song's group, say what the cards are for.
+    return step && { ...step, songGroup: true } as BlockStep;
+  }
   return listStep(program.body, target.body, main) ?? target.songs.map((song, i) => listStep(program.songs[i] ?? [], song, { song: i, path: [] })).find(Boolean) ?? null;
 }
 /** The same pure edits the editor makes for these controls. */
@@ -69,7 +74,7 @@ export function describeStep(step: BlockStep, program: Program, name: Name): str
   if (step.kind === 'make-song') return 'Your group of cards is ready. Tap “Make plan a song”: the group becomes Song 1, and the plan calls it once.';
   if (step.kind === 'add') {
     const then = step.node.kind === 'repeat' ? ' The Repeat starts at ×2.' : step.node.kind === 'if' ? ' Its two branches start empty.' : '';
-    return `Tap ${place(step.location)}, then tap ${paletteLabel(step.node, name)}.${then}`;
+    return `${step.songGroup ? 'Build the group for Song 1 in the plan first. ' : ''}Tap ${place(step.location)}, then tap ${paletteLabel(step.node, name)}.${then}`;
   }
   const at = blockPosition(address(step.location, step.at)), here = blockName(listAt(program, step.location)?.[step.at], name);
   if (step.kind === 'count') return `Tap the Repeat at ${at}, then tap ×${step.times}.`;
