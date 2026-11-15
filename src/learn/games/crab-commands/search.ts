@@ -2,7 +2,11 @@ import { nodeCost, validProgram, type Node, type Program } from '../../program/m
 
 /** A beach as a search machine. `step` returns null on a bump; `won` is checked after every card,
  * because a run stops the moment the crab is home with every shell. */
-export type Sim<S> = { start: S; step: (state: S, command: number) => S | null; won: (state: S) => boolean; key: (state: S) => string; blocked?: (state: S) => boolean };
+export type Sim<S> = {
+  start: S; step: (state: S, command: number) => S | null; won: (state: S) => boolean; key: (state: S) => string; blocked?: (state: S) => boolean;
+  /** Several beaches at once (fog): each beach takes its own If branch. */
+  runIf?: (state: S, yes: readonly Node[], no: readonly Node[]) => { state: S; won: boolean } | null;
+};
 /** Repeat counts the block editor can set (Repeat ×2, then ×3, ×4, ×6 or ×8). */
 export const REPEAT_COUNTS = [2, 3, 4, 6, 8] as const;
 const TURNS = [5, 6];
@@ -53,8 +57,8 @@ export function runNodes<S>(sim: Sim<S>, state: S, nodes: readonly Node[]): Run<
       const r = runNodes(sim, state, node.body);
       if (!r || r.won) return r;
       state = r.state;
-    } else if (node.kind === 'if' && sim.blocked) {
-      const r = runNodes(sim, state, sim.blocked(state) ? node.yes : node.no);
+    } else if (node.kind === 'if' && (sim.runIf || sim.blocked)) {
+      const r = sim.runIf ? sim.runIf(state, node.yes, node.no) : runNodes(sim, state, sim.blocked!(state) ? node.yes : node.no);
       if (!r || r.won) return r;
       state = r.state;
     } else return null;
@@ -69,7 +73,7 @@ export type BlockSearch = { best: number | null; witness: Program | null; soluti
  * the crab in the same state can be finished the same way, so only the cheaper one is kept. `solutions`
  * collects distinct winners within `limit` blocks, cheapest first, for hints.
  */
-export function blockBest<S>(sim: Sim<S>, commands: readonly number[], limit: number, options: { nest?: number; keep?: number; work?: number } = {}): BlockSearch {
+export function blockBest<S>(sim: Sim<S>, commands: readonly number[], limit: number, options: { nest?: number; keep?: number; work?: number; conditions?: boolean } = {}): BlockSearch {
   // Deepen the limit one block at a time: the first limit with a winner is the fewest blocks, and small
   // limits never enumerate the long bodies a large limit would allow.
   let expanded = 0;
@@ -85,7 +89,15 @@ export function blockBest<S>(sim: Sim<S>, commands: readonly number[], limit: nu
   }
   return { best: null, witness: null, solutions: [], expanded, exhausted: false };
 }
-function blocksWithin<S>(sim: Sim<S>, commands: readonly number[], limit: number, options: { nest?: number; keep?: number; work?: number }): BlockSearch {
+/** If blocked with up to two cards in each branch: what the fog searches add to cards and Repeats. */
+function conditionNodes(commands: readonly number[]): Node[] {
+  const seqs: number[][] = [[]];
+  for (const a of commands) { seqs.push([a]); for (const b of commands) seqs.push([a, b]); }
+  const cmd = (c: number): Node => ({ kind: 'command', command: c });
+  return seqs.flatMap(yes => seqs.filter(no => (yes.length || no.length) && JSON.stringify(yes) !== JSON.stringify(no)).map(no => ({ kind: 'if', condition: { kind: 'blocked' }, yes: yes.map(cmd), no: no.map(cmd) } as Node)));
+}
+function blocksWithin<S>(sim: Sim<S>, commands: readonly number[], limit: number, options: { nest?: number; keep?: number; work?: number; conditions?: boolean }): BlockSearch {
+  const ifs = options.conditions ? conditionNodes(commands) : [];
   const nest = options.nest ?? 2, keep = options.keep ?? 0, work = options.work ?? 4_000_000;
   const dist = new Map<string, number>(), from = new Map<string, { parent: string | null; item: Node | null }>();
   const states = new Map<string, S>();
@@ -115,6 +127,17 @@ function blocksWithin<S>(sim: Sim<S>, commands: readonly number[], limit: number
         if (moves(body)) yield { body, first: { state: next, won: false } };
         yield* grow(body, next, size + 1);
       }
+      // At most one If in a group, with plain cards in its branches.
+      if (!prefix.some(n => n.kind === 'if')) for (const node of ifs) {
+        const cost = size + count([node]);
+        if (cost > budget) continue;
+        if (++expanded > work) { exhausted = true; return; }
+        const r = runNodes(sim, at, [node]);
+        if (!r) continue;
+        const body = [...prefix, node];
+        yield { body, first: r };
+        if (!r.won) yield* grow(body, r.state, cost);
+      }
       if (depth < nest) for (const inner of bodies(at, budget - size - 1, depth + 1)) for (const times of REPEAT_COUNTS) {
         if (++expanded > work) { exhausted = true; return; }
         const r = runNodes(sim, at, [{ kind: 'repeat', times, body: inner.body }]);
@@ -143,6 +166,7 @@ function blocksWithin<S>(sim: Sim<S>, commands: readonly number[], limit: number
         dist.set(nk, total); from.set(nk, { parent: k, item }); states.set(nk, r.state); buckets[total].push(nk);
       };
       for (const c of commands) { if (room < 1) break; const n = sim.step(state, c); push({ kind: 'command', command: c }, 1, n === null ? null : { state: n, won: sim.won(n) }); }
+      for (const node of ifs) { const cost = count([node]); if (cost <= room) push(node, cost, runNodes(sim, state, [node])); }
       if (room >= 2) for (const { body } of bodies(state, room - 1, 1)) for (const times of REPEAT_COUNTS) {
         if (++expanded > work) { exhausted = true; break; }
         const item: Node = { kind: 'repeat', times, body };

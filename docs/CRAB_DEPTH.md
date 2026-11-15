@@ -30,7 +30,7 @@ The 24 beaches use Walk and Turn. The plan tray holds fewer blocks than the fewe
 | 2nd beach | 10.5 | 9.8 | 6.3 | 7.3 | Repeat with cards around it |
 | 3rd beach | 14.3 | 13.0 | 6.4 | 6.4 | a Repeat inside a Repeat is needed: no single-level plan fits |
 
-Hint names one structural edit toward the nearest certified winner. Adding a Repeat names only the block, so its cards are left for the next step. The run itself shows where a plan bumps.
+Hint names one editor action toward the nearest certified winner, in the editor's own controls (`block-hint.ts`). It might be: tap a dashed ＋ place, then a palette button; tap a Repeat, then ×N; select a block, then replace or remove it; or "Make plan a song". A new Repeat arrives at ×2 and the next step sets its count. A new If arrives with empty branches, and the next steps fill "＋ When blocked" and "＋ Otherwise". A song is built the only way the editor allows: put its cards in the plan, make the plan a song, then call ♫ Song 1 again. The last help step spells out the whole plan, including every branch and the song. The run itself shows where a plan bumps. The same ladder serves Level 5 and the Songs and Foggy beach puzzles, and a test walks the visible help from an empty plan to a helped win on every one.
 
 ## Deep Water
 
@@ -40,11 +40,22 @@ Five new ideas follow Mud, each in five puzzles: teach, develop, twist, short ha
 |---|---:|---|---|
 | Rising tide | 12 | Low sand (~) floods once the crab has walked the tide number of squares | The twist's shortest route gets cut off; a tide one step sooner is unsolvable |
 | Key and gate | 13 | The gate opens once the key is held | No plan gets home without the key; the key is a detour |
-| Songs | 14 | Name a group of cards and call it. Cards and songs only, no Repeat | No flat plan fits the tray; the song plan does |
-| Foggy beach | 15 | One plan must work on two beaches; If blocked | No flat plan of any length brings the crab home on both; no loop plan fits the tray |
+| Songs | 14 | Name a group of cards and call it. Cards and songs only, no Repeat | No flat plan fits the tray; the song plan does. Teach and the easy finish call the song twice; the others three times |
+| Foggy beach | 15 | One plan must work on two beaches; If blocked | No flat plan brings the crab home on both, and no loop plan fits the tray. Fewest blocks with If allowed, measured on the engine, rise from 4 to 5 and then return to 4 on the easy finish |
 | Two crabs | 16 | Every card moves both; a crab that would bump stays | The twist needs at least two cards where one crab is held still |
 
-Why Songs has no Repeat block: a run stops the moment the crab is home, so on a 5×5 beach any group a song captures, a Repeat can capture in as few blocks. The bake measured this on every candidate it tried, and the test checks that a Repeat plan would fit each Songs tray. Offering Repeat would let a child skip the idea. The engine refuses a Repeat on these puzzles, and the editor doesn't show one.
+Why Songs has no Repeat block: a run stops the moment the crab is home, so on a 5×5 beach any group a song captures, a Repeat can capture in as few blocks. The bake measured this on every three-call candidate it tried. Offering Repeat would let a child skip the idea. The engine refuses a Repeat on these puzzles, and the editor doesn't show one.
+
+Foggy beach rises by program, not by tier number:
+- **Teach** needs `Repeat [If blocked: turn, otherwise: walk]`.
+- **Develop** needs a card before the Repeat.
+- **Twist** needs a branch with two cards.
+- **Tight tray** has no spare block, and every earlier rung's program fails there.
+- **Easy finish** returns to the teaching shape with one spare block.
+
+The tests check the fewest blocks per rung, and that the teaching shape and every other rung's program fail each hard rung.
+
+When Harder would move to another idea, the finish card says where it goes ("Harder takes you to Key and gate 4 of 5."). A "keep learning this idea" choice belongs to the shared Challenge core and is recorded as a follow-up.
 
 Deep Water dares (slots 154–157) sit only on tier-6 rungs, which no earlier idea uses. A dare in a shared tier would change what the finish card offers after a Mud puzzle.
 

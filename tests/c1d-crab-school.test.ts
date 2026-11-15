@@ -8,7 +8,6 @@ import { greedyBot } from '../src/learn/games/crab-commands/deep-proofs';
 import { applyStep, describeStep, nearestBlocks, nextStep } from '../src/learn/games/crab-commands/block-hint';
 import { encodeProgram } from '../src/learn/program/codec';
 import { nodeCost, type Program } from '../src/learn/program/model';
-import { applyOperations } from '../src/learn/program/operations';
 import { engines } from '../src/learn/engines';
 import { createGrowth, isGrowth } from '../src/learn/growth/engine';
 import { optionsAtLevel, levelOf } from '../src/learn/levelOptions';

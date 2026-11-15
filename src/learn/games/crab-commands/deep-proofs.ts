@@ -1,7 +1,7 @@
 import { commands, solve, step, walkerKey, type Command, type Level } from './engine';
 import { advanceWorld, execute, fogLevels, startWorld, worldWon, type Descriptor, type World } from './challenge-engine';
 import { programCodes } from './program';
-import type { Sim } from './search';
+import { runNodes, type Sim } from './search';
 import { crabSim } from './proofs';
 
 /** The whole beach as one machine: one crab, two crabs moving together, or every foggy beach in lockstep.
@@ -14,6 +14,17 @@ export function worldSim(d: Descriptor): Sim<World> {
       step: (world, c) => { const next: World = []; for (let i = 0; i < world.length; i++) { if (beaches[i].won(world[i])) { next.push(world[i]); continue; } const n = beaches[i].step(world[i], c); if (!n) return null; next.push(n); } return next; },
       won: world => world.every((w, i) => beaches[i].won(w)),
       key: world => world.map(walkerKey).join('|'),
+      // Each foggy beach checks its own way ahead, so the two crabs can take different branches.
+      runIf: (world, yes, no) => {
+        const next: World = [];
+        for (let i = 0; i < world.length; i++) {
+          if (beaches[i].won(world[i])) { next.push(world[i]); continue; }
+          const r = runNodes(beaches[i], world[i], beaches[i].blocked!(world[i]) ? yes : no);
+          if (!r) return null;
+          next.push(r.state);
+        }
+        return { state: next, won: next.every((w, i) => beaches[i].won(w)) };
+      },
     };
   }
   return {

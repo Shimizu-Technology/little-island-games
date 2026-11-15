@@ -96,8 +96,7 @@ describe('C1d block ideas: songs and foggy beaches', () => {
       expect(nodeCost(p)).toBeLessThanOrEqual(d.tray!);
       expect(flatBest(crabSim(d.level), W)!.cards).toBeGreaterThan(d.tray!);
       expect(runPlan(d, { program: [], blockDraft: e.witness as PackedProgram }).won).toBe(true);
-      // Why Repeat is not offered here: on a 5×5 beach a Repeat plan fits the same tray (measured, not assumed).
-      expect(blockBest(crabSim(d.level), W, d.tray!, { nest: 2 }).best, e.role).not.toBeNull();
+
       const looped: Program = { version: 1, body: [{ kind: 'repeat', times: 2, body: [{ kind: 'command', command: 4 }] }], songs: [] };
       expect(play(d, [['e', programOperations({ version: 1, body: [], songs: [] }, looped)]]), e.role).toBeNull();
     }
@@ -200,5 +199,36 @@ describe('C1d fix P2-1: initial drafts meet the same tray and tool limits as edi
     expect((next.payload as { initial: { draft?: unknown } }).initial.draft).toEqual(encodeProgram(witness));
     expect(validChallengeSession(next, next.owner, registration.catalog)).toBe(true);
     expect(registration.move(next, ['g'])!.result).not.toBeNull();
+  });
+});
+
+describe('C1d fix P2-2 and P3-2: Foggy beach rises by program, Songs call counts match their words', () => {
+  it('measures each fog rung\'s fewest blocks on the engine, with If allowed, and each rung needs something new', () => {
+    const fog = entries('fog'), least = fog.map(e => blockBest(worldSim(e.descriptor), W, e.descriptor.tray!, { nest: 2, conditions: true }));
+    expect(least.every(r => !r.exhausted)).toBe(true);
+    expect(least.map(r => r.best).filter((_, i) => i !== 3)).toEqual([4, 5, 5, 4]);
+    expect(least[3].best!).toBeGreaterThanOrEqual(5);
+    fog.forEach((e, i) => expect(nodeCost(decodeProgram(e.witness)!), e.role).toBe(least[i].best));
+    // Trays: tight on the three hard rungs (no spare block on Tight tray), one spare on teach and the easy finish.
+    expect(fog.map((e, i) => e.descriptor.tray! - least[i].best!)).toEqual([1, 0, 0, 0, 1]);
+    const wins = (d: Descriptor, p: Program) => runPlan(d, { program: [], blockDraft: encodeProgram(p) }).won;
+    const teachShape = [4, 6, 8].flatMap(times => [5, 6].map(turn => ({ version: 1, body: [{ kind: 'repeat', times, body: [{ kind: 'if', condition: { kind: 'blocked' }, yes: [{ kind: 'command', command: turn }], no: [{ kind: 'command', command: 4 }] }] }], songs: [] } as Program)));
+    for (const hard of [1, 2, 3]) {
+      expect(teachShape.some(p => wins(fog[hard].descriptor, p)), fog[hard].role).toBe(false);
+      for (const other of [0, 1, 2, 3].filter(i => i !== hard)) expect(wins(fog[hard].descriptor, decodeProgram(fog[other].witness)!), `${fog[other].role} on ${fog[hard].role}`).toBe(false);
+    }
+    // What each rung adds, read from its certified program.
+    const shape = (e: Entry) => { const p = decodeProgram(e.witness)!, loop = p.body.find(n => n.kind === 'repeat')!, branch = loop.kind === 'repeat' ? loop.body[0] : undefined; return { prefix: p.body[0].kind === 'command', twoCards: branch?.kind === 'if' && (branch.yes.length === 2 || branch.no.length === 2) }; };
+    expect([0, 1, 2, 4].map(i => shape(fog[i]))).toEqual([{ prefix: false, twoCards: false }, { prefix: true, twoCards: false }, { prefix: false, twoCards: true }, { prefix: false, twoCards: false }]);
+    // Tight tray uses the engine's own fewest-block plan, unlike any earlier rung's.
+    expect(new Set([1, 2, 3].map(i => JSON.stringify(fog[i].witness))).size).toBe(3);
+  });
+  it('Songs teach and easy call the song twice, as their titles and lessons say; the others three times', () => {
+    const songs = entries('songs'), calls = songs.map(e => decodeProgram(e.witness)!.body.filter(n => n.kind === 'call').length);
+    expect(calls).toEqual([2, 3, 3, 3, 2]);
+    const titled = deepPuzzles.filter(p => p.ref.bank === 14);
+    expect(titled[0].title).toContain('Call it twice'); expect(songs[4].descriptor.lesson).toContain('twice');
+    expect(titled[1].title).toContain('Three times');
+    for (const [i, e] of songs.entries()) if (/twice/.test(e.descriptor.lesson + titled[i].title)) expect(calls[i], e.role).toBe(2);
   });
 });
