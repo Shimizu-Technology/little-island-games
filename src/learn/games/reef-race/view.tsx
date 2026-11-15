@@ -1,4 +1,4 @@
-import { useBoardGeometry } from '../../BoardSpace';
+import { BoardColumns, useBoardColumns, useBoardGeometry } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
@@ -353,6 +353,7 @@ export function Board({ session, update, practice, sound, active, width, height,
   // Leave room so the prompt, the whole path and the spinner fit on one phone screen.
   const reserved = 372 + (multi ? 40 : 0) + (session.match ? 66 : 0);
   const pathH = Math.round(Math.max(260, Math.min(width * (width > 600 ? 0.62 : 1.45), height - reserved)));
+  const side = useBoardColumns();
   const geometry = useBoardGeometry('reef-race', pathH, SCHOOL_BOARD_MIN['reef-race']);
   const humanRoll = r.phase === "roll" && !computer && !spinning;
   const showCoach = coach.active && !computer;
@@ -380,6 +381,21 @@ export function Board({ session, update, practice, sound, active, width, height,
         ))}
       </View>
       {multi && <RaceBar end={end} tokens={tokens} width={width} />}
+      <BoardColumns legacyDrawingLast drawing={<View testID={geometry.testID} onLayout={geometry.onLayout}><ReefBoard
+        width={side ? width * .46 : width}
+        height={geometry.height}
+        first={first}
+        last={last}
+        end={end}
+        section={section}
+        tokens={tokens}
+        specials={specials}
+        next={!spinning && !computer ? nextN : null}
+        wrong={wrong}
+        disabled={!active || computer || spinning}
+        onStone={onStone}
+        coach={showCoach && moving}
+      /></View>}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 46 }}>
         {promptIcon}
         <Text accessibilityLiveRegion="polite" style={{ flex: 1, fontSize: 20, fontWeight: "900", color: ink }}>
@@ -413,21 +429,8 @@ export function Board({ session, update, practice, sound, active, width, height,
           </>
         )}
       </View>
-      <View testID={geometry.testID} onLayout={geometry.onLayout}><ReefBoard
-        width={width}
-        height={geometry.height}
-        first={first}
-        last={last}
-        end={end}
-        section={section}
-        tokens={tokens}
-        specials={specials}
-        next={!spinning && !computer ? nextN : null}
-        wrong={wrong}
-        disabled={!active || computer || spinning}
-        onStone={onStone}
-        coach={showCoach && moving}
-      /></View>
+
+      </BoardColumns>
     </View>
   );
 }

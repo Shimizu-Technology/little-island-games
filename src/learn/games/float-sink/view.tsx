@@ -1,5 +1,4 @@
-import { useBoardGeometry } from '../../BoardSpace';
-import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
@@ -136,9 +135,11 @@ function PebblePile({ size = 54 }: { size?: number }) {
   );
 }
 function Water({ children, width, height = 150 }: { children?: React.ReactNode; width: number; height?: number }) {
-  const geometry = useBoardGeometry('float-sink', height, SCHOOL_BOARD_MIN['float-sink']);
+  const side = useBoardColumns(), space = useBoardSpace();
+  const tankWidth = Math.min(side ? width * .46 : width, 420);
+  const geometry = useBoardGeometry('float-sink', height, space?.width && space.width >= 600 ? 138 : 120);
   return (
-    <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ height: geometry.height, width: Math.min(width, 420), alignSelf: "center" }}>
+    <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ height: geometry.height, width: tankWidth, overflow: "hidden", alignSelf: "center" }}>
       <Svg
         width="100%"
         height="100%"
@@ -151,7 +152,7 @@ function Water({ children, width, height = 150 }: { children?: React.ReactNode; 
         <Path d="M10 66Q38 56 64 66T120 66T176 66T232 66T310 66V128Q310 144 294 144H26Q10 144 10 128Z" fill="#9DCBD9" />
         <Path d="M10 140H310" stroke="#C9B48F" strokeWidth="6" />
       </Svg>
-      {children}
+      <View testID="water-contents" pointerEvents="box-none" style={{position:"absolute",left:0,top:0,width:tankWidth,height:150,transformOrigin:"top",transform:[{scaleY:geometry.height/150}]}}>{children}</View>
     </View>
   );
 }
@@ -213,7 +214,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     sank = !!d.shape && (d.shape === "ball" || d.pebbles > max);
   // Boat sits a little lower with each pebble, then sinks.
   useEffect(() => {
-    const to = !d.shape ? 4 : sank ? 62 : 4 + (d.pebbles / (max + 1)) * 30;
+    const to = !d.shape ? 4 : sank ? 48 : 4 + (d.pebbles / (max + 1)) * 30;
     const a = Animated.timing(boatY, {
       toValue: to,
       duration: reduced ? 0 : sank ? 700 : 320,
@@ -302,7 +303,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
               : `${who(seat)}'s boat`}
         </Copy>
       )}
-      {d.phase === "predict" || (d.phase === "shape" && moving) ? (
+      <BoardColumns drawing={d.phase === "predict" || (d.phase === "shape" && moving) ? (
         <Water width={width}>
           {moving ? (
             <Animated.View
@@ -323,7 +324,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                   {
                     translateY: t.interpolate({
                       inputRange: [0, 1, 2],
-                      outputRange: [0, moving.sinks ? 74 : 24, moving.sinks ? 150 : 110],
+                      outputRange: [0, moving.sinks ? 74 : 24, moving.sinks ? 110 : 80],
                     }),
                   },
                   { scale: t.interpolate({ inputRange: [0, 1, 2], outputRange: [1, 1, 0.5] }) },
@@ -394,7 +395,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
             )}
           </Water>
         )
-      )}
+      )}>
       {showResult && lastId && landed && (
         <View
           accessibilityLiveRegion="polite"
@@ -508,6 +509,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
           )}
         </View>
       )}
+      </BoardColumns>
       {d.shelf.length > 0 && (d.phase === "predict" || d.phase === "shape") && (
         <View style={{ flexDirection: "row", gap: 8 }}>
           {([0, 1] as const).map((p) => (

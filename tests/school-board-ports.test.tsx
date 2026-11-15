@@ -8,11 +8,22 @@ import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
 import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
+import { Board as B1 } from '../src/learn/games/crab-commands/view';
+import { Board as B2 } from '../src/learn/games/beep-bot/view';
+import { Board as B3 } from '../src/learn/games/hafa-adai/view';
+import { Board as B4 } from '../src/learn/games/reef-race/view';
+import { Board as B5 } from '../src/learn/games/shell-math/view';
+import { Board as B6 } from '../src/learn/games/tide-pool/view';
+import { Board as B9 } from '../src/learn/games/float-sink/view';
+import { Board as B10 } from '../src/learn/games/logic-lagoon/view';
+import { SchoolBoard as B11 } from '../src/learn/games/slip-tide/schoolBoard';
+import { ProgramEditor } from '../src/learn/program/ProgramEditor';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
 
 
 import { BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
 
+vi.mock('../src/components/feel',()=>({feel:()=>{}}));
 vi.mock('expo-router',()=>({router:{push:vi.fn()}}));
 vi.mock('../src/content/learnAudio',()=>({learnSources:{'beep-bot-intro':1}}));
 vi.mock('../src/state/Store',()=>({useStore:()=>({save:{learning:{active:'a',people:[{id:'a',name:'A'}]},settings:{}}})}));
@@ -29,11 +40,16 @@ vi.mock('react-native', () => {
     Animated: { View: 'View', add: () => new Value(0), multiply: () => new Value(0), Value, ValueXY, timing: () => animation, sequence: () => animation, loop: () => animation, spring: () => animation, delay: () => animation, parallel: () => animation },
     AppState: { currentState: 'active', addEventListener: () => ({ remove() {} }) },
     useWindowDimensions: () => viewport,
+    Easing: { linear:()=>0,bezier:()=>()=>0,out:()=>0,inOut:()=>0,quad:()=>0 },
   };
 });
 vi.mock('react-native-svg', () => Object.fromEntries(['Circle', 'ClipPath', 'Defs', 'Ellipse', 'FeColorMatrix', 'Filter', 'G', 'Line', 'LinearGradient', 'Path', 'Pattern', 'Polygon', 'Polyline', 'RadialGradient', 'Rect', 'Stop', 'SvgXml', 'Text', 'TSpan'].map(k => [k, `Svg${k}`]).concat([['default', 'Svg']])));
+vi.mock('../src/learn/program/PaletteDrag', () => ({ PaletteDrag: ({children}: {children:React.ReactNode}) => children }));
+vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',Gesture:{Pan:()=>{const g:Record<string,()=>unknown>={};for(const k of ['enabled','maxPointers','minDistance','onBegin','onUpdate','onFinalize'])g[k]=()=>g;return g;}}}));
+vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},Easing:{out:()=>0,inOut:()=>0,quad:0,bezier:()=>0},runOnJS:(x:unknown)=>x,useSharedValue:(v:unknown)=>({get:()=>v,set:()=>{}}),useAnimatedStyle:(f:()=>unknown)=>f(),cancelAnimation:()=>{},withTiming:(v:unknown)=>v,withSpring:(v:unknown)=>v,withSequence:(...v:unknown[])=>v.at(-1),withRepeat:(v:unknown)=>v}));
 vi.mock('../src/components/motion', () => ({ easeInOut: () => 0, easeOut: () => 0, nativeDriver: false, useReducedMotion: () => true }));
-vi.mock('../src/learn/Coach', () => ({ CoachSpot: ({ children }: { children: React.ReactNode }) => children }));
+vi.mock('../src/learn/Coach', () => ({ Hand:'Hand', CoachSpot: ({ children }: { children: React.ReactNode }) => children }));
+vi.mock('../src/learn/games/slip-tide/art',()=>({Arrow:'Arrow',CrabSprite:'CrabSprite',HomeEyes:'HomeEyes',LagoonArt:'LagoonArt',PoolBadge:'PoolBadge'}));
 vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 vi.mock('../src/components/GameIcon', () => ({ GameIcon: 'GameIcon' }));
 vi.mock('../src/learn/kit/ReadingText', () => ({ ReadingText: 'ReadingText' }));
@@ -56,14 +72,14 @@ const Pressable = 'Pressable' as unknown as React.ComponentType<Record<string, u
 const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
-async function mountPort(id: LearnId, Board: React.ElementType, available=472) {
+async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
   vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
-  Object.assign(viewport,{width:393,height:852,fontScale:1});
+  Object.assign(viewport,window);
   const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
-  const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:333,height:759,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider space={{width:333,height:available,large:false}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>);});
+  const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
+  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,0,333,500),scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -93,5 +109,93 @@ it('Tide Logic reserves the measured cargo labels and row gaps rather than treat
  });
  const glyphs=r.root.findAll(n=>String(n.type)==='Svg'&&n.props.accessibilityLabel?.startsWith('big '));
  expect(glyphs.length).toBeGreaterThan(0);
- expect(glyphs[0].props.width).toBe(43);
+ expect(glyphs[0].props.width * 49 / 64).toBeGreaterThanOrEqual(56);
+});
+
+const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B2],['hafa-adai',B3],['reef-race',B4],['weather-watch',B7],['shell-math',B5],['tide-pool',B6],['float-sink',B9],['tide-logic',B13],['logic-lagoon',B10],['slip-tide',B11],['treasure-algebra',B8]];
+const configurations = [[393,852],[375,667],[744,1133],[1133,744],[852,393]];
+it.each(ports)('%s renders its actual drawing, primary boundary and touch targets in each measured window',async(id,Board)=>{
+ for(const [width,height] of configurations)for(const fontScale of [1,3.12]){
+  const r=await mountPort(id,Board,height-160,{width,height,fontScale});
+  const drawings=r.root.findAll(n=>String(n.type)==='View'&&n.props.testID===`school-${id}-drawing`);
+  expect(drawings.length).toBeGreaterThan(0);
+  expect(drawings[0].props.onLayout).toBeTypeOf('function');
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='school-primary').length).toBe(1);
+  const columns=r.root.findAll(n=>String(n.type)==='View'&&['school-drawing-row','slip-side'].includes(n.props.testID));
+  expect(columns.length).toBe(width>height || id==='treasure-algebra'&&width-60>=304&&width-60<600?1:0);
+  await act(async()=>r.unmount());root=undefined;
+ }
+});
+it.each([1,3.12])('K7 at text scale %s preserves its base allocation, two plan rows and the visible command palette',async fontScale=>{
+ for(const [width,height] of configurations){
+  Object.assign(viewport,{width,height,fontScale});
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+  const editor=<ProgramEditor schoolGeometry program={{version:1,body:[{kind:'repeat',times:2,body:[{kind:'command',command:0}]}],songs:[]}} cards={[{code:0,name:'Right',icon:null}]} onChange={()=>true} disabled={false} hear={()=>{}} maxHeight={Math.max(180,Math.min(340,height-493))}/>;
+  await act(async()=>{root=create(<BoardSpaceProvider space={{width:width-60,height:height-160,large:fontScale>=1.5}}><BoardSpaceContent>{editor}</BoardSpaceContent></BoardSpaceProvider>);});
+  const allocation=flat(view('program-editor').props.style).maxHeight as number;
+  expect(allocation).toBeGreaterThanOrEqual(Math.max(180,Math.min(340,height-493)));
+  const plan=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Nested program cards')[0];
+  expect(flat(plan.props.style).height).toBe(fontScale>=1.5?120:140);
+  const tools=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Block tools')[0];
+  expect(flat(tools.props.style).minHeight).toBeGreaterThanOrEqual(112);
+  expect(String(tools.children[0] && typeof tools.children[0]!=='string' && tools.children[0].type)).toBe('View');
+  await act(async()=>root!.unmount());root=undefined;
+ }
+});
+it('Treasure number-line labels retain their actual point size under a tight measured allocation',async()=>{
+ await mountPort('treasure-algebra',B8,280,{width:393,height:852,fontScale:3.12});
+ const drawing=view('school-treasure-algebra-drawing');
+ await act(async()=>{drawing.props.onLayout({nativeEvent:{layout:{height:330}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ const svg=drawing.findAll(n=>String(n.type)==='Svg')[0];
+ const labels=svg.findAll(n=>String(n.type)==='SvgText');
+ expect(labels.length).toBeGreaterThan(5);expect(labels.every(n=>Number(n.props.fontSize)>=13*1.5)).toBe(true);
+});
+it('Håfa Adai picture inputs remain at least 56 pt on phone and 64 pt on iPad',async()=>{
+ for(const width of [393,744]){
+  const r=await mountPort('hafa-adai',B3,150,{width,height:852,fontScale:1});
+  await act(async()=>{view('content').props.onLayout({nativeEvent:{layout:{height:700}}});view('school-hafa-adai-drawing').props.onLayout({nativeEvent:{layout:{height:300}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+  const pictures=r.root.findAll(n=>typeof n.type==='function'&&n.type.name==='WordPicture');
+  expect(pictures.length).toBeGreaterThan(0);expect(pictures.every(n=>n.props.size >= (width>=600?64:56))).toBe(true);
+  await act(async()=>r.unmount());root=undefined;
+ }
+});
+it('Float/Sink clips the scaled contents inside the actual tank',async()=>{
+ await mountPort('float-sink',B9,200);
+ expect(flat(view('school-float-sink-drawing').props.style).overflow).toBe('hidden');
+ expect(flat(view('water-contents').props.style).transformOrigin).toBe('top');
+});
+
+it('the actual Crab plan exposes hidden cards, follows running/bumped cards and announces the cue',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ Object.assign(viewport,{width:393,height:852,fontScale:1});
+ const session=startSession('crab-commands',{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
+ const base={...session,state:{...(session.state as Record<string,unknown>),program:Array.from({length:32},()=> 'right'),cursor:0,running:false}};
+ const scrolls:{y:number;animated:boolean}[]=[];
+ const render=(cursor:number,running:boolean)=><BoardSpaceProvider space={{width:333,height:500,large:false}}><BoardSpaceContent><B1 session={{...base,state:{...base.state,cursor,running}} as never} update={vi.fn()} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={vi.fn()} stopSound={vi.fn()} soundOn={false} width={333} height={759} active coach={{active:false,done:vi.fn()}} cheer={vi.fn()}/></BoardSpaceContent></BoardSpaceProvider>;
+ await act(async()=>{root=create(render(0,false),{createNodeMock:()=>({scrollTo:(o:{y:number;animated:boolean})=>scrolls.push(o)})});});
+ const strip=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Your plan cards')[0];
+ const cards=strip.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Card '));
+ expect(cards).toHaveLength(32);
+ await act(async()=>{
+  strip.props.onLayout({nativeEvent:{layout:{height:192}}});strip.props.onContentSizeChange(333,381);
+  cards.forEach((c,i)=>c.props.onLayout({nativeEvent:{layout:{y:4+Math.floor(i/6)*63,height:58,width:44}}}));
+ });
+ expect(view('plan-more-below')).toBeUndefined(); // cue is Copy/Text, not a layout View
+ const cue=root!.root.findAll(n=>n.props.testID==='plan-more-below'&&String(n.type)==='Text')[0];
+ expect(cue.props.accessibilityLabel).toBe('14 more cards below. Scroll down.');
+ await act(async()=>root!.update(render(25,true)));
+ expect(scrolls.at(-1)).toEqual({y:126,animated:false});
+ await act(async()=>strip.props.onScroll({nativeEvent:{contentOffset:{y:126}}}));
+ expect(root!.root.findAll(n=>n.props.testID==='plan-more-above').length).toBeGreaterThan(0);
+});
+it('Slip Tide does not shrink its drawing to pay for a taller sibling column',async()=>{
+ await mountPort('slip-tide',B11,500,{width:852,height:393,fontScale:1});
+ const drawing=view('school-slip-tide-drawing');
+ const drawn=()=>drawing.findAll(n=>String(n.type)==='View'&&typeof flat(n.props.style).height==='number').map(n=>Number(flat(n.props.style).height)).sort((a,b)=>b-a)[0];
+ const before=drawn();
+ await act(async()=>{
+  view('content').props.onLayout({nativeEvent:{layout:{height:700}}});drawing.props.onLayout({nativeEvent:{layout:{height:before}}});
+  const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));
+ });
+ expect(drawn()).toBe(before);
 });

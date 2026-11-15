@@ -1,4 +1,4 @@
-import { useBoardGeometry } from '../BoardSpace';
+import { useBoardGeometry, useBoardSpace } from '../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../boardGeometry';
 import React, { useContext, useEffect, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
@@ -29,15 +29,17 @@ class EditorRuntime {
 
 const blockName = blockPosition;
 /** Tap and drag use exactly the same pure edit and admission path. No move saves on a frame. */
-export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, refusal }: {
+export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, schoolGeometry = false, refusal }: {
   program: Program; cards: Card[]; onChange: (program: Program) => boolean | {accepted:false;reason:string} | Promise<boolean | {accepted:false;reason:string}>; disabled: boolean;
   hear: (key: string) => void; condition?: string; currentPath?: string; iteration?: number[];
-  onStep?: () => void; onRestart?: () => void; onFlat?: () => void; maxHeight?: number; refusal?: string;
+  onStep?: () => void; onRestart?: () => void; onFlat?: () => void; maxHeight?: number; schoolGeometry?: boolean; refusal?: string;
 }) {
+  const space = useBoardSpace(), school = schoolGeometry && !!space;
   const { fontScale } = useWindowDimensions(), cap = atLarge(fontScale, 1.5);
-  const geometry = useBoardGeometry('program-editor', maxHeight, SCHOOL_BOARD_MIN['program-editor']);
+  const planHeight = fontScale >= 1.5 ? 120 : 140;
+  const floor = Math.max(maxHeight, planHeight + 112 + (fontScale >= 1.5 ? 52 : 36) + (currentPath ? 40 : 0), SCHOOL_BOARD_MIN['program-editor']);
+  const geometry = useBoardGeometry('program-editor', school ? floor : maxHeight, floor, school);
   const editorHeight = geometry.height;
-  const planHeight = geometry.measured ? Math.max(44, Math.min(fontScale >= 1.5 ? 120 : 140, editorHeight - 96)) : fontScale >= 1.5 ? 120 : 140;
   const [target, setTarget] = useState<Location>(main), [selected, setSelected] = useState<Selection | null>(null);
   const [history, setHistory] = useState<EditHistory>({ past: [], future: [] }), [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -135,14 +137,15 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
     })}
   </View>;
   const selection = selected ? listAt(program, selected.location)?.[selected.at] : null;
-  return <View testID="program-editor" onLayout={geometry.onLayout} style={{ alignSelf: 'stretch', maxHeight: editorHeight, gap:4 }}>
-    <Copy maxFontSizeMultiplier={cap} style={{ fontWeight: '800', color: C.ink }}>Blocks · {nodeCost(program)} of 80</Copy>
-    {currentPath && <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">Step: block {blockName(currentPath)}{iteration?.length ? ` · repeat ${iteration.map(i => i + 1).join(', ')}` : ''}</Copy>}
-    <View testID="program-plan-viewport" ref={ref=>{registry.set({viewportView:ref});}} collapsable={false} onLayout={measure}><ScrollView ref={ref=>{registry.set({scroll:ref});}} nestedScrollEnabled scrollEnabled={!dragging} onScroll={event=>{registry.set({offset:event.nativeEvent.contentOffset.y});measure();}} scrollEventThrottle={16} onContentSizeChange={(_,height)=>{registry.set({content:height});}} style={{ height: planHeight, maxHeight: planHeight }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
-      {render(program.body, main)}{dropZone(main, program.body.length, '＋ End of plan')}
-      {program.songs.map((song, i) => <View key={i} style={{ padding: 6, gap: 5, borderWidth: 2, borderColor: C.teal, borderRadius: 12 }}><Copy maxFontSizeMultiplier={cap}>♫ Song {i + 1}</Copy>{render(song, { song: i, path: [] })}{dropZone({ song: i, path: [] }, song.length, `＋ Inside Song ${i + 1}`)}</View>)}
-    </ScrollView></View>
-    <ScrollView nestedScrollEnabled style={{flexShrink:1,maxHeight:geometry.measured ? Math.max(44,editorHeight-planHeight-52) : Math.max(64,maxHeight-190)}} contentContainerStyle={{gap:6}} accessibilityLabel="Block tools">
+  const commandPalette = <>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+      {cards.map(card => <React.Fragment key={card.code}>{palette({ kind: 'command', command: card.code }, () => insert({ kind: 'command', command: card.code }, undefined, card.speech), <PressableScale accessibilityRole="button" accessibilityLabel={`${selected ? 'Replace with' : 'Add'} ${card.name} block`} disabled={disabled||saving} onPress={() => insert({ kind: 'command', command: card.code }, undefined, card.speech)} style={{ minHeight: 56, minWidth: 64, borderWidth: 2, borderColor: C.teal, borderRadius: 12, padding: 8, gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: C.paper }}>{card.icon}<Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 13 }}>{card.name}</Copy></PressableScale>)}</React.Fragment>)}
+      {palette({ kind: 'repeat', times: 2, body: [] }, () => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat'), <Button compact label="Add Repeat 2 times" maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat')}>↻ Repeat ×2</Button>)}
+      {condition && <Button compact quiet label="Add condition: edge or obstacle blocked" maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'if', condition: {kind:'blocked'}, yes: [], no: [] }, undefined, 'k7-condition')}>? If blocked</Button>}
+      {program.songs.map((_, i) => <Button key={i} compact quiet label={`Add Song ${i+1}`} maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'call', song: i }, undefined, 'k7-song')}>♫ Song {i + 1}</Button>)}
+    </View>
+  </>;
+  const toolIntro = <>
     <Copy maxFontSizeMultiplier={cap} style={{fontSize:13}}>Tap Repeat, then cards inside. To move, select a block then a dashed place.</Copy>
     {!!selection && selected && <View style={{ gap: 5 }}><Copy maxFontSizeMultiplier={cap}>Selected block. Tap a command to replace it.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={async () => { if (await accept(removeNode(program, selected.location, selected.at))) setTarget(main); }}>Remove block</Button>
@@ -150,12 +153,17 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
       {selection.kind === 'repeat' && [2, 3, 4, 6, 8].map(times => <Button key={times} compact quiet label={`Repeat ${times} times`} maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => accept(replaceNode(program, selected.location, selected.at, { ...selection, times }))}>×{times}</Button>)}
       <Button compact quiet maxFontSizeMultiplier={cap} onPress={() => setSelected(null)}>Keep block</Button>
     </View></View>}
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-      {cards.map(card => <React.Fragment key={card.code}>{palette({ kind: 'command', command: card.code }, () => insert({ kind: 'command', command: card.code }, undefined, card.speech), <PressableScale accessibilityRole="button" accessibilityLabel={`${selected ? 'Replace with' : 'Add'} ${card.name} block`} disabled={disabled||saving} onPress={() => insert({ kind: 'command', command: card.code }, undefined, card.speech)} style={{ minHeight: 56, minWidth: 64, borderWidth: 2, borderColor: C.teal, borderRadius: 12, padding: 8, gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: C.paper }}>{card.icon}<Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 13 }}>{card.name}</Copy></PressableScale>)}</React.Fragment>)}
-      {palette({ kind: 'repeat', times: 2, body: [] }, () => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat'), <Button compact label="Add Repeat 2 times" maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'repeat', times: 2, body: [] }, undefined, 'k7-repeat')}>↻ Repeat ×2</Button>)}
-      {condition && <Button compact quiet label="Add condition: edge or obstacle blocked" maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'if', condition: {kind:'blocked'}, yes: [], no: [] }, undefined, 'k7-condition')}>? If blocked</Button>}
-      {program.songs.map((_, i) => <Button key={i} compact quiet label={`Add Song ${i+1}`} maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'call', song: i }, undefined, 'k7-song')}>♫ Song {i + 1}</Button>)}
-    </View>
+  </>;
+  return <View testID="program-editor" onLayout={geometry.onLayout} style={{ alignSelf: 'stretch', maxHeight: editorHeight, gap:4 }}>
+    <Copy maxFontSizeMultiplier={cap} style={{ fontWeight: '800', color: C.ink }}>Blocks · {nodeCost(program)} of 80</Copy>
+    {currentPath && <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">Step: block {blockName(currentPath)}{iteration?.length ? ` · repeat ${iteration.map(i => i + 1).join(', ')}` : ''}</Copy>}
+    <View testID="program-plan-viewport" ref={ref=>{registry.set({viewportView:ref});}} collapsable={false} onLayout={measure}><ScrollView ref={ref=>{registry.set({scroll:ref});}} nestedScrollEnabled scrollEnabled={!dragging} onScroll={event=>{registry.set({offset:event.nativeEvent.contentOffset.y});measure();}} scrollEventThrottle={16} onContentSizeChange={(_,height)=>{registry.set({content:height});}} style={{ height: planHeight, maxHeight: planHeight }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
+      {render(program.body, main)}{dropZone(main, program.body.length, '＋ End of plan')}
+      {program.songs.map((song, i) => <View key={i} style={{ padding: 6, gap: 5, borderWidth: 2, borderColor: C.teal, borderRadius: 12 }}><Copy maxFontSizeMultiplier={cap}>♫ Song {i + 1}</Copy>{render(song, { song: i, path: [] })}{dropZone({ song: i, path: [] }, song.length, `＋ Inside Song ${i + 1}`)}</View>)}
+    </ScrollView></View>
+    <ScrollView nestedScrollEnabled style={{flexShrink:1,minHeight:school ? 112 : undefined,maxHeight:Math.max(school ? 112 : 64,editorHeight-190)}} contentContainerStyle={{gap:6}} accessibilityLabel="Block tools">
+    {school ? commandPalette : toolIntro}
+    {school ? toolIntro : commandPalette}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving || !program.body.length || program.songs.length >= 4} onPress={async () => { const next = clone(program), song = next.songs.length; next.songs.push(next.body); next.body = [{ kind: 'call', song }]; if (await accept(next, 'k7-song')) setTarget(main); }}>Make plan a song</Button>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving || !history.past.length} onPress={async () => { const prev = history.past.at(-1)!; if (await commit(prev)) { setHistory({ past: history.past.slice(0, -1), future: [...history.future, clone(program)] }); setTarget(main); setSelected(null); announce('tap'); } }}>Undo block edit</Button>

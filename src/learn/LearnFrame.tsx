@@ -1,5 +1,5 @@
 import { BoardSpaceProvider, BoardSpaceContent } from './BoardSpace';
-import { measuredBoardSpace, revealBoardOnEntry } from './boardGeometry';
+import { measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS } from './boardGeometry';
 import { coveReady } from './generated/readiness';
 import { challengeFor, schoolContext } from '../challenge/catalog';
 import { ResultOffer } from '../challenge/ResultOffer';
@@ -86,8 +86,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     // returns to the top of the board rather than above the header, and the answers stay a short scroll away.
     const sameRound = stepRound.current === saved?.id;
     stepRound.current = saved?.id;
-    scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current + boardInset.current - 8) : 0, animated: false });
-  }, [growthStep, saved?.id, large]);
+    scroll.current?.scrollTo({ y: (large || height < 500) && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current + boardInset.current - 8) : 0, animated: false });
+  }, [growthStep, saved?.id, large, height]);
   // Other step games (a story page, the next question) ask for the same return through `useStepReveal`.
   const revealBoard = useCallback(() => {
     if (boardTop.current !== null) scroll.current?.scrollTo({ y: Math.max(0, boardTop.current + boardInset.current - 8), animated: false });
@@ -295,11 +295,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
   const boardInner = boardWidth - (width >= 768 && height >= 600 && store.save.settings.learningIslander !== false ? 88 : 0);
-  const revealEntry = revealBoardOnEntry(large, height);
+  const revealEntry = schoolEntryReveal(id, large, height);
   // A transient cheer above an AX phone board must finish before its one entry
   // reveal, or removing that row would leave the instruction behind the pinned bar.
   const anchorReady = !large || width >= 600 || companionEvent === "waiting";
-  const boardSpace = useMemo(() => viewport.height > 0 && viewport.key === layoutKey && boardLayout.width > 0 && boardLayout.topAt === width && boardLayout.insetAt === width ? {
+  const boardSpace = useMemo(() => viewport.height > 0 && boardLayout.width > 0 ? {
     width: boardLayout.width,
     // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
     // reserve all real header/progress content above it. Scroll position is never
@@ -423,7 +423,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               sound={boardSound}
               stopSound={stopSound}
               soundOn={soundOn}
-              width={boardSpace?.width ?? boardInner}
+              width={MEASURED_SCHOOL_BOARDS.has(id) ? boardSpace?.width ?? boardInner : boardInner}
               height={height - insets.top - insets.bottom}
               active={boardActive}
               coach={{ active: coachActive && boardActive, done: coachDone }}

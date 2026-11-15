@@ -1,4 +1,4 @@
-import { useBoardGeometry } from '../../BoardSpace';
+import { BoardColumns, useBoardColumns, useBoardGeometry } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Platform, View, useWindowDimensions } from "react-native";
@@ -302,8 +302,9 @@ export function PoolScene({
   p: Animated.Value;
   width: number;
 }) {
-  const geometry = useBoardGeometry('tide-pool', Math.min(width, 420) * 0.53, SCHOOL_BOARD_MIN['tide-pool']);
-  const W = Math.min(width, 420, geometry.height / 0.53),
+  const side = useBoardColumns(), sceneWidth = side ? width * .46 : width;
+  const geometry = useBoardGeometry('tide-pool', Math.min(sceneWidth, 420) * 0.53, SCHOOL_BOARD_MIN['tide-pool']);
+  const W = Math.min(sceneWidth, 420, geometry.height / 0.53),
     H = W * 0.53,
     k = W / 320;
   const at = (x: number, y: number, size: number) => ({
@@ -704,7 +705,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
           {s.guesses.length < need ? `${name(guesser(s))} picks an answer` : `${name(s.starter)} makes the change`}
         </Copy>
       )}
-      <PoolScene mission={m.id} watched={s.watched} look={s.pool} p={p} width={width} />
+      <BoardColumns drawing={<PoolScene mission={m.id} watched={s.watched} look={s.pool} p={p} width={width} />}>
       {m.kind === "fix" ? (
         <CoachSpot active={coach.active && !s.watched} handAt="none">
           <View testID="tide-controls" style={{ flexDirection: large ? "column" : "row", gap: 8 }}>
@@ -780,6 +781,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
           {last ? "Finish" : "Next question"}
         </Button>
       )}
+      </BoardColumns>
     </View>
   );
 }

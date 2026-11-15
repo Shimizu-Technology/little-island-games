@@ -11,7 +11,12 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   and measure their board space from the revealed 8-pt top, as the AX path does.
   Header structure, pinning, text caps and the Challenge grid budget are unchanged.
   Scrolling up must still expose Back, sound, Help and the learner switch in their
-  existing VoiceOver order. Windows **>= 500 pt** retain their existing behavior.
+  existing VoiceOver order. At AX, entry/rotation reveal is limited to the ported
+  measured School boards (Crab, Beep, Håfa Adai, Reef Race, Weather, Tide Pool,
+  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure) plus Shell Math,
+  which already had an AX entry reveal. Unported and reading boards keep their
+  existing entry behavior at **>= 500 pt**. Default text keeps the strict 500-pt threshold.
+  Next questions in short landscape retain the revealed board position.
   Rotation preserves the round and triggers at most one reveal per rotation;
   no animated scroll is introduced. Required proof: 499/500 threshold tests,
   portrait/landscape/portrait round preservation and iPhone 15 landscape frames

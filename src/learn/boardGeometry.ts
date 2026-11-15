@@ -18,11 +18,11 @@ export function fitSchoolBoard(space: BoardSpace | null, natural: number, minimu
 
 /** Drawing floors. Interactive grids supply their cell-derived floor instead. */
 export const SCHOOL_BOARD_MIN = {
-  'crab-commands': 150, 'beep-bot': 100, 'hafa-adai': BUTTON_ROW,
-  'reef-race': 260, 'weather-watch': 100, 'shell-math': 44,
-  'tide-pool': 90, 'float-sink': 100, 'tide-logic': 24,
+  'crab-commands': 150, 'beep-bot': 160, 'hafa-adai': BUTTON_ROW,
+  'reef-race': 260, 'weather-watch': 150, 'shell-math': 44,
+  'tide-pool': 90, 'float-sink': 100, 'tide-logic': 56,
   'logic-lagoon': BUTTON_ROW, 'slip-tide': BUTTON_ROW,
-  'treasure-algebra': 140, 'program-editor': 140,
+  'treasure-algebra': 250, 'program-editor': 140,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 
@@ -33,3 +33,7 @@ export function measuredBoardSpace(viewport: number, top: number, inset: number,
 
 /** Lead-approved 15 Nov: short landscape uses the same non-animated reveal as AX. */
 export const revealBoardOnEntry = (large: boolean, windowHeight: number) => large || windowHeight < 500;
+
+/** Entry/rotation AX reveal is scoped to measured boards and Shell's existing path. */
+export const MEASURED_SCHOOL_BOARDS = new Set<string>(Object.keys(SCHOOL_BOARD_MIN).filter(id => id !== 'program-editor'));
+export const schoolEntryReveal = (id: string, large: boolean, height: number) => height < 500 || large && MEASURED_SCHOOL_BOARDS.has(id);

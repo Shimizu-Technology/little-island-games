@@ -1,4 +1,4 @@
-import { useBoardGeometry } from '../../BoardSpace';
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, View, useWindowDimensions } from "react-native";
@@ -90,25 +90,27 @@ export function Board({
     shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
   const spy = s.activity === "spy",
     gentle = options.pace === "easy";
+  const space = useBoardSpace(), side = useBoardColumns(), pictureWidth = side ? width * .46 : width;
+  const captionBase = space ? 13 : 12, captionLine = space ? 16 : 14;
   const gap = 6,
     pad = 8;
   // The scene has a 1px border on each side.
-  const slotFor = (n: number) => Math.floor((width - 2 - pad * 2 - gap * (n - 1)) / n);
+  const slotFor = (n: number) => Math.floor((pictureWidth - 2 - pad * 2 - gap * (n - 1)) / n);
   const captions = spy ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
   // A caption word wider than its slot even at the default size ("Grandmother" in four columns) would break mid-word,
   // so the picnic drops a column until every word fits. Rounds whose words already fit keep their layout.
-  let columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
-  while (columns > 2 && !captions.every(text => wordsFit(text, 12, slotFor(columns) - 8))) columns--;
+  let columns = s.items.length === 6 ? 3 : pictureWidth >= 600 ? 6 : 4;
+  while (columns > 2 && !captions.every(text => wordsFit(text, captionBase, slotFor(columns) - 8))) columns--;
   const rows = Math.ceil(s.items.length / columns);
   const slot = slotFor(columns);
-  const naturalPictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
+  const naturalPictureSize = Math.max(space ? width >= 600 ? 64 : 56 : 44, Math.min(84, slot - (spy ? 10 : 18)));
   // Captions share one size, the largest (at most 1.5x) at which every word of every caption, English or CHamoru,
   // fits its picture's slot. At accessibility sizes each row makes room for two caption lines, so labels never overlap.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
-  const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
-  const captionHeight = spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28;
+  const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, captionBase, slot - 8, 1.5))) : undefined;
+  const captionHeight = spy ? 14 : captionMax ? 10 + 2 * Math.ceil(captionLine * captionMax) : 2 * captionLine;
   const naturalRow = naturalPictureSize + captionHeight;
-  const minimumRow = Math.max(SCHOOL_BOARD_MIN['hafa-adai'], 24 + captionHeight);
+  const minimumRow = Math.max(SCHOOL_BOARD_MIN['hafa-adai'], (width >= 600 ? 64 : 56) + captionHeight);
   const geometry = useBoardGeometry('hafa-adai', rows * naturalRow + 44, rows * minimumRow + 44);
   const rowHeight = Math.max(minimumRow, Math.min(naturalRow, (geometry.height - 44) / rows));
   const pictureSize = Math.min(naturalPictureSize, rowHeight - captionHeight);
@@ -178,6 +180,88 @@ export function Board({
           ))}
         </View>
       )}
+      <BoardColumns legacyDrawingLast drawing={<View testID={geometry.testID} onLayout={geometry.onLayout}
+        style={{
+          borderRadius: 20,
+          overflow: "hidden",
+          borderWidth: 1,
+          borderColor: "#DCC895",
+          paddingHorizontal: pad,
+          paddingTop: tableTop,
+          paddingBottom: 12,
+        }}
+      >
+        <Picnic tableTop={tableTop} rowHeight={rowHeight} rows={rows} />
+        <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: gap }}>
+          {placed.map((id) => {
+            const word = chamoruWord(id)!,
+              found = spy && s.items.indexOf(id) < p.cursor,
+              visited = !spy && p.visited.has(id),
+              wrong = spy && missed && shown?.id === id;
+            const tile = (
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={
+                  spy
+                    ? `Picture ${placed.indexOf(id) + 1}: ${first(word.english)}${found ? ", found" : ""}`
+                    : `${first(word.english)}${visited ? ", seen" : ""}`
+                }
+                accessibilityHint={spy ? undefined : visited ? `CHamoru: ${word.term}` : "Shows its word"}
+                onPress={() => select(id)}
+                amount={0.94}
+                style={{
+                  width: slot,
+                  height: rowHeight,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  paddingBottom: 4,
+                  borderRadius: 14,
+                  borderWidth: 3,
+                  borderColor: found ? "#4F8A66" : wrong ? C.gold : "transparent",
+                  backgroundColor: found ? "#E3EFE3AA" : "transparent",
+                }}
+              >
+                <WordPicture word={word} size={pictureSize} caption={false} />
+                {!spy && (
+                  <Copy numberOfLines={captionMax ? 2 : undefined} maxFontSizeMultiplier={captionMax} style={{ fontSize: captionBase, lineHeight: captionLine, textAlign: "center", color: C.ink, fontWeight: "700" }}>
+                    {visited ? word.term : first(word.english)}
+                  </Copy>
+                )}
+                {(found || visited) && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      right: 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: "#4F8A66",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Svg width={12} height={12} viewBox="0 0 12 12">
+                      <Path d="M2 6l3 3 5-6" stroke="#FFF" strokeWidth={2} fill="none" strokeLinecap="round" />
+                    </Svg>
+                  </View>
+                )}
+              </PressableScale>
+            );
+            return (
+              <View key={id}>
+                {id === coachId && !p.done ? (
+                  <CoachSpot active={coach.active} handAt="bottom-right">
+                    {tile}
+                  </CoachSpot>
+                ) : (
+                  tile
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>}>
       <View
         style={{ backgroundColor: C.paper, borderRadius: 16, padding: 12, gap: 4 }}
         accessibilityLiveRegion="polite"
@@ -229,88 +313,7 @@ export function Board({
           </>
         )}
       </View>
-      <View testID={geometry.testID} onLayout={geometry.onLayout}
-        style={{
-          borderRadius: 20,
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: "#DCC895",
-          paddingHorizontal: pad,
-          paddingTop: tableTop,
-          paddingBottom: 12,
-        }}
-      >
-        <Picnic tableTop={tableTop} rowHeight={rowHeight} rows={rows} />
-        <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: gap }}>
-          {placed.map((id) => {
-            const word = chamoruWord(id)!,
-              found = spy && s.items.indexOf(id) < p.cursor,
-              visited = !spy && p.visited.has(id),
-              wrong = spy && missed && shown?.id === id;
-            const tile = (
-              <PressableScale
-                accessibilityRole="button"
-                accessibilityLabel={
-                  spy
-                    ? `Picture ${placed.indexOf(id) + 1}: ${first(word.english)}${found ? ", found" : ""}`
-                    : `${first(word.english)}${visited ? ", seen" : ""}`
-                }
-                accessibilityHint={spy ? undefined : visited ? `CHamoru: ${word.term}` : "Shows its word"}
-                onPress={() => select(id)}
-                amount={0.94}
-                style={{
-                  width: slot,
-                  height: rowHeight,
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  paddingBottom: 4,
-                  borderRadius: 14,
-                  borderWidth: 3,
-                  borderColor: found ? "#4F8A66" : wrong ? C.gold : "transparent",
-                  backgroundColor: found ? "#E3EFE3AA" : "transparent",
-                }}
-              >
-                <WordPicture word={word} size={pictureSize} caption={false} />
-                {!spy && (
-                  <Copy numberOfLines={captionMax ? 2 : undefined} maxFontSizeMultiplier={captionMax} style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
-                    {visited ? word.term : first(word.english)}
-                  </Copy>
-                )}
-                {(found || visited) && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      right: 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: 10,
-                      backgroundColor: "#4F8A66",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Svg width={12} height={12} viewBox="0 0 12 12">
-                      <Path d="M2 6l3 3 5-6" stroke="#FFF" strokeWidth={2} fill="none" strokeLinecap="round" />
-                    </Svg>
-                  </View>
-                )}
-              </PressableScale>
-            );
-            return (
-              <View key={id}>
-                {id === coachId && !p.done ? (
-                  <CoachSpot active={coach.active} handAt="bottom-right">
-                    {tile}
-                  </CoachSpot>
-                ) : (
-                  tile
-                )}
-              </View>
-            );
-          })}
-        </View>
-      </View>
+      </BoardColumns>
       {shown && !p.done && (!spy || missed) && (
         <View
           style={{
