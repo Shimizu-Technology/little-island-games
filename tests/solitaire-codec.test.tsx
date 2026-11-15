@@ -35,7 +35,7 @@ describe('Solitaire exact table codec',()=>{
   expect(validChallengeSession(session,'another-person',catalog)).toBe(false);
  });
  it('derives helped and Together results from the real final arrangement, with no score or par award',async()=>{
-  const {entry,deal,session}=await launch(),r=solve(deal,undefined,500);expect(r.status).toBe('solved');if(r.status!=='solved')return;
+  const {entry,deal,session}=await launch(),r=solve(deal,undefined,10000);expect(r.status).toBe('solved');if(r.status!=='solved')return;
   for(const partner of [null,'cove-advisor']){
    let s=entry.move({...session,partner},{type:'help'})!;
    for(const move of r.moves){s=entry.move(s,{type:'move',move})!;expect(s).not.toBeNull();}
