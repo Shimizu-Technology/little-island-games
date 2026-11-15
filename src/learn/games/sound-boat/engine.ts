@@ -12,8 +12,20 @@ import {
   wordEntry,
   wordsAt,
 } from "../../kit/reading";
-import { LEGACY_WARMUP_WORDS, PICTURE_WORDS } from "../../content/reading/clues";
-import { LADDERS } from "../../content/reading/ladders";
+import { isLegacyWarmupWord, pictureWords, readingLadder, readingLadders } from "../../reading/provenance";
+import { TILE_FAMILIES, TILE_TWINS, tileLabel } from "../../reading/graphemes";
+import { partsSkills } from "../../reading/scope";
+import { levelOf } from "../../levelOptions";
+import {
+  createParts,
+  isParts,
+  partsOutcome,
+  partsTurn,
+  playable,
+  validParts,
+  type PartsLevel,
+  type PartsState,
+} from "./parts";
 
 /**
  * Sound Boat: hear (and see) a word, then tap letter tiles into the boat's boxes, left to right.
@@ -36,11 +48,18 @@ export type BoatState = {
   assisted: boolean;
   /** One entry per finished word: built with no wrong tile and no help. */
   clean: boolean[];
+  /**
+   * Save shape 1, R1a fix 3: this word's practice credit. "pending" until the word sails, when the board credits it.
+   * "done" when it was already credited. Saves from before the field (absent) credited a word when its last letter
+   * landed, so an absent marker on a built word means "done". See `boatCredit`.
+   */
+  credit?: BoatCredit;
 };
+export type BoatCredit = "pending" | "done";
 
 export const WORDS_PER_ROUND = 10;
 const PICTURES = 4;
-const ladderWords = (id: string): readonly string[] => LADDERS.find((l) => l.id === id)!.words;
+const ladderWords = (id: string): readonly string[] => readingLadder(id)!.words;
 export const boatWords = (s: Pick<BoatState, "pictures" | "ladders">): string[] => [
   ...s.pictures,
   ...s.ladders.flatMap((id) => ladderWords(id).slice(1)),
@@ -81,23 +100,8 @@ export function boatBoxes(s: BoatState): string[] {
 export const boatCurrent = (s: BoatState) => boatBlanks(s)[s.filled] ?? -1;
 export const boatExpected = (s: BoatState) => boatWord(s).tiles[boatCurrent(s)];
 
-// Tiles that sound alike are never offered against each other, so a wrong tile is really wrong.
-const twins = [
-  ["c", "k", "ck"],
-  ["ee", "ea"],
-  ["ai", "a_e"],
-  ["oa", "o_e"],
-  ["s", "ss", "z"],
-  ["l", "ll"],
-  ["oo", "u"],
-];
-const families = [
-  ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "x", "z"],
-  ["a", "e", "i", "o", "u"],
-  ["sh", "ch", "th", "ck", "ng", "ll"],
-  ["a_e", "i_e", "o_e"],
-  ["ee", "ea", "ai", "oa", "oo", "ar", "or"],
-];
+const twins = TILE_TWINS;
+const families = TILE_FAMILIES;
 const hashWord = (word: string, salt: number) =>
   [...word].reduce((h, ch) => (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0, 2166136261 ^ salt);
 /** The letter tiles on offer: the right ones plus a few look-alikes, in a fixed order for this word. */
@@ -135,12 +139,21 @@ export function boatChoices(s: BoatState): string[] {
   }
   return tiles;
 }
-/** How a tile is written on screen: a silent-e vowel shows just its vowel (the e already sits at the end). */
-export const tileLabel = (tile: string) => tile.replace(/_e$/, "");
+export { tileLabel };
 export const silentE = (s: BoatState) => boatWord(s).tiles.some((t) => /_e$/.test(t));
 
-export type BoatAction = { type: "tile"; tile: string } | { type: "help" } | { type: "next" };
+/**
+ * Whether Sail on should credit this word. A save written before the marker existed credited a built word when its last
+ * letter landed, so a built word without a marker was already credited and is "done"; an unbuilt one was not.
+ */
+export const boatCredit = (s: BoatState): BoatCredit => s.credit ?? (boatComplete(s) ? "done" : "pending");
+export type BoatAction = { type: "tile"; tile: string } | { type: "help" } | { type: "undo" } | { type: "next" };
+/** One move. Every changed state carries the credit marker: a new word starts "pending", and the rest keep theirs. */
 export function boatMove(s: BoatState, a: BoatAction): BoatState {
+  const next = boatStep(s, a);
+  return next === s ? s : { ...next, credit: next.index > s.index ? "pending" : boatCredit(s) };
+}
+function boatStep(s: BoatState, a: BoatAction): BoatState {
   if (s.index >= WORDS_PER_ROUND) return s;
   const complete = boatComplete(s);
   if (a.type === "next")
@@ -155,6 +168,11 @@ export function boatMove(s: BoatState, a: BoatAction): BoatState {
           clean: [...s.clean, !s.assisted],
         }
       : s;
+  // Undo takes back the last letter placed on this word, one at a time, down to none placed. It still works once the
+  // word is built, until Sail on: a word is counted only when it sails (the board credits practice then), so a word
+  // with one blank, or a one-letter ladder change, can be taken back and built again without counting twice. A wrong
+  // tile or Help stays counted: undo is not a way to erase an assist. Words that have sailed cannot be undone.
+  if (a.type === "undo") return s.filled ? { ...s, filled: s.filled - 1, out: [], hint: false } : s;
   if (complete) return s;
   if (a.type === "help") return s.hint ? s : { ...s, hint: true, assisted: true };
   if (!boatChoices(s).includes(a.tile) || s.out.includes(a.tile)) return s;
@@ -167,7 +185,7 @@ export const boatTurn = (s: BoatState | LegacyBoatState, o: LearnOptions): 0 | 1
     : (((s.starter + Math.min(s.index, WORDS_PER_ROUND - 1)) % 2) as 0 | 1);
 
 const picturePool = (pace: Pace) =>
-  PICTURE_WORDS[pace].map((w) => wordEntry(w)!).filter((w) => w.tiles.length >= 2 && w.tiles.length <= 5);
+  pictureWords(pace).map((w) => wordEntry(w)!).filter((w) => w.tiles.length >= 2 && w.tiles.length <= 5);
 /** The first picture word is one pace gentler, so every round opens with an easy win. */
 const startPace = (pace: Pace): Pace => (pace === "hard" ? "medium" : "easy");
 function validPictures(v: unknown, pace: Pace): v is string[] {
@@ -182,7 +200,7 @@ function validLadders(v: unknown, pace: Pace): v is string[] {
     Array.isArray(v) &&
     v.length === 2 &&
     new Set(v).size === 2 &&
-    v.every((id) => LADDERS.some((l) => l.id === id && l.pace === pace))
+    v.every((id) => readingLadders().some((l) => l.id === id && l.pace === pace))
   );
 }
 function createBoat(
@@ -198,7 +216,7 @@ function createBoat(
     c.rng,
     c.today
   ).sort((a, b) => a.tiles.length - b.tiles.length).map((w) => w.word);
-  const available = LADDERS.filter((l) => l.pace === o.pace);
+  const available = readingLadders().filter((l) => l.pace === o.pace);
   const preferred = available.filter((l) => !(Array.isArray(previous.ladders) && previous.ladders.includes(l.id)));
   const ladders = pickItems(preferred.length >= 2 ? preferred : available, c.skills, 2, c.rng, c.today).map(
     (l) => l.id
@@ -213,6 +231,7 @@ function createBoat(
     hint: false,
     assisted: false,
     clean: [],
+    credit: "pending",
   };
 }
 
@@ -251,7 +270,7 @@ function validLegacy(v: unknown, o: LearnOptions): v is LegacyBoatState {
     !v.warmups.every(
       (w) =>
         typeof w === "string" &&
-        LEGACY_WARMUP_WORDS.has(w) &&
+        isLegacyWarmupWord(w) &&
         wordsAt(o.pace).some(
           (e) => e.word === w && e.tiles.length >= 3 && e.tiles.length <= 5 && e.tiles.length === phonemes(w).length
         )
@@ -291,55 +310,71 @@ export function boatFromLegacy(s: LegacyBoatState, o: LearnOptions, skills: Skil
   return createBoat(o, { skills, rng: random(seed), starter: s.starter, today });
 }
 
-export const engine: LearnEngine<BoatState | LegacyBoatState> = {
-  id: "sound-boat",
-  name: "Sound Boat",
-  island: "reading",
-  tagline: "Spell a word, sail to the island.",
-  description:
-    "Hear a word and see its picture, then tap letters into the boat to spell it. Later, change one letter to make a new word.",
-  help: "Listen to the word and look at the picture. Tap a letter to fill the glowing box, left to right. A wrong letter wiggles and waits on the side; try another. Each finished word sails the boat closer to the island. Wide boxes hold two letters that make one sound, like sh in ship. In words like cake, the e at the end is already there: it is silent and helps the a say its name. In the second half, change one letter to make the new word, like cat to cot. The help button lights the right letter. Together, take turns word by word. Take turns with a score: a word built without help or a wrong letter earns a point. There is no clock.",
-  helpAudio: "sound-boat-help",
-  introAudio: "sound-boat-intro",
-  color: "#386C9A",
-  surface: "#E3EEF8",
-  modes: ["solo", "together", "versus"],
-  skills: readingSkills,
-  paceHelp: {
-    easy: "Short vowel words: cat, hen, pig, dog, sun.",
-    medium: "Two letters, one sound, and blends: fish, duck, crab, kite.",
-    hard: "Vowel teams: sheep, boat, moon, star.",
-  },
-  create: (o, c) => createBoat(o, c),
-  validate(v, o): v is BoatState | LegacyBoatState {
-    if (isLegacyBoat(v)) return validLegacy(v, o);
-    if (!exact(v, ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"]))
-      return false;
-    if (!validPictures(v.pictures, o.pace) || !validLadders(v.ladders, o.pace)) return false;
-    if (
-      !seat(v.starter) ||
-      !integer(v.index, WORDS_PER_ROUND) ||
-      !bools(v.clean, v.index) ||
-      typeof v.hint !== "boolean" ||
-      typeof v.assisted !== "boolean" ||
-      !Array.isArray(v.out) ||
-      v.out.length > 7 ||
-      !v.out.every((t) => typeof t === "string") ||
-      new Set(v.out).size !== v.out.length ||
-      !integer(v.filled, 5)
-    )
-      return false;
-    const s = v as BoatState;
-    if (s.index === WORDS_PER_ROUND) return s.filled === 0 && s.out.length === 0 && !s.hint && !s.assisted;
-    if (s.filled > boatBlanks(s).length || ((s.hint || s.out.length > 0) && !s.assisted)) return false;
-    if (boatComplete(s)) return s.out.length === 0 && !s.hint;
-    const choices = boatChoices(s),
-      expected = boatExpected(s);
-    return s.out.every((t) => choices.includes(t) && t !== expected);
-  },
-  outcome(s, o) {
-    const finished = isLegacyBoat(s) ? s.stage === "done" : s.index === WORDS_PER_ROUND;
-    return !finished ? null : o.mode === "versus" ? familyResult(s.clean, s.starter) : "done";
-  },
-  turn: boatTurn,
-};
+export type SoundBoatState = BoatState | LegacyBoatState | PartsState;
+/**
+ * The Sound Boat engine. Levels 1-3 always use the words that have shipped since 3.0.0. Levels 4-5 use the new board
+ * only when the admitted registry holds enough words to play (a reviewed bank has been admitted); otherwise they stay
+ * on the older growth quiz, so nothing unreviewed is ever reachable. Words come only from `reading/tasks`, by id.
+ */
+export function createSoundBoat(): LearnEngine<SoundBoatState> {
+  const native = playable();
+  return {
+    id: "sound-boat",
+    name: "Sound Boat",
+    island: "reading",
+    tagline: "Spell a word, sail to the island.",
+    description:
+      "Hear a word and see its picture, then tap letters into the boat to spell it. Later, change one letter to make a new word.",
+    help: "Listen to the word and look at the picture. Tap a letter to fill the glowing box, left to right. A wrong letter wiggles and waits on the side; try another. Each finished word sails the boat closer to the island. Wide boxes hold two letters that make one sound, like sh in ship. In words like cake, the e at the end is already there: it is silent and helps the a say its name. In the second half, change one letter to make the new word, like cat to cot. The help button lights the right letter. Together, take turns word by word. Take turns with a score: a word built without help or a wrong letter earns a point. There is no clock.",
+    helpAudio: "sound-boat-help",
+    introAudio: "sound-boat-intro",
+    color: "#386C9A",
+    surface: "#E3EEF8",
+    modes: ["solo", "together", "versus"],
+    skills: { ...readingSkills, ...partsSkills },
+    nativeStages: native,
+    paceHelp: {
+      easy: "Short vowel words: cat, hen, pig, dog, sun.",
+      medium: "Two letters, one sound, and blends: fish, duck, crab, kite.",
+      hard: "Vowel teams: sheep, boat, moon, star.",
+    },
+    create: (o, c) => (o.stage && native ? createParts(levelOf(o) as PartsLevel, c) : createBoat(o, c)),
+    validate(v, o): v is SoundBoatState {
+      if (o.stage) return native && isParts(v) && validParts(v, levelOf(o) as PartsLevel);
+      if (isParts(v)) return false;
+      if (isLegacyBoat(v)) return validLegacy(v, o);
+      const keys = ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"];
+      const marked = !!v && typeof v === "object" && Object.hasOwn(v, "credit");
+      if (!exact(v, marked ? [...keys, "credit"] : keys)) return false;
+      if (marked && v.credit !== "pending" && v.credit !== "done") return false;
+      if (!validPictures(v.pictures, o.pace) || !validLadders(v.ladders, o.pace)) return false;
+      if (
+        !seat(v.starter) ||
+        !integer(v.index, WORDS_PER_ROUND) ||
+        !bools(v.clean, v.index) ||
+        typeof v.hint !== "boolean" ||
+        typeof v.assisted !== "boolean" ||
+        !Array.isArray(v.out) ||
+        v.out.length > 7 ||
+        !v.out.every((t) => typeof t === "string") ||
+        new Set(v.out).size !== v.out.length ||
+        !integer(v.filled, 5)
+      )
+        return false;
+      const s = v as BoatState;
+      if (s.index === WORDS_PER_ROUND) return s.filled === 0 && s.out.length === 0 && !s.hint && !s.assisted && s.credit !== "done";
+      if (s.filled > boatBlanks(s).length || ((s.hint || s.out.length > 0) && !s.assisted)) return false;
+      if (boatComplete(s)) return s.out.length === 0 && !s.hint;
+      const choices = boatChoices(s),
+        expected = boatExpected(s);
+      return s.out.every((t) => choices.includes(t) && t !== expected);
+    },
+    outcome(s, o) {
+      if (isParts(s)) return partsOutcome(s, o.mode === "versus");
+      const finished = isLegacyBoat(s) ? s.stage === "done" : s.index === WORDS_PER_ROUND;
+      return !finished ? null : o.mode === "versus" ? familyResult(s.clean, s.starter) : "done";
+    },
+    turn: (s, o) => (isParts(s) ? partsTurn(s) : boatTurn(s, o)),
+  };
+}
+export const engine = createSoundBoat();

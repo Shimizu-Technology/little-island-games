@@ -45,6 +45,7 @@ import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
 import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
 import { applyArcadeAction } from "../arcade/saveAction";
+import { flushDeadline, launchClock, newLearnerId, restorePause, slowOpenNotice } from "./storeClocks";
 type WorkingPatch = {bridge?:LearnId;signal?:Signal;choice?:ChallengeProgress['choice']};
 type WorkingExpected = {owner:string;epoch:number;game:string;id:string;revision:number;kind:'school'|'challenge'};
 type Store = {
@@ -285,17 +286,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // state kept. Only the first run takes ownership and hydrates. A replay keeps the accepted snapshot,
     // its queue and ownership, and lets a load already running finish. Recovery reloads through retry.
     if (bootStarted.current === null) {
-      bootStarted.current = Date.now(); owner.current = ++liveStore;
+      bootStarted.current = launchClock(); owner.current = ++liveStore;
       // Hydrates asynchronously from external device storage.
       void load();
     }
     // A load that never settles must not leave a blank or waiting screen. The load keeps running and
     // still publishes if it finishes; until then nothing is writable, so nothing can overwrite the save.
-    const guard = settled.current ? undefined : setTimeout(() => {
+    const guard = settled.current ? undefined : slowOpenNotice(() => {
       if (settled.current || !mounted.current) return;
       noteLaunch('timeout', `Saved games did not open within ${BOOT_TIMEOUT_MS / 1000} seconds.`);
       settled.current = true; setRecovery(bootTimeoutMessage); setReady(true);
-    }, Math.max(0, BOOT_TIMEOUT_MS - (Date.now() - bootStarted.current!)));
+    }, Math.max(0, BOOT_TIMEOUT_MS - (launchClock() - bootStarted.current!)));
     return () => {
       mounted.current = false;
       clearTimeout(guard);
@@ -483,10 +484,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const backup = useCallback(async () => {
     // Flush health is a Library gate, never a gate on recovering accepted work.
     // A write that never finishes mustn't hold the backup: past the wait, export what was accepted.
-    let clean = false, timer: ReturnType<typeof setTimeout> | undefined;
-    const waited = new Promise<boolean>(resolve => { timer = setTimeout(() => resolve(false), BACKUP_FLUSH_MS); });
-    try { clean = await Promise.race([libraryFlush(), waited]); } catch { /* Encoding the coherent accepted state still works. */ }
-    finally { clearTimeout(timer); }
+    let clean = false;
+    const deadline = flushDeadline(BACKUP_FLUSH_MS);
+    try { clean = await Promise.race([libraryFlush(), deadline.waited]); } catch { /* Encoding the coherent accepted state still works. */ }
+    finally { deadline.cancel(); }
     const encoded = encodeSave(latest.current); parseSave(encoded);
     if (!clean) setError('This backup contains the latest accepted work. Some changes could not be saved on this device.');
     return encoded;
@@ -555,7 +556,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addLearner = useCallback((name: string) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current) return false;
     const before = latest.current;
-    const learning = appendLearner(before.learning, name, `learner-${Date.now().toString(36)}`);
+    const learning = appendLearner(before.learning, name, newLearnerId());
     if (learning === before.learning || learning.people.length === (before.learning?.people.length ?? 1)) return false;
     generation.current++; setEpoch(generation.current);
     return commit({ ...before, learning, profiles: before.profiles ? { ...before.profiles, people: { ...before.profiles.people, [learning.active]: { sessions: {}, recent: null, challenge:emptyChallenge() } } } : undefined });
@@ -784,7 +785,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   },[ready,recovery,disk]);
   const covePerson = useCallback(async (action: Parameters<Store['covePerson']>[0], expectedEpoch:number) => {
     // A blur cleanup waits for the current boundary, then rechecks its captured epoch.
-    if (action.type === 'select' && action.id === null) while (restoring.current && mounted.current && expectedEpoch === generation.current) await new Promise(resolve => setTimeout(resolve, 25));
+    if (action.type === 'select' && action.id === null) while (restoring.current && mounted.current && expectedEpoch === generation.current) await restorePause(25);
     if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
     boundaryRefused.current = false; restoring.current = true;
     try {

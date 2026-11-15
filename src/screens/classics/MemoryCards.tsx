@@ -6,6 +6,8 @@ import { Symbol } from "../../components/Art";
 import { easeOut, nativeDriver, useReducedMotion } from "../../components/motion";
 import { chamoruCard, englishCard, type MemoryPack } from "../../games/memory";
 import { WordPicture } from "../../learn/games/hafa-adai/pictures";
+import { admittedReading } from "../../learn/reading/admit";
+import { ReadingRefused } from "../../learn/kit/ReadingRefused";
 import { Cell } from "./shared";
 import { wordFitMultiplier } from "../../components/wordFit";
 function MemoryFace({ open, children }: { open: boolean; children: React.ReactNode }) {
@@ -23,6 +25,8 @@ export function MemoryCards({ cards, pack = "pictures", matched, open, peek = fa
   const { fontScale } = useWindowDimensions(), reading = pack !== "pictures";
   const columns = reading ? fontScale > 1.3 ? 2 : width >= 600 ? 6 : 4 : width >= 460 ? 6 : 4;
   const gap = 9, cardSize = Math.min(reading && fontScale > 1.3 ? 140 : 88, (width - gap * (columns - 1)) / columns);
+  // The CHamoru pack is reading content as data: every CHamoru card must be a branded record from the snapshot.
+  if (!cards.every((card) => { const ch = chamoruCard(card); return !ch || admittedReading(ch.word, "Memory's CHamoru cards"); })) return <ReadingRefused />;
   return <View style={{ width: columns * cardSize + gap * (columns - 1), flexDirection: "row", flexWrap: "wrap", gap, alignSelf: "center" }}>
     {cards.map((card, i) => {
       const found = matched.includes(i), visible = found || open.includes(i) || peek;

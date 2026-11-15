@@ -1,8 +1,9 @@
-import { growthTrack } from "../learn/growth/content";
+import { growthTrack, readingGrowth } from "../learn/growth/content";
 import type { GrowthQuestion } from "../learn/growth/types";
 import { random, shuffle } from "../games/types";
-import { PICTURE_WORDS } from "../learn/content/reading/clues";
-import { SENTENCES } from "../learn/content/reading/sentences";
+import { pictureWords, readingSentences, type ReadingSentence, type ReadingWord } from "../learn/reading/provenance";
+import { admittedReading } from "../learn/reading/admit";
+import type { LearnId } from "../learn/types";
 import { wordAudio, wordEntry, type ReadingScene } from "../learn/kit/reading";
 import {
   createMathQuestions, mathAnswer, mathSkill, mathSpeechKey, validMathQuestion, type MathQuestion,
@@ -11,11 +12,28 @@ import { gateAccepts, makeGate, type Gate } from "../state/grownUpGate";
 import { validPracticeSettings, type PracticeResult, type PracticeSettings, type PracticeSummary } from "./types";
 
 export const PRACTICE_LENGTH = 3;
+/**
+ * A reading question keeps the branded record it prints (`record`, or a reading track's growth `task`), never a copy
+ * of its text: reading content as data flows through `learn/reading/provenance.ts`. Rounds are never saved.
+ */
 export type PracticeQuestion =
-  | { kind: "growth"; id: string; skill: string; speech: string; text: string; task: GrowthQuestion; choices: string[]; answer: number }
+  | { kind: "growth"; id: string; skill: string; speech: string; game: LearnId; task: GrowthQuestion; choices: string[]; answer: number }
   | { kind: "math"; id: string; skill: string; speech: string; question: MathQuestion }
-  | { kind: "word"; id: string; skill: string; speech: string; text: string; choices: string[]; answer: number }
-  | { kind: "sentence"; id: string; skill: string; speech: string; text: string; choices: ReadingScene[]; answer: number };
+  | { kind: "word"; id: string; skill: string; speech: string; record: ReadingWord; choices: string[]; answer: number }
+  | { kind: "sentence"; id: string; skill: string; speech: string; record: ReadingSentence; choices: ReadingScene[]; answer: number };
+/** The reading record a question prints: none for maths, nor for a maths growth track's task. */
+export const practiceRecord = (q: PracticeQuestion): unknown =>
+  q.kind === "math" ? null : q.kind === "growth" ? (readingGrowth(q.game) ? q.task : null) : q.record;
+/**
+ * Every Practice surface (the panel, the treasure chest) runs this before it shows, speaks or credits a question. A
+ * reading question whose record was not branded by the provenance module is refused: in development that throws.
+ */
+export const practiceAdmitted = (q: PracticeQuestion, where: string): boolean => {
+  const record = practiceRecord(q);
+  return record === null || admittedReading(record, where);
+};
+/** The words a word or sentence question prints, from its record. */
+export const practiceText = (q: Extract<PracticeQuestion, { kind: "word" | "sentence" }>): string => (q.kind === "word" ? q.record.word : q.record.text);
 
 export type PracticeRound = {
   questions: PracticeQuestion[];
@@ -56,23 +74,24 @@ export function createPracticeRound(settings: PracticeSettings, seed: number): P
   const rng = random(seed);
   const math = createMathQuestions({ limit: settings.limit, operation: settings.operation, missing: true }, PRACTICE_LENGTH, rng);
   if (!math.every(q => validMathQuestion(q, settings.limit))) throw new Error("Invalid practice arithmetic");
-  const words = shuffle(PICTURE_WORDS.easy, rng);
-  const sentences = SENTENCES.filter(s => s.pace === "easy");
+  const words = shuffle(pictureWords("easy"), rng);
+  const sentences = readingSentences().filter(s => s.pace === "easy");
   const sentence = sentences[Math.floor(rng() * sentences.length)];
   const reading = (index: number, useSentence: boolean): PracticeQuestion => {
     if (useSentence) {
       const order = shuffle([0, 1, 2], rng);
       return {
         kind: "sentence", id: `sentence-${sentence.id}`, skill: "read.meaning",
-        text: sentence.text, speech: `which-one-sentence-${sentence.id}`,
+        record: sentence, speech: `which-one-sentence-${sentence.id}`,
         choices: order.map(i => ({ ...sentence.scenes[i] })), answer: order.indexOf(0),
       };
     }
     const target = words[index];
     const choices = shuffle([target, ...words.filter(w => w !== target).slice(0, 2)], rng);
+    const entry = wordEntry(target)!;
     return {
-      kind: "word", id: `word-${target}`, skill: wordEntry(target)!.skill,
-      text: target, speech: wordAudio(target), choices, answer: choices.indexOf(target),
+      kind: "word", id: `word-${target}`, skill: entry.skill,
+      record: entry, speech: wordAudio(target), choices, answer: choices.indexOf(target),
     };
   };
   const advanced = (subject: "math" | "reading", index: number): PracticeQuestion | null => {
@@ -82,7 +101,7 @@ export function createPracticeRound(settings: PracticeSettings, seed: number): P
     const pool = growthTrack(game, stage)!.questions.filter(q => !q.tiles);
     const task = shuffle(pool, random(seed ^ 0x34ad))[index % pool.length];
     const choices = shuffle(task.choices.map(c => c.value), rng);
-    return { kind: "growth", text: [task.context, task.prompt].filter(Boolean).join(" "), id: `${game}-${stage}-${task.id}`, skill: task.skill, speech: `growth-${game}-${stage}-${task.id}-prompt`, task, choices, answer: choices.indexOf(task.answer) };
+    return { kind: "growth", game, id: `${game}-${stage}-${task.id}`, skill: task.skill, speech: `growth-${game}-${stage}-${task.id}-prompt`, task, choices, answer: choices.indexOf(task.answer) };
   };
   const questions = math.map((q, index): PracticeQuestion => {
     const subject = settings.subject === "reading" || (settings.subject === "mixed" && index === 1) ? "reading" : "math";

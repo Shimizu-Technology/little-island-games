@@ -1,3 +1,5 @@
+import { BoardSpaceProvider, BoardSpaceContent } from './BoardSpace';
+import { measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS } from './boardGeometry';
 import { coveReady } from './generated/readiness';
 import { challengeFor, schoolContext } from '../challenge/catalog';
 import { ResultOffer } from '../challenge/ResultOffer';
@@ -40,6 +42,7 @@ import { LearnArt } from "./LearnArt";
 import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
+import { speakAfter } from "./frameClocks";
 
 export const modeLabel: Record<LearnMode, string> = {
   solo: "On my own",
@@ -65,6 +68,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const scroll = useRef<ScrollView | null>(null);
   // A board that owns a touch (Slip Tide's water) holds the page scroll until release, as Cove grids do.
   const [held, setHeld] = useState(false);
+  const layoutKey = `${width}x${height}`;
+  const [viewport, setViewport] = useState({ height: 0, key: "" });
+  const [boardLayout, setBoardLayout] = useState({ top: 0, inset: 0, width: 0, topAt: 0, insetAt: 0, anchorAt: "" });
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   const large = fontScale >= LARGE_TEXT;
@@ -81,12 +87,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
     // returns to the top of the board rather than above the header, and the answers stay a short scroll away.
     const sameRound = stepRound.current === saved?.id;
     stepRound.current = saved?.id;
-    scroll.current?.scrollTo({ y: large && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current + boardInset.current - 8) : 0, animated: false });
-  }, [growthStep, saved?.id, large]);
+    scroll.current?.scrollTo({ y: (large || height < 500) && sameRound && boardTop.current !== null ? Math.max(0, boardTop.current + boardInset.current - 8) : 0, animated: false });
+  }, [growthStep, saved?.id, large, height]);
   // Other step games (a story page, the next question) ask for the same return through `useStepReveal`.
-  const reveal = useCallback(() => {
-    if (large && boardTop.current !== null) scroll.current?.scrollTo({ y: Math.max(0, boardTop.current + boardInset.current - 8), animated: false });
-  }, [large]);
+  const revealBoard = useCallback(() => {
+    if (boardTop.current !== null) scroll.current?.scrollTo({ y: Math.max(0, boardTop.current + boardInset.current - 8), animated: false });
+  }, []);
+  const reveal = useCallback(() => { if (large) revealBoard(); }, [large, revealBoard]);
   const learner = activeLearner(store.save.learning);
   const comfort = learningComfort(store.save, learner.id);
   const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
@@ -177,7 +184,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       sound(kind === "big" ? "win" : "match");
       if (kind === "big") feel("success");
       clearTimeout(cheerLine.current);
-      if (say) cheerLine.current = setTimeout(() => {
+      if (say) cheerLine.current = speakAfter(() => {
         if (liveFeedback.current === feedbackContext) sound(say, true);
       }, kind === "big" ? 900 : 550);
     },
@@ -198,7 +205,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     if (!saved || !engine.introAudio || !soundOn || !boardActive || (isGrowth(saved.state))) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
     introduced.current = saved.id;
-    const timer = setTimeout(() => sound(engine.introAudio!, true), 450);
+    const timer = speakAfter(() => sound(engine.introAudio!, true), 450);
     return () => clearTimeout(timer);
   }, [saved, engine.introAudio, soundOn, boardActive, sound]);
 
@@ -289,11 +296,23 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
   const boardInner = boardWidth - (width >= 768 && height >= 600 && store.save.settings.learningIslander !== false ? 88 : 0);
+  const revealEntry = schoolEntryReveal(id, large, height);
+  // A transient cheer above an AX phone board must finish before its one entry
+  // reveal, or removing that row would leave the instruction behind the pinned bar.
+  const anchorReady = !large || width >= 600 || companionEvent === "waiting";
+  const boardSpace = useMemo(() => viewport.height > 0 && boardLayout.width > 0 ? {
+    width: boardLayout.width,
+    // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
+    // reserve all real header/progress content above it. Scroll position is never
+    // part of this budget, so scrolling cannot cause the board to grow or shrink.
+    height: measuredBoardSpace(viewport.height, revealEntry ? 8 : boardLayout.top, revealEntry ? 0 : boardLayout.inset, (width < 600 ? 12 : 22) + 2),
+    large, reveal: revealEntry, layoutKey, anchorReady: anchorReady && (!large || width >= 600 || boardLayout.anchorAt === companionEvent),
+  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey, anchorReady, companionEvent]);
   // At accessibility sizes, board text without a cap of its own (prompts, answers, results) stops at 2x, or where its
   // longest word still fits the board. Reading is never timed and Hear stays available, so it stays large without
   // filling the screen. Default sizes never change.
   // A 32-pt heading would reach 64 pt at 2x, so nothing in a board is drawn above 44 pt (about a 22-pt line at 2x).
-  const boardFit = useMemo(() => large ? { width: boardInner, ceiling: 2, maxSize: 44 } : null, [large, boardInner]);
+  const boardFit = useMemo(() => large ? { width: MEASURED_SCHOOL_BOARDS.has(id) ? boardSpace?.width ?? boardInner : boardInner, ceiling: 2, maxSize: 44 } : null, [id, large, boardInner, boardSpace?.width]);
   // The result card ("You did it!") follows the same rule inside its 20-pt padding and 3-pt border.
   const resultFit = useMemo(() => large ? { width: width - insets.left - insets.right - 32 - 46, ceiling: 2, maxSize: 44 } : null, [large, width, insets.left, insets.right]);
   const Board = saved && isGrowth(saved.state) ? GrowthBoard : view.Board;
@@ -376,7 +395,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       <IslandBackdrop island={island} colors={theme}/>
       {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16 }}>{pinned}</View>}
       <GridInteraction.Provider value={setHeld}>
-      <ScrollView key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+      <ScrollView onLayout={event => setViewport({ height: event.nativeEvent.layout.height, key: layoutKey })} key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {scrolled}
         {width >= 600 && !large && saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
@@ -388,12 +407,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && !shortLandscape && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
-        {saved && !finished && <View testID="learn-board" onLayout={e => { boardTop.current = e.nativeEvent.layout.y; }}>
+        {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width && old.anchorAt === companionEvent ? old : { ...old, top, topAt: width, anchorAt: companionEvent }); }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
-            <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}>
-            <View testID="learn-board-inset" onLayout={e => { boardInset.current = e.nativeEvent.layout.y; }}>
+            <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}><BoardSpaceProvider key={saved.id} geometryEnabled={MEASURED_SCHOOL_BOARDS.has(id)} space={boardSpace} onReveal={revealBoard}>
+            <BoardSpaceContent testID="learn-board-inset" onLayout={e => { const layout = e.nativeEvent.layout; boardInset.current = layout.y; setBoardLayout(old => old.inset === layout.y && old.width === layout.width && old.insetAt === width ? old : { ...old, inset: layout.y, width: layout.width, insetAt: width }); }}>
             <Board
               key={saved.id}
               session={saved}
@@ -405,14 +424,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
               sound={boardSound}
               stopSound={stopSound}
               soundOn={soundOn}
-              width={boardInner}
+              width={MEASURED_SCHOOL_BOARDS.has(id) ? boardSpace?.width ?? boardInner : boardInner}
               height={height - insets.top - insets.bottom}
               active={boardActive}
               coach={{ active: coachActive && boardActive, done: coachDone }}
               cheer={cheer}
             />
-            </View>
-            </TextFit.Provider></StepReveal.Provider>
+            </BoardSpaceContent>
+            </BoardSpaceProvider></TextFit.Provider></StepReveal.Provider>
           </View>
           </LearningCompanion>
         </View>}

@@ -6,6 +6,22 @@ The rule (program plan §5): contract changes go through the lead, one at a time
 
 ## Lead-change log
 
+- **15 November 2026 — F-frame-2, lead-approved:** extend the existing non-animated
+  board-entry/rotation reveal to short landscape windows with window height **< 500 pt**,
+  and measure their board space from the revealed 8-pt top, as the AX path does.
+  Header structure, pinning, text caps and the Challenge grid budget are unchanged.
+  Scrolling up must still expose Back, sound, Help and the learner switch in their
+  existing VoiceOver order. At AX, entry/rotation reveal is limited to the ported
+  measured School boards (Crab, Beep, Håfa Adai, Reef Race, Weather, Tide Pool,
+  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure) plus Shell Math,
+  which already had an AX entry reveal. Unported and reading boards keep their
+  existing entry behavior at **>= 500 pt**. Default text keeps the strict 500-pt threshold.
+  Next questions in short landscape retain the revealed board position.
+  Rotation preserves the round and triggers at most one reveal per rotation;
+  no animated scroll is introduced. Required proof: 499/500 threshold tests,
+  portrait/landscape/portrait round preservation and iPhone 15 landscape frames
+  at default and AX5 text sizes.
+
 - **15 November 2026 — K7, pre-authorized by `c2b-k7/BRIEF.md`:** additive
   revision-1 nested program drafts for Crab, Beep and Turtle, plus compact structural
   edit operations in Crab/Beep replay codecs. Shared AST includes sequences, whole-body
@@ -133,6 +149,11 @@ The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/st
 **A slice may add:** a word game that imports only receipted entries through the existing admission path, and speech lines in `scripts/learn/<slice>.json`.
 
 **Lead change:** policy contents, secrets, exceptions, thresholds, a new generator in the admission inventory, or `REVIEW_PROMPT_VERSION`. The version must be bumped whenever the review context changes.
+
+**Reading records (W1 reading-records contract change, PR #64, awaiting lead approval):** the contract covers reading content as data: banks, records, sentences, passages and growth questions that a child reads, builds or answers. Reading content as data must flow through `provenance.ts`. A new reading game or board must use it, and a static test enforces this for registered reading routes and LearnFrame-selected boards. Hand-authored UI strings are covered by code review and W1's export string scan.
+- New reading content comes only through detached W1 admission (`src/learn/reading/admitted/`, minted by `src/learn/reading/tasks.ts`).
+- Inherited content (shipped before admission existed) is a digest-checked, frozen, branded snapshot in `src/learn/reading/provenance.ts`, and every source is anchored to the lead-owned baseline `tests/fixtures/reading-inherited-baseline.json`. Changing that baseline is a lead change; inherited content is never added to or edited by re-pinning a digest.
+- Accepted residual: a new standalone route that prints hand-written text through ordinary `Copy`/`Text` is not a provenance surface; it is caught by independent review and the export string scan, not by the static test.
 
 ## LearnFrame and ChallengeFrame
 
