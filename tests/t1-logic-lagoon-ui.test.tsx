@@ -54,6 +54,8 @@ it('picture boards show every rule box and name pictures throughout the hint lad
     const st = cells[i].props.style;
     expect(st.borderTopWidth).toBe(i >= 8 && i < 12 ? 3 : 1);
     expect(st.borderLeftWidth).toBe(i % 4 === 2 ? 3 : 1);
+    if (i >= 8 && i < 12) expect(st.borderTopColor).toBe('#668A66');
+    if (i % 4 === 2) expect(st.borderLeftColor).toBe('#668A66');
     expect(cells[i].props.accessibilityState.selected).toBe(grid.selected === i);
   }
   const button = (text: string) => screen!.root.findAllByType('button').find(n => n.children.join('') === text)!;

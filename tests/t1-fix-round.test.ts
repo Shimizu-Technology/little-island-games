@@ -79,6 +79,7 @@ it('Help speech matches its visible instructions, including the open step-up pat
   expect(engine.helpAudio).toBe('logic-lagoon-help-v2');
   expect(speech[engine.helpAudio!]).toBe(engine.help);
   expect(engine.help).toContain('Level 4 is open');
+  expect(JSON.parse(readFileSync('scripts/learn/t1-logic-lagoon.stage', 'utf8'))).toEqual({ status: 'design-only', shipping: false });
 });
 
 it('legacy replay drafts upgrade without losing original help, misses, notes or history', () => {
@@ -180,4 +181,12 @@ it('new small picture clues do not depend on shared solver traversal', async () 
 it('legacy proof provenance covers the archived engine used by its adapter', async () => {
   const { logicProofFamily } = await import('../scripts/puzzles/proof-families');
   expect(logicProofFamily().sources).toContain('src/learn/games/logic-lagoon/legacy.ts');
+});
+
+
+it('a fresh board selects an editable square when the first square is a clue', () => {
+  const puzzle = puzzles.find(p => !!p.descriptor.puzzle.givens[0])!;
+  expect(puzzle).toBeDefined();
+  const s = challengeEngine.create(puzzle.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+  expect(s.grid.selected).toBe(puzzle.descriptor.puzzle.givens.indexOf(0));
 });
