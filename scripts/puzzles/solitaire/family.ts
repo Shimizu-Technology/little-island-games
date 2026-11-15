@@ -2,7 +2,7 @@ import type { DescriptorCore, FamilySpec } from '../../../src/puzzles/types';
 import { solitaireAdapter, type Plan } from '../../../src/puzzles/table/adapter';
 import { advise } from '../../../src/puzzles/table/publicSolver';
 import { solve } from '../../../src/puzzles/table/solver';
-import { apply, opening, positionKey, rank, won, type Deal, type Mode } from '../../../src/puzzles/table/solitaire';
+import { apply, opening, positionKey, won, type Deal, type Mode } from '../../../src/puzzles/table/solitaire';
 import {construct} from './generate';
 import { verifyLine } from './independent';
 
@@ -16,16 +16,6 @@ export const rungs: Rung[] = [
  ...([{id:'f1',tier:1,target:128,floor:32,title:'Paddling'},{id:'f3',tier:3,target:256,floor:64,title:'Lagoon'},{id:'f5',tier:5,target:320,floor:64,title:'Deep'},{id:'f6',tier:6,target:320,floor:96,title:'Trench'}] as const).map(r=>({...r,mode:'freecell' as const,title:`FreeCell · ${r.title}`})),
 ];
 export type Candidate = { seed:number; template:string; core:DescriptorCore<Deal>; nodes:number; branches:number; moves:number; depth:number; workload:number };
-/** Structural deal types, independent of card colours: how the four aces are distributed. */
-export function template(d:Deal):string {
- const s=opening(d);
- if(d.mode==='freecell'){const depths=s.piles.slice(0,8).flatMap(p=>p.flatMap((c,i)=>rank(c)===1?[p.length-i-1]:[]));return `ace${Math.min(3,Math.min(...depths))}`;}
- const aces=s.piles.map(p=>p.filter(c=>rank(c)===1).length);
- if(aces[12]>=2)return 'stock';
- if(aces.slice(0,7).some(n=>n>=2))return 'cluster';
- if(s.piles.some((p,i)=>i<8&&p.slice(s.hidden[i]).some(c=>rank(c)===1)))return 'open';
- return 'buried';
-}
 /** No hidden answer is used along the hinted route. A cycle is rejected, never labelled difficult. */
 export function judge(seed:number,r:Rung):Candidate|null {
  const built=construct(r.mode,seed,r.tier),d=built.deal,solved=solve(d,undefined,10000);
