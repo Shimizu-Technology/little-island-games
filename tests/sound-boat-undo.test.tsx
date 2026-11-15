@@ -28,7 +28,7 @@ const place = (s: BoatState) => boatMove(s, { type: "tile", tile: boatExpected(s
 const wrongTile = (s: BoatState) => boatChoices(s).find((t) => t !== boatExpected(s))!;
 const valid = (s: BoatState) => engine.validate(s, options as never);
 const filledWord = (s: BoatState) => { let out = s; while (!boatComplete(out)) out = place(out); return out; };
-/** The first word has one blank, so undo has nothing to take back there. Sail on to a word with several. */
+/** A word with several blanks, for undoing one letter at a time. */
 const several = (seed = 3): BoatState => { let s = fresh(seed); while (boatBlanks(s).length < 2) s = boatMove(filledWord(s), { type: "next" }); return s; };
 
 describe("Levels 1-3 undo", () => {
@@ -55,10 +55,33 @@ describe("Levels 1-3 undo", () => {
       expect(valid(next)).toBe(true);
     }
   });
-  it("is not available once the word is built, so a counted word cannot be completed twice", () => {
-    const done = filledWord(several());
-    expect(boatComplete(done)).toBe(true);
-    expect(boatMove(done, { type: "undo" })).toBe(done);
+  it("works on a built word until it sails, so a word with one blank can be taken back", () => {
+    const first = fresh();
+    expect(boatBlanks(first)).toHaveLength(1);
+    const built = place(first);
+    expect(boatComplete(built)).toBe(true);
+    const back = boatMove(built, { type: "undo" });
+    expect(back).toEqual(first);
+    expect(valid(back)).toBe(true);
+    expect(boatMove(back, { type: "next" })).toBe(back);
+    // A word that has sailed is counted and stays: undo on the next word has nothing to take back.
+    const sailed = boatMove(built, { type: "next" });
+    expect(sailed.index).toBe(1);
+    expect(boatMove(sailed, { type: "undo" })).toBe(sailed);
+  });
+  it("a one-letter ladder change can be taken back before it sails", () => {
+    let s = fresh();
+    while (!(s.index >= 4 && boatBlanks(s).length === 1)) s = boatMove(filledWord(s), { type: "next" });
+    const built = place(s);
+    expect(boatComplete(built)).toBe(true);
+    expect(boatMove(built, { type: "undo" })).toEqual(s);
+  });
+  it("undo of a built word keeps a wrong tile counted", () => {
+    const first = fresh(), wrong = boatMove(first, { type: "tile", tile: wrongTile(first) }), built = place(wrong);
+    expect(built.assisted).toBe(true);
+    const back = boatMove(built, { type: "undo" });
+    expect(back).toMatchObject({ filled: 0, assisted: true, out: [] });
+    expect(boatMove(place(back), { type: "next" }).clean).toEqual([false]);
   });
   it("does not erase an assist: a wrong tile or Help still makes the word helped, and a clean word stays clean", () => {
     let s = several();
@@ -123,7 +146,7 @@ describe("the Levels 1-3 board", () => {
     expect(h.assistance).not.toHaveBeenCalled();
     expect(h.sound).toHaveBeenCalledWith("tap");
   });
-  it("Undo disappears once the word is built, and neither it nor a partly built word credits practice", async () => {
+  it("Undo stays beside Sail on once the word is built, and a word is credited once, when it sails", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const s0 = several(5), h = props(s0);
     await act(async () => { root = create(<Board {...(h.make() as any)} />); });
@@ -134,7 +157,26 @@ describe("the Levels 1-3 board", () => {
     const finish = place(s);
     await act(async () => root!.update(<Board {...({ ...h.make(), session: { ...h.make().session, state: finish } } as any)} />));
     expect(boatComplete(finish)).toBe(true);
-    expect(named("Undo: take back the last letter")).toBeUndefined();
+    const undo = named("Undo: take back the last letter")!;
+    expect(undo.props.disabled).toBeFalsy();
     expect(h.practice).not.toHaveBeenCalled();
+    await act(async () => undo.props.onPress());
+    expect(h.state).toEqual(s);
+    expect(h.practice).not.toHaveBeenCalled();
+  });
+  it("the first word's single letter can be undone and rebuilt, and practice is credited once on Sail on", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const first = fresh(7), built = place(first), h = props(built);
+    await act(async () => { root = create(<Board {...(h.make() as any)} />); });
+    const sail = () => buttons().find((b) => b.props.children === "Sail on")!;
+    expect(sail()).toBeDefined();
+    await act(async () => named("Undo: take back the last letter")!.props.onPress());
+    expect(h.state).toEqual(first);
+    await act(async () => root!.update(<Board {...({ ...h.make(), session: { ...h.make().session, state: built } } as any)} />));
+    expect(h.practice).not.toHaveBeenCalled();
+    await act(async () => sail().props.onPress());
+    expect(h.practice).toHaveBeenCalledTimes(1);
+    expect(h.practice).toHaveBeenCalledWith(expect.any(String), true);
+    expect(h.state.index).toBe(1);
   });
 });

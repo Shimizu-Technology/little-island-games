@@ -6,14 +6,21 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','puzzle-admission','preview','ci'];
+const files=['bake','bake-reading','registry','morphology','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','puzzle-admission','preview','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
-for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':file==='preview'?'scripts/ios-preview-bundle.mjs':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
+// The shared word-parts validator is app TypeScript under src/; the harness loads the copy named by WORD_TEST_MORPHOLOGY_FILE.
+const toolFile=file=>file==='morphology'?'morphology.ts':`${file}.mjs`;
+// Lead contract change: W1 reading records. Every top-level clause of a new reading gate predicate is mutated on its own,
+// run against the cases that saw the whole predicate fail. Only those cases can observe one clause's removal.
+const readingGate=(file,message)=>['bake-reading','registry'].includes(file) || /[Rr]eading|hash\/count mismatch|Invalid word bank manifest|manifest kind|Symlink in export/.test(message);
+const leaves=n=>ts.isParenthesizedExpression(n)?leaves(n.expression):ts.isBinaryExpression(n) && n.operatorToken.kind===ts.SyntaxKind.AmpersandAmpersandToken?[...leaves(n.left),...leaves(n.right)]:ts.isConditionalExpression(n)?[...leaves(n.whenTrue),...leaves(n.whenFalse)]:[n];
+for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':file==='preview'?'scripts/ios-preview-bundle.mjs':file==='morphology'?'src/learn/reading/morphology.ts':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
   const message=n.arguments[1].getText(tree);
   if(file==='check' && /release <|receipt </.test(message))return;
   const arg=n.arguments[0],id=mutations.length;
   mutations.push({id,file,message,source:source.slice(0,arg.getStart(tree))+'true'+source.slice(arg.end)});
+  if(readingGate(file,message)){const parts=leaves(arg);if(parts.length>1)for(const leaf of parts)mutations.push({id:mutations.length,file,message:'R1a clause '+message+' :: '+leaf.getText(tree),source:source.slice(0,leaf.getStart(tree))+'true'+source.slice(leaf.end),coverageOf:id});}
   patches.get(file).push({start:arg.getStart(tree),end:arg.end,id});
  }ts.forEachChild(n,visit);}visit(tree);
 }
@@ -48,7 +55,10 @@ for(const [file,clauses] of Object.entries(clauseSpecs)) for(const clause of cla
  const source=sources.get(file);if(!source.includes(clause))throw new Error('Missing mutation target: '+clause);
  const test=clauseTests[clause]??(file==='check'?'clause release receipt '+({"r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim()":'source','r.policySha256===lock.policySha256':'policySha256','r.scanListSha256===lock.scanListSha256':'scanListSha256','r.admission?.full===true':'admission.full','r.admission.passed===true':'admission.passed','r.web?.passed===true':'web.passed','r.ios?.passed===true':'ios.passed','r.ios.sha256===treeHash(ios)':'ios.sha256'}[clause]):undefined);
  if(!test)throw new Error('Missing clause regression');
- custom(file,'R2 clause '+clause,source.replace(clause,'true'),[test]);
+ // A clause target must be unique: String.replace mutates only the first occurrence, so a duplicated clause would
+ // leave its other copy untested (fix 1 duplicated the manifest hash clause and the Word Search mutant went blind).
+ if(source.split(clause).length!==2)throw new Error('Ambiguous mutation target: '+clause);
+ custom(file,'R2 clause '+clause,source.replace(clause,'true'),[test,...(clause==='entry.sha256===sha256(bytes)'?['reading clause manifest same-length edit hash']:[])]);
 }
 custom('core','R2 sensitive headword rejection',sources.get('core').replace('if (sensitive.has(foldScan(word.spelling)) || sensitive.has(foldScan(word.lemma))) return false;','if (false) return false;'),['clause CHamoru sensitive spelling and lemma rejection']);
 custom('bake','asset listed raw object',sources.get('bake').replace('listed:listed.map(({wordId,answer,cells})=>({wordId,answer,cells}))','listed'),['listed projection strips private fields']);
@@ -268,7 +278,74 @@ custom('guard','R7 whole-key admission bypass',sources.get('guard').replace('con
 custom('guard','R7 every matching component required',sources.get('guard').replace('tokens.every(token=>admission.sources.words.has(token))','tokens.some(token=>admission.sources.words.has(token))'),['R7 every matching component file','R7 token control ordinary']);
 custom('guard','R7 all policy groups in identifiers',sources.get('guard').replace('[...policy.scan,...policy.core,...policy.exact,...policy.lemmas].map(normalizedText)','policy.scan.map(normalizedText)'),['R7 camel policy group core js','R7 camel policy group exact js','R7 camel policy group lemmas js']);
 custom('generated-admission','R7 preserve original identifier tokens',sources.get('generated-admission').replace('identifier:entry','identifier:key'),['R7 registry preserves camel token boundaries']);
-for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
+// R1a fix 2, lead contract change: W1 reading records. Delegations, projections, detectors and the shared kit rules.
+// Each target must occur exactly once. Equivalent mutants are named in FIX-REPORT-2, not counted as kills.
+const readingEdges=[
+ ['bake-reading','policy lock','const { lock, policy: held } = lockedPolicy(policy);','const held = policy, lock = { scanListSha256: digest([...policy.scan].sort()) };',['reading policy lock verified']],
+ ['bake-reading','shared validator at bake','    validateReadingRecord(record);\n','',['reading bake runs the shared kit rules']],
+ ['bake-reading','exact block of shown text','for (const upper of shown) requireThat(answerAllowed(','for (const upper of []) requireThat(answerAllowed(',['reading alternate pieces are checked']],
+ ['bake-reading','scan of shown text','for (const upper of shown) if (upper.length >= 3)','for (const upper of []) if (upper.length >= 3)',['reading gloss scan-only text is checked']],
+ ['bake-reading','tray constructions','const built = readingConstructions(record);','const built = [record.word];',['reading tray pieces that build a blocked term are refused','reading tray scan finds a scan-only term built forwards','reading tray scan reads built text backwards']],
+ ['bake-reading','construction block uses exact terms','[...held.exact, ...held.lemmas]','[...held.lemmas]',['reading tray exact block on a shorter build']],
+ ['bake-reading','construction block uses lemmas','[...held.exact, ...held.lemmas]','[...held.exact]',['reading tray lemma block on a shorter build']],
+ ['bake-reading','shared detached review','verifiedEvidence[record.id] = requireShippingReview(record, ev, batchCache);',"verifiedEvidence[record.id] = { reviewIds: ['x'] };",['reading needs the family sample','reading transcript bytes required','reading needs the lead decision','reading family evidence hash required']],
+ ['bake-reading','asset carries policy','const asset = { schemaVersion: 1, kind: READING_ASSET_KIND,','const asset = { policy, schemaVersion: 1, kind: READING_ASSET_KIND,',['reading records bake through the same detached admission, with an exact safe projection']],
+ ['core','shared validator delegation','const issues = partsWordIssues(r);','const issues = [];',['reading rule compound two whole words','reading rule tray spells unaccepted','reading shipping shape runs the shared kit rules']],
+ ['core','family is shown text',"...(r.family ? [r.family] : []), ",'',['reading family text is checked']],
+ ['core','gloss is shown text',", ...(r.gloss ? r.gloss.split(' ') : [])",'',['reading gloss text is checked','reading gloss scan-only text is checked']],
+ ['core','alternate pieces are shown text','...(r.alternates ?? []).flat(), ','',['reading alternate pieces are checked']],
+ ['core','shorter builds are shown','    if (depth) out.add(text);','    if (depth === boxes) out.add(text);',['reading tray exact block on a shorter build','reading constructions use each tray piece once, up to the box count']],
+ ['core','builds reach every box','    if (depth === boxes) return;','    if (depth === 1) return;',['reading tray pieces that build a blocked term are refused']],
+ ['core','builds use wrong pieces','const tray = [...r.chunks, ...r.distractors], boxes','const tray = [...r.chunks], boxes',['reading tray pieces that build a blocked term are refused']],
+ ['scan','built text read backwards',"[foldScan(text), [...foldScan(text)].reverse().join('')]",'[foldScan(text)]',['reading tray scan reads built text backwards']],
+ ['scan','built text hits recorded','if (node.end) hits.push({ term: node.end });','if (false) hits.push({ term: node.end });',['reading tray scan finds a scan-only term built forwards']],
+ ['review','reading packet projection',"batch.kind === 'reading' ? visibleReading : visibleWord",'visibleWord',['a reading packet shows the reviewer the pieces and the tray, not a family-word clue']],
+ ['review','reading packet tray','distractors:c.distractors,','',['a reading packet shows the reviewer the pieces and the tray, not a family-word clue']],
+ ['review','reading packet context',"context:batch.kind === 'reading' ? READING_REVIEW_CONTEXT : REVIEW_CONTEXT",'context:REVIEW_CONTEXT',['a reading packet shows the reviewer the pieces and the tray, not a family-word clue']],
+ ['review','reading packet prompt',"promptVersion:batch.kind === 'reading' ? READING_PROMPT_VERSION : REVIEW_PROMPT_VERSION",'promptVersion:REVIEW_PROMPT_VERSION',['a reading packet shows the reviewer the pieces and the tray, not a family-word clue']],
+ ['review','reading prepare validation',"kind === 'reading' ? validateReadingRecord(c) :","kind === 'reading' ? c :",['reading rule compound two whole words','a reading record cannot carry its own approval']],
+ ['registry','kind routing',"(b.kind ?? 'words')===kind",'true',['the generated registry loads reading banks through their own table']],
+ ['registry','reading type',"kind==='words'?'WordBank':'ReadingBank'","'WordBank'",['the generated registry loads reading banks through their own table']],
+ ['shipping','reading JSON detector','  if(readingShaped(Object.keys(value)))return true;\n','',['reading stray JSON imported by a route fails shipping and export','reading stray JSON nested under another key fails shipping']],
+ ['shipping','reading literal detector','      if(readingShaped(n.properties.map(propertyName)))found.push(n.getText(tree));\n','',['reading stray source literal fails shipping object','reading stray source literal fails shipping quoted keys','reading stray source literal fails shipping computed keys','reading stray source literal fails shipping nested']],
+ ['shipping','computed reading keys','if(ts.isComputedPropertyName(name))return ts.isStringLiteralLike(name.expression)?name.expression.text:undefined;','if(ts.isComputedPropertyName(name))return undefined;',['reading stray source literal fails shipping computed keys']],
+ ['shipping','two reading fields suffice','.length>=2;','.length>=3;',['reading stray source literal fails shipping quoted keys','reading stray source literal fails shipping computed keys','reading stray source literal fails shipping nested','reading stray JSON nested under another key fails shipping']],
+ ['shipping','shared shape dispatch','(reading?safeReadingAsset:safeAsset)(asset);','(reading?()=>{}:safeAsset)(asset);',['reading shipping shape runs the shared kit rules','reading runtime shape rejects injected status']],
+ ['shipping','JSON payload admission','if(readingShaped(Object.keys(value)))return admit(value,name);','if(readingShaped(Object.keys(value)))return;',['reading payload in exported JSON fails']],
+ ['shipping','JS payload admission','return admit(value,name);}ts.forEachChild(n,visit);','return;}ts.forEachChild(n,visit);',['reading payload in an export fails even when the source tree is clean','reading payload in a release web export fails','reading payload in a release native JavaScript export fails']],
+ ['shipping','unverifiable payload fails','catch{throw new Error(`Unverifiable reading payload in export: ${name}`);}','catch{return;}',['reading payload that cannot be read statically fails']],
+ ['shipping','unreadable JSON fails','catch{throw new Error(`Unreadable JSON in export: ${name}`);}','catch{continue;}',['reading payload in malformed export JSON fails closed']],
+ ['check','export payload backstop','  admission.readingPayloads=checkReadingPayloads(root,directory);\n','',['reading payload in an export fails even when the source tree is clean','reading payload in exported JSON fails']],
+ ['check','release web payload backstop','  admission.readingPayloads=checkReadingPayloads(root,web);\n','',['reading payload in a release web export fails']],
+ ['check','release native payload backstop','    checkReadingPayloads(root,temporary);\n','',['reading payload in a release native JavaScript export fails']],
+ ['generated-admission','reading vocabulary','add(bank.path,bytes,bankVocabulary(bank.kind,JSON.parse(bytes)));','add(bank.path,bytes,[]);',['a registered reading bank passes the complete export gate with detached evidence']],
+ ['generated-admission','reading generated entries',"entries.push(...((kind ?? 'words')==='reading-parts'?shown:data.words.map(w=>w.spelling)));",'entries.push();',['a registered reading bank passes the complete export gate with detached evidence']],
+ ['morphology','id type','typeof r.id !== "string" || ','',['reading rule id type']],
+ ['morphology','id slug','if (typeof r.id !== "string" || !slug.test(r.id)) no(','if (false) no(',['reading rule id slug']],
+ ['morphology','word type','if (typeof r.word !== "string") return','if (false) return',['reading rule word type']],
+ ['morphology','word length','if (!/^[a-z]{4,14}$/.test(r.word)) no(','if (false) no(',['reading rule word length']],
+ ['morphology','kind','if (!["compound", "syllables", "ending", "prefix"].includes(r.kind)) return','if (false) return',['reading rule kind']],
+ ['morphology','piece type','const piece = (p: unknown): p is string => typeof p === "string" && ','const piece = (p: unknown): p is string => ',['reading rule chunk type','reading rule family type']],
+ ['morphology','chunk count','if (!pieces(r.chunks, 2, 4)) return','if (false) return',['reading rule chunk count']],
+ ['morphology','chunks spell','if (r.chunks.join("") !== r.word) no(','if (false) no(',['reading rule chunks spell']],
+ ['morphology','level','if (r.level !== level) no(','if (false) no(',['reading rule level']],
+ ['morphology','compound whole words','if (r.kind === "compound" && (r.chunks.length !== 2 || r.chunks.some((c) => c.length < 3))) no(','if (false) no(',['reading rule compound two whole words']],
+ ['morphology','syllable vowel','if (r.kind === "syllables" && !r.chunks.every(hasVowel)) no(','if (false) no(',['reading rule syllable vowel']],
+ ['morphology','base and affix','if (typeof r.base !== "string" || !/^[a-z]{1,10}$/.test(r.base) || typeof r.affix !== "string" || !list.includes(r.affix)) no(','if (false) no(',['reading rule ending base','reading rule base type','reading rule affix known']],
+ ['morphology','spelling change','if (applyAffix(r.base, r.affix, kind, change) !== r.word) no(','if (false) no(',['reading rule spelling change']],
+ ['morphology','base piece and affix','if (r.chunks.join("|") !== want.join("|")) no(','if (false) no(',['reading rule base piece and affix']],
+ ['morphology','unchanged base on tray','if (change !== "none" && !r.distractors?.includes(r.base)) no(','if (false) no(',['reading rule unchanged base on tray']],
+ ['morphology','gloss','if (typeof r.gloss !== "string" || !/^[a-z ]{3,40}$/.test(r.gloss)) no(','if (false) no(',['reading rule gloss']],
+ ['morphology','only endings carry cues','} else if (r.base || r.affix || r.change || r.gloss) no(','} else if (false) no(',['reading rule compound gloss']],
+ ['morphology','family','if (r.family !== undefined && (typeof r.family !== "string" || !/^[a-z]{2,10}$/.test(r.family))) no(','if (false) no(',['reading rule family','reading rule family type']],
+ ['morphology','family type','typeof r.family !== "string" || ','',['reading rule family type']],
+ ['morphology','distractors','if (!pieces(r.distractors, 2, 4) || new Set(r.distractors).size !== r.distractors.length || r.distractors.some((d) => r.chunks.includes(d))) no(','if (false) no(',['reading rule distractor repeat','reading rule distractor is a chunk','reading rule distractor count']],
+ ['morphology','alternates shape','else if (r.alternates !== undefined && (!Array.isArray(r.alternates) || !r.alternates.every((a) => pieces(a, 1, 8)))) no(','else if (false) no(',['reading rule alternates shape']],
+ ['morphology','alternate differs','if (a.join("") !== r.word || a.join("|") === r.chunks.join("|")) no(','if (false) no(',['reading rule alternate repeats the answer','reading rule alternate spelling']],
+ ['morphology','tray spellings accepted','if (!accepted.has(order.map((i) => tray[i]).join("|"))) no(','if (false) no(',['reading rule tray spells unaccepted']],
+];
+for(const [file,label,before,after,tests] of readingEdges){const original=sources.get(file);if(original.split(before).length!==2)throw new Error('Missing or ambiguous R1a mutation target '+label);custom(file,'R1a '+label,original.replace(before,after),tests);}
+for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile(m.file==='morphology'?'mutant.ts':'mutant.mjs',m.source,ts.ScriptTarget.Latest,true,m.file==='morphology'?ts.ScriptKind.TS:ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});
 const harness=join(scratch,'word-pipeline-regressions.mjs');writeFileSync(harness,readFileSync('tests/helpers/word-pipeline-regressions.mjs'));
@@ -276,18 +353,18 @@ process.once('SIGTERM',()=>{rmSync(scratch,{recursive:true,force:true});process.
 let failed=0;
 try{
  // Freeze all source files for this run.
- for(const [file,source] of sources){let patched=source;for(const p of patches.get(file).sort((a,b)=>b.start-a.start))patched=patched.slice(0,p.start)+`(${source.slice(p.start,p.end)} || (globalThis.__wordRecordGate?.(${p.id}), false))`+patched.slice(p.end);writeFileSync(join(toolRoot,`${file}.mjs`),patched);}
- const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs'),WORD_TEST_PREVIEW_FILE:join(toolRoot,'preview.mjs')},timeout:process.env.LITTLE_ISLAND_SLOW_HOST==='1'?300000:120000,maxBuffer:8*1024*1024});
+ for(const [file,source] of sources){let patched=source;for(const p of patches.get(file).sort((a,b)=>b.start-a.start))patched=patched.slice(0,p.start)+`(${source.slice(p.start,p.end)} || (globalThis.__wordRecordGate?.(${p.id}), false))`+patched.slice(p.end);writeFileSync(join(toolRoot,toolFile(file)),patched);}
+ const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs'),WORD_TEST_PREVIEW_FILE:join(toolRoot,'preview.mjs'),WORD_TEST_MORPHOLOGY_FILE:join(toolRoot,'morphology.ts')},timeout:process.env.LITTLE_ISLAND_SLOW_HOST==='1'?300000:120000,maxBuffer:8*1024*1024});
  const baseline=run({WORD_MUTATION_TRACE:trace});
  if(baseline.status!==0){console.error(baseline.stdout+baseline.stderr);throw new Error('Instrumented unmutated baseline must pass');}
- for(const [file,source] of sources)writeFileSync(join(toolRoot,`${file}.mjs`),source);
+ for(const [file,source] of sources)writeFileSync(join(toolRoot,toolFile(file)),source);
  const coverage=new Map();for(const line of readFileSync(trace,'utf8').trim().split('\n')){const {id,test}=JSON.parse(line);if(!coverage.has(id))coverage.set(id,new Set());coverage.get(id).add(test);}
  const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let count=0;
  for(const m of mutations){if(process.argv[2] && !`${m.file} ${m.message}`.includes(process.argv[2]))continue;count++;
-  const tests=m.tests??[...(coverage.get(m.id)??[])];
-  writeFileSync(join(toolRoot,`${m.file}.mjs`),m.source);
+  const tests=m.tests??[...(coverage.get(m.coverageOf??m.id)??[])];
+  writeFileSync(join(toolRoot,toolFile(m.file)),m.source);
   const r=run({},tests.length?`^(?:${tests.map(escape).join('|')})$`:undefined);
-  writeFileSync(join(toolRoot,`${m.file}.mjs`),sources.get(m.file));
+  writeFileSync(join(toolRoot,toolFile(m.file)),sources.get(m.file));
   const killed=r.status!==0 && r.status!==null;failed+=!killed;
   console.log(JSON.stringify({id:m.id,file:m.file,message:m.message,tests,killed,status:r.status}));
  }

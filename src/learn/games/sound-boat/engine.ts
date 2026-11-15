@@ -155,11 +155,13 @@ export function boatMove(s: BoatState, a: BoatAction): BoatState {
           clean: [...s.clean, !s.assisted],
         }
       : s;
+  // Undo takes back the last letter placed on this word, one at a time, down to none placed. It still works once the
+  // word is built, until Sail on: a word is counted only when it sails (the board credits practice then), so a word
+  // with one blank, or a one-letter ladder change, can be taken back and built again without counting twice. A wrong
+  // tile or Help stays counted: undo is not a way to erase an assist. Words that have sailed cannot be undone.
+  if (a.type === "undo") return s.filled ? { ...s, filled: s.filled - 1, out: [], hint: false } : s;
   if (complete) return s;
   if (a.type === "help") return s.hint ? s : { ...s, hint: true, assisted: true };
-  // Undo takes back the last letter placed on this word, never more than the child placed and never once the word is
-  // built (it was already counted). A wrong tile or Help stays counted: undo is not a way to erase an assist.
-  if (a.type === "undo") return s.filled ? { ...s, filled: s.filled - 1, out: [], hint: false } : s;
   if (!boatChoices(s).includes(a.tile) || s.out.includes(a.tile)) return s;
   if (a.tile === boatExpected(s)) return { ...s, filled: s.filled + 1, out: [], hint: false };
   return { ...s, out: [...s.out, a.tile], assisted: true };

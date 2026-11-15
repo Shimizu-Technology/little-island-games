@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 
 export const TIERS = ['Little', 'Growing', 'Strong', 'Grown-up'];
 export const sha256 = value => createHash('sha256').update(value).digest('hex');
@@ -90,27 +91,42 @@ export function validatePack(words) {
 }
 
 /**
- * Lead contract change: W1 reading records. A Sound Boat word built from pieces. Structure only, with closed keys:
- * no status, review or provenance field can ride along. The kit's morphology rules (src/learn/reading) run on the
- * app side over the same projection, so a record is checked in both places.
+ * Lead contract change: W1 reading records. A Sound Boat word built from pieces, with closed keys: no status, review
+ * or provenance field can ride along. Its structure and morphology are the kit's own pure rules
+ * (`src/learn/reading/morphology.ts`, dependency-free TypeScript that Node loads by stripping types). The same function
+ * runs at prepare, bake and every shipping check here, and again in the app's admitted loader, so the two cannot
+ * disagree.
  */
 export const READING_KINDS = ['compound', 'syllables', 'ending', 'prefix'];
 export const READING_CHANGES = ['none', 'drop-e', 'double', 'y-to-i'];
 const READING_KEYS = ['id', 'word', 'level', 'kind', 'chunks', 'distractors', 'base', 'affix', 'change', 'gloss', 'family', 'alternates'];
+let partsRules;
+export function partsWordIssues(r) {
+  try { partsRules ??= createRequire(import.meta.url)('../../src/learn/reading/morphology.ts'); }
+  catch { throw new Error('Cannot load the shared reading validator src/learn/reading/morphology.ts (Node 22.18+ strips its types)'); }
+  return partsRules.partsWordIssues(r);
+}
 export function validateReadingRecord(r) {
-  const piece = p => typeof p === 'string' && /^[a-z]{1,8}$/.test(p);
-  requireThat(r && typeof r === 'object' && !Array.isArray(r) && Object.keys(r).every(k => READING_KEYS.includes(k)), 'Reading record has unexpected fields');
-  requireThat(typeof r.id === 'string' && /^[a-z0-9][a-z0-9-]{0,39}$/.test(r.id) && typeof r.word === 'string' && /^[a-z]{4,14}$/.test(r.word), 'Invalid reading id or word');
-  requireThat(READING_KINDS.includes(r.kind) && (r.level === 4 || r.level === 5), 'Invalid reading kind or level');
-  requireThat(Array.isArray(r.chunks) && r.chunks.length >= 2 && r.chunks.length <= 4 && r.chunks.every(piece) && r.chunks.join('') === r.word, 'Reading pieces must spell the word');
-  requireThat(Array.isArray(r.distractors) && r.distractors.length >= 2 && r.distractors.length <= 4 && r.distractors.every(piece) && new Set(r.distractors).size === r.distractors.length && r.distractors.every(d => !r.chunks.includes(d)), 'Reading wrong pieces must be 2-4 distinct pieces that are not right pieces');
-  for (const k of ['base', 'affix', 'family']) requireThat(r[k] === undefined || (typeof r[k] === 'string' && /^[a-z]{1,10}$/.test(r[k])), `Invalid reading ${k}`);
-  requireThat(r.change === undefined || READING_CHANGES.includes(r.change), 'Invalid reading spelling change');
-  requireThat(r.gloss === undefined || (typeof r.gloss === 'string' && /^[a-z ]{3,40}$/.test(r.gloss)), 'Invalid reading gloss');
-  requireThat(r.alternates === undefined || (Array.isArray(r.alternates) && r.alternates.every(a => Array.isArray(a) && a.every(piece) && a.join('') === r.word)), 'Invalid reading alternates');
+  requireThat(Object.prototype.toString.call(r) === '[object Object]' && Object.keys(r).every(k => READING_KEYS.includes(k)), 'Reading record has unexpected fields');
+  const issues = partsWordIssues(r);
+  requireThat(issues.length === 0, `Invalid reading record: ${issues.map(i => i.problem).join('; ')}`);
   return r;
 }
 /** Every string a child could see for this record, for the private scan. */
 export function readingStrings(r) {
   return [r.word, ...r.chunks, ...r.distractors, ...(r.base ? [r.base] : []), ...(r.affix ? [r.affix] : []), ...(r.family ? [r.family] : []), ...(r.alternates ?? []).flat(), ...(r.gloss ? r.gloss.split(' ') : [])];
+}
+/**
+ * Every text a child can build in the boxes, whether or not it is ever the answer: each ordered pick of distinct tray
+ * pieces (a piece is used once), from one box up to the record's box count, joined as the boxes show it.
+ */
+export function readingConstructions(r) {
+  const tray = [...r.chunks, ...r.distractors], boxes = r.chunks.length, out = new Set();
+  const build = (text, used, depth) => {
+    if (depth) out.add(text);
+    if (depth === boxes) return;
+    tray.forEach((piece, i) => { if (!used.includes(i)) build(text + piece, [...used, i], depth + 1); });
+  };
+  build('', [], 0);
+  return [...out];
 }

@@ -255,12 +255,13 @@ function Play({
     if (!active) return;
     const next = boatMove(s, a);
     if (next === s) return;
+    // A word is counted when it sails, not when its last letter lands, so Undo before Sail on can never credit twice.
+    if (a.type === "next") practice(word.skill, !s.assisted);
     if (a.type === "tile") {
       if (coach.active) coach.done();
       const right = next.filled > s.filled;
       if (right) {
         if (boatComplete(next)) {
-          practice(word.skill, !next.assisted);
           cheer(s.index === WORDS_PER_ROUND - 1 ? "big" : "right");
         } else sound("tap");
       } else {
@@ -439,7 +440,12 @@ function Play({
         </View>
       )}
       {complete ? (
-        <Button onPress={() => move({ type: "next" })}>{s.index === WORDS_PER_ROUND - 1 ? "Reach the island" : "Sail on"}</Button>
+        <View style={{ alignItems: "center", gap: 8 }}>
+          <Button onPress={() => move({ type: "next" })}>{s.index === WORDS_PER_ROUND - 1 ? "Reach the island" : "Sail on"}</Button>
+          <Button compact quiet label="Undo: take back the last letter" onPress={() => move({ type: "undo" })}>
+            Undo
+          </Button>
+        </View>
       ) : (
         <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
           <Button
