@@ -152,4 +152,8 @@ it('C1d fix: on a block puzzle the help ladder shows beside the beach with Go!, 
  const strip = root!.root.findAll(n => n.props.accessibilityLabel === 'Plan and commands');
  for (const section of strip) expect(hintText(section as never)).toHaveLength(0);
  expect(root!.root.findAllByType('button').some(b => b.children.join('') === 'More help')).toBe(true);
+ // The pinned phone screen has no room for lines the editor already covers.
+ const texts = root!.root.findAllByType('p' as never).map(n => n.children.join(''));
+ expect(texts.some(t => t.startsWith('Plan · '))).toBe(false);
+ expect(texts).not.toContain('Tap a command below to add it.');
 });

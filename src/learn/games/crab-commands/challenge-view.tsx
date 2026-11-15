@@ -72,12 +72,12 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const lessonKey=lessonAudio(d.lesson);
   const feedbackAudio=over?'c1-crab-budget':'c1-crab-retry';
   // On block puzzles the help ladder sits with Go! beside the beach; below the editor it would be out of reach.
-  const helpPanel=<>{hintVisible&&!hint&&!blockHelp&&<Copy>Finding one step…</Copy>}{(hint||blockHelp)&&<View style={{gap:8,padding:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">
+  const helpPanel=<>{hintVisible&&!hint&&!blockHelp&&<Copy>Finding one step…</Copy>}{(hint||blockHelp)&&<View style={{gap:blocks?4:8,padding:blocks?8:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">
       <Copy style={{color:C.ink}}>{s.hintStage<3?stepText:blockHelp?blockHelp.whole:`One working plan: ${(hint?.plan??[]).map(c=>cardLabel[c]).join(', ')}.`}</Copy>
       {hint?.edit&&learnSources[`c1-crab-hint-${hint.edit.op}`]&&<Button compact quiet disabled={disabled} onPress={()=>play(`c1-crab-hint-${hint!.edit!.op}`)}>Hear the edit</Button>}
       {s.hintStage===2&&<Copy>You can try this step, or ask for the whole plan. Helped finishes count too.</Copy>}
       {learnSources[s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help']&&<Button compact quiet disabled={disabled} onPress={()=>play(s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help')}>Hear help</Button>}
-      {s.hintStage<3&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>{s.hintStage===1?'More help':'Show the whole plan'}</Button>}
+      {s.hintStage<3&&<Button quiet compact={blocks} disabled={disabled} onPress={()=>send(['h'])}>{s.hintStage===1?'More help':'Show the whole plan'}</Button>}
 
     </View>}</>;
   return <View style={{gap:8,flex:1,minHeight:0}}>
@@ -95,9 +95,10 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     {blocks&&!s.won&&helpPanel}
     <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{(d.fog?s.won:result.won)?d.crabs===2?'Both crabs are home!':'Home! Every shell collected.':message}</Copy>
     </View></View>
-    <Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
+    {/* With blocks the screen is pinned to the phone's height: the editor shows the tray and its own guidance, so these lines give way. */}
+    {!blocks&&<Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>}
     {/* The empty prompt wraps at any text size; inside the horizontal strip it ran off the edge. */}
-    {!s.won&&!s.program.length&&<View style={{padding:12,borderRadius:12,backgroundColor:C.paper}}><Copy maxFontSizeMultiplier={1.5}>Tap a command below to add it.</Copy></View>}
+    {!blocks&&!s.won&&!s.program.length&&<View style={{padding:12,borderRadius:12,backgroundColor:C.paper}}><Copy maxFontSizeMultiplier={1.5}>Tap a command below to add it.</Copy></View>}
     {!blocks&&!s.won&&s.program.length>0&&<ScrollView horizontal style={{flexGrow:0,maxHeight:94}} contentContainerStyle={{flexDirection:'row',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:80}} accessibilityLabel="Your program editor">
       {s.program.map((c,i)=><PressableScale key={i} disabled={disabled} accessibilityRole="button" accessibilityState={{selected:selected===i}} accessibilityLabel={planCardLabel(i,cardLabel[c],hinted===i?HINTED:'')} onPress={()=>{setSelected(selected===i?null:i);setMode('replace');}} style={{minWidth:48,minHeight:60,padding:4,alignItems:'center',justifyContent:'center',borderWidth:2,borderStyle:hinted===i&&selected!==i?'dashed':'solid',borderColor:selected===i||hinted===i?C.teal:running&&cursor===i?'#B0563A':C.line,borderRadius:10,backgroundColor:selected===i?C.soft:C.cream}}>
         <Copy maxFontSizeMultiplier={1.3} style={{fontSize:12}}>{i+1}</Copy><ArrowArt command={c}/>
