@@ -1,5 +1,5 @@
 import { createRng } from '../../../src/puzzles/rng';
-import { CARD_ALPHABET,type Deal,type Mode } from '../../../src/puzzles/table/solitaire';
+import { type Deal,type Mode } from '../../../src/puzzles/table/solitaire';
 /** Four construction recipes vary the foundation dependency order, before independently graded blockers. */
 export const recipes=['steady','bursts','pairs','weave'] as const;
 export function construct(mode:Mode,seed:number,tier:number):{deal:Deal;template:string}{
@@ -24,5 +24,5 @@ export function construct(mode:Mode,seed:number,tier:number):{deal:Deal;template
  else {for(let row=0;row<7;row++)for(let col=row;col<7;col++)deck.push(piles[col][row]);deck.push(...piles[7].reverse());}
  const swaps=tier===1?0:tier===3?2+rng.below(5):tier===5?8+rng.below(10):18+rng.below(20);
  for(let i=0;i<swaps;i++){const a=rng.below(52),b=rng.below(52);[deck[a],deck[b]]=[deck[b],deck[a]];}
- return {deal:{mode,cards:deck.map(c=>CARD_ALPHABET[c]).join('')},template:recipes[style]};
+ return {deal:{mode,cards:deck},template:recipes[style]};
 }

@@ -55,7 +55,7 @@ describe('Solitaire card interaction',()=>{
    await act(async()=>{screen=create(<Harness/>);});await press(screen,'Hint');expect(text(screen)).toContain('Look for');expect(board(deal).payload.edits).toBe(0);
    await press(screen,'Think');expect(text(screen)).toContain('Think about');expect(board(deal).payload.edits).toBe(0);
    await press(screen,'One step');for(let i=0;i<100&&board(deal).payload.edits!==1;i++)await settle();expect(board(deal).payload.edits).toBe(1);
-   await press(screen,'Show me · next step');for(let i=0;i<100&&board(deal).payload.edits!==2;i++)await settle();expect(board(deal).payload.edits).toBe(2);
+   await press(screen,'Show me');for(let i=0;i<100&&board(deal).payload.edits!==2;i++)await settle();expect(board(deal).payload.edits).toBe(2);
    await settle();await settle();expect(board(deal).payload.edits).toBe(2);expect(board(deal).payload.audit).toEqual([1]);
    await press(screen,'Undo');expect(board(deal).payload.audit).toEqual([1]);
   }finally{if(screen)await act(async()=>screen.unmount());}
@@ -69,7 +69,7 @@ describe('Solitaire card interaction',()=>{
    expect(Math.max(...columns.map(n=>n.props.style.left+(n.children[0] as ReactTestInstance).props.style.width))).toBeLessThanOrEqual(353);
    await act(async()=>screen.unmount());fake.scale=3.5;await act(async()=>{screen=create(<Harness/>);});
    expect(screen.root.findAllByType('span').every(n=>n.props.maxFontSizeMultiplier===1.5)).toBe(true);
-   expect(text(screen)).toContain('Lower cards');expect(text(screen)).toContain('Top of table');
+   expect(text(screen)).toContain('Lower cards');expect(text(screen)).toContain('Top');
    expect(screen.root.findAllByType('button').some(n=>/^Column 8, /.test(n.props.accessibilityLabel??''))).toBe(true);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });

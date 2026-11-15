@@ -1,9 +1,8 @@
 /** Independent certificate verifier. Does not import the playing engine, move generator or solver. */
-export function verifyLine(cards: string, mode: string, moves: readonly (readonly number[])[]): boolean {
-  const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  if(cards.length!==52 || new Set(cards).size!==52 || [...cards].some(c=>!alphabet.includes(c)) || !['draw-one','draw-three','freecell'].includes(mode))return false;
+export function verifyLine(cards: readonly number[], mode: string, moves: readonly (readonly number[])[]): boolean {
+  if(cards.length!==52 || new Set(cards).size!==52 || Array.from(cards).some(c=>!Number.isInteger(c)||c<0||c>51) || !['draw-one','draw-three','freecell'].includes(mode))return false;
   const free=mode==='freecell', cols=free?8:7, stacks:number[][]=Array.from({length:16},()=>[]), covered=Array<number>(8).fill(0);
-  const deck=[...cards].map(c=>alphabet.indexOf(c));
+  const deck=[...cards];
   if(free)for(let i=0;i<52;i++)stacks[i%8].push(deck[i]);
   else {for(let r=0;r<7;r++)for(let c=r;c<7;c++)stacks[c].push(deck.shift()!);stacks[12]=deck.reverse();for(let c=0;c<7;c++)covered[c]=c;}
   const value=(c:number)=>c%13+1,colour=(c:number)=>Math.floor(c/13)%2;

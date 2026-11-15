@@ -1,5 +1,5 @@
 import { apply, legalMoves, positionKey, rank, red, suit, won, type Deal, type Move, type Position } from './solitaire';
-import witnesses from './witnesses.generated.json';
+import {lineFromProof} from './proof';
 import { knownPlan, primePlan, searchSteps } from './solver';
 /** Observable state only: no face-down rank, suit or stock order. */
 export function publicView(s: Position, d: Deal): Position {
@@ -14,7 +14,7 @@ export type Advice = { kind: 'move'; move: Move; plan: Move[]; depth: number } |
 /** Klondike searches visible play until a card is uncovered, never past a hidden reveal. */
 export function* adviceSteps(s: Position, d: Deal, budget = 1200): Generator<void,Advice,void> {
   if (won(s)) return { kind: 'unknown' };
-  if (d.mode === 'freecell') { const proof=(witnesses as Record<string,Move[]>)[d.cards];if(proof&&!knownPlan(s,d))primePlan(d,proof); const cached=knownPlan(s,d); if(cached?.length)return {kind:'move',move:cached[0],plan:[cached[0]],depth:cached.length}; const r = yield* searchSteps(d, s, Math.min(400,budget)); return r.status === 'solved' && r.moves.length ? { kind: 'move', move: r.moves[0], plan: [r.moves[0]], depth: r.moves.length } : { kind: r.status==='unsolved'?'dead-end':'unknown' }; }
+  if (d.mode === 'freecell') { let cached=knownPlan(s,d);if(!cached){const proof=lineFromProof(d);if(proof)primePlan(d,proof);cached=knownPlan(s,d);} if(cached?.length)return {kind:'move',move:cached[0],plan:[cached[0]],depth:cached.length}; const r = yield* searchSteps(d, s, Math.min(400,budget)); return r.status === 'solved' && r.moves.length ? { kind: 'move', move: r.moves[0], plan: [r.moves[0]], depth: r.moves.length } : { kind: r.status==='unsolved'?'dead-end':'unknown' }; }
   const visible = publicView(s, d), all = legalMoves(visible, d.mode);
   const safe = all.find(a => safeFoundation(visible, a));
   if (safe) return { kind: 'move', move: safe, plan: [safe], depth: 1 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apply, CARD_ALPHABET, columns, DRAW, legalMoves, makeDeal, opening, RECYCLE, validDeal, validPosition, won } from '../src/puzzles/table/solitaire';
+import { apply, DECK, columns, DRAW, legalMoves, makeDeal, opening, RECYCLE, validDeal, validPosition, won } from '../src/puzzles/table/solitaire';
 import { decodeBoard, fresh, history, moveTable, readTable, undoTable } from '../src/puzzles/table/checkpoint';
 import { solve } from '../src/puzzles/table/solver';
 import { advise, publicView } from '../src/puzzles/table/publicSolver';
@@ -13,8 +13,8 @@ describe('Solitaire table feasibility', () => {
    expect(s.piles.slice(0,columns(mode)).map(p=>p.length)).toEqual(mode==='freecell'?[7,7,7,7,6,6,6,6]:[1,2,3,4,5,6,7]);
    expect(new Set(s.piles.flat()).size).toBe(52);
   }
-  expect(validDeal({mode:'freecell',cards:'A'.repeat(52)})).toBe(false);
-  expect(validDeal({mode:'freecell',cards:CARD_ALPHABET,extra:1})).toBe(false);
+  expect(validDeal({mode:'freecell',cards:Array<number>(52).fill(0)})).toBe(false);
+  expect(validDeal({mode:'freecell',cards:DECK,extra:1})).toBe(false);
  });
  it('draws three, handles the last short draw, recycles in exact order, and undoes each operation', () => {
   const d=makeDeal('draw-three',1), start=fresh(d);let p=start;
@@ -52,7 +52,7 @@ describe('Solitaire table feasibility', () => {
   const d=makeDeal('draw-three',1),s=opening(d),unknown=s.piles.flat().filter(c=>!s.known[c]),a=unknown[0],b=unknown[1];
   const swap=(c:number)=>c===a?b:c===b?a:c;
   const twin={...s,piles:s.piles.map(p=>p.map(swap))};
-  const other={...d,cards:[...d.cards].map(c=>CARD_ALPHABET[swap(CARD_ALPHABET.indexOf(c))]).join('')};
+  const other={...d,cards:d.cards.map(swap)};
   expect(publicView(s,d)).toEqual(publicView(twin,other)); expect(advise(s,d)).toEqual(advise(twin,other));
  });
 });
@@ -74,7 +74,7 @@ it('counts equivalent FreeCell column orders as one semantic deal',async()=>{
  const d=makeDeal('freecell',4),s=opening(d),deck:number[]=[];
  [s.piles[0],s.piles[1]]=[s.piles[1],s.piles[0]];
  for(let row=0;row<7;row++)for(let col=0;col<8;col++)if(row<s.piles[col].length)deck.push(s.piles[col][row]);
- expect(semanticKey({...d,cards:deck.map(c=>CARD_ALPHABET[c]).join('')})).toBe(semanticKey(d));
+ expect(semanticKey({...d,cards:deck})).toBe(semanticKey(d));
 });
 
 it('proves a public FreeCell dead end and keeps an exhausted budget unknown',async()=>{
@@ -116,4 +116,46 @@ it('backs the Klondike planning grade with a shorter-plan counterfactual',async(
  const d=makeDeal('draw-three',10),g=gradePublic(d);expect(g.complete).toBe(true);expect(g.depth).toBe(8);
  expect(progressWithin(g.bottleneck!,d,7).status).toBe('blocked');
  expect(progressWithin(g.bottleneck!,d,7,0).status).toBe('budget-exhausted');
+});
+
+it('loads each FreeCell winning certificate with its own deal, validates all steps, and rejects extra choices',async()=>{
+ const {construct}=await import('../scripts/puzzles/solitaire/generate'),{proofForLine,lineFromProof}=await import('../src/puzzles/table/proof'),{solitaireAdapter}=await import('../src/puzzles/table/adapter');
+ const adapter=solitaireAdapter(false);
+ for(const d of [construct('freecell',4,1).deal,makeDeal('freecell',4)]){
+  const r=solve(d,undefined,3000);expect(r.status).toBe('solved');if(r.status!=='solved')return;
+  const certified={...d,proof:proofForLine(d,r.moves)};
+  expect(lineFromProof(certified)).toEqual(r.moves);expect(adapter.isPayload(certified)).toBe(true);
+  expect(adapter.decodePayload(adapter.encodePayload(certified))).toEqual(certified);
+  expect(lineFromProof({...certified,proof:certified.proof+'00'})).toBeNull();
+  expect(lineFromProof({...certified,proof:'ff0000'})).toBeNull();
+  certified.proof+='00';expect(lineFromProof(certified)).toBeNull();
+ }
+ expect(adapter.isPayload(makeDeal('freecell',1))).toBe(false);
+ expect(validDeal({mode:'draw-one',cards:DECK,proof:''})).toBe(false);
+ expect(validDeal({mode:'draw-one',cards:Array(52)})).toBe(false);
+});
+
+it('rejects malformed move coordinates and retains a valid arrangement along wandering play',async()=>{
+ const{canMove}=await import('../src/puzzles/table/solitaire');
+ for(const mode of ['draw-one','draw-three','freecell'] as const){
+  const d=makeDeal(mode,4);let s=opening(d);
+  for(let i=0;i<50;i++){
+   const moves=legalMoves(s,mode);for(const a of moves)expect(canMove(s,mode,a)).toBe(true);
+   for(const a of [[0,1,-1],[0,1,1.5],[-1,1,1],[0,16,1],[0,0,1]] as const){expect(canMove(s,mode,a)).toBe(false);expect(apply(s,mode,a)).toBe(s);}
+   if(!moves.length)break;s=apply(s,mode,moves[i%moves.length]);expect(validPosition(s,mode)).toBe(true);
+  }
+ }
+});
+
+it('FreeCell supermoves use only spare cells and spare columns other than their destination',()=>{
+ const make=(cells:number,empty:number[])=>{
+  const piles=Array.from({length:16},():number[]=>[]),used=[3,15,1,17],rest=DECK.filter(c=>!used.includes(c));piles[0]=[3,15,1];piles[1]=[17];
+  for(let i=0;i<cells;i++)piles[12+i]=[rest.pop()!];for(let i=2;i<8;i++)if(!empty.includes(i))piles[i]=[rest.pop()!];piles[7].push(...rest);
+  return {piles,hidden:Array<number>(8).fill(0),known:Array<number>(52).fill(1)};
+ };
+ for(const cells of [4,3,2]){const s=make(cells,[]);expect(validPosition(s,'freecell')).toBe(true);expect(apply(s,'freecell',[0,1,3])!==s).toBe(cells===2);}
+ const s=make(4,[2]);expect(apply(s,'freecell',[0,1,3])).toBe(s);
+ const more=make(4,[2,3]);expect(apply(more,'freecell',[0,1,3])).not.toBe(more);
+ const destination=make(4,[]);destination.piles[7].push(...destination.piles[1].splice(0));expect(apply(destination,'freecell',[0,1,3])).toBe(destination);
+ const spare=make(4,[2,3]);spare.piles[7].push(...spare.piles[1].splice(0));expect(apply(spare,'freecell',[0,1,3])).not.toBe(spare);
 });

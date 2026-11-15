@@ -7,19 +7,19 @@ export const modes: readonly Mode[] = ['draw-one', 'draw-three', 'freecell'];
 export const rank = (c: number) => c % 13 + 1;
 export const suit = (c: number) => Math.floor(c / 13);
 export const red = (c: number) => suit(c) % 2 === 1;
-export const CARD_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-export type Deal = { mode: Mode; cards: string };
-export const makeDeal = (mode: Mode, seed: number): Deal => ({ mode, cards: createRng(seed).shuffle(Array.from({length:52},(_,i)=>i)).map(c=>CARD_ALPHABET[c]).join('') });
+export const DECK = Array.from({length:52},(_,i)=>i);
+export type Deal = { mode: Mode; cards: number[]; proof?: string };
+export const makeDeal = (mode: Mode, seed: number): Deal => ({ mode, cards: createRng(seed).shuffle(DECK) });
 /** Bottom to top. 0..7 tableau; 8..11 foundations; 12..15 cells (Klondike: 12 stock, 13 waste). */
 export type Position = { piles: number[][]; hidden: number[]; known: number[] };
 export type Move = readonly [from: number, to: number, count: number];
 export const DRAW: Move = [12, 13, 0];
 export const RECYCLE: Move = [13, 12, 0];
-export const validDeal = (x: unknown): x is Deal => plain(x) && exactKeys(x, ['mode', 'cards']) && modes.includes(x.mode as Mode) && typeof x.cards === 'string' && x.cards.length === 52 && new Set(x.cards).size === 52 && [...x.cards].every(c=>CARD_ALPHABET.includes(c));
+export const validDeal = (x: unknown): x is Deal => plain(x) && (exactKeys(x,['mode','cards'])||exactKeys(x,['mode','cards','proof'])&&x.mode==='freecell'&&typeof x.proof==='string'&&x.proof.length<=1440&&/^(?:[0-9a-f]{2})*$/.test(x.proof)) && modes.includes(x.mode as Mode) && Array.isArray(x.cards) && x.cards.length===52 && new Set(x.cards).size===52 && Array.from(x.cards).every(c=>uint(c,51));
 export const validMove = (x: unknown): x is Move => Array.isArray(x) && x.length === 3 && uint(x[0], 15) && uint(x[1], 15) && uint(x[2], 13);
 export const columns = (mode: Mode) => mode === 'freecell' ? 8 : 7;
 export function opening(d: Deal): Position {
-  const deck = [...d.cards].map(c=>CARD_ALPHABET.indexOf(c));
+  const deck = [...d.cards];
   const piles = Array.from({ length: 16 }, (): number[] => []), hidden = Array<number>(8).fill(0);
   if (d.mode === 'freecell') deck.forEach((c, i) => piles[i % 8].push(c));
   else {
@@ -49,34 +49,33 @@ export function capacity(s: Position, destination: number): number {
   const empty = s.piles.slice(0, 8).filter((p, i) => i !== destination && !p.length).length;
   return (cells + 1) * 2 ** empty;
 }
+/** Check a move without allocating a new 52-card arrangement for every search edge. */
+export function canMove(s:Position,mode:Mode,a:Move):boolean{
+  const [from,to,n]=a;
+  if(!Number.isInteger(from)||!Number.isInteger(to)||!Number.isInteger(n)||from<0||from>15||to<0||to>15||n<0||n>13||from===to)return false;
+  const src=s.piles[from],dst=s.piles[to];if(!src||!dst)return false;
+  if(mode!=='freecell'&&n===0)return from===12&&to===13&&src.length>0||from===13&&to===12&&src.length>0&&!dst.length;
+  const cols=columns(mode);
+  if(!n||n>src.length||from>=8&&(n!==1||mode!=='freecell'&&from!==13&&from>11)||from<8&&(from>=cols||src.length-n<s.hidden[from]))return false;
+  for(let i=src.length-n+1;i<src.length;i++)if(rank(src[i-1])!==rank(src[i])+1||red(src[i-1])===red(src[i]))return false;
+  const first=src[src.length-n];
+  if(to>=8&&to<=11)return n===1&&suit(first)===to-8&&rank(first)===dst.length+1;
+  if(to<cols)return (dst.length?rank(dst.at(-1)!)===rank(first)+1&&red(dst.at(-1)!)!==red(first):mode==='freecell'||rank(first)===13)&&(mode!=='freecell'||n<=capacity(s,to));
+  return mode==='freecell'&&to>=12&&n===1&&!dst.length;
+}
 export function apply(s: Position, mode: Mode, a: Move): Position {
-  const [from, to, n] = a, src = s.piles[from], dst = s.piles[to];
-  if (!src || !dst || from === to) return s;
-  if (mode !== 'freecell' && n === 0) {
-    const piles = s.piles.map(p => [...p]);
-    if (from === 12 && to === 13 && src.length) for (let i = 0; i < (mode === 'draw-one' ? 1 : 3) && piles[12].length; i++) piles[13].push(piles[12].pop()!);
-    else if (from === 13 && to === 12 && src.length && !dst.length) piles[12] = piles[13].splice(0).reverse();
-    else return s;
-    const known=[...s.known]; piles[13].forEach(c=>{known[c]=1;});
-    return { piles, hidden: [...s.hidden], known };
+  if(!canMove(s,mode,a))return s;
+  const [from,to,n]=a,piles=s.piles.map(p=>[...p]),hidden=[...s.hidden],known=[...s.known];
+  if(n===0){
+    if(from===12)for(let i=0;i<(mode==='draw-one'?1:3)&&piles[12].length;i++)piles[13].push(piles[12].pop()!);
+    else piles[12]=piles[13].splice(0).reverse();
+    piles[13].forEach(c=>{known[c]=1;});
+  }else{
+    const cards=piles[from].splice(-n);piles[to].push(...cards);
+    if(from<columns(mode)&&hidden[from]&&piles[from].length===hidden[from])hidden[from]--;
+    if(from<columns(mode)&&piles[from].length)known[piles[from].at(-1)!]=1;
   }
-  const cols = columns(mode);
-  if (!n || n > src.length || from >= 8 && (n !== 1 || mode !== 'freecell' && from !== 13 && from > 11) || from < 8 && (from >= cols || src.length - n < s.hidden[from])) return s;
-  const cards = src.slice(-n), first = cards[0];
-  if (!descending(cards)) return s;
-  if (to >= 8 && to <= 11) {
-    if (n !== 1 || suit(first) !== to - 8 || rank(first) !== dst.length + 1) return s;
-  } else if (to < cols) {
-    if (dst.length ? rank(dst.at(-1)!) !== rank(first) + 1 || red(dst.at(-1)!) === red(first) : mode !== 'freecell' && rank(first) !== 13) return s;
-    if (mode === 'freecell' && n > capacity(s, to)) return s;
-  } else if (mode === 'freecell' && to >= 12) {
-    if (n !== 1 || dst.length) return s;
-  } else return s;
-  const piles = s.piles.map(p => [...p]), hidden = [...s.hidden];
-  piles[from].splice(-n); piles[to].push(...cards);
-  if (from < cols && hidden[from] && piles[from].length === hidden[from]) hidden[from]--;
-  const known=[...s.known]; if(from<cols && piles[from].length)known[piles[from].at(-1)!]=1;
-  return { piles, hidden, known };
+  return {piles,hidden,known};
 }
 /** All legal choices, including foundation reversals; no hidden-card-dependent filtering. */
 export function legalMoves(s: Position, mode: Mode): Move[] {
@@ -85,10 +84,19 @@ export function legalMoves(s: Position, mode: Mode): Move[] {
     const max = from < cols ? s.piles[from].length - s.hidden[from] : 1;
     for (let n = 1; n <= Math.min(13, max); n++) for (let to = 0; to < 16; to++) {
       const a: Move = [from, to, n];
-      if (apply(s, mode, a) !== s) out.push(a);
+      if (canMove(s, mode, a)) out.push(a);
     }
   }
-  if (mode !== 'freecell') for (const a of [DRAW, RECYCLE]) if (apply(s, mode, a) !== s) out.push(a);
+  if (mode !== 'freecell') for (const a of [DRAW, RECYCLE]) if (canMove(s, mode, a)) out.push(a);
   return out;
 }
 export const positionKey = (s: Position) => s.piles.map((p, i) => `${s.hidden[i] ?? 0}:${p.join('.')}`).join('|');
+
+/** Safe-foundation closure used by both search and its compact FreeCell certificate. */
+export function safeFoundationMove(s:Position,a:Move):boolean{
+ if(a[1]<8||a[1]>11||a[2]!==1||!s.piles[a[0]].length)return false;const c=s.piles[a[0]].at(-1)!;
+ return rank(c)<=2||s.piles.slice(8,12).every((p,i)=>i===suit(c)||p.length>=rank(c)-(red(i*13)===red(c)?2:1));
+}
+export function forcedFoundation(s:Position,mode:Mode):Move|null{
+ for(let from=0;from<16;from++){if(!s.piles[from].length)continue;const c=s.piles[from].at(-1)!,a:Move=[from,8+suit(c),1];if(safeFoundationMove(s,a)&&canMove(s,mode,a))return a;}return null;
+}

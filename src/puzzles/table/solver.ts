@@ -1,7 +1,7 @@
-import { apply, columns, legalMoves, opening, rank, red, suit, won, type Deal, type Move, type Position } from './solitaire';
+import { apply, columns, legalMoves, opening, rank, forcedFoundation, suit, won, type Deal, type Move, type Position } from './solitaire';
 const plans = new Map<string, Move[]>();
 const planKey = (s:Position,d:Deal)=>`${d.mode}|${s.piles.map(p=>p.join('.')).join('|')}|${s.hidden.join('.')}`;
-export function primePlan(d:Deal,moves:readonly Move[]):boolean{let s=opening(d);for(const a of moves){const next=apply(s,d.mode,a);if(next===s)return false;s=next;}if(!won(s))return false;s=opening(d);moves.forEach((a,i)=>{plans.set(planKey(s,d),moves.slice(i));s=apply(s,d.mode,a);});while(plans.size>4096)plans.delete(plans.keys().next().value!);return true;}
+export function primePlan(d:Deal,moves:readonly Move[]):boolean{let s=opening(d);for(const a of moves){const next=apply(s,d.mode,a);if(next===s)return false;s=next;}if(!won(s))return false;s=opening(d);moves.forEach((a,i)=>{plans.set(planKey(s,d),moves.slice(i));s=apply(s,d.mode,a);});while(plans.size>512)plans.delete(plans.keys().next().value!);return true;}
 export function knownPlan(s:Position,d:Deal):Move[]|undefined{return plans.get(planKey(s,d));}
 export type Search = { status: 'solved'; moves: Move[]; nodes: number; branches: number; techniques: string[] } | { status: 'budget-exhausted'; nodes: number } | { status: 'unsolved'; nodes: number };
 /** A bounded best-first graph search. The score orders work; it never proves an optimal move count. */
@@ -11,7 +11,7 @@ export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000
   // Binary max heap: deterministic ties by insertion order, no unbounded sorting per expansion.
   const heap: Node[] = [], seen = new Set<string>();
   const positionKey = (s: Position) => { const cols = columns(deal.mode); return s.piles.slice(0, cols).map((p, i) => `${s.hidden[i]}:${p.join('.')}`).sort().join('|') + '/' + s.piles.slice(8,12).map(p=>p.length).join('.') + '/' + (deal.mode === 'freecell' ? s.piles.slice(12).flat().sort((a,b)=>a-b).join('.') : s.piles.slice(12,14).map(p=>p.join('.')).join('|')); };
-  const safe = (s: Position, a: Move) => { if (a[1] < 8 || a[1] > 11 || a[2] !== 1) return false; const c=s.piles[a[0]].at(-1)!; return rank(c)<=2 || s.piles.slice(8,12).every((p,i)=>i===suit(c) || p.length >= rank(c)-(red(i*13)===red(c)?2:1)); };
+
   const push = (n: Node) => { heap.push(n); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p].score >= n.score) break; heap[i] = heap[p]; i = p; } heap[i] = n; };
   const pop = () => { const n = heap[0], last = heap.pop()!; if (heap.length) { let i = 0; while (i * 2 + 1 < heap.length) { let c = i * 2 + 1; if (c + 1 < heap.length && heap[c + 1].score > heap[c].score) c++; if (heap[c].score <= last.score) break; heap[i] = heap[c]; i = c; } heap[i] = last; } return n; };
   push({ state: initial, path: [], score: score(initial) });
@@ -23,11 +23,10 @@ export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000
     if (seen.has(key)) continue;
     seen.add(key); nodes++;
     if (won(state)) {
-      let cursor=initial; path.forEach((a,i)=>{plans.set(planKey(cursor,deal),path.slice(i));cursor=apply(cursor,deal.mode,a);}); while(plans.size>4096)plans.delete(plans.keys().next().value!);
+      let cursor=initial; path.forEach((a,i)=>{plans.set(planKey(cursor,deal),path.slice(i));cursor=apply(cursor,deal.mode,a);}); while(plans.size>512)plans.delete(plans.keys().next().value!);
       return { status: 'solved', moves: path, nodes, branches, techniques: [...new Set(path.map(a => a[2] === 0 ? 'stock-cycle' : a[1] >= 12 ? 'reserve-space' : a[0] >= 8 && a[0] < 12 ? 'foundation-return' : a[2] > 1 ? 'sequence-transfer' : 'build-and-uncover'))] }; }
     if (path.length >= 240) {clipped=true;continue;}
-    const all = legalMoves(state, deal.mode), forced = all.find(a => safe(state,a));
-    const moves = forced ? [forced] : all;
+    const forced=forcedFoundation(state,deal.mode),moves=forced?[forced]:legalMoves(state,deal.mode);
     branches += Math.max(0, moves.length - 1);
     for (const a of moves) {
       // A complete foundation card can be returned by the player; search prunes only the immediate inverse.
