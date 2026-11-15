@@ -27,6 +27,13 @@ describe('Solitaire review regressions',()=>{
   }
   expect(solved).toBeGreaterThanOrEqual(28);
  });
+ it('returns async hints on the two measured solver-proven off-line fixtures',async()=>{
+  for(const sample of reviewSamples.slice(0,2)){
+   const d=deal(sample.rows[0]),line=lineFromProof(d)!;let s=opening(d);for(const a of line.slice(0,3))s=apply(s,d.mode,a);
+   const off=legalMoves(s,d.mode).find(a=>a[0]!==line[3][0]||a[1]!==line[3][1])!;s=apply(s,d.mode,off);
+   expect((await adviseAsync(s,d,new AbortController().signal,10000)).kind).toBe('move');
+  }
+ });
  it('uses a wall-clock bound and leaves a cancelled search unknown',async()=>{
   const d=makeDeal('freecell',4),clock=vi.spyOn(performance,'now');let ms=0;clock.mockImplementation(()=>ms+=1000);
   try{expect(await adviseAsync(opening(d),d,new AbortController().signal,10000)).toEqual({kind:'unknown'});}finally{clock.mockRestore();}

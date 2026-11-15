@@ -60,9 +60,9 @@ export function* adviceSteps(s: Position, d: Deal, budget = 1200): Generator<voi
 }
 
 export function advise(s:Position,d:Deal,budget=1200):Advice{const job=adviceSteps(s,d,budget);for(;;){const r=job.next();if(r.done)return r.value;}}
-/** User-requested searches yield after 64 expansions or 8 ms, and cancel at an identity boundary. */
+/** User-requested searches yield after at most 8 ms and cancel at an identity boundary. */
 export async function adviseAsync(s:Position,d:Deal,signal:AbortSignal,budget=10000,timeLimitMs=1800):Promise<Advice>{
- const job=adviceSteps(s,d,budget);let count=0,started=performance.now();const deadline=started+timeLimitMs;
- while(!signal.aborted&&performance.now()<deadline){const r=job.next();if(r.done)return r.value;if(++count>=64||performance.now()-started>=8){await new Promise<void>(resolve=>setTimeout(resolve,0));count=0;started=performance.now();}}
+ const job=adviceSteps(s,d,budget);let started=performance.now();const deadline=started+timeLimitMs;
+ while(!signal.aborted&&performance.now()<deadline){const r=job.next();if(r.done)return r.value;if(performance.now()-started>=8){await new Promise<void>(resolve=>setTimeout(resolve,0));started=performance.now();}}
  return {kind:'unknown'};
 }
