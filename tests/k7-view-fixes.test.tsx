@@ -27,10 +27,11 @@ vi.mock('../src/learn/Coach',()=>({CoachSpot:'coach'}));
 vi.mock('../src/learn/program/ProgramEditor',()=>({ProgramEditor:'block-editor'}));
 vi.mock('../src/learn/games/beep-bot/comfort',()=>({useBeepComfort:()=>({youngChild:false})}));
 vi.mock('../src/learn/games/crab-commands/view',()=>({ArrowArt:()=>null,Beach:'beach',cardLabel:{up:'Up',right:'Right',down:'Down',left:'Left',forward:'Walk','turn-left':'Turn left','turn-right':'Turn right',repeat:'Again'}}));
-vi.mock('../src/learn/games/crab-commands/useCrabHint',()=>({useCrabHint:()=>null}));
+const hintProbe=vi.hoisted(()=>({value:null as unknown}));
+vi.mock('../src/learn/games/crab-commands/useCrabHint',()=>({useCrabHint:()=>hintProbe.value}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({sound:false}),useSoundControls:()=>({play:vi.fn(),stop:vi.fn()})}));
 let root:ReactTestRenderer|undefined;
-afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;vi.unstubAllGlobals();});
+afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;hintProbe.value=null;vi.unstubAllGlobals();});
 const options={mode:'solo' as const,pace:'easy' as const},context={skills:{},rng:()=>0,starter:0 as const,today:1};
 async function mount(element:React.ReactElement){vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);await act(async()=>{root=create(element);});}
 const shared=()=>({update:vi.fn(),practice:vi.fn(),cheer:vi.fn(),sound:vi.fn(),stopSound:vi.fn(),soundOn:false,skills:{},width:337,height:800,active:true,coach:{active:false,done:vi.fn()}});
@@ -64,4 +65,14 @@ it.each(['Crab','Beep'])('%s published puzzle stays flat even with a forged draf
  if(game==='Crab'){const d=crabPuzzles[0].descriptor;await mount(<CrabChallenge state={{...crabReplay.create(d,{version:1},{supportOff:false,ownRead:false}),blockDraft:encodeProgram(crabProgram([]))}} active width={337} dispatch={vi.fn()}/>);}
  else{const d=beepPuzzles[0].descriptor;await mount(<BeepChallenge state={{...beepReplay.create(d,{version:1},{supportOff:false,ownRead:false}),blockDraft:encodeProgram(beepProgram([]))}} active width={337} dispatch={vi.fn()}/>);}
  expect(root!.root.findAllByType(ProgramEditor)).toHaveLength(0);expect(root!.root.findAllByType('button').some(b=>b.children.join('')==='Block editor')).toBe(false);
+});
+
+it('Crab Help in block mode names the visible nested block and repeat turn',async()=>{
+ const d={...crabPuzzles.find(p=>p.descriptor.level.pace==='easy')!.descriptor,blockEditor:true};
+ const program=['right','left','right','left','right','left'] as const;
+ const draft={version:1 as const,songs:[],body:[{kind:'repeat' as const,times:3,body:[{kind:'command' as const,command:1},{kind:'command' as const,command:3}]}]};
+ hintProbe.value={keep:4,plan:['right','right'],next:'right',edit:{op:'change',at:4,card:'right'}};
+ const s={...crabReplay.create(d,{version:1},{supportOff:false,ownRead:false}),program:[...program],blockDraft:encodeProgram(draft),hintStage:1,hintProgram:JSON.stringify(program)};
+ await mount(<CrabChallenge state={s} active width={337} dispatch={vi.fn()}/>);
+ const copy=root!.root.findAllByType('p').flatMap(p=>p.children.filter(c=>typeof c==='string')).join(' ');expect(copy).toContain('inside block 1');expect(copy).toContain('repeat turn 3');expect(copy).not.toContain('Change card 5');
 });
