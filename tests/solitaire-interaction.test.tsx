@@ -89,6 +89,17 @@ describe('Solitaire card interaction',()=>{
    expect(screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!.props.style.maxHeight).toBe(206);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
+
+ it('keeps a selected card and explains an illegal tap destination before accepting a legal one',async()=>{
+  const{Harness,deal}=await fixture();let screen!:ReactTestRenderer;
+  try{await act(async()=>{screen=create(<Harness/>);});const initial=opening(deal),move=legalMoves(initial,deal.mode).find(a=>a[0]<8&&a[1]>=8&&a[1]<12)!;
+   const c=initial.piles[move[0]].at(-1)!;await act(async()=>card(screen,move[0],c).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
+   const names=['Clubs','Diamonds','Spades','Hearts'],target=(pile:number)=>screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel===`${names[pile-8]} foundation, empty`)!;
+   await act(async()=>target(8+(move[1]-8+1)%4).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
+   expect(text(screen)).toContain('That place cannot hold these cards.');expect(board(deal).payload.edits).toBe(0);expect(card(screen,move[0],c).props.accessibilityState.selected).toBe(true);
+   await act(async()=>target(move[1]).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));expect(board(deal).position.piles[move[1]]).toEqual([c]);expect(fake.feedback).toHaveBeenCalledTimes(1);
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
  it('fits eight default-size columns and keeps AX5 controls plus full card names available',async()=>{
   const{Harness}=await fixture();let screen!:ReactTestRenderer;
   try{
