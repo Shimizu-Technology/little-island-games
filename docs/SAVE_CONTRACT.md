@@ -77,7 +77,9 @@ they are commands, never silently converted into whole-body repeats.
 `blockDraft` is an authoring form alongside the existing executable `program`.
 Validation reconstructs the executable plan on the exact saved board and requires
 byte-for-byte JSON equality. New School edits measure the complete session before
-publication. A stopped Crab prefix is allowed with a validated draft for manual
+publication, and `validLearnSession` enforces the same complete UTF-8 budget at
+import/load, including IDs and names. The guard applies only to the three K7 draft
+codecs; legacy flat sessions retain their compatibility boundary. A stopped Crab prefix is allowed with a validated draft for manual
 single-step debugging; ordinary legacy pause validation is unchanged. Existing
 game limits (Crab 80 executable cards, Beep 32, Turtle's 120 expanded commands and
 legacy body/turn/repeat constraints) still apply to their current levels. Turtle's

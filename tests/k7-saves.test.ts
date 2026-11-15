@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { expect, it, vi } from 'vitest';
-import { engine as crab, currentLevel, tick as crabTick } from '../src/learn/games/crab-commands/engine';
+import { engine as crab, currentLevel, levels, solve, tick as crabTick, type Command } from '../src/learn/games/crab-commands/engine';
 import { crabProgram, withCrabProgram } from '../src/learn/games/crab-commands/program';
 import { engine as beep, tick as beepTick } from '../src/learn/games/beep-bot/engine';
 import { beepProgram } from '../src/learn/games/beep-bot/program';
@@ -122,4 +122,15 @@ it('K7 two-card debug repairs still cost two edits when supplied as one nested d
   const repaired = crabProgram(proofContent.debug[3].witness as Parameters<typeof crabProgram>[0]);
   const next = crabReplay.step(initial, ['b', encodeProgram(repaired)], d)!.state;
   expect(next.edits).toBe(2); expect(crabReplay.step(next, ['g'], d)!.state.won).toBe(true);
+});
+
+it('K7 counts the complete UTF-8 School wrapper at import, preserving a near-budget legacy round', () => {
+  const options = { mode: 'together' as const, pace: 'hard' as const }, ids = ['h1', 'h3', 'h4'];
+  const completed = ids.slice(0, 2).map(id => { const answer = solve(levels.find(l => l.id === id)!); return [...Array<Command>(Math.floor((80 - answer.length) / 4) * 4).fill('turn-right'), ...answer]; });
+  const state = { levels: ids, completed, program: Array<Command>(80).fill('turn-right'), cursor: 0, running: false, starter: 0 as const, cards: 240, debugging: false };
+  const legacy = { game: 'crab-commands' as const, version: 1 as const, id: '界'.repeat(120), revision: 1000000, learner: 'a'.repeat(40), names: ['😀'.repeat(16), '😀'.repeat(16)], starter: 0 as const, options, state };
+  expect(validLearnSession(legacy)).toBe(true); expect(crab.validate(state, options)).toBe(true);
+  const nested = { ...legacy, state: { ...state, blockDraft: encodeProgram(crabProgram(state.program)) } }, original = JSON.stringify(legacy);
+  expect(sessionBytes(nested.state)).toBeLessThanOrEqual(4096); expect(sessionBytes(nested)).toBeGreaterThan(4096);
+  expect(validLearnSession(nested)).toBe(false); expect(JSON.stringify(legacy)).toBe(original);
 });
