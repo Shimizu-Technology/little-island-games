@@ -90,6 +90,17 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 4, y: 8 }];
     return migrateHome(state) ?? state;
   },
+  // H4 fix round 2: the reviewer's lamp layout. Stove at (7,4), a lamp behind it at (7,0) whose
+  // shade overlaps food in the pan, and a mango on open floor to drop into the pan or in front of it.
+  "pan-lamp": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    const stove = state.rooms.kitchen.instances.find((i) => i.item === "stove")!;
+    state.rooms.kitchen.instances = [{ ...stove, x: 7, y: 4 }, instance("lamp-probe", "lamp", 7, 0), instance("mango", "mango", 11, 8)];
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 2, y: 8 }];
+    return migrateHome(state) ?? state;
+  },
   // H4 fix round 1: the Islander holding a rice ball, Pip beside her (held things follow reactions).
   "delight-held": () => {
     const state = starterHome();
