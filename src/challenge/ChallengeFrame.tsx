@@ -91,7 +91,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   async function dispatch(action:unknown):Promise<ChallengeSession|null> {
     const current=accepted.current;if(!current || lock.current || !focused || picking)return null;
     const next=entry.move(current,action);
-    if(!next){const full=!!entry.restart&&!!entry.full?.(current);setCapacity(full);setMessage(full&&entry.game==='memory'?'This attempt is full. Start the same board again. Your turns and help stay counted.':full?'This attempt is full. Choose Keep my plan in a new attempt to keep trying. Your marks stay kept.':'This draft is kept. Try Help or choose another puzzle.');return null;}
+    if(!next){const full=!!entry.restart&&!!entry.full?.(current,action);setCapacity(full);setMessage(full&&entry.game==='memory'?'This attempt is full. Start the same board again. Your turns and help stay counted.':full?'This attempt is full. Choose Keep my plan in a new attempt to keep trying. Your marks stay kept.':'This draft is kept. Try Help or choose another puzzle.');return null;}
     if(next.result){setCompleted(next);if(entry.animatedRuns)setSettling(true);}
     const token=++dispatchToken.current;
     lock.current=true;setBusy(next.result!==null);setMessage('');
