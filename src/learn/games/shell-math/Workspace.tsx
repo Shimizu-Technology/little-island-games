@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React from "react";
 import { View } from "react-native";
 import { Text } from "../../../components/Text";
@@ -31,12 +33,17 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
   // Choosing shells is the required move at Level 4, so those frames get touch-sized cells (the pictures of other steps keep their size).
   const touch = !!onPick || !!onPickOnes;
   const w = Math.min(width, touch ? 700 : 520);
-  if (hidePicture) return <Copy style={{ color: C.ink, textAlign: "center" }}>Picture hidden. Think it through, then use the number pad.</Copy>;
+
   const total = pic.frames ? pic.frames.gold + pic.frames.blue + pic.frames.ghost : 0;
   const nFrames = Math.max(1, Math.ceil(total / 10));
   const stacked = touch && !!pic.pair && !sideBySide(w);
-  const cell = touch ? (pic.pair && !stacked ? Math.min(46, Math.floor((w - 70) / 10)) : touchCell(w)) : pic.pair ? frameCell(w, 2) : frameCell(w, nFrames);
-  return <View style={{ alignItems: "center", gap: 4 }}>
+  const naturalCell = touch ? (pic.pair && !stacked ? Math.min(46, Math.floor((w - 70) / 10)) : touchCell(w)) : pic.pair ? frameCell(w, 2) : frameCell(w, nFrames);
+  const naturalHeight = pic.pair ? (2 * naturalCell + 40) * (stacked ? 2 : 1) + (stacked ? 36 : 0) : pic.frames ? 2 * naturalCell * Math.ceil(nFrames / Math.max(1, Math.floor(w / (5.4 * naturalCell)))) + 16 : pic.blocks ? 134 : 74;
+  const minimum = touch ? naturalHeight : pic.pair || pic.frames ? Math.min(naturalHeight, 64) : pic.blocks ? 104 : Math.max(74, SCHOOL_BOARD_MIN['shell-math']);
+  const geometry = useBoardGeometry('shell-math', naturalHeight, minimum, !hidePicture);
+  const cell = touch ? naturalCell : Math.max(24, Math.min(naturalCell, Math.floor(naturalCell * geometry.height / naturalHeight)));
+  if (hidePicture) return <Copy style={{ color: C.ink, textAlign: "center" }}>Picture hidden. Think it through, then use the number pad.</Copy>;
+  return <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ alignItems: "center", gap: 4 }}>
     {pic.pair && <View style={{ flexDirection: stacked ? "column" : "row", alignItems: "center", justifyContent: "center", gap: stacked ? 2 : 10 }}>
       <View style={{ alignItems: "center", gap: 4 }}>
         <TenFrame cell={cell} filled={pic.pair.a} label={`First group: ${pic.pair.a} shells${pic.pair.fullA ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(1, k) : undefined} pickLabel={(k) => `Move ${k} ${k === 1 ? "shell" : "shells"} from the first group to the second`} />
@@ -61,7 +68,7 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
           onPick={onPickOnes && k === lastGold && pic.frames!.gold % 10 !== 0 ? onPickOnes : undefined} pickLabel={(n) => `Take away ${n} ${n === 1 ? "shell" : "shells"}`} />;
       })}
     </View>}
-    {pic.blocks && <Blocks unit={Math.max(10, Math.min(13, Math.floor((w - 60) / (pic.blocks.tens + 7))))} tens={pic.blocks.tens} ones={pic.blocks.ones} ghostOnes={pic.blocks.ghostOnes}
+    {pic.blocks && <Blocks unit={Math.max(10, Math.min(13 * geometry.height / naturalHeight, Math.floor((w - 60) / (pic.blocks.tens + 7))))} tens={pic.blocks.tens} ones={pic.blocks.ones} ghostOnes={pic.blocks.ghostOnes}
       struckOnes={pic.blocks.struckOnes} struckTens={pic.blocks.struckTens} onTradeMake={onTradeMake} onTradeOpen={onTradeOpen}
       label={tensOnesText(pic.blocks.tens, pic.blocks.ones)} />}
     {pic.line && <Bridge width={Math.min(w, 380)} start={pic.line.start} hops={pic.line.hops} ten={pic.line.ten} lo={pic.line.lo} hi={pic.line.hi}

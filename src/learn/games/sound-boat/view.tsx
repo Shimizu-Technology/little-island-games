@@ -2,22 +2,28 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import Svg, { Ellipse, Path } from "react-native-svg";
 import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
-import { easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
+import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
-import { wordFitMultiplier } from "../../../components/wordFit";
 import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { Icon } from "../../../components/Icon";
 import { ObjectGlyph, PictureObject } from "../../art/Objects";
-import { pictureFor } from "../../content/reading/clues";
+import { Voyage, glow, ink, letterFit } from "./shared";
+import { pictureFor } from "../../reading/provenance";
 import { dayNumber } from "../../skills";
 import { wordAudio, wordEntry } from "../../kit/reading";
+import { TapWords } from "../../reading/TapWords";
+import { admittedReading } from "../../reading/admit";
+import { PartsBoard } from "./parts-view";
+import { RefusedTask } from "./BuildBoat";
+import { isParts, type PartsState } from "./parts";
 import {
   WORDS_PER_ROUND,
   boatBlanks,
   boatBoxes,
   boatChoices,
   boatComplete,
+  boatCredit,
   boatCurrent,
   boatExpected,
   boatFromLegacy,
@@ -31,53 +37,9 @@ import {
   tileLabel,
   type BoatAction,
   type BoatState,
-  type LegacyBoatState,
+  type SoundBoatState,
 } from "./engine";
 
-const ink = C.ink;
-const glow = "#F9EDC9";
-
-/** Boat on the water, sailing one step toward the island for each finished word. */
-function Voyage({ step, width }: { step: number; width: number }) {
-  const reduced = useReducedMotion();
-  const w = Math.min(width, 380),
-    room = w - 92;
-  const [x] = useState(() => new Animated.Value((step / WORDS_PER_ROUND) * room));
-  useEffect(() => {
-    const to = (step / WORDS_PER_ROUND) * room;
-    if (reduced) x.setValue(to);
-    else Animated.timing(x, { toValue: to, duration: 700, easing: easeOut, useNativeDriver: nativeDriver }).start();
-  }, [step, room, reduced, x]);
-  return (
-    <View
-      accessible
-      accessibilityLabel={`The boat has sailed ${step} of ${WORDS_PER_ROUND} steps to the island`}
-      style={{ width: w, height: 46 }}
-    >
-      <Svg width={w} height={46} viewBox={`0 0 ${w} 46`} style={{ position: "absolute" }}>
-        <Path
-          d={`M4 38 Q20 32 36 38 T68 38 T100 38 T132 38 T164 38 T196 38 T228 38 T260 38 T292 38 T324 38 T356 38 T388 38`}
-          fill="none"
-          stroke="#91C6D3"
-          strokeWidth={3}
-        />
-        <Ellipse cx={w - 26} cy={38} rx={24} ry={7} fill="#E6D3AC" stroke={ink} strokeWidth={2} />
-        <Path
-          d={`M${w - 24} 35 L${w - 24} 12 M${w - 24} 12 Q${w - 42} 6 ${w - 38} 18 M${w - 24} 12 Q${w - 8} 5 ${w - 8} 18`}
-          stroke={C.teal}
-          fill="none"
-          strokeWidth={3}
-          strokeLinecap="round"
-        />
-      </Svg>
-      <Animated.View style={{ position: "absolute", left: 0, top: 4, transform: [{ translateX: x }] }}>
-        <Svg width={44} height={38} viewBox="0 0 100 100">
-          <ObjectGlyph name="boat" color="coral" />
-        </Svg>
-      </Animated.View>
-    </View>
-  );
-}
 
 /** A letter tile that wiggles when it is the wrong one and then waits on the side. */
 function Tile({
@@ -144,8 +106,6 @@ function Tile({
   );
 }
 
-/** Letters in a fixed box stop growing where they fit its width and height (never below the default size). */
-const letterFit = (text: string, size: number, width: number, height: number) => Math.max(1, Math.min(wordFitMultiplier(text, size, width, 2), Math.floor(height * 100) / 100));
 /** One box on the boat. Pops when a letter lands in it. */
 function Box({
   letter,
@@ -219,7 +179,11 @@ function Finished() {
   );
 }
 
-export function Board(props: BoardProps<BoatState | LegacyBoatState>) {
+export function Board(props: BoardProps<SoundBoatState>) {
+  const s = props.session.state;
+  return isParts(s) ? <PartsBoard {...props} session={{ ...props.session, state: s as PartsState }} /> : <Letters {...props} />;
+}
+function Letters(props: BoardProps<SoundBoatState>) {
   const { session, update, skills } = props;
   const s = session.state;
   const legacy = isLegacyBoat(s) ? s : null;
@@ -243,7 +207,7 @@ function Play({
   active,
   coach,
   cheer,
-}: BoardProps<BoatState | LegacyBoatState> & { session: { state: BoatState } }) {
+}: BoardProps<SoundBoatState> & { session: { state: BoatState } }) {
   const s = session.state;
   const reduced = useReducedMotion(),
     compact = height < 730;
@@ -252,14 +216,18 @@ function Play({
   const done = s.index >= WORDS_PER_ROUND;
   // Each new word opens at the top of the board: the picture, then the boat and its letters.
   useStepReveal(s.index);
+  // The word comes from the pinned inherited snapshot by id; anything else is refused before it is shown or spoken.
   const word = boatWord(s),
-    complete = boatComplete(s);
+    previous = boatPrevious(s),
+    previousWord = previous === undefined ? undefined : wordEntry(previous),
+    admitted = admittedReading(word, "Sound Boat's letter board") && (previousWord === undefined || admittedReading(previousWord, "Sound Boat's ladder")),
+    complete = admitted && boatComplete(s);
 
   // Say each new word. A fresh round waits for the spoken goal first; a ladder starts with "change one letter".
   // A restored round waits for her to tap the speaker (browsers also block sound before a first tap).
   const spoken = useRef<string | null>(session.revision > 0 ? `${session.id}-${s.index}` : null);
   useEffect(() => {
-    if (done || !active || !soundOn) return;
+    if (done || !admitted || !active || !soundOn) return;
     const key = `${session.id}-${s.index}`;
     if (spoken.current === key) return;
     const fresh = session.revision === 0;
@@ -276,21 +244,14 @@ function Play({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Speaks once per word; later renders must not repeat it.
   }, [active, soundOn, s.index, session.id, done]);
 
-  // A built word sails on by itself after a short cheer.
-  useEffect(() => {
-    if (!complete || !active) return;
-    const timer = setTimeout(() => update(boatMove(s, { type: "next" })), 1400);
-    return () => clearTimeout(timer);
-  }, [complete, active, s, update]);
-
   if (done) return <Finished />;
+  if (!admitted) return <RefusedTask />;
 
   const boxes = boatBoxes(s),
     blanks = boatBlanks(s),
     current = boatCurrent(s),
     expected = boatExpected(s),
     choices = boatChoices(s),
-    previous = boatPrevious(s),
     picture = pictureFor(word.word);
   const turn = boatTurn(s, session.options),
     who = session.names?.[turn] ?? `Player ${turn + 1}`;
@@ -299,12 +260,15 @@ function Play({
     if (!active) return;
     const next = boatMove(s, a);
     if (next === s) return;
+    // A word is counted when it sails, not when its last letter lands, so Undo before Sail on can never credit twice.
+    // A word an older app already credited (its save has no marker) sails without a second credit. The save moves on
+    // first, so an interrupted Sail on can lose one credit but never count a word twice.
+    const credit = a.type === "next" && boatCredit(s) === "pending";
     if (a.type === "tile") {
       if (coach.active) coach.done();
       const right = next.filled > s.filled;
       if (right) {
         if (boatComplete(next)) {
-          practice(word.skill, !next.assisted);
           cheer(s.index === WORDS_PER_ROUND - 1 ? "big" : "right");
         } else sound("tap");
       } else {
@@ -322,7 +286,9 @@ function Play({
     }
     if (next.assisted) assistance?.();
     if (a.type === "help") sound(wordAudio(word.word));
+    if (a.type === "undo") sound("tap");
     update(next);
+    if (credit) practice(word.skill, !s.assisted);
   }
 
   const boxSize = Math.min(
@@ -331,7 +297,7 @@ function Play({
     ),
     tileSize = compact ? 50 : 58,
     pictureSize = compact ? 84 : 116;
-  const prompt = complete ? `${word.word}!` : previous ? "Change one letter." : "Spell it! Tap the letters.";
+  const prompt = previous ? "Change one letter." : "Spell it! Tap the letters.";
 
   return (
     <View style={{ gap: compact ? 6 : 10, alignItems: "center" }}>
@@ -340,10 +306,10 @@ function Play({
       )}
       <Voyage step={s.index} width={width} />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: pictureSize }}>
-        {previous && (
-          <View accessible accessibilityLabel={`Was ${previous}`} style={{ alignItems: "center", gap: 4 }}>
+        {previousWord && (
+          <View accessible accessibilityLabel={`Was ${previousWord.word}`} style={{ alignItems: "center", gap: 4 }}>
             <View style={{ flexDirection: "row", gap: 2 }}>
-              {wordEntry(previous)!.tiles.map((t, i) => (
+              {previousWord.tiles.map((t, i) => (
                 <View
                   key={i}
                   style={{
@@ -361,7 +327,7 @@ function Play({
                   <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 18, lineHeight: 22, color: ink, fontWeight: "600" }}>{tileLabel(t)}</Copy>
                 </View>
               ))}
-              {/_e$/.test(wordEntry(previous)!.tiles.join(" ")) && (
+              {/_e$/.test(previousWord.tiles.join(" ")) && (
                 <Copy maxFontSizeMultiplier={1} style={{ fontSize: 18, lineHeight: 32, color: C.muted }}>e</Copy>
               )}
             </View>
@@ -402,11 +368,11 @@ function Play({
           />
         )}
       </View>
-      <Copy
-        style={{ color: ink, fontSize: complete ? 26 : 19, fontWeight: complete ? "800" : "600", textAlign: "center" }}
-      >
-        {prompt}
-      </Copy>
+      {complete ? (
+        <TapWords record={word} end="!" sound={sound} soundOn={soundOn} />
+      ) : (
+        <Copy style={{ color: ink, fontSize: 19, fontWeight: "600", textAlign: "center" }}>{prompt}</Copy>
+      )}
       <Animated.View
         style={{
           transform: [{ rotate: rock.interpolate({ inputRange: [-1, 0, 1], outputRange: ["-3deg", "0deg", "3deg"] }) }],
@@ -448,47 +414,62 @@ function Play({
           />
         </Svg>
       </Animated.View>
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: 10,
-          justifyContent: "center",
-          maxWidth: 420,
-          minHeight: tileSize,
-        }}
-      >
-        {choices.map((tile) => {
-          const lit = s.hint && tile === expected && !complete;
-          const t = (
-            <Tile
-              key={`${s.index}-${tile}`}
-              tile={tile}
-              out={s.out.includes(tile) || complete}
-              lit={lit}
-              size={tileSize}
-              shake={shakes[tile] ?? 0}
-              onPress={() => move({ type: "tile", tile })}
-            />
-          );
-          return (
-            <CoachSpot key={`${s.index}-${tile}`} active={coach.active && tile === expected && !complete}>
-              {t}
-            </CoachSpot>
-          );
-        })}
-      </View>
+      {/* Once the word is built the spent tiles step aside, so Sail on sits right under the boat. */}
       {!complete && (
-        <Button
-          compact
-          quiet
-          icon="help"
-          disabled={s.hint}
-          label="Help: light up the right letter"
-          onPress={() => move({ type: "help" })}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 10,
+            justifyContent: "center",
+            maxWidth: 420,
+            minHeight: tileSize,
+          }}
         >
-          Help
-        </Button>
+          {choices.map((tile) => {
+            const lit = s.hint && tile === expected && !complete;
+            const t = (
+              <Tile
+                key={`${s.index}-${tile}`}
+                tile={tile}
+                out={s.out.includes(tile) || complete}
+                lit={lit}
+                size={tileSize}
+                shake={shakes[tile] ?? 0}
+                onPress={() => move({ type: "tile", tile })}
+              />
+            );
+            return (
+              <CoachSpot key={`${s.index}-${tile}`} active={coach.active && tile === expected && !complete}>
+                {t}
+              </CoachSpot>
+            );
+          })}
+        </View>
+      )}
+      {complete ? (
+        <View style={{ alignItems: "center", gap: 8 }}>
+          <Button onPress={() => move({ type: "next" })}>{s.index === WORDS_PER_ROUND - 1 ? "Reach the island" : "Sail on"}</Button>
+          <Button compact quiet label="Undo: take back the last letter" onPress={() => move({ type: "undo" })}>
+            Undo
+          </Button>
+        </View>
+      ) : (
+        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+          <Button
+            compact
+            quiet
+            icon="help"
+            disabled={s.hint}
+            label="Help: light up the right letter"
+            onPress={() => move({ type: "help" })}
+          >
+            Help
+          </Button>
+          <Button compact quiet disabled={!s.filled} label="Undo: take back the last letter" onPress={() => move({ type: "undo" })}>
+            Undo
+          </Button>
+        </View>
       )}
     </View>
   );

@@ -1,3 +1,5 @@
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useState } from "react";
 import { Animated, Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
@@ -25,12 +27,16 @@ function Diver({ size = 62 }: { size?: number }) {
   </Svg>;
 }
 
-function SeaLine({ value, start }: { value: number; start?: number }) {
+function LegacySeaLine({ value, start }: { value: number; start?: number }) {
+  const space = useBoardSpace();
+  const natural = Math.min(330, (space?.ready ? space.width : 286) * 330 / 286);
+  const geometry = useBoardGeometry('treasure-algebra', natural, SCHOOL_BOARD_MIN['treasure-algebra']);
+  const scale = geometry.height / 330;
   const reduced = useReducedMotion();
   const { min, max } = seaLineRange(value, start);
   const lineY = (n: number) => 290 - (n - min) / (max - min) * 250;
   const ticks = Array.from({ length: 6 }, (_, i) => Math.round(min + (max - min) * i / 5));
-  const targetY = lineY(value) - 165;
+  const targetY = (lineY(value) - 165) * scale;
   const [motion] = useState(() => new Animated.Value(targetY));
   useEffect(() => {
     const toValue = targetY;
@@ -39,9 +45,9 @@ function SeaLine({ value, start }: { value: number; start?: number }) {
     move.start();
     return () => move.stop();
   }, [motion, targetY, reduced]);
-  return <View style={{ alignItems: "center", gap: 7 }}>
-    <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} style={{ width: 286, height: 330, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
-      <Svg width="286" height="330" viewBox="0 0 286 330" accessible={false}>
+  return <View style={{ alignItems: "center", gap: space?.ready && space.width < 600 ? 4 : 7 }}>
+    <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} testID={geometry.testID} onLayout={geometry.onLayout} style={{ width: 286 * scale, height: geometry.height, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
+      <Svg width={286 * scale} height={geometry.height} viewBox="0 0 286 330" accessible={false}>
         <Rect width="286" height={lineY(0)} fill="#E9F6DC"/><Rect y={lineY(0)} width="286" height={330-lineY(0)} fill="#C4E9EE"/>
         <Circle cx="47" cy="43" r="20" fill="#F8CC67"/><Path d="M47 10v10M47 66v10M14 43h10M70 43h10M23 19l7 7M64 61l7 7M71 19l-7 7M30 61l-7 7" stroke="#E6A63F" strokeWidth="3" strokeLinecap="round"/>
         <Path d={`M0 ${lineY(0)}H286`} fill="none" stroke={teal} strokeWidth="5"/>
@@ -51,9 +57,37 @@ function SeaLine({ value, start }: { value: number; start?: number }) {
         {ticks.map(n => <G key={n}><Line x1="181" y1={lineY(n)} x2="204" y2={lineY(n)} stroke={n === 0 ? coral : navy} strokeWidth={n === 0 ? "4" : "2"}/><SvgText x="218" y={lineY(n)+5} fill={n === 0 ? "#A94D36" : navy} fontWeight="800" fontSize="16">{n > 0 ? `+${n}` : n}</SvgText></G>)}
         {start !== undefined && <G><Circle cx="192" cy={lineY(start)} r="8" fill="#F7C25E" stroke={navy} strokeWidth="2"/><SvgText x="105" y={lineY(start)-10} fill={navy} fontSize="12" fontWeight="800">START</SvgText></G>}
       </Svg>
-      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 104, top: 133, transform: [{ translateY: motion }] }}><Diver size={62}/></Animated.View>
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 104 * scale, top: 133 * scale, transform: [{ translateY: motion }] }}><Diver size={62 * scale}/></Animated.View>
     </View>
     <Copy style={{ color: navy, fontWeight: "900", fontSize: 18 }}>Diver at {value} {value === 0 ? "· sea level" : value > 0 ? "· above water" : "· below water"}</Copy>
+  </View>;
+}
+
+function SeaLine({ value, start, narrow = false }: { value: number; start?: number; narrow?: boolean }) {
+  const space = useBoardSpace();
+  return space ? <MeasuredSeaLine value={value} start={start} narrow={narrow}/> : <LegacySeaLine value={value} start={start}/>;
+}
+function MeasuredSeaLine({ value, start, narrow }: { value: number; start?: number; narrow: boolean }) {
+  const { fontScale, width } = useWindowDimensions();
+  const g = useBoardGeometry('treasure-algebra', 330, SCHOOL_BOARD_MIN['treasure-algebra']);
+  const label = 13 * (fontScale >= LARGE_TEXT ? 1.5 : 1), W = narrow ? 132 : 250, x = narrow ? 76 : 164;
+  const { min, max } = seaLineRange(value, start);
+  const y = (n: number) => g.height - 30 - (n - min) / (max - min) * (g.height - 60);
+  const ticks = Array.from({ length: 6 }, (_, i) => Math.round(min + (max - min) * i / 5));
+  const reduced = useReducedMotion(), targetY = y(value), [motion] = useState(() => new Animated.Value(targetY));
+  useEffect(() => { const move = Animated.timing(motion, { toValue: targetY, duration: reduced ? 0 : 220, useNativeDriver: true }); move.start(); return () => move.stop(); }, [motion, targetY, reduced]);
+  return <View style={{ alignItems: 'center', gap: 4 }}>
+    <View testID={g.testID} onLayout={g.onLayout} accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? '' : `, start ${start}`}`} style={{ width: W, height: g.height, overflow: 'hidden', borderRadius: 20, borderWidth: 2, borderColor: navy, backgroundColor: '#E3F6F2' }}>
+      <Svg width={W} height={g.height} viewBox={`0 0 ${W} ${g.height}`} accessible={false}>
+        <Rect width={W} height={Math.max(0, y(0))} fill="#E9F6DC"/>
+        <Path d={`M0 ${y(0)}H${W}`} stroke={teal} strokeWidth={4}/>
+        <Line x1={x} y1={12} x2={x} y2={g.height - 12} stroke={navy} strokeWidth={3}/>
+        {ticks.map(n => <G key={n}><Line x1={x-7} x2={x+7} y1={y(n)} y2={y(n)} stroke={n === 0 ? coral : navy} strokeWidth={2}/><SvgText x={x+11} y={y(n)+5} fontSize={label} fontWeight="800" fill={navy}>{n>0?`+${n}`:n}</SvgText></G>)}
+        {start !== undefined && <G><Circle cx={x} cy={y(start)} r={6} fill="#F7C25E"/><SvgText x={4} y={y(start)-12} fontSize={label} fontWeight="800" fill={navy}>START</SvgText></G>}
+      </Svg>
+      <Animated.View pointerEvents="none" style={{ position:'absolute', left:Math.max(0,x-72), top:-28, transform:[{translateY:motion}] }}><Diver size={width >= 600 ? 64 : 56}/></Animated.View>
+    </View>
+    <Copy style={{fontSize:16,fontWeight:'800',color:navy}}>Diver at {value} {value === 0 ? '· sea level' : value > 0 ? '· above water' : '· below water'}</Copy>
   </View>;
 }
 
@@ -87,6 +121,9 @@ function StepControls({ value, balance, change, width }: { value: number; balanc
 }
 
 export function Board({ session, update, practice, assistance, cheer, coach, width }: BoardProps<AlgebraState>) {
+  const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
+  const wide = useBoardColumns(), side = wide || !!space?.ready && width >= 304 && width < 600;
+  const controlsWidth = side ? Math.max(160, width - (wide ? width * .46 : 144)) : width;
   const state = session.state, task = state.tasks[state.index];
   const [feedback, setFeedback] = useState(""), [hint, setHint] = useState(false);
   if (!task) return null;
@@ -108,15 +145,18 @@ export function Board({ session, update, practice, assistance, cheer, coach, wid
     : task.kind === "expression" ? `Find ${task.a} + ${task.b} × ${task.extra}`
     : `${task.extra}x + ${task.a} ≤ ${task.b}`;
   const instruction = task.kind === "inequality" ? "Keep ≤ as you remove and divide both sides. Choose an integer that makes the inequality true." : task.kind === "pattern" ? "Find the repeated step. Move the diver to the next number after the last shown." : task.kind === "expression" ? "Multiply before adding. Move the diver to the result." : balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
-  return <View style={{ gap: 14, paddingBottom: 20 }}>
-    <View style={{ backgroundColor: sand, borderRadius: 19, padding: 16, gap: 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>
+  return <View style={{ gap: compact ? 8 : 14, paddingBottom: 20 }}>
+
+    {!wide && <View style={{ backgroundColor: sand, borderRadius: 19, padding: compact ? 10 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>}
     {balance && <BalanceBoard task={task} state={state} remove={() => change({ offset: -task.a, divided: false })} divide={() => change({ divided: true })}/>}
     {!balance && task.kind === "substitution" && <View style={{ backgroundColor: "#E6F1E4", borderRadius: 20, padding: 15, alignItems: "center" }}><Copy style={{ color: navy, fontSize: 26, fontWeight: "900" }}>{task.a} + {task.b} × {task.extra} = ?</Copy></View>}
-    <SeaLine value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>
-    <StepControls value={state.value} balance={balance} change={value => change({ value })} width={width}/>
+    <BoardColumns side={side} drawingWidth={wide ? undefined : side ? 132 : undefined} drawing={<SeaLine narrow={side && !wide} value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>}>
+    {wide && <View style={{ backgroundColor: sand, borderRadius: 19, padding: compact ? 10 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>}
+    <StepControls value={state.value} balance={balance} change={value => change({ value })} width={controlsWidth}/>
+<Button onPress={check}>Open chest</Button></BoardColumns>
     {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 13, padding: 12 }}><Copy style={{ fontWeight: "700" }}>{workedHint(task)}</Copy></View>}
     {!!feedback && <Copy style={{ color: C.error, fontWeight: "800" }}>{feedback}</Copy>}
-    <View style={{ flexDirection: "row", gap: 8 }}><Button style={{ flex: 1 }} onPress={check}>Open chest</Button><Button quiet compact onPress={() => { if (!hint) assistance?.(); setHint(!hint); update({ ...state, helped: true }); }}>Hint</Button></View>
+    <View style={{ flexDirection: "row", gap: 8 }}><Button quiet compact onPress={() => { if (!hint) assistance?.(); setHint(!hint); update({ ...state, helped: true }); }}>Hint</Button></View>
   </View>;
 }
 

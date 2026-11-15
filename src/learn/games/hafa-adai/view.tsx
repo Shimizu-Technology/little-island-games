@@ -1,3 +1,5 @@
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
@@ -5,7 +7,9 @@ import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../..
 import type { BoardProps } from "../../types";
 import { LARGE_TEXT, wordFitMultiplier, wordsFit } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
-import { chamoruWord, type ChamoruWord } from "../../content/chamoru";
+import { chamoruRecord as chamoruWord, type ChamoruRecord as ChamoruWord } from "../../reading/provenance";
+import { admittedReading } from "../../reading/admit";
+import { ReadingRefused } from "../../kit/ReadingRefused";
 import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
 import { WordPicture } from "./pictures";
 export const wordAudioKey = (id: string) => `hafa-adai-word-${id.replaceAll(".", "-").replaceAll("_", "-")}`;
@@ -13,7 +17,7 @@ const first = (english: string) => english.split(" / ")[0];
 /** Keep the sixth discovery visible when the round replaces its picture grid. */
 export function LastPicnicWord({ state }: { state: IslandState }) {
   const word = state.activity === "explore" && chamoruWord(state.taps.at(-1) ?? "");
-  return word ? <View accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
+  return word && admittedReading(word, "Håfa Adai's last word") ? <View accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
     <WordPicture word={word} size={54} caption={false} />
     <Heading style={{ fontSize: 24, textAlign: "center" }}>{word.term}</Heading>
     <Copy>{word.english}</Copy>
@@ -84,27 +88,37 @@ export function Board({
     options = session.options;
   const [selected, setSelected] = useState<string | null>(null),
     [peek, setPeek] = useState(false);
+  // Every word on the picnic is the pinned inherited record for its saved id. Anything else is refused before a word
+  // or picture is shown, spoken or credited.
+  const admitted = s.items.every((id) => admittedReading(chamoruWord(id), "Håfa Adai Island"));
   const target = chamoruWord(s.items[p.cursor]),
     shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
   const spy = s.activity === "spy",
     gentle = options.pace === "easy";
+  const space = useBoardSpace(), side = useBoardColumns(), pictureWidth = side ? width * .46 : width;
+  const captionBase = space ? 13 : 12, captionLine = space ? 16 : 14;
   const gap = 6,
     pad = 8;
   // The scene has a 1px border on each side.
-  const slotFor = (n: number) => Math.floor((width - 2 - pad * 2 - gap * (n - 1)) / n);
-  const captions = spy ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
+  const slotFor = (n: number) => Math.floor((pictureWidth - 2 - pad * 2 - gap * (n - 1)) / n);
+  const captions = spy || !admitted ? [] : s.items.flatMap(id => [chamoruWord(id)!.term, first(chamoruWord(id)!.english)]);
   // A caption word wider than its slot even at the default size ("Grandmother" in four columns) would break mid-word,
   // so the picnic drops a column until every word fits. Rounds whose words already fit keep their layout.
-  let columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
-  while (columns > 2 && !captions.every(text => wordsFit(text, 12, slotFor(columns) - 8))) columns--;
+  let columns = s.items.length === 6 ? 3 : pictureWidth >= 600 ? 6 : 4;
+  while (columns > 2 && !captions.every(text => wordsFit(text, captionBase, slotFor(columns) - 8))) columns--;
   const rows = Math.ceil(s.items.length / columns);
   const slot = slotFor(columns);
-  const pictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
+  const naturalPictureSize = Math.max(space ? width >= 600 ? 64 : 56 : 44, Math.min(84, slot - (spy ? 10 : 18)));
   // Captions share one size, the largest (at most 1.5x) at which every word of every caption, English or CHamoru,
   // fits its picture's slot. At accessibility sizes each row makes room for two caption lines, so labels never overlap.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
-  const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
-  const rowHeight = pictureSize + (spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28);
+  const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, captionBase, slot - 8, 1.5))) : undefined;
+  const captionHeight = spy ? 14 : captionMax ? 10 + 2 * Math.ceil(captionLine * captionMax) : 2 * captionLine;
+  const naturalRow = naturalPictureSize + captionHeight;
+  const minimumRow = Math.max(SCHOOL_BOARD_MIN['hafa-adai'], (width >= 600 ? 64 : 56) + captionHeight);
+  const geometry = useBoardGeometry('hafa-adai', rows * naturalRow + 44, rows * minimumRow + 44);
+  const rowHeight = Math.max(minimumRow, Math.min(naturalRow, (geometry.height - 44) / rows));
+  const pictureSize = Math.min(naturalPictureSize, rowHeight - captionHeight);
   const tableTop = 30;
   const promptKey = p.done
     ? "hafa-adai-done"
@@ -120,12 +134,13 @@ export function Board({
     // available; only auto-play after a gesture, so browsers never reject initial speech.
     const canAutoPlay =
       Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
-    if (!active || !soundOn || !canAutoPlay) return;
+    if (!admitted || !active || !soundOn || !canAutoPlay) return;
     const wait = fresh.current ? 3700 : 0;
     fresh.current = false;
     const timer = setTimeout(() => sound(promptKey, true), wait);
     return () => clearTimeout(timer);
-  }, [active, soundOn, sound, promptKey]);
+  }, [admitted, active, soundOn, sound, promptKey]);
+  if (!admitted) return <ReadingRefused />;
   function select(id: string) {
     if (!active) return;
     if (coach.active) coach.done();
@@ -171,6 +186,88 @@ export function Board({
           ))}
         </View>
       )}
+      <BoardColumns legacyDrawingLast drawing={<View testID={geometry.testID} onLayout={geometry.onLayout}
+        style={{
+          borderRadius: 20,
+          overflow: "hidden",
+          borderWidth: 1,
+          borderColor: "#DCC895",
+          paddingHorizontal: pad,
+          paddingTop: tableTop,
+          paddingBottom: 12,
+        }}
+      >
+        <Picnic tableTop={tableTop} rowHeight={rowHeight} rows={rows} />
+        <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: gap }}>
+          {placed.map((id) => {
+            const word = chamoruWord(id)!,
+              found = spy && s.items.indexOf(id) < p.cursor,
+              visited = !spy && p.visited.has(id),
+              wrong = spy && missed && shown?.id === id;
+            const tile = (
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={
+                  spy
+                    ? `Picture ${placed.indexOf(id) + 1}: ${first(word.english)}${found ? ", found" : ""}`
+                    : `${first(word.english)}${visited ? ", seen" : ""}`
+                }
+                accessibilityHint={spy ? undefined : visited ? `CHamoru: ${word.term}` : "Shows its word"}
+                onPress={() => select(id)}
+                amount={0.94}
+                style={{
+                  width: slot,
+                  height: rowHeight,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  paddingBottom: 4,
+                  borderRadius: 14,
+                  borderWidth: 3,
+                  borderColor: found ? "#4F8A66" : wrong ? C.gold : "transparent",
+                  backgroundColor: found ? "#E3EFE3AA" : "transparent",
+                }}
+              >
+                <WordPicture word={word} size={pictureSize} caption={false} />
+                {!spy && (
+                  <Copy numberOfLines={captionMax ? 2 : undefined} maxFontSizeMultiplier={captionMax} style={{ fontSize: captionBase, lineHeight: captionLine, textAlign: "center", color: C.ink, fontWeight: "700" }}>
+                    {visited ? word.term : first(word.english)}
+                  </Copy>
+                )}
+                {(found || visited) && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      right: 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: "#4F8A66",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Svg width={12} height={12} viewBox="0 0 12 12">
+                      <Path d="M2 6l3 3 5-6" stroke="#FFF" strokeWidth={2} fill="none" strokeLinecap="round" />
+                    </Svg>
+                  </View>
+                )}
+              </PressableScale>
+            );
+            return (
+              <View key={id}>
+                {id === coachId && !p.done ? (
+                  <CoachSpot active={coach.active} handAt="bottom-right">
+                    {tile}
+                  </CoachSpot>
+                ) : (
+                  tile
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>}>
       <View
         style={{ backgroundColor: C.paper, borderRadius: 16, padding: 12, gap: 4 }}
         accessibilityLiveRegion="polite"
@@ -222,88 +319,7 @@ export function Board({
           </>
         )}
       </View>
-      <View
-        style={{
-          borderRadius: 20,
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: "#DCC895",
-          paddingHorizontal: pad,
-          paddingTop: tableTop,
-          paddingBottom: 12,
-        }}
-      >
-        <Picnic tableTop={tableTop} rowHeight={rowHeight} rows={rows} />
-        <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: gap }}>
-          {placed.map((id) => {
-            const word = chamoruWord(id)!,
-              found = spy && s.items.indexOf(id) < p.cursor,
-              visited = !spy && p.visited.has(id),
-              wrong = spy && missed && shown?.id === id;
-            const tile = (
-              <PressableScale
-                accessibilityRole="button"
-                accessibilityLabel={
-                  spy
-                    ? `Picture ${placed.indexOf(id) + 1}: ${first(word.english)}${found ? ", found" : ""}`
-                    : `${first(word.english)}${visited ? ", seen" : ""}`
-                }
-                accessibilityHint={spy ? undefined : visited ? `CHamoru: ${word.term}` : "Shows its word"}
-                onPress={() => select(id)}
-                amount={0.94}
-                style={{
-                  width: slot,
-                  height: rowHeight,
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  paddingBottom: 4,
-                  borderRadius: 14,
-                  borderWidth: 3,
-                  borderColor: found ? "#4F8A66" : wrong ? C.gold : "transparent",
-                  backgroundColor: found ? "#E3EFE3AA" : "transparent",
-                }}
-              >
-                <WordPicture word={word} size={pictureSize} caption={false} />
-                {!spy && (
-                  <Copy numberOfLines={captionMax ? 2 : undefined} maxFontSizeMultiplier={captionMax} style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
-                    {visited ? word.term : first(word.english)}
-                  </Copy>
-                )}
-                {(found || visited) && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      right: 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: 10,
-                      backgroundColor: "#4F8A66",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Svg width={12} height={12} viewBox="0 0 12 12">
-                      <Path d="M2 6l3 3 5-6" stroke="#FFF" strokeWidth={2} fill="none" strokeLinecap="round" />
-                    </Svg>
-                  </View>
-                )}
-              </PressableScale>
-            );
-            return (
-              <View key={id}>
-                {id === coachId && !p.done ? (
-                  <CoachSpot active={coach.active} handAt="bottom-right">
-                    {tile}
-                  </CoachSpot>
-                ) : (
-                  tile
-                )}
-              </View>
-            );
-          })}
-        </View>
-      </View>
+      </BoardColumns>
       {shown && !p.done && (!spy || missed) && (
         <View
           style={{

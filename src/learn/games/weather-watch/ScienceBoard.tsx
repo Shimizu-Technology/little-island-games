@@ -1,7 +1,10 @@
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
+import { sceneLabelLines } from './labelGeometry';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useState } from "react";
 import { TextInput, View, useWindowDimensions } from "react-native";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
-import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText, TSpan } from "react-native-svg";
 import { Button, Copy, PressableScale, font } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { SkySun, PuffyCloud, EarthGlobe, MoonDisc, Creature, Seaweed, ReefHabitat, WeatherExplorer, NodePicture } from "./Illustrations";
@@ -61,6 +64,10 @@ export function TokenArt({ text, size = 44 }: { text: string; size?: number }) {
     );
   }
 
+  if (s.includes("beach ball")) return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Circle cx={40} cy={40} r={32} fill={gold} stroke={ink} strokeWidth={2}/><Path d="M40 8Q5 40 40 72Q75 40 40 8" fill={blue}/><Path d="M10 28Q40 40 70 28L70 52Q40 40 10 52Z" fill="#E9826B"/></Svg>;
+  if (s.includes("radio")) return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Path d="M53 24L67 6" stroke={ink} strokeWidth={3}/><Rect x={10} y={24} width={60} height={44} rx={9} fill={gold} stroke={ink} strokeWidth={2}/><Circle cx={29} cy={46} r={13} fill={blue} stroke={ink} strokeWidth={2}/><Path d="M51 38h12m-12 7h12m-12 7h12" stroke={ink} strokeWidth={3}/><Circle cx={57} cy={60} r={3} fill={ink}/></Svg>;
+  if (s.includes("flashlight")) return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Path d="M27 25L20 8H60L53 25Z" fill={gold} stroke={ink} strokeWidth={2}/><Rect x={28} y={25} width={24} height={46} rx={6} fill={blue} stroke={ink} strokeWidth={2}/><Rect x={36} y={35} width={8} height={12} rx={3} fill={gold}/></Svg>;
+  if (s === "water") return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Rect x={30} y={5} width={20} height={11} rx={3} fill={ink}/><Path d="M29 16H51V23L59 32V70H21V32L29 23Z" fill="#B7DEE4" stroke={ink} strokeWidth={2}/><Path d="M23 43Q40 36 57 43V68H23Z" fill={blue}/></Svg>;
   if (s.includes("indoor") || s.includes("shelter"))
     return (
       <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden>
@@ -191,6 +198,27 @@ export function TokenArt({ text, size = 44 }: { text: string; size?: number }) {
   );
 }
 function Scene({ game, q, values, records }: { game: Game; q: Task; values: number[]; records: number[][] }) {
+  const space = useBoardSpace(), fontScale = useWindowDimensions().fontScale;
+  // Gauge numbers are 30 source units apart; keep AX labels from colliding.
+  const floor = q.kind === 'gauge' && fontScale >= LARGE_TEXT ? 180 : SCHOOL_BOARD_MIN['weather-watch'];
+  const geometry = useBoardGeometry('weather-watch', 220, floor);
+  const side = useBoardColumns();
+  const sceneScale = Math.min(geometry.height / 235, ((space?.ready ? space.width : 382) * (side ? .46 : 1) - 22) / 360);
+  const sceneLabel = label;
+  const fittedLabel = (text: string, x: number, y: number, size = 13, color = ink) => {
+    if (!space) return sceneLabel(text,x,y,size,color);
+    const actual = Math.max(size,13 * (fontScale >= LARGE_TEXT ? 1.5 : 1) / sceneScale);
+    // Instrument readings keep the tested single baseline below the bulb. A
+    // second line would either overlap its art or run below the viewBox.
+    if (q.kind === 'gauge' && y === 202) return sceneLabel(text,x,y,actual,color);
+    // Wrap the chart header inside its reserved space, clear of the bars.
+    const width = Math.min(2 * (x - 8),2 * (352 - x));
+    const lines = sceneLabelLines(text,actual,width);
+    const top = y;
+    return <SText x={x} y={top} textAnchor="middle" fontFamily={font ?? "Arial"} fontSize={actual} fontWeight="700" fill={color}>
+      {lines.length === 1 ? text : lines.map((line,index)=><TSpan key={index} x={x} y={top + index * actual * 1.2}>{line}</TSpan>)}
+    </SText>;
+  };
   const a = values[0] ?? 0,
     b = values[1] ?? 0;
   const selected = values.map((v) => q.labels[v]).filter(Boolean);
@@ -206,8 +234,8 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         <Line x1={85} y1={70} x2={198} y2={70} stroke={gold} strokeWidth={4} />
         <EarthGlobe x={240} y={95} r={59} night />
         <Circle cx={day ? 192 : 288} cy={95} r={7} fill="#F3B181" stroke={ink} strokeWidth={2} />
-        {label(day ? "Island: day" : "Island: night", 240, 183)}
-        {label("Sunlight →", 113, 124)}
+        {fittedLabel(day ? "Island: day" : "Island: night", 240, 183)}
+        {fittedLabel("Sunlight →", 113, 124)}
       </>
     );
   } else if (q.kind === "moon") {
@@ -220,9 +248,9 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         <Ellipse cx={173} cy={90} rx={76} ry={59} stroke={blue} fill="none" strokeDasharray="1 6" strokeLinecap="round" />
         <EarthGlobe x={173} y={90} r={21} />
         <Circle cx={173 - Math.cos(angle) * 76} cy={90 + Math.sin(angle) * 59} r={9} fill="#DAE4D9" />
-        {label("Orbit view", 173, 182)}
+        {fittedLabel("Orbit view", 173, 182)}
         <MoonDisc x={295} y={90} r={r} phase={a} />
-        {label("View from Earth", 289, 155, 11)}
+        {fittedLabel("View from Earth", 289, 155, 11)}
       </>
     );
   } else if (q.kind === "planets") {
@@ -243,10 +271,10 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
               r={radii[p]}
               fill={["#AA9D8A", "#D5A266", "#649CA9", "#C27D58", "#C9A57A", "#DCC994", "#8CCAC9", "#6E8FBF"][p]}
             />
-            {label(planets[p].slice(0, 3), centers[i], i % 2 ? 168 : 151, 10)}
+            {fittedLabel(planets[p].slice(0, 3), centers[i], i % 2 ? 168 : 151, 10)}
           </G>
         ))}
-        {label("Planet sizes • Sun and spacing not to scale", 180, 184, 12)}
+        {fittedLabel("Planet sizes • Sun and spacing not to scale", 180, 184, 12)}
       </>
     );
   } else if (q.kind === "gravity") {
@@ -256,10 +284,10 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
       <>
         <Path d="M20 167Q180 70 340 167v33H20Z" fill={["#81B8A2", "#B6BDBB", "#CC8C6B", "#CBAD87"][b]} />
         <Rect x={145} y={65} width={70} height={52} rx={9} fill={gold} />
-        {label(`${a} kg`, 180, 97, 18)}
+        {fittedLabel(`${a} kg`, 180, 97, 18)}
         <Line x1={180} y1={118} x2={180} y2={Math.min(177, 125 + (a * g) / 20)} stroke={ink} strokeWidth={5} />
-        {label(`${(a * g).toFixed(1)} N ↓`, 70, 58, 19)}
-        {label(q.labels[b], 280, 58, 17)}
+        {fittedLabel(`${(a * g).toFixed(1)} N ↓`, 70, 58, 19)}
+        {fittedLabel(q.labels[b], 280, 58, 17)}
       </>
     );
   } else if (q.kind === "orbit") {
@@ -279,7 +307,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           strokeDasharray="1 7" strokeLinecap="round"
         />
         <Circle cx={180} cy={26} r={8} fill={gold} />
-        {label("Gravity pulls inward", 180, 192)}
+        {fittedLabel("Gravity pulls inward", 180, 192)}
       </>
     );
   } else if (q.kind === "tilt") {
@@ -291,10 +319,10 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         <EarthGlobe x={250} y={100} r={53} />
         <G rotation={b === 0 ? -a : a} origin="250,100">
           <Line x1={250} y1={25} x2={250} y2={176} stroke={ink} strokeWidth={4} />
-          {label("N", 250, 19, 15)}
+          {fittedLabel("N", 250, 19, 15)}
           <Ellipse cx={250} cy={100} rx={53} ry={9} fill="none" stroke="#ECEDD2" strokeWidth={2} />
         </G>
-        {label("Axis keeps its direction through the year", 180, 199, 11)}
+        {fittedLabel("Axis keeps its direction through the year", 180, 199, 11)}
       </>
     );
   } else if (q.kind === "eclipse") {
@@ -316,7 +344,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         />
         <EarthGlobe x={a === 0 ? 275 : 180} y={90} r={29} />
         <MoonDisc x={a === 0 ? 115 : 285} y={b ? 40 : a === 2 ? 158 : 90} r={12} />
-        {label("Alignment diagram • not to scale", 180, 194, 12)}
+        {fittedLabel("Alignment diagram • not to scale", 180, 194, 12)}
       </>
     );
   } else if (q.kind === "distance") {
@@ -326,8 +354,8 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         <Sun x={30} y={90} />
         <Line x1={60} y1={90} x2={80 + a * 44} y2={90} stroke={gold} strokeWidth={5} strokeDasharray="8 5" />
         <EarthGlobe x={80 + a * 44} y={90} r={17} />
-        {label(`${a} AU`, 180, 151, 20)}
-        {label("Distance line • not to scale", 180, 185, 12)}
+        {fittedLabel(`${a} AU`, 180, 151, 20)}
+        {fittedLabel("Distance line • not to scale", 180, 185, 12)}
       </>
     );
   } else if (q.kind === "gauge") {
@@ -337,25 +365,25 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         <Rect x={35} y={21} width={24} height={143} rx={10} fill="#F8F5E6" stroke={ink} />
         <Rect x={41} y={164 - q.target[0] * 3} width={12} height={q.target[0] * 3} fill="#D47A63" />
         <Circle cx={47} cy={166} r={15} fill="#D47A63" />
-        {label(scalePractice(records.length) ? "°C" : `${q.target[0]} °C`, 47, 202, 15)}
+        {fittedLabel(scalePractice(records.length) ? "°C" : `${q.target[0]} °C`, 47, 202, 15)}
         <Rect x={100} y={44} width={38} height={120} fill="#F1F9F6" stroke={ink} />
         <Rect x={102} y={164 - q.target[1] * 3} width={34} height={q.target[1] * 3} fill="#6BA9C4" />
-        {label(scalePractice(records.length) ? "mm" : `${q.target[1]} mm`, 119, 202, 15)}
+        {fittedLabel(scalePractice(records.length) ? "mm" : `${q.target[1]} mm`, 119, 202, 15)}
         {Array.from({length:41}, (_, n) => n).map((n) => (
           <G key={n}>
             <Line x1={59} y1={164 - n * 3} x2={65} y2={164 - n * 3} stroke={ink} />
-            {n % 10 === 0 && label(String(n), 76, 168 - n * 3, 10)}
+            {n % 10 === 0 && fittedLabel(String(n), 76, 168 - n * 3, 10)}
             <Line x1={138} y1={164 - n * 3} x2={n % 5 === 0 ? 145 : 141} y2={164 - n * 3} stroke={ink} />
-            {n % 10 === 0 && label(String(n), 153, 168 - n * 3, 10)}
+            {n % 10 === 0 && fittedLabel(String(n), 153, 168 - n * 3, 10)}
           </G>
         ))}
         {[...records, [a, b]].map((r, i) => (
           <G key={i}>
             <Rect x={167 + i * 24} y={165 - r[1] * 3} width={14} height={r[1] * 3} fill={blue} />
-            {label(["M", "T", "W", "T", "F", "S", "S"][i], 174 + i * 24, 183, 10)}
+            {fittedLabel(["M", "T", "W", "T", "F", "S", "S"][i], 174 + i * 24, 183, 10)}
           </G>
         ))}
-        {label("Week rain chart", 250, 30, 14)}
+        {fittedLabel("Week rain chart", 250, 30, 14)}
       </>
     );
   } else if (q.kind === "population" || q.kind === "pollution") {
@@ -374,7 +402,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         ))}
         <Rect x={20} y={193} width={320} height={9} rx={4} fill="#C0CEC0" />
         <Rect x={20} y={193} width={health * 3.2} height={9} rx={4} fill={green} />
-        {label("Coral health index", 180, 227, 12)}
+        {fittedLabel("Coral health index", 180, 227, 12)}
       </>
     );
   } else if (q.kind === "energy") {
@@ -382,11 +410,11 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     scene = (
       <>
         <Path d="M180 16L225 78h-90Z" fill="#D88D65" />
-        {label(`${b} units`, 180, 64)}
+        {fittedLabel(`${b} units`, 180, 64)}
         <Path d="M129 88h102l38 56H91Z" fill={gold} />
-        {label(`${a} units`, 180, 122)}
+        {fittedLabel(`${a} units`, 180, 122)}
         <Path d="M85 154h190l32 46H53Z" fill="#93BC74" />
-        {label(`${q.target[0] * 10} producer units`, 180, 184)}
+        {fittedLabel(`${q.target[0] * 10} producer units`, 180, 184)}
       </>
     );
   } else if (q.kind === "cycle") {
@@ -407,8 +435,8 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           [155, 185, 215].map((x) => (
             <Line key={x} x1={x} y1={75} x2={x - 12} y2={111} stroke={blue} strokeWidth={4} />
           ))}
-        {label("Sea", 60, 195)}
-        {label("River", 270, 183)}
+        {fittedLabel("Sea", 60, 195)}
+        {fittedLabel("River", 270, 183)}
       </>
     );
   } else if (q.kind === "web") {
@@ -458,7 +486,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
               <Rect x={x - 42} y={y - 23} width={86} height={50} rx={14} fill="#365653" opacity={.08}/>
               <Rect x={x - 43} y={y - 25} width={86} height={50} rx={14} fill="#FFFAEB" stroke="#7C9D7D" strokeWidth={1.5}/>
               <NodePicture name={n} x={x} y={y-8} scale={.46}/>
-              {label(n, x, y + 18, 9.5)}
+              {fittedLabel(n, x, y + 18, 9.5)}
             </G>
           );
         })}
@@ -485,11 +513,11 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           fill="none"
         />
         {q.title.includes("algae") ? <Algae x={268} y={150}/> : <Creature name={q.title.replace("Feed a ", "").replace("Feed an ", "")} x={267} y={104} scale={.85}/>}
-        {label("energy", 151, 132, 12)}
+        {fittedLabel("energy", 151, 132, 12)}
         <Rect x={8} y={154} width={116} height={30} rx={12} fill="#FFF9E9" opacity={.96}/>
         <Rect x={200} y={154} width={151} height={30} rx={12} fill="#FFF9E9" opacity={.96}/>
-        {label(q.labels[a], 65, 174, 12)}
-        {label(q.title.replace("Feed a ", "").replace("Feed an ", ""), 275, 174, 12)}
+        {fittedLabel(q.labels[a], 65, 174, 12)}
+        {fittedLabel(q.title.replace("Feed a ", "").replace("Feed an ", ""), 275, 174, 12)}
       </>
     );
   } else if (["chain", "kit"].includes(q.kind)) {
@@ -516,7 +544,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
               stroke={green}
             />
             {game === "food-web" && <NodePicture name={q.labels[v]} x={46 + (i % 2) * 172} y={54 + Math.floor(i/2)*82} scale={.65}/>}
-            {label(q.labels[v], (game === "food-web" ? 112 : 94) + (i % 2) * 172, 59 + Math.floor(i / 2) * 82, game === "food-web" ? 10.5 : 13)}
+            {fittedLabel(q.labels[v], (game === "food-web" ? 112 : 94) + (i % 2) * 172, 59 + Math.floor(i / 2) * 82, game === "food-web" ? 10.5 : 13)}
             {i > 0 && (i % 2 ? <Path d={`M173 ${54+Math.floor(i/2)*82}h13m-5-5 5 5-5 5`} stroke={green} strokeWidth={2} fill="none"/> : <Path d="M266 88v7H94v8m-4-4 4 4 4-4" stroke={green} strokeWidth={2} fill="none"/>)}
           </G>
         ))}
@@ -589,13 +617,14 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           </G>
         )}
         <WeatherExplorer gear={q.kind === "dress" ? q.labels[a] : ""}/>
-        {label(q.labels[a] ?? "", 279, 112, 11)}
+        {space ? <G><Circle cx={225} cy={193} r={13 / sceneScale} fill="#FFF9E9" stroke={ink}/>{sceneLabel("1",225,193 + 4 / sceneScale,13 * (fontScale >= LARGE_TEXT ? 1.5 : 1) / sceneScale)}</G> : fittedLabel(q.labels[a] ?? "", 279, 112, 11)}
       </>
     );
   }
   return (
     <View
       style={{
+        alignSelf: space ? "stretch" : undefined,
         backgroundColor: "#F1F5E4",
         borderRadius: 22,
         padding: 10,
@@ -604,10 +633,16 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         borderColor: "#C7D8AD",
       }}
     >
-      <Svg width="100%" height={220} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
+      <View testID={geometry.testID} onLayout={geometry.onLayout}>{space && q.kind === "kit" ? <View style={{ flexDirection:"row",flexWrap:"wrap",gap:8 }}>
+        {values.map((value,index)=><View key={index} style={{ width:"47%",alignItems:"center",gap:4,padding:4,backgroundColor:"#FFF9E9",borderRadius:12 }}>
+          <TokenArt text={q.labels[value]} size={space.width >= 600 ? 64 : 56}/>
+          <Copy testID="weather-object-label" maxFontSizeMultiplier={1.5} style={{fontSize:13,flexShrink:1,alignSelf:"stretch",textAlign:"center",fontWeight:"700"}}>{q.labels[value]}</Copy>
+        </View>)}
+      </View> : <Svg width="100%" height={geometry.height} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
         {scene}
-      </Svg>
-      <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>
+      </Svg>}</View>
+      {space && ["dress","safety","forecast"].includes(q.kind) && <Copy testID="weather-object-label" maxFontSizeMultiplier={1.5} style={{fontSize:13,flexShrink:1,alignSelf:"stretch",fontWeight:"700",textAlign:"center"}}>1 · {q.labels[a]}</Copy>}
+      {!(space && (["dress","safety","forecast"].includes(q.kind) || q.kind === "kit" && values.length > 0)) && <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>}
       {game === "space-station" && (
         <Copy style={{ fontSize: 12, textAlign: "center", color: ink }}>
           Space diagrams simplify sizes and distances. Planet builder compares planet diameters; its Sun is a symbol.
@@ -685,6 +720,9 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   // At accessibility text sizes Reset and Hint fill the row, so Test model takes its own full-width line below
   // instead of being pushed off the right edge.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  const space = useBoardSpace(), side = useBoardColumns();
+  const controlWidth = space?.ready ? side ? space.width * .54 - 12 : space.width : props.width;
+  const compact = !!space?.ready && controlWidth < 600;
   if (!q) return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your discovery journal is complete!</Copy>;
   const send = (a: Parameters<typeof move>[2]) => {
     if (active) {
@@ -715,10 +753,42 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   };
   const numericSlots = q.kind === "eclipse" ? [1] : [0, 1];
   // Choice labels share one size: the largest at which every word fits the narrowest tile (8-pt padding, 2-pt border).
-  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, props.width * (q.labels.length > 4 ? 0.29 : 0.44) - 20, 2))) : undefined;
+  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, controlWidth * (q.labels.length > 4 || compact && q.labels.length === 3 ? 0.29 : 0.44) - 20, 2))) : undefined;
   const ready = s.tested && correct(q, s.values);
+  const hearWhy = <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>;
+  const result = s.tested && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{ padding: 14, gap: 10, borderRadius: 16, backgroundColor: ready ? "#E4EFD4" : "#FFF0CF" }}
+        >
+          <Copy style={{ fontSize: 17, fontWeight: "900", color: ink }}>
+            {ready ? "You made a discovery!" : "Try another change"}
+          </Copy>
+          <Copy style={{ fontSize: 15, lineHeight: 22 }}>
+            {ready
+              ? q.fact
+              : wrongFeedback(q, s.values)}
+          </Copy>
+          {(!space || !ready) && hearWhy}
+          {ready && (
+            <>
+              <Copy style={{ fontWeight: "800" }}>What did you notice?</Copy>
+              <Button
+                disabled={!active}
+                onPress={() => {
+                  send({ type: "next" });
+                  setHint(false);
+                  cheer(s.index === s.items.length - 1 ? "big" : "right");
+                }}
+              >
+                {q.notice}
+              </Button>
+            </>
+          )}
+        </View>
+      );
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: compact ? 10 : 14 }}>
       {/* At accessibility sizes the step count and "Build · Test · Notice" stack, so neither runs off the card. */}
       <View testID="science-steps" style={large ? { gap: 2 } : { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: green, fontWeight: "900", fontSize: 13 }}>
@@ -726,11 +796,10 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
         </Copy>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: ink, fontSize: 13 }}>Build · Test · Notice</Copy>
       </View>
+      <BoardColumns drawing={<Scene game={game} q={q} values={s.values} records={s.records} />}>
       <Copy style={{ fontSize: 23, fontWeight: "900", color: ink }}>{q.title}</Copy>
       <Copy style={{ fontSize: 16, lineHeight: 23 }}>{q.goal}</Copy>
-      <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(goalTranscript(q)))}>Hear the goal</Button>
       {q.kind === "gauge" && <Copy>{scalePractice(s.records.length) ? "Your turn: read the scales without printed answers. Each small mark is 1 unit. Hint can help whenever you need it." : "First, learn the scales: each small mark is 1 °C on red and 1 mm on blue. Read the top of each colored column. Tomorrow, try without the printed answers."}</Copy>}
-      <Scene game={game} q={q} values={s.values} records={s.records} />
       {!ready && (
         <CoachSpot active={coach.active}>
           <View style={{ gap: 10 }}>
@@ -743,7 +812,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
               />
             ))}
             {q.labels.length > 0 && (
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <View style={{ flexDirection: "row", flexWrap: compact && q.labels.length === 3 ? "nowrap" : "wrap", gap: 8 }}>
                 {q.labels.map((name, i) => {
                   const slot = q.kind === "gravity" || q.kind === "tilt" ? 1 : 0;
                   const selected = multi(q) ? s.values.includes(i) : s.values[slot] === i;
@@ -757,7 +826,9 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
                       onPress={() => set(slot, i)}
                       style={{
                         flexGrow: 1,
-                        flexBasis: q.labels.length > 4 ? "29%" : "44%",
+                        flexShrink: compact && q.labels.length === 3 ? 1 : 0,
+                        minWidth: compact && q.labels.length === 3 ? 0 : undefined,
+                        flexBasis: q.labels.length > 4 || compact && q.labels.length === 3 ? "29%" : "44%",
                         minHeight: 82,
                         padding: 8,
                         borderRadius: 16,
@@ -780,28 +851,8 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
         </CoachSpot>
       )}
       <View testID="science-actions" style={{ flexDirection: "row", flexWrap: large ? "wrap" : "nowrap", gap: 8 }}>
-        <Button
-          quiet
-          compact
-          disabled={!active}
-          onPress={() => {
-            send({ type: "reset" });
-            setHint(false);
-          }}
-        >
-          Reset
-        </Button>
-        <Button
-          quiet
-          compact
-          disabled={!active}
-          onPress={() => {
-            assistance?.();
-            setHint(!hint);
-          }}
-        >
-          Hint
-        </Button>
+
+
         {!ready && (
           <Button
             style={large ? { flexBasis: "100%" } : { flex: 1 }}
@@ -817,42 +868,37 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
           </Button>
         )}
       </View>
+      {space && ready && result}
+      </BoardColumns>
+<View style={{flexDirection:"row",gap:8}}><Button
+          quiet
+          compact
+          disabled={!active}
+          onPress={() => {
+            send({ type: "reset" });
+            setHint(false);
+          }}
+        >
+          Reset
+        </Button><Button
+          quiet
+          compact
+          disabled={!active}
+          onPress={() => {
+            assistance?.();
+            setHint(!hint);
+          }}
+        >
+          Hint
+        </Button></View>
+      <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(goalTranscript(q)))}>Hear the goal</Button>
+      {space && ready && hearWhy}
       {hint && (
         <Copy style={{ padding: 12, backgroundColor: "#FFF3CE", borderRadius: 12, fontSize: 15 }}>
           Try this setup: {q.hint}. You can reset and build it yourself.
         </Copy>
       )}
-      {s.tested && (
-        <View
-          accessibilityLiveRegion="polite"
-          style={{ padding: 14, gap: 10, borderRadius: 16, backgroundColor: ready ? "#E4EFD4" : "#FFF0CF" }}
-        >
-          <Copy style={{ fontSize: 17, fontWeight: "900", color: ink }}>
-            {ready ? "You made a discovery!" : "Try another change"}
-          </Copy>
-          <Copy style={{ fontSize: 15, lineHeight: 22 }}>
-            {ready
-              ? q.fact
-              : wrongFeedback(q, s.values)}
-          </Copy>
-          <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>
-          {ready && (
-            <>
-              <Copy style={{ fontWeight: "800" }}>What did you notice?</Copy>
-              <Button
-                disabled={!active}
-                onPress={() => {
-                  send({ type: "next" });
-                  setHint(false);
-                  cheer(s.index === s.items.length - 1 ? "big" : "right");
-                }}
-              >
-                {q.notice}
-              </Button>
-            </>
-          )}
-        </View>
-      )}
+      {(!space || !ready) && result}
       {!s.tested && (
         <Copy style={{ fontSize: 12, color: ink }}>
           Tap a control first, then test. Change one thing and watch what happens.

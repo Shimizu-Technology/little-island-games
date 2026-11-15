@@ -1,3 +1,4 @@
+import { useBoardSpace } from '../../BoardSpace';
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { StepReveal } from "../../stepReveal";
 
@@ -9,13 +10,14 @@ import { StepReveal } from "../../stepReveal";
  * frame has measured the board's place first. `touched` is called on the child's first move.
  */
 export function useEntryReveal(large: boolean) {
+  const measured = useBoardSpace() !== null;
   const reveal = useContext(StepReveal), timer = useRef<ReturnType<typeof setTimeout> | null>(null), moved = useRef(false);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const onLayout = useCallback(() => {
-    if (!large || moved.current) return;
+    if (measured || !large || moved.current) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => { timer.current = null; if (!moved.current) reveal(); }, 80);
-  }, [large, reveal]);
+  }, [large, reveal, measured]);
   const touched = useCallback(() => { moved.current = true; if (timer.current) { clearTimeout(timer.current); timer.current = null; } }, []);
   return { onLayout, touched };
 }

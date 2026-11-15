@@ -1,4 +1,4 @@
-import { chamoruWords, chamoruWord } from "../learn/content/chamoru";
+import { chamoruRecord, chamoruRecords } from "../learn/reading/provenance";
 import { Base, Options, base, random, shuffle } from "./types";
 import { Match, Seat, RoundResult, newMatch, settle, nextStarter } from "./match";
 export const memorySymbols = [
@@ -33,7 +33,7 @@ export type MemoryState = Base & {
 export function createMemory(options: Options, starter: Seat = 0, pack: MemoryPack = "pictures"): MemoryState {
   const count = options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 8 : 12;
   const symbols = shuffle(memorySymbols).slice(0, count);
-  const words = pack === "chamoru" ? shuffle(chamoruWords).slice(0, count) : [];
+  const words = pack === "chamoru" ? shuffle(chamoruRecords()).slice(0, count) : [];
   return {
     ...base("memory", options),
     game: "memory",
@@ -95,10 +95,13 @@ export function memoryUndo(s: MemoryState): MemoryState {
   return { ...s, ...s.history[s.history.length - 1], history: s.history.slice(0, -1) };
 }
 
-/** A CHamoru pair has one picture and one word face; both retain the same reviewed content id. */
+/**
+ * A CHamoru pair has one picture and one word face; both retain the same reviewed content id. The word is the
+ * inherited snapshot's branded record (`learn/reading/provenance.ts`), looked up by that id.
+ */
 export function chamoruCard(card: string) {
   const match = /^ch:([a-z_]+\.[a-z_]+):(picture|word)$/.exec(card);
-  const word = match && chamoruWord(match[1]);
+  const word = match && chamoruRecord(match[1]);
   return word ? { word, face: match![2] as "picture" | "word" } : null;
 }
 export function englishCard(card: string) {
@@ -109,7 +112,7 @@ export const memoryKey = (card: string) => chamoruCard(card)?.word.id ?? english
 /** Small deterministic authored deals, frozen by each Challenge descriptor's hash. */
 export function memoryDeck(pairs: 6 | 8 | 12, pack: MemoryPack, seed: number): string[] {
   const rng = random(seed);
-  const words = shuffle(chamoruWords, rng).slice(0, pairs), symbols = shuffle(memorySymbols, rng).slice(0, pairs);
+  const words = shuffle(chamoruRecords(), rng).slice(0, pairs), symbols = shuffle(memorySymbols, rng).slice(0, pairs);
   return shuffle(pack === "chamoru" ? words.flatMap(w => [`ch:${w.id}:picture`, `ch:${w.id}:word`]) : pack === "words" ? symbols.flatMap(w => [`en:${w}:picture`, `en:${w}:word`]) : [...symbols, ...symbols], rng);
 }
 export const validMemoryCard = (card: string, pack: unknown) => pack === "chamoru" ? !!chamoruCard(card) : pack === "words" ? !!englishCard(card) : memorySymbols.includes(card);

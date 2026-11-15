@@ -1,0 +1,18 @@
+{
+  "393x759:false": {
+    "sha256": "6875d295ff7452226a60fae3bc3c7b5c57f3b87d19d40f7187e5ffe838934912",
+    "bytes": 5392
+  },
+  "393x759:true": {
+    "sha256": "8bacb4c8574f1254b001a7fa1440e7d23c5a1edd944f16a0ce5f9f3b1616cadb",
+    "bytes": 5795
+  },
+  "792x300:false": {
+    "sha256": "80cef90c6e39d58c31aee28cf07f1f8864ffe4b5931d60c1bb61ad97775cf7c5",
+    "bytes": 5920
+  },
+  "792x300:true": {
+    "sha256": "0b8b321b0fd8851d8fcdc331501f959ad1538041667ea22b4f841e64498d7c44",
+    "bytes": 5928
+  }
+}

@@ -1,6 +1,6 @@
 import type { LearnEngine, LearnOptions } from "../../types";
 import { pickItems } from "../../skills";
-import { chamoruWord, chamoruWords } from "../../content/chamoru";
+import { chamoruRecord as chamoruWord, chamoruRecords } from "../../reading/provenance";
 
 export type IslandState = {
   items: string[];
@@ -54,7 +54,7 @@ export const engine: LearnEngine<IslandState> = {
   paceHelp: { easy: "Six pictures. A small English helper on the word card.", medium: "Eight pictures. Peek at English when you need it.", hard: "Twelve pictures. Read the CHamoru word, then find it." },
   skills: { "ch.colors": "CHamoru colors", "ch.numbers": "CHamoru numbers", "ch.food": "CHamoru food", "ch.body": "CHamoru body words", "ch.family": "CHamoru family words", "ch.greetings": "CHamoru greetings" },
   create(o, ctx) {
-    const pool = chamoruWords.filter((w) => o.pace !== "easy" || w.category !== "numbers" || ["One", "Two", "Three", "Four", "Five"].includes(w.english));
+    const pool = chamoruRecords().filter((w) => o.pace !== "easy" || w.category !== "numbers" || ["One", "Two", "Three", "Four", "Five"].includes(w.english));
     const categories = ["colors", "numbers", "food", "body_parts", "family", "greetings"];
     const anchors = categories.map(category => pickItems(pool.filter(w => w.category === category), ctx.skills, 1, ctx.rng, ctx.today)[0]);
     const rest = pickItems(pool.filter(w => !anchors.includes(w)), ctx.skills, countFor(o) - anchors.length, ctx.rng, ctx.today);

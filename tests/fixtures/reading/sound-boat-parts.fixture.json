@@ -1,0 +1,915 @@
+{
+  "schemaVersion": 1,
+  "id": "sound-boat-parts-fixture",
+  "fixture": true,
+  "records": [
+    {
+      "id": "fx-sunset",
+      "status": "fixture",
+      "word": "sunset",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "sun",
+        "set"
+      ],
+      "distractors": [
+        "sin",
+        "sit"
+      ]
+    },
+    {
+      "id": "fx-cupcake",
+      "status": "fixture",
+      "word": "cupcake",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "cup",
+        "cake"
+      ],
+      "distractors": [
+        "cap",
+        "cook"
+      ]
+    },
+    {
+      "id": "fx-seashell",
+      "status": "fixture",
+      "word": "seashell",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "sea",
+        "shell"
+      ],
+      "distractors": [
+        "see",
+        "shall"
+      ]
+    },
+    {
+      "id": "fx-rainbow",
+      "status": "fixture",
+      "word": "rainbow",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "rain",
+        "bow"
+      ],
+      "distractors": [
+        "ran",
+        "boat"
+      ]
+    },
+    {
+      "id": "fx-starfish",
+      "status": "fixture",
+      "word": "starfish",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "star",
+        "fish"
+      ],
+      "distractors": [
+        "stair",
+        "dish"
+      ]
+    },
+    {
+      "id": "fx-sailboat",
+      "status": "fixture",
+      "word": "sailboat",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "sail",
+        "boat"
+      ],
+      "distractors": [
+        "sale",
+        "coat"
+      ]
+    },
+    {
+      "id": "fx-bedtime",
+      "status": "fixture",
+      "word": "bedtime",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "bed",
+        "time"
+      ],
+      "distractors": [
+        "bad",
+        "tame"
+      ]
+    },
+    {
+      "id": "fx-anthill",
+      "status": "fixture",
+      "word": "anthill",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "ant",
+        "hill"
+      ],
+      "distractors": [
+        "and",
+        "hall"
+      ]
+    },
+    {
+      "id": "fx-rabbit",
+      "status": "fixture",
+      "word": "rabbit",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "rab",
+        "bit"
+      ],
+      "distractors": [
+        "rap",
+        "bat"
+      ]
+    },
+    {
+      "id": "fx-picnic",
+      "status": "fixture",
+      "word": "picnic",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "pic",
+        "nic"
+      ],
+      "distractors": [
+        "pik",
+        "nik"
+      ]
+    },
+    {
+      "id": "fx-basket",
+      "status": "fixture",
+      "word": "basket",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "bas",
+        "ket"
+      ],
+      "distractors": [
+        "bask",
+        "kit"
+      ]
+    },
+    {
+      "id": "fx-napkin",
+      "status": "fixture",
+      "word": "napkin",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "nap",
+        "kin"
+      ],
+      "distractors": [
+        "nip",
+        "can"
+      ]
+    },
+    {
+      "id": "fx-happen",
+      "status": "fixture",
+      "word": "happen",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "hap",
+        "pen"
+      ],
+      "distractors": [
+        "hop",
+        "pan"
+      ]
+    },
+    {
+      "id": "fx-magnet",
+      "status": "fixture",
+      "word": "magnet",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "mag",
+        "net"
+      ],
+      "distractors": [
+        "meg",
+        "nit"
+      ]
+    },
+    {
+      "id": "fx-muffin",
+      "status": "fixture",
+      "word": "muffin",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "muf",
+        "fin"
+      ],
+      "distractors": [
+        "mof",
+        "fun"
+      ]
+    },
+    {
+      "id": "fx-kitten",
+      "status": "fixture",
+      "word": "kitten",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "kit",
+        "ten"
+      ],
+      "distractors": [
+        "kat",
+        "tin"
+      ]
+    },
+    {
+      "id": "fx-banana",
+      "status": "fixture",
+      "word": "banana",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "ba",
+        "na",
+        "na"
+      ],
+      "distractors": [
+        "bo",
+        "ne"
+      ]
+    },
+    {
+      "id": "fx-octopus",
+      "status": "fixture",
+      "word": "octopus",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "oc",
+        "to",
+        "pus"
+      ],
+      "distractors": [
+        "ac",
+        "tu"
+      ]
+    },
+    {
+      "id": "fx-jumped",
+      "status": "fixture",
+      "word": "jumped",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "jump",
+        "ed"
+      ],
+      "distractors": [
+        "ing",
+        "er"
+      ],
+      "base": "jump",
+      "affix": "ed",
+      "gloss": "already happened"
+    },
+    {
+      "id": "fx-walked",
+      "status": "fixture",
+      "word": "walked",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "walk",
+        "ed"
+      ],
+      "distractors": [
+        "ing",
+        "s"
+      ],
+      "base": "walk",
+      "affix": "ed",
+      "gloss": "already happened"
+    },
+    {
+      "id": "fx-playing",
+      "status": "fixture",
+      "word": "playing",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "play",
+        "ing"
+      ],
+      "distractors": [
+        "ed",
+        "s"
+      ],
+      "base": "play",
+      "affix": "ing",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-singer",
+      "status": "fixture",
+      "word": "singer",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "sing",
+        "er"
+      ],
+      "distractors": [
+        "ed",
+        "ing"
+      ],
+      "base": "sing",
+      "affix": "er",
+      "gloss": "someone who sings"
+    },
+    {
+      "id": "fx-farmer",
+      "status": "fixture",
+      "word": "farmer",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "farm",
+        "er"
+      ],
+      "distractors": [
+        "ed",
+        "ing"
+      ],
+      "base": "farm",
+      "affix": "er",
+      "gloss": "someone who farms"
+    },
+    {
+      "id": "fx-cats",
+      "status": "fixture",
+      "word": "cats",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "cat",
+        "s"
+      ],
+      "distractors": [
+        "ed",
+        "ing"
+      ],
+      "base": "cat",
+      "affix": "s",
+      "gloss": "more than one"
+    },
+    {
+      "id": "fx-helpful",
+      "status": "fixture",
+      "word": "helpful",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "help",
+        "ful"
+      ],
+      "distractors": [
+        "ed",
+        "er"
+      ],
+      "base": "help",
+      "affix": "ful",
+      "gloss": "full of help"
+    },
+    {
+      "id": "fx-slowly",
+      "status": "fixture",
+      "word": "slowly",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "slow",
+        "ly"
+      ],
+      "distractors": [
+        "ed",
+        "er"
+      ],
+      "base": "slow",
+      "affix": "ly",
+      "gloss": "in a slow way"
+    },
+    {
+      "id": "fx-fastest",
+      "status": "fixture",
+      "word": "fastest",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "fast",
+        "est"
+      ],
+      "distractors": [
+        "ed",
+        "er"
+      ],
+      "base": "fast",
+      "affix": "est",
+      "gloss": "the most"
+    },
+    {
+      "id": "fx-making",
+      "status": "fixture",
+      "word": "making",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "mak",
+        "ing"
+      ],
+      "distractors": [
+        "make",
+        "mac"
+      ],
+      "base": "make",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now",
+      "family": "make"
+    },
+    {
+      "id": "fx-maker",
+      "status": "fixture",
+      "word": "maker",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "mak",
+        "er"
+      ],
+      "distractors": [
+        "make",
+        "mac"
+      ],
+      "base": "make",
+      "affix": "er",
+      "change": "drop-e",
+      "gloss": "someone who makes",
+      "family": "make"
+    },
+    {
+      "id": "fx-baking",
+      "status": "fixture",
+      "word": "baking",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "bak",
+        "ing"
+      ],
+      "distractors": [
+        "bake",
+        "bark"
+      ],
+      "base": "bake",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-riding",
+      "status": "fixture",
+      "word": "riding",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "rid",
+        "ing"
+      ],
+      "distractors": [
+        "ride",
+        "ring"
+      ],
+      "base": "ride",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-smiling",
+      "status": "fixture",
+      "word": "smiling",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "smil",
+        "ing"
+      ],
+      "distractors": [
+        "smile",
+        "smell"
+      ],
+      "base": "smile",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-taking",
+      "status": "fixture",
+      "word": "taking",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "tak",
+        "ing"
+      ],
+      "distractors": [
+        "take",
+        "tack"
+      ],
+      "base": "take",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-hopping",
+      "status": "fixture",
+      "word": "hopping",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "hopp",
+        "ing"
+      ],
+      "distractors": [
+        "hop",
+        "pin"
+      ],
+      "base": "hop",
+      "affix": "ing",
+      "change": "double",
+      "gloss": "happening now",
+      "family": "hop"
+    },
+    {
+      "id": "fx-hopped",
+      "status": "fixture",
+      "word": "hopped",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "hopp",
+        "ed"
+      ],
+      "distractors": [
+        "hop",
+        "pad"
+      ],
+      "base": "hop",
+      "affix": "ed",
+      "change": "double",
+      "gloss": "already happened",
+      "family": "hop"
+    },
+    {
+      "id": "fx-running",
+      "status": "fixture",
+      "word": "running",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "runn",
+        "ing"
+      ],
+      "distractors": [
+        "run",
+        "pin"
+      ],
+      "base": "run",
+      "affix": "ing",
+      "change": "double",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-sitting",
+      "status": "fixture",
+      "word": "sitting",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "sitt",
+        "ing"
+      ],
+      "distractors": [
+        "sit",
+        "tin"
+      ],
+      "base": "sit",
+      "affix": "ing",
+      "change": "double",
+      "gloss": "happening now"
+    },
+    {
+      "id": "fx-bigger",
+      "status": "fixture",
+      "word": "bigger",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "bigg",
+        "er"
+      ],
+      "distractors": [
+        "big",
+        "pen"
+      ],
+      "base": "big",
+      "affix": "er",
+      "change": "double",
+      "gloss": "more big"
+    },
+    {
+      "id": "fx-cried",
+      "status": "fixture",
+      "word": "cried",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "cri",
+        "ed"
+      ],
+      "distractors": [
+        "cry",
+        "ride"
+      ],
+      "base": "cry",
+      "affix": "ed",
+      "change": "y-to-i",
+      "gloss": "already happened"
+    },
+    {
+      "id": "fx-tried",
+      "status": "fixture",
+      "word": "tried",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "tri",
+        "ed"
+      ],
+      "distractors": [
+        "try",
+        "red"
+      ],
+      "base": "try",
+      "affix": "ed",
+      "change": "y-to-i",
+      "gloss": "already happened"
+    },
+    {
+      "id": "fx-carried",
+      "status": "fixture",
+      "word": "carried",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "carri",
+        "ed"
+      ],
+      "distractors": [
+        "carry",
+        "red"
+      ],
+      "base": "carry",
+      "affix": "ed",
+      "change": "y-to-i",
+      "gloss": "already happened"
+    },
+    {
+      "id": "fx-happily",
+      "status": "fixture",
+      "word": "happily",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "happi",
+        "ly"
+      ],
+      "distractors": [
+        "happy",
+        "led"
+      ],
+      "base": "happy",
+      "affix": "ly",
+      "change": "y-to-i",
+      "gloss": "in a happy way"
+    },
+    {
+      "id": "fx-funniest",
+      "status": "fixture",
+      "word": "funniest",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "funni",
+        "est"
+      ],
+      "distractors": [
+        "funny",
+        "ed"
+      ],
+      "base": "funny",
+      "affix": "est",
+      "change": "y-to-i",
+      "gloss": "the most"
+    },
+    {
+      "id": "fx-puppies",
+      "status": "fixture",
+      "word": "puppies",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "puppi",
+        "es"
+      ],
+      "distractors": [
+        "puppy",
+        "ed"
+      ],
+      "base": "puppy",
+      "affix": "es",
+      "change": "y-to-i",
+      "gloss": "more than one"
+    },
+    {
+      "id": "fx-unlock",
+      "status": "fixture",
+      "word": "unlock",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "lock"
+      ],
+      "distractors": [
+        "on",
+        "luck"
+      ],
+      "base": "lock",
+      "affix": "un",
+      "gloss": "open what was locked"
+    },
+    {
+      "id": "fx-undo",
+      "status": "fixture",
+      "word": "undo",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "do"
+      ],
+      "distractors": [
+        "on",
+        "dig"
+      ],
+      "base": "do",
+      "affix": "un",
+      "gloss": "take back what was done",
+      "family": "do"
+    },
+    {
+      "id": "fx-redo",
+      "status": "fixture",
+      "word": "redo",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "do"
+      ],
+      "distractors": [
+        "ray",
+        "dig"
+      ],
+      "base": "do",
+      "affix": "re",
+      "gloss": "do it again",
+      "family": "do"
+    },
+    {
+      "id": "fx-replay",
+      "status": "fixture",
+      "word": "replay",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "play"
+      ],
+      "distractors": [
+        "ray",
+        "pay"
+      ],
+      "base": "play",
+      "affix": "re",
+      "gloss": "play it again"
+    },
+    {
+      "id": "fx-retell",
+      "status": "fixture",
+      "word": "retell",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "tell"
+      ],
+      "distractors": [
+        "ray",
+        "bell"
+      ],
+      "base": "tell",
+      "affix": "re",
+      "gloss": "tell it again"
+    },
+    {
+      "id": "fx-unhappy",
+      "status": "fixture",
+      "word": "unhappy",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "happy"
+      ],
+      "distractors": [
+        "on",
+        "hippy"
+      ],
+      "base": "happy",
+      "affix": "un",
+      "gloss": "not happy"
+    },
+    {
+      "id": "fx-remake",
+      "status": "fixture",
+      "word": "remake",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "make"
+      ],
+      "distractors": [
+        "ray",
+        "mac"
+      ],
+      "base": "make",
+      "affix": "re",
+      "gloss": "make it again",
+      "family": "make"
+    },
+    {
+      "id": "fx-unfold",
+      "status": "fixture",
+      "word": "unfold",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "fold"
+      ],
+      "distractors": [
+        "on",
+        "gold"
+      ],
+      "base": "fold",
+      "affix": "un",
+      "gloss": "open it out"
+    }
+  ]
+}
