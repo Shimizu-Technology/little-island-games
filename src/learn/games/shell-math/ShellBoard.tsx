@@ -12,7 +12,7 @@ import type { BoardProps } from "../../types";
 import { hintLine, routeLines, routeName, solvedLine, stepPrompt, tileCap } from "./copy";
 import { pictureFor } from "./picture";
 import { progress, shellMove, type RoundAct, type ShellRound } from "./round2";
-import { HelpRow } from "./HelpRow";
+import { HelpButton, HelpRow } from "./HelpRow";
 import { StepInput } from "./StepInput";
 import { Workspace } from "./Workspace";
 
@@ -99,11 +99,14 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
   const stepChoices = step.kind === "number" ? choicesAround(step.value, s.index * 7 + work.at) : [];
 
   return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
       <Copy style={{ fontSize: 14, color: C.ink }}>{rungInfo}</Copy>
-      {soundOn && hasSpeech(speechKey(problem)) && <Button compact quiet icon="sound-on" disabled={!active} onPress={() => {
-        if (context.current.active && context.current.id === session.id && live.current === s) { stopSound(); sound(speechKey(problem)); }
-      }}>Hear</Button>}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {!work.solved && <HelpButton work={work} active={active} press={press} onHelp={() => act(["h"])} />}
+        {soundOn && hasSpeech(speechKey(problem)) && <Button compact quiet icon="sound-on" disabled={!active} onPress={() => {
+          if (context.current.active && context.current.id === session.id && live.current === s) { stopSound(); sound(speechKey(problem)); }
+        }}>Hear</Button>}
+      </View>
     </View>
     <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
     <Text accessibilityLabel={equationText(problem, work.solved)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(problem, work.solved)}</Text>
@@ -131,7 +134,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
         <Button disabled={!active} onPress={() => { press(); act(["x"]); }}>{s.index === s.items.length - 1 ? "Finish round" : "Next question"}</Button>
       </View>
       : <HelpRow step={step} work={work} typed={typed} active={active} canHide={level >= 2} hidden={hidePicture} press={press}
-        onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidePicture((h) => !h)} />}
+        onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidePicture((h) => !h)} showHelp={false} />}
     <Copy style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>{work.solved ? "" : `Step ${Math.min(work.at + 1, total)} of ${total}`}</Copy>
   </View>;
 }
