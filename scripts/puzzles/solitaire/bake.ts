@@ -5,6 +5,7 @@ import {certify,type CertifyContext} from '../../../src/puzzles/checks';
 import {validRoot} from '../../../src/puzzles/bank';
 import {arrangeBy} from '../order';
 import {bakeFamily,productionDirs} from '../pipeline';
+import {solve} from '../../../src/puzzles/table/solver';
 import {judge,rungs,klondike,freecell,type Candidate} from './family';
 
 const log=process.env.SOLITAIRE_LOGS;if(!log)throw new Error('Set SOLITAIRE_LOGS to an external evidence directory.');mkdirSync(log,{recursive:true});
@@ -26,6 +27,7 @@ for(let band=0;band<own.length;band++){
  if(kept.length<want)throw new Error(`${r.id}: ${kept.length}/${want}; below promised floor. Nothing published.`);
  pools.push(arrangeBy(c=>c.workload,kept,want));
 }
+const witnesses=JSON.parse(readFileSync('src/puzzles/table/witnesses.generated.json','utf8'));for(const c of pools.flat()){if(c.core.payload.mode!=='freecell')continue;const r=solve(c.core.payload,undefined,10000);if(r.status!=='solved')throw new Error('Lost winning line.');witnesses[c.core.payload.cards]=r.moves;}writeFileSync('src/puzzles/table/witnesses.generated.json',JSON.stringify(witnesses)+'\n');
 const path=join(productionDirs.content,'root.json'),root:unknown=JSON.parse(readFileSync(path,'utf8'));if(!validRoot(root))throw new Error('Invalid root.');
 const base=spec.id==='solitaire'?100:106;if(root.nextSlot>base)throw new Error('Reserved slots are behind catalog cursor.');
 writeFileSync(path,JSON.stringify({...root,nextSlot:base,nextOrdinal:Math.max(root.nextOrdinal,base*1024)})+'\n');

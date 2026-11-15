@@ -56,3 +56,15 @@ describe('Solitaire table feasibility', () => {
   expect(publicView(s,d)).toEqual(publicView(twin,other)); expect(advise(s,d)).toEqual(advise(twin,other));
  });
 });
+
+it('an independent rule implementation accepts each constructed mode and rejects a forged line', async()=>{
+ const {construct}=await import('../scripts/puzzles/solitaire/generate');
+ const {verifyLine}=await import('../scripts/puzzles/solitaire/independent');
+ for(const mode of ['draw-one','draw-three','freecell'] as const)for(let recipe=0;recipe<4;recipe++){
+  const {deal}=construct(mode,recipe,1),r=solve(deal,undefined,500);
+  expect(r.status).toBe('solved');if(r.status!=='solved')continue;
+  expect(verifyLine(deal.cards,mode,r.moves)).toBe(true);
+  expect(verifyLine(deal.cards,mode,[[0,12,2],...r.moves])).toBe(false);
+  expect(verifyLine(deal.cards,mode,r.moves.slice(1))).toBe(false);
+ }
+});

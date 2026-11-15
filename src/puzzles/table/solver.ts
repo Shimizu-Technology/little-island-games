@@ -1,6 +1,7 @@
 import { apply, columns, legalMoves, opening, rank, red, suit, won, type Deal, type Move, type Position } from './solitaire';
 const plans = new Map<string, Move[]>();
 const planKey = (s:Position,d:Deal)=>`${d.mode}|${s.piles.map(p=>p.join('.')).join('|')}|${s.hidden.join('.')}`;
+export function primePlan(d:Deal,moves:readonly Move[]):boolean{let s=opening(d);for(const a of moves){const next=apply(s,d.mode,a);if(next===s)return false;s=next;}if(!won(s))return false;s=opening(d);moves.forEach((a,i)=>{plans.set(planKey(s,d),moves.slice(i));s=apply(s,d.mode,a);});while(plans.size>4096)plans.delete(plans.keys().next().value!);return true;}
 export function knownPlan(s:Position,d:Deal):Move[]|undefined{return plans.get(planKey(s,d));}
 export type Search = { status: 'solved'; moves: Move[]; nodes: number; branches: number; techniques: string[] } | { status: 'budget-exhausted'; nodes: number } | { status: 'unsolved'; nodes: number };
 /** A bounded best-first graph search. The score orders work; it never proves an optimal move count. */
