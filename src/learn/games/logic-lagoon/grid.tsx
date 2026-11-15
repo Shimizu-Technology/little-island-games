@@ -21,12 +21,12 @@ const boxBorders = (p: LatinPuzzle) => (cell: number) => {
   if (p.box) { for (let r = p.box; r < p.size; r += p.box) d += `M0 ${r * cell}H${p.size * cell}`; for (let c = p.size / p.box; c < p.size; c += p.size / p.box) d += `M${c * cell} 0V${p.size * cell}`; }
   return d;
 };
-type Props = { puzzle: LatinPuzzle; state: GridState; dispatch: (a: GridAction) => void; help: () => void; reveal: () => void; check?: () => void; title: string; active: boolean; width: number; pictures?: readonly string[]; message?: string };
+type Props = { puzzle: LatinPuzzle; state: GridState; dispatch: (a: GridAction) => void; assisted: boolean; help: () => void; reveal: () => void; check?: () => void; title: string; active: boolean; width: number; pictures?: readonly string[]; message?: string };
 /** School and Challenge share input, notes and public-rule teaching; only their feedback policy differs. */
-export function LagoonGrid({ puzzle: p, state, dispatch, help, reveal, check, title, active, width, pictures, message }: Props) {
+export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal, check, title, active, width, pictures, message }: Props) {
   const [ladder, setLadder] = useState({ edits: -1, stage: 0 });
   const cue = useMemo(() => cueFor(p, planHint(p, state.values)), [p, state.values]);
-  const stage = ladder.edits === state.edits ? ladder.stage : 0;
+  const stage = ladder.edits === state.edits && assisted ? ladder.stage : 0;
   const tints = useMemo(() => new Map(cue.focus.map(i => [i, 2 as const])), [cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
   const overlay = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
@@ -45,6 +45,11 @@ export function LagoonGrid({ puzzle: p, state, dispatch, help, reveal, check, ti
       {check && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
       <Button compact quiet maxFontSizeMultiplier={1.3} selected={state.pencil} disabled={!active} onPress={() => dispatch({ type: 'pencil' })}>Notes {state.pencil ? 'on' : 'off'}</Button>
     </View>}
+    {!!message && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>}
+    {!!stage && <View accessibilityLiveRegion="polite" style={{ gap: 8, padding: 10, borderRadius: 12, backgroundColor: '#FFF4D6' }}>
+      <Copy maxFontSizeMultiplier={1.5}>{stage === 1 ? cue.look : cue.think}</Copy>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{stage === 1 && <Button compact quiet disabled={!active} onPress={() => setLadder({ edits: state.edits, stage: 2 })}>Why?</Button>}<Button compact disabled={!active} onPress={() => { reveal(); setLadder({ edits: -1, stage: 0 }); }}>{cue.technique === 'clash' || cue.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button><Button compact quiet disabled={!active} onPress={() => { setLadder({ edits: -1, stage: 0 }); if (cue.target !== undefined) dispatch({ type: 'select', cell: cue.target }); }}>I’ll try it</Button></View>
+    </View>}
     {pictures ? <>
       <Copy testID="logic-status" maxFontSizeMultiplier={1.3}>Tap a square, then choose a picture.</Copy>
       <View style={{ alignSelf: 'center', borderWidth: 2, borderColor: '#668A66' }}>
@@ -57,10 +62,5 @@ export function LagoonGrid({ puzzle: p, state, dispatch, help, reveal, check, ti
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button compact quiet disabled={!active || !state.undo.length} onPress={() => dispatch({ type: 'undo' })}>Undo</Button><Button compact quiet disabled={!active || !state.redo.length} onPress={() => dispatch({ type: 'redo' })}>Redo</Button><Button compact quiet disabled={!active} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: 0 })}>Erase</Button></View>
     </> : <NativeGrid spec={specFor(p)} state={state} dispatch={dispatch} active={active} width={gridWidth} mistakes="Plain" borders={borders} overlay={overlay} cellWords={cellWords} tints={stage ? tints : undefined} status={title}/>}
     <Copy maxFontSizeMultiplier={1.3}>{p.cages.length ? `Each row, column and box needs 1–${p.size}. Dashed cages add to their totals without repeating a number.` : p.less.length ? `Each row and column needs 1–${p.size}. Each arrow points at the smaller number.` : `One of each ${pictures ? 'picture' : 'number'} in every row and column.${p.box ? ' Each outlined box needs one of each too.' : ''}`}</Copy>
-    {!!message && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>}
-    {!!stage && <View accessibilityLiveRegion="polite" style={{ gap: 8, padding: 10, borderRadius: 12, backgroundColor: '#FFF4D6' }}>
-      <Copy maxFontSizeMultiplier={1.5}>{stage === 1 ? cue.look : cue.think}</Copy>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{stage === 1 && <Button compact quiet disabled={!active} onPress={() => setLadder({ edits: state.edits, stage: 2 })}>Why?</Button>}<Button compact disabled={!active} onPress={() => { reveal(); setLadder({ edits: -1, stage: 0 }); }}>{cue.technique === 'clash' || cue.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button><Button compact quiet disabled={!active} onPress={() => { setLadder({ edits: -1, stage: 0 }); if (cue.target !== undefined) dispatch({ type: 'select', cell: cue.target }); }}>I’ll try it</Button></View>
-    </View>}
   </View>;
 }

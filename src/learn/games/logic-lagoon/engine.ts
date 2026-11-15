@@ -105,7 +105,7 @@ export const engine: LearnEngine<LogicState> = {
     { name: 'Hidden places', description: '6 × 6: find the only place for a number. Use Notes to keep your choices.' },
     { name: 'Cages and clues', description: 'Sum cages without starting numbers. Challenge adds six-wide cages and arrow-only grids.' },
   ],
-  help: 'Tap a square, then a picture or number. Every row and column needs one of each. Boxes and cage totals add clues. Notes keep possible numbers; Undo takes back an edit. Help teaches a step. Challenge waits for Check before giving feedback.',
+  help: 'Tap a square, then choose a picture or number. Every row and column needs one of each. Boxes and cage totals add clues. Help points to one useful step. There is no clock, and you can change your answers.',
   create: (o, ctx) => ({ version: 2, catalog: 1, level: levelOf(o), seed: Math.floor(ctx.rng() * 0xffffffff) >>> 0, index: 0, total: 4, board: null, helped: false }),
   notWon: undefined, turn: undefined,
   outcome: s => s.index === 4 ? 'done' : null,

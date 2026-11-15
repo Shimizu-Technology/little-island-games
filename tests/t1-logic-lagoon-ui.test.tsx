@@ -1,0 +1,28 @@
+import React from 'react';
+import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { afterEach, expect, it, vi } from 'vitest';
+import { LagoonGrid } from '../src/learn/games/logic-lagoon/grid';
+import { engine, taskAt, boardAt, type LatinState } from '../src/learn/games/logic-lagoon/engine';
+vi.mock('react-native', () => ({ View: 'view', useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
+vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Ellipse: 'ellipse', Path: 'path', Rect: 'rect' }));
+vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'text', PressableScale: 'button', C: {} }));
+vi.mock('../src/components/Text', () => ({ Text: 'text' }));
+let screen: ReactTestRenderer | undefined;
+afterEach(async () => { if (screen) await act(async () => screen!.unmount()); screen = undefined; vi.unstubAllGlobals(); });
+it('a hint waits for accepted assistance; its explanation and Check feedback precede the board', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const state = engine.create({ mode: 'solo', pace: 'easy' }, { rng: () => 17 / 0xffffffff, skills: {}, starter: 0, today: 1 }) as LatinState;
+  const task = taskAt(state); if (task.kind !== 'grid') throw new Error();
+  const help = vi.fn(), reveal = vi.fn();
+  const tree = (assisted: boolean) => <LagoonGrid puzzle={task.puzzle!} state={boardAt(state, task.puzzle!)} assisted={assisted} dispatch={() => {}} help={help} reveal={reveal} check={() => {}} title="PUZZLE 1 OF 4" pictures={task.symbols} active width={337} message="Three squares need a change."/>;
+  await act(async () => { screen = create(tree(false)); });
+  const button = (s: string) => screen!.root.findAllByType('button').find(b => b.children.join('') === s);
+  await act(async () => button('Hint')!.props.onPress());
+  expect(help).toHaveBeenCalledOnce(); expect(button('Show me')).toBeUndefined();
+  await act(async () => screen!.update(tree(true)));
+  expect(button('Show me')).toBeDefined();
+  const output = JSON.stringify(screen!.toJSON());
+  expect(output.indexOf('Three squares need a change.')).toBeLessThan(output.indexOf('logic-status'));
+  expect(output.indexOf('Why?')).toBeLessThan(output.indexOf('logic-status'));
+  await act(async () => button('Show me')!.props.onPress()); expect(reveal).toHaveBeenCalledOnce();
+});
