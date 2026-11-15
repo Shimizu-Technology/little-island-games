@@ -90,6 +90,7 @@ it('compact operations round trip moves, songs, branches and count changes; host
  expect(applyOperations(original,programOperations(original,next))).toEqual(next);
  expect(applyOperations(next,programOperations(next,original))).toEqual(original);
  expect(applyOperations(original,[[2,[-1,0],[-1,2]]])).toEqual(crabProgram(['left','right']));
+ expect(programOperations(original,crabProgram(['left','right']))).toEqual([[2,[-1,1],[-1,0]]]);
  for(const bad of [[],[[1,[-1,-1]]],[[3,[-1,0],17]],[[0,[-1,0],[0,999]]],[[2,[-1,0],[-1,0,0,0]]]]){
   const copy=JSON.stringify(original);if(validOperations(bad))expect(applyOperations(original,bad)).toBeNull();expect(JSON.stringify(original)).toBe(copy);
  }
@@ -112,17 +113,6 @@ it('block hints identify a nested block and repeat turn, rather than an invisibl
  expect(text).toContain('plan, block 1, inside block 2');expect(text).toContain('repeat turn 3');expect(text).not.toContain('card 5');
 });
 
-it('existing School descriptors stay flat and an isolated fixture opts in additively',async()=>{
- const {levels}=await import('../src/learn/games/crab-commands/engine');
- const {bank}=await import('../src/learn/games/beep-bot/engine');
- const {task}=await import('../src/learn/games/turtle-draw/engine');
- expect(levels.every(l=>l.blockEditor===undefined)).toBe(true);
- expect(bank.flat().every(p=>p.puzzle.blockEditor===undefined)).toBe(true);
- for(let level=1;level<=5;level++)expect(task(level,0).blockEditor).toBeUndefined();
- vi.stubEnv('EXPO_PUBLIC_K7_FIXTURES','1');vi.resetModules();
- try{const {levels:fixtures}=await import('../src/learn/games/crab-commands/engine');expect(fixtures.find(l=>l.id==='k7-fixture')).toMatchObject({blockEditor:true,retired:true});expect(fixtures.filter(l=>l.id!=='k7-fixture').every(l=>l.blockEditor===undefined)).toBe(true);}
- finally{vi.unstubAllEnvs();vi.resetModules();}
-});
 
 it('Beep compact restart preserves nested structure, missed runs, edits and Help eligibility',async()=>{
  const {registration}=await import('../src/learn/games/beep-bot/challenge');
@@ -148,4 +138,34 @@ it('Beep compact restart preserves nested structure, missed runs, edits and Help
   const state=engine.create(p.descriptor,payload.initial,options);expect(state.blockDraft).toEqual(encodeProgram(current));
   expect(state.edits).toBeGreaterThan(100);expect(engine.inspect(state,p.descriptor).dareEligible).toBe(false);
  }finally{delete p.descriptor.blockEditor;}
+});
+
+it('the 13-card m2 beach fits over 100 ordinary command replacements as compact parameter edits',async()=>{
+ const {registration}=await import('../src/challenge/registrations/crab-commands');
+ const {emptyChallenge}=await import('../src/state/challenge');
+ const p=crabPuzzles.find(p=>p.ref.bank===7&&p.descriptor.level.id==='m2')!;p.descriptor.blockEditor=true;
+ try{
+  let current=crabProgram(solution(p.descriptor)!);expect(current.body).toHaveLength(13);
+  let s=registration.start(p.ref,'family','m2-repairs',emptyChallenge(),options,[]);
+  s=registration.move(s,['e',programOperations(crabProgram(p.descriptor.starter),current)])!;expect(s).not.toBeNull();let count=0;
+  for(let i=0;i<512;i++){
+   const next={...current,body:[{kind:'command' as const,command:i%2?4:5},...current.body.slice(1)]};
+   const operations=programOperations(current,next);if(!operations.length)continue;
+   const accepted=registration.move(s,['e',operations]);if(!accepted)break;s=accepted;current=next;count++;
+  }
+  expect(count).toBeGreaterThan(100);
+  expect(programOperations(crabProgram(['forward']),crabProgram(['turn-left']))).toEqual([[6,[-1,0],5]]);
+ }finally{delete p.descriptor.blockEditor;}
+});
+
+it('existing School descriptors stay flat and an isolated fixture opts in additively',async()=>{
+ const {levels}=await import('../src/learn/games/crab-commands/engine');
+ const {bank}=await import('../src/learn/games/beep-bot/engine');
+ const {task}=await import('../src/learn/games/turtle-draw/engine');
+ expect(levels.every(l=>l.blockEditor===undefined)).toBe(true);
+ expect(bank.flat().every(p=>p.puzzle.blockEditor===undefined)).toBe(true);
+ for(let level=1;level<=5;level++)expect(task(level,0).blockEditor).toBeUndefined();
+ vi.stubEnv('EXPO_PUBLIC_K7_FIXTURES','1');vi.resetModules();
+ try{const {levels:fixtures}=await import('../src/learn/games/crab-commands/engine');expect(fixtures.find(l=>l.id==='k7-fixture')).toMatchObject({blockEditor:true,retired:true});expect(fixtures.filter(l=>l.id!=='k7-fixture').every(l=>l.blockEditor===undefined)).toBe(true);}
+ finally{vi.unstubAllEnvs();vi.resetModules();}
 });
