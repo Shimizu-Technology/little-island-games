@@ -18,7 +18,6 @@ export type NumberPadProps = {
   /** Label spoken for the typed box. */
   prompt?: string;
 };
-const KEYS: readonly (string | number)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, "del", 0, "go"];
 
 /** Digits, delete and a Go key. Big targets, no clock, nothing is judged until Go. */
 export function NumberPad({ resetKey, width, disabled, maxDigits = 3, onSubmit, prefill = null, onKey, prompt = "Your answer" }: NumberPadProps) {
@@ -28,28 +27,37 @@ export function NumberPad({ resetKey, width, disabled, maxDigits = 3, onSubmit, 
     if (first.current) { first.current = false; return; }
     setText(prefill === null ? "" : String(prefill));
   }, [resetKey, prefill]);
-  const gap = 8, key = Math.min(88, Math.floor((Math.min(width, 360) - gap * 2) / 3));
+  // Five keys to a row keeps the whole pad to three rows, so the picture and the pad fit on one screen.
+  const gap = 8, w = Math.min(width, 380), key = Math.floor((w - gap * 4) / 5), keyH = Math.max(48, Math.min(56, Math.round(key * 0.86)));
   const press = (k: string | number) => {
     if (disabled) return;
     onKey?.();
     if (k === "del") setText((t) => t.slice(0, -1));
     else if (k === "go") { if (text.length) { const n = Number(text); setText(""); onSubmit(n); } }
-    else setText((t) => (t.length >= maxDigits || (t === "0") ? (t === "0" ? String(k) : t) : t + k));
+    else setText((t) => (t === "0" ? String(k) : t.length >= maxDigits ? t : t + k));
   };
-  return <View style={{ alignItems: "center", gap: 10, alignSelf: "center" }}>
-    <View accessible accessibilityLabel={text ? `${prompt}: ${text}` : `${prompt}: nothing typed yet`} accessibilityLiveRegion="polite"
-      style={{ minWidth: key * 2 + gap, minHeight: 56, borderRadius: 16, borderWidth: 2.5, borderColor: C.ink, backgroundColor: C.paper, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 }}>
-      <Text maxFontSizeMultiplier={1.6} style={{ fontSize: 34, fontWeight: "900", color: text ? C.ink : C.line }}>{text || "?"}</Text>
-    </View>
-    <View style={{ width: key * 3 + gap * 2, flexDirection: "row", flexWrap: "wrap", gap }}>
-      {KEYS.map((k) => {
-        const go = k === "go", del = k === "del";
-        return <PressableScale key={String(k)} accessibilityRole="button" accessibilityLabel={go ? "Check my answer" : del ? "Delete" : String(k)}
-          accessibilityState={{ disabled: !!disabled || (go && !text.length) }} disabled={disabled || (go && !text.length)} onPress={() => press(k)} amount={0.94}
-          style={{ width: key, minHeight: Math.max(52, Math.round(key * 0.72)), borderRadius: 16, borderWidth: 2, borderColor: go ? C.teal : C.line, backgroundColor: go ? C.teal : C.paper, alignItems: "center", justifyContent: "center", opacity: go && !text.length ? 0.45 : 1, shadowColor: C.ink, shadowOpacity: 0.16, shadowOffset: { width: 0, height: 3 }, shadowRadius: 0, elevation: 3 }}>
-          <Text maxFontSizeMultiplier={1.4} style={{ fontSize: go || del ? 22 : 28, fontWeight: "900", color: go ? "#FFF" : C.ink }}>{go ? "Go" : del ? "⌫" : k}</Text>
-        </PressableScale>;
-      })}
+  const keyStyle = (go: boolean, off: boolean) => ({
+    width: key, minHeight: keyH, borderRadius: 14, borderWidth: 2, borderColor: go ? C.teal : C.line, backgroundColor: go ? C.teal : C.paper,
+    alignItems: "center" as const, justifyContent: "center" as const, opacity: off ? 0.45 : 1,
+    shadowColor: C.ink, shadowOpacity: 0.16, shadowOffset: { width: 0, height: 3 }, shadowRadius: 0, elevation: 3,
+  });
+  const render = (k: string | number) => {
+    const go = k === "go", del = k === "del", off = !!disabled || (go && !text.length);
+    return <PressableScale key={String(k)} accessibilityRole="button" accessibilityLabel={go ? "Check my answer" : del ? "Delete" : String(k)}
+      accessibilityState={{ disabled: off }} disabled={off} onPress={() => press(k)} amount={0.94} style={keyStyle(go, off)}>
+      <Text maxFontSizeMultiplier={1.4} style={{ fontSize: go || del ? 20 : 26, fontWeight: "900", color: go ? "#FFF" : C.ink }}>{go ? "Go" : del ? "⌫" : k}</Text>
+    </PressableScale>;
+  };
+  return <View style={{ alignItems: "center", gap, alignSelf: "center", width: w }}>
+    <View style={{ flexDirection: "row", gap }}>{[1, 2, 3, 4, 5].map(render)}</View>
+    <View style={{ flexDirection: "row", gap }}>{[6, 7, 8, 9, 0].map(render)}</View>
+    <View style={{ flexDirection: "row", gap, alignItems: "center" }}>
+      <View accessible accessibilityLabel={text ? `${prompt}: ${text}` : `${prompt}: nothing typed yet`} accessibilityLiveRegion="polite"
+        style={{ width: key * 3 + gap * 2, minHeight: keyH, borderRadius: 14, borderWidth: 2.5, borderColor: C.ink, backgroundColor: C.paper, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 }}>
+        <Text maxFontSizeMultiplier={1.6} style={{ fontSize: 30, fontWeight: "900", color: text ? C.ink : C.line }}>{text || "?"}</Text>
+      </View>
+      {render("del")}
+      {render("go")}
     </View>
   </View>;
 }

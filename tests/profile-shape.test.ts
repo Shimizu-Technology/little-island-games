@@ -5,10 +5,8 @@ import { addLearner, selectLearner, recordLearning, activeLearner, readyForNext 
 import { startSession, finished } from '../src/learn/session';
 import { creditSchool, backfillSchool, validSchool, independentRound, roundStars } from '../src/learn/schoolProgress';
 import { recordLevelRound } from '../src/learn/levelEvidence';
-import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
 import { finishMathRound } from './helpers/shell-rounds';
 import { shellMove, type ShellRound } from '../src/learn/games/shell-math/round2';
-import { mathAnswer } from '../src/math/questions';
 import { createGame, gameIds } from '../src/games';
 import { defaultOptions } from '../src/games/types';
 import { migrateLibrary, libraryChild, newLibraryChild } from '../src/library/state';

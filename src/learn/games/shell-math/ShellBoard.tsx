@@ -98,7 +98,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
   const typedStepLabel = step.kind === "number" ? (step.role === "final" ? "Your answer" : "This step") : "";
   const stepChoices = step.kind === "number" ? choicesAround(step.value, s.index * 7 + work.at) : [];
 
-  return <View style={{ gap: 10, alignSelf: "center", width: "100%", maxWidth: 700 }}>
+  return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
       <Copy style={{ fontSize: 14, color: C.ink }}>{rungInfo}</Copy>
       {soundOn && hasSpeech(speechKey(problem)) && <Button compact quiet icon="sound-on" disabled={!active} onPress={() => {
@@ -106,7 +106,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
       }}>Hear</Button>}
     </View>
     <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
-    <Text accessibilityLabel={equationText(problem, work.solved)} style={{ fontSize: width < 350 ? 34 : 42, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(problem, work.solved)}</Text>
+    <Text accessibilityLabel={equationText(problem, work.solved)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(problem, work.solved)}</Text>
     <Workspace pic={pic} width={width} hidePicture={hidePicture && level >= 2}
       onPick={step.kind === "fill" && problem.op === "add" && active ? (side, k) => { press(); act(["m", side, k]); } : undefined}
       onPickOnes={step.kind === "fill" && problem.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}

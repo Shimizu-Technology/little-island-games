@@ -1,4 +1,4 @@
-import { placeValue, type Step } from "../../../math/kit";
+import { placeValue, tensOnesText, type Step } from "../../../math/kit";
 import type { Descriptor } from "./challenge-task";
 
 type Deep = Exclude<Descriptor, { t: "fact" }>;
@@ -7,7 +7,7 @@ const minus = "−";
 /** The line above a Deep Water puzzle: what is being asked, before any step. */
 export function deepTitle(d: Deep): string {
   switch (d.t) {
-    case "regroup": return `${d.tens} tens and ${d.ones} ones. What number is that?`;
+    case "regroup": return `${tensOnesText(d.tens, d.ones)}. What number is that?`;
     case "missing": return d.first ? `? + ${d.known} = ${d.total}` : `${d.known} + ? = ${d.total}`;
     case "equalize": return `Two piles: ${d.x} shells and ${d.y} shells. Make them equal.`;
     case "pairs": return `Find the numbers that make ten, then add them all.`;
@@ -15,7 +15,7 @@ export function deepTitle(d: Deep): string {
 }
 export function deepSpoken(d: Deep): string {
   switch (d.t) {
-    case "regroup": return `${d.tens} tens and ${d.ones} ones`;
+    case "regroup": return tensOnesText(d.tens, d.ones);
     case "missing": return d.first ? `Missing number plus ${d.known} equals ${d.total}` : `${d.known} plus the missing number equals ${d.total}`;
     case "equalize": return `Piles of ${d.x} and ${d.y} shells`;
     case "pairs": return `The numbers ${d.nums.join(", ")}`;
@@ -24,7 +24,7 @@ export function deepSpoken(d: Deep): string {
 export function deepPrompt(d: Deep, plan: readonly Step[], at: number): string {
   const s = plan[at];
   switch (d.t) {
-    case "regroup": return s.kind === "trade" ? "Ten ones can swap for one ten. Tap the cubes to make a ten." : `Now count it up. What number is ${d.tens} tens and ${d.ones} ones?`;
+    case "regroup": return s.kind === "trade" ? "Ten ones can swap for one ten. Tap the cubes to make a ten." : `Now count it up. What number is ${tensOnesText(d.tens, d.ones)}?`;
     case "missing": {
       const ten = d.known + (10 - (d.known % 10));
       if (s.kind !== "number") return "";
@@ -53,5 +53,5 @@ export function deepHint(d: Deep, plan: readonly Step[], at: number, stage: numb
   return "Try the first pair that fits.";
 }
 export const deepEquationA11y = (d: Deep) => deepSpoken(d);
-export const valueText = (n: number) => { const v = placeValue(n); return `${v.tens} tens and ${v.ones} ones`; };
+export const valueText = (n: number) => { const v = placeValue(n); return tensOnesText(v.tens, v.ones); };
 export const gapText = (a: number, b: number) => `${a} ${minus} ${b}`;

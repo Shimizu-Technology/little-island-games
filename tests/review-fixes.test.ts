@@ -5,7 +5,6 @@ import { rewardTransitions, backfillRewards } from '../src/badges/transitions';
 import { addLearner, selectLearner } from '../src/learn/learners';
 import { startSession } from '../src/learn/session';
 import { finishMathRound } from './helpers/shell-rounds';
-import { mathAnswer } from '../src/math/questions';
 import { spotFromPoint, characterDrop } from '../src/home/geometry';
 import { instance, starterHome, validHome } from '../src/home/model';
 import { applyWarmup } from '../src/state/warmupAction';

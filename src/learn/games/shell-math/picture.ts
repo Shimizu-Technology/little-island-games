@@ -1,4 +1,4 @@
-import { placeValue, resultOf, type Level, type Problem, type RouteId, type Step, type Work } from "../../../math/kit";
+import { placeValue, tensOnesText, resultOf, type Level, type Problem, type RouteId, type Step, type Work } from "../../../math/kit";
 
 /**
  * What is on the sand at this point in the plan. Pure data, so a test can check that the shells and blocks always
@@ -12,7 +12,12 @@ export type Picture = { frames?: FramesPic; pair?: PairPic; blocks?: BlocksPic; 
 
 export function pictureFor(level: Level, p: Problem, route: RouteId, plan: readonly Step[], w: Work): Picture {
   const at = w.solved ? plan.length : w.at;
-  const r = resultOf(p);
+  const pic = pictureBase(level, p, route, plan, w, at);
+  // Make a ten asks the child to find the bridge, so the number line waits until the first step is done.
+  return level === 4 && at < 1 && pic.line ? { ...pic, line: undefined } : pic;
+}
+
+function pictureBase(level: Level, p: Problem, route: RouteId, plan: readonly Step[], w: Work, at: number): Picture {  const r = resultOf(p);
   if (route === "count") {
     const big = Math.max(p.a, p.b), small = Math.min(p.a, p.b);
     if (p.op === "add") {
@@ -30,8 +35,8 @@ export function pictureFor(level: Level, p: Problem, route: RouteId, plan: reado
         : { frames: { gold: p.a, blue: 0, struck: p.b, ghost: 0 }, caption: `${p.a} take away ${p.b}` };
     }
     return p.op === "add"
-      ? { blocks: { tens: a.tens + b.tens, ones: a.ones + b.ones, ghostOnes: 0, struckOnes: 0, struckTens: 0 }, caption: `${a.tens + b.tens} tens and ${a.ones + b.ones} ones` }
-      : { blocks: { tens: a.tens, ones: a.ones, ghostOnes: 0, struckOnes: b.ones, struckTens: b.tens }, caption: `${a.tens} tens and ${a.ones} ones, take away ${b.tens} tens and ${b.ones} ones` };
+      ? { blocks: { tens: a.tens + b.tens, ones: a.ones + b.ones, ghostOnes: 0, struckOnes: 0, struckTens: 0 }, caption: tensOnesText(a.tens + b.tens, a.ones + b.ones) }
+      : { blocks: { tens: a.tens, ones: a.ones, ghostOnes: 0, struckOnes: b.ones, struckTens: b.tens }, caption: `${tensOnesText(a.tens, a.ones)}, take away ${tensOnesText(b.tens, b.ones)}` };
   }
   if (route === "to-ten" || route === "to-ten-other") {
     if (p.op === "add") {
@@ -64,14 +69,14 @@ export function pictureFor(level: Level, p: Problem, route: RouteId, plan: reado
     const traded = plan.slice(0, at).some((s) => s.kind === "trade");
     if (p.op === "add") {
       const tens = a.tens + b.tens + (traded ? 1 : 0), ones = a.ones + b.ones - (traded ? 10 : 0);
-      return { blocks: { tens, ones, ghostOnes: 0, struckOnes: 0, struckTens: 0 }, caption: `${tens} tens and ${ones} ones` };
+      return { blocks: { tens, ones, ghostOnes: 0, struckOnes: 0, struckTens: 0 }, caption: tensOnesText(tens, ones) };
     }
     const tens = a.tens - (traded ? 1 : 0), ones = a.ones + (traded ? 10 : 0);
     const onesTaken = plan.slice(0, at).some((s) => s.kind === "number" && s.role === "ones");
     const tensTaken = plan.slice(0, at).some((s) => s.kind === "number" && s.role === "tens") || (b.tens === 0 && onesTaken);
     return {
       blocks: { tens, ones, ghostOnes: 0, struckOnes: onesTaken || w.solved ? b.ones : 0, struckTens: tensTaken || w.solved ? b.tens : 0 },
-      caption: `${tens} tens and ${ones} ones`,
+      caption: tensOnesText(tens, ones),
     };
   }
   // give-take has no picture of its own: the number line carries it.

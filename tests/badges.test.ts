@@ -10,7 +10,6 @@ import { applyArcadeAction } from '../src/arcade/saveAction';
 import { startSession } from '../src/learn/session';
 import { applyLearnSave } from '../src/state/learnAction';
 import { finishMathRound } from './helpers/shell-rounds';
-import { mathAnswer } from '../src/math/questions';
 import { addLearner, recordLearning, levelRoundSkill } from '../src/learn/learners';
 import { defaultOptions } from '../src/games/types';
 import { createTic, ticMove } from '../src/games/tic';

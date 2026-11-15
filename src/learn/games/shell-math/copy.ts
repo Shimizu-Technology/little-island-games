@@ -1,4 +1,4 @@
-import { answerOf, equationText, giveTakeParts, hintFor, levelRoute, placeValue, planFor, resultOf, type Level, type Problem, type RouteId, type Step, type Work } from "../../../math/kit";
+import { answerOf, equationText, giveTakeParts, hintFor, tensOnesText, levelRoute, placeValue, planFor, resultOf, type Level, type Problem, type RouteId, type Step, type Work } from "../../../math/kit";
 
 /**
  * Every sentence the Shell Math board shows, built from the real plan. Prompts name the numbers a child is
@@ -19,8 +19,8 @@ export function stepPrompt(level: Level, p: Problem, plan: readonly Step[], at: 
   }
   if (s.kind === "fill") {
     return p.op === "add"
-      ? `Make a ten. Touch a shell in the small group to move that many into the big group.`
-      : `Get back to ten. Touch the last shell to take away from the ones.`;
+      ? `Make a ten. Touch a shell to move that many across.`
+      : `Get back to ten. Touch the last shell to take away.`;
   }
   if (s.kind === "trade") {
     return s.dir === "make" ? `Ten ones can swap for one ten. Tap the ones to make a ten.` : `There are not enough ones. Tap a ten to open it into ten ones.`;
@@ -53,7 +53,7 @@ export function stepPrompt(level: Level, p: Problem, plan: readonly Step[], at: 
   if (route === "to-ten") {
     const d = p.op === "add" ? 10 - (p.a % 10) : p.a % 10, ten = p.op === "add" ? p.a + d : p.a - d;
     if (role === "to-ten") return p.op === "add" ? `${p.a} + ? = ${ten}. How many make a ten?` : `${p.a} ${minus} ? = ${ten}. How many take you back to ten?`;
-    if (role === "rest") return `${p.b} ${p.op === "add" ? "to add" : "to take away"} and ${d} done. How many are left?`;
+    if (role === "rest") return `${p.b} ${p.op === "add" ? "to add" : "to take away"}, ${d} done. How many left?`;
     return p.op === "add" ? `${ten} + ${p.b - d} = ?` : `${ten} ${minus} ${p.b - d} = ?`;
   }
   if (route === "trade") {
@@ -133,11 +133,11 @@ export function routeLines(p: Problem, route: RouteId): string[] {
         : [`${g.n} is almost ${g.up}. Take away ${g.up} instead: ${p.a} ${minus} ${g.up} = ${v(0)}.`, `That took ${g.d} too many. Give ${g.d} back: ${v(0)} + ${g.d} = ${r}.`];
     }
     case "tens-ones":
-      return [`${p.a} is ${a.tens} tens and ${a.ones} ones.`, `${p.b} is ${b.tens} tens and ${b.ones} ones.`, `Tens and ones, then together: ${r}.`];
+      return [`${p.a} is ${tensOnesText(a.tens, a.ones)}.`, `${p.b} is ${tensOnesText(b.tens, b.ones)}.`, `Tens and ones, then together: ${r}.`];
     case "trade":
       return p.op === "add"
-        ? [`Ones: ${a.ones} + ${b.ones} = ${a.ones + b.ones}.`, `Ten ones make a ten.`, `${r} is ${placeValue(r).tens} tens and ${placeValue(r).ones} ones.`]
-        : [`Open a ten so there are ${a.ones + 10} ones.`, `Take away ${b.ones} ones, then the tens.`, `${r} is ${placeValue(r).tens} tens and ${placeValue(r).ones} ones.`];
+        ? [`Ones: ${a.ones} + ${b.ones} = ${a.ones + b.ones}.`, `Ten ones make a ten.`, `${r} is ${tensOnesText(placeValue(r).tens, placeValue(r).ones)}.`]
+        : [`Open a ten so there are ${a.ones + 10} ones.`, `Take away ${b.ones} ones, then the tens.`, `${r} is ${tensOnesText(placeValue(r).tens, placeValue(r).ones)}.`];
     default:
       return [`Count on from ${Math.max(p.a, p.b)}.`];
   }

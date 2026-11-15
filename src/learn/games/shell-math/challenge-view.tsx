@@ -5,7 +5,7 @@ import { feel } from "../../../components/feel";
 import { Text } from "../../../components/Text";
 import { Button, C, Copy, PressableScale } from "../../../components/ui";
 import type { ChallengeViewProps } from "../../../challenge/types";
-import { choicesAround, choicesFor, equationText, judge, placeValue, type Act, type Level, type RouteId } from "../../../math/kit";
+import { choicesAround, choicesFor, tensOnesText, equationText, judge, placeValue, type Act, type Level, type RouteId } from "../../../math/kit";
 import { Blocks } from "../../../math/kit/ui/Blocks";
 import { Bridge } from "../../../math/kit/ui/Bridge";
 import { deepHint, deepPrompt, deepSpoken, deepTitle } from "./challenge-copy";
@@ -33,7 +33,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     const p = d.t === "fact" ? problemOf(d.item) : null;
     return <View style={{ gap: 12, alignSelf: "center", width: "100%", maxWidth: 700 }}>
       <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>Choose a way to work it out</Text>
-      {p && <Text accessibilityLabel={equationText(p)} style={{ fontSize: width < 350 ? 34 : 42, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(p)}</Text>}
+      {p && <Text accessibilityLabel={equationText(p)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(p)}</Text>}
       {d.t === "fact" && d.level === 5 && <Copy style={{ color: C.ink, textAlign: "center" }}>Some ways take fewer moves than others.</Copy>}
       {d.t === "fact" && d.level === 3 && <Copy style={{ color: C.ink, textAlign: "center" }}>Any way works. Try a different one each time.</Copy>}
       {d.t === "fact" && p && d.ways.map((r: RouteId, i) => <PressableScale key={r} accessibilityRole="button" accessibilityLabel={`${routeName(r)}. ${routeBlurb(p, r)}`} disabled={!active}
@@ -67,9 +67,9 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     const heading = solved ? `${equationText(p, true)}. Well done.` : stepPrompt(level, p, plan, w.at, route);
     const hint = hintLine(level, p, plan, w);
     const tiles = step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, p, tileCap(level)) : choicesAround(step.value, w.at)) : [];
-    return <View style={{ gap: 10, alignSelf: "center", width: "100%", maxWidth: 700 }}>
+    return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
       <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
-      <Text accessibilityLabel={equationText(p, solved)} style={{ fontSize: width < 350 ? 34 : 42, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(p, solved)}</Text>
+      <Text accessibilityLabel={equationText(p, solved)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(p, solved)}</Text>
       <Workspace pic={pic} width={width} hidePicture={hidden && level >= 2}
         onPick={step.kind === "fill" && p.op === "add" && active ? (side, k) => { press(); act(["m", side, k]); } : undefined}
         onPickOnes={step.kind === "fill" && p.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}
@@ -99,10 +99,10 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     act(a);
   };
   const trades = plan.filter((x) => x.kind === "trade").length, done = Math.min(trades, w.at);
-  return <View style={{ gap: 10, alignSelf: "center", width: "100%", maxWidth: 700 }}>
+  return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
     <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
     <Text accessibilityLabel={deepSpoken(d)} style={{ fontSize: width < 350 ? 26 : 32, fontWeight: "900", color: C.ink, textAlign: "center" }}>{solved && d.t === "missing" ? (d.first ? `${finalValue} + ${d.known} = ${d.total}` : `${d.known} + ${finalValue} = ${d.total}`) : deepTitle(d)}</Text>
-    {!hidden && d.t === "regroup" && <Blocks unit={Math.max(10, Math.min(16, Math.floor((width - 60) / (d.tens + 8))))} tens={d.tens + done} ones={d.ones - 10 * done} label={`${d.tens + done} tens and ${d.ones - 10 * done} ones`}
+    {!hidden && d.t === "regroup" && <Blocks unit={Math.max(10, Math.min(13, Math.floor((width - 60) / (d.tens + 8))))} tens={d.tens + done} ones={d.ones - 10 * done} label={tensOnesText(d.tens + done, d.ones - 10 * done)}
       onTradeMake={step.kind === "trade" && active ? () => { press(); act(["t"]); } : undefined} />}
     {!hidden && d.t === "missing" && <Bridge width={Math.min(width, 380)} start={d.known} hops={[d.known + (10 - (d.known % 10)), d.total]} ten={d.known + (10 - (d.known % 10))} lo={Math.floor(d.known / 10) * 10} hi={d.total}
       made={Math.min(w.at, 2)} label={`Number line. Start ${d.known}, hop to ${d.known + (10 - (d.known % 10))}, then to ${d.total}.`} />}

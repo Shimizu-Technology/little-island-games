@@ -5,6 +5,7 @@ import { C, Copy } from "../../../components/ui";
 import { Blocks } from "../../../math/kit/ui/Blocks";
 import { Bridge } from "../../../math/kit/ui/Bridge";
 import { TenFrame } from "../../../math/kit/ui/TenFrame";
+import { tensOnesText } from "../../../math/kit";
 import type { Picture } from "./picture";
 
 export type WorkspaceProps = {
@@ -28,7 +29,7 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
   const total = pic.frames ? pic.frames.gold + pic.frames.blue + pic.frames.ghost : 0;
   const nFrames = Math.max(1, Math.ceil(total / 10));
   const cell = pic.pair ? frameCell(w, 2) : frameCell(w, nFrames);
-  return <View style={{ alignItems: "center", gap: 8 }}>
+  return <View style={{ alignItems: "center", gap: 4 }}>
     {pic.pair && <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
       <View style={{ alignItems: "center", gap: 4 }}>
         <TenFrame cell={cell} filled={pic.pair.a} label={`First group: ${pic.pair.a} shells${pic.pair.fullA ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(1, k) : undefined} pickLabel={(k) => `Move ${k} ${k === 1 ? "shell" : "shells"} from the first group to the second`} />
@@ -53,11 +54,11 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
           onPick={onPickOnes && k === lastGold && pic.frames!.gold % 10 !== 0 ? onPickOnes : undefined} pickLabel={(n) => `Take away ${n} ${n === 1 ? "shell" : "shells"}`} />;
       })}
     </View>}
-    {pic.blocks && <Blocks unit={Math.max(10, Math.min(18, Math.floor((w - 60) / (pic.blocks.tens + 7))))} tens={pic.blocks.tens} ones={pic.blocks.ones} ghostOnes={pic.blocks.ghostOnes}
+    {pic.blocks && <Blocks unit={Math.max(10, Math.min(13, Math.floor((w - 60) / (pic.blocks.tens + 7))))} tens={pic.blocks.tens} ones={pic.blocks.ones} ghostOnes={pic.blocks.ghostOnes}
       struckOnes={pic.blocks.struckOnes} struckTens={pic.blocks.struckTens} onTradeMake={onTradeMake} onTradeOpen={onTradeOpen}
-      label={`${pic.blocks.tens} tens and ${pic.blocks.ones} ones`} />}
+      label={tensOnesText(pic.blocks.tens, pic.blocks.ones)} />}
     {pic.line && <Bridge width={Math.min(w, 380)} start={pic.line.start} hops={pic.line.hops} ten={pic.line.ten} lo={pic.line.lo} hi={pic.line.hi}
       made={pic.line.made} label={`Number line. Start ${pic.line.start}, then ${pic.line.hops.join(", then ")}.`} />}
-    {pic.caption ? <Copy style={{ color: C.ink, fontSize: 15, fontWeight: "700", textAlign: "center" }}>{pic.caption}</Copy> : null}
+    {pic.caption && !pic.line ? <Copy style={{ color: C.ink, fontSize: 15, fontWeight: "700", textAlign: "center" }}>{pic.caption}</Copy> : null}
   </View>;
 }

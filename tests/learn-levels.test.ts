@@ -11,7 +11,7 @@ import { emptySave, parseSave } from "../src/state/validation";
 import { addLearner, activeLearner, levelRoundSkill, readyForNext, recordLearning, rememberLearningChoice, selectLearner } from "../src/learn/learners";
 import { shelfLevel } from "../src/learn/home";
 import { recordLevelRound } from "../src/learn/levelEvidence";
-import { mathAnswer, mathResult } from "../src/math/questions";
+import { mathResult } from "../src/math/questions";
 import { finishMathRound } from "./helpers/shell-rounds";
 import type { MathRound } from "../src/learn/games/shell-math/round";
 import { growthMove, growthQuestions } from "../src/learn/growth/engine";

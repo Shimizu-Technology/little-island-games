@@ -16,7 +16,6 @@ import { shelfLevel, homeContinue, dailySuggestions } from '../src/learn/home';
 import { recordLevelRound } from '../src/learn/levelEvidence';
 import { finishMathRound } from './helpers/shell-rounds';
 import type { MathRound } from '../src/learn/games/shell-math/round';
-import { mathAnswer } from '../src/math/questions';
 import { personFor, withoutLearner, type Person } from '../src/personalization/model';
 import { badgesFor, grantsFor } from '../src/badges/engine';
 import { gameIds, createGame } from '../src/games';

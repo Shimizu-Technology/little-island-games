@@ -31,6 +31,8 @@ export function validProblem(v: unknown): v is Problem {
 }
 
 export const placeValue = (n: number): { tens: number; ones: number } => ({ tens: Math.floor(n / 10), ones: n % 10 });
+/** "1 ten and 1 one", "3 tens and 15 ones": a count never reads "1 tens". */
+export const tensOnesText = (tens: number, ones: number) => `${tens} ${tens === 1 ? "ten" : "tens"} and ${ones} ${ones === 1 ? "one" : "ones"}`;
 export const fromPlaceValue = (tens: number, ones: number): number => tens * 10 + ones;
 /** Trade one ten for ten ones. Null when there is no ten to open. */
 export function openTen(v: { tens: number; ones: number }): { tens: number; ones: number } | null {
