@@ -197,13 +197,28 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.scene.poke).toMatchObject({ id: 'home-shelf-book-2' });
     expect(harness.played).toEqual(['shell', 'clang', 'wood']);
   });
-  it('HC-01: an anchored bed answers a tap with a small wiggle and a soft sound, and nothing moves', async () => {
-    const state = labFixtures['delight-rest']();
+  it('HC-01: an empty stool answers a tap with a small wiggle and its sound; a table holding things gives the sound alone', async () => {
+    const state = labFixtures.delight();
     const persist = await open(state);
-    const bed = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'bed')!;
-    await tap(bed.id);
-    expect(harness.cues).toContainEqual([bed.id, 'tap', undefined]);
-    expect(harness.played).toEqual(['cloth']);
+    const scene = buildScene(state);
+    const stool = Object.values(scene.entities).find((e) => e.item?.item === 'stool' && !e.children.length)!;
+    const table = Object.values(scene.entities).find((e) => e.item?.item === 'kitchen-table')!;
+    expect(table.children.length).toBeGreaterThan(0);
+    await tap(stool.id);
+    await tap(table.id);
+    expect(harness.cues).toEqual([[stool.id, 'tap', undefined]]);
+    expect(harness.played).toEqual(['wood', 'wood']);
     expect(persist).not.toHaveBeenCalled();
+  });
+  it('HD-09: a tap on a bed with a sleeping friend in it is for the friend, who stirs; the bed never tilts', async () => {
+    const state = labFixtures['delight-rest']();
+    const scene = buildScene(state);
+    const bed = Object.values(scene.entities).find((e) => e.item?.item === 'bed')!;
+    const sleeper = Object.values(scene.entities).find((e) => e.character?.slot === 0)!;
+    harness.sleeping = { [sleeper.id]: true };
+    await open(state);
+    await tap(bed.id);
+    expect(harness.cues).toEqual([[sleeper.id, 'stir', undefined]]);
+    expect(harness.played).toEqual(['rustle']);
   });
 });

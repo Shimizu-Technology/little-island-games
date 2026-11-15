@@ -504,7 +504,7 @@ export function HomeScreen({
     }
     if (entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle)
       current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
-    if (entity) delight.tapped(entity, !!sleeping[entity.id]);
+    if (entity) delight.tapped(entity, sleeping);
     if (id) {
       setSelected(!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay ? undefined : id);
       if (entity) {

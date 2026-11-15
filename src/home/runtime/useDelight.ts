@@ -124,9 +124,13 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook }: {
   }, [cueOn, effect, feedback, sceneNow, later, mood]);
 
   /** A touch on something in the room. Toggles have already been dispatched by the screen. */
-  const tapped = useCallback((entity: SceneEntity, sleeping: boolean) => {
+  const tapped = useCallback((entity: SceneEntity, sleeping: Record<string, boolean>) => {
+    // A bed, seat or tub with a friend in it: the touch is for the friend, who is mostly under
+    // the blanket. The furniture never tilts out from under them.
+    const occupant = entity.item ? entity.children.map((id) => sceneNow().entities[id]).find((e) => e?.character) : undefined;
+    if (occupant) entity = occupant;
     if (entity.character) {
-      if (sleeping) {
+      if (sleeping[entity.id]) {
         // HD-09: a sleeping friend stirs and settles back to sleep.
         cueOn(entity.id, "stir");
         const head = friendPoint(entity, "head");
@@ -157,10 +161,11 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook }: {
       feedback.play("bubbles");
       return;
     }
-    // HC-01: nothing that looks touchable stays silent. A small wiggle and its own sound.
-    cueOn(entity.id, "tap");
+    // HC-01: nothing that looks touchable stays silent. A small wiggle and its own sound; a
+    // table or shelf holding things answers with the sound alone, so nothing slides off it.
+    if (!entity.children.length) cueOn(entity.id, "tap");
     feedback.play(materialOf(item.item));
-  }, [cueOn, effect, feedback, mood]);
+  }, [cueOn, effect, feedback, mood, sceneNow]);
 
   const touchedPiece = useCallback((room: RoomId, piece: StagePiece) => {
     setPoke((current) => ({ id: piece.id, serial: (current?.serial ?? 0) + 1 }));
