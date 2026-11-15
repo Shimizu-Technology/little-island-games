@@ -27,10 +27,12 @@ export const GREET_MOOD_MS = 900;
  * resting cue on the UI thread, or a small effect. Cooking (HD-07) is the only one that
  * changes the world, through the reducer's `cook` step.
  */
-export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () => false }: {
+export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScene, cook, isHeld = () => false }: {
   soundOn: boolean;
   reduced: boolean;
   cue: (id: string, kind: CueKind, dir?: number) => void;
+  /** Fix round 2: end `id`'s reaction now (a newer action takes over). */
+  clearCue?: (id: string) => void;
   getScene: () => Scene;
   cook: (id: string, room: RoomId) => void;
   /** Fix round 1: whether a finger has captured this entity right now (not settling). */
@@ -39,8 +41,8 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () 
   const feedback = useHomeFeedback(soundOn);
   // The screen passes fresh closures each render; reading them through a ref keeps every
   // callback below stable, so memoized screen callbacks and effects don't churn.
-  const outside = useRef({ cue, getScene, cook, isHeld });
-  useLayoutEffect(() => { outside.current = { cue, getScene, cook, isHeld }; });
+  const outside = useRef({ cue, clearCue, getScene, cook, isHeld });
+  useLayoutEffect(() => { outside.current = { cue, clearCue, getScene, cook, isHeld }; });
   const cueOn = useCallback((id: string, kind: CueKind, dir?: number) => outside.current.cue(id, kind, dir), []);
   const sceneNow = useCallback(() => outside.current.getScene(), []);
   const cookNow = useCallback((id: string, room: RoomId) => outside.current.cook(id, room), []);
@@ -73,8 +75,18 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () 
   const meals = useRef<Record<string, number>>({});
   // Fix round 1: one action token per friend. Every delayed flourish checks it when it fires,
   // so a newer meal, a pickup or a tap always wins over an older meal's crumbs, smile or burp.
+  // Fix round 2: a newer action also ends whatever mood and reaction are showing right now.
   const actions = useRef<Record<string, number>>({});
-  const newAction = useCallback((id: string) => { const token = ++serial.current; actions.current[id] = token; return token; }, []);
+  const newAction = useCallback((id: string) => {
+    const token = ++serial.current;
+    actions.current[id] = token;
+    if (moodTokens.current[id] !== undefined) {
+      moodTokens.current[id] = token;
+      setMoods((current) => { if (!(id in current)) return current; const next = { ...current }; delete next[id]; return next; });
+    }
+    outside.current.clearCue(id);
+    return token;
+  }, []);
   const current = useCallback((id: string, token: number) => actions.current[id] === token, []);
 
   const pickedUp = useCallback((subject?: SceneEntity) => {

@@ -1512,6 +1512,19 @@ export function useInteraction({
       wakeFrames();
     })(id, kind, dir);
   };
+  /** H4 fix round 2: a newer action on `id` ends its reaction now, before any new one starts. */
+  const clearCue = (id: string) => {
+    runOnUI((target: string) => {
+      "worklet";
+      if (!cues.value[target]) return;
+      cues.modify((current) => {
+        "worklet";
+        delete current[target];
+        return current;
+      });
+      wakeFrames();
+    })(id);
+  };
   const resetFrames = () => {
     frameTimes.set([]);
     frameCount.set(0);
@@ -1544,6 +1557,7 @@ export function useInteraction({
     restingMotion,
     showHint,
     showCue,
+    clearCue,
     watchers,
     animateCamera,
     veil,

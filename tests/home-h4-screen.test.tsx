@@ -11,7 +11,7 @@ import { roomIds } from '../src/home/catalogMore';
 import { labFixtures } from '../src/home/runtime/lab';
 import { COOK_MS } from '../src/home/runtime/delight';
 import { stagePieces } from '../src/home/art/Stage';
-const harness = vi.hoisted(() => ({ options: {} as any, scene: {} as any, cues: [] as any[], played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ options: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
@@ -31,7 +31,7 @@ vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harn
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
 vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {},
   camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: () => {},
-  showHint: () => {}, showCue: (...args: any[]) => harness.cues.push(args), dropZones: { set: () => {} } }; } }));
+  showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: () => null, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
@@ -48,7 +48,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.slots = [{}, {}]; harness.cues = []; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -159,6 +159,68 @@ describe('H4 on the Island Home screen', () => {
     await act(async () => { vi.advanceTimersByTime(400); }); // the second meal's moment
     expect(harness.scene.moods[eaterId]).toBe('happy');
     expect(harness.cues.filter(([id, kind]) => id === eaterId && kind === 'happy')).toHaveLength(1);
+  });
+  // Fix round 2 (codex round 2, P2): a newer action ends the mood and reaction already showing.
+  const feeder = async (count: number) => {
+    const state = labFixtures.delight();
+    state.rooms.kitchen.instances.push(...Array.from({ length: count }, (_, n) => ({ ...instance(`snack-${n}`, 'banana', 0, 0), at: { x: 120 + (n % 6) * 60, y: 470 } })));
+    await open(state);
+    const eaterId = Object.values(buildScene(state).entities).find((e) => e.character?.slot === 0)!.id;
+    const feed = async (n: number) => {
+      const scene = harness.scene.scene, index = scene.rooms.kitchen, mouth = index.targets.find((t: any) => t.id === `${eaterId}/mouth`)!;
+      const proposal = resolve({ ...index, entities: scene.entities }, scene.entities[`kitchen/item/snack-${n}`], mouth.contact, { scale: .5, aim: roomPoint(mouth.face!.x, mouth.face!.y), release: true });
+      expect(proposal.kind).toBe('mouth');
+      const origin = roomOrigin(roomIds.indexOf('kitchen'), building);
+      await act(async () => harness.options.onCommit(0, proposal, { x: proposal.contact.x + origin.x, y: proposal.contact.y + origin.y }, {}));
+    };
+    return { eaterId, feed };
+  };
+  it('fix round 2 (P2): a second meal during the first meal\'s happy afterglow ends that smile and wiggle at once', async () => {
+    const { eaterId, feed } = await feeder(2);
+    await feed(0);
+    await act(async () => { vi.advanceTimersByTime(1000); }); // afterglow started at 760 ms
+    expect(harness.scene.moods[eaterId]).toBe('happy');
+    expect(harness.active[eaterId]).toBe('happy');
+    await feed(1);
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+    expect(harness.active[eaterId]).toBeUndefined();
+    await act(async () => { vi.advanceTimersByTime(400); }); // the first meal's smile would still be showing
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+    expect(harness.active[eaterId]).toBeUndefined();
+    await act(async () => { vi.advanceTimersByTime(400); }); // the second meal's own moment
+    expect(harness.scene.moods[eaterId]).toBe('happy');
+    expect(harness.active[eaterId]).toBe('happy');
+    expect(harness.cues.filter(([id, kind]) => id === eaterId && kind === 'happy')).toHaveLength(2);
+    await act(async () => { vi.advanceTimersByTime(800); });
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+  });
+  it('fix round 2 (P2): a meal during a burp\'s surprise ends it, and the burp itself never comes', async () => {
+    const { eaterId, feed } = await feeder(6);
+    for (let n = 0; n < 4; n++) { await feed(n); await act(async () => { vi.advanceTimersByTime(1600); }); }
+    await feed(4); // the fifth meal of the visit burps
+    await act(async () => { vi.advanceTimersByTime(800); });
+    expect(harness.scene.moods[eaterId]).toBe('surprised');
+    expect(harness.active[eaterId]).toBe('burp');
+    await feed(5);
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+    expect(harness.active[eaterId]).toBeUndefined();
+    await act(async () => { vi.advanceTimersByTime(300); });
+    expect(harness.played).not.toContain('burp');
+    expect(harness.scene.effects.some((e: any) => e.kind === 'burp')).toBe(false);
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+    await act(async () => { vi.advanceTimersByTime(500); });
+    expect(harness.scene.moods[eaterId]).toBe('happy');
+    expect(harness.active[eaterId]).toBe('happy');
+  });
+  it('fix round 2 (P2): picking a friend up during an afterglow ends it too', async () => {
+    const { eaterId, feed } = await feeder(1);
+    await feed(0);
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    expect(harness.scene.moods[eaterId]).toBe('happy');
+    harness.slots = [{ id: eaterId, generation: 0, epoch: 0 }, {}];
+    await act(async () => harness.options.onPickup({ id: eaterId, slot: 0, scene: harness.scene.scene, generation: 0, epoch: 0 }));
+    expect(harness.scene.moods[eaterId]).toBeUndefined();
+    expect(harness.active[eaterId]).toBeUndefined();
   });
   it('HD-07: tap the stove to light it; food in its pan sizzles and cooks; taken off early, it stays raw', async () => {
     const state = labFixtures.delight();

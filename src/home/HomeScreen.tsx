@@ -191,6 +191,7 @@ export function HomeScreen({
     soundOn,
     reduced,
     cue: (id, kind, dir) => runtime.current?.showCue?.(id, kind, dir),
+    clearCue: (id) => runtime.current?.clearCue?.(id),
     getScene: () => live.current.scene,
     cook: (id, roomId) => live.current.store.dispatch({ type: "cook", id, roomId }),
     isHeld: (id) => (runtime.current?.slots.get() ?? []).some((s) => !!s?.id && s.phase !== "settling" && (s.id === id || s.restId === id)),
