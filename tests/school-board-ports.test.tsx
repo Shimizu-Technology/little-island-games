@@ -73,13 +73,13 @@ const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
-async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}) {
+async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level=1) {
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
   vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
   Object.assign(viewport,window);
-  const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
+  const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},level)},{},7);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
   await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
@@ -284,4 +284,25 @@ it('Float/Sink fits the measured AX prediction without reducing its readable tan
  const measuredFixed=576, available=818-233.33333333333334;
  expect(measuredFixed+Number(flat(outer.props.style).gap)).toBeLessThanOrEqual(available);
  expect(Number(flat(view('school-float-sink-drawing').props.style).height)).toBeGreaterThanOrEqual(120);
+});
+it.each([1,3.12])('Weather gauge tick labels stay legible at text scale %s',async fontScale=>{
+ const r=await mountPort('weather-watch',B7,220,{width:393,height:852,fontScale},4);
+ await act(async()=>{view('school-weather-watch-drawing').props.onLayout({nativeEvent:{layout:{height:220}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ const drawing=view('school-weather-watch-drawing'), svg=drawing.findAll(n=>String(n.type)==='Svg')[0];
+ const ticks=svg.findAll(n=>String(n.type)==='SvgText'&&n.children.some(c=>typeof c==='string'&&/^(0|10|20|30|40)$/.test(c)));
+ expect(ticks.length).toBeGreaterThanOrEqual(6);
+ const scale=Math.min(Number(svg.props.height)/235,311/360), floor=13*(fontScale>=1.5?1.5:1);
+ expect(ticks.every(n=>Number(n.props.fontSize)*scale>=floor-.01)).toBe(true);
+ if(fontScale>=1.5)expect(Number(svg.props.height)/235*30).toBeGreaterThanOrEqual(floor);
+});
+it('Logic Lagoon cage totals retain a 13-pt School clue floor',async()=>{
+ const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale:1},5);
+ const clues=r.root.findAll(n=>String(n.type)==='Text'&&n.children.some(c=>typeof c==='string'&&c.startsWith('Σ')));
+ expect(clues.length).toBeGreaterThan(0);expect(clues.every(n=>Number(flat(n.props.style).fontSize)>=13)).toBe(true);
+});
+it('Crab fits AX command words using the actual School label font',async()=>{
+ const r=await mountPort('crab-commands',B1,600,{width:393,height:852,fontScale:3.12});
+ const word=r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('Right')&&flat(n.props.style).fontSize===13)[0];
+ const {wordFitMultiplier}=await import('../src/components/wordFit');
+ expect(word.props.maxFontSizeMultiplier).toBeLessThanOrEqual(Math.min(...['Up','Right','Down','Left'].map(name=>wordFitMultiplier(name,13,(333-18)/4-12,2))));
 });

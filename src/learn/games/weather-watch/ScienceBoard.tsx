@@ -193,8 +193,10 @@ export function TokenArt({ text, size = 44 }: { text: string; size?: number }) {
   );
 }
 function Scene({ game, q, values, records }: { game: Game; q: Task; values: number[]; records: number[][] }) {
-  const geometry = useBoardGeometry('weather-watch', 220, SCHOOL_BOARD_MIN['weather-watch']);
   const space = useBoardSpace(), fontScale = useWindowDimensions().fontScale;
+  // Gauge numbers are 30 source units apart; keep AX labels from colliding.
+  const floor = q.kind === 'gauge' && fontScale >= LARGE_TEXT ? 180 : SCHOOL_BOARD_MIN['weather-watch'];
+  const geometry = useBoardGeometry('weather-watch', 220, floor);
   const side = useBoardColumns();
   const sceneScale = Math.min(geometry.height / 235, ((space?.width ?? 382) * (side ? .46 : 1) - 22) / 360);
   const sceneLabel = label;
@@ -352,9 +354,9 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         {Array.from({length:41}, (_, n) => n).map((n) => (
           <G key={n}>
             <Line x1={59} y1={164 - n * 3} x2={65} y2={164 - n * 3} stroke={ink} />
-            {n % 10 === 0 && label(String(n), 76, 168 - n * 3, 10)}
+            {n % 10 === 0 && fittedLabel(String(n), 76, 168 - n * 3, 10)}
             <Line x1={138} y1={164 - n * 3} x2={n % 5 === 0 ? 145 : 141} y2={164 - n * 3} stroke={ink} />
-            {n % 10 === 0 && label(String(n), 153, 168 - n * 3, 10)}
+            {n % 10 === 0 && fittedLabel(String(n), 153, 168 - n * 3, 10)}
           </G>
         ))}
         {[...records, [a, b]].map((r, i) => (

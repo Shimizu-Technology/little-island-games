@@ -411,7 +411,7 @@ export function Board({
   const geometry = useBoardGeometry('crab-commands', side ? Math.min(beachSize, width * .46) : beachSize, SCHOOL_BOARD_MIN['crab-commands'], !blocks);
   // Command cards share the row; their labels stop where every word still fits a card (2-pt borders, 4-pt inset).
   const cards = commands(l.pace), cardInner = (width - 6 * (cards.length - 1)) / cards.length - 12;
-  const labelMax = large ? Math.min(...cards.map(c => wordFitMultiplier(cardLabel[c], 12, cardInner, 2))) : undefined;
+  const labelMax = large ? Math.min(...cards.map(c => wordFitMultiplier(cardLabel[c], geometry.measured ? 13 : 12, cardInner, 2))) : undefined;
   const go = () => {
     if (!active || s.running || !s.program.length) return;
     setWobble(0); practice('think.sequence', solved(l, run(l, s.program)));
