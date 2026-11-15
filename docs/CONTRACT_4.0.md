@@ -98,6 +98,8 @@ The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/st
 
 **A slice may add:** a family passing its own `spec`, `borders`, `tints`, `overlay`, `frame`, `cellWords` and `status`, or its own board for a genre that isn't a grid.
 
+**Lead-authorized addition, 16 November 2026 (T1 fix round):** optional `cornerClues` presentation metadata reserves the public caption's area when a cell contains pencil notes. It is shared by the Latin boards and Logic Lagoon. It changes no saved state, rule, hint, gesture arbitration, or budget constant. Plain cells keep their existing note rendering; corner-note text never shrinks below its previous size or 10 pt. A dense corner that cannot fit uses the existing enlarged-grid path. This shared change requires geometry and native regression evidence in T1's fix report and PR review.
+
 **Lead change:** props, gesture or scroll arbitration, mistake settings, or the budget constants below.
 
 ## Word pipeline gates

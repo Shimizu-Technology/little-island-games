@@ -3,7 +3,7 @@ import { View, useWindowDimensions } from 'react-native';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import { NativeGrid } from './native-grid';
 
-import { cageLayer, cellClueWords, markLayer } from '../../../puzzles/latin/clues';
+import { cageCorners, cageLayer, cellClueWords, markLayer } from '../../../puzzles/latin/clues';
 import { lagoonCue } from './teaching';
 import type { LatinPuzzle } from '../../../puzzles/latin/core';
 import type { GridAction, GridState } from '../../../puzzles/grid/model';
@@ -23,7 +23,8 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
   const stage = ladder.edits === state.edits && assisted ? ladder.stage : 0;
   const tints = useMemo(() => new Map(cue.focus.map(i => [i, 2 as const])), [cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
-  const overlay = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
+  const overlay = useMemo(() => p.cages.length ? cageLayer(p, { labels: false }) : p.less.length ? markLayer(p) : undefined, [p]);
+  const cornerClues = useMemo(() => p.cages.length ? cageCorners(p) : undefined, [p]);
   const cellWords = useMemo(() => p.cages.length || p.less.length ? cellClueWords(p) : undefined, [p]);
   const { width: windowWidth, height } = useWindowDimensions();
   const short = !pictures && windowWidth > height && height < 500;
@@ -61,7 +62,7 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
       </View>
       <View testID="logic-values" style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>{pictures.map((symbol, i) => <PressableScale key={symbol} accessibilityRole="button" accessibilityLabel={`Place ${symbol}`} disabled={!active || !!p.givens[state.selected]} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: i + 1 })} style={{ width: 54, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#FDF6DF', borderWidth: 2, borderColor: '#87AA72' }}><SeaGlyph kind={symbol} size={40}/></PressableScale>)}</View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button compact quiet disabled={!active || !state.undo.length} onPress={() => dispatch({ type: 'undo' })}>Undo</Button><Button compact quiet disabled={!active || !state.redo.length} onPress={() => dispatch({ type: 'redo' })}>Redo</Button><Button compact quiet disabled={!active} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: 0 })}>Erase</Button></View>
-    </> : <NativeGrid spec={specFor(p)} state={state} dispatch={dispatch} active={active} width={gridWidth} mistakes="Plain" borders={borders} overlay={overlay} cellWords={cellWords} tints={stage ? tints : undefined} status={title}/>}
+    </> : <View testID="lagoon-numeric-fit" style={{ width: gridWidth, maxWidth: '100%' }}><NativeGrid spec={specFor(p)} state={state} dispatch={dispatch} active={active} width={gridWidth} mistakes="Plain" borders={borders} overlay={overlay} cornerClues={cornerClues} cellWords={cellWords} tints={stage ? tints : undefined} status={title}/></View>}
     </View>
     </View>
     <Copy maxFontSizeMultiplier={1.3}>{p.cages.length ? `Each row, column and box needs 1–${p.size}. Dashed cages add to their totals without repeating a number.` : p.less.length ? `Each row and column needs 1–${p.size}. Each arrow points at the smaller number.` : `One of each ${pictures ? 'picture' : 'number'} in every row and column.${p.box ? ' Each outlined box needs one of each too.' : ''}`}</Copy>

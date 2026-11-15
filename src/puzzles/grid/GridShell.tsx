@@ -9,6 +9,7 @@ import { acceptTouch, gridGeometry, moveSelection, nearestCell, paintLine, type 
 import type { Mistakes } from '../../cove/local';
 import { GridPreferences, GridFeedback, GridInteraction, GridAdult } from './preferences';
 import { GridChromeContext, boardRoom, gridViewportMax } from './budget';
+import { cornerNoteLayout, cornersNeedEnlarging, type CornerClue, type CornerClues } from './cornerNotes';
 
 /** This memoized layer never changes during selection, notes, painting or panning. */
 export const GridLines = memo(function GridLines({ rows, columns, cell, borders = '' }: { rows: number; columns: number; cell: number; borders?: string }) {
@@ -19,13 +20,15 @@ export const GridLines = memo(function GridLines({ rows, columns, cell, borders 
 });
 /** Tint 3 and 4 are the two colours of a hint's chain: a dot and a ring, never colour alone. */
 const chainMark: Record<number, { ring: boolean; words: string }> = { 3: { ring: false, words: ', chain dot' }, 4: { ring: true, words: ', chain ring' } };
-const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0, words = '' }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: GridTint; words?: string }) {
+const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0, words = '', corner }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: GridTint; words?: string; corner?: CornerClue }) {
   const noteText = symbols.map((s, i) => notes & 1 << i ? s : '·').reduce((lines, s, i) => lines + s + (i % 3 === 2 ? '\n' : ' '), '').trim(), mark = chainMark[tint];
+  const layout = corner && notes ? cornerNoteLayout(cell, symbols, corner) : undefined;
+  const border = selected ? 3 : conflict ? 2 : 0;
   const label = `Row ${Math.floor(index / columns) + 1}, column ${index % columns + 1}, ${value ? symbols[value - 1] : notes ? `notes ${symbols.filter((_, i) => notes & 1 << i).join(', ')}` : 'empty'}${given ? ', given' : ''}${conflict ? ', conflict' : ''}${tint >= 2 ? ', hint focus' : ''}${mark?.words ?? ''}${words ? `, ${words}` : ''}`;
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: selected ? 3 : conflict ? 2 : 0, borderColor: conflict ? C.error : C.teal }}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: border, borderColor: conflict ? C.error : C.teal }}>
     {/* Centred and large on an empty square; small in the corner when the square shows notes or a number. */}
     {mark && (() => { const big = !value && !notes, size = Math.max(10, cell * (big ? .38 : .22)); return <View accessible={false} pointerEvents="none" style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, ...(big ? {} : { right: 2, bottom: 2 }), backgroundColor: mark.ring ? 'transparent' : C.ink, borderWidth: mark.ring ? Math.max(2.5, size * .16) : 0, borderColor: C.ink }}/>; })()}
-    {notes ? <Text maxFontSizeMultiplier={1} style={{ color: C.ink, fontSize: Math.max(8, cell * .19), lineHeight: cell * .25, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{noteText}</Text> : value > 0 && (!paint || value !== 1) && <Text maxFontSizeMultiplier={1.4} adjustsFontSizeToFit numberOfLines={1} style={{ color: conflict ? C.error : C.ink, fontSize: cell * .48, fontWeight: given ? '800' : '500' }}>{symbols[value - 1] ?? ''}</Text>}
+    {notes ? layout?.fits ? <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: -border, top: -border, width: cell, height: cell }}>{symbols.map((symbol, j) => <Text key={j} testID={`corner-note-${index}-${j}`} maxFontSizeMultiplier={1} style={{ position: 'absolute', ...layout.boxes[j], color: C.ink, fontSize: layout.fontSize, lineHeight: layout.lineHeight, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{notes & 1 << j ? symbol : '·'}</Text>)}</View> : <Text maxFontSizeMultiplier={1} style={{ color: C.ink, fontSize: Math.max(8, cell * .19), lineHeight: cell * .25, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{noteText}</Text> : value > 0 && (!paint || value !== 1) && <Text maxFontSizeMultiplier={1.4} adjustsFontSizeToFit numberOfLines={1} style={{ color: conflict ? C.error : C.ink, fontSize: cell * .48, fontWeight: given ? '800' : '500' }}>{symbols[value - 1] ?? ''}</Text>}
   </Pressable>;
 });
 export type GridShellProps = {
@@ -36,6 +39,8 @@ export type GridShellProps = {
   tints?: ReadonlyMap<number, GridTint>;
   /** Extra words a screen reader hears for a cell, such as the cage it belongs to. */
   cellWords?: (index: number) => string;
+  /** Public corner captions; their note cells reserve a caption strip instead of drawing underneath. */
+  cornerClues?: CornerClues;
   /** The status sentence above the board (see `statusSentence`), so the height budget can measure how it wraps. */
   status?: string;
   /** A static layer above the cells and lines (cage sums, inequality marks). Never input. */
@@ -45,7 +50,7 @@ export type GridShellProps = {
 };
 export type GridTint = 0 | 1 | 2 | 3 | 4;
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
-export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, status }: GridShellProps) {
+export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, cornerClues, status }: GridShellProps) {
   // A clue frame takes its share of the width, so the board's cells stay square and centred.
   const width = frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer;
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
@@ -55,8 +60,12 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   const [zoom, setZoom] = useState(() => spec.kind !== 'digits' && gridGeometry(width, viewportMax, spec, false).needsZoom), [first, setFirst] = useState(numberFirst), [line, setLine] = useState<number[]>([]);
   const [screenReader, setScreenReader] = useState(false);
   useEffect(() => { let live = true; void AccessibilityInfo?.isScreenReaderEnabled().then(on => { if (live) setScreenReader(on); }); const subscription = AccessibilityInfo?.addEventListener('screenReaderChanged', setScreenReader); return () => { live = false; subscription?.remove(); }; }, []);
-  const enlarged = zoom && !screenReader;
+  const fit = gridGeometry(width, viewportMax, spec, false);
+  const fitCorners = useMemo(() => cornerClues?.(fit.cell, fontScale ?? 1), [cornerClues, fit.cell, fontScale]);
+  const noteZoom = cornersNeedEnlarging(fit.cell, spec.symbols, state.notes, fitCorners);
+  const enlarged = noteZoom || zoom && !screenReader;
   const geometry = gridGeometry(width, viewportMax, spec, enlarged), { cell } = geometry;
+  const corners = useMemo(() => cornerClues?.(cell, fontScale ?? 1), [cornerClues, cell, fontScale]);
   // The large pad sits right under the board, in rows of up to five, so a phone shows both at once.
   const padCount = spec.symbols.length + 1, perRow = padCount > 6 ? Math.ceil(padCount / 2) : padCount, padWidth = Math.max(52, Math.floor((Math.min(outer, 560) - 8 * (perRow - 1)) / perRow));
   const acceptedEdits = useRef(state.edits);
@@ -153,7 +162,7 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   // Below the accessibility sizes the zoom controls sit between the board and the keys, as they always did. At them the keys
   // come first, so the board and the keys' first row share the screen; the zoom controls follow the keys.
   const buttonMax = atLarge(fontScale, 1.3);
-  const zoomControls = geometry.needsZoom && !screenReader && <><Button quiet compact maxFontSizeMultiplier={buttonMax} selected={zoom} onPress={() => setZoom(!zoom)}>{zoom ? 'Fit whole board' : 'Enlarge cells'}</Button>{zoom && <><Copy maxFontSizeMultiplier={atLarge(fontScale, 1.5)}>Two fingers move the board. One finger selects or paints.</Copy><Button quiet compact maxFontSizeMultiplier={buttonMax} onPress={() => { panX.set(0); panY.set(0); }}>Return to top left</Button></>}</>;
+  const zoomControls = geometry.needsZoom && !screenReader && <>{noteZoom ? <Copy maxFontSizeMultiplier={buttonMax}>Larger cells keep the clues and notes clear.</Copy> : <Button quiet compact maxFontSizeMultiplier={buttonMax} selected={zoom} onPress={() => setZoom(!zoom)}>{zoom ? 'Fit whole board' : 'Enlarge cells'}</Button>}{enlarged && <><Copy maxFontSizeMultiplier={atLarge(fontScale, 1.5)}>Two fingers move the board. One finger selects or paints.</Copy><Button quiet compact maxFontSizeMultiplier={buttonMax} onPress={() => { panX.set(0); panY.set(0); }}>Return to top left</Button></>}</>;
   return <View testID="cove-grid-keyboard" style={{ gap: 10 }}>
     {Platform.OS === 'ios' && <TextInput ref={nativeKeyboard} testID="cove-native-keyboard" accessible={false} importantForAccessibility="no-hide-descendants" showSoftInputOnFocus={false} caretHidden contextMenuHidden autoCorrect={false} autoCapitalize="none" value="" onKeyPress={e => keyAction(e.nativeEvent.key)} onChangeText={() => nativeKeyboard.current?.clear()} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, fontSize: 18 }}/>}
 
@@ -163,10 +172,15 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
     {frame && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: (spec.columns + 2 * frame.size) * cell, height: (spec.rows + 2 * frame.size) * cell }}>{frame.layer(cell, frame.size * cell)}</View>}
     <View style={{ width: Math.min(width, geometry.width), alignSelf: 'center', height: Math.min(geometry.height, viewportMax), overflow: 'hidden', borderRadius: 8, ...(Platform.OS === 'web' ? { touchAction: spec.kind === 'paint' || zoom ? 'none' as const : 'auto' as const } : {}) }}>
       <Animated.View style={[{ width: geometry.width, height: geometry.height }, panStyle]}>
-        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)}/>; })}</View>)}
+        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)} corner={corners?.get(i)}/>; })}</View>)}
         {line.map(i => <View key={`stroke-${i}`} testID={`stroke-${i}`} pointerEvents="none" accessible={false} style={{ position: 'absolute', left: i % spec.columns * cell, top: Math.floor(i / spec.columns) * cell, width: cell, height: cell, backgroundColor: state.tool === 1 ? '#246858' : '#FFFDF7', opacity: .7, borderWidth: 2, borderColor: C.gold }}/>) }
         <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>
         {overlay && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{overlay(cell)}</View>}
+        {!!corners?.size && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{[...corners!].map(([i, clue]) => {
+          const hasNotes = !!state.notes[i], tint = tints?.get(i) ?? 0;
+          const background = tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : state.selected === i ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : spec.givens[i] ? '#F0EDDF' : '#FFFDF7';
+          return <Text key={i} testID={`corner-clue-${i}`} allowFontScaling={false} numberOfLines={1} style={{ position: 'absolute', left: i % spec.columns * cell + (hasNotes ? 0 : clue.left), top: Math.floor(i / spec.columns) * cell + (hasNotes ? 0 : clue.top), width: clue.width, height: clue.lineHeight, fontSize: clue.fontSize, lineHeight: clue.lineHeight, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'], ...(hasNotes ? { backgroundColor: background } : {}) }}>{clue.text}</Text>;
+        })}</View>}
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
       </Animated.View>
       <View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/>

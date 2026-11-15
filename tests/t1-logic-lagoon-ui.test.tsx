@@ -37,6 +37,7 @@ it('keeps the controls beside the numeric workspace in a short AX5 landscape win
   expect(screen!.root.findByProps({ testID: 'lagoon-workspace' }).props.style.flexDirection).toBe('row');
   expect(screen!.root.findByProps({ testID: 'lagoon-controls' }).props.style.width).toBe(180);
   expect(screen!.root.findByProps({ 'data-grid-width': 304 })).toBeDefined();
+  expect(screen!.root.findByProps({ testID: 'lagoon-numeric-fit' }).props.style).toEqual({ width:304, maxWidth:'100%' });
 });
 
 it('picture boards show every rule box and name pictures throughout the hint ladder', async () => {
