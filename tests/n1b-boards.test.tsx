@@ -202,9 +202,9 @@ describe("Number Hop board", () => {
     await mountHop(5);
     const h = hopOf(hop.items[0], 5);
     await press(/Jump forward 10/);
-    expect(hopProgress(hop)!.puzzle!.kind === 1 && (hopProgress(hop)!.puzzle!.work as { path: number[] }).path).toEqual([10]);
+    expect(hopProgress(hop)!.puzzle!.kind === 1 && (hopProgress(hop)!.puzzle!.work as { path: readonly number[] }).path).toEqual([10]);
     await press("Undo");
-    expect((hopProgress(hop)!.puzzle!.work as { path: number[] }).path).toEqual([]);
+    expect((hopProgress(hop)!.puzzle!.work as { path: readonly number[] }).path).toEqual([]);
     await press(/Jump forward 1$/); await press(/Jump forward 1$/);
     await press("Start again");
     expect((hopProgress(hop)!.puzzle!.work as { at: number }).at).toBe(h.start);

@@ -2,7 +2,7 @@ import { solveActs, solveHop } from "../../src/math/kit";
 import { answerOf } from "../../src/learn/games/quick-practice/items";
 import { quickMove, quickProgress, type QuickRound } from "../../src/learn/games/quick-practice/round2";
 import { hopOf, planOf } from "../../src/learn/games/number-hop/items";
-import { hopMove, hopProgress, type HopRound } from "../../src/learn/games/number-hop/round2";
+import { hopMove, type HopRound } from "../../src/learn/games/number-hop/round2";
 import { mathMove, questionOf, type MathRound } from "../../src/learn/games/shell-math/round";
 import { mathAnswer } from "../../src/math/questions";
 import { progress, shellMove, type ShellRound } from "../../src/learn/games/shell-math/round2";
