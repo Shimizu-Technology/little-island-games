@@ -57,11 +57,13 @@ export function canMove(s:Position,mode:Mode,a:Move):boolean{
   if(mode!=='freecell'&&n===0)return from===12&&to===13&&src.length>0||from===13&&to===12&&src.length>0&&!dst.length;
   const cols=columns(mode);
   if(!n||n>src.length||from>=8&&(n!==1||mode!=='freecell'&&from!==13&&from>11)||from<8&&(from>=cols||src.length-n<s.hidden[from]))return false;
-  for(let i=src.length-n+1;i<src.length;i++)if(rank(src[i-1])!==rank(src[i])+1||red(src[i-1])===red(src[i]))return false;
   const first=src[src.length-n];
-  if(to>=8&&to<=11)return n===1&&suit(first)===to-8&&rank(first)===dst.length+1;
-  if(to<cols)return (dst.length?rank(dst.at(-1)!)===rank(first)+1&&red(dst.at(-1)!)!==red(first):mode==='freecell'||rank(first)===13)&&(mode!=='freecell'||n<=capacity(s,to));
-  return mode==='freecell'&&to>=12&&(from<8||from>=12)&&n===1&&!dst.length;
+  const fits=to>=8&&to<=11?n===1&&suit(first)===to-8&&rank(first)===dst.length+1:
+    to<cols?(dst.length?rank(dst.at(-1)!)===rank(first)+1&&red(dst.at(-1)!)!==red(first):mode==='freecell'||rank(first)===13)&&(mode!=='freecell'||n<=capacity(s,to)):
+    mode==='freecell'&&to>=12&&(from<8||from>=12)&&n===1&&!dst.length;
+  if(!fits)return false;
+  for(let i=src.length-n+1;i<src.length;i++)if(rank(src[i-1])!==rank(src[i])+1||red(src[i-1])===red(src[i]))return false;
+  return true;
 }
 export function apply(s: Position, mode: Mode, a: Move): Position {
   if(!canMove(s,mode,a))return s;
@@ -80,11 +82,21 @@ export function apply(s: Position, mode: Mode, a: Move): Position {
   return {piles,hidden,known};
 }
 /** All legal choices, including foundation reversals; no hidden-card-dependent filtering. */
-export function legalMoves(s: Position, mode: Mode): Move[] {
+export function legalMoves(s: Position, mode: Mode, canonical = false): Move[] {
   const out: Move[] = [], cols = columns(mode), candidate:[number,number,number]=[0,0,0];
+  let emptyCell=-1,emptyColumn=-1;
+  if(canonical&&mode==='freecell'){
+    for(let i=12;i<16;i++)if(!s.piles[i].length){emptyCell=i;break;}
+    for(let i=0;i<8;i++)if(!s.piles[i].length){emptyColumn=i;break;}
+  }
   for (let from = 0; from < 16; from++) {
     const max = from < cols ? s.piles[from].length - s.hidden[from] : 1;
     for (let n = 1; n <= Math.min(13, max); n++) for (let to = 0; to < 16; to++) {
+      // Hint search needs one representative of interchangeable empty places.
+      if(canonical&&mode==='freecell'){
+        if(to>=12&&(n!==1||from>=8||to!==emptyCell))continue;
+        if(to<8&&!s.piles[to].length&&(to!==emptyColumn||from<8&&n===s.piles[from].length))continue;
+      }
       candidate[0]=from;candidate[1]=to;candidate[2]=n;
       if (canMove(s, mode, candidate)) out.push([from,to,n]);
     }

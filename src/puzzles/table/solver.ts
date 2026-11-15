@@ -6,7 +6,7 @@ export function knownPlan(s:Position,d:Deal):Move[]|undefined{return plans.get(p
 export type Search = { status: 'solved'; moves: Move[]; nodes: number; branches: number; techniques: string[] } | { status: 'budget-exhausted'; nodes: number } | { status: 'unsolved'; nodes: number };
 /** A bounded best-first graph search. The score orders work; it never proves an optimal move count. */
 export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000, compactFrontier = false): Generator<void,Search,void> {
-  type Node = { state: Position; parent: Node | null; move: Move | null; depth: number; key: string; score: number };
+  type Node = { state: Position; parent: Node | null; move: Move | null; closure?: Move[]; depth: number; key: string; score: number };
   const score=(s:Position)=>{
     let home=0,covered=0,empty=0,cells=0;
     for(let i=8;i<12;i++)home+=s.piles[i].length*12;
@@ -17,11 +17,14 @@ export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000
   };
   // Binary max heap: preserve the existing deterministic ordering and grades.
   const heap: Node[] = [], seen = new Set<string>(), queued=new Map<string,Node>();
+  const pileText=new WeakMap<number[],string>();
+  const text=(pile:number[])=>{let t=pileText.get(pile);if(t===undefined){t=pile.join('.');pileText.set(pile,t);}return t;};
+  const cellBits=Array.from({length:52},(_,c)=>2**c);
   const positionKey=(s:Position)=>{
-    const cols:string[]=[];for(let i=0;i<columns(deal.mode);i++)cols.push(`${s.hidden[i]}:${s.piles[i].join('.')}`);
+    const cols:string[]=[];for(let i=0;i<columns(deal.mode);i++)cols.push(`${s.hidden[i]}:${text(s.piles[i])}`);
     const home=`${s.piles[8].length}.${s.piles[9].length}.${s.piles[10].length}.${s.piles[11].length}`;
     let reserve:string;
-    if(deal.mode==='freecell'){const cells:number[]=[];for(let i=12;i<16;i++)cells.push(...s.piles[i]);reserve=cells.sort((a,b)=>a-b).join('.');}
+    if(deal.mode==='freecell'){let mask=0;for(let i=12;i<16;i++)for(const card of s.piles[i])mask+=cellBits[card];reserve=mask.toString(36);}
     else reserve=s.piles[12].join('.')+'|'+s.piles[13].join('.');
     return cols.sort().join('|')+'/'+home+'/'+reserve;
   };
@@ -42,21 +45,30 @@ export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000
     if (seen.has(key)) continue;
     seen.add(key); nodes++;
     if (won(state)) {
-      const path:Move[]=[];for(let cursor:Node|null=node;cursor?.move;cursor=cursor.parent)path.push(cursor.move);path.reverse();
+      const segments:Move[][]=[];for(let cursor:Node|null=node;cursor?.move;cursor=cursor.parent)segments.push([cursor.move,...(cursor.closure??[])]);const path=segments.reverse().flat();
       let cursor=initial; path.forEach((a,i)=>{plans.set(planKey(cursor,deal),path.slice(i));cursor=apply(cursor,deal.mode,a);}); while(plans.size>512)plans.delete(plans.keys().next().value!);
       return { status: 'solved', moves: path, nodes, branches, techniques: [...new Set(path.map(a => a[2] === 0 ? 'stock-cycle' : a[1] >= 12 ? 'reserve-space' : a[0] >= 8 && a[0] < 12 ? 'foundation-return' : a[2] > 1 ? 'sequence-transfer' : 'build-and-uncover'))] }; }
     if (depth >= 240) {clipped=true;continue;}
-    const forced=forcedFoundation(state,deal.mode),moves=forced?[forced]:legalMoves(state,deal.mode);
+    const forced=forcedFoundation(state,deal.mode),moves=forced?[forced]:legalMoves(state,deal.mode,compactFrontier);
     branches += Math.max(0, moves.length - 1);
     for (const a of moves) {
       // A complete foundation card can be returned by the player; search prunes only the immediate inverse.
-      const last = node.move;
+      const last = node.closure?.at(-1)??node.move;
       if (last && last[0] === a[1] && last[1] === a[0] && last[2] === a[2] && a[2] > 0) continue;
-      const next = apply(state, deal.mode, a);
+      if(compactFrontier)yield;
+      let next = apply(state, deal.mode, a);
+      let closure:Move[]|undefined;
+      // The normal grader retains its exact expansion order. A hint may fold
+      // the same safe-foundation closure into one search edge; every card move
+      // remains in the witness and is still shown only on a deliberate tap.
+      if(compactFrontier){
+        closure=[];
+        while(depth+1+closure.length<240){const forced=forcedFoundation(next,deal.mode);if(!forced)break;closure.push(forced);next=apply(next,deal.mode,forced);yield;}
+      }
       const nextKey=positionKey(next);if (seen.has(nextKey)) continue;
       const foundation = a[1] >= 8 && a[1] < 12 ? rank(state.piles[a[0]].at(-1)!) : 0;
       const urgency = foundation && foundation <= 2 ? 3 : 0;
-      push({ state: next, parent: node, move: a, depth: depth+1, key: nextKey, score: score(next) - depth * 0.1 + urgency });
+      push({ state: next, parent: node, move: a, closure, depth: depth+1+(closure?.length??0), key: nextKey, score: score(next) - (depth+(closure?.length??0)) * 0.1 + urgency });
     }
     // Memory is part of the search budget. Pruning is a timeout, never an unsolvability claim.
     if (heap.length > budget * 20) return { status: 'budget-exhausted', nodes };

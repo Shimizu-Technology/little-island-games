@@ -4,7 +4,7 @@ import {apply,DECK,DRAW,legalMoves,makeDeal,opening,RECYCLE,validPosition,type D
 import {advise,adviseAsync,publicView} from '../src/puzzles/table/publicSolver';
 import {decodeBoard,encodeBoard,fresh,moveTable,readTable,undoTable} from '../src/puzzles/table/checkpoint';
 import {lineFromProof} from '../src/puzzles/table/proof';
-import {solve} from '../src/puzzles/table/solver';
+import {solve,searchSteps} from '../src/puzzles/table/solver';
 import {solitaireAdapter} from '../src/puzzles/table/adapter';
 import {decodeRow} from '../src/puzzles/descriptor';
 import reviewSamples from './fixtures/solitaire/review-offline-samples.json';
@@ -33,6 +33,15 @@ describe('Solitaire review regressions',()=>{
    if(full.status==='solved'){solved++;expect(hint.kind,`${slot}/${row[0]}`).toBe('move');}
   }
   expect(solved).toBeGreaterThanOrEqual(28);
+ });
+ it('keeps every safe-closure card move in an independently replayable hint witness',async()=>{
+  const{verifyLine}=await import('../scripts/puzzles/solitaire/independent');
+  for(const sample of reviewSamples.slice(0,2)){
+   const d=deal(sample.rows[0]),line=lineFromProof(d)!;let s=opening(d);for(const a of line.slice(0,3))s=apply(s,d.mode,a);
+   const off=legalMoves(s,d.mode).find(a=>a[0]!==line[3][0]||a[1]!==line[3][1])!;s=apply(s,d.mode,off);
+   const job=searchSteps(d,s,10000,true);let result=job.next();while(!result.done)result=job.next();expect(result.value.status).toBe('solved');
+   if(result.value.status==='solved')expect(verifyLine(d.cards,d.mode,[...line.slice(0,3),off,...result.value.moves])).toBe(true);
+  }
  });
  it('returns async hints on the two measured solver-proven off-line fixtures',async()=>{
   for(const sample of reviewSamples.slice(0,2)){
