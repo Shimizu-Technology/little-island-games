@@ -16,6 +16,8 @@ import { capabilityOf } from '../src/home/world';
 import { itemIds } from '../src/home/catalog';
 import { entityName } from '../src/home/scene/labels';
 import { panCell, panFloorPoint, panSeatPoint } from '../src/home/scene/pan';
+import { pickEntity, prepareHits } from '../src/home/runtime/pick';
+import { roomPoint } from '../src/home/scene/types';
 import { decorSpec } from '../src/home/catalog';
 import type { DropProposal } from '../src/home/scene/resolve';
 import type { SceneEntity } from '../src/home/scene/types';
@@ -261,6 +263,17 @@ describe('HD-07 stove and pan (rules 48, 49)', () => {
     // A drink or a toy in the pan never "cooks".
     expect(cookingIds(buildScene(withFood(kitchen(), true, 'juice')))).toEqual([]);
     expect(entityName(buildScene(cooked.state).entities['kitchen/item/pan-food'])).toBe('Grilled mango');
+  });
+  it('the whole of a food seated in the pan is its to touch, though the rim is drawn over its bottom', () => {
+    const scene = buildScene(withFood(kitchen(), true)), food = scene.entities['kitchen/item/pan-food'];
+    const stove = Object.values(scene.entities).find((e) => e.item?.item === 'stove')!;
+    const hits = prepareHits(scene).kitchen;
+    // Its drawn body, from just above the rim to the top, on a phone and a tablet scale.
+    for (const scale of [0.5, 1]) for (let dy = 10; dy <= 40; dy += 5)
+      expect(pickEntity(hits, roomPoint(food.contact.x, food.contact.y - dy), scale, {})).toBe(food.id);
+    // The stove keeps the rest of its hull, and a cold empty stove is untouched.
+    expect(pickEntity(hits, roomPoint(stove.contact.x, stove.contact.y - 20), 1, {})).toBe(stove.id);
+    expect(prepareHits(buildScene(kitchen())).kitchen.every((p) => p.paintOrder % 1 === 0)).toBe(true);
   });
   it('cooking is not an undo step of its own (like finish-action); undo of the drop restores the raw food', () => {
     const hot = withFood(kitchen(), true);

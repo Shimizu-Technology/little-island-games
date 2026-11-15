@@ -21,7 +21,7 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
   return Object.fromEntries(
     Object.entries(scene.rooms).map(([room, index]) => [
       room,
-      paintEntries(Object.values(index.entities).filter((e) => restingVisible(e, scene)), scene)
+      seatedInPans(paintEntries(Object.values(index.entities).filter((e) => restingVisible(e, scene)), scene)
         .flatMap(({ entity: e, front }, paintOrder) => {
           const shapes: HitShape[] = front && e.item
             ? itemFrontShapes(e.item, e.bounds.width).map((s) => translated(s, e.contact.x, e.contact.y))
@@ -30,10 +30,25 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
               : index.hitProxies.filter((p) => p.id === e.id).map((p): HitShape => ({ kind: "box", ...p.bounds }));
           const outline: Bounds = unionBounds(shapes) ?? { left: 0, top: 0, width: 0, height: 0 };
           const depth = paintDepth(e, scene) + (front ? 2 : 0) - (e.item?.layer === "ground" ? 100000 : 0);
-          return shapes.map((shape) => ({ id: e.id, shape, depth, paintOrder, span: Math.min(outline.width, outline.height) }));
-        }),
+          return shapes.map((shape) => ({ id: e.id, shape, depth, paintOrder, span: Math.min(outline.width, outline.height), pan: e.pan }));
+        }), scene),
     ])
   );
+}
+/**
+ * HD-07: food seated in a pan is drawn sitting down behind the pan's rim, but the whole of it is
+ * the food's to touch: it takes the touch over its own stove, never over anything else.
+ */
+function seatedInPans(proxies: (PickProxy & { pan?: string })[], scene: Scene): PickProxy[] {
+  const stoveTop: Record<string, { depth: number; paintOrder: number }> = {};
+  for (const p of proxies) {
+    if (!scene.entities[p.id]?.item || !proxies.some((q) => q.pan === p.id)) continue;
+    const top = stoveTop[p.id];
+    if (!top || p.paintOrder > top.paintOrder) stoveTop[p.id] = { depth: p.depth, paintOrder: p.paintOrder };
+  }
+  return proxies.map(({ pan, ...p }) => pan && stoveTop[pan] && stoveTop[pan].paintOrder > p.paintOrder
+    ? { ...p, depth: stoveTop[pan].depth + 1, paintOrder: stoveTop[pan].paintOrder + 0.5 }
+    : p);
 }
 /**
  * The frontmost painted shape under the finger wins, and a prop only beats its neighbour on its
