@@ -161,7 +161,8 @@ export function HopBoard(props: BoardProps<HopRound>) {
 
   // Where did the frog start?
   const landing = landingOf(item), js = startJumps(item);
-  const points = [item[1], ...landings(item[1], js)];
+  // Help works back from the landing, last jump first, so the line draws those back jumps too.
+  const back = js.slice().reverse().map((j) => -j), points = [landing, ...landings(landing, back)];
   const win = hopWindow(points, 0, 100);
   const prompt = solved ? `${work.helped ? "We worked it out together." : "You found it!"} It started on ${item[1]}.`
     : work.hint >= 3 ? `It started on ${item[1]}. Tap Go to check it.` : work.hint === 2 ? backWorking(item)
@@ -173,8 +174,8 @@ export function HopBoard(props: BoardProps<HopRound>) {
     {noteLine}
     {/* The line carries something only once Help draws the jumps back (or the start is found); before that it would only repeat
         the heading and push the pad off a phone screen. */}
-    {(work.hint >= 2 || solved) && <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={solved ? item[1] : null} from={item[1]}
-      landings={points.slice(1)} target={landing} label={`Number line. The jumps ${js.map(jumpText).join(", ")} end on ${landing}.`} />}
+    {(work.hint >= 2 || solved) && <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={landing} landings={points.slice(1)}
+      label={`Number line. Back from ${landing}: ${back.map((j, k) => `${jumpText(j)} to ${points[k + 1]}`).join(", ")}.`} />}
     {!solved && <CoachSpot active={coach.active && active} handAt="none">
       {work.choices
         ? <View accessibilityLabel="Choose the start" style={{ flexDirection: "row", gap: 10 }}>
@@ -200,7 +201,7 @@ export function HopBoard(props: BoardProps<HopRound>) {
     const n = w.path.length, atPar = solved && n === p.par;
     const prompt = solved
       ? atPar ? `You reached ${h.target} in ${jumpsWord(n)}, the fewest!` : `You reached ${h.target} in ${jumpsWord(n)}. It can be done in ${p.par}.`
-      : suggest !== null ? `Try ${jumpText(suggest)}.` : left === null ? `No jump can reach ${h.target} from ${w.at}. Undo, or start again.`
+      : suggest !== null ? `Try ${jumpText(suggest)} on the way to ${h.target}.` : left === null ? `No jump can reach ${h.target} from ${w.at}. Undo, or start again.`
         : n === 0 ? `Get from ${h.start} to ${h.target}.` : `You are on ${w.at}. Keep going to ${h.target}.`;
     const label = `Number line from ${win.lo} to ${win.hi}. Started on ${h.start}. Flag on ${h.target}. ${n === 0 ? "No jumps yet." : `Jumps: ${w.path.map(jumpText).join(", ")}. On ${w.at}.`}`;
 
@@ -220,7 +221,7 @@ export function HopBoard(props: BoardProps<HopRound>) {
             const off = w.at + j < h.lo || w.at + j > h.hi, hot = suggest === j;
             return <PressableScale key={j} accessibilityRole="button" accessibilityLabel={jumpName(j)} accessibilityState={{ disabled: !active || off, selected: hot }}
               disabled={!active || off} onPress={() => { press(); act(["j", k]); }} amount={0.94}
-              style={{ flex: 1, minWidth: 56, maxWidth: 110, minHeight: 60, borderRadius: 16, borderWidth: hot ? 4 : 2, borderColor: hot ? C.teal : C.line, backgroundColor: j > 0 ? C.paper : C.cream,
+              style={{ flex: 1, minWidth: 56, maxWidth: 110, minHeight: 60, borderRadius: 16, borderWidth: hot ? 4 : 2, borderColor: hot ? C.teal : C.line, backgroundColor: C.paper,
                 alignItems: "center", justifyContent: "center", opacity: off ? 0.4 : 1, shadowColor: C.ink, shadowOpacity: 0.16, shadowOffset: { width: 0, height: 3 }, shadowRadius: 0, elevation: 3 }}>
               <Text maxFontSizeMultiplier={keyCap} style={{ fontSize: 26, fontWeight: "900", color: j > 0 ? C.teal : C.coral }}>{jumpText(j)}</Text>
             </PressableScale>;

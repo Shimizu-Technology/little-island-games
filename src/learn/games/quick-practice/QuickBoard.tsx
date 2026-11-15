@@ -87,7 +87,7 @@ export function QuickBoard(props: BoardProps<QuickRound>) {
   // One line above the question answers what just happened, or says what Help gives; it never pushes the pad down twice.
   const missLine = prog.missed ? `Not quite. ${workingFor(prog.missed.item)} Here is a new question like it.` : null;
   const heading = work.solved
-    ? `${placeHelped ? "We worked it out together." : "You found it!"} ${story ? `${sentenceOf(item, true)}` : `The answer is ${answer}.`}`
+    ? `${placeHelped ? "We worked it out together." : "You found it!"} The answer is ${answer}.`
     : missLine ?? (work.last !== null ? "Not quite. Try again, or tap Help." : work.hint >= 3 ? `It is ${answer}. ${typed ? "Tap Go to check it." : "Choose it."}`
       : work.hint === 2 ? `${cueFor(item)} ${workingFor(item)}` : work.hint === 1 ? cueFor(item)
         : story ? (typed ? "Read the story. Type the answer." : "Read the story.") : `${typed ? "Type" : "Choose"} ${result ? "the answer" : "the missing number"}.`);

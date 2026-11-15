@@ -198,7 +198,7 @@ describe("Number Hop board", () => {
     await mountHop(4);
     const h = hopOf(hop.items[0], 4), j = bestJump(h, h.start)!;
     await press("Help");
-    expect(screen()).toContain(`Try ${jumpText(j)}.`);
+    expect(screen()).toContain(`Try ${jumpText(j)} on the way to ${h.target}.`);
     const hot = buttons().filter((b) => b.props.accessibilityState?.selected);
     expect(hot.map(label)).toEqual([`Jump forward ${j}`]);
     expect(calls.assistance).toBe(1);
@@ -232,6 +232,9 @@ describe("Number Hop board", () => {
     expect(screen()).not.toContain(` ${i[1]} `);
     await press("Help"); await press("More help");
     expect(lines()).toHaveLength(1);
+    // Drawn back from the landing, the way the working reads.
+    expect(lines()[0].props.accessibilityLabel).toContain(`Back from ${landingOf(i)}:`);
+    expect(lines()[0].props.accessibilityLabel).toContain(`to ${i[1]}.`);
     await typeNumber(i[1] + 1);
     expect(screen()).toContain("Not quite. Try again, or tap Help.");
     await typeNumber(i[1]);
