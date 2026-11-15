@@ -75,8 +75,8 @@ export function InquiryBoard({
   // Columns per row: short spot and number rows stay on one or two lines so Test stays in view at large text.
   const columns = (n: number) => {
     // At large text three short choices still share a row when each tile keeps 96 pt.
-    const wanted = n >= 6 ? 4 : n === 5 ? (large ? 2 : 3) : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
-    return Math.max(1, Math.min(wanted, Math.floor(width / 78)));
+    const wanted = n >= 6 ? 4 : n === 5 ? 3 : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
+    return Math.max(1, Math.min(wanted, Math.floor(width / (large ? 104 : 78))));
   };
   const choices = (labels: readonly string[], selected: (i: number) => boolean, onPress: (i: number) => void, verb: string, off?: (i: number) => boolean) => {
     const across = columns(labels.length), basis = `${Math.floor(100 / across) - 3}%` as `${number}%`;
