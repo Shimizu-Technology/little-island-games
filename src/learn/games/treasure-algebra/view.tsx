@@ -45,7 +45,7 @@ function SeaLine({ value, start }: { value: number; start?: number }) {
     move.start();
     return () => move.stop();
   }, [motion, targetY, reduced]);
-  return <View style={{ alignItems: "center", gap: 7 }}>
+  return <View style={{ alignItems: "center", gap: space?.ready && space.width < 600 ? 4 : 7 }}>
     <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} testID={geometry.testID} onLayout={geometry.onLayout} style={{ width: 286 * scale, height: geometry.height, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
       <Svg width={286 * scale} height={geometry.height} viewBox="0 0 286 330" accessible={false}>
         <Rect width="286" height={lineY(0)} fill="#E9F6DC"/><Rect y={lineY(0)} width="286" height={330-lineY(0)} fill="#C4E9EE"/>
@@ -93,6 +93,7 @@ function StepControls({ value, balance, change, width }: { value: number; balanc
 }
 
 export function Board({ session, update, practice, assistance, cheer, coach, width }: BoardProps<AlgebraState>) {
+  const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
   const state = session.state, task = state.tasks[state.index];
   const [feedback, setFeedback] = useState(""), [hint, setHint] = useState(false);
   if (!task) return null;
@@ -114,8 +115,8 @@ export function Board({ session, update, practice, assistance, cheer, coach, wid
     : task.kind === "expression" ? `Find ${task.a} + ${task.b} × ${task.extra}`
     : `${task.extra}x + ${task.a} ≤ ${task.b}`;
   const instruction = task.kind === "inequality" ? "Keep ≤ as you remove and divide both sides. Choose an integer that makes the inequality true." : task.kind === "pattern" ? "Find the repeated step. Move the diver to the next number after the last shown." : task.kind === "expression" ? "Multiply before adding. Move the diver to the result." : balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
-  return <View style={{ gap: 14, paddingBottom: 20 }}>
-    <View style={{ backgroundColor: sand, borderRadius: 19, padding: 16, gap: 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>
+  return <View style={{ gap: compact ? 8 : 14, paddingBottom: 20 }}>
+    <View style={{ backgroundColor: sand, borderRadius: 19, padding: compact ? 10 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>
     {balance && <BalanceBoard task={task} state={state} remove={() => change({ offset: -task.a, divided: false })} divide={() => change({ divided: true })}/>}
     {!balance && task.kind === "substitution" && <View style={{ backgroundColor: "#E6F1E4", borderRadius: 20, padding: 15, alignItems: "center" }}><Copy style={{ color: navy, fontSize: 26, fontWeight: "900" }}>{task.a} + {task.b} × {task.extra} = ?</Copy></View>}
     <SeaLine value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>

@@ -1,4 +1,4 @@
-import { useBoardGeometry } from '../../BoardSpace';
+import { useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useState } from "react";
 import { TextInput, View, useWindowDimensions } from "react-native";
@@ -688,6 +688,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   // At accessibility text sizes Reset and Hint fill the row, so Test model takes its own full-width line below
   // instead of being pushed off the right edge.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
+  const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
   if (!q) return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your discovery journal is complete!</Copy>;
   const send = (a: Parameters<typeof move>[2]) => {
     if (active) {
@@ -718,10 +719,10 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   };
   const numericSlots = q.kind === "eclipse" ? [1] : [0, 1];
   // Choice labels share one size: the largest at which every word fits the narrowest tile (8-pt padding, 2-pt border).
-  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, props.width * (q.labels.length > 4 ? 0.29 : 0.44) - 20, 2))) : undefined;
+  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, props.width * (q.labels.length > 4 || compact && q.labels.length === 3 ? 0.29 : 0.44) - 20, 2))) : undefined;
   const ready = s.tested && correct(q, s.values);
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: compact ? 10 : 14 }}>
       {/* At accessibility sizes the step count and "Build · Test · Notice" stack, so neither runs off the card. */}
       <View testID="science-steps" style={large ? { gap: 2 } : { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: green, fontWeight: "900", fontSize: 13 }}>
@@ -760,7 +761,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
                       onPress={() => set(slot, i)}
                       style={{
                         flexGrow: 1,
-                        flexBasis: q.labels.length > 4 ? "29%" : "44%",
+                        flexBasis: q.labels.length > 4 || compact && q.labels.length === 3 ? "29%" : "44%",
                         minHeight: 82,
                         padding: 8,
                         borderRadius: 16,

@@ -2,8 +2,10 @@ import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Board, Beach } from '../src/learn/games/crab-commands/view';
-import { engine, levels, type CrabState } from '../src/learn/games/crab-commands/engine';
-import { encodeProgram } from '../src/learn/program/codec';
+import { type CrabState } from '../src/learn/games/crab-commands/engine';
+
+
+import { BoardSpaceProvider, BoardSpaceContent } from '../src/learn/BoardSpace';
 vi.mock('react-native', () => {
   class Value { setValue() {} interpolate() { return 1; } }
   class ValueXY { x = new Value(); y = new Value(); setValue() {} }
@@ -17,9 +19,6 @@ vi.mock('../src/learn/Coach', () => ({ CoachSpot: ({ children }: { children: Rea
 vi.mock('../src/learn/games/tide-pool/view', () => ({ CreatureArt: () => null }));
 vi.mock('../src/learn/program/ProgramEditor', () => ({ ProgramEditor: 'block-editor' }));
 vi.mock('../src/learn/games/crab-commands/useCrabHint', () => ({ useCrabHint: () => null }));
-
-
-import { BoardSpaceProvider, BoardSpaceContent } from '../src/learn/BoardSpace';
 const frames = new Map<number, FrameRequestCallback>(); let nextFrame = 0;
 let tree: ReactTestRenderer | undefined;
 afterEach(async () => { if (tree) await act(async () => tree!.unmount()); tree = undefined; frames.clear(); vi.unstubAllGlobals(); });
