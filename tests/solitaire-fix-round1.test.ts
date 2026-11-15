@@ -63,12 +63,16 @@ describe('Solitaire review regressions',()=>{
  it.each(['draw-one','draw-three']as const)('stops cycling a fully public stuck %s stock',mode=>{
   const tops=[1,2,3,4,5,6,7];
   const stock=DECK.filter(c=>!tops.includes(c)&&c%13>0&&(Math.floor(c/13)%2===0||c%13>=7)).slice(0,24);
+  // A red Two can be built on a black Three, but frees no card and cannot
+  // lead to a public reveal or foundation progress in this position.
+  stock[stock.length-(mode==='draw-one'?1:3)]=14;
   const covered=DECK.filter(c=>!tops.includes(c)&&!stock.includes(c));
   const piles=Array.from({length:7},(_,i)=>[...covered.splice(0,i),tops[i]]),cards:number[]=[];
   for(let row=0;row<7;row++)for(let col=row;col<7;col++)cards.push(piles[col][row]);cards.push(...stock.slice().reverse());
   const d:Deal={mode,cards};let s=opening(d);while(s.piles[12].length)s=apply(s,mode,DRAW);s=apply(s,mode,RECYCLE);
   expect(validPosition(s,mode)).toBe(true);
   expect(advise(s,d,10000)).toEqual({kind:'unknown'});
+  const tempting=apply(s,mode,DRAW);expect(legalMoves(tempting,mode).some(a=>a[0]===13&&a[2]===1)).toBe(true);expect(advise(tempting,d,10000)).toEqual({kind:'unknown'});
   const unseen={...s,known:s.known.map((k,c)=>s.piles[12].includes(c)?0:k)};
   expect(publicView(unseen,d).piles[12]).toContain(-1);expect(advise(unseen,d,10000).kind).toBe('move');
  });

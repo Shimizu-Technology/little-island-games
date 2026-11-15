@@ -47,7 +47,7 @@ export function* adviceSteps(s: Position, d: Deal, budget = 1200): Generator<voi
   while(stock.piles[12].length||stock.piles[13].length){
     yield;
     const key=positionKey(stock);if(cycle.has(key))break;cycle.add(key);
-    if(legalMoves(stock,d.mode).some(a=>a[0]===13&&a[2]>0)||stock!==visible&&(yield* visibleProgress(stock,d,budget))){useful=true;break;}
+    if(stock!==visible&&(yield* visibleProgress(stock,d,budget))){useful=true;break;}
     const draw:Move=stock.piles[12].length?[12,13,0]:[13,12,0];
     if(draw[0]===12&&stock.piles[12].slice(-(d.mode==='draw-one'?1:3)).includes(-1)){useful=true;break;}
     stock=apply(stock,d.mode,draw);
