@@ -47,7 +47,8 @@ vi.mock('../src/learn/growth/Board', async () => {
 vi.mock('../src/learn/views', async () => {
   const { TextFit } = await import('../src/components/Text');
   const { StepReveal } = await import('../src/learn/stepReveal');
-  const Board = (p: object) => React.createElement('Board', { ...p, fit: React.useContext(TextFit), reveal: React.useContext(StepReveal) });
+  const { useBoardSpace } = await import('../src/learn/BoardSpace');
+  const Board = (p: object) => React.createElement('Board', { ...p, boardSpace: useBoardSpace(), fit: React.useContext(TextFit), reveal: React.useContext(StepReveal) });
   return { views: new Proxy({}, { get: () => ({ Board, Art: 'Art' }) }) };
 });
 
@@ -134,4 +135,18 @@ it('the step reveal lands on the board itself, below the card padding and a cele
   scrolls.length = 0;
   await act(async () => { byType(r, 'Board')[0].props.reveal(); });
   expect(scrolls).toEqual([970]);
+});
+
+it('measures actual card width and space below the real header instead of passing the window estimate', async () => {
+  Object.assign(viewport, { fontScale: 1 });
+  vi.stubGlobal('requestAnimationFrame', () => 1);
+  vi.stubGlobal('cancelAnimationFrame', () => {});
+  const r = await mount('turtle-tales');
+  await act(async () => {
+    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640 } } });
+    r.root.findAll(n => n.type === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
+    r.root.findAll(n => n.type === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
+  });
+  expect(byType(r, 'Board')[0].props.width).toBe(333);
+  expect(byType(r, 'Board')[0].props.boardSpace).toMatchObject({ width: 333, height: 526, large: false, ready: true });
 });

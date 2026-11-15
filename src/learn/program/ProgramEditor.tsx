@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../boardGeometry';
 import React, { useContext, useEffect, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Button, C, Copy, PressableScale } from '../../components/ui';
@@ -33,6 +35,9 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
   onStep?: () => void; onRestart?: () => void; onFlat?: () => void; maxHeight?: number; refusal?: string;
 }) {
   const { fontScale } = useWindowDimensions(), cap = atLarge(fontScale, 1.5);
+  const geometry = useBoardGeometry('program-editor', maxHeight, SCHOOL_BOARD_MIN['program-editor']);
+  const editorHeight = geometry.height;
+  const planHeight = geometry.measured ? Math.max(44, Math.min(fontScale >= 1.5 ? 120 : 140, editorHeight - 96)) : fontScale >= 1.5 ? 120 : 140;
   const [target, setTarget] = useState<Location>(main), [selected, setSelected] = useState<Selection | null>(null);
   const [history, setHistory] = useState<EditHistory>({ past: [], future: [] }), [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -130,14 +135,14 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
     })}
   </View>;
   const selection = selected ? listAt(program, selected.location)?.[selected.at] : null;
-  return <View testID="program-editor" style={{ alignSelf: 'stretch', maxHeight, gap:4 }}>
+  return <View testID="program-editor" onLayout={geometry.onLayout} style={{ alignSelf: 'stretch', maxHeight: editorHeight, gap:4 }}>
     <Copy maxFontSizeMultiplier={cap} style={{ fontWeight: '800', color: C.ink }}>Blocks · {nodeCost(program)} of 80</Copy>
     {currentPath && <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">Step: block {blockName(currentPath)}{iteration?.length ? ` · repeat ${iteration.map(i => i + 1).join(', ')}` : ''}</Copy>}
-    <View testID="program-plan-viewport" ref={ref=>{registry.set({viewportView:ref});}} collapsable={false} onLayout={measure}><ScrollView ref={ref=>{registry.set({scroll:ref});}} nestedScrollEnabled scrollEnabled={!dragging} onScroll={event=>{registry.set({offset:event.nativeEvent.contentOffset.y});measure();}} scrollEventThrottle={16} onContentSizeChange={(_,height)=>{registry.set({content:height});}} style={{ height: fontScale >= 1.5 ? 120 : 140, maxHeight: fontScale >= 1.5 ? 120 : 140 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
+    <View testID="program-plan-viewport" ref={ref=>{registry.set({viewportView:ref});}} collapsable={false} onLayout={measure}><ScrollView ref={ref=>{registry.set({scroll:ref});}} nestedScrollEnabled scrollEnabled={!dragging} onScroll={event=>{registry.set({offset:event.nativeEvent.contentOffset.y});measure();}} scrollEventThrottle={16} onContentSizeChange={(_,height)=>{registry.set({content:height});}} style={{ height: planHeight, maxHeight: planHeight }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Nested program cards">
       {render(program.body, main)}{dropZone(main, program.body.length, '＋ End of plan')}
       {program.songs.map((song, i) => <View key={i} style={{ padding: 6, gap: 5, borderWidth: 2, borderColor: C.teal, borderRadius: 12 }}><Copy maxFontSizeMultiplier={cap}>♫ Song {i + 1}</Copy>{render(song, { song: i, path: [] })}{dropZone({ song: i, path: [] }, song.length, `＋ Inside Song ${i + 1}`)}</View>)}
     </ScrollView></View>
-    <ScrollView nestedScrollEnabled style={{flexShrink:1,maxHeight:Math.max(64,maxHeight-190)}} contentContainerStyle={{gap:6}} accessibilityLabel="Block tools">
+    <ScrollView nestedScrollEnabled style={{flexShrink:1,maxHeight:geometry.measured ? Math.max(44,editorHeight-planHeight-52) : Math.max(64,maxHeight-190)}} contentContainerStyle={{gap:6}} accessibilityLabel="Block tools">
     <Copy maxFontSizeMultiplier={cap} style={{fontSize:13}}>Tap Repeat, then cards inside. To move, select a block then a dashed place.</Copy>
     {!!selection && selected && <View style={{ gap: 5 }}><Copy maxFontSizeMultiplier={cap}>Selected block. Tap a command to replace it.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={async () => { if (await accept(removeNode(program, selected.location, selected.at))) setTarget(main); }}>Remove block</Button>

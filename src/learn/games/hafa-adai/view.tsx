@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
@@ -99,12 +101,17 @@ export function Board({
   while (columns > 2 && !captions.every(text => wordsFit(text, 12, slotFor(columns) - 8))) columns--;
   const rows = Math.ceil(s.items.length / columns);
   const slot = slotFor(columns);
-  const pictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
+  const naturalPictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
   // Captions share one size, the largest (at most 1.5x) at which every word of every caption, English or CHamoru,
   // fits its picture's slot. At accessibility sizes each row makes room for two caption lines, so labels never overlap.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
   const captionMax = large && !spy ? Math.min(...captions.map(text => wordFitMultiplier(text, 12, slot - 8, 1.5))) : undefined;
-  const rowHeight = pictureSize + (spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28);
+  const captionHeight = spy ? 14 : captionMax ? 10 + 2 * Math.ceil(14 * captionMax) : 28;
+  const naturalRow = naturalPictureSize + captionHeight;
+  const minimumRow = Math.max(SCHOOL_BOARD_MIN['hafa-adai'], 24 + captionHeight);
+  const geometry = useBoardGeometry('hafa-adai', rows * naturalRow + 44, rows * minimumRow + 44);
+  const rowHeight = Math.max(minimumRow, Math.min(naturalRow, (geometry.height - 44) / rows));
+  const pictureSize = Math.min(naturalPictureSize, rowHeight - captionHeight);
   const tableTop = 30;
   const promptKey = p.done
     ? "hafa-adai-done"
@@ -222,7 +229,7 @@ export function Board({
           </>
         )}
       </View>
-      <View
+      <View onLayout={geometry.onLayout}
         style={{
           borderRadius: 20,
           overflow: "hidden",

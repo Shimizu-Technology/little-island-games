@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
@@ -300,7 +302,8 @@ export function PoolScene({
   p: Animated.Value;
   width: number;
 }) {
-  const W = Math.min(width, 420),
+  const geometry = useBoardGeometry('tide-pool', Math.min(width, 420) * 0.53, SCHOOL_BOARD_MIN['tide-pool']);
+  const W = Math.min(width, 420, geometry.height / 0.53),
     H = W * 0.53,
     k = W / 320;
   const at = (x: number, y: number, size: number) => ({
@@ -340,7 +343,7 @@ export function PoolScene({
                   ? "The water got hot and the coral turned white."
                   : "Bright coral at its usual reef temperature.";
   return (
-    <View
+    <View onLayout={geometry.onLayout}
       accessible
       accessibilityLabel={label}
       style={{

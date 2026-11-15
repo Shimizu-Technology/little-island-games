@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useState } from "react";
 import { TextInput, View, useWindowDimensions } from "react-native";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
@@ -191,6 +193,7 @@ export function TokenArt({ text, size = 44 }: { text: string; size?: number }) {
   );
 }
 function Scene({ game, q, values, records }: { game: Game; q: Task; values: number[]; records: number[][] }) {
+  const geometry = useBoardGeometry('weather-watch', 220, SCHOOL_BOARD_MIN['weather-watch']);
   const a = values[0] ?? 0,
     b = values[1] ?? 0;
   const selected = values.map((v) => q.labels[v]).filter(Boolean);
@@ -604,9 +607,9 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         borderColor: "#C7D8AD",
       }}
     >
-      <Svg width="100%" height={220} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
+      <View onLayout={geometry.onLayout}><Svg width="100%" height={geometry.height} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
         {scene}
-      </Svg>
+      </Svg></View>
       <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>
       {game === "space-station" && (
         <Copy style={{ fontSize: 12, textAlign: "center", color: ink }}>

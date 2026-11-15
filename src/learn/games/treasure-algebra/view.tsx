@@ -1,3 +1,5 @@
+import { useBoardGeometry, useBoardSpace } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useState } from "react";
 import { Animated, Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
@@ -26,11 +28,15 @@ function Diver({ size = 62 }: { size?: number }) {
 }
 
 function SeaLine({ value, start }: { value: number; start?: number }) {
+  const space = useBoardSpace();
+  const natural = Math.min(330, (space?.ready ? space.width : 286) * 330 / 286);
+  const geometry = useBoardGeometry('treasure-algebra', natural, SCHOOL_BOARD_MIN['treasure-algebra']);
+  const scale = geometry.height / 330;
   const reduced = useReducedMotion();
   const { min, max } = seaLineRange(value, start);
   const lineY = (n: number) => 290 - (n - min) / (max - min) * 250;
   const ticks = Array.from({ length: 6 }, (_, i) => Math.round(min + (max - min) * i / 5));
-  const targetY = lineY(value) - 165;
+  const targetY = (lineY(value) - 165) * scale;
   const [motion] = useState(() => new Animated.Value(targetY));
   useEffect(() => {
     const toValue = targetY;
@@ -40,8 +46,8 @@ function SeaLine({ value, start }: { value: number; start?: number }) {
     return () => move.stop();
   }, [motion, targetY, reduced]);
   return <View style={{ alignItems: "center", gap: 7 }}>
-    <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} style={{ width: 286, height: 330, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
-      <Svg width="286" height="330" viewBox="0 0 286 330" accessible={false}>
+    <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} onLayout={geometry.onLayout} style={{ width: 286 * scale, height: geometry.height, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
+      <Svg width={286 * scale} height={geometry.height} viewBox="0 0 286 330" accessible={false}>
         <Rect width="286" height={lineY(0)} fill="#E9F6DC"/><Rect y={lineY(0)} width="286" height={330-lineY(0)} fill="#C4E9EE"/>
         <Circle cx="47" cy="43" r="20" fill="#F8CC67"/><Path d="M47 10v10M47 66v10M14 43h10M70 43h10M23 19l7 7M64 61l7 7M71 19l-7 7M30 61l-7 7" stroke="#E6A63F" strokeWidth="3" strokeLinecap="round"/>
         <Path d={`M0 ${lineY(0)}H286`} fill="none" stroke={teal} strokeWidth="5"/>
@@ -51,7 +57,7 @@ function SeaLine({ value, start }: { value: number; start?: number }) {
         {ticks.map(n => <G key={n}><Line x1="181" y1={lineY(n)} x2="204" y2={lineY(n)} stroke={n === 0 ? coral : navy} strokeWidth={n === 0 ? "4" : "2"}/><SvgText x="218" y={lineY(n)+5} fill={n === 0 ? "#A94D36" : navy} fontWeight="800" fontSize="16">{n > 0 ? `+${n}` : n}</SvgText></G>)}
         {start !== undefined && <G><Circle cx="192" cy={lineY(start)} r="8" fill="#F7C25E" stroke={navy} strokeWidth="2"/><SvgText x="105" y={lineY(start)-10} fill={navy} fontSize="12" fontWeight="800">START</SvgText></G>}
       </Svg>
-      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 104, top: 133, transform: [{ translateY: motion }] }}><Diver size={62}/></Animated.View>
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 104 * scale, top: 133 * scale, transform: [{ translateY: motion }] }}><Diver size={62 * scale}/></Animated.View>
     </View>
     <Copy style={{ color: navy, fontWeight: "900", fontSize: 18 }}>Diver at {value} {value === 0 ? "· sea level" : value > 0 ? "· above water" : "· below water"}</Copy>
   </View>;

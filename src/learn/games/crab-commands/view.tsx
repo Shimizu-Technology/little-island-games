@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import { blockHint } from '../../program/hints';
 import { ProgramEditor } from '../../program/ProgramEditor';
 import { encodeProgram, sessionBytes } from '../../program/codec';
@@ -404,6 +406,7 @@ export function Board({
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
   // At accessibility sizes the beach gives up some size so it, the plan and the command cards fit one phone screen.
   const beachSize = large ? Math.max(150, Math.min(width, 220, Math.floor(height * 0.3))) : Math.min(width, height < 740 ? 200 : 280);
+  const geometry = useBoardGeometry('crab-commands', beachSize, SCHOOL_BOARD_MIN['crab-commands'], !blocks);
   // Command cards share the row; their labels stop where every word still fits a card (2-pt borders, 4-pt inset).
   const cards = commands(l.pace), cardInner = (width - 6 * (cards.length - 1)) / cards.length - 12;
   const labelMax = large ? Math.min(...cards.map(c => wordFitMultiplier(cardLabel[c], 12, cardInner, 2))) : undefined;
@@ -446,11 +449,11 @@ export function Board({
           Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
         </Copy>
       )}
-      <View style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
+      <View onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
       <Beach
         level={l}
         walker={w}
-        size={blocks ? Math.max(88,Math.min(width*0.4,height*0.22,160)) : beachSize}
+        size={blocks ? Math.max(88,Math.min(width*0.4,height*0.22,160)) : geometry.height}
         plan={done ? undefined : plan}
         showBump={!s.running}
         facingHint={l.pace !== "easy"}
@@ -468,7 +471,7 @@ export function Board({
           {blocks && <ProgramEditor onFlat={!active||s.running?undefined:()=>setBlocks(false)} maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="edge or rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
             onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
  />}
-          {!blocks && <View
+          {!blocks && geometry.wrapPlan(<View
             accessibilityLabel={`Your plan: ${s.program.length ? s.program.map((c) => cardLabel[c]).join(", ") : "empty"}`}
             style={{
               flexDirection: "row",
@@ -520,7 +523,7 @@ export function Board({
                 </PressableScale>
               );
             })}
-          </View>
+          </View>, large ? 66 : 129)
           }
           {won ? (
             <Button

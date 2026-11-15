@@ -1,3 +1,5 @@
+import { useBoardGeometry } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
@@ -351,6 +353,7 @@ export function Board({ session, update, practice, sound, active, width, height,
   // Leave room so the prompt, the whole path and the spinner fit on one phone screen.
   const reserved = 372 + (multi ? 40 : 0) + (session.match ? 66 : 0);
   const pathH = Math.round(Math.max(260, Math.min(width * (width > 600 ? 0.62 : 1.45), height - reserved)));
+  const geometry = useBoardGeometry('reef-race', pathH, SCHOOL_BOARD_MIN['reef-race']);
   const humanRoll = r.phase === "roll" && !computer && !spinning;
   const showCoach = coach.active && !computer;
   const spinnerSize = width > 600 ? 108 : 92;
@@ -410,9 +413,9 @@ export function Board({ session, update, practice, sound, active, width, height,
           </>
         )}
       </View>
-      <ReefBoard
+      <View onLayout={geometry.onLayout}><ReefBoard
         width={width}
-        height={pathH}
+        height={geometry.height}
         first={first}
         last={last}
         end={end}
@@ -424,7 +427,7 @@ export function Board({ session, update, practice, sound, active, width, height,
         disabled={!active || computer || spinning}
         onStone={onStone}
         coach={showCoach && moving}
-      />
+      /></View>
     </View>
   );
 }
