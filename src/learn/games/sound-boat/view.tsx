@@ -13,15 +13,15 @@ import { pictureFor } from "../../content/reading/clues";
 import { dayNumber } from "../../skills";
 import { wordAudio, wordEntry } from "../../kit/reading";
 import { TapWords } from "../../reading/TapWords";
-import { admittedParts } from "../../reading/admitted";
 import { PartsBoard } from "./parts-view";
-import { isParts, tasksOf, type PartsState } from "./parts";
+import { isParts, type PartsState } from "./parts";
 import {
   WORDS_PER_ROUND,
   boatBlanks,
   boatBoxes,
   boatChoices,
   boatComplete,
+  boatCredit,
   boatCurrent,
   boatExpected,
   boatFromLegacy,
@@ -177,10 +177,9 @@ function Finished() {
   );
 }
 
-const admittedTasks = tasksOf(admittedParts);
 export function Board(props: BoardProps<SoundBoatState>) {
   const s = props.session.state;
-  return isParts(s) ? <PartsBoard {...props} session={{ ...props.session, state: s as PartsState }} tasks={admittedTasks} /> : <Letters {...props} />;
+  return isParts(s) ? <PartsBoard {...props} session={{ ...props.session, state: s as PartsState }} /> : <Letters {...props} />;
 }
 function Letters(props: BoardProps<SoundBoatState>) {
   const { session, update, skills } = props;
@@ -256,7 +255,9 @@ function Play({
     const next = boatMove(s, a);
     if (next === s) return;
     // A word is counted when it sails, not when its last letter lands, so Undo before Sail on can never credit twice.
-    if (a.type === "next") practice(word.skill, !s.assisted);
+    // A word an older app already credited (its save has no marker) sails without a second credit. The save moves on
+    // first, so an interrupted Sail on can lose one credit but never count a word twice.
+    const credit = a.type === "next" && boatCredit(s) === "pending";
     if (a.type === "tile") {
       if (coach.active) coach.done();
       const right = next.filled > s.filled;
@@ -281,6 +282,7 @@ function Play({
     if (a.type === "help") sound(wordAudio(word.word));
     if (a.type === "undo") sound("tap");
     update(next);
+    if (credit) practice(word.skill, !s.assisted);
   }
 
   const boxSize = Math.min(

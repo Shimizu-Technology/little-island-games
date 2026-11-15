@@ -7,9 +7,9 @@ import { AudioPreferences } from "../src/components/Audio";
 import { ChallengeBoard } from "../src/learn/games/sound-boat/challenge-view";
 import { challengeEngine, type Action } from "../src/learn/games/sound-boat/challenge-engine";
 import { PartsBoard } from "../src/learn/games/sound-boat/parts-view";
-import { createParts, partsMove, partsTask, tasksOf, type PartsState } from "../src/learn/games/sound-boat/parts";
-import { taskOfParts, type BuildTask } from "../src/learn/reading/build";
-import type { PartsDraft, PartsWord, WordBank } from "../src/learn/reading/records";
+import { createParts, partsMove, partsTask as current, type PartsState } from "../src/learn/games/sound-boat/parts";
+import { partsTaskById, type MintedTask } from "../src/learn/reading/tasks";
+import type { PartsDraft, WordBank } from "../src/learn/reading/records";
 
 vi.mock("react-native", () => {
   class Value { v: number; constructor(v: number) { this.v = v; } setValue(v: number) { this.v = v; } interpolate() { return this; } }
@@ -28,8 +28,10 @@ vi.mock("../src/learn/art/Objects", () => ({ ObjectGlyph: "glyph", PictureObject
 const sound = vi.hoisted(() => ({ play: vi.fn(), stop: vi.fn() }));
 vi.mock("../src/components/Audio", () => ({ AudioPreferences: createContext({ sound: true }), useSoundControls: () => sound }));
 
+// The fixture records stand in for an admitted bank; the real factory mints them (see helpers/fixture-door).
+vi.mock("../src/learn/reading/admitted", async (real) => (await import("./helpers/fixture-door")).fixtureDoor(real));
 const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
-const tasks = tasksOf(fixture.records);
+const partsTask = (s: PartsState, _?: unknown) => current(s)!;
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.useRealTimers(); sound.play.mockClear(); });
 const mount = async (el: React.ReactElement) => { vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true); await act(async () => { root = create(el); }); };
@@ -38,7 +40,7 @@ const named = (text: string) => buttons().find((b) => String(b.props.accessibili
 const press = async (text: string) => act(async () => { const b = named(text); expect(b, text).toBeDefined(); b!.props.onPress(); });
 const texts = () => root!.root.findAllByType("p").map((p) => p.children.join(""));
 const labels = () => buttons().map((b) => String(b.props.accessibilityLabel ?? ""));
-const task = (id: string): BuildTask => taskOfParts(fixture.records.find((r) => r.id === id)!);
+const task = (id: string): MintedTask => partsTaskById(fixture.records.find((r) => r.id === id)!.id)!;
 const baseProps = { active: true, width: 335, soundOn: true };
 
 it("the Challenge board shows every tray piece, sends add and remove, and gates Check on a full word", async () => {
@@ -127,13 +129,13 @@ it("a Challenge with sound off shows the word, and an inactive board sends nothi
 });
 
 function schoolProps(level: 4 | 5, session: Partial<{ revision: number }> = {}) {
-  let state = createParts(level, tasks, { skills: {}, rng: random(5), starter: 0, today: 1 });
+  let state = createParts(level, { skills: {}, rng: random(5), starter: 0, today: 1 });
   const update = vi.fn((next: PartsState) => { state = next; });
   const practice = vi.fn(), assistance = vi.fn(), sound = vi.fn(), cheer = vi.fn();
   const props = () => ({
     session: { game: "sound-boat" as const, version: 1 as const, id: "r1", revision: session.revision ?? 1, options: { mode: "solo" as const, pace: "easy" as const, stage: level === 4 ? ("stretch" as const) : ("deep" as const) }, state },
     skills: {}, update, practice, assistance, sound, stopSound: vi.fn(), soundOn: true, width: 335, height: 800, active: true,
-    coach: { active: false, done: vi.fn() }, cheer, tasks,
+    coach: { active: false, done: vi.fn() }, cheer,
   });
   return { props, update, practice, assistance, sound, cheer, get state() { return state; } };
 }
@@ -143,7 +145,7 @@ it("the School board builds, checks, and waits for Sail on: nothing advances by 
   const h = schoolProps(4), p0 = h.props();
   await mount(<PartsBoard {...p0} />);
   expect(root!.root.findAllByProps({ accessibilityLabel: "The boat has sailed 0 of 6 steps to the island" }).length).toBeGreaterThan(0);
-  const t = partsTask(h.state, tasks), used: number[] = [];
+  const t = partsTask(h.state), used: number[] = [];
   for (const piece of t.tiles) { const i = t.tray.findIndex((x, k) => x === piece && !used.includes(k)); used.push(i); await press(`Piece ${t.tray[i]}`); await act(async () => root!.update(<PartsBoard {...h.props()} />)); }
   await press("Check");
   expect(h.state.answer.solved).toBe(true);
@@ -165,7 +167,7 @@ it("the School board builds, checks, and waits for Sail on: nothing advances by 
 it("practice and a cheer fire once, on the Check that solves the word, and a miss replays the word", async () => {
   const h = schoolProps(5);
   await mount(<PartsBoard {...h.props()} />);
-  const t = partsTask(h.state, tasks), used: number[] = [];
+  const t = partsTask(h.state), used: number[] = [];
   const wrong = [...t.tiles].reverse();
   for (const piece of wrong) { const i = t.tray.findIndex((x, k) => x === piece && !used.includes(k)); used.push(i); await press(`Piece ${t.tray[i]}`); await act(async () => root!.update(<PartsBoard {...h.props()} />)); }
   if (wrong.join() === t.tiles.join()) return;
@@ -186,11 +188,11 @@ it("every text caps its growth so a piece never breaks mid-word at the largest s
 });
 
 it("a finished round shows the island and a restored round does not speak by itself", async () => {
-  let s = createParts(4, tasks, { skills: {}, rng: random(2), starter: 0, today: 1 });
+  let s = createParts(4, { skills: {}, rng: random(2), starter: 0, today: 1 });
   for (let i = 0; i < 6; i++) {
-    const t = partsTask(s, tasks), used: number[] = [];
-    for (const piece of t.tiles) { const k = t.tray.findIndex((x, j) => x === piece && !used.includes(j)); used.push(k); s = partsMove(s, { type: "edit", edit: ["a", k] }, tasks); }
-    s = partsMove(partsMove(s, { type: "check" }, tasks), { type: "next" }, tasks);
+    const t = partsTask(s), used: number[] = [];
+    for (const piece of t.tiles) { const k = t.tray.findIndex((x, j) => x === piece && !used.includes(j)); used.push(k); s = partsMove(s, { type: "edit", edit: ["a", k] }); }
+    s = partsMove(partsMove(s, { type: "check" }), { type: "next" });
   }
   const h = schoolProps(4);
   await mount(<PartsBoard {...{ ...h.props(), session: { ...h.props().session, state: s } }} />);
@@ -219,7 +221,7 @@ it("shows a start before its base word and an ending after it", async () => {
 it("Hear the word again plays every time it is asked, while the saved hearing stays a single idempotent update", async () => {
   const h = schoolProps(4);
   await mount(<PartsBoard {...h.props()} />);
-  const t = partsTask(h.state, tasks);
+  const t = partsTask(h.state);
   const hears = () => h.sound.mock.calls.filter((c) => c.length === 1 && c[0] === `sound-boat-word-${t.word}`).length;
   await press("Hear the word again");
   await act(async () => root!.update(<PartsBoard {...h.props()} />));
@@ -235,15 +237,15 @@ it("Hear the word again plays every time it is asked, while the saved hearing st
 
 it("a resumed word that was already heard, and a solved word, can still be heard", async () => {
   const h = schoolProps(5);
-  let s = partsMove(h.state, { type: "hear" }, tasks);
+  let s = partsMove(h.state, { type: "hear" });
   expect(s.heard).toBe(true);
   await mount(<PartsBoard {...{ ...h.props(), session: { ...h.props().session, state: s } }} />);
-  const t = partsTask(s, tasks), hears = () => h.sound.mock.calls.filter((c) => c.length === 1 && c[0] === `sound-boat-word-${t.word}`).length;
+  const t = partsTask(s), hears = () => h.sound.mock.calls.filter((c) => c.length === 1 && c[0] === `sound-boat-word-${t.word}`).length;
   await press("Hear the word again");
   expect(hears()).toBe(1);
   const used: number[] = [];
-  for (const piece of t.tiles) { const k = t.tray.findIndex((x, j) => x === piece && !used.includes(j)); used.push(k); s = partsMove(s, { type: "edit", edit: ["a", k] }, tasks); }
-  s = partsMove(s, { type: "check" }, tasks);
+  for (const piece of t.tiles) { const k = t.tray.findIndex((x, j) => x === piece && !used.includes(j)); used.push(k); s = partsMove(s, { type: "edit", edit: ["a", k] }); }
+  s = partsMove(s, { type: "check" });
   expect(s.answer.solved).toBe(true);
   await act(async () => root!.update(<PartsBoard {...{ ...h.props(), session: { ...h.props().session, state: s } }} />));
   await press("Hear the word again");
@@ -263,7 +265,7 @@ it("every box is its own accessibility element: none sits inside an accessible a
   const school = schoolProps(4);
   await act(async () => root!.unmount()); root = undefined;
   await mount(<PartsBoard {...school.props()} />);
-  const pieces = partsTask(school.state, tasks);
+  const pieces = partsTask(school.state);
   await press(`Piece ${pieces.tray[pieces.tray.indexOf(pieces.tiles[0])]}`);
   await act(async () => root!.update(<PartsBoard {...school.props()} />));
   const box = buttons().find((b) => /^Box 1, /.test(String(b.props.accessibilityLabel)))!;

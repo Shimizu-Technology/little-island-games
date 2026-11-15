@@ -3,17 +3,19 @@ import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
 import { TapWords } from "../../reading/TapWords";
-import { hasSilentE, firstMisfit, nextNeeded, type BuildTask } from "../../reading/build";
+import { hasSilentE, firstMisfit, nextNeeded } from "../../reading/build";
+import { REFUSED_TASK_TEXT, admittedTask, type MintedTask } from "../../reading/tasks";
 import { tileLabel } from "../../reading/graphemes";
 import { glow, ink, letterFit } from "./shared";
 
 /**
  * One word on the boat, built from pieces and settled with Check. The School board (Levels 4-5) and the Challenge
  * replay both draw this, so a puzzle looks the same wherever it is opened. Nothing is marked right or wrong until
- * Check; a miss leaves the word where it was. Nothing on this surface is timed.
+ * Check; a miss leaves the word where it was. Nothing on this surface is timed. It draws only a task minted by
+ * `reading/tasks` from an admitted or pinned inherited record; any other task is refused before anything is shown.
  */
 export type BuildBoatProps = {
-  task: BuildTask;
+  task: MintedTask;
   draft: readonly number[];
   helped: boolean;
   solved: boolean;
@@ -39,7 +41,16 @@ export type BuildBoatProps = {
   /** A short line above the boat. */
   prompt: string;
 };
+/** The safe fallback for a refused task: the existing "could not open" words, no word, no pieces, nothing to press. */
+export function RefusedTask() {
+  return (
+    <View testID="reading-task-refused" accessibilityLiveRegion="polite" style={{ padding: 12, alignSelf: "stretch" }}>
+      <Copy maxFontSizeMultiplier={1.4} style={{ color: ink, textAlign: "center" }}>{REFUSED_TASK_TEXT}</Copy>
+    </View>
+  );
+}
 export function BuildBoat(p: BuildBoatProps) {
+  if (!admittedTask(p.task, "Sound Boat's word board")) return <RefusedTask />;
   const { task, draft, helped, solved } = p;
   const size = p.compact ? 24 : 28, room = Math.min(p.width, 420) - 40;
   const misfit = helped && !solved ? firstMisfit(task, draft) : null;

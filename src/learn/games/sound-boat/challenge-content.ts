@@ -1,9 +1,7 @@
 import type { DareRule, Puzzle } from "../../../challenge/types";
 import { sha256Hex } from "../../../puzzles/sha256";
 import { canonical } from "../../../puzzles/descriptor";
-import { taskOfParts, type BuildTask } from "../../reading/build";
-import type { PartsWord } from "../../reading/records";
-import { admittedParts } from "../../reading/admitted";
+import { admittedPartsTasks, admittedTask, type MintedTask } from "../../reading/tasks";
 import type { Descriptor } from "./challenge-engine";
 
 /** Banks 440-444 hold Levels 1-5 (445-449 stay spare); dares 3600-3699 are the first 25 puzzles of Levels 2-5. */
@@ -16,12 +14,14 @@ const ruleOf = (level: number): { rule: DareRule; label: string } | null =>
 
 /**
  * Immutable Challenge puzzles from word tasks, in a fixed order per level. A puzzle's place never moves once published:
- * new words are appended. Only tasks from reviewed, admitted banks are given to this in production.
+ * new words are appended. Only tasks minted by `reading/tasks` become puzzles: any other task is refused (dev throws;
+ * a release leaves it out), so a puzzle's descriptor is always an admitted or pinned inherited word.
  */
-export function soundBoatPuzzles(tasks: readonly BuildTask[]): Puzzle<Descriptor>[] {
+export function soundBoatPuzzles(tasks: readonly MintedTask[]): Puzzle<Descriptor>[] {
   const out: Puzzle<Descriptor>[] = [];
+  const minted = tasks.filter((t) => admittedTask(t, "Sound Boat Challenge puzzles"));
   for (const level of [1, 2, 3, 4, 5] as const) {
-    const rows = tasks.filter((t) => t.level === level);
+    const rows = minted.filter((t) => t.level === level);
     rows.forEach((task, i) => {
       const rule = ruleOf(level), dare = rule && i < DARES_PER_LEVEL;
       out.push({
@@ -39,4 +39,4 @@ export function soundBoatPuzzles(tasks: readonly BuildTask[]): Puzzle<Descriptor
   return out;
 }
 /** Production: only reviewed, admitted word-part records. Until a bank is admitted there are none, and Sound Boat has no Challenge. */
-export const soundBoatProduction = (parts: readonly PartsWord[] = admittedParts) => soundBoatPuzzles(parts.map(taskOfParts));
+export const soundBoatProduction = () => soundBoatPuzzles(admittedPartsTasks());

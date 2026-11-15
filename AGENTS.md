@@ -7,7 +7,7 @@ This is an Expo/React Native mobile application. Prioritize mobile-first pattern
 - Start: `npm start` (Metro strict port 43820), or `npm run export:web && npm run preview` (static preview port 43821, override LITTLE_ISLAND_PORT).
 - Stop: terminate the exact owned root process with SIGTERM; scripts/serve.mjs closes its listener. No Docker services or persistent resources belong to this app.
 - Full gate: `npm run check` and `npm run doctor`. Native release/simulator tests and real family device acceptance are recorded separately in docs/QA.md.
-- Node >=22.13.0. Use the lockfile and `npm ci`.
+- Node >=22.18.0 (the W1 reading validator loads TypeScript through Node's default type stripping). Use the lockfile and `npm ci`.
 - Rules and hints must share the same pure engines. Store only validated, versioned sessions; preserve original data during recovery/restore.
 - CodeRabbit is advisory unless repository protection says otherwise. A skipped/unavailable review is not approval; use completed independent final-code review when advisory review is unavailable.
 - Do not publish the family preview to a public store. Clear speech distribution rights, child-facing metadata/privacy, and real-device acceptance first. Family device builds are authorized; interactive account/device registration may still be required.

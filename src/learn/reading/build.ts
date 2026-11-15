@@ -1,14 +1,13 @@
 import { sha256Hex } from "../../puzzles/sha256";
 import { random } from "../../games/types";
 import type { AnswerRules } from "../../puzzles/wholeAnswer";
-import { TILE_FAMILIES, TILE_TWINS, isSilentETile, tileLabel } from "./graphemes";
-import type { LetterWord, PartsWord } from "./records";
-import { stepOf, type ReadingLevel } from "./scope";
+import { isSilentETile } from "./graphemes";
+import type { ReadingLevel } from "./scope";
 
 /**
  * Building one word on the boat from pieces: letter sounds at Levels 1-3, word parts at Levels 4-5. The same pure
  * rules serve the School board and the Challenge replay, so what a hint says and what Check accepts never differ.
- * Nothing here reads a clock.
+ * Nothing here reads a clock. Tasks are made only by `tasks.ts`, from admitted or pinned inherited records, by id.
  */
 export type BuildTask = {
   id: string;
@@ -28,7 +27,7 @@ export type BuildTask = {
 export type BuildDraft = number[];
 export type BuildEdit = ["a", number] | ["x", number];
 
-const hashOf = (text: string) => parseInt(sha256Hex(text).slice(0, 8), 16);
+export const hashOf = (text: string) => parseInt(sha256Hex(text).slice(0, 8), 16);
 export function shuffled<T>(items: readonly T[], seed: number): T[] {
   const out = [...items], rng = random(seed);
   for (let k = out.length - 1; k > 0; k--) {
@@ -39,42 +38,6 @@ export function shuffled<T>(items: readonly T[], seed: number): T[] {
 }
 const accepted = (t: BuildTask): (readonly string[])[] => [t.tiles, ...t.alternates];
 
-/** A task for a word built from word parts. The tray holds the right pieces and the record's tempting wrong ones. */
-export function taskOfParts(r: PartsWord): BuildTask {
-  return {
-    id: r.id,
-    word: r.word,
-    level: r.level,
-    skill: r.kind === "compound" ? "read.compound" : r.kind === "syllables" ? "read.syllables" : r.kind === "prefix" ? "read.prefixes" : r.change && r.change !== "none" ? "read.spelling-change" : "read.endings",
-    tiles: r.chunks,
-    tray: shuffled([...r.chunks, ...r.distractors], hashOf(`parts:${r.id}`)),
-    alternates: r.alternates ?? [],
-    cue: r.kind === "ending" || r.kind === "prefix" ? { base: r.base!, affix: r.affix!, gloss: r.gloss!, prefix: r.kind === "prefix" } : null,
-  };
-}
-const twinsOf = (t: string) => TILE_TWINS.find((g) => g.includes(t)) ?? [t];
-/** A task for a word built from letter sounds: the right tiles plus look-alikes that are really wrong. */
-export function taskOfLetters(r: LetterWord): BuildTask {
-  const rng = random(hashOf(`letters:${r.id}`));
-  const chosen = [...r.tiles];
-  const fits = (t: string) => !chosen.some((c) => twinsOf(c).includes(t) || tileLabel(c) === tileLabel(t));
-  const room = Math.min(8, r.tiles.length + 3) - r.tiles.length;
-  for (const needed of new Set(r.tiles)) {
-    const pool = shuffled(TILE_FAMILIES.find((f) => f.includes(needed)) ?? TILE_FAMILIES[0], Math.floor(rng() * 1e9));
-    let added = 0;
-    for (const c of pool) if (added < 1 && chosen.length - r.tiles.length < room && fits(c)) { chosen.push(c); added++; }
-  }
-  return {
-    id: r.id,
-    word: r.word,
-    level: r.level,
-    skill: stepOf(r.step).skill,
-    tiles: r.tiles,
-    tray: shuffled(chosen, hashOf(`order:${r.id}`)),
-    alternates: [],
-    cue: null,
-  };
-}
 export const hasSilentE = (t: BuildTask) => t.tiles.some(isSilentETile);
 
 export const draftTexts = (t: BuildTask, draft: readonly number[]): string[] => draft.map((i) => t.tray[i]);

@@ -1,18 +1,21 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { challengeFor } from "../src/challenge/catalog";
-import { defineSoundBoat, registration as production } from "../src/learn/games/sound-boat/challenge";
+import { describe, expect, it, vi } from "vitest";
+import { defineSoundBoat } from "../src/learn/games/sound-boat/challenge";
 import { challengeEngine, type Action } from "../src/learn/games/sound-boat/challenge-engine";
-import { BANK_BASE, DARES_PER_LEVEL, DARE_BASE, soundBoatPuzzles, soundBoatProduction } from "../src/learn/games/sound-boat/challenge-content";
-import { buildRules, taskOfLetters, taskOfParts, type BuildTask } from "../src/learn/reading/build";
+import { BANK_BASE, DARES_PER_LEVEL, DARE_BASE, soundBoatPuzzles } from "../src/learn/games/sound-boat/challenge-content";
+import { buildRules, type BuildTask } from "../src/learn/reading/build";
+import { admittedPartsTasks, letterTaskById } from "../src/learn/reading/tasks";
 import { inheritedWords } from "../src/learn/reading/inherited";
 import { readingEvidence } from "../src/learn/reading/evidence";
-import type { PartsDraft, PartsWord, WordBank } from "../src/learn/reading/records";
+import type { PartsDraft, WordBank } from "../src/learn/reading/records";
 import { emptyChallenge, validChallengeSession, type ChallengeSession } from "../src/state/challenge";
 
+// The fixture records stand in for an admitted bank; the real factory mints them (see helpers/fixture-door). The
+// shipped registration, with no admitted bank, and the slot arithmetic over many words are in sound-boat-provenance.
+vi.mock("../src/learn/reading/admitted", async (real) => (await import("./helpers/fixture-door")).fixtureDoor(real));
 const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
-const letters = inheritedWords.records.filter((r) => ["cat", "fish", "boat", "cake", "ship", "star", "moon", "hen"].includes(r.word)).map(taskOfLetters);
-const all = [...letters, ...fixture.records.map(taskOfParts)];
+const letters = inheritedWords.records.filter((r) => ["cat", "fish", "boat", "cake", "ship", "star", "moon", "hen"].includes(r.word)).map((r) => letterTaskById(r.id)!);
+const all = [...letters, ...admittedPartsTasks()];
 const puzzles = soundBoatPuzzles(all);
 const registration = defineSoundBoat(puzzles);
 const move = (s: ChallengeSession, a: Action) => { const n = registration.move(s, a); expect(n, JSON.stringify(a)).not.toBeNull(); return n!; };
@@ -30,12 +33,9 @@ const wrongOrder = (task: BuildTask) => [...task.tiles].reverse();
 const at = (level: number, n = 0) => puzzles.findIndex((p) => p.source.kind === "school" && p.source.level === level) + n;
 
 describe("the registration's content", () => {
-  it("production has no Challenge until a reviewed bank is admitted", () => {
-    expect(soundBoatProduction()).toEqual([]);
-    expect(production.puzzles).toEqual([]);
-    expect(production.catalog.banks.size).toBe(0);
-    expect(production.catalog.dares.size).toBe(0);
-    expect(challengeFor("sound-boat")).toBeUndefined();
+  it("mints every fixture word as a puzzle", () => {
+    expect(all.length).toBe(letters.length + fixture.records.length);
+    expect(puzzles.length).toBe(all.length);
   });
   it("fills banks 440-444 and dare slots 3600-3699 only, once each", () => {
     const slots = puzzles.flatMap((p) => p.dares.map((d) => d.slot));
@@ -52,9 +52,6 @@ describe("the registration's content", () => {
     expect(new Set(rule(4))).toEqual(new Set(["whole"]));
     expect(new Set(rule(5))).toEqual(new Set(["whole"]));
     expect(DARES_PER_LEVEL * 4).toBe(100);
-    const many = soundBoatPuzzles(Array.from({ length: 60 }, (_, i) => ({ ...taskOfParts(fixture.records[0]), id: `x${i}`, word: `sunset${i}` })));
-    expect(many.filter((p) => p.dares.length).length).toBe(DARES_PER_LEVEL);
-    expect(new Set(many.map((p) => p.ref.hash)).size).toBe(60);
   });
   it("every puzzle is a fair task whose right tiles are on the tray", () => {
     for (const p of puzzles) {

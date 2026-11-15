@@ -1,35 +1,34 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { engines } from "../src/learn/engines";
-import { createGrowth, isGrowth, withGrowth } from "../src/learn/growth/engine";
+import { describe, expect, it, vi } from "vitest";
+import { createGrowth, withGrowth } from "../src/learn/growth/engine";
 import { optionsAtLevel, type LearningLevel } from "../src/learn/levels";
-import { validLearnSession } from "../src/learn/session";
 import { random } from "../src/games/types";
 import { answerMissed } from "../src/puzzles/wholeAnswer";
-import { buildRules, draftTexts, firstMisfit, nextNeeded, taskOfLetters, type BuildTask } from "../src/learn/reading/build";
+import { buildRules, draftTexts, firstMisfit, nextNeeded, type BuildTask } from "../src/learn/reading/build";
+import { letterTaskById, partsTaskById, partsTasksAt } from "../src/learn/reading/tasks";
 import { TILE_TWINS } from "../src/learn/reading/graphemes";
 import { inheritedWords } from "../src/learn/reading/inherited";
-import type { PartsDraft, PartsWord, WordBank } from "../src/learn/reading/records";
-import { createSoundBoat } from "../src/learn/games/sound-boat/engine";
+import type { PartsDraft, WordBank } from "../src/learn/reading/records";
+import { engine } from "../src/learn/games/sound-boat/engine";
 import {
   PARTS_PER_ROUND,
-  PLAYABLE_FLOOR,
   isParts,
   partsMove,
-  partsTask,
-  tasksOf,
+  partsTask as current,
   type PartsAction,
   type PartsState,
 } from "../src/learn/games/sound-boat/parts";
 
+// The fixture records stand in for an admitted bank; the real factory mints them (see helpers/fixture-door).
+vi.mock("../src/learn/reading/admitted", async (real) => (await import("./helpers/fixture-door")).fixtureDoor(real));
 const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
-const tasks = tasksOf(fixture.records);
-const engine = createSoundBoat(fixture.records);
+const tasks = { get: (id: string) => partsTaskById(id) };
+const partsTask = (s: PartsState, _?: unknown) => current(s)!;
 const dispatch = withGrowth(engine as never);
 const ctx = (seed: number) => ({ skills: {}, rng: random(seed), starter: 0 as const, today: 20000 });
 const at = (level: 4 | 5) => optionsAtLevel({ mode: "solo", pace: "easy" }, level as LearningLevel);
 const round = (level: 4 | 5, seed = 1) => dispatch.create(at(level), ctx(seed)) as PartsState;
-const step = (s: PartsState, a: PartsAction) => partsMove(s, a, tasks);
+const step = (s: PartsState, a: PartsAction) => partsMove(s, a);
 /** Place pieces by their texts, in order, using unused tray positions. */
 function place(s: PartsState, texts: readonly string[]): PartsState {
   let out = s;
@@ -52,18 +51,10 @@ function playOut(s: PartsState, write: (task: BuildTask) => readonly string[]) {
   return out;
 }
 
-describe("production never reaches an unreviewed bank", () => {
-  it("the shipped engine keeps Levels 4 and 5 on the older growth quiz", () => {
-    const shipped = engines["sound-boat"];
-    expect(shipped.nativeStages).toBe(false);
-    for (const level of [4, 5] as const) expect(isGrowth(shipped.create(at(level), ctx(3)))).toBe(true);
-    expect(shipped.validate({ kind: "parts" }, at(4))).toBe(false);
-  });
-  it("a bank below the playable floor does not switch the board on", () => {
-    expect(createSoundBoat(fixture.records.slice(0, PLAYABLE_FLOOR - 1)).nativeStages).toBe(false);
-    expect(createSoundBoat([]).nativeStages).toBe(false);
-    expect(engine.nativeStages).toBe(true);
-  });
+// The shipped engine (no admitted bank) and the playable floor are in sound-boat-provenance.test.tsx, without this mock.
+it("an admitted bank at the playable floor switches the new board on", () => {
+  expect(engine.nativeStages).toBe(true);
+  expect(fixture.records.length).toBeGreaterThan(0);
 });
 
 describe("a Levels 4-5 round", () => {
@@ -74,8 +65,6 @@ describe("a Levels 4-5 round", () => {
         expect(s.ids).toHaveLength(PARTS_PER_ROUND);
         expect(new Set(s.ids).size).toBe(PARTS_PER_ROUND);
         expect(dispatch.validate(s, at(level))).toBe(true);
-        // The shipped registry has no admitted bank, so it refuses a fixture-built round outright.
-        expect(validLearnSession({ game: "sound-boat", version: 1, id: "r", revision: 0, options: at(level), state: s })).toBe(false);
         const sizes = s.ids.map((id) => tasks.get(id)!.tiles.length);
         if (level === 4) expect(sizes).toEqual([...sizes].sort((a, b) => a - b));
       }
@@ -214,7 +203,8 @@ describe("saved rounds are checked, not trusted", () => {
     const o = { mode: "solo" as const, pace: "medium" as const };
     const s = dispatch.create(o, ctx(9));
     expect(isParts(s)).toBe(false);
-    expect(Object.keys(s as object).sort()).toEqual(["assisted", "clean", "filled", "hint", "index", "ladders", "out", "pictures", "starter"]);
+    // Save shape 1 plus the optional credit marker (R1a fix 3); older saves without it still validate (sound-boat-undo).
+    expect(Object.keys(s as object).sort()).toEqual(["assisted", "clean", "credit", "filled", "hint", "index", "ladders", "out", "pictures", "starter"]);
     expect(dispatch.validate(s, o)).toBe(true);
     expect(dispatch.validate(round(4, 1), o)).toBe(false);
   });
@@ -225,7 +215,7 @@ describe("difficulty really rises", () => {
     const out = playOut(s, write);
     return out.index === PARTS_PER_ROUND ? 1 : 0;
   };
-  const tasksAt = (level: 4 | 5) => [...tasks.values()].filter((t) => t.level === level);
+  const tasksAt = (level: 4 | 5) => partsTasksAt(level);
   it("a child who keeps the base word and ignores the spelling change passes Level 4 endings and fails every Level 5 change", () => {
     const keepBase = (t: BuildTask) => (t.cue ? [t.cue.base, t.cue.affix] : t.tiles);
     const accepts = (t: BuildTask) => {
@@ -273,7 +263,7 @@ describe("difficulty really rises", () => {
 });
 
 describe("letter-sound puzzles for Levels 1-3 (Challenge)", () => {
-  const tasksL = inheritedWords.records.map(taskOfLetters);
+  const tasksL = inheritedWords.records.map((r) => letterTaskById(r.id)!);
   it("every shipped word makes a fair task: the right tiles are on the tray, and no look-alike is a twin of a right tile", () => {
     for (const t of tasksL) {
       const left = [...t.tray];

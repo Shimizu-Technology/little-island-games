@@ -16,8 +16,6 @@ import { LEGACY_WARMUP_WORDS, PICTURE_WORDS } from "../../content/reading/clues"
 import { LADDERS } from "../../content/reading/ladders";
 import { TILE_FAMILIES, TILE_TWINS, tileLabel } from "../../reading/graphemes";
 import { partsSkills } from "../../reading/scope";
-import { admittedParts } from "../../reading/admitted";
-import type { PartsWord } from "../../reading/records";
 import { levelOf } from "../../levelOptions";
 import {
   createParts,
@@ -25,7 +23,6 @@ import {
   partsOutcome,
   partsTurn,
   playable,
-  tasksOf,
   validParts,
   type PartsLevel,
   type PartsState,
@@ -52,7 +49,14 @@ export type BoatState = {
   assisted: boolean;
   /** One entry per finished word: built with no wrong tile and no help. */
   clean: boolean[];
+  /**
+   * Save shape 1, R1a fix 3: this word's practice credit. "pending" until the word sails, when the board credits it.
+   * "done" when it was already credited. Saves from before the field (absent) credited a word when its last letter
+   * landed, so an absent marker on a built word means "done". See `boatCredit`.
+   */
+  credit?: BoatCredit;
 };
+export type BoatCredit = "pending" | "done";
 
 export const WORDS_PER_ROUND = 10;
 const PICTURES = 4;
@@ -139,8 +143,18 @@ export function boatChoices(s: BoatState): string[] {
 export { tileLabel };
 export const silentE = (s: BoatState) => boatWord(s).tiles.some((t) => /_e$/.test(t));
 
+/**
+ * Whether Sail on should credit this word. A save written before the marker existed credited a built word when its last
+ * letter landed, so a built word without a marker was already credited and is "done"; an unbuilt one was not.
+ */
+export const boatCredit = (s: BoatState): BoatCredit => s.credit ?? (boatComplete(s) ? "done" : "pending");
 export type BoatAction = { type: "tile"; tile: string } | { type: "help" } | { type: "undo" } | { type: "next" };
+/** One move. Every changed state carries the credit marker: a new word starts "pending", and the rest keep theirs. */
 export function boatMove(s: BoatState, a: BoatAction): BoatState {
+  const next = boatStep(s, a);
+  return next === s ? s : { ...next, credit: next.index > s.index ? "pending" : boatCredit(s) };
+}
+function boatStep(s: BoatState, a: BoatAction): BoatState {
   if (s.index >= WORDS_PER_ROUND) return s;
   const complete = boatComplete(s);
   if (a.type === "next")
@@ -218,6 +232,7 @@ function createBoat(
     hint: false,
     assisted: false,
     clean: [],
+    credit: "pending",
   };
 }
 
@@ -298,13 +313,12 @@ export function boatFromLegacy(s: LegacyBoatState, o: LearnOptions, skills: Skil
 
 export type SoundBoatState = BoatState | LegacyBoatState | PartsState;
 /**
- * The Sound Boat engine over a set of reviewed word-part records. Levels 1-3 always use the words that have shipped
- * since 3.0.0. Levels 4-5 use the new board only when the records supplied are enough to play (a reviewed bank has
- * been admitted); otherwise they stay on the older growth quiz, so nothing unreviewed is ever reachable.
+ * The Sound Boat engine. Levels 1-3 always use the words that have shipped since 3.0.0. Levels 4-5 use the new board
+ * only when the admitted registry holds enough words to play (a reviewed bank has been admitted); otherwise they stay
+ * on the older growth quiz, so nothing unreviewed is ever reachable. Words come only from `reading/tasks`, by id.
  */
-export function createSoundBoat(parts: readonly PartsWord[]): LearnEngine<SoundBoatState> {
-  const tasks = tasksOf(parts);
-  const native = playable(tasks);
+export function createSoundBoat(): LearnEngine<SoundBoatState> {
+  const native = playable();
   return {
     id: "sound-boat",
     name: "Sound Boat",
@@ -325,13 +339,15 @@ export function createSoundBoat(parts: readonly PartsWord[]): LearnEngine<SoundB
       medium: "Two letters, one sound, and blends: fish, duck, crab, kite.",
       hard: "Vowel teams: sheep, boat, moon, star.",
     },
-    create: (o, c) => (o.stage && native ? createParts(levelOf(o) as PartsLevel, tasks, c) : createBoat(o, c)),
+    create: (o, c) => (o.stage && native ? createParts(levelOf(o) as PartsLevel, c) : createBoat(o, c)),
     validate(v, o): v is SoundBoatState {
-      if (o.stage) return native && isParts(v) && validParts(v, levelOf(o) as PartsLevel, tasks);
+      if (o.stage) return native && isParts(v) && validParts(v, levelOf(o) as PartsLevel);
       if (isParts(v)) return false;
       if (isLegacyBoat(v)) return validLegacy(v, o);
-      if (!exact(v, ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"]))
-        return false;
+      const keys = ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"];
+      const marked = !!v && typeof v === "object" && Object.hasOwn(v, "credit");
+      if (!exact(v, marked ? [...keys, "credit"] : keys)) return false;
+      if (marked && v.credit !== "pending" && v.credit !== "done") return false;
       if (!validPictures(v.pictures, o.pace) || !validLadders(v.ladders, o.pace)) return false;
       if (
         !seat(v.starter) ||
@@ -347,7 +363,7 @@ export function createSoundBoat(parts: readonly PartsWord[]): LearnEngine<SoundB
       )
         return false;
       const s = v as BoatState;
-      if (s.index === WORDS_PER_ROUND) return s.filled === 0 && s.out.length === 0 && !s.hint && !s.assisted;
+      if (s.index === WORDS_PER_ROUND) return s.filled === 0 && s.out.length === 0 && !s.hint && !s.assisted && s.credit !== "done";
       if (s.filled > boatBlanks(s).length || ((s.hint || s.out.length > 0) && !s.assisted)) return false;
       if (boatComplete(s)) return s.out.length === 0 && !s.hint;
       const choices = boatChoices(s),
@@ -362,4 +378,4 @@ export function createSoundBoat(parts: readonly PartsWord[]): LearnEngine<SoundB
     turn: (s, o) => (isParts(s) ? partsTurn(s) : boatTurn(s, o)),
   };
 }
-export const engine = createSoundBoat(admittedParts);
+export const engine = createSoundBoat();

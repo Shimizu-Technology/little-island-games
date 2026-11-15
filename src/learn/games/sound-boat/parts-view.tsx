@@ -7,7 +7,8 @@ import type { BoardProps } from "../../types";
 import { canCheckAnswer, answerMissed } from "../../../puzzles/wholeAnswer";
 import { buildRules } from "../../reading/build";
 import { wordAudio } from "../../kit/reading";
-import { BuildBoat } from "./BuildBoat";
+import { admittedTask } from "../../reading/tasks";
+import { BuildBoat, RefusedTask } from "./BuildBoat";
 import {
   PARTS_PER_ROUND,
   partsAssisted,
@@ -16,7 +17,6 @@ import {
   partsTask,
   type PartsAction,
   type PartsState,
-  type PartsTasks,
 } from "./parts";
 import { Voyage, ink } from "./shared";
 
@@ -33,7 +33,8 @@ function Finished() {
 
 /**
  * Levels 4 and 5. Build the word you hear from its pieces, tap Check, then sail on when you are ready. The child sets
- * the pace: nothing advances by itself and nothing here keeps time.
+ * the pace: nothing advances by itself and nothing here keeps time. Each word is minted from the admitted registry by
+ * the id the round saved; a word that is not admitted shows the safe fallback, and nothing on it is played or counted.
  */
 export function PartsBoard({
   session,
@@ -46,12 +47,11 @@ export function PartsBoard({
   height,
   active,
   cheer,
-  tasks,
-}: BoardProps<PartsState> & { tasks: PartsTasks }) {
+}: BoardProps<PartsState>) {
   const s = session.state;
   const done = partsDone(s);
   useStepReveal(s.index);
-  const task = done ? null : partsTask(s, tasks);
+  const task = done ? null : partsTask(s);
 
   // Say each new word. A fresh round waits for the spoken goal first; a restored round waits a moment.
   const spoken = useRef<string | null>(session.revision > 0 ? `${session.id}-${s.index}` : null);
@@ -67,13 +67,14 @@ export function PartsBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Speaks once per word; later renders must not repeat it.
   }, [active, soundOn, s.index, session.id, done]);
 
-  if (done || !task) return <Finished />;
+  if (done) return <Finished />;
+  if (!admittedTask(task, "Sound Boat's word-parts board")) return <RefusedTask />;
 
   function act(a: PartsAction) {
-    if (!active || !task) return;
+    if (!active || !admittedTask(task, "Sound Boat's word-parts board")) return;
     // Every request to hear the word plays it, including a repeat and one after Check. Only the saved state is idempotent.
     if (a.type === "hear") sound(wordAudio(task.word));
-    const next = partsMove(s, a, tasks);
+    const next = partsMove(s, a);
     if (next === s) return;
     if (a.type === "edit") sound("tap");
     if (a.type === "check") {

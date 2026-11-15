@@ -68,4 +68,12 @@ describe("one reading validator for shipping and the app", () => {
     expect(() => validateReadingRecord(probe)).toThrow(/a compound is two whole words/);
     expect(() => admitParts([{ schemaVersion: 1, kind: "reading-parts", words: [probe as never] }])).toThrow(/two whole words/);
   });
+  // R3 (review note): the app loader holds the same closed record keys as shipping, so parity holds in both directions.
+  it("the app loader refuses a record with fields shipping refuses", () => {
+    const extra = { id: "r-sunset", word: "sunset", level: 4, kind: "compound", chunks: ["sun", "set"], distractors: ["sin", "sit"], status: "fixture" };
+    expect(() => validateReadingRecord(extra)).toThrow(/unexpected fields/);
+    expect(() => admitParts([{ schemaVersion: 1, kind: "reading-parts", words: [extra as never] }])).toThrow(/unexpected fields/);
+    const { status: _, ...clean } = extra;
+    expect(admitParts([{ schemaVersion: 1, kind: "reading-parts", words: [clean as never] }])).toHaveLength(1);
+  });
 });

@@ -28,5 +28,18 @@ export const inheritedWords: WordBank<LetterWord> = {
     };
   }),
 };
+/**
+ * Every other reading source that has shipped since before this process (Which One's sentences, Turtle Tales' stories,
+ * the picture words and the ladders), pinned the same way: a digest of each module's exact exported data, checked by
+ * `tests/sound-boat-provenance.test.tsx`. Adding, removing or editing a word in any of them changes its digest and
+ * fails the gate; new reading data goes through W1 admission instead.
+ */
+export const INHERITED_SOURCE_DIGESTS: Readonly<Record<string, string>> = {
+  clues: "20aa0c8cf42c3135e9d25b38a0acc92cab7dd70e6cb9f0cbeb5817b612933457",
+  ladders: "f75c86b133962f71883c8fe50283150fa5192243de4f9cd835f2bc6f0292cc52",
+  sentences: "327d4e626c00f1ff87a9bb2c264f7e5743b4a548339923ce215324c7475675de",
+  stories: "999c10ba0fc3ac29b75f228c4b84885eb9949b3080d5fd343c7edd034c78c1f3",
+  words: "7822bf690a6860a8e494be4ee5b051155cb034b230489c4464ceb40f65f05d06",
+};
 /** The shipped data this bank was derived from, for the digest test. */
 export const inheritedSource = WORDS;

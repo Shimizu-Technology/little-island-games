@@ -3,7 +3,10 @@ import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { random } from "../src/games/types";
-import { engine, boatBlanks, boatChoices, boatComplete, boatExpected, boatMove, type BoatState } from "../src/learn/games/sound-boat/engine";
+import { engine, boatBlanks, boatChoices, boatComplete, boatCredit, boatExpected, boatMove, boatWord, type BoatState } from "../src/learn/games/sound-boat/engine";
+import { emptySave, parseSave, type Save } from "../src/state/validation";
+import { applyOwnedPractice } from "../src/state/learnAction";
+import { startSession } from "../src/learn/session";
 import { Board } from "../src/learn/games/sound-boat/view";
 
 vi.mock("react-native", () => {
@@ -48,7 +51,7 @@ describe("Levels 1-3 undo", () => {
   });
   it("keeps the save shape and every undone state validates", () => {
     let s = several(), keys = Object.keys(s).sort();
-    expect(keys).toEqual(["assisted", "clean", "filled", "hint", "index", "ladders", "out", "pictures", "starter"]);
+    expect(keys).toEqual(["assisted", "clean", "credit", "filled", "hint", "index", "ladders", "out", "pictures", "starter"]);
     while (s.filled < boatBlanks(s).length - 1) s = place(s);
     for (const next of [s, boatMove(s, { type: "undo" }), boatMove(boatMove(s, { type: "undo" }), { type: "undo" })]) {
       expect(Object.keys(next).sort()).toEqual(keys);
@@ -178,5 +181,106 @@ describe("the Levels 1-3 board", () => {
     expect(h.practice).toHaveBeenCalledTimes(1);
     expect(h.practice).toHaveBeenCalledWith(expect.any(String), true);
     expect(h.state.index).toBe(1);
+  });
+});
+
+// R3-4. Saves from before fix 2 credited a word when its last letter landed; fix 2 moved credit to Sail on. A built word
+// saved by the older app has no marker and was already credited. New saves carry `credit` ("pending" until it sails).
+describe("practice credit across the Sail on change", () => {
+  const old = (s: BoatState): BoatState => { const { credit: _, ...rest } = s; return rest as BoatState; };
+  /** A real save holding this round, its skill credited `right` times, written and read back by the real parser. */
+  function saved(state: BoatState, right: number) {
+    const skill = boatWord(state).skill;
+    const round = { ...startSession("sound-boat", { options } as any, {}, 1), revision: 2, state };
+    const expected = { id: round.id, revision: 2, epoch: 0 };
+    let save: Save = { ...emptySave(), learn: { "sound-boat": round } } as Save;
+    for (let i = 0; i < right; i++) save = applyOwnedPractice(save, "sound-boat", { ...expected, revision: 1 }, 0, skill, true);
+    save = parseSave(JSON.stringify(save));
+    return { skill, expected, get save() { return save; }, set save(v) { save = v; } };
+  }
+  async function sailOn(h: ReturnType<typeof saved>, steps: (b: { press: (label: string) => Promise<void>; rerender: () => Promise<void> }) => Promise<void> = async () => {}) {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const order: string[] = [];
+    let session = h.save.learn!["sound-boat"]! as any;
+    const update = vi.fn((n: BoatState) => { order.push("update"); session = { ...session, state: n }; });
+    const practice = vi.fn((skill: string, right: boolean) => { order.push("practice"); h.save = applyOwnedPractice(h.save, "sound-boat", h.expected, 0, skill, right); });
+    const make = () => ({ ...props(session.state).make(), session, update, practice } as any);
+    await act(async () => { root = create(<Board {...make()} />); });
+    const rerender = async () => act(async () => root!.update(<Board {...make()} />));
+    const press = async (label: string) => { await act(async () => buttons().find((b) => b.props.accessibilityLabel === label || b.props.children === label)!.props.onPress()); await rerender(); };
+    await steps({ press, rerender });
+    await press("Sail on");
+    return { practice, order, state: session.state as BoatState };
+  }
+  it("an older save with a built word and no marker sails on without a second credit", async () => {
+    const built = old(place(fresh(7)));
+    expect(engine.validate(built, options as never)).toBe(true);
+    expect(boatCredit(built)).toBe("done");
+    const h = saved(built, 1);
+    expect(h.save.skills![h.skill].right).toBe(1);
+    const { practice, state } = await sailOn(h);
+    expect(practice).not.toHaveBeenCalled();
+    expect(state.index).toBe(1);
+    expect(state.credit).toBe("pending");
+    expect(h.save.skills![h.skill].right).toBe(1);
+  });
+  it("undo and rebuild of that older built word still never credits it again", async () => {
+    const built = old(place(fresh(7)));
+    const h = saved(built, 1);
+    const { practice, state } = await sailOn(h, async ({ press, rerender }) => {
+      await press("Undo: take back the last letter");
+      const tile = root!.root.findAll((n) => typeof n.props.accessibilityLabel === "string" && n.props.accessibilityLabel.startsWith(`Letter ${boatExpected(fresh(7)).split("").join(" ")}`) && typeof n.props.onPress === "function")[0];
+      await act(async () => tile.props.onPress());
+      await rerender();
+    });
+    expect(state.index).toBe(1);
+    expect(practice).not.toHaveBeenCalled();
+    expect(h.save.skills![h.skill].right).toBe(1);
+  });
+  it("the marker survives undo: an older built word undone is done, and rebuilt it stays done", () => {
+    const built = old(place(fresh(7))), back = boatMove(built, { type: "undo" });
+    expect(back.credit).toBe("done");
+    expect(engine.validate(back, options as never)).toBe(true);
+    const again = place(back);
+    expect(boatComplete(again)).toBe(true);
+    expect(boatCredit(again)).toBe("done");
+    expect(boatMove(again, { type: "next" }).credit).toBe("pending");
+  });
+  it("an older save in the middle of a word was not yet credited, so it credits once when it sails", () => {
+    const start = old(several()), partway = old(place(start));
+    expect(boatComplete(partway)).toBe(false);
+    expect(boatCredit(partway)).toBe("pending");
+    expect(boatCredit(filledWord(partway))).toBe("pending");
+  });
+  it("fresh play credits once, on Sail on", async () => {
+    const built = place(fresh(7));
+    expect(built.credit).toBe("pending");
+    const h = saved(built, 0);
+    const { practice, order } = await sailOn(h);
+    expect(practice).toHaveBeenCalledTimes(1);
+    expect(h.save.skills![h.skill].right).toBe(1);
+    // The round moves on before the credit is written, so an interrupted Sail on cannot leave a word to credit twice.
+    expect(order).toEqual(["update", "practice"]);
+  });
+  it("undo and rebuild before Sail on keeps it pending, and it is credited once", async () => {
+    const first = fresh(7), built = place(first);
+    const back = boatMove(built, { type: "undo" });
+    expect(back.credit).toBe("pending");
+    const h = saved(place(back), 0);
+    const { practice } = await sailOn(h);
+    expect(practice).toHaveBeenCalledTimes(1);
+    expect(h.save.skills![h.skill].right).toBe(1);
+  });
+  it("saves check the marker", () => {
+    const built = place(fresh(7)), v = (s: unknown) => engine.validate(s as never, options as never);
+    expect(v(built)).toBe(true);
+    expect(v({ ...built, credit: "done" })).toBe(true);
+    expect(v(old(built))).toBe(true);
+    for (const bad of ["yes", null, 1, true, undefined]) expect(v({ ...built, credit: bad }), String(bad)).toBe(false);
+    let done = fresh(7);
+    while (done.index < 10) done = boatMove(filledWord(done), { type: "next" });
+    expect(v(done)).toBe(true);
+    expect(v(old(done))).toBe(true);
+    expect(v({ ...done, credit: "done" })).toBe(false);
   });
 });

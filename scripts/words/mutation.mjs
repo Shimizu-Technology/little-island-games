@@ -2,7 +2,7 @@
 // Every mutant starts from passing synthetic bakes. Trace false predicates once,
 // then run their exact negative cases; unrelated later gates cannot hide removal.
 import ts from 'typescript';
-import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync, symlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -343,8 +343,57 @@ const readingEdges=[
  ['morphology','alternates shape','else if (r.alternates !== undefined && (!Array.isArray(r.alternates) || !r.alternates.every((a) => pieces(a, 1, 8)))) no(','else if (false) no(',['reading rule alternates shape']],
  ['morphology','alternate differs','if (a.join("") !== r.word || a.join("|") === r.chunks.join("|")) no(','if (false) no(',['reading rule alternate repeats the answer','reading rule alternate spelling']],
  ['morphology','tray spellings accepted','if (!accepted.has(order.map((i) => tray[i]).join("|"))) no(','if (false) no(',['reading rule tray spells unaccepted']],
+ // R1a fix 3 (R3-2): the tray scan starts at every offset, and the export backstop's traversal is complete.
+ ['scan','built text scanned from every offset',"reverse().join('')]) for (let i = 0; i < s.length; i++) {","reverse().join('')]) for (let i = 0; i < Math.min(1, s.length); i++) {",['reading tray scan finds a scan-only term inside a build','reading tray scan reports a term at any offset, in both directions']],
+ ['shipping','export JSON array descent','if(Array.isArray(value))return value.forEach(v=>json(v,name));','if(Array.isArray(value))return;',['reading payload in a top-level JSON array fails','reading payload in exported JSON fails']],
+ ['shipping','export JSON object descent','    Object.values(value).forEach(v=>json(v,name));\n','',['reading payload nested in JSON objects fails','reading payload in exported JSON fails']],
+ ['shipping','export directory recursion','if(e.isDirectory()){walk(p);continue;}','if(e.isDirectory())continue;',['reading payload in an export subdirectory fails','reading payload in exported JSON fails']],
+ ['shipping','export JavaScript tree descent','return admit(value,name);}ts.forEachChild(n,visit);};','return admit(value,name);}};',['reading payload deep in a JavaScript tree fails','reading payload in an export fails even when the source tree is clean']],
+ ['core','builds use each tray position once','tray.forEach((piece, i) => { if (!used.includes(i))','tray.forEach((piece, i) => { if (true)',['reading constructions use each tray piece once, up to the box count']],
 ];
 for(const [file,label,before,after,tests] of readingEdges){const original=sources.get(file);if(original.split(before).length!==2)throw new Error('Missing or ambiguous R1a mutation target '+label);custom(file,'R1a '+label,original.replace(before,after),tests);}
+// R1a fix 3, app side. The reading boundary is provenance (src/learn/reading/tasks.ts), checked again by every consumer;
+// practice credit across the Sail on change; and the no-timer walk and its behavioural host test. Each mutant edits one
+// app or test-helper file in a scratch copy of the app and runs the named Vitest cases there. Equivalent mutants are
+// named in FIX-REPORT-3, not counted as kills.
+const PROVENANCE='tests/sound-boat-provenance.test.tsx',HOSTS='tests/sound-boat-provenance-hosts.test.tsx',UNDO='tests/sound-boat-undo.test.tsx',CLOCK='tests/reading-no-timer.test.ts',FAKE='tests/reading-fake-clock.test.tsx';
+const wrapper=readFileSync('src/learn/games/sound-boat/view.tsx','utf8').replace('  sound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,','  sound: originalSound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,').replace('    complete = boatComplete(s);\n\n  // Say each new word.','    complete = boatComplete(s);\n\n  const latest = useRef(s); latest.current = s;\n  function sound(...args: Parameters<typeof originalSound>) { originalSound(...args); update(boatMove(latest.current, {type: "next"})); }\n\n  // Say each new word.');
+const appEdges=[
+ ['src/learn/reading/tasks.ts','minted set membership','made.has(task)','true',[PROVENANCE],'refused|minted|copied'],
+ ['src/learn/reading/tasks.ts','consumer check accepts only minted tasks','  if (isMinted(task)) return true;\n','  return true;\n',[PROVENANCE],'refused|development'],
+ ['src/learn/reading/tasks.ts','development refusal throws','  if (dev()) throw new Error','  if (false) throw new Error',[PROVENANCE],'development|throws|digest'],
+ ['src/learn/reading/tasks.ts','minted task frozen','  Object.freeze(t);\n','',[PROVENANCE],'frozen'],
+ ['src/learn/reading/tasks.ts','minted pieces frozen','for (const part of [t.tiles, t.tray, ...t.alternates, t.alternates]) Object.freeze(part);','',[PROVENANCE],'frozen'],
+ ['src/learn/reading/tasks.ts','minted only from a door','  made.add(t);\n','',[PROVENANCE],'control|frozen'],
+ ['src/learn/reading/tasks.ts','inherited digest gate','if (inheritedIssues(inheritedWords, INHERITED_DIGEST).length)','if (false)',[PROVENANCE],'pinned digest'],
+ ['src/learn/reading/admitted/index.ts','app loader closed record keys','!Object.keys(w).every((k) => KEYS.includes(k))','false',['tests/reading-parity.test.ts'],'fields shipping refuses'],
+ ['src/learn/games/sound-boat/BuildBoat.tsx','word board check','  if (!admittedTask(p.task, "Sound Boat\'s word board")) return <RefusedTask />;\n','',[PROVENANCE],'word board'],
+ ['src/learn/games/sound-boat/challenge-view.tsx','Challenge board check','  if (!admittedTask(s.task, "Sound Boat\'s Challenge board")) return <>{header}<RefusedTask />{footer}</>;\n','',[HOSTS],'Challenge board'],
+ ['src/learn/games/sound-boat/parts-view.tsx','School parts board check','  if (!admittedTask(task, "Sound Boat\'s word-parts board")) return <RefusedTask />;\n','',[HOSTS],'parts board'],
+ ['src/learn/games/sound-boat/parts.ts','round move check','  if (!admittedTask(task, "Sound Boat round")) return s;\n','',[PROVENANCE],'not a valid save'],
+ ['src/learn/games/sound-boat/parts.ts','saved round ids admitted','partsTaskById(id)?.level === level','true',['tests/sound-boat-parts.test.ts'],'forged'],
+ ['src/learn/games/sound-boat/challenge-engine.ts','replay opens only a minted descriptor','validInitial: (v, task): v is Initial => isMinted(task) && ','validInitial: (v, task): v is Initial => ',[PROVENANCE],'Challenge board'],
+ ['src/learn/games/sound-boat/challenge-engine.ts','replay steps only a minted task','if (s.answer.solved || !isMinted(s.task)) return null;','if (s.answer.solved) return null;',[PROVENANCE],'Challenge board'],
+ ['src/learn/games/sound-boat/challenge-engine.ts','replay solves only a minted task','solved: s.answer.solved && isMinted(s.task),','solved: s.answer.solved,',[PROVENANCE],'Challenge board'],
+ ['src/learn/games/sound-boat/challenge-engine.ts','replay create check','    admittedTask(task, "Sound Boat Challenge");\n','',[PROVENANCE],'development it throws'],
+ ['src/learn/games/sound-boat/challenge-content.ts','puzzles only from minted tasks','const minted = tasks.filter((t) => admittedTask(t, "Sound Boat Challenge puzzles"));','const minted = tasks;',[PROVENANCE],'Challenge puzzle'],
+ ['src/learn/games/sound-boat/view.tsx','Sail on credits only a pending word','const credit = a.type === "next" && boatCredit(s) === "pending";','const credit = a.type === "next";',[UNDO],'older'],
+ ['src/learn/games/sound-boat/view.tsx','the round moves on before the credit','    update(next);\n    if (credit) practice(word.skill, !s.assisted);','    if (credit) practice(word.skill, !s.assisted);\n    update(next);',[UNDO],'fresh play'],
+ ['src/learn/games/sound-boat/engine.ts','an unmarked built word was credited','s.credit ?? (boatComplete(s) ? "done" : "pending")','s.credit ?? "pending"',[UNDO],'older'],
+ ['src/learn/games/sound-boat/engine.ts','the marker is read before the fallback','s.credit ?? (boatComplete(s) ? "done" : "pending")','(boatComplete(s) ? "done" : "pending")',[UNDO],'fresh play|pending'],
+ ['src/learn/games/sound-boat/engine.ts','moves keep the marker','credit: next.index > s.index ? "pending" : boatCredit(s)','credit: "pending"',[UNDO],'older|marker survives'],
+ ['src/learn/games/sound-boat/engine.ts','saved marker values','if (marked && v.credit !== "pending" && v.credit !== "done") return false;','',[UNDO],'check the marker'],
+ ['tests/helpers/reading-clock.ts','walk reads .mjs and .cjs modules','const SOURCE = /\\.(?:[cm]?[jt]sx?)$/;','const SOURCE = /\\.[jt]sx?$/;',[CLOCK],'mjs'],
+ ['tests/helpers/reading-clock.ts','walk resolves an extensionless import to .mjs','const EXTENSIONS = [".tsx", ".ts", ".jsx", ".js", ".mjs", ".cjs"];','const EXTENSIONS = [".tsx", ".ts", ".jsx", ".js", ".cjs"];',[CLOCK],'mjs'],
+ ['tests/helpers/reading-clock.ts','walk reads platform directory indexes','PLATFORMS.flatMap((p) => EXTENSIONS.map((e) => `/index${p}${e}`))','EXTENSIONS.map((e) => `/index${e}`)',[CLOCK],'mjs'],
+ ['tests/helpers/reading-clock.ts','clock aliases are references','        if (CLOCKS.has(n.text) && !calledAs(n)) push("reference", p);\n        else if','        if (false) push("reference", p);\n        else if',[CLOCK],'alias|other than a direct call'],
+ ['tests/helpers/reading-clock.ts','computed clock lookups are references','if (ts.isElementAccessExpression(n) && ts.isStringLiteralLike(n.argumentExpression) && (CLOCKS.has(n.argumentExpression.text) || n.argumentExpression.text === "now")) push("reference", n);','',[CLOCK],'other than a direct call'],
+ ['tests/helpers/reading-clock.ts','Date aliases are references','else if (n.text === "Date" && !((ts.isNewExpression(p)','else if (false && !((ts.isNewExpression(p)',[CLOCK],'other than a direct call'],
+ ['tests/helpers/reading-clock.ts','keys bind the declarations a timer uses','if (!taken.some((t) => contains(t, u))) { taken.push(u); queue.push(u); }','',[CLOCK],'dependency is rewrapped'],
+ ['src/learn/games/sound-boat/view.tsx','reviewer wrapper: speech advances the word (behaviour)',null,wrapper,[FAKE],'sound-boat: no word'],
+];
+const appMutations=[];
+for(const [file,label,before,after,tests,pattern] of appEdges){const original=readFileSync(file,'utf8');if(before!==null && original.split(before).length!==2)throw new Error('Missing or ambiguous R1a app mutation target '+label);const source=before===null?after:original.replace(before,after);if(source===original)throw new Error('Unchanged mutant '+label);appMutations.push({file,message:'R1a app '+label,source,tests,pattern});}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile(m.file==='morphology'?'mutant.ts':'mutant.mjs',m.source,ts.ScriptTarget.Latest,true,m.file==='morphology'?ts.ScriptKind.TS:ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});
@@ -368,5 +417,23 @@ try{
   const killed=r.status!==0 && r.status!==null;failed+=!killed;
   console.log(JSON.stringify({id:m.id,file:m.file,message:m.message,tests,killed,status:r.status}));
  }
- console.log(JSON.stringify({mutations:count,killed:count-failed,survived:failed}));process.exitCode=failed?1:0;
+ // App mutants run in a scratch copy of the app with the real dependencies linked in, never in the working tree.
+ const wanted=appMutations.filter(m=>!process.argv[2] || `${m.file} ${m.message}`.includes(process.argv[2]));
+ if(wanted.length){
+  const app=join(scratch,'app');mkdirSync(app);
+  for(const dir of ['src','tests','content','scripts'])cpSync(dir,join(app,dir),{recursive:true});
+  for(const file of ['package.json','tsconfig.json','vitest.config.mts','app.json','app.config.js'])if(existsSync(file))cpSync(file,join(app,file));
+  for(const dir of ['node_modules','assets','modules'])if(existsSync(dir))symlinkSync(resolve(dir),join(app,dir));
+  const vitest=(files,pattern)=>spawnSync(process.execPath,[resolve('node_modules/vitest/vitest.mjs'),'run','--reporter=dot',...files,...(pattern?['-t',pattern]:[])],{cwd:app,encoding:'utf8',env:{...process.env,CI:'1'},timeout:process.env.LITTLE_ISLAND_SLOW_HOST==='1'?600000:240000,maxBuffer:16*1024*1024});
+  // Each mutant's own selection must run and pass unmutated, so a kill is never a pattern that matched nothing.
+  const passed=r=>r.status===0 && /Tests\s+\d+ passed/.test(r.stdout+r.stderr) && !/\d+ failed/.test(r.stdout+r.stderr);
+  for(const key of new Set(wanted.map(m=>JSON.stringify([m.tests,m.pattern])))){const [files,pattern]=JSON.parse(key),base=vitest(files,pattern);if(!passed(base)){console.error(base.stdout+base.stderr);throw new Error('Unmutated app baseline must pass: '+key);}}
+  for(const m of wanted){count++;
+   const target=join(app,m.file),original=readFileSync(target,'utf8');writeFileSync(target,m.source);
+   const r=vitest(m.tests,m.pattern);writeFileSync(target,original);
+   const killed=r.status!==0 && r.status!==null && /\d+ failed/.test(r.stdout+r.stderr);failed+=!killed;
+   console.log(JSON.stringify({file:m.file,message:m.message,tests:m.tests,pattern:m.pattern,killed,status:r.status}));
+  }
+ }
+ console.log(JSON.stringify({mutations:count,killed:count-failed,survived:failed,app:wanted.length}));process.exitCode=failed?1:0;
 }finally{rmSync(scratch,{recursive:true,force:true});}

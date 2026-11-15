@@ -4,12 +4,15 @@ import type { ChallengeViewProps } from "../../../challenge/types";
 import { answerMissed, canCheckAnswer } from "../../../puzzles/wholeAnswer";
 import { buildRules } from "../../reading/build";
 import { wordAudio } from "../../kit/reading";
-import { BuildBoat } from "./BuildBoat";
+import { admittedTask } from "../../reading/tasks";
+import { BuildBoat, RefusedTask } from "./BuildBoat";
 import type { Action, State } from "./challenge-engine";
 
 export function ChallengeBoard({ state: s, dispatch, active, width, header, footer }: ChallengeViewProps<State, Action>) {
   const preferences = useContext(AudioPreferences), { play } = useSoundControls(preferences.sound ?? true);
   const soundOn = preferences.sound !== false;
+  // A task that was not minted from an admitted record is never drawn and nothing on it is sent.
+  if (!admittedTask(s.task, "Sound Boat's Challenge board")) return <>{header}<RefusedTask />{footer}</>;
   const send = (a: Action) => { if (active) dispatch(a); };
   return (
     <>

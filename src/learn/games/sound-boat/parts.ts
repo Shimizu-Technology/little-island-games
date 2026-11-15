@@ -1,13 +1,15 @@
 import type { CreateContext } from "../../types";
 import { pickItems } from "../../skills";
 import { answerCheck, answerEdit, answerHelp, type AnswerState } from "../../../puzzles/wholeAnswer";
-import { buildRules, taskOfParts, type BuildEdit, type BuildTask } from "../../reading/build";
-import type { PartsWord } from "../../reading/records";
+import { buildRules, type BuildEdit, type BuildTask } from "../../reading/build";
+import { admittedTask, partsTaskById, partsTasksAt, type MintedTask } from "../../reading/tasks";
 import { exact, familyResult, integer, seat } from "../../kit/reading";
 
 /**
  * Sound Boat Levels 4 and 5: build a whole word from pieces on the boat, then tap Check. Nothing is marked right or
  * wrong until Check. A miss keeps the word where it was, so there is nothing to lose by trying again.
+ * A round keeps only word ids. Each word is minted again from the admitted registry when it is shown or checked, and a
+ * round whose ids are not admitted is not a valid save.
  */
 export const PARTS_PER_ROUND = 6;
 /** Fewest words a level needs before this board replaces the older quiz. A playability floor, not the content target. */
@@ -33,13 +35,11 @@ export type PartsAction =
   | { type: "hear" }
   | { type: "reset" }
   | { type: "next" };
-export type PartsTasks = ReadonlyMap<string, BuildTask>;
-export const tasksOf = (parts: readonly PartsWord[]): PartsTasks => new Map(parts.map((r) => [r.id, taskOfParts(r)]));
 export const isParts = (s: unknown): s is PartsState => !!s && typeof s === "object" && (s as { kind?: unknown }).kind === "parts";
 
-export const partsTaskIds = (tasks: PartsTasks, level: PartsLevel) => [...tasks.values()].filter((t) => t.level === level);
-export const playable = (tasks: PartsTasks) => ([4, 5] as const).every((l) => partsTaskIds(tasks, l).length >= PLAYABLE_FLOOR);
-export const partsTask = (s: PartsState, tasks: PartsTasks): BuildTask => tasks.get(s.ids[Math.min(s.index, PARTS_PER_ROUND - 1)])!;
+export const playable = () => ([4, 5] as const).every((l) => partsTasksAt(l).length >= PLAYABLE_FLOOR);
+/** The word on the boat now, minted from the admitted registry by its id, or null when that id is not admitted. */
+export const partsTask = (s: PartsState): MintedTask | null => partsTaskById(s.ids[Math.min(s.index, PARTS_PER_ROUND - 1)]);
 export const partsDone = (s: PartsState) => s.index >= PARTS_PER_ROUND;
 
 const startOfWord = (): AnswerState<number[]> => ({
@@ -47,7 +47,7 @@ const startOfWord = (): AnswerState<number[]> => ({
 });
 
 /** Easier words first (fewer, shorter pieces). At Level 5, words from one base word sit side by side. */
-function order(tasks: BuildTask[], level: PartsLevel): BuildTask[] {
+function order(tasks: MintedTask[], level: PartsLevel): MintedTask[] {
   const easy = [...tasks].sort((a, b) => a.tiles.length - b.tiles.length || a.word.length - b.word.length || a.id.localeCompare(b.id));
   if (level === 4) return easy;
   const family = (t: BuildTask) => t.cue?.base ?? t.word;
@@ -55,8 +55,8 @@ function order(tasks: BuildTask[], level: PartsLevel): BuildTask[] {
   for (const t of easy) if (!seen.includes(family(t))) seen.push(family(t));
   return seen.flatMap((f) => easy.filter((t) => family(t) === f));
 }
-export function createParts(level: PartsLevel, tasks: PartsTasks, c: CreateContext<unknown>): PartsState {
-  const picked = pickItems(partsTaskIds(tasks, level), c.skills, PARTS_PER_ROUND, c.rng, c.today);
+export function createParts(level: PartsLevel, c: CreateContext<unknown>): PartsState {
+  const picked = pickItems(partsTasksAt(level), c.skills, PARTS_PER_ROUND, c.rng, c.today);
   return {
     kind: "parts",
     level,
@@ -81,9 +81,10 @@ const saturated = (a: AnswerState<number[]>): AnswerState<number[]> =>
 function bounded(a: AnswerState<number[]>): AnswerState<number[]> {
   return a.revision > MAX_REVISION ? { ...a, revision: 0, checkedRevision: null } : a;
 }
-export function partsMove(s: PartsState, a: PartsAction, tasks: PartsTasks): PartsState {
+export function partsMove(s: PartsState, a: PartsAction): PartsState {
   if (partsDone(s)) return s;
-  const task = partsTask(s, tasks);
+  const task = partsTask(s);
+  if (!admittedTask(task, "Sound Boat round")) return s;
   if (a.type === "next") {
     if (!s.answer.solved) return s;
     return { ...s, index: s.index + 1, answer: startOfWord(), clean: [...s.clean, s.answer.misses === 0 && !s.answer.helped], heard: false };
@@ -125,15 +126,16 @@ function validAnswer(v: unknown, task: BuildTask): v is AnswerState<number[]> {
 }
 const fresh = (a: AnswerState<number[]>) =>
   !a.draft.length && a.revision === 0 && a.checkedRevision === null && !a.checks && !a.misses && !a.solved && !a.helped && !a.last;
-export function validParts(v: unknown, level: PartsLevel, tasks: PartsTasks): v is PartsState {
+export function validParts(v: unknown, level: PartsLevel): v is PartsState {
   if (!exact(v, ["kind", "level", "ids", "starter", "index", "answer", "clean", "heard"])) return false;
   const s = v as unknown as PartsState;
   if (s.kind !== "parts" || s.level !== level || !seat(s.starter) || typeof s.heard !== "boolean" || !integer(s.index, PARTS_PER_ROUND)) return false;
   if (!Array.isArray(s.ids) || s.ids.length !== PARTS_PER_ROUND || new Set(s.ids).size !== PARTS_PER_ROUND) return false;
-  if (!s.ids.every((id) => typeof id === "string" && tasks.get(id)?.level === level)) return false;
+  if (!s.ids.every((id) => partsTaskById(id)?.level === level)) return false;
   if (!Array.isArray(s.clean) || s.clean.length !== s.index || !s.clean.every((b) => typeof b === "boolean")) return false;
   if (partsDone(s)) return fresh(s.answer) && !s.heard;
-  return validAnswer(s.answer, partsTask(s, tasks));
+  const task = partsTask(s);
+  return !!task && validAnswer(s.answer, task);
 }
 export function partsOutcome(s: PartsState, versus: boolean) {
   if (!partsDone(s)) return null;

@@ -4,21 +4,31 @@ import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 
 /**
- * Reading is never timed. This follows every local module a reading route can reach (relative and `@/` imports,
- * re-exports, require and dynamic import, every platform variant) and lists each clock it touches, so a timer in a
- * shared hook or helper is found as surely as one in the game's own folder.
+ * Reading is never timed. This is the static supplement to the fake-clock tests (`tests/reading-fake-clock.test.tsx`):
+ * it follows every local module a reading route can reach, the way Metro resolves them (relative and `@/` imports,
+ * re-exports, require and dynamic import; `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs` and `.cjs`; every platform variant,
+ * including a directory's `index.ios.ts` and the like), and lists each clock it touches. A clock used any way other
+ * than a direct call (an alias, a destructured or imported rename, a computed lookup) is reported as a reference, and
+ * no reference is ever allowed.
  */
-const variants = ["", ".tsx", ".ts", ".ios.tsx", ".ios.ts", ".android.tsx", ".android.ts", ".native.tsx", ".native.ts", ".web.tsx", ".web.ts", ".js", ".jsx", "/index.tsx", "/index.ts", "/index.js"];
+const SOURCE = /\.(?:[cm]?[jt]sx?)$/;
+const EXTENSIONS = [".tsx", ".ts", ".jsx", ".js", ".mjs", ".cjs"];
+const PLATFORMS = ["", ".ios", ".android", ".native", ".web"];
+const variants = ["", ...PLATFORMS.flatMap((p) => EXTENSIONS.map((e) => p + e)), ...PLATFORMS.flatMap((p) => EXTENSIONS.map((e) => `/index${p}${e}`))];
 export function files(path: string): string[] {
   if (!statSync(path).isDirectory()) return [path];
-  return readdirSync(path).flatMap((n) => files(join(path, n))).filter((f) => /\.(ts|tsx)$/.test(f));
+  return readdirSync(path).flatMap((n) => files(join(path, n))).filter((f) => SOURCE.test(f));
 }
-export function reachable(root: string, entries: readonly string[]): string[] {
+/**
+ * `stop` names modules whose imports are not followed: the generated game registries, which reach every game in the app.
+ * The reading games are entries in their own right, so nothing a reading route runs is lost.
+ */
+export function reachable(root: string, entries: readonly string[], stop: readonly string[] = []): string[] {
   const seen = new Set<string>(), queue: string[] = [];
   const add = (path: string) => {
     for (const v of variants) {
       const candidate = path + v;
-      if (!existsSync(candidate) || !statSync(candidate).isFile() || !/\.[jt]sx?$/.test(candidate)) continue;
+      if (!existsSync(candidate) || !statSync(candidate).isFile() || !SOURCE.test(candidate)) continue;
       const name = relative(root, candidate);
       if (!name.startsWith("..") && !seen.has(name)) {
         seen.add(name);
@@ -29,6 +39,7 @@ export function reachable(root: string, entries: readonly string[]): string[] {
   for (const e of entries) add(resolve(root, e));
   for (let i = 0; i < queue.length; i++) {
     const name = queue[i], path = join(root, name);
+    if (stop.includes(name)) continue;
     const tree = ts.createSourceFile(name, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
     const edge = (spec: string) => {
       if (spec.startsWith(".")) add(resolve(dirname(path), spec));
@@ -46,28 +57,76 @@ export function reachable(root: string, entries: readonly string[]): string[] {
   return [...seen].sort();
 }
 
-export type ClockUse = { file: string; kind: "timeout" | "interval" | "frame" | "clock" | "animation-callback"; key: string; text: string };
+/** `call` is the call with the local declarations of callbacks passed by name; `text` is everything the key binds. */
+export type ClockUse = { file: string; kind: "timeout" | "interval" | "frame" | "clock" | "animation-callback" | "reference"; key: string; call: string; text: string };
 const TIMEOUT = new Set(["setTimeout", "setImmediate", "requestIdleCallback", "runAfterInteractions"]);
 const INTERVAL = new Set(["setInterval"]);
 const FRAME = new Set(["requestAnimationFrame"]);
-/** Every clock a set of modules touches, keyed by file, kind and a digest of the exact call, so a key names one call. */
+const CLOCKS = new Set([...TIMEOUT, ...INTERVAL, ...FRAME]);
+const isFunction = (n: ts.Node): n is ts.FunctionLikeDeclaration => ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n) || ts.isArrowFunction(n) || ts.isMethodDeclaration(n) || ts.isGetAccessor(n) || ts.isSetAccessor(n) || ts.isConstructorDeclaration(n);
+const inType = (n: ts.Node): boolean => { for (let p = n.parent; p; p = p.parent) { if (ts.isTypeNode(p)) return true; if (ts.isStatement(p) || ts.isExpression(p) && !ts.isIdentifier(p)) return false; } return false; };
+
+/**
+ * Every clock a set of modules touches. An allowance key binds the file, the kind and a digest of everything the call
+ * depends on in its module: the whole function the call sits in, and, followed through every name it uses, the
+ * declarations those names come from (a renamed prop, a wrapper function, a ref, an import). Changing any of them
+ * changes the key, so the call needs a fresh look. What an imported module does is checked by the fake-clock tests.
+ */
 export function clockUses(root: string, names: readonly string[]): ClockUse[] {
   const out: ClockUse[] = [];
   for (const file of names) {
-    const tree = ts.createSourceFile(file, readFileSync(join(root, file), "utf8"), ts.ScriptTarget.Latest, true);
-    // A callback passed by name is bound by its declaration too, so changing what a timer runs changes its key.
-    const declared = new Map<string, string>();
-    const collect = (n: ts.Node) => {
-      if ((ts.isVariableDeclaration(n) || ts.isFunctionDeclaration(n)) && n.name && ts.isIdentifier(n.name)) declared.set(n.name.text, n.getText(tree));
-      ts.forEachChild(n, collect);
+    const path = join(root, file), text = readFileSync(path, "utf8");
+    // One file, no libraries: the checker is used only to find which local declaration a name refers to.
+    const program = ts.createProgram([path], { noResolve: true, noLib: true, allowJs: true, jsx: ts.JsxEmit.Preserve, types: [] }, {
+      ...ts.createCompilerHost({}),
+      getSourceFile: (name, target) => (resolve(name) === resolve(path) ? ts.createSourceFile(name, text, target, true) : undefined),
+      fileExists: (name) => resolve(name) === resolve(path),
+      readFile: (name) => (resolve(name) === resolve(path) ? text : undefined),
+    });
+    const tree = program.getSourceFile(path)!;
+    let checked: ts.TypeChecker | undefined;
+    const checker = { getSymbolAtLocation: (n: ts.Node) => (checked ??= program.getTypeChecker()).getSymbolAtLocation(n) };
+    /** The declaration a use of a name should bring with it: a whole statement, parameter or import specifier. */
+    const unit = (d: ts.Node): ts.Node => {
+      for (let p: ts.Node = d; p.parent; p = p.parent) {
+        if (ts.isParameter(p) || ts.isImportSpecifier(p) || ts.isImportClause(p) || ts.isNamespaceImport(p)) return p;
+        if (ts.isVariableStatement(p) || ts.isFunctionDeclaration(p) || ts.isClassDeclaration(p)) return p;
+        if (ts.isVariableDeclaration(p) && ts.isVariableDeclarationList(p.parent) && !ts.isVariableStatement(p.parent.parent)) return p.parent;
+      }
+      return d;
     };
-    collect(tree);
+    const bound = (call: ts.Node): string => {
+      let fn: ts.Node = call;
+      while (fn.parent && !isFunction(fn)) fn = fn.parent;
+      const taken: ts.Node[] = [fn], queue: ts.Node[] = [fn];
+      const contains = (outer: ts.Node, n: ts.Node) => n.pos >= outer.pos && n.end <= outer.end;
+      while (queue.length) {
+        const visit = (n: ts.Node) => {
+          if (ts.isIdentifier(n)) {
+            for (const d of checker.getSymbolAtLocation(n)?.declarations ?? []) {
+              if (d.getSourceFile() !== tree) continue;
+              const u = unit(d);
+              if (!taken.some((t) => contains(t, u))) { taken.push(u); queue.push(u); }
+            }
+          }
+          ts.forEachChild(n, visit);
+        };
+        visit(queue.shift()!);
+      }
+      return taken.sort((a, b) => a.pos - b.pos).map((n) => n.getText(tree)).join("\n");
+    };
+    const named = (node: ts.Node) =>
+      ts.isCallExpression(node) ? node.arguments.filter(ts.isIdentifier).flatMap((a) => (checker.getSymbolAtLocation(a)?.declarations ?? []).filter((d) => d.getSourceFile() === tree).map((d) => d.getText(tree))) : [];
     const push = (kind: ClockUse["kind"], node: ts.Node) => {
-      const named = ts.isCallExpression(node) ? node.arguments.filter(ts.isIdentifier).map((a) => declared.get(a.text) ?? "") : [];
-      const text = [node.getText(tree), ...named].join(" ").replace(/\s+/g, " ");
-      out.push({ file, kind, key: `${file}#${kind}#${createHash("sha256").update(text).digest("hex").slice(0, 12)}`, text });
+      const shown = node.getText(tree), call = [shown, ...named(node)].join(" ").replace(/\s+/g, " ");
+      const bind = kind === "reference" ? shown.replace(/\s+/g, " ") : `${shown}\n${bound(node)}`.replace(/\s+/g, " ");
+      out.push({ file, kind, key: `${file}#${kind}#${createHash("sha256").update(bind).digest("hex").slice(0, 12)}`, call, text: bind });
     };
     const callee = (e: ts.Expression) => (ts.isIdentifier(e) ? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : "");
+    const calledAs = (n: ts.Node) => {
+      const call = ts.isPropertyAccessExpression(n.parent) && n.parent.name === n ? n.parent : n;
+      return ts.isCallExpression(call.parent) && call.parent.expression === call;
+    };
     const visit = (n: ts.Node) => {
       if (ts.isCallExpression(n)) {
         const name = callee(n.expression);
@@ -80,6 +139,15 @@ export function clockUses(root: string, names: readonly string[]): ClockUse[] {
         else if (/^with(?:Timing|Delay|Spring|Repeat|Sequence)$/.test(name) && n.arguments.some((a) => ts.isArrowFunction(a) || ts.isFunctionExpression(a))) push("animation-callback", n);
       }
       if (ts.isNewExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "Date") push("clock", n);
+      // Any other mention of a clock: `const later = setTimeout`, `{ setTimeout: later } = globalThis`, an import
+      // rename, `globalThis["setTimeout"]`, `performance.now` passed as a value, `const D = Date`.
+      if (ts.isIdentifier(n) && !inType(n)) {
+        const p = n.parent;
+        if (CLOCKS.has(n.text) && !calledAs(n)) push("reference", p);
+        else if (n.text === "Date" && !((ts.isNewExpression(p) && p.expression === n) || (ts.isPropertyAccessExpression(p) && p.expression === n && (p.name.text !== "now" || calledAs(p.name))))) push("reference", p);
+        else if (n.text === "now" && ts.isPropertyAccessExpression(p) && p.name === n && p.expression.getText(tree) === "performance" && !calledAs(n)) push("reference", p);
+      }
+      if (ts.isElementAccessExpression(n) && ts.isStringLiteralLike(n.argumentExpression) && (CLOCKS.has(n.argumentExpression.text) || n.argumentExpression.text === "now")) push("reference", n);
       ts.forEachChild(n, visit);
     };
     visit(tree);
