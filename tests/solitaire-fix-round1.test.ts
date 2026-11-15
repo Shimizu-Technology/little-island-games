@@ -11,6 +11,13 @@ import reviewSamples from './fixtures/solitaire/review-offline-samples.json';
 const rows=(slot:number)=>readFileSync(`src/content/puzzles/assets/p${slot}.lipuzzle`,'utf8').trim().split('\n').slice(1).map(l=>JSON.parse(l));
 const deal=(row:ReturnType<typeof rows>[number]):Deal=>({mode:'freecell',cards:row[3][1],proof:row[3][2]});
 describe('Solitaire review regressions',()=>{
+ it('replays every original certificate, including all 64 foundation-to-column returns',async()=>{
+  const{verifyLine}=await import('../scripts/puzzles/solitaire/independent');
+  const originals=JSON.parse(readFileSync('tests/fixtures/solitaire/review-certificates.json','utf8'))as Deal[];let returns=0;
+  expect(originals).toHaveLength(256);
+  for(const d of originals){const line=lineFromProof(d);expect(line).not.toBeNull();expect(verifyLine(d.cards,d.mode,line!)).toBe(true);returns+=line!.filter(a=>a[0]>=8&&a[0]<12&&a[1]<8).length;}
+  expect(returns).toBe(64);
+ });
  it('names the Solitaire-only exception at the codec boundary',()=>{
   const header=readFileSync('src/puzzles/table/checkpoint.ts','utf8').split('\n')[0];
   expect(header).toContain('Solitaire-only');expect(header).toContain('docs/SAVE_CONTRACT.md');
