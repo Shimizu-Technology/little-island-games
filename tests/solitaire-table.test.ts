@@ -87,3 +87,33 @@ it('proves a public FreeCell dead end and keeps an exhausted budget unknown',asy
  expect(solve(d,position,10).status).toBe('unsolved');expect(advise(position,d)).toEqual({kind:'dead-end'});
  expect(solve(d,opening(d),0).status).toBe('budget-exhausted');
 });
+
+it('validates cold resumes and invalidates cached validation when a caller changes the payload',()=>{
+ const d=makeDeal('draw-three',1),p=fresh(d),before=JSON.stringify(p),read=readTable(p,d)!;
+ expect(Object.isFrozen(read.position.piles[0])).toBe(true);expect(Object.isFrozen(p)).toBe(false);expect(JSON.stringify(p)).toBe(before);
+ p.board='';expect(readTable(p,d)).toBeNull();
+ let full=fresh(d);for(let i=0;i<1025;i++){const s=decodeBoard(full.board,d)!;full=moveTable(d,full,s.piles[12].length?DRAW:RECYCLE)!;}
+ expect(history(full.undo)).toHaveLength(1024);expect(readTable(JSON.parse(JSON.stringify(full)),d)).not.toBeNull();
+ for(let i=0;i<1024;i++)full=undoTable(d,full)!;
+ expect(readTable(full,d)!.position.piles).toEqual(apply(opening(d),d.mode,DRAW).piles);
+});
+
+it('draw-three records and exactly undoes a final one-card or two-card draw',async()=>{
+ const{construct}=await import('../scripts/puzzles/solitaire/generate');
+ for(const removed of [1,2]){
+  const d=construct('draw-three',1,1).deal,r=solve(d,undefined,500);expect(r.status).toBe('solved');if(r.status!=='solved')return;
+  let p=fresh(d),out=0;for(const a of r.moves){p=moveTable(d,p,a)!;if(a[0]===13&&a[2]===1)out++;if(out===removed)break;}
+  expect(out).toBe(removed);while(readTable(p,d)!.position.piles[12].length)p=moveTable(d,p,DRAW)!;
+  p=moveTable(d,p,RECYCLE)!;while(readTable(p,d)!.position.piles[12].length>3)p=moveTable(d,p,DRAW)!;
+  const before=p;expect(readTable(before,d)!.position.piles[12]).toHaveLength(3-removed);
+  const after=moveTable(d,before,DRAW)!;expect(readTable(after,d)!.position.piles[12]).toHaveLength(0);
+  expect(undoTable(d,after)!.board).toBe(before.board);
+ }
+});
+
+it('backs the Klondike planning grade with a shorter-plan counterfactual',async()=>{
+ const {gradePublic,progressWithin}=await import('../src/puzzles/table/grading');
+ const d=makeDeal('draw-three',10),g=gradePublic(d);expect(g.complete).toBe(true);expect(g.depth).toBe(8);
+ expect(progressWithin(g.bottleneck!,d,7).status).toBe('blocked');
+ expect(progressWithin(g.bottleneck!,d,7,0).status).toBe('budget-exhausted');
+});

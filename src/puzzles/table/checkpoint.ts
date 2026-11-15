@@ -1,8 +1,18 @@
 import { base64, exactKeys, plain, uint, unbase64, pack, unpack } from '../../state/saveBits';
+import {deepFreeze} from '../descriptor';
 import { apply, opening, validPosition, type Deal, type Move, type Position } from './solitaire';
 
 /** The table session: 52 cards, a compact arrangement, 1,024 reversible moves, a retained audit. */
 export type TablePayload = { version: 1; board: string; undo: string; audit: number[]; edits: number };
+type Read={payload:TablePayload;position:Position;history:number[]};
+const accepted=new WeakMap<object,{deal:string;fingerprint:string;read:Read}>();
+const stamp=(p:TablePayload)=>`${p.board}|${p.undo}|${p.edits}|${p.audit.join('.')}`;
+const dealKey=(d:Deal)=>`${d.mode}:${d.cards}`;
+/** Derived data is frozen; caller-owned payloads are neither frozen nor mutated. */
+function remember(d:Deal,payload:TablePayload,position:Position,list:number[]):TablePayload{
+ const read=Object.freeze({payload,position:deepFreeze(position),history:deepFreeze(list)});
+ accepted.set(payload,{deal:dealKey(d),fingerprint:stamp(payload),read});return payload;
+}
 export const encodeBoard = (s: Position) => base64([...s.piles.map(p => p.length), ...s.hidden, ...s.piles.flat(), ...unbase64(pack(s.known,1),7)!]);
 export function decodeBoard(raw: unknown, d: Deal): Position | null {
   const bytes = unbase64(raw, 83);
@@ -39,24 +49,26 @@ function backwards(s: Position, d: Deal, code: number): Position | null {
   const forward = apply(before, d.mode, action);
   return forward !== before && encodeBoard(forward) === encodeBoard(s) && record(before, forward, action) === code ? before : null;
 }
-export const fresh = (d: Deal): TablePayload => ({ version: 1, board: encodeBoard(opening(d)), undo: '', audit: [], edits: 0 });
-export function readTable(x: unknown, d: Deal): { payload: TablePayload; position: Position; history: number[] } | null {
+export const fresh = (d: Deal): TablePayload => {const position=opening(d);return remember(d,{version:1,board:encodeBoard(position),undo:'',audit:[],edits:0},position,[]);};
+export function readTable(x: unknown, d: Deal): Read | null {
   if (!plain(x) || !exactKeys(x, ['version', 'board', 'undo', 'audit', 'edits']) || x.version !== 1 || !uint(x.edits, 2147483647) || !Array.isArray(x.audit) || x.audit.length > 128 || !x.audit.every(n => uint(n, 9999))) return null;
+  if(typeof x.board!=='string'||x.board.length!==112||typeof x.undo!=='string'||x.undo.length>2392)return null;
+  const cached=accepted.get(x);if(cached&&cached.deal===dealKey(d)&&cached.fingerprint===stamp(x as TablePayload))return cached.read;
   const position = decodeBoard(x.board, d), list = history(x.undo);
   if (!position || !list || x.edits < list.length) return null;
   let earlier = position;
   for (let i = list.length - 1; i >= 0; i--) { const prev = backwards(earlier, d, list[i]); if (!prev) return null; earlier = prev; }
   // Before the ring rolls, prove reachability all the way back to this immutable deal.
   if (x.edits === list.length && JSON.stringify(earlier.piles) !== JSON.stringify(opening(d).piles)) return null;
-  return { payload: x as TablePayload, position, history: list };
+  remember(d,x as TablePayload,position,list);return accepted.get(x)!.read;
 }
 export function moveTable(d: Deal, p: TablePayload, a: Move): TablePayload | null {
   const read = readTable(p, d); if (!read || p.edits === 2147483647) return null;
   const next = apply(read.position, d.mode, a); if (next === read.position) return p;
-  return { ...p, board: encodeBoard(next), undo: encodeUndo([...read.history, record(read.position, next, a)].slice(-1024)), edits: p.edits + 1 };
+  const list=[...read.history,record(read.position,next,a)].slice(-1024);return remember(d,{...p,board:encodeBoard(next),undo:encodeUndo(list),edits:p.edits+1},next,list);
 }
 export function undoTable(d: Deal, p: TablePayload): TablePayload | null {
   const read = readTable(p, d); if (!read || !read.history.length || p.edits === 2147483647) return null;
   const next = backwards(read.position, d, read.history.at(-1)!); if (!next) return null;
-  return { ...p, board: encodeBoard(next), undo: encodeUndo(read.history.slice(0, -1)), edits: p.edits + 1 };
+  const list=read.history.slice(0,-1);return remember(d,{...p,board:encodeBoard(next),undo:encodeUndo(list),edits:p.edits+1},next,list);
 }

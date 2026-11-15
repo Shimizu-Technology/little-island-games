@@ -1,6 +1,7 @@
 import { exactKeys, plain, uint } from '../../state/saveBits';
 import { sha256Hex } from '../sha256';
 import type { DescriptorCore, PuzzleAdapter } from '../types';
+import { gradePublic, progressWithin } from './grading';
 import { advise, publicView } from './publicSolver';
 import { solve } from './solver';
 import { apply, CARD_ALPHABET, legalMoves, modes, opening, positionKey, validDeal, validMove, validPosition, won, type Deal, type Move, type Position } from './solitaire';
@@ -28,6 +29,12 @@ export function solitaireAdapter(hidden: boolean): PuzzleAdapter<Deal, TableStat
     solved:s=>won(s.position),metrics:s=>({turns:s.edits}),
     solve:(d,budget)=>{const r=solve(d.payload,undefined,Math.min(10000,budget));return r.status==='solved'?{status:'solved',witness:r.moves.map(a=>[a]),metric:'turns',lower:52,upper:r.moves.length,exact:r.moves.length===52}:r.status==='unsolved'?{status:'unsolved'}:r;},
     hint:(s,d)=>{const r=advise(s.position,d.payload,10000);return r.kind==='move'?r.plan:null;},
+    claims:(d,budget)=>{
+      const mode=d.payload.mode,prefix=mode==='freecell'?'f':mode==='draw-one'?'o':'t',tier=Number(d.band.slice(1));
+      if(mode==='freecell'){const r=solve(d.payload,undefined,Math.min(10000,budget));if(r.status!=='solved')return[{id:'solver-grade',proven:false,evidence:r.status}];const graded=r.nodes<400?1:r.nodes<1500?3:r.nodes<4000?5:6;return[{id:'solver-grade',proven:d.band[0]===prefix&&tier===graded&&d.teaches.join()===`search-${graded}`,evidence:JSON.stringify({nodes:r.nodes,branches:r.branches,moves:r.moves.length,observed:r.techniques})}];}
+      const g=gradePublic(d.payload),graded=g.depth<=1?1:g.depth<=3?3:6,proof=g.bottleneck?progressWithin(g.bottleneck,d.payload,g.depth-1,Math.max(40000,budget)):null;
+      return[{id:'public-plan',proven:g.complete&&d.band[0]===prefix&&tier===graded&&d.teaches.join()===`plan-${g.depth}`&&proof?.status==='blocked',evidence:JSON.stringify({depth:g.depth,steps:g.steps,counterfactual:proof,publicState:g.bottleneck?sha256Hex(positionKey(publicView(g.bottleneck,d.payload))):null})}];
+    },
     semanticKey:d=>semanticKey(d.payload),
     progress:s=>s.position.piles.slice(8,12).reduce((a,p)=>a+p.length,0),
     solutionHash:s=>sha256Hex(positionKey(s.position)),

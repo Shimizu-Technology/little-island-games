@@ -1,8 +1,8 @@
 import type { DescriptorCore, FamilySpec } from '../../../src/puzzles/types';
 import { solitaireAdapter, type Plan } from '../../../src/puzzles/table/adapter';
-import { advise } from '../../../src/puzzles/table/publicSolver';
+import { gradePublic } from '../../../src/puzzles/table/grading';
 import { solve } from '../../../src/puzzles/table/solver';
-import { apply, opening, positionKey, won, type Deal, type Mode } from '../../../src/puzzles/table/solitaire';
+import { type Deal, type Mode } from '../../../src/puzzles/table/solitaire';
 import {construct} from './generate';
 import { verifyLine } from './independent';
 
@@ -20,9 +20,7 @@ export type Candidate = { seed:number; template:string; core:DescriptorCore<Deal
 export function judge(seed:number,r:Rung):Candidate|null {
  const built=construct(r.mode,seed,r.tier),d=built.deal,solved=solve(d,undefined,10000);
  if(solved.status!=='solved'||!verifyLine(d.cards,d.mode,solved.moves))return null;
- let s=opening(d),depth=0,steps=0; const seen=new Set<string>();
- while(!won(s)&&steps<256){const key=positionKey(s);if(seen.has(key))return null;seen.add(key);const h=advise(s,d,10000);if(h.kind!=='move')return null;depth=Math.max(depth,r.mode==='freecell'?1:h.depth);for(const a of h.plan)s=apply(s,d.mode,a);steps++;}
- if(!won(s))return null;
+ const gradedPublic=r.mode==='freecell'?null:gradePublic(d);if(gradedPublic&&!gradedPublic.complete)return null;const depth=gradedPublic?.depth??1;
  const tier=r.mode==='freecell'?(solved.nodes<400?1:solved.nodes<1500?3:solved.nodes<4000?5:6):(depth<=1?1:depth<=3?3:6);
  if(tier!==r.tier)return null;
  const t=built.template,teaches=r.mode==='freecell'?`search-${r.tier}`:`plan-${depth}`;
@@ -31,7 +29,7 @@ export function judge(seed:number,r:Rung):Candidate|null {
 }
 export const family=(free:boolean):FamilySpec<Deal>=>({
  id:free?'freecell':'solitaire',adapter:solitaireAdapter(!free),bands:rungs.filter(r=>(r.mode==='freecell')===free).map(r=>({id:r.id,target:r.target,floor:r.floor,advanced:r.tier>=3})),
- sources:['src/puzzles/table/solitaire.ts','src/puzzles/table/solver.ts','src/puzzles/table/publicSolver.ts','src/puzzles/table/adapter.ts','scripts/puzzles/solitaire/family.ts','scripts/puzzles/solitaire/generate.ts','scripts/puzzles/solitaire/independent.ts'],
+ sources:['src/puzzles/table/solitaire.ts','src/puzzles/table/solver.ts','src/puzzles/table/publicSolver.ts','src/puzzles/table/grading.ts','src/puzzles/table/adapter.ts','scripts/puzzles/solitaire/family.ts','scripts/puzzles/solitaire/generate.ts','scripts/puzzles/solitaire/independent.ts'],
  provenance:{source:'original',note:'Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating.'},review:{ids:[],complete:false},maxRowBytes:128,requiresUnique:false,requiresTrace:false,hiddenInformation:!free,
  generate:(seed,band)=>{const r=rungs.find(r=>r.id===band.id);return r?judge(seed,r)?.core??null:null;},
 });
