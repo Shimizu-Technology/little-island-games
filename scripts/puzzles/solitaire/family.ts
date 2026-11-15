@@ -21,7 +21,8 @@ export type Candidate = { seed:number; template:string; core:DescriptorCore<Deal
 export function judge(seed:number,r:Rung):Candidate|null {
  const built=construct(r.mode,seed,r.tier),d=built.deal,solved=solve(d,undefined,10000);
  if(solved.status!=='solved'||!verifyLine(d.cards,d.mode,solved.moves))return null;
- if(r.mode==='freecell'&&r.tier===1&&solved.moves.filter(a=>a[1]<8||a[1]>=12).length<3)return null;
+ const decisions=solved.moves.filter(a=>a[1]<8||a[1]>=12).length;
+ if(r.mode==='freecell'&&r.tier===1&&(decisions<3||decisions>12))return null;
  if(r.mode==='freecell')d.proof=proofForLine(d,solved.moves);
  const gradedPublic=r.mode==='freecell'?null:gradePublic(d);if(gradedPublic&&!gradedPublic.complete)return null;const depth=gradedPublic?.depth??1;
  const tier=r.mode==='freecell'?(solved.nodes<400?1:solved.nodes<1500?3:solved.nodes<4000?5:6):(depth<=1?1:depth<=3?3:6);

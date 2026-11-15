@@ -76,6 +76,8 @@ it.each(['moves','help'])('the direct %s-cap restart preserves the old attempt a
  expect(readTable(progressFor(store.save,'a')!.paused[0].payload,deal)!.history).toHaveLength(cap==='moves'?1024:1);
  const restart=()=>screen!.root.findAllByType('button').find(n=>n.children.includes('Start this deal again'))!;
  expect(restart()).toBeDefined();expect(JSON.stringify(screen!.toJSON())).toContain(cap==='moves'?'This table has had lots of moves.':'This attempt’s help log is full.');
+ const explanation=screen!.root.findAllByType('p').find(n=>JSON.stringify(n.children).includes(cap==='moves'?'This table has had lots of moves.':'This attempt’s help log is full.'))!;
+ let ancestor=explanation.parent;while(ancestor){expect(ancestor.props.accessibilityLabel).not.toBe('Table instructions and hint');ancestor=ancestor.parent;}
  for(const label of ['Undo','Rules'])expect(screen!.root.findAllByType('button').find(n=>n.children.includes(label))!.props.disabled).toBeFalsy();
  db.failReplace=true;await act(async()=>{await restart().props.onPress();});
  expect(progressFor(store.save,'a')!.paused[0]).toEqual(full);expect(JSON.parse(db.discarded[0])).toEqual(full);

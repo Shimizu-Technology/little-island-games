@@ -59,6 +59,6 @@ describe('Solitaire review regressions',()=>{
   }
  });
  it('every Paddling certificate needs a few tableau decisions while remaining easy',()=>{
-  for(const row of rows(106)){const d=deal(row),line=lineFromProof(d)!;expect(line.filter(a=>a[1]<8||a[1]>=12).length,`${row[0]}`).toBeGreaterThanOrEqual(3);const r=solve(d,undefined,10000);expect(r.status).toBe('solved');if(r.status==='solved')expect(r.nodes).toBeLessThan(400);}
+  for(const row of rows(106)){const d=deal(row),line=lineFromProof(d)!;expect(line.filter(a=>a[1]<8||a[1]>=12).length,`${row[0]}`).toBeGreaterThanOrEqual(3);expect(line.filter(a=>a[1]<8||a[1]>=12).length).toBeLessThanOrEqual(12);const r=solve(d,undefined,10000);expect(r.status).toBe('solved');if(r.status==='solved')expect(r.nodes).toBeLessThan(400);}
  });
 });

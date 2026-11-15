@@ -98,6 +98,9 @@ describe('Solitaire card interaction',()=>{
    const names=['Clubs','Diamonds','Spades','Hearts'],target=(pile:number)=>screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel===`${names[pile-8]} foundation, empty`)!;
    await act(async()=>target(8+(move[1]-8+1)%4).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
    expect(text(screen)).toContain("Those cards can't go there. Your table is kept.");expect(board(deal).payload.edits).toBe(0);expect(card(screen,move[0],c).props.accessibilityState.selected).toBe(true);
+   const from=card(screen,move[0],c),to=target(8+(move[1]-8+1)%4);
+   await act(async()=>{const p=surface(screen).props;p.onPanResponderGrant({nativeEvent:{locationX:from.props.style.left+20,locationY:from.props.style.top+16}});p.onPanResponderRelease({}, {dx:to.props.style.left-from.props.style.left,dy:to.props.style.top-from.props.style.top});});
+   expect(text(screen)).toContain("Those cards can't go there. Your table is kept.");expect(board(deal).payload.edits).toBe(0);
    await act(async()=>target(move[1]).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));expect(board(deal).position.piles[move[1]]).toEqual([c]);expect(fake.feedback).toHaveBeenCalledTimes(1);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
@@ -114,6 +117,12 @@ describe('Solitaire card interaction',()=>{
   try{fake.scale=3.5;await act(async()=>{screen=create(<Harness/>);});const all=screen.root.findAll(()=>true),draw=all.findIndex(n=>n.type==='button'&&n.children.join('').startsWith('Draw three')),table=all.findIndex(n=>n.props.testID==='solitaire-table-viewport');expect(draw).toBeLessThan(table);
    const heading=screen.root.findAllByType('span').find(n=>n.children.includes('Foundations'))!;expect(heading.props.style.position).not.toBe('absolute');
   }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+ it('keeps budget-exhausted advice honest without asking a child to undo',async()=>{
+  const{Harness}=await fixture();let screen!:ReactTestRenderer;const spy=vi.spyOn(publicHints,'adviseAsync').mockResolvedValueOnce({kind:'unknown'});
+  try{await act(async()=>{screen=create(<Harness/>);});await press(screen,'Hint');await press(screen,'Think');await press(screen,'One step');
+   expect(text(screen)).toContain('I have not proved a way forward from here yet. You can keep exploring.');expect(text(screen)).not.toContain('Try undoing');
+  }finally{spy.mockRestore();if(screen)await act(async()=>screen.unmount());}
  });
  it('cancels a pending hint when the app backgrounds and keeps the accepted table on return',async()=>{
   const{Harness,deal}=await fixture();let screen!:ReactTestRenderer,release!:(value:publicHints.Advice)=>void;
