@@ -606,6 +606,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
   return (
     <View
       style={{
+        alignSelf: space ? "stretch" : undefined,
         backgroundColor: "#F1F5E4",
         borderRadius: 22,
         padding: 10,

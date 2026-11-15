@@ -363,3 +363,8 @@ it.each([1,3.12])('cage clues and entered values occupy separate vertical bands 
  expect(valueTop).toBeGreaterThanOrEqual(clueTop+clueLine+1);
  expect(valueTop+valueLine).toBeLessThanOrEqual(Number(cs.height)-border+1);
 });
+it('Weather scene fills its School column so SVG labels use the allocated width',async()=>{
+ await mountPort('weather-watch',B7,420,{width:1133,height:744,fontScale:1});
+ const scene=view('school-weather-watch-drawing').parent!;
+ expect(flat(scene.props.style).alignSelf).toBe('stretch');
+});
