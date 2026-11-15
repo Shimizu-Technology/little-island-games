@@ -60,6 +60,16 @@ describe('Solitaire card interaction',()=>{
    await press(screen,'Undo');expect(board(deal).payload.audit).toEqual([1]);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
+
+ it('a tap on a blocked FreeCell stack explains which cards must move first, with a hit frame inside the exposed strip',async()=>{
+  const{Harness,deal}=await fixture();let screen!:ReactTestRenderer;
+  try{await act(async()=>{screen=create(<Harness/>);});
+   const first=screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel?.startsWith('Column 1,')&&n.props.style.top<200)!;
+   expect(first.props.style.height).toBeLessThanOrEqual(32);
+   await act(async()=>{const p=surface(screen).props;p.onPanResponderGrant({nativeEvent:{locationX:first.props.style.left+10,locationY:first.props.style.top+16}});p.onPanResponderRelease({}, {dx:0,dy:0});});
+   expect(text(screen)).toContain('Move the cards above this one first.');expect(board(deal).payload.edits).toBe(0);
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
  it('fits eight default-size columns and keeps AX5 controls plus full card names available',async()=>{
   const{Harness}=await fixture();let screen!:ReactTestRenderer;
   try{

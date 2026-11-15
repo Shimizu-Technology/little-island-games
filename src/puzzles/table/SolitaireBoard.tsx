@@ -59,9 +59,9 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  // eslint-disable-next-line react-hooks/refs -- responder handlers run after render.
  const pan=useMemo(()=>PanResponder.create({
   onStartShouldSetPanResponder:e=>live.current.active&&!!hit(e.nativeEvent.locationX,e.nativeEvent.locationY),
-  onPanResponderGrant:e=>{const p=hit(e.nativeEvent.locationX,e.nativeEvent.locationY);drag.current=p??null;if(p&&!p.covered&&p.card!==null&&(p.pile>=8||descending(live.current.s.piles[p.pile].slice(p.index)))){translation.setValue({x:0,y:0});setDragging(p);holdPage(true);}else if(p&&!p.covered&&p.card!==null)drag.current=null;},
+  onPanResponderGrant:e=>{const p=hit(e.nativeEvent.locationX,e.nativeEvent.locationY);drag.current=p??null;if(p&&!p.covered&&p.card!==null&&(p.pile>=8||descending(live.current.s.piles[p.pile].slice(p.index)))){translation.setValue({x:0,y:0});setDragging(p);holdPage(true);}},
   onPanResponderMove:(_e,g)=>{if(drag.current&&!drag.current.covered)translation.setValue({x:g.dx,y:g.dy});},
-  onPanResponderTerminationRequest:()=>!drag.current||drag.current.covered||drag.current.card===null,
+  onPanResponderTerminationRequest:()=>{const p=drag.current;return !p||p.covered||p.card===null||p.pile<cols&&!descending(live.current.s.piles[p.pile].slice(p.index));},
   onPanResponderRelease:(e,g)=>{
    const p=drag.current;drag.current=null;setDragging(null);holdPage(false);if(!p)return;
    if(Math.hypot(g.dx,g.dy)<8){touch(p);return;}
@@ -69,7 +69,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
    if(target&&!p.covered&&p.card!==null){const state=live.current.s,move:Move=[p.pile,target.pile,state.piles[p.pile].length-p.index];if(apply(state,view.deal.mode,move)!==state)live.current.dispatch({type:'move',move});else setMessage('Those cards cannot go there. Your table is kept.');}
   },
   onPanResponderTerminate:()=>{drag.current=null;setDragging(null);holdPage(false);},
- }),[cardW,cardH,overlap,holdPage,translation,view.deal.mode,hit,touch]);
+ }),[cardW,cardH,overlap,holdPage,translation,view.deal.mode,cols,hit,touch]);
  const ask=()=>{if(thinking||!active||view.payload.audit.length>=128)return;setHelp({stage:1,edits:view.payload.edits,audit:view.payload.audit.length});setAdvice(null);dispatch({type:'help'});};
  const cueReady=help&&help.edits===view.payload.edits&&view.payload.audit.length>help.audit;
  const showOne=(plan:Move[],stage:3|4=4)=>{if(!plan.length||!live.current.active)return;const before=live.current.s,next=apply(before,view.deal.mode,plan[0]);if(next===before)return;demonstration.current={expected:encodeBoard(next),edits:view.payload.edits,remaining:plan.slice(1),stage};dispatch({type:'move',move:plan[0]});};
