@@ -1,4 +1,4 @@
-import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
 import {apply,opening,positionKey,won,type Deal,type Move,type Position} from '../src/puzzles/table/solitaire';
@@ -7,14 +7,18 @@ import {decodeBoard,fresh,moveTable,readTable} from '../src/puzzles/table/solita
 import {decodeRow} from '../src/puzzles/descriptor';
 import {solitaireAdapter} from '../src/puzzles/table/adapter';
 import selection from '../scripts/puzzles/solitaire/selected-rows.json';
+const baselineRowsHashes=["3c0f65bb8673fa419b9e89677d2dfe060a5e5e8efd2dbb1d4eb5f701239e47cc", "57505f7f714878032a034ed6b8671ea9be235fae068f65a39b9362144cecf553", "4d66a229e04c7c64dd7256cdffce43fe5660fa647d2727483ce959f0b5d008c8", "5ba7a0c6a38c8480f7a9b8a8551c48bba74f4c0113ae6f8f8a549dbffb2c89a4", "075e07a17ae274054f7629f8a608be4d56f088dc697228a6dcdf3d16f29f63a3", "d7c54542f0687618409e2b561cd1d4dc7619707e8f3523c664489c5a6243f942", "a398505da94b4e542c738ff34ae42a3c4ca4017e94d805a91791505661d6bfc6", "921da26f93c9325258d8e12ac47892442021e7063e067b199ddd9b903b309229", "83eac4c4cfe4f85ac1e646e329c85a8a9e2ddcbfe552cfc89acdb7296de9d20d", "56d105b041ac31c6f1ba97c74776ca13952ba2f2e05ef16d13772571476fa694"];
 const key=(s:Position)=>`${positionKey(s)}#${s.known}`;
 const descriptor=(slot:number,row:string)=>decodeRow(row,selection.banks.find(b=>b.slot===slot)!.band,solitaireAdapter(slot<106))!;
 it('keeps all 512 selected rows byte-identical to 9532ba72 and in their original order after the claim',()=>{
  let count=0;
  for(const b of selection.banks){
-  const old=execFileSync('git',['show',`${selection.sourceSha}:src/content/puzzles/assets/p${b.slot}.lipuzzle`],{encoding:'utf8'}).trimEnd().split('\n').slice(1);
+  // Pinned before-claim bytes remain available after a squash merge or shallow
+  // checkout; CI must not depend on an unpublished ancestor's git object.
+  const old=b.rows;expect(selection.sourceSha).toBe('9532ba722c86609da6b67a05507b98a7a7ceb229');
+  expect(createHash('sha256').update(old.join('\n')+'\n').digest('hex')).toBe(baselineRowsHashes[b.slot-100]);
   const installed=readFileSync(`src/content/puzzles/assets/p${b.slot}.lipuzzle`,'utf8').trimEnd().split('\n');
-  expect(b.rows,`source selection ${b.slot}`).toEqual(old);expect(installed.slice(1),`installed ${b.slot}`).toEqual(old);
+  expect(installed.slice(1),`installed ${b.slot}`).toEqual(old);
   expect(JSON.parse(installed[0]).first).toBe(b.slot*1024);count+=old.length;
  }
  expect(count).toBe(512);
