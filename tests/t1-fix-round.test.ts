@@ -172,6 +172,8 @@ it('new small picture clues do not depend on shared solver traversal', async () 
     const p = taskAt(s); if (p.kind !== 'grid') throw new Error();
     expect(solver.search(p.puzzle!, 2).count).toBe(1);
     expect(solver.grade(p.puzzle!).ceiling).toBe('single');
+    const baseline = puzzles.find(p => p.tier === level)!.descriptor.puzzle;
+    expect(p.givens.filter(Boolean)).toHaveLength(baseline.givens.filter(Boolean).length);
   }
 });
 
