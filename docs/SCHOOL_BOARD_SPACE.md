@@ -2,7 +2,7 @@
 
 F-frame-2 starts from `program/4.0` at `9d9dbce3` (15 November 2026). Little Island is a private, offline family app. A child should see a board and its next action together; resizing must preserve the plan, answers, rules and saved round. Sources: `docs/PRD.md`, `docs/QA.md`, `docs/CONTRACT_4.0.md`, and the F-frame-2 brief in the external 4.0 artifacts.
 
-`LearnFrame` measures its ScrollView viewport and the board's actual inner width and position. Its budget excludes the pinned header, card inset and bottom padding. At accessibility sizes the existing board reveal puts the board below the pinned bar; entry and rotation re-arm that reveal. Scrolling itself never changes the budget.
+`LearnFrame` measures its ScrollView viewport and the board's actual inner width and position. Its budget excludes the pinned header, card inset and bottom padding. At accessibility sizes the existing board reveal puts the board below the pinned bar; entry and rotation re-arm that reveal. The lead-approved 15 November exception also uses this same non-animated reveal in windows shorter than 500 pt. It runs once per window rotation, preserves the round, and leaves the header reachable by scrolling up. Default windows of 500 pt or taller are unchanged. Scrolling itself never changes the budget.
 
 `BoardSpaceProvider` is opt-in. Without it, drawing sizes and plan layouts retain their previous behavior. Challenge's `GridChromeContext`, budget constants and frame are unchanged. School uses the existing shared 44-pt button floor.
 
@@ -20,7 +20,7 @@ A view calls `useBoardGeometry` for its flexible drawing and attaches `onLayout`
 | Float/Sink | Water scene | Prediction, shapes and actions |
 | Tide Logic | Cargo pictures | Rule blocks, labels, trace and Run |
 | Logic Lagoon | Grid cells | Clues, status and values; cells remain at least 44 pt |
-| Slip Tide | Water grid | Caption, undo/reset, arrows and help; the existing landscape side layout remains |
+| Slip Tide | Water grid | Caption, undo/reset, arrows and help; the existing landscape side arrangement remains, with measured drawing height |
 | Treasure Algebra | Sea diagram | Caption, step keys, balance controls and Open chest |
 | ProgramEditor | Plan viewport/tools | External map/run actions; plan drop targets and tools remain at least 44 pt |
 
