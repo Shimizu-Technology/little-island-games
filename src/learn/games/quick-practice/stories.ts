@@ -62,9 +62,9 @@ export const STORIES: readonly Story[] = [
   two("subtract", "add", "There were {a} fish in the pool. {b} swam out and {c} swam in. How many fish are in the pool now?"),
   two("subtract", "add", "A bus had {a} people. At the stop, {b} got off and {c} got on. How many people are on the bus now?"),
   two("subtract", "add", "{n} had {a} stickers, used {b} on a card, then got {c} more. How many stickers does {n} have now?"),
-  two("subtract", "add", "A tree had {a} mangoes. {b} were picked, then {c} more grew big enough to pick. How many are ready on the tree now?"),
+  two("subtract", "add", "A tree had {a} ripe mangoes. {b} were picked, then {c} more became ripe. How many ripe mangoes are on the tree now?"),
   two("subtract", "add", "{n} had {a} beads. {b} rolled away, and {m} gave {n} {c} more. How many beads does {n} have now?"),
-  two("subtract", "add", "A shelf had {a} books. {b} were borrowed and {c} were brought back. How many books are on the shelf now?"),
+  two("subtract", "add", "A shelf had {a} books. {b} were borrowed, then {c} other books were put back on it. How many books are on the shelf now?"),
   two("subtract", "add", "There were {a} birds on the wire. {b} flew off, then {c} landed. How many birds are on the wire now?"),
   // Two steps: add, then take away.
   two("add", "subtract", "{n} had {a} shells, found {b} more, then gave {c} to {m}. How many shells does {n} have now?"),
@@ -91,7 +91,7 @@ export const STORIES: readonly Story[] = [
   // Two steps, mixed again.
   two("subtract", "add", "{n} had {a} crayons. {b} got lost, then {n} got {c} new ones. How many crayons does {n} have now?"),
   two("add", "subtract", "A rock pool had {a} snails. {b} more crawled in, then {c} crawled out. How many snails are in the pool now?"),
-  two("subtract", "add", "There were {a} canoes on the beach. {b} went out to sea, then {c} came back. How many canoes are on the beach now?"),
+  two("subtract", "add", "There were {a} canoes on the beach. {b} paddled out to sea, then {c} other canoes landed. How many canoes are on the beach now?"),
 ];
 
 /** First two-step story: one-step stories are 0 to 29 (Level 4), two-step 30 to 59 (Level 5). */

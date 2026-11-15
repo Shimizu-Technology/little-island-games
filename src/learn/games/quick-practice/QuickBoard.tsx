@@ -13,16 +13,31 @@ import { CoachSpot } from "../../Coach";
 import { useStepReveal } from "../../stepReveal";
 import type { BoardProps } from "../../types";
 import { useEntryReveal } from "../shell-math/entryReveal";
+import { BoardColumns, useBoardColumns, useBoardGeometry } from "../../BoardSpace";
+import { SCHOOL_BOARD_MIN } from "../../boardGeometry";
 import { HelpButton } from "../shell-math/HelpRow";
 import { LEVEL_SKILL, ROUND, answerOf, choicesOf, cueFor, hopsFor, levelMax, sentenceOf, storyText, typedLevel, workingFor, type QItem } from "./items";
 import { choiceOf, planOf, quickMove, quickProgress, type QAct, type QuickRound } from "./round2";
 
 const speechKey = (i: QItem) => (i[0] === 0 && i[4] !== 0 ? `math-${i[1] === 0 ? "add" : "subtract"}-${i[2]}-${i[3]}-${i[4] === 1 ? "second" : "result"}` : "");
 
+/**
+ * The optional open number line Help draws, inside the measured School board space (F-frame-2): it gives up height, down to a
+ * readable floor, before the pad or the tiles leave the screen. The question itself is text and is not resized.
+ */
+function QuickLine({ line, width }: { line: NonNullable<ReturnType<typeof hopsFor>>; width: number }) {
+  const g = useBoardGeometry("quick-practice", 74, SCHOOL_BOARD_MIN["quick-practice"]);
+  return <View testID={g.testID} onLayout={g.onLayout} style={{ alignItems: "center" }}>
+    <Bridge width={width} start={line.start} hops={line.hops} lo={line.lo} hi={line.hi} ten={line.hops.length > 1 ? line.hops[0] : undefined} height={g.height} />
+  </View>;
+}
+
 /** Quick Practice, Levels 1 to 5 (version 2). Every state change goes through quickMove, so the board can only do what the rules allow. */
 export function QuickBoard(props: BoardProps<QuickRound>) {
   const { session, active, update, practice, notePractice, assistance, stopSound, sound, soundOn, cheer, coach, width } = props;
   const s = session.state, level = s.level as Level, choice = choiceOf(session.options);
+  // On a wide landscape window the question sits beside the pad; elsewhere above it.
+  const side = useBoardColumns();
   const { fontScale } = useWindowDimensions();
   const large = fontScale >= LARGE_TEXT;
   // At accessibility sizes the frame's header fills the page: the question and its lines stop at 1.5x, so the question and the
@@ -108,14 +123,16 @@ export function QuickBoard(props: BoardProps<QuickRound>) {
     <View accessibilityLiveRegion="polite">
       <Text accessibilityRole="header" maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
     </View>
-    {story && <Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 18, lineHeight: 26, textAlign: "center" }}>{storyText(item)}</Copy>}
-    {(!story || work.solved) && <Text accessibilityLabel={sentenceOf(item, work.solved).replace("?", "what number")} maxFontSizeMultiplier={sentenceCap}
-      style={{ fontSize: width < 350 ? 28 : sentenceOf(item).length > 14 ? 32 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{sentenceOf(item, work.solved)}</Text>}
-    {note && !work.solved ? <View accessibilityLiveRegion="polite"><Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, textAlign: "center" }}>{note}</Copy></View> : null}
-    {line && <Bridge width={Math.min(width, 520)} start={line.start} hops={line.hops} lo={line.lo} hi={line.hi} ten={line.hops.length > 1 ? line.hops[0] : undefined} />}
+    <BoardColumns drawing={<View style={{ gap: 8 }}>
+      {story && <Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 18, lineHeight: 26, textAlign: "center" }}>{storyText(item)}</Copy>}
+      {(!story || work.solved) && <Text accessibilityLabel={sentenceOf(item, work.solved).replace("?", "what number")} maxFontSizeMultiplier={sentenceCap}
+        style={{ fontSize: width < 350 ? 28 : sentenceOf(item).length > 14 ? 32 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{sentenceOf(item, work.solved)}</Text>}
+      {note && !work.solved ? <View accessibilityLiveRegion="polite"><Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, textAlign: "center" }}>{note}</Copy></View> : null}
+      {line && <QuickLine line={line} width={Math.min(side ? Math.floor(width * 0.46) : width, 520)} />}
+    </View>}>
     {!work.solved && (typed
       ? <CoachSpot active={coach.active && active} handAt="none">
-        <NumberPad resetKey={stepKey} width={width} disabled={!active} max={levelMax(level)} maxDigits={String(levelMax(level)).length}
+        <NumberPad resetKey={stepKey} width={side ? Math.floor(width * 0.5) : width} disabled={!active} max={levelMax(level)} maxDigits={String(levelMax(level)).length}
           prefill={work.hint >= 3 ? answer : null} prompt={story ? "Your answer" : "The missing number"}
           onKey={() => { if (soundOn) sound("tap"); }} onSubmit={(n) => act(["n", n])} />
       </CoachSpot>
@@ -127,9 +144,9 @@ export function QuickBoard(props: BoardProps<QuickRound>) {
           </AnswerTile>)}
         </View>
       </CoachSpot>)}
-    {work.solved
-      ? <Button disabled={!active} onPress={() => { press(); act(["x"]); }}>{s.index === ROUND - 1 ? "Finish round" : "Next question"}</Button>
-      : <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+    {work.solved && <Button disabled={!active} onPress={() => { press(); act(["x"]); }}>{s.index === ROUND - 1 ? "Finish round" : "Next question"}</Button>}
+    </BoardColumns>
+    {!work.solved && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
         {large && <HelpButton work={work} active={active} press={press} onHelp={() => act(["h"])} />}
         {typedLevel(level) && !work.choices && <Button quiet compact disabled={!active} onPress={() => { press(); act(["k"]); }}>Show choices</Button>}
       </View>}

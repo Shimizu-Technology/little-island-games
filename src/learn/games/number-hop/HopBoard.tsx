@@ -13,7 +13,9 @@ import { useStepReveal } from "../../stepReveal";
 import type { BoardProps } from "../../types";
 import { useEntryReveal } from "../shell-math/entryReveal";
 import { HelpButton, UndoButton } from "../shell-math/HelpRow";
-import { HopLine, hopWindow } from "./HopLine";
+import { HOP_LINE, HopLine, hopWindow, type HopLineProps } from "./HopLine";
+import { BoardColumns, useBoardColumns, useBoardGeometry } from "../../BoardSpace";
+import { SCHOOL_BOARD_MIN } from "../../boardGeometry";
 import { LEVEL_SKILL, ROUND_LENGTH, countOp, countResult, hopOf, landingOf, lineMax, planOf, startJumps, type HopItem } from "./items";
 import { cleanOf, hopMove, hopProgress, verdictOf, type HopRound, type HopRoundAct, type Puzzle } from "./round2";
 
@@ -37,10 +39,21 @@ function backWorking(i: HopItem): string {
   return `${parts.join(", ")}.`;
 }
 
+/**
+ * The hop line inside the measured School board space (F-frame-2): it gives up height, down to its readable floor, before the
+ * jump keys or the pad leave the screen. Outside a measured host it keeps its natural height.
+ */
+function HopDrawing(props: Omit<HopLineProps, "height">) {
+  const g = useBoardGeometry("number-hop", HOP_LINE.natural, Math.max(HOP_LINE.minimum, SCHOOL_BOARD_MIN["number-hop"]));
+  return <View testID={g.testID} onLayout={g.onLayout} style={{ alignItems: "center" }}><HopLine {...props} height={g.height} /></View>;
+}
+
 /** Number Hop, Levels 1 to 5 (version 2). Every change goes through hopMove, so the board can only do what the rules allow. */
 export function HopBoard(props: BoardProps<HopRound>) {
   const { session, active, update, practice, notePractice, assistance, stopSound, sound, soundOn, cheer, coach, width } = props;
   const s = session.state, level = s.level as Level;
+  // On a wide landscape window the line sits beside the controls; elsewhere above them.
+  const side = useBoardColumns();
   const { fontScale } = useWindowDimensions();
   const large = fontScale >= LARGE_TEXT;
   const cap = atLarge(fontScale, 1.5), sentenceCap = atLarge(fontScale, 1.2), keyCap = atLarge(fontScale, 1.4);
@@ -87,14 +100,18 @@ export function HopBoard(props: BoardProps<HopRound>) {
     stopSound();
     coach.done();
     if (verdict === "wrong" || verdict === "help") assistance?.();
-    update(next);
-    if (verdict === "wrong") { feel("warning"); setNote("Not quite. Try again, or tap Help."); return; }
     if (a[0] === "x") {
+      // A puzzle landed over par is not the child's own work. Say so before the move is saved: on the last puzzle that save
+      // finishes the round and the School record is written from it, so a later mark would come too late (review P1-1).
       const skill = LEVEL_SKILL[level - 1], clean = cleanOf(before);
+      if (!clean) assistance?.();
       practice(skill, clean);
       notePractice?.(skill, !clean);
+      update(next);
       return;
     }
+    update(next);
+    if (verdict === "wrong") { feel("warning"); setNote("Not quite. Try again, or tap Help."); return; }
     const after = hopProgress(next)?.puzzle;
     if (after && after.work.solved && !before.work.solved) {
       if (cleanOf(after)) cheer("right");
@@ -119,7 +136,7 @@ export function HopBoard(props: BoardProps<HopRound>) {
   </View>;
   const noteLine = note && !solved ? <View accessibilityLiveRegion="polite"><Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, textAlign: "center" }}>{note}</Copy></View> : null;
   const nextButton = <Button disabled={!active} onPress={() => { press(); act(["x"]); }}>{nextLabel}</Button>;
-  const lineWidth = Math.min(width, 560);
+  const lineWidth = side ? Math.floor(width * 0.46) : Math.min(width, 560), controlWidth = side ? Math.floor(width * 0.5) : width;
 
   if (puzzle.kind === 1) return reachView();
   const work = puzzle.work, undoable = canUndo(planOf(item)!, work);
@@ -141,8 +158,8 @@ export function HopBoard(props: BoardProps<HopRound>) {
         {item[2]} {op === "add" ? "+" : minus} {item[3]} = {solved ? countResult(item) : "?"}
       </Text>
       {noteLine}
-      <HopLine width={lineWidth} lo={lo} hi={hi} start={item[2]} landings={landings(item[2], hops)}
-        label={`Number line from ${lo} to ${hi}. Started on ${item[2]}. ${made === 0 ? "No hops yet." : `${made} ${made === 1 ? "hop" : "hops"} made.`}${work.at > 0 ? "" : ` On ${at}.`}`} />
+      <BoardColumns drawing={<HopDrawing width={lineWidth} lo={lo} hi={hi} start={item[2]} landings={landings(item[2], hops)}
+        label={`Number line from ${lo} to ${hi}. Started on ${item[2]}. ${made === 0 ? "No hops yet." : `${made} ${made === 1 ? "hop" : "hops"} made.`}${work.at > 0 ? "" : ` On ${at}.`}`} />}>
       {!solved && work.at === 0 && <CoachSpot active={coach.active && active}>
         <Button disabled={!active} onPress={() => { press(); act(["c"]); }} style={{ minHeight: 60 }}>{op === "add" ? "Hop forward one" : "Hop back one"}</Button>
       </CoachSpot>}
@@ -152,7 +169,9 @@ export function HopBoard(props: BoardProps<HopRound>) {
           <Text style={{ fontSize: 32, fontWeight: "900", color: C.ink }}>{n}</Text>
         </AnswerTile>)}
       </View>}
-      {solved ? nextButton : large && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+      {solved && nextButton}
+      </BoardColumns>
+      {!solved && large && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
         <HelpButton work={work} active={active} press={press} onHelp={() => act(["h"])} />
         {undoable && <UndoButton active={active} press={press} onUndo={() => act(["u"])} />}
       </View>}
@@ -174,18 +193,20 @@ export function HopBoard(props: BoardProps<HopRound>) {
     {noteLine}
     {/* The line carries something only once Help draws the jumps back (or the start is found); before that it would only repeat
         the heading and push the pad off a phone screen. */}
-    {(work.hint >= 2 || solved) && <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={landing} landings={points.slice(1)}
-      label={`Number line. Back from ${landing}: ${back.map((j, k) => `${jumpText(j)} to ${points[k + 1]}`).join(", ")}.`} />}
+    <BoardColumns side={work.hint >= 2 || solved ? undefined : false} drawing={(work.hint >= 2 || solved) ? <HopDrawing width={lineWidth} lo={win.lo} hi={win.hi} start={landing} landings={points.slice(1)}
+      label={`Number line. Back from ${landing}: ${back.map((j, k) => `${jumpText(j)} to ${points[k + 1]}`).join(", ")}.`} /> : null}>
     {!solved && <CoachSpot active={coach.active && active} handAt="none">
       {work.choices
         ? <View accessibilityLabel="Choose the start" style={{ flexDirection: "row", gap: 10 }}>
           {choicesAround(item[1], s.index * 7, 100).map((n) => <AnswerTile key={n} label={`Choose ${n}`} disabled={!active} wrong={work.last === n}
             onPress={() => { press(); act(["n", n]); }} style={{ flex: 1, minHeight: 64 }}><Text style={{ fontSize: 32, fontWeight: "900", color: C.ink }}>{n}</Text></AnswerTile>)}
         </View>
-        : <NumberPad resetKey={stepKey} width={width} disabled={!active} max={100} prefill={work.hint >= 3 ? item[1] : null} prompt="The start"
+        : <NumberPad resetKey={stepKey} width={controlWidth} disabled={!active} max={100} prefill={work.hint >= 3 ? item[1] : null} prompt="The start"
           onKey={() => { if (soundOn) sound("tap"); }} onSubmit={(n) => act(["n", n])} />}
     </CoachSpot>}
-    {solved ? nextButton : <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+    {solved && nextButton}
+    </BoardColumns>
+    {!solved && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
       {large && <HelpButton work={work} active={active} press={press} onHelp={() => act(["h"])} />}
       {!work.choices && <Button quiet compact disabled={!active} onPress={() => { press(); act(["k"]); }}>Show choices</Button>}
     </View>}
@@ -213,7 +234,7 @@ export function HopBoard(props: BoardProps<HopRound>) {
         <Copy maxFontSizeMultiplier={cap} style={{ color: C.ink }}>Jumps so far: {n}</Copy>
       </View>
       {noteLine}
-      <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={h.start} landings={path} target={h.target} suggest={suggest} label={label} />
+      <BoardColumns drawing={<HopDrawing width={lineWidth} lo={win.lo} hi={win.hi} start={h.start} landings={path} target={h.target} suggest={suggest} label={label} />}>
       {!solved && <CoachSpot active={coach.active && active} handAt="none">
         {/* One row of keys, sharing the width: four keys still clear 56 pt on the smallest phone. */}
         <View accessibilityLabel="Choose a jump" style={{ flexDirection: "row", gap: 8, justifyContent: "center", alignSelf: "stretch" }}>
@@ -228,12 +249,12 @@ export function HopBoard(props: BoardProps<HopRound>) {
           })}
         </View>
       </CoachSpot>}
-      {solved
-        ? <View style={{ gap: 8 }}>
+      {solved && <View style={{ gap: 8 }}>
           {!atPar && w.restarts < MAX_RESTART && <Button quiet disabled={!active} onPress={() => { press(); act(["r"]); }}>Try for {jumpsWord(p.par)}</Button>}
           {nextButton}
-        </View>
-        : <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        </View>}
+      </BoardColumns>
+      {!solved && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
           {large && reachHelp(w.hint)}
           {large && w.path.length > 0 && <UndoButton active={active} press={press} onUndo={() => act(["u"])} />}
           {w.path.length > 0 && w.restarts < MAX_RESTART && <Button quiet compact disabled={!active} onPress={() => { press(); act(["r"]); }}>Start again</Button>}

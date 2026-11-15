@@ -93,8 +93,9 @@ Still a question game: three questions, no clock. Version-2 rounds store every q
 Sixty story templates (`stories.ts`): 30 one-step (join, separate, start unknown, change unknown, compare) and 30 two-step. Property tests fill every
 template with every number the generator can draw and check the answer is a whole number in range, every number read is at least 2, and the
 hidden number never appears in the text. **A miss never leaves the question to be guessed again:** the board shows the worked answer and a fresh
-question of the same kind takes its place, drawn from the round's seed (`drawFor`), so a reload draws the same one; the place stays helped. After
-nine fresh questions a miss is an ordinary miss. Help is the kit ladder: a clue, the working, then the answer filled in; at Levels 3 to 5 "Show choices"
+question of the same kind takes its place, after every miss. The save stays bounded however many misses there are: the question at each
+place, a retry counter per place (the counter and the round's seed draw the next question, so a reload draws the same one), a sticky
+helped flag per place, the question just missed until the next move, and the actions on the question on screen. Help is the kit ladder: a clue, the working, then the answer filled in; at Levels 3 to 5 "Show choices"
 gives three tiles. An open number line is drawn only when the answer is a distance, never a landing point.
 
 ## Number Hop (N1b, SC-15)
@@ -113,6 +114,10 @@ Par is the fewest jumps, proved by breadth-first search over the whole line (`fe
 standing path counts: Undo takes a jump off it and Start again clears it, both free. A reach puzzle is the child's own work when it lands in par
 with no Help; landing in more is welcome, says how many it can be done in, and offers "Try for N jumps". The smallest-jump bot lands over par on
 every reach puzzle (or never lands at Level 4), so it never earns the level's stars.
+
+Both boards sit in F-frame-2's measured School board space (`SCHOOL_BOARD_MIN`: Number Hop's line 92 pt, Quick Practice's
+optional line 64 pt): the drawing gives up height before the jump keys or the pad leave the screen, and on a wide landscape window it
+sits beside them. A puzzle landed over par marks the round helped before the move that finishes it is saved.
 
 Both games set `nativeStages`: a saved version-1 round keeps its own engine and board, an archived Level 4 or 5 question round keeps the shared
 board, and new rounds at every level are version 2. No Challenge entry yet (banks 430-434 and dares 1100-1149 are reserved and unused).

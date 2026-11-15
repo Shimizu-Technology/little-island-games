@@ -19,7 +19,11 @@ export type HopLineProps = {
   /** Highlight a jump Help suggests, drawn dashed from the frog. */
   suggest?: number | null;
   label: string;
+  /** Drawing height, from the measured board space; 112 when the host has not measured. The numbers below keep 54 pt. */
+  height?: number;
 };
+/** The hop line's natural height and its readable floor (also registered in SCHOOL_BOARD_MIN). */
+export const HOP_LINE = { natural: 112, minimum: 92 } as const;
 
 /** The visible window for a puzzle: every number involved, with a little room, on fives. Never narrower than ten. */
 export function hopWindow(points: readonly number[], min: number, max: number): { lo: number; hi: number } {
@@ -29,15 +33,18 @@ export function hopWindow(points: readonly number[], min: number, max: number): 
 }
 
 /** A number line with the frog, the flag and one arc per jump. It draws what it is given; the board decides what a touch means. */
-export function HopLine({ width, lo, hi, start, landings, target = null, from, suggest = null, label }: HopLineProps) {
-  const pad = 16, w = Math.max(240, width), span = Math.max(1, hi - lo), x = (n: number) => pad + ((n - lo) / span) * (w - pad * 2), y = 58;
+export function HopLine({ width, lo, hi, start, landings, target = null, from, suggest = null, label, height = HOP_LINE.natural }: HopLineProps) {
+  // The line sits 54 pt above the bottom (two rows of numbers); arcs, the flag and Help's suggestion use the room above it.
+  const h = Math.max(HOP_LINE.minimum, Math.round(height)), y = h - 54, room = (y - 10) / 2;
+  const pad = 16, w = Math.max(200, width), span = Math.max(1, hi - lo), x = (n: number) => pad + ((n - lo) / span) * (w - pad * 2);
+  const flag = Math.min(34, y - 6);
   const origin = start ?? from ?? null;
   const points = origin === null ? [] : [origin, ...landings];
   const at = points.length ? points[points.length - 1] : null;
   const every = span > 40 ? 10 : span > 10 ? 5 : 1;
   const ticks = span <= 120 ? Array.from({ length: span + 1 }, (_, i) => lo + i) : [];
   return <View accessible accessibilityLabel={label} style={{ alignItems: "center" }}>
-    <Svg width={w} height={112} viewBox={`0 0 ${w} 112`}>
+    <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
       <Line x1={x(lo)} y1={y} x2={x(hi)} y2={y} stroke={C.ink} strokeWidth={2.4} />
       {ticks.map((n) => {
         const big = n % every === 0 || n === target || points.indexOf(n) >= 0;
@@ -47,13 +54,13 @@ export function HopLine({ width, lo, hi, start, landings, target = null, from, s
         </G>;
       })}
       {target !== null && target >= lo && target <= hi && <G>
-        <Line x1={x(target)} y1={y - 4} x2={x(target)} y2={y - 34} stroke={C.ink} strokeWidth={2} />
-        <Path d={`M${x(target)} ${y - 34}L${x(target) + 16} ${y - 28}L${x(target)} ${y - 22}Z`} fill={C.gold} stroke={C.ink} strokeWidth={1.4} />
+        <Line x1={x(target)} y1={y - 4} x2={x(target)} y2={y - flag} stroke={C.ink} strokeWidth={2} />
+        <Path d={`M${x(target)} ${y - flag}L${x(target) + 16} ${y - flag + 6}L${x(target)} ${y - flag + 12}Z`} fill={C.gold} stroke={C.ink} strokeWidth={1.4} />
         <SvgText x={x(target)} y={y + 45} textAnchor="middle" fontSize={14} fontWeight="900" fill={C.ink}>{target}</SvgText>
       </G>}
       {points.slice(1).map((to, i) => {
         // Every arc sits above the line, so none crosses the numbers below it. Back jumps are coral and lower.
-        const f = points[i], up = to >= f, mid = (x(f) + x(to)) / 2, rise = Math.min(up ? 26 : 16, (up ? 8 : 6) + Math.abs(x(to) - x(f)) * 0.25);
+        const f = points[i], up = to >= f, mid = (x(f) + x(to)) / 2, rise = Math.min(up ? room : room * 0.62, up ? 26 : 16, (up ? 8 : 6) + Math.abs(x(to) - x(f)) * 0.25);
         const yy = y - 7, peak = yy - rise * 2;
         return <G key={i}>
           <Path d={`M${x(f)} ${yy} Q${mid} ${peak} ${x(to)} ${yy}`} stroke={up ? C.teal : C.coral} strokeWidth={3} fill="none" />
@@ -62,7 +69,7 @@ export function HopLine({ width, lo, hi, start, landings, target = null, from, s
         </G>;
       })}
       {suggest !== null && at !== null && at + suggest >= lo && at + suggest <= hi && <Path
-        d={`M${x(at)} ${y - 7} Q${(x(at) + x(at + suggest)) / 2} ${suggest > 0 ? y - 50 : y - 36} ${x(at + suggest)} ${y - 7}`}
+        d={`M${x(at)} ${y - 7} Q${(x(at) + x(at + suggest)) / 2} ${y - 7 - Math.min(room * 2, suggest > 0 ? 43 : 29)} ${x(at + suggest)} ${y - 7}`}
         stroke={C.teal} strokeWidth={2.4} strokeDasharray="5 5" fill="none" />}
       {origin !== null && <G>
         <Rect x={x(origin) - 13} y={y + 30} width={26} height={20} rx={6} fill={start === null ? C.gold : C.paper} stroke={C.ink} strokeWidth={1.4} />

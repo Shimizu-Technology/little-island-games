@@ -23,6 +23,9 @@ import { Board as B10 } from '../src/learn/games/logic-lagoon/view';
 import { SchoolBoard as B11 } from '../src/learn/games/slip-tide/schoolBoard';
 import { ProgramEditor } from '../src/learn/program/ProgramEditor';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
+import { Board as B14 } from '../src/learn/games/number-hop/view';
+import { Board as B15 } from '../src/learn/games/quick-practice/view';
+import { quickMove, type QuickRound } from '../src/learn/games/quick-practice/round2';
 
 
 import { BoardPrimary, BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
@@ -132,9 +135,10 @@ function renderedDrawingHeight(id:LearnId):number {
  if(id==='tide-logic')return Math.max(...drawing.findAll(n=>typeof n.type==='function'&&n.type.name==='Cargo').map(n=>Number(n.props.size)))*2;
  if(id==='logic-lagoon'){const cells=drawing.findAll(n=>String(n.type)==='PressableScale');return Math.sqrt(cells.length)*(Number(flat(cells[0].props.style).height)+2)+14;}
  if(id==='slip-tide')return Number(flat(drawing.findAll(n=>n.props.accessibilityRole==='image')[0].props.style).height);
+ if(id==='number-hop')return drawing.findAll(n=>String(n.type)==='Svg')[0].props.height;
  return Number(flat(drawing.props.style).height);
 }
-const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B2],['hafa-adai',B3],['reef-race',B4],['weather-watch',B7],['shell-math',B5],['tide-pool',B6],['float-sink',B9],['tide-logic',B13],['logic-lagoon',B10],['slip-tide',B11],['treasure-algebra',B8]];
+const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B2],['hafa-adai',B3],['reef-race',B4],['weather-watch',B7],['shell-math',B5],['tide-pool',B6],['float-sink',B9],['tide-logic',B13],['logic-lagoon',B10],['slip-tide',B11],['treasure-algebra',B8],['number-hop',B14]];
 const configurations = [[393,852],[375,667],[744,1133],[1133,744],[852,393]];
 it.each(ports)('%s renders its actual drawing, primary boundary and touch targets in each measured window',async(id,Board)=>{
  for(const [width,height] of configurations)for(const fontScale of [1,3.12]){
@@ -165,7 +169,7 @@ it.each(ports)('%s renders its actual drawing, primary boundary and touch target
    if(id==='hafa-adai')expect(realComponent('WordPicture').props.size).toBe(width-60>=600?64:56);
    else if(id==='tide-logic')expect(realComponent('Cargo').props.size).toBeGreaterThanOrEqual(width-60>=600?64:56);
    else if(id==='shell-math')expect(realComponent('TenFrame').props.cell).toBeGreaterThanOrEqual(24);
-   else expect(actual).toBe(({ 'crab-commands':150,'beep-bot':160,'reef-race':260,'weather-watch':150,'tide-pool':90,'float-sink':width-60>=600?138:120,'logic-lagoon':106,'slip-tide':156,'treasure-algebra':250 } as Partial<Record<LearnId,number>>)[id]);
+   else expect(actual).toBe(({ 'crab-commands':150,'beep-bot':160,'reef-race':260,'weather-watch':150,'tide-pool':90,'float-sink':width-60>=600?138:120,'logic-lagoon':106,'slip-tide':156,'treasure-algebra':250,'number-hop':92 } as Partial<Record<LearnId,number>>)[id]);
   }else expect(actual+reserve).toBeLessThanOrEqual(available);
   const target=drawings[0].findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityRole==='button');
   for(const t of target){const s=flat(t.props.style);if(typeof s.width==='number')expect(s.width).toBeGreaterThanOrEqual(44);if(typeof s.height==='number')expect(s.height).toBeGreaterThanOrEqual(44);}
@@ -489,4 +493,36 @@ it('Weather keeps the gauge reading below the bulb at the AX floor',async()=>{
  const first=reading.findAll(n=>String(n.type)==='SvgTSpan')[0] ?? reading;
  // Keep even a conservative 0.8-em cap height clear of the actual bulb and stroke.
  expect(Number(first.props.y)-Number(reading.props.fontSize)*.8).toBeGreaterThanOrEqual(Number(bulb.props.cy)+Number(bulb.props.r)+.5);
+});
+
+it.each([1,3.12])('Quick Practice (N1b) gives its Help number line the measured room, never below 64 pt, and keeps the pad as the primary at text scale %s',async fontScale=>{
+ for(const [width,height,available] of [[393,852,700],[393,852,300],[375,667,240]]){
+  const help=(session:LearnSession)=>({...session,state:quickMove(session.state as QuickRound,['h'],'add')});
+  const r=await mountPort('quick-practice',B15,available,{width,height,fontScale},3,true,help);
+  const drawing=view('school-quick-practice-drawing');
+  expect(drawing,'the Help line is the measured drawing').toBeDefined();
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='school-primary')).toHaveLength(1);
+  const primary=view('school-primary');
+  expect(primary.findAll(n=>n.props.accessibilityLabel==='Check my answer').length,'Go is inside the primary').toBeGreaterThan(0);
+  const natural=74, reserve=fontScale>=1.5?420:300;
+  boundary={y:0,height:natural+reserve};
+  await act(async()=>{
+   view('content').props.onLayout({nativeEvent:{layout:{height:boundary.height+200}}});
+   drawing.props.onLayout({nativeEvent:{layout:{height:natural}}});
+   const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));
+  });
+  const line=view('school-quick-practice-drawing').findAll(n=>String(n.type)==='Svg')[0].props.height;
+  if(natural+reserve<=available)expect(line).toBe(natural);
+  else expect(line).toBe(Math.max(64,Math.min(natural,available-reserve)));
+  await act(async()=>r.unmount());root=undefined;
+ }
+});
+it('Quick Practice and Number Hop put the question or line beside the controls in one measured row on a landscape phone',async()=>{
+ const help=(session:LearnSession)=>({...session,state:quickMove(session.state as QuickRound,['h'],'add')});
+ for(const [id,Board,prepare] of [['quick-practice',B15,help],['number-hop',B14,undefined]] as const){
+  const r=await mountPort(id,Board,300,{width:852,height:393,fontScale:1},3,true,prepare);
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='school-drawing-row'),id).toHaveLength(1);
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID===`school-${id}-drawing`),id).toHaveLength(1);
+  await act(async()=>r.unmount());root=undefined;
+ }
 });

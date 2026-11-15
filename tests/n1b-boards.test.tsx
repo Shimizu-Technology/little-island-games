@@ -113,7 +113,8 @@ describe("Quick Practice board", () => {
     const first = quick.items[0], ans = answerOf(first);
     await typeNumber(ans + 1);
     expect(calls.assistance).toBe(1);
-    expect(quickProgress(quick)!.cur).toBe(1);
+    expect(quick.tries[0]).toBe(1);
+    expect(quick.items[0]).not.toEqual(first);
     expect(screen()).toContain("Not quite.");
     expect(screen()).toContain(`= ${ans}.`);
     expect(screen()).toContain("Here is a new question like it.");
@@ -124,9 +125,24 @@ describe("Quick Practice board", () => {
   it("the frame's journey bar keeps three parts after a miss brings a fresh question (found on device: it read 0/4)", async () => {
     await mountQuick(4);
     await typeNumber(answerOf(quick.items[0]) + 1);
-    expect(quick.items).toHaveLength(4);
+    expect(quick.items).toHaveLength(3);
+    expect(quick.tries[0]).toBe(1);
     expect(roundProgress({ game: "quick-practice", version: 1, id: "x", revision: 1, options: quickOptions(4), state: quick })).toEqual({ current: 0, total: 3 });
     expect(roundProgress({ game: "number-hop", version: 1, id: "y", revision: 1, options: quickOptions(4), state: createHop(quickOptions(4), random(2)) })).toEqual({ current: 0, total: 5 });
+  });
+  it("the 10th and 11th misses on screen still show the worked answer and a new question (review P2-1)", async () => {
+    await mountQuick(3, 7);
+    for (let k = 1; k <= 11; k++) {
+      const q = quick.items[0], ans = answerOf(q);
+      await typeNumber(ans + 1);
+      if (k >= 10) {
+        expect(screen()).toContain("Not quite.");
+        expect(screen()).toContain(`= ${ans}.`);
+        expect(screen()).toContain("Here is a new question like it.");
+        expect(quick.items[0]).not.toEqual(q);
+      }
+    }
+    expect(quick.tries[0]).toBe(11);
   });
   it("Help climbs a ladder from the engine and fills the pad on the last step; Show choices gives three tiles", async () => {
     await mountQuick(3);

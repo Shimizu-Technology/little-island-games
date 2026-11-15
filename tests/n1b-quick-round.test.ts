@@ -7,7 +7,7 @@ import {
   ROUND, answerOf, choicesOf, cueFor, fitsSlot, freshItem, hopsFor, itemKey, levelMax, sentenceOf, storySum, storyText, workingFor, type QItem,
 } from "../src/learn/games/quick-practice/items";
 import { FIRST_TWO_STEP, STORIES } from "../src/learn/games/quick-practice/stories";
-import { HISTORY_CAP, MAX_FRESH, createQuick, quickMove, quickProgress, validQuick, type QuickRound } from "../src/learn/games/quick-practice/round2";
+import { MAX_TRIES, createQuick, quickMove, quickProgress, validQuick, type QuickRound } from "../src/learn/games/quick-practice/round2";
 
 const CHOICES: OpChoice[] = ["add", "subtract", "mixed"];
 const opts = (level: Level, mathOperation: OpChoice = "add"): LearnOptions => ({ ...optionsAtLevel({ mode: "solo", pace: "easy" }, level), mathOperation });
@@ -105,6 +105,14 @@ describe("Quick Practice stories (60 templates)", () => {
       expect(made, `template ${t} is reachable`).toBeGreaterThan(20);
     }
   });
+  it("a story counts the same group from start to question (review P2-2: story 34; and 36, 59 where c can exceed b)", () => {
+    // The review's item: 20 ripe mangoes, 5 picked, 8 more ripe: the question asks about ripe mangoes, the same group as the start.
+    expect(storyText([3, 34, 0, 20, 5, 8])).toBe("A tree had 20 ripe mangoes. 5 were picked, then 8 more became ripe. How many ripe mangoes are on the tree now?");
+    // Something that "comes back" can only be what left; these add c that may be larger than b, so they say the c are others.
+    expect(storyText([3, 36, 0, 40, 5, 12])).toContain("12 other books");
+    expect(storyText([3, 59, 0, 40, 5, 12])).toContain("12 other canoes");
+    for (const t of STORIES) expect(t.text, t.text).not.toMatch(/\b(came back|brought back|grew big enough)\b/);
+  });
   it("two names in a story are always different people", () => {
     for (let name = 0; name < 8; name++) {
       const text = storyText([3, 4, name, 20, 5]);
@@ -130,15 +138,17 @@ describe("Quick Practice round", () => {
       const first = s.items[0], wrong = answerOf(first) === 0 ? 1 : answerOf(first) - 1;
       s = reload(quickMove(s, ["n", wrong], "mixed"), o);
       const p = quickProgress(s)!;
-      expect(p.cur).toBe(1);
       expect(p.pos).toBe(0);
       expect(p.missed).toEqual({ item: first, value: wrong });
       expect(s.wrong).toBe(wrong);
       expect(s.solved).toBe(false);
-      const fresh = s.items[1];
+      const fresh = s.items[0];
       expect(itemKey(fresh)).not.toBe(itemKey(first));
       expect(fitsSlot(level, 0, "mixed", fresh)).toBe(true);
-      expect(s.items).toHaveLength(ROUND + 1);
+      // Nothing grows: three questions, a counter and a sticky helped flag per place.
+      expect(s.items).toHaveLength(ROUND);
+      expect(s.tries).toEqual([1, 0, 0]);
+      expect(s.helped).toEqual([true, false, false]);
       // The journey bar reads total, which never grows with fresh questions.
       expect(s.total).toBe(ROUND);
       // The worked answer for the missed one ends with its answer.
@@ -156,20 +166,43 @@ describe("Quick Practice round", () => {
     const a = quickMove(createQuick(o, random(5)), ["n", 0], "add"), b = quickMove(createQuick(o, random(5)), ["n", 0], "add");
     expect(a.items).toEqual(b.items);
   });
-  it(`after ${MAX_FRESH} fresh questions a miss is an ordinary miss on the same question`, () => {
-    const o = opts(3);
-    let s = createQuick(o, random(3));
-    for (let k = 0; k < MAX_FRESH; k++) {
-      const cur = quickProgress(s)!.cur;
-      s = quickMove(s, ["n", answerOf(s.items[cur]) + 1], "add");
+  it("every miss, the 10th and the 40th too, shows its worked answer and brings a fresh question; later places still do after many misses (review P2-1)", () => {
+    for (const level of LEVELS) {
+      const o = opts(level, "mixed");
+      let s = createQuick(o, random(7));
+      const bytes0 = JSON.stringify(s).length;
+      for (let k = 1; k <= 40; k++) {
+        const before = s.items[0], wrong = answerOf(before) === 0 ? 1 : answerOf(before) - 1;
+        s = quickMove(s, ["n", wrong], "mixed");
+        if (k % 7 === 0 || k === 10) s = reload(s, o);
+        const p = quickProgress(s)!;
+        expect(p.missed, `L${level} miss ${k}`).toEqual({ item: before, value: wrong });
+        expect(workingFor(p.missed!.item)).toContain(String(answerOf(before)));
+        expect(itemKey(s.items[0]), `L${level} miss ${k} is a fresh question`).not.toBe(itemKey(before));
+        expect(fitsSlot(level, 0, "mixed", s.items[0])).toBe(true);
+        expect(s.tries[0]).toBe(k);
+      }
+      // Bounded: forty misses cost a few bytes for the counter, not forty questions.
+      expect(JSON.stringify(s).length - bytes0).toBeLessThan(120);
+      // The next places behave the same after all that: a miss there is answered and replaced too.
+      s = quickMove(quickMove(s, ["n", answerOf(s.items[0])], "mixed"), ["x"], "mixed");
+      const second = s.items[1];
+      s = reload(quickMove(s, ["n", answerOf(second) + 1 > levelMax(level) ? answerOf(second) - 1 : answerOf(second) + 1], "mixed"), o);
+      expect(quickProgress(s)!.missed?.item).toEqual(second);
+      expect(itemKey(s.items[1])).not.toBe(itemKey(second));
+      s = finish(s, "mixed");
+      expect(quickProgress(s)!.helped).toEqual([true, true, false]);
+      reload(s, o);
     }
-    expect(s.items).toHaveLength(ROUND + MAX_FRESH);
-    const cur = quickProgress(s)!.cur, before = s.items.length;
-    s = reload(quickMove(s, ["n", answerOf(s.items[cur]) + 1], "add"), o);
-    expect(s.items).toHaveLength(before);
-    expect(quickProgress(s)!.cur).toBe(cur);
-    expect(s.wrong).toBe(answerOf(s.items[cur]) + 1);
-    expect(finish(s, "add").index).toBe(ROUND);
+  });
+  it(`the retry counter stops at ${MAX_TRIES}, and a miss there is still answered with a different question`, () => {
+    const o = opts(3), s0 = createQuick(o, random(5));
+    const s: QuickRound = { ...s0, tries: [MAX_TRIES, 0, 0], helped: [true, false, false] };
+    expect(validQuick(s, o)).toBe(true);
+    const next = reload(quickMove(s, ["n", answerOf(s.items[0]) + 1], "add"), o);
+    expect(next.tries[0]).toBe(MAX_TRIES);
+    expect(itemKey(next.items[0])).not.toBe(itemKey(s.items[0]));
+    expect(quickProgress(next)!.missed?.item).toEqual(s.items[0]);
   });
   it("brute force does not work: a guesser never finishes a clean typed round, and does no better than chance with tiles (200 seeds each)", () => {
     for (const level of LEVELS) {
@@ -186,7 +219,6 @@ describe("Quick Practice round", () => {
           const guess = level <= 2 ? tiles[Math.floor(rng() * 3)] : Math.floor(rng() * (max + 1));
           const next = quickMove(s, ["n", guess], "mixed");
           s = next === s ? quickMove(s, ["h"], "mixed") : next;
-          if (s === next && next.history.length >= HISTORY_CAP) break;
         }
         if (s.index === ROUND && quickProgress(s)!.helped.every((h) => !h)) clean++;
       }
@@ -199,7 +231,8 @@ describe("Quick Practice round", () => {
     const o = opts(4);
     let s = createQuick(o, random(2));
     for (let n = 0; n <= 100 && !quickProgress(s)!.work.solved; n++) s = quickMove(s, ["n", n], "add");
-    expect(quickProgress(s)!.fresh).toBeGreaterThan(0);
+    expect(s.tries[0]).toBeGreaterThan(0);
+    expect(s.helped[0]).toBe(true);
   });
   it("help is a ladder from the engine: a cue, the working, then the answer filled in; choices hold the answer", () => {
     for (const level of LEVELS) {
@@ -231,20 +264,21 @@ describe("Quick Practice round", () => {
       }
     }
   });
-  it("a relentless child (every miss and help the round allows) can always finish, and every saved state reloads", () => {
+  it("a relentless child (a dozen misses and every help at each place) always finishes, and every saved state reloads", () => {
     for (const level of LEVELS) for (let seed = 1; seed <= 4; seed++) {
       const o = opts(level, "mixed");
       let s = createQuick(o, random(seed));
       for (let guard = 0; guard < 1000 && s.index < ROUND; guard++) {
         const p = quickProgress(s)!;
-        const tries: (readonly ["n", number] | readonly ["h"] | readonly ["k"] | readonly ["x"])[] = [["n", answerOf(s.items[p.cur]) + 1], ["h"], ["k"], ["n", answerOf(s.items[p.cur])], ["x"]];
+        // Twelve misses at every place (misses never run out), then every help, then the answer.
+        const miss: (readonly ["n", number])[] = s.tries[p.pos] < 12 ? [["n", answerOf(s.items[p.cur]) === 0 ? 1 : answerOf(s.items[p.cur]) - 1]] : [];
+        const tries: (readonly ["n", number] | readonly ["h"] | readonly ["k"] | readonly ["x"])[] = [...miss, ["h"], ["k"], ["n", answerOf(s.items[p.cur])], ["x"]];
         let moved = false;
         for (const a of tries) { const next = quickMove(s, a, "mixed"); if (next !== s) { s = next; moved = true; break; } }
         expect(moved).toBe(true);
         if (guard % 13 === 0) s = reload(s, o);
       }
       expect(s.index).toBe(ROUND);
-      expect(s.history.length).toBeLessThanOrEqual(HISTORY_CAP);
       reload(s, o);
     }
   });
@@ -259,6 +293,17 @@ describe("Quick Practice round", () => {
     expect(validQuick({ ...s, extra: 1 }, o)).toBe(false);
     expect(validQuick({ ...s, total: 4 }, o)).toBe(false);
     expect(validQuick({ ...s, history: [["n", 999]] }, o)).toBe(false);
+    // The bounded fields: counters and helped flags in range and only up to the place on screen, a missed question that fits.
+    expect(validQuick({ ...s, tries: [0, 1, 0] }, o)).toBe(false);
+    expect(validQuick({ ...s, helped: [false, true, false] }, o)).toBe(false);
+    expect(validQuick({ ...s, tries: [MAX_TRIES + 1, 0, 0] }, o)).toBe(false);
+    expect(validQuick({ ...s, missed: s.items[1], wrong: 1, tries: [1, 0, 0], helped: [true, false, false] }, o)).toBe(false);
+    expect(validQuick({ ...s, missed: null, wrong: 3 }, o)).toBe(false);
+    const missed = quickMove(s, ["n", answerOf(s.items[0]) + 1], "add");
+    expect(validQuick(missed, o)).toBe(true);
+    expect(validQuick({ ...missed, helped: [false, false, false] }, o)).toBe(false);
+    expect(validQuick({ ...missed, wrong: answerOf(missed.missed!) }, o)).toBe(false);
+    expect(validQuick({ ...missed, history: [["h"]] }, o)).toBe(false);
     expect(validQuick(s, opts(4))).toBe(false);
     // A seed-drawn round for the same seed is the same.
     expect(createQuick(o, random(4))).toEqual(s);
