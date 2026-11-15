@@ -190,12 +190,14 @@ describe('HD-05 / HD-06 / HD-09 resting reactions', () => {
   });
   it('friends near a friend set down greet them; lying or eating friends do not', () => {
     const scene = buildScene(labFixtures.delight());
-    const islander = scene.entities['kitchen/character/0'] ?? Object.values(scene.entities).find((e) => e.character?.slot === 0)!;
-    const near = greeters(scene, islander);
-    expect(near.map((g) => g.id)).toContain(Object.values(scene.entities).find((e) => e.character?.slot === 1)!.id);
+    const islander = Object.values(scene.entities).find((e) => e.character?.slot === 0)!;
+    const pip = Object.values(scene.entities).find((e) => e.character?.slot === 1)!;
+    expect(greeters(scene, islander).map((g) => g.id)).not.toContain(pip.id);
+    const beside = { ...islander, contact: { ...pip.contact, x: pip.contact.x - 100 } } as SceneEntity;
+    expect(greeters(scene, beside)).toContainEqual({ id: pip.id, dir: -1 }); // Pip leans left, toward the friend set down on that side.
     const rest = buildScene(labFixtures['delight-rest']());
-    const pip = Object.values(rest.entities).find((e) => e.character?.slot === 1)!;
-    expect(greeters(rest, pip).some((g) => rest.entities[g.id].base === 'lie')).toBe(false);
+    const restingPip = Object.values(rest.entities).find((e) => e.character?.slot === 1)!;
+    expect(greeters(rest, restingPip).some((g) => rest.entities[g.id].base === 'lie')).toBe(false);
   });
   it('the burp is rare and never random: the fifth meal, then every sixth', () => {
     expect(Array.from({ length: 30 }, (_, i) => i + 1).filter(burps)).toEqual([5, 11, 17, 23, 29]);
