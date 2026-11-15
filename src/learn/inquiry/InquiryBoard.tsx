@@ -80,7 +80,7 @@ export function InquiryBoard({
   };
   const choices = (labels: readonly string[], selected: (i: number) => boolean, onPress: (i: number) => void, verb: string, off?: (i: number) => boolean) => {
     const across = columns(labels.length), basis = `${Math.floor(100 / across) - 3}%` as `${number}%`;
-    const max = large ? Math.min(...labels.map((l) => wordFitMultiplier(l, 14, (width - 8 * (across - 1)) / across - 20, 2))) : undefined;
+    const max = large ? Math.min(CHROME_MAX, ...labels.map((l) => wordFitMultiplier(l, 14, (width - 8 * (across - 1)) / across - 20, 2))) : undefined;
     return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {labels.map((label, i) => <PressableScale key={label} disabled={!active || off?.(i)} accessibilityRole="button" accessibilityLabel={`${verb}: ${label}`}
         accessibilityState={{ selected: selected(i), disabled: !active || !!off?.(i) }} onPress={() => onPress(i)}

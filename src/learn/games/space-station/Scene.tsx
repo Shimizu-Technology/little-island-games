@@ -33,21 +33,22 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
       {seen && <G><Rect x={150} y={176} width={180} height={32} rx={16} fill={ink} />{text(`Island: ${sky[skyAt(turn)].toLowerCase()}`, 240, 198, label, "#FFF9E9", 170)}</G>}
     </>;
   } else if (topic === "moon") {
-    const spot = at(0), cx = 165, cy = 105, rx = 88, ry = 72;
+    const spot = at(0), cx = 160, cy = 105, rx = 100, ry = 88;
     body = <>
-      <SkySun x={26} y={105} r={16} />
+      <SkySun x={24} y={105} r={14} />
       <Path d={`M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0`} stroke="#4D85A1" strokeDasharray="1 6" strokeLinecap="round" fill="none" />
-      <EarthGlobe x={cx} y={cy} r={20} />
+      <EarthGlobe x={cx} y={cy} r={16} />
       {Array.from({ length: 8 }, (_, i) => {
         const b = (i * Math.PI) / 4, x = cx - Math.cos(b) * rx, y = cy + Math.sin(b) * ry;
         return <G key={i}>
           <Circle cx={x} cy={y} r={i === spot ? 11 : 4} fill={i === spot ? "#DAE4D9" : "#9AAFB9"} stroke={i === spot ? ink : "none"} strokeWidth={2} />
           {i === spot && <Path d={`M${x} ${y - 11}A11 11 0 0 0 ${x} ${y + 11}Z`} fill="#FFF6CF" />}
-          {text(String(i + 1), cx - Math.cos(b) * (rx + label * 1.1), cy + Math.sin(b) * (ry + label * 1.1) + label * 0.35, label * 0.85)}
+          {/* Numbers sit inside the orbit, between each spot and Earth, so none clips or meets the Sun. */}
+          {text(String(i + 1), cx - Math.cos(b) * (rx - label * 1.05), cy + Math.sin(b) * (ry - label * 1.05) + label * 0.35, label * 0.85)}
         </G>;
       })}
-      {seen ? <MoonDisc x={312} y={95} r={34} phase={spot} /> : unknown(312, 95)}
-      {text("From Earth", 312, 160, label * 0.85, ink, 92)}
+      {seen ? <MoonDisc x={318} y={92} r={30} phase={spot} /> : unknown(318, 92)}
+      {text("From Earth", 318, 150, label * 0.85, ink, 80)}
     </>;
   } else if (topic === "planets") {
     const pair = q.controls.length === 2;
