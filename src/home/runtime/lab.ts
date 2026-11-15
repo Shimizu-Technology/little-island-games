@@ -55,8 +55,8 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.kitchen.instances.push(instance("mango", "mango", 3, 9), instance("rice", "rice-ball", 7, 10));
     state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot === 2);
     state.rooms.kitchen.characters = [
-      { slot: 0, anchor: "floor", pose: "stand", x: 6, y: 6 },
-      { slot: 1, anchor: "floor", pose: "stand", x: 10, y: 6 },
+      { slot: 0, anchor: "floor", pose: "stand", x: 5, y: 7 },
+      { slot: 1, anchor: "floor", pose: "stand", x: 9, y: 4 },
     ];
     return migrateHome(state) ?? state;
   },
