@@ -1,4 +1,4 @@
-import { BoardColumns, useBoardColumns, useBoardGeometry } from '../../BoardSpace';
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
@@ -59,6 +59,7 @@ function PlayerChip({ token, toGo, narrow, width }: { token: Token; toGo: number
   // At accessibility sizes the name wraps between words onto two lines and stops where each word fits the card
   // (38-pt turtle, 6-pt gap, 8-pt padding and 3-pt border each side), so "Your turtle" is never cut to "Yo…".
   const large = useWindowDimensions().fontScale >= LARGE_TEXT, room = width - 38 - 6 - 22;
+  const school = useBoardSpace(), labelSize = narrow ? school?.ready ? 13 : 12.5 : 14;
   return (
     <View
       accessibilityLabel={`${token.label}: ${toGo} to go${token.active ? ", playing now" : ""}`}
@@ -78,7 +79,7 @@ function PlayerChip({ token, toGo, narrow, width }: { token: Token; toGo: number
     >
       {token.kind === "tide" ? <Tide size={38} /> : <Turtle size={38} coral={token.kind === "coral"} />}
       <View style={{ flex: 1 }}>
-        <Text numberOfLines={large ? 2 : 1} maxFontSizeMultiplier={large ? wordFitMultiplier(token.label, narrow ? 12.5 : 14, room, 1.5) : undefined} style={{ fontSize: narrow ? 12.5 : 14, fontWeight: "900", color: ink }}>
+        <Text numberOfLines={large ? 2 : 1} maxFontSizeMultiplier={large ? wordFitMultiplier(token.label, labelSize, room, 1.5) : undefined} style={{ fontSize: labelSize, fontWeight: "900", color: ink }}>
           {token.label}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>

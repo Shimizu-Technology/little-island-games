@@ -286,7 +286,7 @@ it('Float/Sink fits the measured AX prediction without reducing its readable tan
  expect(Number(flat(view('school-float-sink-drawing').props.style).height)).toBeGreaterThanOrEqual(120);
 });
 it.each([1,3.12])('Weather gauge tick labels stay legible at text scale %s',async fontScale=>{
- const r=await mountPort('weather-watch',B7,220,{width:393,height:852,fontScale},4);
+ await mountPort('weather-watch',B7,220,{width:393,height:852,fontScale},4);
  await act(async()=>{view('school-weather-watch-drawing').props.onLayout({nativeEvent:{layout:{height:220}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
  const drawing=view('school-weather-watch-drawing'), svg=drawing.findAll(n=>String(n.type)==='Svg')[0];
  const ticks=svg.findAll(n=>String(n.type)==='SvgText'&&n.children.some(c=>typeof c==='string'&&/^(0|10|20|30|40)$/.test(c)));
@@ -305,4 +305,18 @@ it('Crab fits AX command words using the actual School label font',async()=>{
  const word=r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('Right')&&flat(n.props.style).fontSize===13)[0];
  const {wordFitMultiplier}=await import('../src/components/wordFit');
  expect(word.props.maxFontSizeMultiplier).toBeLessThanOrEqual(Math.min(...['Up','Right','Down','Left'].map(name=>wordFitMultiplier(name,13,(333-18)/4-12,2))));
+});
+
+it.each([['reef-race',B4,'Your turtle'],['shell-math',B5,'Step ']] as const)('%s keeps small School labels at 13 pt',async(id,Board,label)=>{
+ const r=await mountPort(id,Board);
+ const words=r.root.findAll(n=>String(n.type)==='Text'&&n.children.some(c=>typeof c==='string'&&c.startsWith(label)));
+ expect(words.length).toBeGreaterThan(0);expect(words.every(n=>Number(flat(n.props.style).fontSize)>=13)).toBe(true);
+});
+it('Beep hint cards retain the School label floor',async()=>{
+ const r=await mountPort('beep-bot',B2);
+ const help=r.root.findAll(n=>String(n.type)==='Pressable'&&n.findAll(t=>String(t.type)==='Text'&&t.children.includes('Help')).length>0)[0];
+ await act(async()=>{help.props.onPress();});
+ await act(async()=>{await new Promise(resolve=>setTimeout(resolve,30));});
+ const words=r.root.findAll(n=>String(n.type)==='Text'&&/^Card \d/.test(n.children.map(String).join('')));
+ expect(words.length).toBeGreaterThan(0);expect(words.every(n=>Number(flat(n.props.style).fontSize)>=13)).toBe(true);
 });

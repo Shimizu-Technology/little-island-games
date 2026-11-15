@@ -1,4 +1,4 @@
-import { BoardColumns, useBoardColumns } from '../../BoardSpace';
+import { BoardColumns, useBoardColumns, useBoardSpace } from '../../BoardSpace';
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { Text } from "../../../components/Text";
@@ -24,7 +24,7 @@ const speechKey = (p: Problem) => `math-${p.op}-${p.a}-${p.b}-${p.unknown === "s
 
 /** Shell Math, levels 1 to 5. Every state change goes through shellMove, so the board can only do what the rules allow. */
 export function ShellBoard(props: BoardProps<ShellRound>) {
-  const side = useBoardColumns();
+  const side = useBoardColumns(), school = useBoardSpace();
   const { session, active, update, practice, notePractice, assistance, stopSound, sound, soundOn, cheer, coach, width } = props;
   const s = session.state;
   // At accessibility sizes the header has no room for a second button, so Help moves down beside the other supports.
@@ -151,6 +151,6 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
       </View>
       : <HelpRow step={step} work={work} typed={typed} active={active} canHide={level >= 2} hidden={hidePicture} press={press}
         onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidePicture((h) => !h)} showHelp={large} onUndo={large && undoable ? () => act(["u"]) : undefined} />}
-    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>{work.solved ? "" : `Step ${Math.min(work.at + 1, total)} of ${total}`}</Copy>
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: school?.ready ? 13 : 12, color: C.muted, textAlign: "center" }}>{work.solved ? "" : `Step ${Math.min(work.at + 1, total)} of ${total}`}</Copy>
   </View>;
 }
