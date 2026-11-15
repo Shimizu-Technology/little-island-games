@@ -1,0 +1,26 @@
+[
+  {
+    "slot": 260,
+    "first": 266240,
+    "count": 200,
+    "packHash": "02815e54c81de3cfab60af52f3736c012b7a551821443202a7161e7b272f6216",
+    "band": "cages",
+    "rules": 2
+  },
+  {
+    "slot": 261,
+    "first": 266440,
+    "count": 100,
+    "packHash": "e39db01092b94d9b083e8453cf431b3269ea83362c62518b35ea0babdd05fa46",
+    "band": "wide-cages",
+    "rules": 2
+  },
+  {
+    "slot": 262,
+    "first": 266540,
+    "count": 200,
+    "packHash": "71a8fadee105452c8333bf75ebe8fb07aa7b57c6ab2a6232a8da8c40f5e5c553",
+    "band": "marks-only",
+    "rules": 2
+  }
+]

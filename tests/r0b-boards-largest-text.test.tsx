@@ -5,6 +5,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, expect, it, vi } from 'vitest';
 import { TextFit } from '../src/components/Text';
 import { wordWidth } from '../src/components/wordFit';
+import { engine as legacyLogic } from '../src/learn/games/logic-lagoon/legacy';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
@@ -19,7 +20,7 @@ import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
 import { Board as B9 } from '../src/learn/games/sound-boat/view';
 import { Board as B10 } from '../src/learn/games/reef-race/view';
-import { Board as B11 } from '../src/learn/games/logic-lagoon/view';
+import { Board as B11 } from '../src/learn/games/logic-lagoon/legacy-view';
 import { Board as B12 } from '../src/learn/games/beep-bot/view';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
 const boards: Partial<Record<LearnId, unknown>> = { 'code-lab': B0, 'hafa-adai': B1, 'fraction-feast': B2, 'pattern-path': B3, 'crab-commands': B4, 'tide-pool': B5, 'float-sink': B6, 'weather-watch': B7, 'treasure-algebra': B8, 'sound-boat': B9, 'reef-race': B10, 'logic-lagoon': B11, 'beep-bot': B12, 'tide-logic': B13 };
@@ -86,6 +87,7 @@ const region = { width: W, ceiling: 2 };
 
 function sessionFor(id: LearnId, level = 1, patch?: (state: never) => unknown): LearnSession {
   const s = startSession(id, { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, level as 1) }, {}, 7);
+  if (id === 'logic-lagoon') s.state = legacyLogic.create(s.options, { rng: () => 7 / 0xffffffff, starter: 0, skills: {}, today: 0 });
   return patch ? { ...s, state: patch(s.state as never) } : s;
 }
 async function mount(view: LearnId, session: LearnSession, extra: Record<string, unknown> = {}, fit: typeof region | null = region) {

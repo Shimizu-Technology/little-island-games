@@ -1,0 +1,13 @@
+# Logic Lagoon — T1
+
+New School rounds use state version 2 and immutable catalog 1. Version-1 rounds still use `legacy.ts` and `legacy-view.tsx`; the old puzzle-kit adapter also binds that archived implementation. Keep both decoders. Never change the catalog-1 selection/shuffle algorithm or its rows: a later generator needs another version gate. `tests/fixtures/t1-lagoon-rounds.json` freezes sample tasks on both sides.
+
+The teacher uses Latin `shapeOf`, `grade`, `planHint`, `solved` and the independent counter, with no second rules or hint solver. The two/three-picture teaching boards pass small unboxed structures to these same pure functions; they do not expand the packed Latin size contract. All packed grids use unchanged Latin tuples. Notes, undo and number-first input come from Sudoku's GridShell/model.
+
+The five levels teach: one choice left on 2×2 and 3×3 picture grids; 4×4 pictures/numbers with a Level-3 scale rest beat; 6×6 hidden places; then sums in cages without starting numbers. A child finding Level 3 easy can choose Level 4 immediately, then Level 5. Challenge adds six-wide cages and arrow-only grids. Sudoku in the Cove is the route to 9×9 and higher techniques; Logic Lagoon stops at 6×6. Difficulty labels are technique certificates, not measured child/adult solve times.
+
+School gives per-cell feedback. Challenge never confirms a cell or highlights wrong entries: Check reports only the number to change. Its three-step hint shows where, why, then an optional placement. A hint is assistance, including clearing a wrong value. Help/miss evidence survives undo/reset. The final solved Challenge board stays visible. The existing LearnFrame owns School's round ending.
+
+Supply: 212 Sprout and 300 Coral Sudoku descriptors are reused by their original bank/index/hash, with rule-keeping teaching shuffles. They add **zero** to global puzzle counts. T1 adds 200 small cages, 100 six-wide cages and 200 arrow-only grids (banks 260–262), through the existing certification/bake pipeline. Twenty fixed School Challenge examples in banks 263–267 reuse this content; they also add **zero** to distinct supply. Dares 800–819. No approval/native fields are filled automatically.
+
+One-shot bake: `node --import ./scripts/puzzles/register.mjs scripts/puzzles/logic-lagoon/bake.ts`, then `supply.ts`, `save-catalog.ts`, `npm run registry:generate`, `npm run qa:matrix:generate`. The bake refuses to overwrite a used reservation; catalog-1 generation refuses changed rows. Published identities remain immutable. New speech is in `scripts/learn/t1-logic-lagoon.json`; audio generation belongs to the lead.

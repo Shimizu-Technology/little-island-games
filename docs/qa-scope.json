@@ -277,14 +277,14 @@
       "name": "Logic Lagoon",
       "family": "school",
       "strata": [
-        "L1",
-        "L2",
-        "L3",
-        "L4",
-        "L5"
+        "L1–2 pictures",
+        "L3 4×4 and balance",
+        "L4 hidden places 6×6",
+        "L5 no-given cages",
+        "Deep Water six-wide cages and arrows only"
       ],
       "door": "School",
-      "maxBoard": "Filled 9×9 number grid, all cage labels and open big pad; Cross Sums longest run; Filled 9×9 with every candidate note visible",
+      "maxBoard": "6×6 hidden places and sum cages, all cage labels and pencil notes; 4×4 arrow-only grid without starting numbers",
       "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
     },
     {
