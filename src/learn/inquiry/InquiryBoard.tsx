@@ -72,14 +72,16 @@ export function InquiryBoard({
     practice(skill, right);
     if (right) cheer(p.index === qs.length - 1 ? "big" : "right"); else sound("tap");
   };
-  // Columns per row: short spot and number rows stay on one or two lines so Test stays in view at large text.
-  const columns = (n: number) => {
-    // At large text three short choices still share a row when each tile keeps 96 pt.
-    const wanted = n >= 6 ? 4 : n === 5 ? 3 : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
-    return Math.max(1, Math.min(wanted, Math.floor(width / (large ? 104 : 78))));
+  // Columns per row, so the drawing and Test stay in view together. Short labels (a mass, a world) share one row;
+  // sentences (reasons) stack one per row at large text; other choices keep at least 96 pt each at large text.
+  const columns = (labels: readonly string[]) => {
+    const n = labels.length, short = labels.every((l) => l.length <= 7), sentence = labels.some((l) => l.split(" ").length >= 5);
+    if (large && sentence) return 1;
+    const wanted = n >= 6 ? 4 : short || n === 5 ? Math.min(n, short ? 5 : 3) : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
+    return Math.max(1, Math.min(wanted, Math.floor((width + 8) / ((short ? 58 : large ? 104 : 78) + 8))));
   };
   const choices = (labels: readonly string[], selected: (i: number) => boolean, onPress: (i: number) => void, verb: string, off?: (i: number) => boolean) => {
-    const across = columns(labels.length), basis = `${Math.floor(100 / across) - 3}%` as `${number}%`;
+    const across = columns(labels), basis = `${Math.floor(100 / across) - 3}%` as `${number}%`;
     const max = large ? Math.min(CHROME_MAX, ...labels.map((l) => wordFitMultiplier(l, 14, (width - 8 * (across - 1)) / across - 20, 2))) : undefined;
     return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {labels.map((label, i) => <PressableScale key={label} disabled={!active || off?.(i)} accessibilityRole="button" accessibilityLabel={`${verb}: ${label}`}
