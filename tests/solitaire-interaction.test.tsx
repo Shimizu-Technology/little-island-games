@@ -120,12 +120,12 @@ describe('Solitaire card interaction',()=>{
  });
  it('keeps Draw, Rules, both reserve rows and every opening tableau face visible at AX5 phone landscape',async()=>{
   const{Harness,deal}=await fixture('draw-three');let screen!:ReactTestRenderer;
-  try{fake.scale=3.5;fake.height=393;await act(async()=>{screen=create(<Harness/>,{createNodeMock:n=>(n.props as {testID?:string}).testID==='solitaire-table-viewport'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,270,734,104)}:null});});
+  try{fake.scale=3.5;fake.height=393;await act(async()=>{screen=create(<Harness/>,{createNodeMock:n=>(n.props as {testID?:string}).testID==='solitaire-table-viewport'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,220,694,130)}:null});});
    const buttons=screen.root.findAllByType('button'),draw=buttons.find(n=>n.children.join('').startsWith('Draw three'))!,undo=buttons.find(n=>n.children.includes('Undo'))!;
    expect(draw.parent).toBe(undo.parent);expect(draw.props.maxFontSizeMultiplier).toBe(1.3);
-   const maxHeight=screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!.props.style.maxHeight;
+   const viewport=screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!;expect(viewport.props.style.width).toBe(694);const maxHeight=viewport.props.style.maxHeight;
    const faces=buttons.filter(n=>/^Column /.test(n.props.accessibilityLabel??'')&&!n.props.accessibilityLabel.includes('face-down'));expect(faces).toHaveLength(7);
-   for(const n of faces){expect(n.props.style.top+n.props.style.height).toBeLessThanOrEqual(maxHeight);expect(n.props.style.left+(n.children[0] as ReactTestInstance).props.style.width).toBeLessThanOrEqual(734);}
+   for(const n of faces){expect(n.props.style.top+n.props.style.height).toBeLessThanOrEqual(maxHeight);expect(n.props.style.left+(n.children[0] as ReactTestInstance).props.style.width).toBeLessThanOrEqual(694);}
    for(const label of ['Stock,','Waste,','Clubs foundation,','Diamonds foundation,','Spades foundation,','Hearts foundation,']){const n=buttons.find(n=>n.props.accessibilityLabel?.startsWith(label))!;expect(n).toBeDefined();expect(n.props.style.top+n.props.style.height).toBeLessThanOrEqual(maxHeight);}
    await press(screen,'Draw three · 24 in stock');expect(board(deal).position.piles[12]).toHaveLength(21);
    await press(screen,'Rules');expect(text(screen)).toContain('Build columns down');

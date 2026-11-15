@@ -20,12 +20,16 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const [foreground,setForeground]=useState(()=>AppState.currentState!=='background'&&AppState.currentState!=='inactive'),active=routeActive&&foreground;
  const {bottom}=useSafeAreaInsets();
  const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,short=large&&height<500,cap=atLarge(fontScale,1.5),controlCap=short?atLarge(fontScale,1.3):cap,read=readTable(view.payload,view.deal)!;
+ const [viewport,setViewport]=useState<{width:number;height:number}|null>(null);
+ // The host's width can include padding outside this table, especially after
+ // rotation. Geometry and navigation use the measured viewport instead.
+ const availableWidth=viewport?.height===height?Math.min(width,viewport.width):width;
  const historyFull=read.history.length===1024,inputActive=active&&!historyFull;
- const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=short?58:Math.max(large?64:40,Math.min(76,(width-12)/cols-gap)),cardH=short?56:large?96:86,overlap=short?46:large?54:32;
+ const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=short?3:free&&!large?2:5,cardW=short?Math.max(56,Math.min(58,Math.floor((availableWidth-24)/(cols+4))-gap)):Math.max(large?64:40,Math.min(76,(availableWidth-12)/cols-gap)),cardH=short?56:large?96:86,overlap=short?46:large?54:32;
  // Short AX landscape places the reserve row beside the columns. Covered cards
  // need only a back edge; every opening face-up card stays in the same viewport.
  const reserveCols=4,tableX=short?reserveCols*(cardW+gap)+12:0;
- const boardW=Math.max(width,tableX+cols*(cardW+gap)+12),boardX=short?tableX:(boardW-cols*cardW-(cols-1)*gap)/2,tableY=short?4:cardH+30;
+ const boardW=Math.max(availableWidth,tableX+cols*(cardW+gap)+12),boardX=short?tableX:(boardW-cols*cardW-(cols-1)*gap)/2,tableY=short?4:cardH+30;
  const cardY=(pile:number,index:number)=>tableY+(short?Math.min(index,s.hidden[pile])*4+Math.max(0,index-s.hidden[pile])*overlap:index*overlap);
  const minimumTableHeight=short?2*(cardH+gap)+8:height<500?cardH+8:190;
  const boardH=Math.max(short?minimumTableHeight:0,...s.piles.slice(0,cols).map((p,i)=>cardY(i,Math.max(0,p.length-1))+cardH+12));
@@ -34,7 +38,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const [help,setHelp]=useState<{stage:1|2|3|4;edits:number;audit:number}|null>(null);
  const search=useRef<AbortController|null>(null),vertical=useRef<ScrollView>(null),horizontal=useRef<ScrollView>(null),demonstration=useRef<{expected:string;edits:number;remaining:Move[];stage:3|4;text:string}|null>(null);
  const tableFrame=useRef<View>(null),[room,setRoom]=useState<number|null>(null);
- const measureRoom=useCallback(()=>tableFrame.current?.measureInWindow((_x,y)=>{if(Number.isFinite(y))setRoom(Math.max(minimumTableHeight,height-y-bottom-12));}),[height,bottom,minimumTableHeight]);
+ const measureRoom=useCallback(()=>tableFrame.current?.measureInWindow((_x,y,w)=>{if(Number.isFinite(w)&&w>0)setViewport(before=>before?.width===w&&before.height===height?before:{width:w,height});if(Number.isFinite(y))setRoom(Math.max(minimumTableHeight,height-y-bottom-12));}),[height,bottom,minimumTableHeight]);
  useLayoutEffect(()=>{measureRoom();},[measureRoom]);
  const [translation]=useState(()=>new Animated.ValueXY());
  const places=useMemo(()=>{
@@ -110,7 +114,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const description=(p:Place)=>!free&&p.pile===12?`Stock, ${s.piles[12].length} cards. ${s.piles[12].length?'Draw '+(view.deal.mode==='draw-three'?'three':'one'):'Turn waste over'}`:`${pileName(p.pile,free)}, ${p.covered?'face-down card':p.card===null?'empty':cardWords(p.card)}${p.pile<8&&p.card!==null&&!p.covered?`, ${s.piles[p.pile].length-p.index} card${s.piles[p.pile].length-p.index===1?' to move':'s from here'}`:''}`;
  const chosen=dragging??(selected?places.find(p=>p.pile===selected.pile&&p.index===selected.index):null);
  const destinations=new Set(chosen?Array.from({length:16},(_,to)=>to).filter(to=>apply(s,view.deal.mode,[chosen.pile,to,s.piles[chosen.pile].length-chosen.index])!==s):[]);
- const visual=(p:Place)=> <View style={{width:cardW,height:cardH,borderRadius:8,borderWidth:selected?.pile===p.pile&&selected.index===p.index||destinations.has(p.pile)?3:1,borderColor:selected?.pile===p.pile&&selected.index===p.index?C.gold:destinations.has(p.pile)?C.teal:'#BACCC4',backgroundColor:p.covered?'#367967':p.card===null?'#E3EEE7':'#FFFDF7',padding:short?2:4}}>
+ const visual=(p:Place)=> <View style={{width:cardW,height:cardH,borderRadius:8,borderWidth:selected?.pile===p.pile&&selected.index===p.index||destinations.has(p.pile)?3:1,borderColor:selected?.pile===p.pile&&selected.index===p.index?C.gold:destinations.has(p.pile)?C.teal:'#BACCC4',backgroundColor:p.covered?'#367967':p.card===null?'#E3EEE7':'#FFFDF7',padding:short?1:4}}>
   {p.covered?<Text maxFontSizeMultiplier={cap} style={{color:'#FFFFFF',fontSize:18,textAlign:'center'}}>≈</Text>:p.card===null?<Text maxFontSizeMultiplier={cap} style={{color:p.pile>=8&&p.pile<12&&(p.pile-8)%2?'#A63E33':C.teal,fontSize:18,textAlign:'center'}}>{p.pile>=8&&p.pile<12?suits[p.pile-8]:p.pile>=12&&free?'○':''}</Text>:<View style={{flexDirection:'row',alignItems:'center',gap:2}}><Text maxFontSizeMultiplier={cap} style={{fontSize:short?16:large?17:15,lineHeight:large?30:23,fontWeight:'800',color:red(p.card)?'#A63E33':C.ink}}>{face(p.card)}</Text><Text maxFontSizeMultiplier={cap} style={{fontSize:short?15:large?16:15,lineHeight:large?30:23,color:red(p.card)?'#A63E33':C.ink}}>{suits[suit(p.card)]}</Text></View>}
  </View>;
  const hintAction=()=>{if(!cueReady){ask();return;}if(help.stage===1){setHelp({...help,stage:2});return;}if(help.stage>=3&&advice?.kind==='move')showOne(advice.plan,4);else void oneStep(help.stage===2?3:4);};
@@ -122,7 +126,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const drawControl=!free&&<Button maxFontSizeMultiplier={controlCap} quiet compact disabled={!inputActive||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>;
  const navigation=<View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
    {boardH>scrollHeight+(short?12:0)&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="Top of table" onPress={()=>vertical.current?.scrollTo({y:0,animated:false})}>{short?'↑':'Top'}</Button><Button maxFontSizeMultiplier={controlCap} quiet compact label="Lower cards" onPress={()=>vertical.current?.scrollToEnd({animated:false})}>{short?'↓':'Lower cards'}</Button></>}
-   {boardW>width+1&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="First columns" onPress={()=>horizontal.current?.scrollTo({x:0,animated:false})}>←</Button><Button maxFontSizeMultiplier={controlCap} quiet compact label="Last columns" onPress={()=>horizontal.current?.scrollToEnd({animated:false})}>→</Button></>}
+   {boardW>availableWidth+1&&<><Button maxFontSizeMultiplier={controlCap} quiet compact label="First columns" onPress={()=>horizontal.current?.scrollTo({x:0,animated:false})}>←</Button><Button maxFontSizeMultiplier={controlCap} quiet compact label="Last columns" onPress={()=>horizontal.current?.scrollToEnd({animated:false})}>→</Button></>}
   </View>;
  const headings=<View style={{flexDirection:'row',justifyContent:'space-between',gap:8}}>
    <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>{free?'Free cells':'Stock · waste'}</Text>
