@@ -73,7 +73,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const feedbackAudio=over?'c1-crab-budget':'c1-crab-retry';
   // On block puzzles the help ladder sits with Go! beside the beach; below the editor it would be out of reach.
   const helpPanel=<>{hintVisible&&!hint&&!blockHelp&&<Copy>Finding one step…</Copy>}{(hint||blockHelp)&&<View style={{gap:blocks?4:8,padding:blocks?8:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">
-      <Copy style={{color:C.ink}}>{s.hintStage<3?stepText:blockHelp?blockHelp.whole:`One working plan: ${(hint?.plan??[]).map(c=>cardLabel[c]).join(', ')}.`}</Copy>
+      <Copy maxFontSizeMultiplier={blocks?1.5:undefined} style={{color:C.ink}}>{s.hintStage<3?stepText:blockHelp?blockHelp.whole:`One working plan: ${(hint?.plan??[]).map(c=>cardLabel[c]).join(', ')}.`}</Copy>
       {hint?.edit&&learnSources[`c1-crab-hint-${hint.edit.op}`]&&<Button compact quiet disabled={disabled} onPress={()=>play(`c1-crab-hint-${hint!.edit!.op}`)}>Hear the edit</Button>}
       {s.hintStage===2&&<Copy>You can try this step, or ask for the whole plan. Helped finishes count too.</Copy>}
       {learnSources[s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help']&&<Button compact quiet disabled={disabled} onPress={()=>play(s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help')}>Hear help</Button>}
@@ -87,14 +87,15 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     <View style={d.fog?{gap:6}:{flex:1,gap:6}}>
     {d.budget!==null&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
     {tideText&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{tideText}</Copy>}
-    {/* With the block editor open, Go! and Help stay beside the beach instead of below the editor. */}
+    <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{(d.fog?s.won:result.won)?d.crabs===2?'Both crabs are home!':'Home! Every shell collected.':message}</Copy>
+    </View></View>
+    {/* With the block editor open, Go! and Help sit full width under the beach: below the editor they fall out of reach, and
+        beside the beach the help text would break words at the largest sizes. */}
     {blocks&&!s.won&&<View testID="crab-challenge-block-run" style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
       <Button compact maxFontSizeMultiplier={1.5} disabled={disabled||!s.program.length} onPress={()=>send(['g'])}>Go!</Button>
       {!hintVisible&&<Button compact quiet maxFontSizeMultiplier={1.5} disabled={disabled} onPress={()=>send(['h'])}>Help</Button>}
     </View>}
     {blocks&&!s.won&&helpPanel}
-    <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{(d.fog?s.won:result.won)?d.crabs===2?'Both crabs are home!':'Home! Every shell collected.':message}</Copy>
-    </View></View>
     {/* With blocks the screen is pinned to the phone's height: the editor shows the tray and its own guidance, so these lines give way. */}
     {!blocks&&<Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>}
     {/* The empty prompt wraps at any text size; inside the horizontal strip it ran off the edge. */}

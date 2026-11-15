@@ -158,3 +158,14 @@ it('C1d fix: on a block puzzle the help ladder shows beside the beach with Go!, 
  expect(texts.some(t => t.startsWith('Plan · '))).toBe(false);
  expect(texts).not.toContain('Tap a command below to add it.');
 });
+it('C1d fix: on a single-beach block puzzle, Go!, Help and the help text sit full width under the beach, not beside it', async () => {
+ const p = crabPuzzles.find(c => c.ref.bank === 14)!;
+ let s = challengeEngine.create(p.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+ s = challengeEngine.step(s, ['h'], p.descriptor)!.state;
+ await mount(s);
+ const beachRow = root!.root.findByType('beach' as never).parent!;
+ expect(beachRow.findAll(n => n.props.testID === 'crab-challenge-block-run')).toHaveLength(0);
+ expect(beachRow.findAllByType('p' as never).some(n => n.children.join('').startsWith('Build the group'))).toBe(false);
+ const help = root!.root.findAllByType('p' as never).find(n => n.children.join('').startsWith('Build the group'))!;
+ expect(help.props.maxFontSizeMultiplier).toBe(1.5);
+});
