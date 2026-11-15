@@ -68,7 +68,9 @@ Tests: `tests/reading-provenance.test.tsx` runs every Reading island game in the
 - **The independent baseline.** `tests/fixtures/reading-inherited-baseline.json` is lead-owned. For each source it records the pinned digest, a hash of what the snapshot serves through its own lookups, and the record count, all computed with node:crypto. The pins, the sources and what the snapshot serves must all equal it, so editing a source and recomputing its pin in `provenance.ts` (REVIEW-5's probe) fails. Changing the baseline requires lead approval, and new content goes through detached admission instead.
 - **Freeze and brand inventory.** The static test lists every freeze and brand clause of `provenance.ts`, `tasks.ts` and `inherited.ts` as either a named app mutant or a documented equivalent with its reason, and fails on any clause it does not list.
 
-Still outside the rule, as their own text: Quick Practice and Shell Song read the pinned, frozen snapshot (Quick Practice's growth questions now included) but print their own text, not through `ReadingText` or a branded check.
+- **Memory and Practice (lead decisions).** Memory's CHamoru pack loads its words through `chamoruRecords()`/`chamoruRecord(id)`, and `MemoryCards` checks each card's record before drawing it. The grown-up Practice panel and the Arcade treasure chest draw Practice questions. Each reading question keeps its branded record (`record` for a word or sentence, `task` for a Which One growth question) instead of a copy of its text, and both surfaces run `practiceAdmitted` on it before showing, speaking or crediting. Practice rounds are not saved. The static test lists every runtime user of `provenance.ts`.
+
+Named non-reading (lead decision): Shell Song (music; its picture prompts come from the snapshot) and the School game Quick Practice (maths facts; its growth stages are maths tracks).
 
 ## Sound Boat
 

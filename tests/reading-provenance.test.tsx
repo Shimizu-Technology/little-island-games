@@ -44,11 +44,17 @@ import { baselineIssues, currentBaseline, readBaseline } from "./helpers/inherit
 import type { LearnId, LearnOptions, LearnSession } from "../src/learn/types";
 import { chamoruCard, createMemory, memoryDeck } from "../src/games/memory";
 import { MemoryCards } from "../src/screens/classics/MemoryCards";
+import { PracticePanel } from "../src/practice/PracticePanel";
+import { createPracticeRound, practiceAdmitted, practiceText, type PracticeQuestion } from "../src/practice/engine";
+import { defaultPracticeSettings, type PracticeSettings } from "../src/practice/types";
+import { TreasureChest } from "../src/arcade/Chest";
+import { arcadeGames } from "../src/arcade/registry";
 
+const practiceAdmittedProbe = (q: PracticeQuestion) => practiceAdmitted(q, "The Practice panel");
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 const played = vi.hoisted(() => [] as string[]);
 /** While on, each game's producer hands its board an edited copy of the real record, the way REVIEW-4's patch did. */
-const swap = vi.hoisted(() => ({ on: false, word: null as string | null, growth: false }));
+const swap = vi.hoisted(() => ({ on: false, word: null as string | null, growth: false, practice: false }));
 const SUNSET = "A sunset is red.";
 vi.mock("../src/state/storage", () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async () => {} } }));
 vi.mock("react-native", () => {
@@ -56,7 +62,7 @@ vi.mock("react-native", () => {
   const anim = () => ({ start() {}, stop() {} });
   return {
     ScrollView: "ScrollView", View: "View", Platform: { OS: "ios", select: (o: Record<string, unknown>) => o.ios ?? o.default },
-    useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }), AppState: { addEventListener: () => ({ remove() {} }) },
+    useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }), AppState: { currentState: "active", addEventListener: () => ({ remove() {} }) },
     Animated: { View: "AnimatedView", Value, timing: anim, spring: anim, sequence: anim, loop: anim, parallel: anim, delay: anim },
     StyleSheet: { create: (s: unknown) => s, absoluteFill: {}, hairlineWidth: 1 }, Text: "Text", Pressable: "Pressable",
   };
@@ -88,6 +94,9 @@ vi.mock("../src/learn/Celebrate", () => ({ Celebrate: () => null }));
 vi.mock("../src/learn/LevelPath", () => ({ LevelPath: () => null }));
 vi.mock("../src/learn/art/Objects", () => ({ PictureObject: "PictureObject", ObjectGlyph: "ObjectGlyph", Scene: "Scene" }));
 vi.mock("../src/badges/ResultCard", () => ({ BadgeResultCard: () => null }));
+vi.mock("../src/arcade/TreasureArt", () => ({ ChestArt: () => null }));
+vi.mock("../src/arcade/Juice", () => ({ ActionBurst: () => null }));
+vi.mock("../src/arcade/Art", () => ({ stickerNames: new Proxy({}, { get: () => "A sticker" }) }));
 // The producers each board reads from. With `swap.on` they hand the board an edited copy of the real record.
 vi.mock("../src/learn/games/which-one/engine", async (real) => {
   const r = (await real()) as typeof import("../src/learn/games/which-one/engine");
@@ -110,7 +119,7 @@ vi.mock("../src/learn/games/word-workshop/engine", async (real) => swapBank((awa
 // A word looked up by spelling (Sound Boat's ladder: the word she is changing) handed over as an edited copy.
 vi.mock("../src/learn/kit/reading", async (real) => {
   const r = (await real()) as typeof import("../src/learn/kit/reading");
-  return { ...r, wordEntry: (w: string) => (swap.word !== null && w.toLowerCase() === swap.word ? { ...r.wordEntry(w)! } : r.wordEntry(w)) };
+  return { ...r, wordEntry: (w: string) => ((swap.word !== null && w.toLowerCase() === swap.word) || (swap.practice && r.wordEntry(w)) ? { ...r.wordEntry(w)! } : r.wordEntry(w)) };
 });
 // The growth quiz's producer: with `swap.growth` a reading track hands GrowthBoard edited copies of its questions.
 vi.mock("../src/learn/growth/content", async (real) => {
@@ -122,7 +131,8 @@ vi.mock("../src/learn/growth/content", async (real) => {
 });
 vi.mock("../src/learn/reading/provenance", async (real) => {
   const r = (await real()) as typeof import("../src/learn/reading/provenance");
-  return { ...r, chamoruRecord: (id: unknown) => (swap.on && r.chamoruRecord(id) ? { ...r.chamoruRecord(id)!, term: "Sunset" } : r.chamoruRecord(id)) };
+  return { ...r, chamoruRecord: (id: unknown) => (swap.on && r.chamoruRecord(id) ? { ...r.chamoruRecord(id)!, term: "Sunset" } : r.chamoruRecord(id)),
+    readingSentences: () => (swap.practice ? r.readingSentences().map((x) => ({ ...x })) : r.readingSentences()) };
 });
 
 const dev = globalThis as { __DEV__?: unknown };
@@ -130,7 +140,7 @@ const releaseMode = dev.__DEV__;
 let root: ReactTestRenderer | undefined;
 afterEach(async () => {
   if (root) await act(async () => root!.unmount());
-  root = undefined; swap.on = false; swap.word = null; swap.growth = false; dev.__DEV__ = releaseMode; played.length = 0;
+  root = undefined; swap.on = false; swap.word = null; swap.growth = false; swap.practice = false; dev.__DEV__ = releaseMode; played.length = 0;
   vi.useRealTimers(); vi.unstubAllGlobals();
 });
 const words = (node: ReactTestInstance | ReactTestRenderer = root!) =>
@@ -614,5 +624,80 @@ describe("Memory's CHamoru pack loads the CHamoru words through the snapshot", (
     expect(onFlip).not.toHaveBeenCalled();
     dev.__DEV__ = true;
     expect(() => admittedReading(chamoruCard(cards[0])!.word, "Memory's CHamoru cards")).toThrow(/Memory's CHamoru cards was given reading content/);
+  });
+});
+
+// ---- Lead decision (Option A): the grown-up Practice panel and the treasure chest print reading records. ----
+describe("Practice questions keep their branded record, and every Practice surface checks it", () => {
+  const settings = (subject: PracticeSettings["subject"], stage?: "stretch" | "deep"): PracticeSettings => ({ ...defaultPracticeSettings, enabled: true, subject, ...(stage ? { readingStage: stage, mathStage: stage } : {}) });
+  const panel = (s: PracticeSettings, onComplete = vi.fn()) => <PracticePanel settings={s} soundOn active onComplete={onComplete} onCancel={vi.fn()} />;
+  /** The words each question prints, from the real snapshot. */
+  const printed = (s: PracticeSettings, seed: number) => createPracticeRound(s, seed).questions.map((q) => (q.kind === "growth" ? q.task.prompt : q.kind === "math" ? "" : practiceText(q)));
+  it("reading questions carry the snapshot's branded record, never copied text", () => {
+    for (let seed = 0; seed < 20; seed++) for (const s of [settings("reading"), settings("mixed"), settings("reading", "stretch"), settings("reading", "deep")]) for (const q of createPracticeRound(s, seed).questions) {
+      expect(q).not.toHaveProperty("text");
+      if (q.kind === "word") expect(q.record).toBe(readingWords().find((w) => w.word === q.record.word));
+      if (q.kind === "sentence") expect(q.record).toBe(readingSentence(q.record.id));
+      if (q.kind === "growth") { expect(q.game).toBe("which-one"); expect(isInheritedRecord(q.task)).toBe(true); }
+    }
+    const maths = createPracticeRound(settings("math", "stretch"), 3).questions;
+    expect(maths.every((q) => q.kind === "growth" && q.game === "quick-practice" && !isInheritedRecord(q.task))).toBe(true);
+  });
+  it.each([["basic reading", settings("reading")], ["a reading stage", settings("reading", "stretch")]] as const)("the real panel shows %s from the snapshot and introduces it", async (_, s) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.spyOn(Math, "random").mockReturnValue(0.25);
+    await act(async () => { root = create(panel(s)); });
+    expect(shownText()).toContain(printed(s, Math.floor(0.25 * 0x100000000))[0]);
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+    expect(played).toContain("practice-intro");
+    vi.restoreAllMocks();
+  });
+  it.each([["basic reading", settings("reading"), "practice"], ["mixed", settings("mixed"), "practice"], ["a reading stage", settings("reading", "stretch"), "growth"]] as const)("given edited copies, the panel refuses %s: no words, speech or credit", async (_, s, which) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.spyOn(Math, "random").mockReturnValue(0.25);
+    const real = printed(s, Math.floor(0.25 * 0x100000000)).filter(Boolean);
+    swap[which] = true;
+    const onComplete = vi.fn();
+    await act(async () => { root = create(panel(s, onComplete)); });
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused").length).toBe(1);
+    for (const text of real) expect(shownText(), text).not.toContain(text);
+    expect(shownText()).not.toMatch(/sunset/i);
+    expect(played, played.join()).toEqual([]);
+    // Only Cancel is left to press.
+    expect(root!.root.findAll((n) => String(n.type) === "Button" || String(n.type) === "PressableScale").map((n) => n.props.children)).toEqual(["Cancel"]);
+    expect(onComplete).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+  it("a maths round with maths growth tasks still opens (the non-reading control)", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    await act(async () => { root = create(panel(settings("math", "stretch"))); });
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused")).toEqual([]);
+  });
+  it("in development an edited copy throws instead of drawing", () => {
+    swap.practice = true;
+    dev.__DEV__ = true;
+    expect(() => createPracticeRound(settings("reading"), 1).questions.forEach((q) => practiceAdmittedProbe(q))).toThrow(/The Practice panel was given reading content/);
+  });
+  it("the treasure chest shows the snapshot's reading question, and refuses an edited copy with only Skip left", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.useFakeTimers();
+    const game = arcadeGames.find((g) => g.subject === "reading")!;
+    const offer = { game: game.id, level: "w1-1", round: "chest-probe", sticker: "reef-fish" } as never;
+    db.raw = encodeSave(migrateProfiles(emptySave()));
+    const Chest = () => { const st = useStore(); return st.ready ? <TreasureChest offer={offer} game={game} expected={{ epoch: 0, learner: "family" } as never} active onClose={vi.fn()} /> : null; };
+    const mount = async () => {
+      await act(async () => { root = create(<StoreProvider><Chest /></StoreProvider>); });
+      for (let i = 0; i < 50 && !root!.root.findAll((n) => String(n.type) === "Button").length; i++) await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    };
+    await mount();
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+    const drawn = shownText();
+    await act(async () => root!.unmount());
+    swap.practice = true;
+    await mount();
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused").length).toBe(1);
+    expect(root!.root.findAll((n) => String(n.type) === "Button" || String(n.type) === "PressableScale").map((n) => n.props.children)).toEqual(["Skip chest · costs nothing"]);
+    expect(shownText()).not.toBe(drawn);
   });
 });

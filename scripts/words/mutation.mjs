@@ -452,6 +452,14 @@ const appEdges=[
  // Lead addition to fix 5: Memory's CHamoru pack reads the snapshot, and its cards check the brand.
  ['src/games/memory.ts','Memory loads CHamoru through the snapshot',null,memoryLive,[PROV],'branded snapshot record|changing the live CHamoru list'],
  ['src/screens/classics/MemoryCards.tsx','Memory cards check the brand',"  if (!cards.every((card) => { const ch = chamoruCard(card); return !ch || admittedReading(ch.word, \"Memory's CHamoru cards\"); })) return <ReadingRefused />;\n",'',[PROV],'refuses edited copies'],
+ // Lead decision (Option A): Practice questions keep their branded record, and every Practice surface checks it.
+ ['src/practice/PracticePanel.tsx','Practice panel check','const admitted = state.questions.every((x) => practiceAdmitted(x, "The Practice panel"));','const admitted = true;',[PROV],'the panel refuses'],
+ ['src/practice/PracticePanel.tsx','Practice panel speaks only admitted questions','    if (admitted && active && soundOn && !state.gateOpen','    if (active && soundOn && !state.gateOpen',[PROV],'the panel refuses'],
+ ['src/practice/PracticePanel.tsx','Practice panel refuses before drawing','{!admitted ? <ReadingRefused /> : state.gateOpen ? <>','{state.gateOpen ? <>',[PROV],'the panel refuses'],
+ ['src/practice/engine.ts','Practice sentences keep their record, not a copy','record: sentence, speech:','record: { ...sentence }, speech:',[PROV],'branded record, never copied text'],
+ ['src/practice/engine.ts','Practice words keep their record, not a copy','record: entry, speech:','record: { ...entry }, speech:',[PROV],'branded record, never copied text|shows basic reading'],
+ ['src/practice/engine.ts','Practice reading growth tasks are checked','readingGrowth(q.game) ? q.task : null','null',[PROV],'the panel refuses a reading stage'],
+ ['src/arcade/Chest.tsx','treasure chest check','  if (!practiceAdmitted(q, "The treasure chest\'s question")) return','  if (false) return',[PROV],'treasure chest'],
  // R1a fix 5 (R5-2): the independent baseline. REVIEW-5's source-plus-pin probe edits two files, as the reviewer did.
  ['src/learn/content/reading/sentences.ts','reviewer source-plus-pin: an edited sentence and its recomputed pin','    "text": "The cat is on the box.",','    "text": "The big cat is on the box.",',[PROV],'frozen baseline',[['src/learn/reading/provenance.ts','  sentences: "327d4e626c00f1ff87a9bb2c264f7e5743b4a548339923ce215324c7475675de",','  sentences: "523b13052b9366a9554722fdce4a6e9872bb5761e96de2b2d9a97f66dc9ce61e",']]],
  ['tests/helpers/inherited-baseline.ts','baseline comparison','  return issues;\n}','  return [];\n}',[PROV],'REVIEW-5|reported'],

@@ -27,8 +27,9 @@ const SOURCES = Object.keys(INHERITED_SOURCE_DIGESTS).map(inheritedSourceFile).s
 /**
  * Every module that loads `provenance.ts` at run time, reviewed. Reading content as data (lead, FIX-BRIEF-5) flows
  * through it: the reading games' producers and boards, the kit, and the growth tracks; and, outside the reading routes,
- * Memory's CHamoru pack, whose cards check the brand before drawing (lead addition to fix 5). The named non-reading
- * users are the lead's decision. One user is held for a lead decision; see FIX-REPORT-5.
+ * Memory's CHamoru pack, whose cards check the brand before drawing (lead addition to fix 5); and the Practice engine,
+ * whose reading questions keep their branded record for the panel and the treasure chest to check (lead decision,
+ * Option A). The named non-reading users are the lead's decision.
  */
 const PROVENANCE_USERS: Record<string, string> = {
   "src/learn/games/hafa-adai/engine.ts": "Håfa Adai's CHamoru words, by id",
@@ -44,18 +45,17 @@ const PROVENANCE_USERS: Record<string, string> = {
   "src/learn/kit/reading.ts": "the kit's word bank",
   "src/learn/reading/admit.ts": "the brand check",
   "src/games/memory.ts": "Memory's CHamoru pack: cards name CHamoru ids and resolve them to branded records; MemoryCards checks them",
+  "src/practice/engine.ts": "Practice's reading questions: each keeps its branded record (word, sentence or reading growth task); every Practice surface runs practiceAdmitted",
 };
 /** Named non-reading (lead decision, fix 5): maths facts and music, not reading content. */
 const NON_READING: Record<string, string> = {
   "src/arcade/games/shell-song/engine.ts": "Shell Song: a music game; its picture prompts come from the pinned snapshot, but it draws pictures and plays notes, not reading text",
   "src/learn/games/quick-practice/engine.ts": "Quick Practice (School): maths facts; its growth stages are maths tracks",
 };
-/**
- * Held for a lead decision: the grown-up Practice panel's reading subject prints Which One sentences and Which One
- * growth questions as its own `text` (FIX-REPORT-5 has the proposal). It reads the frozen, branded snapshot.
- */
-const PENDING_LEAD: Record<string, string> = {
-  "src/practice/engine.ts": "Practice panel (Settings, grown-up gated): reading subject copies sentence and growth question text",
+/** The surfaces that draw Practice questions. Each runs `practiceAdmitted` before it shows, speaks or credits one. */
+const PRACTICE_SURFACES: Record<string, string> = {
+  "src/practice/PracticePanel.tsx": "the grown-up Practice panel (three questions before a game)",
+  "src/arcade/Chest.tsx": "the Arcade treasure chest (one Practice question)",
 };
 /**
  * A source built from another source. The growth quiz's reading tracks take their CHamoru answer choices from the
@@ -167,11 +167,17 @@ describe("only the provenance module loads an inherited reading source", () => {
       expect(importersOf(".", app, [f]), f).toEqual([PROVENANCE]);
     }
   });
-  it("every module that loads the provenance module is reviewed: reading, Memory's CHamoru pack, named non-reading, or held", () => {
-    const users = importersOf(".", app, [PROVENANCE]), reviewed = { ...PROVENANCE_USERS, ...NON_READING, ...PENDING_LEAD };
+  it("every module that loads the provenance module is reviewed: reading, Memory's CHamoru pack, Practice, or named non-reading", () => {
+    const users = importersOf(".", app, [PROVENANCE]), reviewed = { ...PROVENANCE_USERS, ...NON_READING };
     expect(users.filter((f) => !Object.hasOwn(reviewed, f))).toEqual([]);
-    for (const f of [...Object.keys(PROVENANCE_USERS), ...Object.keys(PENDING_LEAD)]) expect(users, f).toContain(f);
-    for (const f of [...Object.keys(PROVENANCE_USERS), ...Object.keys(NON_READING), ...Object.keys(PENDING_LEAD)]) expect(existsSync(f), f).toBe(true);
+    for (const f of Object.keys(PROVENANCE_USERS)) expect(users, f).toContain(f);
+    for (const f of [...Object.keys(PROVENANCE_USERS), ...Object.keys(NON_READING)]) expect(existsSync(f), f).toBe(true);
+    // Every module that makes Practice questions draws them, and each checks every question it draws.
+    const practice = app.filter((f) => edgesOf(".", f).some((e) => e.to === "src/practice/engine.ts" && e.bindings.some((b) => ["createPracticeRound", "createPracticeSession", "*"].includes(b.imported))));
+    expect(practice).toEqual(Object.keys(PRACTICE_SURFACES).sort());
+    for (const f of practice) expect(readFileSync(f, "utf8"), f).toMatch(/practiceAdmitted\(/);
+    // Practice questions carry records, not text: no question type has a `text` field.
+    expect(readFileSync("src/practice/engine.ts", "utf8")).not.toMatch(/kind: "(?:growth|word|sentence)"; [^}]*\btext: string/);
     // Memory loads the CHamoru list only through provenance, and its cards check the brand before drawing.
     expect(edgesOf(".", "src/games/memory.ts").filter((e) => e.to && SOURCES.includes(e.to))).toEqual([]);
     expect(readFileSync("src/screens/classics/MemoryCards.tsx", "utf8")).toMatch(/admittedReading\(ch\.word, "Memory's CHamoru cards"\)/);
