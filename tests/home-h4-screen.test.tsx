@@ -307,6 +307,25 @@ describe('H4 on the Island Home screen', () => {
     await act(async () => { vi.advanceTimersByTime(COOK_MS + 10); });
     expect(saved().powered).toBe(true);
   });
+  it('fix round 2: food set down a little off the pan\'s spot, still over its cell, can be put in the pan; other food cannot', async () => {
+    const state = labFixtures.delight();
+    const persist = await open(state);
+    const stove = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'stove')!;
+    await tap(stove.id);
+    const floorAt = panFloorPoint(stove.item!);
+    // Where the native recheck's floor drop settled: 2 left and 4 nearer than the pan's spot.
+    const off = await drop(state, 'kitchen/item/mango', 'kitchen', { x: floorAt.x - 1.7, y: floorAt.y + 4.4 });
+    expect(off.kind).toBe('floor');
+    expect(off.contact).not.toEqual(floorAt);
+    const pan = harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!;
+    expect([pan.closed, pan.occupied]).toEqual([true, 'kitchen/item/mango']);
+    const scene = harness.scene.scene;
+    expect(resolve({ ...scene.rooms.kitchen, entities: scene.entities }, scene.entities['kitchen/item/rice'], pan.contact, { scale: .5, release: true }).target).not.toBe(pan.id);
+    const into = await drop(state, 'kitchen/item/mango', 'kitchen', pan.contact);
+    expect(into.target).toBe(pan.id);
+    await act(async () => { vi.advanceTimersByTime(COOK_MS + 10); });
+    expect(persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.id === 'mango')!.powered).toBe(true);
+  });
   it('fix round 2: food lifted out of the pan and set on that same floor cell leaves the pan: same save, floor, cooking stops', async () => {
     const state = labFixtures.delight();
     const persist = await open(state);
