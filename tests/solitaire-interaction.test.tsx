@@ -8,11 +8,12 @@ import {construct} from '../scripts/puzzles/solitaire/generate';
 import {emptyChallenge,type ChallengeSession} from '../src/state/challenge';
 import {readTable} from '../src/puzzles/table/checkpoint';
 import {legalMoves,opening,type Deal,type Mode} from '../src/puzzles/table/solitaire';
+import * as publicHints from '../src/puzzles/table/publicSolver';
 import {cardWords} from '../src/puzzles/table/solver';
-const fake=vi.hoisted(()=>({descriptor:null as unknown,scale:1,feedback:vi.fn(),held:[] as boolean[],session:null as ChallengeSession|null}));
+const fake=vi.hoisted(()=>({descriptor:null as unknown,scale:1,feedback:vi.fn(),held:[] as boolean[],session:null as ChallengeSession|null,appState:undefined as ((state:string)=>void)|undefined}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>({entry:async()=>fake.descriptor,savedHash:async()=> 'a'.repeat(64)})}));
 vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})}));
-vi.mock('react-native',()=>({View:'div',Pressable:'button',ScrollView:'section',useWindowDimensions:()=>({width:393,height:852,fontScale:fake.scale}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{v={x:0,y:0};setValue(v:{x:number;y:number}){this.v=v;}getTranslateTransform(){return[{translateX:this.v.x},{translateY:this.v.y}];}}}}));
+vi.mock('react-native',()=>({AppState:{currentState:'active',addEventListener:(_type:string,listener:(state:string)=>void)=>{fake.appState=listener;return{remove(){if(fake.appState===listener)fake.appState=undefined;}};}},View:'div',Pressable:'button',ScrollView:'section',useWindowDimensions:()=>({width:393,height:852,fontScale:fake.scale}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{v={x:0,y:0};setValue(v:{x:number;y:number}){this.v=v;}getTranslateTransform(){return[{translateX:this.v.x},{translateY:this.v.y}];}}}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',C:{gold:'#E1B251',teal:'#246858',ink:'#183F39'}}));
 vi.mock('../src/components/Text',()=>({Text:'span'}));
 async function fixture(mode:Mode='freecell'){
@@ -55,7 +56,7 @@ describe('Solitaire card interaction',()=>{
   try{
    await act(async()=>{screen=create(<Harness/>);});await press(screen,'Hint');expect(text(screen)).toContain('Look for');expect(board(deal).payload.edits).toBe(0);
    await press(screen,'Think');expect(text(screen)).toContain('Think about');expect(board(deal).payload.edits).toBe(0);
-   await press(screen,'One step');for(let i=0;i<100&&board(deal).payload.edits!==1;i++)await settle();expect(board(deal).payload.edits).toBe(1);
+   await press(screen,'One step');for(let i=0;i<100&&board(deal).payload.edits!==1;i++)await settle();expect(board(deal).payload.edits).toBe(1);expect(text(screen)).toContain('Moved');
    await press(screen,'Show me');for(let i=0;i<100&&board(deal).payload.edits!==2;i++)await settle();expect(board(deal).payload.edits).toBe(2);
    await settle();await settle();expect(board(deal).payload.edits).toBe(2);expect(board(deal).payload.audit).toEqual([1]);
    await press(screen,'Undo');expect(board(deal).payload.audit).toEqual([1]);
@@ -99,6 +100,17 @@ describe('Solitaire card interaction',()=>{
    expect(text(screen)).toContain('That place cannot hold these cards.');expect(board(deal).payload.edits).toBe(0);expect(card(screen,move[0],c).props.accessibilityState.selected).toBe(true);
    await act(async()=>target(move[1]).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));expect(board(deal).position.piles[move[1]]).toEqual([c]);expect(fake.feedback).toHaveBeenCalledTimes(1);
   }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+
+ it('cancels a pending hint when the app backgrounds and keeps the accepted table on return',async()=>{
+  const{Harness,deal}=await fixture();let screen!:ReactTestRenderer,release!:(value:publicHints.Advice)=>void;
+  const gate=new Promise<publicHints.Advice>(r=>{release=r;}),spy=vi.spyOn(publicHints,'adviseAsync').mockReturnValueOnce(gate);
+  try{await act(async()=>{screen=create(<Harness/>);});await press(screen,'Hint');await press(screen,'Think');await press(screen,'One step');
+   await act(async()=>fake.appState?.('background'));
+   const move=legalMoves(opening(deal),deal.mode)[0];await act(async()=>{release({kind:'move',move,plan:[move],depth:1});await Promise.resolve();});
+   expect(board(deal).payload.edits).toBe(0);expect(board(deal).payload.audit).toEqual([1]);
+   await act(async()=>fake.appState?.('active'));expect(screen.root.findAllByType('button').find(n=>n.children.join('')==='Hint')?.props.disabled).toBe(false);
+  }finally{spy.mockRestore();if(screen)await act(async()=>screen.unmount());}
  });
  it('fits eight default-size columns and keeps AX5 controls plus full card names available',async()=>{
   const{Harness}=await fixture();let screen!:ReactTestRenderer;

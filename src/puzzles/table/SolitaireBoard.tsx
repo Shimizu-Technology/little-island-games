@@ -1,5 +1,5 @@
 import React,{useCallback,useContext,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {Animated,PanResponder,Pressable,ScrollView,View,useWindowDimensions} from 'react-native';
+import {Animated,AppState,PanResponder,Pressable,ScrollView,View,useWindowDimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Button,C,Copy} from '../../components/ui';
 import {Text} from '../../components/Text';
@@ -16,7 +16,8 @@ const suits=['♣','♦','♠','♥'];
 const face=(c:number)=>`${['','A','2','3','4','5','6','7','8','9','10','J','Q','K'][rank(c)]}`;
 const pileName=(i:number,free:boolean)=>i<8?`Column ${i+1}`:i<12?`${['Clubs','Diamonds','Spades','Hearts'][i-8]} foundation`:free?`Free cell ${i-11}`:i===12?'Stock':'Waste';
 /** A quiet card table. Controls remain above a bounded two-axis scroll area at every text size. */
-export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps){
+export function SolitaireBoard({view,dispatch,active:routeActive,width}:SolitaireBoardProps){
+ const [foreground,setForeground]=useState(()=>AppState.currentState!=='background'&&AppState.currentState!=='inactive'),active=routeActive&&foreground;
  const {bottom}=useSafeAreaInsets();
  const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,cap=atLarge(fontScale,1.5),read=readTable(view.payload,view.deal)!;
  const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(76,(width-12)/cols-gap)),cardH=large?96:86,overlap=large?54:32;
@@ -25,7 +26,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  const [selected,setSelected]=useState<{pile:number;index:number}|null>(null),[message,setMessage]=useState(''),[rules,setRules]=useState(false),[memory,setMemory]=useState(false),[advice,setAdvice]=useState<Advice|null>(null),[thinking,setThinking]=useState(false),[dragging,setDragging]=useState<Place|null>(null);
  const feedback=useContext(GridFeedback),holdPage=useContext(GridInteraction),accepted=useRef(view.payload.edits);
  const [help,setHelp]=useState<{stage:1|2|3|4;edits:number;audit:number}|null>(null);
- const search=useRef<AbortController|null>(null),vertical=useRef<ScrollView>(null),horizontal=useRef<ScrollView>(null),demonstration=useRef<{expected:string;edits:number;remaining:Move[];stage:3|4}|null>(null);
+ const search=useRef<AbortController|null>(null),vertical=useRef<ScrollView>(null),horizontal=useRef<ScrollView>(null),demonstration=useRef<{expected:string;edits:number;remaining:Move[];stage:3|4;text:string}|null>(null);
  const tableFrame=useRef<View>(null),[room,setRoom]=useState<number|null>(null);
  const measureRoom=useCallback(()=>tableFrame.current?.measureInWindow((_x,y)=>{if(Number.isFinite(y))setRoom(Math.max(190,height-y-bottom-12));}),[height,bottom]);
  useLayoutEffect(()=>{measureRoom();},[measureRoom]);
@@ -48,8 +49,8 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  useEffect(()=>{if(view.payload.edits!==accepted.current){
   feedback();accepted.current=view.payload.edits;setSelected(null);setHelp(null);search.current?.abort();setThinking(false);
   const demo=demonstration.current;demonstration.current=null;
-  if(demo&&view.payload.edits===demo.edits+1&&view.payload.board===demo.expected){setHelp({stage:demo.stage,edits:view.payload.edits,audit:view.payload.audit.length-1});setAdvice(demo.remaining.length?{kind:'move',move:demo.remaining[0],plan:demo.remaining,depth:demo.remaining.length}:null);}
-  else setAdvice(null);setMessage('');
+  if(demo&&view.payload.edits===demo.edits+1&&view.payload.board===demo.expected){setHelp({stage:demo.stage,edits:view.payload.edits,audit:view.payload.audit.length-1});setAdvice(demo.remaining.length?{kind:'move',move:demo.remaining[0],plan:demo.remaining,depth:demo.remaining.length}:null);setMessage(demo.text);}
+  else{setAdvice(null);setMessage('');}
  }},[view.payload.edits,view.payload.board,view.payload.audit.length,feedback]);
  useEffect(()=>()=>{holdPage(false);search.current?.abort();},[holdPage]);
  const touch=useCallback((p:Place)=>{
@@ -61,6 +62,9 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  },[dispatch,free,cols,view.deal.mode]);
  const hit=useCallback((x:number,y:number)=>[...live.current.places].reverse().find(p=>x>=p.x-2&&x<=p.x+cardW+2&&y>=p.y&&y<=p.y+cardH),[cardW,cardH]);
  const drag=useRef<Place|null>(null);
+ useEffect(()=>{const listener=AppState.addEventListener('change',state=>{
+  setForeground(state==='active');if(state!=='active'){search.current?.abort();setThinking(false);setHelp(null);setAdvice(null);setSelected(null);drag.current=null;setDragging(null);holdPage(false);}
+ });return()=>listener.remove();},[holdPage]);
  // eslint-disable-next-line react-hooks/refs -- responder handlers run after render.
  const pan=useMemo(()=>PanResponder.create({
   onStartShouldSetPanResponder:e=>live.current.active&&!!hit(e.nativeEvent.locationX,e.nativeEvent.locationY),
@@ -77,7 +81,14 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  }),[cardW,cardH,overlap,holdPage,translation,view.deal.mode,cols,hit,touch]);
  const ask=()=>{if(thinking||!active||view.payload.audit.length>=128)return;setHelp({stage:1,edits:view.payload.edits,audit:view.payload.audit.length});setAdvice(null);dispatch({type:'help'});};
  const cueReady=help&&help.edits===view.payload.edits&&view.payload.audit.length>help.audit;
- const showOne=(plan:Move[],stage:3|4=4)=>{if(!plan.length||!live.current.active)return;const before=live.current.s,next=apply(before,view.deal.mode,plan[0]);if(next===before)return;demonstration.current={expected:encodeBoard(next),edits:view.payload.edits,remaining:plan.slice(1),stage};dispatch({type:'move',move:plan[0]});};
+ const showOne=(plan:Move[],stage:3|4=4)=>{
+  if(!plan.length||!live.current.active)return;
+  const move=plan[0],before=live.current.s,next=apply(before,view.deal.mode,move);if(next===before)return;
+  const drawn=Math.min(view.deal.mode==='draw-three'?3:1,before.piles[12].length);
+  const text=move[2]===0?move[0]===12?`Drew ${drawn} ${drawn===1?'card':'cards'}.`:'Turned the waste over.':`Moved ${move[2]===1?cardWords(before.piles[move[0]].at(-1)!):`${move[2]} cards`} to ${pileName(move[1],free).toLowerCase()}.`;
+  demonstration.current={expected:encodeBoard(next),edits:view.payload.edits,remaining:plan.slice(1),stage,text};
+  dispatch({type:'move',move});
+ };
  const oneStep=async(stage:3|4)=>{
   if(thinking||!active||!view.payload.audit.includes(1))return;search.current?.abort();const controller=new AbortController();search.current=controller;
   const start=encodeBoard(live.current.s);setThinking(true);
