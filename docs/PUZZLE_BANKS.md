@@ -11,6 +11,7 @@ The offline puzzle catalog. Banks are generated and proven at build time. The de
 | `src/content/puzzles/root.json` | Boot directory, at most 16 KiB. The only puzzle data read at launch |
 | `src/content/puzzles/assets/*.lipuzzle` | Family manifests (`f-<id>-<hash>`) and packs (`p<slot>`), read lazily |
 | `src/content/puzzles/assets.generated.ts` | Generated map of asset names to `require` thunks |
+| `src/content/puzzles/slot-ranges.json` | The lead's bank-slot register (mirrors SLOTS.md). Never bundled; the lead edits it |
 | `scripts/puzzles/` | Bake, verify and scale tools. `families/` is where owner slices register |
 | `content/puzzles/receipts/<family>/` | Receipts. Outside the app, never bundled |
 
@@ -40,6 +41,24 @@ The offline puzzle catalog. Banks are generated and proven at build time. The de
 A published slot, its ordinal range, hash, and a daily pool never change. New content takes new slots. New Today entries take a new pool version. `npm run puzzles:verify` checks the current catalog against every committed root.
 
 `catalogIssues` holds the rules no single manifest can see: slots are unique, ordinal ranges are disjoint across families, and `nextSlot` and `nextOrdinal` are past everything published. A bake checks it on the catalog it reads and on the complete candidate, before any file moves.
+
+## Slot allocation
+
+`nextSlot` and `nextOrdinal` are high-water marks. They never move backwards (`assertRootAppendOnly`), and a family never loses entries.
+
+A bake gets its slots one of two ways:
+
+- **Sequential (the default).** Packs take `nextSlot` onward, with ordinals from `nextOrdinal` onward.
+- **Claimed (lead change, 15 Nov 2026).** The bake passes its own range and owner: `npm run puzzles -- bake --family <id> --range 260-279 --owner t1-logic-lagoon`, or the Latin and edge bakes' `--range` (each defaults to its family's run from its base). Packs take the range's slots in order from its first, even below `nextSlot`. Each claimed slot must be:
+  - inside the caller's own reservation in `slot-ranges.json`. The reservation holding the range must be the caller's; a group cannot take a nested slice's slots, and a range may not cross another reservation;
+  - never a pack of any family, retired packs included, in the working catalog;
+  - not an inline bank in the working save catalog (a working packed bank only mirrors a pack, and may be stale during an in-place re-bake);
+  - not a pack or bank at the tip of any published ref (`origin/program/4.0`, `origin/main`), so a slot a branch has dropped stays used once published. A ref that can't be read stops the claim;
+  - above the family's own last pack, because a family's packs ascend.
+
+  A claimed pack's ordinals start at its slot's own block, `slot × 1024`, so it can't meet another slot's ordinals. The counters then become `max(nextSlot, highest claimed + 1)` and `max(nextOrdinal, end of the highest block used)`. A claim below them leaves both unchanged. The first slot is checked before any search runs, and a refusal changes no file.
+
+`scripts/puzzles/slots.ts` holds these rules. `npm run puzzles:verify` adds a catalog-wide invariant: every pack slot, and every save-catalog bank slot, lies inside a recorded reservation, and no inline bank sits on a pack's slot. Uniqueness across families stays with `catalogIssues`.
 
 ## Quality gates
 
@@ -77,7 +96,7 @@ A bake leaves approval open: `review` is `{ids, complete: false, subject: null}`
 
 ## Baking
 
-`npm run puzzles -- bake --family <id> [--seed n] [--attempts n] [--hours n]`. The run stops at the target, the attempt cap or the deadline. Its status is `complete` or `exhausted`. If any band ends below its floor, or an append cannot keep the whole band inside its template share, nothing is published and the accepted bank stays byte-identical. An attempt receipt is always written. A second bake needs a new `--seed`; repeats are rejected as duplicates.
+`npm run puzzles -- bake --family <id> [--range first-last --owner <reservation>] [--seed n] [--attempts n] [--hours n]`. Without `--range` the slots are sequential; with it they are claimed (see "Slot allocation"). The run stops at the target, the attempt cap or the deadline. Its status is `complete` or `exhausted`. If any band ends below its floor, or an append cannot keep the whole band inside its template share, nothing is published and the accepted bank stays byte-identical. An attempt receipt is always written. A second bake needs a new `--seed`; repeats are rejected as duplicates.
 
 ## Adding a family
 
