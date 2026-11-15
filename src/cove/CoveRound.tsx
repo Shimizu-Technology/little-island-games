@@ -32,15 +32,16 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const expected = (session?: ChallengeSession) => ({ owner, epoch: store.epoch, game: entry.game, id: session?.id ?? null, revision: session?.revision ?? null });
   const full = !saved && (progress?.paused.filter(s => !s.credited).length ?? 0) >= (owner.startsWith('cove-') ? 4 : 8);
-  async function launch() {
-    if (!focused || lock.current || !progress || saved && !replace) return;
+  async function launch(restart = false) {
+    if (!focused || lock.current || !progress || saved && !replace && !restart) return;
     boundary.current = true; lock.current = true; setBusy(true); setMessage('');
     try {
+      const ref = restart && saved ? saved.puzzle : card.ref;
       // A packed entry is verified and made resident again in case it left the small cache.
-      if (entry.packed) await entry.packed.prepare(card.ref);
-      let next = { ...entry.start(card.ref, owner, `cove-${owner}-${progress.nextOrdinal}`, progress, { supportOff: false, ownRead: false }, []), partner };
+      if (entry.packed) await entry.packed.prepare(ref);
+      let next = { ...entry.start(ref, owner, `cove-${owner}-${progress.nextOrdinal}`, progress, { supportOff: false, ownRead: false }, []), partner: restart && saved ? saved.partner : partner };
       if (remix) { const recipe = presentationFor(entry).remixes?.find(r => r.id === remix); if (!recipe) throw new Error('Unknown remix.'); const remixed = recipe.start(next); if (!sameRef(remixed.puzzle, next.puzzle)) throw new Error('A remix keeps the same puzzle ref.'); next = remixed; }
-      const replacing = replace ? saved : replacement;
+      const replacing = replace || restart ? saved : replacement;
       if (await store.challengeSave(next, { ...expected(saved), ...(replacing ? { replace: { game: replacing.game, id: replacing.id, revision: replacing.revision } } : {}) })) {
         current.current = next;
       } else if (mounted.current) setMessage('This puzzle could not start. Your saved work is kept. Continue a saved puzzle or export a backup in Settings.');
@@ -105,6 +106,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
       {round.partner && !shortSearch && !role && infoFor(entry.game).role && <Button maxFontSizeMultiplier={cap} quiet compact onPress={() => setRole(true)}>Show role card</Button>}
       {round.partner && !shortSearch && role && infoFor(entry.game).role && <View style={{ gap: 8 }}><Copy maxFontSizeMultiplier={cap}>{infoFor(entry.game).role}</Copy><Button maxFontSizeMultiplier={cap} quiet compact onPress={() => setRole(false)}>Put role card away</Button></View>}
       {pending ? <><Heading maxFontSizeMultiplier={largeSearch ? wordFitMultiplier(infoFor(entry.game).name, 24, Math.max(80, width - 120), shortSearch ? 1 : 2) : entry.game === 'solitaire' ? cap : undefined} style={{ fontSize: 24 }}>Keep this finish</Heading><Copy maxFontSizeMultiplier={cap}>Did you solve together? One tap credits both people. Your finish saves when you choose.</Copy><Button maxFontSizeMultiplier={cap} disabled={busy} onPress={() => void confirmFinish(null)}>Save my finish</Button>{solvingPeople(store.save).filter(p => p.id !== owner).map(p => <Button maxFontSizeMultiplier={cap} key={p.id} quiet disabled={busy} onPress={() => void confirmFinish(p.id)}>Solved together with {p.name}</Button>)}<Button maxFontSizeMultiplier={cap} quiet disabled={busy} onPress={() => setPending(undefined)}>Back to my board</Button></> : round.result ? <><Heading maxFontSizeMultiplier={largeSearch ? wordFitMultiplier(infoFor(entry.game).name, 24, Math.max(80, width - 120), shortSearch ? 1 : 2) : entry.game === 'solitaire' ? cap : undefined} style={{ fontSize: 24 }}>{round.result.event === 'together' ? 'Solved together' : 'Puzzle solved'}</Heading>{entry.helpUI === 'board' && entry.render(round, () => {}, false, width)}<Copy maxFontSizeMultiplier={cap}>{entry.completionText?.(round.puzzle, round.result, entry.completionFacts?.(round) ?? null) ?? 'Your finished puzzle is kept.'} Take your time choosing what comes next.</Copy><Button maxFontSizeMultiplier={cap} onPress={onBrowse}>Replay or choose another puzzle</Button></> : <SessionGate key={`${owner}:${store.epoch}:${round.id}`} open={open} expected={expected(round)} onStartFresh={() => store.challengeDiscard(expected(round))} render={() => <>
+        {entry.game === 'solitaire' && entry.full?.(round, entry.controls.reset()) && <Button maxFontSizeMultiplier={cap} disabled={busy || !focused} onPress={() => void launch(true)}>Start this deal again</Button>}
         <SearchChrome.Provider value={{ top: 60, bottom: 34, bar: largeSearch ? chromeHeight + (round.partner && !shortSearch ? 84 : 0) + 28 : 0 }}><GridFeedback.Provider value={() => { sound.play('tap'); }}>{entry.render(round, a => void dispatch(a), focused && !busy, width)}</GridFeedback.Provider></SearchChrome.Provider>
         {shortSearch && round.partner && <View style={{ gap: 8 }}><Copy maxFontSizeMultiplier={cap}>Together with {solvingPeople(store.save).find(p => p.id === round.partner)?.name ?? 'family'}</Copy>{infoFor(entry.game).role && <><Button maxFontSizeMultiplier={cap} quiet compact onPress={() => setRole(value => !value)}>{role ? 'Put role card away' : 'Show role card'}</Button>{role && <Copy maxFontSizeMultiplier={cap}>{infoFor(entry.game).role}</Copy>}</>}</View>}
         {entry.helpUI !== 'board' && <Button maxFontSizeMultiplier={cap} quiet disabled={busy} onPress={() => void dispatch(entry.controls.help())}>Help · show me how</Button>}<Copy maxFontSizeMultiplier={cap}>Helping a child? Ask what they notice, then let them choose the next step.</Copy>

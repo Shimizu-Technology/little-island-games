@@ -17,13 +17,14 @@ import{SolitaireBoard}from'../src/puzzles/table/SolitaireBoard';
 import{readTable}from'../src/puzzles/table/checkpoint';
 import{legalMoves,opening}from'../src/puzzles/table/solitaire';
 import{solve}from'../src/puzzles/table/solver';
+import{capFixture}from'../scripts/puzzles/solitaire/qa-fixtures';
 import type{RootIndex}from'../src/puzzles/bank';
 import root from'../src/content/puzzles/root.json';
 import facts from'../src/puzzles/table/packs.generated.json';
-const db=vi.hoisted(()=>({raw:null as string|null,rows:[]as string[],loader:null as BankLoader|null,reads:[]as string[]}));
+const db=vi.hoisted(()=>({raw:null as string|null,rows:[]as string[],loader:null as BankLoader|null,reads:[]as string[],discarded:[]as string[],failReplace:false}));
 vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));
-vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{},writeDraft:async(raw:string)=>{db.rows.push(raw);},readDrafts:async()=>db.rows,discardSession:async()=>{}}}));
+vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{},writeDraft:async(raw:string)=>{db.rows.push(raw);},readDrafts:async()=>db.rows,discardSession:async(raw:string)=>{db.discarded.push(raw);if(db.failReplace)throw new Error('test preserve failure');}}}));
 vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})}));
 vi.mock('react-native',()=>({View:'div',Pressable:'button',ScrollView:'section',Platform:{OS:'ios'},AppState:{addEventListener:()=>({remove(){}})},useWindowDimensions:()=>({width:393,height:852,fontScale:1}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{setValue(){}getTranslateTransform(){return[];}}}}));
 vi.mock('expo-router',()=>({useIsFocused:()=>true}));
@@ -61,4 +62,25 @@ it.each(['o1','t1','f1'])('real packed %s -> Cove Store -> serialized pause -> h
  expect(new Set(db.reads)).toEqual(new Set(root.families.filter(f=>f[0]===b.family).map(f=>f[1]).concat([`p${b.slot}`])));
  await act(async()=>{await store.backup();screen!.unmount();});screen=undefined;await mount(false);
  expect(progressFor(store.save,'a')!.paused).toEqual([]);expect(mark('a')).toBe(together?3:2);
+});
+
+it('the direct at-cap restart preserves the old attempt and audit, including a failed replacement',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});db.rows=[];db.reads=[];db.discarded=[];db.failReplace=false;
+ db.loader=createBankLoader({root:root as RootIndex,transport:{read:async name=>readFileSync(`src/content/puzzles/assets/${name}.lipuzzle`,'utf8')}});
+ const b=(facts as BankFacts[]).find(b=>b.band==='f1')!,ref=await entry.packed!.choose(b.slot,emptyChallenge()),card=entry.packed!.card(ref)!,deal=(await db.loader.entry(solitaireAdapter(false),b.family,b.first)).payload;
+ registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
+ function Ready(){const s=useStore();return s.ready?<CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={null} width={353} onBrowse={()=>{}} onClose={()=>{}}/>:null;}
+ await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});
+ const before=progressFor(store.save,'a')!.paused[0],fixture=capFixture(deal),full={...before,revision:before.revision+1,payload:{...fixture.payload,audit:[1,2]}};
+ await act(async()=>{expect(await store.challengeSave(full,{owner:'a',epoch:store.epoch,game:'solitaire',id:before.id,revision:before.revision})).toBe(true);});
+ expect(readTable(progressFor(store.save,'a')!.paused[0].payload,deal)!.history).toHaveLength(1024);
+ const restart=()=>screen!.root.findAllByType('button').find(n=>n.children.includes('Start this deal again'))!;
+ expect(restart()).toBeDefined();expect(JSON.stringify(screen!.toJSON())).toContain('This table has had lots of moves.');
+ for(const label of ['Undo','Rules'])expect(screen!.root.findAllByType('button').find(n=>n.children.includes(label))!.props.disabled).toBeFalsy();
+ db.failReplace=true;await act(async()=>{await restart().props.onPress();});
+ expect(progressFor(store.save,'a')!.paused[0]).toEqual(full);expect(JSON.parse(db.discarded[0])).toEqual(full);
+ db.failReplace=false;await act(async()=>{await restart().props.onPress();});
+ const fresh=progressFor(store.save,'a')!.paused[0];expect(fresh.id).not.toBe(full.id);expect(fresh.ordinal).toBe(full.ordinal+1);expect(fresh.puzzle).toEqual(full.puzzle);expect(fresh.owner).toBe(full.owner);
+ expect(readTable(fresh.payload,deal)!.history).toEqual([]);expect(readTable(fresh.payload,deal)!.payload.audit).toEqual([]);expect(JSON.parse(db.discarded.at(-1)!)).toEqual(full);
+ expect((JSON.parse(db.discarded.at(-1)!)as ChallengeSession).payload).toMatchObject({audit:[1,2]});
 });

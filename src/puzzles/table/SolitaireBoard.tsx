@@ -20,6 +20,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const [foreground,setForeground]=useState(()=>AppState.currentState!=='background'&&AppState.currentState!=='inactive'),active=routeActive&&foreground;
  const {bottom}=useSafeAreaInsets();
  const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,cap=atLarge(fontScale,1.5),read=readTable(view.payload,view.deal)!;
+ const historyFull=read.history.length===1024,inputActive=active&&!historyFull;
  const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(76,(width-12)/cols-gap)),cardH=large?96:86,overlap=large?54:32;
  const boardW=Math.max(width,cols*(cardW+gap)+12),boardX=(boardW-cols*cardW-(cols-1)*gap)/2,tableY=cardH+54;
  const boardH=tableY+Math.max(...s.piles.slice(0,cols).map(p=>Math.max(0,p.length-1)*overlap+cardH))+12;
@@ -44,8 +45,8 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   }
   return out;
  },[s,free,cardW,tableY,overlap,gap,boardX]);
- const live=useRef({s,active,selected,dispatch,places});
- useLayoutEffect(()=>{live.current={s,active,selected,dispatch,places};},[s,active,selected,dispatch,places]);
+ const live=useRef({s,active:inputActive,selected,dispatch,places});
+ useLayoutEffect(()=>{live.current={s,active:inputActive,selected,dispatch,places};},[s,inputActive,selected,dispatch,places]);
  useEffect(()=>{if(view.payload.edits!==accepted.current){
   feedback();accepted.current=view.payload.edits;setSelected(null);setHelp(null);search.current?.abort();setThinking(false);
   const demo=demonstration.current;demonstration.current=null;
@@ -79,7 +80,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   },
   onPanResponderTerminate:()=>{drag.current=null;setDragging(null);holdPage(false);},
  }),[cardW,cardH,overlap,holdPage,translation,view.deal.mode,cols,hit,touch]);
- const ask=()=>{if(thinking||!active||view.payload.audit.length>=128)return;setHelp({stage:1,edits:view.payload.edits,audit:view.payload.audit.length});setAdvice(null);dispatch({type:'help'});};
+ const ask=()=>{if(thinking||!inputActive||view.payload.audit.length>=128)return;setHelp({stage:1,edits:view.payload.edits,audit:view.payload.audit.length});setAdvice(null);dispatch({type:'help'});};
  const cueReady=help&&help.edits===view.payload.edits&&view.payload.audit.length>help.audit;
  const showOne=(plan:Move[],stage:3|4=4)=>{
   if(!plan.length||!live.current.active)return;
@@ -90,7 +91,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   dispatch({type:'move',move});
  };
  const oneStep=async(stage:3|4)=>{
-  if(thinking||!active||!view.payload.audit.includes(1))return;search.current?.abort();const controller=new AbortController();search.current=controller;
+  if(thinking||!inputActive||!view.payload.audit.includes(1))return;search.current?.abort();const controller=new AbortController();search.current=controller;
   const start=encodeBoard(live.current.s);setThinking(true);
   const result=await adviseAsync(live.current.s,view.deal,controller.signal,10000);
   if(controller.signal.aborted||!live.current.active||encodeBoard(live.current.s)!==start){if(search.current===controller)setThinking(false);return;}
@@ -105,15 +106,16 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const hintAction=()=>{if(!cueReady){ask();return;}if(help.stage===1){setHelp({...help,stage:2});return;}if(help.stage>=3&&advice?.kind==='move')showOne(advice.plan,4);else void oneStep(help.stage===2?3:4);};
  const hintLabel=thinking?'Looking…':!cueReady?'Hint':help.stage===1?'Think':help.stage===2?'One step':help.stage===3?'Show me':'Next step';
  const scrollHeight=Math.max(190,Math.min(440,height*(large?0.42:0.55),room??440));
- const detail=rules||memory||message||cueReady||advice;
+ const detail=rules||memory||message||cueReady||advice||historyFull;
  return <View style={{gap:7}}>
   <Copy maxFontSizeMultiplier={cap}>{view.title}</Copy>
   <View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
    <Button maxFontSizeMultiplier={cap} compact quiet disabled={!active||!read.history.length} onPress={()=>dispatch({type:'undo'})}>Undo</Button>
-   <Button maxFontSizeMultiplier={cap} compact quiet disabled={!active||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
+   <Button maxFontSizeMultiplier={cap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
    <Button maxFontSizeMultiplier={cap} compact quiet label="How to play" onPress={()=>setRules(v=>!v)}>Rules</Button>
   </View>
   {detail&&<ScrollView nestedScrollEnabled style={{maxHeight:large?100:110}} accessibilityLabel="Table instructions and hint">
+   {historyFull&&<Copy maxFontSizeMultiplier={cap}>This table has had lots of moves. Undo to keep going, or start this deal again.</Copy>}
    {rules&&<View style={{gap:7}}><Copy maxFontSizeMultiplier={cap}>{free?'Build columns down in alternating colours. An empty column can hold any card. Four free cells hold one card each. A sequence moves only when spare cells and columns can carry it one card at a time.':'Build columns down in alternating colours. Only a King starts an empty column. Tap the stock to draw '+(view.deal.mode==='draw-three'?'three cards; only the top waste card can move.':'one card.')+' When the stock is empty, tap it to turn the waste over.'} Build each suit from Ace to King in its foundation. You may return a foundation card to a column. Tap a card, then its destination, or drag it. Green borders show legal destinations. Scroll tall stacks; at large text, scroll across for the other columns. Every deal has a winning line; a different line can reach a dead end. Cards never move automatically.</Copy>{!free&&<Button maxFontSizeMultiplier={cap} compact quiet onPress={()=>setMemory(v=>!v)}>Remembered cards</Button>}</View>}
    {memory&&!free&&<Copy maxFontSizeMultiplier={cap}>Previously seen stock, next draw first: {s.piles[12].slice().reverse().map(c=>s.known[c]?cardWords(c):'unseen card').join(', ')||'empty'}. Previously seen waste, top first: {s.piles[13].slice().reverse().map(cardWords).join(', ')||'empty'}. Previously seen covered cards: {s.piles.slice(0,7).flatMap((p,i)=>p.slice(0,s.hidden[i]).filter(c=>s.known[c]).map(c=>`column ${i+1}, ${cardWords(c)}`)).join('; ')||'none'}.</Copy>}
    {message&&<Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">{message}</Copy>}
@@ -131,13 +133,13 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
      <Text maxFontSizeMultiplier={cap} style={{position:'absolute',left:boardX,top:3,fontSize:12,color:C.ink}}>{free?'Free cells':'Stock · waste'}</Text>
      <Text maxFontSizeMultiplier={cap} style={{position:'absolute',left:(free?4:3)*(cardW+gap)+boardX,top:3,fontSize:12,color:C.ink}}>Foundations</Text>
      {view.deal.mode==='draw-three'&&s.piles[13].length>1&&<View accessible accessibilityLabel={`Seen behind the top waste card: ${s.piles[13].slice(-3,-1).map(cardWords).join(', ')}. Only the top waste card can move.`} style={{position:'absolute',left:2*(cardW+gap)+boardX,top:28,width:cardW,gap:2}}>{s.piles[13].slice(-3,-1).map(c=><View key={c} style={{height:(cardH-2)/2,borderWidth:1,borderColor:'#BACCC4',borderRadius:6,backgroundColor:'#FFFDF7',padding:2,flexDirection:'row',alignItems:'flex-start',gap:2}}><Text maxFontSizeMultiplier={cap} style={{fontSize:large?17:15,lineHeight:large?26:23,fontWeight:'800',color:red(c)?'#A63E33':C.ink}}>{face(c)}</Text><Text maxFontSizeMultiplier={cap} style={{fontSize:large?16:15,lineHeight:large?26:23,color:red(c)?'#A63E33':C.ink}}>{suits[suit(c)]}</Text></View>)}</View>}
-     {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!active||p.covered&&(free||p.pile!==12)}} disabled={!active||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y,width:cardW,height:p.pile<cols&&p.index<s.piles[p.pile].length-1?overlap:cardH}}>{visual(p)}</Pressable>)}
+     {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!inputActive||p.covered&&(free||p.pile!==12)}} disabled={!inputActive||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y,width:cardW,height:p.pile<cols&&p.index<s.piles[p.pile].length-1?overlap:cardH}}>{visual(p)}</Pressable>)}
      {dragging&&<Animated.View pointerEvents="none" style={{position:'absolute',left:dragging.x,top:dragging.y,zIndex:1000,transform:translation.getTranslateTransform(),opacity:0.9}}>{s.piles[dragging.pile].slice(dragging.index).map((c,i)=><View key={c} style={{position:i?'absolute':'relative',top:i*overlap}}>{visual({...dragging,index:dragging.index+i,card:c})}</View>)}</Animated.View>}
     </View>
    </ScrollView>
   </ScrollView></View>
   {view.payload.audit.length===128&&<Copy maxFontSizeMultiplier={cap}>This attempt’s help log is full. You can keep playing and undoing, or choose a fresh attempt from the puzzle browser.</Copy>}
-  {!free&&<Button maxFontSizeMultiplier={cap} quiet compact disabled={!active||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>}
+  {!free&&<Button maxFontSizeMultiplier={cap} quiet compact disabled={!inputActive||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>}
   {!legalMoves(s,view.deal.mode).length&&!won(s)&&<Copy maxFontSizeMultiplier={cap}>There are no legal moves. You can undo freely.</Copy>}
  </View>;
 }
