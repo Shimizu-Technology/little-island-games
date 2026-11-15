@@ -227,7 +227,7 @@ export function lampShadow(scene: Scene, entity: SceneEntity): LampShadow | unde
     bestDistance = distance;
     const near = 1 - distance / LAMP_REACH;
     // Away from the lamp along the floor; a friend right beside it gets a short, darker shadow.
-    best = { angle: (Math.atan2(dy * 0.5, dx || 0.001) * 180) / Math.PI, length: 40 + 70 * (1 - near), opacity: 0.1 + 0.12 * near };
+    best = { angle: (Math.atan2(dy * 0.5, dx || 0.001) * 180) / Math.PI, length: 50 + 80 * (1 - near), opacity: 0.18 + 0.14 * near };
   }
   return best;
 }

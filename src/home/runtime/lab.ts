@@ -78,15 +78,15 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.beach.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 9, y: 6 }];
     return migrateHome(state) ?? state;
   },
-  // H4: a friend asleep in bed, a lit lamp with a friend beside it.
+  // H4: a friend asleep in bed, a lit lamp with friends standing near it.
   "delight-rest": () => {
     const state = starterHome();
     const room = state.rooms.home;
     room.instances = room.instances.map((i) => (i.id === "lamp" ? { ...i, powered: true } : i));
     room.characters = [
       { slot: 0, anchor: "seat", pose: "lie", seatId: "bed", socket: { itemId: "bed", socketId: "pillow" } },
-      { slot: 1, anchor: "floor", pose: "stand", x: 9, y: 8 },
-      { slot: 2, anchor: "floor", pose: "stand", x: 14, y: 4 },
+      { slot: 1, anchor: "floor", pose: "stand", x: 11, y: 4 },
+      { slot: 2, anchor: "floor", pose: "stand", x: 15, y: 4 },
     ];
     return migrateHome(state) ?? state;
   },

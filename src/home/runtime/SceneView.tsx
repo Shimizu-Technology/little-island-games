@@ -257,7 +257,7 @@ function ShadowCast({ shadow, x, y, reduced }: { shadow: LampShadow; x: number; 
   const shown = useSharedValue(reduced ? 1 : 0);
   React.useEffect(() => { if (!reduced) shown.set(withTiming(1, { duration: 220 })); }, [reduced, shown]);
   const style = useAnimatedStyle(() => ({ opacity: shadow.opacity * shown.value }));
-  const height = 16;
+  const height = 20;
   return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: x, top: y - height / 2, width: shadow.length,
     height, borderRadius: height, backgroundColor: "#284F4B", transformOrigin: [0, height / 2, 0],
     transform: [{ rotate: `${shadow.angle}deg` }] }, style]} />;

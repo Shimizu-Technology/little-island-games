@@ -260,7 +260,7 @@ describe('HD-08 lamp shadows', () => {
     const crab = Object.values(lit.entities).find((e) => e.character?.slot === 2)!;
     const shadow = lampShadow(lit, crab)!;
     expect(shadow).toBeDefined();
-    expect(shadow.opacity).toBeLessThanOrEqual(0.22);
+    expect(shadow.opacity).toBeLessThanOrEqual(0.32);
     const lamp = Object.values(lit.rooms.home.entities).find((e) => e.item?.item === 'lamp')!;
     expect(Math.sign(Math.cos((shadow.angle * Math.PI) / 180))).toBe(Math.sign(crab.contact.x - lamp.contact.x) || 1);
     const state = labFixtures['delight-rest']();
