@@ -114,7 +114,7 @@ it('every board text without its own cap stops at 2x inside the board region, an
   expect(longest(title)).toBeLessThanOrEqual(W * 0.92 + 1);
 });
 
-it('Crab Commands at AX5: labels fit their cards, Go! keeps its own line, Clear and Hint share the next, and the beach shrinks', async () => {
+it('Crab Commands at AX5: labels fit their cards, Go! keeps its own line, Undo, Clear and Hint share the next, and the beach shrinks', async () => {
   const r = await mount('crab-commands', sessionFor('crab-commands'));
   const cards = r.root.find(n => n.props.testID === 'crab-command-cards');
   const labels = cards.findAll(n => String(n.type) === 'Text');
@@ -125,12 +125,14 @@ it('Crab Commands at AX5: labels fit their cards, Go! keeps its own line, Clear 
   expect(new Set(labels.map(l => l.props.maxFontSizeMultiplier)).size).toBe(1);
   const run = r.root.find(n => n.props.testID === 'crab-run-row');
   expect(flat(run.props.style).flexDirection).not.toBe('row');
-  const [go, clear, hint] = run.findAll(n => String(n.type) === 'Pressable');
+  // C1d adds Undo beside Clear and Hint.
+  const [go, undo, clear, hint] = run.findAll(n => String(n.type) === 'Pressable');
   expect(textOf(go)).toBe('Go!');expect(flat(go.props.style).alignSelf).toBe('stretch');
-  expect([textOf(clear), textOf(hint)]).toEqual(['Clear', 'Hint']);
-  expect(clear.parent!.parent).toBe(hint.parent!.parent);
-  // Half the board each, less 8-pt gap and 13-pt compact padding: Hint stays inside the card.
-  for (const b of [clear, hint]) expect(longest(b.findByType('Text' as never))).toBeLessThanOrEqual((W - 8) / 2 - 26);
+  expect([textOf(undo), textOf(clear), textOf(hint)]).toEqual(['Undo', 'Clear', 'Hint']);
+  expect(clear.parent!.parent).toBe(hint.parent!.parent);expect(undo.parent!.parent).toBe(hint.parent!.parent);
+  // Undo and Clear take half the board each (less the 8-pt gap and 13-pt compact padding); Hint wraps to a full line.
+  for (const b of [undo, clear]) expect(longest(b.findByType('Text' as never))).toBeLessThanOrEqual((W - 8) / 2 - 26);
+  expect(flat(hint.props.style).flexBasis).toBe('100%');expect(longest(hint.findByType('Text' as never))).toBeLessThanOrEqual(W - 26);
   // The beach, the plan and the cards share one phone screen; the prompt stops at 2x.
   const beach = r.root.findAll(n => String(n.type) === 'View' && flat(n.props.style).alignSelf === 'center' && typeof flat(n.props.style).width === 'number')[0];
   expect(flat(beach.props.style).width).toBeLessThanOrEqual(Math.floor(H * 0.3));

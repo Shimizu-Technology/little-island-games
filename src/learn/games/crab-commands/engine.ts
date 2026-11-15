@@ -1,8 +1,10 @@
 import { decodeProgram as readProgram, sessionBytes, type PackedProgram } from '../../program/codec';
 import { crabProgram, projectCrab, readCrabDraft } from './program';
-import type { LearnEngine, Pace } from "../../types";
+import type { LearnEngine, LearnOptions, Pace } from "../../types";
 import { pickItems } from "../../skills";
 import { exact, integer, prediction } from "../../kit/science";
+import { nodeCost } from "../../program/model";
+import schoolContent from "./school-content.json";
 export type Command = "up" | "right" | "down" | "left" | "forward" | "turn-left" | "turn-right" | "repeat";
 export type Level = {
   /** Only newly authored content opts in. Never infer this from a saved draft. */
@@ -16,8 +18,18 @@ export type Level = {
   tier: 0 | 1 | 2;
   /** Kept so older saved rounds still load; never offered in a new round. */
   retired?: boolean;
+  /** School Level 4 (stretch) or Level 5 (deep) beach. Levels 1–3 have none and pick by pace. */
+  stage?: "stretch" | "deep";
+  /** Level 4: the plan opens with this planted bug (one wrong step, turn or Again). */
+  starter?: Command[];
+  bug?: "step" | "turn" | "loop";
+  /** Level 5: the most blocks the plan may hold, always below the fewest flat cards. */
+  tray?: number;
+  /** Low sand (~) floods once the crab has walked this many squares. */
+  tide?: number;
 };
-/** Hand-drawn beaches: C crab, S shell, H crab house, # sandcastle. */
+/** Hand-drawn beaches: C crab, S shell, H crab house, # sandcastle. Deep Water adds K key, G gate (open
+ * once the key is held) and ~ low sand (passable only within the level's tide). */
 const beaches: [id: string, tier: 0 | 1 | 2, rows: string[], retired?: true][] = [
   // Gentle: compass arrows. First beaches are one shell, then home.
   ["ea1", 0, ["CSH..", ".....", ".....", ".....", "....."]],
@@ -71,7 +83,7 @@ const beaches: [id: string, tier: 0 | 1 | 2, rows: string[], retired?: true][] =
   ["h7", 2, ["C...S", "##.#.", "H..S.", ".....", "....."]],
   ["h8", 2, ["C.S..", ".#.#.", "S#..H", "...#.", "....."], true],
 ];
-export const levels: Level[] = beaches.map(([id, tier, rows, retired]) => ({
+const authored: Level[] = beaches.map(([id, tier, rows, retired]) => ({
   id,
   rows,
   tier,
@@ -84,6 +96,9 @@ export const levels: Level[] = beaches.map(([id, tier, rows, retired]) => ({
       : "think.sequence",
   facing: 1,
 }));
+/** C1d: 30 more Level 1–3 beaches, then the Level 4 bug beaches and Level 5 block beaches. Baked by
+ * bake-school.ts and re-proved on this engine in tests/c1d-crab-school.test.ts. */
+export const levels: Level[] = [...authored, ...(schoolContent.extra as Level[]), ...(schoolContent.stretch as Level[]), ...(schoolContent.deep as Level[])];
 // Isolated native QA only: a separate retired descriptor, never part of family content selection.
 if (process.env.EXPO_PUBLIC_K7_FIXTURES === '1') levels.push({...levels[0],id:'k7-fixture',retired:true,blockEditor:true});
 export const commands = (p: Pace): Command[] =>
@@ -92,8 +107,21 @@ export const commands = (p: Pace): Command[] =>
     : p === "medium"
       ? ["forward", "turn-left", "turn-right"]
       : ["forward", "turn-left", "turn-right", "repeat"];
-export type Walker = { pos: number; facing: number; shells: number; previous: Command | null; bump: boolean };
+/** `key` and `walked` exist only on beaches that have a key or a tide, so older states never change. */
+export type Walker = { pos: number; facing: number; shells: number; previous: Command | null; bump: boolean; key?: true; walked?: number };
+/** Search identity: every field that can change what the next card does. */
+export const walkerKey = (w: Walker) => `${w.pos}/${w.facing}/${w.shells}/${w.previous}${w.key ? "/k" : ""}${w.walked === undefined ? "" : `/${w.walked}`}`;
 const cell = (l: Level, p: number) => l.rows[Math.floor(p / 5)]?.[p % 5];
+/** Sandcastles block; a gate blocks until the key is held; low sand blocks once the tide is in. */
+export const flooded = (l: Level, w: Walker) => l.tide !== undefined && (w.walked ?? 0) >= l.tide;
+const blockedAt = (l: Level, w: Walker, p: number) => {
+  const c = cell(l, p);
+  return c === "#" || (c === "G" && !w.key) || (c === "~" && flooded(l, w));
+};
+/** The cards a beach offers: its pace's set. Level 5 beaches use Walk and Turn, with blocks. */
+export const levelCommands = (l: Level) => commands(l.pace);
+/** Which beaches a round at these options draws from. Levels 1–3 by pace, Levels 4–5 by stage. */
+export const inPool = (l: Level, o: { pace: Pace; stage?: string }) => (o.stage ? l.stage === o.stage : !l.stage && l.pace === o.pace);
 const shellCells = (l: Level) =>
   l.rows
     .join("")
@@ -117,10 +145,13 @@ export function step(l: Level, w: Walker, c: Command): Walker {
   const dir = c === "forward" ? w.facing : ["up", "right", "down", "left"].indexOf(c);
   const x = (w.pos % 5) + [0, 1, 0, -1][dir],
     y = Math.floor(w.pos / 5) + [-1, 0, 1, 0][dir];
-  if (x < 0 || x > 4 || y < 0 || y > 4 || cell(l, y * 5 + x) === "#") return { ...w, previous: c, bump: true };
+  if (x < 0 || x > 4 || y < 0 || y > 4 || blockedAt(l, w, y * 5 + x)) return { ...w, previous: c, bump: true };
   const pos = y * 5 + x,
     shell = shellCells(l).indexOf(pos);
-  return { pos, facing: dir, shells: w.shells | (shell < 0 ? 0 : 1 << shell), previous: c, bump: false };
+  const next: Walker = { pos, facing: dir, shells: w.shells | (shell < 0 ? 0 : 1 << shell), previous: c, bump: false };
+  if (w.key || cell(l, pos) === "K") next.key = true;
+  if (l.tide !== undefined) next.walked = (w.walked ?? 0) + 1;
+  return next;
 }
 /** One footprint per square walked, with the card that moved the crab there. */
 export type Trail = { steps: { pos: number; facing: number; card: number }[]; bumpCard: number | null; bumpPos: number; bumpFacing: number };
@@ -155,10 +186,10 @@ export function solve(l: Level): Command[] {
   for (let i = 0; i < queue.length; i++) {
     const { w, path } = queue[i];
     if (solved(l, w)) return path;
-    for (const c of commands(l.pace)) {
+    for (const c of levelCommands(l)) {
       const n = step(l, w, c);
       if (n.bump) continue;
-      const key = `${n.pos}/${n.facing}/${n.shells}/${n.previous}`;
+      const key = walkerKey(n);
       if (!seen.has(key)) {
         seen.add(key);
         queue.push({ w: n, path: [...path, c] });
@@ -214,26 +245,23 @@ export const engine: LearnEngine<CrabState> = {
     medium: "Walk and turn cards.",
     hard: "Add Again ×2 to repeat a card.",
   },
-  create: (o, c) => ({
+  // New Level 4–5 rounds play real beaches; a saved Level 4–5 board round still opens on its board.
+  nativeStages: true,
+  levelNames: [
+    { name: "Follow the arrows", description: "Build arrow paths on three beaches, from short to longer." },
+    { name: "Walk and turn", description: "Plan paths using forward, left turns and right turns." },
+    { name: "Do it again", description: "Use Again ×2 to repeat the previous command two more times." },
+    { name: "Find & fix a bug", description: "Each beach opens with a plan that has one bug. Find it, fix it, and Go." },
+    { name: "Repeat whole blocks", description: "The plan tray is too small for single cards. Build Repeat blocks to fit." },
+  ],
+  create: (o, c) => {
     // One beach from each tier, easiest first, so the first beach is two or three cards.
-    levels: ([0, 1, 2] as const).map(
-      (tier) =>
-        pickItems(
-          levels.filter((l) => l.pace === o.pace && l.tier === tier && !l.retired),
-          c.skills,
-          1,
-          c.rng,
-          c.today
-        )[0].id
-    ),
-    completed: [],
-    program: [],
-    cursor: 0,
-    running: false,
-    starter: c.starter,
-    cards: 0,
-    debugging: false,
-  }),
+    const ids = ([0, 1, 2] as const).map(
+      (tier) => pickItems(levels.filter((l) => inPool(l, o) && l.tier === tier && !l.retired), c.skills, 1, c.rng, c.today)[0].id
+    );
+    const opening = [...(levels.find((l) => l.id === ids[0])!.starter ?? [])];
+    return { levels: ids, completed: [], program: opening, cursor: 0, running: false, starter: c.starter, cards: opening.length, debugging: false };
+  },
   validate: (x, o): x is CrabState => {
     if (x && typeof x === 'object' && 'blockDraft' in x) {
       const { blockDraft, ...fields } = x;
@@ -243,15 +271,22 @@ export const engine: LearnEngine<CrabState> = {
       const manual = Array.isArray(legacy.program) && Number.isInteger(legacy.cursor) && legacy.cursor > 0 && legacy.cursor < legacy.program.length && Array.isArray(legacy.levels) && levels.some(l => l.id === legacy.levels[Math.min(Array.isArray(legacy.completed) ? legacy.completed.length : 0, 2)]);
       let validation = legacy;
       if (manual) { const walker = run(currentLevel(legacy as CrabState), legacy.program.slice(0, legacy.cursor)); if (!walker.bump && !solved(currentLevel(legacy as CrabState), walker)) validation = {...legacy,running:true}; }
-      if (!engine.validate(validation, o)) return false;
-      const decoded = readCrabDraft(blockDraft, currentLevel(legacy));
-      return !!decoded && JSON.stringify(decoded.plan) === JSON.stringify(legacy.program) && sessionBytes(x) <= 4096;
+      if (!validRound(validation, o, true)) return false;
+      const level = currentLevel(legacy), decoded = readCrabDraft(blockDraft, level);
+      return !!decoded && JSON.stringify(decoded.plan) === JSON.stringify(legacy.program) && (level.tray === undefined || nodeCost(decoded.program) <= level.tray) && sessionBytes(x) <= 4096;
     }
+    return validRound(x, o, false);
+  },
+  outcome: (s) => (s.completed.length === 3 ? "done" : null),
+  turn: (s) => ((s.starter + s.cards) % 2) as 0 | 1,
+};
+/** The flat fields of a round. A tray beach's flat plan is a block plan of single cards, so it fits the tray too. */
+function validRound(x: unknown, o: LearnOptions, drafted: boolean): x is CrabState {
     if (!exact(x, ["levels", "completed", "program", "cursor", "running", "starter", "cards", "debugging"]))
       return false;
     const s = x as CrabState,
-      validProgram = (p: unknown): p is Command[] =>
-        Array.isArray(p) && p.length <= 80 && p.every((c) => commands(o.pace).includes(c));
+      validProgram = (p: unknown, l: Level | undefined): p is Command[] =>
+        !!l && Array.isArray(p) && p.length <= 80 && p.every((c) => levelCommands(l).includes(c));
     if (
       typeof s.debugging !== "boolean" ||
       !prediction(s.starter) ||
@@ -259,12 +294,12 @@ export const engine: LearnEngine<CrabState> = {
       !Array.isArray(s.levels) ||
       s.levels.length !== 3 ||
       new Set(s.levels).size !== 3 ||
-      !s.levels.every((id) => levels.some((l) => l.id === id && l.pace === o.pace)) ||
+      !s.levels.every((id) => levels.some((l) => l.id === id && inPool(l, o))) ||
       !Array.isArray(s.completed) ||
       s.completed.length > 3 ||
       !s.completed.every(
         (p, i) =>
-          validProgram(p) &&
+          validProgram(p, levels.find((l) => l.id === s.levels[i])) &&
           solved(levels.find((l) => l.id === s.levels[i])!, run(levels.find((l) => l.id === s.levels[i])!, p)) &&
           p.every(
             (_, j) =>
@@ -274,13 +309,14 @@ export const engine: LearnEngine<CrabState> = {
               )
           )
       ) ||
-      !validProgram(s.program) ||
+      !validProgram(s.program, currentLevel(s)) ||
       !integer(s.cursor, 0, s.program.length) ||
       typeof s.running !== "boolean"
     )
       return false;
     const l = currentLevel(s),
       w = run(l, s.program.slice(0, s.cursor));
+    if (!drafted && l.tray !== undefined && s.program.length > l.tray) return false;
     const previous = s.cursor > 0 ? run(l, s.program.slice(0, s.cursor - 1)) : null;
     return (
       s.cards >= s.program.length + s.completed.reduce((n, p) => n + p.length, 0) &&
@@ -290,7 +326,11 @@ export const engine: LearnEngine<CrabState> = {
       (!s.running || (s.completed.length < 3 && s.cursor < s.program.length && !w.bump && !solved(l, w))) &&
       (s.completed.length < 3 || (s.program.length === 0 && s.cursor === 0 && !s.running))
     );
-  },
-  outcome: (s) => (s.completed.length === 3 ? "done" : null),
-  turn: (s) => ((s.starter + s.cards) % 2) as 0 | 1,
-};
+}
+/** Bank a won beach and open the next one; a Level 4 beach opens with its own planted bug. */
+export function nextBeach(s: CrabState): CrabState {
+  const { blockDraft: _draft, ...legacy } = s;
+  const completed = [...s.completed, s.program.slice(0, s.cursor)];
+  const following = completed.length < 3 ? levels.find((l) => l.id === s.levels[completed.length])?.starter ?? [] : [];
+  return { ...legacy, completed, program: [...following], cursor: 0, running: false, debugging: false, cards: Math.min(1000000, s.cards + following.length) };
+}

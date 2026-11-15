@@ -3,11 +3,22 @@ import { encodeProgram } from '../../program/codec';
 import { projectionEdits } from '../../program/edit';
 import { decodeProgram as readProgram, type PackedProgram } from '../../program/codec';
 import { crabProgram, readCrabDraft } from './program';
-import { commands, solved, start, step, type Command, type Level, type Walker } from './engine';
+import { commands, solved, start, step, walkerKey, type Command, type Level, type Walker } from './engine';
+import { nodeCost, type Node as BlockNode, type Program } from '../../program/model';
 import type { LaunchOptions, ReplayEngine, ReplayPayload } from '../../../challenge/types';
 import { sha256Hex } from '../../../puzzles/sha256';
 
-export type Descriptor = { blockEditor?: boolean; level: Level; budget: number | null; starter: Command[]; lesson: string };
+export type Descriptor = {
+  blockEditor?: boolean; level: Level; budget: number | null; starter: Command[]; lesson: string;
+  /** C1d Deep Water. The most blocks a plan may hold, every block counted; such a puzzle is built from blocks only. */
+  tray?: number;
+  /** Foggy beach: one plan must bring the crab home on the level's beach and on each of these. */
+  fog?: string[][];
+  /** Two crabs on one beach: every card moves both, and a crab that would bump stays where it is. */
+  crabs?: 2;
+  /** Block tools the editor offers on a tray puzzle. */
+  tools?: { songs?: boolean; condition?: boolean; repeat?: boolean };
+};
 export const cardCodes: Command[] = ['up','right','down','left','forward','turn-left','turn-right','repeat'];
 /** Compact tuples retain replay and undo evidence within the shared 4 KiB slot. */
 export type Action = ['e',Operation[]] | ['a',number] | ['x',number] | ['r',number,number] | ['i',number,number] | ['g'|'h'|'u'|'z'];
@@ -22,7 +33,22 @@ export type State = {
   descriptor: Descriptor; program: Command[]; history: Command[][]; cursor: number; running: boolean;
   edits: number; runs: number; hints: number; steps: number; hintStage: number; hintProgram: string | null; fullPlanShown: boolean; supportOff: boolean; won: boolean;
 };
-const key = (w: Walker) => `${w.pos}/${w.facing}/${w.shells}/${w.previous}`;
+/** Every crab on the beach. One crab is a world of one; two crabs move together. */
+export type World = Walker[];
+const key = (world: World) => world.map(walkerKey).join('|');
+const crabCells = (l: Level) => l.rows.join('').split('').flatMap((c, i) => (c === 'C' ? [i] : []));
+export const startWorld = (d: Descriptor): World => d.crabs === 2 ? crabCells(d.level).map(pos => ({ ...start(d.level), pos })) : [start(d.level)];
+/** Two crabs are home when every shell is collected and each stands on its own home. */
+export function worldWon(d: Descriptor, world: World): boolean {
+  if (d.crabs !== 2) return solved(d.level, world[0]);
+  const cells = d.level.rows.join(''), shells = cells.split('').filter(c => c === 'S').length;
+  return world.every(w => !w.bump && cells[w.pos] === 'H') && world[0].pos !== world[1].pos && world.reduce((m, w) => m | w.shells, 0) === (1 << shells) - 1;
+}
+export function advanceWorld(d: Descriptor, world: World, command: Command): { world: World; cost: number; bump: boolean } {
+  if (d.crabs === 2) return { world: world.map(w => { const n = advance(d.level, w, command).walker; return n.bump ? { ...w, previous: command } : n; }), cost: 0, bump: false };
+  const n = advance(d.level, world[0], command);
+  return { world: [n.walker], cost: n.cost, bump: n.walker.bump };
+}
 /** Turns are free; entering mud costs two walking steps. Movement always uses the School engine. */
 export function advance(level: Level, walker: Walker, command: Command): { walker: Walker; cost: number } {
   const primitives = command === 'repeat' ? (walker.previous && walker.previous !== 'repeat' ? [walker.previous,walker.previous] : ['repeat'] as Command[]) : [command];
@@ -35,13 +61,24 @@ export function advance(level: Level, walker: Walker, command: Command): { walke
   return {walker,cost};
 }
 export function execute(d: Descriptor, program: readonly Command[]) {
-  let walker=start(d.level), cost=0, cursor=0;
-  const frames=[walker];
+  let world=startWorld(d), cost=0, cursor=0;
+  const frames=[world[0]], worlds=[world];
   for(const c of program) {
-    const next=advance(d.level,walker,c);walker=next.walker;cost+=next.cost;cursor++;frames.push(walker);
-    if(walker.bump || solved(d.level,walker) || d.budget!==null && cost>d.budget)break;
+    const next=advanceWorld(d,world,c);world=next.world;cost+=next.cost;cursor++;frames.push(world[0]);worlds.push(world);
+    if(next.bump || worldWon(d,world) || d.budget!==null && cost>d.budget)break;
   }
-  return {walker,cost,cursor,frames,won:solved(d.level,walker) && (d.budget===null || cost<=d.budget)};
+  return {walker:world[0],walkers:world,cost,cursor,frames,worlds,won:worldWon(d,world) && (d.budget===null || cost<=d.budget)};
+}
+/** Each foggy beach as a level of its own. */
+export const fogLevels = (d: Descriptor): Level[] => [d.level, ...(d.fog ?? []).map(rows => ({ ...d.level, rows }))];
+/** A foggy plan runs separately on every beach (its condition can choose differently on each); it wins only when all do. */
+export function runPlan(d: Descriptor, s: { program: readonly Command[]; blockDraft?: PackedProgram }) {
+  if (!d.fog) return { ...execute(d, s.blockDraft ? readCrabDraft(s.blockDraft, d.level)?.plan ?? [] : s.program), beaches: [] as ReturnType<typeof execute>[] };
+  const beaches = fogLevels(d).map(level => {
+    const plan = s.blockDraft ? readCrabDraft(s.blockDraft, level)?.plan ?? [] : s.program;
+    return execute({ ...d, fog: undefined, level }, plan);
+  });
+  return { ...beaches[0], won: beaches.every(b => b.won), cursor: Math.max(...beaches.map(b => b.cursor)), beaches };
 }
 /** BFS minimises cards under the exact walking budget. Cost-state dominance prevents a short
  * muddy path from pruning a longer path with enough walking steps left. */
@@ -49,20 +86,20 @@ function* solutionWork(d: Descriptor, prefix: readonly Command[] = []): Generato
   const first=execute(d,prefix);
   if(first.cursor!==prefix.length || first.walker.bump || d.budget!==null&&first.cost>d.budget)return null;
   if(first.won)return [...prefix];
-  const queue=[{walker:first.walker,cost:first.cost,path:[...prefix]}];
-  const seen=new Map<string,number>([[key(first.walker),first.cost]]);
+  const queue=[{world:first.walkers,cost:first.cost,path:[...prefix]}];
+  const seen=new Map<string,number>([[key(first.walkers),first.cost]]);
   for(let i=0;i<queue.length;i++) {
     yield;
-    const {walker,cost,path}=queue[i];
+    const {world,cost,path}=queue[i];
     if(path.length>=80)continue;
     for(const c of commands(d.level.pace)) {
-      const n=advance(d.level,walker,c), total=cost+n.cost;
-      if(n.walker.bump || d.budget!==null&&total>d.budget)continue;
+      const n=advanceWorld(d,world,c), total=cost+n.cost;
+      if(n.bump || d.budget!==null&&total>d.budget)continue;
       const next=[...path,c];
-      if(solved(d.level,n.walker))return next;
-      const k=key(n.walker), previous=seen.get(k);
+      if(worldWon(d,n.world))return next;
+      const k=key(n.world), previous=seen.get(k);
       if(previous!==undefined && (d.budget===null || previous<=total))continue;
-      seen.set(k,total);queue.push({walker:n.walker,cost:total,path:next});
+      seen.set(k,total);queue.push({world:n.world,cost:total,path:next});
     }
   }
   return null;
@@ -100,23 +137,23 @@ export function repairStep(program:readonly Command[], plan:Command[], capacity=
  }
  return {op:'change',at,card:plan[at]};
 }
-type Node = { walker: Walker; cost: number; next: [Command, number][] };
+type Node = { world: World; cost: number; next: [Command, number][] };
 type Graph = { layers: Node[][]; goals: number[] };
 /** Every card-optimal winner as a layered graph: each path of L cards from the start to a
  * goal is one shortest winning program. Mud keeps the walking cost in the node. Each yield
  * covers one node, so pruning and expansion never run unbroken through a whole layer. */
 function* winnerGraph(d: Descriptor): Generator<void, Graph | null> {
-  const layers: Node[][] = [[{walker:start(d.level),cost:0,next:[]}]];
+  const layers: Node[][] = [[{world:startWorld(d),cost:0,next:[]}]];
   while(layers.length<=80) {
     const index=new Map<string,number>(), layer:Node[]=[], goals:number[]=[];
     for(const node of layers.at(-1)!) {
       yield;
       for(const c of commands(d.level.pace)) {
-        const n=advance(d.level,node.walker,c), cost=node.cost+n.cost;
-        if(n.walker.bump || d.budget!==null&&cost>d.budget)continue;
-        const id=`${key(n.walker)}/${d.budget===null?0:cost}`;
+        const n=advanceWorld(d,node.world,c), cost=node.cost+n.cost;
+        if(n.bump || d.budget!==null&&cost>d.budget)continue;
+        const id=`${key(n.world)}/${d.budget===null?0:cost}`;
         let at=index.get(id);
-        if(at===undefined){at=layer.length;index.set(id,at);layer.push({walker:n.walker,cost,next:[]});if(solved(d.level,n.walker))goals.push(at);}
+        if(at===undefined){at=layer.length;index.set(id,at);layer.push({world:n.world,cost,next:[]});if(worldWon(d,n.world))goals.push(at);}
         node.next.push([c,at]);
       }
     }
@@ -201,6 +238,15 @@ export async function nextHintSliced(d:Descriptor,program:readonly Command[], op
  }
  return null;
 }
+/** A tray puzzle refuses plans over its tray, and block tools it does not offer. */
+function allowed(d: Descriptor, program: Program): boolean {
+  if (d.tray === undefined) return true;
+  if (nodeCost(program) > d.tray) return false;
+  let song = program.songs.length > 0, condition = false, repeat = false;
+  const visit = (nodes: BlockNode[]) => { for (const n of nodes) { if (n.kind === 'call') song = true; if (n.kind === 'if') { condition = true; visit(n.yes); visit(n.no); } if (n.kind === 'repeat') repeat = true; if (n.kind === 'repeat' || n.kind === 'sequence') visit(n.body); } };
+  visit(program.body); program.songs.forEach(visit);
+  return (!song || !!d.tools?.songs) && (!condition || !!d.tools?.condition) && (!repeat || d.tools?.repeat !== false);
+}
 const integer = (v: unknown, max: number): v is number => Number.isInteger(v) && (v as number)>=0 && (v as number)<=max;
 const make = (d: Descriptor, o: LaunchOptions, initial: Initial): State => ({descriptor:d,blockHistory:[],program:initial.draft?readCrabDraft(initial.draft,d.level)!.plan:[...d.starter],blockDraft:initial.draft,history:[],cursor:0,running:false,edits:0,runs:0,hints:0,steps:initial.prior?.steps??0,hintStage:0,hintProgram:null,fullPlanShown:false,supportOff:o.supportOff,won:false});
 const validPrior = (v: unknown): v is Prior => !!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===3&&integer((v as Prior).runs,65535)&&typeof (v as Prior).failed==='boolean'&&integer((v as Prior).steps,255);
@@ -221,7 +267,7 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
       const program=current&&applyOperations(current,a[1]);
       if(!program)return null;
       const packed=encodeProgram(program);const decoded=readCrabDraft(packed,d.level);
-      if(!decoded||JSON.stringify(packed)===JSON.stringify(s.blockDraft))return null;
+      if(!decoded||JSON.stringify(packed)===JSON.stringify(s.blockDraft)||!allowed(d,program))return null;
       return {state:{...s,blockDraft:packed,program:decoded.plan,history:[...s.history,s.program],blockHistory:[...s.blockHistory,s.blockDraft??null],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+projectionEdits(s.program,decoded.plan)},event:'edit'};
     }
     if(a[0]==='h') {
@@ -233,7 +279,7 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
     }
     if(a[0]==='g') {
       if(!s.program.length)return null;
-      const result=execute(d,s.program);
+      const result=runPlan(d,s);
       return {state:{...s,cursor:result.cursor,running:false,won:result.won,runs:s.runs+1},event:'run',correct:result.won};
     }
     if(a[0]==='u') {
@@ -251,7 +297,7 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
       else if(a[0]==='r') {if(a[1]>=program.length || program[a[1]]===c)return null;program[a[1]]=c;}
       else if(a[0]==='i') {if(a[1]>program.length)return null;program.splice(a[1],0,c);}
     }
-    if(program.length>80)return null;
+    if(program.length>80||d.tray!==undefined&&program.length>d.tray)return null;
     return {state:{...s,program,blockDraft:undefined,blockHistory:[...s.blockHistory,s.blockDraft??null],history:[...s.history,s.program],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'edit'};
   },
   inspect:s=>{
