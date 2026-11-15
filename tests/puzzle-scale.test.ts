@@ -7,7 +7,7 @@ vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 
 describe('format at full catalog scale', () => {
-  it('holds every boot and manifest limit at 63,483 entries', async () => {
+  it('holds every boot and manifest limit at 65,083 entries', async () => {
     const r = await measureScale({ samples: 20 });
     expect(r.launch.paused.map(p=>p.sessions)).toEqual([1,8,56]);
     for(const paused of r.launch.paused){
@@ -21,15 +21,15 @@ describe('format at full catalog scale', () => {
     if(r.launch.continue.retainedHeapBytes!==null)expect(r.launch.continue.retainedHeapBytes).toBeLessThanOrEqual(r.launch.budgets.decodedBytes);
     expect(r.saveFragmentBytes).toBeLessThan(100_000);
     expect(r.launch.aggregateEagerBytes).toBeLessThan(120_000);
-    expect(r.entries).toBe(63483);
-    expect(r.modelEntries).toBe(63483);
+    expect(r.entries).toBe(65083);
+    expect(r.modelEntries).toBe(65083);
     expect(r.rootBytes).toBeLessThanOrEqual(BANK_CAPS.rootBytes);
     expect(r.largestFamilyBytes).toBeLessThanOrEqual(BANK_CAPS.familyBytes);
     expect(r.catalogBytes).toBeLessThanOrEqual(BANK_CAPS.catalogBytes);
     expect(r.packs).toBeLessThanOrEqual(BANK_CAPS.slots);
     expect(r.modelIssues).toEqual([]);
     expect(r.verify?.errors).toBe(0);
-    expect(r.verify?.replayed).toBe(63483);
+    expect(r.verify?.replayed).toBe(65083);
     // Two packs held plus one being checked, as text, plus the largest manifest.
     expect(BANK_CAPS.packBytes * 3 * 2 + BANK_CAPS.familyBytes).toBeLessThanOrEqual(BANK_CAPS.decodedBytes);
   }, 900_000);

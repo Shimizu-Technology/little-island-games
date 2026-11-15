@@ -5,7 +5,7 @@
 export type ByteModelRow = { family: string; target: number; floor: number; bands: number; rowBytes: number };
 const r = (family: string, target: number, floor: number, bands: number, rowBytes: number): ByteModelRow => ({ family, target, floor, bands, rowBytes });
 export const BYTE_MODEL: readonly ByteModelRow[] = [
-  r('logic-lagoon', 500, 400, 3, 512),
+  r('logic-lagoon', 2100, 2000, 4, 512),
   r('sudoku', 4096, 1024, 6, 256), r('picture-grid', 4096, 512, 6, 640), r('bridges', 2048, 512, 6, 320), r('cage-math', 3072, 768, 6, 512),
   r('cross-sums', 1024, 64, 6, 512), r('word-search', 2048, 512, 6, 512), r('fill-in', 1024, 256, 6, 640), r('crossword', 1792, 352, 4, 1408),
   r('word-ladder', 1024, 256, 6, 256), r('word-scramble', 1024, 256, 6, 128), r('solitaire', 2048, 512, 6, 128),

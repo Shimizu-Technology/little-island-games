@@ -2,16 +2,16 @@
  "format": 1,
  "family": "logic-lagoon",
  "slot": 262,
- "catalogRevision": 16,
+ "catalogRevision": 17,
  "band": "marks-only",
  "ordinals": [
-  266540,
+  268288,
   200
  ],
- "sourceSha": "9d9dbce367750d3b871dc092b37c54bae22d82ca",
+ "sourceSha": "3a140e88154f16b26fc8f96edc07daa9419acfda",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "99b7835834697981bab91f6345457b9a6587151516859e0e1523622519e0f2d3"
+  "family": "e8ac34fbc2fb2d0191465d3b55ff1122613c5c0d202f90bd26693350d8903c9a"
  },
  "rng": 1,
  "rules": 2,
@@ -286,7 +286,7 @@
   "raw": 23427,
   "gzip": 2700
  },
- "sha256": "71a8fadee105452c8333bf75ebe8fb07aa7b57c6ab2a6232a8da8c40f5e5c553",
+ "sha256": "d3e52f3181a584ef0fbf48085ae3ff7eb8b0957c6dc5b0ad0a197b52439e8655",
  "native": [],
  "machineGates": true,
  "allShippingGates": false

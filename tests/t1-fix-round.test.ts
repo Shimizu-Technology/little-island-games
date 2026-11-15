@@ -53,8 +53,7 @@ it('past checks and reveals add no solver work to the next ordinary tap', () => 
   finally { grade.mockRestore(); hint.mockRestore(); }
 });
 
-// Required acceptance is blocked until lead/slot-claims lands and the School pool is baked.
-it.skip('new School Level 5 rounds use a separate versioned pool without repeats in a round', async () => {
+it('new School Level 5 rounds use a separate versioned pool without repeats in a round', async () => {
   const { engine, taskAt } = await import('../src/learn/games/logic-lagoon/engine');
   const { optionsAtLevel } = await import('../src/learn/levelOptions');
   const { encodePuzzle } = await import('../src/puzzles/latin/core');
@@ -62,7 +61,7 @@ it.skip('new School Level 5 rounds use a separate versioned pool without repeats
   const challenge = new Set(old.cages.map(row => JSON.stringify(row.puzzle)));
   const o = optionsAtLevel({ mode: 'solo', pace: 'easy' }, 5);
   const s = engine.create(o, { rng: () => 17 / 0xffffffff, skills: {}, starter: 0, today: 1 });
-  expect(s.version === 2 && s.catalog).toBe(2);
+  expect(s.version === 2 && s.catalog).toBe(3);
   if (s.version !== 2) throw new Error();
   const round = new Set();
   for (let index = 0; index < 4; index++) {

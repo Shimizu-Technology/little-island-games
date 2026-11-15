@@ -8,9 +8,10 @@ import { createRng } from '../../../puzzles/rng';
 import { createGrid, decodeGrid, encodeGrid, gridAction, type GridAction, type GridSpec, type GridState, type PackedGrid } from '../../../puzzles/grid/model';
 import { exactKeys, plain, uint } from '../../../state/saveBits';
 import { schoolPuzzle } from './supply';
+import { schoolCage } from './school-cages';
 import { teachingPictures } from './pictures';
 
-export type LatinState = { version: 2; catalog: 1 | 2; level: number; seed: number; index: number; total: 4; board: PackedGrid | null; helped: boolean };
+export type LatinState = { version: 2; catalog: 1 | 2 | 3; level: number; seed: number; index: number; total: 4; board: PackedGrid | null; helped: boolean };
 export type LogicState = LegacyState | LatinState;
 export type Cage = LegacyGrid['cages'][number];
 export type GridTask = LegacyGrid & { puzzle?: LatinPuzzle; teaches?: string };
@@ -45,7 +46,7 @@ export function taskAt(s: LogicState): LogicTask {
     const answer = 2 + seed % 8, right = 1 + (seed >>> 7) % 7;
     task = { kind: 'balance', left: answer + right, right, answer, title: 'Balance the two shell scales' };
   } else {
-    const p = s.level <= 2 ? s.catalog === 1 ? picturePuzzle(s.level + 1, seed) : teachingPictures((s.level + 1) as 2 | 3, seed) : schoolPuzzle(s.level, seed);
+    const p = s.level <= 2 ? s.catalog === 1 ? picturePuzzle(s.level + 1, seed) : teachingPictures((s.level + 1) as 2 | 3, seed) : s.catalog === 3 ? schoolCage(s.seed, s.index) : schoolPuzzle(s.level, seed);
     const g = grade(p), solution = search(p, 1).first!;
     task = { kind: 'grid', size: p.size, boxRows: p.box || 1, boxCols: p.box ? p.size / p.box : 1, solution, givens: p.givens,
       cages: p.cages.map(c => ({ cells: c.cells, sum: c.target })), puzzle: p, teaches: g.status === 'complete' ? g.ceiling : '',
@@ -113,12 +114,12 @@ export const engine: LearnEngine<LogicState> = {
   ],
   helpAudio: 'logic-lagoon-help-v2',
   help: 'Tap a square, then a picture or number. Every row and column needs one of each. Boxes and cage totals add clues. Notes keep possible numbers. Undo takes back an edit. A hint teaches one step. In Challenge, fill the whole grid and press Check when you are ready. If Level 3 feels easy, Level 4 is open. Level 5 adds sum cages, with no prefilled squares. One-square cages tell you their value.',
-  create: (o, ctx) => ({ version: 2, catalog: levelOf(o) === 5 ? 1 : 2, level: levelOf(o), seed: Math.floor(ctx.rng() * 0xffffffff) >>> 0, index: 0, total: 4, board: null, helped: false }),
+  create: (o, ctx) => ({ version: 2, catalog: levelOf(o) === 5 ? 3 : 2, level: levelOf(o), seed: Math.floor(ctx.rng() * 0xffffffff) >>> 0, index: 0, total: 4, board: null, helped: false }),
   notWon: undefined, turn: undefined,
   outcome: s => s.index === 4 ? 'done' : null,
   validate: (x, o): x is LogicState => {
     if (plain(x) && x.version === 1) return legacyEngine.validate(x, o);
-    if (!plain(x) || !exactKeys(x, ['version', 'catalog', 'level', 'seed', 'index', 'total', 'board', 'helped']) || x.version !== 2 || !([1, 2].includes(x.catalog as number)) || x.level !== levelOf(o) || !uint(x.seed, 0xffffffff) || !uint(x.index, 4) || x.total !== 4 || typeof x.helped !== 'boolean' || JSON.stringify(x).length > 3100) return false;
+    if (!plain(x) || !exactKeys(x, ['version', 'catalog', 'level', 'seed', 'index', 'total', 'board', 'helped']) || x.version !== 2 || !([1, 2, 3].includes(x.catalog as number)) || x.catalog === 3 && x.level !== 5 || x.level !== levelOf(o) || !uint(x.seed, 0xffffffff) || !uint(x.index, 4) || x.total !== 4 || typeof x.helped !== 'boolean' || JSON.stringify(x).length > 3100) return false;
     const s = x as LatinState;
     if (s.index === 4) return s.board === null;
     const t = taskAt(s); return t.kind === 'balance' ? s.board === null : s.board === null || !!decodeGrid(s.board, specFor(t.puzzle!));

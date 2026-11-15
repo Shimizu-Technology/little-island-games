@@ -911,10 +911,10 @@
       "slot": 261,
       "engine": "logic-lagoon",
       "rules": 2,
-      "first": 266440,
+      "first": 267264,
       "count": 100,
       "family": "logic-lagoon",
-      "packHash": "e39db01092b94d9b083e8453cf431b3269ea83362c62518b35ea0babdd05fa46",
+      "packHash": "ffeb30dd951ffd440720c11ee95e7a56ff132a8fe85def4a14326097fcce1541",
       "awards": 3,
       "cove": false
     },
@@ -922,10 +922,10 @@
       "slot": 262,
       "engine": "logic-lagoon",
       "rules": 2,
-      "first": 266540,
+      "first": 268288,
       "count": 200,
       "family": "logic-lagoon",
-      "packHash": "71a8fadee105452c8333bf75ebe8fb07aa7b57c6ab2a6232a8da8c40f5e5c553",
+      "packHash": "d3e52f3181a584ef0fbf48085ae3ff7eb8b0957c6dc5b0ad0a197b52439e8655",
       "awards": 3,
       "cove": false
     },
@@ -1077,6 +1077,28 @@
         1,
         1
       ],
+      "cove": false
+    },
+    {
+      "slot": 268,
+      "first": 274432,
+      "count": 1024,
+      "packHash": "7b6fdc7ef9bb561b2e168e2b7790fd8a97fb3f36065a1508c400af9c3f66dc88",
+      "rules": 2,
+      "family": "logic-lagoon",
+      "engine": "logic-lagoon",
+      "awards": 0,
+      "cove": false
+    },
+    {
+      "slot": 269,
+      "first": 275456,
+      "count": 576,
+      "packHash": "fffc4fe49d6bbf1030bd601ad0c1799f24b010eeadfffa67301f0c16181f6c5b",
+      "rules": 2,
+      "family": "logic-lagoon",
+      "engine": "logic-lagoon",
+      "awards": 0,
       "cove": false
     },
     {
