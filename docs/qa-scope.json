@@ -1767,6 +1767,7 @@
     }
   ],
   "registrationAliases": {
-    "drop-puzzles": "coconut-drop"
+    "drop-puzzles": "coconut-drop",
+    "freecell": "solitaire"
   }
 }

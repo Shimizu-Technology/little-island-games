@@ -1,0 +1,154 @@
+{
+ "format": 1,
+ "family": "freecell",
+ "slot": 107,
+ "catalogRevision": 17,
+ "band": "f3",
+ "ordinals": [
+  108576,
+  64
+ ],
+ "sourceSha": "de731882992b7c48b732243d2cbe5eb07467572f",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "842b8684dfb3500c646290316bea2349ca6c5e2ac891a673b222a10cf110a1d7"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 256,
+  "kept": [
+   134217965,
+   134218550,
+   134217783,
+   134217816,
+   134218285,
+   134218162,
+   134218539,
+   134218012,
+   134218665,
+   134218606,
+   134218551,
+   134218056,
+   134218465,
+   134218454,
+   134217951,
+   134217952,
+   134218229,
+   134217958,
+   134218227,
+   134217972,
+   134218021,
+   134218502,
+   134218479,
+   134218584,
+   134218169,
+   134218670,
+   134218391,
+   134218144,
+   134218321,
+   134218106,
+   134218655,
+   134218276,
+   134218141,
+   134217798,
+   134218099,
+   134218328,
+   134218645,
+   134218270,
+   134218711,
+   134217960,
+   134218725,
+   134218090,
+   134217739,
+   134217968,
+   134218153,
+   134218462,
+   134218315,
+   134218220,
+   134217941,
+   134217974,
+   134218055,
+   134217944,
+   134218701,
+   134218222,
+   134218683,
+   134218052,
+   134217761,
+   134218306,
+   134218051,
+   134217760,
+   134218389,
+   134218154,
+   134218451,
+   134218592
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 64,
+  "semantic": 64
+ },
+ "histograms": {
+  "technique": {},
+  "template": {
+   "bursts": 16,
+   "pairs": 16,
+   "steady": 16,
+   "weave": 16
+  },
+  "layout": {
+   "bursts": 16,
+   "pairs": 16,
+   "steady": 16,
+   "weave": 16
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 10000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   52,
+   105
+  ],
+  "exact": 0
+ },
+ "proofHashes": {
+  "witness": "dde580d681489852d289bec514255f2a593775f83b3b6b96a73c2549b4bc3c50",
+  "trace": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "claims": "eca871e2606324a0780029151dd5c62476d3de635d6bec02faf9065ec9c6de69"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 21075,
+  "gzip": 7833
+ },
+ "sha256": "e92767d7e710236039c07961775ffd407c28882ddb7754c8d3aae45bed2c451a",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

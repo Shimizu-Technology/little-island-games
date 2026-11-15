@@ -1,0 +1,106 @@
+{
+ "format": 1,
+ "family": "solitaire",
+ "slot": 100,
+ "catalogRevision": 16,
+ "band": "o1",
+ "ordinals": [
+  102400,
+  16
+ ],
+ "sourceSha": "de731882992b7c48b732243d2cbe5eb07467572f",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "842b8684dfb3500c646290316bea2349ca6c5e2ac891a673b222a10cf110a1d7"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 256,
+  "kept": [
+   16777217,
+   16777222,
+   16777216,
+   16777219,
+   16777221,
+   16777230,
+   16777220,
+   16777223,
+   16777229,
+   16777234,
+   16777224,
+   16777227,
+   16777245,
+   16777250,
+   16777228,
+   16777231
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 16,
+  "semantic": 16
+ },
+ "histograms": {
+  "technique": {},
+  "template": {
+   "bursts": 4,
+   "pairs": 4,
+   "steady": 4,
+   "weave": 4
+  },
+  "layout": {
+   "bursts": 4,
+   "pairs": 4,
+   "steady": 4,
+   "weave": 4
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 10000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   52,
+   100
+  ],
+  "exact": 0
+ },
+ "proofHashes": {
+  "witness": "9b0a1ed1b9b04536a6af0d95078c5da212c77ccb39b278d568f21ed392a87485",
+  "trace": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "claims": "c15b3f0cf28c6337b6fa99d28a9f4f4062c8dd99d02fe35e2efcf2e9a95f4282"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 9
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 3492,
+  "gzip": 1160
+ },
+ "sha256": "fa91915954253a592725d03bf0fae77fda1e739bea8291a9fe6d069c691788e7",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

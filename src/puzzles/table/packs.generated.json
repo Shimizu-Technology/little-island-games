@@ -1,1 +1,122 @@
-[]
+[
+ {
+  "family": "solitaire",
+  "slot": 100,
+  "first": 102400,
+  "count": 16,
+  "packHash": "fa91915954253a592725d03bf0fae77fda1e739bea8291a9fe6d069c691788e7",
+  "rules": 1,
+  "band": "o1",
+  "tier": 1,
+  "title": "Klondike draw 1 · Paddling",
+  "summary": "Direct foundation building. A winning line exists; hidden cards still require exploration."
+ },
+ {
+  "family": "solitaire",
+  "slot": 101,
+  "first": 102416,
+  "count": 48,
+  "packHash": "e706097113e338b36f6455814978ab7e43fd30bbae0bbf86e2e524a0c64e0712",
+  "rules": 1,
+  "band": "o3",
+  "tier": 3,
+  "title": "Klondike draw 1 · Lagoon",
+  "summary": "Short visible plans. A winning line exists; hidden cards still require exploration."
+ },
+ {
+  "family": "solitaire",
+  "slot": 102,
+  "first": 102464,
+  "count": 64,
+  "packHash": "34fc2418a4ca104dac682e61eab3d997379d8bb76be414d685341666da87de33",
+  "rules": 1,
+  "band": "o6",
+  "tier": 6,
+  "title": "Klondike draw 1 · Trench",
+  "summary": "Longer visible plans and stock decisions. A winning line exists; hidden cards still require exploration."
+ },
+ {
+  "family": "solitaire",
+  "slot": 103,
+  "first": 102528,
+  "count": 16,
+  "packHash": "0142730a5820e669abff5b46d502c77ea9815f1c4e4504f07af21d00a9b1e4bf",
+  "rules": 1,
+  "band": "t1",
+  "tier": 1,
+  "title": "Klondike draw 3 · Paddling",
+  "summary": "Direct foundation building. A winning line exists; hidden cards still require exploration."
+ },
+ {
+  "family": "solitaire",
+  "slot": 104,
+  "first": 102544,
+  "count": 48,
+  "packHash": "dea40ee7f1ddf1645caa89d9760e19ba6c3ce98577d2d29c112dc84afb403416",
+  "rules": 1,
+  "band": "t3",
+  "tier": 3,
+  "title": "Klondike draw 3 · Lagoon",
+  "summary": "Short visible plans. A winning line exists; hidden cards still require exploration."
+ },
+ {
+  "family": "solitaire",
+  "slot": 105,
+  "first": 102592,
+  "count": 64,
+  "packHash": "ce097ee6bbe1fce3a9cfb1d686be75c4b68d0cc2fb84c9f36b849ba214a026a8",
+  "rules": 1,
+  "band": "t6",
+  "tier": 6,
+  "title": "Klondike draw 3 · Trench",
+  "summary": "Longer visible plans and stock decisions. A winning line exists; hidden cards still require exploration."
+ },
+ {
+  "family": "freecell",
+  "slot": 106,
+  "first": 108544,
+  "count": 32,
+  "packHash": "95bb7e28177953aea6b07c140096d577f9bdb46ccb451a7e78ba34f5a0d1a515",
+  "rules": 1,
+  "band": "f1",
+  "tier": 1,
+  "title": "FreeCell · Paddling",
+  "summary": "All cards are face up. Start with the low cards in each suit."
+ },
+ {
+  "family": "freecell",
+  "slot": 107,
+  "first": 108576,
+  "count": 64,
+  "packHash": "e92767d7e710236039c07961775ffd407c28882ddb7754c8d3aae45bed2c451a",
+  "rules": 1,
+  "band": "f3",
+  "tier": 3,
+  "title": "FreeCell · Lagoon",
+  "summary": "All cards are face up. Use free cells and columns to plan your next moves."
+ },
+ {
+  "family": "freecell",
+  "slot": 108,
+  "first": 108640,
+  "count": 64,
+  "packHash": "0ffefd5fba280be75a73625abbc796c27df20b8459539e27cf0e79cac4690d9a",
+  "rules": 1,
+  "band": "f5",
+  "tier": 5,
+  "title": "FreeCell · Deep",
+  "summary": "All cards are face up. Look past the next move and keep useful spaces open."
+ },
+ {
+  "family": "freecell",
+  "slot": 109,
+  "first": 108704,
+  "count": 96,
+  "packHash": "73e9245acf42f83c62d0c8a599e35967e097722971aa603e4432a78457a31489",
+  "rules": 1,
+  "band": "f6",
+  "tier": 6,
+  "title": "FreeCell · Trench",
+  "summary": "All cards are face up. Compare longer plans before using your free spaces."
+ }
+]
