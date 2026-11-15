@@ -145,13 +145,13 @@ it('measures actual card width and space below the real header instead of passin
   Object.assign(viewport, { fontScale: 1 });
   vi.stubGlobal('requestAnimationFrame', () => 1);
   vi.stubGlobal('cancelAnimationFrame', () => {});
-  const r = await mount('turtle-tales');
+  const r = await mount('crab-commands');
   await act(async () => {
     byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
   });
-  expect(byType(r, 'Board')[0].props.width).toBe(337); // unported reading board keeps its legacy allocation
+  expect(byType(r, 'Board')[0].props.width).toBe(333); // measured port gets its actual inset width
   expect(byType(r, 'Board')[0].props.boardSpace).toMatchObject({ width: 333, height: 526, large: false, ready: true });
 });
 
@@ -172,7 +172,7 @@ it.each([499,500,744,852])('default window height %s uses only the approved shor
  await act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
  expect(scrolls).toEqual(height<500?[196]:[]);
  const b=byType(r,'Board')[0];
- expect(b.props.boardSpace.height).toBe(height-93-(height<500?8:204)-24);
+ expect(b.props.boardSpace).toBeNull(); // reveal remains available without geometry opt-in
  expect(byType(r,'GameHeader')).toHaveLength(1);
  expect(byType(r,'LearnerChip').length).toBeGreaterThan(0);
  if(height<500)expect(scrollOptions).toEqual([{y:196,animated:false}]);
@@ -228,4 +228,12 @@ it('layout events arriving before the rotation dimensions still provide measured
  Object.assign(viewport,{width:852,height:393});
  await act(async()=>r.update(<StoreProvider><Probe id="crab-commands"/></StoreProvider>));
  expect(byType(r,'Board')[0].props.boardSpace).toMatchObject({width:654,ready:true});
+});
+
+it.each(['food-web','space-station','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
+ Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
+ vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ const r=await mount(id);await measureFrame(r,620,180,24,943);
+ const board=byType(r,'Board')[0];
+ expect(board.props.boardSpace).toBeNull();expect(board.props.width).toBe(812);expect(board.props.fit.width).toBe(812);
 });

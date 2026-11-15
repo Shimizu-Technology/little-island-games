@@ -4,7 +4,7 @@ Little Island is a private offline family app. The child should see a readable b
 
 LearnFrame measures the real viewport and card inset. Its budget includes the safe areas, pinned header and bottom padding. Scrolling never changes the budget. The approved non-animated reveal applies on entry/rotation below 500 pt; at AX it applies to the twelve ported School games, including Shell Math's existing path. Unported reading/School entries keep their previous AX behavior. Short-landscape next questions keep the revealed position. The full header remains reachable by scrolling up.
 
-The measured inner width is used only by ported boards. Unported hosts keep the previous 900-pt cap and companion reserve. Challenge's grid budget and shared AX constants are unchanged.
+LearnFrame enables the geometry context only for ported boards. Shared renderers in Food Web, Space Station and Turtle therefore retain their legacy drawing, controls and text width. Entry reveal uses the frame metrics separately, so unported short-window reveals keep their approved behavior. The measured inner width is used only by ported boards. Unported hosts keep the previous 900-pt cap and companion reserve. Challenge's grid budget and shared AX constants are unchanged.
 
 A port calls `useBoardGeometry`, attaches its callback to the flexible drawing, and marks the end of its primary interaction with `BoardPrimary`. The provider measures that boundary relative to `BoardSpaceContent`, using native `measureLayout`. Help, narration buttons, footers and selected-word details below the boundary do not shrink the drawing. Events share one animation frame. A remount keeps its last allocation until fresh measurements arrive; removed drawings are discarded.
 

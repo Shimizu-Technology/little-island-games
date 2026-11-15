@@ -6,6 +6,8 @@ import { TextFit } from '../src/components/Text';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+import { Board as FoodWeb } from '../src/learn/games/food-web/view';
+import { Board as SpaceStation } from '../src/learn/games/space-station/view';
 import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
 import { Board as B1 } from '../src/learn/games/crab-commands/view';
@@ -73,7 +75,7 @@ const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
-async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level=1) {
+async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level=1, geometryEnabled=true) {
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
@@ -81,7 +83,7 @@ async function mountPort(id: LearnId, Board: React.ElementType, available=472, w
   Object.assign(viewport,window);
   const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},level)},{},7);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
+  await act(async()=>{root=create(<BoardSpaceProvider geometryEnabled={geometryEnabled} space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -319,4 +321,12 @@ it('Beep hint cards retain the School label floor',async()=>{
  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,30));});
  const words=r.root.findAll(n=>String(n.type)==='Text'&&/^Card \d/.test(n.children.map(String).join('')));
  expect(words.length).toBeGreaterThan(0);expect(words.every(n=>Number(flat(n.props.style).fontSize)>=13)).toBe(true);
+});
+
+it.each([['food-web',FoodWeb],['space-station',SpaceStation]] as const)('%s retains the legacy shared science drawing',async(id,Board)=>{
+ const r=await mountPort(id,Board,100,{width:852,height:393,fontScale:3.12},1,false);
+ const marker=view('school-weather-watch-drawing');
+ if(marker)await act(async()=>{marker.props.onLayout({nativeEvent:{layout:{height:220}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ const scene=r.root.findAll(n=>String(n.type)==='Svg'&&n.props.viewBox==='0 0 360 235')[0];
+ expect(scene.props.height).toBe(220);expect(view('school-weather-watch-drawing')).toBeUndefined();expect(view('school-drawing-row')).toBeUndefined();
 });

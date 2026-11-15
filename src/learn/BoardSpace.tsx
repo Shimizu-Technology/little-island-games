@@ -4,7 +4,7 @@ import { View, useWindowDimensions, type LayoutChangeEvent, type ViewProps } fro
 import { fitSchoolBoard, type BoardSpace, type SchoolBoard } from './boardGeometry';
 
 type MeasuredSpace = BoardSpace & {
-  onReveal?: () => void; ready: boolean; chrome: number | null;
+  onReveal?: () => void; geometryEnabled: boolean; ready: boolean; chrome: number | null;
   select: (id: SchoolBoard | null) => void; measure: (id: SchoolBoard, height: number) => void;
   content: React.RefObject<View | null>; primary: React.RefObject<View | null>;
   rowView: React.RefObject<View | null>; drawingColumn: React.RefObject<View | null>; row: () => void; changed: () => void;
@@ -14,7 +14,7 @@ const Space = createContext<MeasuredSpace | null>(null);
 /** A primary boundary is measured relative to the inset, never the screen or scroll
  * offset. Secondary help below it cannot take space from the drawing. Layout events
  * share one frame so a resized drawing and its parent cannot feed stale heights back. */
-export function BoardSpaceProvider({ space, children, onReveal }: { space: BoardSpace | null; children: React.ReactNode; onReveal?: () => void }) {
+export function BoardSpaceProvider({ space, children, onReveal, geometryEnabled = true }: { space: BoardSpace | null; children: React.ReactNode; onReveal?: () => void; geometryEnabled?: boolean }) {
   const content = useRef<View | null>(null), primary = useRef<View | null>(null);
   const selected = useRef<SchoolBoard | null>(null), regions = useRef(new Map<SchoolBoard, number>());
   const rowView = useRef<View | null>(null), drawingColumn = useRef<View | null>(null), lastChrome = useRef(new Map<SchoolBoard, number>());
@@ -60,10 +60,12 @@ export function BoardSpaceProvider({ space, children, onReveal }: { space: Board
   }, [changed]);
   const measure = useCallback((id: SchoolBoard, height: number) => { regions.current.set(id, height); changed(); }, [changed]);
   const row = useCallback(() => { changed(); }, [changed]);
-  const value = useMemo(() => ({ ...(space ?? { width: 0, height: 0, large: false }), ready: space !== null, onReveal, chrome, select, measure, content, primary, rowView, drawingColumn, row, changed }), [space, onReveal, chrome, select, measure, row, changed]);
+  const value = useMemo(() => ({ ...(space ?? { width: 0, height: 0, large: false }), ready: space !== null, geometryEnabled, onReveal, chrome, select, measure, content, primary, rowView, drawingColumn, row, changed }), [space, geometryEnabled, onReveal, chrome, select, measure, row, changed]);
   return <Space.Provider value={value}>{children}</Space.Provider>;
 }
-export const useBoardSpace = () => useContext(Space);
+/** Shared renderers in unported games retain their legacy geometry. Entry reveal
+ * remains available independently through BoardSpaceContent. */
+export const useBoardSpace = () => { const space = useContext(Space); return space?.geometryEnabled ? space : null; };
 
 export function useBoardGeometry(id: SchoolBoard, natural: number, minimum: number, enabled = true) {
   const space = useBoardSpace(), select = space?.select, measure = space?.measure;
@@ -100,7 +102,7 @@ export function BoardColumns({ drawing, children, side: override, drawingWidth, 
 }
 
 export function BoardSpaceContent({ onLayout, ...props }: ViewProps) {
-  const space = useBoardSpace(), stepReveal = useContext(StepReveal), reveal = space?.onReveal ?? stepReveal;
+  const space = useContext(Space), stepReveal = useContext(StepReveal), reveal = space?.onReveal ?? stepReveal;
   const lastWindow = useRef<string | null>(null);
   useEffect(() => {
     if (!space?.ready || space.anchorReady === false) return;

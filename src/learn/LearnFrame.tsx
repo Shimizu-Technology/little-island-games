@@ -311,7 +311,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // longest word still fits the board. Reading is never timed and Hear stays available, so it stays large without
   // filling the screen. Default sizes never change.
   // A 32-pt heading would reach 64 pt at 2x, so nothing in a board is drawn above 44 pt (about a 22-pt line at 2x).
-  const boardFit = useMemo(() => large ? { width: boardSpace?.width ?? boardInner, ceiling: 2, maxSize: 44 } : null, [large, boardInner, boardSpace?.width]);
+  const boardFit = useMemo(() => large ? { width: MEASURED_SCHOOL_BOARDS.has(id) ? boardSpace?.width ?? boardInner : boardInner, ceiling: 2, maxSize: 44 } : null, [id, large, boardInner, boardSpace?.width]);
   // The result card ("You did it!") follows the same rule inside its 20-pt padding and 3-pt border.
   const resultFit = useMemo(() => large ? { width: width - insets.left - insets.right - 32 - 46, ceiling: 2, maxSize: 44 } : null, [large, width, insets.left, insets.right]);
   const Board = saved && isGrowth(saved.state) ? GrowthBoard : view.Board;
@@ -410,7 +410,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
-            <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}><BoardSpaceProvider key={saved.id} space={boardSpace} onReveal={revealBoard}>
+            <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}><BoardSpaceProvider key={saved.id} geometryEnabled={MEASURED_SCHOOL_BOARDS.has(id)} space={boardSpace} onReveal={revealBoard}>
             <BoardSpaceContent testID="learn-board-inset" onLayout={e => { const layout = e.nativeEvent.layout; boardInset.current = layout.y; setBoardLayout(old => old.inset === layout.y && old.width === layout.width && old.insetAt === width ? old : { ...old, inset: layout.y, width: layout.width, insetAt: width }); }}>
             <Board
               key={saved.id}
