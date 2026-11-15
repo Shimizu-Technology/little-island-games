@@ -2,7 +2,7 @@ import type { PointerCapture } from "../scene/controller";
 import type { SceneEntity } from "../scene/types";
 import { pickupTransform } from "./handFeel";
 import { hintWiggle } from "./quietHints";
-import { cueMotion, noticesFor, type Cue, type Notice, type Watcher } from "./delight";
+import { cueMotion, noticesFor, REDUCED_CUE_DIM, REDUCED_CUE_MS, type Cue, type Notice, type Watcher } from "./delight";
 import type { DragSlot } from "./useInteraction";
 
 /**
@@ -30,14 +30,16 @@ export type RestingFlags = {
 export type RestingFollow = { owner: string; dx: number; dy: number; tilt: number; sx: number; sy: number };
 export type RestingMotion = { key: string; follow: RestingFollow[]; wobble: Record<string, number>;
   /** H4 cues: a small rise and vertical squash beside the wobble, about the contact. */
-  bob: Record<string, { dy: number; sy: number }> };
+  bob: Record<string, { dy: number; sy: number }>;
+  /** Fix round 1: under Reduce Motion a reaction is a brief stationary dim instead of motion. */
+  dim: Record<string, number> };
 export const emptyRestingFlags = (): RestingFlags => {
   "worklet";
   return { key: "", rest: [], pressed: [], dragTargets: [], targets: [], fronts: [], notice: [] };
 };
 export const emptyRestingMotion = (): RestingMotion => {
   "worklet";
-  return { key: "", follow: [], wobble: {}, bob: {} };
+  return { key: "", follow: [], wobble: {}, bob: {}, dim: {} };
 };
 export function restingFlagsOf(slots: readonly DragSlot[], pointers: readonly PointerCapture[], watchers: readonly Watcher[] = []): RestingFlags {
   "worklet";
@@ -113,6 +115,14 @@ export function restingMotionOf(
       motion.wobble[id] = (motion.wobble[id] ?? 0) + m.deg;
       if (m.dy !== 0 || m.sy !== 1) motion.bob[id] = { dy: m.dy, sy: m.sy };
       key += `c${id}:${m.deg}:${m.dy}:${m.sy};`;
+    }
+  } else {
+    // Reduce Motion: nothing moves, but the reaction is still seen as a short dim in place.
+    for (const id in cues) {
+      const e = now - cues[id].at;
+      if (e < 0 || e >= REDUCED_CUE_MS) continue;
+      motion.dim[id] = REDUCED_CUE_DIM;
+      key += `r${id};`;
     }
   }
   motion.key = key;

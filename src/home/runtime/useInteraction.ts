@@ -1499,7 +1499,7 @@ export function useInteraction({
   };
   /** H4: one resting reaction on `id`. The frame callback runs only while it plays. */
   const showCue = (id: string, kind: CueKind, dir = 0) => {
-    if (reduced) return;
+    // Under Reduce Motion the cue still plays, as a stationary dim (restingMotionOf).
     runOnUI((target: string, cueKind: CueKind, lean: number) => {
       "worklet";
       const now = eventTime();

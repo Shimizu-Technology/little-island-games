@@ -57,7 +57,14 @@ const RestingEntity = memo(function RestingEntity({
   life,
   mood,
   shadow,
+  ownerId,
+  ownerPivot,
 }: {
+  /** Fix round 1: a held thing takes its owner's whole presentation (lean, wiggle, hop, stir)
+   * about the owner's own pivot, so it never comes away from the hand. */
+  ownerId?: string;
+  /** The owner's pivot (its contact) in this entity's frame. */
+  ownerPivot?: { x: number; y: number };
   /** HM-11: the shared life clock, given only to friends at rest in the room on screen. */
   life?: SharedValue<number>;
   /** H4: a short expression after eating, a greeting or a burp. */
@@ -105,25 +112,32 @@ const RestingEntity = memo(function RestingEntity({
   // HD-06: lean toward food or a friend carried near. The flag changes only on entering or
   // leaving; the lean eases on the UI thread and then nothing runs.
   const character = !!entity.character, id = entity.id;
+  // The friend whose lean this art shows: itself, or the friend holding it.
+  const leaner = character ? id : ownerId;
   const lean = useSharedValue(0);
   useAnimatedReaction(() => {
-    if (!character || sleeping || reduced) return 0;
-    for (const n of restingFlags.value.notice) if (n.id === id) return n.dir;
+    if (!leaner || sleeping || reduced) return 0;
+    for (const n of restingFlags.value.notice) if (n.id === leaner) return n.dir;
     return 0;
   }, (dir, previous) => {
     if (dir !== previous) lean.set(withTiming(dir * NOTICE_DEGREES, { duration: 180 }));
-  }, [character, sleeping, reduced, id]);
+  }, [leaner, sleeping, reduced]);
   const style = useAnimatedStyle(() => {
     const flags = restingFlags.value, motion = restingMotion.value;
     const rest = firstRest(flags, owners);
     const follow = firstFollow(motion, owners);
     const pressed = anyIn(flags.pressed, owners);
     const landing = anyIn(flags.dragTargets, landingTargets);
-    const wobble = reduced ? 0 : (motion.wobble[entity.id] ?? 0) + lean.value;
-    const bob = reduced ? undefined : motion.bob[entity.id];
+    // A held thing moves with its owner whenever the owner reacts; otherwise it has its own.
+    const owned = !!ownerId && !!ownerPivot && ((motion.wobble[ownerId] ?? 0) !== 0 || !!motion.bob[ownerId] || lean.value !== 0);
+    const presenter = owned ? ownerId! : entity.id;
+    const wobble = reduced ? 0 : (motion.wobble[presenter] ?? 0) + (owned || character ? lean.value : 0);
+    const bob = reduced ? undefined : motion.bob[presenter];
     const hidden = (front && flags.fronts.includes(entity.id)) || (rest?.hide ?? false);
-    return { opacity: hidden ? 0 : 1,
-      transformOrigin: [rest ? rest.gx - frame.left : -frame.left, rest ? rest.gy - frame.top : -frame.top, 0],
+    const dim = motion.dim[presenter] ?? 1;
+    return { opacity: hidden ? 0 : dim,
+      transformOrigin: rest ? [rest.gx - frame.left, rest.gy - frame.top, 0]
+        : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
         { translateX: follow ? follow.dx : 0 },
         { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
@@ -254,6 +268,14 @@ const RestingEntity = memo(function RestingEntity({
     </View>
   );
 });
+/** Fix round 1: the friend holding this thing, and that friend's pivot in this thing's frame. */
+function heldBy(entity: SceneEntity, scene: Scene): { ownerId?: string; ownerPivot?: { x: number; y: number } } {
+  if (entity.attachment.kind !== "hand") return {};
+  const owner = scene.entities[entity.attachment.character];
+  if (!owner) return {};
+  const frame = artFrame(entity);
+  return { ownerId: owner.id, ownerPivot: { x: owner.contact.x - entity.contact.x - frame.left, y: owner.contact.y - entity.contact.y - frame.top } };
+}
 /** HD-08: a warm pool of light around a lit lamp and on the floor below it. Fades in once. */
 function LampGlow({ lamp, reduced }: { lamp: SceneEntity; reduced: boolean }) {
   const shown = useSharedValue(reduced ? 1 : 0);
@@ -417,6 +439,7 @@ export function SceneView({
                 life={living && !front && alive(entity) ? lifeClock : undefined}
                 mood={front ? undefined : moods[entity.id]}
                 shadow={front ? undefined : shadows[entity.id]}
+                {...heldBy(entity, scene)}
               />
             );
             return (

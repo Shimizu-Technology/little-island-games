@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { View } from "react-native";
 import Svg from "react-native-svg";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { stagePieces, type PieceKind, type StagePiece } from "../art/Stage";
 import type { RoomId } from "../catalogMore";
 import type { HomeSound } from "./homeSound";
@@ -19,7 +19,7 @@ export function pieceMotion(kind: PieceKind, t: number, reduced: boolean): { deg
   if (t <= 0 || t >= 1) return { deg: 0, dy: 0, opacity: kind === "sink" ? 0 : 1 };
   if (kind === "sink") return { deg: 0, dy: 0, opacity: t < 0.06 ? t / 0.06 : t > 0.85 ? (1 - t) / 0.15 : 1 };
   // Reduce Motion: no movement, a brief dim so the touch is still answered.
-  if (reduced) return { deg: 0, dy: 0, opacity: t < 0.2 ? 0.7 : 1 };
+  if (reduced) return { deg: 0, dy: 0, opacity: t < 0.5 ? 0.6 : 1 };
   switch (kind) {
     case "jar": case "toy": return { deg: t > 0.55 ? Math.sin(((t - 0.55) / 0.45) * Math.PI * 3) * 3 * (1 - t) : 0,
       dy: t < 0.55 ? -10 * Math.sin((t / 0.55) * Math.PI) : 0, opacity: 1 };
@@ -45,7 +45,8 @@ const Piece = memo(function Piece({ piece, serial, reduced }: { piece: StagePiec
   React.useEffect(() => {
     if (!serial) return;
     progress.set(0);
-    progress.set(withTiming(1, { duration: pieceLength[piece.kind], easing: Easing.linear }));
+    // Always run: under Reduce Motion pieceMotion is a stationary dim (and the sink still runs).
+    progress.set(withTiming(1, { duration: pieceLength[piece.kind], easing: Easing.linear, reduceMotion: ReduceMotion.Never }));
   }, [serial, piece.kind, progress]);
   const kind = piece.kind;
   // The layer box covers the piece and its swing; a pan or lantern swings from its hook.

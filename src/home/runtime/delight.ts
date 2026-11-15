@@ -132,6 +132,9 @@ export function faceSample(sample: number): number {
 
 // Resting reactions (HD-05, HD-06, HD-09, HC-01), drawn through the resting wobble channel.
 export type CueKind = "tap" | "happy" | "burp" | "stir" | "greet" | "hop";
+/** Reduce Motion: a reaction is a stationary dim for this long instead of motion. */
+export const REDUCED_CUE_MS = 260;
+export const REDUCED_CUE_DIM = 0.6;
 export type Cue = { at: number; kind: CueKind; dir: number };
 export const cueLength: Record<CueKind, number> = { tap: 260, happy: 640, burp: 760, stir: 760, greet: 900, hop: 320 };
 /** Degrees of rotation about the contact, a small rise, and a vertical squash, for one cue. */

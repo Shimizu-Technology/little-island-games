@@ -17,7 +17,7 @@ import type { Interaction } from '../src/home/runtime/useInteraction';
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' }, AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => React.useRef({ value: v, set(n: any) { this.value = n; }, get() { return this.value; } }).current,
-  withTiming: (x: any) => x, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
+  withTiming: (x: any) => x, ReduceMotion: { System: 'system', Always: 'always', Never: 'never' }, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
   useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }), useAnimatedReaction: () => {}, runOnJS: (f: any) => f, runOnUI: (f: any) => f }));
 vi.mock('react-native-gesture-handler', () => ({ GestureDetector: 'GestureDetector' }));
 vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: (props: any) => React.createElement('EntityArt', { face: props.faceOverride, carry: !!props.carry, entityId: props.entity.id, preview: !!props.preview, blink: !!props.blink }), artFrame: (e: any) => e.bounds }));

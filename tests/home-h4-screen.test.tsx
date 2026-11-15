@@ -12,7 +12,7 @@ import { labFixtures } from '../src/home/runtime/lab';
 import { COOK_MS } from '../src/home/runtime/delight';
 import { stagePieces } from '../src/home/art/Stage';
 const harness = vi.hoisted(() => ({ options: {} as any, scene: {} as any, cues: [] as any[], played: [] as string[], haptics: [] as string[],
-  live: undefined as boolean | undefined, settings: { sound: true } as any, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
+  live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
 vi.mock('../src/home/runtime/homeSound', () => ({
@@ -26,7 +26,7 @@ vi.mock('expo-router', () => ({ router: { push: vi.fn() }, useFocusEffect: () =>
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }), AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
-vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harness.settings } }) }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
 vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {},
@@ -48,7 +48,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.slots = [{}, {}]; harness.cues = []; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.slots = [{}, {}]; harness.cues = []; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -201,6 +201,19 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.scene.effects.some((e: any) => e.kind === 'zzz')).toBe(true);
     expect(harness.played).toContain('rustle');
     expect(harness.scene.moods[sleeper.id]).toBeUndefined();
+  });
+  it('fix round 1 (P2): with Reduce Motion on and sound off, a sleeping friend tapped still shows a stir and a drawn z', async () => {
+    harness.settings = { sound: false };
+    harness.reduced = true;
+    const state = labFixtures['delight-rest']();
+    const sleeper = Object.values(buildScene(state).entities).find((e) => e.character?.slot === 0)!;
+    harness.sleeping = { [sleeper.id]: true };
+    await open(state);
+    await tap(sleeper.id);
+    expect(harness.live).toBe(false);
+    expect(harness.played).toEqual([]);
+    expect(harness.cues).toContainEqual([sleeper.id, 'stir', undefined]);
+    expect(harness.scene.effects.some((e: any) => e.kind === 'zzz')).toBe(true);
   });
   it('HC-01: a painted jar, pan and book answer a touch with their own motion and sound', async () => {
     const state = labFixtures.delight();

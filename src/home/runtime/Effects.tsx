@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { View } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import type { RoomId } from "../catalogMore";
 
 /**
@@ -78,7 +78,9 @@ const OneEffect = memo(function OneEffect({ effect, reduced }: { effect: Effect;
   const length = effectLength[effect.kind];
   const progress = useSharedValue(0);
   React.useEffect(() => {
-    progress.set(withTiming(1, { duration: reduced ? Math.min(length, 400) : length, easing: Easing.linear }));
+    // Always run the clock: under Reduce Motion the cue is a stationary fade (see Dot), which the
+    // system setting would otherwise skip straight to its invisible end.
+    progress.set(withTiming(1, { duration: reduced ? Math.min(length, 400) : length, easing: Easing.linear, reduceMotion: ReduceMotion.Never }));
   }, [progress, length, reduced]);
   const seed = [...effect.key].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 9973, 7);
   return <View pointerEvents="none" style={{ position: "absolute", left: effect.x, top: effect.y }}>
