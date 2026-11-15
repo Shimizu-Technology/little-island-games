@@ -34,7 +34,7 @@ export function HopLine({ width, lo, hi, start, landings, target = null, from, s
   const origin = start ?? from ?? null;
   const points = origin === null ? [] : [origin, ...landings];
   const at = points.length ? points[points.length - 1] : null;
-  const every = span > 40 ? 10 : span > 15 ? 5 : 1;
+  const every = span > 40 ? 10 : span > 10 ? 5 : 1;
   const ticks = span <= 120 ? Array.from({ length: span + 1 }, (_, i) => lo + i) : [];
   return <View accessible accessibilityLabel={label} style={{ alignItems: "center" }}>
     <Svg width={w} height={112} viewBox={`0 0 ${w} 112`}>
@@ -52,16 +52,17 @@ export function HopLine({ width, lo, hi, start, landings, target = null, from, s
         <SvgText x={x(target)} y={y + 45} textAnchor="middle" fontSize={14} fontWeight="900" fill={C.ink}>{target}</SvgText>
       </G>}
       {points.slice(1).map((to, i) => {
-        const f = points[i], up = to >= f, mid = (x(f) + x(to)) / 2, rise = Math.min(26, 8 + Math.abs(x(to) - x(f)) * 0.25);
-        const yy = up ? y - 7 : y + 7, peak = up ? yy - rise * 2 : yy + rise * 2;
+        // Every arc sits above the line, so none crosses the numbers below it. Back jumps are coral and lower.
+        const f = points[i], up = to >= f, mid = (x(f) + x(to)) / 2, rise = Math.min(up ? 26 : 16, (up ? 8 : 6) + Math.abs(x(to) - x(f)) * 0.25);
+        const yy = y - 7, peak = yy - rise * 2;
         return <G key={i}>
           <Path d={`M${x(f)} ${yy} Q${mid} ${peak} ${x(to)} ${yy}`} stroke={up ? C.teal : C.coral} strokeWidth={3} fill="none" />
-          <Path d={up ? `M${x(to) - 5} ${yy - 9}L${x(to)} ${yy - 1}L${x(to) + 5} ${yy - 9}` : `M${x(to) - 5} ${yy + 9}L${x(to)} ${yy + 1}L${x(to) + 5} ${yy + 9}`}
+          <Path d={`M${x(to) - 5} ${yy - 9}L${x(to)} ${yy - 1}L${x(to) + 5} ${yy - 9}`}
             stroke={up ? C.teal : C.coral} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </G>;
       })}
       {suggest !== null && at !== null && at + suggest >= lo && at + suggest <= hi && <Path
-        d={`M${x(at)} ${y - 7} Q${(x(at) + x(at + suggest)) / 2} ${suggest > 0 ? y - 50 : y + 36} ${x(at + suggest)} ${y - 7}`}
+        d={`M${x(at)} ${y - 7} Q${(x(at) + x(at + suggest)) / 2} ${suggest > 0 ? y - 50 : y - 36} ${x(at + suggest)} ${y - 7}`}
         stroke={C.teal} strokeWidth={2.4} strokeDasharray="5 5" fill="none" />}
       {origin !== null && <G>
         <Rect x={x(origin) - 13} y={y + 30} width={26} height={20} rx={6} fill={start === null ? C.gold : C.paper} stroke={C.ink} strokeWidth={1.4} />

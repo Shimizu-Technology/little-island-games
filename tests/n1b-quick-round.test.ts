@@ -139,6 +139,8 @@ describe("Quick Practice round", () => {
       expect(itemKey(fresh)).not.toBe(itemKey(first));
       expect(fitsSlot(level, 0, "mixed", fresh)).toBe(true);
       expect(s.items).toHaveLength(ROUND + 1);
+      // The journey bar reads total, which never grows with fresh questions.
+      expect(s.total).toBe(ROUND);
       // The worked answer for the missed one ends with its answer.
       expect(workingFor(first)).toContain(String(answerOf(first)));
       // Any next move clears the miss note.
@@ -255,6 +257,7 @@ describe("Quick Practice round", () => {
     expect(validQuick({ ...s, items: [s.items[0], s.items[0], s.items[2]] }, o)).toBe(false);
     expect(validQuick({ ...s, level: 4 }, o)).toBe(false);
     expect(validQuick({ ...s, extra: 1 }, o)).toBe(false);
+    expect(validQuick({ ...s, total: 4 }, o)).toBe(false);
     expect(validQuick({ ...s, history: [["n", 999]] }, o)).toBe(false);
     expect(validQuick(s, opts(4))).toBe(false);
     // A seed-drawn round for the same seed is the same.

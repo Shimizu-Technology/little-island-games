@@ -9,6 +9,7 @@ import { answerOf } from "../src/learn/games/quick-practice/items";
 import { QuickBoard } from "../src/learn/games/quick-practice/QuickBoard";
 import { createQuick, quickProgress, validQuick, type QuickRound } from "../src/learn/games/quick-practice/round2";
 import { HopBoard } from "../src/learn/games/number-hop/HopBoard";
+import { roundProgress } from "../src/learn/LearnChrome";
 import { countResult, hopOf, landingOf } from "../src/learn/games/number-hop/items";
 import { createHop, hopProgress, validHop2, type HopRound } from "../src/learn/games/number-hop/round2";
 
@@ -120,6 +121,13 @@ describe("Quick Practice board", () => {
     expect(calls.practice.at(-1)).toEqual(["num.missing-to-100", false]);
     expect(screen()).toContain("We worked it out together.");
   });
+  it("the frame's journey bar keeps three parts after a miss brings a fresh question (found on device: it read 0/4)", async () => {
+    await mountQuick(4);
+    await typeNumber(answerOf(quick.items[0]) + 1);
+    expect(quick.items).toHaveLength(4);
+    expect(roundProgress({ game: "quick-practice", version: 1, id: "x", revision: 1, options: quickOptions(4), state: quick })).toEqual({ current: 0, total: 3 });
+    expect(roundProgress({ game: "number-hop", version: 1, id: "y", revision: 1, options: quickOptions(4), state: createHop(quickOptions(4), random(2)) })).toEqual({ current: 0, total: 5 });
+  });
   it("Help climbs a ladder from the engine and fills the pad on the last step; Show choices gives three tiles", async () => {
     await mountQuick(3);
     const ans = answerOf(quick.items[0]);
@@ -230,7 +238,9 @@ describe("Number Hop board", () => {
     await mountHop(5);
     const keys = buttons().filter((b) => /^Jump /.test(label(b)));
     expect(keys).toHaveLength(4);
-    for (const k of keys) { expect(k.props.style.width).toBeGreaterThanOrEqual(56); expect(k.props.style.minHeight).toBeGreaterThanOrEqual(60); }
+    // One row sharing the width: 4 keys on a 320-pt phone's board (about 264 pt inside) still clear 56 pt each.
+    for (const k of keys) { expect(k.props.style.flex).toBe(1); expect(k.props.style.minWidth).toBeGreaterThanOrEqual(56); expect(k.props.style.minHeight).toBeGreaterThanOrEqual(60); }
+    expect(4 * 56 + 3 * 8).toBeLessThanOrEqual(320 - 32 - 24);
     await act(async () => root!.unmount()); root = undefined;
     viewport.fontScale = 3.12; viewport.width = 393;
     await mountHop(4);

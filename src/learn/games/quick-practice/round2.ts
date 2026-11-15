@@ -16,7 +16,8 @@ import { ROUND, answerOf, fitsSlot, freshItem, itemKey, levelMax, type QItem } f
  */
 export type QAct = Act | readonly ["x"];
 export type QuickRound = {
-  version: 2; level: Level; seed: number; index: number; items: QItem[]; history: QAct[];
+  /** `total` is always ROUND: the frame's journey bar reads it, since `items` grows when a fresh question is given. */
+  version: 2; level: Level; seed: number; index: number; total: number; items: QItem[]; history: QAct[];
   /** Mirrors of the current question, which the Learn frame reads to let the companion react. Re-derived on load. */
   solved: boolean; wrong: number | null;
 };
@@ -33,7 +34,7 @@ export function createQuick(o: LearnOptions, rng: () => number): QuickRound {
   const seed = Math.floor((Number.isFinite(rng()) ? rng() : 0) * 4294967296) >>> 0;
   const items: QItem[] = [];
   for (let pos = 0; pos < ROUND; pos++) items.push(freshItem(level, pos, choice, drawFor(seed, pos), items, fallback(seed)));
-  return { version: 2, level, seed, index: 0, items, history: [], solved: false, wrong: null };
+  return { version: 2, level, seed, index: 0, total: ROUND, items, history: [], solved: false, wrong: null };
 }
 
 export type QuickProgress = {
@@ -115,12 +116,12 @@ export function quickMove(s: QuickRound, act: QAct, choice: OpChoice): QuickRoun
 }
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
-const KEYS = ["version", "level", "seed", "index", "items", "history", "solved", "wrong"];
+const KEYS = ["version", "level", "seed", "index", "total", "items", "history", "solved", "wrong"];
 
 export function validQuick(v: unknown, o: LearnOptions): v is QuickRound {
   if (!object(v) || Object.keys(v).length !== KEYS.length || !KEYS.every((k) => k in v)) return false;
   const level = levelOf(o) as Level, choice = choiceOf(o), max = levelMax(level);
-  if (v.version !== 2 || v.level !== level || !Number.isInteger(v.seed) || (v.seed as number) < 0 || (v.seed as number) > 4294967295) return false;
+  if (v.version !== 2 || v.level !== level || v.total !== ROUND || !Number.isInteger(v.seed) || (v.seed as number) < 0 || (v.seed as number) > 4294967295) return false;
   if (!Array.isArray(v.items) || v.items.length < ROUND || v.items.length > ROUND + MAX_FRESH) return false;
   if (!Array.isArray(v.history) || v.history.length > HISTORY_CAP) return false;
   if (!Number.isInteger(v.index) || (v.index as number) < 0 || (v.index as number) > ROUND) return false;

@@ -162,15 +162,15 @@ export function HopBoard(props: BoardProps<HopRound>) {
   // Where did the frog start?
   const landing = landingOf(item), js = startJumps(item);
   const points = [item[1], ...landings(item[1], js)];
-  const win = hopWindow(work.hint >= 2 || solved ? points : [landing, landing - js.reduce((a, b) => a + b, 0)], 0, 100);
+  // Before Help draws the jumps, the window depends only on the landing, so its edges never hint at the start.
+  const win = hopWindow(work.hint >= 2 || solved ? points : [landing - 25, landing + 5], 0, 100);
   const prompt = solved ? `${work.helped ? "We worked it out together." : "You found it!"} It started on ${item[1]}.`
     : work.hint >= 3 ? `It started on ${item[1]}. Tap Go to check it.` : work.hint === 2 ? backWorking(item)
-      : work.hint === 1 ? `Start at ${landing} and do each jump backwards, from the last one.` : "Where did the frog start?";
+      : work.hint === 1 ? `Start at ${landing} and do each jump backwards, from the last one.` : `The frog landed on ${landing}. Where did it start?`;
   return <View onLayout={entry.onLayout} style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
     {header(help, false)}
     {heading(prompt)}
-    <Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, fontSize: 18, textAlign: "center" }}>The frog jumped {js.map(jumpText).join(", ")} and landed on {landing}.</Copy>
-    <Text accessibilityLabel={startSentence(item, solved).replace("?", "what number")} maxFontSizeMultiplier={sentenceCap} style={{ fontSize: width < 350 ? 26 : 32, fontWeight: "900", color: C.ink, textAlign: "center" }}>{startSentence(item, solved)}</Text>
+    <Text accessibilityLabel={`The frog jumped ${js.map(jumpText).join(", ")} and landed on ${landing}. ${startSentence(item, solved).replace("?", "what number")}`} maxFontSizeMultiplier={sentenceCap} style={{ fontSize: width < 350 ? 26 : 32, fontWeight: "900", color: C.ink, textAlign: "center" }}>{startSentence(item, solved)}</Text>
     {noteLine}
     <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={solved ? item[1] : null} from={work.hint >= 2 || solved ? item[1] : undefined}
       landings={work.hint >= 2 || solved ? points.slice(1) : []} target={landing}
@@ -203,7 +203,7 @@ export function HopBoard(props: BoardProps<HopRound>) {
       : suggest !== null ? `Try ${jumpText(suggest)}.` : left === null ? `No jump can reach ${h.target} from ${w.at}. Undo, or start again.`
         : n === 0 ? `Get from ${h.start} to ${h.target}.` : `You are on ${w.at}. Keep going to ${h.target}.`;
     const label = `Number line from ${win.lo} to ${win.hi}. Started on ${h.start}. Flag on ${h.target}. ${n === 0 ? "No jumps yet." : `Jumps: ${w.path.map(jumpText).join(", ")}. On ${w.at}.`}`;
-    const keyW = Math.max(56, Math.min(96, Math.floor((Math.min(width, 520) - 10 * (h.jumps.length - 1)) / h.jumps.length)));
+
     return <View onLayout={entry.onLayout} style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
       {header(reachHelp(w.hint), w.path.length > 0)}
       {heading(prompt)}
@@ -214,12 +214,13 @@ export function HopBoard(props: BoardProps<HopRound>) {
       {noteLine}
       <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={h.start} landings={path} target={h.target} suggest={suggest} label={label} />
       {!solved && <CoachSpot active={coach.active && active} handAt="none">
-        <View accessibilityLabel="Choose a jump" style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+        {/* One row of keys, sharing the width: four keys still clear 56 pt on the smallest phone. */}
+        <View accessibilityLabel="Choose a jump" style={{ flexDirection: "row", gap: 8, justifyContent: "center", alignSelf: "stretch" }}>
           {h.jumps.map((j, k) => {
             const off = w.at + j < h.lo || w.at + j > h.hi, hot = suggest === j;
             return <PressableScale key={j} accessibilityRole="button" accessibilityLabel={jumpName(j)} accessibilityState={{ disabled: !active || off, selected: hot }}
               disabled={!active || off} onPress={() => { press(); act(["j", k]); }} amount={0.94}
-              style={{ width: keyW, minHeight: 60, borderRadius: 16, borderWidth: hot ? 4 : 2, borderColor: hot ? C.teal : C.line, backgroundColor: j > 0 ? C.paper : C.cream,
+              style={{ flex: 1, minWidth: 56, maxWidth: 110, minHeight: 60, borderRadius: 16, borderWidth: hot ? 4 : 2, borderColor: hot ? C.teal : C.line, backgroundColor: j > 0 ? C.paper : C.cream,
                 alignItems: "center", justifyContent: "center", opacity: off ? 0.4 : 1, shadowColor: C.ink, shadowOpacity: 0.16, shadowOffset: { width: 0, height: 3 }, shadowRadius: 0, elevation: 3 }}>
               <Text maxFontSizeMultiplier={keyCap} style={{ fontSize: 26, fontWeight: "900", color: j > 0 ? C.teal : C.coral }}>{jumpText(j)}</Text>
             </PressableScale>;
