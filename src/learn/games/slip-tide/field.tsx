@@ -1,4 +1,4 @@
-import { BoardPrimary, BoardRow, useBoardColumns, useBoardGeometry } from '../../BoardSpace';
+import { BoardPrimary, BoardRow, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -129,7 +129,8 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
   const n = puzzle.size, solved = !!finished;
   // A landscape phone (about 400 pt tall) cannot show the board and the arrows stacked, so the arrows, the caption and
   // help sit beside the board, with the arrows as an up / left-right / down pad.
-  const wide = useBoardColumns();
+  const wide = useBoardColumns(), school = useBoardSpace();
+  const Drawing = school ? View : React.Fragment, Row = school ? BoardRow : View;
   const side = wide || width >= 520 && height < 500, sideColumn = 236;
   const naturalCell = boardCell(side ? width - sideColumn : width, height, n, together);
   const geometry = useBoardGeometry('slip-tide', naturalCell * n + boardPad * 2, Math.min(naturalCell, 36) * n + boardPad * 2);
@@ -194,7 +195,7 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
       })()}
     </View>
   </>;
-  const board = <View testID={geometry.testID} onLayout={geometry.onLayout}>
+  const board = <Drawing {...(school ? { testID: geometry.testID, onLayout: geometry.onLayout } : {})}>
     <CoachSpot active={!!coach?.active} handAt="none" style={{ borderRadius: 26 }}>
       <GestureDetector gesture={pan}>
         <View accessible accessibilityRole="image" accessibilityLabel={describeBoard(slipView(puzzle, crabs))} style={{ width: boardSize, height: boardSize, padding: boardPad, borderRadius: 24, backgroundColor: '#F2DFA9', borderWidth: 2, borderColor: '#A98F58', overflow: 'hidden' }}>
@@ -217,18 +218,18 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
         </View>
       </GestureDetector>
     </CoachSpot>
-  </View>;
+  </Drawing>;
   const controls = finished ?? <>
       <View testID="slip-arrows" style={side ? { alignItems: 'center', gap: 12 } : { flexDirection: 'row', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
         {together ? <>{arrowsFor([0, 2], `${nameA}: up and down`)}{arrowsFor([3, 1], `${nameB}: left and right`)}</> : side ? <View style={{ alignItems: 'center', gap: 8 }}>{arrowsFor([0])}{arrowsFor([3, 1])}{arrowsFor([2])}</View> : arrowsFor([3, 0, 2, 1])}
       </View>
-      <BoardPrimary/>
+      {school && <BoardPrimary/>}
       {help && <View style={{ alignSelf: 'stretch' }}>{help}</View>}
       {onAnother && <Button quiet compact disabled={!active} onPress={onAnother}>Try another</Button>}
     </>;
-  if (side) return <BoardRow testID="slip-side" style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start', justifyContent: 'center' }}>
+  if (side) return <Row testID="slip-side" style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start', justifyContent: 'center' }}>
     {board}
     <View style={{ flex: 1, maxWidth: 360, gap: 12, alignItems: 'center' }}>{header}{controls}</View>
-  </BoardRow>;
+  </Row>;
   return <View style={{ gap: 12, alignItems: 'center' }}>{header}{board}{controls}</View>;
 }

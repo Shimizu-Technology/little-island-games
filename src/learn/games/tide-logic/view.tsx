@@ -1,7 +1,7 @@
 import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
-import React, { useState } from "react";
-import { View, useWindowDimensions } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ScrollView, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading } from "../../../components/ui";
 import { GameIcon } from "../../../components/GameIcon";
@@ -25,7 +25,8 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
   const side = useBoardColumns(), cargoWidth = side ? width * .46 : width;
   const s = session.state, done = complete(s), t = done ? null : taskAt(s.level, s.seed, s.index, s.version);
-  const cargoRows = Math.max(1, Math.ceil((t?.items.length ?? 0) / Math.max(1, Math.floor((cargoWidth - 24 + 5) / (Math.ceil((width >= 600 ? 64 : 56) * 64 / 49) + 11)))));
+  const singleRow = compact && !side && !space?.large;
+  const cargoRows = singleRow ? 1 : Math.max(1, Math.ceil((t?.items.length ?? 0) / Math.max(1, Math.floor((cargoWidth - 24 + 5) / (Math.ceil((width >= 600 ? 64 : 56) * 64 / 49) + 11)))));
   const [cargoChrome, setCargoChrome] = useState(0);
   const cargoFloor = !space ? 64 : Math.ceil((width >= 600 ? 64 : SCHOOL_BOARD_MIN['tide-logic']) * 64 / 49);
   const geometry = useBoardGeometry('tide-logic', cargoFloor * cargoRows + cargoChrome, cargoFloor * cargoRows + cargoChrome);
@@ -35,7 +36,12 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const [showHelp, setShowHelp] = useState(false);
   const [guess, setGuess] = useState<"left" | "right" | null>(null);
   const [failure, setFailure] = useState<number | null>(null);
+  const CargoViewport = singleRow ? ScrollView : React.Fragment;
+  const cargoScroll = useRef<ScrollView | null>(null), cargoPositions = useRef<number[]>([]);
   const current = t && s.running >= 0 ? Math.min(s.running, t.items.length - 1) : 0;
+  useEffect(() => {
+    if (singleRow && s.running >= 0) cargoScroll.current?.scrollTo({x:cargoPositions.current[current] ?? 0,animated:false});
+  }, [singleRow,current,s.running]);
   const traceIndex = s.index % 2 ? 1 : 0;
   const traceAnswer = t ? route(t.items[traceIndex], t.target) : null;
   const change = (slot: keyof TideState["rule"], value: string) => { update({ ...s, rule: { ...s.rule, [slot]: value } }); setEditing(null); setMessage(""); setFailure(null); coach.done(); };
@@ -60,10 +66,13 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   return <View style={{ gap: compact ? 4 : 12, paddingBottom: 20 }}>
     <Heading>{done ? "Dock sorter complete!" : `Belt ${s.index + 1} of 4`}</Heading>
     {t && <>
+      <Copy>{t.prompt}</Copy>
       <BoardColumns drawing={<View style={{ backgroundColor: "#E2F3F2", borderRadius: 18, padding: compact ? 8 : 12, gap: compact ? 6 : 8 }}>
-        <View testID={geometry.testID} onLayout={event => { geometry.onLayout?.(event); const fixed = Math.max(0, event.nativeEvent.layout.height - cargoRows * cargoSize); setCargoChrome(old => Math.abs(old - fixed) < 1 ? old : fixed); }} style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 5 }}>
-          {t.items.map((item, i) => <View key={i} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: i === failure || s.running === i ? 3 : 0, borderColor: i === failure ? "#B74431" : "#287A82", borderRadius: 12, backgroundColor: i === failure ? "#FFE0D8" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{item.size}</Copy></View>)}
+        <CargoViewport {...(singleRow ? { ref: cargoScroll, horizontal: true, nestedScrollEnabled: true, testID: "tide-cargo-scroll", accessibilityLabel: "Cargo belt. Scroll sideways to see every catch." } : {})}>
+        <View testID={geometry.testID} onLayout={event => { geometry.onLayout?.(event); const fixed = Math.max(0, event.nativeEvent.layout.height - cargoRows * cargoSize); setCargoChrome(old => Math.abs(old - fixed) < 1 ? old : fixed); }} style={{ flexDirection: "row", flexWrap: singleRow ? "nowrap" : "wrap", justifyContent: "center", gap: 5 }}>
+          {t.items.map((item, i) => <View key={i} onLayout={singleRow ? event => { cargoPositions.current[i] = event.nativeEvent.layout.x; if (s.running === i) cargoScroll.current?.scrollTo({x:event.nativeEvent.layout.x,animated:false}); } : undefined} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: i === failure || s.running === i ? 3 : 0, borderColor: i === failure ? "#B74431" : "#287A82", borderRadius: 12, backgroundColor: i === failure ? "#FFE0D8" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{item.size}</Copy></View>)}
         </View>
+        </CargoViewport>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
         {/* The bucket labels shrink and wrap between words at large text, never running into each other or off the board. */}
         <View testID="tide-buckets" style={{ flexDirection: "row", justifyContent: "space-around", gap: 8 }}><Copy maxFontSizeMultiplier={bucketMax} style={{ flexShrink: 1 }}>{"←\u00a0LEFT BUCKET"}</Copy><Copy maxFontSizeMultiplier={bucketMax} style={{ flexShrink: 1, textAlign: "right" }}>{"RIGHT BUCKET\u00a0→"}</Copy></View>
@@ -71,7 +80,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
         {s.running >= 0 && <Copy style={{ textAlign: "center", fontWeight: "700" }}>{s.running < t.items.length ? `Catch ${s.running + 1}: ${route(t.items[s.running], s.rule).toUpperCase()} ${s.rule.action === "count left" && route(t.items[s.running], s.rule) === "left" ? " · counter +1" : ""}` : `All sorted! ${t.items.filter((item) => route(item, s.rule) === "left").length} left · ${t.items.filter((item) => route(item, s.rule) === "right").length} right`}</Copy>}
         {failure !== null && <Copy style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>Look at the outlined catch: the sorter found a bug.</Copy>}
       </View>
-      }><Copy>{t.prompt}</Copy><View style={{ borderWidth: 2, borderColor: "#287A82", backgroundColor: "#FFF9EA", borderRadius: 16, padding: compact ? 8 : 12, gap: compact ? 5 : 7 }}>
+      }><View style={{ borderWidth: 2, borderColor: "#287A82", backgroundColor: "#FFF9EA", borderRadius: 16, padding: compact ? 8 : 12, gap: compact ? 5 : 7 }}>
         <Copy style={{ fontWeight: "700" }}>BUILD THE RULE</Copy>
         <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", alignItems: "center" }}><Copy>IF</Copy>{t.slots.map((slot, i) => <React.Fragment key={slot}>{s.level === 1 && slot === "first" && !!s.rule.first && <View style={{ width: 23, height: 23, borderRadius: 12, backgroundColor: s.rule.first === "blue" ? "#4E9BB9" : "#E9826B", borderWidth: 2, borderColor: C.ink }}/>}{i === t.slots.length - 1 && <Copy>→</Copy>}{s.level === 1 && slot === "action" && <BucketPicture side={s.rule.action === "right" ? "right" : "left"}/>}<Button compact quiet selected={editing === slot} onPress={() => setEditing(editing === slot ? null : slot)} disabled={!active || s.running >= 0} label={`Choose ${slot}, currently ${s.rule[slot] || "empty"}`}>{slot === "action" ? bucketLabel(s.rule.action) : s.rule[slot] || (slot === "first" || slot === "second" ? "clue +" : s.level >= 4 ? "THEN +" : "AND/OR +")}</Button></React.Fragment>)}<Copy>{"ELSE\u00a0→ "}{bucketLabel(s.rule.action === "right" ? "left" : "right")}</Copy></View>
       </View>

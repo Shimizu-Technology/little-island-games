@@ -469,12 +469,12 @@ export function Board({
           {blocks && <ProgramEditor schoolGeometry onFlat={!active||s.running?undefined:()=>setBlocks(false)} maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="edge or rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
             onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
  />}
-          {!blocks && <PlanStrip count={s.program.length} focus={s.running ? s.cursor : bumpedCard ?? hinted ?? editing} cardHeight={58} gap={geometry.measured ? 2 : 5} padding={4}><View
+          {!blocks && <PlanStrip count={s.program.length} focus={s.running ? s.cursor : bumpedCard ?? hinted ?? editing} cardHeight={58} gap={5} padding={4} drawingFloor={SCHOOL_BOARD_MIN['crab-commands']}><View
             accessibilityLabel={`Your plan: ${s.program.length ? s.program.map((c) => cardLabel[c]).join(", ") : "empty"}`}
             style={{
               flexDirection: "row",
               flexWrap: "wrap",
-              gap: geometry.measured ? 2 : 5,
+              gap: 5,
               minHeight: 52,
               backgroundColor: C.paper,
               padding: 4,
@@ -647,8 +647,8 @@ export function Board({
                   Hint
                 </Button>
                 </View>}
-{blocks&&<Button quiet compact maxFontSizeMultiplier={1.5} disabled={s.running||!active} onPress={()=>{if(!hint){assistance?.();sound('crab-commands-hint');}setHint(hint?0:1);}}>Hint</Button>}
-{hint > 0 && (
+{blocks&&!done&&!won&&<Button quiet compact maxFontSizeMultiplier={1.5} disabled={s.running||!active} onPress={()=>{if(!hint){assistance?.();sound('crab-commands-hint');}setHint(hint?0:1);}}>Hint</Button>}
+{hint > 0 && !done && !won && (
                 <View style={{ gap: 4 }}>
                   <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? (blocks ? blockHint(helpPlan.edit,draft?.frames??[],helpPlan.edit?.card?cardLabel[helpPlan.edit.card]:'a card') : hintText(helpPlan, s.program.length, cardLabel)) : hint === 2 ? (blocks ? blockHint(helpPlan.edit,draft?.frames??[],helpPlan.edit?.card?cardLabel[helpPlan.edit.card]:'a card') : hintText(helpPlan, s.program.length, cardLabel, "Try this step, or ask for the whole plan.")) : "One plan that works:"}</Copy>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>

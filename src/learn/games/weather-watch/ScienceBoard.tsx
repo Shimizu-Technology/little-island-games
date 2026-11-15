@@ -1,9 +1,10 @@
 import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
+import { sceneLabelLines } from './labelGeometry';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useState } from "react";
 import { TextInput, View, useWindowDimensions } from "react-native";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
-import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText, TSpan } from "react-native-svg";
 import { Button, Copy, PressableScale, font } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { SkySun, PuffyCloud, EarthGlobe, MoonDisc, Creature, Seaweed, ReefHabitat, WeatherExplorer, NodePicture } from "./Illustrations";
@@ -63,6 +64,10 @@ export function TokenArt({ text, size = 44 }: { text: string; size?: number }) {
     );
   }
 
+  if (s.includes("beach ball")) return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Circle cx={40} cy={40} r={32} fill={gold} stroke={ink} strokeWidth={2}/><Path d="M40 8Q5 40 40 72Q75 40 40 8" fill={blue}/><Path d="M10 28Q40 40 70 28L70 52Q40 40 10 52Z" fill="#E9826B"/></Svg>;
+  if (s.includes("radio")) return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Path d="M53 24L67 6" stroke={ink} strokeWidth={3}/><Rect x={10} y={24} width={60} height={44} rx={9} fill={gold} stroke={ink} strokeWidth={2}/><Circle cx={29} cy={46} r={13} fill={blue} stroke={ink} strokeWidth={2}/><Path d="M51 38h12m-12 7h12m-12 7h12" stroke={ink} strokeWidth={3}/><Circle cx={57} cy={60} r={3} fill={ink}/></Svg>;
+  if (s.includes("flashlight")) return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Path d="M27 25L20 8H60L53 25Z" fill={gold} stroke={ink} strokeWidth={2}/><Rect x={28} y={25} width={24} height={46} rx={6} fill={blue} stroke={ink} strokeWidth={2}/><Rect x={36} y={35} width={8} height={12} rx={3} fill={gold}/></Svg>;
+  if (s === "water") return <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden><Rect x={30} y={5} width={20} height={11} rx={3} fill={ink}/><Path d="M29 16H51V23L59 32V70H21V32L29 23Z" fill="#B7DEE4" stroke={ink} strokeWidth={2}/><Path d="M23 43Q40 36 57 43V68H23Z" fill={blue}/></Svg>;
   if (s.includes("indoor") || s.includes("shelter"))
     return (
       <Svg width={size} height={size} viewBox="0 0 80 80" accessibilityElementsHidden>
@@ -200,7 +205,18 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
   const side = useBoardColumns();
   const sceneScale = Math.min(geometry.height / 235, ((space?.width ?? 382) * (side ? .46 : 1) - 22) / 360);
   const sceneLabel = label;
-  const fittedLabel = (text: string, x: number, y: number, size = 13, color = ink) => sceneLabel(text,x,y,space ? Math.max(size,13 * (fontScale >= LARGE_TEXT ? 1.5 : 1) / sceneScale) : size,color);
+  const fittedLabel = (text: string, x: number, y: number, size = 13, color = ink) => {
+    if (!space) return sceneLabel(text,x,y,size,color);
+    const actual = Math.max(size,13 * (fontScale >= LARGE_TEXT ? 1.5 : 1) / sceneScale);
+    // Gauge names/numbers have reserved boxes clear of the instruments and bars.
+    // Wrap at the floor, never shrink the text to the former source-unit size.
+    const width = q.kind === 'gauge' && y === 202 ? 68 : Math.min(2 * (x - 8),2 * (352 - x));
+    const lines = sceneLabelLines(text,actual,width);
+    const top = lines.length > 1 && y === 202 ? 190 : y;
+    return <SText x={x} y={top} textAnchor="middle" fontFamily={font ?? "Arial"} fontSize={actual} fontWeight="700" fill={color}>
+      {lines.length === 1 ? text : lines.map((line,index)=><TSpan key={index} x={x} y={top + index * actual * 1.2}>{line}</TSpan>)}
+    </SText>;
+  };
   const a = values[0] ?? 0,
     b = values[1] ?? 0;
   const selected = values.map((v) => q.labels[v]).filter(Boolean);
@@ -599,7 +615,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           </G>
         )}
         <WeatherExplorer gear={q.kind === "dress" ? q.labels[a] : ""}/>
-        {fittedLabel(q.labels[a] ?? "", 279, 112, 11)}
+        {space ? <G><Circle cx={225} cy={193} r={13 / sceneScale} fill="#FFF9E9" stroke={ink}/>{sceneLabel("1",225,193 + 4 / sceneScale,13 * (fontScale >= LARGE_TEXT ? 1.5 : 1) / sceneScale)}</G> : fittedLabel(q.labels[a] ?? "", 279, 112, 11)}
       </>
     );
   }
@@ -615,10 +631,16 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         borderColor: "#C7D8AD",
       }}
     >
-      <View testID={geometry.testID} onLayout={geometry.onLayout}><Svg width="100%" height={geometry.height} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
+      <View testID={geometry.testID} onLayout={geometry.onLayout}>{space && q.kind === "kit" ? <View style={{ flexDirection:"row",flexWrap:"wrap",gap:8 }}>
+        {values.map((value,index)=><View key={index} style={{ width:"47%",alignItems:"center",gap:4,padding:4,backgroundColor:"#FFF9E9",borderRadius:12 }}>
+          <TokenArt text={q.labels[value]} size={space.width >= 600 ? 64 : 56}/>
+          <Copy testID="weather-object-label" maxFontSizeMultiplier={1.5} style={{fontSize:13,flexShrink:1,alignSelf:"stretch",textAlign:"center",fontWeight:"700"}}>{q.labels[value]}</Copy>
+        </View>)}
+      </View> : <Svg width="100%" height={geometry.height} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
         {scene}
-      </Svg></View>
-      <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>
+      </Svg>}</View>
+      {space && ["dress","safety","forecast"].includes(q.kind) && <Copy testID="weather-object-label" maxFontSizeMultiplier={1.5} style={{fontSize:13,flexShrink:1,alignSelf:"stretch",fontWeight:"700",textAlign:"center"}}>1 · {q.labels[a]}</Copy>}
+      {!(space && (["dress","safety","forecast"].includes(q.kind) || q.kind === "kit" && values.length > 0)) && <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>}
       {game === "space-station" && (
         <Copy style={{ fontSize: 12, textAlign: "center", color: ink }}>
           Space diagrams simplify sizes and distances. Planet builder compares planet diameters; its Sun is a symbol.

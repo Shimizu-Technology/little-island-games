@@ -8,7 +8,7 @@ import { optionsAtLevel, type LearningLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
 import { Board as FoodWeb } from '../src/learn/games/food-web/view';
 import { Board as SpaceStation } from '../src/learn/games/space-station/view';
-import { move as weatherMove, type ScienceState } from '../src/learn/games/weather-watch/model';
+import { move as weatherMove, tasks as weatherTasks, type ScienceState } from '../src/learn/games/weather-watch/model';
 import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
 import { Board as B1 } from '../src/learn/games/crab-commands/view';
@@ -252,7 +252,7 @@ it('Slip Tide does not shrink its drawing to pay for a taller sibling column',as
 it('Float/Sink header art keeps its original aspect ratio outside the measured host',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
  await act(async()=>{root=create(<FloatArt size={70}/>);});
- expect(flat(view('water-contents').props.style).transform).toEqual([{scaleY:1}]);
+ expect(flat(view('water-contents').props.style).transform).toEqual([{scale:1}]);
 });
 it('ProgramEditor leaves Turtle and other unported hosts at their original allocation',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
@@ -367,4 +367,85 @@ it('Weather scene fills its School column so SVG labels use the allocated width'
  await mountPort('weather-watch',B7,420,{width:1133,height:744,fontScale:1});
  const scene=view('school-weather-watch-drawing').parent!;
  expect(flat(scene.props.style).alignSelf).toBe('stretch');
+});
+
+
+it.each([393,744])('Weather labels stay outside their art and wrap in bounded rows at width %s',async width=>{
+ for(const fontScale of [1,3.12])for(const level of [1,2,3,5] as LearningLevel[]){
+  const tasks=weatherTasks('weather-watch',level,7);
+  for(const [index,task] of tasks.entries())for(let value=0;value<task.labels.length;value++){
+   const r=await mountPort('weather-watch',B7,500,{width,height:width===393?852:1133,fontScale},level,true,session=>({...session,state:{...session.state as ScienceState,seed:7,index,values:[value],tested:false}}));
+   const scene=r.root.findAll(n=>typeof n.type==='function'&&n.type.name==='Scene')[0];
+   if(['dress','safety','forecast','kit'].includes(task.kind)){
+    expect(scene.findAll(n=>String(n.type)==='SvgText'&&n.children.includes(task.labels[value]))).toHaveLength(0);
+    const labels=scene.findAll(n=>String(n.type)==='Text'&&n.props.testID==='weather-object-label');
+    expect(labels.some(n=>n.children.join('').includes(task.labels[value]))).toBe(true);
+    for(const label of labels){expect(flat(label.props.style)).toMatchObject({fontSize:13,flexShrink:1});expect(label.props.maxFontSizeMultiplier).toBe(1.5);expect(label.props.numberOfLines).toBeUndefined();}
+   }
+   await act(async()=>r.unmount());root=undefined;
+  }
+ }
+});
+it.each([['crab-commands',B1,58,150],['beep-bot',B2,64,160]] as const)('%s caps a long plan against measured remaining space',async(id,Board,cardHeight,floor)=>{
+ const r=await mountPort(id,Board,500,{width:393,height:852,fontScale:1},1,true,session=>({...session,state:{...session.state as object,program:Array(32).fill('right'),cursor:0,running:false}}));
+ const strip=view('plan-strip');expect(strip).toBeDefined();
+ const scroll=r.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Your plan cards')[0];
+ const original=Number(flat(scroll.props.style).maxHeight);
+ boundary={y:0,height:540};rowBox={y:0,height:160};
+ await act(async()=>{
+  strip.props.onLayout({nativeEvent:{layout:{height:original+54}}});
+  view(`school-${id}-drawing`).props.onLayout({nativeEvent:{layout:{height:floor}}});
+  const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));
+ });
+ const cap=Number(flat(scroll.props.style).maxHeight);
+ expect(cap).toBeLessThan(original);expect(cap).toBeGreaterThanOrEqual(cardHeight+8);
+});
+it('Tide Logic keeps the prompt before its bounded one-row phone cargo belt',async()=>{
+ const r=await mountPort('tide-logic',B13);
+ const belt=r.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.testID==='tide-cargo-scroll')[0];
+ expect(belt).toBeDefined();expect(belt.props.horizontal).toBe(true);
+ const cargo=belt.findAll(n=>typeof n.type==='function'&&n.type.name==='Cargo');
+ expect(cargo.length).toBeGreaterThan(3);expect(cargo.every(c=>c.props.size>=56)).toBe(true);
+ expect(flat(view('school-tide-logic-drawing').props.style).flexWrap).toBe('nowrap');
+});
+
+it('Float/Sink scales its art uniformly at the phone tank floor',async()=>{
+ await mountPort('float-sink',B9,200);
+ boundary={y:0,height:500};
+ await act(async()=>{view('school-float-sink-drawing').props.onLayout({nativeEvent:{layout:{height:150}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ expect(flat(view('school-float-sink-drawing').props.style).height).toBe(120);
+ expect(flat(view('water-contents').props.style).transform).toEqual([{scale:.8}]);
+});
+it('Crab hides an open hint after reaching home and after the final beach',async()=>{
+ const r=await mountPort('crab-commands',B1,500);
+ const board=r.root.findByType(B1), original=board.props as React.ComponentProps<typeof B1>;
+ const {solve,currentLevel}=await import('../src/learn/games/crab-commands/engine');
+ const state=original.session.state, program=solve(currentLevel(state));
+ const hint=r.root.findAll(n=>String(n.type)==='Pressable'&&n.findAll(t=>String(t.type)==='Text'&&t.children.includes('Hint')).length>0)[0];
+ await act(async()=>hint.props.onPress());
+ expect(r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('More help')).length).toBeGreaterThan(0);
+ await act(async()=>r.update(<BoardSpaceProvider space={{width:333,height:500,large:false}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><B1 {...original} session={{...original.session,state:{...state,program,cursor:program.length}}}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>));
+ expect(r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('More help'))).toHaveLength(0);
+ expect(r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('Hint'))).toHaveLength(0);
+ await act(async()=>r.update(<BoardSpaceProvider space={{width:333,height:500,large:false}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><B1 {...original} session={{...original.session,state:{...state,completed:[[],[],[]]}}}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>));
+ expect(r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('More help'))).toHaveLength(0);
+});
+
+it.each([393,744])('Weather gauge labels fit their bounded boxes at width %s',async width=>{
+ for(const fontScale of [1,3.12]){
+  const r=await mountPort('weather-watch',B7,500,{width,height:width===393?852:1133,fontScale},4,true,session=>({...session,state:{...session.state as ScienceState,records:Array(6).fill([30,20]),index:6}}));
+  const drawing=view('school-weather-watch-drawing'),svg=drawing.findAll(n=>String(n.type)==='Svg')[0];
+  const labels=svg.findAll(n=>String(n.type)==='SvgText');
+  expect(labels.length).toBeGreaterThan(12);
+  for(const label of labels){
+   const lines=label.findAll(n=>String(n.type)==='SvgTSpan');
+   for(const line of lines.length?lines:[label]){
+    const text=line.children.join(''),size=Number(label.props.fontSize),x=Number(line.props.x);
+    expect(x-text.length*size*.65/2).toBeGreaterThanOrEqual(0);
+    expect(x+text.length*size*.65/2).toBeLessThanOrEqual(360);
+    expect(Number(line.props.y)+size*.25).toBeLessThanOrEqual(235);
+   }
+  }
+  await act(async()=>r.unmount());root=undefined;
+ }
 });

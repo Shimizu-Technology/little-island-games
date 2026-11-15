@@ -1,4 +1,7 @@
 import React from 'react';
+import { View } from 'react-native';
+import { createHash } from 'node:crypto';
+import legacyTree from './fixtures/slip-tide-challenge-legacy.json';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Playfield, boardCell, type PlayfieldProps } from '../src/learn/games/slip-tide/field';
@@ -80,4 +83,13 @@ it('largest text: the caption keeps a minimum width and the controls wrap below 
   expect(header.props.style.flexWrap).toBe('wrap');
   expect((header.children[0] as ReactTestRenderer['root']).props.style.minWidth).toBeGreaterThanOrEqual(150);
   act(() => { root.unmount(); });
+});
+
+// Exact JSON host tree from 9d9dbce3, before this slice. Includes every Yoga style,
+// wrapper, ordering and accessibility prop, in stacked/side and solo/together modes.
+it.each([[393,759,false],[393,759,true],[792,300,false],[792,300,true]])('Challenge Slip Tide preserves legacy host bytes at %s × %s, together=%s',(width,height,together)=>{
+ let root!:ReactTestRenderer;act(()=>{root=create(<Playfield {...props(width as number,height as number)} together={together as boolean} help={<View>Help</View>} onAnother={()=>{}}/>);});
+ const bytes=JSON.stringify(root.toJSON());
+ expect({sha256:createHash('sha256').update(bytes).digest('hex'),bytes:Buffer.byteLength(bytes)}).toEqual(legacyTree[`${width}x${height}:${together}` as keyof typeof legacyTree]);
+ act(()=>root.unmount());
 });

@@ -152,7 +152,7 @@ function Water({ children, width, height = 150 }: { children?: React.ReactNode; 
         <Path d="M10 66Q38 56 64 66T120 66T176 66T232 66T310 66V128Q310 144 294 144H26Q10 144 10 128Z" fill="#9DCBD9" />
         <Path d="M10 140H310" stroke="#C9B48F" strokeWidth="6" />
       </Svg>
-      <View testID="water-contents" pointerEvents="box-none" style={{position:"absolute",left:0,top:0,width:tankWidth,height,transformOrigin:"top",transform:[{scaleY:geometry.height/height}]}}>{children}</View>
+      <View testID="water-contents" pointerEvents="box-none" style={{position:"absolute",left:0,top:0,width:tankWidth,height,transformOrigin:"top",transform:[{scale:geometry.height/height}]}}>{children}</View>
     </View>
   );
 }

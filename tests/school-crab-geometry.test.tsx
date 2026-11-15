@@ -44,8 +44,8 @@ it('Crab filled-plan regression: uses the measured 500-pt inner space instead of
   expect(plan).toBeDefined();
   const row=plan!.findAllByType('div' as never).find(n=>n.props.accessibilityLabel?.startsWith('Your plan:'))!;
   const capacity=Math.floor((333-2*row.props.style.padding+row.props.style.gap)/(44+row.props.style.gap));
-  expect(capacity).toBeGreaterThanOrEqual(7); // a readable thirteen-card plan fits two rows
+  expect(capacity).toBeGreaterThanOrEqual(6); // retain the original 5-pt spacing; long plans scroll internally
 
-  expect(plan!.props.style.maxHeight).toBeGreaterThanOrEqual(3 * 58 + 2 * 2 + 8);
+  expect(plan!.props.style.maxHeight).toBeGreaterThanOrEqual(3 * 58 + 2 * 5 + 8);
   expect(plan!.findAllByType('button').filter(n=>n.props.accessibilityLabel?.startsWith('Card ')).every(n=>n.props.style.width>=44&&n.props.style.height>=44)).toBe(true);
 });
