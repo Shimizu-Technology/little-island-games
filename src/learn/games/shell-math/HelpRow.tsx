@@ -30,6 +30,6 @@ export function HelpRow({ step, work, typed, active, canHide, hidden, press, onH
 /** The help ladder's one button: its words say what the next press gives. */
 export function HelpButton({ work, active, press, onHelp }: { work: Work; active: boolean; press: () => void; onHelp: () => void }) {
   return <Button quiet compact icon="help" disabled={!active || work.hint >= 3} onPress={() => { press(); onHelp(); }}>
-    {work.hint === 0 ? "Help" : work.hint === 1 ? "More help" : work.hint === 2 ? "Fill it in" : "Answer filled in"}
+    {work.hint === 0 ? "Help" : work.hint === 1 ? "More help" : work.hint === 2 ? "Fill it in" : "Filled in"}
   </Button>;
 }

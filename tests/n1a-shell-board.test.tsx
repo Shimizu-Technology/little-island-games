@@ -8,7 +8,8 @@ import { createShell, progress, validShell, type ShellRound } from "../src/learn
 import { ShellBoard } from "../src/learn/games/shell-math/ShellBoard";
 import { LEVELS, type Level } from "../src/math/kit";
 
-vi.mock("react-native", () => ({ View: "div", ScrollView: "section", Pressable: "pressable", Animated: { Value: class { setValue() {} interpolate() { return 0; } }, View: "div", timing: () => ({ start() {}, stop() {} }), sequence: () => ({ start() {}, stop() {} }), createAnimatedComponent: (c: unknown) => c }, Platform: { OS: "ios" }, useWindowDimensions: () => ({ fontScale: 1, width: 393, height: 852 }), StyleSheet: { create: (s: unknown) => s, flatten: (s: unknown) => s }, AccessibilityInfo: { isReduceMotionEnabled: async () => true, addEventListener: () => ({ remove() {} }) } }));
+const viewport = vi.hoisted(() => ({ fontScale: 1 }));
+vi.mock("react-native", () => ({ View: "div", ScrollView: "section", Pressable: "pressable", Animated: { Value: class { setValue() {} interpolate() { return 0; } }, View: "div", timing: () => ({ start() {}, stop() {} }), sequence: () => ({ start() {}, stop() {} }), createAnimatedComponent: (c: unknown) => c }, Platform: { OS: "ios" }, useWindowDimensions: () => ({ fontScale: viewport.fontScale, width: 393, height: 852 }), StyleSheet: { create: (s: unknown) => s, flatten: (s: unknown) => s }, AccessibilityInfo: { isReduceMotionEnabled: async () => true, addEventListener: () => ({ remove() {} }) } }));
 vi.mock("react-native-svg", () => ({ default: "svg", Circle: "circle", Rect: "rect", Path: "path", G: "g", Line: "line", Text: "svgtext", Ellipse: "ellipse" }));
 vi.mock("../src/components/Text", () => ({ Text: "span" }));
 vi.mock("../src/components/ui", () => ({ Button: "button", Copy: "p", PressableScale: "button", C: { ink: "#183F39", muted: "#64716C", cream: "#FCFAF4", paper: "#FFF", line: "#DBE3DA", teal: "#246858", soft: "#E5EFE5", coral: "#C56D50", gold: "#E1B251", blue: "#386C9A", success: "#E3EFE3", sand: "#F0F1E8", error: "#9C432D" } }));
@@ -18,7 +19,7 @@ vi.mock("../src/components/Audio", () => ({ hasSpeech: (k: string) => k === "mat
 vi.mock("../src/components/feel", () => ({ feel: () => {} }));
 
 let root: ReactTestRenderer | undefined;
-afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; });
+afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; viewport.fontScale = 1; });
 const calls = { practice: [] as [string, boolean][], assistance: 0, cheer: 0, sounds: [] as string[] };
 
 function Harness({ level, seed, onState }: { level: Level; seed: number; onState: (s: ShellRound) => void }) {
@@ -125,6 +126,18 @@ describe("Shell Math board", () => {
       expect(buttons().find((b) => label(b) === "Check my answer")).toBeUndefined();
       await act(async () => root!.unmount()); root = undefined;
     }
+  });
+
+  it("keeps Help in the header at normal sizes and below the pad at accessibility sizes", async () => {
+    const order = () => buttons().map(label);
+    await mount(3);
+    expect(order().indexOf("Help")).toBeGreaterThanOrEqual(0);
+    expect(order().indexOf("Help")).toBeLessThan(order().indexOf("1"));
+    await act(async () => root!.unmount()); root = undefined;
+    viewport.fontScale = 2;
+    await mount(3);
+    expect(order().filter((l) => l === "Help")).toHaveLength(1);
+    expect(order().indexOf("Help")).toBeGreaterThan(order().indexOf("Check my answer"));
   });
 
   it("only offers Hear when a clip exists for the exact equation", async () => {

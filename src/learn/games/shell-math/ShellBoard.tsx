@@ -1,7 +1,8 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { Text } from "../../../components/Text";
 import { hasSpeech } from "../../../components/Audio";
+import { LARGE_TEXT } from "../../../components/wordFit";
 import { feel } from "../../../components/feel";
 import { Button, C, Copy } from "../../../components/ui";
 import {
@@ -23,6 +24,8 @@ const speechKey = (p: Problem) => `math-${p.op}-${p.a}-${p.b}-${p.unknown === "s
 export function ShellBoard(props: BoardProps<ShellRound>) {
   const { session, active, update, practice, notePractice, assistance, stopSound, sound, soundOn, cheer, coach, width } = props;
   const s = session.state;
+  // At accessibility sizes the header has no room for a second button, so Help moves down beside the other supports.
+  const large = useWindowDimensions().fontScale >= LARGE_TEXT;
   const level = s.level as Level;
   const prog = useMemo(() => progress(s), [s]);
   const live = useRef(s);
@@ -103,7 +106,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
       <Copy style={{ fontSize: 14, color: C.ink }}>{rungInfo}</Copy>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {!work.solved && <HelpButton work={work} active={active} press={press} onHelp={() => act(["h"])} />}
+        {!work.solved && !large && <HelpButton work={work} active={active} press={press} onHelp={() => act(["h"])} />}
         {soundOn && hasSpeech(speechKey(problem)) && <Button compact quiet icon="sound-on" disabled={!active} onPress={() => {
           if (context.current.active && context.current.id === session.id && live.current === s) { stopSound(); sound(speechKey(problem)); }
         }}>Hear</Button>}
@@ -133,7 +136,7 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
         <Button disabled={!active} onPress={() => { press(); act(["x"]); }}>{s.index === s.items.length - 1 ? "Finish round" : "Next question"}</Button>
       </View>
       : <HelpRow step={step} work={work} typed={typed} active={active} canHide={level >= 2} hidden={hidePicture} press={press}
-        onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidePicture((h) => !h)} showHelp={false} />}
+        onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidePicture((h) => !h)} showHelp={large} />}
     <Copy style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>{work.solved ? "" : `Step ${Math.min(work.at + 1, total)} of ${total}`}</Copy>
   </View>;
 }
