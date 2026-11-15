@@ -1,7 +1,7 @@
 """Island Home landing and delight sounds (H4: HD-03, HD-05, HD-07, HD-08, HC-01).
 
 Original, generated waveforms: no recordings, samples or external assets. Run with
-`python3 -I src/home/sounds/generate.py` to rebuild every file in assets/home/ byte for byte
+`python3 -I scripts/generate-home-sounds.py` to rebuild every file in assets/home/ byte for byte
 (the noise source is a fixed linear congruential generator, so the output is deterministic).
 Their SHA-256s are in scripts/public-audio-receipt.json, which the public export verifies.
 Rule 60 limits: pickup ticks <= 50 ms, landing cues 60-120 ms, action sounds <= 800 ms.
@@ -10,7 +10,7 @@ import math, struct, wave
 from pathlib import Path
 
 RATE = 22050
-OUT = Path(__file__).resolve().parents[3] / "assets" / "home"
+OUT = Path(__file__).resolve().parents[1] / "assets" / "home"
 seed = 20261115
 def noise():
     global seed

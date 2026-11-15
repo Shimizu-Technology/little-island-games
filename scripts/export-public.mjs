@@ -68,7 +68,7 @@ export function exportPublic(target) {
     const receipt = JSON.parse(readFileSync(join(root, 'scripts/public-audio-receipt.json'), 'utf8'));
     const map = readFileSync(join(root, 'src/content/neuralAudio.ts'), 'utf8');
     const speech = new Set([...map.matchAll(/require\("\.\.\/\.\.\/assets\/(audio\/[^"\n]+\.m4a)"\)/g)].map(m => m[1]));
-    // Island Home's generated cues (src/home/sounds/generate.py): exactly the files homeSound.ts requires.
+    // Island Home's generated cues (scripts/generate-home-sounds.py): exactly the files homeSound.ts requires.
     const homeTones = [...readFileSync(join(root, 'src/home/runtime/homeSound.ts'), 'utf8')
       .matchAll(/require\("\.\.\/\.\.\/\.\.\/assets\/(home\/[a-z-]+\.wav)"\)/g)].map(m => m[1]);
     const tones = new Set(['audio/tap.wav', 'audio/match.wav', 'audio/win.wav', ...homeTones,

@@ -1,4 +1,5 @@
 import { capabilityOf } from "../world";
+import { decorSpec, type ItemId } from "../catalog";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
@@ -14,13 +15,18 @@ import type { HomeSound } from "./homeSound";
 
 // HD-02 / HD-03: what something is made of decides how it lands and how it sounds.
 export type Material = "cloth" | "wood" | "shell" | "splash";
-const clothItems = new Set(["floor-cushion", "beanbag", "teddy", "ball", "rug", "mat", "round-rug", "striped-rug", "star-rug",
-  "beach-towel", "bed", "cloud-bed", "bunk-bed", "hammock", "sofa", "armchair", "lounger", "mango", "banana", "rice-ball",
-  "cupcake", "juice", "plant", "potted-fern", "banana-plant", "cactus"]);
-const shellItems = new Set(["shell", "shell-pile", "teapot", "flower-vase", "cake-stand", "fruit-bowl", "mirror", "globe",
-  "trophies", "island-lamp", "lantern", "table-lamp", "lamp"]);
+/** Soft toys that the catalog files with the hard ones. Keys, not a word list. */
+const softToys: Partial<Record<string, true>> = { teddy: true, ball: true };
+/** Read from the catalog: rugs, beds, seats, plants and food are soft; shells, lights,
+ * vases and drinks clink; everything else is wood. */
 export function materialOf(itemId: string): Material {
-  return clothItems.has(itemId) ? "cloth" : shellItems.has(itemId) ? "shell" : "wood";
+  const id = itemId as ItemId, spec = decorSpec(id), cap = capabilityOf(id);
+  if (cap.edible === "food" || softToys[itemId]) return "cloth";
+  if (cap.edible === "drink" || itemId.startsWith("shell") || spec.category === "lights" || itemId.endsWith("vase")) return "shell";
+  // Wooden seats (a chair, a rocking chair, a stool, a bench) knock; upholstered ones are soft.
+  if (/(?:^|-)chair$|stool$|bench$/.test(itemId)) return "wood";
+  if (spec.category === "rugs-floor" || spec.category === "beds-seats" || spec.category === "plants-nature") return "cloth";
+  return "wood";
 }
 /** How much a material gives on landing: soft things squash most, hard things least. */
 export const materialGive: Record<Material, number> = { cloth: 1, wood: 0.55, shell: 0.4, splash: 0.7 };
@@ -215,12 +221,13 @@ export function cookingIds(scene: Scene): string[] {
 // HD-08: a lit lamp throws a soft shadow from each friend standing near it.
 export const LAMP_REACH = 260;
 export type LampShadow = { angle: number; length: number; opacity: number };
-const lampIds = new Set(["lamp", "table-lamp", "floor-lamp", "island-lamp", "lantern"]);
+/** Lamps are the catalog's standing or table lights (not wall string lights). */
+const isLamp = (itemId: string) => decorSpec(itemId as ItemId).category === "lights" && decorSpec(itemId as ItemId).layer !== "wall";
 /** HD-08: lit lamps in a room, for the warm pool of light drawn behind everything. */
 export function litLamps(scene: Scene, room: keyof Scene["rooms"]): SceneEntity[] {
   return Object.values(scene.rooms[room].entities).filter((e) => {
     const item = e.item;
-    return !!item && lampIds.has(item.item) && !!(item.powered ?? item.state === "active") && !item.staged && e.attachment.kind !== "container";
+    return !!item && isLamp(item.item) && !!(item.powered ?? item.state === "active") && !item.staged && e.attachment.kind !== "container";
   });
 }
 export function lampShadow(scene: Scene, entity: SceneEntity): LampShadow | undefined {
@@ -228,7 +235,7 @@ export function lampShadow(scene: Scene, entity: SceneEntity): LampShadow | unde
   let best: LampShadow | undefined, bestDistance = Infinity;
   for (const lamp of Object.values(scene.rooms[entity.room].entities)) {
     const item = lamp.item;
-    if (!item || !lampIds.has(item.item) || !(item.powered ?? item.state === "active") || item.staged) continue;
+    if (!item || !isLamp(item.item) || !(item.powered ?? item.state === "active") || item.staged) continue;
     const dx = entity.contact.x - lamp.contact.x, dy = entity.contact.y - lamp.contact.y;
     const distance = Math.hypot(dx, dy);
     if (distance > LAMP_REACH || distance >= bestDistance) continue;

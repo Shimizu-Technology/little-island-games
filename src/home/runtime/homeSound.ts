@@ -3,7 +3,7 @@ import { AppState, Platform } from "react-native";
 
 /**
  * H4 (HD-03, HD-04, rule 60): Island Home's own small sound set and light haptics.
- * Every cue is an original generated waveform (`src/home/sounds/generate.py`, files in
+ * Every cue is an original generated waveform (`scripts/generate-home-sounds.py`, files in
  * `assets/home/`), preloaded once
  * per screen, never `replace()`d per tap. At most four play at once. Sound and haptics both
  * follow the app's sound switch (and the effects switch): with sound off nothing plays and
