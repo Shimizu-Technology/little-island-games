@@ -11,6 +11,8 @@ import { roomIds } from '../src/home/catalogMore';
 import { labFixtures } from '../src/home/runtime/lab';
 import { COOK_MS } from '../src/home/runtime/delight';
 import { stagePieces } from '../src/home/art/Stage';
+import { panFloorPoint } from '../src/home/scene/pan';
+import { floorPoint } from '../src/home/geometry';
 const harness = vi.hoisted(() => ({ options: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
@@ -274,6 +276,46 @@ describe('H4 on the Island Home screen', () => {
     expect(mango().powered).toBeUndefined();
     await act(async () => { vi.advanceTimersByTime(100); });
     expect(mango().powered).toBe(true);
+  });
+  // Fix round 2 (lead decision on the pan/floor ambiguity): the pan is a runtime seat that only a
+  // pan drop fills. Food dropped on the floor in front of the stove stays on the floor.
+  it('fix round 2: food dropped on the floor cell in front of a lit stove stays on the floor and never cooks', async () => {
+    const state = labFixtures.delight();
+    const persist = await open(state);
+    const stove = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'stove')!;
+    await tap(stove.id);
+    const floorAt = panFloorPoint(stove.item!);
+    const proposal = await drop(state, 'kitchen/item/mango', 'kitchen', floorAt);
+    expect(proposal.kind).toBe('floor');
+    expect(proposal.target).toBeUndefined();
+    const saved = () => persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.id === 'mango')!;
+    expect(floorPoint(saved().x, saved().y)).toEqual({ x: floorAt.x, y: floorAt.y });
+    const mango = harness.scene.scene.entities['kitchen/item/mango'];
+    expect(mango.pan).toBeUndefined();
+    expect(mango.contact).toEqual(floorAt);
+    expect(harness.played).not.toContain('sizzle');
+    await act(async () => { vi.advanceTimersByTime(COOK_MS * 3); });
+    expect(saved().powered).toBeUndefined();
+    // The pan is still free for a pan drop.
+    expect(harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!.occupied).toBeUndefined();
+  });
+  it('fix round 2: food lifted out of the pan and set on that same floor cell leaves the pan: same save, floor, cooking stops', async () => {
+    const state = labFixtures.delight();
+    const persist = await open(state);
+    const stove = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'stove')!;
+    await tap(stove.id);
+    const pan = harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!;
+    await drop(state, 'kitchen/item/mango', 'kitchen', pan.contact, { target: pan.id });
+    expect(harness.scene.scene.entities['kitchen/item/mango'].pan).toBe(stove.id);
+    const inPan = persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.id === 'mango')!;
+    await act(async () => { vi.advanceTimersByTime(COOK_MS / 2); });
+    const proposal = await drop(state, 'kitchen/item/mango', 'kitchen', panFloorPoint(stove.item!));
+    expect(proposal.kind).toBe('floor');
+    const onFloor = persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.id === 'mango')!;
+    expect([onFloor.x, onFloor.y, onFloor.at]).toEqual([inPan.x, inPan.y, inPan.at]);
+    expect(harness.scene.scene.entities['kitchen/item/mango'].pan).toBeUndefined();
+    await act(async () => { vi.advanceTimersByTime(COOK_MS * 2); });
+    expect(persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.id === 'mango')!.powered).toBeUndefined();
   });
   it('HD-09: a tap on a sleeping friend makes them stir, with a drawn z, and they stay asleep', async () => {
     const state = labFixtures['delight-rest']();

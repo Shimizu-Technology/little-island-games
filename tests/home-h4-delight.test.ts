@@ -13,12 +13,12 @@ import { buildingLayout } from '../src/home/camera';
 import { homeReducer, instance, starterHome, validHome, type HomeStateV2 } from '../src/home/model';
 import { editHistory } from '../src/home/useHomeStore';
 import { capabilityOf } from '../src/home/world';
-import { itemIds } from '../src/home/catalog';
+import { decorSpec, itemIds } from '../src/home/catalog';
 import { entityName } from '../src/home/scene/labels';
 import { panCell, panFloorPoint, panSeatPoint } from '../src/home/scene/pan';
+import { seatInPan } from '../src/home/scene/panSeats';
 import { pickEntity, prepareHits, shapeDistance } from '../src/home/runtime/pick';
 import { roomPoint } from '../src/home/scene/types';
-import { decorSpec } from '../src/home/catalog';
 import type { DropProposal } from '../src/home/scene/resolve';
 import type { SceneEntity } from '../src/home/scene/types';
 vi.mock('react-native', () => ({ AppState: { addEventListener: () => ({ remove() {} }), currentState: 'active' }, Platform: { OS: 'ios' }, View: 'View' }));
@@ -219,11 +219,14 @@ describe('HD-05 / HD-06 / HD-09 resting reactions', () => {
 describe('HD-07 stove and pan (rules 48, 49)', () => {
   const kitchen = () => labFixtures.delight();
   // Food in the pan is saved on the floor cell in front of the stove (scene/pan), never `on` it.
-  const withFood = (state: HomeStateV2, lit: boolean, food = 'mango') => {
+  // Fix round 2: which food is in the pan is runtime-only; a pan drop seats it (scene/panSeats).
+  const withFood = (state: HomeStateV2, lit: boolean, food = 'mango', seated = true) => {
     const stove = state.rooms.kitchen.instances.find((i) => i.item === 'stove')!, cell = panCell(stove);
-    return { ...state, rooms: { ...state.rooms, kitchen: { ...state.rooms.kitchen,
+    const next = { ...state, rooms: { ...state.rooms, kitchen: { ...state.rooms.kitchen,
       instances: [...state.rooms.kitchen.instances.filter((i) => i.id !== 'mango').map((i) => i.item === 'stove' ? { ...i, powered: lit } : i),
         instance('pan-food', food as never, cell.x, cell.y)] } } } as HomeStateV2;
+    if (seated) seatInPan(next.rooms.kitchen, 'pan-food');
+    return next;
   };
   it('a tap lights the stove and a second tap turns it off; it stays put in Play', () => {
     const state = kitchen(), stove = state.rooms.kitchen.instances.find((i) => i.item === 'stove')!;
@@ -294,6 +297,7 @@ describe('fix round 2 (P2): food in its pan beats only its own stove, and only a
     state.rooms.kitchen.instances = [stove, instance('mango', 'mango', cell.x, cell.y),
       ...(other ? [instance('other', other.item as never, other.dy < 0 ? stove.x + other.dx : cell.x + other.dx, other.dy < 0 ? -other.dy - 1 : cell.y + other.dy)] : [])];
     expect(validHome(state)).toBe(true);
+    seatInPan(state.rooms.kitchen, 'mango');
     const scene = buildScene(state), hits = prepareHits(scene).kitchen;
     const ids = { food: 'kitchen/item/mango', stove: `kitchen/item/${stove.id}`, other: 'kitchen/item/other' };
     expect(scene.entities[ids.food].pan).toBe(ids.stove);

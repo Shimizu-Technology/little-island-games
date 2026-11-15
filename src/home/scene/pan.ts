@@ -1,8 +1,9 @@
 import { itemSpec } from "../catalog";
 import { floorPoint, itemPoint } from "../geometry";
 import { capabilityOf } from "../world";
-import type { Instance } from "../model";
-import { gridCell, roomPoint, type GridCell, type RoomPoint } from "./types";
+import type { HomeAction, HomeStateV2, Instance } from "../model";
+import { panSeats, setPanSeats } from "./panSeats";
+import { gridCell, itemEntityId, roomPoint, type GridCell, type RoomPoint } from "./types";
 
 /**
  * HD-07 (fix round 1): the stove's pan is a runtime seat, not a saved attachment.
@@ -10,7 +11,8 @@ import { gridCell, roomPoint, type GridCell, type RoomPoint } from "./types";
  * Saves must stay readable by the build before H4, whose validator rejects anything `on` a
  * stove. So food "in the pan" is saved exactly as the older build understands it: resting on
  * the floor in the cell directly in front of the stove (same column), with `powered` for
- * cooked. This build recognises food at that exact point and draws it seated in the pan.
+ * cooked. This build draws food at that exact point seated in the pan only when a pan drop put
+ * it there this session (scene/panSeats); food set on that floor cell stays on the floor.
  * An older build simply shows it on the floor in front of the stove. A true pan attachment
  * waits for the versioned Home storage change (H5).
  */
@@ -39,4 +41,32 @@ export function panStoveOf(item: Instance, instances: readonly Instance[]): Inst
   if (!panFood(item)) return undefined;
   const point = itemPoint(item, instances);
   return instances.find((s) => isStove(s) && same(panFloorPoint(s), point));
+}
+/**
+ * Fix round 2: carry the runtime pan seats from one Home state to the next (scene/panSeats).
+ * Only an accepted drop into a pan seats food; any other drop of that food unseats it, and food
+ * that has left its pan cell by any route is unseated. Rooms an action leaves alone keep their
+ * object, and with it their seats.
+ */
+export function carryPanSeats(before: HomeStateV2, after: HomeStateV2, action: HomeAction): void {
+  const moved = action.type === "apply-proposal" ? action.proposal : undefined;
+  for (const [roomId, room] of Object.entries(after.rooms) as [keyof HomeStateV2["rooms"], HomeStateV2["rooms"][keyof HomeStateV2["rooms"]]][]) {
+    const was = before.rooms[roomId];
+    if (!room || room === was) continue;
+    const next = new Set(was ? panSeats(was) : []);
+    if (moved) {
+      const id = moved.id.split("/item/")[1];
+      if (id) {
+        next.delete(id);
+        const food = moved.room === roomId ? room.instances.find((i) => i.id === id) : undefined;
+        const stove = food && panStoveOf(food, room.instances);
+        if (stove && moved.target === `${itemEntityId(roomId, stove.id)}/pan`) next.add(id);
+      }
+    }
+    for (const id of next) {
+      const food = room.instances.find((i) => i.id === id);
+      if (!food || !panStoveOf(food, room.instances)) next.delete(id);
+    }
+    setPanSeats(room, next);
+  }
 }

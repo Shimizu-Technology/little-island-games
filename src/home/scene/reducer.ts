@@ -5,6 +5,7 @@ import { floorPoint, itemPoint } from "../geometry";
 import { MAX_INSTANCES, instance, owns, placedInstances, starterHome, validHome, validInstance } from "../model";
 import { apply, resolve } from "./proposal";
 import { panStoveOf } from "./pan";
+import { panSeats } from "./panSeats";
 import { buildScene, itemEntity, movingGroup } from "./graph";
 import { characterEntityId, itemEntityId, roomPoint } from "./types";
 import type { HomeAction, HomeResult, HomeStateV2, Ownership } from "../model";
@@ -50,7 +51,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
     // Only raw food still sitting on a lit stove cooks. A pan taken off the heat, a stove
     // turned off or food already cooked leaves the world exactly as it is (rule 49).
     const food = state.instances.find((i) => i.id === action.id);
-    const stove = food ? panStoveOf(food, state.instances) : undefined;
+    const stove = food && panSeats(state).has(food.id) ? panStoveOf(food, state.instances) : undefined;
     if (!food || food.powered || capabilityOf(food.item).edible !== "food" || !stove?.powered)
       return { state: save };
     const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state,

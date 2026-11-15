@@ -7,6 +7,7 @@ import { canHold, retiredSeat, socketPoint, socketsOf } from "../interactions";
 import { itemShapes, occluderBounds, paintedBounds, unionBounds } from "../art/silhouettes";
 import { characterFrame, characterPoint, furnitureDepth, itemPoint, itemSize, surfacePoint } from "../geometry";
 import { panCell, panFloorPoint, panSeatPoint, panStoveOf } from "./pan";
+import { panSeats, panSeatsTag } from "./panSeats";
 import { anchorsFor, species } from "./species";
 import { characterEntityId, gridCell, gridToRoom, itemEntityId, roomPoint } from "./types";
 import type {
@@ -42,15 +43,16 @@ function surveyed(shapes: HitShape[], fallback: Bounds): Pick<SceneEntity, "shap
     visual: { x: outline.left + outline.width / 2, y: outline.top + outline.height / 2 },
   };
 }
-export function itemEntity(room: RoomId, item: Instance, instances: readonly Instance[] = []): SceneEntity {
+export function itemEntity(room: RoomId, item: Instance, instances: readonly Instance[] = [], seated = false): SceneEntity {
   const spec = itemSpec(item.item);
   const [a, b] = spec.footprint;
   const capability = capabilityOf(item.item);
   const point = itemPoint(item, instances);
   const box = visualBox(item.item, item.rotation, item.mirrored);
   const parent = item.on && instances.find((i) => i.id === item.on);
-  // HD-07: food saved on the floor in front of a stove is drawn seated in its pan.
-  const stove = panStoveOf(item, instances);
+  // HD-07: food saved on the floor in front of a stove is drawn seated in its pan, but only
+  // when a pan drop put it there this session (scene/panSeats); otherwise it is on the floor.
+  const stove = seated ? panStoveOf(item, instances) : undefined;
   const shown = stove ? panSeatPoint(stove) : point;
   const attachment: Attachment = item.staged
     ? { kind: "staging", room }
@@ -133,10 +135,10 @@ function rectCore(point: RoomPoint, radius: number): Bounds {
   return { left: point.x - radius, top: point.y - radius, width: radius * 2, height: radius * 2 };
 }
 /** Build once per settled edit. The returned index is safe to serialize to a worklet. */
-export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.stringify(state)): RoomIndex {
+export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.stringify(state) + panSeatsTag(state)): RoomIndex {
   const entities: RoomIndex["entities"] = {};
   for (const item of state.instances) {
-    const entity = itemEntity(room, item, state.instances);
+    const entity = itemEntity(room, item, state.instances, panSeats(state).has(item.id));
     entities[entity.id] = entity;
   }
   for (const character of state.characters) {
@@ -388,7 +390,7 @@ export function buildScene(state: SceneState, cache?: SceneRoomCache): Scene {
   const rooms = {} as Scene["rooms"];
   const entities: Scene["entities"] = {};
   for (const room of roomIds) {
-    const key = JSON.stringify(state.rooms[room]);
+    const key = JSON.stringify(state.rooms[room]) + panSeatsTag(state.rooms[room]);
     let cached = cache?.[room];
     if (!cached || cached.key !== key) {
       cached = { key, index: buildRoomIndex(room, state.rooms[room], revision) };

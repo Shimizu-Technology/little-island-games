@@ -1,4 +1,5 @@
 import { apply, type DropProposal } from "./scene/proposal";
+import { carryPanSeats } from "./scene/pan";
 import { useMemo, useRef, useState } from "react";
 import {
   homeReducer,
@@ -109,6 +110,7 @@ export function editHistory(
         }
       : history;
   const result = computed ?? homeReducer(history.present, action as HomeAction, ownership);
+  if (result.state !== history.present) carryPanSeats(history.present, result.state, action as HomeAction);
   return result.state === history.present
     ? history
     : action.type === "room" || action.type === "finish-action" || action.type === "cook"
@@ -193,6 +195,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     if (stillCurrent && !stillCurrent()) return undefined;
     const result = apply(seed ?? current.history.present, proposal);
     if ("stale" in result || (stillCurrent && !stillCurrent())) return undefined;
+    carryPanSeats(seed ?? current.history.present, result.state, { type: "apply-proposal", proposal });
     const start = base(current);
     const history = {
       present: bare(result.state),
