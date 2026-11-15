@@ -208,11 +208,13 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
   const fittedLabel = (text: string, x: number, y: number, size = 13, color = ink) => {
     if (!space) return sceneLabel(text,x,y,size,color);
     const actual = Math.max(size,13 * (fontScale >= LARGE_TEXT ? 1.5 : 1) / sceneScale);
-    // Gauge names/numbers have reserved boxes clear of the instruments and bars.
-    // Wrap at the floor, never shrink the text to the former source-unit size.
-    const width = q.kind === 'gauge' && y === 202 ? 68 : Math.min(2 * (x - 8),2 * (352 - x));
+    // Instrument readings keep the tested single baseline below the bulb. A
+    // second line would either overlap its art or run below the viewBox.
+    if (q.kind === 'gauge' && y === 202) return sceneLabel(text,x,y,actual,color);
+    // Wrap the chart header inside its reserved space, clear of the bars.
+    const width = Math.min(2 * (x - 8),2 * (352 - x));
     const lines = sceneLabelLines(text,actual,width);
-    const top = lines.length > 1 && y === 202 ? 190 : y;
+    const top = y;
     return <SText x={x} y={top} textAnchor="middle" fontFamily={font ?? "Arial"} fontSize={actual} fontWeight="700" fill={color}>
       {lines.length === 1 ? text : lines.map((line,index)=><TSpan key={index} x={x} y={top + index * actual * 1.2}>{line}</TSpan>)}
     </SText>;

@@ -479,3 +479,14 @@ it('Weather uses valid marker geometry before its measured space is ready',async
  const marker=scene.findAll(n=>String(n.type)==='SvgCircle'&&n.props.cx===225)[0];
  expect(marker.props.r).toBeGreaterThan(0);expect(marker.props.r).toBeLessThan(30);
 });
+
+it('Weather keeps the gauge reading below the bulb at the AX floor',async()=>{
+ await mountPort('weather-watch',B7,220,{width:393,height:852,fontScale:3.12},4);
+ await act(async()=>{view('school-weather-watch-drawing').props.onLayout({nativeEvent:{layout:{height:220}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ const drawing=view('school-weather-watch-drawing');
+ const bulb=drawing.findAll(n=>String(n.type)==='SvgCircle'&&n.props.cx===47&&n.props.cy===166)[0];
+ const reading=drawing.findAll(n=>String(n.type)==='SvgText'&&n.props.x===47&&n.props.y>=190)[0];
+ const first=reading.findAll(n=>String(n.type)==='SvgTSpan')[0] ?? reading;
+ // Keep even a conservative 0.8-em cap height clear of the actual bulb and stroke.
+ expect(Number(first.props.y)-Number(reading.props.fontSize)*.8).toBeGreaterThanOrEqual(Number(bulb.props.cy)+Number(bulb.props.r)+.5);
+});
