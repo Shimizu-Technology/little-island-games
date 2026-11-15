@@ -72,7 +72,8 @@ it('Weather keeps the three default clothes choices in one full-size row in meas
  const r=await mountPort('weather-watch',B7);
  const choices=r.root.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Set '));
  expect(choices).toHaveLength(3);
- for(const choice of choices){expect(flat(choice.props.style).flexBasis).toBe('29%');expect(flat(choice.props.style).minHeight).toBeGreaterThanOrEqual(44);}
+ expect(flat(choices[0].parent!.props.style).flexWrap).toBe('nowrap');
+ for(const choice of choices){expect(flat(choice.props.style)).toMatchObject({flexBasis:'29%',flexShrink:1,minWidth:0});expect(flat(choice.props.style).minHeight).toBeGreaterThanOrEqual(44);}
 });
 it('Treasure retains 48 by 52 step targets while tightening only the surrounding phone spacing',async()=>{
  const r=await mountPort('treasure-algebra',B8);

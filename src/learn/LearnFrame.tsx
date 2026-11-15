@@ -69,7 +69,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const [held, setHeld] = useState(false);
   const layoutKey = `${width}x${height}`;
   const [viewport, setViewport] = useState({ height: 0, key: "" });
-  const [boardLayout, setBoardLayout] = useState({ top: 0, inset: 0, width: 0, topAt: 0, insetAt: 0 });
+  const [boardLayout, setBoardLayout] = useState({ top: 0, inset: 0, width: 0, topAt: 0, insetAt: 0, anchorAt: "" });
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   const large = fontScale >= LARGE_TEXT;
@@ -296,14 +296,17 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
   const boardInner = boardWidth - (width >= 768 && height >= 600 && store.save.settings.learningIslander !== false ? 88 : 0);
   const revealEntry = revealBoardOnEntry(large, height);
+  // A transient cheer above an AX phone board must finish before its one entry
+  // reveal, or removing that row would leave the instruction behind the pinned bar.
+  const anchorReady = !large || width >= 600 || companionEvent === "waiting";
   const boardSpace = useMemo(() => viewport.height > 0 && viewport.key === layoutKey && boardLayout.width > 0 && boardLayout.topAt === width && boardLayout.insetAt === width ? {
     width: boardLayout.width,
     // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
     // reserve all real header/progress content above it. Scroll position is never
     // part of this budget, so scrolling cannot cause the board to grow or shrink.
     height: measuredBoardSpace(viewport.height, revealEntry ? 8 : boardLayout.top, revealEntry ? 0 : boardLayout.inset, (width < 600 ? 12 : 22) + 2),
-    large, reveal: revealEntry, layoutKey,
-  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey]);
+    large, reveal: revealEntry, layoutKey, anchorReady: anchorReady && (!large || width >= 600 || boardLayout.anchorAt === companionEvent),
+  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey, anchorReady, companionEvent]);
   // At accessibility sizes, board text without a cap of its own (prompts, answers, results) stops at 2x, or where its
   // longest word still fits the board. Reading is never timed and Hear stays available, so it stays large without
   // filling the screen. Default sizes never change.
@@ -403,7 +406,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && !shortLandscape && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
-        {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width ? old : { ...old, top, topAt: width }); }}>
+        {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width && old.anchorAt === companionEvent ? old : { ...old, top, topAt: width, anchorAt: companionEvent }); }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />

@@ -61,3 +61,12 @@ it('re-arms AX entry on rotation, without pulling the page after each edit', asy
   await layout(568, 280); expect(reveal).toHaveBeenCalledTimes(1);
   await act(async () => tree!.update(render(700))); await flush(); expect(reveal).toHaveBeenCalledTimes(2);
 });
+
+it('waits for transient header chrome to settle before its single entry reveal',async()=>{
+ const reveal=vi.fn();
+ const render=(anchorReady:boolean)=><StepReveal.Provider value={reveal}><BoardSpaceProvider space={{...space,large:true,anchorReady}}><BoardSpaceContent><Drawing/></BoardSpaceContent></BoardSpaceProvider></StepReveal.Provider>;
+ await act(async()=>{tree=create(render(false));});await flush();expect(reveal).not.toHaveBeenCalled();
+ await act(async()=>tree!.update(render(true)));await flush();expect(reveal).toHaveBeenCalledTimes(1);
+ await act(async()=>tree!.update(render(false)));await flush();
+ await act(async()=>tree!.update(render(true)));await flush();expect(reveal).toHaveBeenCalledTimes(1);
+});

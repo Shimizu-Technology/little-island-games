@@ -70,7 +70,7 @@ export function BoardSpaceContent({ onLayout, ...props }: ViewProps) {
   // Reuse the existing non-animated reveal once on entry/rotation. A changing plan,
   // companion, measured width or text size alone must not pull the child away.
   useEffect(() => {
-    if (!space?.ready) return;
+    if (!space?.ready || space.anchorReady === false) return;
     const key = space.layoutKey ?? String(space.width);
     if (lastWindow.current === key) return;
     if (!(space.reveal ?? space.large)) { lastWindow.current = key; return; }
@@ -80,7 +80,7 @@ export function BoardSpaceContent({ onLayout, ...props }: ViewProps) {
       reveal();
     });
     return () => cancelAnimationFrame(frame);
-  }, [space?.ready, space?.layoutKey, space?.width, space?.large, space?.reveal, reveal]);
+  }, [space?.ready, space?.anchorReady, space?.layoutKey, space?.width, space?.large, space?.reveal, reveal]);
   return <View {...props} onLayout={event => { measure?.(event); onLayout?.(event); }} />;
 }
 

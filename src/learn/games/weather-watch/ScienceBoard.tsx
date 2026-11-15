@@ -747,7 +747,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
               />
             ))}
             {q.labels.length > 0 && (
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <View style={{ flexDirection: "row", flexWrap: compact && q.labels.length === 3 ? "nowrap" : "wrap", gap: 8 }}>
                 {q.labels.map((name, i) => {
                   const slot = q.kind === "gravity" || q.kind === "tilt" ? 1 : 0;
                   const selected = multi(q) ? s.values.includes(i) : s.values[slot] === i;
@@ -761,6 +761,8 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
                       onPress={() => set(slot, i)}
                       style={{
                         flexGrow: 1,
+                        flexShrink: compact && q.labels.length === 3 ? 1 : 0,
+                        minWidth: compact && q.labels.length === 3 ? 0 : undefined,
                         flexBasis: q.labels.length > 4 || compact && q.labels.length === 3 ? "29%" : "44%",
                         minHeight: 82,
                         padding: 8,
