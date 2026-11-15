@@ -3,12 +3,13 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { LagoonGrid } from '../src/learn/games/logic-lagoon/grid';
 import { engine, taskAt, boardAt, type LatinState } from '../src/learn/games/logic-lagoon/engine';
-vi.mock('react-native', () => ({ View: 'view', useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
+const dimensions = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
+vi.mock('react-native', () => ({ View: 'view', useWindowDimensions: () => dimensions }));
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Ellipse: 'ellipse', Path: 'path', Rect: 'rect' }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'text', PressableScale: 'button', C: {} }));
 vi.mock('../src/components/Text', async () => { const { createContext } = await import('react'); return { Text: 'text', TextFit: createContext(null) }; });
 let screen: ReactTestRenderer | undefined;
-afterEach(async () => { if (screen) await act(async () => screen!.unmount()); screen = undefined; vi.unstubAllGlobals(); });
+afterEach(async () => { if (screen) await act(async () => screen!.unmount()); screen = undefined; vi.unstubAllGlobals(); Object.assign(dimensions, { width: 393, height: 852, fontScale: 1 }); });
 it('a hint waits for accepted assistance; its explanation and Check feedback precede the board', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const state = engine.create({ mode: 'solo', pace: 'easy' }, { rng: () => 17 / 0xffffffff, skills: {}, starter: 0, today: 1 }) as LatinState;
@@ -25,4 +26,15 @@ it('a hint waits for accepted assistance; its explanation and Check feedback pre
   expect(output.indexOf('Three squares need a change.')).toBeLessThan(output.indexOf('logic-status'));
   expect(output.indexOf('Why?')).toBeLessThan(output.indexOf('logic-status'));
   await act(async () => button('Show me')!.props.onPress()); expect(reveal).toHaveBeenCalledOnce();
+});
+it('keeps the controls beside the numeric workspace in a short AX5 landscape window', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  vi.stubGlobal('require', () => ({ GridShell: (p: { width: number }) => React.createElement('view', { 'data-grid-width': p.width }) }));
+  Object.assign(dimensions, { width: 852, height: 393, fontScale: 3.12 });
+  const state = engine.create({ mode: 'solo', pace: 'easy', stage: 'stretch' }, { rng: () => 17 / 0xffffffff, skills: {}, starter: 0, today: 1 }) as LatinState;
+  const task = taskAt(state); if (task.kind !== 'grid') throw new Error();
+  await act(async () => { screen = create(<LagoonGrid puzzle={task.puzzle!} state={boardAt(state, task.puzzle!)} assisted={false} dispatch={() => {}} help={() => {}} reveal={() => {}} check={() => {}} title="Sum cages" active width={710}/>); });
+  expect(screen!.root.findByProps({ testID: 'lagoon-workspace' }).props.style.flexDirection).toBe('row');
+  expect(screen!.root.findByProps({ testID: 'lagoon-controls' }).props.style.width).toBe(180);
+  expect(screen!.root.findByProps({ 'data-grid-width': 304 })).toBeDefined();
 });
