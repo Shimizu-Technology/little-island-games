@@ -4,7 +4,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { TextFit } from '../src/components/Text';
 import { startSession } from '../src/learn/session';
-import { optionsAtLevel } from '../src/learn/levels';
+import { optionsAtLevel, type LearningLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
 import { Board as FoodWeb } from '../src/learn/games/food-web/view';
 import { Board as SpaceStation } from '../src/learn/games/space-station/view';
@@ -76,7 +76,7 @@ const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
-async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level=1, geometryEnabled=true, prepare?:(session:LearnSession)=>LearnSession) {
+async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level:LearningLevel=1, geometryEnabled=true, prepare?:(session:LearnSession)=>LearnSession) {
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
