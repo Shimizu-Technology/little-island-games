@@ -4,6 +4,7 @@ import {join} from 'node:path';
 import {certify,type CertifyContext} from '../../../src/puzzles/checks';
 import {validRoot} from '../../../src/puzzles/bank';
 import {orderCandidates} from './order';
+import {recipes} from './generate';
 import {bakeFamily,productionDirs} from '../pipeline';
 import {judge,rungs,klondike,freecell,type Candidate} from './family';
 
@@ -12,14 +13,16 @@ const spec=process.argv[2]==='freecell'?freecell:klondike,own=rungs.filter(r=>sp
 const ctx:CertifyContext={budget:10000,seenExact:new Set(),seenSemantic:new Set()},pools:Candidate[][]=[];
 const max=Number(process.env.SOLITAIRE_TRIES??20000), useTargets=process.env.SOLITAIRE_TARGET==='1',refresh=process.env.SOLITAIRE_REFRESH==='1';
 for(let band=0;band<own.length;band++){
- const r=own[band],want=useTargets?r.target:r.floor,kept:Candidate[]=[],per=new Map<string,number>(),rejects:Record<string,number>={};const t=Date.now();
+ const r=own[band],want=useTargets?r.target:r.floor,kept:Candidate[]=[],per=new Map<string,number>(),rejects:Record<string,number>={},attempted=new Set<number>();const t=Date.now();
  const cached=join(log,`pool-${r.id}.json`);let poolWant=want*Number(process.env.SOLITAIRE_POOL??3);
  // Cached pools are seed proposals only: every selected deal is regenerated and certified by this source.
- if(existsSync(cached)){const prior=JSON.parse(readFileSync(cached,'utf8'));let seeds=prior.kept as Candidate[];if(refresh&&seeds.length>=want){try{const chosen=orderCandidates(seeds,want);if(chosen.length===want){seeds=chosen;poolWant=want;}}catch{/* Keep a partial candidate pool and collect more. */}}for(const old of seeds){const c=judge(old.core.seed,r);if(!c||!certify(spec,spec.bands[band],c.core,ctx).ok)continue;kept.push(c);per.set(c.core.template,(per.get(c.core.template)??0)+1);}}
+ if(existsSync(cached)){const prior=JSON.parse(readFileSync(cached,'utf8'));let seeds=prior.kept as Candidate[];if(refresh&&seeds.length>=want){try{const chosen=orderCandidates(seeds,want);if(chosen.length===want){seeds=chosen;poolWant=want;}}catch{/* Keep a partial candidate pool and collect more. */}}for(const old of seeds){attempted.add(old.core.seed);const c=judge(old.core.seed,r);if(!c||!certify(spec,spec.bands[band],c.core,ctx).ok)continue;kept.push(c);per.set(c.core.template,(per.get(c.core.template)??0)+1);}}
  if(poolWant===want&&kept.length<want)poolWant=want*Number(process.env.SOLITAIRE_POOL??3);
  if(!useTargets&&kept.length>=want){try{if(orderCandidates(kept,want).length>=r.floor)poolWant=kept.length;}catch{/* A wider pool may be needed. */}}
  for(let i=0;i<max&&kept.length<poolWant;i++) {
-  const seed=((rungs.indexOf(r)+1)*0x1000000+i)>>>0,c=judge(seed,r);
+  const seed=((rungs.indexOf(r)+1)*0x1000000+i)>>>0;
+  if(attempted.has(seed)||(per.get(recipes[seed%4])??0)>=Math.floor(poolWant/4))continue;
+  const c=judge(seed,r);
   if(!c)continue;
   if((per.get(c.core.template)??0)>=Math.floor(poolWant/4))continue;
   const proof=certify(spec,spec.bands[band],c.core,ctx);
