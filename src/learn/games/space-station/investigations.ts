@@ -44,7 +44,7 @@ function dayNight(seed: number): Investigation[] {
   const turnControl = (fixed: boolean) => [{ name: "Turn Earth", options: turns, fixed }];
   const observe = (key: string, turn: number): Investigation => ({
     key, kind: "observe", title: "Spin the Earth",
-    question: `${turn === 0 ? "Earth stays as it is in the picture" : `Earth makes a ${turns[turn]} from the picture`}. What will the island have?`,
+    question: `The island began facing the Sun. Then Earth made a ${turns[turn]}. What will the island have now?`,
     controls: turnControl(true), start: [turn], outcomes: sky,
     observe: ([t]) => ({ outcome: skyAt(t), reading: `The island is in ${sky[skyAt(t)].toLowerCase()} in this model.` }),
     explain: why("Why?", reasons[skyAt(turn)][0], reasons[skyAt(turn)][1], r),
@@ -52,15 +52,16 @@ function dayNight(seed: number): Investigation[] {
   });
   const reach = (key: string, want: number, start: number): Investigation => ({
     key, kind: "reach", title: want === 1 ? "Bring the night" : "Bring the day",
-    question: `Turn Earth so the island has ${sky[want].toLowerCase()}. Plan your turn, then test it.`,
+    question: `The island began facing the Sun. How far should Earth turn to give the island ${sky[want].toLowerCase()}?`,
     controls: turnControl(false), start: [start], outcomes: sky, want,
     observe: ([t]) => ({ outcome: skyAt(t), reading: `The island is in ${sky[skyAt(t)].toLowerCase()} in this model.` }),
     explain: why("Why did that work?", reasons[want][0], reasons[want][1], r),
     clue: "Which way does the island face after each turn?", rule,
   });
-  const first = r(2) === 0 ? 0 : 2, edge = r(2) === 0 ? 1 : 3, want = r(2);
+  // The first prediction is always the night case: the Sun keeps shining while the island faces away.
+  const edge = r(2) === 0 ? 1 : 3, want = r(2);
   return [
-    observe("day-night-a", first),
+    observe("day-night-a", 2),
     reach("day-night-b", 1, 0),
     observe("day-night-c", edge),
     reach("day-night-d", want === 0 ? 0 : 1, want === 0 ? 2 : edge),
