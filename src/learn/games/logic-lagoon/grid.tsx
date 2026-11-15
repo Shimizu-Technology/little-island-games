@@ -33,14 +33,18 @@ export function LagoonGrid({ puzzle: p, state, dispatch, help, reveal, check, ti
   const cellWords = useMemo(() => p.cages.length || p.less.length ? cellClueWords(p) : undefined, [p]);
   const { height } = useWindowDimensions();
   // The teacher's maximum is six-wide. Leave room for both pad rows and Notes beside Check.
-  const gridWidth = Math.min(width, Math.max(240, height * .32));
+  const gridWidth = Math.min(width, Math.max(304, height * .36));
   const size = Math.min(56, Math.floor((width - 12) / p.size));
   return <View style={{ gap: 8 }}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
       <Copy maxFontSizeMultiplier={1.3} style={{ color: C.ink, fontWeight: '800', flexGrow: 1 }}>{title}</Copy>
-      {check && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
+      {check && pictures && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
       <Button compact quiet maxFontSizeMultiplier={1.3} disabled={!active || !cue.technique} onPress={() => { help(); setLadder({ edits: state.edits, stage: 1 }); }}>Hint</Button>
     </View>
+    {!pictures && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      {check && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
+      <Button compact quiet maxFontSizeMultiplier={1.3} selected={state.pencil} disabled={!active} onPress={() => dispatch({ type: 'pencil' })}>Notes {state.pencil ? 'on' : 'off'}</Button>
+    </View>}
     {pictures ? <>
       <Copy testID="logic-status" maxFontSizeMultiplier={1.3}>Tap a square, then choose a picture.</Copy>
       <View style={{ alignSelf: 'center', borderWidth: 2, borderColor: '#668A66' }}>
