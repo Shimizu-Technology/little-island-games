@@ -130,7 +130,7 @@ it('a surprising first prediction is forgiven at Level 1 but marks the round hel
     const miss = (q.observe(q.start).outcome + 1) % q.outcomes.length;
     await press(tile(`Predict: ${q.outcomes[miss]}`), settle);
     await press(button('Test the model'), settle);
-    expect(texts().some(t => t.startsWith('Surprise! The model showed: '))).toBe(true);
+    expect(texts()).toContain('Surprise!');
     expect(props.assistance).toHaveBeenCalledTimes(level === 4 ? 1 : 0);
     await act(async () => root!.unmount()); root = undefined;
   }

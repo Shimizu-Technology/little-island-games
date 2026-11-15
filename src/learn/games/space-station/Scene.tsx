@@ -3,7 +3,7 @@ import Svg, { Circle, G, Line, Path, Rect, Text as SText } from "react-native-sv
 import { font } from "../../../components/ui";
 import { describeSetup, type Investigation, type Observation } from "../../inquiry/engine";
 import { EarthGlobe, MoonDisc, SkySun } from "../weather-watch/Illustrations";
-import { eclipseAt, masses, newtons, planetSize, planets, seasonAt, skyAt, tilts, weight, worlds } from "./model";
+import { eclipseAt, masses, newtons, planetSize, planets, seasonAt, sky, skyAt, tilts, weight, worlds } from "./model";
 
 const ink = "#254B4B", gold = "#E9B84D", night = "#263D59", soft = "#DCE5D9";
 export const VIEW = { width: 360, height: 210 };
@@ -30,7 +30,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
       {[75, 100, 125].map((y) => <Line key={y} x1={86} y1={y} x2={160} y2={y} stroke={gold} strokeWidth={3} strokeLinecap="round" />)}
       <EarthGlobe x={240} y={100} r={62} night={!!seen} />
       <Circle cx={240 + Math.cos(angle) * 62} cy={100 + Math.sin(angle) * 62} r={9} fill="#F3B181" stroke={ink} strokeWidth={2.5} />
-      {seen && <G><Rect x={150} y={176} width={180} height={32} rx={16} fill={ink} />{text(`Island: ${["day", "night", "dawn or dusk"][skyAt(turn)]}`, 240, 198, label, "#FFF9E9", 170)}</G>}
+      {seen && <G><Rect x={150} y={176} width={180} height={32} rx={16} fill={ink} />{text(`Island: ${sky[skyAt(turn)].toLowerCase()}`, 240, 198, label, "#FFF9E9", 170)}</G>}
     </>;
   } else if (topic === "moon") {
     const spot = at(0), cx = 165, cy = 105, rx = 88, ry = 72;

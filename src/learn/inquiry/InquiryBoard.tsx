@@ -94,19 +94,19 @@ export function InquiryBoard({
   const speak = (text: string) => { const key = inquirySpeechKey(text); return soundOn && hasSpeech(key) ? <Button quiet compact icon="sound-on" disabled={!active} onPress={() => sound(key)}>Hear it</Button> : null; };
   const hints = hintText(q, p), repeat = p.phase === "setup" && testedBefore(qs, s);
   const result = p.seen && <View accessibilityLiveRegion="polite" style={{ padding: 12, gap: 8, borderRadius: 16, backgroundColor: p.matched ? "#E4EFD4" : "#FFF0CF" }}>
-    <Copy style={{ fontSize: 17, fontWeight: "900", color: theme.ink }}>
-      {q.kind === "reach" ? (p.matched ? "Your plan worked!" : "Not yet") : p.matched ? "Your prediction matched the model!" : `Surprise! The model showed: ${q.outcomes[p.seen.outcome]}`}
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 17, fontWeight: "900", color: theme.ink }}>
+      {q.kind === "reach" ? (p.matched ? "Your plan worked!" : "Not yet") : p.matched ? "Your prediction matched the model!" : "Surprise!"}
     </Copy>
-    <Copy style={{ fontSize: 15 }}>{p.seen.reading}</Copy>
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>{p.seen.reading}</Copy>
     {p.phase === "result" && <>
-      <Copy style={{ fontSize: 15 }}>Change your plan, then test again.</Copy>
+      <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>Change your plan, then test again.</Copy>
       <Button disabled={!active} onPress={() => send({ type: "revise" })}>Change my plan</Button>
     </>}
-    {!p.matched && q.kind === "observe" && <Copy style={{ fontSize: 15 }}>A surprise is a discovery. Now find the reason.</Copy>}
+    {!p.matched && q.kind === "observe" && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>A surprise is a discovery. Now find the reason.</Copy>}
     {p.phase === "explain" && <>
-      <Copy style={{ fontSize: 16, fontWeight: "800" }}>{q.explain.prompt}</Copy>
+      <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 16, fontWeight: "800" }}>{q.explain.prompt}</Copy>
       {choices(q.explain.choices, () => false, explain, "Reason", (i) => p.tried.includes(i))}
-      {p.tried.length > 0 && <Copy style={{ fontSize: 15 }}>Not that one. Look again at what the model showed.</Copy>}
+      {p.tried.length > 0 && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>Not that one. Look again at what the model showed.</Copy>}
     </>}
     {p.phase === "done" && <>
       <Copy style={{ fontSize: 15, fontWeight: "800" }}>Yes: {q.explain.choices[q.explain.answer]}.</Copy>
