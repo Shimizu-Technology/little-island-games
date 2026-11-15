@@ -114,7 +114,7 @@ it('every board text without its own cap stops at 2x inside the board region, an
   expect(longest(title)).toBeLessThanOrEqual(W * 0.92 + 1);
 });
 
-it('Crab Commands at AX5: labels fit their cards, Go! keeps its own line, Clear and Hint share the next, and the beach shrinks', async () => {
+it('Crab Commands at AX5: labels fit, Go! keeps its own line, Clear and Hint share a secondary row, and the beach shrinks', async () => {
   const r = await mount('crab-commands', sessionFor('crab-commands'));
   const cards = r.root.find(n => n.props.testID === 'crab-command-cards');
   const labels = cards.findAll(n => String(n.type) === 'Text');
@@ -125,10 +125,16 @@ it('Crab Commands at AX5: labels fit their cards, Go! keeps its own line, Clear 
   expect(new Set(labels.map(l => l.props.maxFontSizeMultiplier)).size).toBe(1);
   const run = r.root.find(n => n.props.testID === 'crab-run-row');
   expect(flat(run.props.style).flexDirection).not.toBe('row');
-  const [go, clear, hint] = run.findAll(n => String(n.type) === 'Pressable');
+  const go = run.find(n => String(n.type) === 'Pressable');
+  const clear = r.root.find(n => String(n.type) === 'Pressable' && textOf(n) === 'Clear');
+  const hint = r.root.find(n => String(n.type) === 'Pressable' && textOf(n) === 'Hint');
   expect(textOf(go)).toBe('Go!');expect(flat(go.props.style).alignSelf).toBe('stretch');
   expect([textOf(clear), textOf(hint)]).toEqual(['Clear', 'Hint']);
   expect(clear.parent!.parent).toBe(hint.parent!.parent);
+  expect(flat(clear.parent!.parent!.props.style).flexDirection).toBe('row');
+  const buttons = r.root.findAll(n => String(n.type) === 'Pressable');
+  expect(buttons.indexOf(clear)).toBeGreaterThan(buttons.indexOf(go));
+  expect(buttons.indexOf(hint)).toBeGreaterThan(buttons.indexOf(go));
   // Half the board each, less 8-pt gap and 13-pt compact padding: Hint stays inside the card.
   for (const b of [clear, hint]) expect(longest(b.findByType('Text' as never))).toBeLessThanOrEqual((W - 8) / 2 - 26);
   // The beach, the plan and the cards share one phone screen; the prompt stops at 2x.
@@ -271,21 +277,28 @@ it('Håfa Adai: no caption word is wider than its picture, on any level or seed,
 
 it('Logic Lagoon at AX5: the values follow the grid directly, with the "tap a square" line above the grid', async () => {
   const r = await mount('logic-lagoon', sessionFor('logic-lagoon'));
-  const board = r.root.children[0] as ReactTestInstance;
-  const order = board.children.filter((c): c is ReactTestInstance => typeof c !== 'string');
-  const grid = order.findIndex(c => String(c.type) === 'ScrollView'), status = order.findIndex(c => c.props.testID === 'logic-status'), values = order.findIndex(c => c.props.testID === 'logic-values');
+  // Host order crosses geometry wrappers and matches native reading order.
+  const order = r.root.findAll(n => typeof n.type === 'string');
+  const gridNode = order.find(n => String(n.type) === 'ScrollView')!;
+  const valueNode = order.find(n => String(n.type) === 'View' && n.props.testID === 'logic-values')!;
+  expect(gridNode).toBeDefined();expect(valueNode).toBeDefined();
+  const grid = order.indexOf(gridNode), status = order.findIndex(n => String(n.type) === 'Text' && n.props.testID === 'logic-status'), values = order.indexOf(valueNode);
   expect(grid).toBeGreaterThan(0);
   expect(status).toBe(grid - 1);
-  expect(values).toBe(grid + 1);
+  expect(values).toBeGreaterThan(grid);
+  expect(order.slice(grid + 1, values).filter(n => !inside(n, gridNode))).toEqual([]);
 });
 
 it('Logic Lagoon at the default size keeps the line between the grid and the values', async () => {
   Object.assign(viewport, { fontScale: 1 });
   const r = await mount('logic-lagoon', sessionFor('logic-lagoon'), {}, null);
-  const order = (r.root.children[0] as ReactTestInstance).children.filter((c): c is ReactTestInstance => typeof c !== 'string');
-  const grid = order.findIndex(c => String(c.type) === 'ScrollView');
-  expect(order[grid + 1].props.testID).toBe('logic-status');
-  expect(order[grid + 2].props.testID).toBe('logic-values');
+  const order = r.root.findAll(n => typeof n.type === 'string');
+  const gridNode = order.find(n => String(n.type) === 'ScrollView')!;
+  const valueNode = order.find(n => String(n.type) === 'View' && n.props.testID === 'logic-values')!;
+  expect(gridNode).toBeDefined();expect(valueNode).toBeDefined();
+  const grid = order.indexOf(gridNode), values = order.indexOf(valueNode);
+  expect(values).toBeGreaterThan(grid);
+  expect(order.slice(grid + 1, values).filter(n => !inside(n, gridNode)).map(n => n.props.testID)).toEqual(['logic-status']);
 });
 
 it('the board region is what caps an uncapped prompt: without it the Crab prompt keeps the full AX5 size', async () => {

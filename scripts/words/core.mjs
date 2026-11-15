@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 
 export const TIERS = ['Little', 'Growing', 'Strong', 'Grown-up'];
 export const sha256 = value => createHash('sha256').update(value).digest('hex');
@@ -87,4 +88,45 @@ export function validatePack(words) {
   requireThat(new Set(words.map(w => `${w.language}:${englishKey(w.lemma)}`)).size === words.length, 'Word and inflection cannot share a pack');
   const adults = words.filter(w => w.readerLevel === 'Grown-up');
   requireThat(adults.filter(w => w.form !== 'lemma').length <= Math.floor(adults.length * 0.1), 'Adult inflection cap is 10%');
+}
+
+/**
+ * Lead contract change: W1 reading records. A Sound Boat word built from pieces, with closed keys: no status, review
+ * or provenance field can ride along. Its structure and morphology are the kit's own pure rules
+ * (`src/learn/reading/morphology.ts`, dependency-free TypeScript that Node loads by stripping types). The same function
+ * runs at prepare, bake and every shipping check here, and again in the app's admitted loader, so the two cannot
+ * disagree.
+ */
+export const READING_KINDS = ['compound', 'syllables', 'ending', 'prefix'];
+export const READING_CHANGES = ['none', 'drop-e', 'double', 'y-to-i'];
+const READING_KEYS = ['id', 'word', 'level', 'kind', 'chunks', 'distractors', 'base', 'affix', 'change', 'gloss', 'family', 'alternates'];
+let partsRules;
+export function partsWordIssues(r) {
+  try { partsRules ??= createRequire(import.meta.url)('../../src/learn/reading/morphology.ts'); }
+  catch { throw new Error('Cannot load the shared reading validator src/learn/reading/morphology.ts (Node 22.18+ strips its types)'); }
+  return partsRules.partsWordIssues(r);
+}
+export function validateReadingRecord(r) {
+  requireThat(Object.prototype.toString.call(r) === '[object Object]' && Object.keys(r).every(k => READING_KEYS.includes(k)), 'Reading record has unexpected fields');
+  const issues = partsWordIssues(r);
+  requireThat(issues.length === 0, `Invalid reading record: ${issues.map(i => i.problem).join('; ')}`);
+  return r;
+}
+/** Every string a child could see for this record, for the private scan. */
+export function readingStrings(r) {
+  return [r.word, ...r.chunks, ...r.distractors, ...(r.base ? [r.base] : []), ...(r.affix ? [r.affix] : []), ...(r.family ? [r.family] : []), ...(r.alternates ?? []).flat(), ...(r.gloss ? r.gloss.split(' ') : [])];
+}
+/**
+ * Every text a child can build in the boxes, whether or not it is ever the answer: each ordered pick of distinct tray
+ * pieces (a piece is used once), from one box up to the record's box count, joined as the boxes show it.
+ */
+export function readingConstructions(r) {
+  const tray = [...r.chunks, ...r.distractors], boxes = r.chunks.length, out = new Set();
+  const build = (text, used, depth) => {
+    if (depth) out.add(text);
+    if (depth === boxes) return;
+    tray.forEach((piece, i) => { if (!used.includes(i)) build(text + piece, [...used, i], depth + 1); });
+  };
+  build('', [], 0);
+  return [...out];
 }

@@ -8,6 +8,8 @@ import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { PictureObject, Scene } from "../../art/Objects";
 import { ReadingText } from "../../kit/ReadingText";
+import { ReadingRefused } from "../../kit/ReadingRefused";
+import { admittedReading } from "../../reading/admit";
 import { sceneLabel, wordAudio } from "../../kit/reading";
 import {
   isLegacyTale,
@@ -176,16 +178,12 @@ function Read({
   const s = session.state,
     t = tale(s),
     small = height < 730;
-  const done = taleDone(s);
-  // When the page turns by itself, the next sentence comes into view at the top of the board.
+  // When the child turns the page, the next sentence comes into view at the top of the board.
   useStepReveal(s.page);
-
-  // After a right pick, the turtle swims and the page turns by itself.
-  useEffect(() => {
-    if (!s.solved || !active) return;
-    const timer = setTimeout(() => update(taleTurnPage(s)), 1500);
-    return () => clearTimeout(timer);
-  }, [s, active, update]);
+  // The tale and its page are the pinned inherited records for this saved id. Anything else is refused before a word
+  // or picture is shown, spoken or credited.
+  if (!admittedReading(t, "Turtle Tales") || (s.page < t.pages.length && !admittedReading(t.pages[s.page], "Turtle Tales' page"))) return <ReadingRefused />;
+  const done = taleDone(s);
 
   if (done)
     return (
@@ -246,7 +244,7 @@ function Read({
       <Swim page={s.page + (s.solved ? 1 : 0)} pages={t.pages.length} width={width} />
       <Copy style={{ fontSize: 14, color: C.ink, textAlign: "center" }}>{t.title}</Copy>
       <ReadingText
-        text={page.text}
+        record={page}
         compact={small}
         highlight={s.wrong && !s.solved ? page.cue : undefined}
         onWord={(_, w) => { if (active) { assistance?.(); sound(wordAudio(w)); } }}
@@ -254,6 +252,12 @@ function Read({
       <Copy style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>
         {s.solved ? "Yes! That’s the one." : s.wrong ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
+      {/* Reading is never timed: the page turns when the child presses it. */}
+      {s.solved && (
+        <Button disabled={!active} onPress={() => update(taleTurnPage(s))}>
+          {s.page === t.pages.length - 1 ? "Finish the tale" : "Turn the page"}
+        </Button>
+      )}
       <CoachSpot active={coach.active && !s.solved && !s.wrong} handAt="none">
         {cards}
       </CoachSpot>

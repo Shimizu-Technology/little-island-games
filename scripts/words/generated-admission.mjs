@@ -4,7 +4,7 @@ import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { spawnSync } from 'node:child_process';
-import { digest, requireThat, sha256 } from './core.mjs';
+import { digest, requireThat, sha256, readingStrings } from './core.mjs';
 import { privatePath } from './paths.mjs';
 import { libraryNormalize } from './artifact-views.mjs';
 import { normalizedText, wordTokens } from './density.mjs';
@@ -20,8 +20,22 @@ export const generatorInventory=[
   {id:'pictures',paths:['src/content/pictures/assets.generated.ts','content/pictures/manifest.json'],scripts:['scripts/art/pictures/build.mjs','scripts/art/pictures/allowlist.mjs']},
   {id:'library',paths:['src/library/catalog.generated.json','src/library/assets.generated.ts','src/library/speech.generated.ts'],scripts:['scripts/library/build-index.mjs']},
   {id:'puzzles',paths:['src/content/puzzles/assets'],scripts:['scripts/puzzles/pipeline.ts'],rule:'Word families must admit decoded answers before publishing any pack.'},
-  {id:'banks',paths:['content/words/banks'],scripts:['scripts/words/cli.mjs','scripts/words/bake.mjs','scripts/words/registry.mjs']},
+  {id:'banks',paths:['content/words/banks'],scripts:['scripts/words/cli.mjs','scripts/words/bake.mjs','scripts/words/bake-reading.mjs','scripts/words/registry.mjs']},
 ];
+// Lead contract change: W1 reading records. A bank supplies the text its runtime projection shows, read by its
+// manifest kind: Word Search spellings and accepted answers, or every string a reading record can show.
+export function bankVocabulary(kind,data) {
+  if((kind ?? 'words')==='reading-parts') {
+    requireThat(data?.kind==='reading-parts' && Array.isArray(data.words),'Reading bank differs from its manifest kind');
+    return data.words.flatMap(readingStrings);
+  }
+  requireThat(data?.kind===undefined && Array.isArray(data?.words) && Array.isArray(data.accept),'Word bank differs from its manifest kind');
+  return [...data.words.map(w=>w.spelling),...data.accept];
+}
+function bankKinds(root) {
+  const manifest=join(root,'content/words/banks.manifest.json');
+  return new Map(existsSync(manifest)?JSON.parse(readFileSync(manifest,'utf8')).banks.map(b=>[b.path,b.kind]):[]);
+}
 function walk(root,path,visit) {
   if(!existsSync(path))return;
   requireThat(!lstatSync(path).isSymbolicLink(),'Symlink in generated admission source');
@@ -116,7 +130,7 @@ export function vocabularySources(root) {
   const manifest=join(root,'content/words/banks.manifest.json');
   if(existsSync(manifest))for(const bank of JSON.parse(readFileSync(manifest,'utf8')).banks) {
     requireThat(/^content\/words\/banks\/[^/]+\.json$/.test(bank.path),'Invalid admission bank path');const bytes=readFileSync(join(root,bank.path));requireThat(sha256(bytes)===bank.sha256,'Stale admitted bank');
-    const data=JSON.parse(bytes);add(bank.path,bytes,[...data.words.map(w=>w.spelling),...data.accept]);
+    add(bank.path,bytes,bankVocabulary(bank.kind,JSON.parse(bytes)));
   }
   return {words,exact,files,sourceSha256:digest(files)};
 }
@@ -191,7 +205,7 @@ export function wordMapKeys(text,name='artifact.js') {
   function visit(n){if(ts.isObjectLiteralExpression(n) && n.properties.length>=3 && n.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression(p.initializer) || ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer) || ts.isObjectLiteralExpression(p.initializer) || ts.isStringLiteralLike(p.initializer))) && !n.properties.every(p=>ts.isStringLiteralLike(p.initializer) && /^#[a-f0-9]{3,8}$/i.test(p.initializer.text)))keys.push(...n.properties.map(p=>p.name.text));ts.forEachChild(n,visit);}visit(tree);return keys;
 }
 export function generatedReceipts(root,sources=admissionSources(root)) {
-  const receipts=[];
+  const receipts=[],kinds=bankKinds(root);
   for(const generator of generatorInventory) {
     const entries=[];let libraryIndex,libraryActiveIds;
     for(const path of generator.paths)walk(root,join(root,path),(name,bytes)=>{
@@ -203,7 +217,11 @@ export function generatedReceipts(root,sources=admissionSources(root)) {
       else if(name==='src/library/catalog.generated.json') {
         // Item-bound phonetic derivation is independently checked by library-source.
         const catalog=JSON.parse(bytes);libraryIndex=catalog.index??[];libraryActiveIds=(catalog.items??[]).map(item=>item.id);
-      } else if(/^content\/words\/banks\//.test(name))entries.push(...JSON.parse(bytes).words.map(w=>w.spelling));
+      } else if(/^content\/words\/banks\//.test(name)) {
+        // Kind-checked: a reading bank's entries are its shown strings, a word bank's its spellings.
+        const kind=kinds.get(name),data=JSON.parse(bytes),shown=bankVocabulary(kind,data);
+        entries.push(...((kind ?? 'words')==='reading-parts'?shown:data.words.map(w=>w.spelling)));
+      }
     });
     // Paths are identifiers. Their exact authored literal must supply provenance.
     // Module paths are derived from an admitted audio key or authored asset path.

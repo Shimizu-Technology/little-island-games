@@ -76,6 +76,15 @@ export function countOccurrences(grid, cells) {
   return paths.size;
 }
 /** Wheel letters can be rearranged freely; never choose a blocked permutation. */
+/** One trie for many short texts, each read in both directions (a row of boxes can be read either way). */
+export function scanTexts(texts, terms) {
+  const root = trieFor(terms), hits = [];
+  for (const text of texts) for (const s of [foldScan(text), [...foldScan(text)].reverse().join('')]) for (let i = 0; i < s.length; i++) {
+    let node = root;
+    for (let j = i; j < s.length && (node = node[s[j]]); j++) if (node.end) hits.push({ term: node.end });
+  }
+  return hits;
+}
 export function scanScramble(shuffle, terms) { return scanGrid([[...shuffle].join('')].map(row => [...row]), terms); }
 /** Builder boards may bend through the eight touching neighbors, without reusing a cell. */
 export function scanBentPaths(grid, coreTerms) {

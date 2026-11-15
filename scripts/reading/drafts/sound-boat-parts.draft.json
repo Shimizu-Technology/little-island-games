@@ -1,0 +1,915 @@
+{
+  "schemaVersion": 1,
+  "id": "sound-boat-parts-draft",
+  "fixture": false,
+  "records": [
+    {
+      "id": "dr-sunset",
+      "status": "draft",
+      "word": "sunset",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "sun",
+        "set"
+      ],
+      "distractors": [
+        "sin",
+        "sit"
+      ]
+    },
+    {
+      "id": "dr-cupcake",
+      "status": "draft",
+      "word": "cupcake",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "cup",
+        "cake"
+      ],
+      "distractors": [
+        "cap",
+        "cook"
+      ]
+    },
+    {
+      "id": "dr-seashell",
+      "status": "draft",
+      "word": "seashell",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "sea",
+        "shell"
+      ],
+      "distractors": [
+        "see",
+        "shall"
+      ]
+    },
+    {
+      "id": "dr-rainbow",
+      "status": "draft",
+      "word": "rainbow",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "rain",
+        "bow"
+      ],
+      "distractors": [
+        "ran",
+        "boat"
+      ]
+    },
+    {
+      "id": "dr-starfish",
+      "status": "draft",
+      "word": "starfish",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "star",
+        "fish"
+      ],
+      "distractors": [
+        "stair",
+        "dish"
+      ]
+    },
+    {
+      "id": "dr-sailboat",
+      "status": "draft",
+      "word": "sailboat",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "sail",
+        "boat"
+      ],
+      "distractors": [
+        "sale",
+        "coat"
+      ]
+    },
+    {
+      "id": "dr-bedtime",
+      "status": "draft",
+      "word": "bedtime",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "bed",
+        "time"
+      ],
+      "distractors": [
+        "bad",
+        "tame"
+      ]
+    },
+    {
+      "id": "dr-anthill",
+      "status": "draft",
+      "word": "anthill",
+      "level": 4,
+      "kind": "compound",
+      "chunks": [
+        "ant",
+        "hill"
+      ],
+      "distractors": [
+        "and",
+        "hall"
+      ]
+    },
+    {
+      "id": "dr-rabbit",
+      "status": "draft",
+      "word": "rabbit",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "rab",
+        "bit"
+      ],
+      "distractors": [
+        "rap",
+        "bat"
+      ]
+    },
+    {
+      "id": "dr-picnic",
+      "status": "draft",
+      "word": "picnic",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "pic",
+        "nic"
+      ],
+      "distractors": [
+        "pik",
+        "nik"
+      ]
+    },
+    {
+      "id": "dr-basket",
+      "status": "draft",
+      "word": "basket",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "bas",
+        "ket"
+      ],
+      "distractors": [
+        "bask",
+        "kit"
+      ]
+    },
+    {
+      "id": "dr-napkin",
+      "status": "draft",
+      "word": "napkin",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "nap",
+        "kin"
+      ],
+      "distractors": [
+        "nip",
+        "can"
+      ]
+    },
+    {
+      "id": "dr-happen",
+      "status": "draft",
+      "word": "happen",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "hap",
+        "pen"
+      ],
+      "distractors": [
+        "hop",
+        "pan"
+      ]
+    },
+    {
+      "id": "dr-magnet",
+      "status": "draft",
+      "word": "magnet",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "mag",
+        "net"
+      ],
+      "distractors": [
+        "meg",
+        "nit"
+      ]
+    },
+    {
+      "id": "dr-muffin",
+      "status": "draft",
+      "word": "muffin",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "muf",
+        "fin"
+      ],
+      "distractors": [
+        "mof",
+        "fun"
+      ]
+    },
+    {
+      "id": "dr-kitten",
+      "status": "draft",
+      "word": "kitten",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "kit",
+        "ten"
+      ],
+      "distractors": [
+        "kat",
+        "tin"
+      ]
+    },
+    {
+      "id": "dr-banana",
+      "status": "draft",
+      "word": "banana",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "ba",
+        "na",
+        "na"
+      ],
+      "distractors": [
+        "bo",
+        "ne"
+      ]
+    },
+    {
+      "id": "dr-octopus",
+      "status": "draft",
+      "word": "octopus",
+      "level": 4,
+      "kind": "syllables",
+      "chunks": [
+        "oc",
+        "to",
+        "pus"
+      ],
+      "distractors": [
+        "ac",
+        "tu"
+      ]
+    },
+    {
+      "id": "dr-jumped",
+      "status": "draft",
+      "word": "jumped",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "jump",
+        "ed"
+      ],
+      "distractors": [
+        "ing",
+        "er"
+      ],
+      "base": "jump",
+      "affix": "ed",
+      "gloss": "already happened"
+    },
+    {
+      "id": "dr-walked",
+      "status": "draft",
+      "word": "walked",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "walk",
+        "ed"
+      ],
+      "distractors": [
+        "ing",
+        "s"
+      ],
+      "base": "walk",
+      "affix": "ed",
+      "gloss": "already happened"
+    },
+    {
+      "id": "dr-playing",
+      "status": "draft",
+      "word": "playing",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "play",
+        "ing"
+      ],
+      "distractors": [
+        "ed",
+        "s"
+      ],
+      "base": "play",
+      "affix": "ing",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-singer",
+      "status": "draft",
+      "word": "singer",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "sing",
+        "er"
+      ],
+      "distractors": [
+        "ed",
+        "ing"
+      ],
+      "base": "sing",
+      "affix": "er",
+      "gloss": "someone who sings"
+    },
+    {
+      "id": "dr-farmer",
+      "status": "draft",
+      "word": "farmer",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "farm",
+        "er"
+      ],
+      "distractors": [
+        "ed",
+        "ing"
+      ],
+      "base": "farm",
+      "affix": "er",
+      "gloss": "someone who farms"
+    },
+    {
+      "id": "dr-cats",
+      "status": "draft",
+      "word": "cats",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "cat",
+        "s"
+      ],
+      "distractors": [
+        "ed",
+        "ing"
+      ],
+      "base": "cat",
+      "affix": "s",
+      "gloss": "more than one"
+    },
+    {
+      "id": "dr-helpful",
+      "status": "draft",
+      "word": "helpful",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "help",
+        "ful"
+      ],
+      "distractors": [
+        "ed",
+        "er"
+      ],
+      "base": "help",
+      "affix": "ful",
+      "gloss": "full of help"
+    },
+    {
+      "id": "dr-slowly",
+      "status": "draft",
+      "word": "slowly",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "slow",
+        "ly"
+      ],
+      "distractors": [
+        "ed",
+        "er"
+      ],
+      "base": "slow",
+      "affix": "ly",
+      "gloss": "in a slow way"
+    },
+    {
+      "id": "dr-fastest",
+      "status": "draft",
+      "word": "fastest",
+      "level": 4,
+      "kind": "ending",
+      "chunks": [
+        "fast",
+        "est"
+      ],
+      "distractors": [
+        "ed",
+        "er"
+      ],
+      "base": "fast",
+      "affix": "est",
+      "gloss": "the most"
+    },
+    {
+      "id": "dr-making",
+      "status": "draft",
+      "word": "making",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "mak",
+        "ing"
+      ],
+      "distractors": [
+        "make",
+        "mac"
+      ],
+      "base": "make",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now",
+      "family": "make"
+    },
+    {
+      "id": "dr-maker",
+      "status": "draft",
+      "word": "maker",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "mak",
+        "er"
+      ],
+      "distractors": [
+        "make",
+        "mac"
+      ],
+      "base": "make",
+      "affix": "er",
+      "change": "drop-e",
+      "gloss": "someone who makes",
+      "family": "make"
+    },
+    {
+      "id": "dr-baking",
+      "status": "draft",
+      "word": "baking",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "bak",
+        "ing"
+      ],
+      "distractors": [
+        "bake",
+        "bark"
+      ],
+      "base": "bake",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-riding",
+      "status": "draft",
+      "word": "riding",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "rid",
+        "ing"
+      ],
+      "distractors": [
+        "ride",
+        "ring"
+      ],
+      "base": "ride",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-smiling",
+      "status": "draft",
+      "word": "smiling",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "smil",
+        "ing"
+      ],
+      "distractors": [
+        "smile",
+        "smell"
+      ],
+      "base": "smile",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-taking",
+      "status": "draft",
+      "word": "taking",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "tak",
+        "ing"
+      ],
+      "distractors": [
+        "take",
+        "tack"
+      ],
+      "base": "take",
+      "affix": "ing",
+      "change": "drop-e",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-hopping",
+      "status": "draft",
+      "word": "hopping",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "hopp",
+        "ing"
+      ],
+      "distractors": [
+        "hop",
+        "pin"
+      ],
+      "base": "hop",
+      "affix": "ing",
+      "change": "double",
+      "gloss": "happening now",
+      "family": "hop"
+    },
+    {
+      "id": "dr-hopped",
+      "status": "draft",
+      "word": "hopped",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "hopp",
+        "ed"
+      ],
+      "distractors": [
+        "hop",
+        "pad"
+      ],
+      "base": "hop",
+      "affix": "ed",
+      "change": "double",
+      "gloss": "already happened",
+      "family": "hop"
+    },
+    {
+      "id": "dr-running",
+      "status": "draft",
+      "word": "running",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "runn",
+        "ing"
+      ],
+      "distractors": [
+        "run",
+        "pin"
+      ],
+      "base": "run",
+      "affix": "ing",
+      "change": "double",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-sitting",
+      "status": "draft",
+      "word": "sitting",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "sitt",
+        "ing"
+      ],
+      "distractors": [
+        "sit",
+        "tin"
+      ],
+      "base": "sit",
+      "affix": "ing",
+      "change": "double",
+      "gloss": "happening now"
+    },
+    {
+      "id": "dr-bigger",
+      "status": "draft",
+      "word": "bigger",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "bigg",
+        "er"
+      ],
+      "distractors": [
+        "big",
+        "pen"
+      ],
+      "base": "big",
+      "affix": "er",
+      "change": "double",
+      "gloss": "more big"
+    },
+    {
+      "id": "dr-cried",
+      "status": "draft",
+      "word": "cried",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "cri",
+        "ed"
+      ],
+      "distractors": [
+        "cry",
+        "ride"
+      ],
+      "base": "cry",
+      "affix": "ed",
+      "change": "y-to-i",
+      "gloss": "already happened"
+    },
+    {
+      "id": "dr-tried",
+      "status": "draft",
+      "word": "tried",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "tri",
+        "ed"
+      ],
+      "distractors": [
+        "try",
+        "red"
+      ],
+      "base": "try",
+      "affix": "ed",
+      "change": "y-to-i",
+      "gloss": "already happened"
+    },
+    {
+      "id": "dr-carried",
+      "status": "draft",
+      "word": "carried",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "carri",
+        "ed"
+      ],
+      "distractors": [
+        "carry",
+        "red"
+      ],
+      "base": "carry",
+      "affix": "ed",
+      "change": "y-to-i",
+      "gloss": "already happened"
+    },
+    {
+      "id": "dr-happily",
+      "status": "draft",
+      "word": "happily",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "happi",
+        "ly"
+      ],
+      "distractors": [
+        "happy",
+        "led"
+      ],
+      "base": "happy",
+      "affix": "ly",
+      "change": "y-to-i",
+      "gloss": "in a happy way"
+    },
+    {
+      "id": "dr-funniest",
+      "status": "draft",
+      "word": "funniest",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "funni",
+        "est"
+      ],
+      "distractors": [
+        "funny",
+        "ed"
+      ],
+      "base": "funny",
+      "affix": "est",
+      "change": "y-to-i",
+      "gloss": "the most"
+    },
+    {
+      "id": "dr-puppies",
+      "status": "draft",
+      "word": "puppies",
+      "level": 5,
+      "kind": "ending",
+      "chunks": [
+        "puppi",
+        "es"
+      ],
+      "distractors": [
+        "puppy",
+        "ed"
+      ],
+      "base": "puppy",
+      "affix": "es",
+      "change": "y-to-i",
+      "gloss": "more than one"
+    },
+    {
+      "id": "dr-unlock",
+      "status": "draft",
+      "word": "unlock",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "lock"
+      ],
+      "distractors": [
+        "on",
+        "luck"
+      ],
+      "base": "lock",
+      "affix": "un",
+      "gloss": "open what was locked"
+    },
+    {
+      "id": "dr-undo",
+      "status": "draft",
+      "word": "undo",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "do"
+      ],
+      "distractors": [
+        "on",
+        "dig"
+      ],
+      "base": "do",
+      "affix": "un",
+      "gloss": "take back what was done",
+      "family": "do"
+    },
+    {
+      "id": "dr-redo",
+      "status": "draft",
+      "word": "redo",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "do"
+      ],
+      "distractors": [
+        "ray",
+        "dig"
+      ],
+      "base": "do",
+      "affix": "re",
+      "gloss": "do it again",
+      "family": "do"
+    },
+    {
+      "id": "dr-replay",
+      "status": "draft",
+      "word": "replay",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "play"
+      ],
+      "distractors": [
+        "ray",
+        "pay"
+      ],
+      "base": "play",
+      "affix": "re",
+      "gloss": "play it again"
+    },
+    {
+      "id": "dr-retell",
+      "status": "draft",
+      "word": "retell",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "tell"
+      ],
+      "distractors": [
+        "ray",
+        "bell"
+      ],
+      "base": "tell",
+      "affix": "re",
+      "gloss": "tell it again"
+    },
+    {
+      "id": "dr-unhappy",
+      "status": "draft",
+      "word": "unhappy",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "happy"
+      ],
+      "distractors": [
+        "on",
+        "hippy"
+      ],
+      "base": "happy",
+      "affix": "un",
+      "gloss": "not happy"
+    },
+    {
+      "id": "dr-remake",
+      "status": "draft",
+      "word": "remake",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "re",
+        "make"
+      ],
+      "distractors": [
+        "ray",
+        "mac"
+      ],
+      "base": "make",
+      "affix": "re",
+      "gloss": "make it again",
+      "family": "make"
+    },
+    {
+      "id": "dr-unfold",
+      "status": "draft",
+      "word": "unfold",
+      "level": 5,
+      "kind": "prefix",
+      "chunks": [
+        "un",
+        "fold"
+      ],
+      "distractors": [
+        "on",
+        "gold"
+      ],
+      "base": "fold",
+      "affix": "un",
+      "gloss": "open it out"
+    }
+  ]
+}

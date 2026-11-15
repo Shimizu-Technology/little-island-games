@@ -1,3 +1,4 @@
+import { BoardColumns, useBoardColumns, useBoardSpace } from '../../BoardSpace';
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { Text } from "../../../components/Text";
@@ -23,6 +24,7 @@ const speechKey = (p: Problem) => `math-${p.op}-${p.a}-${p.b}-${p.unknown === "s
 
 /** Shell Math, levels 1 to 5. Every state change goes through shellMove, so the board can only do what the rules allow. */
 export function ShellBoard(props: BoardProps<ShellRound>) {
+  const side = useBoardColumns(), school = useBoardSpace();
   const { session, active, update, practice, notePractice, assistance, stopSound, sound, soundOn, cheer, coach, width } = props;
   const s = session.state;
   // At accessibility sizes the header has no room for a second button, so Help moves down beside the other supports.
@@ -127,14 +129,15 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     <Text accessibilityLabel={equationText(problem, work.solved)} maxFontSizeMultiplier={equationCap} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(problem, work.solved)}</Text>
     {/* A gentle miss is one short line with the question, above the picture and the pad. */}
     {!work.solved && note ? <View accessibilityLiveRegion="polite"><Copy maxFontSizeMultiplier={cap} style={{ color: C.ink, textAlign: "center" }}>{note}</Copy></View> : null}
-    <Workspace pic={pic} width={width} hidePicture={hidePicture && level >= 2}
+    <BoardColumns drawing={<Workspace pic={pic} width={side ? width * .46 : width} hidePicture={hidePicture && level >= 2}
       onPick={step.kind === "fill" && problem.op === "add" && active ? (side, k) => { press(); act(["m", side, k]); } : undefined}
       onPickOnes={step.kind === "fill" && problem.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}
       onTradeMake={step.kind === "trade" && step.dir === "make" && active ? () => { press(); act(["t"]); } : undefined}
-      onTradeOpen={step.kind === "trade" && step.dir === "open" && active ? () => { press(); act(["t"]); } : undefined} />
+      onTradeOpen={step.kind === "trade" && step.dir === "open" && active ? () => { press(); act(["t"]); } : undefined} />}>
     <StepInput step={step} work={work} typed={typed} tiles={step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, problem, tileCap(level)) : stepChoices) : []}
-      width={width} active={active} coachActive={coach.active} resetKey={stepKey} addVerb={problem.op === "add" ? "on" : "back"} press={press} onAct={act}
+      width={side ? width * .5 : width} active={active} coachActive={coach.active} resetKey={stepKey} addVerb={problem.op === "add" ? "on" : "back"} press={press} onAct={act}
       soundOn={soundOn} sound={sound} prompt={typedStepLabel} />
+    </BoardColumns>
     {work.solved
       ? <View style={{ gap: 8 }}>
         {seconds.length > 0 && <Button quiet compact disabled={!active} onPress={() => { press(); setWay((w) => (w === null ? 0 : w + 1 >= seconds.length ? null : w + 1)); }}>
@@ -148,6 +151,6 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
       </View>
       : <HelpRow step={step} work={work} typed={typed} active={active} canHide={level >= 2} hidden={hidePicture} press={press}
         onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidePicture((h) => !h)} showHelp={large} onUndo={large && undoable ? () => act(["u"]) : undefined} />}
-    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>{work.solved ? "" : `Step ${Math.min(work.at + 1, total)} of ${total}`}</Copy>
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: school?.ready ? 13 : 12, color: C.muted, textAlign: "center" }}>{work.solved ? "" : `Step ${Math.min(work.at + 1, total)} of ${total}`}</Copy>
   </View>;
 }

@@ -1,3 +1,5 @@
+import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
+import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
@@ -57,6 +59,7 @@ function PlayerChip({ token, toGo, narrow, width }: { token: Token; toGo: number
   // At accessibility sizes the name wraps between words onto two lines and stops where each word fits the card
   // (38-pt turtle, 6-pt gap, 8-pt padding and 3-pt border each side), so "Your turtle" is never cut to "Yo…".
   const large = useWindowDimensions().fontScale >= LARGE_TEXT, room = width - 38 - 6 - 22;
+  const school = useBoardSpace(), labelSize = narrow ? school?.ready ? 13 : 12.5 : 14;
   return (
     <View
       accessibilityLabel={`${token.label}: ${toGo} to go${token.active ? ", playing now" : ""}`}
@@ -76,7 +79,7 @@ function PlayerChip({ token, toGo, narrow, width }: { token: Token; toGo: number
     >
       {token.kind === "tide" ? <Tide size={38} /> : <Turtle size={38} coral={token.kind === "coral"} />}
       <View style={{ flex: 1 }}>
-        <Text numberOfLines={large ? 2 : 1} maxFontSizeMultiplier={large ? wordFitMultiplier(token.label, narrow ? 12.5 : 14, room, 1.5) : undefined} style={{ fontSize: narrow ? 12.5 : 14, fontWeight: "900", color: ink }}>
+        <Text numberOfLines={large ? 2 : 1} maxFontSizeMultiplier={large ? wordFitMultiplier(token.label, labelSize, room, 1.5) : undefined} style={{ fontSize: labelSize, fontWeight: "900", color: ink }}>
           {token.label}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
@@ -351,6 +354,8 @@ export function Board({ session, update, practice, sound, active, width, height,
   // Leave room so the prompt, the whole path and the spinner fit on one phone screen.
   const reserved = 372 + (multi ? 40 : 0) + (session.match ? 66 : 0);
   const pathH = Math.round(Math.max(260, Math.min(width * (width > 600 ? 0.62 : 1.45), height - reserved)));
+  const side = useBoardColumns();
+  const geometry = useBoardGeometry('reef-race', pathH, SCHOOL_BOARD_MIN['reef-race']);
   const humanRoll = r.phase === "roll" && !computer && !spinning;
   const showCoach = coach.active && !computer;
   const spinnerSize = width > 600 ? 108 : 92;
@@ -377,6 +382,21 @@ export function Board({ session, update, practice, sound, active, width, height,
         ))}
       </View>
       {multi && <RaceBar end={end} tokens={tokens} width={width} />}
+      <BoardColumns legacyDrawingLast drawing={<View testID={geometry.testID} onLayout={geometry.onLayout}><ReefBoard
+        width={side ? width * .46 : width}
+        height={geometry.height}
+        first={first}
+        last={last}
+        end={end}
+        section={section}
+        tokens={tokens}
+        specials={specials}
+        next={!spinning && !computer ? nextN : null}
+        wrong={wrong}
+        disabled={!active || computer || spinning}
+        onStone={onStone}
+        coach={showCoach && moving}
+      /></View>}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 46 }}>
         {promptIcon}
         <Text accessibilityLiveRegion="polite" style={{ flex: 1, fontSize: 20, fontWeight: "900", color: ink }}>
@@ -410,21 +430,8 @@ export function Board({ session, update, practice, sound, active, width, height,
           </>
         )}
       </View>
-      <ReefBoard
-        width={width}
-        height={pathH}
-        first={first}
-        last={last}
-        end={end}
-        section={section}
-        tokens={tokens}
-        specials={specials}
-        next={!spinning && !computer ? nextN : null}
-        wrong={wrong}
-        disabled={!active || computer || spinning}
-        onStone={onStone}
-        coach={showCoach && moving}
-      />
+
+      </BoardColumns>
     </View>
   );
 }

@@ -1,23 +1,28 @@
 import { readFileSync } from 'node:fs';
 import { privatePath } from './paths.mjs';
-import { digest, requireThat, nonempty, isDate, validateClue, validateWord, sha256 } from './core.mjs';
+import { digest, requireThat, nonempty, isDate, validateClue, validateWord, validateReadingRecord, sha256 } from './core.mjs';
 
 export const REVIEW_PROMPT_VERSION = 'family-words-blind-v1';
+export const READING_PROMPT_VERSION = 'reading-parts-blind-v1';
 export const REVIEW_CONTEXT = `Judge for a private offline family app for a seven-year-old on Guam and older family members. All levels are open: Grown-up means harder, never mature. Catholic faith is welcome; mainstream science is welcome. Respect living faiths; no instruction in another religion's practice. Family wording includes two homes without pointing at it. No brands, shaming, reading pressure, graphic violence, colonial framing or jokes about Pacific neighbors. Warm, calm, honest; over-sanitizing is a failure. DRAGON, FAIRY, GIANT and GHOST can appear in all tiers as stories. WITCH, DEVIL and DEMON start at Strong. DEAD, DEATH and GUN start at Growing in calm science/history senses; SWORD in stories. CHamoru terms must be exact source-backed teaching text, limited to word search and matching; do not invent or fix any. God is allowed. Check accuracy, answer specificity, vocabulary/readability for the named tier, cultural/family fit, and originality. Every clue needs an actual decision. Return keep, revise, reject or call and a reason. Give an English replacement for revise. Do not infer another review or any approval. No web or published clue examples. For every British variant give a separate variants entry with spelling, keep/revise/reject/call, relation (spelling-variant only when it means the same thing), and reason. Check the actual variant, lemma, form, proper-noun status and allowed uses. This review does not approve shipping.`;
+// Lead contract change: W1 reading records. Reviewers of a Sound Boat word see the word, its pieces and the tray.
+export const READING_REVIEW_CONTEXT = 'Judge each Sound Boat word for a seven-year-old learning to read. Do the pieces spell the word? Are the wrong pieces fair tempting mistakes and never a right piece? Is the spelling change (drop e, double the letter, y to i) correct for this base and ending? Is the plain-words gloss true? Warm, calm, honest; no shaming, no speed, no brands. Keep only what you would put in front of a child unhelped.';
+const visibleReading = c => ({id:c.id,word:c.word,kind:c.kind,level:c.level,chunks:c.chunks,distractors:c.distractors,base:c.base ?? null,affix:c.affix ?? null,change:c.change ?? null,gloss:c.gloss ?? null,family:c.family ?? null,alternates:c.alternates ?? null});
 const visible = c => ({ id: c.id, answer: c.answer, meaning: c.meaning, tier: c.tier, text: c.text });
 const visibleWord = c => ({id:c.id,spelling:c.spelling,meaning:c.sense,language:c.language,readerLevel:c.readerLevel,knownBand:c.knownBand,readBand:c.readBand,spellBand:c.spellBand,clueBand:c.clueBand,theme:c.theme,topic:c.topic,guamFit:c.guamFit,british:c.british,lemma:c.lemma,form:c.form,properNoun:c.properNoun,canonicalId:c.canonicalId ?? null,uses:c.uses ?? null,audio:c.audio,wordLengths:c.wordLengths ?? null,abbreviation:c.abbreviation,livingPerson:c.livingPerson ?? false});
 function packetFor(batch,slot) {
-  const items=batch.records.map(batch.kind === 'clue' ? visible : visibleWord).sort((x,y)=>digest(`${batch.id}:${slot}:${x.id}`).localeCompare(digest(`${batch.id}:${slot}:${y.id}`)));
-  return {schemaVersion:1,batchId:batch.id,batchSha256:digest(batch),slot,fixture:batch.fixture,promptVersion:REVIEW_PROMPT_VERSION,context:REVIEW_CONTEXT,items};
+  const items=batch.records.map(batch.kind === 'clue' ? visible : batch.kind === 'reading' ? visibleReading : visibleWord).sort((x,y)=>digest(`${batch.id}:${slot}:${x.id}`).localeCompare(digest(`${batch.id}:${slot}:${y.id}`)));
+  return {schemaVersion:1,batchId:batch.id,batchSha256:digest(batch),slot,fixture:batch.fixture,promptVersion:batch.kind === 'reading' ? READING_PROMPT_VERSION : REVIEW_PROMPT_VERSION,context:batch.kind === 'reading' ? READING_REVIEW_CONTEXT : REVIEW_CONTEXT,items};
 }
 function uniqueIds(items) {
   requireThat(Array.isArray(items) && items.length > 0 && new Set(items.map(x => x.id)).size === items.length && items.every(x => nonempty(x.id)), 'Empty/duplicate IDs');
 }
 export function prepareBatch(clues, options) { return prepareRecords(clues, options, 'clue'); }
 export function prepareWordBatch(words, options) { return prepareRecords(words, options, 'word'); }
+export function prepareReadingBatch(records, options) { return prepareRecords(records, options, 'reading'); }
 function prepareRecords(clues, { id, fixture, vocabularySha256, scanListSha256, canonicalTerms = [] }, kind) {
   requireThat(typeof fixture === 'boolean' && nonempty(id) && clues.length <= 250 && /^[a-f0-9]{64}$/.test(vocabularySha256) && /^[a-f0-9]{64}$/.test(scanListSha256), 'Invalid batch metadata');
-  clues.forEach(c => kind === 'clue' ? validateClue(c) : validateWord(c,canonicalTerms)); uniqueIds(clues);
+  clues.forEach(c => kind === 'clue' ? validateClue(c) : kind === 'reading' ? validateReadingRecord(c) : validateWord(c,canonicalTerms)); uniqueIds(clues);
   const batch = { schemaVersion: 1, id, fixture, kind, records:clues, vocabularySha256, scanListSha256 };
   const batchSha256 = digest(batch);
   // Strict projections contain no lint, other verdicts, provenance or approval state.
