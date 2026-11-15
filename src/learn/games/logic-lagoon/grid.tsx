@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
+import { TextFit } from '../../../components/Text';
+import { LARGE_TEXT } from '../../../components/wordFit';
 import type { GridShellProps } from '../../../puzzles/grid/GridShell';
 
 import { cageLayer, cellClueWords, markLayer } from '../../../puzzles/latin/clues';
@@ -12,9 +14,11 @@ import { SeaGlyph } from '../thinkingArt';
 import { specFor } from './engine';
 
 function NativeGrid(props: GridShellProps) {
+  const { fontScale } = useWindowDimensions();
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Grid = (require('../../../puzzles/grid/GridShell') as typeof import('../../../puzzles/grid/GridShell')).GridShell;
-  return <Grid {...props}/>;
+  // GridShell's uncapped selected-notes caption must share this teacher's compact board region.
+  return <TextFit.Provider value={fontScale >= LARGE_TEXT ? { width: props.width, ceiling: 1.3 } : null}><Grid {...props}/></TextFit.Provider>;
 }
 const boxBorders = (p: LatinPuzzle) => (cell: number) => {
   let d = `M0 0H${p.size * cell}V${p.size * cell}H0Z`;

@@ -6,7 +6,7 @@ import { engine, taskAt, boardAt, type LatinState } from '../src/learn/games/log
 vi.mock('react-native', () => ({ View: 'view', useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Ellipse: 'ellipse', Path: 'path', Rect: 'rect' }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'text', PressableScale: 'button', C: {} }));
-vi.mock('../src/components/Text', () => ({ Text: 'text' }));
+vi.mock('../src/components/Text', async () => { const { createContext } = await import('react'); return { Text: 'text', TextFit: createContext(null) }; });
 let screen: ReactTestRenderer | undefined;
 afterEach(async () => { if (screen) await act(async () => screen!.unmount()); screen = undefined; vi.unstubAllGlobals(); });
 it('a hint waits for accepted assistance; its explanation and Check feedback precede the board', async () => {
