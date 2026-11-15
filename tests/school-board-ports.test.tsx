@@ -14,7 +14,7 @@ import { Board as B3 } from '../src/learn/games/hafa-adai/view';
 import { Board as B4 } from '../src/learn/games/reef-race/view';
 import { Board as B5 } from '../src/learn/games/shell-math/view';
 import { Board as B6 } from '../src/learn/games/tide-pool/view';
-import { Board as B9 } from '../src/learn/games/float-sink/view';
+import { Art as FloatArt, Board as B9 } from '../src/learn/games/float-sink/view';
 import { Board as B10 } from '../src/learn/games/logic-lagoon/view';
 import { SchoolBoard as B11 } from '../src/learn/games/slip-tide/schoolBoard';
 import { ProgramEditor } from '../src/learn/program/ProgramEditor';
@@ -198,4 +198,10 @@ it('Slip Tide does not shrink its drawing to pay for a taller sibling column',as
   const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));
  });
  expect(drawn()).toBe(before);
+});
+
+it('Float/Sink header art keeps its original aspect ratio outside the measured host',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ await act(async()=>{root=create(<FloatArt size={70}/>);});
+ expect(flat(view('water-contents').props.style).transform).toEqual([{scaleY:1}]);
 });
