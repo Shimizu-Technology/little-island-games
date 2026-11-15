@@ -5,9 +5,10 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { TextFit } from '../src/components/Text';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
-import type { LearnId } from '../src/learn/types';
+import type { LearnId, LearnSession } from '../src/learn/types';
 import { Board as FoodWeb } from '../src/learn/games/food-web/view';
 import { Board as SpaceStation } from '../src/learn/games/space-station/view';
+import { move as weatherMove, type ScienceState } from '../src/learn/games/weather-watch/model';
 import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
 import { Board as B1 } from '../src/learn/games/crab-commands/view';
@@ -75,13 +76,14 @@ const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
-async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level=1, geometryEnabled=true) {
+async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level=1, geometryEnabled=true, prepare?:(session:LearnSession)=>LearnSession) {
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
   vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
   Object.assign(viewport,window);
-  const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},level)},{},7);
+  let session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},level)},{},7);
+  if(prepare)session=prepare(session);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
   await act(async()=>{root=create(<BoardSpaceProvider geometryEnabled={geometryEnabled} space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
@@ -329,4 +331,15 @@ it.each([['food-web',FoodWeb],['space-station',SpaceStation]] as const)('%s reta
  if(marker)await act(async()=>{marker.props.onLayout({nativeEvent:{layout:{height:220}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
  const scene=r.root.findAll(n=>String(n.type)==='Svg'&&n.props.viewBox==='0 0 360 235')[0];
  expect(scene.props.height).toBe(220);expect(view('school-weather-watch-drawing')).toBeUndefined();expect(view('school-drawing-row')).toBeUndefined();
+});
+
+it('Weather includes its correct-answer next action in the primary boundary',async()=>{
+ await mountPort('weather-watch',B7,472,{width:393,height:852,fontScale:1},1,true,session=>{
+  const chosen=weatherMove('weather-watch',session.state as ScienceState,{type:'set',slot:0,value:0});
+  return {...session,state:weatherMove('weather-watch',chosen,{type:'test'})};
+ });
+ const primary=view('school-primary');
+ const text=(label:string)=>primary.findAll(n=>String(n.type)==='Text'&&n.children.includes(label));
+ expect(text('The hat made shade.')).toHaveLength(1);
+ expect(text('Reset')).toHaveLength(0);expect(text('Hear why')).toHaveLength(0);
 });

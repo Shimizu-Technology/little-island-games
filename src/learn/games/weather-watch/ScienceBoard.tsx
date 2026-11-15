@@ -730,6 +730,38 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   // Choice labels share one size: the largest at which every word fits the narrowest tile (8-pt padding, 2-pt border).
   const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, controlWidth * (q.labels.length > 4 || compact && q.labels.length === 3 ? 0.29 : 0.44) - 20, 2))) : undefined;
   const ready = s.tested && correct(q, s.values);
+  const hearWhy = <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>;
+  const result = s.tested && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{ padding: 14, gap: 10, borderRadius: 16, backgroundColor: ready ? "#E4EFD4" : "#FFF0CF" }}
+        >
+          <Copy style={{ fontSize: 17, fontWeight: "900", color: ink }}>
+            {ready ? "You made a discovery!" : "Try another change"}
+          </Copy>
+          <Copy style={{ fontSize: 15, lineHeight: 22 }}>
+            {ready
+              ? q.fact
+              : wrongFeedback(q, s.values)}
+          </Copy>
+          {(!space || !ready) && hearWhy}
+          {ready && (
+            <>
+              <Copy style={{ fontWeight: "800" }}>What did you notice?</Copy>
+              <Button
+                disabled={!active}
+                onPress={() => {
+                  send({ type: "next" });
+                  setHint(false);
+                  cheer(s.index === s.items.length - 1 ? "big" : "right");
+                }}
+              >
+                {q.notice}
+              </Button>
+            </>
+          )}
+        </View>
+      );
   return (
     <View style={{ gap: compact ? 10 : 14 }}>
       {/* At accessibility sizes the step count and "Build · Test · Notice" stack, so neither runs off the card. */}
@@ -811,6 +843,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
           </Button>
         )}
       </View>
+      {space && ready && result}
       </BoardColumns>
 <View style={{flexDirection:"row",gap:8}}><Button
           quiet
@@ -834,42 +867,13 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
           Hint
         </Button></View>
       <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(goalTranscript(q)))}>Hear the goal</Button>
+      {space && ready && hearWhy}
       {hint && (
         <Copy style={{ padding: 12, backgroundColor: "#FFF3CE", borderRadius: 12, fontSize: 15 }}>
           Try this setup: {q.hint}. You can reset and build it yourself.
         </Copy>
       )}
-      {s.tested && (
-        <View
-          accessibilityLiveRegion="polite"
-          style={{ padding: 14, gap: 10, borderRadius: 16, backgroundColor: ready ? "#E4EFD4" : "#FFF0CF" }}
-        >
-          <Copy style={{ fontSize: 17, fontWeight: "900", color: ink }}>
-            {ready ? "You made a discovery!" : "Try another change"}
-          </Copy>
-          <Copy style={{ fontSize: 15, lineHeight: 22 }}>
-            {ready
-              ? q.fact
-              : wrongFeedback(q, s.values)}
-          </Copy>
-          <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>
-          {ready && (
-            <>
-              <Copy style={{ fontWeight: "800" }}>What did you notice?</Copy>
-              <Button
-                disabled={!active}
-                onPress={() => {
-                  send({ type: "next" });
-                  setHint(false);
-                  cheer(s.index === s.items.length - 1 ? "big" : "right");
-                }}
-              >
-                {q.notice}
-              </Button>
-            </>
-          )}
-        </View>
-      )}
+      {(!space || !ready) && result}
       {!s.tested && (
         <Copy style={{ fontSize: 12, color: ink }}>
           Tap a control first, then test. Change one thing and watch what happens.
