@@ -21,6 +21,7 @@ export type Candidate = { seed:number; template:string; core:DescriptorCore<Deal
 export function judge(seed:number,r:Rung):Candidate|null {
  const built=construct(r.mode,seed,r.tier),d=built.deal,solved=solve(d,undefined,10000);
  if(solved.status!=='solved'||!verifyLine(d.cards,d.mode,solved.moves))return null;
+ if(r.mode==='freecell'&&r.tier===1&&solved.moves.filter(a=>a[1]<8||a[1]>=12).length<3)return null;
  if(r.mode==='freecell')d.proof=proofForLine(d,solved.moves);
  const gradedPublic=r.mode==='freecell'?null:gradePublic(d);if(gradedPublic&&!gradedPublic.complete)return null;const depth=gradedPublic?.depth??1;
  const tier=r.mode==='freecell'?(solved.nodes<400?1:solved.nodes<1500?3:solved.nodes<4000?5:6):(depth<=1?1:depth<=3?3:6);
@@ -32,7 +33,7 @@ export function judge(seed:number,r:Rung):Candidate|null {
 export const family=(free:boolean):FamilySpec<Deal>=>({
  id:free?'freecell':'solitaire',adapter:solitaireAdapter(!free),bands:rungs.filter(r=>(r.mode==='freecell')===free).map(r=>({id:r.id,target:r.target,floor:r.floor,advanced:r.tier>=3})),
  sources:['src/puzzles/table/solitaire.ts','src/puzzles/table/solver.ts','src/puzzles/table/publicSolver.ts','src/puzzles/table/grading.ts','src/puzzles/table/adapter.ts','src/puzzles/table/proof.ts','scripts/puzzles/solitaire/family.ts','scripts/puzzles/solitaire/order.ts','scripts/puzzles/solitaire/generate.ts','scripts/puzzles/solitaire/independent.ts'],
- provenance:{source:'original',note:'Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating.'},review:{ids:[],complete:false},maxRowBytes:free?768:256,requiresUnique:false,requiresTrace:false,hiddenInformation:!free,
+ provenance:{source:'original',note:'Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating.'},review:{ids:[],complete:false},maxRowBytes:free?768:256,requiresUnique:false,requiresTrace:true,hiddenInformation:!free,
  generate:(seed,band)=>{const r=rungs.find(r=>r.id===band.id);return r?judge(seed,r)?.core??null:null;},
 });
 export const klondike=family(false),freecell=family(true);

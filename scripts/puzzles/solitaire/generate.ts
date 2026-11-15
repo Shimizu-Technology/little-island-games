@@ -22,7 +22,7 @@ export function construct(mode:Mode,seed:number,tier:number):{deal:Deal;template
  const deck:number[]=[];
  if(free){for(let row=0;row<7;row++)for(let col=0;col<8;col++)if(row<lengths[col])deck.push(piles[col][row]);}
  else {for(let row=0;row<7;row++)for(let col=row;col<7;col++)deck.push(piles[col][row]);deck.push(...piles[7].reverse());}
- const swaps=tier===1?0:tier===3?2+rng.below(5):tier===5?8+rng.below(10):18+rng.below(20);
+ const swaps=tier===1?(free?3+rng.below(3):0):tier===3?2+rng.below(5):tier===5?8+rng.below(10):18+rng.below(20);
  for(let i=0;i<swaps;i++){const a=rng.below(52),b=rng.below(52);[deck[a],deck[b]]=[deck[b],deck[a]];}
  return {deal:{mode,cards:deck},template:recipes[style]};
 }

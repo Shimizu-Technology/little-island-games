@@ -61,7 +61,7 @@ export function canMove(s:Position,mode:Mode,a:Move):boolean{
   const first=src[src.length-n];
   if(to>=8&&to<=11)return n===1&&suit(first)===to-8&&rank(first)===dst.length+1;
   if(to<cols)return (dst.length?rank(dst.at(-1)!)===rank(first)+1&&red(dst.at(-1)!)!==red(first):mode==='freecell'||rank(first)===13)&&(mode!=='freecell'||n<=capacity(s,to));
-  return mode==='freecell'&&to>=12&&n===1&&!dst.length;
+  return mode==='freecell'&&to>=12&&(from<8||from>=12)&&n===1&&!dst.length;
 }
 export function apply(s: Position, mode: Mode, a: Move): Position {
   if(!canMove(s,mode,a))return s;

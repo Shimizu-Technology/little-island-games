@@ -30,6 +30,14 @@ export function solitaireAdapter(hidden: boolean): PuzzleAdapter<Deal, TableStat
     solved:s=>won(s.position),metrics:s=>({turns:s.edits}),
     solve:(d,budget)=>{const proof=lineFromProof(d.payload);if(proof)return{status:'solved',witness:proof.map(a=>[a]),metric:'turns',lower:52,upper:proof.length,exact:proof.length===52};const r=solve(d.payload,undefined,Math.min(10000,budget));return r.status==='solved'?{status:'solved',witness:r.moves.map(a=>[a]),metric:'turns',lower:52,upper:r.moves.length,exact:r.moves.length===52}:r.status==='unsolved'?{status:'unsolved'}:r;},
     hint:(s,d)=>{const r=advise(s.position,d.payload,10000);return r.kind==='move'?r.plan:null;},
+    technique:(d,budget)=>{
+      if(d.payload.mode==='freecell'){
+        const r=solve(d.payload,undefined,Math.min(10000,budget));if(r.status!=='solved')return{status:'stalled'};
+        const tier=r.nodes<400?1:r.nodes<1500?3:r.nodes<4000?5:6;
+        return{status:'complete',ceiling:`search-${tier}`,steps:r.moves.length,trace:JSON.stringify({nodes:r.nodes,branches:r.branches,moves:r.moves,observed:r.techniques})};
+      }
+      const g=gradePublic(d.payload);return g.complete?{status:'complete',ceiling:`plan-${g.depth}`,steps:g.steps,trace:JSON.stringify({depth:g.depth,steps:g.steps})}:{status:'stalled'};
+    },
     claims:(d,budget)=>{
       const mode=d.payload.mode,prefix=mode==='freecell'?'f':mode==='draw-one'?'o':'t',tier=Number(d.band.slice(1));
       if(mode==='freecell'){const r=solve(d.payload,undefined,Math.min(10000,budget));if(r.status!=='solved')return[{id:'solver-grade',proven:false,evidence:r.status}];const graded=r.nodes<400?1:r.nodes<1500?3:r.nodes<4000?5:6;return[{id:'solver-grade',proven:d.band[0]===prefix&&tier===graded&&d.teaches.join()===`search-${graded}`,evidence:JSON.stringify({nodes:r.nodes,branches:r.branches,moves:r.moves.length,observed:r.techniques})}];}

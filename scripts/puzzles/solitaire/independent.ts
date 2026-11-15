@@ -23,7 +23,7 @@ export function verifyLine(cards: readonly number[], mode: string, moves: readon
     else if(b<cols){
       if(dst.length?(value(dst.at(-1)!)!==value(bottom)+1||colour(dst.at(-1)!)===colour(bottom)):!free&&value(bottom)!==13)return false;
       if(free){let spaces=0,empty=0;for(let c=12;c<16;c++)if(!stacks[c].length)spaces++;for(let c=0;c<8;c++)if(c!==b&&!stacks[c].length)empty++;if(n>(spaces+1)*Math.pow(2,empty))return false;}
-    } else if(free&&b>=12){if(n!==1||dst.length)return false;}else return false;
+    } else if(free&&b>=12){if(n!==1||dst.length||a>=8&&a<12)return false;}else return false;
     src.splice(-n);dst.push(...moving);
     if(a<cols&&covered[a]&&src.length===covered[a])covered[a]--;
     if(stacks.flat().length!==52||new Set(stacks.flat()).size!==52)return false;

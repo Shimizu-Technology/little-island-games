@@ -14,7 +14,7 @@ import{createBankLoader,type BankLoader}from'../src/puzzles/loader';
 import{solitaireAdapter}from'../src/puzzles/table/adapter';
 import{defineSolitaire,type BankFacts}from'../src/puzzles/table/registration';
 import{SolitaireBoard}from'../src/puzzles/table/SolitaireBoard';
-import{readTable}from'../src/puzzles/table/checkpoint';
+import{readTable,moveTable}from'../src/puzzles/table/checkpoint';
 import{legalMoves,opening}from'../src/puzzles/table/solitaire';
 import{solve}from'../src/puzzles/table/solver';
 import{capFixture}from'../scripts/puzzles/solitaire/qa-fixtures';
@@ -64,23 +64,23 @@ it.each(['o1','t1','f1'])('real packed %s -> Cove Store -> serialized pause -> h
  expect(progressFor(store.save,'a')!.paused).toEqual([]);expect(mark('a')).toBe(together?3:2);
 });
 
-it('the direct at-cap restart preserves the old attempt and audit, including a failed replacement',async()=>{
+it.each(['moves','help'])('the direct %s-cap restart preserves the old attempt and audit, including a failed replacement',async cap=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});db.rows=[];db.reads=[];db.discarded=[];db.failReplace=false;
  db.loader=createBankLoader({root:root as RootIndex,transport:{read:async name=>readFileSync(`src/content/puzzles/assets/${name}.lipuzzle`,'utf8')}});
  const b=(facts as BankFacts[]).find(b=>b.band==='f1')!,ref=await entry.packed!.choose(b.slot,emptyChallenge()),card=entry.packed!.card(ref)!,deal=(await db.loader.entry(solitaireAdapter(false),b.family,b.first)).payload;
  registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
  function Ready(){const s=useStore();return s.ready?<CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={null} width={353} onBrowse={()=>{}} onClose={()=>{}}/>:null;}
  await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});
- const before=progressFor(store.save,'a')!.paused[0],fixture=capFixture(deal),full={...before,revision:before.revision+1,payload:{...fixture.payload,audit:[1,2]}};
+ const before=progressFor(store.save,'a')!.paused[0],fixture=capFixture(deal),full={...before,revision:before.revision+1,payload:cap==='moves'?{...fixture.payload,audit:[1,2]}:{...moveTable(deal,before.payload as import('../src/puzzles/table/checkpoint').TablePayload,legalMoves(opening(deal),deal.mode)[0])!,audit:Array(128).fill(1)}};
  await act(async()=>{expect(await store.challengeSave(full,{owner:'a',epoch:store.epoch,game:'solitaire',id:before.id,revision:before.revision})).toBe(true);});
- expect(readTable(progressFor(store.save,'a')!.paused[0].payload,deal)!.history).toHaveLength(1024);
+ expect(readTable(progressFor(store.save,'a')!.paused[0].payload,deal)!.history).toHaveLength(cap==='moves'?1024:1);
  const restart=()=>screen!.root.findAllByType('button').find(n=>n.children.includes('Start this deal again'))!;
- expect(restart()).toBeDefined();expect(JSON.stringify(screen!.toJSON())).toContain('This table has had lots of moves.');
+ expect(restart()).toBeDefined();expect(JSON.stringify(screen!.toJSON())).toContain(cap==='moves'?'This table has had lots of moves.':'This attempt’s help log is full.');
  for(const label of ['Undo','Rules'])expect(screen!.root.findAllByType('button').find(n=>n.children.includes(label))!.props.disabled).toBeFalsy();
  db.failReplace=true;await act(async()=>{await restart().props.onPress();});
  expect(progressFor(store.save,'a')!.paused[0]).toEqual(full);expect(JSON.parse(db.discarded[0])).toEqual(full);
  db.failReplace=false;await act(async()=>{await restart().props.onPress();});
  const fresh=progressFor(store.save,'a')!.paused[0];expect(fresh.id).not.toBe(full.id);expect(fresh.ordinal).toBe(full.ordinal+1);expect(fresh.puzzle).toEqual(full.puzzle);expect(fresh.owner).toBe(full.owner);
  expect(readTable(fresh.payload,deal)!.history).toEqual([]);expect(readTable(fresh.payload,deal)!.payload.audit).toEqual([]);expect(JSON.parse(db.discarded.at(-1)!)).toEqual(full);
- expect((JSON.parse(db.discarded.at(-1)!)as ChallengeSession).payload).toMatchObject({audit:[1,2]});
+ expect((JSON.parse(db.discarded.at(-1)!)as ChallengeSession).payload).toMatchObject({audit:cap==='moves'?[1,2]:Array(128).fill(1)});
 });

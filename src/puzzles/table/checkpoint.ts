@@ -1,3 +1,4 @@
+/** Solitaire-only bounded opening-path codec; see docs/SAVE_CONTRACT.md's Solitaire exception. */
 import { base64, exactKeys, plain, uint, unbase64, pack, unpack } from '../../state/saveBits';
 import {deepFreeze} from '../descriptor';
 import { apply, opening, validPosition, type Deal, type Move, type Position } from './solitaire';
@@ -63,12 +64,10 @@ export function readTable(x: unknown, d: Deal): Read | null {
   // Every accepted cold checkpoint proves its complete path from this immutable deal.
   const initial=opening(d);
   if (JSON.stringify(earlier.piles) !== JSON.stringify(initial.piles) || JSON.stringify(earlier.hidden) !== JSON.stringify(initial.hidden)) return null;
-  // Replay gives a conservative knowledge history: remembered cards from undone
-  // moves may be absent, so they can prevent a match but can never invent one.
-  // The current endpoint is exact. Every loop key includes all known flags.
+  // Replay is the sole authority for knowledge, including on cold load.
   let forward=initial;const path=[encodeBoard(initial)];
   for(const code of list){const from=code&15,to=code>>4&15,count=code>>8&31;forward=apply(forward,d.mode,[from,to,d.mode!=='freecell'&&from>=12&&to>=12?0:count]);path.push(encodeBoard(forward));}
-  path[path.length-1]=encodeBoard(position);
+  if(encodeBoard(forward)!==encodeBoard(position))return null;
   remember(d,x as TablePayload,position,list,path);return accepted.get(x)!.read;
 }
 export function moveTable(d: Deal, p: TablePayload, a: Move): TablePayload | null {
@@ -82,7 +81,9 @@ export function moveTable(d: Deal, p: TablePayload, a: Move): TablePayload | nul
 }
 export function undoTable(d: Deal, p: TablePayload): TablePayload | null {
   const read = readTable(p, d); if (!read || !read.history.length || p.edits === 2147483647) return null;
-  const next = backwards(read.position, d, read.history.at(-1)!); if (!next) return null;
-  const list=read.history.slice(0,-1),board=encodeBoard(next),path=read.path.slice(0,-1);path[path.length-1]=board;
+  const previous = backwards(read.position, d, read.history.at(-1)!); if (!previous) return null;
+  const list=read.history.slice(0,-1);let next=opening(d);
+  for(const code of list){const from=code&15,to=code>>4&15,count=code>>8&31;next=apply(next,d.mode,[from,to,d.mode!=='freecell'&&from>=12&&to>=12?0:count]);}
+  const board=encodeBoard(next),path=read.path.slice(0,-1);path[path.length-1]=board;
   return remember(d,{...p,board,undo:encodeUndo(list),edits:p.edits+1},next,list,path);
 }

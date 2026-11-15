@@ -66,7 +66,7 @@ describe('Solitaire card interaction',()=>{
  it('a tap on a blocked FreeCell stack explains which cards must move first, with a hit frame inside the exposed strip',async()=>{
   const{Harness,deal}=await fixture();let screen!:ReactTestRenderer;
   try{await act(async()=>{screen=create(<Harness/>);});
-   const first=screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel?.startsWith('Column 1,')&&n.props.style.top<200)!;
+   const first=screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel?.startsWith('Column 1,')&&n.props.style.top<180)!;
    expect(first.props.style.height).toBeLessThanOrEqual(32);
    await act(async()=>{const p=surface(screen).props;p.onPanResponderGrant({nativeEvent:{locationX:first.props.style.left+10,locationY:first.props.style.top+16}});p.onPanResponderRelease({}, {dx:0,dy:0});});
    expect(text(screen)).toContain('Move the cards above this one first.');expect(board(deal).payload.edits).toBe(0);
@@ -97,11 +97,24 @@ describe('Solitaire card interaction',()=>{
    const c=initial.piles[move[0]].at(-1)!;await act(async()=>card(screen,move[0],c).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
    const names=['Clubs','Diamonds','Spades','Hearts'],target=(pile:number)=>screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel===`${names[pile-8]} foundation, empty`)!;
    await act(async()=>target(8+(move[1]-8+1)%4).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
-   expect(text(screen)).toContain('That place cannot hold these cards.');expect(board(deal).payload.edits).toBe(0);expect(card(screen,move[0],c).props.accessibilityState.selected).toBe(true);
+   expect(text(screen)).toContain("Those cards can't go there. Your table is kept.");expect(board(deal).payload.edits).toBe(0);expect(card(screen,move[0],c).props.accessibilityState.selected).toBe(true);
    await act(async()=>target(move[1]).props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));expect(board(deal).position.piles[move[1]]).toEqual([c]);expect(fake.feedback).toHaveBeenCalledTimes(1);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
 
+ it('explains a drag dropped on empty table and keeps the accepted table',async()=>{
+  const{Harness,deal}=await fixture();let screen!:ReactTestRenderer;
+  try{await act(async()=>{screen=create(<Harness/>);});const m=legalMoves(opening(deal),deal.mode).find(a=>a[0]<8&&a[2]===1)!,c=opening(deal).piles[m[0]].at(-1)!,from=card(screen,m[0],c),x=from.props.style.left+20,y=from.props.style.top+16;
+   await act(async()=>{const p=surface(screen).props;p.onPanResponderGrant({nativeEvent:{locationX:x,locationY:y}});p.onPanResponderRelease({}, {dx:2000,dy:0});});
+   expect(text(screen)).toContain('Drop on a card or an empty place. Your table is kept.');expect(board(deal).payload.edits).toBe(0);
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+ it('keeps Draw before the table and gives Foundations a whole heading row',async()=>{
+  const{Harness}=await fixture('draw-three');let screen!:ReactTestRenderer;
+  try{fake.scale=3.5;await act(async()=>{screen=create(<Harness/>);});const all=screen.root.findAll(()=>true),draw=all.findIndex(n=>n.type==='button'&&n.children.join('').startsWith('Draw three')),table=all.findIndex(n=>n.props.testID==='solitaire-table-viewport');expect(draw).toBeLessThan(table);
+   const heading=screen.root.findAllByType('span').find(n=>n.children.includes('Foundations'))!;expect(heading.props.style.position).not.toBe('absolute');
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
  it('cancels a pending hint when the app backgrounds and keeps the accepted table on return',async()=>{
   const{Harness,deal}=await fixture();let screen!:ReactTestRenderer,release!:(value:publicHints.Advice)=>void;
   const gate=new Promise<publicHints.Advice>(r=>{release=r;}),spy=vi.spyOn(publicHints,'adviseAsync').mockReturnValueOnce(gate);
