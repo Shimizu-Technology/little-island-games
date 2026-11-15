@@ -16,7 +16,7 @@ import { capabilityOf } from '../src/home/world';
 import { itemIds } from '../src/home/catalog';
 import { entityName } from '../src/home/scene/labels';
 import { panCell, panFloorPoint, panSeatPoint } from '../src/home/scene/pan';
-import { pickEntity, prepareHits } from '../src/home/runtime/pick';
+import { pickEntity, prepareHits, shapeDistance } from '../src/home/runtime/pick';
 import { roomPoint } from '../src/home/scene/types';
 import { decorSpec } from '../src/home/catalog';
 import type { DropProposal } from '../src/home/scene/resolve';
@@ -281,6 +281,64 @@ describe('HD-07 stove and pan (rules 48, 49)', () => {
     const next = editHistory(history, { type: 'cook', id: 'pan-food', roomId: 'kitchen' }, {});
     expect(next.past).toBe(history.past);
     expect(next.present.rooms.kitchen.instances.find((i) => i.id === 'pan-food')!.powered).toBe(true);
+  });
+});
+
+describe('fix round 2 (P2): food in its pan beats only its own stove, and only at selection', () => {
+  // The reviewer's layout: stove at (7,4), mango on its pan cell, and one other thing.
+  const layout = (other?: { item: string; dx: number; dy: number }) => {
+    const state = labFixtures['delight-stove']();
+    const stove = state.rooms.kitchen.instances.find((i) => i.item === 'stove')!;
+    stove.y = 4;
+    const cell = panCell(stove);
+    state.rooms.kitchen.instances = [stove, instance('mango', 'mango', cell.x, cell.y),
+      ...(other ? [instance('other', other.item as never, other.dy < 0 ? stove.x + other.dx : cell.x + other.dx, other.dy < 0 ? -other.dy - 1 : cell.y + other.dy)] : [])];
+    expect(validHome(state)).toBe(true);
+    const scene = buildScene(state), hits = prepareHits(scene).kitchen;
+    const ids = { food: 'kitchen/item/mango', stove: `kitchen/item/${stove.id}`, other: 'kitchen/item/other' };
+    expect(scene.entities[ids.food].pan).toBe(ids.stove);
+    const on = (id: string, x: number, y: number) => hits.some((h) => h.id === id && shapeDistance(h.shape, x, y) === 0);
+    const order = (id: string) => Math.max(...hits.filter((h) => h.id === id).map((h) => h.paintOrder));
+    const around = function* () { const c = scene.entities[ids.food].contact; for (let x = c.x - 40; x <= c.x + 40; x++) for (let y = c.y - 70; y <= c.y + 10; y++) yield [x, y] as const; };
+    return { scene, hits, ids, on, order, around };
+  };
+  it('a lamp painted between the food and its stove keeps every touch where it is in front', () => {
+    const { hits, ids, on, order, around } = layout({ item: 'lamp', dx: 0, dy: -1 });
+    expect(order(ids.food) < order(ids.other) && order(ids.other) < order(ids.stove)).toBe(true);
+    for (const scale of [0.5, 1]) expect(pickEntity(hits, roomPoint(295.5, 314.6), scale, {})).toBe(ids.other);
+    let lampOverFood = 0, stoveOverBoth = 0;
+    for (const [x, y] of around()) {
+      if (!on(ids.food, x, y) || !on(ids.other, x, y)) continue;
+      // The stove's rim drawn over both: the lamp is next under it, not the food, so the stove keeps it.
+      if (on(ids.stove, x, y)) { stoveOverBoth++; expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.stove); }
+      else { lampOverFood++; expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.other); }
+    }
+    expect(lampOverFood).toBeGreaterThan(0);
+    expect(stoveOverBoth).toBeGreaterThan(0);
+  });
+  it('a fridge painted in front of the stove keeps its touches over the seated food', () => {
+    const { hits, ids, on, order, around } = layout({ item: 'fridge', dx: 0, dy: 2 });
+    expect(order(ids.other)).toBeGreaterThan(order(ids.stove));
+    let overlaps = 0;
+    for (const [x, y] of around()) if (on(ids.food, x, y) && on(ids.other, x, y)) {
+      overlaps++;
+      expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.other);
+    }
+    expect(overlaps).toBeGreaterThan(100);
+  });
+  it('paint order is the ordinary one; the only change is stove-to-own-food where the food is next', () => {
+    const { hits, ids, on } = layout();
+    expect(hits.every((h) => Number.isInteger(h.paintOrder))).toBe(true);
+    const ordinary = hits.map(({ pan: _pan, ...h }) => h);
+    let changed = 0;
+    for (let x = 0; x < 800; x += 4) for (let y = 0; y < 560; y += 4) for (const scale of [0.5, 1]) {
+      const before = pickEntity(ordinary, roomPoint(x, y), scale, {}), after = pickEntity(hits, roomPoint(x, y), scale, {});
+      if (before === after) continue;
+      changed++;
+      expect([before, after]).toEqual([ids.stove, ids.food]);
+      expect(on(ids.food, x, y)).toBe(true);
+    }
+    expect(changed).toBeGreaterThan(0);
   });
 });
 
