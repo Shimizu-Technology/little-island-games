@@ -7,20 +7,21 @@ type Props = { children: React.ReactNode; disabled: boolean; start: () => void; 
  * ordinary pressables so their scroll pane remains scrollable. */
 export function PaletteDrag(props: Props) {
   const latest = useRef(props);
+  const [pressed,setPressed]=useState(false);
   useLayoutEffect(() => { latest.current = props; });
   // PanResponder.create stores handlers; these ref reads happen only when a touch arrives.
   // eslint-disable-next-line react-hooks/refs
   const [responder] = useState(() => PanResponder.create({
     onStartShouldSetPanResponderCapture: () => !latest.current.disabled,
-    onPanResponderGrant: () => latest.current.start(),
+    onPanResponderGrant: () => {setPressed(true);latest.current.start();},
     onPanResponderMove: (_, gesture) => latest.current.move(gesture.moveX, gesture.moveY),
     onPanResponderRelease: (_, gesture) => {
-      latest.current.cancel();
+      setPressed(false);latest.current.cancel();
       if (Math.abs(gesture.dx) < 8 && Math.abs(gesture.dy) < 8) latest.current.tap();
       else latest.current.drop(gesture.moveX, gesture.moveY);
     },
     onPanResponderTerminationRequest: () => false,
-    onPanResponderTerminate: () => latest.current.cancel(),
+    onPanResponderTerminate: () => {setPressed(false);latest.current.cancel();},
   }));
-  return <View testID="program-palette-drag" {...responder.panHandlers}>{props.children}</View>;
+  return <View style={{opacity:pressed?0.6:1,transform:[{scale:pressed?0.96:1}]}} testID="program-palette-drag" {...responder.panHandlers}>{props.children}</View>;
 }

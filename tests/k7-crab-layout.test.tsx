@@ -2,7 +2,7 @@ import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { Board, Beach } from '../src/learn/games/crab-commands/view';
-import { engine, type CrabState } from '../src/learn/games/crab-commands/engine';
+import { engine, levels, type CrabState } from '../src/learn/games/crab-commands/engine';
 import { encodeProgram } from '../src/learn/program/codec';
 vi.mock('react-native', () => {
   class Value { setValue() {} interpolate() { return 1; } }
@@ -23,6 +23,7 @@ it('K7 AX5 keeps Go and Step beside the beach; a manual step is valid and its ne
   const state: CrabState = { levels: ['ea1', 'eb1', 'e5'], completed: [], program: ['right', 'right'], cursor: 1, running: false, starter: 0, cards: 2, debugging: false, blockDraft: encodeProgram({ version: 1, songs: [], body: [{ kind: 'repeat', times: 2, body: [{ kind: 'command', command: 1 }] }] }) };
   const options = { mode: 'solo' as const, pace: 'easy' as const }, update = vi.fn(); let tree: ReactTestRenderer | undefined;
   expect(engine.validate(state, options)).toBe(true);
+  levels[0].blockEditor=true;
   try {
     await act(async () => { tree = create(<Board session={{ game: 'crab-commands', version: 1, id: 'k7-layout', revision: 1, options, state }} update={update} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={vi.fn()} stopSound={vi.fn()} soundOn={false} width={337} height={852} active coach={{ active: false, done: vi.fn() }} cheer={vi.fn()} />); });
     const run = tree!.root.findByProps({ testID: 'crab-block-run' });
@@ -31,5 +32,5 @@ it('K7 AX5 keeps Go and Step beside the beach; a manual step is valid and its ne
     await act(async () => step.props.onPress());
     const saved = JSON.parse(JSON.stringify(update.mock.lastCall![0])) as CrabState;
     expect(saved.cursor).toBe(2); expect(saved.running).toBe(false); expect(saved.blockDraft).toEqual(state.blockDraft); expect(engine.validate(saved, options)).toBe(true);
-  } finally { if (tree) await act(async () => tree!.unmount()); vi.unstubAllGlobals(); }
+  } finally { if (tree) await act(async () => tree!.unmount()); delete levels[0].blockEditor;vi.unstubAllGlobals(); }
 });

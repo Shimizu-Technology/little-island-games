@@ -28,7 +28,7 @@ it('K7 pre-reader tap journey places a repeat, nests cards, undoes/redoes, and e
   expect(heard).toHaveBeenCalledWith('crab-commands-card-right');
   await press('Undo block edit'); expect(changed.mock.lastCall![0]).toEqual([1, [[2, 2, []]], []]);
   await press('Redo block edit'); expect(changed.mock.lastCall![0]).toEqual([1, [[2, 2, [[0, 1]]]], []]);
-  await press('Block 1, inside 1: Right. Tap to change.'); await press('Replace with Up block');
+  await press('Block in plan, block 1, inside block 1: Right. Tap to change.'); await press('Replace with Up block');
   expect(changed.mock.lastCall![0]).toEqual([1, [[2, 2, [[0, 0]]]], []]);
   const paragraphs = tree!.root.findAllByType('p');
   expect(paragraphs.every(p => p.props.maxFontSizeMultiplier <= 1.5)).toBe(true);

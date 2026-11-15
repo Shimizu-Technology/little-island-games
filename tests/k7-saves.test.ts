@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { engine as crab, currentLevel, levels, solve, tick as crabTick, type Command } from '../src/learn/games/crab-commands/engine';
 import { crabProgram, withCrabProgram } from '../src/learn/games/crab-commands/program';
 import { engine as beep, tick as beepTick } from '../src/learn/games/beep-bot/engine';
@@ -18,8 +18,12 @@ import { crabPuzzles, proofContent } from '../src/learn/games/crab-commands/chal
 import { challengeEngine as crabReplay, type Descriptor } from '../src/learn/games/crab-commands/challenge-engine';
 import { beepPuzzles } from '../src/learn/games/beep-bot/challenge-content';
 import { emptyChallenge, validChallengeSession } from '../src/state/challenge';
+import { programOperations } from '../src/learn/program/operations';
 import { fromFlat, type Program } from '../src/learn/program/model';
 vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
+const opted: {blockEditor?:boolean}[]=[];
+const optIn=<T extends {blockEditor?:boolean}>(descriptor:T):T=>{descriptor.blockEditor=true;opted.push(descriptor);return descriptor;};
+afterEach(()=>{for(const d of opted)delete d.blockEditor;opted.length=0;});
 const context = { skills: {}, rng: () => 0, starter: 0 as const, today: 1 };
 const freeze = <T>(v: T): T => { if (v && typeof v === 'object') { Object.values(v).forEach(freeze); Object.freeze(v); } return v; };
 
@@ -77,19 +81,21 @@ it('K7 rejects mismatched executable projections, unknown fields and byte overfl
 it('K7 replay codecs recompute nested wins and costs; reject forged results and retain audit across undo', () => {
   const opts = { supportOff: false, ownRead: false };
   const cp = crabPuzzles.find(p => p.descriptor.level.pace === 'easy')!;
+  optIn(cp.descriptor);
   let c = crabEntry.start(cp.ref, 'family', 'k7-crab', emptyChallenge(), opts, []);
   // The shared program may be empty while building a repeat; it cannot forge a result.
   const nested: Program = { version: 1, songs: [], body: [{ kind: 'repeat', times: 2, body: [{ kind: 'command', command: 1 }] }] };
-  c = crabEntry.move(c, ['b', encodeProgram(nested)])!; expect(c).not.toBeNull();
+  c = crabEntry.move(c, ['e', programOperations(crabProgram(cp.descriptor.starter),nested)])!; expect(c).not.toBeNull();
   expect(validChallengeSession(c, 'family', crabEntry.catalog)).toBe(true);
   expect(validChallengeSession({ ...c, result: { event: 'independent', awards: 0, dares: [], cost: 0, solution: null } }, 'family', crabEntry.catalog)).toBe(false);
   const helped = crabEntry.move(c, ['h'])!, undone = crabEntry.move(helped, ['u'])!;
   expect((undone.payload as { actions: unknown[] }).actions).toHaveLength(3);
   expect(crabEntry.move(c, ['b', [1, [[3, 0]], []]])).toBeNull();
   const bp = beepPuzzles.find(p => p.descriptor.level === 3)!;
+  optIn(bp.descriptor);
   let b = beepEntry.start(bp.ref, 'family', 'k7-beep', emptyChallenge(), opts, []);
   const plan = beepProgram(bp.descriptor.winners[0]);
-  b = beepEntry.move(b, ['b', encodeProgram(plan)])!; b = beepEntry.move(b, ['g'])!;
+  b = beepEntry.move(b, ['e', programOperations(beepProgram(bp.descriptor.starter),plan)])!; b = beepEntry.move(b, ['g'])!;
   expect(b.result?.event).toBe('independent'); expect(validChallengeSession(b, 'family', beepEntry.catalog)).toBe(true);
   expect(validChallengeSession({ ...b, result: { ...b.result!, cost: 0 } }, 'family', beepEntry.catalog)).toBe(false);
   expect(beepEntry.move(beepEntry.start(bp.ref, 'family', 'bad', emptyChallenge(), opts, []), ['b', encodeProgram(fromFlat([4]))])).toBeNull();
@@ -106,9 +112,12 @@ it('K7 80-node School drafts fit the unchanged session budget; nested replay edi
     expect(sessionBytes({ game: e.id, version: 1, id: 'x'.repeat(120), revision: 1000000, options, state: states[i] })).toBeLessThanOrEqual(4096);
   }
   const p = crabPuzzles.find(p => p.descriptor.level.pace === 'easy')!;
+  optIn(p.descriptor);
   let s = crabEntry.start(p.ref, 'family', 'k7-reserve', emptyChallenge(), { supportOff: false, ownRead: false }, []), refused = false;
   for (let i = 0; i < 512; i++) {
-    const next = crabEntry.move(s, ['b', encodeProgram({ version: 1, body: [{ kind: 'repeat', times: i % 2 ? 2 : 3, body: [{ kind: 'command', command: 0 }] }], songs: [] })]);
+    const target:Program={ version: 1, body: [{ kind: 'repeat', times: i % 2 ? 2 : 3, body: [{ kind: 'command', command: 0 }] }], songs: [] };
+    const before:Program=i?{...target,body:[{...target.body[0] as Extract<Program['body'][number],{kind:'repeat'}>,times:i%2?3:2}]}:crabProgram(p.descriptor.starter);
+    const next=crabEntry.move(s,['e',programOperations(before,target)]);
     if (!next) { refused = true; break; } s = next;
   }
   expect(refused).toBe(true); const accepted = JSON.stringify(s);
@@ -118,9 +127,9 @@ it('K7 80-node School drafts fit the unchanged session budget; nested replay edi
 });
 
 it('K7 two-card debug repairs still cost two edits when supplied as one nested draft', () => {
-  const d = proofContent.debug[3].descriptor as Descriptor, initial = crabReplay.create(d, { version: 1 }, { supportOff: false, ownRead: false });
+  const d = {...proofContent.debug[3].descriptor,blockEditor:true} as Descriptor, initial = crabReplay.create(d, { version: 1 }, { supportOff: false, ownRead: false });
   const repaired = crabProgram(proofContent.debug[3].witness as Parameters<typeof crabProgram>[0]);
-  const next = crabReplay.step(initial, ['b', encodeProgram(repaired)], d)!.state;
+  const next = crabReplay.step(initial, ['e', programOperations(crabProgram(d.starter),repaired)], d)!.state;
   expect(next.edits).toBe(2); expect(crabReplay.step(next, ['g'], d)!.state.won).toBe(true);
 });
 

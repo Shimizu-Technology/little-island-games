@@ -21,5 +21,9 @@ export function readCrabDraft(draft: unknown, level: Level) {
 }
 export function withCrabProgram(state: CrabState, program: Program, level: Level): (CrabState & { blockDraft: PackedProgram }) | null {
   const blockDraft = encodeProgram(program), result = readCrabDraft(blockDraft, level);
-  return result ? { ...state, program: result.plan, cursor: 0, running: false, blockDraft, cards: Math.min(1000000, Math.max(state.cards + 1, result.plan.length + state.completed.reduce((sum, p) => sum + p.length, 0))) } : null;
+  if(!result)return null;
+  const minimum=Math.max(state.cards+1,result.plan.length+state.completed.reduce((sum,p)=>sum+p.length,0));
+  // Retain the legacy executable-card floor while advancing exactly one seat per edit.
+  const cards=minimum+(minimum-state.cards-1)%2;
+  return cards<=1000000?{...state,program:result.plan,cursor:0,running:false,blockDraft,cards}:null;
 }

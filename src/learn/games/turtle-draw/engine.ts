@@ -3,7 +3,7 @@ import { readTurtleDraft, turtlePrimitives, turtleProgram } from './program';
 import type { LearnEngine } from '../../types';
 import { levelOf } from '../../levelOptions';
 export type Block={kind:'forward';n:number}|{kind:'turn';angle:number}|{kind:'color';color:'coral'|'teal'|'gold'}|{kind:'repeat';times:number;body:Block[]};
-export type Task={seed:number;target:Block[];limit:number;requiredLoop:boolean;debug:boolean};
+export type Task={ blockEditor?: boolean;seed:number;target:Block[];limit:number;requiredLoop:boolean;debug:boolean};
 export type TurtleState={blockDraft?:PackedProgram;version:1;level:number;tasks:Task[];done:number;completed:Block[][];program:Block[];cursor:number;running:boolean;attempts:number;helped:boolean;free:boolean};
 const f=(n:number):Block=>({kind:'forward',n}),t=(angle:number):Block=>({kind:'turn',angle}),r=(times:number,body:Block[]):Block=>({kind:'repeat',times,body});
 export function task(level:number,seed:number):Task {const n=60+seed%3*10;let target:Block[];

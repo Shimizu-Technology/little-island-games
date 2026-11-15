@@ -5,6 +5,8 @@ import { pickItems } from "../../skills";
 import { exact, integer, prediction } from "../../kit/science";
 export type Command = "up" | "right" | "down" | "left" | "forward" | "turn-left" | "turn-right" | "repeat";
 export type Level = {
+  /** Only newly authored content opts in. Never infer this from a saved draft. */
+  blockEditor?: boolean;
   id: string;
   pace: Pace;
   skill: string;
@@ -82,6 +84,8 @@ export const levels: Level[] = beaches.map(([id, tier, rows, retired]) => ({
       : "think.sequence",
   facing: 1,
 }));
+// Isolated native QA only: a separate retired descriptor, never part of family content selection.
+if (process.env.EXPO_PUBLIC_K7_FIXTURES === '1') levels.push({...levels[0],id:'k7-fixture',retired:true,blockEditor:true});
 export const commands = (p: Pace): Command[] =>
   p === "easy"
     ? ["up", "right", "down", "left"]

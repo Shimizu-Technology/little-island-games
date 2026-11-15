@@ -61,10 +61,10 @@ F2 registers exact engine codecs, immutable descriptors and evidence. F1 rejects
 Crab Commands, Beep Bot and Turtle Draw share `src/learn/program/`. School states may
 add `blockDraft`, a compact revision-1 program `[1, body, songs]`. Nodes are exact
 tuples: command `[0, code]`, sequence `[1, body]`, repeat `[2, times, body]`, song
-call `[3, songIndex]`, and obstacle condition `[4, blockedBody, clearBody]`.
+call `[3, songIndex]`, and condition `[4, sensor, yesBody, noBody]`. The sensor is a tagged tuple: `[0]` means blocked. The in-memory `Condition` is a tagged union (`{kind: 'blocked'}` today).
 Command codes are game-owned; unknown codes fail closed. Turtle has no obstacle
 sensor and refuses conditions. Beep's sensor checks the square above; Crab's
-sensor checks ahead of its current facing. Songs have numbered identities, at
+sensor checks ahead of its current facing. The grid edge counts as blocked. To add a sensor, append a new tag and exact payload schema to `Condition` and the codec, then add the adapter predicate and hostile/round-trip tests. Keep existing tags and their meaning. Unknown tags fail closed. This is an additive sensor extension within revision 1, not a new envelope or program revision; do not reinterpret `[0]`. Songs remain parameterless. Code Lab and Tide Logic have separate contracts. Songs have numbered identities, at
 most four definitions, and cannot recurse, directly or indirectly.
 
 Every written node counts, including containers, both branches, calls and each
@@ -86,18 +86,17 @@ legacy body/turn/repeat constraints) still apply to their current levels. Turtle
 old top-level goal limit remains unchanged until SC-03; K7 reports recursive cost
 without retroactively changing a saved task's win rule.
 
-Crab and Beep replay codecs accept one additional typed edit action
-`['b', blockDraft]`. Replay reconstructs the plan and terminal outcome, tracks
-recursive card cost, and retains run, miss, help and edit evidence through undo
-and reset. Existing codec IDs and replay payload revision 1 remain unchanged.
-The existing byte admission and 512-action log cap still apply, including help
-reserves. Oversized edits leave the accepted attempt intact.
+Only content descriptors with `blockEditor: true` offer the editor or accept nested replay edits. The flag is absent on every existing level/task and published Challenge puzzle. A draft does not grant opt-in. Existing card counts, Again usage, shortest-plan dares, par and best costs retain their flat executable-card semantics. An opted-in Crab dare also counts executed expanded cards (through home); Beep counts its full expanded plan. Recursive node cost is available to future explicitly authored block objectives, never substituted into existing card metrics.
+
+Crab and Beep replay codecs accept compact `['e', operations]` edits, not whole programs. Each operation is insert-subtree `[0, path, code]`, delete `[1, path]`, move `[2, fromPath, beforePath]`, set-repeat `[3, path, times]`, add-empty-song `[4, index]` or delete-song `[5, index]`. A path starts with -1 for main or 0–3 for a song, followed by node index / branch / node index; branch 0 is body, 1 yes, 2 no. A batch has at most 160 operations and is admitted atomically after validating the final tree, its game projection and the complete encoded session. Intermediate edits never publish. Replay still recomputes outcomes and retains run/miss/Help/edit evidence through undo and reset; executable edit distance prevents hiding several repairs in one batch. Existing codec IDs and replay payload revision 1 remain unchanged.
+
+The 4,096-byte session boundary and 512-action cap include the actual encoded action and revision, retaining the assistance reserve. A refused edit never enters editor undo history. The frame offers Keep my plan when that action exceeds the log budget. A continued attempt may carry one validated `initial.draft`, only on opted-in content, preserving nested structure without logging snapshots per edit. Crab carries its prior run/miss/hint-step evidence and Help ladder; Beep carries prior runs/misses/edits/hints. Original attempts remain untouched.
 
 Conversion is pure and opt-in when editing. No load migration rewrites legacy
 state. Original flat saves, completed plans, tasks and frozen fixture bytes remain
 unchanged; a draft is removed when an ordinary card edit replaces its projection
 or the next task starts. Existing migration/restore preservation and rollback
-rules remain in force. Envelope 3, profiles 2, progress/session revisions, session
+rules remain in force. A pre-K7 build rejects the whole save once a School draft is present, including a draft in an existing game; recovery preserves the original. Downgrade does not promise continued play of that save. Envelope 3, profiles 2, progress/session revisions, session
 classes, catalog slots, budgets and capacities do not change. Legacy Turtle v1
 trees accepted by its older validator keep their decoder, including trees outside
 the new authoring limits.

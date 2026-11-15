@@ -1,5 +1,6 @@
+import { blockHint } from '../../program/hints';
+import { programOperations } from '../../program/operations';
 import { ProgramEditor } from '../../program/ProgramEditor';
-import { encodeProgram } from '../../program/codec';
 import { crabProgram, programCodes, readCrabDraft } from './program';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -16,9 +17,10 @@ import { lessonAudio } from './lesson-audio';
 import { useReducedMotion } from '../../../components/motion';
 import { commandActionLabel, EDIT_TEXT_MAX, HINTED, hintedCard, PlanEditChoices, planCardLabel, type EditMode } from './plan-edit';
 
-export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer}:ChallengeViewProps<State,Action>) {
+export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer,commit,sessionKey}:ChallengeViewProps<State,Action>) {
   const prefs=useContext(AudioPreferences), {play,stop}=useSoundControls(prefs.sound??true), reduced=useReducedMotion();
-  const [blocks,setBlocks]=useState(!!s.blockDraft);
+  const [blockMode,setBlocks]=useState(!!s.blockDraft);
+ const blocks=s.descriptor.blockEditor===true&&blockMode;
   const draft=s.blockDraft?readCrabDraft(s.blockDraft,s.descriptor.level):null;
   const [selected,setSelected]=useState<number|null>(null), [mode,setMode]=useState<EditMode>('replace');
   const [playback,setPlayback]=useState({run:s.runs,cursor:s.cursor,playing:false});
@@ -50,7 +52,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const over=d.budget!==null&&result.cost>d.budget;
   const goal='Collect every shell, then reach home.';
   const message=running?'Watch your plan.':result.walker.bump?'Bump. Your plan is kept. Change a card and try again.':over?'That route costs too many walking steps. Try a drier path.':s.cursor>0?'Not home yet. Your plan is kept: add or change a card.':d.starter.length?'Find the bug. Tap any card to change it.':goal;
-  const stepText=hint?hintText(hint,s.program.length,cardLabel):'';
+  const stepText=hint?(blocks?blockHint(hint.edit,draft?.frames??[],hint.edit?.card?cardLabel[hint.edit.card]:'a card'):hintText(hint,s.program.length,cardLabel)):'';
   const hinted=hint&&s.hintStage<3?hintedCard(hint.edit,s.program.length):null;
   const lessonKey=lessonAudio(d.lesson);
   const feedbackAudio=over?'c1-crab-budget':'c1-crab-retry';
@@ -64,15 +66,16 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     <Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
     {/* The empty prompt wraps at any text size; inside the horizontal strip it ran off the edge. */}
     {!s.won&&!s.program.length&&<View style={{padding:12,borderRadius:12,backgroundColor:C.paper}}><Copy maxFontSizeMultiplier={1.5}>Tap a command below to add it.</Copy></View>}
-    {!s.won&&s.program.length>0&&<ScrollView horizontal style={{flexGrow:0,maxHeight:94}} contentContainerStyle={{flexDirection:'row',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:80}} accessibilityLabel="Your program editor">
+    {!blocks&&!s.won&&s.program.length>0&&<ScrollView horizontal style={{flexGrow:0,maxHeight:94}} contentContainerStyle={{flexDirection:'row',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:80}} accessibilityLabel="Your program editor">
       {s.program.map((c,i)=><PressableScale key={i} disabled={disabled} accessibilityRole="button" accessibilityState={{selected:selected===i}} accessibilityLabel={planCardLabel(i,cardLabel[c],hinted===i?HINTED:'')} onPress={()=>{setSelected(selected===i?null:i);setMode('replace');}} style={{minWidth:48,minHeight:60,padding:4,alignItems:'center',justifyContent:'center',borderWidth:2,borderStyle:hinted===i&&selected!==i?'dashed':'solid',borderColor:selected===i||hinted===i?C.teal:running&&cursor===i?'#B0563A':C.line,borderRadius:10,backgroundColor:selected===i?C.soft:C.cream}}>
         <Copy maxFontSizeMultiplier={1.3} style={{fontSize:12}}>{i+1}</Copy><ArrowArt command={c}/>
       </PressableScale>)}
     </ScrollView>}
+    {blocks&&<ProgramEditor program={draft?.program??crabProgram(s.program)} cards={commands(d.level.pace).map(command=>({code:programCodes.indexOf(command),name:cardLabel[command],icon:<ArrowArt command={command} size={24}/>,speech:`crab-commands-card-${command}`}))} disabled={disabled} hear={key=>play(key,true)} condition="edge or rock ahead" currentPath={cursor>0?draft?.frames[cursor-1]?.path:undefined} iteration={cursor>0?draft?.frames[cursor-1]?.iteration:undefined} onChange={async program=>!!commit&&!!sessionKey&&!!(await commit(['e',programOperations(draft?.program??crabProgram(s.program),program)],sessionKey))}/>}
     {!s.won&&<ScrollView style={{flex:1,minHeight:0}} contentContainerStyle={{gap:10,paddingBottom:8}} accessibilityLabel="Plan and commands">
     {header}
-    <Button compact quiet maxFontSizeMultiplier={1.5} disabled={disabled} onPress={()=>setBlocks(!blocks)}>{blocks?'Arrow editor':'Block editor'}</Button>
-    {blocks&&<ProgramEditor program={draft?.program??crabProgram(s.program)} cards={commands(d.level.pace).map(command=>({code:programCodes.indexOf(command),name:cardLabel[command],icon:<ArrowArt command={command} size={24}/>,speech:`crab-commands-card-${command}`}))} disabled={disabled} hear={key=>play(key,true)} condition="rock ahead" currentPath={cursor>0?draft?.frames[cursor-1]?.path:undefined} iteration={cursor>0?draft?.frames[cursor-1]?.iteration:undefined} onChange={program=>{send(['b',encodeProgram(program)]);return true;}}/>}
+    {d.blockEditor&&<Button compact quiet maxFontSizeMultiplier={1.5} disabled={disabled} onPress={()=>setBlocks(!blocks)}>{blocks?'Arrow editor':'Block editor'}</Button>}
+
     {d.budget!==null&&<Copy>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
     {/* The goal already shows beside the beach; a lesson that only repeats it is left out. */}
     {d.lesson!==goal&&<Copy>{d.lesson}</Copy>}
@@ -80,12 +83,12 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     {learnSources[rulesAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(rulesAudio)}>Hear rules</Button>}
     {s.runs>0&&learnSources[feedbackAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(feedbackAudio)}>Hear feedback</Button>}
     {s.supportOff&&learnSources['c1-crab-footprints']&&<Button compact quiet disabled={!active} onPress={()=>play('c1-crab-footprints')}>Hear about footprints</Button>}
-    {selected!==null&&selected<s.program.length&&<PlanEditChoices at={selected} label={cardLabel[s.program[selected]]} mode={mode} setMode={setMode} disabled={disabled} onRemove={()=>{send(['x',selected]);setSelected(null);}} onAddAtEnd={()=>setSelected(null)}/>}
-    <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
+    {!blocks&&selected!==null&&selected<s.program.length&&<PlanEditChoices at={selected} label={cardLabel[s.program[selected]]} mode={mode} setMode={setMode} disabled={disabled} onRemove={()=>{send(['x',selected]);setSelected(null);}} onAddAtEnd={()=>setSelected(null)}/>}
+    {!blocks&&<View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
       {commands(d.level.pace).map(c=><PressableScale key={c} accessibilityRole="button" accessibilityLabel={commandActionLabel(selected,mode,cardLabel[c])} disabled={disabled||s.program.length>=80&&(selected===null||mode==='insert')} onPress={()=>{if(selected===null||mode==='insert'||s.program[selected]!==c)send(selected===null?['a',cardCodes.indexOf(c)]:[mode==='replace'?'r':'i',selected,cardCodes.indexOf(c)]);setSelected(null);}} style={{minWidth:64,minHeight:72,flexGrow:1,padding:8,gap:4,alignItems:'center',justifyContent:'center',backgroundColor:C.paper,borderRadius:12,borderWidth:2,borderColor:C.line,opacity:disabled?0.5:1}}>
         <ArrowArt command={c}/><Copy maxFontSizeMultiplier={EDIT_TEXT_MAX} style={{fontSize:14,fontWeight:'700'}}>{cardLabel[c]}</Copy>
       </PressableScale>)}
-    </View>
+    </View>}
     {d.level.pace==='hard'&&<Copy>Again ×2 does the card before it two more times.</Copy>}
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
       <Button disabled={disabled||!s.program.length} onPress={()=>{setSelected(null);send(['g']);}}>Go!</Button>

@@ -10,8 +10,8 @@ export function compress(commands: readonly number[]): Program | null {
   const exhausted = Symbol('compression budget');
   const cost = (body: Node[]) => nodeCost({ version: 1, body, songs: [] });
   const best = (lo: number, hi: number, depth: number): Node[] => {
-    if (++work > 100000) throw exhausted;
     const key = `${lo}/${hi}/${depth}`, cached = memo.get(key); if (cached) return cached;
+    if (++work > 100000) throw exhausted;
     let result = sequence(commands.slice(lo, hi)).body;
     for (let split = lo + 1; split < hi; split++) {
       const candidate = [...best(lo, split, depth), ...best(split, hi, depth)];
@@ -33,10 +33,10 @@ export function compress(commands: readonly number[]): Program | null {
 
 /** Bounded search over caller-supplied block candidates, replayed on the very same machine.
  * A caller can enumerate songs/conditions; exhaustion is distinct from no winner. */
-export function* solvePrograms<S>(candidates: Iterable<Program>, initial: S, machine: Machine<S>, solved: (state: S) => boolean, budget = 10000): Generator<void, { status: 'solved'; program: Program; cost: number } | { status: 'budget-exhausted' | 'unsolved' }> {
+export function* solvePrograms<S>(candidates: Iterable<Program>, initial: S, machine: Machine<S>, solved: (state: S) => boolean, budget = 10000): Generator<void, { status: 'solved'; program: Program; cost: number } | { status: 'budget-exhausted'; program?: Program; cost?: number } | { status: 'unsolved' }> {
   let tried = 0, best: { program: Program; cost: number } | null = null;
   for (const program of candidates) {
-    if (tried++ >= budget) return { status: 'budget-exhausted' };
+    if (tried++ >= budget) return { status: 'budget-exhausted', ...(best ?? {}) };
     yield;
     const result = interpret(program, initial, machine);
     if (result && solved(result.state)) { const cost = nodeCost(program); if (!best || cost < best.cost) best = { program, cost }; }

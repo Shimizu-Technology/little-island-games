@@ -7,15 +7,24 @@ The rule (program plan §5): contract changes go through the lead, one at a time
 ## Lead-change log
 
 - **15 November 2026 — K7, pre-authorized by `c2b-k7/BRIEF.md`:** additive
-  revision-1 nested program drafts for Crab, Beep and Turtle, plus a typed nested
-  edit in Crab/Beep replay codecs. Shared AST includes sequences, whole-body
+  revision-1 nested program drafts for Crab, Beep and Turtle, plus compact structural
+  edit operations in Crab/Beep replay codecs. Shared AST includes sequences, whole-body
   repeats, nonrecursive songs and one obstacle condition. All written nodes count;
   limits remain 80 nodes, effective depth 4, 512 expanded commands, 512 replay
   actions and 4,096 bytes. No envelope/profile/session version, class, budget,
-  slot, published puzzle or existing level behavior changes. Legacy saves remain
+  or slot changes. Block editing requires explicit `blockEditor: true` on a newly
+  authored level/task or puzzle descriptor. Every existing/published descriptor
+  keeps its flat editor and exact executed-card/Again/par/best semantics. Opted-in
+  card-limit dares count expanded executable cards, not AST nodes. The condition
+  sensor is an extensible tagged union: `[4, [0], yes, no]` means
+  blocked (edge or obstacle). New sensors append exact tagged payloads and adapter
+  predicates with tests; unknown tags fail closed and old tags never change.
+  Code Lab/Tide Logic stay separate. Legacy saves remain
   unchanged and retain their compatibility decoders. See SAVE_CONTRACT's K7
-  subsection and `tests/k7-{program,parity,saves}.test.ts`. Integration must re-gate
-  the affected adapters; SC-01b/c and SC-03 new content remain separate work.
+  subsection and `tests/k7-{program,parity,saves}.test.ts`. Pre-K7 builds reject the
+  whole save after a School draft is stored; originals
+  remain preserved by recovery. This includes drafts in existing games.
+  Integration must re-gate the affected adapters; SC-01b/c and SC-03 new content remain separate work.
 
 ## Saves: envelope 3, profiles 2
 

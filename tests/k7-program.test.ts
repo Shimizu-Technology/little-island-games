@@ -10,7 +10,7 @@ const machine = { step: (n: number, code: number) => n + code, blocked: (n: numb
 const freeze = <T>(value: T): T => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; };
 
 it('K7 traces nested repeats, songs, sequences and the chosen condition against current state', () => {
-  const p = program([{ kind: 'repeat', times: 2, body: [{ kind: 'call', song: 0 }, { kind: 'if', yes: [c(4)], no: [c(2)] }] }], [[{ kind: 'sequence', body: [c(1)] }]]);
+  const p = program([{ kind: 'repeat', times: 2, body: [{ kind: 'call', song: 0 }, { kind: 'if', condition: {kind:'blocked'}, yes: [c(4)], no: [c(2)] }] }], [[{ kind: 'sequence', body: [c(1)] }]]);
   const result = interpret(freeze(p), 0, machine)!;
   expect(result.state).toBe(8);
   expect(result.frames.map(f => [f.command, f.path, f.iteration])).toEqual([[1, 'song0.0.body.0', [0]], [2, 'main.0.body.1.no.0', [0]], [1, 'song0.0.body.0', [1]], [4, 'main.0.body.1.yes.0', [1]]]);

@@ -1,7 +1,7 @@
 import { fromFlat } from '../../program/model';
 import { interpret } from '../../program/interpreter';
 export type Arrow = 'up'|'right'|'down'|'left'|'repeat2'|'repeat3';
-export type Puzzle = { start:number; shell:number; rocks:number[]; answer:Arrow[]; seed:number };
+export type Puzzle = { blockEditor?: boolean; start:number; shell:number; rocks:number[]; answer:Arrow[]; seed:number };
 export const dirs:Arrow[]=['up','right','down','left'];
 export function cardEffect(p:Puzzle,pos:number,card:Arrow,previous:Arrow|null):{pos:number;bump:boolean} {
   const move = card.startsWith('repeat') ? previous : card;

@@ -1,10 +1,12 @@
 /** K7: commands are game-owned small integers; control flow is shared. No eval or recursion. */
+/** Add sensors as tagged variants; unknown tags fail closed until their adapter supports them. */
+export type Condition = { kind: 'blocked' };
 export type Node =
   | { kind: 'command'; command: number }
   | { kind: 'sequence'; body: Node[] }
   | { kind: 'repeat'; times: number; body: Node[] }
   | { kind: 'call'; song: number }
-  | { kind: 'if'; yes: Node[]; no: Node[] };
+  | { kind: 'if'; condition: Condition; yes: Node[]; no: Node[] };
 export type Program = { version: 1; body: Node[]; songs: Node[][] };
 export const LIMITS = { nodes: 80, depth: 4, actions: 512, work: 8192, songs: 4, repeat: 16 } as const;
 export const emptyProgram = (): Program => ({ version: 1, body: [], songs: [] });
@@ -31,7 +33,7 @@ export function validProgram(value: unknown, validCommand: (command: number) => 
       if (node.kind === 'sequence') accepted = keys(node, ['kind', 'body']) && body(node.body, depth + 1);
       if (node.kind === 'repeat') accepted = keys(node, ['kind', 'times', 'body']) && uint(node.times, LIMITS.repeat) && node.times >= 2 && body(node.body, depth + 1);
       if (node.kind === 'call') accepted = keys(node, ['kind', 'song']) && uint(node.song, songCount - 1);
-      if (node.kind === 'if') accepted = keys(node, ['kind', 'yes', 'no']) && body(node.yes, depth + 1) && body(node.no, depth + 1);
+      if (node.kind === 'if') accepted = keys(node, ['kind', 'condition', 'yes', 'no']) && plain(node.condition) && keys(node.condition, ['kind']) && node.condition.kind === 'blocked' && body(node.yes, depth + 1) && body(node.no, depth + 1);
       active.delete(node);
       return accepted;
     });
