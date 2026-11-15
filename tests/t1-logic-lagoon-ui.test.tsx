@@ -5,6 +5,7 @@ import { LagoonGrid } from '../src/learn/games/logic-lagoon/grid';
 import { engine, taskAt, boardAt, type LatinState } from '../src/learn/games/logic-lagoon/engine';
 const dimensions = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 vi.mock('react-native', () => ({ View: 'view', useWindowDimensions: () => dimensions }));
+vi.mock('../src/learn/games/logic-lagoon/native-grid', () => ({ NativeGrid: (p: { width: number }) => React.createElement('view', { 'data-grid-width': p.width }) }));
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Ellipse: 'ellipse', Path: 'path', Rect: 'rect' }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'text', PressableScale: 'button', C: {} }));
 vi.mock('../src/components/Text', async () => { const { createContext } = await import('react'); return { Text: 'text', TextFit: createContext(null) }; });
@@ -29,7 +30,6 @@ it('a hint waits for accepted assistance; its explanation and Check feedback pre
 });
 it('keeps the controls beside the numeric workspace in a short AX5 landscape window', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  vi.stubGlobal('require', () => ({ GridShell: (p: { width: number }) => React.createElement('view', { 'data-grid-width': p.width }) }));
   Object.assign(dimensions, { width: 852, height: 393, fontScale: 3.12 });
   const state = engine.create({ mode: 'solo', pace: 'easy', stage: 'stretch' }, { rng: () => 17 / 0xffffffff, skills: {}, starter: 0, today: 1 }) as LatinState;
   const task = taskAt(state); if (task.kind !== 'grid') throw new Error();
