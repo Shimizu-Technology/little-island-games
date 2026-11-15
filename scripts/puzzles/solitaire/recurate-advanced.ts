@@ -1,15 +1,16 @@
 /** Re-grade/re-curate unpublished advanced FreeCell packs after the family rules fix. */
 import{execFileSync}from'node:child_process';
-import{readFileSync,writeFileSync,unlinkSync}from'node:fs';
+import{existsSync,readFileSync,writeFileSync,unlinkSync}from'node:fs';
 import{join}from'node:path';
 import{certify,type CertifyContext}from'../../../src/puzzles/checks';
 import{decodeRow}from'../../../src/puzzles/descriptor';
 import{encodePack,manifestAsset,type PackHeader,type RootFamily}from'../../../src/puzzles/bank';
 import{sha256Hex}from'../../../src/puzzles/sha256';
 import{solve}from'../../../src/puzzles/table/solver';
+import{proofForLine}from'../../../src/puzzles/table/proof';
 import{generatedAssets,readCatalog,productionDirs}from'../pipeline';
 import{judge,freecell,rungs,type Candidate}from'./family';
-import{recipes}from'./generate';
+import{construct,recipes}from'./generate';
 import{orderCandidates}from'./order';
 const out=process.env.SOLITAIRE_LOGS;if(!out)throw new Error('Set external SOLITAIRE_LOGS.');
 for(const ref of['origin/program/4.0','origin/main']){
@@ -18,16 +19,34 @@ for(const ref of['origin/program/4.0','origin/main']){
  if(JSON.parse(execFileSync('git',['show',`${ref}:${path}`],{encoding:'utf8'})).families.some((f:unknown[])=>f[0]==='freecell'))throw new Error('FreeCell published; lead reconciliation required.');
 }
 const catalog=readCatalog(productionDirs),manifest=catalog.families.get('freecell')!,pools=new Map<string,Candidate[]>([['f3',[]],['f5',[]],['f6',[]]]),changes:unknown[]=[],discarded:unknown[]=[],allSeeds=new Set<number>();
+const checkpoint=join(out,'advanced-pools.json');
+const savePool=()=>writeFileSync(checkpoint,JSON.stringify({sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),pools:Object.fromEntries(pools)}));
+// A checkpoint supplies only seeds. Regenerate the deal and current grade;
+// every selected entry is freshly certified before it can be written.
+if(existsSync(checkpoint)){
+ const cached=JSON.parse(readFileSync(checkpoint,'utf8'));
+ for(const rows of Object.values(cached.pools??{})as Candidate[][])for(const old of rows){
+  const seed=old.seed,prefix=Math.floor(seed/0x1000000),tier=prefix===8?3:prefix===9?5:prefix===10?6:null;
+  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!tier||allSeeds.has(seed))continue;
+  const built=construct('freecell',seed,tier),r=solve(built.deal,undefined,10000);allSeeds.add(seed);if(r.status!=='solved')continue;
+  const graded=r.nodes<400?1:r.nodes<1500?3:r.nodes<4000?5:6,band=`f${graded}`,pool=pools.get(band);if(!pool)continue;
+  built.deal.proof=proofForLine(built.deal,r.moves);
+  const core={format:1 as const,seed,rng:1 as const,band,layout:built.template,template:built.template,payload:built.deal,objectives:[],limits:[{metric:'turns' as const,max:1024}],par:null,teaches:[`search-${graded}`],speech:null};
+  pool.push({core,seed,template:built.template,nodes:r.nodes,branches:r.branches,moves:r.moves.length,depth:1,workload:r.nodes});
+ }
+ console.log(JSON.stringify({resumedPools:[...pools].map(([band,pool])=>({band,count:pool.length}))}));
+}
 for(const p of manifest.packs.filter(p=>p[0]>=107)){
  const old=JSON.parse(readFileSync(`content/puzzles/receipts/freecell/slot-${String(p[0]).padStart(4,'0')}.json`,'utf8'));if(old.review.complete||old.native.length||old.allShippingGates)throw new Error('Preserve approval evidence.');
  for(const row of readFileSync(`src/content/puzzles/assets/p${p[0]}.lipuzzle`,'utf8').trim().split('\n').slice(1)){
-  const core=decodeRow(row,manifest.bands[p[5]],freecell.adapter)!;if(!core)throw new Error('Invalid old row.');allSeeds.add(core.seed);
+  const core=decodeRow(row,manifest.bands[p[5]],freecell.adapter)!;if(!core)throw new Error('Invalid old row.');if(allSeeds.has(core.seed))continue;allSeeds.add(core.seed);
   const r=solve(core.payload,undefined,10000);if(r.status!=='solved'){discarded.push({slot:p[0],seed:core.seed,reason:r.status});continue;}
   const tier=r.nodes<400?1:r.nodes<1500?3:r.nodes<4000?5:6,band=`f${tier}`,pool=pools.get(band);
   if(!pool){discarded.push({slot:p[0],seed:core.seed,reason:'now-introductory',nodes:r.nodes});continue;}
   pool.push({core:{...core,band,teaches:[`search-${tier}`]},seed:core.seed,template:core.template,nodes:r.nodes,branches:r.branches,moves:r.moves.length,depth:1,workload:r.nodes});
  }
 }
+savePool();
 const selected=new Map<string,ReturnType<typeof certify>[]>(),ctx:CertifyContext={budget:10000,seenExact:new Set(),seenSemantic:new Set()};
 for(const band of['f3','f5','f6']){
  const rung=rungs.find(r=>r.id===band)!,pool=pools.get(band)!,want=rung.floor;let attempt=0;
@@ -36,13 +55,13 @@ for(const band of['f3','f5','f6']){
   if(ordered.length===want){
    const testCtx:CertifyContext={budget:10000,seenExact:new Set(ctx.seenExact),seenSemantic:new Set(ctx.seenSemantic)},entries:ReturnType<typeof certify>[]=[];let bad:Candidate|null=null;
    for(const c of ordered){const r=certify(freecell,freecell.bands.find(b=>b.id===band)!,c.core,testCtx);if(!r.ok){discarded.push({seed:c.seed,band,reason:r.reason});bad=c;break;}entries.push(r);}
-   if(!bad){selected.set(band,entries);ctx.seenExact=testCtx.seenExact;ctx.seenSemantic=testCtx.seenSemantic;console.log(JSON.stringify({band,selected:want,pool:pool.length,attempts:attempt}));break;}
+   if(!bad){selected.set(band,entries);ctx.seenExact=testCtx.seenExact;ctx.seenSemantic=testCtx.seenSemantic;savePool();console.log(JSON.stringify({band,selected:want,pool:pool.length,attempts:attempt}));break;}
    pool.splice(pool.indexOf(bad),1);continue;
   }
   if(attempt>=20000)throw new Error(`${band} cannot meet its floor.`);
   const counts=recipes.map(t=>pool.filter(c=>c.template===t).length),need=recipes[counts.indexOf(Math.min(...counts))];
   const seed=((rungs.indexOf(rung)+1)*0x1000000+0x400000+attempt++)>>>0;if(allSeeds.has(seed)||recipes[seed%4]!==need)continue;allSeeds.add(seed);
-  const c=judge(seed,rung);if(!c)continue;pool.push(c);if(pool.length%8===0)console.log(JSON.stringify({band,pool:pool.length,attempts:attempt}));
+  const c=judge(seed,rung);if(!c)continue;pool.push(c);if(pool.length%8===0){savePool();console.log(JSON.stringify({band,pool:pool.length,attempts:attempt}));}
  }
 }
 const packs=manifest.packs.map(p=>{
