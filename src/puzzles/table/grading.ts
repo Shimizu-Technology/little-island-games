@@ -1,4 +1,4 @@
-import { advise,publicView } from './publicSolver';
+import { gradeAdvice,publicView } from './publicSolver';
 import { apply,legalMoves,opening,positionKey,won,type Deal,type Move,type Position } from './solitaire';
 export type PublicGrade={complete:boolean;depth:number;bottleneck:Position|null;steps:number};
 const grades=new WeakMap<Deal,PublicGrade>();
@@ -6,7 +6,7 @@ const grades=new WeakMap<Deal,PublicGrade>();
 export function gradePublic(d:Deal):PublicGrade{
  const cached=grades.get(d);if(cached)return cached;
  let s=opening(d),depth=0,bottleneck:Position|null=null,steps=0;const seen=new Set<string>();
- while(!won(s)&&steps<256){const key=positionKey(s);if(seen.has(key))break;seen.add(key);const h=advise(s,d,10000);if(h.kind!=='move')break;
+ while(!won(s)&&steps<256){const key=positionKey(s);if(seen.has(key))break;seen.add(key);const h=gradeAdvice(s,d,10000);if(h.kind!=='move')break;
   if(h.depth>depth){depth=h.depth;bottleneck=s;}for(const a of h.plan)s=apply(s,d.mode,a);steps++;
  }
  const result={complete:won(s),depth,bottleneck,steps};grades.set(d,result);return result;

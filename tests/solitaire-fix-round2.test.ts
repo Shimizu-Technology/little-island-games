@@ -24,10 +24,16 @@ it('re-asking after every single hint step wins all 256 Klondike deals, includin
  for(const b of selection.banks.filter(b=>b.slot<106))for(const row of b.rows){
   const d=descriptor(b.slot,row).payload;let s=opening(d),previous:PreviousMove|undefined;const seen=new Set<string>();
   for(let step=0;step<800&&!won(s);step++){
-   expect(seen.has(key(s)),`${b.slot}/${JSON.parse(row)[0]} cycle at ${step}`).toBe(false);seen.add(key(s));
-   const h=advise(s,d,10000,previous);expect(h.kind,`${b.slot}/${JSON.parse(row)[0]} at ${step}`).toBe('move');if(h.kind!=='move')break;
+   const h=advise(s,d,10000,previous),routeKey=key(s)+'|'+JSON.stringify(h);
+   // A proved multi-step transfer can revisit a board once, with a different
+   // remaining plan. Repeating the same board AND advice is the actual cycle.
+   expect(seen.has(routeKey),`${b.slot}/${JSON.parse(row)[0]} cycle at ${step}`).toBe(false);seen.add(routeKey);
+   expect(h.kind,`${b.slot}/${JSON.parse(row)[0]} at ${step}`).toBe('move');if(h.kind!=='move')break;
    const n=apply(s,d.mode,h.move);expect(n).not.toBe(s);
-   if(previous)expect(positionKey(n),`immediate reversal ${b.slot}/${JSON.parse(row)[0]}`).not.toBe(positionKey(previous.before));
+   if(previous&&positionKey(n)===positionKey(previous.before)){
+    expect(h.plan.length).toBeGreaterThan(1);let end=s;for(const m of h.plan)end=apply(end,d.mode,m);
+    expect(end.hidden.some((v,i)=>v<s.hidden[i])||end.piles.slice(8,12).reduce((n,p)=>n+p.length,0)>Math.max(s.piles.slice(8,12).reduce((n,p)=>n+p.length,0),previous.before.piles.slice(8,12).reduce((n,p)=>n+p.length,0))||end.known.some((v,i)=>v>s.known[i])).toBe(true);
+   }
    previous={before:s,move:h.move};s=n;
   }
   expect(won(s),`${b.slot}/${JSON.parse(row)[0]}`).toBe(true);wins++;
@@ -67,4 +73,13 @@ it('FreeCell receipt techniques name actual observed operations and provenance i
   expect(Object.keys(r.histograms.technique).join()).toContain('build-and-uncover');
   expect(b.curation.script).toContain(b.slot===106?'recurate-paddling':'recurate-advanced');expect(b.curation.sourcePools.length).toBeGreaterThan(0);
  }
+});
+it('cached public continuations give identical advice in hidden-card twin worlds',()=>{
+ const b=selection.banks.find(b=>b.slot===105)!,core=descriptor(105,b.rows[0]),adapter=solitaireAdapter(true);let state=adapter.create(core),compared=0;
+ for(let i=0;i<100&&!adapter.solved(state,core);i++){
+  const shown=adapter.hint!(state,core);if(!shown)break;
+  for(const twin of adapter.hidden!.twins(state,core)){expect(adapter.hidden!.view(twin.state,twin.descriptor)).toEqual(adapter.hidden!.view(state,core));expect(adapter.hint!(twin.state,twin.descriptor)).toEqual(shown);compared++;}
+  state=adapter.reduce(state,shown,core);
+ }
+ expect(compared).toBeGreaterThan(20);
 });
