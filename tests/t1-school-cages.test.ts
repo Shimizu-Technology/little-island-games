@@ -8,6 +8,7 @@ import { emptyChallenge } from '../src/state/challenge';
 import { createBankLoader } from '../src/puzzles/loader';
 import { catalogRoot } from '../src/puzzles/catalog';
 import { lagoonLatinAdapter } from '../src/puzzles/adapters/lagoon-latin';
+import { decodeRow } from '../src/puzzles/descriptor';
 import { decodePuzzle, encodePuzzle } from '../src/puzzles/latin/core';
 import { grade } from '../src/puzzles/latin/solver';
 import { independentCount } from '../src/puzzles/latin/independent';
@@ -30,6 +31,7 @@ it('catalog 2 keeps every accepted level and seed mapping', () => {
 it('all 1,600 School cages have original packed identities, unique solutions and combination work', () => {
   expect(rows).toHaveLength(1600);
   const seen = new Set<string>(), packs = new Map<number, string[]>();
+  const challenge = new Set(readFileSync('src/content/puzzles/assets/p260.lipuzzle', 'utf8').trimEnd().split('\n').slice(1).map(line => semanticHash(lagoonLatinAdapter.semanticKey(decodeRow(line, 'cages', lagoonLatinAdapter)!))));
   for (const row of rows) {
     const [slot, index, hash] = row.source;
     expect([268, 269]).toContain(slot);
@@ -43,6 +45,7 @@ it('all 1,600 School cages have original packed identities, unique solutions and
     expect(clueSinglesBot(p).solved).toBe(false);
     const d = { payload: p } as Parameters<typeof lagoonLatinAdapter.semanticKey>[0];
     const key = semanticHash(lagoonLatinAdapter.semanticKey(d));
+    expect(challenge.has(key)).toBe(false);
     expect(seen.has(key)).toBe(false); seen.add(key);
   }
 });
