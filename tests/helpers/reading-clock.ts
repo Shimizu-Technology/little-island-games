@@ -70,16 +70,23 @@ export const CLOCK_OWNERS: Readonly<Record<string, readonly string[]>> = {
   "src/learn/frameClocks.ts": ["speakAfter"],
   "src/state/storeClocks.ts": ["flushDeadline", "launchClock", "newLearnerId", "restorePause", "slowOpenNotice"],
 };
-/** The local file an import names, resolved the way `reachable` resolves it, or undefined. */
-export function resolveLocal(root: string, from: string, spec: string): string | undefined {
+/**
+ * Every local file an import can name, resolved the way `reachable` resolves it: the plain file and each platform
+ * variant (`.ios`, `.android`, `.native`, `.web`) and directory index that exists, since a different bundle can load
+ * each one. Empty when the import names no local file.
+ */
+export function resolveAll(root: string, from: string, spec: string): string[] {
   const base = spec.startsWith(".") ? resolve(root, dirname(from), spec) : spec.startsWith("@/") ? join(resolve(root), "src", spec.slice(2)) : undefined;
-  if (!base) return undefined;
+  if (!base) return [];
+  const out: string[] = [];
   for (const v of variants) {
     const candidate = base + v;
-    if (existsSync(candidate) && statSync(candidate).isFile() && SOURCE.test(candidate)) return relative(resolve(root), candidate);
+    if (existsSync(candidate) && statSync(candidate).isFile() && SOURCE.test(candidate)) out.push(relative(resolve(root), candidate));
   }
-  return undefined;
+  return out;
 }
+/** The first local file an import names (the plain file before its platform variants), or undefined. */
+export const resolveLocal = (root: string, from: string, spec: string): string | undefined => resolveAll(root, from, spec)[0];
 const TIMEOUT = new Set(["setTimeout", "setImmediate", "requestIdleCallback", "runAfterInteractions"]);
 const INTERVAL = new Set(["setInterval"]);
 const FRAME = new Set(["requestAnimationFrame"]);
@@ -162,7 +169,7 @@ export function clockUses(root: string, names: readonly string[]): ClockUse[] {
     };
     // Names this module imports from a clock owner: `{ speakAfter as later }` maps later, `* as clocks` maps clocks.
     const owned = new Set<string>(), owners = new Map<string, string>();
-    const ownerOf = (spec: string) => { const f = resolveLocal(root, file, spec); return f && Object.hasOwn(CLOCK_OWNERS, f) ? f : undefined; };
+    const ownerOf = (spec: string) => resolveAll(root, file, spec).find((f) => Object.hasOwn(CLOCK_OWNERS, f));
     for (const st of tree.statements) {
       if (!ts.isImportDeclaration(st) || st.importClause?.isTypeOnly || !ts.isStringLiteralLike(st.moduleSpecifier)) continue;
       const owner = ownerOf(st.moduleSpecifier.text), clause = st.importClause;

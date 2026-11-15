@@ -1,0 +1,58 @@
+{
+  "owner": "lead",
+  "rule": "Lead-owned frozen baseline of every inherited reading source (R1a fix 5, R5-2). Changing any value here requires lead approval. Inherited content is never added to or edited: new or changed reading content goes through detached W1 admission (src/learn/reading/admitted/), not a re-pin of src/learn/reading/provenance.ts.",
+  "anchors": "Recorded 15 Nov 2026 from content byte-identical to origin/main (1700d54c) and origin/program/4.0 (9d9dbce3) for chamoru, clues, growth, ladders, sentences, stories and words; lagoon, studio and workshop serve exactly the banks their engines built at 396dcda4.",
+  "hash": "digest: SHA-256 of canonical() of the source module's data exports, as src/learn/reading/provenance.ts pins it. served: SHA-256 of canonical() of what the snapshot serves through its own lookups. records: how many records that is.",
+  "sources": {
+    "chamoru": {
+      "digest": "621cc0a463fac4aab4ca365e4fcab6ecffde5206e8477640f7c0907d99c3d73a",
+      "served": "40d8b301721dc4f712350e03c873200580ec1cc13d1a3d041ed9aad695bf319f",
+      "records": 51
+    },
+    "clues": {
+      "digest": "20aa0c8cf42c3135e9d25b38a0acc92cab7dd70e6cb9f0cbeb5817b612933457",
+      "served": "be35dbbd82d6c5bc7649d41e5a13fcbc962839e65bac515119fb68e487fd7a3b",
+      "records": 36
+    },
+    "growth": {
+      "digest": "9f205888b588dc4b541ac459a842499bb4ca71355293204bcadff03939cfbe74",
+      "served": "64ac38d6cf232ca1afd1db4ff4d10a32b6f1aa01c9622288d07e139c5b0a8f54",
+      "records": 96
+    },
+    "ladders": {
+      "digest": "f75c86b133962f71883c8fe50283150fa5192243de4f9cd835f2bc6f0292cc52",
+      "served": "021fd23e1771a272157de540a63657b21bf2ac5fbc8f1f050b3725afc7f533ae",
+      "records": 20
+    },
+    "lagoon": {
+      "digest": "1bfc8b89b503829c10cf23f469c923a8b5d60436499dd21fcec36595cfe47980",
+      "served": "17df4dfa631c4a103e3b26181fb6043a3363102a8a53eda452bcd6a3317723a4",
+      "records": 98
+    },
+    "sentences": {
+      "digest": "327d4e626c00f1ff87a9bb2c264f7e5743b4a548339923ce215324c7475675de",
+      "served": "47d8b21adcccebe6e964db0ca2d62bb39be2c22a06b62f2c519ba28aaf373222",
+      "records": 60
+    },
+    "stories": {
+      "digest": "999c10ba0fc3ac29b75f228c4b84885eb9949b3080d5fd343c7edd034c78c1f3",
+      "served": "ec3f955afc542e1a0104b5150a305dd50200c809ef8ac01cea5bdcb6c4c3ba2f",
+      "records": 12
+    },
+    "studio": {
+      "digest": "c9cff9b57980f57a2159e3e06015b5a44e13e6c4ac817427c71946301c9dbea1",
+      "served": "71ad40031d7a3791ba3a42897632283e639635ffd3352322f4257f1735619160",
+      "records": 64
+    },
+    "words": {
+      "digest": "7822bf690a6860a8e494be4ee5b051155cb034b230489c4464ceb40f65f05d06",
+      "served": "33389f9d16481c1d21cd9ae8bbd77879506428bb305324c5d2f0b193d97fca92",
+      "records": 340
+    },
+    "workshop": {
+      "digest": "a97b502e1678a124ca616afe3bd6a761c54b5c350efc102dddd26d3e9182c2f6",
+      "served": "fd8830b624f771f66190e211a493fd38c9abf13cea42b181bf18b4fd8da98c20",
+      "records": 70
+    }
+  }
+}

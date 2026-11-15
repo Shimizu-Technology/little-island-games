@@ -359,6 +359,9 @@ for(const [file,label,before,after,tests] of readingEdges){const original=source
 const PROV='tests/reading-provenance.test.tsx',STATIC='tests/reading-provenance-static.test.ts';
 const PROVENANCE='tests/sound-boat-provenance.test.tsx',HOSTS='tests/sound-boat-provenance-hosts.test.tsx',UNDO='tests/sound-boat-undo.test.tsx',CLOCK='tests/reading-no-timer.test.ts',FAKE='tests/reading-fake-clock.test.tsx';
 const wrapper=readFileSync('src/learn/games/sound-boat/view.tsx','utf8').replace('  sound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,','  sound: originalSound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,').replace('    complete = admitted && boatComplete(s);\n\n  // Say each new word.','    complete = boatComplete(s);\n\n  const latest = useRef(s); latest.current = s;\n  function sound(...args: Parameters<typeof originalSound>) { originalSound(...args); update(boatMove(latest.current, {type: "next"})); }\n\n  // Say each new word.');
+const growthContent=readFileSync('src/learn/growth/content.ts','utf8');
+const growthLive=growthContent.replace('import { readingGrowthTracks } from "../reading/provenance";','import { readingGrowthTracks } from "../reading/provenance";\nimport { literacyTracks } from "./literacy";').replace('...readingGrowthTracks(),','...literacyTracks,');
+if(growthLive.split('...literacyTracks,').length!==2 || !growthLive.includes('import { literacyTracks }'))throw new Error('Missing R1a growth content mutation target');
 const appEdges=[
  ['src/learn/reading/tasks.ts','minted set membership','made.has(task)','true',[PROVENANCE],'refused|minted|copied'],
  ['src/learn/reading/tasks.ts','consumer check accepts only minted tasks','  if (isMinted(task)) return true;\n','  return true;\n',[PROVENANCE],'refused|development'],
@@ -427,16 +430,50 @@ const appEdges=[
  ['tests/helpers/import-graph.ts','graph reads import-equals','} else if (ts.isImportEqualsDeclaration(n)','} else if (false && ts.isImportEqualsDeclaration(n)',[STATIC],'every import form'],
  ['tests/helpers/import-graph.ts','graph reads require and import()','      add(n.arguments[0].text, false);\n','',[STATIC],'every import form'],
  ['tests/helpers/import-graph.ts','graph tells type-only imports apart','      add(n.moduleSpecifier.text, allTypes, bindings);','      add(n.moduleSpecifier.text, false, bindings);',[STATIC],'every import form'],
- ['tests/helpers/import-graph.ts','renderers follow namespaces','        if (b.imported === "*") namespaces.set(b.local, e.to);\n        else if','        if (false) namespaces.set(b.local, e.to);\n        else if',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','renderers follow namespaces','        if (b.imported === "*") namespaces.set(b.local, [...(namespaces.get(b.local) ?? []), e.to]);\n        else for','        if (false) namespaces.set(b.local, [...(namespaces.get(b.local) ?? []), e.to]);\n        else for',[STATIC],'every import form'],
  ['tests/helpers/import-graph.ts','a reader passed as a value is flagged','found.push({ component: local.get(n.text)!, props: ["value"] });','{}',[STATIC],'every import form'],
  // Clock granularity: host calls to the reviewed clock functions are keyed by the call and its callbacks.
  ['tests/helpers/reading-clock.ts','clock-calls bind their callbacks','kind === "clock-call" ? callbacks(node).replace(/\\s+/g, " ")','kind === "clock-call" ? shown.replace(/\\s+/g, " ")',[CLOCK],'host timer'],
  ['tests/helpers/reading-clock.ts','clock-calls follow function-valued names','              if (functional(u) && !taken.some((t) => contains(t, u))) { taken.push(u); queue.push(u); }','',[CLOCK],'host timer'],
  ['tests/helpers/reading-clock.ts','a clock function alias is a reference','push(calledAs(n) ? "clock-call" : "reference", p);','if (calledAs(n)) push("clock-call", p);',[CLOCK],'clock function used'],
  ['tests/helpers/reading-clock.ts','a clock owner required is a reference','&& ownerOf(n.arguments[0].text)) push("reference", n);','&& false) push("reference", n);',[CLOCK],'clock function used'],
+ // R1a fix 5 (R5-1): the growth quiz's reading questions are inherited records, and GrowthBoard checks them.
+ ['src/learn/reading/provenance.ts','growth questions branded','  for (const stages of Object.values(all ?? {})) for (const track of Object.values(stages)) brand(track.questions);\n','',[PROV],'snapshot question and speaks it|branded, deep-frozen copy'],
+ ['src/learn/reading/provenance.ts','growth snapshot copied from the checked bytes','growth: tracks(pinned("growth")?.literacyTracks),','growth: tracks(literacyTracks as never),',[PROV],'live growth source|branded, deep-frozen copy'],
+ ['src/learn/growth/content.ts','growth reading tracks are the snapshot',null,growthLive,[PROV],'snapshot question and speaks it|branded, deep-frozen copy'],
+ ['src/learn/growth/content.ts','reading growth tracks are told apart','!Object.hasOwn(numberTracks, game) && !Object.hasOwn(discoveryTracks, game)','false',[PROV],'an edited copy is refused'],
+ ['src/learn/growth/content.ts','an unknown growth track counts as reading','!Object.hasOwn(numberTracks, game) && !Object.hasOwn(discoveryTracks, game)','Object.hasOwn(readingGrowthTracks(), game)',[PROV],'any other track counts as reading'],
+ ['src/learn/growth/Board.tsx','growth board check','const admitted = !readingGrowth(session.game) || questions.every((x) => admittedReading(x, "The growth reading board"));','const admitted = true;',[PROV],'an edited copy is refused'],
+ ['src/learn/growth/Board.tsx','growth board refuses before drawing','  if (!admitted) return <ReadingRefused />;\n','',[PROV],'an edited copy is refused'],
+ ['src/learn/growth/Board.tsx','growth board speaks only admitted questions','    if (!admitted || !q || !active || !soundOn','    if (!q || !active || !soundOn',[PROV],'an edited copy is refused'],
+ // R1a fix 5 (R5-2): the independent baseline. REVIEW-5's source-plus-pin probe edits two files, as the reviewer did.
+ ['src/learn/content/reading/sentences.ts','reviewer source-plus-pin: an edited sentence and its recomputed pin','    "text": "The cat is on the box.",','    "text": "The big cat is on the box.",',[PROV],'frozen baseline',[['src/learn/reading/provenance.ts','  sentences: "327d4e626c00f1ff87a9bb2c264f7e5743b4a548339923ce215324c7475675de",','  sentences: "523b13052b9366a9554722fdce4a6e9872bb5761e96de2b2d9a97f66dc9ce61e",']]],
+ ['tests/helpers/inherited-baseline.ts','baseline comparison','  return issues;\n}','  return [];\n}',[PROV],'REVIEW-5|reported'],
+ ['tests/helpers/inherited-baseline.ts','baseline pin check','    if (pins[name] !== base.digest) issues.push(`${name}: its pin is not the baseline`);\n','',[PROV],'REVIEW-5|reported'],
+ ['tests/helpers/inherited-baseline.ts','baseline source check','    if (!now[name] || now[name].digest !== base.digest) issues.push(`${name}: its source is not the baseline`);\n','',[PROV],'REVIEW-5|reported'],
+ ['tests/helpers/inherited-baseline.ts','baseline served check','now[name].served !== base.served || ','',[PROV],'REVIEW-5'],
+ ['tests/helpers/inherited-baseline.ts','baseline covers every source',"    if (!base) { issues.push(`${name}: not in the baseline`); continue; }\n","    if (!base) continue;\n",[PROV],'reported'],
+ // R5-3: the exported bank containers, and each record registration on its own.
+ ['src/learn/reading/provenance.ts','exported bank containers frozen','  Object.freeze(Array.isArray(bank) && bank.length === 5 ?','  (Array.isArray(bank) && bank.length === 5 ?',[PROV],'branded only here'],
+ ['src/learn/reading/provenance.ts','words branded','words: brand<ReadingWord>(pinned("words")?.WORDS ?? []),','words: (pinned("words")?.WORDS ?? []) as readonly ReadingWord[],',[PROV],'branded only here'],
+ ['src/learn/reading/provenance.ts','sentences branded','sentences: brand<ReadingSentence>(pinned("sentences")?.SENTENCES ?? []),','sentences: (pinned("sentences")?.SENTENCES ?? []) as readonly ReadingSentence[],',[PROV],'branded only here'],
+ ['src/learn/reading/provenance.ts','passages branded','passages: brand<ReadingPassage>(stories?.STORIES ?? []),','passages: (stories?.STORIES ?? []) as readonly ReadingPassage[],',[PROV],'branded only here'],
+ ['src/learn/reading/provenance.ts','ladders branded','ladders: brand<ReadingLadder>(pinned("ladders")?.LADDERS ?? []),','ladders: (pinned("ladders")?.LADDERS ?? []) as readonly ReadingLadder[],',[PROV],'branded only here'],
+ ['src/learn/reading/provenance.ts','CHamoru words branded','chamoru: brand<ChamoruRecord>(pinned("chamoru")?.chamoruWords ?? []),','chamoru: (pinned("chamoru")?.chamoruWords ?? []) as readonly ChamoruRecord[],',[PROV],'branded only here'],
+ // Import graph (fix 5): re-exports are followed, and an import names every platform variant.
+ ['tests/helpers/import-graph.ts','renderers follow named re-exports','        if (targets) for (const t of targets) out.push(...exported(root, t, original, components, seen));\n','',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/import-graph.ts','renderers follow export *','if (!clause) { if (targets && name !== "default") for (const t of targets) out.push(...exported(root, t, name, components, seen)); }','if (!clause) { }',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/import-graph.ts','renderers follow export * as','if (targets && clause.name.text === name) for (const t of targets) out.push({ namespace: t });','',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/import-graph.ts','renderers follow local re-exports','        else out.push(...imported(root, file, original, components, seen));\n','',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/import-graph.ts','renderers follow export default','} else if (ts.isExportAssignment(st) && name === "default"','} else if (false && name === "default"',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/import-graph.ts','a namespaced reader passed as a value is flagged','        if (c) found.push({ component: c, props: ["value"] });\n','',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/import-graph.ts','graph edges go to every platform variant','for (const to of targets.length ? targets : [undefined])','for (const to of [targets[0]])',[STATIC],"REVIEW-5's probe"],
+ ['tests/helpers/reading-clock.ts','resolver lists every platform variant','    if (existsSync(candidate) && statSync(candidate).isFile() && SOURCE.test(candidate)) out.push(relative(resolve(root), candidate));','    if (existsSync(candidate) && statSync(candidate).isFile() && SOURCE.test(candidate)) { out.push(relative(resolve(root), candidate)); break; }',[STATIC],"REVIEW-5's probe"],
 ];
 const appMutations=[];
-for(const [file,label,before,after,tests,pattern] of appEdges){const original=readFileSync(file,'utf8');if(before!==null && original.split(before).length!==2)throw new Error('Missing or ambiguous R1a app mutation target '+label);const source=before===null?after:original.replace(before,after);if(source===original)throw new Error('Unchanged mutant '+label);appMutations.push({file,message:'R1a app '+label,source,tests,pattern});}
+// A mutant may also edit further files (`also`: [file, before, after]), as REVIEW-5's source-plus-pin probe does.
+const edited=(file,before,after,label)=>{const original=readFileSync(file,'utf8');if(before!==null && original.split(before).length!==2)throw new Error('Missing or ambiguous R1a app mutation target '+label);const source=before===null?after:original.replace(before,after);if(source===original)throw new Error('Unchanged mutant '+label);return source;};
+for(const [file,label,before,after,tests,pattern,also=[]] of appEdges)appMutations.push({file,message:'R1a app '+label,source:edited(file,before,after,label),tests,pattern,also:also.map(([f,b,a])=>({file:f,source:edited(f,b,a,label)}))});
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile(m.file==='morphology'?'mutant.ts':'mutant.mjs',m.source,ts.ScriptTarget.Latest,true,m.file==='morphology'?ts.ScriptKind.TS:ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});
@@ -472,8 +509,9 @@ try{
   const passed=r=>r.status===0 && /Tests\s+\d+ passed/.test(r.stdout+r.stderr) && !/\d+ failed/.test(r.stdout+r.stderr);
   for(const key of new Set(wanted.map(m=>JSON.stringify([m.tests,m.pattern])))){const [files,pattern]=JSON.parse(key),base=vitest(files,pattern);if(!passed(base)){console.error(base.stdout+base.stderr);throw new Error('Unmutated app baseline must pass: '+key);}}
   for(const m of wanted){count++;
-   const target=join(app,m.file),original=readFileSync(target,'utf8');writeFileSync(target,m.source);
-   const r=vitest(m.tests,m.pattern);writeFileSync(target,original);
+   const edits=[m,...m.also].map(e=>({target:join(app,e.file),source:e.source}));
+   for(const e of edits){e.original=readFileSync(e.target,'utf8');writeFileSync(e.target,e.source);}
+   const r=vitest(m.tests,m.pattern);for(const e of edits)writeFileSync(e.target,e.original);
    const killed=r.status!==0 && r.status!==null && /\d+ failed/.test(r.stdout+r.stderr);failed+=!killed;
    console.log(JSON.stringify({file:m.file,message:m.message,tests:m.tests,pattern:m.pattern,killed,status:r.status}));
   }

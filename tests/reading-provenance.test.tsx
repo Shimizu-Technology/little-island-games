@@ -34,13 +34,19 @@ import { STORIES } from "../src/learn/content/reading/stories";
 import { WORDS } from "../src/learn/content/reading/words";
 import { LETTER_LAGOON_BANK } from "../src/learn/content/reading/lagoon";
 import { chamoruWords } from "../src/learn/content/chamoru";
-import { dataExports, inheritedSourceDigests, inheritedSourceFile, inheritedSourceFiles, inheritedSourceModules, sourceDigest } from "./helpers/inherited-sources";
+import { literacyTracks } from "../src/learn/growth/literacy";
+import { growthTrack, growthTracks, readingGrowth } from "../src/learn/growth/content";
+import { numberTracks } from "../src/learn/growth/numbers";
+import { discoveryTracks } from "../src/learn/growth/discovery";
+import type { GrowthState } from "../src/learn/growth/types";
+import { dataExports, inheritedSourceDigests, inheritedSourceFile, inheritedSourceFiles, inheritedSourceModules, isInReadingFolder, sourceDigest } from "./helpers/inherited-sources";
+import { baselineIssues, currentBaseline, readBaseline } from "./helpers/inherited-baseline";
 import type { LearnId, LearnOptions, LearnSession } from "../src/learn/types";
 
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 const played = vi.hoisted(() => [] as string[]);
 /** While on, each game's producer hands its board an edited copy of the real record, the way REVIEW-4's patch did. */
-const swap = vi.hoisted(() => ({ on: false, word: null as string | null }));
+const swap = vi.hoisted(() => ({ on: false, word: null as string | null, growth: false }));
 const SUNSET = "A sunset is red.";
 vi.mock("../src/state/storage", () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async () => {} } }));
 vi.mock("react-native", () => {
@@ -104,6 +110,14 @@ vi.mock("../src/learn/kit/reading", async (real) => {
   const r = (await real()) as typeof import("../src/learn/kit/reading");
   return { ...r, wordEntry: (w: string) => (swap.word !== null && w.toLowerCase() === swap.word ? { ...r.wordEntry(w)! } : r.wordEntry(w)) };
 });
+// The growth quiz's producer: with `swap.growth` a reading track hands GrowthBoard edited copies of its questions.
+vi.mock("../src/learn/growth/content", async (real) => {
+  const r = (await real()) as typeof import("../src/learn/growth/content");
+  return { ...r, growthTrack: (game: LearnId, stage: "stretch" | "deep") => {
+    const t = r.growthTrack(game, stage);
+    return swap.growth && t && r.readingGrowth(game) ? { ...t, questions: t.questions.map((q) => ({ ...q, prompt: SUNSET })) } : t;
+  } };
+});
 vi.mock("../src/learn/reading/provenance", async (real) => {
   const r = (await real()) as typeof import("../src/learn/reading/provenance");
   return { ...r, chamoruRecord: (id: unknown) => (swap.on && r.chamoruRecord(id) ? { ...r.chamoruRecord(id)!, term: "Sunset" } : r.chamoruRecord(id)) };
@@ -114,7 +128,7 @@ const releaseMode = dev.__DEV__;
 let root: ReactTestRenderer | undefined;
 afterEach(async () => {
   if (root) await act(async () => root!.unmount());
-  root = undefined; swap.on = false; swap.word = null; dev.__DEV__ = releaseMode; played.length = 0;
+  root = undefined; swap.on = false; swap.word = null; swap.growth = false; dev.__DEV__ = releaseMode; played.length = 0;
   vi.useRealTimers(); vi.unstubAllGlobals();
 });
 const words = (node: ReactTestInstance | ReactTestRenderer = root!) =>
@@ -124,10 +138,10 @@ const shownText = () => words().join(" ");
 describe("the inherited sources are pinned, and the snapshot is a frozen copy", () => {
   it("each source matches its pin, hashed independently, and every data export it has is pinned", () => {
     expect(inheritedSourceDigests()).toEqual(INHERITED_SOURCE_DIGESTS);
-    expect(inheritedSourceFiles()).toEqual(Object.keys(INHERITED_SOURCE_DIGESTS).filter((n) => n !== "chamoru").map((n) => `${n}.ts`).sort());
+    expect(inheritedSourceFiles()).toEqual(Object.keys(INHERITED_SOURCE_DIGESTS).filter(isInReadingFolder).map((n) => `${n}.ts`).sort());
     for (const [name, mod] of Object.entries(inheritedSourceModules)) expect(inheritedSourceExports()[name as provenance.SourceName], name).toEqual(dataExports(mod));
     for (const [name, mod] of Object.entries(inheritedSourceModules)) expect(sha256Hex(sourceBytes(mod)), name).toBe(sourceDigest(mod));
-    for (const name of Object.keys(INHERITED_SOURCE_DIGESTS)) expect(inheritedSourceFile(name)).toMatch(/^src\/learn\/content\//);
+    for (const name of Object.keys(INHERITED_SOURCE_DIGESTS)) expect(inheritedSourceFile(name)).toMatch(/^src\/learn\/(?:content\/|growth\/literacy\.ts$)/);
   });
   it("adding, dropping or changing one word in any source changes its digest, so the pin fails", () => {
     const m = inheritedSourceModules as Record<string, any>;
@@ -143,6 +157,7 @@ describe("the inherited sources are pinned, and the snapshot is a frozen copy", 
       ["studio", { ...m.studio, STORY_STUDIO_BANK: m.studio.STORY_STUDIO_BANK.map((l: any[], i: number) => (i ? l : [...l, l[0]])) }],
       ["workshop", { ...m.workshop, WORD_WORKSHOP_BANK: m.workshop.WORD_WORKSHOP_BANK.map((l: any[], i: number) => (i ? l : l.slice(1))) }],
       ["chamoru", { ...m.chamoru, chamoruWords: m.chamoru.chamoruWords.map((w: any, i: number) => (i ? w : { ...w, term: "Sunset" })) }],
+      ["growth", { ...m.growth, literacyTracks: { ...m.growth.literacyTracks, "sound-boat": { ...m.growth.literacyTracks["sound-boat"], stretch: { ...m.growth.literacyTracks["sound-boat"].stretch, questions: m.growth.literacyTracks["sound-boat"].stretch.questions.map((q: any, i: number) => (i ? q : { ...q, prompt: SUNSET })) } } } }],
     ] as const;
     for (const [name, mod] of changed) expect(sourceDigest(mod), name).not.toBe(INHERITED_SOURCE_DIGESTS[name]);
   });
@@ -173,6 +188,11 @@ describe("the inherited sources are pinned, and the snapshot is a frozen copy", 
     expect(() => { (readingSentences()[0] as { text: string }).text = SUNSET; }).toThrow(TypeError);
     expect(() => { (readingWords() as unknown[]).push({ word: "sunset" }); }).toThrow(TypeError);
     expect(() => { (readingBank("letter-lagoon")[0] as unknown[]).push({ prompt: SUNSET }); }).toThrow(TypeError);
+    // R5-3: each exported bank is a frozen container too, so no level a saved index points into can be replaced.
+    for (const game of ["letter-lagoon", "story-studio", "word-workshop"] as const) {
+      expect(Object.isFrozen(readingBank(game)), game).toBe(true);
+      expect(() => { (readingBank(game) as unknown[])[0] = []; }, game).toThrow(TypeError);
+    }
     for (const s of [SUNSET, "cat", null, undefined, 1, ["cat"]]) expect(isInheritedRecord(s)).toBe(false);
   });
   it("lookups take ids, never record data", () => {
@@ -220,6 +240,65 @@ describe("the inherited sources are pinned, and the snapshot is a frozen copy", 
     vi.doMock("../src/learn/content/reading/sentences", extra);
     await expect(import("../src/learn/reading/provenance")).rejects.toThrow(/inherited reading source "sentences" no longer matches its pinned digest/);
     vi.doUnmock("../src/learn/content/reading/sentences");
+  });
+});
+
+describe("R5-2: every inherited source is anchored to the lead-owned baseline", () => {
+  it("every pin, source and served snapshot equals the frozen baseline, and the baseline covers every source", () => {
+    const baseline = readBaseline();
+    expect(baseline.owner).toBe("lead");
+    expect(baseline.rule).toMatch(/requires lead approval/);
+    expect(baseline.rule).toMatch(/detached W1 admission/);
+    expect(Object.keys(baseline.sources).sort()).toEqual(Object.keys(INHERITED_SOURCE_DIGESTS).sort());
+    expect(Object.keys(baseline.sources).sort()).toEqual(Object.keys(inheritedSourceModules).sort());
+    expect(baselineIssues(provenance)).toEqual([]);
+    // The three moved banks serve exactly what their engines built at 396dcda4 (the hashes above).
+    expect(baseline.sources.lagoon.served).toBe(sha256Hex(canonical(readingBank("letter-lagoon"))));
+  });
+  it("a changed pin, source or served record is each reported", () => {
+    const sentences = inheritedSourceModules.sentences as { SENTENCES: { id: string; text: string }[] };
+    const edited = { ...inheritedSourceModules, sentences: { ...sentences, SENTENCES: sentences.SENTENCES.map((x) => (x.id === "easy-0" ? { ...x, text: "The big cat is on the box." } : x)) } };
+    expect(baselineIssues(provenance, { ...INHERITED_SOURCE_DIGESTS, words: "0".repeat(64) })).toEqual(["words: its pin is not the baseline"]);
+    expect(baselineIssues(provenance, INHERITED_SOURCE_DIGESTS, edited)).toEqual(["sentences: its source is not the baseline"]);
+    const { growth: _g, ...withoutGrowth } = INHERITED_SOURCE_DIGESTS;
+    expect(baselineIssues(provenance, withoutGrowth)).toEqual(["growth: its pin is not the baseline"]);
+    expect(baselineIssues(provenance, { ...INHERITED_SOURCE_DIGESTS, extra: "0".repeat(64) })).toEqual(["extra: not in the baseline"]);
+  });
+  it("REVIEW-5's probe: a source edit plus its re-pinned digest is admitted by the snapshot, and the baseline refuses it", async () => {
+    const TEXT = "The big cat is on the box.";
+    const edit = async (real: () => Promise<unknown>) => {
+      const r = (await real()) as typeof import("../src/learn/content/reading/sentences");
+      return { ...r, SENTENCES: r.SENTENCES.map((x) => (x.id === "easy-0" ? { ...x, text: TEXT } : x)) };
+    };
+    vi.resetModules();
+    vi.doUnmock("../src/learn/reading/provenance");
+    vi.doMock("../src/learn/content/reading/sentences", edit);
+    // The re-pin: the app's hash of exactly the edited source now gives the pinned digest, as if the author had
+    // recomputed INHERITED_SOURCE_DIGESTS.sentences in provenance.ts (REVIEW-5's provenance-digest.patch).
+    vi.doMock("../src/puzzles/sha256", async (real) => {
+      const r = (await real()) as typeof import("../src/puzzles/sha256");
+      return { ...r, sha256Hex: (b: string) => (b.startsWith('{"SENTENCES":') && b.includes(JSON.stringify(TEXT)) ? INHERITED_SOURCE_DIGESTS.sentences : r.sha256Hex(b)) };
+    });
+    try {
+      const bumped = await import("../src/learn/reading/provenance");
+      const admit = await import("../src/learn/reading/admit");
+      const source = await import("../src/learn/content/reading/sentences");
+      // Reproduced: the snapshot serves and brands the replacement sentence.
+      const r = bumped.readingSentence("easy-0")!;
+      expect(r.text).toBe(TEXT);
+      expect(admit.admittedReading(r, "probe")).toBe(true);
+      // The pin the author would have written: the edited source's real digest.
+      const modules = { ...inheritedSourceModules, sentences: source as unknown as Record<string, unknown> };
+      const pins = { ...INHERITED_SOURCE_DIGESTS, sentences: sourceDigest(modules.sentences) };
+      expect(pins.sentences).toBe("523b13052b9366a9554722fdce4a6e9872bb5761e96de2b2d9a97f66dc9ce61e");
+      expect(baselineIssues(bumped, pins, modules)).toEqual(["sentences: its pin is not the baseline", "sentences: its source is not the baseline", "sentences: what it serves is not the baseline"]);
+      // Only a lead-approved baseline change would let it through.
+      expect(baselineIssues(bumped, pins, modules, { ...readBaseline(), sources: currentBaseline(bumped, modules) })).toEqual([]);
+    } finally {
+      vi.doUnmock("../src/learn/content/reading/sentences");
+      vi.doUnmock("../src/puzzles/sha256");
+      vi.resetModules();
+    }
   });
 });
 
@@ -394,5 +473,103 @@ describe("live inherited data changed after the check", () => {
     } finally {
       [liveSentence.text, livePage.text] = old;
     }
+  });
+});
+
+// ---- R1a fix 5 (R5-1): the growth quiz's reading questions (Levels 4-5), which LearnFrame shows through GrowthBoard. ----
+/** Every reading game's Level 4 and 5 session that is a growth session, opened through the real registry. */
+const growthRounds = READING.flatMap((id) => ([4, 5] as const).map((level) => [id, level] as const))
+  .filter(([id, level]) => (startSession(id, { options: optionsAtLevel({ mode: "solo", pace: "easy" }, level) }, {}, 11).state as { type?: string }).type === "growth");
+function growthRound(id: LearnId, level: 4 | 5, revision = 1): LearnSession {
+  return { ...startSession(id, { options: optionsAtLevel({ mode: "solo", pace: "easy" }, level) }, {}, 11), learner: "family", revision } as LearnSession;
+}
+/** The session's first question as the real content serves it (`growthTracks` is never the swapped producer). */
+const firstQuestion = (session: LearnSession) => growthTracks[session.game]![session.options.stage!].questions.find((q) => q.id === (session.state as GrowthState).ids[0])!;
+
+describe("R5-1: growth reading questions are inherited records, branded and frozen", () => {
+  it("covers the growth sessions of Sound Boat, Which One, Turtle Tales and Håfa Adai at Levels 4 and 5", () => {
+    expect(growthRounds.map(([id, level]) => `${id}-${level}`)).toEqual(["hafa-adai-4", "hafa-adai-5", "sound-boat-4", "sound-boat-5", "turtle-tales-4", "turtle-tales-5", "which-one-4", "which-one-5"]);
+  });
+  it("every reading track question is a branded, deep-frozen copy; copies are not branded", () => {
+    const tracks = provenance.readingGrowthTracks();
+    expect(Object.keys(tracks).sort()).toEqual(Object.keys(literacyTracks).sort());
+    expect(tracks).toEqual(JSON.parse(JSON.stringify(literacyTracks)));
+    const deep = (v: unknown): boolean => typeof v !== "object" || v === null || (Object.isFrozen(v) && Object.values(v).every(deep));
+    expect(deep(tracks)).toBe(true);
+    for (const [game, stages] of Object.entries(tracks)) for (const stage of ["stretch", "deep"] as const) {
+      const live = literacyTracks[game as LearnId]![stage];
+      expect(growthTrack(game as LearnId, stage), `${game} ${stage}`).toBe(stages![stage]);
+      expect(stages![stage], `${game} ${stage}`).not.toBe(live);
+      for (const q of stages![stage].questions) {
+        expect(isInheritedRecord(q), q.id).toBe(true);
+        expect(q, q.id).not.toBe(live.questions.find((x) => x.id === q.id));
+        for (const copy of [{ ...q }, structuredClone(q), Object.create(q)]) expect(isInheritedRecord(copy), q.id).toBe(false);
+      }
+    }
+    const q = firstQuestion(growthRound("sound-boat", 4));
+    expect(() => { (q as { prompt: string }).prompt = SUNSET; }).toThrow(TypeError);
+    expect(() => { (q.choices as unknown as unknown[]).push({ value: "x", label: SUNSET }); }).toThrow(TypeError);
+  });
+  it("maths and discovery tracks are not reading and stay as they were; any other track counts as reading", () => {
+    for (const game of Object.keys(growthTracks) as LearnId[]) expect(readingGrowth(game), game).toBe(Object.hasOwn(literacyTracks, game));
+    expect(growthTrack("reef-race", "stretch")).toBe(numberTracks["reef-race"]!.stretch);
+    expect(isInheritedRecord(growthTrack("reef-race", "stretch")!.questions[0])).toBe(false);
+    expect(readingGrowth("tide-pool")).toBe(!Object.hasOwn(discoveryTracks, "tide-pool"));
+    expect(readingGrowth("new-reading-game" as LearnId)).toBe(true);
+  });
+  it("changing the live growth source after the check changes nothing a child is shown", async () => {
+    const session = growthRound("sound-boat", 4);
+    const q = firstQuestion(session), live = literacyTracks["sound-boat"]![session.options.stage!].questions.find((x) => x.id === q.id)! as { prompt: string };
+    const old = live.prompt;
+    try {
+      live.prompt = SUNSET;
+      expect(firstQuestion(session).prompt).toBe(old);
+      await open("sound-boat", session);
+      expect(shownText()).toContain(old);
+      expect(shownText()).not.toMatch(/sunset/i);
+    } finally { live.prompt = old; }
+  });
+  it.each(growthRounds)("%s Level %i: the real host shows the snapshot question and speaks it", async (id, level) => {
+    const session = growthRound(id, level);
+    await open(id, session);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+    expect(shownText()).toContain(firstQuestion(session).prompt);
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+    expect(played.some((k) => k.startsWith(`growth-${id}-`))).toBe(true);
+  });
+  // REVIEW-5's real Level 4 host probe: its live question, given new text, reached the child. The snapshot question
+  // cannot be edited (above), so the probe now hands GrowthBoard edited copies through the producer.
+  it.each(growthRounds.flatMap(([id, level]) => [[id, level, 1], [id, level, 0]] as [LearnId, 4 | 5, number][]))("%s Level %i: an edited copy is refused, with no word, speech or credit for a minute (revision %i)", async (id, level, revision) => {
+    const session = growthRound(id, level, revision);
+    swap.growth = true;
+    await open(id, session);
+    const before = savedNow();
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(words()).toContain(REFUSED_TASK_TEXT);
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused").length).toBe(1);
+    // Nothing of the question is drawn: not its skill, prompt, context, choices, pieces or explanation.
+    const q = firstQuestion(session);
+    for (const text of [q.skillLabel, q.prompt, q.context, q.explanation, ...q.choices.map((c) => c.label), ...(q.tiles ?? [])]) if (text) expect(shownText(), text).not.toContain(text);
+    expect(root!.root.findAll((n) => ["Button", "Chip", "AnswerTile"].includes(String(n.type)) && n.props.onPress && !n.props.disabled && /idea|Check|Show me/.test(String(n.props.children)))).toEqual([]);
+    expect(shownText()).not.toMatch(/sunset/i);
+    expect(played.filter((k) => k.startsWith("growth-")), played.join()).toEqual([]);
+    const after = savedNow();
+    expect(after.learn?.[id]?.state).toEqual(before.learn?.[id]?.state);
+    expect(after.learn?.[id]?.revision).toBe(before.learn?.[id]?.revision);
+    expect(after.skills).toEqual(before.skills);
+    expect(after.learning).toEqual(before.learning);
+  });
+  it("in development the edited copy throws instead of drawing", async () => {
+    swap.growth = true;
+    dev.__DEV__ = true;
+    const q = growthTrack("sound-boat", "stretch")!.questions[0];
+    expect(() => admittedReading(q, "The growth reading board")).toThrow(/The growth reading board was given reading content that did not come from an admitted or pinned inherited record/);
+  });
+  it("a maths growth round with unbranded questions still opens (the non-reading control)", async () => {
+    const session = { ...startSession("reef-race", { options: optionsAtLevel({ mode: "solo", pace: "easy" }, 4) }, {}, 11), learner: "family", revision: 1 } as LearnSession;
+    expect((session.state as { type?: string }).type).toBe("growth");
+    await open("reef-race", session);
+    expect(shownText()).toContain(firstQuestion(session).prompt);
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
   });
 });

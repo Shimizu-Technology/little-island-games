@@ -4,27 +4,38 @@
  * by its spelling): who may load the inherited sources, who renders reading text, and that each renderer gets its
  * content from the provenance module. W1's shape and string checks (`scripts/words/shipping.mjs`) stay as further,
  * supplementary layers.
+ *
+ * R1a fix 5 (lead boundary decision): reading content as data must flow through `provenance.ts`. A new reading game
+ * or board must use it, and this file enforces that for registered reading routes and every board LearnFrame can
+ * select for them (including GrowthBoard). Hand-authored UI strings are covered by code review and W1's export string
+ * scan, not by this file.
  */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import ts from "typescript";
 import { afterAll, describe, expect, it } from "vitest";
 import { engines } from "../src/learn/engines";
+import { growthTracks } from "../src/learn/growth/content";
 import { INHERITED_SOURCE_DIGESTS } from "../src/learn/reading/provenance";
 import { appFiles, closure, edgesOf, renderers } from "./helpers/import-graph";
 import { inheritedSourceFile } from "./helpers/inherited-sources";
-import { files, reachable } from "./helpers/reading-clock";
+import { files, reachable, resolveAll } from "./helpers/reading-clock";
 
 const PROVENANCE = "src/learn/reading/provenance.ts", TASKS = "src/learn/reading/tasks.ts";
 const SOURCES = Object.keys(INHERITED_SOURCE_DIGESTS).map(inheritedSourceFile).sort();
 /**
- * Modules outside reading that still load an inherited source directly. Neither renders `ReadingText`, `TapWords` or a
- * reading board, and neither is reachable from one (checked below). Named here so any other importer fails.
+ * Modules outside reading that still load an inherited source directly. It renders no `ReadingText`, `TapWords` or
+ * reading board, and no reading route reaches it (checked below). Named here so any other importer fails.
  */
 const NOT_READING: Record<string, string> = {
   "src/games/memory.ts": "Memory's CHamoru picture pack: matching cards, not a reading board",
-  "src/learn/growth/literacy.ts": "the growth quiz's CHamoru answer choices, chosen by id from the source-backed list",
 };
+/**
+ * A source built from another source. The growth quiz's reading tracks take their CHamoru answer choices from the
+ * source-backed list when the module loads; what it builds is pinned and baselined as a whole, CHamoru labels included.
+ */
+const BUILT_FROM: Record<string, string> = { "src/learn/growth/literacy.ts": "src/learn/content/chamoru.ts" };
 /** The components that print reading content, and the modules that define them. */
 const READERS = {
   "src/learn/kit/ReadingText.tsx": ["ReadingText"],
@@ -69,15 +80,69 @@ const app = appFiles(".");
 const importersOf = (root: string, all: readonly string[], targets: readonly string[]) =>
   all.filter((f) => edgesOf(root, f).some((e) => e.to && !e.typeOnly && targets.includes(e.to))).sort();
 
+/** The School host. Every board it can select for a reading route is inventoried from here, not from a list of views. */
+const HOST = "src/learn/LearnFrame.tsx";
+const GROWTH_BOARD = "src/learn/growth/Board.tsx";
+/**
+ * What LearnFrame draws from a game, growth, reading or kit module, reviewed: `view.Board` is each game's own board
+ * (BOARDS above); the rest are named by the module and component they resolve to.
+ */
+const HOST_BOARDS: Record<string, string> = {
+  "view.Board": "each game's own board (BOARDS)",
+  [`${GROWTH_BOARD}#GrowthBoard`]: "Levels 4-5 growth sessions; a reading track's questions are checked before anything is drawn",
+  "src/learn/games/hafa-adai/view.tsx#LastPicnicWord": "Håfa Adai's last tapped word; checks the CHamoru record before drawing",
+};
+const hostTree = () => ts.createSourceFile(HOST, readFileSync(HOST, "utf8"), ts.ScriptTarget.Latest, true);
+/** A name LearnFrame uses, resolved through its imports to `file#export`, or its own text when it is not imported. */
+const hostName = (text: string) => {
+  const [head, ...rest] = text.split(".");
+  for (const e of edgesOf(".", HOST)) for (const b of e.bindings) if (e.to && b.local === head) return rest.length ? `${e.to}#${b.imported}.${rest.join(".")}` : `${e.to}#${b.imported}`;
+  return text;
+};
+/** The components the host's `Board` can be: every leaf of the expression it is declared as. */
+function hostBoardChoices(): string[] {
+  const tree = hostTree(), out: string[] = [];
+  const leaves = (e: ts.Expression): void => {
+    if (ts.isParenthesizedExpression(e)) return leaves(e.expression);
+    if (ts.isConditionalExpression(e)) { leaves(e.whenTrue); leaves(e.whenFalse); return; }
+    if (ts.isBinaryExpression(e) && [ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.AmpersandAmpersandToken].includes(e.operatorToken.kind)) { leaves(e.left); leaves(e.right); return; }
+    out.push(hostName(e.getText(tree)));
+  };
+  const visit = (n: ts.Node) => { if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === "Board" && n.initializer) leaves(n.initializer); ts.forEachChild(n, visit); };
+  visit(tree);
+  return [...new Set(out)].sort();
+}
+/** Every JSX element the host draws, resolved through its imports. */
+function hostElements(): string[] {
+  const tree = hostTree(), out = new Set<string>();
+  const visit = (n: ts.Node) => { if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) out.add(hostName(n.tagName.getText(tree))); ts.forEachChild(n, visit); };
+  visit(tree);
+  return [...out].sort();
+}
+/** Each registered reading route and every board the host can select for it. */
+function readingRoutes(): { id: string; boards: string[] }[] {
+  return Object.keys(engines).filter((id) => engines[id as keyof typeof engines].island === "reading").sort().map((id) => ({
+    id,
+    // The game's own board (where its view's brand check sits), GrowthBoard when the game has a growth track, and
+    // Håfa Adai's last word (in its view, which is its board).
+    boards: [BOARDS[id] ?? `src/learn/games/${id}/view.tsx`, ...(growthTracks[id as keyof typeof growthTracks] ? [GROWTH_BOARD] : [])],
+  }));
+}
+
 describe("only the provenance module loads an inherited reading source", () => {
   it("the sources are the pinned ones", () => {
-    expect(SOURCES).toEqual(["src/learn/content/chamoru.ts", ...["clues", "ladders", "lagoon", "sentences", "stories", "studio", "words", "workshop"].map((n) => `src/learn/content/reading/${n}.ts`)].sort());
+    expect(SOURCES).toEqual(["src/learn/content/chamoru.ts", "src/learn/growth/literacy.ts", ...["clues", "ladders", "lagoon", "sentences", "stories", "studio", "words", "workshop"].map((n) => `src/learn/content/reading/${n}.ts`)].sort());
   });
   it("no other module loads one at run time, by any resolved path", () => {
-    expect(importersOf(".", app, SOURCES)).toEqual([PROVENANCE, ...Object.keys(NOT_READING)].sort());
-    // The two older non-reading importers load only the CHamoru list, and no reading route reaches them.
+    expect(importersOf(".", app, SOURCES)).toEqual([PROVENANCE, ...Object.keys(NOT_READING), ...Object.keys(BUILT_FROM)].sort());
+    // The older non-reading importer loads only the CHamoru list, and no reading route reaches it.
     for (const f of Object.keys(NOT_READING)) expect(edgesOf(".", f).filter((e) => e.to && SOURCES.includes(e.to)).map((e) => e.to), f).toEqual(["src/learn/content/chamoru.ts"]);
-    const routes = Object.keys(engines).filter((id) => engines[id as keyof typeof engines].island === "reading").flatMap((id) => closure(".", `src/learn/games/${id}/view.tsx`));
+    // The growth reading source loads only the CHamoru list, and only the provenance module loads it.
+    for (const [f, from] of Object.entries(BUILT_FROM)) {
+      expect(edgesOf(".", f).filter((e) => e.to && !e.typeOnly && SOURCES.includes(e.to)).map((e) => e.to), f).toEqual([from]);
+      expect(importersOf(".", app, [f]), f).toEqual([PROVENANCE]);
+    }
+    const routes = readingRoutes().flatMap((r) => r.boards).flatMap((b) => closure(".", b));
     for (const f of Object.keys(NOT_READING)) expect(routes, f).not.toContain(f);
   });
   it("no import that names an inherited source fails to resolve", () => {
@@ -129,6 +194,34 @@ describe("every reading renderer gets its content from the provenance module", (
       expect(readFileSync(BOARDS[id], "utf8"), id).toMatch(CHECK);
     }
   });
+});
+
+describe("R5-1: every board the School host can select for a reading route", () => {
+  it("the host's Board is a game's own board or GrowthBoard, nothing else", () => {
+    expect(hostBoardChoices()).toEqual([`${GROWTH_BOARD}#GrowthBoard`, "view.Board"].sort());
+  });
+  it("everything the host draws from a game, growth, reading or kit module is a reviewed board", () => {
+    const drawn = hostElements().filter((x) => /^src\/learn\/(?:games|growth|reading|kit)\//.test(x) || x.startsWith("view.") || x === "Board");
+    expect(drawn).toEqual(["Board", "src/learn/games/hafa-adai/view.tsx#LastPicnicWord", "view.Art"]);
+    // `Board` is the choice above; `view.Art` is the game's picture, with no text.
+    for (const x of [...hostBoardChoices(), ...drawn.filter((d) => d.includes("#"))]) expect(Object.keys(HOST_BOARDS), x).toContain(x);
+  });
+  it("each reading route's boards, GrowthBoard included, load the provenance module and check the brand", () => {
+    const routes = readingRoutes();
+    expect(routes.filter((r) => r.boards.includes(GROWTH_BOARD)).map((r) => r.id)).toEqual(["hafa-adai", "sound-boat", "turtle-tales", "which-one"]);
+    for (const { id, boards } of routes) for (const board of boards) {
+      expect(closure(".", board), `${id} ${board}`).toContain(PROVENANCE);
+      expect(readFileSync(board, "utf8"), `${id} ${board}`).toMatch(CHECK);
+    }
+    // GrowthBoard checks every question of a reading track, and is the only module that draws the literacy visual.
+    expect(readFileSync(GROWTH_BOARD, "utf8")).toMatch(/!readingGrowth\(session\.game\) \|\| questions\.every\(\(x\) => admittedReading\(/);
+    expect(Object.keys(renderers(".", app, { "src/learn/growth/LiteracyVisual.tsx": ["LiteracyVisual"] }))).toEqual([GROWTH_BOARD]);
+  });
+  it("no reviewed reading module has a platform variant the inventory would miss", () => {
+    const reviewed = [PROVENANCE, TASKS, HOST, GROWTH_BOARD, "src/learn/growth/LiteracyVisual.tsx", "src/learn/growth/content.ts", "src/learn/reading/admit.ts", ...SOURCES, ...Object.keys(READERS), ...Object.keys(RENDERERS), ...Object.values(BOARDS)];
+    const variants = [...new Set(reviewed)].flatMap((f) => [".ios", ".android", ".native", ".web"].map((p) => f.replace(/(\.[cm]?[jt]sx?)$/, `${p}$1`))).filter((f) => existsSync(f));
+    expect(variants).toEqual([]);
+  });
   it("no reading game's engine builds reading strings from an inherited source: they ask the provenance module by id", () => {
     for (const id of Object.keys(BOARDS)) {
       const engine = `src/learn/games/${id}/engine.ts`;
@@ -173,8 +266,78 @@ describe("the static checks resolve every import form", () => {
     expect(found).toEqual(["src/learn/reading/provenance.ts", ...Object.keys(forms).map((n) => `src/learn/probe/${n}`)].sort());
     expect(closure(root, "src/learn/probe/viafolder.ts")).toContain("src/learn/content/reading/sentences.ts");
   });
+  // REVIEW-5's graph probe, inverted: a reader re-exported through a barrel is found, and every platform variant counts.
+  put("src/reader.tsx", "export function ReadingText() { return null; }");
+  put("src/barrel.ts", 'export { ReadingText } from "./reader";');
+  put("src/board.tsx", 'import { ReadingText } from "./barrel"; export const Board = () => <ReadingText record={x} />;');
+  put("src/source.ts", "export const v = 0;");
+  put("src/source.ios.ts", "export const v = 1;");
+  put("src/use.ts", 'import { v } from "./source"; export const w = v;');
+  // Every other re-export form.
+  put("src/star.ts", 'export * from "./barrel";');
+  put("src/nsbarrel.ts", 'export * as kit from "./reader";');
+  put("src/local.ts", 'import { ReadingText as R } from "./reader"; export { R as Shown }; export default R;');
+  put("src/forms.tsx", 'import { ReadingText } from "./star"; import { kit } from "./nsbarrel"; import { Shown } from "./local"; import Def from "./local"; import * as all from "./nsbarrel"; export const a = () => <ReadingText text="a" />; export const b = () => <kit.ReadingText text="b" />; export const c = () => <Shown text="c" />; export const d = () => <Def text="d" />; export const e = () => <all.kit.ReadingText text="e" />; export const f = all.kit.ReadingText;');
+  it("REVIEW-5's probe: a reader through a barrel is a renderer, and an import names every platform variant", () => {
+    const found = renderers(root, appFiles(root, ["src"]), { "src/reader.tsx": ["ReadingText"] });
+    expect(found["src/board.tsx"]).toEqual([{ component: "src/reader.tsx#ReadingText", props: ["record"] }]);
+    expect(found["src/forms.tsx"].map((u) => u.props)).toEqual([["text"], ["text"], ["text"], ["text"], ["text"], ["value"]]);
+    expect(Object.keys(found).sort()).toEqual(["src/board.tsx", "src/forms.tsx"]);
+    expect(resolveAll(root, "src/use.ts", "./source")).toEqual(["src/source.ts", "src/source.ios.ts"]);
+    expect(edgesOf(root, "src/use.ts").map((e) => e.to)).toEqual(["src/source.ts", "src/source.ios.ts"]);
+    expect(closure(root, "src/use.ts")).toEqual(["src/source.ios.ts", "src/source.ts", "src/use.ts"]);
+  });
   it("a renamed or namespaced reader is found, with its props, and passing it as a value is flagged", () => {
     const found = renderers(root, appFiles(root, ["src"]), { "src/learn/kit/ReadingText.tsx": ["ReadingText"] });
     expect(found["src/learn/probe/render.tsx"].map((u) => u.props)).toEqual([["text"], ["record"], ["value"]]);
+  });
+});
+
+/**
+ * R5-3: every freeze and brand clause of the reading boundary, each either killed by a named app mutant in
+ * `scripts/words/mutation.mjs` or a documented equivalent, with the reason. A new clause fails until it is listed.
+ */
+const BOUNDARY: { file: string; clause: string; mutant?: string; equivalent?: string }[] = [
+  { file: PROVENANCE, clause: "return deepFreeze(JSON.parse(bytes));", mutant: "snapshot deep-frozen" },
+  { file: PROVENANCE, clause: "for (const r of records) known.add(r);", mutant: "records branded" },
+  { file: PROVENANCE, clause: "Object.freeze(Array.isArray(bank) && bank.length === 5", mutant: "exported bank containers frozen" },
+  { file: PROVENANCE, clause: "bank.map((level: Task[]) => brand(level))", mutant: "bank tasks branded" },
+  { file: PROVENANCE, clause: "[[], [], [], [], []].map((l) => Object.freeze(l))", equivalent: "the refused-bank fallback: runs only after the digest check has refused the bank (its own mutant), and holds no task" },
+  { file: PROVENANCE, clause: "for (const track of Object.values(stages)) brand(track.questions);", mutant: "growth questions branded" },
+  { file: PROVENANCE, clause: "return all ?? Object.freeze({});", equivalent: "the refused-growth fallback: an empty object, used only after the digest check refused the source; GrowthBoard refuses any unbranded reading question regardless" },
+  { file: PROVENANCE, clause: "const snapshot = Object.freeze({", equivalent: "a private module constant, never exported; every value a lookup returns is frozen by its own clause" },
+  { file: PROVENANCE, clause: 'words: brand<ReadingWord>(pinned("words")?.WORDS ?? []),', mutant: "words branded" },
+  { file: PROVENANCE, clause: 'sentences: brand<ReadingSentence>(pinned("sentences")?.SENTENCES ?? []),', mutant: "sentences branded" },
+  { file: PROVENANCE, clause: "passages: brand<ReadingPassage>(stories?.STORIES ?? []),", mutant: "passages branded" },
+  { file: PROVENANCE, clause: "brand<ReadingPage>((stories?.STORIES ?? []).flatMap((t: Tale) => t.pages))", mutant: "passage pages branded" },
+  { file: PROVENANCE, clause: 'ladders: brand<ReadingLadder>(pinned("ladders")?.LADDERS ?? []),', mutant: "ladders branded" },
+  { file: PROVENANCE, clause: "deepFreeze({ easy: [], medium: [], hard: [] })", equivalent: "the refused-clues fallback: empty lists, used only after the digest check refused the source" },
+  { file: PROVENANCE, clause: "banks: Object.freeze({", equivalent: "a private field of the private snapshot; readingBank returns each bank, which is frozen by its own clause" },
+  { file: PROVENANCE, clause: 'chamoru: brand<ChamoruRecord>(pinned("chamoru")?.chamoruWords ?? []),', mutant: "CHamoru words branded" },
+  { file: TASKS, clause: "for (const part of [t.tiles, t.tray, ...t.alternates, t.alternates]) Object.freeze(part);", mutant: "minted pieces frozen" },
+  { file: TASKS, clause: "if (t.cue) Object.freeze(t.cue);", mutant: "minted cue frozen" },
+  { file: TASKS, clause: "  Object.freeze(t);", mutant: "minted task frozen" },
+  { file: TASKS, clause: "made.add(t);", mutant: "minted only from a door" },
+  { file: "src/learn/reading/inherited.ts", clause: "export const inheritedWords: WordBank<LetterWord> = deepFreeze({", mutant: "inherited words frozen" },
+];
+describe("R5-3: every freeze and brand clause is a mutant or a documented equivalent", () => {
+  const CLAUSE = /Object\.freeze\(|deepFreeze\(|\bbrand(?:<[A-Za-z]+>)?\(|known\.add\(|made\.add\(/g;
+  const mutation = readFileSync("scripts/words/mutation.mjs", "utf8");
+  it("each listed clause occurs once, and is a named app mutant or has a reason", () => {
+    for (const b of BOUNDARY) {
+      expect(readFileSync(b.file, "utf8").split(b.clause).length, b.clause).toBe(2);
+      expect(!!b.mutant !== !!b.equivalent, b.clause).toBe(true);
+      if (b.mutant) expect(mutation, b.mutant).toContain(`'${b.mutant}'`);
+      if (b.equivalent) expect(b.equivalent.length, b.clause).toBeGreaterThan(40);
+    }
+  });
+  it("no freeze or brand clause in the boundary modules is missing from the list", () => {
+    for (const file of [...new Set(BOUNDARY.map((b) => b.file))]) {
+      const text = readFileSync(file, "utf8");
+      const spans = BOUNDARY.filter((b) => b.file === file).map((b) => [text.indexOf(b.clause), text.indexOf(b.clause) + b.clause.length]);
+      // The brand function's own declaration is not a clause.
+      const unlisted = [...text.matchAll(CLAUSE)].filter((m) => !spans.some(([a, z]) => m.index! >= a && m.index! < z) && !/^function brand/.test(text.slice(text.lastIndexOf("\n", m.index!) + 1)) && !/^import /.test(text.slice(text.lastIndexOf("\n", m.index!) + 1)));
+      expect(unlisted.map((m) => text.slice(text.lastIndexOf("\n", m.index!) + 1, text.indexOf("\n", m.index!)).trim()), file).toEqual([]);
+    }
   });
 });

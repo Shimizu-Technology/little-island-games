@@ -118,6 +118,11 @@ The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/st
 
 **Lead change:** policy contents, secrets, exceptions, thresholds, a new generator in the admission inventory, or `REVIEW_PROMPT_VERSION`. The version must be bumped whenever the review context changes.
 
+**Reading records (W1 reading-records contract change, PR #64, awaiting lead approval):** the contract covers reading content as data: banks, records, sentences, passages and growth questions that a child reads, builds or answers. Reading content as data must flow through `provenance.ts`. A new reading game or board must use it, and a static test enforces this for registered reading routes and LearnFrame-selected boards. Hand-authored UI strings are covered by code review and W1's export string scan.
+- New reading content comes only through detached W1 admission (`src/learn/reading/admitted/`, minted by `src/learn/reading/tasks.ts`).
+- Inherited content (shipped before admission existed) is a digest-checked, frozen, branded snapshot in `src/learn/reading/provenance.ts`, and every source is anchored to the lead-owned baseline `tests/fixtures/reading-inherited-baseline.json`. Changing that baseline is a lead change; inherited content is never added to or edited by re-pinning a digest.
+- Accepted residual: a new standalone route that prints hand-written text through ordinary `Copy`/`Text` is not a provenance surface; it is caught by independent review and the export string scan, not by the static test.
+
 ## LearnFrame and ChallengeFrame
 
 - **Code:** `src/learn/LearnFrame.tsx` (`LearnFrame({ id })`, `useStepReveal`, the board text cap); `src/challenge/ChallengeFrame.tsx` (`ChallengeFrame({ entry, requestedPuzzle })`, `ChosenDare`, `challengeIntro(entry)`).

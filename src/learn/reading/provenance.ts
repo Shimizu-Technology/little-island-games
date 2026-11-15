@@ -10,12 +10,14 @@ import { STORY_STUDIO_BANK } from "../content/reading/studio";
 import { WORDS } from "../content/reading/words";
 import { WORD_WORKSHOP_BANK } from "../content/reading/workshop";
 import type { Task } from "../games/letter-lagoon/puzzle";
-import type { Pace } from "../types";
+import { literacyTracks } from "../growth/literacy";
+import type { GrowthQuestion, GrowthStage, GrowthTrack } from "../growth/types";
+import type { LearnId, Pace } from "../types";
 import { refuse } from "./refuse";
 
 /**
- * The one door for inherited reading content: every word, sentence, passage, tray and CHamoru word that shipped before
- * W1 admission existed. New reading content comes through W1 admission instead (`admitted/`, minted by `tasks.ts`).
+ * The one door for inherited reading content: every word, sentence, passage, tray, CHamoru word and growth reading
+ * question (Levels 4-5 of the reading games) that shipped before W1 admission existed. New reading content comes through W1 admission instead (`admitted/`, minted by `tasks.ts`).
  *
  * When this module loads it checks each source once against the digest pinned below, then deep-freezes a copy made
  * from the exact bytes it hashed. From then on only that copy is used; the live source arrays are never read again,
@@ -26,6 +28,10 @@ import { refuse } from "./refuse";
  *
  * Only this module imports the inherited sources (checked statically by `tests/reading-provenance-static.test.ts`).
  * Games ask for records by id, level or pace and get the branded records back; they never build reading strings.
+ *
+ * Each pin below is anchored to an independent frozen baseline, `tests/fixtures/reading-inherited-baseline.json`, which
+ * only the lead changes: editing a source and re-pinning its digest here fails that test. Inherited content is never
+ * added to or edited; new reading content goes through detached W1 admission.
  */
 declare const inherited: unique symbol;
 type Branded<T> = Readonly<T> & { readonly [inherited]: true };
@@ -36,7 +42,10 @@ export type ReadingPassage = Branded<Omit<Tale, "pages"> & { pages: readonly Rea
 export type ReadingTask = Branded<Task>;
 export type ReadingLadder = Branded<{ id: string; pace: Pace; skill: string; words: readonly string[] }>;
 export type ChamoruRecord = Branded<ChamoruWord>;
-export type InheritedRecord = ReadingWord | ReadingSentence | ReadingPage | ReadingPassage | ReadingTask | ReadingLadder | ChamoruRecord;
+export type ReadingQuestion = Branded<GrowthQuestion>;
+export type ReadingGrowthTrack = Readonly<Omit<GrowthTrack, "questions"> & { questions: readonly ReadingQuestion[] }>;
+export type ReadingGrowthTracks = Readonly<Partial<Record<LearnId, Readonly<Record<GrowthStage, ReadingGrowthTrack>>>>>;
+export type InheritedRecord = ReadingWord | ReadingSentence | ReadingPage | ReadingPassage | ReadingTask | ReadingLadder | ChamoruRecord | ReadingQuestion;
 export type BankGame = "letter-lagoon" | "story-studio" | "word-workshop";
 
 /**
@@ -46,6 +55,7 @@ export type BankGame = "letter-lagoon" | "story-studio" | "word-workshop";
 export const INHERITED_SOURCE_DIGESTS = {
   chamoru: "621cc0a463fac4aab4ca365e4fcab6ecffde5206e8477640f7c0907d99c3d73a",
   clues: "20aa0c8cf42c3135e9d25b38a0acc92cab7dd70e6cb9f0cbeb5817b612933457",
+  growth: "9f205888b588dc4b541ac459a842499bb4ca71355293204bcadff03939cfbe74",
   ladders: "f75c86b133962f71883c8fe50283150fa5192243de4f9cd835f2bc6f0292cc52",
   lagoon: "1bfc8b89b503829c10cf23f469c923a8b5d60436499dd21fcec36595cfe47980",
   sentences: "327d4e626c00f1ff87a9bb2c264f7e5743b4a548339923ce215324c7475675de",
@@ -59,6 +69,7 @@ export type SourceName = keyof typeof INHERITED_SOURCE_DIGESTS;
 const SOURCES: Record<SourceName, Record<string, unknown>> = {
   chamoru: { chamoruWords },
   clues: { LEGACY_WARMUP_WORDS, PICTURE_WORDS },
+  growth: { literacyTracks },
   ladders: { LADDERS },
   lagoon: { LETTER_LAGOON_BANK },
   sentences: { SENTENCES },
@@ -92,6 +103,11 @@ function brand<T extends object>(records: readonly T[]): readonly Branded<T>[] {
 }
 const levels = (bank: unknown): readonly (readonly ReadingTask[])[] =>
   Object.freeze(Array.isArray(bank) && bank.length === 5 ? bank.map((level: Task[]) => brand(level)) : [[], [], [], [], []].map((l) => Object.freeze(l)));
+/** The growth reading tracks, already deep-frozen, with every question branded. */
+function tracks(all: Record<string, Record<GrowthStage, GrowthTrack>> | undefined): ReadingGrowthTracks {
+  for (const stages of Object.values(all ?? {})) for (const track of Object.values(stages)) brand(track.questions);
+  return all ?? Object.freeze({});
+}
 
 const clues = pinned("clues");
 const stories = pinned("stories");
@@ -109,6 +125,7 @@ const snapshot = Object.freeze({
     "word-workshop": levels(pinned("workshop")?.WORD_WORKSHOP_BANK),
   }) as Readonly<Record<BankGame, readonly (readonly ReadingTask[])[]>>,
   chamoru: brand<ChamoruRecord>(pinned("chamoru")?.chamoruWords ?? []),
+  growth: tracks(pinned("growth")?.literacyTracks),
 });
 const pictured = new Set(Object.values(snapshot.pictureWords).flat());
 
@@ -136,3 +153,5 @@ export const readingBank = (game: BankGame): readonly (readonly ReadingTask[])[]
 /** Håfa Adai's CHamoru words (HåfaGPT source-backed terms). */
 export const chamoruRecords = (): readonly ChamoruRecord[] => snapshot.chamoru;
 export const chamoruRecord = (id: unknown): ChamoruRecord | undefined => snapshot.chamoru.find((w) => w.id === id);
+/** The growth quiz's reading tracks, by game and stage. Sessions save question ids and resolve them in these tracks. */
+export const readingGrowthTracks = (): ReadingGrowthTracks => snapshot.growth;
