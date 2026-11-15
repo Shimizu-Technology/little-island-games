@@ -27,21 +27,24 @@ export const GREET_MOOD_MS = 900;
  * resting cue on the UI thread, or a small effect. Cooking (HD-07) is the only one that
  * changes the world, through the reducer's `cook` step.
  */
-export function useDelight({ soundOn, reduced, cue, getScene, cook }: {
+export function useDelight({ soundOn, reduced, cue, getScene, cook, isHeld = () => false }: {
   soundOn: boolean;
   reduced: boolean;
   cue: (id: string, kind: CueKind, dir?: number) => void;
   getScene: () => Scene;
   cook: (id: string, room: RoomId) => void;
+  /** Fix round 1: whether a finger has captured this entity right now (not settling). */
+  isHeld?: (id: string) => boolean;
 }) {
   const feedback = useHomeFeedback(soundOn);
   // The screen passes fresh closures each render; reading them through a ref keeps every
   // callback below stable, so memoized screen callbacks and effects don't churn.
-  const outside = useRef({ cue, getScene, cook });
-  useLayoutEffect(() => { outside.current = { cue, getScene, cook }; });
+  const outside = useRef({ cue, getScene, cook, isHeld });
+  useLayoutEffect(() => { outside.current = { cue, getScene, cook, isHeld }; });
   const cueOn = useCallback((id: string, kind: CueKind, dir?: number) => outside.current.cue(id, kind, dir), []);
   const sceneNow = useCallback(() => outside.current.getScene(), []);
   const cookNow = useCallback((id: string, room: RoomId) => outside.current.cook(id, room), []);
+  const heldNow = useCallback((id: string) => outside.current.isHeld(id), []);
   const [moods, setMoods] = useState<Record<string, Face>>({});
   const [effects, setEffects] = useState<Effect[]>([]);
   const [poke, setPoke] = useState<Poke>();
@@ -177,7 +180,8 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook }: {
    * or turning the stove off first, stops it; nothing cooks twice. */
   const cooking = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const watchCooking = useCallback((scene: Scene) => {
-    const ids = cookingIds(scene);
+    // Fix round 1: food a child has picked up is off the heat, even before it's set down.
+    const ids = cookingIds(scene).filter((id) => !heldNow(id));
     for (const id of Object.keys(cooking.current)) {
       if (ids.includes(id)) continue;
       clearTimeout(cooking.current[id]);
@@ -192,13 +196,14 @@ export function useDelight({ soundOn, reduced, cue, getScene, cook }: {
       cooking.current[id] = setTimeout(() => {
         delete cooking.current[id];
         const latest = sceneNow().entities[id];
-        if (!latest?.item) return;
+        // Picked up during the wait: no cooking. The next watch (on release) starts it again.
+        if (!latest?.item || heldNow(id) || !cookingIds(sceneNow()).includes(id)) { feedback.stop("sizzle"); return; }
         cookNow(latest.item.id, latest.room);
         effect("steam", latest.room, latest.contact.x, latest.contact.y - 24);
         cueOn(id, "hop");
       }, COOK_MS);
     }
-  }, [cookNow, cueOn, effect, feedback, sceneNow]);
+  }, [cookNow, cueOn, effect, feedback, heldNow, sceneNow]);
   useEffect(() => () => { for (const timer of Object.values(cooking.current)) clearTimeout(timer); }, []);
 
   return { moods, effects, poke, pickedUp, landed, ate, tapped, touchedPiece, watchCooking, reduced };

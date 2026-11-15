@@ -168,6 +168,29 @@ describe('H4 on the Island Home screen', () => {
     expect(after.find((i: any) => i.id === 'rice')!.on).toBeUndefined();
     expect(after.find((i: any) => i.id === 'mango')!.powered).toBe(true);
   });
+  it('fix round 1 (P2): food picked up out of a hot pan stops cooking while held, and cooks again if the carry is cancelled', async () => {
+    const state = labFixtures.delight();
+    const persist = await open(state);
+    const stove = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'stove')!;
+    await tap(stove.id);
+    const pan = harness.scene.scene.rooms.kitchen.targets.find((t: any) => t.owner === stove.id && t.pan)!;
+    await drop(state, 'kitchen/item/mango', 'kitchen', pan.contact, { target: pan.id });
+    await act(async () => { vi.advanceTimersByTime(200); });
+    // A finger captures the mango (the save still has it in the pan) and holds it past the deadline.
+    const scene = harness.scene.scene;
+    harness.slots = [{ id: 'kitchen/item/mango', phase: 'dragging', generation: 0, epoch: 0 }, {}];
+    await act(async () => harness.options.onPickup({ id: 'kitchen/item/mango', slot: 0, scene, generation: 0, epoch: 0 }));
+    await act(async () => { vi.advanceTimersByTime(1500); });
+    const mango = () => persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.id === 'mango')!;
+    expect(mango().powered).toBeUndefined();
+    // Cancelled: the mango never left the pan, so it starts cooking again from the start.
+    harness.slots = [{}, {}];
+    await act(async () => harness.options.onClear(0, 'kitchen/item/mango'));
+    await act(async () => { vi.advanceTimersByTime(COOK_MS - 50); });
+    expect(mango().powered).toBeUndefined();
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(mango().powered).toBe(true);
+  });
   it('HD-09: a tap on a sleeping friend makes them stir, with a drawn z, and they stay asleep', async () => {
     const state = labFixtures['delight-rest']();
     const sleeper = Object.values(buildScene(state).entities).find((e) => e.character?.slot === 0)!;

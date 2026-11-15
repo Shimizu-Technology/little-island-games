@@ -193,6 +193,7 @@ export function HomeScreen({
     cue: (id, kind, dir) => runtime.current?.showCue?.(id, kind, dir),
     getScene: () => live.current.scene,
     cook: (id, roomId) => live.current.store.dispatch({ type: "cook", id, roomId }),
+    isHeld: (id) => (runtime.current?.slots.get() ?? []).some((s) => !!s?.id && s.phase !== "settling" && (s.id === id || s.restId === id)),
   });
   const { watchCooking, pickedUp: delightPickup, landed: delightLanded, ate: delightAte } = delight;
   React.useEffect(() => watchCooking(scene), [scene, watchCooking]);
@@ -404,15 +405,18 @@ export function HomeScreen({
         if (pickup.scene.entities[id]?.character) wake(id);
       }
       delightPickup(pickup.scene.entities[pickup.id]);
+      watchCooking(live.current.scene);
       setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
       setSelected(undefined);
     },
-    [wake, delightPickup]
+    [wake, delightPickup, watchCooking]
   );
   const onClear = useCallback(
     (index: number, id?: string, reason?: "capacity") => {
       if (reason === "capacity") live.current.store.setMessage(CAPACITY_MESSAGE);
       if (id) clearCatalogSeed(catalogSeeds.current, id);
+      // A cancelled carry puts food back in a hot pan: it starts cooking again.
+      watchCooking(live.current.scene);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
       setPickups((current) => {
@@ -421,7 +425,7 @@ export function HomeScreen({
         return current.map((p, i) => (i === index ? undefined : p));
       });
     },
-    []
+    [watchCooking]
   );
   const onDestination = useCallback(
     (index: number, destination: Scene) =>
