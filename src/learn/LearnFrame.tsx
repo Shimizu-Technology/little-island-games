@@ -40,6 +40,7 @@ import { LearnArt } from "./LearnArt";
 import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
+import { speakAfter } from "./frameClocks";
 
 export const modeLabel: Record<LearnMode, string> = {
   solo: "On my own",
@@ -177,7 +178,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       sound(kind === "big" ? "win" : "match");
       if (kind === "big") feel("success");
       clearTimeout(cheerLine.current);
-      if (say) cheerLine.current = setTimeout(() => {
+      if (say) cheerLine.current = speakAfter(() => {
         if (liveFeedback.current === feedbackContext) sound(say, true);
       }, kind === "big" ? 900 : 550);
     },
@@ -198,7 +199,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     if (!saved || !engine.introAudio || !soundOn || !boardActive || (isGrowth(saved.state))) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
     introduced.current = saved.id;
-    const timer = setTimeout(() => sound(engine.introAudio!, true), 450);
+    const timer = speakAfter(() => sound(engine.introAudio!, true), 450);
     return () => clearTimeout(timer);
   }, [saved, engine.introAudio, soundOn, boardActive, sound]);
 

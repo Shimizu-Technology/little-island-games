@@ -124,7 +124,7 @@ export function BuildBoat(p: BuildBoatProps) {
       </View>
       {solved ? (
         <View style={{ alignItems: "center", gap: 10, alignSelf: "stretch" }}>
-          <TapWords text={`${task.word}!`} sound={p.sound} soundOn={p.soundOn} onHeard={p.onHeard} />
+          <TapWords record={task} end="!" sound={p.sound} soundOn={p.soundOn} onHeard={p.onHeard} />
           {cue && (
             <Copy maxFontSizeMultiplier={1.4} style={{ color: ink, textAlign: "center", fontSize: 18 }}>
               {cue.prefix ? `${cue.affix}- : ${cue.gloss}` : `-${cue.affix} : ${cue.gloss}`}

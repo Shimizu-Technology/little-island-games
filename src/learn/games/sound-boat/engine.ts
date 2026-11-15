@@ -12,8 +12,7 @@ import {
   wordEntry,
   wordsAt,
 } from "../../kit/reading";
-import { LEGACY_WARMUP_WORDS, PICTURE_WORDS } from "../../content/reading/clues";
-import { LADDERS } from "../../content/reading/ladders";
+import { isLegacyWarmupWord, pictureWords, readingLadder, readingLadders } from "../../reading/provenance";
 import { TILE_FAMILIES, TILE_TWINS, tileLabel } from "../../reading/graphemes";
 import { partsSkills } from "../../reading/scope";
 import { levelOf } from "../../levelOptions";
@@ -60,7 +59,7 @@ export type BoatCredit = "pending" | "done";
 
 export const WORDS_PER_ROUND = 10;
 const PICTURES = 4;
-const ladderWords = (id: string): readonly string[] => LADDERS.find((l) => l.id === id)!.words;
+const ladderWords = (id: string): readonly string[] => readingLadder(id)!.words;
 export const boatWords = (s: Pick<BoatState, "pictures" | "ladders">): string[] => [
   ...s.pictures,
   ...s.ladders.flatMap((id) => ladderWords(id).slice(1)),
@@ -186,7 +185,7 @@ export const boatTurn = (s: BoatState | LegacyBoatState, o: LearnOptions): 0 | 1
     : (((s.starter + Math.min(s.index, WORDS_PER_ROUND - 1)) % 2) as 0 | 1);
 
 const picturePool = (pace: Pace) =>
-  PICTURE_WORDS[pace].map((w) => wordEntry(w)!).filter((w) => w.tiles.length >= 2 && w.tiles.length <= 5);
+  pictureWords(pace).map((w) => wordEntry(w)!).filter((w) => w.tiles.length >= 2 && w.tiles.length <= 5);
 /** The first picture word is one pace gentler, so every round opens with an easy win. */
 const startPace = (pace: Pace): Pace => (pace === "hard" ? "medium" : "easy");
 function validPictures(v: unknown, pace: Pace): v is string[] {
@@ -201,7 +200,7 @@ function validLadders(v: unknown, pace: Pace): v is string[] {
     Array.isArray(v) &&
     v.length === 2 &&
     new Set(v).size === 2 &&
-    v.every((id) => LADDERS.some((l) => l.id === id && l.pace === pace))
+    v.every((id) => readingLadders().some((l) => l.id === id && l.pace === pace))
   );
 }
 function createBoat(
@@ -217,7 +216,7 @@ function createBoat(
     c.rng,
     c.today
   ).sort((a, b) => a.tiles.length - b.tiles.length).map((w) => w.word);
-  const available = LADDERS.filter((l) => l.pace === o.pace);
+  const available = readingLadders().filter((l) => l.pace === o.pace);
   const preferred = available.filter((l) => !(Array.isArray(previous.ladders) && previous.ladders.includes(l.id)));
   const ladders = pickItems(preferred.length >= 2 ? preferred : available, c.skills, 2, c.rng, c.today).map(
     (l) => l.id
@@ -271,7 +270,7 @@ function validLegacy(v: unknown, o: LearnOptions): v is LegacyBoatState {
     !v.warmups.every(
       (w) =>
         typeof w === "string" &&
-        LEGACY_WARMUP_WORDS.has(w) &&
+        isLegacyWarmupWord(w) &&
         wordsAt(o.pace).some(
           (e) => e.word === w && e.tiles.length >= 3 && e.tiles.length <= 5 && e.tiles.length === phonemes(w).length
         )

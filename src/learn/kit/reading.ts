@@ -1,4 +1,4 @@
-import { WORDS } from "../content/reading/words";
+import { readingWords, type ReadingWord } from "../reading/provenance";
 import type { Pace } from "../types";
 
 export type ReadingScene = {
@@ -11,10 +11,9 @@ export type ReadingScene = {
   subjectSize?: number;
   objectSize?: number;
 };
-export type ReadingWord = { word: string; skill: string; pace: Pace; tiles: readonly string[] };
-export const wordBank: readonly ReadingWord[] = WORDS.map((w) =>
-  w.word === "box" || w.word === "fox" ? { ...w, tiles: [w.word[0], "o", "x"] } : w
-);
+export type { ReadingWord };
+/** The inherited decodable words: the frozen, branded snapshot from `reading/provenance.ts`, never the live source. */
+export const wordBank: readonly ReadingWord[] = readingWords();
 export const paceRank: Record<Pace, number> = { easy: 0, medium: 1, hard: 2 };
 /** Deliberate exceptions, visible to the adult; never inferred from spelling. */
 export const trickyWords: Record<Pace, readonly string[]> = {

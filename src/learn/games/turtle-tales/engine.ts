@@ -1,6 +1,6 @@
 import type { LearnEngine } from "../../types";
 import { pickItems } from "../../skills";
-import { STORIES } from "../../content/reading/stories";
+import { readingPassage, readingPassages, type ReadingPassage } from "../../reading/provenance";
 import { random } from "../../../games/types";
 import { bools, exact, integer, readingSkills, seat, tokens } from "../../kit/reading";
 
@@ -25,7 +25,8 @@ export type TaleState = {
   /** One entry per finished page: found on the first pick without being read to. */
   clean: boolean[];
 };
-export const tale = (s: { id: string }) => STORIES.find((t) => t.id === s.id)!;
+/** The tale on the board: the pinned inherited passage with this saved id, never a copy. */
+export const tale = (s: { id: string }): ReadingPassage => readingPassage(s.id)!;
 export const talePageCount = (s: { id: string }) => tale(s).pages.length;
 export const taleDone = (s: TaleState) => s.page >= talePageCount(s);
 /** Together: readers take turns page by page. */
@@ -89,7 +90,7 @@ function validLegacy(v: unknown, pace: string): v is LegacyTaleState {
     ])
   )
     return false;
-  const t = STORIES.find((t) => t.id === v.id && t.pace === pace);
+  const t = readingPassages().find((t) => t.id === v.id && t.pace === pace);
   if (!t) return false;
   if (
     !seat(v.starter) ||
@@ -160,7 +161,7 @@ export const engine: LearnEngine<TaleState | LegacyTaleState> = {
   skills: readingSkills,
   create(o, c) {
     const previous = c.previous as { id?: unknown } | undefined;
-    const pool = STORIES.filter((t) => t.pace === o.pace && t.id !== previous?.id);
+    const pool = readingPassages().filter((t) => t.pace === o.pace && t.id !== previous?.id);
     const id = pickItems(pool, c.skills, 1, c.rng, c.today)[0].id;
     return {
       id,
@@ -176,7 +177,7 @@ export const engine: LearnEngine<TaleState | LegacyTaleState> = {
   validate(v, o): v is TaleState | LegacyTaleState {
     if (isLegacyTale(v)) return validLegacy(v, o.pace);
     if (!exact(v, ["id", "starter", "page", "sides", "wrong", "heard", "solved", "clean"])) return false;
-    const t = STORIES.find((t) => t.id === v.id && t.pace === o.pace);
+    const t = readingPassages().find((t) => t.id === v.id && t.pace === o.pace);
     if (!t) return false;
     const n = t.pages.length;
     if (

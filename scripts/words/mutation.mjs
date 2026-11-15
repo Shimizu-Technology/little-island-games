@@ -356,12 +356,13 @@ for(const [file,label,before,after,tests] of readingEdges){const original=source
 // practice credit across the Sail on change; and the no-timer walk and its behavioural host test. Each mutant edits one
 // app or test-helper file in a scratch copy of the app and runs the named Vitest cases there. Equivalent mutants are
 // named in FIX-REPORT-3, not counted as kills.
+const PROV='tests/reading-provenance.test.tsx',STATIC='tests/reading-provenance-static.test.ts';
 const PROVENANCE='tests/sound-boat-provenance.test.tsx',HOSTS='tests/sound-boat-provenance-hosts.test.tsx',UNDO='tests/sound-boat-undo.test.tsx',CLOCK='tests/reading-no-timer.test.ts',FAKE='tests/reading-fake-clock.test.tsx';
-const wrapper=readFileSync('src/learn/games/sound-boat/view.tsx','utf8').replace('  sound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,','  sound: originalSound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,').replace('    complete = boatComplete(s);\n\n  // Say each new word.','    complete = boatComplete(s);\n\n  const latest = useRef(s); latest.current = s;\n  function sound(...args: Parameters<typeof originalSound>) { originalSound(...args); update(boatMove(latest.current, {type: "next"})); }\n\n  // Say each new word.');
+const wrapper=readFileSync('src/learn/games/sound-boat/view.tsx','utf8').replace('  sound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,','  sound: originalSound,\n  soundOn,\n  width,\n  height,\n  active,\n  coach,').replace('    complete = admitted && boatComplete(s);\n\n  // Say each new word.','    complete = boatComplete(s);\n\n  const latest = useRef(s); latest.current = s;\n  function sound(...args: Parameters<typeof originalSound>) { originalSound(...args); update(boatMove(latest.current, {type: "next"})); }\n\n  // Say each new word.');
 const appEdges=[
  ['src/learn/reading/tasks.ts','minted set membership','made.has(task)','true',[PROVENANCE],'refused|minted|copied'],
  ['src/learn/reading/tasks.ts','consumer check accepts only minted tasks','  if (isMinted(task)) return true;\n','  return true;\n',[PROVENANCE],'refused|development'],
- ['src/learn/reading/tasks.ts','development refusal throws','  if (dev()) throw new Error','  if (false) throw new Error',[PROVENANCE],'development|throws|digest'],
+ ['src/learn/reading/refuse.ts','development refusal throws','  if (dev()) throw new Error','  if (false) throw new Error',[PROVENANCE],'development|throws|digest'],
  ['src/learn/reading/tasks.ts','minted task frozen','  Object.freeze(t);\n','',[PROVENANCE],'frozen'],
  ['src/learn/reading/tasks.ts','minted pieces frozen','for (const part of [t.tiles, t.tray, ...t.alternates, t.alternates]) Object.freeze(part);','',[PROVENANCE],'frozen'],
  ['src/learn/reading/tasks.ts','minted only from a door','  made.add(t);\n','',[PROVENANCE],'control|frozen'],
@@ -391,6 +392,48 @@ const appEdges=[
  ['tests/helpers/reading-clock.ts','Date aliases are references','else if (n.text === "Date" && !((ts.isNewExpression(p)','else if (false && !((ts.isNewExpression(p)',[CLOCK],'other than a direct call'],
  ['tests/helpers/reading-clock.ts','keys bind the declarations a timer uses','if (!taken.some((t) => contains(t, u))) { taken.push(u); queue.push(u); }','',[CLOCK],'dependency is rewrapped'],
  ['src/learn/games/sound-boat/view.tsx','reviewer wrapper: speech advances the word (behaviour)',null,wrapper,[FAKE],'sound-boat: no word'],
+ // R1a fix 4 (R4-2): the cue's own freeze, checked by a fixture ending/prefix assertion.
+ ['src/learn/reading/tasks.ts','minted cue frozen','  if (t.cue) Object.freeze(t.cue);\n','',[PROVENANCE],'cue is frozen'],
+ ['src/learn/reading/inherited.ts','inherited words frozen','export const inheritedWords: WordBank<LetterWord> = deepFreeze({','export const inheritedWords: WordBank<LetterWord> = ({',[PROVENANCE],'mints from are frozen'],
+ // R1a fix 4 (R4-1): the inherited snapshot (digest check, copy, freeze, brand) and every reading consumer's check.
+ ['src/learn/reading/provenance.ts','inherited source digest check','  if (sha256Hex(bytes) !== INHERITED_SOURCE_DIGESTS[name]) {','  if (false) {',[PROV],'no longer matches its pin'],
+ ['src/learn/reading/provenance.ts','snapshot deep-frozen','  return deepFreeze(JSON.parse(bytes));','  return JSON.parse(bytes);',[PROV],'deep-frozen'],
+ ['src/learn/reading/provenance.ts','snapshot copied from the checked bytes','  return deepFreeze(JSON.parse(bytes));','  return SOURCES[name] as Record<string, any>;',[PROV],'live sources|deep-frozen copy'],
+ ['src/learn/reading/provenance.ts','records branded','  for (const r of records) known.add(r);\n','',[PROV],'id-based save'],
+ ['src/learn/reading/provenance.ts','brand membership','known.has(record)','true',[PROV],'copies of it are not branded|copies, spreads'],
+ ['src/learn/reading/provenance.ts','passage pages branded','brand<ReadingPage>((stories?.STORIES ?? []).flatMap((t: Tale) => t.pages))','[]',[PROV],'turtle-tales: the save keeps'],
+ ['src/learn/reading/provenance.ts','bank tasks branded','bank.map((level: Task[]) => brand(level))','bank',[PROV],'letter-lagoon: the save keeps'],
+ ['src/learn/reading/admit.ts','consumers admit only branded or minted records','  if (isInheritedRecord(record) || isMinted(record)) return true;\n','  return true;\n',[PROV],'raw string|copies, spreads'],
+ ['src/learn/reading/admit.ts','minted tasks are admitted','isInheritedRecord(record) || isMinted(record)','isInheritedRecord(record)',[PROV],'branded records and minted tasks print'],
+ ['src/learn/kit/ReadingText.tsx','ReadingText check','  if (!admittedReading(record, "ReadingText"))','  if (false)',[PROV],'raw string|copies, spreads'],
+ ['src/learn/kit/reading.ts','kit words are the branded snapshot','export const wordBank: readonly ReadingWord[] = readingWords();','export const wordBank: readonly ReadingWord[] = readingWords().map((w) => ({ ...w })) as never;',[PROV],'sound-boat: the save keeps'],
+ ['src/learn/games/which-one/engine.ts','reviewer legacy-producer swap, on today\'s producer','readingSentence(s.ids[Math.min(s.index, 7)])!;','({ ...readingSentence(s.ids[Math.min(s.index, 7)])!, text: JSON.parse(\'{"term":"A sunset is red."}\').term as string });',[PROV],'which-one: the save keeps'],
+ ['src/learn/games/turtle-tales/engine.ts','Turtle Tales producer copies','readingPassage(s.id)!;','({ ...readingPassage(s.id)! });',[PROV],'turtle-tales: the save keeps'],
+ ['src/learn/games/letter-lagoon/engine.ts','shared-board producer copies','export const bank = readingBank("letter-lagoon");','export const bank = readingBank("letter-lagoon").map((l) => l.map((t) => ({ ...t })));',[PROV],'letter-lagoon: the save keeps'],
+ ['src/learn/games/which-one/view.tsx','Which One board check','  if (!admittedReading(item, "Which One")) return <ReadingRefused />;\n','',[PROV],'which-one: the board shows the fallback'],
+ ['src/learn/games/turtle-tales/view.tsx','Turtle Tales board check',"  if (!admittedReading(t, \"Turtle Tales\") || (s.page < t.pages.length && !admittedReading(t.pages[s.page], \"Turtle Tales' page\"))) return <ReadingRefused />;\n",'',[PROV],'turtle-tales: the board shows the fallback'],
+ ['src/learn/games/hafa-adai/view.tsx','Håfa Adai board check','  if (!admitted) return <ReadingRefused />;\n','',[PROV],'hafa-adai: the board shows the fallback'],
+ ['src/learn/games/hafa-adai/view.tsx','Håfa Adai words checked','const admitted = s.items.every((id) => admittedReading(chamoruWord(id), "Håfa Adai Island"));','const admitted = true;',[PROV],'hafa-adai: the board shows the fallback'],
+ ['src/learn/games/hafa-adai/view.tsx','Håfa Adai speaks only admitted words','    if (!admitted || !active || !soundOn || !canAutoPlay) return;','    if (!active || !soundOn || !canAutoPlay) return;',[PROV],'hafa-adai: the board shows the fallback'],
+ ['src/learn/games/letter-lagoon/ReadingBoard.tsx','reading board check','  if (!admitted) return <ReadingRefused />;\n','',[PROV],'letter-lagoon: the board shows the fallback'],
+ ['src/learn/games/letter-lagoon/ReadingBoard.tsx','reading board task checked','admitted = finished || admittedReading(t, "The reading board"),','admitted = true,',[PROV],'story-studio: the board shows the fallback'],
+ ['src/learn/games/letter-lagoon/ReadingBoard.tsx','reading board speaks only an admitted task','    if (admitted && kind !== "studio" && active','    if (kind !== "studio" && active',[PROV],'letter-lagoon: the board shows the fallback'],
+ ['src/learn/games/sound-boat/view.tsx','Sound Boat letters board check','  if (!admitted) return <RefusedTask />;\n','',[PROV],'sound-boat: the board shows the fallback'],
+ ['src/learn/games/sound-boat/view.tsx','Sound Boat speaks only an admitted word','    if (done || !admitted || !active || !soundOn) return;','    if (done || !active || !soundOn) return;',[PROV],'sound-boat: the board shows the fallback'],
+ ['src/learn/games/sound-boat/view.tsx','Sound Boat ladder word checked',' && (previousWord === undefined || admittedReading(previousWord, "Sound Boat\'s ladder"))','',[PROV],'ladder whose previous word'],
+ // The static backstop resolves imports instead of matching their spelling.
+ ['tests/helpers/reading-clock.ts','resolver follows the @/ alias','spec.startsWith("@/") ? join(resolve(root), "src", spec.slice(2)) : undefined','undefined',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','graph reads export-from','} else if (ts.isExportDeclaration(n) && n.moduleSpecifier','} else if (false && n.moduleSpecifier',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','graph reads import-equals','} else if (ts.isImportEqualsDeclaration(n)','} else if (false && ts.isImportEqualsDeclaration(n)',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','graph reads require and import()','      add(n.arguments[0].text, false);\n','',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','graph tells type-only imports apart','      add(n.moduleSpecifier.text, allTypes, bindings);','      add(n.moduleSpecifier.text, false, bindings);',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','renderers follow namespaces','        if (b.imported === "*") namespaces.set(b.local, e.to);\n        else if','        if (false) namespaces.set(b.local, e.to);\n        else if',[STATIC],'every import form'],
+ ['tests/helpers/import-graph.ts','a reader passed as a value is flagged','found.push({ component: local.get(n.text)!, props: ["value"] });','{}',[STATIC],'every import form'],
+ // Clock granularity: host calls to the reviewed clock functions are keyed by the call and its callbacks.
+ ['tests/helpers/reading-clock.ts','clock-calls bind their callbacks','kind === "clock-call" ? callbacks(node).replace(/\\s+/g, " ")','kind === "clock-call" ? shown.replace(/\\s+/g, " ")',[CLOCK],'host timer'],
+ ['tests/helpers/reading-clock.ts','clock-calls follow function-valued names','              if (functional(u) && !taken.some((t) => contains(t, u))) { taken.push(u); queue.push(u); }','',[CLOCK],'host timer'],
+ ['tests/helpers/reading-clock.ts','a clock function alias is a reference','push(calledAs(n) ? "clock-call" : "reference", p);','if (calledAs(n)) push("clock-call", p);',[CLOCK],'clock function used'],
+ ['tests/helpers/reading-clock.ts','a clock owner required is a reference','&& ownerOf(n.arguments[0].text)) push("reference", n);','&& false) push("reference", n);',[CLOCK],'clock function used'],
 ];
 const appMutations=[];
 for(const [file,label,before,after,tests,pattern] of appEdges){const original=readFileSync(file,'utf8');if(before!==null && original.split(before).length!==2)throw new Error('Missing or ambiguous R1a app mutation target '+label);const source=before===null?after:original.replace(before,after);if(source===original)throw new Error('Unchanged mutant '+label);appMutations.push({file,message:'R1a app '+label,source,tests,pattern});}

@@ -9,11 +9,13 @@ import { CoachSpot } from "../../Coach";
 import { Icon } from "../../../components/Icon";
 import { ObjectGlyph, PictureObject } from "../../art/Objects";
 import { Voyage, glow, ink, letterFit } from "./shared";
-import { pictureFor } from "../../content/reading/clues";
+import { pictureFor } from "../../reading/provenance";
 import { dayNumber } from "../../skills";
 import { wordAudio, wordEntry } from "../../kit/reading";
 import { TapWords } from "../../reading/TapWords";
+import { admittedReading } from "../../reading/admit";
 import { PartsBoard } from "./parts-view";
+import { RefusedTask } from "./BuildBoat";
 import { isParts, type PartsState } from "./parts";
 import {
   WORDS_PER_ROUND,
@@ -214,14 +216,18 @@ function Play({
   const done = s.index >= WORDS_PER_ROUND;
   // Each new word opens at the top of the board: the picture, then the boat and its letters.
   useStepReveal(s.index);
+  // The word comes from the pinned inherited snapshot by id; anything else is refused before it is shown or spoken.
   const word = boatWord(s),
-    complete = boatComplete(s);
+    previous = boatPrevious(s),
+    previousWord = previous === undefined ? undefined : wordEntry(previous),
+    admitted = admittedReading(word, "Sound Boat's letter board") && (previousWord === undefined || admittedReading(previousWord, "Sound Boat's ladder")),
+    complete = admitted && boatComplete(s);
 
   // Say each new word. A fresh round waits for the spoken goal first; a ladder starts with "change one letter".
   // A restored round waits for her to tap the speaker (browsers also block sound before a first tap).
   const spoken = useRef<string | null>(session.revision > 0 ? `${session.id}-${s.index}` : null);
   useEffect(() => {
-    if (done || !active || !soundOn) return;
+    if (done || !admitted || !active || !soundOn) return;
     const key = `${session.id}-${s.index}`;
     if (spoken.current === key) return;
     const fresh = session.revision === 0;
@@ -239,13 +245,13 @@ function Play({
   }, [active, soundOn, s.index, session.id, done]);
 
   if (done) return <Finished />;
+  if (!admitted) return <RefusedTask />;
 
   const boxes = boatBoxes(s),
     blanks = boatBlanks(s),
     current = boatCurrent(s),
     expected = boatExpected(s),
     choices = boatChoices(s),
-    previous = boatPrevious(s),
     picture = pictureFor(word.word);
   const turn = boatTurn(s, session.options),
     who = session.names?.[turn] ?? `Player ${turn + 1}`;
@@ -300,10 +306,10 @@ function Play({
       )}
       <Voyage step={s.index} width={width} />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: pictureSize }}>
-        {previous && (
-          <View accessible accessibilityLabel={`Was ${previous}`} style={{ alignItems: "center", gap: 4 }}>
+        {previousWord && (
+          <View accessible accessibilityLabel={`Was ${previousWord.word}`} style={{ alignItems: "center", gap: 4 }}>
             <View style={{ flexDirection: "row", gap: 2 }}>
-              {wordEntry(previous)!.tiles.map((t, i) => (
+              {previousWord.tiles.map((t, i) => (
                 <View
                   key={i}
                   style={{
@@ -321,7 +327,7 @@ function Play({
                   <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 18, lineHeight: 22, color: ink, fontWeight: "600" }}>{tileLabel(t)}</Copy>
                 </View>
               ))}
-              {/_e$/.test(wordEntry(previous)!.tiles.join(" ")) && (
+              {/_e$/.test(previousWord.tiles.join(" ")) && (
                 <Copy maxFontSizeMultiplier={1} style={{ fontSize: 18, lineHeight: 32, color: C.muted }}>e</Copy>
               )}
             </View>
@@ -363,7 +369,7 @@ function Play({
         )}
       </View>
       {complete ? (
-        <TapWords text={`${word.word}!`} sound={sound} soundOn={soundOn} />
+        <TapWords record={word} end="!" sound={sound} soundOn={soundOn} />
       ) : (
         <Copy style={{ color: ink, fontSize: 19, fontWeight: "600", textAlign: "center" }}>{prompt}</Copy>
       )}

@@ -1,8 +1,7 @@
 import { growthTrack } from "../learn/growth/content";
 import type { GrowthQuestion } from "../learn/growth/types";
 import { random, shuffle } from "../games/types";
-import { PICTURE_WORDS } from "../learn/content/reading/clues";
-import { SENTENCES } from "../learn/content/reading/sentences";
+import { pictureWords, readingSentences } from "../learn/reading/provenance";
 import { wordAudio, wordEntry, type ReadingScene } from "../learn/kit/reading";
 import {
   createMathQuestions, mathAnswer, mathSkill, mathSpeechKey, validMathQuestion, type MathQuestion,
@@ -56,8 +55,8 @@ export function createPracticeRound(settings: PracticeSettings, seed: number): P
   const rng = random(seed);
   const math = createMathQuestions({ limit: settings.limit, operation: settings.operation, missing: true }, PRACTICE_LENGTH, rng);
   if (!math.every(q => validMathQuestion(q, settings.limit))) throw new Error("Invalid practice arithmetic");
-  const words = shuffle(PICTURE_WORDS.easy, rng);
-  const sentences = SENTENCES.filter(s => s.pace === "easy");
+  const words = shuffle(pictureWords("easy"), rng);
+  const sentences = readingSentences().filter(s => s.pace === "easy");
   const sentence = sentences[Math.floor(rng() * sentences.length)];
   const reading = (index: number, useSentence: boolean): PracticeQuestion => {
     if (useSentence) {

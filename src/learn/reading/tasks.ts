@@ -4,6 +4,7 @@ import { INHERITED_DIGEST, inheritedWords } from "./inherited";
 import { hashOf, shuffled, type BuildTask } from "./build";
 import { TILE_FAMILIES, TILE_TWINS, tileLabel } from "./graphemes";
 import type { LetterWord, PartsWord } from "./records";
+import { refuse } from "./refuse";
 import { stepOf } from "./scope";
 import { inheritedIssues } from "./validate";
 
@@ -94,10 +95,6 @@ export const admittedPartsTasks = (): MintedTask[] => [...partsDoor().values()];
 export const letterTaskById = (id: unknown): MintedTask | null => (typeof id === "string" && lettersDoor().get(id)) || null;
 
 export const isMinted = (task: unknown): task is MintedTask => typeof task === "object" && task !== null && made.has(task);
-const dev = () => (globalThis as { __DEV__?: unknown }).__DEV__ === true;
-function refuse(why: string) {
-  if (dev()) throw new Error(`${why}. Reading tasks come only from src/learn/reading/tasks.ts, by id, from the admitted or pinned inherited records.`);
-}
 /**
  * The check every consumer runs before it shows, scores or records a task. A task this module did not mint is refused:
  * in development that throws, so the mistake is loud; in a release it returns false and the consumer shows the safe
@@ -108,5 +105,4 @@ export function admittedTask(task: unknown, where: string): task is MintedTask {
   refuse(`${where} was given a reading task that was not minted from an admitted record`);
   return false;
 }
-/** What a board shows instead of a refused task: the Challenge's existing "could not open" words, with nothing to press. */
-export const REFUSED_TASK_TEXT = "This puzzle could not open. Your saved work is kept. Try again, or choose another puzzle.";
+export { REFUSED_TASK_TEXT } from "./refuse";

@@ -17,8 +17,7 @@ import { soundBoatProduction, soundBoatPuzzles } from "../src/learn/games/sound-
 import { registration as production } from "../src/learn/games/sound-boat/challenge";
 import { PartsBoard } from "../src/learn/games/sound-boat/parts-view";
 import { partsMove, partsTask, validParts, type PartsAction, type PartsState } from "../src/learn/games/sound-boat/parts";
-import { INHERITED_SOURCE_DIGESTS, inheritedWords } from "../src/learn/reading/inherited";
-import { INHERITED_SOURCE_DIR, inheritedSourceDigests, inheritedSourceFiles, inheritedSourceModules, sourceDigest } from "./helpers/inherited-sources";
+import { inheritedWords } from "../src/learn/reading/inherited";
 import * as factory from "../src/learn/reading/tasks";
 import { REFUSED_TASK_TEXT, admittedPartsTasks, admittedTask, isMinted, letterTaskById, partsTaskById, type MintedTask } from "../src/learn/reading/tasks";
 import { fixtureRecords } from "./helpers/fixture-door";
@@ -122,6 +121,11 @@ describe("the factory", () => {
     expect(() => { (t.tray as string[]).push("sin"); }).toThrow(TypeError);
     expect(t.word).toBe("cat");
   });
+  it("the inherited words it mints from are frozen, so nothing can be added to them after the digest check", () => {
+    expect(Object.isFrozen(inheritedWords) && Object.isFrozen(inheritedWords.records) && inheritedWords.records.every((r) => Object.isFrozen(r) && Object.isFrozen(r.tiles))).toBe(true);
+    expect(() => { (inheritedWords.records as unknown[]).push({ ...inheritedWords.records[0], id: "reviewer-forged", word: "sunset" }); }).toThrow(TypeError);
+    expect(letterTaskById("reviewer-forged")).toBeNull();
+  });
   it("in development a refused task throws a clear error; in a release it is refused quietly", () => {
     const [, t] = forged[0];
     expect(admittedTask(t, "probe")).toBe(false);
@@ -212,6 +216,22 @@ describe("the playable floor and slot arithmetic, through the real factory", () 
     vi.doUnmock("../src/learn/reading/inherited");
     expect(() => loud.letterTaskById("w-cat")).toThrow(/no longer match their pinned digest/);
   });
+  // R4-2: an ending or prefix task's cue (its base, affix and gloss) is frozen with the task, so nothing can change the
+  // words a child is shown after minting.
+  it("every ending and prefix task's cue is frozen with the task", async () => {
+    const { tasks } = await withDoor(fixtureRecords);
+    const cued = tasks.admittedPartsTasks().filter((t) => t.cue);
+    expect(cued.length).toBeGreaterThan(0);
+    expect(new Set(cued.map((t) => (t.cue!.prefix ? "prefix" : "ending")))).toEqual(new Set(["prefix", "ending"]));
+    for (const t of cued) {
+      const { base, affix, gloss } = t.cue!;
+      expect(Object.isFrozen(t.cue), t.id).toBe(true);
+      expect(() => { (t.cue as { gloss: string }).gloss = "sunset"; }, t.id).toThrow(TypeError);
+      expect(() => { (t.cue as { base: string }).base = "sun"; }, t.id).toThrow(TypeError);
+      expect(t.cue).toEqual({ base, affix, gloss, prefix: t.cue!.prefix });
+    }
+    for (const t of tasks.admittedPartsTasks()) for (const a of t.alternates) expect(Object.isFrozen(a), t.id).toBe(true);
+  });
   it("only the first 25 words of a level get a dare, and every word is its own puzzle", async () => {
     const base = fixtureRecords[0];
     const { content, tasks } = await withDoor(Array.from({ length: 60 }, (_, i) => ({ ...base, id: `x${i}`, word: `sunset${i}` })));
@@ -222,30 +242,8 @@ describe("the playable floor and slot arithmetic, through the real factory", () 
   });
 });
 
-describe("every other inherited reading source is pinned to its shipped data", () => {
-  it("each module under src/learn/content/reading matches its pinned digest, and there are no others", () => {
-    expect(inheritedSourceFiles()).toEqual(Object.keys(INHERITED_SOURCE_DIGESTS).map((n) => `${n}.ts`).sort());
-    expect(inheritedSourceDigests()).toEqual(INHERITED_SOURCE_DIGESTS);
-  });
-  it("adding, dropping or changing one word changes the digest, so the pin fails", () => {
-    const { sentences, stories, words, clues, ladders } = inheritedSourceModules as Record<string, any>;
-    const changed = [
-      ["words", { ...words, WORDS: [...words.WORDS, { ...words.WORDS[0], word: "sunset" }] }],
-      ["words", { ...words, WORDS: words.WORDS.slice(1) }],
-      ["sentences", { ...sentences, SENTENCES: [...sentences.SENTENCES, { ...sentences.SENTENCES[0], id: "extra" }] }],
-      ["stories", { ...stories, STORIES: stories.STORIES.map((t: any, i: number) => (i ? t : { ...t, title: `${t.title}!` })) }],
-      ["clues", { ...clues, PICTURE_WORDS: { ...clues.PICTURE_WORDS, easy: [...clues.PICTURE_WORDS.easy, "sunset"] } }],
-      ["clues", { ...clues, LEGACY_WARMUP_WORDS: new Set([...clues.LEGACY_WARMUP_WORDS, "sunset"]) }],
-      ["ladders", { ...ladders, LADDERS: [...ladders.LADDERS, ladders.LADDERS[0]] }],
-    ] as const;
-    for (const [name, mod] of changed) expect(sourceDigest(mod), name).not.toBe(INHERITED_SOURCE_DIGESTS[name]);
-  });
-  it("the modules that read inherited reading data are the ones that always have", () => {
-    const readers = (dir: string): string[] => readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? readers(p) : /\.[jt]sx?$/.test(n) && readFileSync(p, "utf8").includes("content/reading/") ? [p] : []; });
-    expect(readers("src").sort()).toEqual(["src/arcade/games/shell-song/engine.ts", "src/learn/games/sound-boat/engine.ts", "src/learn/games/sound-boat/view.tsx", "src/learn/games/turtle-tales/engine.ts", "src/learn/games/which-one/engine.ts", "src/learn/kit/reading.ts", "src/learn/reading/inherited.ts", "src/practice/engine.ts"]);
-    expect(INHERITED_SOURCE_DIR).toBe("src/learn/content/reading");
-  });
-});
+// The inherited reading sources' pins, their frozen snapshot and the consumers outside Sound Boat are covered by
+// tests/reading-provenance.test.tsx and tests/reading-provenance-static.test.ts (R1a fix 4).
 
 // A static supplement to the runtime checks above. TypeScript's MintedTask type is a reminder; these are the guards.
 describe("the import graph", () => {
@@ -277,7 +275,7 @@ describe("the import graph", () => {
     // Modules that name the task type, and modules that draw a task they were handed (a prop or a saved id).
     const users = app.filter((f) => f !== "src/learn/reading/tasks.ts" && /\b(?:MintedTask|BuildTask)\b/.test(readFileSync(f, "utf8"))).sort();
     const drawers = app.filter((f) => /\bpartsTask\(|\bs\.task\b|<BuildBoat\b/.test(readFileSync(f, "utf8"))).sort();
-    const checked = ["src/learn/games/sound-boat/BuildBoat.tsx", "src/learn/games/sound-boat/challenge-content.ts", "src/learn/games/sound-boat/challenge-engine.ts", "src/learn/games/sound-boat/challenge-view.tsx", "src/learn/games/sound-boat/parts-view.tsx", "src/learn/games/sound-boat/parts.ts"];
+    const checked = ["src/learn/reading/admit.ts", "src/learn/games/sound-boat/BuildBoat.tsx", "src/learn/games/sound-boat/challenge-content.ts", "src/learn/games/sound-boat/challenge-engine.ts", "src/learn/games/sound-boat/challenge-view.tsx", "src/learn/games/sound-boat/parts-view.tsx", "src/learn/games/sound-boat/parts.ts"];
     // build.ts defines the type and its pure rules; it holds no task of its own.
     expect([...new Set([...users, ...drawers])].sort()).toEqual(["src/learn/reading/build.ts", ...checked].sort());
     for (const f of checked) expect(readFileSync(f, "utf8"), f).toMatch(/\b(?:admittedTask|isMinted)\(/);

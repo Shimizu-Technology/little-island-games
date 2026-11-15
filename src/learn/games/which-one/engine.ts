@@ -1,6 +1,6 @@
 import type { LearnEngine } from "../../types";
 import { pickItems } from "../../skills";
-import { SENTENCES } from "../../content/reading/sentences";
+import { readingSentence, readingSentences, type ReadingSentence } from "../../reading/provenance";
 import { bools, exact, familyResult, integer, readingSkills, seat, shuffle } from "../../kit/reading";
 export type WhichState = {
   ids: string[];
@@ -12,7 +12,8 @@ export type WhichState = {
   wrong: number | null;
   solved: boolean;
 };
-export const whichItem = (s: WhichState) => SENTENCES.find((i) => i.id === s.ids[Math.min(s.index, 7)])!;
+/** The sentence on the board: the pinned inherited record with this saved id, never a copy or a string. */
+export const whichItem = (s: WhichState): ReadingSentence => readingSentence(s.ids[Math.min(s.index, 7)])!;
 export const whichAnswer = (s: WhichState) => s.orders[Math.min(s.index, 7)].indexOf(0);
 /** Reading help uses the existing assisted-attempt flag; no fabricated wrong picture. */
 export const whichHelp = (s: WhichState): WhichState =>
@@ -41,7 +42,7 @@ export const engine: LearnEngine<WhichState> = {
   modes: ["solo", "versus"],
   skills: readingSkills,
   create(o, c) {
-    const pool = SENTENCES.filter((i) => i.pace === o.pace);
+    const pool = readingSentences().filter((i) => i.pace === o.pace);
     const fresh = pool.filter((i) => !c.previous?.ids.includes(i.id));
     return {
       ids: pickItems(fresh.length >= 8 ? fresh : pool, c.skills, 8, c.rng, c.today).sort((a, b) => a.text.split(/\s+/).length - b.text.split(/\s+/).length).map((i) => i.id),
@@ -60,7 +61,7 @@ export const engine: LearnEngine<WhichState> = {
       !Array.isArray(v.ids) ||
       v.ids.length !== 8 ||
       new Set(v.ids).size !== 8 ||
-      !v.ids.every((id) => SENTENCES.some((i) => i.id === id && i.pace === o.pace))
+      !v.ids.every((id) => readingSentence(id)?.pace === o.pace)
     )
       return false;
     if (

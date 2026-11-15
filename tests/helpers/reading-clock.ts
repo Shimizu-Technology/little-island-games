@@ -58,7 +58,28 @@ export function reachable(root: string, entries: readonly string[], stop: readon
 }
 
 /** `call` is the call with the local declarations of callbacks passed by name; `text` is everything the key binds. */
-export type ClockUse = { file: string; kind: "timeout" | "interval" | "frame" | "clock" | "animation-callback" | "reference"; key: string; call: string; text: string };
+export type ClockUse = { file: string; kind: "timeout" | "interval" | "frame" | "clock" | "animation-callback" | "clock-call" | "reference"; key: string; call: string; text: string };
+/**
+ * Small, reviewed functions that own the School host's and the Store's clocks (R1a fix 4). The clock inside each is
+ * keyed like any other, by its whole (small) function. A call to one from another module is a `clock-call`, keyed by
+ * the call itself and every function-valued declaration it uses, followed name by name (a wrapped `sound`, a
+ * `useCallback`), but not by the rest of the function it sits in, so an ordinary host edit elsewhere needs no fresh
+ * review. Any other use of one (an alias, a namespace passed around, a require) is a reference and is never allowed.
+ */
+export const CLOCK_OWNERS: Readonly<Record<string, readonly string[]>> = {
+  "src/learn/frameClocks.ts": ["speakAfter"],
+  "src/state/storeClocks.ts": ["flushDeadline", "launchClock", "newLearnerId", "restorePause", "slowOpenNotice"],
+};
+/** The local file an import names, resolved the way `reachable` resolves it, or undefined. */
+export function resolveLocal(root: string, from: string, spec: string): string | undefined {
+  const base = spec.startsWith(".") ? resolve(root, dirname(from), spec) : spec.startsWith("@/") ? join(resolve(root), "src", spec.slice(2)) : undefined;
+  if (!base) return undefined;
+  for (const v of variants) {
+    const candidate = base + v;
+    if (existsSync(candidate) && statSync(candidate).isFile() && SOURCE.test(candidate)) return relative(resolve(root), candidate);
+  }
+  return undefined;
+}
 const TIMEOUT = new Set(["setTimeout", "setImmediate", "requestIdleCallback", "runAfterInteractions"]);
 const INTERVAL = new Set(["setInterval"]);
 const FRAME = new Set(["requestAnimationFrame"]);
@@ -115,11 +136,47 @@ export function clockUses(root: string, names: readonly string[]): ClockUse[] {
       }
       return taken.sort((a, b) => a.pos - b.pos).map((n) => n.getText(tree)).join("\n");
     };
+    /** A clock-call binds the call and, followed name by name, every function-valued declaration it uses. */
+    const functional = (u: ts.Node): boolean => {
+      if (ts.isFunctionDeclaration(u)) return true;
+      const list = ts.isVariableStatement(u) ? u.declarationList : ts.isVariableDeclarationList(u) ? u : undefined;
+      return !!list?.declarations.some((d) => !!d.initializer && (ts.isArrowFunction(d.initializer) || ts.isFunctionExpression(d.initializer) || (ts.isCallExpression(d.initializer) && /^use(?:Callback|EffectEvent)$/.test(callee(d.initializer.expression)))));
+    };
+    const callbacks = (call: ts.Node): string => {
+      const taken: ts.Node[] = [call], queue: ts.Node[] = [call];
+      const contains = (outer: ts.Node, n: ts.Node) => n.pos >= outer.pos && n.end <= outer.end;
+      while (queue.length) {
+        const visit = (n: ts.Node) => {
+          if (ts.isIdentifier(n)) {
+            for (const d of checker.getSymbolAtLocation(n)?.declarations ?? []) {
+              if (d.getSourceFile() !== tree) continue;
+              const u = unit(d);
+              if (functional(u) && !taken.some((t) => contains(t, u))) { taken.push(u); queue.push(u); }
+            }
+          }
+          ts.forEachChild(n, visit);
+        };
+        visit(queue.shift()!);
+      }
+      return taken.sort((a, b) => a.pos - b.pos).map((n) => n.getText(tree)).join("\n");
+    };
+    // Names this module imports from a clock owner: `{ speakAfter as later }` maps later, `* as clocks` maps clocks.
+    const owned = new Set<string>(), owners = new Map<string, string>();
+    const ownerOf = (spec: string) => { const f = resolveLocal(root, file, spec); return f && Object.hasOwn(CLOCK_OWNERS, f) ? f : undefined; };
+    for (const st of tree.statements) {
+      if (!ts.isImportDeclaration(st) || st.importClause?.isTypeOnly || !ts.isStringLiteralLike(st.moduleSpecifier)) continue;
+      const owner = ownerOf(st.moduleSpecifier.text), clause = st.importClause;
+      if (!owner || !clause) continue;
+      if (clause.name) owners.set(clause.name.text, owner);
+      const bindings = clause.namedBindings;
+      if (bindings && ts.isNamespaceImport(bindings)) owners.set(bindings.name.text, owner);
+      else if (bindings) for (const e of bindings.elements) if (!e.isTypeOnly && CLOCK_OWNERS[owner].includes((e.propertyName ?? e.name).text)) owned.add(e.name.text);
+    }
     const named = (node: ts.Node) =>
       ts.isCallExpression(node) ? node.arguments.filter(ts.isIdentifier).flatMap((a) => (checker.getSymbolAtLocation(a)?.declarations ?? []).filter((d) => d.getSourceFile() === tree).map((d) => d.getText(tree))) : [];
     const push = (kind: ClockUse["kind"], node: ts.Node) => {
       const shown = node.getText(tree), call = [shown, ...named(node)].join(" ").replace(/\s+/g, " ");
-      const bind = kind === "reference" ? shown.replace(/\s+/g, " ") : `${shown}\n${bound(node)}`.replace(/\s+/g, " ");
+      const bind = kind === "reference" ? shown.replace(/\s+/g, " ") : kind === "clock-call" ? callbacks(node).replace(/\s+/g, " ") : `${shown}\n${bound(node)}`.replace(/\s+/g, " ");
       out.push({ file, kind, key: `${file}#${kind}#${createHash("sha256").update(bind).digest("hex").slice(0, 12)}`, call, text: bind });
     };
     const callee = (e: ts.Expression) => (ts.isIdentifier(e) ? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : "");
@@ -127,7 +184,17 @@ export function clockUses(root: string, names: readonly string[]): ClockUse[] {
       const call = ts.isPropertyAccessExpression(n.parent) && n.parent.name === n ? n.parent : n;
       return ts.isCallExpression(call.parent) && call.parent.expression === call;
     };
+    const declaredHere = (n: ts.Identifier) => ts.isImportSpecifier(n.parent) || ts.isNamespaceImport(n.parent) || ts.isImportClause(n.parent);
     const visit = (n: ts.Node) => {
+      // A reviewed clock function: called directly it is a clock-call; any other use is a reference.
+      if (ts.isIdentifier(n) && !inType(n) && !declaredHere(n)) {
+        const p = n.parent;
+        if (owned.has(n.text) && !(ts.isPropertyAccessExpression(p) && p.name === n)) push(calledAs(n) ? "clock-call" : "reference", p);
+        else if (owners.has(n.text) && ts.isPropertyAccessExpression(p) && p.expression === n && CLOCK_OWNERS[owners.get(n.text)!].includes(p.name.text) && calledAs(p.name)) push("clock-call", p.parent);
+        else if (owners.has(n.text) && !(ts.isPropertyAccessExpression(p) && p.name === n)) push("reference", p);
+      }
+      if (ts.isCallExpression(n) && (n.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(n.expression) && n.expression.text === "require")) && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0]) && ownerOf(n.arguments[0].text)) push("reference", n);
+      if (ts.isExportDeclaration(n) && !n.isTypeOnly && n.moduleSpecifier && ts.isStringLiteralLike(n.moduleSpecifier) && ownerOf(n.moduleSpecifier.text)) push("reference", n);
       if (ts.isCallExpression(n)) {
         const name = callee(n.expression);
         if (TIMEOUT.has(name)) push("timeout", n);

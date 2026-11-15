@@ -7,6 +7,8 @@ import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { Scene, PictureObject } from "../../art/Objects";
 import { ReadingText } from "../../kit/ReadingText";
+import { ReadingRefused } from "../../kit/ReadingRefused";
+import { admittedReading } from "../../reading/admit";
 import { sceneLabel, wordAudio } from "../../kit/reading";
 import { whichAnswer, whichHelp, whichItem, whichNext, whichPick, type WhichState } from "./engine";
 
@@ -112,8 +114,11 @@ export function Board({
         <Copy style={{ color: C.ink, textAlign: "center" }}>You read all eight sentences.</Copy>
       </View>
     );
-  const item = whichItem(s),
-    correct = item.scenes[0],
+  // The sentence is the pinned inherited record for this saved id. Anything else is refused before a word or picture
+  // is shown, spoken or credited.
+  const item = whichItem(s);
+  if (!admittedReading(item, "Which One")) return <ReadingRefused />;
+  const correct = item.scenes[0],
     wrong = s.wrong === null ? null : item.scenes[s.orders[s.index][s.wrong]];
   const changed = wrong
     ? (["subject", "object", "relation", "color", "size"] as const).find((k) => wrong[k] !== correct[k])
@@ -177,7 +182,7 @@ export function Board({
       )}
       <Copy style={{ fontSize: 13, color: C.muted }}>{s.index + 1} of 8</Copy>
       <ReadingText
-        text={item.text}
+        record={item}
         highlight={highlight}
         onWord={(_, word) => {
           if (active && soundOn) {

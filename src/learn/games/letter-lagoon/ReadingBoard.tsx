@@ -5,7 +5,9 @@ import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui
 import { CoachSpot } from "../../Coach";
 import { PictureObject } from "../../art/Objects";
 import type { BoardProps } from "../../types";
-import { choices, complete, current, move, type Action, type State, type Task } from "./puzzle";
+import { ReadingRefused } from "../../kit/ReadingRefused";
+import { admittedReading } from "../../reading/admit";
+import { choices, complete, current, move, type Action, type Bank, type State, type Task } from "./puzzle";
 
 export function Creature({ size, letter = "a", kind = "lagoon" }: { size: number; letter?: string; kind?: string }) {
   return (
@@ -159,18 +161,23 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
     </View>
   );
 }
-export function ReadingBoard(p: BoardProps<State> & { bank: Task[][]; kind: string }) {
+export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }) {
   const { session, bank, kind, active, soundOn, sound } = p,
     s = session.state,
     t = current(s, bank),
-    done = complete(s, bank);
+    finished = s.index === s.ids.length,
+    // The task is the pinned inherited record at this saved index. Anything else is refused before a card, a clue or a
+    // picture is shown, spoken or credited.
+    admitted = finished || admittedReading(t, "The reading board"),
+    done = admitted && !finished && complete(s, bank);
   useEffect(() => {
-    if (kind !== "studio" && active && soundOn && t.audio && s.index < s.ids.length) {
+    if (admitted && kind !== "studio" && active && soundOn && t.audio && s.index < s.ids.length) {
       if (t.audio.startsWith("letter-")) sound("tap");
       sound(t.audio, true);
     }
-  }, [t.audio, s.index, s.ids.length, active, soundOn, sound, kind]);
-  if (s.index === s.ids.length) return <Copy>Your creations are ready!</Copy>;
+  }, [admitted, t?.audio, s.index, s.ids.length, active, soundOn, sound, kind]);
+  if (finished) return <Copy>Your creations are ready!</Copy>;
+  if (!admitted) return <ReadingRefused />;
   const expected = t.answer[s.placed.length];
   function act(a: Action) {
     if (!p.active) return;

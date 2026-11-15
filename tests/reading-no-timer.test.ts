@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { engines } from "../src/learn/engines";
-import { clockUses, files, reachable, type ClockUse } from "./helpers/reading-clock";
+import { CLOCK_OWNERS, clockUses, files, reachable, type ClockUse } from "./helpers/reading-clock";
 
 /**
  * Reading is never timed and never rewards speed. The reading routes are found from the registry (every game on the
@@ -43,14 +43,15 @@ const code = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])
  */
 const ALLOWED: Record<string, string> = {
   // Reading games
-  "src/learn/games/sound-boat/view.tsx#timeout#88adf3cf142e": "speech: the ladder cue plays a beat after a ladder word opens",
-  "src/learn/games/sound-boat/view.tsx#timeout#cbb1acbfd426": "speech: the word is spoken after the ladder cue; it only marks the word as spoken",
-  "src/learn/games/sound-boat/view.tsx#timeout#0b1a0abd78c3": "speech: the word is spoken once a fresh round's goal has played; it only marks the word as spoken",
+  "src/learn/games/sound-boat/view.tsx#timeout#69bba69223f8": "speech: the ladder cue plays a beat after a ladder word opens (only for an admitted word)",
+  "src/learn/games/sound-boat/view.tsx#timeout#95a49a1c0b65": "speech: the word is spoken after the ladder cue; it only marks the word as spoken (only for an admitted word)",
+  "src/learn/games/sound-boat/view.tsx#timeout#5344b8df2aa8": "speech: the word is spoken once a fresh round's goal has played; it only marks the word as spoken (only for an admitted word)",
   "src/learn/games/sound-boat/parts-view.tsx#timeout#7aebd69cb4eb": "speech: Levels 4-5 speak the word after the spoken goal; it only marks the word as spoken",
-  "src/learn/games/hafa-adai/view.tsx#timeout#4050d4a81a91": "speech: the prompt plays after the spoken goal on a fresh board",
-  // The School host
-  "src/learn/LearnFrame.tsx#timeout#02370b8b9f0d": "speech: the cheer line plays after a right answer's sound, only if the same feedback is still showing",
-  "src/learn/LearnFrame.tsx#timeout#c4dc69b8698c": "speech: a game's spoken introduction starts a beat after the board opens",
+  "src/learn/games/hafa-adai/view.tsx#timeout#ec801aefa0a1": "speech: the prompt plays after the spoken goal on a fresh board (only for admitted words)",
+  // The School host. Its one timer lives in frameClocks.ts; each call is keyed by the call and the callbacks it passes.
+  "src/learn/frameClocks.ts#timeout#1cd8eeffd6b0": "speech: speakAfter runs the line it is given once, after a beat",
+  "src/learn/LearnFrame.tsx#clock-call#0f53e5ac1fcf": "speech: the cheer line plays after a right answer's sound, only if the same feedback is still showing",
+  "src/learn/LearnFrame.tsx#clock-call#e3dd1c9ffd2f": "speech: a game's spoken introduction starts a beat after the board opens",
   "src/learn/Celebrate.tsx#animation-callback#e00a488244ba": "motion: the celebration hides itself once its animation finishes",
   "src/islander/Companion.tsx#interval#f282c4bcf6ee": "motion: the companion's idle picture frames; it changes only which picture shows, never the board",
   "src/islander/Companion.tsx#timeout#9a1382a92c37": "motion: the companion settles back to waiting after a reaction",
@@ -72,12 +73,17 @@ const ALLOWED: Record<string, string> = {
   "src/games/checkers.ts#clock#3dd954d18c92": "computer player: the checkers search's own time slice",
   "src/games/checkers.ts#clock#53c2158fd2c9": "computer player: the checkers search's own deadline",
   "src/games/checkers.ts#timeout#750b4307f3e0": "computer player: the checkers search yields to the UI between slices",
-  // The save layer
-  "src/state/Store.tsx#clock#a2d55e25b433": "saving: when the saved games began to open, for the slow-open notice",
-  "src/state/Store.tsx#timeout#fcef78126d99": "saving: notes when saved games are slow to open; it never touches a round",
-  "src/state/Store.tsx#clock#b9addfe8c891": "identity: a new learner's id",
-  "src/state/Store.tsx#timeout#06b97aa9702f": "saving: stops waiting for a backup write after a few seconds",
-  "src/state/Store.tsx#timeout#a4aab9a16c60": "saving: waits for a restore to finish before selecting nobody",
+  // The save layer. The Store's clocks live in storeClocks.ts; each call is keyed by the call and the callbacks it passes.
+  "src/state/storeClocks.ts#clock#36edcca9d727": "saving: launchClock reads now, for the slow-open notice",
+  "src/state/storeClocks.ts#timeout#4ba80e9fe26c": "saving: slowOpenNotice runs the notice it is given once",
+  "src/state/storeClocks.ts#timeout#a1b62377dcdd": "saving: flushDeadline settles false after the wait",
+  "src/state/storeClocks.ts#clock#997b6a443ed2": "identity: newLearnerId",
+  "src/state/storeClocks.ts#timeout#1b792359fa87": "saving: restorePause waits a moment",
+  "src/state/Store.tsx#clock-call#ce6386e04c95": "saving: when the saved games began to open, and how long they have taken, for the slow-open notice",
+  "src/state/Store.tsx#clock-call#dcd6d8607905": "saving: notes when saved games are slow to open; it never touches a round",
+  "src/state/Store.tsx#clock-call#fd543a8b4e9c": "identity: a new learner's id",
+  "src/state/Store.tsx#clock-call#fa3a27752b25": "saving: stops waiting for a backup write after a few seconds",
+  "src/state/Store.tsx#clock-call#a2170e194cc9": "saving: waits for a restore to finish before selecting nobody",
   "src/state/backup.web.ts#timeout#3fd4c79152fa": "saving: frees a downloaded backup's link after the download starts (web)",
   "src/state/challengeDrafts.ts#clock#bc23d840d940": "identity: a new save revision id",
   "src/state/launchLog.ts#clock#2b61720b9db2": "saving: the time a launch note was written, for a grown-up's support log",
@@ -199,7 +205,7 @@ describe("the clock check follows shared code", () => {
     const view = readFileSync("src/learn/games/sound-boat/view.tsx", "utf8");
     const patched = view
       .replace("  update,\n  practice,\n  assistance,\n  sound,\n  soundOn,", "  update,\n  practice,\n  assistance,\n  sound: originalSound,\n  soundOn,")
-      .replace("    complete = boatComplete(s);\n\n  // Say each new word.", '    complete = boatComplete(s);\n\n  const latest = useRef(s); latest.current = s;\n  function sound(...args: Parameters<typeof originalSound>) { originalSound(...args); update(boatMove(latest.current, {type: "next"})); }\n\n  // Say each new word.');
+      .replace("    complete = admitted && boatComplete(s);\n\n  // Say each new word.", '    complete = boatComplete(s);\n\n  const latest = useRef(s); latest.current = s;\n  function sound(...args: Parameters<typeof originalSound>) { originalSound(...args); update(boatMove(latest.current, {type: "next"})); }\n\n  // Say each new word.');
     expect(patched.split("originalSound").length).toBe(4);
     const allowed = clockUses(".", ["src/learn/games/sound-boat/view.tsx"]);
     expect(unallowed(allowed)).toEqual([]);
@@ -207,5 +213,65 @@ describe("the clock check follows shared code", () => {
     const uses = clockUses(root, ["src/learn/games/sound-boat/view.tsx"]);
     expect(uses.map((u) => u.call)).toEqual(allowed.map((u) => u.call));
     expect(unallowed(uses).length).toBe(3);
+  });
+});
+
+// R1a fix 4: the School host's and the Store's clocks live in small reviewed functions. A host call to one is keyed by
+// the call and the callbacks it passes, so ordinary host edits keep their keys and a timed action still loses its own.
+describe("the host's clock functions", () => {
+  const root = mkdtempSync(join(tmpdir(), "li-host-clock-"));
+  afterAll(() => rmSync(root, { recursive: true, force: true }));
+  const put = (name: string, text: string) => {
+    mkdirSync(dirname(join(root, name)), { recursive: true });
+    writeFileSync(join(root, name), text);
+  };
+  for (const owner of Object.keys(CLOCK_OWNERS)) put(owner, readFileSync(owner, "utf8"));
+  const frame = readFileSync("src/learn/LearnFrame.tsx", "utf8");
+  const keys = (file: string) => clockUses(root, [file]).map((u) => u.key).sort();
+  const original = clockUses(".", ["src/learn/LearnFrame.tsx"]).map((u) => u.key).sort();
+  it("each clock owner exports only its reviewed clock functions, and holds every clock it is allowed", () => {
+    for (const [owner, names] of Object.entries(CLOCK_OWNERS)) {
+      const exported = [...readFileSync(owner, "utf8").matchAll(/^export (?:function|const) (\w+)/gm)].map((m) => m[1]).sort();
+      expect(exported, owner).toEqual([...names].sort());
+      expect(clockUses(".", [owner]).every((u) => Object.hasOwn(ALLOWED, u.key)), owner).toBe(true);
+    }
+    expect(original).toEqual(["src/learn/LearnFrame.tsx#clock-call#0f53e5ac1fcf", "src/learn/LearnFrame.tsx#clock-call#e3dd1c9ffd2f"]);
+  });
+  it("an ordinary LearnFrame edit keeps every key", () => {
+    // Like F-frame-2: layout and the code around the timers change; the timer calls and their callbacks do not.
+    const edited = frame
+      .replace("      reactCompanion(\"correct\");", "      reactCompanion(\"correct\");\n      setBurst((b) => ({ ...b }));")
+      .replace("    introduced.current = saved.id;", "    introduced.current = saved.id;\n    stopSound();");
+    expect(edited.split("setBurst((b) => ({ ...b }))").length).toBe(2);
+    expect(edited.split("stopSound();").length).toBeGreaterThan(frame.split("stopSound();").length);
+    put("src/learn/LearnFrame.tsx", edited);
+    expect(keys("src/learn/LearnFrame.tsx")).toEqual(original);
+  });
+  it("a host timer that is changed to advance, or whose callback is rewrapped to advance, loses its allowance", () => {
+    put("src/learn/LearnFrame.tsx", frame.replace("speakAfter(() => sound(engine.introAudio!, true), 450)", "speakAfter(() => { sound(engine.introAudio!, true); save(saved); }, 450)"));
+    const changed = clockUses(root, ["src/learn/LearnFrame.tsx"]);
+    expect(unallowed(changed).length).toBe(1);
+    // The cheer line's sound is rewrapped: the timer call is the same text, its callback now saves.
+    const wrapped = frame.replace("  const { play: sound, stop: stopSound } = useSoundControls(", "  const { play: playSound, stop: stopSound } = useSoundControls(")
+      .replace("  const cheerLine = useRef", "  const sound = useCallback((key: string, automatic?: boolean) => { playSound(key, automatic); save(acceptedRound.current!); }, [playSound]);\n  const cheerLine = useRef");
+    expect(wrapped.split("playSound").length).toBe(4);
+    put("src/learn/LearnFrame.tsx", wrapped);
+    const uses = clockUses(root, ["src/learn/LearnFrame.tsx"]);
+    expect(uses.map((u) => u.call)).toEqual(clockUses(".", ["src/learn/LearnFrame.tsx"]).map((u) => u.call));
+    expect(unallowed(uses).length).toBe(2);
+  });
+  it("a clock function used any way but a direct call is a reference", () => {
+    const forms = [
+      'import { speakAfter } from "../../src/learn/frameClocks"; const later = speakAfter; later(() => {}, 1);',
+      'import * as clocks from "../../src/learn/frameClocks"; const c = clocks; c.speakAfter(() => {}, 1);',
+      'const clocks = require("../../src/learn/frameClocks"); clocks.speakAfter(() => {}, 1);',
+      'export { speakAfter } from "../../src/learn/frameClocks";',
+      'import { speakAfter as later } from "../../src/learn/frameClocks"; [later][0](() => {}, 1);',
+    ];
+    forms.forEach((body, i) => put(`probe/host/f${i}.ts`, body));
+    for (const [i, body] of forms.entries()) expect(clockUses(root, [`probe/host/f${i}.ts`]).some((u) => u.kind === "reference"), body).toBe(true);
+    // A direct call, plain or through a namespace, is a clock-call.
+    put("probe/host/ok.ts", 'import * as clocks from "../../src/learn/frameClocks"; import { speakAfter as later } from "../../src/learn/frameClocks"; clocks.speakAfter(() => {}, 1); later(() => {}, 2);');
+    expect(clockUses(root, ["probe/host/ok.ts"]).map((u) => u.kind)).toEqual(["clock-call", "clock-call"]);
   });
 });

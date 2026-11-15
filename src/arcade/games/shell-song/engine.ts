@@ -1,5 +1,5 @@
 import { createLives, configureLives, stepLives, hitLives, validLives, type Lives } from "../../lives";
-import { PICTURE_WORDS } from "../../../learn/content/reading/clues";
+import { pictureWords } from "../../../learn/reading/provenance";
 import { phonemes, wordEntry } from "../../../learn/kit/reading";
 import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
 export type SongLevel = ArcadeLevel & { shells: number; startLength: number; rounds: number; noteMs: number; twist: "growing" | "response" | "twins" | "finale" | "word"; word?: string };
@@ -7,7 +7,7 @@ export type SongState = { level: SongLevel | "endless"; seed: number; helper: bo
 export type SongInput = { type: "tick" } | { type: "shell"; index: number } | { type: "picture"; word: string } | { type: "replay" } | { type: "helper"; value: boolean } | { type: "finish" } | { type: "show" };
 // All picture targets and sound tiles come from the existing curated reading bank.
 /** Authored phrase lengths and cadence; player recall is always untimed. */
-export const songWords = PICTURE_WORDS.easy.filter(word => !!wordEntry(word) && wordEntry(word)!.tiles.length === 3 && wordEntry(word)!.tiles.every(t => t.length === 1) && phonemes(word).length === 3).slice(0, 8);
+export const songWords = pictureWords("easy").filter(word => !!wordEntry(word) && wordEntry(word)!.tiles.length === 3 && wordEntry(word)!.tiles.every(t => t.length === 1) && phonemes(word).length === 3).slice(0, 8);
 export const songLevels: readonly SongLevel[] = allLevelIds.map(id => {
   const index = levelNumber(id), world = worldOf(id), rank = ({ w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 })[world], learning = world === "learn";
   const shells = learning ? 3 : Math.min(6, 3 + rank + (rank >= 2 && index >= 5 ? 1 : 0));
@@ -33,7 +33,7 @@ function append(s: SongState, count = 1): SongState {
 }
 export function createSong(level: SongState["level"], seed: number, helper = false): SongState {
   const word = level !== "endless" ? level.word : undefined;
-  const distractors = PICTURE_WORDS.easy.filter(w => w !== word), choices = word ? [word, distractors[seed % distractors.length], distractors[(seed + 3) % distractors.length]] : [];
+  const distractors = pictureWords("easy").filter(w => w !== word), choices = word ? [word, distractors[seed % distractors.length], distractors[(seed + 3) % distractors.length]] : [];
   if (word) { const offset = seed % 3; choices.push(...choices.splice(0, offset)); }
   const s: SongState = { level, seed, helper, lives: createLives(helper), event: 0, onset: 0, pattern: [], shells: level === "endless" ? 4 : level.shells, phase: "watch", elapsed: 0, cursor: 0, rounds: 0, slips: 0, score: 0, lastTap: null, choices, replays: 0, message: word ? "Hear each sound. You can replay as often as you like." : "Watch the glowing shells. Then play their song back.", helped: false };
   return word ? { ...s, pattern: [0, 1, 2] } : append(s, level === "endless" ? 2 : level.startLength);
@@ -94,7 +94,7 @@ export function validSong(v: unknown): v is SongState {
     if (Object.keys(level).length !== Object.keys(canonical).length || !Object.entries(canonical).every(([key, value]) => key === "goals" ? Array.isArray(level.goals) && level.goals.length === 3 && (value as readonly string[]).every((goal, i) => (level.goals as unknown[])[i] === goal) : level[key] === value)) return false;
   }
   if (!validLives(v.lives) || v.lives.maxHearts !== (v.helper ? 5 : 3) || (v.phase === "over") !== (v.lives.hearts === 0) || v.phase === "picture" && !canonical?.word || v.phase === "rest" && v.level !== "endless") return false;
-  return integer(v.onset) && validLives(v.lives) && integer(v.event) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && typeof v.helped === "boolean" && [v.cursor, v.rounds, v.slips, v.score, v.replays].every(n => integer(n)) && (v.cursor as number) <= v.pattern.length && typeof v.elapsed === "number" && Number.isFinite(v.elapsed) && v.elapsed >= 0 && ["watch", "repeat", "picture", "cleared", "rest", "over"].includes(v.phase as string) && (v.lastTap === null || integer(v.lastTap, (v.shells as number) - 1)) && Array.isArray(v.choices) && v.choices.length === (canonical?.word ? 3 : 0) && new Set(v.choices).size === v.choices.length && (!canonical?.word || v.choices.includes(canonical.word)) && v.choices.every(w => PICTURE_WORDS.easy.includes(w)) && typeof v.message === "string";
+  return integer(v.onset) && validLives(v.lives) && integer(v.event) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && typeof v.helped === "boolean" && [v.cursor, v.rounds, v.slips, v.score, v.replays].every(n => integer(n)) && (v.cursor as number) <= v.pattern.length && typeof v.elapsed === "number" && Number.isFinite(v.elapsed) && v.elapsed >= 0 && ["watch", "repeat", "picture", "cleared", "rest", "over"].includes(v.phase as string) && (v.lastTap === null || integer(v.lastTap, (v.shells as number) - 1)) && Array.isArray(v.choices) && v.choices.length === (canonical?.word ? 3 : 0) && new Set(v.choices).size === v.choices.length && (!canonical?.word || v.choices.includes(canonical.word)) && v.choices.every(w => pictureWords("easy").includes(w)) && typeof v.message === "string";
 }
 export const songEngine: ArcadeEngine<SongState, SongInput, SongLevel> = { create: createSong, reduce: songTransition, step: songStep, result: songResult, validate: validSong };
 
