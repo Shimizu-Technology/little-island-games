@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-import {expect,it} from 'vitest';
+import {expect,it,vi} from 'vitest';
 import {apply,opening,positionKey,won,type Deal,type Move,type Position} from '../src/puzzles/table/solitaire';
 import {advise,type PreviousMove} from '../src/puzzles/table/publicSolver';
 import {decodeBoard,fresh,moveTable,readTable} from '../src/puzzles/table/solitaireCheckpoint';
@@ -47,7 +47,7 @@ it('re-asking after every single hint step wins all 256 Klondike deals, includin
  }
  expect(wins).toBe(256);
 });
-it('rebuilds a public foundation-return continuation after a truly cold checkpoint and deal object',()=>{
+it('rebuilds a public foundation-return continuation after a truly cold checkpoint and deal object',async()=>{
  const b=selection.banks.find(b=>b.slot===101)!,row=b.rows.find(row=>JSON.parse(row)[0]===33554601)!;
  const d=descriptor(b.slot,row).payload;let p=fresh(d);let found=false;
  for(let i=0;i<256;i++){
@@ -55,7 +55,8 @@ it('rebuilds a public foundation-return continuation after a truly cold checkpoi
   if(h.plan.length>1&&h.move[0]>=8&&h.move[0]<12){
    p=moveTable(d,p,h.move)!;const coldDeal=JSON.parse(JSON.stringify(d)) as Deal,cold=readTable(JSON.parse(JSON.stringify(p)),coldDeal)!;
    const previous={before:decodeBoard(cold.path.at(-2)!,coldDeal)!,move:h.move};
-   const next=advise(cold.position,coldDeal,10000,previous);expect(next.kind).toBe('move');
+   vi.resetModules();const {advise:coldAdvise}=await import('../src/puzzles/table/publicSolver');
+   const next=coldAdvise(cold.position,coldDeal,10000,previous);expect(next.kind).toBe('move');
    if(next.kind==='move'){expect(next.move).toEqual(h.plan[1]);expect(apply(cold.position,coldDeal.mode,next.move).piles).not.toEqual(previous.before.piles);}
    found=true;break;
   }
