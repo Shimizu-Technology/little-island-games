@@ -229,6 +229,8 @@ it('the actual Crab plan exposes hidden cards, follows running/bumped cards and 
  expect(scrolls.at(-1)).toEqual({y:126,animated:false});
  await act(async()=>strip.props.onScroll({nativeEvent:{contentOffset:{y:126}}}));
  expect(root!.root.findAll(n=>n.props.testID==='plan-more-above').length).toBeGreaterThan(0);
+ await act(async()=>root!.update(render(32,true)));
+ expect(scrolls.at(-1)).toEqual({y:189,animated:false}); // end-of-plan / insert-after-last hint
 });
 it('Slip Tide does not shrink its drawing to pay for a taller sibling column',async()=>{
  await mountPort('slip-tide',B11,500,{width:852,height:393,fontScale:1});

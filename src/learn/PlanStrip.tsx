@@ -11,7 +11,7 @@ export function PlanStrip({ children, count, focus, cardHeight, gap, padding }: 
   const [content, setContent] = useState(0), [height, setHeight] = useState(0), [offset, setOffset] = useState(0);
   const [cards, setCards] = useState<Record<number, { y: number; height: number }>>({});
   const maxHeight = 3 * cardHeight + 2 * gap + 2 * padding;
-  const card = focus === null ? undefined : cards[focus];
+  const card = focus === null || count === 0 ? undefined : cards[Math.min(count - 1, Math.max(0, focus))];
   useEffect(() => {
     if (!card || height <= 0) return;
     const top = card.y, bottom = top + card.height, current = offsetNow.current;
