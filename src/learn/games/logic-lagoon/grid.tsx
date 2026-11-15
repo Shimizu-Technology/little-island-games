@@ -4,8 +4,7 @@ import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import { NativeGrid } from './native-grid';
 
 import { cageLayer, cellClueWords, markLayer } from '../../../puzzles/latin/clues';
-import { cueFor } from '../../../puzzles/latin/teach';
-import { planHint } from '../../../puzzles/latin/solver';
+import { lagoonCue } from './teaching';
 import type { LatinPuzzle } from '../../../puzzles/latin/core';
 import type { GridAction, GridState } from '../../../puzzles/grid/model';
 import { SeaGlyph } from '../thinkingArt';
@@ -20,7 +19,7 @@ type Props = { puzzle: LatinPuzzle; state: GridState; dispatch: (a: GridAction) 
 /** School and Challenge share input, notes and public-rule teaching; only their feedback policy differs. */
 export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal, check, title, active, width, pictures, message }: Props) {
   const [ladder, setLadder] = useState({ edits: -1, stage: 0 });
-  const cue = useMemo(() => cueFor(p, planHint(p, state.values)), [p, state.values]);
+  const cue = useMemo(() => lagoonCue(p, state.values, pictures), [p, state.values, pictures]);
   const stage = ladder.edits === state.edits && assisted ? ladder.stage : 0;
   const tints = useMemo(() => new Map(cue.focus.map(i => [i, 2 as const])), [cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
@@ -37,16 +36,17 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
       <Copy maxFontSizeMultiplier={1.3} style={{ color: C.ink, fontWeight: '800', flexGrow: 1 }}>{title}</Copy>
       {check && pictures && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
-      <Button compact quiet maxFontSizeMultiplier={1.3} disabled={!active || !cue.technique} onPress={() => { help(); setLadder({ edits: state.edits, stage: 1 }); }}>Hint</Button>
+      <Button compact quiet maxFontSizeMultiplier={1.3} disabled={!active} onPress={() => { help(); setLadder({ edits: state.edits, stage: 1 }); }}>Hint</Button>
     </View>
     {!pictures && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {check && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
+      {/* The shared toolbar follows both pad rows. Keep this shortcut beside Check when those rows scroll. */}
       <Button compact quiet maxFontSizeMultiplier={1.3} selected={state.pencil} disabled={!active} onPress={() => dispatch({ type: 'pencil' })}>Notes {state.pencil ? 'on' : 'off'}</Button>
     </View>}
     {!!message && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>}
     {!!stage && <View accessibilityLiveRegion="polite" style={{ gap: 8, padding: 10, borderRadius: 12, backgroundColor: '#FFF4D6' }}>
       <Copy maxFontSizeMultiplier={1.5}>{stage === 1 ? cue.look : cue.think}</Copy>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{stage === 1 && <Button compact quiet disabled={!active} onPress={() => setLadder({ edits: state.edits, stage: 2 })}>Why?</Button>}<Button compact disabled={!active} onPress={() => { reveal(); setLadder({ edits: -1, stage: 0 }); }}>{cue.technique === 'clash' || cue.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button><Button compact quiet disabled={!active} onPress={() => { setLadder({ edits: -1, stage: 0 }); if (cue.target !== undefined) dispatch({ type: 'select', cell: cue.target }); }}>I’ll try it</Button></View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{stage === 1 && <Button compact quiet disabled={!active} onPress={() => setLadder({ edits: state.edits, stage: 2 })}>Why?</Button>}<Button compact disabled={!active || !cue.technique} onPress={() => { reveal(); setLadder({ edits: -1, stage: 0 }); }}>{cue.technique === 'clash' || cue.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button><Button compact quiet disabled={!active} onPress={() => { setLadder({ edits: -1, stage: 0 }); if (cue.target !== undefined) dispatch({ type: 'select', cell: cue.target }); }}>I’ll try it</Button></View>
     </View>}
     </View>
     <View style={{ minWidth: 0, gap: 8, ...(short ? { flex: 1 } : {}) }}>
@@ -55,10 +55,10 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
       <View style={{ alignSelf: 'center', borderWidth: 2, borderColor: '#668A66' }}>
         {Array.from({ length: p.size }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: p.size }, (_, c) => {
           const i = r * p.size + c, v = state.values[i];
-          return <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Row ${r + 1}, column ${c + 1}: ${v ? pictures[v - 1] : 'empty'}${p.givens[i] ? ', clue' : ''}`} disabled={!active || !!p.givens[i]} onPress={() => dispatch({ type: 'select', cell: i })} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', backgroundColor: state.selected === i ? '#FFE8A5' : p.givens[i] ? '#D8EACD' : '#FFFDF3', borderWidth: 1, borderColor: stage && cue.focus.includes(i) ? C.gold : '#B6CCAB' }}>{!!v && <SeaGlyph kind={pictures[v - 1]} size={size * .68} />}</PressableScale>;
+          return <PressableScale key={i} accessibilityRole="button" accessibilityState={{ selected: state.selected === i }} accessibilityLabel={`Row ${r + 1}, column ${c + 1}: ${v ? pictures[v - 1] : 'empty'}${p.givens[i] ? ', clue' : ''}`} disabled={!active || !!p.givens[i]} onPress={() => dispatch({ type: 'select', cell: i })} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', backgroundColor: state.selected === i ? '#FFE8A5' : p.givens[i] ? '#D8EACD' : '#FFFDF3', borderWidth: 1, borderTopWidth: p.box && r > 0 && r % p.box === 0 ? 3 : 1, borderLeftWidth: p.box && c > 0 && c % (p.size / p.box) === 0 ? 3 : 1, borderColor: stage && cue.focus.includes(i) ? C.gold : '#B6CCAB' }}>{!!v && <SeaGlyph kind={pictures[v - 1]} size={size * .68} />}</PressableScale>;
         })}</View>)}
       </View>
-      <View testID="logic-values" style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>{pictures.map((symbol, i) => <PressableScale key={symbol} accessibilityRole="button" accessibilityLabel={`Place ${symbol}`} disabled={!active} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: i + 1 })} style={{ width: 54, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#FDF6DF', borderWidth: 2, borderColor: '#87AA72' }}><SeaGlyph kind={symbol} size={40}/></PressableScale>)}</View>
+      <View testID="logic-values" style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>{pictures.map((symbol, i) => <PressableScale key={symbol} accessibilityRole="button" accessibilityLabel={`Place ${symbol}`} disabled={!active || !!p.givens[state.selected]} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: i + 1 })} style={{ width: 54, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#FDF6DF', borderWidth: 2, borderColor: '#87AA72' }}><SeaGlyph kind={symbol} size={40}/></PressableScale>)}</View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button compact quiet disabled={!active || !state.undo.length} onPress={() => dispatch({ type: 'undo' })}>Undo</Button><Button compact quiet disabled={!active || !state.redo.length} onPress={() => dispatch({ type: 'redo' })}>Redo</Button><Button compact quiet disabled={!active} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: 0 })}>Erase</Button></View>
     </> : <NativeGrid spec={specFor(p)} state={state} dispatch={dispatch} active={active} width={gridWidth} mistakes="Plain" borders={borders} overlay={overlay} cellWords={cellWords} tints={stage ? tints : undefined} status={title}/>}
     </View>

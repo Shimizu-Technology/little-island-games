@@ -27,7 +27,7 @@ function LatinBoard({ session, update, practice, assistance, cheer, coach, activ
   const markHelp = () => { assistance?.(); update({ ...s, helped: true }); };
   return <LagoonGrid key={s.index} puzzle={p} state={grid} assisted={s.helped} dispatch={send} title={`PUZZLE ${s.index + 1} OF 4`} active={active} width={width} pictures={task.symbols[0] === 'shell' ? task.symbols : undefined} message={feedback.index === s.index ? feedback.text : ''}
     help={markHelp} reveal={() => { assistance?.(); update(revealStep(s)); sound('tap'); }}
-    check={() => { const wrong = grid.values.filter((v, i) => v !== task.solution[i]).length; setFeedback({ index: s.index, text: wrong ? `${wrong} squares still need a change.` : 'Every clue fits.' }); }}/ >;
+    check={() => { const wrong = grid.values.filter((v, i) => v !== task.solution[i]).length; setFeedback({ index: s.index, text: wrong ? `${wrong} squares to fill or change.` : 'Every clue fits.' }); }}/ >;
 }
 export function Board(props: BoardProps<LogicState>) {
   return props.session.state.version === 1 ? <LegacyBoard {...props as BoardProps<Extract<LogicState, { version: 1 }>>}/> : <LatinBoard {...props as Parameters<typeof LatinBoard>[0]}/>;

@@ -35,7 +35,7 @@ const logicLevels: Record<string, number> = { little: 2, growing: 3, grown: 4 };
 export function logicProofFamily(targets: Record<string, number> = { little: 4, growing: 8, grown: 2 }): FamilySpec<LogicPayload> {
   return {
     id: 'proof-logic', adapter: logicLagoonAdapter, maxRowBytes: 256, requiresUnique: true, requiresTrace: true, hiddenInformation: false,
-    sources: ['src/learn/games/logic-lagoon/engine.ts', 'src/puzzles/adapters/logic-lagoon.ts', 'scripts/puzzles/proof-families.ts'],
+    sources: ['src/learn/games/logic-lagoon/engine.ts', 'src/learn/games/logic-lagoon/legacy.ts', 'src/puzzles/adapters/logic-lagoon.ts', 'scripts/puzzles/proof-families.ts'],
     provenance: { source: 'original', note: 'Seeded by the app Logic Lagoon engine.' }, review: { ids: [], complete: false },
     bands: Object.keys(logicLevels).map((id, i) => ({ id, target: targets[id] ?? 0, floor: Math.min(2, targets[id] ?? 0), advanced: i === 2 })),
     generate(seed: number, band: BandQuota): DescriptorCore<LogicPayload> | null {

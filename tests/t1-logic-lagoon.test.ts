@@ -28,7 +28,7 @@ describe('T1 shared Latin teacher', () => {
   it('version gates freeze old and new task identities', () => {
     expect(sha(readFileSync('src/learn/games/logic-lagoon/legacy.ts', 'utf8'))).toBe(frozenRounds.legacyEngine);
     for (const [version, level, index, fingerprint] of frozenRounds.rows) {
-      const state = version === 1 ? { version: 1 as const, level: +level, seed: 17, index: +index, total: 4 as const, entries: [], helped: false } : { ...create(+level as 1|2|3|4|5, 17), index: +index };
+      const state = version === 1 ? { version: 1 as const, level: +level, seed: 17, index: +index, total: 4 as const, entries: [], helped: false } : { ...create(+level as 1|2|3|4|5, 17), catalog: 1 as const, index: +index };
       expect(sha(JSON.stringify(taskAt(state)))).toBe(fingerprint);
     }
   });
@@ -68,7 +68,7 @@ describe('T1 shared Latin teacher', () => {
     expect(h.reason).toMatch(/row|column|box|place/i);
     expect(h.value).toBe(t.solution[h.cell]);
     const taught = revealStep(s); expect(boardAt(taught, t.puzzle!).pencil).toBe(true); expect(boardAt(taught, t.puzzle!).values[h.cell]).toBe(h.value); expect(taught.helped).toBe(true);
-    expect(engine.validate({ ...s, catalog: 2 }, opts(4))).toBe(false);
+    expect(engine.validate({ ...s, catalog: 3 }, opts(4))).toBe(false);
     expect(engine.validate({ ...s, board: { ...s.board, selected: 99 } }, opts(4))).toBe(false);
   });
   it('version-1 paused rounds retain their exact grids and stars through Challenge handover', () => {
@@ -125,11 +125,11 @@ describe('T1 shared Latin teacher', () => {
     expect(session.result?.event).toBe('helped'); expect(session.result?.dares).toEqual([]); expect(session.result?.awards).toBe(0);
     expect(validChallengeSession(JSON.parse(JSON.stringify(session)), 'family', registration.catalog)).toBe(true);
   });
-  it('a full attempt still reserves a complete teaching route and final Check', () => {
+  it('long attempts retain a complete teaching route and final Check', () => {
     const puzzle = puzzles.find(p => p.tier === 4)!, d = puzzle.descriptor;
     let round = registration.start(puzzle.ref, 'family', 'budget-test', emptyChallenge(), { supportOff: false, ownRead: false }, []);
-    for (let i = 0; i < 600; i++) { const next = registration.move(round, ['p']); if (!next) break; round = next; }
-    expect(registration.move(round, ['p'])).toBeNull();
+    for (let i = 0; i < 600; i++) { const next = registration.move(round, ['p']); expect(next).not.toBeNull(); round = next!; }
+    expect(registration.move(round, ['p'])).not.toBeNull();
     for (let i = 0; i < 36; i++) { const next = registration.move(round, ['v']); if (!next) break; round = next; }
     round = registration.move(round, ['c'])!;
     expect(round.result?.event).toBe('helped'); expect(JSON.stringify(round).length).toBeLessThanOrEqual(4096);
