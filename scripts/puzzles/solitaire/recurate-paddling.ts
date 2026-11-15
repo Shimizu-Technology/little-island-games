@@ -10,7 +10,10 @@ import {judge,freecell,rungs,type Candidate} from './family';
 import {orderCandidates} from './order';
 const out=process.env.SOLITAIRE_LOGS;if(!out)throw new Error('Set SOLITAIRE_LOGS to external evidence.');
 for(const ref of ['origin/program/4.0','origin/main']){
- const published=JSON.parse(execFileSync('git',['show',`${ref}:src/content/puzzles/root.json`],{encoding:'utf8'}));
+ execFileSync('git',['rev-parse','--verify',ref],{stdio:'ignore'});
+ const path='src/content/puzzles/root.json';
+ if(ref==='origin/main'&&!execFileSync('git',['ls-tree',ref,'--',path],{encoding:'utf8'}).trim())continue;
+ const published=JSON.parse(execFileSync('git',['show',`${ref}:${path}`],{encoding:'utf8'}));
  if(published.families.some((f:unknown[])=>f[0]==='freecell'))throw new Error('FreeCell has been published. Lead reconciliation required.');
 }
 const catalog=readCatalog(productionDirs),m=catalog.families.get('freecell')!,pack=m.packs.find(p=>p[0]===106)!;
