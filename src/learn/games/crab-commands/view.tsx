@@ -464,8 +464,8 @@ export function Board({
       </View>
       {!done && (
         <>
-          {l.blockEditor && <Button compact quiet maxFontSizeMultiplier={1.5} disabled={s.running || !active} onPress={() => setBlocks(!blocks)}>{blocks ? 'Arrow editor' : 'Block editor'}</Button>}
-          {blocks && <ProgramEditor maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="edge or rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
+          {l.blockEditor && !blocks && <Button compact quiet maxFontSizeMultiplier={1.5} disabled={s.running || !active} onPress={() => setBlocks(!blocks)}>{blocks ? 'Arrow editor' : 'Block editor'}</Button>}
+          {blocks && <ProgramEditor onFlat={!active||s.running?undefined:()=>setBlocks(false)} maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="edge or rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
             onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
  />}
           {!blocks && <View

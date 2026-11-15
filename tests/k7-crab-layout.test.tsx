@@ -27,6 +27,8 @@ it('K7 AX5 keeps Go and Step beside the beach; a manual step is valid and its ne
   try {
     await act(async () => { tree = create(<Board session={{ game: 'crab-commands', version: 1, id: 'k7-layout', revision: 1, options, state }} update={update} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={vi.fn()} stopSound={vi.fn()} soundOn={false} width={337} height={852} active coach={{ active: false, done: vi.fn() }} cheer={vi.fn()} />); });
     const run = tree!.root.findByProps({ testID: 'crab-block-run' });
+    expect(tree!.root.findAllByType('button').some(b=>b.children.join('')==='Arrow editor')).toBe(false);
+    expect(tree!.root.findByType('block-editor' as never).props.onFlat).toBeTypeOf('function');
     expect(run.parent!.findByType(Beach).props.size).toBeLessThanOrEqual(180);
     const step = run.findAllByType('button').find(b => b.children.join('') === 'Step')!;
     await act(async () => step.props.onPress());

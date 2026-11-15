@@ -27,10 +27,10 @@ class EditorRuntime {
 
 const blockName = blockPosition;
 /** Tap and drag use exactly the same pure edit and admission path. No move saves on a frame. */
-export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, maxHeight = 420, refusal }: {
+export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, refusal }: {
   program: Program; cards: Card[]; onChange: (program: Program) => boolean | {accepted:false;reason:string} | Promise<boolean | {accepted:false;reason:string}>; disabled: boolean;
   hear: (key: string) => void; condition?: string; currentPath?: string; iteration?: number[];
-  onStep?: () => void; onRestart?: () => void; maxHeight?: number; refusal?: string;
+  onStep?: () => void; onRestart?: () => void; onFlat?: () => void; maxHeight?: number; refusal?: string;
 }) {
   const { fontScale } = useWindowDimensions(), cap = atLarge(fontScale, 1.5);
   const [target, setTarget] = useState<Location>(main), [selected, setSelected] = useState<Selection | null>(null);
@@ -155,6 +155,7 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving || !program.body.length || program.songs.length >= 4} onPress={async () => { const next = clone(program), song = next.songs.length; next.songs.push(next.body); next.body = [{ kind: 'call', song }]; if (await accept(next, 'k7-song')) setTarget(main); }}>Make plan a song</Button>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving || !history.past.length} onPress={async () => { const prev = history.past.at(-1)!; if (await commit(prev)) { setHistory({ past: history.past.slice(0, -1), future: [...history.future, clone(program)] }); setTarget(main); setSelected(null); announce('tap'); } }}>Undo block edit</Button>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving || !history.future.length} onPress={async () => { const next = history.future.at(-1)!; if (await commit(next)) { setHistory({ past: [...history.past, clone(program)], future: history.future.slice(0, -1) }); setTarget(main); setSelected(null); announce('tap'); } }}>Redo block edit</Button>
+      {onFlat && <Button compact quiet maxFontSizeMultiplier={cap} disabled={saving} onPress={onFlat}>Arrow editor</Button>}
       {onStep && <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={onStep}>Step</Button>}{onRestart && <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={onRestart}>Rewind run</Button>}
     </View>
     {(message || dragging) && <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">{dragging ? 'Drop on a dashed place.' : message}</Copy>}
