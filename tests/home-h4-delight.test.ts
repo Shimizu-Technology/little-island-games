@@ -68,12 +68,13 @@ describe('HD-03 / HD-04 sounds and haptics (rule 60)', () => {
   });
   it('every cue is short: ticks <= 50 ms, landings 60-120 ms, actions <= 800 ms', () => {
     for (const s of ['pick', 'lift'] as const) expect(soundLength[s]).toBeLessThanOrEqual(50);
-    for (const s of ['cloth', 'wood', 'shell'] as const) { expect(soundLength[s]).toBeGreaterThanOrEqual(60); expect(soundLength[s]).toBeLessThanOrEqual(120); }
+    // Every cue a landing can play, water included (fix round 1, P3).
+    for (const s of ['cloth', 'wood', 'shell', 'plop'] as const) { expect(soundLength[s]).toBeGreaterThanOrEqual(60); expect(soundLength[s]).toBeLessThanOrEqual(120); }
     for (const s of homeSounds) expect(soundLength[s]).toBeLessThanOrEqual(800);
   });
   it('cloth, wood, shell and splash each have a sound, chosen by what lands and where', () => {
     const scene = buildScene(labFixtures.delight());
-    expect(landingSound(undefined, proposal({ kind: 'socket', base: 'bathe' }), scene)).toBe('splash');
+    expect(landingSound(undefined, proposal({ kind: 'socket', base: 'bathe' }), scene)).toBe('plop');
     expect(landingSound({ item: instance('c', 'floor-cushion', 0, 0) } as SceneEntity, proposal({}), scene)).toBe('cloth');
     expect(landingSound({ item: instance('b', 'book', 0, 0) } as SceneEntity, proposal({}), scene)).toBe('wood');
     expect(landingSound({ item: instance('s', 'shell', 0, 0) } as SceneEntity, proposal({}), scene)).toBe('shell');

@@ -10,12 +10,12 @@ import { AppState, Platform } from "react-native";
  * nothing buzzes, and every visual stays exactly the same.
  */
 export const homeSounds = ["pick", "lift", "cloth", "wood", "shell", "splash", "munch", "burp", "bubbles",
-  "sizzle", "clang", "rustle", "knob"] as const;
+  "sizzle", "clang", "rustle", "knob", "plop"] as const;
 export type HomeSound = (typeof homeSounds)[number];
 /** Lengths in milliseconds, from the generated files. A voice counts as busy for this long. */
 export const soundLength: Record<HomeSound, number> = {
   pick: 40, lift: 50, cloth: 95, wood: 100, shell: 120, splash: 260, munch: 230, burp: 380,
-  bubbles: 520, sizzle: 700, clang: 320, rustle: 300, knob: 150,
+  bubbles: 520, sizzle: 700, clang: 320, rustle: 300, knob: 150, plop: 100,
 };
 export const MAX_VOICES = 4;
 export const HAPTIC_GAP_MS = 100;
@@ -96,6 +96,7 @@ function source(sound: HomeSound): number {
     case "clang": return require("../../../assets/home/clang.wav");
     case "rustle": return require("../../../assets/home/rustle.wav");
     case "knob": return require("../../../assets/home/knob.wav");
+    case "plop": return require("../../../assets/home/plop.wav");
   }
 }
 function nativeVoice(sound: HomeSound): Voice | undefined {

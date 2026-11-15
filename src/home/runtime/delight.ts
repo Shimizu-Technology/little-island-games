@@ -45,7 +45,9 @@ export function landingMaterial(subject: SceneEntity | undefined, proposal: Drop
 export function landingSound(subject: SceneEntity | undefined, proposal: DropProposal, scene: Scene): HomeSound | undefined {
   if (proposal.kind === "mouth" || proposal.kind === "staging" || proposal.kind === "transfer") return undefined;
   if (proposal.kind === "hand") return "pick";
-  return landingMaterial(subject, proposal, scene);
+  // A water landing is a short plop (rule 60: landing cues 60-120 ms). The long splash is for actions.
+  const material = landingMaterial(subject, proposal, scene);
+  return material === "splash" ? "plop" : material;
 }
 /** Semantic attachments get a light haptic (rule 60); plain floor drops do not. */
 export const attaches = (proposal: DropProposal) =>

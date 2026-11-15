@@ -114,9 +114,19 @@ def knob():    # the stove's burner turns on: a click and a soft whump
         t = i / RATE; out[i] += 3.2 * w * math.sin(math.pi * min(1, t / .15))
     return out
 
+def plop():   # a short water landing (bath, running sink): rule 60's 60-120 ms landing cue
+    out = []; n = length(100); phase = 0.0
+    burst = highpass(lowpass([noise() for _ in range(n)], 2200), 600)
+    for i in range(n):
+        t = i / RATE; f = 900 - 520 * (i / n); phase += 2 * math.pi * f / RATE
+        out.append((.5 * math.sin(phase) + 1.2 * burst[i]) * attack(t, 3) * decay(t, .028))
+    return out
+
 SOUNDS = {"pick": pick, "lift": lift, "cloth": cloth, "wood": wood, "shell": shell, "splash": splash,
           "munch": munch, "burp": burp, "bubbles": bubbles, "sizzle": sizzle, "clang": clang,
-          "rustle": rustle, "knob": knob}
+          "rustle": rustle, "knob": knob,
+          # New cues go last, so every earlier file keeps its exact bytes (one shared noise stream).
+          "plop": plop}
 
 def write(name, samples):
     peak = max(1e-9, max(abs(s) for s in samples))
