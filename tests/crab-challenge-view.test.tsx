@@ -169,3 +169,23 @@ it('C1d fix: on a single-beach block puzzle, Go!, Help and the help text sit ful
  const help = root!.root.findAllByType('p' as never).find(n => n.children.join('').startsWith('Build the group'))!;
  expect(help.props.maxFontSizeMultiplier).toBe(1.5);
 });
+it('C1d fix: on a block puzzle the help text scrolls in a bounded box and More help sits beside Go!, so the palette keeps its room at the largest text', async () => {
+ for (const bank of [14, 15]) {
+  const p = crabPuzzles.find(c => c.ref.bank === bank)!;
+  let s = challengeEngine.create(p.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+  s = challengeEngine.step(s, ['h'], p.descriptor)!.state;
+  for (const next of ['More help', 'Show the whole plan']) {
+   if (root) await act(async () => root!.unmount());
+   await mount(s);
+   const run = root!.root.findByProps({ testID: 'crab-challenge-block-run' });
+   const more = run.findAllByType('button' as never).find(b => b.children.join('') === next);
+   expect(more, `${bank} ${next}`).toBeDefined();
+   expect(more!.props.maxFontSizeMultiplier).toBe(1.5);
+   const box = root!.root.findByProps({ testID: 'crab-challenge-help' });
+   expect(box.type).toBe('section');
+   expect(box.props.style.maxHeight).toBeLessThanOrEqual(116);
+   for (const t of box.findAllByType('p' as never)) expect(t.props.maxFontSizeMultiplier).toBe(1.5);
+   s = challengeEngine.step(s, ['h'], p.descriptor)!.state;
+  }
+ }
+});

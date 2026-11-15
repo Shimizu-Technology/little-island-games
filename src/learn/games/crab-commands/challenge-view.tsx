@@ -71,15 +71,19 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const hinted=hint&&!blockHelp&&s.hintStage<3?hintedCard(hint.edit,s.program.length):null;
   const lessonKey=lessonAudio(d.lesson);
   const feedbackAudio=over?'c1-crab-budget':'c1-crab-retry';
-  // On block puzzles the help ladder sits with Go! beside the beach; below the editor it would be out of reach.
-  const helpPanel=<>{hintVisible&&!hint&&!blockHelp&&<Copy>Finding one step…</Copy>}{(hint||blockHelp)&&<View style={{gap:blocks?4:8,padding:blocks?8:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">
-      <Copy maxFontSizeMultiplier={blocks?1.5:undefined} style={{color:C.ink}}>{s.hintStage<3?stepText:blockHelp?blockHelp.whole:`One working plan: ${(hint?.plan??[]).map(c=>cardLabel[c]).join(', ')}.`}</Copy>
-      {hint?.edit&&learnSources[`c1-crab-hint-${hint.edit.op}`]&&<Button compact quiet disabled={disabled} onPress={()=>play(`c1-crab-hint-${hint!.edit!.op}`)}>Hear the edit</Button>}
-      {s.hintStage===2&&<Copy>You can try this step, or ask for the whole plan. Helped finishes count too.</Copy>}
-      {learnSources[s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help']&&<Button compact quiet disabled={disabled} onPress={()=>play(s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help')}>Hear help</Button>}
-      {s.hintStage<3&&<Button quiet compact={blocks} disabled={disabled} onPress={()=>send(['h'])}>{s.hintStage===1?'More help':'Show the whole plan'}</Button>}
-
-    </View>}</>;
+  // On block puzzles the help sits under the beach with Go!, and the next-help choice sits beside Go!. The help text scrolls in
+  // a bounded box, so at the largest text sizes the pinned screen still leaves the palette room.
+  const cap=blocks?1.5:undefined;
+  const nextHelp=s.hintStage<3&&(hint||blockHelp)&&<Button quiet compact={blocks} maxFontSizeMultiplier={cap} disabled={disabled} onPress={()=>send(['h'])}>{s.hintStage===1?'More help':'Show the whole plan'}</Button>;
+  const helpBody=<>
+      <Copy maxFontSizeMultiplier={cap} style={{color:C.ink}}>{s.hintStage<3?stepText:blockHelp?blockHelp.whole:`One working plan: ${(hint?.plan??[]).map(c=>cardLabel[c]).join(', ')}.`}</Copy>
+      {hint?.edit&&learnSources[`c1-crab-hint-${hint.edit.op}`]&&<Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled} onPress={()=>play(`c1-crab-hint-${hint!.edit!.op}`)}>Hear the edit</Button>}
+      {s.hintStage===2&&<Copy maxFontSizeMultiplier={cap}>You can try this step, or ask for the whole plan. Helped finishes count too.</Copy>}
+      {learnSources[s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help']&&<Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled} onPress={()=>play(s.hintStage===1?'c1-crab-first-hint':'c1-crab-more-help')}>Hear help</Button>}
+  </>;
+  const helpPanel=<>{hintVisible&&!hint&&!blockHelp&&<Copy maxFontSizeMultiplier={cap}>Finding one step…</Copy>}{(hint||blockHelp)&&(blocks?
+    <ScrollView testID="crab-challenge-help" nestedScrollEnabled style={{flexGrow:0,maxHeight:116,backgroundColor:C.soft,borderRadius:12}} contentContainerStyle={{gap:4,padding:8}} accessibilityLiveRegion="polite">{helpBody}</ScrollView>:
+    <View style={{gap:8,padding:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">{helpBody}{nextHelp}</View>)}</>;
   return <View style={{gap:8,flex:1,minHeight:0}}>
     <View style={{flexDirection:d.fog?'column':'row',gap:10,alignItems:d.fog?'stretch':'center'}}>
     {d.fog?<View style={{flexDirection:'row',gap:8,justifyContent:'center'}}>{foggy.map((b,i)=><Beach key={i} label={`Foggy beach ${i+1} of ${foggy.length}`} level={b.level} walker={b.walker} size={Math.max(100,Math.min((width-8)/2,170))} facingHint showBump={false}/>)}</View>:
@@ -94,6 +98,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     {blocks&&!s.won&&<View testID="crab-challenge-block-run" style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
       <Button compact maxFontSizeMultiplier={1.5} disabled={disabled||!s.program.length} onPress={()=>send(['g'])}>Go!</Button>
       {!hintVisible&&<Button compact quiet maxFontSizeMultiplier={1.5} disabled={disabled} onPress={()=>send(['h'])}>Help</Button>}
+      {nextHelp}
     </View>}
     {blocks&&!s.won&&helpPanel}
     {/* With blocks the screen is pinned to the phone's height: the editor shows the tray and its own guidance, so these lines give way. */}
