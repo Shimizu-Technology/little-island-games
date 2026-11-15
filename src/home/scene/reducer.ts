@@ -45,6 +45,17 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
       ? { state: save }
       : finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state, characters } } });
   }
+  if (action.type === "cook") {
+    // Only raw food still sitting on a lit stove cooks. A pan taken off the heat, a stove
+    // turned off or food already cooked leaves the world exactly as it is (rule 49).
+    const food = state.instances.find((i) => i.id === action.id);
+    const stove = food?.on ? state.instances.find((i) => i.id === food.on) : undefined;
+    if (!food || food.powered || capabilityOf(food.item).edible !== "food" || stove?.item !== "stove" || !stove.powered)
+      return { state: save };
+    const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state,
+      instances: state.instances.map((i) => (i.id === food.id ? { ...i, powered: true } : i)) } } });
+    return "message" in result ? result : { ...result, message: `The ${itemSpec(food.item).name.toLowerCase()} is cooked.` };
+  }
   if (action.type === "room") {
     return roomIds.includes(action.room) && action.room !== save.current
       ? { state: { ...save, current: action.room } }

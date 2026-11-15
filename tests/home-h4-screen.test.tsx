@@ -1,0 +1,209 @@
+import React from 'react';
+import { act, create } from 'react-test-renderer';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HomeScreen } from '../src/home/HomeScreen';
+import { instance, type HomeStateV2 } from '../src/home/model';
+import { buildScene } from '../src/home/scene/graph';
+import { roomPoint } from '../src/home/scene/types';
+import { resolve } from '../src/home/scene/proposal';
+import { buildingLayout, roomOrigin } from '../src/home/camera';
+import { roomIds } from '../src/home/catalogMore';
+import { labFixtures } from '../src/home/runtime/lab';
+import { COOK_MS } from '../src/home/runtime/delight';
+import { stagePieces } from '../src/home/art/Stage';
+const harness = vi.hoisted(() => ({ options: {} as any, scene: {} as any, cues: [] as any[], played: [] as string[], haptics: [] as string[],
+  live: undefined as boolean | undefined, settings: { sound: true } as any, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
+vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
+vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
+vi.mock('../src/home/runtime/homeSound', () => ({
+  useHomeFeedback: (live: boolean) => {
+    harness.live = live;
+    return { play: (s: string) => { if (live) harness.played.push(s); return live; }, haptic: (k: string) => { if (live) harness.haptics.push(k); return live; },
+      stop: () => {}, setLive: () => {}, silence: () => {}, dispose: () => {} };
+  },
+}));
+vi.mock('expo-router', () => ({ router: { push: vi.fn() }, useFocusEffect: () => {} }));
+vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }), AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
+vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
+vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harness.settings } }) }));
+vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {},
+  camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: () => {},
+  showHint: () => {}, showCue: (...args: any[]) => harness.cues.push(args), dropZones: { set: () => {} } }; } }));
+vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
+vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: () => null, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
+vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
+vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
+vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
+vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
+vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
+vi.mock('../src/home/runtime/FriendDrawer', () => ({ FriendDrawer: () => null }));
+vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: 'CapacityCue', CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
+vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
+vi.mock('../src/home/art/More', () => ({ MoreItemArt: () => null }));
+vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGonePicture: () => null }));
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+vi.stubGlobal('requestAnimationFrame', () => 1);
+vi.stubGlobal('cancelAnimationFrame', () => {});
+let root: ReturnType<typeof create>;
+beforeEach(() => { vi.useFakeTimers(); harness.slots = [{}, {}]; harness.cues = []; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
+const building = buildingLayout(roomIds.length, false);
+async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
+  await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
+  return persist;
+}
+/** Commit a resolved drop the way the runtime does after the settle. */
+async function drop(state: HomeStateV2, id: string, room: keyof HomeStateV2['rooms'], at: { x: number; y: number }, options: Record<string, unknown> = {}) {
+  const scene = harness.scene.scene ?? buildScene(state);
+  const proposal = resolve({ ...scene.rooms[room], entities: scene.entities }, scene.entities[id], roomPoint(at.x, at.y), { scale: .5, release: true, ...options });
+  const origin = roomOrigin(roomIds.indexOf(room), building);
+  await act(async () => harness.options.onCommit(0, proposal, { x: proposal.contact.x + origin.x, y: proposal.contact.y + origin.y }, {}));
+  return proposal;
+}
+const tap = async (id: string | undefined, point = { x: 0, y: 0 }) => act(async () => harness.options.onTap(id, point, Date.now()));
+
+describe('H4 on the Island Home screen', () => {
+  it('HD-04: sound and haptics follow the sound switch and the effects switch together', async () => {
+    harness.settings = { sound: false };
+    await open(labFixtures.delight());
+    expect(harness.live).toBe(false);
+    await act(async () => root.unmount());
+    harness.settings = { sound: true, effects: false };
+    await open(labFixtures.delight());
+    expect(harness.live).toBe(false);
+    await act(async () => root.unmount());
+    harness.settings = { sound: true };
+    await open(labFixtures.delight());
+    expect(harness.live).toBe(true);
+  });
+  it('HD-01 / HD-04: a pickup ticks and taps lightly; a friend gets a softer lift sound', async () => {
+    const state = labFixtures.delight();
+    await open(state);
+    const scene = buildScene(state);
+    const friend = Object.values(scene.entities).find((e) => e.character)!;
+    const mango = Object.values(scene.entities).find((e) => e.item?.item === 'mango')!;
+    const pickup = (id: string) => { harness.slots = [{ id, generation: 0, epoch: 0 }, {}]; return act(async () => harness.options.onPickup({ id, slot: 0, scene, generation: 0, epoch: 0 })); };
+    await pickup(friend.id); await pickup(mango.id);
+    expect(harness.played).toEqual(['lift', 'pick']);
+    expect(harness.haptics).toEqual(['pickup', 'pickup']);
+  });
+  it('HD-03: a landing sounds like what landed; a seat gives a light attach tap, the floor does not', async () => {
+    const state = labFixtures.delight();
+    await open(state);
+    const scene = buildScene(state);
+    const rice = Object.values(scene.entities).find((e) => e.item?.item === 'rice-ball')!;
+    await drop(state, rice.id, 'kitchen', { x: rice.contact.x + 90, y: rice.contact.y });
+    expect(harness.played).toEqual(['cloth']);
+    expect(harness.haptics).toEqual([]);
+  });
+  it('HD-06: friends near a friend set down turn to greet and both smile', async () => {
+    const state = labFixtures.delight();
+    await open(state);
+    const scene = buildScene(state);
+    const islander = Object.values(scene.entities).find((e) => e.character?.slot === 0)!;
+    const pip = Object.values(scene.entities).find((e) => e.character?.slot === 1)!;
+    await drop(state, islander.id, 'kitchen', { x: pip.contact.x - 110, y: pip.contact.y });
+    expect(harness.cues.some(([id, kind]) => id === pip.id && kind === 'greet')).toBe(true);
+    expect(harness.scene.moods[pip.id]).toBe('happy');
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    expect(harness.scene.moods[pip.id]).toBeUndefined();
+  });
+  it('HD-05: eating crunches, drops crumbs, then a happy wiggle; the fifth meal ends in a small burp', async () => {
+    const state = labFixtures.delight();
+    state.rooms.kitchen.instances.push(...Array.from({ length: 5 }, (_, n) => ({ ...instance(`snack-${n}`, 'banana', 0, 0), at: { x: 120 + n * 60, y: 470 } })));
+    await open(state);
+    const eaterId = Object.values(buildScene(state).entities).find((e) => e.character?.slot === 0)!.id;
+    for (let n = 0; n < 5; n++) {
+      const scene = harness.scene.scene;
+      const food = scene.entities[`kitchen/item/snack-${n}`];
+      const index = scene.rooms.kitchen, mouth = index.targets.find((t: any) => t.id === `${eaterId}/mouth`)!;
+      const proposal = resolve({ ...index, entities: scene.entities }, food, mouth.contact, { scale: .5, aim: roomPoint(mouth.face!.x, mouth.face!.y), release: true });
+      expect(proposal.kind).toBe('mouth');
+      const origin = roomOrigin(roomIds.indexOf('kitchen'), building);
+      await act(async () => harness.options.onCommit(0, proposal, { x: proposal.contact.x + origin.x, y: proposal.contact.y + origin.y }, {}));
+      expect(harness.played.at(-1)).toBe('munch');
+      await act(async () => { vi.advanceTimersByTime(200); });
+      expect(harness.scene.effects.some((e: any) => e.kind === 'crumbs')).toBe(true);
+      await act(async () => { vi.advanceTimersByTime(600); });
+      if (n < 4) {
+        expect(harness.scene.moods[eaterId]).toBe('happy');
+        expect(harness.cues.at(-1)).toEqual([eaterId, 'happy', undefined]);
+      }
+      await act(async () => { vi.advanceTimersByTime(400); });
+    }
+    expect(harness.cues.some(([id, kind]) => id === eaterId && kind === 'burp')).toBe(true);
+    expect(harness.played).toContain('burp');
+    expect(harness.played.filter((s) => s === 'burp')).toHaveLength(1);
+  });
+  it('HD-07: tap the stove to light it; food in its pan sizzles and cooks; taken off early, it stays raw', async () => {
+    const state = labFixtures.delight();
+    const persist = await open(state);
+    const stove = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'stove')!;
+    await tap(stove.id);
+    expect(harness.played).toContain('knob');
+    expect(persist.mock.calls.at(-1)![0].rooms.kitchen.instances.find((i: any) => i.item === 'stove')!.powered).toBe(true);
+    const pan = harness.scene.scene.rooms.kitchen.surfaces.find((t: any) => t.owner === stove.id)!;
+    const mango = harness.scene.scene.entities['kitchen/item/mango'];
+    await drop(state, mango.id, 'kitchen', pan.contact, { target: pan.id });
+    expect(harness.scene.scene.entities['kitchen/item/mango'].attachment).toMatchObject({ kind: 'surface', parent: stove.id });
+    expect(harness.played).toContain('sizzle');
+    expect(harness.scene.effects.some((e: any) => e.kind === 'steam')).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(COOK_MS + 10); });
+    const saved = persist.mock.calls.at(-1)![0];
+    expect(saved.rooms.kitchen.instances.find((i: any) => i.id === 'mango')!.powered).toBe(true);
+    // Serve the cooked mango, then put raw rice in the pan and take it off before it is done.
+    await drop(saved, 'kitchen/item/mango', 'kitchen', { x: 250, y: 480 });
+    const empty = harness.scene.scene.rooms.kitchen.surfaces.find((t: any) => t.owner === stove.id)!;
+    expect(empty.occupied).toBeUndefined();
+    await drop(saved, 'kitchen/item/rice', 'kitchen', empty.contact, { target: empty.id });
+    expect(harness.scene.scene.entities['kitchen/item/rice'].attachment).toMatchObject({ kind: 'surface', parent: stove.id });
+    await act(async () => { vi.advanceTimersByTime(COOK_MS / 2); });
+    await drop(saved, 'kitchen/item/rice', 'kitchen', { x: 330, y: 480 });
+    await act(async () => { vi.advanceTimersByTime(COOK_MS * 2); });
+    const after = persist.mock.calls.at(-1)![0].rooms.kitchen.instances;
+    expect(after.find((i: any) => i.id === 'rice')!.powered).toBeUndefined();
+    expect(after.find((i: any) => i.id === 'rice')!.on).toBeUndefined();
+    expect(after.find((i: any) => i.id === 'mango')!.powered).toBe(true);
+  });
+  it('HD-09: a tap on a sleeping friend makes them stir, with a drawn z, and they stay asleep', async () => {
+    const state = labFixtures['delight-rest']();
+    const sleeper = Object.values(buildScene(state).entities).find((e) => e.character?.slot === 0)!;
+    harness.sleeping = { [sleeper.id]: true };
+    await open(state);
+    await tap(sleeper.id);
+    expect(harness.cues).toContainEqual([sleeper.id, 'stir', undefined]);
+    expect(harness.scene.effects.some((e: any) => e.kind === 'zzz')).toBe(true);
+    expect(harness.played).toContain('rustle');
+    expect(harness.scene.moods[sleeper.id]).toBeUndefined();
+  });
+  it('HC-01: a painted jar, pan and book answer a touch with their own motion and sound', async () => {
+    const state = labFixtures.delight();
+    await open(state);
+    const tapPiece = async (room: keyof HomeStateV2['rooms'], id: string) => {
+      const piece = stagePieces[room].find((p) => p.id === id)!;
+      const origin = roomOrigin(roomIds.indexOf(room), building);
+      // The mocked camera is 0.5 with no translation.
+      await tap(undefined, { x: (origin.x + piece.hit.left + piece.hit.width / 2) * .5, y: (origin.y + piece.hit.top + piece.hit.height / 2) * .5 });
+      return piece;
+    };
+    await tapPiece('kitchen', 'kitchen-left-jar-1');
+    expect(harness.scene.poke).toMatchObject({ id: 'kitchen-left-jar-1' });
+    await tapPiece('kitchen', 'kitchen-pan-1');
+    expect(harness.scene.poke).toMatchObject({ id: 'kitchen-pan-1' });
+    await tapPiece('home', 'home-shelf-book-2');
+    expect(harness.scene.poke).toMatchObject({ id: 'home-shelf-book-2' });
+    expect(harness.played).toEqual(['shell', 'clang', 'wood']);
+  });
+  it('HC-01: an anchored bed answers a tap with a small wiggle and a soft sound, and nothing moves', async () => {
+    const state = labFixtures['delight-rest']();
+    const persist = await open(state);
+    const bed = Object.values(buildScene(state).entities).find((e) => e.item?.item === 'bed')!;
+    await tap(bed.id);
+    expect(harness.cues).toContainEqual([bed.id, 'tap', undefined]);
+    expect(harness.played).toEqual(['cloth']);
+    expect(persist).not.toHaveBeenCalled();
+  });
+});

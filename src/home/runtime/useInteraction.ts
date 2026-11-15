@@ -40,6 +40,7 @@ import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } 
 import { anchorsFor } from "../scene/species";
 import { poseToken } from "./poseBank";
 import type { TraceEvent } from "./trace";
+import { cueLength, watchersOf, type Cue, type CueKind, type Watcher } from "./delight";
 import {
   emptyRestingFlags,
   emptyRestingMotion,
@@ -323,6 +324,9 @@ export function useInteraction({
   const queuedInput = useSharedValue<ControllerEvent[]>([]);
   const fixtureNudges = useSharedValue<Record<string, number>>({});
   const hint = useSharedValue<{ id: string; at: number } | null>(null);
+  // H4: short resting reactions (eat, greet, stir, tap) and the friends who can notice things.
+  const cues = useSharedValue<Record<string, Cue>>({});
+  const watchers = useSharedValue<Watcher[]>([]);
   const cameraGesture = useSharedValue(false);
   // HM-13: resting art reads these, never `slots`. They change only on meaningful edges.
   const restingFlags = useSharedValue<RestingFlags>(emptyRestingFlags());
@@ -357,6 +361,7 @@ export function useInteraction({
     })(changed, scene.revision, changedHits);
     renderedRevision.set(scene.revision);
     layoutTokens.set(expectedLayout);
+    watchers.set(watchersOf(scene, building));
     const refreshed: number[] = [];
     slots.set((current) =>
       current.map((slot, index) => {
@@ -396,7 +401,7 @@ export function useInteraction({
       })
     );
     refreshed.forEach((index) => onDestination?.(index, scene));
-  }, [scene, resolverScene, roomPayloads, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
+  }, [scene, resolverScene, roomPayloads, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens, watchers]);
 
   useLayoutEffect(() => { activeRoom.set(currentRoom ?? ""); }, [currentRoom, activeRoom]);
   const movable = useSharedValue<Record<string, boolean>>({});
@@ -571,12 +576,12 @@ export function useInteraction({
     // Returning the previous object with forceUpdate=false wakes nothing.
     restingFlags.modify((previous) => {
       "worklet";
-      const next = restingFlagsOf(slots.value, controller.value.pointers);
+      const next = restingFlagsOf(slots.value, controller.value.pointers, watchers.value);
       return next.key === previous.key ? previous : next;
     }, false);
     restingMotion.modify((previous) => {
       "worklet";
-      const next = restingMotionOf(slots.value, renderedRevision.value, camera.value.a, eventTime(), reduced, fixtureNudges.value, hint.value);
+      const next = restingMotionOf(slots.value, renderedRevision.value, camera.value.a, eventTime(), reduced, fixtureNudges.value, hint.value, cues.value);
       return next.key === previous.key ? previous : next;
     }, false);
   };  const switchRoom = (room: RoomId) => {
@@ -1111,7 +1116,8 @@ export function useInteraction({
       if (due.length) probePending.set(probePending.value.filter((p) => now < p.at + 520));
     }
     const nudging = Object.values(fixtureNudges.value).some(at => lastFrame.value < at + 220) ||
-      (!!hint.value && lastFrame.value < hint.value.at + 220);
+      (!!hint.value && lastFrame.value < hint.value.at + 220) ||
+      Object.values(cues.value).some(c => lastFrame.value < c.at + cueLength[c.kind]);
     if (slots.value.some(s => !!s.id) || nudging) lastFrame.set(eventTime());
     if (queuedInput.value.length && !slots.value.some((s) => s.id && s.commitRequested &&
       (!s.committed || s.revision !== renderedRevision.value))) {
@@ -1330,7 +1336,7 @@ export function useInteraction({
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onTrace, traceFrames, catalogTimes, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
-    poseLayouts, overlayLayouts, fixtureNudges, externalSubjects, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
+    poseLayouts, overlayLayouts, fixtureNudges, cues, watchers, externalSubjects, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]);
   const frames = useFrameCallback(frameCallback) as ReturnType<typeof useFrameCallback> | undefined;
   // A new callback registers active (in the hook's own effect, which runs first); tell the
@@ -1491,6 +1497,21 @@ export function useInteraction({
       wakeFrames();
     })();
   };
+  /** H4: one resting reaction on `id`. The frame callback runs only while it plays. */
+  const showCue = (id: string, kind: CueKind, dir = 0) => {
+    if (reduced) return;
+    runOnUI((target: string, cueKind: CueKind, lean: number) => {
+      "worklet";
+      const now = eventTime();
+      cues.modify((current) => {
+        "worklet";
+        for (const key in current) if (now - current[key].at > 2000) delete current[key];
+        current[target] = { at: now, kind: cueKind, dir: lean };
+        return current;
+      });
+      wakeFrames();
+    })(id, kind, dir);
+  };
   const resetFrames = () => {
     frameTimes.set([]);
     frameCount.set(0);
@@ -1522,6 +1543,8 @@ export function useInteraction({
     restingFlags,
     restingMotion,
     showHint,
+    showCue,
+    watchers,
     animateCamera,
     veil,
     dropZones,

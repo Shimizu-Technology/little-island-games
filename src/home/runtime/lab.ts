@@ -48,6 +48,30 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     room.instances = [...room.instances, ...extra];
     return migrateHome(state) ?? state;
   },
+  // H4: the kitchen with the stove off, two friends near each other and food on the table.
+  delight: () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances.push(instance("mango", "mango", 3, 9), instance("rice", "rice-ball", 7, 10));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot === 2);
+    state.rooms.kitchen.characters = [
+      { slot: 0, anchor: "floor", pose: "stand", x: 6, y: 6 },
+      { slot: 1, anchor: "floor", pose: "stand", x: 10, y: 6 },
+    ];
+    return migrateHome(state) ?? state;
+  },
+  // H4: a friend asleep in bed, a lit lamp with a friend beside it.
+  "delight-rest": () => {
+    const state = starterHome();
+    const room = state.rooms.home;
+    room.instances = room.instances.map((i) => (i.id === "lamp" ? { ...i, powered: true } : i));
+    room.characters = [
+      { slot: 0, anchor: "seat", pose: "lie", seatId: "bed", socket: { itemId: "bed", socketId: "pillow" } },
+      { slot: 1, anchor: "floor", pose: "stand", x: 9, y: 8 },
+      { slot: 2, anchor: "floor", pose: "stand", x: 14, y: 4 },
+    ];
+    return migrateHome(state) ?? state;
+  },
   crowded: () => {
     const state = starterHome();
     const room = state.rooms.home;

@@ -2,6 +2,7 @@ import type { PointerCapture } from "../scene/controller";
 import type { SceneEntity } from "../scene/types";
 import { pickupTransform } from "./handFeel";
 import { hintWiggle } from "./quietHints";
+import { cueMotion, noticesFor, type Cue, type Notice, type Watcher } from "./delight";
 import type { DragSlot } from "./useInteraction";
 
 /**
@@ -23,23 +24,34 @@ export type RestingFlags = {
   targets: string[];
   /** Socket furniture whose front piece the overlay is drawing. */
   fronts: string[];
+  /** HD-06: friends at rest who notice food or a friend carried near them, and which way to lean. */
+  notice: Notice[];
 };
 export type RestingFollow = { owner: string; dx: number; dy: number; tilt: number; sx: number; sy: number };
-export type RestingMotion = { key: string; follow: RestingFollow[]; wobble: Record<string, number> };
+export type RestingMotion = { key: string; follow: RestingFollow[]; wobble: Record<string, number>;
+  /** H4 cues: a small rise and vertical squash beside the wobble, about the contact. */
+  bob: Record<string, { dy: number; sy: number }> };
 export const emptyRestingFlags = (): RestingFlags => {
   "worklet";
-  return { key: "", rest: [], pressed: [], dragTargets: [], targets: [], fronts: [] };
+  return { key: "", rest: [], pressed: [], dragTargets: [], targets: [], fronts: [], notice: [] };
 };
 export const emptyRestingMotion = (): RestingMotion => {
   "worklet";
-  return { key: "", follow: [], wobble: {} };
+  return { key: "", follow: [], wobble: {}, bob: {} };
 };
-export function restingFlagsOf(slots: readonly DragSlot[], pointers: readonly PointerCapture[]): RestingFlags {
+export function restingFlagsOf(slots: readonly DragSlot[], pointers: readonly PointerCapture[], watchers: readonly Watcher[] = []): RestingFlags {
   "worklet";
   const flags = emptyRestingFlags();
   let key = "";
   for (const s of slots) {
     if (!s.id) continue;
+    const subject = s.subject;
+    if (watchers.length && subject && s.phase === "dragging" && s.ready && (subject.character || subject.body?.edible)) {
+      const b = subject.bounds, visual = subject.visual;
+      const point = visual ? { x: s.x + visual.x, y: s.y + visual.y } : { x: s.x + b.left + b.width / 2, y: s.y + b.top + b.height / 2 };
+      const seen = noticesFor(point, !subject.character, watchers, [s.id, s.restId ?? s.id]);
+      for (const n of seen) { flags.notice.push(n); key += `n${n.id}:${n.dir}:${n.food ? 1 : 0};`; }
+    }
     const hide = !s.revealFrame && s.ready && s.painted !== false && (s.phase !== "pending" || s.committed || s.pausedElapsed > 0);
     const owner = s.restId ?? s.id;
     flags.rest.push({ owner, hide, gx: s.gripX, gy: s.gripY });
@@ -67,7 +79,8 @@ export function restingMotionOf(
   now: number,
   reduced: boolean,
   nudges: Record<string, number>,
-  hint: { id: string; at: number } | null
+  hint: { id: string; at: number } | null,
+  cues: Record<string, Cue> = {}
 ): RestingMotion {
   "worklet";
   const motion = emptyRestingMotion();
@@ -93,6 +106,13 @@ export function restingMotionOf(
     if (hint) {
       const degrees = hintWiggle(now - hint.at);
       if (degrees !== 0) { motion.wobble[hint.id] = (motion.wobble[hint.id] ?? 0) + degrees; key += `h${hint.id}:${degrees};`; }
+    }
+    for (const id in cues) {
+      const m = cueMotion(cues[id], now);
+      if (!m) continue;
+      motion.wobble[id] = (motion.wobble[id] ?? 0) + m.deg;
+      if (m.dy !== 0 || m.sy !== 1) motion.bob[id] = { dy: m.dy, sy: m.sy };
+      key += `c${id}:${m.deg}:${m.dy}:${m.sy};`;
     }
   }
   motion.key = key;

@@ -111,7 +111,7 @@ export function editHistory(
   const result = computed ?? homeReducer(history.present, action as HomeAction, ownership);
   return result.state === history.present
     ? history
-    : action.type === "room" || action.type === "finish-action"
+    : action.type === "room" || action.type === "finish-action" || action.type === "cook"
       ? { ...history, present: result.state }
       : { present: result.state, past: [...history.past, history.present].slice(-60), future: [] };
 }

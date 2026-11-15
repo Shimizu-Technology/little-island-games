@@ -5,8 +5,8 @@ import type { BadgeId } from "../../badges/engine";
 import type { HomeState } from "../model";
 export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0", "math-lab": "#B6CABE", library: "#E7CFAD", "night-sky": "#B5BDD3", "arcade-neon": "#C9C5DA" };
 export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA", "island-breeze": "#D9C79B", "game-room": "#BCCBC0" };
-export function RoomArt({theme, badges, onBadgePress}: {theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; reduced?: boolean}) {
-  return <StageRoom room="home" theme={theme} badges={badges} onBadgePress={onBadgePress}/>;
+export function RoomArt({theme, badges, onBadgePress, live}: {theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; reduced?: boolean; live?: boolean}) {
+  return <StageRoom room="home" theme={theme} badges={badges} onBadgePress={onBadgePress} live={live}/>;
 }
 
 /** Quiet outdoor layers extend the stage below its floor in tall layouts. */
