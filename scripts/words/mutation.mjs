@@ -362,6 +362,9 @@ const wrapper=readFileSync('src/learn/games/sound-boat/view.tsx','utf8').replace
 const growthContent=readFileSync('src/learn/growth/content.ts','utf8');
 const growthLive=growthContent.replace('import { readingGrowthTracks } from "../reading/provenance";','import { readingGrowthTracks } from "../reading/provenance";\nimport { literacyTracks } from "./literacy";').replace('...readingGrowthTracks(),','...literacyTracks,');
 if(growthLive.split('...literacyTracks,').length!==2 || !growthLive.includes('import { literacyTracks }'))throw new Error('Missing R1a growth content mutation target');
+const memorySource=readFileSync('src/games/memory.ts','utf8');
+const memoryLive=memorySource.replace('import { chamoruRecord, chamoruRecords } from "../learn/reading/provenance";','import { chamoruWords, chamoruWord } from "../learn/content/chamoru";').replaceAll('chamoruRecords()','chamoruWords').replace('chamoruRecord(match[1])','chamoruWord(match[1])');
+if(memoryLive.includes('chamoruRecord') || memoryLive===memorySource)throw new Error('Missing R1a Memory mutation target');
 const appEdges=[
  ['src/learn/reading/tasks.ts','minted set membership','made.has(task)','true',[PROVENANCE],'refused|minted|copied'],
  ['src/learn/reading/tasks.ts','consumer check accepts only minted tasks','  if (isMinted(task)) return true;\n','  return true;\n',[PROVENANCE],'refused|development'],
@@ -446,6 +449,9 @@ const appEdges=[
  ['src/learn/growth/Board.tsx','growth board check','const admitted = !readingGrowth(session.game) || questions.every((x) => admittedReading(x, "The growth reading board"));','const admitted = true;',[PROV],'an edited copy is refused'],
  ['src/learn/growth/Board.tsx','growth board refuses before drawing','  if (!admitted) return <ReadingRefused />;\n','',[PROV],'an edited copy is refused'],
  ['src/learn/growth/Board.tsx','growth board speaks only admitted questions','    if (!admitted || !q || !active || !soundOn','    if (!q || !active || !soundOn',[PROV],'an edited copy is refused'],
+ // Lead addition to fix 5: Memory's CHamoru pack reads the snapshot, and its cards check the brand.
+ ['src/games/memory.ts','Memory loads CHamoru through the snapshot',null,memoryLive,[PROV],'branded snapshot record|changing the live CHamoru list'],
+ ['src/screens/classics/MemoryCards.tsx','Memory cards check the brand',"  if (!cards.every((card) => { const ch = chamoruCard(card); return !ch || admittedReading(ch.word, \"Memory's CHamoru cards\"); })) return <ReadingRefused />;\n",'',[PROV],'refuses edited copies'],
  // R1a fix 5 (R5-2): the independent baseline. REVIEW-5's source-plus-pin probe edits two files, as the reviewer did.
  ['src/learn/content/reading/sentences.ts','reviewer source-plus-pin: an edited sentence and its recomputed pin','    "text": "The cat is on the box.",','    "text": "The big cat is on the box.",',[PROV],'frozen baseline',[['src/learn/reading/provenance.ts','  sentences: "327d4e626c00f1ff87a9bb2c264f7e5743b4a548339923ce215324c7475675de",','  sentences: "523b13052b9366a9554722fdce4a6e9872bb5761e96de2b2d9a97f66dc9ce61e",']]],
  ['tests/helpers/inherited-baseline.ts','baseline comparison','  return issues;\n}','  return [];\n}',[PROV],'REVIEW-5|reported'],

@@ -5,6 +5,7 @@
   "hash": "digest: SHA-256 of canonical() of the source module's data exports, as src/learn/reading/provenance.ts pins it. served: SHA-256 of canonical() of what the snapshot serves through its own lookups. records: how many records that is.",
   "sources": {
     "chamoru": {
+      "usedBy": "Håfa Adai's board, Memory's CHamoru pack (lead addition to fix 5), and the growth quiz's CHamoru choices (built into the growth source)",
       "digest": "621cc0a463fac4aab4ca365e4fcab6ecffde5206e8477640f7c0907d99c3d73a",
       "served": "40d8b301721dc4f712350e03c873200580ec1cc13d1a3d041ed9aad695bf319f",
       "records": 51

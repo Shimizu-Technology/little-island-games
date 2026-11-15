@@ -42,6 +42,8 @@ import type { GrowthState } from "../src/learn/growth/types";
 import { dataExports, inheritedSourceDigests, inheritedSourceFile, inheritedSourceFiles, inheritedSourceModules, isInReadingFolder, sourceDigest } from "./helpers/inherited-sources";
 import { baselineIssues, currentBaseline, readBaseline } from "./helpers/inherited-baseline";
 import type { LearnId, LearnOptions, LearnSession } from "../src/learn/types";
+import { chamoruCard, createMemory, memoryDeck } from "../src/games/memory";
+import { MemoryCards } from "../src/screens/classics/MemoryCards";
 
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 const played = vi.hoisted(() => [] as string[]);
@@ -252,6 +254,7 @@ describe("R5-2: every inherited source is anchored to the lead-owned baseline", 
     expect(Object.keys(baseline.sources).sort()).toEqual(Object.keys(INHERITED_SOURCE_DIGESTS).sort());
     expect(Object.keys(baseline.sources).sort()).toEqual(Object.keys(inheritedSourceModules).sort());
     expect(baselineIssues(provenance)).toEqual([]);
+    expect(baseline.sources.chamoru.usedBy).toMatch(/Memory's CHamoru pack/);
     // The three moved banks serve exactly what their engines built at 396dcda4 (the hashes above).
     expect(baseline.sources.lagoon.served).toBe(sha256Hex(canonical(readingBank("letter-lagoon"))));
   });
@@ -571,5 +574,45 @@ describe("R5-1: growth reading questions are inherited records, branded and froz
     await open("reef-race", session);
     expect(shownText()).toContain(firstQuestion(session).prompt);
     expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+  });
+});
+
+// ---- Lead addition to fix 5: Memory's CHamoru pack is reading content as data too. ----
+describe("Memory's CHamoru pack loads the CHamoru words through the snapshot", () => {
+  const options = { difficulty: "hard", mode: "solo", computerFirst: false } as Parameters<typeof createMemory>[0];
+  const text = () => root!.root.findAll((n) => String(n.type) === "Text" || String(n.type) === "Copy").map((n) => n.children.filter((c) => typeof c === "string").join("")).join(" ");
+  it("every CHamoru card resolves to the branded snapshot record, never the live list", () => {
+    const cards = [...createMemory(options, 0, "chamoru").cards, ...memoryDeck(12, "chamoru", 7)];
+    expect(cards.length).toBe(48);
+    for (const card of cards) {
+      const ch = chamoruCard(card)!;
+      expect(isInheritedRecord(ch.word), card).toBe(true);
+      expect(ch.word, card).toBe(chamoruRecord(ch.word.id));
+      expect(ch.word, card).not.toBe(chamoruWords.find((w) => w.id === ch.word.id));
+    }
+  });
+  it("changing the live CHamoru list after the check changes no card", () => {
+    const card = createMemory(options, 0, "chamoru").cards[0], id = chamoruCard(card)!.word.id;
+    const live = chamoruWords.find((w) => w.id === id)! as { term: string }, old = live.term;
+    try { live.term = "Sunset"; expect(chamoruCard(card)!.word.term).toBe(old); } finally { live.term = old; }
+  });
+  it("MemoryCards draws the snapshot's words, and refuses edited copies with nothing to flip; development throws", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const cards = createMemory(options, 0, "chamoru").cards, onFlip = vi.fn();
+    const draw = () => <MemoryCards cards={cards} pack="chamoru" matched={[]} open={[]} peek width={600} disabled={false} onFlip={onFlip} />;
+    await act(async () => { root = create(draw()); });
+    const word = chamoruCard(cards.find((c) => c.endsWith(":word"))!)!.word;
+    expect(text()).toContain(word.term);
+    expect(text()).not.toContain(REFUSED_TASK_TEXT);
+    await act(async () => root!.unmount());
+    swap.on = true;
+    await act(async () => { root = create(draw()); });
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused").length).toBe(1);
+    expect(text()).not.toMatch(/sunset/i);
+    expect(text()).not.toContain(word.term);
+    expect(root!.root.findAll((n) => typeof n.props.onPress === "function")).toEqual([]);
+    expect(onFlip).not.toHaveBeenCalled();
+    dev.__DEV__ = true;
+    expect(() => admittedReading(chamoruCard(cards[0])!.word, "Memory's CHamoru cards")).toThrow(/Memory's CHamoru cards was given reading content/);
   });
 });

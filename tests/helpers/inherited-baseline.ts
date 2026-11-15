@@ -11,7 +11,7 @@ import { inheritedSourceModules, sourceDigest } from "./inherited-sources";
  * use node:crypto, not the app's own SHA-256.
  */
 export const BASELINE_FILE = "tests/fixtures/reading-inherited-baseline.json";
-export type BaselineEntry = { digest: string; served: string; records: number };
+export type BaselineEntry = { digest: string; served: string; records: number; usedBy?: string };
 export type Baseline = { owner: string; rule: string; sources: Record<string, BaselineEntry> };
 export const readBaseline = (): Baseline => JSON.parse(readFileSync(BASELINE_FILE, "utf8"));
 const hash = (v: unknown) => createHash("sha256").update(canonical(v)).digest("hex");

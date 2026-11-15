@@ -16,7 +16,7 @@ import { dirname, join } from "node:path";
 import ts from "typescript";
 import { afterAll, describe, expect, it } from "vitest";
 import { engines } from "../src/learn/engines";
-import { growthTracks } from "../src/learn/growth/content";
+import { growthTracks, readingGrowth } from "../src/learn/growth/content";
 import { INHERITED_SOURCE_DIGESTS } from "../src/learn/reading/provenance";
 import { appFiles, closure, edgesOf, renderers } from "./helpers/import-graph";
 import { inheritedSourceFile } from "./helpers/inherited-sources";
@@ -25,11 +25,37 @@ import { files, reachable, resolveAll } from "./helpers/reading-clock";
 const PROVENANCE = "src/learn/reading/provenance.ts", TASKS = "src/learn/reading/tasks.ts";
 const SOURCES = Object.keys(INHERITED_SOURCE_DIGESTS).map(inheritedSourceFile).sort();
 /**
- * Modules outside reading that still load an inherited source directly. It renders no `ReadingText`, `TapWords` or
- * reading board, and no reading route reaches it (checked below). Named here so any other importer fails.
+ * Every module that loads `provenance.ts` at run time, reviewed. Reading content as data (lead, FIX-BRIEF-5) flows
+ * through it: the reading games' producers and boards, the kit, and the growth tracks; and, outside the reading routes,
+ * Memory's CHamoru pack, whose cards check the brand before drawing (lead addition to fix 5). The named non-reading
+ * users are the lead's decision. One user is held for a lead decision; see FIX-REPORT-5.
  */
-const NOT_READING: Record<string, string> = {
-  "src/games/memory.ts": "Memory's CHamoru picture pack: matching cards, not a reading board",
+const PROVENANCE_USERS: Record<string, string> = {
+  "src/learn/games/hafa-adai/engine.ts": "Håfa Adai's CHamoru words, by id",
+  "src/learn/games/hafa-adai/view.tsx": "Håfa Adai's board and last word, by id",
+  "src/learn/games/letter-lagoon/engine.ts": "Letter Lagoon's bank",
+  "src/learn/games/sound-boat/engine.ts": "Sound Boat's picture words and ladders, by id",
+  "src/learn/games/sound-boat/view.tsx": "Sound Boat's ladders, by id",
+  "src/learn/games/story-studio/engine.ts": "Story Studio's bank",
+  "src/learn/games/turtle-tales/engine.ts": "Turtle Tales' passages, by id",
+  "src/learn/games/which-one/engine.ts": "Which One's sentences, by id",
+  "src/learn/games/word-workshop/engine.ts": "Word Workshop's bank",
+  "src/learn/growth/content.ts": "the growth quiz's reading tracks",
+  "src/learn/kit/reading.ts": "the kit's word bank",
+  "src/learn/reading/admit.ts": "the brand check",
+  "src/games/memory.ts": "Memory's CHamoru pack: cards name CHamoru ids and resolve them to branded records; MemoryCards checks them",
+};
+/** Named non-reading (lead decision, fix 5): maths facts and music, not reading content. */
+const NON_READING: Record<string, string> = {
+  "src/arcade/games/shell-song/engine.ts": "Shell Song: a music game; its picture prompts come from the pinned snapshot, but it draws pictures and plays notes, not reading text",
+  "src/learn/games/quick-practice/engine.ts": "Quick Practice (School): maths facts; its growth stages are maths tracks",
+};
+/**
+ * Held for a lead decision: the grown-up Practice panel's reading subject prints Which One sentences and Which One
+ * growth questions as its own `text` (FIX-REPORT-5 has the proposal). It reads the frozen, branded snapshot.
+ */
+const PENDING_LEAD: Record<string, string> = {
+  "src/practice/engine.ts": "Practice panel (Settings, grown-up gated): reading subject copies sentence and growth question text",
 };
 /**
  * A source built from another source. The growth quiz's reading tracks take their CHamoru answer choices from the
@@ -134,16 +160,26 @@ describe("only the provenance module loads an inherited reading source", () => {
     expect(SOURCES).toEqual(["src/learn/content/chamoru.ts", "src/learn/growth/literacy.ts", ...["clues", "ladders", "lagoon", "sentences", "stories", "studio", "words", "workshop"].map((n) => `src/learn/content/reading/${n}.ts`)].sort());
   });
   it("no other module loads one at run time, by any resolved path", () => {
-    expect(importersOf(".", app, SOURCES)).toEqual([PROVENANCE, ...Object.keys(NOT_READING), ...Object.keys(BUILT_FROM)].sort());
-    // The older non-reading importer loads only the CHamoru list, and no reading route reaches it.
-    for (const f of Object.keys(NOT_READING)) expect(edgesOf(".", f).filter((e) => e.to && SOURCES.includes(e.to)).map((e) => e.to), f).toEqual(["src/learn/content/chamoru.ts"]);
+    expect(importersOf(".", app, SOURCES)).toEqual([PROVENANCE, ...Object.keys(BUILT_FROM)].sort());
     // The growth reading source loads only the CHamoru list, and only the provenance module loads it.
     for (const [f, from] of Object.entries(BUILT_FROM)) {
       expect(edgesOf(".", f).filter((e) => e.to && !e.typeOnly && SOURCES.includes(e.to)).map((e) => e.to), f).toEqual([from]);
       expect(importersOf(".", app, [f]), f).toEqual([PROVENANCE]);
     }
-    const routes = readingRoutes().flatMap((r) => r.boards).flatMap((b) => closure(".", b));
-    for (const f of Object.keys(NOT_READING)) expect(routes, f).not.toContain(f);
+  });
+  it("every module that loads the provenance module is reviewed: reading, Memory's CHamoru pack, named non-reading, or held", () => {
+    const users = importersOf(".", app, [PROVENANCE]), reviewed = { ...PROVENANCE_USERS, ...NON_READING, ...PENDING_LEAD };
+    expect(users.filter((f) => !Object.hasOwn(reviewed, f))).toEqual([]);
+    for (const f of [...Object.keys(PROVENANCE_USERS), ...Object.keys(PENDING_LEAD)]) expect(users, f).toContain(f);
+    for (const f of [...Object.keys(PROVENANCE_USERS), ...Object.keys(NON_READING), ...Object.keys(PENDING_LEAD)]) expect(existsSync(f), f).toBe(true);
+    // Memory loads the CHamoru list only through provenance, and its cards check the brand before drawing.
+    expect(edgesOf(".", "src/games/memory.ts").filter((e) => e.to && SOURCES.includes(e.to))).toEqual([]);
+    expect(readFileSync("src/screens/classics/MemoryCards.tsx", "utf8")).toMatch(/admittedReading\(ch\.word, "Memory's CHamoru cards"\)/);
+    // MemoryCards is the only module that turns a card into its CHamoru word.
+    expect(app.filter((f) => edgesOf(".", f).some((e) => e.to === "src/games/memory.ts" && e.bindings.some((b) => b.imported === "chamoruCard" || b.imported === "*")))).toEqual(["src/screens/classics/MemoryCards.tsx"]);
+    // Quick Practice's growth tracks are maths, not reading.
+    expect(Object.keys(growthTracks)).toContain("quick-practice");
+    expect(readingGrowth("quick-practice")).toBe(false);
   });
   it("no import that names an inherited source fails to resolve", () => {
     const unresolved = app.flatMap((f) => edgesOf(".", f).filter((e) => !e.to && /content\/+(?:\.\/)*(?:reading|chamoru)/.test(e.spec) && (e.spec.startsWith(".") || e.spec.startsWith("@/"))).map((e) => `${f} -> ${e.spec}`));
