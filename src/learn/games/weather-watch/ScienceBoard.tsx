@@ -203,7 +203,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
   const floor = q.kind === 'gauge' && fontScale >= LARGE_TEXT ? 180 : SCHOOL_BOARD_MIN['weather-watch'];
   const geometry = useBoardGeometry('weather-watch', 220, floor);
   const side = useBoardColumns();
-  const sceneScale = Math.min(geometry.height / 235, ((space?.width ?? 382) * (side ? .46 : 1) - 22) / 360);
+  const sceneScale = Math.min(geometry.height / 235, ((space?.ready ? space.width : 382) * (side ? .46 : 1) - 22) / 360);
   const sceneLabel = label;
   const fittedLabel = (text: string, x: number, y: number, size = 13, color = ink) => {
     if (!space) return sceneLabel(text,x,y,size,color);

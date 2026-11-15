@@ -17,8 +17,9 @@ export function PlanStrip({ children, count, focus, cardHeight, gap, padding, dr
   // Reserve both cues so following a card never makes the page jump.
   const cues = 52 * (space?.large ? 1.5 : 1) + 4;
   const remaining = space?.ready && space.chrome !== null && extent > 0 && drawingFloor !== undefined && !side
-    ? space.height - space.chrome + extent - drawingFloor - cues : natural;
-  const maxHeight = Math.max(cardHeight + 2 * padding, Math.min(natural, Math.floor(remaining)));
+    ? space.height - space.chrome + extent - drawingFloor : natural;
+  const reserve = content > remaining + 1 ? cues : 0;
+  const maxHeight = Math.max(cardHeight + 2 * padding, Math.min(natural, Math.floor(remaining - reserve)));
   const card = focus === null || count === 0 ? undefined : cards[Math.min(count - 1, Math.max(0, focus))];
   useEffect(() => {
     if (!card || height <= 0) return;

@@ -75,8 +75,9 @@ vi.mock('../src/components/ui', async () => {
 const Pressable = 'Pressable' as unknown as React.ComponentType<Record<string, unknown>>;
 const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
+const nativeScrollCalls: unknown[] = [];
 let root: ReactTestRenderer | undefined;
-afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
+afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; nativeScrollCalls.length=0; frames.clear(); vi.unstubAllGlobals(); });
 async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level:LearningLevel=1, geometryEnabled=true, prepare?:(session:LearnSession)=>LearnSession, fit:{width:number;ceiling:number;maxSize:number}|null=null) {
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
@@ -86,7 +87,7 @@ async function mountPort(id: LearnId, Board: React.ElementType, available=472, w
   let session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},level)},{},7);
   if(prepare)session=prepare(session);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider geometryEnabled={geometryEnabled} space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={fit}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
+  await act(async()=>{root=create(<BoardSpaceProvider geometryEnabled={geometryEnabled} space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={fit}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn((options:unknown)=>nativeScrollCalls.push(options)),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -393,6 +394,7 @@ it.each([['crab-commands',B1,58,150],['beep-bot',B2,64,160]] as const)('%s caps 
  const original=Number(flat(scroll.props.style).maxHeight);
  boundary={y:0,height:540};rowBox={y:0,height:160};
  await act(async()=>{
+  scroll.props.onContentSizeChange(333,700);
   strip.props.onLayout({nativeEvent:{layout:{height:original+54}}});
   view(`school-${id}-drawing`).props.onLayout({nativeEvent:{layout:{height:floor}}});
   const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));
@@ -448,4 +450,32 @@ it.each([393,744])('Weather gauge labels fit their bounded boxes at width %s',as
   }
   await act(async()=>r.unmount());root=undefined;
  }
+});
+
+it('a short Crab plan uses the available rows without reserving absent cues',async()=>{
+ const r=await mountPort('crab-commands',B1,500,{width:393,height:852,fontScale:1});
+ const strip=view('plan-strip'),scroll=r.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Your plan cards')[0];
+ boundary={y:0,height:500};
+ await act(async()=>{scroll.props.onContentSizeChange(333,129);strip.props.onLayout({nativeEvent:{layout:{height:129}}});view('school-crab-commands-drawing').props.onLayout({nativeEvent:{layout:{height:150}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ expect(Number(flat(scroll.props.style).maxHeight)).toBeGreaterThanOrEqual(129);
+});
+
+it('Tide Logic follows the current catch and resets the new belt to its first catch',async()=>{
+ const r=await mountPort('tide-logic',B13),props=r.root.findByType(B13).props as React.ComponentProps<typeof B13>;
+ const belt=r.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.testID==='tide-cargo-scroll')[0];
+ const cards=belt.findAll(n=>typeof n.type==='function'&&n.type.name==='Cargo');
+ await act(async()=>cards.forEach((card,index)=>card.parent!.props.onLayout({nativeEvent:{layout:{x:index*85}}})));
+ const render=(running:number,index=0)=><BoardSpaceProvider space={{width:333,height:500,large:false}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><B13 {...props} session={{...props.session,state:{...props.session.state,running,index}}}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>;
+ await act(async()=>r.update(render(3)));
+ expect(nativeScrollCalls.at(-1)).toEqual({x:255,animated:false});
+ await act(async()=>r.update(render(-1,1)));
+ expect(nativeScrollCalls.at(-1)).toEqual({x:0,animated:false});
+});
+
+it('Weather uses valid marker geometry before its measured space is ready',async()=>{
+ const r=await mountPort('weather-watch',B7),props=r.root.findByType(B7).props as React.ComponentProps<typeof B7>;
+ await act(async()=>r.update(<BoardSpaceProvider space={null}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><B7 {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>));
+ const scene=r.root.findAll(n=>typeof n.type==='function'&&n.type.name==='Scene')[0];
+ const marker=scene.findAll(n=>String(n.type)==='SvgCircle'&&n.props.cx===225)[0];
+ expect(marker.props.r).toBeGreaterThan(0);expect(marker.props.r).toBeLessThan(30);
 });

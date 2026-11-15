@@ -40,7 +40,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const cargoScroll = useRef<ScrollView | null>(null), cargoPositions = useRef<number[]>([]);
   const current = t && s.running >= 0 ? Math.min(s.running, t.items.length - 1) : 0;
   useEffect(() => {
-    if (singleRow && s.running >= 0) cargoScroll.current?.scrollTo({x:cargoPositions.current[current] ?? 0,animated:false});
+    if (singleRow) cargoScroll.current?.scrollTo({x:s.running >= 0 ? cargoPositions.current[current] ?? 0 : 0,animated:false});
   }, [singleRow,current,s.running]);
   const traceIndex = s.index % 2 ? 1 : 0;
   const traceAnswer = t ? route(t.items[traceIndex], t.target) : null;
