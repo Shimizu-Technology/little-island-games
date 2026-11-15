@@ -300,6 +300,10 @@ describe('HC-01 nothing that looks touchable refuses silently', () => {
   });
   it('the starter rooms and the H4 lab fixtures validate with the stove change', () => {
     expect(validHome(starterHome())).toBe(true);
-    for (const name of ['delight', 'delight-rest', 'delight-feast', 'delight-beach']) expect(validHome(labFixtures[name]())).toBe(true);
+    for (const name of ['delight', 'delight-rest', 'delight-feast', 'delight-beach', 'delight-stove', 'delight-held', 'delight-bath']) expect([name, validHome(labFixtures[name]())]).toEqual([name, true]);
+    // The fix-round fixtures put what they show in the middle: the stove and its free pan, the held rice ball, the tub.
+    const stove = buildScene(labFixtures['delight-stove']()).rooms.kitchen.targets.find((t) => t.pan)!;
+    expect(stove.closed).toBe(false);
+    expect(buildScene(labFixtures['delight-held']()).entities['kitchen/item/held'].attachment.kind).toBe('hand');
   });
 });

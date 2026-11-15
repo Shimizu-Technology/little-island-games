@@ -78,6 +78,39 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.beach.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 9, y: 6 }];
     return migrateHome(state) ?? state;
   },
+  // H4 fix round 1: the stove in the middle of the kitchen (fully on screen on iPad too), food beside it.
+  "delight-stove": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances = state.rooms.kitchen.instances
+      .filter((i) => i.item !== "sink-counter")
+      .map((i) => (i.item === "stove" ? { ...i, x: 7 } : i));
+    state.rooms.kitchen.instances.push(instance("mango", "mango", 4, 6), instance("rice", "rice-ball", 11, 6));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 4, y: 8 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4 fix round 1: the Islander holding a rice ball, Pip beside her (held things follow reactions).
+  "delight-held": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances.push(instance("held", "rice-ball", 0, 0), instance("snack", "banana", 11, 6));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot === 2);
+    state.rooms.kitchen.characters = [
+      { slot: 0, anchor: "floor", pose: "stand", x: 6, y: 7, holding: "held" },
+      { slot: 1, anchor: "floor", pose: "stand", x: 9, y: 7 },
+    ];
+    return migrateHome(state) ?? state;
+  },
+  // H4 fix round 1: the beach hut with the bubble bath in the middle and the Islander beside it.
+  "delight-bath": () => {
+    const state = starterHome();
+    state.current = "beach";
+    state.rooms.beach.instances = state.rooms.beach.instances.map((i) => (i.item === "bubble-bath" ? { ...i, x: 6 } : i.item === "lounger" ? { ...i, x: 12 } : i));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.beach.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 4, y: 7 }];
+    return migrateHome(state) ?? state;
+  },
   // H4: a friend asleep in bed, a lit lamp with friends standing near it.
   "delight-rest": () => {
     const state = starterHome();
