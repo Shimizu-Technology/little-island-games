@@ -7,7 +7,7 @@ type MeasuredSpace = BoardSpace & {
   onReveal?: () => void; ready: boolean; chrome: number | null;
   select: (id: SchoolBoard | null) => void; measure: (id: SchoolBoard, height: number) => void;
   content: React.RefObject<View | null>; primary: React.RefObject<View | null>;
-  rowView: React.RefObject<View | null>; row: () => void; changed: () => void;
+  rowView: React.RefObject<View | null>; drawingColumn: React.RefObject<View | null>; row: () => void; changed: () => void;
 };
 const Space = createContext<MeasuredSpace | null>(null);
 
@@ -17,7 +17,7 @@ const Space = createContext<MeasuredSpace | null>(null);
 export function BoardSpaceProvider({ space, children, onReveal }: { space: BoardSpace | null; children: React.ReactNode; onReveal?: () => void }) {
   const content = useRef<View | null>(null), primary = useRef<View | null>(null);
   const selected = useRef<SchoolBoard | null>(null), regions = useRef(new Map<SchoolBoard, number>());
-  const rowView = useRef<View | null>(null), lastChrome = useRef(new Map<SchoolBoard, number>());
+  const rowView = useRef<View | null>(null), drawingColumn = useRef<View | null>(null), lastChrome = useRef(new Map<SchoolBoard, number>());
   const [chrome, setChrome] = useState<number | null>(null);
   const disposed = useRef(false);
   const frame = useRef<ReturnType<typeof requestAnimationFrame> | null>(null), revision = useRef(0);
@@ -38,7 +38,14 @@ export function BoardSpaceProvider({ space, children, onReveal }: { space: Board
           lastChrome.current.set(id, next);
           setChrome(old => old !== null && Math.abs(old - next) < 1 ? old : next);
         };
-        if (rowView.current) rowView.current.measureLayout(content.current!, (_rx, ry, _rw, rh) => save(ry + Math.max(0, y + height - ry - rh)));
+        if (rowView.current) rowView.current.measureLayout(content.current!, (_rx, ry, _rw, rh) => {
+          const outside = ry + Math.max(0, y + height - ry - rh);
+          // Captions/padding in the drawing's own column still need room. A
+          // taller sibling column does not. Hosts with an inner map/run row
+          // can omit this column measurement and declare that row directly.
+          if (drawingColumn.current) drawingColumn.current.measureLayout(content.current!, (_cx, _cy, _cw, ch) => save(outside + Math.max(0, ch - drawing)));
+          else save(outside);
+        });
         else save(y + height - drawing);
       });
     });
@@ -53,7 +60,7 @@ export function BoardSpaceProvider({ space, children, onReveal }: { space: Board
   }, [changed]);
   const measure = useCallback((id: SchoolBoard, height: number) => { regions.current.set(id, height); changed(); }, [changed]);
   const row = useCallback(() => { changed(); }, [changed]);
-  const value = useMemo(() => ({ ...(space ?? { width: 0, height: 0, large: false }), ready: space !== null, onReveal, chrome, select, measure, content, primary, rowView, row, changed }), [space, onReveal, chrome, select, measure, row, changed]);
+  const value = useMemo(() => ({ ...(space ?? { width: 0, height: 0, large: false }), ready: space !== null, onReveal, chrome, select, measure, content, primary, rowView, drawingColumn, row, changed }), [space, onReveal, chrome, select, measure, row, changed]);
   return <Space.Provider value={value}>{children}</Space.Provider>;
 }
 export const useBoardSpace = () => useContext(Space);
@@ -82,11 +89,12 @@ export function useBoardColumns() {
   return !!space?.ready && space.width >= 520 && window.width > window.height;
 }
 /** A single primary row: drawing left, controls right on wide landscape windows. */
-export function BoardColumns({ drawing, children, side: override, drawingWidth, legacyDrawingLast = false, gap = 8 }: { drawing: React.ReactNode; children: React.ReactNode; side?: boolean; drawingWidth?: number; legacyDrawingLast?: boolean; gap?: number }) {
+export function BoardColumns({ drawing, children, side: override, drawingWidth, legacyDrawingLast = false, gap = 8, flexibleColumn = 'drawing', reserveColumnChrome = true }: { drawing: React.ReactNode; children: React.ReactNode; side?: boolean; drawingWidth?: number; legacyDrawingLast?: boolean; gap?: number; flexibleColumn?: 'drawing' | 'controls'; reserveColumnChrome?: boolean }) {
   const wide = useBoardColumns(), space = useBoardSpace(), side = override ?? wide;
   if (!space) return <>{legacyDrawingLast ? <>{children}{drawing}</> : <>{drawing}{children}</>}</>;
-  const art = <View style={side ? { width: drawingWidth ?? '46%', alignItems: 'center' } : undefined}>{drawing}</View>;
-  const controls = <View style={side ? { flex: 1, minWidth: 0, gap } : { gap }}>{children}</View>;
+  const column = (which: 'drawing' | 'controls') => side && reserveColumnChrome && flexibleColumn === which ? { ref: space.drawingColumn, testID: 'school-drawing-column', onLayout: space.changed, collapsable: false } : {};
+  const art = <View {...column('drawing')} style={side ? { width: drawingWidth ?? '46%', alignItems: 'center' } : undefined}>{drawing}</View>;
+  const controls = <View {...column('controls')} style={side ? { flex: 1, minWidth: 0, gap } : { gap }}>{children}</View>;
   const body = !side && legacyDrawingLast ? <>{controls}{art}</> : <>{art}{controls}</>;
   return <BoardPrimary>{side ? <BoardRow style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>{body}</BoardRow> : <View style={{ gap }}>{body}</View>}</BoardPrimary>;
 }

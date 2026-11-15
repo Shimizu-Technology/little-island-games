@@ -74,8 +74,8 @@ function MeasuredSeaLine({ value, start, narrow }: { value: number; start?: numb
   const { min, max } = seaLineRange(value, start);
   const y = (n: number) => g.height - 30 - (n - min) / (max - min) * (g.height - 60);
   const ticks = Array.from({ length: 6 }, (_, i) => Math.round(min + (max - min) * i / 5));
-  const reduced = useReducedMotion(), [motion] = useState(() => new Animated.Value(y(value)));
-  useEffect(() => { const move = Animated.timing(motion, { toValue: y(value), duration: reduced ? 0 : 220, useNativeDriver: true }); move.start(); return () => move.stop(); }, [motion, value, min, max, g.height, reduced]);
+  const reduced = useReducedMotion(), targetY = y(value), [motion] = useState(() => new Animated.Value(targetY));
+  useEffect(() => { const move = Animated.timing(motion, { toValue: targetY, duration: reduced ? 0 : 220, useNativeDriver: true }); move.start(); return () => move.stop(); }, [motion, targetY, reduced]);
   return <View style={{ alignItems: 'center', gap: 4 }}>
     <View testID={g.testID} onLayout={g.onLayout} accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? '' : `, start ${start}`}`} style={{ width: W, height: g.height, overflow: 'hidden', borderRadius: 20, borderWidth: 2, borderColor: navy, backgroundColor: '#E3F6F2' }}>
       <Svg width={W} height={g.height} viewBox={`0 0 ${W} ${g.height}`} accessible={false}>
@@ -146,10 +146,12 @@ export function Board({ session, update, practice, assistance, cheer, coach, wid
     : `${task.extra}x + ${task.a} ≤ ${task.b}`;
   const instruction = task.kind === "inequality" ? "Keep ≤ as you remove and divide both sides. Choose an integer that makes the inequality true." : task.kind === "pattern" ? "Find the repeated step. Move the diver to the next number after the last shown." : task.kind === "expression" ? "Multiply before adding. Move the diver to the result." : balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
   return <View style={{ gap: compact ? 8 : 14, paddingBottom: 20 }}>
-    <View style={{ backgroundColor: sand, borderRadius: 19, padding: compact ? 10 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>
+
+    {!wide && <View style={{ backgroundColor: sand, borderRadius: 19, padding: compact ? 10 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>}
     {balance && <BalanceBoard task={task} state={state} remove={() => change({ offset: -task.a, divided: false })} divide={() => change({ divided: true })}/>}
     {!balance && task.kind === "substitution" && <View style={{ backgroundColor: "#E6F1E4", borderRadius: 20, padding: 15, alignItems: "center" }}><Copy style={{ color: navy, fontSize: 26, fontWeight: "900" }}>{task.a} + {task.b} × {task.extra} = ?</Copy></View>}
     <BoardColumns side={side} drawingWidth={wide ? undefined : side ? 132 : undefined} drawing={<SeaLine narrow={side && !wide} value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>}>
+    {wide && <View style={{ backgroundColor: sand, borderRadius: 19, padding: compact ? 10 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>}
     <StepControls value={state.value} balance={balance} change={value => change({ value })} width={controlsWidth}/>
 <Button onPress={check}>Open chest</Button></BoardColumns>
     {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 13, padding: 12 }}><Copy style={{ fontWeight: "700" }}>{workedHint(task)}</Copy></View>}

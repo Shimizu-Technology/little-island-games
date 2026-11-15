@@ -693,7 +693,9 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   // At accessibility text sizes Reset and Hint fill the row, so Test model takes its own full-width line below
   // instead of being pushed off the right edge.
   const large = useWindowDimensions().fontScale >= LARGE_TEXT;
-  const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
+  const space = useBoardSpace(), side = useBoardColumns();
+  const controlWidth = space?.ready ? side ? space.width * .54 - 12 : space.width : props.width;
+  const compact = !!space?.ready && controlWidth < 600;
   if (!q) return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your discovery journal is complete!</Copy>;
   const send = (a: Parameters<typeof move>[2]) => {
     if (active) {
@@ -724,7 +726,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   };
   const numericSlots = q.kind === "eclipse" ? [1] : [0, 1];
   // Choice labels share one size: the largest at which every word fits the narrowest tile (8-pt padding, 2-pt border).
-  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, props.width * (q.labels.length > 4 || compact && q.labels.length === 3 ? 0.29 : 0.44) - 20, 2))) : undefined;
+  const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, controlWidth * (q.labels.length > 4 || compact && q.labels.length === 3 ? 0.29 : 0.44) - 20, 2))) : undefined;
   const ready = s.tested && correct(q, s.values);
   return (
     <View style={{ gap: compact ? 10 : 14 }}>

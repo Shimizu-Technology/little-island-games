@@ -447,7 +447,7 @@ export function Board({
         <IconButton icon="sound-on" label="Hear this instruction" onPress={() => sound(promptKey)} />
       </View>
       
-      <BoardColumns gap={6} drawing={<View testID={geometry.testID} onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
+      <BoardColumns gap={6} flexibleColumn={blocks ? "controls" : "drawing"} drawing={<View testID={geometry.testID} onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
       <Beach
         level={l}
         walker={w}

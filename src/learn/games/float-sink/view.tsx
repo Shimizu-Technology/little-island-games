@@ -289,7 +289,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
   const shelfItems = d.shelf.filter((id) => id !== moving?.id);
   const tankWidth = Math.min(width, 420);
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
         <Copy style={{ fontWeight: "700", color: C.ink, flex: 1, fontSize: 20 }}>{title}</Copy>
         <IconButton icon="sound-on" label="Hear this instruction" onPress={() => sound(prompt)} />

@@ -70,18 +70,18 @@ vi.mock('../src/components/ui', async () => {
 });
 const Pressable = 'Pressable' as unknown as React.ComponentType<Record<string, unknown>>;
 const frames = new Map<number, FrameRequestCallback>(); let next = 0;
-let boundary={y:0,height:500}, rowBox={y:0,height:500};
+let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
 async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}) {
-  boundary={y:0,height:500};rowBox={y:0,height:500};
+  boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
   vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
   Object.assign(viewport,window);
   const session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,['school-drawing-row','slip-side','beep-map-row'].includes((element.props as {testID:string}).testID)?rowBox.y:boundary.y,333,['school-drawing-row','slip-side','beep-map-row'].includes((element.props as {testID:string}).testID)?rowBox.height:boundary.height),scrollTo:vi.fn(),measureInWindow:()=>{}})});});
+  await act(async()=>{root=create(<BoardSpaceProvider space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -132,7 +132,7 @@ const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B
 const configurations = [[393,852],[375,667],[744,1133],[1133,744],[852,393]];
 it.each(ports)('%s renders its actual drawing, primary boundary and touch targets in each measured window',async(id,Board)=>{
  for(const [width,height] of configurations)for(const fontScale of [1,3.12]){
-  boundary={y:0,height:500};rowBox={y:0,height:500};
+  boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   const available=height-160, r=await mountPort(id,Board,available,{width,height,fontScale});
   const drawings=r.root.findAll(n=>String(n.type)==='View'&&n.props.testID===`school-${id}-drawing`);
   expect(drawings.length).toBeGreaterThan(0);
@@ -261,4 +261,27 @@ it('Beep keeps its map size when its AX Go column sets the map-row height',async
  const natural=renderedDrawingHeight('beep-bot');boundary={y:0,height:700};rowBox={y:0,height:700};
  await act(async()=>{view('content').props.onLayout({nativeEvent:{layout:{height:900}}});view('school-beep-bot-drawing').props.onLayout({nativeEvent:{layout:{height:natural}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
  expect(renderedDrawingHeight('beep-bot')).toBe(natural);
+});
+it('Weather compacts three choices inside the actual phone-landscape control column',async()=>{
+ const r=await mountPort('weather-watch',B7,340,{width:852,height:393,fontScale:1});
+ const choices=r.root.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Set '));
+ expect(choices).toHaveLength(3);expect(flat(choices[0].parent!.props.style).flexWrap).toBe('nowrap');
+});
+it('Treasure reserves its drawing-column caption without paying for a tall sibling',async()=>{
+ await mountPort('treasure-algebra',B8,340,{width:852,height:393,fontScale:1});
+ boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};columnBox={y:0,height:355};
+ await act(async()=>{view('school-treasure-algebra-drawing').props.onLayout({nativeEvent:{layout:{height:330}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ expect(renderedDrawingHeight('treasure-algebra')).toBe(315);
+ columnBox={y:0,height:340};
+ await act(async()=>{view('school-treasure-algebra-drawing').props.onLayout({nativeEvent:{layout:{height:315}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+ expect(renderedDrawingHeight('treasure-algebra')).toBe(315);
+});
+it('Float/Sink fits the measured AX prediction without reducing its readable tank',async()=>{
+ await mountPort('float-sink',B9,585,{width:393,height:852,fontScale:3.12});
+ const board=root!.root.findByType(B9), outer=board.findAll(n=>String(n.type)==='View')[0];
+ // Native 506b5db3: board y=233.333, safe bottom=818; the primary
+ // interaction excluding the outer header-to-board gap measured 576 pt.
+ const measuredFixed=576, available=818-233.33333333333334;
+ expect(measuredFixed+Number(flat(outer.props.style).gap)).toBeLessThanOrEqual(available);
+ expect(Number(flat(view('school-float-sink-drawing').props.style).height)).toBeGreaterThanOrEqual(120);
 });
