@@ -446,12 +446,8 @@ export function Board({
         <Copy style={{ fontWeight: "700", color: C.ink, flex: 1, fontSize: 18 }}>{prompt}</Copy>
         <IconButton icon="sound-on" label="Hear this instruction" onPress={() => sound(promptKey)} />
       </View>
-      {!done && (
-        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ fontSize: 13, color: C.ink }}>
-          Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
-        </Copy>
-      )}
-      <BoardColumns drawing={<View testID={geometry.testID} onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
+      
+      <BoardColumns gap={6} drawing={<View testID={geometry.testID} onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
       <Beach
         level={l}
         walker={w}
@@ -473,12 +469,12 @@ export function Board({
           {blocks && <ProgramEditor schoolGeometry onFlat={!active||s.running?undefined:()=>setBlocks(false)} maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="edge or rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
             onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
  />}
-          {!blocks && <PlanStrip count={s.program.length} focus={s.running ? s.cursor : bumpedCard ?? hinted ?? editing} cardHeight={58} gap={5} padding={4}><View
+          {!blocks && <PlanStrip count={s.program.length} focus={s.running ? s.cursor : bumpedCard ?? hinted ?? editing} cardHeight={58} gap={geometry.measured ? 2 : 5} padding={4}><View
             accessibilityLabel={`Your plan: ${s.program.length ? s.program.map((c) => cardLabel[c]).join(", ") : "empty"}`}
             style={{
               flexDirection: "row",
               flexWrap: "wrap",
-              gap: 5,
+              gap: geometry.measured ? 2 : 5,
               minHeight: 52,
               backgroundColor: C.paper,
               padding: 4,
@@ -619,7 +615,21 @@ export function Board({
                 >
                   Go!
                 </Button>
-                <View style={{ flexDirection: "row", gap: 8 }}>
+                
+              </View>
+              }
+
+            </>
+          )}
+        </>
+      )}
+    </BoardColumns>
+      {!done && (
+        <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ fontSize: 13, color: C.ink }}>
+          Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
+        </Copy>
+      )}
+      {!done && !blocks && !won && <View style={{ flexDirection: "row", gap: 8 }}>
                 <Button compact quiet disabled={s.running || s.program.length === 0} style={large ? { flex: 1 } : undefined} onPress={() => edit([])}>
                   Clear
                 </Button>
@@ -636,15 +646,7 @@ export function Board({
                 >
                   Hint
                 </Button>
-                </View>
-              </View>
-              }
-
-            </>
-          )}
-        </>
-      )}
-    </BoardColumns>
+                </View>}
 {blocks&&<Button quiet compact maxFontSizeMultiplier={1.5} disabled={s.running||!active} onPress={()=>{if(!hint){assistance?.();sound('crab-commands-hint');}setHint(hint?0:1);}}>Hint</Button>}
 {hint > 0 && (
                 <View style={{ gap: 4 }}>

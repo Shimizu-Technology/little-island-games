@@ -82,13 +82,13 @@ export function useBoardColumns() {
   return !!space?.ready && space.width >= 520 && window.width > window.height;
 }
 /** A single primary row: drawing left, controls right on wide landscape windows. */
-export function BoardColumns({ drawing, children, side: override, drawingWidth, legacyDrawingLast = false }: { drawing: React.ReactNode; children: React.ReactNode; side?: boolean; drawingWidth?: number; legacyDrawingLast?: boolean }) {
+export function BoardColumns({ drawing, children, side: override, drawingWidth, legacyDrawingLast = false, gap = 8 }: { drawing: React.ReactNode; children: React.ReactNode; side?: boolean; drawingWidth?: number; legacyDrawingLast?: boolean; gap?: number }) {
   const wide = useBoardColumns(), space = useBoardSpace(), side = override ?? wide;
   if (!space) return <>{legacyDrawingLast ? <>{children}{drawing}</> : <>{drawing}{children}</>}</>;
   const art = <View style={side ? { width: drawingWidth ?? '46%', alignItems: 'center' } : undefined}>{drawing}</View>;
-  const controls = <View style={side ? { flex: 1, minWidth: 0, gap: 8 } : { gap: 8 }}>{children}</View>;
+  const controls = <View style={side ? { flex: 1, minWidth: 0, gap } : { gap }}>{children}</View>;
   const body = !side && legacyDrawingLast ? <>{controls}{art}</> : <>{art}{controls}</>;
-  return <BoardPrimary>{side ? <BoardRow style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>{body}</BoardRow> : <View style={{ gap: 8 }}>{body}</View>}</BoardPrimary>;
+  return <BoardPrimary>{side ? <BoardRow style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>{body}</BoardRow> : <View style={{ gap }}>{body}</View>}</BoardPrimary>;
 }
 
 export function BoardSpaceContent({ onLayout, ...props }: ViewProps) {

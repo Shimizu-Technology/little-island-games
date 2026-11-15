@@ -219,18 +219,18 @@ it('the actual Crab plan exposes hidden cards, follows running/bumped cards and 
  const cards=strip.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Card '));
  expect(cards).toHaveLength(32);
  await act(async()=>{
-  strip.props.onLayout({nativeEvent:{layout:{height:192}}});strip.props.onContentSizeChange(333,381);
-  cards.forEach((c,i)=>c.props.onLayout({nativeEvent:{layout:{y:4+Math.floor(i/6)*63,height:58,width:44}}}));
+  strip.props.onLayout({nativeEvent:{layout:{height:186}}});strip.props.onContentSizeChange(333,306);
+  cards.forEach((c,i)=>c.props.onLayout({nativeEvent:{layout:{y:4+Math.floor(i/7)*60,height:58,width:44}}}));
  });
  expect(view('plan-more-below')).toBeUndefined(); // cue is Copy/Text, not a layout View
  const cue=root!.root.findAll(n=>n.props.testID==='plan-more-below'&&String(n.type)==='Text')[0];
- expect(cue.props.accessibilityLabel).toBe('14 more cards below. Scroll down.');
+ expect(cue.props.accessibilityLabel).toBe('11 more cards below. Scroll down.');
  await act(async()=>root!.update(render(25,true)));
- expect(scrolls.at(-1)).toEqual({y:126,animated:false});
- await act(async()=>strip.props.onScroll({nativeEvent:{contentOffset:{y:126}}}));
+ expect(scrolls.at(-1)).toEqual({y:60,animated:false});
+ await act(async()=>strip.props.onScroll({nativeEvent:{contentOffset:{y:60}}}));
  expect(root!.root.findAll(n=>n.props.testID==='plan-more-above').length).toBeGreaterThan(0);
  await act(async()=>root!.update(render(32,true)));
- expect(scrolls.at(-1)).toEqual({y:189,animated:false}); // end-of-plan / insert-after-last hint
+ expect(scrolls.at(-1)).toEqual({y:120,animated:false}); // end-of-plan / insert-after-last hint
 });
 it('Slip Tide does not shrink its drawing to pay for a taller sibling column',async()=>{
  await mountPort('slip-tide',B11,500,{width:852,height:393,fontScale:1});

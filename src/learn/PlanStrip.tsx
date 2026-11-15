@@ -28,7 +28,7 @@ export function PlanStrip({ children, count, focus, cardHeight, gap, padding }: 
     } });
   }));
   const known = Object.entries(cards).filter(([index]) => +index < count).map(([, rect]) => rect);
-  const before = known.filter(c => c.y + c.height <= offset).length;
+  const before = known.filter(c => c.y < offset - 1).length;
   const after = known.filter(c => c.y + c.height > offset + height + 1).length;
   return <View style={{ gap: 2 }}>
     {before > 0 && <Copy testID="plan-more-above" accessibilityLabel={`${before} more cards above. Scroll up.`} style={{ fontSize: 13, fontWeight: '700' }}>↑ {before} more cards</Copy>}

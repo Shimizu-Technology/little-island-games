@@ -26,7 +26,7 @@ it('Crab filled-plan regression: uses the measured 500-pt inner space instead of
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => { frames.set(++nextFrame, f); return nextFrame; });
   vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id));
-  const state: CrabState = { levels: ['ea1', 'eb1', 'e5'], completed: [], program: Array.from({length:12},()=> 'right' as const), cursor: 0, running: false, starter: 0, cards: 12, debugging: false };
+  const state: CrabState = { levels: ['ea1', 'eb1', 'e5'], completed: [], program: Array.from({length:13},()=> 'right' as const), cursor: 0, running: false, starter: 0, cards: 13, debugging: false };
   const options = { mode: 'solo' as const, pace: 'easy' as const };
   await act(async () => { tree = create(<BoardSpaceProvider space={{width:333,height:500,large:false}}><BoardSpaceContent testID="content"><Board session={{ game: 'crab-commands', version: 1, id: 'geometry', revision: 1, options, state }} update={vi.fn()} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={vi.fn()} stopSound={vi.fn()} soundOn={false} width={333} height={759} active coach={{ active: false, done: vi.fn() }} cheer={vi.fn()} /></BoardSpaceContent></BoardSpaceProvider>, {createNodeMock:()=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>done(0,0,333,568)})}); });
   const beach = () => tree!.root.findByType(Beach);
@@ -42,6 +42,10 @@ it('Crab filled-plan regression: uses the measured 500-pt inner space instead of
   expect(beach().props.size).toBeGreaterThanOrEqual(150);
   const plan=tree!.root.findAllByType('scroll' as never).find(n=>n.props.accessibilityLabel==='Your plan cards');
   expect(plan).toBeDefined();
-  expect(plan!.props.style.maxHeight).toBeGreaterThanOrEqual(3 * 58 + 2 * 5 + 8);
+  const row=plan!.findAllByType('div' as never).find(n=>n.props.accessibilityLabel?.startsWith('Your plan:'))!;
+  const capacity=Math.floor((333-2*row.props.style.padding+row.props.style.gap)/(44+row.props.style.gap));
+  expect(capacity).toBeGreaterThanOrEqual(7); // a readable thirteen-card plan fits two rows
+
+  expect(plan!.props.style.maxHeight).toBeGreaterThanOrEqual(3 * 58 + 2 * 2 + 8);
   expect(plan!.findAllByType('button').filter(n=>n.props.accessibilityLabel?.startsWith('Card ')).every(n=>n.props.style.width>=44&&n.props.style.height>=44)).toBe(true);
 });
