@@ -216,7 +216,7 @@ function fogPuzzle(role: Role, id: string): unknown | null {
   const tray = nodeCost(program);
   if ((role === 'teach' || role === 'easy' || role === 'short') && tray > 5) return reject('fog6');
   if ((role === 'twist' || role === 'develop') && tray < 5) return reject('fog7');
-  const d = describe(id, rowsOf(a), 'medium', {}, { blockEditor: true, tray, fog: [rowsOf(b)], tools: { condition: true } }, fogLessons[role]);
+  const d = describe(id, rowsOf(a), 'medium', {}, { blockEditor: true, tray, fog: [{ rows: rowsOf(b) }], tools: { condition: true } }, fogLessons[role]);
   if (!runPlan(d, { program: [], blockDraft: encodeProgram(program) }).won) return reject('fog3');
   // No flat plan of any length brings both crabs home, and no plan of cards and Repeats fits the tray.
   if (flatBest(worldSim(d), W, 40)) return reject('fog4');
@@ -239,12 +239,12 @@ for (const [name, make] of Object.entries(ideas)) {
     for (; !made && tries < Number(process.env.CRAB_BAKE_TRIES ?? 200000); tries++) {
       if (tries && tries % 20000 === 0) console.error(`${name} ${role}: ${tries} tries`);
       const p = make(role, `${name}-${i + 1}`) as { descriptor: Descriptor } | null;
-      if (p && fresh(JSON.stringify([p.descriptor.level.rows, p.descriptor.fog]))) made = p;
+      if (p && fresh(JSON.stringify([p.descriptor.level.rows, p.descriptor.fog?.map(f => f.rows)]))) made = p;
     }
     if (!made) throw new Error(`No ${name} ${role} after ${tries} tries ${JSON.stringify(rejected)}`);
     out[name].push({ role, ...(made as object) });
     const p = made as { descriptor: Descriptor; cards: number; proof: unknown };
-    console.log(name, role, tries, p.descriptor.level.rows.join('/'), p.descriptor.fog?.[0]?.join('/') ?? '', 'tide', p.descriptor.level.tide ?? '-', 'tray', p.descriptor.tray ?? '-', 'cards', p.cards, JSON.stringify(p.proof));
+    console.log(name, role, tries, p.descriptor.level.rows.join('/'), p.descriptor.fog?.[0]?.rows.join('/') ?? '', 'tide', p.descriptor.level.tide ?? '-', 'tray', p.descriptor.tray ?? '-', 'cards', p.cards, JSON.stringify(p.proof));
   }
 }
 if (!only) writeFileSync(new URL('./deep-content.json', import.meta.url), JSON.stringify({ version: 1, ...out }, null, 1) + '\n');

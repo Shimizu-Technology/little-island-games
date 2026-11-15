@@ -13,7 +13,7 @@ export type Descriptor = {
   /** C1d Deep Water. The most blocks a plan may hold, every block counted; such a puzzle is built from blocks only. */
   tray?: number;
   /** Foggy beach: one plan must bring the crab home on the level's beach and on each of these. */
-  fog?: string[][];
+  fog?: { rows: string[] }[];
   /** Two crabs on one beach: every card moves both, and a crab that would bump stays where it is. */
   crabs?: 2;
   /** Block tools the editor offers on a tray puzzle. */
@@ -70,7 +70,7 @@ export function execute(d: Descriptor, program: readonly Command[]) {
   return {walker:world[0],walkers:world,cost,cursor,frames,worlds,won:worldWon(d,world) && (d.budget===null || cost<=d.budget)};
 }
 /** Each foggy beach as a level of its own. */
-export const fogLevels = (d: Descriptor): Level[] => [d.level, ...(d.fog ?? []).map(rows => ({ ...d.level, rows }))];
+export const fogLevels = (d: Descriptor): Level[] => [d.level, ...(d.fog ?? []).map(beach => ({ ...d.level, rows: beach.rows }))];
 /** A foggy plan runs separately on every beach (its condition can choose differently on each); it wins only when all do. */
 export function runPlan(d: Descriptor, s: { program: readonly Command[]; blockDraft?: PackedProgram }) {
   if (!d.fog) return { ...execute(d, s.blockDraft ? readCrabDraft(s.blockDraft, d.level)?.plan ?? [] : s.program), beaches: [] as ReturnType<typeof execute>[] };
