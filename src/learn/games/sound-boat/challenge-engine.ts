@@ -1,0 +1,65 @@
+import type { ReplayEngine, ReplayPayload } from "../../../challenge/types";
+import { exactKeys, plain } from "../../../state/saveBits";
+import { sha256Hex } from "../../../puzzles/sha256";
+import { answerCheck, answerEdit, type AnswerState } from "../../../puzzles/wholeAnswer";
+import { buildRules, draftTexts, type BuildEdit } from "../../reading/build";
+import { admittedTask, isMinted, type MintedTask } from "../../reading/tasks";
+
+/**
+ * The Sound Boat Challenge replay: one word, built from pieces and settled with Check. A Challenge never shows a
+ * piece as right or wrong before Check. With sound on the word is dictated (heard, then spelled with pieces), which is
+ * a spelling task and never evidence of reading it alone; an own-read dare prints the word instead. Hearing the word is
+ * recorded as a read-aloud, which is exactly what the "own read" dare forbids; Help is recorded as Help. Nothing here
+ * is timed, and a Check counts once. A descriptor must be a task minted by `reading/tasks`: any other is refused, so its
+ * replay never opens and no action on it is recorded.
+ */
+export type Descriptor = MintedTask;
+export type Initial = { version: 1 };
+export type Action = ["a", number] | ["x", number] | ["k"] | ["h"] | ["r"] | ["z"];
+export type Payload = ReplayPayload<Initial, Action>;
+/** `ownRead` is the launch choice (an own-read dare), kept so the board prints the word to read instead of dictating it. */
+export type State = { task: MintedTask; answer: AnswerState<number[]>; heard: boolean; ownRead: boolean };
+const MAX_TRAY = 8;
+const fresh = (): AnswerState<number[]> => ({
+  draft: [], revision: 0, checkedRevision: null, checks: 0, misses: 0, solved: false, helped: false, needsVariant: false, last: null,
+});
+const toEdit = (a: Action): BuildEdit => a as BuildEdit;
+export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> = {
+  initial: () => ({ version: 1 }),
+  validInitial: (v, task): v is Initial => isMinted(task) && plain(v) && exactKeys(v, ["version"]) && v.version === 1,
+  create: (task, _initial, options) => {
+    admittedTask(task, "Sound Boat Challenge");
+    return { task, answer: fresh(), heard: false, ownRead: options.ownRead };
+  },
+  validAction: (v): v is Action =>
+    Array.isArray(v) && Object.keys(v).length === v.length &&
+    (v.length === 1 ? ["k", "h", "r", "z"].includes(v[0] as string) : v.length === 2 && (v[0] === "a" || v[0] === "x") && Number.isInteger(v[1]) && (v[1] as number) >= 0 && (v[1] as number) < MAX_TRAY),
+  step: (s, a) => {
+    if (s.answer.solved || !isMinted(s.task)) return null;
+    switch (a[0]) {
+      case "h":
+        return { state: { ...s, answer: { ...s.answer, helped: true } }, event: "help" };
+      case "r":
+        return s.heard ? null : { state: { ...s, heard: true }, event: "read-aloud" };
+      case "z":
+        // Start over clears the word but never what Check and Help already counted.
+        return s.answer.draft.length ? { state: { ...s, answer: { ...s.answer, draft: [], revision: 0, checkedRevision: null, last: null } }, event: "reset" } : null;
+      case "k": {
+        const answer = answerCheck(buildRules, s.task, s.answer, "board");
+        return answer === s.answer ? null : { state: { ...s, answer }, event: "check", correct: answer.solved };
+      }
+      default: {
+        const answer = answerEdit(buildRules, s.task, s.answer, toEdit(a));
+        if (answer === s.answer) return null;
+        return { state: { ...s, answer: answer.revision > 200 ? { ...answer, revision: 0, checkedRevision: null } : answer }, event: "edit" };
+      }
+    }
+  },
+  inspect: (s) => ({
+    solved: s.answer.solved && isMinted(s.task),
+    metrics: {},
+    edits: s.answer.revision,
+    solution: s.answer.solved ? sha256Hex(draftTexts(s.task, s.answer.draft).join("|")) : null,
+    objectives: [],
+  }),
+};

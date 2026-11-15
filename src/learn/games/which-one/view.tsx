@@ -7,6 +7,8 @@ import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { Scene, PictureObject } from "../../art/Objects";
 import { ReadingText } from "../../kit/ReadingText";
+import { ReadingRefused } from "../../kit/ReadingRefused";
+import { admittedReading } from "../../reading/admit";
 import { sceneLabel, wordAudio } from "../../kit/reading";
 import { whichAnswer, whichHelp, whichItem, whichNext, whichPick, type WhichState } from "./engine";
 
@@ -104,13 +106,6 @@ export function Board({
   // The next sentence opens at the top of the board, above the pictures she just chose from.
   useStepReveal(s.index);
 
-  // After a right answer, a short pause to enjoy it, then the next sentence.
-  useEffect(() => {
-    if (!s.solved || !active) return;
-    const timer = setTimeout(() => update(whichNext(s)), 1400);
-    return () => clearTimeout(timer);
-  }, [s, active, update]);
-
   if (s.index === 8)
     return (
       <View style={{ alignItems: "center", padding: 16, gap: 10 }}>
@@ -119,8 +114,11 @@ export function Board({
         <Copy style={{ color: C.ink, textAlign: "center" }}>You read all eight sentences.</Copy>
       </View>
     );
-  const item = whichItem(s),
-    correct = item.scenes[0],
+  // The sentence is the pinned inherited record for this saved id. Anything else is refused before a word or picture
+  // is shown, spoken or credited.
+  const item = whichItem(s);
+  if (!admittedReading(item, "Which One")) return <ReadingRefused />;
+  const correct = item.scenes[0],
     wrong = s.wrong === null ? null : item.scenes[s.orders[s.index][s.wrong]];
   const changed = wrong
     ? (["subject", "object", "relation", "color", "size"] as const).find((k) => wrong[k] !== correct[k])
@@ -184,7 +182,7 @@ export function Board({
       )}
       <Copy style={{ fontSize: 13, color: C.muted }}>{s.index + 1} of 8</Copy>
       <ReadingText
-        text={item.text}
+        record={item}
         highlight={highlight}
         onWord={(_, word) => {
           if (active && soundOn) {
@@ -196,6 +194,12 @@ export function Board({
       <Copy style={{ fontSize: 18, fontWeight: "700", textAlign: "center", color: C.ink }}>
         {s.solved ? "Yes! That’s the one." : s.wrong !== null ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
+      {/* Reading is never timed: the next sentence waits for the child to press Next. */}
+      {s.solved && (
+        <Button disabled={!active} onPress={() => update(whichNext(s))}>
+          {s.index === 7 ? "Finish" : "Next"}
+        </Button>
+      )}
       {!s.solved && (
         <Button compact quiet icon="sound-on" disabled={!soundOn || !active}
           onPress={() => { update(whichHelp(s)); assistance?.(); sound(`which-one-sentence-${item.id}`); }}>

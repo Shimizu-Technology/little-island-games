@@ -6,7 +6,8 @@ import { Button, C, Copy, Heading, PressableScale, styles } from "../components/
 import { PictureObject, Scene } from "../learn/art/Objects";
 import { sceneLabel } from "../learn/kit/reading";
 import { mathEquation } from "../math/questions";
-import { createPracticeSession, practiceAnswer, practiceConfigKey, type PracticeAction } from "./engine";
+import { createPracticeSession, practiceAdmitted, practiceAnswer, practiceConfigKey, practiceText, type PracticeAction } from "./engine";
+import { ReadingRefused } from "../learn/kit/ReadingRefused";
 import { PracticeMathPicture } from "./PracticePictures";
 import type { PracticeSettings, PracticeSummary } from "./types";
 
@@ -35,6 +36,8 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
   const live = useRef({ mounted: false, active, soundOn, onComplete, onCancel });
   const introduced = useRef(false);
   const { play, stop } = useSoundControls(soundOn && active && !state.gateOpen);
+  // A reading question is reading content as data: each must carry a record branded by the provenance module.
+  const admitted = state.questions.every((x) => practiceAdmitted(x, "The Practice panel"));
   useLayoutEffect(() => {
     live.current = { mounted: true, active, soundOn, onComplete, onCancel };
   }, [active, soundOn, onComplete, onCancel]);
@@ -44,13 +47,13 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
   }, [stop]);
   useLayoutEffect(() => { if (!active || !soundOn) stop(); }, [active, soundOn, stop]);
   useEffect(() => {
-    if (active && soundOn && !state.gateOpen && state.status === "playing" && state.index === 0 &&
+    if (admitted && active && soundOn && !state.gateOpen && state.status === "playing" && state.index === 0 &&
       !state.helped && !state.solved && foreground() && !introduced.current &&
       live.current.mounted && live.current.active && live.current.soundOn && session.canHear(0)) {
       introduced.current = true;
       play("practice-intro", true);
     }
-  }, [active, soundOn, state.gateOpen, state.status, state.index, state.helped, state.solved, play, session]);
+  }, [admitted, active, soundOn, state.gateOpen, state.status, state.index, state.helped, state.solved, play, session]);
 
   function speak(key: string, automatic = false) {
     if (live.current.mounted && live.current.active && live.current.soundOn && foreground()) play(key, automatic);
@@ -95,7 +98,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
       <Copy style={{ color: C.ink, flexShrink: 1 }}>{state.results.length} of 3 complete</Copy>
       <Button quiet compact onPress={() => send({ type: "cancel" })}>Cancel</Button>
     </View>
-    {state.gateOpen ? <>
+    {!admitted ? <ReadingRefused /> : state.gateOpen ? <>
       <Heading style={{ fontSize: 22 }}>For a grown-up</Heading>
       <Copy>To skip practice this time, type the answer.</Copy>
       <Heading style={{ fontSize: 26 }}>{state.gate.a} × {state.gate.b} = ?</Heading>
@@ -131,7 +134,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
       </> : <>
         <View style={{ padding: 10, borderRadius: 14, backgroundColor: state.shown ? C.success : C.paper,
           borderWidth: state.shown ? 2 : 1, borderColor: state.shown ? C.teal : C.line }}>
-          <Copy style={{ fontSize: q.kind === "word" ? 32 : 24, lineHeight: 36, color: C.ink, textAlign: "center", fontWeight: "700" }}>{q.text}</Copy>
+          <Copy style={{ fontSize: q.kind === "word" ? 32 : 24, lineHeight: 36, color: C.ink, textAlign: "center", fontWeight: "700" }}>{practiceText(q)}</Copy>
         </View>
         <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
           {q.choices.map((choice, i) => {

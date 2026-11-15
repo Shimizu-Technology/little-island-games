@@ -1,0 +1,19 @@
+# Measured School boards
+
+Little Island is a private offline family app. The child should see a readable board and its next action together, while keeping her plan and saved round. Sources: PRD, QA, CONTRACT_4.0 and the external F-frame-2 fix brief, 15 November 2026.
+
+LearnFrame measures the real viewport and card inset. Its budget includes the safe areas, pinned header and bottom padding. Scrolling never changes the budget. The approved non-animated reveal applies on entry/rotation below 500 pt; at AX it applies to the twelve ported School games, including Shell Math's existing path. Unported reading/School entries keep their previous AX behavior. Short-landscape next questions keep the revealed position. The full header remains reachable by scrolling up.
+
+LearnFrame enables the geometry context only for ported boards. Shared renderers in Food Web, Space Station and Turtle therefore retain their legacy drawing, controls and text width. Entry reveal uses the frame metrics separately, so unported short-window reveals keep their approved behavior. The measured inner width is used only by ported boards. Unported hosts keep the previous 900-pt cap and companion reserve. Challenge's grid budget and shared AX constants are unchanged.
+
+A port calls `useBoardGeometry`, attaches its callback to the flexible drawing, and marks the end of its primary interaction with `BoardPrimary`. The provider measures that boundary relative to `BoardSpaceContent`, using native `measureLayout`. Help, narration buttons, footers and selected-word details below the boundary do not shrink the drawing. Weather includes its correct-answer observation/continue button in this boundary and keeps its narration below it; shared unported science hosts keep their original order. Events share one animation frame. A remount keeps its last allocation until fresh measurements arrive; removed drawings are discarded.
+
+Wide landscape layouts use `BoardColumns`: drawing left, controls right. `BoardRow` measures the row itself. A taller sibling does not become fixed chrome against the drawing: the budget reserves the row's top, the drawing column's own captions/padding, and anything after the row through the primary action. Beep declares its inner map/Go row separately so Go's height never counts as map chrome. Treasure also uses a narrow, readable number line beside its keys at phone AX sizes.
+
+Legibility wins over fit. Håfa picture inputs stay at least 56 pt on phone / 64 pt on iPad; Tide Logic's smaller cargo has the same floor. Treasure's tick/START labels are drawn at their actual 13-pt floor (19.5 pt at AX), independently of diagram scaling. Weather's diagram labels account for both horizontal and vertical SVG scale. Beep's map retains a 160-pt floor. Touch targets keep their existing floors of at least 44 pt. If the floor and primary controls cannot fit, the page scrolls and the measurement is reported as an overflow.
+
+Crab and Beep plans wrap through three rows, then scroll. Their actual card positions drive the hidden-card count, visible arrow cue, VoiceOver label and non-animated reveal of the running, bumped, hinted or selected card. Manually scrolling does not repeatedly pull the plan back to its focus.
+
+Only Crab and Beep opt ProgramEditor into School geometry. Its allocation is never below its pre-slice maximum, with separate floors for two plan rows and a visible command palette. Turtle retains its original allocation. Float/Sink's animated contents scale in the tank's coordinate system, land inside its bottom and are clipped at the tank boundary.
+
+Tests render all twelve boards and ProgramEditor under the provider at phone, SE, iPad portrait/landscape and short-phone dimensions, default and AX5. Native measurements and before/fix comparisons live in the external slice's FIX-REPORT.md. These checks do not mark whole QA-25 rows passed, establish family usability or authorize a public release.

@@ -10,7 +10,7 @@ import { hermesStrings } from './artifact-views.mjs';
 import { compilerIdentity,verifyCompilerCapture,bytecodeFiles } from './compiler.mjs';
 import { generatedReceipts } from './generated-admission.mjs';
 import { guardTree } from './guard.mjs';
-import { checkShippingTree } from './shipping.mjs';
+import { checkShippingTree, checkReadingPayloads } from './shipping.mjs';
 import { lockedPolicy } from './policy.mjs';
 import { privatePath } from './paths.mjs';
 import { digest, sha256, requireThat } from './core.mjs';
@@ -35,6 +35,7 @@ export const isCI = value => !!value?.trim() && !/^(?:0|false)$/i.test(value.tri
 export function checkExport(root, directory) {
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   generatedReceipts(root);
+  admission.readingPayloads=checkReadingPayloads(root,directory);
   // CI receives the private policy lock via an operator-provisioned secret file.
   // Before the first bank, a policy-free structural check is explicit in the receipt.
   requireThat(!isCI(process.env.CI) || !!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK?.trim(), 'CI export requires a nonempty private policy');
@@ -48,6 +49,7 @@ export function checkRelease(root, web, ios, output, run=execFileSync, compile=e
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   generatedReceipts(root);
+  admission.readingPayloads=checkReadingPayloads(root,web);
   const nativeFiles=bytecodeFiles(ios);requireThat(nativeFiles.length>0,'Real embedded Hermes iOS bundle required');
   const embeddedStrings=nativeFiles.flatMap(file=>hermesStrings(readFileSync(join(ios,file.path))));
   const nativeCompiler=verifyCompilerCapture(root,ios);
@@ -58,6 +60,7 @@ export function checkRelease(root, web, ios, output, run=execFileSync, compile=e
     const jsFiles=[];
     function findJS(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const path=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in native JavaScript export');if(e.isDirectory())findJS(path);else if(/\.(?:js|bundle)$/.test(e.name))jsFiles.push({path,name:relative(temporary,path),sha256:sha256(readFileSync(path))});}}
     findJS(temporary);requireThat(jsFiles.length>0,'Native platform JavaScript export required');
+    checkReadingPayloads(root,temporary);
     iosJavaScript={sha256:treeHash(temporary),...guardTree(temporary,policy,[lock],{sourceRoot:root})};
     const derived=mkdtempSync(join(tmpdir(),'li-word-derived-hbc-')),exportedStrings=new Set();
     try {
