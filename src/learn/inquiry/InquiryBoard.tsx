@@ -6,6 +6,7 @@ import { Button, Copy, PressableScale } from "../../components/ui";
 import { hasSpeech } from "../../components/Audio";
 import { LARGE_TEXT, wordFitMultiplier } from "../../components/wordFit";
 import { CoachSpot } from "../Coach";
+import { useStepReveal } from "../stepReveal";
 import type { BoardProps } from "../types";
 import { clean, hintText, move, replay, testedBefore, undo, type InquiryState, type Investigation, type Move, type Observation } from "./engine";
 import { inquirySpeechKey } from "./speech";
@@ -28,6 +29,8 @@ export function InquiryBoard({
   const large = fontScale >= LARGE_TEXT;
   const space = useBoardSpace(), side = useBoardColumns();
   const geometry = useBoardGeometry(board, side ? 190 : 210, floor);
+  // At large text the frame brings the board back into view for each new step: a new investigation, and its result.
+  useStepReveal(p ? `${p.index}:${p.phase === "setup" ? 0 : 1}` : "end");
   const width = space?.ready ? (side ? space.width * 0.54 - 12 : space.width) : props.width;
   if (!p || p.phase === "finished") return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your investigation journal is complete!</Copy>;
   const q = qs[p.index], record = p.records[p.index];
@@ -118,6 +121,8 @@ export function InquiryBoard({
         <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={large ? 19.5 : 13} /></View>
         <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 12, textAlign: "center", color: theme.ink }}>Illustrative model{q.given ? ` · given: ${q.given}` : ""}</Copy>
       </View>}>
+        {/* Once tested, the result and the reasons sit right under the drawing the child is watching. */}
+        {p.phase !== "setup" && result}
         <Copy style={{ fontSize: 21, fontWeight: "900", color: theme.ink }}>{q.title}</Copy>
         <Copy style={{ fontSize: 16, lineHeight: 22 }}>{q.question}</Copy>
         {p.phase === "setup" && <CoachSpot active={coach.active}>
@@ -134,7 +139,6 @@ export function InquiryBoard({
         </CoachSpot>}
         {p.phase === "setup" && <Button disabled={!active || (q.kind === "observe" && s.guess < 0) || repeat} onPress={test}>{q.kind === "observe" ? "Test the model" : "Test my plan"}</Button>}
         {repeat && <Copy style={{ fontSize: 14 }}>You already tested that setup. Change something first.</Copy>}
-        {result}
       </BoardColumns>
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         <Button quiet compact disabled={!active || earlier.length === 0 || p.phase !== "setup"} onPress={back}>Undo</Button>
