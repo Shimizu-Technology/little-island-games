@@ -34,6 +34,11 @@ describe('Solitaire review regressions',()=>{
    expect((await adviseAsync(s,d,new AbortController().signal,10000)).kind).toBe('move');
   }
  });
+ it('keeps search order and measured node grades while sharing immutable search data',()=>{
+  for(const [index,expected] of [[0,482],[1,1592]] as const){const d=deal(reviewSamples[index].rows[0]),line=lineFromProof(d)!;let s=opening(d);for(const a of line.slice(0,3))s=apply(s,d.mode,a);const off=legalMoves(s,d.mode).find(a=>a[0]!==line[3][0]||a[1]!==line[3][1])!;s=apply(s,d.mode,off);
+   const before=JSON.stringify(s),r=solve(d,s,10000);expect(r.status).toBe('solved');expect(r.nodes).toBe(expected);expect(JSON.stringify(s)).toBe(before);
+  }
+ });
  it('uses a wall-clock bound and leaves a cancelled search unknown',async()=>{
   const d=makeDeal('freecell',4),clock=vi.spyOn(performance,'now');let ms=0;clock.mockImplementation(()=>ms+=1000);
   try{expect(await adviseAsync(opening(d),d,new AbortController().signal,10000)).toEqual({kind:'unknown'});}finally{clock.mockRestore();}

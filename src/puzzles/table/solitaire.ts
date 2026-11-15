@@ -65,7 +65,9 @@ export function canMove(s:Position,mode:Mode,a:Move):boolean{
 }
 export function apply(s: Position, mode: Mode, a: Move): Position {
   if(!canMove(s,mode,a))return s;
-  const [from,to,n]=a,piles=s.piles.map(p=>[...p]),hidden=[...s.hidden],known=[...s.known];
+  const [from,to,n]=a,piles=[...s.piles],hidden=mode==='freecell'?s.hidden:[...s.hidden],known=mode==='freecell'?s.known:[...s.known];
+  // Only two piles change. FreeCell has no hidden or newly observed cards.
+  piles[from]=[...s.piles[from]];piles[to]=[...s.piles[to]];
   if(n===0){
     if(from===12)for(let i=0;i<(mode==='draw-one'?1:3)&&piles[12].length;i++)piles[13].push(piles[12].pop()!);
     else piles[12]=piles[13].splice(0).reverse();
@@ -73,18 +75,18 @@ export function apply(s: Position, mode: Mode, a: Move): Position {
   }else{
     const cards=piles[from].splice(-n);piles[to].push(...cards);
     if(from<columns(mode)&&hidden[from]&&piles[from].length===hidden[from])hidden[from]--;
-    if(from<columns(mode)&&piles[from].length)known[piles[from].at(-1)!]=1;
+    if(mode!=='freecell'&&from<columns(mode)&&piles[from].length)known[piles[from].at(-1)!]=1;
   }
   return {piles,hidden,known};
 }
 /** All legal choices, including foundation reversals; no hidden-card-dependent filtering. */
 export function legalMoves(s: Position, mode: Mode): Move[] {
-  const out: Move[] = [], cols = columns(mode);
+  const out: Move[] = [], cols = columns(mode), candidate:[number,number,number]=[0,0,0];
   for (let from = 0; from < 16; from++) {
     const max = from < cols ? s.piles[from].length - s.hidden[from] : 1;
     for (let n = 1; n <= Math.min(13, max); n++) for (let to = 0; to < 16; to++) {
-      const a: Move = [from, to, n];
-      if (canMove(s, mode, a)) out.push(a);
+      candidate[0]=from;candidate[1]=to;candidate[2]=n;
+      if (canMove(s, mode, candidate)) out.push([from,to,n]);
     }
   }
   if (mode !== 'freecell') for (const a of [DRAW, RECYCLE]) if (canMove(s, mode, a)) out.push(a);
