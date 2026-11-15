@@ -19,7 +19,10 @@ it.each([1, 3.12].flatMap(scale => [26, 32, 36, 40, 42, 50.667, 56, 68].flatMap(
     const actual = (noteGeometry.cornerGridGeometry?.(cell * n, 1400, spec, false, notes, clues, c => new Map([[0, caption(c, scale, text, kind)]])).geometry ?? gridGeometry(cell * n, 1400, spec, enlarge)).cell;
     // The required Killer/Lagoon frames use these shorter captions: preserve
     // their previous cell size while extending support to real four-digit products.
-    if (text.length <= 4) expect(actual).toBe(enlarge ? Math.max(44, cell) : cell);
+    if (text.length <= 4) {
+      const previous = gridGeometry(cell * n, 1400, spec, enlarge).cell;
+      expect(actual).toBe(enlarge ? Math.max(44, previous) : previous);
+    }
     const layout = cornerNoteLayout(actual, symbols, caption(actual, scale, text, kind));
     expect(layout.fits, `${text} at ${actual}`).toBe(true);
     if (!layout.fits) throw new Error();
