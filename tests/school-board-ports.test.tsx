@@ -18,6 +18,7 @@ import { Board as B4 } from '../src/learn/games/reef-race/view';
 import { Board as B5 } from '../src/learn/games/shell-math/view';
 import { Board as B6 } from '../src/learn/games/tide-pool/view';
 import { Art as FloatArt, Board as B9 } from '../src/learn/games/float-sink/view';
+import { enter as logicEnter, taskAt as logicTaskAt, type LogicState } from '../src/learn/games/logic-lagoon/engine';
 import { Board as B10 } from '../src/learn/games/logic-lagoon/view';
 import { SchoolBoard as B11 } from '../src/learn/games/slip-tide/schoolBoard';
 import { ProgramEditor } from '../src/learn/program/ProgramEditor';
@@ -76,7 +77,7 @@ const frames = new Map<number, FrameRequestCallback>(); let next = 0;
 let boundary={y:0,height:500}, rowBox={y:0,height:500}, columnBox={y:0,height:0};
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if(root) await act(async()=>root!.unmount()); root=undefined; frames.clear(); vi.unstubAllGlobals(); });
-async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level:LearningLevel=1, geometryEnabled=true, prepare?:(session:LearnSession)=>LearnSession) {
+async function mountPort(id: LearnId, Board: React.ElementType, available=472, window={width:393,height:852,fontScale:1}, level:LearningLevel=1, geometryEnabled=true, prepare?:(session:LearnSession)=>LearnSession, fit:{width:number;ceiling:number;maxSize:number}|null=null) {
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++next,f);return next;});
@@ -85,7 +86,7 @@ async function mountPort(id: LearnId, Board: React.ElementType, available=472, w
   let session=startSession(id,{options:optionsAtLevel({mode:'solo',pace:'easy'},level)},{},7);
   if(prepare)session=prepare(session);
   const props={session,update:vi.fn(),practice:vi.fn(),assistance:vi.fn(),skills:{},sound:vi.fn(),stopSound:vi.fn(),soundOn:false,width:window.width-60,height:window.height-93,active:true,coach:{active:false,done:vi.fn()},cheer:vi.fn()};
-  await act(async()=>{root=create(<BoardSpaceProvider geometryEnabled={geometryEnabled} space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={null}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
+  await act(async()=>{root=create(<BoardSpaceProvider geometryEnabled={geometryEnabled} space={{width:window.width-60,height:available,large:window.fontScale>=1.5}}><BoardSpaceContent testID="content"><TextFit.Provider value={fit}><Board {...props}/></TextFit.Provider></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:element=>({measureLayout:(_:unknown,done:(x:number,y:number,w:number,h:number)=>void)=>{const id=(element.props as {testID:string}).testID;const b=id==='school-drawing-column'?columnBox:['school-drawing-row','slip-side','beep-map-row'].includes(id)?rowBox:boundary;done(0,b.y,333,b.height);},scrollTo:vi.fn(),measureInWindow:()=>{}})});});
   return root!;
 }
 const flat=(s:unknown):Record<string,unknown>=>Array.isArray(s)?Object.assign({},...s.map(flat)):s&&typeof s==='object'?s as Record<string,unknown>:{};
@@ -342,4 +343,23 @@ it('Weather includes its correct-answer next action in the primary boundary',asy
  const text=(label:string)=>primary.findAll(n=>String(n.type)==='Text'&&n.children.includes(label));
  expect(text('The hat made shade.')).toHaveLength(1);
  expect(text('Reset')).toHaveLength(0);expect(text('Hear why')).toHaveLength(0);
+});
+
+it.each([1,3.12])('cage clues and entered values occupy separate vertical bands at text scale %s',async fontScale=>{
+ const r=await mountPort('logic-lagoon',B10,600,{width:393,height:852,fontScale},5,true,session=>{
+  const state=session.state as LogicState,task=logicTaskAt(state);if(task.kind!=='grid')throw Error('Expected cage fixture');
+  return {...session,state:logicEnter(state,0,task.solution[0])};
+ },{width:333,ceiling:2,maxSize:44});
+ const cell=r.root.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Row 1, column 1:'))[0];
+ const value=cell.findAll(n=>String(n.type)==='Text')[0];
+ const clue=r.root.findAll(n=>String(n.type)==='Text'&&n.children.some(c=>typeof c==='string'&&c.startsWith('Σ')))[0];
+ let overlay=clue.parent;while(overlay&&flat(overlay.props.style).position!=='absolute')overlay=overlay.parent;
+ const cs=flat(cell.props.style),vs=flat(value.props.style),ls=flat(clue.props.style),box=flat(overlay!.props.style);
+ const physicalLine=(node:typeof value,style:Record<string,unknown>)=>Number(style.lineHeight)*Math.min(fontScale,node.props.maxFontSizeMultiplier??fontScale);
+ const valueLine=physicalLine(value,vs),clueLine=physicalLine(clue,ls),border=Number(cs.borderWidth),padding=Number(cs.paddingTop??0);
+ const valueTop=border+padding+(Number(cs.height)-2*border-padding-valueLine)/2;
+ const gridPadding=Number(flat(view('school-logic-lagoon-drawing').props.style).padding);
+ const clueTop=Number(box.top)-gridPadding-Number(cs.margin);
+ expect(valueTop).toBeGreaterThanOrEqual(clueTop+clueLine+1);
+ expect(valueTop+valueLine).toBeLessThanOrEqual(Number(cs.height)-border+1);
 });
