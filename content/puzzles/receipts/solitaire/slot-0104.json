@@ -1,0 +1,141 @@
+{
+ "format": 1,
+ "family": "solitaire",
+ "slot": 104,
+ "catalogRevision": 20,
+ "band": "t3",
+ "ordinals": [
+  106496,
+  48
+ ],
+ "sourceSha": "d2856c26f347fd55b4be3196f8be21661193c1ca",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "a188b95ffd7a38c403377376f322223d59fa73256b4633c349150d224d9c008b"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 256,
+  "kept": [
+   83888870,
+   83889268,
+   83889691,
+   83889529,
+   83886882,
+   83886144,
+   83886163,
+   83886237,
+   83887214,
+   83886240,
+   83886175,
+   83886329,
+   83887230,
+   83886244,
+   83886447,
+   83886437,
+   83887614,
+   83886316,
+   83886479,
+   83886461,
+   83887706,
+   83886364,
+   83886495,
+   83887205,
+   83887734,
+   83886504,
+   83886523,
+   83887721,
+   83887762,
+   83886564,
+   83886631,
+   83888109,
+   83887826,
+   83886568,
+   83886647,
+   83888373,
+   83887918,
+   83886816,
+   83886675,
+   83888685,
+   83888006,
+   83886872,
+   83886683,
+   83888881,
+   83888190,
+   83887012,
+   83886923,
+   83888909
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 48,
+  "semantic": 48
+ },
+ "histograms": {
+  "technique": {
+   "plan-2": 4,
+   "plan-3": 44
+  },
+  "template": {
+   "bursts": 12,
+   "pairs": 12,
+   "steady": 12,
+   "weave": 12
+  },
+  "layout": {
+   "bursts": 12,
+   "pairs": 12,
+   "steady": 12,
+   "weave": 12
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 10000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   52,
+   141
+  ],
+  "exact": 0
+ },
+ "proofHashes": {
+  "witness": "25db63a8fff328ffdec634b74d8bc08c16acc4c4f28f244da79afcbfacd7ba97",
+  "trace": "8a0d6ecd6b17bb535db8d05ab9c8c8ecf524c52e05c117437991e9164e0842b9",
+  "claims": "490fd86de479ef23089a3ca4ab9d88c71960215ca5b48d298a470eb56e9ecdba"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating. Exact ordered install of 9532ba72 via scripts/puzzles/solitaire/install.ts. Curation scripts, source pool/checkpoint hashes and every selected row in scripts/puzzles/solitaire/selected-rows.json (sha256 dcdc5a1df121e8a25931f201454357c2479e76cd0b06840ce49dbfa97f80c637). Receipt attempts/rejects describe this exact-row certification, not historical candidate curation."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 10276,
+  "gzip": 3177
+ },
+ "sha256": "d0b8310c0a84476c43b899d52a4e34675d7300e0fdeb238a8ad61be2ba9dbe6c",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

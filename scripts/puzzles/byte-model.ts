@@ -7,7 +7,7 @@ const r = (family: string, target: number, floor: number, bands: number, rowByte
 export const BYTE_MODEL: readonly ByteModelRow[] = [
   r('sudoku', 4096, 1024, 6, 256), r('picture-grid', 4096, 512, 6, 640), r('bridges', 2048, 512, 6, 320), r('cage-math', 3072, 768, 6, 512),
   r('cross-sums', 1024, 64, 6, 512), r('word-search', 2048, 512, 6, 512), r('fill-in', 1024, 256, 6, 640), r('crossword', 1792, 352, 4, 1408),
-  r('word-ladder', 1024, 256, 6, 256), r('word-scramble', 1024, 256, 6, 128), r('solitaire', 2048, 512, 6, 128),
+  r('word-ladder', 1024, 256, 6, 256), r('word-scramble', 1024, 256, 6, 128), r('solitaire', 1024, 256, 6, 256), r('freecell', 1024, 256, 4, 512),
   r('slip-tide', 4096, 512, 7, 384), r('canoe-seats', 4096, 512, 8, 384), r('gate-crab', 384, 96, 6, 256), r('every-stone', 4096, 512, 7, 384),
   r('shell-scale', 32, 32, 6, 384), r('sail-fold', 2048, 256, 7, 512), r('crab-commands', 2048, 512, 6, 384), r('beep-bot', 240, 240, 5, 256),
   r('maze', 2048, 512, 6, 256), r('reef-sweep', 128, 128, 4, 256), r('turtle-draw', 320, 120, 6, 384), r('code-lab', 440, 140, 6, 640),

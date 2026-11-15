@@ -1,0 +1,21 @@
+{
+ "format": 1,
+ "family": "freecell",
+ "seedBase": 1,
+ "attempts": 256,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 10000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "f1": 32,
+  "f3": 64,
+  "f5": 64,
+  "f6": 96
+ },
+ "sourceSha": "de731882992b7c48b732243d2cbe5eb07467572f",
+ "status": "complete"
+}
