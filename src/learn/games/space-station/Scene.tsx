@@ -15,8 +15,10 @@ const worldGround = ["#81B8A2", "#B6BDBB", "#CC8C6B", "#CBAD87"];
  */
 export function StationScene({ q, settings, seen, height, label }: { q: Investigation; settings: readonly number[]; seen: Observation | null; height: number; label: number }) {
   const at = (i: number) => settings[i] ?? q.start[i];
-  const text = (s: string, x: number, y: number, size = label, fill = ink, anchor: "middle" | "start" | "end" = "middle") => (
-    <SText x={x} y={y} textAnchor={anchor} fontFamily={font ?? "Arial"} fontSize={size} fontWeight="800" fill={fill}>{s}</SText>
+  // `room` is the width a label may use. At the largest text a reading shrinks to fit its box; the same reading is
+  // also printed below the drawing in text that scales.
+  const text = (s: string, x: number, y: number, size = label, fill = ink, room = 340) => (
+    <SText x={x} y={y} textAnchor="middle" fontFamily={font ?? "Arial"} fontSize={Math.min(size, room / (s.length * 0.6))} fontWeight="800" fill={fill}>{s}</SText>
   );
   const unknown = (x: number, y: number) => <G><Circle cx={x} cy={y} r={label * 1.1} fill="#FFF9E9" stroke={ink} strokeDasharray="3 3" />{text("?", x, y + label * 0.36)}</G>;
   let body: React.ReactNode = null;
@@ -28,7 +30,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
       {[80, 105, 130].map((y) => <Line key={y} x1={86} y1={y} x2={160} y2={y} stroke={gold} strokeWidth={3} strokeLinecap="round" />)}
       <EarthGlobe x={240} y={105} r={64} night={!!seen} />
       <Circle cx={240 + Math.cos(angle) * 64} cy={105 + Math.sin(angle) * 64} r={9} fill="#F3B181" stroke={ink} strokeWidth={2.5} />
-      {seen && text(["Day", "Night", "Edge"][skyAt(turn)], 240 + Math.cos(angle) * 30, 105 + Math.sin(angle) * 30 + label * 0.35, label, skyAt(turn) === 0 ? ink : "#FFF9E9")}
+      {seen && text(["Day", "Night", "Edge"][skyAt(turn)], 240 + Math.cos(angle) * 30, 105 + Math.sin(angle) * 30 + label * 0.35, label, skyAt(turn) === 0 ? ink : "#FFF9E9", 80)}
     </>;
   } else if (topic === "moon") {
     const spot = at(0), cx = 165, cy = 105, rx = 88, ry = 72;
@@ -45,7 +47,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
         </G>;
       })}
       {seen ? <MoonDisc x={312} y={95} r={34} phase={spot} /> : unknown(312, 95)}
-      {text("From Earth", 312, 160, label * 0.85)}
+      {text("From Earth", 312, 160, label * 0.85, ink, 92)}
     </>;
   } else if (topic === "planets") {
     const pair = q.controls.length === 2;
@@ -56,18 +58,18 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
         const x = i === 0 ? 100 : 260, r = Math.max(2, planetSize[p] * scale), revealed = seen || (!pair && i === 0);
         return <G key={i}>
           {revealed ? <Circle cx={x} cy={95} r={r} fill={["#AA9D8A", "#D5A266", "#649CA9", "#C27D58", "#C9A57A", "#DCC994", "#8CCAC9", "#6E8FBF"][p]} stroke={ink} strokeWidth={1.5} /> : unknown(x, 95)}
-          {text(planets[p], x, 182, label)}
+          {text(planets[p], x, 186, label, ink, 150)}
         </G>;
       })}
     </>;
   } else if (topic === "gravity") {
     const scale = (x: number, ground: string, mass: number, reading: string | null, caption: string) => <G key={x}>
       <Rect x={x - 70} y={150} width={140} height={44} rx={10} fill={ground} />
-      <Rect x={x - 30} y={86} width={60} height={46} rx={8} fill={gold} stroke={ink} strokeWidth={1.5} />
-      {text(`${mass} kg`, x, 109 + label * 0.35, label)}
+      <Rect x={x - 40} y={86} width={80} height={46} rx={8} fill={gold} stroke={ink} strokeWidth={1.5} />
+      {text(`${mass} kg`, x, 109 + label * 0.35, label, ink, 74)}
       <Rect x={x - 46} y={132} width={92} height={18} rx={5} fill="#F8F5E6" stroke={ink} />
-      {reading === null ? unknown(x, 50) : <G><Rect x={x - 58} y={32} width={116} height={label * 1.9} rx={9} fill="#FFF9E9" stroke={ink} />{text(reading, x, 32 + label * 1.3)}</G>}
-      {text(caption, x, 188, label * 0.9, "#FFFCF1")}
+      {reading === null ? unknown(x, 50) : <G><Rect x={x - 66} y={30} width={132} height={40} rx={9} fill="#FFF9E9" stroke={ink} />{text(reading, x, 57, label, ink, 124)}</G>}
+      {text(caption, x, 186, label * 0.9, "#FFFCF1", 132)}
     </G>;
     if (q.key === "gravity-a" || q.key === "gravity-b") {
       const [m, w] = [masses[at(0)], at(1)];
@@ -101,7 +103,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
         {text("N", 250, 18, label)}
         {season !== null && <Path d="M194 100A56 56 0 0 1 306 100Z" fill={season === 0 ? gold : season === 1 ? night : soft} opacity={0.45} />}
       </G>
-      {text(`${tilts[t]}°`, 330, 190, label)}
+      {text(`${tilts[t]}°`, 326, 190, label, ink, 60)}
     </>;
   } else {
     const place = at(0), orbit = at(1), result = seen ? eclipseAt(place, orbit) : null;

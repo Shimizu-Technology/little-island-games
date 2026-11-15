@@ -13,6 +13,8 @@ import { inquirySpeechKey } from "./speech";
 
 export type InquiryTheme = { ink: string; accent: string; card: string; line: string; chosen: string };
 type Earlier = Pick<InquiryState, "draft" | "guess" | "history" | "index">;
+/** Scenes draw in a 360 × 210 viewBox. */
+const sceneWidth = 360, sceneHeight = 210;
 export type SceneProps = { q: Investigation; settings: readonly number[]; seen: Observation | null; height: number; label: number };
 
 /**
@@ -33,7 +35,9 @@ export function InquiryBoard({
   useStepReveal(p ? `${p.index}:${p.phase === "setup" ? 0 : 1}` : "end");
   const width = space?.ready ? (side ? space.width * 0.54 - 12 : space.width) : props.width;
   if (!p || p.phase === "finished") return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your investigation journal is complete!</Copy>;
-  const q = qs[p.index], record = p.records[p.index];
+  const q = qs[p.index], record = p.records[p.index], free = q.controls.filter((c) => !c.fixed).length;
+  // SVG labels are drawn in the scene's units; divide by its scale so they never fall below the School label floor.
+  const sceneScale = Math.min(geometry.height / sceneHeight, ((side && space ? space.width * 0.46 : width) - 12) / sceneWidth);
   const send = (m: Move, tone = true): InquiryState | null => {
     if (!active) return null;
     const next = move(qs, s, m);
@@ -117,8 +121,8 @@ export function InquiryBoard({
           {steps.map((step, i) => (i === now ? `▸${step}` : step)).join(" · ")}
         </Copy>
       </View>
-      <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 8, gap: 4 }}>
-        <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={large ? 19.5 : 13} /></View>
+      <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
+        <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={(large ? 19.5 : 13) / sceneScale} /></View>
         <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 12, textAlign: "center", color: theme.ink }}>Illustrative model{q.given ? ` · given: ${q.given}` : ""}</Copy>
       </View>}>
         {/* Once tested, the result and the reasons sit right under the drawing the child is watching. */}
@@ -128,7 +132,7 @@ export function InquiryBoard({
         {p.phase === "setup" && <CoachSpot active={coach.active}>
           <View style={{ gap: 8 }}>
             {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 4 }}>
-              <Copy style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>
+              {free > 1 && <Copy style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>}
               {choices(c.options, (j) => s.draft[i] === j, (j) => send({ type: "set", control: i, value: j }), `Set ${c.name}`)}
             </View>)}
             {q.kind === "observe" && <>
