@@ -1,5 +1,6 @@
 import React,{useCallback,useContext,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {Animated,PanResponder,Pressable,ScrollView,View,useWindowDimensions} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Button,C,Copy} from '../../components/ui';
 import {Text} from '../../components/Text';
 import {atLarge} from '../../components/wordFit';
@@ -16,6 +17,7 @@ const face=(c:number)=>`${['','A','2','3','4','5','6','7','8','9','10','J','Q','
 const pileName=(i:number,free:boolean)=>i<8?`Column ${i+1}`:i<12?`${['Clubs','Diamonds','Spades','Hearts'][i-8]} foundation`:free?`Free cell ${i-11}`:i===12?'Stock':'Waste';
 /** A quiet card table. Controls remain above a bounded two-axis scroll area at every text size. */
 export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps){
+ const {bottom}=useSafeAreaInsets();
  const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,cap=atLarge(fontScale,1.5),read=readTable(view.payload,view.deal)!;
  const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(76,(width-12)/cols-gap)),cardH=large?96:86,overlap=large?54:32;
  const boardW=Math.max(width,cols*(cardW+gap)+12),tableY=cardH+54;
@@ -24,6 +26,9 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  const feedback=useContext(GridFeedback),holdPage=useContext(GridInteraction),accepted=useRef(view.payload.edits);
  const [help,setHelp]=useState<{stage:1|2|3|4;edits:number;audit:number}|null>(null);
  const search=useRef<AbortController|null>(null),vertical=useRef<ScrollView>(null),horizontal=useRef<ScrollView>(null),demonstration=useRef<{expected:string;edits:number;remaining:Move[];stage:3|4}|null>(null);
+ const tableFrame=useRef<View>(null),[room,setRoom]=useState<number|null>(null);
+ const measureRoom=useCallback(()=>tableFrame.current?.measureInWindow((_x,y)=>{if(Number.isFinite(y))setRoom(Math.max(190,height-y-bottom-12));}),[height,bottom]);
+ useLayoutEffect(()=>{measureRoom();},[measureRoom]);
  const [translation]=useState(()=>new Animated.ValueXY());
  const places=useMemo(()=>{
   const out:Place[]=[];
@@ -88,7 +93,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
  </View>;
  const hintAction=()=>{if(!cueReady){ask();return;}if(help.stage===1){setHelp({...help,stage:2});return;}if(help.stage>=3&&advice?.kind==='move')showOne(advice.plan,4);else void oneStep(help.stage===2?3:4);};
  const hintLabel=thinking?'Looking…':!cueReady?'Hint':help.stage===1?'Think':help.stage===2?'One step':help.stage===3?'Show me':'Next step';
- const scrollHeight=Math.max(190,Math.min(440,height*(large?0.42:0.55)));
+ const scrollHeight=Math.max(190,Math.min(440,height*(large?0.42:0.55),room??440));
  const detail=rules||memory||message&&!selected||cueReady||advice;
  return <View style={{gap:7}}>
   <Copy maxFontSizeMultiplier={cap}>{view.title}</Copy>
@@ -109,7 +114,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
    {boardH>scrollHeight&&<><Button maxFontSizeMultiplier={cap} quiet compact label="Top of table" onPress={()=>vertical.current?.scrollTo({y:0,animated:false})}>Top</Button><Button maxFontSizeMultiplier={cap} quiet compact onPress={()=>vertical.current?.scrollToEnd({animated:false})}>Lower cards</Button></>}
    {boardW>width+1&&<><Button maxFontSizeMultiplier={cap} quiet compact label="First columns" onPress={()=>horizontal.current?.scrollTo({x:0,animated:false})}>←</Button><Button maxFontSizeMultiplier={cap} quiet compact label="Last columns" onPress={()=>horizontal.current?.scrollToEnd({animated:false})}>→</Button></>}
   </View>
-  <ScrollView ref={horizontal} horizontal nestedScrollEnabled scrollEnabled={!dragging} style={{maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, horizontal scroll">
+  <View ref={tableFrame} testID="solitaire-table-viewport" collapsable={false} onLayout={measureRoom}><ScrollView ref={horizontal} horizontal nestedScrollEnabled scrollEnabled={!dragging} style={{maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, horizontal scroll">
    <ScrollView ref={vertical} nestedScrollEnabled scrollEnabled={!dragging} style={{width:boardW,maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, vertical scroll">
     <View {...pan.panHandlers} style={{width:boardW,height:boardH,backgroundColor:'#D4E7DC',borderRadius:12}}>
      <Text maxFontSizeMultiplier={cap} style={{position:'absolute',left:6,top:3,fontSize:12,color:C.ink}}>{free?'Free cells':'Stock · waste'}</Text>
@@ -119,7 +124,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
      {dragging&&<Animated.View pointerEvents="none" style={{position:'absolute',left:dragging.x,top:dragging.y,zIndex:1000,transform:translation.getTranslateTransform(),opacity:0.9}}>{s.piles[dragging.pile].slice(dragging.index).map((c,i)=><View key={c} style={{position:i?'absolute':'relative',top:i*overlap}}>{visual({...dragging,index:dragging.index+i,card:c})}</View>)}</Animated.View>}
     </View>
    </ScrollView>
-  </ScrollView>
+  </ScrollView></View>
   {view.payload.audit.length===128&&<Copy maxFontSizeMultiplier={cap}>This attempt’s help log is full. You can keep playing and undoing, or choose a fresh attempt from the puzzle browser.</Copy>}
   {!free&&<Button maxFontSizeMultiplier={cap} quiet compact disabled={!active||!s.piles[12].length&&!s.piles[13].length} onPress={()=>dispatch({type:'move',move:s.piles[12].length?[12,13,0]:[13,12,0]})}>{s.piles[12].length?`Draw ${view.deal.mode==='draw-three'?'three':'one'} · ${s.piles[12].length} in stock`:'Turn waste over'}</Button>}
   {!legalMoves(s,view.deal.mode).length&&!won(s)&&<Copy maxFontSizeMultiplier={cap}>There are no legal moves. You can undo freely.</Copy>}

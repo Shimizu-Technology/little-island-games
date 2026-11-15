@@ -11,6 +11,7 @@ import {legalMoves,opening,type Deal,type Mode} from '../src/puzzles/table/solit
 import {cardWords} from '../src/puzzles/table/solver';
 const fake=vi.hoisted(()=>({descriptor:null as unknown,scale:1,feedback:vi.fn(),held:[] as boolean[],session:null as ChallengeSession|null}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>({entry:async()=>fake.descriptor,savedHash:async()=> 'a'.repeat(64)})}));
+vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})}));
 vi.mock('react-native',()=>({View:'div',Pressable:'button',ScrollView:'section',useWindowDimensions:()=>({width:393,height:852,fontScale:fake.scale}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{v={x:0,y:0};setValue(v:{x:number;y:number}){this.v=v;}getTranslateTransform(){return[{translateX:this.v.x},{translateY:this.v.y}];}}}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',C:{gold:'#E1B251',teal:'#246858',ink:'#183F39'}}));
 vi.mock('../src/components/Text',()=>({Text:'span'}));
@@ -79,6 +80,13 @@ describe('Solitaire card interaction',()=>{
    expect(seen).toHaveLength(1);for(const c of waste.slice(0,2))expect(seen[0].props.accessibilityLabel).toContain(cardWords(c));
    expect(screen.root.findAllByType('button').filter(n=>n.props.accessibilityLabel?.startsWith('Waste,'))).toHaveLength(1);
    expect(screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel===`Waste, ${cardWords(waste[2])}`)).toBeDefined();
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+
+ it('bounds Lower cards to the actual visible space above the phone home indicator',async()=>{
+  const{Harness}=await fixture();let screen!:ReactTestRenderer;
+  try{await act(async()=>{screen=create(<Harness/>,{createNodeMock:n=>(n.props as {testID?:string}).testID==='solitaire-table-viewport'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,600,353,440)}:null});});
+   expect(screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!.props.style.maxHeight).toBe(206);
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
  it('fits eight default-size columns and keeps AX5 controls plus full card names available',async()=>{
