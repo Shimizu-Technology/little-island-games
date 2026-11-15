@@ -85,7 +85,7 @@ it.each([3.12, 1])('landscape phone at text scale %s: the arrows sit beside the 
   Object.assign(viewport, { width: 874, height: 402, fontScale });
   // The frame gives the board 874 - 2 x 59 - 56 pt and 402 - 21 pt.
   act(() => { root = create(<Playfield {...slip} width={700} height={381} />); });
-  const side = root!.root.find(n => n.props.testID === 'slip-side');
+  const side = root!.root.find(n => String(n.type) === 'View' && n.props.testID === 'slip-side');
   expect(side.props.style.flexDirection).toBe('row');
   const [board, column] = side.children as unknown as { props: { testID?: string; style: Record<string, unknown> }; findAll: (f: (n: { props: Record<string, unknown> }) => boolean) => unknown[] }[];
   const water = root!.root.find(n => n.props.accessibilityRole === 'image');
