@@ -41,6 +41,20 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   whole save after a School draft is stored; originals
   remain preserved by recovery. This includes drafts in existing games.
   Integration must re-gate the affected adapters; SC-01b/c and SC-03 new content remain separate work.
+- **15 November 2026 — reserved-slot claims below the high-water mark (lead, `lead/slot-claims`):**
+  `root.json`'s `nextSlot` and `nextOrdinal` stay monotonic high-water marks and
+  `assertRootAppendOnly` is unchanged. A bake may now claim explicit slots below them,
+  each inside the caller's own reservation in `src/content/puzzles/slot-ranges.json`
+  (the lead's register, mirroring SLOTS.md), never a pack of any family (retired included),
+  not an inline bank in the working save catalog, and not a pack or bank at any published
+  tip. A claimed pack's ordinals start at `slot × 1024`. After a claim each counter is
+  the larger of itself and what the claim used. The Latin and edge bakes, the kit's
+  `bake --range … --owner …` and the Word Search install use this path; the sequential
+  default is unchanged. `puzzles verify` now also requires every pack and save-catalog
+  bank slot to lie inside a recorded reservation. No published bank, catalog entry or
+  save changes. Found by the G7a (P3-6) and T1 (P1-2) reviews; G7a and T1 re-bake their
+  unpublished packs through a claim before integration. See `docs/PUZZLE_BANKS.md`
+  "Slot allocation" and `tests/slot-claims.test.ts`.
 
 ## Saves: envelope 3, profiles 2
 
@@ -104,7 +118,7 @@ The rule (program plan §5): contract changes go through the lead, one at a time
 
 ## Slots
 
-The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/state/catalogManifest.ts`). A slice uses only the range the lead's slot register gives it, and the lead checks `src/state/save-catalog.json` against the register before each merge. A new range, or anything outside the caps, is a lead change.
+The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/state/catalogManifest.ts`). A slice uses only the range the lead's slot register gives it, and the lead checks `src/state/save-catalog.json` against the register before each merge. Bank ranges are also recorded in `src/content/puzzles/slot-ranges.json`, which `puzzles verify` enforces and packed bakes claim from (`docs/PUZZLE_BANKS.md` "Slot allocation"). A new range, an edit to that file, or anything outside the caps, is a lead change.
 
 ## Grid shell
 

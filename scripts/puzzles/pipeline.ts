@@ -11,6 +11,7 @@ import type { BandQuota, FamilySpec } from '../../src/puzzles/types';
 import { utf8Bytes } from '../../src/state/saveBits';
 import { BYTE_MODEL, verifyByteModel, type ByteModelRow, type FamilyActual } from './byte-model';
 import { receiptBody, receiptIssues, type BakeFacts } from './receipts';
+import { assertClaimable, blockStart, readReservations, slotRangeIssues, slotRangesFile, type SlotClaim } from './slots';
 
 export type CatalogDirs = { content: string; receipts: string };
 export const productionDirs: CatalogDirs = { content: 'src/content/puzzles', receipts: 'content/puzzles/receipts' };
@@ -92,6 +93,11 @@ export type BakeOptions = {
   budget?: number;
   sourceSha?: string;
   now?: () => number;
+  /**
+   * Explicit slots (`slots.ts`): packs take the claimed range's slots in order from its first, each with
+   * ordinals from its own block, instead of `nextSlot` onward. Without it the sequential default runs.
+   */
+  claim?: SlotClaim;
   /** Failure injection for tests: throws after staging, before the catalog commits. */
   beforeCommit?: () => void;
 };
@@ -114,6 +120,8 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
   const broken = catalogIssues(root, families.values());
   if (broken.length) throw new Error(`The published catalog is inconsistent, so nothing can be baked: ${broken.join(' ')}`);
   const previous = families.get(spec.id) ?? null;
+  // A claim that cannot take its first slot fails before any generation runs.
+  if (options.claim) claimSlot(options.claim, families, previous, options.claim.range.first);
   const ctx: CertifyContext = { budget, seenExact: new Set(), seenSemantic: new Set() };
   const have: Record<string, number> = Object.fromEntries(spec.bands.map(b => [b.id, 0]));
   const publishedTemplates = new Map<string, Map<string, number>>();
@@ -195,7 +203,7 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
   if (short.length) return report(false, `Below floor: ${short.map(b => `${b.id} ${counts[b.id]}/${b.floor}`).join(', ')}.`);
   if (overfull.length) return report(false, overfull.join(' '));
   if (!spec.bands.some(b => accepted[b.id].length)) return report(false, complete ? 'Already at target.' : 'Nothing new was accepted.');
-  const slots = publish(spec, dirs, root, previous, accepted, { sourceSha, seedBase, attempts, rejects, budget, budgetHits, timedOut }, options.beforeCommit);
+  const slots = publish(spec, dirs, root, families, previous, accepted, { sourceSha, seedBase, attempts, rejects, budget, budgetHits, timedOut }, options.claim, options.beforeCommit);
   return report(true, null, slots);
 }
 
@@ -205,7 +213,15 @@ const hashFiles = (files: readonly string[]) => {
   for (const file of files) if (existsSync(file)) h.update(file).update(readFileSync(file));
   return h.digest('hex');
 };
-function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, previous: FamilyManifest | null, accepted: Record<string, CertifiedEntry<P>[]>, facts: BakeFacts, beforeCommit?: () => void): number[] {
+/** A claimed slot must also be free in the catalog being baked, and above the family's own packs, which ascend. */
+function claimSlot(claim: SlotClaim, families: ReadonlyMap<string, FamilyManifest>, previous: FamilyManifest | null, slot: number): number {
+  assertClaimable(claim, slot);
+  for (const m of families.values()) if (m.packs.some(p => p[0] === slot)) throw new Error(`Slot ${slot} cannot be claimed: it is a pack of ${m.family}.`);
+  const last = previous?.packs.at(-1)?.[0];
+  if (last !== undefined && slot < last) throw new Error(`Slot ${slot} is below ${previous!.family}'s last pack ${last}; a family's packs ascend.`);
+  return slot;
+}
+function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, current: ReadonlyMap<string, FamilyManifest>, previous: FamilyManifest | null, accepted: Record<string, CertifiedEntry<P>[]>, facts: BakeFacts, claim?: SlotClaim, beforeCommit?: () => void): number[] {
   // Validate decoded answers before staging or publishing a word-family pack.
   if ([spec.id, spec.adapter.engine].some(id => /(?:^|-)(?:word-search|crossword|fill-in|word-ladder|word-scramble|word-builder)(?:$|-)/.test(id))) {
     const admission = spawnSync(process.execPath, [fileURLToPath(new URL('../words/puzzle-admission.mjs', import.meta.url))], { input: JSON.stringify({ family: spec.id, engine: spec.adapter.engine, cores: Object.values(accepted).flat().map(e => e.core) }), encoding: 'utf8' });
@@ -213,17 +229,26 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, pre
   }
   const staging = join(dirs.content, `.staging-${process.pid}`);
   const bands = previous?.bands ?? spec.bands.map(b => b.id);
-  let nextSlot = root.nextSlot, nextOrdinal = root.nextOrdinal;
+  // Both counters are high-water marks: a claim below them leaves them, a claim above raises them.
+  let nextSlot = root.nextSlot, nextOrdinal = root.nextOrdinal, claimed = claim?.range.first;
   const newRows: PackRow[] = [], staged: { asset: string; text: string }[] = [], receipts: { slot: number; body: string }[] = [], newRanges = new Map<string, [number, number][]>();
   const speech = new Set<string>(), kitHash = hashFiles(kitSources), familyHash = hashFiles(spec.sources);
   for (const band of spec.bands) {
     const entries = accepted[band.id];
     const headerBytes = utf8Bytes(JSON.stringify({ format: 1, family: spec.id, slot: 511, first: 2147483647, count: 1024, band: band.id, rules: spec.adapter.rules, rng: 1 } satisfies PackHeader));
     for (const group of splitPacks(entries, headerBytes)) {
-      const slot = nextSlot++;
-      if (slot >= BANK_CAPS.slots) throw new Error('The catalog has no bank slots left.');
-      const first = nextOrdinal;
-      nextOrdinal += group.length;
+      let slot: number, first: number;
+      if (claim) {
+        slot = claimSlot(claim, current, previous, claimed!++);
+        first = blockStart(slot);
+        nextSlot = Math.max(nextSlot, slot + 1);
+        nextOrdinal = Math.max(nextOrdinal, first + group.length);
+      } else {
+        slot = nextSlot++;
+        if (slot >= BANK_CAPS.slots) throw new Error('The catalog has no bank slots left.');
+        first = nextOrdinal;
+        nextOrdinal += group.length;
+      }
       const text = encodePack({ format: 1, family: spec.id, slot, first, count: group.length, band: band.id, rules: spec.adapter.rules, rng: 1 }, group.map(e => e.row));
       const bytes = utf8Bytes(text), hash = sha(text);
       if (bytes > BANK_CAPS.packBytes) throw new Error(`Pack ${slot} is over the byte cap.`);
@@ -307,6 +332,11 @@ export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unkn
   const stats: VerifyStats = { families: root.families.length, packs: 0, entries: 0, catalogBytes: 0, rootBytes: utf8Bytes(readFileSync(rootFile(dirs), 'utf8')), largestFamilyBytes: 0, replayed: 0, botRuns: 0 };
   if (stats.rootBytes > BANK_CAPS.rootBytes) errors.push(`Root index is ${stats.rootBytes} bytes.`);
   errors.push(...catalogIssues(root, manifests.values()));
+  // A catalog with a slot register keeps every pack inside a recorded reservation (production always has one).
+  if (existsSync(slotRangesFile(dirs))) {
+    try { errors.push(...slotRangeIssues(readReservations(dirs), [...manifests.values()].flatMap(m => m.packs.map(p => ({ slot: p[0], what: `pack of ${m.family}` }))))); }
+    catch (e) { errors.push(e instanceof Error ? e.message : String(e)); }
+  }
   const slots = new Set<number>(), certifiedCounts = new Map<string, Map<string, number>>();
   for (const [id, asset, hash, entries, packCount, familyBytes] of root.families) {
     const manifest = manifests.get(id)!, text = readFileSync(assetFile(dirs, asset), 'utf8'), spec = specs.find(s => s.id === id);
