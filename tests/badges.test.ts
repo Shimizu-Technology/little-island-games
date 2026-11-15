@@ -9,8 +9,7 @@ import { arcadeTransition, emptyArcade } from '../src/arcade/progress';
 import { applyArcadeAction } from '../src/arcade/saveAction';
 import { startSession } from '../src/learn/session';
 import { applyLearnSave } from '../src/state/learnAction';
-import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
-import { mathAnswer } from '../src/math/questions';
+import { finishMathRound } from './helpers/shell-rounds';
 import { addLearner, recordLearning, levelRoundSkill } from '../src/learn/learners';
 import { defaultOptions } from '../src/games/types';
 import { createTic, ticMove } from '../src/games/tic';
@@ -18,7 +17,7 @@ import { createSession, engines } from '../src/board';
 import { canWear, styleCatalog, lockedReason } from '../src/personalization/catalog';
 import { preserveAndReplace } from '../src/state/replacement';
 const learnGames = {math:['shell-math','number-hop'],reading:['sound-boat','turtle-tales'],science:['tide-pool','float-sink'],coding:['beep-bot','turtle-draw'],chamoru:['hafa-adai','chamoru-memory']} as const;
-function finishMath(s: MathRound) { while(s.index<s.questions.length) { while(s.steps<questionOf(s).b) s=mathMove(s,'shell-math',{type:'step'}); s=mathMove(s,'shell-math',{type:'answer',answer:mathAnswer(questionOf(s))});s=mathMove(s,'shell-math',{type:'next'}); } return s; }
+const finishMath = <T,>(s: T): T => finishMathRound(s);
 describe('permanent distinct accomplishment badges',()=>{
   for(const track of ['math','reading','science','coding','chamoru'] as const) {
     const [game,other] = learnGames[track];
@@ -117,7 +116,7 @@ describe('accepted transitions, backfill, recovery',()=>{
   });
   it('helped Family/together learning earns in the accepted save, never from a result mount',()=>{
     const round={...startSession('shell-math',{options:{mode:'together',pace:'easy'}},{},44),learner:'family'},before={...backfillRewards(emptySave()),learn:{'shell-math':round}};
-    const done={...round,revision:1,levelHelped:true,state:finishMath(round.state as MathRound)};
+    const done={...round,revision:1,levelHelped:true,state:finishMath(round.state)};
     const accepted=applyLearnSave(before,'shell-math',done,{id:round.id,revision:0,epoch:1},1),after=rewardTransitions(before,accepted);
     expect(personFor(after).earned).toContain('accessory:calculator-watch');expect(applyLearnSave(after,'shell-math',done,{id:round.id,revision:0,epoch:1},1)).toBe(after);
     expect(rewardTransitions(after,after)).toEqual(after);

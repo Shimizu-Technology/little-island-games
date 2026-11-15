@@ -14,8 +14,8 @@ import { engines as learnEngines } from '../src/learn/engines';
 import { optionsAtLevel } from '../src/learn/levels';
 import { shelfLevel, homeContinue, dailySuggestions } from '../src/learn/home';
 import { recordLevelRound } from '../src/learn/levelEvidence';
-import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
-import { mathAnswer } from '../src/math/questions';
+import { finishMathRound } from './helpers/shell-rounds';
+import type { MathRound } from '../src/learn/games/shell-math/round';
 import { personFor, withoutLearner, type Person } from '../src/personalization/model';
 import { badgesFor, grantsFor } from '../src/badges/engine';
 import { gameIds, createGame } from '../src/games';
@@ -58,7 +58,7 @@ function round(game: LearnId, owner: string, seed: number, level: 1|2|3|4|5 = 1)
   r.learner = owner; expect(validLearnSession(r)).toBe(true); return r;
 }
 async function learn(r: LearnSession) { const old = store.save.learn?.[r.game]; await act(async () => { expect(store.learnUpdate(r.game, r, { id: old?.id ?? null, revision: old?.revision, epoch: store.epoch })).toBe(true); }); }
-function mathFinish(s: MathRound) { while(s.index < s.questions.length) { while(s.steps < questionOf(s).b) s = mathMove(s,'shell-math',{type:'step'}); s = mathMove(s,'shell-math',{type:'answer',answer:mathAnswer(questionOf(s))}); s = mathMove(s,'shell-math',{type:'next'}); } return s; }
+const mathFinish = <T,>(s: T): T => finishMathRound(s);
 const expected = () => ({ learner: store.save.learning?.active ?? 'family', epoch: store.epoch });
 async function arcade(action: Parameters<typeof store.arcade>[0]) { await act(async () => { expect(store.arcade(action, expected())).toBe(true); }); }
 function activity(game: ActivityId, seed: number): ActivitySession {

@@ -5,6 +5,7 @@ import { dayNumber } from "./skills";
 import { LearnId, LearnOptions, LearnSession, Outcome, SkillProgress, learnIds } from "./types";
 import { isGrowth } from "./growth/engine";
 import { isMathGame, validMathOptions } from "./games/shell-math/round";
+import { sessionBytes } from './program/codec';
 
 const MODES = ["solo", "together", "versus"] as const;
 const PACES = ["easy", "medium", "hard"] as const;
@@ -106,6 +107,9 @@ export function validLearnSession(value: unknown, key?: string): value is LearnS
   if (!twoPlayer && (value.match !== undefined || value.starter !== undefined || value.names !== undefined)) return false;
   if (o.mode === "versus" ? !validMatch(value.match) : value.match !== undefined) return false;
   if (o.stage && isGrowth(value.state) && value.state.starter !== (twoPlayer ? value.starter ?? 0 : 0)) return false;
+  // K7's pre-authorized additive codec is bounded as a complete session, including UTF-8
+  // names and IDs. Legacy sessions keep their original admission/compatibility behavior.
+  if (['crab-commands', 'beep-bot', 'turtle-draw'].includes(value.game as string) && obj(value.state) && Object.hasOwn(value.state, 'blockDraft') && sessionBytes(value) > 4096) return false;
   return engine.validate(value.state, o as LearnOptions);
 }
 

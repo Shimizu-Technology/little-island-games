@@ -5,8 +5,8 @@ import { addLearner, selectLearner, recordLearning, activeLearner, readyForNext 
 import { startSession, finished } from '../src/learn/session';
 import { creditSchool, backfillSchool, validSchool, independentRound, roundStars } from '../src/learn/schoolProgress';
 import { recordLevelRound } from '../src/learn/levelEvidence';
-import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
-import { mathAnswer } from '../src/math/questions';
+import { finishMathRound } from './helpers/shell-rounds';
+import { shellMove, type ShellRound } from '../src/learn/games/shell-math/round2';
 import { createGame, gameIds } from '../src/games';
 import { defaultOptions } from '../src/games/types';
 import { migrateLibrary, libraryChild, newLibraryChild } from '../src/library/state';
@@ -14,8 +14,7 @@ import type { Save } from '../src/state/validation';
 import fixture25 from './fixtures/profile-2.5.json';
 const learning = () => selectLearner(addLearner(addLearner(undefined,'A','a'),'B','b'),'a');
 function complete(round: ReturnType<typeof startSession>) {
-  let s=round.state as MathRound;
-  while(s.index<s.questions.length){while(s.steps<questionOf(s).b)s=mathMove(s,'shell-math',{type:'step'});s=mathMove(s,'shell-math',{type:'answer',answer:mathAnswer(questionOf(s))});s=mathMove(s,'shell-math',{type:'next'});}
+  const s=finishMathRound(round.state);
   return {...round,revision:round.revision+1,state:s};
 }
 it('migrates known owners immutably, buckets unknowns, never infers ownership from active/name',()=>{
@@ -77,7 +76,7 @@ it('legacy unknown assistance stays unknown through ordinary saves and cannot ea
   const { applyLearnSave }=await import('../src/state/learnAction');
   const original={...startSession('shell-math',{options:{mode:'solo',pace:'easy'}},{},91),learner:'a',levelHelped:undefined};
   const before={...emptySave(),learning:learning(),learn:{'shell-math':original}};
-  const step={...original,revision:1,levelHelped:false,state:mathMove(original.state as MathRound,'shell-math',{type:'step'})};
+  const step={...original,revision:1,levelHelped:false,state:shellMove(original.state as ShellRound,['c'])};
   const middle=applyLearnSave(before,'shell-math',step,{id:original.id,revision:0,epoch:1},1);
   expect(middle.learn!['shell-math']!.levelHelped).toBeUndefined();
   const done={...complete(middle.learn!['shell-math']!),levelHelped:false};

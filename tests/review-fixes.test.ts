@@ -4,8 +4,7 @@ import { initializePersonalization, personFor, applyPersonalization } from '../s
 import { rewardTransitions, backfillRewards } from '../src/badges/transitions';
 import { addLearner, selectLearner } from '../src/learn/learners';
 import { startSession } from '../src/learn/session';
-import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
-import { mathAnswer } from '../src/math/questions';
+import { finishMathRound } from './helpers/shell-rounds';
 import { spotFromPoint, characterDrop } from '../src/home/geometry';
 import { instance, starterHome, validHome } from '../src/home/model';
 import { applyWarmup } from '../src/state/warmupAction';
@@ -19,12 +18,12 @@ import { newLab } from '../src/explore/activities';
 import { milestoneCatalog, MAX_MILESTONES, grantCatalog, applyCompletion } from '../src/badges/engine';
 import { emptyArcade, arcadeLearner } from '../src/arcade/progress';
 
-function finish(s: MathRound) { while(s.index<s.questions.length) { while(s.steps<questionOf(s).b)s=mathMove(s,'shell-math',{type:'step'});s=mathMove(s,'shell-math',{type:'answer',answer:mathAnswer(questionOf(s))});s=mathMove(s,'shell-math',{type:'next'}); }return s; }
+const finish = <T,>(s: T): T => finishMathRound(s);
 for(const [owner,active] of [['mina','family'],['family','mina'],['mina','leo'],['leo','mina']])it(`credits ${owner} while ${active} is active`,()=>{
  let learning=addLearner(addLearner(undefined,'Mina','mina'),'Leo','leo');learning=selectLearner(learning,active);
  const round={...startSession('shell-math',{options:{mode:'together',pace:'easy'}},{},44),learner:owner};
  const before=initializePersonalization({...emptySave(),learning,learn:{'shell-math':round}});
- const after=rewardTransitions(before,{...before,learn:{'shell-math':{...round,state:finish(round.state as MathRound)}}});
+ const after=rewardTransitions(before,{...before,learn:{'shell-math':{...round,state:finish(round.state)}}});
  expect(personFor(after,owner).milestones).toContain('learn:shell-math:1');expect(personFor(after,active).milestones).toEqual([]);
 });
 for(const change of ['look','furniture','sticker','theme','grant','milestone'])it(`rejects tampered ${change} at restore and write boundaries`,()=>{

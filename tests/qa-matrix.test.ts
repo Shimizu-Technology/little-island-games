@@ -26,10 +26,14 @@ function fixture(run: (root: string) => void) {
 describe('QA-25 reproducible scope and execution ledger', () => {
   it('covers the real registries, planned roster, mechanics and Challenge surfaces', () => {
     expect(() => validate()).not.toThrow();
-    expect(inventory.games).toHaveLength(63);
-    expect(inventory.challenge).toHaveLength(19);
-    expect(matrix.rows.filter(r => r.group === 'games')).toHaveLength(92);
-    expect(matrix.rows.filter(r => r.group === 'challenge')).toHaveLength(19);
+    // Counts follow the registries, so a new registration only needs `npm run qa:matrix:generate`.
+    // The planned roster (92 games) and the 36 mechanics are fixed by PLAN section 10.
+    const gameRows = matrix.rows.filter(r => r.group === 'games');
+    expect(gameRows).toHaveLength(92);
+    expect(gameRows.filter(r => r.availability === 'registered')).toHaveLength(inventory.games.length);
+    expect(inventory.games.length).toBeGreaterThanOrEqual(63);
+    expect(matrix.rows.filter(r => r.group === 'challenge')).toHaveLength(inventory.challenge.length);
+    expect(inventory.challenge.length).toBeGreaterThanOrEqual(19);
     expect(inventory.mechanics).toHaveLength(36);
   });
   it.each(['G-beep-bot','G-bridges','G-crossword','C-drop-puzzles','M01','J34','P11','RD11','H-A10','BP-slip-tide-0','B-reef-race-01','PH-001'])('rejects removed required row %s', id => {
@@ -70,7 +74,7 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     for (const id of ['G-sudoku','M01','B-sudoku-01','J01','PH-001']) expect(() => validate(edited(m => { m.rows.find(r => r.id === id)!.availability = 'bogus'; }))).toThrow(/availability drift/);
   });
   it('requires every target stratum, so bulk deletion or one-game removal fails', () => {
-    expect(matrix.rows.filter(r => r.sampling?.kind === 'target level/band')).toHaveLength(489);
+    expect(matrix.rows.filter(r => r.sampling?.kind === 'target level/band')).toHaveLength(scope.games.reduce((n, game) => n + game.strata.length, 0));
     for (const remove of [(r: typeof matrix.rows[number]) => r.sampling?.kind === 'target level/band', (r: typeof matrix.rows[number]) => r.id.startsWith('B-reef-race-')]) expect(() => validate({ ...matrix, rows:matrix.rows.filter(r => !remove(r)) })).toThrow(/target bank strata/);
     expect(() => validate(matrix,{ ...inventory, banks:[...inventory.banks,{game:'sudoku',slot:999}] })).toThrow(/published stratum/);
   });
@@ -112,11 +116,16 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     }))).toThrow(/matching evidence/);
   });
   it('counts atomic native dimensions and renders mapping, maximums and per-pass results', () => {
-    expect(nativeCases(matrix)).toBe(600);
-    expect(['games','challenge','mechanics','journeys','play'].map(g => nativeCases(matrix,g))).toEqual([184,38,216,128,34]);
+    const groups = ['games','challenge','mechanics','journeys','play'] as const;
+    const perGroup = groups.map(g => nativeCases(matrix,g));
+    expect(perGroup.reduce((a,b) => a + b, 0)).toBe(nativeCases(matrix));
+    // Games and Challenge scale with the registries; mechanics, journeys and Play are fixed by PLAN section 10.
+    expect(perGroup[0]).toBe(2 * matrix.rows.filter(r => r.group === 'games').length);
+    expect(perGroup[1]).toBe(2 * matrix.rows.filter(r => r.group === 'challenge').length);
+    expect(perGroup.slice(2)).toEqual([216,128,34]);
     expect(matrix.passesRequired).toBe(2);
     const markdown = renderMatrix(matrix);
-    expect(markdown).toContain('600 device-dimension executions');
+    expect(markdown).toContain(`${nativeCases(matrix)} device-dimension executions`);
     expect(markdown).toContain('[M01](#mechanics)');
     expect(markdown).toContain('25×25');
     expect(markdown).toContain('pass 2 not run');

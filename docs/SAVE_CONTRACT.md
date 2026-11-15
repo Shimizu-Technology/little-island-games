@@ -56,6 +56,51 @@ F2 registers exact engine codecs, immutable descriptors and evidence. F1 rejects
 
 ## Bounded sessions
 
+### K7 additive program drafts (15 November 2026, pre-authorized lead change)
+
+Crab Commands, Beep Bot and Turtle Draw share `src/learn/program/`. School states may
+add `blockDraft`, a compact revision-1 program `[1, body, songs]`. Nodes are exact
+tuples: command `[0, code]`, sequence `[1, body]`, repeat `[2, times, body]`, song
+call `[3, songIndex]`, and condition `[4, sensor, yesBody, noBody]`. The sensor is a tagged tuple: `[0]` means blocked. The in-memory `Condition` is a tagged union (`{kind: 'blocked'}` today).
+Command codes are game-owned; unknown codes fail closed. Turtle has no obstacle
+sensor and refuses conditions. Beep's sensor checks the square above; Crab's
+sensor checks ahead of its current facing. The grid edge counts as blocked. To add a sensor, append a new tag and exact payload schema to `Condition` and the codec, then add the adapter predicate and hostile/round-trip tests. Keep existing tags and their meaning. Unknown tags fail closed. This is an additive sensor extension within revision 1, not a new envelope or program revision; do not reinterpret `[0]`. Songs remain parameterless. Code Lab and Tide Logic have separate contracts. Songs have numbered identities, at
+most four definitions, and cannot recurse, directly or indirectly.
+
+Every written node counts, including containers, both branches, calls and each
+song definition. The limits remain 80 nodes, effective depth 4 (including calls),
+512 expanded commands and 4,096 UTF-8 bytes. Worst-case branch expansion is checked
+before execution; control traversal also has a fixed bound. Repeats are 2–16
+whole-body iterations. Legacy Again cards retain their game-specific meaning;
+they are commands, never silently converted into whole-body repeats.
+
+`blockDraft` is an authoring form alongside the existing executable `program`.
+Validation reconstructs the executable plan on the exact saved board and requires
+byte-for-byte JSON equality. New School edits measure the complete session before
+publication, and `validLearnSession` enforces the same complete UTF-8 budget at
+import/load, including IDs and names. The guard applies only to the three K7 draft
+codecs; legacy flat sessions retain their compatibility boundary. A stopped Crab prefix is allowed with a validated draft for manual
+single-step debugging; ordinary legacy pause validation is unchanged. Existing
+game limits (Crab 80 executable cards, Beep 32, Turtle's 120 expanded commands and
+legacy body/turn/repeat constraints) still apply to their current levels. Turtle's
+old top-level goal limit remains unchanged until SC-03; K7 reports recursive cost
+without retroactively changing a saved task's win rule.
+
+Only content descriptors with `blockEditor: true` offer the editor or accept nested replay edits. The flag is absent on every existing level/task and published Challenge puzzle. A draft does not grant opt-in. Existing card counts, Again usage, shortest-plan dares, par and best costs retain their flat executable-card semantics. An opted-in Crab dare also counts executed expanded cards (through home); Beep counts its full expanded plan. Recursive node cost is available to future explicitly authored block objectives, never substituted into existing card metrics.
+
+Crab and Beep replay codecs accept compact `['e', operations]` edits, not whole programs. Each operation is insert-subtree `[0, path, code]`, delete `[1, path]`, move `[2, fromPath, beforePath]`, set-repeat `[3, path, times]`, add-empty-song `[4, index]` delete-song `[5, index]`, or set-command `[6, path, code]`. Command replacement changes only that command parameter, avoiding a delete/insert pair or accidental reorder of the remaining plan. A path starts with -1 for main or 0–3 for a song, followed by node index / branch / node index; branch 0 is body, 1 yes, 2 no. A batch has at most 160 operations and is admitted atomically after validating the final tree, its game projection and the complete encoded session. Intermediate edits never publish. Replay still recomputes outcomes and retains run/miss/Help/edit evidence through undo and reset; executable edit distance prevents hiding several repairs in one batch. Existing codec IDs and replay payload revision 1 remain unchanged.
+
+The 4,096-byte session boundary and 512-action cap include the actual encoded action and revision, retaining the assistance reserve. A refused edit never enters editor undo history. The frame offers Keep my plan when that action exceeds the log budget. A continued attempt may carry one validated `initial.draft`, only on opted-in content, preserving nested structure without logging snapshots per edit. Crab carries its prior run/miss/hint-step evidence and Help ladder; Beep carries prior runs/misses/edits/hints. Original attempts remain untouched.
+
+Conversion is pure and opt-in when editing. No load migration rewrites legacy
+state. Original flat saves, completed plans, tasks and frozen fixture bytes remain
+unchanged; a draft is removed when an ordinary card edit replaces its projection
+or the next task starts. Existing migration/restore preservation and rollback
+rules remain in force. A pre-K7 build rejects the whole save once a School draft is present, including a draft in an existing game; recovery preserves the original. Downgrade does not promise continued play of that save. Envelope 3, profiles 2, progress/session revisions, session
+classes, catalog slots, budgets and capacities do not change. Legacy Turtle v1
+trees accepted by its older validator keep their decoder, including trees outside
+the new authoring limits.
+
 Each session names owner, game, round ID, monotonic ordinal, revision, immutable puzzle ref and exact registered codec revision. The codec must validate/replay both payload and recorded result, not trust counters. A credited terminal session cannot be credited again. Successful credit removes the terminal session from `paused` in the same atomic envelope write; permanent completion/award facts remain. The open frame may show that result until it leaves; reopening starts at the picker. Legacy credited terminal sessions remain readable and are removed on the next start, without counting toward the unfinished-slot cap. Replay and checkpoint are separate codecs; unknown codecs remain unreadable, never blank.
 
 | Class | Board maximum | Canonical draft | Undo minimum | Session budget |
