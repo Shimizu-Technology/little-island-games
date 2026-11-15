@@ -11,21 +11,20 @@ import type { PuzzleDescriptor } from '../types';
 import { sha256Hex } from '../sha256';
 import { solitaireAdapter } from './adapter';
 import { fresh, moveTable, readTable, undoTable, type TablePayload } from './checkpoint';
-import { advise } from './publicSolver';
 import { positionKey, validMove, won, type Deal, type Move } from './solitaire';
 import { LazySolitaireBoard } from './LazyBoard';
-export type TableAction = {type:'move';move:Move}|{type:'undo'|'help'|'hint'|'reset'};
+export type TableAction = {type:'move'|'hint';move:Move}|{type:'undo'|'help'|'reset'};
 export type BankFacts={family:string;slot:number;first:number;count:number;packHash:string;rules:number;band:string;tier:1|2|3|4|5|6;title:string;summary:string};
 export type TableView={deal:Deal;payload:TablePayload;title:string;summary:string};
 const key=(r:PuzzleRef)=>`${r.bank}:${r.puzzle}:${r.hash}`;
-const validAction=(x:unknown):x is TableAction=>plain(x)&&(['undo','help','hint','reset'].includes(x.type as string)&&exactKeys(x,['type'])||x.type==='move'&&exactKeys(x,['type','move'])&&validMove(x.move));
+const validAction=(x:unknown):x is TableAction=>plain(x)&&(['undo','help','reset'].includes(x.type as string)&&exactKeys(x,['type'])||(x.type==='move'||x.type==='hint')&&exactKeys(x,['type','move'])&&validMove(x.move));
 export function defineSolitaire(facts:readonly BankFacts[]):TypedRegistration<TablePayload,TableAction,TableView>{
  const game='solitaire',codecId='solitaire-v1',resident=new Map<string,PuzzleDescriptor<Deal>>();
  const fact=(bank:number)=>facts.find(b=>b.slot===bank);
  const descriptor=(s:ChallengeSession)=>resident.get(key(s.puzzle));
  const read=(s:ChallengeSession)=>{const d=descriptor(s);const r=d?readTable(s.payload,d.payload):null;return r&&r.payload.audit.every(n=>n===1||n===2)?r:null;};
  const evaluate=(s:ChallengeSession):Terminal|null=>{const r=read(s);return r&&won(r.position)?{event:s.partner?'together':r.payload.audit.includes(1)?'helped':'independent',awards:0,dares:[],cost:null,solution:sha256Hex(positionKey(r.position))}:null;};
- const codec={game,cove:true,budget:{wrapper:600,draft:230,undo:2392,audit:641},validate:(s:ChallengeSession)=>!!read(s),evaluate,
+ const codec={game,cove:true,budget:{wrapper:696,draft:230,undo:2392,audit:641},validate:(s:ChallengeSession)=>!!read(s),evaluate,
  canStart:(s:ChallengeSession)=>{const d=descriptor(s);return !!d&&s.result===null&&JSON.stringify(s.payload)===JSON.stringify(fresh(d.payload));},
  extends:(a:ChallengeSession,b:ChallengeSession)=>{const x=a.payload,y=b.payload;return plain(x)&&plain(y)&&uint(x.edits)&&uint(y.edits)&&y.edits>=x.edits&&Array.isArray(x.audit)&&Array.isArray(y.audit)&&y.audit.length>=x.audit.length&&x.audit.every((v,i)=>v===(y.audit as unknown[])[i]);}};
  const bands:PackedBand[]=facts.map(b=>({kind:'band',bank:b.slot,path:'endless',tier:b.tier,title:b.title,count:b.count}));
@@ -49,12 +48,12 @@ export function defineSolitaire(facts:readonly BankFacts[]):TypedRegistration<Ta
  move:(s,action)=>{
   if(!validAction(action)||s.result||s.credited||!validChallengeSession(s,s.owner,catalog,s.owner.startsWith('cove-')))return null;
   const d=descriptor(s)!,r=read(s)!;let p=r.payload;
-  if(action.type==='move')p=moveTable(d.payload,p,action.move)??p;
+  if(action.type==='move'||action.type==='hint'){if(action.type==='hint'&&p.audit.length===128)return null;const next=moveTable(d.payload,p,action.move);if(!next||next===p)return null;p=action.type==='hint'?{...next,audit:[...next.audit,1]}:next;}
   else if(action.type==='undo')p=undoTable(d.payload,p)??p;
   else {if(p.audit.length===128)return null;
    if(action.type==='reset')p={...fresh(d.payload),audit:[...p.audit,2],edits:p.edits+1};
-   else {p={...p,audit:[...p.audit,1]};if(action.type==='hint'){const a=advise(r.position,d.payload,10000);if(a.kind==='move')for(const move of a.plan)p=moveTable(d.payload,p,move)??p;}}
+   else p={...p,audit:[...p.audit,1]};
   }
   if(p===r.payload)return null;const next={...s,payload:p,revision:s.revision+1},done={...next,result:evaluate(next)};return jsonBytes(done)<=4096&&validChallengeSession(done,s.owner,catalog,s.owner.startsWith('cove-'))?done:null;
- },render:(s,dispatch,active,width)=>{const d=descriptor(s),r=read(s),b=fact(s.puzzle.bank);return d&&r&&b?<LazySolitaireBoard view={{deal:d.payload,payload:r.payload,title:card(s.puzzle)!.title,summary:b.summary}} dispatch={dispatch} active={active} width={width}/>:null;}};
+ },render:(s,dispatch,active,width)=>{const d=descriptor(s),r=read(s),b=fact(s.puzzle.bank);return d&&r&&b?<LazySolitaireBoard key={`${s.owner}:${s.id}`} view={{deal:d.payload,payload:r.payload,title:card(s.puzzle)!.title,summary:b.summary}} dispatch={dispatch} active={active} width={width}/>:null;}};
 }

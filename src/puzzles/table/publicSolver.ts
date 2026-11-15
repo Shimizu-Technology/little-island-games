@@ -1,6 +1,6 @@
 import { apply, legalMoves, positionKey, rank, red, suit, won, type Deal, type Move, type Position } from './solitaire';
 import witnesses from './witnesses.generated.json';
-import { knownPlan, primePlan, solve } from './solver';
+import { knownPlan, primePlan, searchSteps } from './solver';
 /** Observable state only: no face-down rank, suit or stock order. */
 export function publicView(s: Position, d: Deal): Position {
   return { piles: s.piles.map((p, i) => p.map((c, j) => d.mode !== 'freecell' && (i === 12 || i < 7 && j < s.hidden[i]) && !s.known[c] ? -1 : c)), hidden: [...s.hidden], known: [...s.known] };
@@ -12,9 +12,9 @@ const safeFoundation = (s: Position, a: Move) => {
 };
 export type Advice = { kind: 'move'; move: Move; plan: Move[]; depth: number } | { kind: 'unknown' } | { kind: 'dead-end' };
 /** Klondike searches visible play until a card is uncovered, never past a hidden reveal. */
-export function advise(s: Position, d: Deal, budget = 1200): Advice {
+export function* adviceSteps(s: Position, d: Deal, budget = 1200): Generator<void,Advice,void> {
   if (won(s)) return { kind: 'unknown' };
-  if (d.mode === 'freecell') { const proof=(witnesses as Record<string,Move[]>)[d.cards];if(proof&&!knownPlan(s,d))primePlan(d,proof); const cached=knownPlan(s,d); if(cached?.length)return {kind:'move',move:cached[0],plan:[cached[0]],depth:cached.length}; const r = solve(d, s, Math.min(400,budget)); return r.status === 'solved' && r.moves.length ? { kind: 'move', move: r.moves[0], plan: [r.moves[0]], depth: r.moves.length } : { kind: 'unknown' }; }
+  if (d.mode === 'freecell') { const proof=(witnesses as Record<string,Move[]>)[d.cards];if(proof&&!knownPlan(s,d))primePlan(d,proof); const cached=knownPlan(s,d); if(cached?.length)return {kind:'move',move:cached[0],plan:[cached[0]],depth:cached.length}; const r = yield* searchSteps(d, s, Math.min(400,budget)); return r.status === 'solved' && r.moves.length ? { kind: 'move', move: r.moves[0], plan: [r.moves[0]], depth: r.moves.length } : { kind: r.status==='unsolved'?'dead-end':'unknown' }; }
   const visible = publicView(s, d), all = legalMoves(visible, d.mode);
   const safe = all.find(a => safeFoundation(visible, a));
   if (safe) return { kind: 'move', move: safe, plan: [safe], depth: 1 };
@@ -24,6 +24,7 @@ export function advise(s: Position, d: Deal, budget = 1200): Advice {
   const queue: {s: Position; path: Move[]; depth: number}[] = [{s:visible,path:[],depth:0}], seen = new Set<string>();
   let at=0;
   while (at < queue.length && at < budget) {
+    yield;
     const node=queue[at++], key=positionKey(node.s); if(seen.has(key))continue; seen.add(key);
     if(node.depth >= 8)continue;
     for(const a of legalMoves(node.s,d.mode)) {
@@ -38,4 +39,12 @@ export function advise(s: Position, d: Deal, budget = 1200): Advice {
   // A recycle is public and legal, but cannot certify that the hidden stock has a useful card.
   if (s.piles[13].length) return {kind:'move',move:[13,12,0],plan:[[13,12,0]],depth:1};
   return !all.length ? {kind:'dead-end'} : {kind:'unknown'};
+}
+
+export function advise(s:Position,d:Deal,budget=1200):Advice{const job=adviceSteps(s,d,budget);for(;;){const r=job.next();if(r.done)return r.value;}}
+/** User-requested searches yield after 64 expansions or 8 ms, and cancel at an identity boundary. */
+export async function adviseAsync(s:Position,d:Deal,signal:AbortSignal,budget=1200):Promise<Advice>{
+ const job=adviceSteps(s,d,budget);let count=0,started=performance.now();
+ while(!signal.aborted){const r=job.next();if(r.done)return r.value;if(++count>=64||performance.now()-started>=8){await new Promise<void>(resolve=>setTimeout(resolve,0));count=0;started=performance.now();}}
+ return {kind:'unknown'};
 }

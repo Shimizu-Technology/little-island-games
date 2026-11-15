@@ -68,3 +68,22 @@ it('an independent rule implementation accepts each constructed mode and rejects
   expect(verifyLine(deal.cards,mode,r.moves.slice(1))).toBe(false);
  }
 });
+
+it('counts equivalent FreeCell column orders as one semantic deal',async()=>{
+ const {semanticKey}=await import('../src/puzzles/table/adapter');
+ const d=makeDeal('freecell',4),s=opening(d),deck:number[]=[];
+ [s.piles[0],s.piles[1]]=[s.piles[1],s.piles[0]];
+ for(let row=0;row<7;row++)for(let col=0;col<8;col++)if(row<s.piles[col].length)deck.push(s.piles[col][row]);
+ expect(semanticKey({...d,cards:deck.map(c=>CARD_ALPHABET[c]).join('')})).toBe(semanticKey(d));
+});
+
+it('proves a public FreeCell dead end and keeps an exhausted budget unknown',async()=>{
+ const {advise}=await import('../src/puzzles/table/publicSolver');
+ const d=makeDeal('freecell',4),tops=Array.from({length:8},(_,i)=>i+1),seconds=tops.map(c=>c+26),cells=[9,10,11,12],used=new Set([...tops,...seconds,...cells]);
+ const rest=Array.from({length:52},(_,i)=>i).filter(c=>!used.has(c));
+ const piles=Array.from({length:16},():number[]=>[]);for(let i=0;i<8;i++)piles[i]=[...rest.splice(0,4),seconds[i],tops[i]];for(let i=0;i<4;i++)piles[12+i]=[cells[i]];
+ const position={piles,hidden:Array<number>(8).fill(0),known:Array<number>(52).fill(1)};
+ expect(validPosition(position,d.mode)).toBe(true);expect(legalMoves(position,d.mode)).toHaveLength(0);
+ expect(solve(d,position,10).status).toBe('unsolved');expect(advise(position,d)).toEqual({kind:'dead-end'});
+ expect(solve(d,opening(d),0).status).toBe('budget-exhausted');
+});

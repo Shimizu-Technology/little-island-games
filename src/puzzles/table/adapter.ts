@@ -13,7 +13,8 @@ export function semanticKey(d: Deal): string {
     const map=[blacks[0],reds[0],blacks[1],reds[1]].map(s=>swap?s^1:s);
     maps.push(map);
   }
-  return `${d.mode}|${maps.map(map=>[...d.cards].map(c=>{const n=CARD_ALPHABET.indexOf(c);return CARD_ALPHABET[map[Math.floor(n/13)]*13+n%13];}).join('')).sort()[0]}`;
+  const encoded=maps.map(map=>{const cards=[...d.cards].map(c=>{const n=CARD_ALPHABET.indexOf(c);return CARD_ALPHABET[map[Math.floor(n/13)]*13+n%13];}).join('');return d.mode==='freecell'?opening({...d,cards}).piles.slice(0,8).map(p=>p.map(c=>CARD_ALPHABET[c]).join('')).sort().join('|'):cards;});
+  return `${d.mode}|${encoded.sort()[0]}`;
 }
 export function solitaireAdapter(hidden: boolean): PuzzleAdapter<Deal, TableState, Plan> {
   const adapter: PuzzleAdapter<Deal, TableState, Plan> = {
