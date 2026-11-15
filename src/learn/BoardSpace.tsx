@@ -1,4 +1,5 @@
 import { StepReveal } from './stepReveal';
+import { nextLayoutFrame } from './frameClocks';
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions, type LayoutChangeEvent, type ViewProps } from 'react-native';
 import { fitSchoolBoard, type BoardSpace, type SchoolBoard } from './boardGeometry';
@@ -20,12 +21,12 @@ export function BoardSpaceProvider({ space, children, onReveal, geometryEnabled 
   const rowView = useRef<View | null>(null), drawingColumn = useRef<View | null>(null), lastChrome = useRef(new Map<SchoolBoard, number>());
   const [chrome, setChrome] = useState<number | null>(null);
   const disposed = useRef(false);
-  const frame = useRef<ReturnType<typeof requestAnimationFrame> | null>(null), revision = useRef(0);
+  const frame = useRef<(() => void) | null>(null), revision = useRef(0);
   const changed = useCallback(() => {
     if (disposed.current) return;
     revision.current++;
     if (frame.current !== null) return;
-    frame.current = requestAnimationFrame(() => {
+    frame.current = nextLayoutFrame(() => {
       frame.current = null;
       const id = selected.current, drawing = id && regions.current.get(id), at = revision.current;
       if (!id || drawing == null || !content.current || !primary.current) return;
@@ -50,7 +51,7 @@ export function BoardSpaceProvider({ space, children, onReveal, geometryEnabled 
       });
     });
   }, []);
-  useLayoutEffect(() => { disposed.current = false; return () => { disposed.current = true; if (frame.current !== null) cancelAnimationFrame(frame.current); frame.current = null; }; }, []);
+  useLayoutEffect(() => { disposed.current = false; return () => { disposed.current = true; frame.current?.(); frame.current = null; }; }, []);
   const select = useCallback((id: SchoolBoard | null) => {
     if (selected.current) regions.current.delete(selected.current);
     selected.current = id;
@@ -109,8 +110,7 @@ export function BoardSpaceContent({ onLayout, ...props }: ViewProps) {
     const key = space.layoutKey ?? String(space.width);
     if (lastWindow.current === key) return;
     if (!(space.reveal ?? space.large)) { lastWindow.current = key; return; }
-    const frame = requestAnimationFrame(() => { if (lastWindow.current !== key) { lastWindow.current = key; reveal(); } });
-    return () => cancelAnimationFrame(frame);
+    return nextLayoutFrame(() => { if (lastWindow.current !== key) { lastWindow.current = key; reveal(); } });
   }, [space?.ready, space?.anchorReady, space?.layoutKey, space?.width, space?.large, space?.reveal, reveal]);
   return <View {...props} ref={space?.content} collapsable={false} onLayout={event => { space?.changed(); onLayout?.(event); }} />;
 }

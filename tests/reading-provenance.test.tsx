@@ -7,7 +7,8 @@
  */
 import React, { createContext } from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { holdFrames } from "./helpers/held-frames";
 import { LearnFrame } from "../src/learn/LearnFrame";
 import { StoreProvider, useStore } from "../src/state/Store";
 import { emptySave, parseSave } from "../src/state/validation";
@@ -49,6 +50,7 @@ import { createPracticeRound, practiceAdmitted, practiceText, type PracticeQuest
 import { defaultPracticeSettings, type PracticeSettings } from "../src/practice/types";
 import { TreasureChest } from "../src/arcade/Chest";
 import { arcadeGames } from "../src/arcade/registry";
+beforeEach(holdFrames);
 
 const practiceAdmittedProbe = (q: PracticeQuestion) => practiceAdmitted(q, "The Practice panel");
 const db = vi.hoisted(() => ({ raw: null as string | null }));

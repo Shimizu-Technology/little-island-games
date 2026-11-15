@@ -6,7 +6,8 @@
  */
 import React, { createContext } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { holdFrames } from "./helpers/held-frames";
 import { LearnFrame } from "../src/learn/LearnFrame";
 import { StoreProvider, useStore } from "../src/state/Store";
 import { emptySave, parseSave } from "../src/state/validation";
@@ -19,6 +20,7 @@ import { whichAnswer, whichPick, type WhichState } from "../src/learn/games/whic
 import { talePick, type TaleState } from "../src/learn/games/turtle-tales/engine";
 import { partsMove, partsTask, type PartsState } from "../src/learn/games/sound-boat/parts";
 import type { LearnId, LearnOptions, LearnSession } from "../src/learn/types";
+beforeEach(holdFrames);
 
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 const played = vi.hoisted(() => [] as string[]);

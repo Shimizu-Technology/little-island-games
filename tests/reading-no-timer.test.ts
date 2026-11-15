@@ -50,6 +50,9 @@ const ALLOWED: Record<string, string> = {
   "src/learn/games/hafa-adai/view.tsx#timeout#ec801aefa0a1": "speech: the prompt plays after the spoken goal on a fresh board (only for admitted words)",
   // The School host. Its one timer lives in frameClocks.ts; each call is keyed by the call and the callbacks it passes.
   "src/learn/frameClocks.ts#timeout#1cd8eeffd6b0": "speech: speakAfter runs the line it is given once, after a beat",
+  "src/learn/frameClocks.ts#frame#913ee577dc98": "layout: nextLayoutFrame runs one board-space measurement on the next frame; it never saves, speaks or moves a round (int-8 lead review)",
+  "src/learn/BoardSpace.tsx#clock-call#5a72d8dc5479": "layout: coalesced board-space measurement stores the measured chrome height only (F-frame-2; int-8 lead review)",
+  "src/learn/BoardSpace.tsx#clock-call#0adef6e9b676": "layout: after a window change, the entry reveal scrolls the board into view once; it never saves or moves a round (int-8 lead review)",
   "src/learn/LearnFrame.tsx#clock-call#0f53e5ac1fcf": "speech: the cheer line plays after a right answer's sound, only if the same feedback is still showing",
   "src/learn/LearnFrame.tsx#clock-call#e3dd1c9ffd2f": "speech: a game's spoken introduction starts a beat after the board opens",
   "src/learn/Celebrate.tsx#animation-callback#e00a488244ba": "motion: the celebration hides itself once its animation finishes",

@@ -1,11 +1,13 @@
 import React, { createContext } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { afterEach, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, expect, it, vi } from "vitest";
+import { holdFrames } from "./helpers/held-frames";
 import { ChallengeBoard } from "../src/learn/games/sound-boat/challenge-view";
 import { challengeEngine } from "../src/learn/games/sound-boat/challenge-engine";
 import { PartsBoard } from "../src/learn/games/sound-boat/parts-view";
 import type { PartsState } from "../src/learn/games/sound-boat/parts";
 import { letterTaskById, type MintedTask } from "../src/learn/reading/tasks";
+beforeEach(holdFrames);
 
 /**
  * R3-1: each host checks the task itself before it hands it to the word board, so the board's own check is a second

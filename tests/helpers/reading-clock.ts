@@ -67,7 +67,7 @@ export type ClockUse = { file: string; kind: "timeout" | "interval" | "frame" | 
  * review. Any other use of one (an alias, a namespace passed around, a require) is a reference and is never allowed.
  */
 export const CLOCK_OWNERS: Readonly<Record<string, readonly string[]>> = {
-  "src/learn/frameClocks.ts": ["speakAfter"],
+  "src/learn/frameClocks.ts": ["speakAfter", "nextLayoutFrame"],
   "src/state/storeClocks.ts": ["flushDeadline", "launchClock", "newLearnerId", "restorePause", "slowOpenNotice"],
 };
 /**

@@ -7,3 +7,12 @@
 export function speakAfter(say: () => void, ms: number): ReturnType<typeof setTimeout> {
   return setTimeout(say, ms);
 }
+
+/**
+ * Board-space layout coalescing (F-frame-2). Schedules one measurement on the next frame and returns its cancel. It only
+ * measures and stores a height; it never saves, speaks or moves a round.
+ */
+export function nextLayoutFrame(measure: () => void): () => void {
+  const frame = requestAnimationFrame(measure);
+  return () => cancelAnimationFrame(frame);
+}
