@@ -41,8 +41,11 @@ it('keeps the controls beside the numeric workspace in a short AX5 landscape win
 
 it('picture boards show every rule box and name pictures throughout the hint ladder', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  const s = { version: 2 as const, catalog: 1 as const, level: 3, seed: 17, index: 0, total: 4 as const, board: null, helped: false };
+  const s = { version: 2 as const, catalog: 1 as const, level: 3, seed: 8, index: 0, total: 4 as const, board: null, helped: false };
   const t = taskAt(s); if (t.kind !== 'grid') throw new Error();
+  const { search } = await import('../src/puzzles/latin/solver');
+  expect(search(t.puzzle!, 2).count).toBe(1);
+  expect(search({ ...t.puzzle!, box: 0 }, 2).count).toBe(2);
   const grid = boardAt(s, t.puzzle!);
   await act(async () => { screen = create(<LagoonGrid puzzle={t.puzzle!} state={grid} assisted dispatch={() => {}} help={() => {}} reveal={() => {}} title="Pictures" active width={337} pictures={t.symbols}/>); });
   const cells = screen!.root.findAllByType('button').filter(n => /^Row /.test(n.props.accessibilityLabel ?? ''));
