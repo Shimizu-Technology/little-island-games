@@ -22,7 +22,7 @@ async function fixture(mode:Mode='freecell'){
  const fact:BankFacts={family:mode==='freecell'?'freecell':'solitaire',slot:100,first:102400,count:1,packHash:'b'.repeat(64),rules:1,band:'f1',tier:1,title:'FreeCell · Paddling',summary:'Foundation building'};
  const entry=defineSolitaire([fact]);await entry.packed!.prepare(ref);
  const initial=entry.start(ref,'family','cove-family-1',emptyChallenge(),{supportOff:false,ownRead:false},[]);
- function Harness({saved=initial}:{saved?:ChallengeSession}){const[s,set]=useState(saved);useEffect(()=>{fake.session=s;},[s]);return <GridFeedback.Provider value={fake.feedback}><GridInteraction.Provider value={held=>fake.held.push(held)}><SolitaireBoard view={{deal,payload:readTable(s.payload,deal)!.payload,title:'FreeCell · Paddling 1',summary:'Foundation building'}} dispatch={(a:TableAction)=>set(before=>entry.move(before,a)??before)} active={!s.result} width={fake.height<500?734:353}/></GridInteraction.Provider></GridFeedback.Provider>;}
+ function Harness({saved=initial}:{saved?:ChallengeSession}){const[s,set]=useState(saved);useEffect(()=>{fake.session=s;},[s]);return <GridFeedback.Provider value={fake.feedback}><GridInteraction.Provider value={held=>fake.held.push(held)}><SolitaireBoard view={{deal,payload:readTable(s.payload,deal)!.payload,title:'FreeCell · Paddling 1',summary:'Foundation building'}} dispatch={(a:TableAction)=>set(before=>entry.move(before,a)??before)} active={!s.result} width={fake.height<500?812:353}/></GridInteraction.Provider></GridFeedback.Provider>;}
  return {deal,Harness};
 }
 const text=(screen:ReactTestRenderer)=>JSON.stringify(screen.toJSON());
