@@ -1,6 +1,6 @@
 /** Re-grade/re-curate unpublished advanced FreeCell packs after the family rules fix. */
 import{execFileSync}from'node:child_process';
-import{existsSync,readFileSync,writeFileSync,unlinkSync}from'node:fs';
+import{existsSync,readFileSync,writeFileSync,unlinkSync,renameSync}from'node:fs';
 import{join}from'node:path';
 import{certify,type CertifyContext}from'../../../src/puzzles/checks';
 import{decodeRow}from'../../../src/puzzles/descriptor';
@@ -20,7 +20,7 @@ for(const ref of['origin/program/4.0','origin/main']){
 }
 const catalog=readCatalog(productionDirs),manifest=catalog.families.get('freecell')!,pools=new Map<string,Candidate[]>([['f3',[]],['f5',[]],['f6',[]]]),changes:unknown[]=[],discarded:unknown[]=[],allSeeds=new Set<number>();
 const checkpoint=join(out,'advanced-pools.json');
-const savePool=()=>writeFileSync(checkpoint,JSON.stringify({sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),pools:Object.fromEntries(pools)}));
+const savePool=()=>{writeFileSync(checkpoint+'.tmp',JSON.stringify({sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),pools:Object.fromEntries(pools)}));renameSync(checkpoint+'.tmp',checkpoint);};
 // A checkpoint supplies only seeds. Regenerate the deal and current grade;
 // every selected entry is freshly certified before it can be written.
 if(existsSync(checkpoint)){
