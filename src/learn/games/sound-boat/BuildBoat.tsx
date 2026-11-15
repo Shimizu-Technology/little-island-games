@@ -2,7 +2,6 @@ import React, { type ReactNode } from "react";
 import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
-import { WholeAnswerControls } from "../../../puzzles/ui/WholeAnswerControls";
 import { TapWords } from "../../reading/TapWords";
 import { hasSilentE, firstMisfit, nextNeeded, type BuildTask } from "../../reading/build";
 import { tileLabel } from "../../reading/graphemes";
@@ -48,7 +47,7 @@ export function BuildBoat(p: BuildBoatProps) {
   const cue = task.cue;
   return (
     <View style={{ gap: p.compact ? 8 : 12, alignItems: "center", alignSelf: "stretch" }}>
-      <Copy style={{ color: ink, fontSize: 19, fontWeight: "600", textAlign: "center" }}>{p.prompt}</Copy>
+      <Copy maxFontSizeMultiplier={1.4} style={{ color: ink, fontSize: 19, fontWeight: "600", textAlign: "center" }}>{p.prompt}</Copy>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
         {p.soundOn ? (
           <IconButton icon="sound-on" label="Hear the word again" onPress={p.onHear} size={56} />
@@ -58,10 +57,11 @@ export function BuildBoat(p: BuildBoatProps) {
           </Copy>
         )}
         {cue && (
-          <View accessible accessibilityLabel={`${cue.base} plus ${cue.affix}`} style={{ flexDirection: "row", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
-            <Copy maxFontSizeMultiplier={letterFit(cue.base, 24, room / 2, Infinity)} style={{ fontSize: 24, lineHeight: 30, color: ink, fontWeight: "700" }}>{cue.base}</Copy>
-            <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 24, lineHeight: 30, color: C.muted }}>+</Copy>
-            <Copy maxFontSizeMultiplier={letterFit(cue.affix, 24, room / 3, Infinity)} style={{ fontSize: 24, lineHeight: 30, color: ink, fontWeight: "700" }}>{cue.affix}</Copy>
+          <View accessible accessibilityLabel={cue.prefix ? `${cue.affix} plus ${cue.base}` : `${cue.base} plus ${cue.affix}`} style={{ flexDirection: "row", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
+            {(cue.prefix ? [cue.affix, cue.base] : [cue.base, cue.affix]).flatMap((part, i) => [
+              i ? <Copy key="plus" maxFontSizeMultiplier={1.3} style={{ fontSize: 24, lineHeight: 30, color: C.muted }}>+</Copy> : null,
+              <Copy key={part} maxFontSizeMultiplier={letterFit(part, 24, room / 2.5, Infinity)} style={{ fontSize: 24, lineHeight: 30, color: ink, fontWeight: "700" }}>{part}</Copy>,
+            ])}
           </View>
         )}
       </View>
@@ -114,8 +114,8 @@ export function BuildBoat(p: BuildBoatProps) {
         <View style={{ alignItems: "center", gap: 10, alignSelf: "stretch" }}>
           <TapWords text={`${task.word}!`} sound={p.sound} soundOn={p.soundOn} onHeard={p.onHeard} />
           {cue && (
-            <Copy style={{ color: ink, textAlign: "center", fontSize: 18 }}>
-              {task.level >= 5 && task.tiles[0] === cue.affix ? `${cue.affix}- : ${cue.gloss}` : `-${cue.affix} : ${cue.gloss}`}
+            <Copy maxFontSizeMultiplier={1.4} style={{ color: ink, textAlign: "center", fontSize: 18 }}>
+              {cue.prefix ? `${cue.affix}- : ${cue.gloss}` : `-${cue.affix} : ${cue.gloss}`}
             </Copy>
           )}
           {p.done}
@@ -155,7 +155,11 @@ export function BuildBoat(p: BuildBoatProps) {
               );
             })}
           </View>
-          <WholeAnswerControls canCheck={p.canCheck} incorrect={p.missed} needsVariant={false} onCheck={p.onCheck} onVariant={() => true} />
+          {/* The same words and testID as the shared whole-answer controls, with text that stops growing at the largest sizes. */}
+          <View style={{ gap: 10, alignItems: "center" }} testID="whole-answer-controls">
+            {p.missed && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.4} style={{ textAlign: "center" }}>Not quite yet. Your answer is still here.</Copy>}
+            <Button disabled={!p.canCheck} onPress={p.onCheck}>Check</Button>
+          </View>
           <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Button compact quiet icon="help" disabled={helped} label="Help: show the next piece" onPress={p.onHelp}>Help</Button>
             <Button compact quiet disabled={!draft.length} label="Start this word over" onPress={p.onReset}>Start over</Button>

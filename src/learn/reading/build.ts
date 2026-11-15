@@ -22,7 +22,7 @@ export type BuildTask = {
   /** Other right orders. */
   alternates: readonly (readonly string[])[];
   /** What an ending or start does, shown once the word is built. */
-  cue: { base: string; affix: string; gloss: string } | null;
+  cue: { base: string; affix: string; gloss: string; prefix: boolean } | null;
 };
 /** Tray positions already placed in the boxes, left to right. */
 export type BuildDraft = number[];
@@ -49,7 +49,7 @@ export function taskOfParts(r: PartsWord): BuildTask {
     tiles: r.chunks,
     tray: shuffled([...r.chunks, ...r.distractors], hashOf(`parts:${r.id}`)),
     alternates: r.alternates ?? [],
-    cue: r.kind === "ending" || r.kind === "prefix" ? { base: r.base!, affix: r.affix!, gloss: r.gloss! } : null,
+    cue: r.kind === "ending" || r.kind === "prefix" ? { base: r.base!, affix: r.affix!, gloss: r.gloss!, prefix: r.kind === "prefix" } : null,
   };
 }
 const twinsOf = (t: string) => TILE_TWINS.find((g) => g.includes(t)) ?? [t];

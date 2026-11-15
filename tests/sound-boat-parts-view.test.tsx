@@ -182,3 +182,15 @@ it("a finished round shows the island and a restored round does not speak by its
   await act(async () => { vi.advanceTimersByTime(5000); });
   expect(restored.sound).not.toHaveBeenCalled();
 });
+
+it("shows a start before its base word and an ending after it", async () => {
+  for (const [id, order] of [["fx-redo", ["re", "+", "do"]], ["fx-making", ["make", "+", "ing"]]] as const) {
+    const t = task(id), s = challengeEngine.create(t, { version: 1 }, { supportOff: false, ownRead: false });
+    await mount(<ChallengeBoard state={s} dispatch={vi.fn()} {...baseProps} />);
+    const shown = texts();
+    const at = shown.indexOf(order[0]);
+    expect(at, id).toBeGreaterThanOrEqual(0);
+    expect(shown.slice(at, at + 3)).toEqual(order);
+    await act(async () => root!.unmount()); root = undefined;
+  }
+});

@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { C, Copy, PressableScale } from "../../components/ui";
+import { wordFitMultiplier } from "../../components/wordFit";
 /** Whole words stay intact and all touch targets are at least 44 points. */
 export function ReadingText({
   text,
@@ -43,6 +44,7 @@ export function ReadingText({
             }}
           >
             <Copy
+              maxFontSizeMultiplier={wordFitMultiplier(word, compact ? 20 : 24, 300, 1.6)}
               style={{ fontSize: compact ? 20 : 24, lineHeight: 32, color: C.ink, fontWeight: next ? "700" : "500" }}
             >
               {word}

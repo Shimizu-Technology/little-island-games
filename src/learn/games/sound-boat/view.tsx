@@ -404,36 +404,39 @@ function Play({
           />
         </Svg>
       </Animated.View>
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: 10,
-          justifyContent: "center",
-          maxWidth: 420,
-          minHeight: tileSize,
-        }}
-      >
-        {choices.map((tile) => {
-          const lit = s.hint && tile === expected && !complete;
-          const t = (
-            <Tile
-              key={`${s.index}-${tile}`}
-              tile={tile}
-              out={s.out.includes(tile) || complete}
-              lit={lit}
-              size={tileSize}
-              shake={shakes[tile] ?? 0}
-              onPress={() => move({ type: "tile", tile })}
-            />
-          );
-          return (
-            <CoachSpot key={`${s.index}-${tile}`} active={coach.active && tile === expected && !complete}>
-              {t}
-            </CoachSpot>
-          );
-        })}
-      </View>
+      {/* Once the word is built the spent tiles step aside, so Sail on sits right under the boat. */}
+      {!complete && (
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 10,
+            justifyContent: "center",
+            maxWidth: 420,
+            minHeight: tileSize,
+          }}
+        >
+          {choices.map((tile) => {
+            const lit = s.hint && tile === expected && !complete;
+            const t = (
+              <Tile
+                key={`${s.index}-${tile}`}
+                tile={tile}
+                out={s.out.includes(tile) || complete}
+                lit={lit}
+                size={tileSize}
+                shake={shakes[tile] ?? 0}
+                onPress={() => move({ type: "tile", tile })}
+              />
+            );
+            return (
+              <CoachSpot key={`${s.index}-${tile}`} active={coach.active && tile === expected && !complete}>
+                {t}
+              </CoachSpot>
+            );
+          })}
+        </View>
+      )}
       {complete ? (
         <Button onPress={() => move({ type: "next" })}>{s.index === WORDS_PER_ROUND - 1 ? "Reach the island" : "Sail on"}</Button>
       ) : (
