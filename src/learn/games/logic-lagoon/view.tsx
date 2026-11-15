@@ -6,10 +6,12 @@ import { Board as LegacyBoard } from './legacy-view';
 import { boardAt, enter, hint, move, taskAt, revealStep, type LatinState, type LogicState } from './engine';
 import { LagoonGrid } from './grid';
 import { ScaleGlyph } from '../thinkingArt';
+import { BoardColumns, useBoardGeometry } from '../../BoardSpace';
 export { Art } from './legacy-view';
 
 function LatinBoard({ session, update, practice, assistance, cheer, coach, active, width, sound }: BoardProps<LogicState> & { session: BoardProps<LogicState>['session'] & { state: LatinState } }) {
   const s = session.state, task = taskAt(s), [feedback, setFeedback] = useState({ index: -1, text: '' });
+  const balanceGeometry = useBoardGeometry('logic-lagoon', 70.5, 70.5, task.kind === 'balance');
   const send: Parameters<typeof LagoonGrid>[0]['dispatch'] = action => {
     if (!active) return;
     const next = move(s, action);
@@ -22,7 +24,7 @@ function LatinBoard({ session, update, practice, assistance, cheer, coach, activ
     } else if (!['select', 'tool', 'pencil'].includes(action.type)) sound('tap');
     update(next);
   };
-  if (task.kind === 'balance') return <View style={{ gap: 10 }}><Copy maxFontSizeMultiplier={1.3}>PUZZLE {s.index + 1} OF 4 · Shell scales</Copy><ScaleGlyph/><Copy>The left holds {task.left} shells. The right holds {task.right} shells and a mystery bag.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{Array.from({ length: 10 }, (_, i) => <Button key={i} compact disabled={!active} onPress={() => { const right = i + 1 === task.answer; practice('think.balance', right); update(enter(s, 0, i + 1)); setFeedback({ index: s.index, text: right ? '' : 'The scales are still uneven.' }); if (right) cheer('big'); }}>{i + 1}</Button>)}</View>{feedback.index === s.index && <Copy>{feedback.text}</Copy>}<Button quiet disabled={!active} onPress={() => { assistance?.(); const h = hint(s); update(h.state); setFeedback({ index: s.index, text: h.reason }); }}>Hint</Button></View>;
+  if (task.kind === 'balance') return <View style={{ gap: 10 }}><Copy maxFontSizeMultiplier={1.3}>PUZZLE {s.index + 1} OF 4 · Shell scales</Copy><BoardColumns drawing={<View testID={balanceGeometry.testID} onLayout={balanceGeometry.onLayout}><ScaleGlyph size={balanceGeometry.height / .47}/></View>}><Copy>The left holds {task.left} shells. The right holds {task.right} shells and a mystery bag.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{Array.from({ length: 10 }, (_, i) => <Button key={i} compact disabled={!active} onPress={() => { const right = i + 1 === task.answer; practice('think.balance', right); update(enter(s, 0, i + 1)); setFeedback({ index: s.index, text: right ? '' : 'The scales are still uneven.' }); if (right) cheer('big'); }}>{i + 1}</Button>)}</View></BoardColumns>{feedback.index === s.index && <Copy>{feedback.text}</Copy>}<Button quiet disabled={!active} onPress={() => { assistance?.(); const h = hint(s); update(h.state); setFeedback({ index: s.index, text: h.reason }); }}>Hint</Button></View>;
   const p = task.puzzle!, grid = boardAt(s, p);
   const markHelp = () => { assistance?.(); update({ ...s, helped: true }); };
   return <LagoonGrid key={s.index} puzzle={p} state={grid} assisted={s.helped} dispatch={send} title={`PUZZLE ${s.index + 1} OF 4`} active={active} width={width} pictures={task.symbols[0] === 'shell' ? task.symbols : undefined} message={feedback.index === s.index ? feedback.text : ''}

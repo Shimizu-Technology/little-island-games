@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, PanResponder, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, PanResponder, Platform, Pressable, TextInput, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../../components/Text';
@@ -20,15 +20,17 @@ export const GridLines = memo(function GridLines({ rows, columns, cell, borders 
 });
 /** Tint 3 and 4 are the two colours of a hint's chain: a dot and a ring, never colour alone. */
 const chainMark: Record<number, { ring: boolean; words: string }> = { 3: { ring: false, words: ', chain dot' }, 4: { ring: true, words: ', chain ring' } };
-const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0, words = '', corner }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: GridTint; words?: string; corner?: CornerClue }) {
+const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0, words = '', corner, school }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: GridTint; words?: string; corner?: CornerClue; school?: boolean }) {
   const noteText = symbols.map((s, i) => notes & 1 << i ? s : '·').reduce((lines, s, i) => lines + s + (i % 3 === 2 ? '\n' : ' '), '').trim(), mark = chainMark[tint];
   const layout = corner && notes ? cornerNoteLayout(cell, symbols, corner, notes) : undefined;
   const border = selected ? 3 : conflict ? 2 : 0;
+  const valueBand = school && corner ? Math.ceil(corner.top + corner.lineHeight) + 2 : 0;
+  const valueFont = school ? Math.min(cell * .48, cell - valueBand - 6) : cell * .48;
   const label = `Row ${Math.floor(index / columns) + 1}, column ${index % columns + 1}, ${value ? symbols[value - 1] : notes ? `notes ${symbols.filter((_, i) => notes & 1 << i).join(', ')}` : 'empty'}${given ? ', given' : ''}${conflict ? ', conflict' : ''}${tint >= 2 ? ', hint focus' : ''}${mark?.words ?? ''}${words ? `, ${words}` : ''}`;
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: border, borderColor: conflict ? C.error : C.teal }}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: border, borderColor: conflict ? C.error : C.teal, ...(valueBand && value ? { paddingTop: valueBand } : {}) }}>
     {/* Centred and large on an empty square; small in the corner when the square shows notes or a number. */}
     {mark && (() => { const big = !value && !notes, size = Math.max(10, cell * (big ? .38 : .22)); return <View accessible={false} pointerEvents="none" style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, ...(big ? {} : { right: 2, bottom: 2 }), backgroundColor: mark.ring ? 'transparent' : C.ink, borderWidth: mark.ring ? Math.max(2.5, size * .16) : 0, borderColor: C.ink }}/>; })()}
-    {notes ? layout ? layout.fits ? <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: -border, top: -border, width: cell, height: cell }}>{layout.boxes.map(({ symbolIndex, ...box }) => <Text key={symbolIndex} testID={`corner-note-${index}-${symbolIndex}`} maxFontSizeMultiplier={1} style={{ position: 'absolute', ...box, color: C.ink, fontSize: layout.fontSize, lineHeight: layout.lineHeight, fontFamily: Platform.OS === 'android' ? 'monospace' : 'ui-monospace', fontVariant: ['tabular-nums'], textAlign: 'center' }}>{symbols[symbolIndex]}</Text>)}</View> : null : <Text maxFontSizeMultiplier={1} style={{ color: C.ink, fontSize: Math.max(8, cell * .19), lineHeight: cell * .25, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{noteText}</Text> : value > 0 && (!paint || value !== 1) && <Text maxFontSizeMultiplier={1.4} adjustsFontSizeToFit numberOfLines={1} style={{ color: conflict ? C.error : C.ink, fontSize: cell * .48, fontWeight: given ? '800' : '500' }}>{symbols[value - 1] ?? ''}</Text>}
+    {notes ? layout ? layout.fits ? <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: -border, top: -border, width: cell, height: cell }}>{layout.boxes.map(({ symbolIndex, ...box }) => <Text key={symbolIndex} testID={`corner-note-${index}-${symbolIndex}`} maxFontSizeMultiplier={1} style={{ position: 'absolute', ...box, color: C.ink, fontSize: layout.fontSize, lineHeight: layout.lineHeight, fontFamily: Platform.OS === 'android' ? 'monospace' : 'ui-monospace', fontVariant: ['tabular-nums'], textAlign: 'center' }}>{symbols[symbolIndex]}</Text>)}</View> : null : <Text maxFontSizeMultiplier={1} style={{ color: C.ink, fontSize: Math.max(8, cell * .19), lineHeight: cell * .25, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{noteText}</Text> : value > 0 && (!paint || value !== 1) && <Text maxFontSizeMultiplier={school ? 1 : 1.4} adjustsFontSizeToFit numberOfLines={1} style={{ color: conflict ? C.error : C.ink, fontSize: valueFont, fontWeight: given ? '800' : '500', ...(school ? { lineHeight: valueFont } : {}) }}>{symbols[value - 1] ?? ''}</Text>}
   </Pressable>;
 });
 export type GridShellProps = {
@@ -41,6 +43,8 @@ export type GridShellProps = {
   cellWords?: (index: number) => string;
   /** Public corner captions; their note cells reserve the caption area instead of drawing underneath. */
   cornerClues?: CornerClues;
+  /** Lead-approved School drawing allocation; absent hosts retain the legacy budget. */
+  schoolLayout?: { height: number; minimumCell: number; testID: string; onLayout: (event: LayoutChangeEvent) => void };
   /** The status sentence above the board (see `statusSentence`), so the height budget can measure how it wraps. */
   status?: string;
   /** A static layer above the cells and lines (cage sums, inequality marks). Never input. */
@@ -50,19 +54,20 @@ export type GridShellProps = {
 };
 export type GridTint = 0 | 1 | 2 | 3 | 4;
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
-export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, cornerClues, status }: GridShellProps) {
+export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, cornerClues, schoolLayout, status }: GridShellProps) {
   // A clue frame takes its share of the width, so the board's cells stay square and centred.
   const width = frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer;
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), large = (fontScale ?? 1) >= LARGE_TEXT, chrome = useContext(GridChromeContext);
   // At accessibility sizes the board, its clue gutters and the keys share one height budget; below them it is the base share of the window.
-  const viewportMax = gridViewportMax(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: true, sentence: status }), height, spec.rows, frame?.size ?? 0);
+  const viewportMax = schoolLayout ? Math.max(schoolLayout.height, schoolLayout.minimumCell * spec.rows) : gridViewportMax(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: true, sentence: status }), height, spec.rows, frame?.size ?? 0);
   const [zoom, setZoom] = useState(() => spec.kind !== 'digits' && gridGeometry(width, viewportMax, spec, false).needsZoom), [first, setFirst] = useState(numberFirst), [line, setLine] = useState<number[]>([]);
   const [screenReader, setScreenReader] = useState(false);
   useEffect(() => { let live = true; void AccessibilityInfo?.isScreenReaderEnabled().then(on => { if (live) setScreenReader(on); }); const subscription = AccessibilityInfo?.addEventListener('screenReaderChanged', setScreenReader); return () => { live = false; subscription?.remove(); }; }, []);
-  const fit = gridGeometry(width, viewportMax, spec, false);
+  const layoutWidth = schoolLayout ? Math.max(width, schoolLayout.minimumCell * spec.columns) : width;
+  const fit = gridGeometry(layoutWidth, viewportMax, spec, false);
   const fitCorners = useMemo(() => cornerClues?.(fit.cell, fontScale ?? 1), [cornerClues, fit.cell, fontScale]);
-  const { geometry, noteZoom } = cornerGridGeometry(width, viewportMax, spec, zoom && !screenReader, state.notes, fitCorners, cell => cornerClues?.(cell, fontScale ?? 1));
+  const { geometry, noteZoom } = cornerGridGeometry(layoutWidth, viewportMax, spec, zoom && !screenReader, state.notes, fitCorners, cell => cornerClues?.(cell, fontScale ?? 1));
   const enlarged = noteZoom || zoom && !screenReader;
   const { cell } = geometry;
   const corners = useMemo(() => cornerClues?.(cell, fontScale ?? 1), [cornerClues, cell, fontScale]);
@@ -170,9 +175,9 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
     {(screenReader || !!state.notes[state.selected]) && <Copy>Selected row {Math.floor(state.selected / spec.columns) + 1}, column {state.selected % spec.columns + 1}{state.notes[state.selected] ? ` · Notes: ${spec.symbols.filter((_, i) => state.notes[state.selected] & 1 << i).join(', ')}` : ''}</Copy>}
     <View style={frame ? { alignSelf: 'center', padding: frame.size * cell } : { alignSelf: 'center' }}>
     {frame && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: (spec.columns + 2 * frame.size) * cell, height: (spec.rows + 2 * frame.size) * cell }}>{frame.layer(cell, frame.size * cell)}</View>}
-    <View style={{ width: Math.min(width, geometry.width), alignSelf: 'center', height: Math.min(geometry.height, viewportMax), overflow: 'hidden', borderRadius: 8, ...(Platform.OS === 'web' ? { touchAction: spec.kind === 'paint' || zoom ? 'none' as const : 'auto' as const } : {}) }}>
+    <View {...(schoolLayout ? { testID: schoolLayout.testID, onLayout: schoolLayout.onLayout } : {})} style={{ width: Math.min(layoutWidth, geometry.width), alignSelf: 'center', height: Math.min(geometry.height, viewportMax), overflow: 'hidden', borderRadius: 8, ...(Platform.OS === 'web' ? { touchAction: spec.kind === 'paint' || zoom ? 'none' as const : 'auto' as const } : {}) }}>
       <Animated.View style={[{ width: geometry.width, height: geometry.height }, panStyle]}>
-        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)} corner={corners?.get(i)}/>; })}</View>)}
+        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)} corner={corners?.get(i)} {...(schoolLayout ? { school: true } : {})}/>; })}</View>)}
         {line.map(i => <View key={`stroke-${i}`} testID={`stroke-${i}`} pointerEvents="none" accessible={false} style={{ position: 'absolute', left: i % spec.columns * cell, top: Math.floor(i / spec.columns) * cell, width: cell, height: cell, backgroundColor: state.tool === 1 ? '#246858' : '#FFFDF7', opacity: .7, borderWidth: 2, borderColor: C.gold }}/>) }
         <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>
         {overlay && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{overlay(cell)}</View>}
