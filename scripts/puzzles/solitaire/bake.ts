@@ -3,7 +3,7 @@ import {existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {certify,type CertifyContext} from '../../../src/puzzles/checks';
 import {validRoot} from '../../../src/puzzles/bank';
-import {arrangeBy} from '../order';
+import {orderCandidates} from './order';
 import {bakeFamily,productionDirs} from '../pipeline';
 import {judge,rungs,klondike,freecell,type Candidate} from './family';
 
@@ -12,10 +12,12 @@ const spec=process.argv[2]==='freecell'?freecell:klondike,own=rungs.filter(r=>sp
 const ctx:CertifyContext={budget:10000,seenExact:new Set(),seenSemantic:new Set()},pools:Candidate[][]=[];
 const max=Number(process.env.SOLITAIRE_TRIES??20000), useTargets=process.env.SOLITAIRE_TARGET==='1',refresh=process.env.SOLITAIRE_REFRESH==='1';
 for(let band=0;band<own.length;band++){
- const r=own[band],want=useTargets?r.target:r.floor,poolWant=want*(refresh&&existsSync(join(log,`pool-${r.id}.json`))?1:Number(process.env.SOLITAIRE_POOL??3)),kept:Candidate[]=[],per=new Map<string,number>(),rejects:Record<string,number>={};const t=Date.now();
- const cached=join(log,`pool-${r.id}.json`);
+ const r=own[band],want=useTargets?r.target:r.floor,kept:Candidate[]=[],per=new Map<string,number>(),rejects:Record<string,number>={};const t=Date.now();
+ const cached=join(log,`pool-${r.id}.json`);let poolWant=want*Number(process.env.SOLITAIRE_POOL??3);
  // Cached pools are seed proposals only: every selected deal is regenerated and certified by this source.
- if(existsSync(cached)){const prior=JSON.parse(readFileSync(cached,'utf8'));const seeds=refresh?arrangeBy((c:Candidate)=>c.workload,prior.kept as Candidate[],want):prior.kept;for(const old of seeds){const c=judge(old.core.seed,r);if(!c||!certify(spec,spec.bands[band],c.core,ctx).ok)continue;kept.push(c);per.set(c.core.template,(per.get(c.core.template)??0)+1);}}
+ if(existsSync(cached)){const prior=JSON.parse(readFileSync(cached,'utf8'));let seeds=prior.kept as Candidate[];if(refresh&&seeds.length>=want){try{const chosen=orderCandidates(seeds,want);if(chosen.length===want){seeds=chosen;poolWant=want;}}catch{/* Keep a partial candidate pool and collect more. */}}for(const old of seeds){const c=judge(old.core.seed,r);if(!c||!certify(spec,spec.bands[band],c.core,ctx).ok)continue;kept.push(c);per.set(c.core.template,(per.get(c.core.template)??0)+1);}}
+ if(poolWant===want&&kept.length<want)poolWant=want*Number(process.env.SOLITAIRE_POOL??3);
+ if(!useTargets&&kept.length>=want){try{if(orderCandidates(kept,want).length>=r.floor)poolWant=kept.length;}catch{/* A wider pool may be needed. */}}
  for(let i=0;i<max&&kept.length<poolWant;i++) {
   const seed=((rungs.indexOf(r)+1)*0x1000000+i)>>>0,c=judge(seed,r);
   if(!c)continue;
@@ -24,12 +26,12 @@ for(let band=0;band<own.length;band++){
   if(!proof.ok){rejects[proof.reason]=(rejects[proof.reason]??0)+1;continue;}
   kept.push(c);per.set(c.core.template,(per.get(c.core.template)??0)+1);
   if(kept.length%4===0){writeFileSync(cached,JSON.stringify({rung:r.id,kept,rejects}));console.log(JSON.stringify({band:r.id,tried:i+1,kept:kept.length,want:poolWant,seconds:Math.round((Date.now()-t)/1000)}));
-   if(!useTargets&&kept.length>=want){try{if(arrangeBy((c:Candidate)=>c.workload,kept,want).length>=r.floor)break;}catch{/* A wider pool may give all recipes a gentle shared range. */}}
+   if(!useTargets&&kept.length>=want){try{if(orderCandidates(kept,want).length>=r.floor)break;}catch{/* A wider pool may give all recipes a gentle shared range. */}}
   }
  }
  writeFileSync(join(log,`pool-${r.id}.json`),JSON.stringify({rung:r.id,kept,rejects}));
  if(kept.length<want)throw new Error(`${r.id}: ${kept.length}/${want}; below promised floor. Nothing published.`);
- const arranged=arrangeBy(c=>c.workload,kept,want);if(arranged.length<r.floor)throw new Error(`${r.id}: gentle order is below floor.`);pools.push(arranged);
+ const arranged=orderCandidates(kept,want);if(arranged.length<r.floor)throw new Error(`${r.id}: gentle order is below floor.`);pools.push(arranged);
 }
 if(process.env.SOLITAIRE_POOL_ONLY==='1'){console.log(JSON.stringify({family:spec.id,curated:pools.reduce((n,p)=>n+p.length,0),published:false}));process.exit(0);}
 const path=join(productionDirs.content,'root.json'),root:unknown=JSON.parse(readFileSync(path,'utf8'));if(!validRoot(root))throw new Error('Invalid root.');
