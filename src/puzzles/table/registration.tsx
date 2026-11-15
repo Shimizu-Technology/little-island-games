@@ -10,7 +10,7 @@ import { bankLoader } from '../catalog';
 import type { PuzzleDescriptor } from '../types';
 import { sha256Hex } from '../sha256';
 import { solitaireAdapter } from './adapter';
-import { fresh, moveTable, readTable, undoTable, type TablePayload } from './checkpoint';
+import { fresh, moveTable, readTable, undoTable, type TablePayload } from './solitaireCheckpoint';
 import { positionKey, validMove, won, type Deal, type Move } from './solitaire';
 import { LazySolitaireBoard } from './LazyBoard';
 export type TableAction = {type:'move'|'hint';move:Move}|{type:'undo'|'help'|'reset'};

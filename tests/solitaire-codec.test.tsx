@@ -2,7 +2,7 @@ import React from 'react';
 import {describe,it,expect,vi} from 'vitest';
 import {defineSolitaire,type BankFacts, type TableView} from '../src/puzzles/table/registration';
 import {construct} from '../scripts/puzzles/solitaire/generate';
-import {fresh,readTable,type TablePayload} from '../src/puzzles/table/checkpoint';
+import {fresh,readTable,type TablePayload} from '../src/puzzles/table/solitaireCheckpoint';
 import {emptyChallenge,validChallengeSession} from '../src/state/challenge';
 import {legalMoves,opening,won} from '../src/puzzles/table/solitaire';
 import {solve} from '../src/puzzles/table/solver';

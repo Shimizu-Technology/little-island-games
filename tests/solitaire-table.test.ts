@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { apply, DECK, columns, DRAW, legalMoves, makeDeal, opening, RECYCLE, validDeal, validPosition, won } from '../src/puzzles/table/solitaire';
-import { decodeBoard, encodeBoard, fresh, history, moveTable, readTable, undoTable } from '../src/puzzles/table/checkpoint';
+import { decodeBoard, encodeBoard, fresh, history, moveTable, readTable, undoTable } from '../src/puzzles/table/solitaireCheckpoint';
 import { solve } from '../src/puzzles/table/solver';
 import { advise, publicView } from '../src/puzzles/table/publicSolver';
 import {capFixture,tallFixture} from '../scripts/puzzles/solitaire/qa-fixtures';

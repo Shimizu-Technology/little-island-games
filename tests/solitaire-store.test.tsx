@@ -14,7 +14,7 @@ import{createBankLoader,type BankLoader}from'../src/puzzles/loader';
 import{solitaireAdapter}from'../src/puzzles/table/adapter';
 import{defineSolitaire,type BankFacts}from'../src/puzzles/table/registration';
 import{SolitaireBoard}from'../src/puzzles/table/SolitaireBoard';
-import{readTable,moveTable}from'../src/puzzles/table/checkpoint';
+import{readTable,moveTable}from'../src/puzzles/table/solitaireCheckpoint';
 import{legalMoves,opening}from'../src/puzzles/table/solitaire';
 import{solve}from'../src/puzzles/table/solver';
 import{capFixture}from'../scripts/puzzles/solitaire/qa-fixtures';
@@ -71,7 +71,7 @@ it.each(['moves','help'])('the direct %s-cap restart preserves the old attempt a
  registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
  function Ready(){const s=useStore();return s.ready?<CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={null} width={353} onBrowse={()=>{}} onClose={()=>{}}/>:null;}
  await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});
- const before=progressFor(store.save,'a')!.paused[0],fixture=capFixture(deal),full={...before,revision:before.revision+1,payload:cap==='moves'?{...fixture.payload,audit:[1,2]}:{...moveTable(deal,before.payload as import('../src/puzzles/table/checkpoint').TablePayload,legalMoves(opening(deal),deal.mode)[0])!,audit:Array(128).fill(1)}};
+ const before=progressFor(store.save,'a')!.paused[0],fixture=capFixture(deal),full={...before,revision:before.revision+1,payload:cap==='moves'?{...fixture.payload,audit:[1,2]}:{...moveTable(deal,before.payload as import('../src/puzzles/table/solitaireCheckpoint').TablePayload,legalMoves(opening(deal),deal.mode)[0])!,audit:Array(128).fill(1)}};
  await act(async()=>{expect(await store.challengeSave(full,{owner:'a',epoch:store.epoch,game:'solitaire',id:before.id,revision:before.revision})).toBe(true);});
  expect(readTable(progressFor(store.save,'a')!.paused[0].payload,deal)!.history).toHaveLength(cap==='moves'?1024:1);
  const restart=()=>screen!.root.findAllByType('button').find(n=>n.children.includes('Start this deal again'))!;

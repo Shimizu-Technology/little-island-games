@@ -1,6 +1,6 @@
 import { apply, legalMoves, positionKey, rank, red, suit, won, type Deal, type Move, type Position } from './solitaire';
 import {lineFromProof} from './proof';
-import { knownPlan, primePlan, searchSteps } from './solver';
+import { knownPlan, primePlan, searchHintSteps } from './solver';
 /** Observable state only: no face-down rank, suit or stock order. */
 export function publicView(s: Position, d: Deal): Position {
   return { piles: s.piles.map((p, i) => p.map((c, j) => d.mode !== 'freecell' && (i === 12 || i < 7 && j < s.hidden[i]) && !s.known[c] ? -1 : c)), hidden: [...s.hidden], known: [...s.known] };
@@ -34,7 +34,7 @@ function* visibleProgress(visible:Position,d:Deal,budget:number):Generator<void,
 /** Klondike searches visible play until a card is uncovered, never past a hidden reveal. */
 export function* adviceSteps(s: Position, d: Deal, budget = 1200): Generator<void,Advice,void> {
   if (won(s)) return { kind: 'unknown' };
-  if (d.mode === 'freecell') { let cached=knownPlan(s,d);if(!cached){const proof=lineFromProof(d);if(proof)primePlan(d,proof);cached=knownPlan(s,d);} if(cached?.length)return {kind:'move',move:cached[0],plan:[cached[0]],depth:cached.length}; const r = yield* searchSteps(d, s, budget, true); return r.status === 'solved' && r.moves.length ? { kind: 'move', move: r.moves[0], plan: [r.moves[0]], depth: r.moves.length } : { kind: r.status==='unsolved'?'dead-end':'unknown' }; }
+  if (d.mode === 'freecell') { let cached=knownPlan(s,d);if(!cached){const proof=lineFromProof(d);if(proof)primePlan(d,proof);cached=knownPlan(s,d);} if(cached?.length)return {kind:'move',move:cached[0],plan:[cached[0]],depth:cached.length}; const r = yield* searchHintSteps(d, s, budget); return r.status === 'solved' && r.moves.length ? { kind: 'move', move: r.moves[0], plan: [r.moves[0]], depth: r.moves.length } : { kind: r.status==='unsolved'?'dead-end':'unknown' }; }
   const visible = publicView(s, d), all = legalMoves(visible, d.mode);
   const safe = all.find(a => safeFoundation(visible, a));
   if (safe) return { kind: 'move', move: safe, plan: [safe], depth: 1 };

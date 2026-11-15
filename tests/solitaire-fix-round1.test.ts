@@ -2,9 +2,9 @@ import {readFileSync} from 'node:fs';
 import {describe,expect,it,vi} from 'vitest';
 import {apply,DECK,DRAW,legalMoves,makeDeal,opening,RECYCLE,validPosition,type Deal} from '../src/puzzles/table/solitaire';
 import {advise,adviseAsync,publicView} from '../src/puzzles/table/publicSolver';
-import {decodeBoard,encodeBoard,fresh,moveTable,readTable,undoTable} from '../src/puzzles/table/checkpoint';
+import {decodeBoard,encodeBoard,fresh,moveTable,readTable,undoTable} from '../src/puzzles/table/solitaireCheckpoint';
 import {lineFromProof} from '../src/puzzles/table/proof';
-import {solve,searchSteps} from '../src/puzzles/table/solver';
+import {solve,searchSteps,searchHintSteps} from '../src/puzzles/table/solver';
 import {solitaireAdapter} from '../src/puzzles/table/adapter';
 import {decodeRow} from '../src/puzzles/descriptor';
 import reviewSamples from './fixtures/solitaire/review-offline-samples.json';
@@ -19,7 +19,7 @@ describe('Solitaire review regressions',()=>{
   expect(returns).toBe(64);
  });
  it('names the Solitaire-only exception at the codec boundary',()=>{
-  const header=readFileSync('src/puzzles/table/checkpoint.ts','utf8').split('\n')[0];
+  const header=readFileSync('src/puzzles/table/solitaireCheckpoint.ts','utf8').split('\n')[0];
   expect(header).toContain('Solitaire-only');expect(header).toContain('docs/SAVE_CONTRACT.md');
  });
  it('hints off the certified FreeCell line wherever the 10,000-node engine solves the reviewer sample',()=>{
@@ -33,6 +33,15 @@ describe('Solitaire review regressions',()=>{
    if(full.status==='solved'){solved++;expect(hint.kind,`${slot}/${row[0]}`).toBe('move');}
   }
   expect(solved).toBeGreaterThanOrEqual(28);
+ });
+ it('falls back from a misleading safe-closure frontier within the shared node budget',async()=>{
+  const{verifyLine}=await import('../scripts/puzzles/solitaire/independent');
+  const row=reviewSamples.find(s=>s.slot===108)!.rows.find(r=>r[0]===150994969)!,d=deal(row),line=lineFromProof(d)!;
+  let s=opening(d);for(const a of line.slice(0,3))s=apply(s,d.mode,a);
+  const off=legalMoves(s,d.mode).find(a=>a[0]!==line[3][0]||a[1]!==line[3][1])!;s=apply(s,d.mode,off);
+  const job=searchHintSteps(d,s,10000);let r=job.next();while(!r.done)r=job.next();
+  expect(r.value.status).toBe('solved');expect(r.value.nodes).toBeGreaterThan(400);expect(r.value.nodes).toBeLessThanOrEqual(10000);
+  if(r.value.status==='solved')expect(verifyLine(d.cards,d.mode,[...line.slice(0,3),off,...r.value.moves])).toBe(true);
  });
  it('keeps every safe-closure card move in an independently replayable hint witness',async()=>{
   const{verifyLine}=await import('../scripts/puzzles/solitaire/independent');

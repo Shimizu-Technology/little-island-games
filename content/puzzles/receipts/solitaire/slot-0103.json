@@ -2,16 +2,16 @@
  "format": 1,
  "family": "solitaire",
  "slot": 103,
- "catalogRevision": 16,
+ "catalogRevision": 18,
  "band": "t1",
  "ordinals": [
   102528,
   16
  ],
- "sourceSha": "de731882992b7c48b732243d2cbe5eb07467572f",
+ "sourceSha": "b787a3d2d52e197f512a4dea8bf743fe298d4db2",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "842b8684dfb3500c646290316bea2349ca6c5e2ac891a673b222a10cf110a1d7"
+  "family": "8ccb98ac603a8cd2829c27c8e38698ec9e25c255fe731e7e87400a9da90ff691"
  },
  "rng": 1,
  "rules": 1,
@@ -46,7 +46,9 @@
   "semantic": 16
  },
  "histograms": {
-  "technique": {},
+  "technique": {
+   "plan-1": 16
+  },
   "template": {
    "bursts": 4,
    "pairs": 4,
@@ -73,7 +75,7 @@
  },
  "proofHashes": {
   "witness": "a90b4f0f44e14708b2be823b9a4a7c84b2f2c752058610cb7efc1d3810019de2",
-  "trace": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "trace": "c7578b5902983900bd904d26725ae686633bf418d09225e1cf007791e204850d",
   "claims": "7a21dc80762dd433494b3482db294e7765835873b2dac034f5db275b9e949461"
  },
  "bots": {

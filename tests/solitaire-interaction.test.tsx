@@ -6,7 +6,7 @@ import {SolitaireBoard} from '../src/puzzles/table/SolitaireBoard';
 import {GridFeedback,GridInteraction} from '../src/puzzles/grid/preferences';
 import {construct} from '../scripts/puzzles/solitaire/generate';
 import {emptyChallenge,type ChallengeSession} from '../src/state/challenge';
-import {readTable} from '../src/puzzles/table/checkpoint';
+import {readTable} from '../src/puzzles/table/solitaireCheckpoint';
 import {legalMoves,opening,type Deal,type Mode} from '../src/puzzles/table/solitaire';
 import * as publicHints from '../src/puzzles/table/publicSolver';
 import {cardWords} from '../src/puzzles/table/solver';

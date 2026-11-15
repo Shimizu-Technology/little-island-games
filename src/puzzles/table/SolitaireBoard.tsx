@@ -5,7 +5,7 @@ import {Button,C,Copy} from '../../components/ui';
 import {Text} from '../../components/Text';
 import {atLarge} from '../../components/wordFit';
 import {GridFeedback,GridInteraction} from '../grid/preferences';
-import {encodeBoard,readTable} from './checkpoint';
+import {encodeBoard,readTable} from './solitaireCheckpoint';
 import {adviseAsync,type Advice} from './publicSolver';
 import {cardWords} from './solver';
 import {apply,columns,descending,legalMoves,rank,red,suit,won,type Move} from './solitaire';

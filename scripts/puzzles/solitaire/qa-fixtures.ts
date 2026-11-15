@@ -2,7 +2,7 @@
 import{apply,DECK,DRAW,legalMoves,rank,type Deal,type Move}from'../../../src/puzzles/table/solitaire';
 import{solve}from'../../../src/puzzles/table/solver';
 import{lineFromProof}from'../../../src/puzzles/table/proof';
-import{encodeBoard,fresh,moveTable,readTable,type TablePayload}from'../../../src/puzzles/table/checkpoint';
+import{encodeBoard,fresh,moveTable,readTable,type TablePayload}from'../../../src/puzzles/table/solitaireCheckpoint';
 export function tallFixture(){
  const run=Array.from({length:13},(_,i)=>{const rank=13-i;return(rank%2?0:13)+rank-1;}),reserved=new Map<number,number>([[27,run[0]],...run.slice(1).map((c,i):[number,number]=>[28+i,c])]);
  const rest=DECK.filter(c=>!run.includes(c)),deal:Deal={mode:'draw-one',cards:Array.from({length:52},(_,i)=>reserved.get(i)??rest.shift()!)};let payload=fresh(deal);

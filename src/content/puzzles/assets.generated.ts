@@ -3,7 +3,7 @@
 export const puzzleAssets: Record<string, () => number> = {
   "f-bridges-50f297fd8db3": () => require("./assets/f-bridges-50f297fd8db3.lipuzzle"),
   "f-cage-math-bc0b9dba9646": () => require("./assets/f-cage-math-bc0b9dba9646.lipuzzle"),
-  "f-freecell-dacfc8d46747": () => require("./assets/f-freecell-dacfc8d46747.lipuzzle"),
+  "f-freecell-6bf4d605ebf1": () => require("./assets/f-freecell-6bf4d605ebf1.lipuzzle"),
   "f-greater-than-e21b1047ecd8": () => require("./assets/f-greater-than-e21b1047ecd8.lipuzzle"),
   "f-killer-2803fbd7eb2f": () => require("./assets/f-killer-2803fbd7eb2f.lipuzzle"),
   "f-loop-22753a4952f7": () => require("./assets/f-loop-22753a4952f7.lipuzzle"),

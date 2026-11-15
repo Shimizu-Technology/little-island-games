@@ -5,7 +5,7 @@ export function primePlan(d:Deal,moves:readonly Move[]):boolean{let s=opening(d)
 export function knownPlan(s:Position,d:Deal):Move[]|undefined{return plans.get(planKey(s,d));}
 export type Search = { status: 'solved'; moves: Move[]; nodes: number; branches: number; techniques: string[] } | { status: 'budget-exhausted'; nodes: number } | { status: 'unsolved'; nodes: number };
 /** A bounded best-first graph search. The score orders work; it never proves an optimal move count. */
-export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000, compactFrontier = false): Generator<void,Search,void> {
+export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000, compactFrontier = false, foldFoundations = compactFrontier): Generator<void,Search,void> {
   type Node = { state: Position; parent: Node | null; move: Move | null; closure?: Move[]; depth: number; key: string; score: number };
   const score=(s:Position)=>{
     let home=0,covered=0,empty=0,cells=0;
@@ -61,7 +61,7 @@ export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000
       // The normal grader retains its exact expansion order. A hint may fold
       // the same safe-foundation closure into one search edge; every card move
       // remains in the witness and is still shown only on a deliberate tap.
-      if(compactFrontier){
+      if(foldFoundations){
         closure=[];
         while(depth+1+closure.length<240){const forced=forcedFoundation(next,deal.mode);if(!forced)break;closure.push(forced);next=apply(next,deal.mode,forced);yield;}
       }
@@ -77,4 +77,11 @@ export function* searchSteps(deal: Deal, initial = opening(deal), budget = 20000
   return { status: clipped?'budget-exhausted':'unsolved', nodes };
 }
 export function solve(deal:Deal,initial=opening(deal),budget=20000):Search{const job=searchSteps(deal,initial,budget);for(;;){const r=job.next();if(r.done)return r.value;}}
+/** Try safe closures briefly, then spend the remaining shared budget on unfurled play. */
+export function* searchHintSteps(deal:Deal,initial:Position,budget:number):Generator<void,Search,void>{
+  const fast=yield* searchSteps(deal,initial,Math.min(400,budget),true,true);
+  if(fast.status==='solved'||fast.nodes>=budget)return fast;
+  const fallback=yield* searchSteps(deal,initial,budget-fast.nodes,true,false);
+  return {...fallback,nodes:fast.nodes+fallback.nodes};
+}
 export const cardWords = (c: number) => `${['', 'Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'][rank(c)]} of ${['clubs', 'diamonds', 'spades', 'hearts'][suit(c)]}`;
