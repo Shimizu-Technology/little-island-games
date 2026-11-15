@@ -56,7 +56,11 @@ function atRung(level: Level, rung: number, p: Problem): boolean {
   const r = resultOf(p);
   switch (level) {
     case 1: return rung <= 1 ? Math.max(p.a, p.b, r) <= 6 && p.a + p.b >= 3 : rung === 2 ? r <= 8 && Math.min(p.a, p.b) >= 2 : Math.max(p.a, p.b) >= 4 && Math.min(p.a, p.b) >= 2;
-    case 2: return rung <= 1 ? Math.max(p.a, p.b, r) <= 15 : rung === 2 ? Math.max(p.a, p.b, r) <= 20 : Math.min(p.a, p.b) >= 10 || p.a >= 20;
+    // Early rungs work with real ones on both sides; 10 + 5 or 15 - 10 has no ones to work out. Later rungs may add whole tens.
+    case 2: {
+      const ones = p.a % 10 > 0 && p.b % 10 > 0;
+      return rung <= 1 ? ones && Math.max(p.a, p.b, r) <= 15 : rung === 2 ? ones && Math.max(p.a, p.b, r) <= 20 : Math.min(p.a, p.b) >= 10 || p.a >= 20;
+    }
     case 3: case 4: {
       if (p.unknown === "second") {
         const lo = p.op === "add" ? p.a : p.a - p.b, hi = p.op === "add" ? p.a + p.b : p.a;

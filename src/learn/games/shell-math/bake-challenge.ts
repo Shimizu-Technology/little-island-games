@@ -32,7 +32,11 @@ export function bakeFacts(level: Level): Descriptor[] {
     const fit = pool.filter((p) => !seen.has(key(p)) && (!need || wanted(level, p) !== null));
     // Deterministic shuffle by the seeded source; the original list is never reordered.
     const order = fit.map((p, i) => [rng(), i] as const).sort((a, b) => a[0] - b[0]).map(([, i]) => fit[i]);
-    for (const p of order.slice(0, count)) {
+    let taken = 0;
+    for (const p of order) {
+      // A swapped pair of addends is the same fact; two of them in one batch must not both go in.
+      if (taken >= count || seen.has(key(p))) continue;
+      taken++;
       seen.add(key(p));
       picked.push({ d: { t: "fact", level, item: codeOf(p), ways: wanted(level, p) ?? [levelRoute(level, p)] }, rung });
     }
