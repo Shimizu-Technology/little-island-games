@@ -3,7 +3,8 @@ import { AppState, Platform } from "react-native";
 
 /**
  * H4 (HD-03, HD-04, rule 60): Island Home's own small sound set and light haptics.
- * Every cue is an original generated waveform (`src/home/sounds/generate.py`), preloaded once
+ * Every cue is an original generated waveform (`src/home/sounds/generate.py`, files in
+ * `assets/home/`), preloaded once
  * per screen, never `replace()`d per tap. At most four play at once. Sound and haptics both
  * follow the app's sound switch (and the effects switch): with sound off nothing plays and
  * nothing buzzes, and every visual stays exactly the same.
@@ -82,19 +83,19 @@ export function createFeedback(deps: FeedbackDeps): HomeFeedback {
 /** Static requires so the bundler ships each file. */
 function source(sound: HomeSound): number {
   switch (sound) {
-    case "pick": return require("../sounds/pick.wav");
-    case "lift": return require("../sounds/lift.wav");
-    case "cloth": return require("../sounds/cloth.wav");
-    case "wood": return require("../sounds/wood.wav");
-    case "shell": return require("../sounds/shell.wav");
-    case "splash": return require("../sounds/splash.wav");
-    case "munch": return require("../sounds/munch.wav");
-    case "burp": return require("../sounds/burp.wav");
-    case "bubbles": return require("../sounds/bubbles.wav");
-    case "sizzle": return require("../sounds/sizzle.wav");
-    case "clang": return require("../sounds/clang.wav");
-    case "rustle": return require("../sounds/rustle.wav");
-    case "knob": return require("../sounds/knob.wav");
+    case "pick": return require("../../../assets/home/pick.wav");
+    case "lift": return require("../../../assets/home/lift.wav");
+    case "cloth": return require("../../../assets/home/cloth.wav");
+    case "wood": return require("../../../assets/home/wood.wav");
+    case "shell": return require("../../../assets/home/shell.wav");
+    case "splash": return require("../../../assets/home/splash.wav");
+    case "munch": return require("../../../assets/home/munch.wav");
+    case "burp": return require("../../../assets/home/burp.wav");
+    case "bubbles": return require("../../../assets/home/bubbles.wav");
+    case "sizzle": return require("../../../assets/home/sizzle.wav");
+    case "clang": return require("../../../assets/home/clang.wav");
+    case "rustle": return require("../../../assets/home/rustle.wav");
+    case "knob": return require("../../../assets/home/knob.wav");
   }
 }
 function nativeVoice(sound: HomeSound): Voice | undefined {
