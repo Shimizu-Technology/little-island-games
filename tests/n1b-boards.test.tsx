@@ -226,8 +226,12 @@ describe("Number Hop board", () => {
     for (let q = 0; q < 3; q++) { await playHop(); await press("Next puzzle"); }
     const i = hop.items[3];
     expect(screen()).toContain(`landed on ${landingOf(i)}`);
-    const line = root!.root.findAll((n) => typeof n.props.accessibilityLabel === "string" && n.props.accessibilityLabel.startsWith("Number line"))[0];
-    expect(line.props.accessibilityLabel).not.toContain(String(i[1]));
+    // No line before Help, so nothing on it can give the start away; Help's second stage draws the jumps back.
+    const lines = () => root!.root.findAll((n) => typeof n.props.accessibilityLabel === "string" && n.props.accessibilityLabel.startsWith("Number line"));
+    expect(lines()).toHaveLength(0);
+    expect(screen()).not.toContain(` ${i[1]} `);
+    await press("Help"); await press("More help");
+    expect(lines()).toHaveLength(1);
     await typeNumber(i[1] + 1);
     expect(screen()).toContain("Not quite. Try again, or tap Help.");
     await typeNumber(i[1]);

@@ -162,8 +162,7 @@ export function HopBoard(props: BoardProps<HopRound>) {
   // Where did the frog start?
   const landing = landingOf(item), js = startJumps(item);
   const points = [item[1], ...landings(item[1], js)];
-  // Before Help draws the jumps, the window depends only on the landing, so its edges never hint at the start.
-  const win = hopWindow(work.hint >= 2 || solved ? points : [landing - 25, landing + 5], 0, 100);
+  const win = hopWindow(points, 0, 100);
   const prompt = solved ? `${work.helped ? "We worked it out together." : "You found it!"} It started on ${item[1]}.`
     : work.hint >= 3 ? `It started on ${item[1]}. Tap Go to check it.` : work.hint === 2 ? backWorking(item)
       : work.hint === 1 ? `Start at ${landing} and do each jump backwards, from the last one.` : `The frog landed on ${landing}. Where did it start?`;
@@ -172,9 +171,10 @@ export function HopBoard(props: BoardProps<HopRound>) {
     {heading(prompt)}
     <Text accessibilityLabel={`The frog jumped ${js.map(jumpText).join(", ")} and landed on ${landing}. ${startSentence(item, solved).replace("?", "what number")}`} maxFontSizeMultiplier={sentenceCap} style={{ fontSize: width < 350 ? 26 : 32, fontWeight: "900", color: C.ink, textAlign: "center" }}>{startSentence(item, solved)}</Text>
     {noteLine}
-    <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={solved ? item[1] : null} from={work.hint >= 2 || solved ? item[1] : undefined}
-      landings={work.hint >= 2 || solved ? points.slice(1) : []} target={landing}
-      label={work.hint >= 2 || solved ? `Number line. The jumps ${js.map(jumpText).join(", ")} end on ${landing}.` : `Number line. The frog landed on ${landing}.`} />
+    {/* The line carries something only once Help draws the jumps back (or the start is found); before that it would only repeat
+        the heading and push the pad off a phone screen. */}
+    {(work.hint >= 2 || solved) && <HopLine width={lineWidth} lo={win.lo} hi={win.hi} start={solved ? item[1] : null} from={item[1]}
+      landings={points.slice(1)} target={landing} label={`Number line. The jumps ${js.map(jumpText).join(", ")} end on ${landing}.`} />}
     {!solved && <CoachSpot active={coach.active && active} handAt="none">
       {work.choices
         ? <View accessibilityLabel="Choose the start" style={{ flexDirection: "row", gap: 10 }}>

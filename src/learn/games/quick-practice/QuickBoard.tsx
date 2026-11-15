@@ -57,6 +57,8 @@ export function QuickBoard(props: BoardProps<QuickRound>) {
   const typed = typedLevel(level) && !work.choices;
   const story = item[0] === 3;
   const placeHelped = work.helped || prog.placeMissed;
+  // `8 + 5 = ?` and `40 − 15 + 8 = ?` ask for an answer; `? + 6 = 14` asks for a missing number.
+  const result = item[0] === 2 || (item[0] === 0 && item[4] === 2);
 
   function act(a: QAct) {
     if (!context.current.active || context.current.id !== session.id || live.current !== s || !prog) return;
@@ -88,7 +90,7 @@ export function QuickBoard(props: BoardProps<QuickRound>) {
     ? `${placeHelped ? "We worked it out together." : "You found it!"} ${story ? `${sentenceOf(item, true)}` : `The answer is ${answer}.`}`
     : missLine ?? (work.last !== null ? "Not quite. Try again, or tap Help." : work.hint >= 3 ? `It is ${answer}. ${typed ? "Tap Go to check it." : "Choose it."}`
       : work.hint === 2 ? `${cueFor(item)} ${workingFor(item)}` : work.hint === 1 ? cueFor(item)
-        : story ? (typed ? "Read the story. Type the answer." : "Read the story.") : typed ? "Type the missing number." : "Choose the missing number.");
+        : story ? (typed ? "Read the story. Type the answer." : "Read the story.") : `${typed ? "Type" : "Choose"} ${result ? "the answer" : "the missing number"}.`);
   const line = work.hint >= 1 && !work.solved ? hopsFor(item) : null;
   const tiles = choicesOf(item, level, prog.cur);
   const speech = speechKey(item);
