@@ -343,7 +343,7 @@ export function PoolScene({
                   ? "The water got hot and the coral turned white."
                   : "Bright coral at its usual reef temperature.";
   return (
-    <View onLayout={geometry.onLayout}
+    <View testID={geometry.testID} onLayout={geometry.onLayout}
       accessible
       accessibilityLabel={label}
       style={{

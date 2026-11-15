@@ -449,7 +449,7 @@ export function Board({
           Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
         </Copy>
       )}
-      <View onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
+      <View testID={geometry.testID} onLayout={geometry.onLayout} style={blocks ? {flexDirection:"row",alignItems:"center",gap:8} : undefined}>
       <Beach
         level={l}
         walker={w}

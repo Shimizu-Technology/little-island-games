@@ -413,7 +413,7 @@ export function Board({ session, update, practice, sound, active, width, height,
           </>
         )}
       </View>
-      <View onLayout={geometry.onLayout}><ReefBoard
+      <View testID={geometry.testID} onLayout={geometry.onLayout}><ReefBoard
         width={width}
         height={geometry.height}
         first={first}

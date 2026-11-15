@@ -138,7 +138,7 @@ function PebblePile({ size = 54 }: { size?: number }) {
 function Water({ children, width, height = 150 }: { children?: React.ReactNode; width: number; height?: number }) {
   const geometry = useBoardGeometry('float-sink', height, SCHOOL_BOARD_MIN['float-sink']);
   return (
-    <View onLayout={geometry.onLayout} style={{ height: geometry.height, width: Math.min(width, 420), alignSelf: "center" }}>
+    <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ height: geometry.height, width: Math.min(width, 420), alignSelf: "center" }}>
       <Svg
         width="100%"
         height="100%"

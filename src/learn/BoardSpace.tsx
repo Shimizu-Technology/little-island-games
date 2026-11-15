@@ -59,7 +59,7 @@ export function useBoardGeometry(id: SchoolBoard, natural: number, minimum: numb
   }, [id, enabled, measure]);
   const geometry = fitSchoolBoard(enabled && space?.ready && space.chrome !== null ? space : null, natural, minimum, space?.chrome ?? 0);
   const wrapPlan = (children: React.ReactNode, maxHeight: number) => space ? <ScrollView nestedScrollEnabled style={{ maxHeight, flexGrow: 0 }} accessibilityLabel="Your plan cards">{children}</ScrollView> : children;
-  return { ...geometry, wrapPlan, onLayout: enabled && space ? onLayout : undefined, measured: !!space?.ready };
+  return { ...geometry, testID: space ? `school-${id}-drawing` : undefined, wrapPlan, onLayout: enabled && space ? onLayout : undefined, measured: !!space?.ready };
 }
 
 /** The existing LearnFrame inset, also measuring all fixed siblings of the drawing. */

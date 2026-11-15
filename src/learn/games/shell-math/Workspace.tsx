@@ -43,7 +43,7 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
   const geometry = useBoardGeometry('shell-math', naturalHeight, minimum, !hidePicture);
   const cell = touch ? naturalCell : Math.max(24, Math.min(naturalCell, Math.floor(naturalCell * geometry.height / naturalHeight)));
   if (hidePicture) return <Copy style={{ color: C.ink, textAlign: "center" }}>Picture hidden. Think it through, then use the number pad.</Copy>;
-  return <View onLayout={geometry.onLayout} style={{ alignItems: "center", gap: 4 }}>
+  return <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ alignItems: "center", gap: 4 }}>
     {pic.pair && <View style={{ flexDirection: stacked ? "column" : "row", alignItems: "center", justifyContent: "center", gap: stacked ? 2 : 10 }}>
       <View style={{ alignItems: "center", gap: 4 }}>
         <TenFrame cell={cell} filled={pic.pair.a} label={`First group: ${pic.pair.a} shells${pic.pair.fullA ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(1, k) : undefined} pickLabel={(k) => `Move ${k} ${k === 1 ? "shell" : "shells"} from the first group to the second`} />

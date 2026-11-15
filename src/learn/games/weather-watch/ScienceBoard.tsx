@@ -607,7 +607,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         borderColor: "#C7D8AD",
       }}
     >
-      <View onLayout={geometry.onLayout}><Svg width="100%" height={geometry.height} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
+      <View testID={geometry.testID} onLayout={geometry.onLayout}><Svg width="100%" height={geometry.height} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
         {scene}
       </Svg></View>
       <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>

@@ -193,7 +193,7 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
       })()}
     </View>
   </>;
-  const board = <View onLayout={geometry.onLayout}>
+  const board = <View testID={geometry.testID} onLayout={geometry.onLayout}>
     <CoachSpot active={!!coach?.active} handAt="none" style={{ borderRadius: 26 }}>
       <GestureDetector gesture={pan}>
         <View accessible accessibilityRole="image" accessibilityLabel={describeBoard(slipView(puzzle, crabs))} style={{ width: boardSize, height: boardSize, padding: boardPad, borderRadius: 24, backgroundColor: '#F2DFA9', borderWidth: 2, borderColor: '#A98F58', overflow: 'hidden' }}>

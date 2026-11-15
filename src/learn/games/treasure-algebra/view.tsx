@@ -46,7 +46,7 @@ function SeaLine({ value, start }: { value: number; start?: number }) {
     return () => move.stop();
   }, [motion, targetY, reduced]);
   return <View style={{ alignItems: "center", gap: 7 }}>
-    <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} onLayout={geometry.onLayout} style={{ width: 286 * scale, height: geometry.height, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
+    <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} testID={geometry.testID} onLayout={geometry.onLayout} style={{ width: 286 * scale, height: geometry.height, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
       <Svg width={286 * scale} height={geometry.height} viewBox="0 0 286 330" accessible={false}>
         <Rect width="286" height={lineY(0)} fill="#E9F6DC"/><Rect y={lineY(0)} width="286" height={330-lineY(0)} fill="#C4E9EE"/>
         <Circle cx="47" cy="43" r="20" fill="#F8CC67"/><Path d="M47 10v10M47 66v10M14 43h10M70 43h10M23 19l7 7M64 61l7 7M71 19l-7 7M30 61l-7 7" stroke="#E6A63F" strokeWidth="3" strokeLinecap="round"/>

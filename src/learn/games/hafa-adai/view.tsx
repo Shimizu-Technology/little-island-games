@@ -229,7 +229,7 @@ export function Board({
           </>
         )}
       </View>
-      <View onLayout={geometry.onLayout}
+      <View testID={geometry.testID} onLayout={geometry.onLayout}
         style={{
           borderRadius: 20,
           overflow: "hidden",

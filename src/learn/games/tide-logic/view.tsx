@@ -58,7 +58,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
     {t && <>
       <Copy>{t.prompt}</Copy>
       <View style={{ backgroundColor: "#E2F3F2", borderRadius: 18, padding: 12, gap: 8 }}>
-        <View onLayout={geometry.onLayout} style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 5 }}>
+        <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 5 }}>
           {t.items.map((item, i) => <View key={i} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: i === failure || s.running === i ? 3 : 0, borderColor: i === failure ? "#B74431" : "#287A82", borderRadius: 12, backgroundColor: i === failure ? "#FFE0D8" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{item.size}</Copy></View>)}
         </View>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
