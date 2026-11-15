@@ -7,17 +7,17 @@ import {GridFeedback,GridInteraction} from '../src/puzzles/grid/preferences';
 import {construct} from '../scripts/puzzles/solitaire/generate';
 import {emptyChallenge,type ChallengeSession} from '../src/state/challenge';
 import {readTable} from '../src/puzzles/table/checkpoint';
-import {legalMoves,opening,type Deal} from '../src/puzzles/table/solitaire';
+import {legalMoves,opening,type Deal,type Mode} from '../src/puzzles/table/solitaire';
 import {cardWords} from '../src/puzzles/table/solver';
 const fake=vi.hoisted(()=>({descriptor:null as unknown,scale:1,feedback:vi.fn(),held:[] as boolean[],session:null as ChallengeSession|null}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>({entry:async()=>fake.descriptor,savedHash:async()=> 'a'.repeat(64)})}));
 vi.mock('react-native',()=>({View:'div',Pressable:'button',ScrollView:'section',useWindowDimensions:()=>({width:393,height:852,fontScale:fake.scale}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{v={x:0,y:0};setValue(v:{x:number;y:number}){this.v=v;}getTranslateTransform(){return[{translateX:this.v.x},{translateY:this.v.y}];}}}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',C:{gold:'#E1B251',teal:'#246858',ink:'#183F39'}}));
 vi.mock('../src/components/Text',()=>({Text:'span'}));
-async function fixture(){
- const deal=construct('freecell',4,1).deal,ref={bank:100,puzzle:0,engine:'solitaire',rules:1,hash:'a'.repeat(64)};
+async function fixture(mode:Mode='freecell'){
+ const deal=construct(mode,4,1).deal,ref={bank:100,puzzle:0,engine:'solitaire',rules:1,hash:'a'.repeat(64)};
  fake.descriptor={format:1,seed:4,rng:1,band:'f1',layout:'steady',template:'steady',payload:deal,objectives:[],limits:[],par:null,teaches:['search-1'],speech:null,ref};
- const fact:BankFacts={family:'freecell',slot:100,first:102400,count:1,packHash:'b'.repeat(64),rules:1,band:'f1',tier:1,title:'FreeCell · Paddling',summary:'Foundation building'};
+ const fact:BankFacts={family:mode==='freecell'?'freecell':'solitaire',slot:100,first:102400,count:1,packHash:'b'.repeat(64),rules:1,band:'f1',tier:1,title:'FreeCell · Paddling',summary:'Foundation building'};
  const entry=defineSolitaire([fact]);await entry.packed!.prepare(ref);
  const initial=entry.start(ref,'family','cove-family-1',emptyChallenge(),{supportOff:false,ownRead:false},[]);
  function Harness({saved=initial}:{saved?:ChallengeSession}){const[s,set]=useState(saved);useEffect(()=>{fake.session=s;},[s]);return <GridFeedback.Provider value={fake.feedback}><GridInteraction.Provider value={held=>fake.held.push(held)}><SolitaireBoard view={{deal,payload:readTable(s.payload,deal)!.payload,title:'FreeCell · Paddling 1',summary:'Foundation building'}} dispatch={(a:TableAction)=>set(before=>entry.move(before,a)??before)} active={!s.result} width={353}/></GridInteraction.Provider></GridFeedback.Provider>;}
@@ -68,6 +68,17 @@ describe('Solitaire card interaction',()=>{
    expect(first.props.style.height).toBeLessThanOrEqual(32);
    await act(async()=>{const p=surface(screen).props;p.onPanResponderGrant({nativeEvent:{locationX:first.props.style.left+10,locationY:first.props.style.top+16}});p.onPanResponderRelease({}, {dx:0,dy:0});});
    expect(text(screen)).toContain('Move the cards above this one first.');expect(board(deal).payload.edits).toBe(0);
+  }finally{if(screen)await act(async()=>screen.unmount());}
+ });
+
+ it('draw-three displays the two observed cards behind the playable top waste card',async()=>{
+  const{Harness,deal}=await fixture('draw-three');let screen!:ReactTestRenderer;
+  try{await act(async()=>{screen=create(<Harness/>);});await press(screen,'Draw three · 24 in stock');
+   const waste=board(deal).position.piles[13];expect(waste).toHaveLength(3);
+   const seen=screen.root.findAll(n=>typeof n.props.accessibilityLabel==='string'&&n.props.accessibilityLabel.startsWith('Seen behind the top waste card:'));
+   expect(seen).toHaveLength(1);for(const c of waste.slice(0,2))expect(seen[0].props.accessibilityLabel).toContain(cardWords(c));
+   expect(screen.root.findAllByType('button').filter(n=>n.props.accessibilityLabel?.startsWith('Waste,'))).toHaveLength(1);
+   expect(screen.root.findAllByType('button').find(n=>n.props.accessibilityLabel===`Waste, ${cardWords(waste[2])}`)).toBeDefined();
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
  it('fits eight default-size columns and keeps AX5 controls plus full card names available',async()=>{

@@ -31,6 +31,7 @@ for(let band=0;band<own.length;band++){
  if(kept.length<want)throw new Error(`${r.id}: ${kept.length}/${want}; below promised floor. Nothing published.`);
  const arranged=arrangeBy(c=>c.workload,kept,want);if(arranged.length<r.floor)throw new Error(`${r.id}: gentle order is below floor.`);pools.push(arranged);
 }
+if(process.env.SOLITAIRE_POOL_ONLY==='1'){console.log(JSON.stringify({family:spec.id,curated:pools.reduce((n,p)=>n+p.length,0),published:false}));process.exit(0);}
 const path=join(productionDirs.content,'root.json'),root:unknown=JSON.parse(readFileSync(path,'utf8'));if(!validRoot(root))throw new Error('Invalid root.');
 const base=spec.id==='solitaire'?100:106;if(root.nextSlot>base)throw new Error('Reserved slots are behind catalog cursor.');
 writeFileSync(path,JSON.stringify({...root,nextSlot:base,nextOrdinal:Math.max(root.nextOrdinal,base*1024)})+'\n');
