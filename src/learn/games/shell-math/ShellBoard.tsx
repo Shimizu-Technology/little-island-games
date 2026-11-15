@@ -110,6 +110,8 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     </View>
     <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
     <Text accessibilityLabel={equationText(problem, work.solved)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(problem, work.solved)}</Text>
+    {/* Hints and gentle misses sit with the question, above the picture and the pad, where they are never below the fold. */}
+    {!work.solved && (note || hint) ? <View accessibilityLiveRegion="polite"><Copy style={{ color: C.ink, textAlign: "center", fontWeight: note ? "400" : "700" }}>{note ?? hint}</Copy></View> : null}
     <Workspace pic={pic} width={width} hidePicture={hidePicture && level >= 2}
       onPick={step.kind === "fill" && problem.op === "add" && active ? (side, k) => { press(); act(["m", side, k]); } : undefined}
       onPickOnes={step.kind === "fill" && problem.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}
@@ -118,10 +120,6 @@ export function ShellBoard(props: BoardProps<ShellRound>) {
     <StepInput step={step} work={work} typed={typed} tiles={step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, problem, tileCap(level)) : stepChoices) : []}
       width={width} active={active} coachActive={coach.active} resetKey={stepKey} addVerb={problem.op === "add" ? "on" : "back"} press={press} onAct={act}
       soundOn={soundOn} sound={sound} prompt={typedStepLabel} />
-    <View accessibilityLiveRegion="polite" style={{ minHeight: 24 }}>
-      {work.solved ? null : note ? <Copy style={{ color: C.ink, textAlign: "center" }}>{note}</Copy>
-        : hint ? <Copy style={{ color: C.ink, textAlign: "center", fontWeight: "700" }}>{hint}</Copy> : null}
-    </View>
     {work.solved
       ? <View style={{ gap: 8 }}>
         {seconds.length > 0 && <Button quiet compact disabled={!active} onPress={() => { press(); setWay((w) => (w === null ? 0 : w + 1 >= seconds.length ? null : w + 1)); }}>

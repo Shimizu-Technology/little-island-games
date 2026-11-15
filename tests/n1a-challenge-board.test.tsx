@@ -80,6 +80,26 @@ describe("Shell Math Challenge board", () => {
     expect(latest.work.used).toBe((1 << 0) | (1 << a));
   });
 
+  it("a miss is answered in words where the child is looking, and the right answer then clears it", async () => {
+    const d = pick((p) => p.dares[0]?.rule.kind === "whole");
+    await mount(d);
+    const plan = waysOf(d)[0].plan;
+    const first = plan.findIndex((x) => x.kind === "number"), acts = solveActs(plan.slice(0, first));
+    for (const a of acts) {
+      if (a[0] === "m") await press(`Move ${a[2]} ${a[2] === 1 ? "shell" : "shells"} from the ${a[1] === 0 ? "second group to the first" : "first group to the second"}`);
+      else if (a[0] === "t") await press(/Make a ten|Open a ten/);
+      else if (a[0] === "c") await press(/Count (on|back) one/);
+    }
+    const num = plan[first] as { value: number };
+    const wrong = num.value === 9 ? 8 : num.value + 1;
+    for (const ch of String(wrong)) await press(ch);
+    await press("Check my answer");
+    expect(text(root!.root)).toContain("Not quite");
+    for (const ch of String(num.value)) await press(ch);
+    await press("Check my answer");
+    expect(text(root!.root)).not.toContain("Not quite");
+  });
+
   it("Open a number: trading is the only move and the blocks follow it", async () => {
     const d = pick((p) => p.descriptor.t === "regroup");
     await mount(d);

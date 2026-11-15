@@ -53,6 +53,8 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     dispatch(a);
   };
   const solved = w.solved;
+  // A miss is answered right where the child is looking; the pad clears, so it must never go unsaid.
+  const miss = !solved && w.last !== null ? "Not quite. Look at the picture and try again, or tap Help." : null;
   const level: Level = d.t === "fact" ? d.level : 5;
   const typed = d.t === "fact" ? level >= 3 : true;
   const key = `${w.at}:${w.wrong}`;
@@ -70,13 +72,13 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
       <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
       <Text accessibilityLabel={equationText(p, solved)} style={{ fontSize: width < 350 ? 30 : 38, fontWeight: "900", color: C.ink, textAlign: "center" }}>{equationText(p, solved)}</Text>
+      {!solved && (miss ?? hint) ? <View accessibilityLiveRegion="polite"><Copy style={{ color: C.ink, textAlign: "center", fontWeight: miss ? "400" : "700" }}>{miss ?? hint}</Copy></View> : null}
       <Workspace pic={pic} width={width} hidePicture={hidden && level >= 2}
         onPick={step.kind === "fill" && p.op === "add" && active ? (side, k) => { press(); act(["m", side, k]); } : undefined}
         onPickOnes={step.kind === "fill" && p.op === "subtract" && active ? (k) => { press(); act(["m", 0, k]); } : undefined}
         onTradeMake={step.kind === "trade" && step.dir === "make" && active ? () => { press(); act(["t"]); } : undefined}
         onTradeOpen={step.kind === "trade" && step.dir === "open" && active ? () => { press(); act(["t"]); } : undefined} />
       <StepInput {...common(p)} tiles={tiles} prompt={step.kind === "number" && step.role === "final" ? "Your answer" : "This step"} />
-      <View accessibilityLiveRegion="polite" style={{ minHeight: 24 }}>{!solved && hint ? <Copy style={{ color: C.ink, textAlign: "center", fontWeight: "700" }}>{hint}</Copy> : null}</View>
       {!solved && <HelpRow step={step} work={w} typed={typed} active={active} canHide={level >= 2} hidden={hidden} press={press}
         onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidden((h) => !h)} />}
       {d.ways.length > 1 && !solved && w.moves === 0 && <Button quiet compact disabled={!active} onPress={() => { press(); send(["z"]); }}>Choose another way</Button>}
@@ -102,6 +104,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
   return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
     <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
     <Text accessibilityLabel={deepSpoken(d)} style={{ fontSize: width < 350 ? 26 : 32, fontWeight: "900", color: C.ink, textAlign: "center" }}>{solved && d.t === "missing" ? (d.first ? `${finalValue} + ${d.known} = ${d.total}` : `${d.known} + ${finalValue} = ${d.total}`) : deepTitle(d)}</Text>
+    {!solved && (miss ?? hint) ? <View accessibilityLiveRegion="polite"><Copy style={{ color: C.ink, textAlign: "center", fontWeight: miss ? "400" : "700" }}>{miss ?? hint}</Copy></View> : null}
     {!hidden && d.t === "regroup" && <Blocks unit={Math.max(10, Math.min(13, Math.floor((width - 60) / (d.tens + 8))))} tens={d.tens + done} ones={d.ones - 10 * done} label={tensOnesText(d.tens + done, d.ones - 10 * done)}
       onTradeMake={step.kind === "trade" && active ? () => { press(); act(["t"]); } : undefined} />}
     {!hidden && d.t === "missing" && <Bridge width={Math.min(width, 380)} start={d.known} hops={[d.known + (10 - (d.known % 10)), d.total]} ten={d.known + (10 - (d.known % 10))} lo={Math.floor(d.known / 10) * 10} hi={d.total}
@@ -127,7 +130,6 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     </View>}
     {hidden && <Copy style={{ color: C.ink, textAlign: "center" }}>Picture hidden. Think it through, then use the number pad.</Copy>}
     <StepInput {...common(null)} tiles={tiles} prompt={step.kind === "number" && step.role === "final" ? "Your answer" : "This step"} />
-    <View accessibilityLiveRegion="polite" style={{ minHeight: 24 }}>{!solved && hint ? <Copy style={{ color: C.ink, textAlign: "center", fontWeight: "700" }}>{hint}</Copy> : null}</View>
     {!solved && <HelpRow step={step} work={w} typed={typed} active={active} canHide={d.t !== "pairs"} hidden={hidden} press={press}
       onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidden((h) => !h)} />}
   </View>;
