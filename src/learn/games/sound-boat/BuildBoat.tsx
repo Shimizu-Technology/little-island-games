@@ -28,6 +28,8 @@ export type BuildBoatProps = {
   onHear: () => void;
   sound: (key: string) => void;
   soundOn: boolean;
+  /** Print the word even with sound on: an own-read dare asks the child to read it. */
+  showWord?: boolean;
   /** Tapping a word of the finished sentence to hear it is a read-aloud act. */
   onHeard?: (word: string) => void;
   width: number;
@@ -49,12 +51,14 @@ export function BuildBoat(p: BuildBoatProps) {
     <View style={{ gap: p.compact ? 8 : 12, alignItems: "center", alignSelf: "stretch" }}>
       <Copy maxFontSizeMultiplier={1.4} style={{ color: ink, fontSize: 19, fontWeight: "600", textAlign: "center" }}>{p.prompt}</Copy>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-        {p.soundOn ? (
-          <IconButton icon="sound-on" label="Hear the word again" onPress={p.onHear} size={56} />
-        ) : (
+        {/* Own read: the printed word is there to read. Hearing it is still possible, and it ends the own-read mark. */}
+        {(!p.soundOn || p.showWord) && (
           <Copy accessibilityLabel={`The word is ${task.word}`} style={{ color: ink, fontWeight: "800", fontSize: 28, lineHeight: 34 }} maxFontSizeMultiplier={letterFit(task.word, 28, room, Infinity)}>
             {task.word}
           </Copy>
+        )}
+        {p.soundOn && (
+          <IconButton icon="sound-on" label={p.showWord ? "Hear the word. This ends your own read" : "Hear the word again"} onPress={p.onHear} size={56} />
         )}
         {cue && (
           <View accessible accessibilityLabel={cue.prefix ? `${cue.affix} plus ${cue.base}` : `${cue.base} plus ${cue.affix}`} style={{ flexDirection: "row", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
@@ -66,11 +70,8 @@ export function BuildBoat(p: BuildBoatProps) {
         )}
       </View>
       <View style={{ alignSelf: "stretch", alignItems: "center", backgroundColor: "#D1E8EF", borderRadius: 22, paddingTop: 10, paddingHorizontal: 8 }}>
-        <View
-          accessible
-          accessibilityLabel={`The word on the boat: ${task.tiles.map((_, i) => (draft[i] !== undefined ? piece(draft[i]) : "empty")).join(", ")}`}
-          style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" }}
-        >
+        {/* Not one accessibility element: each box is its own button, so VoiceOver can reach and remove a chosen piece. */}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
           {task.tiles.map((_, i) => {
             const at = draft[i];
             const text = at === undefined ? "" : piece(at);

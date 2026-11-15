@@ -21,7 +21,8 @@ export function ChallengeBoard({ state: s, dispatch, active, width, header, foot
         solved={s.answer.solved}
         missed={answerMissed(s.answer)}
         canCheck={canCheckAnswer(buildRules, s.task, s.answer)}
-        prompt="Build the word. Check when every box is full."
+        showWord={s.ownRead}
+        prompt={s.ownRead ? "Read the word, then build it. Check when every box is full." : soundOn ? "Hear the word, then spell it. Check when every box is full." : "Build the word. Check when every box is full."}
         width={width}
         soundOn={soundOn}
         sound={(key) => play(key)}

@@ -104,13 +104,6 @@ export function Board({
   // The next sentence opens at the top of the board, above the pictures she just chose from.
   useStepReveal(s.index);
 
-  // After a right answer, a short pause to enjoy it, then the next sentence.
-  useEffect(() => {
-    if (!s.solved || !active) return;
-    const timer = setTimeout(() => update(whichNext(s)), 1400);
-    return () => clearTimeout(timer);
-  }, [s, active, update]);
-
   if (s.index === 8)
     return (
       <View style={{ alignItems: "center", padding: 16, gap: 10 }}>
@@ -196,6 +189,12 @@ export function Board({
       <Copy style={{ fontSize: 18, fontWeight: "700", textAlign: "center", color: C.ink }}>
         {s.solved ? "Yes! That’s the one." : s.wrong !== null ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
+      {/* Reading is never timed: the next sentence waits for the child to press Next. */}
+      {s.solved && (
+        <Button disabled={!active} onPress={() => update(whichNext(s))}>
+          {s.index === 7 ? "Finish" : "Next"}
+        </Button>
+      )}
       {!s.solved && (
         <Button compact quiet icon="sound-on" disabled={!soundOn || !active}
           onPress={() => { update(whichHelp(s)); assistance?.(); sound(`which-one-sentence-${item.id}`); }}>

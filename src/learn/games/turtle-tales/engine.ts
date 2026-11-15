@@ -151,7 +151,7 @@ export const engine: LearnEngine<TaleState | LegacyTaleState> = {
   tagline: "Read a page, pick its picture.",
   description:
     "Read a little island tale. On every page, pick the picture that matches what you read, and the turtle swims on.",
-  help: "Read the words on the page. Then tap the picture that matches. The two pictures are almost the same: one word on the page tells you which is right, so read every word. Tap any word to hear it. If you pick the other picture, a word lights up; look at it and try again, or tap Read it to me. A right pick swims the turtle forward and turns the page. Together, take turns reading a page each. Go at your own pace; there is no clock.",
+  help: "Read the words on the page. Then tap the picture that matches. The two pictures are almost the same: one word on the page tells you which is right, so read every word. Tap any word to hear it. If you pick the other picture, a word lights up; look at it and try again, or tap Read it to me. A right pick swims the turtle forward. Tap Turn the page when you are ready. Together, take turns reading a page each. Go at your own pace; there is no clock.",
   helpAudio: "turtle-tales-help",
   introAudio: "turtle-tales-intro",
   color: "#246858",

@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { resolve, join, relative, posix } from 'node:path';
 import ts from 'typescript';
-import { digest, requireThat, sha256 } from './core.mjs';
+import { digest, requireThat, sha256, validateReadingRecord } from './core.mjs';
 import { bakeBank } from './bake.mjs';
+import { bakeReadingBank, READING_ASSET_KIND } from './bake-reading.mjs';
 import { registrySource } from './registry.mjs';
 
 function dependencies(source,path) {
@@ -34,6 +35,13 @@ function safeAsset(asset) {
     if(s.listed!==undefined) requireThat(Array.isArray(s.listed) && s.listed.every(e=>keys(e,['wordId','answer','cells']) && text(e.wordId) && text(e.answer) && Array.isArray(e.cells) && e.cells.length>0 && e.cells.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isInteger))),'Private/invalid listed path in bank');
   }
   requireThat(asset.accept.every(w=>typeof w==='string' && /^[A-Z]+(?: [A-Z]+)*$/.test(w)),'Invalid bank accept list');
+}
+
+// Lead contract change: W1 reading records. A reading bank is an explicit runtime projection with closed keys.
+function safeReadingAsset(asset) {
+  requireThat(asset?.schemaVersion===1 && asset.kind===READING_ASSET_KIND && JSON.stringify(Object.keys(asset).sort())===JSON.stringify(['kind','schemaVersion','words']) && Array.isArray(asset.words) && asset.words.length>0,'Invalid reading bank shape');
+  requireThat(new Set(asset.words.map(w=>w.id)).size===asset.words.length && new Set(asset.words.map(w=>w.word)).size===asset.words.length,'Duplicate reading record');
+  asset.words.forEach(validateReadingRecord);
 }
 
 // New word data has one admission and loader boundary, regardless of encoding.
@@ -79,7 +87,7 @@ export function checkShippingTree(root, evidenceDirectory, {full=false}={}) {
   for(const dir of ['src','content','assets','modules']) walk(join(root,dir));
   const manifestPath=join(root,'content/words/banks.manifest.json');
   const manifest=existsSync(manifestPath)?JSON.parse(readFileSync(manifestPath,'utf8')):{schemaVersion:1,banks:[]};
-  requireThat(manifest.schemaVersion===1 && Array.isArray(manifest.banks) && new Set(manifest.banks.map(b=>b.path)).size===manifest.banks.length,'Invalid word bank manifest');
+  requireThat(manifest.schemaVersion===1 && Array.isArray(manifest.banks) && new Set(manifest.banks.map(b=>b.path)).size===manifest.banks.length && manifest.banks.every(b=>['words',READING_ASSET_KIND].includes(b.kind ?? 'words')),'Invalid word bank manifest');
   const registered=new Map(manifest.banks.map(b=>[b.path,b])),assets=[];
   const registryPath=join(root,'content/words/registry.generated.ts');
   if(registered.size || existsSync(registryPath)) requireThat(existsSync(registryPath) && readFileSync(registryPath,'utf8')===registrySource(manifest),'Word bank loader registry differs from manifest');
@@ -111,13 +119,19 @@ export function checkShippingTree(root, evidenceDirectory, {full=false}={}) {
   requireThat(assets.length===registered.size,'Word bank manifest entry missing');
   for(const path of assets) {
     const name=relative(root,path).replaceAll('\\','/'),bytes=readFileSync(path),asset=JSON.parse(bytes),entry=registered.get(name);
-    safeAsset(asset);
-    requireThat(entry.sha256===sha256(bytes) && entry.bytes===bytes.length && entry.words===asset.words.length && entry.clues===asset.clues.length && entry.surfaces===asset.surfaces.length,'Word bank manifest hash/count mismatch');
+    const reading=(entry.kind ?? 'words')===READING_ASSET_KIND;
+    if(reading) {
+      safeReadingAsset(asset);
+      requireThat(entry.sha256===sha256(bytes) && entry.bytes===bytes.length && entry.words===asset.words.length && entry.clues===undefined && entry.surfaces===undefined,'Word bank manifest hash/count mismatch');
+    } else {
+      safeAsset(asset);
+      requireThat(entry.sha256===sha256(bytes) && entry.bytes===bytes.length && entry.words===asset.words.length && entry.clues===asset.clues.length && entry.surfaces===asset.surfaces.length,'Word bank manifest hash/count mismatch');
+    }
     if(full) {
       requireThat(evidenceDirectory,'Full word check requires detached admission evidence in LITTLE_ISLAND_WORD_RECEIPTS');
       const inputPath=join(resolve(evidenceDirectory),relative(join(root,'content/words/banks'),path));
       requireThat(existsSync(inputPath),'Missing detached word-bank admission evidence');
-      const {asset:baked}=bakeBank(JSON.parse(readFileSync(inputPath,'utf8')));
+      const {asset:baked}=(reading?bakeReadingBank:bakeBank)(JSON.parse(readFileSync(inputPath,'utf8')));
       requireThat(digest(baked)===digest(asset),'Shipped word bank differs from reviewed, scanned bake');
     }
   }

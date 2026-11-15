@@ -4,25 +4,21 @@ import { PICTURE_WORDS } from "../src/learn/content/reading/clues";
 import { LADDERS } from "../src/learn/content/reading/ladders";
 import { WORDS } from "../src/learn/content/reading/words";
 import { admittedParts, admitParts } from "../src/learn/reading/admitted";
+import { loadReadingBank, readingBankIds, type ReadingBank } from "../content/words/registry";
 import { applyAffix, spellings, stemOf } from "../src/learn/reading/morphology";
 import { patternsOf, primaryPattern, tilesSpell } from "../src/learn/reading/graphemes";
 import { INHERITED_DIGEST, inheritedWords } from "../src/learn/reading/inherited";
-import { contentHash, type PartsWord, type ReadingText, type ReviewEvidence, type WordBank } from "../src/learn/reading/records";
+import type { PartsDraft, PartsWord, ReadingText, WordBank } from "../src/learn/reading/records";
 import { SCOPE, levelOfPace, levelOfStep, partsSkills, stepForSkill, taughtThrough } from "../src/learn/reading/scope";
-import { assertShippable, bankDigest, letterBankIssues, lexiconOf, partsBankIssues, partsWordIssues, shippingIssues, textIssues } from "../src/learn/reading/validate";
+import * as validate from "../src/learn/reading/validate";
+import { bankDigest, inheritedIssues, letterBankIssues, lexiconOf, partsBankIssues, partsWordIssues, textIssues } from "../src/learn/reading/validate";
 import { readingEvidence } from "../src/learn/reading/evidence";
 import { tapWord } from "../src/learn/reading/tap";
 import { readingSkills } from "../src/learn/kit/reading";
 
-const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsWord>;
-const draft = JSON.parse(readFileSync("scripts/reading/drafts/sound-boat-parts.draft.json", "utf8")) as WordBank<PartsWord>;
+const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
+const draft = JSON.parse(readFileSync("scripts/reading/drafts/sound-boat-parts.draft.json", "utf8")) as WordBank<PartsDraft>;
 const sample = (id: string) => structuredClone(fixture.records.find((r) => r.id === id)!) as PartsWord;
-// TEST ONLY: a synthetic evidence block to prove the validator's accept path. It is never written to any data file.
-const SYNTHETIC = (r: PartsWord): ReviewEvidence => {
-  const h = (c: string) => c.repeat(64);
-  const run = (n: string, model: string, c: string) => ({ id: n, family: "openai" as const, model, runId: `run-${n}`, verdict: "keep" as const, transcriptSha256: h(c), startedAt: "2026-11-01T00:00:00Z", finishedAt: "2026-11-01T00:05:00Z" });
-  return { batchSha256: h("a"), contentSha256: contentHash(r), reviews: [run("a", "model-one", "b"), run("b", "model-two", "c")], lead: { reviewer: "lead", decision: "keep", reconciliationSha256: h("d"), startedAt: "2026-11-01T01:00:00Z", finishedAt: "2026-11-01T01:05:00Z" } };
-};
 
 describe("scope and sequence", () => {
   it("runs in teaching order, five levels, one skill per step", () => {
@@ -78,10 +74,10 @@ describe("the words that shipped, filed into the kit", () => {
   });
   it("is admitted only by the pinned digest of the exact shipped data", () => {
     expect(bankDigest(inheritedWords)).toBe(INHERITED_DIGEST);
-    expect(shippingIssues(inheritedWords, { inheritedDigest: INHERITED_DIGEST })).toEqual([]);
-    expect(shippingIssues(inheritedWords)).not.toEqual([]);
+    expect(inheritedIssues(inheritedWords, INHERITED_DIGEST)).toEqual([]);
+    expect(inheritedIssues(inheritedWords, "0".repeat(64))).not.toEqual([]);
     const tampered = { ...inheritedWords, records: inheritedWords.records.map((r, i) => (i === 0 ? { ...r, tiles: [...r.tiles].reverse() } : r)) };
-    expect(shippingIssues(tampered, { inheritedDigest: INHERITED_DIGEST }).map((i) => i.problem)).toContain("inherited records do not match the pinned shipped data");
+    expect(inheritedIssues(tampered, INHERITED_DIGEST).map((i) => i.problem)).toContain("inherited records do not match the pinned shipped data");
   });
 });
 
@@ -133,39 +129,41 @@ describe("word-part banks", () => {
   });
 });
 
-describe("shipping validation fails closed", () => {
-  it("never ships a fixture bank or unreviewed drafts, and says why", () => {
-    expect(shippingIssues(fixture).map((i) => i.problem)).toEqual(["a fixture bank can never ship"]);
-    const issues = shippingIssues(draft);
-    expect(issues).toHaveLength(draft.records.length);
-    expect(new Set(issues.map((i) => i.problem))).toEqual(new Set(["draft records are not reviewed"]));
-    expect(() => assertShippable(draft)).toThrow(/cannot ship/);
-    expect(() => assertShippable(fixture)).toThrow(/cannot ship/);
+describe("reading admission is the detached W1 gate", () => {
+  it("has no inline shipping path: no record carries review evidence and no validator accepts a claim of review", () => {
+    for (const gone of ["assertShippable", "shippingIssues", "reviewIssues"]) expect(gone in validate, gone).toBe(false);
+    const forged = { ...draft.records[0], status: "reviewed", review: { anything: true } };
+    expect(partsWordIssues(forged as never)).toEqual([]); // structure only: nothing here can approve a record
+    const source = readFileSync("src/learn/reading/admitted/index.ts", "utf8");
+    expect(source).toMatch(/content\/words\/registry/);
+    expect(source).not.toMatch(/reviewedPartsBanks|fixture|draft|\.json/);
   });
-  it("a record that merely says it is reviewed fails without evidence", () => {
-    const forged = { ...draft, records: draft.records.map((r) => ({ ...r, status: "reviewed" as const })) };
-    expect(new Set(shippingIssues(forged).map((i) => i.problem))).toEqual(new Set(["no review evidence"]));
-  });
-  it("accepts complete evidence bound to the exact content, and nothing less", () => {
-    const base = { ...draft.records[0], status: "reviewed" as const };
-    const ok = { ...base, review: SYNTHETIC(base) };
-    const bank = (r: PartsWord): WordBank<PartsWord> => ({ ...draft, records: [r] });
-    expect(shippingIssues(bank(ok))).toEqual([]);
-    const problems = (r: PartsWord) => shippingIssues(bank(r)).map((i) => i.problem).join("; ");
-    expect(problems({ ...ok, word: "xxxxxx" })).toMatch(/changed after review/);
-    expect(problems({ ...ok, review: { ...ok.review!, reviews: [ok.review!.reviews[0], { ...ok.review!.reviews[1], model: "model-one" }] } })).toMatch(/two different models/);
-    expect(problems({ ...ok, review: { ...ok.review!, reviews: [ok.review!.reviews[0], { ...ok.review!.reviews[1], runId: ok.review!.reviews[0].runId }] } })).toMatch(/separate runs/);
-    expect(problems({ ...ok, review: { ...ok.review!, reviews: [ok.review!.reviews[0], { ...ok.review!.reviews[1], transcriptSha256: "zz" }] } })).toMatch(/transcript hash/);
-    expect(problems({ ...ok, review: { ...ok.review!, lead: { ...ok.review!.lead, decision: "revise" as never } } })).toMatch(/lead/);
-    expect(problems({ ...ok, review: { ...ok.review!, reviews: [{ ...ok.review!.reviews[0], verdict: "reject" as never }, ok.review!.reviews[1]] } })).toMatch(/both reviewers must keep/);
-    expect(problems({ ...ok, review: { ...ok.review!, reviews: [{ ...ok.review!.reviews[0], finishedAt: "2020-01-01T00:00:00Z" }, ok.review!.reviews[1]] } })).toMatch(/impossible times/);
-    expect(problems({ ...ok, review: undefined })).toMatch(/no review evidence/);
-  });
-  it("the app ships no word-part bank until one is admitted, and refuses to admit an unreviewed one", () => {
+  it("the admitted list is exactly what the manifest registers, and the manifest registers no reading bank yet", () => {
+    const manifest = JSON.parse(readFileSync("content/words/banks.manifest.json", "utf8")) as { banks: { kind?: string }[] };
+    expect(manifest.banks.filter((b) => b.kind === "reading-parts")).toEqual([]);
+    expect(readingBankIds).toEqual([]);
     expect(admittedParts).toEqual([]);
-    expect(() => admitParts([fixture])).toThrow();
-    expect(() => admitParts([draft])).toThrow(/cannot ship/);
-    expect(() => admitParts([{ ...draft, records: [{ ...draft.records[0], chunks: ["x", "y"] }] }])).toThrow(/malformed/);
+    expect(() => loadReadingBank("sound-boat-parts-fixture")).toThrow(/Unknown admitted reading bank/);
+  });
+  it("runs the kit's own rules over an admitted bank, and refuses anything malformed, repeated or mislabelled", () => {
+    const projected = (r: PartsDraft) => { const { status: _s, ...rest } = r; return rest; };
+    const bank = (words: object[]) => ({ schemaVersion: 1, kind: "reading-parts", words }) as unknown as ReadingBank;
+    expect(admitParts([bank([projected(fixture.records[0]), projected(fixture.records[1])])]).map((r) => r.id)).toEqual([fixture.records[0].id, fixture.records[1].id]);
+    expect(() => admitParts([bank([{ ...projected(fixture.records[0]), chunks: ["x", "y"] }])])).toThrow(/malformed/);
+    expect(() => admitParts([bank([projected(fixture.records[0]), projected(fixture.records[0])])])).toThrow(/repeats/);
+    expect(() => admitParts([{ schemaVersion: 1, kind: "words", words: [] } as unknown as ReadingBank])).toThrow(/wrong shape/);
+    expect(() => admitParts([fixture as unknown as ReadingBank])).toThrow(/wrong shape/);
+  });
+  it("fixture and draft banks hold no approval and are never admitted by status", () => {
+    for (const bank of [fixture, draft]) {
+      expect(partsBankIssues(bank)).toEqual([]);
+      for (const r of bank.records) expect(Object.keys(r).sort()).not.toEqual(expect.arrayContaining(["review"]));
+    }
+    expect(new Set(fixture.records.map((r) => r.status))).toEqual(new Set(["fixture"]));
+    expect(new Set(draft.records.map((r) => r.status))).toEqual(new Set(["draft"]));
+    expect(inheritedIssues(fixture as never, "x").map((i) => i.problem)).toContain("a fixture bank can never ship");
+    expect(inheritedIssues(inheritedWords, INHERITED_DIGEST)).toEqual([]);
+    expect(inheritedIssues({ ...inheritedWords, records: inheritedWords.records.slice(1) }, INHERITED_DIGEST).map((i) => i.problem)).toEqual(["inherited records do not match the pinned shipped data"]);
   });
 });
 

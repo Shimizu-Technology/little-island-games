@@ -139,7 +139,7 @@ export function boatChoices(s: BoatState): string[] {
 export { tileLabel };
 export const silentE = (s: BoatState) => boatWord(s).tiles.some((t) => /_e$/.test(t));
 
-export type BoatAction = { type: "tile"; tile: string } | { type: "help" } | { type: "next" };
+export type BoatAction = { type: "tile"; tile: string } | { type: "help" } | { type: "undo" } | { type: "next" };
 export function boatMove(s: BoatState, a: BoatAction): BoatState {
   if (s.index >= WORDS_PER_ROUND) return s;
   const complete = boatComplete(s);
@@ -157,6 +157,9 @@ export function boatMove(s: BoatState, a: BoatAction): BoatState {
       : s;
   if (complete) return s;
   if (a.type === "help") return s.hint ? s : { ...s, hint: true, assisted: true };
+  // Undo takes back the last letter placed on this word, never more than the child placed and never once the word is
+  // built (it was already counted). A wrong tile or Help stays counted: undo is not a way to erase an assist.
+  if (a.type === "undo") return s.filled ? { ...s, filled: s.filled - 1, out: [], hint: false } : s;
   if (!boatChoices(s).includes(a.tile) || s.out.includes(a.tile)) return s;
   if (a.tile === boatExpected(s)) return { ...s, filled: s.filled + 1, out: [], hint: false };
   return { ...s, out: [...s.out, a.tile], assisted: true };

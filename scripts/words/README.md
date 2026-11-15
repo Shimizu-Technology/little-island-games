@@ -59,6 +59,10 @@ node scripts/words/cli.mjs reconcile "$BATCH/prepared.private.json" "$RESULTS/a.
 
 Imports reject missing/duplicate IDs, stale packets, wrong fixture mode, missing reasons or transcripts and invalid times. Reconciliation rejects altered projections, edited imports, duplicate transcripts/runs/identities or the same model family. Its rows show both actual verdicts and proposed agreement/disagreement, with empty lead decisions. Reviewer durations and disagreement rate are measured from the imported run data. Lead duration stays null until a real lead pass. No reconcile command approves content.
 
+## Reading records (lead contract change: W1 reading records)
+
+Sound Boat word-parts records use the same detached admission with a smallest additive extension: `prepare-reading` (closed record keys, reading blind packets), the same `import`/`reconcile`, and `bake-reading` (`bake-reading.mjs`) for the runtime projection `{schemaVersion, kind:'reading-parts', words}`. A bank is registered in the manifest with `kind: "reading-parts"` and loads through `readingBankLoaders`; `check:words` rebakes it and the export guard runs it at every shipping gate. Details: `docs/READING_KIT.md`.
+
 ## Shipping evidence and bake
 
 The lead supplies detached evidence per retained word/clue, keyed by record ID: `{prepared,reviews:[a,b],transcriptPaths:[actualA,actualB],lead,familySample}`. `lead` has `schemaVersion:1`, `fixture:false`, the canonical `reconciliationSha256`, actual `reviewer`, `startedAt`, `finishedAt` and one `{id,decision,reason}` per original row. `familySample` has `fixture:false`, the current `batchSha256`, `decision:'keep'`, actual `reviewer`, ISO `date` and an external evidence file path in `evidence` and its byte hash in `evidenceSha256` for the device sample. These describe real actions and must never be filled in by a fixture generator.

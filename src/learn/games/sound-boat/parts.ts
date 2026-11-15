@@ -70,6 +70,13 @@ export function createParts(level: PartsLevel, tasks: PartsTasks, c: CreateConte
 }
 
 const MAX_REVISION = 200;
+/**
+ * Checks and misses saturate here instead of growing without end, so every legal sequence of Checks stays a saveable
+ * state. "Ever missed" (misses above 0) and first-try truth (a clean word has no miss) are unchanged by saturation.
+ */
+export const MAX_COUNT = 500;
+const saturated = (a: AnswerState<number[]>): AnswerState<number[]> =>
+  a.checks > MAX_COUNT || a.misses > MAX_COUNT ? { ...a, checks: Math.min(a.checks, MAX_COUNT), misses: Math.min(a.misses, MAX_COUNT) } : a;
 /** Edits bump a revision so a Check can tell whether the word changed since. Wrap it so it stays small; meaning is unchanged. */
 function bounded(a: AnswerState<number[]>): AnswerState<number[]> {
   return a.revision > MAX_REVISION ? { ...a, revision: 0, checkedRevision: null } : a;
@@ -93,7 +100,7 @@ export function partsMove(s: PartsState, a: PartsAction, tasks: PartsTasks): Par
   }
   if (a.type === "check") {
     const answer = answerCheck(buildRules, task, s.answer, "board");
-    return answer === s.answer ? s : { ...s, answer };
+    return answer === s.answer ? s : { ...s, answer: saturated(answer) };
   }
   const answer = answerEdit(buildRules, task, s.answer, a.edit);
   return answer === s.answer ? s : { ...s, answer: bounded(answer) };
@@ -104,14 +111,16 @@ const answerKeys = ["draft", "revision", "checkedRevision", "checks", "misses", 
 function validAnswer(v: unknown, task: BuildTask): v is AnswerState<number[]> {
   if (!exact(v, answerKeys)) return false;
   const a = v as unknown as AnswerState<number[]>;
-  if (!buildRules.valid(a.draft, task) || !integer(a.revision, MAX_REVISION + 1) || !integer(a.checks, 500) || !integer(a.misses, 500) || a.misses > a.checks) return false;
+  if (!buildRules.valid(a.draft, task) || !integer(a.revision, MAX_REVISION + 1) || !integer(a.checks, MAX_COUNT) || !integer(a.misses, MAX_COUNT) || a.misses > a.checks) return false;
   if (typeof a.solved !== "boolean" || typeof a.helped !== "boolean" || a.needsVariant !== false) return false;
   if (a.checkedRevision !== null && (!integer(a.checkedRevision, MAX_REVISION + 1) || a.checkedRevision > a.revision)) return false;
   if (a.last !== null) {
     if (!exact(a.last, ["draft", "correct"]) || !buildRules.valid(a.last.draft, task) || typeof a.last.correct !== "boolean") return false;
     if (a.checks === 0) return false;
   } else if (a.checkedRevision !== null) return false;
-  if (a.solved) return a.checks === a.misses + 1 && buildRules.complete(a.draft, task) && buildRules.accepts(a.draft, task) && a.last?.correct === true;
+  // A solved word has one more Check than misses, until both saturate together at the cap.
+  const counted = a.checks === a.misses + 1 || (a.checks === MAX_COUNT && a.misses === MAX_COUNT);
+  if (a.solved) return counted && buildRules.complete(a.draft, task) && buildRules.accepts(a.draft, task) && a.last?.correct === true;
   return a.checks === a.misses && (a.last === null || a.last.correct === false);
 }
 const fresh = (a: AnswerState<number[]>) =>

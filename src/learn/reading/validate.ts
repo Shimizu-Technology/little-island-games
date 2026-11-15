@@ -3,14 +3,12 @@ import { sha256Hex } from "../../puzzles/sha256";
 import { tokens } from "../kit/reading";
 import { patternsOf, primaryPattern, tilesSpell } from "./graphemes";
 import { PREFIXES, SUFFIXES, applyAffix, spellings, stemOf } from "./morphology";
-import { contentHash, type LetterWord, type PartsWord, type ReadingText, type ReviewEvidence, type WordBank } from "./records";
+import type { LetterWord, PartsDraft, PartsWord, ReadingText, WordBank } from "./records";
 import { levelOfStep, stepIds, taughtThrough, type ReadingLevel } from "./scope";
 
 export type Issue = { id: string; problem: string };
 const bad = (id: string, problem: string): Issue => ({ id, problem });
 const slug = /^[a-z0-9][a-z0-9-]{0,39}$/;
-const hash = /^[a-f0-9]{64}$/;
-const iso = (v: unknown) => typeof v === "string" && /^\d{4}-\d\d-\d\dT[\d:.]+(?:Z|[+-]\d\d:\d\d)$/.test(v) && !Number.isNaN(Date.parse(v));
 const hasVowel = (c: string) => /[aeiouy]/.test(c);
 
 /** Structure of one decodable word: its tiles spell it and its tags are exactly what the tiles show. */
@@ -82,52 +80,21 @@ export function bankIssues<R extends { id: string; word?: string; status: string
   }
   return out;
 }
-export const partsBankIssues = (bank: WordBank<PartsWord>) => bankIssues(bank, partsWordIssues);
+export const partsBankIssues = (bank: WordBank<PartsDraft>) => bankIssues(bank, partsWordIssues);
 export const letterBankIssues = (bank: WordBank<LetterWord>) => bankIssues(bank, letterWordIssues);
 
-/** Complete, honest review evidence for a record's exact current content. Anything missing or stale fails. */
-export function reviewIssues(r: { id: string; status: string; review?: ReviewEvidence } & Parameters<typeof contentHash>[0]): Issue[] {
-  const e = r.review;
-  if (!e) return [bad(r.id, "no review evidence")];
-  const out: Issue[] = [];
-  const no = (problem: string) => out.push(bad(r.id, problem));
-  if (!hash.test(e.batchSha256)) no("review batch hash is malformed");
-  if (e.contentSha256 !== contentHash(r)) no("the record changed after review");
-  const [a, b] = e.reviews ?? [];
-  for (const run of [a, b]) {
-    if (!run || run.verdict !== "keep") return [...out, bad(r.id, "both reviewers must keep the record")];
-    if (!["openai", "anthropic", "google"].includes(run.family) || !run.id || !run.model || !run.runId) no("a review lacks its reviewer, model or run");
-    if (!hash.test(run.transcriptSha256)) no("a review has no transcript hash");
-    if (!iso(run.startedAt) || !iso(run.finishedAt) || Date.parse(run.finishedAt) < Date.parse(run.startedAt)) no("a review has impossible times");
-  }
-  if (a.runId === b.runId || a.transcriptSha256 === b.transcriptSha256) no("the two reviews must be separate runs with separate transcripts");
-  if (a.model === b.model) no("the two reviews must come from two different models");
-  const lead = e.lead;
-  if (!lead || lead.decision !== "keep" || !lead.reviewer || !hash.test(lead.reconciliationSha256) || !iso(lead.startedAt) || !iso(lead.finishedAt) || Date.parse(lead.finishedAt) < Date.parse(lead.startedAt)) no("the lead's reconcile decision is missing or incomplete");
-  return out;
-}
-
 /**
- * Shipping validation fails closed. A bank ships only when it is real (not a fixture) and every record is either
- * reviewed with complete evidence or inherited and matches the pinned digest of the shipped data.
+ * Inherited records are admitted only by a pinned digest of the exact shipped data. Reviewed content has no entry
+ * here: it ships only through the detached W1 admission (`scripts/words`, manifest, runtime projection).
  */
-export function shippingIssues<R extends { id: string; status: string; review?: ReviewEvidence }>(bank: WordBank<R>, options: { inheritedDigest?: string } = {}): Issue[] {
-  if (bank.fixture) return [bad(bank.id, "a fixture bank can never ship")];
+export function inheritedIssues(bank: WordBank<{ id: string; status: string }>, pinned: string): Issue[] {
   const out: Issue[] = [];
-  let inherited = false;
-  for (const r of bank.records) {
-    if (r.status === "reviewed") out.push(...reviewIssues(r as Parameters<typeof reviewIssues>[0]));
-    else if (r.status === "inherited") inherited = true;
-    else out.push(bad(r.id, `${r.status} records are not reviewed`));
-  }
-  if (inherited && (!options.inheritedDigest || bankDigest(bank) !== options.inheritedDigest)) out.push(bad(bank.id, "inherited records do not match the pinned shipped data"));
+  for (const r of bank.records) if (r.status !== "inherited") out.push(bad(r.id, `${r.status} records are not inherited`));
+  if (bank.fixture) out.push(bad(bank.id, "a fixture bank can never ship"));
+  if (bankDigest(bank) !== pinned) out.push(bad(bank.id, "inherited records do not match the pinned shipped data"));
   return out;
 }
 export const bankDigest = (bank: WordBank<unknown>): string => sha256Hex(canonical(bank.records));
-export function assertShippable<R extends { id: string; status: string; review?: ReviewEvidence }>(bank: WordBank<R>, options: { inheritedDigest?: string } = {}): void {
-  const issues = shippingIssues(bank, options);
-  if (issues.length) throw new Error(`Reading bank ${bank.id} cannot ship: ${issues.slice(0, 3).map((i) => `${i.id}: ${i.problem}`).join("; ")}${issues.length > 3 ? ` (+${issues.length - 3} more)` : ""}`);
-}
 
 /** Every word a child can meet, filed by the newest pattern in it. */
 export type Lexicon = ReadonlyMap<string, ReadingLevel>;

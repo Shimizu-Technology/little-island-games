@@ -4,12 +4,13 @@
  *
  *   node --import ./scripts/puzzles/register.mjs scripts/reading/make-parts-bank.ts <fixture|draft> <out.json>
  *
- * "fixture" writes TEST ONLY records (status fixture). "draft" writes the same shape as unreviewed drafts for the
- * W1/W2 two-reviewer process. Neither carries review evidence, and this tool cannot write any.
+ * "fixture" writes TEST ONLY records (status fixture). "draft" writes the same shape as unreviewed drafts. To review
+ * them, strip `status` and run `node scripts/words/cli.mjs prepare-reading` over {records, fixture:false}; the
+ * detached W1 process does the rest. Neither file carries review evidence, and this tool cannot write any.
  */
 import { writeFileSync, existsSync } from "node:fs";
 import { applyAffix, stemOf, type SpellingChange } from "../../src/learn/reading/morphology";
-import type { PartsWord } from "../../src/learn/reading/records";
+import type { PartsDraft } from "../../src/learn/reading/records";
 
 type Beats = { k: "compound" | "syllables"; w: string; c: string[]; d: string[] };
 type Affixed = { k: "ending" | "prefix"; base: string; affix: string; change?: SpellingChange; d: string[]; gloss: string; family?: string };
@@ -76,8 +77,8 @@ const specs: Spec[] = [
   { k: "prefix", base: "fold", affix: "un", d: ["on", "gold"], gloss: "open it out" },
 ];
 
-export function records(status: "fixture" | "draft"): PartsWord[] {
-  return specs.map((s): PartsWord => {
+export function records(status: "fixture" | "draft"): PartsDraft[] {
+  return specs.map((s): PartsDraft => {
     if (beats(s))
       return { id: `${status === "fixture" ? "fx" : "dr"}-${s.w}`, status, word: s.w, level: 4, kind: s.k, chunks: s.c, distractors: s.d };
     const kind = s.k === "ending" ? "suffix" : "prefix";

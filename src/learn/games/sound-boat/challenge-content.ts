@@ -11,7 +11,7 @@ export const BANK_BASE = 440;
 export const DARE_BASE = 3600;
 export const DARES_PER_LEVEL = 25;
 const ruleOf = (level: number): { rule: DareRule; label: string } | null =>
-  level === 2 || level === 3 ? { rule: { kind: "own-read" }, label: "Hear it once, then build it" } :
+  level === 2 || level === 3 ? { rule: { kind: "own-read" }, label: "Read it yourself, then build it" } :
   level >= 4 ? { rule: { kind: "whole" }, label: "Check once, first try, no Help" } : null;
 
 /**

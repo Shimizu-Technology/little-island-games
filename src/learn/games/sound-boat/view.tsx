@@ -278,6 +278,7 @@ function Play({
     }
     if (next.assisted) assistance?.();
     if (a.type === "help") sound(wordAudio(word.word));
+    if (a.type === "undo") sound("tap");
     update(next);
   }
 
@@ -440,16 +441,21 @@ function Play({
       {complete ? (
         <Button onPress={() => move({ type: "next" })}>{s.index === WORDS_PER_ROUND - 1 ? "Reach the island" : "Sail on"}</Button>
       ) : (
-        <Button
-          compact
-          quiet
-          icon="help"
-          disabled={s.hint}
-          label="Help: light up the right letter"
-          onPress={() => move({ type: "help" })}
-        >
-          Help
-        </Button>
+        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+          <Button
+            compact
+            quiet
+            icon="help"
+            disabled={s.hint}
+            label="Help: light up the right letter"
+            onPress={() => move({ type: "help" })}
+          >
+            Help
+          </Button>
+          <Button compact quiet disabled={!s.filled} label="Undo: take back the last letter" onPress={() => move({ type: "undo" })}>
+            Undo
+          </Button>
+        </View>
       )}
     </View>
   );

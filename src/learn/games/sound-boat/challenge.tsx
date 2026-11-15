@@ -17,7 +17,7 @@ export function defineSoundBoat(puzzles: readonly Puzzle<Descriptor>[]) {
     completionText: (_ref, result, facts) =>
       result.event === "independent" ? "You built the word." : facts?.helpUsed ? "You built the word, with help along the way." : "You kept trying and built the word.",
   });
-  entry.dareHelp = "Help keeps your finish, without a dare mark. Hearing the word again keeps it too, but not the own-read mark.";
+  entry.dareHelp = "Help keeps your finish, without a dare mark. Hearing the word keeps your finish too, but not the own-read mark.";
   return entry;
 }
 export const registration = defineSoundBoat(soundBoatProduction());

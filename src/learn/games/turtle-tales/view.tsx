@@ -177,15 +177,8 @@ function Read({
     t = tale(s),
     small = height < 730;
   const done = taleDone(s);
-  // When the page turns by itself, the next sentence comes into view at the top of the board.
+  // When the child turns the page, the next sentence comes into view at the top of the board.
   useStepReveal(s.page);
-
-  // After a right pick, the turtle swims and the page turns by itself.
-  useEffect(() => {
-    if (!s.solved || !active) return;
-    const timer = setTimeout(() => update(taleTurnPage(s)), 1500);
-    return () => clearTimeout(timer);
-  }, [s, active, update]);
 
   if (done)
     return (
@@ -254,6 +247,12 @@ function Read({
       <Copy style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>
         {s.solved ? "Yes! That’s the one." : s.wrong ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
+      {/* Reading is never timed: the page turns when the child presses it. */}
+      {s.solved && (
+        <Button disabled={!active} onPress={() => update(taleTurnPage(s))}>
+          {s.page === t.pages.length - 1 ? "Finish the tale" : "Turn the page"}
+        </Button>
+      )}
       <CoachSpot active={coach.active && !s.solved && !s.wrong} handAt="none">
         {cards}
       </CoachSpot>

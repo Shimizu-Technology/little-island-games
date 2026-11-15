@@ -71,6 +71,8 @@ export function PartsBoard({
 
   function act(a: PartsAction) {
     if (!active || !task) return;
+    // Every request to hear the word plays it, including a repeat and one after Check. Only the saved state is idempotent.
+    if (a.type === "hear") sound(wordAudio(task.word));
     const next = partsMove(s, a, tasks);
     if (next === s) return;
     if (a.type === "edit") sound("tap");
@@ -80,7 +82,6 @@ export function PartsBoard({
         cheer(s.index === PARTS_PER_ROUND - 1 ? "big" : "right", "sound-boat-parts-built");
       } else sound(wordAudio(task.word), true);
     }
-    if (a.type === "hear") sound(wordAudio(task.word));
     if (partsAssisted(next)) assistance?.();
     update(next);
   }

@@ -9,7 +9,7 @@ import { challengeEngine, type Action } from "../src/learn/games/sound-boat/chal
 import { PartsBoard } from "../src/learn/games/sound-boat/parts-view";
 import { createParts, partsMove, partsTask, tasksOf, type PartsState } from "../src/learn/games/sound-boat/parts";
 import { taskOfParts, type BuildTask } from "../src/learn/reading/build";
-import type { PartsWord, WordBank } from "../src/learn/reading/records";
+import type { PartsDraft, PartsWord, WordBank } from "../src/learn/reading/records";
 
 vi.mock("react-native", () => {
   class Value { v: number; constructor(v: number) { this.v = v; } setValue(v: number) { this.v = v; } interpolate() { return this; } }
@@ -28,7 +28,7 @@ vi.mock("../src/learn/art/Objects", () => ({ ObjectGlyph: "glyph", PictureObject
 const sound = vi.hoisted(() => ({ play: vi.fn(), stop: vi.fn() }));
 vi.mock("../src/components/Audio", () => ({ AudioPreferences: createContext({ sound: true }), useSoundControls: () => sound }));
 
-const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsWord>;
+const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
 const tasks = tasksOf(fixture.records);
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.useRealTimers(); sound.play.mockClear(); });
@@ -89,10 +89,31 @@ it("Help lights the next piece and names a piece that does not fit, only once as
 
 it("hearing the word again plays it and tells the replay", async () => {
   const t = task("fx-sunset"), send = vi.fn();
-  const s = challengeEngine.create(t, { version: 1 }, { supportOff: false, ownRead: true });
+  const s = challengeEngine.create(t, { version: 1 }, { supportOff: false, ownRead: false });
   await mount(<ChallengeBoard state={s} dispatch={send} {...baseProps} />);
   await press("Hear the word again");
   expect(sound.play).toHaveBeenCalledWith("sound-boat-word-sunset");
+  expect(send).toHaveBeenCalledWith(["r"] satisfies Action);
+});
+
+it("with sound on, a Challenge is honest dictation: the word is heard, not printed, and the prompt says so", async () => {
+  const t = task("fx-sunset");
+  const s = challengeEngine.create(t, { version: 1 }, { supportOff: false, ownRead: false });
+  await mount(<ChallengeBoard state={s} dispatch={vi.fn()} {...baseProps} />);
+  expect(texts()).not.toContain("sunset");
+  expect(texts().join(" ")).toContain("Hear the word, then spell it");
+  expect(texts().join(" ")).not.toMatch(/Read the word/);
+});
+
+it("an own-read dare prints the word to read, never calls itself hearing, and warns that hearing ends the mark", async () => {
+  const t = task("fx-sunset"), send = vi.fn();
+  const s = challengeEngine.create(t, { version: 1 }, { supportOff: false, ownRead: true });
+  await mount(<ChallengeBoard state={s} dispatch={send} {...baseProps} />);
+  expect(texts()).toContain("sunset");
+  expect(texts().join(" ")).toContain("Read the word, then build it");
+  expect(sound.play).not.toHaveBeenCalled();
+  expect(labels()).not.toContain("Hear the word again");
+  await press("Hear the word. This ends your own read");
   expect(send).toHaveBeenCalledWith(["r"] satisfies Action);
 });
 
@@ -193,4 +214,60 @@ it("shows a start before its base word and an ending after it", async () => {
     expect(shown.slice(at, at + 3)).toEqual(order);
     await act(async () => root!.unmount()); root = undefined;
   }
+});
+
+it("Hear the word again plays every time it is asked, while the saved hearing stays a single idempotent update", async () => {
+  const h = schoolProps(4);
+  await mount(<PartsBoard {...h.props()} />);
+  const t = partsTask(h.state, tasks);
+  const hears = () => h.sound.mock.calls.filter((c) => c.length === 1 && c[0] === `sound-boat-word-${t.word}`).length;
+  await press("Hear the word again");
+  await act(async () => root!.update(<PartsBoard {...h.props()} />));
+  expect(h.state.heard).toBe(true);
+  const saves = h.update.mock.calls.length;
+  await press("Hear the word again");
+  await press("Hear the word again");
+  expect(hears()).toBe(3);
+  expect(h.update.mock.calls.length).toBe(saves);
+  expect(h.state.heard).toBe(true);
+  expect(h.assistance).not.toHaveBeenCalled();
+});
+
+it("a resumed word that was already heard, and a solved word, can still be heard", async () => {
+  const h = schoolProps(5);
+  let s = partsMove(h.state, { type: "hear" }, tasks);
+  expect(s.heard).toBe(true);
+  await mount(<PartsBoard {...{ ...h.props(), session: { ...h.props().session, state: s } }} />);
+  const t = partsTask(s, tasks), hears = () => h.sound.mock.calls.filter((c) => c.length === 1 && c[0] === `sound-boat-word-${t.word}`).length;
+  await press("Hear the word again");
+  expect(hears()).toBe(1);
+  const used: number[] = [];
+  for (const piece of t.tiles) { const k = t.tray.findIndex((x, j) => x === piece && !used.includes(j)); used.push(k); s = partsMove(s, { type: "edit", edit: ["a", k] }, tasks); }
+  s = partsMove(s, { type: "check" }, tasks);
+  expect(s.answer.solved).toBe(true);
+  await act(async () => root!.update(<PartsBoard {...{ ...h.props(), session: { ...h.props().session, state: s } }} />));
+  await press("Hear the word again");
+  expect(hears()).toBe(2);
+});
+
+it("every box is its own accessibility element: none sits inside an accessible ancestor, so VoiceOver can remove a chosen piece", async () => {
+  const t = task("fx-sunset");
+  let s = challengeEngine.create(t, { version: 1 }, { supportOff: false, ownRead: false });
+  s = challengeEngine.step(s, ["a", 0], t)!.state;
+  await mount(<ChallengeBoard state={s} dispatch={vi.fn()} {...baseProps} />);
+  const filled = buttons().find((b) => String(b.props.accessibilityLabel).startsWith("Box 1, "))!;
+  expect(filled.props.accessibilityHint).toBe("Tap to take this piece out");
+  for (let node = filled.parent; node; node = node.parent) expect(node.props.accessible, `ancestor ${String(node.type)}`).not.toBe(true);
+  const empty = buttons().find((b) => String(b.props.accessibilityLabel).startsWith("Box 2, empty"))!;
+  for (let node = empty.parent; node; node = node.parent) expect(node.props.accessible).not.toBe(true);
+  const school = schoolProps(4);
+  await act(async () => root!.unmount()); root = undefined;
+  await mount(<PartsBoard {...school.props()} />);
+  const pieces = partsTask(school.state, tasks);
+  await press(`Piece ${pieces.tray[pieces.tray.indexOf(pieces.tiles[0])]}`);
+  await act(async () => root!.update(<PartsBoard {...school.props()} />));
+  const box = buttons().find((b) => /^Box 1, /.test(String(b.props.accessibilityLabel)))!;
+  for (let node = box.parent; node; node = node.parent) expect(node.props.accessible, `School ancestor ${String(node.type)}`).not.toBe(true);
+  await press(String(box.props.accessibilityLabel));
+  expect(school.state.answer.draft).toEqual([]);
 });

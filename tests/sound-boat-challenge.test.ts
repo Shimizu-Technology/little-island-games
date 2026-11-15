@@ -6,10 +6,11 @@ import { challengeEngine, type Action } from "../src/learn/games/sound-boat/chal
 import { BANK_BASE, DARES_PER_LEVEL, DARE_BASE, soundBoatPuzzles, soundBoatProduction } from "../src/learn/games/sound-boat/challenge-content";
 import { buildRules, taskOfLetters, taskOfParts, type BuildTask } from "../src/learn/reading/build";
 import { inheritedWords } from "../src/learn/reading/inherited";
-import type { PartsWord, WordBank } from "../src/learn/reading/records";
+import { readingEvidence } from "../src/learn/reading/evidence";
+import type { PartsDraft, PartsWord, WordBank } from "../src/learn/reading/records";
 import { emptyChallenge, validChallengeSession, type ChallengeSession } from "../src/state/challenge";
 
-const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsWord>;
+const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
 const letters = inheritedWords.records.filter((r) => ["cat", "fish", "boat", "cake", "ship", "star", "moon", "hen"].includes(r.word)).map(taskOfLetters);
 const all = [...letters, ...fixture.records.map(taskOfParts)];
 const puzzles = soundBoatPuzzles(all);
@@ -84,12 +85,34 @@ describe("replay", () => {
       expect(s.result?.event).not.toBe("independent");
     }
   });
-  it("Level 2-3 own read: building after hearing the word once earns the mark", () => {
+  it("Level 2-3 own read: reading the printed word and building it, without hearing it, earns the mark", () => {
     for (const level of [2, 3]) {
       const { p, s: s0 } = start(at(level), true, `own-${level}`);
       const done = move(fill(s0, p.descriptor), ["k"]);
       expect(done.result).toMatchObject({ event: "independent", dares: [p.dares[0].slot] });
     }
+  });
+  it("the Levels 2-3 dare promises only what the board gives: reading it yourself, never a first hearing", () => {
+    for (const level of [2, 3]) {
+      const label = puzzles[at(level)].dares[0].label;
+      expect(label).toBe("Read it yourself, then build it");
+      expect(label).not.toMatch(/hear/i);
+    }
+    expect(registration.dareHelp).toMatch(/not the own-read mark/);
+  });
+  it("spelling after hearing is never own-read evidence, with or without a clean finish", () => {
+    for (const ownRead of [true, false]) {
+      const { p, s: s0 } = start(at(3), ownRead, `dictation-${ownRead}`);
+      const done = move(fill(move(s0, ["r"]), p.descriptor), ["k"]);
+      expect(done.result?.dares, `ownRead ${ownRead}`).toEqual([]);
+    }
+    expect(readingEvidence(["read-aloud"]).independentDecoding).toBe(false);
+    expect(readingEvidence(["prompt", "read-aloud"]).independentDecoding).toBe(false);
+  });
+  it("the replay state keeps the launch choice, so the board can print the word for an own-read dare only", () => {
+    const task = puzzles[at(2)].descriptor;
+    expect(challengeEngine.create(task, { version: 1 }, { supportOff: false, ownRead: true }).ownRead).toBe(true);
+    expect(challengeEngine.create(task, { version: 1 }, { supportOff: false, ownRead: false }).ownRead).toBe(false);
   });
   it("hearing is recorded once and never counts as Help", () => {
     const { p, s: s0 } = start(at(2), true, "heard");

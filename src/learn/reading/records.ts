@@ -1,39 +1,20 @@
-import { sha256Hex } from "../../puzzles/sha256";
-import { canonical } from "../../puzzles/descriptor";
 import type { SpellingChange } from "./morphology";
 import type { ReadingLevel, StepId } from "./scope";
 
 /**
- * Where a record stands. Only the lead's two-reviewer process (W1/W2 tooling) can move a record to "reviewed";
- * nothing in the app or its tests writes that status, and no field here is ever filled in by hand.
- * - inherited: shipped in 3.0.0 before this process. Admitted only by a pinned digest of the exact shipped data.
+ * Where a record stands in this tree. Nothing here can be "reviewed": review is detached W1 evidence (two blind
+ * reviewers, the lead's reconciliation and Leon's family sample) checked by `scripts/words`, and a record that passes
+ * ships only as the runtime projection of a manifest-registered bank (`content/words`). No field in this file is
+ * approval, and no test or tool writes one.
+ * - inherited: shipped in 3.0.0 before this process, pinned by a digest of the exact shipped data.
  * - draft: written, not yet reviewed. Never ships.
  * - fixture: invented for tests and the dev harness. Never ships.
- * - reviewed: carries complete review evidence bound to the record's exact content.
  */
-export type RecordStatus = "inherited" | "draft" | "fixture" | "reviewed";
-export type ReviewerRun = {
-  /** Reviewer identity label. */
-  id: string;
-  family: "openai" | "anthropic" | "google";
-  model: string;
-  runId: string;
-  verdict: "keep";
-  transcriptSha256: string;
-  startedAt: string;
-  finishedAt: string;
-};
-export type ReviewEvidence = {
-  batchSha256: string;
-  /** Hash of the record's content at review time. A later edit makes it stale. */
-  contentSha256: string;
-  reviews: readonly [ReviewerRun, ReviewerRun];
-  lead: { reviewer: string; decision: "keep"; reconciliationSha256: string; startedAt: string; finishedAt: string };
-};
-type Reviewable = { status: RecordStatus; review?: ReviewEvidence };
+export type RecordStatus = "inherited" | "draft" | "fixture";
+type Filed = { status: RecordStatus };
 
 /** A decodable word tagged by pattern: its tiles are the sounds, left to right (a silent e is written a_e). */
-export type LetterWord = Reviewable & {
+export type LetterWord = Filed & {
   id: string;
   word: string;
   tiles: readonly string[];
@@ -46,7 +27,7 @@ export type LetterWord = Reviewable & {
 
 /** A word Sound Boat Levels 4 and 5 build from pieces on the boat. */
 export type PartsKind = "compound" | "syllables" | "ending" | "prefix";
-export type PartsWord = Reviewable & {
+export type PartsWord = {
   id: string;
   word: string;
   level: 4 | 5;
@@ -66,10 +47,12 @@ export type PartsWord = Reviewable & {
   /** Other piece orders that are also right. */
   alternates?: readonly (readonly string[])[];
 };
+/** A parts record in the review process: the same content plus where it stands. It carries no approval. */
+export type PartsDraft = Filed & PartsWord;
 export type WordBank<R> = { schemaVersion: 1; id: string; fixture: boolean; records: readonly R[] };
 
 /** A sentence or short passage written to be read with the patterns taught so far. */
-export type ReadingText = Reviewable & {
+export type ReadingText = Filed & {
   id: string;
   kind: "sentence" | "passage";
   text: string;
@@ -79,10 +62,3 @@ export type ReadingText = Reviewable & {
   /** Irregular words the page asks a child to know by sight, listed on purpose and never inferred. */
   tricky: readonly string[];
 };
-
-/** What a review is about: the record without its status and evidence. */
-export function contentOf<R extends Reviewable>(record: R): Omit<R, "status" | "review"> {
-  const { status: _status, review: _review, ...content } = record;
-  return content;
-}
-export const contentHash = (record: Reviewable): string => sha256Hex(canonical(contentOf(record)));

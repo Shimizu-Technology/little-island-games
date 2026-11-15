@@ -9,7 +9,7 @@ import { answerMissed } from "../src/puzzles/wholeAnswer";
 import { buildRules, draftTexts, firstMisfit, nextNeeded, taskOfLetters, type BuildTask } from "../src/learn/reading/build";
 import { TILE_TWINS } from "../src/learn/reading/graphemes";
 import { inheritedWords } from "../src/learn/reading/inherited";
-import type { PartsWord, WordBank } from "../src/learn/reading/records";
+import type { PartsDraft, PartsWord, WordBank } from "../src/learn/reading/records";
 import { createSoundBoat } from "../src/learn/games/sound-boat/engine";
 import {
   PARTS_PER_ROUND,
@@ -22,7 +22,7 @@ import {
   type PartsState,
 } from "../src/learn/games/sound-boat/parts";
 
-const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsWord>;
+const fixture = JSON.parse(readFileSync("tests/fixtures/reading/sound-boat-parts.fixture.json", "utf8")) as WordBank<PartsDraft>;
 const tasks = tasksOf(fixture.records);
 const engine = createSoundBoat(fixture.records);
 const dispatch = withGrowth(engine as never);
@@ -289,5 +289,49 @@ describe("letter-sound puzzles for Levels 1-3 (Challenge)", () => {
       expect(buildRules.accepts(used, t), t.word).toBe(true);
       expect(buildRules.accepts([...used].reverse(), t) === (t.tiles.join() === [...t.tiles].reverse().join()), t.word).toBe(true);
     }
+  });
+});
+
+describe("stored counts are bounded, and every legal transition stays saveable", () => {
+  const wrongOrder = (t: BuildTask) => (t.tiles.length > 1 ? [...t.tiles].reverse() : t.tiles);
+  it("501 legal misses in a row still validate, keep 'ever missed', and a correct Check afterwards validates too", () => {
+    let s = round(5, 4);
+    const task = partsTask(s, tasks), wrong = wrongOrder(task);
+    expect(task.tiles.join()).not.toBe([...task.tiles].reverse().join());
+    for (let i = 1; i <= 520; i++) {
+      s = place(s, wrong);
+      s = step(s, { type: "check" });
+      expect(s.answer.solved).toBe(false);
+      expect(s.answer.misses, `miss ${i}`).toBeGreaterThan(0);
+      expect(s.answer.checks).toBeLessThanOrEqual(500);
+      expect(s.answer.misses).toBeLessThanOrEqual(500);
+      expect(engine.validate(s, at(5)), `after ${i} misses`).toBe(true);
+      s = step(s, { type: "reset" });
+    }
+    expect(s.answer.misses).toBe(500);
+    s = step(build(s), { type: "check" });
+    expect(s.answer.solved).toBe(true);
+    expect(s.answer.misses).toBeGreaterThan(0);
+    expect(engine.validate(s, at(5))).toBe(true);
+    s = step(s, { type: "next" });
+    expect(s.clean).toEqual([false]);
+    expect(engine.validate(s, at(5))).toBe(true);
+  });
+  it("a word with no miss is still first-try clean, and one miss is never forgotten", () => {
+    let s = step(build(round(4, 2)), { type: "check" });
+    expect(step(s, { type: "next" }).clean).toEqual([true]);
+    s = round(4, 2);
+    s = step(place(s, wrongOrder(partsTask(s, tasks))), { type: "check" });
+    expect(s.answer.misses).toBe(1);
+    s = step(step(s, { type: "reset" }), { type: "check" });
+    s = step(build(s), { type: "check" });
+    expect(step(s, { type: "next" }).clean).toEqual([false]);
+  });
+  it("a saved round at the cap is accepted, and one past it is still refused", () => {
+    const s = round(4, 3), task = partsTask(s, tasks);
+    const capped = { ...s, answer: { ...s.answer, checks: 500, misses: 500 } };
+    expect(engine.validate(capped, at(4))).toBe(true);
+    expect(engine.validate({ ...s, answer: { ...s.answer, checks: 501, misses: 501 } }, at(4))).toBe(false);
+    expect(task.tiles.length).toBeGreaterThan(0);
   });
 });

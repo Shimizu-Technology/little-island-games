@@ -6,14 +6,17 @@ import { buildRules, draftTexts, type BuildEdit, type BuildTask } from "../../re
 
 /**
  * The Sound Boat Challenge replay: one word, built from pieces and settled with Check. A Challenge never shows a
- * piece as right or wrong before Check. Hearing the word again is recorded as a read-aloud, which is exactly what the
- * "own read" dare forbids; Help is recorded as Help. Nothing here is timed, and a Check counts once.
+ * piece as right or wrong before Check. With sound on the word is dictated (heard, then spelled with pieces), which is
+ * a spelling task and never evidence of reading it alone; an own-read dare prints the word instead. Hearing the word is
+ * recorded as a read-aloud, which is exactly what the "own read" dare forbids; Help is recorded as Help. Nothing here
+ * is timed, and a Check counts once.
  */
 export type Descriptor = BuildTask;
 export type Initial = { version: 1 };
 export type Action = ["a", number] | ["x", number] | ["k"] | ["h"] | ["r"] | ["z"];
 export type Payload = ReplayPayload<Initial, Action>;
-export type State = { task: BuildTask; answer: AnswerState<number[]>; heard: boolean };
+/** `ownRead` is the launch choice (an own-read dare), kept so the board prints the word to read instead of dictating it. */
+export type State = { task: BuildTask; answer: AnswerState<number[]>; heard: boolean; ownRead: boolean };
 const MAX_TRAY = 8;
 const fresh = (): AnswerState<number[]> => ({
   draft: [], revision: 0, checkedRevision: null, checks: 0, misses: 0, solved: false, helped: false, needsVariant: false, last: null,
@@ -22,7 +25,7 @@ const toEdit = (a: Action): BuildEdit => a as BuildEdit;
 export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> = {
   initial: () => ({ version: 1 }),
   validInitial: (v): v is Initial => plain(v) && exactKeys(v, ["version"]) && v.version === 1,
-  create: (task) => ({ task, answer: fresh(), heard: false }),
+  create: (task, _initial, options) => ({ task, answer: fresh(), heard: false, ownRead: options.ownRead }),
   validAction: (v): v is Action =>
     Array.isArray(v) && Object.keys(v).length === v.length &&
     (v.length === 1 ? ["k", "h", "r", "z"].includes(v[0] as string) : v.length === 2 && (v[0] === "a" || v[0] === "x") && Number.isInteger(v[1]) && (v[1] as number) >= 0 && (v[1] as number) < MAX_TRAY),

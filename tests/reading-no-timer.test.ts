@@ -1,17 +1,41 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { engines } from "../src/learn/engines";
 
-/** Reading is never timed and never rewards speed. These checks read the source of every reading route. */
-const roots = ["src/learn/reading", "src/learn/games/sound-boat", "src/learn/kit/ReadingText.tsx", "src/learn/kit/reading.ts", "src/learn/kit/readingSpeech.ts", "scripts/dev/sound-boat-entry.tsx"];
+/**
+ * Reading is never timed and never rewards speed. These checks read the source of every reading route, found
+ * from the registry rather than named here: every game on the Reading island, every game that uses the reading
+ * kit, the kit and the reading modules themselves, and the dev entry for the board.
+ */
 function files(path: string): string[] {
   if (!statSync(path).isDirectory()) return [path];
   return readdirSync(path).flatMap((n) => files(join(path, n))).filter((f) => /\.(ts|tsx)$/.test(f));
 }
-const sources = roots.flatMap(files).map((f) => ({ f, text: readFileSync(f, "utf8") }));
+const KIT = ["src/learn/reading", "src/learn/kit/ReadingText.tsx", "src/learn/kit/reading.ts", "src/learn/kit/readingSpeech.ts", "scripts/dev/sound-boat-entry.tsx"];
+const usesReadingKit = /from\s+["'][^"']*(?:kit\/reading|kit\/ReadingText|kit\/readingSpeech|learn\/reading|\.\.\/\.\.\/reading)[^"']*["']/;
+/** The game directories that hold reading routes: the Reading island's games plus every game that imports the kit. */
+export function readingGameDirs(): string[] {
+  const dirs = new Set<string>();
+  for (const [id, engine] of Object.entries(engines)) if (engine.island === "reading" && existsSync(`src/learn/games/${id}`)) dirs.add(`src/learn/games/${id}`);
+  for (const dir of readdirSync("src/learn/games")) {
+    const path = join("src/learn/games", dir);
+    if (statSync(path).isDirectory() && files(path).some((f) => usesReadingKit.test(readFileSync(f, "utf8")))) dirs.add(path);
+  }
+  return [...dirs].sort();
+}
+const roots = [...readingGameDirs(), ...KIT];
+const sources = [...new Set(roots.flatMap(files))].map((f) => ({ f, text: readFileSync(f, "utf8") }));
 const code = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 
 describe("no clock is reachable from a reading route", () => {
+  it("finds the reading routes from the registry, not a list in this file", () => {
+    const dirs = readingGameDirs();
+    for (const id of ["sound-boat", "which-one", "turtle-tales", "hafa-adai"]) expect(dirs, id).toContain(`src/learn/games/${id}`);
+    for (const [id, engine] of Object.entries(engines)) if (engine.island === "reading") expect(dirs, `Reading island game ${id}`).toContain(`src/learn/games/${id}`);
+    expect(sources.some((s) => s.f.endsWith("which-one/view.tsx"))).toBe(true);
+    expect(sources.some((s) => s.f.endsWith("turtle-tales/view.tsx"))).toBe(true);
+  });
   it("reads no time and runs no interval", () => {
     expect(sources.length).toBeGreaterThan(15);
     for (const { f, text } of sources) expect(code(text), f).not.toMatch(/setInterval|Date\.now|new Date\b|performance\.now|requestAnimationFrame|countdown|stopwatch|timeLimit|secondsLeft|elapsed/i);

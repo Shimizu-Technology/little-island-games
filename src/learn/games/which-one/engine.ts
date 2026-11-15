@@ -33,7 +33,7 @@ export const engine: LearnEngine<WhichState> = {
   tagline: "Every word changes the picture.",
   description:
     "Read a short sentence, then choose its picture. Look closely: each other picture changes just one word.",
-  help: "Read every word, then tap the picture that matches. Look at the animal, its size and colour, and where it is. If you pick another picture, the word that tells them apart lights up. Look again and try. Ask to hear the sentence or any word whenever you need help. Helped reading counts. A right picture gets a cheer, then the next sentence comes by itself. In take turns, a correct first try earns a point. There is no clock.",
+  help: "Read every word, then tap the picture that matches. Look at the animal, its size and colour, and where it is. If you pick another picture, the word that tells them apart lights up. Look again and try. Ask to hear the sentence or any word whenever you need help. Helped reading counts. A right picture gets a cheer. Tap Next when you are ready for the next sentence. In take turns, a correct first try earns a point. There is no clock.",
   helpAudio: "reading-v25-which-help",
   introAudio: "which-one-intro",
   color: "#C56D50",
