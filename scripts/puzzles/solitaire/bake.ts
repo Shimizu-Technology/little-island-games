@@ -23,7 +23,9 @@ for(let band=0;band<own.length;band++){
   const proof=certify(spec,spec.bands[band],c.core,ctx);
   if(!proof.ok){rejects[proof.reason]=(rejects[proof.reason]??0)+1;continue;}
   kept.push(c);per.set(c.core.template,(per.get(c.core.template)??0)+1);
-  if(kept.length%4===0)console.log(JSON.stringify({band:r.id,tried:i+1,kept:kept.length,want:poolWant,seconds:Math.round((Date.now()-t)/1000)}));
+  if(kept.length%4===0){writeFileSync(cached,JSON.stringify({rung:r.id,kept,rejects}));console.log(JSON.stringify({band:r.id,tried:i+1,kept:kept.length,want:poolWant,seconds:Math.round((Date.now()-t)/1000)}));
+   if(!useTargets&&kept.length>=want){try{if(arrangeBy((c:Candidate)=>c.workload,kept,want).length>=r.floor)break;}catch{/* A wider pool may give all recipes a gentle shared range. */}}
+  }
  }
  writeFileSync(join(log,`pool-${r.id}.json`),JSON.stringify({rung:r.id,kept,rejects}));
  if(kept.length<want)throw new Error(`${r.id}: ${kept.length}/${want}; below promised floor. Nothing published.`);

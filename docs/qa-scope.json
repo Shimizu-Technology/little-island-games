@@ -1000,22 +1000,20 @@
       "name": "Solitaire",
       "family": "cove",
       "strata": [
-        "Klondike / Paddling",
-        "Klondike / Shallows",
-        "Klondike / Lagoon",
-        "Klondike / Reef",
-        "Klondike / Deep",
-        "Klondike / Trench",
+        "Klondike draw 1 / Paddling",
+        "Klondike draw 1 / Lagoon",
+        "Klondike draw 1 / Trench",
+        "Klondike draw 3 / Paddling",
+        "Klondike draw 3 / Lagoon",
+        "Klondike draw 3 / Trench",
         "FreeCell / Paddling",
-        "FreeCell / Shallows",
         "FreeCell / Lagoon",
-        "FreeCell / Reef",
         "FreeCell / Deep",
         "FreeCell / Trench"
       ],
       "door": "Cove",
-      "maxBoard": "Solitaire full Klondike/FreeCell tall stacks; Go Fish/Eights maximum legal hands",
-      "firstAction": "Choose Paddling (or first supported mode); make one legal cards action"
+      "maxBoard": "Full 52-card Klondike draw 1/draw 3 and FreeCell; tallest reachable tableau, 1,024 reversible moves; AX5 two-axis scrolling",
+      "firstAction": "Choose a certified deal in each mode; tap or drag one legal card, reject an illegal move, undo, quit and resume the exact table"
     },
     {
       "id": "rope-pairs",

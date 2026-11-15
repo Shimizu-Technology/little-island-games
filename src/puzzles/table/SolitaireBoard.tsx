@@ -77,7 +77,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
   if(thinking||!active||!view.payload.audit.includes(1))return;search.current?.abort();const controller=new AbortController();search.current=controller;
   const start=encodeBoard(live.current.s);setThinking(true);
   const result=await adviseAsync(live.current.s,view.deal,controller.signal,10000);
-  if(controller.signal.aborted||!live.current.active||encodeBoard(live.current.s)!==start)return;
+  if(controller.signal.aborted||!live.current.active||encodeBoard(live.current.s)!==start){if(search.current===controller)setThinking(false);return;}
   setThinking(false);setAdvice(result);setHelp({stage:3,edits:view.payload.edits,audit:view.payload.audit.length-1});if(result.kind==='move')showOne(result.plan,stage);
  };
  const description=(p:Place)=>!free&&p.pile===12?`Stock, ${s.piles[12].length} cards. ${s.piles[12].length?'Draw '+(view.deal.mode==='draw-three'?'three':'one'):'Turn waste over'}`:`${pileName(p.pile,free)}, ${p.covered?(p.card!==null&&s.known[p.card]?`face-down, previously seen ${cardWords(p.card)}`:'face-down card'):p.card===null?'empty':cardWords(p.card)}${p.pile<8&&p.card!==null&&!p.covered?`, ${s.piles[p.pile].length-p.index} card${s.piles[p.pile].length-p.index===1?'':'s'} to move`:''}`;
@@ -114,7 +114,7 @@ export function SolitaireBoard({view,dispatch,active,width}:SolitaireBoardProps)
     <View {...pan.panHandlers} style={{width:boardW,height:boardH,backgroundColor:'#D4E7DC',borderRadius:12}}>
      <Text maxFontSizeMultiplier={cap} style={{position:'absolute',left:6,top:3,fontSize:12,color:C.ink}}>{free?'Free cells':'Stock · waste'}</Text>
      <Text maxFontSizeMultiplier={cap} style={{position:'absolute',left:(free?4:3)*(cardW+gap)+6,top:3,fontSize:12,color:C.ink}}>Foundations</Text>
-     {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!active||p.covered&&(free||p.pile!==12)}} disabled={!active||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y}}>{visual(p)}</Pressable>)}
+     {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!active||p.covered&&(free||p.pile!==12)}} disabled={!active||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y,width:cardW,height:p.pile<cols&&p.index<s.piles[p.pile].length-1?overlap:cardH}}>{visual(p)}</Pressable>)}
      {dragging&&<Animated.View pointerEvents="none" style={{position:'absolute',left:dragging.x,top:dragging.y,zIndex:1000,transform:translation.getTranslateTransform(),opacity:0.9}}>{s.piles[dragging.pile].slice(dragging.index).map((c,i)=><View key={c} style={{position:i?'absolute':'relative',top:i*overlap}}>{visual({...dragging,index:dragging.index+i,card:c})}</View>)}</Animated.View>}
     </View>
    </ScrollView>
