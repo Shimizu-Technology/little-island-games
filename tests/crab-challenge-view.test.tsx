@@ -9,6 +9,7 @@ vi.mock('../src/content/learnAudio',async()=>({learnSources:Object.fromEntries(O
 vi.mock('react-native',()=>({View:'div',ScrollView:'section'}));
 vi.mock('../src/components/ui',()=>({View:'div',Button:'button',Copy:'p',PressableScale:'button',C:{ink:'#183F39',soft:'#E5EFE5'}}));
 vi.mock('../src/components/motion',()=>({useReducedMotion:()=>true}));
+vi.mock('../src/learn/program/ProgramEditor',()=>({ProgramEditor:'block-editor'}));
 const sound=vi.hoisted(()=>({play:vi.fn(),stop:vi.fn()}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({sound:false}),useSoundControls:()=>sound}));
 vi.mock('../src/learn/games/crab-commands/view',()=>({ArrowArt:()=>null,Beach:'beach',cardLabel:{up:'Up',right:'Right',down:'Down',left:'Left',forward:'Walk','turn-left':'Turn left','turn-right':'Turn right',repeat:'Again ×2'}}));
@@ -91,4 +92,14 @@ it('P3-3: editing after a failed run returns to the full planned cost',async()=>
  let s=state(0);s=challengeEngine.step(s,['a',4],s.descriptor)!.state;s=challengeEngine.step(s,['g'],s.descriptor)!.state;s=challengeEngine.step(s,['a',4],s.descriptor)!.state;
  expect(s.runs).toBe(1);expect(s.cursor).toBe(0);await mount(s);
  expect(root!.root.findAllByType('p').some(p=>p.children.join('').startsWith('Plan cost: 3 of 3'))).toBe(true);
+});
+it('C1d: on a foggy tray puzzle the board opens in blocks with Go! and Help beside both beaches, never below the editor', async () => {
+ const p = crabPuzzles.find(c => c.ref.bank === 15)!, s = challengeEngine.create(p.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+ const dispatch = await mount(s);
+ const run = root!.root.findByProps({ testID: 'crab-challenge-block-run' });
+ expect(run.findAllByType('button').map(b => b.children.join(''))).toEqual(['Go!', 'Help']);
+ expect(root!.root.findAllByType('button').filter(b => b.children.join('') === 'Go!')).toHaveLength(1);
+ expect(root!.root.findAllByType('beach' as never)).toHaveLength(2);
+ await act(async () => run.findAllByType('button')[1].props.onPress());
+ expect(dispatch).toHaveBeenLastCalledWith(['h']);
 });

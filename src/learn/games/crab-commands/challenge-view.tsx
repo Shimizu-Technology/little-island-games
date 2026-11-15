@@ -78,6 +78,11 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     <View style={d.fog?{gap:6}:{flex:1,gap:6}}>
     {d.budget!==null&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
     {tideText&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{tideText}</Copy>}
+    {/* With the block editor open, Go! and Help stay beside the beach instead of below the editor. */}
+    {blocks&&!s.won&&<View testID="crab-challenge-block-run" style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
+      <Button compact maxFontSizeMultiplier={1.5} disabled={disabled||!s.program.length} onPress={()=>send(['g'])}>Go!</Button>
+      {!hintVisible&&<Button compact quiet maxFontSizeMultiplier={1.5} disabled={disabled} onPress={()=>send(['h'])}>Help</Button>}
+    </View>}
     <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{(d.fog?s.won:result.won)?d.crabs===2?'Both crabs are home!':'Home! Every shell collected.':message}</Copy>
     </View></View>
     <Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
@@ -108,7 +113,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     </View>}
     {d.level.pace==='hard'&&<Copy>Again ×2 does the card before it two more times.</Copy>}
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
-      <Button disabled={disabled||!s.program.length} onPress={()=>{setSelected(null);send(['g']);}}>Go!</Button>
+      {!blocks&&<Button disabled={disabled||!s.program.length} onPress={()=>{setSelected(null);send(['g']);}}>Go!</Button>}
       <Button quiet disabled={disabled||!s.history.length} onPress={()=>{setSelected(null);send(['u']);}}>Undo edit</Button>
       <Button quiet disabled={disabled||JSON.stringify(s.program)===JSON.stringify(d.starter)} onPress={()=>{setSelected(null);send(['z']);}}>Reset plan</Button>
     </View>
@@ -121,7 +126,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
       {s.hintStage<3&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>{s.hintStage===1?'More help':'Show the whole plan'}</Button>}
 
     </View>}
-    {!hintVisible&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>Help</Button>}
+    {!hintVisible&&!blocks&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>Help</Button>}
     {learnSources['c1-crab-marks']&&<Button compact quiet disabled={disabled} onPress={()=>play('c1-crab-marks')}>Hear about marks</Button>}
     {footer}
     </ScrollView>}

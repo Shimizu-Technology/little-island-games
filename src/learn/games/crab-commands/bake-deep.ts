@@ -139,8 +139,9 @@ const songLessons: Record<Role, string> = {
 };
 /** A song captures a group that comes back. On a 5×5 beach a Repeat block can capture the same groups in as few
  * blocks (the bake measured it), so the Songs idea offers cards and songs only, never Repeat. */
-const templates: Record<Role, string[][]> = {
-  teach: [['S', 'x', 'S', 'x', 'S'], ['S', 'S', 'x', 'S']], develop: [['S', 'x', 'S', 'y', 'S']], twist: [['x', 'S', 'y', 'S', 'z', 'S'], ['S', 'x', 'S', 'y', 'S', 'z']], short: [['S', 'x', 'S', 'y', 'S']], easy: [['S', 'x', 'S', 'x', 'S'], ['S', 'S', 'x', 'S']],
+// Plain strings: S calls the song, any other letter is a single card. (A table of single letters reads as a word grid.)
+const templates: Record<Role, string[]> = {
+  teach: ['SxSxS', 'SSxS'], develop: ['SxSyS'], twist: ['xSySzS', 'SxSySz'], short: ['SxSyS'], easy: ['SxSxS', 'SSxS'],
 };
 function songPuzzle(role: Role, id: string): unknown | null {
   const song = Array.from({ length: role === 'develop' || role === 'twist' ? 4 + rng.below(2) : role === 'short' ? 5 : 4 }, () => pick(W));
@@ -148,7 +149,7 @@ function songPuzzle(role: Role, id: string): unknown | null {
   const separators = rng.shuffle(W).slice(0, 3);
   let sep = 0;
   const same = role === 'teach' || role === 'easy';
-  const main: Node[] = pick(templates[role]).map(t => (t === 'S' ? { kind: 'call', song: 0 } as Node : cmd(separators[same ? 0 : sep++])));
+  const main: Node[] = [...pick(templates[role])].map(t => (t === 'S' ? { kind: 'call', song: 0 } as Node : cmd(separators[same ? 0 : sep++])));
   const program: Program = { version: 1, body: main, songs: [song.map(cmd)] };
   const expanded = main.flatMap(n => (n.kind === 'call' ? song : n.kind === 'command' ? [n.command] : []));
   // Try every start square: a long plan fits a 5×5 beach only from a few of them.
