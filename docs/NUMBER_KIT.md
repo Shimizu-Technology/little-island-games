@@ -15,20 +15,44 @@ Plain data in, plain data out. No React, clocks, `Math.random`, classes, `Map` o
 | `work.ts` | the step state machine: `advance`, `judge`, `replay`, the help ladder (`hintFor`), `solveActs` |
 | `generate.ts` | levels graded by required strategy, rungs inside a level, `roundProblems`, `candidates`, `secondWays` |
 | `deep.ts` | the four Deep Water shapes: open a number, a missing number, two piles, pairs of ten |
+| `wide.ts` | single-step facts beyond 100 up to `WIDE_MAX` (1000): `wideProblems`, `isWide` |
+| `twostep.ts` | two-step problems `a ± b ± c`, worked left to right: `validTwoStep`, `twoStepPlan`, `twoStepProblems`, `twoStepText` |
 
 A step is one of `count`, `number`, `trade`, `fill` (move shells) or `pair`. An action is a short array: `["c"]`, `["n", 13]`, `["t"]`,
-`["m", side, n]`, `["p", i, j]`, `["h"]` (next help stage), `["k"]` (turn on choices). The same `advance` runs the School board, the Challenge
+`["m", side, n]`, `["p", i, j]`, `["h"]` (next help stage), `["k"]` (turn on choices), `["u"]` (undo). The same `advance` runs the School board, the Challenge
 replay and the dumb-player bots.
 
 Help is a ladder read from the plan: stage 1 says where to look, stage 2 says the step's number, stage 3 fills it in for the child to confirm.
 A miss marks the problem helped and blocks nothing. A second way is another route's plan for the same problem, so "show a second way",
 the Two-ways dare and the fewest-moves dare use the same plans.
 
+## Undo, Reset and the cost of a puzzle
+
+Undo takes back the last accepted action (a count tap, a trade, a fill, a pair, a typed step), never the problem as a whole and never after it is solved.
+It keeps what is on the record: misses and Help stay, Undo is itself a move (`moves`), it clears the help stage of the step it returns to, and it is
+bounded to `MAX_UNDO` (6) a problem. It is not assistance, so it does not mark a problem helped. In Challenge a Reset (start the puzzle again) is free
+only before any work, to change the way; after that the moves already made stay in the cost, so neither Undo nor Reset can be used to try a longer route
+and then claim Fewest moves. Misses and Help are kept by the shared replay evidence.
+
+A School round keeps the room it needs to finish. `finishCost` counts the forward actions still needed (the rest of this problem, a Next after each problem,
+every later problem's steps); a miss, Help, Choices or Undo is refused when it would use that room, so no mix of them can leave a saved round that cannot be finished.
+
+## Range, beyond 100 and two-step problems (what K4 provides)
+
+Every kit validator takes the range as a parameter: `validProblem(p, max)`, `validTwoStep(t, max)` and `validAct(a, max)` default to `KIT_MAX` (100, where
+Shell Math lives) and accept `WIDE_MAX` (1000) for games that need it. `placeValue3` gives hundreds, tens and ones. `wideProblems(count, rng)` returns distinct
+single-step facts with at least one number over 100; `twoStepProblems(count, rng, max)` returns distinct two-step problems whose middle number and answer stay in
+range, and `twoStepPlan` is their plan (the middle number, then the answer) for the same help ladder and replay.
+
+What K4 does not provide, and is left to the games that use it: levels or strategies beyond 100 (no route in `plan.ts` crosses a hundred), pictures for hundreds
+(`Blocks` draws tens and ones), unknown positions for two-step problems (the answer is always the last number), story wording (SC-13), and speech for numbers past 20 (K9).
+
 ## Components (`src/math/kit/ui/`)
 
 `TenFrame` (shells, a second group in blue, pale shells waiting, struck-out shells, touchable shells for a pick), `Blocks` (tens rods and ones cubes with
-touchable trades), `Bridge` (a number line with one arc per hop), `NumberPad` (digits, delete, Go; clears when the step changes; can prefill), `PartWhole`,
-`ArrayGrid`. They draw what they are given; the board decides what a touch means.
+touchable trades), `Bridge` (a number line with one arc per hop; it speaks only the hops already drawn, `bridgeLabel`), `NumberPad` (digits, delete, Go; clears when
+the step changes; can prefill; refuses a number past `max` and says so), `PartWhole`, `ArrayGrid`. They draw what they are given; the board decides what a touch means.
+A touchable `TenFrame` needs cells of at least `MIN_TOUCH` (44 pt), so Level 4 stacks its two groups on a phone.
 
 ## Shell Math levels
 

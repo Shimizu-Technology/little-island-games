@@ -22,15 +22,15 @@ const tap = async (label: string) => act(async () => { key(label).props.onPress(
 describe("Bridge", () => {
   const labels = () => root!.root.findAll((n) => (n.type as string) === "svgtext").map(text);
   it("draws only the hops that have been made, so the line never shows an answer early", async () => {
-    await mount(<Bridge width={320} start={9} hops={[10, 13]} ten={10} lo={0} hi={20} made={0} label="line" />);
+    await mount(<Bridge width={320} start={9} hops={[10, 13]} ten={10} lo={0} hi={20} made={0} />);
     expect(root!.root.findAll((n) => (n.type as string) === "path")).toHaveLength(0);
     expect(labels()).not.toContain("13");
     expect(labels()).toContain("9");
-    await act(async () => root!.update(<Bridge width={320} start={9} hops={[10, 13]} ten={10} lo={0} hi={20} made={1} label="line" />));
+    await act(async () => root!.update(<Bridge width={320} start={9} hops={[10, 13]} ten={10} lo={0} hi={20} made={1} />));
     expect(labels()).toContain("10");
     expect(labels()).not.toContain("13");
     expect(root!.root.findAll((n) => (n.type as string) === "path")).toHaveLength(2);
-    await act(async () => root!.update(<Bridge width={320} start={9} hops={[10, 13]} ten={10} lo={0} hi={20} made={2} label="line" />));
+    await act(async () => root!.update(<Bridge width={320} start={9} hops={[10, 13]} ten={10} lo={0} hi={20} made={2} />));
     expect(labels()).toContain("13");
     expect(root!.root.findAll((n) => (n.type as string) === "path")).toHaveLength(4);
   });

@@ -9,7 +9,8 @@ const minus = "−";
 export const tileCap = (level: Level) => (level <= 1 ? 10 : level <= 4 ? 20 : 99);
 const sign = (p: Problem) => (p.op === "add" ? "+" : minus);
 
-export function stepPrompt(level: Level, p: Problem, plan: readonly Step[], at: number, route: RouteId = levelRoute(level, p)): string {
+/** `side` is the group the child filled a ten in (0 the first, 1 the second); the sentences after it describe that move, not the other one. */
+export function stepPrompt(level: Level, p: Problem, plan: readonly Step[], at: number, route: RouteId = levelRoute(level, p), side: 0 | 1 | null = null): string {
   const s = plan[at];
   const a = placeValue(p.a), b = placeValue(p.b);
   if (s.kind === "count") {
@@ -51,6 +52,9 @@ export function stepPrompt(level: Level, p: Problem, plan: readonly Step[], at: 
     return `Put the tens and ones back together. What is ${p.a} ${sign(p)} ${p.b}?`;
   }
   if (route === "to-ten") {
+    // The child filled the second group's ten from the first: that group is the one that gave shells.
+    const first = plan[0], other = first.kind === "fill" && side === 1 ? first.options.find((o) => o[0] === 1) : undefined;
+    if (p.op === "add" && other) return role === "rest" ? `${p.a} to add, ${other[1]} done. How many left?` : `10 + ${p.a - other[1]} = ?`;
     const d = p.op === "add" ? 10 - (p.a % 10) : p.a % 10, ten = p.op === "add" ? p.a + d : p.a - d;
     if (role === "to-ten") return p.op === "add" ? `${p.a} + ? = ${ten}. How many make a ten?` : `${p.a} ${minus} ? = ${ten}. How many take you back to ten?`;
     if (role === "rest") return `${p.b} ${p.op === "add" ? "to add" : "to take away"}, ${d} done. How many left?`;

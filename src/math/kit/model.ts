@@ -9,8 +9,10 @@ export type Op = "add" | "subtract";
 /** Which part of `a op b = c` the child finds. */
 export type Unknown = "result" | "second";
 export type Problem = { op: Op; a: number; b: number; unknown: Unknown };
-/** Largest number any kit problem reaches. */
+/** Largest number a kit problem reaches unless a game asks for the wide range. Shell Math stays within it. */
 export const KIT_MAX = 100;
+/** The wide range: sums, differences and two-step answers beyond 100, for the games that need them (SC-13, SC-15, N2-N4). */
+export const WIDE_MAX = 1000;
 
 export const resultOf = (p: Problem): number => (p.op === "add" ? p.a + p.b : p.a - p.b);
 export const answerOf = (p: Problem): number => (p.unknown === "second" ? p.b : resultOf(p));
@@ -18,21 +20,23 @@ export const answerOf = (p: Problem): number => (p.unknown === "second" ? p.b : 
 const whole = (v: unknown, min: number, max: number): v is number =>
   typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
 
-/** Exactly four keys, whole numbers in range, and a result that stays on the number line. */
-export function validProblem(v: unknown): v is Problem {
+/** Exactly four keys, whole numbers in range (up to `max`, 100 unless a game passes the wide range), and a result that stays on the number line. */
+export function validProblem(v: unknown, max = KIT_MAX): v is Problem {
   if (!v || typeof v !== "object" || Array.isArray(v)) return false;
   const p = v as Record<string, unknown>;
   const keys = Object.keys(p);
   if (keys.length !== 4 || !["op", "a", "b", "unknown"].every((k) => keys.includes(k))) return false;
   if ((p.op !== "add" && p.op !== "subtract") || (p.unknown !== "result" && p.unknown !== "second")) return false;
-  if (!whole(p.a, 0, KIT_MAX) || !whole(p.b, 0, KIT_MAX)) return false;
+  if (!whole(p.a, 0, max) || !whole(p.b, 0, max)) return false;
   const c = p.op === "add" ? p.a + p.b : p.a - p.b;
-  return whole(c, 0, KIT_MAX);
+  return whole(c, 0, max);
 }
 
 export const placeValue = (n: number): { tens: number; ones: number } => ({ tens: Math.floor(n / 10), ones: n % 10 });
 /** "1 ten and 1 one", "3 tens and 15 ones": a count never reads "1 tens". */
 export const tensOnesText = (tens: number, ones: number) => `${tens} ${tens === 1 ? "ten" : "tens"} and ${ones} ${ones === 1 ? "one" : "ones"}`;
+/** Hundreds, tens and ones: 407 is 4 hundreds, 0 tens and 7 ones. A thousand is ten hundreds. */
+export const placeValue3 = (n: number): { hundreds: number; tens: number; ones: number } => ({ hundreds: Math.floor(n / 100), tens: Math.floor((n % 100) / 10), ones: n % 10 });
 export const fromPlaceValue = (tens: number, ones: number): number => tens * 10 + ones;
 /** Trade one ten for ten ones. Null when there is no ten to open. */
 export function openTen(v: { tens: number; ones: number }): { tens: number; ones: number } | null {

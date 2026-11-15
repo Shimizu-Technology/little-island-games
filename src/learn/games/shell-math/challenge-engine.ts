@@ -5,7 +5,7 @@ import { advance, initialWork, judge, planKey, validAct, type Act, type Work } f
 import { waysOf, type Descriptor } from "./challenge-task";
 export type { Descriptor } from "./challenge-task";
 
-/** A way chosen (`r`), a start-over (`z`), or any step action of the kit. */
+/** A way chosen (`r`), a start-over (`z`), or any step action of the kit (including `u`, undo). */
 export type Action = Act | readonly ["r", number] | readonly ["z"];
 export type Initial = { version: 1 };
 export type Payload = ReplayPayload<Initial, Action>;
@@ -26,8 +26,12 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
   step: (s, a, d) => {
     const ways = waysOf(d);
     if (a[0] === "z") {
-      const start = fresh(d);
-      return s.way === start.way && s.work.moves === 0 && s.work.hint === 0 && !s.work.choices ? null : { state: start, event: "reset" };
+      const start = fresh(d), w = s.work;
+      const clean = w.at === 0 && w.tapped === 0 && w.hint === 0 && !w.choices && w.side === null && w.used === 0 && w.last === null;
+      if (s.way === start.way && clean) return null;
+      // Starting again is free before any work, to change the way. Moves already made stay in the cost, so Reset cannot be
+      // used to try a longer route and then claim the shortest one; misses and Help stay on the record through the replay.
+      return { state: { ...start, work: { ...start.work, moves: w.moves, undone: w.undone } }, event: "reset" };
     }
     if (s.way === null) {
       if (a[0] !== "r" || (a[1] as number) >= ways.length) return null;
@@ -38,6 +42,8 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
     if (verdict === "ignored") return null;
     const work = advance(plan, s.work, a);
     if (verdict === "help") return { state: { ...s, work }, event: "help" };
+    // Taking a choice back is not assistance. It costs a move, and the misses and Help before it stay.
+    if (verdict === "undo") return { state: { ...s, work }, event: "edit" };
     const step = plan[s.work.at], last = s.work.at === plan.length - 1;
     if (step.kind === "count" || step.kind === "trade") return { state: { ...s, work }, event: "edit" };
     return { state: { ...s, work }, event: step.kind === "number" && last ? "check" : "run", correct: verdict === "ok" };

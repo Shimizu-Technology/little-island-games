@@ -1,5 +1,5 @@
 import {
-  ROUND_LENGTH, advance, fitsLevel, initialWork, judge, levelPlan, roundProblems, sameFact, slotFor, validAct,
+  ROUND_LENGTH, advance, fitsLevel, initialWork, judge, levelPlan, roundProblems, sameFact, slotFor, solveActs, validAct,
   type Act, type Level, type OpChoice, type Problem, type Step, type Work,
 } from "../../../math/kit";
 import { levelOf } from "../../levelOptions";
@@ -22,9 +22,8 @@ export type ShellRound = {
   solved: boolean; wrong: number | null;
 };
 
-/** Long enough for five slow, careful problems; the last RESERVE actions only take steps forward, never misses. */
+/** Long enough for five slow, careful problems. Anything that is not a step forward must leave room to finish the round. */
 export const HISTORY_CAP = 240;
-export const RESERVE = 48;
 
 export const problemOf = (c: ItemCode): Problem => ({ op: c[0] === 0 ? "add" : "subtract", a: c[1], b: c[2], unknown: c[3] === 0 ? "result" : "second" });
 export const codeOf = (p: Problem): ItemCode => [p.op === "add" ? 0 : 1, p.a, p.b, p.unknown === "result" ? 0 : 1];
@@ -68,6 +67,24 @@ export function progress(s: ShellRound): Progress | null {
   return { index, helped, work, problem: index < s.items.length ? problemOf(s.items[index]) : null, plan };
 }
 
+/**
+ * How many forward actions the round still needs, counted from what is left of this problem, one Next for each
+ * problem, and every later problem's own steps. Null when the round cannot be read.
+ */
+export function finishCost(s: ShellRound): number | null {
+  const p = progress(s);
+  if (!p) return null;
+  if (!p.plan || !p.problem) return 0;
+  let n = 1;
+  if (!p.work.solved) n += solveActs(p.plan.slice(p.work.at)).length - (p.plan[p.work.at].kind === "count" ? p.work.tapped : 0);
+  for (let i = s.index + 1; i < s.items.length; i++) {
+    const plan = levelPlan(s.level, problemOf(s.items[i]));
+    if (!plan) return null;
+    n += solveActs(plan).length + 1;
+  }
+  return n;
+}
+
 /** One action. Returns the same round when the move is not allowed, so a caller can tell nothing happened. */
 export function shellMove(s: ShellRound, act: RoundAct): ShellRound {
   if (!act || typeof act !== "object" || s.index >= s.items.length || s.history.length >= HISTORY_CAP) return s;
@@ -77,10 +94,15 @@ export function shellMove(s: ShellRound, act: RoundAct): ShellRound {
   if (!validAct(act)) return s;
   const verdict = judge(p.plan, p.work, act);
   if (verdict === "ignored") return s;
-  // Help and the last stretch of the round only ever move forward: a flood of misses cannot trap a child.
-  if (verdict === "wrong" && s.history.length >= HISTORY_CAP - RESERVE) return s;
   const work = advance(p.plan, p.work, act);
-  return { ...s, history: [...s.history, act], solved: work.solved, wrong: work.last };
+  const next: ShellRound = { ...s, history: [...s.history, act], solved: work.solved, wrong: work.last };
+  // Only steps forward are always allowed. A miss, Help, Choices or Undo is refused once it would use the room the
+  // round still needs to be finished, so no mix of them can trap a child.
+  if (verdict !== "ok") {
+    const need = finishCost(next);
+    if (need === null || next.history.length + need > HISTORY_CAP) return s;
+  }
+  return next;
 }
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);

@@ -4,7 +4,7 @@ import { Text } from "../../../components/Text";
 import { C, Copy } from "../../../components/ui";
 import { Blocks } from "../../../math/kit/ui/Blocks";
 import { Bridge } from "../../../math/kit/ui/Bridge";
-import { TenFrame } from "../../../math/kit/ui/TenFrame";
+import { MIN_TOUCH, TenFrame } from "../../../math/kit/ui/TenFrame";
 import { tensOnesText } from "../../../math/kit";
 import type { Picture } from "./picture";
 
@@ -21,16 +21,23 @@ export type WorkspaceProps = {
 };
 
 const frameCell = (width: number, frames: number) => Math.max(24, Math.min(46, Math.floor((width - 28) / (frames > 1 ? 11.6 : 5.8))));
+/** A frame the child chooses shells from: never under MIN_TOUCH (46 when there is room), whatever the window. One frame is 5 cells and its border wide. */
+const touchCell = (width: number) => Math.max(MIN_TOUCH, Math.min(46, Math.floor((width - 28) / 5.4)));
+/** Two touchable frames side by side need 10 cells, the plus sign and the gaps; below that width the groups stack. */
+const sideBySide = (width: number) => (width - 70) / 10 >= MIN_TOUCH;
 
 /** Draws the Picture. Pure presentation: every number on it came from picture.ts. */
 export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTradeOpen, hidePicture }: WorkspaceProps) {
-  const w = Math.min(width, 520);
+  // Choosing shells is the required move at Level 4, so those frames get touch-sized cells (the pictures of other steps keep their size).
+  const touch = !!onPick || !!onPickOnes;
+  const w = Math.min(width, touch ? 700 : 520);
   if (hidePicture) return <Copy style={{ color: C.ink, textAlign: "center" }}>Picture hidden. Think it through, then use the number pad.</Copy>;
   const total = pic.frames ? pic.frames.gold + pic.frames.blue + pic.frames.ghost : 0;
   const nFrames = Math.max(1, Math.ceil(total / 10));
-  const cell = pic.pair ? frameCell(w, 2) : frameCell(w, nFrames);
+  const stacked = touch && !!pic.pair && !sideBySide(w);
+  const cell = touch ? (pic.pair && !stacked ? Math.min(46, Math.floor((w - 70) / 10)) : touchCell(w)) : pic.pair ? frameCell(w, 2) : frameCell(w, nFrames);
   return <View style={{ alignItems: "center", gap: 4 }}>
-    {pic.pair && <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+    {pic.pair && <View style={{ flexDirection: stacked ? "column" : "row", alignItems: "center", justifyContent: "center", gap: stacked ? 2 : 10 }}>
       <View style={{ alignItems: "center", gap: 4 }}>
         <TenFrame cell={cell} filled={pic.pair.a} label={`First group: ${pic.pair.a} shells${pic.pair.fullA ? ", a full ten" : ""}`} onPick={onPick ? (k) => onPick(1, k) : undefined} pickLabel={(k) => `Move ${k} ${k === 1 ? "shell" : "shells"} from the first group to the second`} />
         <Text maxFontSizeMultiplier={1.4} style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{pic.pair.a}</Text>
@@ -58,7 +65,7 @@ export function Workspace({ pic, width, onPick, onPickOnes, onTradeMake, onTrade
       struckOnes={pic.blocks.struckOnes} struckTens={pic.blocks.struckTens} onTradeMake={onTradeMake} onTradeOpen={onTradeOpen}
       label={tensOnesText(pic.blocks.tens, pic.blocks.ones)} />}
     {pic.line && <Bridge width={Math.min(w, 380)} start={pic.line.start} hops={pic.line.hops} ten={pic.line.ten} lo={pic.line.lo} hi={pic.line.hi}
-      made={pic.line.made} label={`Number line. Start ${pic.line.start}, then ${pic.line.hops.join(", then ")}.`} />}
+      made={pic.line.made} />}
     {pic.caption && !pic.line ? <Copy style={{ color: C.ink, fontSize: 15, fontWeight: "700", textAlign: "center" }}>{pic.caption}</Copy> : null}
   </View>;
 }

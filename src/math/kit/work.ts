@@ -1,3 +1,4 @@
+import { KIT_MAX } from "./model";
 import type { Step } from "./plan";
 
 /**
@@ -12,8 +13,11 @@ import type { Step } from "./plan";
  *   ["p", i, j]      pick the numbers at positions i and j (pair steps)
  *   ["h"]            ask for the next help stage (a cue, then the answer shown, then the answer filled in)
  *   ["k"]            turn on answer choices (the typed-answer help)
+ *   ["u"]            undo the last accepted action (never a miss or help, which stay on the record)
  */
-export type Act = readonly ["c"] | readonly ["n", number] | readonly ["t"] | readonly ["m", 0 | 1, number] | readonly ["p", number, number] | readonly ["h"] | readonly ["k"];
+export type Act = readonly ["c"] | readonly ["n", number] | readonly ["t"] | readonly ["m", 0 | 1, number] | readonly ["p", number, number] | readonly ["h"] | readonly ["k"] | readonly ["u"];
+/** Where a problem stood before an accepted action: step, taps, side of a ten, pairs used. Undo goes back to it. */
+export type Pos = readonly [at: number, tapped: number, side: 0 | 1 | null, used: number];
 export type Work = {
   /** Index of the step the child is on; equals the plan length once solved. */
   at: number;
@@ -34,20 +38,26 @@ export type Work = {
   side: 0 | 1 | null;
   /** Positions already used by pair steps, as a bit set. */
   used: number;
+  /** One entry per accepted action still standing, newest last. Undo pops it; misses and help never leave. */
+  back: readonly Pos[];
+  /** Undos used on this problem, never more than MAX_UNDO. Undo is a move: it counts toward `moves`. */
+  undone: number;
 };
-export const initialWork = (): Work => ({ at: 0, tapped: 0, wrong: 0, hint: 0, choices: false, helped: false, solved: false, moves: 0, last: null, side: null, used: 0 });
+export const initialWork = (): Work => ({ at: 0, tapped: 0, wrong: 0, hint: 0, choices: false, helped: false, solved: false, moves: 0, last: null, side: null, used: 0, back: [], undone: 0 });
 export const MAX_HINT = 3;
+/** A child can change their mind this many times on one problem; past it the choice stands. */
+export const MAX_UNDO = 6;
 
-export type Verdict = "ok" | "wrong" | "help" | "ignored";
+export type Verdict = "ok" | "wrong" | "help" | "undo" | "ignored";
 
 const whole = (v: unknown, max: number): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
 
-/** True for any action shape the engine could ever take. */
-export function validAct(v: unknown): v is Act {
+/** True for any action shape the engine could ever take; a said number is at most `max` (100, or the wide range). */
+export function validAct(v: unknown, max = KIT_MAX): v is Act {
   if (!Array.isArray(v) || Object.keys(v).length !== v.length) return false;
   const k = v[0];
-  if (v.length === 1) return k === "c" || k === "t" || k === "h" || k === "k";
-  if (v.length === 2) return k === "n" && whole(v[1], 100);
+  if (v.length === 1) return k === "c" || k === "t" || k === "h" || k === "k" || k === "u";
+  if (v.length === 2) return k === "n" && whole(v[1], max);
   if (v.length !== 3) return false;
   if (k === "m") return (v[1] === 0 || v[1] === 1) && whole(v[2], 10);
   return k === "p" && whole(v[1], 7) && whole(v[2], 7) && v[1] !== v[2];
@@ -58,6 +68,7 @@ export function judge(plan: readonly Step[], w: Work, act: Act): Verdict {
   if (w.solved || w.at >= plan.length) return "ignored";
   if (act[0] === "h") return w.hint >= MAX_HINT ? "ignored" : "help";
   if (act[0] === "k") return w.choices ? "ignored" : "help";
+  if (act[0] === "u") return w.back.length > 0 && w.undone < MAX_UNDO ? "undo" : "ignored";
   const s = plan[w.at];
   switch (act[0]) {
     case "c": return s.kind === "count" ? "ok" : "ignored";
@@ -79,19 +90,28 @@ export function judge(plan: readonly Step[], w: Work, act: Act): Verdict {
   }
 }
 
+/** Whether the child can take back the last accepted action. */
+export const canUndo = (plan: readonly Step[], w: Work): boolean => judge(plan, w, ["u"]) === "undo";
+
 /** Apply an action. Returns the same object when nothing happens, so callers can compare references. */
 export function advance(plan: readonly Step[], w: Work, act: Act): Work {
   const v = judge(plan, w, act);
   if (v === "ignored") return w;
+  if (v === "undo") {
+    // Back to where the last accepted action started. The record of misses and help is kept, and the undo itself is a move.
+    const p = w.back[w.back.length - 1];
+    return { ...w, at: p[0], tapped: p[1], side: p[2], used: p[3], back: w.back.slice(0, -1), hint: 0, last: null, moves: w.moves + 1, undone: w.undone + 1 };
+  }
   if (v === "help") return act[0] === "h" ? { ...w, hint: w.hint + 1, helped: true, last: null } : { ...w, choices: true, helped: true, last: null };
   const moves = w.moves + 1;
   if (v === "wrong") return { ...w, wrong: w.wrong + 1, helped: true, moves, last: act[0] === "n" ? (act[1] as number) : act[0] === "m" ? (act[2] as number) : act[0] === "p" ? (act[1] as number) * 8 + (act[2] as number) : null };
   // Accepted. A count step only completes on its last tap.
   const s = plan[w.at];
-  if (s.kind === "count" && w.tapped + 1 < s.times) return { ...w, tapped: w.tapped + 1, moves, last: null };
+  const back: readonly Pos[] = [...w.back, [w.at, w.tapped, w.side, w.used]];
+  if (s.kind === "count" && w.tapped + 1 < s.times) return { ...w, tapped: w.tapped + 1, moves, last: null, back };
   const at = w.at + 1;
   const used = s.kind === "pair" ? w.used | (1 << (act[1] as number)) | (1 << (act[2] as number)) : w.used;
-  return { ...w, at, tapped: 0, hint: 0, moves, last: null, used, side: s.kind === "fill" ? (act[1] as 0 | 1) : w.side, solved: at >= plan.length };
+  return { ...w, at, tapped: 0, hint: 0, moves, last: null, used, back, side: s.kind === "fill" ? (act[1] as 0 | 1) : w.side, solved: at >= plan.length };
 }
 
 /** Replay a whole list of actions; null if any of them is not a legal move at that point. */

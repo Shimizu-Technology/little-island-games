@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Text } from "../../../components/Text";
 import { C, PressableScale } from "../../../components/ui";
+import { KIT_MAX } from "../model";
 
 export type NumberPadProps = {
   /** Changing this clears what has been typed, e.g. the step the child is on. */
@@ -9,6 +10,8 @@ export type NumberPadProps = {
   width: number;
   disabled?: boolean;
   maxDigits?: number;
+  /** Largest number the pad will type. A digit that would pass it is refused, with a line saying so. */
+  max?: number;
   /** Called with the typed whole number. The pad clears after any submit, right or wrong. */
   onSubmit: (n: number) => void;
   /** A number to pre-fill, as the last help stage does. The child still confirms it. */
@@ -20,21 +23,29 @@ export type NumberPadProps = {
 };
 
 /** Digits, delete and a Go key. Big targets, no clock, nothing is judged until Go. */
-export function NumberPad({ resetKey, width, disabled, maxDigits = 3, onSubmit, prefill = null, onKey, prompt = "Your answer" }: NumberPadProps) {
+export function NumberPad({ resetKey, width, disabled, maxDigits = 3, max = KIT_MAX, onSubmit, prefill = null, onKey, prompt = "Your answer" }: NumberPadProps) {
   const [text, setText] = useState(prefill === null ? "" : String(prefill));
+  const [refused, setRefused] = useState(false);
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     setText(prefill === null ? "" : String(prefill));
+    setRefused(false);
   }, [resetKey, prefill]);
   // Five keys to a row keeps the whole pad to three rows, so the picture and the pad fit on one screen.
   const gap = 8, w = Math.min(width, 380), key = Math.floor((w - gap * 4) / 5), keyH = Math.max(48, Math.min(56, Math.round(key * 0.86)));
   const press = (k: string | number) => {
     if (disabled) return;
     onKey?.();
-    if (k === "del") setText((t) => t.slice(0, -1));
-    else if (k === "go") { if (text.length) { const n = Number(text); setText(""); onSubmit(n); } }
-    else setText((t) => (t === "0" ? String(k) : t.length >= maxDigits ? t : t + k));
+    if (k === "del") { setRefused(false); setText((t) => t.slice(0, -1)); }
+    else if (k === "go") { setRefused(false); if (text.length) { const n = Number(text); setText(""); onSubmit(n); } }
+    else {
+      const next = text === "0" ? String(k) : text.length >= maxDigits ? text : text + k;
+      // A number past the range is never typed, and the child is told why, so a key never seems to do nothing.
+      if (Number(next) > max) { setRefused(true); return; }
+      setRefused(false);
+      setText(next);
+    }
   };
   const keyStyle = (go: boolean, off: boolean) => ({
     width: key, minHeight: keyH, borderRadius: 14, borderWidth: 2, borderColor: go ? C.teal : C.line, backgroundColor: go ? C.teal : C.paper,
@@ -59,5 +70,6 @@ export function NumberPad({ resetKey, width, disabled, maxDigits = 3, onSubmit, 
       {render("del")}
       {render("go")}
     </View>
+    {refused && <View accessibilityLiveRegion="polite"><Text maxFontSizeMultiplier={1.4} style={{ fontSize: 14, fontWeight: "700", color: C.ink }}>Answers go up to {max}.</Text></View>}
   </View>;
 }

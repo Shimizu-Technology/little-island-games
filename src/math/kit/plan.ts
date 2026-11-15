@@ -8,7 +8,7 @@ import { answerOf, placeValue, resultOf, type Problem } from "./model";
 export type RouteId = "count" | "tens-ones" | "to-ten" | "to-ten-other" | "up-to-ten" | "give-take" | "trade";
 /** `prompted` asks "how many to make ten?"; `built` has the child choose which shells to move. */
 export type Scaffold = "prompted" | "built";
-export type Role = "ones" | "tens" | "to-ten" | "rest" | "round-up" | "gap" | "final";
+export type Role = "ones" | "tens" | "to-ten" | "rest" | "round-up" | "gap" | "part" | "final";
 export type Step =
   | { kind: "count"; times: number; dir: 1 | -1 }
   | { kind: "number"; value: number; role: Role }

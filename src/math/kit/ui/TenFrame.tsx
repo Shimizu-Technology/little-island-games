@@ -13,6 +13,8 @@ export function ShellCounter({ size, tone = "gold", muted = false, struck = fals
   </Svg>;
 }
 
+/** The smallest touch target, in points, for a shell a child must choose. */
+export const MIN_TOUCH = 44;
 export type TenFrameProps = {
   /** Width of one cell, in points. */
   cell: number;
@@ -27,7 +29,7 @@ export type TenFrameProps = {
   /** Cells in the frame; 10 for a ten-frame. */
   cells?: number;
   label: string;
-  /** When set, shell number k (from 1) can be touched to choose "move k shells". */
+  /** When set, shell number k (from 1) can be touched to choose "move k shells". Cells touch each other, so a touchable frame needs `cell` of at least MIN_TOUCH. */
   onPick?: (k: number) => void;
   /** What a touched shell is called for VoiceOver, e.g. which way the shells would go. */
   pickLabel?: (k: number) => string;
@@ -49,7 +51,7 @@ export function TenFrame({ cell, filled, second = 0, ghost = 0, struck = 0, tone
           {(on || waiting) ? <ShellCounter size={cell - pad * 2 - 2} tone={blue ? "blue" : tone} muted={waiting || gone} struck={gone} /> : null}
         </View>;
         return onPick && on && !gone
-          ? <Pressable key={c} accessibilityRole="button" accessibilityLabel={pickLabel ? pickLabel(i + 1) : `Move ${i + 1} ${i === 0 ? "shell" : "shells"}`} hitSlop={2} onPress={() => onPick(i + 1)}>{body}</Pressable>
+          ? <Pressable key={c} accessibilityRole="button" accessibilityLabel={pickLabel ? pickLabel(i + 1) : `Move ${i + 1} ${i === 0 ? "shell" : "shells"}`} onPress={() => onPick(i + 1)}>{body}</Pressable>
           : <View key={c}>{body}</View>;
       })}
     </View>)}

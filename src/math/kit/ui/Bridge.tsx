@@ -13,16 +13,18 @@ export type BridgeProps = {
   /** Number line is lo..hi. */
   lo: number;
   hi: number;
-  label: string;
-  /** How many hops the child has made. Only those are drawn, so the line never shows an answer before it is found. */
+  /** How many hops the child has made. Only those are drawn and spoken, so the line never shows an answer before it is found. */
   made?: number;
 };
+/** What VoiceOver says for the line: where the child started and the hops made so far, exactly what is drawn. */
+export const bridgeLabel = (start: number, hops: readonly number[], made = hops.length): string =>
+  `Number line. Start ${start}${made > 0 ? `, then ${hops.slice(0, made).join(", then ")}` : ""}.`;
 /** A number line with one arc per hop. The arcs make the idea of "bridging a ten" visible. */
-export function Bridge({ width, start, hops, ten, lo, hi, label, made = hops.length }: BridgeProps) {
+export function Bridge({ width, start, hops, ten, lo, hi, made = hops.length }: BridgeProps) {
   const pad = 14, w = Math.max(220, width), span = hi - lo, x = (n: number) => pad + ((n - lo) / span) * (w - pad * 2), y = 46;
   const points = [start, ...hops.slice(0, made)];
   const every = span > 40 ? 10 : span > 12 ? 5 : 1;
-  return <View accessible accessibilityLabel={label} style={{ alignItems: "center" }}>
+  return <View accessible accessibilityLabel={bridgeLabel(start, hops, made)} style={{ alignItems: "center" }}>
     <Svg width={w} height={74} viewBox={`0 0 ${w} 74`}>
       <Line x1={x(lo)} y1={y} x2={x(hi)} y2={y} stroke={C.ink} strokeWidth={2.4} />
       {Array.from({ length: span + 1 }, (_, i) => {

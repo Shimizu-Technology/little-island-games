@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { Text } from "../../../components/Text";
-import { Button, C } from "../../../components/ui";
-import type { Act, Step, Work } from "../../../math/kit";
+import { Button, C, Copy } from "../../../components/ui";
+import { KIT_MAX, type Act, type Step, type Work } from "../../../math/kit";
 import { NumberPad } from "../../../math/kit/ui/NumberPad";
 import { AnswerTile } from "../../AnswerTile";
 import { CoachSpot } from "../../Coach";
@@ -30,6 +30,10 @@ export type StepInputProps = {
 
 /** The control for whichever step the child is on: count, trade, tiles or the number pad. Fill and pair are touched in the picture. */
 export function StepInput({ step, work, typed, tiles, width, active, coachActive, resetKey, addVerb, press, onAct, soundOn, sound, prompt }: StepInputProps) {
+  // A number past the range cannot be a recorded answer. The pad never types one; if one arrives it is refused in words.
+  // It belongs to the step it happened on, so a new step clears it without an effect.
+  const [overAt, setOverAt] = useState<string | null>(null);
+  const over = overAt === resetKey;
   if (work.solved) return null;
   const hinted = step.kind === "number" && work.hint >= 3 ? step.value : null;
   if (step.kind === "count") {
@@ -55,6 +59,7 @@ export function StepInput({ step, work, typed, tiles, width, active, coachActive
   }
   return <CoachSpot active={coachActive && active} handAt="none">
     <NumberPad resetKey={resetKey} width={width} disabled={!active} prefill={hinted} prompt={prompt}
-      onKey={() => { if (soundOn) sound("tap"); }} onSubmit={(n) => onAct(["n", n])} />
+      onKey={() => { if (soundOn) sound("tap"); setOverAt(null); }} onSubmit={(n) => { if (n > KIT_MAX) setOverAt(resetKey); else onAct(["n", n]); }} />
+    {over && <View accessibilityLiveRegion="polite"><Copy style={{ color: C.ink, textAlign: "center" }}>Answers go up to {KIT_MAX}.</Copy></View>}
   </CoachSpot>;
 }

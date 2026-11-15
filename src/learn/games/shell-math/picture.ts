@@ -10,6 +10,12 @@ export type BlocksPic = { tens: number; ones: number; ghostOnes: number; struckO
 export type LinePic = { lo: number; hi: number; start: number; hops: number[]; ten: number; made: number };
 export type Picture = { frames?: FramesPic; pair?: PairPic; blocks?: BlocksPic; line?: LinePic; caption: string };
 
+/** The stretch of number line a bridge needs: 0 to 20 for small numbers, otherwise the twenty that holds the start, the ten and the landing. */
+const lineAround = (start: number, ten: number, land: number) => {
+  const top = Math.max(start, ten, land), lo = top <= 20 ? 0 : Math.floor(Math.min(start, ten, land) / 10) * 10;
+  return { lo, hi: top <= 20 ? 20 : lo + 20 };
+};
+
 export function pictureFor(level: Level, p: Problem, route: RouteId, plan: readonly Step[], w: Work): Picture {
   const at = w.solved ? plan.length : w.at;
   const pic = pictureBase(level, p, route, plan, w, at);
@@ -44,15 +50,17 @@ function pictureBase(level: Level, p: Problem, route: RouteId, plan: readonly St
       const toB = route === "to-ten-other" || w.side === 1;
       const moved = at < 1 ? 0 : first.kind === "fill" ? first.options.find((o) => o[0] === (w.side ?? 0))?.[1] ?? first.options[0][1] : first.kind === "number" ? first.value : 0;
       const a2 = toB ? p.a - moved : p.a + moved, b2 = toB ? p.b + moved : p.b - moved;
+      const from = toB ? p.b : p.a, ten = from + (10 - (from % 10));
       return {
         pair: { a: a2, b: b2, fullA: a2 === 10, fullB: b2 === 10 },
-        line: { lo: 0, hi: 20, start: toB ? p.b : p.a, hops: [10, r], ten: 10, made: Math.min(at, 2) },
+        line: { ...lineAround(from, ten, r), start: from, hops: [ten, r], ten, made: Math.min(at, 2) },
         caption: at >= 1 ? `${toB ? b2 : a2} is a full ten, with ${toB ? a2 : b2} left over` : `${p.a} and ${p.b}: make one of them a ten`,
       };
     }
     // Subtract: one big group, the ones past ten are taken first, then the rest.
     const oa = p.a % 10, struck = at >= 2 || w.solved ? p.b : at >= 1 ? oa : 0;
-    return { frames: { gold: p.a, blue: 0, struck, ghost: 0 }, line: { lo: 0, hi: 20, start: p.a, hops: [10, r], ten: 10, made: Math.min(at, 2) }, caption: `${p.a - struck} shells left` };
+    const ten = p.a - oa;
+    return { frames: { gold: p.a, blue: 0, struck, ghost: 0 }, line: { ...lineAround(p.a, ten, r), start: p.a, hops: [ten, r], ten, made: Math.min(at, 2) }, caption: `${p.a - struck} shells left` };
   }
   if (route === "up-to-ten") {
     const lo = p.op === "subtract" && p.unknown === "result" ? p.b : p.op === "add" ? p.a : p.a - p.b;

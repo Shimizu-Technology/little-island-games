@@ -51,10 +51,10 @@ export function Blocks({ unit, tens, ones, ghostOnes = 0, struckOnes = 0, struck
   </View>;
   return <View accessible accessibilityLabel={label} style={{ flexDirection: "row", gap: 14, alignItems: "flex-end", justifyContent: "center", minHeight: unit * 10 + 4 }}>
     {tens > 0 && (onTradeOpen
-      ? <Pressable accessibilityRole="button" accessibilityLabel="Open a ten" onPress={onTradeOpen}>{rods}</Pressable>
+      ? <Pressable accessibilityRole="button" accessibilityLabel="Open a ten" hitSlop={8} onPress={onTradeOpen}>{rods}</Pressable>
       : rods)}
     {shown > 0 && (onTradeMake
-      ? <Pressable accessibilityRole="button" accessibilityLabel="Make a ten" onPress={onTradeMake}>{cubes}</Pressable>
+      ? <Pressable accessibilityRole="button" accessibilityLabel="Make a ten" hitSlop={8} onPress={onTradeMake}>{cubes}</Pressable>
       : cubes)}
   </View>;
 }

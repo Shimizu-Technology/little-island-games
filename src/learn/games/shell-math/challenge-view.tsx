@@ -5,7 +5,7 @@ import { feel } from "../../../components/feel";
 import { Text } from "../../../components/Text";
 import { Button, C, Copy, PressableScale } from "../../../components/ui";
 import type { ChallengeViewProps } from "../../../challenge/types";
-import { choicesAround, choicesFor, tensOnesText, equationText, judge, placeValue, type Act, type Level, type RouteId } from "../../../math/kit";
+import { canUndo, choicesAround, choicesFor, tensOnesText, equationText, judge, placeValue, type Act, type Level, type RouteId } from "../../../math/kit";
 import { Blocks } from "../../../math/kit/ui/Blocks";
 import { Bridge } from "../../../math/kit/ui/Bridge";
 import { deepHint, deepPrompt, deepSpoken, deepTitle } from "./challenge-copy";
@@ -68,7 +68,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     const pic = pictureFor(level, p, route, plan, w);
     // A hint takes the question's place, so help never pushes the pad down the page.
     const hint = hintLine(level, p, plan, w);
-    const heading = solved ? `${equationText(p, true)}. Well done.` : !miss && hint ? hint : stepPrompt(level, p, plan, w.at, route);
+    const heading = solved ? `${equationText(p, true)}. Well done.` : !miss && hint ? hint : stepPrompt(level, p, plan, w.at, route, w.side);
     const tiles = step.kind === "number" ? (step.role === "final" ? choicesFor(step.value, p, tileCap(level)) : choicesAround(step.value, w.at)) : [];
     return <View style={{ gap: 8, alignSelf: "center", width: "100%", maxWidth: 700 }}>
       <Text accessibilityRole="header" style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{heading}</Text>
@@ -81,7 +81,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
         onTradeOpen={step.kind === "trade" && step.dir === "open" && active ? () => { press(); act(["t"]); } : undefined} />
       <StepInput {...common(p)} tiles={tiles} prompt={step.kind === "number" && step.role === "final" ? "Your answer" : "This step"} />
       {!solved && <HelpRow step={step} work={w} typed={typed} active={active} canHide={level >= 2} hidden={hidden} press={press}
-        onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidden((h) => !h)} />}
+        onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidden((h) => !h)} onUndo={canUndo(plan, w) ? () => act(["u"]) : undefined} />}
       {d.ways.length > 1 && !solved && w.moves === 0 && <Button quiet compact disabled={!active} onPress={() => { press(); send(["z"]); }}>Choose another way</Button>}
     </View>;
   }
@@ -109,7 +109,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     {!hidden && d.t === "regroup" && <Blocks unit={Math.max(10, Math.min(13, Math.floor((width - 60) / (d.tens + 8))))} tens={d.tens + done} ones={d.ones - 10 * done} label={tensOnesText(d.tens + done, d.ones - 10 * done)}
       onTradeMake={step.kind === "trade" && active ? () => { press(); act(["t"]); } : undefined} />}
     {!hidden && d.t === "missing" && <Bridge width={Math.min(width, 380)} start={d.known} hops={[d.known + (10 - (d.known % 10)), d.total]} ten={d.known + (10 - (d.known % 10))} lo={Math.floor(d.known / 10) * 10} hi={d.total}
-      made={Math.min(w.at, 2)} label={`Number line. Start ${d.known}, hop to ${d.known + (10 - (d.known % 10))}, then to ${d.total}.`} />}
+      made={Math.min(w.at, 2)} />}
     {!hidden && d.t === "equalize" && <View style={{ flexDirection: "row", gap: 16, justifyContent: "center", alignItems: "flex-end" }}>
       {[d.x, d.y].map((n, i) => {
         const level2 = solved ? (d.x + d.y) / 2 : n, pv = placeValue(level2);
@@ -132,6 +132,6 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     {hidden && <Copy style={{ color: C.ink, textAlign: "center" }}>Picture hidden. Think it through, then use the number pad.</Copy>}
     <StepInput {...common(null)} tiles={tiles} prompt={step.kind === "number" && step.role === "final" ? "Your answer" : "This step"} />
     {!solved && <HelpRow step={step} work={w} typed={typed} active={active} canHide={d.t !== "pairs"} hidden={hidden} press={press}
-      onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidden((h) => !h)} />}
+      onHelp={() => act(["h"])} onChoices={() => act(["k"])} onToggle={() => setHidden((h) => !h)} onUndo={canUndo(plan, w) ? () => act(["u"]) : undefined} />}
   </View>;
 }
