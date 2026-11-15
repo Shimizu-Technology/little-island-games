@@ -172,7 +172,15 @@ describe('the published catalog under the register', () => {
   });
   it('lets G6, G7a, T1 and G5\'s free tail claim below nextSlot, refuses published slots, and changes no published byte', () => {
     const before = files(), { root, families } = readCatalog(productionDirs), claim = (range: string) => { const r = parseRange(range); return slotClaim(productionDirs, families.values(), r, reservationFor(readReservations(productionDirs), r).owner, sources); };
-    for (const range of ['80-99', '100-109', '260-279', '77-79', '73']) expect(() => assertClaimable(claim(range), parseRange(range).first), range).not.toThrow();
+    // Derived from the catalog this commit carries, so a slice that correctly bakes into its own range (G6, G7a, T1)
+    // turns its first slot into an expected refusal instead of breaking the gate.
+    const taken = new Set([...[...families.values()].flatMap(m => m.packs.map(p => p[0])),
+      ...(JSON.parse(readFileSync(saveCatalogPath, 'utf8')) as { banks: { slot: number }[] }).banks.map(b => b.slot)]);
+    for (const range of ['80-99', '100-109', '260-279', '77-79', '73']) {
+      const { first, last } = parseRange(range), free = Array.from({ length: last - first + 1 }, (_, i) => first + i).find(s => !taken.has(s));
+      if (taken.has(first)) expect(() => assertClaimable(claim(range), first), range).toThrow(/cannot be claimed/);
+      if (free !== undefined) expect(() => assertClaimable(claim(range), free), range).not.toThrow();
+    }
     expect(() => assertClaimable(claim('40-59'), 40)).toThrow(/it is a pack of sudoku/);
     expect(() => assertClaimable(claim('7-19'), 7)).toThrow(/save-catalog bank/);
     expect(() => assertClaimable(claim('420-429'), 425)).toThrow(/save-catalog bank/);
