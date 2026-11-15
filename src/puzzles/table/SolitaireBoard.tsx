@@ -5,7 +5,7 @@ import {Button,C,Copy} from '../../components/ui';
 import {Text} from '../../components/Text';
 import {atLarge} from '../../components/wordFit';
 import {GridFeedback,GridInteraction} from '../grid/preferences';
-import {encodeBoard,readTable} from './solitaireCheckpoint';
+import {encodeBoard,previousStep,readTable} from './solitaireCheckpoint';
 import {adviseAsync,type Advice} from './publicSolver';
 import {cardWords} from './solver';
 import {apply,columns,descending,legalMoves,rank,red,suit,won,type Move} from './solitaire';
@@ -21,10 +21,14 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const {bottom}=useSafeAreaInsets();
  const {fontScale,height}=useWindowDimensions(),large=fontScale>=1.5,short=large&&height<500,cap=atLarge(fontScale,1.5),controlCap=short?atLarge(fontScale,1.3):cap,read=readTable(view.payload,view.deal)!;
  const historyFull=read.history.length===1024,inputActive=active&&!historyFull;
- const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(76,(width-12)/cols-gap)),cardH=large?96:86,overlap=large?54:32;
- const boardW=Math.max(width,cols*(cardW+gap)+12),boardX=(boardW-cols*cardW-(cols-1)*gap)/2,tableY=cardH+30;
- const minimumTableHeight=height<500?cardH+8:190;
- const boardH=tableY+Math.max(...s.piles.slice(0,cols).map(p=>Math.max(0,p.length-1)*overlap+cardH))+12;
+ const s=read.position,free=view.deal.mode==='freecell',cols=columns(view.deal.mode),gap=free&&!large?2:5,cardW=Math.max(large?64:40,Math.min(short?64:76,(width-12)/cols-gap)),cardH=short?56:large?96:86,overlap=short?32:large?54:32;
+ // Short AX landscape places the reserve row beside the columns. Covered cards
+ // need only a back edge; every opening face-up card stays in the same viewport.
+ const reserveCols=free?4:3,tableX=short?reserveCols*(cardW+gap)+12:0;
+ const boardW=Math.max(width,tableX+cols*(cardW+gap)+12),boardX=short?tableX:(boardW-cols*cardW-(cols-1)*gap)/2,tableY=short?4:cardH+30;
+ const cardY=(pile:number,index:number)=>tableY+(short?Math.min(index,s.hidden[pile])*4+Math.max(0,index-s.hidden[pile])*overlap:index*overlap);
+ const minimumTableHeight=short?2*(cardH+gap)+8:height<500?cardH+8:190;
+ const boardH=Math.max(short?minimumTableHeight:0,...s.piles.slice(0,cols).map((p,i)=>cardY(i,Math.max(0,p.length-1))+cardH+12));
  const [selected,setSelected]=useState<{pile:number;index:number}|null>(null),[message,setMessage]=useState(''),[rules,setRules]=useState(false),[memory,setMemory]=useState(false),[advice,setAdvice]=useState<Advice|null>(null),[thinking,setThinking]=useState(false),[dragging,setDragging]=useState<Place|null>(null);
  const feedback=useContext(GridFeedback),holdPage=useContext(GridInteraction),accepted=useRef(view.payload.edits);
  const [help,setHelp]=useState<{stage:1|2|3|4;edits:number;audit:number}|null>(null);
@@ -38,14 +42,17 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   for(let i=0;i<16;i++){
    if(!free&&[7,14,15].includes(i))continue;
    const top=i>=8,slot=free?(i>=12?i-12:i-4):(i>=12?i-12:i-5);
-   const x=(top?slot:i)*(cardW+gap)+boardX;
-   const y=top?4:tableY,p=s.piles[i];
+   const compactSlot=free?(i>=12?i-12:i-4):i>=12?i-12:i-6;
+   const x=top&&short?(compactSlot%reserveCols)*(cardW+gap)+6:(top?slot:i)*(cardW+gap)+boardX;
+   const y=top?(short?4+Math.floor(compactSlot/reserveCols)*(cardH+gap):4):tableY,p=s.piles[i];
    if(!p.length)out.push({pile:i,index:0,card:null,covered:false,x,y});
    else if(top)out.push({pile:i,index:p.length-1,card:i===12&&!free?null:p.at(-1)!,covered:i===12&&!free,x,y});
-   else p.forEach((c,j)=>out.push({pile:i,index:j,card:c,covered:j<s.hidden[i],x,y:y+j*overlap}));
+   else p.forEach((c,j)=>out.push({pile:i,index:j,card:c,covered:j<s.hidden[i],x,y:cardY(i,j)}));
   }
   return out;
- },[s,free,cardW,tableY,overlap,gap,boardX]);
+ // cardY is derived only from these geometry inputs and the current position.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[s,free,short,reserveCols,cardW,cardH,tableY,overlap,gap,boardX]);
  const live=useRef({s,active:inputActive,selected,dispatch,places});
  useLayoutEffect(()=>{live.current={s,active:inputActive,selected,dispatch,places};},[s,inputActive,selected,dispatch,places]);
  useEffect(()=>{if(view.payload.edits!==accepted.current){
@@ -95,11 +102,12 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  const oneStep=async(stage:3|4)=>{
   if(thinking||!inputActive||!view.payload.audit.includes(1))return;search.current?.abort();const controller=new AbortController();search.current=controller;
   const start=encodeBoard(live.current.s);setThinking(true);
-  const result=await adviseAsync(live.current.s,view.deal,controller.signal,10000);
+  const previous=previousStep(read,view.deal);
+  const result=await adviseAsync(live.current.s,view.deal,controller.signal,10000,1800,previous);
   if(controller.signal.aborted||!live.current.active||encodeBoard(live.current.s)!==start){if(search.current===controller)setThinking(false);return;}
   setThinking(false);setAdvice(result);setHelp({stage:3,edits:view.payload.edits,audit:view.payload.audit.length-1});if(result.kind==='move')showOne(result.plan,stage);
  };
- const description=(p:Place)=>!free&&p.pile===12?`Stock, ${s.piles[12].length} cards. ${s.piles[12].length?'Draw '+(view.deal.mode==='draw-three'?'three':'one'):'Turn waste over'}`:`${pileName(p.pile,free)}, ${p.covered?(p.card!==null&&s.known[p.card]?`face-down, previously seen ${cardWords(p.card)}`:'face-down card'):p.card===null?'empty':cardWords(p.card)}${p.pile<8&&p.card!==null&&!p.covered?`, ${s.piles[p.pile].length-p.index} card${s.piles[p.pile].length-p.index===1?' to move':'s from here'}`:''}`;
+ const description=(p:Place)=>!free&&p.pile===12?`Stock, ${s.piles[12].length} cards. ${s.piles[12].length?'Draw '+(view.deal.mode==='draw-three'?'three':'one'):'Turn waste over'}`:`${pileName(p.pile,free)}, ${p.covered?'face-down card':p.card===null?'empty':cardWords(p.card)}${p.pile<8&&p.card!==null&&!p.covered?`, ${s.piles[p.pile].length-p.index} card${s.piles[p.pile].length-p.index===1?' to move':'s from here'}`:''}`;
  const chosen=dragging??(selected?places.find(p=>p.pile===selected.pile&&p.index===selected.index):null);
  const destinations=new Set(chosen?Array.from({length:16},(_,to)=>to).filter(to=>apply(s,view.deal.mode,[chosen.pile,to,s.piles[chosen.pile].length-chosen.index])!==s):[]);
  const visual=(p:Place)=> <View style={{width:cardW,height:cardH,borderRadius:8,borderWidth:selected?.pile===p.pile&&selected.index===p.index||destinations.has(p.pile)?3:1,borderColor:selected?.pile===p.pile&&selected.index===p.index?C.gold:destinations.has(p.pile)?C.teal:'#BACCC4',backgroundColor:p.covered?'#367967':p.card===null?'#E3EEE7':'#FFFDF7',padding:4}}>
@@ -121,7 +129,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
    <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>Foundations</Text>
   </View>;
  return <View style={{gap:short?3:7}}>
-  <Copy maxFontSizeMultiplier={short?controlCap:cap} style={short?{fontSize:14,lineHeight:20}:undefined}>{view.title}{short?` · ${status}`:''}</Copy>
+  <Copy maxFontSizeMultiplier={short?controlCap:cap} style={short?{fontSize:12,lineHeight:18}:undefined}>{view.title}{short?` · ${status} · ${free?'Cells':'Stock / waste'} / foundations`:''}</Copy>
   <View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
    <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!active||!read.history.length} onPress={()=>dispatch({type:'undo'})}>Undo</Button>
    <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
@@ -131,7 +139,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
    {historyFull&&<Copy maxFontSizeMultiplier={cap}>This table has had lots of moves. Undo to keep going, or start this deal again.</Copy>}
   {detail&&<ScrollView nestedScrollEnabled style={{maxHeight:large?100:110}} accessibilityLabel="Table instructions and hint">
    {rules&&<View style={{gap:7}}><Copy maxFontSizeMultiplier={cap}>{free?'Build columns down in alternating colours. An empty column can hold any card. Four free cells hold one card each. A sequence moves only when spare cells and columns can carry it one card at a time.':'Build columns down in alternating colours. Only a King starts an empty column. Tap the stock to draw '+(view.deal.mode==='draw-three'?'three cards; only the top waste card can move.':'one card.')+' When the stock is empty, tap it to turn the waste over.'} Build each suit from Ace to King in its foundation. {free?'This family-friendly variant allows taking a card back from a foundation to a column.':'You may return a foundation card to a column.'} Tap a card, then its destination, or drag it. Green borders show legal destinations. Scroll tall stacks; at large text, scroll across for the other columns. Every deal has a winning line; a different line can reach a dead end. Cards never move automatically.</Copy>{!free&&<Button maxFontSizeMultiplier={cap} compact quiet onPress={()=>setMemory(v=>!v)}>Remembered cards</Button>}</View>}
-   {memory&&!free&&<Copy maxFontSizeMultiplier={cap}>Previously seen stock, next draw first: {s.piles[12].slice().reverse().map(c=>s.known[c]?cardWords(c):'unseen card').join(', ')||'empty'}. Previously seen waste, top first: {s.piles[13].slice().reverse().map(cardWords).join(', ')||'empty'}. Previously seen covered cards: {s.piles.slice(0,7).flatMap((p,i)=>p.slice(0,s.hidden[i]).filter(c=>s.known[c]).map(c=>`column ${i+1}, ${cardWords(c)}`)).join('; ')||'none'}.</Copy>}
+   {memory&&!free&&<Copy maxFontSizeMultiplier={cap}>Previously seen stock, next draw first: {s.piles[12].slice().reverse().map(c=>s.known[c]?cardWords(c):'unseen card').join(', ')||'empty'}. Previously seen waste, top first: {s.piles[13].slice().reverse().map(cardWords).join(', ')||'empty'}.</Copy>}
    {message&&<Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">{message}</Copy>}
    {cueReady&&<Copy maxFontSizeMultiplier={cap}>{help.stage===1?'Look for the next low card in a suit, or a card covering another card.':help.stage===2?'Think about which card a move will free. Spare columns and cells let you plan more than one move.':'One move at a time. Tap Next step for another, or keep playing yourself.'}</Copy>}
    {advice&&advice.kind!=='move'&&<Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite">{advice.kind==='dead-end'?'This position cannot finish. Undo can take you back.':'I have not proved a way forward from here yet. You can keep exploring.'}</Copy>}
@@ -140,12 +148,12 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   {!short&&navigation}
   {view.payload.audit.length===128&&<Copy maxFontSizeMultiplier={cap}>This attempt’s help log is full. You can keep playing and undoing, or start this deal again.</Copy>}
   {!short&&drawControl}
-  {short?<View style={{flexDirection:'row',alignItems:'center',gap:12}}>{navigation}<View style={{flex:1}}>{headings}</View></View>:headings}
+  {short?navigation:headings}
   <View ref={tableFrame} testID="solitaire-table-viewport" collapsable={false} onLayout={measureRoom}><ScrollView ref={horizontal} horizontal nestedScrollEnabled scrollEnabled={!dragging} style={{maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, horizontal scroll">
    <ScrollView ref={vertical} nestedScrollEnabled scrollEnabled={!dragging} style={{width:boardW,maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, vertical scroll">
     <View {...pan.panHandlers} style={{width:boardW,height:boardH,backgroundColor:'#D4E7DC',borderRadius:12}}>
-     {view.deal.mode==='draw-three'&&s.piles[13].length>1&&<View accessible accessibilityLabel={`Seen behind the top waste card: ${s.piles[13].slice(-3,-1).map(cardWords).join(', ')}. Only the top waste card can move.`} style={{position:'absolute',left:2*(cardW+gap)+boardX,top:4,width:cardW,gap:2}}>{s.piles[13].slice(-3,-1).map(c=><View key={c} style={{height:(cardH-2)/2,borderWidth:1,borderColor:'#BACCC4',borderRadius:6,backgroundColor:'#FFFDF7',padding:2,flexDirection:'row',alignItems:'flex-start',gap:2}}><Text maxFontSizeMultiplier={cap} style={{fontSize:large?17:15,lineHeight:large?26:23,fontWeight:'800',color:red(c)?'#A63E33':C.ink}}>{face(c)}</Text><Text maxFontSizeMultiplier={cap} style={{fontSize:large?16:15,lineHeight:large?26:23,color:red(c)?'#A63E33':C.ink}}>{suits[suit(c)]}</Text></View>)}</View>}
-     {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!inputActive||p.covered&&(free||p.pile!==12)}} disabled={!inputActive||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y,width:cardW,height:p.pile<cols&&p.index<s.piles[p.pile].length-1?overlap:cardH}}>{visual(p)}</Pressable>)}
+     {view.deal.mode==='draw-three'&&s.piles[13].length>1&&<View accessible accessibilityLabel={`Seen behind the top waste card: ${s.piles[13].slice(-3,-1).map(cardWords).join(', ')}. Only the top waste card can move.`} style={{position:'absolute',left:short?6+cardW+gap-8:2*(cardW+gap)+boardX,top:4,width:cardW,gap:2}}>{s.piles[13].slice(-3,-1).map(c=><View key={c} style={{height:(cardH-2)/2,borderWidth:1,borderColor:'#BACCC4',borderRadius:6,backgroundColor:'#FFFDF7',padding:2,flexDirection:'row',alignItems:'flex-start',gap:2}}><Text maxFontSizeMultiplier={cap} style={{fontSize:large?17:15,lineHeight:large?26:23,fontWeight:'800',color:red(c)?'#A63E33':C.ink}}>{face(c)}</Text><Text maxFontSizeMultiplier={cap} style={{fontSize:large?16:15,lineHeight:large?26:23,color:red(c)?'#A63E33':C.ink}}>{suits[suit(c)]}</Text></View>)}</View>}
+     {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!inputActive||p.covered&&(free||p.pile!==12)}} disabled={!inputActive||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y,width:cardW,height:p.pile<cols&&p.index<s.piles[p.pile].length-1?(short&&p.covered?4:overlap):cardH}}>{visual(p)}</Pressable>)}
      {dragging&&<Animated.View pointerEvents="none" style={{position:'absolute',left:dragging.x,top:dragging.y,zIndex:1000,transform:translation.getTranslateTransform(),opacity:0.9}}>{s.piles[dragging.pile].slice(dragging.index).map((c,i)=><View key={c} style={{position:i?'absolute':'relative',top:i*overlap}}>{visual({...dragging,index:dragging.index+i,card:c})}</View>)}</Animated.View>}
     </View>
    </ScrollView>

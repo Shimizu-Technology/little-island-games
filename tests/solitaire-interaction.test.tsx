@@ -118,12 +118,17 @@ describe('Solitaire card interaction',()=>{
    const heading=screen.root.findAllByType('span').find(n=>n.children.includes('Foundations'))!;expect(heading.props.style.position).not.toBe('absolute');
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
- it('keeps Draw with the primary actions and a card-high viewport at AX5 phone landscape',async()=>{
-  const{Harness}=await fixture('draw-three');let screen!:ReactTestRenderer;
+ it('keeps Draw, Rules, both reserve rows and every opening tableau face visible at AX5 phone landscape',async()=>{
+  const{Harness,deal}=await fixture('draw-three');let screen!:ReactTestRenderer;
   try{fake.scale=3.5;fake.height=393;await act(async()=>{screen=create(<Harness/>,{createNodeMock:n=>(n.props as {testID?:string}).testID==='solitaire-table-viewport'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,270,734,104)}:null});});
    const buttons=screen.root.findAllByType('button'),draw=buttons.find(n=>n.children.join('').startsWith('Draw three'))!,undo=buttons.find(n=>n.children.includes('Undo'))!;
    expect(draw.parent).toBe(undo.parent);expect(draw.props.maxFontSizeMultiplier).toBe(1.3);
-   expect(screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!.props.style.maxHeight).toBe(104);
+   const maxHeight=screen.root.findAllByType('section').find(n=>n.props.accessibilityLabel==='Solitaire table, vertical scroll')!.props.style.maxHeight;
+   const faces=buttons.filter(n=>/^Column /.test(n.props.accessibilityLabel??'')&&!n.props.accessibilityLabel.includes('face-down'));expect(faces).toHaveLength(7);
+   for(const n of faces){expect(n.props.style.top+n.props.style.height).toBeLessThanOrEqual(maxHeight);expect(n.props.style.left+(n.children[0] as ReactTestInstance).props.style.width).toBeLessThanOrEqual(734);}
+   for(const label of ['Stock,','Waste,','Clubs foundation,','Diamonds foundation,','Spades foundation,','Hearts foundation,']){const n=buttons.find(n=>n.props.accessibilityLabel?.startsWith(label))!;expect(n).toBeDefined();expect(n.props.style.top+n.props.style.height).toBeLessThanOrEqual(maxHeight);}
+   await press(screen,'Draw three · 24 in stock');expect(board(deal).position.piles[12]).toHaveLength(21);
+   await press(screen,'Rules');expect(text(screen)).toContain('Build columns down');
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
  it('keeps budget-exhausted advice honest without asking a child to undo',async()=>{

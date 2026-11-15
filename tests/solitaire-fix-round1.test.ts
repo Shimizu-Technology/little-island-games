@@ -108,7 +108,7 @@ describe('Solitaire review regressions',()=>{
   for(const slot of [100,101,102,103,104,105,106,107,108,109]){
    const free=slot>=106,adapter=solitaireAdapter(!free),band=free?['f1','f3','f5','f6'][slot-106]:`${slot<103?'o':'t'}${[1,3,6][slot%3]}`,d=decodeRow(JSON.stringify(rows(slot)[0]),band,adapter)!;
    const trace=adapter.technique?.(d,10000);expect(trace?.status).toBe('complete');
-   if(trace?.status==='complete'){expect(trace.ceiling).toMatch(free?/^search-/:/^plan-/);expect(trace.steps).toBeGreaterThan(0);expect(JSON.parse(trace.trace)).toHaveProperty(free?'observed':'depth');}
+   if(trace?.status==='complete'){expect(trace.ceiling).toMatch(free?/build-and-uncover/:/^plan-/);expect(trace.steps).toBeGreaterThan(0);expect(JSON.parse(trace.trace)).toHaveProperty(free?'observed':'depth');}
   }
  });
  it('every Paddling certificate needs a few tableau decisions while remaining easy',()=>{

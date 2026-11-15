@@ -70,6 +70,12 @@ export function readTable(x: unknown, d: Deal): Read | null {
   if(encodeBoard(forward)!==encodeBoard(position))return null;
   remember(d,x as TablePayload,position,list,path);return accepted.get(x)!.read;
 }
+/** Last retained action and its replay-proven predecessor, also available on cold resume. */
+export function previousStep(read:Read,d:Deal):{before:Position;move:Move}|undefined{
+ const code=read.history.at(-1);if(code===undefined)return;
+ const from=code&15,to=code>>4&15,count=code>>8&31;
+ return{before:decodeBoard(read.path.at(-2)!,d)!,move:[from,to,d.mode!=='freecell'&&from>=12&&to>=12?0:count]};
+}
 export function moveTable(d: Deal, p: TablePayload, a: Move): TablePayload | null {
   const read = readTable(p, d); if (!read || p.edits === 2147483647) return null;
   const next = apply(read.position, d.mode, a); if (next === read.position) return p;

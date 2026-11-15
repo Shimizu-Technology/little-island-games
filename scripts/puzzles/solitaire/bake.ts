@@ -2,10 +2,10 @@ import {execFileSync} from 'node:child_process';
 import {existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {certify,type CertifyContext} from '../../../src/puzzles/checks';
-import {validRoot} from '../../../src/puzzles/bank';
+import {slotClaim,parseRange} from '../slots';
 import {orderCandidates} from './order';
 import {recipes} from './generate';
-import {bakeFamily,productionDirs} from '../pipeline';
+import {bakeFamily,productionDirs,readCatalog} from '../pipeline';
 import {judge,rungs,klondike,freecell,type Candidate} from './family';
 
 const log=process.env.SOLITAIRE_LOGS;if(!log)throw new Error('Set SOLITAIRE_LOGS to an external evidence directory.');mkdirSync(log,{recursive:true});
@@ -37,9 +37,10 @@ for(let band=0;band<own.length;band++){
  const arranged=orderCandidates(kept,want);if(arranged.length<r.floor)throw new Error(`${r.id}: gentle order is below floor.`);pools.push(arranged);
 }
 if(process.env.SOLITAIRE_POOL_ONLY==='1'){console.log(JSON.stringify({family:spec.id,curated:pools.reduce((n,p)=>n+p.length,0),published:false}));process.exit(0);}
-const path=join(productionDirs.content,'root.json'),root:unknown=JSON.parse(readFileSync(path,'utf8'));if(!validRoot(root))throw new Error('Invalid root.');
-const base=spec.id==='solitaire'?100:106;if(root.nextSlot>base)throw new Error('Reserved slots are behind catalog cursor.');
-writeFileSync(path,JSON.stringify({...root,nextSlot:base,nextOrdinal:Math.max(root.nextOrdinal,base*1024)})+'\n');
+const arg=(key:string)=>{const i=process.argv.indexOf(key);if(i<0||!process.argv[i+1])throw new Error(`Missing ${key}.`);return process.argv[i+1];};
+const catalog=readCatalog(productionDirs),range=parseRange(arg('--range')),owner=arg('--owner');
+if(range.first!==100||range.last!==109||owner!=='g7a-solitaire')throw new Error('Use --range 100-109 --owner g7a-solitaire.');
+const claim=slotClaim(productionDirs,catalog.families.values(),range,owner),base=spec.id==='solitaire'?100:106;
 const listed={...spec,bands:spec.bands.map((b,i)=>({...b,target:pools[i].length})),generate:(seed:number,band:{id:string})=>{const i=spec.bands.findIndex(b=>b.id===band.id),index=seed-1-i*0x1000000;return pools[i]?.[index]?.core??null;}};
-const result=bakeFamily(listed,{dirs:productionDirs,budget:10000,seedBase:1,maxAttempts:Math.max(...pools.map(p=>p.length)),sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()});
+const result=bakeFamily(listed,{dirs:productionDirs,claim:{...claim,range:{first:base,last:spec.id==='solitaire'?105:109}},budget:10000,seedBase:1,maxAttempts:Math.max(...pools.map(p=>p.length)),sourceSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()});
 console.log(JSON.stringify(result));if(!result.published||result.slots.some(s=>s<base||s>109))throw new Error('Bake did not publish in reserved slots.');
