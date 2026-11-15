@@ -4,6 +4,28 @@ The 4.0 contract froze at the end of Proofs, on `program/4.0` @ `ef94a25b` (15 N
 
 The rule (program plan §5): contract changes go through the lead, one at a time, and every affected slice is re-gated. A slice may **add** inside the shapes below. Changing a shape, limit, version or rule that another slice relies on is a **lead change**.
 
+## Lead-change log
+
+- **15 November 2026 — K7, pre-authorized by `c2b-k7/BRIEF.md`:** additive
+  revision-1 nested program drafts for Crab, Beep and Turtle, plus compact structural
+  edit operations in Crab/Beep replay codecs. Shared AST includes sequences, whole-body
+  repeats, nonrecursive songs and one obstacle condition. All written nodes count;
+  limits remain 80 nodes, effective depth 4, 512 expanded commands, 512 replay
+  actions and 4,096 bytes. No envelope/profile/session version, class, budget,
+  or slot changes. Block editing requires explicit `blockEditor: true` on a newly
+  authored level/task or puzzle descriptor. Every existing/published descriptor
+  keeps its flat editor and exact executed-card/Again/par/best semantics. Opted-in
+  card-limit dares count expanded executable cards, not AST nodes. The condition
+  sensor is an extensible tagged union: `[4, [0], yes, no]` means
+  blocked (edge or obstacle). New sensors append exact tagged payloads and adapter
+  predicates with tests; unknown tags fail closed and old tags never change.
+  Code Lab/Tide Logic stay separate. Legacy saves remain
+  unchanged and retain their compatibility decoders. See SAVE_CONTRACT's K7
+  subsection and `tests/k7-{program,parity,saves}.test.ts`. Pre-K7 builds reject the
+  whole save after a School draft is stored; originals
+  remain preserved by recovery. This includes drafts in existing games.
+  Integration must re-gate the affected adapters; SC-01b/c and SC-03 new content remain separate work.
+
 ## Saves: envelope 3, profiles 2
 
 - **Rules:** `docs/SAVE_CONTRACT.md` (FND-15 revision 4), `docs/PROFILE_SAVES.md`.

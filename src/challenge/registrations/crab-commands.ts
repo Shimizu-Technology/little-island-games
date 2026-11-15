@@ -37,7 +37,7 @@ registration.puzzles=crabPuzzles;
 registration.catalog.contexts=new Set([...registration.catalog.contexts,'crab-6']);
 registration.animatedRuns=true;
 registration.dareHelp='Help can show you two steps and still earn a dare mark. A third step, or the whole plan, keeps your finish but earns no dare mark.';
-registration.full=s=>{const payload=s.payload as Payload;return jsonBytes(s)+largestMove>4096-crabAssistance.bytes||payload.actions.length+1>512-crabAssistance.actions;};
+registration.full=(s,action)=>{const payload=s.payload as Payload;const bytes=action?jsonBytes({...s,revision:s.revision+1,payload:{...payload,actions:[...payload.actions,action]}}):jsonBytes(s)+largestMove;return bytes>4096-crabAssistance.bytes||payload.actions.length+1>512-crabAssistance.actions;};
 registration.restart=(session,id,progress)=>{
  const puzzle=crabPuzzles.find(p=>p.ref.bank===session.puzzle.bank&&p.ref.puzzle===session.puzzle.puzzle);
  if(!puzzle||session.result||!validChallengeSession(session,session.owner,registration.catalog))throw new Error('Invalid Crab attempt.');
@@ -47,10 +47,10 @@ registration.restart=(session,id,progress)=>{
  const help=state.fullPlanShown?3:state.hints?1:0;
  // Carry the evidence, not just the help: runs, misses and hinted steps all continue.
  const prior={runs:Math.min(65535,(payload.initial.prior?.runs??0)+state.runs),failed:missed,steps:Math.min(255,Math.max(0,state.steps-(help?1:0)))};
- const initial:Initial=prior.runs||prior.failed||prior.steps?{version:1,prior}:{version:1};
+ const initial:Initial={version:1,...(prior.runs||prior.failed||prior.steps?{prior}:{}),...(state.blockDraft?{draft:state.blockDraft}:{})};
  const started=registration.start(session.puzzle,session.owner,id,progress,payload.options,session.selectedDares.filter(slot=>!puzzle.dares.find(d=>d.slot===slot)?.retired));
  let next:ChallengeSession={...started,payload:{...(started.payload as Payload),initial}};
- const actions:Action[]=[...puzzle.descriptor.starter.map(()=>['x',0] as Action),...state.program.map(c=>['a',cardCodes.indexOf(c)] as Action),...Array.from({length:help},()=>['h'] as Action)];
+ const actions:Action[]=[...(state.blockDraft?[]:puzzle.descriptor.starter.map(()=>['x',0] as Action)),...(state.blockDraft?[]:state.program.map(c=>['a',cardCodes.indexOf(c)] as Action)),...Array.from({length:help},()=>['h'] as Action)];
  for(const action of actions){const moved=registration.move(next,action);if(!moved)throw new Error('Plan could not fit a fresh attempt.');next=moved;}
  return {...next,revision:0};
 };

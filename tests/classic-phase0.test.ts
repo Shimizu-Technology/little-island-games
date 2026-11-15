@@ -54,7 +54,7 @@ describe("classic audit regressions", () => {
   it("uses friendly foundation and growth parent labels without internal IDs", () => {
     expect(noteLabel(`sound-boat:easy:${levelRoundSkill}`, {})).toContain("Level 1 · Cat, hen and sun · Verified completed rounds");
     expect(noteLabel("sound-boat:stretch:internal-id", {})).not.toContain("internal-id");
-    expect(noteLabel("shell-math:hard:math.add", { "math.add": "Adding" })).toContain("Level 3 · More sums to 20 · Adding");
+    expect(noteLabel("shell-math:hard:math.add", { "math.add": "Adding" })).toContain("Level 3 · Bridge a ten · Adding");
   });
   it("persists bounded tile drafts and clears them when changing question", () => {
     const o = { mode: "solo", pace: "easy", stage: "stretch" } as const;

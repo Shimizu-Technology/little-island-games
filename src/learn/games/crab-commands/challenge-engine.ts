@@ -1,18 +1,24 @@
+import { applyOperations, validOperations, type Operation } from '../../program/operations';
+import { encodeProgram } from '../../program/codec';
+import { projectionEdits } from '../../program/edit';
+import { decodeProgram as readProgram, type PackedProgram } from '../../program/codec';
+import { crabProgram, readCrabDraft } from './program';
 import { commands, solved, start, step, type Command, type Level, type Walker } from './engine';
 import type { LaunchOptions, ReplayEngine, ReplayPayload } from '../../../challenge/types';
 import { sha256Hex } from '../../../puzzles/sha256';
 
-export type Descriptor = { level: Level; budget: number | null; starter: Command[]; lesson: string };
+export type Descriptor = { blockEditor?: boolean; level: Level; budget: number | null; starter: Command[]; lesson: string };
 export const cardCodes: Command[] = ['up','right','down','left','forward','turn-left','turn-right','repeat'];
 /** Compact tuples retain replay and undo evidence within the shared 4 KiB slot. */
-export type Action = ['a',number] | ['x',number] | ['r',number,number] | ['i',number,number] | ['g'|'h'|'u'|'z'];
+export type Action = ['e',Operation[]] | ['a',number] | ['x',number] | ['r',number,number] | ['i',number,number] | ['g'|'h'|'u'|'z'];
 /** `prior` carries an earlier attempt's runs, misses and hinted steps into a continued attempt. */
 export type Prior = { runs: number; failed: boolean; steps: number };
-export type Initial = { version: 1; prior?: Prior };
+export type Initial = { version: 1; prior?: Prior; draft?: PackedProgram };
 /** Help may show this many steps in an attempt and still leave dare marks open. */
 export const freeHintSteps = 2;
 export type Payload = ReplayPayload<Initial,Action>;
 export type State = {
+  blockDraft?: PackedProgram; blockHistory: (PackedProgram | null)[];
   descriptor: Descriptor; program: Command[]; history: Command[][]; cursor: number; running: boolean;
   edits: number; runs: number; hints: number; steps: number; hintStage: number; hintProgram: string | null; fullPlanShown: boolean; supportOff: boolean; won: boolean;
 };
@@ -196,19 +202,28 @@ export async function nextHintSliced(d:Descriptor,program:readonly Command[], op
  return null;
 }
 const integer = (v: unknown, max: number): v is number => Number.isInteger(v) && (v as number)>=0 && (v as number)<=max;
-const make = (d: Descriptor, o: LaunchOptions, initial: Initial): State => ({descriptor:d,program:[...d.starter],history:[],cursor:0,running:false,edits:0,runs:0,hints:0,steps:initial.prior?.steps??0,hintStage:0,hintProgram:null,fullPlanShown:false,supportOff:o.supportOff,won:false});
+const make = (d: Descriptor, o: LaunchOptions, initial: Initial): State => ({descriptor:d,blockHistory:[],program:initial.draft?readCrabDraft(initial.draft,d.level)!.plan:[...d.starter],blockDraft:initial.draft,history:[],cursor:0,running:false,edits:0,runs:0,hints:0,steps:initial.prior?.steps??0,hintStage:0,hintProgram:null,fullPlanShown:false,supportOff:o.supportOff,won:false});
 const validPrior = (v: unknown): v is Prior => !!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===3&&integer((v as Prior).runs,65535)&&typeof (v as Prior).failed==='boolean'&&integer((v as Prior).steps,255);
 export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
   initial:()=>({version:1}),
-  validInitial:(v):v is Initial=>!!v&&typeof v==='object'&&!Array.isArray(v)&&(v as Initial).version===1&&(Object.keys(v).length===1||Object.keys(v).length===2&&validPrior((v as Initial).prior)),
+  validInitial:(v,d):v is Initial=>!!v&&typeof v==='object'&&!Array.isArray(v)&&(v as Initial).version===1&&Object.keys(v).every(k=>['version','prior','draft'].includes(k))&&(!('prior' in v)||validPrior((v as Initial).prior))&&(!('draft' in v)||d.blockEditor===true&&!!readCrabDraft((v as Initial).draft,d.level)),
   create:(d,initial,o)=>make(d,o,initial),
   prior:initial=>initial.prior?{runs:initial.prior.runs,failed:initial.prior.failed}:null,
-  validAction:(v):v is Action=>Array.isArray(v)&&Object.keys(v).length===v.length&&(
+  validAction:(v):v is Action=>Array.isArray(v)&&v[0]==='e'?v.length===2&&Object.keys(v).length===2&&validOperations(v[1]):Array.isArray(v)&&Object.keys(v).length===v.length&&(
     v.length===1&&['g','h','u','z'].includes(v[0]) ||
     v.length===2&&(v[0]==='a'?integer(v[1],7):v[0]==='x'&&integer(v[1],79)) ||
     v.length===3&&['r','i'].includes(v[0])&&integer(v[1],80)&&integer(v[2],7)),
   step:(s,a,d)=>{
     if(s.won)return null;
+    if(a[0]==='e'){
+      if(d.blockEditor!==true)return null;
+      const current=s.blockDraft?readProgram(s.blockDraft):crabProgram(s.program);
+      const program=current&&applyOperations(current,a[1]);
+      if(!program)return null;
+      const packed=encodeProgram(program);const decoded=readCrabDraft(packed,d.level);
+      if(!decoded||JSON.stringify(packed)===JSON.stringify(s.blockDraft))return null;
+      return {state:{...s,blockDraft:packed,program:decoded.plan,history:[...s.history,s.program],blockHistory:[...s.blockHistory,s.blockDraft??null],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+projectionEdits(s.program,decoded.plan)},event:'edit'};
+    }
     if(a[0]==='h') {
       // Each press reveals more; once the whole plan shows, another press would only grow the log.
       const hintProgram=JSON.stringify(s.program), same=s.hintProgram===hintProgram;
@@ -223,10 +238,10 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
     }
     if(a[0]==='u') {
       if(!s.history.length)return null;
-      return {state:{...s,program:s.history.at(-1)!,history:s.history.slice(0,-1),cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'edit'};
+      return {state:{...s,program:s.history.at(-1)!,blockDraft:s.blockHistory.at(-1)??undefined,blockHistory:s.blockHistory.slice(0,-1),history:s.history.slice(0,-1),cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'edit'};
     }
     if(a[0]==='z'&&JSON.stringify(s.program)===JSON.stringify(d.starter))return null;
-    if(a[0]==='z')return {state:{...s,program:[...d.starter],history:[...s.history,s.program],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'reset'};
+    if(a[0]==='z')return {state:{...s,program:[...d.starter],blockDraft:undefined,blockHistory:[...s.blockHistory,s.blockDraft??null],history:[...s.history,s.program],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'reset'};
     const program=[...s.program];
     if(a[0]==='x') {if(a[1]>=program.length)return null;program.splice(a[1],1);}
     else {
@@ -237,7 +252,7 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
       else if(a[0]==='i') {if(a[1]>program.length)return null;program.splice(a[1],0,c);}
     }
     if(program.length>80)return null;
-    return {state:{...s,program,history:[...s.history,s.program],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'edit'};
+    return {state:{...s,program,blockDraft:undefined,blockHistory:[...s.blockHistory,s.blockDraft??null],history:[...s.history,s.program],cursor:0,hintStage:0,hintProgram:null,edits:s.edits+1},event:'edit'};
   },
   inspect:s=>{
     const result=execute(s.descriptor,s.program.slice(0,s.cursor));

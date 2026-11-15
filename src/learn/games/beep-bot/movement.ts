@@ -1,5 +1,7 @@
+import { fromFlat } from '../../program/model';
+import { interpret } from '../../program/interpreter';
 export type Arrow = 'up'|'right'|'down'|'left'|'repeat2'|'repeat3';
-export type Puzzle = { start:number; shell:number; rocks:number[]; answer:Arrow[]; seed:number };
+export type Puzzle = { blockEditor?: boolean; start:number; shell:number; rocks:number[]; answer:Arrow[]; seed:number };
 export const dirs:Arrow[]=['up','right','down','left'];
 export function cardEffect(p:Puzzle,pos:number,card:Arrow,previous:Arrow|null):{pos:number;bump:boolean} {
   const move = card.startsWith('repeat') ? previous : card;
@@ -14,14 +16,13 @@ export function cardEffect(p:Puzzle,pos:number,card:Arrow,previous:Arrow|null):{
 }
 export function step(p:Puzzle,pos:number,card:Arrow,previous:Arrow|null):number {const result=cardEffect(p,pos,card,previous);return result.bump?-1:result.pos;}
 export function execution(p:Puzzle,program:Arrow[]):{path:number[];pos:number;failedCard:number|null} {
-  let pos=p.start,previous:Arrow|null=null;const path=[pos];
-  for(let i=0;i<program.length;i++) {
-    const card=program[i],result=cardEffect(p,pos,card,previous);pos=result.pos;
-    path.push(result.bump?-1:pos);
-    if(result.bump)return {path,pos,failedCard:i};
-    if(!card.startsWith('repeat'))previous=card;
-  }
-  return {path,pos,failedCard:null};
+  const codes:Arrow[]=['up','right','down','left','repeat2','repeat3'];
+  const result=interpret(fromFlat(program.map(c=>codes.indexOf(c))),{pos:p.start,previous:null as Arrow|null,bump:false},{
+    step:(state,code)=>{const card=codes[code],next=cardEffect(p,state.pos,card,state.previous);return {...next,previous:card.startsWith('repeat')?state.previous:card};},
+    blocked:()=>false,halt:state=>state.bump,
+  });
+  if(!result)return {path:[p.start],pos:p.start,failedCard:null};
+  return {path:[p.start,...result.frames.map(f=>f.after.bump?-1:f.after.pos)],pos:result.state.pos,failedCard:result.state.bump?result.frames.length-1:null};
 }
 export const trace=(p:Puzzle,program:Arrow[]):number[]=>execution(p,program).path;
 export const solves=(p:Puzzle,program:Arrow[])=>{const path=trace(p,program);return path.at(-1)===p.shell && path.slice(0,-1).every(x=>x!==p.shell);};

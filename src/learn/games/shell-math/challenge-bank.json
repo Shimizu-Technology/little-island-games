@@ -1,0 +1,1756 @@
+{
+ "facts": {
+  "1": [
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     4,
+     2,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     2,
+     1,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     1,
+     4,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     6,
+     4,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     4,
+     3,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     3,
+     3,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     4,
+     2,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     6,
+     2,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     2,
+     1,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     3,
+     2,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     10,
+     6,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     8,
+     5,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     9,
+     6,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     10,
+     7,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     9,
+     5,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     10,
+     4,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     5,
+     5,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     7,
+     3,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     7,
+     2,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     5,
+     3,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     3,
+     7,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     6,
+     3,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     0,
+     8,
+     2,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 1,
+    "item": [
+     1,
+     10,
+     8,
+     0
+    ],
+    "ways": [
+     "count"
+    ]
+   }
+  ],
+  "2": [
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     15,
+     1,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     12,
+     1,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     1,
+     11,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     1,
+     14,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     15,
+     4,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     15,
+     12,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     13,
+     2,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     1,
+     13,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     14,
+     11,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     12,
+     1,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     5,
+     11,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     18,
+     7,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     2,
+     14,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     15,
+     5,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     15,
+     13,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     88,
+     16,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     10,
+     71,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     15,
+     22,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     63,
+     15,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     67,
+     31,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     0,
+     82,
+     13,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     34,
+     30,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     69,
+     33,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 2,
+    "item": [
+     1,
+     89,
+     30,
+     0
+    ],
+    "ways": [
+     "tens-ones"
+    ]
+   }
+  ],
+  "3": [
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     12,
+     3,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     11,
+     4,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     12,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     11,
+     3,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     9,
+     4,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     9,
+     7,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     9,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     8,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     12,
+     4,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     11,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     13,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     8,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     5,
+     7,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     16,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     16,
+     7,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     3,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     7,
+     6,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     7,
+     8,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     16,
+     8,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     6,
+     6,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     6,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     17,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     1,
+     13,
+     8,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "up-to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 3,
+    "item": [
+     0,
+     5,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten",
+     "to-ten-other",
+     "give-take"
+    ]
+   }
+  ],
+  "4": [
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     8,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     9,
+     4,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     8,
+     4,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     8,
+     3,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     9,
+     3,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     11,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     11,
+     6,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     13,
+     6,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     12,
+     5,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     12,
+     8,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     8,
+     6,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     5,
+     7,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     8,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     7,
+     7,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     9,
+     9,
+     0
+    ],
+    "ways": [
+     "to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     19,
+     15,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     17,
+     13,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     13,
+     8,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     17,
+     8,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     1,
+     12,
+     7,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     4,
+     15,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     9,
+     7,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     6,
+     14,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 4,
+    "item": [
+     0,
+     8,
+     12,
+     1
+    ],
+    "ways": [
+     "up-to-ten"
+    ]
+   }
+  ],
+  "5": [
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     49,
+     7,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     28,
+     3,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     45,
+     9,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     69,
+     8,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     29,
+     3,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     71,
+     8,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     75,
+     9,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     66,
+     8,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     62,
+     9,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     38,
+     9,
+     0
+    ],
+    "ways": [
+     "trade",
+     "to-ten",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     29,
+     22,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     25,
+     69,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     74,
+     19,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     19,
+     13,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     35,
+     58,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     91,
+     28,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     67,
+     29,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     97,
+     48,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     77,
+     49,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     1,
+     83,
+     26,
+     0
+    ],
+    "ways": [
+     "trade"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     18,
+     49,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     18,
+     63,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     34,
+     58,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   },
+   {
+    "t": "fact",
+    "level": 5,
+    "item": [
+     0,
+     65,
+     29,
+     0
+    ],
+    "ways": [
+     "trade",
+     "give-take"
+    ]
+   }
+  ]
+ },
+ "deep": [
+  {
+   "t": "regroup",
+   "tens": 3,
+   "ones": 17
+  },
+  {
+   "t": "regroup",
+   "tens": 4,
+   "ones": 15
+  },
+  {
+   "t": "regroup",
+   "tens": 2,
+   "ones": 26
+  },
+  {
+   "t": "regroup",
+   "tens": 1,
+   "ones": 38
+  },
+  {
+   "t": "missing",
+   "known": 17,
+   "total": 40,
+   "first": false
+  },
+  {
+   "t": "missing",
+   "known": 28,
+   "total": 51,
+   "first": true
+  },
+  {
+   "t": "missing",
+   "known": 46,
+   "total": 83,
+   "first": false
+  },
+  {
+   "t": "missing",
+   "known": 59,
+   "total": 100,
+   "first": true
+  },
+  {
+   "t": "equalize",
+   "x": 34,
+   "y": 46
+  },
+  {
+   "t": "equalize",
+   "x": 27,
+   "y": 53
+  },
+  {
+   "t": "equalize",
+   "x": 48,
+   "y": 90
+  },
+  {
+   "t": "equalize",
+   "x": 15,
+   "y": 89
+  },
+  {
+   "t": "pairs",
+   "nums": [
+    7,
+    8,
+    3,
+    2
+   ]
+  },
+  {
+   "t": "pairs",
+   "nums": [
+    6,
+    9,
+    4,
+    1
+   ]
+  },
+  {
+   "t": "pairs",
+   "nums": [
+    3,
+    7,
+    9,
+    1,
+    5,
+    5
+   ]
+  },
+  {
+   "t": "pairs",
+   "nums": [
+    8,
+    2,
+    6,
+    4,
+    7,
+    3
+   ]
+  }
+ ]
+}

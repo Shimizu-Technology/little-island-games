@@ -242,3 +242,16 @@ it('Memory capacity offers a board restart and honestly explains the target mark
  const text=JSON.stringify(r.toJSON());expect(text).toContain('You can still finish');expect(text).toContain('suggested-turns mark');expect(text).not.toContain('Your plan is kept');
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
+
+it('K7 a refused compact edit passes its real bytes to full and offers Keep my plan',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
+ const action=['e',[[3,[-1,0],3]]],full=vi.fn((_session:unknown,refused:unknown)=>JSON.stringify(refused)===JSON.stringify(action));
+ const selectedEntry={...entry,move:()=>null,full,restart:(s:Parameters<typeof registration.move>[0])=>s,render:(_s:unknown,dispatch:(a:unknown)=>void)=><button onClick={()=>dispatch(action)}>Change repeat count</button>};
+ db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});await press(r,'Start this puzzle');await press(r,'Change repeat count');
+ expect(full).toHaveBeenCalledWith(expect.anything(),action);
+ expect(r.root.findAllByType('button').some(b=>b.children.join('')==='Keep my plan in a new attempt')).toBe(true);
+ expect(JSON.stringify(r.toJSON())).toContain('This attempt is full.');
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});

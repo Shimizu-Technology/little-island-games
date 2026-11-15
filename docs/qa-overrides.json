@@ -1,0 +1,722 @@
+{
+  "schemaVersion": 1,
+  "evidence": {
+    "E01": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5 / AX5; eight selected games also iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/r0-learn-ax/REPORT.md",
+      "result": "passed",
+      "scope": "All 29 School L1 boards opened and one legal action made at AX5. This is first-action/layout evidence only; no full quit/resume/finish/reopen sweep.",
+      "sha": "50988fa96472f23733c97617b7f6eacfcc04891a"
+    },
+    "E02": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/c1-crab/REPORT.md",
+      "result": "passed",
+      "scope": "Mud, hints, wrong/edit/finish/dare flow and School retention recorded. Physical P03–P06, iOS 18.5 and full tablet/text dimensions remain open.",
+      "sha": "c967b580123eae82ef84a6b95d2523ed2c5e56d3"
+    },
+    "E03": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5; iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/c1b-crab/REPORT.md",
+      "result": "passed",
+      "scope": "Final b5 School regression on the merged tested head only. Earlier b1–b3 frame sources remain historical; no whole two-pass mechanic acceptance.",
+      "sha": "6260c850111168c0995f94bbc6d4b05c6d83be41"
+    },
+    "E04": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "li4-rehearsal / iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/q1-rehearsal/REPORT.md",
+      "result": "passed",
+      "scope": "Combined smoke: nine game/surface finishes confirmed from copied SQLite; Home table survives relaunch. Not every game quit/resume/result-reopen sequence, other OS/tablet/text or present integration head.",
+      "sha": "ab685bd475cac8a5316f1e1bcc13bb89dbc72241"
+    },
+    "E05": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5; iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/c2a-beep/REPORT.md",
+      "result": "passed",
+      "scope": "School L1/2 completion, L3 wrong-Go/edit/Undo/finish, L5 loop, full v1 state retention, Challenge interruption and exact saved-state checks. Later follow-ups narrow what remains; this does not establish Crab P02. B01–B07 ran on this tested head; the later 440cb832 marker-only retest is not claimed here.",
+      "sha": "6922e4cc922d1374ea1e1638ef7b8e853016124b"
+    },
+    "E06": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5; iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/c2a-beep/FIX-REPORT.md",
+      "result": "passed",
+      "scope": "F01–F05 affected flows pass with saved-data reads, including AX5 repair/Go/result and mark retained on next puzzle. No complete maximum editor/force-close matrix.",
+      "sha": "55116f822a9375972c6be776f6ac4d6ededaf4ea"
+    },
+    "E07": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "li4-slip-3 / iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/o1-slip/FIX-REPORT-2.md",
+      "result": "passed",
+      "scope": "Native board/page drag arbitration, packed Lagoon finish and related-dare selection recorded in fix2-frames. Too-easy was renderer-only; iOS 18.5/iPad/physical timing not run.",
+      "sha": "1e2bb18e1e597467b53e2408e729fd80f11140bd"
+    },
+    "E08": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone simulator / iOS 18.5",
+      "evidenceKind": "simulator",
+      "path": "v4/l2-lagoon/REPORT.md",
+      "result": "failed",
+      "scope": "iOS 18.5 pickup hitch exceeded target on this tested head. Superseded by audio retest; iOS 26.5 used a different build and is not claimed by this citation. No physical protocol.",
+      "sha": "b131d2fb3fb33c921be9c57d718136f9faf44765",
+      "superseded": true
+    },
+    "E09": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone simulators / iOS 18.5 and 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/a2-audio/FIX-REPORT.md",
+      "result": "passed",
+      "scope": "Three W1-8 seed-771 runs per OS: 0/117 pickup windows over 33.4 ms in each. Earlier hitch failed and is retained above; physical thermal/input/Low Power protocol unrun.",
+      "sha": "a11e1020b5f40880bd32ef05f1fe7f8cb26f9cce"
+    },
+    "E10": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5; iPhone 17 Pro / iOS 26.5; iPad mini 6 / iOS 26.5 (Checkers landscape and largest text)",
+      "evidenceKind": "simulator",
+      "path": "v4/p3a-classics/REPORT.md",
+      "result": "passed",
+      "scope": "Original affected native flows and Checkers chain/wrong-route/save evidence. Later curation/capacity fixes and integrated-head retests must be read with this, not inferred from these earlier frames.",
+      "sha": "b8c59dacb1a4d3452dc2660bc8884f00c956caba"
+    },
+    "E11": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone simulator / iOS 18.5 and 26.5 (named devices in report)",
+      "evidenceKind": "simulator",
+      "path": "v4/p1b-boards/REPORT.md",
+      "result": "passed",
+      "scope": "Board rival/head-start/public-information and tactical affected flows recorded; physical oldest-iPad response timing unmeasured. P07 card-policy/family components remain.",
+      "sha": "280dcd1e02692afde313efaa2e078ee1f063c439"
+    },
+    "E12": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5 / AX5 portrait and landscape (no iPad in this integration retest)",
+      "evidenceKind": "simulator",
+      "path": "v4/g6-words/MERGE-REPORT.md",
+      "result": "passed",
+      "scope": "Final scoped fixture/AX retest and locked gates on integration catch-up. No published real Word Search bank: packs list empty and family sample/bake pending. Native fixture two-hunter results cannot pass physical RD10.",
+      "sha": "34b36ac9fe7e256da5abe23ee1a899e9063783bc"
+    },
+    "E13": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "li4-latin / iPhone 17 Pro / iOS 26.5; li4-latin-18 / iPhone 15 / iOS 18.5 (no iPad in this report)",
+      "evidenceKind": "simulator",
+      "path": "v4/g3-latin/REPORT.md",
+      "result": "passed",
+      "scope": "Latin grids, pad, notes, hints, saved outcomes and scale checks recorded. Full maximum-board force-close, iPad landscape and physical VoiceOver coverage is not established by this report.",
+      "sha": "ef7a404f0a987aa7d141f2c4a83f18f018762c96"
+    },
+    "E14": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "li4-edges iPhone 17 Pro / iOS 26.5; li4-edges-ipad iPad / iOS 26.5; li4-edges-18 / iOS 18.5",
+      "evidenceKind": "simulator",
+      "path": "v4/g5-edges/REPORT.md",
+      "result": "passed",
+      "scope": "Saved edge-game finish/undo/hint and iOS 18 smoke recorded. iPad landscape, physical long drags, VoiceOver and family understanding explicitly not run.",
+      "sha": "215b7230b0ed002389028ab013d8b197c492b71a"
+    },
+    "E15": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 15 / iOS 18.5 / AX5 landscape and portrait",
+      "evidenceKind": "simulator",
+      "path": "v4/r0c-entry-ax/FIX-REPORT-2.md",
+      "result": "passed",
+      "scope": "Full Cages 144 full 9×9 plus first pad row visible. Default landscape captured; two-digit AX count and iPad not captured in this final round. No persisted force-close proof for the whole row.",
+      "sha": "2838a7c0ebc9465464a6fa7344f130c9293c17ff"
+    },
+    "E16": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 17 Pro / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/h1-home/FIX-REPORT.md",
+      "result": "passed",
+      "scope": "Aim/feeding/drop repair evidence and planned-touch fixtures. Physical adult/child target measures and full semantic/zoom sweep remain.",
+      "sha": "4f83680d67c691dc1de109327568cb69c11de8f5"
+    },
+    "E17": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "iPhone 17 Pro and iPad mini 6 / iOS 26.5",
+      "evidenceKind": "simulator",
+      "path": "v4/h3-home/REPORT.md",
+      "result": "passed",
+      "scope": "Navigation/carry, drawer, saved Undo, larger controls and H2 feeding retest recorded. Simulator timing is relative under host load; Home A1–A10 and physical P1–P6 remain incomplete.",
+      "sha": "4cb0f58338fd68a73e2282ec2b24d01d41a8e54e"
+    },
+    "E18": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "li4-home-9 iPhone 17 Pro / iOS 26.5; li4-home-10 iPhone 15 / iOS 18.5",
+      "evidenceKind": "simulator",
+      "path": "v4/h3-home/FIX-REPORT-2.md",
+      "result": "passed",
+      "scope": "Final native affected recovery/history checks, retained room state and physical limits recorded. Not a full Home semantic fixture or A9 performance pass.",
+      "sha": "63d1810ad9686971d2aaf949edd5994ed4489fe1"
+    },
+    "E19": {
+      "build": "Host source tests; not an installed app",
+      "coverage": "partial",
+      "device": "Host Node / SQLite adapter fixtures (no native device)",
+      "evidenceKind": "host",
+      "path": "v4/f1-save/REPORT.md",
+      "result": "passed",
+      "scope": "Automated save/migration/failure-injection and owner-epoch evidence only. Physical Files, low-disk, installed update and real durability remain open.",
+      "sha": "c540c7ea8ba56ab72683d4edb281daa09ea862ed"
+    },
+    "E20": {
+      "build": "Host source tests",
+      "coverage": "partial",
+      "device": "Host Node / SQLite adapter fixtures (no native device)",
+      "evidenceKind": "host",
+      "path": "v4/f1-save/FIX-REPORT.md",
+      "result": "passed",
+      "scope": "Source review fixes and host crash-boundary/rollback/monotonic proof; not physical/native journey acceptance.",
+      "sha": "c7321b0c5476700bff31b3de3355defca083d03e"
+    },
+    "E21": {
+      "build": "Offline private Release simulator build",
+      "coverage": "partial",
+      "device": "li4-recover-3 iPhone 17 Pro / iOS 26.5; li4-recover-4 iPhone 15 / iOS 18.5",
+      "evidenceKind": "simulator",
+      "path": "v4/f-launch-recover/FIX-REPORT-2.md",
+      "result": "passed",
+      "scope": "Probe recovery, held writes and cold reopen recorded; this supports persistence/recovery only, not complete backup, rollback or real installed-update journey.",
+      "sha": "f5b680014994d0a29cd54b2f3e64cd9e6021a9dd"
+    }
+  },
+  "rows": {
+    "G-reef-race": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-island-market": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-sound-boat": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-turtle-tales": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-which-one": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-tide-pool": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-float-sink": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-crab-commands": {
+      "evidence": [
+        "E01",
+        "E02",
+        "E03",
+        "E04"
+      ]
+    },
+    "G-hafa-adai": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-shell-math": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-number-hop": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-quick-practice": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-beep-bot": {
+      "evidence": [
+        "E01",
+        "E05",
+        "E06"
+      ]
+    },
+    "G-turtle-draw": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-tide-logic": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-code-lab": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-pattern-path": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-shape-shift": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-logic-lagoon": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-weather-watch": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-food-web": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-space-station": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-times-tide": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-fraction-feast": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-treasure-algebra": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-letter-lagoon": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-word-workshop": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-story-studio": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "G-slip-tide": {
+      "evidence": [
+        "E01",
+        "E07",
+        "E04"
+      ]
+    },
+    "G-reef-builder": {
+      "evidence": [
+        "E04"
+      ]
+    },
+    "G-lagoon-run": {
+      "evidence": [
+        "E08",
+        "E09",
+        "E04"
+      ]
+    },
+    "G-tic-tac-toe": {
+      "evidence": [
+        "E10"
+      ]
+    },
+    "G-memory": {
+      "evidence": [
+        "E10"
+      ]
+    },
+    "G-checkers": {
+      "evidence": [
+        "E10"
+      ]
+    },
+    "G-numbers": {
+      "evidence": [
+        "E10"
+      ]
+    },
+    "G-coconut-drop": {
+      "evidence": [
+        "E11"
+      ]
+    },
+    "G-fishing-nets": {
+      "evidence": [
+        "E11"
+      ]
+    },
+    "G-hidden-canoes": {
+      "evidence": [
+        "E11"
+      ]
+    },
+    "G-shell-pits": {
+      "evidence": [
+        "E11",
+        "E04"
+      ]
+    },
+    "G-word-search": {
+      "evidence": [
+        "E12"
+      ]
+    },
+    "G-sudoku": {
+      "evidence": [
+        "E13",
+        "E04"
+      ]
+    },
+    "G-bridges": {
+      "evidence": [
+        "E14",
+        "E04"
+      ]
+    },
+    "G-cage-math": {
+      "evidence": [
+        "E13"
+      ]
+    },
+    "G-loop": {
+      "evidence": [
+        "E14",
+        "E04"
+      ]
+    },
+    "G-greater-than": {
+      "evidence": [
+        "E13"
+      ]
+    },
+    "G-skyline": {
+      "evidence": [
+        "E13"
+      ]
+    },
+    "G-killer": {
+      "evidence": [
+        "E13"
+      ]
+    },
+    "G-pearl-loop": {
+      "evidence": [
+        "E14"
+      ]
+    },
+    "M01": {
+      "evidence": [
+        "E13",
+        "E15"
+      ]
+    },
+    "M02": {
+      "evidence": [
+        "E13"
+      ]
+    },
+    "M04": {
+      "evidence": [
+        "E12"
+      ]
+    },
+    "M07": {
+      "evidence": [
+        "E12"
+      ]
+    },
+    "M13": {
+      "evidence": [
+        "E14"
+      ]
+    },
+    "M14": {
+      "evidence": [
+        "E14"
+      ]
+    },
+    "M16": {
+      "evidence": [
+        "E07"
+      ]
+    },
+    "M27": {
+      "evidence": [
+        "E05",
+        "E06",
+        "E02",
+        "E03"
+      ]
+    },
+    "M32": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "M33": {
+      "evidence": [
+        "E11",
+        "E10"
+      ]
+    },
+    "M34": {
+      "evidence": [
+        "E08",
+        "E09"
+      ]
+    },
+    "M35": {
+      "evidence": [
+        "E16",
+        "E17",
+        "E18"
+      ]
+    },
+    "J01": {
+      "evidence": [
+        "E01"
+      ]
+    },
+    "J05": {
+      "evidence": [
+        "E04"
+      ]
+    },
+    "J08": {
+      "evidence": [
+        "E04"
+      ]
+    },
+    "J09": {
+      "evidence": [
+        "E02"
+      ]
+    },
+    "J10": {
+      "evidence": [
+        "E02"
+      ]
+    },
+    "J17": {
+      "evidence": [
+        "E07"
+      ]
+    },
+    "J19": {
+      "evidence": [
+        "E19",
+        "E20",
+        "E21"
+      ]
+    },
+    "J20": {
+      "evidence": [
+        "E19",
+        "E20",
+        "E21"
+      ]
+    },
+    "J21": {
+      "evidence": [
+        "E19",
+        "E20",
+        "E21"
+      ]
+    },
+    "J22": {
+      "evidence": [
+        "E19",
+        "E20",
+        "E21"
+      ]
+    },
+    "J23": {
+      "evidence": [
+        "E19"
+      ]
+    },
+    "J24": {
+      "evidence": [
+        "E19"
+      ]
+    },
+    "J25": {
+      "evidence": [
+        "E19"
+      ]
+    },
+    "J26": {
+      "evidence": [
+        "E19"
+      ]
+    },
+    "J27": {
+      "evidence": [
+        "E19"
+      ]
+    },
+    "J28": {
+      "evidence": [
+        "E15"
+      ]
+    },
+    "P01": {
+      "evidence": [
+        "E02"
+      ]
+    },
+    "P02": {
+      "evidence": [
+        "E05",
+        "E02"
+      ]
+    },
+    "P03": {
+      "evidence": [
+        "E19",
+        "E20"
+      ]
+    },
+    "P04": {
+      "evidence": [
+        "E19",
+        "E20",
+        "E21"
+      ]
+    },
+    "P07": {
+      "evidence": [
+        "E11"
+      ]
+    },
+    "P09": {
+      "evidence": [
+        "E13",
+        "E15"
+      ]
+    },
+    "RD01": {
+      "evidence": [
+        "E08",
+        "E09"
+      ]
+    },
+    "RD08": {
+      "evidence": [
+        "E19"
+      ]
+    },
+    "RD10": {
+      "evidence": [
+        "E12"
+      ]
+    },
+    "H-A1": {
+      "evidence": [
+        "E16"
+      ]
+    },
+    "H-A2": {
+      "evidence": [
+        "E17"
+      ]
+    },
+    "H-A3": {
+      "evidence": [
+        "E16"
+      ]
+    },
+    "H-A4": {
+      "evidence": [
+        "E17",
+        "E18"
+      ]
+    },
+    "H-A5": {
+      "evidence": [
+        "E17"
+      ]
+    },
+    "H-A6": {
+      "evidence": [
+        "E17",
+        "E18"
+      ]
+    },
+    "H-A7": {
+      "evidence": [
+        "E16",
+        "E17",
+        "E18"
+      ]
+    },
+    "H-A8": {
+      "evidence": [
+        "E17"
+      ]
+    }
+  }
+}

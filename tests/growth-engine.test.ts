@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { learnIds, type LearnOptions } from "../src/learn/types";
 import { engines as sharedLevelEngines } from "../src/learn/engines";
 /** Games that use the shared Level 4–5 growth board (new 2.3 games own all five levels). */
-const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels);
+// A game with native replacement stages (Shell Math) keeps the shared board only for archived growth saves.
+const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels && !sharedLevelEngines[id].nativeStages);
 import { startSession, validLearnSession, outcomeOf, replaySession } from "../src/learn/session";
 import { growthMove, growthProgress, growthQuestions } from "../src/learn/growth/engine";
 import { growthTrack } from "../src/learn/growth/content";
@@ -59,7 +60,7 @@ describe("growth progression and preserved saves", () => {
   it("credits accepted answers once and isolates owners/epochs", () => {
     const learning = addLearner(undefined, "Test learner", "test");
     let save: Save = { ...emptySave(), learning };
-    let s = { ...startSession("shell-math", { options: { mode: "solo", pace: "easy", stage: "stretch" } }, {}, 10), learner: "test" };
+    let s = { ...startSession("quick-practice", { options: { mode: "solo", pace: "easy", stage: "stretch" } }, {}, 10), learner: "test" };
     save = applyLearnSave(save, s.game, s, { id: null, epoch: 1 }, 1);
     const qs = growthQuestions(s.game, s.options, s.state as GrowthState), q = qs[0];
     const answered = { ...s, revision: 1, state: growthMove(s.state as GrowthState, { type: "answer", value: q.answer }, qs) };

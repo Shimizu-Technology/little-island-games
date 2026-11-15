@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { learnIds, type LearnOptions } from "../src/learn/types";
 import { engines as sharedLevelEngines } from "../src/learn/engines";
 /** Games that use the shared Level 4–5 growth board (new 2.3 games own all five levels). */
-const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels);
+// A game with native replacement stages (Shell Math) keeps the shared board only for archived growth saves.
+const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels && !sharedLevelEngines[id].nativeStages);
 import { engines } from "../src/learn/engines";
 import { levelInfo, levelNumbers, levelOf, optionsAtLevel } from "../src/learn/levels";
 import { startSession, validLearnOptions, validLearnSession, replaySession } from "../src/learn/session";
@@ -10,8 +11,9 @@ import { emptySave, parseSave } from "../src/state/validation";
 import { addLearner, activeLearner, levelRoundSkill, readyForNext, recordLearning, rememberLearningChoice, selectLearner } from "../src/learn/learners";
 import { shelfLevel } from "../src/learn/home";
 import { recordLevelRound } from "../src/learn/levelEvidence";
-import { mathAnswer, mathResult } from "../src/math/questions";
-import { mathMove, questionOf, type MathRound } from "../src/learn/games/shell-math/round";
+import { mathResult } from "../src/math/questions";
+import { finishMathRound } from "./helpers/shell-rounds";
+import type { MathRound } from "../src/learn/games/shell-math/round";
 import { growthMove, growthQuestions } from "../src/learn/growth/engine";
 import type { GrowthState } from "../src/learn/growth/types";
 import { SENTENCES } from "../src/learn/content/reading/sentences";
@@ -19,14 +21,7 @@ import { objects } from "../src/learn/games/float-sink/engine";
 import { random } from "../src/games/types";
 
 const base: LearnOptions = { mode: "solo", pace: "easy" };
-function mathFinish(state: MathRound) {
-  while (state.index < state.questions.length) {
-    while (state.steps < questionOf(state).b) state = mathMove(state, "shell-math", { type: "step" });
-    state = mathMove(state, "shell-math", { type: "answer", answer: mathAnswer(questionOf(state)) });
-    state = mathMove(state, "shell-math", { type: "next" });
-  }
-  return state;
-}
+const mathFinish = <T,>(state: T): T => finishMathRound(state);
 describe("five learning levels", () => {
   for (const game of sharedLevelGames) it(`${game}: all five choices validate and legacy saves retain their level`, () => {
     for (const level of levelNumbers) {
@@ -115,7 +110,8 @@ describe("five learning levels", () => {
     }
   });
   it("math Level 3 has a full-range first question and preserves chosen operation", () => {
-    for (const game of ["shell-math", "number-hop", "quick-practice"] as const) for (const operation of ["add", "subtract", "mixed"] as const) {
+    // Shell Math has its own level 3 (a bridge through ten); see n1a-shell-round.test.ts.
+    for (const game of ["number-hop", "quick-practice"] as const) for (const operation of ["add", "subtract", "mixed"] as const) {
       const options = { ...optionsAtLevel(base, 3), mathOperation: operation };
       const round = startSession(game, { options }, {}, 42), s = round.state as MathRound;
       expect(validLearnSession(round)).toBe(true);
