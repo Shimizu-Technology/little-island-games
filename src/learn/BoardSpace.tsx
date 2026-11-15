@@ -58,7 +58,7 @@ export function useBoardGeometry(id: SchoolBoard, natural: number, minimum: numb
     if (enabled) measure?.(id, event.nativeEvent.layout.height);
   }, [id, enabled, measure]);
   const geometry = fitSchoolBoard(enabled && space?.ready && space.chrome !== null ? space : null, natural, minimum, space?.chrome ?? 0);
-  const wrapPlan = (children: React.ReactNode, maxHeight: number) => space ? <ScrollView nestedScrollEnabled style={{ maxHeight, flexGrow: 0 }} accessibilityLabel="Your plan cards">{children}</ScrollView> : children;
+  const wrapPlan = (children: React.ReactNode, maxHeight: number, compactHeight = maxHeight) => space ? <ScrollView nestedScrollEnabled style={{ maxHeight: space.ready && space.height < 600 ? compactHeight : maxHeight, flexGrow: 0 }} accessibilityLabel="Your plan cards">{children}</ScrollView> : children;
   return { ...geometry, testID: space ? `school-${id}-drawing` : undefined, wrapPlan, onLayout: enabled && space ? onLayout : undefined, measured: !!space?.ready };
 }
 

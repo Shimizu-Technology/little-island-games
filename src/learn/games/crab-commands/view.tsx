@@ -523,7 +523,7 @@ export function Board({
                 </PressableScale>
               );
             })}
-          </View>, large ? 66 : 129)
+          </View>, large ? 66 : 129, 66)
           }
           {won ? (
             <Button
