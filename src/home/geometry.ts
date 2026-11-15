@@ -24,7 +24,7 @@ export function surfacePoint(i: Instance) {
           : i.item === "toy-box" || i.item === "coffee-table"
             ? 60
             : i.item === "stove"
-              ? 92
+              ? 99
               : 78),
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createFeedback, homeSounds, MAX_VOICES, HAPTIC_GAP_MS, soundLength, type HomeSound } from '../src/home/runtime/homeSound';
-import { attaches, burps, cookingIds, cueLength, cueMotion, dangle, DANGLE_AFTER_MS, faceSamples, giggleTilt, GIGGLE_DEGREES, greeters,
+import { litLamps, attaches, burps, cookingIds, cueLength, cueMotion, dangle, DANGLE_AFTER_MS, faceSamples, giggleTilt, GIGGLE_DEGREES, greeters,
   lampShadow, landingMaterial, landingSound, materialGive, materialOf, noticesFor, NOTICE_RADIUS, pickupFace, squashCurve, squashDepth,
   squashScale, SQUASH_MS, watchersOf, FRIEND_GIVE } from '../src/home/runtime/delight';
 import { carryDisplay, landingSquash, pickupTransform } from '../src/home/runtime/handFeel';
@@ -124,19 +124,19 @@ describe('HD-02 squash by drop height and material', () => {
 });
 
 describe('HD-01 picked-up reactions (rule 43)', () => {
-  it('glances at once, smiles within 250 ms, and the expression ends', () => {
+  it('glances at once, smiles within 250 ms and keeps smiling while carried; set down, the face is their own again', () => {
     expect(pickupFace(0)).toBe(1);
     expect(pickupFace(250)).toBe(2);
-    expect(pickupFace(899)).toBe(2);
-    expect(pickupFace(900)).toBe(0);
+    expect(pickupFace(5000)).toBe(2);
     expect(pickupFace(-1)).toBe(0);
+    expect(carryDisplay(slot({ phase: 'settling', liftedAt: 0 }), 5000, false).face).toBe(0);
   });
   it('the giggle and the dangle only rotate about the grip and stay small', () => {
     let max = 0;
     for (let t = 0; t < 2000; t += 5) max = Math.max(max, Math.abs(giggleTilt(t)));
     expect(max).toBeLessThanOrEqual(GIGGLE_DEGREES);
     expect(dangle(DANGLE_AFTER_MS)).toEqual({ tilt: 0, sample: 0 });
-    for (let t = 0; t < 12000; t += 7) { const d = dangle(t); expect(Math.abs(d.tilt)).toBeLessThanOrEqual(2.5); expect(Math.abs(d.sample)).toBeLessThanOrEqual(3); }
+    for (let t = 0; t < 12000; t += 7) { const d = dangle(t); expect(Math.abs(d.tilt)).toBeLessThanOrEqual(4); expect(Math.abs(d.sample)).toBeLessThanOrEqual(4); }
     const scene = buildScene(labFixtures.delight());
     const friend = Object.values(scene.entities).find((e) => e.character)!;
     const held = slot({ id: friend.id, phase: 'dragging', liftedAt: 1000, lastMoveAt: 1000 });
@@ -267,6 +267,8 @@ describe('HD-08 lamp shadows', () => {
     state.rooms.home.instances = state.rooms.home.instances.map((i) => (i.id === 'lamp' ? { ...i, powered: false } : i));
     const dark = buildScene(state);
     expect(lampShadow(dark, Object.values(dark.entities).find((e) => e.character?.slot === 2)!)).toBeUndefined();
+    expect(litLamps(lit, 'home').map((e) => e.item!.item)).toEqual(['lamp']);
+    expect(litLamps(dark, 'home')).toEqual([]);
     // A friend asleep in bed throws none.
     expect(lampShadow(lit, Object.values(lit.entities).find((e) => e.character?.slot === 0)!)).toBeUndefined();
   });

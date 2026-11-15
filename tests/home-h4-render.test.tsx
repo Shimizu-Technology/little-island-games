@@ -40,10 +40,10 @@ describe('HD-01 the carried friend has glance and smile frames, and exactly one 
     const frames = tree.root.findAll((n) => String(n.type) === 'AnimatedView');
     const faces = tree.root.findAll((n) => String(n.type) === 'EntityArt').map((n) => n.props.face);
     expect(faces.filter((f) => f === 'surprised')).toHaveLength(1);
-    expect(faces.filter((f) => f === 'happy')).toHaveLength(reduced ? 1 : 3);
-    expect(frames).toHaveLength(reduced ? 3 : 13);
+    expect(faces.filter((f) => f === 'happy')).toHaveLength(reduced ? 1 : 5);
+    expect(frames).toHaveLength(reduced ? 3 : 15);
     const shown = () => frames.filter((f) => f.props.style[1].evaluate().opacity === 1);
-    for (const [t, face] of [[1000, 'surprised'], [1240, 'happy'], [2400, undefined], [5200, undefined]] as const) {
+    for (const [t, face] of [[1000, 'surprised'], [1240, 'happy'], [2400, 'happy'], [5200, 'happy']] as const) {
       (interaction.clock as any).value = t;
       expect(shown()).toHaveLength(1);
       expect(shown()[0].findByType('EntityArt' as never).props.face).toBe(face);

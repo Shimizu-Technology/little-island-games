@@ -86,13 +86,14 @@ export const GIGGLE_MS = 480;
 export const GIGGLE_DEGREES = 3.5;
 export const DANGLE_AFTER_MS = 240;
 export const DANGLE_PERIOD_MS = 1300;
-export const DANGLE_DEGREES = 2.5;
+export const DANGLE_DEGREES = 4;
 export const KICK_EVERY_MS = 2600;
 export const KICK_MS = 160;
-/** 0 none, 1 the glance (surprised), 2 the smile (happy). */
+/** 0 none, 1 the glance (surprised), 2 the smile (happy). A carried friend keeps smiling:
+ * being carried is the game. The friend's own expression returns when they are set down. */
 export function pickupFace(elapsed: number): 0 | 1 | 2 {
   "worklet";
-  if (elapsed < 0 || elapsed >= SMILE_MS) return 0;
+  if (elapsed < 0) return 0;
   return elapsed < GLANCE_MS ? 1 : 2;
 }
 /** Two small wiggles about the grip, so the finger's point never moves. */
@@ -113,14 +114,14 @@ export function dangle(still: number): { tilt: number; sample: number } {
   if (t <= 0) return { tilt: 0, sample: 0 };
   const ramp = Math.min(1, t / 300), phase = (t / DANGLE_PERIOD_MS) * Math.PI * 2;
   const kickAt = t % KICK_EVERY_MS, kick = t > KICK_EVERY_MS / 2 && kickAt < KICK_MS;
-  const sample = kick ? 3 * (Math.floor(t / KICK_EVERY_MS) % 2 ? -1 : 1) : Math.round(-2 * ramp * Math.cos(phase));
+  const sample = kick ? 4 * (Math.floor(t / KICK_EVERY_MS) % 2 ? -1 : 1) : Math.round(-2 * ramp * Math.cos(phase));
   return { tilt: DANGLE_DEGREES * ramp * Math.sin(phase), sample };
 }
 /** During the glance and smile the limb samples are quantized to the mounted face frames. */
-export const faceSamples = [-2, 0, 2] as const;
+export const faceSamples = [-4, -2, 0, 2, 4] as const;
 export function faceSample(sample: number): number {
   "worklet";
-  return Math.max(-2, Math.min(2, Math.round(sample / 2) * 2));
+  return Math.max(-4, Math.min(4, Math.round(sample / 2) * 2));
 }
 
 // Resting reactions (HD-05, HD-06, HD-09, HC-01), drawn through the resting wobble channel.
@@ -142,7 +143,7 @@ export function cueMotion(cue: Cue, now: number): { deg: number; dy: number; sy:
       const v = (u - 0.3) / 0.7;
       return { deg: Math.sin(v * Math.PI * 4) * 4 * (1 - v), dy: 0, sy: 1 };
     }
-    case "stir": return { deg: Math.sin(u * Math.PI * 3) * 3 * (1 - u * 0.6), dy: 0, sy: 1 + 0.03 * Math.sin(u * Math.PI) };
+    case "stir": return { deg: Math.sin(u * Math.PI * 3) * 6 * (1 - u * 0.6), dy: -3 * Math.sin(u * Math.PI), sy: 1 + 0.04 * Math.sin(u * Math.PI) };
     case "greet": {
       const lean = u < 0.2 ? u / 0.2 : u > 0.75 ? (1 - u) / 0.25 : 1;
       return { deg: 6 * cue.dir * lean * (u < 0.2 ? 1 : 1 + 0.15 * Math.sin((u - 0.2) * Math.PI * 4)), dy: 0, sy: 1 };
@@ -215,6 +216,13 @@ export function cookingIds(scene: Scene): string[] {
 export const LAMP_REACH = 260;
 export type LampShadow = { angle: number; length: number; opacity: number };
 const lampIds = new Set(["lamp", "table-lamp", "floor-lamp", "island-lamp", "lantern"]);
+/** HD-08: lit lamps in a room, for the warm pool of light drawn behind everything. */
+export function litLamps(scene: Scene, room: keyof Scene["rooms"]): SceneEntity[] {
+  return Object.values(scene.rooms[room].entities).filter((e) => {
+    const item = e.item;
+    return !!item && lampIds.has(item.item) && !!(item.powered ?? item.state === "active") && !item.staged && e.attachment.kind !== "container";
+  });
+}
 export function lampShadow(scene: Scene, entity: SceneEntity): LampShadow | undefined {
   if (!entity.character || entity.base !== "stand" || entity.attachment.kind === "staging") return undefined;
   let best: LampShadow | undefined, bestDistance = Infinity;

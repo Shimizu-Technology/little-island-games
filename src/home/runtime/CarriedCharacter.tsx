@@ -67,7 +67,7 @@ export function CarriedCharacter(props: {
     return d.sample * 3 + d.face;
   });
   const samples = reduced ? [0] : [-4, -3, -2, -1, 0, 1, 2, 3, 4];
-  // The glance is brief and drawn only at rest limbs; the smile follows the legs at three levels.
+  // The glance is brief and drawn only at rest limbs; the smile follows the legs at five levels.
   const faces: [number, 1 | 2][] = reduced ? [[0, 1], [0, 2]] : [[0, 1], ...faceSamples.map((s) => [s, 2] as [number, 2])];
   return (
     <>

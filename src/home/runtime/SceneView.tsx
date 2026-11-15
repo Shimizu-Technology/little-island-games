@@ -11,7 +11,7 @@ import type { BadgeId } from "../../badges/engine";
 import { tracks } from "../../badges/engine";
 import type { HomeStateV2 } from "../model";
 import type { Face, Scene, SceneEntity } from "../scene/types";
-import { lampShadow, NOTICE_DEGREES, type LampShadow } from "./delight";
+import { lampShadow, litLamps, NOTICE_DEGREES, type LampShadow } from "./delight";
 import { Effects, type Effect } from "./Effects";
 import { SetPieces, type Poke } from "./SetPieces";
 import { paintEntries, restingVisible } from "./group";
@@ -254,13 +254,26 @@ const RestingEntity = memo(function RestingEntity({
     </View>
   );
 });
+/** HD-08: a warm pool of light around a lit lamp and on the floor below it. Fades in once. */
+function LampGlow({ lamp, reduced }: { lamp: SceneEntity; reduced: boolean }) {
+  const shown = useSharedValue(reduced ? 1 : 0);
+  React.useEffect(() => { if (!reduced) shown.set(withTiming(1, { duration: 240 })); }, [reduced, shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shown.value }));
+  const bulb = lamp.contact.y + lamp.bounds.top + lamp.bounds.height * 0.35, x = lamp.contact.x;
+  const floor = lamp.attachment.kind === "surface" ? lamp.contact.y + 80 : lamp.contact.y;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, style]}>
+    <View style={{ position: "absolute", left: x - 150, top: bulb - 150, width: 300, height: 300, borderRadius: 150, backgroundColor: "#FFE7A0", opacity: 0.16 }} />
+    <View style={{ position: "absolute", left: x - 95, top: bulb - 95, width: 190, height: 190, borderRadius: 95, backgroundColor: "#FFE7A0", opacity: 0.18 }} />
+    <View style={{ position: "absolute", left: x - 170, top: floor - 34, width: 340, height: 68, borderRadius: 170, backgroundColor: "#F6CD71", opacity: 0.2 }} />
+  </Animated.View>;
+}
 /** HD-08: a lamp's soft shadow from a friend's feet, away from the light. Fades in once. */
 function ShadowCast({ shadow, x, y, reduced }: { shadow: LampShadow; x: number; y: number; reduced: boolean }) {
   const shown = useSharedValue(reduced ? 1 : 0);
   React.useEffect(() => { if (!reduced) shown.set(withTiming(1, { duration: 220 })); }, [reduced, shown]);
   const style = useAnimatedStyle(() => ({ opacity: shadow.opacity * shown.value }));
-  const height = 20;
-  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: x, top: y - height / 2, width: shadow.length,
+  const height = 30;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: x - 10, top: y - height / 2, width: shadow.length,
     height, borderRadius: height, backgroundColor: "#284F4B", transformOrigin: [0, height / 2, 0],
     transform: [{ rotate: `${shadow.angle}deg` }] }, style]} />;
 }
@@ -434,6 +447,7 @@ export function SceneView({
                   style={{ position: "absolute", left: 8, top: 8, width: 784, height: 544, overflow: "hidden" }}
                 >
                   <View pointerEvents="box-none" style={{ position: "absolute", left: -8, top: -8 }}>
+                    {litLamps(scene, roomId).map((lamp) => <LampGlow key={`glow:${lamp.id}`} lamp={lamp} reduced={reduced} />)}
                     {paintEntries(entities, scene).flatMap(({ entity, front }, order, entries) => [
                       ...(order === entries.findIndex((entry) => entry.entity.item?.layer !== "ground")
                         ? scene.rooms[roomId].targets.filter((target) => target.rim).map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
