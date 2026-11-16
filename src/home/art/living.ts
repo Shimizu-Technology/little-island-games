@@ -14,7 +14,8 @@ export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   lamp:{moveInPlay:true,toggle:'light'},
   'sink-counter':{moveInPlay:false,toggle:'water'},
   tv:{moveInPlay:true,toggle:'power'}, radio:{moveInPlay:true,toggle:'power'},
-  stove:{moveInPlay:false},
+  // HD-07: a tap lights the burner under the stove's pan; food in the pan cooks.
+  stove:{moveInPlay:false,toggle:'power'},
   fridge:{moveInPlay:false,toggle:'open',dispenses:['mango','banana','juice','rice-ball']},
   'fruit-bowl':{moveInPlay:true,dispenses:['mango','banana','coconut-drink']},
 };

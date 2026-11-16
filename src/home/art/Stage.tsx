@@ -5,9 +5,9 @@ import type { RoomId } from "../catalogMore";
 import { BadgeGlyph } from "../../badges/BadgeArt";
 import { tracks, type BadgeId } from "../../badges/engine";
 
-const ink = "#64554C";
-const wood = "#BD8C66";
-const ivory = "#FFF4DE";
+export const ink = "#64554C";
+export const wood = "#BD8C66";
+export const ivory = "#FFF4DE";
 const wallColors: Record<HomeState["theme"]["wallpaper"], string> = {cream:"#F5E6C8",lagoon:"#C5DED3",night:"#A5ADC9",peach:"#F1CEC0","math-lab":"#B6CABE",library:"#E7CFAD","night-sky":"#B5BDD3","arcade-neon":"#C9C5DA"};
 const floorColors: Record<HomeState["theme"]["floor"], string> = {sand:"#EBD7B2",honey:"#DDAE7D",seafoam:"#AACDC1",rose:"#DCB9AA","island-breeze":"#D9C79B","game-room":"#BCCBC0"};
 type Room = RoomId;
@@ -26,17 +26,21 @@ function Window({ round = false, wide = false }: { round?: boolean; wide?: boole
   </G>;
 }
 
-function Shelf({ x, y, kitchen = false }: { x: number; y: number; kitchen?: boolean }) {
+/** One jar or book on a painted shelf. HC-01: in the live room each is its own touchable piece. */
+export function ShelfThing({ x, y, n, kitchen = false }: { x: number; y: number; n: number; kitchen?: boolean }) {
+  return kitchen ?
+    <G stroke={ink} strokeWidth={2}><Ellipse cx={x+32+n*42} cy={y+61} rx={16} ry={5} fill={ivory}/><Rect x={x+17+n*42} y={y+28+n%2*8} width={30} height={32-n%2*8} rx={4} fill={["#B9D9CF","#E8B4A3","#EBCB8F","#AFC6D2"][n]}/><Path d={`M${x+22+n*42} ${y+37+n%2*8}h20`} stroke={ivory}/></G> :
+    <G stroke={ink} strokeWidth={2}><Rect x={x+15+n*43} y={y+25+n%2*8} width={25} height={40-n%2*8} rx={3} fill={["#8BB7AC","#E8A899","#E9C77F","#9BA6C5"][n]}/><Path d={`M${x+20+n*43} ${y+34+n%2*8}h14m-14 20h14`} stroke={ivory} strokeWidth={2}/></G>;
+}
+function Shelf({ x, y, kitchen = false, live = false }: { x: number; y: number; kitchen?: boolean; live?: boolean }) {
   return <G stroke={ink} strokeWidth={2}>
     <Rect x={x} y={y+66} width={195} height={12} rx={4} fill={wood}/>
-    {[0,1,2,3].map(n => kitchen ?
-      <G key={n}><Ellipse cx={x+32+n*42} cy={y+61} rx={16} ry={5} fill={ivory}/><Rect x={x+17+n*42} y={y+28+n%2*8} width={30} height={32-n%2*8} rx={4} fill={["#B9D9CF","#E8B4A3","#EBCB8F","#AFC6D2"][n]}/><Path d={`M${x+22+n*42} ${y+37+n%2*8}h20`} stroke={ivory}/></G> :
-      <G key={n}><Rect x={x+15+n*43} y={y+25+n%2*8} width={25} height={40-n%2*8} rx={3} fill={["#8BB7AC","#E8A899","#E9C77F","#9BA6C5"][n]}/><Path d={`M${x+20+n*43} ${y+34+n%2*8}h14m-14 20h14`} stroke={ivory} strokeWidth={2}/></G>)}
+    {!live && [0,1,2,3].map(n => <ShelfThing key={n} x={x} y={y} n={n} kitchen={kitchen}/>)}
     <Path d={`M${x+15} ${y+78}v12m165-12v12`} stroke={wood} strokeWidth={5}/>
   </G>;
 }
 
-function Plant({ x, y }: { x: number; y: number }) {
+export function Plant({ x, y }: { x: number; y: number }) {
   return <G stroke={ink} strokeWidth={2}>
     <Path d={`M${x-26} ${y}h52l-9 45h-34Z`} fill="#D9A482"/>
     <Path d={`M${x} ${y}v-100m0 55q-28-35-44-34m44 10q27-38 45-38`} stroke="#638D6C" strokeWidth={6} fill="none"/>
@@ -45,7 +49,73 @@ function Plant({ x, y }: { x: number; y: number }) {
   </G>;
 }
 
-export function StageRoom({ room, theme, badges = [] }: { room: Room; theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void }) {
+/**
+ * HC-01: painted things that read as objects answer a touch. Each is drawn here in room units,
+ * so the still picture and the live room are the same art; the live room lifts each one into
+ * its own small layer (runtime/SetPieces) so it can hop, tilt or swing. Everything else stays
+ * painted set dressing.
+ */
+export type PieceKind = "jar" | "toy" | "book" | "pan" | "plant" | "lantern" | "sink";
+export type StagePiece = { id: string; kind: PieceKind; hit: { left: number; top: number; width: number; height: number };
+  pivot: { x: number; y: number }; draw: () => React.ReactElement | null };
+const box = (left: number, top: number, width: number, height: number) => ({ left, top, width, height });
+function plantPiece(id: string, x: number, y: number): StagePiece {
+  return { id, kind: "plant", hit: box(x - 44, y - 108, 88, 153), pivot: { x, y: y + 45 }, draw: () => <Plant x={x} y={y}/> };
+}
+function shelfPieces(prefix: string, x: number, y: number, kitchen = false): StagePiece[] {
+  return [0, 1, 2, 3].map((n) => kitchen
+    ? { id: `${prefix}-jar-${n}`, kind: "jar" as const, hit: box(x + 16 + n * 42, y + 28 + (n % 2) * 8, 32, 38 - (n % 2) * 8),
+        pivot: { x: x + 32 + n * 42, y: y + 66 }, draw: () => <ShelfThing x={x} y={y} n={n} kitchen/> }
+    : { id: `${prefix}-book-${n}`, kind: "book" as const, hit: box(x + 15 + n * 43, y + 25 + (n % 2) * 8, 25, 40 - (n % 2) * 8),
+        pivot: { x: x + 27.5 + n * 43, y: y + 65 }, draw: () => <ShelfThing x={x} y={y} n={n}/> });
+}
+function lanternPiece(id: string, x: number, string = x): StagePiece {
+  return { id, kind: "lantern", hit: box(x - 12, 120, 42, 60), pivot: { x: string, y: 0 }, draw: () => <G>
+    <Path d={`M${string} 0v128`} stroke="#987451" strokeWidth={5}/><Path d={`M${x - 11} 127h33l-4 48h-25Z`} fill="#E7C688" stroke={ink} strokeWidth={3}/>
+    <Circle cx={x + 5} cy={153} r={10} fill="#FFF2BC"/></G> };
+}
+export const stagePieces: Record<Room, readonly StagePiece[]> = {
+  home: [
+    ...shelfPieces("home-shelf", 516, 224),
+    plantPiece("home-plant", 732, 303),
+    { id: "home-box-0", kind: "toy", hit: box(393, 217, 19, 33), pivot: { x: 402.5, y: 250 },
+      draw: () => <Rect x={393} y={217} width={19} height={33} rx={2} fill="#83B5AB" stroke={ink}/> },
+    { id: "home-box-1", kind: "toy", hit: box(419, 227, 17, 23), pivot: { x: 427.5, y: 250 },
+      draw: () => <Rect x={419} y={227} width={17} height={23} rx={2} fill="#E9B397" stroke={ink}/> },
+    { id: "home-bear", kind: "toy", hit: box(448, 220, 33, 30), pivot: { x: 464, y: 250 },
+      draw: () => <G><Circle cx={464} cy={236} r={14} fill="#E9C588" stroke={ink}/><Circle cx={455} cy={227} r={7} fill="#E9C588"/><Circle cx={473} cy={227} r={7} fill="#E9C588"/></G> },
+  ],
+  kitchen: [
+    ...shelfPieces("kitchen-left", 31, 111, true),
+    ...shelfPieces("kitchen-right", 563, 110, true),
+    ...[286, 318, 495, 527].map((x, n): StagePiece => ({ id: `kitchen-jar-${n}`, kind: "jar", hit: box(x, 258 + (n % 2) * 9, 19, 27 - (n % 2) * 9),
+      pivot: { x: x + 9.5, y: 285 }, draw: () => <G><Rect x={x} y={258+n%2*9} width={19} height={27-n%2*9} rx={3} fill={n%2?"#E9BA9C":"#B6D2C5"} stroke={ink}/><Path d={`M${x+4} 268h11`} stroke={ivory}/></G> })),
+    ...[610, 666, 720].map((x, n): StagePiece => {
+      const rx = n === 1 ? 24 : 18, ry = n === 1 ? 16 : 12;
+      return { id: `kitchen-pan-${n}`, kind: "pan", hit: box(x - rx, 229, rx * 2, 43 + ry), pivot: { x, y: 229 },
+        draw: () => <G><Path d={`M${x} 229v28`} stroke={ink} strokeWidth={3}/><Ellipse cx={x} cy={272} rx={rx} ry={ry} fill="#B6BDB4" stroke={ink} strokeWidth={3}/></G> };
+    }),
+    // The painted sink stays painted; a touch runs its water for a moment.
+    { id: "kitchen-sink", kind: "sink", hit: box(356, 268, 86, 64), pivot: { x: 400, y: 285 },
+      draw: () => <G><Path d="M400 285V316" stroke="#8FD3DD" strokeWidth={5}/><Path d="M388 318q-8-5-13-1m26 0q9-5 14-1" fill="none" stroke="#D8F4ED" strokeWidth={3}/></G> },
+  ],
+  treehouse: [
+    plantPiece("treehouse-plant", 558, 280),
+    ...shelfPieces("treehouse-shelf", 100, 148),
+    lanternPiece("treehouse-lantern-0", 212),
+    lanternPiece("treehouse-lantern-1", 587, 588),
+    { id: "treehouse-basket", kind: "lantern", hit: box(625, 105, 115, 70), pivot: { x: 682, y: 0 }, draw: () => <G>
+      <Path d="M647 0v110m71-110v110" stroke="#9B7F5B" strokeWidth={5}/><Path d="M625 110h115l-18 62h-79Z" fill="#E9C383" stroke={ink} strokeWidth={3}/>
+      <Ellipse cx={682} cy={164} rx={42} ry={11} fill="#FFE3A9"/></G> },
+  ],
+  beach: [plantPiece("beach-plant", 715, 314)],
+};
+const drawn = (room: Room, prefix: string) => stagePieces[room].filter((p) => p.id.startsWith(prefix) && p.kind !== "sink")
+  .map((p) => <G key={p.id}>{p.draw()}</G>);
+
+export function StageRoom({ room, theme, badges = [], live = false }: { room: Room; theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void;
+  /** HC-01: the live room draws its touchable pieces in their own layer. */
+  live?: boolean }) {
   const tree = room === "treehouse", kitchen = room === "kitchen", beach = room === "beach";
   const wall = wallColors[theme.wallpaper], floor = floorColors[theme.floor];
   return <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
@@ -72,7 +142,7 @@ export function StageRoom({ room, theme, badges = [] }: { room: Room; theme: Hom
       <Path d="M112 90q13 77 1 169m201-171q-15 77-3 174" stroke={ivory} fill="none" strokeWidth={3}/>
       <Path d="M18 50Q190 100 395 55" stroke={wood} strokeWidth={3} fill="none"/>
       {[54,103,151,200,249,298,345].map((x,n)=><G key={x}><Path d={`M${x} ${65+n%2*6}v13`} stroke={wood} strokeWidth={2}/><Circle cx={x} cy={80+n%2*6} r={6} fill={n%2?"#F4D391":"#F6C7B6"} stroke={ink} strokeWidth={1}/></G>)}
-      <Shelf x={516} y={224}/><Plant x={732} y={303}/>
+      <Shelf x={516} y={224} live/>{!live && drawn("home", "home-shelf")}{!live && drawn("home", "home-plant")}
       <Rect x={524} y={26} width={178} height={172} rx={11} fill="#B88562" stroke={ink} strokeWidth={3}/>
       <Rect x={531} y={33} width={164} height={158} rx={7} fill="#E9CC9E"/>
       {tracks.flatMap((track,row)=>([1,2,3,4] as const).map((tier,col)=>{
@@ -83,31 +153,31 @@ export function StageRoom({ room, theme, badges = [] }: { room: Room; theme: Hom
         </G>;
       }))}
       <Rect x={412} y={118} width={83} height={96} rx={5} fill="#C7956F" stroke={ink} strokeWidth={3}/><Path d="M422 196l21-33 16 18 11-27 16 42Z" fill="#85B5A5"/><Circle cx={470} cy={143} r={9} fill="#F4CF86"/>
-      <Path d="M386 254h113" stroke={wood} strokeWidth={11}/><Path d="M396 249h92" stroke={ivory} strokeWidth={3}/><Rect x={393} y={217} width={19} height={33} rx={2} fill="#83B5AB" stroke={ink}/><Rect x={419} y={227} width={17} height={23} rx={2} fill="#E9B397" stroke={ink}/><Circle cx={464} cy={236} r={14} fill="#E9C588" stroke={ink}/><Circle cx={455} cy={227} r={7} fill="#E9C588"/><Circle cx={473} cy={227} r={7} fill="#E9C588"/>
+      <Path d="M386 254h113" stroke={wood} strokeWidth={11}/><Path d="M396 249h92" stroke={ivory} strokeWidth={3}/>{!live && drawn("home", "home-b")}
       <Path d="M34 98h55v73H34Z" fill="#EAC29F" stroke={ink} strokeWidth={3}/><Path d="M45 110h33v49H45Z" fill="#F7EAD1"/><Path d="M46 151l13-22 18 23" fill="#EAA993"/>
       <Circle cx={772} cy={130} r={16} fill="#F6D995"/><Path d="M772 146v47" stroke={wood} strokeWidth={5}/>
     </>}
     {kitchen && <>
-      <Window wide/><Shelf x={31} y={111} kitchen/><Shelf x={563} y={110} kitchen/>
+      <Window wide/><Shelf x={31} y={111} kitchen live/>{!live && drawn("kitchen", "kitchen-left")}<Shelf x={563} y={110} kitchen live/>{!live && drawn("kitchen", "kitchen-right")}
       <Path d="M240 291h321" stroke={wood} strokeWidth={11}/><Path d="M251 285h299" stroke={ivory} strokeWidth={3}/>
-      {[286,318,495,527].map((x,n)=><G key={x}><Rect x={x} y={258+n%2*9} width={19} height={27-n%2*9} rx={3} fill={n%2?"#E9BA9C":"#B6D2C5"} stroke={ink}/><Path d={`M${x+4} 268h11`} stroke={ivory}/></G>)}
-      <Path d="M593 225h160" stroke={wood} strokeWidth={8}/>{[610,666,720].map((x,n)=><G key={x}><Path d={`M${x} 229v28`} stroke={ink} strokeWidth={3}/><Ellipse cx={x} cy={272} rx={n===1?24:18} ry={n===1?16:12} fill="#B6BDB4" stroke={ink} strokeWidth={3}/></G>)}
+      {!live && drawn("kitchen", "kitchen-jar")}
+      <Path d="M593 225h160" stroke={wood} strokeWidth={8}/>{!live && drawn("kitchen", "kitchen-pan")}
       <Rect x={282} y={310} width={235} height={34} rx={6} fill="#D2A47D" stroke={ink} strokeWidth={3}/><Ellipse cx={398} cy={322} rx={42} ry={9} fill="#B4D0D0"/><Path d="M419 319v-31q0-15-19-14v11" fill="none" stroke={ink} strokeWidth={5}/>
       <Rect x={584} y={42} width={160} height={46} rx={5} fill="#DEB18B" stroke={ink} strokeWidth={3}/>
     </>}
     {tree && <>
       <Window round/><Path d="M70 0v330M730 0v330" stroke="#8C6849" strokeWidth={24}/><Path d="M69 0v330M729 0v330" stroke="#D4AD79" strokeWidth={10}/>
       <Path d="M535 0q-32 105-8 196M579 0q-28 124-7 219" fill="none" stroke="#6F9A6C" strokeWidth={8}/>
-      <Plant x={558} y={280}/><Shelf x={100} y={148}/>
-      <Path d="M212 0v128m376-128v128" stroke="#987451" strokeWidth={5}/><Path d="M201 127h33l-4 48h-25Z" fill="#E7C688" stroke={ink} strokeWidth={3}/><Path d="M576 127h33l-4 48h-25Z" fill="#E7C688" stroke={ink} strokeWidth={3}/><Circle cx={217} cy={153} r={10} fill="#FFF2BC"/><Circle cx={592} cy={153} r={10} fill="#FFF2BC"/>
-      <Path d="M647 0v110m71-110v110" stroke="#9B7F5B" strokeWidth={5}/><Path d="M625 110h115l-18 62h-79Z" fill="#E9C383" stroke={ink} strokeWidth={3}/><Ellipse cx={682} cy={164} rx={42} ry={11} fill="#FFE3A9"/>
+      {!live && drawn("treehouse", "treehouse-plant")}<Shelf x={100} y={148} live/>{!live && drawn("treehouse", "treehouse-shelf")}
+      {!live && drawn("treehouse", "treehouse-lantern")}
+      {!live && drawn("treehouse", "treehouse-basket")}
     </>}
     {beach && <>
       <Window wide/><Path d="M228 62v225m345-225v225" stroke={wood} strokeWidth={15}/>
       <Path d="M240 50q157 48 320 0" stroke={wood} strokeWidth={3} fill="none"/>{[270,315,360,405,450,495,540].map((x,n)=><G key={x}><Path d={`M${x} ${58+Math.sin(n/6*Math.PI)*17}v17`} stroke={wood} strokeWidth={2}/><Path d={`M${x-8} ${78+Math.sin(n/6*Math.PI)*17}q8-18 16 0q-8 12-16 0`} fill={n%2?"#F5D0AC":"#F8EDD4"} stroke={ink}/></G>)}
       <Path d="M226 90l-86 62v139l88-40ZM573 90l88 63v138l-88-40Z" fill="#D5AB79" stroke={ink} strokeWidth={3}/>
       <Path d="M91 96h45v210H91Z" fill="#7BB6B0" stroke={ink} strokeWidth={3}/><Path d="M154 79h46v228h-46Z" fill="#E8B58D" stroke={ink} strokeWidth={3}/><Path d="M99 170h96M108 99v198m70-209v209" stroke={ivory} strokeWidth={4}/>
-      <Path d="M75 311h160" stroke={wood} strokeWidth={13}/><Plant x={715} y={314}/>
+      <Path d="M75 311h160" stroke={wood} strokeWidth={13}/>{!live && drawn("beach", "beach-plant")}
       <Path d="M589 81q78 15 146 0" fill="none" stroke={wood} strokeWidth={3}/>{[605,634,665,695,723].map((x,n)=><G key={x}><Path d={`M${x} 88v22`} stroke={wood}/><Path d={`M${x-8} 111q8-20 16 0q-8 10-16 0`} fill={n%2?"#F3C9AD":"#FFF0D7"} stroke={ink}/></G>)}
     </>}
     {room==="home" && <G stroke={ink} strokeWidth={2}><Rect x={8} y={276} width={155} height={70} rx={7} fill="#D6AA80"/><Path d="M16 305h140M55 305v36m56-36v36" stroke="#8B725B" strokeWidth={3}/><Rect x={23} y={285} width={22} height={19} rx={3} fill="#80B1A5"/><Circle cx={79} cy={295} r={11} fill="#F0C98D"/><Path d="M122 285l17 18h-34Z" fill="#E99E94"/></G>}

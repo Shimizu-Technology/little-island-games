@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -10,7 +10,10 @@ import { roomOrigin, type Building } from "../camera";
 import type { BadgeId } from "../../badges/engine";
 import { tracks } from "../../badges/engine";
 import type { HomeStateV2 } from "../model";
-import type { Scene, SceneEntity } from "../scene/types";
+import type { Face, Scene, SceneEntity } from "../scene/types";
+import { lampShadow, litLamps, NOTICE_DEGREES, type LampShadow } from "./delight";
+import { Effects, type Effect } from "./Effects";
+import { SetPieces, type Poke } from "./SetPieces";
 import { paintEntries, restingVisible } from "./group";
 import { SeatRimCue, TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
@@ -52,9 +55,22 @@ const RestingEntity = memo(function RestingEntity({
   front = false,
   onNode,
   life,
+  mood,
+  shadow,
+  ownerId,
+  ownerPivot,
 }: {
+  /** Fix round 1: a held thing takes its owner's whole presentation (lean, wiggle, hop, stir)
+   * about the owner's own pivot, so it never comes away from the hand. */
+  ownerId?: string;
+  /** The owner's pivot (its contact) in this entity's frame. */
+  ownerPivot?: { x: number; y: number };
   /** HM-11: the shared life clock, given only to friends at rest in the room on screen. */
   life?: SharedValue<number>;
+  /** H4: a short expression after eating, a greeting or a burp. */
+  mood?: Face;
+  /** HD-08: a soft shadow thrown by a lit lamp nearby. */
+  shadow?: LampShadow;
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
   sceneRevision: string;
@@ -93,29 +109,57 @@ const RestingEntity = memo(function RestingEntity({
   // The motion channel carries per-frame values only while art follows before its overlay
   // is ready, or while something wobbles; otherwise nothing here runs during a drag.
   const seed = entity.character ? lifeSeed(entity.character.slot) : 0;
+  // HD-06: lean toward food or a friend carried near. The flag changes only on entering or
+  // leaving; the lean eases on the UI thread and then nothing runs.
+  const character = !!entity.character, id = entity.id;
+  // The friend whose lean this art shows: itself, or the friend holding it.
+  const leaner = character ? id : ownerId;
+  const lean = useSharedValue(0);
+  useAnimatedReaction(() => {
+    if (!leaner || sleeping || reduced) return 0;
+    for (const n of restingFlags.value.notice) if (n.id === leaner) return n.dir;
+    return 0;
+  }, (dir, previous) => {
+    if (dir !== previous) lean.set(withTiming(dir * NOTICE_DEGREES, { duration: 180 }));
+  }, [leaner, sleeping, reduced]);
   const style = useAnimatedStyle(() => {
     const flags = restingFlags.value, motion = restingMotion.value;
     const rest = firstRest(flags, owners);
     const follow = firstFollow(motion, owners);
     const pressed = anyIn(flags.pressed, owners);
     const landing = anyIn(flags.dragTargets, landingTargets);
-    const wobble = reduced ? 0 : motion.wobble[entity.id] ?? 0;
+    // A held thing moves with its owner whenever the owner reacts; otherwise it has its own.
+    const owned = !!ownerId && !!ownerPivot && ((motion.wobble[ownerId] ?? 0) !== 0 || !!motion.bob[ownerId] || lean.value !== 0);
+    const presenter = owned ? ownerId! : entity.id;
+    const wobble = reduced ? 0 : (motion.wobble[presenter] ?? 0) + (owned || character ? lean.value : 0);
+    const bob = reduced ? undefined : motion.bob[presenter];
     const hidden = (front && flags.fronts.includes(entity.id)) || (rest?.hide ?? false);
-    return { opacity: hidden ? 0 : 1,
-      transformOrigin: [rest ? rest.gx - frame.left : -frame.left, rest ? rest.gy - frame.top : -frame.top, 0],
+    const dim = motion.dim[presenter] ?? 1;
+    return { opacity: hidden ? 0 : dim,
+      transformOrigin: rest ? [rest.gx - frame.left, rest.gy - frame.top, 0]
+        : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
         { translateX: follow ? follow.dx : 0 },
-        { translateY: follow ? follow.dy : landing && !reduced ? -3 : 0 },
+        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
         { rotate: `${follow ? follow.tilt : wobble}deg` },
         { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
         { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
-          life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) },
+          (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
-  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }));
+  // The open-eyed art always keeps this style. Dropping it when the clock goes (a friend falls
+  // asleep) left the last native value behind: asleep mid-blink, the friend vanished for good.
+  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed]);
   const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
   const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
-  const anticipating = useDerivedValue(() => entity.character && anyIn(restingFlags.value.targets, anticipationTargets) ? 1 : 0);
+  // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
+  const anticipating = useDerivedValue(() => {
+    if (!character) return 0;
+    if (anyIn(restingFlags.value.targets, anticipationTargets)) return 1;
+    if (sleeping) return 0;
+    for (const n of restingFlags.value.notice) if (n.id === id && n.food) return 1;
+    return 0;
+  });
   const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   return (
@@ -197,12 +241,13 @@ const RestingEntity = memo(function RestingEntity({
       {!entity.character && !front && <Animated.View testID={`landing-rim-${entity.id}`} pointerEvents="none"
         style={[{ position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "4%", borderRadius: 18,
           borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
+      {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
       <Animated.View style={normal}>
-        <Animated.View style={life ? open : undefined}>
+        <Animated.View style={open}>
           <EntityArt
             entity={entity}
             actionOverride={action}
-            faceOverride={sleeping ? "sleepy" : undefined}
+            faceOverride={sleeping ? "sleepy" : mood}
             front={front}
             reduced={reduced}
             renderCharacter={renderCharacter}
@@ -210,7 +255,7 @@ const RestingEntity = memo(function RestingEntity({
         </Animated.View>
         {life && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={entity} actionOverride={action} reduced={reduced} renderCharacter={renderCharacter} blink />
+            <EntityArt entity={entity} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
         )}
       </Animated.View>
@@ -223,6 +268,37 @@ const RestingEntity = memo(function RestingEntity({
     </View>
   );
 });
+/** Fix round 1: the friend holding this thing, and that friend's pivot in this thing's frame. */
+function heldBy(entity: SceneEntity, scene: Scene): { ownerId?: string; ownerPivot?: { x: number; y: number } } {
+  if (entity.attachment.kind !== "hand") return {};
+  const owner = scene.entities[entity.attachment.character];
+  if (!owner) return {};
+  const frame = artFrame(entity);
+  return { ownerId: owner.id, ownerPivot: { x: owner.contact.x - entity.contact.x - frame.left, y: owner.contact.y - entity.contact.y - frame.top } };
+}
+/** HD-08: a warm pool of light around a lit lamp and on the floor below it. Fades in once. */
+function LampGlow({ lamp, reduced }: { lamp: SceneEntity; reduced: boolean }) {
+  const shown = useSharedValue(reduced ? 1 : 0);
+  React.useEffect(() => { if (!reduced) shown.set(withTiming(1, { duration: 240 })); }, [reduced, shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shown.value }));
+  const bulb = lamp.contact.y + lamp.bounds.top + lamp.bounds.height * 0.35, x = lamp.contact.x;
+  const floor = lamp.attachment.kind === "surface" ? lamp.contact.y + 80 : lamp.contact.y;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, style]}>
+    <View style={{ position: "absolute", left: x - 150, top: bulb - 150, width: 300, height: 300, borderRadius: 150, backgroundColor: "#FFE7A0", opacity: 0.16 }} />
+    <View style={{ position: "absolute", left: x - 95, top: bulb - 95, width: 190, height: 190, borderRadius: 95, backgroundColor: "#FFE7A0", opacity: 0.18 }} />
+    <View style={{ position: "absolute", left: x - 170, top: floor - 34, width: 340, height: 68, borderRadius: 170, backgroundColor: "#F6CD71", opacity: 0.2 }} />
+  </Animated.View>;
+}
+/** HD-08: a lamp's soft shadow from a friend's feet, away from the light. Fades in once. */
+function ShadowCast({ shadow, x, y, reduced }: { shadow: LampShadow; x: number; y: number; reduced: boolean }) {
+  const shown = useSharedValue(reduced ? 1 : 0);
+  React.useEffect(() => { if (!reduced) shown.set(withTiming(1, { duration: 220 })); }, [reduced, shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shadow.opacity * shown.value }));
+  const height = 30;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: x - 10, top: y - height / 2, width: shadow.length,
+    height, borderRadius: height, backgroundColor: "#284F4B", transformOrigin: [0, height / 2, 0],
+    transform: [{ rotate: `${shadow.angle}deg` }] }, style]} />;
+}
 export function SceneView({
   state,
   scene,
@@ -243,7 +319,16 @@ export function SceneView({
   onBadges,
   debugLayer,
   liveRoom,
+  moods = {},
+  effects = [],
+  poke,
 }: {
+  /** HC-01: the painted piece that was last touched. */
+  poke?: Poke;
+  /** H4: short expressions on friends at rest (after eating, greeting, a burp). */
+  moods?: Record<string, Face>;
+  /** H4: crumbs, bubbles, splashes and steam, drawn above the room's things. */
+  effects?: readonly Effect[];
   /** HM-11: friends at rest in this room blink and breathe. None in the overview. */
   liveRoom?: string;
   /** Lab-only layer in house space, under the carried object. */
@@ -267,6 +352,13 @@ export function SceneView({
   onMove: (id: string, action: string) => void;
 }) {
   const { camera } = interaction;
+  // HD-08: lamp shadows change only when the room's contents do.
+  // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
+  const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {
+    const shadow = lampShadow(scene, e);
+    return shadow ? [[e.id, shadow]] : [];
+  }))), [scene]);
+  const shadows = useMemo(() => JSON.parse(shadowKey) as Record<string, LampShadow>, [shadowKey]);
   // One UI-thread clock for every friend on screen; nothing re-renders an SVG.
   const lifeClock = useSharedValue(0);
   // R3: the clock runs only while a friend on screen actually blinks and breathes with it.
@@ -345,6 +437,9 @@ export function SceneView({
                 onSelect={onSelect}
                 onMove={onMove}
                 life={living && !front && alive(entity) ? lifeClock : undefined}
+                mood={front ? undefined : moods[entity.id]}
+                shadow={front ? undefined : shadows[entity.id]}
+                {...heldBy(entity, scene)}
               />
             );
             return (
@@ -358,11 +453,12 @@ export function SceneView({
               >
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ width: 800, height: 560 }}>
                   {roomId === "home" ? (
-                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} />
+                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} live />
                   ) : (
-                    <RoomShellArt room={roomId} theme={room.theme} />
+                    <RoomShellArt room={roomId} theme={room.theme} live />
                   )}
                 </View>
+                <SetPieces room={roomId} poke={poke?.id.startsWith(`${roomId}-`) ? poke : undefined} reduced={reduced} />
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
                   {index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />}
                 </View>
@@ -374,6 +470,7 @@ export function SceneView({
                   style={{ position: "absolute", left: 8, top: 8, width: 784, height: 544, overflow: "hidden" }}
                 >
                   <View pointerEvents="box-none" style={{ position: "absolute", left: -8, top: -8 }}>
+                    {litLamps(scene, roomId).map((lamp) => <LampGlow key={`glow:${lamp.id}`} lamp={lamp} reduced={reduced} />)}
                     {paintEntries(entities, scene).flatMap(({ entity, front }, order, entries) => [
                       ...(order === entries.findIndex((entry) => entry.entity.item?.layer !== "ground")
                         ? scene.rooms[roomId].targets.filter((target) => target.rim).map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
@@ -383,6 +480,7 @@ export function SceneView({
                     {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
+                    {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}
                     {stress && roomId === "home" && (
                       <StressCopies
                         extraProps={Math.max(0, 150 - Object.values(scene.entities).filter((e) => e.item).length)}

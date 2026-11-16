@@ -52,6 +52,8 @@ export type SceneEntity = {
   visual?: { x: number; y: number };
   body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink"; portable?: boolean; underfoot?: boolean };
   item?: Instance;
+  /** HD-07: the stove whose pan this food is drawn in (saved on the floor in front of it). */
+  pan?: EntityId;
   character?: Character;
 };
 export type Scene = {
@@ -88,6 +90,9 @@ export type Target = {
   pet?: boolean;
   hidden?: boolean;
   closed?: boolean;
+  /** HD-07: the stove's pan. Food lands on the saved floor point `attachment.at`, in `cell`. */
+  pan?: boolean;
+  cell?: GridCell;
 };
 /** Prepared at settled edits, never a Map, function, class or native handle. */
 export type RoomIndex = {
