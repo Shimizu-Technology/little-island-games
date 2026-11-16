@@ -58,7 +58,7 @@ export function characterPose(base: CharacterBase, action: CharacterAction = nul
     // Approach from below the chin, with the elbow below the hand. A restored
     // action has no transient food: keep its empty hand down while it chews.
     const reach = clampRig(meal?.reach, 0, 1);
-    const target: Point = action === 'hold' ? [61, 88] : [58 - 8 * reach, 91 - 19 * reach];
+    const target: Point = action === 'hold' ? [61, 88] : [58 - 11 * reach, 91 - 25 * reach];
     [joints.rightElbow, joints.rightHand] = solve(joints.rightShoulder, target, action === 'hold' ? [72, 76] : [68, 94], 16);
   }
   joints.head = [joints.head[0] + clampRig(gaze?.x, -1, 1) * 1.4, joints.head[1] + clampRig(gaze?.y, -1, 1) * .6];

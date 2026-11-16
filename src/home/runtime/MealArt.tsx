@@ -12,15 +12,15 @@ function Frame({ input, meal, time, index, progress, reduced, renderCharacter }:
   reduced: boolean; renderCharacter?: CharacterRenderer;
 }) {
   const sampled = mealFrame(time, reduced);
-  const frame = { ...sampled, bite: meal.action === 'eat' && sampled.bite }, bitten = meal.action === 'eat' && time >= 300;
+  const frame = { ...sampled, bite: meal.action === 'eat' && sampled.bite }, bitten = meal.action === 'eat' && time >= 360;
   const clip = `meal-${input.slot}-${meal.key}-${index}`;
   const held = <G data-meal-food={meal.food.item}>
-    {bitten && <Defs><ClipPath id={clip}><Path d="M0 9Q3 12 5 8Q9 11 11 6Q15 8 16 1L24 0V24H0Z"/></ClipPath></Defs>}
+    {bitten && <Defs><ClipPath id={clip}><Path d="M0 14Q5 17 7 12Q13 15 14 9Q20 11 20 4L23 0H24V24H0Z"/></ClipPath></Defs>}
     <G transform={meal.action === 'drink' ? 'translate(-8 -3)' : undefined} clipPath={bitten ? `url(#${clip})` : undefined}>
       <HandProp id={meal.food.item as HoldableId} tint={meal.food.tint} state={{ on: meal.food.powered, empty: meal.action === 'drink' && time >= 540 }}/>
     </G>
   </G>;
-  const value = { ...input, action: meal.action, face: frame.bite ? 'anticipate' as const : 'chew' as const,
+  const value = { ...input, action: meal.action, face: time < 150 ? 'neutral' as const : frame.bite ? 'anticipate' as const : 'chew' as const,
     held, meal: frame, gaze: { x: .35, y: .8 } };
   const style = useAnimatedStyle(() => ({ opacity: mealIndex(progress.value) === index ? 1 : 0 }));
   return <Animated.View testID={`meal-frame-${index}`} pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0 }, style]}>

@@ -14,7 +14,7 @@ export function mealIndex(ms: number): number {
 export function mealFrame(ms: number, reduced = false): MealFrame {
   // An ease-out reach, a clear bite, then an easy downward return while chewing.
   const t = Math.max(0, Math.min(1, ms / 180));
-  const down = Math.max(0, Math.min(1, (ms - 300) / 240));
+  const down = Math.max(0, Math.min(1, (ms - 360) / 240));
   return { reach: reduced ? 1 : ms < 180 ? 1 - (1 - t) ** 2 : 1 - down * down * (3 - 2 * down),
-    bite: ms >= 150 && ms < 300, chew: Math.floor(ms / 120) % 2 === 0 };
+    bite: ms >= 150 && ms < 360, chew: Math.floor(ms / 120) % 2 === 0 };
 }

@@ -26,7 +26,7 @@ describe('H4b meal art and natural hand path', () => {
       for (const joint of ['head','leftHip','rightHip','leftFoot','rightFoot'] as const) expect(bite.joints[joint]).toEqual(first.joints[joint]);
     }
     expect(mealFrame(180).bite).toBe(true);
-    expect(mealFrame(360).bite).toBe(false);
+    expect(mealFrame(420).bite).toBe(false);
     expect(mealFrame(360).chew).not.toBe(mealFrame(480).chew);
   });
   it('shows exactly one opaque mounted frame at every 60 Hz step, always carrying identifiable food', async () => {
@@ -43,7 +43,7 @@ describe('H4b meal art and natural hand path', () => {
     }
     for (const input of inputs) expect(renderToStaticMarkup(input.held)).toContain('data-meal-food="mango"');
     expect(inputs.some(i => i.meal.bite)).toBe(true);
-    expect(inputs.slice(8).every(i => i.face === 'chew')).toBe(true);
+    expect(inputs.slice(9).every(i => i.face === 'chew')).toBe(true);
     expect(renderToStaticMarkup(inputs.at(-1).held)).toContain('clip-path=');
     await act(async () => tree.unmount());
   });
