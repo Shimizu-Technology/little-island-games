@@ -23,8 +23,9 @@ export const SCHOOL_BOARD_MIN = {
   'tide-pool': 90, 'float-sink': 100, 'tide-logic': 56,
   'logic-lagoon': BUTTON_ROW, 'slip-tide': BUTTON_ROW,
   'treasure-algebra': 250, 'program-editor': 140,
-  // S1a: Star Station's inquiry scenes keep their labels and Moon spots readable at this height.
-  'space-station': 140,
+  // S1a: Star Station's scene labels are sized to the text floor whatever the drawing's height; 120 keeps the
+  // Moon spots, scales and readings clear of each other at AX (tests/s1a-inquiry-board.test.tsx).
+  'space-station': 120,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 

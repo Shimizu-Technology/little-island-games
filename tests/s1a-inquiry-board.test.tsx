@@ -9,6 +9,8 @@ import type { LearnSession } from '../src/learn/types';
 import { Board } from '../src/learn/games/space-station/view';
 import { legacyEngine } from '../src/learn/games/space-station/engine';
 import { investigations } from '../src/learn/games/space-station/investigations';
+import { StationScene } from '../src/learn/games/space-station/Scene';
+import { SCHOOL_BOARD_MIN } from '../src/learn/boardGeometry';
 import { move, solve, type InquiryState, type Investigation } from '../src/learn/inquiry/engine';
 import { BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
 
@@ -229,7 +231,8 @@ it('"From Earth" and "Mystery world" now read as legend text at the floor, not s
   for (const [level, key, words] of [[2, 'moon', 'Right: the Moon as seen from Earth'], [4, 'gravity-c', 'Left: the mystery world. Right: your test.']] as const) {
     await mount(level, { width: 393, height: 852, fontScale: 3.12 }, session => skipTo(session, q => q.key.startsWith(key)));
     const legend = root!.root.findAll(n => String(n.type) === 'Text' && n.props.testID === 'inquiry-legend');
-    expect(legend.map(n => n.children.map(String).join(''))).toContain(words);
+    const lines = legend[0].findAll(n => String(n.type) === 'Text').map(n => n.children.filter(c => typeof c === 'string').join(''));
+    expect(lines).toContain(`${words} · `);
     expect(legend[0].props.maxFontSizeMultiplier).toBe(1.5); // 13 pt × 1.5 = 19.5 pt at AX
     expect(labelSizes({ width: 393, fontScale: 3.12 }).every(l => l.words.length <= 8)).toBe(true);
     await act(async () => root!.unmount()); root = undefined;
@@ -296,3 +299,23 @@ it('a restored dirty round with a false help flag calls assistance on the next m
   else await press(button('Hint'), settle);
   expect(props.assistance).toHaveBeenCalledTimes(1);
 });
+
+// At the drawing's floor (the smallest it gets), every label still reads at the text floor and fits in the scene.
+it('at the 120-pt drawing floor, every scene label on every level reaches the text floor and fits, default and AX', async () => {
+  const height = SCHOOL_BOARD_MIN['space-station'], width = 393 - 60, scale = Math.min(height / 210, (width - 12) / 360);
+  expect(height).toBe(120);
+  for (const floor of [13, 19.5]) for (let seed = 0; seed < 40; seed++) for (let level = 1; level <= 5; level++) for (const q of investigations(level, seed)) {
+    const plans = [q.start, ...(q.kind === 'reach' ? [solve(q)!] : [])];
+    for (const settings of plans) for (const seen of [null, q.observe(settings)]) {
+      let tree: ReactTestRenderer | undefined;
+      await act(async () => { tree = create(<StationScene q={q} settings={settings} seen={seen} height={height} label={floor / scale} />); });
+      for (const t of tree!.root.findAll(n => String(n.type) === 'SvgText')) {
+        const words = String(t.props.children), half = (words.length * 0.6 * t.props.fontSize) / 2;
+        expect(t.props.fontSize * scale, words).toBeGreaterThanOrEqual(floor - 0.01);
+        expect(t.props.x - half, `${q.key} ${words}`).toBeGreaterThanOrEqual(0);
+        expect(t.props.x + half, `${q.key} ${words}`).toBeLessThanOrEqual(360);
+      }
+      await act(async () => tree!.unmount());
+    }
+  }
+}, 120_000);

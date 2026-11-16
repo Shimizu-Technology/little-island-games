@@ -48,7 +48,8 @@ export const seasonAt = (tilt: number, leaning: number) => (tilts[tilt] === 0 ? 
  * "untilted". The second condition is where the Moon is on its tilted path right now: crossing the Sun–Earth line
  * (near a node, in an eclipse season) or passing above or below it. Source: NASA, eclipse seasons and nodes.
  */
-export const moonPlaces = ["Between Sun and Earth", "Behind Earth", "Off to the side"] as const;
+/** The line-up from the Sun: Moon in the middle (new Moon), Earth in the middle (full Moon), or the Moon to one side. */
+export const moonPlaces = ["Sun, Moon, Earth", "Sun, Earth, Moon", "Off to the side"] as const;
 export const moonPaths = ["Crosses the line", "Passes above or below"] as const;
 export const eclipses = ["Solar eclipse", "Lunar eclipse", "No eclipse"] as const;
 export const eclipseAt = (place: number, path: number) => (path === 1 || place === 2 ? 2 : place);

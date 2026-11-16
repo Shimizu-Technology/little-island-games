@@ -305,7 +305,7 @@ function lightTiltEclipse(seed: number): Investigation[] {
   const make: Investigation = {
     key: "eclipse-c", kind: "reach", title: want === 0 ? "Solar eclipse" : "Lunar eclipse",
     question: `Set up the model to make a ${want === 0 ? "solar" : "lunar"} eclipse.`,
-    controls: [{ name: "Moon", options: places.options }, { name: "Moon's path", options: paths.options }], start: misses[r(misses.length)],
+    controls: [{ name: "Line-up", options: places.options }, { name: "Moon's path", options: paths.options }], start: misses[r(misses.length)],
     outcomes: eclipses, want,
     observe: ([p, q]) => {
       const result = eclipseAt(places.model(p), paths.model(q));
@@ -332,7 +332,7 @@ function lightTiltEclipse(seed: number): Investigation[] {
   const check: Investigation = {
     key: "eclipse-d", kind: "observe", title: "Eclipse check",
     question: `${where}. ${now} What will the model show?`,
-    controls: [{ name: "Moon", options: moonPlaces, fixed: true }, { name: "Moon's path", options: moonPaths, fixed: true }], start: [place, path],
+    controls: [{ name: "Line-up", options: moonPlaces, fixed: true }, { name: "Moon's path", options: moonPaths, fixed: true }], start: [place, path],
     outcomes: checkTiles.outcomes,
     observe: ([p, q]) => {
       const result = eclipseAt(p, q);

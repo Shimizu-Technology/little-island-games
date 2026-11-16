@@ -133,14 +133,19 @@ export function InquiryBoard({
       </View>
       <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
         <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={(large ? 19.5 : 13) / sceneScale} /></View>
-        {legend?.({ q, settings: s.draft, seen: p.seen }).map((line) => <Copy key={line} testID="inquiry-legend" maxFontSizeMultiplier={cap} style={{ fontSize: 13, textAlign: "center", color: theme.ink, fontWeight: "700" }}>{line}</Copy>)}
-        <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 13, textAlign: "center", color: theme.ink }}>Illustrative model{q.given ? ` · given: ${q.given}` : ""}</Copy>
+        {/* The legend and the "illustrative" note share one wrapped caption, so they cost the board as little height as possible. */}
+        <Copy testID="inquiry-legend" maxFontSizeMultiplier={cap} style={{ fontSize: 13, textAlign: "center", color: theme.ink }}>
+          {(legend?.({ q, settings: s.draft, seen: p.seen }) ?? []).map((line) => <Copy key={line} style={{ fontSize: 13, fontWeight: "800", color: theme.ink }}>{line} · </Copy>)}
+          Illustrative model{q.given ? ` · given: ${q.given}` : ""}
+        </Copy>
       </View>}>
         {/* Once tested, the result and the reasons sit right under the drawing the child is watching. */}
         {p.phase !== "setup" && result}
         {/* Title, question and prompts stop at 1.5× so the drawing and Test stay in view together; Hear it reads them. */}
-        <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 21, fontWeight: "900", color: theme.ink }}>{q.title}</Copy>
-        <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 16, lineHeight: 22 }}>{q.question}</Copy>
+        {/* The title leads the question in one block: one line less between the drawing and Test. */}
+        <Copy testID="inquiry-question" maxFontSizeMultiplier={cap} style={{ fontSize: 16, lineHeight: 22 }}>
+          <Copy style={{ fontSize: 18, fontWeight: "900", color: theme.ink }}>{q.title}. </Copy>{q.question}
+        </Copy>
         {p.phase === "setup" && <CoachSpot active={coach.active}>
           <View style={{ gap: 8 }}>
             {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 4 }}>
