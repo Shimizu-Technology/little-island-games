@@ -114,7 +114,7 @@ it('every board text without its own cap stops at 2x inside the board region, an
   expect(longest(title)).toBeLessThanOrEqual(W * 0.92 + 1);
 });
 
-it('Crab Commands at AX5: labels fit, Go! keeps its own line, Clear and Hint share a secondary row, and the beach shrinks', async () => {
+it('Crab Commands at AX5: labels fit, Go! keeps its own line, Undo, Clear and Hint share a secondary row, and the beach shrinks', async () => {
   const r = await mount('crab-commands', sessionFor('crab-commands'));
   const cards = r.root.find(n => n.props.testID === 'crab-command-cards');
   const labels = cards.findAll(n => String(n.type) === 'Text');
@@ -126,17 +126,17 @@ it('Crab Commands at AX5: labels fit, Go! keeps its own line, Clear and Hint sha
   const run = r.root.find(n => n.props.testID === 'crab-run-row');
   expect(flat(run.props.style).flexDirection).not.toBe('row');
   const go = run.find(n => String(n.type) === 'Pressable');
-  const clear = r.root.find(n => String(n.type) === 'Pressable' && textOf(n) === 'Clear');
-  const hint = r.root.find(n => String(n.type) === 'Pressable' && textOf(n) === 'Hint');
+  // C1d adds Undo beside Clear and Hint, in F-frame-2's secondary row under the board.
+  const button = (label: string) => r.root.find(n => String(n.type) === 'Pressable' && textOf(n) === label);
+  const [undo, clear, hint] = ['Undo', 'Clear', 'Hint'].map(button);
   expect(textOf(go)).toBe('Go!');expect(flat(go.props.style).alignSelf).toBe('stretch');
-  expect([textOf(clear), textOf(hint)]).toEqual(['Clear', 'Hint']);
-  expect(clear.parent!.parent).toBe(hint.parent!.parent);
+  expect(clear.parent!.parent).toBe(hint.parent!.parent);expect(undo.parent!.parent).toBe(hint.parent!.parent);
   expect(flat(clear.parent!.parent!.props.style).flexDirection).toBe('row');
   const buttons = r.root.findAll(n => String(n.type) === 'Pressable');
-  expect(buttons.indexOf(clear)).toBeGreaterThan(buttons.indexOf(go));
-  expect(buttons.indexOf(hint)).toBeGreaterThan(buttons.indexOf(go));
-  // Half the board each, less 8-pt gap and 13-pt compact padding: Hint stays inside the card.
-  for (const b of [clear, hint]) expect(longest(b.findByType('Text' as never))).toBeLessThanOrEqual((W - 8) / 2 - 26);
+  for (const b of [undo, clear, hint]) expect(buttons.indexOf(b)).toBeGreaterThan(buttons.indexOf(go));
+  // Undo and Clear take half the board each (less the 8-pt gap and 13-pt compact padding); Hint wraps to a full line.
+  for (const b of [undo, clear]) expect(longest(b.findByType('Text' as never))).toBeLessThanOrEqual((W - 8) / 2 - 26);
+  expect(flat(hint.props.style).flexBasis).toBe('100%');expect(longest(hint.findByType('Text' as never))).toBeLessThanOrEqual(W - 26);
   // The beach, the plan and the cards share one phone screen; the prompt stops at 2x.
   const beach = r.root.findAll(n => String(n.type) === 'View' && flat(n.props.style).alignSelf === 'center' && typeof flat(n.props.style).width === 'number')[0];
   expect(flat(beach.props.style).width).toBeLessThanOrEqual(Math.floor(H * 0.3));
