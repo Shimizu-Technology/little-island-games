@@ -1,0 +1,88 @@
+import React,{createContext,useLayoutEffect}from'react';
+import{readFileSync}from'node:fs';
+import{act,create,type ReactTestRenderer}from'react-test-renderer';
+import{afterEach,expect,it,vi}from'vitest';
+import{CoveRound}from'../src/cove/CoveRound';
+import{StoreProvider,useStore}from'../src/state/Store';
+import{emptySave}from'../src/state/validation';
+import{addLearner}from'../src/learn/learners';
+import{catalogManifest}from'../src/state/catalogManifest';
+import{emptyChallenge,registerSaveContent,type ChallengeSession}from'../src/state/challenge';
+import{selectedOwner,progressFor}from'../src/state/challengeDrafts';
+import{unpack}from'../src/state/saveBits';
+import{createBankLoader,type BankLoader}from'../src/puzzles/loader';
+import{solitaireAdapter}from'../src/puzzles/table/adapter';
+import{defineSolitaire,type BankFacts}from'../src/puzzles/table/registration';
+import{SolitaireBoard}from'../src/puzzles/table/SolitaireBoard';
+import{readTable,moveTable}from'../src/puzzles/table/solitaireCheckpoint';
+import{legalMoves,opening}from'../src/puzzles/table/solitaire';
+import{solve}from'../src/puzzles/table/solver';
+import{capFixture}from'../scripts/puzzles/solitaire/qa-fixtures';
+import type{RootIndex}from'../src/puzzles/bank';
+import root from'../src/content/puzzles/root.json';
+import facts from'../src/puzzles/table/packs.generated.json';
+const db=vi.hoisted(()=>({raw:null as string|null,rows:[]as string[],loader:null as BankLoader|null,reads:[]as string[],discarded:[]as string[],failReplace:false}));
+vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
+vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));
+vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{},writeDraft:async(raw:string)=>{db.rows.push(raw);},readDrafts:async()=>db.rows,discardSession:async(raw:string)=>{db.discarded.push(raw);if(db.failReplace)throw new Error('test preserve failure');}}}));
+vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bottom:34,left:0,right:0})}));
+vi.mock('react-native',()=>({View:'div',Pressable:'button',ScrollView:'section',Platform:{OS:'ios'},AppState:{addEventListener:()=>({remove(){}})},useWindowDimensions:()=>({width:393,height:852,fontScale:1}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{setValue(){}getTranslateTransform(){return[];}}}}));
+vi.mock('expo-router',()=>({useIsFocused:()=>true}));
+vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',Heading:'h2',C:{},styles:{}}));
+vi.mock('../src/components/Text',()=>({Text:'span'}));
+vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play(){}})}));
+vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
+vi.mock('../src/puzzles/table/LazyBoard',async()=>({LazySolitaireBoard:(await import('../src/puzzles/table/SolitaireBoard')).SolitaireBoard}));
+const entry=defineSolitaire(facts as BankFacts[]);
+let store:ReturnType<typeof useStore>,screen:ReactTestRenderer|undefined;
+function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
+afterEach(async()=>{if(screen)await act(async()=>{await store.backup();screen!.unmount();});screen=undefined;vi.unstubAllGlobals();});
+it.each(['o1','t1','f1'])('real packed %s -> Cove Store -> serialized pause -> helped/Together finish',async band=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});db.rows=[];db.reads=[];
+ db.loader=createBankLoader({root:root as RootIndex,transport:{read:async name=>{db.reads.push(name);return readFileSync(`src/content/puzzles/assets/${name}.lipuzzle`,'utf8');}}});
+ const b=(facts as BankFacts[]).find(b=>b.band===band)!;expect(b).toBeDefined();
+ const ref=await entry.packed!.choose(b.slot,emptyChallenge()),card=entry.packed!.card(ref)!,deal=(await db.loader.entry(solitaireAdapter(b.family==='solitaire'),b.family,b.first)).payload;
+ registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
+ const together=band==='t1';
+ function Ready(){const s=useStore();return s.ready?<CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={together?'family':null} width={353} onBrowse={()=>{}} onClose={()=>{}}/>:null;}
+ const mount=async(round=true)=>act(async()=>{screen=create(<StoreProvider><Probe/>{round&&<Ready/>}</StoreProvider>);});
+ const session=()=>progressFor(store.save,'a')!.paused[0],send=async(action:unknown)=>act(async()=>screen!.root.findByType(SolitaireBoard).props.dispatch(action));
+ await mount();expect(session().puzzle).toEqual(ref);await send({type:'help'});
+ const move=legalMoves(opening(deal),deal.mode).find(a=>a[2]>0)!;await send({type:'move',move});const accepted=JSON.parse(JSON.stringify(session()))as ChallengeSession;
+ await act(async()=>{await store.backup();screen!.unmount();});screen=undefined;db.loader.release();await mount();
+ expect(session()).toEqual(accepted);expect(readTable(session().payload,deal)!.payload.audit).toEqual([1]);
+ await send({type:'undo'});expect(readTable(session().payload,deal)!.position.piles).toEqual(opening(deal).piles);
+ const solved=solve(deal,undefined,10000);expect(solved.status).toBe('solved');if(solved.status!=='solved')return;
+ for(const move of solved.moves)await send({type:'move',move});
+ if(!together)await act(async()=>screen!.root.findAllByType('button').find(n=>n.children.join('')==='Save my finish')!.props.onPress());
+ expect(progressFor(store.save,'a')!.paused).toEqual([]);
+ const mark=(owner:string)=>unpack(progressFor(store.save,owner)!.banks.find(([slot])=>slot===b.slot)![1],b.count,3)![0];
+ expect(mark('a')).toBe(together?3:2);if(together)expect(mark('family')).toBe(3);
+ expect(JSON.stringify(screen!.toJSON())).toContain(together?'Solved together':'Puzzle solved');
+ expect(new Set(db.reads)).toEqual(new Set(root.families.filter(f=>f[0]===b.family).map(f=>f[1]).concat([`p${b.slot}`])));
+ await act(async()=>{await store.backup();screen!.unmount();});screen=undefined;await mount(false);
+ expect(progressFor(store.save,'a')!.paused).toEqual([]);expect(mark('a')).toBe(together?3:2);
+});
+
+it.each(['moves','help'])('the direct %s-cap restart preserves the old attempt and audit, including a failed replacement',async cap=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});db.rows=[];db.reads=[];db.discarded=[];db.failReplace=false;
+ db.loader=createBankLoader({root:root as RootIndex,transport:{read:async name=>readFileSync(`src/content/puzzles/assets/${name}.lipuzzle`,'utf8')}});
+ const b=(facts as BankFacts[]).find(b=>b.band==='f1')!,ref=await entry.packed!.choose(b.slot,emptyChallenge()),card=entry.packed!.card(ref)!,deal=(await db.loader.entry(solitaireAdapter(false),b.family,b.first)).payload;
+ registerSaveContent(entry.catalog,catalogManifest(entry.catalog));
+ function Ready(){const s=useStore();return s.ready?<CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={null} width={353} onBrowse={()=>{}} onClose={()=>{}}/>:null;}
+ await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});
+ const before=progressFor(store.save,'a')!.paused[0],fixture=capFixture(deal),full={...before,revision:before.revision+1,payload:cap==='moves'?{...fixture.payload,audit:[1,2]}:{...moveTable(deal,before.payload as import('../src/puzzles/table/solitaireCheckpoint').TablePayload,legalMoves(opening(deal),deal.mode)[0])!,audit:Array(128).fill(1)}};
+ await act(async()=>{expect(await store.challengeSave(full,{owner:'a',epoch:store.epoch,game:'solitaire',id:before.id,revision:before.revision})).toBe(true);});
+ expect(readTable(progressFor(store.save,'a')!.paused[0].payload,deal)!.history).toHaveLength(cap==='moves'?1024:1);
+ const restart=()=>screen!.root.findAllByType('button').find(n=>n.children.includes('Start this deal again'))!;
+ expect(restart()).toBeDefined();expect(JSON.stringify(screen!.toJSON())).toContain(cap==='moves'?'This table has had lots of moves.':'This attempt’s help log is full.');
+ const explanation=screen!.root.findAllByType('p').find(n=>JSON.stringify(n.children).includes(cap==='moves'?'This table has had lots of moves.':'This attempt’s help log is full.'))!;
+ let ancestor=explanation.parent;while(ancestor){expect(ancestor.props.accessibilityLabel).not.toBe('Table instructions and hint');ancestor=ancestor.parent;}
+ for(const label of ['Undo','Rules'])expect(screen!.root.findAllByType('button').find(n=>n.children.includes(label))!.props.disabled).toBeFalsy();
+ db.failReplace=true;await act(async()=>{await restart().props.onPress();});
+ expect(progressFor(store.save,'a')!.paused[0]).toEqual(full);expect(JSON.parse(db.discarded[0])).toEqual(full);
+ db.failReplace=false;await act(async()=>{await restart().props.onPress();});
+ const fresh=progressFor(store.save,'a')!.paused[0];expect(fresh.id).not.toBe(full.id);expect(fresh.ordinal).toBe(full.ordinal+1);expect(fresh.puzzle).toEqual(full.puzzle);expect(fresh.owner).toBe(full.owner);
+ expect(readTable(fresh.payload,deal)!.history).toEqual([]);expect(readTable(fresh.payload,deal)!.payload.audit).toEqual([]);expect(JSON.parse(db.discarded.at(-1)!)).toEqual(full);
+ expect((JSON.parse(db.discarded.at(-1)!)as ChallengeSession).payload).toMatchObject({audit:cap==='moves'?[1,2]:Array(128).fill(1)});
+});

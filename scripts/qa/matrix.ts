@@ -87,7 +87,7 @@ export function discoverInventory(root = process.cwd(), scope = readScope(root))
   const packed = json(root, 'src/content/puzzles/root.json').families as [string, string][];
   const banks = packed.flatMap(([game, manifest]) => {
     const family = json(root, `src/content/puzzles/assets/${manifest}.lipuzzle`) as { packs: number[][] };
-    return family.packs.map(pack => ({ game, slot: pack[0] }));
+    return family.packs.map(pack => ({ game: scope.registrationAliases[game] ?? game, slot: pack[0] }));
   });
   const coveAst = ts.createSourceFile('catalog.ts', readFileSync(resolve(root, 'src/cove/catalog.ts'), 'utf8'), ts.ScriptTarget.Latest, true);
   let cove: string[] | undefined;
@@ -107,7 +107,7 @@ export function discoverInventory(root = process.cwd(), scope = readScope(root))
   const games = [...new Set([...school,
     ...literalIds(root, 'src/games/index.ts', 'gameIds'), ...literalIds(root, 'src/board/index.ts', 'boardIds'),
     ...literalIds(root, 'src/arcade/types.ts', 'arcadeIds'), ...literalIds(root, 'src/state/activities.ts', 'activityIds'),
-    ...challenge.map(id => scope.registrationAliases[id] ?? id), ...packed.map(([game]) => game),
+    ...challenge.map(id => scope.registrationAliases[id] ?? id), ...packed.map(([game]) => scope.registrationAliases[game] ?? game),
   ])];
   return { games, challenge, cove, banks, mechanics: [...new Set([...guardedMechanics, ...declaredMechanics(root)])], school, hall, boards, arcade, activities };
 }

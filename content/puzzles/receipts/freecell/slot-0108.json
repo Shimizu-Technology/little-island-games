@@ -1,0 +1,157 @@
+{
+ "format": 1,
+ "family": "freecell",
+ "slot": 108,
+ "catalogRevision": 21,
+ "band": "f5",
+ "ordinals": [
+  110592,
+  64
+ ],
+ "sourceSha": "d2856c26f347fd55b4be3196f8be21661193c1ca",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "a188b95ffd7a38c403377376f322223d59fa73256b4633c349150d224d9c008b"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 256,
+  "kept": [
+   150995265,
+   155189414,
+   134218592,
+   155189711,
+   150995013,
+   155189774,
+   150995736,
+   155189411,
+   167773621,
+   150995542,
+   155189348,
+   150995083,
+   150995481,
+   150995602,
+   150995124,
+   155189551,
+   155189765,
+   150995622,
+   150995360,
+   150995587,
+   150995405,
+   155189930,
+   155189764,
+   150995511,
+   167772893,
+   150995338,
+   155189984,
+   150995803,
+   150995209,
+   150995378,
+   150995284,
+   150995239,
+   150995337,
+   150995466,
+   150995236,
+   150995203,
+   150994969,
+   155189398,
+   150995464,
+   150995223,
+   155190045,
+   150994962,
+   155189640,
+   150995623,
+   150995845,
+   150995242,
+   155189888,
+   167772179,
+   150995733,
+   155190014,
+   150995296,
+   150995787,
+   167773889,
+   150995570,
+   150995648,
+   150995159,
+   167774121,
+   155189534,
+   150995856,
+   167773255,
+   155189985,
+   167774118,
+   155189556,
+   150995735
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 64,
+  "semantic": 64
+ },
+ "histograms": {
+  "technique": {
+   "build-and-uncover + foundation-return + reserve-space + sequence-transfer": 8,
+   "build-and-uncover + reserve-space + sequence-transfer": 56
+  },
+  "template": {
+   "bursts": 16,
+   "pairs": 16,
+   "steady": 16,
+   "weave": 16
+  },
+  "layout": {
+   "bursts": 16,
+   "pairs": 16,
+   "steady": 16,
+   "weave": 16
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 10000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   52,
+   119
+  ],
+  "exact": 0
+ },
+ "proofHashes": {
+  "witness": "d34391871175f60927213d9c767370c0260488510159bab068e57f6275d7e120",
+  "trace": "46d5e3fe9aaaf67b65087c85270a67e12b2dd88b8797d2ae6b1efad45ae870ff",
+  "claims": "64f5a647239345c6b25de580d718812068e0c8ebbaa14e9d879d868912aa0d48"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating. Exact ordered install of 9532ba72 via scripts/puzzles/solitaire/install.ts. Curation scripts, source pool/checkpoint hashes and every selected row in scripts/puzzles/solitaire/selected-rows.json (sha256 dcdc5a1df121e8a25931f201454357c2479e76cd0b06840ce49dbfa97f80c637). 106: recurate-paddling.ts, 0x7000000+i; 107–109: recurate-advanced.ts, original/regraded rows + regenerated advanced-pools checkpoint + new 0x400000-offset candidates. Historical search totals unavailable. Receipt attempts/rejects describe this exact-row certification, not historical candidate curation."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 22443,
+  "gzip": 8737
+ },
+ "sha256": "4b4a6691c64cb130f34771c19028f9f3be746dd2fe0f831ea2f9088d950e50a2",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

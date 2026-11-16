@@ -1,0 +1,23 @@
+{
+ "format": 1,
+ "family": "solitaire",
+ "seedBase": 1,
+ "attempts": 256,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 10000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "o1": 16,
+  "o3": 48,
+  "o6": 64,
+  "t1": 16,
+  "t3": 48,
+  "t6": 64
+ },
+ "sourceSha": "de731882992b7c48b732243d2cbe5eb07467572f",
+ "status": "complete"
+}

@@ -1,0 +1,322 @@
+[
+ {
+  "seed": 50331925,
+  "template": "bursts",
+  "workload": 5
+ },
+ {
+  "seed": 50331694,
+  "template": "pairs",
+  "workload": 6
+ },
+ {
+  "seed": 50331816,
+  "template": "steady",
+  "workload": 6
+ },
+ {
+  "seed": 50331699,
+  "template": "weave",
+  "workload": 6
+ },
+ {
+  "seed": 50331805,
+  "template": "bursts",
+  "workload": 6
+ },
+ {
+  "seed": 50332078,
+  "template": "pairs",
+  "workload": 6
+ },
+ {
+  "seed": 50331736,
+  "template": "steady",
+  "workload": 7
+ },
+ {
+  "seed": 50331659,
+  "template": "weave",
+  "workload": 7
+ },
+ {
+  "seed": 50331861,
+  "template": "bursts",
+  "workload": 7
+ },
+ {
+  "seed": 50331650,
+  "template": "pairs",
+  "workload": 7
+ },
+ {
+  "seed": 50331848,
+  "template": "steady",
+  "workload": 7
+ },
+ {
+  "seed": 50331679,
+  "template": "weave",
+  "workload": 7
+ },
+ {
+  "seed": 50331873,
+  "template": "bursts",
+  "workload": 7
+ },
+ {
+  "seed": 50331658,
+  "template": "pairs",
+  "workload": 7
+ },
+ {
+  "seed": 50331928,
+  "template": "steady",
+  "workload": 7
+ },
+ {
+  "seed": 50331703,
+  "template": "weave",
+  "workload": 7
+ },
+ {
+  "seed": 50331901,
+  "template": "bursts",
+  "workload": 7
+ },
+ {
+  "seed": 50331702,
+  "template": "pairs",
+  "workload": 7
+ },
+ {
+  "seed": 50332028,
+  "template": "steady",
+  "workload": 7
+ },
+ {
+  "seed": 50331707,
+  "template": "weave",
+  "workload": 7
+ },
+ {
+  "seed": 50331969,
+  "template": "bursts",
+  "workload": 7
+ },
+ {
+  "seed": 50331662,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331660,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331655,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331665,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331678,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331692,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331711,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331705,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331682,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331700,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331731,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331713,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331686,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331712,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331751,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331717,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331710,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331720,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331763,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331733,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331722,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331744,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331791,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331749,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331742,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331752,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331803,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331769,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331754,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331756,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331811,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331777,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331778,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331760,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331875,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331785,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331790,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331764,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331883,
+  "template": "weave",
+  "workload": 8
+ },
+ {
+  "seed": 50331793,
+  "template": "bursts",
+  "workload": 8
+ },
+ {
+  "seed": 50331802,
+  "template": "pairs",
+  "workload": 8
+ },
+ {
+  "seed": 50331788,
+  "template": "steady",
+  "workload": 8
+ },
+ {
+  "seed": 50331887,
+  "template": "weave",
+  "workload": 8
+ }
+]
