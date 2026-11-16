@@ -69,6 +69,6 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
   return <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}><Defs><LinearGradient id={`more-volume-${id}`} x1="0%" y1="0%" x2="15%" y2="100%"><Stop offset="0%" stopColor={light}/><Stop offset="46%" stopColor={color}/><Stop offset="100%" stopColor={dark}/></LinearGradient><Filter id={`more-muted-${id}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs><G filter={muted?`url(#more-muted-${id})`:undefined}><Ellipse cx={75} cy={120} rx={54} ry={6} fill={ink} opacity={.12}/><G transform={flip?'translate(150 0) scale(-1 1)':undefined} stroke={ink} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round"><ItemMotion active={active} animated={animated} reduced={reduced}>{art}<ItemFinish id={id} color={color}/></ItemMotion><ItemLife id={id} color={color} active={active} animated={animated} reduced={reduced}/></G></G></Svg>;
 }
 
-export function RoomShellArt({room, theme}: {room: Exclude<RoomId, "home">; theme: HomeState["theme"]}) {
-  return <StageRoom room={room} theme={theme}/>;
+export function RoomShellArt({room, theme, live}: {room: Exclude<RoomId, "home">; theme: HomeState["theme"]; live?: boolean}) {
+  return <StageRoom room={room} theme={theme} live={live}/>;
 }

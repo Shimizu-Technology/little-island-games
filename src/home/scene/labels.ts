@@ -3,8 +3,11 @@ import type { EntityId, SceneEntity } from "./types";
 
 const friends = ["Islander", "Pip", "Crab"];
 /** The spoken name of an entity before any numbering. */
+/** HD-07: food cooked on the stove says so. */
+const cookedNames: Record<string, string> = { mango: "Grilled mango", banana: "Fried banana", "rice-ball": "Toasted rice ball", cupcake: "Warm cupcake" };
 export const entityName = (entity: SceneEntity) =>
-  entity.character ? friends[entity.character.slot] : itemSpec(entity.item!.item).name;
+  entity.character ? friends[entity.character.slot]
+    : (entity.item!.powered && cookedNames[entity.item!.item]) || itemSpec(entity.item!.item).name;
 
 /**
  * Accessible names for entities that share a room. Same-name entities in one room are numbered

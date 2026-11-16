@@ -6,6 +6,8 @@ import { capabilityOf, visualBox } from "../world";
 import { canHold, retiredSeat, socketPoint, socketsOf } from "../interactions";
 import { itemShapes, occluderBounds, paintedBounds, unionBounds } from "../art/silhouettes";
 import { characterFrame, characterPoint, furnitureDepth, itemPoint, itemSize, surfacePoint } from "../geometry";
+import { panCell, panFloorPoint, panFood, panSeatPoint, panStoveOf } from "./pan";
+import { panSeats, panSeatsTag } from "./panSeats";
 import { anchorsFor, species } from "./species";
 import { characterEntityId, gridCell, gridToRoom, itemEntityId, roomPoint } from "./types";
 import type {
@@ -41,13 +43,17 @@ function surveyed(shapes: HitShape[], fallback: Bounds): Pick<SceneEntity, "shap
     visual: { x: outline.left + outline.width / 2, y: outline.top + outline.height / 2 },
   };
 }
-export function itemEntity(room: RoomId, item: Instance, instances: readonly Instance[] = []): SceneEntity {
+export function itemEntity(room: RoomId, item: Instance, instances: readonly Instance[] = [], seated = false): SceneEntity {
   const spec = itemSpec(item.item);
   const [a, b] = spec.footprint;
   const capability = capabilityOf(item.item);
   const point = itemPoint(item, instances);
   const box = visualBox(item.item, item.rotation, item.mirrored);
   const parent = item.on && instances.find((i) => i.id === item.on);
+  // HD-07: food saved on the floor in front of a stove is drawn seated in its pan, but only
+  // when a pan drop put it there this session (scene/panSeats); otherwise it is on the floor.
+  const stove = seated ? panStoveOf(item, instances) : undefined;
+  const shown = stove ? panSeatPoint(stove) : point;
   const attachment: Attachment = item.staged
     ? { kind: "staging", room }
     : item.in
@@ -59,17 +65,18 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
     id: itemEntityId(room, item.id),
     room,
     attachment,
-    contact: roomPoint(point.x, point.y),
+    contact: roomPoint(shown.x, shown.y),
     bounds: box,
     ...surveyed(itemShapes(item, box.width), box),
     base: "stand",
     facing: item.mirrored !== item.rotation >= 180 ? "left" : "front",
     action: null,
     children: [],
-    depth: furnitureDepth(item),
+    depth: stove ? furnitureDepth(stove) + 1 : furnitureDepth(item),
     band: item.layer === "wall" || item.layer === "ground" ? "background" : "furniture-back",
     hitProxies: [box],
     item,
+    ...(stove ? { pan: itemEntityId(room, stove.id) } : {}),
     body: {
       w: item.rotation % 180 ? b * 2 : a * 2,
       h: item.rotation % 180 ? a * 2 : b * 2,
@@ -128,10 +135,10 @@ function rectCore(point: RoomPoint, radius: number): Bounds {
   return { left: point.x - radius, top: point.y - radius, width: radius * 2, height: radius * 2 };
 }
 /** Build once per settled edit. The returned index is safe to serialize to a worklet. */
-export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.stringify(state)): RoomIndex {
+export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.stringify(state) + panSeatsTag(state)): RoomIndex {
   const entities: RoomIndex["entities"] = {};
   for (const item of state.instances) {
-    const entity = itemEntity(room, item, state.instances);
+    const entity = itemEntity(room, item, state.instances, panSeats(state).has(item.id));
     entities[entity.id] = entity;
   }
   for (const character of state.characters) {
@@ -288,6 +295,37 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         });
       }
     }
+    if (item.item === "stove") {
+      // HD-07: the pan takes one food. It lands on the floor cell in front of the stove (what
+      // the save keeps) and is drawn in the pan. A blocked cell closes the pan.
+      const cell = panCell(item), floorAt = panFloorPoint(item), seat = panSeatPoint(item);
+      const seated = Object.values(entities).find((e) => e.pan === entity.id)?.id;
+      const blockers = new Set<string>();
+      for (let y = cell.y; y < cell.y + 2; y++) for (let x = cell.x; x < cell.x + 2; x++)
+        for (const id of occupancy[`furniture:${x}:${y}`] ?? []) if (id !== seated) blockers.add(id);
+      // Fix round 2: food set on the floor over the pan's cell isn't in the pan, but it holds the
+      // cell. That one food may still go in (it only moves to the pan's spot); nothing else can.
+      const [only] = blockers, holder = blockers.size === 1 ? entities[only] : undefined;
+      const waiting = !seated && holder?.item && holder.attachment.kind === "floor" && !holder.children.length && panFood(holder.item) ? holder.id : undefined;
+      const occupant = seated ?? waiting;
+      const blocked = cell.y + 2 > 12 || [...blockers].some((id) => id !== occupant);
+      const box = { left: seat.x - 36, top: seat.y - 18, width: 72, height: 32 };
+      targets.push({
+        id: `${entity.id}/pan`,
+        kind: "surface",
+        owner: entity.id,
+        attachment: { kind: "floor", room, at: floorAt },
+        contact: seat,
+        core: box,
+        support: box,
+        base: "stand",
+        facing: "front",
+        occupied: occupant,
+        closed: !!occupant || blocked,
+        pan: true,
+        cell,
+      });
+    }
     if (capabilityOf(item.item).toggle === "open") {
       targets.push({
         id: `${entity.id}/container`,
@@ -358,7 +396,7 @@ export function buildScene(state: SceneState, cache?: SceneRoomCache): Scene {
   const rooms = {} as Scene["rooms"];
   const entities: Scene["entities"] = {};
   for (const room of roomIds) {
-    const key = JSON.stringify(state.rooms[room]);
+    const key = JSON.stringify(state.rooms[room]) + panSeatsTag(state.rooms[room]);
     let cached = cache?.[room];
     if (!cached || cached.key !== key) {
       cached = { key, index: buildRoomIndex(room, state.rooms[room], revision) };

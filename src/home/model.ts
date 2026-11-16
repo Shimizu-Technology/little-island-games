@@ -621,6 +621,8 @@ export function starterHome(): HomeStateV2 {
 export type HomeAction = (
   | { type: "apply-proposal"; proposal: DropProposal }
   | { type: "finish-action"; slot: Character["slot"] }
+  /** HD-07: food in the pan of a lit stove becomes cooked. Outside history, like finish-action. */
+  | { type: "cook"; id: string }
   | { type: "dispense"; source: string; item: ItemId; id: string; x: number; y: number }
   | { type: "use-item"; id: string; slot: Character["slot"]; eat?: boolean }
   | { type: "release-held"; slot: Character["slot"]; x: number; y: number }

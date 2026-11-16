@@ -4,8 +4,9 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "../components/motion";
+import { useDelight } from "./runtime/useDelight";
+import { pieceAt } from "./runtime/SetPieces";
 import { useStore } from "../state/Store";
-import { useSounds } from "../components/Audio";
 import type { BadgeId } from "../badges/engine";
 import { buildingLayout, roomOrigin } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
@@ -81,8 +82,9 @@ export function HomeScreen({
     inset = useSafeAreaInsets(),
     reduced = useReducedMotion(),
     visible = useHomeVisible();
-  const app = useStore(),
-    sound = useSounds(app.save.settings.sound);
+  const app = useStore();
+  // HD-04: Home's sounds and haptics follow the sound switch (and the effects switch) together.
+  const soundOn = app.save.settings.sound && app.save.settings.effects !== false;
   const store = useHomeStore(ownership, initialState, persist);
   const [designing, setDesigning] = useState(!!initialItem),
     [selected, setSelected] = useState<string>();
@@ -184,6 +186,18 @@ export function HomeScreen({
   useLayoutEffect(() => {
     live.current = { store, scene, selected, placing, room, designing };
   });
+  // H4: reactions, effects, sounds and cooking.
+  const delight = useDelight({
+    soundOn,
+    reduced,
+    cue: (id, kind, dir) => runtime.current?.showCue?.(id, kind, dir),
+    clearCue: (id) => runtime.current?.clearCue?.(id),
+    getScene: () => live.current.scene,
+    cook: (id, roomId) => live.current.store.dispatch({ type: "cook", id, roomId }),
+    isHeld: (id) => (runtime.current?.slots.get() ?? []).some((s) => !!s?.id && s.phase !== "settling" && (s.id === id || s.restId === id)),
+  });
+  const { watchCooking, pickedUp: delightPickup, landed: delightLanded, ate: delightAte } = delight;
+  React.useEffect(() => watchCooking(scene), [scene, watchCooking]);
   const recordLayoutRef = useRef<(() => void) | undefined>(undefined);
   const ghost = useSharedValue<CatalogGhost>({ active: false, x: 0, y: 0 });
   const viewportOffset = useSharedValue({ x: 0, y: 64 + inset.top });
@@ -308,6 +322,8 @@ export function HomeScreen({
     const action = proposal.consume === "drink" ? "drink" : "eat";
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
+    const eater = live.current.scene.entities[target.owner];
+    if (eater?.character) delightAte(eater, action);
     reactionTimers.current[target.owner] = setTimeout(() => {
       delete reactionTimers.current[target.owner];
       const owner = live.current.scene.entities[target.owner];
@@ -350,6 +366,7 @@ export function HomeScreen({
         if (labKit && trace)
           trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
         showReaction(result.proposal);
+        const before = live.current.scene;
         const destination = buildRuntimeScene(result.state);
         setPickups((current) =>
           current.map((p, i) =>
@@ -372,10 +389,13 @@ export function HomeScreen({
           const owner = live.current.scene.rooms[result.proposal.room].targets.find(t => t.id === result.proposal.target)?.owner;
           restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
         }
-        sound("tap");
+        delightLanded(result.proposal, before.entities[proposal.id], before, destination, result.identities[result.proposal.id]);
+        // Rule 49: food dropped into a hot pan starts sizzling with the commit, not a render later.
+        watchCooking(destination);
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
-    [building, commitAt, sound, buildRuntimeScene, trace]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- showReaction reads refs; the delight callbacks are stable.
+    [building, commitAt, delightLanded, delightAte, watchCooking, buildRuntimeScene, trace]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {
@@ -385,15 +405,19 @@ export function HomeScreen({
       for (const id of groupIds(pickup.scene, pickup.id)) {
         if (pickup.scene.entities[id]?.character) wake(id);
       }
+      delightPickup(pickup.scene.entities[pickup.id]);
+      watchCooking(live.current.scene);
       setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
       setSelected(undefined);
     },
-    [wake]
+    [wake, delightPickup, watchCooking]
   );
   const onClear = useCallback(
     (index: number, id?: string, reason?: "capacity") => {
       if (reason === "capacity") live.current.store.setMessage(CAPACITY_MESSAGE);
       if (id) clearCatalogSeed(catalogSeeds.current, id);
+      // A cancelled carry puts food back in a hot pan: it starts cooking again.
+      watchCooking(live.current.scene);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
       setPickups((current) => {
@@ -402,7 +426,7 @@ export function HomeScreen({
         return current.map((p, i) => (i === index ? undefined : p));
       });
     },
-    []
+    [watchCooking]
   );
   const onDestination = useCallback(
     (index: number, destination: Scene) =>
@@ -452,6 +476,16 @@ export function HomeScreen({
         router.push("/badges");
         return;
       }
+      // HC-01: a painted jar, pan, book, plant or lantern answers the touch.
+      const camera = runtime.current!.camera.get(), index = roomAtScreen(point.x, point.y, camera, building);
+      if (index >= 0) {
+        const at = roomOrigin(index, building), there = screenToRoom(point, camera, housePoint(at.x, at.y));
+        const piece = pieceAt(roomIds[index], there.x, there.y);
+        if (piece) {
+          delight.touchedPiece(roomIds[index], piece);
+          return;
+        }
+      }
     }
     const entity = id ? current.scene.entities[id] : undefined;
     if (!id && !current.selected && !current.placing) {
@@ -475,6 +509,7 @@ export function HomeScreen({
     }
     if (entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle)
       current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
+    if (entity) delight.tapped(entity, sleeping);
     if (id) {
       setSelected(!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay ? undefined : id);
       if (entity) {
@@ -880,6 +915,9 @@ export function HomeScreen({
             selected={selected}
             reactions={reactions}
             sleeping={sleeping}
+            moods={delight.moods}
+            effects={delight.effects}
+            poke={delight.poke}
             onNode={onNode}
             onSelect={choose}
             onMove={moveAccessible}

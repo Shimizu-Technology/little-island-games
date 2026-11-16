@@ -7,6 +7,7 @@ import { HINT_IDLE_MS } from '../src/home/runtime/quietHints';
 const harness = vi.hoisted(() => ({
   hint: vi.fn(), scene: {} as any, appState: [] as ((s: string) => void)[], focus: [] as (() => void | (() => void))[], blur: [] as (() => void)[],
 }));
+vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
 vi.mock('expo-router', () => ({
   router: {},
   useFocusEffect: (effect: () => void | (() => void)) => {
