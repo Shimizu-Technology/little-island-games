@@ -1126,6 +1126,8 @@
     "flat": null,
     "blocks": 4,
     "least": 4,
+    "winners": 101,
+    "gridWinners": 104,
     "loopsWithinTray": false
    }
   },
@@ -1136,10 +1138,10 @@
      "id": "fog-2",
      "rows": [
       "C...H",
+      "#..#.",
+      ".#...",
       "#....",
-      ".....",
-      ".....",
-      ".##.#"
+      "....."
      ],
      "tier": 0,
      "pace": "medium",
@@ -1148,17 +1150,17 @@
     },
     "budget": null,
     "starter": [],
-    "lesson": "This time one card comes before the Repeat. Where should the crab face before it starts?",
+    "lesson": "Try one card before the Repeat. Where should the crab face before it starts?",
     "blockEditor": true,
     "tray": 5,
     "fog": [
      {
       "rows": [
-       "C#.#H",
+       "C##.H",
        ".....",
        "#....",
-       "#....",
-       ".##.#"
+       "...#.",
+       "....."
       ]
      }
     ],
@@ -1241,6 +1243,8 @@
     "flat": null,
     "blocks": 5,
     "least": 5,
+    "winners": 43,
+    "gridWinners": 43,
     "loopsWithinTray": false
    }
   },
@@ -1251,9 +1255,9 @@
      "id": "fog-3",
      "rows": [
       "C....",
-      ".##..",
-      ".#.#.",
+      "#....",
       ".....",
+      "##...",
       "H...."
      ],
      "tier": 0,
@@ -1263,17 +1267,17 @@
     },
     "budget": null,
     "starter": [],
-    "lesson": "Turning is not enough this time. One branch needs two cards.",
+    "lesson": "This beach needs a longer plan. Try two cards in one branch.",
     "blockEditor": true,
     "tray": 5,
     "fog": [
      {
       "rows": [
-       "C..#.",
-       "##...",
-       "##.##",
+       "C#...",
        ".....",
-       "H...."
+       ".....",
+       "...##",
+       "H.#.."
       ]
      }
     ],
@@ -1356,6 +1360,8 @@
     "flat": null,
     "blocks": 5,
     "least": 5,
+    "winners": 67,
+    "gridWinners": 70,
     "loopsWithinTray": false
    }
   },
@@ -1365,11 +1371,11 @@
     "level": {
      "id": "fog-4",
      "rows": [
-      "C.H..",
-      ".#...",
-      "....#",
+      "C..##",
+      "##...",
+      ".#H##",
       "#....",
-      ".##.#"
+      "...#."
      ],
      "tier": 0,
      "pace": "medium",
@@ -1378,17 +1384,17 @@
     },
     "budget": null,
     "starter": [],
-    "lesson": "Two foggy beaches and a tight tray with no spare block. The plans from the last beaches will not work here.",
+    "lesson": "Two foggy beaches and a tight tray with no spare block. The shortest plans from the last beaches will not work here.",
     "blockEditor": true,
     "tray": 5,
     "fog": [
      {
       "rows": [
-       "C#H..",
-       "...#.",
-       "##...",
-       "#....",
-       "###.#"
+       "C....",
+       "###..",
+       "..H..",
+       "..#..",
+       "...#."
       ]
      }
     ],
@@ -1405,26 +1411,24 @@
       [
        [
         0,
-        5
+        6
        ],
        [
-        2,
-        2,
+        4,
+        [
+         0
+        ],
         [
          [
-          4,
-          [
-           0
-          ],
-          [],
-          [
-           [
-            0,
-            4
-           ]
-          ]
+          0,
+          5
          ]
-        ]
+        ],
+        []
+       ],
+       [
+        0,
+        4
        ]
       ]
      ]
@@ -1442,26 +1446,24 @@
        [
         [
          0,
-         5
+         6
         ],
         [
-         2,
-         2,
+         4,
+         [
+          0
+         ],
          [
           [
-           4,
-           [
-            0
-           ],
-           [],
-           [
-            [
-             0,
-             4
-            ]
-           ]
+           0,
+           5
           ]
-         ]
+         ],
+         []
+        ],
+        [
+         0,
+         4
         ]
        ]
       ]
@@ -1473,6 +1475,8 @@
     "flat": null,
     "blocks": 5,
     "least": 5,
+    "winners": 6,
+    "gridWinners": 6,
     "loopsWithinTray": false
    }
   },
@@ -1482,7 +1486,7 @@
     "level": {
      "id": "fog-5",
      "rows": [
-      "C.#.#",
+      "C.#..",
       "#....",
       ".....",
       ".....",
@@ -1501,11 +1505,11 @@
     "fog": [
      {
       "rows": [
-       "C##..",
-       ".##..",
+       "C##.#",
+       "..#..",
        ".....",
-       "....#",
-       "H##.."
+       ".....",
+       "H.#.."
       ]
      }
     ],
@@ -1580,6 +1584,8 @@
     "flat": null,
     "blocks": 4,
     "least": 4,
+    "winners": 101,
+    "gridWinners": 104,
     "loopsWithinTray": false
    }
   }

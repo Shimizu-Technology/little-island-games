@@ -4,10 +4,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRng } from '../../../puzzles/rng';
 import { encodeProgram } from '../../program/codec';
-import { nodeCost, type Node, type Program } from '../../program/model';
+import { nodeCost, validProgram, type Node, type Program } from '../../program/model';
 import { commands, type Command, type Level } from './engine';
-import { execute, runPlan, solution, type Descriptor } from './challenge-engine';
-import { blockBest, flatBest, runNodes } from './search';
+import { execute, fogLevels, runPlan, solution, type Descriptor } from './challenge-engine';
+import { flatBest, runNodes } from './search';
 import { codes, crabSim } from './proofs';
 import { programCodes } from './program';
 import { greedyBot, worldSim } from './deep-proofs';
@@ -181,39 +181,115 @@ function songPuzzle(role: Role, id: string): unknown | null {
 // ---- Foggy beach ---------------------------------------------------------------------------
 const fogLessons: Record<Role, string> = {
   teach: 'Fog hides which beach this is. One plan must work on both. Use If blocked inside a Repeat.',
-  develop: 'This time one card comes before the Repeat. Where should the crab face before it starts?',
-  twist: 'Turning is not enough this time. One branch needs two cards.',
-  short: 'Two foggy beaches and a tight tray with no spare block. The plans from the last beaches will not work here.',
+  develop: 'Try one card before the Repeat. Where should the crab face before it starts?',
+  twist: 'This beach needs a longer plan. Try two cards in one branch.',
+  short: 'Two foggy beaches and a tight tray with no spare block. The shortest plans from the last beaches will not work here.',
   easy: 'One more foggy walk home, with room to spare.',
 };
 const If = (yes: Node[], no: Node[]): Node => ({ kind: 'if', condition: { kind: 'blocked' }, yes, no });
 /** What each rung asks for beyond the one before, as the program it needs:
  * teach: Repeat [If blocked: turn, otherwise: walk] · develop: a card before the Repeat · twist: a branch with two cards ·
- * short hard: a tray with no spare block, where every earlier rung's program fails · easy: the teaching shape, with room to spare. */
+ * Tight tray: a five-block program no earlier rung's shortest plan can stand in for · easy: the teaching shape, with room to spare. */
 const fogFamily = (role: Role): Node[] => {
   const F = cmd(4), T = () => cmd(pick([5, 6])), X = () => cmd(pick(W)), k = pick([4, 6, 8]);
   const loop = (yes: Node[], no: Node[]): Node => ({ kind: 'repeat', times: k, body: [If(yes, no)] });
   if (role === 'teach' || role === 'easy') return [loop([T()], [F])];
   if (role === 'develop') return [X(), loop([T()], [F])];
   if (role === 'twist') return pick([[loop([T(), F], [F])], [loop([T()], [F, F])]]);
-  // Tight tray: any of the harder shapes, measured minimal, with no spare block; the earlier rungs' programs must fail.
-  return pick([[X(), loop([T()], [F])], [loop([T(), F], [F])], [loop([T()], [F, F])], [X(), loop([T(), F], [F])], [X(), loop([T()], [F, F])]]);
+  // Tight tray: five-block shapes the earlier rungs do not teach (a card after the Repeat, or an If sharing the Repeat with cards).
+  const rep = (body: Node[]): Node => ({ kind: 'repeat', times: k, body });
+  return pick([[loop([T()], [F]), X()], [rep([F, If([T()], [F])])], [rep([If([T()], []), F, F])], [rep([If([T()], [F]), T()])], [rep([If([T()], []), F]), X()], [rep([F, F, If([T()], [])])], [loop([T(), T()], [F])]]);
 };
-/** Earlier rungs' programs, kept so a later rung can prove it needs something new. */
-const fogDone: Program[] = [], fogPairs: string[][][] = [], fogHard: Descriptor[] = [];
-const fogUniversal = [4, 6, 8].flatMap(times => [5, 6].map(turn => ({ version: 1, body: [{ kind: 'repeat', times, body: [If([cmd(turn)], [cmd(4)])] }], songs: [] } as Program)));
+
+/** Every program of up to five blocks the editor can build on a foggy beach: Walk, Turn left, Turn right, Repeat at its
+ * button counts (2, 3, 4, 6, 8) and If blocked with both branches. Lists share their tails, so a run is memoized per list. */
+type PNode = { id: number; k: 'c'; c: number } | { id: number; k: 'r'; n: number; body: PList } | { id: number; k: 'i'; yes: PList | null; no: PList | null };
+type PList = { id: number; head: PNode; tail: PList | null; cost: number };
+let pid = 0;
+const pLists: PList[][] = [[]], pNodes: PNode[][] = [[]];
+for (let cost = 1; cost <= 5; cost++) {
+  const nodes: PNode[] = cost === 1 ? W.map(c => ({ id: pid++, k: 'c' as const, c })) : [];
+  if (cost > 1) {
+    for (const body of pLists[cost - 1]) for (const n of [2, 3, 4, 6, 8]) nodes.push({ id: pid++, k: 'r', n, body });
+    for (let y = 0; y < cost; y++) for (const yes of y ? pLists[y] : [null]) for (const no of cost - 1 - y ? pLists[cost - 1 - y] : [null]) nodes.push({ id: pid++, k: 'i', yes, no });
+  }
+  pNodes.push(nodes);
+  const lists: PList[] = [];
+  for (let k = 1; k <= cost; k++) for (const head of pNodes[k]) for (const tail of k === cost ? [null] : pLists[cost - k]) lists.push({ id: pid++, head, tail, cost });
+  pLists.push(lists);
+}
+const allPrograms = pLists.flat();
+const toNodes = (l: PList | null): Node[] => l ? [toNode(l.head), ...toNodes(l.tail)] : [];
+const toNode = (n: PNode): Node => n.k === 'c' ? cmd(n.c) : n.k === 'r' ? { kind: 'repeat', times: n.n, body: toNodes(n.body) } : If(toNodes(n.yes), toNodes(n.no));
+const toProgram = (l: PList): Program => ({ version: 1, body: toNodes(l), songs: [] });
+/** One beach as a raw grid machine: a bump fails the run, and the crab stops the moment it is home with every shell. */
+function fogMachine(rows: string[]) {
+  const cells = rows.join(''), shellAt = new Map([...cells].flatMap((c, i) => (c === 'S' ? [i] : [])).map((p, i) => [p, 1 << i]));
+  const all = (1 << shellAt.size) - 1, FAIL = -1, memo = new Map<number, number>();
+  const pos = (s: number) => (s >> 2) % 25, dir = (s: number) => s & 3, mask = (s: number) => Math.floor((s >> 2) / 25);
+  const home = (s: number) => s >= 0 && cells[pos(s)] === 'H' && mask(s) === all;
+  const move = (s: number, c: number) => {
+    if (c !== 4) return (s & ~3) | ((dir(s) + (c === 5 ? 3 : 1)) % 4);
+    const x = (pos(s) % 5) + [0, 1, 0, -1][dir(s)], y = Math.floor(pos(s) / 5) + [-1, 0, 1, 0][dir(s)];
+    if (x < 0 || x > 4 || y < 0 || y > 4 || cells[y * 5 + x] === '#') return FAIL;
+    const p = y * 5 + x;
+    return ((mask(s) | (shellAt.get(p) ?? 0)) * 25 + p) * 4 + dir(s);
+  };
+  const runNode = (n: PNode, s: number): number => {
+    if (n.k === 'c') return move(s, n.c);
+    if (n.k === 'i') return runList(move(s, 4) === FAIL ? n.yes : n.no, s);
+    for (let i = 0; i < n.n && s !== FAIL && !home(s); i++) s = runList(n.body, s);
+    return s;
+  };
+  const runList = (l: PList | null, s: number): number => {
+    if (!l || s === FAIL || home(s)) return s;
+    const key = l.id * 4096 + s, hit = memo.get(key);
+    if (hit !== undefined) return hit;
+    const out = runList(l.tail, runNode(l.head, s));
+    memo.set(key, out);
+    return out;
+  };
+  const start = cells.indexOf('C') * 4 + 1;
+  return (l: PList) => home(runList(l, start));
+}
+/** All of a foggy pair's winners within five blocks, and the fewest blocks among them. */
+function fogWinners(d: Descriptor) {
+  const beaches = fogLevels(d).map(l => fogMachine(l.rows));
+  return { winners: allPrograms.filter(l => beaches.every(won => won(l))) };
+}
+const hasIfInRepeat = (nodes: Node[], inside = false): boolean => nodes.some(n => n.kind === 'if' ? inside || hasIfInRepeat([...n.yes, ...n.no], inside) : n.kind === 'repeat' ? hasIfInRepeat(n.body, true) : false);
+/** Each rung's fewest-block winners (the grid machine's set, so the check is conservative), kept so a later rung can prove
+ * that no earlier shortest plan stands in for its own. On the hard rungs the tray is the minimum, so these are all their winners. */
+const fogEarlier: { role: Role; ids: Set<number> }[] = [];
+const relaxed0 = (role: Role) => role === 'teach' || role === 'easy';
+/** Tight tray's plan: any five-block palette program that is not a shortest winner of an earlier rung. */
+const fogTightPlans = () => pLists[5].filter(l => !fogEarlier.some(e => e.ids.has(l.id)) && hasIfInRepeat(toNodes(l)) && validProgram(toProgram(l)));
+let tightPlans: PList[] | null = null;
 function fogPuzzle(role: Role, id: string): unknown | null {
-  const body = fogFamily(role);
+  if (role === 'short') tightPlans ??= fogTightPlans();
+  const body = role === 'short' ? toNodes(pick(tightPlans!)) : fogFamily(role);
   const program: Program = { version: 1, body, songs: [] };
   // Start from the school-spec foggy pair and move a few sandcastles; most random pairs share a flat route.
   const beach = (seed: string[]) => { const cells = seed.join('').replace('H', '.').split(''); for (let i = rng.below(6); i > 0; i--) { const at = 1 + rng.below(24); cells[at] = cells[at] === '#' ? '.' : '#'; } return cells; };
-  // Harder rungs: a random beach and its foggy twin, a few sandcastles moved.
-  const twin = (cells: string[]) => { const next = [...cells]; for (let i = 2 + rng.below(4); i > 0; i--) { const at = 1 + rng.below(24); next[at] = next[at] === '#' ? '.' : '#'; } return next; };
-  const fresh0 = () => { const cells = blank(); cells[0] = 'C'; scatter(cells, '#', 3 + rng.below(6)); return cells; };
-  // Tight tray searches near the develop and twist pairs: layouts that already suit If plans, with sandcastles moved.
-  const near = role === 'short' && fogPairs.length ? pick(fogPairs) : null;
-  const a = near ? twin(near[0]) : role === 'teach' || role === 'easy' || role === 'develop' && rng.below(2) ? beach(['C.#..', '#....', '.....', 'H....', '..#.#']) : fresh0();
-  const b = near ? twin(near[1]) : role === 'teach' || role === 'easy' || a.join('').startsWith('C.#..#') ? beach(['C##..', '.....', '.....', 'H....', '..#.#']) : twin(a);
+  // Harder rungs carve each beach from the program itself: run it on an open grid and settle every unknown If test at random,
+  // a sandcastle ahead for "blocked", open sand otherwise. Two carvings make a foggy pair the program walks by construction.
+  const carve = () => {
+    const cells = Array.from({ length: 25 }, () => '?'); cells[0] = 'C';
+    let pos = 0, dir = 1, ok = true;
+    const ahead = () => { const x = (pos % 5) + [0, 1, 0, -1][dir], y = Math.floor(pos / 5) + [-1, 0, 1, 0][dir]; return x < 0 || x > 4 || y < 0 || y > 4 ? -1 : y * 5 + x; };
+    const blocked = () => { const at = ahead(); if (at < 0) return true; if (cells[at] === '?') cells[at] = rng.below(5) < 2 ? '#' : '.'; return cells[at] === '#'; };
+    const run = (nodes: Node[]) => { for (const n of nodes) { if (!ok) return;
+      if (n.kind === 'command') { if (n.command === 4) { const at = ahead(); if (at < 0 || cells[at] === '#') { ok = false; return; } if (cells[at] === '?') cells[at] = '.'; pos = at; } else dir = (dir + (n.command === 5 ? 3 : 1)) % 4; }
+      else if (n.kind === 'repeat') for (let i = 0; i < n.times; i++) run(n.body);
+      else if (n.kind === 'if') run(blocked() ? n.yes : n.no);
+    } };
+    run(body);
+    return ok ? cells.map(c => (c === '?' ? (rng.below(6) ? '.' : '#') : c)) : null;
+  };
+  const carved = relaxed0(role) ? null : [carve(), carve()];
+  if (carved && (!carved[0] || !carved[1])) return reject('fog-carve');
+  const a = carved ? carved[0]! : beach(['C.#..', '#....', '.....', 'H....', '..#.#']);
+  const b = carved ? carved[1]! : beach(['C##..', '.....', '.....', 'H....', '..#.#']);
   // Each crab stops the moment it reaches home, so home is a square both routes reach: the deepest one they share.
   const route = (cells: string[]) => {
     const l: Level = { id, rows: rowsOf(cells), tier: 0, pace: 'medium', skill: 'think.loops', facing: 1 }, sim = crabSim(l), visits = [0];
@@ -230,28 +306,21 @@ function fogPuzzle(role: Role, id: string): unknown | null {
   const d = describe(id, rowsOf(a), 'medium', {}, { blockEditor: true, tray, fog: [{ rows: rowsOf(b) }], tools: { condition: true } }, fogLessons[role]);
   const wins = (p: Program) => runPlan(d, { program: [], blockDraft: encodeProgram(p) }).won;
   if (!wins(program)) return reject('fog3');
-  // A harder rung refuses the teaching shape and every earlier rung's program.
-  if (!relaxed && [...fogUniversal, ...fogDone].some(wins)) return reject('fog-old-program');
-  // No flat plan of any length brings both crabs home, and no plan of cards and Repeats fits the tray.
+  // No flat plan of any length brings both crabs home.
   if (flatBest(worldSim(d), W, 40)) return reject('fog4');
-  const loops = blockBest(worldSim(d), W, tray, { nest: 2, work: 600_000 });
-  if (loops.exhausted || loops.best !== null) return reject('fog5');
-  // Measured on the engine with If blocks allowed: this program is the fewest blocks that work.
-  const least = blockBest(worldSim(d), W, cost, { nest: 2, conditions: true, work: 2_000_000 });
-  if (least.exhausted || least.best === null) return reject('fog-not-minimal');
-  // Tight tray takes the engine's own fewest-block program as its plan, with the tray set exactly to it.
-  if (role === 'short' && least.best >= 5 && least.best < cost) {
-    const tight = { ...d, tray: least.best }, plan = least.witness!;
-    if ([...fogUniversal, ...fogDone].some(p => runPlan(tight, { program: [], blockDraft: encodeProgram(p) }).won)) return reject('fog-old-program');
-    // And the other way round: this plan fails every earlier hard rung, so each rung keeps a program of its own.
-    if (fogHard.some(old => runPlan(old, { program: [], blockDraft: encodeProgram(plan) }).won)) return reject('fog-solves-earlier');
-    fogDone.push(plan); fogHard.push(tight);
-    return { descriptor: tight, witness: encodeProgram(plan), cards: 0, solutions: [encodeProgram(plan)], proof: { flat: null, blocks: least.best, least: least.best, loopsWithinTray: false } };
-  }
-  if (least.best !== cost) return reject('fog-not-minimal');
-  if (!relaxed && fogHard.some(old => runPlan(old, { program: [], blockDraft: encodeProgram(program) }).won)) return reject('fog-solves-earlier');
-  if (!relaxed) { fogHard.push(d); fogDone.push(program); fogPairs.push([a.map(c => (c === 'H' ? '.' : c)), b.map(c => (c === 'H' ? '.' : c))]); }
-  return { descriptor: d, witness: encodeProgram(program), cards: 0, solutions: [encodeProgram(program)], proof: { flat: null, blocks: cost, least: least.best, loopsWithinTray: false } };
+  // Every palette program of up to five blocks, run on both beaches by a raw grid machine. The app wins a subset of these:
+  // it also refuses a plan whose cards run past 80 on a beach. Minimum and lessons use the app's winners; the shared-winner
+  // check uses the grid machine's larger set, which is the stricter test.
+  const grid = fogWinners(d).winners, app = grid.filter(l => wins(toProgram(l))), least = Math.min(...app.map(l => l.cost));
+  if (least !== cost) return reject('fog-not-minimal');
+  // Every winner within the tray uses If blocked inside a Repeat, as the teaching lesson says.
+  const fits = app.filter(l => l.cost <= tray).map(toProgram);
+  if (!fits.every(p => hasIfInRepeat(p.body))) return reject('fog-if-free');
+  // A harder rung: none of an earlier rung's fewest-block winners also wins here, so each rung needs a program of its own.
+  const sharedWith = relaxed ? undefined : fogEarlier.find(e => grid.some(l => e.ids.has(l.id)));
+  if (sharedWith) return reject(`fog-shared-${sharedWith.role}`);
+  if (role !== 'short' && role !== 'easy') fogEarlier.push({ role, ids: new Set(grid.filter(l => l.cost <= least).map(l => l.id)) });
+  return { descriptor: d, witness: encodeProgram(program), cards: 0, solutions: [encodeProgram(program)], proof: { flat: null, blocks: cost, least, winners: fits.length, gridWinners: grid.length, loopsWithinTray: false } };
 }
 
 const rejected: Record<string, number> = {};
