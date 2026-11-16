@@ -13,7 +13,7 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   Scrolling up must still expose Back, sound, Help and the learner switch in their
   existing VoiceOver order. At AX, entry/rotation reveal is limited to the ported
   measured School boards (Crab, Beep, Håfa Adai, Reef Race, Weather, Tide Pool,
-  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure) plus Shell Math,
+  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure, Canoe Seats) plus Shell Math,
   which already had an AX entry reveal. Unported and reading boards keep their
   existing entry behavior at **>= 500 pt**. Default text keeps the strict 500-pt threshold.
   Next questions in short landscape retain the revealed board position.
@@ -21,6 +21,9 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   no animated scroll is introduced. Required proof: 499/500 threshold tests,
   portrait/landscape/portrait round preservation and iPhone 15 landscape frames
   at default and AX5 text sizes.
+  *16 November 2026, O2 (lead-approved):* Canoe Seats joins the ported measured boards. Its floor is
+  legibility-first: seat pictures stay at least 56 pt on a phone and 64 pt on an iPad (the board passes
+  the per-rung, per-device floor as the hook's minimum), and the page scrolls rather than shrinking them.
 
 - **15 November 2026 — K7, pre-authorized by `c2b-k7/BRIEF.md`:** additive
   revision-1 nested program drafts for Crab, Beep and Turtle, plus compact structural

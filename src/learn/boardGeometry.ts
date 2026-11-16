@@ -1,4 +1,5 @@
 import { BUTTON_ROW } from '../puzzles/grid/budget';
+import { canoeHeight, SEAT_FLOOR_PHONE } from './games/canoe-seats/layout';
 
 /** Real inner card dimensions, after the safe areas, pinned header and card inset. */
 export type BoardSpace = { width: number; height: number; large: boolean; reveal?: boolean; layoutKey?: string; anchorReady?: boolean };
@@ -23,6 +24,9 @@ export const SCHOOL_BOARD_MIN = {
   'tide-pool': 90, 'float-sink': 100, 'tide-logic': 56,
   'logic-lagoon': BUTTON_ROW, 'slip-tide': BUTTON_ROW,
   'treasure-algebra': 250, 'program-editor': 140,
+  // O2 (lead-approved 16 Nov): legibility first. The canoe never draws a seat picture below 56 pt on a phone;
+  // the board passes its own per-rung, per-device floor (64 pt on iPad) as the hook's minimum.
+  'canoe-seats': canoeHeight(SEAT_FLOOR_PHONE, 1),
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 
