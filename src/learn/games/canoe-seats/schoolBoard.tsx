@@ -11,7 +11,7 @@ import {
   toggleUsed, undoSeat, type CanoeState,
 } from './engine';
 import { canoeHelpRules, canoeView, type CanoeView, type HelpMove } from './help';
-import { clueKey, gameLines } from './speech';
+import { clueKey, teachCaptions } from './speech';
 
 /** The help key names this exact board and seating, so a hint for any other position is never shown or applied. */
 const keyOf = (s: CanoeState) => `${s.index}:${s.puzzles[s.index]?.join('|') ?? ''}:${s.pos.join(',')}:${s.lights ? 1 : 0}:${s.checks}:${s.helped ? 1 : 0}:${s.won ? 1 : 0}`;
@@ -69,7 +69,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
   }, [sound, soundOn]);
   if (!puzzle || !rules || !snapshot) return null;
   const teach = teachNow;
-  const teachLine = teach ? gameLines[`canoe-teach-${teach}`] : '';
+  const teachLine = teach ? teachCaptions[teach] : '';
   const title = `${levelInfo[state.level - 1].name} · Canoe ${state.index + 1} of ${state.puzzles.length}${teach ? ' · New clue' : ''}`;
   const finished = state.won ? <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: 10, alignSelf: 'stretch', backgroundColor: '#E2F2E4', borderRadius: 20, padding: 14 }}>
     <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', fontSize: 20, color: C.ink }}>Everyone has a seat!</Copy>
@@ -82,7 +82,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
   </View> : undefined;
   const names = session.names ?? ['Player 1', 'Player 2'];
   return <CanoeBoard key={boardKey} puzzle={puzzle} pos={state.pos} used={state.used} lights={state.lights} won={state.won} missed={state.checked} canCheck={canCheck(state)}
-    active={active} width={width} title={title} hear={hear} notice={notice || (state.moves ? '' : teachLine)} cue={cue} finished={finished} teach={teach === 'whatif' ? null : teach}
+    active={active} width={width} title={title} hear={hear} notice={notice} cue={cue} finished={finished} teach={teach === 'whatif' ? null : teach} teachNote={teachLine}
     coach={state.index === 0 && !state.moves ? coach : undefined}
     onPlace={(item, seat) => placeOne(item, seat, false)} onToggleUsed={clue => commit(toggleUsed(latest.current, clue))} onCheck={check}
     onUndo={() => commit(undoSeat(latest.current))} onReset={() => commit(resetSeats(latest.current))} canUndo={state.undo.length > 0} canReset={state.pos.some(s => s !== -1)}

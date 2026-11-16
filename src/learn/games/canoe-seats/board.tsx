@@ -39,6 +39,8 @@ export type CanoeBoardProps = {
   keepers?: Keepers;
   /** A teaching board: cards of this new kind wear a "New" ribbon until tapped. */
   teach?: Kind | null;
+  /** What the new card means, shown above the cards until the child taps it. */
+  teachNote?: string;
   coach?: { active: boolean; done: () => void };
   cue?: HintCue | null;
   notice?: string;
@@ -79,7 +81,7 @@ function Spark({ t, angle, reach, color }: { t: ReturnType<typeof useSharedValue
 }
 
 export function CanoeBoard(props: CanoeBoardProps) {
-  const { puzzle: p, pos, used, lights, won, missed, canCheck, active, width, title, hear, onPlace, onToggleUsed, onCheck, onUndo, onReset, canUndo, canReset, onLights, keepers, teach = null, coach, cue = null, notice, help, finished, footer, header } = props;
+  const { puzzle: p, pos, used, lights, won, missed, canCheck, active, width, title, hear, onPlace, onToggleUsed, onCheck, onUndo, onReset, canUndo, canReset, onLights, keepers, teach = null, teachNote, coach, cue = null, notice, help, finished, footer, header } = props;
   const reduced = useReducedMotion(), window = useWindowDimensions(), large = window.fontScale >= LARGE_TEXT;
   const [held, setPicked] = useState<number | null>(null), [heard, setHeard] = useState<number | null>(null), [caption, setCaption] = useState(''), [page, setPage] = useState(0);
   const [met, setMet] = useState(false);
@@ -140,10 +142,10 @@ export function CanoeBoard(props: CanoeBoardProps) {
       {hat !== undefined && <View pointerEvents="none" style={{ position: 'absolute', top: friend !== undefined ? hatTop - seat * 0.06 : hatTop + seat * 0.3, left: seat * 0.14 }}><Seated reduced={reduced} flag={`h${hat}`}><Hat pool={p.cast[hat]} size={seat * 0.72} /></Seated></View>}
       {fruit !== undefined && <View pointerEvents="none" style={{ position: 'absolute', top: hatTop + seat * 0.62, right: -seat * 0.04 }}><Seated reduced={reduced} flag={`r${fruit}`}><Fruit pool={p.cast[fruit]} size={seat * 0.44} /></Seated></View>}
       {picked !== null && here.includes(picked) && <View pointerEvents="none" style={{ position: 'absolute', left: 2, top: 2, right: 2, bottom: 2, borderRadius: 12, borderWidth: 3, borderColor: C.teal }} />}
-      {crossed !== null && <View testID="canoe-hint-cross" pointerEvents="none" style={{ position: 'absolute', top: hatTop, alignItems: 'center' }}>
-        <View style={{ opacity: 0.55 }}><ItemArt attr={attrOf(p, crossed)} pool={p.cast[crossed]} size={seat * 0.7} /></View>
-        <View style={{ position: 'absolute', top: seat * 0.1, width: seat * 0.6, height: seat * 0.6, borderRadius: seat, borderWidth: 4, borderColor: '#D24B3E' }} />
-        <View style={{ position: 'absolute', top: seat * 0.38, width: seat * 0.66, height: 4, backgroundColor: '#D24B3E', transform: [{ rotate: '-40deg' }] }} />
+      {crossed !== null && <View testID="canoe-hint-cross" pointerEvents="none" style={{ position: 'absolute', top: -seat * 0.08, right: -seat * 0.1, width: seat * 0.56, height: seat * 0.56, borderRadius: seat, backgroundColor: '#FFFFFF', borderWidth: 2, borderColor: '#D24B3E', alignItems: 'center', justifyContent: 'center' }}>
+        {/* A badge of its own, so it never looks like a mark on whoever already sits here. */}
+        <ItemArt attr={attrOf(p, crossed)} pool={p.cast[crossed]} size={seat * 0.42} />
+        <View style={{ position: 'absolute', width: seat * 0.5, height: 3.5, backgroundColor: '#D24B3E', transform: [{ rotate: '-45deg' }] }} />
       </View>}
     </PressableScale>;
   });
@@ -202,7 +204,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
         <CluePicture kind={c.k} x={item(c.x)} y={c.y === undefined ? undefined : item(c.y)} seat={c.s} n={p.n} width={Math.min(cardW - 8, (cardH - 6) * CLUE_RATIO)} height={Math.min(cardH - 6, (cardW - 8) / CLUE_RATIO)} />
         {isLit && <View pointerEvents="none" style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: '#2E9D6A', alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 9, height: 5, borderLeftWidth: 2.6, borderBottomWidth: 2.6, borderColor: '#FFFFFF', transform: [{ rotate: '-45deg' }], marginTop: -2 }} /></View>}
         {isUsed && <View pointerEvents="none" style={{ position: 'absolute', left: 10, right: 10, top: cardH / 2 - 2, height: 4, borderRadius: 2, backgroundColor: ink, opacity: 0.7, transform: [{ rotate: '-8deg' }] }} />}
-        {c.k === teach && !met && <View pointerEvents="none" style={{ position: 'absolute', left: 6, top: 5, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: '#E1B251' }}><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 12, fontWeight: '900', color: ink }}>New</Copy></View>}
+        {c.k === teach && !met && <View pointerEvents="none" style={{ position: 'absolute', right: 8, top: -10, paddingHorizontal: 7, paddingVertical: 1, borderRadius: 8, backgroundColor: '#E1B251', borderWidth: 1.5, borderColor: ink }}><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 12, fontWeight: '900', color: ink }}>New</Copy></View>}
         <Pulse on={focus.clue === i || c.k === teach && !met && focus.clue === null} reduced={reduced} radius={16} color={focus.clue === i ? '#FFD24A' : '#F3C969'} />
       </PressableScale>;
     })}
@@ -246,6 +248,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
     {finished ?? <>
       {shore}
       {keeperBar}
+      {teachNote && !met && !covered && <Copy testID="canoe-teach-note" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ alignSelf: 'stretch', color: C.ink, fontWeight: '800', fontSize: 15, textAlign: 'center' }}>{teachNote}</Copy>}
       {cards}
       {pager}
       {captionView}

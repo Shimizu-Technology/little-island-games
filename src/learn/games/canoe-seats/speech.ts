@@ -31,6 +31,12 @@ export function friendClueLines(): Record<string, string> {
   }
   return out;
 }
+/** Short on-screen captions for teaching boards; the spoken teaching lines say a little more. */
+export const teachCaptions: Record<string, string> = {
+  at: 'New card: count the dots from the front.', ahead: 'New card: the arrows point to the front.', next: 'New card: side by side.',
+  end: 'New card: the very front or the very back.', far: 'New card: not side by side.', gap: 'New card: one seat between.',
+  mid: 'New card: not at either end.', whatif: 'Try a seat. If a clue breaks, try another.',
+};
 export const gameLines: Record<string, string> = {
   'canoe-intro': 'Seat every friend so every picture clue is true.',
   'canoe-help': 'Pick up a friend and tap a seat. Seat one is at the front. Tap a clue to hear it, and tap it again to mark it done.',
