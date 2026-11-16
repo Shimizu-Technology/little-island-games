@@ -564,6 +564,18 @@
       "path": "v4/w4-pictures/REPORT.md",
       "sha256": "3f29dde7fe990461e86906df94af8353e8db331e8bbd1f956cf7cad39fb17b8a",
       "bytes": 12549
+    },
+    {
+      "path": "v4/wave2/h4b-rig/results/HOST-VERIFICATION.md",
+      "sha256": "e97e18b0a4eed4ed26f9ca3b13a24fe36921087f634c35bc94dabe86900b5220",
+      "bytes": 1551,
+      "testedHeads": [
+        {
+          "sha": "1202c8bf64241204cfdaaabc49598781f68c1a6c",
+          "recordedHead": "1202c8bf64241204cfdaaabc49598781f68c1a6c",
+          "record": "Tested head `1202c8bf64241204cfdaaabc49598781f68c1a6c` on branch `p4/h4b-rig`, 16 November 2026. Source was clean for this run."
+        }
+      ]
     }
   ],
   "nativeFrameFolders": [
