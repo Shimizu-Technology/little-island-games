@@ -137,7 +137,7 @@ export function InquiryBoard({
         {p.phase === "setup" && <CoachSpot active={coach.active}>
           <View style={{ gap: 8 }}>
             {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 4 }}>
-              {free > 1 && <Copy style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>}
+              {free > 1 && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>}
               {choices(c.options, (j) => s.draft[i] === j, (j) => send({ type: "set", control: i, value: j }), `Set ${c.name}`)}
             </View>)}
             {q.kind === "observe" && <>

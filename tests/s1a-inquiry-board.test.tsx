@@ -152,7 +152,7 @@ it('a reach plan that misses asks for a new plan; Undo restores an untested sett
   await press(button('Change my plan'), settle);
   expect(button('Test my plan').props.disabled).toBe(true); // that setup was tested
   const heavier = q.controls[0].options[(q.start[0] + 1) % 5];
-  await press(tile(`Set Mass: ${heavier}`), settle);
+  await press(tile(`Set Mass (kg): ${heavier}`), settle);
   expect(button('Test my plan').props.disabled).toBe(false);
   await press(button('Undo'), settle);
   expect((props.session.state as InquiryState).draft).toEqual(q.start);

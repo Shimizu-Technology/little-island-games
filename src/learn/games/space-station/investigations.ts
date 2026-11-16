@@ -142,7 +142,7 @@ function planetSizes(seed: number): Investigation[] {
 function gravityLab(seed: number): Investigation[] {
   const r = stream(seed, 4);
   const rule = "In this model weight is mass × gravity. Approximate gravity: Earth 9.81, Moon 1.62, Mars 3.71, Jupiter 23.1 m/s². Mass stays the same on every world. Jupiter has no solid surface; this is a model scale.";
-  const massControl = (fixed: boolean) => ({ name: "Mass", options: masses.map((m) => `${m} kg`), fixed });
+  const massControl = (fixed: boolean) => ({ name: "Mass (kg)", options: masses.map(String), fixed });
   const worldControl = (fixed: boolean) => ({ name: "World", options: worlds, fixed });
   const reading = (m: number, w: number) => `${masses[m]} kg on ${worlds[w]}: ${newtons(weight(masses[m], w))}.`;
   // Two observe answers that differ, so no fixed guess can be right every time.
