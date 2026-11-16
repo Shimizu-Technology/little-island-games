@@ -164,10 +164,10 @@ export function CanoeBoard(props: CanoeBoardProps) {
   const shoreRows = Array.from({ length: p.attrs }, (_, a) => itemsOf(p, a).filter(i => pos[i] === SHORE));
   const shoreEmpty = shoreRows.every(r => !r.length);
   const pickedSeated = picked !== null && pos[picked] !== SHORE;
-  const shore = <View testID="canoe-shore" style={{ alignSelf: 'stretch', backgroundColor: '#F4E2B8', borderRadius: 18, borderWidth: 2, borderColor: '#D9BF86', padding: 6, gap: 4, minHeight: token + 16 }}>
+  const shore = <View testID="canoe-shore" style={{ alignSelf: 'stretch', backgroundColor: '#F4E2B8', borderRadius: 18, borderWidth: 2, borderColor: '#D9BF86', padding: 6, gap: 4, minHeight: shoreEmpty ? 0 : token + 16 }}>
     {pickedSeated && <PressableScale accessibilityRole="button" accessibilityLabel={`Put ${the(p, picked!)} back on the shore`} onPress={() => drop(picked!, SHORE)} disabled={!live}
       style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: 16, borderWidth: 2, borderStyle: 'dashed', borderColor: C.teal, backgroundColor: 'rgba(36,104,88,.08)', zIndex: 1 }} />}
-    {shoreEmpty ? <Copy maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', color: C.muted, paddingVertical: token * 0.28, fontSize: 14 }}>{won ? 'Everyone is in the canoe.' : 'The shore is empty.'}</Copy>
+    {shoreEmpty ? <Copy maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', color: C.muted, paddingVertical: 4, fontSize: 14 }}>{won ? 'Everyone is in the canoe.' : 'The shore is empty.'}</Copy>
       : shoreRows.map((row, a) => row.length ? <View key={a} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
         {row.map((i, k) => {
           const chosen = picked === i;
@@ -225,16 +225,16 @@ export function CanoeBoard(props: CanoeBoardProps) {
     </View>
     {!finished && <View testID="board-actions" style={{ flexDirection: 'row', gap: 8 }}>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active || !canUndo || covered} onPress={onUndo}>Undo</Button>
-      <Button compact maxFontSizeMultiplier={1.5} disabled={!active || !canReset || covered} onPress={onReset}>Reset</Button>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active || !canReset || covered} onPress={onReset}>Reset</Button>
     </View>}
   </View>;
   const keeperBar = keepers && !covered && !won ? <View style={{ flexDirection: large ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: 8, alignSelf: 'stretch' }}>
     <Copy numberOfLines={1} maxFontSizeMultiplier={1.5} accessibilityLabel={`${keepers.names[keepers.keeper]} is holding the clues`} style={{ color: C.ink, fontWeight: '800', flexShrink: 1 }}>{`${keepers.names[keepers.keeper]}'s clues`}</Copy>
     <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active} onPress={keepers.onPass} label={`Pass the clues to ${keepers.names[keepers.keeper === 0 ? 1 : 0]}`} numberOfLines={1}>{`Pass to ${keepers.names[keepers.keeper === 0 ? 1 : 0]}`}</Button>
   </View> : null;
-  const lightsRow = onLights && !won && !covered ? <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-    <Button quiet compact selected={lights} maxFontSizeMultiplier={1.5} disabled={!active} onPress={() => onLights(true)}>Clue lights</Button>
-    <Button quiet compact selected={!lights} maxFontSizeMultiplier={1.5} disabled={!active} onPress={() => onLights(false)}>Check at the end</Button>
+  // One quiet switch, so Check stays the only filled button.
+  const lightsRow = onLights && !won && !covered ? <View style={{ alignItems: 'center' }}>
+    <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active} onPress={() => onLights(!lights)} label={lights ? 'Clue lights are on. Turn them off and Check at the end' : 'Clue lights are off. Turn them on'}>{lights ? 'Clue lights: on' : 'Clue lights: off'}</Button>
   </View> : null;
   const check = !lights && !won && onCheck ? <View style={{ alignItems: 'center', gap: 6 }}>
     {missed && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ color: C.ink, textAlign: 'center' }}>Not quite yet. Everyone is still in their seats.</Copy>}

@@ -308,14 +308,14 @@ function Tile({ x, y, w, mark }: { x: number; y: number; w: number; mark?: 'pick
   </G>;
 }
 /** A small copy of the game canoe with `n` seat tiles: the curled prow with its eye on the left. */
-function MiniCanoe({ x, y, w, n, mark }: { x: number; y: number; w: number; n: number; mark?: (i: number) => 'pick' | 'no' | 'ghost' | null }) {
+function MiniCanoe({ x, y, w, n, mark }: { x: number; y: number; w: number; n: number; mark?: (i: number) => 'pick' | 'no' | 'ghost' | 'skip' | null }) {
   const tileW = (w - 16) / n;
   return <G>
     <Path d={`M${x + 8} ${y + 12}H${x + w}Q${x + w - 1} ${y + 20} ${x + w - 7} ${y + 22}H${x + 12}Q${x + 6} ${y + 20} ${x + 8} ${y + 12}Z`} fill="#C9833F" stroke={ink} strokeWidth={2} strokeLinejoin="round" />
     <Path d={`M${x + 10} ${y + 13}Q${x - 2} ${y + 6} ${x + 1} ${y - 6}Q${x + 9} ${y + 2} ${x + 15} ${y + 13}Z`} fill="#B06E30" stroke={ink} strokeWidth={1.8} strokeLinejoin="round" />
     <Circle cx={x + 4.4} cy={y + 1} r={2.4} fill="#FFFDF6" stroke={ink} strokeWidth={1.1} />
     <Circle cx={x + 3.8} cy={y + 1} r={1.1} fill={ink} />
-    {Array.from({ length: n }, (_, i) => <Tile key={i} x={x + 12 + i * tileW + 1.5} y={y} w={tileW - 3} mark={mark?.(i) ?? null} />)}
+    {Array.from({ length: n }, (_, i) => { const m = mark?.(i) ?? null; return m === 'skip' ? null : <Tile key={i} x={x + 12 + i * tileW + 1.5} y={y} w={tileW - 3} mark={m === 'ghost' ? null : m} />; })}
   </G>;
 }
 const tileCentre = (x: number, w: number, n: number, i: number) => x + 12 + ((w - 16) / n) * (i + 0.5);
@@ -380,16 +380,18 @@ export const CluePicture = memo(function CluePicture({ kind, x, y, seat, n, widt
         return <><Mini {...x} cx={27} bottom={64} s={50} alone /><MiniCanoe x={54} y={42} w={104} n={n} mark={i => (i === 0 || i === n - 1 ? 'pick' : null)} />
           {[l, r].map(cx => <Path key={cx} d={`M${cx} 14V36M${cx - 5} 31L${cx} 37L${cx + 5} 31`} fill="none" stroke="#C98A12" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />)}</>;
       }
-      case 'mid': return <><Mini {...x} cx={27} bottom={64} s={50} alone /><MiniCanoe x={54} y={42} w={104} n={n} mark={i => (i === 0 || i === n - 1 ? null : 'pick')} />
-        <Rect x={50} y={3} width={108} height={64} rx={12} fill="none" stroke={bad} strokeWidth={2.4} />
-        {[0, n - 1].map(i => <NoSign key={i} cx={tileCentre(54, 104, n, i)} cy={24} r={9} />)}</>;
-      case 'next': return <>{frame(true, 26, 108)}<Segment x={36} y={48} w={88} k={2} /><Mini {...x} cx={58} bottom={48} s={44} alone /><Mini {...y!} cx={102} bottom={48} s={44} alone /></>;
-      case 'far': return <>{frame(false, 6, 148)}<Segment x={14} y={48} w={132} k={2} /><Mini {...x} cx={40} bottom={48} s={44} alone /><Mini {...y!} cx={120} bottom={48} s={44} alone /><NoSign cx={80} cy={30} r={14} /></>;
+      case 'mid': return <><Mini {...x} cx={27} bottom={64} s={50} alone /><MiniCanoe x={54} y={42} w={104} n={n} mark={i => (i === 0 || i === n - 1 ? 'no' : null)} />
+        {[0, n - 1].map(i => <NoSign key={i} cx={tileCentre(54, 104, n, i)} cy={24} r={10} />)}</>;
+      case 'next': return <><Segment x={36} y={46} w={88} k={2} /><Mini {...x} cx={58} bottom={46} s={44} alone /><Mini {...y!} cx={102} bottom={46} s={44} alone />
+        {/* a green link under the two seats: side by side */}
+        <Path d="M50 64Q80 72 110 64" fill="none" stroke={good} strokeWidth={3.6} strokeLinecap="round" /><Path d="M50 59V65M110 59V65" stroke={good} strokeWidth={3.6} strokeLinecap="round" /></>;
+      case 'far': return <><Segment x={14} y={46} w={132} k={2} /><Mini {...x} cx={40} bottom={46} s={44} alone /><Mini {...y!} cx={120} bottom={46} s={44} alone /><NoSign cx={80} cy={30} r={14} /></>;
       case 'ahead': {
-        // No middle seat: chevrons pointing to the prow say "closer to the front", however far apart.
-        const a = tileCentre(4, 154, 2, 0), b = tileCentre(4, 154, 2, 1);
-        return <><MiniCanoe x={4} y={50} w={154} n={2} /><Mini {...x} cx={a} bottom={50} s={44} alone /><Mini {...y!} cx={b} bottom={50} s={44} alone />
-          <Path d="M86 20L78 28L86 36M96 20L88 28L96 36M106 20L98 28L106 36" fill="none" stroke="#2F7E8D" strokeWidth={4.2} strokeLinecap="round" strokeLinejoin="round" /></>;
+        // Two seats with an open stretch between: "somewhere in front", however far. Chevrons point at the prow.
+        const a = tileCentre(4, 154, 3, 0), b = tileCentre(4, 154, 3, 2), m = tileCentre(4, 154, 3, 1);
+        return <><MiniCanoe x={4} y={50} w={154} n={3} mark={i => (i === 1 ? 'skip' : null)} /><Mini {...x} cx={a} bottom={50} s={44} alone /><Mini {...y!} cx={b} bottom={50} s={44} alone />
+          <Path d={`M${m - 14} 55h3M${m - 4} 55h3M${m + 6} 55h3`} stroke={ink} strokeWidth={3} strokeLinecap="round" />
+          <Path d={`M${m - 4} 14L${m - 12} 22L${m - 4} 30M${m + 6} 14L${m - 2} 22L${m + 6} 30M${m + 16} 14L${m + 8} 22L${m + 16} 30`} fill="none" stroke="#2F7E8D" strokeWidth={4.2} strokeLinecap="round" strokeLinejoin="round" /></>;
       }
       case 'gap': return <><Segment x={14} y={46} w={132} k={3} /><Mini {...x} cx={36} bottom={46} s={40} alone /><Someone cx={80} bottom={46} s={36} /><Mini {...y!} cx={124} bottom={46} s={40} alone />
         <Path d="M36 64H124M36 58V69M124 58V69" stroke="#2F7E8D" strokeWidth={3.6} strokeLinecap="round" fill="none" /></>;
