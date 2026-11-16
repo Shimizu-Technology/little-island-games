@@ -79,10 +79,10 @@ export function InquiryBoard({
     if (right) cheer(p.index === qs.length - 1 ? "big" : "right"); else sound("tap");
   };
   // Columns per row, so the drawing and Test stay in view together. Short labels (a mass, a world) share one row;
-  // sentences (reasons) stack one per row at large text; other choices keep at least 96 pt each at large text.
+  // sentences (reasons) stack one per row at every size; other choices keep at least 96 pt each at large text.
   const columns = (labels: readonly string[]) => {
     const n = labels.length, short = labels.every((l) => l.length <= 7), sentence = labels.some((l) => l.split(" ").length >= 5);
-    if (large && sentence) return 1;
+    if (sentence) return 1;
     const wanted = n >= 6 ? 4 : short || n === 5 ? Math.min(n, short ? 5 : 3) : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
     return Math.max(1, Math.min(wanted, Math.floor((width + 8) / ((short ? 58 : large ? 104 : 78) + 8))));
   };
