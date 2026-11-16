@@ -103,6 +103,7 @@ export function HomeScreen({
   const [reactions, setReactions] = useState<Record<string, "eat" | "drink">>({});
   const [meals, setMeals] = useState<Record<string, Meal>>({});
   const mealSerial = useRef(0);
+  const mealFinishers = useRef<Record<string, { key: number; finish: () => void; presented: boolean }>>({});
   const entityNodes = useRef<Record<string, View>>({});
   const [focusId, restoreFocus] = useState<string>();
   const onNode = useCallback((id: string, node: View | null) => {
@@ -110,10 +111,14 @@ export function HomeScreen({
     else delete entityNodes.current[id];
   }, []);
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
+  React.useEffect(() => () => {
+    Object.values(reactionTimers.current).forEach(clearTimeout);
+    mealFinishers.current = {};
+  }, []);
   const clearMealArt = useCallback(() => {
     Object.values(reactionTimers.current).forEach(clearTimeout);
     reactionTimers.current = {};
+    mealFinishers.current = {};
     setMeals({});
     setReactions({});
   }, []);
@@ -191,9 +196,9 @@ export function HomeScreen({
   // F3: an undo note stays until the next message or a tap; reading is never timed.
   const [noteGone, setNoteGone] = useState<number>();
   const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
-  const live = useRef({ store, scene, selected, placing, room, designing });
+  const live = useRef({ store, scene, selected, placing, room, designing, meals });
   useLayoutEffect(() => {
-    live.current = { store, scene, selected, placing, room, designing };
+    live.current = { store, scene, selected, placing, room, designing, meals };
   });
   // H4: reactions, effects, sounds and cooking.
   const delight = useDelight({
@@ -335,7 +340,9 @@ export function HomeScreen({
     if (food) setMeals(current => ({ ...current, [target.owner]: { key, food: { ...food }, action } }));
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
-    reactionTimers.current[target.owner] = setTimeout(() => {
+    const finish = () => {
+      if (mealFinishers.current[target.owner]?.key !== key) return;
+      delete mealFinishers.current[target.owner];
       delete reactionTimers.current[target.owner];
       setMeals(current => { const next = { ...current }; delete next[target.owner]; return next; });
       const owner = live.current.scene.entities[target.owner];
@@ -346,8 +353,18 @@ export function HomeScreen({
         delete next[target.owner];
         return next;
       });
-    }, MEAL_MS);
+    };
+    mealFinishers.current[target.owner] = { key, finish, presented: false };
+    // Fallback for an interrupted/unmounted presentation. Consumption already happened.
+    reactionTimers.current[target.owner] = setTimeout(finish, MEAL_MS);
   };
+  const onMealPresented = useCallback((id: string, key: number) => {
+    const entry = mealFinishers.current[id];
+    if (!entry || entry.key !== key || entry.presented || live.current.meals[id]?.key !== key) return;
+    entry.presented = true;
+    clearTimeout(reactionTimers.current[id]);
+    reactionTimers.current[id] = setTimeout(entry.finish, MEAL_MS);
+  }, []);
   React.useEffect(() => {
     // A restored or interrupted action completes without changing its supported base.
     for (const entity of Object.values(scene.entities)) {
@@ -367,7 +384,9 @@ export function HomeScreen({
       const stillCurrent = () => runtime.current!.isCurrent(index, token);
       if (!stillCurrent()) return;
       const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
-      const mealFood = live.current.scene.entities[proposal.id]?.item;
+      // Catalog seeds and detached portions may exist only in the captured slot.
+      const mealFood = live.current.scene.entities[proposal.id]?.item ??
+        runtime.current?.slots.get()[index]?.subject?.item ?? proposal.item;
       const result = commitAt(
         proposal.id,
         proposal.room,
@@ -938,6 +957,7 @@ export function HomeScreen({
             selected={selected}
             reactions={reactions}
             meals={meals}
+            onMealPresented={onMealPresented}
             sleeping={sleeping}
             moods={delight.moods}
             effects={delight.effects}

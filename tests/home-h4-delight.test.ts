@@ -389,3 +389,14 @@ it('H4b gaze notices distinguish food above and below without per-frame coordina
   expect(noticesFor({ x: 50, y: 170 }, true, watchers, [])[0]).toMatchObject({ dir: -1, vertical: 1 });
   expect(noticesFor({ x: 150, y: 31 }, true, watchers, [])).toEqual(noticesFor({ x: 149, y: 32 }, true, watchers, []));
 });
+
+it('H4b crumbs stay a few small crumbs near the bite instead of a shower down the shirt', () => {
+  for (const seed of [1,7,53,881]) {
+    const crumbs = particlesOf('crumbs',seed);
+    expect(crumbs).toHaveLength(3);
+    for (const crumb of crumbs) {
+      expect(crumb.size).toBeLessThanOrEqual(6);
+      expect(crumb.y1).toBeLessThanOrEqual(28);
+    }
+  }
+});

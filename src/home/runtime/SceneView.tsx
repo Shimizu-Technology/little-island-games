@@ -53,6 +53,7 @@ const RestingEntity = memo(function RestingEntity({
   targetKey,
   action,
   meal,
+  onMealPresented,
   mealHeld = false,
   sleeping,
   front = false,
@@ -90,6 +91,7 @@ const RestingEntity = memo(function RestingEntity({
   targetKey: string;
   action?: "eat" | "drink";
   meal?: Meal;
+  onMealPresented?: (id: string, key: number) => void;
   mealHeld?: boolean;
   sleeping: boolean;
   onSelect: (id: string) => void;
@@ -102,6 +104,9 @@ const RestingEntity = memo(function RestingEntity({
     },
     [entity.id, front, onNode]
   );
+  const presented = React.useCallback(() => {
+    if (meal) onMealPresented?.(entity.id, meal.key);
+  }, [meal, entity.id, onMealPresented]);
   const frame = artFrame(entity);
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
@@ -264,6 +269,7 @@ const RestingEntity = memo(function RestingEntity({
             entity={entity}
             actionOverride={action}
             meal={meal}
+            onMealPresented={presented}
             gaze={gaze}
             faceOverride={sleeping ? "sleepy" : mood}
             front={front}
@@ -273,7 +279,7 @@ const RestingEntity = memo(function RestingEntity({
         </Animated.View>
         {life && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={entity} meal={meal} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            <EntityArt entity={entity} meal={meal} onMealPresented={presented} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
         )}
       </Animated.View>
@@ -332,6 +338,7 @@ export function SceneView({
   stress = false,
   reactions,
   meals = {},
+  onMealPresented,
   sleeping,
   onNode,
   badges = [],
@@ -367,6 +374,7 @@ export function SceneView({
   stress?: boolean;
   reactions: Record<string, "eat" | "drink">;
   meals?: Record<string, Meal>;
+  onMealPresented?: (id: string, key: number) => void;
   sleeping: Record<string, boolean>;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
@@ -442,6 +450,7 @@ export function SceneView({
                 onNode={onNode}
                 action={reactions[entity.id]}
                 meal={meals[entity.id]}
+                onMealPresented={onMealPresented}
                 mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
                 sleeping={!!sleeping[entity.id]}
                 ownerKey={ancestors(entity, scene).join("|")}

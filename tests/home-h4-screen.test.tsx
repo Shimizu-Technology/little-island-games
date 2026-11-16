@@ -470,3 +470,38 @@ it('H4b the committed drink stays empty and regrabbing its real container ends t
   await act(async () => { vi.advanceTimersByTime(800); });
   expect(harness.scene.scene.entities['character/0'].action).not.toBe('drink');
 });
+
+it('H4b a slow native mount gets a full 750 ms presentation after layout, with consumption already committed', async () => {
+  const state = labFixtures['rig-meal']();
+  await open(state);
+  const scene = harness.scene.scene;
+  const food = Object.values(scene.entities).find((e: any) => e.body?.edible === 'food') as any;
+  const mouth = scene.rooms.home.targets.find((t: any) => t.owner === 'character/0' && t.kind === 'mouth');
+  await drop(state, food.id, 'home', mouth.contact, { previousTarget: mouth.id });
+  const meal = harness.scene.meals['character/0'];
+  expect(harness.scene.scene.entities[food.id]).toBeUndefined();
+  await act(async () => { vi.advanceTimersByTime(300); });
+  await act(async () => harness.scene.onMealPresented('character/0', meal.key));
+  await act(async () => { vi.advanceTimersByTime(749); });
+  expect(harness.scene.meals['character/0'].key).toBe(meal.key);
+  // A second layout must not extend the meal again.
+  await act(async () => harness.scene.onMealPresented('character/0', meal.key));
+  await act(async () => { vi.advanceTimersByTime(2); });
+  expect(harness.scene.meals['character/0']).toBeUndefined();
+});
+
+it('H4b a stale native presentation callback cannot extend a newer meal', async () => {
+  const state = labFixtures['rig-meal']();
+  await open(state);
+  const scene = harness.scene.scene;
+  const food = Object.values(scene.entities).filter((e: any) => e.body?.edible === 'food') as any[];
+  const mouth = scene.rooms.home.targets.find((t: any) => t.owner === 'character/0' && t.kind === 'mouth');
+  await drop(state, food[0].id, 'home', mouth.contact, { previousTarget: mouth.id });
+  const old = harness.scene.meals['character/0'];
+  await act(async () => { vi.advanceTimersByTime(300); });
+  await drop(state, food[1].id, 'home', mouth.contact, { previousTarget: mouth.id });
+  await act(async () => { vi.advanceTimersByTime(100); });
+  await act(async () => harness.scene.onMealPresented('character/0', old.key));
+  await act(async () => { vi.advanceTimersByTime(651); });
+  expect(harness.scene.meals['character/0']).toBeUndefined();
+});

@@ -58,10 +58,12 @@ export const EntityArt = memo(function EntityArt({
   limbLag = 0,
   blink = false,
   meal,
+  onMealPresented,
   gaze,
 }: {
   entity: SceneEntity;
   meal?: Meal;
+  onMealPresented?: () => void;
   gaze?: Gaze;
   /** HM-11: the closed-eye copy a resting friend swaps to by opacity. */
   blink?: boolean;
@@ -107,10 +109,10 @@ export const EntityArt = memo(function EntityArt({
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
-      {meal && !carry ? <MealArt key={meal.key} input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
+      {meal && !carry ? <MealArt key={meal.key} input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter} onPresented={onMealPresented}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
     </View>
   );
-}, (a, b) => a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && a.entity.action === b.entity.action &&
