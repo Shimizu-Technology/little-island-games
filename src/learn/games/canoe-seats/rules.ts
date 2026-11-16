@@ -7,7 +7,7 @@
  * Every item has exactly one seat in the answer, and no two items of one attribute share a seat.
  */
 
-export const friendNames = ['turtle', 'crab', 'fish', 'bird', 'gecko', 'fruit bat', 'octopus', 'frog'] as const;
+export const friendNames = ['turtle', 'crab', 'fish', 'bird', 'gecko', 'fruit bat', 'octopus', 'pig'] as const;
 export const hatNames = ['red cap', 'blue bucket hat', 'gold straw hat', 'green leaf hat', 'purple bobble hat'] as const;
 export const fruitNames = ['banana', 'coconut', 'mango', 'star fruit', 'pineapple'] as const;
 export const POOLS = [friendNames.length, hatNames.length, fruitNames.length] as const;

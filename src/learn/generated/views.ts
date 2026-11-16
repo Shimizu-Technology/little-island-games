@@ -28,6 +28,7 @@ import * as v25 from '../games/letter-lagoon/view';
 import * as v26 from '../games/word-workshop/view';
 import * as v27 from '../games/story-studio/view';
 import * as v28 from '../games/slip-tide/view';
+import * as v29 from '../games/canoe-seats/view';
 import type { LearnId } from '../types';
 import type { LearnView } from '../views';
 export const registeredViews: Record<LearnId, LearnView> = {
@@ -60,4 +61,5 @@ export const registeredViews: Record<LearnId, LearnView> = {
   'word-workshop': v26 as LearnView,
   'story-studio': v27 as LearnView,
   'slip-tide': v28 as LearnView,
+  'canoe-seats': v29 as LearnView,
 };
