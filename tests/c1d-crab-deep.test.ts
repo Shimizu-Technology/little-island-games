@@ -202,6 +202,29 @@ describe('C1d fix P2-1: initial drafts meet the same tray and tool limits as edi
   });
 });
 
+describe('C1d fix round 2 P2-2a: Challenge block puzzles admit only the palette Repeat counts', () => {
+  const tight = () => deepPuzzles.find(p => p.ref.bank === 15 && p.ref.puzzle === 3)!.descriptor;
+  const draft = (times: number): Program => ({ version: 1, body: [{ kind: 'repeat', times, body: [{ kind: 'if', condition: { kind: 'blocked' }, yes: [{ kind: 'command', command: 5 }], no: [{ kind: 'command', command: 4 }] }] }], songs: [] });
+  it('refuses ×9 (and every other non-palette count) in an initial draft and in an edit, keeps 2/3/4/6/8, and the K7 codec still decodes 2–16', () => {
+    const d = tight();
+    for (const times of [5, 7, 9, 10, 11, 12, 16]) {
+      const packed = encodeProgram(draft(times));
+      expect(decodeProgram(packed), `codec ×${times}`).not.toBeNull();
+      expect(challengeEngine.validInitial({ version: 1, draft: packed }, d), `initial ×${times}`).toBe(false);
+      expect(play(d, [['e', programOperations({ version: 1, body: [], songs: [] }, draft(times))]]), `edit ×${times}`).toBeNull();
+    }
+    for (const times of [2, 3, 4, 6, 8]) {
+      expect(challengeEngine.validInitial({ version: 1, draft: encodeProgram(draft(times)) }, d), `initial ×${times}`).toBe(true);
+      expect(play(d, [['e', programOperations({ version: 1, body: [], songs: [] }, draft(times))]]), `edit ×${times}`).not.toBeNull();
+    }
+  });
+  it('the replay engine refuses a recorded edit that sets a non-palette count', () => {
+    const d = tight();
+    const s = play(d, [['e', programOperations({ version: 1, body: [], songs: [] }, draft(8))]])!;
+    expect(challengeEngine.step(s, ['e', programOperations(draft(8), draft(9))], d)).toBeNull();
+  });
+});
+
 describe('C1d fix P2-2 and P3-2: Foggy beach rises by program, Songs call counts match their words', () => {
   it('measures each fog rung\'s fewest blocks on the engine, with If allowed, and each rung needs something new', () => {
     const fog = entries('fog'), least = fog.map(e => blockBest(worldSim(e.descriptor), W, e.descriptor.tray!, { nest: 2, conditions: true }));

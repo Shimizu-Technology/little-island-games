@@ -1,5 +1,5 @@
 import { decodeProgram as readProgram, sessionBytes, type PackedProgram } from '../../program/codec';
-import { crabProgram, projectCrab, readCrabDraft } from './program';
+import { crabProgram, paletteRepeats, projectCrab, readCrabDraft } from './program';
 import type { LearnEngine, LearnOptions, Pace } from "../../types";
 import { pickItems } from "../../skills";
 import { exact, integer, prediction } from "../../kit/science";
@@ -280,8 +280,8 @@ export const engine: LearnEngine<CrabState> = {
   outcome: (s) => (s.completed.length === 3 ? "done" : null),
   turn: (s) => ((s.starter + s.cards) % 2) as 0 | 1,
 };
-/** A Level 5 board offers cards and Repeat only: no songs and no condition. */
-const trayTools = (p: Program): boolean => !p.songs.length && !JSON.stringify(p.body).includes('"call"') && !JSON.stringify(p.body).includes('"if"');
+/** A Level 5 board offers cards and Repeat only (at the editor's counts): no songs and no condition. */
+const trayTools = (p: Program): boolean => paletteRepeats(p) && !p.songs.length && !JSON.stringify(p.body).includes('"call"') && !JSON.stringify(p.body).includes('"if"');
 /** The flat fields of a round. A tray beach's flat plan is a block plan of single cards, so it fits the tray too. */
 function validRound(x: unknown, o: LearnOptions, drafted: boolean): x is CrabState {
     if (!exact(x, ["levels", "completed", "program", "cursor", "running", "starter", "cards", "debugging"]))

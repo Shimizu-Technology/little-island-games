@@ -134,6 +134,32 @@ describe('C1d Level 5: block loops, tray below the flat optimum', () => {
       expect(runNodes(crabSim(l), crabSim(l).start, program.body)?.won, l.id).toBe(true);
     }
   });
+  it('fix round 2 P2-1: from a full, mistaken tray every step the hint names fits the tray and reaches home', () => {
+    const name = (c: number) => ['Up', 'Right', 'Down', 'Left', 'Walk', 'Turn left', 'Turn right'][c];
+    const walk = { kind: 'command', command: 4 } as const;
+    for (const l of loops) {
+      const winner = loopSolutions(l)[0], cards = Array.from({ length: l.tray! }, () => walk);
+      // A tray of Walks, and the winner with its first card turned the other way and Walks filling the rest.
+      const swapped = JSON.parse(JSON.stringify(winner).replace(/"command":(\d)/, (_, c) => `"command":${c === '4' ? 5 : 4}`)) as Program;
+      for (const start of [{ version: 1, body: cards, songs: [] } as Program, { ...swapped, body: [...swapped.body, ...Array.from({ length: l.tray! - nodeCost(swapped) }, () => walk)] }]) {
+        expect(nodeCost(start), l.id).toBe(l.tray);
+        let program = start;
+        const trace: string[] = [];
+        const near = nearestBlocks(program, loopSolutions(l), l.tray)!;
+        expect(near, l.id).not.toBeNull();
+        for (let guard = 0; guard < 60; guard++) {
+          const step = nextStep(program, near.target, l.tray);
+          if (!step) break;
+          trace.push(describeStep(step, program, name));
+          const next = applyStep(program, step)!;
+          expect(next, l.id).not.toBeNull();
+          expect(nodeCost(next), `${l.id} ${describeStep(step, program, name)}`).toBeLessThanOrEqual(l.tray!);
+          program = next;
+        }
+        expect(runNodes(crabSim(l), crabSim(l).start, program.body)?.won, `${l.id} ${trace.join(' | ')}`).toBe(true);
+      }
+    }
+  });
 });
 
 describe('C1d School rounds: new rounds use the new beaches; saved rounds and stars stay', () => {
@@ -216,4 +242,11 @@ it('fix P2-1: a saved Level 5 draft with a song or a condition is refused, even 
     expect(drafted && crab.validate(drafted, o)).toBeFalsy();
   }
   expect(crab.validate(withCrabProgram(s, loopSolutions(l)[0], l)!, o)).toBe(true);
+});
+
+it('fix round 2 P2-2a: a Level 5 draft admits only the Repeat counts the editor offers (2, 3, 4, 6, 8)', () => {
+  const o = at(5), s = crab.create(o, context), l = currentLevel(s);
+  const repeat = (times: number): Program => ({ version: 1, body: [{ kind: 'repeat', times, body: [{ kind: 'command', command: 4 }] }], songs: [] });
+  for (const times of [5, 7, 9, 16]) { const drafted = withCrabProgram(s, repeat(times), l); expect(drafted && crab.validate(drafted, o), `×${times}`).toBeFalsy(); }
+  for (const times of [2, 3, 4, 6, 8]) expect(crab.validate(withCrabProgram(s, repeat(times), l)!, o), `×${times}`).toBe(true);
 });

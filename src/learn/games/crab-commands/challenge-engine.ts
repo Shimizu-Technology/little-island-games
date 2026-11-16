@@ -2,7 +2,7 @@ import { applyOperations, validOperations, type Operation } from '../../program/
 import { encodeProgram } from '../../program/codec';
 import { projectionEdits } from '../../program/edit';
 import { decodeProgram as readProgram, type PackedProgram } from '../../program/codec';
-import { crabProgram, readCrabDraft } from './program';
+import { crabProgram, paletteRepeats, readCrabDraft } from './program';
 import { commands, solved, start, step, walkerKey, type Command, type Level, type Walker } from './engine';
 import { nodeCost, type Node as BlockNode, type Program } from '../../program/model';
 import type { LaunchOptions, ReplayEngine, ReplayPayload } from '../../../challenge/types';
@@ -246,7 +246,7 @@ function admitted(d: Descriptor, draft: unknown): boolean {
 }
 function allowed(d: Descriptor, program: Program): boolean {
   if (d.tray === undefined) return true;
-  if (nodeCost(program) > d.tray) return false;
+  if (nodeCost(program) > d.tray || !paletteRepeats(program)) return false;
   let song = program.songs.length > 0, condition = false, repeat = false;
   const visit = (nodes: BlockNode[]) => { for (const n of nodes) { if (n.kind === 'call') song = true; if (n.kind === 'if') { condition = true; visit(n.yes); visit(n.no); } if (n.kind === 'repeat') repeat = true; if (n.kind === 'repeat' || n.kind === 'sequence') visit(n.body); } };
   visit(program.body); program.songs.forEach(visit);
