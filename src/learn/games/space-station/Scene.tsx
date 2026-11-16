@@ -148,10 +148,9 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
 export function stationLegend({ q, settings, seen }: { q: Investigation; settings: readonly number[]; seen: Observation | null }): string[] {
   const read = reader(q, settings), topic = q.key.split("-")[0];
   if (topic === "day") return seen ? [`Island: ${sky[skyAt(settings[0] ?? q.start[0])].toLowerCase()}`] : [];
-  if (topic === "moon") return ["Right: the Moon as seen from Earth"];
-  if (q.key === "gravity-c") return ["Left: the mystery world. Right: your test."];
-  if (topic === "tilt") return seen ? [`Northern half: ${seasons[seasonAt(settings[0] ?? q.start[0], settings[1] ?? q.start[1])].toLowerCase()}`] : [];
-  if (topic === "eclipse") return [read.place(0) === 2 ? "Moon: off to the side, away from the Sun–Earth line"
-    : `Moon's path: ${read.path(1) === 1 ? "passes above the Sun–Earth line" : "crosses the Sun–Earth line here"}`];
+  if (topic === "moon") return ["Right: the view from Earth"];
+  if (q.key === "gravity-c") return ["Left: the mystery world"];
+  if (topic === "tilt") return seen ? [`North: ${seasons[seasonAt(settings[0] ?? q.start[0], settings[1] ?? q.start[1])].replace("Northern ", "").toLowerCase()}`] : [];
+  if (topic === "eclipse") return [read.place(0) === 2 ? "Moon off to the side" : `Path ${read.path(1) === 1 ? "passes above the line" : "crosses the line here"}`];
   return [];
 }

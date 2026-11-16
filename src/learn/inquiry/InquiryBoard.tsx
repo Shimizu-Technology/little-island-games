@@ -92,7 +92,7 @@ export function InquiryBoard({
     return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {labels.map((label, i) => <PressableScale key={label} disabled={!active || off?.(i)} accessibilityRole="button" accessibilityLabel={`${verb}: ${label}`}
         accessibilityState={{ selected: selected(i), disabled: !active || !!off?.(i) }} onPress={() => onPress(i)}
-        style={{ flexGrow: 1, flexBasis: basis, minHeight: 48, padding: 8, borderRadius: 14, borderWidth: 2, alignItems: "center", justifyContent: "center",
+        style={{ flexGrow: 1, flexBasis: basis, minHeight: 48, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 14, borderWidth: 2, alignItems: "center", justifyContent: "center",
           borderColor: selected(i) ? theme.accent : theme.line, backgroundColor: off?.(i) ? "#EEEDE6" : selected(i) ? theme.chosen : theme.card }}>
         <Copy maxFontSizeMultiplier={max} style={{ fontSize: 14, fontWeight: "800", textAlign: "center", color: off?.(i) ? "#6F756F" : theme.ink }}>{label}</Copy>
       </PressableScale>)}
@@ -147,8 +147,8 @@ export function InquiryBoard({
           <Copy style={{ fontSize: 18, fontWeight: "900", color: theme.ink }}>{q.title}. </Copy>{q.question}
         </Copy>
         {p.phase === "setup" && <CoachSpot active={coach.active}>
-          <View style={{ gap: 8 }}>
-            {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 4 }}>
+          <View style={{ gap: 6 }}>
+            {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 2 }}>
               {free > 1 && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>}
               {choices(c.options, (j) => s.draft[i] === j, (j) => send({ type: "set", control: i, value: j }), `Set ${c.name}`)}
             </View>)}
@@ -159,7 +159,7 @@ export function InquiryBoard({
           </View>
         </CoachSpot>}
         {/* After a revision the drawing shows only the new plan; the earlier result keeps its own tested setup. */}
-        {p.phase === "setup" && p.previous && <Copy testID="inquiry-previous" maxFontSizeMultiplier={cap} style={{ fontSize: 14 }}>
+        {p.phase === "setup" && p.previous && <Copy testID="inquiry-previous" maxFontSizeMultiplier={cap} style={{ fontSize: 13, lineHeight: 18 }}>
           Last test ({q.controls.map((c, i) => (c.fixed ? null : `${c.name} ${c.options[p.previous!.settings[i]]}`)).filter(Boolean).join(", ")}): {p.previous.observation.reading}
         </Copy>}
         {p.phase === "setup" && <Button maxFontSizeMultiplier={cap} disabled={!active || (q.kind === "observe" && s.guess < 0) || repeat} onPress={test}>{q.kind === "observe" ? "Test the model" : "Test my plan"}</Button>}

@@ -228,7 +228,7 @@ it.each([1, 2, 3, 4, 5] as const)('level %i: every scene label reaches the floor
   }
 });
 it('"From Earth" and "Mystery world" now read as legend text at the floor, not shrunken scene labels', async () => {
-  for (const [level, key, words] of [[2, 'moon', 'Right: the Moon as seen from Earth'], [4, 'gravity-c', 'Left: the mystery world. Right: your test.']] as const) {
+  for (const [level, key, words] of [[2, 'moon', 'Right: the view from Earth'], [4, 'gravity-c', 'Left: the mystery world']] as const) {
     await mount(level, { width: 393, height: 852, fontScale: 3.12 }, session => skipTo(session, q => q.key.startsWith(key)));
     const legend = root!.root.findAll(n => String(n.type) === 'Text' && n.props.testID === 'inquiry-legend');
     const lines = legend[0].findAll(n => String(n.type) === 'Text').map(n => n.children.filter(c => typeof c === 'string').join(''));
