@@ -9,7 +9,9 @@ import { createRail, railLevel, railLevels, railScoredSeed, railTick } from "../
 import { crabLanes, crabLevel, crabLevels, crabPace, crabScoredSeed, crabStep, crabTransition, createCrab, supported, validCrab, type CrabState } from "../src/arcade/games/crab-crossing/engine";
 import { createPalm, palmLevel, palmLevels, palmStep, palmTransition, palmWorkload, PALM_ENDLESS_BREAK, PALM_WAVE_BREAK, type PalmState } from "../src/arcade/games/palm-patrol/engine";
 import { boundaryTables, easings } from "../src/arcade/boundaries";
-import { allLevelIds, type LevelId } from "../src/arcade/types";
+import { allLevelIds, type ArcadeId, type LevelId } from "../src/arcade/types";
+import { arcadeTransition, emptyArcade, validArcade, type ArcadeSave } from "../src/arcade/progress";
+import { readFileSync } from "node:fs";
 import { crabWitness, pilotRun, railWitness } from "./helpers/arcade-pilots";
 import { crossings, firstLanding, landsAt } from "./helpers/crab-support";
 import { certified as railCertified } from "../src/arcade/games/rail-parade/certified";
@@ -229,6 +231,21 @@ describe("A3a dares and saves", () => {
   it("still witnesses each changed game's dares on the real launch path", () => {
     expect(pilotRun("rail-parade", "w1-5", 3).result?.facts?.streak).toBeGreaterThanOrEqual(6);
     expect(pilotRun("crab-crossing", "w2-2", 3).result?.facts?.clean).toBeGreaterThanOrEqual(1);
+  });
+  it("keeps stars and bests won under the old curves; a weaker finish on a new curve never rescores them", () => {
+    // The frozen 3.0.0 save (tests/fixtures/arcade): learner b holds Shell Song stars from the old tempo and phrases.
+    const shipped = JSON.parse(readFileSync("tests/fixtures/arcade/arcade-d1-shipped.json", "utf8")) as ArcadeSave, old = shipped.people.b.games["shell-song"]!;
+    const level = Object.keys(old.stars)[0] as LevelId;
+    const after = arcadeTransition(shipped, "b", { type: "finish", game: "shell-song", level, stars: 1, score: 1, round: "a3a-new-curve", name: "B" });
+    expect(validArcade(after)).toBe(true);
+    expect(after.people.b.games["shell-song"]!.stars).toEqual(old.stars);
+    expect(after.people.b.games["shell-song"]!.best).toBe(old.best);
+    for (const game of ["rail-parade", "crab-crossing", "palm-patrol"] as ArcadeId[]) {
+      const won = arcadeTransition(emptyArcade(), "family", { type: "finish", game, level: "w6-8", stars: 3, score: 999, round: `${game}-v1`, name: "Kid" });
+      const later = arcadeTransition(won, "family", { type: "finish", game, level: "w6-8", stars: 1, score: 10, round: `${game}-v2`, name: "Kid" });
+      expect(later.people.family.games[game]!.stars["w6-8"]).toBe(3);
+      expect(later.people.family.games[game]!.best).toBe(999);
+    }
   });
   it("versions every changed descriptor, so a round says which curve it played", () => {
     for (const l of [...railLevels, ...crabLevels, ...palmLevels]) expect(l.rulesVersion).toBe(2);
