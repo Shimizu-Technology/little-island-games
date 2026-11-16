@@ -45,11 +45,13 @@ function toward(p: CanoePuzzle, pos: Seating): HelpMove[] {
  * one seat that card rules out. One step seats one friend; Show me seats the rest. With lights off,
  * One step waits while seats are filled and Show me shows an example, so help never judges a seat.
  */
-export function canoeHelpRules(puzzle: CanoePuzzle, whole: boolean): PublicHintRules<CanoeView, HelpMove> {
+export function canoeHelpRules(puzzle: CanoePuzzle, whole: boolean, keepers = false): PublicHintRules<CanoeView, HelpMove> {
   const first = mostUseful(puzzle), impossible = oneImpossible(puzzle);
-  const look = (): HintCue => ({ text: `Look at this clue first. ${clueText(puzzle, puzzle.clues[first])}`, focus: [`clue:${first}`] });
+  // Clue keepers hide some cards from whoever holds the device, so help points at a card without saying it.
+  const say = (clue: number) => (keepers ? 'Whoever holds that card can say it out loud.' : clueText(puzzle, puzzle.clues[clue]));
+  const look = (): HintCue => ({ text: `Look at this clue first. ${say(first)}`, focus: [`clue:${first}`] });
   const think = (): HintCue => impossible
-    ? { text: `Think: ${the(puzzle, impossible.item)} cannot sit in seat ${impossible.seat + 1}. ${clueText(puzzle, puzzle.clues[impossible.clue])}`, focus: [`clue:${impossible.clue}`, `cross:${impossible.item}-${impossible.seat}`] }
+    ? { text: `Think: ${the(puzzle, impossible.item)} cannot sit in seat ${impossible.seat + 1}. ${say(impossible.clue)}`, focus: [`clue:${impossible.clue}`, `cross:${impossible.item}-${impossible.seat}`] }
     : look();
   const draft = {
     hasEntries: (v: CanoeView) => v.pos.some(s => s !== SHORE),

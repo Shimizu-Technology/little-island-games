@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { hasSpeech } from '../../../components/Audio';
 import { Button, C, Copy } from '../../../components/ui';
@@ -11,7 +11,7 @@ import {
   toggleUsed, undoSeat, type CanoeState,
 } from './engine';
 import { canoeHelpRules, canoeView, type CanoeView, type HelpMove } from './help';
-import { clueKey } from './speech';
+import { clueKey, gameLines } from './speech';
 
 /** The help key names this exact board and seating, so a hint for any other position is never shown or applied. */
 const keyOf = (s: CanoeState) => `${s.index}:${s.puzzles[s.index]?.join('|') ?? ''}:${s.pos.join(',')}:${s.lights ? 1 : 0}:${s.checks}:${s.helped ? 1 : 0}:${s.won ? 1 : 0}`;
@@ -43,7 +43,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     if (next.won) won(next, false);
     else sound('canoe-not-yet');
   }, [commit, sound, won]);
-  const rules = useMemo(() => puzzle && canoeHelpRules(puzzle, !state.lights), [puzzle, state.lights]);
+  const rules = useMemo(() => puzzle && canoeHelpRules(puzzle, !state.lights, together), [puzzle, state.lights, together]);
   const snapshot = useMemo<HintSnapshot<CanoeView> | null>(() => puzzle && { key: keyOf(state), view: canoeView(puzzle, state.pos, !state.lights) }, [puzzle, state]);
   /** Help is recorded on the round before any cue shows; helped placements use the same rule as play. */
   const helpCommit = useCallback(async (event: HintCommit<HelpMove>, expected: string): Promise<HintSnapshot<CanoeView> | null> => {
@@ -58,6 +58,9 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     if (next?.text.startsWith('Look')) sound('canoe-hint-look');
     else if (next?.text.startsWith('Think')) sound('canoe-hint-think');
   }, [sound]);
+  // A teaching board says what its new card means, once, as automatic speech the settings can silence.
+  const teachNow = teachKindOf(state.level, state.puzzles[state.index]), fresh = !state.moves && active;
+  useEffect(() => { if (teachNow && fresh) sound(`canoe-teach-${teachNow}`, true); }, [boardKey]); // eslint-disable-line react-hooks/exhaustive-deps -- once per board.
   const hear = useCallback((clue: number) => {
     const p = puzzleAt(latest.current), key = p && clueKey(p, p.clues[clue]);
     if (!key || !soundOn || !hasSpeech(key)) return false;
@@ -65,7 +68,8 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     return true;
   }, [sound, soundOn]);
   if (!puzzle || !rules || !snapshot) return null;
-  const teach = teachKindOf(state.level, state.puzzles[state.index]);
+  const teach = teachNow;
+  const teachLine = teach ? gameLines[`canoe-teach-${teach}`] : '';
   const title = `${levelInfo[state.level - 1].name} · Canoe ${state.index + 1} of ${state.puzzles.length}${teach ? ' · New clue' : ''}`;
   const finished = state.won ? <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: 10, alignSelf: 'stretch', backgroundColor: '#E2F2E4', borderRadius: 20, padding: 14 }}>
     <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', fontSize: 20, color: C.ink }}>Everyone has a seat!</Copy>
@@ -78,7 +82,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
   </View> : undefined;
   const names = session.names ?? ['Player 1', 'Player 2'];
   return <CanoeBoard key={boardKey} puzzle={puzzle} pos={state.pos} used={state.used} lights={state.lights} won={state.won} missed={state.checked} canCheck={canCheck(state)}
-    active={active} width={width} title={title} hear={hear} notice={notice} cue={cue} finished={finished}
+    active={active} width={width} title={title} hear={hear} notice={notice || (state.moves ? '' : teachLine)} cue={cue} finished={finished} teach={teach === 'whatif' ? null : teach}
     coach={state.index === 0 && !state.moves ? coach : undefined}
     onPlace={(item, seat) => placeOne(item, seat, false)} onToggleUsed={clue => commit(toggleUsed(latest.current, clue))} onCheck={check}
     onUndo={() => commit(undoSeat(latest.current))} onReset={() => commit(resetSeats(latest.current))} canUndo={state.undo.length > 0} canReset={state.pos.some(s => s !== -1)}

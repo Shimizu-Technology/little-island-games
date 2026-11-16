@@ -10,7 +10,7 @@ import type { HintCue } from '../../../puzzles/hints';
 import { CluePicture, Fruit, Friend, Hat, Hull, ItemArt, ink } from './art';
 import { describeCanoe, focusOf, seatWords } from './help';
 import { canoeHeight, canoeWidth, clueCardHeight, clueColumns, CLUE_PAGE_PHONE, cluePages, HULL_PAD, seatFloor, seatForHeight, seatForWidth, tokenSize } from './layout';
-import { attrOf, clueText, itemsOf, lit, nameOf, SHORE, type CanoePuzzle, type Seating } from './rules';
+import { attrOf, clueText, itemsOf, lit, nameOf, SHORE, type CanoePuzzle, type Kind, type Seating } from './rules';
 
 export type Keepers = { names: readonly [string, string]; keeper: 0 | 1; cover: boolean; owner: (clue: number) => 0 | 1; onPass: () => void; onReveal: () => void };
 export type CanoeBoardProps = {
@@ -37,6 +37,8 @@ export type CanoeBoardProps = {
   canReset: boolean;
   onLights?: (on: boolean) => void;
   keepers?: Keepers;
+  /** A teaching board: cards of this new kind wear a "New" ribbon until tapped. */
+  teach?: Kind | null;
   coach?: { active: boolean; done: () => void };
   cue?: HintCue | null;
   notice?: string;
@@ -77,9 +79,10 @@ function Spark({ t, angle, reach, color }: { t: ReturnType<typeof useSharedValue
 }
 
 export function CanoeBoard(props: CanoeBoardProps) {
-  const { puzzle: p, pos, used, lights, won, missed, canCheck, active, width, title, hear, onPlace, onToggleUsed, onCheck, onUndo, onReset, canUndo, canReset, onLights, keepers, coach, cue = null, notice, help, finished, footer, header } = props;
+  const { puzzle: p, pos, used, lights, won, missed, canCheck, active, width, title, hear, onPlace, onToggleUsed, onCheck, onUndo, onReset, canUndo, canReset, onLights, keepers, teach = null, coach, cue = null, notice, help, finished, footer, header } = props;
   const reduced = useReducedMotion(), window = useWindowDimensions(), large = window.fontScale >= LARGE_TEXT;
   const [held, setPicked] = useState<number | null>(null), [heard, setHeard] = useState<number | null>(null), [caption, setCaption] = useState(''), [page, setPage] = useState(0);
+  const [met, setMet] = useState(false);
   const school = useBoardSpace();
   // Legibility first: the drawing never shrinks a seat picture below its floor; the page scrolls instead.
   const floor = seatFloor(window.width), natural = seatForWidth(width, p.n, window.width);
@@ -116,8 +119,9 @@ export function CanoeBoard(props: CanoeBoardProps) {
     if (won || covered) return;
     if (heard === clue || (used & (1 << clue))) { onToggleUsed(clue); setHeard(null); return; }
     setHeard(clue);
+    if (p.clues[clue].k === teach) setMet(true);
     setCaption(hear(clue) ? '' : clueText(p, p.clues[clue]));
-  }, [covered, hear, heard, onToggleUsed, p, used, won]);
+  }, [covered, hear, heard, onToggleUsed, p, teach, used, won]);
 
   // ---------- canoe ----------
   const seatViews = Array.from({ length: p.n }, (_, s) => {
@@ -198,7 +202,8 @@ export function CanoeBoard(props: CanoeBoardProps) {
         <CluePicture kind={c.k} x={item(c.x)} y={c.y === undefined ? undefined : item(c.y)} seat={c.s} n={p.n} width={Math.min(cardW - 8, (cardH - 6) * 2.5)} height={Math.min(cardH - 6, (cardW - 8) / 2.5)} />
         {isLit && <View pointerEvents="none" style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: '#2E9D6A', alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 9, height: 5, borderLeftWidth: 2.6, borderBottomWidth: 2.6, borderColor: '#FFFFFF', transform: [{ rotate: '-45deg' }], marginTop: -2 }} /></View>}
         {isUsed && <View pointerEvents="none" style={{ position: 'absolute', left: 10, right: 10, top: cardH / 2 - 2, height: 4, borderRadius: 2, backgroundColor: ink, opacity: 0.7, transform: [{ rotate: '-8deg' }] }} />}
-        <Pulse on={focus.clue === i} reduced={reduced} radius={16} />
+        {c.k === teach && !met && <View pointerEvents="none" style={{ position: 'absolute', left: 6, top: 5, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: '#E1B251' }}><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 12, fontWeight: '900', color: ink }}>New</Copy></View>}
+        <Pulse on={focus.clue === i || c.k === teach && !met && focus.clue === null} reduced={reduced} radius={16} color={focus.clue === i ? '#FFD24A' : '#F3C969'} />
       </PressableScale>;
     })}
   </View>;

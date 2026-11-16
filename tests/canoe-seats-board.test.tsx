@@ -102,3 +102,15 @@ describe('Canoe Seats board', () => {
     expect(canoe.props.accessibilityLabel).toBe('Canoe with 4 seats. Seat 1, at the front: the fish. Seat 2: the turtle. Seat 3: empty. Seat 4, at the back: empty. On the shore: the crab, the bird.');
   });
 });
+
+describe('Canoe Seats help', () => {
+  it('looks and thinks from the cards alone, and never reads a keeper’s hidden card aloud', async () => {
+    const { canoeHelpRules, canoeView } = await import('../src/learn/games/canoe-seats/help');
+    const solo = canoeHelpRules(puzzle, false), keepers = canoeHelpRules(puzzle, false, true), view = canoeView(puzzle, [-1, -1, -1, -1], false);
+    expect(solo.look(view).text).toMatch(/^Look at this clue first\. The /);
+    expect(keepers.look(view).text).toBe('Look at this clue first. Whoever holds that card can say it out loud.');
+    expect(keepers.think(view).text).not.toMatch(/sits|next to|in front/);
+    expect(solo.draft).toBeNull();
+    expect(canoeHelpRules(puzzle, true).draft).not.toBeNull();
+  });
+});
