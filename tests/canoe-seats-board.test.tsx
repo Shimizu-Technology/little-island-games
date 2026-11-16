@@ -14,7 +14,7 @@ vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 vi.mock('../src/components/ui', () => ({ Button: 'Button', C: { ink: '#000', teal: '#0a0', blue: '#00f', muted: '#888' }, Copy: 'Copy', PressableScale: 'PressableScale' }));
 vi.mock('../src/learn/Coach', () => ({ CoachSpot: 'CoachSpot' }));
 vi.mock('../src/learn/BoardSpace', () => ({ BoardPrimary: 'BoardPrimary', useBoardSpace: () => null, useBoardGeometry: (_id: string, natural: number) => ({ height: natural, measured: false }) }));
-vi.mock('../src/learn/games/canoe-seats/art', () => ({ CluePicture: 'CluePicture', Fruit: 'Fruit', Friend: 'Friend', Hat: 'Hat', Hull: 'Hull', ItemArt: 'ItemArt', ink: '#000' }));
+vi.mock('../src/learn/games/canoe-seats/art', () => ({ CLUE_RATIO: 160 / 70, CluePicture: 'CluePicture', Fruit: 'Fruit', Friend: 'Friend', Hat: 'Hat', Hull: 'Hull', ItemArt: 'ItemArt', ink: '#000' }));
 const { CanoeBoard } = await import('../src/learn/games/canoe-seats/board');
 
 const puzzle = { n: 4, attrs: 1, cast: [0, 1, 2, 3], clues: [{ k: 'at' as const, x: 0, s: 0 }, { k: 'next' as const, x: 1, y: 2 }, { k: 'ahead' as const, x: 3, y: 1 }] };

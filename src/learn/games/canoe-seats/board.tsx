@@ -7,7 +7,7 @@ import { useReducedMotion } from '../../../components/motion';
 import { LARGE_TEXT } from '../../../components/wordFit';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import type { HintCue } from '../../../puzzles/hints';
-import { CluePicture, Fruit, Friend, Hat, Hull, ItemArt, ink } from './art';
+import { CLUE_RATIO, CluePicture, Fruit, Friend, Hat, Hull, ItemArt, ink } from './art';
 import { describeCanoe, focusOf, seatWords } from './help';
 import { canoeHeight, canoeWidth, clueCardHeight, clueColumns, CLUE_PAGE_PHONE, cluePages, HULL_PAD, seatFloor, seatForHeight, seatForWidth, tokenSize } from './layout';
 import { attrOf, clueText, itemsOf, lit, nameOf, SHORE, type CanoePuzzle, type Kind, type Seating } from './rules';
@@ -199,7 +199,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
         accessibilityHint={isUsed ? 'Double-tap to mark it not done.' : heard === i ? 'Double-tap again to mark it done.' : 'Double-tap to hear it.'} accessibilityState={{ selected: isUsed }}
         disabled={won} onPress={() => tapClue(i)}
         style={{ width: cardW, height: cardH, borderRadius: 16, backgroundColor: isLit ? '#E6F6EC' : '#FFFFFF', borderWidth: isLit ? 3 : heard === i ? 3 : 2, borderColor: isLit ? '#2E9D6A' : heard === i ? C.blue : '#C9B79A', alignItems: 'center', justifyContent: 'center', opacity: isUsed ? 0.42 : 1 }}>
-        <CluePicture kind={c.k} x={item(c.x)} y={c.y === undefined ? undefined : item(c.y)} seat={c.s} n={p.n} width={Math.min(cardW - 8, (cardH - 6) * 2.5)} height={Math.min(cardH - 6, (cardW - 8) / 2.5)} />
+        <CluePicture kind={c.k} x={item(c.x)} y={c.y === undefined ? undefined : item(c.y)} seat={c.s} n={p.n} width={Math.min(cardW - 8, (cardH - 6) * CLUE_RATIO)} height={Math.min(cardH - 6, (cardW - 8) / CLUE_RATIO)} />
         {isLit && <View pointerEvents="none" style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: '#2E9D6A', alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 9, height: 5, borderLeftWidth: 2.6, borderBottomWidth: 2.6, borderColor: '#FFFFFF', transform: [{ rotate: '-45deg' }], marginTop: -2 }} /></View>}
         {isUsed && <View pointerEvents="none" style={{ position: 'absolute', left: 10, right: 10, top: cardH / 2 - 2, height: 4, borderRadius: 2, backgroundColor: ink, opacity: 0.7, transform: [{ rotate: '-8deg' }] }} />}
         {c.k === teach && !met && <View pointerEvents="none" style={{ position: 'absolute', left: 6, top: 5, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: '#E1B251' }}><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 12, fontWeight: '900', color: ink }}>New</Copy></View>}

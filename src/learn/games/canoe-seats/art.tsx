@@ -27,14 +27,14 @@ const Shadow = () => <Ellipse cx="50" cy="93" rx="30" ry="5" fill="#1C4A4C" opac
 function Turtle() {
   return <>
     <Shadow />
-    <Path d="M18 80C18 58 32 50 50 50C68 50 82 58 82 80Z" fill="#3E8A52" {...line} />
-    <Path d="M38 56L50 52L62 56L64 68L50 74L36 68Z" fill="#79BE6E" stroke="#2C6A3D" strokeWidth={2.2} />
-    <Path d="M24 76L34 66M76 76L66 66M36 68L28 80M64 68L72 80" stroke="#2C6A3D" strokeWidth={2.2} />
-    <Path d="M14 82Q8 74 14 68Q22 70 24 78Z" fill="#8FCB72" {...line} strokeWidth={2.6} />
-    <Path d="M86 82Q92 74 86 68Q78 70 76 78Z" fill="#8FCB72" {...line} strokeWidth={2.6} />
-    <Path d="M30 40C30 22 40 14 50 14C60 14 70 22 70 40C70 52 61 56 50 56C39 56 30 52 30 40Z" fill="#8FCB72" {...line} />
-    <Eyes y={34} dx={9} r={6.4} />
-    <Smile y={46} w={7} />
+    {/* a big tan-rimmed shell with plates: the turtle's own shape, even at token size */}
+    <Path d="M10 84C10 56 28 44 50 44C72 44 90 56 90 84Z" fill="#B98A4E" {...line} />
+    <Path d="M16 82C16 60 31 50 50 50C69 50 84 60 84 82Z" fill="#3E8A52" stroke="#2C6A3D" strokeWidth={2} />
+    <Path d="M36 58L50 54L64 58L66 70L50 76L34 70Z" fill="#79BE6E" stroke="#2C6A3D" strokeWidth={2.2} />
+    <Path d="M22 78L34 70M78 78L66 70M34 70L30 82M66 70L70 82M50 76V82" stroke="#2C6A3D" strokeWidth={2.2} />
+    <Path d="M32 38C32 22 40 14 50 14C60 14 68 22 68 38C68 48 60 52 50 52C40 52 32 48 32 38Z" fill="#6CC6A6" {...line} />
+    <Eyes y={32} dx={8.6} r={6.2} />
+    <Smile y={43} w={6} />
   </>;
 }
 function Crab() {
@@ -80,34 +80,35 @@ function Bird() {
 function Gecko() {
   return <>
     <Shadow />
-    <Path d="M70 80Q94 84 90 64Q86 54 78 60Q86 64 82 72Q78 76 66 74Z" fill="#B7D84A" {...line} strokeWidth={2.8} />
-    <Path d="M32 88C30 70 38 56 50 56C62 56 70 70 68 88Z" fill="#B7D84A" {...line} />
-    <Path d="M28 74L18 70M72 74L82 70" {...line} strokeWidth={4} />
-    <Circle cx="18" cy="70" r="3.6" fill="#B7D84A" {...line} strokeWidth={2} />
-    <Circle cx="82" cy="70" r="3.6" fill="#B7D84A" {...line} strokeWidth={2} />
-    <Path d="M20 38C20 22 34 14 50 14C66 14 80 22 80 38C80 54 66 60 50 60C34 60 20 54 20 38Z" fill="#B7D84A" {...line} />
-    <Circle cx="44" cy="74" r="3.2" fill="#F08F3C" />
-    <Circle cx="56" cy="80" r="2.8" fill="#F08F3C" />
-    <Circle cx="38" cy="18" r="0" />
-    <Eyes y={32} dx={15} r={9} />
-    <Path d="M38 48Q50 56 62 48" fill="none" {...line} strokeWidth={2.8} />
-    <Circle cx="30" cy="46" r="2.6" fill="#F08F3C" opacity={0.8} />
-    <Circle cx="70" cy="46" r="2.6" fill="#F08F3C" opacity={0.8} />
+    {/* long curled tail and round toe pads: a gecko, not a turtle */}
+    <Path d="M66 84Q92 90 94 70Q96 52 82 50Q72 52 76 62Q80 68 86 64" fill="none" stroke={ink} strokeWidth={9} strokeLinecap="round" />
+    <Path d="M66 84Q92 90 94 70Q96 52 82 50Q72 52 76 62Q80 68 86 64" fill="none" stroke="#C9E03C" strokeWidth={5} strokeLinecap="round" />
+    <Path d="M34 90C30 72 38 58 50 58C62 58 70 72 66 90Z" fill="#C9E03C" {...line} />
+    <Path d="M30 72L16 64M70 72L84 64" {...line} strokeWidth={4.4} />
+    <Circle cx="14" cy="63" r="5" fill="#C9E03C" {...line} strokeWidth={2.2} />
+    <Circle cx="86" cy="63" r="5" fill="#C9E03C" {...line} strokeWidth={2.2} />
+    <Path d="M18 36C18 22 32 12 50 12C68 12 82 22 82 36C82 52 68 60 50 60C32 60 18 52 18 36Z" fill="#C9E03C" {...line} />
+    <Circle cx="44" cy="74" r="3.4" fill="#F08F3C" />
+    <Circle cx="56" cy="82" r="3" fill="#F08F3C" />
+    <Circle cx="54" cy="68" r="2.4" fill="#F08F3C" />
+    <Eyes y={30} dx={16} r={10} />
+    <Path d="M36 47Q50 55 64 47" fill="none" {...line} strokeWidth={2.8} />
   </>;
 }
 function FruitBat() {
   return <>
     <Shadow />
-    <Path d="M50 46L6 34Q4 54 12 62Q16 54 22 60Q26 52 32 60Q36 52 42 62Z" fill="#5C4034" {...line} />
-    <Path d="M50 46L94 34Q96 54 88 62Q84 54 78 60Q74 52 68 60Q64 52 58 62Z" fill="#5C4034" {...line} />
-    <Path d="M36 88C32 70 38 54 50 54C62 54 68 70 64 88Z" fill="#7A5A48" {...line} />
-    <Path d="M30 22L28 6L42 16Z" fill="#7A5A48" {...line} strokeWidth={2.6} />
-    <Path d="M70 22L72 6L58 16Z" fill="#7A5A48" {...line} strokeWidth={2.6} />
-    <Path d="M26 34C26 20 36 12 50 12C64 12 74 20 74 34C74 48 64 56 50 56C36 56 26 48 26 34Z" fill="#C98A4B" {...line} />
-    <Path d="M50 36C58 36 64 42 62 50C58 54 42 54 38 50C36 42 42 36 50 36Z" fill="#E0B07A" />
-    <Eyes y={30} dx={10} r={6.2} />
-    <Ellipse cx="50" cy="42" rx="3.6" ry="2.6" fill={ink} />
-    <Path d="M44 48Q50 52 56 48" fill="none" {...line} strokeWidth={2.4} />
+    <Path d="M50 46L6 34Q4 54 12 62Q16 54 22 60Q26 52 32 60Q36 52 42 62Z" fill="#8A6250" {...line} />
+    <Path d="M50 46L94 34Q96 54 88 62Q84 54 78 60Q74 52 68 60Q64 52 58 62Z" fill="#8A6250" {...line} />
+    <Path d="M36 88C32 70 38 54 50 54C62 54 68 70 64 88Z" fill="#9C7258" {...line} />
+    <Path d="M30 22L28 6L42 16Z" fill="#C98A4B" {...line} strokeWidth={2.6} />
+    <Path d="M70 22L72 6L58 16Z" fill="#C98A4B" {...line} strokeWidth={2.6} />
+    <Path d="M26 34C26 20 36 12 50 12C64 12 74 20 74 34C74 48 64 56 50 56C36 56 26 48 26 34Z" fill="#E0A562" {...line} />
+    <Eyes y={30} dx={10} r={6.6} />
+    <Ellipse cx="50" cy="40" rx="3.4" ry="2.4" fill={ink} />
+    <Path d="M42 45Q50 52 58 45" fill="none" {...line} strokeWidth={2.6} />
+    <Circle cx="34" cy="42" r="3" fill="#F2A07A" opacity={0.8} />
+    <Circle cx="66" cy="42" r="3" fill="#F2A07A" opacity={0.8} />
   </>;
 }
 function Octopus() {
@@ -157,10 +158,11 @@ function RedCap() {
 }
 function BucketHat() {
   return <>
-    <Path d="M6 54L18 38H82L94 54Q94 58 88 58H12Q6 58 6 54Z" fill="#2E7BC4" {...line} />
-    <Path d="M24 40L30 12H70L76 40Z" fill="#4A9BE6" {...line} />
-    <Path d="M27 30H73" stroke="#1E5E9C" strokeWidth={4} />
-    <Path d="M14 50Q50 44 86 50" fill="none" stroke="#1E5E9C" strokeWidth={2} strokeDasharray="4 4" />
+    {/* a soft, drooping brim all round */}
+    <Path d="M4 50Q10 38 22 38H78Q90 38 96 50Q90 60 76 56Q50 50 24 56Q10 60 4 50Z" fill="#2E7BC4" {...line} />
+    <Path d="M24 42C24 22 34 12 50 12C66 12 76 22 76 42Z" fill="#4A9BE6" {...line} />
+    <Path d="M25 34H75" stroke="#1E5E9C" strokeWidth={4} />
+    <Path d="M36 18Q50 14 64 18" fill="none" stroke="#9CCBF4" strokeWidth={3} strokeLinecap="round" />
   </>;
 }
 function StrawHat() {
@@ -173,14 +175,16 @@ function StrawHat() {
 }
 function LeafHat() {
   return <>
-    <G fill="#4FAE4A" {...line} strokeWidth={2.8}>
-      <Path d="M14 54Q6 30 22 18Q28 36 30 54Z" />
-      <Path d="M86 54Q94 30 78 18Q72 36 70 54Z" />
-      <Path d="M30 54Q24 20 42 8Q48 30 46 54Z" fill="#6CC65F" />
-      <Path d="M70 54Q76 20 58 8Q52 30 54 54Z" fill="#6CC65F" />
-      <Path d="M44 54Q40 14 50 2Q60 14 56 54Z" fill="#3D9440" />
+    {/* a woven band and brim, with leaves standing up out of it */}
+    <G fill="#4FAE4A" {...line} strokeWidth={2.6}>
+      <Path d="M22 40Q14 20 26 8Q32 24 32 40Z" />
+      <Path d="M78 40Q86 20 74 8Q68 24 68 40Z" />
+      <Path d="M36 40Q32 14 44 2Q50 22 48 40Z" fill="#6CC65F" />
+      <Path d="M64 40Q68 14 56 2Q50 22 52 40Z" fill="#3D9440" />
     </G>
-    <Path d="M10 52H90V58H10Z" fill="#2F7D33" stroke={ink} strokeWidth={2.4} strokeLinejoin="round" />
+    <Path d="M20 38H80V48H20Z" fill="#C9A15A" stroke={ink} strokeWidth={2.6} strokeLinejoin="round" />
+    <Path d="M28 38V48M40 38V48M52 38V48M64 38V48M76 38V48" stroke="#9C7A3A" strokeWidth={1.8} />
+    <Ellipse cx="50" cy="51" rx="46" ry="7" fill="#2F7D33" {...line} />
   </>;
 }
 function BobbleHat() {
@@ -206,20 +210,21 @@ function Banana() {
 }
 function Coconut() {
   return <>
-    <Circle cx="50" cy="54" r="34" fill="#8B5A33" {...line} />
-    <Path d="M24 40Q34 30 46 34M60 76Q72 72 78 60M30 66Q36 74 44 76" fill="none" stroke="#5E3A1E" strokeWidth={2.2} strokeLinecap="round" />
-    <Circle cx="42" cy="46" r="4.6" fill="#4A2C15" />
-    <Circle cx="58" cy="46" r="4.6" fill="#4A2C15" />
-    <Circle cx="50" cy="60" r="4.6" fill="#4A2C15" />
+    {/* half a coconut: brown husk, white inside */}
+    <Path d="M14 46H86C86 70 70 88 50 88C30 88 14 70 14 46Z" fill="#8B5A33" {...line} />
+    <Path d="M22 58Q30 64 34 74M78 58Q70 64 66 74M50 62V82" fill="none" stroke="#5E3A1E" strokeWidth={2.2} strokeLinecap="round" />
+    <Ellipse cx="50" cy="46" rx="36" ry="12" fill="#FFF8EC" {...line} />
+    <Ellipse cx="50" cy="46" rx="25" ry="7" fill="#EDE3CF" />
   </>;
 }
 function Mango() {
   return <>
-    <Path d="M30 30C48 16 82 28 84 54C86 78 64 92 44 86C22 80 12 46 30 30Z" fill="#F39A2E" {...line} />
-    <Path d="M30 30C40 34 44 46 40 60C36 72 44 82 50 86C30 84 16 60 22 42Z" fill="#E4572E" opacity={0.7} />
-    <Path d="M52 22Q50 14 56 8" fill="none" {...line} strokeWidth={3} />
-    <Path d="M56 12Q72 2 86 10Q74 22 56 14Z" fill="#4FAE4A" {...line} strokeWidth={2.6} />
-    <Path d="M66 38Q74 44 74 54" fill="none" stroke="#FFD58A" strokeWidth={4} strokeLinecap="round" />
+    {/* a kidney shape with a red blush and a leaf */}
+    <Path d="M26 40C30 18 60 14 76 30C92 46 88 76 66 86C48 94 30 84 30 70C30 60 40 58 40 50C40 42 24 50 26 40Z" fill="#F7B733" {...line} />
+    <Path d="M64 24C82 30 90 52 82 70C78 52 72 36 64 24Z" fill="#E4572E" opacity={0.85} />
+    <Path d="M44 24Q44 14 50 10" fill="none" {...line} strokeWidth={3} />
+    <Path d="M50 12Q66 2 80 10Q68 22 50 14Z" fill="#4FAE4A" {...line} strokeWidth={2.6} />
+    <Path d="M40 66Q46 78 58 80" fill="none" stroke="#FFE4A0" strokeWidth={4} strokeLinecap="round" />
   </>;
 }
 function StarFruit() {
@@ -261,28 +266,31 @@ export function ItemArt({ attr, pool, size }: { attr: number; pool: number; size
   return <Svg width={size} height={size} viewBox="-8 -8 116 116" {...hide}>{React.createElement(fruitArt[pool] ?? Banana)}</Svg>;
 }
 
-/** The canoe: bow (the front, seat 1) on the left with a carved prow, stern on the right, an outrigger float behind. */
+/** Dice-style pips for seat numbers 1-5, centred in a square of side `d`. Children already read dice faces. */
+export function Pips({ cx, cy, d, k, fill = ink }: { cx: number; cy: number; d: number; k: number; fill?: string }) {
+  const o = d * 0.27, r = Math.max(1.8, d * 0.11);
+  const at: [number, number][] = k === 1 ? [[0, 0]] : k === 2 ? [[-o, -o], [o, o]] : k === 3 ? [[-o, -o], [0, 0], [o, o]] : k === 4 ? [[-o, -o], [o, -o], [-o, o], [o, o]] : [[-o, -o], [o, -o], [0, 0], [-o, o], [o, o]];
+  return <G>{at.map(([x, y], i) => <Circle key={i} cx={cx + x} cy={cy + y} r={r} fill={fill} />)}</G>;
+}
+/** The canoe: bow (the front, seat 1) on the left with a carved prow and its eye, a wake trailing behind the stern. */
 export const Hull = memo(function Hull({ width, height, seats, seat, pad }: { width: number; height: number; seats: number; seat: number; pad: number }) {
-  const top = height - seat * 0.42, h = seat * 0.42;
+  const h = seat * 0.42, top = height - h - 4, badge = Math.min(seat * 0.34, h * 0.86);
   return <Svg width={width} height={height} {...hide}>
-    {/* outrigger float and its poles, behind the hull */}
-    <Path d={`M${pad + seat * 0.4} ${top - 2}L${pad + seat * 0.2} ${top - seat * 0.12}M${width - pad - seat * 0.4} ${top - 2}L${width - pad - seat * 0.2} ${top - seat * 0.12}`} stroke="#7A4E2A" strokeWidth={4} strokeLinecap="round" />
-    <Rect x={pad} y={top - seat * 0.2} width={width - pad * 2} height={seat * 0.1} rx={seat * 0.05} fill="#A8753F" stroke={ink} strokeWidth={2} />
-    {/* water */}
-    <Path d={`M0 ${height - 3}Q${width * 0.12} ${height - 9} ${width * 0.25} ${height - 3}T${width * 0.5} ${height - 3}T${width * 0.75} ${height - 3}T${width} ${height - 3}V${height}H0Z`} fill="#7FD0D8" />
-    {/* hull */}
-    <Path d={`M2 ${top}L${width - 6} ${top}Q${width - 2} ${top + h * 0.5} ${width - pad * 0.9} ${top + h}L${pad * 0.9} ${top + h}Q${pad * 0.25} ${top + h * 0.6} 2 ${top}Z`} fill="#C9833F" stroke={ink} strokeWidth={3} strokeLinejoin="round" />
-    <Path d={`M${pad * 0.5} ${top + h * 0.36}H${width - pad * 0.5}`} stroke="#E8B06A" strokeWidth={Math.max(3, h * 0.14)} strokeLinecap="round" />
-    <Path d={`M${pad * 0.9} ${top + h * 0.72}H${width - pad * 0.9}`} stroke="#9E5F2A" strokeWidth={2} strokeLinecap="round" />
-    {/* carved prow at the front */}
-    <Path d={`M4 ${top}Q-2 ${top - h * 0.9} ${pad * 0.5} ${top - h * 1.3}Q${pad * 0.55} ${top - h * 0.5} ${pad * 0.9} ${top}Z`} fill="#B06E30" stroke={ink} strokeWidth={2.6} strokeLinejoin="round" />
-    <Circle cx={pad * 0.46} cy={top - h * 1.18} r={Math.max(3, h * 0.16)} fill="#F4D58D" stroke={ink} strokeWidth={2} />
-    {/* seat planks with number pips: 1 at the front */}
+    <Path d={`M0 ${height - 4}Q${width * 0.12} ${height - 10} ${width * 0.25} ${height - 4}T${width * 0.5} ${height - 4}T${width * 0.75} ${height - 4}T${width} ${height - 4}V${height}H0Z`} fill="#7FD0D8" />
+    {/* wake behind the stern: the canoe is going left */}
+    <Path d={`M${width - 2} ${top + h * 0.7}Q${width - pad * 0.6} ${top + h * 0.95} ${width - pad * 1.4} ${top + h * 1.05}M${width - 2} ${top + h * 0.4}Q${width - pad * 0.3} ${top + h * 0.6} ${width - pad * 0.9} ${top + h * 0.7}`} stroke="#FFFFFF" strokeWidth={2.6} fill="none" strokeLinecap="round" />
+    <Path d={`M${pad * 0.6} ${top}L${width - pad * 0.3} ${top}Q${width - pad * 0.15} ${top + h * 0.55} ${width - pad * 0.95} ${top + h}L${pad * 1.1} ${top + h}Q${pad * 0.4} ${top + h * 0.7} ${pad * 0.6} ${top}Z`} fill="#C9833F" stroke={ink} strokeWidth={3} strokeLinejoin="round" />
+    <Path d={`M${pad * 0.9} ${top + h * 0.3}H${width - pad * 0.5}`} stroke="#E8B06A" strokeWidth={Math.max(3, h * 0.12)} strokeLinecap="round" />
+    {/* carved prow at the front, with an eye to show which way it faces */}
+    <Path d={`M${pad * 0.7} ${top + 2}Q${pad * -0.2} ${top - h * 0.6} ${pad * 0.15} ${top - h * 1.2}Q${pad * 0.85} ${top - h * 0.7} ${pad * 1.15} ${top}Z`} fill="#B06E30" stroke={ink} strokeWidth={2.6} strokeLinejoin="round" />
+    <Circle cx={pad * 0.38} cy={top - h * 0.62} r={Math.max(3, h * 0.17)} fill="#FFFDF6" stroke={ink} strokeWidth={1.8} />
+    <Circle cx={pad * 0.32} cy={top - h * 0.62} r={Math.max(1.5, h * 0.08)} fill={ink} />
     {Array.from({ length: seats }, (_, i) => {
-      const x = pad + i * seat;
+      const x = pad + i * seat, cx = x + seat / 2, by = top + h * 0.56;
       return <G key={i}>
         <Rect x={x + seat * 0.08} y={top - seat * 0.08} width={seat * 0.84} height={seat * 0.14} rx={seat * 0.05} fill="#8C5A2E" stroke={ink} strokeWidth={2} />
-        {Array.from({ length: i + 1 }, (_, k) => <Circle key={k} cx={x + seat / 2 + (k - i / 2) * Math.min(9, seat * 0.13)} cy={top + h * 0.56} r={Math.max(2.6, seat * 0.045)} fill="#FFF4DC" stroke={ink} strokeWidth={1.4} />)}
+        <Rect x={cx - badge / 2} y={by - badge / 2} width={badge} height={badge} rx={badge * 0.22} fill="#FFF8E8" stroke={ink} strokeWidth={1.6} />
+        <Pips cx={cx} cy={by} d={badge} k={i + 1} />
       </G>;
     })}
   </Svg>;
@@ -291,58 +299,100 @@ export const Hull = memo(function Hull({ width, height, seats, seat, pad }: { wi
 // ---------- Clue pictures ----------
 
 const good = '#2E9D6A', bad = '#D24B3E';
-/** A small canoe outline with `n` seats; the bow (front) points left. */
-function MiniCanoe({ x, y, w, n, mark }: { x: number; y: number; w: number; n: number; mark?: (i: number) => 'pick' | 'no' | 'ghost' | null }) {
-  const seatW = (w - 14) / n, h = 12;
-  return <G transform={`translate(${x} ${y})`}>
-    <Path d={`M0 0H${w}Q${w - 2} ${h * 0.9} ${w - 8} ${h}H8Q2 ${h * 0.9} 0 0Z`} fill="#D49250" stroke={ink} strokeWidth={2} strokeLinejoin="round" />
-    <Path d={`M1 0Q-4 -8 4 -12Q4 -5 7 0Z`} fill="#B06E30" stroke={ink} strokeWidth={1.6} strokeLinejoin="round" />
-    {Array.from({ length: n }, (_, i) => {
-      const m = mark?.(i) ?? null, sx = 7 + i * seatW;
-      return <G key={i}>
-        <Rect x={sx + 2} y={-12} width={seatW - 4} height={11} rx={3} fill={m === 'pick' ? '#FFE07A' : '#F7E9D2'} stroke={m === 'pick' ? '#C98A12' : ink} strokeWidth={m === 'pick' ? 2.4 : 1.4} />
-        {m === 'no' && <Path d={`M${sx + 5} -10L${sx + seatW - 5} -3M${sx + seatW - 5} -10L${sx + 5} -3`} stroke={bad} strokeWidth={2.6} strokeLinecap="round" />}
-      </G>;
-    })}
+/** One seat tile, the same plank-and-cushion as the real canoe. */
+function Tile({ x, y, w, mark }: { x: number; y: number; w: number; mark?: 'pick' | 'no' | 'ghost' | null }) {
+  return <G>
+    <Rect x={x} y={y} width={w} height={9} rx={3} fill={mark === 'pick' ? '#FFE07A' : '#F7E9D2'} stroke={mark === 'pick' ? '#C98A12' : ink} strokeWidth={mark === 'pick' ? 2.4 : 1.4} />
+    <Rect x={x + 2} y={y + 9} width={w - 4} height={4} rx={1.5} fill="#8C5A2E" />
+    {mark === 'no' && <Path d={`M${x + 4} ${y - 2}L${x + w - 4} ${y + 11}M${x + w - 4} ${y - 2}L${x + 4} ${y + 11}`} stroke={bad} strokeWidth={2.8} strokeLinecap="round" />}
   </G>;
 }
-/** One item drawn inside a clue: friends, hats or fruit at the given size, centred on (cx, cy). */
-function Mini({ attr, pool, cx, cy, s }: { attr: number; pool: number; cx: number; cy: number; s: number }) {
+/** A small whole canoe with `n` seat tiles; the prow (front) on the left. Returns tile centres for placing friends. */
+function MiniCanoe({ x, y, w, n, mark }: { x: number; y: number; w: number; n: number; mark?: (i: number) => 'pick' | 'no' | 'ghost' | null }) {
+  const tileW = (w - 16) / n;
+  return <G>
+    <Path d={`M${x + 4} ${y + 12}H${x + w}Q${x + w - 1} ${y + 20} ${x + w - 7} ${y + 22}H${x + 10}Q${x + 5} ${y + 20} ${x + 4} ${y + 12}Z`} fill="#D49250" stroke={ink} strokeWidth={2} strokeLinejoin="round" />
+    <Path d={`M${x + 6} ${y + 13}Q${x - 2} ${y + 4} ${x + 3} ${y - 3}Q${x + 7} ${y + 5} ${x + 12} ${y + 13}Z`} fill="#B06E30" stroke={ink} strokeWidth={1.6} strokeLinejoin="round" />
+    <Circle cx={x + 4.6} cy={y + 4} r={1.8} fill="#FFFDF6" stroke={ink} strokeWidth={1} />
+    {Array.from({ length: n }, (_, i) => <Tile key={i} x={x + 12 + i * tileW + 1.5} y={y} w={tileW - 3} mark={mark?.(i) ?? null} />)}
+  </G>;
+}
+const tileCentre = (x: number, w: number, n: number, i: number) => x + 12 + ((w - 16) / n) * (i + 0.5);
+/** A piece cut from the middle of a canoe: `k` tiles on a plank whose ends fade out, so no seat number is implied. */
+function Segment({ x, y, w, k }: { x: number; y: number; w: number; k: number }) {
+  const tileW = w / k;
+  return <G>
+    <Rect x={x - 6} y={y + 12} width={w + 12} height={8} rx={3} fill="#D49250" stroke={ink} strokeWidth={1.8} />
+    <Path d={`M${x - 14} ${y + 16}H${x - 9}M${x + w + 9} ${y + 16}H${x + w + 14}`} stroke={ink} strokeWidth={2} strokeLinecap="round" strokeDasharray="2 3" />
+    {Array.from({ length: k }, (_, i) => <Tile key={i} x={x + i * tileW + 1.5} y={y} w={tileW - 3} />)}
+  </G>;
+}
+/** One item drawn inside a clue: friends, hats or fruit at the given size, its feet (or base) at y. */
+function Mini({ attr, pool, cx, bottom, s, opacity = 1 }: { attr: number; pool: number; cx: number; bottom: number; s: number; opacity?: number }) {
   const Art = (attr === 0 ? friendArt : attr === 1 ? hatArt : fruitArt)[pool];
   if (!Art) return null;
-  const k = s / 100, oy = attr === 1 ? 30 : 50;
-  return <G transform={`translate(${cx - 50 * k} ${cy - oy * k}) scale(${k})`}><Art /></G>;
+  const k = s / 100, base = attr === 1 ? 58 : 92;
+  return <G opacity={opacity} transform={`translate(${cx - 50 * k} ${bottom - base * k}) scale(${k})`}><Art /></G>;
 }
 function NoSign({ cx, cy, r }: { cx: number; cy: number; r: number }) {
-  return <G><Circle cx={cx} cy={cy} r={r} fill="none" stroke={bad} strokeWidth={3.4} /><Line x1={cx - r * 0.7} y1={cy + r * 0.7} x2={cx + r * 0.7} y2={cy - r * 0.7} stroke={bad} strokeWidth={3.4} strokeLinecap="round" /></G>;
+  return <G><Circle cx={cx} cy={cy} r={r} fill="#FFFFFF" fillOpacity={0.6} stroke={bad} strokeWidth={3.6} /><Line x1={cx - r * 0.7} y1={cy + r * 0.7} x2={cx + r * 0.7} y2={cy - r * 0.7} stroke={bad} strokeWidth={3.6} strokeLinecap="round" /></G>;
+}
+/** "Someone sits here": a grey friend shape, for the seat between two friends. */
+const Someone = ({ cx, bottom, s }: { cx: number; bottom: number; s: number }) => <G opacity={0.5}><Circle cx={cx} cy={bottom - s * 0.62} r={s * 0.2} fill="#9AA6A4" /><Path d={`M${cx - s * 0.26} ${bottom}C${cx - s * 0.26} ${bottom - s * 0.3} ${cx + s * 0.26} ${bottom - s * 0.3} ${cx + s * 0.26} ${bottom}Z`} fill="#9AA6A4" /></G>;
+/** One item worn or held by another, on a single seat tile. */
+function Together({ a, b, cx, bottom }: { a: ClueItem; b: ClueItem; cx: number; bottom: number }) {
+  if (a.attr === 0) return <><Mini {...a} cx={cx} bottom={bottom} s={40} />{b.attr === 1 ? <Mini {...b} cx={cx} bottom={bottom - 28} s={30} /> : <Mini {...b} cx={cx + 17} bottom={bottom - 1} s={20} />}</>;
+  return <><Mini {...a} cx={cx - 8} bottom={bottom - 14} s={32} /><Mini {...b} cx={cx + 10} bottom={bottom - 1} s={22} /></>;
 }
 export type ClueItem = { attr: number; pool: number };
 /**
- * Picture for one clue, on a 160 x 64 card. Every kind has its own shape: a seat in a little canoe,
- * two friends touching, a wall between them, an arrow to the bow, an empty seat between, or one seat
- * holding both. Negative clues add the same red "no" sign.
+ * Picture for one clue, on a 160 x 64 card. Every position clue uses the same seat tiles as the canoe:
+ * a seat in a little canoe, two friends on side-by-side seats, a seat with someone between, the prow
+ * for "in front", or one seat holding both. Negative clues cross out the same picture in red.
  */
+/** Clue pictures are drawn on a 160 x 70 box. */
+export const CLUE_RATIO = 160 / 70;
 export const CluePicture = memo(function CluePicture({ kind, x, y, seat, n, width, height }: { kind: Kind; x: ClueItem; y?: ClueItem; seat?: number; n: number; width: number; height: number }) {
   const body = (() => {
     switch (kind) {
-      case 'at': return <><Mini {...x} cx={26} cy={34} s={46} /><MiniCanoe x={56} y={40} w={98} n={n} mark={i => (i === seat ? 'pick' : null)} /><Path d={`M${63 + ((seat ?? 0) + 0.5) * ((98 - 14) / n)} 8V20`} stroke="#C98A12" strokeWidth={3} strokeLinecap="round" /><Path d={`M${57 + ((seat ?? 0) + 0.5) * ((98 - 14) / n)} 15L${63 + ((seat ?? 0) + 0.5) * ((98 - 14) / n)} 22L${69 + ((seat ?? 0) + 0.5) * ((98 - 14) / n)} 15`} fill="none" stroke="#C98A12" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></>;
-      case 'end': return <><Mini {...x} cx={26} cy={34} s={46} /><MiniCanoe x={56} y={40} w={98} n={n} mark={i => (i === 0 || i === n - 1 ? 'pick' : null)} /><Path d="M74 10L62 22M136 10L148 22" stroke="#C98A12" strokeWidth={3} strokeLinecap="round" /></>;
-      case 'mid': return <><Mini {...x} cx={26} cy={34} s={46} /><MiniCanoe x={56} y={40} w={98} n={n} mark={i => (i === 0 || i === n - 1 ? 'no' : 'pick')} /></>;
-      case 'next': return <><Rect x={34} y={46} width={44} height={13} rx={4} fill="#FFE07A" stroke="#C98A12" strokeWidth={2.2} /><Rect x={82} y={46} width={44} height={13} rx={4} fill="#FFE07A" stroke="#C98A12" strokeWidth={2.2} /><Mini {...x} cx={56} cy={26} s={44} /><Mini {...y!} cx={104} cy={26} s={44} /><Circle cx={74} cy={52} r={6} fill="none" stroke={good} strokeWidth={3} /><Circle cx={86} cy={52} r={6} fill="none" stroke={good} strokeWidth={3} /></>;
-      case 'far': return <><Mini {...x} cx={34} cy={32} s={44} /><Mini {...y!} cx={126} cy={32} s={44} /><Rect x={74} y={8} width={12} height={48} rx={4} fill="#C9B79A" stroke={ink} strokeWidth={2} /><NoSign cx={80} cy={32} r={18} /></>;
-      case 'ahead': return <><MiniCanoe x={8} y={56} w={146} n={2} /><Mini {...x} cx={40} cy={28} s={42} /><Mini {...y!} cx={122} cy={28} s={42} /><Path d="M96 26H70M78 16L68 26L78 36" fill="none" stroke="#2F7E8D" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" /></>;
-      case 'gap': return <><Mini {...x} cx={28} cy={30} s={42} /><Rect x={60} y={12} width={40} height={36} rx={8} fill="#FFFFFF" stroke={ink} strokeWidth={2.2} strokeDasharray="5 4" /><Mini {...y!} cx={132} cy={30} s={42} /><Path d="M50 56H110" stroke="#2F7E8D" strokeWidth={2.6} strokeLinecap="round" /><Path d="M50 51V61M110 51V61" stroke="#2F7E8D" strokeWidth={2.6} strokeLinecap="round" /></>;
+      case 'at': {
+        const cx = tileCentre(54, 102, n, seat ?? 0);
+        return <><Mini {...x} cx={26} bottom={58} s={46} /><MiniCanoe x={54} y={38} w={102} n={n} mark={i => (i === seat ? 'pick' : null)} />
+          <Rect x={cx - 10} y={4} width={20} height={20} rx={5} fill="#FFF8E8" stroke={ink} strokeWidth={1.8} /><Pips cx={cx} cy={14} d={20} k={(seat ?? 0) + 1} />
+          <Path d={`M${cx} 26V34M${cx - 4} 30L${cx} 35L${cx + 4} 30`} fill="none" stroke="#C98A12" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" /></>;
+      }
+      case 'end': {
+        const l = tileCentre(8, 148, n, 0), r = tileCentre(8, 148, n, n - 1);
+        return <><MiniCanoe x={8} y={44} w={148} n={n} mark={i => (i === 0 || i === n - 1 ? 'pick' : null)} />
+          <Mini {...x} cx={l} bottom={44} s={36} /><Mini {...x} cx={r} bottom={44} s={36} opacity={0.35} />
+          <Path d={`M${l + 16} 14Q${(l + r) / 2} 2 ${r - 16} 14`} fill="none" stroke="#C98A12" strokeWidth={2.4} strokeDasharray="4 4" strokeLinecap="round" /></>;
+      }
+      case 'mid': return <><Mini {...x} cx={26} bottom={58} s={46} /><MiniCanoe x={54} y={38} w={102} n={n} mark={i => (i === 0 || i === n - 1 ? 'no' : 'pick')} /></>;
+      case 'next':
+      case 'far': {
+        // The same two side-by-side seats; "not next to" pushes the friends apart and crosses out the join.
+        const far = kind === 'far', lx = far ? 50 : 62, rx = far ? 110 : 98;
+        return <><Rect x={far ? 24 : 36} y={4} width={far ? 112 : 88} height={58} rx={12} fill={far ? '#FFFFFF' : '#EAF7EF'} stroke={far ? '#C9B79A' : good} strokeWidth={2.4} />
+          <Segment x={far ? 32 : 44} y={44} w={far ? 96 : 72} k={2} /><Mini {...x} cx={lx} bottom={44} s={38} /><Mini {...y!} cx={rx} bottom={44} s={38} />
+          {far && <NoSign cx={80} cy={30} r={13} />}</>;
+      }
+      case 'ahead': return <><MiniCanoe x={14} y={38} w={140} n={3} mark={i => (i === 1 ? 'ghost' : null)} />
+        <Mini {...x} cx={tileCentre(14, 140, 3, 0)} bottom={38} s={36} /><Mini {...y!} cx={tileCentre(14, 140, 3, 2)} bottom={38} s={36} />
+        <Path d={`M${tileCentre(14, 140, 3, 1) - 6} 28h2M${tileCentre(14, 140, 3, 1)} 28h2M${tileCentre(14, 140, 3, 1) + 6} 28h2`} stroke={ink} strokeWidth={3} strokeLinecap="round" />
+        {/* the way the canoe goes: toward the prow */}
+        <Path d="M150 63H10M18 57L10 63L18 69" fill="none" stroke="#2F7E8D" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></>;
+      case 'gap': return <><Segment x={24} y={40} w={112} k={3} /><Mini {...x} cx={42.7} bottom={40} s={36} /><Someone cx={80} bottom={40} s={30} /><Mini {...y!} cx={117.3} bottom={40} s={36} />
+        <Path d="M42 60H118M42 55V64M118 55V64" stroke="#2F7E8D" strokeWidth={2.4} strokeLinecap="round" fill="none" /></>;
       case 'same':
       case 'diff': {
         const a = y && y.attr < x.attr ? y : x, b = a === x ? y! : x;
-        return <><Rect x={44} y={4} width={72} height={56} rx={12} fill={kind === 'same' ? '#EAF7EF' : '#FBEDEB'} stroke={kind === 'same' ? good : bad} strokeWidth={2.6} />
-          {a.attr === 0 ? <><Mini {...a} cx={80} cy={36} s={44} />{b.attr === 1 ? <Mini {...b} cx={80} cy={14} s={34} /> : <Mini {...b} cx={102} cy={46} s={24} />}</>
-            : <><Mini {...a} cx={74} cy={22} s={36} /><Mini {...b} cx={88} cy={44} s={26} /></>}
-          {kind === 'diff' && <NoSign cx={136} cy={32} r={14} />}</>;
+        return <><Rect x={50} y={3} width={60} height={58} rx={12} fill={kind === 'same' ? '#EAF7EF' : '#FBEDEB'} stroke={kind === 'same' ? good : bad} strokeWidth={2.4} />
+          <Tile x={58} y={44} w={44} /><Together a={a} b={b} cx={80} bottom={44} />
+          {kind === 'diff' && <Line x1={52} y1={58} x2={108} y2={6} stroke={bad} strokeWidth={4.4} strokeLinecap="round" />}</>;
       }
     }
   })();
-  return <Svg width={width} height={height} viewBox="0 0 160 64" {...hide}>{body}</Svg>;
+  return <Svg width={width} height={height} viewBox="0 0 160 70" {...hide}>{body}</Svg>;
 });
 
 /** Shelf and card art: three friends paddling. */
