@@ -14,6 +14,8 @@ import { buildingLayout } from '../src/home/camera';
 import type { Interaction, Pickup } from '../src/home/runtime/useInteraction';
 import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
 vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
+// These scene tests replace native art; the mouth cue now also imports SVG.
+vi.mock('react-native-svg',()=>({default:'Svg',Path:'Path'}));
 vi.mock('react-native',()=>({View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
 vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useSharedValue:(v:any)=>React.useRef({value:v,set(n:any){this.value=n;},get(){return this.value;}}).current,withRepeat:(x:any)=>x,withTiming:(x:any)=>x,cancelAnimation:()=>{},Easing:{linear:(t:number)=>t},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn}));
 const pans=vi.hoisted(()=>[] as any[]);
@@ -152,11 +154,12 @@ it('H2 a pre-mounted prop follows the second pointer even while pickup JS is wit
  await act(async()=>tree.unmount());
 });
 
-it('H2 pose previews retain a native layout anchor and follow the live proposal after a slot changes', async () => {
+it('H4b footprints retain a native anchor, follow the live floor proposal and defer semantic target cues', async () => {
  const {LandingPreview}=await import('../src/home/runtime/LandingPreview');
  const {roomOrigin}=await import('../src/home/camera');
  const c=context('character/0'),building=buildingLayout(4),origin=roomOrigin(0,building);
- Object.assign(c.slot,{proposal:{kind:'socket',room:'home',base:'sit',facing:'front',contact:{x:427,y:442.15}}});
+ const proposal={kind:'floor' as 'floor'|'socket',room:'home' as 'home'|'kitchen',base:'stand',facing:'front',contact:{x:427,y:442.15}};
+ Object.assign(c.slot,{proposal});
  c.interaction.slots.value=[{} as any,c.slot as any];
  let tree!:TestRenderer.ReactTestRenderer;
  await act(async()=>{tree=TestRenderer.create(<LandingPreview source={c.scene.entities['character/0']} interaction={c.interaction} building={building}/>);});
@@ -165,6 +168,12 @@ it('H2 pose previews retain a native layout anchor and follow the live proposal 
  expect(active[0].props.collapsable).toBe(false);
  expect(active[0].props.style[0]).toMatchObject({width:1,height:1});
  expect(active[0].props.style[1].evaluate().transform).toEqual([{translateX:origin.x+427},{translateY:origin.y+442.15}]);
+ expect(tree.root.findAllByProps({testID:'landing-footprints'})).toHaveLength(1);
+ proposal.kind='socket';
+ expect(active[0].props.style[1].evaluate().opacity).toBe(0);
+ proposal.kind='floor';proposal.room='kitchen';proposal.contact={x:300,y:500};
+ const nextOrigin=roomOrigin(1,building);
+ expect(active[0].props.style[1].evaluate().transform).toEqual([{translateX:nextOrigin.x+300},{translateY:nextOrigin.y+500}]);
  await act(async()=>tree.unmount());
 });
 
