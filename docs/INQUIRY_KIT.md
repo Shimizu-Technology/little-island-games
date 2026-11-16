@@ -83,7 +83,11 @@ Fresh rounds are version 2 (`InquiryState`). A saved version-1 Star Station roun
 
 ## Layout
 
-Star Station is a measured School board (`SCHOOL_BOARD_MIN['space-station'] = 140`). The drawing gives up height before Test leaves the measured space, and Test, the result and the explanation are inside `BoardPrimary`. Choice tiles keep a 48-pt minimum and their words fit the tile at AX sizes (`wordFitMultiplier`); the Moon's eight spots stay in two rows. Because it is now a measured board, it also gets the AX entry reveal the other measured boards have (see "Contract note" in the S1a report).
+Star Station is a measured School board (`SCHOOL_BOARD_MIN['space-station'] = 140`). The drawing gives up height before Test leaves the measured space; Test, the result and the reasons are inside `BoardPrimary`. Once tested, the result and the reasons sit directly under the drawing. SVG labels are divided by the scene's scale, so they never draw below the 13-pt School label floor (19.5 pt at AX); a reading too long for its box at AX shrinks to fit, and the same reading is printed below in text that scales.
+
+At AX sizes (`atLarge`): the step line names only the current step; the title, question, prompts, result text, control names and buttons stop at `CHROME_MAX` (1.5×) so the drawing and Test stay in view together; Hear it reads them aloud. Choice tiles keep a 48-pt minimum, their words fit the tile (`wordFitMultiplier`), short options (a mass, a world, a turn) share one row, three to five outcomes keep at least 96 pt per tile, and reasons (sentences) stack one per row. Measured natively on iPhone 15 / iOS 18.5 and iPad mini 6 / iOS 26.5 at default and AX5: the setup step of every level shows the drawing and Test together.
+
+Because Star Station is now a measured board, it also gets the AX entry and rotation reveal the other measured boards have (see "Contract note" in the S1a report). A new round started from the options sheet begins at the page top, as the frame does for every board; the reveal applies on entry, rotation and each following step.
 
 ## Speech
 
