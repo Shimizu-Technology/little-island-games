@@ -1,0 +1,159 @@
+{
+ "format": 1,
+ "family": "solitaire",
+ "slot": 102,
+ "catalogRevision": 20,
+ "band": "o6",
+ "ordinals": [
+  104448,
+  64
+ ],
+ "sourceSha": "d2856c26f347fd55b4be3196f8be21661193c1ca",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "a188b95ffd7a38c403377376f322223d59fa73256b4633c349150d224d9c008b"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 256,
+  "kept": [
+   50331925,
+   50331694,
+   50331816,
+   50331699,
+   50331805,
+   50332078,
+   50331736,
+   50331659,
+   50331861,
+   50331650,
+   50331848,
+   50331679,
+   50331873,
+   50331658,
+   50331928,
+   50331703,
+   50331901,
+   50331702,
+   50332028,
+   50331707,
+   50331969,
+   50331662,
+   50331660,
+   50331655,
+   50331665,
+   50331678,
+   50331692,
+   50331711,
+   50331705,
+   50331682,
+   50331700,
+   50331731,
+   50331713,
+   50331686,
+   50331712,
+   50331751,
+   50331717,
+   50331710,
+   50331720,
+   50331763,
+   50331733,
+   50331722,
+   50331744,
+   50331791,
+   50331749,
+   50331742,
+   50331752,
+   50331803,
+   50331769,
+   50331754,
+   50331756,
+   50331811,
+   50331777,
+   50331778,
+   50331760,
+   50331875,
+   50331785,
+   50331790,
+   50331764,
+   50331883,
+   50331793,
+   50331802,
+   50331788,
+   50331887
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 64,
+  "semantic": 64
+ },
+ "histograms": {
+  "technique": {
+   "plan-5": 1,
+   "plan-6": 5,
+   "plan-7": 15,
+   "plan-8": 43
+  },
+  "template": {
+   "bursts": 16,
+   "pairs": 16,
+   "steady": 16,
+   "weave": 16
+  },
+  "layout": {
+   "bursts": 16,
+   "pairs": 16,
+   "steady": 16,
+   "weave": 16
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 10000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   52,
+   186
+  ],
+  "exact": 0
+ },
+ "proofHashes": {
+  "witness": "6cb2e02fc512b19d66ac054d6dcee77eead264beb227fcc5a1a3be1d7fff2e0e",
+  "trace": "3e2c7d84dbd63f5901beb49d84c6e3df8311c540c47642edebf9e6423438c3f2",
+  "claims": "d9b402b1416add8aeb9a5ed68460e8c6229303ab7325f9660f4ec680d8d14871"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating. Exact ordered install of 9532ba72 via scripts/puzzles/solitaire/install.ts. Curation scripts, source pool/checkpoint hashes and every selected row in scripts/puzzles/solitaire/selected-rows.json (sha256 dcdc5a1df121e8a25931f201454357c2479e76cd0b06840ce49dbfa97f80c637). Receipt attempts/rejects describe this exact-row certification, not historical candidate curation."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 13668,
+  "gzip": 4176
+ },
+ "sha256": "a47c86b8efd1e891aa52b00ac653195fbc8abcdc162635c96fe7b8d59395a3d9",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}
