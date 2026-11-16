@@ -184,6 +184,9 @@ describe("Star Station content (SC-09)", () => {
   it("goal text never states the answer: not the outcome, not the setting that reaches it, not the reason", () => {
     for (const level of levelNumbers) for (const { qs } of all(level)) for (const q of qs) {
       const goal = `${q.title} ${q.question} ${q.given ?? ""}`.toLowerCase();
+      // A one-word label (a mass, a world) must appear as its own word; "6" inside "58.6 N" is not naming it.
+      const words = new Set(goal.split(/[\s,?!:;]+/).map((w) => w.replace(/\.$/, "")));
+      const names = (label: string) => (label.includes(" ") ? goal.includes(label) : words.has(label));
       expect(goal, q.key).not.toContain(q.explain.choices[q.explain.answer].toLowerCase());
       if (q.kind === "observe") expect(goal, q.key).not.toContain(q.outcomes[q.observe(q.start).outcome].toLowerCase());
       else {
@@ -191,7 +194,7 @@ describe("Star Station content (SC-09)", () => {
         for (const plan of sweep(q).filter((p) => q.observe(p).outcome === q.want)) {
           const changed = plan.map((v, i) => (v !== q.start[i] ? q.controls[i].options[v].toLowerCase() : null)).filter(Boolean) as string[];
           expect(changed.length, q.key).toBeGreaterThan(0);
-          expect(changed.every((label) => goal.includes(label)), `${q.key}: ${changed}`).toBe(false);
+          expect(changed.every(names), `${q.key}: ${changed}`).toBe(false);
         }
       }
     }
@@ -218,7 +221,7 @@ describe("Star Station content (SC-09)", () => {
       expect(Number(percent)).toBe(visibleMoonPercent(plan[0]));
     }
     for (const { qs } of all(5, 60)) {
-      const light = qs[0];
+      const light = qs.find((q) => q.key === "light-a")!;
       light.outcomes.forEach((o, i) => expect(o).toBe(`${lightMinutes(Number(light.controls[0].options[i].split(" ")[0])).toFixed(1)} minutes`));
     }
     expect(gravity).toEqual([9.81, 1.62, 3.71, 23.1]);
@@ -235,13 +238,14 @@ describe("Star Station content (SC-09)", () => {
     for (const { qs } of all(4)) {
       const mystery = qs.find((q) => q.key === "gravity-c")!;
       const answer = solve(mystery)!;
-      expect(mystery.question).not.toContain(worlds[answer[1]]);
+      expect(mystery.question).not.toContain(mystery.controls[1].options[answer[1]]);
       expect(mystery.given).toMatch(/ N$/);
     }
+    // The eclipse check: Moon in place for an eclipse, and on or off the Sun–Earth line right now.
     for (const { qs } of all(5)) {
-      const twist = qs.find((q) => q.key === "eclipse-d")!;
-      expect(twist.observe(twist.start).outcome).toBe(2);
-      expect(twist.controls[1].options[twist.start[1]]).toBe("Tilted");
+      const check = qs.find((q) => q.key === "eclipse-d")!;
+      const result = check.outcomes[check.observe(check.start).outcome];
+      expect(result).toBe(check.controls[1].options[check.start[1]] === "Passes above or below" ? "No eclipse" : check.start[0] === 0 ? "Solar eclipse" : "Lunar eclipse");
     }
   });
 });
@@ -283,8 +287,9 @@ describe("difficulty rises by inquiry demand", () => {
     }
   });
   it("each level asks for something new", () => {
-    const kinds = levelNumbers.map((level) => investigations(level, 1).map((q) => q.key.split("-")[0]));
-    expect(kinds).toEqual([["day", "day", "day", "day"], ["moon", "moon", "moon", "moon"], ["planets", "planets", "planets", "planets"], ["gravity", "gravity", "gravity", "gravity"], ["light", "tilt", "eclipse", "eclipse"]]);
+    // Levels 4–5 shuffle the order of their four investigations; compare the sets.
+    const kinds = levelNumbers.map((level) => investigations(level, 1).map((q) => q.key.split("-")[0]).sort());
+    expect(kinds).toEqual([["day", "day", "day", "day"], ["moon", "moon", "moon", "moon"], ["planets", "planets", "planets", "planets"], ["gravity", "gravity", "gravity", "gravity"], ["eclipse", "eclipse", "light", "tilt"]]);
     // Level 4 needs a fair test (two free controls) and Level 5 two conditions at once.
     expect(investigations(4, 1).find((q) => q.key === "gravity-b")!.controls.filter((c) => !c.fixed)).toHaveLength(2);
     expect(investigations(5, 1).find((q) => q.key === "eclipse-c")!.controls.filter((c) => !c.fixed)).toHaveLength(2);

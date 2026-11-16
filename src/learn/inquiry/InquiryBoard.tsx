@@ -22,11 +22,16 @@ export type SceneProps = { q: Investigation; settings: readonly number[]; seen: 
  * scene and the skill it records; the steps, checks, hints and stars all come from ./engine.
  */
 export function InquiryBoard({
-  qs, Scene, board, floor, skill, theme, ...props
-}: BoardProps<InquiryState> & { qs: readonly Investigation[]; Scene: React.ComponentType<SceneProps>; board: SchoolBoard; floor: number; skill: string; theme: InquiryTheme }) {
+  qs, Scene, legend, board, floor, skill, theme, ...props
+}: BoardProps<InquiryState> & {
+  qs: readonly Investigation[]; Scene: React.ComponentType<SceneProps>; board: SchoolBoard; floor: number; skill: string; theme: InquiryTheme;
+  /** Words for the drawing that would not fit inside it at the label floor; printed below it in text that wraps. */
+  legend?: (p: Pick<SceneProps, "q" | "settings" | "seen">) => string[];
+}) {
   const { session, update, active, practice, assistance, sound, stopSound, soundOn, cheer, coach } = props;
   const s = session.state, p = useMemo(() => replay(qs, s.history), [qs, s.history]);
   const [earlier, setEarlier] = useState<Earlier[]>([]);
+  const [marked, setMarked] = useState(false);
   const { fontScale } = useWindowDimensions();
   const large = fontScale >= LARGE_TEXT, cap = atLarge(fontScale, CHROME_MAX);
   const space = useBoardSpace(), side = useBoardColumns();
@@ -44,8 +49,9 @@ export function InquiryBoard({
     if (next === s) return null;
     stopSound();
     const after = replay(qs, next.history);
-    // One rule for stars: once the engine says the work is not independent, the round is helped.
-    if (after && clean(p, s.level) && !clean(after, s.level)) assistance?.();
+    // One rule for stars: once the replay says the work is not independent, the round is helped. A restored round
+    // whose saved flag disagrees with its own history is marked on its next move (School credit already ignores it).
+    if (after && !clean(after, s.level) && session.levelHelped !== true && !marked) { setMarked(true); assistance?.(); }
     if (m.type === "set" || m.type === "predict") setEarlier((e) => [...e.slice(-11), { draft: s.draft, guess: s.guess, history: s.history, index: s.index }]);
     else setEarlier([]);
     update(next);
@@ -127,7 +133,8 @@ export function InquiryBoard({
       </View>
       <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
         <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={(large ? 19.5 : 13) / sceneScale} /></View>
-        <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 12, textAlign: "center", color: theme.ink }}>Illustrative model{q.given ? ` · given: ${q.given}` : ""}</Copy>
+        {legend?.({ q, settings: s.draft, seen: p.seen }).map((line) => <Copy key={line} testID="inquiry-legend" maxFontSizeMultiplier={cap} style={{ fontSize: 13, textAlign: "center", color: theme.ink, fontWeight: "700" }}>{line}</Copy>)}
+        <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 13, textAlign: "center", color: theme.ink }}>Illustrative model{q.given ? ` · given: ${q.given}` : ""}</Copy>
       </View>}>
         {/* Once tested, the result and the reasons sit right under the drawing the child is watching. */}
         {p.phase !== "setup" && result}
@@ -146,6 +153,10 @@ export function InquiryBoard({
             </>}
           </View>
         </CoachSpot>}
+        {/* After a revision the drawing shows only the new plan; the earlier result keeps its own tested setup. */}
+        {p.phase === "setup" && p.previous && <Copy testID="inquiry-previous" maxFontSizeMultiplier={cap} style={{ fontSize: 14 }}>
+          Last test ({q.controls.map((c, i) => (c.fixed ? null : `${c.name} ${c.options[p.previous!.settings[i]]}`)).filter(Boolean).join(", ")}): {p.previous.observation.reading}
+        </Copy>}
         {p.phase === "setup" && <Button maxFontSizeMultiplier={cap} disabled={!active || (q.kind === "observe" && s.guess < 0) || repeat} onPress={test}>{q.kind === "observe" ? "Test the model" : "Test my plan"}</Button>}
         {repeat && <Copy style={{ fontSize: 14 }}>You already tested that setup. Change something first.</Copy>}
       </BoardColumns>

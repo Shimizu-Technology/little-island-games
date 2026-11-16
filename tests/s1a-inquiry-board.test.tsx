@@ -9,7 +9,7 @@ import type { LearnSession } from '../src/learn/types';
 import { Board } from '../src/learn/games/space-station/view';
 import { legacyEngine } from '../src/learn/games/space-station/engine';
 import { investigations } from '../src/learn/games/space-station/investigations';
-import { replay, solve, type InquiryState } from '../src/learn/inquiry/engine';
+import { move, solve, type InquiryState, type Investigation } from '../src/learn/inquiry/engine';
 import { BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
 
 vi.mock('../src/components/feel',()=>({feel:()=>{}}));
@@ -62,7 +62,7 @@ let root: ReactTestRenderer | undefined;
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.unstubAllGlobals(); });
 
 type Props = { session: LearnSession; update: ReturnType<typeof vi.fn>; practice: ReturnType<typeof vi.fn>; assistance: ReturnType<typeof vi.fn> };
-async function mount(level: LearningLevel, window = { width: 393, height: 852, fontScale: 1 }, prepare?: (s: LearnSession) => LearnSession) {
+async function mount(level: LearningLevel, window: { width: number; height: number; fontScale: number } = { width: 393, height: 852, fontScale: 1 }, prepare?: (s: LearnSession) => LearnSession) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.stubGlobal('requestAnimationFrame', () => 1);
   vi.stubGlobal('cancelAnimationFrame', () => {});
@@ -123,10 +123,24 @@ it('predict → test → explain → next, with one helped mark for the first hi
   expect(texts()).toContain(qs[1].clue);
 });
 
+/** Plays the round correctly through the real engine until `pick` matches the current investigation. */
+function skipTo(session: LearnSession, pick: (q: Investigation) => boolean): LearnSession {
+  let s = session.state as InquiryState;
+  const qs = investigations(s.level, s.seed);
+  while (!pick(qs[s.index])) {
+    const q = qs[s.index];
+    if (q.kind === 'observe') s = move(qs, s, { type: 'predict', outcome: q.observe(q.start).outcome });
+    else solve(q)!.forEach((value, control) => { if (!q.controls[control].fixed) s = move(qs, s, { type: 'set', control, value }); });
+    s = move(qs, s, { type: 'test' });
+    s = move(qs, s, { type: 'explain', choice: q.explain.answer });
+    s = move(qs, s, { type: 'next' });
+  }
+  return { ...session, state: s };
+}
 it('a surprising first prediction is forgiven at Level 1 but marks the round helped at Level 4', async () => {
   for (const level of [1, 4] as const) {
-    const { props, settle } = await mount(level);
-    const s = props.session.state as InquiryState, q = investigations(level, s.seed)[0];
+    const { props, settle } = await mount(level, undefined, session => skipTo(session, q => q.kind === 'observe'));
+    const s = props.session.state as InquiryState, q = investigations(level, s.seed)[s.index];
     const miss = (q.observe(q.start).outcome + 1) % q.outcomes.length;
     await press(tile(`Predict: ${q.outcomes[miss]}`), settle);
     await press(button('Test the model'), settle);
@@ -137,16 +151,9 @@ it('a surprising first prediction is forgiven at Level 1 but marks the round hel
 });
 
 it('a reach plan that misses asks for a new plan; Undo restores an untested setting', async () => {
-  const { props, settle } = await mount(4, { width: 393, height: 852, fontScale: 1 }, session => {
-    const s = session.state as InquiryState, qs = investigations(4, s.seed);
-    // Skip to the fair test, as a child would after the first investigation.
-    let state = s; const q = qs[0];
-    state = { ...state, guess: q.observe(q.start).outcome };
-    state = { ...state, history: [['t', state.guess, ...q.start], ['e', q.explain.answer], ['x']], index: 1, draft: [...qs[1].start], guess: -1 };
-    return { ...session, state };
-  });
-  const s = props.session.state as InquiryState, q = investigations(4, s.seed)[1];
-  expect(replay(investigations(4, s.seed), s.history)!.index).toBe(1);
+  const { props, settle } = await mount(4, { width: 393, height: 852, fontScale: 1 }, session => skipTo(session, q => q.key === 'gravity-b'));
+  // The start setup never reaches the goal, whichever world the plan starts on.
+  const s = props.session.state as InquiryState, q = investigations(4, s.seed)[s.index];
   await press(button('Test my plan'), settle);
   expect(texts()).toContain('Not yet');
   await press(button('Change my plan'), settle);
@@ -188,21 +195,104 @@ it.each([1, 2, 3, 4, 5] as const)('level %i renders every investigation without 
   }
 });
 
-// Found natively: SVG labels were drawn in viewBox units, so a 140-pt scene shrank them to about 9 pt. The board now
-// divides by the scene's scale; labels reach the School floor (13 pt, 19.5 at AX) unless a reading must fit its box.
-it.each([1, 2, 3, 4, 5] as const)('level %i scene labels reach the School label floor at phone default and AX5', async level => {
+// Found natively, then tightened in review (P2-4): every SVG label reaches the School floor (13 pt, 19.5 pt at AX)
+// with no length exception, and fits inside the drawing. Longer words moved to the legend below the drawing.
+const labelSizes = (window: { width: number; fontScale: number }) => {
+  const svg = root!.root.findAll(n => String(n.type) === 'Svg')[0];
+  const scale = Math.min(svg.props.height / 210, (window.width - 60 - 12) / 360);
+  return svg.findAll(n => String(n.type) === 'SvgText').map(n => ({ words: String(n.props.children), x: n.props.x, size: n.props.fontSize * scale, units: n.props.fontSize }));
+};
+it.each([1, 2, 3, 4, 5] as const)('level %i: every scene label reaches the floor and fits, before and after Test, default and AX5', async level => {
   for (const window of [{ width: 393, height: 852, fontScale: 1 }, { width: 393, height: 852, fontScale: 3.12 }]) {
-    await mount(level, window);
-    const svg = root!.root.findAll(n => String(n.type) === 'Svg')[0];
-    const scale = Math.min(svg.props.height / 210, (window.width - 60 - 12) / 360), floor = window.fontScale >= 1.5 ? 19.5 : 13;
-    const labels = svg.findAll(n => String(n.type) === 'SvgText');
-    if (level > 1) expect(labels.length).toBeGreaterThan(0); // Level 1 shows its labels only after Test.
-    for (const label of labels) {
-      const words = String(label.props.children), size = label.props.fontSize * scale;
-      // A label below the floor only ever shrank to fit the room it was given (`room / (length × 0.6)`).
-      if (size < floor - 0.01) expect(words.length, words).toBeGreaterThanOrEqual(7);
-      else expect(size).toBeGreaterThanOrEqual(floor - 0.01);
+    const floor = window.fontScale >= 1.5 ? 19.5 : 13;
+    const { props, settle } = await mount(level, window);
+    const qs = investigations(level, (props.session.state as InquiryState).seed);
+    for (const q of qs) {
+      const check = () => { for (const l of labelSizes(window)) {
+        expect(l.size, l.words).toBeGreaterThanOrEqual(floor - 0.01);
+        const half = (l.words.length * 0.6 * l.units) / 2;
+        expect(l.x - half, l.words).toBeGreaterThanOrEqual(0);
+        expect(l.x + half, l.words).toBeLessThanOrEqual(360);
+      } };
+      check();
+      if (q.kind === 'observe') await press(tile(`Predict: ${q.outcomes[q.observe(q.start).outcome]}`), settle);
+      else for (const [c, v] of solve(q)!.entries()) if (!q.controls[c].fixed && v !== (props.session.state as InquiryState).draft[c]) await press(tile(`Set ${q.controls[c].name}: ${q.controls[c].options[v]}`), settle);
+      await press(button(q.kind === 'observe' ? 'Test the model' : 'Test my plan'), settle);
+      check();
+      await press(tile(`Reason: ${q.explain.choices[q.explain.answer]}`), settle);
+      await press(button(q === qs[qs.length - 1] ? 'Finish' : 'Next investigation'), settle);
     }
     await act(async () => root!.unmount()); root = undefined;
   }
+});
+it('"From Earth" and "Mystery world" now read as legend text at the floor, not shrunken scene labels', async () => {
+  for (const [level, key, words] of [[2, 'moon', 'Right: the Moon as seen from Earth'], [4, 'gravity-c', 'Left: the mystery world. Right: your test.']] as const) {
+    await mount(level, { width: 393, height: 852, fontScale: 3.12 }, session => skipTo(session, q => q.key.startsWith(key)));
+    const legend = root!.root.findAll(n => String(n.type) === 'Text' && n.props.testID === 'inquiry-legend');
+    expect(legend.map(n => n.children.map(String).join(''))).toContain(words);
+    expect(legend[0].props.maxFontSizeMultiplier).toBe(1.5); // 13 pt × 1.5 = 19.5 pt at AX
+    expect(labelSizes({ width: 393, fontScale: 3.12 }).every(l => l.words.length <= 8)).toBe(true);
+    await act(async () => root!.unmount()); root = undefined;
+  }
+});
+
+// P2-1: a revised plan shows no result for its untested draft; the earlier result names its own tested setup.
+it('after Change my plan, the drawing and VoiceOver show no result for the new draft, also after save and reload', async () => {
+  const { props, settle } = await mount(4, undefined, session => skipTo(session, q => q.key === 'gravity-b'));
+  const s0 = props.session.state as InquiryState, q = investigations(4, s0.seed)[s0.index];
+  const tested = q.observe(q.start);
+  await press(button('Test my plan'), settle);
+  await press(button('Change my plan'), settle);
+  const other = (q.start[0] + 1) % 5;
+  await press(tile(`Set Mass (kg): ${q.controls[0].options[other]}`), settle);
+  const draft = (props.session.state as InquiryState).draft, untested = q.observe(draft);
+  const look = () => {
+    const svg = root!.root.findAll(n => String(n.type) === 'Svg')[0];
+    expect(svg.props.accessibilityLabel).toContain('Result hidden until you test.');
+    expect(svg.props.accessibilityLabel).not.toContain(tested.reading);
+    const drawn = svg.findAll(n => String(n.type) === 'SvgText').map(n => String(n.props.children));
+    for (const n of untested.reading.match(/[\d.]+ N/g) ?? []) expect(drawn).not.toContain(n);
+    const previous = root!.root.findAll(n => String(n.type) === 'Text' && n.props.testID === 'inquiry-previous')[0];
+    const words = previous.children.map(String).join('');
+    expect(words).toContain(tested.reading);
+    expect(words).toContain(`Mass (kg) ${q.controls[0].options[q.start[0]]}`);
+  };
+  look();
+  props.session = JSON.parse(JSON.stringify(props.session));
+  await act(async () => root!.unmount()); root = undefined;
+  await mount(4, undefined, () => props.session);
+  look();
+});
+
+// P2-3: the Earth reference keeps its size whatever hidden planet is chosen before Test.
+it('cycling every offered planet before Test never changes the Earth reference or reveals the choice', async () => {
+  for (const want of [3, 0]) {
+    const { props, settle } = await mount(3, undefined, session => skipTo(session, q => q.kind === 'reach' && q.want === want));
+    const q = investigations(3, (props.session.state as InquiryState).seed)[(props.session.state as InquiryState).index];
+    const earth = () => root!.root.findAll(n => String(n.type) === 'SvgCircle' && n.props.fill === '#649CA9').map(n => n.props.r);
+    const sizes = new Set<number>();
+    for (const option of q.controls[0].options) {
+      const selected = (props.session.state as InquiryState).draft[0];
+      if (q.controls[0].options[selected] !== option) await press(tile(`Set Planet: ${option}`), settle);
+      if (option !== 'Earth') { expect(earth()).toHaveLength(1); sizes.add(earth()[0]); }
+      const circles = root!.root.findAll(n => String(n.type) === 'SvgCircle' && typeof n.props.fill === 'string' && n.props.fill.startsWith('#') && n.props.fill !== '#649CA9' && n.props.fill !== '#FFF9E9');
+      expect(circles.filter(c => ['#AA9D8A', '#D5A266', '#C27D58', '#C9A57A', '#DCC994', '#8CCAC9', '#6E8FBF'].includes(c.props.fill))).toHaveLength(0);
+    }
+    expect(sizes.size).toBe(1);
+    await act(async () => root!.unmount()); root = undefined;
+  }
+});
+
+// P2-5: a restored round whose own history shows help, saved with levelHelped false, is marked on its next move.
+it('a restored dirty round with a false help flag calls assistance on the next move', async () => {
+  const { props, settle } = await mount(4, undefined, session => {
+    let s = session.state as InquiryState;
+    const qs = investigations(4, s.seed);
+    s = move(qs, s, { type: 'hint' });
+    return { ...session, levelHelped: false, state: s };
+  });
+  const q = investigations(4, (props.session.state as InquiryState).seed)[0];
+  if (q.kind === 'observe') await press(tile(`Predict: ${q.outcomes[0]}`), settle);
+  else await press(button('Hint'), settle);
+  expect(props.assistance).toHaveBeenCalledTimes(1);
 });

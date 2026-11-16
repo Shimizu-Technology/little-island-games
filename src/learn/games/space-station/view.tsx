@@ -8,7 +8,7 @@ import type { ScienceState } from "../weather-watch/model";
 import { ScienceBoard, ScienceArt } from "../weather-watch/ScienceBoard";
 import { isInquiry, type StationState } from "./engine";
 import { investigations } from "./investigations";
-import { StationScene } from "./Scene";
+import { StationScene, stationLegend } from "./Scene";
 
 const theme = { ink: "#254B4B", accent: "#4F793B", card: "#FFFCF1", line: "#CDD7BC", chosen: "#DDECCA" };
 
@@ -18,7 +18,7 @@ export function Board(props: BoardProps<StationState>) {
   const qs = useMemo(() => (inquiry ? investigations(state.level, state.seed) : []), [inquiry, state.level, state.seed]);
   if (!inquiry)
     return <BoardSpaceProvider space={null} geometryEnabled={false}><ScienceBoard {...(props as BoardProps<ScienceState>)} game="space-station" /></BoardSpaceProvider>;
-  return <InquiryBoard {...(props as BoardProps<InquiryState>)} qs={qs} Scene={StationScene}
+  return <InquiryBoard {...(props as BoardProps<InquiryState>)} qs={qs} Scene={StationScene} legend={stationLegend}
     board="space-station" floor={SCHOOL_BOARD_MIN["space-station"]} skill="sci.space-station" theme={theme} />;
 }
 export function Art({ size }: { size: number }) {

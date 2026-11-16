@@ -1,7 +1,7 @@
 import type { LearnEngine } from "../../types";
 import { levelOf } from "../../levelOptions";
 import { makeEngine, type ScienceState } from "../weather-watch/model";
-import { create, finished, validState, type InquiryState } from "../../inquiry/engine";
+import { clean, create, finished, replay, validState, type InquiryState } from "../../inquiry/engine";
 import { scienceSkills } from "../../kit/science";
 import { investigations } from "./investigations";
 
@@ -39,6 +39,13 @@ export const engine: LearnEngine<StationState> = {
     if (!isInquiry(x)) return legacyEngine.validate(x, o);
     const seed = (x as InquiryState).seed;
     return Number.isInteger(seed) && validState(x, levelOf(o), investigations(levelOf(o), seed));
+  },
+  // The replay is the star rule: a version-2 round whose history shows help is helped, whatever its saved flag says.
+  // Version-1 rounds keep their own evidence (the flag).
+  helpedWork: (s, o) => {
+    if (!isInquiry(s)) return false;
+    const p = replay(investigations(s.level, s.seed), s.history);
+    return !p || !clean(p, levelOf(o));
   },
   outcome: (s, o) => (isInquiry(s) ? (finished(investigations(s.level, s.seed), s) ? "done" : null) : legacyEngine.outcome(s as ScienceState, o)),
 };

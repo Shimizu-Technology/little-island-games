@@ -37,7 +37,7 @@ There are two kinds:
 
 1. **Setup.** Changing a control or the prediction is free and is not saved as evidence. Undo puts back an earlier draft, only in this step.
 2. **Test.** An observe test needs a prediction. A setup can be tested once per investigation, so repeating a failed plan adds nothing. The result appears only after the test: before it, the drawing and its VoiceOver label show the setup and say the result is hidden.
-3. **Result.** A reach plan that missed shows what the model did, then asks for a new plan (`revise`). An observe prediction that missed shows "Surprise!" and moves on: a surprise is a discovery.
+3. **Result.** A reach plan that missed shows what the model did, then asks for a new plan (`revise`). After a revision the drawing and its VoiceOver label show no result for the new draft; the earlier result stays visible only as "Last test (its own tested settings): reading" (`Progress.previous`). An observe prediction that missed shows "Surprise!" and moves on: a surprise is a discovery.
 4. **Explain.** Pick the reason that fits the model. Each wrong reason counts once and stays greyed out.
 5. **Next.** The rule is shown with the accepted reason.
 
@@ -49,7 +49,7 @@ Three stages from the same investigation the checks use: the clue, the model's r
 
 ### Stars
 
-`clean(progress, level)` is the one rule. Work stays independent when an investigation has no hints and no wrong reasons. At **Levels 4 and 5** (`strictLevel`) each investigation's first test must also match the prediction or reach the goal. The board marks the round helped the moment the engine says work stopped being independent, through the frame's existing `assistance()`; a wrong reason also records `practice(skill, false)`. Stars then come from the unchanged School rule (`schoolProgress.ts`): helped finishes count, with one star.
+`clean(progress, level)` is the one rule. Work stays independent when an investigation has no hints and no wrong reasons. At **Levels 4 and 5** (`strictLevel`) each investigation's first test must also match the prediction or plan. The board marks the round helped the moment the replay says work is not independent, through the frame's existing `assistance()`; a wrong reason also records `practice(skill, false)`. **The replay is authoritative at the credit boundary:** the engine's optional `helpedWork(state, options)` reports a version-2 history that shows help, and School credit (`independentRound`, `recordLevelRound`) treats such a round as helped whatever its saved `levelHelped` flag says. The saved round is never rewritten for this; a restored round with a contradictory flag is marked helped on its next move. Version-1 rounds keep their own evidence (the flag).
 
 Levels 1–3 forgive a surprising prediction, so a curious child is not punished for being wrong. A reach plan that misses at Levels 1–3 is also forgiven.
 
@@ -66,8 +66,8 @@ The kit grades only Test, explanations and hints. Changing a control before test
 | 1 Day & night | Predict what the island has after a turn; turn Earth to bring night or day | Predict from a picture |
 | 2 Moon phases | Predict how the Moon looks from Earth at a spot in its orbit; move it to hide or show the lit half | Predict from a position in an orbit |
 | 3 Planet builder | Predict which of two planets is wider in the size model; find a planet more than twice Earth's width, or narrower | Compare against a reference and sort rocky and giant planets |
-| 4 Gravity lab | Predict a crate's weight on another world; plan a fair test (change only the mass); find a **mystery world** from its weight | Fair tests and identifying from evidence; strict stars |
-| 5 Light, tilt & eclipses | Predict light-time at a distance and the season from tilt and leaning; make a solar or lunar eclipse; the **eclipse twist** (Moon in place but the orbit tilted) | Two conditions at once; strict stars |
+| 4 Gravity lab | Predict a crate's weight on another world; plan a fair test (heavier or lighter, and put the world back when the plan starts elsewhere); find a **mystery world** from its weight; compare two worlds | Fair tests and identifying from evidence; strict stars |
+| 5 Light, tilt & eclipses | Predict light-time at a distance and the season from tilt and leaning; make a solar or lunar eclipse; the **eclipse check** (which body is in the middle, and whether the Moon is on the Sun–Earth line right now) | Two conditions at once; strict stars |
 
 A child who finds Level 3 too easy gets a real step up at Level 4: a fair test needs one variable held while another changes, and the mystery world can only be found by comparing a measured weight with the model's gravity.
 
@@ -75,7 +75,11 @@ A child who finds Level 3 too easy gets a real step up at Level 4: a fair test n
 
 **Wording.** Every rule and reading names the model ("in this model", "in the size model", "Illustrative model: sizes and distances are not to scale", "this is a model scale"). The drawing's caption always reads "Illustrative model". Facts come from Star Station's existing reviewed facts; no internet claims were added. The eclipse rule keeps "Never look at the Sun without approved protection."
 
-**Dumb players.** Tests play every seed with guess-and-check (every setup in order from the start, reasons in order) and with fixed taps (always choice 0, 1, 2 or 3). None earns independent work at Level 4 or 5 over 1,000 seeds each (the test), nor over 4,000 seeds at any level (measured). A random guesser earned it in 0 of 4,000 rounds at Level 4 and 1 of 4,000 at Level 5; the test requires under 0.2%. At Levels 1–3 a random guesser succeeds in about 1 to 2% of rounds (38 to 68 of 4,000), since all four reasons must be right first time. Each strict round's observe answers are built so no fixed guess is right every time, and every reach investigation starts on a setup that does not work.
+**Planet widths.** Any planet whose circle is smaller than Earth's is "narrower than Earth", Venus included (3 against 3.2; NASA lists 12,104 km against 12,756 km). There is no tolerance band anywhere: in a pair, whichever circle is wider is wider, however close. Before Test the hidden planet never sets the drawing's scale, so Earth's reference circle keeps one size whatever is chosen.
+
+**Eclipses.** The Moon's orbit is tilted about 5° to Earth's path around the Sun, so in most months the new or full Moon passes above or below the Sun–Earth line and there is no eclipse. Eclipses happen only when the Moon is lined up near a node, where its tilted path crosses that line (an eclipse season). The model never offers "untilted": its two conditions are which body is in the middle (Moon between Sun and Earth, Moon behind Earth, or off to the side) and **the Moon's path right now** ("Crosses the line" or "Passes above or below"). A miss is explained by this position (the Moon passed above the line, or above Earth's shadow), never by tilt alone. Sources: [NASA, eclipse periodicity, seasons and nodes](https://eclipse.gsfc.nasa.gov/SEsaros/SEperiodicity.html) and [NASA, Eclipses and the Moon](https://science.nasa.gov/moon/eclipses/). Every eclipse sentence (rule, clue, questions, readings, reasons and distractors) was re-read against these.
+
+**No habit earns the top rungs** (`tests/s1a-habits.test.ts`). At Levels 4 and 5 the four investigations come in a seeded order; prediction tiles and plan options are shown in a seeded order, separate from the model's order; each answer varies from round to round (heavier or lighter, every world, solar, lunar or no eclipse); and the right reason is the longest, middle or shortest of the three equally often (`balancedWhy` chooses from pools of wordings with overlapping lengths) and lands in any place. The test searches every fixed habit exhaustively on the review's 8,192 seeds: a prediction tile by position or label, a fixed reach plan (each control left alone, set to a position or set to a label), and a reason picked by position, letter-length rank or word-count rank, keyed by step number or by investigation type. The lead's threshold is 0.5%. Measured best: Level 4 0.05% (step) and 0.17% (type); Level 5 0.09% (step) and 0.21% (type). The reviewer's public-information adversary earns 0 of 8,192 at both levels. A reasoning strategy earns every round.
 
 ## Saves (K8)
 
@@ -83,11 +87,11 @@ Fresh rounds are version 2 (`InquiryState`). A saved version-1 Star Station roun
 
 ## Layout
 
-Star Station is a measured School board (`SCHOOL_BOARD_MIN['space-station'] = 140`). The drawing gives up height before Test leaves the measured space; Test, the result and the reasons are inside `BoardPrimary`. Once tested, the result and the reasons sit directly under the drawing. SVG labels are divided by the scene's scale, so they never draw below the 13-pt School label floor (19.5 pt at AX); a reading too long for its box at AX shrinks to fit, and the same reading is printed below in text that scales.
+Star Station is a measured School board (`SCHOOL_BOARD_MIN['space-station'] = 140`). The drawing gives up height before Test leaves the measured space; Test, the result and the reasons are inside `BoardPrimary`. Once tested, the result and the reasons sit directly under the drawing. Every SVG label is drawn at the School floor (13 pt, 19.5 pt at AX) by dividing by the scene's scale, with no length clamp; labels inside the drawing are short (at most eight characters, such as a number, a mass, a world or "Mystery") and placed where they fit at that size. Longer words ("Right: the Moon as seen from Earth", the island's time of day, the season, the Moon's path) are a legend below the drawing in text that scales and wraps.
 
 At AX sizes (`atLarge`): the step line names only the current step; the title, question, prompts, result text, control names and buttons stop at `CHROME_MAX` (1.5×) so the drawing and Test stay in view together; Hear it reads them aloud. Choice tiles keep a 48-pt minimum, their words fit the tile (`wordFitMultiplier`), short options (a mass, a world, a turn) share one row, three to five outcomes keep at least 96 pt per tile, and reasons (sentences) stack one per row. Measured natively on iPhone 15 / iOS 18.5 and iPad mini 6 / iOS 26.5 at default and AX5: the setup step of every level shows the drawing and Test together.
 
-Because Star Station is now a measured board, it also gets the AX entry and rotation reveal the other measured boards have (see "Contract note" in the S1a report). A new round started from the options sheet begins at the page top, as the frame does for every board; the reveal applies on entry, rotation and each following step.
+Because Star Station is now a measured board, it also gets the AX entry and rotation reveal the other measured boards have, recorded in `docs/CONTRACT_4.0.md` (F-frame-2 entry) and proved in `tests/r0b-frame-largest-text.test.tsx`. A new round started from the options sheet begins at the page top, as the frame does for every board; the reveal applies on entry, rotation and each following step.
 
 ## Speech
 

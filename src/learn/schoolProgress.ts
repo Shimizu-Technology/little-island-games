@@ -14,6 +14,7 @@ export type SchoolProgress = Partial<Record<LearnId, Partial<Record<LearningLeve
 /** No clock, speed or score: completion, independent work, then a return on another day. Family practice is shared, so it isn't one child's independent work. */
 export function independentRound(round: LearnSession): boolean {
   if ((round.learner ?? 'family') === 'family' || round.options.mode !== 'solo' || round.levelHelped !== false || engines[round.game].notWon?.(round.state, round.options)) return false;
+  if (engines[round.game].helpedWork?.(round.state, round.options)) return false;
   if (isGrowth(round.state) && growthProgress(round.state as GrowthState, growthQuestions(round.game, round.options, round.state as GrowthState)).clean.some(clean => !clean)) return false;
   return !(round.game === 'hafa-adai' && !round.options.stage && (round.state as { activity: string }).activity !== 'spy');
 }

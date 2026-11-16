@@ -74,6 +74,11 @@ export type Progress = {
   seen: Observation | null;
   /** Whether that test matched the prediction (observe) or reached the goal (reach). */
   matched: boolean;
+  /**
+   * After a revision: the last test's own setup and what the model showed for it. The result for the new draft stays
+   * hidden (`seen` is null) until the next test, so changing a control never reveals an untested outcome.
+   */
+  previous: { settings: number[]; observation: Observation } | null;
   records: Step[];
   /** The explanation choices tried and refused in this investigation. */
   tried: number[];
@@ -111,6 +116,7 @@ const matches = (q: Investigation, guess: number, seen: Observation) =>
 /** Rebuild the round from its history. Null if any action was not legal where it happened. */
 export function replay(qs: readonly Investigation[], history: readonly Act[]): Progress | null {
   let index = 0, phase: Phase = qs.length ? "setup" : "finished", seen: Observation | null = null, matched = false;
+  let tested: number[] = [], previous: Progress["previous"] = null;
   let tried: number[] = [];
   const records: Step[] = [emptyRecord()];
   let setups: string[] = [];
@@ -127,12 +133,16 @@ export function replay(qs: readonly Investigation[], history: readonly Act[]): P
       if (setups.includes(settings.join())) return null;
       setups = [...setups, settings.join()];
       seen = q.observe(settings);
+      tested = settings;
+      previous = null;
       matched = matches(q, guess, seen);
       if (r.tests === 0) r.firstMatched = matched;
       r.tests++;
       phase = q.kind === "reach" && !matched ? "result" : "explain";
     } else if (a[0] === "r") {
-      if (phase !== "result") return null;
+      if (phase !== "result" || !seen) return null;
+      previous = { settings: tested, observation: seen };
+      seen = null; matched = false;
       phase = "setup";
     } else if (a[0] === "e") {
       if (phase !== "explain" || a[1] >= q.explain.choices.length || tried.includes(a[1])) return null;
@@ -142,11 +152,11 @@ export function replay(qs: readonly Investigation[], history: readonly Act[]): P
       if (phase !== "done") return null;
       index++;
       phase = index === qs.length ? "finished" : "setup";
-      seen = null; matched = false; tried = []; setups = [];
+      seen = null; matched = false; tried = []; setups = []; previous = null;
       if (index < qs.length) records.push(emptyRecord());
     }
   }
-  return { index, phase, seen, matched, records: index === qs.length ? records.slice(0, index) : records, tried };
+  return { index, phase, seen, matched, previous, records: index === qs.length ? records.slice(0, index) : records, tried };
 }
 
 /** Work so far is independent: no hints, no wrong explanation and, at strict levels, every first test right. */
