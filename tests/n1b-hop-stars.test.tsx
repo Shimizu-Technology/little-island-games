@@ -1,6 +1,6 @@
 /** N1b fix P1-1: finishing Number Hop's last puzzle over par must not be credited as independent work. Real LearnFrame, Store and
  * Number Hop board; only the platform is mocked. The board is played through its own buttons. */
-import React, { createContext } from 'react';
+import React, { createContext, useLayoutEffect } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { random } from '../src/games/types';
@@ -48,8 +48,9 @@ vi.mock('../src/learn/views', async () => {
   return { views: new Proxy({}, { get: () => ({ Board: hop.Board, Art: 'Art' }) }) };
 });
 
-let root: ReactTestRenderer | undefined, store: ReturnType<typeof useStore> | undefined;
-function Probe() { const s = useStore(); store = s; return s.ready ? <LearnFrame id="number-hop" /> : null; }
+let root: ReactTestRenderer | undefined;
+const seen: { store?: ReturnType<typeof useStore> } = {};
+function Probe() { const s = useStore(); useLayoutEffect(() => { seen.store = s; }); return s.ready ? <LearnFrame id="number-hop" /> : null; }
 const options = { ...optionsAtLevel({ mode: 'solo', pace: 'easy' }, 3), mathOperation: 'add' as const };
 /** Seed 9, Level 3, the review's round: the first four puzzles done at par, the fifth waiting. */
 function fourDone(): HopRound {
@@ -68,7 +69,7 @@ async function mount(state: HopRound) {
   db.raw = encodeSave(save);
   await act(async () => { root = create(<StoreProvider><Probe /></StoreProvider>, { createNodeMock: () => ({ scrollTo: () => {}, measureLayout: () => {} }) }); });
 }
-afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; store = undefined; vi.unstubAllGlobals(); });
+afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; seen.store = undefined; vi.unstubAllGlobals(); });
 const textOf = (n: ReactTestInstance): string => n.children.map((c) => (typeof c === 'string' ? c : textOf(c))).join('');
 const label = (n: ReactTestInstance) => n.props.accessibilityLabel ?? textOf(n);
 async function press(name: string) {
@@ -76,7 +77,7 @@ async function press(name: string) {
   expect(hit, `${name} among ${root!.root.findAll((n) => String(n.type) === 'Button').map(label).join(' | ')}`).toBeDefined();
   await act(async () => { hit.props.onPress(); });
 }
-const saved = (): Save => store!.save;
+const saved = (): Save => seen.store!.save;
 const hopState = () => saved().learn!['number-hop']!.state as HopRound;
 
 it('the review repro: a last puzzle finished over par (seed 9, 1 to 12 in 11 jumps, par 6) is not credited as independent work', async () => {
