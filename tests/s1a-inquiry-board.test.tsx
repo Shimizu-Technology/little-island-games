@@ -320,14 +320,20 @@ it('at the 120-pt drawing floor, every scene label on every level reaches the te
   }
 }, 120_000);
 
-// Found natively in fix round 1: nested spans (the title inside the question, the legend inside the caption) must carry
-// the same 1.5× cap as their block, or iOS scales them with the frame's 2× region.
-it('nested title and legend spans carry the chrome cap at AX5', async () => {
+// Found natively in fix round 1: nested spans (the title inside the question, the legend inside the caption) must
+// inherit their block's 1.5× cap; a span with its own cap or region fit is scaled twice on iOS.
+it('nested title and legend spans inherit the block cap at AX5', async () => {
   await mount(5, { width: 393, height: 852, fontScale: 3.12 });
   for (const id of ['inquiry-question', 'inquiry-legend']) {
     const block = root!.root.findAll(n => String(n.type) === 'Text' && n.props.testID === id)[0];
     const nested = block.findAll(n => String(n.type) === 'Text' && n !== block);
     expect(nested.length, id).toBeGreaterThan(0);
-    for (const span of nested) expect(span.props.maxFontSizeMultiplier, id).toBe(1.5);
+    expect(block.props.maxFontSizeMultiplier, id).toBe(1.5);
+    // A nested span carries no cap or pre-scaled size of its own, so the block's native cap scales it exactly once.
+    for (const span of nested) {
+      expect(span.props.maxFontSizeMultiplier, id).toBeUndefined();
+      expect(span.props.allowFontScaling, id).not.toBe(false);
+      expect(Number((Array.isArray(span.props.style) ? Object.assign({}, ...span.props.style) : span.props.style ?? {}).fontSize ?? 0), id).toBeLessThanOrEqual(17);
+    }
   }
 });

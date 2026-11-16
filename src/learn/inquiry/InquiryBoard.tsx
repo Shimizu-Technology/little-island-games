@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, useWindowDimensions } from "react-native";
+import { Text as Span, View, useWindowDimensions } from "react-native";
 import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from "../BoardSpace";
 import type { SchoolBoard } from "../boardGeometry";
 import { Button, Copy, PressableScale } from "../../components/ui";
@@ -133,9 +133,10 @@ export function InquiryBoard({
       </View>
       <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
         <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={(large ? 19.5 : 13) / sceneScale} /></View>
-        {/* The legend and the "illustrative" note share one wrapped caption, so they cost the board as little height as possible. */}
+        {/* The legend and the "illustrative" note share one wrapped caption, so they cost the board as little height as possible.
+            Nested spans are plain native spans: they inherit the block's 1.5× cap instead of being scaled twice. */}
         <Copy testID="inquiry-legend" maxFontSizeMultiplier={cap} style={{ fontSize: 13, textAlign: "center", color: theme.ink }}>
-          {(legend?.({ q, settings: s.draft, seen: p.seen }) ?? []).map((line) => <Copy key={line} maxFontSizeMultiplier={cap} style={{ fontSize: 13, fontWeight: "800", color: theme.ink }}>{line} · </Copy>)}
+          {(legend?.({ q, settings: s.draft, seen: p.seen }) ?? []).map((line) => <Span key={line} style={{ fontWeight: "800" }}>{line} · </Span>)}
           Illustrative model{q.given ? ` · given: ${q.given}` : ""}
         </Copy>
       </View>}>
@@ -144,7 +145,7 @@ export function InquiryBoard({
         {/* Title, question and prompts stop at 1.5× so the drawing and Test stay in view together; Hear it reads them. */}
         {/* The title leads the question in one block: one line less between the drawing and Test. */}
         <Copy testID="inquiry-question" maxFontSizeMultiplier={cap} style={{ fontSize: 16, lineHeight: 22 }}>
-          <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 17, fontWeight: "900", color: theme.ink }}>{q.title}. </Copy>{q.question}
+          <Span style={{ fontSize: 17, fontWeight: "900", color: theme.ink }}>{q.title}. </Span>{q.question}
         </Copy>
         {p.phase === "setup" && <CoachSpot active={coach.active}>
           <View style={{ gap: 6 }}>
