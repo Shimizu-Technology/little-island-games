@@ -84,7 +84,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
   const { puzzle: p, pos, used, lights, won, missed, canCheck, active, width, title, hear, onPlace, onToggleUsed, onCheck, onUndo, onReset, canUndo, canReset, onLights, keepers, teach = null, teachNote, coach, cue = null, notice, help, finished, footer, header } = props;
   const reduced = useReducedMotion(), window = useWindowDimensions(), large = window.fontScale >= LARGE_TEXT;
   const [held, setPicked] = useState<number | null>(null), [heard, setHeard] = useState<number | null>(null), [caption, setCaption] = useState(''), [page, setPage] = useState(0);
-  const [met, setMet] = useState(false);
+  const [met, setMet] = useState(false), [gridWidth, setGridWidth] = useState<number | null>(null);
   const school = useBoardSpace();
   // Legibility first: the drawing never shrinks a seat picture below its floor; the page scrolls instead.
   const floor = seatFloor(window.width), natural = seatForWidth(width, p.n, window.width);
@@ -182,14 +182,16 @@ export function CanoeBoard(props: CanoeBoardProps) {
   </View>;
 
   // ---------- clue cards ----------
-  const cols = clueColumns(width), pages = cluePages(p.clues.length, width), perPage = pages > 1 ? CLUE_PAGE_PHONE : p.clues.length;
-  const shownPage = Math.min(page, pages - 1), cardH = clueCardHeight(width), gap = 8, cardW = Math.floor((width - gap * (cols - 1)) / cols);
+  // Hosts may pass a narrower width than the board really gets; the card grid measures its own.
+  const cardsWidth = gridWidth ?? width;
+  const cols = clueColumns(cardsWidth), pages = cluePages(p.clues.length, cardsWidth), perPage = pages > 1 ? CLUE_PAGE_PHONE : p.clues.length;
+  const shownPage = Math.min(page, pages - 1), cardH = clueCardHeight(cardsWidth), gap = 8, cardW = Math.floor((cardsWidth - gap * (cols - 1)) / cols);
   const indices = p.clues.map((_, i) => i).slice(shownPage * perPage, shownPage * perPage + perPage);
   const cards = covered ? <View testID="canoe-cover" style={{ alignSelf: 'stretch', minHeight: cardH * 2 + gap, borderRadius: 20, backgroundColor: '#2F6F7A', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 10 }}>
     <Copy maxFontSizeMultiplier={1.5} style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 20, textAlign: 'center' }}>{`Pass to ${keepers!.names[keepers!.keeper]}`}</Copy>
     <Copy maxFontSizeMultiplier={1.5} style={{ color: '#E5F4F2', fontSize: 15, textAlign: 'center' }}>The clue cards are hidden. No peeking!</Copy>
     <Button compact maxFontSizeMultiplier={1.5} disabled={!active} onPress={keepers!.onReveal} label={`${keepers!.names[keepers!.keeper]} is ready: show my clues`} numberOfLines={2}>{`I'm ${keepers!.names[keepers!.keeper]}: show my clues`}</Button>
-  </View> : <View testID="canoe-clues" style={{ flexDirection: 'row', flexWrap: 'wrap', gap, alignSelf: 'stretch' }}>
+  </View> : <View testID="canoe-clues" onLayout={e => { const w = Math.floor(e.nativeEvent.layout.width); if (w > 0 && w !== gridWidth) setGridWidth(w); }} style={{ flexDirection: 'row', flexWrap: 'wrap', gap, alignSelf: 'stretch' }}>
     {indices.map(i => {
       const c = p.clues[i], mine = !keepers || keepers.owner(i) === keepers.keeper;
       const isLit = lights && lit(p, c, pos), isUsed = !!(used & (1 << i)), item = (x: number) => ({ attr: attrOf(p, x), pool: p.cast[x] });
