@@ -11,6 +11,7 @@ import {
 import { canonicalLevel, clamp, exact, finite, integer } from "../../action/validation";
 import { BUG_RADIUS_X, BUG_RADIUS_Y, HUSK_RADIUS } from "../../action/arena";
 import { configureLives, createLives, hitLives, stepLives, validLives, type Lives } from "../../lives";
+import { certified } from "./certified";
 export const FIRE_SECONDS = 0.22,
   HUSK_SPEED = 560;
 export type PalmLevel = ArcadeLevel & {
@@ -29,35 +30,34 @@ export type PalmLevel = ArcadeLevel & {
   facts: number;
   par: number;
   accuracy: number;
+  /** 2: the AR-05 smoothed waves, 2 s wave breaks and replay-fitted pars. Stars and bests from version 1 stay as earned. */
+  rulesVersion: 2;
 };
-export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
+/** Seconds of calm between waves in a level: no beetles, no tosses (AR-05). Endless keeps its old breath. */
+export const PALM_WAVE_BREAK = 2,
+  PALM_ENDLESS_BREAK = 0.65;
+const palmNames = [
+  "Marching visitors",
+  "Husk toss",
+  "Leafy shelter",
+  "Quick nets",
+  "Grove keepers",
+  "Swoop & scoop",
+  "Palm party",
+  "The crowned visitor",
+];
+const learnNames = ["Little sums", "One more", "Make five", "Take away", "Make ten", "Double up", "Ten and more", "Math grove"];
+/** The behaviour shared by both tables: march, dives, armor, aim and shield gaps. */
+function palmBase(id: LevelId) {
   const index = levelNumber(id),
     world = worldOf(id),
     rank = world === "learn" ? 0 : Number(world[1]) - 1,
     learning = world === "learn";
-  const waves = learning || rank === 0 ? 1 : 2 + Number(rank >= 2) + Number(rank >= 5);
-  const par = rank === 0 && !learning ? 15 + index * 3 : waves * (22 + rank * 2 + index * 0.5);
   return {
     id,
     index,
     world,
-    name: learning
-      ? ["Little sums", "One more", "Make five", "Take away", "Make ten", "Double up", "Ten and more", "Math grove"][
-          index - 1
-        ]
-      : [
-          "Marching visitors",
-          "Husk toss",
-          "Leafy shelter",
-          "Quick nets",
-          "Grove keepers",
-          "Swoop & scoop",
-          "Palm party",
-          "The crowned visitor",
-        ][index - 1],
-    count: learning ? 3 : rank === 0 ? (index <= 3 ? 5 : 10) : 10 + 5 * Number(rank >= 2),
-    waves,
-    relays: learning || rank === 0 && index <= 3 ? 1 : rank === 0 ? 2 : rank < 2 ? 4 : 3,
+    name: learning ? learnNames[index - 1] : palmNames[index - 1],
     speed: learning ? 0 : 40 + rank * 6 + (index - 1) * 1.1,
     descent: 16 + rank,
     diveEvery: rank === 0 ? 0 : Math.max(1.2, 4.2 - rank * 0.4 - index * 0.05),
@@ -68,17 +68,72 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
     divers: rank > 0,
     boss: index === 8 && !learning,
     facts: learning ? 3 + Math.floor(index / 3) : 0,
+    rank,
+    learning,
+  };
+}
+/**
+ * The shipped 3.0 wave table. Endless still marches through these crowns (`palmConfig`), so its waves are
+ * unchanged; scored levels use `palmLevels` below.
+ */
+const palmEndlessLevels: readonly PalmLevel[] = (["w1-8", "w2-8", "w3-8", "w4-8", "w5-8", "w6-8"] as const).map((id) => {
+  const { rank, learning: _learning, ...base } = palmBase(id),
+    waves = rank === 0 ? 1 : 2 + Number(rank >= 2) + Number(rank >= 5);
+  const par = rank === 0 ? 15 + base.index * 3 : waves * (22 + rank * 2 + base.index * 0.5);
+  return {
+    ...base,
+    count: rank === 0 ? 10 : 10 + 5 * Number(rank >= 2),
+    waves,
+    relays: rank === 0 ? 2 : rank < 2 ? 4 : 3,
     par,
     accuracy: 0.55 + rank * 0.025,
+    rulesVersion: 2 as const,
+    goals: ["", "", ""] as const,
+  };
+});
+/**
+ * AR-05 workload: every formation is one burst followed by a 2 s break. World 1 nets
+ * 5, 5, 5, 8, 10, 12 and 14 beetles, and W1-8 adds one short crown encounter. World 2 is two
+ * waves of 10, where divers arrive. Worlds 3–5 are three waves of 9, so armor adds hits rather than
+ * beetles, and World 6 is four. Each world's last level adds its crown: a short wave of its own, or
+ * in World 6 a crown that marches in the last wave's formation. Pars come from legal replays
+ * (`certified.ts`).
+ */
+const palmCounts = [5, 5, 5, 8, 10, 12, 14, 14];
+const palmCertified = certified.levels;
+export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
+  const { rank, learning, ...base } = palmBase(id),
+    index = base.index;
+  const formations = learning || rank === 0 ? 1 : rank === 1 ? 2 : rank < 5 ? 3 : 4;
+  const waves = formations + Number(base.boss && rank < 5);
+  const fitted = palmCertified[id] ?? { par: 999, accuracy: 0.55 + rank * 0.025 };
+  return {
+    ...base,
+    count: learning ? 3 : rank === 0 ? palmCounts[index - 1] : rank === 1 ? 10 : 9,
+    waves,
+    relays: 1,
+    par: fitted.par,
+    accuracy: fitted.accuracy,
+    rulesVersion: 2 as const,
     goals: learning
       ? [`Match ${3 + Math.floor(index / 3)} math facts`, "At most 1 wrong answer", "Every answer right first time"]
       : [
           `Net every wave · ${waves} ${waves === 1 ? "wave" : "waves"}`,
           "Lose at most 1 heart",
-          `No hearts lost · ${Math.round((0.55 + rank * 0.025) * 100)}% aim · under ${Math.ceil(par)}s`,
+          `No hearts lost · ${Math.round(fitted.accuracy * 100)}% aim · under ${Math.ceil(fitted.par)}s`,
         ],
   };
 });
+/**
+ * What a scored level asks for (AR-05), with armor kept apart from the beetle count: beetles in its
+ * formations, the extra nets armored beetles need, and whether a crown arrives in a short wave of its own.
+ */
+export function palmWorkload(level: PalmLevel): { beetles: number; armorHits: number; crownWave: boolean } {
+  const crownWave = level.boss && level.world !== "w6",
+    formations = level.waves - Number(crownWave),
+    armored = level.armored ? Array.from({ length: level.count }, (_, i) => i % 4 === 2).filter(Boolean).length : 0;
+  return { beetles: level.count * formations, armorHits: armored * formations, crownWave };
+}
 export function palmLevel(id: LevelId) {
   "worklet";
   return palmLevels.find((l) => l.id === id)!;
@@ -144,7 +199,7 @@ export type PalmInput =
   | { type: "finish" };
 export function palmConfig(s: PalmState): PalmLevel {
   "worklet";
-  return s.level === "endless" ? palmLevel(`w${Math.min(6, 1 + Math.floor((s.wave - 1) / 3))}-8` as LevelId) : s.level;
+  return s.level === "endless" ? palmEndlessLevels[Math.min(5, Math.floor((s.wave - 1) / 3))] : s.level;
 }
 function fact(s: PalmState): PalmState {
   "worklet";
@@ -415,7 +470,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
   if (!s.beetles.length) {
     if (s.relay < config.relays) return formation({ ...s, relay: s.relay + 1 });
     if (s.level !== "endless" && s.wave >= config.waves) return { ...s, phase: "cleared" };
-    return feedback({ ...s, waveWait: 0.65 }, "wave", "Next wave", 180, 72);
+    return feedback({ ...s, waveWait: s.level === "endless" ? PALM_ENDLESS_BREAK : PALM_WAVE_BREAK }, "wave", "Next wave", 180, 72);
   }
   return s;
 }
@@ -476,7 +531,7 @@ export function validPalm(v: unknown): v is PalmState {
     (v.wave as number) > 0 &&
     finite(v.cooldown, 0, FIRE_SECONDS) &&
     finite(v.pulse, 0, 0.45) &&
-    finite(v.waveWait, 0, 0.65) &&
+    finite(v.waveWait, 0, v.level === "endless" ? PALM_ENDLESS_BREAK : PALM_WAVE_BREAK) &&
     finite(v.diveClock, 0, 10) &&
     [-1, 1].includes(v.direction as number) &&
     finite(v.marchX, -360, 360) &&

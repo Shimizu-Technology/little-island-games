@@ -11,7 +11,7 @@ import { reefLevels } from "./games/reef-builder/engine";
 import { createSong, noteDuration, songLevels, songResult, songStep, songTransition, type SongState } from "./games/shell-song/engine";
 import { createRail, railLevels, railTick } from "./games/rail-parade/engine";
 import { createCrab, crabLanes, crabLevels, crabPace } from "./games/crab-crossing/engine";
-import { createPalm, palmDiveInterval, palmLevels, palmMarchSpeed } from "./games/palm-patrol/engine";
+import { createPalm, palmDiveInterval, palmLevels, palmMarchSpeed, palmWorkload } from "./games/palm-patrol/engine";
 import { beachLevels, beachStartSpeed, createBeach, paddleWidth } from "./games/beach-ball/engine";
 import { createFlight, flightGap, flightSpeed } from "./games/fruit-bat-flight/engine";
 import { createRun, runSpeed } from "./games/lagoon-run/engine";
@@ -47,8 +47,10 @@ export function songUnits(level: (typeof songLevels)[number]): { longestShown: n
     if (s.phase === "picture") { s = songTransition(s, { type: "picture", word: level.word! }); continue; }
     if (s.phase === "repeat") {
       if (s.cursor === 0) {
-        // Paired notes repeat the same shell; a pair is one thing to remember.
+        // Paired notes repeat the same shell; a pair is one thing to remember. The played phrase must
+        // match the descriptor's authored motif units and taps (AR-02).
         const units = level.twist === "twins" ? s.pattern.length / 2 : s.pattern.length;
+        if (units !== level.units[s.rounds] || s.pattern.length !== level.taps[s.rounds]) throw new Error(`Shell Song ${level.id} phrase ${s.rounds + 1} plays ${units} units in ${s.pattern.length} taps, but its descriptor says ${level.units[s.rounds]} in ${level.taps[s.rounds]}`);
         longestShown = Math.max(longestShown, s.pattern.length); longestUnits = Math.max(longestUnits, units);
       }
       s = songTransition(s, { type: "shell", index: s.pattern[s.cursor] });
@@ -119,15 +121,17 @@ function table(game: ArcadeId): GameTable {
     case "palm-patrol": return {
       game, metrics: [
         ...runtime("speed", "March speed", "up", "reaction", "px/s"),
-        { id: "workload", label: "Nominal beetles (count × waves × relays)", harder: "up", kind: "workload" },
+        { id: "beetles", label: "Beetles in formations (a crown's own wave apart)", harder: "up", kind: "workload" },
+        { id: "armor", label: "Extra nets for armor", harder: "up", kind: "workload" },
         ...runtime("dive", "Dive interval", "down", "spawn", "s"),
         { id: "facts", label: "Facts", harder: "up", kind: "workload" },
       ],
       rows: palmLevels.map(l => {
-        if (!ordinary(l.id)) return { level: l.id, values: { speed: null, speedPeak: null, workload: null, dive: null, divePeak: null, facts: l.facts } };
+        if (!ordinary(l.id)) return { level: l.id, values: { speed: null, speedPeak: null, beetles: null, armor: null, dive: null, divePeak: null, facts: l.facts } };
         // The march speeds up as beetles are caught and as a wave goes on: one beetle left, 22 seconds in.
         const s = createPalm(l, 42, false), late = { ...s, beetles: s.beetles.map((b, i) => i ? { ...b, caught: 1 } : b), waveTime: 22 }, dive = (v: number) => v > 0 ? round(v) : null;
-        return { level: l.id, values: { speed: round(palmMarchSpeed(s)), speedPeak: round(palmMarchSpeed(late)), workload: l.count * l.waves * l.relays, dive: dive(palmDiveInterval(s)), divePeak: dive(palmDiveInterval(late)), facts: null } };
+        const work = palmWorkload(l);
+        return { level: l.id, values: { speed: round(palmMarchSpeed(s)), speedPeak: round(palmMarchSpeed(late)), beetles: work.beetles, armor: work.armorHits, dive: dive(palmDiveInterval(s)), divePeak: dive(palmDiveInterval(late)), facts: null } };
       }),
       helper: palmLevels.filter(l => ordinary(l.id)).map(l => ({ level: l.id, metric: "march", off: round(palmMarchSpeed(createPalm(l, 42, false))), on: round(palmMarchSpeed(createPalm(l, 42, true))), harder: "up" as const })),
     };

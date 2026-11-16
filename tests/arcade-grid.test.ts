@@ -10,6 +10,7 @@ import {
   railMove,
   railResult,
   railSafeStart,
+  railScoredSeed,
   railSnake,
   railStep,
   railTick,
@@ -26,6 +27,7 @@ import {
   crabPace,
   crabPosition,
   crabResult,
+  crabScoredSeed,
   crabStep,
   crabTransition,
   createCrab,
@@ -180,7 +182,8 @@ describe("Rail movement, damage and interpolation", () => {
 });
 describe("Rail deterministic completion fixtures", () => {
   it.each(railLevels)("clears $id with a bounded route and a skill par", (level) => {
-    let s = createRail(level, 120);
+    // Seed 120 as Start's entropy: scored play picks its garden from the certified pool (AR-03).
+    let s = createRail(level, railScoredSeed(level, 120));
     for (let move = 0; move < 700 && s.phase === "play"; move++) {
       const path = railPath(s);
       expect(path.length, `${level.id} ${s.moves}`).toBeGreaterThan(0);
@@ -299,7 +302,8 @@ describe("Crab deterministic completion fixtures", () => {
   it.each(crabLevels)(
     "clears $id through actual hops and moving lanes",
     (level) => {
-      let s = createCrab(level, 120);
+      // Seed 120 as Start's entropy: scored play picks its traffic phase from the certified pool (AR-04).
+      let s = createCrab(level, crabScoredSeed(level, 120));
       if (level.world === "learn") {
         for (const target of level.stones) {
           while (Math.abs(s.x - target) > 0.01)

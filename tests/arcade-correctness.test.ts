@@ -5,7 +5,7 @@ import { applyArcadeAction } from "../src/arcade/saveAction";
 import { emptySave, parseSave } from "../src/state/validation";
 import { addLearner } from "../src/learn/learners";
 import { createReef, legalReefMoves, reefLevel, reefLevels, reefTransition } from "../src/arcade/games/reef-builder/engine";
-import { createPalm, palmLevel, palmResult, palmMarchSpeed, palmStep, palmTransition, validPalm } from "../src/arcade/games/palm-patrol/engine";
+import { createPalm, palmLevel, palmResult, palmMarchSpeed, palmStep, palmTransition, palmWorkload, validPalm } from "../src/arcade/games/palm-patrol/engine";
 import { palmFrameStep } from "../src/arcade/action/controls";
 const finish = (round: string, stars = 3, game = "reef-builder"): ArcadeAction => ({ type: "finish", game, level: "w1-1", stars, round, score: 100, name: "Family" } as ArcadeAction);
 const expected = { epoch: 3, learner: "family" };
@@ -100,7 +100,8 @@ describe("Palm fresh fact input and opener", () => {
       expect(s.time).toBeLessThan(l.par);
       expect(palmResult(s)?.stars).toBe(3);
     }
-    const hard = palmLevel("w6-8"); expect(hard.count * hard.waves * hard.relays).toBe(180);
+    // AR-05 caps W6 at four waves of nine with armor counted apart, short of the old 180-beetle nominal.
+    const hard = palmLevel("w6-8"); expect(palmWorkload(hard)).toEqual({ beetles: 36, armorHits: 8, crownWave: false });
     const a = arcadeTransition(emptyArcade(), "family", finish("old-stars", 3, "palm-patrol"));
     expect(parseSave(JSON.stringify({ ...emptySave(), arcade: a }))?.arcade?.people.family.games["palm-patrol"]?.stars["w1-1"]).toBe(3);
   });

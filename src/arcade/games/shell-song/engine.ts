@@ -2,23 +2,44 @@ import { createLives, configureLives, stepLives, hitLives, validLives, type Live
 import { pictureWords } from "../../../learn/reading/provenance";
 import { phonemes, wordEntry } from "../../../learn/kit/reading";
 import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
-export type SongLevel = ArcadeLevel & { shells: number; startLength: number; rounds: number; noteMs: number; twist: "growing" | "response" | "twins" | "finale" | "word"; word?: string };
+/**
+ * `units` and `taps` describe each phrase of a perfect round (AR-02). A motif unit is one thing to
+ * remember: an ordinary note is one unit, and a paired echo (the same shell twice) is one unit shown
+ * as two taps. Recall load is measured in units; `taps` is only what the child presses.
+ */
+export type SongLevel = ArcadeLevel & { shells: number; startLength: number; rounds: number; noteMs: number; twist: "growing" | "response" | "twins" | "finale" | "word"; word?: string; units: readonly number[]; taps: readonly number[] };
 export type SongState = { level: SongLevel | "endless"; seed: number; helper: boolean; pattern: number[]; shells: number; lives: Lives; event: number; onset: number; phase: "over" | "watch" | "repeat" | "picture" | "cleared" | "rest"; elapsed: number; cursor: number; rounds: number; slips: number; score: number; lastTap: number | null; choices: string[]; message: string; helped: boolean; /** Times the child pressed Replay this round. A slip's automatic replay is not counted. */ replays: number };
 export type SongInput = { type: "tick" } | { type: "shell"; index: number } | { type: "picture"; word: string } | { type: "replay" } | { type: "helper"; value: boolean } | { type: "finish" } | { type: "show" };
 // All picture targets and sound tiles come from the existing curated reading bank.
 /** Authored phrase lengths and cadence; player recall is always untimed. */
 export const songWords = pictureWords("easy").filter(word => !!wordEntry(word) && wordEntry(word)!.tiles.length === 3 && wordEntry(word)!.tiles.every(t => t.length === 1) && phonemes(word).length === 3).slice(0, 8);
+/** Playback quickens by this much per phrase inside a level, the same in every world. Recall stays untimed. */
+export const SONG_PHRASE_STEP = 10;
+const songWorldNames = ["Shoreline song", "Tide voices", "Six-shell chorus", "New phrases", "Paired echoes", "Long finale"] as const;
+/** Independent units in each phrase: growing songs add one, new phrases are each one longer, the finale grows by two. */
+export function songPhraseUnits(twist: SongLevel["twist"], startLength: number, rounds: number): number[] {
+  const grow = twist === "finale" ? 2 : 1;
+  return Array.from({ length: rounds }, (_, k) => startLength + k * grow);
+}
 export const songLevels: readonly SongLevel[] = allLevelIds.map(id => {
   const index = levelNumber(id), world = worldOf(id), rank = ({ w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 })[world], learning = world === "learn";
   const shells = learning ? 3 : Math.min(6, 3 + rank + (rank >= 2 && index >= 5 ? 1 : 0));
-  const startLength = learning ? 3 : [2, 3, 4, 4, 5, 7][rank] + Math.floor((index - 1) / 3);
-  const rounds = learning ? 1 : 3 + Number(index >= 6), word = learning ? songWords[index - 1] : undefined;
+  // AR-02: phrase count never falls back at a world entry. Three phrases open World 1, four from W1-6,
+  // and the last three finale levels play five. World entries rest on units instead (restBeats.ts).
+  const startLength = learning ? 3 : [2, 3, 4, 4, 5, 4][rank] + Math.floor((index - 1) / 3);
+  const rounds = learning ? 1 : world === "w1" && index < 6 ? 3 : world === "w6" && index >= 6 ? 5 : 4, word = learning ? songWords[index - 1] : undefined;
   const twist = learning ? "word" : rank === 3 ? "response" : rank === 4 ? "twins" : rank === 5 ? "finale" : "growing";
-  return { id, index, world, name: learning ? `Sound a word · ${index}` : `${["Shoreline song", "Tide voices", "Six-shell chorus", "Call and response", "Twin-note echoes", "Long-song finale"][rank]} · ${index}`, shells, startLength, rounds, twist, noteMs: learning ? 3200 : [650, 540, 460, 440, 400, 360][rank] - (index - 1) * (rank < 2 ? 10 : 6), ...(word ? { word } : {}), goals: [learning ? "Blend the sounds. Pick their picture." : `Repeat ${rounds} ${twist === "response" ? "new phrases" : "growing patterns"}`, "Finish with 1 slip or fewer", "Finish with no slips"] };
+  const units = learning ? [3] : songPhraseUnits(twist, startLength, rounds), taps = units.map(u => twist === "twins" ? u * 2 : u);
+  // One tempo curve across W1-1 … W6-8 that never slows at a world entry; it is separate from recall load.
+  const noteMs = learning ? 3200 : [620, 540, 460, 400, 352, 310][rank] - (index - 1) * [10, 10, 8, 6, 6, 4][rank];
+  const goal = twist === "response" ? `Answer ${rounds} new phrases` : twist === "twins" ? `Echo ${rounds} paired phrases` : twist === "finale" ? `Play a long finale of ${rounds} phrases` : `Repeat ${rounds} growing patterns`;
+  return { id, index, world, name: learning ? `Sound a word · ${index}` : `${songWorldNames[rank]} · ${index}`, shells, startLength, rounds, twist, noteMs, units, taps, ...(word ? { word } : {}), goals: [learning ? "Blend the sounds. Pick their picture." : goal, "Finish with 1 slip or fewer", "Finish with no slips"] };
 });
+/** The longest phrase of a level in independent motif units: the Shell Song memory measure. */
+export const songMotifUnits = (level: SongLevel) => Math.max(...level.units);
 export const songLevel = (id: LevelId) => songLevels.find(l => l.id === id)!;
 export const songTiles = (s: SongState): readonly string[] => s.level !== "endless" && s.level.word ? wordEntry(s.level.word)!.tiles : Array.from({ length: s.shells }, (_, i) => ["1", "2", "3", "4", "5", "6"][i]);
-export const noteDuration = (s: SongState) => s.level !== "endless" && s.level.word ? s.level.noteMs : Math.max(240, (s.level === "endless" ? 650 : s.level.noteMs) - s.rounds * (s.level !== "endless" && s.level.world === "w1" ? 50 : 20)) + (s.helper ? 120 : 0);
+export const noteDuration = (s: SongState) => s.level !== "endless" && s.level.word ? s.level.noteMs : Math.max(240, s.level === "endless" ? 650 - s.rounds * 20 : s.level.noteMs - s.rounds * SONG_PHRASE_STEP) + (s.helper ? 120 : 0);
 export const watchNoteIndex = (s: SongState) => s.phase === "watch" && s.elapsed >= 450 ? Math.floor((s.elapsed - 450) / noteDuration(s)) : -1;
 export function glowingShell(s: SongState): number | null {
   const index = watchNoteIndex(s), duration = noteDuration(s);
@@ -36,7 +57,7 @@ export function createSong(level: SongState["level"], seed: number, helper = fal
   const distractors = pictureWords("easy").filter(w => w !== word), choices = word ? [word, distractors[seed % distractors.length], distractors[(seed + 3) % distractors.length]] : [];
   if (word) { const offset = seed % 3; choices.push(...choices.splice(0, offset)); }
   const s: SongState = { level, seed, helper, lives: createLives(helper), event: 0, onset: 0, pattern: [], shells: level === "endless" ? 4 : level.shells, phase: "watch", elapsed: 0, cursor: 0, rounds: 0, slips: 0, score: 0, lastTap: null, choices, replays: 0, message: word ? "Hear each sound. You can replay as often as you like." : "Watch the glowing shells. Then play their song back.", helped: false };
-  return word ? { ...s, pattern: [0, 1, 2] } : append(s, level === "endless" ? 2 : level.startLength);
+  return word ? { ...s, pattern: [0, 1, 2] } : append(s, level === "endless" ? 2 : level.units[0]);
 }
 export function songStep(s: SongState, input: SongInput, dt: number): SongState {
   if (input.type !== "tick") return songTransition(s, input);
@@ -75,9 +96,9 @@ export function songTransition(s: SongState, input: SongInput): SongState {
   if (cursor !== s.pattern.length) return { ...s, cursor, score, lastTap: input.index, message: `${cursor} of ${s.pattern.length} sounds. Keep going.` };
   const rounds = s.rounds + 1;
   if (s.level !== "endless" && s.level.word) return { ...s, cursor, rounds, score, phase: "picture", lastTap: input.index, message: "Blend those sounds. Which picture is the word?" };
-  if (s.level !== "endless" && rounds >= s.level.rounds) return { ...s, cursor, rounds, score, phase: "cleared", lastTap: input.index, message: "You played the whole growing song!" };
+  if (s.level !== "endless" && rounds >= s.level.rounds) return { ...s, cursor, rounds, score, phase: "cleared", lastTap: input.index, message: ({ response: "You answered every new phrase!", twins: "You echoed every pair!", finale: "You played the whole finale!" } as Partial<Record<SongLevel["twist"], string>>)[s.level.twist] ?? "You played the whole growing song!" };
   const response = s.level !== "endless" && s.level.twist === "response", finale = s.level !== "endless" && s.level.twist === "finale";
-  return append({ ...s, ...(response ? { pattern: [] } : {}), cursor: 0, rounds, score, lastTap: null, elapsed: 0, phase: "watch", message: response ? "A new call. Listen, then answer." : "The song grew. Watch and listen." }, response && s.level !== "endless" ? s.level.startLength + rounds : finale ? 2 : 1);
+  return append({ ...s, ...(response ? { pattern: [] } : {}), cursor: 0, rounds, score, lastTap: null, elapsed: 0, phase: "watch", message: response ? "A new phrase. Listen, then answer." : finale ? "The finale grew by two notes. Watch and listen." : "The song grew. Watch and listen." }, s.level === "endless" ? 1 : response ? s.level.units[rounds] : s.level.units[rounds] - s.level.units[rounds - 1]);
 }
 export function songResult(s: SongState): ArcadeResult | null {
   if (s.phase !== "cleared" && s.phase !== "rest" && s.phase !== "over") return null;
@@ -91,7 +112,7 @@ export function validSong(v: unknown): v is SongState {
   if (Object.keys(v).sort().join() !== "choices,cursor,elapsed,event,helped,helper,lastTap,level,lives,message,onset,pattern,phase,replays,rounds,score,seed,shells,slips" || v.shells !== (canonical?.shells ?? 4)) return false;
   if (canonical) {
     const level = v.level as Record<string, unknown>;
-    if (Object.keys(level).length !== Object.keys(canonical).length || !Object.entries(canonical).every(([key, value]) => key === "goals" ? Array.isArray(level.goals) && level.goals.length === 3 && (value as readonly string[]).every((goal, i) => (level.goals as unknown[])[i] === goal) : level[key] === value)) return false;
+    if (Object.keys(level).length !== Object.keys(canonical).length || !Object.entries(canonical).every(([key, value]) => Array.isArray(value) ? Array.isArray(level[key]) && (level[key] as unknown[]).length === value.length && (value as readonly unknown[]).every((item, i) => (level[key] as unknown[])[i] === item) : level[key] === value)) return false;
   }
   if (!validLives(v.lives) || v.lives.maxHearts !== (v.helper ? 5 : 3) || (v.phase === "over") !== (v.lives.hearts === 0) || v.phase === "picture" && !canonical?.word || v.phase === "rest" && v.level !== "endless") return false;
   return integer(v.onset) && validLives(v.lives) && integer(v.event) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && typeof v.helped === "boolean" && [v.cursor, v.rounds, v.slips, v.score, v.replays].every(n => integer(n)) && (v.cursor as number) <= v.pattern.length && typeof v.elapsed === "number" && Number.isFinite(v.elapsed) && v.elapsed >= 0 && ["watch", "repeat", "picture", "cleared", "rest", "over"].includes(v.phase as string) && (v.lastTap === null || integer(v.lastTap, (v.shells as number) - 1)) && Array.isArray(v.choices) && v.choices.length === (canonical?.word ? 3 : 0) && new Set(v.choices).size === v.choices.length && (!canonical?.word || v.choices.includes(canonical.word)) && v.choices.every(w => pictureWords("easy").includes(w)) && typeof v.message === "string";

@@ -72,54 +72,54 @@ No easings.
 
 | Level | Shells ▲ | Longest phrase, independent units ▲ | Phrases ▲ | Note length at start (ms) ▼ | Note length at its hardest (ms) ▼ |
 |---|---:|---:|---:|---:|---:|
-| w1-1 | 3 | 4 | 3 | 650 | 550 |
-| w1-2 | 3 | 4 | 3 | 640 | 540 |
-| w1-3 | 3 | 4 | 3 | 630 | 530 |
-| w1-4 | 3 | 5 | 3 | 620 | 520 |
-| w1-5 | 3 | 5 | 3 | 610 | 510 |
-| w1-6 | 3 | 6 | 4 | 600 | 450 |
-| w1-7 | 3 | 7 | 4 | 590 | 440 |
-| w1-8 | 3 | 7 | 4 | 580 | 430 |
-| w2-1 | 4 | 5 ↓ | 3 ↓ | 540 | 500 ↓ |
-| w2-2 | 4 | 5 | 3 | 530 | 490 |
-| w2-3 | 4 | 5 | 3 | 520 | 480 |
-| w2-4 | 4 | 6 | 3 | 510 | 470 |
-| w2-5 | 4 | 6 | 3 | 500 | 460 |
-| w2-6 | 4 | 7 | 4 | 490 | 430 |
-| w2-7 | 4 | 8 | 4 | 480 | 420 |
-| w2-8 | 4 | 8 | 4 | 470 | 410 |
-| w3-1 | 5 | 6 ↓ | 3 ↓ | 460 | 420 ↓ |
-| w3-2 | 5 | 6 | 3 | 454 | 414 |
-| w3-3 | 5 | 6 | 3 | 448 | 408 |
-| w3-4 | 5 | 7 | 3 | 442 | 402 |
-| w3-5 | 6 | 7 | 3 | 436 | 396 |
-| w3-6 | 6 | 8 | 4 | 430 | 370 |
-| w3-7 | 6 | 9 | 4 | 424 | 364 |
-| w3-8 | 6 | 9 | 4 | 418 | 358 |
-| w4-1 | 6 | 6 ↓ | 3 ↓ | 440 ↓ | 400 ↓ |
-| w4-2 | 6 | 6 | 3 | 434 | 394 |
-| w4-3 | 6 | 6 | 3 | 428 | 388 |
-| w4-4 | 6 | 7 | 3 | 422 | 382 |
-| w4-5 | 6 | 7 | 3 | 416 | 376 |
-| w4-6 | 6 | 8 | 4 | 410 | 350 |
-| w4-7 | 6 | 9 | 4 | 404 | 344 |
-| w4-8 | 6 | 9 | 4 | 398 | 338 |
-| w5-1 | 6 | 7 ↓ | 3 ↓ | 400 ↓ | 360 ↓ |
-| w5-2 | 6 | 7 | 3 | 394 | 354 |
-| w5-3 | 6 | 7 | 3 | 388 | 348 |
-| w5-4 | 6 | 8 | 3 | 382 | 342 |
-| w5-5 | 6 | 8 | 3 | 376 | 336 |
-| w5-6 | 6 | 9 | 4 | 370 | 310 |
-| w5-7 | 6 | 10 | 4 | 364 | 304 |
-| w5-8 | 6 | 10 | 4 | 358 | 298 |
-| w6-1 | 6 | 11 | 3 ↓ | 360 ↓ | 320 ↓ |
-| w6-2 | 6 | 11 | 3 | 354 | 314 |
-| w6-3 | 6 | 11 | 3 | 348 | 308 |
-| w6-4 | 6 | 12 | 3 | 342 | 302 |
-| w6-5 | 6 | 12 | 3 | 336 | 296 |
-| w6-6 | 6 | 14 | 4 | 330 | 270 |
-| w6-7 | 6 | 15 | 4 | 324 | 264 |
-| w6-8 | 6 | 15 | 4 | 318 | 258 |
+| w1-1 | 3 | 4 | 3 | 620 | 600 |
+| w1-2 | 3 | 4 | 3 | 610 | 590 |
+| w1-3 | 3 | 4 | 3 | 600 | 580 |
+| w1-4 | 3 | 5 | 3 | 590 | 570 |
+| w1-5 | 3 | 5 | 3 | 580 | 560 |
+| w1-6 | 3 | 6 | 4 | 570 | 540 |
+| w1-7 | 3 | 7 | 4 | 560 | 530 |
+| w1-8 | 3 | 7 | 4 | 550 | 520 |
+| w2-1 | 4 | 6 ↓ | 4 | 540 | 510 |
+| w2-2 | 4 | 6 | 4 | 530 | 500 |
+| w2-3 | 4 | 6 | 4 | 520 | 490 |
+| w2-4 | 4 | 7 | 4 | 510 | 480 |
+| w2-5 | 4 | 7 | 4 | 500 | 470 |
+| w2-6 | 4 | 7 | 4 | 490 | 460 |
+| w2-7 | 4 | 8 | 4 | 480 | 450 |
+| w2-8 | 4 | 8 | 4 | 470 | 440 |
+| w3-1 | 5 | 7 ↓ | 4 | 460 | 430 |
+| w3-2 | 5 | 7 | 4 | 452 | 422 |
+| w3-3 | 5 | 7 | 4 | 444 | 414 |
+| w3-4 | 5 | 8 | 4 | 436 | 406 |
+| w3-5 | 6 | 8 | 4 | 428 | 398 |
+| w3-6 | 6 | 8 | 4 | 420 | 390 |
+| w3-7 | 6 | 9 | 4 | 412 | 382 |
+| w3-8 | 6 | 9 | 4 | 404 | 374 |
+| w4-1 | 6 | 7 ↓ | 4 | 400 | 370 |
+| w4-2 | 6 | 7 | 4 | 394 | 364 |
+| w4-3 | 6 | 7 | 4 | 388 | 358 |
+| w4-4 | 6 | 8 | 4 | 382 | 352 |
+| w4-5 | 6 | 8 | 4 | 376 | 346 |
+| w4-6 | 6 | 8 | 4 | 370 | 340 |
+| w4-7 | 6 | 9 | 4 | 364 | 334 |
+| w4-8 | 6 | 9 | 4 | 358 | 328 |
+| w5-1 | 6 | 8 ↓ | 4 | 352 | 322 |
+| w5-2 | 6 | 8 | 4 | 346 | 316 |
+| w5-3 | 6 | 8 | 4 | 340 | 310 |
+| w5-4 | 6 | 9 | 4 | 334 | 304 |
+| w5-5 | 6 | 9 | 4 | 328 | 298 |
+| w5-6 | 6 | 9 | 4 | 322 | 292 |
+| w5-7 | 6 | 10 | 4 | 316 | 286 |
+| w5-8 | 6 | 10 | 4 | 310 | 280 |
+| w6-1 | 6 | 10 | 4 | 310 | 280 |
+| w6-2 | 6 | 10 | 4 | 306 | 276 |
+| w6-3 | 6 | 10 | 4 | 302 | 272 |
+| w6-4 | 6 | 11 | 4 | 298 | 268 |
+| w6-5 | 6 | 11 | 4 | 294 | 264 |
+| w6-6 | 6 | 13 | 5 | 290 | 250 |
+| w6-7 | 6 | 14 | 5 | 286 | 246 |
+| w6-8 | 6 | 14 | 5 | 282 | 242 |
 | learn-1 | 3 | 3 | 1 | 3200 | 3200 |
 | learn-2 | 3 | 3 | 1 | 3200 | 3200 |
 | learn-3 | 3 | 3 | 1 | 3200 | 3200 |
@@ -131,25 +131,12 @@ No easings.
 
 **Easings**
 
-- w1-8 → w2-1, Longest phrase, independent units: 7 → 5. Rest beat, teaches a fourth shell. The new voice is easier to learn on a shorter phrase. Reviewed up to 28.6%.
-- w1-8 → w2-1, Phrases: 4 → 3. Phrase count is a within-world wave: levels 1–5 play three phrases and 6–8 play four, so each world restarts it. AR-02 re-measures Shell Song in motif units. (owner AR-02) Reviewed up to 25%.
-- w1-8 → w2-1, Note length at its hardest: 430 → 500. World 2 starts 40 ms faster, but its fastest note is 70 ms slower than World 1's last: World 1 shortens notes by 50 ms a phrase over four phrases, World 2 by 20 ms over three. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 16.3%.
-- w2-8 → w3-1, Longest phrase, independent units: 8 → 6. Rest beat, teaches a fifth shell. The new voice is easier to learn on a shorter phrase. Reviewed up to 25%.
-- w2-8 → w3-1, Phrases: 4 → 3. Phrase count is a within-world wave: levels 1–5 play three phrases and 6–8 play four, so each world restarts it. AR-02 re-measures Shell Song in motif units. (owner AR-02) Reviewed up to 25%.
-- w2-8 → w3-1, Note length at its hardest: 410 → 420. World 3 starts 10 ms faster, but with three phrases instead of four its fastest note is 10 ms slower than World 2's last. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 2.5%.
-- w3-8 → w4-1, Longest phrase, independent units: 9 → 6. Rest beat, teaches call and response. Each round is a new call instead of a growing song, so it starts short. Reviewed up to 33.4%.
-- w3-8 → w4-1, Phrases: 4 → 3. Phrase count is a within-world wave: levels 1–5 play three phrases and 6–8 play four, so each world restarts it. AR-02 re-measures Shell Song in motif units. (owner AR-02) Reviewed up to 25%.
-- w3-8 → w4-1, Note length at start: 418 → 440. Call and response starts 22 ms slower than the end of World 3, and its fastest note is 42 ms slower. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 11.8%.
-- w3-8 → w4-1, Note length at its hardest: 358 → 400. Call and response starts 22 ms slower than the end of World 3, and its fastest note is 42 ms slower. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 11.8%.
-- w4-8 → w5-1, Longest phrase, independent units: 9 → 7. Rest beat, teaches paired echoes. Paired notes double the taps, so the number of things to remember starts lower. Reviewed up to 22.3%.
-- w4-8 → w5-1, Phrases: 4 → 3. Phrase count is a within-world wave: levels 1–5 play three phrases and 6–8 play four, so each world restarts it. AR-02 re-measures Shell Song in motif units. (owner AR-02) Reviewed up to 25%.
-- w4-8 → w5-1, Note length at start: 398 → 400. Paired echoes start 2 ms slower than the end of World 4, and their fastest note is 22 ms slower. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 6.6%.
-- w4-8 → w5-1, Note length at its hardest: 338 → 360. Paired echoes start 2 ms slower than the end of World 4, and their fastest note is 22 ms slower. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 6.6%.
-- w5-8 → w6-1, Phrases: 4 → 3. Phrase count is a within-world wave: levels 1–5 play three phrases and 6–8 play four, so each world restarts it. AR-02 re-measures Shell Song in motif units. (owner AR-02) Reviewed up to 25%.
-- w5-8 → w6-1, Note length at start: 358 → 360. The finale starts 2 ms slower than the end of World 5, and its fastest note is 22 ms slower. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 7.4%.
-- w5-8 → w6-1, Note length at its hardest: 298 → 320. The finale starts 2 ms slower than the end of World 5, and its fastest note is 22 ms slower. AR-02 keeps playback tempo and recall load separate. (owner AR-02) Reviewed up to 7.4%.
+- w1-8 → w2-1, Longest phrase, independent units: 7 → 6. Rest beat, teaches a fourth shell. The new voice is easier to learn on a phrase one unit shorter. Reviewed up to 14.3%.
+- w2-8 → w3-1, Longest phrase, independent units: 8 → 7. Rest beat, teaches a fifth shell. The new voice is easier to learn on a phrase one unit shorter. Reviewed up to 12.5%.
+- w3-8 → w4-1, Longest phrase, independent units: 9 → 7. Rest beat, teaches new phrases. Each round is a new phrase instead of a growing song, so the longest starts two units shorter. Reviewed up to 22.3%.
+- w4-8 → w5-1, Longest phrase, independent units: 9 → 8. Rest beat, teaches paired echoes. Each unit is now a pair of taps, so the longest phrase starts one unit shorter. Reviewed up to 11.2%.
 
-Helper (runtime start value, off → on): noteMs ×1–1.38.
+Helper (runtime start value, off → on): noteMs ×1–1.43.
 
 ## rail-parade
 
@@ -179,29 +166,29 @@ Helper (runtime start value, off → on): noteMs ×1–1.38.
 | w3-6 | 0.13 | 0.1131 | 14 | 5 | 5 |
 | w3-7 | 0.127 | 0.1105 | 15 | 5 | 5 |
 | w3-8 | 0.124 | 0.1079 | 15 | 5 | 5 |
-| w4-1 | 0.135 ↓ | 0.1175 ↓ | 15 | 6 | 6 |
-| w4-2 | 0.133 | 0.1157 | 15 | 6 | 6 |
-| w4-3 | 0.131 | 0.114 | 16 | 6 | 6 |
-| w4-4 | 0.129 | 0.1122 | 16 | 6 | 6 |
-| w4-5 | 0.127 | 0.1105 | 17 | 6 | 6 |
-| w4-6 | 0.125 | 0.1087 | 17 | 6 | 6 |
-| w4-7 | 0.123 | 0.107 | 18 | 6 | 6 |
-| w4-8 | 0.121 | 0.1053 | 18 | 6 | 6 |
-| w5-1 | 0.128 ↓ | 0.1114 ↓ | 18 | 8 | 6 |
-| w5-2 | 0.1265 | 0.1101 | 18 | 8 | 6 |
-| w5-3 | 0.125 | 0.1087 | 19 | 8 | 6 |
-| w5-4 | 0.1235 | 0.1074 | 19 | 8 | 6 |
-| w5-5 | 0.122 | 0.1061 | 20 | 8 | 6 |
-| w5-6 | 0.1205 | 0.1048 | 20 | 8 | 6 |
-| w5-7 | 0.119 | 0.1035 | 21 | 8 | 6 |
-| w5-8 | 0.1175 | 0.1022 | 21 | 8 | 6 |
-| w6-1 | 0.12 ↓ | 0.1044 ↓ | 21 | 8 | 6 |
-| w6-2 | 0.119 | 0.1035 | 21 | 8 | 6 |
-| w6-3 | 0.118 | 0.1027 | 22 | 8 | 6 |
-| w6-4 | 0.117 | 0.1018 | 22 | 8 | 6 |
-| w6-5 | 0.116 | 0.1009 | 23 | 8 | 6 |
-| w6-6 | 0.115 | 0.1 | 23 | 8 | 6 |
-| w6-7 | 0.114 | 0.0992 | 24 | 8 | 6 |
+| w4-1 | 0.1235 | 0.1074 | 15 | 6 | 6 |
+| w4-2 | 0.123 | 0.107 | 15 | 6 | 6 |
+| w4-3 | 0.1226 | 0.1067 | 16 | 6 | 6 |
+| w4-4 | 0.1221 | 0.1063 | 16 | 6 | 6 |
+| w4-5 | 0.1217 | 0.1059 | 17 | 6 | 6 |
+| w4-6 | 0.1212 | 0.1055 | 17 | 6 | 6 |
+| w4-7 | 0.1208 | 0.1051 | 18 | 6 | 6 |
+| w4-8 | 0.1203 | 0.1047 | 18 | 6 | 6 |
+| w5-1 | 0.1198 | 0.1043 | 18 | 8 | 6 |
+| w5-2 | 0.1194 | 0.1039 | 18 | 8 | 6 |
+| w5-3 | 0.1189 | 0.1035 | 19 | 8 | 6 |
+| w5-4 | 0.1185 | 0.1031 | 19 | 8 | 6 |
+| w5-5 | 0.118 | 0.1027 | 20 | 8 | 6 |
+| w5-6 | 0.1176 | 0.1023 | 20 | 8 | 6 |
+| w5-7 | 0.1171 | 0.1019 | 21 | 8 | 6 |
+| w5-8 | 0.1167 | 0.1015 | 21 | 8 | 6 |
+| w6-1 | 0.1162 | 0.1011 | 21 | 8 | 6 |
+| w6-2 | 0.1157 | 0.1007 | 21 | 8 | 6 |
+| w6-3 | 0.1153 | 0.1003 | 22 | 8 | 6 |
+| w6-4 | 0.1148 | 0.0999 | 22 | 8 | 6 |
+| w6-5 | 0.1144 | 0.0995 | 23 | 8 | 6 |
+| w6-6 | 0.1139 | 0.0991 | 23 | 8 | 6 |
+| w6-7 | 0.1135 | 0.0987 | 24 | 8 | 6 |
 | w6-8 | 0.113 | 0.0983 | 24 | 8 | 6 |
 | learn-1 | 0.12 | 0.1044 | 4 | 0 | 3 |
 | learn-2 | 0.12 | 0.1044 | 4 | 0 | 3 |
@@ -214,12 +201,6 @@ Helper (runtime start value, off → on): noteMs ×1–1.38.
 
 **Easings**
 
-- w3-8 → w4-1, Step time at start: 0.124 → 0.135. Step time resets slower when a new garden arrives. AR-03 applies tick[i] = min(authored, previous) and re-certifies the scored seed pool. (owner AR-03) Reviewed up to 8.9%.
-- w3-8 → w4-1, Step time at its hardest: 0.1079 → 0.1175. Step time resets slower when a new garden arrives. AR-03 applies tick[i] = min(authored, previous) and re-certifies the scored seed pool. (owner AR-03) Reviewed up to 8.9%.
-- w4-8 → w5-1, Step time at start: 0.121 → 0.128. Step time resets slower when a new garden arrives. AR-03 applies tick[i] = min(authored, previous) and re-certifies the scored seed pool. (owner AR-03) Reviewed up to 5.8%.
-- w4-8 → w5-1, Step time at its hardest: 0.1053 → 0.1114. Step time resets slower when a new garden arrives. AR-03 applies tick[i] = min(authored, previous) and re-certifies the scored seed pool. (owner AR-03) Reviewed up to 5.8%.
-- w5-8 → w6-1, Step time at start: 0.1175 → 0.12. Step time resets slower when a new garden arrives. AR-03 applies tick[i] = min(authored, previous) and re-certifies the scored seed pool. (owner AR-03) Reviewed up to 2.2%.
-- w5-8 → w6-1, Step time at its hardest: 0.1022 → 0.1044. Step time resets slower when a new garden arrives. AR-03 applies tick[i] = min(authored, previous) and re-certifies the scored seed pool. (owner AR-03) Reviewed up to 2.2%.
 - learn-4 → learn-5, Food to collect: 5 → 3. Rest beat, teaches spelling words. Learn levels 5–8 switch from counting to spelling three-sound words, so there are three stops instead of five. Reviewed up to 40%.
 
 Helper (runtime start value, off → on): tick ×1.2.
@@ -252,25 +233,25 @@ Helper (runtime start value, off → on): tick ×1.2.
 | w3-6 | 2.43 | 2.7945 | 3 | 7 | 1.8519 | 1.6103 |
 | w3-7 | 2.484 | 2.8566 | 3 | 7 | 1.8116 | 1.5753 |
 | w3-8 | 2.538 | 2.9187 | 3 | 7 | 1.773 | 1.5418 |
-| w4-1 | 2.46 ↓ | 2.829 ↓ | 3 | 7 | 1.8293 ↓ | 1.5907 ↓ |
-| w4-2 | 2.514 | 2.8911 | 3 | 7 | 1.79 | 1.5565 |
+| w4-1 | 2.538 | 2.9187 | 3 | 7 | 1.773 | 1.5418 |
+| w4-2 | 2.538 | 2.9187 | 3 | 7 | 1.773 | 1.5418 |
 | w4-3 | 2.568 | 2.9532 | 3 | 7 | 1.7523 | 1.5238 |
 | w4-4 | 2.622 | 3.0153 | 3 | 7 | 1.7162 | 1.4924 |
 | w4-5 | 2.676 | 3.0774 | 3 | 7 | 1.6816 | 1.4623 |
 | w4-6 | 2.73 | 3.1395 | 3 | 7 | 1.6484 | 1.4333 |
 | w4-7 | 2.784 | 3.2016 | 3 | 7 | 1.6164 | 1.4055 |
 | w4-8 | 2.838 | 3.2637 | 3 | 7 | 1.5856 | 1.3788 |
-| w5-1 | 2.76 ↓ | 3.174 ↓ | 4 | 8 | 1.6304 ↓ | 1.4178 ↓ |
-| w5-2 | 2.814 | 3.2361 | 4 | 8 | 1.5991 | 1.3906 |
+| w5-1 | 2.838 | 3.2637 | 4 | 8 | 1.5856 | 1.3788 |
+| w5-2 | 2.838 | 3.2637 | 4 | 8 | 1.5856 | 1.3788 |
 | w5-3 | 2.868 | 3.2982 | 4 | 8 | 1.569 | 1.3644 |
 | w5-4 | 2.922 | 3.3603 | 4 | 8 | 1.54 | 1.3392 |
 | w5-5 | 2.976 | 3.4224 | 4 | 8 | 1.5121 | 1.3149 |
 | w5-6 | 3.03 | 3.4845 | 4 | 8 | 1.4851 | 1.2914 |
 | w5-7 | 3.084 | 3.5466 | 4 | 8 | 1.4591 | 1.2688 |
 | w5-8 | 3.138 | 3.6087 | 4 | 8 | 1.434 | 1.247 |
-| w6-1 | 3 ↓ | 3.45 ↓ | 4 | 7 ↓ | 1.5 ↓ | 1.3043 ↓ |
-| w6-2 | 3.054 | 3.5121 | 4 | 7 | 1.4735 | 1.2813 |
-| w6-3 | 3.108 | 3.5742 | 4 | 7 | 1.4479 | 1.259 |
+| w6-1 | 3.138 | 3.6087 | 4 | 7 ↓ | 1.434 | 1.247 |
+| w6-2 | 3.138 | 3.6087 | 4 | 7 | 1.434 | 1.247 |
+| w6-3 | 3.138 | 3.6087 | 4 | 7 | 1.434 | 1.247 |
 | w6-4 | 3.162 | 3.6363 | 4 | 7 | 1.4231 | 1.2375 |
 | w6-5 | 3.216 | 3.6984 | 5 | 7 | 1.3993 | 1.2167 |
 | w6-6 | 3.27 | 3.7605 | 5 | 7 | 1.3761 | 1.1966 |
@@ -287,95 +268,83 @@ Helper (runtime start value, off → on): tick ×1.2.
 
 **Easings**
 
-- w3-8 → w4-1, Fastest lane speed at start: 2.538 → 2.46. Lane speed resets lower at the world boundary. AR-04 applies speed[i] = max(authored, previous) and certifies hop budgets. (owner AR-04) Reviewed up to 3.1%.
-- w3-8 → w4-1, Fastest lane speed at its hardest: 2.9187 → 2.829. Lane speed resets lower at the world boundary. AR-04 applies speed[i] = max(authored, previous) and certifies hop budgets. (owner AR-04) Reviewed up to 3.1%.
-- w3-8 → w4-1, Shortest lane period at start: 1.773 → 1.8293. The shortest lane period follows the lane speed reset. AR-04's speed continuity removes it. (owner AR-04) Reviewed up to 3.2%.
-- w3-8 → w4-1, Shortest lane period at its hardest: 1.5418 → 1.5907. The shortest lane period follows the lane speed reset. AR-04's speed continuity removes it. (owner AR-04) Reviewed up to 3.2%.
-- w4-8 → w5-1, Fastest lane speed at start: 2.838 → 2.76. Lane speed resets lower at the world boundary. AR-04 applies speed[i] = max(authored, previous) and certifies hop budgets. (owner AR-04) Reviewed up to 2.8%.
-- w4-8 → w5-1, Fastest lane speed at its hardest: 3.2637 → 3.174. Lane speed resets lower at the world boundary. AR-04 applies speed[i] = max(authored, previous) and certifies hop budgets. (owner AR-04) Reviewed up to 2.8%.
-- w4-8 → w5-1, Shortest lane period at start: 1.5856 → 1.6304. The shortest lane period follows the lane speed reset. AR-04's speed continuity removes it. (owner AR-04) Reviewed up to 2.9%.
-- w4-8 → w5-1, Shortest lane period at its hardest: 1.3788 → 1.4178. The shortest lane period follows the lane speed reset. AR-04's speed continuity removes it. (owner AR-04) Reviewed up to 2.9%.
-- w5-8 → w6-1, Fastest lane speed at start: 3.138 → 3. Lane speed resets lower at the world boundary. AR-04 applies speed[i] = max(authored, previous) and certifies hop budgets. (owner AR-04) Reviewed up to 4.4%.
-- w5-8 → w6-1, Fastest lane speed at its hardest: 3.6087 → 3.45. Lane speed resets lower at the world boundary. AR-04 applies speed[i] = max(authored, previous) and certifies hop budgets. (owner AR-04) Reviewed up to 4.4%.
 - w5-8 → w6-1, Moving lanes: 8 → 7. Rest beat, teaches island hopping. Still islands replace one moving canoe lane, so there is one fewer moving lane while children learn to hop between islands. Reviewed up to 12.5%.
-- w5-8 → w6-1, Shortest lane period at start: 1.434 → 1.5. The shortest lane period follows the lane speed reset. AR-04's speed continuity removes it. (owner AR-04) Reviewed up to 4.7%.
-- w5-8 → w6-1, Shortest lane period at its hardest: 1.247 → 1.3043. The shortest lane period follows the lane speed reset. AR-04's speed continuity removes it. (owner AR-04) Reviewed up to 4.7%.
 
 Helper (runtime start value, off → on): pace ×0.8.
 
 ## palm-patrol
 
-| Level | March speed at start (px/s) ▲ | March speed at its hardest (px/s) ▲ | Nominal beetles (count × waves × relays) ▲ | Dive interval at start (s) ▼ | Dive interval at its hardest (s) ▼ | Facts ▲ |
-|---|---:|---:|---:|---:|---:|---:|
-| w1-1 | 40 | 78.72 | 5 | — | — | — |
-| w1-2 | 41.1 | 80.8848 | 5 | — | — | — |
-| w1-3 | 42.2 | 83.0496 | 5 | — | — | — |
-| w1-4 | 43.3 | 89.3712 | 20 | — | — | — |
-| w1-5 | 44.4 | 91.6416 | 20 | — | — | — |
-| w1-6 | 45.5 | 93.912 | 20 | — | — | — |
-| w1-7 | 46.6 | 96.1824 | 20 | — | — | — |
-| w1-8 | 47.7 | 98.4528 | 20 | — | — | — |
-| w2-1 | 46 ↓ | 94.944 ↓ | 80 | 3.75 | 2.8846 | — |
-| w2-2 | 47.1 | 97.2144 | 80 | 3.7 | 2.8462 | — |
-| w2-3 | 48.2 | 99.4848 | 80 | 3.65 | 2.8077 | — |
-| w2-4 | 49.3 | 101.7552 | 80 | 3.6 | 2.7692 | — |
-| w2-5 | 50.4 | 104.0256 | 80 | 3.55 | 2.7308 | — |
-| w2-6 | 51.5 | 106.296 | 80 | 3.5 | 2.6923 | — |
-| w2-7 | 52.6 | 108.5664 | 80 | 3.45 | 2.6538 | — |
-| w2-8 | 53.7 | 110.8368 | 80 | 3.4 | 2.6154 | — |
-| w3-1 | 52 ↓ | 108.992 ↓ | 135 | 3.35 | 2.5769 | — |
-| w3-2 | 53.1 | 111.2976 | 135 | 3.3 | 2.5385 | — |
-| w3-3 | 54.2 | 113.6032 | 135 | 3.25 | 2.5 | — |
-| w3-4 | 55.3 | 115.9088 | 135 | 3.2 | 2.4615 | — |
-| w3-5 | 56.4 | 118.2144 | 135 | 3.15 | 2.4231 | — |
-| w3-6 | 57.5 | 120.52 | 135 | 3.1 | 2.3846 | — |
-| w3-7 | 58.6 | 122.8256 | 135 | 3.05 | 2.3462 | — |
-| w3-8 | 59.7 | 125.1312 | 135 | 3 | 2.3077 | — |
-| w4-1 | 58 ↓ | 121.568 ↓ | 135 | 2.95 | 2.2692 | — |
-| w4-2 | 59.1 | 123.8736 | 135 | 2.9 | 2.2308 | — |
-| w4-3 | 60.2 | 126.1792 | 135 | 2.85 | 2.1923 | — |
-| w4-4 | 61.3 | 128.4848 | 135 | 2.8 | 2.1538 | — |
-| w4-5 | 62.4 | 130.7904 | 135 | 2.75 | 2.1154 | — |
-| w4-6 | 63.5 | 133.096 | 135 | 2.7 | 2.0769 | — |
-| w4-7 | 64.6 | 135.4016 | 135 | 2.65 | 2.0385 | — |
-| w4-8 | 65.7 | 137.7072 | 135 | 2.6 | 2 | — |
-| w5-1 | 64 ↓ | 134.144 ↓ | 135 | 2.55 | 1.9615 | — |
-| w5-2 | 65.1 | 136.4496 | 135 | 2.5 | 1.9231 | — |
-| w5-3 | 66.2 | 138.7552 | 135 | 2.45 | 1.8846 | — |
-| w5-4 | 67.3 | 141.0608 | 135 | 2.4 | 1.8462 | — |
-| w5-5 | 68.4 | 143.3664 | 135 | 2.35 | 1.8077 | — |
-| w5-6 | 69.5 | 145.672 | 135 | 2.3 | 1.7692 | — |
-| w5-7 | 70.6 | 147.9776 | 135 | 2.25 | 1.7308 | — |
-| w5-8 | 71.7 | 150.2832 | 135 | 2.2 | 1.6923 | — |
-| w6-1 | 70 ↓ | 146.72 ↓ | 180 | 2.15 | 1.6538 | — |
-| w6-2 | 71.1 | 149.0256 | 180 | 2.1 | 1.6154 | — |
-| w6-3 | 72.2 | 151.3312 | 180 | 2.05 | 1.5769 | — |
-| w6-4 | 73.3 | 153.6368 | 180 | 2 | 1.5385 | — |
-| w6-5 | 74.4 | 155.9424 | 180 | 1.95 | 1.5 | — |
-| w6-6 | 75.5 | 158.248 | 180 | 1.9 | 1.4615 | — |
-| w6-7 | 76.6 | 160.5536 | 180 | 1.85 | 1.4231 | — |
-| w6-8 | 77.7 | 162.8592 | 180 | 1.8 | 1.3846 | — |
-| learn-1 | — | — | — | — | — | 3 |
-| learn-2 | — | — | — | — | — | 3 |
-| learn-3 | — | — | — | — | — | 4 |
-| learn-4 | — | — | — | — | — | 4 |
-| learn-5 | — | — | — | — | — | 4 |
-| learn-6 | — | — | — | — | — | 5 |
-| learn-7 | — | — | — | — | — | 5 |
-| learn-8 | — | — | — | — | — | 5 |
+| Level | March speed at start (px/s) ▲ | March speed at its hardest (px/s) ▲ | Beetles in formations (a crown's own wave apart) ▲ | Extra nets for armor ▲ | Dive interval at start (s) ▼ | Dive interval at its hardest (s) ▼ | Facts ▲ |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| w1-1 | 40 | 78.72 | 5 | 0 | — | — | — |
+| w1-2 | 41.1 | 80.8848 | 5 | 0 | — | — | — |
+| w1-3 | 42.2 | 83.0496 | 5 | 0 | — | — | — |
+| w1-4 | 43.3 | 88.332 | 8 | 0 | — | — | — |
+| w1-5 | 44.4 | 91.6416 | 10 | 0 | — | — | — |
+| w1-6 | 45.5 | 94.64 | 12 | 0 | — | — | — |
+| w1-7 | 46.6 | 97.4606 | 14 | 0 | — | — | — |
+| w1-8 | 47.7 | 99.7611 | 14 | 0 | — | — | — |
+| w2-1 | 46 ↓ | 94.944 ↓ | 20 | 0 | 3.75 | 2.8846 | — |
+| w2-2 | 47.1 | 97.2144 | 20 | 0 | 3.7 | 2.8462 | — |
+| w2-3 | 48.2 | 99.4848 | 20 | 0 | 3.65 | 2.8077 | — |
+| w2-4 | 49.3 | 101.7552 | 20 | 0 | 3.6 | 2.7692 | — |
+| w2-5 | 50.4 | 104.0256 | 20 | 0 | 3.55 | 2.7308 | — |
+| w2-6 | 51.5 | 106.296 | 20 | 0 | 3.5 | 2.6923 | — |
+| w2-7 | 52.6 | 108.5664 | 20 | 0 | 3.45 | 2.6538 | — |
+| w2-8 | 53.7 | 110.8368 | 20 | 0 | 3.4 | 2.6154 | — |
+| w3-1 | 52 ↓ | 106.7733 ↓ | 27 | 6 | 3.35 | 2.5769 | — |
+| w3-2 | 53.1 | 109.032 | 27 | 6 | 3.3 | 2.5385 | — |
+| w3-3 | 54.2 | 111.2907 | 27 | 6 | 3.25 | 2.5 | — |
+| w3-4 | 55.3 | 113.5493 | 27 | 6 | 3.2 | 2.4615 | — |
+| w3-5 | 56.4 | 115.808 | 27 | 6 | 3.15 | 2.4231 | — |
+| w3-6 | 57.5 | 118.0667 | 27 | 6 | 3.1 | 2.3846 | — |
+| w3-7 | 58.6 | 120.3253 | 27 | 6 | 3.05 | 2.3462 | — |
+| w3-8 | 59.7 | 122.584 | 27 | 6 | 3 | 2.3077 | — |
+| w4-1 | 58 ↓ | 119.0933 ↓ | 27 | 6 | 2.95 | 2.2692 | — |
+| w4-2 | 59.1 | 121.352 | 27 | 6 | 2.9 | 2.2308 | — |
+| w4-3 | 60.2 | 123.6107 | 27 | 6 | 2.85 | 2.1923 | — |
+| w4-4 | 61.3 | 125.8693 | 27 | 6 | 2.8 | 2.1538 | — |
+| w4-5 | 62.4 | 128.128 | 27 | 6 | 2.75 | 2.1154 | — |
+| w4-6 | 63.5 | 130.3867 | 27 | 6 | 2.7 | 2.0769 | — |
+| w4-7 | 64.6 | 132.6453 | 27 | 6 | 2.65 | 2.0385 | — |
+| w4-8 | 65.7 | 134.904 | 27 | 6 | 2.6 | 2 | — |
+| w5-1 | 64 ↓ | 131.4133 ↓ | 27 | 6 | 2.55 | 1.9615 | — |
+| w5-2 | 65.1 | 133.672 | 27 | 6 | 2.5 | 1.9231 | — |
+| w5-3 | 66.2 | 135.9307 | 27 | 6 | 2.45 | 1.8846 | — |
+| w5-4 | 67.3 | 138.1893 | 27 | 6 | 2.4 | 1.8462 | — |
+| w5-5 | 68.4 | 140.448 | 27 | 6 | 2.35 | 1.8077 | — |
+| w5-6 | 69.5 | 142.7067 | 27 | 6 | 2.3 | 1.7692 | — |
+| w5-7 | 70.6 | 144.9653 | 27 | 6 | 2.25 | 1.7308 | — |
+| w5-8 | 71.7 | 147.224 | 27 | 6 | 2.2 | 1.6923 | — |
+| w6-1 | 70 ↓ | 143.7333 ↓ | 36 | 8 | 2.15 | 1.6538 | — |
+| w6-2 | 71.1 | 145.992 | 36 | 8 | 2.1 | 1.6154 | — |
+| w6-3 | 72.2 | 148.2507 | 36 | 8 | 2.05 | 1.5769 | — |
+| w6-4 | 73.3 | 150.5093 | 36 | 8 | 2 | 1.5385 | — |
+| w6-5 | 74.4 | 152.768 | 36 | 8 | 1.95 | 1.5 | — |
+| w6-6 | 75.5 | 155.0267 | 36 | 8 | 1.9 | 1.4615 | — |
+| w6-7 | 76.6 | 157.2853 | 36 | 8 | 1.85 | 1.4231 | — |
+| w6-8 | 77.7 | 159.544 | 36 | 8 | 1.8 | 1.3846 | — |
+| learn-1 | — | — | — | — | — | — | 3 |
+| learn-2 | — | — | — | — | — | — | 3 |
+| learn-3 | — | — | — | — | — | — | 4 |
+| learn-4 | — | — | — | — | — | — | 4 |
+| learn-5 | — | — | — | — | — | — | 4 |
+| learn-6 | — | — | — | — | — | — | 5 |
+| learn-7 | — | — | — | — | — | — | 5 |
+| learn-8 | — | — | — | — | — | — | 5 |
 
 **Easings**
 
-- w1-8 → w2-1, March speed at start: 47.7 → 46. Rest beat, teaches diving beetles. March speed eases by 1.7 px/s while beetles start diving out of formation. Reviewed up to 3.6%.
-- w1-8 → w2-1, March speed at its hardest: 98.4528 → 94.944. Rest beat, teaches diving beetles. March speed eases by 1.7 px/s while beetles start diving out of formation. Reviewed up to 3.6%.
-- w2-8 → w3-1, March speed at start: 53.7 → 52. Rest beat, teaches armored beetles. March speed eases by 1.7 px/s while armored beetles need two nets. Reviewed up to 3.2%.
-- w2-8 → w3-1, March speed at its hardest: 110.8368 → 108.992. Rest beat, teaches armored beetles. March speed eases by 1.7 px/s while armored beetles need two nets. Reviewed up to 3.2%.
+- w1-8 → w2-1, March speed at start: 47.7 → 46. Rest beat, teaches diving beetles. March speed eases by 1.7 px/s while beetles start diving out of formation. Reviewed up to 4.9%.
+- w1-8 → w2-1, March speed at its hardest: 99.7611 → 94.944. Rest beat, teaches diving beetles. March speed eases by 1.7 px/s while beetles start diving out of formation. Reviewed up to 4.9%.
+- w2-8 → w3-1, March speed at start: 53.7 → 52. Rest beat, teaches armored beetles. March speed eases by 1.7 px/s while armored beetles need two nets. Reviewed up to 3.7%.
+- w2-8 → w3-1, March speed at its hardest: 110.8368 → 106.7733. Rest beat, teaches armored beetles. March speed eases by 1.7 px/s while armored beetles need two nets. Reviewed up to 3.7%.
 - w3-8 → w4-1, March speed at start: 59.7 → 58. Rest beat, teaches aimed tosses. March speed eases by 1.7 px/s while the toss starts aiming. Reviewed up to 2.9%.
-- w3-8 → w4-1, March speed at its hardest: 125.1312 → 121.568. Rest beat, teaches aimed tosses. March speed eases by 1.7 px/s while the toss starts aiming. Reviewed up to 2.9%.
+- w3-8 → w4-1, March speed at its hardest: 122.584 → 119.0933. Rest beat, teaches aimed tosses. March speed eases by 1.7 px/s while the toss starts aiming. Reviewed up to 2.9%.
 - w4-8 → w5-1, March speed at start: 65.7 → 64. Rest beat, teaches shield gaps. March speed eases by 1.7 px/s while shield gaps change the safe toss paths. Reviewed up to 2.6%.
-- w4-8 → w5-1, March speed at its hardest: 137.7072 → 134.144. Rest beat, teaches shield gaps. March speed eases by 1.7 px/s while shield gaps change the safe toss paths. Reviewed up to 2.6%.
+- w4-8 → w5-1, March speed at its hardest: 134.904 → 131.4133. Rest beat, teaches shield gaps. March speed eases by 1.7 px/s while shield gaps change the safe toss paths. Reviewed up to 2.6%.
 - w5-8 → w6-1, March speed at start: 71.7 → 70. Rest beat, teaches a fourth wave. March speed eases by 1.7 px/s while every level adds a fourth wave. Reviewed up to 2.4%.
-- w5-8 → w6-1, March speed at its hardest: 150.2832 → 146.72. Rest beat, teaches a fourth wave. March speed eases by 1.7 px/s while every level adds a fourth wave. Reviewed up to 2.4%.
+- w5-8 → w6-1, March speed at its hardest: 147.224 → 143.7333. Rest beat, teaches a fourth wave. March speed eases by 1.7 px/s while every level adds a fourth wave. Reviewed up to 2.4%.
 
 Helper (runtime start value, off → on): march ×0.82.
 
