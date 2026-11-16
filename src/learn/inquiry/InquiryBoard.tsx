@@ -113,7 +113,7 @@ export function InquiryBoard({
     return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {labels.map((label, i) => <PressableScale key={label} disabled={!active || off?.(i)} accessibilityRole="button" accessibilityLabel={`${verb}: ${label}`}
         accessibilityState={{ selected: selected(i), disabled: !active || !!off?.(i) }} onPress={() => onPress(i)}
-        style={{ flexGrow: 1, flexBasis: basis, minHeight: 48, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 14, borderWidth: 2, alignItems: "center", justifyContent: "center",
+        style={{ flexGrow: 1, flexBasis: basis, minHeight: 48, paddingVertical: large ? 3 : 6, paddingHorizontal: 8, borderRadius: 14, borderWidth: 2, alignItems: "center", justifyContent: "center",
           borderColor: selected(i) ? theme.accent : theme.line, backgroundColor: off?.(i) ? "#EEEDE6" : selected(i) ? theme.chosen : theme.card }}>
         <Copy maxFontSizeMultiplier={max} style={{ fontSize: 14, fontWeight: "800", textAlign: "center", color: off?.(i) ? "#6F756F" : theme.ink }}>{label}</Copy>
       </PressableScale>)}
@@ -153,7 +153,7 @@ export function InquiryBoard({
           {large ? `▸${steps[now]}` : steps.map((step, i) => (i === now ? `▸${step}` : step)).join(" · ")}
         </Copy>
       </View>}
-      <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
+      <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: large ? 4 : 6, gap: 2 }}>
         <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={(large ? 19.5 : 13) / sceneScale} /></View>
         {/* The legend and the "illustrative" note share one wrapped caption, so they cost the board as little height as possible.
             Nested spans are plain native spans: they inherit the block's 1.5× cap instead of being scaled twice. */}
@@ -174,7 +174,7 @@ export function InquiryBoard({
         {p.phase === "setup" && <CoachSpot active={coach.active}>
           <View style={{ gap: 6 }}>
             {q.controls.map((c, i) => c.fixed ? null : <View key={c.name} style={{ gap: 2 }}>
-              {free > 1 && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>}
+              {free > 1 && <Copy maxFontSizeMultiplier={large ? 1.3 : undefined} style={{ fontSize: 14, fontWeight: "800" }}>{c.name}</Copy>}
               {choices(c.options, (j) => s.draft[i] === j, (j) => send({ type: "set", control: i, value: j }), `Set ${c.name}`)}
             </View>)}
             {q.kind === "observe" && <>
