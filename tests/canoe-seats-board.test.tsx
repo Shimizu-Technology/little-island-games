@@ -82,8 +82,8 @@ describe('Canoe Seats board', () => {
   });
   it('pages rung H’s thirteen cards on a phone, and shows them all on an iPad', () => {
     mount({ puzzle: big, pos: Array(15).fill(-1) });
-    expect(root!.root.findAll(n => typeof n.props.testID === 'string' && /^canoe-clue-\d+$/.test(n.props.testID))).toHaveLength(8);
-    expect(JSON.stringify(root!.toJSON())).toContain('1 / 2');
+    expect(root!.root.findAll(n => typeof n.props.testID === 'string' && /^canoe-clue-\d+$/.test(n.props.testID))).toHaveLength(6);
+    expect(JSON.stringify(root!.toJSON())).toContain('1 / 3');
     act(() => root!.unmount()); root = undefined;
     Object.assign(viewport, { width: 744 });
     mount({ puzzle: big, pos: Array(15).fill(-1), width: 600 });

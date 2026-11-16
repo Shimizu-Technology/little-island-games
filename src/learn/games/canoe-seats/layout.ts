@@ -27,10 +27,11 @@ export function seatForHeight(height: number, attrs: number, windowWidth: number
 /** Phones keep two columns of clue cards; wider boards take three. Rung H pages its cards on a phone. */
 export const clueColumns = (width: number) => (width >= 560 ? 3 : 2);
 export const CLUE_PAGE_PHONE = 8;
-export function cluePages(clues: number, width: number): number {
-  if (width >= 560) return 1;
-  return Math.ceil(clues / CLUE_PAGE_PHONE);
+/** A full canoe (friends, hats and fruit) needs more room for the shore, so a phone shows six cards a page. */
+export const cluePageSize = (width: number, attrs: number, clues: number) => (width >= 560 ? clues : attrs >= 3 ? 6 : CLUE_PAGE_PHONE);
+export function cluePages(clues: number, width: number, attrs = 1): number {
+  return Math.ceil(clues / cluePageSize(width, attrs, clues));
 }
 export const clueCardHeight = (width: number) => (width >= 560 ? 84 : 70);
 /** Shore tokens: one row per kind of item, large enough to pick up. */
-export const tokenSize = (windowWidth: number) => (windowWidth >= TABLET_WIDTH ? 64 : 52);
+export const tokenSize = (windowWidth: number, attrs = 1) => (windowWidth >= TABLET_WIDTH ? 64 : attrs >= 2 ? 48 : 52);

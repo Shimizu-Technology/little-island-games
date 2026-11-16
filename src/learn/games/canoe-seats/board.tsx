@@ -9,7 +9,7 @@ import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import type { HintCue } from '../../../puzzles/hints';
 import { CLUE_RATIO, CluePicture, Fruit, Friend, Hat, Hull, ItemArt, ink } from './art';
 import { describeCanoe, focusOf, seatWords } from './help';
-import { canoeHeight, canoeWidth, clueCardHeight, clueColumns, CLUE_PAGE_PHONE, cluePages, HULL_PAD, seatFloor, seatForHeight, seatForWidth, tokenSize } from './layout';
+import { canoeHeight, canoeWidth, clueCardHeight, clueColumns, cluePageSize, cluePages, HULL_PAD, seatFloor, seatForHeight, seatForWidth, tokenSize } from './layout';
 import { attrOf, clueText, itemsOf, lit, nameOf, SHORE, type CanoePuzzle, type Kind, type Seating } from './rules';
 
 export type Keepers = { names: readonly [string, string]; keeper: 0 | 1; cover: boolean; owner: (clue: number) => 0 | 1; onPass: () => void; onReveal: () => void };
@@ -160,7 +160,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
   </View>;
 
   // ---------- shore ----------
-  const token = tokenSize(window.width);
+  const token = tokenSize(window.width, p.attrs);
   const shoreRows = Array.from({ length: p.attrs }, (_, a) => itemsOf(p, a).filter(i => pos[i] === SHORE));
   const shoreEmpty = shoreRows.every(r => !r.length);
   const pickedSeated = picked !== null && pos[picked] !== SHORE;
@@ -184,7 +184,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
   // ---------- clue cards ----------
   // Hosts may pass a narrower width than the board really gets; the card grid measures its own.
   const cardsWidth = gridWidth ?? width;
-  const cols = clueColumns(cardsWidth), pages = cluePages(p.clues.length, cardsWidth), perPage = pages > 1 ? CLUE_PAGE_PHONE : p.clues.length;
+  const cols = clueColumns(cardsWidth), pages = cluePages(p.clues.length, cardsWidth, p.attrs), perPage = cluePageSize(cardsWidth, p.attrs, p.clues.length);
   const shownPage = Math.min(page, pages - 1), cardH = clueCardHeight(cardsWidth), gap = 8, cardW = Math.floor((cardsWidth - gap * (cols - 1)) / cols);
   const indices = p.clues.map((_, i) => i).slice(shownPage * perPage, shownPage * perPage + perPage);
   const cards = covered ? <View testID="canoe-cover" style={{ alignSelf: 'stretch', minHeight: cardH * 2 + gap, borderRadius: 20, backgroundColor: '#2F6F7A', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 10 }}>
