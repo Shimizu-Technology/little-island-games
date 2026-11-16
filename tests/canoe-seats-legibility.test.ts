@@ -26,3 +26,13 @@ describe('Canoe Seats seat pictures stay legible at the floor', () => {
     });
   }
 });
+describe('clue paging on a phone', () => {
+  it('keeps Check in view by paging hats and fruit, more tightly at the largest text', async () => {
+    const { cluePages, cluePageSize } = await import('../src/learn/games/canoe-seats/layout');
+    expect(cluePages(5, 337, 1)).toBe(1);
+    expect(cluePageSize(337, 3, 13)).toBe(6);
+    expect(cluePages(13, 337, 3)).toBe(3);
+    expect(cluePageSize(337, 3, 13, true)).toBe(4);
+    expect(cluePages(13, 600, 3, true)).toBe(1);
+  });
+});

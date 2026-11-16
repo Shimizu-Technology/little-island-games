@@ -184,7 +184,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
   // ---------- clue cards ----------
   // Hosts may pass a narrower width than the board really gets; the card grid measures its own.
   const cardsWidth = gridWidth ?? width;
-  const cols = clueColumns(cardsWidth), pages = cluePages(p.clues.length, cardsWidth, p.attrs), perPage = cluePageSize(cardsWidth, p.attrs, p.clues.length);
+  const cols = clueColumns(cardsWidth), pages = cluePages(p.clues.length, cardsWidth, p.attrs, large), perPage = cluePageSize(cardsWidth, p.attrs, p.clues.length, large);
   const shownPage = Math.min(page, pages - 1), cardH = clueCardHeight(cardsWidth), gap = 8, cardW = Math.floor((cardsWidth - gap * (cols - 1)) / cols);
   const indices = p.clues.map((_, i) => i).slice(shownPage * perPage, shownPage * perPage + perPage);
   const cards = covered ? <View testID="canoe-cover" style={{ alignSelf: 'stretch', minHeight: cardH * 2 + gap, borderRadius: 20, backgroundColor: '#2F6F7A', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 10 }}>
