@@ -74,7 +74,7 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     for (const id of ['G-sudoku','M01','B-sudoku-01','J01','PH-001']) expect(() => validate(edited(m => { m.rows.find(r => r.id === id)!.availability = 'bogus'; }))).toThrow(/availability drift/);
   });
   it('requires every target stratum, so bulk deletion or one-game removal fails', () => {
-    expect(matrix.rows.filter(r => r.sampling?.kind === 'target level/band')).toHaveLength(489);
+    expect(matrix.rows.filter(r => r.sampling?.kind === 'target level/band')).toHaveLength(scope.games.reduce((n, game) => n + game.strata.length, 0));
     for (const remove of [(r: typeof matrix.rows[number]) => r.sampling?.kind === 'target level/band', (r: typeof matrix.rows[number]) => r.id.startsWith('B-reef-race-')]) expect(() => validate({ ...matrix, rows:matrix.rows.filter(r => !remove(r)) })).toThrow(/target bank strata/);
     expect(() => validate(matrix,{ ...inventory, banks:[...inventory.banks,{game:'sudoku',slot:999}] })).toThrow(/published stratum/);
   });

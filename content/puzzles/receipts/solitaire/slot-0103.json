@@ -1,0 +1,108 @@
+{
+ "format": 1,
+ "family": "solitaire",
+ "slot": 103,
+ "catalogRevision": 20,
+ "band": "t1",
+ "ordinals": [
+  105472,
+  16
+ ],
+ "sourceSha": "d2856c26f347fd55b4be3196f8be21661193c1ca",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "a188b95ffd7a38c403377376f322223d59fa73256b4633c349150d224d9c008b"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 256,
+  "kept": [
+   67108873,
+   67108866,
+   67108864,
+   67108867,
+   67108877,
+   67108874,
+   67108868,
+   67108871,
+   67108889,
+   67108882,
+   67108872,
+   67108875,
+   67108897,
+   67108890,
+   67108876,
+   67108883
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 16,
+  "semantic": 16
+ },
+ "histograms": {
+  "technique": {
+   "plan-1": 16
+  },
+  "template": {
+   "bursts": 4,
+   "pairs": 4,
+   "steady": 4,
+   "weave": 4
+  },
+  "layout": {
+   "bursts": 4,
+   "pairs": 4,
+   "steady": 4,
+   "weave": 4
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 10000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   52,
+   91
+  ],
+  "exact": 0
+ },
+ "proofHashes": {
+  "witness": "a90b4f0f44e14708b2be823b9a4a7c84b2f2c752058610cb7efc1d3810019de2",
+  "trace": "c7578b5902983900bd904d26725ae686633bf418d09225e1cf007791e204850d",
+  "claims": "7a21dc80762dd433494b3482db294e7765835873b2dac034f5db275b9e949461"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 2
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original shuffled deals, bounded search witness, independent rules replay. Winning-line promise only; solver effort is not a calibrated human rating. Exact ordered install of 9532ba72 via scripts/puzzles/solitaire/install.ts. Curation scripts, source pool/checkpoint hashes and every selected row in scripts/puzzles/solitaire/selected-rows.json (sha256 dcdc5a1df121e8a25931f201454357c2479e76cd0b06840ce49dbfa97f80c637). Receipt attempts/rejects describe this exact-row certification, not historical candidate curation."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 3492,
+  "gzip": 1234
+ },
+ "sha256": "0fa6389c013380cc5f518f4d3c4767951f49d118ac3a3c3062d489ffabf14955",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}
