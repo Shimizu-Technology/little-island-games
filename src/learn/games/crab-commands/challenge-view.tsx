@@ -43,7 +43,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const hint=useCrabHint(d,s.program,hintVisible&&active&&d.tray===undefined);
   const blockHelp=useMemo(()=>{
     if(d.tray===undefined||!hintVisible)return null;
-    const current=(s.blockDraft&&decodeProgram(s.blockDraft))||crabProgram(s.program), near=nearestBlocks(current,blockSolutions(d)), name=(code:number)=>cardLabel[programCodes[code]];
+    const current=(s.blockDraft&&decodeProgram(s.blockDraft))||crabProgram(s.program), near=nearestBlocks(current,blockSolutions(d),d.tray), name=(code:number)=>cardLabel[programCodes[code]];
     if(!near)return null;
     return {step:near.first?describeStep(near.first,current,name):'Your blocks reach home. Press Go to try them.',whole:`One working plan: ${describeProgram(near.target,name)}.`};
   },[d,hintVisible,s.blockDraft,s.program]);

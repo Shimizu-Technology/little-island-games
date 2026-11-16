@@ -458,7 +458,7 @@ export function Board({
   const blockHelp = useMemo(() => {
     if (l.tray === undefined || !hint) return null;
     const current = (s.blockDraft && decodeProgram(s.blockDraft)) || crabProgram(s.program), name = (code: number) => cardLabel[programCodes[code]];
-    const near = nearestBlocks(current, loopSolutions(l));
+    const near = nearestBlocks(current, loopSolutions(l), l.tray);
     if (!near) return null;
     const bump = plan.bumpCard !== null ? draft?.frames[plan.bumpCard] : undefined;
     const where = bump ? `Your plan bumps at ${blockPosition(bump.path)}${bump.iteration.length ? ` (repeat turn ${bump.iteration.map(n => n + 1).join(", ")})` : ""}. ` : "";

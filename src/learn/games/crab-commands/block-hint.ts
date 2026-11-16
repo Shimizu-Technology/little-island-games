@@ -1,13 +1,13 @@
 import { blockPosition } from '../../program/hints';
 import { clone, insertNode, listAt, main, removeNode, replaceNode, address, type Location } from '../../program/edit';
-import type { Node, Program } from '../../program/model';
+import { nodeCost, type Node, type Program } from '../../program/model';
 
 /** One thing a child can do in the block editor, in the editor's own controls. A hint never names anything else. */
 export type BlockStep =
   | { kind: 'add'; location: Location; node: Node; songGroup?: true }
   | { kind: 'count'; location: Location; at: number; times: number }
   | { kind: 'replace'; location: Location; at: number; command: number }
-  | { kind: 'remove'; location: Location; at: number }
+  | { kind: 'remove'; location: Location; at: number; room?: true }
   | { kind: 'make-song' };
 type Name = (command: number) => string;
 
@@ -42,7 +42,7 @@ function listStep(list: readonly Node[], target: readonly Node[], location: Loca
 }
 /** The next editor action from the child's plan toward one certified winner, or null when the plan already is that winner.
  * A song is built the only way the editor allows: put its cards in the plan, then Make plan a song. */
-export function nextStep(program: Program, target: Program): BlockStep | null {
+function freeStep(program: Program, target: Program): BlockStep | null {
   if (target.songs.length && !program.songs.length) {
     if (same(program.body, target.songs[0])) return { kind: 'make-song' };
     const step = listStep(program.body, target.songs[0], main);
@@ -50,6 +50,37 @@ export function nextStep(program: Program, target: Program): BlockStep | null {
     return step && { ...step, songGroup: true } as BlockStep;
   }
   return listStep(program.body, target.body, main) ?? target.songs.map((song, i) => listStep(program.songs[i] ?? [], song, { song: i, path: [] })).find(Boolean) ?? null;
+}
+/** Every block the child could remove, as the editor addresses it. */
+function removals(program: Program): BlockStep[] {
+  const out: BlockStep[] = [];
+  const walk = (list: readonly Node[], location: Location) => list.forEach((n, at) => {
+    out.push({ kind: 'remove', location, at, room: true });
+    if (n.kind === 'repeat') walk(n.body, child(location, at, 'body'));
+    if (n.kind === 'if') { walk(n.yes, child(location, at, 'yes')); walk(n.no, child(location, at, 'no')); }
+  });
+  walk(program.body, main); program.songs.forEach((song, i) => walk(song, { song: i, path: [] }));
+  return out;
+}
+const freeSteps = (program: Program, target: Program) => {
+  let p: Program | null = program, n = 0;
+  for (let step = p && freeStep(p, target); step && p && n < 200; step = p && freeStep(p, target)) { p = applyStep(p, step); n++; }
+  return p ? n : Infinity;
+};
+/** The next action the editor will accept. When the next card would not fit the tray, the hint makes room first:
+ * it removes the block whose removal leaves the shortest way to the winner (a stray card, not one the winner needs). */
+export function nextStep(program: Program, target: Program, tray?: number): BlockStep | null {
+  const step = freeStep(program, target);
+  if (!step || tray === undefined) return step;
+  const next = applyStep(program, step);
+  if (next && nodeCost(next) <= tray) return step;
+  let best: { step: BlockStep; steps: number } | null = null;
+  for (const remove of removals(program)) {
+    const left = applyStep(program, remove), steps = left ? freeSteps(left, target) : Infinity;
+    // Ties go to the later block: stray cards usually sit at the end of the plan.
+    if (steps <= (best?.steps ?? Infinity)) best = { step: remove, steps };
+  }
+  return best && best.steps < Infinity ? best.step : step;
 }
 /** The same pure edits the editor makes for these controls. */
 export function applyStep(program: Program, step: BlockStep): Program | null {
@@ -79,7 +110,7 @@ export function describeStep(step: BlockStep, program: Program, name: Name): str
   const at = blockPosition(address(step.location, step.at)), here = blockName(listAt(program, step.location)?.[step.at], name);
   if (step.kind === 'count') return `Tap the Repeat at ${at}, then tap ×${step.times}.`;
   if (step.kind === 'replace') return `Tap ${at} (${here}), then tap ${name(step.command)} to replace it.`;
-  return `Tap ${at} (${here}), then tap Remove block.`;
+  return `${step.kind === 'remove' && step.room ? 'The tray is full, so make room first. ' : ''}Tap ${at} (${here}), then tap Remove block.`;
 }
 /** The whole plan in words for the last help step, with every branch and the song spelled out. */
 export function describeProgram(program: Program, name: Name): string {
@@ -87,17 +118,17 @@ export function describeProgram(program: Program, name: Name): string {
   const songs = program.songs.map((song, i) => `Song ${i + 1} is [${say(song)}]`).join('. ');
   return `${songs ? `${songs}. Plan: ` : ''}${say(program.body)}`;
 }
-const stepsTo = (program: Program, target: Program) => {
+const stepsTo = (program: Program, target: Program, tray?: number) => {
   let p: Program | null = program, n = 0;
-  for (let step = p && nextStep(p, target); step && p && n < 200; step = p && nextStep(p, target)) { p = applyStep(p, step); n++; }
-  return p ? n : Infinity;
+  for (let step = p && nextStep(p, target, tray); step && p && n < 200; step = p && nextStep(p, target, tray)) { p = applyStep(p, step); n++; }
+  return p && n < 200 ? n : Infinity;
 };
-/** The certified winner the fewest editor actions away, and the first action toward it. Ties keep the cheaper winner. */
-export function nearestBlocks(program: Program, solutions: readonly Program[]): { target: Program; first: BlockStep | null; steps: number } | null {
+/** The certified winner the fewest accepted editor actions away, and the first action toward it. Ties keep the cheaper winner. */
+export function nearestBlocks(program: Program, solutions: readonly Program[], tray?: number): { target: Program; first: BlockStep | null; steps: number } | null {
   let best: { target: Program; first: BlockStep | null; steps: number } | null = null;
   for (const target of solutions) {
-    const steps = stepsTo(program, target);
-    if (steps < (best?.steps ?? Infinity)) best = { target, first: nextStep(program, target), steps };
+    const steps = stepsTo(program, target, tray);
+    if (steps < (best?.steps ?? Infinity)) best = { target, first: nextStep(program, target, tray), steps };
   }
   return best;
 }
