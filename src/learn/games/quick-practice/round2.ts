@@ -13,17 +13,23 @@ import { ROUND, answerOf, fitsSlot, freshItem, itemKey, levelMax, type QItem } f
  *   - `tries` counts the fresh questions drawn at each place, and that counter plus the round's seed draws the next one, so a
  *     reload draws the same question;
  *   - `helped` is the sticky record that a place took a miss or any help, whatever happens next;
+ *   - `done` is each finished place's witness, `[answer, aided]` (aided: Help or Choices was used): the answer must be that place's question's
+ *     answer, the finished places must come first, and their count is the place on screen. `helped` must be exactly what
+ *     the witnesses, the retry counters and the current question's actions say, so no saved flag can disagree with them;
  *   - `missed` is the question just missed (with `wrong`, what was said), kept only until the child's next move, so its worked
  *     answer survives a reload;
  *   - `history` is what the child did on the question on screen (Help, Choices, the right answer), replayed through the kit
  *     on every load, so a saved round can never say something the rules would not allow.
  */
 export type QAct = Act | readonly ["x"];
+export type Witness = readonly [answer: number, aided: 0 | 1];
 export type QuickRound = {
   version: 2; level: Level; seed: number;
   /** The place the child is on, 0 to 3. `total` is always ROUND, for the frame's journey bar. */
   index: number; total: number;
   items: QItem[]; tries: number[]; helped: boolean[];
+  /** Witness for each finished place: the answer given, and 1 when Help or Choices was used on the question answered. */
+  done: (Witness | null)[];
   missed: QItem | null;
   history: QAct[];
   /** Mirrors the Learn frame reads to let the companion react: the question is solved, or what the miss said. Re-derived on load. */
@@ -44,7 +50,7 @@ export function createQuick(o: LearnOptions, rng: () => number): QuickRound {
   const seed = Math.floor((Number.isFinite(rng()) ? rng() : 0) * 4294967296) >>> 0;
   const items: QItem[] = [];
   for (let pos = 0; pos < ROUND; pos++) items.push(freshItem(level, pos, choice, drawFor(seed, pos), items, fallback(seed)));
-  return { version: 2, level, seed, index: 0, total: ROUND, items, tries: [0, 0, 0], helped: [false, false, false], missed: null, history: [], solved: false, wrong: null };
+  return { version: 2, level, seed, index: 0, total: ROUND, items, tries: [0, 0, 0], helped: [false, false, false], done: [null, null, null], missed: null, history: [], solved: false, wrong: null };
 }
 
 /** The fresh question for a place after its n-th miss: deterministic from the seed, never one already showing or just missed. */
@@ -91,7 +97,8 @@ export function quickMove(s: QuickRound, act: QAct, choice: OpChoice): QuickRoun
   const pos = s.index, helped = (h: boolean) => s.helped.map((v, i) => (i === pos ? v || h : v));
   if (isNext(act)) {
     if (!p.work.solved) return s;
-    return { ...s, index: pos + 1, helped: helped(p.work.helped), missed: null, history: [], solved: false, wrong: null };
+    const witness: Witness = [answerOf(s.items[pos]), p.work.helped ? 1 : 0];
+    return { ...s, index: pos + 1, helped: helped(p.work.helped), done: s.done.map((d, i) => (i === pos ? witness : d)), missed: null, history: [], solved: false, wrong: null };
   }
   if (!validAct(act, levelMax(s.level)) || (act[0] !== "n" && act[0] !== "h" && act[0] !== "k")) return s;
   const item = s.items[pos], plan = planOf(item), v = judge(plan, p.work, act);
@@ -111,7 +118,7 @@ export function quickMove(s: QuickRound, act: QAct, choice: OpChoice): QuickRoun
 }
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
-const KEYS = ["version", "level", "seed", "index", "total", "items", "tries", "helped", "missed", "history", "solved", "wrong"];
+const KEYS = ["version", "level", "seed", "index", "total", "items", "tries", "helped", "done", "missed", "history", "solved", "wrong"];
 const itemShape = (i: unknown): i is QItem => Array.isArray(i) && Object.keys(i).length === i.length && i.length >= 5 && i.length <= 6 && i.every((n) => Number.isInteger(n));
 
 export function validQuick(v: unknown, o: LearnOptions): v is QuickRound {
@@ -122,10 +129,18 @@ export function validQuick(v: unknown, o: LearnOptions): v is QuickRound {
   if (!Array.isArray(v.items) || v.items.length !== ROUND || !v.items.every(itemShape)) return false;
   if (!Array.isArray(v.tries) || v.tries.length !== ROUND || !v.tries.every((t) => Number.isInteger(t) && t >= 0 && t <= MAX_TRIES)) return false;
   if (!Array.isArray(v.helped) || v.helped.length !== ROUND || !v.helped.every((h) => typeof h === "boolean")) return false;
+  if (!Array.isArray(v.done) || v.done.length !== ROUND) return false;
+  for (const d of v.done) {
+    if (d === null) continue;
+    if (!Array.isArray(d) || d.length !== 2 || Object.keys(d).length !== 2 || !Number.isInteger(d[0]) || d[0] < 0 || d[0] > max || (d[1] !== 0 && d[1] !== 1)) return false;
+  }
   if (!Array.isArray(v.history) || v.history.length > MAX_HISTORY) return false;
   for (const a of v.history) if (!Array.isArray(a) || !validAct(a, max) || (a[0] !== "n" && a[0] !== "h" && a[0] !== "k")) return false;
   const s = v as unknown as QuickRound, index = s.index;
   if (!s.items.every((q, pos) => fitsSlot(level, pos, choice, q))) return false;
+  // The finished places come first, each witnessing its own question's answer, and their count is the place on screen.
+  if (s.done.some((d, pos) => (d !== null) !== (pos < index))) return false;
+  if (s.done.some((d, pos) => d !== null && d[0] !== answerOf(s.items[pos]))) return false;
   const keys = s.items.map(itemKey);
   if (keys.some((k, i) => keys.indexOf(k) !== i)) return false;
   // A place before the one on screen is finished; a place after it has never been tried.
@@ -137,7 +152,13 @@ export function validQuick(v: unknown, o: LearnOptions): v is QuickRound {
   }
   const p = quickProgress(s);
   if (!p) return false;
-  if (index < ROUND && p.work.helped && !s.helped[index]) return false;
+  // Every place's helped flag is exactly its evidence: any miss (a retry counter above 0), and any help or choices,
+  // whether witnessed on a finished place or replayed on the question on screen.
+  for (let pos = 0; pos < ROUND; pos++) {
+    const d = s.done[pos];
+    const aided = d ? d[1] === 1 : pos === index && p.work.helped;
+    if (s.helped[pos] !== (s.tries[pos] > 0 || aided)) return false;
+  }
   if (s.solved !== p.work.solved || (s.missed === null && s.wrong !== null)) return false;
   return index < ROUND || (s.missed === null && !s.solved);
 }

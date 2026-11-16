@@ -23,7 +23,8 @@ export const bridgeLabel = (start: number, hops: readonly number[], made = hops.
   `Number line. Start ${start}${made > 0 ? `, then ${hops.slice(0, made).join(", then ")}` : ""}.`;
 /** A number line with one arc per hop. The arcs make the idea of "bridging a ten" visible. */
 export function Bridge({ width, start, hops, ten, lo, hi, made = hops.length, height = 74 }: BridgeProps) {
-  const h = Math.max(56, Math.round(height)), pad = 14, w = Math.max(220, width), span = hi - lo, x = (n: number) => pad + ((n - lo) / span) * (w - pad * 2), y = h - 28;
+  // Only a smaller height fits the arcs inside it; at the default 74 the drawing is exactly the one Shell Math has always had.
+  const h = Math.max(56, Math.round(height)), fit = h < 74, pad = 14, w = Math.max(220, width), span = hi - lo, x = (n: number) => pad + ((n - lo) / span) * (w - pad * 2), y = h - 28;
   const points = [start, ...hops.slice(0, made)];
   const every = span > 40 ? 10 : span > 12 ? 5 : 1;
   return <View accessible accessibilityLabel={bridgeLabel(start, hops, made)} style={{ alignItems: "center" }}>
@@ -41,7 +42,7 @@ export function Bridge({ width, start, hops, ten, lo, hi, made = hops.length, he
         <Circle cx={x(ten)} cy={y} r={5} fill={C.teal} />
       </G>}
       {hops.slice(0, made).map((to, i) => {
-        const from = points[i], mid = (x(from) + x(to)) / 2, rise = Math.min(30, (y - 12) / 2, 12 + Math.abs(x(to) - x(from)) * 0.2);
+        const from = points[i], mid = (x(from) + x(to)) / 2, rise = Math.min(30, fit ? (y - 12) / 2 : 30, 12 + Math.abs(x(to) - x(from)) * 0.2);
         return <G key={i}>
           <Path d={`M${x(from)} ${y - 8} Q${mid} ${y - 8 - rise * 2} ${x(to)} ${y - 8}`} stroke={C.teal} strokeWidth={3} fill="none" />
           <Path d={`M${x(to) - 5} ${y - 18}L${x(to)} ${y - 9}L${x(to) + 5} ${y - 18}`} stroke={C.teal} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />

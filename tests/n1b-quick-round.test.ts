@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { random } from "../src/games/types";
+import { startSession, validLearnSession } from "../src/learn/session";
+import { emptySave, parseSave } from "../src/state/validation";
 import { optionsAtLevel } from "../src/learn/levelOptions";
 import type { LearnOptions } from "../src/learn/types";
 import { LEVELS, drawFor, seeded, type Level, type OpChoice } from "../src/math/kit";
@@ -308,5 +310,86 @@ describe("Quick Practice round", () => {
     // A seed-drawn round for the same seed is the same.
     expect(createQuick(o, random(4))).toEqual(s);
     expect(drawFor(1, 2)()).toBe(drawFor(1, 2)());
+  });
+});
+
+describe("Quick Practice saves after review round 2 (P2-1): completed places carry witnesses, flags match evidence", () => {
+  const o = opts(3, "mixed");
+  /** Seed 7, the reviewer's round: miss the first question, then answer its replacement. */
+  function missThenAnswer(): QuickRound {
+    let s = createQuick(o, random(7));
+    s = quickMove(s, ["n", answerOf(s.items[0]) + 1], "mixed");
+    return quickMove(s, ["n", answerOf(s.items[0])], "mixed");
+  }
+  it("rejects helped turned false after answering a fresh replacement (the reviewer's repro)", () => {
+    const s = missThenAnswer();
+    expect(s).toMatchObject({ tries: [1, 0, 0], missed: null, helped: [true, false, false], solved: true });
+    expect(validQuick(s, o)).toBe(true);
+    expect(validQuick({ ...s, helped: [false, false, false] }, o)).toBe(false);
+  });
+  it("rejects helped turned false after moving on to the next place", () => {
+    const s = quickMove(missThenAnswer(), ["x"], "mixed");
+    expect(s.index).toBe(1);
+    expect(validQuick(s, o)).toBe(true);
+    expect(validQuick({ ...s, helped: [false, false, false] }, o)).toBe(false);
+    // Help on a finished place is witnessed too.
+    let h = createQuick(o, random(8));
+    h = quickMove(quickMove(quickMove(h, ["h"], "mixed"), ["n", answerOf(h.items[0])], "mixed"), ["x"], "mixed");
+    expect(h.done[0]).toEqual([answerOf(h.items[0]), 1]);
+    expect(validQuick(h, o)).toBe(true);
+    expect(validQuick({ ...h, helped: [false, false, false] }, o)).toBe(false);
+    expect(validQuick({ ...h, done: [[answerOf(h.items[0]), 0], null, null] }, o)).toBe(false);
+  });
+  it("rejects a place index changed without completion evidence, and witnesses that do not fit", () => {
+    const fresh = createQuick(o, random(7));
+    expect(validQuick({ ...fresh, index: 3 }, o)).toBe(false);
+    expect(validQuick({ ...fresh, index: 1 }, o)).toBe(false);
+    const one = quickMove(quickMove(fresh, ["n", answerOf(fresh.items[0])], "mixed"), ["x"], "mixed");
+    expect(validQuick(one, o)).toBe(true);
+    expect(validQuick({ ...one, index: 2 }, o)).toBe(false);
+    expect(validQuick({ ...one, index: 0 }, o)).toBe(false);
+    expect(validQuick({ ...one, done: [[answerOf(fresh.items[0]) + 1, 0], null, null] }, o)).toBe(false);
+    expect(validQuick({ ...one, done: [null, [answerOf(fresh.items[1]), 0], null] }, o)).toBe(false);
+    expect(validQuick({ ...one, done: [[answerOf(fresh.items[0]), 2], null, null] }, o)).toBe(false);
+    expect(validQuick({ ...one, done: [[answerOf(fresh.items[0]), 0, 0], null, null] }, o)).toBe(false);
+    expect(validQuick({ ...one, helped: [true, false, false] }, o)).toBe(false);
+    const finished = finish(fresh, "mixed");
+    expect(validQuick(finished, o)).toBe(true);
+    expect(validQuick({ ...finished, done: [finished.done[0], finished.done[1], null] }, o)).toBe(false);
+  });
+  it("a contradictory save is refused by the session and save parsers, so recovery keeps the original bytes", () => {
+    const s = missThenAnswer();
+    const session = { ...startSession("quick-practice", { options: o }, {}, 7), state: { ...s, helped: [false, false, false] } };
+    expect(validLearnSession(session)).toBe(false);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), learn: { "quick-practice": session } }))).toThrow();
+    const good = { ...session, state: s };
+    expect(parseSave(JSON.stringify({ ...emptySave(), learn: { "quick-practice": good } })).learn?.["quick-practice"]).toEqual(good);
+  });
+  it("the save stays small: the worst valid state measured across levels, seeds and saturated counters", () => {
+    let worst = 0, worstState = "";
+    for (const level of LEVELS) for (const choice of CHOICES) for (let seed = 1; seed <= 40; seed++) {
+      const lo = opts(level, choice);
+      let s = createQuick(lo, random(seed));
+      // Every place: help to the last stage and choices, a counter at its cap, then a miss shown while waiting.
+      for (let pos = 0; pos < ROUND; pos++) {
+        s = { ...s, tries: s.tries.map((t, i) => (i === pos ? MAX_TRIES - 1 : t)), helped: s.helped.map((h, i) => (i === pos ? true : h)) };
+        const wrong = answerOf(s.items[pos]) === levelMax(level) ? 0 : levelMax(level);
+        const missed = quickMove(s, ["n", wrong], choice);
+        expect(validQuick(missed, lo)).toBe(true);
+        const size = JSON.stringify(missed).length;
+        if (size > worst) { worst = size; worstState = JSON.stringify(missed); }
+        for (const a of [["h"], ["h"], ["h"], ["k"]] as const) s = quickMove(missed, a, choice) === missed ? s : quickMove(s, a, choice);
+        let t = missed;
+        for (const a of [["h"], ["h"], ["h"], ["k"]] as const) t = quickMove(t, a, choice);
+        expect(validQuick(t, lo)).toBe(true);
+        worst = Math.max(worst, JSON.stringify(t).length);
+        s = quickMove(quickMove(t, ["n", answerOf(t.items[pos])], choice), ["x"], choice);
+        expect(validQuick(s, lo)).toBe(true);
+        worst = Math.max(worst, JSON.stringify(s).length);
+      }
+    }
+    // Recorded in FIX-REPORT-2: the largest valid state seen.
+    expect(worst).toBeLessThanOrEqual(420);
+    expect(worstState.length).toBeGreaterThan(0);
   });
 });
