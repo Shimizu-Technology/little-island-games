@@ -170,7 +170,7 @@ function gravityLab(seed: number): Investigation[] {
   const mystery = 1 + r(3), mm = r(5);
   const unknown: Investigation = {
     key: "gravity-c", kind: "reach", title: "Mystery world",
-    question: `Mystery world! Our ${masses[mm]} kg crate weighs ${newtons(weight(masses[mm], mystery))} there and ${newtons(weight(masses[mm], 0))} on Earth. Which world in our model pulls the same?`,
+    question: `Our ${masses[mm]} kg crate weighs ${newtons(weight(masses[mm], mystery))} on the mystery world and ${newtons(weight(masses[mm], 0))} on Earth. Which world in our model pulls the same?`,
     controls: [massControl(true), worldControl(false)], start: [mm, 0],
     outcomes: ["Heavier than on the mystery world", "Same as on the mystery world", "Lighter than on the mystery world"], want: 1,
     observe: ([m, w]) => {
@@ -216,7 +216,7 @@ function lightTiltEclipse(seed: number): Investigation[] {
   const leaning = r(2), tilt = r(3) === 0 && distances.indexOf(au) !== 2 ? 0 : 1;
   const season: Investigation = {
     key: "tilt-b", kind: "observe", title: "Tilted Earth",
-    question: `Earth's axis is set to ${tilts[tilt]}° and ${tilt === 0 ? "does not lean" : leanings[leaning].toLowerCase()}. What will the model show for the northern half?`,
+    question: `Earth's axis is set to ${tilts[tilt]}° and ${tilt === 0 ? "does not lean" : leanings[leaning].replace("North", "north")}. What will the model show for the northern half?`,
     controls: [{ name: "Tilt", options: tilts.map((t) => `${t}°`), fixed: true }, { name: "Leaning", options: leanings, fixed: true }], start: [tilt, leaning], outcomes: seasons,
     observe: ([t, l]) => ({ outcome: seasonAt(t, l), reading: `${seasons[seasonAt(t, l)]} in this model.` }),
     explain: tilt === 0
@@ -229,7 +229,7 @@ function lightTiltEclipse(seed: number): Investigation[] {
   const eclipseRule = "In this model an eclipse needs the Sun, Earth and Moon lined up. The Moon's orbit is tilted, so most months the shadow misses and there is no eclipse. Never look at the Sun without approved protection. " + SPACE;
   const want = r(2);
   const make: Investigation = {
-    key: "eclipse-c", kind: "reach", title: want === 0 ? "Make a solar eclipse" : "Make a lunar eclipse",
+    key: "eclipse-c", kind: "reach", title: want === 0 ? "Solar eclipse" : "Lunar eclipse",
     question: `Set up the model to make a ${want === 0 ? "solar" : "lunar"} eclipse.`,
     controls: [{ name: "Moon", options: moonPlaces }, { name: "Orbit", options: orbitLines }], start: [[2, want, 1 - want][r(3)], 1],
     outcomes: eclipses, want,

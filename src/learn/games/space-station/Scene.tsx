@@ -118,7 +118,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
       <MoonDisc x={moonX} y={moonY} r={11} phase={result === 1 ? 0 : 4} />
       {text(orbit === 1 ? "Orbit tilted" : "Orbit lined up", 205, 196, label * 0.9)}
       {result !== null && text(["Solar eclipse", "Lunar eclipse", "No eclipse"][result], 205, 30, label)}
-      {result === null && unknown(205, 30)}
+      {result === null && unknown(56, 168)}
     </>;
   }
   return (

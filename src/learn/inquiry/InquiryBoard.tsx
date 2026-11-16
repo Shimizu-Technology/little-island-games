@@ -93,7 +93,7 @@ export function InquiryBoard({
     </View>;
   };
   const steps = ["Predict", "Test", "Explain"], now = p.phase === "setup" ? 0 : p.phase === "result" ? 1 : 2;
-  const speak = (text: string) => { const key = inquirySpeechKey(text); return soundOn && hasSpeech(key) ? <Button quiet compact icon="sound-on" disabled={!active} onPress={() => sound(key)}>Hear it</Button> : null; };
+  const speak = (text: string) => { const key = inquirySpeechKey(text); return soundOn && hasSpeech(key) ? <Button maxFontSizeMultiplier={cap} quiet compact icon="sound-on" disabled={!active} onPress={() => sound(key)}>Hear it</Button> : null; };
   const hints = hintText(q, p), repeat = p.phase === "setup" && testedBefore(qs, s);
   const result = p.seen && <View accessibilityLiveRegion="polite" style={{ padding: 12, gap: 8, borderRadius: 16, backgroundColor: p.matched ? "#E4EFD4" : "#FFF0CF" }}>
     <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 17, fontWeight: "900", color: theme.ink }}>
@@ -102,7 +102,7 @@ export function InquiryBoard({
     <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>{p.seen.reading}</Copy>
     {p.phase === "result" && <>
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>Change your plan, then test again.</Copy>
-      <Button disabled={!active} onPress={() => send({ type: "revise" })}>Change my plan</Button>
+      <Button maxFontSizeMultiplier={cap} disabled={!active} onPress={() => send({ type: "revise" })}>Change my plan</Button>
     </>}
     {!p.matched && q.kind === "observe" && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>A surprise is a discovery. Now find the reason.</Copy>}
     {p.phase === "explain" && <>
@@ -113,7 +113,7 @@ export function InquiryBoard({
     {p.phase === "done" && <>
       <Copy style={{ fontSize: 15, fontWeight: "800" }}>Yes: {q.explain.choices[q.explain.answer]}.</Copy>
       <Copy style={{ fontSize: 14 }}>{q.rule}</Copy>
-      <Button disabled={!active} onPress={() => { send({ type: "next" }); }}>{p.index === qs.length - 1 ? "Finish" : "Next investigation"}</Button>
+      <Button maxFontSizeMultiplier={cap} disabled={!active} onPress={() => { send({ type: "next" }); }}>{p.index === qs.length - 1 ? "Finish" : "Next investigation"}</Button>
     </>}
   </View>;
   return (
@@ -146,12 +146,12 @@ export function InquiryBoard({
             </>}
           </View>
         </CoachSpot>}
-        {p.phase === "setup" && <Button disabled={!active || (q.kind === "observe" && s.guess < 0) || repeat} onPress={test}>{q.kind === "observe" ? "Test the model" : "Test my plan"}</Button>}
+        {p.phase === "setup" && <Button maxFontSizeMultiplier={cap} disabled={!active || (q.kind === "observe" && s.guess < 0) || repeat} onPress={test}>{q.kind === "observe" ? "Test the model" : "Test my plan"}</Button>}
         {repeat && <Copy style={{ fontSize: 14 }}>You already tested that setup. Change something first.</Copy>}
       </BoardColumns>
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-        <Button quiet compact disabled={!active || earlier.length === 0 || p.phase !== "setup"} onPress={back}>Undo</Button>
-        <Button quiet compact disabled={!active || p.phase === "done" || record.hints >= 3} onPress={() => send({ type: "hint" })}>Hint</Button>
+        <Button maxFontSizeMultiplier={cap} quiet compact disabled={!active || earlier.length === 0 || p.phase !== "setup"} onPress={back}>Undo</Button>
+        <Button maxFontSizeMultiplier={cap} quiet compact disabled={!active || p.phase === "done" || record.hints >= 3} onPress={() => send({ type: "hint" })}>Hint</Button>
         {speak(`${q.title}. ${q.question}`)}
       </View>
       {hints.map((h, i) => <Copy key={i} style={{ padding: 10, backgroundColor: "#FFF3CE", borderRadius: 12, fontSize: 15 }}>{h}</Copy>)}
