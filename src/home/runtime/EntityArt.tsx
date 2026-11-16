@@ -1,3 +1,6 @@
+import { MealArt } from "./MealArt";
+import type { Meal } from "./meal";
+import type { Gaze } from "../../islander/rig/character";
 import { HomeCharacter, type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
 import { View } from "react-native";
@@ -54,8 +57,12 @@ export const EntityArt = memo(function EntityArt({
   tilt = 0,
   limbLag = 0,
   blink = false,
+  meal,
+  gaze,
 }: {
   entity: SceneEntity;
+  meal?: Meal;
+  gaze?: Gaze;
   /** HM-11: the closed-eye copy a resting friend swaps to by opacity. */
   blink?: boolean;
   tilt?: number;
@@ -85,6 +92,7 @@ export const EntityArt = memo(function EntityArt({
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
   const input = {
+    gaze: carry ? { x: 0, y: -1 } : gaze,
     slot: character.slot,
     base,
     action: carry ? (entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
@@ -99,10 +107,10 @@ export const EntityArt = memo(function EntityArt({
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
-      {renderCharacter?.(input) ?? <HomeCharacter input={input} />}
+      {meal && !carry ? <MealArt key={meal.key} input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
     </View>
   );
-}, (a, b) => a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && a.entity.action === b.entity.action &&

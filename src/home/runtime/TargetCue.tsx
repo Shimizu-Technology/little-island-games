@@ -1,4 +1,5 @@
 import React from "react";
+import Svg, { Path } from "react-native-svg";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import type { Target } from "../scene/types";
@@ -26,6 +27,13 @@ export function SeatRimCue({ target, interaction }: { target: Target; interactio
 /** Rounded, pictorial contact cue. It has no input or collision geometry. */
 export function TargetCue({ target, interaction }: { target: Target; interaction: Interaction }) {
   const style = useCueStyle(target, interaction);
+  if (target.kind === "mouth") return <Animated.View testID="mouth-target-halo" pointerEvents="none"
+    accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+    style={[{ position: "absolute", left: target.contact.x - 25, top: target.contact.y - 3, width: 50, height: 26 }, style]}>
+    <Svg width={50} height={26} viewBox="0 0 50 26"><Path d="M8 3Q0 13 8 23M42 3Q50 13 42 23"
+      fill="none" stroke="#FFF5CF" strokeWidth={7} strokeLinecap="round"/><Path d="M8 3Q0 13 8 23M42 3Q50 13 42 23"
+      fill="none" stroke="#C68A50" strokeWidth={2} strokeLinecap="round"/></Svg>
+  </Animated.View>;
   if (target.kind === "hand") return <Animated.View testID="open-hand-preview" pointerEvents="none"
     accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={[{ position: "absolute", left: (target.projectedContact ?? target.contact).x - 16, top: (target.projectedContact ?? target.contact).y - 22, width: 32, height: 40 }, style]}>

@@ -13,7 +13,7 @@ import { COOK_MS } from '../src/home/runtime/delight';
 import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
-const harness = vi.hoisted(() => ({ options: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
@@ -35,7 +35,7 @@ vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options:
   camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: () => {},
   showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
-vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: () => null, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
+vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
 vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
@@ -410,4 +410,63 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.cues).toEqual([[sleeper.id, 'stir', undefined]]);
     expect(harness.played).toEqual(['rustle']);
   });
+});
+
+it('H4b retains only transient food art after consumption, replaces it for a newer meal, and clears it on pickup', async () => {
+  const state = labFixtures['delight-feast']();
+  await open(state);
+  const initial = harness.scene.scene;
+  const friend = initial.entities['character/0'];
+  const mouth = initial.rooms.kitchen.targets.find((t: any) => t.owner === friend.id && t.kind === 'mouth');
+  const food = Object.values(initial.entities).filter((e: any) => e.item && e.body?.edible === 'food') as any[];
+  await drop(state, food[0].id, 'kitchen', mouth.contact, { previousTarget: mouth.id });
+  const meal = harness.scene.meals[friend.id];
+  expect(meal.food).toEqual(food[0].item);
+  expect(harness.scene.scene.entities[food[0].id]).toBeUndefined();
+  expect(JSON.stringify(harness.scene.state)).not.toContain('mealSerial');
+  await act(async () => { vi.advanceTimersByTime(300); });
+  await drop(state, food[1].id, 'kitchen', mouth.contact, { previousTarget: mouth.id });
+  expect(harness.scene.meals[friend.id].key).toBeGreaterThan(meal.key);
+  expect(harness.scene.meals[friend.id].food.id).toBe(food[1].item.id);
+  await act(async () => { vi.advanceTimersByTime(460); });
+  expect(harness.scene.meals[friend.id]).toBeDefined();
+  const scene = harness.scene.scene;
+  harness.slots = [{ id: friend.id, generation: 0, epoch: 0 }, {}];
+  await act(async () => harness.options.onPickup({ id: friend.id, slot: 0, scene, generation: 0, epoch: 0 }));
+  expect(harness.scene.meals[friend.id]).toBeUndefined();
+  expect(harness.scene.reactions[friend.id]).toBeUndefined();
+});
+
+it('H4b undo during the bite removes transient art and restores the consumed food atomically', async () => {
+  const state = labFixtures['delight-feast']();
+  await open(state);
+  const scene = harness.scene.scene;
+  const food = Object.values(scene.entities).find((e: any) => e.body?.edible === 'food') as any;
+  const mouth = scene.rooms.kitchen.targets.find((t: any) => t.owner === 'character/0' && t.kind === 'mouth');
+  await drop(state, food.id, 'kitchen', mouth.contact, { previousTarget: mouth.id });
+  expect(harness.scene.meals['character/0']).toBeDefined();
+  await act(async () => harness.chrome.onUndo());
+  expect(harness.scene.meals).toEqual({});
+  expect(harness.scene.reactions).toEqual({});
+  expect(harness.scene.scene.entities[food.id].item).toEqual(food.item);
+  await act(async () => { vi.advanceTimersByTime(800); });
+  expect(harness.scene.scene.entities[food.id].item).toEqual(food.item);
+});
+
+it('H4b the committed drink stays empty and regrabbing its real container ends the sip art', async () => {
+  const state = labFixtures['rig-meal']();
+  await open(state);
+  const scene = harness.scene.scene;
+  const drink = Object.values(scene.entities).find((e: any) => e.body?.edible === 'drink') as any;
+  const mouth = scene.rooms.home.targets.find((t: any) => t.owner === 'character/0' && t.kind === 'mouth');
+  await drop(state, drink.id, 'home', mouth.contact, { previousTarget: mouth.id });
+  const committed = harness.scene.scene;
+  expect(committed.entities[drink.id].item.empty).toBe(true);
+  expect(harness.scene.meals['character/0'].food.empty).not.toBe(true);
+  harness.slots = [{ id: drink.id, generation: 0, epoch: 0 }, {}];
+  await act(async () => harness.options.onPickup({ id: drink.id, slot: 0, scene: committed, generation: 0, epoch: 0 }));
+  expect(harness.scene.meals['character/0']).toBeUndefined();
+  expect(harness.scene.scene.entities[drink.id].item.empty).toBe(true);
+  await act(async () => { vi.advanceTimersByTime(800); });
+  expect(harness.scene.scene.entities['character/0'].action).not.toBe('drink');
 });

@@ -18,6 +18,16 @@ function reviewRoom(items: Instance[], hero = false): HomeStateV2 {
 }
 /** Fixtures for recorded gesture QA. None of them can reach a learner's saved world. */
 export const labFixtures: Record<string, () => HomeStateV2> = {
+  // H4b: uncluttered, reachable meal and drink art at the normal room camera.
+  "rig-meal": () => {
+    const state = reviewRoom([
+      { ...instance("rig-fruit", "mango", 0, 0), at: roomPoint(270, 505) },
+      { ...instance("rig-snack", "rice-ball", 0, 0), at: roomPoint(390, 505) },
+      { ...instance("rig-drink", "juice", 0, 0), at: roomPoint(510, 505) },
+    ], true);
+    state.rooms.home.characters[0] = { slot: 0, anchor: "floor", pose: "stand", x: 8, y: 7 };
+    return state;
+  },
   starter: () => migrateHome(starterHome()) ?? starterHome(),
   "feed-stand": () => feedRoom([], { slot: 0, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   "feed-sit": () => feedRoom([instance("seat", "stool", 6, 7)], { slot: 0, anchor: "seat", pose: "sit", seatId: "seat", socket: { itemId: "seat", socketId: "seat" } }),

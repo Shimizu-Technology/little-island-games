@@ -40,6 +40,7 @@ import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
 import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
+import { MEAL_MS, type Meal } from "./runtime/meal";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
@@ -100,6 +101,8 @@ export function HomeScreen({
   const [debug, setDebug] = useState(lab),
     [stress, setStress] = useState(false);
   const [reactions, setReactions] = useState<Record<string, "eat" | "drink">>({});
+  const [meals, setMeals] = useState<Record<string, Meal>>({});
+  const mealSerial = useRef(0);
   const entityNodes = useRef<Record<string, View>>({});
   const [focusId, restoreFocus] = useState<string>();
   const onNode = useCallback((id: string, node: View | null) => {
@@ -108,6 +111,12 @@ export function HomeScreen({
   }, []);
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
+  const clearMealArt = useCallback(() => {
+    Object.values(reactionTimers.current).forEach(clearTimeout);
+    reactionTimers.current = {};
+    setMeals({});
+    setReactions({});
+  }, []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
   // HM-18: Redo shows in Play for 10 s after an Undo; a full room shows a picture, not just words.
   const [redoWindow, setRedoWindow] = useState(false);
@@ -314,7 +323,7 @@ export function HomeScreen({
     },
     [shoreRooms]
   );
-  const showReaction = (proposal: DropProposal) => {
+  const showReaction = (proposal: DropProposal, food?: Meal["food"]) => {
     if (proposal.kind !== "mouth") return;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
     if (!target) return;
@@ -322,10 +331,13 @@ export function HomeScreen({
     const action = proposal.consume === "drink" ? "drink" : "eat";
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
+    const key = ++mealSerial.current;
+    if (food) setMeals(current => ({ ...current, [target.owner]: { key, food: { ...food }, action } }));
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
     reactionTimers.current[target.owner] = setTimeout(() => {
       delete reactionTimers.current[target.owner];
+      setMeals(current => { const next = { ...current }; delete next[target.owner]; return next; });
       const owner = live.current.scene.entities[target.owner];
       if (owner?.character)
         live.current.store.dispatch({ type: "finish-action", slot: owner.character.slot, roomId: owner.room });
@@ -334,7 +346,7 @@ export function HomeScreen({
         delete next[target.owner];
         return next;
       });
-    }, 750);
+    }, MEAL_MS);
   };
   React.useEffect(() => {
     // A restored or interrupted action completes without changing its supported base.
@@ -355,6 +367,7 @@ export function HomeScreen({
       const stillCurrent = () => runtime.current!.isCurrent(index, token);
       if (!stillCurrent()) return;
       const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
+      const mealFood = live.current.scene.entities[proposal.id]?.item;
       const result = commitAt(
         proposal.id,
         proposal.room,
@@ -365,7 +378,7 @@ export function HomeScreen({
       if (result) {
         if (labKit && trace)
           trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
-        showReaction(result.proposal);
+        showReaction(result.proposal, mealFood);
         const before = live.current.scene;
         const destination = buildRuntimeScene(result.state);
         setPickups((current) =>
@@ -402,8 +415,16 @@ export function HomeScreen({
       const current = runtime.current!.slots.get()[pickup.slot];
       if (current.id !== pickup.id || current.generation !== pickup.generation || current.epoch !== pickup.epoch)
         return;
-      for (const id of groupIds(pickup.scene, pickup.id)) {
-        if (pickup.scene.entities[id]?.character) wake(id);
+      const captured = pickup.scene.entities[pickup.id];
+      // A committed drink remains a recoverable hand object. Regrabbing it ends
+      // its owner's transient sip art, just as regrabbing the friend does.
+      const owner = captured?.attachment.kind === "hand" ? captured.attachment.character : undefined;
+      for (const id of new Set([...groupIds(pickup.scene, pickup.id), ...(owner ? [owner] : [])])) {
+        if (pickup.scene.entities[id]?.character) {
+          wake(id);
+          setMeals(current => { const next = { ...current }; delete next[id]; return next; });
+          setReactions(current => { const next = { ...current }; delete next[id]; return next; });
+        }
       }
       delightPickup(pickup.scene.entities[pickup.id]);
       watchCooking(live.current.scene);
@@ -663,7 +684,7 @@ export function HomeScreen({
   }, [viewport, building]);
   React.useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") interaction.cancelAll();
+      if (state !== "active") { interaction.cancelAll(); setMeals({}); setReactions({}); }
     });
     return () => {
       sub.remove();
@@ -853,6 +874,7 @@ export function HomeScreen({
         onBack={() => router.back()}
         onUndo={() => {
           interaction.cancelAll();
+          clearMealArt();
           store.dispatch({ type: "undo" });
           setRedoWindow(true);
           clearTimeout(redoTimer.current);
@@ -861,6 +883,7 @@ export function HomeScreen({
         showRedo={redoWindow && store.canRedo}
         onRedo={() => {
           interaction.cancelAll();
+          clearMealArt();
           store.dispatch({ type: "redo" });
         }}
         onFind={find}
@@ -914,6 +937,7 @@ export function HomeScreen({
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
             reactions={reactions}
+            meals={meals}
             sleeping={sleeping}
             moods={delight.moods}
             effects={delight.effects}

@@ -3,7 +3,7 @@ import Svg, { G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { buildFor, defaultLook, normalizeLook, outfitPalettes, outfitDefaults, skinTones, type IslanderLook } from '../look';
 import { resolvePose, isLying, poseBox, type Point, type Pose, type Side, type View } from './poses';
 import { anchorsFor } from './wardrobe';
-import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife } from './character';
+import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame } from './character';
 import { islanderAnchors, islanderOrigin, islanderSurface, rigTransform } from './anchors';
 import { RewardArt } from './Rewards';
 import { Hair } from './Hair';
@@ -46,7 +46,7 @@ export function limbShape(a: Point, b: Point, c: Point, r: number, tip: number):
     return `M${edge(a,n,r)}${outward}${shin(1)}Q${c[0]+m[1]*tip*1.5} ${c[1]-m[0]*tip*1.5} ${edge(c,m,-tip)}${sharp && cross < 0 ? `L${edge(between(b,c,.34),m,-mid)}` : reverseShin}${sharp && cross < 0 ? `L${crease(-1)}` : `Q${edge(b,turn,-mid*.82)} ${edge(before,n,-mid)}`}L${edge(a,n,-r)}Q${a[0]-n[1]*r} ${a[1]+n[0]*r} ${edge(a,n,r)}Z`;
 }
 const between = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-export function IslanderShape({ pose, look: input = defaultLook, held, reduced = false, expression, blink = false, heldMirrored = false }: { pose: Pose; look?: IslanderLook; held?: React.ReactNode; reduced?: boolean; expression?: import('./poses').Expression; blink?: boolean; heldMirrored?: boolean }) {
+export function IslanderShape({ pose, look: input = defaultLook, held, reduced = false, expression, blink = false, heldMirrored = false, gaze, meal }: { pose: Pose; look?: IslanderLook; held?: React.ReactNode; reduced?: boolean; expression?: import('./poses').Expression; blink?: boolean; heldMirrored?: boolean; gaze?: Gaze; meal?: MealFrame }) {
   const look = normalizeLook(input), j = pose.joints, a = anchorsFor(pose), compact = !!pose.compact, front = pose.view === 'front';
   const skin = skinTones[look.skinTone], colors = look.palette ? outfitPalettes[look.palette] : outfitDefaults[look.outfit];
   const [hx, hy] = j.head, r = compact ? 12 : 28, sy = j.leftShoulder[1], hip = j.leftHip[1];
@@ -94,10 +94,11 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
       {!compact && <><Path data-head="soft-square" d={`M${hx-r} ${hy-9}Q${hx-r} ${hy-28} ${hx} ${hy-28}Q${hx+r} ${hy-28} ${hx+r} ${hy-9}L${hx+r} ${hy+11}Q${hx+r} ${hy+28} ${hx} ${hy+28}Q${hx-r} ${hy+28} ${hx-r} ${hy+11}Z`} fill={skin}/><Path d={`M${hx+24} ${hy-7}V${hy+10}Q${hx+24} ${hy+24} ${hx+4} ${hy+26}Q${hx+28} ${hy+29} ${hx+28} ${hy+11}V${hy-7}Z`} fill="#7E5142" fillOpacity={.10} strokeWidth={0}/></>}</G>
     <G data-layer="clothing"><Clothes look={look} pose={pose} colors={colors}/>{compact && look.accessory === 'backpack' && backpack}</G>
     <G data-layer="front-limbs">{front && limb(rearArm, true)}{limb(frontArm, true)}</G>
-    <G data-layer="held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>
+    { !meal && <G data-layer="held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>}
     <G data-layer="hands">{front || compact ? <>{hand('left')}{hand('right')}</> : hand(frontArm)}</G>
     <RewardArt look={look} pose={pose} layer="neckwear"/><G data-layer="front-hair"><Hair look={look} pose={pose}/></G>
-    <G data-layer="face"><Face look={look} pose={pose} expression={expression} blink={blink}/></G>
+    <G data-layer="face"><Face look={look} pose={pose} expression={expression} blink={blink} gaze={gaze} meal={meal}/></G>
+    {meal && <G data-layer="meal-held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>}
     <G data-layer="hat" transform={`translate(${a.headTop[0]} ${a.headTop[1]+(compact?0:look.hat==='flower-crown'?2.5:0)}) scale(${compact ? (look.hat==='flower-crown' ? .6 : 1) : look.hat==='flower-crown' ? 1.2 : 1.12} ${compact && look.hat==='flower-crown' ? .6 : 1})`}>
       {look.hat === 'sunhat' && (compact ? <G fill="#F4CC76"><Path d="M-11 3L-10 -2Q0 -5 10 -2L11 3Z"/><Path d="M-15 4Q0 0 15 4Q0 8-15 4Z"/></G> : <G fill="#F4CC76"><Path d="M-19 9C-19 -6 -10 -9 0 -9C10 -9 19 -6 19 9ZM-32 10C-28 5 -18 6 0 6C18 6 28 5 32 10C25 17 -25 17 -32 10Z"/><Path d="M-19 5C-10 9 10 9 19 5L19 1C10 5 -10 5 -19 1Z" fill="#E2856C" strokeWidth={.8}/></G>)}
       {look.hat === 'cap' && (compact ? <G fill={colors.secondary}><Path d="M-12 4Q-11-5 0-5Q11-5 12 4Z"/></G> : <G fill={colors.secondary}><Path d="M-25 11C-26 -7 -11 -10 0 -10C11 -10 26 -7 25 11C12 7 -12 7 -25 11ZM0 -10V7M-1.4 -10.6h2.8"/><Path d={front ? 'M-23 9C-12 5 12 5 23 9C27 12 24 16.4 20 15.6C8 13 -8 13 -20 15.6C-24 16.4 -27 12 -23 9Z' : 'M-8 6Q0 3 8 6V10.6Q0 8 -8 10.6Z'} fill={front ? colors.primary : '#FFF3DC'}/></G>)}
@@ -123,18 +124,20 @@ export type IslanderProps = RigLife & {
   facing?: Facing;
   tilt?: number;
   limbLag?: number;
+  gaze?: Gaze;
+  meal?: MealFrame;
 };
-export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false, base, action = null, face, facing = 'right', tilt = 0, limbLag = 0, mood, clock, seed, blink, breath }: IslanderProps) {
+export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false, base, action = null, face, facing = 'right', tilt = 0, limbLag = 0, mood, clock, seed, blink, breath, gaze, meal }: IslanderProps) {
   if (base) {
     const life = rigIdle(clock, seed, reduced);
-    const options = { action, tilt, limbLag, reduced, breath: breath ?? life.breath };
-    const resolved = characterPose(base, action, reduced ? 0 : limbLag, tilt * (facing === 'left' ? -1 : 1));
+    const options = { action, tilt, limbLag, reduced, meal, gaze, breath: breath ?? life.breath };
+    const resolved = characterPose(base, action, reduced ? 0 : limbLag, tilt * (facing === 'left' ? -1 : 1), meal, gaze);
     const box = islanderAnchors(base, facing, options).bounds, origin = islanderOrigin(base);
     const scale = size / 132;
     return <Svg {...islanderSurface(box, scale)} accessible={false}>
       <G data-rig="islander" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)}>
         <G transform={`translate(${-origin[0]} ${-origin[1]})`}>
-          <IslanderShape pose={resolved} look={look} held={held} reduced={reduced} expression={rigFace(face, mood, action)} heldMirrored={facing === 'left'} blink={!reduced && (blink ?? life.blink)}/>
+          <IslanderShape pose={resolved} look={look} held={held} reduced={reduced} gaze={gaze} meal={meal} expression={meal?.bite ? 'anticipate' : rigFace(face, mood, action)} heldMirrored={facing === 'left'} blink={!reduced && (blink ?? life.blink)}/>
         </G>
       </G>
     </Svg>;

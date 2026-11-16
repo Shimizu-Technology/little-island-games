@@ -1,4 +1,4 @@
-import { characterPose, clampRig, rotatePoint, type CharacterAction, type CharacterBase, type Facing } from './character';
+import { characterPose, clampRig, rotatePoint, type CharacterAction, type CharacterBase, type Facing, type Gaze, type MealFrame } from './character';
 import { isLying, poseBox, type Point } from './poses';
 export type RigPoint = Readonly<{ x: number; y: number }>;
 export type RigAnchors = Readonly<{
@@ -7,7 +7,7 @@ export type RigAnchors = Readonly<{
   mouth: RigPoint;
   head: RigPoint;
 }>;
-export type AnchorOptions = Readonly<{ action?: CharacterAction; tilt?: number; limbLag?: number; breath?: number; reduced?: boolean }>;
+export type AnchorOptions = Readonly<{ action?: CharacterAction; gaze?: Gaze; meal?: MealFrame; tilt?: number; limbLag?: number; breath?: number; reduced?: boolean }>;
 const xy = (p: Point): RigPoint => ({ x: p[0], y: p[1] });
 export const islanderOrigin = (base: CharacterBase) => poseBox(characterPose(base)).anchor;
 /** Same transform stack as IslanderShape, then anchor-relative life and facing. */
@@ -33,13 +33,13 @@ function bounds(points: RigPoint[]) {
  * Carry adds 7 units for the authored ≤10° loose-limb sweep. Held objects
  * have separate bounds in CORE; arbitrary ReactNode props are not wardrobe. */
 export function islanderAnchors(base: CharacterBase, facing: Facing = 'right', options: AnchorOptions = {}): RigAnchors {
-  const pose = characterPose(base, options.action, options.reduced ? 0 : options.limbLag, (options.tilt ?? 0) * (facing === 'left' ? -1 : 1));
+  const pose = characterPose(base, options.action, options.reduced ? 0 : options.limbLag, (options.tilt ?? 0) * (facing === 'left' ? -1 : 1), options.meal, options.gaze);
   const pad = base === 'carry' ? 7 : 0;
   const corners: Point[] = [[-2-pad, -4], [82+pad, -4], [-2-pad, 136+pad], [82+pad, 136+pad]];
   return {
     bounds: bounds(corners.map(p => islanderPoint(p, base, facing, options))),
     hand: islanderPoint(pose.joints.rightHand, base, facing, options),
-    mouth: islanderPoint([40, 58], base, facing, options),
+    mouth: islanderPoint([40 + clampRig(options.gaze?.x, -1, 1) * 1.4, 58 + clampRig(options.gaze?.y, -1, 1) * .6], base, facing, options),
     head: islanderPoint(pose.joints.head, base, facing, options),
   };
 }
@@ -58,12 +58,13 @@ export function islanderSurface(box: Readonly<{ left?: number; top?: number; wid
 export const crabOrigin = (base: CharacterBase): Point => base === 'carry' ? [60, 54] : base === 'lie' ? [60, 72] : base === 'bathe' ? [60, 73] : base === 'sit' ? [60, 96] : [60, 100];
 export const pipOrigin = (base: CharacterBase): Point => base === 'carry' ? [75, 57] : base === 'lie' ? [42, 85] : base === 'sit' || base === 'bathe' ? [75, 111] : [75, 117];
 /** Pose-local companion contacts shared with the art, in source SVG units. */
-export function companionContacts(species: 'crab' | 'pip', base: CharacterBase, action: CharacterAction = null) {
+export function companionContacts(species: 'crab' | 'pip', base: CharacterBase, action: CharacterAction = null, meal?: MealFrame) {
+  const reach = clampRig(meal?.reach, 0, 1);
   if (species === 'crab') {
-    const hand: Point = action === 'eat' ? [64, 73] : action === 'drink' ? [56, 84] : base === 'carry' ? [100, 70] : [97, 53];
+    const hand: Point = action === 'eat' || action === 'drink' ? [97 - 29 * reach, 60 + 20 * reach] : base === 'carry' ? [100, 70] : [97, 53];
     return { hand, mouth: [60, 73] as Point, head: [60, 42] as Point };
   }
-  const hand: Point = action === 'eat' ? [38, 94] : action === 'drink' ? [30, 105] : [65, 103];
+  const hand: Point = action === 'eat' || action === 'drink' ? [65 - 25 * reach, 103 + 1 * reach] : [65, 103];
   return { hand, mouth: [34, 94] as Point, head: [48, 78] as Point };
 }
 export function companionPoint(species: 'crab' | 'pip', p: Point, base: CharacterBase, facing: Facing, options: AnchorOptions = {}) {
@@ -73,7 +74,7 @@ export function companionPoint(species: 'crab' | 'pip', p: Point, base: Characte
   return rigPoint([posed[0] - origin[0], posed[1] - origin[1]], facing, options);
 }
 function companionAnchors(species: 'crab' | 'pip', base: CharacterBase, facing: Facing, options: AnchorOptions): RigAnchors {
-  const c = companionContacts(species, base, options.action);
+  const c = companionContacts(species, base, options.action, options.meal);
   const hull: Point[] = species === 'crab' ? [[-4, 26], [124, 26], [-4, 112], [124, 112]] : [[20, 41], [base === 'carry' ? 166 : 158, 41], [20, 130], [base === 'carry' ? 166 : 158, 130]];
   return { bounds: bounds(hull.map(p => companionPoint(species, p, base, facing, options))), hand: companionPoint(species, c.hand, base, facing, options), mouth: companionPoint(species, c.mouth, base, facing, options), head: companionPoint(species, c.head, base, facing, options) };
 }

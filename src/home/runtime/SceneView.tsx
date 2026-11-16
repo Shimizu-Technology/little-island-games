@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import type { Meal } from "./meal";
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -51,6 +52,8 @@ const RestingEntity = memo(function RestingEntity({
   selected,
   targetKey,
   action,
+  meal,
+  mealHeld = false,
   sleeping,
   front = false,
   onNode,
@@ -86,6 +89,8 @@ const RestingEntity = memo(function RestingEntity({
   selected: boolean;
   targetKey: string;
   action?: "eat" | "drink";
+  meal?: Meal;
+  mealHeld?: boolean;
   sleeping: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
@@ -115,6 +120,20 @@ const RestingEntity = memo(function RestingEntity({
   // The friend whose lean this art shows: itself, or the friend holding it.
   const leaner = character ? id : ownerId;
   const lean = useSharedValue(0);
+  const [gazeCode, setGazeCode] = React.useState(0);
+  const gazeRef = React.useRef(0);
+  const publishGaze = React.useCallback((code: number) => {
+    if (gazeRef.current === code) return;
+    gazeRef.current = code;
+    setGazeCode(code);
+  }, []);
+  useAnimatedReaction(() => {
+    if (!character || sleeping) return 0;
+    const notice = restingFlags.value.notice.find(n => n.id === id);
+    return notice ? notice.dir * 4 + (notice.vertical ?? 0) : 0;
+  }, (dir, before) => { if (dir !== before) runOnJS(publishGaze)(dir); }, [character, sleeping, id]);
+  const gazeDir = Math.round(gazeCode / 4);
+  const gaze = { x: gazeDir * (entity.facing === "left" ? -1 : 1), y: gazeCode - gazeDir * 4 };
   useAnimatedReaction(() => {
     if (!leaner || sleeping || reduced) return 0;
     for (const n of restingFlags.value.notice) if (n.id === leaner) return n.dir;
@@ -135,7 +154,7 @@ const RestingEntity = memo(function RestingEntity({
     const bob = reduced ? undefined : motion.bob[presenter];
     const hidden = (front && flags.fronts.includes(entity.id)) || (rest?.hide ?? false);
     const dim = motion.dim[presenter] ?? 1;
-    return { opacity: hidden ? 0 : dim,
+    return { opacity: hidden || mealHeld ? 0 : dim,
       transformOrigin: rest ? [rest.gx - frame.left, rest.gy - frame.top, 0]
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
@@ -151,10 +170,10 @@ const RestingEntity = memo(function RestingEntity({
   // asleep) left the last native value behind: asleep mid-blink, the friend vanished for good.
   const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed]);
   const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
-  const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
+
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
   const anticipating = useDerivedValue(() => {
-    if (!character) return 0;
+    if (!character || action || entity.action === "eat" || entity.action === "drink") return 0;
     if (anyIn(restingFlags.value.targets, anticipationTargets)) return 1;
     if (sleeping) return 0;
     for (const n of restingFlags.value.notice) if (n.id === id && n.food) return 1;
@@ -238,15 +257,14 @@ const RestingEntity = memo(function RestingEntity({
       <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
         style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
-      {!entity.character && !front && <Animated.View testID={`landing-rim-${entity.id}`} pointerEvents="none"
-        style={[{ position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "4%", borderRadius: 18,
-          borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
       {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
       <Animated.View style={normal}>
         <Animated.View style={open}>
           <EntityArt
             entity={entity}
             actionOverride={action}
+            meal={meal}
+            gaze={gaze}
             faceOverride={sleeping ? "sleepy" : mood}
             front={front}
             reduced={reduced}
@@ -255,13 +273,13 @@ const RestingEntity = memo(function RestingEntity({
         </Animated.View>
         {life && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={entity} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            <EntityArt entity={entity} meal={meal} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
         )}
       </Animated.View>
       {entity.character && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
-          <EntityArt entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
+          <EntityArt entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
       </Animated.View>
@@ -313,6 +331,7 @@ export function SceneView({
   onMove,
   stress = false,
   reactions,
+  meals = {},
   sleeping,
   onNode,
   badges = [],
@@ -347,6 +366,7 @@ export function SceneView({
   selected?: string;
   stress?: boolean;
   reactions: Record<string, "eat" | "drink">;
+  meals?: Record<string, Meal>;
   sleeping: Record<string, boolean>;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
@@ -421,6 +441,8 @@ export function SceneView({
                 name={names[entity.id]}
                 onNode={onNode}
                 action={reactions[entity.id]}
+                meal={meals[entity.id]}
+                mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
                 sleeping={!!sleeping[entity.id]}
                 ownerKey={ancestors(entity, scene).join("|")}
                 targetKey={scene.rooms[roomId].targets
@@ -477,7 +499,7 @@ export function SceneView({
                         : []),
                       resting(entity, front),
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface" || target.kind === "mouth")).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}
