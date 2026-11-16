@@ -88,7 +88,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     if (!card && !entry.puzzles.length && entry.packed) { void deal(entry, () => suggestedPacked(entry, progress, preferences.band, local.data.hidden), replace); return; }
     setBrowse(null); setSelection({ entry, card: card ?? suggested({ ...entry, puzzles: entry.puzzles.filter(p => !local.data.hidden.includes(p.ref.hash)) }, progress, preferences.band), replace });
   };
-  const opened = useRef(false);
+  const opened = useRef(!!selection);
   useEffect(() => { const entry = entries.find(e => e.game === params.game); if (!opened.current && !selection && entry?.packed && !entry.puzzles.length) { opened.current = true; choose(entry); } }); // A packed shortcut deals once on arrival.
   useEffect(() => { if (owner.startsWith('cove-')) void local.change({ type: 'remember-person', owner }); }, [owner]); // eslint-disable-line react-hooks/exhaustive-deps -- Remember explicit identity changes only.
   const owners = people.map(p => p.id).sort().join('|');

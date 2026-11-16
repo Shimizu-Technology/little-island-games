@@ -627,6 +627,116 @@
       "cove": true
     },
     {
+      "slot": 100,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 102400,
+      "count": 16,
+      "family": "solitaire",
+      "packHash": "fa91915954253a592725d03bf0fae77fda1e739bea8291a9fe6d069c691788e7",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 101,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 103424,
+      "count": 48,
+      "family": "solitaire",
+      "packHash": "dc45a3a75dfec4a7bdc98343baee78fd2c246ac57430a13a7a1d7426450a558b",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 102,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 104448,
+      "count": 64,
+      "family": "solitaire",
+      "packHash": "a47c86b8efd1e891aa52b00ac653195fbc8abcdc162635c96fe7b8d59395a3d9",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 103,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 105472,
+      "count": 16,
+      "family": "solitaire",
+      "packHash": "0fa6389c013380cc5f518f4d3c4767951f49d118ac3a3c3062d489ffabf14955",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 104,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 106496,
+      "count": 48,
+      "family": "solitaire",
+      "packHash": "d0b8310c0a84476c43b899d52a4e34675d7300e0fdeb238a8ad61be2ba9dbe6c",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 105,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 107520,
+      "count": 64,
+      "family": "solitaire",
+      "packHash": "16d8a0fccb0223c13a31bf7a9cbd5ca3951b6921b7358d163fb089bb98692393",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 106,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 108544,
+      "count": 32,
+      "family": "freecell",
+      "packHash": "9664fb0a06032810ea35a902d129f4802cfdc56f226f299c2e3fddda0d29ac88",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 107,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 109568,
+      "count": 64,
+      "family": "freecell",
+      "packHash": "6466049e981e8ce0eb9ccb644cf7fba2f06183f32a438923f7e0b4518fcbd947",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 108,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 110592,
+      "count": 64,
+      "family": "freecell",
+      "packHash": "4b4a6691c64cb130f34771c19028f9f3be746dd2fe0f831ea2f9088d950e50a2",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 109,
+      "engine": "solitaire",
+      "rules": 1,
+      "first": 111616,
+      "count": 96,
+      "family": "freecell",
+      "packHash": "bd4d34574f841b40118e087b1126a62d6582c25ec048d19cca91fde6d769b671",
+      "awards": 0,
+      "cove": true
+    },
+    {
       "slot": 200,
       "engine": "beep-bot",
       "rules": 1,
@@ -6175,6 +6285,10 @@
     "shell-3",
     "shell-4",
     "shell-5",
-    "shell-6"
+    "shell-6",
+    "solitaire-1",
+    "solitaire-3",
+    "solitaire-6",
+    "solitaire-5"
   ]
 }
