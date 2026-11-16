@@ -1,4 +1,4 @@
-import { LagoonHintScroll } from './games/logic-lagoon/hintScrollHost';
+import { LagoonHintScroll } from './LagoonHintScroll';
 import { BoardSpaceProvider, BoardSpaceContent } from './BoardSpace';
 import { measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS } from './boardGeometry';
 import { coveReady } from './generated/readiness';

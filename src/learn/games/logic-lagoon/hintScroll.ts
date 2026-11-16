@@ -2,8 +2,8 @@ import { useCallback, useContext, useLayoutEffect, useRef } from 'react';
 import type { View } from 'react-native';
 import { nextLayoutFrame } from '../../frameClocks';
 
-import { LagoonHintScroll } from './hintScrollHost';
-export { LagoonHintScroll } from './hintScrollHost';
+import { LagoonHintScroll } from '../../LagoonHintScroll';
+export { LagoonHintScroll } from '../../LagoonHintScroll';
 /** Move only as far as needed: preceding board rows stay visible whenever they fit. */
 export function hintScrollTarget(offset: number, top: number, height: number, viewport: number, boardTop?: number) {
   if (height + 16 > viewport) return Math.max(0, top - 8);
