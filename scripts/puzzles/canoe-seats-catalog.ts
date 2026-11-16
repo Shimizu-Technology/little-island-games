@@ -4,7 +4,7 @@ import { catalogManifest } from '../../src/state/catalogManifest';
 
 /**
  * Appends Canoe Seats' banks, dares and contexts to the save catalog, exactly as the registration
- * builds them. Anything already present must be identical; nothing else is touched.
+ * builds them. Anything already present must be identical; nothing else is touched. `--check` only compares.
  */
 const path = 'src/state/save-catalog.json', catalog = JSON.parse(readFileSync(path, 'utf8'));
 const facts = catalogManifest(registration.catalog), same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -20,7 +20,10 @@ for (const [slot, dare] of facts.dares) {
   if (!old) catalog.dares.push([slot, dare]);
 }
 for (const id of facts.contexts) if (!catalog.contexts.includes(id)) catalog.contexts.push(id);
-// Banks stay in slot order, as the Latin and edge writers keep them.
+// Banks and dares stay in slot order, as the Latin, edge and board writers keep them.
 catalog.banks.sort((a: { slot: number }, b: { slot: number }) => a.slot - b.slot);
-writeFileSync(path, `${JSON.stringify(catalog, null, 2)}\n`);
+catalog.dares.sort((a: [number, unknown], b: [number, unknown]) => a[0] - b[0]);
+const text = `${JSON.stringify(catalog, null, 2)}\n`;
+if (process.argv.includes('--check')) { if (text !== readFileSync(path, 'utf8')) throw new Error('Canoe Seats catalog entries are missing or stale in src/state/save-catalog.json. Run scripts/puzzles/canoe-seats-catalog.ts.'); }
+else writeFileSync(path, text);
 console.log(`Canoe Seats catalog: ${facts.banks.length} banks, ${facts.dares.length} dares, ${facts.contexts.length} contexts.`);

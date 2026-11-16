@@ -209,3 +209,10 @@ describe('speech', () => {
     }
   });
 });
+
+describe('save catalog', () => {
+  it('holds exactly the registration’s banks, dares and contexts, in slot order', async () => {
+    const { execFileSync } = await import('node:child_process');
+    expect(() => execFileSync(process.execPath, ['--import', './scripts/puzzles/register.mjs', 'scripts/puzzles/canoe-seats-catalog.ts', '--check'], { encoding: 'utf8', stdio: 'pipe' })).not.toThrow();
+  });
+});

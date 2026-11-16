@@ -4911,6 +4911,798 @@
       }
     ],
     [
+      2000,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 0
+      }
+    ],
+    [
+      2001,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 0
+      }
+    ],
+    [
+      2002,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 1
+      }
+    ],
+    [
+      2003,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 1
+      }
+    ],
+    [
+      2004,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 2
+      }
+    ],
+    [
+      2005,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 2
+      }
+    ],
+    [
+      2006,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 3
+      }
+    ],
+    [
+      2007,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 3
+      }
+    ],
+    [
+      2008,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 4
+      }
+    ],
+    [
+      2009,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 4
+      }
+    ],
+    [
+      2010,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 5
+      }
+    ],
+    [
+      2011,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 5
+      }
+    ],
+    [
+      2012,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 6
+      }
+    ],
+    [
+      2013,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 6
+      }
+    ],
+    [
+      2014,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 7
+      }
+    ],
+    [
+      2015,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 7
+      }
+    ],
+    [
+      2016,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 8
+      }
+    ],
+    [
+      2017,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 8
+      }
+    ],
+    [
+      2018,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 9
+      }
+    ],
+    [
+      2019,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 9
+      }
+    ],
+    [
+      2020,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 10
+      }
+    ],
+    [
+      2021,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 10
+      }
+    ],
+    [
+      2022,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 11
+      }
+    ],
+    [
+      2023,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 11
+      }
+    ],
+    [
+      2024,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 12
+      }
+    ],
+    [
+      2025,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 12
+      }
+    ],
+    [
+      2026,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 13
+      }
+    ],
+    [
+      2027,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 13
+      }
+    ],
+    [
+      2028,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 14
+      }
+    ],
+    [
+      2029,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 14
+      }
+    ],
+    [
+      2030,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 15
+      }
+    ],
+    [
+      2031,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 15
+      }
+    ],
+    [
+      2032,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 16
+      }
+    ],
+    [
+      2033,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 16
+      }
+    ],
+    [
+      2034,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 17
+      }
+    ],
+    [
+      2035,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 17
+      }
+    ],
+    [
+      2036,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 18
+      }
+    ],
+    [
+      2037,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 18
+      }
+    ],
+    [
+      2038,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 19
+      }
+    ],
+    [
+      2039,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 308,
+        "puzzle": 19
+      }
+    ],
+    [
+      2040,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 0
+      }
+    ],
+    [
+      2041,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 0
+      }
+    ],
+    [
+      2042,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 1
+      }
+    ],
+    [
+      2043,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 1
+      }
+    ],
+    [
+      2044,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 2
+      }
+    ],
+    [
+      2045,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 2
+      }
+    ],
+    [
+      2046,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 3
+      }
+    ],
+    [
+      2047,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 3
+      }
+    ],
+    [
+      2048,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 4
+      }
+    ],
+    [
+      2049,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 4
+      }
+    ],
+    [
+      2050,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 5
+      }
+    ],
+    [
+      2051,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 5
+      }
+    ],
+    [
+      2052,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 6
+      }
+    ],
+    [
+      2053,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 6
+      }
+    ],
+    [
+      2054,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 7
+      }
+    ],
+    [
+      2055,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 7
+      }
+    ],
+    [
+      2056,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 8
+      }
+    ],
+    [
+      2057,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 8
+      }
+    ],
+    [
+      2058,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 9
+      }
+    ],
+    [
+      2059,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 9
+      }
+    ],
+    [
+      2060,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 10
+      }
+    ],
+    [
+      2061,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 10
+      }
+    ],
+    [
+      2062,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 11
+      }
+    ],
+    [
+      2063,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 11
+      }
+    ],
+    [
+      2064,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 12
+      }
+    ],
+    [
+      2065,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 12
+      }
+    ],
+    [
+      2066,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 13
+      }
+    ],
+    [
+      2067,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 13
+      }
+    ],
+    [
+      2068,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 14
+      }
+    ],
+    [
+      2069,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 14
+      }
+    ],
+    [
+      2070,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 15
+      }
+    ],
+    [
+      2071,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 15
+      }
+    ],
+    [
+      2072,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 16
+      }
+    ],
+    [
+      2073,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 16
+      }
+    ],
+    [
+      2074,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 17
+      }
+    ],
+    [
+      2075,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 17
+      }
+    ],
+    [
+      2076,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 18
+      }
+    ],
+    [
+      2077,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 18
+      }
+    ],
+    [
+      2078,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 19
+      }
+    ],
+    [
+      2079,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 19
+      }
+    ],
+    [
+      2080,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 20
+      }
+    ],
+    [
+      2081,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 20
+      }
+    ],
+    [
+      2082,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 21
+      }
+    ],
+    [
+      2083,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 21
+      }
+    ],
+    [
+      2084,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 22
+      }
+    ],
+    [
+      2085,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 22
+      }
+    ],
+    [
+      2086,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 23
+      }
+    ],
+    [
+      2087,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 309,
+        "puzzle": 23
+      }
+    ],
+    [
       3000,
       {
         "kind": "clean",
@@ -6366,798 +7158,6 @@
         "help": "allowed",
         "bank": 508,
         "puzzle": 1
-      }
-    ],
-    [
-      2000,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 0
-      }
-    ],
-    [
-      2001,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 0
-      }
-    ],
-    [
-      2002,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 1
-      }
-    ],
-    [
-      2003,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 1
-      }
-    ],
-    [
-      2004,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 2
-      }
-    ],
-    [
-      2005,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 2
-      }
-    ],
-    [
-      2006,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 3
-      }
-    ],
-    [
-      2007,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 3
-      }
-    ],
-    [
-      2008,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 4
-      }
-    ],
-    [
-      2009,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 4
-      }
-    ],
-    [
-      2010,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 5
-      }
-    ],
-    [
-      2011,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 5
-      }
-    ],
-    [
-      2012,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 6
-      }
-    ],
-    [
-      2013,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 6
-      }
-    ],
-    [
-      2014,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 7
-      }
-    ],
-    [
-      2015,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 7
-      }
-    ],
-    [
-      2016,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 8
-      }
-    ],
-    [
-      2017,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 8
-      }
-    ],
-    [
-      2018,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 9
-      }
-    ],
-    [
-      2019,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 9
-      }
-    ],
-    [
-      2020,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 10
-      }
-    ],
-    [
-      2021,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 10
-      }
-    ],
-    [
-      2022,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 11
-      }
-    ],
-    [
-      2023,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 11
-      }
-    ],
-    [
-      2024,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 12
-      }
-    ],
-    [
-      2025,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 12
-      }
-    ],
-    [
-      2026,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 13
-      }
-    ],
-    [
-      2027,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 13
-      }
-    ],
-    [
-      2028,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 14
-      }
-    ],
-    [
-      2029,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 14
-      }
-    ],
-    [
-      2030,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 15
-      }
-    ],
-    [
-      2031,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 15
-      }
-    ],
-    [
-      2032,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 16
-      }
-    ],
-    [
-      2033,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 16
-      }
-    ],
-    [
-      2034,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 17
-      }
-    ],
-    [
-      2035,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 17
-      }
-    ],
-    [
-      2036,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 18
-      }
-    ],
-    [
-      2037,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 18
-      }
-    ],
-    [
-      2038,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 19
-      }
-    ],
-    [
-      2039,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 308,
-        "puzzle": 19
-      }
-    ],
-    [
-      2040,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 0
-      }
-    ],
-    [
-      2041,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 0
-      }
-    ],
-    [
-      2042,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 1
-      }
-    ],
-    [
-      2043,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 1
-      }
-    ],
-    [
-      2044,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 2
-      }
-    ],
-    [
-      2045,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 2
-      }
-    ],
-    [
-      2046,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 3
-      }
-    ],
-    [
-      2047,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 3
-      }
-    ],
-    [
-      2048,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 4
-      }
-    ],
-    [
-      2049,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 4
-      }
-    ],
-    [
-      2050,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 5
-      }
-    ],
-    [
-      2051,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 5
-      }
-    ],
-    [
-      2052,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 6
-      }
-    ],
-    [
-      2053,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 6
-      }
-    ],
-    [
-      2054,
-      {
-        "kind": "blind",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 7
-      }
-    ],
-    [
-      2055,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 7
-      }
-    ],
-    [
-      2056,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 8
-      }
-    ],
-    [
-      2057,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 8
-      }
-    ],
-    [
-      2058,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 9
-      }
-    ],
-    [
-      2059,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 9
-      }
-    ],
-    [
-      2060,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 10
-      }
-    ],
-    [
-      2061,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 10
-      }
-    ],
-    [
-      2062,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 11
-      }
-    ],
-    [
-      2063,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 11
-      }
-    ],
-    [
-      2064,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 12
-      }
-    ],
-    [
-      2065,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 12
-      }
-    ],
-    [
-      2066,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 13
-      }
-    ],
-    [
-      2067,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 13
-      }
-    ],
-    [
-      2068,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 14
-      }
-    ],
-    [
-      2069,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 14
-      }
-    ],
-    [
-      2070,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 15
-      }
-    ],
-    [
-      2071,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 15
-      }
-    ],
-    [
-      2072,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 16
-      }
-    ],
-    [
-      2073,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 16
-      }
-    ],
-    [
-      2074,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 17
-      }
-    ],
-    [
-      2075,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 17
-      }
-    ],
-    [
-      2076,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 18
-      }
-    ],
-    [
-      2077,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 18
-      }
-    ],
-    [
-      2078,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 19
-      }
-    ],
-    [
-      2079,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 19
-      }
-    ],
-    [
-      2080,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 20
-      }
-    ],
-    [
-      2081,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 20
-      }
-    ],
-    [
-      2082,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 21
-      }
-    ],
-    [
-      2083,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 21
-      }
-    ],
-    [
-      2084,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 22
-      }
-    ],
-    [
-      2085,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 22
-      }
-    ],
-    [
-      2086,
-      {
-        "kind": "whole",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 23
-      }
-    ],
-    [
-      2087,
-      {
-        "kind": "par",
-        "help": "independent",
-        "bank": 309,
-        "puzzle": 23
       }
     ]
   ],
