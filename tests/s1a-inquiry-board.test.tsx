@@ -187,3 +187,22 @@ it.each([1, 2, 3, 4, 5] as const)('level %i renders every investigation without 
     await act(async () => root!.unmount()); root = undefined;
   }
 });
+
+// Found natively: SVG labels were drawn in viewBox units, so a 140-pt scene shrank them to about 9 pt. The board now
+// divides by the scene's scale; labels reach the School floor (13 pt, 19.5 at AX) unless a reading must fit its box.
+it.each([1, 2, 3, 4, 5] as const)('level %i scene labels reach the School label floor at phone default and AX5', async level => {
+  for (const window of [{ width: 393, height: 852, fontScale: 1 }, { width: 393, height: 852, fontScale: 3.12 }]) {
+    await mount(level, window);
+    const svg = root!.root.findAll(n => String(n.type) === 'Svg')[0];
+    const scale = Math.min(svg.props.height / 210, (window.width - 60 - 12) / 360), floor = window.fontScale >= 1.5 ? 19.5 : 13;
+    const labels = svg.findAll(n => String(n.type) === 'SvgText');
+    if (level > 1) expect(labels.length).toBeGreaterThan(0); // Level 1 shows its labels only after Test.
+    for (const label of labels) {
+      const words = String(label.props.children), size = label.props.fontSize * scale;
+      // A label below the floor only ever shrank to fit the room it was given (`room / (length × 0.6)`).
+      if (size < floor - 0.01) expect(words.length, words).toBeGreaterThanOrEqual(7);
+      else expect(size).toBeGreaterThanOrEqual(floor - 0.01);
+    }
+    await act(async () => root!.unmount()); root = undefined;
+  }
+});

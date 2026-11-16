@@ -44,11 +44,11 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
           <Circle cx={x} cy={y} r={i === spot ? 11 : 4} fill={i === spot ? "#DAE4D9" : "#9AAFB9"} stroke={i === spot ? ink : "none"} strokeWidth={2} />
           {i === spot && <Path d={`M${x} ${y - 11}A11 11 0 0 0 ${x} ${y + 11}Z`} fill="#FFF6CF" />}
           {/* Numbers sit inside the orbit, between each spot and Earth, so none clips or meets the Sun. */}
-          {text(String(i + 1), cx - Math.cos(b) * (rx - label * 1.05), cy + Math.sin(b) * (ry - label * 1.05) + label * 0.35, label * 0.85)}
+          {text(String(i + 1), cx - Math.cos(b) * (rx - label * 1.05), cy + Math.sin(b) * (ry - label * 1.05) + label * 0.35)}
         </G>;
       })}
       {seen ? <MoonDisc x={318} y={92} r={30} phase={spot} /> : unknown(318, 92)}
-      {text("From Earth", 318, 150, label * 0.85, ink, 80)}
+      {text("From Earth", 318, 150, label, ink, 80)}
     </>;
   } else if (topic === "planets") {
     const pair = q.controls.length === 2;
@@ -70,7 +70,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
       {text(`${mass} kg`, x, 109 + label * 0.35, label, ink, 74)}
       <Rect x={x - 46} y={132} width={92} height={18} rx={5} fill="#F8F5E6" stroke={ink} />
       {reading === null ? unknown(x, 50) : <G><Rect x={x - 66} y={30} width={132} height={40} rx={9} fill="#FFF9E9" stroke={ink} />{text(reading, x, 57, label, ink, 124)}</G>}
-      {text(caption, x, 186, label * 0.9, "#FFFCF1", 132)}
+      {text(caption, x, 186, label, "#FFFCF1", 132)}
     </G>;
     if (q.key === "gravity-a" || q.key === "gravity-b") {
       const [m, w] = [masses[at(0)], at(1)];
@@ -116,7 +116,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
       {result === 1 && <Path d={`M${earthX} 82L${moonX} 88L${moonX} 112L${earthX} 118Z`} fill={night} opacity={0.4} />}
       <EarthGlobe x={earthX} y={100} r={26} />
       <MoonDisc x={moonX} y={moonY} r={11} phase={result === 1 ? 0 : 4} />
-      {text(orbit === 1 ? "Orbit tilted" : "Orbit lined up", 205, 196, label * 0.9)}
+      {text(orbit === 1 ? "Orbit tilted" : "Orbit lined up", 205, 196, label)}
       {result !== null && text(["Solar eclipse", "Lunar eclipse", "No eclipse"][result], 205, 30, label)}
       {result === null && unknown(56, 168)}
     </>;
