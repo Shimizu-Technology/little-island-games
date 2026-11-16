@@ -14,7 +14,8 @@ import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { emptyDragSlot, zoneAt, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
-import { pickupTransform, footprintShadow } from "./handFeel";
+import { carryDisplay, pickupTransform, footprintShadow, landingSquash } from "./handFeel";
+import { FRIEND_GIVE, materialGive, materialOf } from "./delight";
 
 export type SocketBases = Record<string, readonly CharacterBase[]>;
 /** Character bases each room's furniture offers; standing is always reachable. */
@@ -117,6 +118,13 @@ const OverlayGroup = memo(function OverlayGroup({
       ],
     };
   });
+  // HD-02: squash about the contact (this view's origin), scaled by material and drop height.
+  const give = root.character ? FRIEND_GIVE : materialGive[root.item ? materialOf(root.item.item) : "wood"];
+  const squash = useAnimatedStyle(() => {
+    const slot = slots.value[index];
+    const s = slot.id === id ? landingSquash(slot, root, give, camera.value.a, clock.value, reduced) : { sx: 1, sy: 1 };
+    return { transform: [{ scaleX: s.sx }, { scaleY: s.sy }] };
+  });
   const footprint = footprintShadow(root);
   const shadow = useAnimatedStyle(() => {
     const slot = slots.value[index];
@@ -182,6 +190,7 @@ const OverlayGroup = memo(function OverlayGroup({
       >
         <View collapsable={false} onLayout={acknowledge}
           style={{ position: "absolute", opacity: 0, width: 1 + pickup.generation, height: 1 }} />
+        <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: 1, height: 1, transformOrigin: [0, 0, 0] }, squash]}>
         {entities.map((entity) => {
           const frame = artFrame(entity, entity.id === root.id && !!root.character);
           const dx = entity.contact.x - root.contact.x,
@@ -241,6 +250,7 @@ const OverlayGroup = memo(function OverlayGroup({
           .map((entity) => (
             <Front key={`front-${entity.id}`} entity={entity} root={root} reduced={reduced} />
           ))}
+        </Animated.View>
       </Animated.View>
     </>
   );
@@ -285,7 +295,7 @@ function CarriedProp({
     const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.settleAt);
     const p = settling ? settleProgress(elapsed, reduced, s.duration) : 0,
       blend = p;
-    const hand = hands[(reduced ? 0 : Math.max(-4, Math.min(4, Math.round(s.lag / 2.5)))) + 4];
+    const hand = hands[carryDisplay(s, clock.value, reduced).sample + 4];
     const x = hand.x + start.x + (end.x - start.x) * p,
       y = hand.y + start.y + (end.y - start.y) * p;
     return { transform: [{ translateX: x + (final.x - x) * blend }, { translateY: y + (final.y - y) * blend }] };

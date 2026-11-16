@@ -19,12 +19,16 @@ export function LivingShape({id,state={},tint='original',reduced=false}:{id:stri
       <Rect data-front="sink" x={10} y={65} width={130} height={73} rx={4} fill={color}/><Rect x={8} y={59} width={134} height={8} rx={3} fill={cream}/><Ellipse cx={76} cy={62} rx={32} ry={4} fill="#A7CDD0"/><Path d="M99 57V34Q99 19 83 24V40" fill="none" stroke="#9FAFA6" strokeWidth={7}/><Path d="M75 70v65M16 73h53v57H16ZM81 73h53v57H81ZM59 87v13m32-13v13" fill="none" stroke="#5B9086"/>
       {on && <G data-water="running"><Path d="M83 40V61" stroke="#8FD3DD" strokeWidth={5}/><Path d="M82 60q-11-6-16-1m18 0q10-6 17-2M72 64h22" fill="none" stroke="#D8F4ED" strokeWidth={3}/></G>}
     </> : id==='stove' ? <>
+      {/* HD-07: the pan is the stove's own cooking place. Food dropped on the stove sits in it;
+          tapping the stove lights the burner under it. */}
       <Rect data-front="oven" x={13} y={61} width={124} height={76} rx={5} fill={color}/><Rect x={10} y={55} width={130} height={7} rx={2} fill={cream}/>
-      <Ellipse cx={39} cy={55} rx={13} ry={2.5} fill={ink}/><Ellipse cx={111} cy={55} rx={13} ry={2.5} fill={ink}/>
-      <Rect x={51} y={32} width={48} height={24} rx={7} fill={wood}/><Path d="M49 35h52m-53 8h-8m61 0h8" stroke={ink} strokeWidth={3}/><Path d="M61 37h27" stroke={cream}/>
-      {[43,75,107].map(x=><Circle key={x} cx={x} cy={73} r={4} fill={cream}/>)}
+      <Ellipse cx={24} cy={56} rx={9} ry={2} fill={ink}/><Ellipse cx={126} cy={56} rx={9} ry={2} fill={ink}/>
+      <Ellipse data-burner={on?'lit':'off'} cx={75} cy={56} rx={24} ry={3.5} fill={on?'#F08A4B':ink} stroke={on?'#D9643A':ink}/>
+      {on && <Path data-flame="lit" d="M52 55q3-6 5 0m8 1q3-7 6 0m9 0q3-7 6 0m8-1q3-6 5 0" fill="#F7B65B" stroke="#E5793F" strokeWidth={1.2}/>}
+      <Path data-pan="stove" d="M44 46Q75 56 106 46L103 52Q75 61 47 52Z" fill="#56676A"/><Ellipse cx={75} cy={46} rx={31} ry={5} fill="#6F8285"/><Ellipse cx={75} cy={46} rx={25} ry={3.4} fill="#83969A" stroke="none"/>
+      <Path d="M105 47L134 40" stroke={wood} strokeWidth={6}/><Path d="M105 47L134 40" stroke={ink} strokeWidth={1}/>
+      {[43,75,107].map((x,i)=><G key={x}><Circle cx={x} cy={73} r={4} fill={on&&i===1?'#F7B65B':cream}/>{i===1&&<Path d={on?'M75 73l3-3':'M75 73v-4'} stroke={ink} strokeWidth={1.5}/>}</G>)}
       <Rect x={30} y={85} width={90} height={43} rx={5} fill="#4D6869"/><Path d="M39 96h72m-67 12h62m-62 10h62" stroke="#ABC9BF" strokeWidth={2}/><Path d="M34 86h82" stroke={wood} strokeWidth={5}/>
-      {on && <Path d="M62 26q-7-6 0-13m13 13q7-6 0-13m13 13q-7-6 0-13" stroke="#D2E6DC" strokeWidth={3}/>}
     </> : id==='kitchen-table' ? <>
       <Path d="M27 71v66m96-66v66" stroke={wood} strokeWidth={8}/><Rect data-front="table" x={10} y={59} width={130} height={13} rx={4} fill={color}/><Path d="M13 60h124" stroke={cream} strokeWidth={3}/>
     </> : id==='tv' ? <>

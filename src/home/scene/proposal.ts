@@ -97,7 +97,10 @@ export function apply(
       const y = move.cell?.y ?? parent?.cell?.y ?? originalParent?.y ?? item.y;
       // Keep the save lean: a drop that landed exactly on its grid point stays as x/y alone.
       const grid = gridToRoom(gridCell(x, y), item.layer === "wall");
-      const exactDrop = attachment.kind === "floor" && (Math.abs(move.contact.x - grid.x) > 0.01 || Math.abs(move.contact.y - grid.y) > 0.01);
+      // The floor point saved is the attachment's. It equals the contact except for the stove's
+      // pan (HD-07), whose food is drawn up in the pan but saved on the floor in front of it.
+      const at = attachment.kind === "floor" ? attachment.at : move.contact;
+      const exactDrop = attachment.kind === "floor" && (Math.abs(at.x - grid.x) > 0.01 || Math.abs(at.y - grid.y) > 0.01);
       const next: Instance = {
         ...rest,
         id: names[move.id],
@@ -106,7 +109,7 @@ export function apply(
         ...(attachment.kind === "surface" ? { on: parentItemId(attachment.parent, names) } : {}),
         ...(attachment.kind === "container" ? { in: parentItemId(attachment.parent, names) } : {}),
         ...(attachment.kind === "staging" ? { staged: true } : {}),
-        ...(exactDrop ? { at: { x: move.contact.x, y: move.contact.y } } : {}),
+        ...(exactDrop ? { at: { x: at.x, y: at.y } } : {}),
         ...(proposal.consume === "drink" && move.id === proposal.id ? { empty: true } : {}),
       };
       rooms[move.room].instances.push(next);

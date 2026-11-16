@@ -142,6 +142,8 @@ function eligible(
   if (!subject.body) return false;
   if (target.kind === "hand") return !!subject.body.holdable;
   if (target.kind === "mouth") return !!subject.body.edible;
+  // HD-07: the stove's pan takes food only; a toy dropped there lands on the floor as usual.
+  if (target.pan) return subject.body.edible === "food" && !subject.children.length;
   if (target.kind === "surface" || target.kind === "container") return !!subject.body.small;
   return false;
 }
@@ -314,7 +316,7 @@ function makeProposal(
 }
 function targetMove(index: RoomIndex, subject: SceneEntity, target: Target): EntityMove {
   "worklet";
-  let cell: GridCell | undefined;
+  let cell: GridCell | undefined = target.cell;
   if (target.attachment.kind === "surface") {
     const parent = index.entities[target.attachment.parent]?.item;
     if (parent) cell = gridCell(parent.x + target.attachment.slot, parent.y);

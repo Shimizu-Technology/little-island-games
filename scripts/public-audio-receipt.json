@@ -6458,7 +6458,21 @@
     "audio/win.wav": "b54ac7c815c4d44748584ea1b5dd08fd3171fd03d983090946de5800e06c820f",
     "audio/wind.m4a": "625ec05a1a7e034a03d9af9b3ae215dcc5866feb1b89c6d5ee8a40b264fee6ac",
     "audio/word-workshop-intro.m4a": "150592654891a2b6251950e8fa05ad1b66042bce91056753f3b153c3434fefc8",
-    "audio/yellow.m4a": "71fc57c6161897eebfc12c53d18cd29fccc4a9045f4594b12e491f0c097f11da"
+    "audio/yellow.m4a": "71fc57c6161897eebfc12c53d18cd29fccc4a9045f4594b12e491f0c097f11da",
+    "home/bubbles.wav": "5b6e6636488e6e88a8947fcc6e5de3d94dfd8360bb595706fccbb82eeae658e0",
+    "home/burp.wav": "dfc51958fbb13cdeff731f74b896ffe2afd6d7e46d7a4b8938b7134b669ec981",
+    "home/clang.wav": "80b2696aaf57bb526177d0d5813debff71f58cd7884c80a2fc11fa421513f559",
+    "home/cloth.wav": "5cd4a9ae1b8222e650d7a2fb7ffa6330a0a0d6a0164e9d22c6f2994b6583969f",
+    "home/knob.wav": "2256570c0f6402c854b2a9cebe6b3d383f4fe2614f030538b50a544f127851e5",
+    "home/lift.wav": "87e2374a89a11498faf4592b74ff06a660c2a799bec8ec0fb78ef50fbf4c41e8",
+    "home/munch.wav": "5ae41661b681c4386f74bf7f6db0cac20e980975f2c981c9bea32c7c9011deec",
+    "home/pick.wav": "51b3fda5a28e9f55e73cd1c44b982052230045265a434871eec0e585c037f117",
+    "home/plop.wav": "c59f0e9d77506ee0e2d19c68e6e77a7c9a032b77eb87b943ad694cd1b7c7387f",
+    "home/rustle.wav": "9831c421da55acfa536f5e0e6b15f230e92dcd89534ce56b9dc02cd98c43b09d",
+    "home/shell.wav": "72b930c7feb0ccf896d3ab0e84ddbe116a6a5e7ef842b360fdcfa6e3077e1440",
+    "home/sizzle.wav": "266b0c8aa463b3ef04250abc930beda10f511da3668cd62900281ac52e4ac5be",
+    "home/splash.wav": "9ba0fd1c0182c8159b8d1b97e88568ab021081a403ede77789eea0447bf22177",
+    "home/wood.wav": "71ac8ddef0bd8e84f86afeed3603b63170021e56e642b025e6010a3e7a9a90e2"
   },
   "speechReceipt": {
     "engine": "Kokoro-82M v1.0",

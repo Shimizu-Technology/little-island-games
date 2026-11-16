@@ -48,6 +48,92 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     room.instances = [...room.instances, ...extra];
     return migrateHome(state) ?? state;
   },
+  // H4: the kitchen with the stove off, two friends near each other and food on the table.
+  delight: () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances.push(instance("mango", "mango", 3, 9), instance("rice", "rice-ball", 7, 10));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot === 2);
+    state.rooms.kitchen.characters = [
+      { slot: 0, anchor: "floor", pose: "stand", x: 5, y: 7 },
+      { slot: 1, anchor: "floor", pose: "stand", x: 13, y: 10 },
+    ];
+    return migrateHome(state) ?? state;
+  },
+  // H4: five snacks on the kitchen floor in front of the Islander (the fifth meal burps).
+  "delight-feast": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances.push(...(["banana", "mango", "rice-ball", "cupcake", "banana"] as const).map((item, n) =>
+      ({ ...instance(`snack-${n}`, item, 0, 0), at: roomPoint(160 + n * 110, 500) })));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 8, y: 5 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4: the beach hut, with the Islander standing beside the bubble bath.
+  "delight-beach": () => {
+    const state = starterHome();
+    state.current = "beach";
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.beach.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 9, y: 6 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4 fix round 1: the stove in the middle of the kitchen (fully on screen on iPad too), food beside it.
+  "delight-stove": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances = state.rooms.kitchen.instances
+      .filter((i) => i.item !== "sink-counter")
+      .map((i) => (i.item === "stove" ? { ...i, x: 7 } : i));
+    state.rooms.kitchen.instances.push(instance("mango", "mango", 4, 6), instance("rice", "rice-ball", 11, 6));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 4, y: 8 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4 fix round 2: the reviewer's lamp layout. Stove at (7,4), a lamp behind it at (7,0) whose
+  // shade overlaps food in the pan, and a mango on open floor to drop into the pan or in front of it.
+  "pan-lamp": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    const stove = state.rooms.kitchen.instances.find((i) => i.item === "stove")!;
+    state.rooms.kitchen.instances = [{ ...stove, x: 7, y: 4 }, instance("lamp-probe", "lamp", 7, 0), instance("mango", "mango", 11, 8)];
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.kitchen.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 2, y: 8 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4 fix round 1: the Islander holding a rice ball, Pip beside her (held things follow reactions).
+  "delight-held": () => {
+    const state = starterHome();
+    state.current = "kitchen";
+    state.rooms.kitchen.instances.push(instance("held", "rice-ball", 0, 0), instance("snack", "banana", 11, 6));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot === 2);
+    state.rooms.kitchen.characters = [
+      { slot: 0, anchor: "floor", pose: "stand", x: 6, y: 7, holding: "held" },
+      { slot: 1, anchor: "floor", pose: "stand", x: 9, y: 7 },
+    ];
+    return migrateHome(state) ?? state;
+  },
+  // H4 fix round 1: the beach hut with the bubble bath in the middle and the Islander beside it.
+  "delight-bath": () => {
+    const state = starterHome();
+    state.current = "beach";
+    state.rooms.beach.instances = state.rooms.beach.instances.map((i) => (i.item === "bubble-bath" ? { ...i, x: 6 } : i.item === "lounger" ? { ...i, x: 12 } : i));
+    state.rooms.home.characters = state.rooms.home.characters.filter((c) => c.slot !== 0);
+    state.rooms.beach.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 4, y: 7 }];
+    return migrateHome(state) ?? state;
+  },
+  // H4: a friend asleep in bed, a lit lamp with friends standing near it.
+  "delight-rest": () => {
+    const state = starterHome();
+    const room = state.rooms.home;
+    room.instances = room.instances.map((i) => (i.id === "lamp" ? { ...i, powered: true } : i));
+    room.characters = [
+      { slot: 0, anchor: "seat", pose: "lie", seatId: "bed", socket: { itemId: "bed", socketId: "pillow" } },
+      { slot: 1, anchor: "floor", pose: "stand", x: 11, y: 4 },
+      { slot: 2, anchor: "floor", pose: "stand", x: 15, y: 4 },
+    ];
+    return migrateHome(state) ?? state;
+  },
   crowded: () => {
     const state = starterHome();
     const room = state.rooms.home;

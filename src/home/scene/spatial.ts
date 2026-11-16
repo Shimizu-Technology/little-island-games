@@ -4,10 +4,11 @@ import { anchorsFor } from "./species";
 import { roomPoint } from "./types";
 import type { Bounds, RoomIndex, RoomPoint, SceneEntity, SceneState } from "./types";
 import type { Character } from "../model";
+import { panSeatsTag } from "./panSeats";
 
-/** Exact revision token; navigation is deliberately excluded. */
+/** Exact revision token; navigation is deliberately excluded. Runtime pan seats count too. */
 export function worldRevision(state: SceneState): string {
-  return JSON.stringify(state.rooms);
+  return JSON.stringify(state.rooms) + Object.values(state.rooms).map(panSeatsTag).join("");
 }
 export function translatedBounds(bounds: Bounds, contact: RoomPoint): Bounds {
   "worklet";
