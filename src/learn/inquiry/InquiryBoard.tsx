@@ -84,7 +84,18 @@ export function InquiryBoard({
     const n = labels.length, short = labels.every((l) => l.length <= 7), sentence = labels.some((l) => l.split(" ").length >= 5);
     if (sentence) return 1;
     const wanted = n >= 6 ? 4 : short || n === 5 ? Math.min(n, short ? 5 : 3) : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
-    return Math.max(1, Math.min(wanted, Math.floor((width + 8) / ((short ? 58 : large ? 104 : 78) + 8))));
+    const most = Math.max(1, Math.min(wanted, Math.floor((width + 8) / ((short ? 58 : large ? 104 : 78) + 8))));
+    // Fewer columns when that makes the block shorter: a label that wraps to three lines in a narrow tile often fits on
+    // one line in a wide one. Estimated from the letters at the capped size (bold, about 0.6 em each).
+    const px = 14 * (large ? CHROME_MAX : 1), line = px * 1.3;
+    const tall = (across: number) => {
+      const room = (width - 8 * (across - 1)) / across - 20;
+      const lines = Math.max(...labels.map((l) => Math.ceil((l.length * 0.6 * px) / room)));
+      return Math.ceil(n / across) * (Math.max(48, lines * line + 12) + 8);
+    };
+    let best = most;
+    for (let across = most - 1; across >= 1; across--) if (tall(across) < tall(best)) best = across;
+    return best;
   };
   const choices = (labels: readonly string[], selected: (i: number) => boolean, onPress: (i: number) => void, verb: string, off?: (i: number) => boolean) => {
     const across = columns(labels), basis = `${Math.floor(100 / across) - 3}%` as `${number}%`;
@@ -125,12 +136,13 @@ export function InquiryBoard({
   return (
     <View style={{ gap: 10 }}>
       {/* At large text the step line names only the current step, so it stays one line. */}
-      <View testID="inquiry-steps" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+      {/* At AX the step line folds into the question block (below) so the drawing and Test keep their room. */}
+      {!large && <View testID="inquiry-steps" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: theme.accent, fontWeight: "900", fontSize: 13 }}>{large ? "" : "INVESTIGATION "}{p.index + 1} / {qs.length}</Copy>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} accessibilityLabel={`Step: ${steps[now]}`} style={{ color: theme.ink, fontSize: 13 }}>
           {large ? `▸${steps[now]}` : steps.map((step, i) => (i === now ? `▸${step}` : step)).join(" · ")}
         </Copy>
-      </View>
+      </View>}
       <BoardColumns drawing={<View style={{ alignSelf: space ? "stretch" : undefined, backgroundColor: "#EEF2F4", borderRadius: 20, padding: 6, gap: 2 }}>
         <View testID={geometry.testID} onLayout={geometry.onLayout}><Scene q={q} settings={s.draft} seen={p.seen} height={geometry.height} label={(large ? 19.5 : 13) / sceneScale} /></View>
         {/* The legend and the "illustrative" note share one wrapped caption, so they cost the board as little height as possible.
@@ -144,7 +156,9 @@ export function InquiryBoard({
         {p.phase !== "setup" && result}
         {/* Title, question and prompts stop at 1.5× so the drawing and Test stay in view together; Hear it reads them. */}
         {/* The title leads the question in one block: one line less between the drawing and Test. */}
-        <Copy testID="inquiry-question" maxFontSizeMultiplier={cap} style={{ fontSize: 16, lineHeight: 22 }}>
+        <Copy testID="inquiry-question" maxFontSizeMultiplier={cap} style={{ fontSize: 16, lineHeight: 22 }}
+          accessibilityLabel={`Investigation ${p.index + 1} of ${qs.length}. Step: ${steps[now]}. ${q.title}. ${q.question}`}>
+          {large && <Span style={{ fontSize: 14, fontWeight: "900", color: theme.accent }}>{p.index + 1}/{qs.length} ▸{steps[now]} · </Span>}
           <Span style={{ fontSize: 17, fontWeight: "900", color: theme.ink }}>{q.title}. </Span>{q.question}
         </Copy>
         {p.phase === "setup" && <CoachSpot active={coach.active}>

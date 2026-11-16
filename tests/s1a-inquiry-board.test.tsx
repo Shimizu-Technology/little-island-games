@@ -337,3 +337,17 @@ it('nested title and legend spans inherit the block cap at AX5', async () => {
     }
   }
 });
+
+// Found natively in fix round 1 (AX5 eclipse plan): three-line "Moon's path" tiles and the step row pushed Test off screen.
+it('at AX5 the step line folds into the question, and long two-word-plus options take one wide line each', async () => {
+  await mount(5, { width: 393, height: 852, fontScale: 3.12 }, session => skipTo(session, q => q.key === 'eclipse-c'));
+  expect(root!.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'inquiry-steps')).toHaveLength(0);
+  const question = root!.root.findAll(n => String(n.type) === 'Text' && n.props.testID === 'inquiry-question')[0];
+  expect(question.props.accessibilityLabel).toMatch(/^Investigation \d of 4\. Step: Predict\. /);
+  const path = root!.root.findAll(n => String(n.type) === 'PressableScale' && /^Set Moon's path: /.test(n.props.accessibilityLabel ?? ''));
+  expect(path).toHaveLength(2);
+  for (const tile of path) expect(String((Array.isArray(tile.props.style) ? Object.assign({}, ...tile.props.style) : tile.props.style).flexBasis)).toBe('97%');
+  await act(async () => root!.unmount()); root = undefined;
+  await mount(5, { width: 393, height: 852, fontScale: 1 }, session => skipTo(session, q => q.key === 'eclipse-c'));
+  expect(root!.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'inquiry-steps')).toHaveLength(1);
+});
