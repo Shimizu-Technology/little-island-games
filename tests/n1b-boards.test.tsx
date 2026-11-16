@@ -270,5 +270,11 @@ describe("Number Hop board", () => {
     expect(has("Help")).toBe(true);
     const jumpText0 = root!.root.findAll((n) => (n.type as string) === "span" && /^\+\d+$/.test(text(n)));
     expect(jumpText0.every((n) => n.props.maxFontSizeMultiplier === 1.4)).toBe(true);
+    // A key's sign and number never break across lines (native AX5: "−10" wrapped on the highlighted key).
+    await act(async () => root!.unmount()); root = undefined;
+    await mountHop(5);
+    const labels = root!.root.findAll((n) => (n.type as string) === "span" && /^[+−]\d+$/.test(text(n)));
+    expect(labels).toHaveLength(4);
+    for (const l of labels) expect(l.props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
   });
 });

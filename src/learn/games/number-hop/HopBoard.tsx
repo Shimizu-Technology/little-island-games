@@ -244,7 +244,8 @@ export function HopBoard(props: BoardProps<HopRound>) {
               disabled={!active || off} onPress={() => { press(); act(["j", k]); }} amount={0.94}
               style={{ flex: 1, minWidth: 56, maxWidth: 110, minHeight: 60, borderRadius: 16, borderWidth: hot ? 4 : 2, borderColor: hot ? C.teal : C.line, backgroundColor: C.paper,
                 alignItems: "center", justifyContent: "center", opacity: off ? 0.4 : 1, shadowColor: C.ink, shadowOpacity: 0.16, shadowOffset: { width: 0, height: 3 }, shadowRadius: 0, elevation: 3 }}>
-              <Text maxFontSizeMultiplier={keyCap} style={{ fontSize: 26, fontWeight: "900", color: j > 0 ? C.teal : C.coral }}>{jumpText(j)}</Text>
+              {/* One line, shrinking to fit: four keys at AX5 broke "−10" across two lines (native fix-round check). */}
+              <Text maxFontSizeMultiplier={keyCap} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={{ fontSize: 26, fontWeight: "900", color: j > 0 ? C.teal : C.coral }}>{jumpText(j)}</Text>
             </PressableScale>;
           })}
         </View>
