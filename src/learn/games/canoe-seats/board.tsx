@@ -204,7 +204,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
         <CluePicture kind={c.k} x={item(c.x)} y={c.y === undefined ? undefined : item(c.y)} seat={c.s} n={p.n} width={Math.min(cardW - 8, (cardH - 6) * CLUE_RATIO)} height={Math.min(cardH - 6, (cardW - 8) / CLUE_RATIO)} />
         {isLit && <View pointerEvents="none" style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: '#2E9D6A', alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 9, height: 5, borderLeftWidth: 2.6, borderBottomWidth: 2.6, borderColor: '#FFFFFF', transform: [{ rotate: '-45deg' }], marginTop: -2 }} /></View>}
         {isUsed && <View pointerEvents="none" style={{ position: 'absolute', left: 10, right: 10, top: cardH / 2 - 2, height: 4, borderRadius: 2, backgroundColor: ink, opacity: 0.7, transform: [{ rotate: '-8deg' }] }} />}
-        {c.k === teach && !met && <View pointerEvents="none" style={{ position: 'absolute', right: 8, top: -10, paddingHorizontal: 7, paddingVertical: 1, borderRadius: 8, backgroundColor: '#E1B251', borderWidth: 1.5, borderColor: ink }}><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 12, fontWeight: '900', color: ink }}>New</Copy></View>}
+        {c.k === teach && !met && <View pointerEvents="none" style={{ position: 'absolute', right: 8, top: -11, paddingHorizontal: 6, borderRadius: 8, backgroundColor: '#E1B251', borderWidth: 1.5, borderColor: ink }}><Copy allowFontScaling={false} style={{ fontSize: 11, lineHeight: 15, fontWeight: '900', color: ink }}>New</Copy></View>}
         <Pulse on={focus.clue === i || c.k === teach && !met && focus.clue === null} reduced={reduced} radius={16} color={focus.clue === i ? '#FFD24A' : '#F3C969'} />
       </PressableScale>;
     })}
@@ -248,7 +248,7 @@ export function CanoeBoard(props: CanoeBoardProps) {
     {finished ?? <>
       {shore}
       {keeperBar}
-      {teachNote && !met && !covered && <Copy testID="canoe-teach-note" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ alignSelf: 'stretch', color: C.ink, fontWeight: '800', fontSize: 15, textAlign: 'center' }}>{teachNote}</Copy>}
+      {teachNote && !met && !covered && (!keepers || p.clues.some((c, i) => c.k === teach && keepers.owner(i) === keepers.keeper)) && <Copy testID="canoe-teach-note" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ alignSelf: 'stretch', color: C.ink, fontWeight: '800', fontSize: 15, textAlign: 'center' }}>{teachNote}</Copy>}
       {cards}
       {pager}
       {captionView}
