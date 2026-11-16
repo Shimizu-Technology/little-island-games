@@ -86,12 +86,22 @@ export function InquiryBoard({
     const wanted = n >= 6 ? 4 : short || n === 5 ? Math.min(n, short ? 5 : 3) : large && n > 2 && (width - 8 * (n - 1)) / n < 96 ? 2 : n;
     const most = Math.max(1, Math.min(wanted, Math.floor((width + 8) / ((short ? 58 : large ? 104 : 78) + 8))));
     // Fewer columns when that makes the block shorter: a label that wraps to three lines in a narrow tile often fits on
-    // one line in a wide one. Estimated from the letters at the capped size (bold, about 0.6 em each).
-    const px = 14 * (large ? CHROME_MAX : 1), line = px * 1.3;
+    // one line in a wide one. Estimated from the words at the capped size (bold, about 0.6 em a letter).
+    // Calibrated on iPhone 15 at AX5: a three-line 21-pt tile measured 129 pt, one line 48 pt.
+    const px = 14 * (large ? CHROME_MAX : 1), line = px * 1.45;
     const tall = (across: number) => {
       const room = (width - 8 * (across - 1)) / across - 20;
-      const lines = Math.max(...labels.map((l) => Math.ceil((l.length * 0.6 * px) / room)));
-      return Math.ceil(n / across) * (Math.max(48, lines * line + 12) + 8);
+      // Greedy word wrap, as the text engine does: a line takes words while they fit.
+      const wrapped = (label: string) => {
+        let count = 1, used = 0;
+        for (const word of label.split(" ")) {
+          const w = word.length * 0.6 * px, gap = used ? 0.3 * px : 0;
+          if (used && used + gap + w > room) { count++; used = w; } else used += gap + w;
+        }
+        return count;
+      };
+      const lines = Math.max(...labels.map(wrapped));
+      return Math.ceil(n / across) * (Math.max(48, lines * line + 20) + 8);
     };
     let best = most;
     for (let across = most - 1; across >= 1; across--) if (tall(across) < tall(best)) best = across;
