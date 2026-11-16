@@ -14,11 +14,12 @@ export function lagoonHint(p: LatinPuzzle, values: readonly number[]): HintPlan 
 /** Symbol words are local presentation. Row/column coordinates keep their ordinary names. */
 export function lagoonCue(p: LatinPuzzle, values: readonly number[], pictures?: readonly string[]): Cue {
   const plan = lagoonHint(p, values), cue = cueFor(p, plan);
+  const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
   if (!pictures) return cue;
   const pictureWords = (text: string) => text.replace(/\bnumbers\b/g, 'pictures').replace(/\bnumber\b/g, 'picture');
   if (plan.kind === 'clash' && plan.rule.kind === 'repeat') {
     const rule = plan.rule;
-    return { ...cue, think: `${pictures[rule.value - 1]} is in ${groupName(p, rule.group)} twice. Each picture goes once in a ${rule.group.kind}.` };
+    return { ...cue, think: `${sentence(pictures[rule.value - 1])} is in ${groupName(p, rule.group)} twice. Each picture goes once in a ${rule.group.kind}.` };
   }
-  return { ...cue, look: pictureWords(cue.look), think: pictureWords(cue.think), show: plan.kind === 'place' ? cue.show.replace(/^\d+/, pictures[plan.value - 1]) : pictureWords(cue.show) };
+  return { ...cue, look: pictureWords(cue.look), think: pictureWords(cue.think), show: sentence(plan.kind === 'place' ? cue.show.replace(/^\d+/, pictures[plan.value - 1]) : pictureWords(cue.show)) };
 }

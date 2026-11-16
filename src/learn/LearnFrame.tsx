@@ -1,3 +1,4 @@
+import { LagoonHintScroll } from './games/logic-lagoon/hintScrollHost';
 import { BoardSpaceProvider, BoardSpaceContent } from './BoardSpace';
 import { measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS } from './boardGeometry';
 import { coveReady } from './generated/readiness';
@@ -65,7 +66,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const engine = engines[id],
     view = views[id];
   const saved = store.save.learn?.[id];
-  const scroll = useRef<ScrollView | null>(null);
+  const scroll = useRef<ScrollView | null>(null), lagoonOffset = useRef(0);
+  const lagoonScroll = useMemo(() => id === "logic-lagoon" ? { scroll, offset: lagoonOffset } : null, [id]);
   // A board that owns a touch (Slip Tide's water) holds the page scroll until release, as Cove grids do.
   const [held, setHeld] = useState(false);
   const layoutKey = `${width}x${height}`;
@@ -395,7 +397,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       <IslandBackdrop island={island} colors={theme}/>
       {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16 }}>{pinned}</View>}
       <GridInteraction.Provider value={setHeld}>
-      <ScrollView onLayout={event => setViewport({ height: event.nativeEvent.layout.height, key: layoutKey })} key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+      <ScrollView {...(id === "logic-lagoon" ? { onScroll: (event: import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>) => { lagoonOffset.current = event.nativeEvent.contentOffset.y; }, scrollEventThrottle: 16 } : {})} onLayout={event => setViewport({ height: event.nativeEvent.layout.height, key: layoutKey })} key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {scrolled}
         {width >= 600 && !large && saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
@@ -413,7 +415,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             <Celebrate burst={burst.n} big={burst.big} />
             <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}><BoardSpaceProvider key={saved.id} geometryEnabled={MEASURED_SCHOOL_BOARDS.has(id)} space={boardSpace} onReveal={revealBoard}>
             <BoardSpaceContent testID="learn-board-inset" onLayout={e => { const layout = e.nativeEvent.layout; boardInset.current = layout.y; setBoardLayout(old => old.inset === layout.y && old.width === layout.width && old.insetAt === width ? old : { ...old, inset: layout.y, width: layout.width, insetAt: width }); }}>
-            <Board
+            <LagoonHintScroll.Provider value={lagoonScroll}><Board
               key={saved.id}
               session={saved}
               update={update}
@@ -430,7 +432,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               coach={{ active: coachActive && boardActive, done: coachDone }}
               cheer={cheer}
             />
-            </BoardSpaceContent>
+            </LagoonHintScroll.Provider></BoardSpaceContent>
             </BoardSpaceProvider></TextFit.Provider></StepReveal.Provider>
           </View>
           </LearningCompanion>

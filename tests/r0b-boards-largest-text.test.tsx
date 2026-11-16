@@ -354,7 +354,9 @@ it('Logic Lagoon v2 at AX5: picture and six-wide boards retain fitted text and t
   for (const level of [1, 4] as const) {
     const session = sessionFor('logic-lagoon', level);
     session.state = engine.create(session.options, { rng: () => 17 / 0xffffffff, starter: 0, skills: {}, today: 0 });
-    // Mount the current board while retaining the two legacy guard cases above.
+    // This guard mocks NativeGrid and checks the Notes-label caps; real numeric
+    // GridShell geometry/AX5 floors are covered in school-board-ports.test.tsx.
+    // Retain the two legacy guard cases above.
     await act(async () => { root = create(<TextFit.Provider value={region}><NewLogicBoard session={session as never} update={() => {}} practice={() => {}} assistance={() => {}} skills={{}} sound={() => {}} stopSound={() => {}} soundOn width={W} height={H} active coach={{ active: false, done: () => {} }} cheer={() => {}} /></TextFit.Provider>); });
     expect(textNode(root!, 'Check')).toBeDefined();
     for (const t of texts(root!)) expect(drawnSize(t), textOf(t)).toBeLessThanOrEqual(2 * ((flat(t.props.style).fontSize as number) ?? 14) + .01);

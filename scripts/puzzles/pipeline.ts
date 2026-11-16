@@ -11,7 +11,7 @@ import type { BandQuota, FamilySpec } from '../../src/puzzles/types';
 import { utf8Bytes } from '../../src/state/saveBits';
 import { BYTE_MODEL, verifyByteModel, type ByteModelRow, type FamilyActual } from './byte-model';
 import { receiptBody, receiptIssues, type BakeFacts } from './receipts';
-import { assertClaimable, blockStart, readReservations, slotRangeIssues, slotRangesFile, type SlotClaim } from './slots';
+import { assertClaimable, assertSequentialSlot, blockStart, readReservations, slotRangeIssues, slotRangesFile, type SlotClaim } from './slots';
 
 export type CatalogDirs = { content: string; receipts: string };
 export const productionDirs: CatalogDirs = { content: 'src/content/puzzles', receipts: 'content/puzzles/receipts' };
@@ -122,6 +122,7 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
   const previous = families.get(spec.id) ?? null;
   // A claim that cannot take its first slot fails before any generation runs.
   if (options.claim) claimSlot(options.claim, families, previous, options.claim.range.first);
+  else assertSequentialSlot(dirs, root.nextSlot);
   const ctx: CertifyContext = { budget, seenExact: new Set(), seenSemantic: new Set() };
   const have: Record<string, number> = Object.fromEntries(spec.bands.map(b => [b.id, 0]));
   const publishedTemplates = new Map<string, Map<string, number>>();
@@ -244,6 +245,7 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, cur
         nextSlot = Math.max(nextSlot, slot + 1);
         nextOrdinal = Math.max(nextOrdinal, first + group.length);
       } else {
+        assertSequentialSlot(dirs, nextSlot);
         slot = nextSlot++;
         if (slot >= BANK_CAPS.slots) throw new Error('The catalog has no bank slots left.');
         first = nextOrdinal;

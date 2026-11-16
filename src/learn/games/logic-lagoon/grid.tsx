@@ -12,6 +12,7 @@ import { specFor } from './engine';
 import { BoardPrimary, BoardRow, useBoardColumns, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import { LARGE_TEXT } from '../../../components/wordFit';
+import { useHintScroll } from './hintScroll';
 import type { CornerClues } from '../../../puzzles/grid/cornerNotes';
 
 const boxBorders = (p: LatinPuzzle) => (cell: number) => {
@@ -35,6 +36,7 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
   const [ladder, setLadder] = useState({ edits: -1, stage: 0 });
   const cue = useMemo(() => lagoonCue(p, state.values, pictures), [p, state.values, pictures]);
   const stage = ladder.edits === state.edits && assisted ? ladder.stage : 0;
+  const { card: hintCardRef, drawing: hintDrawingRef, remember: rememberHintScroll, onLayout: revealHint } = useHintScroll(stage, school);
   const tints = useMemo(() => new Map(cue.focus.map(i => [i, 2 as const])), [cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
   const overlay = useMemo(() => p.cages.length ? cageLayer(p, { labels: false }) : p.less.length ? markLayer(p) : undefined, [p]);
@@ -51,14 +53,14 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
   // The teacher's maximum is six-wide. Leave room for both pad rows and Notes beside Check.
   const gridWidth = school ? Math.max(columnWidth, floor * p.size + rim) : Math.min(short ? width - 192 : width, Math.max(304, height * .36));
   const size = school ? Math.max(floor, Math.min(naturalCell, Math.floor((geometry.height - rim) / p.size))) : Math.min(56, Math.floor((width - 12) / p.size));
-  const hintCard = !!stage && <View accessibilityLiveRegion="polite" style={{ gap: 8, padding: 10, borderRadius: 12, backgroundColor: '#FFF4D6' }}>
+  const hintCard = !!stage && <View testID="lagoon-hint-card" ref={hintCardRef} collapsable={false} onLayout={revealHint} accessibilityLiveRegion="polite" style={{ gap: 8, padding: 10, borderRadius: 12, backgroundColor: '#FFF4D6' }}>
     <Copy maxFontSizeMultiplier={1.5}>{stage === 1 ? cue.look : cue.think}</Copy>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{stage === 1 && <Button compact quiet disabled={!active} onPress={() => setLadder({ edits: state.edits, stage: 2 })}>Why?</Button>}<Button compact disabled={!active || !cue.technique} onPress={() => { reveal(); setLadder({ edits: -1, stage: 0 }); }}>{cue.technique === 'clash' || cue.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button><Button compact quiet disabled={!active} onPress={() => { setLadder({ edits: -1, stage: 0 }); if (cue.target !== undefined) dispatch({ type: 'select', cell: cue.target }); }}>I’ll try it</Button></View>
   </View>;
   const Workspace = school && short ? BoardRow : View;
   const drawing = pictures ? <>
       <Copy testID="logic-status" maxFontSizeMultiplier={1.3}>Tap a square, then choose a picture.</Copy>
-      <View {...(school ? { testID: geometry.testID, onLayout: geometry.onLayout } : {})} style={{ alignSelf: 'center', borderWidth: 2, borderColor: '#668A66' }}>
+      <View {...(school ? { ref: hintDrawingRef, collapsable: false, testID: geometry.testID, onLayout: geometry.onLayout } : {})} style={{ alignSelf: 'center', borderWidth: 2, borderColor: '#668A66' }}>
         {Array.from({ length: p.size }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: p.size }, (_, c) => {
           const i = r * p.size + c, v = state.values[i], topBox = !!p.box && r > 0 && r % p.box === 0, leftBox = !!p.box && c > 0 && c % (p.size / p.box) === 0;
           const line = stage && cue.focus.includes(i) ? C.gold : '#B6CCAB';
@@ -67,13 +69,13 @@ export function LagoonGrid({ puzzle: p, state, dispatch, assisted, help, reveal,
       </View>
       <View testID="logic-values" style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>{pictures.map((symbol, i) => <PressableScale key={symbol} accessibilityRole="button" accessibilityLabel={`Place ${symbol}`} disabled={!active || !!p.givens[state.selected]} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: i + 1 })} style={{ width: 54, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#FDF6DF', borderWidth: 2, borderColor: '#87AA72' }}><SeaGlyph kind={symbol} size={40}/></PressableScale>)}</View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button compact quiet disabled={!active || !state.undo.length} onPress={() => dispatch({ type: 'undo' })}>Undo</Button><Button compact quiet disabled={!active || !state.redo.length} onPress={() => dispatch({ type: 'redo' })}>Redo</Button><Button compact quiet disabled={!active} onPress={() => dispatch({ type: 'write', cells: [state.selected], value: 0 })}>Erase</Button></View>
-    </> : <View testID="lagoon-numeric-fit" style={{ width: gridWidth, maxWidth: school ? undefined : '100%' }}><NativeGrid spec={specFor(p)} state={state} dispatch={dispatch} active={active} width={gridWidth} mistakes="Plain" borders={borders} overlay={overlay} cornerClues={cornerClues} schoolLayout={schoolLayout} cellWords={cellWords} tints={stage ? tints : undefined} status={title}/></View>;
+    </> : <View testID="lagoon-numeric-fit" {...(school ? { ref: hintDrawingRef, collapsable: false } : {})} style={{ width: gridWidth, maxWidth: school ? undefined : '100%' }}><NativeGrid spec={specFor(p)} state={state} dispatch={dispatch} active={active} width={gridWidth} mistakes="Plain" borders={borders} overlay={overlay} cornerClues={cornerClues} schoolLayout={schoolLayout} cellWords={cellWords} tints={stage ? tints : undefined} status={title}/></View>;
   const workspace = <Workspace testID={school && short ? 'school-drawing-row' : 'lagoon-workspace'} style={{ flexDirection: school && short ? 'row-reverse' : short ? 'row' : 'column', gap: 8, ...(short ? { alignItems: 'flex-start' } : {}) }}>
     <View testID="lagoon-controls" style={{ gap: 8, ...(short ? { width: 180 } : {}) }}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
       <Copy maxFontSizeMultiplier={1.3} style={{ color: C.ink, fontWeight: '800', flexGrow: 1 }}>{title}</Copy>
       {check && pictures && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}
-      <Button compact quiet maxFontSizeMultiplier={1.3} disabled={!active} onPress={() => { help(); setLadder({ edits: state.edits, stage: 1 }); }}>Hint</Button>
+      <Button compact quiet maxFontSizeMultiplier={1.3} disabled={!active} onPress={() => { rememberHintScroll(); help(); setLadder({ edits: state.edits, stage: 1 }); }}>Hint</Button>
     </View>
     {!pictures && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {check && <Button compact maxFontSizeMultiplier={1.3} disabled={!active} onPress={check}>Check</Button>}

@@ -524,3 +524,15 @@ it('Weather keeps the gauge reading below the bulb at the AX floor',async()=>{
  // Keep even a conservative 0.8-em cap height clear of the actual bulb and stroke.
  expect(Number(first.props.y)-Number(reading.props.fontSize)*.8).toBeGreaterThanOrEqual(Number(bulb.props.cy)+Number(bulb.props.r)+.5);
 });
+
+it.each([1,3.12])('paused v1 Logic Lagoon keeps its measured picture port at scale %s',async fontScale=>{
+ const {engine:legacy}=await import('../src/learn/games/logic-lagoon/legacy');
+ const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale},3,true,session=>({...session,state:legacy.create(session.options,{rng:()=>17/0xffffffff,skills:{},starter:0,today:0})}));
+ expect(r.root.findByType(B10).props.session.state.version).toBe(1);
+ expect(view('school-logic-lagoon-drawing')).toBeDefined();
+ const legacyHeight=()=>{const d=view('school-logic-lagoon-drawing'),cells=d.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Row ')),cell=flat(cells[0].props.style);return Math.sqrt(cells.length)*(Number(cell.height)+2*Number(cell.margin))+2*Number(flat(d.props.style).padding);};
+ const natural=legacyHeight();boundary={y:0,height:natural+400};
+ await act(async()=>{view('school-logic-lagoon-drawing').props.onLayout({nativeEvent:{layout:{height:natural}}});const pending=[...frames.values()];frames.clear();pending.forEach(f=>f(0));});
+ expect(legacyHeight()).toBe(198); // four 44pt cells, their 1pt margins, and the legacy 7pt rim
+ expect(r.root.findAllByType(BoardPrimary).length).toBeGreaterThan(0);
+});

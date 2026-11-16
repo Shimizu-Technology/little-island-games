@@ -132,6 +132,8 @@ The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/st
 
 **Lead-approved additive prop, 16 November 2026 (T1 F-frame-2 catch-up):** optional `schoolLayout: { height, minimumCell, testID, onLayout }` supplies a measured School drawing allocation. School cells keep a 44-pt plain floor, or 56 pt default / 72 pt AX for cage cells; overflow scrolls instead of shrinking below that floor. Only this opt-in reserves a value band below cage captions. When absent, GridShell's rendering/props, legacy height budget, corner-note logic, gestures and AX behavior stay byte-for-byte unchanged. T1 records baseline layout/prop comparisons for Sudoku, Killer and Cage Math in Challenge and Cove hosts, plus measured School and native evidence. This changes no rule, saved state, legacy budget constant or gesture handler.
 
+**Lead-approved shared rendering fix, 16 November 2026 (T1 round 2):** word-fit the Erase key at every text size, using its erase icon with spoken label “Erase” if the word cannot fit. Draw rule lines above caption backgrounds so the frame and box lines stay intact. These intentional shared visual changes supersede only those parts of the older render-signature baseline; School-absence tests normalize exactly these approved deltas. No gesture, save, rule or budget change.
+
 **Lead change:** props, gesture or scroll arbitration, mistake settings, or the budget constants below.
 
 ## Word pipeline gates

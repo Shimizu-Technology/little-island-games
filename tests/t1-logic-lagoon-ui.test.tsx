@@ -95,3 +95,25 @@ it('Hint availability on a full Challenge grid does not signal whether it is cor
     expect(hint.props.disabled).toBe(false);
   }
 });
+
+it('every box-dependent Sprout puzzle and a numeric box board draw their rule outlines', async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const {default:pool}=await import('../src/learn/games/logic-lagoon/supply-v1.json');
+ const {decodePuzzle}=await import('../src/puzzles/latin/core'),{search}=await import('../src/puzzles/latin/solver');
+ const dependent=pool.sprout.map(row=>decodePuzzle(row.puzzle)!).filter(p=>search({...p,box:0},2).count>1);expect(dependent.length).toBe(22);
+ for(const p of dependent){
+  await act(async()=>{screen=create(<LagoonGrid puzzle={p} state={{version:1,values:[...p.givens],notes:Array(16).fill(0),selected:0,tool:1,pencil:false,undo:[],redo:[],edits:0}} assisted={false} dispatch={()=>{}} help={()=>{}} reveal={()=>{}} title="Boxes" pictures={['shell','fish','star','crab']} active width={337}/>);});
+  const cells=screen!.root.findAllByType('button').filter(n=>/^Row /.test(n.props.accessibilityLabel??''));expect(cells).toHaveLength(16);
+  cells.forEach((c,i)=>{expect(c.props.style.borderTopWidth).toBe(i>=8&&i<12?3:1);expect(c.props.style.borderLeftWidth).toBe(i%4===2?3:1);});
+  await act(async()=>screen!.unmount());screen=undefined;
+ }
+ const p=dependent[0];await act(async()=>{screen=create(<LagoonGrid puzzle={p} state={boardAt({version:2,catalog:1,level:3,seed:8,index:0,total:4,board:null,helped:false},p)} assisted={false} dispatch={()=>{}} help={()=>{}} reveal={()=>{}} title="Numeric boxes" active width={337}/>);});
+ const native=screen!.root.find(n=>typeof n.props.borders==='function');expect(native.props.borders(56)).toContain('M0 112H224');expect(native.props.borders(56)).toContain('M112 0V224');
+});
+
+it('picture placement and clash cues start with capitals',async()=>{
+ const {lagoonCue}=await import('../src/learn/games/logic-lagoon/teaching');
+ const s={version:2 as const,catalog:1 as const,level:3,seed:8,index:0,total:4 as const,board:null,helped:false},t=taskAt(s);if(t.kind!=='grid')throw Error('grid');
+ const cue=lagoonCue(t.puzzle!,t.puzzle!.givens,t.symbols);expect(cue.show[0]).toBe(cue.show[0].toUpperCase());
+ const values=Array(16).fill(0);values[0]=values[1]=1;const clash=lagoonCue(t.puzzle!,values,t.symbols);expect(clash.think).toMatch(/^Shell /);
+});

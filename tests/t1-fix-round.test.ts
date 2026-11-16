@@ -119,7 +119,7 @@ it('picture-rung hints use picture words, including clashes and revealed placeme
   const { lagoonCue } = await import('../src/learn/games/logic-lagoon/teaching');
   const t = taskAt(state); if (t.kind !== 'grid') throw new Error();
   const cue = lagoonCue(t.puzzle!, boardAt(state, t.puzzle!).values, t.symbols);
-  expect(cue.show).toMatch(/^(shell|fish|star) goes/);
+  expect(cue.show).toMatch(/^(Shell|Fish|Star) goes/);
   const cell = t.givens.indexOf(0), wrong = move(state, { type: 'write', cells: [cell], value: t.solution[cell] % 3 + 1 });
   const clash = lagoonCue(t.puzzle!, boardAt(wrong, t.puzzle!).values, t.symbols);
   expect(clash.think).not.toMatch(/\bnumber(s)?\b|^[1-3] is in/);

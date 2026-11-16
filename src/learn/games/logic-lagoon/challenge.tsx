@@ -40,4 +40,4 @@ return withCheckpoints(legacy, puzzles, descriptors, (p: ChallengeViewProps<Stat
 });
 };
 export const registration = makeRegistration();
-registration.dareHelp = 'Dares are optional. Check counts the squares to fill or change; it never points them out. Hints keep your finish without a dare mark.';
+registration.dareHelp = 'Dares are optional. Check counts the squares to fill or change; it never points them out. Hints keep your finish without a dare mark. Hint costs the independent award even when the filled grid is already correct.';

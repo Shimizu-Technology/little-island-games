@@ -7,6 +7,7 @@ import { GridShell } from '../src/puzzles/grid/GridShell';
 import { createGrid, type GridSpec } from '../src/puzzles/grid/model';
 import { GridChromeContext, challengeChrome } from '../src/puzzles/grid/budget';
 import { GridPreferences } from '../src/puzzles/grid/preferences';
+import { wordFitMultiplier } from '../src/components/wordFit';
 import { defaults } from '../src/cove/local';
 import { cageCorners, cageLayer } from '../src/puzzles/latin/clues';
 import type { LatinPuzzle } from '../src/puzzles/latin/core';
@@ -35,6 +36,28 @@ const baseline: Baseline = capture ? { source: '23744722 (merged frame/R1a, befo
 // Preserve missing-vs-undefined props and every layout value; callbacks compare
 // their callable signature rather than identities allocated by different renders.
 const signature = (tree: unknown) => JSON.stringify(tree, (_key, v) => typeof v === 'function' ? { function: v.name, arity: v.length } : v === undefined ? { undefined: true } : v);
+// Round 2 explicitly authorizes two shared deltas: the Erase presentation and
+// drawing grid lines over captions. Normalize only those for the original 237
+// School-absence proof; grid-round2 tests independently assert their real output.
+function priorPresentation(tree: unknown): unknown {
+ if(Array.isArray(tree))return tree.map(priorPresentation);
+ if(!tree||typeof tree!=='object')return tree;
+ const n=tree as {type?:string;props?:{label?:string;style:Record<string,unknown>&{width:number;paddingHorizontal?:number};icon?:string;numberOfLines?:number;maxFontSizeMultiplier?:number};children?:unknown[]};
+ const copy={...n,props:n.props?{...n.props}:undefined,children:n.children === null ? null : n.children?.map(priorPresentation)};
+ if(copy.type==='Button'&&copy.props?.label==='Erase'){
+  const width=copy.props.style.width;copy.props.style={...copy.props.style};
+  if(window.fontScale<1.5)delete copy.props.style.paddingHorizontal;
+  copy.props.label='Enter Erase';delete copy.props.icon;delete copy.props.numberOfLines;
+  copy.props.maxFontSizeMultiplier=window.fontScale>=1.5?wordFitMultiplier('Erase',15,width-10,1.3):undefined;
+  copy.children=['Erase'];
+ }
+ if(copy.type==='AnimatedView'&&copy.children&&JSON.stringify(copy.children).includes('corner-clue-')){
+  const grid=(v:unknown):boolean=>!!v&&typeof v==='object'&&(JSON.stringify(v).includes('"stroke":"#A1B4A9"'));
+  const index=copy.children.findIndex(grid);
+  if(index>=0){const [line]=copy.children.splice(index,1);const first=copy.children.findIndex(v=>!!v&&typeof v==='object'&&(v as typeof n).props?.style?.position==='absolute');copy.children.splice(first<0?copy.children.length:first,0,line);}
+ }
+ return copy;
+}
 let screen: ReactTestRenderer | undefined;
 afterEach(async () => { if (screen) await act(async () => screen!.unmount()); screen = undefined; });
 afterAll(() => { if (capture) writeFileSync(fixture, JSON.stringify(baseline, null, 2) + '\n'); });
@@ -50,8 +73,8 @@ it.each((['Cove', 'Challenge'] as const).flatMap(host => (['sudoku', 'killer', '
   const chrome = host === 'Challenge' ? challengeChrome({ insets: { top: 59, bottom: 34 }, barPinned: true, short: false, chip: scale >= 1.5 }) : { top: 0, bottom: 0, bar: 0 };
   const render = (explicitUndefined: boolean) => <GridChromeContext.Provider value={chrome}><GridPreferences.Provider value={{ ...defaults(), mistakes: host === 'Cove' ? 'Friendly' : 'Plain' }}><GridShell spec={spec} state={state} active width={width - 60} dispatch={() => {}} conflicts={[2]} tints={new Map([[2, 3], [3, 4]])} cornerClues={p.cages.length ? cageCorners(p) : undefined} overlay={p.cages.length ? cageLayer(p, { labels: false }) : undefined} {...(explicitUndefined ? { schoolLayout: undefined } : {})}/></GridPreferences.Provider></GridChromeContext.Provider>;
   await act(async () => { screen = create(render(false)); });
-  const before = signature(screen!.toJSON()), key = `${host}/${kind}/${width}/${scale}`;
+  const before = signature(priorPresentation(screen!.toJSON())), key = `${host}/${kind}/${width}/${scale}`;
   if (capture) baseline.cases[key] = hash(before); else expect(hash(before), key).toBe(baseline.cases[key]);
   await act(async () => screen!.update(render(true)));
-  expect(signature(screen!.toJSON())).toBe(before);
+  expect(signature(priorPresentation(screen!.toJSON()))).toBe(before);
 });
