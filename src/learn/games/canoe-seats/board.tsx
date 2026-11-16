@@ -79,7 +79,7 @@ function Spark({ t, angle, reach, color }: { t: ReturnType<typeof useSharedValue
 export function CanoeBoard(props: CanoeBoardProps) {
   const { puzzle: p, pos, used, lights, won, missed, canCheck, active, width, title, hear, onPlace, onToggleUsed, onCheck, onUndo, onReset, canUndo, canReset, onLights, keepers, coach, cue = null, notice, help, finished, footer, header } = props;
   const reduced = useReducedMotion(), window = useWindowDimensions(), large = window.fontScale >= LARGE_TEXT;
-  const [picked, setPicked] = useState<number | null>(null), [heard, setHeard] = useState<number | null>(null), [caption, setCaption] = useState(''), [page, setPage] = useState(0);
+  const [held, setPicked] = useState<number | null>(null), [heard, setHeard] = useState<number | null>(null), [caption, setCaption] = useState(''), [page, setPage] = useState(0);
   const school = useBoardSpace();
   // Legibility first: the drawing never shrinks a seat picture below its floor; the page scrolls instead.
   const floor = seatFloor(window.width), natural = seatForWidth(width, p.n, window.width);
@@ -88,10 +88,9 @@ export function CanoeBoard(props: CanoeBoardProps) {
   const hullW = canoeWidth(seat, p.n), hullH = canoeHeight(seat, p.attrs), pad = seat * HULL_PAD;
   const focus = won ? { clue: null, cross: null } : focusOf(cue);
   const covered = !!keepers?.cover;
-  // A new board clears any picked-up item and caption; the board key changes with the puzzle.
-  useEffect(() => { setPicked(null); setHeard(null); setCaption(''); setPage(0); }, [p]);
-  useEffect(() => { if (won || covered || !active) setPicked(null); }, [won, covered, active]);
-  const live = !won && active && !covered;
+  // Hosts key the board by puzzle, so a new board starts with nothing picked up. A win, a hand-over
+  // or a pause puts down whatever was held.
+  const live = !won && active && !covered, picked = live ? held : null;
 
   const drop = useCallback((item: number, seatIndex: number) => {
     if (!live) return;

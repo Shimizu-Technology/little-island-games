@@ -6,7 +6,7 @@ import { PuzzleHelp, type HintCommit, type HintSnapshot } from '../../../puzzles
 import { CanoeBoard } from './board';
 import { canoeStep, CHECK, HELP, hinted, ordinaryAllowed, ordinaryFull, RESET, UNDO, USED, type Action, type State } from './challenge';
 import { canoeHelpRules, canoeView, type CanoeView, type HelpMove } from './help';
-import { complete } from './rules';
+import { complete, puzzleTuple } from './rules';
 import { clueKey } from './speech';
 
 type Accepted = { key: string; state: State };
@@ -80,7 +80,8 @@ export function ChallengeBoard({ state, dispatch, active, width, sessionKey, com
     return !!key && hasSpeech(key) && play(key);
   }, [play, state.puzzle]);
   const full = ordinaryFull(state);
-  return <CanoeBoard puzzle={state.puzzle} pos={state.pos} used={state.used} lights={state.lights} won={state.won} missed={state.checked}
+  // Keyed by puzzle, so nothing picked up or heard carries over to the next one.
+  return <CanoeBoard key={puzzleTuple(state.puzzle).join('|')} puzzle={state.puzzle} pos={state.pos} used={state.used} lights={state.lights} won={state.won} missed={state.checked}
     canCheck={whole && !state.won && !state.checked && complete(state.puzzle, state.pos)} active={active} width={width} title="Canoe Seats" hear={hear} cue={cue}
     notice={full ? 'That is a lot of moves! Help can still show the way, or choose another puzzle.' : undefined}
     onPlace={(item, seat) => enqueue(item * 8 + seat + 1)} onToggleUsed={clue => { enqueue(USED + clue); }} onCheck={() => { enqueue(CHECK); }}
