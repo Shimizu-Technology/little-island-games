@@ -982,7 +982,7 @@ export function HomeScreen({
               }}
             />
           )}
-          {lab && <View pointerEvents="none" accessible accessibilityLabel="Release frame probe"
+          {lab && debug && <View pointerEvents="none" accessible accessibilityLabel="Release frame probe"
             style={{ position: "absolute", left: 8, bottom: 60, backgroundColor: "#FFF8E9", padding: 8, borderRadius: 8, maxWidth: "96%" }}>
             <Text style={{ fontSize: 12, color: "#284F4B" }}>Release ±500ms · max {probeMax.toFixed(1)}ms</Text>
             {releaseProbes.map((probe) => <Text key={probe.at} style={{ fontSize: 11, color: "#284F4B" }}>

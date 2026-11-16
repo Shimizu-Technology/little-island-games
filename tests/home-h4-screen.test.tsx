@@ -505,3 +505,12 @@ it('H4b a stale native presentation callback cannot extend a newer meal', async 
   await act(async () => { vi.advanceTimersByTime(651); });
   expect(harness.scene.meals['character/0']).toBeUndefined();
 });
+
+it('H4b lab debug toggle hides the release probe so AX5 diagnostics cannot cover the gesture', async () => {
+  await act(async () => { root = create(<HomeScreen initialState={labFixtures['rig-meal']()} lab />); });
+  expect(root.root.findAllByProps({ accessibilityLabel: 'Release frame probe' })).toHaveLength(1);
+  await act(async () => root.root.findByProps({ label: 'Toggle debug' }).props.onPress());
+  expect(root.root.findAllByProps({ accessibilityLabel: 'Release frame probe' })).toHaveLength(0);
+  await act(async () => root.root.findByProps({ label: 'Toggle debug' }).props.onPress());
+  expect(root.root.findAllByProps({ accessibilityLabel: 'Release frame probe' })).toHaveLength(1);
+});
