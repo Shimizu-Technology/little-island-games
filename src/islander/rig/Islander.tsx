@@ -3,7 +3,7 @@ import Svg, { G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { buildFor, defaultLook, normalizeLook, outfitPalettes, outfitDefaults, skinTones, type IslanderLook } from '../look';
 import { resolvePose, isLying, poseBox, type Point, type Pose, type Side, type View } from './poses';
 import { anchorsFor } from './wardrobe';
-import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback } from './character';
+import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback, type CarryGrip } from './character';
 import { islanderAnchors, islanderOrigin, islanderSurface, rigTransform } from './anchors';
 import { RewardArt } from './Rewards';
 import { Hair } from './Hair';
@@ -47,7 +47,7 @@ export function limbShape(a: Point, b: Point, c: Point, r: number, tip: number):
     return `M${edge(a,n,r)}${outward}${shin(1)}Q${c[0]+m[1]*tip*1.5} ${c[1]-m[0]*tip*1.5} ${edge(c,m,-tip)}${sharp && cross < 0 ? `L${edge(between(b,c,.34),m,-mid)}` : reverseShin}${sharp && cross < 0 ? `L${crease(-1)}` : `Q${edge(b,turn,-mid*.82)} ${edge(before,n,-mid)}`}L${edge(a,n,-r)}Q${a[0]-n[1]*r} ${a[1]+n[0]*r} ${edge(a,n,r)}Z`;
 }
 const between = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-export function IslanderShape({ pose, look: input = defaultLook, held, reduced = false, expression, blink = false, heldMirrored = false, gaze, meal, mealPlayback, mealBase, actionForMeal = null }: { pose: Pose; look?: IslanderLook; held?: React.ReactNode; reduced?: boolean; expression?: import('./poses').Expression; blink?: boolean; heldMirrored?: boolean; gaze?: Gaze; meal?: MealFrame; mealPlayback?: MealPlayback; mealBase?: CharacterBase; actionForMeal?: CharacterAction }) {
+export function IslanderShape({ pose, look: input = defaultLook, held, reduced = false, expression, blink = false, heldMirrored = false, gaze, meal, mealPlayback, mealBase, actionForMeal = null, carryGrip, holdPose }: { pose: Pose; look?: IslanderLook; held?: React.ReactNode; reduced?: boolean; expression?: import('./poses').Expression; blink?: boolean; heldMirrored?: boolean; gaze?: Gaze; meal?: MealFrame; mealPlayback?: MealPlayback; mealBase?: CharacterBase; actionForMeal?: CharacterAction; carryGrip?:CarryGrip; holdPose?:Pose }) {
   const look = normalizeLook(input), j = pose.joints, a = anchorsFor(pose), compact = !!pose.compact, front = pose.view === 'front';
   const skin = skinTones[look.skinTone], colors = look.palette ? outfitPalettes[look.palette] : outfitDefaults[look.outfit];
   const [hx, hy] = j.head, r = compact ? 12 : 28, sy = j.leftShoulder[1], hip = j.leftHip[1];
@@ -95,9 +95,9 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
     <G data-layer="body"><Path d={`${compact ? `M${hx+4} ${hy+r-4}L44 ${sy+3}H36L${hx-4} ${hy+r-4}Z` : `M${hx-4} ${hy+r-4}L36 ${sy-3}Q33 ${sy-3} 29 ${sy}L33 ${sy+10}L34 ${hip-2}H46L47 ${sy+10}L51 ${sy}Q47 ${sy-3} 44 ${sy-3}L${hx+4} ${hy+r-4}Z`} ${['long-straight','long-wavy','bob','braids'].includes(look.hairStyle) ? '' : `M${hx-r+1} ${hy+7}q-5-2-4 2q0 4 4 4M${hx+r-1} ${hy+7}q5-2 4 2q0 4-4 4`}`} fill={skin}/>
       {!compact && <><Path data-head="soft-square" d={`M${hx-r} ${hy-9}Q${hx-r} ${hy-28} ${hx} ${hy-28}Q${hx+r} ${hy-28} ${hx+r} ${hy-9}L${hx+r} ${hy+11}Q${hx+r} ${hy+28} ${hx} ${hy+28}Q${hx-r} ${hy+28} ${hx-r} ${hy+11}Z`} fill={skin}/><Path d={`M${hx+24} ${hy-7}V${hy+10}Q${hx+24} ${hy+24} ${hx+4} ${hy+26}Q${hx+28} ${hy+29} ${hx+28} ${hy+11}V${hy-7}Z`} fill="#7E5142" fillOpacity={.10} strokeWidth={0}/></>}</G>
     <G data-layer="clothing"><Clothes look={look} pose={pose} colors={colors}/>{compact && look.accessory === 'backpack' && backpack}</G>
-    <G data-layer="front-limbs">{front && limb(rearArm, true)}{!mealPlayback && limb(frontArm, true)}{mealPlayback && <MealMorph playback={mealPlayback}>{f=>limb(frontArm, true, characterPose(mealBase!, actionForMeal, 0, 0, f.meal, gaze))}</MealMorph>}</G>
+    <G data-layer="front-limbs">{front && limb(rearArm, true)}{!mealPlayback && (carryGrip && holdPose ? <>{carryGrip.renderLayer(false,limb(frontArm,true))}{carryGrip.renderLayer(true,limb(frontArm,true,holdPose))}</>:limb(frontArm,true))}{mealPlayback && <MealMorph playback={mealPlayback}>{f=>limb(frontArm, true, characterPose(mealBase!, actionForMeal, 0, 0, f.meal, gaze))}</MealMorph>}</G>
     { !meal && <G data-layer="held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>}
-    <G data-layer="hands">{front || compact ? <>{hand('left')}{!mealPlayback && hand('right')}</> : hand(frontArm)}</G>
+    <G data-layer="hands">{front || compact ? <>{hand('left')}{!mealPlayback && (carryGrip && holdPose ? <>{carryGrip.renderLayer(false,hand('right'))}{carryGrip.renderLayer(true,hand('right',holdPose))}</>:hand('right'))}</> : hand(frontArm)}</G>
     <RewardArt look={look} pose={pose} layer="neckwear"/><G data-layer="front-hair"><Hair look={look} pose={pose}/></G>
     <G data-layer="face"><Face look={look} pose={pose} expression={expression} blink={blink} gaze={gaze} meal={meal} playback={mealPlayback} sipping={actionForMeal === 'drink'}/></G>
     {meal && !mealPlayback && <G data-layer="meal-held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>}
@@ -130,8 +130,9 @@ export type IslanderProps = RigLife & {
   gaze?: Gaze;
   meal?: MealFrame;
   mealPlayback?: MealPlayback;
+  carryGrip?:CarryGrip;
 };
-export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false, base, action = null, face, facing = 'right', tilt = 0, limbLag = 0, mood, clock, seed, blink, breath, gaze, meal, mealPlayback }: IslanderProps) {
+export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false, base, action = null, face, facing = 'right', tilt = 0, limbLag = 0, mood, clock, seed, blink, breath, gaze, meal, mealPlayback, carryGrip }: IslanderProps) {
   if (base) {
     const life = rigIdle(clock, seed, reduced);
     const options = { action, tilt, limbLag, reduced, meal, gaze, breath: breath ?? life.breath };
@@ -141,7 +142,7 @@ export const Islander = memo(function Islander({ view = 'front', pose = view ===
     return <Svg {...islanderSurface(box, scale)} accessible={false}>
       <G data-rig="islander" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)}>
         <G transform={`translate(${-origin[0]} ${-origin[1]})`}>
-          <IslanderShape pose={resolved} look={look} held={held} reduced={reduced} gaze={gaze} meal={meal} mealPlayback={mealPlayback} mealBase={base} actionForMeal={action} expression={meal?.bite ? 'anticipate' : rigFace(face, mood, action)} heldMirrored={facing === 'left'} blink={!reduced && (blink ?? life.blink)}/>
+          <IslanderShape pose={resolved} look={look} held={held} carryGrip={carryGrip} holdPose={carryGrip?characterPose(base,'hold',reduced?0:limbLag,tilt*(facing==='left'?-1:1),undefined,gaze):undefined} reduced={reduced} gaze={gaze} meal={meal} mealPlayback={mealPlayback} mealBase={base} actionForMeal={action} expression={meal?.bite ? 'anticipate' : rigFace(face, mood, action)} heldMirrored={facing === 'left'} blink={!reduced && (blink ?? life.blink)}/>
         </G>
       </G>
     </Svg>;

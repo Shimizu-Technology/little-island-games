@@ -2,7 +2,7 @@ import {instance} from '../model';
 import {heldDrinkScale} from '../art/heldDrink';
 import { MealArt } from "./MealArt";
 import type { Meal } from "./meal";
-import type { Gaze } from "../../islander/rig/character";
+import type { Gaze, CarryGrip } from "../../islander/rig/character";
 import { HomeCharacter, type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
 import { View } from "react-native";
@@ -67,6 +67,7 @@ export const EntityArt = memo(function EntityArt({
   limbLag = 0,
   blink = false,
   prepareMeal = false,
+  carryGrip,
   meal,
   onMealPresented,
   onMealFinished,
@@ -81,6 +82,7 @@ export const EntityArt = memo(function EntityArt({
   blink?: boolean;
   /** Only the visible resting drawing owns a prewarmed meal stage. */
   prepareMeal?: boolean;
+  carryGrip?:CarryGrip;
   tilt?: number;
   limbLag?: number;
   carry?: boolean;
@@ -120,12 +122,13 @@ export const EntityArt = memo(function EntityArt({
     gaze: carry ? { x: 0, y: -1 } : gaze,
     slot: character.slot,
     base,
-    action: carry ? (entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
+    action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
     face: preview ? ("anticipate" as const) : (faceOverride ?? null),
     facing: entity.facing === "left" ? ("left" as const) : ("right" as const),
     size,
     tilt,
     limbLag,
+    carryGrip,
     reduced,
     // Every rig accepts RigLife; the route's renderer spreads input into it.
     ...(blink ? { blink: true } : {}),
@@ -144,7 +147,7 @@ export const EntityArt = memo(function EntityArt({
   );
 }, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
-  a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.tilt === b.tilt && a.limbLag === b.limbLag &&
+  a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&
-  a.entity.character?.slot === b.entity.character?.slot && a.entity.children.length === b.entity.children.length &&
+  a.entity.character?.slot === b.entity.character?.slot && (a.entity.children.length === b.entity.children.length || !!a.carry && !!b.carry && !!a.carryGrip && a.carryGrip === b.carryGrip) &&
   JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));

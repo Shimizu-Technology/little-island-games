@@ -104,3 +104,39 @@ it('does not repaint prewarmed carry and landing rigs for a resting friends tran
  expect(render.mock.calls.length).toBe(before);
  await act(async()=>tree.unmount());
 });
+
+it('receiving a cup switches prebuilt carry grips without repainting whole characters',async()=>{
+ const {CarriedCharacter}=await import('../src/home/runtime/CarriedCharacter');
+ const scene=buildScene(labFixtures['rig-meal']()),hero=scene.entities['character/0'];
+ const interaction={slots:{value:[{},{}]},clock:{value:0}}as any;
+ const inputs:any[]=[];const render=vi.fn((input:any)=>{inputs.push(input);return React.createElement('body');});
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<CarriedCharacter entity={hero} interaction={interaction} index={0} reduced={false} renderCharacter={render}/>);});
+ const before=render.mock.calls.length;
+ await act(async()=>tree.update(<CarriedCharacter entity={{...hero,children:['home/item/cup']}} interaction={interaction} index={0} reduced={false} renderCharacter={render}/>));
+ expect(render.mock.calls.length).toBe(before);
+ expect(inputs[0].carryGrip.renderLayer(true,null).props.holding.value).toBe(true);
+ await act(async()=>tree.unmount());
+});
+
+it('prebuilt loose and holding arms keep the authored hand geometry at every carry lean',async()=>{
+ const {G}=await import('react-native-svg');
+ const hero=buildScene(labFixtures['rig-meal']()).entities['character/0'];
+ const grip={renderLayer:(holding:boolean,children:React.ReactNode)=><G data-carry-state={String(holding)}>{children}</G>};
+ for(const facing of ['front','left']as const)for(const lean of [-1,0,1]){
+  let tree!:ReturnType<typeof create>;
+  await act(async()=>{tree=create(<EntityArt entity={{...hero,facing}} carry carryGrip={grip} reduced={false} tilt={lean*6} limbLag={Math.abs(lean)}/>);});
+  for(const held of [false,true]){
+   let reference!:ReturnType<typeof create>;
+   await act(async()=>{reference=create(<EntityArt entity={{...hero,facing,children:held?['cup']:[]}} carry reduced={false} tilt={lean*6} limbLag={Math.abs(lean)}/>);});
+   for(const marker of [{'data-limb':'right-arm'},{'data-mitten':'right'}]){
+    const variants=tree.root.findAllByProps(marker).filter(n=>typeof n.type==='string');
+    const selected=variants.find(n=>{let p=n.parent;while(p){if(p.props['data-carry-state']!==undefined)return p.props['data-carry-state']===String(held);p=p.parent;}return false;});
+    const wanted=reference.root.findAllByProps(marker).find(n=>typeof n.type==='string');
+    expect(selected?.props.d).toBe(wanted?.props.d);expect(selected).toBeDefined();
+   }
+   await act(async()=>reference.unmount());
+  }
+  await act(async()=>tree.unmount());
+ }
+});
