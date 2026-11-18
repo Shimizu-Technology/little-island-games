@@ -351,10 +351,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
         </View>;
   const small = large ? 1.5 : undefined, big = large ? 2 : undefined;
   // F-frame-3: the cheer line is drawn over the page, never laid out in it, so it can't move or resize the board when it
-  // comes and goes. A phone shows it at the right end of the mode row; a tablet beside the islander (above it when the
-  // islander stands beside the card, to its left when below).
-  const cheerPill = cheerText && <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, ...(phone ? {} : { borderWidth: 2, borderColor: theme.accent }) }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>;
-  const phoneCheer = phone && cheerPill && saved && !finished && <View pointerEvents="none" style={{ position: "absolute", top: 0, bottom: 0, right: 0, justifyContent: "center" }}>{cheerPill}</View>;
+  // comes and goes. A phone shows it at the right end of the mode row, rising from the row's bottom into the free space
+  // below the islander (it never hangs below the pinned header); a tablet beside the islander (above it when the islander
+  // stands beside the card, to its left when below).
+  const cheerPill = cheerText && <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, ...(phone ? { paddingVertical: 2 } : { paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }) }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>;
+  const phoneCheer = phone && cheerPill && saved && !finished && <View pointerEvents="none" style={{ position: "absolute", bottom: 0, right: 0 }}>{cheerPill}</View>;
   const islanderCheer = <View style={{ alignSelf: "stretch" }}>{cheerPill && <View pointerEvents="none" style={islanderBeside
     ? { position: "absolute", bottom: 4, left: -80, right: -80, alignItems: "center" }
     : { position: "absolute", top: 0, right: "100%", width: 240, height: 112, marginRight: 8, alignItems: "flex-end", justifyContent: "center" }}>{cheerPill}</View>}</View>;
