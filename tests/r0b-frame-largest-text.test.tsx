@@ -74,7 +74,8 @@ const byType = (r: ReactTestRenderer, type: string) => r.root.findAll(n => Strin
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 const inside = (n: ReactTestInstance, parent: ReactTestInstance) => { for (let p: ReactTestInstance | null = n; p; p = p.parent) if (p === parent) return true; return false; };
 
-it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
+// F-frame-3: the card's real content width, 393 less 16-pt gutters, a 2-pt border and 12-pt padding (it was 337).
+it.each([[3.12, { width: 333, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
   Object.assign(viewport, { fontScale });
   const r = await mount('turtle-tales');
   expect(byType(r, 'Board')[0].props.fit).toEqual(fit);
@@ -83,7 +84,7 @@ it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text s
 it('an iPad board region is the board width beside the companion', async () => {
   Object.assign(viewport, { width: 1133, height: 744 });
   const r = await mount('turtle-tales');
-  // 1133 - 56, less the 88-pt companion column on a wide screen.
+  // The unmeasured board keeps its earlier cap beside the companion, 900 - 88 (the card itself is 942 pt wide here).
   expect(byType(r, 'Board')[0].props.fit).toEqual({ width: 900 - 88, ceiling: 2, maxSize: 44 });
 });
 

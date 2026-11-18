@@ -42,3 +42,13 @@ export const revealBoardOnEntry = (large: boolean, windowHeight: number) => larg
 /** Entry/rotation AX reveal is scoped to measured boards and Shell's existing path. */
 export const MEASURED_SCHOOL_BOARDS = new Set<string>(Object.keys(SCHOOL_BOARD_MIN).filter(id => id !== 'program-editor'));
 export const schoolEntryReveal = (id: string, large: boolean, height: number) => height < 500 || large && MEASURED_SCHOOL_BOARDS.has(id);
+
+/** The board card: 16-pt page gutters, a 2-pt border, and 12-pt padding on a phone or 22 pt from 600 pt (LearnFrame). */
+export const boardCardPadding = (width: number) => width < 600 ? 12 : 22;
+/** From 768 × 600 the islander stands beside the card. Companion.tsx draws a 168-pt islander, 168 × 80 / 132 wide, 8 pt away. */
+export const companionBeside = (width: number, height: number) => width >= 768 && height >= 600;
+export const COMPANION_COLUMN = 168 * 80 / 132 + 8;
+/** F-frame-3: the card's real content width, which a board is told before (or instead of) measuring it. */
+export function boardCardInner(width: number, left: number, right: number, beside: boolean) {
+  return Math.min(width - left - right, 1280) - 2 * (16 + 2 + boardCardPadding(width)) - (beside ? COMPANION_COLUMN : 0);
+}
