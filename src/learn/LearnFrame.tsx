@@ -300,16 +300,17 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const islanderBeside = companionBeside(width, height) && store.save.settings.learningIslander !== false;
   const cardInner = boardCardInner(width, insets.left, insets.right, islanderBeside);
   const revealEntry = schoolEntryReveal(id, large, height);
-  // F-frame-3: the greeting and cheers are drawn over the header, never laid out above the board, so the one entry reveal
-  // no longer waits for them to end (it used to wait for the board to move up when the greeting's row went away).
+  // An AX phone board's one entry reveal waits for the greeting to end, when the page has settled. F-frame-3: the
+  // greeting is drawn over the header, so its end no longer moves the board or brings a fresh board layout to wait for.
+  const anchorReady = !large || width >= 600 || companionEvent === "waiting";
   const boardSpace = useMemo(() => viewport.height > 0 && boardLayout.width > 0 ? {
     width: boardLayout.width,
     // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
     // reserve all real header/progress content above it. Scroll position is never
     // part of this budget, so scrolling cannot cause the board to grow or shrink.
     height: measuredBoardSpace(viewport.height, revealEntry ? 8 : boardLayout.top, revealEntry ? 0 : boardLayout.inset, boardCardPadding(width) + 2),
-    large, reveal: revealEntry, layoutKey,
-  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey]);
+    large, reveal: revealEntry, layoutKey, anchorReady,
+  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey, anchorReady]);
   // A measured board is told its measured width, which the card estimate already matches. Unmeasured boards keep
   // their earlier caps: 900 pt, or 812 beside the islander.
   const boardWidth = MEASURED_SCHOOL_BOARDS.has(id) ? boardSpace?.width ?? cardInner : Math.min(cardInner, islanderBeside ? 812 : 900);
