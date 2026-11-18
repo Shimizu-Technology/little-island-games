@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
 import { wordTokens } from './density.mjs';
-import { requireThat } from './core.mjs';
+import { requireThat, sha256, digest } from './core.mjs';
 
 export const hermesMagic = Buffer.from('c61fbc03c103191f', 'hex');
 
@@ -46,8 +46,8 @@ export function hermesStrings(bytes, options={}) {
  * member names, regex bodies and comments from the blocked-word content view.
  * Property names and comments remain in the partial-list leak view; only literals supply displayed-word checks.
  */
-export function javascriptStrings(text, teachings=[]) {
-  const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+export function javascriptStrings(text, teachings=[], fileName='artifact.js') {
+  const tree = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
   const strings = [], keys = [], units = [], grids = [], sensitiveStrings=[], sensitiveGrids=[],decodedRanges=[];
   const propertyName=n=>n && (ts.isIdentifier(n)||ts.isStringLiteralLike(n))?n.text:undefined;
@@ -71,7 +71,11 @@ export function javascriptStrings(text, teachings=[]) {
     const names=new Set(n.properties.filter(ts.isPropertyAssignment).map(p=>propertyName(p.name)));
     return ['items','index','preview','bytes','fixtures'].every(key=>names.has(key));
   }
-  function addUnit(values,node) {values.library=attachment(node);values.origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree)};units.push(values);}
+  // Match a complete literal container across TS transpilation/minification.
+  // Decoded literal values and every syntax child remain part of its identity;
+  // formatting, quote style and comments do not. The source hash stays exact.
+  function syntax(node) {return [node.kind,node.text??null,...node.getChildren(tree).filter(child=>child.kind!==ts.SyntaxKind.CommaToken).map(child=>syntax(child))];}
+  function addUnit(values,node) {values.library=attachment(node);values.origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree),end:node.end,sourceSha256:sha256(node.getText(tree)),signature:digest(syntax(node))};units.push(values);}
   function addCompact(values,node){values.compact=true;addUnit(values,node);}
   const comments=new Map();
   function recordComments(pos) {

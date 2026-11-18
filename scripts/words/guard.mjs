@@ -126,7 +126,7 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     const leakStrings=[...strings,...keys];
     const contentStrings=new Set(strings);
     const stringHits=leakStrings.filter(text=>!technicalString(text) || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)).map(text=>({sha256:sha256(text),advisory:contentStrings.has(text)&&!technicalString(text),listShaped:listString(text,excluded),broad:[...broad(normalizedText(text))],literal:contentStrings.has(text)&&!technicalString(text)?[...literal(normalizedText(text))]:[]}));
-    const unitHits=units.map(unit=>{const remaining=untracedLibraryUnit(unit,library);return {sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(remaining,excluded) && (!unit.compact || compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)),broad:remaining.filter(text=>!technicalString(text)).flatMap(text=>[...broad(normalizedText(text))]),literal:[]};});
+    const unitHits=units.map(unit=>{const remaining=untracedLibraryUnit(unit,library);return {sha256:sha256(JSON.stringify(unit)),origin:unit.origin,listShaped:!proseTokens(remaining,excluded) && (!unit.compact || compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)),broad:remaining.filter(text=>!technicalString(text)).flatMap(text=>[...broad(normalizedText(text))]),literal:[]};});
     return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,hardHermesFailure,densityMaximum,shortDensityMaximum,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
   };
 }
@@ -232,6 +232,42 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     library=JSON.parse(result.stdout);
   }
   const scan=artifactScanner(policy,library,teachings);
+  const sourceExceptions=policy.sourceUnitExceptions??[];
+  requireThat(Array.isArray(sourceExceptions),'Invalid source unit exceptions');
+  const sourceInputs=admissionSourceFiles(sourceRoot),sourceBindings=[];
+  for(const rule of sourceExceptions) {
+    requireThat(typeof rule.path==='string' && /^src\/.+\.[cm]?[jt]sx?$/.test(rule.path) && !rule.path.split('/').some(part=>['','..','.'].includes(part)) && !/[\\*]/.test(rule.path) && Array.isArray(rule.units) && rule.units.length>0,'Invalid source unit exception path');
+    const bytes=sourceInputs.get(rule.path);
+    const units=bytes?javascriptStrings(bytes.toString('utf8'),[],rule.path).units:[];
+    for(const item of rule.units) {
+      requireThat(/^[a-f0-9]{64}$/.test(item.sha256) && Number.isSafeInteger(item.occurrences) && item.occurrences>0 && Array.isArray(item.terms) && item.terms.length>0,'Invalid source unit exception');
+      for(const e of item.terms)requireThat(e.check==='broad' && typeof e.term==='string' && policy.scan.some(term=>normalizedText(term)===normalizedText(e.term)) && ![...policy.core,...policy.exact,...policy.lemmas].some(term=>normalizedText(term)===normalizedText(e.term)) && typeof e.reason==='string' && e.reason.trim().length>0 && typeof e.evidence==='string' && e.evidence.trim().length>0,'Unreviewed source unit exception');
+      const matches=new Map(units.filter(unit=>unit.origin.sourceSha256===item.sha256).map(unit=>[unit.origin.offset,unit]));
+      requireThat(matches.size===item.occurrences,'Stale source unit exception');
+      const terms=new Set(item.terms.map(e=>normalizedText(e.term)));
+      for(const unit of matches.values()) {
+        const hit=scan(Buffer.from('const reviewedUnit='+bytes.toString('utf8').slice(unit.origin.offset,unit.origin.end)+';'), 'source.js').unitHits.find(hit=>hit.origin?.signature===unit.origin.signature);
+        requireThat(hit?.listShaped && new Set(hit.broad).size>=3 && terms.size===new Set(hit.broad).size && hit.broad.every(term=>terms.has(term)),'Unused source unit exception terms');
+      }
+      requireThat(!sourceBindings.some(binding=>binding.path===rule.path && binding.item.sha256===item.sha256),'Duplicate source unit exception');
+      sourceBindings.push({path:rule.path,item,terms,signatures:new Set([...matches.values()].map(unit=>unit.origin.signature))});
+    }
+  }
+  let sourceUnitExceptionsUsed=0,exportedSourceUnitExceptionsUsed=0;
+  function reviewedSourceUnits(hits,bindings,source=false) {
+    const used=new Map();
+    for(const hit of hits) {
+      if(!hit.listShaped || !hit.origin)continue;
+      for(const binding of bindings) {
+        if(!binding.signatures.has(hit.origin.signature))continue;
+        const origins=used.get(binding)??new Set(),identity=hit.origin.offset+':'+hit.origin.signature;
+        if(!origins.has(identity) && origins.size>=binding.item.occurrences)continue;
+        if(new Set(hit.broad).size!==binding.terms.size || !hit.broad.every(term=>binding.terms.has(term)))continue;
+        if(!origins.has(identity)) {if(source)sourceUnitExceptionsUsed++;else exportedSourceUnitExceptionsUsed++;}
+        origins.add(identity);used.set(binding,origins);hit.reviewedSourceUnit=true;break;
+      }
+    }
+  }
   // Check the authored strings where the derived tokens originated. These
   // receive the same literal/list-shaped string checks as exported prose.
   for(const item of library)for(const text of [...item.source,...item.sourceUnits]) {
@@ -240,12 +276,13 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   }
   // Admission inputs get the same literal, list and density rules as exports,
   // including unreachable src files. A pasted list fails before generation.
-  for(const [name,bytes] of admissionSourceFiles(sourceRoot)) {
+  for(const [name,bytes] of sourceInputs) {
     const code=/\.[cm]?[jt]sx?$/.test(name);
     const text=name.endsWith('.py')?JSON.stringify(Object.fromEntries(speechInputs(sourceRoot).find(input=>input.path===name).entries)):code?ts.transpileModule(bytes.toString('utf8'),{fileName:name,compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText:bytes;
     const view=scan(Buffer.from(text),code?'source.js':name.endsWith('.py')?'source.json':name);
+    reviewedSourceUnits(view.unitHits,sourceBindings.filter(binding=>binding.path===name),true);
     if(view.literalHits.size || view.hardHermesFailure)findings.push(name+':blocked-source-literal');
-    if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
+    if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
     if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
   }
   // Validate all speech inputs even when an export has only prefixed identifiers.
@@ -301,7 +338,8 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
           }
         }
       }
-      if([...stringHits,...unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3)) findings.push(`${name}:partial-list`);
+      reviewedSourceUnits(unitHits,sourceBindings);
+      if([...stringHits,...unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3)) findings.push(`${name}:partial-list`);
       for(const hit of stringHits)if(hit.advisory && hit.broad.length && !advisories.some(row=>row.stringSha256===hit.sha256))advisories.push({file:name,stringSha256:hit.sha256,terms:hit.broad});
       if(literalHits.size) findings.push(`${name}:blocked-literal`);
       for(const word of policy.canaries??[]) if(uppers.some(upper=>upper.includes(word.toUpperCase()))) findings.push(`${name}:canary`);
@@ -321,5 +359,5 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     writeFileSync(generatedAdmissionFile,JSON.stringify({schemaVersion:1,sourceRoot,receipts:admission.receipts,exports:admission.exports})+'\n',{flag:'wx',mode:0o600});
   }
   requireThat(findings.length===0,`Private word data leaked: ${[...new Set(findings)].map(f=>f.startsWith('artifact-')?f:'artifact-'+sha256(f)+(f.includes(':')?':'+f.split(':').at(-1):'')).join(', ')}`);
-  return {passed:true,files,generatedAdmissionFile,termExceptionsUsed,densityMaximum,shortDensityMaximum,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
+  return {passed:true,files,generatedAdmissionFile,termExceptionsUsed,sourceUnitExceptionsUsed,exportedSourceUnitExceptionsUsed,densityMaximum,shortDensityMaximum,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
 }

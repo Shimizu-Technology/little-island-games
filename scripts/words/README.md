@@ -269,3 +269,35 @@ For preview IPA delivery, first run `npm run ios:preview-bundle-prep`, keep
 run `npm run ios:restore-generated` after completion. The wrapper verifies fresh
 preview JavaScript against embedded Hermes before any delivery command. A default
 export does not validate a preview IPA. This worker does not authorize delivery.
+
+### Reviewed source-unit collisions
+
+A source list can contain ordinary authored words that also occur in the broad
+scan policy. Review that complete unit instead of renaming content to avoid the
+guard. The private policy accepts `sourceUnitExceptions`, an array of entries
+with an exact repository-relative `path` under `src/` and a nonempty `units`
+array. Each unit has `sha256` (SHA-256 of the exact source expression text),
+`occurrences` (positive exact source count), and nonempty `terms`. Each term
+requires `term`, `check: "broad"`, a specific `reason`, and review `evidence`.
+Keep all real terms and unit hashes in private artifacts outside Git.
+
+The operator must inspect the unit at the specified commit, verify each term's
+review records, and update the locked policy bytes and policy hash. Core, exact,
+and lemma terms cannot receive an exception, including normalized equivalents.
+Every listed term must occur in the unit's broad finding, with no unreviewed
+broad terms. Missing paths, edited text, changed counts, duplicate entries, and
+unused entries fail closed. Remove obsolete exceptions when removing content.
+These are collision annotations; they do not change bank content-policy hashes
+or grant word, clue, grid, shipping, or family approval.
+
+The guard checks the exact source unit first. Its full syntax and decoded literal
+values then identify the corresponding JavaScript container in web and native
+JavaScript exports, allowing formatting, quote, and trailing-comma changes. A
+changed/reordered container or an extra copy receives the ordinary list check.
+The occurrence limit applies independently to each export file. Hermes retains
+its existing string-table checks and the release gate's companion native
+JavaScript scan. Only that container's list finding is suppressed: strings,
+other units, literals, density, grids, raw policy blobs/hashes, canaries, and
+private filenames still get every check. The result reports
+`sourceUnitExceptionsUsed` and `exportedSourceUnitExceptionsUsed` as matched
+source/export container counts; no private terms are printed.

@@ -1302,3 +1302,54 @@ manifestCase('manifest bank list',stagedReading,m=>{m.banks={};},/Invalid word b
 manifestCase('manifest duplicate path',stagedReading,m=>{m.banks.push({...m.banks[0]});},/Invalid word bank manifest/);
 for(const [label,second] of [['id',{...reading('sundog',{chunks:['sun','dog'],distractors:['sin','dig']}),id:'r-sunset'}],['word',{...reading(),id:'r-sunset-2'}]])test(`reading banks repeat a record ${label} across banks`,()=>{const staged=stagedReading();try{const bytes=JSON.stringify({schemaVersion:1,kind:'reading-parts',words:[second]}),name='content/words/banks/reading-two.json';writeFileSync(join(staged.dir,name),bytes);const m=staged.manifest;m.banks.push({path:name,kind:'reading-parts',sha256:sha256(bytes),bytes:Buffer.byteLength(bytes),words:1});writeFileSync(join(staged.dir,'content/words/banks.manifest.json'),JSON.stringify(m));writeFileSync(join(staged.dir,'content/words/registry.generated.ts'),registrySource(m));assert.throws(()=>checkShippingTree(staged.dir),/Reading banks repeat a record/);}finally{cleanup(staged.dir);}});
 test('reading and word registries reject an unsafe bank path',()=>{for(const kind of ['reading-parts',undefined])assert.throws(()=>registrySource({schemaVersion:1,banks:[{path:'content/words/banks/../x.json',kind}]}),/Invalid bank registry path/);});
+
+// Wguard2: synthetic reviewed source containers; no real policy vocabulary.
+const reviewedSourceText='["ALPHANONSENSE", "BETANONSENSE", "GAMMANONSENSE",]';
+function sourceUnitCase(run) {
+ const dir=mkdtempSync(join(scratch,'source-unit-')),sourcePath='src/reviewed-unit.ts',sourceFile=join(root,sourcePath);
+ const p={...policy,scan:[...policy.scan,'DELTANONSENSE'],sourceUnitExceptions:[{path:sourcePath,units:[{sha256:sha256(reviewedSourceText),occurrences:1,terms:policy.scan.slice(1).map(term=>({term,check:'broad',reason:'Synthetic cast collision',evidence:'Synthetic blind review'}))}]}]};
+ const source=text=>writeFileSync(sourceFile,'export const cast='+text+' as const;');
+ const artifact=text=>writeFileSync(join(dir,'app.js'),text);
+ source(reviewedSourceText);artifact("globalThis.cast=['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'];");
+ try {run({p,dir,source,artifact,rule:p.sourceUnitExceptions[0],item:p.sourceUnitExceptions[0].units[0],check:()=>guardTree(dir,p)});} finally {rmSync(sourceFile,{force:true});rmSync(dir,{recursive:true,force:true});}
+}
+test('Wguard2 reviewed source and minified export pass',()=>sourceUnitCase(({check})=>{const r=check();assert.equal(r.passed,true);assert.equal(r.sourceUnitExceptionsUsed,1);assert.equal(r.exportedSourceUnitExceptionsUsed,1);}));
+for(const [name,change,rx] of [
+ ['wrong path',({rule})=>rule.path='src/elsewhere.ts',/Stale source unit/],
+ ['changed unit',({source})=>source(reviewedSourceText.replace('[','[ ')),/Stale source unit/],
+ ['extra term',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE","DELTANONSENSE"];'),/partial-list/],
+ ['reordered export',({artifact})=>artifact('globalThis.cast=["BETANONSENSE","ALPHANONSENSE","GAMMANONSENSE"];'),/partial-list/],
+ ['extra neutral export',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE","NEUTRAL"];'),/partial-list/],
+ ['duplicate export',({artifact})=>artifact('globalThis.a=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.b=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];'),/partial-list/],
+ ['unrelated string',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.label="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";'),/partial-list/],
+ ['literal outside unit',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.label="Tap COLD now";'),/blocked-literal/],
+ ['stale hash',({item})=>item.sha256='e'.repeat(64),/Stale source unit/],
+ ['stale count',({item})=>item.occurrences=2,/Stale source unit/],
+ ['unused terms',({item})=>item.terms.push({...item.terms[0],term:'DELTANONSENSE'}),/Unused source unit/],
+ ['missing term',({item})=>item.terms.pop(),/Unused source unit/],
+ ['duplicate entry',({rule,item})=>rule.units.push(structuredClone(item)),/Duplicate source unit/],
+ ['no source exceptions',({p})=>delete p.sourceUnitExceptions,/blocked-source-list/],
+])test(`Wguard2 ${name}`,()=>sourceUnitCase(f=>{change(f);assert.throws(f.check,rx);}));
+for(const [name,change,rx] of [
+ ['array',({p})=>p.sourceUnitExceptions={},/Invalid source unit exceptions/],
+ ['absolute path',({rule})=>rule.path='/src/reviewed-unit.ts',/exception path/],
+ ['parent path',({rule})=>rule.path='src/../src/reviewed-unit.ts',/exception path/],
+ ['wildcard path',({rule})=>rule.path='src/*.ts',/exception path/],
+ ['backslash path',({rule})=>rule.path='src/reviewed\\unit.ts',/exception path/],
+ ['units',({rule})=>rule.units=[],/exception path/],
+ ['hash',({item})=>item.sha256='bad',/Invalid source unit exception/],
+ ['count',({item})=>item.occurrences=0,/Invalid source unit exception/],
+ ['terms',({item})=>item.terms=[],/Invalid source unit exception/],
+ ['check',({item})=>item.terms[0].check='literal',/Unreviewed source unit/],
+ ['core',({p})=>p.core=[...p.core,'ALPHANONSENSE'],/Unreviewed source unit/],
+ ['exact',({p})=>p.exact=[...p.exact,'ALPHANONSENSE'],/Unreviewed source unit/],
+ ['lemma normalized',({p})=>p.lemmas=[...p.lemmas,'alphano\u200bnsense'],/Unreviewed source unit/],
+ ['not broad',({item})=>item.terms[0].term='NEUTRAL',/Unreviewed source unit/],
+ ['reason',({item})=>item.terms[0].reason=' ',/Unreviewed source unit/],
+ ['evidence',({item})=>item.terms[0].evidence='',/Unreviewed source unit/],
+])test(`Wguard2 requires ${name}`,()=>sourceUnitCase(f=>{change(f);assert.throws(f.check,rx);}));
+test('Wguard2 density still fails',()=>sourceUnitCase(({p,artifact,check})=>{const terms=Array.from({length:16},(_,i)=>'NONSENSE'+String.fromCharCode(65+i));p.scan.push(...terms);artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.prose='+JSON.stringify(terms.join(' and the '))+';');assert.throws(check,/broad-density/);}));
+test('Wguard2 metadata preserves bank content policy',async()=>{const {contentPolicy}=await import(pathToFileURL(join(root,'scripts/words/policy.mjs')));assert.deepEqual(contentPolicy({...policy,sourceUnitExceptions:[]}),contentPolicy(policy));});
+test('Wguard2 core inside reviewed unit still fails',()=>sourceUnitCase(({source,artifact,item,check})=>{const text=reviewedSourceText.replace(',]',',"COLD"]');source(text);artifact('globalThis.cast='+text+';');item.sha256=sha256(text);assert.throws(check,/blocked-source-literal|blocked-literal/);}));
+test('Wguard2 extra stale entry fails',()=>sourceUnitCase(({rule,item,check})=>{rule.units.push({...structuredClone(item),sha256:'f'.repeat(64)});assert.throws(check,/Stale source unit/);}));
+test('Wguard2 wrong source cannot borrow review',()=>sourceUnitCase(({source,check})=>{const other=join(root,'src/unreviewed-unit.ts');writeFileSync(other,'export const unreviewed='+reviewedSourceText+';');try{source(reviewedSourceText);assert.throws(check,/blocked-source-list/);}finally{rmSync(other,{force:true});}}));

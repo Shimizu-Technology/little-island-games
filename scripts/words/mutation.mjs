@@ -65,6 +65,17 @@ custom('bake','asset listed raw object',sources.get('bake').replace('listed:list
 custom('bake','asset raw word object',sources.get('bake').replace('words.map(w => ({ id:w.id,','words.map(w => ({ ...w, id:w.id,'),['successful synthetic bake has exact safe asset projection']);
 custom('bake','asset whole policy',sources.get('bake').replace('const asset = { schemaVersion:1,','const asset = { policy, schemaVersion:1,'),['successful synthetic bake has exact safe asset projection']);
 custom('paths','symlink ancestor canonicalization',sources.get('paths').replace('realpathSync.native(parent)','parent'),['privatePath resolves symlink ancestors']);
+// Wguard2: every source/export binding edge has its own negative probe.
+const sourceUnitEdges=[
+ ['path binding','sourceBindings.filter(binding=>binding.path===name)','sourceBindings',['Wguard2 wrong source cannot borrow review']],
+ ['exact source hash','unit.origin.sourceSha256===item.sha256','true',['Wguard2 changed unit']],
+ ['export identity','if(!binding.signatures.has(hit.origin.signature))continue;','',['Wguard2 extra term','Wguard2 reordered export','Wguard2 extra neutral export']],
+ ['export occurrence cap','if(!origins.has(identity) && origins.size>=binding.item.occurrences)continue;','',['Wguard2 duplicate export']],
+ ['all reviewed broad terms','terms.size===new Set(hit.broad).size && hit.broad.every(term=>terms.has(term))','true',['Wguard2 missing term','Wguard2 unused terms']],
+ ['broad only',"e.check==='broad' && typeof e.term==='string'","typeof e.term==='string'",['Wguard2 requires check']],
+ ['never hard terms','![...policy.core,...policy.exact,...policy.lemmas].some(term=>normalizedText(term)===normalizedText(e.term))','true',['Wguard2 requires core','Wguard2 requires exact','Wguard2 requires lemma normalized']],
+];
+for(const [label,before,after,tests] of sourceUnitEdges){const source=sources.get('guard');if(!source.includes(before))throw new Error('Missing source-unit mutation target');custom('guard','Wguard2 '+label,source.replace(before,after),tests);}
 custom('guard','partial-list detector',sources.get('guard').replaceAll('new Set(hit.broad).size>=3','false'),['guard partial-array','guard newlines','guard three broad JS words','guard packed metadata partial list']);
 custom('guard','original Hermes hard-term gate',sources.get('guard').replace('if(scanned.hardHermesFailure)','if(false)'),['R4 original Hermes hard term technical','R4 original Hermes hard term worklet','R4 original Hermes hard term vector','R4 original Hermes hard term short exact']);
 custom('guard','individual blocked-literal detector',sources.get('guard').replace('if(literalHits.size)','if(false)'),['guard core','guard blocked visible string']);
@@ -256,7 +267,7 @@ const r6Edges=[
  ['generated-admission','frozen key identity','row.keySha256===sha256(key)','true',['R6 published inherited key and word frozen']],
  ['generated-admission','frozen transcript identity','row.transcriptSha256===sha256(text)','true',['R6 published inherited key and word frozen']],
  ['guard','source literal check','if(view.literalHits.size || view.hardHermesFailure)','if(false)',['R6 source scan scripts/learn/spelling.json core','R6 source scan scripts/quality-audio.json exact']],
- ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
+ ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
  ['guard','source density check','if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)','if(false)',['R6 source scan scripts/learn/spelling.json density']],
  ['guard','policy token vocabulary','tokens.every(token=>admission.sources.words.has(token))','true',['R7 identifier vocabulary clue file scan']],
  ['guard','camel word file tokens','policyTokens(stem).length',"policyNames(normalizedText(stem)).size",['R6 word asset camel']],
