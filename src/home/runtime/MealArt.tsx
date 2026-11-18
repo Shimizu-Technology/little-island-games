@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { cancelAnimation, useAnimatedProps, useAnimatedStyle, useDerivedValue, type SharedValue, Easing, runOnJS, ReduceMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { ClipPath, Defs, G, Path } from 'react-native-svg';
@@ -14,15 +14,15 @@ import { MEAL_MS, mealFrame, mealIndex, mealTimes, type Meal } from './meal';
 const AnimatedGroup = Animated.createAnimatedComponent(G);
 // Keep one caller-owned clock. An epoch prevents a newer meal from briefly
 // displaying the preceding meal's frame before its native clock starts.
-const EPOCH = 1000, INDEX_EPOCH = 100;
-function frameIndex(code: number, key: number) {
-  'worklet';
-  const value = code - key * INDEX_EPOCH;
-  return value >= 0 && value < mealTimes.length ? value : 0;
+const EPOCH = 1000;
+type MealClock=SharedValue<{key:number;drink:boolean}>;
+function frameIndex(value:number) {
+  'worklet';return value >= 0 && value < mealTimes.length ? value : 0;
 }
-function OpacityLayer({ current, mealKey, index, children }: { current: SharedValue<number>; mealKey: number; index: number | readonly number[]; children: React.ReactNode }) {
-  const indices = typeof index === 'number' ? [index] : index;
-  const props = useAnimatedProps(() => ({ opacity: indices.includes(frameIndex(current.value, mealKey)) ? 1 : 0 }));
+function OpacityLayer({ current, index, children }: { current: SharedValue<number>; index: number | readonly number[]; children: React.ReactNode }) {
+  const signature=JSON.stringify(typeof index==='number'?[index]:index);
+  const indices=useMemo(()=>JSON.parse(signature) as number[],[signature]);
+  const props = useAnimatedProps(() => ({ opacity: indices.includes(frameIndex(current.value)) ? 1 : 0 }));
   return <AnimatedGroup testID={`meal-frame-${indices.join('-')}`} animatedProps={props}>{children}</AnimatedGroup>;
 }
 function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, index: number, reduced: boolean, poseTip = true) {
@@ -35,16 +35,16 @@ function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, i
     </G>
   </G>;
 }
-function FoodVariant({ current, meal, input, reduced, after }: { current: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
+function FoodVariant({ current, clock, meal, input, reduced, after }: { current: SharedValue<number>; clock:MealClock; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
   const time = after ? meal.action === 'eat' ? 360 : 540 : 0;
-  const style = useAnimatedStyle(() => ({ opacity: (mealTimes[frameIndex(current.value, meal.key)] >= (meal.action === 'eat' ? 360 : 540)) === after ? 1 : 0 }));
+  const style = useAnimatedStyle(() => ({ opacity: (mealTimes[frameIndex(current.value)] >= (clock.value.drink ? 540 : 360)) === after ? 1 : 0 }));
   const unit = input.size / [132,160,120][input.slot];
   return <Animated.View testID={`meal-food-${after ? 1 : 0}`} pointerEvents="none" style={[{ position:'absolute',left:-20*unit,top:-34*unit,width:40*unit,height:54*unit },style]}>
     <Svg width={40*unit} height={54*unit} viewBox="-8 -22 40 54" accessible={false}>{foodArt(input.slot,meal,time,after ? 1 : 0,reduced,false)}</Svg>
   </Animated.View>;
 }
 /** Only two small food trees. Position/rotation/fade composite on the UI thread. */
-function Food({ current, progress, meal, input, reduced }: { current: SharedValue<number>; progress: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean }) {
+function Food({ current, clock, progress, meal, input, reduced }: { current: SharedValue<number>; clock:MealClock; progress: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean }) {
   const {slot,size,base,facing,tilt,limbLag} = input;
   const positions = useMemo(() => {
     const make = [islanderAnchors,pipAnchors,crabAnchors][slot], unit = size / [132,160,120][slot];
@@ -59,33 +59,32 @@ function Food({ current, progress, meal, input, reduced }: { current: SharedValu
     });
   },[slot,size,base,facing,tilt,limbLag,meal.action,reduced]);
   const style = useAnimatedStyle(() => {
-    const point = positions[frameIndex(current.value,meal.key)];
-    const elapsed = progress.value - meal.key * EPOCH;
+    const point = positions[frameIndex(current.value)];
+    const elapsed = progress.value - clock.value.key * EPOCH;
     const ms = elapsed >= 0 && elapsed <= MEAL_MS ? elapsed : 0;
-    return { opacity:meal.action === 'eat' && ms > 600 ? (MEAL_MS-ms)/150 : 1,
+    return { opacity:!clock.value.drink && ms > 600 ? (MEAL_MS-ms)/150 : 1,
       transform:[{translateX:point.x},{translateY:point.y},{rotate:`${point.angle}deg`}] };
   });
   return <Animated.View testID="meal-held-food" pointerEvents="none" style={[{position:'absolute',left:0,top:0,width:1,height:1,transformOrigin:[0,0,0]},style]}>
-    <FoodVariant {...{current,meal,input,reduced}} after={false}/><FoodVariant {...{current,meal,input,reduced}} after/>
+    <FoodVariant {...{current,clock,meal,input,reduced}} after={false}/><FoodVariant {...{current,clock,meal,input,reduced}} after/>
   </Animated.View>;
 }
 /** Persistent body; authored arm/mouth poses and one small held-food stage. */
 export function MealArt({ input, meal, reduced, renderCharacter, onPresented, onFinished }: {
   input: CharacterRenderInput; meal?: Meal; reduced: boolean; renderCharacter?: CharacterRenderer; onPresented?: () => void; onFinished?: () => void;
 }) {
-  const progress = useSharedValue(0), key = meal?.key ?? 0, slot = input.slot;
+  const clock=useSharedValue({key:0,drink:false});
+  const progress = useSharedValue(0), key = meal?.key ?? 0, slot = input.slot, drink=meal?.action==='drink';
   const current = useDerivedValue(() => {
-    const elapsed = progress.value - key * EPOCH;
-    return key * INDEX_EPOCH + mealIndex(elapsed >= 0 && elapsed <= MEAL_MS ? elapsed : 0);
-  },[key]);
+    const elapsed = progress.value - clock.value.key * EPOCH;
+    return mealIndex(elapsed >= 0 && elapsed <= MEAL_MS ? elapsed : 0);
+  });
   const started = useRef(false), live = useRef(true), laidOut = useRef(false);
   const frameRequest = useRef<number | undefined>(undefined);
   const finish = useCallback(() => { if (live.current) onFinished?.(); }, [onFinished]);
   const playback = useMemo(() => !meal ? undefined : ({ progress,
-    renderMorph:(nodes:readonly React.ReactNode[])=>mealPaths(nodes,current,value=>{
-      'worklet';return frameIndex(value,meal.key);
-    },(index,children)=><OpacityLayer current={current} mealKey={meal.key} index={index}>{children}</OpacityLayer>),
-    renderLayer:(index:number | readonly number[],children:React.ReactNode)=><OpacityLayer current={current} mealKey={meal.key} index={index}>{children}</OpacityLayer>,
+    renderMorph:(nodes:readonly React.ReactNode[])=>mealPaths(nodes,current,frameIndex,(index,children)=><OpacityLayer current={current} index={index}>{children}</OpacityLayer>),
+    renderLayer:(index:number | readonly number[],children:React.ReactNode)=><OpacityLayer current={current} index={index}>{children}</OpacityLayer>,
     frames:mealTimes.map((time,index) => {
       const sampled = mealFrame(time,reduced);
       return {time,meal:{...sampled,bite:meal.action === 'eat' && sampled.bite},
@@ -107,7 +106,9 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
       });
     });
   },[key,progress,onPresented,finish]);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    clock.set({key,drink});
+    progress.set(key*EPOCH);
     live.current = true;
     if (laidOut.current) begin();
     return () => {
@@ -116,10 +117,10 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
       if (frameRequest.current !== undefined) cancelAnimationFrame(frameRequest.current);
       cancelAnimation(progress);
     };
-  },[progress,begin]);
+  },[clock,key,drink,progress,begin]);
   return <View testID={meal ? 'meal-stage' : 'character-stage'} collapsable={false} onLayout={begin}
     style={{position:'absolute',left:0,top:0,right:0,bottom:0}}>
     {renderCharacter?.(value) ?? <HomeCharacter input={value}/>}
-    {meal && <Food {...{current,progress,meal,input,reduced}}/>}
+    {meal && <Food {...{current,clock,progress,meal,input,reduced}}/>}
   </View>;
 }

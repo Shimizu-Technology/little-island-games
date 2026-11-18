@@ -6,7 +6,8 @@ import type {MealPlayback} from '../../islander/rig/character';
 type ShapeProps={children?:React.ReactNode;d?:string;[key:string]:unknown};
 const AnimatedPath=Animated.createAnimatedComponent(Path);
 function ChangingPath({nodes,current,index}:{nodes:readonly React.ReactElement<ShapeProps>[];current:SharedValue<number>;index:(value:number)=>number}) {
-  const paths=nodes.map(n=>n.props.d);
+  const signature=JSON.stringify(nodes.map(n=>n.props.d));
+  const paths=React.useMemo(()=>JSON.parse(signature) as string[],[signature]);
   const props=useAnimatedProps(()=>({d:paths[index(current.value)]}));
   return <AnimatedPath {...nodes[0].props} animatedProps={props}/>;
 }
