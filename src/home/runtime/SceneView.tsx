@@ -53,6 +53,7 @@ const RestingEntity = memo(function RestingEntity({
   targetKey,
   action,
   meal,
+  mealVisible = true,
   onMealPresented,
   onMealFinished,
   mealHeld = false,
@@ -95,6 +96,7 @@ const RestingEntity = memo(function RestingEntity({
   targetKey: string;
   action?: "eat" | "drink";
   meal?: Meal;
+  mealVisible?:boolean;
   onMealPresented?: (id: string, key: number) => void;
   onMealFinished?: (id: string, key: number) => void;
   mealHeld?: boolean;
@@ -147,6 +149,10 @@ const RestingEntity = memo(function RestingEntity({
   }, (dir, before) => { if (dir !== before) runOnJS(publishGaze)(dir); }, [character, sleeping, id]);
   const gazeDir = Math.round(gazeCode / 4);
   const gaze = { x: gazeDir * (entity.facing === "left" ? -1 : 1), y: gazeCode - gazeDir * 4 };
+  // Hidden blink and anticipation drawings keep their last resting pose during
+  // a meal; only the visible working rig receives the transient action.
+  const idleArt=React.useRef({entity,gaze,mood});
+  if(!meal)idleArt.current={entity,gaze,mood};
   useAnimatedReaction(() => {
     if (!leaner || sleeping || reduced) return 0;
     for (const n of restingFlags.value.notice) if (n.id === leaner) return n.dir;
@@ -278,6 +284,7 @@ const RestingEntity = memo(function RestingEntity({
             actionOverride={action}
             prepareMeal={!!entity.character}
             meal={meal}
+            mealVisible={mealVisible}
             onMealPresented={presented}
             onMealFinished={finished}
             gaze={gaze}
@@ -289,13 +296,13 @@ const RestingEntity = memo(function RestingEntity({
         </Animated.View>
         {cacheBlink && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={entity} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            <EntityArt entity={idleArt.current.entity} gaze={idleArt.current.gaze} faceOverride={idleArt.current.mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
         )}
       </Animated.View>
       {entity.character && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
-          <EntityArt entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
+          <EntityArt entity={idleArt.current.entity} gaze={idleArt.current.gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
       </Animated.View>
@@ -348,6 +355,7 @@ export function SceneView({
   stress = false,
   reactions,
   meals = {},
+  mealReady,
   onMealPresented,
   onMealFinished,
   sleeping,
@@ -385,6 +393,7 @@ export function SceneView({
   stress?: boolean;
   reactions: Record<string, "eat" | "drink">;
   meals?: Record<string, Meal>;
+  mealReady?:Record<string,number>;
   onMealPresented?: (id: string, key: number) => void;
   onMealFinished?: (id: string, key: number) => void;
   sleeping: Record<string, boolean>;
@@ -392,6 +401,10 @@ export function SceneView({
   onMove: (id: string, action: string) => void;
 }) {
   const { camera } = interaction;
+  React.useLayoutEffect(()=>{
+    for(const [id,meal]of Object.entries(meals))if(meal.source && meal.capture && (!mealReady || mealReady[id]===meal.key))
+      interaction.completeMealHandoff?.(meal.source,meal.capture);
+  },[interaction.completeMealHandoff,meals,mealReady]);
   // HD-08: lamp shadows change only when the room's contents do.
   // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
   const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {
@@ -463,6 +476,7 @@ export function SceneView({
                 onNode={onNode}
                 action={reactions[entity.id]}
                 meal={meals[entity.id]}
+                mealVisible={!mealReady || mealReady[entity.id]===meals[entity.id]?.key}
                 onMealPresented={onMealPresented}
                 onMealFinished={onMealFinished}
                 mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
@@ -556,7 +570,7 @@ export function SceneView({
             activeRoom={state.current}
             scene={scene}
             pickups={pickups}
-            hiddenByMeal={Object.values(meals).flatMap(m=>m.source?[m.source]:[])}
+            hiddenByMeal={Object.entries(meals).flatMap(([id,m])=>m.source && (!mealReady || mealReady[id]===m.key)?[m.source]:[])}
             interaction={interaction}
             building={building}
             reduced={reduced}

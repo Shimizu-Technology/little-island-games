@@ -14,7 +14,7 @@ import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
 const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
-  live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
+  handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
 vi.mock('../src/home/runtime/homeSound', () => ({
@@ -31,7 +31,7 @@ vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, u
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harness.settings } }) }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
-vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {},
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {}, completeMealHandoff:(...args:any[])=>harness.handoffs.push(args),
   camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: () => {},
   showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
@@ -50,7 +50,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -523,4 +523,20 @@ it('H4b lab debug toggle hides the release probe so AX5 diagnostics cannot cover
   expect(root.root.findAllByProps({ accessibilityLabel: 'Release frame probe' })).toHaveLength(0);
   await act(async () => root.root.findByProps({ label: 'Toggle debug' }).props.onPress());
   expect(root.root.findAllByProps({ accessibilityLabel: 'Release frame probe' })).toHaveLength(1);
+});
+
+
+it('reveals the meal only after presentation and releases its captured source on interruption',async()=>{
+ const state=labFixtures['rig-menu-0']();await open(state);
+ const source='home/item/menu-0',owner='character/0';
+ const scene=buildScene(state),mouth=scene.rooms.home.targets.find(t=>t.owner===owner && t.kind==='mouth')!;
+ await drop(state,source,'home',mouth.contact,{target:mouth.id});
+ const meal=harness.scene.meals[owner];expect(meal).toBeDefined();
+ expect(harness.scene.mealReady?.[owner]).not.toBe(meal.key);
+ await act(async()=>harness.scene.onMealPresented(owner,meal.key));
+ expect(harness.scene.mealReady?.[owner]).toBe(meal.key);
+ const currentScene=harness.scene.scene;harness.slots=[{id:owner,generation:9,epoch:0},{}];
+ await act(async()=>harness.options.onPickup({id:owner,slot:0,scene:currentScene,generation:9,epoch:0}));
+ expect(harness.scene.meals[owner]).toBeUndefined();
+ expect(harness.handoffs).toContainEqual([source,meal.capture]);
 });

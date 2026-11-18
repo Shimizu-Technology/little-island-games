@@ -102,6 +102,7 @@ export function HomeScreen({
     [stress, setStress] = useState(false);
   const [reactions, setReactions] = useState<Record<string, "eat" | "drink">>({});
   const [meals, setMeals] = useState<Record<string, Meal>>({});
+  const [mealReady,setMealReady]=useState<Record<string,number>>({});
   const mealSerial = useRef(0);
   const mealFinishers = useRef<Record<string, { key: number; finish: () => void; presented: boolean }>>({});
   const entityNodes = useRef<Record<string, View>>({});
@@ -120,6 +121,7 @@ export function HomeScreen({
     reactionTimers.current = {};
     mealFinishers.current = {};
     setMeals({});
+    setMealReady({});
     setReactions({});
   }, []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
@@ -328,22 +330,27 @@ export function HomeScreen({
     },
     [shoreRooms]
   );
-  const showReaction = (proposal: DropProposal, food?: Meal["food"], offered = false, source = proposal.id) => {
+  const showReaction = (proposal: DropProposal, food?: Meal["food"], offered = false, source = proposal.id, capture?:Meal["capture"]) => {
     if (proposal.kind !== "mouth") return;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
     if (!target) return;
     wake(target.owner);
     const action = proposal.consume === "drink" ? "drink" : "eat";
+    const previousMeal=live.current.meals[target.owner];
+    if(previousMeal?.source && previousMeal.capture)runtime.current?.completeMealHandoff(previousMeal.source,previousMeal.capture);
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
     const key = ++mealSerial.current;
-    if (food) setMeals(current => ({ ...current, [target.owner]: { key, source, offered, food: { ...food }, action } }));
+    setMealReady(current=>{const next={...current};delete next[target.owner];return next;});
+    if (food) setMeals(current => ({ ...current, [target.owner]: { key, source, capture, offered, food: { ...food }, action } }));
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
     const finish = () => {
       if (mealFinishers.current[target.owner]?.key !== key) return;
       delete mealFinishers.current[target.owner];
       delete reactionTimers.current[target.owner];
+      const presentedMeal=live.current.meals[target.owner];
+      if(presentedMeal?.source && presentedMeal.capture)runtime.current?.completeMealHandoff(presentedMeal.source,presentedMeal.capture);
       setMeals(current => { const next = { ...current }; delete next[target.owner]; return next; });
       const owner = live.current.scene.entities[target.owner];
       if (owner?.character)
@@ -362,6 +369,7 @@ export function HomeScreen({
     const entry = mealFinishers.current[id];
     if (!entry || entry.key !== key || entry.presented || live.current.meals[id]?.key !== key) return;
     entry.presented = true;
+    setMealReady(current=>({...current,[id]:key}));
     clearTimeout(reactionTimers.current[id]);
     delete reactionTimers.current[id];
   }, []);
@@ -401,7 +409,7 @@ export function HomeScreen({
       if (result) {
         if (labKit && trace)
           trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
-        showReaction(result.proposal, mealFood, true, proposal.id);
+        showReaction(result.proposal, mealFood, true, proposal.id, token);
         const before = live.current.scene;
         const destination = buildRuntimeScene(result.state);
         setPickups((current) =>
@@ -418,7 +426,8 @@ export function HomeScreen({
           destination.revision,
           destination,
           token,
-          result.identities[result.proposal.id]
+          result.identities[result.proposal.id],
+          result.proposal.kind === "mouth" && !!mealFood
         );
         setRoom(result.proposal.room);
         if (runtime.current!.slots.get()[index]?.synthetic) {
@@ -448,6 +457,8 @@ export function HomeScreen({
           clearTimeout(reactionTimers.current[id]);
           delete reactionTimers.current[id];
           delete mealFinishers.current[id];
+          const interrupted=live.current.meals[id];
+          if(interrupted?.source && interrupted.capture)runtime.current?.completeMealHandoff(interrupted.source,interrupted.capture);
           setMeals(current => { const next = { ...current }; delete next[id]; return next; });
           setReactions(current => { const next = { ...current }; delete next[id]; return next; });
         }
@@ -964,6 +975,7 @@ export function HomeScreen({
             selected={selected}
             reactions={reactions}
             meals={meals}
+            mealReady={mealReady}
             onMealPresented={onMealPresented}
             onMealFinished={onMealFinished}
             sleeping={sleeping}

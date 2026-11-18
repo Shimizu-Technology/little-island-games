@@ -71,6 +71,8 @@ export type DragSlot = CaptureToken & {
   landedAt?: number;
   phase: "pending" | "dragging" | "settling";
   consumed: boolean;
+  /** A consumed release stays painted until its meal SVG has presented. */
+  mealPending?: boolean;
   absoluteX: number;
   absoluteY: number;
   x: number;
@@ -508,7 +510,8 @@ export function useInteraction({
     revision?: string,
     destination?: Scene,
     token?: CaptureToken,
-    identity?: string
+    identity?: string,
+    mealPending = false
   ) => {
     if (token && !isCurrent(index, token)) return;
     const current = slots.get();
@@ -533,6 +536,7 @@ export function useInteraction({
               targetX: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
               targetY: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
               proposal,
+              mealPending: committed && mealPending,
               consumed: s.catalog && !committed || committed && proposal?.kind === "mouth" && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
               subject: restEntity ?? s.subject,
@@ -547,6 +551,13 @@ export function useInteraction({
       )
     );
   };
+  const completeMealHandoff=useCallback((id:string,token:CaptureToken)=>{
+    slots.modify(current=>{
+      'worklet';
+      for(const slot of current)if(slot.id===id && slot.generation===token.generation && slot.epoch===token.epoch)slot.mealPending=false;
+      return current;
+    });
+  },[slots]);
   const unready = useCallback((id: string) => {
     overlayLayouts.modify(layouts => { "worklet"; delete layouts[id]; return layouts; });
   }, [overlayLayouts]);
@@ -1252,7 +1263,7 @@ export function useInteraction({
             const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
               (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
                 (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))))));
-            if (nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
+            if (!slot.mealPending && nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
                 const bounds = translatedBounds(
@@ -1545,6 +1556,7 @@ export function useInteraction({
     ready,
     unready,
     finish,
+    completeMealHandoff,
     cancelAll,
     frameTimes,
     renderedRevision,

@@ -1,9 +1,10 @@
 import {instance} from '../model';
 import {heldDrinkScale} from '../art/heldDrink';
+import {CharacterDrawing} from "./CharacterDrawing";
 import { MealArt } from "./MealArt";
 import type { Meal } from "./meal";
 import type { Gaze, CarryGrip } from "../../islander/rig/character";
-import { HomeCharacter, type CharacterRenderer } from "../characterRenderer";
+import { type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
 import { View } from "react-native";
 import Svg, { G } from 'react-native-svg';
@@ -69,12 +70,14 @@ export const EntityArt = memo(function EntityArt({
   prepareMeal = false,
   carryGrip,
   meal,
+  mealVisible = true,
   onMealPresented,
   onMealFinished,
   gaze,
 }: {
   entity: SceneEntity;
   meal?: Meal;
+  mealVisible?:boolean;
   onMealPresented?: () => void;
   onMealFinished?: () => void;
   gaze?: Gaze;
@@ -136,18 +139,25 @@ export const EntityArt = memo(function EntityArt({
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
       {!carry && !blink && !preview && (prepareMeal || meal) ? <>
-        <View pointerEvents="none" style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal?0:1}}>
-          {renderCharacter?.(input) ?? <HomeCharacter input={input}/>}
+        <View pointerEvents="none" style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal && mealVisible?0:1}}>
+          <IdleDrawing input={input} mealActive={!!meal} renderCharacter={renderCharacter}/>
         </View>
-        <View testID="prepared-meal" pointerEvents="none" collapsable={false} style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal?1:0}}>
-          <MealArt input={input} meal={meal ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
+        <View testID="prepared-meal" pointerEvents="none" collapsable={false} style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal && mealVisible?1:0}}>
+          <MealArt input={input} visible={!meal || mealVisible} meal={meal ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
         </View>
-      </> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
+      </> : <CharacterDrawing input={input} renderCharacter={renderCharacter}/> }
     </View>
   );
-}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealVisible === b.mealVisible && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&
   a.entity.character?.slot === b.entity.character?.slot && (a.entity.children.length === b.entity.children.length || !!a.carry && !!b.carry && !!a.carryGrip && a.carryGrip === b.carryGrip) &&
   JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));
+
+
+function IdleDrawing({input,mealActive,renderCharacter}:{input:Parameters<typeof CharacterDrawing>[0]['input'];mealActive:boolean;renderCharacter?:CharacterRender}) {
+  const resting=React.useRef(input);
+  if(!mealActive)resting.current=input;
+  return <CharacterDrawing input={resting.current} renderCharacter={renderCharacter}/>;
+}

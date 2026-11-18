@@ -1147,3 +1147,24 @@ it('mouth consumption never retargets the released overlay toward the nose while
  expect(final.targetX).toBe(at.x);expect(final.targetY).toBe(at.y);expect(final.finished).toBe(true);
  await act(async()=>tree.unmount());vi.useRealTimers();
 });
+
+
+it('keeps a consumed release visible until its own meal drawing is presented',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ touch('down',120,300);touch('move',150,320);flushJS();touch('up',150,320);
+ const at={...current.slots.get()[0]};
+ const proposal={...at.proposal!,kind:'mouth' as const,consume:'food' as const};
+ const destination=fixture('consumed');destination.entities={};destination.rooms.home.entities={};
+ current.finish(0,true,proposal,'consumed',destination,at,undefined,true);
+ await act(async()=>tree.update(<Probe scene={destination}/>));
+ for(let n=0;n<35;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+ expect(current.slots.get()[0].id).toBe(at.id);
+ expect(current.slots.get()[0].consumed).toBe(true);
+ current.completeMealHandoff(at.id,{generation:at.generation+1,epoch:at.epoch});
+ expect(current.slots.get()[0].mealPending).toBe(true);
+ current.completeMealHandoff(at.id,at);
+ expect(current.slots.get()[0].mealPending).toBe(false);
+ vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});
+ expect(current.slots.get()[0].id).toBe('');
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});

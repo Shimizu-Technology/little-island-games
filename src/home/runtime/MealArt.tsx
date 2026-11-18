@@ -69,9 +69,14 @@ function Food({ current, clock, progress, meal, input, reduced }: { current: Sha
     <FoodVariant {...{current,clock,meal,input,reduced}} after={false}/><FoodVariant {...{current,clock,meal,input,reduced}} after/>
   </Animated.View>;
 }
+/** Readiness changes the enclosing visibility, never the authored body. */
+const MealDrawing=React.memo(function MealDrawing({input,meal,playback,renderCharacter}:{input:CharacterRenderInput;meal?:Meal;playback?:CharacterRenderInput['mealPlayback'];renderCharacter?:CharacterRenderer}) {
+  const value=meal && playback?{...input,action:meal.action,meal:playback.frames[0].meal,mealPlayback:playback,blink:false}:input;
+  return renderCharacter?.(value) ?? <HomeCharacter input={value}/>;
+},(a,b)=>a.meal===b.meal && a.playback===b.playback && a.renderCharacter===b.renderCharacter && JSON.stringify(a.input)===JSON.stringify(b.input));
 /** Persistent body; authored arm/mouth poses and one small held-food stage. */
-export function MealArt({ input, meal, reduced, renderCharacter, onPresented, onFinished }: {
-  input: CharacterRenderInput; meal?: Meal; reduced: boolean; renderCharacter?: CharacterRenderer; onPresented?: () => void; onFinished?: () => void;
+export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderCharacter, onPresented, onFinished, visible = true }: {
+  input: CharacterRenderInput; meal?: Meal; visible?:boolean; reduced: boolean; renderCharacter?: CharacterRenderer; onPresented?: () => void; onFinished?: () => void;
 }) {
   const clock=useSharedValue({key:0,drink:false});
   const progress = useSharedValue(0), key = meal?.key ?? 0, slot = input.slot, drink=meal?.action==='drink';
@@ -79,7 +84,8 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
     const elapsed = progress.value - clock.value.key * EPOCH;
     return mealIndex(elapsed >= 0 && elapsed <= MEAL_MS ? elapsed : 0);
   });
-  const started = useRef(false), live = useRef(true), laidOut = useRef(false);
+  const started = useRef(false), live = useRef(true), laidOut = useRef(false), prepared=useRef(false), playing=useRef(false), visibleRef=useRef(visible);
+  visibleRef.current=visible;
   const frameRequest = useRef<number | undefined>(undefined);
   const finish = useCallback(() => { if (live.current) onFinished?.(); }, [onFinished]);
   const playback = useMemo(() => !meal ? undefined : ({ progress,
@@ -91,7 +97,12 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
         face:time < 150 ? 'neutral' as const : meal.action === 'drink' ? 'happy' as const : sampled.bite ? 'anticipate' as const : 'chew' as const,
         held:foodArt(slot,meal,time,index,reduced)};
     }) }),[progress,current,meal,reduced,slot]);
-  const value = meal && playback ? {...input,action:meal.action,meal:playback.frames[0].meal,mealPlayback:playback,blink:false} : input;
+  const play=useCallback(()=>{
+    if(!key || !live.current || playing.current)return;
+    playing.current=true;
+    progress.set(key*EPOCH);
+    progress.set(withTiming(key*EPOCH+MEAL_MS,{duration:MEAL_MS,easing:Easing.linear,reduceMotion:ReduceMotion.Never},done=>{if(done)runOnJS(finish)();}));
+  },[key,progress,finish]);
   const begin = useCallback(() => {
     laidOut.current = true;
     if (!key || started.current) return;
@@ -100,12 +111,12 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
       if (!live.current) return;
       frameRequest.current = requestAnimationFrame(() => {
         if (!live.current) return;
-        progress.set(key * EPOCH);
-        progress.set(withTiming(key * EPOCH + MEAL_MS, {duration:MEAL_MS,easing:Easing.linear,reduceMotion:ReduceMotion.Never}, done => {if (done) runOnJS(finish)();}));
+        prepared.current=true;
+        if(visibleRef.current)play();
         onPresented?.();
       });
     });
-  },[key,progress,onPresented,finish]);
+  },[key,onPresented,play]);
   useLayoutEffect(() => {
     clock.set({key,drink});
     progress.set(key*EPOCH);
@@ -114,13 +125,16 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
     return () => {
       live.current = false;
       started.current = false;
+      prepared.current=false;
+      playing.current=false;
       if (frameRequest.current !== undefined) cancelAnimationFrame(frameRequest.current);
       cancelAnimation(progress);
     };
   },[clock,key,drink,progress,begin]);
+  useLayoutEffect(()=>{if(visible && prepared.current)play();},[visible,play]);
   return <View testID={meal ? 'meal-stage' : 'character-stage'} collapsable={false} onLayout={begin}
     style={{position:'absolute',left:0,top:0,right:0,bottom:0}}>
-    {renderCharacter?.(value) ?? <HomeCharacter input={value}/>}
+    <MealDrawing input={input} meal={meal} playback={playback} renderCharacter={renderCharacter}/>
     {meal && <Food {...{current,clock,progress,meal,input,reduced}}/>}
   </View>;
-}
+},(a,b)=>a.meal===b.meal && a.visible===b.visible && a.reduced===b.reduced && a.renderCharacter===b.renderCharacter && a.onPresented===b.onPresented && a.onFinished===b.onFinished && JSON.stringify(a.input)===JSON.stringify(b.input));

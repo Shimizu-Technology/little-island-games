@@ -8,13 +8,13 @@ import {EntityArt} from '../src/home/runtime/EntityArt';
 import {buildScene} from '../src/home/scene/graph';
 import {labFixtures} from '../src/home/runtime/lab';
 import {instance} from '../src/home/model';
-const clock=vi.hoisted(()=>({shared:undefined as any}));
+const clock=vi.hoisted(()=>({shared:undefined as any,animations:0}));
 vi.mock('react-native-gesture-handler',()=>({Gesture:{Manual:()=>({})}}));
 vi.mock('react-native',()=>({View:'view',Platform:{OS:'ios'}}));
 vi.mock('react-native-svg',()=>Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
-vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>v,useAnimatedReaction:()=>{},cancelAnimation:()=>{},runOnJS:(fn:any)=>fn,
+vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>{clock.animations++;return v;},useAnimatedReaction:()=>{},cancelAnimation:()=>{},runOnJS:(fn:any)=>fn,
  useSharedValue:(v:number)=>{const shared=React.useRef({value:v,set(n:number){this.value=n;}}).current;clock.shared=shared;return shared;},
- useDerivedValue:(fn:any)=>({get value(){return fn();}}),useAnimatedStyle:(fn:any)=>({evaluate:fn}),useAnimatedProps:(fn:any)=>({evaluate:fn})}));
+ useDerivedValue:(fn:any)=>{const latest=React.useRef(fn);latest.current=fn;return React.useRef({get value(){return latest.current();}}).current;},useAnimatedStyle:(fn:any)=>({evaluate:fn}),useAnimatedProps:(fn:any)=>({evaluate:fn})}));
 vi.mock('../src/home/art/Items',()=>({ItemArt:()=>null}));
 vi.mock('../src/home/art/More',()=>({MoreItemArt:()=>null}));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
@@ -128,7 +128,7 @@ it('prebuilt loose and holding arms keep the authored hand geometry at every car
   await act(async()=>{tree=create(<EntityArt entity={{...hero,facing}} carry carryGrip={grip} reduced={false} tilt={lean*6} limbLag={Math.abs(lean)}/>);});
   for(const held of [false,true]){
    let reference!:ReturnType<typeof create>;
-   await act(async()=>{reference=create(<EntityArt entity={{...hero,facing,children:held?['cup']:[]}} carry reduced={false} tilt={lean*6} limbLag={Math.abs(lean)}/>);});
+   await act(async()=>{reference=create(<HomeCharacter input={{slot:0,base:'carry',facing:facing==='left'?'left':'right',size:224,face:null,action:held?'hold':null,tilt:lean*6,limbLag:Math.abs(lean),gaze:{x:0,y:-1}}}/>);});
    for(const marker of [{'data-limb':'right-arm'},{'data-mitten':'right'}]){
     const variants=tree.root.findAllByProps(marker).filter(n=>typeof n.type==='string');
     const selected=variants.find(n=>{let p=n.parent;while(p){if(p.props['data-carry-state']!==undefined)return p.props['data-carry-state']===String(held);p=p.parent;}return false;});
@@ -139,4 +139,82 @@ it('prebuilt loose and holding arms keep the authored hand geometry at every car
   }
   await act(async()=>tree.unmount());
  }
+});
+
+
+it('does not repaint hidden human landing bodies when the first cup is attached',async()=>{
+ const {SettleArt}=await import('../src/home/runtime/SettleArt');
+ const hero=buildScene(labFixtures['rig-meal']()).entities['character/0'];
+ const interaction={slots:{value:[{},{}]},clock:{value:0},poseLayouts:{value:{}}}as any;
+ const render=vi.fn((_input:any)=>React.createElement('body'));let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<SettleArt source={hero} interaction={interaction} index={0} reduced={false} bases={['stand']} renderCharacter={render}/>);});
+ const before=render.mock.calls.length;
+ const held={...hero,action:'hold' as const,children:['cup']};
+ await act(async()=>tree.update(<SettleArt source={held} interaction={interaction} index={0} reduced={false} bases={['stand']} renderCharacter={render}/>));
+ expect(render.mock.calls.length).toBe(before);
+ await act(async()=>tree.unmount());
+});
+
+it('keeps the hidden idle human drawing unchanged during an offered drink',async()=>{
+ const hero=buildScene(labFixtures['rig-meal']()).entities['character/0'];
+ const render=vi.fn((_input:any)=>React.createElement('body'));let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<EntityArt prepareMeal entity={hero} reduced={false} renderCharacter={render}/>);});
+ render.mockClear();
+ const meal={key:12,action:'drink' as const,food:instance('cup','coconut-drink',0,0)};
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={{...hero,action:'drink',children:['cup']}} meal={meal} reduced={false} renderCharacter={render}/>));
+ expect(render.mock.calls).toHaveLength(1);
+ expect(render.mock.calls[0]?.[0]?.mealPlayback).toBeDefined();
+ await act(async()=>tree.unmount());
+});
+
+
+it('prebuilt resting grips match the authored hold arm in each base and facing',async()=>{
+ const {CharacterDrawing}=await import('../src/home/runtime/CharacterDrawing');
+ for(const base of ['stand','sit','lie','bathe']as const)for(const facing of ['left','right']as const){
+  const input={slot:0 as const,base,facing,size:224,face:null,action:null};
+  let draw:any;const render=(value:any)=>{draw=value;return React.createElement('body');};
+  let tree!:ReturnType<typeof create>;
+  await act(async()=>{tree=create(<CharacterDrawing input={input} renderCharacter={render}/>);});
+  for(const held of [false,true]){
+   await act(async()=>tree.update(<CharacterDrawing input={{...input,action:held?'hold':null}} renderCharacter={render}/>));
+   expect(draw.carryGrip.renderLayer(held,null).props.holding.value).toBe(held);
+   let actual!:ReturnType<typeof create>,expected!:ReturnType<typeof create>;
+   await act(async()=>{actual=create(<HomeCharacter input={draw}/>);expected=create(<HomeCharacter input={{...input,action:held?'hold':null}}/>);});
+   for(const marker of [{'data-limb':'right-arm'},{'data-mitten':'right'}]){
+    const selected=actual.root.findAllByProps(marker).filter(n=>typeof n.type==='string').find(n=>{
+     let p=n.parent;while(p){if(p.props.selected!==undefined)return p.props.selected===held;p=p.parent;}return false;
+    });
+    const target=expected.root.findAllByProps(marker).find(n=>typeof n.type==='string');
+    expect(selected).toBeDefined();expect(selected?.props.d).toBe(target?.props.d);
+   }
+   await act(async()=>{actual.unmount();expected.unmount();});
+  }
+  await act(async()=>tree.unmount());
+ }
+});
+
+
+it('prepares food behind the resting drawing until the native handoff is ready',async()=>{
+ const hero=buildScene(labFixtures['rig-meal']()).entities['character/0'];
+ const meal={key:13,action:'eat' as const,food:instance('snack','mango',0,0)};
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<EntityArt prepareMeal entity={hero} meal={meal} mealVisible={false} reduced={false}/>);});
+ expect(tree.root.findByProps({testID:'prepared-meal'}).props.style.opacity).toBe(0);
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={hero} meal={meal} mealVisible reduced={false}/>));
+ expect(tree.root.findByProps({testID:'prepared-meal'}).props.style.opacity).toBe(1);
+ await act(async()=>tree.unmount());
+});
+
+
+it('waits for visibility before playing a prepared meal, without repainting its body',async()=>{
+ const frames:Array<()=>void>=[];vi.stubGlobal('requestAnimationFrame',(fn:()=>void)=>{frames.push(fn);return frames.length;});
+ const input={slot:0 as const,base:'stand' as const,action:null,face:null,facing:'right' as const,size:224};
+ const meal={key:100,action:'eat' as const,food:instance('snack','mango',0,0)},presented=vi.fn(),render=vi.fn(()=>React.createElement('body'));
+ let tree!:ReturnType<typeof create>;clock.animations=0;
+ await act(async()=>{tree=create(<MealArt input={input} meal={meal} visible={false} reduced={false} onPresented={presented} renderCharacter={render}/>);});
+ await act(async()=>{tree.root.findByProps({testID:'meal-stage'}).props.onLayout();frames.shift()!();frames.shift()!();});
+ expect(presented).toHaveBeenCalledOnce();expect(clock.animations).toBe(0);
+ await act(async()=>tree.update(<MealArt input={{...input}} meal={meal} visible reduced={false} onPresented={presented} renderCharacter={render}/>));
+ expect(clock.animations).toBe(1);expect(render).toHaveBeenCalledOnce();
+ await act(async()=>tree.unmount());vi.stubGlobal('requestAnimationFrame',()=>1);
 });
