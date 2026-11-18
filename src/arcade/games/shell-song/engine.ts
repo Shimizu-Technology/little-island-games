@@ -7,7 +7,11 @@ import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type 
  * remember: an ordinary note is one unit, and a paired echo (the same shell twice) is one unit shown
  * as two taps. Recall load is measured in units; `taps` is only what the child presses.
  */
-export type SongLevel = ArcadeLevel & { shells: number; startLength: number; rounds: number; noteMs: number; twist: "growing" | "response" | "twins" | "finale" | "word"; word?: string; units: readonly number[]; taps: readonly number[] };
+export type SongLevel = ArcadeLevel & {
+  shells: number; startLength: number; rounds: number; noteMs: number; twist: "growing" | "response" | "twins" | "finale" | "word"; word?: string; units: readonly number[]; taps: readonly number[];
+  /** 2: the AR-02 phrase counts, motif units and one tempo curve. Stars and bests from version 1 stay as earned. */
+  rulesVersion: 2;
+};
 export type SongState = { level: SongLevel | "endless"; seed: number; helper: boolean; pattern: number[]; shells: number; lives: Lives; event: number; onset: number; phase: "over" | "watch" | "repeat" | "picture" | "cleared" | "rest"; elapsed: number; cursor: number; rounds: number; slips: number; score: number; lastTap: number | null; choices: string[]; message: string; helped: boolean; /** Times the child pressed Replay this round. A slip's automatic replay is not counted. */ replays: number };
 export type SongInput = { type: "tick" } | { type: "shell"; index: number } | { type: "picture"; word: string } | { type: "replay" } | { type: "helper"; value: boolean } | { type: "finish" } | { type: "show" };
 // All picture targets and sound tiles come from the existing curated reading bank.
@@ -33,7 +37,7 @@ export const songLevels: readonly SongLevel[] = allLevelIds.map(id => {
   // One tempo curve across W1-1 … W6-8 that never slows at a world entry; it is separate from recall load.
   const noteMs = learning ? 3200 : [620, 540, 460, 400, 352, 310][rank] - (index - 1) * [10, 10, 8, 6, 6, 4][rank];
   const goal = twist === "response" ? `Answer ${rounds} new phrases` : twist === "twins" ? `Echo ${rounds} paired phrases` : twist === "finale" ? `Play a long finale of ${rounds} phrases` : `Repeat ${rounds} growing patterns`;
-  return { id, index, world, name: learning ? `Sound a word · ${index}` : `${songWorldNames[rank]} · ${index}`, shells, startLength, rounds, twist, noteMs, units, taps, ...(word ? { word } : {}), goals: [learning ? "Blend the sounds. Pick their picture." : goal, "Finish with 1 slip or fewer", "Finish with no slips"] };
+  return { id, index, world, name: learning ? `Sound a word · ${index}` : `${songWorldNames[rank]} · ${index}`, shells, startLength, rounds, twist, noteMs, units, taps, rulesVersion: 2 as const, ...(word ? { word } : {}), goals: [learning ? "Blend the sounds. Pick their picture." : goal, "Finish with 1 slip or fewer", "Finish with no slips"] };
 });
 /** The longest phrase of a level in independent motif units: the Shell Song memory measure. */
 export const songMotifUnits = (level: SongLevel) => Math.max(...level.units);

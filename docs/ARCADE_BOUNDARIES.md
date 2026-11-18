@@ -274,64 +274,64 @@ Helper (runtime start value, off → on): pace ×0.8.
 
 ## palm-patrol
 
-| Level | March speed at start (px/s) ▲ | March speed at its hardest (px/s) ▲ | Beetles in formations (a crown's own wave apart) ▲ | Extra nets for armor ▲ | Dive interval at start (s) ▼ | Dive interval at its hardest (s) ▼ | Facts ▲ |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| w1-1 | 40 | 78.72 | 5 | 0 | — | — | — |
-| w1-2 | 41.1 | 80.8848 | 5 | 0 | — | — | — |
-| w1-3 | 42.2 | 83.0496 | 5 | 0 | — | — | — |
-| w1-4 | 43.3 | 88.332 | 8 | 0 | — | — | — |
-| w1-5 | 44.4 | 91.6416 | 10 | 0 | — | — | — |
-| w1-6 | 45.5 | 94.64 | 12 | 0 | — | — | — |
-| w1-7 | 46.6 | 97.4606 | 14 | 0 | — | — | — |
-| w1-8 | 47.7 | 99.7611 | 14 | 0 | — | — | — |
-| w2-1 | 46 ↓ | 94.944 ↓ | 20 | 0 | 3.75 | 2.8846 | — |
-| w2-2 | 47.1 | 97.2144 | 20 | 0 | 3.7 | 2.8462 | — |
-| w2-3 | 48.2 | 99.4848 | 20 | 0 | 3.65 | 2.8077 | — |
-| w2-4 | 49.3 | 101.7552 | 20 | 0 | 3.6 | 2.7692 | — |
-| w2-5 | 50.4 | 104.0256 | 20 | 0 | 3.55 | 2.7308 | — |
-| w2-6 | 51.5 | 106.296 | 20 | 0 | 3.5 | 2.6923 | — |
-| w2-7 | 52.6 | 108.5664 | 20 | 0 | 3.45 | 2.6538 | — |
-| w2-8 | 53.7 | 110.8368 | 20 | 0 | 3.4 | 2.6154 | — |
-| w3-1 | 52 ↓ | 106.7733 ↓ | 27 | 6 | 3.35 | 2.5769 | — |
-| w3-2 | 53.1 | 109.032 | 27 | 6 | 3.3 | 2.5385 | — |
-| w3-3 | 54.2 | 111.2907 | 27 | 6 | 3.25 | 2.5 | — |
-| w3-4 | 55.3 | 113.5493 | 27 | 6 | 3.2 | 2.4615 | — |
-| w3-5 | 56.4 | 115.808 | 27 | 6 | 3.15 | 2.4231 | — |
-| w3-6 | 57.5 | 118.0667 | 27 | 6 | 3.1 | 2.3846 | — |
-| w3-7 | 58.6 | 120.3253 | 27 | 6 | 3.05 | 2.3462 | — |
-| w3-8 | 59.7 | 122.584 | 27 | 6 | 3 | 2.3077 | — |
-| w4-1 | 58 ↓ | 119.0933 ↓ | 27 | 6 | 2.95 | 2.2692 | — |
-| w4-2 | 59.1 | 121.352 | 27 | 6 | 2.9 | 2.2308 | — |
-| w4-3 | 60.2 | 123.6107 | 27 | 6 | 2.85 | 2.1923 | — |
-| w4-4 | 61.3 | 125.8693 | 27 | 6 | 2.8 | 2.1538 | — |
-| w4-5 | 62.4 | 128.128 | 27 | 6 | 2.75 | 2.1154 | — |
-| w4-6 | 63.5 | 130.3867 | 27 | 6 | 2.7 | 2.0769 | — |
-| w4-7 | 64.6 | 132.6453 | 27 | 6 | 2.65 | 2.0385 | — |
-| w4-8 | 65.7 | 134.904 | 27 | 6 | 2.6 | 2 | — |
-| w5-1 | 64 ↓ | 131.4133 ↓ | 27 | 6 | 2.55 | 1.9615 | — |
-| w5-2 | 65.1 | 133.672 | 27 | 6 | 2.5 | 1.9231 | — |
-| w5-3 | 66.2 | 135.9307 | 27 | 6 | 2.45 | 1.8846 | — |
-| w5-4 | 67.3 | 138.1893 | 27 | 6 | 2.4 | 1.8462 | — |
-| w5-5 | 68.4 | 140.448 | 27 | 6 | 2.35 | 1.8077 | — |
-| w5-6 | 69.5 | 142.7067 | 27 | 6 | 2.3 | 1.7692 | — |
-| w5-7 | 70.6 | 144.9653 | 27 | 6 | 2.25 | 1.7308 | — |
-| w5-8 | 71.7 | 147.224 | 27 | 6 | 2.2 | 1.6923 | — |
-| w6-1 | 70 ↓ | 143.7333 ↓ | 36 | 8 | 2.15 | 1.6538 | — |
-| w6-2 | 71.1 | 145.992 | 36 | 8 | 2.1 | 1.6154 | — |
-| w6-3 | 72.2 | 148.2507 | 36 | 8 | 2.05 | 1.5769 | — |
-| w6-4 | 73.3 | 150.5093 | 36 | 8 | 2 | 1.5385 | — |
-| w6-5 | 74.4 | 152.768 | 36 | 8 | 1.95 | 1.5 | — |
-| w6-6 | 75.5 | 155.0267 | 36 | 8 | 1.9 | 1.4615 | — |
-| w6-7 | 76.6 | 157.2853 | 36 | 8 | 1.85 | 1.4231 | — |
-| w6-8 | 77.7 | 159.544 | 36 | 8 | 1.8 | 1.3846 | — |
-| learn-1 | — | — | — | — | — | — | 3 |
-| learn-2 | — | — | — | — | — | — | 3 |
-| learn-3 | — | — | — | — | — | — | 4 |
-| learn-4 | — | — | — | — | — | — | 4 |
-| learn-5 | — | — | — | — | — | — | 4 |
-| learn-6 | — | — | — | — | — | — | 5 |
-| learn-7 | — | — | — | — | — | — | 5 |
-| learn-8 | — | — | — | — | — | — | 5 |
+| Level | March speed at start (px/s) ▲ | March speed at its hardest (px/s) ▲ | Beetles to net, crowns included ▲ | Extra nets for armor ▲ | Nets needed, armor and crowns included ▲ | Dive interval at start (s) ▼ | Dive interval at its hardest (s) ▼ | Facts ▲ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| w1-1 | 40 | 78.72 | 5 | 0 | 5 | — | — | — |
+| w1-2 | 41.1 | 80.8848 | 5 | 0 | 5 | — | — | — |
+| w1-3 | 42.2 | 83.0496 | 5 | 0 | 5 | — | — | — |
+| w1-4 | 43.3 | 88.332 | 8 | 0 | 8 | — | — | — |
+| w1-5 | 44.4 | 91.6416 | 10 | 0 | 10 | — | — | — |
+| w1-6 | 45.5 | 94.64 | 12 | 0 | 12 | — | — | — |
+| w1-7 | 46.6 | 97.4606 | 14 | 0 | 14 | — | — | — |
+| w1-8 | 47.7 | 99.7611 | 15 | 0 | 19 | — | — | — |
+| w2-1 | 46 ↓ | 94.944 ↓ | 20 | 0 | 20 | 3.75 | 2.8846 | — |
+| w2-2 | 47.1 | 97.2144 | 20 | 0 | 20 | 3.7 | 2.8462 | — |
+| w2-3 | 48.2 | 99.4848 | 20 | 0 | 20 | 3.65 | 2.8077 | — |
+| w2-4 | 49.3 | 101.7552 | 20 | 0 | 20 | 3.6 | 2.7692 | — |
+| w2-5 | 50.4 | 104.0256 | 20 | 0 | 20 | 3.55 | 2.7308 | — |
+| w2-6 | 51.5 | 106.296 | 20 | 0 | 20 | 3.5 | 2.6923 | — |
+| w2-7 | 52.6 | 108.5664 | 20 | 0 | 20 | 3.45 | 2.6538 | — |
+| w2-8 | 53.7 | 110.8368 | 21 | 0 | 25 | 3.4 | 2.6154 | — |
+| w3-1 | 52 ↓ | 106.7733 ↓ | 27 | 6 | 33 | 3.35 | 2.5769 | — |
+| w3-2 | 53.1 | 109.032 | 27 | 6 | 33 | 3.3 | 2.5385 | — |
+| w3-3 | 54.2 | 111.2907 | 27 | 6 | 33 | 3.25 | 2.5 | — |
+| w3-4 | 55.3 | 113.5493 | 27 | 6 | 33 | 3.2 | 2.4615 | — |
+| w3-5 | 56.4 | 115.808 | 27 | 6 | 33 | 3.15 | 2.4231 | — |
+| w3-6 | 57.5 | 118.0667 | 27 | 6 | 33 | 3.1 | 2.3846 | — |
+| w3-7 | 58.6 | 120.3253 | 27 | 6 | 33 | 3.05 | 2.3462 | — |
+| w3-8 | 59.7 | 122.584 | 28 | 6 | 38 | 3 | 2.3077 | — |
+| w4-1 | 58 ↓ | 119.0933 ↓ | 27 ↓ | 6 | 33 ↓ | 2.95 | 2.2692 | — |
+| w4-2 | 59.1 | 121.352 | 27 | 6 | 33 | 2.9 | 2.2308 | — |
+| w4-3 | 60.2 | 123.6107 | 27 | 6 | 33 | 2.85 | 2.1923 | — |
+| w4-4 | 61.3 | 125.8693 | 27 | 6 | 33 | 2.8 | 2.1538 | — |
+| w4-5 | 62.4 | 128.128 | 27 | 6 | 33 | 2.75 | 2.1154 | — |
+| w4-6 | 63.5 | 130.3867 | 27 | 6 | 33 | 2.7 | 2.0769 | — |
+| w4-7 | 64.6 | 132.6453 | 27 | 6 | 33 | 2.65 | 2.0385 | — |
+| w4-8 | 65.7 | 134.904 | 28 | 6 | 38 | 2.6 | 2 | — |
+| w5-1 | 64 ↓ | 131.4133 ↓ | 27 ↓ | 6 | 33 ↓ | 2.55 | 1.9615 | — |
+| w5-2 | 65.1 | 133.672 | 27 | 6 | 33 | 2.5 | 1.9231 | — |
+| w5-3 | 66.2 | 135.9307 | 27 | 6 | 33 | 2.45 | 1.8846 | — |
+| w5-4 | 67.3 | 138.1893 | 27 | 6 | 33 | 2.4 | 1.8462 | — |
+| w5-5 | 68.4 | 140.448 | 27 | 6 | 33 | 2.35 | 1.8077 | — |
+| w5-6 | 69.5 | 142.7067 | 27 | 6 | 33 | 2.3 | 1.7692 | — |
+| w5-7 | 70.6 | 144.9653 | 27 | 6 | 33 | 2.25 | 1.7308 | — |
+| w5-8 | 71.7 | 147.224 | 28 | 6 | 38 | 2.2 | 1.6923 | — |
+| w6-1 | 70 ↓ | 143.7333 ↓ | 36 | 8 | 44 | 2.15 | 1.6538 | — |
+| w6-2 | 71.1 | 145.992 | 36 | 8 | 44 | 2.1 | 1.6154 | — |
+| w6-3 | 72.2 | 148.2507 | 36 | 8 | 44 | 2.05 | 1.5769 | — |
+| w6-4 | 73.3 | 150.5093 | 36 | 8 | 44 | 2 | 1.5385 | — |
+| w6-5 | 74.4 | 152.768 | 36 | 8 | 44 | 1.95 | 1.5 | — |
+| w6-6 | 75.5 | 155.0267 | 36 | 8 | 44 | 1.9 | 1.4615 | — |
+| w6-7 | 76.6 | 157.2853 | 36 | 8 | 44 | 1.85 | 1.4231 | — |
+| w6-8 | 77.7 | 159.544 | 36 | 8 | 48 | 1.8 | 1.3846 | — |
+| learn-1 | — | — | — | — | — | — | — | 3 |
+| learn-2 | — | — | — | — | — | — | — | 3 |
+| learn-3 | — | — | — | — | — | — | — | 4 |
+| learn-4 | — | — | — | — | — | — | — | 4 |
+| learn-5 | — | — | — | — | — | — | — | 4 |
+| learn-6 | — | — | — | — | — | — | — | 5 |
+| learn-7 | — | — | — | — | — | — | — | 5 |
+| learn-8 | — | — | — | — | — | — | — | 5 |
 
 **Easings**
 
@@ -341,8 +341,12 @@ Helper (runtime start value, off → on): pace ×0.8.
 - w2-8 → w3-1, March speed at its hardest: 110.8368 → 106.7733. Rest beat, teaches armored beetles. March speed eases by 1.7 px/s while armored beetles need two nets. Reviewed up to 3.7%.
 - w3-8 → w4-1, March speed at start: 59.7 → 58. Rest beat, teaches aimed tosses. March speed eases by 1.7 px/s while the toss starts aiming. Reviewed up to 2.9%.
 - w3-8 → w4-1, March speed at its hardest: 122.584 → 119.0933. Rest beat, teaches aimed tosses. March speed eases by 1.7 px/s while the toss starts aiming. Reviewed up to 2.9%.
+- w3-8 → w4-1, Beetles to net, crowns included: 28 → 27. Rest beat, teaches aimed tosses. The level after a crown has no crown wave: 27 beetles and 33 nets after W3-8's 28 and 38, while the toss starts aiming. Reviewed beside the speed rest beat. Reviewed up to 13.2%.
+- w3-8 → w4-1, Nets needed, armor and crowns included: 38 → 33. Rest beat, teaches aimed tosses. The level after a crown has no crown wave: 27 beetles and 33 nets after W3-8's 28 and 38, while the toss starts aiming. Reviewed beside the speed rest beat. Reviewed up to 13.2%.
 - w4-8 → w5-1, March speed at start: 65.7 → 64. Rest beat, teaches shield gaps. March speed eases by 1.7 px/s while shield gaps change the safe toss paths. Reviewed up to 2.6%.
 - w4-8 → w5-1, March speed at its hardest: 134.904 → 131.4133. Rest beat, teaches shield gaps. March speed eases by 1.7 px/s while shield gaps change the safe toss paths. Reviewed up to 2.6%.
+- w4-8 → w5-1, Beetles to net, crowns included: 28 → 27. Rest beat, teaches shield gaps. The level after a crown has no crown wave: 27 beetles and 33 nets after W4-8's 28 and 38, while shield gaps change the safe toss paths. Reviewed beside the speed rest beat. Reviewed up to 13.2%.
+- w4-8 → w5-1, Nets needed, armor and crowns included: 38 → 33. Rest beat, teaches shield gaps. The level after a crown has no crown wave: 27 beetles and 33 nets after W4-8's 28 and 38, while shield gaps change the safe toss paths. Reviewed beside the speed rest beat. Reviewed up to 13.2%.
 - w5-8 → w6-1, March speed at start: 71.7 → 70. Rest beat, teaches a fourth wave. March speed eases by 1.7 px/s while every level adds a fourth wave. Reviewed up to 2.4%.
 - w5-8 → w6-1, March speed at its hardest: 147.224 → 143.7333. Rest beat, teaches a fourth wave. March speed eases by 1.7 px/s while every level adds a fourth wave. Reviewed up to 2.4%.
 

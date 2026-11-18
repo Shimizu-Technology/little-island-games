@@ -100,8 +100,8 @@ describe("Palm fresh fact input and opener", () => {
       expect(s.time).toBeLessThan(l.par);
       expect(palmResult(s)?.stars).toBe(3);
     }
-    // AR-05 caps W6 at four waves of nine with armor counted apart, short of the old 180-beetle nominal.
-    const hard = palmLevel("w6-8"); expect(palmWorkload(hard)).toEqual({ beetles: 36, armorHits: 8, crownWave: false });
+    // AR-05 caps W6 at four waves of nine with armor and the crown counted apart, short of the old 180-beetle nominal.
+    const hard = palmLevel("w6-8"); expect(palmWorkload(hard)).toEqual({ beetles: 36, armorHits: 8, crowns: 1, crownHp: 5, nets: 48, crownWave: false });
     const a = arcadeTransition(emptyArcade(), "family", finish("old-stars", 3, "palm-patrol"));
     expect(parseSave(JSON.stringify({ ...emptySave(), arcade: a }))?.arcade?.people.family.games["palm-patrol"]?.stars["w1-1"]).toBe(3);
   });

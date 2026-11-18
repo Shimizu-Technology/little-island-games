@@ -121,17 +121,19 @@ function table(game: ArcadeId): GameTable {
     case "palm-patrol": return {
       game, metrics: [
         ...runtime("speed", "March speed", "up", "reaction", "px/s"),
-        { id: "beetles", label: "Beetles in formations (a crown's own wave apart)", harder: "up", kind: "workload" },
-        { id: "armor", label: "Extra nets for armor", harder: "up", kind: "workload" },
+        // One workload parameter: a note on it covers all three columns.
+        { id: "beetles", label: "Beetles to net, crowns included", harder: "up", kind: "workload", param: "workload" },
+        { id: "armor", label: "Extra nets for armor", harder: "up", kind: "workload", param: "workload" },
+        { id: "nets", label: "Nets needed, armor and crowns included", harder: "up", kind: "workload", param: "workload" },
         ...runtime("dive", "Dive interval", "down", "spawn", "s"),
         { id: "facts", label: "Facts", harder: "up", kind: "workload" },
       ],
       rows: palmLevels.map(l => {
-        if (!ordinary(l.id)) return { level: l.id, values: { speed: null, speedPeak: null, beetles: null, armor: null, dive: null, divePeak: null, facts: l.facts } };
+        if (!ordinary(l.id)) return { level: l.id, values: { speed: null, speedPeak: null, beetles: null, armor: null, nets: null, dive: null, divePeak: null, facts: l.facts } };
         // The march speeds up as beetles are caught and as a wave goes on: one beetle left, 22 seconds in.
         const s = createPalm(l, 42, false), late = { ...s, beetles: s.beetles.map((b, i) => i ? { ...b, caught: 1 } : b), waveTime: 22 }, dive = (v: number) => v > 0 ? round(v) : null;
         const work = palmWorkload(l);
-        return { level: l.id, values: { speed: round(palmMarchSpeed(s)), speedPeak: round(palmMarchSpeed(late)), beetles: work.beetles, armor: work.armorHits, dive: dive(palmDiveInterval(s)), divePeak: dive(palmDiveInterval(late)), facts: null } };
+        return { level: l.id, values: { speed: round(palmMarchSpeed(s)), speedPeak: round(palmMarchSpeed(late)), beetles: work.beetles, armor: work.armorHits, nets: work.nets, dive: dive(palmDiveInterval(s)), divePeak: dive(palmDiveInterval(late)), facts: null } };
       }),
       helper: palmLevels.filter(l => ordinary(l.id)).map(l => ({ level: l.id, metric: "march", off: round(palmMarchSpeed(createPalm(l, 42, false))), on: round(palmMarchSpeed(createPalm(l, 42, true))), harder: "up" as const })),
     };
@@ -229,7 +231,11 @@ export function easings(tables = boundaryTables()): Easing[] {
   return out;
 }
 
-export type RestBeat = { teaches: string; reason: string };
+/**
+ * `with` names another parameter's rest beat at the same step that this one was reviewed beside, as when
+ * a world entry eases both march speed and workload while it teaches one new thing.
+ */
+export type RestBeat = { teaches: string; reason: string; with?: string };
 /**
  * Either a deliberate rest beat or a known easing with a stated reason and the ledger row that owns it.
  * `metric` names a parameter: one note covers its start and peak columns. `upTo` is the largest
@@ -256,9 +262,14 @@ export function boundaryIssues(notes: readonly EasingNote[], tables = boundaryTa
     else if (easedBy(e) > n.upTo + 1e-6) issues.push(`Easing larger than reviewed: ${e.game} ${e.from} → ${e.level} ${e.metric} ${e.before} → ${e.after} eases ${Number(easedBy(e).toFixed(1))}%, reviewed up to ${n.upTo}%`);
   }
   for (const n of notes) if (!found.some(e => key(e) === key(n))) issues.push(`Stale note, no easing here any more: ${key(n)}`);
-  // A rest beat eases one parameter. Further easings at the same step need their own owned reason.
-  const beats = notes.filter(n => "restBeat" in n);
-  for (const n of beats) if (beats.filter(b => b.game === n.game && b.level === n.level).length > 1) issues.push(`More than one rest beat at ${n.game} ${n.level}`);
+  // A rest beat eases one parameter. Further easings at the same step need their own owned reason, or a
+  // rest beat that names the beat it was reviewed beside.
+  const beats = notes.filter((n): n is Extract<EasingNote, { restBeat: RestBeat }> => "restBeat" in n);
+  for (const n of beats) {
+    const here = beats.filter(b => b.game === n.game && b.level === n.level), main = here.filter(b => !b.restBeat.with);
+    if (n.restBeat.with === undefined) { if (main.length > 1 && main[0] === n) issues.push(`More than one rest beat at ${n.game} ${n.level}`); }
+    else if (!main.some(b => b.metric === n.restBeat.with)) issues.push(`Rest beat ${key(n)} sits with ${n.restBeat.with}, which has no rest beat there`);
+  }
   for (const t of tables) for (const h of t.helper) {
     const harder = h.harder === "up" ? h.on > h.off + 1e-9 : h.on < h.off - 1e-9;
     if (harder) issues.push(`Helper makes ${t.game} ${h.level} ${h.metric} harder: ${h.off} → ${h.on}`);
@@ -284,7 +295,7 @@ export function boundaryMarkdown(notes: readonly EasingNote[], tables = boundary
     lines.push("", own.length ? "**Easings**" : "No easings.", "");
     for (const e of own) {
       const n = notes.find(n => n.game === e.game && n.level === e.level && n.metric === e.param);
-      lines.push(`- ${e.from} → ${e.level}, ${t.metrics.find(m => m.id === e.metric)!.label}: ${e.before} → ${e.after}. ${!n ? "**UNEXPLAINED**" : "restBeat" in n ? `Rest beat, teaches ${n.restBeat.teaches}. ${n.restBeat.reason}` : `${n.reason} (owner ${n.owner})`}${n ? ` Reviewed up to ${n.upTo}%.` : ""}`);
+      lines.push(`- ${e.from} → ${e.level}, ${t.metrics.find(m => m.id === e.metric)!.label}: ${e.before} → ${e.after}. ${!n ? "**UNEXPLAINED**" : "restBeat" in n ? `Rest beat, teaches ${n.restBeat.teaches}. ${n.restBeat.reason}${n.restBeat.with ? ` Reviewed beside the ${n.restBeat.with} rest beat.` : ""}` : `${n.reason} (owner ${n.owner})`}${n ? ` Reviewed up to ${n.upTo}%.` : ""}`);
     }
     const helperMetrics = [...new Set(t.helper.map(h => h.metric))];
     if (helperMetrics.length) {

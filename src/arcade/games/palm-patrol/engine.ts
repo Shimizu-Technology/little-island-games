@@ -36,6 +36,15 @@ export type PalmLevel = ArcadeLevel & {
 /** Seconds of calm between waves in a level: no beetles, no tosses (AR-05). Endless keeps its old breath. */
 export const PALM_WAVE_BREAK = 2,
   PALM_ENDLESS_BREAK = 0.65;
+/**
+ * AR-05's hard burst limit: ordinary play (scored levels and Endless) never runs more than 15 s without
+ * a break. When a formation is still on the board at the limit, a breather of PALM_WAVE_BREAK seconds
+ * starts: beetles hold their places, divers climb back to their rows, husks already thrown still land,
+ * and nothing can reach Coco. Then play resumes where it stopped. Learn is untimed and never breaks.
+ */
+export const PALM_BURST_LIMIT = 15,
+  PALM_CROWN_HP = 5;
+const RETREAT_SPEED = 260;
 const palmNames = [
   "Marching visitors",
   "Husk toss",
@@ -125,14 +134,19 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
   };
 });
 /**
- * What a scored level asks for (AR-05), with armor kept apart from the beetle count: beetles in its
- * formations, the extra nets armored beetles need, and whether a crown arrives in a short wave of its own.
+ * What a scored level asks for (AR-05). `beetles` counts every beetle to net, crowns included; armor is
+ * kept apart as the extra nets armored beetles need; `crownHp` is the nets the crowns take; and `nets`
+ * is every successful toss the level needs. A crown before World 6 arrives in a short wave of its own;
+ * World 6's crown takes a place in the last formation.
  */
-export function palmWorkload(level: PalmLevel): { beetles: number; armorHits: number; crownWave: boolean } {
+export function palmWorkload(level: PalmLevel): { beetles: number; armorHits: number; crowns: number; crownHp: number; nets: number; crownWave: boolean } {
   const crownWave = level.boss && level.world !== "w6",
     formations = level.waves - Number(crownWave),
-    armored = level.armored ? Array.from({ length: level.count }, (_, i) => i % 4 === 2).filter(Boolean).length : 0;
-  return { beetles: level.count * formations, armorHits: armored * formations, crownWave };
+    crowns = Number(level.boss),
+    armored = level.armored ? Array.from({ length: level.count }, (_, i) => i % 4 === 2).filter(Boolean).length : 0,
+    beetles = level.count * formations + Number(crownWave),
+    armorHits = armored * formations;
+  return { beetles, armorHits, crowns, crownHp: crowns * PALM_CROWN_HP, nets: beetles - crowns + armorHits + crowns * PALM_CROWN_HP, crownWave };
 }
 export function palmLevel(id: LevelId) {
   "worklet";
@@ -188,7 +202,10 @@ export type PalmState = {
   marchX: number;
   marchY: number;
   diveClock: number;
+  /** A break's seconds left: between waves, or a breather with beetles still on the board. */
   waveWait: number;
+  /** Seconds of active ordinary play since the last break (AR-05 burst limit). */
+  burst: number;
 };
 export type PalmInput =
   | { type: "tick" }
@@ -258,7 +275,7 @@ function formation(s: PalmState): PalmState {
       x: count === 1 ? 180 : 76 + (i % 5) * 52,
       base: count === 1 ? 180 : 76 + (i % 5) * 52,
       y: 105 + Math.floor(i / 5) * 58,
-      hp: boss && i === 0 ? 5 : config.armored && i % 4 === 2 ? 2 : 1,
+      hp: boss && i === 0 ? PALM_CROWN_HP : config.armored && i % 4 === 2 ? 2 : 1,
       value: -1,
       diver: config.divers && i % 3 === 1,
       boss: boss && i === 0,
@@ -306,6 +323,7 @@ export function createPalm(level: PalmState["level"], seed: number, helper = fal
     marchY: 0,
     diveClock: 0,
     waveWait: 0,
+    burst: 0,
   });
 }
 function feedback(s: PalmState, cue: PalmState["cue"], text: string, x: number, y: number): PalmState {
@@ -359,7 +377,6 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
   let s: PalmState = {
     ...before,
     time: before.time + dt,
-    waveTime: before.waveTime + dt,
     cooldown: Math.max(0, before.cooldown - dt),
     pulse: Math.max(0, before.pulse - dt),
     lives: stepLives(before.lives, dt),
@@ -371,9 +388,15 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     learning = config.world === "learn";
   if (s.waveWait > 0) {
     s.waveWait = Math.max(0, s.waveWait - dt);
-    return s.waveWait ? s : formation({ ...s, wave: s.wave + 1, relay: 1 });
-  }
-  if (!learning) {
+    if (!s.beetles.length) return s.waveWait ? s : formation({ ...s, wave: s.wave + 1, relay: 1 });
+  } else if (!learning && s.burst + dt > PALM_BURST_LIMIT + 1e-9)
+    // This tick would pass the limit, so it opens the breather instead of playing on.
+    s = feedback({ ...s, waveWait: PALM_WAVE_BREAK, burst: 0 }, "wave", "Breather", 180, 72);
+  else if (!learning) s.burst += dt;
+  // During a breather the formation holds, its clocks stop, and only thrown husks and netted beetles move.
+  const holding = before.waveWait > 0 || s.waveWait > 0;
+  if (!holding) s.waveTime += dt;
+  if (!learning && !holding) {
     const march = s.beetles.filter((b) => !b.caught && !b.diving);
     const dx = s.direction * palmMarchSpeed(s) * dt;
     let edge = false;
@@ -405,6 +428,14 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     if (b.caught) {
       b.caught = Math.max(0.001, b.caught - dt);
       b.y -= 170 * dt;
+    } else if (b.diving && holding) {
+      // A diver climbs back to its place in the formation, never toward Coco.
+      const rowX = clamp(b.base + s.marchX, 25, 335),
+        rowY = 105 + Math.floor(b.id / 5) * 58 + s.marchY,
+        step = RETREAT_SPEED * dt;
+      b.x = b.x < rowX ? Math.min(rowX, b.x + step) : Math.max(rowX, b.x - step);
+      b.y = Math.max(Math.min(b.y, rowY), b.y - step);
+      if (b.x === rowX && b.y <= rowY) b.diving = false;
     } else if (b.diving) {
       b.y += config.diveSpeed * (s.helper ? 0.82 : 1) * dt;
       b.x = clamp(b.x + (config.aimed ? b.diveX : Math.sin(s.waveTime * 5 + b.id) * 60) * dt, 25, 335);
@@ -446,7 +477,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
   s.husks = s.husks.filter((h) => h.y >= -20 && h.y <= 620);
   if (learning && s.fact > before.fact) return s.fact >= config.facts ? { ...s, phase: "cleared" } : fact(s);
   for (const b of s.beetles) {
-    if (learning || b.caught || b.y + BUG_RADIUS_Y < 475) continue;
+    if (learning || holding || b.caught || b.y + BUG_RADIUS_Y < 475) continue;
     const shield = [72, 180, 288].findIndex((x) => Math.abs(x - b.x) <= 38 + BUG_RADIUS_X);
     if (shield >= 0 && s.shields[shield] > 0) {
       s.shields = [...s.shields];
@@ -468,9 +499,10 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
   s.beetles = s.beetles.filter((b) => !b.caught || (b.caught > 0.002 && b.y > -60));
   if (!s.lives.hearts) return { ...s, phase: "rest" };
   if (!s.beetles.length) {
-    if (s.relay < config.relays) return formation({ ...s, relay: s.relay + 1 });
+    // An Endless relay that arrives during a breather waits out the rest of it.
+    if (s.relay < config.relays) return { ...formation({ ...s, relay: s.relay + 1 }), waveWait: s.waveWait };
     if (s.level !== "endless" && s.wave >= config.waves) return { ...s, phase: "cleared" };
-    return feedback({ ...s, waveWait: s.level === "endless" ? PALM_ENDLESS_BREAK : PALM_WAVE_BREAK }, "wave", "Next wave", 180, 72);
+    return feedback({ ...s, waveWait: s.level === "endless" ? PALM_ENDLESS_BREAK : PALM_WAVE_BREAK, burst: 0 }, "wave", "Next wave", 180, 72);
   }
   return s;
 }
@@ -508,7 +540,7 @@ export function validPalm(v: unknown): v is PalmState {
   if (
     !exact(
       v,
-      "level seed helper helped phase time waveTime launcher beetles husks shields lives wave relay caught score cooldown fact prompt answer event cue feedback feedbackX feedbackY pulse shots inputTap fireHeld landed misses direction marchX marchY diveClock waveWait"
+      "level seed helper helped phase time waveTime launcher beetles husks shields lives wave relay caught score cooldown fact prompt answer event cue feedback feedbackX feedbackY pulse shots inputTap fireHeld landed misses direction marchX marchY diveClock waveWait burst"
     ) ||
     !(v.level === "endless" || canonicalLevel(v.level, palmLevels)) ||
     !integer(v.seed, 0xffffffff) ||
@@ -531,7 +563,9 @@ export function validPalm(v: unknown): v is PalmState {
     (v.wave as number) > 0 &&
     finite(v.cooldown, 0, FIRE_SECONDS) &&
     finite(v.pulse, 0, 0.45) &&
-    finite(v.waveWait, 0, v.level === "endless" ? PALM_ENDLESS_BREAK : PALM_WAVE_BREAK) &&
+    // A breather lasts PALM_WAVE_BREAK in Endless too; its own wave breaths are shorter.
+    finite(v.waveWait, 0, PALM_WAVE_BREAK) &&
+    finite(v.burst, 0, PALM_BURST_LIMIT) &&
     finite(v.diveClock, 0, 10) &&
     [-1, 1].includes(v.direction as number) &&
     finite(v.marchX, -360, 360) &&

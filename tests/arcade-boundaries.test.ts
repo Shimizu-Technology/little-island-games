@@ -40,6 +40,10 @@ describe("AR-00 Arcade boundary table", () => {
     const beat = (metric: string): EasingNote => ({ game: "palm-patrol", level: "w2-1", metric, upTo: 5, restBeat: { teaches: "diving beetles", reason: "Beetles dive out of formation." } });
     expect(boundaryIssues([...restBeats, beat("speed")])).toContain("Duplicate note: palm-patrol w2-1 speed");
     expect(boundaryIssues([...restBeats, beat("dive")])).toContain("More than one rest beat at palm-patrol w2-1");
+    // A second rest beat at one step must say which beat it sits beside, and that beat must be there.
+    const beside = (metric: string, by: string): EasingNote => ({ game: "palm-patrol", level: "w2-1", metric, upTo: 5, restBeat: { teaches: "diving beetles", reason: "Beetles dive out of formation.", with: by } });
+    expect(boundaryIssues([...restBeats, beside("dive", "armor")])).toContain("Rest beat palm-patrol w2-1 dive sits with armor, which has no rest beat there");
+    expect(boundaryIssues([...restBeats, beside("dive", "speed")])).not.toContain("More than one rest beat at palm-patrol w2-1");
     const harder = boundaryTables().map(t => t.game !== "canoe-cargo" ? t : { ...t, helper: [{ level: "w1-1", metric: "fall", off: 0.8, on: 0.7, harder: "down" }] }) as GameTable[];
     expect(boundaryIssues(restBeats, harder)).toContain("Helper makes canoe-cargo w1-1 fall harder: 0.8 → 0.7");
   });

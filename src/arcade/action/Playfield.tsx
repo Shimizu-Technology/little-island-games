@@ -406,6 +406,18 @@ export function PalmBoard({
             </Text>
           </View>
         )}
+        {s.breather && (
+          <View
+            testID="palm-breather"
+            pointerEvents="none"
+            accessible
+            accessibilityLiveRegion="polite"
+            accessibilityLabel="Breather. The beetles wait, then play goes on."
+            style={{ position: "absolute", top: camera.y + 300 * scale, alignSelf: "center" }}
+          >
+            <Pill>Breather · the beetles wait</Pill>
+          </View>
+        )}
         {s.tip && (camera.x >= 150 || camera.y >= 30) && (
           <View
             testID="palm-aim-tip"

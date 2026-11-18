@@ -9,7 +9,7 @@ import type { EasingNote } from "./boundaries";
  * value, across the parameter's start and peak columns. A larger drop fails the build until
  * someone reviews it and writes a fresh reason.
  */
-const beat = (game: EasingNote["game"], level: EasingNote["level"], metric: string, upTo: number, teaches: string, reason: string): EasingNote => ({ game, level, metric, upTo, restBeat: { teaches, reason } });
+const beat = (game: EasingNote["game"], level: EasingNote["level"], metric: string, upTo: number, teaches: string, reason: string, beside?: string): EasingNote => ({ game, level, metric, upTo, restBeat: { teaches, reason, ...(beside ? { with: beside } : {}) } });
 const owned = (game: EasingNote["game"], level: EasingNote["level"], metric: string, upTo: number, owner: string, reason: string): EasingNote => ({ game, level, metric, upTo, owner, reason });
 type Boundary = "w2-1" | "w3-1" | "w4-1" | "w5-1" | "w6-1";
 /** One reason at several world entries, each with its own reviewed bound. */
@@ -34,7 +34,11 @@ export const restBeats: readonly EasingNote[] = [
   beat("palm-patrol", "w2-1", "speed", 4.9, "diving beetles", "March speed eases by 1.7 px/s while beetles start diving out of formation."),
   beat("palm-patrol", "w3-1", "speed", 3.7, "armored beetles", "March speed eases by 1.7 px/s while armored beetles need two nets."),
   beat("palm-patrol", "w4-1", "speed", 2.9, "aimed tosses", "March speed eases by 1.7 px/s while the toss starts aiming."),
+  // A3a review P2-1: Worlds 3 and 4 end on a crown in a wave of its own, and the next world opens on three
+  // plain formations, so the work drops too. The lead reviewed these and kept the waves as they are.
+  beat("palm-patrol", "w4-1", "workload", 13.2, "aimed tosses", "The level after a crown has no crown wave: 27 beetles and 33 nets after W3-8's 28 and 38, while the toss starts aiming.", "speed"),
   beat("palm-patrol", "w5-1", "speed", 2.6, "shield gaps", "March speed eases by 1.7 px/s while shield gaps change the safe toss paths."),
+  beat("palm-patrol", "w5-1", "workload", 13.2, "shield gaps", "The level after a crown has no crown wave: 27 beetles and 33 nets after W4-8's 28 and 38, while shield gaps change the safe toss paths.", "speed"),
   beat("palm-patrol", "w6-1", "speed", 2.4, "a fourth wave", "March speed eases by 1.7 px/s while every level adds a fourth wave."),
   // Beach Ball.
   ...each({ "w2-1": 3, "w3-1": 2.9, "w4-1": 2.7, "w5-1": 2.6, "w6-1": 2.5 }, (level, upTo) => owned("beach-ball", level, "serve", upTo, "AR-06", "Serve speed resets 8 px/s lower at every world. AR-06 applies speed[i] = max(authored, previous) and checks two-ball timing.")),

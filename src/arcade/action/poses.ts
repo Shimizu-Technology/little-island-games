@@ -15,7 +15,8 @@ export function palmPoses(s: PalmState, a: Arena, reduced: boolean, entry: numbe
     const size = b.boss ? 87 : 58,
       p: ArtPose = position(a, b.x, b.y, size);
     p.identity = `${group}:${b.id}:${b.boss}:${b.caught}`;
-    p.frame = !reduced && !b.caught && !b.diving ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
+    // Beetles stop stepping while a breather holds the formation.
+    p.frame = !reduced && !b.caught && !b.diving && !s.waveWait ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
     // Small, nonblocking entry gesture; never hide a collidable beetle off-screen.
     if (!reduced && palmConfig(s).world !== "learn") {
       p.x += entry * (s.relay % 3 === 0 ? 0 : s.relay % 2 ? -10 : 10) * a.scale;

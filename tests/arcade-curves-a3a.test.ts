@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { createSong, noteDuration, songLevel, songLevels, songMotifUnits, songResult, songStep, songTransition, SONG_PHRASE_STEP } from "../src/arcade/games/shell-song/engine";
 import { createRail, railLevel, railLevels, railScoredSeed, railTick } from "../src/arcade/games/rail-parade/engine";
 import { crabLanes, crabLevel, crabLevels, crabPace, crabScoredSeed, crabStep, crabTransition, createCrab, supported, validCrab, type CrabState } from "../src/arcade/games/crab-crossing/engine";
-import { createPalm, palmLevel, palmLevels, palmStep, palmTransition, palmWorkload, PALM_ENDLESS_BREAK, PALM_WAVE_BREAK, type PalmState } from "../src/arcade/games/palm-patrol/engine";
+import { createPalm, palmLevel, palmLevels, palmStep, palmTransition, palmWorkload, validPalm, PALM_BURST_LIMIT, PALM_ENDLESS_BREAK, PALM_WAVE_BREAK, type PalmLevel, type PalmState } from "../src/arcade/games/palm-patrol/engine";
 import { boundaryTables, easings } from "../src/arcade/boundaries";
 import { allLevelIds, type ArcadeId, type LevelId } from "../src/arcade/types";
 import { arcadeTransition, emptyArcade, validArcade, type ArcadeSave } from "../src/arcade/progress";
@@ -16,7 +16,8 @@ import { crabWitness, pilotRun, railWitness } from "./helpers/arcade-pilots";
 import { crossings, firstLanding, landsAt } from "./helpers/crab-support";
 import { certified as railCertified } from "../src/arcade/games/rail-parade/certified";
 import { certified as palmCertified } from "../src/arcade/games/palm-patrol/certified";
-import { palmParsFromReplays, palmReplay, PALM_SEEDS } from "./helpers/palm-replay";
+import { palmParsFromReplays, palmProbe, palmReplay, PALM_SEEDS, type PalmPilot } from "./helpers/palm-replay";
+import { restBeats } from "../src/arcade/restBeats";
 
 const ordinary = allLevelIds.filter(id => !id.startsWith("learn-"));
 const rows = (game: string) => boundaryTables().find(t => t.game === game)!.rows.filter(r => !r.level.startsWith("learn-"));
@@ -172,15 +173,48 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     expect(["w1-1", "w1-2", "w1-3", "w1-4", "w1-5", "w1-6", "w1-7"].map(id => palmWorkload(palmLevel(id as LevelId)).beetles)).toEqual([5, 5, 5, 8, 10, 12, 14]);
     expect(palmLevels.every(l => l.relays === 1)).toBe(true);
     const w18 = palmLevel("w1-8");
-    expect(palmWorkload(w18)).toEqual({ beetles: 14, armorHits: 0, crownWave: true });
+    expect(palmWorkload(w18)).toEqual({ beetles: 15, armorHits: 0, crowns: 1, crownHp: 5, nets: 19, crownWave: true });
     expect(w18.waves).toBe(2);
   });
   it("brings divers in at World 2 with two waves of 10, and caps every level at 60 beetles with armor counted apart", () => {
     const w2 = palmLevel("w2-1");
     expect([w2.count, w2.waves, w2.relays, w2.divers]).toEqual([10, 2, 1, true]);
     for (const id of ordinary) { const w = palmWorkload(palmLevel(id)); expect(w.beetles).toBeLessThanOrEqual(60); if (!palmLevel(id).armored) expect(w.armorHits).toBe(0); }
-    expect(palmWorkload(palmLevel("w3-1"))).toEqual({ beetles: 27, armorHits: 6, crownWave: false });
-    expect(palmWorkload(palmLevel("w6-8"))).toEqual({ beetles: 36, armorHits: 8, crownWave: false });
+    expect(palmWorkload(palmLevel("w3-1"))).toEqual({ beetles: 27, armorHits: 6, crowns: 0, crownHp: 0, nets: 33, crownWave: false });
+    expect(palmWorkload(palmLevel("w6-8"))).toEqual({ beetles: 36, armorHits: 8, crowns: 1, crownHp: 5, nets: 48, crownWave: false });
+  });
+  it("counts every crown and its nets in the workload, checked against the formations the engine really sends", () => {
+    // Review P2-1: walk each level's real formations, emptying a wave only to see the next one.
+    const formations = (l: PalmLevel) => {
+      let s: PalmState = createPalm(l, 9, false), beetles = 0, crowns = 0, nets = 0, armor = 0, guard = 0;
+      for (;;) {
+        beetles += s.beetles.length; crowns += s.beetles.filter(b => b.boss).length;
+        nets += s.beetles.reduce((n, b) => n + b.hp, 0); armor += s.beetles.filter(b => !b.boss && b.hp > 1).length;
+        const wave = s.wave;
+        s = palmStep({ ...s, beetles: [] }, tick, 1 / 60);
+        while (s.phase === "play" && s.wave === wave && guard++ < 1e5) s = palmStep(s, tick, 1 / 60);
+        if (s.phase !== "play") return { beetles, crowns, nets, armor };
+      }
+    };
+    for (const id of ordinary) {
+      const l = palmLevel(id), w = palmWorkload(l), real = formations(l);
+      expect({ beetles: w.beetles, crowns: w.crowns, nets: w.nets, armor: w.armorHits }, id).toEqual(real);
+      expect(w.nets).toBe(w.beetles - w.crowns + w.armorHits + w.crownHp);
+    }
+    expect(formations(palmLevel("w3-8"))).toEqual({ beetles: 28, crowns: 1, nets: 38, armor: 6 });
+    expect(formations(palmLevel("w4-1"))).toEqual({ beetles: 27, crowns: 0, nets: 33, armor: 6 });
+  });
+  it("shows the two world-entry workload drops in the boundary table as named rest beats beside the speed rest beats", () => {
+    const palmEasings = easings().filter(e => e.game === "palm-patrol" && e.param === "workload");
+    expect(palmEasings.map(e => `${e.from}→${e.level} ${e.metric} ${e.before}→${e.after}`).sort()).toEqual([
+      "w3-8→w4-1 beetles 28→27", "w3-8→w4-1 nets 38→33", "w4-8→w5-1 beetles 28→27", "w4-8→w5-1 nets 38→33",
+    ]);
+    for (const level of ["w4-1", "w5-1"]) {
+      const note = restBeats.find(n => n.game === "palm-patrol" && n.level === level && n.metric === "workload")!;
+      expect("restBeat" in note && note.restBeat.with).toBe("speed");
+      expect(restBeats.some(n => n.game === "palm-patrol" && n.level === level && n.metric === "speed" && "restBeat" in n)).toBe(true);
+    }
+    expect(readFileSync("docs/ARCADE_BOUNDARIES.md", "utf8")).toContain("w3-8 → w4-1, Nets needed");
   });
   it("rests 2 s between waves with no beetles and no tosses", () => {
     let s: PalmState = createPalm(palmLevel("w2-1"), 3, false);
@@ -204,6 +238,79 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     e = palmStep(e, tick, 1 / 60);
     expect(e.waveWait).toBe(PALM_ENDLESS_BREAK);
   });
+  it("takes a safe 2 s breather mid-formation once ordinary play has run 15 s, keeping every beetle", () => {
+    // Review P1: the engine enforces the burst limit itself. A diver mid-dive and a marcher just above the
+    // shields are both on the board when the limit arrives.
+    let s: PalmState = createPalm(palmLevel("w3-1"), 4, false);
+    s = { ...s, burst: PALM_BURST_LIMIT - 1 / 120, launcher: 300, beetles: s.beetles.map((b, i) => i === 1 ? { ...b, diving: true, y: 430, x: 120 } : i === 3 ? { ...b, y: 470, x: 72 } : b) };
+    const before = s.beetles.map(b => ({ id: b.id, hp: b.hp }));
+    s = palmStep(s, tick, 1 / 60);
+    expect(s.waveWait).toBe(PALM_WAVE_BREAK);
+    expect(s.burst).toBe(0);
+    expect(s.feedback).toBe("Breather");
+    expect(s.beetles.map(b => ({ id: b.id, hp: b.hp }))).toEqual(before);
+    expect(palmTransition(s, { type: "toss" }).shots).toBe(s.shots);
+    expect(validPalm(s)).toBe(true);
+    const low = s.beetles.find(b => b.id === 3)!.y;
+    let frames = 1;
+    while (s.waveWait > 0) {
+      const prev = s;
+      s = palmStep(s, tick, 1 / 60); frames++;
+      expect(s.lives.hit).toBe(0);
+      for (const b of s.beetles) expect(b.y).toBeLessThanOrEqual(prev.beetles.find(p => p.id === b.id)!.y + 1e-9);
+    }
+    // The tick that ends the breather still holds; the diver is back in its row and nobody came closer.
+    expect(frames / 60).toBeGreaterThanOrEqual(PALM_WAVE_BREAK);
+    expect(s.wave).toBe(1);
+    expect(s.beetles.map(b => ({ id: b.id, hp: b.hp }))).toEqual(before);
+    const diver = s.beetles.find(b => b.id === 1)!;
+    expect(diver.diving).toBe(false);
+    expect(diver.y).toBeCloseTo(105 + s.marchY, 6);
+    expect(s.beetles.find(b => b.id === 3)!.y).toBe(low);
+    // Play resumes: the clock runs again and tosses are accepted.
+    s = palmStep(s, tick, 1 / 60);
+    expect(s.burst).toBeGreaterThan(0);
+    expect(palmTransition({ ...s, cooldown: 0 }, { type: "toss" }).shots).toBe(s.shots + 1);
+  });
+  it("keeps Learn untimed: no breather however long a fact takes", () => {
+    let s: PalmState = createPalm(palmLevel("learn-5"), 2, false);
+    for (let i = 0; i < 60 * 40; i++) { s = palmStep(s, tick, 1 / 60); expect(s.waveWait).toBe(0); }
+    expect(s.phase).toBe("play");
+    expect(s.burst).toBe(0);
+  });
+  it("holds Endless to the same 15 s limit, with valid breather states", () => {
+    for (const pilot of ["gentle", "late", "idle"] as const) for (const helper of [false, true]) {
+      const r = palmProbe("endless", 3, helper, pilot, 240);
+      expect(r.burst, `${pilot} ${helper}`).toBeLessThanOrEqual(PALM_BURST_LIMIT);
+      expect(r.holds).toBeGreaterThan(0);
+      expect([r.breakHits, r.breakMoves, r.lostProgress, r.diving]).toEqual([0, 0, 0, 0]);
+    }
+    let s: PalmState = createPalm("endless", 6, false);
+    s = palmStep({ ...s, burst: PALM_BURST_LIMIT }, tick, 1 / 60);
+    expect(s.waveWait).toBe(PALM_WAVE_BREAK);
+    expect(validPalm(s)).toBe(true);
+  });
+  it("matches the reviewer's gentle replays: W1-7, W3-1 and W6-8 now break before 15 s", () => {
+    for (const id of ["w1-7", "w3-1", "w6-8"] as const) {
+      const r = palmReplay(palmLevel(id), 1, false, "gentle");
+      expect(r.burst, id).toBeLessThanOrEqual(PALM_BURST_LIMIT);
+      expect(r.holds, id).toBeGreaterThan(0);
+      expect(r.result?.cleared, id).toBe(true);
+    }
+  });
+  const pilots: [PalmPilot, readonly number[]][] = [["gentle", PALM_SEEDS], ["late", [1, 2]], ["miss", [1, 2]], ["idle", [1]]];
+  it.each(ordinary.map(id => [id] as const))("%s: gentle, late, missing and idle pilots never play more than 15 s between safe breaks", id => {
+    const l = palmLevel(id);
+    for (const [pilot, seeds] of pilots) for (const seed of seeds) for (const helper of [false, true]) {
+      const r = palmProbe(l, seed, helper, pilot), at = `${id} ${pilot} seed ${seed} helper ${helper}`;
+      expect(r.burst, at).toBeLessThanOrEqual(PALM_BURST_LIMIT);
+      expect(r.breaks.every(b => b >= PALM_WAVE_BREAK), at).toBe(true);
+      expect({ breakHits: r.breakHits, breakMoves: r.breakMoves, lostProgress: r.lostProgress, diving: r.diving }, at).toEqual({ breakHits: 0, breakMoves: 0, lostProgress: 0, diving: 0 });
+      // The gentle child still clears every level with Helper on. Helper off, 11 of its 384 runs in W5-4,
+      // W5-8 and W6-2 lose their hearts, exactly as before the breather (A3a FIX-REPORT).
+      if (pilot === "gentle" && helper) expect(r.result?.cleared, at).toBe(true);
+    }
+  });
   it.each(ordinary.map(id => [id] as const))("%s: steady legal replays clear hit-free with bursts of 15 s or less and earn three stars, Helper off and on", id => {
     const l = palmLevel(id);
     for (const seed of PALM_SEEDS) for (const helper of [false, true]) {
@@ -212,8 +319,9 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
       expect(r.result?.cleared, `${id} seed ${seed} helper ${helper}`).toBe(true);
       expect(r.heartsLost).toBe(0);
       expect(r.burst).toBeLessThanOrEqual(15);
-      expect(r.breaks.every(b => b >= PALM_WAVE_BREAK - 1 / 60)).toBe(true);
+      expect(r.breaks.every(b => b >= PALM_WAVE_BREAK)).toBe(true);
       expect(r.breaks).toHaveLength(l.waves - 1);
+      expect(r.holds).toBe(0);
       // Rounds of more than one wave land in the 20–60 s target; W1-8's short crown encounter brings it to
       // 19.4–20.4 s. World 1's single waves are one short burst each.
       if (l.waves > 1) { expect(r.time).toBeGreaterThanOrEqual(l.world === "w1" ? 19 : 20); expect(r.time).toBeLessThanOrEqual(60); }
@@ -248,7 +356,8 @@ describe("A3a dares and saves", () => {
     }
   });
   it("versions every changed descriptor, so a round says which curve it played", () => {
-    for (const l of [...railLevels, ...crabLevels, ...palmLevels]) expect(l.rulesVersion).toBe(2);
+    for (const l of [...songLevels, ...railLevels, ...crabLevels, ...palmLevels]) expect(l.rulesVersion, l.id).toBe(2);
+    expect(createSong(songLevel("w6-1"), 3).level).toMatchObject({ rulesVersion: 2 });
     expect(createRail(railLevel("w2-1"), railLevel("w2-1").seeds[0]).level).toMatchObject({ rulesVersion: 2 });
     expect(railTick(createRail(railLevel("w4-1"), 1))).toBeCloseTo(railLevel("w4-1").tick, 9);
   });
