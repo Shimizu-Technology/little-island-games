@@ -24,7 +24,10 @@ export const registration=defineReplayGame({
   if(result.event==='together')return 'You guided the crab home together.';
   if(facts?.helpUsed)return 'You used help and guided the crab home.';
   if(facts?.failed)return 'You kept changing your plan until the crab got home.';
-  return p?.descriptor.budget!==null&&p?.descriptor.budget!==undefined?'You found a route within the walking steps.':p?.descriptor.starter.length?'You found the bug and fixed it.':'Your plan collected every shell and reached home.';
+  const done=p?.descriptor.budget!==null&&p?.descriptor.budget!==undefined?'You found a route within the walking steps.':p?.descriptor.starter.length?'You found the bug and fixed it.':p?.descriptor.crabs===2?'Your plan brought both crabs home.':p?.descriptor.fog?'Your plan worked on every foggy beach.':'Your plan collected every shell and reached home.';
+ // C1d Deep Water keeps the best possible hidden until a win, so nobody searches blindly for it.
+ const best=p&&p.ref.bank>=12&&p.ref.bank<=16&&p.par?` The best possible is ${p.par.lower} cards.`:'';
+ return done+best;
  },
  prefilledStart:payload=>payload.actions.length<=163&&payload.actions.every(a=>a[0]==='x'&&a[1]===0||a[0]==='a'||a[0]==='h'),
  Board:(props:ChallengeViewProps<State,Action>)=>React.createElement(Suspense,{fallback:null},React.createElement(Board,props)),

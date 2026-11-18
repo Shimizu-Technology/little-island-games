@@ -132,6 +132,10 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const recentChoices=()=>progress.recent.flatMap(([bank,puzzle])=>{const c=choiceOf(bank,puzzle);return c?[c]:[];});
   // The same band deals another of its own entries; directions move between bands and cards of the path.
   const nextChoice=(here:Choice,direction:'easier'|'same'|'harder')=>direction==='same'&&isBand(here)?here:adjacentTide(choices(here.path),here,direction,recentChoices());
+  // When Harder would leave this idea (another Deep Water collection or School level), the finish card says where it goes.
+  const ideaOf=(c:Choice)=>isBand(c)?`band-${c.bank}`:c.source.kind==='deep-water'?`dw-${c.source.collection}`:c.source.kind==='school'?`s-${c.source.level}`:c.path;
+  const harderNext=round?.result&&currentChoice?nextChoice(currentChoice,'harder'):null;
+  const harderNote=harderNext&&currentChoice&&ideaOf(harderNext)!==ideaOf(currentChoice)?`Harder takes you to ${harderNext.title.split(' · ')[0]}.`:null;
   function chooseNext(direction: 'easier'|'same'|'harder') {
     if(!currentChoice)return;
     const next=nextChoice(currentChoice,direction);
@@ -226,6 +230,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       </View></GridChromeContext.Provider>}/>}
       {round.result&&!settling ? <><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
+        {showDirections&&harderNote&&<Copy testID="harder-destination">{harderNote}</Copy>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>

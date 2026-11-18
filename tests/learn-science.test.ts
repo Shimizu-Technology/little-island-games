@@ -266,7 +266,8 @@ describe("float dock", () => {
   });
 });
 describe("crab beach solver", () => {
-  for (const l of levels)
+  // Level 4–5 beaches (C1d) play in stage rounds; Level 5's tray refuses flat plans. tests/c1d-crab-school.test.ts proves both.
+  for (const l of levels.filter(v => !v.stage))
     it(`${l.id} has a legal shortest hint and every execution prefix saves`, () => {
       const path = solve(l);
       expect(path.length).toBeGreaterThan(0);
@@ -280,7 +281,7 @@ describe("crab beach solver", () => {
         levels: [
           l.id,
           ...levels
-            .filter((v) => v.pace === l.pace && v.id !== l.id)
+            .filter((v) => v.pace === l.pace && !v.stage && v.id !== l.id)
             .slice(0, 2)
             .map((v) => v.id),
         ],
@@ -296,7 +297,7 @@ describe("crab beach solver", () => {
       expect(solved(currentLevel(s), run(l, s.program.slice(0, s.cursor)))).toBe(true);
     });
   it("each pace ramps: first beach two or three cards, then four to six, then longer", () => {
-    for (const l of levels) {
+    for (const l of levels.filter(v => !v.stage)) {
       const n = solve(l).length;
       if (l.tier === 0) expect(n, l.id).toBeGreaterThanOrEqual(2);
       if (l.tier === 0) expect(n, l.id).toBeLessThanOrEqual(3);

@@ -1,6 +1,9 @@
 import authored from './challenge-content.json';
 import legacyMud from './legacy-mud.json';
 import legacyMud2 from './legacy-mud-2.json';
+import deepWater from './deep-content.json';
+import { decodeProgram, type PackedProgram } from '../../program/codec';
+import type { Program } from '../../program/model';
 import type { Descriptor } from './challenge-engine';
 import type { Puzzle, RegisteredDare } from '../../../challenge/types';
 import { sha256Hex } from '../../../puzzles/sha256';
@@ -34,5 +37,26 @@ const retire=(entries:typeof legacyMud,bank:number,puzzle:(i:number,j:number)=>n
  return {...current,retired:true,ref:{...current.ref,bank,puzzle:puzzle(i,j),hash:sha256Hex(JSON.stringify(d))},descriptor:d,par:{metric:'steps',lower:p.minimumSteps,upper:p.minimumSteps}};
 });
 const legacy=[...retire(legacyMud,9,i=>i),...retire(legacyMud2,10,(_,j)=>j)];
+/** C1d Deep Water: five ideas of five, each teach, develop, twist, short hard, easy finish (banks 12–16).
+ * Proofs are re-run on this engine in tests/c1d-crab-deep.test.ts. */
+type DeepEntry={role:string;descriptor:unknown;cards:number;solutions?:unknown[]};
+const ideas:[key:keyof typeof deepWater,bank:number,name:string,tiers:number[],parts:string[]][]=[
+ ['tide',12,'Rising tide',[1,2,3,4,1],['Dry crossing','Just in time','Which shell first?','Fast tide','Easy crossing']],
+ ['key',13,'Key and gate',[2,3,4,5,2],['Key on the way','Fetch the key','Shells and a gate','Key away','Key, gate, home']],
+ ['songs',14,'Songs',[3,4,5,6,3],['Call it twice','Three times','Between the groups','Tight tray','One more song']],
+ ['fog',15,'Foggy beach',[3,4,5,6,3],['Two beaches','Walk or turn','Different castles','Tight tray','Foggy finish']],
+ ['two',16,'Two crabs',[2,3,5,6,2],['Walk together','Hold one still','Castle hold','Who waits?','Home together']],
+];
+/** Dares only on the tier-6 rungs, which no earlier Deep Water idea uses: a dare in a shared tier would change what
+ * the finish card offers after Mud. First run, and for card plans the shortest plan. Slots from 154. */
+let dareSlot=154;
+export const deepPuzzles:Puzzle<Descriptor>[]=ideas.flatMap(([key,bank,name,tiers,parts])=>(deepWater[key] as DeepEntry[]).map((p,i)=>{
+ const d=descriptor(p.descriptor), blocks=d.tray!==undefined, hard=tiers[i]===6;
+ const dares:RegisteredDare[]=hard?[{slot:dareSlot++,id:`crab-${String(key)}-${i+1}-first`,label:'First run works',rule:{kind:'plan',max:1},help:'allowed'},...(blocks?[]:[{slot:dareSlot++,id:`crab-${String(key)}-${i+1}-par`,label:'Shortest plan',rule:{kind:'par' as const,metric:'cards' as const,max:p.cards},help:'allowed' as const}])]:[];
+ return {ref:{bank,puzzle:i,engine:'crab-commands',rules:1,hash:sha256Hex(JSON.stringify(d))},source:{kind:'deep-water',collection:bank,puzzle:i},path:'deep-water',tier:tiers[i] as Puzzle<Descriptor>['tier'],title:`${name} ${i+1} of 5 · ${parts[i]}`,descriptor:d,dares,awards:[clean,null],...(blocks?{}:{par:{metric:'cards' as const,lower:p.cards,upper:p.cards}})};
+}));
+const certified=new Map(ideas.flatMap(([key])=>(deepWater[key] as DeepEntry[]).map(p=>[JSON.stringify(p.descriptor),(p.solutions??[]) as PackedProgram[]] as const)));
+/** Certified block winners for a tray puzzle, used by its block hint. */
+export const blockSolutions=(d:Descriptor):Program[]=>(certified.get(JSON.stringify(d))??[]).map(p=>decodeProgram(p)).filter((p):p is Program=>!!p);
 // Small authored proof sets use the replay kit. Bulk Endless banks are a later slice.
-export const crabPuzzles:readonly Puzzle<Descriptor>[]=[...mud,...debug,...replays,...legacy];
+export const crabPuzzles:readonly Puzzle<Descriptor>[]=[...mud,...debug,...replays,...legacy,...deepPuzzles];
