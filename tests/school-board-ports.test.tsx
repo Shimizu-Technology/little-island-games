@@ -8,6 +8,7 @@ import { optionsAtLevel, type LearningLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
 import { Board as FoodWeb } from '../src/learn/games/food-web/view';
 import { Board as SpaceStation } from '../src/learn/games/space-station/view';
+import { legacyEngine as legacyStation } from '../src/learn/games/space-station/engine';
 import { move as weatherMove, tasks as weatherTasks, type ScienceState } from '../src/learn/games/weather-watch/model';
 import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
@@ -334,8 +335,10 @@ it('Beep hint cards retain the School label floor',async()=>{
  expect(words.length).toBeGreaterThan(0);expect(words.every(n=>Number(flat(n.props.style).fontSize)>=13)).toBe(true);
 });
 
-it.each([['food-web',FoodWeb],['space-station',SpaceStation]] as const)('%s retains the legacy shared science drawing',async(id,Board)=>{
- const r=await mountPort(id,Board,100,{width:852,height:393,fontScale:3.12},1,false);
+// Food Web is unported. Star Station's fresh rounds are measured K6 boards (tests/s1a-inquiry-board.test.tsx); a saved
+// version-1 Star Station round keeps the legacy shared drawing even under a measured host (K8).
+it.each([['food-web',FoodWeb,false],['space-station',SpaceStation,true]] as const)('%s retains the legacy shared science drawing',async(id,Board,host)=>{
+ const r=await mountPort(id,Board,100,{width:852,height:393,fontScale:3.12},1,host,id==='space-station'?session=>({...session,state:legacyStation.create(session.options,{skills:{},rng:()=>.3,starter:0,today:0})}):undefined);
  const marker=view('school-weather-watch-drawing');
  if(marker)await act(async()=>{marker.props.onLayout({nativeEvent:{layout:{height:220}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
  const scene=r.root.findAll(n=>String(n.type)==='Svg'&&n.props.viewBox==='0 0 360 235')[0];
