@@ -390,8 +390,9 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     s.waveWait = Math.max(0, s.waveWait - dt);
     if (!s.beetles.length) return s.waveWait ? s : formation({ ...s, wave: s.wave + 1, relay: 1 });
   } else if (!learning && s.burst + dt > PALM_BURST_LIMIT + 1e-9)
-    // This tick would pass the limit, so it opens the breather instead of playing on.
-    s = feedback({ ...s, waveWait: PALM_WAVE_BREAK, burst: 0 }, "wave", "Breather", 180, 72);
+    // This tick would pass the limit, so it opens the breather instead of playing on. The cue sounds its
+    // tone; the view's own Breather label replaces the pulse text, so nothing covers the formation.
+    s = { ...s, waveWait: PALM_WAVE_BREAK, burst: 0, event: s.event + 1, cue: "wave", feedback: "Breather", pulse: 0 };
   else if (!learning) s.burst += dt;
   // During a breather the formation holds, its clocks stop, and only thrown husks and netted beetles move.
   const holding = before.waveWait > 0 || s.waveWait > 0;

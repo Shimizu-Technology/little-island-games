@@ -413,7 +413,7 @@ export function PalmBoard({
             accessible
             accessibilityLiveRegion="polite"
             accessibilityLabel="Breather. The beetles wait, then play goes on."
-            style={{ position: "absolute", top: camera.y + 300 * scale, alignSelf: "center" }}
+            style={{ position: "absolute", top: 54, alignSelf: "center" }}
           >
             <Pill>Breather · the beetles wait</Pill>
           </View>
