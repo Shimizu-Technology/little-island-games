@@ -2,7 +2,7 @@ import React from 'react';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import { companionContacts, crabAnchors, crabOrigin, pipAnchors, pipOrigin, rigTransform } from './anchors';
 import { clampRig, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback } from './character';
-import { MealLayer } from './MealLayer';
+import { MealLayer, mealGroups } from './MealLayer';
 
 export type CompanionProps = RigLife & {
   base?: CharacterBase;
@@ -44,14 +44,15 @@ export function RigCrab({ base = 'stand', action = null, face, facing = 'right',
         <Ellipse cx={60} cy={73} rx={32} ry={23} fill="#EC9989"/><Ellipse cx={60} cy={81} rx={22} ry={12} fill="#F4CC76"/>
         <Path d="M45 55V42M75 55V42" stroke="#EC9989" strokeWidth={8}/>
         {[45,75].map(x => <G key={x} transform={`translate(${clampRig(gaze?.x,-1,1)} 0)`}><Circle cx={x} cy={38} r={9} fill="#FFF1D3"/><PetEyes x={x} y={38} gaze={gaze} face={expression} blink={!reduced && (blink ?? life.blink)}/></G>)}
-        {mealPlayback ? mealPlayback.frames.map((f,i) => {
+        {mealPlayback ? <>
+          {mealGroups(mealPlayback,f=>action==='drink'?'sip':f.meal.bite?'bite':f.face).map(({frame:f,indices})=><MealLayer key={indices[0]} playback={mealPlayback} index={indices}><PetMouth meal={f.meal} x={60} y={73} face={action==='drink'?'sip':f.face}/></MealLayer>)}
+          {mealGroups(mealPlayback,f=>f.meal.reach).map(({frame:f,indices}) => {
           const c = companionContacts('crab', base, action, f.meal);
-          return <MealLayer key={i} playback={mealPlayback} index={i}>        <PetMouth meal={f.meal} x={60} y={73} face={action === 'drink' ? 'sip' : f.face}/>
+          return <MealLayer key={indices[0]} playback={mealPlayback} index={indices}>
         <Path d={`M85 66Q${carry ? 98 : 92} ${carry ? 76 : 64} ${c.hand[0]} ${c.hand[1]}`} fill="none" stroke="#EC9989" strokeWidth={8}/>
         <G data-joint="right-claw" transform={`translate(${c.hand[0]} ${c.hand[1]}) rotate(${carry ? 35+lag : action ? -50 : 0})`}><Path d="M0 3Q-17-2-5-19L1-7L13-15Q15 3 0 3Z" fill="#EC9989"/></G>
-        <Held at={c.hand} facing={facing}>{f.held}</Held>
         {f.held && <Path d={`M${c.hand[0]-4} ${c.hand[1]+3}q4 5 8 0`} fill="none" stroke="#EC9989" strokeWidth={4}/ >}</MealLayer>;
-        }) : <>        <PetMouth meal={meal} x={60} y={73} face={expression}/>
+        })}</> : <>        <PetMouth meal={meal} x={60} y={73} face={expression}/>
         <Path d={`M85 66Q${carry ? 98 : 92} ${carry ? 76 : 64} ${c.hand[0]} ${c.hand[1]}`} fill="none" stroke="#EC9989" strokeWidth={8}/>
         <G data-joint="right-claw" transform={`translate(${c.hand[0]} ${c.hand[1]}) rotate(${carry ? 35+lag : action ? -50 : 0})`}><Path d="M0 3Q-17-2-5-19L1-7L13-15Q15 3 0 3Z" fill="#EC9989"/></G>
         <Held at={c.hand} facing={facing}>{held}</Held>
@@ -78,11 +79,10 @@ export function Pip({ base = 'stand', action = null, face, facing = 'right', siz
         <Ellipse cx={75} cy={85} rx={49} ry={32} fill="#F0C36A"/>
         <Path d="M94 63Q77 84 94 108M109 69Q94 86 108 102" fill="none" stroke="#FFE2A0" strokeWidth={7}/>
         <G data-joint="head-look" transform={`translate(${clampRig(gaze?.x,-1,1)*1.4} ${clampRig(gaze?.y,-1,1)*.6})`}><Circle cx={48} cy={78} r={8} fill="#FFF9E8" strokeWidth={0}/><PetEyes x={47} y={79} r={4} gaze={gaze} face={expression} blink={!reduced && (blink ?? life.blink)}/>
-        <Ellipse cx={49} cy={95} rx={7} ry={4} fill="#E6986B" strokeWidth={0}/>{mealPlayback ? mealPlayback.frames.map((f,i) => <MealLayer key={i} playback={mealPlayback} index={i}><PetMouth meal={f.meal} x={34} y={94} face={action === 'drink' ? 'sip' : f.face}/></MealLayer>) : <PetMouth meal={meal} x={34} y={94} face={expression}/>}</G>
-        {mealPlayback ? mealPlayback.frames.map((f,i) => {
+        <Ellipse cx={49} cy={95} rx={7} ry={4} fill="#E6986B" strokeWidth={0}/>{mealPlayback ? mealGroups(mealPlayback,f=>action==='drink'?'sip':f.meal.bite?'bite':f.face).map(({frame:f,indices}) => <MealLayer key={indices[0]} playback={mealPlayback} index={indices}><PetMouth meal={f.meal} x={34} y={94} face={action === 'drink' ? 'sip' : f.face}/></MealLayer>) : <PetMouth meal={meal} x={34} y={94} face={expression}/>}</G>
+        {mealPlayback ? mealGroups(mealPlayback,f=>f.meal.reach).map(({frame:f,indices}) => {
           const c = companionContacts('pip', base, action, f.meal);
-          return <MealLayer key={i} playback={mealPlayback} index={i}>        <Path data-joint="fin" d={`M73 91Q${action ? 59 : 78} ${action ? 118 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 119 : 99} 73 91Z`} fill="#D89843"/>
-        <Held at={c.hand} facing={facing}>{f.held}</Held>
+          return <MealLayer key={indices[0]} playback={mealPlayback} index={indices}>        <Path data-joint="fin" d={`M73 91Q${action ? 59 : 78} ${action ? 118 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 119 : 99} 73 91Z`} fill="#D89843"/>
         {f.held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/ >}</MealLayer>;
         }) : <>        <Path data-joint="fin" d={`M73 91Q${action ? 57 : 78} ${action ? 100 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 46 : 57} ${action ? 90 : 99} 73 91Z`} fill="#D89843"/>
         <Held at={c.hand} facing={facing}>{held}</Held>

@@ -56,6 +56,7 @@ const RestingEntity = memo(function RestingEntity({
   onMealPresented,
   onMealFinished,
   mealHeld = false,
+  cacheBlink = false,
   sleeping,
   front = false,
   onNode,
@@ -72,6 +73,8 @@ const RestingEntity = memo(function RestingEntity({
   ownerPivot?: { x: number; y: number };
   /** HM-11: the shared life clock, given only to friends at rest in the room on screen. */
   life?: SharedValue<number>;
+  /** Keep the visible room's static closed-eye drawing mounted across meals. */
+  cacheBlink?: boolean;
   /** H4: a short expression after eating, a greeting or a burp. */
   mood?: Face;
   /** HD-08: a soft shadow thrown by a lit lamp nearby. */
@@ -270,7 +273,7 @@ const RestingEntity = memo(function RestingEntity({
       {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
       <Animated.View style={normal}>
         <Animated.View style={open}>
-          <EntityArt
+          {!mealHeld && <EntityArt
             entity={entity}
             actionOverride={action}
             meal={meal}
@@ -281,9 +284,9 @@ const RestingEntity = memo(function RestingEntity({
             front={front}
             reduced={reduced}
             renderCharacter={renderCharacter}
-          />
+          />}
         </Animated.View>
-        {life && !meal && (
+        {cacheBlink && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
             <EntityArt entity={entity} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
@@ -452,6 +455,7 @@ export function SceneView({
               <RestingEntity
                 key={front ? `front:${entity.id}` : entity.id}
                 front={front}
+                cacheBlink={!front && !!entity.character && entity.room === liveRoom && !reduced}
                 entity={entity}
                 sceneRevision={scene.revision}
                 name={names[entity.id]}
@@ -460,7 +464,7 @@ export function SceneView({
                 meal={meals[entity.id]}
                 onMealPresented={onMealPresented}
                 onMealFinished={onMealFinished}
-                mealHeld={entity.attachment.kind === "hand" && (meals[entity.attachment.character]?.action === "drink" || scene.entities[entity.attachment.character]?.action === "drink")}
+                mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
                 sleeping={!!sleeping[entity.id]}
                 ownerKey={ancestors(entity, scene).join("|")}
                 targetKey={scene.rooms[roomId].targets

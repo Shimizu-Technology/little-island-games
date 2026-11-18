@@ -1,7 +1,7 @@
 import React from 'react';
 import { Circle, Ellipse, G, Path } from 'react-native-svg';
 import { clampRig, type Gaze, type MealFrame, type MealPlayback } from './character';
-import { MealLayer } from './MealLayer';
+import { MealLayer, mealGroups } from './MealLayer';
 import type { IslanderLook } from '../look';
 import type { Expression, Pose } from './poses';
 export function Face({look,pose,expression,blink=false,gaze,meal,playback,sipping=false}: {look: IslanderLook; pose: Pose; expression?: Expression; blink?: boolean; gaze?: Gaze; meal?: MealFrame; playback?: MealPlayback; sipping?: boolean}) {
@@ -23,7 +23,7 @@ export function Face({look,pose,expression,blink=false,gaze,meal,playback,sippin
       {lash&&<Path d="M-12 7l-3-2M12 7l3-2" fill="none" strokeWidth={1.5}/>}
     </G>}
     <Path d={`M-.9 11Q-2 14 1 14Q3 13 1 11${playback||e==='surprised'||e==='anticipate'||e==='chew'||stars?'':e==='thinking'?'M-2 20q3-2 5 0':e==='sleepy'?'M-2 20h4':e==='yum'?(pose.id==='drink'?'M-2 20q2-3 4 0q-2 3-4 0':'M-4 19q4 5 8 0M2 19q3-2 4 0'):e==='focused'||e==='neutral'?'M-3 20h6':'M-3 19q3 4 6 0'}`} fill="none" strokeWidth={1.15}/>
-    {playback ? playback.frames.map((f,i) => <MealLayer key={i} playback={playback} index={i}><MealMouth meal={f.meal} expression={f.face} sipping={sipping}/></MealLayer>) : <MealMouth stars={stars} meal={meal} expression={e} sipping={sipping}/>}
+    {playback ? mealGroups(playback,f=>sipping?'sip':f.meal.bite?'bite':f.face==='chew'?`chew-${f.meal.chew}`:f.face).map(({frame:f,indices}) => <MealLayer key={indices[0]} playback={playback} index={indices}><MealMouth meal={f.meal} expression={f.face} sipping={sipping}/></MealLayer>) : <MealMouth stars={stars} meal={meal} expression={e} sipping={sipping}/>}
     {look.freckles==='freckles'&&<Path d="M-18 11h.1m4 0h.1m2 3h.1M18 11h.1m-4 0h.1m-2 3h.1" stroke="#95634B" strokeWidth={1.3}/>}
   </G>;
 }

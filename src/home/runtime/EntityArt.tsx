@@ -126,7 +126,7 @@ export const EntityArt = memo(function EntityArt({
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
-      {meal && !carry ? <MealArt key={meal.key} input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter} onPresented={onMealPresented} onFinished={onMealFinished}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
+      {!carry && !blink ? <MealArt input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter} onPresented={onMealPresented} onFinished={onMealFinished}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
     </View>
   );
 }, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&

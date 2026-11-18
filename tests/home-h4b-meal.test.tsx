@@ -8,8 +8,8 @@ import { characterPose } from '../src/islander/rig/character';
 import { instance } from '../src/home/model';
 const playback = vi.hoisted(() => ({ progress: undefined as any, timingCalls: 0, completion: undefined as undefined | ((done: boolean) => void), frames: new Map<number, () => void>(), serial: 0 }));
 vi.mock('react-native', () => ({ View: 'meal-stage' }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath'].map(k=>[k,k.toLowerCase()])));
-vi.mock('react-native-reanimated', () => ({ default: { View: 'frame', createAnimatedComponent: () => 'frame' }, ReduceMotion: { Never: 'never' }, Easing: { linear: (t: number) => t }, runOnJS: (fn: any) => fn, useAnimatedProps: (fn: () => any) => ({ evaluate: fn }), withTiming: (_to: any, _opts: any, done: any) => { playback.timingCalls++; playback.completion = done; return 0; },
+vi.mock('react-native-svg', () => Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'frame', createAnimatedComponent: () => 'frame' }, ReduceMotion: { Never: 'never' }, Easing: { linear: (t: number) => t }, runOnJS: (fn: any) => fn, cancelAnimation: () => {}, useDerivedValue: (fn: () => any) => ({get value(){return fn();}}), useAnimatedProps: (fn: () => any) => ({ evaluate: fn }), withTiming: (_to: any, _opts: any, done: any) => { playback.timingCalls++; playback.completion = done; return 0; },
   useSharedValue: (v: number) => { const ref = React.useRef({ value: v, set(n: number) { this.value = n; } }); playback.progress = ref.current; return ref.current; },
   useAnimatedStyle: (fn: () => any) => ({ evaluate: fn }) }));
 vi.mock('../src/home/characterRenderer', () => ({ HomeCharacter: () => null }));
@@ -39,10 +39,10 @@ describe('H4b meal art and natural hand path', () => {
     await act(async () => { tree = create(<MealArt input={{ slot: 0, base: 'stand', action: 'eat', face: null, facing: 'right', size: 240 }}
       meal={{ key: 7, food: instance('meal-prop', 'mango', 0, 0), action: 'eat' }} reduced={false}
       renderCharacter={input => { inputs.push(input); return <>{input.mealPlayback!.frames.map((f,i) => <React.Fragment key={i}>{input.mealPlayback!.renderLayer(i,f.held)}</React.Fragment>)}</>; }}/>); });
-    const frames = tree.root.findAllByType('frame' as never);
+    const frames = tree.root.findAll(n => n.type === 'frame' as never && String(n.props.testID ?? '').startsWith('meal-frame-'));
     expect(frames).toHaveLength(mealTimes.length);
     for (let ms = 0; ms <= MEAL_MS; ms += 1000 / 60) {
-      playback.progress.value = ms;
+      playback.progress.value = 7000 + ms;
       expect(frames.filter(f => f.props.animatedProps.evaluate().opacity === 1)).toHaveLength(1);
     }
     for (const f of inputs[0].mealPlayback.frames) expect(renderToStaticMarkup(f.held)).toContain('data-meal-food="mango"');

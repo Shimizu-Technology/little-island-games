@@ -263,7 +263,7 @@ it('a food drag draws no shadow across the face for mouth proposals',async()=>{
  await act(async()=>tree.unmount());
 });
 
-it('a meal mounts only in the open copy and hides the committed drink from its first action frame',async()=>{
+it('one meal stage hides its real cup atomically, while restored drinks remain visible',async()=>{
  const c=context('character/0');
  c.interaction.slots.value=[{} as any,{} as any];
  const state=labHome('rig-meal');
@@ -276,9 +276,27 @@ it('a meal mounts only in the open copy and hides the committed drink from its f
  const {EntityArt}=await import('../src/home/runtime/EntityArt');
  const art=tree.root.findAllByType(EntityArt);
  expect(art.filter(n=>n.props.meal)).toHaveLength(1);
+ expect(tree.root.findByProps({testID:'object-rig-drink'}).findAllByType(EntityArt)).toHaveLength(0);
  await act(async()=>{tree.update(<SceneView state={state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
  const drink=tree.root.findByProps({testID:'object-rig-drink'});
  const paint=drink.findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0];
- expect(paint.props.style.evaluate().opacity).toBe(0);
+ expect(paint.props.style.evaluate().opacity).toBe(1);
+ await act(async()=>tree.unmount());
+});
+
+it('a visible friend keeps its closed-eye art cached through a meal without playing a second meal',async()=>{
+ const c=context('character/0');c.interaction.slots.value=[{} as any,{} as any];
+ const state=labHome('rig-meal'),scene=buildScene(state);
+ const props={building:buildingLayout(4),viewport:{width:402,height:650},interaction:c.interaction,pickups:[],reduced:false,reactions:{},sleeping:{},liveRoom:'home',onNode:()=>{},onSelect:()=>{},onMove:()=>{}};
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<SceneView {...props} state={state} scene={scene}/>);});
+ const {EntityArt}=await import('../src/home/runtime/EntityArt');
+ expect(tree.root.findAllByType(EntityArt).filter(n=>n.props.blink && n.props.entity.id==='character/0')).toHaveLength(1);
+ state.rooms.home.characters[0].action='eat';const next=buildScene(state);
+ const meal={key:5,action:'eat' as const,food:state.rooms.home.instances[0]};
+ await act(async()=>tree.update(<SceneView {...props} state={state} scene={next} meals={{'character/0':meal}}/>));
+ const closed=tree.root.findAllByType(EntityArt).filter(n=>n.props.blink && n.props.entity.id==='character/0');
+ expect(closed).toHaveLength(1);expect(closed[0].props.meal).toBeUndefined();
+ expect(closed[0].parent!.props.style[1].evaluate().opacity).toBe(0);
  await act(async()=>tree.unmount());
 });
