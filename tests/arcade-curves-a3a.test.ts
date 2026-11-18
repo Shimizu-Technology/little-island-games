@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { createSong, noteDuration, songLevel, songLevels, songMotifUnits, songResult, songStep, songTransition, SONG_PHRASE_STEP } from "../src/arcade/games/shell-song/engine";
 import { createRail, railLevel, railLevels, railScoredSeed, railTick } from "../src/arcade/games/rail-parade/engine";
 import { crabLanes, crabLevel, crabLevels, crabPace, crabScoredSeed, crabStep, crabTransition, createCrab, supported, validCrab, type CrabState } from "../src/arcade/games/crab-crossing/engine";
-import { createPalm, palmLevel, palmLevels, palmStep, palmTransition, palmWorkload, validPalm, PALM_BURST_LIMIT, PALM_ENDLESS_BREAK, PALM_WAVE_BREAK, type PalmLevel, type PalmState } from "../src/arcade/games/palm-patrol/engine";
+import { createPalm, palmLevel, palmLevels, palmStep, palmTransition, palmWorkload, validPalm, PALM_BURST_LIMIT, PALM_SAFE_ROW, PALM_WAVE_BREAK, type PalmLevel, type PalmState } from "../src/arcade/games/palm-patrol/engine";
 import { boundaryTables, easings } from "../src/arcade/boundaries";
 import { allLevelIds, type ArcadeId, type LevelId } from "../src/arcade/types";
 import { arcadeTransition, emptyArcade, validArcade, type ArcadeSave } from "../src/arcade/progress";
@@ -16,7 +16,7 @@ import { crabWitness, pilotRun, railWitness } from "./helpers/arcade-pilots";
 import { crossings, firstLanding, landsAt } from "./helpers/crab-support";
 import { certified as railCertified } from "../src/arcade/games/rail-parade/certified";
 import { certified as palmCertified } from "../src/arcade/games/palm-patrol/certified";
-import { palmParsFromReplays, palmProbe, palmReplay, PALM_SEEDS, type PalmPilot } from "./helpers/palm-replay";
+import { palmDamaged, palmOverlaps, palmParsFromReplays, palmProbe, palmReplay, PALM_SEEDS, type PalmPilot } from "./helpers/palm-replay";
 import { restBeats } from "../src/arcade/restBeats";
 
 const ordinary = allLevelIds.filter(id => !id.startsWith("learn-"));
@@ -228,15 +228,25 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     expect(frames / 60).toBeGreaterThanOrEqual(PALM_WAVE_BREAK - 1e-9);
     expect(s.wave).toBe(2);
   });
-  it("keeps Endless's own waves and short breath", () => {
+  it("keeps Endless's own waves, and rests the same 2 s after each completed wave", () => {
+    // Review 2 P2: Endless wave breaks were 0.65 s.
     const s = createPalm("endless", 5, false);
     expect(s.beetles).toHaveLength(10);
     let e: PalmState = { ...s, beetles: [] };
     e = palmStep(e, tick, 1 / 60);
-    expect(e.relay).toBe(2);
+    expect([e.relay, e.waveWait]).toEqual([2, 0]);
     e = { ...e, beetles: [], relay: 2 };
     e = palmStep(e, tick, 1 / 60);
-    expect(e.waveWait).toBe(PALM_ENDLESS_BREAK);
+    expect(e.waveWait).toBe(PALM_WAVE_BREAK);
+    expect(validPalm(e)).toBe(true);
+    let frames = 0;
+    while (e.wave === 1) { expect(e.beetles).toEqual([]); e = palmStep(e, tick, 1 / 60); frames++; }
+    expect(frames / 60).toBeGreaterThanOrEqual(PALM_WAVE_BREAK - 1e-9);
+    // The reviewer's steady pilot (seed 1, Helper off) finishes wave 1's last relay at 13.85 s; every
+    // break after it, wave breaks and breathers alike, lasts at least 2 s.
+    const r = palmProbe("endless", 1, false, "steady", 120);
+    expect(r.breaks.length).toBeGreaterThan(r.holds);
+    expect(r.breaks.every(b => b >= PALM_WAVE_BREAK)).toBe(true);
   });
   it("takes a safe 2 s breather mid-formation once ordinary play has run 15 s, keeping every beetle", () => {
     // Review P1: the engine enforces the burst limit itself. A diver mid-dive and a marcher just above the
@@ -277,6 +287,84 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     expect(s.burst).toBeGreaterThan(0);
     expect(palmTransition({ ...s, cooldown: 0 }, { type: "toss" }).shots).toBe(s.shots + 1);
   });
+  it("keeps a naturally reached burst limit inside its own validator", () => {
+    // Review 2 P3: 900 ticks of 1/60 summed to 15.000000000000325 and failed validPalm.
+    for (const [dt, ticks] of [[1 / 60, 900], [1 / 30, 450], [0.1, 150]] as const) {
+      let s: PalmState = createPalm(palmLevel("w1-1"), 1, false);
+      for (let i = 0; i < ticks; i++) { s = palmStep(s, tick, dt); expect(validPalm(s), `${dt} tick ${i + 1}`).toBe(true); }
+      // At 60 Hz the sum drifts just past 15 and is held at the limit; other rates may land just short.
+      expect(s.waveWait, `${dt}`).toBe(0);
+      expect(s.burst, `${dt}`).toBeCloseTo(PALM_BURST_LIMIT, 9);
+      if (dt === 1 / 60) expect(s.burst).toBe(PALM_BURST_LIMIT);
+      s = palmStep(s, tick, dt);
+      expect(s.waveWait, `${dt}`).toBe(PALM_WAVE_BREAK);
+      expect(validPalm(s)).toBe(true);
+    }
+  });
+  // Review 2 P1: idle, Helper on, tick inputs only. At each listed tick a breather has just ended; the
+  // next tick used to cost a heart (W1-1, W1-6) or the regroup itself stacked two beetles (W4-5, W2-7).
+  const restarts = [["w1-1", 1, 8176], ["w4-5", 1, 1022], ["w2-7", 8, 2044], ["w1-6", 1, 4088]] as const;
+  it.each(restarts)("%s seed %i: an idle breather that ends at tick %i restarts fairly", (id, seed, ticks) => {
+    let s: PalmState = createPalm(palmLevel(id), seed, true), prev = s, deepest = 0;
+    for (let i = 0; i < ticks; i++) {
+      prev = s; s = palmStep(s, tick, 1 / 60);
+      // The formation origin never runs on below the heart line, through any number of shield saves and resets.
+      deepest = Math.max(deepest, 105 + s.marchY);
+    }
+    expect(prev.waveWait).toBeGreaterThan(0);
+    expect(s.waveWait).toBe(0);
+    const bugs = s.beetles.filter(b => !b.caught);
+    expect(bugs.length).toBeGreaterThan(1);
+    expect(new Set(bugs.map(b => `${b.x},${b.y}`)).size).toBe(bugs.length);
+    expect(palmOverlaps(s)).toBe(0);
+    // No heart or leaf shield is lost on the resume tick, through the first descent step, or within 1 s.
+    let n = 0, descents = 0;
+    while (n < 60 || !descents) {
+      prev = s; s = palmStep(s, tick, 1 / 60); n++;
+      expect(palmDamaged(prev, s), `${id} tick ${ticks + n}`).toBe(false);
+      if (s.direction !== prev.direction) descents++;
+      expect(n).toBeLessThan(60 * 10);
+    }
+    // The regrouped grid sat at or above the safe row, every diver back in it.
+    for (const b of bugs) {
+      expect(b.diving).toBe(false);
+      expect(b.y, `beetle ${b.id}`).toBeLessThanOrEqual(PALM_SAFE_ROW);
+    }
+    expect(deepest).toBeLessThan(520);
+  });
+  it("regroups the surviving formation into its own grid, upward or level, at or above the safe row", () => {
+    // Columns at the screen edge stay apart, rows never share a height, and the origin is re-anchored.
+    let s: PalmState = createPalm(palmLevel("w4-5"), 2, false);
+    s = {
+      ...s,
+      burst: PALM_BURST_LIMIT,
+      marchX: 300,
+      marchY: 900,
+      beetles: s.beetles.map(b => b.id === 0 ? { ...b, caught: 0.3, y: 120 } : b.id < 5 ? { ...b, x: 330, y: 508 } : { ...b, x: 335, y: b.id === 5 ? 140 + 58 : 508, diving: b.id === 6 }),
+    };
+    const before = new Map(s.beetles.map(b => [b.id, b]));
+    s = palmStep(s, tick, 1 / 60);
+    expect(s.waveWait).toBe(PALM_WAVE_BREAK);
+    while (s.waveWait > 0) {
+      const prev = s;
+      s = palmStep(s, tick, 1 / 60);
+      for (const b of s.beetles) if (!b.caught) expect(b.y).toBeLessThanOrEqual(prev.beetles.find(p => p.id === b.id)!.y);
+    }
+    const bugs = s.beetles.filter(b => !b.caught);
+    expect(bugs.map(b => b.id).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    for (const b of bugs) {
+      expect(b.hp).toBe(before.get(b.id)!.hp);
+      expect(b.x).toBeCloseTo(b.base + s.marchX, 9);
+      expect(b.y).toBeCloseTo(105 + Math.floor(b.id / 5) * 58 + s.marchY, 9);
+      expect(b.x).toBeGreaterThanOrEqual(25);
+      expect(b.x).toBeLessThanOrEqual(335);
+      expect(b.y).toBeLessThanOrEqual(PALM_SAFE_ROW);
+    }
+    // Beetle 5 had climbed back to 35 px below its row, so the whole grid sits at that height.
+    expect(s.marchY).toBeCloseTo(35, 9);
+    expect(palmOverlaps(s)).toBe(0);
+    expect(validPalm(s)).toBe(true);
+  });
   it("keeps Learn untimed: no breather however long a fact takes", () => {
     let s: PalmState = createPalm(palmLevel("learn-5"), 2, false);
     for (let i = 0; i < 60 * 40; i++) { s = palmStep(s, tick, 1 / 60); expect(s.waveWait).toBe(0); }
@@ -288,7 +376,8 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
       const r = palmProbe("endless", 3, helper, pilot, 240);
       expect(r.burst, `${pilot} ${helper}`).toBeLessThanOrEqual(PALM_BURST_LIMIT);
       expect(r.holds).toBeGreaterThan(0);
-      expect([r.breakHits, r.breakMoves, r.lostProgress, r.diving]).toEqual([0, 0, 0, 0]);
+      expect(r.breaks.every(b => b >= PALM_WAVE_BREAK), `${pilot} ${helper}`).toBe(true);
+      expect([r.breakHits, r.breakMoves, r.lostProgress, r.diving, r.resumeHits, r.stacked], `${pilot} ${helper}`).toEqual([0, 0, 0, 0, 0, 0]);
     }
     let s: PalmState = createPalm("endless", 6, false);
     s = palmStep({ ...s, burst: PALM_BURST_LIMIT }, tick, 1 / 60);
@@ -310,11 +399,25 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
       const r = palmProbe(l, seed, helper, pilot), at = `${id} ${pilot} seed ${seed} helper ${helper}`;
       expect(r.burst, at).toBeLessThanOrEqual(PALM_BURST_LIMIT);
       expect(r.breaks.every(b => b >= PALM_WAVE_BREAK), at).toBe(true);
-      expect({ breakHits: r.breakHits, breakMoves: r.breakMoves, lostProgress: r.lostProgress, diving: r.diving }, at).toEqual({ breakHits: 0, breakMoves: 0, lostProgress: 0, diving: 0 });
+      expect({ breakHits: r.breakHits, breakMoves: r.breakMoves, lostProgress: r.lostProgress, diving: r.diving, resumeHits: r.resumeHits, stacked: r.stacked }, at).toEqual({ breakHits: 0, breakMoves: 0, lostProgress: 0, diving: 0, resumeHits: 0, stacked: 0 });
       // The gentle child still clears every level with Helper on. Helper off, 11 of its 384 runs in W5-4,
       // W5-8 and W6-2 lose their hearts, exactly as before the breather (A3a FIX-REPORT).
       if (pilot === "gentle" && helper) expect(r.result?.cleared, at).toBe(true);
     }
+  });
+  it.each(ordinary.map(id => [id] as const))("%s: idle, gentle and slow pilots resume fairly after every breather, Helper off and on", id => {
+    // Review 2 P1 sweep: no heart or leaf shield lost within 1 s of play resuming, and no stacked beetles.
+    const l = palmLevel(id);
+    let holds = 0;
+    for (const pilot of ["idle", "gentle", "slow"] as const) for (const seed of [1, 3, 8]) for (const helper of [false, true]) {
+      const r = palmProbe(l, seed, helper, pilot, 240), at = `${id} ${pilot} seed ${seed} helper ${helper}`;
+      holds += r.holds;
+      expect({ resumeHits: r.resumeHits, stacked: r.stacked, breakHits: r.breakHits, breakMoves: r.breakMoves, lostProgress: r.lostProgress, diving: r.diving }, at)
+        .toEqual({ resumeHits: 0, stacked: 0, breakHits: 0, breakMoves: 0, lostProgress: 0, diving: 0 });
+    }
+    // An idle round can end before its first breather (in the six levels without a middle leaf, even with
+    // Helper on); across these pilots every level still takes some.
+    expect(holds).toBeGreaterThan(0);
   });
   it.each(ordinary.map(id => [id] as const))("%s: steady legal replays clear hit-free with bursts of 15 s or less and earn three stars, Helper off and on", id => {
     const l = palmLevel(id);

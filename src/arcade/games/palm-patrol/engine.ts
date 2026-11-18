@@ -33,19 +33,27 @@ export type PalmLevel = ArcadeLevel & {
   /** 2: the AR-05 smoothed waves, 2 s wave breaks and replay-fitted pars. Stars and bests from version 1 stay as earned. */
   rulesVersion: 2;
 };
-/** Seconds of calm between waves in a level: no beetles, no tosses (AR-05). Endless keeps its old breath. */
-export const PALM_WAVE_BREAK = 2,
-  PALM_ENDLESS_BREAK = 0.65;
+/** Seconds of calm between waves, in scored levels and Endless alike: no beetles, no tosses (AR-05). */
+export const PALM_WAVE_BREAK = 2;
 /**
  * AR-05's hard burst limit: ordinary play (scored levels and Endless) never runs more than 15 s without
  * a break. When a formation is still on the board at the limit, a breather of PALM_WAVE_BREAK seconds
- * starts: the formation regroups (each beetle back to its column, none lower than its row) and holds,
- * husks already thrown still land, and nothing can reach Coco. Then play resumes where it stopped.
- * Learn is untimed and never breaks.
+ * starts: the formation regroups into its own grid and holds, husks already thrown still land, and
+ * nothing can reach Coco. Then play resumes where it stopped. Learn is untimed and never breaks.
  */
 export const PALM_BURST_LIMIT = 15,
   PALM_CROWN_HP = 5;
+/**
+ * The lowest row any formation starts on. A regrouped formation's bottom row sits here or higher, so after
+ * a breather a beetle needs at least a descent step and a whole dive to reach the leaves.
+ */
+export const PALM_SAFE_ROW = 221;
 const RETREAT_SPEED = 260;
+/** A beetle's place in its formation grid, before the march moves it. */
+function rowOf(b: Beetle) {
+  "worklet";
+  return 105 + Math.floor(b.id / 5) * 58;
+}
 const palmNames = [
   "Marching visitors",
   "Husk toss",
@@ -327,6 +335,26 @@ export function createPalm(level: PalmState["level"], seed: number, helper = fal
     burst: 0,
   });
 }
+/**
+ * A breather re-anchors the formation origin for the beetles still in play, so their grid places are
+ * fair to resume from. Each column stays on screen at its own spacing, so no two beetles share a place,
+ * even at an edge. The grid rises to the safe row, and to the highest beetle's own row height, so every
+ * beetle's move back is upward or level. The dive clock starts again.
+ */
+function regroup(s: PalmState): PalmState {
+  "worklet";
+  let lo = -Infinity,
+    hi = Infinity,
+    depth = Infinity;
+  for (const b of s.beetles) {
+    if (b.caught) continue;
+    const edge = b.boss ? 35 : 25;
+    lo = Math.max(lo, edge - b.base);
+    hi = Math.min(hi, 360 - edge - b.base);
+    depth = Math.min(depth, PALM_SAFE_ROW - rowOf(b), b.y - rowOf(b));
+  }
+  return depth === Infinity ? s : { ...s, marchX: clamp(s.marchX, lo, hi), marchY: Math.max(0, depth), diveClock: 0 };
+}
 function feedback(s: PalmState, cue: PalmState["cue"], text: string, x: number, y: number): PalmState {
   "worklet";
   return { ...s, event: s.event + 1, cue, feedback: text, feedbackX: x, feedbackY: y, pulse: 0.45 };
@@ -393,8 +421,9 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
   } else if (!learning && s.burst + dt > PALM_BURST_LIMIT + 1e-9)
     // This tick would pass the limit, so it opens the breather instead of playing on. The cue sounds its
     // tone; the view shows its own resting label, so no pulse text covers the formation.
-    s = { ...s, waveWait: PALM_WAVE_BREAK, burst: 0, event: s.event + 1, cue: "wave", pulse: 0 };
-  else if (!learning) s.burst += dt;
+    s = regroup({ ...s, waveWait: PALM_WAVE_BREAK, burst: 0, event: s.event + 1, cue: "wave", pulse: 0 });
+  // Rounding drift of up to the tolerance stays at the limit itself.
+  else if (!learning) s.burst = Math.min(PALM_BURST_LIMIT, s.burst + dt);
   // During a breather the formation holds, its clocks stop, and only thrown husks and netted beetles move.
   const holding = before.waveWait > 0 || s.waveWait > 0;
   if (!holding) s.waveTime += dt;
@@ -431,12 +460,12 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
       b.caught = Math.max(0.001, b.caught - dt);
       b.y -= 170 * dt;
     } else if (holding) {
-      // The formation regroups: each beetle slides back to its own column, and any beetle below its row
-      // climbs back to it, never toward Coco. Play never resumes with a beetle about to land, and no two
-      // beetles are left on one spot. Beetles already in place hold still.
-      const rowX = clamp(b.base + s.marchX, 25, 335),
-        rowY = 105 + Math.floor(b.id / 5) * 58 + s.marchY,
-        step = RETREAT_SPEED * dt;
+      // The formation regroups into the grid `regroup` anchored: each beetle slides to its own place,
+      // upward or level, never toward Coco. Beetles already in place hold still, and the breather's last
+      // tick settles any beetle still on its way.
+      const rowX = b.base + s.marchX,
+        rowY = rowOf(b) + s.marchY,
+        step = s.waveWait > 0 ? RETREAT_SPEED * dt : Infinity;
       b.x = b.x < rowX ? Math.min(rowX, b.x + step) : Math.max(rowX, b.x - step);
       b.y = Math.max(Math.min(b.y, rowY), b.y - step);
       if (b.x === rowX && b.y <= rowY) b.diving = false;
@@ -488,6 +517,8 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
       s.shields[shield]--;
       b.y = 300;
       b.diving = false;
+      // The formation origin follows a beetle sent back up, so it never runs on below the danger line.
+      s.marchY = Math.min(s.marchY, b.y - rowOf(b));
       s = feedback(s, "shield", "Leaf save", b.x, 475);
     } else if (b.y >= 520) {
       const lives = hitLives(s.lives);
@@ -498,6 +529,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
       // Reset the whole threatening row during grace, never drain all hearts in one frame.
       b.y = 140 + Math.floor(b.id / 5) * 58;
       b.diving = false;
+      s.marchY = Math.min(s.marchY, b.y - rowOf(b));
     }
   }
   s.beetles = s.beetles.filter((b) => !b.caught || (b.caught > 0.002 && b.y > -60));
@@ -506,7 +538,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     // An Endless relay that arrives during a breather waits out the rest of it.
     if (s.relay < config.relays) return { ...formation({ ...s, relay: s.relay + 1 }), waveWait: s.waveWait };
     if (s.level !== "endless" && s.wave >= config.waves) return { ...s, phase: "cleared" };
-    return feedback({ ...s, waveWait: s.level === "endless" ? PALM_ENDLESS_BREAK : PALM_WAVE_BREAK, burst: 0 }, "wave", "Next wave", 180, 72);
+    return feedback({ ...s, waveWait: PALM_WAVE_BREAK, burst: 0 }, "wave", "Next wave", 180, 72);
   }
   return s;
 }
@@ -567,7 +599,6 @@ export function validPalm(v: unknown): v is PalmState {
     (v.wave as number) > 0 &&
     finite(v.cooldown, 0, FIRE_SECONDS) &&
     finite(v.pulse, 0, 0.45) &&
-    // A breather lasts PALM_WAVE_BREAK in Endless too; its own wave breaths are shorter.
     finite(v.waveWait, 0, PALM_WAVE_BREAK) &&
     finite(v.burst, 0, PALM_BURST_LIMIT) &&
     finite(v.diveClock, 0, 10) &&
