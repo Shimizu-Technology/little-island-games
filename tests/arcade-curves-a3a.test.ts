@@ -268,7 +268,10 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     expect(diver.y).toBeCloseTo(105 + s.marchY, 6);
     // The marcher that was about to reach the shields climbed back to its row as well.
     expect(s.beetles.find(b => b.id === 3)!.y).toBeCloseTo(105 + s.marchY, 6);
-    for (const b of s.beetles) expect(b.y, `beetle ${b.id}`).toBeLessThanOrEqual(105 + Math.floor(b.id / 5) * 58 + s.marchY + 1e-9);
+    for (const b of s.beetles) {
+      expect(b.y, `beetle ${b.id}`).toBeLessThanOrEqual(105 + Math.floor(b.id / 5) * 58 + s.marchY + 1e-9);
+      expect(b.x, `beetle ${b.id}`).toBeCloseTo(b.base + s.marchX, 6);
+    }
     // Play resumes: the clock runs again and tosses are accepted.
     s = palmStep(s, tick, 1 / 60);
     expect(s.burst).toBeGreaterThan(0);
