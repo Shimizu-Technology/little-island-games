@@ -44,9 +44,10 @@ def spoken(text):
     # The beach-ball buddy "Bibi" was heard as "Bibai" in both voices; the name is read "BEE-bee".
     text=re.sub(r'\bBibi\b', 'Bee-bee', text)
     # Inquiry units (S1a): "AU" was heard as "1.0", and kg/N/m/s² are letters to a child's ear. Speak the unit words.
+    text=re.sub(r'(?<=\d) kg(?= (?:crate|mass)\b)', ' kilogram', text)
     text=re.sub(r'(?<=\d) kg\b', ' kilograms', text)
     text=re.sub(r'(?<=\d) N\b', ' newtons', text)
-    text=re.sub(r'\b(1|One|each) AU\b', r'\1 astronomical unit', text)
+    text=re.sub(r'\b(1|One|each|per) AU\b', r'\1 astronomical unit', text)
     text=re.sub(r'\bAU\b', 'astronomical units', text)
     text=text.replace('m/s²', 'meters per second squared')
     # A short label ending in "Faith." was heard as "face"; exclaiming keeps the "th".

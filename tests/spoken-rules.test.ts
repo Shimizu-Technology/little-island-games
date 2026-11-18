@@ -10,8 +10,9 @@ it("reads the beach-ball buddy's name as Bee-bee, not Bibai", () => {
   expect(spoken("Bibi ••")).toBe("Bee-bee ••");
 });
 it("speaks the inquiry units: kilograms, newtons, astronomical units, metres per second squared", () => {
-  expect(spoken("Our 6 kg crate weighs 22.3 N on Earth.")).toBe("Our 6 kilograms crate weighs 22.3 newtons on Earth.");
+  expect(spoken("Our 6 kg crate weighs 22.3 N on Earth.")).toBe("Our 6 kilogram crate weighs 22.3 newtons on Earth.");
   expect(spoken("Light takes 8.3 minutes to cross 1 AU. A probe is 5 AU from the Sun. One AU is about the Earth–Sun distance.")).toBe("Light takes 8.3 minutes to cross 1 astronomical unit. A probe is 5 astronomical units from the Sun. One astronomical unit is about the Earth–Sun distance.");
+  expect(spoken("Set mass to 24 kg and keep a 12 kg mass. Light takes 8.3 minutes per AU. Check both AU and minutes.")).toBe("Set mass to 24 kilograms and keep a 12 kilogram mass. Light takes 8.3 minutes per astronomical unit. Check both astronomical units and minutes.");
   expect(spoken("Jupiter 23.1 m/s². Mass stays.")).toBe("Jupiter 23.1 meters per second squared. Mass stays.");
 });
 it("leaves ordinary words and the other rules alone", () => {
