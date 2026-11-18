@@ -6,8 +6,8 @@ import { engine as pattern, taskAt as patternTask, place as patternPlace } from 
 import { Board as PatternBoard } from '../src/learn/games/pattern-path/view';
 import { engine as shape, taskAt as shapeTask, place as shapePlace, chooseCube, normalize, rotate, flip } from '../src/learn/games/shape-shift/engine';
 import { Board as ShapeBoard } from '../src/learn/games/shape-shift/view';
-import { engine as logic, taskAt as logicTask, enter, solutionCount } from '../src/learn/games/logic-lagoon/engine';
-import { Board as LogicBoard } from '../src/learn/games/logic-lagoon/view';
+import { engine as logic, taskAt as logicTask, enter, solutionCount } from '../src/learn/games/logic-lagoon/legacy';
+import { Board as LogicBoard } from '../src/learn/games/logic-lagoon/legacy-view';
 import type { BoardProps, LearnOptions } from '../src/learn/types';
 const { Pass } = vi.hoisted(() => ({ Pass: ({ children }: { children?: unknown }) => children as never }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => true }));

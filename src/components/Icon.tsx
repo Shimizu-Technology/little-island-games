@@ -13,6 +13,7 @@ export type IconName =
   | "left"
   | "right"
   | "undo"
+  | "erase"
   | "flag"
   | "refresh"
   | "close"
@@ -25,6 +26,7 @@ export function Icon({ name, size = 22, color = "#183F39" }: { name: IconName; s
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       {name === "back" && <Path d="M15 5l-7 7 7 7" {...stroke} />}
+      {name === "erase" && <Path d="M4 15l8-10 9 7-8 9H8zM9 10l9 7M13 21h8" {...stroke} />}
       {name === "left" && <Path d="M19 12H5m6-6l-6 6 6 6" {...stroke} />}
       {name === "right" && <Path d="M5 12h14m-6-6l6 6-6 6" {...stroke} />}
       {name === "up" && <Path d="M12 19V5m-6 6l6-6 6 6" {...stroke} />}

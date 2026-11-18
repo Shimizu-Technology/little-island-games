@@ -13,7 +13,7 @@ import { shelfLevel } from "../src/learn/home";
 import { recordLevelRound } from "../src/learn/levelEvidence";
 import { mathResult } from "../src/math/questions";
 import { finishMathRound } from "./helpers/shell-rounds";
-import type { MathRound } from "../src/learn/games/shell-math/round";
+import { createRound, type MathRound } from "../src/learn/games/shell-math/round";
 import { growthMove, growthQuestions } from "../src/learn/growth/engine";
 import type { GrowthState } from "../src/learn/growth/types";
 import { SENTENCES } from "../src/learn/content/reading/sentences";
@@ -109,11 +109,12 @@ describe("five learning levels", () => {
       expect(activeLearner(recordLevelRound(before, after, game).learning).notes[`${game}:stretch:${levelRoundSkill}`]).toMatchObject({ independent: 0, helped: 1, days: [], rounds: [] });
     }
   });
-  it("math Level 3 has a full-range first question and preserves chosen operation", () => {
-    // Shell Math has its own level 3 (a bridge through ten); see n1a-shell-round.test.ts.
+  it("a saved version-1 math Level 3 round keeps its full-range first question and chosen operation", () => {
+    // All three games start their own version-2 Level 3 now (n1a-shell-round, n1b-hop-round, n1b-quick-round tests).
+    // A version-1 round saved before that keeps these rules, so it is built from the version-1 generator.
     for (const game of ["number-hop", "quick-practice"] as const) for (const operation of ["add", "subtract", "mixed"] as const) {
       const options = { ...optionsAtLevel(base, 3), mathOperation: operation };
-      const round = startSession(game, { options }, {}, 42), s = round.state as MathRound;
+      const started = startSession(game, { options }, {}, 42), round = { ...started, state: createRound(options, game, random(42)) }, s = round.state as MathRound;
       expect(validLearnSession(round)).toBe(true);
       expect(s.questions[0].blank).toBe(game === "quick-practice" ? "second" : "result");
       expect(s.questions.every(q => Math.max(q.a, q.b, mathResult(q)) <= 20)).toBe(true);

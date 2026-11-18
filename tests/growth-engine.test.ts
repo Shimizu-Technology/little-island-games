@@ -60,7 +60,8 @@ describe("growth progression and preserved saves", () => {
   it("credits accepted answers once and isolates owners/epochs", () => {
     const learning = addLearner(undefined, "Test learner", "test");
     let save: Save = { ...emptySave(), learning };
-    let s = { ...startSession("quick-practice", { options: { mode: "solo", pace: "easy", stage: "stretch" } }, {}, 10), learner: "test" };
+    // Island Market still uses the shared Level 4 question board (Quick Practice moved to its own in N1b).
+    let s = { ...startSession("island-market", { options: { mode: "solo", pace: "easy", stage: "stretch" } }, {}, 10), learner: "test" };
     save = applyLearnSave(save, s.game, s, { id: null, epoch: 1 }, 1);
     const qs = growthQuestions(s.game, s.options, s.state as GrowthState), q = qs[0];
     const answered = { ...s, revision: 1, state: growthMove(s.state as GrowthState, { type: "answer", value: q.answer }, qs) };
