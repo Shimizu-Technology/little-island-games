@@ -1,0 +1,21 @@
+{
+ "format": 1,
+ "family": "logic-lagoon",
+ "seedBase": 1,
+ "attempts": 1600,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "cages": 200,
+  "wide-cages": 100,
+  "marks-only": 200,
+  "school-cages": 1600
+ },
+ "sourceSha": "3a140e88154f16b26fc8f96edc07daa9419acfda",
+ "status": "complete"
+}

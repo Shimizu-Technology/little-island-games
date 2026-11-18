@@ -42,8 +42,8 @@ it('AX5: the status line is one capped sentence with the full spoken count, and 
 
 it('AX5: the number pad keys stop at 1.3x and Erase fits its key, so no word breaks mid-word', async () => {
   await mountBoard();
-  const keys = buttons().filter(b => /^Enter /.test(String(b.props.label ?? '')));
-  expect(keys.map(k => k.props.label)).toEqual(['Enter 1', 'Enter 2', 'Enter 3', 'Enter 4', 'Enter Erase']);
+  const keys = buttons().filter(b => /^Enter /.test(String(b.props.label ?? '')) || b.props.label === 'Erase');
+  expect(keys.map(k => k.props.label)).toEqual(['Enter 1', 'Enter 2', 'Enter 3', 'Enter 4', 'Erase']);
   const erase = keys[4], padWidth = erase.props.style.width as number;
   expect(erase.props.style.paddingHorizontal).toBe(4);
   expect(erase.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.3);
@@ -62,17 +62,18 @@ it('AX5: the rules a child opens with How to play stop at 1.5x', async () => {
   expect(rules.props.maxFontSizeMultiplier).toBe(1.5);
 });
 
-it('default size: the status stays three separate facts in one row, and the Erase key keeps its padding and cap', async () => {
+it('default size: status stays separate and the approved Erase word fit prevents mid-word breaks', async () => {
   Object.assign(viewport, { fontScale: 1 });
   await mountBoard();
   expect(screen!.root.findAllByProps({ testID: 'puzzle-status-line' })).toHaveLength(0);
   const facts = screen!.root.findByProps({ testID: 'puzzle-status' }).findAllByType('p' as never);
   expect(facts.map(textOf)).toEqual(['Sprout 1', '· skill: One number left', '· 2/16']);
   expect(facts[2].props.accessibilityLabel).toBe('2 of 16 cells filled');
-  const erase = buttons().find(b => b.props.label === 'Enter Erase')!;
-  expect(erase.props.style.paddingHorizontal).toBeUndefined();
-  // Below the accessibility sizes nothing is capped, so every key is drawn as it always was.
-  expect(erase.props.maxFontSizeMultiplier).toBeUndefined();
+  const erase = buttons().find(b => b.props.label === 'Erase')!;
+  expect(erase.props.style.paddingHorizontal).toBe(4);
+  // Lead-approved round2 exception: word keys fit at default as well as AX.
+  expect(erase.props.numberOfLines).toBe(1);
+  expect(wordWidth('Erase') * 15 * Math.min(viewport.fontScale, erase.props.maxFontSizeMultiplier)).toBeLessThanOrEqual(erase.props.style.width - 12);
   expect(erase.props.style.minWidth).toBe(52);
 });
 

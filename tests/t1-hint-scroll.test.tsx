@@ -1,0 +1,33 @@
+import React from 'react';
+import {act,create,type ReactTestRenderer} from 'react-test-renderer';
+import {afterEach,expect,it,vi} from 'vitest';
+import {LagoonGrid} from '../src/learn/games/logic-lagoon/grid';
+import {LagoonHintScroll,hintScrollTarget} from '../src/learn/games/logic-lagoon/hintScroll';
+import {engine,taskAt,boardAt,type LatinState} from '../src/learn/games/logic-lagoon/engine';
+const frames=new Map<number,FrameRequestCallback>();let seq=0;
+vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++seq,f);return seq;});vi.stubGlobal('cancelAnimationFrame',(n:number)=>frames.delete(n));
+vi.mock('react-native',()=>({View:'View',ScrollView:'ScrollView',useWindowDimensions:()=>({width:393,height:852,fontScale:3.12})}));
+vi.mock('../src/learn/BoardSpace',()=>({useBoardSpace:()=>({ready:true,width:333}),useBoardColumns:()=>false,useBoardGeometry:()=>({height:288,testID:'school-logic-lagoon-drawing',onLayout:()=>{}}),BoardPrimary:'Primary',BoardRow:'Row'}));
+vi.mock('../src/learn/games/logic-lagoon/native-grid',()=>({NativeGrid:'Grid'}));
+vi.mock('../src/components/ui',()=>({Button:'Button',Copy:'Copy',PressableScale:'Pressable',C:{}}));
+vi.mock('react-native-svg',()=>({default:'Svg',Circle:'Circle',Ellipse:'Ellipse',Path:'Path',Rect:'Rect'}));
+vi.mock('../src/components/Text',async()=>{const {createContext}=await import('react');return {Text:'Text',TextFit:createContext(null)};});
+let root:ReactTestRenderer|undefined;afterEach(async()=>{if(root)await act(async()=>root!.unmount());root=undefined;frames.clear();});
+const flush=async()=>act(async()=>{const pending=[...frames.values()];frames.clear();pending.forEach(f=>f(0));});
+it('reveals only the missing card area, keeps preceding rows when they fit, and aligns a very tall card at its top',()=>{
+ expect(hintScrollTarget(100,900,200,600)).toBe(508);expect(hintScrollTarget(508,900,200,600)).toBe(508);expect(hintScrollTarget(100,300,200,600)).toBe(100);expect(hintScrollTarget(100,900,700,600)).toBe(892);expect(hintScrollTarget(900,1100,100,600,800)).toBe(792);
+});
+it.each(['I’ll try it','Show me'])('Hint/Why reveal the real School card and %s restores the exact prior scroll',async dismiss=>{
+ const offset={current:100};let cardHeight=200;
+ const scrollTo=vi.fn(({y}:{y:number})=>{offset.current=y;}),host={offset,scroll:{current:{getNativeScrollRef:()=>({measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,100,333,600)}),scrollTo} as never}};
+ const s=engine.create({mode:'solo',pace:'easy',stage:'deep'},{rng:()=>17/0xffffffff,skills:{},starter:0,today:0}) as LatinState,t=taskAt(s);if(t.kind!=='grid')throw Error('grid');
+ const help=vi.fn(),reveal=vi.fn();
+ await act(async()=>{root=create(<LagoonHintScroll.Provider value={host}><LagoonGrid puzzle={t.puzzle!} state={boardAt(s,t.puzzle!)} assisted dispatch={()=>{}} help={help} reveal={reveal} title="Cages" active width={333}/></LagoonHintScroll.Provider>,{createNodeMock:node=>(node.props as {testID?:string}).testID==='lagoon-hint-card'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,900-offset.current+100,333,cardHeight)}:(node.props as {testID?:string}).testID==='lagoon-numeric-fit'?{measureInWindow:(cb:(x:number,y:number,w:number,h:number)=>void)=>cb(0,600-offset.current+100,333,288)}:{}});});
+ const button=(text:string)=>root!.root.findAllByType('Button' as never).find(n=>n.children.join('')===text)!;
+ await act(async()=>button('Hint').props.onPress());await flush();expect(help).toHaveBeenCalledOnce();expect(scrollTo).toHaveBeenLastCalledWith({y:508,animated:false});
+ expect(root!.root.findByType('Primary' as never).findAll(n=>n.props.testID==='lagoon-hint-card')).toHaveLength(0);
+ cardHeight=300;await act(async()=>button('Why?').props.onPress());await flush();expect(scrollTo).toHaveBeenLastCalledWith({y:608,animated:false});
+ await act(async()=>button(dismiss).props.onPress());await flush();expect(scrollTo).toHaveBeenLastCalledWith({y:100,animated:false});
+ if(dismiss==='Show me')expect(reveal).toHaveBeenCalledOnce();
+});
