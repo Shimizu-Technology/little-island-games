@@ -10,7 +10,7 @@ import { PuzzleStatus, statusSentence, useStatusMax } from '../ui/PuzzleStatus';
 import { conflicts, type LatinPuzzle } from './core';
 import { planHint } from './solver';
 import { cueFor, techniqueName, type Cue } from './teach';
-import { cageLayer, cellClueWords, clueWords, markLayer, sightFrame } from './clues';
+import { cageCorners, cageLayer, cellClueWords, clueWords, markLayer, sightFrame } from './clues';
 import type { LatinBoardProps, LatinEvent } from './registration';
 
 /** Thick lines for box edges (Sudoku, Cage Sudoku) or cage edges (Cage Math), in pixels for one cell size. */
@@ -103,7 +103,8 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     return out;
   }, [state.values, state.selected, shown, ladder.cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
-  const clues = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
+  const clues = useMemo(() => p.cages.length ? cageLayer(p, { labels: false }) : p.less.length ? markLayer(p) : undefined, [p]);
+  const cornerClues = useMemo(() => p.cages.length ? cageCorners(p) : undefined, [p]);
   // A shown colour chain draws the lines that join it, under any clue layer.
   const links = shown ? ladder.cue?.links : undefined, proof = shown && stage === 2 ? ladder.cue?.proof : undefined, wrap = !!proof && proof.length === 2 && proof.every(i => ladder.cue?.marks?.[0].includes(i));
   const overlay = useMemo(() => links?.length ? (cell: number) => <>{chainLines(p.size, links, cell, proof, wrap)}{clues?.(cell)}</> : clues, [links, proof, wrap, clues, p.size]);
@@ -129,7 +130,7 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
       </View>
     </View>}
     <View style={{ marginHorizontal: -bleed }}>
-      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} overlay={overlay} frame={frame} cellWords={cellWords} status={statusSentence(view.title, techniqueName(view.teaches) || undefined, `${total}/${total}`)} fillNotes={() => send({ type: 'fill-notes' })}/>
+      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} overlay={overlay} cornerClues={cornerClues} frame={frame} cellWords={cellWords} status={statusSentence(view.title, techniqueName(view.teaches) || undefined, `${total}/${total}`)} fillNotes={() => send({ type: 'fill-notes' })}/>
     </View>
     {!!words && p.kind !== 'sudoku' && <Copy accessibilityRole="text" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{words}</Copy>}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

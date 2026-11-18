@@ -14,6 +14,7 @@ import { techniqueNames as lineTechniques } from '../src/puzzles/lines/teach';
 import { latinRungs } from '../src/puzzles/latin/rungs';
 import { bridgesRungs } from '../src/puzzles/edges/rungs';
 import { loopRungs, pearlRungs } from '../src/puzzles/lines/rungs';
+import { wordsFit } from '../src/components/wordFit';
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) }, View: 'div', TextInput: 'input', Pressable: 'button', Platform: { OS: 'ios' }, useWindowDimensions: () => viewport, PanResponder: { create: (handlers: unknown) => ({ panHandlers: handlers }) } }));
@@ -137,11 +138,14 @@ it('Sudoku 9×9 at AX5 on the landscape phone: the board takes the room left abo
   expect(STATUS_LINE).toBeGreaterThan(0);
 });
 
-it.each([1, 1.3, 1.35])('Skyline 6×6 at text scale %s on the landscape phone is drawn as before: 55%% of the window, Enlarge cells before the keys, no caps', async fontScale => {
+it.each([1, 1.3, 1.35])('Skyline 6×6 at text scale %s keeps its legacy height, zoom order and number-key caps, with the approved Erase word fit', async fontScale => {
   Object.assign(viewport, { fontScale });
   await mount(devices[1]);
   expect(framed().props.style.height).toBeCloseTo(393 * .55, 5);
   const zoom = buttons().find(b => textOf(b) === 'Enlarge cells')!, firstKey = buttons().find(b => b.props.label === 'Enter 1')!;
   expect(order(zoom)).toBeLessThan(order(firstKey));
-  for (const b of buttons()) expect(b.props.maxFontSizeMultiplier, textOf(b)).toBeUndefined();
+  for (const b of buttons().filter(b => b.props.label !== 'Erase')) expect(b.props.maxFontSizeMultiplier, textOf(b)).toBeUndefined();
+  const erase = buttons().find(b => b.props.label === 'Erase')!;
+  expect(erase.props.maxFontSizeMultiplier).toBeGreaterThanOrEqual(1);
+  expect(wordsFit('Erase', 15 * Math.min(fontScale, erase.props.maxFontSizeMultiplier), erase.props.style.width - 12)).toBe(true);
 });

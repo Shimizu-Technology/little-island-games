@@ -1,0 +1,31 @@
+{
+  "source": "23744722 (merged frame/R1a, before schoolLayout)",
+  "gestureHash": "479698d0c25cbf505fd11df56cb773b97841b9ac3b306f102a06f4740916f996",
+  "cornerHash": "5a45bdc4d53862c748481bdd27b476991b778ca35d4c1a824a95bae10522933c",
+  "cases": {
+    "Cove/sudoku/393/1": "f1c47e34c5621d0def5a4e54ba371ef777919207dee97b03fb3979dd37d23a19",
+    "Cove/sudoku/393/3.12": "7ce39e35474bfc75abebf6099eb17446a531c37a676f4870a099576c326da130",
+    "Cove/sudoku/744/1": "26f250f015c492d5b1b45b9d0f4a04349e292005c2656796fe14dd7b090ce31a",
+    "Cove/sudoku/744/3.12": "519d6e463e5705eb0b645c8730eb72c19d72b27a23c9e77ed9e2703129150c21",
+    "Cove/killer/393/1": "9ebc8e64498d8279e0ad44592a0f535de14929be3acb1d8eb058a6392c3b2594",
+    "Cove/killer/393/3.12": "294dc9db9512dafc373fdfcb55bfad99a38a464b667cc2ed98ed308b6338830c",
+    "Cove/killer/744/1": "62c823db8a1bfc4e3ebc203f8da90ba87a88d7730cf0581de022137edc4cfbb8",
+    "Cove/killer/744/3.12": "08af0a5f40bf00bfe453a0b667dc0e5cd218588c4f208186348ca697cf67008d",
+    "Cove/cage-math/393/1": "52a802f4948b9b2843cad02feb2f546b08ebbc31839a9fed6a51cf878e95b433",
+    "Cove/cage-math/393/3.12": "bd4eda0053ea854fc3282fcdd915f45b89f553ad59f1412af3621add41638240",
+    "Cove/cage-math/744/1": "8862910014a3b5511907d2ba0f7ee1cdc340f24512ffdcd6cc6c3f4130e61b6d",
+    "Cove/cage-math/744/3.12": "ce54a4efc186ad90108bfb02ed8b4a535eeb45dcc840a0cd7030e763ebd7e6bd",
+    "Challenge/sudoku/393/1": "c8829932d73a6b58a9af15ba61c7cad887b9c8f7a587524439869e11e113e9c8",
+    "Challenge/sudoku/393/3.12": "066fc75aded65eff8355082dfa4b82bd06fb076d878e864a810bf6a23d2c7efa",
+    "Challenge/sudoku/744/1": "885ce1cebd940e1beada647b73d51ca181beadda1886de4b4d7f8171c9832948",
+    "Challenge/sudoku/744/3.12": "4faf1c360766199667394f567ebe2c22734861a8807f7aa26df16fc3f89c000c",
+    "Challenge/killer/393/1": "e76eb37d859ca46d25f7ff7afa10bd33cd36b113abbcb4af0fc406c9344bad91",
+    "Challenge/killer/393/3.12": "64f5516dfb7f50da5832eefc50e925e18a14700f885221ecb5dc6c27f4d79b11",
+    "Challenge/killer/744/1": "375bbf086e81c5359fef3bcc39a527fad88e4e42e0eaa980251f7d089367918a",
+    "Challenge/killer/744/3.12": "8c7deaaeacd901bcad069f7137bae3c8fa0aa23e537f8beed42d65f45691af04",
+    "Challenge/cage-math/393/1": "1fba955d9d574df3eeb51e81a5566599b2c6ab23aeaf2b201d123c811f29a481",
+    "Challenge/cage-math/393/3.12": "8483e8821b2d5defa71694b8ea0e8b3ca79cc948b6c2b5ab196a693cec015e72",
+    "Challenge/cage-math/744/1": "72baf1d29bc7a01a18fad4e42c00673d6b29e097e56f6b141c56e5a90b4158e3",
+    "Challenge/cage-math/744/3.12": "7240ab1cc621031ed14f813018aa2b3f36a7f790e5bd5fc345cb758be6ddd726"
+  }
+}

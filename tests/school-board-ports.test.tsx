@@ -23,11 +23,16 @@ import { Board as B10 } from '../src/learn/games/logic-lagoon/view';
 import { SchoolBoard as B11 } from '../src/learn/games/slip-tide/schoolBoard';
 import { ProgramEditor } from '../src/learn/program/ProgramEditor';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
+import { Board as B14 } from '../src/learn/games/number-hop/view';
+import { Board as B15 } from '../src/learn/games/quick-practice/view';
+import { quickMove, type QuickRound } from '../src/learn/games/quick-practice/round2';
 
 
 import { BoardPrimary, BoardSpaceContent, BoardSpaceProvider } from '../src/learn/BoardSpace';
 
 vi.mock('../src/components/feel',()=>({feel:()=>{}}));
+// Keep the real grid while adapting Metro's deferred native require to Vitest's ESM loader.
+vi.mock('../src/learn/games/logic-lagoon/native-grid', async () => { const { GridShell } = await import('../src/puzzles/grid/GridShell'); return { NativeGrid: GridShell }; });
 vi.mock('expo-router',()=>({router:{push:vi.fn()}}));
 vi.mock('../src/content/learnAudio',()=>({learnSources:{'beep-bot-intro':1}}));
 vi.mock('../src/state/Store',()=>({useStore:()=>({save:{learning:{active:'a',people:[{id:'a',name:'A'}]},settings:{}}})}));
@@ -39,6 +44,7 @@ vi.mock('react-native', () => {
   const flatten = (s: unknown): Record<string, unknown> => Array.isArray(s) ? Object.assign({}, ...s.map(flatten)) : s && typeof s === 'object' ? s as Record<string, unknown> : {};
   return {
     View: 'View', ScrollView: 'ScrollView', Text: 'Text', TextInput: 'TextInput', Pressable: 'Pressable',
+    AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) }, PanResponder: { create: () => ({ panHandlers: {} }) },
     Platform: { OS: 'ios', select: (o: Record<string, unknown>) => o.ios ?? o.default },
     StyleSheet: { flatten, create: (s: unknown) => s },
     Animated: { View: 'View', add: () => new Value(0), multiply: () => new Value(0), Value, ValueXY, timing: () => animation, sequence: () => animation, loop: () => animation, spring: () => animation, delay: () => animation, parallel: () => animation },
@@ -130,16 +136,17 @@ function renderedDrawingHeight(id:LearnId):number {
  if(id==='weather-watch')return drawing.findAll(n=>String(n.type)==='Svg')[0].props.height;
  if(id==='shell-math')return 2*component('TenFrame').props.cell+16;
  if(id==='tide-logic')return Math.max(...drawing.findAll(n=>typeof n.type==='function'&&n.type.name==='Cargo').map(n=>Number(n.props.size)))*2;
- if(id==='logic-lagoon'){const cells=drawing.findAll(n=>String(n.type)==='PressableScale');return Math.sqrt(cells.length)*(Number(flat(cells[0].props.style).height)+2)+14;}
+ if(id==='logic-lagoon'){const cells=drawing.findAll(n=>n.props.accessibilityLabel?.startsWith('Row ')&&['PressableScale','Pressable'].includes(String(n.type)));return Math.sqrt(cells.length)*Number(flat(cells[0].props.style).height)+(flat(drawing.props.style).borderWidth?4:0);}
  if(id==='slip-tide')return Number(flat(drawing.findAll(n=>n.props.accessibilityRole==='image')[0].props.style).height);
+ if(id==='number-hop')return drawing.findAll(n=>String(n.type)==='Svg')[0].props.height;
  return Number(flat(drawing.props.style).height);
 }
-const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B2],['hafa-adai',B3],['reef-race',B4],['weather-watch',B7],['shell-math',B5],['tide-pool',B6],['float-sink',B9],['tide-logic',B13],['logic-lagoon',B10],['slip-tide',B11],['treasure-algebra',B8]];
+const ports: [LearnId,React.ElementType][] = [['crab-commands',B1],['beep-bot',B2],['hafa-adai',B3],['reef-race',B4],['weather-watch',B7],['shell-math',B5],['tide-pool',B6],['float-sink',B9],['tide-logic',B13],['logic-lagoon',B10],['slip-tide',B11],['treasure-algebra',B8],['number-hop',B14]];
 const configurations = [[393,852],[375,667],[744,1133],[1133,744],[852,393]];
 it.each(ports)('%s renders its actual drawing, primary boundary and touch targets in each measured window',async(id,Board)=>{
  for(const [width,height] of configurations)for(const fontScale of [1,3.12]){
   boundary={y:0,height:500};rowBox={y:0,height:500};columnBox={y:0,height:0};
-  const available=height-160, r=await mountPort(id,Board,available,{width,height,fontScale});
+  const available=height-160, r=await mountPort(id,Board,available,{width,height,fontScale},id==='logic-lagoon'?3:1);
   const drawings=r.root.findAll(n=>String(n.type)==='View'&&n.props.testID===`school-${id}-drawing`);
   expect(drawings.length).toBeGreaterThan(0);
   expect(drawings[0].props.onLayout).toBeTypeOf('function');
@@ -165,7 +172,7 @@ it.each(ports)('%s renders its actual drawing, primary boundary and touch target
    if(id==='hafa-adai')expect(realComponent('WordPicture').props.size).toBe(width-60>=600?64:56);
    else if(id==='tide-logic')expect(realComponent('Cargo').props.size).toBeGreaterThanOrEqual(width-60>=600?64:56);
    else if(id==='shell-math')expect(realComponent('TenFrame').props.cell).toBeGreaterThanOrEqual(24);
-   else expect(actual).toBe(({ 'crab-commands':150,'beep-bot':160,'reef-race':260,'weather-watch':150,'tide-pool':90,'float-sink':width-60>=600?138:120,'logic-lagoon':106,'slip-tide':156,'treasure-algebra':250 } as Partial<Record<LearnId,number>>)[id]);
+   else expect(actual).toBe(({ 'crab-commands':150,'beep-bot':160,'reef-race':260,'weather-watch':150,'tide-pool':90,'float-sink':width-60>=600?138:120,'logic-lagoon':180,'slip-tide':156,'treasure-algebra':250,'number-hop':92 } as Partial<Record<LearnId,number>>)[id]);
   }else expect(actual+reserve).toBeLessThanOrEqual(available);
   const target=drawings[0].findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityRole==='button');
   for(const t of target){const s=flat(t.props.style);if(typeof s.width==='number')expect(s.width).toBeGreaterThanOrEqual(44);if(typeof s.height==='number')expect(s.height).toBeGreaterThanOrEqual(44);}
@@ -303,8 +310,8 @@ it.each([1,3.12])('Weather gauge tick labels stay legible at text scale %s',asyn
 });
 it.each([1,3.12])('Logic Lagoon cage totals retain the School clue floor at text scale %s',async fontScale=>{
  const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale},5);
- const clues=r.root.findAll(n=>String(n.type)==='Text'&&n.children.some(c=>typeof c==='string'&&c.startsWith('Σ')));
- expect(clues.length).toBeGreaterThan(0);expect(clues.every(n=>Number(flat(n.props.style).fontSize)*Math.min(fontScale,n.props.maxFontSizeMultiplier??fontScale)>=13*(fontScale>=1.5?1.5:1))).toBe(true);
+ const clues=r.root.findAll(n=>String(n.type)==='Text'&&n.props.testID?.startsWith('corner-clue-'));
+ expect(clues.length).toBeGreaterThan(0);expect(clues.every(n=>Number(flat(n.props.style).fontSize)*(n.props.allowFontScaling===false?1:Math.min(fontScale,n.props.maxFontSizeMultiplier??fontScale))>=13*(fontScale>=1.5?1.5:1))).toBe(true);
 });
 it('Crab fits AX command words using the actual School label font',async()=>{
  const r=await mountPort('crab-commands',B1,600,{width:393,height:852,fontScale:3.12});
@@ -351,18 +358,49 @@ it.each([1,3.12])('cage clues and entered values occupy separate vertical bands 
   const state=session.state as LogicState,task=logicTaskAt(state);if(task.kind!=='grid')throw Error('Expected cage fixture');
   return {...session,state:logicEnter(state,0,task.solution[0])};
  },{width:333,ceiling:2,maxSize:44});
- const cell=r.root.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Row 1, column 1:'))[0];
+ const cell=r.root.findAll(n=>String(n.type)==='Pressable'&&n.props.accessibilityLabel?.startsWith('Row 1, column 1,'))[0];
  const value=cell.findAll(n=>String(n.type)==='Text')[0];
- const clue=r.root.findAll(n=>String(n.type)==='Text'&&n.children.some(c=>typeof c==='string'&&c.startsWith('Σ')))[0];
- let overlay=clue.parent;while(overlay&&flat(overlay.props.style).position!=='absolute')overlay=overlay.parent;
- const cs=flat(cell.props.style),vs=flat(value.props.style),ls=flat(clue.props.style),box=flat(overlay!.props.style);
- const physicalLine=(node:typeof value,style:Record<string,unknown>)=>Number(style.lineHeight)*Math.min(fontScale,node.props.maxFontSizeMultiplier??fontScale);
+ const clue=r.root.findAll(n=>String(n.type)==='Text'&&n.props.testID==='corner-clue-0')[0];
+ const cs=flat(cell.props.style),vs=flat(value.props.style),ls=flat(clue.props.style);
+ const physicalLine=(node:typeof value,style:Record<string,unknown>)=>Number(style.lineHeight??Number(style.fontSize)*1.2)*(node.props.allowFontScaling===false?1:Math.min(fontScale,node.props.maxFontSizeMultiplier??fontScale));
  const valueLine=physicalLine(value,vs),clueLine=physicalLine(clue,ls),border=Number(cs.borderWidth),padding=Number(cs.paddingTop??0);
  const valueTop=border+padding+(Number(cs.height)-2*border-padding-valueLine)/2;
- const gridPadding=Number(flat(view('school-logic-lagoon-drawing').props.style).padding);
- const clueTop=Number(box.top)-gridPadding-Number(cs.margin);
- expect(valueTop).toBeGreaterThanOrEqual(clueTop+clueLine+1);
+ expect(valueTop).toBeGreaterThanOrEqual(Number(ls.top)+clueLine+1);
  expect(valueTop+valueLine).toBeLessThanOrEqual(Number(cs.height)-border+1);
+ expect(Number(cs.height)).toBeGreaterThanOrEqual(fontScale>=1.5?72:56);
+ const primary=view('school-primary');
+ expect(primary.findAll(n=>String(n.type)==='Text'&&n.children.includes('Check'))).toHaveLength(1);
+ expect(primary.findAll(n=>String(n.type)==='Pressable'&&n.props.label==='Enter 1')).toHaveLength(1);
+});
+it.each([3,4,5] as LearningLevel[])('Logic Lagoon level %s keeps its cell floor when measured space is exhausted',async level=>{
+ for(const fontScale of [1,3.12]){
+  const r=await mountPort('logic-lagoon',B10,120,{width:375,height:667,fontScale},level);
+  const natural=renderedDrawingHeight('logic-lagoon');boundary={y:0,height:natural+400};
+  await act(async()=>{view('school-logic-lagoon-drawing').props.onLayout({nativeEvent:{layout:{height:natural}}});const q=[...frames.values()];frames.clear();q.forEach(f=>f(0));});
+  const drawing=view('school-logic-lagoon-drawing');
+  const cells=drawing.findAll(n=>['PressableScale','Pressable'].includes(String(n.type))&&n.props.accessibilityLabel?.startsWith('Row '));
+  expect(cells.length).toBeGreaterThan(0);
+  const floor=level===5?(fontScale>=1.5?72:56):44;
+  expect(cells.every(c=>Number(flat(c.props.style).height)>=floor&&Number(flat(c.props.style).width)>=floor)).toBe(true);
+  expect(renderedDrawingHeight('logic-lagoon')).toBe(Math.sqrt(cells.length)*floor+(level===3?4:0));
+  const primary=view('school-primary');
+  expect(primary.findAll(n=>String(n.type)==='Text'&&n.children.includes('Check'))).toHaveLength(1);
+  await act(async()=>r.unmount());root=undefined;
+ }
+});
+it('Logic Lagoon exposes horizontal overflow rather than reducing an AX cage cell',async()=>{
+ const r=await mountPort('logic-lagoon',B10,120,{width:300,height:667,fontScale:3.12},5);
+ const scroll=r.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.horizontal&&n.props.scrollEnabled);
+ expect(scroll).toHaveLength(1);
+ const cells=view('school-logic-lagoon-drawing').findAll(n=>String(n.type)==='Pressable'&&n.props.accessibilityLabel?.startsWith('Row '));
+ expect(cells.every(c=>Number(flat(c.props.style).width)>=72)).toBe(true);
+});
+it('Logic Lagoon keeps its teaching card below the primary Check and keypad boundary',async()=>{
+ const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale:3.12},5,true,session=>({...session,state:{...session.state as LogicState,helped:true}}));
+ const hint=r.root.findAll(n=>String(n.type)==='Pressable'&&n.findAll(t=>String(t.type)==='Text'&&t.children.includes('Hint')).length>0)[0];
+ await act(async()=>hint.props.onPress());
+ expect(r.root.findAll(n=>String(n.type)==='Text'&&n.children.includes('Why?'))).toHaveLength(1);
+ expect(view('school-primary').findAll(n=>String(n.type)==='Text'&&n.children.includes('Why?'))).toHaveLength(0);
 });
 it('Weather scene fills its School column so SVG labels use the allocated width',async()=>{
  await mountPort('weather-watch',B7,420,{width:1133,height:744,fontScale:1});
@@ -507,4 +545,48 @@ it('the plan cue counts one hidden card as "1 more card"',async()=>{
  await act(async()=>{cards.forEach((c,i)=>c.props.onLayout({nativeEvent:{layout:{y:i<1?0:60,height:58,width:44}}}));strip.props.onScroll({nativeEvent:{contentOffset:{y:60}}});});
  expect(cue('plan-more-above').props.accessibilityLabel).toBe('1 more card above. Scroll up.');
  expect(cue('plan-more-above').props.children.join('')).toBe('↑ 1 more card');
+});
+
+it.each([1,3.12])('paused v1 Logic Lagoon keeps its measured picture port at scale %s',async fontScale=>{
+ const {engine:legacy}=await import('../src/learn/games/logic-lagoon/legacy');
+ const r=await mountPort('logic-lagoon',B10,500,{width:393,height:852,fontScale},3,true,session=>({...session,state:legacy.create(session.options,{rng:()=>17/0xffffffff,skills:{},starter:0,today:0})}));
+ expect(r.root.findByType(B10).props.session.state.version).toBe(1);
+ expect(view('school-logic-lagoon-drawing')).toBeDefined();
+ const legacyHeight=()=>{const d=view('school-logic-lagoon-drawing'),cells=d.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Row ')),cell=flat(cells[0].props.style);return Math.sqrt(cells.length)*(Number(cell.height)+2*Number(cell.margin))+2*Number(flat(d.props.style).padding);};
+ const natural=legacyHeight();boundary={y:0,height:natural+400};
+ await act(async()=>{view('school-logic-lagoon-drawing').props.onLayout({nativeEvent:{layout:{height:natural}}});const pending=[...frames.values()];frames.clear();pending.forEach(f=>f(0));});
+ expect(legacyHeight()).toBe(198); // four 44pt cells, their 1pt margins, and the legacy 7pt rim
+ expect(r.root.findAllByType(BoardPrimary).length).toBeGreaterThan(0);
+});
+
+it.each([1,3.12])('Quick Practice (N1b) gives its Help number line the measured room, never below 64 pt, and keeps the pad as the primary at text scale %s',async fontScale=>{
+ for(const [width,height,available] of [[393,852,700],[393,852,300],[375,667,240]]){
+  const help=(session:LearnSession)=>({...session,state:quickMove(session.state as QuickRound,['h'],'add')});
+  const r=await mountPort('quick-practice',B15,available,{width,height,fontScale},3,true,help);
+  const drawing=view('school-quick-practice-drawing');
+  expect(drawing,'the Help line is the measured drawing').toBeDefined();
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='school-primary')).toHaveLength(1);
+  const primary=view('school-primary');
+  expect(primary.findAll(n=>n.props.accessibilityLabel==='Check my answer').length,'Go is inside the primary').toBeGreaterThan(0);
+  const natural=74, reserve=fontScale>=1.5?420:300;
+  boundary={y:0,height:natural+reserve};
+  await act(async()=>{
+   view('content').props.onLayout({nativeEvent:{layout:{height:boundary.height+200}}});
+   drawing.props.onLayout({nativeEvent:{layout:{height:natural}}});
+   const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));
+  });
+  const line=view('school-quick-practice-drawing').findAll(n=>String(n.type)==='Svg')[0].props.height;
+  if(natural+reserve<=available)expect(line).toBe(natural);
+  else expect(line).toBe(Math.max(64,Math.min(natural,available-reserve)));
+  await act(async()=>r.unmount());root=undefined;
+ }
+});
+it('Quick Practice and Number Hop put the question or line beside the controls in one measured row on a landscape phone',async()=>{
+ const help=(session:LearnSession)=>({...session,state:quickMove(session.state as QuickRound,['h'],'add')});
+ for(const [id,Board,prepare] of [['quick-practice',B15,help],['number-hop',B14,undefined]] as const){
+  const r=await mountPort(id,Board,300,{width:852,height:393,fontScale:1},3,true,prepare);
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='school-drawing-row'),id).toHaveLength(1);
+  expect(r.root.findAll(n=>String(n.type)==='View'&&n.props.testID===`school-${id}-drawing`),id).toHaveLength(1);
+  await act(async()=>r.unmount());root=undefined;
+ }
 });

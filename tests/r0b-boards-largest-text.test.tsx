@@ -5,6 +5,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, expect, it, vi } from 'vitest';
 import { TextFit } from '../src/components/Text';
 import { wordWidth } from '../src/components/wordFit';
+import { engine as legacyLogic } from '../src/learn/games/logic-lagoon/legacy';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
@@ -19,11 +20,13 @@ import { Board as B7 } from '../src/learn/games/weather-watch/view';
 import { Board as B8 } from '../src/learn/games/treasure-algebra/view';
 import { Board as B9 } from '../src/learn/games/sound-boat/view';
 import { Board as B10 } from '../src/learn/games/reef-race/view';
-import { Board as B11 } from '../src/learn/games/logic-lagoon/view';
+import { Board as B11 } from '../src/learn/games/logic-lagoon/legacy-view';
+import { Board as NewLogicBoard } from '../src/learn/games/logic-lagoon/view';
 import { Board as B12 } from '../src/learn/games/beep-bot/view';
 import { Board as B13 } from '../src/learn/games/tide-logic/view';
 const boards: Partial<Record<LearnId, unknown>> = { 'code-lab': B0, 'hafa-adai': B1, 'fraction-feast': B2, 'pattern-path': B3, 'crab-commands': B4, 'tide-pool': B5, 'float-sink': B6, 'weather-watch': B7, 'treasure-algebra': B8, 'sound-boat': B9, 'reef-race': B10, 'logic-lagoon': B11, 'beep-bot': B12, 'tide-logic': B13 };
 
+vi.mock('../src/learn/games/logic-lagoon/native-grid', async () => { const { Text } = await import('../src/components/Text'); return { NativeGrid: () => <Text maxFontSizeMultiplier={1.3}>Notes off</Text> }; });
 vi.mock('expo-router',()=>({router:{push:vi.fn()}}));
 vi.mock('../src/content/learnAudio',()=>({learnSources:{'beep-bot-intro':1}}));
 vi.mock('../src/state/Store',()=>({useStore:()=>({save:{learning:{active:'a',people:[{id:'a',name:'A'}]},settings:{}}})}));
@@ -86,6 +89,7 @@ const region = { width: W, ceiling: 2 };
 
 function sessionFor(id: LearnId, level = 1, patch?: (state: never) => unknown): LearnSession {
   const s = startSession(id, { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, level as 1) }, {}, 7);
+  if (id === 'logic-lagoon') s.state = legacyLogic.create(s.options, { rng: () => 7 / 0xffffffff, starter: 0, skills: {}, today: 0 });
   return patch ? { ...s, state: patch(s.state as never) } : s;
 }
 async function mount(view: LearnId, session: LearnSession, extra: Record<string, unknown> = {}, fit: typeof region | null = region) {
@@ -341,4 +345,22 @@ it('Treasure Algebra says "Climb 1 step", and a 32-pt board heading stops at 44 
   const heading = r.root.findAll(n => String(n.type) === 'Text' && n.props.accessibilityRole === 'header')[0];
   expect(textOf(heading)).toBe('Start at 5. Climb 1 step.');
   expect(drawnSize(heading)).toBeLessThanOrEqual(44);
+});
+
+
+it('Logic Lagoon v2 at AX5: picture and six-wide boards retain fitted text and the Notes shortcut beside Check', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const { engine } = await import('../src/learn/games/logic-lagoon/engine');
+  for (const level of [1, 4] as const) {
+    const session = sessionFor('logic-lagoon', level);
+    session.state = engine.create(session.options, { rng: () => 17 / 0xffffffff, starter: 0, skills: {}, today: 0 });
+    // This guard mocks NativeGrid and checks the Notes-label caps; real numeric
+    // GridShell geometry/AX5 floors are covered in school-board-ports.test.tsx.
+    // Retain the two legacy guard cases above.
+    await act(async () => { root = create(<TextFit.Provider value={region}><NewLogicBoard session={session as never} update={() => {}} practice={() => {}} assistance={() => {}} skills={{}} sound={() => {}} stopSound={() => {}} soundOn width={W} height={H} active coach={{ active: false, done: () => {} }} cheer={() => {}} /></TextFit.Provider>); });
+    expect(textNode(root!, 'Check')).toBeDefined();
+    for (const t of texts(root!)) expect(drawnSize(t), textOf(t)).toBeLessThanOrEqual(2 * ((flat(t.props.style).fontSize as number) ?? 14) + .01);
+    if (level === 4) { const notes = texts(root!).filter(n => /^Notes (on|off)$/.test(textOf(n))); expect(notes).toHaveLength(2); for (const n of notes) expect(n.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.3); }
+    await act(async () => root!.unmount()); root = undefined;
+  }
 });
