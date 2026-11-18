@@ -47,7 +47,7 @@ it('shape help names only controls available at that level',()=>{
 it('logic help provides a reason without entering the answer',()=>{
  for(let level=1;level<=5;level++)for(let seed=0;seed<20;seed++) {
   const s:LogicState={version:1,level,seed,index:0,total:4,entries:[],helped:false}; const h=hint(s);
-  expect(h.reason.length).toBeGreaterThan(20);expect(h.state.entries).toEqual([]);
+  expect(h.reason.length).toBeGreaterThan(20);expect(h.state.version === 1 && h.state.entries).toEqual([]);
   const t=logic(s);if(t.kind==='grid')expect(h.value).toBe(t.solution[h.cell]);
  }
 });

@@ -4,12 +4,23 @@ import Svg, { Path } from 'react-native-svg';
 import { Text } from '../../components/Text';
 import { C } from '../../components/ui';
 import type { LatinPuzzle } from './core';
+import type { CornerClues } from '../grid/cornerNotes';
 
 const opGlyph: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷', '=': '' };
 /** A one-cell cage reads "=5", so it is not mistaken for a small starting number. */
 const cageLabel = (c: { op: string; target: number }) => c.op === '=' ? `=${c.target}` : `${c.target}${opGlyph[c.op]}`;
+/** One source for the drawn caption and the strip the note renderer must leave clear. */
+export function cageCorners(p: LatinPuzzle): CornerClues {
+  return (cell, fontScale) => new Map(p.cages.map(c => {
+    const inset = Math.max(3, cell * .08), text = cageLabel(c);
+    const fontSize = Math.max(11, Math.min(16, cell * .27)) * Math.min(fontScale, 1.2);
+    return [Math.min(...c.cells), { text, left: inset + (p.kind === 'killer' ? 2 : 0), top: p.kind === 'killer' ? inset + 1 : 2,
+      fontSize, lineHeight: fontSize * 1.15, width: text.length * .7 * fontSize + 1,
+      notesInset: p.kind === 'killer' ? inset + 1 : 2, notesBottomInset: p.kind === 'killer' ? inset - .2 : 1 }];
+  }));
+}
 /** Cage totals sit in each cage's first cell; Cage Sudoku also draws its cages as dashed outlines. */
-export function cageLayer(p: LatinPuzzle) {
+export function cageLayer(p: LatinPuzzle, { labels = true }: { labels?: boolean } = {}) {
   const n = p.size, cage = p.givens.map(() => -1);
   p.cages.forEach((c, k) => c.cells.forEach(i => { cage[i] = k; }));
   return function CageLayer(cell: number) {
@@ -28,7 +39,7 @@ export function cageLayer(p: LatinPuzzle) {
     const size = Math.max(11, Math.min(16, cell * 0.27));
     return <>
       {!!dashed && <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={dashed} stroke={C.teal} strokeWidth={2} strokeDasharray="5 3" fill="none"/></Svg>}
-      {p.cages.map((c, k) => {
+      {labels && p.cages.map((c, k) => {
         const first = Math.min(...c.cells);
         return <Text key={k} maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ position: 'absolute', left: (first % n) * cell + inset + (p.kind === 'killer' ? 2 : 0), top: Math.floor(first / n) * cell + (p.kind === 'killer' ? inset + 1 : 2), fontSize: size, lineHeight: size * 1.15, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'] }}>{cageLabel(c)}</Text>;
       })}

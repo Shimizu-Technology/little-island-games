@@ -23,6 +23,8 @@ export const SCHOOL_BOARD_MIN = {
   'tide-pool': 90, 'float-sink': 100, 'tide-logic': 56,
   'logic-lagoon': BUTTON_ROW, 'slip-tide': BUTTON_ROW,
   'treasure-algebra': 250, 'program-editor': 140,
+  // N1b: the hop line keeps its numbers, flag and frog readable down to this height; Quick Practice's optional number line likewise.
+  'number-hop': 92, 'quick-practice': 64,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 

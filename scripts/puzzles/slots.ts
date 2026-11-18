@@ -20,6 +20,13 @@ export type SlotClaim = { range: SlotRange; owner: string; used: ReadonlyMap<num
 
 export const slotRangesFile = (dirs: CatalogDirs) => join(dirs.content, 'slot-ranges.json');
 export const saveCatalogPath = 'src/state/save-catalog.json';
+/** Registered catalogs require the caller to identify its owner explicitly. A high-water
+ * counter is not permission to allocate inside the reservation it currently points at. */
+export function assertSequentialSlot(dirs: CatalogDirs, slot: number): void {
+  if (!existsSync(slotRangesFile(dirs))) return; // isolated, unregistered proof catalogs
+  const held = reservationFor(readReservations(dirs), { first: slot, last: slot });
+  throw new Error(`Slot ${slot} is reserved for ${held.owner}; an explicit owner claim is required.`);
+}
 /** First ordinal of a slot's own block. A pack holds at most one block's worth of entries. */
 export const blockStart = (slot: number) => slot * BANK_CAPS.packEntries;
 const inside = (outer: SlotRange, inner: SlotRange) => outer.first <= inner.first && inner.last <= outer.last;
