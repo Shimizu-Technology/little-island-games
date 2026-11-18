@@ -178,3 +178,28 @@ it.each(windows)('%s: a measured board is told the measured width, and its first
   expect(byType(r, 'Board')[0].props.boardSpace).toMatchObject({ width: estimate, ready: true });
   expect(byType(r, 'Board')[0].props.width).toBe(estimate);
 });
+
+// The greeting no longer moves the board, so its end brings no new layout event. A board measured while it showed must
+// still get its one AX entry reveal (Quick Practice and Shell Math stayed unrevealed natively until this was fixed).
+it.each(['quick-practice', 'shell-math', 'space-station'] as const)('AX5 phone: %s measured during the greeting is revealed once, with no further layout', async id => {
+  Object.assign(viewport, { width: 393, height: 852, fontScale: 3.12 }); companion.event = 'entry';
+  const scrolls: number[] = [];
+  const frames = new Map<number, FrameRequestCallback>(); let n = 0;
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const save = migrateProfiles(emptySave());
+  save.learn = { [id]: { ...startSession(id, { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, 1) }, {}, 7), learner: 'family' } };
+  db.raw = encodeSave(save);
+  await act(async () => { root = create(<StoreProvider><Probe id={id} /></StoreProvider>, { createNodeMock: () => ({ scrollTo: (o: { y: number }) => scrolls.push(o.y), measureLayout() {} }) }); });
+  vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => { frames.set(++n, f); return n; }); vi.stubGlobal('cancelAnimationFrame', (i: number) => frames.delete(i));
+  const flushFrames = async () => act(async () => { const q = [...frames.values()]; frames.clear(); q.forEach(f => f(0)); });
+  await act(async () => {
+    byType(root!, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 759 } } });
+    root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board').props.onLayout({ nativeEvent: { layout: { y: 180 } } });
+    root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board-inset').props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
+  });
+  await flushFrames();
+  companion.event = 'waiting';
+  await act(async () => root!.update(<StoreProvider><Probe id={id} /></StoreProvider>));
+  await flushFrames();
+  expect(scrolls.filter(y => y > 0)).toEqual([186]);
+});

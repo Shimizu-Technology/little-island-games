@@ -72,7 +72,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const [held, setHeld] = useState(false);
   const layoutKey = `${width}x${height}`;
   const [viewport, setViewport] = useState({ height: 0, key: "" });
-  const [boardLayout, setBoardLayout] = useState({ top: 0, inset: 0, width: 0, topAt: 0, insetAt: 0, anchorAt: "" });
+  const [boardLayout, setBoardLayout] = useState({ top: 0, inset: 0, width: 0, topAt: 0, insetAt: 0 });
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   const large = fontScale >= LARGE_TEXT;
@@ -300,17 +300,16 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const islanderBeside = companionBeside(width, height) && store.save.settings.learningIslander !== false;
   const cardInner = boardCardInner(width, insets.left, insets.right, islanderBeside);
   const revealEntry = schoolEntryReveal(id, large, height);
-  // A transient cheer above an AX phone board must finish before its one entry
-  // reveal, or removing that row would leave the instruction behind the pinned bar.
-  const anchorReady = !large || width >= 600 || companionEvent === "waiting";
+  // F-frame-3: the greeting and cheers are drawn over the header, never laid out above the board, so the one entry reveal
+  // no longer waits for them to end (it used to wait for the board to move up when the greeting's row went away).
   const boardSpace = useMemo(() => viewport.height > 0 && boardLayout.width > 0 ? {
     width: boardLayout.width,
     // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
     // reserve all real header/progress content above it. Scroll position is never
     // part of this budget, so scrolling cannot cause the board to grow or shrink.
     height: measuredBoardSpace(viewport.height, revealEntry ? 8 : boardLayout.top, revealEntry ? 0 : boardLayout.inset, boardCardPadding(width) + 2),
-    large, reveal: revealEntry, layoutKey, anchorReady: anchorReady && (!large || width >= 600 || boardLayout.anchorAt === companionEvent),
-  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey, anchorReady, companionEvent]);
+    large, reveal: revealEntry, layoutKey,
+  } : null, [viewport, boardLayout, large, width, revealEntry, layoutKey]);
   // A measured board is told its measured width, which the card estimate already matches. Unmeasured boards keep
   // their earlier caps: 900 pt, or 812 beside the islander.
   const boardWidth = MEASURED_SCHOOL_BOARDS.has(id) ? boardSpace?.width ?? cardInner : Math.min(cardInner, islanderBeside ? 812 : 900);
@@ -423,7 +422,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && !shortLandscape && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
-        {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width && old.anchorAt === companionEvent ? old : { ...old, top, topAt: width, anchorAt: companionEvent }); }}>
+        {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width ? old : { ...old, top, topAt: width }); }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={islanderCheer}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: boardCardPadding(width), shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             {/* F-frame-3: the burst plays over the card's top edge (inside it when the board sits at the top of the screen),
