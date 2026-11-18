@@ -70,6 +70,7 @@
     "registry:check": "node scripts/generate-game-registry.mjs --check",
     "check:words": "node scripts/words/check.mjs full",
     "check:words:export": "node scripts/words/check.mjs export",
+    "check:words:ios": "npm run library:validate && npm run library:index && node scripts/words/check.mjs ios",
     "check:words:release": "node scripts/words/check.mjs release",
     "check:words:receipt": "node scripts/words/check.mjs receipt",
     "deliver:web": "node scripts/words/delivery.mjs web --",

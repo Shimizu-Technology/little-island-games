@@ -1,5 +1,6 @@
 import { syncBuiltinESMExports } from 'node:module';
 import { Buffer } from 'node:buffer';
+import { createHash } from 'node:crypto';
 // Synthetic gate proof only. No content, reviewer or family approval is created.
 import { test as nodeTest, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -50,7 +51,8 @@ const generatedAdmission=await import(pathToFileURL(join(root,'scripts/words/gen
 const {scanTexts}=await import(pathToFileURL(join(root,'scripts/words/scan.mjs')));
 const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mjs')));
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
-const {checkExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const {checkExport,checkIOSExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const identifierTools=await import(pathToFileURL(join(root,'scripts/words/identifier-provenance.mjs')));
 const {prepareCompilerCapture,compilerIdentity,bytecodeFiles,verifyCompilerCapture,captureNativeBuild}=await import(pathToFileURL(join(root,'scripts/words/compiler.mjs')));
 const compilerCapture=prepareCompilerCapture(root);after(()=>compilerCapture.cleanup());let nativeFixture=0;
 function realCheckRelease(...args) {
@@ -1354,3 +1356,70 @@ test('Wguard2 core inside reviewed unit still fails',()=>sourceUnitCase(({source
 test('Wguard2 extra stale entry fails',()=>sourceUnitCase(({rule,item,check})=>{rule.units.push({...structuredClone(item),sha256:'f'.repeat(64)});assert.throws(check,/Stale source unit/);}));
 test('Wguard2 wrong source cannot borrow review',()=>sourceUnitCase(({source,check})=>{const other=join(root,'src/unreviewed-unit.ts');writeFileSync(other,'export const unreviewed='+reviewedSourceText+';');try{source(reviewedSourceText);assert.throws(check,/blocked-source-list/);}finally{rmSync(other,{force:true});}}));
 test('Wguard2 repeated worklets cannot share occurrence identity',()=>sourceUnitCase(({artifact,check})=>{const code=JSON.stringify('function f(){return ["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];}');artifact('globalThis.a='+code+';globalThis.b='+code+';');assert.throws(check,/partial-list/);}));
+
+const technicalKey='bridgeZqunknownx';
+async function identifierCase(name,run) {
+ const {dir}=await admissionFixture('identifier-'+name),out=join(dir,'dist');mkdirSync(out);
+ const file=join(dir,'src/content/authored.ts'),text='export const nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};';
+ writeFileSync(file,text);const artifact=join(out,'entry.js');writeFileSync(artifact,'globalThis.nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};');
+ const p={scan:['ZQUNKNOWNX'],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]};
+ await run({dir,out,file,text,artifact,p,check:()=>guardTree(out,p,[],{sourceRoot:dir})});
+}
+test('Wguard2 identifier exact authored property',()=>identifierCase('exact',({check})=>{const r=check();assert.equal(r.tracedIdentifiersUsed,1);assert.equal(r.dependencyIdentifiersUsed,0);}));
+test('Wguard2 identifier near miss',()=>identifierCase('near',({artifact,check})=>{writeFileSync(artifact,readFileSync(artifact,'utf8').replace(technicalKey,technicalKey+'Extra'));assert.throws(check,/untraced-word-map/);}));
+test('Wguard2 identifier displayed text supplies no identifier provenance',()=>identifierCase('display',({file,check})=>{writeFileSync(file,'export const text="'+technicalKey+'";');assert.equal(check().tracedIdentifiersUsed,0);}));
+test('Wguard2 identifier source must pass',()=>identifierCase('failed',({file,p,check})=>{p.core=['COLD'];writeFileSync(file,readFileSync(file,'utf8')+'export const text="COLD";');assert.throws(check,/blocked-source-literal/);}));
+test('Wguard2 identifier failed source excluded from provenance',()=>{const input=new Map([['src/native.ts',Buffer.from('export const '+technicalKey+'=1;')]]);assert.equal(identifierTools.authoredIdentifiers(input,new Set()).has(technicalKey),false);});
+test('Wguard2 identifier generated registry',()=>identifierCase('registry',({dir,file,text,check})=>{writeFileSync(file,'export const text="Plain reef beach";');mkdirSync(join(dir,'src/challenge'));writeFileSync(join(dir,'src/challenge/registry.generated.ts'),text);assert.equal(check().tracedIdentifiersUsed,1);}));
+test('Wguard2 identifier registry symlink',()=>identifierCase('registry-link',({dir,file,check})=>{mkdirSync(join(dir,'src/challenge'));symlinkSync(file,join(dir,'src/challenge/registry.generated.ts'));assert.throws(check,/Symlink/);}));
+test('Wguard2 identifier escaped spelling is not verbatim',()=>{const source='export const bridgeZq\\u0075nknownx=1;';assert.equal(identifierTools.identifierPositions(source,'source.ts').some(p=>p.identifier===technicalKey),false);});
+test('Wguard2 identifier does not donate filenames',()=>identifierCase('filename',({out,check})=>{writeFileSync(join(out,technicalKey+'.m4a'),validM4a);assert.throws(check,/untraced-word-file/);}));
+test('Wguard2 identifier visible hard text still fails',()=>identifierCase('hard',({artifact,p,check})=>{p.core=['COLD'];writeFileSync(artifact,readFileSync(artifact,'utf8')+'globalThis.label="COLD";');assert.throws(check,/blocked-literal/);}));
+
+async function dependencyCase(name,run) {
+ return identifierCase('dep-'+name,async f=>{
+  writeFileSync(f.file,'export const text="Plain reef beach";');
+  const packageName='synthetic-native',version='1.2.3',integrity='sha512-'+Buffer.alloc(64,7).toString('base64'),path='generated/native.js',packageDir=join(f.dir,'node_modules',packageName);
+  mkdirSync(join(packageDir,'generated'),{recursive:true});writeFileSync(join(packageDir,'package.json'),JSON.stringify({name:packageName,version}));
+  const dependencyFile=join(packageDir,path),source='export const nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};';writeFileSync(dependencyFile,source);
+  const lock={lockfileVersion:3,packages:{['node_modules/'+packageName]:{version,integrity}}},lockPath=join(f.dir,'package-lock.json');writeFileSync(lockPath,JSON.stringify(lock));
+  const rule={package:packageName,version,integrity,path,identifier:technicalKey,offset:source.indexOf(technicalKey),reason:'Synthetic generated native property'};f.p.dependencyIdentifierProvenance=[rule];
+  await run({...f,rule,lock,lockPath,dependencyFile,packageDir});
+ });
+}
+test('Wguard2 dependency exact pin and count',()=>dependencyCase('pass',({check})=>{const r=check();assert.equal(r.dependencyIdentifiersUsed,1);assert.equal(r.tracedIdentifiersUsed,0);}));
+for(const [name,change,rx] of [
+ ['version bump',f=>{f.lock.packages['node_modules/synthetic-native'].version='1.2.4';writeFileSync(f.lockPath,JSON.stringify(f.lock));},/Stale dependency identifier version/],
+ ['wrong path',f=>{f.rule.path='generated/other.js';writeFileSync(join(f.packageDir,f.rule.path),'export const other=1;');},/Stale dependency identifier position/],
+ ['integrity mismatch',f=>{f.rule.integrity='sha512-'+Buffer.alloc(64,8).toString('base64');},/Stale dependency identifier integrity/],
+ ['string position',f=>{const source='export const text="'+technicalKey+'";';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf(technicalKey);},/Stale dependency identifier position/],
+ ['type position',f=>{const source='export type NativeMap={'+technicalKey+':string};';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf(technicalKey);},/Stale dependency identifier position/],
+ ['near miss',f=>{writeFileSync(f.dependencyFile,readFileSync(f.dependencyFile,'utf8').replace(technicalKey,technicalKey+'Extra'));},/Stale dependency identifier position/],
+ ['wrong offset',f=>{f.rule.offset++;},/Stale dependency identifier position/],
+ ['source fails',f=>{f.p.core=['COLD'];writeFileSync(f.dependencyFile,readFileSync(f.dependencyFile,'utf8')+'export const label="COLD";');},/Dependency identifier source failed scan/],
+ ['installed version',f=>{writeFileSync(join(f.packageDir,'package.json'),JSON.stringify({name:'synthetic-native',version:'1.2.4'}));},/Installed dependency identifier version mismatch/],
+ ['missing source',f=>rmSync(f.dependencyFile),/Missing or symlinked/],
+ ['symlink source',f=>{rmSync(f.dependencyFile);symlinkSync(f.file,f.dependencyFile);},/Missing or symlinked/],
+ ['directory source',f=>{rmSync(f.dependencyFile);mkdirSync(f.dependencyFile);},/must be a file/],
+ ['parent path',f=>{f.rule.path='../outside.js';},/Invalid dependency identifier path/],
+ ['empty path',f=>{f.rule.path='';},/Invalid dependency identifier path/],
+ ['duplicate',f=>{f.p.dependencyIdentifierProvenance.push({...f.rule});},/Duplicate dependency identifier/],
+ ['stale without export',f=>{writeFileSync(f.artifact,'globalThis.safe=1;');f.rule.offset++;},/Stale dependency identifier position/],
+ ['missing reason',f=>{delete f.rule.reason;},/Invalid dependency identifier provenance entry/],
+ ['invalid rules',f=>{f.p.dependencyIdentifierProvenance={};},/Invalid dependency identifier provenance/],
+])test('Wguard2 dependency '+name,()=>dependencyCase(name,f=>{change(f);assert.throws(f.check,rx);}));
+test('Wguard2 dependency metadata preserves content policy',async()=>{const {contentPolicy}=await import(pathToFileURL(join(root,'scripts/words/policy.mjs')));assert.deepEqual(contentPolicy({...policy,dependencyIdentifierProvenance:[]}),contentPolicy(policy));});
+
+for(const algorithm of ['md5','sha1','sha256'])test('Wguard2 own hash '+algorithm,()=>{const stem=createHash(algorithm).update(validM4a).digest('hex');assert.equal(identifierTools.ownContentHash('assets/'+stem+'.m4a',validM4a),true);assert.equal(identifierTools.ownContentHash(stem,validM4a),true);assert.equal(identifierTools.ownContentHash(stem+'.m4a',Buffer.concat([validM4a,Buffer.from('x')])),false);});
+test('Wguard2 own hash guard and renamed asset',()=>{
+ const dir=join(scratch,'own-hash');mkdirSync(dir);const stem=createHash('md5').update(validM4a).digest('hex'),tokens=densityTools.wordTokens(stem),p={scan:tokens,core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]};
+ const path=join(dir,stem+'.m4a');writeFileSync(path,validM4a);assert.equal(guardTree(dir,p).passed,true);rmSync(path);writeFileSync(join(dir,tokens[0]+'.m4a'),validM4a);assert.throws(()=>guardTree(dir,p),/untraced-word-file/);
+});
+test('Wguard2 own hash mismatch fails',()=>{const dir=join(scratch,'own-hash-mismatch');mkdirSync(dir);const stem=createHash('md5').update('different bytes').digest('hex');writeFileSync(join(dir,stem+'.m4a'),validM4a);assert.throws(()=>guardTree(dir,{scan:densityTools.wordTokens(stem),core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}),/untraced-word-file/);});
+test('Wguard2 own hash never hides content',()=>{const dir=join(scratch,'own-hash-content');mkdirSync(dir);const bytes=Buffer.from('Say COLD now'),stem=createHash('sha256').update(bytes).digest('hex');writeFileSync(join(dir,stem+'.txt'),bytes);assert.throws(()=>guardTree(dir,{scan:[],core:['COLD'],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}),/blocked-literal/);});
+test('Wguard2 own hash rejects arbitrary names',()=>{for(const name of ['a'.repeat(32)+'.m4a','random-name.m4a','prefix-'+createHash('md5').update(validM4a).digest('hex')+'.m4a'])assert.equal(identifierTools.ownContentHash(name,validM4a),false);});
+
+test('Wguard2 standalone iOS scan uses complete guard and cleans output',()=>{let directory;const r=checkIOSExport(root,(_cmd,args)=>{directory=args.at(-1);assert.ok(args.includes('--no-bytecode') && args.includes('--no-minify') && args.includes('ios'));writeFileSync(join(directory,'native.js'),'globalThis.safe=1;');});assert.equal(r.guard.passed,true);assert.equal(fs.existsSync(directory),false);assert.ok(r.runtimeSeconds>=0);});
+test('Wguard2 standalone iOS scan rejects leaks and cleans output',()=>{let directory;assert.throws(()=>checkIOSExport(root,(_cmd,args)=>{directory=args.at(-1);writeFileSync(join(directory,'native.js'),'globalThis.label="COLD";');}),/blocked-literal/);assert.equal(fs.existsSync(directory),false);});
+test('Wguard2 standalone iOS scan requires JavaScript',()=>{assert.throws(()=>checkIOSExport(root,()=>{}),/Native platform JavaScript export required/);});
+test('Wguard2 standalone iOS scan requires policy',()=>{const saved=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;delete process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;try{assert.throws(()=>checkIOSExport(root,()=>{}),/Private policy lock required/);}finally{process.env.LITTLE_ISLAND_WORD_POLICY_LOCK=saved;}});

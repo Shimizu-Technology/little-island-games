@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync, sy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','bake-reading','registry','morphology','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','puzzle-admission','preview','ci'];
+const files=['bake','bake-reading','registry','morphology','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','identifier-provenance','puzzle-admission','preview','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
 // The shared word-parts validator is app TypeScript under src/; the harness loads the copy named by WORD_TEST_MORPHOLOGY_FILE.
 const toolFile=file=>file==='morphology'?'morphology.ts':`${file}.mjs`;
@@ -77,6 +77,18 @@ const sourceUnitEdges=[
  ['never hard terms','![...policy.core,...policy.exact,...policy.lemmas].some(term=>normalizedText(term)===normalizedText(e.term))','true',['Wguard2 requires core','Wguard2 requires exact','Wguard2 requires lemma normalized']],
 ];
 for(const [label,before,after,tests] of sourceUnitEdges){const source=sources.get('guard');if(!source.includes(before))throw new Error('Missing source-unit mutation target');custom('guard','Wguard2 '+label,source.replace(before,after),tests);}
+const provenanceEdges=[
+ ['guard','near-match authored identifier','identifiers.get(entry)','identifiers.get(entry)??[...identifiers].find(([id])=>entry.startsWith(id))?.[1]',['Wguard2 identifier near miss']],
+ ['identifier-provenance','source scan prerequisite','!passedSources.has(path)','false',['Wguard2 identifier failed source excluded from provenance']],
+ ['identifier-provenance','dependency exact identifier','position.identifier===rule.identifier','true',['Wguard2 dependency near miss']],
+ ['identifier-provenance','dependency exact offset','position.offset===rule.offset','true',['Wguard2 dependency wrong offset']],
+ ['identifier-provenance','displayed dependency string','(property || declaration || exported)','true',['Wguard2 dependency string position','Wguard2 identifier displayed text supplies no identifier provenance']],
+ ['identifier-provenance','verbatim spelling','node.getText(tree)===node.text','true',['Wguard2 identifier escaped spelling is not verbatim']],
+ ['identifier-provenance','own bytes hash equality',"createHash(algorithm).update(bytes).digest('hex')===stem",'true',['Wguard2 own hash mismatch fails','Wguard2 own hash md5']],
+ ['guard','opaque basename exemption','const opaqueName=ownContentHash(name,bytes);','const opaqueName=true;',['Wguard2 own hash guard and renamed asset']],
+ ['guard','opaque content still scanned','if(literalHits.size)','if(!opaqueName && literalHits.size)',['Wguard2 own hash never hides content']],
+];
+for(const [file,label,before,after,tests] of provenanceEdges){const source=sources.get(file);if(source.split(before).length!==2)throw new Error('Missing or ambiguous provenance mutation target');custom(file,'Wguard2 '+label,source.replace(before,after),tests);}
 custom('guard','partial-list detector',sources.get('guard').replaceAll('new Set(hit.broad).size>=3','false'),['guard partial-array','guard newlines','guard three broad JS words','guard packed metadata partial list']);
 custom('guard','original Hermes hard-term gate',sources.get('guard').replace('if(scanned.hardHermesFailure)','if(false)'),['R4 original Hermes hard term technical','R4 original Hermes hard term worklet','R4 original Hermes hard term vector','R4 original Hermes hard term short exact']);
 custom('guard','individual blocked-literal detector',sources.get('guard').replace('if(literalHits.size)','if(false)'),['guard core','guard blocked visible string']);
@@ -248,8 +260,8 @@ const r5Edges=[
  ['artifact-views','record excludes fields only','keys.filter(key=>!excluded.has(key))',"(keys.some(key=>excluded.has(key))?[]:keys)",['R5 records 5 id data.json']],
  ['artifact-views','object record key unit',"values.every(v=>v && !Array.isArray(v) && typeof v==='object' && JSON.stringify(Object.keys(v).sort())===JSON.stringify(Object.keys(values[0]).sort()))",'false',['R5 object record key structure']],
  ['guard','compact mixed share','compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)','compactBroadShare(remaining,broad)>=0.5',['R5 mixed filenames','R5 mixed ids']],
- ['guard','export map provenance',"if(mapKeys.some(key=>policyTokens(key).length && !admitted(key)))","if(false)",['R5 diluted map 7600 plus 300']],
- ['guard','export file provenance',"if(policyTokens(stem).length && !admittedFilename(stem))","if(false)",['R5 diluted 300 audio files']],
+ ['guard','export map provenance',"if(mapKeys.some(key=>policyTokens(key).length && !admittedMapKey(key)))","if(false)",['R5 diluted map 7600 plus 300']],
+ ['guard','export file provenance',"if(!opaqueName && policyTokens(stem).length && !admittedFilename(stem))","if(false)",['R5 diluted 300 audio files']],
  ['density','camel case tokens',"text.replace(/([a-z])([A-Z])/g,'$1 $2')",'text',['R5 camelCase density']],
  ['check','CI any truthy value',"!isCI(process.env.CI)","process.env.CI!=='true'",['R5 CI 1 missing policy']],
  ['generated-admission','exclude output sources',' || outputPath.test(name)','',['R5 generator rejects output self admission']],

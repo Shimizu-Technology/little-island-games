@@ -14,6 +14,7 @@ import { normalizedText, densityScanner, densityThreshold, shortDensityWindow, s
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
+import { authoredIdentifiers, dependencyIdentifiers, dependencyJavaScript, ownContentHash } from './identifier-provenance.mjs';
 
 // Failure links find overlapping terms in one byte pass, including nested terms.
 // Match both the single-byte and UTF-16LE string tables used by Hermes.
@@ -148,6 +149,17 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const policyNames=rawTermMatcher([...policy.scan,...policy.core,...policy.exact,...policy.lemmas].map(normalizedText));
   const policyTokens=entry=>wordTokens(entry).filter(token=>policyNames(token).size);
   let admission;
+  let identifiers=new Map(),dependencies=new Map();
+  const tracedIdentifiersUsed=new Set(),dependencyIdentifiersUsed=new Set();
+  function admittedMapKey(entry) {
+    const source=identifiers.get(entry),dependency=dependencies.get(entry);
+    if(source || dependency) {
+      if(source)tracedIdentifiersUsed.add(entry);else dependencyIdentifiersUsed.add(entry);
+      admission?.exports.push({identifier:entry,source:source??dependency});
+      return true;
+    }
+    return admitted(entry);
+  }
   function admitted(entry) {
     if(!admission){const sources=admissionSources(sourceRoot);admission={sources,receipts:[],exports:[]};}
     // Identifiers never vouch for vocabulary, even when the whole key is known.
@@ -235,6 +247,8 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const sourceExceptions=policy.sourceUnitExceptions??[];
   requireThat(Array.isArray(sourceExceptions),'Invalid source unit exceptions');
   const sourceInputs=admissionSourceFiles(sourceRoot),sourceBindings=[];
+  const registryPath='src/challenge/registry.generated.ts',registryFile=join(sourceRoot,registryPath);
+  if(existsSync(registryFile))sourceInputs.set(registryPath,readFileSync(registryFile));
   for(const rule of sourceExceptions) {
     requireThat(typeof rule.path==='string' && /^src\/.+\.[cm]?[jt]sx?$/.test(rule.path) && !rule.path.split('/').some(part=>['','..','.'].includes(part)) && !/[\\*]/.test(rule.path) && Array.isArray(rule.units) && rule.units.length>0,'Invalid source unit exception path');
     const bytes=sourceInputs.get(rule.path);
@@ -276,7 +290,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   }
   // Admission inputs get the same literal, list and density rules as exports,
   // including unreachable src files. A pasted list fails before generation.
+  const passedSources=new Set();
   for(const [name,bytes] of sourceInputs) {
+    const before=findings.length;
     const code=/\.[cm]?[jt]sx?$/.test(name);
     const text=name.endsWith('.py')?JSON.stringify(Object.fromEntries(speechInputs(sourceRoot).find(input=>input.path===name).entries)):code?ts.transpileModule(bytes.toString('utf8'),{fileName:name,compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText:bytes;
     const view=scan(Buffer.from(text),code?'source.js':name.endsWith('.py')?'source.json':name);
@@ -284,7 +300,13 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     if(view.literalHits.size || view.hardHermesFailure)findings.push(name+':blocked-source-literal');
     if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
     if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
+    if(findings.length===before)passedSources.add(name);
   }
+  identifiers=authoredIdentifiers(sourceInputs,passedSources);
+  dependencies=dependencyIdentifiers(sourceRoot,policy.dependencyIdentifierProvenance??[],(bytes,name)=>{
+    const view=scan(Buffer.from(dependencyJavaScript(bytes,name)),'source.js');
+    return !view.literalHits.size && !view.hardHermesFailure && ![...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3) && view.densityMaximum<=densityThreshold && view.shortDensityMaximum<=shortDensityThreshold;
+  });
   // Validate all speech inputs even when an export has only prefixed identifiers.
   if(!findings.length){
     const sources=admissionSources(sourceRoot);admission={sources,receipts:generatedReceipts(sourceRoot,sources),exports:[]};
@@ -311,12 +333,13 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       shortDensityMaximum=Math.max(shortDensityMaximum,scanned.shortDensityMaximum);
       if(scanned.densityMaximum>densityThreshold || scanned.shortDensityMaximum>shortDensityThreshold)findings.push(`${name}:broad-density`);
       if(scanned.hardHermesFailure)findings.push(`${name}:blocked-literal`);
-      if(literalBasename(name).size)findings.push(`${name}:blocked-literal`);
+      const opaqueName=ownContentHash(name,bytes);
+      if(!opaqueName && literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       const stem=name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'');
-      if(policyTokens(stem).length && !admittedFilename(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
+      if(!opaqueName && policyTokens(stem).length && !admittedFilename(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
       if(/\.(?:[cm]?js|bundle|json)$/.test(name)) {
         const mapKeys=wordMapKeys(bytes.toString('utf8'),name);
-        if(mapKeys.some(key=>policyTokens(key).length && !admitted(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
+        if(mapKeys.some(key=>policyTokens(key).length && !admittedMapKey(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
       }
       if(sensitiveStrings.some(text=>sensitive(sensitiveText(text)).size)) findings.push(`${name}:blocked-chamoru`);
       if(grids.some(grid=>scanGrid(grid,grid.supplemental?hardGridTerms:gridTerms).length) || sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)) findings.push(`${name}:blocked-grid`);
@@ -359,5 +382,5 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     writeFileSync(generatedAdmissionFile,JSON.stringify({schemaVersion:1,sourceRoot,receipts:admission.receipts,exports:admission.exports})+'\n',{flag:'wx',mode:0o600});
   }
   requireThat(findings.length===0,`Private word data leaked: ${[...new Set(findings)].map(f=>f.startsWith('artifact-')?f:'artifact-'+sha256(f)+(f.includes(':')?':'+f.split(':').at(-1):'')).join(', ')}`);
-  return {passed:true,files,generatedAdmissionFile,termExceptionsUsed,sourceUnitExceptionsUsed,exportedSourceUnitExceptionsUsed,densityMaximum,shortDensityMaximum,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
+  return {passed:true,files,generatedAdmissionFile,termExceptionsUsed,sourceUnitExceptionsUsed,exportedSourceUnitExceptionsUsed,tracedIdentifiersUsed:tracedIdentifiersUsed.size,dependencyIdentifiersUsed:dependencyIdentifiersUsed.size,densityMaximum,shortDensityMaximum,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
 }

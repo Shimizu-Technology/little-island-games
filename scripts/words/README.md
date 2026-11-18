@@ -301,3 +301,43 @@ other units, literals, density, grids, raw policy blobs/hashes, canaries, and
 private filenames still get every check. The result reports
 `sourceUnitExceptionsUsed` and `exportedSourceUnitExceptionsUsed` as matched
 source/export container counts; no private terms are printed.
+
+### Identifier provenance and opaque asset names
+
+An exported identifier-map key can trace verbatim to one specific identifier
+position in a repository source file that passes the source scan. Property and
+declaration names qualify; displayed strings, comments, substrings and normalized
+near matches do not. The generated Challenge registry receives its own source
+scan. Audio maps and speech keys cannot supply their own provenance. This path
+applies only to map keys: it donates no vocabulary or filename admission and
+does not suppress literal, list, grid, density or private-data checks. The result
+counts distinct admitted keys in `tracedIdentifiersUsed`.
+
+For third-party names the operator can supply private
+`dependencyIdentifierProvenance` entries with `package`, exact `version`,
+lockfile `integrity`, package-relative `path`, verbatim `identifier`, source
+character `offset` and a nonempty `reason`. Review each property/export name in
+the generated native/module map. The package's lockfile entry and installed
+manifest must agree with the pin; the exact identifier position must still exist
+and its source file must pass the scan. Displayed string values do not qualify.
+Missing or symlinked files, wrong positions, changed versions/integrities,
+duplicate identifiers and stale entries fail even if that export does not use
+the entry. `dependencyIdentifiersUsed` reports distinct used entries; an intact
+entry can legitimately be unused on another platform. There is no package-wide
+allowance. Keep entries and their source evidence outside Git. This collision
+metadata stays outside bank content-policy digests, while the operator lock
+binds all policy bytes.
+
+An opaque asset basename skips filename word checks only when its complete
+extension-free name equals the MD5, SHA-1 or SHA-256 of its own bytes. Random hex,
+wrong content hashes and renamed assets retain filename checks. The file's
+contents still receive all ordinary checks.
+
+Run `LITTLE_ISLAND_WORD_POLICY_LOCK=<private-lock> npm run check:words:ios` to
+validate Library inputs, regenerate the selected Library mode, export fresh iOS
+JavaScript without bytecode/minification, and run the complete export guard. The
+command requires a lock, reports `runtimeSeconds` and removes its temporary
+export on success or failure. Restore default generated Library files after a
+preview run. Measured runtimes and source commits belong in the external slice
+report. This command does not establish Hermes, installed-device or family
+acceptance; release retains its separate native compiler/bytecode binding gate.

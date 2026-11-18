@@ -5,7 +5,7 @@ import { privatePath } from './paths.mjs';
 
 /** Artifact collision metadata is independent of word/content admission. */
 export function contentPolicy(policy) {
-  const {legacyArtifactSha256,legacyArtifactSource,artifactTermExceptions,artifactStringExceptions,sourceUnitExceptions,...content}=policy;
+  const {legacyArtifactSha256,legacyArtifactSource,artifactTermExceptions,artifactStringExceptions,sourceUnitExceptions,dependencyIdentifierProvenance,...content}=policy;
   return content;
 }
 
