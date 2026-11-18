@@ -68,6 +68,17 @@ function byteViews(bytes) {
   return {views,uppers:views.map(text=>text.toUpperCase())};
 }
 
+// Metro's native asset names can lose extensions. A pack-shaped header must
+// still go through the registered source codec, including malformed headers.
+export function puzzleCarrier(bytes) {
+  let start=bytes.subarray(0,3).equals(Buffer.from([0xef,0xbb,0xbf]))?3:0;
+  while(start<bytes.length && [9,10,13,32].includes(bytes[start]))start++;
+  if(bytes[start]!==0x7b)return false;
+  const newline=bytes.indexOf(10,start),first=bytes.subarray(start,newline<0?bytes.length:newline).toString('utf8');
+  try {const header=JSON.parse(first);return header && typeof header==='object' && typeof header.family==='string' && ('format' in header) && ('slot' in header || 'packs' in header);}
+  catch {return false;}
+}
+
 /** Raw views are reserved for unconditional private-byte detection. */
 export function artifactScanner(policy, library=[], teachings=[]) {
   const excluded=[...policy.scan,...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])];
@@ -312,7 +323,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     const sources=admissionSources(sourceRoot);admission={sources,receipts:generatedReceipts(sourceRoot,sources),exports:[]};
     for(const receipt of admission.receipts)if(receipt.entries.some(entry=>!admitted(entry.identifier??entry.word)))findings.push('generated-'+receipt.generator+':untraced-word-map');
   }
-  const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name));
+  const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name) || puzzleCarrier(e.bytes));
   if(packs.length) {
     const runner=fileURLToPath(new URL('./decode-packs.mjs',import.meta.url));
     const result=spawnSync(process.execPath,['--import',resolve(sourceRoot,'scripts/puzzles/register.mjs'),runner],{input:JSON.stringify(packs.map(e=>e.bytes.toString('utf8'))),encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000,cwd:sourceRoot});

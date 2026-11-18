@@ -333,6 +333,12 @@ extension-free name equals the MD5, SHA-1 or SHA-256 of its own bytes. Random he
 wrong content hashes and renamed assets retain filename checks. The file's
 contents still receive all ordinary checks.
 
+Native export can also remove a puzzle pack's extension. Pack-shaped JSON
+headers are detected from bytes and decoded through the exporting source's
+registered codec before semantic scanning. Malformed or unknown codecs fail
+closed. Decoded grids, literals and word admission retain the same checks as
+named `.lipuzzle` files; raw private-byte and density checks still apply.
+
 Run `LITTLE_ISLAND_WORD_POLICY_LOCK=<private-lock> npm run check:words:ios` to
 validate Library inputs, regenerate the selected Library mode, export fresh iOS
 JavaScript without bytecode/minification, and run the complete export guard. The

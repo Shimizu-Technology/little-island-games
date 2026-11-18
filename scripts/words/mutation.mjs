@@ -78,6 +78,9 @@ const sourceUnitEdges=[
 ];
 for(const [label,before,after,tests] of sourceUnitEdges){const source=sources.get('guard');if(!source.includes(before))throw new Error('Missing source-unit mutation target');custom('guard','Wguard2 '+label,source.replace(before,after),tests);}
 const provenanceEdges=[
+ ['guard','native pack header detection',' || puzzleCarrier(e.bytes)','',['Wguard2 native pack encoded collision','Wguard2 native pack decoded grid','Wguard2 native pack invalid codec fails closed']],
+ ['guard','native pack whitespace header','while(start<bytes.length && [9,10,13,32].includes(bytes[start]))start++;','',['Wguard2 native pack padded header']],
+ ['guard','native pack BOM fails closed',"bytes.subarray(0,3).equals(Buffer.from([0xef,0xbb,0xbf]))?3:0",'0',['Wguard2 native pack BOM fails closed']],
  ['guard','near-match authored identifier','identifiers.get(entry)','identifiers.get(entry)??[...identifiers].find(([id])=>entry.startsWith(id))?.[1]',['Wguard2 identifier near miss']],
  ['identifier-provenance','source scan prerequisite','!passedSources.has(path)','false',['Wguard2 identifier failed source excluded from provenance']],
  ['identifier-provenance','dependency exact identifier','position.identifier===rule.identifier','true',['Wguard2 dependency near miss']],

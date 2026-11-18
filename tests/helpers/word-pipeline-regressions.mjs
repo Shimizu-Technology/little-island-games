@@ -360,7 +360,7 @@ for(const [name,source,fail] of [
 
 // Synthetic codec uses the real row decoder, with isolated family bindings.
 // Its symbol string stands for numeric cells, like cage IDs in numeric packs.
-function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='synthetic',authored=[]) {
+function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='synthetic',authored=[],carrier='extension') {
  test(name,()=>{
   const source=join(scratch,`pack-source-${name.replaceAll(' ','-')}`),dir=join(source,'dist');
   mkdirSync(join(source,'scripts/puzzles/families'),{recursive:true});mkdirSync(join(source,'src/puzzles'),{recursive:true});mkdirSync(join(source,'src/state'));mkdirSync(dir);
@@ -369,7 +369,8 @@ function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='syn
   writeFileSync(join(source,'scripts/puzzles/families/index.ts'),`export const families=[{id:${JSON.stringify(family)},bands:[{id:'a'}],adapter:{rules:1,decodePayload:x=>x===${JSON.stringify(encoded)}?${JSON.stringify(decoded)}:null,isPayload:x=>!!x}}];`);
   if(authored.length){mkdirSync(join(source,'src/app'),{recursive:true});writeFileSync(join(source,'src/app/index.ts'),'export const words='+JSON.stringify(authored)+';');}
   const header={format:1,family,slot:0,first:0,count:1,band:'a',rules:1,rng:1};
-  writeFileSync(join(dir,'p0.lipuzzle'),JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded,0,objectives]));
+  const bytes=(carrier==='padded-hash'?' '.repeat(128):'')+JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded,0,objectives]);
+  writeFileSync(join(dir,carrier.endsWith('hash')?createHash('md5').update(bytes).digest('hex'):carrier==='renamed'?'native-carrier':'p0.lipuzzle'),bytes);
   const original=process.cwd();try{process.chdir(source);if(rejected)assert.throws(()=>guardTree(dir,policy),/leaked|no admitted authored source/);else assert.equal(guardTree(dir,policy).passed,true);}finally{process.chdir(original);}
  });
 }
@@ -377,6 +378,14 @@ packedCase('guard numeric encoded pack collision','COLD',{values:[2,14,11,3]});
 packedCase('guard base64 numeric pack collision','XCOLDbXALPHANONSENSEBETANONSENSEGAMMANONSENSEZ==',{values:[1,2,3]});
 packedCase('guard decoded packed word grid','numeric-code',{language:'en',cells:[['C','O','L','D']]},true);
 packedCase('guard decoded packed visible word','numeric-code',{clue:'COLD'},true);
+packedCase('Wguard2 native pack encoded collision','COLD',{values:[2,14,11,3]},false,0,'synthetic',[],'hash');
+packedCase('Wguard2 renamed native pack encoded collision','COLD',{values:[2,14,11,3]},false,0,'synthetic',[],'renamed');
+packedCase('Wguard2 native pack padded header','COLD',{values:[2,14,11,3]},false,0,'synthetic',[],'padded-hash');
+packedCase('Wguard2 native pack decoded grid','numeric-code',{language:'en',cells:[['C','O','L','D']]},true,0,'synthetic',[],'hash');
+packedCase('Wguard2 native pack decoded literal','numeric-code',{clue:'COLD'},true,0,'synthetic',[],'hash');
+packedCase('Wguard2 native pack word admission','numeric-code',{language:'en',answers:['ZQUNKNOWNX']},true,0,'word-search',[],'hash');
+test('Wguard2 native pack invalid codec fails closed',()=>{const dir=join(scratch,'unknown-native-pack');mkdirSync(dir);const text=JSON.stringify({format:2,family:'unknown',slot:0,count:1})+'\n[1,"layout","template",0]';writeFileSync(join(dir,createHash('md5').update(text).digest('hex')),text);assert.throws(()=>guardTree(dir,policy),/Cannot decode exported puzzle packs/);});
+test('Wguard2 native pack BOM fails closed',()=>{const dir=join(scratch,'bom-native-pack');mkdirSync(dir);const text='\ufeff'+JSON.stringify({format:1,family:'unknown',slot:0,count:1})+'\n[1,"layout","template",0]';writeFileSync(join(dir,createHash('md5').update(text).digest('hex')),text);assert.throws(()=>guardTree(dir,policy),/Cannot decode exported puzzle packs/);});
 exportCase('guard partial list comment','app.js','// ALPHANONSENSE BETANONSENSE GAMMANONSENSE\nglobalThis.label="safe";',policy,true);
 exportCase('guard row string grid','bank.json',JSON.stringify({grid:['COLD']}),policy,true);
 exportCase('guard word list is not a grid','bank.json',JSON.stringify({language:'en',words:['XCOL','DXXX']}));
