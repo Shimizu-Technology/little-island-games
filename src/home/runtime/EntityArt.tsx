@@ -156,8 +156,6 @@ export const EntityArt = memo(function EntityArt({
   JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));
 
 
-function IdleDrawing({input,mealActive,renderCharacter}:{input:Parameters<typeof CharacterDrawing>[0]['input'];mealActive:boolean;renderCharacter?:CharacterRender}) {
-  const resting=React.useRef(input);
-  if(!mealActive)resting.current=input;
-  return <CharacterDrawing input={resting.current} renderCharacter={renderCharacter}/>;
-}
+const IdleDrawing=memo(function IdleDrawing({input,renderCharacter}:{input:Parameters<typeof CharacterDrawing>[0]['input'];mealActive:boolean;renderCharacter?:CharacterRender}) {
+  return <CharacterDrawing input={input} renderCharacter={renderCharacter}/>;
+},(_previous,next)=>next.mealActive);

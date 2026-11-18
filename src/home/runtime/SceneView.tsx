@@ -36,6 +36,10 @@ function ancestors(entity: SceneEntity, scene: Scene): string[] {
   }
   return result;
 }
+/** Hidden copies retain their last idle props until the visible meal finishes. */
+const IdleEntityDrawing=memo(function IdleEntityDrawing({mealActive:_mealActive,...props}:React.ComponentProps<typeof EntityArt>&{mealActive:boolean}) {
+  return <EntityArt {...props}/>;
+},(_previous,next)=>next.mealActive);
 const RestingEntity = memo(function RestingEntity({
   entity,
   sceneRevision,
@@ -149,10 +153,6 @@ const RestingEntity = memo(function RestingEntity({
   }, (dir, before) => { if (dir !== before) runOnJS(publishGaze)(dir); }, [character, sleeping, id]);
   const gazeDir = Math.round(gazeCode / 4);
   const gaze = { x: gazeDir * (entity.facing === "left" ? -1 : 1), y: gazeCode - gazeDir * 4 };
-  // Hidden blink and anticipation drawings keep their last resting pose during
-  // a meal; only the visible working rig receives the transient action.
-  const idleArt=React.useRef({entity,gaze,mood});
-  if(!meal)idleArt.current={entity,gaze,mood};
   useAnimatedReaction(() => {
     if (!leaner || sleeping || reduced) return 0;
     for (const n of restingFlags.value.notice) if (n.id === leaner) return n.dir;
@@ -296,13 +296,13 @@ const RestingEntity = memo(function RestingEntity({
         </Animated.View>
         {cacheBlink && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={idleArt.current.entity} gaze={idleArt.current.gaze} faceOverride={idleArt.current.mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
         )}
       </Animated.View>
       {entity.character && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
-          <EntityArt entity={idleArt.current.entity} gaze={idleArt.current.gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
+          <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
       </Animated.View>
@@ -400,11 +400,11 @@ export function SceneView({
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
 }) {
-  const { camera } = interaction;
+  const { camera,completeMealHandoff } = interaction;
   React.useLayoutEffect(()=>{
     for(const [id,meal]of Object.entries(meals))if(meal.source && meal.capture && (!mealReady || mealReady[id]===meal.key))
-      interaction.completeMealHandoff?.(meal.source,meal.capture);
-  },[interaction.completeMealHandoff,meals,mealReady]);
+      completeMealHandoff?.(meal.source,meal.capture);
+  },[completeMealHandoff,meals,mealReady]);
   // HD-08: lamp shadows change only when the room's contents do.
   // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
   const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {

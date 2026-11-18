@@ -85,7 +85,7 @@ export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderC
     return mealIndex(elapsed >= 0 && elapsed <= MEAL_MS ? elapsed : 0);
   });
   const started = useRef(false), live = useRef(true), laidOut = useRef(false), prepared=useRef(false), playing=useRef(false), visibleRef=useRef(visible);
-  visibleRef.current=visible;
+  useLayoutEffect(()=>{visibleRef.current=visible;},[visible]);
   const frameRequest = useRef<number | undefined>(undefined);
   const finish = useCallback(() => { if (live.current) onFinished?.(); }, [onFinished]);
   const playback = useMemo(() => !meal ? undefined : ({ progress,
