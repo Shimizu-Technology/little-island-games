@@ -88,15 +88,16 @@ export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderC
   useLayoutEffect(()=>{visibleRef.current=visible;},[visible]);
   const frameRequest = useRef<number | undefined>(undefined);
   const finish = useCallback(() => { if (live.current) onFinished?.(); }, [onFinished]);
+  const renderMorph=useCallback((nodes:readonly React.ReactNode[])=>mealPaths(nodes,current,frameIndex,(index,children)=><OpacityLayer current={current} index={index}>{children}</OpacityLayer>),[current]);
+  const renderLayer=useCallback((index:number | readonly number[],children:React.ReactNode)=><OpacityLayer current={current} index={index}>{children}</OpacityLayer>,[current]);
   const playback = useMemo(() => !meal ? undefined : ({ progress,
-    renderMorph:(nodes:readonly React.ReactNode[])=>mealPaths(nodes,current,frameIndex,(index,children)=><OpacityLayer current={current} index={index}>{children}</OpacityLayer>),
-    renderLayer:(index:number | readonly number[],children:React.ReactNode)=><OpacityLayer current={current} index={index}>{children}</OpacityLayer>,
+    renderMorph,renderLayer,
     frames:mealTimes.map((time,index) => {
       const sampled = mealFrame(time,reduced);
       return {time,meal:{...sampled,bite:meal.action === 'eat' && sampled.bite},
         face:time < 150 ? 'neutral' as const : meal.action === 'drink' ? 'happy' as const : sampled.bite ? 'anticipate' as const : 'chew' as const,
         held:foodArt(slot,meal,time,index,reduced)};
-    }) }),[progress,current,meal,reduced,slot]);
+    }) }),[progress,renderMorph,renderLayer,meal,reduced,slot]);
   const play=useCallback(()=>{
     if(!key || !live.current || playing.current)return;
     playing.current=true;

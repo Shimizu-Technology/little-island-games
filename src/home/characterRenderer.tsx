@@ -17,6 +17,26 @@ export function adaptLegacyCharacterRenderer(renderer: LegacyCharacterRenderer):
 }
 /** Canonical renderer for RUNTIME. Size is rig scale: Islander /132, crab /120,
  * Pip /160. Position this SVG at anchor + bounds.left/top times that scale. */
-export function HomeCharacter({ input, look, ...life }: { input: CharacterRenderInput; look?: IslanderLook } & RigLife) {
+type HomeCharacterProps={ input: CharacterRenderInput; look?: IslanderLook } & RigLife;
+function RigCharacter({ input, look, ...life }: HomeCharacterProps) {
   return input.slot === 0 ? <Islander {...input} {...life} look={look}/> : input.slot === 1 ? <Pip {...input} {...life}/> : <RigCrab {...input} {...life}/>;
+}
+function mealBodySignature({input,look,...life}:HomeCharacterProps){
+  const playback=input.mealPlayback!;
+  // The built-in rigs use held only to close the fingers/fin. Actual food is
+  // painted by MealArt; external renderers still receive every real food frame.
+  return JSON.stringify({look,life,input:{...input,held:!!input.held,carryGrip:undefined,
+    mealPlayback:playback.frames.map(({held,...frame})=>({...frame,held:!!held}))}});
+}
+const MealCharacter=React.memo(RigCharacter,(a,b)=>{
+  const x=a.input.mealPlayback!,y=b.input.mealPlayback!;
+  return x.progress===y.progress && x.renderLayer===y.renderLayer && x.renderMorph===y.renderMorph &&
+    a.input.carryGrip===b.input.carryGrip && mealBodySignature(a)===mealBodySignature(b);
+});
+export function HomeCharacter({input,...props}:HomeCharacterProps){
+  // Meal playback owns the expression. Idle notice/gaze changes must not rebuild
+  // a hidden prepared rig, or its first visible SVG, at the release boundary.
+  return input.mealPlayback
+    ? <MealCharacter {...props} blink={false} input={{...input,face:null,gaze:{x:0,y:0}}}/>
+    : <RigCharacter {...props} input={input}/>;
 }

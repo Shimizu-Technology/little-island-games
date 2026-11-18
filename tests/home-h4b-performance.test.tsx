@@ -260,3 +260,23 @@ it('warms at most one hidden carry SVG per native frame, and prioritizes a visib
  expect(clock.frames.every(e=>!e.isActive)).toBe(true);
  await act(async()=>tree.unmount());
 });
+
+it('retains the prepared meal body across food identities and idle gaze changes',async()=>{
+ for(const slot of [0,1,2]as const){
+  const hero=buildScene(labFixtures[`rig-menu-${slot}`]()).entities[`character/${slot}`];
+  const render=(input:Parameters<typeof HomeCharacter>[0]['input'])=><HomeCharacter input={input}/>;let tree!:ReturnType<typeof create>;
+  await act(async()=>{tree=create(<EntityArt prepareMeal entity={hero} gaze={{x:0,y:0}} reduced={false} renderCharacter={render}/>);});
+  const body=()=>tree.root.findByType(MealArt).findAll(n=>typeof n.type==='string' && !!n.props['data-rig'])[0].props;
+  const initial=body();
+  for(const [i,item]of (['mango','banana','rice-ball','cupcake']as const).entries()){
+   const meal={key:i+1,action:'eat' as const,offered:true,food:instance('food',item,0,0)};
+   await act(async()=>tree.update(<EntityArt prepareMeal entity={{...hero,action:'eat'}} gaze={{x:-1,y:1}} faceOverride="happy" meal={meal} reduced={false} renderCharacter={render}/>));
+   expect(body()===initial).toBe(true);
+   expect(tree.root.findAllByProps({'data-meal-food':item})).toHaveLength(2);
+  }
+  const meal={key:5,action:'eat' as const,food:instance('food','mango',0,0)};
+  await act(async()=>tree.update(<EntityArt prepareMeal entity={{...hero,base:'sit',action:'eat'}} meal={meal} reduced={false} renderCharacter={render}/>));
+  expect(body()===initial).toBe(false);
+  await act(async()=>tree.unmount());
+ }
+});
