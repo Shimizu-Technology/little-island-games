@@ -203,3 +203,11 @@ it.each(['quick-practice', 'shell-math', 'space-station'] as const)('AX5 phone: 
   await flushFrames();
   expect(scrolls.filter(y => y > 0)).toEqual([186]);
 });
+
+it('a phone cheer at the bottom of the pinned header is drawn above the scrolling page', async () => {
+  companion.event = 'correct';
+  const r = await mount('quick-practice');
+  const pinned = r.root.find(n => String(n.type) === 'View' && n.props.testID === 'learn-header-pinned');
+  expect(flat(pinned.props.style).zIndex).toBeGreaterThan(0);
+  expect(pinned.findAll(n => String(n.type) === 'Copy' && n.children.includes('You got it!'))).toHaveLength(1);
+});

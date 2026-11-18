@@ -409,7 +409,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
       <IslandBackdrop island={island} colors={theme}/>
-      {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16 }}>{pinned}</View>}
+      {/* Above the page, so a cheer drawn at the bottom of the pinned header shows in full over the scrolling content. */}
+      {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16, zIndex: 1 }}>{pinned}</View>}
       <GridInteraction.Provider value={setHeld}>
       <ScrollView {...(id === "logic-lagoon" ? { onScroll: (event: import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>) => { lagoonOffset.current = event.nativeEvent.contentOffset.y; }, scrollEventThrottle: 16 } : {})} onLayout={event => setViewport({ height: event.nativeEvent.layout.height, key: layoutKey })} key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {scrolled}
