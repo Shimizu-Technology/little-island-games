@@ -328,7 +328,7 @@ export function HomeScreen({
     },
     [shoreRooms]
   );
-  const showReaction = (proposal: DropProposal, food?: Meal["food"]) => {
+  const showReaction = (proposal: DropProposal, food?: Meal["food"], offered = false, source = proposal.id) => {
     if (proposal.kind !== "mouth") return;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
     if (!target) return;
@@ -337,7 +337,7 @@ export function HomeScreen({
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
     const key = ++mealSerial.current;
-    if (food) setMeals(current => ({ ...current, [target.owner]: { key, food: { ...food }, action } }));
+    if (food) setMeals(current => ({ ...current, [target.owner]: { key, source, offered, food: { ...food }, action } }));
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
     const finish = () => {
@@ -401,7 +401,7 @@ export function HomeScreen({
       if (result) {
         if (labKit && trace)
           trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
-        showReaction(result.proposal, mealFood);
+        showReaction(result.proposal, mealFood, true, proposal.id);
         const before = live.current.scene;
         const destination = buildRuntimeScene(result.state);
         setPickups((current) =>

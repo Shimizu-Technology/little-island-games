@@ -519,7 +519,7 @@ export function useInteraction({
     const origin = proposal?.kind === "staging" && slot.stagingAt
       ? { x: slot.stagingAt.x - proposal.contact.x, y: slot.stagingAt.y - proposal.contact.y } : room;
     const restEntity = destination && destination.entities[identity ?? proposal?.id ?? slot.restId ?? slot.id];
-    const retargeted = committed && proposal && !(slot.synthetic && proposal.kind === "staging") &&
+    const retargeted = committed && proposal && proposal.kind !== "mouth" && !(slot.synthetic && proposal.kind === "staging") &&
       (Math.abs(origin.x + proposal.contact.x - slot.targetX) > .01 || Math.abs(origin.y + proposal.contact.y - slot.targetY) > .01);
     slots.set(
       current.map((s, i) =>
@@ -530,8 +530,8 @@ export function useInteraction({
               phase: "settling",
               releaseX: s.settleAt && committed && !retargeted ? s.releaseX : s.x,
               releaseY: s.settleAt && committed && !retargeted ? s.releaseY : s.y,
-              targetX: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
-              targetY: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
+              targetX: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
+              targetY: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
               proposal,
               consumed: s.catalog && !committed || committed && proposal?.kind === "mouth" && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
@@ -767,7 +767,7 @@ export function useInteraction({
         const slot = slots.value[index];
         if (!slot) continue;
         const origin = roomOrigin(roomIds.indexOf(effect.proposal.room), building);
-        const at = effect.proposal.kind === "staging" && slot.stagingAt ? slot.stagingAt
+        const at = effect.proposal.kind === "mouth" ? {x:slot.x,y:slot.y} : effect.proposal.kind === "staging" && slot.stagingAt ? slot.stagingAt
           : { x: origin.x + effect.proposal.contact.x, y: origin.y + effect.proposal.contact.y };
         slots.set(
           slots.value.map((s, i) =>
@@ -1237,7 +1237,7 @@ export function useInteraction({
             const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
-            slot.tilt *= 1 - progress;
+            if(slot.proposal?.kind !== "mouth")slot.tilt *= 1 - progress;
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
             if (slot.finished && slot.catalog && !slot.landedAt) slot.landedAt = now;

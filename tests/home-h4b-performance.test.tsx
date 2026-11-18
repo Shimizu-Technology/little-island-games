@@ -33,11 +33,11 @@ it('retains the idle and prewarmed meal bodies when a meal starts and finishes',
  const renderer=()=> <Body/>;
  const scene=buildScene(labFixtures['rig-meal']()),entity=scene.entities['character/0'];
  let tree!:ReturnType<typeof create>;
- await act(async()=>{tree=create(<EntityArt entity={entity} reduced={false} renderCharacter={renderer}/>);});
+ await act(async()=>{tree=create(<EntityArt prepareMeal entity={entity} reduced={false} renderCharacter={renderer}/>);});
  const meal={key:1,action:'eat' as const,food:instance('snack','mango',0,0)};
- await act(async()=>tree.update(<EntityArt entity={entity} meal={meal} reduced={false} renderCharacter={renderer}/>));
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={entity} meal={meal} reduced={false} renderCharacter={renderer}/>));
  expect({mounts,unmounts}).toEqual({mounts:2,unmounts:0});
- await act(async()=>tree.update(<EntityArt entity={entity} reduced={false} renderCharacter={renderer}/>));
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={entity} reduced={false} renderCharacter={renderer}/>));
  expect({mounts,unmounts}).toEqual({mounts:2,unmounts:0});
  await act(async()=>tree.unmount());
  expect(unmounts).toBe(2);
@@ -62,4 +62,29 @@ it('changes a single arm or fin path to each authored pose without replacing it'
   }
   await act(async()=>live.unmount());
  }
+});
+
+it('keeps hidden landing drawings mounted across a meal and gives them no meal caches',async()=>{
+ const {SettleArt}=await import('../src/home/runtime/SettleArt');
+ const scene=buildScene(labFixtures['rig-meal']()),source=scene.entities['character/0'];
+ let mounts=0;
+ function Body(){React.useEffect(()=>{mounts++;},[]);return React.createElement('body');}
+ const render=()=> <Body/>;
+ const interaction={slots:{value:[{},{}]},clock:{value:0},poseLayouts:{value:{}}} as any;
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<SettleArt source={source} destination={source} interaction={interaction} index={0} reduced={false} bases={['stand']} renderCharacter={render}/>);});
+ expect(tree.root.findAllByType(MealArt)).toHaveLength(0);
+ const initial=mounts;
+ await act(async()=>tree.update(<SettleArt source={{...source,action:'eat'}} destination={{...source,action:'eat'}} interaction={interaction} index={0} reduced={false} bases={['stand']} renderCharacter={render}/>));
+ expect(mounts).toBe(initial);
+ await act(async()=>tree.unmount());
+});
+
+it('leaves offered food at the contact while the empty hand approaches it',async()=>{
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<MealArt input={{slot:0,base:'stand',action:null,face:null,facing:'right',size:224}} meal={{key:8,action:'eat',offered:true,food:instance('a','mango',0,0)}} reduced={false}/>);});
+ const progress=clock.shared,food=tree.root.findByProps({testID:'meal-held-food'});
+ const at=(ms:number)=>{progress.value=8000+ms;return food.props.style[1].evaluate().transform.slice(0,2);};
+ expect(at(0)).toEqual(at(180));expect(at(90)).toEqual(at(180));expect(at(540)).not.toEqual(at(180));
+ await act(async()=>tree.unmount());
 });

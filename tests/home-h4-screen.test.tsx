@@ -422,6 +422,8 @@ it('H4b retains only transient food art after consumption, replaces it for a new
   await drop(state, food[0].id, 'kitchen', mouth.contact, { previousTarget: mouth.id });
   const meal = harness.scene.meals[friend.id];
   expect(meal.food).toEqual(food[0].item);
+  expect(meal.source).toBe(food[0].id);
+  expect(meal.offered).toBe(true);
   expect(harness.scene.scene.entities[food[0].id]).toBeUndefined();
   const proposal = resolve({ ...initial.rooms.kitchen, entities: initial.entities }, food[0], mouth.contact, { scale: .5, release: true });
   const applied = apply(state, proposal);

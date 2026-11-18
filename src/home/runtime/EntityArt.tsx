@@ -20,7 +20,7 @@ import type { CharacterAction, Face, SceneEntity } from "../scene/types";
 
 export type CharacterRender = CharacterRenderer;
 // Prewarm one small meal rig at scene load. It is hidden at rest and never clocks.
-const preparedMeal: Meal = {key:0,action:'eat',food:instance('prepared-food','mango',0,0)};
+const preparedMeal: Meal = {key:0,action:'eat',offered:true,food:instance('prepared-food','mango',0,0)};
 export const DecorArt = memo(function DecorArt({
   entity,
   layer = "all",
@@ -66,6 +66,7 @@ export const EntityArt = memo(function EntityArt({
   tilt = 0,
   limbLag = 0,
   blink = false,
+  prepareMeal = false,
   meal,
   onMealPresented,
   onMealFinished,
@@ -78,6 +79,8 @@ export const EntityArt = memo(function EntityArt({
   gaze?: Gaze;
   /** HM-11: the closed-eye copy a resting friend swaps to by opacity. */
   blink?: boolean;
+  /** Only the visible resting drawing owns a prewarmed meal stage. */
+  prepareMeal?: boolean;
   tilt?: number;
   limbLag?: number;
   carry?: boolean;
@@ -129,7 +132,7 @@ export const EntityArt = memo(function EntityArt({
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
-      {!carry && !blink && !preview ? <>
+      {!carry && !blink && !preview && (prepareMeal || meal) ? <>
         <View pointerEvents="none" style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal?0:1}}>
           {renderCharacter?.(input) ?? <HomeCharacter input={input}/>}
         </View>
@@ -141,7 +144,7 @@ export const EntityArt = memo(function EntityArt({
   );
 }, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
-  a.faceOverride === b.faceOverride && a.blink === b.blink && a.tilt === b.tilt && a.limbLag === b.limbLag &&
+  a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && a.entity.action === b.entity.action &&
   a.entity.character?.slot === b.entity.character?.slot && a.entity.children.length === b.entity.children.length &&
   JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));

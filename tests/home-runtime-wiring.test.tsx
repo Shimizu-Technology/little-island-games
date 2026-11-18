@@ -1134,3 +1134,16 @@ it('R2-P1-2 pickup publication leaves resolver-only sample caches on UI',async()
  expect(pickup.scene.entities[entity.id].catalogSamples).toBeUndefined();expect(pickup.scene).not.toHaveProperty("rooms");
  await act(async()=>tree.unmount());vi.useRealTimers();
 });
+
+it('mouth consumption never retargets the released overlay toward the nose while layout catches up',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ touch('down',120,300);touch('move',150,320);flushJS();touch('up',150,320);
+ const at={...current.slots.get()[0]};
+ const proposal={...at.proposal!,kind:'mouth' as const,consume:'food' as const,contact:roomPoint(400,100)};
+ current.slots.set(current.slots.get().map((s,i)=>i? s:{...s,proposal,targetX:at.x,targetY:at.y,finished:true}));
+ const destination=fixture('consumed');destination.entities={};destination.rooms.home.entities={};
+ current.finish(0,true,proposal,'consumed',destination);
+ const final=current.slots.get()[0];
+ expect(final.targetX).toBe(at.x);expect(final.targetY).toBe(at.y);expect(final.finished).toBe(true);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});

@@ -53,11 +53,11 @@ function Food({ current, clock, progress, meal, input, reduced }: { current: Sha
     const direction = facing === 'left' ? -1 : 1;
     const lying = base === 'lie' ? slot === 0 ? -90 : slot === 1 ? -18 : 0 : 0;
     return mealTimes.map(time => {
-      const frame = mealFrame(time,reduced), hand = make(base,facing,{...options,meal:frame}).hand;
+      const frame = mealFrame(meal.offered?Math.max(180,time):time,reduced), hand = make(base,facing,{...options,meal:frame}).hand;
       return { x:(hand.x-bounds.left)*unit,y:(hand.y-bounds.top)*unit,
         angle:(lying + (slot === 1 && meal.action === 'drink' ? 5 : 0))*direction*frame.reach + (reduced ? 0 : tilt ?? 0) };
     });
-  },[slot,size,base,facing,tilt,limbLag,meal.action,reduced]);
+  },[slot,size,base,facing,tilt,limbLag,meal.action,meal.offered,reduced]);
   const style = useAnimatedStyle(() => {
     const point = positions[frameIndex(current.value)];
     const elapsed = progress.value - clock.value.key * EPOCH;

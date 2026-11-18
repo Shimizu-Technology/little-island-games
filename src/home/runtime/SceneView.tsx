@@ -276,6 +276,7 @@ const RestingEntity = memo(function RestingEntity({
           {!mealHeld && <EntityArt
             entity={entity}
             actionOverride={action}
+            prepareMeal={!!entity.character}
             meal={meal}
             onMealPresented={presented}
             onMealFinished={finished}
@@ -555,6 +556,7 @@ export function SceneView({
             activeRoom={state.current}
             scene={scene}
             pickups={pickups}
+            hiddenByMeal={Object.values(meals).flatMap(m=>m.source?[m.source]:[])}
             interaction={interaction}
             building={building}
             reduced={reduced}

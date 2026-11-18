@@ -30,6 +30,7 @@ const OverlayGroup = memo(function OverlayGroup({
   reduced,
   renderCharacter,
   socketBases,
+  hidden = false,
 }: {
   pickup: Pickup;
   interaction: Interaction;
@@ -37,6 +38,7 @@ const OverlayGroup = memo(function OverlayGroup({
   reduced: boolean;
   renderCharacter?: CharacterRender;
   socketBases?: SocketBases;
+  hidden?:boolean;
 }) {
   const { scene, id } = pickup;
   const unready = interaction.unready;
@@ -152,7 +154,7 @@ const OverlayGroup = memo(function OverlayGroup({
     };
   });
   return (
-    <>
+    <View testID={`meal-handoff-source-${id}`} pointerEvents="none" style={{position:"absolute",left:0,top:0,right:0,bottom:0,opacity:hidden?0:1}}>
       {pickup.generation > 0 && <LandingPreview source={root} interaction={interaction}
         building={building} renderCharacter={renderCharacter} />}
       <Animated.View
@@ -252,9 +254,9 @@ const OverlayGroup = memo(function OverlayGroup({
           ))}
         </Animated.View>
       </Animated.View>
-    </>
+    </View>
   );
-}, (previous, next) => previous.pickup === next.pickup && previous.building === next.building && previous.socketBases === next.socketBases &&
+}, (previous, next) => previous.pickup === next.pickup && previous.hidden === next.hidden && previous.building === next.building && previous.socketBases === next.socketBases &&
   previous.reduced === next.reduced && previous.renderCharacter === next.renderCharacter &&
   previous.interaction.slots === next.interaction.slots && previous.interaction.camera === next.interaction.camera);
 
@@ -330,6 +332,7 @@ function Front({ entity, root, reduced }: { entity: SceneEntity; root: SceneEnti
 export function DragOverlay(props: {
   scene: Scene;
   activeRoom?: SceneEntity["room"];
+  hiddenByMeal?:readonly string[];
   pickups: (Pickup | undefined)[];
   interaction: Interaction;
   building: Building;
@@ -359,7 +362,7 @@ export function DragOverlay(props: {
           { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 };
         return <OverlayGroup key={entity.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} socketBases={socketBases} />;
       })}
-      {items.map(pickup => <OverlayGroup key={pickup.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />)}
+      {items.map(pickup => <OverlayGroup key={pickup.id} hidden={props.hiddenByMeal?.includes(pickup.id)} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />)}
       <SupportFronts scene={props.scene} interaction={props.interaction} building={props.building} reduced={props.reduced} />
     </View>
   );

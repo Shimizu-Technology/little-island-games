@@ -11,7 +11,7 @@ import { withPortions } from '../src/home/runtime/portions';
 import { labHome } from '../src/home/runtime/lab';
 import { buildScene } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
-import type { Interaction, Pickup } from '../src/home/runtime/useInteraction';
+import { emptyDragSlot, type DragSlot, type Interaction, type Pickup } from '../src/home/runtime/useInteraction';
 import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
 vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
 // These scene tests replace native art; the mouth cue now also imports SVG.
@@ -298,5 +298,26 @@ it('a visible friend keeps its closed-eye art cached through a meal without play
  const closed=tree.root.findAllByType(EntityArt).filter(n=>n.props.blink && n.props.entity.id==='character/0');
  expect(closed).toHaveLength(1);expect(closed[0].props.meal).toBeUndefined();
  expect(closed[0].parent!.props.style[1].evaluate().opacity).toBe(0);
+ await act(async()=>tree.unmount());
+});
+
+it('holds the painted food position and scale at a mouth release until the meal takes it',async()=>{
+ const {pickupTransform}=await import('../src/home/runtime/handFeel');
+ const c=context('home/item/banana'),root=c.scene.entities['home/item/banana'];
+ const slot:DragSlot={...emptyDragSlot(),...c.slot,phase:'dragging',proposal:{kind:'mouth'}as any};
+ const before=pickupTransform(slot,root,1,1000,false);
+ slot.phase='settling';slot.settleAt=1000;
+ for(const ms of [0,70,140,240,500]){
+  const after=pickupTransform(slot,root,1,1000+ms,false);
+  expect(after.lift).toBe(before.lift);expect(after.scaleX).toBe(before.scaleX);expect(after.scaleY).toBe(before.scaleY);
+ }
+});
+
+it('hides the carried food in the same native commit that presents its meal art',async()=>{
+ const c=context('home/item/banana'),id='home/item/banana';
+ const pickup={id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false} {...{hiddenByMeal:[id]}}/>);});
+ expect(tree.root.findByProps({testID:`meal-handoff-source-${id}`}).props.style.opacity).toBe(0);
  await act(async()=>tree.unmount());
 });
