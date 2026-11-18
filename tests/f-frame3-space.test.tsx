@@ -181,8 +181,11 @@ it.each(windows)('%s: a measured board is told the measured width, and its first
 
 // The greeting no longer moves the board, so its end brings no new layout event. A board measured while it showed must
 // still get its one AX entry reveal (Quick Practice and Shell Math stayed unrevealed natively until this was fixed).
-it.each(['quick-practice', 'shell-math', 'space-station'] as const)('AX5 phone: %s measured during the greeting is revealed once, with no further layout', async id => {
-  Object.assign(viewport, { width: 393, height: 852, fontScale: 3.12 }); companion.event = 'entry';
+// On a tablet the in-flow greeting used to lengthen the page as the reveal ran; now the reveal waits for the page to settle.
+it.each([
+  ['quick-practice', 393, 852], ['shell-math', 393, 852], ['space-station', 393, 852], ['space-station', 744, 1133], ['hafa-adai', 1133, 744],
+] as const)('AX5: %s at %sx%s, measured during the greeting, is revealed once when it ends, with no further layout', async (id, width, height) => {
+  Object.assign(viewport, { width, height, fontScale: 3.12 }); companion.event = 'entry';
   const scrolls: number[] = [];
   const frames = new Map<number, FrameRequestCallback>(); let n = 0;
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -195,9 +198,10 @@ it.each(['quick-practice', 'shell-math', 'space-station'] as const)('AX5 phone: 
   await act(async () => {
     byType(root!, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 759 } } });
     root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board').props.onLayout({ nativeEvent: { layout: { y: 180 } } });
-    root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board-inset').props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
+    root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board-inset').props.onLayout({ nativeEvent: { layout: { y: 14, width: width < 600 ? 333 : 664, height: 400 } } });
   });
   await flushFrames();
+  expect(scrolls.filter(y => y > 0)).toEqual([]);
   companion.event = 'waiting';
   await act(async () => root!.update(<StoreProvider><Probe id={id} /></StoreProvider>));
   await flushFrames();

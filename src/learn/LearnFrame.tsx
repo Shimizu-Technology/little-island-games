@@ -300,9 +300,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const islanderBeside = companionBeside(width, height) && store.save.settings.learningIslander !== false;
   const cardInner = boardCardInner(width, insets.left, insets.right, islanderBeside);
   const revealEntry = schoolEntryReveal(id, large, height);
-  // An AX phone board's one entry reveal waits for the greeting to end, when the page has settled. F-frame-3: the
-  // greeting is drawn over the header, so its end no longer moves the board or brings a fresh board layout to wait for.
-  const anchorReady = !large || width >= 600 || companionEvent === "waiting";
+  // An AX board's one entry reveal waits for the greeting to end, when the page has settled. F-frame-3: the greeting is
+  // drawn over the page, so its end no longer moves the board or brings a fresh board layout to wait for; on a tablet it
+  // no longer lengthens the page either, so revealing before the page settled stopped short (iPad mini AX5, 52 pt).
+  const anchorReady = !large || companionEvent === "waiting";
   const boardSpace = useMemo(() => viewport.height > 0 && boardLayout.width > 0 ? {
     width: boardLayout.width,
     // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
