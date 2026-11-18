@@ -70,6 +70,7 @@ const sourceUnitEdges=[
  ['path binding','sourceBindings.filter(binding=>binding.path===name)','sourceBindings',['Wguard2 wrong source cannot borrow review']],
  ['exact source hash','unit.origin.sourceSha256===item.sha256','true',['Wguard2 changed unit']],
  ['export identity','if(!binding.signatures.has(hit.origin.signature))continue;','',['Wguard2 extra term','Wguard2 reordered export','Wguard2 extra neutral export']],
+ ['parser occurrence identity','identity=hit.origin','identity=hit.origin.offset+\":\"+hit.origin.signature',['Wguard2 repeated worklets cannot share occurrence identity']],
  ['export occurrence cap','if(!origins.has(identity) && origins.size>=binding.item.occurrences)continue;','',['Wguard2 duplicate export']],
  ['all reviewed broad terms','terms.size===new Set(hit.broad).size && hit.broad.every(term=>terms.has(term))','true',['Wguard2 missing term','Wguard2 unused terms']],
  ['broad only',"e.check==='broad' && typeof e.term==='string'","typeof e.term==='string'",['Wguard2 requires check']],

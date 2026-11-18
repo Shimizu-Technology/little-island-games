@@ -260,7 +260,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(!hit.listShaped || !hit.origin)continue;
       for(const binding of bindings) {
         if(!binding.signatures.has(hit.origin.signature))continue;
-        const origins=used.get(binding)??new Set(),identity=hit.origin.offset+':'+hit.origin.signature;
+        const origins=used.get(binding)??new Set(),identity=hit.origin;
         if(!origins.has(identity) && origins.size>=binding.item.occurrences)continue;
         if(new Set(hit.broad).size!==binding.terms.size || !hit.broad.every(term=>binding.terms.has(term)))continue;
         if(!origins.has(identity)) {if(source)sourceUnitExceptionsUsed++;else exportedSourceUnitExceptionsUsed++;}

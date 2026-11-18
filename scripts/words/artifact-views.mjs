@@ -75,7 +75,12 @@ export function javascriptStrings(text, teachings=[], fileName='artifact.js') {
   // Decoded literal values and every syntax child remain part of its identity;
   // formatting, quote style and comments do not. The source hash stays exact.
   function syntax(node) {return [node.kind,node.text??null,...node.getChildren(tree).filter(child=>child.kind!==ts.SyntaxKind.CommaToken).map(child=>syntax(child))];}
-  function addUnit(values,node) {values.library=attachment(node);values.origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree),end:node.end,sourceSha256:sha256(node.getText(tree)),signature:digest(syntax(node))};units.push(values);}
+  const unitOrigins=new WeakMap();
+  function addUnit(values,node) {
+    let origin=unitOrigins.get(node);
+    if(!origin){origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree),end:node.end,sourceSha256:sha256(node.getText(tree)),signature:digest(syntax(node))};unitOrigins.set(node,origin);}
+    values.library=attachment(node);values.origin=origin;units.push(values);
+  }
   function addCompact(values,node){values.compact=true;addUnit(values,node);}
   const comments=new Map();
   function recordComments(pos) {
