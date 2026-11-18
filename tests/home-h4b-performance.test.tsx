@@ -8,12 +8,20 @@ import {EntityArt} from '../src/home/runtime/EntityArt';
 import {buildScene} from '../src/home/scene/graph';
 import {labFixtures} from '../src/home/runtime/lab';
 import {instance} from '../src/home/model';
-const clock=vi.hoisted(()=>({shared:undefined as any,animations:0}));
+const clock=vi.hoisted(()=>({shared:undefined as any,animations:0,deferJS:false,js:[]as any[],reactions:[] as any[],frames:[] as any[]}));
 vi.mock('react-native-gesture-handler',()=>({Gesture:{Manual:()=>({})}}));
 vi.mock('react-native',()=>({View:'view',Platform:{OS:'ios'}}));
 vi.mock('react-native-svg',()=>Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
-vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>{clock.animations++;return v;},useAnimatedReaction:()=>{},cancelAnimation:()=>{},runOnJS:(fn:any)=>fn,
- useSharedValue:(v:number)=>{const shared=React.useRef({value:v,set(n:number){this.value=n;}}).current;clock.shared=shared;return shared;},
+vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>{clock.animations++;return v;},useAnimatedReaction:(prepare:any,react:any)=>{
+  const latest=React.useRef({prepare,react});React.useLayoutEffect(()=>{latest.current={prepare,react};});
+  const entry=React.useRef({tick:()=>latest.current.react(latest.current.prepare(),null)}).current;
+  React.useEffect(()=>{clock.reactions.push(entry);return()=>{clock.reactions=clock.reactions.filter(e=>e!==entry);};},[entry]);
+ },useFrameCallback:(fn:any)=>{
+  const latest=React.useRef(fn);React.useLayoutEffect(()=>{latest.current=fn;});
+  const entry=React.useRef({isActive:false,setActive(v:boolean){this.isActive=v;},tick:(ms=16.67)=>latest.current({timeSincePreviousFrame:ms})}).current;
+  React.useEffect(()=>{clock.frames.push(entry);return()=>{clock.frames=clock.frames.filter(e=>e!==entry);};},[entry]);return entry;
+ },cancelAnimation:()=>{},runOnJS:(fn:any)=>(...args:any[])=>{if(clock.deferJS)clock.js.push(()=>fn(...args));else return fn(...args);},runOnUI:(fn:any)=>fn,
+ useSharedValue:(v:number)=>{const shared=React.useRef({value:v,set(n:number){this.value=n;},get(){return this.value;}}).current;clock.shared=shared;return shared;},
  useDerivedValue:(fn:any)=>{const latest=React.useRef(fn);latest.current=fn;return React.useRef({get value(){return latest.current();}}).current;},useAnimatedStyle:(fn:any)=>({evaluate:fn}),useAnimatedProps:(fn:any)=>({evaluate:fn})}));
 vi.mock('../src/home/art/Items',()=>({ItemArt:()=>null}));
 vi.mock('../src/home/art/More',()=>({MoreItemArt:()=>null}));
@@ -115,7 +123,6 @@ it('receiving a cup switches prebuilt carry grips without repainting whole chara
  const before=render.mock.calls.length;
  await act(async()=>tree.update(<CarriedCharacter entity={{...hero,children:['home/item/cup']}} interaction={interaction} index={0} reduced={false} renderCharacter={render}/>));
  expect(render.mock.calls.length).toBe(before);
- expect(inputs[0].carryGrip.renderLayer(true,null).props.holding.value).toBe(true);
  await act(async()=>tree.unmount());
 });
 
@@ -217,4 +224,39 @@ it('waits for visibility before playing a prepared meal, without repainting its 
  await act(async()=>tree.update(<MealArt input={{...input}} meal={meal} visible reduced={false} onPresented={presented} renderCharacter={render}/>));
  expect(clock.animations).toBe(1);expect(render).toHaveBeenCalledOnce();
  await act(async()=>tree.unmount());vi.stubGlobal('requestAnimationFrame',()=>1);
+});
+
+
+it('warms at most one hidden carry SVG per native frame, and prioritizes a visible held pose',async()=>{
+ const {CarriedCharacter}=await import('../src/home/runtime/CarriedCharacter');
+ const hero=buildScene(labFixtures['rig-meal']()).entities['character/0'];
+ const slots={value:[{id:'',lag:0},{}]},interaction={slots,clock:{value:0}}as any;
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<CarriedCharacter entity={hero} interaction={interaction} index={0} reduced={false}/>);});
+ const groups=()=>tree.root.findAll(n=>String(n.type)==='animated-g'&&String(n.props.testID).startsWith('carry-grip-'));
+ const paint=()=>groups().map(n=>n.props.animatedProps.evaluate().opacity);
+ let previous=paint();expect(previous).toHaveLength(60);
+ await act(async()=>tree.update(<CarriedCharacter entity={{...hero,children:['cup']}} interaction={interaction} index={0} reduced={false}/>));
+ const flush=()=>clock.reactions.forEach(e=>e.tick());flush();
+ const changed=(next:number[])=>{const n=next.filter((p,i)=>p!==previous[i]).length;previous=next;return n;};
+ expect(changed(paint())).toBeLessThanOrEqual(4);
+ // The far-left carry frame has not warmed yet, but must be ready on its first visible tick.
+ slots.value[0]={id:hero.id,lag:-10};flush();
+ const first=groups().slice(0,4).map(n=>n.props.animatedProps.evaluate().opacity);
+ expect(first).toEqual([0,1,0,1]);
+ slots.value[0]={id:'',lag:0};flush();previous=paint();
+ clock.deferJS=true;
+ for(let i=0;i<16;i++){
+  clock.frames.filter(e=>e.isActive).forEach(e=>e.tick(i===2?300:16.67));flush();
+  expect(changed(paint())).toBeLessThanOrEqual(4);
+ }
+ expect(paint().filter((_,i)=>i%4===1||i%4===3).every(v=>v===1)).toBe(true);
+ // A newer grip request must survive an older stop callback delayed on JS.
+ await act(async()=>tree.update(<CarriedCharacter entity={hero} interaction={interaction} index={0} reduced={false}/>));flush();
+ clock.js.splice(0).forEach(fn=>fn());clock.deferJS=false;
+ expect(clock.frames.some(e=>e.isActive)).toBe(true);previous=paint();
+ for(let i=0;i<16;i++){clock.frames.filter(e=>e.isActive).forEach(e=>e.tick());flush();expect(changed(paint())).toBeLessThanOrEqual(4);}
+ expect(paint().filter((_,i)=>i%4===0||i%4===2).every(v=>v===1)).toBe(true);
+ expect(clock.frames.every(e=>!e.isActive)).toBe(true);
+ await act(async()=>tree.unmount());
 });

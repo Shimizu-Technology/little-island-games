@@ -6,7 +6,7 @@ import { layoutToken } from "../src/home/runtime/layout";
 import { poseToken } from "../src/home/runtime/poseBank";
 import { poseLaidOut } from "../src/home/runtime/poseAck";
 import { useInteraction, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
-import { buildingLayout } from "../src/home/camera";
+import { buildingLayout, roomOrigin } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, screenPoint, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
@@ -1166,5 +1166,41 @@ it('keeps a consumed release visible until its own meal drawing is presented',as
  expect(current.slots.get()[0].mealPending).toBe(false);
  vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});
  expect(current.slots.get()[0].id).toBe('');
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+
+async function offeredMouthDrop(){
+ const {labHome}=await import('../src/home/runtime/lab'),{buildScene}=await import('../src/home/scene/graph');
+ const scene=buildScene(labHome('rig-menu-0')),food=scene.entities['home/item/menu-0'],mouth=scene.rooms.home.targets.find(t=>t.id==='character/0/mouth')!;
+ const origin=roomOrigin(0,fixtureBuilding);
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ const source={x:origin.x+food.contact.x+food.bounds.left+food.bounds.width/2,y:origin.y+food.contact.y+food.bounds.top+food.bounds.height/2};
+ touch('down',source.x,source.y);touch('move',source.x+16,source.y);flushJS();
+ vi.advanceTimersByTime(120);harness.frames[0]({timeSincePreviousFrame:17});
+ let drop={x:origin.x+mouth.contact.x,y:origin.y+mouth.contact.y+18};
+ for(const lift of [18,12,24,6,0,30]){
+  drop={x:origin.x+mouth.contact.x,y:origin.y+mouth.contact.y+lift};touch('move',drop.x,drop.y);
+  if(current.slots.get()[0].proposal?.kind==='mouth')break;
+ }
+ expect(current.slots.get()[0].proposal?.kind).toBe('mouth');
+ touch('up',drop.x,drop.y);
+ return tree;
+}
+it('starts a stationary mouth presentation on the first released frame, without a floor-travel wait',async()=>{
+ const tree=await offeredMouthDrop();expect(committed).toBe(0);
+ harness.frames[0]({timeSincePreviousFrame:17});flushJS();
+ expect(committed).toBe(1);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('a refused stationary mouth drop keeps its normal return motion',async()=>{
+ const tree=await offeredMouthDrop(),released={...current.slots.get()[0]};
+ current.finish(0,false,undefined,undefined,undefined,released);
+ harness.frames[0]({timeSincePreviousFrame:17});
+ expect(current.slots.get()[0].finished).toBe(false);
+ expect(current.slots.get()[0].x).toBeCloseTo(released.x);
+ vi.advanceTimersByTime(100);harness.frames[0]({timeSincePreviousFrame:17});
+ const returning=current.slots.get()[0];expect(returning.finished).toBe(false);
+ expect(Math.abs(returning.x-returning.sourceX)).toBeLessThan(Math.abs(released.x-released.sourceX));
  await act(async()=>tree.unmount());vi.useRealTimers();
 });

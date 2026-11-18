@@ -297,7 +297,9 @@ it('a visible friend keeps its closed-eye art cached through a meal without play
  await act(async()=>tree.update(<SceneView {...props} state={state} scene={next} meals={{'character/0':meal}}/>));
  const closed=tree.root.findAllByType(EntityArt).filter(n=>n.props.blink && n.props.entity.id==='character/0');
  expect(closed).toHaveLength(1);expect(closed[0].props.meal).toBeUndefined();
- expect(closed[0].parent!.props.style[1].evaluate().opacity).toBe(0);
+ let wrapper=closed[0].parent;
+ while(wrapper && !wrapper.props.style?.[1]?.evaluate)wrapper=wrapper.parent;
+ expect(wrapper).not.toBeNull();expect(wrapper!.props.style[1].evaluate().opacity).toBe(0);
  await act(async()=>tree.unmount());
 });
 

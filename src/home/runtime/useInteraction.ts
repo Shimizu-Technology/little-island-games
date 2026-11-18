@@ -536,6 +536,8 @@ export function useInteraction({
               targetX: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
               targetY: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
               proposal,
+              // A refused stationary mouth drop still travels back to its source.
+              duration: !committed && s.duration === 0 ? undefined : s.duration,
               mealPending: committed && mealPending,
               consumed: s.catalog && !committed || committed && proposal?.kind === "mouth" && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
@@ -787,6 +789,9 @@ export function useInteraction({
               targetX: at.x, targetY: at.y,
               x: reduced ? at.x : s.x,
               y: reduced ? at.y : s.y,
+              // A mouth release stays at its dropped point: there is no travel
+              // to wait for. The meal's native presentation gate owns the handoff.
+              duration: effect.proposal.kind === "mouth" ? 0 : s.duration,
               settleAt: eventTime(), travelDelay: 0, finished: false, commitRequested: false } : s
           )
         );
