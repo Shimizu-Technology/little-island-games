@@ -1,6 +1,7 @@
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {describe,it,expect,vi} from 'vitest';
+import {paintedBounds} from '../src/home/art/silhouettes';
 import {EntityArt} from '../src/home/runtime/EntityArt';
 import {buildScene} from '../src/home/scene/graph';
 import {pickEntity,prepareHits} from '../src/home/runtime/pick';
@@ -32,6 +33,7 @@ for(const slot of [0,1,2] as const) for(const empty of [false,true]) it(`held ${
  cup.empty=empty;state.rooms.home.characters[0].holding=cup.id;
  const scene=buildScene(state),e=scene.entities[`home/item/${cup.id}`];
  expect(e.visual).toEqual({x:0,y:0});
+ expect(paintedBounds(e)).toEqual({...e.bounds,left:e.bounds.left+e.contact.x,top:e.bounds.top+e.contact.y});
  expect(e.bounds.top).toBeGreaterThan(-31);
  expect(pickEntity(prepareHits(scene).home,roomPoint(e.contact.x,e.contact.y),.5)).toBe(e.id);
  if(slot===1){const p=scene.entities['character/1'];

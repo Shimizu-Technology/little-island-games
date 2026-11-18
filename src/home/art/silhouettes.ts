@@ -216,7 +216,7 @@ export function unionBounds(shapes: readonly HitShape[]): Bounds | undefined {
 export function paintedBounds(entity: SceneEntity): Bounds | undefined {
   const item = entity.item;
   if (!item) return;
-  const bounds = unionBounds(itemShapes(item, entity.bounds.width));
+  const bounds = unionBounds(entity.attachment.kind === "hand" && entity.shapes ? entity.shapes : itemShapes(item, entity.bounds.width));
   return bounds && { ...bounds, left: bounds.left + entity.contact.x, top: bounds.top + entity.contact.y };
 }
 
