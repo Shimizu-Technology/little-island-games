@@ -21,3 +21,9 @@ export function mealGroups(playback: MealPlayback, identity: (frame: MealPose) =
   cached.set(signature,result);
   return result;
 }
+
+/** Native Home can change path data within a mounted limb; static clients keep layers. */
+export function MealMorph({playback,children}:{playback:MealPlayback;children:(frame:MealPose)=>React.ReactNode}) {
+  const nodes=playback.frames.map(children);
+  return playback.renderMorph?.(nodes) ?? <>{nodes.map((node,index)=><MealLayer key={index} playback={playback} index={index}>{node}</MealLayer>)}</>;
+}

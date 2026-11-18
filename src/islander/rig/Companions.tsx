@@ -2,7 +2,7 @@ import React from 'react';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import { companionContacts, crabAnchors, crabOrigin, pipAnchors, pipOrigin, rigTransform } from './anchors';
 import { clampRig, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback } from './character';
-import { MealLayer, mealGroups } from './MealLayer';
+import { MealLayer, MealMorph, mealGroups } from './MealLayer';
 
 export type CompanionProps = RigLife & {
   base?: CharacterBase;
@@ -80,11 +80,11 @@ export function Pip({ base = 'stand', action = null, face, facing = 'right', siz
         <Path d="M94 63Q77 84 94 108M109 69Q94 86 108 102" fill="none" stroke="#FFE2A0" strokeWidth={7}/>
         <G data-joint="head-look" transform={`translate(${clampRig(gaze?.x,-1,1)*1.4} ${clampRig(gaze?.y,-1,1)*.6})`}><Circle cx={48} cy={78} r={8} fill="#FFF9E8" strokeWidth={0}/><PetEyes x={47} y={79} r={4} gaze={gaze} face={expression} blink={!reduced && (blink ?? life.blink)}/>
         <Ellipse cx={49} cy={95} rx={7} ry={4} fill="#E6986B" strokeWidth={0}/>{mealPlayback ? mealGroups(mealPlayback,f=>action==='drink'?'sip':f.meal.bite?'bite':f.face).map(({frame:f,indices}) => <MealLayer key={indices[0]} playback={mealPlayback} index={indices}><PetMouth meal={f.meal} x={34} y={94} face={action === 'drink' ? 'sip' : f.face}/></MealLayer>) : <PetMouth meal={meal} x={34} y={94} face={expression}/>}</G>
-        {mealPlayback ? mealGroups(mealPlayback,f=>f.meal.reach).map(({frame:f,indices}) => {
+        {mealPlayback ? <MealMorph playback={mealPlayback}>{f=>{
           const c = companionContacts('pip', base, action, f.meal);
-          return <MealLayer key={indices[0]} playback={mealPlayback} index={indices}>        <Path data-joint="fin" d={`M73 91Q${action ? 59 : 78} ${action ? 118 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 119 : 99} 73 91Z`} fill="#D89843"/>
-        {f.held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/ >}</MealLayer>;
-        }) : <>        <Path data-joint="fin" d={`M73 91Q${action ? 57 : 78} ${action ? 100 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 46 : 57} ${action ? 90 : 99} 73 91Z`} fill="#D89843"/>
+          return <><Path data-joint="fin" d={`M73 91Q${action ? 59 : 78} ${action ? 118 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 119 : 99} 73 91Z`} fill="#D89843"/>
+          {f.held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/>}</>;
+        }}</MealMorph> : <>        <Path data-joint="fin" d={`M73 91Q${action ? 59 : 78} ${action ? 118 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 119 : 99} 73 91Z`} fill="#D89843"/>
         <Held at={c.hand} facing={facing}>{held}</Held>
         {held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/ >}</>}
 

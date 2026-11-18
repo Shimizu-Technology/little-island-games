@@ -7,7 +7,7 @@ import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBa
 import { islanderAnchors, islanderOrigin, islanderSurface, rigTransform } from './anchors';
 import { RewardArt } from './Rewards';
 import { Hair } from './Hair';
-import { MealLayer, mealGroups } from './MealLayer';
+import { MealMorph } from './MealLayer';
 import { Face } from './Face';
 import { Shoes } from './Shoes';
 import { buildShape, Clothes, garmentFor, toneOf } from './Clothes';
@@ -81,7 +81,7 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
       {wear.sleeve === 'billow' && arm && <Path d={shortsShape(between(start, middle, .28), between(start, middle, .52), 1, radius-.5) + shortsShape(between(start, middle, .62), between(start, middle, .86), 1, radius-.7) + (front ? shortsShape(between(middle, end, .24), between(middle, end, .5), 1, radius-1) : '')} fill={colors.primary} strokeWidth={0}/>}
       {wear.sleeve === 'bulky' && arm && <Path d={shortsShape(between(start, middle, .86), between(start, middle, 1.14), .9, radius+.2)} fill={colors.trim} strokeWidth={.9}/>}
       {!arm && <Shoes look={look} foot={end} back={!front} lifted={end[1]<123} compact={compact}/>}
-      {arm && side === 'right' && <RewardArt look={look} pose={activePose} layer="wrist"/>}
+      {arm && side === 'right' && look.accessory === 'calculator-watch' && <RewardArt look={look} pose={activePose} layer="wrist"/>}
     </G>;
   };
   const hand = (side: Side, activePose = pose) => { const [x, y] = activePose.joints[`${side}Hand`], s = side === 'left' ? 1 : -1; return <Path key={side} data-mitten={side} d={`M${x - s * 1.9} ${y - 2}Q${x - s * 2.6} ${y + 2.5} ${x} ${y + 3}Q${x + s * 2.6} ${y + 3} ${x + s * 2.3} ${y}Q${x + s * 3.8} ${y - 1} ${x + s * 2.6} ${y - 3}Q${x + s * 1.9} ${y - 3} ${x + s * 1.5} ${y - 2}Z`} fill={wear.sleeve === 'bulky' ? colors.trim : skin} strokeWidth={1.2}/>; };
@@ -95,18 +95,13 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
     <G data-layer="body"><Path d={`${compact ? `M${hx+4} ${hy+r-4}L44 ${sy+3}H36L${hx-4} ${hy+r-4}Z` : `M${hx-4} ${hy+r-4}L36 ${sy-3}Q33 ${sy-3} 29 ${sy}L33 ${sy+10}L34 ${hip-2}H46L47 ${sy+10}L51 ${sy}Q47 ${sy-3} 44 ${sy-3}L${hx+4} ${hy+r-4}Z`} ${['long-straight','long-wavy','bob','braids'].includes(look.hairStyle) ? '' : `M${hx-r+1} ${hy+7}q-5-2-4 2q0 4 4 4M${hx+r-1} ${hy+7}q5-2 4 2q0 4-4 4`}`} fill={skin}/>
       {!compact && <><Path data-head="soft-square" d={`M${hx-r} ${hy-9}Q${hx-r} ${hy-28} ${hx} ${hy-28}Q${hx+r} ${hy-28} ${hx+r} ${hy-9}L${hx+r} ${hy+11}Q${hx+r} ${hy+28} ${hx} ${hy+28}Q${hx-r} ${hy+28} ${hx-r} ${hy+11}Z`} fill={skin}/><Path d={`M${hx+24} ${hy-7}V${hy+10}Q${hx+24} ${hy+24} ${hx+4} ${hy+26}Q${hx+28} ${hy+29} ${hx+28} ${hy+11}V${hy-7}Z`} fill="#7E5142" fillOpacity={.10} strokeWidth={0}/></>}</G>
     <G data-layer="clothing"><Clothes look={look} pose={pose} colors={colors}/>{compact && look.accessory === 'backpack' && backpack}</G>
-    <G data-layer="front-limbs">{front && limb(rearArm, true)}{!mealPlayback && limb(frontArm, true)}{mealPlayback && mealGroups(mealPlayback,f=>f.meal.reach).map(({frame:f,indices}) => <MealLayer key={indices[0]} playback={mealPlayback} index={indices}>{limb(frontArm, true, characterPose(mealBase!, actionForMeal, 0, 0, f.meal, gaze))}</MealLayer>)}</G>
+    <G data-layer="front-limbs">{front && limb(rearArm, true)}{!mealPlayback && limb(frontArm, true)}{mealPlayback && <MealMorph playback={mealPlayback}>{f=>limb(frontArm, true, characterPose(mealBase!, actionForMeal, 0, 0, f.meal, gaze))}</MealMorph>}</G>
     { !meal && <G data-layer="held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>}
     <G data-layer="hands">{front || compact ? <>{hand('left')}{!mealPlayback && hand('right')}</> : hand(frontArm)}</G>
     <RewardArt look={look} pose={pose} layer="neckwear"/><G data-layer="front-hair"><Hair look={look} pose={pose}/></G>
     <G data-layer="face"><Face look={look} pose={pose} expression={expression} blink={blink} gaze={gaze} meal={meal} playback={mealPlayback} sipping={actionForMeal === 'drink'}/></G>
     {meal && !mealPlayback && <G data-layer="meal-held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>}
-    {mealPlayback && mealGroups(mealPlayback,f=>f.meal.reach).map(({frame:f,indices}) => {
-      const p = characterPose(mealBase!, actionForMeal, 0, 0, f.meal, gaze);
-      return <MealLayer key={indices[0]} playback={mealPlayback} index={indices}>
-        {hand('right', p)}
-      </MealLayer>;
-    })}
+    {mealPlayback && <MealMorph playback={mealPlayback}>{f=>hand('right',characterPose(mealBase!,actionForMeal,0,0,f.meal,gaze))}</MealMorph>}
     <G data-layer="hat" transform={`translate(${a.headTop[0]} ${a.headTop[1]+(compact?0:look.hat==='flower-crown'?2.5:0)}) scale(${compact ? (look.hat==='flower-crown' ? .6 : 1) : look.hat==='flower-crown' ? 1.2 : 1.12} ${compact && look.hat==='flower-crown' ? .6 : 1})`}>
       {look.hat === 'sunhat' && (compact ? <G fill="#F4CC76"><Path d="M-11 3L-10 -2Q0 -5 10 -2L11 3Z"/><Path d="M-15 4Q0 0 15 4Q0 8-15 4Z"/></G> : <G fill="#F4CC76"><Path d="M-19 9C-19 -6 -10 -9 0 -9C10 -9 19 -6 19 9ZM-32 10C-28 5 -18 6 0 6C18 6 28 5 32 10C25 17 -25 17 -32 10Z"/><Path d="M-19 5C-10 9 10 9 19 5L19 1C10 5 -10 5 -19 1Z" fill="#E2856C" strokeWidth={.8}/></G>)}
       {look.hat === 'cap' && (compact ? <G fill={colors.secondary}><Path d="M-12 4Q-11-5 0-5Q11-5 12 4Z"/></G> : <G fill={colors.secondary}><Path d="M-25 11C-26 -7 -11 -10 0 -10C11 -10 26 -7 25 11C12 7 -12 7 -25 11ZM0 -10V7M-1.4 -10.6h2.8"/><Path d={front ? 'M-23 9C-12 5 12 5 23 9C27 12 24 16.4 20 15.6C8 13 -8 13 -20 15.6C-24 16.4 -27 12 -23 9Z' : 'M-8 6Q0 3 8 6V10.6Q0 8 -8 10.6Z'} fill={front ? colors.primary : '#FFF3DC'}/></G>)}

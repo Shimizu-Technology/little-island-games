@@ -10,7 +10,7 @@ export type Gaze = Readonly<{ x: number; y: number }>;
 /** Transient meal progress; never part of a saved character. */
 export type MealFrame = Readonly<{ reach: number; bite: boolean; chew: boolean }>;
 export type MealPose = Readonly<{ time: number; meal: MealFrame; held: ReactNode; face: CharacterFace }>;
-export type MealPlayback = Readonly<{ progress: SharedValue<number>; frames: readonly MealPose[]; renderLayer: (index: number | readonly number[], children: ReactNode) => ReactNode }>;
+export type MealPlayback = Readonly<{ progress: SharedValue<number>; frames: readonly MealPose[]; renderMorph?: (frames: readonly ReactNode[]) => ReactNode; renderLayer: (index: number | readonly number[], children: ReactNode) => ReactNode }>;
 export type Facing = 'left' | 'right';
 export type CharacterRenderInput = Readonly<{
   slot: 0 | 1 | 2;

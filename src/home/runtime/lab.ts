@@ -35,6 +35,14 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.home.characters = [{ slot, anchor: 'floor', pose: 'stand', x: 8, y: 7 }];
     return state;
   }])),
+  ...Object.fromEntries((['stool','chair','bed','bubble-bath','toy-box'] as const).map(item=>[`rig-landing-${item}`,()=>{
+    const state=reviewRoom([
+      {...instance('landing',item,0,0),at:roomPoint(520,510),powered:item==='toy-box'},
+      {...instance('snack','mango',0,0),at:roomPoint(220,525)},
+    ]);
+    state.rooms.home.characters=[{slot:0,anchor:'floor',pose:'stand',x:6,y:7}];
+    return state;
+  }])),
   starter: () => migrateHome(starterHome()) ?? starterHome(),
   "feed-stand": () => feedRoom([], { slot: 0, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   "feed-sit": () => feedRoom([instance("seat", "stool", 6, 7)], { slot: 0, anchor: "seat", pose: "sit", seatId: "seat", socket: { itemId: "seat", socketId: "seat" } }),

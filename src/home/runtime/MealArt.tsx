@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { cancelAnimation, useAnimatedProps, useAnimatedStyle, useDerivedValue, type SharedValue, Easing, runOnJS, ReduceMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { ClipPath, Defs, G, Path } from 'react-native-svg';
+import {mealPaths} from './MealPaths';
 import {heldDrinkScale} from '../art/heldDrink';
 import { HandProp } from '../art/PropShape';
 import type { HoldableId } from '../art/living';
@@ -81,6 +82,9 @@ export function MealArt({ input, meal, reduced, renderCharacter, onPresented, on
   const frameRequest = useRef<number | undefined>(undefined);
   const finish = useCallback(() => { if (live.current) onFinished?.(); }, [onFinished]);
   const playback = useMemo(() => !meal ? undefined : ({ progress,
+    renderMorph:(nodes:readonly React.ReactNode[])=>mealPaths(nodes,current,value=>{
+      'worklet';return frameIndex(value,meal.key);
+    },(index,children)=><OpacityLayer current={current} mealKey={meal.key} index={index}>{children}</OpacityLayer>),
     renderLayer:(index:number | readonly number[],children:React.ReactNode)=><OpacityLayer current={current} mealKey={meal.key} index={index}>{children}</OpacityLayer>,
     frames:mealTimes.map((time,index) => {
       const sampled = mealFrame(time,reduced);
