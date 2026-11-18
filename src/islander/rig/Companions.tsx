@@ -2,6 +2,7 @@ import React from 'react';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import { companionContacts, crabAnchors, crabOrigin, pipAnchors, pipOrigin, rigTransform } from './anchors';
 import { clampRig, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback } from './character';
+import { MealLayer } from './MealLayer';
 
 export type CompanionProps = RigLife & {
   base?: CharacterBase;
@@ -17,7 +18,6 @@ export type CompanionProps = RigLife & {
   limbLag?: number;
   reduced?: boolean;
 };
-import { MealLayer } from './MealLayer';
 const ink = '#493E38';
 function PetEyes({ x, y, face, blink, r = 3, gaze }: { x: number; y: number; face: string; blink: boolean; r?: number; gaze?: Gaze }) {
   return face === 'sleepy' || blink ? <Path d={`M${x-r-1} ${y}q${r+1} ${r+1} ${2*r+2} 0`} fill="none" strokeWidth={1.8}/> : <G data-gaze="pupils" transform={`translate(${clampRig(gaze?.x, -1, 1) * 2} ${clampRig(gaze?.y, -1, 1) * 1.5})`}><Circle cx={x} cy={y} r={face === 'surprised' ? r+1 : r} fill={ink} strokeWidth={0}/><Circle cx={x-1} cy={y-1} r={1} fill="#FFF8E9" strokeWidth={0}/></G>;

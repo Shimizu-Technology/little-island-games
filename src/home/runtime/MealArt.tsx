@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedProps, type SharedValue, Easing, runOnJS, ReduceMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { ClipPath, Defs, G, Path } from 'react-native-svg';
+import {heldDrinkScale} from '../art/heldDrink';
 import { HandProp } from '../art/PropShape';
 import type { HoldableId } from '../art/living';
 import { HomeCharacter, type CharacterRenderer } from '../characterRenderer';
@@ -19,7 +20,7 @@ function foodArt(input: CharacterRenderInput, meal: Meal, time: number, index: n
   const clip = `meal-${input.slot}-${meal.key}-${index}`;
   return <G data-meal-food={meal.food.item} opacity={meal.action === 'eat' && time > 600 ? (MEAL_MS - time) / 150 : 1}>
     {bitten && <Defs><ClipPath id={clip}><Path d="M0 14Q5 17 7 12Q13 15 14 9Q20 11 20 4L23 0H24V24H0Z"/></ClipPath></Defs>}
-    <G transform={input.slot === 1 && meal.action === 'drink' ? `translate(12 12) scale(1.25) rotate(${mealFrame(time, reduced).reach * 5}) translate(-12 -12)` : undefined} clipPath={bitten ? `url(#${clip})` : undefined}>
+    <G transform={input.slot === 1 && meal.action === 'drink' ? `translate(12 12) scale(${heldDrinkScale(1,input.slot)}) rotate(${mealFrame(time, reduced).reach * 5}) translate(-12 -12)` : undefined} clipPath={bitten ? `url(#${clip})` : undefined}>
       <HandProp longStraw={input.slot === 1 && meal.action === 'drink'} id={meal.food.item as HoldableId} tint={meal.food.tint} state={{ on: meal.food.powered, empty: meal.action === 'drink' && time >= 540 }}/>
     </G>
   </G>;

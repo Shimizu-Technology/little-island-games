@@ -1,3 +1,4 @@
+import {heldDrinkScale} from '../art/heldDrink';
 import { MealArt } from "./MealArt";
 import type { Meal } from "./meal";
 import type { Gaze } from "../../islander/rig/character";
@@ -42,6 +43,7 @@ export const DecorArt = memo(function DecorArt({
 
 /** The art origin and hit geometry both use CORE's semantic contact. */
 export function artFrame(entity: SceneEntity, carry = false) {
+  if (entity.item && entity.attachment.kind === 'hand' && capabilityOf(entity.item.item).edible === 'drink') return entity.bounds;
   if (entity.item) {
     const size = itemSize(entity.item);
     return { left: -size / 2, top: -size * 0.85, width: size, height: size };
@@ -84,14 +86,12 @@ export const EntityArt = memo(function EntityArt({
   faceOverride?: Face;
 }) {
   const frame = entity.character ? renderAnchors(entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
-  if (entity.item && entity.attachment.kind === 'hand' && entity.body?.edible === 'drink') {
+  if (entity.item && entity.attachment.kind === 'hand' && capabilityOf(entity.item.item).edible === 'drink') {
     const slot = Number(entity.attachment.character.split('/').at(-1)) as 0 | 1 | 2;
-    const unit = species[slot].unit;
+    const unit = heldDrinkScale(species[slot].unit,slot);
     return <Svg width={frame.width} height={frame.height} style={{ overflow: 'visible' }} accessible={false}>
       <G transform={`translate(${-frame.left} ${-frame.top}) scale(${unit}) translate(-12 -12)`}>
-        <G transform={slot === 1 ? "translate(12 12) scale(1.25) translate(-12 -12)" : undefined}>
-          <HandProp longStraw={slot === 1} id={entity.item.item as HoldableId} tint={entity.item.tint} state={{ empty: entity.item.empty }}/>
-        </G>
+        <HandProp longStraw={slot === 1} id={entity.item.item as HoldableId} tint={entity.item.tint} state={{ empty: entity.item.empty }}/>
       </G>
     </Svg>;
   }
