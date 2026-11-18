@@ -9,9 +9,10 @@ import {buildScene} from '../src/home/scene/graph';
 import {labFixtures} from '../src/home/runtime/lab';
 import {instance} from '../src/home/model';
 const clock=vi.hoisted(()=>({shared:undefined as any}));
-vi.mock('react-native',()=>({View:'view'}));
+vi.mock('react-native-gesture-handler',()=>({Gesture:{Manual:()=>({})}}));
+vi.mock('react-native',()=>({View:'view',Platform:{OS:'ios'}}));
 vi.mock('react-native-svg',()=>Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
-vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>v,cancelAnimation:()=>{},runOnJS:(fn:any)=>fn,
+vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>v,useAnimatedReaction:()=>{},cancelAnimation:()=>{},runOnJS:(fn:any)=>fn,
  useSharedValue:(v:number)=>{const shared=React.useRef({value:v,set(n:number){this.value=n;}}).current;clock.shared=shared;return shared;},
  useDerivedValue:(fn:any)=>({get value(){return fn();}}),useAnimatedStyle:(fn:any)=>({evaluate:fn}),useAnimatedProps:(fn:any)=>({evaluate:fn})}));
 vi.mock('../src/home/art/Items',()=>({ItemArt:()=>null}));
@@ -86,5 +87,20 @@ it('leaves offered food at the contact while the empty hand approaches it',async
  const progress=clock.shared,food=tree.root.findByProps({testID:'meal-held-food'});
  const at=(ms:number)=>{progress.value=8000+ms;return food.props.style[1].evaluate().transform.slice(0,2);};
  expect(at(0)).toEqual(at(180));expect(at(90)).toEqual(at(180));expect(at(540)).not.toEqual(at(180));
+ await act(async()=>tree.unmount());
+});
+
+it('does not repaint prewarmed carry and landing rigs for a resting friends transient meal',async()=>{
+ const {DragOverlay}=await import('../src/home/runtime/DragOverlay');
+ const {buildingLayout}=await import('../src/home/camera');
+ const scene=buildScene(labFixtures['rig-meal']()),hero=scene.entities['character/0'];
+ const interaction={slots:{value:[{},{}]},camera:{value:{a:1}},clock:{value:0},poseLayouts:{value:{}}}as any;
+ const render=vi.fn(()=>React.createElement('body')),building=buildingLayout(4);
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<DragOverlay scene={scene} pickups={[]} interaction={interaction} building={building} reduced={false} renderCharacter={render}/>);});
+ const before=render.mock.calls.length;
+ const next={...scene,revision:'eating',entities:{...scene.entities,[hero.id]:{...hero,action:'eat' as const}}};
+ await act(async()=>tree.update(<DragOverlay scene={next} pickups={[]} interaction={interaction} building={building} reduced={false} renderCharacter={render}/>));
+ expect(render.mock.calls.length).toBe(before);
  await act(async()=>tree.unmount());
 });

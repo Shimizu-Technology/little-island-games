@@ -145,6 +145,6 @@ export const EntityArt = memo(function EntityArt({
 }, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.tilt === b.tilt && a.limbLag === b.limbLag &&
-  a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && a.entity.action === b.entity.action &&
+  a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&
   a.entity.character?.slot === b.entity.character?.slot && a.entity.children.length === b.entity.children.length &&
   JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));

@@ -43,7 +43,11 @@ const OverlayGroup = memo(function OverlayGroup({
   const { scene, id } = pickup;
   const unready = interaction.unready;
   useEffect(() => () => unready?.(id), [id, unready]);
-  const root = scene.entities[id];
+  const original=scene.entities[id];
+  // Idle landing/carry banks never play a resting friend's transient meal.
+  // The live capture still uses its exact source and destination.
+  const root=useMemo<SceneEntity>(()=>pickup.generation===0 && original.character
+    ? {...original,action:original.children.length?'hold':null}:original,[original,pickup.generation]);
   const index = root.character ? pickup.slot : 0;
   const globalSlots = interaction.slots, globalClock = interaction.clock;
   const idle = useMemo(() => [emptyDragSlot(), emptyDragSlot()], []);
