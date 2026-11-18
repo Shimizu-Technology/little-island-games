@@ -154,7 +154,7 @@ it('H2 a pre-mounted prop follows the second pointer even while pickup JS is wit
  await act(async()=>tree.unmount());
 });
 
-it('H4b footprints retain a native anchor, follow the live floor proposal and defer semantic target cues', async () => {
+it('H4b landing has exactly one cue: floor footprints or a furniture outline', async () => {
  const {LandingPreview}=await import('../src/home/runtime/LandingPreview');
  const {roomOrigin}=await import('../src/home/camera');
  const c=context('character/0'),building=buildingLayout(4),origin=roomOrigin(0,building);
@@ -171,6 +171,12 @@ it('H4b footprints retain a native anchor, follow the live floor proposal and de
  expect(tree.root.findAllByProps({testID:'landing-footprints'})).toHaveLength(1);
  proposal.kind='socket';
  expect(active[0].props.style[1].evaluate().opacity).toBe(0);
+ const target:any={id:'seat',kind:'socket',contact:proposal.contact};
+ const cueInteraction:any={restingFlags:{value:{dragTargets:['seat']}}};
+ let cue!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{cue=TestRenderer.create(<TargetCue target={target} interaction={cueInteraction}/>);});
+ expect(cue.root.findByProps({testID:'socket-landing-outline'}).props.style[1].evaluate().opacity).toBe(1);
+ await act(async()=>cue.unmount());
  proposal.kind='floor';proposal.room='kitchen';proposal.contact={x:300,y:500};
  const nextOrigin=roomOrigin(1,building);
  expect(active[0].props.style[1].evaluate().transform).toEqual([{translateX:nextOrigin.x+300},{translateY:nextOrigin.y+500}]);
@@ -243,4 +249,36 @@ it('R2-P3-3 unmounting the owning drawer cell cancels the capture and clears its
  const ghost={value:{item:'chair',active:true,x:100,y:100},set(v:any){this.value=v;}};
  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<DesignTools state={c.state} ownership={{}} vertical={false} ghost={ghost as any} onChoose={()=>{}} onDrop={()=>{}} onDragItem={()=>{}} interaction={c.interaction} offset={{value:{x:0,y:0}} as any} dispatch={()=>{}} onClose={()=>{}}/>);});
  await act(async()=>tree.unmount());expect(cancel).toHaveBeenCalledExactlyOnceWith(-500,true);expect(ghost.value.active).toBe(false);
+});
+
+it('a food drag draws no shadow across the face for mouth proposals',async()=>{
+ const c=context('kitchen/item/bowl');
+ const id=c.slot.id, root=c.scene.entities[id];
+ const pickup={id,slot:0,generation:1,epoch:0,scene:c.scene,grip:{x:0,y:0}} as Pickup;
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
+ const shadow=tree.root.findByProps({testID:`drag-shadow-${id}`});
+ (c.slot as any).proposal={kind:'mouth',room:root.room,contact:root.contact,attachment:{kind:'hand',character:'character/0'}};
+ expect(shadow.props.style[1].evaluate().opacity).toBe(0);
+ await act(async()=>tree.unmount());
+});
+
+it('a meal mounts only in the open copy and hides the committed drink from its first action frame',async()=>{
+ const c=context('character/0');
+ c.interaction.slots.value=[{} as any,{} as any];
+ const state=labHome('rig-meal');
+ state.rooms.home.characters[0].holding='rig-drink';
+ state.rooms.home.characters[0].action='drink';
+ const scene=buildScene(state), friend=scene.entities['character/0'];
+ const meal={key:3,food:state.rooms.home.instances.find(i=>i.id==='rig-drink')!,action:'drink' as const};
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<SceneView state={state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} liveRoom="home" meals={{[friend.id]:meal}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
+ const {EntityArt}=await import('../src/home/runtime/EntityArt');
+ const art=tree.root.findAllByType(EntityArt);
+ expect(art.filter(n=>n.props.meal)).toHaveLength(1);
+ await act(async()=>{tree.update(<SceneView state={state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
+ const drink=tree.root.findByProps({testID:'object-rig-drink'});
+ const paint=drink.findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0];
+ expect(paint.props.style.evaluate().opacity).toBe(0);
+ await act(async()=>tree.unmount());
 });

@@ -355,20 +355,24 @@ export function HomeScreen({
       });
     };
     mealFinishers.current[target.owner] = { key, finish, presented: false };
-    // Fallback for an interrupted/unmounted presentation. Consumption already happened.
-    reactionTimers.current[target.owner] = setTimeout(finish, MEAL_MS);
+    // Only an action without presentation uses a timer. Visible art completes from playback.
+    if (!food) reactionTimers.current[target.owner] = setTimeout(finish, MEAL_MS);
   };
   const onMealPresented = useCallback((id: string, key: number) => {
     const entry = mealFinishers.current[id];
     if (!entry || entry.key !== key || entry.presented || live.current.meals[id]?.key !== key) return;
     entry.presented = true;
     clearTimeout(reactionTimers.current[id]);
-    reactionTimers.current[id] = setTimeout(entry.finish, MEAL_MS);
+    delete reactionTimers.current[id];
+  }, []);
+  const onMealFinished = useCallback((id: string, key: number) => {
+    const entry = mealFinishers.current[id];
+    if (entry?.key === key && entry.presented) entry.finish();
   }, []);
   React.useEffect(() => {
     // A restored or interrupted action completes without changing its supported base.
     for (const entity of Object.values(scene.entities)) {
-      if (!entity.character || !["eat", "drink"].includes(entity.action ?? "") || reactionTimers.current[entity.id])
+      if (!entity.character || !["eat", "drink"].includes(entity.action ?? "") || meals[entity.id] || reactionTimers.current[entity.id])
         continue;
       reactionTimers.current[entity.id] = setTimeout(() => {
         delete reactionTimers.current[entity.id];
@@ -377,7 +381,7 @@ export function HomeScreen({
           live.current.store.dispatch({ type: "finish-action", slot: latest.character.slot, roomId: latest.room });
       }, 750);
     }
-  }, [scene]);
+  }, [scene, meals]);
 
   const onCommit = useCallback(
     (index: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => {
@@ -441,6 +445,9 @@ export function HomeScreen({
       for (const id of new Set([...groupIds(pickup.scene, pickup.id), ...(owner ? [owner] : [])])) {
         if (pickup.scene.entities[id]?.character) {
           wake(id);
+          clearTimeout(reactionTimers.current[id]);
+          delete reactionTimers.current[id];
+          delete mealFinishers.current[id];
           setMeals(current => { const next = { ...current }; delete next[id]; return next; });
           setReactions(current => { const next = { ...current }; delete next[id]; return next; });
         }
@@ -703,7 +710,7 @@ export function HomeScreen({
   }, [viewport, building]);
   React.useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") { interaction.cancelAll(); setMeals({}); setReactions({}); }
+      if (state !== "active") { interaction.cancelAll(); clearMealArt(); }
     });
     return () => {
       sub.remove();
@@ -958,6 +965,7 @@ export function HomeScreen({
             reactions={reactions}
             meals={meals}
             onMealPresented={onMealPresented}
+            onMealFinished={onMealFinished}
             sleeping={sleeping}
             moods={delight.moods}
             effects={delight.effects}
@@ -1001,7 +1009,7 @@ export function HomeScreen({
                   setFrameReport(interaction.frameTimes.get());
                 }}
               >
-                <Text style={{ backgroundColor: "#FFF8E9", padding: 12 }}>Frames</Text>
+                <Text maxFontSizeMultiplier={1.2} style={{ backgroundColor: "#FFF8E9", padding: 12 }}>Frames</Text>
               </Pressable>
             </View>
           )}

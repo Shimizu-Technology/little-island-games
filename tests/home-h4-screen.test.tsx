@@ -5,6 +5,7 @@ import { HomeScreen } from '../src/home/HomeScreen';
 import { instance, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { roomPoint } from '../src/home/scene/types';
+import { apply } from '../src/home/scene/proposal';
 import { resolve } from '../src/home/scene/proposal';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { roomIds } from '../src/home/catalogMore';
@@ -423,7 +424,10 @@ it('H4b retains only transient food art after consumption, replaces it for a new
   const meal = harness.scene.meals[friend.id];
   expect(meal.food).toEqual(food[0].item);
   expect(harness.scene.scene.entities[food[0].id]).toBeUndefined();
-  expect(JSON.stringify(harness.scene.state)).not.toContain('mealSerial');
+  const proposal = resolve({ ...initial.rooms.kitchen, entities: initial.entities }, food[0], mouth.contact, { scale: .5, release: true });
+  const applied = apply(state, proposal);
+  expect('state' in applied).toBe(true);
+  if ('state' in applied) expect(harness.scene.state).toEqual(applied.state);
   await act(async () => { vi.advanceTimersByTime(300); });
   await drop(state, food[1].id, 'kitchen', mouth.contact, { previousTarget: mouth.id });
   expect(harness.scene.meals[friend.id].key).toBeGreaterThan(meal.key);
@@ -471,7 +475,7 @@ it('H4b the committed drink stays empty and regrabbing its real container ends t
   expect(harness.scene.scene.entities['character/0'].action).not.toBe('drink');
 });
 
-it('H4b a slow native mount gets a full 750 ms presentation after layout, with consumption already committed', async () => {
+it('H4b playback completion owns the meal end even after a long JS stall', async () => {
   const state = labFixtures['rig-meal']();
   await open(state);
   const scene = harness.scene.scene;
@@ -482,15 +486,15 @@ it('H4b a slow native mount gets a full 750 ms presentation after layout, with c
   expect(harness.scene.scene.entities[food.id]).toBeUndefined();
   await act(async () => { vi.advanceTimersByTime(300); });
   await act(async () => harness.scene.onMealPresented('character/0', meal.key));
-  await act(async () => { vi.advanceTimersByTime(749); });
-  expect(harness.scene.meals['character/0'].key).toBe(meal.key);
+  await act(async () => { vi.advanceTimersByTime(2000); });
+  expect(harness.scene.meals['character/0']).toMatchObject({key:meal.key});
   // A second layout must not extend the meal again.
   await act(async () => harness.scene.onMealPresented('character/0', meal.key));
-  await act(async () => { vi.advanceTimersByTime(2); });
+  await act(async () => harness.scene.onMealFinished('character/0', meal.key));
   expect(harness.scene.meals['character/0']).toBeUndefined();
 });
 
-it('H4b a stale native presentation callback cannot extend a newer meal', async () => {
+it('H4b stale presentation and completion callbacks cannot finish a newer meal', async () => {
   const state = labFixtures['rig-meal']();
   await open(state);
   const scene = harness.scene.scene;
@@ -502,7 +506,12 @@ it('H4b a stale native presentation callback cannot extend a newer meal', async 
   await drop(state, food[1].id, 'home', mouth.contact, { previousTarget: mouth.id });
   await act(async () => { vi.advanceTimersByTime(100); });
   await act(async () => harness.scene.onMealPresented('character/0', old.key));
-  await act(async () => { vi.advanceTimersByTime(651); });
+  const current = harness.scene.meals['character/0'];
+  await act(async () => harness.scene.onMealPresented('character/0', current.key));
+  await act(async () => harness.scene.onMealFinished('character/0', old.key));
+  await act(async () => { vi.advanceTimersByTime(2000); });
+  expect(harness.scene.meals['character/0']).toMatchObject({key:current.key});
+  await act(async () => harness.scene.onMealFinished('character/0', current.key));
   expect(harness.scene.meals['character/0']).toBeUndefined();
 });
 

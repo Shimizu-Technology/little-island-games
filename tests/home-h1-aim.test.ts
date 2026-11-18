@@ -303,7 +303,8 @@ describe("HC-03 companion anchors", () => {
       expect(String(fin.props.d)).toContain(`${contacts.hand[0]} ${contacts.hand[1]}`);
     }
     const { mouth, hand } = companionContacts("pip", "stand", null);
-    expect(hand).toEqual([65, 103]);
+    expect(hand).toEqual([65, 116]);
+    expect(hand[1]).toBeGreaterThan(mouth[1] + 20);
     const a = pipAnchors("stand");
     expect(a.mouth.x).toBeCloseTo(mouth[0] - 75);
     expect(a.mouth.y).toBeCloseTo(mouth[1] - 117);

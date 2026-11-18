@@ -147,7 +147,7 @@ const OverlayGroup = memo(function OverlayGroup({
     const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
     const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced, slot.duration) : 1;
     return {
-      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
+      opacity: p?.kind !== "mouth" && slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
       transform: [{ translateX: groundX - footprint.width / 2 }, { translateY: groundY - footprint.height / 2 }, { scale: 1 - 0.15 * lift }],
     };
   });

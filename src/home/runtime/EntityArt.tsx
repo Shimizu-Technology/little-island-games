@@ -4,6 +4,10 @@ import type { Gaze } from "../../islander/rig/character";
 import { HomeCharacter, type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
 import { View } from "react-native";
+import Svg, { G } from 'react-native-svg';
+import { HandProp } from '../art/PropShape';
+import { species } from '../scene/species';
+import type { HoldableId } from '../art/living';
 import { ItemArt } from "../art/Items";
 import { MoreItemArt } from "../art/More";
 import { moreCatalog } from "../catalogMore";
@@ -59,11 +63,13 @@ export const EntityArt = memo(function EntityArt({
   blink = false,
   meal,
   onMealPresented,
+  onMealFinished,
   gaze,
 }: {
   entity: SceneEntity;
   meal?: Meal;
   onMealPresented?: () => void;
+  onMealFinished?: () => void;
   gaze?: Gaze;
   /** HM-11: the closed-eye copy a resting friend swaps to by opacity. */
   blink?: boolean;
@@ -78,6 +84,17 @@ export const EntityArt = memo(function EntityArt({
   faceOverride?: Face;
 }) {
   const frame = entity.character ? renderAnchors(entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
+  if (entity.item && entity.attachment.kind === 'hand' && entity.body?.edible === 'drink') {
+    const slot = Number(entity.attachment.character.split('/').at(-1)) as 0 | 1 | 2;
+    const unit = species[slot].unit;
+    return <Svg width={frame.width} height={frame.height} style={{ overflow: 'visible' }} accessible={false}>
+      <G transform={`translate(${-frame.left} ${-frame.top}) scale(${unit}) translate(-12 -12)`}>
+        <G transform={slot === 1 ? "translate(12 12) scale(1.25) translate(-12 -12)" : undefined}>
+          <HandProp longStraw={slot === 1} id={entity.item.item as HoldableId} tint={entity.item.tint} state={{ empty: entity.item.empty }}/>
+        </G>
+      </G>
+    </Svg>;
+  }
   if (entity.item)
     return (
       <View style={{ width: frame.width, height: frame.height }}>
@@ -109,10 +126,10 @@ export const EntityArt = memo(function EntityArt({
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
-      {meal && !carry ? <MealArt key={meal.key} input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter} onPresented={onMealPresented}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
+      {meal && !carry ? <MealArt key={meal.key} input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter} onPresented={onMealPresented} onFinished={onMealFinished}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
     </View>
   );
-}, (a, b) => a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && a.entity.action === b.entity.action &&

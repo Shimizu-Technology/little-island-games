@@ -28,6 +28,13 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.home.characters[0] = { slot: 0, anchor: "floor", pose: "stand", x: 8, y: 7 };
     return state;
   },
+  ...Object.fromEntries(([0, 1, 2] as const).map(slot => [`rig-menu-${slot}`, () => {
+    const state = reviewRoom(['mango', 'banana', 'rice-ball', 'cupcake', 'coconut-drink', 'juice'].map((id, n) => ({
+      ...instance(`menu-${n}`, id as Instance['item'], 0, 0), at: roomPoint(220 + n * 85, 525),
+    })));
+    state.rooms.home.characters = [{ slot, anchor: 'floor', pose: 'stand', x: 8, y: 7 }];
+    return state;
+  }])),
   starter: () => migrateHome(starterHome()) ?? starterHome(),
   "feed-stand": () => feedRoom([], { slot: 0, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   "feed-sit": () => feedRoom([instance("seat", "stool", 6, 7)], { slot: 0, anchor: "seat", pose: "sit", seatId: "seat", socket: { itemId: "seat", socketId: "seat" } }),

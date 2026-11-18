@@ -29,9 +29,9 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
   const style = useCueStyle(target, interaction);
   if (target.kind === "mouth") return <Animated.View testID="mouth-target-halo" pointerEvents="none"
     accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-    style={[{ position: "absolute", left: target.contact.x - 25, top: target.contact.y - 3, width: 50, height: 26 }, style]}>
-    <Svg width={50} height={26} viewBox="0 0 50 26"><Path d="M8 3Q0 13 8 23M42 3Q50 13 42 23"
-      fill="none" stroke="#FFF5CF" strokeWidth={7} strokeLinecap="round"/><Path d="M8 3Q0 13 8 23M42 3Q50 13 42 23"
+    style={[{ position: "absolute", left: (target.face?.x ?? target.contact.x) - (target.face?.headRadius ?? 40) - 34, top: target.contact.y - 15, width: 24, height: 24 }, style]}>
+    <Svg width={24} height={24} viewBox="0 0 24 24"><Path d="M8 3Q1 12 8 21M16 3Q23 12 16 21"
+      fill="none" stroke="#FFF5CF" strokeWidth={6} strokeLinecap="round"/><Path d="M8 3Q1 12 8 21M16 3Q23 12 16 21"
       fill="none" stroke="#C68A50" strokeWidth={2} strokeLinecap="round"/></Svg>
   </Animated.View>;
   if (target.kind === "hand") return <Animated.View testID="open-hand-preview" pointerEvents="none"
@@ -44,6 +44,10 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
     <View style={{ position: "absolute", left: 0, top: 20, width: 14, height: 8, borderRadius: 5,
       borderWidth: 2, borderColor: "#477D60", backgroundColor: "#E8F7C8", transform: [{ rotate: "35deg" }] }} />
   </Animated.View>;
+  if (target.kind === 'socket' || target.kind === 'container') return <Animated.View testID="socket-landing-outline" pointerEvents="none"
+    accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+    style={[{ position: 'absolute', left: target.contact.x - 26, top: target.contact.y - 12, width: 52, height: 24,
+      borderRadius: 16, borderWidth: 3, borderColor: '#477D60' }, style]} />;
   if (target.kind !== "surface") return null;
   return (
     <Animated.View

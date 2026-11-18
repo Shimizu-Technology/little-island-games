@@ -61,10 +61,10 @@ export const pipOrigin = (base: CharacterBase): Point => base === 'carry' ? [75,
 export function companionContacts(species: 'crab' | 'pip', base: CharacterBase, action: CharacterAction = null, meal?: MealFrame) {
   const reach = clampRig(meal?.reach, 0, 1);
   if (species === 'crab') {
-    const hand: Point = action === 'eat' || action === 'drink' ? [97 - 29 * reach, 60 + 20 * reach] : base === 'carry' ? [100, 70] : [97, 53];
+    const hand: Point = action === 'eat' || action === 'drink' ? [97 - 29 * reach, 53 + 27 * reach] : base === 'carry' ? [100, 70] : [97, 53];
     return { hand, mouth: [60, 73] as Point, head: [60, 42] as Point };
   }
-  const hand: Point = action === 'eat' || action === 'drink' ? [65 - 25 * reach, 103 + 1 * reach] : [65, 103];
+  const hand: Point = action === 'drink' ? [65 - 39 * reach, 116 + 6 * reach] : action === 'eat' ? [65 - 25 * reach, 110 - 6 * reach] : [65, 116];
   return { hand, mouth: [34, 94] as Point, head: [48, 78] as Point };
 }
 export function companionPoint(species: 'crab' | 'pip', p: Point, base: CharacterBase, facing: Facing, options: AnchorOptions = {}) {
@@ -75,7 +75,8 @@ export function companionPoint(species: 'crab' | 'pip', p: Point, base: Characte
 }
 function companionAnchors(species: 'crab' | 'pip', base: CharacterBase, facing: Facing, options: AnchorOptions): RigAnchors {
   const c = companionContacts(species, base, options.action, options.meal);
-  const hull: Point[] = species === 'crab' ? [[-4, 26], [124, 26], [-4, 112], [124, 112]] : [[20, 41], [base === 'carry' ? 166 : 158, 41], [20, 130], [base === 'carry' ? 166 : 158, 130]];
+  const vessel = options.action === 'drink' || options.action === 'hold', left = vessel ? 8 : 20, bottom = vessel ? 142 : 130;
+  const hull: Point[] = species === 'crab' ? [[-4, 26], [124, 26], [-4, 112], [124, 112]] : [[left, 41], [base === 'carry' ? 166 : 158, 41], [left, bottom], [base === 'carry' ? 166 : 158, bottom]];
   return { bounds: bounds(hull.map(p => companionPoint(species, p, base, facing, options))), hand: companionPoint(species, c.hand, base, facing, options), mouth: companionPoint(species, c.mouth, base, facing, options), head: companionPoint(species, c.head, base, facing, options) };
 }
 export const crabAnchors = (base: CharacterBase, facing: Facing = 'right', options: AnchorOptions = {}) => companionAnchors('crab', base, facing, options);

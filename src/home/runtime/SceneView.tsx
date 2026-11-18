@@ -54,6 +54,7 @@ const RestingEntity = memo(function RestingEntity({
   action,
   meal,
   onMealPresented,
+  onMealFinished,
   mealHeld = false,
   sleeping,
   front = false,
@@ -92,6 +93,7 @@ const RestingEntity = memo(function RestingEntity({
   action?: "eat" | "drink";
   meal?: Meal;
   onMealPresented?: (id: string, key: number) => void;
+  onMealFinished?: (id: string, key: number) => void;
   mealHeld?: boolean;
   sleeping: boolean;
   onSelect: (id: string) => void;
@@ -107,6 +109,9 @@ const RestingEntity = memo(function RestingEntity({
   const presented = React.useCallback(() => {
     if (meal) onMealPresented?.(entity.id, meal.key);
   }, [meal, entity.id, onMealPresented]);
+  const finished = React.useCallback(() => {
+    if (meal) onMealFinished?.(entity.id, meal.key);
+  }, [meal, entity.id, onMealFinished]);
   const frame = artFrame(entity);
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
@@ -173,8 +178,8 @@ const RestingEntity = memo(function RestingEntity({
   });
   // The open-eyed art always keeps this style. Dropping it when the clock goes (a friend falls
   // asleep) left the last native value behind: asleep mid-blink, the friend vanished for good.
-  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed]);
-  const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
+  const open = useAnimatedStyle(() => ({ opacity: !meal && life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed, meal]);
+  const closed = useAnimatedStyle(() => ({ opacity: !meal && life && lifeBlink(life.value, seed) ? 1 : 0 }));
 
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
   const anticipating = useDerivedValue(() => {
@@ -270,6 +275,7 @@ const RestingEntity = memo(function RestingEntity({
             actionOverride={action}
             meal={meal}
             onMealPresented={presented}
+            onMealFinished={finished}
             gaze={gaze}
             faceOverride={sleeping ? "sleepy" : mood}
             front={front}
@@ -277,9 +283,9 @@ const RestingEntity = memo(function RestingEntity({
             renderCharacter={renderCharacter}
           />
         </Animated.View>
-        {life && (
+        {life && !meal && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={entity} meal={meal} onMealPresented={presented} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            <EntityArt entity={entity} gaze={gaze} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
           </Animated.View>
         )}
       </Animated.View>
@@ -339,6 +345,7 @@ export function SceneView({
   reactions,
   meals = {},
   onMealPresented,
+  onMealFinished,
   sleeping,
   onNode,
   badges = [],
@@ -375,6 +382,7 @@ export function SceneView({
   reactions: Record<string, "eat" | "drink">;
   meals?: Record<string, Meal>;
   onMealPresented?: (id: string, key: number) => void;
+  onMealFinished?: (id: string, key: number) => void;
   sleeping: Record<string, boolean>;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
@@ -451,7 +459,8 @@ export function SceneView({
                 action={reactions[entity.id]}
                 meal={meals[entity.id]}
                 onMealPresented={onMealPresented}
-                mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
+                onMealFinished={onMealFinished}
+                mealHeld={entity.attachment.kind === "hand" && (meals[entity.attachment.character]?.action === "drink" || scene.entities[entity.attachment.character]?.action === "drink")}
                 sleeping={!!sleeping[entity.id]}
                 ownerKey={ancestors(entity, scene).join("|")}
                 targetKey={scene.rooms[roomId].targets
@@ -508,7 +517,7 @@ export function SceneView({
                         : []),
                       resting(entity, front),
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface" || target.kind === "mouth")).map((target) => (
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}

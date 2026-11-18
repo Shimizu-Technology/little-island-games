@@ -1,9 +1,11 @@
 import React from 'react';
+import { act, create } from 'react-test-renderer';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { characterPose } from '../src/islander/rig/character';
 import { Islander } from '../src/islander/rig/Islander';
 import { Pip, RigCrab } from '../src/islander/rig/Companions';
+import { companionContacts } from '../src/islander/rig/anchors';
 import { LandingPreview } from '../src/home/runtime/LandingPreview';
 import { TargetCue } from '../src/home/runtime/TargetCue';
 import { labFixtures } from '../src/home/runtime/lab';
@@ -52,4 +54,39 @@ describe('H4b confirmed renderer defects', () => {
       expect(renderToStaticMarkup(<Rig base="stand" gaze={{ x: 100, y: -.5 }}/>)).toEqual(right);
     }
   });
+});
+
+it('Pip keeps its drinking vessel below and in front of its mouth at contact', () => {
+ const c=companionContacts('pip','stand','drink',{reach:1,bite:false,chew:false});
+ expect(c.hand[1]-c.mouth[1]).toBeGreaterThanOrEqual(20);
+ expect(c.hand[0]).toBeLessThan(c.mouth[0]);
+});
+
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+it('each furniture socket and container owns one visible outline', async () => {
+ for (const kind of ['socket','container'] as const) {
+  const target: any={id:'mouth',kind,contact:{x:300,y:300}};
+  let root!:ReturnType<typeof create>;
+  await act(async()=>{root=create(<TargetCue target={target} interaction={interaction(kind)}/>);});
+  expect(root.root.findByProps({testID:'socket-landing-outline'}).props.style[1].opacity).toBe(1);
+  await act(async()=>root.unmount());
+ }
+});
+it('the whole mouth cue stays beyond the face silhouette', async () => {
+ const target=scene.rooms[friend.room].targets.find(t=>t.owner===friend.id && t.kind==='mouth')!;
+ let root!:ReturnType<typeof create>;
+ await act(async()=>{root=create(<TargetCue target={{...target,id:'mouth'}} interaction={interaction('mouth')}/>);});
+ const style=root.root.findByProps({testID:'mouth-target-halo'}).props.style[0];
+ expect(style.left+style.width).toBeLessThan(target.face!.x-target.face!.headRadius);
+ await act(async()=>root.unmount());
+});
+
+it('drinking has a sip mouth and both chewing frames keep a content smile', () => {
+ const sip=renderToStaticMarkup(<Islander base="stand" action="drink" meal={{reach:1,bite:false,chew:false}}/>);
+ expect(sip).toContain('data-mouth="sip"');
+ for (const chew of [true,false]) {
+  const html=renderToStaticMarkup(<Islander base="stand" action="eat" face="chew" meal={{reach:0,bite:false,chew}}/>);
+  expect(html).toContain('data-mouth="chew"');
+  expect(html).not.toContain('M-6 21q6-2 12 0');
+ }
 });

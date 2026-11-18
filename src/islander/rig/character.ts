@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 import { resolvePose, solve, type Expression, type Joint, type Point, type Pose } from './poses';
 
 /** Structural match for the CORE scene contract; no runtime/model dependency. */
@@ -8,6 +9,8 @@ export type CharacterFace = 'neutral' | 'anticipate' | 'chew' | 'happy' | 'sleep
 export type Gaze = Readonly<{ x: number; y: number }>;
 /** Transient meal progress; never part of a saved character. */
 export type MealFrame = Readonly<{ reach: number; bite: boolean; chew: boolean }>;
+export type MealPose = Readonly<{ time: number; meal: MealFrame; held: ReactNode; face: CharacterFace }>;
+export type MealPlayback = Readonly<{ progress: SharedValue<number>; frames: readonly MealPose[]; renderLayer: (index: number, children: ReactNode) => ReactNode }>;
 export type Facing = 'left' | 'right';
 export type CharacterRenderInput = Readonly<{
   slot: 0 | 1 | 2;
@@ -19,6 +22,7 @@ export type CharacterRenderInput = Readonly<{
   held?: ReactNode;
   gaze?: Gaze;
   meal?: MealFrame;
+  mealPlayback?: MealPlayback;
   tilt?: number;
   limbLag?: number;
   reduced?: boolean;
@@ -58,7 +62,7 @@ export function characterPose(base: CharacterBase, action: CharacterAction = nul
     // Approach from below the chin, with the elbow below the hand. A restored
     // action has no transient food: keep its empty hand down while it chews.
     const reach = clampRig(meal?.reach, 0, 1);
-    const target: Point = action === 'hold' ? [61, 88] : [58 - 11 * reach, 91 - 25 * reach];
+    const target: Point = action === 'hold' ? [61, 88] : action === 'drink' ? [61 - 14 * reach, 88 - 22 * reach] : [58 - 11 * reach, 91 - 25 * reach];
     [joints.rightElbow, joints.rightHand] = solve(joints.rightShoulder, target, action === 'hold' ? [72, 76] : [68, 94], 16);
   }
   joints.head = [joints.head[0] + clampRig(gaze?.x, -1, 1) * 1.4, joints.head[1] + clampRig(gaze?.y, -1, 1) * .6];
