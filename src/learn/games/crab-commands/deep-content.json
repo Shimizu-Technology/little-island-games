@@ -1,0 +1,1758 @@
+{
+ "version": 1,
+ "tide": [
+  {
+   "role": "teach",
+   "descriptor": {
+    "level": {
+     "id": "tide-1",
+     "rows": [
+      "C~~~H",
+      ".....",
+      "#####",
+      "#####",
+      "#####"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1,
+     "tide": 4
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Low sand floods once the crab has walked the tide number of squares. Cross while it is dry."
+   },
+   "witness": [
+    "forward",
+    "forward",
+    "forward",
+    "forward"
+   ],
+   "cards": 4,
+   "proof": {
+    "open": 4,
+    "cut": false
+   }
+  },
+  {
+   "role": "develop",
+   "descriptor": {
+    "level": {
+     "id": "tide-2",
+     "rows": [
+      "C....",
+      "####~",
+      "H~~~~",
+      "#####",
+      "#####"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1,
+     "tide": 9
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The tide is just long enough. Do not take extra steps."
+   },
+   "witness": [
+    "forward",
+    "forward",
+    "forward",
+    "forward",
+    "turn-right",
+    "forward",
+    "forward",
+    "turn-right",
+    "forward",
+    "forward",
+    "forward",
+    "forward"
+   ],
+   "cards": 12,
+   "proof": {
+    "open": 12,
+    "cut": false
+   }
+  },
+  {
+   "role": "twist",
+   "descriptor": {
+    "level": {
+     "id": "tide-3",
+     "rows": [
+      "....C",
+      "S###.",
+      "~H.S~",
+      "...#.",
+      ".~..."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1,
+     "tide": 7
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The shortest route gets cut off by the tide. Which shell should the crab visit first?"
+   },
+   "witness": [
+    "turn-left",
+    "turn-left",
+    "forward",
+    "forward",
+    "forward",
+    "forward",
+    "turn-left",
+    "forward",
+    "forward",
+    "turn-left",
+    "forward",
+    "forward",
+    "forward",
+    "turn-left",
+    "turn-left",
+    "forward",
+    "forward"
+   ],
+   "cards": 17,
+   "proof": {
+    "open": 15,
+    "cut": true
+   }
+  },
+  {
+   "role": "short",
+   "descriptor": {
+    "level": {
+     "id": "tide-4",
+     "rows": [
+      "C.~S.",
+      "###~.",
+      "###H.",
+      "#####",
+      "#####"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1,
+     "tide": 3
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "A short beach with a fast tide. Plan the route before you press Go."
+   },
+   "witness": [
+    "forward",
+    "forward",
+    "forward",
+    "forward",
+    "turn-right",
+    "forward",
+    "forward",
+    "turn-right",
+    "forward"
+   ],
+   "cards": 9,
+   "proof": {
+    "open": 6,
+    "cut": true
+   }
+  },
+  {
+   "role": "easy",
+   "descriptor": {
+    "level": {
+     "id": "tide-5",
+     "rows": [
+      ".....",
+      "C~~H.",
+      ".....",
+      "#####",
+      "#####"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1,
+     "tide": 4
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "One last low-sand crossing, with time to spare."
+   },
+   "witness": [
+    "forward",
+    "forward",
+    "forward"
+   ],
+   "cards": 3,
+   "proof": {
+    "open": 3,
+    "cut": false
+   }
+  }
+ ],
+ "key": [
+  {
+   "role": "teach",
+   "descriptor": {
+    "level": {
+     "id": "key-1",
+     "rows": [
+      "#.#..",
+      "...##",
+      "#..HG",
+      "..##K",
+      "..#.C"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The gate opens once the crab holds the key. Walk over the key, then through the gate."
+   },
+   "witness": [
+    "turn-left",
+    "forward",
+    "forward",
+    "turn-left",
+    "forward"
+   ],
+   "cards": 5,
+   "proof": {
+    "gateOpen": 5,
+    "detour": false
+   }
+  },
+  {
+   "role": "develop",
+   "descriptor": {
+    "level": {
+     "id": "key-2",
+     "rows": [
+      "..#..",
+      ".##..",
+      ".#KC.",
+      "H.G..",
+      "#.#.."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The key is not on the way. Fetch it first, then come back to the gate."
+   },
+   "witness": [
+    "turn-left",
+    "turn-left",
+    "forward",
+    "turn-left",
+    "forward",
+    "turn-right",
+    "forward",
+    "forward"
+   ],
+   "cards": 8,
+   "proof": {
+    "gateOpen": 6,
+    "detour": true
+   }
+  },
+  {
+   "role": "twist",
+   "descriptor": {
+    "level": {
+     "id": "key-3",
+     "rows": [
+      "##..#",
+      "SSGH#",
+      "..C#.",
+      ".....",
+      ".#K.."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Shells, a key and a gate. Which should the crab visit first?"
+   },
+   "witness": [
+    "turn-right",
+    "forward",
+    "forward",
+    "turn-left",
+    "turn-left",
+    "forward",
+    "forward",
+    "forward",
+    "turn-left",
+    "forward",
+    "forward",
+    "turn-left",
+    "turn-left",
+    "forward",
+    "forward",
+    "forward"
+   ],
+   "cards": 16,
+   "proof": {
+    "gateOpen": 10,
+    "detour": true
+   }
+  },
+  {
+   "role": "short",
+   "descriptor": {
+    "level": {
+     "id": "key-4",
+     "rows": [
+      "....#",
+      ".K.#.",
+      ".CGH.",
+      ".#...",
+      ".#..."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The gate is right beside the crab, but the key is not."
+   },
+   "witness": [
+    "turn-left",
+    "forward",
+    "turn-left",
+    "turn-left",
+    "forward",
+    "turn-left",
+    "forward",
+    "forward"
+   ],
+   "cards": 8,
+   "proof": {
+    "gateOpen": 2,
+    "detour": true
+   }
+  },
+  {
+   "role": "easy",
+   "descriptor": {
+    "level": {
+     "id": "key-5",
+     "rows": [
+      "#...#",
+      "#..#.",
+      ".#...",
+      "KGH..",
+      "C#..#"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Key, gate, home."
+   },
+   "witness": [
+    "turn-left",
+    "forward",
+    "turn-right",
+    "forward",
+    "forward"
+   ],
+   "cards": 5,
+   "proof": {
+    "gateOpen": 5,
+    "detour": false
+   }
+  }
+ ],
+ "songs": [
+  {
+   "role": "teach",
+   "descriptor": {
+    "level": {
+     "id": "songs-1",
+     "rows": [
+      "#S.S#",
+      "#.#.#",
+      "#HCS#",
+      ".#.#.",
+      "....."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Build a group of cards, then press Make plan a song. Call the song wherever the group comes again.",
+    "blockEditor": true,
+    "tray": 9,
+    "tools": {
+     "songs": true,
+     "repeat": false
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      4
+     ],
+     [
+      3,
+      0
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ]
+     ]
+    ]
+   ],
+   "cards": 11,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        5
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        5
+       ]
+      ]
+     ]
+    ]
+   ],
+   "proof": {
+    "flat": 10,
+    "blocks": 9
+   }
+  },
+  {
+   "role": "develop",
+   "descriptor": {
+    "level": {
+     "id": "songs-2",
+     "rows": [
+      "C.#..",
+      "#..S#",
+      "..#S#",
+      ".#HS#",
+      "..##."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The same group of cards comes three times, with other cards between. A song saves blocks.",
+    "blockEditor": true,
+    "tray": 10,
+    "tools": {
+     "songs": true,
+     "repeat": false
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      4
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      6
+     ],
+     [
+      3,
+      0
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ]
+     ]
+    ]
+   ],
+   "cards": 14,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        6
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        5
+       ]
+      ]
+     ]
+    ]
+   ],
+   "proof": {
+    "flat": 11,
+    "blocks": 10
+   }
+  },
+  {
+   "role": "twist",
+   "descriptor": {
+    "level": {
+     "id": "songs-3",
+     "rows": [
+      "...SS",
+      "#.H..",
+      "...#.",
+      "#SC..",
+      ".##.."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Different cards sit between the groups. Find the group that comes back.",
+    "blockEditor": true,
+    "tray": 12,
+    "tools": {
+     "songs": true,
+     "repeat": false
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      0,
+      6
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      5
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      4
+     ],
+     [
+      3,
+      0
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       6
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       4
+      ]
+     ]
+    ]
+   ],
+   "cards": 18,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       0,
+       6
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       [
+        0,
+        6
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        6
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        4
+       ]
+      ]
+     ]
+    ]
+   ],
+   "proof": {
+    "flat": 16,
+    "blocks": 12
+   }
+  },
+  {
+   "role": "short",
+   "descriptor": {
+    "level": {
+     "id": "songs-4",
+     "rows": [
+      "S..#.",
+      ".#.#.",
+      ".C.#.",
+      ".SH#.",
+      "###.."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "The tray is tight. Only one song fits.",
+    "blockEditor": true,
+    "tray": 11,
+    "tools": {
+     "songs": true,
+     "repeat": false
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      4
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      6
+     ],
+     [
+      3,
+      0
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ]
+     ]
+    ]
+   ],
+   "cards": 17,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        5
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        5
+       ]
+      ]
+     ]
+    ]
+   ],
+   "proof": {
+    "flat": 14,
+    "blocks": 11
+   }
+  },
+  {
+   "role": "easy",
+   "descriptor": {
+    "level": {
+     "id": "songs-5",
+     "rows": [
+      "....H",
+      ".....",
+      ".#SS.",
+      "...##",
+      ".C.#."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "One song, called twice.",
+    "blockEditor": true,
+    "tray": 9,
+    "tools": {
+     "songs": true,
+     "repeat": false
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      3,
+      0
+     ],
+     [
+      0,
+      4
+     ],
+     [
+      3,
+      0
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       6
+      ]
+     ]
+    ]
+   ],
+   "cards": 11,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        5
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        4
+       ],
+       [
+        0,
+        6
+       ]
+      ]
+     ]
+    ]
+   ],
+   "proof": {
+    "flat": 10,
+    "blocks": 9
+   }
+  }
+ ],
+ "fog": [
+  {
+   "role": "teach",
+   "descriptor": {
+    "level": {
+     "id": "fog-1",
+     "rows": [
+      "C.#..",
+      "#....",
+      ".....",
+      ".....",
+      "H...#"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Fog hides which beach this is. One plan must work on both. Use If blocked inside a Repeat.",
+    "blockEditor": true,
+    "tray": 5,
+    "fog": [
+     {
+      "rows": [
+       "C##..",
+       ".....",
+       ".....",
+       ".....",
+       "H.#.#"
+      ]
+     }
+    ],
+    "tools": {
+     "condition": true
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      2,
+      8,
+      [
+       [
+        4,
+        [
+         0
+        ],
+        [
+         [
+          0,
+          6
+         ]
+        ],
+        [
+         [
+          0,
+          4
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    []
+   ],
+   "cards": 0,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       2,
+       8,
+       [
+        [
+         4,
+         [
+          0
+         ],
+         [
+          [
+           0,
+           6
+          ]
+         ],
+         [
+          [
+           0,
+           4
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     []
+    ]
+   ],
+   "proof": {
+    "flat": null,
+    "blocks": 4,
+    "least": 4,
+    "winners": 101,
+    "gridWinners": 104,
+    "loopsWithinTray": false
+   }
+  },
+  {
+   "role": "develop",
+   "descriptor": {
+    "level": {
+     "id": "fog-2",
+     "rows": [
+      "C...H",
+      "#..#.",
+      ".#...",
+      "#....",
+      "....."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Try one card before the Repeat. Where should the crab face before it starts?",
+    "blockEditor": true,
+    "tray": 5,
+    "fog": [
+     {
+      "rows": [
+       "C##.H",
+       ".....",
+       "#....",
+       "...#.",
+       "....."
+      ]
+     }
+    ],
+    "tools": {
+     "condition": true
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      0,
+      6
+     ],
+     [
+      2,
+      8,
+      [
+       [
+        4,
+        [
+         0
+        ],
+        [
+         [
+          0,
+          5
+         ]
+        ],
+        [
+         [
+          0,
+          4
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    []
+   ],
+   "cards": 0,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       0,
+       6
+      ],
+      [
+       2,
+       8,
+       [
+        [
+         4,
+         [
+          0
+         ],
+         [
+          [
+           0,
+           5
+          ]
+         ],
+         [
+          [
+           0,
+           4
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     []
+    ]
+   ],
+   "proof": {
+    "flat": null,
+    "blocks": 5,
+    "least": 5,
+    "winners": 43,
+    "gridWinners": 43,
+    "loopsWithinTray": false
+   }
+  },
+  {
+   "role": "twist",
+   "descriptor": {
+    "level": {
+     "id": "fog-3",
+     "rows": [
+      "C....",
+      "#....",
+      ".....",
+      "##...",
+      "H...."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "This beach needs a longer plan. Try two cards in one branch.",
+    "blockEditor": true,
+    "tray": 5,
+    "fog": [
+     {
+      "rows": [
+       "C#...",
+       ".....",
+       ".....",
+       "...##",
+       "H.#.."
+      ]
+     }
+    ],
+    "tools": {
+     "condition": true
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      2,
+      8,
+      [
+       [
+        4,
+        [
+         0
+        ],
+        [
+         [
+          0,
+          6
+         ]
+        ],
+        [
+         [
+          0,
+          4
+         ],
+         [
+          0,
+          4
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    []
+   ],
+   "cards": 0,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       2,
+       8,
+       [
+        [
+         4,
+         [
+          0
+         ],
+         [
+          [
+           0,
+           6
+          ]
+         ],
+         [
+          [
+           0,
+           4
+          ],
+          [
+           0,
+           4
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     []
+    ]
+   ],
+   "proof": {
+    "flat": null,
+    "blocks": 5,
+    "least": 5,
+    "winners": 67,
+    "gridWinners": 70,
+    "loopsWithinTray": false
+   }
+  },
+  {
+   "role": "short",
+   "descriptor": {
+    "level": {
+     "id": "fog-4",
+     "rows": [
+      "C..##",
+      "##...",
+      ".#H##",
+      "#....",
+      "...#."
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Two foggy beaches and a tight tray with no spare block. The shortest plans from the last beaches will not work here.",
+    "blockEditor": true,
+    "tray": 5,
+    "fog": [
+     {
+      "rows": [
+       "C....",
+       "###..",
+       "..H..",
+       "..#..",
+       "...#."
+      ]
+     }
+    ],
+    "tools": {
+     "condition": true
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      2,
+      6,
+      [
+       [
+        0,
+        6
+       ],
+       [
+        4,
+        [
+         0
+        ],
+        [
+         [
+          0,
+          5
+         ]
+        ],
+        []
+       ],
+       [
+        0,
+        4
+       ]
+      ]
+     ]
+    ],
+    []
+   ],
+   "cards": 0,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       2,
+       6,
+       [
+        [
+         0,
+         6
+        ],
+        [
+         4,
+         [
+          0
+         ],
+         [
+          [
+           0,
+           5
+          ]
+         ],
+         []
+        ],
+        [
+         0,
+         4
+        ]
+       ]
+      ]
+     ],
+     []
+    ]
+   ],
+   "proof": {
+    "flat": null,
+    "blocks": 5,
+    "least": 5,
+    "winners": 6,
+    "gridWinners": 6,
+    "loopsWithinTray": false
+   }
+  },
+  {
+   "role": "easy",
+   "descriptor": {
+    "level": {
+     "id": "fog-5",
+     "rows": [
+      "C.#..",
+      "#....",
+      ".....",
+      ".....",
+      "H.#.#"
+     ],
+     "tier": 0,
+     "pace": "medium",
+     "skill": "think.loops",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "One more foggy walk home, with room to spare.",
+    "blockEditor": true,
+    "tray": 5,
+    "fog": [
+     {
+      "rows": [
+       "C##.#",
+       "..#..",
+       ".....",
+       ".....",
+       "H.#.."
+      ]
+     }
+    ],
+    "tools": {
+     "condition": true
+    }
+   },
+   "witness": [
+    1,
+    [
+     [
+      2,
+      8,
+      [
+       [
+        4,
+        [
+         0
+        ],
+        [
+         [
+          0,
+          6
+         ]
+        ],
+        [
+         [
+          0,
+          4
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    []
+   ],
+   "cards": 0,
+   "solutions": [
+    [
+     1,
+     [
+      [
+       2,
+       8,
+       [
+        [
+         4,
+         [
+          0
+         ],
+         [
+          [
+           0,
+           6
+          ]
+         ],
+         [
+          [
+           0,
+           4
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     []
+    ]
+   ],
+   "proof": {
+    "flat": null,
+    "blocks": 4,
+    "least": 4,
+    "winners": 101,
+    "gridWinners": 104,
+    "loopsWithinTray": false
+   }
+  }
+ ],
+ "two": [
+  {
+   "role": "teach",
+   "descriptor": {
+    "level": {
+     "id": "two-1",
+     "rows": [
+      ".....",
+      ".....",
+      "..C..",
+      "C...H",
+      "..H.."
+     ],
+     "tier": 0,
+     "pace": "easy",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Two crabs, one plan. Every card moves both crabs. Bring each crab to a home.",
+    "crabs": 2
+   },
+   "witness": [
+    "right",
+    "right",
+    "down"
+   ],
+   "cards": 3,
+   "proof": {
+    "holds": 0
+   }
+  },
+  {
+   "role": "develop",
+   "descriptor": {
+    "level": {
+     "id": "two-2",
+     "rows": [
+      ".#...",
+      ".#..#",
+      ".C..C",
+      "...#.",
+      "..H.H"
+     ],
+     "tier": 0,
+     "pace": "easy",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "A crab that would bump just stays where it is. Use the edge to hold one crab still.",
+    "crabs": 2
+   },
+   "witness": [
+    "right",
+    "down",
+    "down"
+   ],
+   "cards": 3,
+   "proof": {
+    "holds": 1
+   }
+  },
+  {
+   "role": "twist",
+   "descriptor": {
+    "level": {
+     "id": "two-3",
+     "rows": [
+      "..H..",
+      ".#C..",
+      ".....",
+      ".SH..",
+      "C.#.."
+     ],
+     "tier": 0,
+     "pace": "easy",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Use a sandcastle to hold one crab while the other walks on.",
+    "crabs": 2
+   },
+   "witness": [
+    "up",
+    "left",
+    "left",
+    "right",
+    "right"
+   ],
+   "cards": 5,
+   "proof": {
+    "holds": 2
+   }
+  },
+  {
+   "role": "short",
+   "descriptor": {
+    "level": {
+     "id": "two-4",
+     "rows": [
+      ".....",
+      "....#",
+      ".H...",
+      "#C.HC",
+      "....."
+     ],
+     "tier": 0,
+     "pace": "easy",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "A short plan for two crabs. Which crab should wait?",
+    "crabs": 2
+   },
+   "witness": [
+    "up",
+    "up",
+    "right",
+    "down",
+    "left"
+   ],
+   "cards": 5,
+   "proof": {
+    "holds": 2
+   }
+  },
+  {
+   "role": "easy",
+   "descriptor": {
+    "level": {
+     "id": "two-5",
+     "rows": [
+      ".....",
+      ".....",
+      ".....",
+      ".H.H.",
+      "..C.C"
+     ],
+     "tier": 0,
+     "pace": "easy",
+     "skill": "think.sequence",
+     "facing": 1
+    },
+    "budget": null,
+    "starter": [],
+    "lesson": "Two crabs walking home together.",
+    "crabs": 2
+   },
+   "witness": [
+    "up",
+    "left"
+   ],
+   "cards": 2,
+   "proof": {
+    "holds": 0
+   }
+  }
+ ]
+}

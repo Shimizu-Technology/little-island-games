@@ -48,7 +48,7 @@ A published slot, its ordinal range, hash, and a daily pool never change. New co
 
 A bake gets its slots one of two ways:
 
-- **Sequential (the default).** Packs take `nextSlot` onward, with ordinals from `nextOrdinal` onward.
+- **Sequential (unregistered proof catalogs only).** Packs take `nextSlot` onward, with ordinals from `nextOrdinal` onward. A catalog with a slot register requires an explicit owner claim instead (lead-approved T1 round-2 fix, 16 Nov 2026).
 - **Claimed (lead change, 15 Nov 2026).** The bake passes its own range and owner: `npm run puzzles -- bake --family <id> --range 260-279 --owner t1-logic-lagoon`, or the Latin and edge bakes' `--range` (each defaults to its family's run from its base). Packs take the range's slots in order from its first, even below `nextSlot`. Each claimed slot must be:
   - inside the caller's own reservation in `slot-ranges.json`. The reservation holding the range must be the caller's; a group cannot take a nested slice's slots, and a range may not cross another reservation;
   - never a pack of any family, retired packs included, in the working catalog;
@@ -96,7 +96,7 @@ A bake leaves approval open: `review` is `{ids, complete: false, subject: null}`
 
 ## Baking
 
-`npm run puzzles -- bake --family <id> [--range first-last --owner <reservation>] [--seed n] [--attempts n] [--hours n]`. Without `--range` the slots are sequential; with it they are claimed (see "Slot allocation"). The run stops at the target, the attempt cap or the deadline. Its status is `complete` or `exhausted`. If any band ends below its floor, or an append cannot keep the whole band inside its template share, nothing is published and the accepted bank stays byte-identical. An attempt receipt is always written. A second bake needs a new `--seed`; repeats are rejected as duplicates.
+`npm run puzzles -- bake --family <id> [--range first-last --owner <reservation>] [--seed n] [--attempts n] [--hours n]`. Without `--range` only unregistered proof catalogs may allocate sequentially; registered catalogs refuse before generation. With it the slots are claimed (see "Slot allocation"). The run stops at the target, the attempt cap or the deadline. Its status is `complete` or `exhausted`. If any band ends below its floor, or an append cannot keep the whole band inside its template share, nothing is published and the accepted bank stays byte-identical. An attempt receipt is always written. A second bake needs a new `--seed`; repeats are rejected as duplicates.
 
 ## Adding a family
 
@@ -108,3 +108,5 @@ A bake leaves approval open: `review` is `{ids, complete: false, subject: null}`
 ## Today's Puzzle
 
 `pickFromManifest` hashes `LI-TODAY-V1|game|tier|YYYY-MM-DD` with FNV-1a 32 and indexes the frozen pool. The date comes from the device's calendar fields. `keepActive` holds an active puzzle across midnight, a zone change or a clock change. There is no date history, no record of who played and no reward. Every puzzle stays open every day.
+
+Registered catalogs require an explicit owner claim for new packs, including allocation at `nextSlot`. The sequential high-water counter never grants permission to use the reservation it points into. Only isolated catalogs without a slot register retain the sequential default. (Lead-approved T1 round-2 tooling fix, 16 November 2026.)

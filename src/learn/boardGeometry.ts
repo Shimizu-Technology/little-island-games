@@ -26,6 +26,8 @@ export const SCHOOL_BOARD_MIN = {
   // S1a: Star Station's scene labels are sized to the text floor whatever the drawing's height; 120 keeps the
   // Moon spots, scales and readings clear of each other at AX (tests/s1a-inquiry-board.test.tsx).
   'space-station': 120,
+  // N1b: the hop line keeps its numbers, flag and frog readable down to this height; Quick Practice's optional number line likewise.
+  'number-hop': 92, 'quick-practice': 64,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 

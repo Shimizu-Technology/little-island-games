@@ -36,12 +36,13 @@ export function PlanStrip({ children, count, focus, cardHeight, gap, padding, dr
       setCards(old => old[index]?.y === y && old[index]?.height === height ? old : { ...old, [index]: { y, height } });
     } });
   }));
+  const more = (n: number) => `${n} more ${n === 1 ? 'card' : 'cards'}`;
   const known = Object.entries(cards).filter(([index]) => +index < count).map(([, rect]) => rect);
   const before = known.filter(c => c.y < offset - 1).length;
   const after = known.filter(c => c.y + c.height > offset + height + 1).length;
   return <View testID="plan-strip" onLayout={e => { setExtent(e.nativeEvent.layout.height); space.changed(); }} style={{ gap: 2 }}>
-    {before > 0 && <Copy testID="plan-more-above" maxFontSizeMultiplier={1.5} accessibilityLabel={`${before} more cards above. Scroll up.`} style={{ fontSize: 13, fontWeight: '700' }}>↑ {before} more cards</Copy>}
+    {before > 0 && <Copy testID="plan-more-above" maxFontSizeMultiplier={1.5} accessibilityLabel={`${more(before)} above. Scroll up.`} style={{ fontSize: 13, fontWeight: '700' }}>↑ {more(before)}</Copy>}
     <ScrollView ref={scroll} nestedScrollEnabled style={{ maxHeight, flexGrow: 0 }} onLayout={e => setHeight(e.nativeEvent.layout.height)} onContentSizeChange={(_w, h) => setContent(h)} onScroll={e => { offsetNow.current = e.nativeEvent.contentOffset.y; setOffset(offsetNow.current); }} scrollEventThrottle={16} accessibilityLabel="Your plan cards">{measured}</ScrollView>
-    {content > height + 1 && after > 0 && <Copy testID="plan-more-below" maxFontSizeMultiplier={1.5} accessibilityLabel={`${after} more cards below. Scroll down.`} style={{ fontSize: 13, fontWeight: '700' }}>↓ {after} more cards</Copy>}
+    {content > height + 1 && after > 0 && <Copy testID="plan-more-below" maxFontSizeMultiplier={1.5} accessibilityLabel={`${more(after)} below. Scroll down.`} style={{ fontSize: 13, fontWeight: '700' }}>↓ {more(after)}</Copy>}
   </View>;
 }

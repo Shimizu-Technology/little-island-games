@@ -1,4 +1,4 @@
-import { enter, hint, solutionCount, taskAt, type GridTask, type LogicState } from '../../learn/games/logic-lagoon/engine';
+import { enter, hint, solutionCount, taskAt, type GridTask, type LogicState } from '../../learn/games/logic-lagoon/legacy';
 import { exactKeys, plain, uint } from '../../state/saveBits';
 import { relabel, smallest, squareSymmetries } from '../semantic';
 import type { CountResult, DescriptorCore, PuzzleAdapter, TechniqueResult } from '../types';
