@@ -25,9 +25,9 @@ function OpacityLayer({ current, index, children }: { current: SharedValue<numbe
   const props = useAnimatedProps(() => ({ opacity: indices.includes(frameIndex(current.value)) ? 1 : 0 }));
   return <AnimatedGroup testID={`meal-frame-${indices.join('-')}`} animatedProps={props}>{children}</AnimatedGroup>;
 }
-function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, index: number, reduced: boolean, poseTip = true) {
+function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, index: number, reduced: boolean, poseTip = true, clipId?:string) {
   const bitten = meal.action === 'eat' && time >= 360;
-  const clip = `meal-${slot}-${meal.key}-${index}`;
+  const clip = clipId ?? `meal-${slot}-${meal.key}-${index}`;
   return <G data-meal-food={meal.food.item}>
     {bitten && <Defs><ClipPath id={clip}><Path d="M0 14Q5 17 7 12Q13 15 14 9Q20 11 20 4L23 0H24V24H0Z"/></ClipPath></Defs>}
     <G transform={slot === 1 && meal.action === 'drink' ? `translate(12 12) scale(${heldDrinkScale(1,slot)}) rotate(${poseTip ? mealFrame(time, reduced).reach * 5 : 0}) translate(-12 -12)` : undefined} clipPath={bitten ? `url(#${clip})` : undefined}>
@@ -35,12 +35,16 @@ function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, i
     </G>
   </G>;
 }
+function AuthoredFoodFrame({slot,meal,time,index,reduced}:{slot:CharacterRenderInput['slot'];meal:Meal;time:number;index:number;reduced:boolean}){
+  return foodArt(slot,meal,time,index,reduced);
+}
 function FoodVariant({ current, clock, meal, input, reduced, after }: { current: SharedValue<number>; clock:MealClock; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
+  const clipId=`meal-food-${React.useId().replace(/[^A-Za-z0-9_-]/g,'')}`;
   const time = after ? meal.action === 'eat' ? 360 : 540 : 0;
   const style = useAnimatedStyle(() => ({ opacity: (mealTimes[frameIndex(current.value)] >= (clock.value.drink ? 540 : 360)) === after ? 1 : 0 }));
   const unit = input.size / [132,160,120][input.slot];
   return <Animated.View testID={`meal-food-${after ? 1 : 0}`} pointerEvents="none" style={[{ position:'absolute',left:-20*unit,top:-34*unit,width:40*unit,height:54*unit },style]}>
-    <Svg width={40*unit} height={54*unit} viewBox="-8 -22 40 54" accessible={false}>{foodArt(input.slot,meal,time,after ? 1 : 0,reduced,false)}</Svg>
+    <Svg width={40*unit} height={54*unit} viewBox="-8 -22 40 54" accessible={false}>{foodArt(input.slot,meal,time,after ? 1 : 0,reduced,false,clipId)}</Svg>
   </Animated.View>;
 }
 /** Only two small food trees. Position/rotation/fade composite on the UI thread. */
@@ -96,7 +100,9 @@ export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderC
       const sampled = mealFrame(time,reduced);
       return {time,meal:{...sampled,bite:meal.action === 'eat' && sampled.bite},
         face:time < 150 ? 'neutral' as const : meal.action === 'drink' ? 'happy' as const : sampled.bite ? 'anticipate' as const : 'chew' as const,
-        held:foodArt(slot,meal,time,index,reduced)};
+        // Built-in rigs need only presence. Custom renderers can render this
+        // recipe to get the real food without allocating unused SVG trees here.
+        held:<AuthoredFoodFrame {...{slot,meal,time,index,reduced}}/>};
     }) }),[progress,renderMorph,renderLayer,meal,reduced,slot]);
   const play=useCallback(()=>{
     if(!key || !live.current || playing.current)return;

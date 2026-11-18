@@ -280,3 +280,26 @@ it('retains the prepared meal body across food identities and idle gaze changes'
   await act(async()=>tree.unmount());
  }
 });
+
+it('keeps the mounted bite clip resource stable across meal keys and foods',async()=>{
+ const input={slot:0 as const,base:'stand' as const,action:null,face:null,facing:'right' as const,size:224};
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<MealArt input={input} meal={{key:0,action:'eat',food:instance('warm','mango',0,0)}} reduced={false}/>);});
+ const clips=()=>tree.root.findByProps({testID:'meal-food-1'}).findAll(n=>String(n.type)==='clippath').map(n=>n.props.id);
+ const initial=clips();expect(initial).toHaveLength(1);
+ for(const [key,item]of [[1,'mango'],[2,'banana']]as const){
+  await act(async()=>tree.update(<MealArt input={input} meal={{key,action:'eat',food:instance('offered',item,0,0)}} reduced={false}/>));
+  expect(clips()).toEqual(initial);
+  expect(tree.root.findAllByProps({'data-meal-food':item})).toHaveLength(2);
+ }
+ await act(async()=>tree.unmount());
+});
+
+it('keeps unused custom-renderer food frames as small recipes',async()=>{
+ let playback:any;const render=(input:any)=>{playback=input.mealPlayback;return React.createElement('body');};
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<MealArt input={{slot:0,base:'stand',action:null,face:null,facing:'right',size:224}} meal={{key:1,action:'eat',food:instance('offered','mango',0,0)}} reduced={false} renderCharacter={render}/>);});
+ const nodes=(node:React.ReactNode):number=>React.isValidElement<{children?:React.ReactNode}>(node)?1+React.Children.toArray(node.props.children).reduce<number>((n,c)=>n+nodes(c),0):0;
+ expect(playback.frames.reduce((n:number,f:any)=>n+nodes(f.held),0)).toBeLessThanOrEqual(mealTimes.length*2);
+ await act(async()=>tree.unmount());
+});
