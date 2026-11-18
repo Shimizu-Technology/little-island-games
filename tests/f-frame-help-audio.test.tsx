@@ -19,8 +19,8 @@ const neural = readFileSync('src/content/neuralAudio.ts', 'utf8'), calmAt = neur
 const voices = { warm: keysIn(neural.slice(0, calmAt)), calm: keysIn(neural.slice(calmAt)) };
 const shared = new Set([...keysIn(readFileSync('src/content/audioSources.ts', 'utf8')), ...readdirSync('src/content/learnAudio').flatMap(f => [...keysIn(readFileSync(`src/content/learnAudio/${f}`, 'utf8'))])]);
 const shipped = (key: string, voice: 'warm' | 'calm' = 'warm') => voices[voice].has(key) || shared.has(key);
-// Owner: lead's audio batch (the lines are staged in scripts/learn/f-frame.json and n1a-numbers.json). T1 Logic Lagoon is staged in scripts/learn/t1-logic-lagoon.json. Remove an entry as soon as it ships.
-const knownMissing = ['slip-help', 'shell-math-help-v2', 'logic-lagoon-help-v2'];
+// Owner: lead's audio batch (the lines are staged in scripts/learn/f-frame.json, n1a-numbers.json, n1b-numbers.json and t1-logic-lagoon.json). Remove an entry as soon as it ships.
+const knownMissing = ['slip-help', 'shell-math-help-v2', 'logic-lagoon-help-v2', 'quick-practice-help-v2', 'number-hop-help-v2'];
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));

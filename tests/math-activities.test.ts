@@ -10,12 +10,12 @@ import { emptySave, parseSave } from "../src/state/validation";
 const games: MathGame[] = ["shell-math", "number-hop", "quick-practice"];
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 /**
- * Shell Math starts version-2 rounds now (see n1a-shell-round.test.ts). A saved version-1 round keeps the shape and rules
- * covered here, so it is built straight from the version-1 generator; Number Hop and Quick Practice start normally.
+ * All three games start version-2 rounds now (n1a-shell-round, n1b-hop-round and n1b-quick-round tests). A saved version-1
+ * round keeps the shape and rules covered here, so it is built straight from the version-1 generator.
  */
 function start(game: MathGame, options: LearnOptions, seed: number) {
   const session = startSession(game, { options }, {}, seed);
-  return game === "shell-math" ? { ...session, state: createRound(options, game, random(seed ^ 0x5bd1e995)) } : session;
+  return { ...session, state: createRound(options, game, random(seed ^ 0x5bd1e995)) };
 }
 function ready(s: MathRound, game: MathGame) {
   if (game !== "quick-practice") for (let n = 0; n < questionOf(s).b; n++) s = mathMove(s, game, { type: "step" });
@@ -72,8 +72,8 @@ describe("math activity rounds", () => {
       const replay = replaySession(session, {}, 456);
       expect(validLearnSession(replay)).toBe(true);
       expect(replay.options).toEqual(options);
-      // A replayed Shell Math round is a fresh version-2 round; the other two replay their own shape.
-      expect(replay.state).toMatchObject(game === "shell-math" ? { version: 2, index: 0, solved: false } : { index: 0, completed: [], helped: false, shown: false, solved: false });
+      // A replayed round is a fresh version-2 round in all three games.
+      expect(replay.state).toMatchObject({ version: 2, index: 0, solved: false });
     });
   }
   it("bounds creation with constant RNGs, keeps helpers on pure shared rules and never mutates input", () => {
