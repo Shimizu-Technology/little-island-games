@@ -31,6 +31,8 @@ export function palmPoses(s: PalmState, a: Arena, reduced: boolean, entry: numbe
           ? Math.atan2(b.diveX, palmConfig(s).diveSpeed) + Math.sin(s.time * 6 + b.id) * 0.07
           : s.direction * 0.035;
     p.scale = b.caught ? 0.85 : 1;
+    // A resting formation dims a little, so the pause shows without reading the label.
+    if (s.waveWait > 0 && !b.caught) p.opacity = (p.opacity ?? 1) * 0.6;
     next[(b.boss ? 15 : 0) + b.id] = p;
     if (b.caught) next[30 + b.id] = { ...position(a, b.x, b.y, 58), angle: p.angle, identity: p.identity };
     if (b.hp > 1 && !b.boss) next[73 + b.id] = { ...position(a, b.x, b.y - 12, 14, 7), identity: p.identity };
