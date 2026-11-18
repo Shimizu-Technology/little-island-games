@@ -27,7 +27,7 @@ it('mounts only two food variants, rather than one whole food tree per pose',asy
  expect(tree.root.findAll(n=>typeof n.type==='string' && !!n.props['data-mouth']).length).toBeLessThanOrEqual(3);
  await act(async()=>tree.unmount());
 });
-it('retains the mounted body when a meal starts and finishes',async()=>{
+it('retains the idle and prewarmed meal bodies when a meal starts and finishes',async()=>{
  let mounts=0,unmounts=0;
  function Body(){React.useEffect(()=>{mounts++;return()=>{unmounts++;};},[]);return React.createElement('body');}
  const renderer=()=> <Body/>;
@@ -36,11 +36,11 @@ it('retains the mounted body when a meal starts and finishes',async()=>{
  await act(async()=>{tree=create(<EntityArt entity={entity} reduced={false} renderCharacter={renderer}/>);});
  const meal={key:1,action:'eat' as const,food:instance('snack','mango',0,0)};
  await act(async()=>tree.update(<EntityArt entity={entity} meal={meal} reduced={false} renderCharacter={renderer}/>));
- expect({mounts,unmounts}).toEqual({mounts:1,unmounts:0});
+ expect({mounts,unmounts}).toEqual({mounts:2,unmounts:0});
  await act(async()=>tree.update(<EntityArt entity={entity} reduced={false} renderCharacter={renderer}/>));
- expect({mounts,unmounts}).toEqual({mounts:1,unmounts:0});
+ expect({mounts,unmounts}).toEqual({mounts:2,unmounts:0});
  await act(async()=>tree.unmount());
- expect(unmounts).toBe(1);
+ expect(unmounts).toBe(2);
 });
 
 it('changes a single arm or fin path to each authored pose without replacing it',async()=>{

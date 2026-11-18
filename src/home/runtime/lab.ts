@@ -35,10 +35,10 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.home.characters = [{ slot, anchor: 'floor', pose: 'stand', x: 8, y: 7 }];
     return state;
   }])),
-  ...Object.fromEntries((['stool','chair','bed','bubble-bath','toy-box'] as const).map(item=>[`rig-landing-${item}`,()=>{
+  ...Object.fromEntries((['stool','chair','bed','bubble-bath','fridge'] as const).map(item=>[`rig-landing-${item}`,()=>{
     const state=reviewRoom([
-      {...instance('landing',item,0,0),at:roomPoint(520,510),powered:item==='toy-box'},
-      {...instance('snack','mango',0,0),at:roomPoint(220,525)},
+      {...instance('landing',item,11,7),at:roomPoint(520,item==='fridge'?490:510),powered:item==='fridge'},
+      {...instance('snack','mango',3,10),at:roomPoint(220,525)},
     ]);
     state.rooms.home.characters=[{slot:0,anchor:'floor',pose:'stand',x:6,y:7}];
     return state;

@@ -1,3 +1,4 @@
+import {instance} from '../model';
 import {heldDrinkScale} from '../art/heldDrink';
 import { MealArt } from "./MealArt";
 import type { Meal } from "./meal";
@@ -18,6 +19,8 @@ import { renderAnchors } from "./rigGeometry";
 import type { CharacterAction, Face, SceneEntity } from "../scene/types";
 
 export type CharacterRender = CharacterRenderer;
+// Prewarm one small meal rig at scene load. It is hidden at rest and never clocks.
+const preparedMeal: Meal = {key:0,action:'eat',food:instance('prepared-food','mango',0,0)};
 export const DecorArt = memo(function DecorArt({
   entity,
   layer = "all",
@@ -126,7 +129,14 @@ export const EntityArt = memo(function EntityArt({
   };
   return (
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
-      {!carry && !blink ? <MealArt input={input} meal={meal} reduced={reduced} renderCharacter={renderCharacter} onPresented={onMealPresented} onFinished={onMealFinished}/> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
+      {!carry && !blink && !preview ? <>
+        <View pointerEvents="none" style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal?0:1}}>
+          {renderCharacter?.(input) ?? <HomeCharacter input={input}/>}
+        </View>
+        <View testID="prepared-meal" pointerEvents="none" collapsable={false} style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal?1:0}}>
+          <MealArt input={input} meal={meal ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
+        </View>
+      </> : renderCharacter?.(input) ?? <HomeCharacter input={input} />}
     </View>
   );
 }, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
