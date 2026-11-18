@@ -243,15 +243,15 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     // shields are both on the board when the limit arrives.
     let s: PalmState = createPalm(palmLevel("w3-1"), 4, false);
     s = { ...s, burst: PALM_BURST_LIMIT - 1 / 120, launcher: 300, beetles: s.beetles.map((b, i) => i === 1 ? { ...b, diving: true, y: 430, x: 120 } : i === 3 ? { ...b, y: 470, x: 72 } : b) };
-    const before = s.beetles.map(b => ({ id: b.id, hp: b.hp }));
+    const before = s.beetles.map(b => ({ id: b.id, hp: b.hp })), event = s.event;
     s = palmStep(s, tick, 1 / 60);
     expect(s.waveWait).toBe(PALM_WAVE_BREAK);
     expect(s.burst).toBe(0);
-    expect(s.feedback).toBe("Breather");
+    // It sounds the wave tone; the view shows its own resting label instead of pulse text.
+    expect([s.cue, s.event, s.pulse]).toEqual(["wave", event + 1, 0]);
     expect(s.beetles.map(b => ({ id: b.id, hp: b.hp }))).toEqual(before);
     expect(palmTransition(s, { type: "toss" }).shots).toBe(s.shots);
     expect(validPalm(s)).toBe(true);
-    const low = s.beetles.find(b => b.id === 3)!.y;
     let frames = 1;
     while (s.waveWait > 0) {
       const prev = s;
@@ -266,7 +266,9 @@ describe("AR-05 Palm Patrol: smoothed workload, short bursts, a 2 s break, repla
     const diver = s.beetles.find(b => b.id === 1)!;
     expect(diver.diving).toBe(false);
     expect(diver.y).toBeCloseTo(105 + s.marchY, 6);
-    expect(s.beetles.find(b => b.id === 3)!.y).toBe(low);
+    // The marcher that was about to reach the shields climbed back to its row as well.
+    expect(s.beetles.find(b => b.id === 3)!.y).toBeCloseTo(105 + s.marchY, 6);
+    for (const b of s.beetles) expect(b.y, `beetle ${b.id}`).toBeLessThanOrEqual(105 + Math.floor(b.id / 5) * 58 + s.marchY + 1e-9);
     // Play resumes: the clock runs again and tosses are accepted.
     s = palmStep(s, tick, 1 / 60);
     expect(s.burst).toBeGreaterThan(0);

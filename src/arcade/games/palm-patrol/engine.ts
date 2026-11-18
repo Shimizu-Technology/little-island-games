@@ -39,8 +39,9 @@ export const PALM_WAVE_BREAK = 2,
 /**
  * AR-05's hard burst limit: ordinary play (scored levels and Endless) never runs more than 15 s without
  * a break. When a formation is still on the board at the limit, a breather of PALM_WAVE_BREAK seconds
- * starts: beetles hold their places, divers climb back to their rows, husks already thrown still land,
- * and nothing can reach Coco. Then play resumes where it stopped. Learn is untimed and never breaks.
+ * starts: beetles hold their places, divers and any beetle below its row climb back to the formation,
+ * husks already thrown still land, and nothing can reach Coco. Then play resumes where it stopped.
+ * Learn is untimed and never breaks.
  */
 export const PALM_BURST_LIMIT = 15,
   PALM_CROWN_HP = 5;
@@ -391,8 +392,8 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     if (!s.beetles.length) return s.waveWait ? s : formation({ ...s, wave: s.wave + 1, relay: 1 });
   } else if (!learning && s.burst + dt > PALM_BURST_LIMIT + 1e-9)
     // This tick would pass the limit, so it opens the breather instead of playing on. The cue sounds its
-    // tone; the view's own Breather label replaces the pulse text, so nothing covers the formation.
-    s = { ...s, waveWait: PALM_WAVE_BREAK, burst: 0, event: s.event + 1, cue: "wave", feedback: "Breather", pulse: 0 };
+    // tone; the view shows its own resting label, so no pulse text covers the formation.
+    s = { ...s, waveWait: PALM_WAVE_BREAK, burst: 0, event: s.event + 1, cue: "wave", pulse: 0 };
   else if (!learning) s.burst += dt;
   // During a breather the formation holds, its clocks stop, and only thrown husks and netted beetles move.
   const holding = before.waveWait > 0 || s.waveWait > 0;
@@ -429,14 +430,17 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     if (b.caught) {
       b.caught = Math.max(0.001, b.caught - dt);
       b.y -= 170 * dt;
-    } else if (b.diving && holding) {
-      // A diver climbs back to its place in the formation, never toward Coco.
-      const rowX = clamp(b.base + s.marchX, 25, 335),
-        rowY = 105 + Math.floor(b.id / 5) * 58 + s.marchY,
+    } else if (holding) {
+      // Any beetle below its row climbs back to it, and a diver to its place, never toward Coco, so
+      // play never resumes with a beetle about to land. Beetles in their rows hold still.
+      const rowY = 105 + Math.floor(b.id / 5) * 58 + s.marchY,
         step = RETREAT_SPEED * dt;
-      b.x = b.x < rowX ? Math.min(rowX, b.x + step) : Math.max(rowX, b.x - step);
       b.y = Math.max(Math.min(b.y, rowY), b.y - step);
-      if (b.x === rowX && b.y <= rowY) b.diving = false;
+      if (b.diving) {
+        const rowX = clamp(b.base + s.marchX, 25, 335);
+        b.x = b.x < rowX ? Math.min(rowX, b.x + step) : Math.max(rowX, b.x - step);
+        if (b.x === rowX && b.y <= rowY) b.diving = false;
+      }
     } else if (b.diving) {
       b.y += config.diveSpeed * (s.helper ? 0.82 : 1) * dt;
       b.x = clamp(b.x + (config.aimed ? b.diveX : Math.sin(s.waveTime * 5 + b.id) * 60) * dt, 25, 335);
