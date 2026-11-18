@@ -7,10 +7,11 @@ import { hintText } from '../src/learn/games/crab-commands/hint-text';
 import { lessonAudio } from '../src/learn/games/crab-commands/lesson-audio';
 import c1Speech from '../scripts/learn/c1-crab.json';
 import c1bSpeech from '../scripts/learn/c1b-crab.json';
+import c1dSpeech from '../scripts/learn/c1d-crab-depth.json';
 import { crabAssistance, registration } from '../src/challenge/registrations/crab-commands';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { jsonBytes } from '../src/state/saveBits';
-const speech={...c1Speech,...c1bSpeech};
+const speech={...c1Speech,...c1bSpeech,...c1dSpeech};
 const options={supportOff:false,ownRead:false};
 const label=Object.fromEntries(cardCodes.map(c=>[c,c])) as Record<Command,string>;
 const find=(title:string)=>crabPuzzles.find(p=>p.title.includes(title)&&!p.retired)!;
@@ -55,7 +56,7 @@ it('R2 P1-2: Crab owns its Help ladder; every press is kept and the whole plan c
 });
 it('R2 P1-2: certified reserve — from the ordinary-edit ceiling, the full ladder and a winning Go fit with the largest result',()=>{
  let worst=0;
- for(const p of crabPuzzles.filter(p=>!p.retired))for(const wall of ['bytes','actions'] as const){
+ for(const p of crabPuzzles.filter(p=>!p.retired&&p.descriptor.tray===undefined))for(const wall of ['bytes','actions'] as const){
   const dare=[...p.dares].filter(d=>!d.retired&&d.rule.kind==='par').sort((a,b)=>b.slot-a.slot)[0];
   let s=registration.start(p.ref,'a','reserve',emptyChallenge(),options,dare?[dare.slot]:[]);
   const good=solution(p.descriptor)!,last=good.length-1,other=cardCodes.indexOf(commands(p.descriptor.level.pace).find(c=>c!==good[last])!);
@@ -104,7 +105,8 @@ it('R2 P2-2: one wrong first card is repaired in one hinted edit on every regist
  }
 });
 it('R2 P2-2/P3-3: literal hints reach a card-optimal winner, one edit per hint, on bug starters and two-edit perturbations',()=>{
- for(const p of crabPuzzles.filter(p=>!p.retired)){
+ // C1d tray puzzles are built from blocks; their block hint is covered in tests/c1d-crab-deep.test.ts.
+ for(const p of crabPuzzles.filter(p=>!p.retired&&p.descriptor.tray===undefined)){
   const d=p.descriptor,good=solution(d)!;
   const starts=[d.starter.length?[...d.starter]:null,[...good].reverse(),good.slice(1),[...good.slice(0,2),...good]].filter((q):q is Command[]=>!!q&&!execute(d,q).won);
   for(const start of starts){
@@ -112,7 +114,9 @@ it('R2 P2-2/P3-3: literal hints reach a card-optimal winner, one edit per hint, 
    const promised=distance(program,first.plan);
    while(!execute(d,program).won&&edits<100){program=apply(program,stepOf(nextHint(d,program),program));edits++;}
    // The crab stops at home, so a win can come one edit early with unused cards left over.
-   expect(execute(d,program).won,p.title).toBe(true);expect(edits).toBeLessThanOrEqual(promised);expect(edits).toBeGreaterThanOrEqual(promised-1);expect(execute(d,program).cursor).toBe(good.length);
+   expect(execute(d,program).won,p.title).toBe(true);expect(edits).toBeLessThanOrEqual(promised);expect(edits).toBeGreaterThanOrEqual(promised-1);
+   // C1d two crabs: a card that would bump holds that crab still, so a plan can also win with one held card to spare.
+   if(d.crabs===2)expect(execute(d,program).cursor).toBeLessThanOrEqual(good.length+1);else expect(execute(d,program).cursor).toBe(good.length);
   }
  }
 });
@@ -146,7 +150,8 @@ it('R2 P2-4: every registered puzzle hears its own lesson, and School beaches ha
   else if(p.retired){if(key)expect((speech as Record<string,string>)[key],p.title).toBe(p.descriptor.lesson);}
   else{expect(key,p.title).toBeDefined();expect((speech as Record<string,string>)[key!]).toBe(p.descriptor.lesson);}
  }
- expect(new Set(crabPuzzles.flatMap(p=>lessonAudio(p.descriptor.lesson)??[])).size).toBe(11);
+ // 11 C1/C1b lines plus C1d's 25 Deep Water lessons.
+ expect(new Set(crabPuzzles.flatMap(p=>lessonAudio(p.descriptor.lesson)??[])).size).toBe(36);
 });
 
 it('R2 P3-1: retired legacy Mud entries keep their own certified walking minimum as par',()=>{

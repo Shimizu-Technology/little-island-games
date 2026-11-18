@@ -162,10 +162,12 @@ it('existing School descriptors stay flat and an isolated fixture opts in additi
  const {levels}=await import('../src/learn/games/crab-commands/engine');
  const {bank}=await import('../src/learn/games/beep-bot/engine');
  const {task}=await import('../src/learn/games/turtle-draw/engine');
- expect(levels.every(l=>l.blockEditor===undefined)).toBe(true);
+ // C1d's newly authored Level 5 beaches are the only School opt-ins; every earlier beach stays flat.
+ expect(levels.filter(l=>l.stage!=='deep').every(l=>l.blockEditor===undefined)).toBe(true);
+ expect(levels.filter(l=>l.stage==='deep').every(l=>l.blockEditor===true&&l.tray!==undefined)).toBe(true);
  expect(bank.flat().every(p=>p.puzzle.blockEditor===undefined)).toBe(true);
  for(let level=1;level<=5;level++)expect(task(level,0).blockEditor).toBeUndefined();
  vi.stubEnv('EXPO_PUBLIC_K7_FIXTURES','1');vi.resetModules();
- try{const {levels:fixtures}=await import('../src/learn/games/crab-commands/engine');expect(fixtures.find(l=>l.id==='k7-fixture')).toMatchObject({blockEditor:true,retired:true});expect(fixtures.filter(l=>l.id!=='k7-fixture').every(l=>l.blockEditor===undefined)).toBe(true);}
+ try{const {levels:fixtures}=await import('../src/learn/games/crab-commands/engine');expect(fixtures.find(l=>l.id==='k7-fixture')).toMatchObject({blockEditor:true,retired:true});expect(fixtures.filter(l=>l.id!=='k7-fixture'&&l.stage!=='deep').every(l=>l.blockEditor===undefined)).toBe(true);}
  finally{vi.unstubAllEnvs();vi.resetModules();}
 });

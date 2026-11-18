@@ -59,9 +59,13 @@ it('R2 merge: Harder after Mud 5 deals the current Mud 6, never the retired lega
  const mud6=crabPuzzles.find(p=>p.title.startsWith('Mud 6')&&!p.retired)!;
  await mount({...s,revision:0},[[mud6.ref.bank,mud6.ref.puzzle]]);await press('Go!');
  await vi.waitFor(()=>expect(text()).toContain('Puzzle solved!'),{timeout:8000,interval:50});
+ const note=text();
  await press('Harder');
  const next=crabPuzzles.find(c=>c.ref.bank===paused().puzzle.bank&&c.ref.puzzle===paused().puzzle.puzzle)!;
- expect(next.retired).toBeFalsy();expect(next.title).toMatch(/^Mud 6/);
+ // C1d fix: when Harder leaves Mud for another idea, the finish card names exactly where it goes.
+ if(!next.title.startsWith('Mud'))expect(note).toContain(`Harder takes you to ${next.title.split(' · ')[0]}.`);else expect(note).not.toContain('Harder takes you to');
+ // Since C1d the Deep Water ladder holds five more ideas, so Harder may deal another unplayed card one tier up.
+ expect(next.retired).toBeFalsy();expect(next.tier).toBe(mud6.tier);if(next.title.startsWith('Mud'))expect(next.ref).toEqual(mud6.ref);
 },15000);
 
 it('R2 P3-2: a refused move that is not a full log says the draft is kept, without the new-attempt offer',async()=>{

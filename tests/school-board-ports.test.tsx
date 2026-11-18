@@ -490,3 +490,21 @@ it('Weather keeps the gauge reading below the bulb at the AX floor',async()=>{
  // Keep even a conservative 0.8-em cap height clear of the actual bulb and stroke.
  expect(Number(first.props.y)-Number(reading.props.fontSize)*.8).toBeGreaterThanOrEqual(Number(bulb.props.cy)+Number(bulb.props.r)+.5);
 });
+it('the plan cue counts one hidden card as "1 more card"',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ Object.assign(viewport,{width:393,height:852,fontScale:1});
+ const session=startSession('crab-commands',{options:optionsAtLevel({mode:'solo',pace:'easy'},1)},{},7);
+ const base={...session,state:{...(session.state as Record<string,unknown>),program:Array.from({length:8},()=> 'right'),cursor:0,running:false}};
+ await act(async()=>{root=create(<BoardSpaceProvider space={{width:333,height:500,large:false}}><BoardSpaceContent><B1 session={base as never} update={vi.fn()} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={vi.fn()} stopSound={vi.fn()} soundOn={false} width={333} height={759} active coach={{active:false,done:vi.fn()}} cheer={vi.fn()}/></BoardSpaceContent></BoardSpaceProvider>,{createNodeMock:()=>({scrollTo:()=>{}})});});
+ const strip=root!.root.findAll(n=>String(n.type)==='ScrollView'&&n.props.accessibilityLabel==='Your plan cards')[0];
+ const cards=strip.findAll(n=>String(n.type)==='PressableScale'&&n.props.accessibilityLabel?.startsWith('Card '));
+ const cue=(id:string)=>root!.root.findAll(n=>n.props.testID===id&&String(n.type)==='Text')[0];
+ // Seven cards on the first row, the eighth alone below the strip's edge.
+ await act(async()=>{strip.props.onLayout({nativeEvent:{layout:{height:60}}});strip.props.onContentSizeChange(333,120);cards.forEach((c,i)=>c.props.onLayout({nativeEvent:{layout:{y:i<7?0:60,height:58,width:44}}}));});
+ expect(cue('plan-more-below').props.accessibilityLabel).toBe('1 more card below. Scroll down.');
+ expect(cue('plan-more-below').props.children.join('')).toBe('↓ 1 more card');
+ // The first card alone on a row above the strip.
+ await act(async()=>{cards.forEach((c,i)=>c.props.onLayout({nativeEvent:{layout:{y:i<1?0:60,height:58,width:44}}}));strip.props.onScroll({nativeEvent:{contentOffset:{y:60}}});});
+ expect(cue('plan-more-above').props.accessibilityLabel).toBe('1 more card above. Scroll up.');
+ expect(cue('plan-more-above').props.children.join('')).toBe('↑ 1 more card');
+});
