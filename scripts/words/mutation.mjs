@@ -236,8 +236,12 @@ r4Edges.push(
 r4Edges.push(
  ['artifact-views','decoded source position view','sensitiveGrids, densitySource };','sensitiveGrids, densitySource:undefined };',['R4 decoded JavaScript source proximity']]
 );
+// Bind this existing release mutation to its export call; the standalone iOS
+// helper uses the same flag and must not capture a first-match replacement.
+const releaseExportPrefix="\n    run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--no-minify',";
+if(sources.get('check').split(releaseExportPrefix).length!==2)throw new Error('Missing or ambiguous release export mutation target');
 r4Edges.push(
- ['check','native compiler input names',"'--no-minify',",'', ['release gate requires Hermes and checks current receipt artifacts']]
+ ['check','native compiler input names',releaseExportPrefix,releaseExportPrefix.replace("'--no-minify',",''), ['release gate requires Hermes and checks current receipt artifacts']]
 );
 r4Edges.push(
  ['artifact-views','prose before inline enumeration','if(sentence)return false;','',['R4 prose before inline enum']]
