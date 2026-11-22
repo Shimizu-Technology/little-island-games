@@ -619,7 +619,7 @@ export function useInteraction({
       return;
     }
     if (replay && event.type === "down" && event.entity) {
-      const id = event.entity, slot = slots.value.find((s) => s.id === id || s.restId === id);
+      const id = event.entity, slot = slots.value.find((s) => !!s.id && (s.id === id || s.restId === id));
       if (slot) {
         const origin = originFor(slot.id);
         event = { ...event, entity: slot.id, contact: roomPoint(slot.x - origin.x, slot.y - origin.y) };
@@ -780,7 +780,7 @@ export function useInteraction({
           : undefined;
         slots.set(slots.value.map((s, i) => (i === index ? nextSlot : s)));
       } else if (effect.type === "commit") {
-        const index = slots.value.findIndex((s) => s.id === effect.entity || s.restId === effect.entity);
+        const index = slots.value.findIndex((s) => !!s.id && (s.id === effect.entity || s.restId === effect.entity));
         const slot = slots.value[index];
         if (!slot) continue;
         const origin = roomOrigin(roomIds.indexOf(effect.proposal.room), building);
