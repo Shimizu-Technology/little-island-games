@@ -89,7 +89,7 @@ const Food = React.memo(function Food({ current, clock, progress, meal, input, r
 const MealDrawing=React.memo(function MealDrawing({input,meal,playback,renderCharacter}:{input:CharacterRenderInput;meal?:Meal;playback?:CharacterRenderInput['mealPlayback'];renderCharacter?:CharacterRenderer}) {
   const value=meal && playback?{...input,action:meal.action,meal:playback.frames[0].meal,mealPlayback:playback,blink:false}:input;
   return renderCharacter?.(value) ?? <HomeCharacter input={value}/>;
-},(a,b)=>a.meal===b.meal && a.playback===b.playback && a.renderCharacter===b.renderCharacter && JSON.stringify({...a.input,action:undefined,face:undefined,gaze:undefined})===JSON.stringify({...b.input,action:undefined,face:undefined,gaze:undefined}));
+},(a,b)=>a.meal===b.meal && a.playback===b.playback && a.renderCharacter===b.renderCharacter && JSON.stringify(a.meal ? {...a.input,action:undefined} : a.input)===JSON.stringify(b.meal ? {...b.input,action:undefined} : b.input));
 /** Persistent body; authored arm/mouth poses and one small held-food stage. */
 export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderCharacter, onPresented, onFinished, visible = true }: {
   input: CharacterRenderInput; meal?: Meal; visible?:boolean; reduced: boolean; renderCharacter?: CharacterRenderer; onPresented?: () => void; onFinished?: () => void;
