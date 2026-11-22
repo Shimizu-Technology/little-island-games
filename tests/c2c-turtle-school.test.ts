@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { advance, draw, engine as turtle, initialProgram, solves, task as legacyTask, validBlock, type Block, type TurtleState } from '../src/learn/games/turtle-draw/engine';
 import { blockCost } from '../src/learn/games/turtle-draw/dsl';
-import { LEVEL_TASKS, schoolTemplates, templateTask } from '../src/learn/games/turtle-draw/templates';
+import { LEVEL_TASKS, schoolTemplates } from '../src/learn/games/turtle-draw/templates';
 import { deepCodes, readTurtleDraft, turtleProgram, programCodes } from '../src/learn/games/turtle-draw/program';
 import { encodeProgram, sessionBytes } from '../src/learn/program/codec';
 import { levelOf } from '../src/learn/levelOptions';
