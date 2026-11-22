@@ -12,13 +12,17 @@ const stones: Record<string, { fill: string; name: string; mark: React.ReactNode
   plum: { fill: "#9D7DB0", name: "plum diamond", mark: <Path d="M25 13L37 25L25 37L13 25Z" fill="none" stroke="#FFF8E6" strokeWidth="3.5" strokeLinejoin="round" /> },
 };
 
-export function StoneGlyph({ color, size = 46 }: { color: string; size?: number }) {
+const turnDegrees: Record<string, number> = { up: 0, right: 90, down: 180, left: 270 };
+
+export function StoneGlyph({ color, size = 46, turn }: { color: string; size?: number; turn?: string }) {
   const stone = stones[color] ?? stones.coral;
-  return <Svg width={size} height={size} viewBox="0 0 50 50" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+  const deg = turn ? turnDegrees[turn] : undefined;
+  return <Svg width={size} height={size} viewBox="0 0 50 50" style={deg !== undefined ? { transform: [{ rotate: `${deg}deg` }] } : undefined} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
     <Circle cx="25" cy="26" r="22" fill="#B7C9A4" opacity={0.4} />
     <Circle cx="25" cy="23" r="21" fill={stone.fill} stroke={ink} strokeWidth="2.5" />
     <Path d="M12 17Q16 9 25 8" fill="none" stroke="#FFF8E6" strokeWidth="3" strokeLinecap="round" opacity={0.65} />
     {stone.mark}
+    {deg !== undefined && <Path d="M25 2L32 13H18Z" fill="#FFF8E6" stroke={ink} strokeWidth="2.2" strokeLinejoin="round" />}
   </Svg>;
 }
 
@@ -30,17 +34,26 @@ export function SeaGlyph({ kind, size = 42 }: { kind: string; size?: number }) {
 }
 
 export function patternLabel(token: string): string {
-  if (token.startsWith("stone:")) { const [,color,scale] = token.split(":"); return `${stones[color]?.name ?? color}${scale ? `, size ${scale}` : ""}`; }
+  if (token.startsWith("stone:")) {
+    const [, color, scale, turn] = token.split(":");
+    const sizeText = scale && scale !== "0" ? `, size ${scale}` : "";
+    const turnText = turn ? `, pointing ${turn}` : "";
+    return `${stones[color]?.name ?? color}${sizeText}${turnText}`;
+  }
   if (token.startsWith("shells:")) return `${token.split(":")[1]} shells`;
   if (token.startsWith("arrow:")) return `${token.split(":")[1]} arrow`;
   return token;
 }
 
 export function PatternGlyph({ token, size = 46 }: { token: string; size?: number }) {
-  if (token.startsWith("stone:")) { const [,color,scale] = token.split(":"); const stoneSize = scale ? Math.min(size, 27 + Number(scale) * 7) : size; return <StoneGlyph color={color} size={stoneSize} />; }
-  if (token.startsWith("shells:")) { const count = Number(token.split(":")[1]); return <View style={{ width: size + 10, flexDirection: "row", flexWrap: "wrap", justifyContent: "center" }}>{Array.from({ length: count }, (_, i) => <SeaGlyph key={i} kind="shell" size={count > 4 ? 19 : 23} />)}</View>; }
-  if (token.startsWith("arrow:")) { const direction = token.split(":")[1], degrees = ({ up: 0, right: 90, down: 180, left: 270 } as Record<string, number>)[direction] ?? 0; return <Svg width={size} height={size} viewBox="0 0 50 50" style={{ transform: [{ rotate: `${degrees}deg` }] }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Circle cx="25" cy="25" r="22" fill="#D6E6D4" stroke={ink} strokeWidth="2"/><Path d="M25 9L12 25H20V41H30V25H38Z" fill="#5E9B75" stroke={ink} strokeWidth="2.5" strokeLinejoin="round"/></Svg>; }
-  return <Copy style={{ color: C.ink, fontSize: token.length > 3 ? 21 : 27, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{token}</Copy>;
+  if (token.startsWith("stone:")) {
+    const [, color, scale, turn] = token.split(":");
+    const stoneSize = scale && scale !== "0" ? Math.min(size, 25 + Number(scale) * 7) : size;
+    return <StoneGlyph color={color} size={stoneSize} turn={turn} />;
+  }
+  if (token.startsWith("shells:")) { const count = Number(token.split(":")[1]); return <View style={{ width: size + 10, flexDirection: "row", flexWrap: "wrap", justifyContent: "center" }}>{Array.from({ length: count }, (_, i) => <SeaGlyph key={i} kind="shell" size={count > 4 ? 17 : 22} />)}</View>; }
+  if (token.startsWith("arrow:")) { const direction = token.split(":")[1], degrees = turnDegrees[direction] ?? 0; return <Svg width={size} height={size} viewBox="0 0 50 50" style={{ transform: [{ rotate: `${degrees}deg` }] }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Circle cx="25" cy="25" r="22" fill="#D6E6D4" stroke={ink} strokeWidth="2"/><Path d="M25 9L12 25H20V41H30V25H38Z" fill="#5E9B75" stroke={ink} strokeWidth="2.5" strokeLinejoin="round"/></Svg>; }
+  return <Copy maxFontSizeMultiplier={1.4} style={{ color: C.ink, fontSize: token.length > 3 ? 17 : token.length > 2 ? 21 : 25, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{token}</Copy>;
 }
 
 export function ScaleGlyph({ size = 150 }: { size?: number }) { return <Svg width={size} height={size * .47} viewBox="0 0 150 70" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Path d="M75 9V57M48 58H102M36 16H114M75 8L36 16M75 8L114 16" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round"/><Circle cx="75" cy="8" r="5" fill="#E9BF5C" stroke={ink} strokeWidth="2"/><Path d="M29 17L18 43M43 17L54 43M107 17L96 43M121 17L132 43M16 43Q36 62 56 43ZM94 43Q114 62 134 43Z" fill="#E9BF5C" stroke={ink} strokeWidth="2.5" strokeLinejoin="round"/><Rect x="67" y="56" width="16" height="6" rx="3" fill={ink}/></Svg>; }
