@@ -8,9 +8,10 @@ const COLORS = ["#E1B251", "#C56D50", "#246858", "#386C9A", "#79AB80", "#E58C8C"
 /**
  * A short burst of stars and a big check that plays once per `burst` change (a counter).
  * It owns a clipped layout cell so no frame can paint over text or characters. Under Reduce Motion
- * shows a brief still check instead.
+ * shows a brief still check instead. `onDone` reports the finished burst, so a host that remounts it can pass 0 for a
+ * burst that already played instead of playing it again.
  */
-export function Celebrate({ burst, big = false }: { burst: number; big?: boolean }) {
+export function Celebrate({ burst, big = false, onDone }: { burst: number; big?: boolean; onDone?: (burst: number) => void }) {
   const reduced = useReducedMotion();
   const [t] = useState(() => new Animated.Value(0));
   const [visible, setVisible] = useState(false);
@@ -20,9 +21,13 @@ export function Celebrate({ burst, big = false }: { burst: number; big?: boolean
     setVisible(true);
     t.setValue(0);
     const anim = Animated.timing(t, { toValue: 1, duration: reduced ? 500 : big ? 1100 : 750, easing: easeOut, useNativeDriver: nativeDriver });
-    anim.start(({ finished }) => finished && setVisible(false));
+    anim.start(({ finished }) => {
+      if (!finished) return;
+      setVisible(false);
+      onDone?.(burst);
+    });
     return () => anim.stop();
-  }, [burst, big, reduced, t]);
+  }, [burst, big, reduced, t, onDone]);
   if (!burst) return null;
   const pieces = big ? 14 : 8;
   return (

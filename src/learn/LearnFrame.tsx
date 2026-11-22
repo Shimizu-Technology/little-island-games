@@ -1,6 +1,6 @@
 import { LagoonHintScroll } from './LagoonHintScroll';
 import { BoardSpaceProvider, BoardSpaceContent } from './BoardSpace';
-import { boardCardInner, boardCardPadding, companionBeside, measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS } from './boardGeometry';
+import { boardCardInner, boardCardPadding, cheerPillClear, companionBeside, layoutMatchesWindow, measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS, type Box } from './boardGeometry';
 import { coveReady } from './generated/readiness';
 import { challengeFor, schoolContext } from '../challenge/catalog';
 import { ResultOffer } from '../challenge/ResultOffer';
@@ -13,7 +13,7 @@ import { isMathGame, type MathRound } from "./games/shell-math/round";
 import { Companion, LearningCompanion, PhoneLearningCompanion, useCompanionReaction } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AppState, ScrollView, View, useWindowDimensions } from "react-native";
+import { AppState, ScrollView, View, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useIsFocused } from "expo-router";
 import { useStore } from "../state/Store";
@@ -71,8 +71,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // A board that owns a touch (Slip Tide's water) holds the page scroll until release, as Cove grids do.
   const [held, setHeld] = useState(false);
   const layoutKey = `${width}x${height}`;
-  const [viewport, setViewport] = useState({ height: 0, key: "" });
+  const [viewport, setViewport] = useState({ height: 0, width: 0, key: "" });
   const [boardLayout, setBoardLayout] = useState({ top: 0, inset: 0, width: 0, topAt: 0, insetAt: 0 });
+  // Where a phone's cheer line may be drawn: its row and the in-flow boxes it must stay clear of (F-frame-3 fix 1).
+  const [cheerFit, setCheerFit] = useState<Record<"row" | "mode" | "chip" | "pill", Box | null>>({ row: null, mode: null, chip: null, pill: null });
+  const fit = useCallback((key: "row" | "mode" | "chip" | "pill") => (event: LayoutChangeEvent) => {
+    const { x, y, width: w, height: h } = event.nativeEvent.layout;
+    setCheerFit(old => old[key]?.x === x && old[key]?.y === y && old[key]?.width === w && old[key]?.height === h ? old : { ...old, [key]: { x, y, width: w, height: h } });
+  }, []);
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   const large = fontScale >= LARGE_TEXT;
@@ -142,11 +148,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, [finished, saved?.id]);
   // Celebrations: a small burst on right answers, a big one when the round is won or completed.
   // A round the island friend or tide won ends calmly; the board says who got there first.
-  const [burst, setBurst] = useState({ n: 0, big: false });
+  // `done` is the last burst that finished (or was never drawn), kept here so a remount of the board card, which crossing
+  // the 600-pt companion breakpoint causes, doesn't play a finished burst again.
+  const [burst, setBurst] = useState({ n: 0, big: false, done: 0 });
+  const burstDone = useCallback((n: number) => setBurst(b => b.n === n && b.done !== n ? { ...b, done: n } : b), []);
   useEffect(() => {
     if (finished && !wasFinished.current && !notWon) {
       sound("win");
-      setBurst((b) => ({ n: b.n + 1, big: true }));
+      setBurst((b) => ({ ...b, n: b.n + 1, big: true }));
     }
     wasFinished.current = finished;
   }, [finished, notWon, sound]);
@@ -182,7 +191,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     (kind: "right" | "big" = "right", say?: string) => {
       if (!boardActive || liveFeedback.current !== feedbackContext) return;
       reactCompanion("correct");
-      setBurst((b) => ({ n: b.n + 1, big: kind === "big" }));
+      setBurst((b) => ({ ...b, n: b.n + 1, big: kind === "big" }));
       sound(kind === "big" ? "win" : "match");
       if (kind === "big") feel("success");
       clearTimeout(cheerLine.current);
@@ -254,7 +263,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, learningSkills);
     next.learner = learner.id;
     if (options.mode !== "solo") store.rememberPlayers(names);
-    if (save(next)) { stopSound(); setBurst({ n: 0, big: false }); setSetup(false); }
+    if (save(next)) { stopSound(); setBurst({ n: 0, big: false, done: 0 }); setSetup(false); }
   }
   function replay() {
     if (!saved || !finished) return;
@@ -263,7 +272,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       ? replaySession(saved, learningSkills, undefined, learner.id)
       : startSession(id, { options: learner.choices[id] ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) } }, learningSkills);
     next.learner = learner.id;
-    if (save(next)) { stopSound(); setBurst({ n: 0, big: false }); }
+    if (save(next)) { stopSound(); setBurst({ n: 0, big: false, done: 0 }); }
   }
   function openSetup() {
     if (saved) {
@@ -300,10 +309,21 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const islanderBeside = companionBeside(width, height) && store.save.settings.learningIslander !== false;
   const cardInner = boardCardInner(width, insets.left, insets.right, islanderBeside);
   const revealEntry = schoolEntryReveal(id, large, height);
+  // A burst the revealed board doesn't draw counts as played, so a later rotation to a card that does draw it cannot start it late.
+  if (revealEntry && !finished && burst.done !== burst.n) setBurst(b => ({ ...b, done: b.n }));
+  const liveBurst = burst.done === burst.n ? 0 : burst.n;
   // An AX board's one entry reveal waits for the greeting to end, when the page has settled. F-frame-3: the greeting is
   // drawn over the page, so its end no longer moves the board or brings a fresh board layout to wait for; on a tablet it
   // no longer lengthens the page either, so revealing before the page settled stopped short (iPad mini AX5, 52 pt).
-  const anchorReady = !large || companionEvent === "waiting";
+  // Only that first greeting waits. A rotation, or a right or wrong answer's cheer, has nothing to settle, so a reveal for
+  // a new window never waits out a 1,200-ms reaction: once the round's greeting has passed, it is passed.
+  const round = `${learner.id}:${saved?.id ?? "setup"}`;
+  const [greeted, setGreeted] = useState("");
+  if (companionEvent !== "entry" && greeted !== round) setGreeted(round);
+  // Window dimensions and layout events arrive in either order. The reveal is consumed only against offsets the native
+  // layout has delivered for this window (its viewport's width is the window's), never against the previous window's.
+  const geometryFresh = layoutMatchesWindow(viewport.width, width, insets.left, insets.right);
+  const anchorReady = (!large || greeted === round) && geometryFresh;
   const boardSpace = useMemo(() => viewport.height > 0 && boardLayout.width > 0 ? {
     width: boardLayout.width,
     // AX and short-landscape entry reveal put the board 8 pt below the viewport top. Other windows
@@ -355,10 +375,15 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // comes and goes. A phone shows it at the right end of the mode row, rising from the row's bottom into the free space
   // below the islander (it never hangs below the pinned header); a tablet beside the islander (above it when the islander
   // stands beside the card, to its left when below).
-  const cheerPill = cheerText && <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, ...(phone ? { paddingVertical: 2 } : { paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }) }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>;
-  const phoneCheer = phone && cheerPill && saved && !finished && <View pointerEvents="none" style={{ position: "absolute", bottom: 0, right: 0 }}>{cheerPill}</View>;
-  const islanderCheer = <View style={{ alignSelf: "stretch" }}>{cheerPill && <View pointerEvents="none" style={islanderBeside
-    ? { position: "absolute", bottom: 4, left: -80, right: -80, alignItems: "center" }
+  // A phone's line is drawn only where it leaves the mode label and learner chip clear, so a long mode ("Together: two
+  // directions each") or a long name, which wrap the row, never have text painted over. It stays mounted so the live region
+  // still speaks it. A tablet's line stays inside its column and the 16-pt gutter beside it: a pill wider than the column
+  // (about 102 pt) wraps its words rather than reaching past the gutter.
+  const cheerPill = cheerText && <View accessibilityLiveRegion="polite" onLayout={phone ? fit("pill") : undefined} style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, ...(phone ? { paddingVertical: 2 } : { paddingVertical: 5, borderWidth: 2, borderColor: theme.accent, maxWidth: "100%" }) }}><Copy maxFontSizeMultiplier={small} style={{ color: theme.ink, fontWeight: "900", ...(phone ? {} : { textAlign: "center" }) }}>{cheerText}</Copy></View>;
+  const pillClear = cheerPillClear(cheerFit.row, large ? [cheerFit.chip, cheerFit.mode] : [cheerFit.mode], cheerFit.pill);
+  const phoneCheer = phone && cheerPill && saved && !finished && <View pointerEvents="none" testID="learn-cheer-phone" style={{ position: "absolute", bottom: 0, right: 0, opacity: pillClear ? 1 : 0 }}>{cheerPill}</View>;
+  const islanderCheer = <View style={{ alignSelf: "stretch" }}>{cheerPill && <View pointerEvents="none" testID="learn-cheer-tablet" style={islanderBeside
+    ? { position: "absolute", bottom: 4, left: -12, right: -12, alignItems: "center" }
     : { position: "absolute", top: 0, right: "100%", width: 240, height: 112, marginRight: 8, alignItems: "flex-end", justifyContent: "center" }}>{cheerPill}</View>}</View>;
   // Sheet text runs across the sheet (a 560-pt card on wide screens) inside its 22-pt padding.
   const sheetLine = (width >= 600 ? Math.min(560, width - 48) : width) - 44;
@@ -366,8 +391,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <LearnerChip compact/>
         {bar}
         {level}
-        {phone && saved && <View>
-          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>
+        {phone && saved && <View onLayout={fit("row")}>
+          <Copy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>
           {phoneCheer}
         </View>}
 
@@ -389,9 +414,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
         </View>
       </View> : <View testID="learn-header-scrolled" style={{ gap: 4 }}>
         {level}
-        {saved && <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-          <LearnerChip compact/>
-          <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>
+        {saved && <View onLayout={fit("row")} style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          <View onLayout={fit("chip")} style={{ maxWidth: "100%" }}><LearnerChip compact/></View>
+          <Copy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>
           {phoneCheer}
         </View>}
         {!saved && <LearnerChip compact/>}
@@ -414,7 +439,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       {/* Above the page, so a cheer drawn at the bottom of the pinned header shows in full over the scrolling content. */}
       {pinned && <View testID="learn-header-pinned" style={{ paddingHorizontal: 16, zIndex: 1 }}>{pinned}</View>}
       <GridInteraction.Provider value={setHeld}>
-      <ScrollView {...(id === "logic-lagoon" ? { onScroll: (event: import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>) => { lagoonOffset.current = event.nativeEvent.contentOffset.y; }, scrollEventThrottle: 16 } : {})} onLayout={event => setViewport({ height: event.nativeEvent.layout.height, key: layoutKey })} key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+      <ScrollView {...(id === "logic-lagoon" ? { onScroll: (event: import("react-native").NativeSyntheticEvent<import("react-native").NativeScrollEvent>) => { lagoonOffset.current = event.nativeEvent.contentOffset.y; }, scrollEventThrottle: 16 } : {})} onLayout={event => setViewport({ height: event.nativeEvent.layout.height, width: event.nativeEvent.layout.width, key: layoutKey })} key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {scrolled}
         {width >= 600 && !large && saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
@@ -429,9 +454,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width ? old : { ...old, top, topAt: width }); }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={islanderCheer}>
           <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: boardCardPadding(width), shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
-            {/* F-frame-3: the burst plays over the card's top edge (inside it when the board sits at the top of the screen),
-                so it never holds space above the board or moves it. */}
-            <View pointerEvents="none" style={{ position: "absolute", top: revealEntry ? 0 : burst.big ? -45 : -33, left: 0, right: 0, alignItems: "center", zIndex: 1 }}><Celebrate burst={burst.n} big={burst.big} /></View>
+            {/* F-frame-3: the burst plays over the card's top edge, so it never holds space above the board or moves it. Where
+                the board is revealed at the top of the screen (AX, short landscape) that edge is under the pinned bar, and
+                the burst would land on the board's own words, so it isn't drawn; the board, the islander and the line say it. */}
+            {!revealEntry && <View pointerEvents="none" style={{ position: "absolute", top: burst.big ? -45 : -33, left: 0, right: 0, alignItems: "center", zIndex: 1 }}><Celebrate burst={liveBurst} big={burst.big} onDone={burstDone} /></View>}
             <StepReveal.Provider value={reveal}><TextFit.Provider value={boardFit}><BoardSpaceProvider key={saved.id} geometryEnabled={MEASURED_SCHOOL_BOARDS.has(id)} space={boardSpace} onReveal={revealBoard}>
             <BoardSpaceContent testID="learn-board-inset" onLayout={e => { const layout = e.nativeEvent.layout; boardInset.current = layout.y; setBoardLayout(old => old.inset === layout.y && old.width === layout.width && old.insetAt === width ? old : { ...old, inset: layout.y, width: layout.width, insetAt: width }); }}>
             <LagoonHintScroll.Provider value={lagoonScroll}><Board
@@ -464,7 +490,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 accessibilityLiveRegion="polite"
                 style={{ alignItems: "center", justifyContent: "center", gap: 14, padding: 20, borderRadius: 28, backgroundColor: theme.sky, alignSelf: "stretch", minHeight: Math.max(430, height - insets.top - insets.bottom - 190), borderWidth: 3, borderColor: theme.accent }}
               >
-                <View pointerEvents="none" style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}><Celebrate burst={burst.n} big /></View>
+                <View pointerEvents="none" style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}><Celebrate burst={liveBurst} big onDone={burstDone} /></View>
                 {engine.id === "hafa-adai" && !saved.options.stage && <LastPicnicWord state={saved.state as IslandState} />}
                 {earnedStars > 0 && <View accessible accessibilityLabel={`${earnedStars} ${earnedStars === 1 ? "star" : "stars"} earned`}><Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>{"★  ".repeat(earnedStars).trim()}</Heading></View>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>

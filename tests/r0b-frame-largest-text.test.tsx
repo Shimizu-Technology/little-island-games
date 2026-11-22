@@ -146,7 +146,7 @@ it('measures actual card width and space below the real header instead of passin
   vi.stubGlobal('cancelAnimationFrame', () => {});
   const r = await mount('crab-commands');
   await act(async () => {
-    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640 } } });
+    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640, width: 393 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
   });
@@ -156,7 +156,7 @@ it('measures actual card width and space below the real header instead of passin
 
 async function measureFrame(r: ReactTestRenderer, height=556, top=56, inset=14, width=333) {
   await act(async()=>{
-    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height}}});
+    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height,width:viewport.width}}});
     r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board')[0].props.onLayout({nativeEvent:{layout:{y:top}}});
     r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board-inset')[0].props.onLayout({nativeEvent:{layout:{y:inset,width,height:400}}});
   });

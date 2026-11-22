@@ -95,6 +95,8 @@ it.each(windows)('%s: a burst never holds space in the board card, before, durin
     const r = await mount(id);
     for (const kind of ['right', 'big'] as const) {
       await cheer(r, kind);
+      // Where the board is revealed at the top of the screen (AX, short landscape) the burst isn't drawn (fix 1, P2-3).
+      if (fontScale >= 1.5 || height < 500) { expect(r.root.findAll(n => n.props.testID === 'celebration-cell'), `${id} ${kind}`).toHaveLength(0); continue; }
       const cell = r.root.find(n => n.props.testID === 'celebration-cell');
       const card = boardCard(r);
       // The cell is drawn over the card, so no part of it is in the card's layout.
@@ -171,7 +173,7 @@ it.each(windows)('%s: a measured board is told the measured width, and its first
   const estimate = byType(r, 'Board')[0].props.width;
   expect(estimate).toBeCloseTo(cardInner(width, 0, 0, wide), 6);
   await act(async () => {
-    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: height - 200 } } });
+    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: height - 200, width } } });
     r.root.find(n => String(n.type) === 'View' && n.props.testID === 'learn-board').props.onLayout({ nativeEvent: { layout: { y: 90 } } });
     r.root.find(n => String(n.type) === 'View' && n.props.testID === 'learn-board-inset').props.onLayout({ nativeEvent: { layout: { y: width < 600 ? 14 : 24, width: estimate, height: 400 } } });
   });
@@ -196,7 +198,7 @@ it.each([
   vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => { frames.set(++n, f); return n; }); vi.stubGlobal('cancelAnimationFrame', (i: number) => frames.delete(i));
   const flushFrames = async () => act(async () => { const q = [...frames.values()]; frames.clear(); q.forEach(f => f(0)); });
   await act(async () => {
-    byType(root!, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 759 } } });
+    byType(root!, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 759, width } } });
     root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board').props.onLayout({ nativeEvent: { layout: { y: 180 } } });
     root!.root.find(x => String(x.type) === 'View' && x.props.testID === 'learn-board-inset').props.onLayout({ nativeEvent: { layout: { y: 14, width: width < 600 ? 333 : 664, height: 400 } } });
   });
