@@ -78,7 +78,7 @@ describe('version 3 world invariants',()=>{
  });
  it('toggles capabilities without requiring legacy interactive metadata',()=>{
   capabilities.fridge={moveInPlay:true,toggle:'open'};const s=empty();s.rooms.home.instances=[instance('fridge','fridge',6,0)];
-  const opened=homeReducer(s,{type:'toggle',id:'fridge'}).state;expect(opened.rooms.home.instances[0].powered).toBe(true);expect(validHome(opened)).toBe(true);
+  const opened=homeReducer(s,{type:'toggle',id:'fridge'}).state;expect(opened.rooms.home.instances[0].storage).toEqual({version:1,open:true});expect(opened.rooms.home.instances[0].powered).toBe(true);expect(validHome(opened)).toBe(true);
  });
  it('keeps camera navigation out of world history and preserves context on undo',()=>{
   const s=starterHome();let h=editHistory({present:s,past:[],future:[]},{type:'mirror',id:'bed'});h=editHistory(h,{type:'room',room:'kitchen'});expect(h.past).toHaveLength(1);h=editHistory(h,{type:'undo'});expect(h.present.current).toBe('kitchen');expect(h.present.rooms.home.instances[0].mirrored).toBe(false);

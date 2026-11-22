@@ -179,7 +179,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         entity.hitProxies=[entity.bounds];
       }
     } else if (parent && entity.attachment.kind === "container") {
-      entity.contact = parent.contact;
+      entity.contact = roomPoint(parent.contact.x, parent.contact.y - (parent.item ? itemSize(parent.item) * .3 : 0));
     } else if (parent) {
       entity.contact = roomPoint(
         parent.contact.x + originalContacts[entity.id].x - originalContacts[parent.id].x,

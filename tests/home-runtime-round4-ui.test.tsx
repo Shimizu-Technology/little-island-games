@@ -61,7 +61,7 @@ describe('round4 rendered runtime contracts',()=>{
    pickups:[],reduced:false,selected:undefined,reactions:{},sleeping:{},onNode:()=>{},onSelect:()=>{},onMove:()=>{}};
   await act(async()=>{tree=TestRenderer.create(<SceneView {...props}/>);});
   expect(tree.root.findAll(n=>typeof n.type==='string' && n.props.testID?.startsWith('home-scene-'))).toHaveLength(0);
-  const labels=tree.root.findAllByProps({accessibilityLabel:'Fridge, Kitchen'}).filter(n=>typeof n.type==='string');
+  const labels=tree.root.findAllByProps({accessibilityLabel:'Fridge, Kitchen, open, 0 of 8 items, empty'}).filter(n=>typeof n.type==='string');
   expect(labels).toHaveLength(1);
   c.clock.value=1030;const rotation=()=>labels[0].findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0].props.style.evaluate().transform.find((t:any)=>'rotate'in t)?.rotate;
   const angle=parseFloat(rotation());expect(Math.abs(angle)).toBeGreaterThan(.1);expect(Math.abs(angle)).toBeLessThanOrEqual(1.5);
@@ -84,10 +84,10 @@ describe('round4 rendered runtime contracts',()=>{
    return node.children.flatMap(n=>typeof n==='string'?[]:ax(n));
   }
   const elements=ax(tree.root);
-  expect(elements.filter(e=>e.label.endsWith(', Kitchen'))).toMatchInlineSnapshot(`
+  expect(elements.filter(e=>e.label.includes(', Kitchen'))).toMatchInlineSnapshot(`
     [
       {
-        "label": "Fridge, Kitchen",
+        "label": "Fridge, Kitchen, open, 0 of 8 items, empty",
         "role": "button",
       },
       {
@@ -102,7 +102,7 @@ describe('round4 rendered runtime contracts',()=>{
   `);
   expect(elements.filter(e=>e.label.startsWith('Badge board'))).toEqual([{role:'button',label:'Badge board, 6 of 28 earned. Open My badges'}]);
   expect(elements.every(e=>!e.label.includes('house-')&&!e.label.includes('home-scene-')&&!e.label.includes('overlay'))).toBe(true);
-  for(const element of elements.filter(e=>e.label.endsWith(', Kitchen')))expect(elements.filter(e=>e.label===element.label)).toHaveLength(1);
+  for(const element of elements.filter(e=>e.label.includes(', Kitchen')))expect(elements.filter(e=>e.label===element.label)).toHaveLength(1);
   await act(async()=>tree.unmount());
  });
 

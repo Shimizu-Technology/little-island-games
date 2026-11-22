@@ -300,7 +300,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
       ? { ...item, tint: action.tint }
       : {
           ...item,
-          ...(storageCapacity(item.item) ? { storage: { version: 1 as const, open: !storageOpen(item) } } : cap.toggle ? { powered: !(item.powered ?? item.state === "active") } : {}),
+          ...(storageCapacity(item.item) ? { storage: { version: 1 as const, open: !storageOpen(item) }, powered: !storageOpen(item) } : cap.toggle ? { powered: !(item.powered ?? item.state === "active") } : {}),
           state: spec.interactive ? (item.state === "rest" ? ("active" as const) : ("rest" as const)) : item.state,
         };
   return finish({

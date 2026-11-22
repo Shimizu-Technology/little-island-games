@@ -37,6 +37,8 @@ describe('HS-01 / HS-02 storage', () => {
     expect(result.state.rooms.home.instances.find(i => i.id === 'loose')?.in).toBe('box');
     const box = result.state.rooms.home.instances.find(i => i.id === 'box')!;
     expect(box.storage).toEqual({ version: 1, open: true });
+    expect(box.powered).toBe(true);
+    expect(buildScene(result.state).entities['home/item/loose'].contact).toEqual(p.contact);
     expect(storageOpen(box)).toBe(true);
   });
   it('full means a typed refusal, with no mutation or lost object', () => {

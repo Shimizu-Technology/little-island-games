@@ -54,6 +54,8 @@ it('P3-6 every catalog body across every room preserves visibility in both fixtu
   for (let x=80;x<800;x+=160) for (let y=350;y<=530;y+=60) {
    const p=resolve(scene.rooms[room],subject,roomPoint(x,y),{scale:.5,release:true,catalog:true,avoidFurnitureOverlap:true});
    if(p.kind==='staging')continue;
+   // HS-01: a stored catalog prop is intentionally hidden by its container.
+   if(p.attachment.kind==='container'){expect(subject.body?.small).toBe(true);continue;}
    placed++;
    const bands=scene.rooms[room].occlusionBands.filter(b=>b.id!==subject.id);
    expect(occludedFraction(translatedBounds(subject.bounds,p.contact),p.contact.y,bands)).toBeLessThanOrEqual(.5);

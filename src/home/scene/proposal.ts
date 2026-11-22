@@ -169,7 +169,7 @@ export function apply(
   if (proposal.attachment.kind === "container") {
     const parent = parentItemId(proposal.attachment.parent, names);
     rooms[proposal.room].instances = rooms[proposal.room].instances.map(i => i.id === parent && storageCapacity(i.item)
-      ? { ...i, storage: { version: 1, open: true } } : i);
+      ? { ...i, storage: { version: 1, open: true }, powered: true } : i);
   }
   for (const room of roomIds) {
     const originalOrder = state.rooms[room].instances.map((i) => i.id);
