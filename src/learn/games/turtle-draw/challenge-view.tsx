@@ -62,7 +62,6 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
   const showCanvas = d.kind === 'build' || s.won || running;
   const body = d.kind === 'build' ? <BuildControls sideBySide={sideBySide} compact={!sideBySide && win.width < 500} room={editorRoom(win.height, sideBySide)} s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
     : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide && showCanvas ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
-  // Once settled, a right prediction keeps its drawing and program and leaves the room below for what comes next.
   // Settled and right: keep the drawing and the program, and leave the room below for what comes next.
   const settled = (message: string, blocks: Block[], label: string) => {
     const words = <View style={{ gap: 10, flex: 1, minWidth: 0 }}><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>{message}</Copy><ProgramList blocks={blocks} label={label} testID="turtle-program" compact={large} /></View>;

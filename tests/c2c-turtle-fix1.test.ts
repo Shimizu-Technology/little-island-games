@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { schoolTemplates, templateTask } from '../src/learn/games/turtle-draw/templates';
 import { solves, type Block, type Task } from '../src/learn/games/turtle-draw/engine';
 import { applyCardsOp, cardsHint, cardsMoves, cardsText, COUNTS, type CardsOp } from '../src/learn/games/turtle-draw/cards';
-import { blockCost, parseBlocks } from '../src/learn/games/turtle-draw/dsl';
+import { blockCost } from '../src/learn/games/turtle-draw/dsl';
 import { nearestEdit, applyEdit, editText } from '../src/learn/games/turtle-draw/distance';
 import { registration } from '../src/learn/games/turtle-draw/challenge';
 import { turtlePuzzles } from '../src/learn/games/turtle-draw/challenge-content';
@@ -68,6 +68,44 @@ describe('P1-3: every Level 1–3 hint is a tap the cards board offers', () => {
     expect(cardsMoves(wrong).some(m => same(m, fix))).toBe(true);
     expect(solves(task, applyCardsOp(wrong, fix))).toBe(true);
     expect(cardsText(fix)).toMatch(/^Tap block 1 \(Repeat ×\d\), then choose ×\d\.$/);
+  });
+});
+
+describe('Round 2 P1-1: a crowded or tangled Level 3 plan gets a fast, executable hint', () => {
+  const f = (n: number): Block => ({ kind: 'forward', n }), t = (angle: number): Block => ({ kind: 'turn', angle }), c = (color: 'coral' | 'teal' | 'gold'): Block => ({ kind: 'color', color });
+  const r = (times: number, body: Block[]): Block => ({ kind: 'repeat', times, body });
+  it('five unrelated blocks on a limit-5 task converge with no null, each tap a board action, in well under 100 ms', () => {
+    const task = templateTask(3, 10);
+    expect(task.limit).toBe(5);
+    const junk = [c('gold'), c('coral'), c('teal'), t(45), t(60)];
+    const started = performance.now();
+    expect(cardsHint(task, junk)).not.toBeNull();
+    expect(performance.now() - started).toBeLessThan(100);
+    replay(task, junk);
+  });
+  it('the slow plans from review (nested repeat, five forwards, repeat with extras) all converge, and so do arbitrary 5-block plans on every limit-5 task', () => {
+    const task = templateTask(3, 10), plans = [[r(8, [r(8, [f(100)])]), t(45)], [f(100), f(90), f(80), f(70), f(60)], [r(8, [f(100)]), t(45), c('gold'), f(90)]];
+    // A fixed pseudo-random draw from every card on the board, so the plans are arbitrary but the test is repeatable.
+    let seed = 7;
+    const pick = <T,>(list: readonly T[]): T => list[(seed = (seed * 1103515245 + 12345) % 2147483648) % list.length];
+    const cards: Block[] = [...[60, 70, 80, 90, 100].map(f), ...[45, 60, 90, 120].map(t), c('coral'), c('teal'), c('gold')];
+    for (let i = 0; i < 60; i++) plans.push(Array.from({ length: 5 }, () => pick(cards)));
+    const limit5 = schoolTemplates[2].map((_, i) => templateTask(3, i)).filter(k => k.limit === 5);
+    expect(limit5.length).toBe(20);
+    const started = performance.now();
+    for (const plan of plans) { replay(task, plan); replay(pick(limit5), plan); }
+    expect((performance.now() - started) / (plans.length * 2)).toBeLessThan(5);
+  });
+  it('other shapes: the search uses only the picture\'s own blocks and counts, skips plans the board refuses, and never answers null', () => {
+    const task: Task = { seed: 0, target: [f(60), t(90), f(60), r(2, [f(70), t(90)])], limit: 5, requiredLoop: false, debug: false };
+    for (const start of [[], [r(8, [r(8, [f(100)])])], [c('gold'), c('coral'), c('teal'), t(45), t(60)], [r(2, [f(70), t(90)]), f(60), t(90)]]) {
+      const started = performance.now();
+      expect(cardsHint(task, start), JSON.stringify(start)).not.toBeNull();
+      expect(performance.now() - started).toBeLessThan(500);
+    }
+    // Never a blank or an over-deep wrap: the first tap named for a tangled plan is one the board can make.
+    const tangled = [c('gold'), c('coral'), c('teal'), t(45), t(60)];
+    expect(cardsMoves(tangled).some(m => same(m, cardsHint(task, tangled)))).toBe(true);
   });
 });
 
@@ -166,5 +204,21 @@ describe('P2-3: admit reads the saved tree, not the flattened blocks', () => {
     expect(admit([1, [[4, [0], [[0, 12]], []]], []], d)).toBeNull();
     expect(admit([1, [[2, 5, [[0, 12]]]], []], d)).not.toBeNull();
     expect(admit(encodeProgram(turtleProgram([{ kind: 'repeat', times: 5, body: [{ kind: 'forward', n: 40 }] }], deepCodes)), d)).not.toBeNull();
+  });
+});
+
+describe('Round 2 P2-2: a full tray names the right nested block', () => {
+  const f = (n: number): Block => ({ kind: 'forward', n }), t = (angle: number): Block => ({ kind: 'turn', angle });
+  it('a top-level insert and an inside-repeat insert before a nested remove do not shift the named place', () => {
+    const prog: Block[] = [{ kind: 'repeat', times: 3, body: [f(60), t(120), f(70), f(80)] }];
+    const win: Block[] = [{ kind: 'color', color: 'coral' }, { kind: 'repeat', times: 3, body: [t(90), f(60), t(120)] }];
+    expect(blockCost(prog)).toBe(5);
+    const near = nearestEdit(prog, [win], { full: true })!;
+    expect(near.edit).toMatchObject({ op: 'remove', path: [0, 2], from: f(70) });
+    expect(editText(near.edit, prog)).toBe('Remove block 3 inside block 1 (Forward 70).');
+    // Applying it frees a block and takes the plan one step closer.
+    const after = applyEdit(prog, near.edit);
+    expect(blockCost(after)).toBe(4);
+    expect(after[0]).toMatchObject({ body: [f(60), t(120), f(80)] });
   });
 });

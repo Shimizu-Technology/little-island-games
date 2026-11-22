@@ -102,7 +102,7 @@ export function choicesFor(program: Block[], tier: number, rotate: number): { bl
     if (wrong.length === 3) break;
     const blocks = misreads[kind](program);
     const lines = blocks.length ? draw(blocks) : null;
-    // A wrong picture a child can tell from the others at thumbnail size: at least 12 units from every one already chosen.
+    // A wrong picture a child can tell from the others at thumbnail size: at least 28 units from every one already chosen.
     if (!lines || !lines.length || seen.some(s => samePicture(s, lines) || pictureGap(s, lines) < MIN_GAP)) continue;
     wrong.push({ blocks, kind }); seen.push(lines);
   }

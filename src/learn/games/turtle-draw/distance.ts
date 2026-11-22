@@ -61,8 +61,9 @@ export function nearestEdit(program: readonly Block[], winners: readonly (readon
     const later = edits.findIndex(e => e.op !== 'insert');
     if (later > 0) {
       const skipped = edits.slice(0, later);
-      const path = [...edits[later].path];
-      for (let j = 0; j < path.length; j++) path[j] -= skipped.filter(e => e.path.length === j + 1 && e.path.slice(0, j).every((v, k) => v === path[k]) && e.path[j] < path[j]).length;
+      // Every skipped insert is compared with the original place, not the one being corrected, so nested places shift only for their own insert.
+      const orig = edits[later].path, path = [...orig];
+      for (let j = 0; j < path.length; j++) path[j] -= skipped.filter(e => e.path.length === j + 1 && e.path.slice(0, j).every((v, k) => v === orig[k]) && e.path[j] < orig[j]).length;
       edit = { ...edits[later], path } as Edit;
     }
   }

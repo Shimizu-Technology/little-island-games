@@ -342,7 +342,7 @@ it('P2-4 and P1-2: a settled right Draw-It shows the drawing and program; Predic
   expect(labelled('More help')!.props.disabled).toBe(true);
 });
 
-it('blind review: wide landscape settles beside its program; the cards board shows turns with the picture and the hint below the cards; free Next shape is the quiet button', async () => {
+it('blind review: wide landscape settles beside its program; the cards board shows turns with the picture and the hint right under the Draw row, above the cards; free Next shape is the quiet button', async () => {
   viewport.width = 1133; viewport.height = 744;
   const d = challenge('build') as BuildDescriptor;
   let s = startState(d);
@@ -359,7 +359,9 @@ it('blind review: wide landscape settles beside its program; the cards board sho
   expect(order.indexOf('Add turn 120 degrees')).toBeGreaterThan(order.indexOf('Add forward 60'));
   await press('Hint');
   const labels = tree!.root.findAll(n => n.type === 'button' || n.props.testID === 'turtle-hint').map(n => n.props.testID ?? n.props.label ?? '');
-  expect(labels.indexOf('turtle-hint')).toBeGreaterThan(labels.indexOf('Add turn 120 degrees'));
+  // The hint sits above the cards, so tapping Hint on a phone keeps it on screen.
+  expect(labels.indexOf('turtle-hint')).toBeGreaterThanOrEqual(0);
+  expect(labels.indexOf('turtle-hint')).toBeLessThan(labels.indexOf('Add forward 60'));
   const free: TurtleState = { ...roundAt(3), free: true, program: [] };
   await act(async () => tree!.update(<Board {...as(props(free, {}, 'free-1'))} />));
   expect(labelled('Next shape')!.props.quiet).toBe(true);

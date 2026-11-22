@@ -1,6 +1,6 @@
 /** Turtle Draw, version 2 rounds (C2c): measured board space, every block counted, Undo, a hint ladder, and the K7 block editor from Level 4.
  * Version 1 rounds keep the original board in view.tsx. Free drawing is the same free drawing: ungraded, with no hint and no limit but the shared ones. */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { Button, C, Copy } from '../../../components/ui';
 import { useReducedMotion } from '../../../components/motion';
@@ -41,6 +41,8 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   const draft = s.blockDraft ? readTurtleDraft(s.blockDraft) : null;
   const [message, setMessage] = useState(''), [editing, setEditing] = useState<{ path: number[]; block: Block } | null>(null);
   const [history, setHistory] = useState<Block[][]>([]), [hint, setHint] = useState(0);
+  // Only the second hint names a tap, so the cards-board search runs once per plan then, not on every render.
+  const move = useMemo(() => hint >= 2 && !blocks && !won && !free ? cardsHint(task, s.program) : null, [hint, blocks, won, free, task, s.program]);
   const winners = !free && task.template !== undefined ? templateWinners(s.level, task.template) : [task.target];
   const feedback = !free && s.cursor > 0 && !s.running && !won ? drawingFeedback(task, s.program) : null;
   const finish = (state: TurtleState) => {
@@ -82,10 +84,9 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
     if (hint === 0) return '';
     if (solves(task, s.program)) return 'Your blocks match the picture. Press Draw.';
     // The cards board can only add at the end, remove, change a block or count, and wrap: hint in those moves. The block editor can place a block anywhere.
-    const move = !blocks ? cardsHint(task, s.program) : null;
     const near = nearestEdit(s.program, winners, { full: blockCost(s.program) >= limit });
     if (!near && !move) return 'Your blocks match the picture. Press Draw.';
-    if (hint === 1) { const n = editsToGo(s.program, winners); return s.cursor > 0 && feedback ? feedback.message : move ? 'Not there yet. The next hint shows what to tap.' : `You are ${n} ${n === 1 ? 'change' : 'changes'} from the picture.`; }
+    if (hint === 1) { const n = editsToGo(s.program, winners); return s.cursor > 0 && feedback ? feedback.message : !blocks ? 'Not there yet. The next hint shows what to tap.' : `You are ${n} ${n === 1 ? 'change' : 'changes'} from the picture.`; }
     if (move) return cardsText(move);
     return `${editText(near!.edit, s.program)}${!blocks && task.blockEditor ? ' The Block editor can make this change.' : ''}`;
   };
@@ -158,8 +159,8 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
     onStep={!s.program.length ? undefined : () => { if (s.cursor >= steps) return; update({ ...advance({ ...s, running: true }), running: false }); if (s.cursor + 1 >= steps) finish(s); else sound('tap', true); }}
     onRestart={() => update({ ...s, cursor: 0, running: false })} />;
 
-  // Forwards and turns sit with the picture; the hint reads just below them, so the card it names is on screen.
-  const cardsPrimary = <>{status}{runRow}{!won && <>{palette('forward')}{palette('turn')}</>}{hintPanel}</>;
+  // Forwards and turns sit with the picture; the hint reads right under the Draw row, so it stays on screen when Hint is tapped on a phone.
+  const cardsPrimary = <>{status}{runRow}{hintPanel}{!won && <>{palette('forward')}{palette('turn')}</>}</>;
   const cardsRest = <>{!won && <>{s.level >= 2 && palette('pen')}{s.level >= 3 && <><Copy maxFontSizeMultiplier={1.5}>↻ ×2 = [↑ ↻] + [↑ ↻] · two whole-body runs</Copy>{palette('wrap')}</>}</>}{programList}{editor}</>;
   const primary = blocks ? <>{status}{runRow}{hintPanel}{editorBlock}</> : wide ? <>{cardsPrimary}{cardsRest}</> : cardsPrimary;
   const toggle = task.blockEditor === true && !free && s.done < 4 && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => setBlocks(b => !b)}>{blocks ? 'Drawing cards' : 'Block editor'}</Button>;
