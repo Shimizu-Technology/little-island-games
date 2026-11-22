@@ -3,6 +3,8 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { CarriedCharacter } from '../src/home/runtime/CarriedCharacter';
+import {resolve} from '../src/home/scene/resolve';
+import {apply} from '../src/home/scene/proposal';
 import { SceneView } from '../src/home/runtime/SceneView';
 import { stagePieces, StageRoom } from '../src/home/art/Stage';
 import { pieceAt, pieceMotion, pieceLength, pieceSound } from '../src/home/runtime/SetPieces';
@@ -14,10 +16,11 @@ import { emptyDragSlot } from '../src/home/runtime/useInteraction';
 import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
 import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import type { Interaction } from '../src/home/runtime/useInteraction';
+const setDownClock=vi.hoisted(()=>({done:[] as Array<(done:boolean)=>void>}));
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' }, AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView', createAnimatedComponent:()=> 'AnimatedGroup' }, useAnimatedProps:(fn:()=>unknown)=>({evaluate:fn}), useSharedValue: (v: any) => React.useRef({ value: v, set(n: any) { this.value = n; }, get() { return this.value; } }).current,
-  withTiming: (x: any) => x, ReduceMotion: { System: 'system', Always: 'always', Never: 'never' }, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
+  cancelAnimation:()=>{}, withTiming: (x: any, _config:any, done?:(done:boolean)=>void) => {if(done)setDownClock.done.push(done);return x;}, ReduceMotion: { System: 'system', Always: 'always', Never: 'never' }, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
   useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }), useAnimatedReaction: () => {}, useFrameCallback:()=>React.useRef({setActive:()=>{}}).current, runOnJS: (f: any) => f, runOnUI: (f: any) => f }));
 vi.mock('react-native-gesture-handler', () => ({ GestureDetector: 'GestureDetector' }));
 vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: (props: any) => React.createElement('EntityArt', { idleStyle:props.idleStyle, face: props.faceOverride, carry: !!props.carry, entityId: props.entity.id, preview: !!props.preview, blink: !!props.blink }), artFrame: (e: any) => e.bounds }));
@@ -144,4 +147,29 @@ describe('HC-01 touchable set pieces', () => {
     // corner, and the screen checks the board before any piece, so the board still wins there.
     for (let x = 524; x <= 680; x += 8) for (let y = 26; y <= 198; y += 8) expect(pieceAt('home', x, y)).toBeUndefined();
   });
+});
+
+for(const slot of [0,1,2]as const)it(`keeps actor ${slot}'s displaced cup above the body until it reaches a stationary floor shadow`,async()=>{
+ const state=labFixtures[`rig-menu-${slot}`](),coconut=state.rooms.home.instances.find(i=>i.item==='coconut-drink')!;
+ state.rooms.home.characters[0].holding=coconut.id;
+ const scene=buildScene(state),juice=Object.values(scene.entities).find(e=>e.item?.item==='juice')!;
+ const mouth=scene.rooms.home.targets.find(t=>t.kind==='mouth'&&t.owner===`character/${slot}`)!;
+ const proposal=resolve(scene.rooms.home,juice,mouth.contact,{scale:1,target:mouth.id,release:true}),result=apply(state,proposal);
+ if(!('state'in result))throw Error('commit rejected');
+ const interaction:any={slots:{value:[{},{}]},camera:{value:{a:1}},acknowledgeLayout:()=>{},ready:()=>{},
+  restingFlags:{value:restingFlagsOf([],[])},restingMotion:{value:restingMotionOf([],scene.revision,1,0,false,{},null)}};
+ const props={state,scene,building:buildingLayout(4),viewport:{width:402,height:650},interaction,pickups:[],reduced:false,reactions:{},sleeping:{},onNode:()=>{},onSelect:()=>{},onMove:()=>{},liveRoom:'home'};
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<SceneView {...props}/>);});
+ setDownClock.done=[];
+ await act(async()=>tree.update(<SceneView {...props} state={result.state} scene={buildScene(result.state)}/>));
+ const cup=()=>tree.root.findAll(n=>typeof n.type==='string'&&n.props.testID===`object-${coconut.id}`)[0];
+ expect(cup().props.style[0].zIndex).toBe(1000);
+ const shadow=cup().findByProps({testID:`drink-ground-shadow-${Object.values(scene.entities).find(e=>e.item?.id===coconut.id)!.id}`});
+ expect(shadow.props.style[1].evaluate().opacity).toBe(.16);
+ expect(shadow.props.style[0].transform).toBeUndefined();
+ expect(setDownClock.done).toHaveLength(1);
+ await act(async()=>setDownClock.done[0](true));
+ expect(cup().props.style[0].zIndex).toBeUndefined();
+ await act(async()=>tree.unmount());
 });

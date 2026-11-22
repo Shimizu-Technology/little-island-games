@@ -46,13 +46,13 @@ export function RigCrab({ base = 'stand', action = null, face, facing = 'right',
         {[45,75].map(x => <G key={x} transform={`translate(${clampRig(gaze?.x,-1,1)} 0)`}><Circle cx={x} cy={38} r={9} fill="#FFF1D3"/><PetEyes x={x} y={38} gaze={gaze} face={expression} blink={!reduced && (blink ?? life.blink)}/></G>)}
         {mealPlayback ? <>
           {mealGroups(mealPlayback,f=>action==='drink'?'sip':f.meal.bite?'bite':f.face).map(({frame:f,indices})=><MealLayer key={indices[0]} playback={mealPlayback} index={indices}><PetMouth meal={f.meal} x={60} y={73} face={action==='drink'?'sip':f.face}/></MealLayer>)}
-          {mealGroups(mealPlayback,f=>f.meal.reach).map(({frame:f,indices}) => {
+          <MealMorph playback={mealPlayback}>{f => {
           const c = companionContacts('crab', base, action, f.meal);
-          return <MealLayer key={indices[0]} playback={mealPlayback} index={indices}>
+          return <>
         <Path d={`M85 66Q${carry ? 98 : 92} ${carry ? 76 : 64} ${c.hand[0]} ${c.hand[1]}`} fill="none" stroke="#EC9989" strokeWidth={8}/>
         <G data-joint="right-claw" transform={`translate(${c.hand[0]} ${c.hand[1]}) rotate(${carry ? 35+lag : action ? -50 : 0})`}><Path d="M0 3Q-17-2-5-19L1-7L13-15Q15 3 0 3Z" fill="#EC9989"/></G>
-        {f.held && <Path d={`M${c.hand[0]-4} ${c.hand[1]+3}q4 5 8 0`} fill="none" stroke="#EC9989" strokeWidth={4}/ >}</MealLayer>;
-        })}</> : <>        <PetMouth meal={meal} x={60} y={73} face={expression}/>
+        {f.held && <Path d={`M${c.hand[0]-4} ${c.hand[1]+3}q4 5 8 0`} fill="none" stroke="#EC9989" strokeWidth={4}/ >}</>;
+        }}</MealMorph></> : <>        <PetMouth meal={meal} x={60} y={73} face={expression}/>
         <Path d={`M85 66Q${carry ? 98 : 92} ${carry ? 76 : 64} ${c.hand[0]} ${c.hand[1]}`} fill="none" stroke="#EC9989" strokeWidth={8}/>
         <G data-joint="right-claw" transform={`translate(${c.hand[0]} ${c.hand[1]}) rotate(${carry ? 35+lag : action ? -50 : 0})`}><Path d="M0 3Q-17-2-5-19L1-7L13-15Q15 3 0 3Z" fill="#EC9989"/></G>
         <Held at={c.hand} facing={facing}>{held}</Held>

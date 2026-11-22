@@ -34,7 +34,7 @@ describe('H4b confirmed renderer defects', () => {
     }
   });
   it('a landing carries only footprints, with no second character art', () => {
-    const html = renderToStaticMarkup(<LandingPreview source={friend} interaction={interaction('floor')} building={buildingLayout(4)}/>);
+    const html = renderToStaticMarkup(<LandingPreview source={friend} interaction={{...interaction('floor'),camera:{value:{a:1}}} as any} building={buildingLayout(4)}/>);
     expect(html).toContain('landing-footprints');
     expect(html).not.toContain('data-extra-character');
   });

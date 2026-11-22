@@ -343,6 +343,9 @@ export function useInteraction({
     "worklet";
     idleFrames.set(0);
     if (framesOn.value) return;
+    // Start the probe at input wake, excluding stopped idle time while keeping
+    // the real input-to-first-frame delay in the pickup window.
+    probeLastAt.set(eventTime());
     framesOn.set(true);
     restarted.set(true);
     if (onTrace) runOnJS(onTrace)({ type: "frames-active", at: eventTime() });

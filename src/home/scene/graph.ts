@@ -172,7 +172,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       entity.depth = parent.depth + 0.1;
       if (entity.item && capabilityOf(entity.item.item).edible === 'drink') {
         const slot=parent.character.slot;
-        Object.assign(entity,heldDrinkGeometry(entity.item,heldDrinkScale(species[slot].unit,slot),slot===1));
+        Object.assign(entity,heldDrinkGeometry(entity.item,heldDrinkScale(species[slot].unit,slot),false));
         entity.hitProxies=[entity.bounds];
       }
     } else if (parent && entity.attachment.kind === "container") {

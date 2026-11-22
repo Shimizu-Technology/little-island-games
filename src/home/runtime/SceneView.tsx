@@ -3,7 +3,9 @@ import { Platform, Pressable, View } from "react-native";
 import { anchorsFor } from "../scene/species";
 import { restFrom, restTransform } from "./restFrom";
 import type { Meal } from "./meal";
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
+import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
+import { capabilityOf } from '../world';
+import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -127,10 +129,15 @@ const RestingEntity = memo(function RestingEntity({
   if (restState.entity !== entity) setRestState({entity,from:restFrom(restState.entity,entity)});
   const from = restState.from;
   const restClock = useSharedValue(220);
+  const finishSetDown=React.useCallback(()=>setRestState(current=>current.entity===entity && current.from ? {entity,from:undefined} : current),[entity]);
   React.useLayoutEffect(() => {
-    if (from) { restClock.set(0); restClock.set(withTiming(220, { duration: reduced ? 0 : 220, easing:Easing.linear })); }
-  }, [entity, from, reduced, restClock]);
+    if (from) { restClock.set(0); restClock.set(withTiming(220, { duration: reduced ? 0 : 220, easing:Easing.linear },done=>{if(done)runOnJS(finishSetDown)();})); }
+    return ()=>cancelAnimation(restClock);
+  }, [entity, from, reduced, restClock, finishSetDown]);
   const frame = artFrame(entity);
+  const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
+  const drinkSize=entity.item ? itemSize(entity.item) : 0;
+  const groundShadow=useAnimatedStyle(()=>({opacity:floorDrink ? .16*(from && !reduced ? Math.max(0,Math.min(1,(restClock.value-120)/100)) : 1) : 0}));
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
   const [stamp, setStamp] = React.useState({ token, value: 1 });
@@ -266,9 +273,14 @@ const RestingEntity = memo(function RestingEntity({
           top: entity.contact.y + frame.top,
           width: frame.width,
           height: frame.height,
+          // A displaced cup crosses the actor's silhouette. Keep it in front
+          // until it is down, then return to ordinary floor depth.
+          zIndex: from ? 1000 : undefined,
         },
       ]}
     >
+      {floorDrink && <Animated.View testID={`drink-ground-shadow-${entity.id}`} pointerEvents="none" accessible={false}
+        style={[{position:'absolute',left:drinkSize*.32,top:drinkSize*.71,width:drinkSize*.36,height:drinkSize*.08,borderRadius:drinkSize*.1,backgroundColor:'#385451'},groundShadow]}/>}
       {selected && !front && (
         <View
           pointerEvents="none"

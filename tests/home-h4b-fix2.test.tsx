@@ -8,6 +8,7 @@ import {apply} from '../src/home/scene/proposal';
 import {paintedBounds} from '../src/home/art/silhouettes';
 import {restFrom,restTransform} from '../src/home/runtime/restFrom';
 import {roomPoint} from '../src/home/scene/types';
+import {floorCueMask,floorCueHidden} from '../src/home/runtime/floorCues';
 import {LandingPreview} from '../src/home/runtime/LandingPreview';
 import {buildingLayout} from '../src/home/camera';
 import {releaseWindow} from '../src/home/runtime/frameProbe';
@@ -36,6 +37,11 @@ for(const slot of [0,1,2]as const)describe(`replacement drink actor ${slot}`,()=
   expect(floor.contact.y+start.dy+(floor.visual?.y ?? 0)*start.scale).toBeCloseTo(coconut.contact.y);
   expect(restTransform(from,220,false)).toEqual({dx:0,dy:0,scale:1});
   expect(restTransform(from,0,true)).toEqual({dx:0,dy:0,scale:1});
+  // A short, visible set-down must not spend its entire travel before the
+  // first mid-transition native sample. Halfway still has half the lateral trip.
+  const middle=restTransform(from,110,false);
+  expect(middle.dx).toBeCloseTo(from.dx/2);
+  expect(middle.scale).toBeCloseTo((1+from.scale)/2);
  });
  it('prefers a free reachable surface but never an occupied one',()=>{
   const {scene}=fixture(),index=scene.rooms.home,owner=scene.entities[`character/${slot}`];
@@ -49,6 +55,14 @@ for(const slot of [0,1,2]as const)describe(`replacement drink actor ${slot}`,()=
   const occupied={...index,targets:[...index.targets,{...surface,occupied:'other-cup'}]};
   const blocked=resolve(occupied,juice,mouth.contact,{scale:1,target:mouth.id,release:true});
   expect(blocked.moves.find(m=>m.id.includes('menu-4'))?.attachment.kind).toBe('floor');
+ });
+ it('suppresses the shared carry-shadow mask at the footprint edge and face approach',()=>{
+  const {scene}=fixture(),owner=scene.entities[`character/${slot}`],juice=Object.values(scene.entities).find(e=>e.item?.item==='juice')!;
+  const mask=floorCueMask(scene),actor=mask.find(a=>a.room===owner.room)!;
+  const b=actor.bounds,footprint={width:40,height:10};
+  expect(floorCueHidden(mask,juice,owner.room,{x:b.left-19,y:b.top+b.height/2},{x:-1000,y:-1000},1,footprint)).toBe(true);
+  expect(floorCueHidden(mask,juice,owner.room,{x:-1000,y:-1000},{x:actor.x,y:actor.y},1,footprint)).toBe(true);
+  expect(floorCueHidden(mask,juice,owner.room,{x:-1000,y:-1000},{x:-1000,y:-1000},1,footprint)).toBe(false);
  });
  it('suppresses floor preview under a painted character',async()=>{
   const {scene}=fixture(),owner=scene.entities[`character/${slot}`],juice=Object.values(scene.entities).find(e=>e.item?.item==='juice')!;

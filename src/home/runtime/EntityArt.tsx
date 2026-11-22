@@ -108,7 +108,7 @@ export const EntityArt = memo(function EntityArt({
     const unit = heldDrinkScale(species[slot].unit,slot);
     return <Svg width={frame.width} height={frame.height} style={{ overflow: 'visible' }} accessible={false}>
       <G transform={`translate(${-frame.left} ${-frame.top}) scale(${unit}) translate(-12 -12)`}>
-        <HandProp longStraw={slot === 1} id={entity.item.item as HoldableId} tint={entity.item.tint} state={{ empty: entity.item.empty }}/>
+        <HandProp longStraw={false} id={entity.item.item as HoldableId} tint={entity.item.tint} state={{ empty: entity.item.empty }}/>
       </G>
     </Svg>;
   }

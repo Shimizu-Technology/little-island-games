@@ -10,6 +10,7 @@ import { settleProgress } from "./settle";
 import type { CharacterBase, Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
 import { LandingPreview } from "./LandingPreview";
+import { floorCueMask, floorCueHidden } from './floorCues';
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { emptyDragSlot, zoneAt, type Interaction, type Pickup } from "./useInteraction";
@@ -146,6 +147,7 @@ const OverlayGroup = memo(function OverlayGroup({
     return { transform: [{ scaleX: s.sx }, { scaleY: s.sy }] };
   });
   const footprint = footprintShadow(root);
+  const floorMask=useMemo(()=>floorCueMask(scene),[scene]);
   const shadow = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const p = slot.proposal,
@@ -166,8 +168,10 @@ const OverlayGroup = memo(function OverlayGroup({
         : Math.max(0, Math.min(1, (clock.value - slot.liftedAt) / 90));
     const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
     const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced, slot.duration) : 1;
+    const aim={x:slot.x-dest.x+(root.visual?.x ?? root.bounds.left+root.bounds.width/2),y:slot.y-dest.y+(root.visual?.y ?? root.bounds.top+root.bounds.height/2)};
+    const obscured=!root.character && p?.kind==='floor' && floorCueHidden(floorMask,root,p.room,p.contact,aim,camera.value.a,footprint);
     return {
-      opacity: p?.kind !== "mouth" && slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
+      opacity: !obscured && p?.kind !== "mouth" && slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
       transform: [{ translateX: groundX - footprint.width / 2 }, { translateY: groundY - footprint.height / 2 }, { scale: 1 - 0.15 * lift }],
     };
   });

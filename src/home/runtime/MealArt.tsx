@@ -22,7 +22,8 @@ function frameIndex(value:number) {
 function OpacityLayer({ current, index, children }: { current: SharedValue<number>; index: number | readonly number[]; children: React.ReactNode }) {
   const signature=JSON.stringify(typeof index==='number'?[index]:index);
   const indices=useMemo(()=>JSON.parse(signature) as number[],[signature]);
-  const props = useAnimatedProps(() => ({ opacity: indices.includes(frameIndex(current.value)) ? 1 : 0 }));
+  const selected=useDerivedValue(()=>indices.includes(frameIndex(current.value)));
+  const props = useAnimatedProps(() => ({ opacity: selected.value ? 1 : 0 }));
   return <AnimatedGroup testID={`meal-frame-${indices.join('-')}`} animatedProps={props}>{children}</AnimatedGroup>;
 }
 function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, index: number, reduced: boolean, poseTip = true, clipId?:string) {
@@ -31,23 +32,29 @@ function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, i
   return <G data-meal-food={meal.food.item} transform={meal.food.item === 'banana' ? 'rotate(60 12 12)' : undefined}>
     {bitten && <Defs><ClipPath id={clip}><Path d="M0 14Q5 17 7 12Q13 15 14 9Q20 11 20 4L23 0H24V24H0Z"/></ClipPath></Defs>}
     <G transform={slot === 1 && meal.action === 'drink' ? `translate(12 12) scale(${heldDrinkScale(1,slot)}) rotate(${poseTip ? mealFrame(time, reduced).reach * 5 : 0}) translate(-12 -12)` : undefined} clipPath={bitten ? `url(#${clip})` : undefined}>
-      <HandProp longStraw={slot === 1 && meal.action === 'drink'} id={meal.food.item as HoldableId} tint={meal.food.tint} state={{ on: meal.food.powered, empty: meal.action === 'drink' && time >= 660 }}/>
+      <HandProp longStraw={slot === 1 && meal.action === 'drink' && time < 420} id={meal.food.item as HoldableId} tint={meal.food.tint} state={{ on: meal.food.powered, empty: meal.action === 'drink' && time >= 660 }}/>
     </G>
   </G>;
 }
 function AuthoredFoodFrame({slot,meal,time,index,reduced}:{slot:CharacterRenderInput['slot'];meal:Meal;time:number;index:number;reduced:boolean}){
   return foodArt(slot,meal,time,index,reduced);
 }
-function FoodVariant({ current, clock, meal, input, reduced, after, filter }: { filter?:string; current: SharedValue<number>; clock:MealClock; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
+function FoodVariant({ current, clock, meal, input, reduced, after, lowering = false, filter }: { lowering?:boolean; filter?:string; current: SharedValue<number>; clock:MealClock; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
   const clipId=`meal-food-${React.useId().replace(/[^A-Za-z0-9_-]/g,'')}`;
-  const time = after ? meal.action === 'eat' ? 360 : 660 : 0;
-  const style = useAnimatedStyle(() => ({ opacity: (!filter || clock.value.foodItem === filter) && (mealTimes[frameIndex(current.value)] >= (clock.value.drink ? 660 : 360)) === after ? 1 : 0 }));
+  const slot=input.slot;
+  const time = after ? meal.action === 'eat' ? 360 : 660 : lowering ? 540 : 0;
+  const selected = useDerivedValue(() => {
+    const ms=mealTimes[frameIndex(current.value)];
+    const variant=ms >= (clock.value.drink ? 660 : 360) ? 1 : slot === 1 && clock.value.drink && ms >= 420 ? 2 : 0;
+    return (!filter || clock.value.foodItem === filter) && variant === (after ? 1 : lowering ? 2 : 0);
+  });
+  const style = useAnimatedStyle(() => ({opacity:selected.value ? 1 : 0}));
   const unit = input.size / [132,160,120][input.slot];
-  return <Animated.View testID={`meal-food-${after ? 1 : 0}${filter ? `-${filter}` : ""}`} pointerEvents="none" style={[{ position:'absolute',left:-20*unit,top:-34*unit,width:40*unit,height:54*unit },style]}>
+  return <Animated.View testID={`meal-food-${lowering ? 'lowering' : after ? 1 : 0}${filter ? `-${filter}` : ""}`} pointerEvents="none" style={[{ position:'absolute',left:-20*unit,top:-34*unit,width:40*unit,height:54*unit },style]}>
     <Svg width={40*unit} height={54*unit} viewBox="-8 -22 40 54" accessible={false}>{foodArt(input.slot,meal,time,after ? 1 : 0,reduced,false,clipId)}</Svg>
   </Animated.View>;
 }
-/** Two variants per recipe; both vessels stay mounted to keep pickup off SVG construction. */
+/** Both vessels stay mounted; Pip also has a full, lowered short-straw pose. */
 const Food = React.memo(function Food({ current, clock, progress, meal, input, reduced }: { current: SharedValue<number>; clock:MealClock; progress: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean }) {
   const {slot,size,base,facing,tilt,limbLag} = input;
   const positions = useMemo(() => {
@@ -75,6 +82,7 @@ const Food = React.memo(function Food({ current, clock, progress, meal, input, r
       return <React.Fragment key={meal.action === "drink" ? item : "food"}>
         <FoodVariant {...{current,clock,input,reduced}} meal={recipe} filter={meal.action === 'drink' ? item : undefined} after={false}/>
         <FoodVariant {...{current,clock,input,reduced}} meal={recipe} filter={meal.action === 'drink' ? item : undefined} after/>
+        {input.slot === 1 && meal.action === 'drink' && <FoodVariant {...{current,clock,input,reduced}} meal={recipe} filter={item} after={false} lowering/>}
       </React.Fragment>;
     })}
   </Animated.View>;

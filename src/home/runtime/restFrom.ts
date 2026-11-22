@@ -1,5 +1,4 @@
 import type { SceneEntity } from '../scene/types';
-import { settleProgress } from './settle';
 
 /** Held art is centred on the hand. Floor/surface art uses a support contact. */
 export function restFrom(previous: SceneEntity, next: SceneEntity) {
@@ -11,7 +10,9 @@ export function restFrom(previous: SceneEntity, next: SceneEntity) {
 }
 export function restTransform(from: ReturnType<typeof restFrom>, elapsed: number, reduced: boolean) {
   'worklet';
-  const left = from ? 1 - settleProgress(elapsed, reduced, from.duration) : 0;
+  const left = from && !reduced ? 1 - Math.max(0,Math.min(1,elapsed/from.duration)) : 0;
   if (!left) return {dx:0,dy:0,scale:1};
-  return { dx: (from?.dx ?? 0) * left, dy: (from?.dy ?? 0) * left, scale: 1 + ((from?.scale ?? 1) - 1) * left };
+  // Lower first, then finish the sideways set-down. Keep lateral travel spread
+  // across the whole clock rather than compressing it into the first 100 ms.
+  return { dx: (from?.dx ?? 0) * left, dy: (from?.dy ?? 0) * left * left, scale: 1 + ((from?.scale ?? 1) - 1) * left };
 }

@@ -4,6 +4,7 @@ import {it,expect,vi} from 'vitest';
 import {HomeCharacter} from '../src/home/characterRenderer';
 import {mealFrame,mealTimes} from '../src/home/runtime/meal';
 import {MealArt} from '../src/home/runtime/MealArt';
+import {gripMatrix} from '../src/home/runtime/MealPaths';
 import {HandProp} from '../src/home/art/PropShape';
 import {EntityArt} from '../src/home/runtime/EntityArt';
 import {buildScene} from '../src/home/scene/graph';
@@ -92,6 +93,26 @@ it('changes a single arm or fin path to each authored pose without replacing it'
   }
   await act(async()=>live.unmount());
  }
+});
+
+it('keeps one crab claw transform instead of one native claw for every pose',async()=>{
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<MealArt input={{slot:2,base:'stand',action:null,face:null,facing:'right',size:98}} meal={{key:3,action:'drink',offered:true,food:instance('cup','coconut-drink',0,0)}} reduced={false}/>);});
+ const claws=tree.root.findAll(n=>typeof n.type==='string' && n.props['data-joint']==='right-claw');
+ expect(claws).toHaveLength(1);
+ expect(claws[0].props.animatedProps).toBeDefined();
+ const progress=clock.shared;
+ for(const time of mealTimes){
+  progress.value=3000+time;
+  let reference!:ReturnType<typeof create>;
+  await act(async()=>{reference=create(<HomeCharacter input={{slot:2,base:'stand',action:'drink',face:null,facing:'right',size:98,meal:mealFrame(time)}}/>);});
+  const authored=reference.root.findAll(n=>typeof n.type==='string' && n.props['data-joint']==='right-claw')[0];
+  expect(claws[0].props.animatedProps.evaluate().matrix).toEqual(gripMatrix(authored.props.transform));
+  await act(async()=>reference.unmount());
+ }
+ expect(gripMatrix('scale(2)')).toBeUndefined();
+ expect(gripMatrix('translate(3 4) rotate(90)')!.map(n=>Math.round(n))).toEqual([0,1,-1,0,3,4]);
+ await act(async()=>tree.unmount());
 });
 
 it('keeps hidden landing drawings mounted across a meal and gives them no meal caches',async()=>{
@@ -336,7 +357,7 @@ it('Pip drink standby retains its MealDrawing, Food and held recipe at the first
  const playback=render.mock.calls.at(-1)![0].mealPlayback;
  const preparedProps=tree.root.findAllByType(HomeCharacter)[0].props.input;
  const propsBefore=tree.root.findAllByType(HandProp);
- expect(propsBefore).toHaveLength(4);expect(propsBefore.every(n=>n.props.longStraw)).toBe(true);
+ expect(propsBefore).toHaveLength(6);expect(propsBefore.map(n=>n.props.longStraw)).toEqual([true,false,false,true,false,false]);
  expect(propsBefore[0].parent!.props.transform).toContain('scale(1.25)');
  render.mockClear();
  await act(async()=>tree.update(<MealArt input={{...input,action:'drink'}} meal={{...standby,key:31,food:{...standby.food,empty:true}}} reduced={false} renderCharacter={render}/>));
@@ -346,7 +367,7 @@ it('Pip drink standby retains its MealDrawing, Food and held recipe at the first
  expect(tree.root.findAllByType(HandProp)).toEqual(propsBefore);
  expect(tree.root.findAllByType(HomeCharacter)[0].props.input.mealPlayback).toBe(playback);
  expect(!!preparedProps.held).toBe(!!tree.root.findAllByType(HomeCharacter)[0].props.input.held);
- expect(tree.root.findAllByProps({'data-meal-food':'coconut-drink'})).toHaveLength(2);
+ expect(tree.root.findAllByProps({'data-meal-food':'coconut-drink'})).toHaveLength(3);
  await act(async()=>tree.unmount());
 });
 
@@ -358,7 +379,7 @@ it('composites the hover scale across reach and empties a drink only after lower
  const style=()=>tree.root.findByProps({testID:'meal-held-food'}).props.style[1].evaluate();
  const after=()=>tree.root.findByProps({testID:'meal-food-1-juice'}).props.style[1].evaluate().opacity;
  for(const [ms,scale]of [[0,2],[90,1.5],[180,1]]as const){progress.value=44000+ms;expect(style().transform.at(-1).scale).toBe(scale);}
- for(const ms of [540,600]){progress.value=44000+ms;expect(after()).toBe(0);}
+ for(const ms of [540,600]){progress.value=44000+ms;expect(after()).toBe(0);expect(tree.root.findByProps({testID:'meal-food-lowering-juice'}).props.style[1].evaluate().opacity).toBe(1);}
  progress.value=44660;expect(after()).toBe(1);
  await act(async()=>tree.unmount());
 });

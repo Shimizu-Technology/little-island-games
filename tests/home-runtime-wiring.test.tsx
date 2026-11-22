@@ -154,8 +154,9 @@ const commitFixture: Parameters<typeof useInteraction>[0]["onCommit"] = (index, 
   committed++; committedId = proposal.id; committedContact = proposal.contact;
   current.finish(index, true, proposal, "committed", undefined, token);
 };
-function Probe({ scene, layout = true, designing = false, reduced = false }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean }) {
+function Probe({ scene, layout = true, designing = false, reduced = false, onReleaseProbe }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean; onReleaseProbe?: Parameters<typeof useInteraction>[0]["onReleaseProbe"] }) {
   const interaction = useInteraction({
+    onReleaseProbe,
     scene,
     building: fixtureBuilding,
     viewport: fixtureViewport,
@@ -1202,5 +1203,21 @@ it('a refused stationary mouth drop keeps its normal return motion',async()=>{
  vi.advanceTimersByTime(100);harness.frames[0]({timeSincePreviousFrame:17});
  const returning=current.slots.get()[0];expect(returning.finished).toBe(false);
  expect(Math.abs(returning.x-returning.sourceX)).toBeLessThan(Math.abs(released.x-released.sourceX));
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+it('pickup probing excludes stopped idle time but preserves the first actual wake stall',async()=>{
+ const reports:any[]=[];let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()} onReleaseProbe={p=>reports.push(p)}/>);});
+ for(let i=0;i<20;i++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+ vi.advanceTimersByTime(10000);
+ touch('down',120,300);touch('move',200,380);flushJS();
+ vi.advanceTimersByTime(120);harness.frames[0]({timeSincePreviousFrame:10120});
+ for(let i=0;i<35;i++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});flushJS();}
+ const pickup=reports.find(p=>p.phase==='pickup');
+ expect(pickup).toBeDefined();
+ expect(pickup.frames[0].delta).toBe(120);
+ expect(pickup.frames.every((f:any)=>f.delta<1000)).toBe(true);
+ touch('cancel',200,380);flushJS();
  await act(async()=>tree.unmount());vi.useRealTimers();
 });
