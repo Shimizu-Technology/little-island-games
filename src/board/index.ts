@@ -184,7 +184,17 @@ export function undo(s: BoardSession): BoardSession {
         : engine.create(s.position.seed, s.position.size, s.position.starter, s.position.edge),
     states = [initial];
   for (const m of s.position.moves) states.push(engine.move(states[states.length - 1], m));
-  for (let i = states.length - 2; i >= 0; i--) if (states[i].turn === 0) return { ...s, position: states[i] };
+  for (let i = states.length - 2; i >= 0; i--) {
+    if (states[i].turn === 0) {
+      const pos = states[i];
+      if (s.game === "reef-sweep" && pos.attempt !== undefined && !pos.marks.includes(1)) {
+        const { attempt: _omit, ...unopened } = pos;
+        void _omit;
+        return { ...s, position: unopened };
+      }
+      return { ...s, position: pos };
+    }
+  }
   return s;
 }
 /** Compare-and-swap plus restore generation prevents delayed AI or old screens overwriting a new save. */

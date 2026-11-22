@@ -32,6 +32,8 @@ type Props = {
   hintFocus?: readonly number[];
   /** Shown safe starting cell for an explicitly accepted certified fallback Reef Sweep board. */
   startCell?: number | null;
+  /** Compact mode for Reef Sweep (Screen renders counter/captions in its own column/footer so board+controls fit together). */
+  compact?: boolean;
 };
 const tone = ["#805538", "#286B69"];
 const netWord = (n: number) => (n === 1 ? "net" : "nets");
@@ -456,19 +458,23 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
     </View>
   );
 }
-function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], startCell = null }: Props) {
+function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], startCell = null, compact = false }: Props) {
   const { fontScale } = useWindowDimensions();
-  const cell = Math.max(42, Math.min(Math.floor(width / s.size), 58)),
+  const minCell = compact ? 40 : 42,
+    maxCell = compact ? 44 : 58,
+    cell = Math.max(minCell, Math.min(Math.floor(width / s.size), maxCell)),
     boardW = cell * s.size,
     captionMax = Math.max(boardW, width),
     count = s.board.length,
     unopened = !s.marks.includes(1),
     copyCap = atLarge(fontScale, CHROME_MAX);
   return (
-    <View style={{ width: "100%", alignItems: "center", gap: 10 }}>
-      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
-        {urchins(s.size)} sea urchins · {s.marks.filter((m) => m === 2).length} flags · {s.scores[0]} pearls
-      </Copy>
+    <View style={{ width: "100%", alignItems: "center", gap: compact ? 6 : 10 }}>
+      {!compact && (
+        <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
+          {urchins(s.size)} sea urchins · {s.marks.filter((m) => m === 2).length} flags · {s.scores[0]} pearls
+        </Copy>
+      )}
       <View style={{ width: boardW, backgroundColor: "#CADFD0", borderRadius: 18, overflow: "hidden" }}>
         {Array.from({ length: s.size }, (_, r) => (
           <View key={r} style={{ flexDirection: "row" }}>
@@ -557,9 +563,11 @@ function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], sta
           </View>
         ))}
       </View>
-      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
-        Numbers count sea urchins in all touching spaces. Hold a closed tile to flag.
-      </Copy>
+      {!compact && (
+        <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
+          Numbers count sea urchins in all touching spaces. Hold a closed tile to flag.
+        </Copy>
+      )}
     </View>
   );
 }

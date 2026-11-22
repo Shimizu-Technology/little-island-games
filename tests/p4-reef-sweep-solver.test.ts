@@ -4,6 +4,7 @@ import { applyBoardSave, catalog, createSession, playAgain, undo, validBoardSess
 import * as reef from "../src/board/reef-sweep/engine";
 import {
   boardFromMines,
+  candidateMines,
   legacyBoard,
   REDRAW_MAX_ATTEMPTS,
   redrawBoard,
@@ -19,12 +20,17 @@ import {
 } from "../src/board/reef-sweep/solver";
 import {
   challengeHintStep,
+  descriptorFromPayload,
   REEF_DEEP_BANK,
   REEF_FIRST_DARE,
   reefChallengeEngine,
   reefDeepPuzzles,
   reefPackedBanks,
 } from "../src/board/reef-sweep/challenge";
+import { bankLoader } from "../src/puzzles/catalog";
+import { bankTransport } from "../src/puzzles/bankAssets";
+import { sha256Hex } from "../src/puzzles/sha256";
+import { validChallengeSession } from "../src/state/challenge";
 import { certifiedFallbackSync, loadCertifiedFallback } from "../src/board/reef-sweep/fallback";
 import { registration as reefRegistration } from "../src/challenge/registrations/reef-sweep";
 import { reefSweepAdapter, type ReefPayload } from "../src/puzzles/adapters/reef-sweep";
@@ -80,23 +86,45 @@ describe("BD-08: Reef Sweep deterministic first-tap no-guess redraw", () => {
     const exhaustedAttempts = await redrawBoardTask(19, 7, 0, { cancelled: false }, { maxAttempts: 0, yieldTurn });
     expect(exhaustedAttempts.status).toBe("exhausted");
 
-    // Exhausted wall-clock budget returns exhausted cleanly.
-    let fakeTime = 0;
-    const exhaustedTime = await redrawBoardTask(
+    // Deterministic clock probe (P2-2): candidate finishing at t=10 past budgetMs=5 MUST return exhausted, never found.
+    let clockCall = 0;
+    const midCandidateTimeout = await redrawBoardTask(
       19,
       7,
       0,
       { cancelled: false },
       {
         budgetMs: 5,
-        now: () => {
-          fakeTime += 10;
-          return fakeTime;
-        },
+        now: () => [0, 1, 10][Math.min(clockCall++, 2)],
         yieldTurn,
       }
     );
-    expect(exhaustedTime.status).toBe("exhausted");
+    expect(midCandidateTimeout.status).toBe("exhausted");
+    expect(midCandidateTimeout.durationMs).toBe(10);
+
+    // P2-2: moveWithAttempt carries proven attempt directly; validate accepts it and rejects forged unsolvable attempts.
+    const foundRes = redrawBoard(19, 7, 0);
+    expect(foundRes.status).toBe("found");
+    if (foundRes.status === "found") {
+      const startPos = reef.create(19, 7);
+      const opened = reef.moveWithAttempt(startPos, 0, foundRes.attempt);
+      expect(opened.attempt).toBe(foundRes.attempt);
+      expect(opened.board).toEqual(foundRes.board);
+      expect(reef.validate(opened)).toBe(true);
+      // Legacy v2 save without `attempt` still validates.
+      const { attempt: _omit, ...withoutAttempt } = opened;
+      void _omit;
+      expect(reef.validate(withoutAttempt)).toBe(true);
+      // Undoing back to unopened clears `attempt` cleanly.
+      const s = { ...createSession("reef-sweep", { seed: 19, size: 7 }), position: opened };
+      const undone = undo(s);
+      expect(undone.position.attempt).toBeUndefined();
+      expect(undone.position.moves).toEqual([]);
+      // Unopened position carrying a forged attempt is rejected.
+      expect(reef.validate({ ...startPos, attempt: 0 })).toBe(false);
+      // Verify candidateMines matches the recorded attempt.
+      expect(boardFromMines(7, candidateMines(19, 7, 0, foundRes.attempt))).toEqual(opened.board);
+    }
   });
 
   it("preserves legacy paused rounds unchanged via version marker while new rounds use rules: 2", () => {
@@ -367,14 +395,23 @@ describe("BK-21: Certified 128-entry bank, receipts & tiered deduction Challenge
     expect(helped.result!.event).toBe("helped");
     expect(helped.result!.dares).toEqual([]);
 
-    // Hint ladder produces sound Look -> Think -> One step -> Show me step.
+    // Hint ladder produces sound Look -> Think -> One step -> Show me step (teaching prerequisite flag before derived open).
     let state = reefChallengeEngine.create(first.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
     const h0 = challengeHintStep(state);
     expect(h0?.cell).toBe(first.descriptor.start);
     state = reefChallengeEngine.step(state, ["ho", first.descriptor.start], first.descriptor)!.state;
     const h1 = challengeHintStep(state);
     expect(h1).not.toBeNull();
-    expect(board[h1!.cell]).not.toBe(-1);
+    if (h1!.kind === "flag") {
+      expect(board[h1!.cell]).toBe(-1);
+      // Applying the prerequisite flag unlocks the next safe opening with truthful flagged-urchin wording.
+      state = reefChallengeEngine.step(state, ["ho", h1!.cell], first.descriptor)!.state;
+      const h2 = challengeHintStep(state);
+      expect(h2).not.toBeNull();
+      expect(h2!.reason.oneStep).not.toContain("already has all its urchins placed");
+    } else {
+      expect(board[h1!.cell]).not.toBe(-1);
+    }
 
     // Speech stage file is design-only, non-shipping.
     expect(JSON.parse(readFileSync("scripts/learn/p4-reef-sweep.stage", "utf8"))).toEqual({
@@ -382,5 +419,259 @@ describe("BK-21: Certified 128-entry bank, receipts & tiered deduction Challenge
       shipping: false,
     });
     expect(Object.keys(JSON.parse(readFileSync("scripts/learn/p4-reef-sweep.json", "utf8")))).toContain("p4-reef-sweep-rules");
+  });
+});
+
+describe("Fix Round 1 regressions (P1-1, P2-3, P3-6)", () => {
+  it("P1-1 Reproduction A: packed bank 466:20 completes from ordinary reserve boundary via both compact and 4-step ladders", async () => {
+    const prevRead = bankTransport.read;
+    bankTransport.read = async (name) => readFileSync(`src/content/puzzles/assets/${name}.lipuzzle`, "utf8");
+    try {
+      const packText = readFileSync("src/content/puzzles/assets/p466.lipuzzle", "utf8").trimEnd().split("\n");
+      const ref = {
+        bank: 466,
+        puzzle: 20,
+        engine: "reef-sweep",
+        rules: 1,
+        hash: sha256Hex(JSON.stringify(JSON.parse(packText[21]))),
+      };
+      await reefRegistration.packed!.prepare(ref);
+      const entry = await bankLoader().entry(reefSweepAdapter, "reef-sweep", 466 * 1024 + 20);
+      const d = descriptorFromPayload(entry.payload, "subset-7");
+
+      for (const mode of ["compact", "four-step"] as const) {
+        let s = reefRegistration.start(ref, "family", `packed-capacity-max-wrapper-${mode}`, emptyChallenge(), { supportOff: false, ownRead: false }, []);
+        let st = reefChallengeEngine.create(d, { version: 1 }, { supportOff: false, ownRead: false });
+        const apply = (a: unknown) => {
+          const next = reefRegistration.move(s, a);
+          if (!next) return false;
+          s = next;
+          st = reefChallengeEngine.step(st, a as never, d)!.state;
+          return true;
+        };
+        expect(apply(["o", d.start])).toBe(true);
+        const flagCell = st.marks.findIndex((m) => m === 0);
+        while (apply(["f", flagCell])) {
+          // Fill right up to the ordinary reserve boundary.
+        }
+        // Complete via Help/Show me inside the reserve.
+        if (mode === "compact") {
+          expect(apply(["h", 0])).toBe(true);
+          for (let k = 0; k < 100 && !s.result; k++) {
+            const step = challengeHintStep(st);
+            expect(step).not.toBeNull();
+            expect(apply(["ho", step!.cell])).toBe(true);
+          }
+        } else {
+          for (let k = 0; k < 220 && !s.result; k++) {
+            const h = st.hintStage;
+            const step = challengeHintStep(st);
+            expect(step).not.toBeNull();
+            const action = h === null ? ["h", 0] : h === 0 ? ["h", 1] : h === 1 ? ["h", 2] : ["ho", step!.cell];
+            expect(apply(action)).toBe(true);
+          }
+        }
+        expect(s.result?.event).toBe("helped");
+        expect(s.result?.dares).toEqual([]);
+        expect(st.marks.filter((m) => m === 1)).toHaveLength(41);
+        expect(Buffer.byteLength(JSON.stringify(s))).toBeLessThanOrEqual(4096);
+        expect(validChallengeSession(s, s.owner, reefRegistration.catalog)).toBe(true);
+      }
+    } finally {
+      bankTransport.read = prevRead;
+    }
+  });
+
+  it("P1-1 Reproduction B: late miss at ordinary boundary allows Undo and Start again and finishes with monotonic audit", () => {
+    const p = reefDeepPuzzles[8];
+    for (const recovery of [["u"] as const, ["z"] as const]) {
+      let s = reefRegistration.start(
+        p.ref,
+        "family",
+        `cap-miss-${recovery[0]}`,
+        emptyChallenge(),
+        { supportOff: false, ownRead: false },
+        p.dares.map((d) => d.slot)
+      );
+      let st = reefChallengeEngine.create(p.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+      const apply = (a: unknown) => {
+        const next = reefRegistration.move(s, a);
+        if (!next) return false;
+        s = next;
+        st = reefChallengeEngine.step(st, a as never, p.descriptor)!.state;
+        return true;
+      };
+      expect(apply(["o", p.descriptor.start])).toBe(true);
+      while (apply(["f", p.descriptor.mines[0]])) {
+        // Fill to ordinary reserve boundary.
+      }
+      // Late miss is accepted.
+      expect(apply(["o", p.descriptor.mines[1]])).toBe(true);
+      expect(st.outcome).toBe(1);
+      // Recovery action (Undo or Start again) MUST succeed!
+      expect(apply(recovery)).toBe(true);
+      expect(st.outcome).toBeNull();
+      // Complete with Help/Show me -> helped finish, zero dares laundered.
+      expect(apply(["h", 0])).toBe(true);
+      for (let k = 0; k < 100 && !s.result; k++) {
+        const step = challengeHintStep(st);
+        expect(step).not.toBeNull();
+        expect(apply(["ho", step!.cell])).toBe(true);
+      }
+      expect(s.result?.event).toBe("helped");
+      expect(s.result?.dares).toEqual([]);
+      expect(Buffer.byteLength(JSON.stringify(s))).toBeLessThanOrEqual(4096);
+      expect(validChallengeSession(s, "family", reefRegistration.catalog)).toBe(true);
+    }
+  });
+
+  it("P2-3: every coupled hint across bank 467 names a mathematically complete premise set with zero counterexamples", () => {
+    const lines = readFileSync("src/content/puzzles/assets/p467.lipuzzle", "utf8").trimEnd().split("\n").slice(1);
+    let checkedCoupled = 0;
+
+    function hasCounterexample(
+      size: number,
+      total: number,
+      visible: readonly number[],
+      namedClues: readonly number[],
+      target: number,
+      wantSafe: boolean,
+      useTotal: boolean
+    ): boolean {
+      const closed: number[] = [];
+      for (let i = 0; i < size * size; i++) if (visible[i] < 0) closed.push(i);
+      const cs = namedClues.map((clue) => ({
+        cells: neighbors(size, clue).filter((nb) => visible[nb] < 0),
+        v: visible[clue],
+      }));
+      const inFront = new Set<number>(cs.flatMap((c) => c.cells));
+      const front = closed.filter((i) => inFront.has(i));
+      const outside = closed.filter((i) => !inFront.has(i));
+      const used = cs.map(() => 0);
+      const left = cs.map((c) => c.cells.length);
+      const touch = front.map((cell) => cs.flatMap((c, ci) => (c.cells.includes(cell) ? [ci] : [])));
+      const targetPos = front.indexOf(target);
+      let foundBad = false;
+      function dfs(p: number, mines: number): void {
+        if (foundBad) return;
+        if (useTotal && (mines > total || mines + (front.length - p) + outside.length < total)) return;
+        if (p === front.length) {
+          if (used.some((u, ci) => u !== cs[ci].v)) return;
+          if (useTotal) {
+            const rem = total - mines;
+            if (rem < 0 || rem > outside.length) return;
+            if (targetPos === -1 && ((wantSafe && rem > 0) || (!wantSafe && rem < outside.length))) foundBad = true;
+          } else if (targetPos === -1) {
+            foundBad = true;
+          }
+          return;
+        }
+        const vals: readonly (0 | 1)[] = p === targetPos ? (wantSafe ? [1] : [0]) : [0, 1];
+        for (const val of vals) {
+          if (touch[p].some((ci) => used[ci] + val > cs[ci].v || used[ci] + val + left[ci] - 1 < cs[ci].v)) continue;
+          for (const ci of touch[p]) {
+            used[ci] += val;
+            left[ci]--;
+          }
+          if (p === targetPos) {
+            // Check whether ANY completion exists for the bad assignment.
+            let badComplete = false;
+            const checkRest = (q: number, m2: number): void => {
+              if (badComplete) return;
+              if (useTotal && (m2 > total || m2 + (front.length - q) + outside.length < total)) return;
+              if (q === front.length) {
+                if (used.some((u, ci) => u !== cs[ci].v)) return;
+                if (!useTotal || (total - m2 >= 0 && total - m2 <= outside.length)) badComplete = true;
+                return;
+              }
+              for (const v2 of [0, 1] as const) {
+                if (touch[q].some((ci) => used[ci] + v2 > cs[ci].v || used[ci] + v2 + left[ci] - 1 < cs[ci].v)) continue;
+                for (const ci of touch[q]) {
+                  used[ci] += v2;
+                  left[ci]--;
+                }
+                checkRest(q + 1, m2 + v2);
+                for (const ci of touch[q]) {
+                  used[ci] -= v2;
+                  left[ci]++;
+                }
+              }
+            };
+            checkRest(p + 1, mines + val);
+            if (badComplete) foundBad = true;
+          } else {
+            dfs(p + 1, mines + val);
+          }
+          for (const ci of touch[p]) {
+            used[ci] -= val;
+            left[ci]++;
+          }
+          if (foundBad) return;
+        }
+      }
+      dfs(0, 0);
+      return foundBad;
+    }
+
+    for (let idx = 0; idx < lines.length; idx++) {
+      const [n, start, mines] = JSON.parse(lines[idx])[3] as [number, number, number[]];
+      const board = boardFromMines(n, mines);
+      let marks = Array<number>(n * n).fill(0);
+      const open = (cell: number) => {
+        const q = [cell];
+        while (q.length) {
+          const c = q.pop()!;
+          if (marks[c] === 1) continue;
+          marks[c] = 1;
+          if (board[c] === 0) for (const nb of neighbors(n, c)) if (marks[nb] === 0) q.push(nb);
+        }
+      };
+      open(start);
+      for (let k = 0; k < 49; k++) {
+        const view = publicView(n, mines.length, board, marks);
+        const res = deducePublic(view);
+        if (res.status !== "deduced") break;
+        if (res.tier === "coupled") {
+          checkedCoupled++;
+          const citesTotal = res.step.reason.oneStep.includes(`${mines.length} sea urchins`);
+          expect(
+            hasCounterexample(n, mines.length, view.visible, res.step.clues, res.step.cell, res.step.kind !== "flag", citesTotal),
+            `467:${idx} coupled step cell=${res.step.cell} clues=${res.step.clues.join(",")}`
+          ).toBe(false);
+          if (idx === 0) {
+            // Codex's explicit counterexample [9,30,32,33,40,41,43,46] MUST violate the named clues!
+            const badMines = new Set([9, 30, 32, 33, 40, 41, 43, 46]);
+            const violates = res.step.clues.some(
+              (c) => neighbors(n, c).filter((nb) => badMines.has(nb)).length !== view.visible[c]
+            );
+            expect(violates).toBe(true);
+          }
+        }
+        open(res.step.cell);
+      }
+    }
+    expect(checkedCoupled).toBeGreaterThanOrEqual(30);
+  });
+
+  it("P3-6: certifiedFallbackSync reports the true global bank-468 Deep Water puzzle ordinal", () => {
+    const fb6 = certifiedFallbackSync(6, 42);
+    expect(fb6.bank).toBe(468);
+    expect(fb6.puzzle).toBe(4);
+    expect(reefDeepPuzzles[4].descriptor.start).toBe(fb6.start);
+    expect(reefDeepPuzzles[4].descriptor.mines).toEqual(fb6.mines);
+
+    for (const size of [5, 6, 7] as const) {
+      for (const seed of [1, 7, 19, 42, 99]) {
+        const fb = certifiedFallbackSync(size, seed);
+        expect(fb.bank).toBe(468);
+        const deep = reefDeepPuzzles[fb.puzzle];
+        expect(deep).toBeDefined();
+        expect(deep.ref.puzzle).toBe(fb.puzzle);
+        expect(deep.descriptor.size).toBe(fb.size);
+        expect(deep.descriptor.start).toBe(fb.start);
+        expect(deep.descriptor.mines).toEqual(fb.mines);
+        expect(deep.descriptor.band).toBe(fb.band);
+      }
+    }
   });
 });

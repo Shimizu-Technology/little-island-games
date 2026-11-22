@@ -67,11 +67,20 @@ export type State = {
   hintStep: PublicStep | null;
 };
 
-/** Certified assistance reserve: up to 49 board cells + ladder stages + result overhead. */
-export const ASSIST_ACTIONS = 56;
-export const ASSIST_BYTES = 768;
+/**
+ * Certified assistance & post-miss recovery reserve:
+ * Fits worst-case 7x7 puzzle completion (post-miss Undo/Start-again + unflagging wrong flags +
+ * flagging prerequisite urchins + opening every pearl + terminal result overhead, plus legacy
+ * 4-action h0/h1/h2/ho replay sequences) inside the frozen 512-action / 4,096-byte caps.
+ */
+export const ASSIST_ACTIONS = 200;
+export const ASSIST_BYTES = 1850;
 
 export const isAssistAction = (a: Action): boolean => a[0] === "h" || a[0] === "ho";
+
+/** Post-miss Undo or Start again stays admissible inside the reserve while preserving monotonic failure evidence. */
+export const isRecoveryAction = (s: State, a: Action): boolean =>
+  s.outcome === 1 && (a[0] === "u" || a[0] === "z");
 
 const validAction = (v: unknown): v is Action => {
   if (!Array.isArray(v)) return false;
@@ -116,7 +125,7 @@ export function challengeHintStep(s: State): PublicStep | null {
   }
   const board = boardFromMines(size, mines);
   const view = publicView(size, mines.length, board, s.marks);
-  const res = deducePublic(view);
+  const res = deducePublic(view, { teachPrerequisites: true });
   return res.status === "deduced" ? res.step : null;
 }
 

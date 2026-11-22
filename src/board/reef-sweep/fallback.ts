@@ -19,14 +19,18 @@ const packedRows = sets.packed as unknown as readonly PackedTuple[];
 const bandsForSize = (size: number): readonly string[] =>
   size === 5 ? ["single-5"] : size === 6 ? ["single-6"] : ["subset-7", "coupled-7"];
 
+const allDeepRows = (() => {
+  let globalIdx = 0;
+  return sets.deep.flatMap((g) =>
+    g.rows.map((row) => ({ band: g.band, row, idx: globalIdx++ }))
+  );
+})();
+
 /** Synchronous certified fallback from the embedded certified Deep Water rows (same 128-entry bank). */
 export function certifiedFallbackSync(size: number, seed: number): FallbackCandidate {
   const n = size === 5 || size === 6 || size === 7 ? size : 5;
   const bands = bandsForSize(n);
-  const matching = sets.deep.filter((g) => bands.includes(g.band));
-  const pool = matching.flatMap((g) =>
-    g.rows.map((row, idx) => ({ band: g.band, row, idx }))
-  );
+  const pool = allDeepRows.filter((item) => bands.includes(item.band));
   const pick = pool[fnv1a32(`reef-fallback-sync|${n}|${seed}`) % pool.length];
   const decoded = decodeRow<ReefPayload>(pick.row, pick.band, reefSweepAdapter);
   if (!decoded) throw new Error(`Certified fallback row for ${pick.band} failed to decode.`);

@@ -5,7 +5,7 @@ import {
   REDRAW_NODE_BUDGET,
   urchins,
 } from "./redraw";
-import { solvePublicNoGuess, type DeductionTier } from "./solver";
+import { createPublicSolve, stepPublicSolve, type DeductionTier } from "./solver";
 
 /** Time-slice yield cadence (ms) when running off the frame callback. */
 export const REDRAW_SLICE_MS = 8;
@@ -25,8 +25,9 @@ const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 /**
  * Sliced, cancellable async first-tap no-guess redraw.
  * Lives outside pure engine/save imports so no reading route can reach a clock or timer.
- * Never blocks a UI frame callback: yields after `sliceMs` (default 8 ms) and stops cleanly
- * if cancelled, if `maxAttempts` is reached, or if `budgetMs` passes.
+ * Never blocks a UI frame callback: steps candidate solves incrementally, yields within
+ * `sliceMs` (default 8 ms), checks cancellation and `budgetMs` mid-candidate and before
+ * returning `found`, and stops cleanly without silently moving the tap.
  */
 export async function redrawBoardTask(
   seed: number,
@@ -58,20 +59,51 @@ export async function redrawBoardTask(
   await pause();
   if (cancel.cancelled) return { status: "cancelled", attempts: 0, durationMs: clock() - started };
 
+  const shouldStop = () => cancel.cancelled || clock() - started >= budgetMs;
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (cancel.cancelled) return { status: "cancelled", attempts: attempt, durationMs: clock() - started };
-    const spent = clock() - started;
-    if (spent >= budgetMs) return { status: "exhausted", attempts: attempt, durationMs: spent };
+    const spentBefore = clock() - started;
+    if (spentBefore >= budgetMs) return { status: "exhausted", attempts: attempt, durationMs: spentBefore };
 
     const mines = candidateMines(seed, size, firstCell, attempt, mineCount);
     const board = boardFromMines(size, mines);
-    const solved = solvePublicNoGuess(board, size, firstCell, { nodeBudget });
-    if (solved.status === "solved") {
-      return { status: "found", board, mines, attempt, ceiling: solved.ceiling, durationMs: clock() - started };
+    const stepper = createPublicSolve(board, size, firstCell);
+    if (!stepper) continue;
+
+    let solvedCeiling: DeductionTier | null = null;
+    for (;;) {
+      const stepRes = stepPublicSolve(stepper, { nodeBudget, shouldStop });
+      if (cancel.cancelled) return { status: "cancelled", attempts: attempt + 1, durationMs: clock() - started };
+      const elapsed = clock() - started;
+      if (elapsed >= budgetMs) {
+        return { status: "exhausted", attempts: attempt + 1, durationMs: elapsed };
+      }
+      if (stepRes.status === "solved") {
+        solvedCeiling = stepRes.ceiling;
+        break;
+      }
+      if (stepRes.status !== "continue") break;
+      if (elapsed - (sliceStart - started) >= sliceMs) {
+        await pause();
+        if (cancel.cancelled) return { status: "cancelled", attempts: attempt + 1, durationMs: clock() - started };
+        const afterYield = clock() - started;
+        if (afterYield >= budgetMs) return { status: "exhausted", attempts: attempt + 1, durationMs: afterYield };
+        sliceStart = started + afterYield;
+      }
+    }
+
+    if (solvedCeiling !== null) {
+      const finalDuration = clock() - started;
+      if (finalDuration >= budgetMs) {
+        return { status: "exhausted", attempts: attempt + 1, durationMs: finalDuration };
+      }
+      return { status: "found", board, mines, attempt, ceiling: solvedCeiling, durationMs: finalDuration };
     }
 
     if (clock() - sliceStart >= sliceMs) {
       await pause();
+      if (cancel.cancelled) return { status: "cancelled", attempts: attempt + 1, durationMs: clock() - started };
       sliceStart = clock();
     }
   }

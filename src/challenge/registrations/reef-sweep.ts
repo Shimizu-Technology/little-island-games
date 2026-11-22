@@ -7,6 +7,7 @@ import {
   awardsFor,
   descriptorFromPayload,
   isAssistAction,
+  isRecoveryAction,
   reefChallengeEngine,
   reefDeepPuzzles,
   reefPackedBanks,
@@ -36,8 +37,9 @@ export const registration = defineReplayGame({
   assistance: {
     bytes: ASSIST_BYTES,
     actions: ASSIST_ACTIONS,
-    idempotentHelp: false,
+    idempotentHelp: true,
     isAction: isAssistAction,
+    isRecovery: isRecoveryAction,
   },
   puzzles: reefDeepPuzzles,
   engine: reefChallengeEngine,

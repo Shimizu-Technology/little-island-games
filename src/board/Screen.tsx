@@ -1,7 +1,7 @@
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { resultEvent } from "../islander/reactions";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, Platform, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -26,7 +26,14 @@ import { Boards, demoPosition } from "./Boards";
 import { coordinate, target as canoeTarget } from "./hidden-canoes/engine";
 import { hintReason as coconutHintReason } from "./coconut-drop/engine";
 import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
-import { coordinate as reefCoordinate, createFallbackPosition, publicHintStep, urchins, type PublicStep } from "./reef-sweep/engine";
+import {
+  coordinate as reefCoordinate,
+  createFallbackPosition,
+  moveWithAttempt,
+  publicHintStep,
+  urchins,
+  type PublicStep,
+} from "./reef-sweep/engine";
 import { loadCertifiedFallback, type FallbackCandidate } from "./reef-sweep/fallback";
 import { redrawBoardTask, type RedrawCancel } from "./reef-sweep/redrawTask";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
@@ -263,22 +270,36 @@ function Round({
     { width, height, fontScale } = useWindowDimensions(),
     play = useSounds(store.save.settings.sound);
   const wide = s.game === "reef-sweep" ? width >= 660 && width > height : width >= 900 && width > height;
-  const buttonCap = atLarge(fontScale, 1.3);
-  const copyCap = atLarge(fontScale, CHROME_MAX);
+  const large = fontScale >= 1.5;
+  const reefCompactPortrait = s.game === "reef-sweep" && !wide && large && height < 920;
+  const reefShortLandscape = s.game === "reef-sweep" && wide && height < 500;
+  const reefCompact = reefCompactPortrait || reefShortLandscape;
+  const buttonCap = atLarge(fontScale, reefCompact ? 1.2 : 1.3);
+  const copyCap = atLarge(fontScale, reefCompact ? 1.25 : CHROME_MAX);
+  const horizontalPad = reefShortLandscape ? 12 : reefCompactPortrait ? 14 : 20;
   const contentWidth = Math.min(wide ? 1120 : 680, width - insets.left - insets.right);
-  const innerWidth = Math.max(240, contentWidth - 40);
-  const reefLeftCol = Math.floor((innerWidth - 16) * (1 / 2.15));
-  const reefWideCol = Math.max(220, innerWidth - 16 - reefLeftCol);
+  const innerWidth = Math.max(240, contentWidth - horizontalPad * 2);
+  const reefBoardSide = reefShortLandscape
+    ? Math.min(308, Math.max(280, height - insets.top - insets.bottom - 70))
+    : Math.min(420, height - insets.top - insets.bottom - 120);
+  const reefBoardCol = Math.min(Math.floor((innerWidth - 12) * 0.52), reefBoardSide);
+  const reefLeftCol = Math.max(220, innerWidth - 12 - reefBoardCol);
   const available =
     s.game === "reef-sweep" && wide
-      ? Math.max(220, Math.min(reefWideCol, Math.min(440, height - insets.top - insets.bottom - 120)))
-      : Math.max(
-          280,
-          Math.min(
-            wide ? width * 0.52 - 48 : innerWidth,
-            wide ? Math.min(440, height - insets.top - insets.bottom - 96) : 560
-          )
-        );
+      ? Math.max(280, reefBoardCol)
+      : reefCompactPortrait
+        ? Math.min(308, innerWidth)
+        : Math.max(
+            280,
+            Math.min(
+              wide ? width * 0.52 - 48 : innerWidth,
+              wide ? Math.min(440, height - insets.top - insets.bottom - 96) : 560
+            )
+          );
+  const canUndo = useMemo(
+    () => (s.game === "reef-sweep" ? p.moves.length > 0 : undo(s) !== s),
+    [s, p.moves.length]
+  );
   const success = p.outcome !== null && p.outcome !== "draw" && (s.mode !== "solo" || p.outcome === 0);
   const [help, setHelp] = useState(false),
     [demo, setDemo] = useState(0),
@@ -385,8 +406,11 @@ function Round({
     });
     play("tap");
   };
-  const commitMove = (action: number) => {
-    const position = engine.move(p, action);
+  const commitMove = (action: number, provenAttempt?: number) => {
+    const position =
+      s.game === "reef-sweep" && provenAttempt !== undefined
+        ? moveWithAttempt(p, action, provenAttempt)
+        : engine.move(p, action);
     if (position === p) {
       setNotice(
         flag
@@ -439,7 +463,7 @@ function Round({
         if (cancel.cancelled) return;
         if (res.status === "found") {
           setRedrawing(false);
-          commitMove(action);
+          commitMove(action, res.attempt);
         } else if (res.status === "exhausted") {
           const candidate = await loadCertifiedFallback(p.size, p.seed);
           if (cancel.cancelled) return;
@@ -565,9 +589,163 @@ function Round({
             ? "First tap is safe · every new reef solves with no guessing."
             : "First tap is safe. Open every pearl space."
         : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`;
+  const reefCounterText = `${urchins(p.size)} ${reefCompact ? "urchins" : "sea urchins"} · ${p.marks.filter((m) => m === 2).length} flags · ${p.scores[0]} pearls`;
+  const reefModeChips = s.game === "reef-sweep" && p.outcome === null && (
+    <View style={[styles.row, { justifyContent: "center", flexWrap: "wrap", gap: reefCompact ? 6 : 8 }]}>
+      <Chip maxFontSizeMultiplier={buttonCap} selected={!flag} onPress={() => setFlag(false)}>
+        Open pearls
+      </Chip>
+      <Chip maxFontSizeMultiplier={buttonCap} selected={flag} onPress={() => setFlag(true)}>
+        Flag urchins
+      </Chip>
+    </View>
+  );
+  const reefNoticeBanner = s.game === "reef-sweep" && !!notice && !concealed && (
+    <Copy
+      maxFontSizeMultiplier={copyCap}
+      accessibilityLiveRegion="polite"
+      style={{
+        width: "100%",
+        maxWidth: wide ? reefLeftCol : undefined,
+        alignSelf: "center",
+        padding: reefCompact ? 8 : 12,
+        backgroundColor: C.sand,
+        borderRadius: 12,
+        color: C.ink,
+        fontSize: reefCompact ? 13 : 15,
+        lineHeight: reefCompact ? 18 : 22,
+      }}
+    >
+      {notice}
+    </Copy>
+  );
+  const actionButtons = (
+    <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center", gap: reefCompact ? 6 : 8 }]}>
+      {p.outcome === null && !concealed && (
+        <Button quiet compact maxFontSizeMultiplier={buttonCap} disabled={locked || hinting} onPress={showHint}>
+          {hinting
+            ? "Thinking…"
+            : s.game === "reef-sweep"
+              ? reefHintStage === null
+                ? "Hint · Look"
+                : reefHintStage === 0
+                  ? "Hint · Think"
+                  : reefHintStage === 1
+                    ? "Hint · One step"
+                    : "Hint · Show me"
+              : "Hint"}
+        </Button>
+      )}
+      {p.outcome !== null && s.game !== "reef-sweep" && reviewSeat !== null && review === null && (
+        <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={seeBestMove}>
+          See the best move
+        </Button>
+      )}
+      {(s.mode === "solo" || s.game === "reef-sweep") && s.game !== "hidden-canoes" && (
+        <Button
+          quiet
+          compact
+          maxFontSizeMultiplier={buttonCap}
+          disabled={teaching || redrawing || !canUndo}
+          onPress={() => {
+            const next = undo(s);
+            if (commit(next)) {
+              setHint(null);
+              setReefHintStage(null);
+              setReefHintStep(null);
+              setFallbackOffer(null);
+              setNotice("");
+              play("tap");
+            }
+          }}
+        >
+          Undo
+        </Button>
+      )}
+      {secret && !concealed && !ai && (
+        <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={conceal}>
+          Cover my turn
+        </Button>
+      )}
+      {p.outcome !== null && <Button maxFontSizeMultiplier={buttonCap} onPress={onReplay}>Play again</Button>}
+      <Button
+        quiet
+        compact
+        maxFontSizeMultiplier={buttonCap}
+        onPress={() => {
+          conceal();
+          onSetup();
+        }}
+      >
+        New game
+      </Button>
+    </View>
+  );
+  const reefFallbackCard = s.game === "reef-sweep" && fallbackOffer && (
+    <View
+      accessibilityLiveRegion="polite"
+      style={{ gap: 10, padding: 14, backgroundColor: "#FFF4D6", borderRadius: 16 }}
+    >
+      <Heading
+        maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier("Try a certified reef?", 20, available, CHROME_MAX))}
+        style={{ fontSize: 20 }}
+      >
+        Try a certified reef?
+      </Heading>
+      <Copy maxFontSizeMultiplier={copyCap} style={{ color: C.ink }}>
+        Finding a no-guess reef from {reefCoordinate(p.size, fallbackOffer.tappedCell)} took too long. Your tap
+        was not moved. Would you like a certified no-guess reef that starts at{" "}
+        {reefCoordinate(p.size, fallbackOffer.candidate.start)}, or keep this reef and tap another space?
+      </Copy>
+      <View style={[styles.row, { flexWrap: "wrap" }]}>
+        <Button
+          compact
+          maxFontSizeMultiplier={buttonCap}
+          onPress={() => {
+            const nextPos = createFallbackPosition(p.seed, p.size, {
+              start: fallbackOffer.candidate.start,
+              mines: fallbackOffer.candidate.mines,
+            });
+            if (commit({ ...s, position: nextPos })) {
+              setFallbackOffer(null);
+              setHint(null);
+              setReefHintStage(null);
+              setReefHintStep(null);
+              setNotice("");
+              play("tap");
+            }
+          }}
+        >
+          Use certified reef (starts at {reefCoordinate(p.size, fallbackOffer.candidate.start)})
+        </Button>
+        <Button
+          quiet
+          compact
+          maxFontSizeMultiplier={buttonCap}
+          onPress={() => {
+            setFallbackOffer(null);
+            setNotice("");
+            play("tap");
+          }}
+        >
+          Keep this reef
+        </Button>
+      </View>
+    </View>
+  );
   return (
     <SafeAreaView style={styles.page}>
-      <ScrollView contentContainerStyle={[styles.content, { maxWidth: wide ? 1120 : 680, paddingHorizontal: 20, gap: 12 }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            maxWidth: wide ? 1120 : 680,
+            paddingHorizontal: horizontalPad,
+            paddingVertical: reefShortLandscape ? 4 : reefCompactPortrait ? 8 : 20,
+            gap: reefCompact ? 6 : 12,
+          },
+        ]}
+      >
         <GameHeader
           title={info.name}
           titleMax={headerMax}
@@ -583,11 +761,50 @@ function Round({
           }}
         />
         <SaveStatus />
-        <View style={{ flexDirection: wide ? "row" : "column", gap: 16, width: "100%" }}>
+        {reefCompactPortrait ? (
+          <View style={{ width: "100%", gap: 6, alignItems: "center" }}>
+            {p.outcome !== null && (
+              <View accessibilityLiveRegion="polite" style={[styles.status, { width: "100%" }, success && { backgroundColor: C.success }]}>
+                <Heading maxFontSizeMultiplier={copyCap} style={{ fontSize: 18 }}>{title}</Heading>
+                <Copy maxFontSizeMultiplier={copyCap} style={{ marginTop: 2, fontSize: 13, lineHeight: 18 }}>{statusDetail}</Copy>
+              </View>
+            )}
+            {p.outcome !== null && <BadgeResultCard round={s.id} />}
+            {p.outcome !== null && success && <Celebrate burst={1} />}
+            <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 13, textAlign: "center", color: C.ink }}>
+              {reefCounterText}
+            </Copy>
+            {reefModeChips}
+            <Boards
+              key={`${s.id}:${p.moves.length}:${visible === token}`}
+              game={s.game}
+              state={p}
+              width={available}
+              onMove={move}
+              locked={locked || p.outcome !== null}
+              hint={hint}
+              hintFocus={reefHintStage !== null && reefHintStep ? reefHintStep.clues : undefined}
+              startCell={p.fallback ? p.fallback.start : null}
+              flag={flag}
+              compact
+              speak={play}
+            />
+            {actionButtons}
+            {reefNoticeBanner}
+            {reefFallbackCard}
+            <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>
+              Saved on this device · No rush, take your time.
+            </Copy>
+            <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>
+              Numbers count sea urchins in all touching spaces. Hold a closed tile to flag.
+            </Copy>
+          </View>
+        ) : (
+        <View style={{ flexDirection: wide ? "row" : "column", gap: wide && s.game === "reef-sweep" ? 12 : 16, width: "100%", alignItems: wide && s.game === "reef-sweep" ? "flex-start" : undefined }}>
         <View
           style={
             wide && s.game === "reef-sweep"
-              ? { width: reefLeftCol, minWidth: 0, gap: 8 }
+              ? { width: reefLeftCol, minWidth: 0, gap: reefShortLandscape ? 6 : 8 }
               : { flex: 1, minWidth: 0, gap: 12 }
           }
         >
@@ -611,10 +828,12 @@ function Round({
           />
         )}
         {s.game === "reef-sweep" ? (
-          <View accessibilityLiveRegion="polite" style={[styles.status, success && { backgroundColor: C.success }]}>
-            <Heading maxFontSizeMultiplier={copyCap} style={{ fontSize: 20 }}>{title}</Heading>
-            <Copy maxFontSizeMultiplier={copyCap} style={{ marginTop: 4, fontSize: 14, lineHeight: 21 }}>{statusDetail}</Copy>
-          </View>
+          (!reefShortLandscape || p.outcome !== null) && (
+            <View accessibilityLiveRegion="polite" style={[styles.status, success && { backgroundColor: C.success }]}>
+              <Heading maxFontSizeMultiplier={copyCap} style={{ fontSize: 20 }}>{title}</Heading>
+              <Copy maxFontSizeMultiplier={copyCap} style={{ marginTop: 4, fontSize: 14, lineHeight: 21 }}>{statusDetail}</Copy>
+            </View>
+          )
         ) : (
           <Status title={title} success={success} detail={statusDetail} />
         )}
@@ -625,7 +844,7 @@ function Round({
         )}
         {p.outcome !== null && <BadgeResultCard round={s.id}/>}
         {p.outcome !== null && success && <Celebrate burst={1} />}
-        {p.outcome !== null && (
+        {p.outcome !== null && !reefShortLandscape && (
           <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Companion event={resultEvent(p.outcome, s.mode === "solo" || s.game === "reef-sweep")} size={80}/>
             <View style={{ width: 80, height: 80, overflow: "hidden" }}>
@@ -644,124 +863,30 @@ function Round({
             </Heading>
           </View>
         )}
-        <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>
-          {p.outcome === null && !concealed && (
-            <Button quiet compact maxFontSizeMultiplier={buttonCap} disabled={locked || hinting} onPress={showHint}>
-              {hinting
-                ? "Thinking…"
-                : s.game === "reef-sweep"
-                  ? reefHintStage === null
-                    ? "Hint · Look"
-                    : reefHintStage === 0
-                      ? "Hint · Think"
-                      : reefHintStage === 1
-                        ? "Hint · One step"
-                        : "Hint · Show me"
-                  : "Hint"}
-            </Button>
-          )}
-          {p.outcome !== null && s.game !== "reef-sweep" && reviewSeat !== null && review === null && (
-            <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={seeBestMove}>
-              See the best move
-            </Button>
-          )}
-          {(s.mode === "solo" || s.game === "reef-sweep") && s.game !== "hidden-canoes" && (
-            <Button
-              quiet
-              compact
-              maxFontSizeMultiplier={buttonCap}
-              disabled={teaching || redrawing || undo(s) === s}
-              onPress={() => {
-                const next = undo(s);
-                if (commit(next)) {
-                  setHint(null);
-                  setReefHintStage(null);
-                  setReefHintStep(null);
-                  setFallbackOffer(null);
-                  setNotice("");
-                  play("tap");
-                }
-              }}
-            >
-              Undo
-            </Button>
-          )}
-          {secret && !concealed && !ai && (
-            <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={conceal}>
-              Cover my turn
-            </Button>
-          )}
-          {p.outcome !== null && <Button maxFontSizeMultiplier={buttonCap} onPress={onReplay}>Play again</Button>}
-          <Button
-            quiet
-            compact
-            maxFontSizeMultiplier={buttonCap}
-            onPress={() => {
-              conceal();
-              onSetup();
-            }}
-          >
-            New game
-          </Button>
-        </View>
-        {s.game === "reef-sweep" && fallbackOffer && (
-          <View
-            accessibilityLiveRegion="polite"
-            style={{ gap: 10, padding: 14, backgroundColor: "#FFF4D6", borderRadius: 16 }}
-          >
-            <Heading
-              maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier("Try a certified reef?", 20, available, CHROME_MAX))}
-              style={{ fontSize: 20 }}
-            >
-              Try a certified reef?
-            </Heading>
-            <Copy maxFontSizeMultiplier={copyCap} style={{ color: C.ink }}>
-              Finding a no-guess reef from {reefCoordinate(p.size, fallbackOffer.tappedCell)} took too long. Your tap
-              was not moved. Would you like a certified no-guess reef that starts at{" "}
-              {reefCoordinate(p.size, fallbackOffer.candidate.start)}, or keep this reef and tap another space?
+        {wide && s.game === "reef-sweep" && (
+          <>
+            <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: reefShortLandscape ? 13 : 14, textAlign: "center", color: C.ink }}>
+              {reefCounterText}
             </Copy>
-            <View style={[styles.row, { flexWrap: "wrap" }]}>
-              <Button
-                compact
-                maxFontSizeMultiplier={buttonCap}
-                onPress={() => {
-                  const nextPos = createFallbackPosition(p.seed, p.size, {
-                    start: fallbackOffer.candidate.start,
-                    mines: fallbackOffer.candidate.mines,
-                  });
-                  if (commit({ ...s, position: nextPos })) {
-                    setFallbackOffer(null);
-                    setHint(null);
-                    setReefHintStage(null);
-                    setReefHintStep(null);
-                    setNotice("");
-                    play("tap");
-                  }
-                }}
-              >
-                Use certified reef (starts at {reefCoordinate(p.size, fallbackOffer.candidate.start)})
-              </Button>
-              <Button
-                quiet
-                compact
-                maxFontSizeMultiplier={buttonCap}
-                onPress={() => {
-                  setFallbackOffer(null);
-                  setNotice("");
-                  play("tap");
-                }}
-              >
-                Keep this reef
-              </Button>
-            </View>
-          </View>
+            {reefModeChips}
+          </>
         )}
-        <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
+        {actionButtons}
+        {wide && s.game === "reef-sweep" && reefNoticeBanner}
+        {reefFallbackCard}
+        {!reefShortLandscape && (
+          <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
+        )}
+        {wide && s.game === "reef-sweep" && !reefShortLandscape && (
+          <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>
+            Numbers count sea urchins in all touching spaces. Hold a closed tile to flag.
+          </Copy>
+        )}
         </View>
         <View
           style={
             wide && s.game === "reef-sweep"
-              ? { width: reefWideCol, minWidth: 0, gap: 8, justifyContent: "center" }
+              ? { width: reefBoardCol, minWidth: 0, gap: 6, alignItems: "center", justifyContent: "flex-start" }
               : { flex: wide ? 1.15 : undefined, minWidth: 0, gap: 12, justifyContent: "center" }
           }
         >
@@ -834,33 +959,8 @@ function Round({
           </View>
         ) : (
           <>
-            {s.game === "reef-sweep" && (
-              <View style={[styles.row, { justifyContent: "center", flexWrap: "wrap" }]}>
-                <Chip maxFontSizeMultiplier={buttonCap} selected={!flag} onPress={() => setFlag(false)}>
-                  Open pearls
-                </Chip>
-                <Chip maxFontSizeMultiplier={buttonCap} selected={flag} onPress={() => setFlag(true)}>
-                  Flag urchins
-                </Chip>
-              </View>
-            )}
-            {s.game === "reef-sweep" && !!notice && !concealed && (
-              <Copy
-                maxFontSizeMultiplier={copyCap}
-                accessibilityLiveRegion="polite"
-                style={{
-                  width: "100%",
-                  maxWidth: wide ? Math.min(reefWideCol, Math.max(available, 320)) : undefined,
-                  alignSelf: "center",
-                  padding: wide ? 10 : 12,
-                  backgroundColor: C.sand,
-                  borderRadius: 12,
-                  color: C.ink,
-                }}
-              >
-                {notice}
-              </Copy>
-            )}
+            {!wide && reefModeChips}
+            {!wide && reefNoticeBanner}
             <Boards
               key={`${s.id}:${p.moves.length}:${visible === token}`}
               game={s.game}
@@ -872,6 +972,7 @@ function Round({
               hintFocus={s.game === "reef-sweep" && reefHintStage !== null && reefHintStep ? reefHintStep.clues : undefined}
               startCell={s.game === "reef-sweep" && p.fallback ? p.fallback.start : null}
               flag={flag}
+              compact={wide && s.game === "reef-sweep"}
               speak={play}
             />
           </>
@@ -881,6 +982,7 @@ function Round({
         )}
         </View>
         </View>
+        )}
       </ScrollView>
       <Sheet
         visible={teaching}
@@ -917,9 +1019,11 @@ function Round({
           {demo === 0 ? "Show the move" : "Watch again"}
         </Button>
         <Copy>{info.rule}</Copy>
-        <Button quiet compact onPress={() => play(`board-rules-${s.game}`)}>
-          Hear the rules
-        </Button>
+        {!(s.game === "reef-sweep" && p.rules === 2) && (
+          <Button quiet compact onPress={() => play(`board-rules-${s.game}`)}>
+            Hear the rules
+          </Button>
+        )}
       </Sheet>
     </SafeAreaView>
   );

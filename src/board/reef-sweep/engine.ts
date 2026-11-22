@@ -2,6 +2,7 @@ import { Seat, validSeat } from "../../games/match";
 import { blank, integer, object, Position, ReefFallback, Strength } from "../types";
 import {
   boardFromMines,
+  candidateMines,
   legacyBoard,
   redrawBoard,
   REDRAW_MAX_ATTEMPTS,
@@ -47,11 +48,12 @@ export function createFallbackPosition(seed: number, size: number, fallback: Ree
   };
 }
 
-/** Rebuilds the exact starting Position for undo/replay, preserving legacy rules or an accepted fallback. */
+/** Rebuilds the exact starting Position for undo/replay, preserving legacy rules, proven attempt, or fallback. */
 export function initialFrom(s: Position): Position {
   if (s.rules === undefined) return createLegacy(s.seed, s.size, s.starter);
   if (s.fallback) return createFallbackPosition(s.seed, s.size, s.fallback);
-  return create(s.seed, s.size, s.starter);
+  const base = create(s.seed, s.size, s.starter);
+  return s.attempt !== undefined ? { ...base, attempt: s.attempt } : base;
 }
 
 /** 0..N-1 opens a tile; N..2N-1 toggles a flag. First opening and its neighbors are safe. */
@@ -70,14 +72,30 @@ export function legal(s: Position): number[] {
   });
 }
 
-function resolveFirstBoard(s: Position, cell: number): number[] | null {
-  if (s.rules === undefined) return legacyBoard(s.seed, s.size, cell);
-  if (s.fallback) return cell === s.fallback.start ? boardFromMines(s.size, s.fallback.mines) : null;
+function resolveFirstBoard(s: Position, cell: number): { board: number[]; attempt?: number } | null {
+  if (s.rules === undefined) return { board: legacyBoard(s.seed, s.size, cell) };
+  if (s.fallback) return cell === s.fallback.start ? { board: boardFromMines(s.size, s.fallback.mines) } : null;
+  if (s.attempt !== undefined) {
+    if (!integer(s.attempt, 0, REDRAW_MAX_ATTEMPTS - 1)) return null;
+    const mines = candidateMines(s.seed, s.size, cell, s.attempt, urchins(s.size));
+    return { board: boardFromMines(s.size, mines), attempt: s.attempt };
+  }
   const redrawn = redrawBoard(s.seed, s.size, cell, {
     maxAttempts: REDRAW_MAX_ATTEMPTS,
     nodeBudget: REDRAW_NODE_BUDGET,
   });
-  return redrawn.status === "found" ? redrawn.board : null;
+  return redrawn.status === "found" ? { board: redrawn.board, attempt: redrawn.attempt } : null;
+}
+
+/**
+ * Applies a first opening using the proven attempt already found by `redrawBoardTask`,
+ * reconstructing that exact candidate in O(1) without re-running the search loop.
+ */
+export function moveWithAttempt(s: Position, action: number, attempt: number): Position {
+  if (!integer(attempt, 0, REDRAW_MAX_ATTEMPTS - 1)) return s;
+  if (s.rules !== 2 || s.fallback || s.marks.includes(1)) return move(s, action);
+  const next = move({ ...s, attempt }, action);
+  return next.moves.length === s.moves.length ? s : next;
 }
 
 export function move(s: Position, action: number): Position {
@@ -90,15 +108,17 @@ export function move(s: Position, action: number): Position {
     return { ...s, marks, moves: [...s.moves, action] };
   }
   let board = s.board;
+  let attempt = s.attempt;
   if (!s.marks.includes(1)) {
     const generated = resolveFirstBoard(s, cell);
     if (!generated) return s;
-    board = generated;
+    board = generated.board;
+    attempt = generated.attempt;
   }
   const marks = revealCell(board, s.size, s.marks, cell);
   const won = board.every((v, i) => v === -1 || marks[i] === 1),
     outcome = board[cell] === -1 ? 1 : won ? 0 : null;
-  return {
+  const next: Position = {
     ...s,
     board,
     marks,
@@ -106,6 +126,8 @@ export function move(s: Position, action: number): Position {
     scores: [marks.filter((m, i) => m === 1 && board[i] !== -1).length, 0],
     outcome,
   };
+  if (attempt !== undefined) next.attempt = attempt;
+  return next;
 }
 
 /** Public-constraint logical deductions using ONLY visible numbers and total urchin count. */
@@ -171,7 +193,9 @@ export function publicHintStep(s: Position): PublicStep | null {
       },
     };
   }
-  const res = deducePublic(publicView(s.size, urchins(s.size), s.board, s.marks));
+  const res = deducePublic(publicView(s.size, urchins(s.size), s.board, s.marks), {
+    teachPrerequisites: s.moves.length < 400,
+  });
   if (res.status !== "deduced") return null;
   if (res.step.kind === "flag" && s.moves.length >= 400) return null;
   return res.step;
@@ -203,17 +227,21 @@ function validFallback(v: unknown, size: number): v is ReefFallback {
 }
 
 /**
- * Strictly replays and validates legacy (no `rules`), v2 no-guess (`rules: 2`),
- * and v2 explicitly accepted fallback (`rules: 2` + `fallback`) Reef Sweep positions.
+ * Strictly replays and validates legacy (no `rules`), v2 no-guess (`rules: 2`, with or without
+ * proven `attempt`), and v2 explicitly accepted fallback (`rules: 2` + `fallback`) positions.
  */
 export function validate(value: unknown): value is Position {
   if (!object(value)) return false;
   const keys = Object.keys(value).sort().join();
   const isLegacy = keys === "board,marks,moves,outcome,scores,seed,size,starter,turn";
   const isV2 = keys === "board,marks,moves,outcome,rules,scores,seed,size,starter,turn" && value.rules === 2;
+  const isV2Attempt =
+    keys === "attempt,board,marks,moves,outcome,rules,scores,seed,size,starter,turn" &&
+    value.rules === 2 &&
+    integer(value.attempt, 0, REDRAW_MAX_ATTEMPTS - 1);
   const isFallback =
     keys === "board,fallback,marks,moves,outcome,rules,scores,seed,size,starter,turn" && value.rules === 2;
-  if (!isLegacy && !isV2 && !isFallback) return false;
+  if (!isLegacy && !isV2 && !isV2Attempt && !isFallback) return false;
   if (
     !integer(value.seed, 0, 0xffffffff) ||
     ![5, 6, 7].includes(value.size as number) ||
@@ -226,12 +254,17 @@ export function validate(value: unknown): value is Position {
     return false;
   }
   const size = value.size as number;
+  const count = size * size;
   let state: Position;
   if (isLegacy) {
     state = createLegacy(value.seed, size, value.starter);
   } else if (isFallback) {
     if (!validFallback(value.fallback, size)) return false;
     state = createFallbackPosition(value.seed, size, value.fallback);
+  } else if (isV2Attempt) {
+    const firstOpen = (value.moves as number[]).find((m) => m < count);
+    if (firstOpen === undefined) return false;
+    state = { ...create(value.seed, size, value.starter), attempt: value.attempt as number };
   } else {
     state = create(value.seed, size, value.starter);
   }
@@ -239,6 +272,20 @@ export function validate(value: unknown): value is Position {
     const next = move(state, action);
     if (next === state) return false;
     state = next;
+  }
+  if (isV2Attempt) {
+    const firstOpen = (value.moves as number[]).find((m) => m < count)!;
+    if (solvePublicNoGuess(state.board, size, firstOpen, { nodeBudget: REDRAW_NODE_BUDGET }).status !== "solved") {
+      return false;
+    }
+  }
+  // Backward compatibility: older v2 saves saved before `attempt` was recorded lack `attempt`.
+  if (isV2 && state.attempt !== undefined) {
+    const { attempt: _omit, ...withoutAttempt } = state;
+    void _omit;
+    return Object.keys(withoutAttempt).every(
+      (k) => JSON.stringify(withoutAttempt[k as keyof typeof withoutAttempt]) === JSON.stringify(value[k])
+    );
   }
   return Object.keys(state).every((k) => JSON.stringify(state[k as keyof Position]) === JSON.stringify(value[k]));
 }

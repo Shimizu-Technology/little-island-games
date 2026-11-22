@@ -29,6 +29,12 @@ export type Position = {
    */
   rules?: 2;
   /**
+   * Proven redraw attempt index (0..REDRAW_MAX_ATTEMPTS-1) for a rules: 2 Reef Sweep board.
+   * Recorded on the first opening so commit, save validation, and undo reconstruct that exact
+   * candidate directly without re-searching earlier attempts.
+   */
+  attempt?: number;
+  /**
    * Present only when the player explicitly accepted a certified fallback Reef Sweep board
    * after bounded redraw exhausted its budget. Never set silently.
    */

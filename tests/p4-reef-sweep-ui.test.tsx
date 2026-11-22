@@ -12,6 +12,7 @@ import { wordsFit, wordFitMultiplier, CHROME_MAX } from "../src/components/wordF
 const fixture = vi.hoisted(() => ({
   push: vi.fn(),
   openGame: vi.fn(),
+  play: vi.fn(),
   dims: { width: 390, height: 844, fontScale: 1 },
   store: {
     ready: true,
@@ -74,7 +75,7 @@ vi.mock("../src/learn/Celebrate", () => ({ Celebrate: () => null }));
 vi.mock("../src/components/Match", () => ({ PlayerNames: () => null, Scoreboard: () => null }));
 vi.mock("../src/components/Recovery", () => ({ Recovery: () => null }));
 vi.mock("../src/components/SaveStatus", () => ({ SaveStatus: () => null }));
-vi.mock("../src/components/Audio", () => ({ useSounds: () => () => {} }));
+vi.mock("../src/components/Audio", () => ({ useSounds: () => fixture.play }));
 vi.mock("../src/state/Store", () => ({ useStore: () => fixture.store }));
 vi.mock("../src/practice/useRoundPractice", () => ({ useRoundPractice: () => ({ request: (f: () => void) => f(), panel: null }) }));
 vi.mock("../src/board/Art", () => ({ BoardArt: () => null, Piece: () => null }));
@@ -266,20 +267,22 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     await act(() => r.unmount());
   });
 
-  it("caps BoardScreen header and status chrome cleanly at AX5 while leaving default text untouched", async () => {
+  it("caps BoardScreen header and status chrome cleanly at AX5 while keeping board and controls together", async () => {
     const session = { ...createSession("reef-sweep", { seed: 4, size: 7 }), taught: true };
     fixture.store.save.board = { "reef-sweep": session };
 
+    // Portrait AX5 on iPhone 15 uses compact layout (hides active Status box above board so 7x7 + controls fit together).
     fixture.dims = { width: 393, height: 852, fontScale: 3.12 };
     let r!: ReactTestRenderer;
     await act(() => {
       r = create(<BoardScreen game="reef-sweep" />);
     });
-    // GameHeader receives a bounded titleMax at AX5 and status/copy nodes cap at CHROME_MAX.
-    const statusHeading = r.root.findAll((n) => n.props.children === "A little pearl hunt")[0];
-    expect(statusHeading.props.maxFontSizeMultiplier).toBe(CHROME_MAX);
+    expect(r.root.findAll((n) => n.props.children === "A little pearl hunt")).toHaveLength(0);
     const savedCopy = r.root.findAll((n) => n.props.children === "Saved on this device · No rush, take your time.")[0];
-    expect(savedCopy.props.maxFontSizeMultiplier).toBe(CHROME_MAX);
+    expect(savedCopy.props.maxFontSizeMultiplier).toBe(1.25);
+    expect(text(r)).toContain("Open pearls");
+    expect(text(r)).toContain("Hint · Look");
+    expect(text(r)).toContain("Undo");
     await act(() => r.unmount());
 
     fixture.dims = { width: 393, height: 852, fontScale: 1 };
@@ -290,7 +293,7 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     expect(defaultHeading.props.maxFontSizeMultiplier).toBeUndefined();
     await act(() => r.unmount());
 
-    // Landscape AX5 on iPhone 15 bounds both split columns to innerWidth so neither can overflow horizontally.
+    // Landscape AX5 on iPhone 15 bounds both split columns to innerWidth with board alone in the right column.
     fixture.dims = { width: 852, height: 393, fontScale: 3.12 };
     await act(() => {
       r = create(<BoardScreen game="reef-sweep" />);
@@ -299,12 +302,65 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
       (n) =>
         n.props.style &&
         !Array.isArray(n.props.style) &&
-        n.props.style.gap === 8 &&
+        n.props.style.gap === 6 &&
         typeof n.props.style.width === "number" &&
         n.props.style.minWidth === 0
     );
     expect(splitCols).toHaveLength(2);
-    expect(splitCols[0].props.style.width + 16 + splitCols[1].props.style.width).toBeLessThanOrEqual(852 - 40);
+    expect(splitCols[0].props.style.width + 12 + splitCols[1].props.style.width).toBeLessThanOrEqual(852 - 24);
+    await act(() => r.unmount());
+  });
+
+  it("P1-1 UI: ReefChallengeBoard logs only ['h', 0] on Look and ['ho', cell] on Show me while stepping Think/One step locally", async () => {
+    fixture.dims = { width: 393, height: 852, fontScale: 3.12 };
+    const p = reefDeepPuzzles[0];
+    let state: State = reefChallengeEngine.create(p.descriptor, { version: 1 }, { supportOff: false, ownRead: false });
+    state = reefChallengeEngine.step(state, ["o", p.descriptor.start], p.descriptor)!.state;
+    const dispatched: unknown[] = [];
+
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<ReefChallengeBoard state={state} dispatch={(a) => dispatched.push(a)} active width={353} />);
+    });
+    await act(() => button(r, "Hint · Look").props.onPress());
+    expect(dispatched).toEqual([["h", 0]]);
+    await act(() => button(r, "Hint · Think").props.onPress());
+    expect(dispatched).toEqual([["h", 0]]);
+    await act(() => button(r, "Hint · One step").props.onPress());
+    expect(dispatched).toEqual([["h", 0]]);
+    await act(() => button(r, "Hint · Show me").props.onPress());
+    expect(dispatched).toHaveLength(2);
+    expect((dispatched[1] as unknown[])[0]).toBe("ho");
+    await act(() => r.unmount());
+  });
+
+  it("P2-5: suppresses obsolete 'Hear the rules' guessing narration on rules: 2 reefs while keeping it for legacy rounds", async () => {
+    fixture.dims = { width: 390, height: 844, fontScale: 1 };
+    fixture.play.mockReset();
+
+    // rules: 2 teaching sheet (taught: false) MUST NOT show "Hear the rules".
+    const v2Session = { ...createSession("reef-sweep", { seed: 4, size: 5 }), taught: false };
+    fixture.store.save.board = { "reef-sweep": v2Session };
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<BoardScreen game="reef-sweep" />);
+    });
+    expect(text(r)).not.toContain("Hear the rules");
+    await act(() => r.unmount());
+
+    // Legacy round (rules: undefined) keeps "Hear the rules" wired to board-rules-reef-sweep.
+    const legacySession = {
+      ...createSession("reef-sweep", { seed: 4, size: 5 }),
+      position: reef.createLegacy(4, 5),
+      taught: false,
+    };
+    fixture.store.save.board = { "reef-sweep": legacySession };
+    await act(() => {
+      r = create(<BoardScreen game="reef-sweep" />);
+    });
+    expect(text(r)).toContain("Hear the rules");
+    await act(() => button(r, "Hear the rules").props.onPress());
+    expect(fixture.play).toHaveBeenCalledWith("board-rules-reef-sweep");
     await act(() => r.unmount());
   });
 });
