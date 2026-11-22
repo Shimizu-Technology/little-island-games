@@ -187,3 +187,28 @@ it('HS-01: a queued tap ignores retired basket identities during another prop co
   expect(current.controller.get().pointers).toHaveLength(0);
   await act(async()=>tree.unmount());vi.useRealTimers();
 });
+
+it('HS-02: a real drag commits through its active slot when an earlier slot remembers the same basket',async()=>{
+  const initial=migrateHome(starterHome())!;
+  for(const r of Object.values(initial.rooms)){r.instances=[];r.characters=[];}
+  initial.rooms.home.instances=[instance('basket','carry-basket',10,8)];
+  let tree!:TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<Host initial={initial}/>);});
+  let scene=buildScene(settled);
+  const move=resolve(scene.rooms.home,scene.entities['home/item/basket'],roomPoint(650,525),{scale:1,release:true,floorOnly:true});
+  await act(async()=>{expect(current.animateProposal(move)).toBe(true);});await flush();await frames(90);
+  const retired=current.slots.get()[0];expect(retired.id).toBe('');
+  scene=buildScene(settled);const basket=scene.entities['home/item/basket'],origin=roomOrigin(0,building);
+  const touch={id:23,x:origin.x+basket.contact.x,y:origin.y+basket.contact.y-25};
+  await act(async()=>harness.handlers.down({changedTouches:[touch],numberOfTouches:1},{activate:()=>{}}));await flush();
+  expect(current.slots.get()[0].id).toBe(basket.id);
+  // Valid two-slot ordering after another carry retired before this grab.
+  current.slots.set([retired,current.slots.get()[0]]);
+  const end={...touch,x:touch.x-60};vi.advanceTimersByTime(100);
+  await act(async()=>harness.handlers.move({changedTouches:[end],numberOfTouches:1}));await flush();
+  await act(async()=>harness.handlers.up({changedTouches:[end],numberOfTouches:0},{end:()=>{}}));await flush();await frames(90);
+  expect(commits).toBe(2);
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  expect(buildScene(settled).entities[basket.id].contact.x).toBeLessThan(basket.contact.x);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+});
