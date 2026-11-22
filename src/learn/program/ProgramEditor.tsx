@@ -29,7 +29,7 @@ class EditorRuntime {
 
 const blockName = blockPosition;
 /** Tap and drag use exactly the same pure edit and admission path. No move saves on a frame. */
-export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, schoolGeometry = false, refusal, tray, songs = true, repeat = true, counts = [2, 3, 4, 6, 8] }: {
+export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, schoolGeometry = false, refusal, tray, songs = true, repeat = true, counts = [2, 3, 4, 6, 8], planHeight: planRows }: {
   program: Program; cards: Card[]; onChange: (program: Program) => boolean | {accepted:false;reason:string} | Promise<boolean | {accepted:false;reason:string}>; disabled: boolean;
   hear: (key: string) => void; condition?: string; currentPath?: string; iteration?: number[];
   onStep?: () => void; onRestart?: () => void; onFlat?: () => void; maxHeight?: number; schoolGeometry?: boolean; refusal?: string;
@@ -37,10 +37,12 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
   tray?: number; songs?: boolean; repeat?: boolean;
   /** The Repeat counts the level's buttons offer. Defaults to the School counts. */
   counts?: readonly number[];
+  /** Height of the plan pane. Default 140 (120 at large text); a phone that needs the palette to show more can ask for less. */
+  planHeight?: number;
 }) {
   const space = useBoardSpace(), school = schoolGeometry && !!space;
   const { fontScale } = useWindowDimensions(), cap = atLarge(fontScale, 1.5);
-  const planHeight = fontScale >= 1.5 ? 120 : 140;
+  const planHeight = planRows ?? (fontScale >= 1.5 ? 120 : 140);
   const floor = Math.max(maxHeight, planHeight + 112 + (fontScale >= 1.5 ? 52 : 36) + (currentPath ? 40 : 0), SCHOOL_BOARD_MIN['program-editor']);
   const geometry = useBoardGeometry('program-editor', school ? floor : maxHeight, floor, school);
   const editorHeight = geometry.height;
