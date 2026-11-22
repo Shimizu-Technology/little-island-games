@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { easeOut, nativeDriver, useReducedMotion } from "../components/motion";
@@ -21,13 +21,15 @@ export function Celebrate({ burst, big = false, onDone }: { burst: number; big?:
     setVisible(true);
     t.setValue(0);
     const anim = Animated.timing(t, { toValue: 1, duration: reduced ? 500 : big ? 1100 : 750, easing: easeOut, useNativeDriver: nativeDriver });
-    anim.start(({ finished }) => {
-      if (!finished) return;
-      setVisible(false);
-      onDone?.(burst);
-    });
+    anim.start(({ finished }) => finished && setVisible(false));
     return () => anim.stop();
-  }, [burst, big, reduced, t, onDone]);
+  }, [burst, big, reduced, t]);
+  // The overlay hiding itself is the end of the burst; the host is told which one ended.
+  const shown = useRef(false);
+  useEffect(() => {
+    if (visible) shown.current = true;
+    else if (shown.current) { shown.current = false; onDone?.(burst); }
+  }, [visible, burst, onDone]);
   if (!burst) return null;
   const pieces = big ? 14 : 8;
   return (
