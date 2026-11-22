@@ -459,15 +459,17 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
 function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], startCell = null }: Props) {
   const { fontScale } = useWindowDimensions();
   const cell = Math.max(42, Math.min(Math.floor(width / s.size), 58)),
+    boardW = cell * s.size,
+    captionMax = Math.max(boardW, width),
     count = s.board.length,
     unopened = !s.marks.includes(1),
     copyCap = atLarge(fontScale, CHROME_MAX);
   return (
-    <View style={{ alignItems: "center", gap: 10 }}>
-      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center" }}>
+    <View style={{ width: "100%", alignItems: "center", gap: 10 }}>
+      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
         {urchins(s.size)} sea urchins · {s.marks.filter((m) => m === 2).length} flags · {s.scores[0]} pearls
       </Copy>
-      <View style={{ width: cell * s.size, backgroundColor: "#CADFD0", borderRadius: 18, overflow: "hidden" }}>
+      <View style={{ width: boardW, backgroundColor: "#CADFD0", borderRadius: 18, overflow: "hidden" }}>
         {Array.from({ length: s.size }, (_, r) => (
           <View key={r} style={{ flexDirection: "row" }}>
             {Array.from({ length: s.size }, (_, c) => {
@@ -555,7 +557,7 @@ function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], sta
           </View>
         ))}
       </View>
-      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center" }}>
+      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
         Numbers count sea urchins in all touching spaces. Hold a closed tile to flag.
       </Copy>
     </View>

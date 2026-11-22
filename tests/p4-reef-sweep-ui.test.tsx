@@ -290,7 +290,7 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     expect(defaultHeading.props.maxFontSizeMultiplier).toBeUndefined();
     await act(() => r.unmount());
 
-    // Landscape AX5 on iPhone 15 keeps both flex columns shrinkable (minWidth: 0) with no horizontal overflow.
+    // Landscape AX5 on iPhone 15 bounds both split columns to innerWidth so neither can overflow horizontally.
     fixture.dims = { width: 852, height: 393, fontScale: 3.12 };
     await act(() => {
       r = create(<BoardScreen game="reef-sweep" />);
@@ -300,12 +300,11 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
         n.props.style &&
         !Array.isArray(n.props.style) &&
         n.props.style.gap === 8 &&
-        (n.props.style.flex === 1 || n.props.style.flex === 1.15)
+        typeof n.props.style.width === "number" &&
+        n.props.style.minWidth === 0
     );
-    expect(splitCols.length).toBeGreaterThanOrEqual(2);
-    for (const col of splitCols) {
-      expect(col.props.style.minWidth).toBe(0);
-    }
+    expect(splitCols).toHaveLength(2);
+    expect(splitCols[0].props.style.width + 16 + splitCols[1].props.style.width).toBeLessThanOrEqual(852 - 40);
     await act(() => r.unmount());
   });
 });
