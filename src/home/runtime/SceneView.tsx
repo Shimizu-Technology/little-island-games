@@ -459,7 +459,8 @@ export function SceneView({
       Math.hypot(b.contact.x-offeredEntity.contact.x,b.contact.y-offeredEntity.contact.y))[0]?.id;
   const standbyCandidates = useMemo(() => Object.values(scene.entities).filter(e => e.character && !sleeping[e.id])
     .map(e => ({id:e.id,room:e.room,x:e.contact.x,y:e.contact.y})), [scene,sleeping]);
-  const [approachingOwner, setApproachingOwner] = React.useState<string>();
+  const [approachChoice, setApproachChoice] = React.useState<{key:string;owner:string}>();
+  const publishStandbyOwner = React.useCallback((owner:string) => setApproachChoice({key:standbyKey,owner}),[standbyKey]);
   const dragSlots = interaction.slots;
   useAnimatedReaction(() => {
     const slot = dragSlots.value.find(s => s.id === offeredId && s.phase === "dragging");
@@ -472,8 +473,8 @@ export function SceneView({
       if (actor.room === room && d < distance) { closest=actor.id; distance=d; }
     }
     return closest;
-  }, (owner,before) => { if(owner !== before) runOnJS(setApproachingOwner)(owner); }, [offeredId,offeredEntity?.room,standbyCandidates,building]);
-  const standbyOwner = approachingOwner ?? initialStandbyOwner;
+  }, (owner,before) => { if(owner && owner !== before) runOnJS(publishStandbyOwner)(owner); }, [offeredId,offeredEntity?.room,standbyCandidates,building]);
+  const standbyOwner = approachChoice?.key === standbyKey ? approachChoice.owner : initialStandbyOwner;
   const mealStandby = useMemo<Meal | undefined>(() =>
     standbyId === standbyKey && offeredEntity?.item ? { key: 0, action: "drink", offered: true, food: offeredEntity.item } : undefined,
     [standbyId, standbyKey, offeredEntity]);
