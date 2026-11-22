@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
-import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts, wordMapKeys } from './generated-admission.mjs';
+import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts } from './generated-admission.mjs';
 import { admitPuzzlePack } from './puzzle-admission.mjs';
 import { exportTextViews } from './text-views.mjs';
 import { tmpdir } from 'node:os';
@@ -9,7 +9,7 @@ import { privatePath } from './paths.mjs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix, teachingJSON, teachingRecordData } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, jsonWordMaps, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix, teachingJSON, teachingRecordData } from './artifact-views.mjs';
 import { normalizedText, densityScanner, densityThreshold, shortDensityWindow, shortDensityThreshold, decodedTextViews, wordTokens } from './density.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
@@ -59,6 +59,9 @@ function compactBroadShare(unit,broad) {
   const tokens=unit.flatMap(wordTokens);
   return tokens.filter(token=>broad(token).size).length/Math.max(1,tokens.length);
 }
+function broadPolicyTerms(policy) {
+  return policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w)));
+}
 function sensitiveText(value) {
   return normalizedText(value).replace(/['ʼ’]/g,'').replace(/\s+/g,' ').toUpperCase();
 }
@@ -82,17 +85,17 @@ export function puzzleCarrier(bytes) {
 /** Raw views are reserved for unconditional private-byte detection. */
 export function artifactScanner(policy, library=[], teachings=[]) {
   const excluded=[...policy.scan,...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])];
-  const broad=rawTermMatcher([...new Set(policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w))).map(normalizedText))]);
-  const densityTerms=policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w)));
+  const densityTerms=broadPolicyTerms(policy);
+  const broad=rawTermMatcher([...new Set(densityTerms.map(normalizedText))]);
   const density=densityScanner(densityTerms),shortDensity=densityScanner(densityTerms,shortDensityWindow);
   const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas].map(normalizedText))]);
   return (bytes,name='artifact.bin',decodedPack,raw=byteViews(bytes)) => {
     const {uppers}=raw,decodedViews=exportTextViews(bytes),views=[...raw.views];
     if(decodedViews.length)views[1]=decodedViews[0];
     const isHermes=bytes.subarray(0,8).equals(hermesMagic) || /\.hbc$/i.test(name),isJavaScript=/\.(?:[cm]?js|bundle)$/i.test(name);
-    let strings=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[],semantic=true,densitySource;
+    let strings=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[],wordMaps=[],semantic=true,densitySource;
     if(isHermes) strings=hermesStrings(bytes);
-    else if(/\.(?:[cm]?js|bundle)$/i.test(name)) ({strings,keys,units,grids,sensitiveStrings,sensitiveGrids,densitySource}=javascriptStrings(views[1],teachings));
+    else if(isJavaScript) ({strings,keys,units,grids,sensitiveStrings,sensitiveGrids,densitySource,wordMaps}=javascriptStrings(views[1],teachings));
     else if(decodedPack) {
       strings=puzzleStrings([decodedPack.payloads,decodedPack.speech]);keys=puzzleStrings(decodedPack.metadata);grids=letterGrids(decodedPack.payloads);
       units=(decodedPack.rows??[]).map(row=>puzzleStrings(row).filter(shortWords));
@@ -101,6 +104,7 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     else if(/\.(?:json|lipuzzle|webmanifest)$/i.test(name)) {
       let value;
       try {value=JSON.parse(views[1]);} catch {requireThat(false,'Cannot parse exported JSON');}
+      if(/\.json$/.test(name))wordMaps=jsonWordMaps(value);
       requireGridLanguages(value);strings=jsonStrings(value);units=jsonUnits(value);grids=letterGrids(value);sensitiveStrings=chamoruValues(value,false,teachings);sensitiveGrids=chamoruGrids(value);
     } else if(/\.svg$/i.test(name)) ({strings,keys,units,grids,sensitiveStrings,sensitiveGrids}=svgViews(views[1],teachings));
     else if(/\.html$/i.test(name)) ({strings,keys,units,grids,sensitiveStrings,sensitiveGrids}=htmlViews(views[1],teachings));
@@ -139,7 +143,7 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     const contentStrings=new Set(strings);
     const stringHits=leakStrings.filter(text=>!technicalString(text) || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)).map(text=>({sha256:sha256(text),advisory:contentStrings.has(text)&&!technicalString(text),listShaped:listString(text,excluded),broad:[...broad(normalizedText(text))],literal:contentStrings.has(text)&&!technicalString(text)?[...literal(normalizedText(text))]:[]}));
     const unitHits=units.map(unit=>{const remaining=untracedLibraryUnit(unit,library);return {sha256:sha256(JSON.stringify(unit)),origin:unit.origin,listShaped:!proseTokens(remaining,excluded) && (!unit.compact || compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)),broad:remaining.filter(text=>!technicalString(text)).flatMap(text=>[...broad(normalizedText(text))]),literal:[]};});
-    return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,hardHermesFailure,densityMaximum,shortDensityMaximum,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
+    return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,wordMaps,hardHermesFailure,densityMaximum,shortDensityMaximum,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
   };
 }
 
@@ -159,23 +163,30 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const literalBasename=name=>basenameMatcher(normalizedText(name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'')));
   const policyNames=rawTermMatcher([...policy.scan,...policy.core,...policy.exact,...policy.lemmas].map(normalizedText));
   const policyTokens=entry=>wordTokens(entry).filter(token=>policyNames(token).size);
+  const hardTerms=new Set([...policy.core,...policy.exact,...policy.lemmas].map(normalizedText));
+  const broadMapTerms=new Set(broadPolicyTerms(policy).map(normalizedText));
+  const mapTerms=keys=>[...new Set(keys.flatMap(wordTokens).filter(token=>broadMapTerms.has(token)))];
+  function mapListHit(map) {
+    const broad=mapTerms(map.keys);
+    const listShaped=broad.length>=3;
+    return {origin:listShaped?map.origin?.():undefined,listShaped,broad};
+  }
   let admission;
   let identifiers=new Map(),dependencies=new Map();
   const tracedIdentifiersUsed=new Set(),dependencyIdentifiersUsed=new Set();
-  function admittedMapKey(entry) {
+  function traceMapKey(entry,tokens) {
     const source=identifiers.get(entry),dependency=dependencies.get(entry);
-    if(source || dependency) {
+    if((source || dependency) && !tokens.some(token=>hardTerms.has(token))) {
       if(source)tracedIdentifiersUsed.add(entry);else dependencyIdentifiersUsed.add(entry);
       admission?.exports.push({identifier:entry,source:source??dependency});
       return true;
     }
-    return admitted(entry);
+    return false;
   }
-  function admitted(entry) {
+  function admitted(entry,tokens=policyTokens(entry)) {
     if(!admission){const sources=admissionSources(sourceRoot);admission={sources,receipts:[],exports:[]};}
     // Identifiers never vouch for vocabulary, even when the whole key is known.
     // Only policy-matching tokens need provenance; other id components are free.
-    const tokens=policyTokens(entry);
     if(!tokens.every(token=>admission.sources.words.has(token)))return false;
     admission.exports.push(...tokens.map(word=>({word,source:admission.sources.words.get(word)})));
     return true;
@@ -263,19 +274,21 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   for(const rule of sourceExceptions) {
     requireThat(typeof rule.path==='string' && /^src\/.+\.[cm]?[jt]sx?$/.test(rule.path) && !rule.path.split('/').some(part=>['','..','.'].includes(part)) && !/[\\*]/.test(rule.path) && Array.isArray(rule.units) && rule.units.length>0,'Invalid source unit exception path');
     const bytes=sourceInputs.get(rule.path);
-    const units=bytes?javascriptStrings(bytes.toString('utf8'),[],rule.path).units:[];
+    const parsed=bytes?javascriptStrings(bytes.toString('utf8'),[],rule.path):null;
+    const origins=parsed?[...parsed.units.map(unit=>unit.origin),...parsed.wordMaps.map(map=>map.origin())]:[];
     for(const item of rule.units) {
       requireThat(/^[a-f0-9]{64}$/.test(item.sha256) && Number.isSafeInteger(item.occurrences) && item.occurrences>0 && Array.isArray(item.terms) && item.terms.length>0,'Invalid source unit exception');
       for(const e of item.terms)requireThat(e.check==='broad' && typeof e.term==='string' && policy.scan.some(term=>normalizedText(term)===normalizedText(e.term)) && ![...policy.core,...policy.exact,...policy.lemmas].some(term=>normalizedText(term)===normalizedText(e.term)) && typeof e.reason==='string' && e.reason.trim().length>0 && typeof e.evidence==='string' && e.evidence.trim().length>0,'Unreviewed source unit exception');
-      const matches=new Map(units.filter(unit=>unit.origin.sourceSha256===item.sha256).map(unit=>[unit.origin.offset,unit]));
+      const matches=new Map(origins.filter(origin=>origin.sourceSha256===item.sha256).map(origin=>[origin.offset,origin]));
       requireThat(matches.size===item.occurrences,'Stale source unit exception');
       const terms=new Set(item.terms.map(e=>normalizedText(e.term)));
-      for(const unit of matches.values()) {
-        const hit=scan(Buffer.from('const reviewedUnit='+bytes.toString('utf8').slice(unit.origin.offset,unit.origin.end)+';'), 'source.js').unitHits.find(hit=>hit.origin?.signature===unit.origin.signature);
-        requireThat(hit?.listShaped && new Set(hit.broad).size>=3 && terms.size===new Set(hit.broad).size && hit.broad.every(term=>terms.has(term)),'Unused source unit exception terms');
+      for(const origin of matches.values()) {
+        const view=scan(Buffer.from('const reviewedUnit='+bytes.toString('utf8').slice(origin.offset,origin.end)+';'), 'source.js');
+        const hits=[...view.unitHits,...view.wordMaps.map(mapListHit)];
+        requireThat(hits.some(hit=>hit.origin?.signature===origin.signature && hit.listShaped && new Set(hit.broad).size>=3 && terms.size===new Set(hit.broad).size && hit.broad.every(term=>terms.has(term))),'Unused source unit exception terms');
       }
       requireThat(!sourceBindings.some(binding=>binding.path===rule.path && binding.item.sha256===item.sha256),'Duplicate source unit exception');
-      sourceBindings.push({path:rule.path,item,terms,signatures:new Set([...matches.values()].map(unit=>unit.origin.signature))});
+      sourceBindings.push({path:rule.path,item,terms,signatures:new Set([...matches.values()].map(origin=>origin.signature))});
     }
   }
   let sourceUnitExceptionsUsed=0,exportedSourceUnitExceptionsUsed=0;
@@ -307,7 +320,8 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     const code=/\.[cm]?[jt]sx?$/.test(name);
     const text=name.endsWith('.py')?JSON.stringify(Object.fromEntries(speechInputs(sourceRoot).find(input=>input.path===name).entries)):code?ts.transpileModule(bytes.toString('utf8'),{fileName:name,compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText:bytes;
     const view=scan(Buffer.from(text),code?'source.js':name.endsWith('.py')?'source.json':name);
-    reviewedSourceUnits(view.unitHits,sourceBindings.filter(binding=>binding.path===name),true);
+    const bindings=sourceBindings.filter(binding=>binding.path===name);
+    if(bindings.length)reviewedSourceUnits([...view.unitHits,...view.wordMaps.map(mapListHit)],bindings,true);
     if(view.literalHits.size || view.hardHermesFailure)findings.push(name+':blocked-source-literal');
     if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
     if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
@@ -338,7 +352,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if((policy.canaries??[]).some(word=>raw.uppers.some(upper=>upper.includes(word.toUpperCase())))) {findings.push(`${name}:canary`);continue;}
       // Bytecode string storage is not guaranteed to begin at an even offset.
       let scanned;try {scanned=scan(bytes,name,decoded,raw);}catch(e){throw new Error(name+': '+e.message);}
-      const {uppers,broadHits,literalHits,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits}=scanned;
+      const {uppers,broadHits,literalHits,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,wordMaps}=scanned;
       options.observeDensity?.({fileSha256:fileHash,long:scanned.densityMaximum,short:scanned.shortDensityMaximum});
       densityMaximum=Math.max(densityMaximum,scanned.densityMaximum);
       shortDensityMaximum=Math.max(shortDensityMaximum,scanned.shortDensityMaximum);
@@ -348,9 +362,17 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(!opaqueName && literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       const stem=name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'');
       if(!opaqueName && policyTokens(stem).length && !admittedFilename(stem))findings.push('artifact-'+fileHash+':untraced-word-file');
-      if(/\.(?:[cm]?js|bundle|json)$/.test(name)) {
-        const mapKeys=wordMapKeys(bytes.toString('utf8'),name);
-        if(mapKeys.some(key=>policyTokens(key).length && !admittedMapKey(key)))findings.push('artifact-'+fileHash+':untraced-word-map');
+      const mapHits=[];
+      for(const map of wordMaps) {
+        const identifierKeys=[];
+        for(const key of map.keys) {
+          const tokens=policyTokens(key);
+          if(!tokens.length || admitted(key,tokens))continue;
+          if(traceMapKey(key,tokens))identifierKeys.push(key);
+          else findings.push('artifact-'+fileHash+':untraced-word-map');
+        }
+        // Identifier tracing must not substitute for review of a whole list.
+        if(mapTerms(identifierKeys).length>=3)mapHits.push(mapListHit(map));
       }
       if(sensitiveStrings.some(text=>sensitive(sensitiveText(text)).size)) findings.push(`${name}:blocked-chamoru`);
       if(grids.some(grid=>scanGrid(grid,grid.supplemental?hardGridTerms:gridTerms).length) || sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)) findings.push(`${name}:blocked-grid`);
@@ -372,8 +394,8 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
           }
         }
       }
-      reviewedSourceUnits(unitHits,sourceBindings);
-      if([...stringHits,...unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3)) findings.push(`${name}:partial-list`);
+      reviewedSourceUnits([...unitHits,...mapHits],sourceBindings);
+      if([...stringHits,...unitHits,...mapHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3)) findings.push(`${name}:partial-list`);
       for(const hit of stringHits)if(hit.advisory && hit.broad.length && !advisories.some(row=>row.stringSha256===hit.sha256))advisories.push({file:name,stringSha256:hit.sha256,terms:hit.broad});
       if(literalHits.size) findings.push(`${name}:blocked-literal`);
       for(const word of policy.canaries??[]) if(uppers.some(upper=>upper.includes(word.toUpperCase()))) findings.push(`${name}:canary`);

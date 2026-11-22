@@ -305,24 +305,31 @@ source/export container counts; no private terms are printed.
 ### Identifier provenance and opaque asset names
 
 An exported identifier-map key can trace verbatim to one specific identifier
-position in a repository source file that passes the source scan. Property and
-declaration names qualify; displayed strings, comments, substrings and normalized
-near matches do not. The generated Challenge registry receives its own source
-scan. Audio maps and speech keys cannot supply their own provenance. This path
-applies only to map keys: it donates no vocabulary or filename admission and
-does not suppress literal, list, grid, density or private-data checks. The result
-counts distinct admitted keys in `tracedIdentifiersUsed`.
+position in a repository source file that passes the source scan. Runtime
+property and declaration names qualify. Map keys in the same shape as an export
+map cannot donate provenance, and type declarations, ambient declarations,
+type-only exports, displayed strings, comments and near matches are ineligible.
+The generated Challenge registry receives its own source scan. A key containing
+a normalized core, exact or lemma token must use ordinary vocabulary admission.
+Keys with ordinary vocabulary admission use that path first. A map with at
+least three distinct broad tokens among its identifier-traced keys
+requires a `sourceUnitExceptions` binding for the exact source object and its
+complete set of broad key tokens. The binding is checked against the full
+exported object syntax, including function values. The result counts distinct
+traced repository keys in `tracedIdentifiersUsed`. Identifier provenance
+applies only to map keys and leaves the other artifact checks in force.
 
 For third-party names the operator can supply private
 `dependencyIdentifierProvenance` entries with `package`, exact `version`,
-lockfile `integrity`, package-relative `path`, verbatim `identifier`, source
-character `offset` and a nonempty `reason`. Review each property/export name in
-the generated native/module map. The package's lockfile entry and installed
-manifest must agree with the pin; the exact identifier position must still exist
-and its source file must pass the scan. Displayed string values do not qualify.
-Missing or symlinked files, wrong positions, changed versions/integrities,
-duplicate identifiers and stale entries fail even if that export does not use
-the entry. `dependencyIdentifiersUsed` reports distinct used entries; an intact
+lockfile `integrity`, package-relative `path`, lowercase hexadecimal
+`sha256` of the installed file bytes, verbatim `identifier`, source character
+`offset` and a nonempty `reason`. Review each runtime property or export name in
+the generated native/module map. The package's lockfile entry, installed
+manifest, file bytes and exact identifier position must agree with the pin. The
+source file must also pass the scan. Missing or symlinked files, changed bytes,
+wrong positions, changed versions or integrity values, duplicate identifiers and
+stale entries fail even if that export does not use the entry.
+`dependencyIdentifiersUsed` reports distinct used entries; an intact
 entry can legitimately be unused on another platform. There is no package-wide
 allowance. Keep entries and their source evidence outside Git. This collision
 metadata stays outside bank content-policy digests, while the operator lock

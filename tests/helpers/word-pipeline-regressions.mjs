@@ -1369,14 +1369,18 @@ test('Wguard2 repeated worklets cannot share occurrence identity',()=>sourceUnit
 const technicalKey='bridgeZqunknownx';
 async function identifierCase(name,run) {
  const {dir}=await admissionFixture('identifier-'+name),out=join(dir,'dist');mkdirSync(out);
- const file=join(dir,'src/content/authored.ts'),text='export const nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};';
+ const file=join(dir,'src/content/authored.ts'),text='export const registration={'+technicalKey+':()=>null};';
  writeFileSync(file,text);const artifact=join(out,'entry.js');writeFileSync(artifact,'globalThis.nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};');
  const p={scan:['ZQUNKNOWNX'],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]};
  await run({dir,out,file,text,artifact,p,check:()=>guardTree(out,p,[],{sourceRoot:dir})});
 }
 test('Wguard2 identifier exact authored property',()=>identifierCase('exact',({check})=>{const r=check();assert.equal(r.tracedIdentifiersUsed,1);assert.equal(r.dependencyIdentifiersUsed,0);}));
 test('Wguard2 identifier near miss',()=>identifierCase('near',({artifact,check})=>{writeFileSync(artifact,readFileSync(artifact,'utf8').replace(technicalKey,technicalKey+'Extra'));assert.throws(check,/untraced-word-map/);}));
-test('Wguard2 identifier displayed text supplies no identifier provenance',()=>identifierCase('display',({file,check})=>{writeFileSync(file,'export const text="'+technicalKey+'";');assert.equal(check().tracedIdentifiersUsed,0);}));
+test('Wguard2 identifier displayed text supplies no identifier provenance',()=>identifierCase('display',({dir,file,check})=>{
+ writeFileSync(file,'export const text="Plain reef beach";');
+ writeFileSync(join(dir,'src/content/unreachable.ts'),'export const text="'+technicalKey+'";');
+ assert.throws(check,/untraced-word-map/);
+}));
 test('Wguard2 identifier source must pass',()=>identifierCase('failed',({file,p,check})=>{p.core=['COLD'];writeFileSync(file,readFileSync(file,'utf8')+'export const text="COLD";');assert.throws(check,/blocked-source-literal/);}));
 test('Wguard2 identifier failed source excluded from provenance',()=>{const input=new Map([['src/native.ts',Buffer.from('export const '+technicalKey+'=1;')]]);assert.equal(identifierTools.authoredIdentifiers(input,new Set()).has(technicalKey),false);});
 test('Wguard2 identifier generated registry',()=>identifierCase('registry',({dir,file,text,check})=>{writeFileSync(file,'export const text="Plain reef beach";');mkdirSync(join(dir,'src/challenge'));writeFileSync(join(dir,'src/challenge/registry.generated.ts'),text);assert.equal(check().tracedIdentifiersUsed,1);}));
@@ -1385,6 +1389,72 @@ test('Wguard2 identifier escaped spelling is not verbatim',()=>{const source='ex
 test('Wguard2 identifier does not donate filenames',()=>identifierCase('filename',({out,check})=>{writeFileSync(join(out,technicalKey+'.m4a'),validM4a);assert.throws(check,/untraced-word-file/);}));
 test('Wguard2 identifier visible hard text still fails',()=>identifierCase('hard',({artifact,p,check})=>{p.core=['COLD'];writeFileSync(artifact,readFileSync(artifact,'utf8')+'globalThis.label="COLD";');assert.throws(check,/blocked-literal/);}));
 
+const functionMap=(...keys)=>'{'+keys.map(key=>key+':()=>null').join(',')+'}';
+test('Wguard2 fix2 broad map cannot donate its own keys',()=>identifierCase('self-map',({file,artifact,check})=>{
+ const map=functionMap(technicalKey,'ordinary','another');
+ writeFileSync(file,'export const map='+map+';');writeFileSync(artifact,'globalThis.map='+map+';');
+ assert.throws(check,/untraced-word-map/);
+}));
+for(const [kind,source] of [
+ ['interface',`export interface Sound { ${technicalKey}(): void }`],
+ ['property signature',`export interface Sound { ${technicalKey}: string }`],
+ ['type alias',`export type Sound = { ${technicalKey}: string };`],
+ ['declare block',`declare global { const ${technicalKey}: string; }`],
+ ['declare property',`declare class Sound { ${technicalKey}: string }`],
+])test('Wguard2 fix2 repository type-only donor '+kind,()=>identifierCase('donor-'+kind.replaceAll(' ','-'),({file,check})=>{
+ writeFileSync(file,source);assert.throws(check,/untraced-word-map/);
+}));
+test('Wguard2 fix2 declaration file supplies no donor',()=>{
+ assert.deepEqual(identifierTools.identifierPositions(`export const ${technicalKey}: string;`,'source.d.ts'),[]);
+});
+for(const [kind,group,source] of [
+ ['self-authored map','core',`export const map=${functionMap(technicalKey,'ordinary','another')};`],
+ ['interface member','exact',`export interface Sound { ${technicalKey}: string }`],
+ ['runtime declaration core','core',`export const ${technicalKey}=null;`],
+ ['runtime declaration exact','exact',`export const ${technicalKey}=null;`],
+ ['runtime declaration lemma','lemmas',`export const ${technicalKey}=null;`],
+])test('Wguard2 fix2 hard map key via '+kind,()=>identifierCase('hard-'+kind.replaceAll(' ','-'),({file,p,check})=>{
+ p[group]=['zqúnknownx'];writeFileSync(file,source);assert.throws(check,/untraced-word-map/);
+}));
+const mapTerms=['zqbroadax','zqbroadbx','zqbroadcx'];
+function broadFunctionMap(name,run) {
+ return identifierCase(name,({file,artifact,p,check})=>{
+  const map=functionMap(...mapTerms);
+  p.scan=mapTerms;writeFileSync(file,mapTerms.map(key=>`export const ${key}=null;`).join('\n'));
+  writeFileSync(artifact,'globalThis.map='+map+';');
+  return run({file,artifact,p,check,map});
+ });
+}
+test('Wguard2 fix2 function map needs reviewed list binding',()=>broadFunctionMap('map-list',({check})=>{
+ assert.throws(check,/partial-list/);
+}));
+test('Wguard2 fix2 ordinary vocabulary takes precedence over identifier donors',()=>broadFunctionMap('map-vocabulary',({file,check})=>{
+ const prose=`A note describes ${mapTerms[0]} beside a synthetic path before ${mapTerms[1]} passes farther along and finally reaches ${mapTerms[2]}.`;
+ writeFileSync(file,readFileSync(file,'utf8')+`\nexport const label="${prose}";`);
+ assert.equal(check().tracedIdentifiersUsed,0);
+}));
+test('Wguard2 fix2 list threshold belongs to each map',()=>broadFunctionMap('separate-maps',({artifact,check})=>{
+ writeFileSync(artifact,`globalThis.a=${functionMap(...mapTerms.slice(0,2),'ordinary')};globalThis.b=${functionMap(mapTerms[2],'ordinary','another')};`);
+ assert.equal(check().tracedIdentifiersUsed,3);
+}));
+test('Wguard2 fix2 list threshold counts distinct tokens',()=>broadFunctionMap('repeated-map-terms',({file,artifact,check})=>{
+ const keys=[mapTerms[0],mapTerms[1],`prefix${mapTerms[0][0].toUpperCase()}${mapTerms[0].slice(1)}`];
+ writeFileSync(file,keys.map(key=>`export const ${key}=null;`).join('\n')+`\nexport const label="A synthetic description includes ${mapTerms[2]}.";`);
+ writeFileSync(artifact,'globalThis.map='+functionMap(...keys,mapTerms[2])+';');assert.equal(check().tracedIdentifiersUsed,3);
+}));
+test('Wguard2 fix2 function map review binds complete syntax',()=>broadFunctionMap('reviewed-map',({file,artifact,p,check,map})=>{
+ writeFileSync(file,readFileSync(file,'utf8')+'\nexport const map='+map+';');
+ p.sourceUnitExceptions=[{path:'src/content/authored.ts',units:[{sha256:sha256(map),occurrences:1,terms:mapTerms.map(term=>({term,check:'broad',reason:'Synthetic reason',evidence:'Synthetic evidence'}))}]}];
+ const result=check();assert.equal(result.sourceUnitExceptionsUsed,1);assert.equal(result.exportedSourceUnitExceptionsUsed,1);
+ writeFileSync(artifact,'globalThis.map='+map.replace('()=>null','()=>false')+';');assert.throws(check,/partial-list/);
+}));
+for(const [name,source] of [
+ ['declaration',`export type { ${technicalKey} } from './other';`],
+ ['specifier',`export { type ${technicalKey} } from './other';`],
+])test('Wguard2 fix2 type-only re-export '+name,()=>{
+ for(const dependency of [false,true])assert.deepEqual(identifierTools.identifierPositions(source,'source.ts',dependency),[]);
+});
+
 async function dependencyCase(name,run) {
  return identifierCase('dep-'+name,async f=>{
   writeFileSync(f.file,'export const text="Plain reef beach";');
@@ -1392,16 +1462,23 @@ async function dependencyCase(name,run) {
   mkdirSync(join(packageDir,'generated'),{recursive:true});writeFileSync(join(packageDir,'package.json'),JSON.stringify({name:packageName,version}));
   const dependencyFile=join(packageDir,path),source='export const nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};';writeFileSync(dependencyFile,source);
   const lock={lockfileVersion:3,packages:{['node_modules/'+packageName]:{version,integrity}}},lockPath=join(f.dir,'package-lock.json');writeFileSync(lockPath,JSON.stringify(lock));
-  const rule={package:packageName,version,integrity,path,identifier:technicalKey,offset:source.indexOf(technicalKey),reason:'Synthetic generated native property'};f.p.dependencyIdentifierProvenance=[rule];
+  const rule={package:packageName,version,integrity,path,sha256:sha256(source),identifier:technicalKey,offset:source.indexOf(technicalKey),reason:'Synthetic generated native property'};f.p.dependencyIdentifierProvenance=[rule];
   await run({...f,rule,lock,lockPath,dependencyFile,packageDir});
  });
 }
 test('Wguard2 dependency exact pin and count',()=>dependencyCase('pass',({check})=>{const r=check();assert.equal(r.dependencyIdentifiersUsed,1);assert.equal(r.tracedIdentifiersUsed,0);}));
+test('Wguard2 fix2 dependency byte change at same offset fails',()=>dependencyCase('changed-bytes',({dependencyFile,check})=>{
+ writeFileSync(dependencyFile,readFileSync(dependencyFile,'utf8')+'\n// synthetic patch');assert.throws(check,/Stale dependency identifier file hash/);
+}));
+test('Wguard2 fix2 dependency file hash is required and lowercase',()=>dependencyCase('bad-file-hash',({rule,check})=>{
+ const fileHash=rule.sha256;delete rule.sha256;assert.throws(check,/Invalid dependency identifier file hash/);
+ rule.sha256=fileHash.toUpperCase();assert.throws(check,/Invalid dependency identifier file hash/);
+}));
 for(const [name,change,rx] of [
  ['version bump',f=>{f.lock.packages['node_modules/synthetic-native'].version='1.2.4';writeFileSync(f.lockPath,JSON.stringify(f.lock));},/Stale dependency identifier version/],
  ['wrong path',f=>{f.rule.path='generated/other.js';writeFileSync(join(f.packageDir,f.rule.path),'export const other=1;');},/Stale dependency identifier position/],
  ['integrity mismatch',f=>{f.rule.integrity='sha512-'+Buffer.alloc(64,8).toString('base64');},/Stale dependency identifier integrity/],
- ['string position',f=>{const source='export const text="'+technicalKey+'";';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf(technicalKey);},/Stale dependency identifier position/],
+ ['string position',f=>{const source='export const text="'+technicalKey+'";';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf('"');},/Stale dependency identifier position/],
  ['type position',f=>{const source='export type NativeMap={'+technicalKey+':string};';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf(technicalKey);},/Stale dependency identifier position/],
  ['near miss',f=>{writeFileSync(f.dependencyFile,readFileSync(f.dependencyFile,'utf8').replace(technicalKey,technicalKey+'Extra'));},/Stale dependency identifier position/],
  ['wrong offset',f=>{f.rule.offset++;},/Stale dependency identifier position/],
@@ -1416,7 +1493,11 @@ for(const [name,change,rx] of [
  ['stale without export',f=>{writeFileSync(f.artifact,'globalThis.safe=1;');f.rule.offset++;},/Stale dependency identifier position/],
  ['missing reason',f=>{delete f.rule.reason;},/Invalid dependency identifier provenance entry/],
  ['invalid rules',f=>{f.p.dependencyIdentifierProvenance={};},/Invalid dependency identifier provenance/],
-])test('Wguard2 dependency '+name,()=>dependencyCase(name,f=>{change(f);assert.throws(f.check,rx);}));
+])test('Wguard2 dependency '+name,()=>dependencyCase(name,f=>{
+ change(f);
+ if(['wrong path','string position','type position','near miss','source fails'].includes(name))f.rule.sha256=sha256(readFileSync(join(f.packageDir,f.rule.path)));
+ assert.throws(f.check,rx);
+}));
 test('Wguard2 dependency metadata preserves content policy',async()=>{const {contentPolicy}=await import(pathToFileURL(join(root,'scripts/words/policy.mjs')));assert.deepEqual(contentPolicy({...policy,dependencyIdentifierProvenance:[]}),contentPolicy(policy));});
 
 for(const algorithm of ['md5','sha1','sha256'])test('Wguard2 own hash '+algorithm,()=>{const stem=createHash(algorithm).update(validM4a).digest('hex');assert.equal(identifierTools.ownContentHash('assets/'+stem+'.m4a',validM4a),true);assert.equal(identifierTools.ownContentHash(stem,validM4a),true);assert.equal(identifierTools.ownContentHash(stem+'.m4a',Buffer.concat([validM4a,Buffer.from('x')])),false);});
