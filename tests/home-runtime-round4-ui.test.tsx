@@ -9,7 +9,7 @@ import { DragOverlay } from '../src/home/runtime/DragOverlay';
 import { SceneView } from '../src/home/runtime/SceneView';
 import { withPortions } from '../src/home/runtime/portions';
 import { labHome } from '../src/home/runtime/lab';
-import { buildScene } from '../src/home/scene/graph';
+import { buildScene, createSceneBuilder } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
 import { emptyDragSlot, type DragSlot, type Interaction, type Pickup } from '../src/home/runtime/useInteraction';
 import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
@@ -276,11 +276,15 @@ it('one meal stage hides its real cup atomically, while restored drinks remain v
  const {EntityArt}=await import('../src/home/runtime/EntityArt');
  const art=tree.root.findAllByType(EntityArt);
  expect(art.filter(n=>n.props.meal)).toHaveLength(1);
- expect(tree.root.findByProps({testID:'object-rig-drink'}).findAllByType(EntityArt)).toHaveLength(0);
+ const cup = tree.root.findByProps({testID:'object-rig-drink'});
+ const hiddenPaint = cup.findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0];
+ expect(hiddenPaint.props.style.evaluate().opacity).toBe(0);
+ const mountedCup = cup.findByType(EntityArt);
  await act(async()=>{tree.update(<SceneView state={state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
  const drink=tree.root.findByProps({testID:'object-rig-drink'});
  const paint=drink.findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0];
  expect(paint.props.style.evaluate().opacity).toBe(1);
+ expect(drink.findByType(EntityArt)).toBe(mountedCup);
  await act(async()=>tree.unmount());
 });
 
@@ -322,4 +326,50 @@ it('hides the carried food in the same native commit that presents its meal art'
  await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false} {...{hiddenByMeal:[id]}}/>);});
  expect(tree.root.findByProps({testID:`meal-handoff-source-${id}`}).props.style.opacity).toBe(0);
  await act(async()=>tree.unmount());
+});
+
+it('keeps an offered food overlay in place when its source leaves the room', async () => {
+ const state = labHome('rig-menu-0');
+ const scene = buildScene(state);
+ const id = 'home/item/menu-0';
+ const pickup = { id, slot: 0, scene, generation: 1, epoch: 0 } as Pickup;
+ const { interaction } = context(id);
+ const props = { pickups: [pickup], interaction, building: buildingLayout(4), reduced: false };
+ let tree!: TestRenderer.ReactTestRenderer;
+ await act(async () => { tree = TestRenderer.create(<DragOverlay {...props} scene={scene} />); });
+ const itemOrder = () => tree.root.findAll(n => typeof n.type === 'string' &&
+  n.props.testID?.startsWith('meal-handoff-source-home/item/menu-')).map(n => n.props.testID);
+ const before = itemOrder();
+ expect(before).toHaveLength(6);
+
+ state.rooms.home.instances = state.rooms.home.instances.filter(item => item.id !== 'menu-0');
+ const consumed = buildScene(state);
+ await act(async () => tree.update(<DragOverlay {...props} scene={consumed} />));
+ expect(itemOrder()).toEqual(before);
+ await act(async () => tree.unmount());
+});
+
+it('retains an unchanged resting entity through a meal in another room', async () => {
+ const c = context('');
+ c.interaction.slots.value = [emptyDragSlot(), emptyDragSlot()];
+ const build = createSceneBuilder();
+ const scene = build(c.state);
+ const props = {
+  building: buildingLayout(4), viewport: { width: 402, height: 650 }, interaction: c.interaction,
+  pickups: [], reduced: false, reactions: {}, sleeping: {}, onNode: () => {}, onSelect: () => {}, onMove: () => {},
+ };
+ let tree!: TestRenderer.ReactTestRenderer;
+ await act(async () => { tree = TestRenderer.create(<SceneView {...props} state={c.state} scene={scene} />); });
+ const fridgeAction = () => tree.root.findByProps({ testID: 'object-fridge' }).props.onAccessibilityAction;
+ const originalAction = fridgeAction();
+ const state = { ...c.state, rooms: { ...c.state.rooms, home: {
+  ...c.state.rooms.home, characters: c.state.rooms.home.characters.map(character =>
+   character.slot === 0 ? { ...character, action: 'eat' as const } : character),
+ } } };
+ const next = build(state);
+ expect(next.revision).not.toBe(scene.revision);
+ expect(next.entities['kitchen/item/fridge']).toBe(scene.entities['kitchen/item/fridge']);
+ await act(async () => tree.update(<SceneView {...props} state={state} scene={next} />));
+ expect(fridgeAction()).toBe(originalAction);
+ await act(async () => tree.unmount());
 });

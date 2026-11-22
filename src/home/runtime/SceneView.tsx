@@ -42,7 +42,6 @@ const IdleEntityDrawing=memo(function IdleEntityDrawing({mealActive:_mealActive,
 },(_previous,next)=>next.mealActive);
 const RestingEntity = memo(function RestingEntity({
   entity,
-  sceneRevision,
   name,
   ownerKey,
   restingFlags,
@@ -86,7 +85,6 @@ const RestingEntity = memo(function RestingEntity({
   shadow?: LampShadow;
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
-  sceneRevision: string;
   /** Accessible name; numbered when the room holds several of the same thing. */
   name: string;
   ownerKey: string;
@@ -279,7 +277,9 @@ const RestingEntity = memo(function RestingEntity({
       {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
       <Animated.View style={normal}>
         <Animated.View style={open}>
-          {!mealHeld && <EntityArt
+          {/* Keep the saved cup painted under the transient sip so the final
+              frame can reveal it without mounting a new native SVG. */}
+          <EntityArt
             entity={entity}
             actionOverride={action}
             prepareMeal={!!entity.character}
@@ -292,7 +292,7 @@ const RestingEntity = memo(function RestingEntity({
             front={front}
             reduced={reduced}
             renderCharacter={renderCharacter}
-          />}
+          />
         </Animated.View>
         {cacheBlink && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
@@ -471,7 +471,6 @@ export function SceneView({
                 front={front}
                 cacheBlink={!front && !!entity.character && entity.room === liveRoom && !reduced}
                 entity={entity}
-                sceneRevision={scene.revision}
                 name={names[entity.id]}
                 onNode={onNode}
                 action={reactions[entity.id]}

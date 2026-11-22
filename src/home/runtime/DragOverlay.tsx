@@ -353,6 +353,9 @@ export function DragOverlay(props: {
   const items: Pickup[] = warm.map(p => props.pickups.find(active => active?.id === p.id) ?? p);
   for (const pickup of props.pickups) if (pickup && !pickup.scene.entities[pickup.id]?.character &&
     !items.some(p => p.id === pickup.id)) items.push(pickup);
+  // Consumed food leaves the warm list before its meal is presented. Keep its
+  // carry art in the same native position while the active pickup owns it.
+  items.sort((a, b) => a.id.localeCompare(b.id));
   return (
     <View
       testID={Platform.OS === "web" ? "building-drag-overlay" : undefined}

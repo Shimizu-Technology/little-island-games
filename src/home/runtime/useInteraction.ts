@@ -291,9 +291,9 @@ export function useInteraction({
   const forgetPose = useCallback((actor: string, token: string, mount: number) => {
     poseLayouts.modify((current) => { "worklet"; return forgetPoseIn(current, actor, token, mount); });
   }, [poseLayouts]);
-  const acknowledgeLayout = (id: string, token: string) => {
+  const acknowledgeLayout = useCallback((id: string, token: string) => {
     laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
-  };
+  }, [laidOut]);
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptyDragSlot(), emptyDragSlot()]);
   const frameTimes = useSharedValue<number[]>([]);

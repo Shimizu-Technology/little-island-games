@@ -513,12 +513,26 @@ export function HomeScreen({
     );
     if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
   };
-  const choose = (id: string) => {
+  const floorOf = useCallback((id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns), [building.columns]);
+  const goRoom = useCallback((id: RoomId) => {
+    const interaction = runtime.current!;
+    interaction.cancelAll();
+    setSelected(undefined);
+    setMore(false);
+    setFriends(false);
+    setRoom(id);
+    setOverview(false);
+    live.current.store.dispatch({ type: "room", room: id });
+    // HR-02: another floor is a door, not a jump; the same floor eases across.
+    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
+      !overview && floorOf(id) !== floorOf(room));
+  }, [building, floorOf, overview, room, viewport]);
+  const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
     else setSelected(id);
-  };
+  }, [designing, goRoom, overview]);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
     // Overview room taps always navigate, even over an object or with a previous selection.
@@ -730,19 +744,6 @@ export function HomeScreen({
     // Stable shared handles; never re-register cancellation on a settled edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const goRoom = (id: RoomId) => {
-    interaction.cancelAll();
-    setSelected(undefined);
-    setMore(false);
-    setFriends(false);
-    setRoom(id);
-    setOverview(false);
-    store.dispatch({ type: "room", room: id });
-    // HR-02: another floor is a door, not a jump; the same floor eases across.
-    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
-      !overview && floorOf(id) !== floorOf(room));
-  };
-  const floorOf = (id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns);
   // HR-02 (rule 52): after 6 s without a touch, one thing you can use gives one small wiggle.
   // A JS timer, not a frame loop: nothing runs while waiting. Any touch starts the quiet over.
   const hints = useRef<HintState>(freshHints(0));
