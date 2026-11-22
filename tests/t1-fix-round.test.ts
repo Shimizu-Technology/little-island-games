@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { expect, it, vi } from 'vitest';
 import { makeRegistration, puzzles } from '../src/learn/games/logic-lagoon/challenge';
 import { emptyChallenge, validChallengeSession } from '../src/state/challenge';
@@ -78,7 +78,7 @@ it('Help speech matches its visible instructions, including the open step-up pat
   expect(engine.helpAudio).toBe('logic-lagoon-help-v2');
   expect(speech[engine.helpAudio!]).toBe(engine.help);
   expect(engine.help).toContain('Level 4 is open');
-  expect(JSON.parse(readFileSync('scripts/learn/t1-logic-lagoon.stage', 'utf8'))).toEqual({ status: 'design-only', shipping: false });
+  expect(existsSync('scripts/learn/t1-logic-lagoon.stage'), 'voiced in the W5a batch; the staging sidecar is gone').toBe(false);
 });
 
 it('legacy replay drafts upgrade without losing original help, misses, notes or history', () => {
