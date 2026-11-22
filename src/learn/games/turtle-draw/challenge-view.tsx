@@ -94,13 +94,13 @@ function PredictControls({ s, d, active, running, dispatch, play, width, large, 
   const pictures = useMemo(() => d.choices.map(c => draw(c, d.origin) ?? []), [d]);
   const frame = useMemo(() => { const all = pictures.flatMap(p => bounds(p) ? [bounds(p)!] : []); return { left: Math.min(...all.map(b => b.left)), top: Math.min(...all.map(b => b.top)), right: Math.max(...all.map(b => b.right)), bottom: Math.max(...all.map(b => b.bottom)) }; }, [pictures]);
   // Two by two even at the largest text: the four pictures and Check stay together. Only a very narrow board stacks them.
-  const idle = !active || running || s.won, columns = width >= 300 ? 2 : 1, cell = Math.max(96, Math.min(230, Math.floor((Math.min(width, 520) - 10 * (columns - 1)) / columns)));
+  const win = useWindowDimensions(), wide = win.width > win.height && width >= 720;
+  const idle = !active || running || s.won, columns = width >= 300 ? 2 : 1, cell = Math.max(96, Math.min(wide ? 180 : 230, Math.floor((Math.min(wide ? 400 : width, 520) - 10 * (columns - 1)) / columns)));
   const stage = s.hintStage;
   const message = s.won ? 'Yes! That is the picture. Watch it drawn.' : s.wrong.length && s.pick === null ? 'Not that one. It is crossed out. Choose again.' : 'Read the program, then choose the picture it draws. Nothing is drawn until you check.';
-  return <View style={{ gap: 8 }}>
-    <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>
-    <ProgramList blocks={d.program} label="The program" testID="turtle-program" />
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: columns * cell + (columns - 1) * 10, alignSelf: 'center' }} accessibilityLabel="Four pictures">
+  const messageLine = <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>;
+  const program = <ProgramList blocks={d.program} label="The program" testID="turtle-program" />;
+  const grid = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: columns * cell + (columns - 1) * 10, alignSelf: 'center' }} accessibilityLabel="Four pictures">
       {pictures.map((lines, i) => {
         const out = s.wrong.includes(i) || s.ruled.includes(i), chosen = s.pick === i, answer = s.won && d.answer === i;
         const tone = out ? ' Crossed out.' : chosen ? ' Chosen.' : answer ? ' The answer.' : '';
@@ -110,12 +110,15 @@ function PredictControls({ s, d, active, running, dispatch, play, width, large, 
           <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800', color: C.ink }}>{LETTERS[i]}{out ? ' ✕' : answer ? ' ✓' : ''}</Copy>
         </PressableScale>;
       })}
-    </View>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+    </View>;
+  const actions = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button maxFontSizeMultiplier={1.5} style={{ flexGrow: 1 }} disabled={idle || s.pick === null} onPress={() => dispatch(['c'])}>Check my picture</Button>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || stage >= 3} onPress={() => dispatch(['h'])}>{stage ? 'More help' : 'Help'}</Button>
       {hear}
-    </View>
-    {stage > 0 && !s.won && <View accessibilityLiveRegion="polite" testID="turtle-hint" style={{ padding: 10, borderRadius: 12, backgroundColor: C.soft }}><Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{predictHint(d, stage)}</Copy></View>}
-  </View>;
+    </View>;
+  const hintPanel = stage > 0 && !s.won && <View accessibilityLiveRegion="polite" testID="turtle-hint" style={{ padding: 10, borderRadius: 12, backgroundColor: C.soft }}><Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{predictHint(d, stage)}</Copy></View>;
+  // In a wide landscape window the program reads on the left and the pictures, Check and Help stay together on the right.
+  return wide
+    ? <View style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}><View style={{ flex: 1, minWidth: 0, gap: 8 }}>{messageLine}{program}</View><View style={{ width: columns * cell + (columns - 1) * 10, gap: 8 }}>{grid}{actions}{hintPanel}</View></View>
+    : <View style={{ gap: 8 }}>{messageLine}{program}{grid}{actions}{hintPanel}</View>;
 }

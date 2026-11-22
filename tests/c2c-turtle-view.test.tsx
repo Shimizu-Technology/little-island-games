@@ -233,3 +233,17 @@ it('Deep Water boards put header and footer inside the scrolling controls when p
   expect(scroll.findAllByType('button').some(n => text(n) === 'Another puzzle')).toBe(true);
   expect(labelled('Hear rules')).toBeUndefined();
 });
+
+it('in a wide landscape window the program reads on the left and the four pictures with Check and Help sit together on the right, even at the largest text', async () => {
+  viewport.width = 1133; viewport.height = 744; viewport.fontScale = 3.12;
+  const d = challenge('predict', 5) as PredictDescriptor;
+  await mount(<ChallengeBoard state={startState(d)} dispatch={vi.fn()} active width={1100} />);
+  const grid = tree!.root.findByProps({ accessibilityLabel: 'Four pictures' }), column = grid.parent!;
+  const row = column.parent!;
+  expect(row.props.style.flexDirection).toBe('row');
+  expect(column.findAllByType('button').some(b => text(b) === 'Check my picture')).toBe(true);
+  expect(column.findAllByType('button').some(b => text(b) === 'Help')).toBe(true);
+  expect(row.findAllByProps({ testID: 'turtle-program' }).length).toBeGreaterThan(0);
+  expect(column.findAllByProps({ testID: 'turtle-program' })).toHaveLength(0);
+  expect(grid.props.style.width).toBeLessThanOrEqual(400);
+});
