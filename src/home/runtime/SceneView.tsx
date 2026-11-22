@@ -40,6 +40,33 @@ function ancestors(entity: SceneEntity, scene: Scene): string[] {
   }
   return result;
 }
+/** A displaced cup gets a fresh zero-valued native style on its first paint.
+ * Reusing the resting entity's finished clock can show the floor pose before
+ * the new worklet and clock reset arrive, then jump back into the tween. */
+function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:string;from:NonNullable<ReturnType<typeof restFrom>>;frame:{left:number;top:number};reduced:boolean;onFinished:()=>void;shadow?:React.ComponentProps<typeof View>['style'];children:React.ReactNode}) {
+  const elapsed=useSharedValue(0);
+  const motion=useAnimatedStyle(()=>{
+    const pose=restTransform(from,elapsed.value,reduced);
+    return {transform:[{translateX:pose.dx},{translateY:pose.dy},{scale:pose.scale}]};
+  });
+  const shade=useAnimatedStyle(()=>({opacity:.16*(reduced?1:Math.max(0,Math.min(1,(elapsed.value-120)/100)))}));
+  const started=React.useRef(false),request=React.useRef<number|undefined>(undefined);
+  const begin=React.useCallback(()=>{
+    if(started.current)return;
+    started.current=true;
+    request.current=requestAnimationFrame(()=>{
+      elapsed.set(withTiming(220,{duration:reduced?0:220,easing:Easing.linear},done=>{if(done)runOnJS(onFinished)();}));
+    });
+  },[elapsed,reduced,onFinished]);
+  React.useLayoutEffect(()=>()=>{
+    if(request.current!==undefined)cancelAnimationFrame(request.current);
+    cancelAnimation(elapsed);
+  },[elapsed]);
+  return <>
+    {shadow && <Animated.View testID={`drink-ground-shadow-${id}`} pointerEvents="none" accessible={false} style={[shadow,shade]}/>}
+    <Animated.View collapsable={false} onLayout={begin} testID={`rest-set-down-${id}`} pointerEvents="none" style={[{transformOrigin:[-frame.left,-frame.top,0]},motion]}>{children}</Animated.View>
+  </>;
+}
 /** Hidden copies retain their last idle props until the visible meal finishes. */
 const IdleEntityDrawing=memo(function IdleEntityDrawing({mealActive:_mealActive,...props}:React.ComponentProps<typeof EntityArt>&{mealActive:boolean}) {
   return <EntityArt {...props}/>;
@@ -128,16 +155,11 @@ const RestingEntity = memo(function RestingEntity({
   const [restState, setRestState] = React.useState<{entity:SceneEntity;from:ReturnType<typeof restFrom>}>({entity,from:undefined});
   if (restState.entity !== entity) setRestState({entity,from:restFrom(restState.entity,entity)});
   const from = restState.from;
-  const restClock = useSharedValue(220);
   const finishSetDown=React.useCallback(()=>setRestState(current=>current.entity===entity && current.from ? {entity,from:undefined} : current),[entity]);
-  React.useLayoutEffect(() => {
-    if (from) { restClock.set(0); restClock.set(withTiming(220, { duration: reduced ? 0 : 220, easing:Easing.linear },done=>{if(done)runOnJS(finishSetDown)();})); }
-    return ()=>cancelAnimation(restClock);
-  }, [entity, from, reduced, restClock, finishSetDown]);
   const frame = artFrame(entity);
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
   const drinkSize=entity.item ? itemSize(entity.item) : 0;
-  const groundShadow=useAnimatedStyle(()=>({opacity:floorDrink ? .16*(from && !reduced ? Math.max(0,Math.min(1,(restClock.value-120)/100)) : 1) : 0}));
+  const groundShadow={position:'absolute' as const,left:drinkSize*.32,top:drinkSize*.71,width:drinkSize*.36,height:drinkSize*.08,borderRadius:drinkSize*.1,backgroundColor:'#385451'};
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
   const [stamp, setStamp] = React.useState({ token, value: 1 });
@@ -177,7 +199,6 @@ const RestingEntity = memo(function RestingEntity({
     if (dir !== previous) lean.set(withTiming(dir * NOTICE_DEGREES, { duration: 180 }));
   }, [leaner, sleeping, reduced]);
   const style = useAnimatedStyle(() => {
-    const setDown = restTransform(from, restClock.value, reduced);
     const flags = restingFlags.value, motion = restingMotion.value;
     const rest = firstRest(flags, owners);
     const follow = firstFollow(motion, owners);
@@ -194,11 +215,11 @@ const RestingEntity = memo(function RestingEntity({
       transformOrigin: rest ? [rest.gx - frame.left, rest.gy - frame.top, 0]
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
-        { translateX: follow ? follow.dx : setDown.dx },
-        { translateY: follow ? follow.dy : setDown.dy + (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
+        { translateX: follow ? follow.dx : 0 },
+        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
         { rotate: `${follow ? follow.tilt : wobble}deg` },
-        { scaleX: follow ? follow.sx : setDown.scale * (pressed || landing ? 1.02 : 1) },
-        { scaleY: follow ? follow.sy : setDown.scale * (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
+        { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
+        { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
@@ -219,6 +240,45 @@ const RestingEntity = memo(function RestingEntity({
   }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   const mealShowing = !!meal && mealVisible;
+  const drawing=(<Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
+          style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
+        {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
+        <View collapsable={ownerId ? false : undefined} style={character ? undefined : { opacity: mealHeld ? 0 : 1 }}>
+          {/* Keep the saved cup painted under the transient sip so the final
+              frame can reveal it without mounting a new native SVG. */}
+          <EntityArt
+            entity={entity}
+            actionOverride={action}
+            prepareMeal={!!entity.character}
+            idleStyle={character ? idleStyle : undefined}
+            meal={meal}
+            mealStandby={mealStandby}
+            mealVisible={mealVisible}
+            onMealPresented={presented}
+            onMealFinished={finished}
+            gaze={gaze}
+            faceOverride={sleeping ? "sleepy" : mood}
+            front={front}
+            reduced={reduced}
+            renderCharacter={renderCharacter}
+          />
+        </View>
+        {cacheBlink && (
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
+            <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            </Animated.View>
+          </View>
+        )}
+        {character && (
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
+            <Animated.View style={anticipate}>
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
+            </Animated.View>
+          </View>
+        )}
+      </Animated.View>);
   return (
     <View
       ref={bindNode}
@@ -279,8 +339,7 @@ const RestingEntity = memo(function RestingEntity({
         },
       ]}
     >
-      {floorDrink && <Animated.View testID={`drink-ground-shadow-${entity.id}`} pointerEvents="none" accessible={false}
-        style={[{position:'absolute',left:drinkSize*.32,top:drinkSize*.71,width:drinkSize*.36,height:drinkSize*.08,borderRadius:drinkSize*.1,backgroundColor:'#385451'},groundShadow]}/>}
+      {!from && floorDrink && <View testID={`drink-ground-shadow-${entity.id}`} pointerEvents="none" accessible={false} style={[groundShadow,{opacity:.16}]}/>}
       {selected && !front && (
         <View
           pointerEvents="none"
@@ -297,45 +356,7 @@ const RestingEntity = memo(function RestingEntity({
           }}
         />
       )}
-      <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
-          style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
-        {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
-        <View collapsable={ownerId ? false : undefined} style={character ? undefined : { opacity: mealHeld ? 0 : 1 }}>
-          {/* Keep the saved cup painted under the transient sip so the final
-              frame can reveal it without mounting a new native SVG. */}
-          <EntityArt
-            entity={entity}
-            actionOverride={action}
-            prepareMeal={!!entity.character}
-            idleStyle={character ? idleStyle : undefined}
-            meal={meal}
-            mealStandby={mealStandby}
-            mealVisible={mealVisible}
-            onMealPresented={presented}
-            onMealFinished={finished}
-            gaze={gaze}
-            faceOverride={sleeping ? "sleepy" : mood}
-            front={front}
-            reduced={reduced}
-            renderCharacter={renderCharacter}
-          />
-        </View>
-        {cacheBlink && (
-          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
-            <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
-            </Animated.View>
-          </View>
-        )}
-        {character && (
-          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
-            <Animated.View style={anticipate}>
-              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
-            </Animated.View>
-          </View>
-        )}
-      </Animated.View>
+      {from ? <SetDownMotion key={token} id={entity.id} from={from} frame={frame} reduced={reduced} onFinished={finishSetDown} shadow={floorDrink?groundShadow:undefined}>{drawing}</SetDownMotion> : drawing}
     </View>
   );
 });
