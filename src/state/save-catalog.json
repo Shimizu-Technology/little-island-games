@@ -231,6 +231,181 @@
       "cove": false
     },
     {
+      "slot": 12,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 12288,
+          "hash": "16341f7ac4bb8f9aef9211ed60f2f26a2503d9543e0e26517e866addeb83d18b"
+        },
+        {
+          "ordinal": 12289,
+          "hash": "25827932ae89bb2f9d1d8b1028d1d0520a12f414df3b5c2b9999f9e7b4bcf4f5"
+        },
+        {
+          "ordinal": 12290,
+          "hash": "a340c93dd4fd62fbc17860d25bd911cf799c621303274be5df87330b8e5b1633"
+        },
+        {
+          "ordinal": 12291,
+          "hash": "41c45799be3023796dd53630d6f52d57e0a0e394d9ff6ccbe775a6d6e2dcb220"
+        },
+        {
+          "ordinal": 12292,
+          "hash": "dc2b8b61a86a55f8888504e3d589eff1673295589af1d98f5784406386e8cfe4"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 13,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 13312,
+          "hash": "b5dfa1c4ebbdb74c05ecd6b97028561e7f105d4a7c9748a04c9f4f99c7acb390"
+        },
+        {
+          "ordinal": 13313,
+          "hash": "74062615e2d04001e81f7d4a474609def4aceb1057e2af23ebfbe10338a94024"
+        },
+        {
+          "ordinal": 13314,
+          "hash": "431348a0a48c63ee1bffccb6894577549c2dc1b29e5aa632339421f829c32744"
+        },
+        {
+          "ordinal": 13315,
+          "hash": "c8bd9f7dfc8a83dc574158d97d3f9a8656a7354bdb7d45e414eb7aba902856be"
+        },
+        {
+          "ordinal": 13316,
+          "hash": "c89ab5abb1bc054dde832265a47471b3026c48bc710774a2d20de446aa3f1910"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 14,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 14336,
+          "hash": "d812423b5c68ca5907dab44a22241fb9eb940cf36f4bce21afc9ba603d13af23"
+        },
+        {
+          "ordinal": 14337,
+          "hash": "2c1d416c72f4f701ab7eb640555fe03ededad277846a67a9056d0daac6e5c329"
+        },
+        {
+          "ordinal": 14338,
+          "hash": "257be8e8599b11953bc3bf9a3ed49756ccd6a56bc5a729acf4e9aa6e17aafde6"
+        },
+        {
+          "ordinal": 14339,
+          "hash": "7e46820b30dcd0059dd8e9bd6ef1b019be2267b73b9ade44fdaef10280e7ca49"
+        },
+        {
+          "ordinal": 14340,
+          "hash": "6dba6f83a0501a500f02c279f40138b872e252e8ae3be4c86cd4caff76bbcf98"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 15,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 15360,
+          "hash": "9cddf724edee1f8b77ffb79a83f00f1d4f3e06aad28c8d5072287ce5ac08f26a"
+        },
+        {
+          "ordinal": 15361,
+          "hash": "42a889a60595fdb96140dc24ecfbafda0243e5460e2622ec6af8ddd1a934b845"
+        },
+        {
+          "ordinal": 15362,
+          "hash": "db13dfdadde3eba9043696498b6bfb47a5d512cdb7f6f56a4a2a01f4b324c135"
+        },
+        {
+          "ordinal": 15363,
+          "hash": "d905fa47be55c495c6d3831ddaaf0e8c3f5878d93a5d07ec1454d5a2960e96ca"
+        },
+        {
+          "ordinal": 15364,
+          "hash": "071e8189d3cd41016b419b2b08cf64ed9fb6720cec6b81e529ba3eaaeacc9a24"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 16,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 16384,
+          "hash": "e2fe21ed23dc1b180a5afa7e24699e697a4f9ded45a3a280725db21c11a4a17a"
+        },
+        {
+          "ordinal": 16385,
+          "hash": "dac0149bd0f0b03884fa049263aba13cf3762f485aeb442bbbafb08ab33555a0"
+        },
+        {
+          "ordinal": 16386,
+          "hash": "5eea11016fb283741ef2cd7018739f25b7f7c8c4cdba797e91208eadb705cdcd"
+        },
+        {
+          "ordinal": 16387,
+          "hash": "f8d572eda248518c0b9b01d2995e463a461d2945a11753f412282cc15b945098"
+        },
+        {
+          "ordinal": 16388,
+          "hash": "521da74552b4f353e58b2254bbf87b631ecec46f2498ef19683b2c87e66a1141"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
       "slot": 40,
       "engine": "sudoku",
       "rules": 1,
@@ -1004,6 +1179,211 @@
         1,
         1
       ],
+      "cove": false
+    },
+    {
+      "slot": 260,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "first": 266240,
+      "count": 200,
+      "family": "logic-lagoon",
+      "packHash": "02815e54c81de3cfab60af52f3736c012b7a551821443202a7161e7b272f6216",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 261,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "first": 267264,
+      "count": 100,
+      "family": "logic-lagoon",
+      "packHash": "ffeb30dd951ffd440720c11ee95e7a56ff132a8fe85def4a14326097fcce1541",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 262,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "first": 268288,
+      "count": 200,
+      "family": "logic-lagoon",
+      "packHash": "d3e52f3181a584ef0fbf48085ae3ff7eb8b0957c6dc5b0ad0a197b52439e8655",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 263,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "entries": [
+        {
+          "ordinal": 269312,
+          "hash": "0cf85671de6d7b5a7e49c5dd900d672947d9ee90d2aad5ba11e03aba199f5288"
+        },
+        {
+          "ordinal": 269313,
+          "hash": "6aa83b3fab116a1feaf128c81f8e273cee667f69f5c5b1f45840dc4b29ba45a5"
+        },
+        {
+          "ordinal": 269314,
+          "hash": "b7820bc9cd32fbdbe6054745b086c5096a69b12367ac5ede30997d92a7651cc3"
+        },
+        {
+          "ordinal": 269315,
+          "hash": "639216923e57c5710c992f5a3eac85499587df269e69961d4c390cc6583bb613"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 264,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "entries": [
+        {
+          "ordinal": 270336,
+          "hash": "a35cd81d4e1bf069530a5d5ce2c5656ce4388dee7109b725a8a4d4f8a790a6ef"
+        },
+        {
+          "ordinal": 270337,
+          "hash": "f09e46461a21041e522d94dbeffb5c0838594d5d709f2681c5d400a2b1fb8c25"
+        },
+        {
+          "ordinal": 270338,
+          "hash": "02ff1cc70f1b6dc62daa9d586dd170aeb6f5e576c44e0828586dca09ad09b413"
+        },
+        {
+          "ordinal": 270339,
+          "hash": "85c0e4944cefd6cd70672e149ffc82c39ddf33c7f69ec1e9f13a7300f4a32a7b"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 265,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "entries": [
+        {
+          "ordinal": 271360,
+          "hash": "44a112f4bec1c928b4a2aced1b3e2cb4e0192eb3b49a3bc3bec4a3508ccaed58"
+        },
+        {
+          "ordinal": 271361,
+          "hash": "24f26021e320f9a5d4834ba58c6310f9d4d72214ee4282ef554d61341b2f52ff"
+        },
+        {
+          "ordinal": 271362,
+          "hash": "90a34f84fde283573b1ce42733ee3ff6330374ca75122cce41aa7e6a7d35066c"
+        },
+        {
+          "ordinal": 271363,
+          "hash": "ea5fbd193c2588d90709e691d9ca8cd672b1843f285628339ea6e1587fc2cadd"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 266,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "entries": [
+        {
+          "ordinal": 272384,
+          "hash": "f3d4e5f75897de84bc442a3c021bc2dcac2e0cdebcafb1e48f51baf071fba1cd"
+        },
+        {
+          "ordinal": 272385,
+          "hash": "d85cc7dcf1ca3da469d6181cbcfab17dc121bd445732fdd1e938f44684c93b77"
+        },
+        {
+          "ordinal": 272386,
+          "hash": "78ee4e13f24121fee47a54d204183ddbc6fe10ba2c14982a3dbf0ec4076466e2"
+        },
+        {
+          "ordinal": 272387,
+          "hash": "11532efcf160c2f38f4800db7466ea4ad3408ed8814f6b888cc730591c1ed34c"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 267,
+      "engine": "logic-lagoon",
+      "rules": 2,
+      "entries": [
+        {
+          "ordinal": 273408,
+          "hash": "bf5a9f4c0acc2ab7e573c555d918faa1de1f5d68019bef3051ff85eeeed80475"
+        },
+        {
+          "ordinal": 273409,
+          "hash": "46859002ca64467dc3a00c1d8831de8aaaac1cad7a09b73a55d3f12e1bc0f005"
+        },
+        {
+          "ordinal": 273410,
+          "hash": "e51c8f40f5c7d981e52e26ba7d21bed2de64e878d662bb51a7bcf121922bf6bc"
+        },
+        {
+          "ordinal": 273411,
+          "hash": "970e49a7853ec48341a58bf633aae574ca893373cd0503666c99ad1e25075136"
+        }
+      ],
+      "awards": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "cove": false
+    },
+    {
+      "slot": 268,
+      "first": 274432,
+      "count": 1024,
+      "packHash": "7b6fdc7ef9bb561b2e168e2b7790fd8a97fb3f36065a1508c400af9c3f66dc88",
+      "rules": 2,
+      "family": "logic-lagoon",
+      "engine": "logic-lagoon",
+      "awards": 0,
+      "cove": false
+    },
+    {
+      "slot": 269,
+      "first": 275456,
+      "count": 576,
+      "packHash": "fffc4fe49d6bbf1030bd601ad0c1799f24b010eeadfffa67301f0c16181f6c5b",
+      "rules": 2,
+      "family": "logic-lagoon",
+      "engine": "logic-lagoon",
+      "awards": 0,
       "cove": false
     },
     {
@@ -3219,6 +3599,42 @@
       }
     ],
     [
+      154,
+      {
+        "kind": "plan",
+        "help": "allowed",
+        "bank": 14,
+        "puzzle": 3
+      }
+    ],
+    [
+      155,
+      {
+        "kind": "plan",
+        "help": "allowed",
+        "bank": 15,
+        "puzzle": 3
+      }
+    ],
+    [
+      156,
+      {
+        "kind": "plan",
+        "help": "allowed",
+        "bank": 16,
+        "puzzle": 3
+      }
+    ],
+    [
+      157,
+      {
+        "kind": "par",
+        "help": "allowed",
+        "bank": 16,
+        "puzzle": 3
+      }
+    ],
+    [
       256,
       {
         "kind": "clean",
@@ -3648,6 +4064,186 @@
         "help": "independent",
         "bank": 202,
         "puzzle": 15
+      }
+    ],
+    [
+      800,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 263,
+        "puzzle": 0
+      }
+    ],
+    [
+      801,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 263,
+        "puzzle": 1
+      }
+    ],
+    [
+      802,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 263,
+        "puzzle": 2
+      }
+    ],
+    [
+      803,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 263,
+        "puzzle": 3
+      }
+    ],
+    [
+      804,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 264,
+        "puzzle": 0
+      }
+    ],
+    [
+      805,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 264,
+        "puzzle": 1
+      }
+    ],
+    [
+      806,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 264,
+        "puzzle": 2
+      }
+    ],
+    [
+      807,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 264,
+        "puzzle": 3
+      }
+    ],
+    [
+      808,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 265,
+        "puzzle": 0
+      }
+    ],
+    [
+      809,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 265,
+        "puzzle": 1
+      }
+    ],
+    [
+      810,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 265,
+        "puzzle": 2
+      }
+    ],
+    [
+      811,
+      {
+        "kind": "clean",
+        "help": "independent",
+        "bank": 265,
+        "puzzle": 3
+      }
+    ],
+    [
+      812,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 266,
+        "puzzle": 0
+      }
+    ],
+    [
+      813,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 266,
+        "puzzle": 1
+      }
+    ],
+    [
+      814,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 266,
+        "puzzle": 2
+      }
+    ],
+    [
+      815,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 266,
+        "puzzle": 3
+      }
+    ],
+    [
+      816,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 267,
+        "puzzle": 0
+      }
+    ],
+    [
+      817,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 267,
+        "puzzle": 1
+      }
+    ],
+    [
+      818,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 267,
+        "puzzle": 2
+      }
+    ],
+    [
+      819,
+      {
+        "kind": "plan",
+        "help": "independent",
+        "bank": 267,
+        "puzzle": 3
       }
     ],
     [
@@ -7384,6 +7980,11 @@
     "shell-4",
     "shell-5",
     "shell-6",
+    "lagoon-1",
+    "lagoon-2",
+    "lagoon-3",
+    "lagoon-4",
+    "lagoon-5",
     "solitaire-1",
     "solitaire-3",
     "solitaire-6",

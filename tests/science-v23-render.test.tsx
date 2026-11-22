@@ -4,7 +4,8 @@ import { expect, it, vi } from "vitest";
 import { ScienceBoard } from "../src/learn/games/weather-watch/ScienceBoard";
 import { engine as weather } from "../src/learn/games/weather-watch/engine";
 import { engine as food } from "../src/learn/games/food-web/engine";
-import { engine as space } from "../src/learn/games/space-station/engine";
+// Saved version-1 Star Station rounds keep the shared science engine; fresh rounds are K6 inquiry rounds (tests/s1a-inquiry.test.ts).
+import { legacyEngine as space } from "../src/learn/games/space-station/engine";
 import { optionsAtLevel, levelNumbers } from "../src/learn/levels";
 import { random } from "../src/games/types";
 import type { Game } from "../src/learn/games/weather-watch/model";

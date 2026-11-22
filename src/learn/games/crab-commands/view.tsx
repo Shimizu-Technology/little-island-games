@@ -1,10 +1,13 @@
 import { PlanStrip } from '../../PlanStrip';
 import { BoardColumns, useBoardColumns, useBoardGeometry } from '../../BoardSpace';
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
-import { blockHint } from '../../program/hints';
+import { blockHint, blockPosition } from '../../program/hints';
 import { ProgramEditor } from '../../program/ProgramEditor';
-import { encodeProgram, sessionBytes } from '../../program/codec';
+import { decodeProgram, encodeProgram, sessionBytes } from '../../program/codec';
+import { nodeCost } from '../../program/model';
 import { crabProgram, programCodes, readCrabDraft, withCrabProgram } from './program';
+import { describeProgram, describeStep, nearestBlocks } from './block-hint';
+import { loopSolutions } from './proofs';
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
@@ -20,6 +23,8 @@ import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import {
   commands,
   currentLevel,
+  flooded,
+  nextBeach,
   run,
   solved,
   solve,
@@ -135,6 +140,8 @@ export function Beach({
   showBump,
   facingHint,
   wobble,
+  others = [],
+  label,
 }: {
   level: Level;
   walker: Walker;
@@ -143,6 +150,9 @@ export function Beach({
   showBump?: boolean;
   facingHint?: boolean;
   wobble?: number;
+  /** Deep Water's second crab, moved by the same cards. */
+  others?: Walker[];
+  label?: string;
 }) {
   const reduced = useReducedMotion();
   const cellPx = size / 5;
@@ -173,6 +183,8 @@ export function Beach({
   const cells = level.rows.join("").split("");
   const start = { pos: cells.indexOf("C") };
   const bumpAt = plan && plan.bumpCard !== null && showBump ? plan : null;
+  const water = flooded(level, walker), holding = !!walker.key || others.some(o => o.key);
+  const describeCell = (c: string) => c === "S" ? "Shell" : c === "H" ? "Home" : c === "m" ? "Mud, two steps" : c === "K" ? (holding ? "Key, picked up" : "Key") : c === "G" ? (holding ? "Gate, open" : "Gate, locked") : c === "~" ? (water ? "Water, flooded" : `Low sand, floods after ${level.tide} steps`) : "Sandcastle";
   return (
     <View style={{ width: size, height: size, alignSelf: "center" }}>
       <Svg
@@ -180,9 +192,9 @@ export function Beach({
         height={size}
         viewBox="0 0 250 250"
         accessible
-        accessibilityLabel={`Beach. The crab is in row ${Math.floor(walker.pos / 5) + 1}, column ${(walker.pos % 5) + 1}.${
+        accessibilityLabel={`${label ? `${label}. ` : ""}Beach. The crab is in row ${Math.floor(walker.pos / 5) + 1}, column ${(walker.pos % 5) + 1}.${others.map(o => ` The other crab is in row ${Math.floor(o.pos / 5) + 1}, column ${(o.pos % 5) + 1}.`).join("")}${
           plan ? ` Your plan walks ${plan.steps.length} squares.` : ""
-        }${bumpAt ? " The plan bumps into something." : ""}${walker.bump ? " The crab bumped." : ""} ${cells.flatMap((c, i) => ["S", "H", "#", "m"].includes(c) ? [`${c === "S" ? "Shell" : c === "H" ? "Home" : c === "m" ? "Mud, two steps" : "Sandcastle"} at row ${Math.floor(i / 5) + 1}, column ${i % 5 + 1}`] : []).join(". ")}`}
+        }${bumpAt ? " The plan bumps into something." : ""}${walker.bump ? " The crab bumped." : ""} ${cells.flatMap((c, i) => ["S", "H", "#", "m", "K", "G", "~"].includes(c) ? [`${describeCell(c)} at row ${Math.floor(i / 5) + 1}, column ${i % 5 + 1}`] : []).join(". ")}`}
       >
         <Rect x="0" y="0" width="250" height="250" rx="16" fill="#F6E3B9" />
         {cells.map((c, i) => {
@@ -217,8 +229,26 @@ export function Beach({
         {cells.map((c, i) => {
           const x = (i % 5) * 50,
             y = Math.floor(i / 5) * 50,
-            gone = c === "S" && !!(walker.shells & (1 << shell++));
-          return c === "m" ? (
+            gone = c === "S" && !!((walker.shells | others.reduce((m, o) => m | o.shells, 0)) & (1 << shell++));
+          return c === "~" ? (
+            <G key={i}>
+              <Rect x={x + 2} y={y + 2} width="46" height="46" rx="9" fill={water ? "#5FA8C9" : "#D9C08A"} />
+              <Path d={`M${x + 8} ${y + 20}q6 -5 12 0t12 0t12 0M${x + 8} ${y + 33}q6 -5 12 0t12 0t12 0`} fill="none" stroke={water ? "#E8F6FB" : "#A98F5C"} strokeWidth="2.5" strokeLinecap="round" />
+            </G>
+          ) : c === "K" ? (
+            holding ? null : (
+              <G key={i}>
+                <Circle cx={x + 17} cy={y + 25} r="8" fill="none" stroke="#B8860B" strokeWidth="4" />
+                <Path d={`M${x + 25} ${y + 25}H${x + 41}M${x + 35} ${y + 25}V${y + 32}M${x + 40} ${y + 25}V${y + 31}`} stroke="#B8860B" strokeWidth="4" strokeLinecap="round" />
+              </G>
+            )
+          ) : c === "G" ? (
+            <G key={i}>
+              <Rect x={x + 4} y={y + 6} width="42" height="40" rx="5" fill={holding ? "none" : "#9C6B3F"} stroke="#6E4527" strokeWidth="3" strokeDasharray={holding ? "5 4" : undefined} />
+              {!holding && <Path d={`M${x + 15} ${y + 8}V${y + 44}M${x + 25} ${y + 8}V${y + 44}M${x + 35} ${y + 8}V${y + 44}`} stroke="#6E4527" strokeWidth="2.5" />}
+              {!holding && <Circle cx={x + 25} cy={y + 27} r="4.5" fill="#F2C94C" stroke="#6E4527" strokeWidth="1.5" />}
+            </G>
+          ) : c === "m" ? (
             <G key={i}>
               <Rect x={x + 3} y={y + 3} width="44" height="44" rx="12" fill="#AD8264" />
               <Path d={`M${x + 10} ${y + 17}q8 -6 15 0t15 0M${x + 8} ${y + 30}q8 -6 15 0t15 0`} fill="none" stroke="#6F4F3E" strokeWidth="2" />
@@ -310,10 +340,28 @@ export function Beach({
           />
         )}
       </Animated.View>
+      {others.map((o, i) => <OtherCrab key={i} walker={o} cellPx={cellPx} />)}
     </View>
   );
 }
-const withoutDraft = (s: CrabState): CrabState => { const {blockDraft: _, ...legacy} = s; return legacy; };
+/** The second crab walks with the same easing; a tinted shell tells the two apart. */
+function OtherCrab({ walker, cellPx }: { walker: Walker; cellPx: number }) {
+  const reduced = useReducedMotion();
+  const [pos] = useState(() => new Animated.ValueXY({ x: (walker.pos % 5) * cellPx, y: Math.floor(walker.pos / 5) * cellPx }));
+  useEffect(() => {
+    const to = { x: (walker.pos % 5) * cellPx, y: Math.floor(walker.pos / 5) * cellPx };
+    if (reduced) { pos.setValue(to); return; }
+    const a = Animated.timing(pos, { toValue: to, duration: 360, easing: easeInOut, useNativeDriver: nativeDriver });
+    a.start();
+    return () => a.stop();
+  }, [walker.pos, cellPx, reduced, pos]);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: cellPx, height: cellPx, alignItems: "center", justifyContent: "center", transform: [{ translateX: pos.x }, { translateY: pos.y }] }}>
+      <View style={{ position: "absolute", width: cellPx - 8, height: cellPx - 8, borderRadius: cellPx, borderWidth: 3, borderColor: C.teal }} />
+      <CreatureArt kind="crab" size={cellPx - 12} />
+    </Animated.View>
+  );
+}
 export function Board({
   session,
   update,
@@ -339,7 +387,11 @@ export function Board({
     [mode, setMode] = useState<EditMode>("replace"),
     // Fully shown until a bump starts the blink, so a bumped round restored from a save is not faded.
     [flash] = useState(() => new Animated.Value(1));
-  const blocks = l.blockEditor === true && blockMode;
+  // A Level 5 tray beach is only ever built from blocks: no flat plan fits its tray.
+  const blocks = l.blockEditor === true && (blockMode || l.tray !== undefined);
+  const beachKey = `${session.id}:${s.completed.length}`;
+  const [undo, setUndo] = useState<{ key: string; past: Command[][] }>({ key: beachKey, past: [] });
+  const past = undo.key === beachKey ? undo.past : [];
   const plan = trail(l, s.program);
   const draft = s.blockDraft ? readCrabDraft(s.blockDraft, l) : null;
   const together = session.options.mode === "together";
@@ -386,8 +438,9 @@ export function Board({
     a.start(() => flash.setValue(1));
     return () => a.stop();
   }, [wobble, reduced, flash]);
-  const edit = (program: Command[], placed = false) => {
+  const edit = (program: Command[], placed = false, remember = true) => {
     if (!active || s.running) return;
+    if (remember) setUndo({ key: beachKey, past: [...past.slice(-15), s.program] });
     const { blockDraft: _draft, ...legacy } = s;
     update({ ...legacy, program, cursor: 0, cards: placed ? Math.min(1000000, s.cards + 1) : s.cards });
     setHint(0);
@@ -400,7 +453,17 @@ export function Board({
   const firstCard = shortest[0];
   const helpDescriptor = useMemo(() => ({ level: l, budget: null, starter: [], lesson: "" }), [l]);
   // The School board edits like the Challenge board, so its hint repairs the nearest winner in one step.
-  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active);
+  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active && l.tray === undefined);
+  // Level 5: the nearest certified block winner, one structural edit at a time. The run itself says where a plan bumps.
+  const blockHelp = useMemo(() => {
+    if (l.tray === undefined || !hint) return null;
+    const current = (s.blockDraft && decodeProgram(s.blockDraft)) || crabProgram(s.program), name = (code: number) => cardLabel[programCodes[code]];
+    const near = nearestBlocks(current, loopSolutions(l), l.tray);
+    if (!near) return null;
+    const bump = plan.bumpCard !== null ? draft?.frames[plan.bumpCard] : undefined;
+    const where = bump ? `Your plan bumps at ${blockPosition(bump.path)}${bump.iteration.length ? ` (repeat turn ${bump.iteration.map(n => n + 1).join(", ")})` : ""}. ` : "";
+    return { step: near.first ? `${where}${describeStep(near.first, current, name)}` : "Your blocks reach home. Press Go to try them.", whole: `One plan that works: ${describeProgram(near.target, name)}.` };
+  }, [l, hint, s.blockDraft, s.program, plan.bumpCard, draft]);
   const bumpedCard = w.bump ? s.cursor - 1 : null;
   const hinted = hint > 0 && hint < 3 ? hintedCard(helpPlan?.edit, s.program.length) : null;
   const planBumps = plan.bumpCard !== null;
@@ -428,18 +491,31 @@ export function Board({
     else if(solved(l,walker)){practice(l.skill,true);cheer('right','crab-commands-home');}
     else sound('tap',true);
   };
+  const buggy = !!l.starter && JSON.stringify(s.program) === JSON.stringify(l.starter);
   const prompt = done
     ? "Every crab is home!"
     : won
       ? "Home! Great plan!"
       : w.bump
-        ? "Bump! Change the red card."
+        ? l.starter ? "Bump! Find the card that went wrong." : "Bump! Change the red card."
         : s.running
           ? "Watch the crab walk!"
           : s.cursor > 0
-            ? "Almost! Add more cards."
-            : "Plan the crab's path, then Go!";
-  const promptKey = won ? "crab-commands-home" : w.bump ? "crab-commands-bump" : "crab-commands-plan";
+            ? l.starter ? "Not home yet. Look for the bug." : "Almost! Add more cards."
+            : buggy
+              ? "This plan has a bug. Find it and fix it."
+              : l.tray !== undefined && !s.program.length
+                ? `The tray holds ${l.tray} blocks. Build with Repeat!`
+                : "Plan the crab's path, then Go!";
+  const promptKey = won
+    ? "crab-commands-home"
+    : w.bump
+      ? "crab-commands-bump"
+      : buggy
+        ? "c1d-crab-bug"
+        : l.tray !== undefined && !s.program.length
+          ? "c1d-crab-tray"
+          : "crab-commands-plan";
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
@@ -466,8 +542,8 @@ export function Board({
       {!done && (
         <>
           {l.blockEditor && !blocks && <Button compact quiet maxFontSizeMultiplier={1.5} disabled={s.running || !active} onPress={() => setBlocks(!blocks)}>{blocks ? 'Arrow editor' : 'Block editor'}</Button>}
-          {blocks && <ProgramEditor schoolGeometry onFlat={!active||s.running?undefined:()=>setBlocks(false)} maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition="edge or rock ahead" currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
-            onChange={program => { const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
+          {blocks && <ProgramEditor schoolGeometry tray={l.tray} songs={l.tray === undefined} onFlat={!active||s.running||l.tray!==undefined?undefined:()=>setBlocks(false)} maxHeight={Math.max(180,Math.min(340,height-400))} key={`${session.id}:${s.completed.length}`} program={draft?.program ?? crabProgram(s.program)} cards={commands(l.pace).map(command => ({ code: programCodes.indexOf(command), name: cardLabel[command], icon: <ArrowArt command={command} size={24} />, speech: `crab-commands-card-${command}` }))} disabled={!active || s.running || won} hear={key => sound(key, true)} condition={l.tray === undefined ? "edge or rock ahead" : undefined} currentPath={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.path : undefined} iteration={s.cursor > 0 ? draft?.frames[s.cursor - 1]?.iteration : undefined}
+            onChange={program => { if (l.tray !== undefined && nodeCost(program) > l.tray) return false; const next = withCrabProgram(s, program, l); if (!next || sessionBytes({...session,state:next}) > 4096) return false; update(next); setHint(0); return true; }}
  />}
           {!blocks && <PlanStrip count={s.program.length} focus={s.running ? s.cursor : bumpedCard ?? hinted ?? editing} cardHeight={58} gap={5} padding={4} drawingFloor={SCHOOL_BOARD_MIN['crab-commands']}><View
             accessibilityLabel={`Your plan: ${s.program.length ? s.program.map((c) => cardLabel[c]).join(", ") : "empty"}`}
@@ -528,14 +604,7 @@ export function Board({
               onPress={() => {
                 setHint(0);
                 setSelected(null);
-                update({
-                  ...withoutDraft(s),
-                  completed: [...s.completed, s.program.slice(0, s.cursor)],
-                  program: [],
-                  cursor: 0,
-                  running: false,
-                  debugging: false,
-                });
+                update(nextBeach(s));
               }}
             >
               {s.completed.length === 2 ? "Finish!" : "Next beach"}
@@ -629,15 +698,21 @@ export function Board({
           Beach {s.completed.length + 1} of 3{together ? ` · ${name} adds a card` : ""}
         </Copy>
       )}
-      {!done && !blocks && !won && <View style={{ flexDirection: "row", gap: 8 }}>
-                <Button compact quiet disabled={s.running || s.program.length === 0} style={large ? { flex: 1 } : undefined} onPress={() => edit([])}>
-                  Clear
+      {/* At accessibility sizes Undo and Clear (or Start over) share a line and Hint takes the next, so no label runs past its card. */}
+      {!done && !blocks && !won && <View style={{ flexDirection: "row", gap: 8, flexWrap: large ? "wrap" : undefined }}>
+                <Button compact quiet disabled={s.running || !past.length} style={large ? { flex: 1 } : undefined} onPress={() => { edit(past.at(-1)!, false, false); setUndo({ key: beachKey, past: past.slice(0, -1) }); }}>
+                  Undo
                 </Button>
+                {l.starter ? <Button compact quiet disabled={s.running || buggy} style={large ? { flex: 1 } : undefined} onPress={() => edit([...l.starter!])}>
+                  Start over
+                </Button> : <Button compact quiet disabled={s.running || s.program.length === 0} style={large ? { flex: 1 } : undefined} onPress={() => edit([])}>
+                  Clear
+                </Button>}
                 <Button
                   compact
                   quiet
                   disabled={s.running}
-                  style={large ? { flex: 1 } : undefined}
+                  style={large ? { flexBasis: "100%" } : undefined}
                   onPress={() => {
                     if (!hint) assistance?.();
                     setHint(hint ? 0 : 1);
@@ -650,9 +725,10 @@ export function Board({
 {blocks&&!done&&!won&&<Button quiet compact maxFontSizeMultiplier={1.5} disabled={s.running||!active} onPress={()=>{if(!hint){assistance?.();sound('crab-commands-hint');}setHint(hint?0:1);}}>Hint</Button>}
 {hint > 0 && !done && !won && (
                 <View style={{ gap: 4 }}>
-                  <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? (blocks ? blockHint(helpPlan.edit,draft?.frames??[],helpPlan.edit?.card?cardLabel[helpPlan.edit.card]:'a card') : hintText(helpPlan, s.program.length, cardLabel)) : hint === 2 ? (blocks ? blockHint(helpPlan.edit,draft?.frames??[],helpPlan.edit?.card?cardLabel[helpPlan.edit.card]:'a card') : hintText(helpPlan, s.program.length, cardLabel, "Try this step, or ask for the whole plan.")) : "One plan that works:"}</Copy>
+                  {blockHelp ? <Copy style={{ fontSize: 13, color: C.ink }}>{hint === 3 ? blockHelp.whole : hint === 2 ? `${blockHelp.step} Try this step, or ask for the whole plan.` : blockHelp.step}</Copy> :
+                  <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? (blocks ? blockHint(helpPlan.edit,draft?.frames??[],helpPlan.edit?.card?cardLabel[helpPlan.edit.card]:'a card') : hintText(helpPlan, s.program.length, cardLabel)) : hint === 2 ? (blocks ? blockHint(helpPlan.edit,draft?.frames??[],helpPlan.edit?.card?cardLabel[helpPlan.edit.card]:'a card') : hintText(helpPlan, s.program.length, cardLabel, "Try this step, or ask for the whole plan.")) : "One plan that works:"}</Copy>}
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
-                    {(hint === 3 ? helpPlan?.plan ?? shortest : []).map((c, i) => (
+                    {(hint === 3 && !blockHelp ? helpPlan?.plan ?? shortest : []).map((c, i) => (
                       <PressableScale
                         key={i}
                         accessibilityRole="button"

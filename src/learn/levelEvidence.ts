@@ -24,7 +24,7 @@ export function recordLevelRound(before: Save, after: Save, game: LearnId, day =
   if (!old || !next || old.id !== next.id || finished(old) || !finished(next) || next.options.mode !== "solo" ||
     (next.learner ?? "family") === "family" || next.learner !== after.learning?.active ||
     old.levelHelped === undefined || next.levelHelped === undefined) return after;
-  let helped = old.levelHelped || next.levelHelped || !!engines[game].notWon?.(next.state, next.options);
+  let helped = old.levelHelped || next.levelHelped || !!engines[game].notWon?.(next.state, next.options) || !!engines[game].helpedWork?.(next.state, next.options);
   if (isGrowth(next.state)) {
     const s = next.state as GrowthState;
     helped ||= growthProgress(s, growthQuestions(game, next.options, s)).clean.some(clean => !clean);

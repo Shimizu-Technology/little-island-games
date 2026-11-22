@@ -75,11 +75,11 @@ describe('the slot register', () => {
 });
 
 describe('claiming reserved slots below the high-water mark', () => {
-  it('claims below nextSlot without moving either counter back, and the sequential default carries on above', { timeout: 60_000 }, () => {
+  it('claims below nextSlot without moving either counter back, and registered allocation requires an owner', { timeout: 60_000 }, () => {
     const r = repo();
     try {
-      // The sequential default is unchanged: slot 0, ordinals from 0.
-      expect(bakeFamily(family('toy', 0), { dirs: r.dirs, sourceSha: 'base' }).slots).toEqual([0]);
+      // A registered catalog requires an explicit owner, even at its initial slot.
+      expect(bakeFamily(family('toy', 0), { dirs: r.dirs, sourceSha: 'base', claim: r.claim('0-9') }).slots).toEqual([0]);
       r.publish(r.commit('published toy'));
       // A slice high in the register bakes first and takes the counters past everyone below it.
       const before = r.root(), high = bakeFamily(family('toy-high', 3), { dirs: r.dirs, sourceSha: 'high', claim: r.claim('300-309') });
@@ -94,8 +94,9 @@ describe('claiming reserved slots below the high-water mark', () => {
       expect(manifest.packs.map(p => [p[0], p[1]])).toEqual([[20, 20 * 1024], [21, 21 * 1024]]);
       expect(afterLow).toMatchObject({ nextSlot: 301, nextOrdinal: 300 * 1024 + 8 });
       assertRootAppendOnly(afterHigh, afterLow);
-      // The sequential default resumes at the high-water mark.
-      expect(bakeFamily(family('toy-next', 11), { dirs: r.dirs, sourceSha: 'next' }).slots).toEqual([301]);
+      // The high-water mark cannot silently allocate another reserved slot.
+      expect(() => bakeFamily(family('unclaimed', 11), { dirs: r.dirs })).toThrow(/explicit owner claim/);
+      expect(bakeFamily(family('toy-next', 11), { dirs: r.dirs, sourceSha: 'next', claim: r.claim('301-309') }).slots).toEqual([301]);
       const { root, families } = readCatalog(r.dirs);
       assertRootAppendOnly(afterLow, root);
       expect(catalogIssues(root, families.values())).toEqual([]);
@@ -191,4 +192,15 @@ describe('the published catalog under the register', () => {
     expect(readCatalog(productionDirs).root).toEqual(root satisfies RootIndex);
     expect(files()).toEqual(before);
   });
+});
+
+it('refuses an unclaimed non-T1 bake at nextSlot270 before generation and leaves the catalog untouched', () => {
+ const r=repo();try {
+  writeFileSync(slotRangesFile(r.dirs),JSON.stringify({format:1,source:'lead test',banks:[{owner:'t1-logic-lagoon',first:260,last:279}]}));
+  const root={...r.root(),nextSlot:270,nextOrdinal:270*1024};writeFileSync(join(r.dirs.content,'root.json'),JSON.stringify(root));
+  const before=readFileSync(join(r.dirs.content,'root.json'),'utf8');let generated=false;
+  const spec=family('not-t1',7),generate=spec.generate;spec.generate=(...args)=>{generated=true;return generate(...args);};
+  expect(()=>bakeFamily(spec,{dirs:r.dirs})).toThrow(/Slot 270.*t1-logic-lagoon.*explicit owner claim/);
+  expect(generated).toBe(false);expect(readFileSync(join(r.dirs.content,'root.json'),'utf8')).toBe(before);
+ }finally{r.done();}
 });

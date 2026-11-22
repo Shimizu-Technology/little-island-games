@@ -7,6 +7,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { solveActs } from '../src/math/kit';
 import { shellMove, progress, type ShellRound } from '../src/learn/games/shell-math/round2';
 import { LearnFrame } from '../src/learn/LearnFrame';
+import { finishMathRound } from './helpers/shell-rounds';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { emptySave } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
@@ -73,7 +74,8 @@ const byType = (r: ReactTestRenderer, type: string) => r.root.findAll(n => Strin
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 const inside = (n: ReactTestInstance, parent: ReactTestInstance) => { for (let p: ReactTestInstance | null = n; p; p = p.parent) if (p === parent) return true; return false; };
 
-it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
+// F-frame-3: the card's real content width, 393 less 16-pt gutters, a 2-pt border and 12-pt padding (it was 337).
+it.each([[3.12, { width: 333, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
   Object.assign(viewport, { fontScale });
   const r = await mount('turtle-tales');
   expect(byType(r, 'Board')[0].props.fit).toEqual(fit);
@@ -82,7 +84,7 @@ it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text s
 it('an iPad board region is the board width beside the companion', async () => {
   Object.assign(viewport, { width: 1133, height: 744 });
   const r = await mount('turtle-tales');
-  // 1133 - 56, less the 88-pt companion column on a wide screen.
+  // The unmeasured board keeps its earlier cap beside the companion, 900 - 88 (the card itself is 942 pt wide here).
   expect(byType(r, 'Board')[0].props.fit).toEqual({ width: 900 - 88, ceiling: 2, maxSize: 44 });
 });
 
@@ -98,10 +100,7 @@ it.each([[3.12, [892]], [1, []]])('a step game asking for the board at text scal
 it.each([[3.12, 2], [1, undefined]])('the result card at text scale %s draws its words inside a region capped at %s', async (fontScale, ceiling) => {
   Object.assign(viewport, { fontScale });
   // A finished Quick practice round: every question answered.
-  const r = await mount('quick-practice', s => {
-    const st = s.state as { questions: unknown[]; index: number; completed: boolean[] };
-    return { ...s, state: { ...st, index: st.questions.length, completed: st.questions.map(() => false) } };
-  });
+  const r = await mount('quick-practice', s => ({ ...s, state: finishMathRound(s.state, 'quick-practice') }));
   const result = r.root.find(n => String(n.type) === 'Heading' && textOf(n) === 'You did it!');
   expect(result.props.fit?.ceiling).toBe(ceiling);
   if (ceiling) expect(result.props.fit.width).toBe(393 - 32 - 46);
@@ -147,7 +146,7 @@ it('measures actual card width and space below the real header instead of passin
   vi.stubGlobal('cancelAnimationFrame', () => {});
   const r = await mount('crab-commands');
   await act(async () => {
-    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640 } } });
+    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640, width: 393 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
   });
@@ -157,7 +156,7 @@ it('measures actual card width and space below the real header instead of passin
 
 async function measureFrame(r: ReactTestRenderer, height=556, top=56, inset=14, width=333) {
   await act(async()=>{
-    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height}}});
+    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height,width:viewport.width}}});
     r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board')[0].props.onLayout({nativeEvent:{layout:{y:top}}});
     r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board-inset')[0].props.onLayout({nativeEvent:{layout:{y:inset,width,height:400}}});
   });
@@ -212,6 +211,37 @@ it.each([500,852])('AX5 height %s reveals ported Crab but leaves an unported rea
   await act(async()=>r.unmount());root=undefined;
  }
 });
+// S1a (P2-6): Star Station is a ported measured board, so AX entry reveals it like Crab.
+it.each([500,852])('AX5 height %s reveals the ported Star Station on entry',async height=>{
+ companion.event='waiting'; Object.assign(viewport,{width:393,height,fontScale:3.12});
+ const frames=new Map<number,FrameRequestCallback>();let n=0;
+ vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++n,f);return n;});vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ const r=await mount('space-station');scrolls.length=0;await measureFrame(r,height-93,180,24,333);
+ await act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
+ expect(scrolls).toEqual([196]);expect(scrollOptions.at(-1)).toEqual({y:196,animated:false});
+});
+it('AX5 Star Station: portrait-landscape-portrait keeps the round and reveals once per rotation, with no animation',async()=>{
+ companion.event='waiting'; Object.assign(viewport,{width:393,height:852,fontScale:3.12});
+ const frames=new Map<number,FrameRequestCallback>();let n=0;
+ vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++n,f);return n;});
+ vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ const flush=async()=>act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
+ const r=await mount('space-station');await measureFrame(r);await flush();
+ const round=byType(r,'Board')[0].props.session;
+ scrolls.length=0;scrollOptions.length=0;
+ const rotate=async(width:number,height:number)=>{
+  Object.assign(viewport,{width,height});
+  await act(async()=>r.update(<StoreProvider><Probe id="space-station"/></StoreProvider>));
+  await measureFrame(r,width===393?556:372,width===393?56:247,width===393?14:24,width===393?333:654);
+  await flush();
+ };
+ await rotate(852,393);expect(scrolls).toEqual([263]);
+ await measureFrame(r,372,247,24,654);await flush();expect(scrolls).toEqual([263]);
+ await rotate(393,852);expect(scrolls).toEqual([263,62]);
+ await rotate(852,393);expect(scrolls).toEqual([263,62,263]);
+ expect(byType(r,'Board')[0].props.session).toBe(round);
+ expect(scrollOptions.every(o=>o.animated===false)).toBe(true);
+});
 it('a 499-pt next question retains the short-landscape reveal at default text',async()=>{
  Object.assign(viewport,{width:852,height:499,fontScale:1});
  vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
@@ -230,10 +260,18 @@ it('layout events arriving before the rotation dimensions still provide measured
  expect(byType(r,'Board')[0].props.boardSpace).toMatchObject({width:654,ready:true});
 });
 
-it.each(['food-web','space-station','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
+// Star Station became a measured board in S1a (K6); see the measured case below.
+it.each(['food-web','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
  Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
  vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
  const r=await mount(id);await measureFrame(r,620,180,24,943);
  const board=byType(r,'Board')[0];
  expect(board.props.boardSpace).toBeNull();expect(board.props.width).toBe(812);expect(board.props.fit.width).toBe(812);
+});
+it('space-station is a measured School board after S1a, using the measured inner width',async()=>{
+ Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
+ vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ const r=await mount('space-station');await measureFrame(r,620,180,24,943);
+ const board=byType(r,'Board')[0];
+ expect(board.props.boardSpace).toMatchObject({width:943,ready:true,large:true});expect(board.props.width).toBe(943);expect(board.props.fit.width).toBe(943);
 });

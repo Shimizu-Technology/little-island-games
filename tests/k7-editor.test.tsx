@@ -55,3 +55,17 @@ it('K7 refused edits retain the accepted tree and do not enter undo history', as
   expect(tree!.root.findAllByType('p').map(p => p.children.join('')).join(' ')).toContain('Your plan is kept.');
   const undo = tree!.root.findAllByType('button').find(b => label(b) === 'Undo block edit'); expect(undo?.props.disabled).toBe(true);
 });
+
+it('C1d fix P3-1: overflow advice names only a tool the puzzle offers', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const texts = () => tree!.root.findAllByType('p' as never).map(p => p.children.join(''));
+  for (const [repeat, songs, expected, absent] of [[false, true, 'A song can hold', 'Repeat block'], [true, false, 'A Repeat block can hold', 'A song can hold'], [false, false, 'Your plan is kept.', 'Repeat block']] as const) {
+    function Harness() { const [p, set] = useState<Program>(emptyProgram()); return <ProgramEditor tray={1} repeat={repeat} songs={songs} program={p} cards={[{ code: 1, name: 'Right', icon: <span>→</span> }]} onChange={next => { set(next); return true; }} disabled={false} hear={() => {}} />; }
+    await act(async () => { tree = create(<Harness />); });
+    await press('Add Right block'); await press('Add Right block');
+    const message = texts().find(t => t.startsWith('The tray holds 1 blocks.'));
+    expect(message, `${repeat}/${songs}`).toContain(expected);
+    expect(message).not.toContain(absent);
+    await act(async () => tree!.unmount()); tree = undefined;
+  }
+});

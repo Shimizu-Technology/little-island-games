@@ -5,3 +5,5 @@ export * from "./generate";
 export * from "./deep";
 export * from "./twostep";
 export * from "./wide";
+export * from "./hop";
+export * from "./unknowns";

@@ -13,8 +13,12 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   Scrolling up must still expose Back, sound, Help and the learner switch in their
   existing VoiceOver order. At AX, entry/rotation reveal is limited to the ported
   measured School boards (Crab, Beep, Håfa Adai, Reef Race, Weather, Tide Pool,
-  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure, Canoe Seats) plus Shell Math,
-  which already had an AX entry reveal. Unported and reading boards keep their
+  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure, Star Station
+  since S1a, and Canoe Seats) plus Shell Math, which already had an AX entry reveal. Star Station's
+  port was approved by the lead in the S1a review brief (16 November 2026); a saved
+  version-1 Star Station round keeps its legacy drawing inside a geometry-off
+  provider. Proof: `tests/r0b-frame-largest-text.test.tsx` (Star Station AX entry
+  and rotation cases). Unported and reading boards keep their
   existing entry behavior at **>= 500 pt**. Default text keeps the strict 500-pt threshold.
   Next questions in short landscape retain the revealed board position.
   Rotation preserves the round and triggers at most one reveal per rotation;
@@ -130,6 +134,12 @@ The caps are banks 0–511 and dares 0–4095 (`src/state/challenge.ts`, `src/st
 **Frozen:** `GridShellProps`; the Friendly, Plain and Rewind mistake settings with no mistake cap; number-first entry; nearest-cell hit testing; page scroll held while the grid owns a touch; fill-notes for adults only.
 
 **A slice may add:** a family passing its own `spec`, `borders`, `tints`, `overlay`, `frame`, `cellWords` and `status`, or its own board for a genre that isn't a grid.
+
+**Lead-authorized addition, 16 November 2026 (T1 fix round):** optional `cornerClues` presentation metadata reserves the public caption's area when a cell contains pencil notes. It is shared by the Latin boards and Logic Lagoon. It changes no saved state, rule, hint, gesture arbitration, or budget constant. Plain cells keep their existing note rendering; corner-note text never shrinks below its previous size or 10 pt. A dense corner that cannot fit uses the existing enlarged-grid path. This shared change requires geometry and native regression evidence in T1's fix report and PR review.
+
+**Lead-approved additive prop, 16 November 2026 (T1 F-frame-2 catch-up):** optional `schoolLayout: { height, minimumCell, testID, onLayout }` supplies a measured School drawing allocation. School cells keep a 44-pt plain floor, or 56 pt default / 72 pt AX for cage cells; overflow scrolls instead of shrinking below that floor. Only this opt-in reserves a value band below cage captions. When absent, GridShell's rendering/props, legacy height budget, corner-note logic, gestures and AX behavior stay byte-for-byte unchanged. T1 records baseline layout/prop comparisons for Sudoku, Killer and Cage Math in Challenge and Cove hosts, plus measured School and native evidence. This changes no rule, saved state, legacy budget constant or gesture handler.
+
+**Lead-approved shared rendering fix, 16 November 2026 (T1 round 2):** word-fit the Erase key at every text size, using its erase icon with spoken label “Erase” if the word cannot fit. Draw rule lines above caption backgrounds so the frame and box lines stay intact. These intentional shared visual changes supersede only those parts of the older render-signature baseline; School-absence tests normalize exactly these approved deltas. No gesture, save, rule or budget change.
 
 **Lead change:** props, gesture or scroll arbitration, mistake settings, or the budget constants below.
 

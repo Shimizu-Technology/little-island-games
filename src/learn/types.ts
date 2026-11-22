@@ -96,6 +96,11 @@ export type LearnEngine<S> = {
    * tide got there first), a kind heading for the finish card. The card then skips the win fanfare.
    */
   notWon?: (state: S, options: LearnOptions) => string | null;
+  /**
+   * True when the saved round's own work shows help (a hint, a miss), whatever its help flag says. School credit
+   * consults it so a restored or contradictory flag can never earn independent stars. Never changes the state.
+   */
+  helpedWork?(state: S, options: LearnOptions): boolean;
   /** Whose turn it is in together/versus play, for the scoreboard. */
   turn?: (state: S, options: LearnOptions) => Seat | null;
 };

@@ -15,7 +15,8 @@ export function palmPoses(s: PalmState, a: Arena, reduced: boolean, entry: numbe
     const size = b.boss ? 87 : 58,
       p: ArtPose = position(a, b.x, b.y, size);
     p.identity = `${group}:${b.id}:${b.boss}:${b.caught}`;
-    p.frame = !reduced && !b.caught && !b.diving ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
+    // Beetles stop stepping while a breather holds the formation.
+    p.frame = !reduced && !b.caught && !b.diving && !s.waveWait ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
     // Small, nonblocking entry gesture; never hide a collidable beetle off-screen.
     if (!reduced && palmConfig(s).world !== "learn") {
       p.x += entry * (s.relay % 3 === 0 ? 0 : s.relay % 2 ? -10 : 10) * a.scale;
@@ -30,6 +31,8 @@ export function palmPoses(s: PalmState, a: Arena, reduced: boolean, entry: numbe
           ? Math.atan2(b.diveX, palmConfig(s).diveSpeed) + Math.sin(s.time * 6 + b.id) * 0.07
           : s.direction * 0.035;
     p.scale = b.caught ? 0.85 : 1;
+    // A resting formation dims a little, so the pause shows without reading the label.
+    if (s.waveWait > 0 && !b.caught) p.opacity = (p.opacity ?? 1) * 0.6;
     next[(b.boss ? 15 : 0) + b.id] = p;
     if (b.caught) next[30 + b.id] = { ...position(a, b.x, b.y, 58), angle: p.angle, identity: p.identity };
     if (b.hp > 1 && !b.boss) next[73 + b.id] = { ...position(a, b.x, b.y - 12, 14, 7), identity: p.identity };

@@ -38,6 +38,9 @@ afterEach(async () => { if (root) await act(async () => root.unmount()); vi.rest
 const labels = () => root.root.findAllByType('button').map(b => b.children.filter(c => typeof c === 'string').join(''));
 const text = () => JSON.stringify(root.toJSON());
 const press = async (label: string) => act(async () => { const b = root.root.findAllByType('button').find(b => b.children.join('') === label); expect(b, `${label}: ${text()}`).toBeDefined(); expect(b!.props.disabled).not.toBe(true); await (b!.props.onPress ?? b!.props.onClick)(); });
+/** PuzzleHelp starts its search without awaiting it, and the search may yield between slices: wait for what the child sees
+ * once it settles. Under fake timers, waitFor advances them on each check. */
+const settled = (check: () => void) => vi.waitFor(async () => { await act(async () => {}); check(); }, { timeout: 5000, interval: 20 });
 async function mount(entry: ChallengeEntry, progress = emptyChallenge(), comfort = {}) {
   registerSaveContent(entry.catalog, catalogManifest(entry.catalog));
   const save = migrateProfiles({ ...emptySave(), learning: addLearner(undefined, 'A', 'a') });
@@ -78,7 +81,20 @@ it('F5/F10: one real ladder in the frame; opening it records nothing; immediate 
   expect(labels().filter(l => l === 'Help')).toHaveLength(1);
   await press('Help'); expect((store.save.challenge!.paused[0].payload as Payload).actions).toEqual([]);
   await press('Look'); await press('Think'); await press('One step');
-  expect(text()).not.toContain('Your draft changed'); expect(labels()).toContain('Show me');
+  await settled(() => expect(labels()).toContain('Show me'));
+  expect(text()).not.toContain('Your draft changed');
+  expect((store.save.challenge!.paused[0].payload as Payload).actions.filter(a => (a as LadderAction).type === 'demo')).toHaveLength(1);
+});
+it('F5/F10 with a slow search: One step shows "Finding a hint…" while it yields, then "Show me" and exactly one saved step', async () => {
+  await mount(makeEntry());
+  await press('Help'); await press('Look'); await press('Think');
+  // Every clock read costs 9 ms, past the search's slice budget, so the search yields to a timer as it does under load.
+  vi.useFakeTimers(); let clock = 0; vi.spyOn(performance, 'now').mockImplementation(() => (clock += 9));
+  await press('One step');
+  expect(labels()).toContain('Finding a hint…');
+  await settled(() => expect(labels()).toContain('Show me'));
+  vi.useRealTimers();
+  expect(text()).not.toContain('Your draft changed');
   expect((store.save.challenge!.paused[0].payload as Payload).actions.filter(a => (a as LadderAction).type === 'demo')).toHaveLength(1);
 });
 it('F3: one offer replaces directions, and dismissing it does not reveal another offer in that round', async () => {

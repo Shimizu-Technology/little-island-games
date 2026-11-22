@@ -55,7 +55,7 @@ const ALLOWED: Record<string, string> = {
   "src/learn/BoardSpace.tsx#clock-call#0adef6e9b676": "layout: after a window change, the entry reveal scrolls the board into view once; it never saves or moves a round (int-8 lead review)",
   "src/learn/LearnFrame.tsx#clock-call#0f53e5ac1fcf": "speech: the cheer line plays after a right answer's sound, only if the same feedback is still showing",
   "src/learn/LearnFrame.tsx#clock-call#e3dd1c9ffd2f": "speech: a game's spoken introduction starts a beat after the board opens",
-  "src/learn/Celebrate.tsx#animation-callback#e00a488244ba": "motion: the celebration hides itself once its animation finishes",
+  "src/learn/Celebrate.tsx#animation-callback#8c4523e8b173": "motion: the celebration hides itself once its animation finishes (F-frame-3 fix 1: the same call; the function around it gained an onDone report of which burst ended, which is no clock)",
   "src/islander/Companion.tsx#interval#f282c4bcf6ee": "motion: the companion's idle picture frames; it changes only which picture shows, never the board",
   "src/islander/Companion.tsx#timeout#9a1382a92c37": "motion: the companion settles back to waiting after a reaction",
   "src/components/sheetPresence.ts#timeout#b4135a55719a": "motion: a closed sheet lets go of the shared sheet hold after its slide settles",

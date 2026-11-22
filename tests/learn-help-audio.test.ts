@@ -2,8 +2,8 @@ import {readFileSync,statSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {expect,it} from 'vitest';
 import {engines} from '../src/learn/engines';
-// Owner: lead — Slip Tide help audio and the Shell Math help (scripts/learn/n1a-numbers.json). Remove an entry as soon as audio ships.
-const knownMissing = ['slip-help', 'shell-math-help-v2', 'canoe-help'];
+// Owner: lead — a help line staged for the next audio batch (scripts/learn/*.json) goes here. Remove an entry as soon as audio ships (W5a voiced the last six; canoe-help awaits W5b).
+const knownMissing: string[] = ['canoe-help'];
 /** Inspect the shipped require table without loading native audio assets into Node. */
 it('P2-6 every learning engine helpAudio resolves to a shipped source in both voices',()=>{
  const file=resolve('src/content/neuralAudio.ts'),text=readFileSync(file,'utf8');

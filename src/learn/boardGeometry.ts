@@ -27,6 +27,11 @@ export const SCHOOL_BOARD_MIN = {
   // O2 (lead-approved 16 Nov): legibility first. The canoe never draws a seat picture below 56 pt on a phone;
   // the board passes its own per-rung, per-device floor (64 pt on iPad) as the hook's minimum.
   'canoe-seats': canoeHeight(SEAT_FLOOR_PHONE, 1),
+  // S1a: Star Station's scene labels are sized to the text floor whatever the drawing's height; 120 keeps the
+  // Moon spots, scales and readings clear of each other at AX (tests/s1a-inquiry-board.test.tsx).
+  'space-station': 120,
+  // N1b: the hop line keeps its numbers, flag and frog readable down to this height; Quick Practice's optional number line likewise.
+  'number-hop': 92, 'quick-practice': 64,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 
@@ -41,3 +46,35 @@ export const revealBoardOnEntry = (large: boolean, windowHeight: number) => larg
 /** Entry/rotation AX reveal is scoped to measured boards and Shell's existing path. */
 export const MEASURED_SCHOOL_BOARDS = new Set<string>(Object.keys(SCHOOL_BOARD_MIN).filter(id => id !== 'program-editor'));
 export const schoolEntryReveal = (id: string, large: boolean, height: number) => height < 500 || large && MEASURED_SCHOOL_BOARDS.has(id);
+
+/** The board card: 16-pt page gutters, a 2-pt border, and 12-pt padding on a phone or 22 pt from 600 pt (LearnFrame). */
+export const boardCardPadding = (width: number) => width < 600 ? 12 : 22;
+/** From 768 × 600 the islander stands beside the card. Companion.tsx draws a 168-pt islander, 168 × 80 / 132 wide, 8 pt away. */
+export const companionBeside = (width: number, height: number) => width >= 768 && height >= 600;
+export const COMPANION_COLUMN = 168 * 80 / 132 + 8;
+/** F-frame-3: the card's real content width, which a board is told before (or instead of) measuring it. */
+export function boardCardInner(width: number, left: number, right: number, beside: boolean) {
+  return Math.min(width - left - right, 1280) - 2 * (16 + 2 + boardCardPadding(width)) - (beside ? COMPANION_COLUMN : 0);
+}
+
+/**
+ * F-frame-3 fix 1: a ScrollView layout event reports the native window it was laid out for through its own width, which is
+ * the window less the safe-area sides. Window dimensions and layout events reach JS in either order, so a measured offset
+ * belongs to the current window only when its viewport's width says so; a board never reveals against the previous
+ * window's offsets.
+ */
+export const layoutMatchesWindow = (layoutWidth: number, width: number, left: number, right: number) =>
+  Math.abs(layoutWidth - (width - left - right)) <= 2;
+
+/** A measured box, in the coordinates of the row that holds it. */
+export type Box = { x: number; y: number; width: number; height: number };
+/**
+ * F-frame-3 fix 1: whether a phone's cheer line, drawn over the bottom-right corner of its row, leaves every in-flow box
+ * of that row clear (by `gap` points all round). The line holds no layout space, so when a long mode label or learner
+ * name leaves no clear corner it is not drawn rather than painted over the text. Unmeasured is not clear.
+ */
+export function cheerPillClear(row: Pick<Box, 'width' | 'height'> | null, boxes: (Box | null)[], pill: Pick<Box, 'width' | 'height'> | null, gap = 6) {
+  if (!row || !pill || row.width <= 0 || pill.width <= 0 || pill.width > row.width) return false;
+  const left = row.width - pill.width - gap, top = row.height - pill.height - gap;
+  return boxes.every(b => b !== null && (b.x + b.width <= left || b.y + b.height <= top));
+}

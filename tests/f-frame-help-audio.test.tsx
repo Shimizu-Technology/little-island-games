@@ -19,8 +19,8 @@ const neural = readFileSync('src/content/neuralAudio.ts', 'utf8'), calmAt = neur
 const voices = { warm: keysIn(neural.slice(0, calmAt)), calm: keysIn(neural.slice(calmAt)) };
 const shared = new Set([...keysIn(readFileSync('src/content/audioSources.ts', 'utf8')), ...readdirSync('src/content/learnAudio').flatMap(f => [...keysIn(readFileSync(`src/content/learnAudio/${f}`, 'utf8'))])]);
 const shipped = (key: string, voice: 'warm' | 'calm' = 'warm') => voices[voice].has(key) || shared.has(key);
-// Owner: lead's audio batch (the lines are staged in scripts/learn/f-frame.json and n1a-numbers.json). Remove an entry as soon as it ships.
-const knownMissing = ['slip-help', 'shell-math-help-v2', 'canoe-help'];
+// Owner: lead's audio batch. A help line staged for the next batch goes here; remove it as soon as it ships (W5a voiced the last six; canoe-help awaits W5b).
+const knownMissing: string[] = ['canoe-help'];
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));
@@ -83,10 +83,10 @@ it.each(withHelp)('%s: Help offers "Hear a quick guide" only when its recording 
   expect(sheet.findAll(n => String(n.type) === 'Copy' && textOf(n) === engines[id].help)).toHaveLength(1);
 });
 
-it('Slip Tide: with no slip-help recording yet, the Help sheet has no silent Hear button', async () => {
+it('Slip Tide: its slip-help recording ships in both voices, so the Help sheet offers the Hear button', async () => {
   speech.has = (key, voice) => shipped(key, voice ?? 'warm');
-  expect(shipped('slip-help')).toBe(false);
-  expect(hearIn(await openHelp('slip-tide'))).toHaveLength(0);
+  expect(shipped('slip-help', 'warm') && shipped('slip-help', 'calm')).toBe(true);
+  expect(hearIn(await openHelp('slip-tide'))).toHaveLength(1);
 });
 
 it('the check uses the chosen voice', async () => {

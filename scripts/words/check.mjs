@@ -44,6 +44,17 @@ export function checkExport(root, directory) {
   // A bank can only reach here after full rebake with the operator policy lock.
   return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[],{sourceRoot:root})};
 }
+export function checkIOSExport(root, run=execFileSync) {
+  lockedPolicy();
+  const started=Date.now(),temporary=mkdtempSync(join(tmpdir(),'li-word-ios-scan-'));
+  try {
+    try {run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--no-minify','--output-dir',temporary],{cwd:root,stdio:'pipe',env:{...process.env,CI:'1'},maxBuffer:64*1024*1024});}
+    catch {throw new Error('Native JavaScript export failed');}
+    const files=readdirSync(temporary,{recursive:true});
+    requireThat(files.some(name=>/\.(?:js|bundle)$/.test(name)),'Native platform JavaScript export required');
+    return {...checkExport(root,temporary),runtimeSeconds:(Date.now()-started)/1000};
+  } finally {rmSync(temporary,{recursive:true,force:true});}
+}
 export function checkRelease(root, web, ios, output, run=execFileSync, compile=execFileSync) {
   requireCleanSource(root);
   const {policy,lock}=lockedPolicy();
@@ -105,9 +116,10 @@ if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.
     let result;
     if(mode==='full')result=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
     else if(mode==='export')result=checkExport(root,args[0]??'dist');
+    else if(mode==='ios')result=checkIOSExport(root);
     else if(mode==='release'){requireThat(args.length===3,'release <web-dist> <embedded-ios-directory> <new-private-receipt>');result=checkRelease(root,...args);}
     else if(mode==='receipt'){requireThat(args.length===3,'receipt <private-receipt> <web-dist> <embedded-ios-directory>');result=verifyReleaseReceipt(root,...args);}
-    else throw new Error('Expected full, export, release or receipt');
+    else throw new Error('Expected full, export, ios, release or receipt');
     console.log(JSON.stringify(result));
   }catch(e){console.error(e.message);process.exitCode=1;}
   finally {if(privateDirectory)rmSync(privateDirectory,{recursive:true,force:true});}

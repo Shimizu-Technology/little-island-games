@@ -2,27 +2,56 @@ name: Validate
 on:
   pull_request:
   push:
-    branches: [main, p4/w1-words]
+    branches: [main, program/4.0, p4/w1-words]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history, so the shallow-repository guard passes.
+      - name: Classify changed paths
+        id: paths
+        run: python3 .github/scripts/validate-paths.py
       # The catalog gates compare against what is published at these tips and stop if either is missing.
       - name: Fetch the published refs
+        if: steps.paths.outputs.full == 'true'
         run: git fetch --no-tags origin +refs/heads/program/4.0:refs/remotes/origin/program/4.0 +refs/heads/main:refs/remotes/origin/main
       - uses: actions/setup-node@v7
+        if: steps.paths.outputs.full == 'true'
         with:
           node-version: 22.22.3
           cache: npm
-      - run: npm ci
+      - name: Restore Metro transforms
+        if: steps.paths.outputs.full == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/metro-cache
+          key: metro-${{ runner.os }}-${{ runner.arch }}-node22-v1-${{ hashFiles('package-lock.json', 'app.json', '*config*', '.github/workflows/ci.yml') }}-${{ github.sha }}
+          restore-keys: |
+            metro-${{ runner.os }}-${{ runner.arch }}-node22-v1-${{ hashFiles('package-lock.json', 'app.json', '*config*', '.github/workflows/ci.yml') }}-
+      - run: npm ci --prefer-offline
+        if: steps.paths.outputs.full == 'true'
+      - name: Check CI path filter
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
       - run: npm run check:source
+        if: steps.paths.outputs.full == 'true'
+        env:
+          # Expo's transform store lives in os.tmpdir()/metro-cache.
+          TMPDIR: ${{ runner.temp }}
       - name: Guard the actual web export
+        if: steps.paths.outputs.full == 'true'
         run: npm run check:words:export
         env:
           LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64 }}
       - run: npm run doctor
+        if: steps.paths.outputs.full == 'true'
+      - name: Documentation-only result
+        if: steps.paths.outputs.full == 'false'
+        run: echo 'Only documentation outside validation inputs changed; check passed without the app gate.'
