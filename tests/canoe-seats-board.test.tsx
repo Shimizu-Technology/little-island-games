@@ -14,13 +14,20 @@ vi.mock('react-native-reanimated', () => ({
   withTiming: (v: number) => v, withSpring: (v: number) => v, withSequence: (...v: number[]) => v.at(-1), withRepeat: (v: number) => v,
 }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
-vi.mock('../src/components/Audio', () => ({ hasSpeech: () => false }));
+vi.mock('../src/components/Audio', async () => {
+  const { createContext } = await import('react');
+  return { AudioPreferences: createContext({ sound: false }), hasSpeech: () => false, useSoundControls: () => ({ play: () => false }) };
+});
 vi.mock('../src/components/ui', () => ({ Button: 'Button', Heading: 'Heading', C: { ink: '#000', teal: '#0a0', blue: '#00f', muted: '#888' }, Copy: 'Copy', PressableScale: 'PressableScale' }));
 vi.mock('../src/learn/Coach', () => ({ CoachSpot: 'CoachSpot' }));
 vi.mock('../src/learn/BoardSpace', () => ({ BoardPrimary: 'BoardPrimary', useBoardSpace: () => null, useBoardGeometry: (_id: string, natural: number) => ({ height: natural, measured: false }) }));
 vi.mock('../src/learn/games/canoe-seats/art', () => ({ CLUE_RATIO: 160 / 70, CluePicture: 'CluePicture', Fruit: 'Fruit', Friend: 'Friend', Hat: 'Hat', Hull: 'Hull', ItemArt: 'ItemArt', ink: '#000' }));
 const { CanoeBoard } = await import('../src/learn/games/canoe-seats/board');
 const { SchoolBoard } = await import('../src/learn/games/canoe-seats/schoolBoard');
+const { ChallengeBoard } = await import('../src/learn/games/canoe-seats/challengeBoard');
+const canoeChallenge = await import('../src/learn/games/canoe-seats/challenge');
+const canoeRules = await import('../src/learn/games/canoe-seats/rules');
+const { emptyChallenge } = await import('../src/state/challenge');
 
 const puzzle = { n: 4, attrs: 1, cast: [0, 1, 2, 3], clues: [{ k: 'at' as const, x: 0, s: 0 }, { k: 'next' as const, x: 1, y: 2 }, { k: 'ahead' as const, x: 3, y: 1 }] };
 const big = { n: 5, attrs: 3, cast: [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4], clues: Array.from({ length: 13 }, (_, i) => ({ k: 'next' as const, x: i % 5, y: (i % 5) + 5 })) };
@@ -233,5 +240,154 @@ describe('Canoe Seats help', () => {
     expect(afterReveal).not.toContain('The bird sits in seat 3.');
     expect(afterReveal).not.toContain('Think: the bird cannot sit in seat 1.');
     expect(buttonByText('Help')).toBeDefined();
+  });
+});
+
+describe('ChallengeBoard Check-mode reserve escape', () => {
+  const entry = canoeChallenge.puzzles.find(x => x.ref.bank === 308 && x.ref.puzzle === 14)!;
+  const boardPuzzle = entry.descriptor.puzzle;
+  const answer = canoeRules.answerOf(boardPuzzle)!;
+  const freshState = (): ReturnType<typeof canoeChallenge.canoeStep> extends infer T ? NonNullable<T> : never => ({
+    puzzle: boardPuzzle, lights: false, pos: canoeRules.emptySeating(boardPuzzle), used: 0, stack: [],
+    placements: 0, checks: 0, misses: 0, checked: false, won: false, actions: 0,
+  });
+  const actionsOf = (s: { payload: unknown }) => (s.payload as { actions: number[] }).actions;
+
+  async function mountChallengeHost(initialSession: ReturnType<typeof canoeChallenge.registration.start>) {
+    let current = initialSession;
+    const replay = (s: typeof current) => actionsOf(s).reduce((v, a) => canoeChallenge.canoeStep(v, a)!, freshState());
+    function Host() {
+      const [session, setSession] = React.useState(current);
+      return <ChallengeBoard state={replay(session)} sessionKey={String(session.revision)} active width={337} dispatch={() => {}} onFresh={() => {}}
+        commit={async (action, expected) => {
+          if (expected !== String(current.revision)) return null;
+          const next = canoeChallenge.registration.move(current, action);
+          if (!next) return null;
+          current = next;
+          setSession(next);
+          return { key: String(next.revision), state: replay(next) };
+        }} />;
+    }
+    await act(async () => { root = create(<Host />); });
+    const button = (text: string) => root!.root.findAll(n => String(n.type) === 'Button').find(b => b.children.join('') === text);
+    const press = async (text: string) => {
+      const b = button(text);
+      expect(b, `missing button "${text}"`).toBeDefined();
+      expect(b!.props.disabled, `disabled button "${text}"`).not.toBe(true);
+      await act(async () => {
+        await b!.props.onPress();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    };
+    return { getSession: () => current, getState: () => replay(current), button, press };
+  }
+
+  it('completes a wrong full draft at the 495-action limit through real Help -> Next step -> Check with event helped', async () => {
+    let s = canoeChallenge.registration.start(entry.ref, 'alex', 'r2-full-wrong', emptyChallenge(), { supportOff: false, ownRead: false }, []);
+    let st = freshState();
+    const apply = (a: number) => { s = canoeChallenge.registration.move(s, a)!; st = canoeChallenge.canoeStep(st, a)!; };
+    for (let i = 0; i < 15; i++) apply(i * 8 + ((answer[i] + 1) % boardPuzzle.n) + 1);
+    while (actionsOf(s).length < canoeChallenge.ORDINARY_LIMIT) apply((st.pos[0] === 0 ? 1 : 0) + 1);
+    expect(actionsOf(s).length).toBe(495);
+
+    const host = await mountChallengeHost(s);
+    expect(host.button('Undo')!.props.disabled).toBe(true);
+    expect(host.button('Reset')!.props.disabled).toBe(true);
+
+    await host.press('Help');
+    await host.press('Look');
+    await host.press('Think');
+    await host.press('One step');
+    expect(JSON.stringify(root!.toJSON())).not.toContain('Every box is filled.');
+    await host.press('Show me');
+    expect(host.button('Next step')).toBeDefined();
+
+    let guard = 0;
+    while (host.button('Next step') && guard++ < 20) await host.press('Next step');
+    expect(canoeRules.accepts(boardPuzzle, host.getState().pos)).toBe(true);
+
+    await host.press('Check');
+    expect(host.getSession().result).toMatchObject({ event: 'helped', awards: 0, dares: [] });
+    expect(actionsOf(host.getSession()).length).toBeLessThanOrEqual(512);
+  });
+
+  it('completes a wrong full draft even after a missed Check at 495 actions through real Help -> Next step -> Check', async () => {
+    let s = canoeChallenge.registration.start(entry.ref, 'alex', 'r2-full-missed-first', emptyChallenge(), { supportOff: false, ownRead: false }, []);
+    let st = freshState();
+    const apply = (a: number) => { s = canoeChallenge.registration.move(s, a)!; st = canoeChallenge.canoeStep(st, a)!; };
+    for (let i = 0; i < 15; i++) apply(i * 8 + ((answer[i] + 1) % boardPuzzle.n) + 1);
+    while (actionsOf(s).length < canoeChallenge.ORDINARY_LIMIT) apply((st.pos[0] === 0 ? 1 : 0) + 1);
+
+    const host = await mountChallengeHost(s);
+    await host.press('Check');
+    expect(host.getSession().result).toBeNull();
+    expect(host.getState().misses).toBe(1);
+    expect(host.button('Check')!.props.disabled).toBe(true);
+
+    await host.press('Help');
+    await host.press('Look');
+    await host.press('Think');
+    await host.press('One step');
+    await host.press('Show me');
+    expect(host.button('Next step')).toBeDefined();
+
+    let guard = 0;
+    while (host.button('Next step') && guard++ < 20) await host.press('Next step');
+    expect(canoeRules.accepts(boardPuzzle, host.getState().pos)).toBe(true);
+
+    await host.press('Check');
+    expect(host.getSession().result).toMatchObject({ event: 'helped', awards: 0, dares: [] });
+    expect(actionsOf(host.getSession()).length).toBeLessThanOrEqual(512);
+  });
+
+  it('completes both empty and partial drafts at the 495-action limit through real Help -> Next step -> Check within 512 actions', async () => {
+    for (const seedPartial of [false, true]) {
+      let s = canoeChallenge.registration.start(entry.ref, 'alex', seedPartial ? 'r2-partial' : 'r2-empty', emptyChallenge(), { supportOff: false, ownRead: false }, []);
+      let st = freshState();
+      const apply = (a: number) => { s = canoeChallenge.registration.move(s, a)!; st = canoeChallenge.canoeStep(st, a)!; };
+      if (seedPartial) {
+        for (let i = 0; i < 5; i++) apply(i * 8 + ((answer[i] + 1) % boardPuzzle.n) + 1);
+      }
+      while (actionsOf(s).length < canoeChallenge.ORDINARY_LIMIT) apply(canoeChallenge.USED);
+      expect(actionsOf(s).length).toBe(495);
+
+      const host = await mountChallengeHost(s);
+      await host.press('Help');
+      await host.press('Look');
+      await host.press('Think');
+      await host.press('One step');
+      await host.press('Show me');
+      expect(host.button('Next step')).toBeDefined();
+
+      let guard = 0;
+      while (host.button('Next step') && guard++ < 20) await host.press('Next step');
+      expect(canoeRules.accepts(boardPuzzle, host.getState().pos)).toBe(true);
+
+      await host.press('Check');
+      expect(host.getSession().result).toMatchObject({ event: 'helped', awards: 0, dares: [] });
+      expect(actionsOf(host.getSession()).length).toBeLessThanOrEqual(512);
+      act(() => root!.unmount());
+      root = undefined;
+    }
+  });
+
+  it('preserves normal Check-mode draft and separate-example Help while ordinary actions remain available', async () => {
+    let s = canoeChallenge.registration.start(entry.ref, 'alex', 'r2-normal', emptyChallenge(), { supportOff: false, ownRead: false }, []);
+    let st = freshState();
+    const apply = (a: number) => { s = canoeChallenge.registration.move(s, a)!; st = canoeChallenge.canoeStep(st, a)!; };
+    for (let i = 0; i < 15; i++) apply(i * 8 + ((answer[i] + 1) % boardPuzzle.n) + 1);
+    const draftBefore = [...st.pos];
+
+    const host = await mountChallengeHost(s);
+    await host.press('Help');
+    await host.press('Look');
+    await host.press('Think');
+    await host.press('One step');
+    expect(JSON.stringify(root!.toJSON())).toContain('Every box is filled. Check when you are ready, or choose Show me.');
+    await host.press('Show me');
+    expect(JSON.stringify(root!.toJSON())).toContain('Here is the answer, front to back:');
+    expect(host.button('Next step')).toBeUndefined();
+    expect(host.getState().pos).toEqual(draftBefore);
   });
 });

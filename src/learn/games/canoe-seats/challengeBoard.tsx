@@ -66,20 +66,20 @@ export function ChallengeBoard({ state, dispatch, active, width, sessionKey, com
     }).catch(() => null).finally(() => { waiting.current--; });
     return true;
   }, [active, commit, dispatch, play, state, submit]);
-  const whole = !state.lights;
-  const rules = useMemo(() => canoeHelpRules(state.puzzle, whole), [state.puzzle, whole]);
-  const snapshot = useMemo<HintSnapshot<CanoeView>>(() => ({ key: sessionKey ?? `standalone:${state.actions}`, view: canoeView(state.puzzle, state.pos, whole) }), [sessionKey, state, whole]);
+  const whole = !state.lights, full = ordinaryFull(state), helpWhole = whole && !full;
+  // Once ordinary actions are exhausted, switch Check-mode Help to route-producing mode so the reserved hinted placements can repair any draft for final Check.
+  const rules = useMemo(() => canoeHelpRules(state.puzzle, helpWhole), [state.puzzle, helpWhole]);
+  const snapshot = useMemo<HintSnapshot<CanoeView>>(() => ({ key: sessionKey ?? `standalone:${state.actions}`, view: canoeView(state.puzzle, state.pos, helpWhole) }), [sessionKey, state, helpWhole]);
   const helpCommit = useCallback(async (event: HintCommit<HelpMove>, expected: string): Promise<HintSnapshot<CanoeView> | null> => {
-    const view = (a: Accepted) => ({ key: a.key, view: canoeView(a.state.puzzle, a.state.pos, !a.state.lights) });
-    if (event.kind === 'finish') return live.current.key === expected ? { key: expected, view: canoeView(live.current.state.puzzle, live.current.state.pos, whole) } : null;
+    const view = (a: Accepted) => ({ key: a.key, view: canoeView(a.state.puzzle, a.state.pos, !a.state.lights && !ordinaryFull(a.state)) });
+    if (event.kind === 'finish') return live.current.key === expected ? { key: expected, view: canoeView(live.current.state.puzzle, live.current.state.pos, !live.current.state.lights && !ordinaryFull(live.current.state)) } : null;
     const accepted = await submit(event.kind === 'step' ? hinted(event.action) : HELP, expected);
     return accepted ? view(accepted) : null;
-  }, [submit, whole]);
+  }, [submit]);
   const hear = useCallback((clue: number) => {
     const key = clueKey(state.puzzle, state.puzzle.clues[clue]);
     return !!key && hasSpeech(key) && play(key);
   }, [play, state.puzzle]);
-  const full = ordinaryFull(state);
   // Keyed by puzzle, so nothing picked up or heard carries over to the next one.
   return <CanoeBoard key={puzzleTuple(state.puzzle).join('|')} puzzle={state.puzzle} pos={state.pos} used={state.used} lights={state.lights} won={state.won} missed={state.checked}
     canCheck={whole && !state.won && !state.checked && complete(state.puzzle, state.pos)} active={active} width={width} title="Canoe Seats" hear={hear} cue={cue}
