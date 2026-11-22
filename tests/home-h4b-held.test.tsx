@@ -7,6 +7,7 @@ import {buildScene} from '../src/home/scene/graph';
 import {pickEntity,prepareHits} from '../src/home/runtime/pick';
 import {roomPoint} from '../src/home/scene/types';
 import {labFixtures} from '../src/home/runtime/lab';
+vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'}}));
 vi.mock('react-native',()=>({View:'view'}));
 vi.mock('react-native-svg',()=>Object.fromEntries(['G','Circle','Ellipse','Rect','Path'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
 vi.mock('../src/home/runtime/CharacterDrawing',()=>({CharacterDrawing:()=>null}));

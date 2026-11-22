@@ -1,7 +1,8 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
+import { restFrom, restTransform } from "./restFrom";
 import type { Meal } from "./meal";
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -121,6 +122,13 @@ const RestingEntity = memo(function RestingEntity({
   const finished = React.useCallback(() => {
     if (meal) onMealFinished?.(entity.id, meal.key);
   }, [meal, entity.id, onMealFinished]);
+  const [restState, setRestState] = React.useState<{entity:SceneEntity;from:ReturnType<typeof restFrom>}>({entity,from:undefined});
+  if (restState.entity !== entity) setRestState({entity,from:restFrom(restState.entity,entity)});
+  const from = restState.from;
+  const restClock = useSharedValue(220);
+  React.useLayoutEffect(() => {
+    if (from) { restClock.set(0); restClock.set(withTiming(220, { duration: reduced ? 0 : 220, easing:Easing.linear })); }
+  }, [entity, from, reduced, restClock]);
   const frame = artFrame(entity);
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
@@ -161,6 +169,7 @@ const RestingEntity = memo(function RestingEntity({
     if (dir !== previous) lean.set(withTiming(dir * NOTICE_DEGREES, { duration: 180 }));
   }, [leaner, sleeping, reduced]);
   const style = useAnimatedStyle(() => {
+    const setDown = restTransform(from, restClock.value, reduced);
     const flags = restingFlags.value, motion = restingMotion.value;
     const rest = firstRest(flags, owners);
     const follow = firstFollow(motion, owners);
@@ -177,11 +186,11 @@ const RestingEntity = memo(function RestingEntity({
       transformOrigin: rest ? [rest.gx - frame.left, rest.gy - frame.top, 0]
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
-        { translateX: follow ? follow.dx : 0 },
-        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
+        { translateX: follow ? follow.dx : setDown.dx },
+        { translateY: follow ? follow.dy : setDown.dy + (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
         { rotate: `${follow ? follow.tilt : wobble}deg` },
-        { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
-        { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
+        { scaleX: follow ? follow.sx : setDown.scale * (pressed || landing ? 1.02 : 1) },
+        { scaleY: follow ? follow.sy : setDown.scale * (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
@@ -431,10 +440,43 @@ export function SceneView({
   }, [completeMealHandoff, meals, mealReady]);
   // Use the existing hidden meal stage to prepare a sip while the cup is
   // already being carried. Key zero prepares art without starting playback.
-  const offeredDrink = pickups.map(pickup => pickup && pickup.scene.entities[pickup.id])
-    .find(entity => entity?.body?.edible === "drink" && entity.item && !entity.item.empty)?.item;
+  const offered = pickups.map(pickup => pickup && {pickup, entity:pickup.scene.entities[pickup.id]})
+    .find(value => value?.entity?.body?.edible === "drink" && !value.entity.item?.empty);
+  const offeredId = offered?.entity.id, offeredGeneration = offered?.pickup.generation;
+  const [standbyId, setStandbyId] = React.useState<string>();
+  const standbyKey = `${offeredId}:${offeredGeneration}`;
+  React.useEffect(() => {
+    if (!offeredId) return;
+    // Two callbacks guarantee a presented lift frame before constructing the sip bank.
+    let second: number | undefined;
+    const first = requestAnimationFrame(() => { second = requestAnimationFrame(() => setStandbyId(standbyKey)); });
+    return () => { cancelAnimationFrame(first); if (second !== undefined) cancelAnimationFrame(second); };
+  }, [offeredId, standbyKey]);
+  const offeredEntity = offered?.entity;
+  const initialStandbyOwner = offeredEntity && Object.values(scene.entities)
+    .filter(e => e.character && e.room === offeredEntity.room && !sleeping[e.id])
+    .sort((a,b) => Math.hypot(a.contact.x-offeredEntity.contact.x,a.contact.y-offeredEntity.contact.y) -
+      Math.hypot(b.contact.x-offeredEntity.contact.x,b.contact.y-offeredEntity.contact.y))[0]?.id;
+  const standbyCandidates = useMemo(() => Object.values(scene.entities).filter(e => e.character && !sleeping[e.id])
+    .map(e => ({id:e.id,room:e.room,x:e.contact.x,y:e.contact.y})), [scene,sleeping]);
+  const [approachingOwner, setApproachingOwner] = React.useState<string>();
+  const dragSlots = interaction.slots;
+  useAnimatedReaction(() => {
+    const slot = dragSlots.value.find(s => s.id === offeredId && s.phase === "dragging");
+    if (!slot) return undefined;
+    const room = slot.proposal?.room ?? offeredEntity?.room;
+    const origin = room ? roomOrigin(roomIds.indexOf(room),building) : {x:0,y:0};
+    let closest: string | undefined, distance = Infinity;
+    for (const actor of standbyCandidates) {
+      const d = Math.hypot(actor.x-slot.x+origin.x,actor.y-slot.y+origin.y);
+      if (actor.room === room && d < distance) { closest=actor.id; distance=d; }
+    }
+    return closest;
+  }, (owner,before) => { if(owner !== before) runOnJS(setApproachingOwner)(owner); }, [offeredId,offeredEntity?.room,standbyCandidates,building]);
+  const standbyOwner = approachingOwner ?? initialStandbyOwner;
   const mealStandby = useMemo<Meal | undefined>(() =>
-    offeredDrink && { key: 0, action: "drink", offered: true, food: offeredDrink }, [offeredDrink]);
+    standbyId === standbyKey && offeredEntity?.item ? { key: 0, action: "drink", offered: true, food: offeredEntity.item } : undefined,
+    [standbyId, standbyKey, offeredEntity]);
   // HD-08: lamp shadows change only when the room's contents do.
   // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
   const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {
@@ -505,7 +547,7 @@ export function SceneView({
                 onNode={onNode}
                 action={reactions[entity.id]}
                 meal={meals[entity.id]}
-                mealStandby={entity.character && roomId === state.current ? mealStandby : undefined}
+                mealStandby={entity.id === standbyOwner ? mealStandby : undefined}
                 mealVisible={!mealReady || mealReady[entity.id]===meals[entity.id]?.key}
                 onMealPresented={onMealPresented}
                 onMealFinished={onMealFinished}

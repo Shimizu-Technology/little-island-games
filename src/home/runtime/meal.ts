@@ -2,7 +2,7 @@ import type { Instance } from '../model';
 import type { MealFrame } from '../../islander/rig/character';
 
 /** Art only: the resolver has already committed consumption and its undo. */
-export type Meal = Readonly<{ key: number; source?:string; capture?:Readonly<{generation:number;epoch:number}>; offered?:boolean; food: Instance; action: 'eat' | 'drink' }>;
+export type Meal = Readonly<{ key: number; releaseScale?: number; source?:string; capture?:Readonly<{generation:number;epoch:number}>; offered?:boolean; food: Instance; action: 'eat' | 'drink' }>;
 export const MEAL_MS = 750;
 export const mealTimes = [0, 30, 60, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720] as const;
 export function mealIndex(ms: number): number {

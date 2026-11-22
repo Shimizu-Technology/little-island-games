@@ -15,7 +15,7 @@ import type { Interaction } from '../src/home/runtime/useInteraction';
 
 vi.mock('react-native', () => ({ View: 'view' }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k => [k,k.toLowerCase()]).concat([['default','svg']])));
-vi.mock('react-native-reanimated', () => ({ default: { View: 'animated-view' }, useAnimatedStyle: (fn: any) => fn(), useAnimatedReaction: () => {} }));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'animated-view' }, withTiming:(v:any)=>v, useAnimatedStyle: (fn: any) => fn(), useAnimatedReaction: () => {} }));
 vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: () => <div data-extra-character="true"/>, artFrame: (e: any) => e.bounds }));
 
 const scene = buildScene(labFixtures.delight());
@@ -89,4 +89,10 @@ it('drinking has a sip mouth and both chewing frames keep a content smile', () =
   expect(html).toContain('data-mouth="chew"');
   expect(html).not.toContain('M-6 21q6-2 12 0');
  }
+});
+
+it('an empty juice keeps its fruit identity and warm carton colors',async()=>{
+ const {HandProp}=await import('../src/home/art/PropShape');
+ const html=renderToStaticMarkup(<svg><HandProp id="juice" state={{empty:true}}/></svg>);
+ expect(html).toContain('#E9BF69');expect(html).toContain('#EC9989');expect(html).not.toContain('#E8DDC6');
 });

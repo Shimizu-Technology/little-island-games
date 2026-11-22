@@ -441,10 +441,13 @@ it('applies the anticipation fade only to the idle drawing during a meal', async
  await act(async () => tree.unmount());
 });
 
-it('prepares a full picked-up drink in the resting actor’s hidden stage', async () => {
+it('defers the full picked-up drink past lift and prepares one resting actor', async () => {
+ const frames:FrameRequestCallback[]=[];vi.stubGlobal('requestAnimationFrame',(cb:FrameRequestCallback)=>{frames.push(cb);return frames.length;});vi.stubGlobal('cancelAnimationFrame',()=>{});
  const c = context('');
  c.interaction.slots.value = [emptyDragSlot(), emptyDragSlot()];
  const state = labHome('rig-menu-1');
+ const actor=state.rooms.home.characters[0];
+ state.rooms.home.characters.push({...actor,slot:0,x:(actor.x ?? 6)+4},{...actor,slot:2,x:(actor.x ?? 6)+5});
  const scene = buildScene(state);
  const drink = scene.entities['home/item/menu-4'];
  const pickup = { id: drink.id, slot: 0, scene, generation: 1, epoch: 0 } as Pickup;
@@ -457,6 +460,11 @@ it('prepares a full picked-up drink in the resting actor’s hidden stage', asyn
  await act(async () => { tree = TestRenderer.create(<SceneView {...props} pickups={[pickup]} />); });
  const art = tree.root.findAllByType(EntityArt).find(node => node.props.prepareMeal)!;
  expect(art.props.meal).toBeUndefined();
- expect(art.props.mealStandby).toEqual({ key: 0, action: 'drink', offered: true, food: drink.item });
+ expect(art.props.mealStandby).toBeUndefined();
+ await act(async()=>{frames.shift()!(0);});
+ expect(art.props.mealStandby).toBeUndefined();
+ await act(async()=>{frames.shift()!(16);});
+ expect(tree.root.findAllByType(EntityArt).filter(n=>n.props.mealStandby)).toHaveLength(1);
+ expect(tree.root.findAllByType(EntityArt).find(n=>n.props.mealStandby)!.props.mealStandby).toEqual({ key: 0, action: 'drink', offered: true, food: drink.item });
  await act(async () => tree.unmount());
 });

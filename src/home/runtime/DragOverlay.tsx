@@ -173,7 +173,7 @@ const OverlayGroup = memo(function OverlayGroup({
   });
   return (
     <View testID={`meal-handoff-source-${id}`} pointerEvents="none" style={{position:"absolute",left:0,top:0,right:0,bottom:0,opacity:hidden?0:1}}>
-      {active && <LandingPreview source={root} interaction={interaction}
+      {active && <LandingPreview scene={scene} reduced={reduced} source={root} interaction={interaction}
         building={building} renderCharacter={renderCharacter} />}
       <Animated.View
         testID={`drag-shadow-${id}`}

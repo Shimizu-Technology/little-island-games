@@ -45,7 +45,7 @@ import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { groupIds, restingVisible } from "./runtime/group";
-import { anchorsFor } from "./scene/species";
+import { anchorsFor, species } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
 import { freshHints, nextHintAt, takeHint, touchedHints, type HintState } from "./runtime/quietHints";
@@ -342,7 +342,11 @@ export function HomeScreen({
     setReactions((current) => ({ ...current, [target.owner]: action }));
     const key = ++mealSerial.current;
     setMealReady(current=>{const next={...current};delete next[target.owner];return next;});
-    if (food) setMeals(current => ({ ...current, [target.owner]: { key, source, capture, offered, food: { ...food }, action } }));
+    const drag = runtime.current?.slots.get().find(s => s.id === source);
+    const recipient = live.current.scene.entities[target.owner];
+    const heldWidth = recipient?.character ? 24 * species[recipient.character.slot].unit * (action === 'drink' && recipient.character.slot === 1 ? 1.25 : 1) : 24;
+    const releaseScale = drag?.subject ? drag.subject.bounds.width * 1.08 / heldWidth : 1;
+    if (food) setMeals(current => ({ ...current, [target.owner]: { key, source, capture, offered, releaseScale, food: { ...food }, action } }));
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
     const finish = () => {

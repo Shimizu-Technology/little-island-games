@@ -323,3 +323,37 @@ it('keeps unused custom-renderer food frames as small recipes',async()=>{
  expect(playback.frames.reduce((n:number,f:any)=>n+nodes(f.held),0)).toBeLessThanOrEqual(mealTimes.length*2);
  await act(async()=>tree.unmount());
 });
+
+it('Pip drink standby retains its MealDrawing, Food and held recipe at the first sip',async()=>{
+ const input={slot:1 as const,base:'stand' as const,action:null,face:null,facing:'right' as const,size:170};
+ const standby={key:0,action:'drink' as const,offered:true,food:instance('cup','coconut-drink',0,0)};
+ const render=vi.fn((value:any)=><HomeCharacter input={value}/>);
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<MealArt input={input} meal={standby} reduced={false} renderCharacter={render} visible={false}/>);});
+ const food=tree.root.findByProps({testID:'meal-held-food'}).props.style;
+ const body=tree.root.findAll(n=>typeof n.type==='function' && n.type.name==='MealDrawing')[0];
+ const playback=render.mock.calls.at(-1)![0].mealPlayback;
+ const preparedProps=tree.root.findAllByType(HomeCharacter)[0].props.input;
+ render.mockClear();
+ await act(async()=>tree.update(<MealArt input={{...input,action:'drink'}} meal={{...standby,key:31,food:{...standby.food,empty:true}}} reduced={false} renderCharacter={render}/>));
+ expect(tree.root.findByProps({testID:'meal-held-food'}).props.style).toBe(food);
+ expect(tree.root.findAll(n=>typeof n.type==='function' && n.type.name==='MealDrawing')[0]).toBe(body);
+ expect(render).not.toHaveBeenCalled();
+ expect(tree.root.findAllByType(HomeCharacter)[0].props.input.mealPlayback).toBe(playback);
+ expect(!!preparedProps.held).toBe(!!tree.root.findAllByType(HomeCharacter)[0].props.input.held);
+ expect(tree.root.findAllByProps({'data-meal-food':'coconut-drink'})).toHaveLength(2);
+ await act(async()=>tree.unmount());
+});
+
+it('composites the hover scale across reach and empties a drink only after lowering',async()=>{
+ const input={slot:1 as const,base:'stand' as const,action:null,face:null,facing:'right' as const,size:170};
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<MealArt input={input} meal={{key:44,action:'drink',offered:true,releaseScale:2,food:instance('juice','juice',0,0)}} reduced={false}/>);});
+ const progress=clock.shared;
+ const style=()=>tree.root.findByProps({testID:'meal-held-food'}).props.style[1].evaluate();
+ const after=()=>tree.root.findByProps({testID:'meal-food-1'}).props.style[1].evaluate().opacity;
+ for(const [ms,scale]of [[0,2],[90,1.5],[180,1]]as const){progress.value=44000+ms;expect(style().transform.at(-1).scale).toBe(scale);}
+ for(const ms of [540,600]){progress.value=44000+ms;expect(after()).toBe(0);}
+ progress.value=44660;expect(after()).toBe(1);
+ await act(async()=>tree.unmount());
+});

@@ -735,8 +735,9 @@ export function useInteraction({
         };
         captureSequence.set(Math.max(captureSequence.value, slot.generation));
         slots.set(slots.value.map((s, i) => (i === index ? slot : s)));
-        if (existing < 0 || !visible?.ready)
-          runOnJS(onPickup)({
+        if (onReleaseProbe && effect.type === "pickup") probePending.set([...probePending.value,
+          {at:eventTime(),phase:"pickup",id:entity.id,kind:"pickup"}]);
+        if (existing < 0 || !visible?.ready) runOnJS(onPickup)({
             id: effect.entity,
             slot: index,
             scene: pickupScene(prepared.value, entity),
