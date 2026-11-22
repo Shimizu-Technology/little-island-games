@@ -20,15 +20,15 @@ describe("Shell Song feel curve", () => {
       const ready = hear(b); expect(songStep(ready, { type: "tick" }, 99).phase).toBe("repeat");
       expect(noteDuration({ ...a, helper: true }) - noteDuration(a)).toBe(120);
     }
-    expect(["w1-1", "w3-8", "w6-8"].map(id => songLevel(id as "w1-1").noteMs)).toEqual([650, 418, 318]);
-    expect([0, 1, 2].map(rounds => noteDuration({ ...createSong(songLevel("w1-1"), 1), rounds }))).toEqual([650, 600, 550]);
+    expect(["w1-1", "w3-8", "w6-8"].map(id => songLevel(id as "w1-1").noteMs)).toEqual([620, 404, 282]);
+    expect([0, 1, 2].map(rounds => noteDuration({ ...createSong(songLevel("w1-1"), 1), rounds }))).toEqual([620, 610, 600]);
   });
   it("publishes every onset including repeated shells at fixed-clock precision", () => {
     let s = { ...createSong(songLevel("w3-8"), 1), pattern: [2, 2, 0] };
     const onsets: { at: number; note: number | null }[] = [];
     for (let i = 0; i < 200 && s.phase === "watch"; i++) { const old = s; s = songStep(s, { type: "tick" }, 1 / 60); if (s.onset !== old.onset) { expect(s.event).toBeGreaterThan(old.event); onsets.push({ at: s.elapsed, note: glowingShell(s) }); } }
     expect(onsets.map(o => o.note)).toEqual([2, 2, 0]);
-    onsets.forEach((o, i) => expect(Math.abs(o.at - (450 + i * 418))).toBeLessThanOrEqual(1000 / 60 + .001));
+    onsets.forEach((o, i) => expect(Math.abs(o.at - (450 + i * 404))).toBeLessThanOrEqual(1000 / 60 + .001));
   });
   it("does not reveal arcade answers through show, even with Helper", () => {
     const s = hear(createSong(songLevel("w1-1"), 1, true)); expect(songTransition(s, { type: "show" })).toBe(s);

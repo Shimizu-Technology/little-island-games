@@ -1,4 +1,5 @@
 import { wordEntry } from "../../../learn/kit/reading";
+import { certified } from "./certified";
 import { songWords } from "../shell-song/engine";
 import { configureLives, createLives, hitLives, stepLives, validLives, type Lives } from "../../lives";
 import {
@@ -38,6 +39,10 @@ export type RailLevel = ArcadeLevel & {
   sequence: string[];
   word?: string;
   par: number;
+  /** Scored rounds draw their garden from this certified pool (AR-03); every seed in it has a witness. */
+  seeds: readonly number[];
+  /** 2: the AR-03 continuous step curve and certified pool. Stars and bests from version 1 stay as earned. */
+  rulesVersion: 2;
 };
 /** Open outer ring and two bottom rows remain connected in every authored garden. */
 const garden = (rank: number): Cell[] => {
@@ -89,16 +94,19 @@ const garden = (rank: number): Cell[] => {
                 ];
   return pairs.map(([x, y]) => ({ x, y }));
 };
-/** Seed-120 legal route fixtures, rounded up with 8% route-choice margin. */
-const railPars = [
-  [65, 75, 85, 85, 90, 90, 105, 105],
-  [85, 85, 95, 95, 105, 105, 110, 110],
-  [130, 130, 145, 145, 160, 160, 165, 165],
-  [185, 185, 215, 215, 230, 230, 235, 235],
-  [230, 230, 240, 240, 250, 250, 310, 310],
-  [275, 275, 295, 295, 295, 295, 300, 300],
-  [40, 40, 45, 45, 35, 35, 35, 35],
-];
+/**
+ * AR-03 certified pools and pars, written by `npm run arcade:certify` (scripts/arcade/certify-curves.ts).
+ * Each level keeps eight seeds whose legal 60 Hz witness clears with no bump, Helper off and on. Its par
+ * is the longest of those witnessed routes, rounded up with an 8% route-choice margin.
+ */
+const railCertified = certified.levels;
+/** Worlds 4–6 share one step curve that continues World 3's last step and reaches the old top speed. */
+const RAIL_LATE_START = 0.1235,
+  RAIL_TOP = 0.113;
+export const railAuthoredTick = (rank: number, index: number) =>
+  rank < 3
+    ? [0.24, 0.19, 0.145][rank] - (index - 1) * [0.003, 0.004, 0.003][rank]
+    : Number((RAIL_LATE_START - ((rank - 3) * 8 + index - 1) * ((RAIL_LATE_START - RAIL_TOP) / 23)).toFixed(5));
 export const railLevels: readonly RailLevel[] = allLevelIds.map((id) => {
   const index = levelNumber(id),
     world = worldOf(id),
@@ -113,21 +121,22 @@ export const railLevels: readonly RailLevel[] = allLevelIds.map((id) => {
         )
       : [];
   const target = learn ? sequence.length : [6, 9, 12, 15, 18, 21][rank] + Math.floor((index - 1) / 2);
-  const par = railPars[learn ? 6 : rank][index - 1];
+  const pool = railCertified[id] ?? { seeds: [120], par: 999 },
+    par = pool.par;
   return {
     id,
     index,
     world,
     target,
-    tick: learn
-      ? RAIL_LEARN_MOVE
-      : [0.24, 0.19, 0.145, 0.135, 0.128, 0.12][rank] - (index - 1) * [0.003, 0.004, 0.003, 0.002, 0.0015, 0.001][rank],
+    tick: learn ? RAIL_LEARN_MOVE : railAuthoredTick(rank, index),
     hedges: garden(rank),
     snakeRow: learn ? -1 : rank < 2 ? 1 : 2,
     snakeSpan: 3 + Math.min(3, rank),
     sequence,
     ...(word ? { word } : {}),
     par,
+    seeds: pool.seeds,
+    rulesVersion: 2 as const,
     name: learn
       ? word
         ? `Spell ${word}`
@@ -158,6 +167,9 @@ export const railLevels: readonly RailLevel[] = allLevelIds.map((id) => {
   };
 });
 export const railLevel = (id: LevelId) => railLevels.find((l) => l.id === id)!;
+/** The seed a round plays: a scored level picks from its certified pool, Endless keeps free garden RNG. */
+export const railScoredSeed = (level: RailLevel | "endless", entropy: number) =>
+  level === "endless" ? entropy >>> 0 : level.seeds[(entropy >>> 0) % level.seeds.length];
 export type RailState = {
   level: RailLevel | "endless";
   seed: number;

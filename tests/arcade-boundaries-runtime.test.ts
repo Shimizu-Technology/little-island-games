@@ -45,7 +45,7 @@ describe("AR-00 boundary validator reads runtime curves", () => {
   });
   it("fails an engine change that makes a reviewed easing bigger", () => {
     mutate.palm = true;
-    expect(boundaryIssues(restBeats, buildBoundaryTables())).toContain("Easing larger than reviewed: palm-patrol w1-8 → w2-1 speed 47.7 → 23 eases 51.8%, reviewed up to 3.6%");
+    expect(boundaryIssues(restBeats, buildBoundaryTables())).toContain("Easing larger than reviewed: palm-patrol w1-8 → w2-1 speed 47.7 → 23 eases 51.8%, reviewed up to 4.9%");
   });
   it("fails a spawn cadence eased inside the engine", () => {
     mutate.cargo = true;

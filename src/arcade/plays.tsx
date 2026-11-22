@@ -8,9 +8,9 @@ import { Scenery } from "./games/scrolling/Art";
 import { Rehearsal } from "./games/scrolling/Teaching";
 import { ScrollBoard } from "./games/scrolling/Board";
 import { flightLevel, flightLevels, runLevel, runLevels } from "./games/scrolling/content";
-import { createRail, railLevel, railLevels } from "./games/rail-parade/engine";
+import { createRail, railLevel, railLevels, railScoredSeed } from "./games/rail-parade/engine";
 import { RailBoard } from "./games/rail-parade/View";
-import { createCrab, crabLevel, crabLevels } from "./games/crab-crossing/engine";
+import { createCrab, crabLevel, crabLevels, crabScoredSeed } from "./games/crab-crossing/engine";
 import { CrabBoard } from "./games/crab-crossing/View";
 import { GridBackdrop } from "./games/grid/Art";
 import { GridTeaching } from "./games/grid/Teaching";
@@ -155,7 +155,8 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     Teach: p => <GridTeaching crab={false} learning={p.learning}/>,
     teachingDetail: learning => learning ? "The world waits for your next swipe. Take all the time you need." : "Mama walks on her own. Swipe or tap to turn. Avoid the edge, the parade, and the brown tree snake.",
     learningSkill: level => { const word = railLevel(level.id).word; return { skill: word ? wordEntry(word)!.skill : "num.count-on", config: practice(word ? "reading" : "math") }; },
-    Board: p => <View style={{ flex: 1, paddingHorizontal: 7, paddingBottom: 8 }}><RailBoard initial={createRail(p.level === "endless" ? p.level : railLevel(p.level.id), p.seed, p.helper)} {...p} {...gridSize(p, false)} onResult={result => p.onResult(result, result.stars < 3)}/></View>,
+    // Scored levels play a certified garden from the level's pool (AR-03); Endless keeps free RNG.
+    Board: p => { const level = p.level === "endless" ? p.level : railLevel(p.level.id); return <View style={{ flex: 1, paddingHorizontal: 7, paddingBottom: 8 }}><RailBoard initial={createRail(level, railScoredSeed(level, p.seed), p.helper)} {...p} {...gridSize(p, false)} onResult={result => p.onResult(result, result.stars < 3)}/></View>; },
   },
   "crab-crossing": {
     levels: crabLevels, level: crabLevel,
@@ -166,7 +167,8 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     Teach: p => <GridTeaching crab learning={p.learning}/>,
     teachingDetail: learning => learning ? "The world waits for your next hop. Tap forward or swipe to move. Take all the time you need." : "Tap anywhere to hop forward. Swipe sideways or back. Wait on the sand, look for traffic gaps, and ride the wide logs. The small arrows work too.",
     learningSkill: () => ({ skill: "num.number-line", config: practice("math") }),
-    Board: p => <CrabBoard initial={createCrab(p.level === "endless" ? p.level : crabLevel(p.level.id), p.seed, p.helper)} {...p} size={p.width} wide={p.width > p.height} onResult={result => p.onResult(result, result.stars < 3)}/>,
+    // Scored levels play a certified traffic phase from the level's pool (AR-04); Endless keeps free RNG.
+    Board: p => { const level = p.level === "endless" ? p.level : crabLevel(p.level.id); return <CrabBoard initial={createCrab(level, crabScoredSeed(level, p.seed), p.helper)} {...p} size={p.width} wide={p.width > p.height} onResult={result => p.onResult(result, result.stars < 3)}/>; },
   },
   "palm-patrol": {
     levels: palmLevels, level: palmLevel,

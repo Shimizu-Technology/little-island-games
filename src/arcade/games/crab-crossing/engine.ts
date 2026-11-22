@@ -9,6 +9,7 @@ import {
   type LevelId,
 } from "../../types";
 import { delta, directions, exact, finite, integer, matches, type Direction } from "../grid/rules";
+import { certified } from "./certified";
 export const CRAB_COLS = 9,
   CRAB_ROWS = 11,
   CRAB_HOP = 0.12,
@@ -25,17 +26,23 @@ export type CrabLevel = ArcadeLevel & {
   numbers: number[];
   stones: number[];
   par: number;
+  /** Scored rounds draw their traffic phase from this certified pool (AR-04); every phase in it has a witness. */
+  seeds: readonly number[];
+  /** 2: the AR-04 speed continuity and certified hop budgets. Stars and bests from version 1 stay as earned. */
+  rulesVersion: 2;
 };
-/** Seed-120 moving-lane routes, with 10% room for a different safe landing. */
-const crabPars = [
-  [30, 30, 30, 30, 30, 30, 29, 29],
-  [27, 27, 27, 27, 27, 28, 28, 28],
-  [40, 44, 40, 44, 44, 44, 42, 42],
-  [43, 44, 43, 43, 41, 41, 46, 46],
-  [61, 62, 62, 60, 60, 65, 69, 69],
-  [60, 58, 60, 60, 76, 72, 74, 73],
-  [11, 18, 18, 18, 18, 18, 18, 18],
-];
+/**
+ * AR-04 certified traffic phases and hop budgets, written by `npm run arcade:certify`
+ * (scripts/arcade/certify-curves.ts). Each level keeps eight traffic phases whose legal 60 Hz witness
+ * crosses with no bump, Helper off and on. Its par counts hops only, never waiting: the most hops any
+ * of those witnesses used, with 10% room for a different safe landing.
+ */
+const crabCertified = certified.levels;
+const crabAuthoredSpeed = (rank: number, index: number) => [1, 1.4, 1.8, 2.05, 2.3, 2.5][rank] + (index - 1) * 0.045;
+/** Speed continuity over W1-1 … W6-8: speed[i] = max(authored, previous), so no world starts slower. */
+const crabChainSpeed: number[] = [];
+for (let n = 0; n < 48; n++)
+  crabChainSpeed.push(Number(Math.max(crabAuthoredSpeed(Math.floor(n / 8), (n % 8) + 1), crabChainSpeed[n - 1] ?? 0).toFixed(4)));
 export const crabLevels: readonly CrabLevel[] = allLevelIds.map((id) => {
   const index = levelNumber(id),
     world = worldOf(id),
@@ -45,17 +52,20 @@ export const crabLevels: readonly CrabLevel[] = allLevelIds.map((id) => {
     skip = index >= 6 ? 5 : index >= 3 ? 2 : 1;
   const numbers = learn ? Array.from({ length: 9 }, (_, i) => (backwards ? 9 - i : i + 1) * skip) : [],
     target = learn ? 1 : 2 + Math.floor(rank / 2) + Number(rank === 5 && index >= 5),
-    par = crabPars[learn ? 6 : rank][index - 1];
+    pool = crabCertified[id] ?? { seeds: [120], par: 999 },
+    par = pool.par;
   return {
     id,
     index,
     world,
     rank,
-    speed: [1, 1.4, 1.8, 2.05, 2.3, 2.5][rank] + (index - 1) * 0.045,
+    speed: learn ? crabAuthoredSpeed(0, index) : crabChainSpeed[rank * 8 + index - 1],
     target,
     numbers,
     stones: learn ? Array.from({ length: 9 }, (_, i) => 4 + (index === 1 ? 0 : (Math.floor(i / 2) % 3) - 1)) : [],
     par,
+    seeds: pool.seeds,
+    rulesVersion: 2 as const,
     name: learn
       ? `${backwards ? "Count back" : "Count on"}${skip > 1 ? ` by ${skip}` : ""}`
       : [
@@ -78,6 +88,9 @@ export const crabLevels: readonly CrabLevel[] = allLevelIds.map((id) => {
   };
 });
 export const crabLevel = (id: LevelId) => crabLevels.find((l) => l.id === id)!;
+/** The seed a round plays: a scored level picks a certified traffic phase, Endless keeps free RNG. */
+export const crabScoredSeed = (level: CrabLevel | "endless", entropy: number) =>
+  level === "endless" ? entropy >>> 0 : level.seeds[(entropy >>> 0) % level.seeds.length];
 export type Lane = {
   row: number;
   kind: "bus" | "pickup" | "bike" | "log" | "turtle" | "canoe" | "island";
@@ -144,7 +157,8 @@ export function crabLanes(s: CrabState): Lane[] {
       ? [{ row: 6, kind: "bike" as const, speed: speed * 1.2, span: 0.85, spacing: 4.5, offset: offset + 1 }]
       : []),
     { row: 4, kind: "log", speed: log * reverse, span: 3.5 - Math.min(0.5, l.rank * 0.1), spacing: 4.8, offset: 0 },
-    { row: 3, kind: "turtle", speed: -log * 0.82, span: 3.2, spacing: 4.5, offset: 1 },
+    // Water lanes alternate direction, so a reversed log never drifts alongside the turtles (AR-04).
+    { row: 3, kind: "turtle", speed: -log * 0.82 * reverse, span: 3.2, spacing: 4.5, offset: 1 },
     ...(l.rank > 0
       ? [
           l.rank === 5
@@ -152,7 +166,7 @@ export function crabLanes(s: CrabState): Lane[] {
             : { row: 2, kind: "canoe" as const, speed: log * 0.95 * reverse, span: 3.1, spacing: 4.4, offset: 0 },
         ]
       : []),
-    ...(l.rank > 1 ? [{ row: 1, kind: "canoe" as const, speed: log * 0.9, span: 3.2, spacing: 4.5, offset: 1 }] : []),
+    ...(l.rank > 1 ? [{ row: 1, kind: "canoe" as const, speed: -log * 0.9 * reverse, span: 3.2, spacing: 4.5, offset: 1 }] : []),
   ];
 }
 export function laneObjects(l: Lane, travel: number): number[] {
