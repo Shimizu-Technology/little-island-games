@@ -23,6 +23,7 @@ import type { CharacterAction, Face, SceneEntity } from "../scene/types";
 export type CharacterRender = CharacterRenderer;
 // Prewarm one small meal rig at scene load. It is hidden at rest and never clocks.
 const preparedMeal: Meal = {key:0,action:'eat',offered:true,food:instance('prepared-food','mango',0,0)};
+const preparedDrink: Meal = {key:0,action:'drink',offered:true,food:instance('prepared-drink','coconut-drink',0,0)};
 export const DecorArt = memo(function DecorArt({
   entity,
   layer = "all",
@@ -150,7 +151,17 @@ export const EntityArt = memo(function EntityArt({
           </Animated.View>
         </View>
         <View testID="prepared-meal" pointerEvents="none" collapsable={false} style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal && mealVisible?1:0}}>
-          <MealArt input={input} visible={!meal || mealVisible} meal={meal ?? mealStandby ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
+          {/* Keep both bodies prepared: pickup changes two small food variants,
+              never a whole eating/sipping SVG bank under the finger. */}
+          {(['eat','drink'] as const).map(action => {
+            const active = meal?.action === action;
+            const recipe = active ? meal : mealStandby?.action === action ? mealStandby : action === 'eat' ? preparedMeal : preparedDrink;
+            return <View key={action} testID={`prepared-meal-${action}`} pointerEvents="none"
+              style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:active ? 1 : 0}}>
+              <MealArt input={input} visible={active && mealVisible} meal={recipe} reduced={reduced} renderCharacter={renderCharacter}
+                onPresented={active ? onMealPresented : undefined} onFinished={active ? onMealFinished : undefined}/>
+            </View>;
+          })}
         </View>
       </> : <CharacterDrawing input={input} renderCharacter={renderCharacter}/> }
     </View>

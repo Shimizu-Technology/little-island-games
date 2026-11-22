@@ -66,11 +66,11 @@ it('retains the idle and prewarmed meal bodies when a meal starts and finishes',
  await act(async()=>{tree=create(<EntityArt prepareMeal entity={entity} reduced={false} renderCharacter={renderer}/>);});
  const meal={key:1,action:'eat' as const,food:instance('snack','mango',0,0)};
  await act(async()=>tree.update(<EntityArt prepareMeal entity={entity} meal={meal} reduced={false} renderCharacter={renderer}/>));
- expect({mounts,unmounts}).toEqual({mounts:2,unmounts:0});
+ expect({mounts,unmounts}).toEqual({mounts:3,unmounts:0});
  await act(async()=>tree.update(<EntityArt prepareMeal entity={entity} reduced={false} renderCharacter={renderer}/>));
- expect({mounts,unmounts}).toEqual({mounts:2,unmounts:0});
+ expect({mounts,unmounts}).toEqual({mounts:3,unmounts:0});
  await act(async()=>tree.unmount());
- expect(unmounts).toBe(2);
+ expect(unmounts).toBe(3);
 });
 
 it('changes a single arm or fin path to each authored pose without replacing it',async()=>{
@@ -287,7 +287,7 @@ it('retains the prepared meal body across food identities and idle gaze changes'
   const hero=buildScene(labFixtures[`rig-menu-${slot}`]()).entities[`character/${slot}`];
   const render=(input:Parameters<typeof HomeCharacter>[0]['input'])=><HomeCharacter input={input}/>;let tree!:ReturnType<typeof create>;
   await act(async()=>{tree=create(<EntityArt prepareMeal entity={hero} gaze={{x:0,y:0}} reduced={false} renderCharacter={render}/>);});
-  const body=()=>tree.root.findByType(MealArt).findAll(n=>typeof n.type==='string' && !!n.props['data-rig'])[0].props;
+  const body=()=>tree.root.findByProps({testID:'prepared-meal-eat'}).findByType(MealArt).findAll(n=>typeof n.type==='string' && !!n.props['data-rig'])[0].props;
   const initial=body();
   for(const [i,item]of (['mango','banana','rice-ball','cupcake']as const).entries()){
    const meal={key:i+1,action:'eat' as const,offered:true,food:instance('food',item,0,0)};
@@ -360,5 +360,19 @@ it('composites the hover scale across reach and empties a drink only after lower
  for(const [ms,scale]of [[0,2],[90,1.5],[180,1]]as const){progress.value=44000+ms;expect(style().transform.at(-1).scale).toBe(scale);}
  for(const ms of [540,600]){progress.value=44000+ms;expect(after()).toBe(0);}
  progress.value=44660;expect(after()).toBe(1);
+ await act(async()=>tree.unmount());
+});
+
+it('keeps the sipping body bank prepared across pickup, meal completion and a second drink',async()=>{
+ const hero=buildScene(labFixtures['rig-meal']()).entities['character/0'];
+ const standby={key:0,action:'drink' as const,offered:true,food:instance('cup','coconut-drink',0,0)};
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<EntityArt prepareMeal entity={hero} reduced={false}/>);});
+ const arm=()=>tree.root.findByProps({testID:'prepared-meal-drink'}).findAllByProps({'data-limb':'right-arm'}).find(n=>n.props.animatedProps)!.props.animatedProps;
+ const prepared=arm();
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={hero} mealStandby={standby} reduced={false}/>));expect(arm()).toBe(prepared);
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={{...hero,action:'drink'}} meal={{...standby,key:7}} reduced={false}/>));expect(arm()).toBe(prepared);
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={{...hero,action:'hold'}} reduced={false}/>));expect(arm()).toBe(prepared);
+ await act(async()=>tree.update(<EntityArt prepareMeal entity={{...hero,action:'hold'}} mealStandby={{...standby,food:instance('juice','juice',0,0)}} reduced={false}/>));expect(arm()).toBe(prepared);
  await act(async()=>tree.unmount());
 });
