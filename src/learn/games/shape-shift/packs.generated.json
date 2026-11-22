@@ -1,0 +1,50 @@
+[
+  {
+    "slot": 288,
+    "first": 294912,
+    "count": 50,
+    "packHash": "8a831bf4ba410353eade35710d44f48b5111ac3101d7baf883e1de2806c3f401",
+    "rules": 1,
+    "band": "a"
+  },
+  {
+    "slot": 289,
+    "first": 295936,
+    "count": 50,
+    "packHash": "273e3057f82d53f84c27bf69ad72ef8c10e5d5a78ae2970fef3bc44731798fb0",
+    "rules": 1,
+    "band": "b"
+  },
+  {
+    "slot": 290,
+    "first": 296960,
+    "count": 50,
+    "packHash": "6a895591a0d87fdd29defbda84e5111ac010ba52b3ff6c91816d41ca312982fd",
+    "rules": 1,
+    "band": "c"
+  },
+  {
+    "slot": 291,
+    "first": 297984,
+    "count": 50,
+    "packHash": "1a59b820835c23f45693200dee831e7ad927e5a03c7ec5ec41477b6913634c3f",
+    "rules": 1,
+    "band": "d"
+  },
+  {
+    "slot": 292,
+    "first": 299008,
+    "count": 50,
+    "packHash": "0ab499fda3f9ff1ecfaa5b41f1c0bf54831862017f57af1df9cc53001cac3ed6",
+    "rules": 1,
+    "band": "e"
+  },
+  {
+    "slot": 293,
+    "first": 300032,
+    "count": 50,
+    "packHash": "71a453b43625344835964c98db1925a2bdfaefc353226f72217c64518609fd0a",
+    "rules": 1,
+    "band": "f"
+  }
+]

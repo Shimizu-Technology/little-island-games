@@ -1,83 +1,570 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Platform, View, type ViewStyle } from "react-native";
-import Svg, { Circle, Path } from "react-native-svg";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Platform, View, useWindowDimensions, type ViewStyle } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { C, Copy, PressableScale } from "../../../components/ui";
+import { atLarge } from "../../../components/wordFit";
 import type { BoardProps } from "../../types";
-import { chooseCube, flip, help, normalize, place, rotate, taskAt, type Cell, type ShapeState } from "./engine";
+import {
+  chooseCube,
+  help,
+  place,
+  placedToSolver,
+  removePlaced,
+  setMode,
+  shapeHint,
+  taskAt,
+  transformPiece,
+  type ShapeState,
+} from "./engine";
+import { LegacyBoard } from "./legacy-view";
+import {
+  CubeNetView,
+  PiecePreview,
+  SilhouetteSvg,
+  dropGridCoord,
+  placedPieceAtCell,
+  type PlacedVisual,
+} from "./ShapeCanvas";
+import { atomKey, canPlaceAtoms, translateAtoms } from "./solver";
 
-export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<ShapeState>) {
-  const s = session.state, task = taskAt(s), piece = task.pieces[s.placed.length];
-  const [cells, setCells] = useState<Cell[]>(piece?.cells ?? []), [hint, setHint] = useState(false), [wrong, setWrong] = useState(false), [reveal, setReveal] = useState(false);
-  const boardRef = useRef<View>(null), dragStart = useRef<Cell>([0,0]);
+export function Board(props: BoardProps<ShapeState>) {
+  if (props.session.state.version === 1) {
+    return <LegacyBoard {...(props as BoardProps<Extract<ShapeState, { version: 1 }>>)} />;
+  }
+  return <ShapeBoardV2 {...props} stateV2={props.session.state} />;
+}
+
+function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, active, width }: BoardProps<ShapeState> & { stateV2: Extract<ShapeState, { version: 2 }> }) {
+  const task = taskAt(s);
+  const { fontScale } = useWindowDimensions();
+  const buttonCap = atLarge(fontScale, 1.35);
+
+  const placedIndices = useMemo(() => new Set(s.placed.map((p) => p.pieceIndex)), [s.placed]);
+  const unplaced = useMemo(
+    () => task.pieces.map((_, i) => i).filter((i) => !placedIndices.has(i)),
+    [task.pieces, placedIndices],
+  );
+
+  const [selectedPiece, setSelectedPiece] = useState<number>(unplaced[0] ?? 0);
+  const [reveal, setReveal] = useState<boolean>(false);
+
+  const boardRef = useRef<View>(null);
+  const boardBox = useRef<{ left: number; top: number } | null>(null);
+  const dragStart = useRef<[number, number]>([0, 0]);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => () => { if (revealTimer.current) clearTimeout(revealTimer.current); }, []);
-  const [drag, setDrag] = useState<Cell>([0,0]);
-  const size = Math.max(44, Math.min(49, Math.floor((width - 42) / task.width) - 2));
-  const target = task.pieces.flatMap(p => p.target.map(([x,y]) => `${x},${y}`));
-  const anchorX = piece ? Math.min(...piece.target.map(c => c[0])) : -1, anchorY = piece ? Math.min(...piece.target.map(c => c[1])) : -1;
-  const filled = task.pieces.slice(0, s.placed.length).flatMap(p => p.target.map(([x,y]) => `${x},${y}`));
-  const normalized = cells.length ? normalize(cells) : [], maxX = cells.length ? Math.max(...normalized.map(c => c[0])) : 0, maxY = cells.length ? Math.max(...normalized.map(c => c[1])) : 0;
-  const tryPlace = (x: number, y: number) => {
-    const next = place(s, s.placed.length, cells, x, y), right = next !== s;
+
+  // Reset selection/orientation when switching task or when selected piece gets placed.
+  const activePieceIdx = !task.freeOrder
+    ? s.placed.length
+    : unplaced.includes(selectedPiece)
+      ? selectedPiece
+      : (unplaced[0] ?? 0);
+
+  const taskKey = `${s.index}:${s.mode}`;
+  const pieceKey = `${taskKey}:${activePieceIdx}`;
+  const [pieceUi, setPieceUi] = useState<{
+    key: string;
+    turns: 0 | 1 | 2 | 3;
+    flipped: boolean;
+    wrong: boolean;
+    dragOffset: [number, number];
+    ghost: { x: number; y: number; valid: boolean } | null;
+  }>({ key: "", turns: 0, flipped: false, wrong: false, dragOffset: [0, 0], ghost: null });
+  const [hintKey, setHintKey] = useState<string | null>(null);
+
+  const currentUi = pieceUi.key === pieceKey
+    ? pieceUi
+    : { key: pieceKey, turns: 0 as const, flipped: false, wrong: false, dragOffset: [0, 0] as [number, number], ghost: null };
+  const { turns, flipped, wrong, dragOffset, ghost } = currentUi;
+  const hintOpen = hintKey === taskKey;
+
+  const patchUi = (patch: Partial<Omit<typeof currentUi, "key">>) =>
+    setPieceUi((prev) => ({
+      ...(prev.key === pieceKey
+        ? prev
+        : { key: pieceKey, turns: 0 as const, flipped: false, wrong: false, dragOffset: [0, 0] as [number, number], ghost: null }),
+      ...patch,
+    }));
+  const setTurns = (next: 0 | 1 | 2 | 3) => patchUi({ turns: next });
+  const setFlipped = (next: boolean) => patchUi({ flipped: next });
+  const setWrong = (next: boolean) => patchUi({ wrong: next });
+  const setDragOffset = (next: [number, number]) => patchUi({ dragOffset: next });
+  const setGhost = (next: { x: number; y: number; valid: boolean } | null) => patchUi({ ghost: next });
+  const setHintOpen = (open: boolean) => setHintKey(open ? taskKey : null);
+
+  const piece = task.pieces[activePieceIdx];
+  const currentCells = useMemo(
+    () => (piece ? transformPiece(piece.cells, turns, flipped) : []),
+    [piece, turns, flipped],
+  );
+
+  const step = Math.max(32, Math.min(48, Math.floor((Math.min(width - 36, 420)) / Math.max(task.width, 4))));
+  const silSet = useMemo(() => new Set(task.silhouette.map(atomKey)), [task.silhouette]);
+
+  const placedVisuals: PlacedVisual[] = useMemo(
+    () =>
+      placedToSolver(task, s.placed).map((pl) => ({
+        ...pl,
+        color: task.pieces[pl.pieceIndex].color,
+      })),
+    [task, s.placed],
+  );
+
+  const occupiedSet = useMemo(() => {
+    const occ = new Set<string>();
+    for (const pl of placedVisuals) {
+      for (const a of translateAtoms(pl.cells, pl.x, pl.y)) occ.add(atomKey(a));
+    }
+    return occ;
+  }, [placedVisuals]);
+
+  const hintInfo = useMemo(() => (hintOpen ? shapeHint(s) : null), [hintOpen, s]);
+
+  // Gold corner appears ONLY on L1–L2 (task.showGoldCorner) OR when Help is actively showing a suggestion!
+  const goldCorner = useMemo(() => {
+    if (reveal) return null;
+    if (hintOpen && hintInfo?.suggestion) {
+      return { x: hintInfo.suggestion.x, y: hintInfo.suggestion.y };
+    }
+    if (task.showGoldCorner && piece) {
+      return {
+        x: Math.min(...piece.target.map((a) => a[0])),
+        y: Math.min(...piece.target.map((a) => a[1])),
+      };
+    }
+    return null;
+  }, [reveal, hintOpen, hintInfo, task.showGoldCorner, piece]);
+
+  const modeSwitcher = (
+    <View testID="shape-mode-switch" style={{ flexDirection: "row", gap: 8, alignSelf: "flex-start" }}>
+      {(["poly", "tangram"] as const).map((m) => {
+        const on = s.mode === m;
+        return (
+          <PressableScale
+            key={m}
+            testID={`shape-mode-${m}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: on }}
+            disabled={!active || reveal}
+            onPress={() => update(setMode(s, m))}
+            style={{
+              paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, minHeight: 44, justifyContent: "center",
+              backgroundColor: on ? "#3D6549" : "#E6EFE2",
+              borderWidth: 2, borderColor: on ? "#2B4C35" : "#9BB593",
+            }}
+          >
+            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: on ? "#FFFDF3" : C.ink, fontWeight: "800", fontSize: 14 }}>
+              {m === "poly" ? "Island Shapes" : "Tangrams"}
+            </Copy>
+          </PressableScale>
+        );
+      })}
+    </View>
+  );
+
+  // =========================================================================
+  // Cube Net tasks (Level 5 — opposite face across all 11 nets & which-folds!)
+  // =========================================================================
+  if (task.kind === "cube" && task.cube) {
+    const cube = task.cube;
+    return (
+      <View style={{ gap: 14, paddingVertical: 6 }}>
+        {modeSwitcher}
+        <Copy style={{ color: C.ink, fontSize: 21, fontWeight: "900" }}>{task.title}</Copy>
+        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontWeight: "800" }}>
+          PUZZLE {s.index + 1} OF 4 · {cube.kind === "opposite" ? cube.netName.toUpperCase() : "FOLD CHECK"}
+        </Copy>
+
+        {cube.kind === "opposite" ? (
+          <>
+            <Copy style={{ color: C.ink, fontSize: 17 }}>
+              When this net folds into a cube, which face is opposite <Copy style={{ fontWeight: "900" }}>{cube.faces[cube.askIndex]}</Copy>?
+            </Copy>
+            <CubeNetView cells={cube.cells} faces={cube.faces} highlightIndex={cube.askIndex} cellSize={Math.min(54, Math.floor((width - 64) / 5))} />
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
+              {cube.faces
+                .filter((_, idx) => idx !== cube.askIndex)
+                .map((face) => (
+                  <PressableScale
+                    key={face}
+                    testID={`cube-face-${face}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Cube face ${face}`}
+                    disabled={!active}
+                    onPress={() => {
+                      const next = chooseCube(s, face);
+                      const right = next !== s;
+                      practice("think.spatial", right);
+                      if (right) {
+                        setWrong(false);
+                        setHintOpen(false);
+                        update(next);
+                        cheer(s.index === 3 ? "big" : "right");
+                        coach.done();
+                      } else {
+                        setWrong(true);
+                      }
+                    }}
+                    style={{
+                      width: 54, minHeight: 54, alignItems: "center", justifyContent: "center",
+                      borderRadius: 14, backgroundColor: "#FFF8E8", borderWidth: 2, borderColor: "#8CAD75",
+                    }}
+                  >
+                    <Copy maxFontSizeMultiplier={1.4} style={{ fontSize: 22, fontWeight: "900", color: C.ink }}>{face}</Copy>
+                  </PressableScale>
+                ))}
+            </View>
+          </>
+        ) : (
+          <>
+            <Copy style={{ color: C.ink, fontSize: 17 }}>
+              Only one of these three nets folds into a closed cube without overlapping faces. Tap it!
+            </Copy>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 10 }}>
+              {cube.options.map((opt, idx) => (
+                <PressableScale
+                  key={opt.id}
+                  testID={`cube-fold-opt-${idx}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Net choice ${idx + 1}`}
+                  disabled={!active}
+                  onPress={() => {
+                    const next = chooseCube(s, idx);
+                    const right = next !== s;
+                    practice("think.spatial", right);
+                    if (right) {
+                      setWrong(false);
+                      setHintOpen(false);
+                      update(next);
+                      cheer(s.index === 3 ? "big" : "right");
+                      coach.done();
+                    } else {
+                      setWrong(true);
+                    }
+                  }}
+                  style={{
+                    padding: 10, borderRadius: 18, backgroundColor: "#FFFDF3",
+                    borderWidth: 2, borderColor: "#8CAD75", alignItems: "center", gap: 6,
+                  }}
+                >
+                  <CubeNetView cells={opt.cells} cellSize={24} />
+                  <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: 14 }}>
+                    Net {idx + 1}
+                  </Copy>
+                </PressableScale>
+              ))}
+            </View>
+          </>
+        )}
+
+        {wrong && (
+          <Copy accessibilityLiveRegion="polite" style={{ color: "#9A542E", fontWeight: "800" }}>
+            {cube.kind === "opposite"
+              ? "That face touches the highlighted square. Try picturing the folded cube."
+              : "That net overlaps two faces when folded. Try another one!"}
+          </Copy>
+        )}
+
+        <PressableScale
+          testID="shape-help-button"
+          accessibilityRole="button"
+          accessibilityLabel="Help with cube net"
+          disabled={!active}
+          onPress={() => { assistance?.(); update(help(s)); setHintOpen(true); }}
+          style={{ alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#E8F2DF", borderRadius: 14, minHeight: 46, justifyContent: "center" }}
+        >
+          <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Help</Copy>
+        </PressableScale>
+        {hintOpen && hintInfo && (
+          <View style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+            <Copy accessibilityLiveRegion="polite" style={{ color: C.ink }}>{hintInfo.text}</Copy>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  if (!piece) return null;
+
+  // =========================================================================
+  // Polyomino & Tangram Board (W0-06 true drop-where-dropped + SC-08 + SP-06)
+  // =========================================================================
+  const tryPlaceAt = (x: number, y: number) => {
+    if (!active || reveal) return;
+    const next = place(s, activePieceIdx, currentCells, x, y, { turns, flipped });
+    const right = next !== s;
     practice("think.spatial", right);
     if (right) {
-      setHint(false); setWrong(false);
+      setHintOpen(false);
+      setWrong(false);
       if (next.index > s.index) {
-        setReveal(true); cheer("big");
-        revealTimer.current = setTimeout(() => { setReveal(false); setCells(taskAt(next).pieces[next.placed.length]?.cells ?? []); update(next); coach.done(); }, 820);
-      } else { setCells(taskAt(next).pieces[next.placed.length]?.cells ?? []); update(next); cheer("right"); coach.done(); }
+        setReveal(true);
+        cheer("big");
+        revealTimer.current = setTimeout(() => {
+          setReveal(false);
+          update(next);
+          coach.done();
+        }, 720);
+      } else {
+        update(next);
+        cheer("right");
+        coach.done();
+      }
+    } else {
+      setWrong(true);
     }
-    else setWrong(true);
   };
-  const drop = (pageX: number, pageY: number) => {
-    setDrag([0,0]);
+
+  const handleCellTap = (x: number, y: number) => {
+    if (!active || reveal) return;
+    // Tapping an already-placed piece lifts it back to the tray so the child can rearrange freely!
+    const existing = placedPieceAtCell(placedVisuals, x, y);
+    if (existing !== null && !canPlaceAtoms(silSet, occupiedSet, currentCells, x, y)) {
+      setWrong(false);
+      update(removePlaced(s, existing));
+      setSelectedPiece(existing);
+      return;
+    }
+    tryPlaceAt(x, y);
+  };
+
+  const handleDrop = (pageX: number, pageY: number) => {
+    setDragOffset([0, 0]);
+    setGhost(null);
     boardRef.current?.measureInWindow((left, top) => {
-      const x=Math.floor((pageX-left-10)/(size+2)), y=Math.floor((pageY-top-10)/(size+2));
-      if(piece?.target.some(([a,b])=>a===x&&b===y)) tryPlace(anchorX,anchorY);
-      else setWrong(true);
+      // TRUE DROP-WHERE-DROPPED (W0-06): never snap a wrong drop into the target anchor!
+      const { x, y } = dropGridCoord(pageX, pageY, left, top, step, currentCells);
+      tryPlaceAt(x, y);
     });
   };
-  if (!piece && task.cube) {
-    const faceCells: [number,number][] = [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]];
-    return <View style={{ gap: 14, paddingVertical: 8 }}>
-      <Copy style={{ color: C.ink, fontSize: 21, fontWeight: "900" }}>Fold the cube in your mind</Copy>
-      <Copy style={{ color: C.ink, fontSize: 17 }}>When this net folds, which face is opposite {task.cube.faces[2]}?</Copy>
-      <View style={{ alignSelf: "center", padding: 12, backgroundColor: "#E6EBD7", borderRadius: 20 }}>{Array.from({length:4},(_,y)=><View key={y} style={{flexDirection:"row"}}>{Array.from({length:3},(_,x)=>{const i=faceCells.findIndex(([a,b])=>a===x&&b===y);return <View key={x} style={{width:58,height:58,margin:2,alignItems:"center",justifyContent:"center",backgroundColor:i<0?"transparent":"#B889B9",borderRadius:8,borderWidth:i<0?0:2,borderColor:"#365034"}}><Copy style={{fontSize:25,fontWeight:"900",color:C.ink}}>{i<0?"":task.cube!.faces[i]}</Copy></View>;})}</View>)}</View>
-      <View style={{flexDirection:"row",flexWrap:"wrap",justifyContent:"center",gap:8}}>{task.cube.faces.filter(f=>f!==task.cube!.faces[2]).map(face=><PressableScale key={face} accessibilityRole="button" accessibilityLabel={`Cube face ${face}`} disabled={!active} onPress={()=>{const next=chooseCube(s,face),right=next!==s;practice("think.spatial",right);if(right){update(next);cheer("big");setWrong(false);coach.done();}else setWrong(true);}} style={{width:54,minHeight:54,alignItems:"center",justifyContent:"center",borderRadius:14,backgroundColor:"#FFF8E8",borderWidth:2,borderColor:"#8CAD75"}}><Copy style={{fontSize:23,fontWeight:"900",color:C.ink}}>{face}</Copy></PressableScale>)}</View>
-      {wrong&&<Copy style={{color:"#9A542E",fontWeight:"800"}}>That face touches the middle. Try looking across the folded cube.</Copy>}
-      <PressableScale accessibilityRole="button" accessibilityLabel="Help with cube net" onPress={()=>{assistance?.();update(help(s));setHint(true);}} style={{alignSelf:"flex-start",padding:13,backgroundColor:"#E8F2DF",borderRadius:14}}><Copy style={{color:C.ink,fontWeight:"800"}}>💡 Help</Copy></PressableScale>
-      {hint&&<Copy style={{color:C.ink}}>Follow the net from the middle past the square below it. The opposite face is {task.cube.answer}.</Copy>}
-    </View>;
-  }
-  if (!piece) return null;
-  return <View style={{ gap: 13, paddingVertical: 7 }}>
-    <Copy style={{fontSize: 21, fontWeight: "900", color: C.ink}}>{task.title}</Copy>
-    <Copy style={{fontWeight: "800", color: C.ink}}>{reveal ? `${task.picture.toUpperCase()} COMPLETE!` : `PIECE ${s.placed.length+1} OF ${task.pieces.length} · ${piece.name}`}</Copy>
-    <View ref={boardRef} style={{ alignSelf: "center", backgroundColor: "#E6EBD7", borderRadius: 21, padding: 8, borderWidth: 2, borderColor: reveal ? "#E3B657" : "#B9CEAD" }}>
-      {Array.from({length: task.height}, (_, y) => <View key={y} style={{flexDirection: "row"}}>{Array.from({length: task.width}, (_, x) => { const key=`${x},${y}`, isTarget=target.includes(key), isFilled=isTarget&&(reveal||filled.includes(key)), isAnchor=x===anchorX&&y===anchorY&&!reveal; return <PressableScale key={key} accessibilityRole="button" accessibilityLabel={`Silhouette column ${x+1}, row ${y+1}${isAnchor ? ", placement corner" : isFilled ? ", filled" : isTarget ? ", open" : ""}`} disabled={!active || reveal || isFilled&&!isAnchor} onPress={() => tryPlace(x,y)} style={{width: size,height: size,margin: 1,borderRadius: 7,backgroundColor: isFilled ? task.pieces.find(p => p.target.some(([a,b]) => a===x && b===y))?.color : isAnchor ? "#FFF1C8" : isTarget ? "#FFF9E9" : "#D7E4D1",borderWidth: isAnchor ? 3 : isTarget ? 2 : 0,borderColor: isAnchor ? "#D29E35" : isFilled ? "#365034" : "#779463"}} />; })}</View>)}
-      {reveal && <PictureDetails picture={task.picture} step={size+2} />}
+
+  const handleDragMove = (pageX: number, pageY: number) => {
+    setDragOffset([pageX - dragStart.current[0], pageY - dragStart.current[1]]);
+    if (boardBox.current) {
+      const { x, y } = dropGridCoord(pageX, pageY, boardBox.current.left, boardBox.current.top, step, currentCells);
+      const valid = canPlaceAtoms(silSet, occupiedSet, currentCells, x, y);
+      setGhost({ x, y, valid });
+    }
+  };
+
+  return (
+    <View style={{ gap: 12, paddingVertical: 6 }}>
+      {modeSwitcher}
+      <Copy style={{ fontSize: 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
+      <Copy maxFontSizeMultiplier={1.45} style={{ fontWeight: "800", color: "#365034" }}>
+        {reveal
+          ? `${task.picture.toUpperCase()} COMPLETE!`
+          : `PUZZLE ${s.index + 1} OF 4 · ${s.placed.length}/${task.pieces.length} PLACED · ${piece.name}`}
+      </Copy>
+
+      {/* Interactive Silhouette Board */}
+      <View
+        ref={boardRef}
+        testID="shape-board"
+        style={{
+          alignSelf: "center",
+          backgroundColor: "#E6EBD7",
+          borderRadius: 20,
+          padding: 4,
+          borderWidth: 2,
+          borderColor: reveal ? "#E3B657" : "#B9CEAD",
+        }}
+      >
+        <View style={{ width: task.width * step + 8, height: task.height * step + 8 }}>
+          <SilhouetteSvg
+            width={task.width}
+            height={task.height}
+            step={step}
+            silhouette={task.silhouette}
+            placed={placedVisuals}
+            outlineOnly={task.outlineOnly}
+            goldCorner={goldCorner}
+            ghost={ghost ? { cells: currentCells, x: ghost.x, y: ghost.y, valid: ghost.valid } : null}
+            reveal={reveal}
+          />
+          {/* Accessible cell tap overlay for VoiceOver, tap-to-place, and tap-to-lift */}
+          <View style={{ position: "absolute", left: 4, top: 4, width: task.width * step, height: task.height * step }}>
+            {Array.from({ length: task.height }, (_, y) => (
+              <View key={y} style={{ flexDirection: "row" }}>
+                {Array.from({ length: task.width }, (_, x) => {
+                  const isAnchor = goldCorner?.x === x && goldCorner?.y === y;
+                  const owner = placedPieceAtCell(placedVisuals, x, y);
+                  return (
+                    <PressableScale
+                      key={`${x},${y}`}
+                      testID={`shape-cell-${x}-${y}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Column ${x + 1}, row ${y + 1}${owner !== null ? `, filled by ${task.pieces[owner].name}, tap to lift` : isAnchor ? ", gold corner" : ""}`}
+                      disabled={!active || reveal}
+                      onPress={() => handleCellTap(x, y)}
+                      style={{ width: step, height: step, backgroundColor: "transparent" }}
+                    />
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+
+      {/* Free Piece Tray Selector (Levels 2–5 and Tangrams) */}
+      {task.freeOrder && !reveal && (
+        <View testID="shape-tray" style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+          {unplaced.map((idx) => {
+            const p = task.pieces[idx];
+            const selected = idx === activePieceIdx;
+            return (
+              <PressableScale
+                key={idx}
+                testID={`shape-tray-${idx}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`Select ${p.name}`}
+                disabled={!active}
+                onPress={() => setSelectedPiece(idx)}
+                style={{
+                  padding: 8, minWidth: 56, minHeight: 56, borderRadius: 14,
+                  alignItems: "center", justifyContent: "center",
+                  backgroundColor: selected ? "#FFF1C8" : "#FFFDF3",
+                  borderWidth: selected ? 3 : 1.5,
+                  borderColor: selected ? "#C6861E" : "#9BB593",
+                }}
+              >
+                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? 13 : 16} />
+              </PressableScale>
+            );
+          })}
+        </View>
+      )}
+
+      {/* Draggable Active Piece Stage */}
+      {!reveal && (
+        <View
+          testID="shape-active-piece"
+          accessible
+          accessibilityLabel={`Drag ${piece.name} to the outline`}
+          onStartShouldSetResponder={() => active}
+          onMoveShouldSetResponder={() => active}
+          onResponderTerminationRequest={() => false}
+          onResponderGrant={(e) => {
+            dragStart.current = [e.nativeEvent.pageX, e.nativeEvent.pageY];
+            boardRef.current?.measureInWindow((left, top) => {
+              boardBox.current = { left, top };
+            });
+          }}
+          onResponderMove={(e) => handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY)}
+          onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)}
+          onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }}
+          style={[
+            {
+              alignSelf: "center",
+              padding: 10,
+              backgroundColor: "#FFF9E9",
+              borderRadius: 18,
+              borderWidth: 2,
+              borderColor: piece.color,
+              transform: [{ translateX: dragOffset[0] }, { translateY: dragOffset[1] }],
+              zIndex: 5,
+            },
+            Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : {},
+          ]}
+        >
+          <PiecePreview atoms={currentCells} color={piece.color} cellSize={Math.min(34, step - 4)} />
+        </View>
+      )}
+
+      {/* Controls: Turn, Flip, Undo, Help */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        {task.allowRotate && (
+          <PressableScale
+            testID="shape-turn"
+            accessibilityRole="button"
+            accessibilityLabel="Turn piece clockwise"
+            disabled={!active || reveal}
+            onPress={() => setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3)}
+            style={{ backgroundColor: "#E2EFE2", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
+          >
+            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>↻ Turn</Copy>
+          </PressableScale>
+        )}
+        {task.allowFlip && (
+          <PressableScale
+            testID="shape-flip"
+            accessibilityRole="button"
+            accessibilityLabel="Flip piece"
+            disabled={!active || reveal}
+            onPress={() => setFlipped(!flipped)}
+            style={{ backgroundColor: "#E2EFE2", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
+          >
+            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>⇄ Flip</Copy>
+          </PressableScale>
+        )}
+        {s.placed.length > 0 && (
+          <PressableScale
+            testID="shape-undo"
+            accessibilityRole="button"
+            accessibilityLabel="Undo last placed piece"
+            disabled={!active || reveal}
+            onPress={() => {
+              const last = s.placed[s.placed.length - 1];
+              update(removePlaced(s, last.pieceIndex));
+              setSelectedPiece(last.pieceIndex);
+              setWrong(false);
+            }}
+            style={{ backgroundColor: "#F0ECE0", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
+          >
+            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Undo</Copy>
+          </PressableScale>
+        )}
+        <PressableScale
+          testID="shape-help-button"
+          accessibilityRole="button"
+          accessibilityLabel="Help with this shape"
+          disabled={!active || reveal}
+          onPress={() => {
+            assistance?.();
+            const next = help(s);
+            update(next);
+            setHintOpen(true);
+            if (next.version === 2 && next.hintPiece !== null && task.freeOrder) {
+              setSelectedPiece(next.hintPiece);
+            }
+          }}
+          style={{ backgroundColor: "#E8F2DF", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
+        >
+          <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Help</Copy>
+        </PressableScale>
+      </View>
+
+      <Copy maxFontSizeMultiplier={1.45} style={{ color: C.ink, textAlign: "center", fontSize: 14 }}>
+        {task.showGoldCorner
+          ? "Drag the piece onto the exact spot, or tap the gold corner."
+          : "Drag the piece onto the exact spot, or tap its top-left square. Tap a placed piece to lift it."}
+      </Copy>
+
+      {wrong && (
+        <Copy accessibilityLiveRegion="polite" style={{ color: "#9A542E", fontWeight: "800", textAlign: "center" }}>
+          It did not fit at that spot. Try another square, turn, or flip!
+        </Copy>
+      )}
+
+      {hintOpen && hintInfo && (
+        <View testID="shape-hint-box" style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+          <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 15 }}>{hintInfo.text}</Copy>
+        </View>
+      )}
     </View>
-    {!reveal && <View accessible accessibilityLabel={`Drag the ${piece.name} piece to the silhouette`} onStartShouldSetResponder={() => active} onMoveShouldSetResponder={() => active} onResponderTerminationRequest={() => false} onResponderGrant={e => {dragStart.current=[e.nativeEvent.pageX,e.nativeEvent.pageY];}} onResponderMove={e => setDrag([e.nativeEvent.pageX-dragStart.current[0],e.nativeEvent.pageY-dragStart.current[1]])} onResponderRelease={e => drop(e.nativeEvent.pageX,e.nativeEvent.pageY)} onResponderTerminate={() => setDrag([0,0])} style={[{alignSelf: "center", padding: 10, backgroundColor: "#FFF9E9", borderRadius: 18, borderWidth: 2, borderColor: piece.color, transform:[{translateX:drag[0]},{translateY:drag[1]}], zIndex:2}, Platform.OS === "web" ? ({touchAction:"none"} as unknown as ViewStyle) : {}]}>
-      {Array.from({length: maxY+1}, (_, y) => <View key={y} style={{flexDirection: "row"}}>{Array.from({length: maxX+1}, (_, x) => <View key={x} style={{width: 42,height: 42,margin: 1,borderRadius: 6,backgroundColor: normalized.some(([a,b]) => a===x && b===y) ? piece.color : "transparent"}} />)}</View>)}
-    </View>}
-    <View style={{flexDirection: "row", gap: 9, justifyContent: "center"}}>
-      {s.level >= 2 && <PressableScale accessibilityRole="button" accessibilityLabel="Turn piece clockwise" onPress={() => setCells(normalize(rotate(cells)))} style={{backgroundColor: "#E2EFE2", borderRadius: 14, padding: 14, minHeight: 50}}><Copy style={{color: C.ink,fontWeight: "800"}}>↻ Turn</Copy></PressableScale>}
-      {s.level >= 3 && <PressableScale accessibilityRole="button" accessibilityLabel="Flip piece" onPress={() => setCells(normalize(flip(cells)))} style={{backgroundColor: "#E2EFE2", borderRadius: 14, padding: 14, minHeight: 50}}><Copy style={{color: C.ink,fontWeight: "800"}}>⇄ Flip</Copy></PressableScale>}
-    </View>
-    <Copy style={{color: C.ink, textAlign: "center"}}>Drag the piece to its outline, or tap the gold corner.</Copy>
-    {wrong && <Copy style={{color: "#9A542E",fontWeight: "800"}}>That outline needs a different turn or spot. Try again!</Copy>}
-    <PressableScale accessibilityRole="button" accessibilityLabel="Help with this shape" onPress={() => {assistance?.();update(help(s));setHint(true);}} style={{alignSelf: "flex-start",padding: 13,backgroundColor: "#E8F2DF",borderRadius: 14}}><Copy style={{color: C.ink,fontWeight: "800"}}>💡 Help</Copy></PressableScale>
-    {hint && <Copy style={{color: C.ink}}>{task.hint} Its top-left square is column {Math.min(...piece.target.map(c => c[0]))+1}, row {Math.min(...piece.target.map(c => c[1]))+1}.</Copy>}
-  </View>;
+  );
 }
-function PictureDetails({picture,step}:{picture:string;step:number}) {
-  const x=(n:number)=>n*step;
-  return <Svg width={step*6} height={step*6} style={{position:"absolute",left:8,top:8}} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-    {picture==="Boat"&&<><Path d={`M${x(2.45)} ${x(.25)}V${x(3.9)}`} stroke="#365034" strokeWidth="3"/><Path d={`M${x(1)} ${x(3.9)}Q${x(3)} ${x(4.7)} ${x(5)} ${x(3.9)}`} fill="none" stroke="#FFF7E5" strokeWidth="4"/><Circle cx={x(3)} cy={x(3.6)} r="5" fill="#FFF7E5"/></>}
-    {picture==="House"&&<><Path d={`M${x(2.3)} ${x(4.8)}V${x(3.2)}H${x(3.1)}V${x(4.8)}`} fill="#805E49" stroke="#365034" strokeWidth="2"/><Path d={`M${x(3.5)} ${x(2.8)}H${x(4.2)}V${x(3.5)}H${x(3.5)}Z`} fill="#FFF5D7" stroke="#365034" strokeWidth="2"/></>}
-    {picture==="Fish"&&<><Circle cx={x(4.75)} cy={x(2.25)} r="6" fill="#FFF9E8"/><Circle cx={x(4.75)} cy={x(2.25)} r="2.5" fill="#365034"/><Path d={`M${x(3)} ${x(2.4)}Q${x(3.6)} ${x(2.8)} ${x(3)} ${x(3.2)}`} fill="none" stroke="#FFF9E8" strokeWidth="3"/></>}
-    {picture==="Rocket"&&<><Circle cx={x(3)} cy={x(2.45)} r={x(.33)} fill="#FFF8DF" stroke="#365034" strokeWidth="2"/><Path d={`M${x(2.25)} ${x(5.1)}L${x(2.65)} ${x(5.9)}L${x(3)} ${x(5.2)}L${x(3.35)} ${x(5.9)}L${x(3.75)} ${x(5.1)}`} fill="#EFBF75" stroke="#365034" strokeWidth="2"/></>}
-    {picture==="Cube net"&&<Path d={`M${x(2.5)} ${x(.2)}V${x(3.8)}M${x(1.2)} ${x(1.5)}H${x(3.8)}`} stroke="#FFF8E6" strokeWidth="3" strokeDasharray="6 5"/>}
-  </Svg>;
+
+export function Art({ size }: { size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Path d="M8 61L42 27L42 61Z" fill="#E9916F" stroke="#365034" strokeWidth="3" />
+      <Path d="M46 27L86 27L86 65L46 65Z" fill="#5C9FA0" stroke="#365034" strokeWidth="3" />
+      <Path d="M16 70L86 70L70 88L31 88Z" fill="#D8AE55" stroke="#365034" strokeWidth="3" />
+    </Svg>
+  );
 }
-export function Art({size}:{size:number}) {return <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Path d="M8 61L42 27L42 61Z" fill="#E9916F" stroke="#365034" strokeWidth="3"/><Path d="M46 27L86 27L86 65L46 65Z" fill="#5C9FA0" stroke="#365034" strokeWidth="3"/><Path d="M16 70L86 70L70 88L31 88Z" fill="#D8AE55" stroke="#365034" strokeWidth="3"/></Svg>;}
