@@ -183,8 +183,6 @@ const RestingEntity = memo(function RestingEntity({
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
-  const closed = useAnimatedStyle(() => ({ opacity: !meal && life && lifeBlink(life.value, seed) ? 1 : 0 }));
-
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
   const anticipating = useDerivedValue(() => {
     if (!character || action || entity.action === "eat" || entity.action === "drink") return 0;
@@ -196,6 +194,9 @@ const RestingEntity = memo(function RestingEntity({
   // A lingering native anticipation or blink must never cover the meal layer.
   const idleStyle = useAnimatedStyle(() => ({
     opacity: !meal && life && lifeBlink(life.value, seed) ? 0 : 1 - anticipating.value,
+  }));
+  const closed = useAnimatedStyle(() => ({
+    opacity: !meal && life && lifeBlink(life.value, seed) ? 1 - anticipating.value : 0,
   }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   const mealShowing = !!meal && mealVisible;

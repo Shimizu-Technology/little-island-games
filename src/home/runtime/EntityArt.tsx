@@ -6,7 +6,7 @@ import type { Meal } from "./meal";
 import type { Gaze, CarryGrip } from "../../islander/rig/character";
 import { type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
-import { View, type StyleProp, type ViewStyle } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import Svg, { G } from 'react-native-svg';
 import { HandProp } from '../art/PropShape';
@@ -87,7 +87,7 @@ export const EntityArt = memo(function EntityArt({
   blink?: boolean;
   /** Only the visible resting drawing owns a prewarmed meal stage. */
   prepareMeal?: boolean;
-  idleStyle?: StyleProp<ViewStyle>;
+  idleStyle?: React.ComponentProps<typeof Animated.View>["style"];
   carryGrip?:CarryGrip;
   tilt?: number;
   limbLag?: number;
