@@ -5,14 +5,8 @@ import { HomeScreen } from '../src/home/HomeScreen';
 import { instance, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { roomPoint } from '../src/home/scene/types';
-import { apply, resolve } from '../src/home/scene/proposal';
-import { buildingLayout, roomOrigin } from '../src/home/camera';
-import { roomIds } from '../src/home/catalogMore';
+import { resolve } from '../src/home/scene/proposal';
 import { labFixtures } from '../src/home/runtime/lab';
-import { COOK_MS } from '../src/home/runtime/delight';
-import { stagePieces } from '../src/home/art/Stage';
-import { panFloorPoint } from '../src/home/scene/pan';
-import { floorPoint } from '../src/home/geometry';
 const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
@@ -52,18 +46,9 @@ vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
 beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
-const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
   await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
   return persist;
-}
-/** Commit a resolved drop the way the runtime does after the settle. */
-async function drop(state: HomeStateV2, id: string, room: keyof HomeStateV2['rooms'], at: { x: number; y: number }, options: Record<string, unknown> = {}) {
-  const scene = harness.scene.scene ?? buildScene(state);
-  const proposal = resolve({ ...scene.rooms[room], entities: scene.entities }, scene.entities[id], roomPoint(at.x, at.y), { scale: .5, release: true, ...options });
-  const origin = roomOrigin(roomIds.indexOf(room), building);
-  await act(async () => harness.options.onCommit(0, proposal, { x: proposal.contact.x + origin.x, y: proposal.contact.y + origin.y }, {}));
-  return proposal;
 }
 const tap = async (id: string | undefined, point = { x: 0, y: 0 }) => act(async () => harness.options.onTap(id, point, Date.now()));
 
@@ -75,7 +60,7 @@ describe('H5 storage on the live screen', () => {
     s.rooms.home.characters = [];
     const saves: HomeStateV2[] = [];
     await open(s, next => { saves.push(JSON.parse(JSON.stringify(next))); return true; });
-    await tap('home/item/box');
+    await act(async()=>harness.scene.onSelect('home/item/box'));
     expect(root.root.findAllByProps({testID:'storage-tray'}).length).toBeGreaterThan(0);
     const take = root.root.findAll(n => n.props.accessibilityLabel==='Take out Teddy' && n.type==='Pressable')[0];
     await act(async()=>take.props.onPress());

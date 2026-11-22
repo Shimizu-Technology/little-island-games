@@ -545,6 +545,12 @@ export function HomeScreen({
   }, [building, floorOf, overview, room, viewport]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
+    if (entity?.item && storageCapacity(entity.item.item) && !overview) {
+      live.current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
+      setStorageId(storageOpen(entity.item) ? undefined : id);
+      setSelected(undefined);
+      return;
+    }
     if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
     else setSelected(id);
