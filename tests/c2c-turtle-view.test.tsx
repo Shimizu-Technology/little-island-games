@@ -341,3 +341,26 @@ it('P2-4 and P1-2: a settled right Draw-It shows the drawing and program; Predic
   await act(async () => tree!.update(<ChallengeBoard state={ps} dispatch={vi.fn()} active width={353} />));
   expect(labelled('More help')!.props.disabled).toBe(true);
 });
+
+it('blind review: wide landscape settles beside its program; the cards board shows turns with the picture and the hint below the cards; free Next shape is the quiet button', async () => {
+  viewport.width = 1133; viewport.height = 744;
+  const d = challenge('build') as BuildDescriptor;
+  let s = startState(d);
+  s = challengeEngine.step(challengeEngine.step(s, ['e', programOperations(emptyProgram(), turtleProgram(d.target, deepCodes))], d)!.state, ['g'], d)!.state;
+  await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={1100} />);
+  const settledRow = tree!.root.findAll(n => n.props.style?.flexDirection === 'row' && n.findAllByProps({ testID: 'turtle-program' }).length > 0 && n.findAllByType('svg' as never).length > 0);
+  expect(settledRow.length).toBeGreaterThan(0);
+  await act(async () => tree!.unmount()); tree = undefined;
+  viewport.width = 393; viewport.height = 852;
+  const p = props(roundAt(3));
+  await mount(<Board {...as(p)} />);
+  expect(labelled('Add turn 90 degrees')).toBeDefined();
+  const order = tree!.root.findAll(n => n.type === 'button' || n.props.testID === 'turtle-hint').map(n => n.props.testID ?? n.props.label ?? '').filter(Boolean);
+  expect(order.indexOf('Add turn 120 degrees')).toBeGreaterThan(order.indexOf('Add forward 60'));
+  await press('Hint');
+  const labels = tree!.root.findAll(n => n.type === 'button' || n.props.testID === 'turtle-hint').map(n => n.props.testID ?? n.props.label ?? '');
+  expect(labels.indexOf('turtle-hint')).toBeGreaterThan(labels.indexOf('Add turn 120 degrees'));
+  const free: TurtleState = { ...roundAt(3), free: true, program: [] };
+  await act(async () => tree!.update(<Board {...as(props(free, {}, 'free-1'))} />));
+  expect(labelled('Next shape')!.props.quiet).toBe(true);
+});

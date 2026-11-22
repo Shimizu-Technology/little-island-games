@@ -107,7 +107,7 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   const speech = task.debug ? 'c2c-turtle-fix' : s.level === 4 ? 'c2c-turtle-angles' : null;
   const hear = speech && learnSources[speech] && !free && !won ? <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => sound(speech, true)}>Hear this</Button> : null;
   const runRow = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-    {(won || free) && <Button style={{ flexGrow: 1 }} onPress={next}>{s.done === 3 ? 'Finish!' : 'Next shape'}</Button>}
+    {(won || free) && <Button quiet={free} style={{ flexGrow: 1 }} onPress={next}>{s.done === 3 ? 'Finish!' : 'Next shape'}</Button>}
     {won && <Button quiet onPress={() => { const { blockDraft: _, ...legacy } = s; update({ ...legacy, free: true, program: [], cursor: 0 }); setMessage('Free draw: add any blocks!'); }}>Free draw</Button>}
     {(!won || free) && <>
       <Button style={{ flexGrow: 1 }} maxFontSizeMultiplier={1.5} disabled={controlsOff || !s.program.length} onPress={run}>Draw ▶</Button>
@@ -158,8 +158,9 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
     onStep={!s.program.length ? undefined : () => { if (s.cursor >= steps) return; update({ ...advance({ ...s, running: true }), running: false }); if (s.cursor + 1 >= steps) finish(s); else sound('tap', true); }}
     onRestart={() => update({ ...s, cursor: 0, running: false })} />;
 
-  const cardsPrimary = <>{status}{runRow}{hintPanel}{!won && palette('forward')}</>;
-  const cardsRest = <>{!won && <>{palette('turn')}{s.level >= 2 && palette('pen')}{s.level >= 3 && <><Copy maxFontSizeMultiplier={1.5}>↻ ×2 = [↑ ↻] + [↑ ↻] · two whole-body runs</Copy>{palette('wrap')}</>}</>}{programList}{editor}</>;
+  // Forwards and turns sit with the picture; the hint reads just below them, so the card it names is on screen.
+  const cardsPrimary = <>{status}{runRow}{!won && <>{palette('forward')}{palette('turn')}</>}{hintPanel}</>;
+  const cardsRest = <>{!won && <>{s.level >= 2 && palette('pen')}{s.level >= 3 && <><Copy maxFontSizeMultiplier={1.5}>↻ ×2 = [↑ ↻] + [↑ ↻] · two whole-body runs</Copy>{palette('wrap')}</>}</>}{programList}{editor}</>;
   const primary = blocks ? <>{status}{runRow}{hintPanel}{editorBlock}</> : wide ? <>{cardsPrimary}{cardsRest}</> : cardsPrimary;
   const toggle = task.blockEditor === true && !free && s.done < 4 && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => setBlocks(b => !b)}>{blocks ? 'Drawing cards' : 'Block editor'}</Button>;
   const heading = s.done === 4 ? 'Turtle artist!' : `Drawing ${s.done + 1} of 4 · ${free ? 'Free draw' : goalWords(s.level, task.debug)}`;

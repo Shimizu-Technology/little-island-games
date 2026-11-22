@@ -60,12 +60,19 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
   const canvas = <SandCanvas width={side} goal={d.kind === 'build' || s.won ? goal : []} traced={shownLines} point={point} labels={d.kind === 'build'} label={d.kind === 'build' ? `Sand canvas with the faint picture to draw. ${shownLines.length} lines drawn.` : s.won ? `The program drew ${shownLines.length} of ${lines.length} lines.` : 'Sand canvas. The picture appears here after you check.'} />;
   // Nothing is drawn until the check, so the pictures take the room the empty sand would.
   const showCanvas = d.kind === 'build' || s.won || running;
-  const body = d.kind === 'build' ? <BuildControls compact={!sideBySide && win.width < 500} room={editorRoom(win.height, sideBySide)} s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
+  const body = d.kind === 'build' ? <BuildControls sideBySide={sideBySide} compact={!sideBySide && win.width < 500} room={editorRoom(win.height, sideBySide)} s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
     : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide && showCanvas ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
   // Once settled, a right prediction keeps its drawing and program and leaves the room below for what comes next.
-  if (!pinned && d.kind === 'predict' && s.won) return <View style={{ gap: 10 }}><View style={{ alignItems: 'center' }}>{canvas}</View><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>Yes! That is the picture.</Copy><ProgramList blocks={d.program} label="The program" testID="turtle-program" compact={large} /></View>;
   // Settled and right: keep the drawing and the program, and leave the room below for what comes next.
-  if (!pinned && d.kind === 'build' && s.won) return <View style={{ gap: 10 }}><View style={{ alignItems: 'center' }}>{canvas}</View><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>You drew it!</Copy><ProgramList blocks={s.program} label="Your blocks" testID="turtle-program" compact={large} /></View>;
+  const settled = (message: string, blocks: Block[], label: string) => {
+    const words = <View style={{ gap: 10, flex: 1, minWidth: 0 }}><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>{message}</Copy><ProgramList blocks={blocks} label={label} testID="turtle-program" compact={large} /></View>;
+    // Wide and landscape: the drawing sits beside its program, so the result and what comes next stay on the screen.
+    return win.width > win.height && width >= 720
+      ? <View style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}><View style={{ width: Math.min(side, 300) }}>{canvas}</View>{words}</View>
+      : <View style={{ gap: 10 }}><View style={{ alignItems: 'center' }}>{canvas}</View>{words}</View>;
+  };
+  if (!pinned && d.kind === 'build' && s.won) return settled('You drew it!', s.program, 'Your blocks');
+  if (!pinned && d.kind === 'predict' && s.won) return settled('Yes! That is the picture.', d.program, 'The program');
   if (!pinned) return <View style={{ gap: 10 }}>{showCanvas && <View style={{ alignItems: 'center' }}>{canvas}</View>}{body}</View>;
   const stack = <ScrollView style={{ flex: 1, minHeight: 0 }} contentContainerStyle={{ gap: 10, paddingBottom: 12 }} accessibilityLabel="Turtle program and help">{header}{body}{footer}</ScrollView>;
   return sideBySide && showCanvas
@@ -76,7 +83,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
 /** Height for the block editor. Beside the canvas it has the whole column; stacked under it, most of the screen. */
 export const editorRoom = (windowHeight: number, sideBySide: boolean) => Math.min(640, Math.max(420, sideBySide ? windowHeight - 190 : Math.round(windowHeight * 0.7)));
 type Play = (key: string, automatic?: boolean) => unknown;
-function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, play, hear, room, compact }: { room: number; compact: boolean; s: State; d: BuildDescriptor; active: boolean; running: boolean; dispatch: (a: Action) => void; commit: ChallengeViewProps<State, Action>['commit']; sessionKey?: string; play: Play; hear: React.ReactNode }) {
+function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, play, hear, room, compact, sideBySide }: { room: number; compact: boolean; sideBySide: boolean; s: State; d: BuildDescriptor; active: boolean; running: boolean; dispatch: (a: Action) => void; commit: ChallengeViewProps<State, Action>['commit']; sessionKey?: string; play: Play; hear: React.ReactNode }) {
   // The editor keeps its place, undo history and scroll across edits. Only an explicit Reset plan starts it afresh; the round itself is keyed by the frame.
   const [resets, setResets] = useState(0);
   const program = s.draft ? decodeProgram(s.draft, code => code < deepCodes.length) : null;
@@ -95,7 +102,7 @@ function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, pl
       <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{hint.text}</Copy>
       {hint.reveal && <ProgramList blocks={hint.reveal} label="One way to draw the picture" testID="turtle-reveal" />}
     </View>}
-    <ProgramEditor key={`plan-${resets}`} program={current} songs={false} tray={d.tray} maxHeight={room} planHeight={compact ? 100 : undefined} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
+    <ProgramEditor key={`plan-${resets}`} program={current} songs={false} tray={d.tray} maxHeight={room} planHeight={compact ? 100 : sideBySide ? 170 : room >= 560 ? 220 : undefined} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
       cards={deepCards.map(([block, code]) => ({ code, name: blockLabel(block), icon: <Copy maxFontSizeMultiplier={1.3}>{block.kind === 'forward' ? '↑' : block.kind === 'turn' ? '↻' : block.kind === 'grow' ? '＋' : '●'}</Copy>, speech: `k7-turtle-${code}` }))}
       onChange={async next => !!commit && !!sessionKey && !!(await commit(['e', programOperations(current, next)], sessionKey))} />
   </View>;
