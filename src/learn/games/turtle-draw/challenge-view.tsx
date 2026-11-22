@@ -54,9 +54,10 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
   const side = Math.max(120, Math.min(width, sideBySide ? Math.min(width * 0.46, (win.height - 150) / ASPECT) : large ? 210 : 300));
   const point = shownLines.at(-1)?.to ?? d.origin;
   const rules = RULES[d.kind], hearRules = prefs.sound !== false && learnSources[rules] ? <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => play(rules, true)}>Hear rules</Button> : null;
+  const hearGrow = prefs.sound !== false && d.step === 3 && learnSources['c2c-turtle-grow'] ? <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => play('c2c-turtle-grow', true)}>Hear Grow</Button> : null;
   const canvas = <SandCanvas width={side} goal={d.kind === 'build' || s.won ? goal : []} traced={shownLines} point={point} labels={d.kind === 'build'} label={d.kind === 'build' ? `Sand canvas with the faint picture to draw. ${shownLines.length} lines drawn.` : s.won ? `The program drew ${shownLines.length} of ${lines.length} lines.` : 'Sand canvas. The picture appears here after you check.'} />;
-  const body = d.kind === 'build' ? <BuildControls s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={hearRules} />
-    : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide ? width - side - 12 : width} large={large} hear={hearRules} />;
+  const body = d.kind === 'build' ? <BuildControls s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
+    : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
   if (!pinned) return <View style={{ gap: 10 }}>{canvas}{body}</View>;
   const stack = <ScrollView style={{ flex: 1, minHeight: 0 }} contentContainerStyle={{ gap: 10, paddingBottom: 12 }} accessibilityLabel="Turtle program and help">{header}{body}{footer}</ScrollView>;
   return sideBySide

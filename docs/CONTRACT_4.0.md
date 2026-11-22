@@ -13,8 +13,8 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   Scrolling up must still expose Back, sound, Help and the learner switch in their
   existing VoiceOver order. At AX, entry/rotation reveal is limited to the ported
   measured School boards (Crab, Beep, Håfa Adai, Reef Race, Weather, Tide Pool,
-  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure, and Star Station
-  since S1a) plus Shell Math, which already had an AX entry reveal. Star Station's
+  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure, Star Station
+  since S1a, and Turtle Draw since C2c) plus Shell Math, which already had an AX entry reveal. Star Station's
   port was approved by the lead in the S1a review brief (16 November 2026); a saved
   version-1 Star Station round keeps its legacy drawing inside a geometry-off
   provider. Proof: `tests/r0b-frame-largest-text.test.tsx` (Star Station AX entry
@@ -45,6 +45,20 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   whole save after a School draft is stored; originals
   remain preserved by recovery. This includes drafts in existing games.
   Integration must re-gate the affected adapters; SC-01b/c and SC-03 new content remain separate work.
+- **22 November 2026 — C2c Turtle Draw (W0-03, SC-03, BK-22), additions inside the frozen shapes:**
+  Turtle Draw joins the measured School boards (F-frame-2 list above): the drawing
+  reports its height through `useBoardGeometry('turtle-draw', …)` (floor 200 pt), the
+  K7 editor opts into School geometry on Levels 4–5, and saved version-1 rounds keep
+  their legacy drawing inside a geometry-off provider, as Star Station's did. Entry and
+  rotation reveal at AX applies to Turtle Draw. Fresh rounds are School state version 2
+  (template numbers, recursive block cost); version 1 is untouched. K7 is unchanged:
+  Deep Water appends Turtle command codes 12–17 (Forward 40 and 50, turns 40°, 72° and
+  144°, Grow +10) that only the Deep Water reader accepts, and `ProgramEditor` takes an
+  optional `counts` prop whose default is today's `[2, 3, 4, 6, 8]`. One Challenge
+  registration (`turtle-draw`, codec `turtle-proof-v1`, context `turtle`) with banks
+  **220–229** and dares **400–429** from the reserved ranges; no new envelope field,
+  class, budget, dare rule, metric or path. Details and proofs: `docs/TURTLE_DEPTH.md`,
+  `tests/c2c-turtle-*.test.ts*`.
 - **15 November 2026 — reserved-slot claims below the high-water mark (lead, `lead/slot-claims`):**
   `root.json`'s `nextSlot` and `nextOrdinal` stay monotonic high-water marks and
   `assertRootAppendOnly` is unchanged. A bake may now claim explicit slots below them,

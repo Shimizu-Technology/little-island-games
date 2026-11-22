@@ -171,7 +171,7 @@ Sixteen games define their own Level 1–5 mechanics (`ownLevels: true`). The sh
 | Thinking | Shape Shift | 4–13 | Big pieces → Turn it → Flip the fish → Mirror island → Fold the net |
 | Thinking | Logic Lagoon | 6–14 | Two friends → Picture grid → Little sudoku → Bigger lagoon → Cages and clues |
 | Coding | Beep Bot | 4–6 | One little path → Around the corner → Find a way → Fix the arrow → Again and again |
-| Coding | Turtle Draw | 6–11 | Lines in sand → Four sides → Loop a shape → Angles and flowers → Tiny clever programs |
+| Coding | Turtle Draw | 6–11 | Lines in sand → Four sides → Loop a shape → Angles → Flowers and fixes |
 | Coding | Tide Logic | 7–12 | Colour gates → Big or small → Two clues → Bell and counter → Trace the rule |
 | Coding | Code Lab | 9–14 | Say and step → Scores and loops → Make a function → Find the bug → Tiny programs |
 

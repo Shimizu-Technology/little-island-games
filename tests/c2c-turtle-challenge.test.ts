@@ -238,24 +238,26 @@ describe('predict the picture: the engine, the replay and the dumb player', () =
       expect(ruleOut(s, dd)).not.toBe(dd.answer);
     }
   });
-  it('the dumb player (reads every Repeat as "once") is wrong on every top rung, and no rung is solved by position alone', () => {
-    const skim = (dd: PredictDescriptor) => { const once = draw(misreads.once(dd.program), dd.origin)!; return dd.choices.findIndex(c => samePicture(draw(c, dd.origin)!, once)); };
+  it('the dumb player (reads every Repeat as "once", else takes the first picture) is wrong on every top rung and cannot beat the low rungs by position', () => {
+    const skim = (dd: PredictDescriptor) => { const once = draw(misreads.once(dd.program), dd.origin)!; const hit = dd.choices.findIndex(c => samePicture(draw(c, dd.origin)!, once)); return hit >= 0 ? hit : 0; };
     for (const q of predicts) {
-      const dd = q.descriptor as PredictDescriptor, pick = skim(dd);
-      if (q.tier >= 5) { expect(pick, q.title).toBeGreaterThanOrEqual(0); expect(pick, q.title).not.toBe(dd.answer); }
+      const dd = q.descriptor as PredictDescriptor;
+      if (q.tier >= 5) { expect(dd.kinds.includes('once'), q.title).toBe(true); expect(skim(dd), q.title).not.toBe(dd.answer); }
     }
     const rate = (tiers: number[]) => { const rows = predicts.filter(q => tiers.includes(q.tier)); return rows.filter(q => skim(q.descriptor as PredictDescriptor) === (q.descriptor as PredictDescriptor).answer).length / rows.length; };
     expect(rate([5, 6])).toBe(0);
-    expect(rate([1, 2, 3, 4])).toBeLessThan(0.5);
+    // Without the skim to lean on it can only guess the first picture, and the answer sits there a quarter of the time.
+    expect(rate([1, 2, 3, 4])).toBeGreaterThan(0.1); expect(rate([1, 2, 3, 4])).toBeLessThanOrEqual(0.35);
+    for (let slot = 0; slot < 4; slot++) expect(predicts.filter(q => (q.descriptor as PredictDescriptor).answer === slot).length).toBe(predicts.length / 4);
   });
 });
 
 describe('the dumb player cannot draw it either', () => {
-  it('a flat plan with no Repeat never fits any Deep Water tray, and at the top the tray is a third of the flat plan or less', () => {
+  it('a flat plan with no Repeat never fits any Deep Water tray: at least 1.8× it everywhere and 2.25× at the top rungs', () => {
     for (const q of builds) {
       const dd = q.descriptor as BuildDescriptor;
-      expect(flatCost(dd.target), q.title).toBeGreaterThan(dd.tray);
-      if (q.tier >= 5) expect(dd.tray * 2, q.title).toBeLessThanOrEqual(flatCost(dd.target) + 2);
+      expect(flatCost(dd.target) / dd.tray, q.title).toBeGreaterThanOrEqual(1.8);
+      if (q.tier >= 5) expect(flatCost(dd.target) / dd.tray, q.title).toBeGreaterThanOrEqual(2.25);
     }
   });
 });

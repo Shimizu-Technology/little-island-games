@@ -58,10 +58,11 @@ const FAMILIES: Family[][] = [
     { name: 'nine-zig', quota: 6, pool: [...pairs(SMALL, 9, 40, 120), ...pairs(SMALL, 9, 120, 40)] },
   ],
   [
-    { name: 'growing-triangles', quota: 6, pool: growing(3, false) },
-    { name: 'growing-squares', quota: 6, pool: growing(4, false) },
-    { name: 'growing-hexagons', quota: 6, pool: growing(6, false) },
-    { name: 'grow-first', quota: 6, pool: [...growing(3, true), ...growing(4, true), ...growing(6, true)] },
+    { name: 'growing-triangles', quota: 5, pool: growing(3, false) },
+    { name: 'growing-squares', quota: 5, pool: growing(4, false) },
+    { name: 'growing-hexagons', quota: 5, pool: growing(6, false) },
+    { name: 'growing-rectangles', quota: 5, pool: outerTurns.flatMap(outer => [[40, 50], [40, 60], [50, 60], [40, 70]].map(([a, b]) => [r(outer, r(2, f(a), t(90), f(b), t(90)), t(360 / outer), g)])) },
+    { name: 'grow-first', quota: 4, pool: [...growing(3, true), ...growing(4, true), ...growing(6, true)] },
   ],
   [
     { name: 'star-growth', quota: 5, pool: [3, 4, 6].flatMap(inner => [40, 50, 60].flatMap(a => rosette(5, inner, [a], [g], false, 144).slice(0, 1))) },

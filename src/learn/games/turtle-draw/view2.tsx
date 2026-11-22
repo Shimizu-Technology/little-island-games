@@ -18,6 +18,7 @@ import { blockLabel } from './labels';
 import { programCodes, readTurtleDraft, turtleBlocks, turtleProgram } from './program';
 import { ASPECT, SandCanvas } from './SandCanvas';
 import { templateWinners } from './templates';
+import { learnSources } from '../../../content/learnAudio';
 
 /** Free drawing keeps the original shared limits: 20 blocks on the top level and the 120-line cap. */
 export const FREE_BLOCKS = 20;
@@ -95,6 +96,9 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   const programLine = free ? `Free drawing · ${s.program.length} ${s.program.length === 1 ? 'block' : 'blocks'}` : `Your program: ${blockCost(s.program)} of ${task.limit} blocks`;
   const status = <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite" style={{ fontSize: 15, color: C.ink }}>{message || programLine}</Copy>;
   const controlsOff = !active || s.running;
+  // A recording appears only once the lead has generated its audio; until then the printed words carry everything.
+  const speech = task.debug ? 'c2c-turtle-fix' : s.level === 4 ? 'c2c-turtle-angles' : null;
+  const hear = speech && learnSources[speech] && !free && !won ? <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => sound(speech, true)}>Hear this</Button> : null;
   const runRow = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
     {won || free ? <>
       <Button style={{ flexGrow: 1 }} onPress={next}>{s.done === 3 ? 'Finish!' : 'Next shape'}</Button>
@@ -104,6 +108,7 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
       {!blocks && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || !history.length} onPress={undo}>Undo</Button>}
       {!free && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || hint >= 2} onPress={() => { assistance?.(); setHint(h => Math.min(2, h + 1)); sound('tap', true); }}>{hint === 0 ? 'Hint' : 'More hint'}</Button>}
       {!free && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={showMe}>Show me</Button>}
+      {hear}
     </>}
   </View>;
   const hintPanel = hint > 0 && !won && !free ? <View accessibilityLiveRegion="polite" testID="turtle-hint" style={{ padding: 10, borderRadius: 12, backgroundColor: C.soft }}><Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{hintText()}</Copy></View> : null;
