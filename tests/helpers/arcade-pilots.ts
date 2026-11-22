@@ -1,12 +1,15 @@
 /**
  * Legal-input pilots for every Arcade engine, used as dare witnesses (AR-10).
- * Rail, Crab, Palm, Beach and Flight pilots are the v3 play-spec reachability
- * policies (artifacts v3/master-audit/play-spec/probes/reachability.ts); Reef and
+ * Rail, Crab, Beach and Flight pilots are the v3 play-spec reachability policies
+ * (artifacts v3/master-audit/play-spec/probes/reachability.ts), and Palm paces that
+ * policy's aim to one toss every 0.9 s (AR-05); Reef and
  * Cargo replay tests/fixtures/puzzle-feel.json; Run uses the shipped runFixture.
  * Cargo with Helper on, or on another seed, uses a placement planner, because Helper
  * changes the garbage schedule and the recorded moves no longer fit.
  * Pilots only send real inputs to the real transitions: no state is patched. Every
  * pilot creates its engine in the requested Helper mode and reports the mode it ran in.
+ * Rail and Crab pilots start where real play starts: the requested seed picks from the level's
+ * certified pool (AR-03, AR-04). `railWitness` and `crabWitness` take a raw seed for certification.
  */
 import { readFileSync } from "node:fs";
 import * as reef from "../../src/arcade/games/reef-builder/engine";
@@ -21,6 +24,7 @@ import { runFixture } from "../../src/arcade/games/lagoon-run/fixtures";
 import * as cargo from "../../src/arcade/games/canoe-cargo/engine";
 import type { ArcadeId, ArcadeResult, LevelId } from "../../src/arcade/types";
 import { crabAdvance, crossingPath, railPath, railUpcoming } from "../grid-fixtures";
+import { palmReplay } from "./palm-replay";
 
 const tick = { type: "tick" } as const;
 const fixtures = JSON.parse(readFileSync("tests/fixtures/puzzle-feel.json", "utf8")) as { reef: { id: LevelId; seed: number; moves: { slot: number; row: number; col: number }[] }[]; cargo: { id: LevelId; seed: number; moves: { turn: number; col: number }[] }[] };
@@ -29,7 +33,16 @@ const fixtures = JSON.parse(readFileSync("tests/fixtures/puzzle-feel.json", "utf
 export type PilotRun = { result: ArcadeResult | null; helper: boolean };
 const ran = (result: ArcadeResult | null, state: { helper: boolean }): PilotRun => ({ result, helper: state.helper });
 
+/** The Rail witness on one raw seed. Scored play only meets seeds from the level's certified pool. */
+export function railWitness(level: rail.RailLevel, seed: number, helper: boolean): PilotRun & { moves: number; bumps: number } {
+  const s = railPilotState(level, seed, helper);
+  return { ...ran(rail.railResult(s), s), moves: s.moves, bumps: s.bumps };
+}
 function railPilot(level: rail.RailLevel, seed: number, helper: boolean): PilotRun {
+  const s = railPilotState(level, rail.railScoredSeed(level, seed), helper);
+  return ran(rail.railResult(s), s);
+}
+function railPilotState(level: rail.RailLevel, seed: number, helper: boolean): rail.RailState {
   let s = rail.createRail(level, seed, helper);
   for (let move = 0; move < 700 && s.phase === "play"; move++) {
     const path = railPath(s); if (!path.length) break;
@@ -40,28 +53,28 @@ function railPilot(level: rail.RailLevel, seed: number, helper: boolean): PilotR
       for (let f = 0; f < 30 && s.moves === before && s.phase === "play" && s.respawn === 0; f++) s = rail.railStep(s, tick, 1 / 60);
     }
   }
-  return ran(rail.railResult(s), s);
+  return s;
 }
-function crabPilot(level: crab.CrabLevel, seed: number, helper: boolean): PilotRun {
-  let s = crab.createCrab(level, seed, helper);
+/**
+ * The Crab witness on one raw traffic phase. It counts hops and waiting apart: `waitSeconds` is the time
+ * spent standing still between hops, which a hop budget never charges.
+ */
+export function crabWitness(level: crab.CrabLevel, seed: number, helper: boolean): PilotRun & { hops: number; bumps: number; waitSeconds: number } {
+  let s = crab.createCrab(level, seed, helper), waits = 0;
   for (let c = 0; c < level.target; c++) {
-    for (const d of crossingPath(s)) s = crabAdvance(d === "wait" ? s : crab.crabTransition(s, { type: "hop", direction: d }));
+    for (const d of crossingPath(s)) { if (d === "wait") waits++; s = crabAdvance(d === "wait" ? s : crab.crabTransition(s, { type: "hop", direction: d })); }
     if (s.phase === "play") s = crabAdvance(s, 12);
   }
-  return ran(crab.crabResult(s), s);
+  return { ...ran(crab.crabResult(s), s), hops: s.hops, bumps: s.bumps, waitSeconds: Number((waits * 8 / 60).toFixed(2)) };
 }
+function crabPilot(level: crab.CrabLevel, seed: number, helper: boolean): PilotRun {
+  const run = crabWitness(level, crab.crabScoredSeed(level, seed), helper);
+  return { result: run.result, helper: run.helper };
+}
+/** Palm plays the AR-05 steady replay: a lead-aimed toss at most every 0.9 s (tests/helpers/palm-replay.ts). */
 function palmPilot(level: palm.PalmLevel, seed: number, helper: boolean): PilotRun {
-  let s = palm.createPalm(level, seed, helper);
-  for (let i = 0; i < 40000 && s.phase === "play"; i++) {
-    const b = s.beetles.filter(b => !b.caught).sort((a, b) => b.y - a.y)[0];
-    if (b) {
-      const dx = !b.diving ? s.direction * palm.palmMarchSpeed(s) * (532 - b.y) / palm.HUSK_SPEED : 0;
-      let x = b.x + dx; if (x > 335 || x < 25) x = b.x - dx;
-      s = palm.palmTransition(palm.palmTransition(s, { type: "move", x }), { type: "toss" });
-    }
-    s = palm.palmStep(s, tick, 1 / 60);
-  }
-  return ran(palm.palmResult(s), s);
+  const run = palmReplay(level, seed, helper, "steady");
+  return { result: run.result, helper: run.helper };
 }
 function beachPilot(level: beach.BeachLevel, seed: number, helper: boolean): PilotRun {
   let s = beach.createBeach(level, seed, helper);
