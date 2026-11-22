@@ -48,7 +48,7 @@ function FoodVariant({ current, clock, meal, input, reduced, after }: { current:
   </Animated.View>;
 }
 /** Only two small food trees. Position/rotation/fade composite on the UI thread. */
-function Food({ current, clock, progress, meal, input, reduced }: { current: SharedValue<number>; clock:MealClock; progress: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean }) {
+const Food = React.memo(function Food({ current, clock, progress, meal, input, reduced }: { current: SharedValue<number>; clock:MealClock; progress: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean }) {
   const {slot,size,base,facing,tilt,limbLag} = input;
   const positions = useMemo(() => {
     const make = [islanderAnchors,pipAnchors,crabAnchors][slot], unit = size / [132,160,120][slot];
@@ -72,7 +72,19 @@ function Food({ current, clock, progress, meal, input, reduced }: { current: Sha
   return <Animated.View testID="meal-held-food" pointerEvents="none" style={[{position:'absolute',left:0,top:0,width:1,height:1,transformOrigin:[0,0,0]},style]}>
     <FoodVariant {...{current,clock,meal,input,reduced}} after={false}/><FoodVariant {...{current,clock,meal,input,reduced}} after/>
   </Animated.View>;
-}
+}, (previous, next) => {
+  const a = previous.input, b = next.input;
+  const first = previous.meal, second = next.meal;
+  // The UI clock owns the meal identity. Keep a prepared drawing when its
+  // recipe and grip geometry are the same, including the first offered mango.
+  return previous.current === next.current && previous.clock === next.clock &&
+    previous.progress === next.progress && previous.reduced === next.reduced &&
+    a.slot === b.slot && a.size === b.size && a.base === b.base && a.facing === b.facing &&
+    a.tilt === b.tilt && a.limbLag === b.limbLag &&
+    first.action === second.action && first.offered === second.offered &&
+    first.food.item === second.food.item && first.food.tint === second.food.tint &&
+    first.food.powered === second.food.powered;
+});
 /** Readiness changes the enclosing visibility, never the authored body. */
 const MealDrawing=React.memo(function MealDrawing({input,meal,playback,renderCharacter}:{input:CharacterRenderInput;meal?:Meal;playback?:CharacterRenderInput['mealPlayback'];renderCharacter?:CharacterRenderer}) {
   const value=meal && playback?{...input,action:meal.action,meal:playback.frames[0].meal,mealPlayback:playback,blink:false}:input;

@@ -36,6 +36,26 @@ it('mounts only two food variants, rather than one whole food tree per pose',asy
  expect(tree.root.findAll(n=>typeof n.type==='string' && !!n.props['data-mouth']).length).toBeLessThanOrEqual(3);
  await act(async()=>tree.unmount());
 });
+
+it('reuses the prewarmed food view when only the meal identity or visibility changes', async () => {
+ const input = { slot: 0 as const, base: 'stand' as const, action: null, face: null, facing: 'right' as const, size: 224 };
+ const standby = { key: 0, action: 'eat' as const, offered: true, food: instance('standby', 'mango', 0, 0) };
+ const meal = { ...standby, key: 9, food: instance('offering', 'mango', 3, 4) };
+ let tree!: ReturnType<typeof create>;
+ await act(async () => { tree = create(<MealArt input={input} meal={standby} reduced={false} visible={false} />); });
+ const paintedFood = () => tree.root.findByProps({ testID: 'meal-held-food' }).props.style;
+ const preparedStyle = paintedFood();
+ await act(async () => tree.update(<MealArt input={input} meal={meal} reduced={false} visible={false} />));
+ expect(paintedFood()).toBe(preparedStyle);
+ await act(async () => tree.update(<MealArt input={input} meal={meal} reduced={false} />));
+ expect(paintedFood()).toBe(preparedStyle);
+
+ const changed = { ...meal, key: 10, food: instance('another', 'banana', 3, 4) };
+ await act(async () => tree.update(<MealArt input={input} meal={changed} reduced={false} />));
+ expect(tree.root.findAllByProps({ 'data-meal-food': 'banana' })).toHaveLength(2);
+ expect(paintedFood()).not.toBe(preparedStyle);
+ await act(async () => tree.unmount());
+});
 it('retains the idle and prewarmed meal bodies when a meal starts and finishes',async()=>{
  let mounts=0,unmounts=0;
  function Body(){React.useEffect(()=>{mounts++;return()=>{unmounts++;};},[]);return React.createElement('body');}

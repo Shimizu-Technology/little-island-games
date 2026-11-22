@@ -347,6 +347,22 @@ it('keeps an offered food overlay in place when its source leaves the room', asy
  await act(async () => tree.unmount());
 });
 
+it('preserves an unchanged prepared food overlay after a different food is eaten', async () => {
+ const state = labHome('rig-menu-0');
+ const scene = buildScene(state);
+ const { interaction } = context('');
+ const props = { pickups: [], interaction, building: buildingLayout(4), reduced: false };
+ let tree!: TestRenderer.ReactTestRenderer;
+ await act(async () => { tree = TestRenderer.create(<DragOverlay {...props} scene={scene} />); });
+ const banana = () => tree.root.findByProps({ nativeID: 'drag-overlay-home/item/menu-1' });
+ const before = banana().props.onLayout;
+
+ state.rooms.home.instances = state.rooms.home.instances.filter(item => item.id !== 'menu-0');
+ await act(async () => tree.update(<DragOverlay {...props} scene={buildScene(state)} />));
+ expect(banana().props.onLayout).toBe(before);
+ await act(async () => tree.unmount());
+});
+
 it('retains an unchanged resting entity through a meal in another room', async () => {
  const c = context('');
  c.interaction.slots.value = [emptyDragSlot(), emptyDragSlot()];

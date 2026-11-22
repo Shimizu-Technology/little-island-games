@@ -23,6 +23,18 @@ export function socketBasesOf(scene: Scene): SocketBases {
   return Object.fromEntries(Object.entries(scene.rooms).map(([room, index]) =>
     [room, [...new Set(index.targets.filter((t) => t.kind === "socket").map((t) => t.base))].sort()]));
 }
+
+function isLooseFood(entity?: SceneEntity): entity is SceneEntity {
+  return !!entity?.body?.edible && entity.attachment.kind === "floor" && !entity.children.length;
+}
+
+function samePreparedFood(previous: Pickup, next: Pickup): boolean {
+  if (previous.generation !== 0 || next.generation !== 0 || previous.id !== next.id) return false;
+  const before = previous.scene.entities[previous.id];
+  const after = next.scene.entities[next.id];
+  return isLooseFood(before) && isLooseFood(after) && JSON.stringify(before) === JSON.stringify(after);
+}
+
 const OverlayGroup = memo(function OverlayGroup({
   pickup,
   interaction,
@@ -41,6 +53,7 @@ const OverlayGroup = memo(function OverlayGroup({
   hidden?:boolean;
 }) {
   const { scene, id } = pickup;
+  const active = pickup.generation > 0;
   const unready = interaction.unready;
   useEffect(() => () => unready?.(id), [id, unready]);
   const original=scene.entities[id];
@@ -48,6 +61,7 @@ const OverlayGroup = memo(function OverlayGroup({
   // The live capture still uses its exact source and destination.
   const root=useMemo<SceneEntity>(()=>pickup.generation===0 && original.character
     ? {...original,action:original.children.length?'hold':null}:original,[original,pickup.generation]);
+  const trackSocketOwner = active || !isLooseFood(root);
   const index = root.character ? pickup.slot : 0;
   const globalSlots = interaction.slots, globalClock = interaction.clock;
   const idle = useMemo(() => [emptyDragSlot(), emptyDragSlot()], []);
@@ -138,7 +152,7 @@ const OverlayGroup = memo(function OverlayGroup({
       dest = p ? roomOrigin(roomIds.indexOf(p.room), building) : origin;
     let groundX = p ? dest.x + p.contact.x : slot.x,
       groundY = p ? dest.y + p.contact.y : slot.y;
-    if (p && p.attachment.kind === "socket") {
+    if (trackSocketOwner && p?.attachment.kind === "socket") {
       const owner = scene.entities[p.attachment.item];
       if (owner) {
         groundX = dest.x + owner.contact.x;
@@ -159,7 +173,7 @@ const OverlayGroup = memo(function OverlayGroup({
   });
   return (
     <View testID={`meal-handoff-source-${id}`} pointerEvents="none" style={{position:"absolute",left:0,top:0,right:0,bottom:0,opacity:hidden?0:1}}>
-      {pickup.generation > 0 && <LandingPreview source={root} interaction={interaction}
+      {active && <LandingPreview source={root} interaction={interaction}
         building={building} renderCharacter={renderCharacter} />}
       <Animated.View
         testID={`drag-shadow-${id}`}
@@ -260,7 +274,8 @@ const OverlayGroup = memo(function OverlayGroup({
       </Animated.View>
     </View>
   );
-}, (previous, next) => previous.pickup === next.pickup && previous.hidden === next.hidden && previous.building === next.building && previous.socketBases === next.socketBases &&
+}, (previous, next) => (previous.pickup === next.pickup || samePreparedFood(previous.pickup, next.pickup)) &&
+  previous.hidden === next.hidden && previous.building === next.building && previous.socketBases === next.socketBases &&
   previous.reduced === next.reduced && previous.renderCharacter === next.renderCharacter &&
   previous.interaction.slots === next.interaction.slots && previous.interaction.camera === next.interaction.camera);
 
