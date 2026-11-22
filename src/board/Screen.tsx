@@ -118,13 +118,14 @@ function Setup({
   const rival = game === "reef-sweep" ? null : rivalFor(game, strength),
     offers = game === "reef-sweep" ? [] : headStarts(game, size),
     headStart = offers.find((h) => h.amount === edge);
+  const headerMax = atLarge(fontScale, wordFitMultiplier(info.name, 21, Math.max(120, Math.min(width, 640) - 180), CHROME_MAX));
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { maxWidth: 640, gap: 16 }]}
       >
-        <GameHeader title={info.name} onBack={previous ? onClose : back} backLabel={previous ? "Back" : "Games"} />
+        <GameHeader title={info.name} titleMax={headerMax} onBack={previous ? onClose : back} backLabel={previous ? "Back" : "Games"} />
         <View style={{ alignItems: "center", gap: 8 }}>
           <BoardArt game={game} size={116} />
           <Heading maxFontSizeMultiplier={titleCap} style={{ textAlign: "center" }}>{info.name}</Heading>
@@ -216,6 +217,7 @@ function Setup({
           </Copy>
         )}
         <Button
+          maxFontSizeMultiplier={buttonCap}
           onPress={() =>
             onStart({
               ...createSession(game, {
@@ -234,7 +236,7 @@ function Setup({
           Start {info.name}
         </Button>
         {previous && (
-          <Button quiet onPress={onClose}>
+          <Button quiet maxFontSizeMultiplier={buttonCap} onPress={onClose}>
             Continue saved round
           </Button>
         )}
@@ -541,11 +543,27 @@ function Round({
               ? "You win!"
               : `${rival ?? "The computer"} wins this time.`
             : `${s.match.names[p.outcome]} wins!`;
+  const headerMax = atLarge(fontScale, wordFitMultiplier(info.name, 21, Math.max(120, width - insets.left - insets.right - 180), CHROME_MAX));
+  const statusDetail =
+    p.outcome !== null
+      ? s.game === "reef-sweep"
+        ? p.outcome === 0
+          ? "You gave the sea urchins room and found their pearl neighbors."
+          : "You can undo the last opening or try a new reef. Take your time."
+        : "Your family score includes this round. Play again to carry it forward."
+      : s.game === "reef-sweep"
+        ? p.fallback && !p.marks.includes(1)
+          ? `Certified no-guess reef · tap the ringed start at ${reefCoordinate(p.size, p.fallback.start)}.`
+          : p.rules === 2
+            ? "First tap is safe · every new reef solves with no guessing."
+            : "First tap is safe. Open every pearl space."
+        : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`;
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView contentContainerStyle={[styles.content, { maxWidth: wide ? 1120 : 680, paddingHorizontal: 20, gap: 12 }]}>
         <GameHeader
           title={info.name}
+          titleMax={headerMax}
           backLabel="Games"
           onBack={() => {
             conceal();
@@ -579,25 +597,14 @@ function Round({
             }
           />
         )}
-        <Status
-          title={title}
-          success={success}
-          detail={
-            p.outcome !== null
-              ? s.game === "reef-sweep"
-                ? p.outcome === 0
-                  ? "You gave the sea urchins room and found their pearl neighbors."
-                  : "You can undo the last opening or try a new reef. Take your time."
-                : "Your family score includes this round. Play again to carry it forward."
-              : s.game === "reef-sweep"
-                ? p.fallback && !p.marks.includes(1)
-                  ? `Certified no-guess reef · tap the ringed start at ${reefCoordinate(p.size, p.fallback.start)}.`
-                  : p.rules === 2
-                    ? "First tap is safe · every new reef solves with no guessing."
-                    : "First tap is safe. Open every pearl space."
-                : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`
-          }
-        />
+        {s.game === "reef-sweep" ? (
+          <View accessibilityLiveRegion="polite" style={[styles.status, success && { backgroundColor: C.success }]}>
+            <Heading maxFontSizeMultiplier={copyCap} style={{ fontSize: 20 }}>{title}</Heading>
+            <Copy maxFontSizeMultiplier={copyCap} style={{ marginTop: 4, fontSize: 14, lineHeight: 21 }}>{statusDetail}</Copy>
+          </View>
+        ) : (
+          <Status title={title} success={success} detail={statusDetail} />
+        )}
         {headStart && (
           <Copy accessibilityLabel={`Head start for ${headStartFor}: ${headStart}`} style={{ fontSize: 14, color: C.ink, padding: 10, backgroundColor: "#FFF4D6", borderRadius: 12 }}>
             Head start for {headStartFor}: {headStart.charAt(0).toLowerCase() + headStart.slice(1)}.{rival && edge[0] ? ` ${rival} still plays its best.` : ""}
@@ -736,7 +743,7 @@ function Round({
             </View>
           </View>
         )}
-        <Copy style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
+        <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
         </View>
         <View style={{ flex: wide ? 1.15 : undefined, gap: 12, justifyContent: "center" }}>
         {p.outcome !== null && review !== null ? (
@@ -818,6 +825,15 @@ function Round({
                 </Chip>
               </View>
             )}
+            {s.game === "reef-sweep" && !!notice && !concealed && (
+              <Copy
+                maxFontSizeMultiplier={copyCap}
+                accessibilityLiveRegion="polite"
+                style={{ padding: 12, backgroundColor: C.sand, borderRadius: 12, color: C.ink }}
+              >
+                {notice}
+              </Copy>
+            )}
             <Boards
               key={`${s.id}:${p.moves.length}:${visible === token}`}
               game={s.game}
@@ -833,7 +849,7 @@ function Round({
             />
           </>
         )}
-        {!!notice && !concealed && (
+        {s.game !== "reef-sweep" && !!notice && !concealed && (
           <Copy style={{ padding: 12, backgroundColor: C.sand, borderRadius: 12, color: C.ink }}>{notice}</Copy>
         )}
         </View>

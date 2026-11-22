@@ -265,4 +265,29 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     expect(fixture.openGame).toHaveBeenCalledWith("reef-sweep");
     await act(() => r.unmount());
   });
+
+  it("caps BoardScreen header and status chrome cleanly at AX5 while leaving default text untouched", async () => {
+    const session = { ...createSession("reef-sweep", { seed: 4, size: 7 }), taught: true };
+    fixture.store.save.board = { "reef-sweep": session };
+
+    fixture.dims = { width: 393, height: 852, fontScale: 3.12 };
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<BoardScreen game="reef-sweep" />);
+    });
+    // GameHeader receives a bounded titleMax at AX5 and status/copy nodes cap at CHROME_MAX.
+    const statusHeading = r.root.findAll((n) => n.props.children === "A little pearl hunt")[0];
+    expect(statusHeading.props.maxFontSizeMultiplier).toBe(CHROME_MAX);
+    const savedCopy = r.root.findAll((n) => n.props.children === "Saved on this device · No rush, take your time.")[0];
+    expect(savedCopy.props.maxFontSizeMultiplier).toBe(CHROME_MAX);
+    await act(() => r.unmount());
+
+    fixture.dims = { width: 393, height: 852, fontScale: 1 };
+    await act(() => {
+      r = create(<BoardScreen game="reef-sweep" />);
+    });
+    const defaultHeading = r.root.findAll((n) => n.props.children === "A little pearl hunt")[0];
+    expect(defaultHeading.props.maxFontSizeMultiplier).toBeUndefined();
+    await act(() => r.unmount());
+  });
 });
