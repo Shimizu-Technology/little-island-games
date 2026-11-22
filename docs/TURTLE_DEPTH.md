@@ -52,7 +52,7 @@ Deep Water adds Forward 40 and 50, the 40°, 72° and 144° turns, and Repeat co
 
 The board shows a program and four pictures drawn to one shared frame, so a picture that is only a little bigger still looks it. The child picks one and checks. Nothing is drawn until the check. A wrong pick is crossed out and the attempt continues; there is no mistake limit. A right pick draws the program line by line. Finishing on the first check without Help is independent; anything else is a helped finish.
 
-The three wrong pictures are real misreadings of the program: ignoring the Repeat, miscounting it, a different or far-off first turn, every side longer or shorter, the blocks read in the other order, forgetting Grow. Each wrong picture sits at least 12 sand units from every other picture on the board (`pictureGap`), so none differs from another by a stroke alone. From tier 5 the wrong pictures always include the one that reads every Repeat as "once". Help crosses out that picture first, then another, and never the answer.
+The three wrong pictures are real misreadings of the program: ignoring the Repeat, miscounting it, a different or far-off first turn, every side longer or shorter, the blocks read in the other order, forgetting Grow. Each wrong picture sits at least 28 sand units from every other picture on the board (`pictureGap`), so none differs from another by a stroke alone. From tier 5 the wrong pictures always include the one that reads every Repeat as "once". Help crosses out that picture first, then another, and never the answer.
 
 ### The dumb player
 

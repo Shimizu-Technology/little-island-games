@@ -93,7 +93,7 @@ export const misreads = {
 };
 export type Misread = keyof typeof misreads;
 /** Wrong pictures must sit at least this far (in sand units) from each other and from the answer. */
-export const MIN_GAP = 12;
+export const MIN_GAP = 28;
 /** Pictures that a reader who skimmed would draw. At the top rungs the first is always "ignore the Repeat". */
 export function choicesFor(program: Block[], tier: number, rotate: number): { blocks: Block[][]; answer: number; kinds: (Misread | 'answer')[] } {
   const answer = draw(program, undefined)!, seen: Segment[][] = [answer], wrong: { blocks: Block[]; kind: Misread }[] = [];
