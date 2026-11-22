@@ -321,16 +321,22 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
   }
 
   return (
-    <View style={{ gap: compactPhone ? 6 : 10, alignItems: "center", width: "100%" }}>
+    <View style={{ gap: compactPhone ? 6 : 10, alignItems: "center", width: "100%", paddingBottom: compactPhone ? 20 : 0 }}>
       <Copy
         accessibilityLiveRegion="polite"
         maxFontSizeMultiplier={copyCap}
-        style={{ color: C.ink, fontSize: compactPhone ? 13 : 15, alignSelf: "stretch", textAlign: "center" }}
+        style={{
+          color: C.ink,
+          fontSize: compactPhone ? 13 : 15,
+          lineHeight: compactPhone ? 18 : 22,
+          alignSelf: "stretch",
+          textAlign: "center",
+        }}
       >
         {statusLine}
       </Copy>
       {!compactPhone && (
-        <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 13, textAlign: "center" }}>
+        <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 13, lineHeight: 19, textAlign: "center" }}>
           {meta.detail}
         </Copy>
       )}
@@ -340,9 +346,6 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
         <>
           {actionRow}
           {hintBanner}
-          <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>
-            {meta.detail}
-          </Copy>
         </>
       ) : (
         <>
@@ -350,7 +353,7 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
           {actionRow}
         </>
       )}
-      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>
+      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, lineHeight: compactPhone ? 16 : 18, textAlign: "center" }}>
         Press and hold any closed tile to toggle a flag. No guessing required.
       </Copy>
     </View>
