@@ -46,7 +46,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "export:web": "npm run library:validate && npm run library:index && expo export --platform web --clear && node scripts/offline-web.mjs",
+    "export:web": "npm run library:validate && npm run library:index && expo export --platform web --max-workers 2 && node scripts/offline-web.mjs",
     "save:catalog": "node --experimental-strip-types scripts/check-save-catalog.mjs",
     "puzzles": "node --import ./scripts/puzzles/register.mjs scripts/puzzles/cli.ts",
     "puzzles:verify": "npm run puzzles -- verify",
