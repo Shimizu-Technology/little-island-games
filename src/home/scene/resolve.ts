@@ -415,11 +415,6 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       : Number.isFinite(subject.contact.x) && Number.isFinite(subject.contact.y)
         ? subject.contact
         : roomPoint(400, 500);
-  const full = !ctx.floorOnly && subject.body?.small && !subject.body.container && group.length === 1 && index.targets.find(t =>
-    t.kind === "container" && t.closed && (!ctx.target || t.id === ctx.target) &&
-    !group.some(e => e.id === t.owner) && subject.parent !== t.owner &&
-    contains(t.core, point));
-  if (full) return { ...makeProposal(index, subject, rootMove(subject, subject.room, subject.attachment, subject.contact), group, "floor", "Container full", full), refusal: "storage-capacity" };
   const candidates: Candidate[] = [];
   const nearby =
     ctx.scale >= 0.2 && !ctx.silhouette && !ctx.contact
@@ -541,6 +536,11 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     }
     return { ...proposal, catalogIntent };
   }
+  const full = !ctx.floorOnly && subject.body?.small && !subject.body.container && group.length === 1 && index.targets.find(t =>
+    t.kind === "container" && t.closed && (!ctx.target || t.id === ctx.target) &&
+    !group.some(e => e.id === t.owner) && subject.parent !== t.owner &&
+    contains(t.core, point));
+  if (full) return { ...makeProposal(index, subject, rootMove(subject, subject.room, subject.attachment, subject.contact), group, "floor", "Container full", full), refusal: "storage-capacity" };
   let best: EntityMove | undefined;
   let bestDistance = Infinity;
   const wall = subject.body?.layer === "wall";

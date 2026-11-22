@@ -1,5 +1,6 @@
 // Public contract: worklet resolution is independent of the JS validation/reducer graph.
 import { storageCapacity } from '../storage';
+import { itemSpec } from '../catalog';
 import type { DropProposal } from "./resolve";
 import { roomIds, type RoomId } from "../catalogMore";
 import { validHome } from "../model";
@@ -169,7 +170,7 @@ export function apply(
   if (proposal.attachment.kind === "container") {
     const parent = parentItemId(proposal.attachment.parent, names);
     rooms[proposal.room].instances = rooms[proposal.room].instances.map(i => i.id === parent && storageCapacity(i.item)
-      ? { ...i, storage: { version: 1, open: true }, powered: true } : i);
+      ? { ...i, storage: { version: 1, open: true }, powered: true, ...(itemSpec(i.item).interactive ? { state: "active" as const } : {}) } : i);
   }
   for (const room of roomIds) {
     const originalOrder = state.rooms[room].instances.map((i) => i.id);

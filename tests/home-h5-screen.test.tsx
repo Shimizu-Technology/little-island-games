@@ -6,7 +6,7 @@ import { instance, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve } from '../src/home/scene/proposal';
 import { labFixtures } from '../src/home/runtime/lab';
-const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, design: {} as any, dest: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
@@ -30,9 +30,9 @@ vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options:
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
-vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
+vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: (props: any) => { harness.design = props; return null; }, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
-vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
+vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: (props: any) => { harness.dest = props; return null; } }));
 vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
 vi.mock('../src/home/runtime/FriendDrawer', () => ({ FriendDrawer: () => null }));
 vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: 'CapacityCue', CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
@@ -93,4 +93,47 @@ describe('H5 storage on the live screen', () => {
     expect(root.root.findAllByProps({testID:'storage-full-note'}).length).toBeGreaterThan(0);
   });
 
+});
+
+const storageKinds = ['fridge', 'toy-box', 'dresser', 'cupboard', 'carry-basket'];
+describe('H5 review: selection and explicit opening', () => {
+  it.each(storageKinds.flatMap(kind => ['activate', 'tap'].map(input => [kind, input])))('Design %s %s selects without a save', async (kind, input) => {
+    const s = labFixtures['rig-menu-0']();
+    s.rooms.home.instances = [instance('box', kind, 8, 7)]; s.rooms.home.characters = [];
+    const persist = await open(s);
+    await act(async () => harness.chrome.onDesign());
+    for (let n = 0; n < 2; n++) {
+      if (input === 'tap') await tap('home/item/box');
+      else await act(async () => harness.scene.onSelect('home/item/box'));
+    }
+    expect(harness.dest.selected).toBe('home/item/box');
+    expect(harness.design.target.id).toBe('box');
+    expect(root.root.findAllByProps({ testID: 'storage-tray' })).toHaveLength(0);
+    expect(persist).not.toHaveBeenCalled();
+  });
+  it('Play activation selects the portable basket for room destinations; open is separate', async () => {
+    const s = labFixtures['rig-menu-0']();
+    s.rooms.home.instances = [instance('box', 'carry-basket', 8, 7)]; s.rooms.home.characters = [];
+    const saves: HomeStateV2[] = [];
+    const persist = await open(s, vi.fn(next => { saves.push(next); return true; }));
+    await act(async () => harness.scene.onSelect('home/item/box'));
+    expect(harness.dest.selected).toBe('home/item/box');
+    expect(harness.dest.designing).toBe(false);
+    expect(persist).not.toHaveBeenCalled();
+    await act(async () => harness.scene.onMove('home/item/box', 'open'));
+    expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(true);
+    expect(root.root.findAllByProps({ testID: 'storage-tray' }).length).toBeGreaterThan(0);
+    await act(async () => harness.scene.onMove('home/item/box', 'open'));
+    expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(false);
+  });
+  it.each(storageKinds.filter(kind => kind !== 'carry-basket'))('Play activate and explicit open both toggle anchored %s', async kind => {
+    const s = labFixtures['rig-menu-0']();
+    s.rooms.home.instances = [instance('box', kind, 8, 7)]; s.rooms.home.characters = [];
+    const saves: HomeStateV2[] = [];
+    await open(s, next => { saves.push(next); return true; });
+    await act(async () => harness.scene.onSelect('home/item/box'));
+    expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(true);
+    await act(async () => harness.scene.onMove('home/item/box', 'open'));
+    expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(false);
+  });
 });

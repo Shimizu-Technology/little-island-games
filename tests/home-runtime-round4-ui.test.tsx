@@ -468,3 +468,21 @@ it('defers the full picked-up drink past lift and prepares one resting actor', a
  expect(tree.root.findAllByType(EntityArt).find(n=>n.props.mealStandby)!.props.mealStandby).toEqual({ key: 0, action: 'drink', offered: true, food: drink.item });
  await act(async () => tree.unmount());
 });
+
+it.each(['fridge','toy-box','dresser','cupboard','carry-basket'])('H5 %s exposes separate select and open accessibility actions', async kind => {
+ const c=context(''); c.state.rooms.home.instances=[{...c.state.rooms.kitchen.instances.find(i=>i.id==='fridge')!,id:'box',item:kind}];
+ c.state.rooms.home.characters=[];
+ const scene=buildScene(c.state), onSelect=vi.fn(), onMove=vi.fn();
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<SceneView state={c.state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={onSelect} onMove={onMove}/>);});
+ const view=tree.root.findAllByProps({testID:'object-box'}).find(n=>typeof n.type==='string')!;
+ expect(view.props.accessibilityActions).toContainEqual({name:'open',label:'Open or close'});
+ await act(async()=>view.props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
+ expect(onSelect).toHaveBeenCalledWith('home/item/box');
+ await act(async()=>view.props.onAccessibilityAction({nativeEvent:{actionName:'open'}}));
+ expect(onMove).toHaveBeenCalledWith('home/item/box','open');
+ await act(async()=>tree.update(<SceneView state={c.state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced designing reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={onSelect} onMove={onMove}/>));
+ const designView=tree.root.findAllByProps({testID:'object-box'}).find(n=>typeof n.type==='string')!;
+ expect(designView.props.accessibilityActions).toContainEqual({name:'activate',label:'Select'});
+ await act(async()=>tree.unmount());
+});

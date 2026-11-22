@@ -38,8 +38,11 @@ describe('HS-01 / HS-02 storage', () => {
     const box = result.state.rooms.home.instances.find(i => i.id === 'box')!;
     expect(box.storage).toEqual({ version: 1, open: true });
     expect(box.powered).toBe(true);
+    expect(box.state).toBe('active');
     expect(buildScene(result.state).entities['home/item/loose'].contact).toEqual(p.contact);
     expect(storageOpen(box)).toBe(true);
+    const closed = homeReducer(result.state, { type: 'toggle', id: 'box', roomId: 'home' }).state.rooms.home.instances.find(i => i.id === 'box')!;
+    expect(storageOpen(closed)).toBe(false); expect(closed.powered).toBe(false); expect(closed.state).toBe('rest');
   });
   it('full means a typed refusal, with no mutation or lost object', () => {
     const s = fixture('carry-basket', 4), raw = JSON.stringify(s), p = put(s);
@@ -138,5 +141,27 @@ describe('HS-01 / HS-02 storage', () => {
     const reset = editHistory({ present: next, past: [], future: [] }, { type: 'reset', roomId: 'home' });
     expect(editHistory(restoredHistory(savedHistory(reset)), { type: 'undo' }).present.rooms).toEqual(next.rooms);
     expect(JSON.stringify(s)).toBe(raw);
+  });
+});
+
+describe('H5 review: full storage never steals a valid target', () => {
+  it.each([1, 2])('a full chest keeps lid surface/%i available', n => {
+    const scene = buildScene(fixture('toy-box', 6));
+    const index = scene.rooms.home, target = index.targets.find(t => t.id === `home/item/box/surface/${n}`)!;
+    const p = resolve(index, scene.entities['home/item/loose'], target.contact, { scale: 1, release: true });
+    expect(p.refusal).toBeUndefined(); expect(p.kind).toBe('surface'); expect(p.target).toBe(target.id);
+  });
+  it.each(['mouth', 'hand'] as const)('a friend in front of a full fridge still accepts %s', kind => {
+    const s = fixture('fridge', 8);
+    s.rooms.home.characters = [{ slot: 0, anchor: 'floor', pose: 'stand', x: 8, y: 9 }];
+    const scene = buildScene(s), index = scene.rooms.home, target = index.targets.find(t => t.id === `character/0/${kind}`)!;
+    const p = resolve(index, scene.entities['home/item/loose'], target.contact, { scale: 1, release: true });
+    expect(p.refusal).toBeUndefined(); expect(p.kind).toBe(kind); expect(p.target).toBe(target.id);
+  });
+  it('an untargeted full opening still refuses without mutating the source', () => {
+    const s = fixture('carry-basket', 4), before = JSON.stringify(s), scene = buildScene(s), index = scene.rooms.home;
+    const target = index.targets.find(t => t.kind === 'container')!;
+    const p = resolve(index, scene.entities['home/item/loose'], target.contact, { scale: 1, release: true });
+    expect(p.refusal).toBe('storage-capacity'); expect(JSON.stringify(s)).toBe(before);
   });
 });

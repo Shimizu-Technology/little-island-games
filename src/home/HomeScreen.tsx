@@ -562,7 +562,7 @@ export function HomeScreen({
   }, [building, floorOf, overview, room, viewport]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
-    if (entity?.item && storageCapacity(entity.item.item) && !overview) {
+    if (!designing && entity?.item && storageCapacity(entity.item.item) && !capabilityOf(entity.item.item).moveInPlay && !overview) {
       live.current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
       setStorageId(storageOpen(entity.item) ? undefined : id);
       setSelected(undefined);
@@ -570,7 +570,7 @@ export function HomeScreen({
     }
     if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
-    else setSelected(id);
+    else { setStorageId(undefined); setStorageInspect(undefined); setSelected(id); }
   }, [designing, goRoom, overview]);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
@@ -616,6 +616,12 @@ export function HomeScreen({
     }
     if (current.selected && current.selected !== id) {
       moveTo(current.selected, entity, point);
+      return;
+    }
+    if (designing && entity?.item && storageCapacity(entity.item.item)) {
+      setStorageId(undefined);
+      setStorageInspect(undefined);
+      setSelected(id);
       return;
     }
     if (entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle) {
@@ -860,7 +866,15 @@ export function HomeScreen({
     (id: string, action: string) => {
       const { scene } = live.current;
       const entity = scene.entities[id];
-      if (!entity || (!live.current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return;
+      if (!entity) return;
+      if (action === "open" && entity.item && storageCapacity(entity.item.item)) {
+        live.current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
+        setStorageId(storageOpen(entity.item) ? undefined : id);
+        setStorageInspect(undefined);
+        setSelected(undefined);
+        return;
+      }
+      if (!live.current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay) return;
       if (action === "store") {
         const proposal = resolve({ ...scene.rooms[entity.room], entities: scene.entities }, entity, entity.contact, {
           scale: runtime.current!.camera.get().a,
@@ -1025,6 +1039,7 @@ export function HomeScreen({
             effects={delight.effects}
             poke={delight.poke}
             onNode={onNode}
+            designing={designing}
             onSelect={choose}
             onMove={moveAccessible}
             stress={stress}

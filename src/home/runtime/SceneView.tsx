@@ -31,6 +31,8 @@ import { entityLabels, storageDescription } from "../scene/labels";
 import type { Interaction, Pickup } from "./useInteraction";
 import type { Viewport } from "./CameraController";
 
+const ZERO_OFFSET = { x: 0, y: 0 };
+
 function ancestors(entity: SceneEntity, scene: Scene): string[] {
   const result = [entity.id];
   let parent = entity.parent;
@@ -90,6 +92,7 @@ const RestingEntity = memo(function RestingEntity({
   onSelect,
   onMove,
   selected,
+  designing = false,
   targetKey,
   action,
   meal,
@@ -133,6 +136,7 @@ const RestingEntity = memo(function RestingEntity({
   reduced: boolean;
   renderCharacter?: CharacterRender;
   selected: boolean;
+  designing?: boolean;
   targetKey: string;
   action?: "eat" | "drink";
   meal?: Meal;
@@ -299,9 +303,10 @@ const RestingEntity = memo(function RestingEntity({
       accessibilityElementsHidden={front}
       importantForAccessibility={front ? "no-hide-descendants" : "auto"}
       accessibilityState={{ selected: selected }}
-      accessibilityHint={entity.body?.container ? "Open or close. Choose an item picture to take it out." : "Select, then choose a place."}
+      accessibilityHint={entity.body?.container ? "Select or use Open or close. Choose an item picture to take it out." : "Select, then choose a place."}
       accessibilityActions={[
-        { name: "activate", label: entity.body?.container ? "Open or close" : "Select" },
+        { name: "activate", label: entity.body?.container && !designing && !entity.body.portable ? "Open or close" : "Select" },
+        ...(entity.body?.container ? [{ name: "open", label: "Open or close" }] : []),
         ...["left", "right", "back", "forward", ...(!isPortion(entity.id) ? ["store"] : [])].map((name) => ({
           name,
           label: name,
@@ -409,6 +414,7 @@ export function SceneView({
   reduced,
   renderCharacter,
   selected,
+  designing = false,
   onSelect,
   onMove,
   stress = false,
@@ -449,6 +455,7 @@ export function SceneView({
   reduced: boolean;
   renderCharacter?: CharacterRender;
   selected?: string;
+  designing?: boolean;
   stress?: boolean;
   reactions: Record<string, "eat" | "drink">;
   meals?: Record<string, Meal>;
@@ -500,7 +507,7 @@ export function SceneView({
       const face=anchorsFor(e.character!.slot,e.base,e.facing,e.action).head;
       return {id:e.id,room:e.room,x:e.contact.x+face.x,y:e.contact.y+face.y};
     }), [scene,sleeping]);
-  const foodOffset = offeredEntity?.visual ?? {x:0,y:0};
+  const foodOffset = offeredEntity?.visual ?? ZERO_OFFSET;
   const initialStandbyOwner = offeredEntity && standbyCandidates.filter(e => e.room === offeredEntity.room)
     .sort((a,b) => Math.hypot(a.x-offeredEntity.contact.x-foodOffset.x,a.y-offeredEntity.contact.y-foodOffset.y) -
       Math.hypot(b.x-offeredEntity.contact.x-foodOffset.x,b.y-offeredEntity.contact.y-foodOffset.y))[0]?.id;
@@ -611,6 +618,7 @@ export function SceneView({
                 reduced={reduced}
                 renderCharacter={renderCharacter}
                 selected={!front && selected === entity.id}
+                designing={designing}
                 onSelect={onSelect}
                 onMove={onMove}
                 life={living && !front && alive(entity) ? lifeClock : undefined}
