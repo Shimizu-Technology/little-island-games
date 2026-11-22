@@ -12,7 +12,6 @@ import { decodeProgram } from '../../program/codec';
 import { programOperations } from '../../program/operations';
 import { emptyProgram } from '../../program/model';
 import { draw, type Block, type Segment } from './engine';
-import { blockCost } from './dsl';
 import { buildHint, predictHint, type Action, type BuildDescriptor, type PredictDescriptor, type State } from './challenge-engine';
 import { deepCodes } from './program';
 import { DEEP_COUNTS } from './mincost';
@@ -23,7 +22,7 @@ import { bounds } from './picture';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 const RULES: Record<'build' | 'predict', string> = { build: 'c2c-turtle-build-rules', predict: 'c2c-turtle-predict-rules' };
-const picturesLabel = (lines: Segment[], letter: string, tone: string) => `Picture ${letter}. ${lines.length} lines${lines.length > 1 && Math.hypot(lines[0].from.x - lines.at(-1)!.to.x, lines[0].from.y - lines.at(-1)!.to.y) < 1 ? ', ends where it began' : ''}.${tone}`;
+const picturesLabel = (lines: Segment[], letter: string, tone: string) => `Picture ${letter}. ${lines.length} ${lines.length === 1 ? 'line' : 'lines'}${lines.length > 1 && Math.hypot(lines[0].from.x - lines.at(-1)!.to.x, lines[0].from.y - lines.at(-1)!.to.y) < 1 ? ', ends where it began' : ''}.${tone}`;
 
 export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, header, footer, commit, sessionKey }: ChallengeViewProps<State, Action>) {
   const d = s.descriptor, prefs = useContext(AudioPreferences), { play, stop } = useSoundControls(prefs.sound ?? true), reduced = useReducedMotion();
@@ -56,13 +55,15 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
   const rules = RULES[d.kind], hearRules = prefs.sound !== false && learnSources[rules] ? <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => play(rules, true)}>Hear rules</Button> : null;
   const hearGrow = prefs.sound !== false && d.step === 3 && learnSources['c2c-turtle-grow'] ? <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => play('c2c-turtle-grow', true)}>Hear Grow</Button> : null;
   const canvas = <SandCanvas width={side} goal={d.kind === 'build' || s.won ? goal : []} traced={shownLines} point={point} labels={d.kind === 'build'} label={d.kind === 'build' ? `Sand canvas with the faint picture to draw. ${shownLines.length} lines drawn.` : s.won ? `The program drew ${shownLines.length} of ${lines.length} lines.` : 'Sand canvas. The picture appears here after you check.'} />;
+  // Nothing is drawn until the check, so the pictures take the room the empty sand would.
+  const showCanvas = d.kind === 'build' || s.won || running;
   const body = d.kind === 'build' ? <BuildControls s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
-    : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
-  if (!pinned) return <View style={{ gap: 10 }}>{canvas}{body}</View>;
+    : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide && showCanvas ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
+  if (!pinned) return <View style={{ gap: 10 }}>{showCanvas && <View style={{ alignItems: 'center' }}>{canvas}</View>}{body}</View>;
   const stack = <ScrollView style={{ flex: 1, minHeight: 0 }} contentContainerStyle={{ gap: 10, paddingBottom: 12 }} accessibilityLabel="Turtle program and help">{header}{body}{footer}</ScrollView>;
-  return sideBySide
+  return sideBySide && showCanvas
     ? <View style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: 12 }}><View style={{ width: side }}>{canvas}</View><View style={{ flex: 1, minWidth: 0 }}>{stack}</View></View>
-    : <View style={{ flex: 1, minHeight: 0, gap: 8 }}><View style={{ alignItems: 'center' }}>{canvas}</View>{stack}</View>;
+    : <View style={{ flex: 1, minHeight: 0, gap: 8 }}>{showCanvas && <View style={{ alignItems: 'center' }}>{canvas}</View>}{stack}</View>;
 }
 
 type Play = (key: string, automatic?: boolean) => unknown;
@@ -86,20 +87,20 @@ function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, pl
     <ProgramEditor key={`${sessionKey}:${s.draft === null}`} program={current} songs={false} tray={d.tray} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
       cards={deepCodes.map((block, code) => ({ code, name: blockLabel(block), icon: <Copy maxFontSizeMultiplier={1.3}>{block.kind === 'forward' ? '↑' : block.kind === 'turn' ? '↻' : block.kind === 'grow' ? '＋' : '●'}</Copy>, speech: `k7-turtle-${code}` }))}
       onChange={async next => !!commit && !!sessionKey && !!(await commit(['e', programOperations(current, next)], sessionKey))} />
-    <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 13 }}>{`Tray · ${blockCost(s.program)} of ${d.tray} blocks`}</Copy>
   </View>;
 }
 
 function PredictControls({ s, d, active, running, dispatch, play, width, large, hear }: { s: State; d: PredictDescriptor; active: boolean; running: boolean; dispatch: (a: Action) => void; play: Play; width: number; large: boolean; hear: React.ReactNode }) {
   const pictures = useMemo(() => d.choices.map(c => draw(c, d.origin) ?? []), [d]);
   const frame = useMemo(() => { const all = pictures.flatMap(p => bounds(p) ? [bounds(p)!] : []); return { left: Math.min(...all.map(b => b.left)), top: Math.min(...all.map(b => b.top)), right: Math.max(...all.map(b => b.right)), bottom: Math.max(...all.map(b => b.bottom)) }; }, [pictures]);
-  const idle = !active || running || s.won, columns = large ? 1 : 2, cell = Math.max(96, Math.floor((Math.min(width, 420) - 10 * (columns - 1)) / columns));
+  // Two by two even at the largest text: the four pictures and Check stay together. Only a very narrow board stacks them.
+  const idle = !active || running || s.won, columns = width >= 300 ? 2 : 1, cell = Math.max(96, Math.min(230, Math.floor((Math.min(width, 520) - 10 * (columns - 1)) / columns)));
   const stage = s.hintStage;
   const message = s.won ? 'Yes! That is the picture. Watch it drawn.' : s.wrong.length && s.pick === null ? 'Not that one. It is crossed out. Choose again.' : 'Read the program, then choose the picture it draws. Nothing is drawn until you check.';
   return <View style={{ gap: 8 }}>
     <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>
     <ProgramList blocks={d.program} label="The program" testID="turtle-program" />
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }} accessibilityLabel="Four pictures">
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: columns * cell + (columns - 1) * 10, alignSelf: 'center' }} accessibilityLabel="Four pictures">
       {pictures.map((lines, i) => {
         const out = s.wrong.includes(i) || s.ruled.includes(i), chosen = s.pick === i, answer = s.won && d.answer === i;
         const tone = out ? ' Crossed out.' : chosen ? ' Chosen.' : answer ? ' The answer.' : '';

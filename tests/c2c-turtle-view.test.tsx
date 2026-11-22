@@ -186,14 +186,15 @@ it('Deep Water predict shows the program and four lettered pictures, checks one,
   expect(messages().some(m => m.startsWith('Yes!'))).toBe(true);
 });
 
-it('Deep Water predict lays its pictures out in one column at the largest text size, and Help crosses out the quick reading', async () => {
+it('Deep Water predict keeps its pictures two by two at the largest text size, and Help crosses out the quick reading', async () => {
   viewport.fontScale = 3.12;
   const d = challenge('predict', 5) as PredictDescriptor;
   let s = startState(d);
   await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={353} />);
   const cells = buttons().filter(b => /^Picture [A-D]\./.test(b.props.accessibilityLabel ?? ''));
   expect(cells.every(c => c.props.style.width >= 96)).toBe(true);
-  expect(cells.every(c => c.props.style.width + 4 >= 330 || c.props.style.width <= 353)).toBe(true);
+  expect(cells.every(c => c.props.style.width * 2 + 10 <= 353)).toBe(true);
+  expect(tree!.root.findByProps({ accessibilityLabel: 'Four pictures' }).props.style.width).toBe(cells[0].props.style.width * 2 + 10);
   s = challengeEngine.step(challengeEngine.step(s, ['h'], d)!.state, ['h'], d)!.state;
   await act(async () => tree!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={353} />));
   const crossed = buttons().filter(b => (b.props.accessibilityLabel ?? '').includes('Crossed out'));
