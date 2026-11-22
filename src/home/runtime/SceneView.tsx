@@ -27,7 +27,7 @@ import { layoutToken } from "./layout";
 import { anyIn, firstFollow, firstRest } from "./restingState";
 import { BREATH_SCALE, lifeBlink, lifeBreath, lifeSeed, nextLifeTick } from "./life";
 import { isPortion, SHORE_TOP } from "./portions";
-import { entityLabels } from "../scene/labels";
+import { entityLabels, storageDescription } from "../scene/labels";
 import type { Interaction, Pickup } from "./useInteraction";
 import type { Viewport } from "./CameraController";
 
@@ -295,7 +295,7 @@ const RestingEntity = memo(function RestingEntity({
       focusable={!front}
       tabIndex={front ? -1 : 0}
       accessibilityRole="button"
-      accessibilityLabel={front ? undefined : `${name}, ${roomNames[entity.room]}${entity.character ? `, ${entity.base}` : ""}`}
+      accessibilityLabel={front ? undefined : `${name}, ${roomNames[entity.room]}${entity.character ? `, ${entity.base}` : storageDescription(entity) ? `, ${storageDescription(entity)}` : ""}`}
       accessibilityElementsHidden={front}
       importantForAccessibility={front ? "no-hide-descendants" : "auto"}
       accessibilityState={{ selected: selected }}
@@ -518,7 +518,7 @@ export function SceneView({
       if (actor.room === room && d < distance) { closest=actor.id; distance=d; }
     }
     return closest;
-  }, (owner,before) => { if(owner && owner !== before) runOnJS(publishStandbyOwner)(owner); }, [offeredId,offeredEntity?.room,standbyCandidates,building]);
+  }, (owner,before) => { if(owner && owner !== before) runOnJS(publishStandbyOwner)(owner); }, [offeredId,offeredEntity?.room,standbyCandidates,building,publishStandbyOwner,foodOffset]);
   const standbyOwner = approachChoice?.key === standbyKey ? approachChoice.owner : initialStandbyOwner;
   const mealStandby = useMemo<Meal | undefined>(() =>
     standbyId === standbyKey && offeredEntity?.item ? { key: 0, action: "drink", offered: true, food: offeredEntity.item } : undefined,

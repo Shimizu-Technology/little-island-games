@@ -34,6 +34,8 @@ import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
 import { FriendDrawer } from "./runtime/FriendDrawer";
+import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from './storage';
+import { StorageTray, StorageFullNote } from './runtime/StorageTray';
 import { HomePanels } from "./runtime/HomePanels";
 import { DesignTools, portraitDrawerHeightFor, type CatalogGhost } from "./runtime/DesignTools";
 import { StagingTray } from "./runtime/StagingTray";
@@ -128,6 +130,8 @@ export function HomeScreen({
   // HM-18: Redo shows in Play for 10 s after an Undo; a full room shows a picture, not just words.
   const [redoWindow, setRedoWindow] = useState(false);
   const redoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [storageId, setStorageId] = useState<string>();
+  const [storageNoteGone, setStorageNoteGone] = useState(0);
   const [capacityGone, setCapacityGone] = useState(0);
   React.useEffect(() => () => clearTimeout(redoTimer.current), []);
   const catalogSeeds = useRef<Record<string, { seed: HomeStateV2 }>>({});
@@ -399,6 +403,7 @@ export function HomeScreen({
     (index: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => {
       const stillCurrent = () => runtime.current!.isCurrent(index, token);
       if (!stillCurrent()) return;
+      if (proposal.refusal === "storage-capacity") { live.current.store.setMessage(STORAGE_FULL_MESSAGE); runtime.current!.finish(index, false, undefined, undefined, undefined, token); return; }
       const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
       // Catalog seeds and detached portions may exist only in the captured slot.
       const mealFood = live.current.scene.entities[proposal.id]?.item ??
@@ -411,6 +416,7 @@ export function HomeScreen({
         stillCurrent
       );
       if (result) {
+        if (result.proposal.attachment.kind === "container") setStorageId(result.proposal.attachment.parent);
         if (labKit && trace)
           trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
         showReaction(result.proposal, mealFood, true, proposal.id, token);
@@ -471,6 +477,7 @@ export function HomeScreen({
           setReactions(current => { const next = { ...current }; delete next[id]; return next; });
         }
       }
+      setStorageId(undefined);
       delightPickup(pickup.scene.entities[pickup.id]);
       watchCooking(live.current.scene);
       setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
@@ -479,7 +486,8 @@ export function HomeScreen({
     [wake, delightPickup, watchCooking]
   );
   const onClear = useCallback(
-    (index: number, id?: string, reason?: "capacity") => {
+    (index: number, id?: string, reason?: "capacity" | "storage-capacity") => {
+      if (reason === "storage-capacity") live.current.store.setMessage(STORAGE_FULL_MESSAGE);
       if (reason === "capacity") live.current.store.setMessage(CAPACITY_MESSAGE);
       if (id) clearCatalogSeed(catalogSeeds.current, id);
       // A cancelled carry puts food back in a hot pan: it starts cooking again.
@@ -587,8 +595,10 @@ export function HomeScreen({
       moveTo(current.selected, entity, point);
       return;
     }
-    if (entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle)
+    if (entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle) {
       current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
+      if (storageCapacity(entity.item.item)) setStorageId(storageOpen(entity.item) ? undefined : entity.id);
+    }
     if (entity) delight.tapped(entity, sleeping);
     if (id) {
       setSelected(!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay ? undefined : id);
@@ -1076,7 +1086,7 @@ export function HomeScreen({
       {!overview && !more && !friends && (
         <Destinations
           scene={scene}
-          selected={selected}
+          selected={selected === storageId ? undefined : selected}
           designing={designing}
           scale={1}
           camera={interaction.camera}
@@ -1096,6 +1106,16 @@ export function HomeScreen({
 
           }}
         />
+      )}
+      {!overview && !more && !friends && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+        <StorageTray entity={scene.entities[storageId]} scene={scene} large={large} bottom={inset.bottom + navigationHeight + 8}
+          onClose={() => { const e = scene.entities[storageId]; if (e?.item) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); }}
+          onTake={id => {
+            const e = scene.entities[id], owner = scene.entities[storageId];
+            if (!e || !owner) return;
+            const p = resolve({ ...scene.rooms[e.room], entities: scene.entities }, e, roomPoint(owner.contact.x, Math.min(535, owner.contact.y + 70)), { scale: 1, floorOnly: true, release: true });
+            if (interaction.animateProposal(p)) setStorageId(undefined);
+          }}/>
       )}
       <StagingTray
         entities={staged}
@@ -1149,8 +1169,9 @@ export function HomeScreen({
       />
       {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
-        {UNDO_NOTES.includes(store.message) ? "" : store.message}
+        {UNDO_NOTES.includes(store.message) || store.message === STORAGE_FULL_MESSAGE ? "" : store.message}
       </Text>
+      {store.message === STORAGE_FULL_MESSAGE && storageNoteGone !== store.messageSerial && <StorageFullNote top={headerHeight + 10} onDismiss={() => setStorageNoteGone(store.messageSerial)}/>}
       {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
       {undoNote && <UndoNote message={store.message} restored={Object.values(RESTORE_NOTE).includes(store.message)}
         top={headerHeight + 10}

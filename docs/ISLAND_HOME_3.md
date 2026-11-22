@@ -130,3 +130,13 @@ The frozen Play list is `anchoredInPlay` in `world.ts`: beds, baths, large seats
 - `access: { largeTargets: true }` — the grown-up larger-target mode, set only behind the typed grown-up question in More. Never an undo step.
 
 Older saves and saves without these fields are unchanged; migrations never write them.
+
+## H5 storage — HS-01 / HS-02
+
+The chest, dresser drawers, cupboard and carry basket share the existing `container` attachment (`Instance.in`). Capacities are authored in `storage.ts`: chest 6, drawers 4, cupboard 8, basket 4, fridge 8. Only a small leaf prop can enter. Characters, furniture and other containers cannot enter; self/ancestor drops fall back through the floor resolver. Full storage refuses the edit, keeps the object at its source, and shows a persistent, dismissible picture and note.
+
+A closed container still offers an outlined landing area and downward arrow. The accepted store operation opens it and attaches the prop in one transaction; hovering or cancelling changes no saved state. Tapping opens/closes it. The open contents shelf has a picture for each actual item and an empty space for each remaining slot. Tap a picture to take that item out onto a resolved floor/tray destination. A basket's real contents peek through its opening; its contents shelf is available on tap. Carry the basket across a room button or doorway using H3's group carry. Descendants move together and collision-renamed IDs update every parent link.
+
+`Instance.storage?: { version: 1, open: boolean }` is additive inside home v4. An absent field reads the legacy `powered` / `state` door state. Legacy canonical saves remain unchanged on load; the first accepted toggle or store writes revision 1 on that container only. Unknown revisions, malformed fields, missing parents, excess contents, nested containers and simultaneous hand/container ownership fail validation and take the existing preserve-and-recover path. Opening/closing, contents, travel and Restore room use existing atomic history patches. Write/read limits remain 15,000 / 20,480 bytes, with H3's refusal and restore-confirmation rules unchanged.
+
+The cupboard and basket are free in Design. This adds no speech/audio, account, network service or public release. Automated and simulator evidence is recorded in the external `v4/wave2/h5-storage/REPORT.md`; Home A1–A10 physical/family rows remain unpassed until their complete protocols run on family hardware.

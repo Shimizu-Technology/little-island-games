@@ -1,3 +1,4 @@
+import { storageCapacity } from './storage';
 import { livingCapabilities } from './art/living';
 import { seatSockets } from './art/sockets';
 import type { ItemId } from "./catalog";
@@ -65,7 +66,7 @@ export const capabilities: Partial<Record<ItemId, Capability>> = { ...Object.fro
 export const anchoredInPlay: readonly ItemId[] = [
   "bed", "bunk-bed", "hammock", "lounger", "sofa", "armchair", "chair", "rocking-chair", "bench", "stool", "bathtub", "bubble-bath",
   "table", "kitchen-table", "coffee-table", "side-table", "desk", "computer-desk", "checkers",
-  "shelf", "bookcase", "dresser", "books", "trophies", "toy-box",
+  "cupboard", "shelf", "bookcase", "dresser", "books", "trophies", "toy-box",
   "fridge", "stove", "sink-counter", "tv", "aquarium", "arcade", "dollhouse",
   "rug", "mat", "round-rug", "striped-rug", "star-rug", "beach-towel",
   "chime", "string-lights", "kite", "sea-picture", "clock", "mirror", "world-map",
@@ -74,6 +75,7 @@ for (const id of anchoredInPlay) capabilities[id] = { ...capabilities[id], moveI
 
 /** Anything without an entry is a loose decoration or toy. Stickers live on the wall. */
 export function capabilityOf(item: ItemId): Capability {
+  if (storageCapacity(item)) return { ...capabilities[item], moveInPlay: item === "carry-basket", toggle: "open" };
   return capabilities[item] ?? { moveInPlay: !String(item).startsWith("sticker:") };
 }
 

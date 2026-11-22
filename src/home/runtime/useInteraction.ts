@@ -240,7 +240,7 @@ export function useInteraction({
   onPickup: (pickup: Pickup) => void;
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
   onTap: (id: EntityId | undefined, point: ScreenPoint, now: number) => void;
-  onClear: (slot: number, id?: string, reason?: "capacity") => void;
+  onClear: (slot: number, id?: string, reason?: "capacity" | "storage-capacity") => void;
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
   onReleaseProbe?: (probe: ReleaseProbe) => void;

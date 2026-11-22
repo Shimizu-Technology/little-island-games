@@ -1,4 +1,5 @@
 // Public contract: worklet resolution is independent of the JS validation/reducer graph.
+import { storageCapacity } from '../storage';
 import type { DropProposal } from "./resolve";
 import { roomIds, type RoomId } from "../catalogMore";
 import { validHome } from "../model";
@@ -27,6 +28,7 @@ export function apply(
   state: SceneState,
   proposal: DropProposal
 ): { state: SceneState; identities: Record<EntityId, EntityId> } | { stale: true } {
+  if (proposal.refusal === "storage-capacity") return { stale: true };
   if (worldRevision(state) !== proposal.revision || !roomIds.includes(proposal.room)) return { stale: true };
   const moves = proposal.moves;
   if (!moves.length || new Set(moves.map((m) => m.id)).size !== moves.length) return { stale: true };
@@ -162,6 +164,12 @@ export function apply(
     rooms[proposal.room].characters = rooms[proposal.room].characters.map((c) =>
       characterEntityId(c.slot) === ownerId ? { ...c, action: proposal.consume === "food" ? "eat" : "drink" } : c
     );
+  }
+  // Opening and storing are one accepted edit; hover/cancel never writes state.
+  if (proposal.attachment.kind === "container") {
+    const parent = parentItemId(proposal.attachment.parent, names);
+    rooms[proposal.room].instances = rooms[proposal.room].instances.map(i => i.id === parent && storageCapacity(i.item)
+      ? { ...i, storage: { version: 1, open: true } } : i);
   }
   for (const room of roomIds) {
     const originalOrder = state.rooms[room].instances.map((i) => i.id);
