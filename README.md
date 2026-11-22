@@ -19,7 +19,7 @@ npm start
 
 Metro uses port 43820. For the production web bundle, run `npm run export:web`, then `npm run preview` (port 43821). The service worker bundles the application and audio for subsequent offline launches; the first visit needs a connection. A new export gets its own cache fingerprint.
 
-Native configuration uses Expo SDK 57 and React Native 0.86.3, with iOS/iPadOS 16.4 minimum. Generated `ios/` and `android/` folders are ignored; configure them through `app.json` and Expo plugins. Ruby 3.3.4 and the Gemfile lock pin the CocoaPods toolchain for local iOS builds.
+Native configuration uses Expo SDK 57 and React Native 0.86.3, with iOS/iPadOS 16.4 minimum. Generated `ios/` and `android/` folders are ignored; configure them through `app.json` and Expo plugins. Ruby 3.3.14 and the Gemfile lock pin the CocoaPods toolchain for local iOS builds.
 
 ```sh
 bundle install
