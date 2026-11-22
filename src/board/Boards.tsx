@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Line, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
 import { Button, C, Copy, PressableScale, font } from "../components/ui";
+import { CHROME_MAX, atLarge } from "../components/wordFit";
 import { other } from "../games/match";
 import { Piece } from "./Art";
 import { BoardId, engines, Position } from "./index";
@@ -27,6 +28,10 @@ type Props = {
   names?: readonly [string, string];
   /** The other side's latest move, ringed: Coconut Drop cells or Fishing Nets ropes. */
   recent?: readonly number[];
+  /** Clue cells highlighted by Look/Think steps in the public hint ladder (Reef Sweep). */
+  hintFocus?: readonly number[];
+  /** Shown safe starting cell for an explicitly accepted certified fallback Reef Sweep board. */
+  startCell?: number | null;
 };
 const tone = ["#805538", "#286B69"];
 const netWord = (n: number) => (n === 1 ? "net" : "nets");
@@ -451,12 +456,15 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
     </View>
   );
 }
-function Reef({ state: s, width, onMove, locked, hint, flag }: Props) {
-  const cell = Math.min(width / s.size, 58),
-    count = s.board.length;
+function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], startCell = null }: Props) {
+  const { fontScale } = useWindowDimensions();
+  const cell = Math.max(42, Math.min(Math.floor(width / s.size), 58)),
+    count = s.board.length,
+    unopened = !s.marks.includes(1),
+    copyCap = atLarge(fontScale, CHROME_MAX);
   return (
     <View style={{ alignItems: "center", gap: 10 }}>
-      <Copy style={{ fontSize: 14 }}>
+      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center" }}>
         {urchins(s.size)} sea urchins · {s.marks.filter((m) => m === 2).length} flags · {s.scores[0]} pearls
       </Copy>
       <View style={{ width: cell * s.size, backgroundColor: "#CADFD0", borderRadius: 18, overflow: "hidden" }}>
@@ -467,25 +475,52 @@ function Reef({ state: s, width, onMove, locked, hint, flag }: Props) {
                 revealed = s.marks[i] === 1,
                 marked = s.marks[i] === 2,
                 showUrchin = s.outcome !== null && s.board[i] === -1,
-                chosen = hint !== null && hint !== undefined && hint % count === i;
+                chosen = hint !== null && hint !== undefined && hint % count === i,
+                focused = hintFocus.includes(i),
+                isStart = unopened && startCell === i,
+                blockedStart = unopened && startCell !== null && i !== startCell && !flag && !marked;
               return (
                 <PressableScale
                   key={c}
                   accessibilityRole="button"
-                  accessibilityLabel={`Reef ${String.fromCharCode(65 + c)}${r + 1}, ${showUrchin ? "sea urchin" : revealed ? `${s.board[i]} neighboring urchins` : marked ? "flag" : "closed"}`}
-                  disabled={locked || revealed || s.outcome !== null}
+                  accessibilityLabel={`Reef ${String.fromCharCode(65 + c)}${r + 1}, ${
+                    showUrchin
+                      ? "sea urchin"
+                      : revealed
+                        ? `${s.board[i]} neighboring urchins`
+                        : marked
+                          ? isStart
+                            ? "safe start, flag"
+                            : "flag"
+                          : isStart
+                            ? "safe start, closed"
+                            : "closed"
+                  }`}
+                  disabled={locked || revealed || s.outcome !== null || blockedStart}
+                  accessibilityState={{ disabled: !!locked || revealed || s.outcome !== null || blockedStart }}
                   onPress={() => onMove(i + (flag ? count : 0))}
+                  onLongPress={() => {
+                    if (!locked && !revealed && s.outcome === null) onMove(i + count);
+                  }}
                   style={{
                     width: cell - 4,
                     height: cell - 4,
                     minHeight: 40,
                     margin: 2,
                     borderRadius: 10,
-                    backgroundColor: revealed ? "#FAF5E6" : marked ? "#EDDBB6" : "#64947C",
+                    backgroundColor: showUrchin
+                      ? "#EBD7E0"
+                      : revealed
+                        ? "#FAF5E6"
+                        : marked
+                          ? "#EDDBB6"
+                          : isStart
+                            ? "#548C78"
+                            : "#64947C",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderWidth: chosen ? 3 : 1,
-                    borderColor: chosen ? "#B77725" : "#36674F",
+                    borderWidth: chosen || isStart || focused ? 3 : 1,
+                    borderColor: chosen || isStart ? "#B77725" : focused ? C.teal : "#36674F",
                   }}
                 >
                   {showUrchin ? (
@@ -496,10 +531,21 @@ function Reef({ state: s, width, onMove, locked, hint, flag }: Props) {
                     s.board[i] === 0 ? (
                       <Piece kind="pearl" size={cell - 14} />
                     ) : (
-                      <NumberText color={s.board[i] === 1 ? C.blue : s.board[i] === 2 ? C.teal : C.error}>
+                      <Text
+                        maxFontSizeMultiplier={1.25}
+                        style={{
+                          color: s.board[i] === 1 ? C.blue : s.board[i] === 2 ? C.teal : C.error,
+                          fontSize: Math.min(22, Math.floor(cell * 0.48)),
+                          fontFamily: font,
+                          fontWeight: "800",
+                          textAlign: "center",
+                        }}
+                      >
                         {s.board[i]}
-                      </NumberText>
+                      </Text>
                     )
+                  ) : isStart ? (
+                    <Piece kind="pearl" size={Math.max(18, cell - 20)} />
                   ) : (
                     <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#D1E7C8" }} />
                   )}
@@ -509,7 +555,9 @@ function Reef({ state: s, width, onMove, locked, hint, flag }: Props) {
           </View>
         ))}
       </View>
-      <Copy style={{ fontSize: 14, textAlign: "center" }}>Numbers count sea urchins in all touching spaces.</Copy>
+      <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center" }}>
+        Numbers count sea urchins in all touching spaces. Hold a closed tile to flag.
+      </Copy>
     </View>
   );
 }

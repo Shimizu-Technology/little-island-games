@@ -6,6 +6,7 @@ import { AppState, Platform, ScrollView, View, useWindowDimensions } from "react
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { Button, C, Chip, Copy, GameHeader, Heading, Label, Sheet, Status, ToggleRow, styles } from "../components/ui";
+import { CHROME_MAX, atLarge, wordFitMultiplier } from "../components/wordFit";
 import { Celebrate } from "../learn/Celebrate";
 import { PlayerNames, Scoreboard } from "../components/Match";
 import { Recovery } from "../components/Recovery";
@@ -25,6 +26,9 @@ import { Boards, demoPosition } from "./Boards";
 import { coordinate, target as canoeTarget } from "./hidden-canoes/engine";
 import { hintReason as coconutHintReason } from "./coconut-drop/engine";
 import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
+import { coordinate as reefCoordinate, createFallbackPosition, publicHintStep, urchins, type PublicStep } from "./reef-sweep/engine";
+import { loadCertifiedFallback, type FallbackCandidate } from "./reef-sweep/fallback";
+import { redrawBoardTask, type RedrawCancel } from "./reef-sweep/redraw";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
 /** Each board's Challenge puzzles, reached from its setup, and the Challenge ID they're registered under. */
 const puzzleLinks = {
@@ -32,10 +36,12 @@ const puzzleLinks = {
   "coconut-drop": { game: "drop-puzzles", label: "Puzzles · win, block and fork" },
   "fishing-nets": { game: "fishing-nets", label: "Chain endings · keep control of the nets" },
   "hidden-canoes": { game: "hidden-canoes", label: "Chart puzzles · find canoes by thinking" },
+  "reef-sweep": { game: "reef-sweep", label: "Deduction puzzles · 128 certified no-guess reefs" },
 } as const;
 const back = () =>
   router.canGoBack() ? router.back() : router.replace({ pathname: "/shelf", params: { island: "classic" } });
-export function BoardScreen({ game }: { game: BoardId }) {
+export type ReefRedrawOptions = Parameters<typeof redrawBoardTask>[4];
+export function BoardScreen({ game, redrawOptions }: { game: BoardId; redrawOptions?: ReefRedrawOptions }) {
   const store = useStore(),
     [setup, setSetup] = useState(false),
     s = store.save.board?.[game];
@@ -77,6 +83,7 @@ export function BoardScreen({ game }: { game: BoardId }) {
       <Round
         key={`${s.id}:${store.epoch}`}
         session={s}
+        redrawOptions={redrawOptions}
         onSetup={() => setSetup(true)}
         onReplay={() => practice.request(() => store.boardUpdate(game, playAgain(s, Date.now() >>> 0), s, store.epoch))}
       />
@@ -96,7 +103,11 @@ function Setup({
   onClose: () => void;
 }) {
   const store = useStore(),
-    info = catalog[game];
+    info = catalog[game],
+    { width, fontScale } = useWindowDimensions(),
+    buttonCap = atLarge(fontScale, 1.3),
+    copyCap = atLarge(fontScale, CHROME_MAX),
+    titleCap = atLarge(fontScale, wordFitMultiplier(info.name, 26, Math.min(width, 640) - 40, 2));
   const [mode, setMode] = useState<"solo" | "together">(previous?.mode ?? "solo"),
     [strength, setStrength] = useState<Strength>(previous?.strength ?? "gentle"),
     [size, setSize] = useState(previous?.position.size ?? info.sizes[0]),
@@ -116,12 +127,12 @@ function Setup({
         <GameHeader title={info.name} onBack={previous ? onClose : back} backLabel={previous ? "Back" : "Games"} />
         <View style={{ alignItems: "center", gap: 8 }}>
           <BoardArt game={game} size={116} />
-          <Heading style={{ textAlign: "center" }}>{info.name}</Heading>
-          <Copy style={{ textAlign: "center" }}>{info.description}</Copy>
+          <Heading maxFontSizeMultiplier={titleCap} style={{ textAlign: "center" }}>{info.name}</Heading>
+          <Copy maxFontSizeMultiplier={copyCap} style={{ textAlign: "center" }}>{info.description}</Copy>
         </View>
-        <Copy>{info.rule}</Copy>
+        <Copy maxFontSizeMultiplier={copyCap}>{info.rule}</Copy>
         {game in puzzleLinks && (
-          <Button quiet onPress={() => router.push({ pathname: "/challenge", params: { game: puzzleLinks[game as keyof typeof puzzleLinks].game } })}>
+          <Button quiet maxFontSizeMultiplier={buttonCap} onPress={() => router.push({ pathname: "/challenge", params: { game: puzzleLinks[game as keyof typeof puzzleLinks].game } })}>
             {puzzleLinks[game as keyof typeof puzzleLinks].label}
           </Button>
         )}
@@ -190,9 +201,9 @@ function Setup({
             <Label>Board size</Label>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {info.sizes.map((n) => (
-                <Chip key={n} selected={size === n} onPress={() => setSize(n)}>
+                <Chip key={n} maxFontSizeMultiplier={buttonCap} selected={size === n} onPress={() => setSize(n)}>
                   {n} × {n}
-                  {game === "reef-sweep" ? (n === 5 ? " · Gentle" : n === 6 ? " · Growing" : " · Challenge") : " boxes"}
+                  {game === "reef-sweep" ? ` · ${urchins(n)} urchins` : " boxes"}
                 </Chip>
               ))}
             </View>
@@ -233,10 +244,12 @@ function Setup({
 }
 function Round({
   session: s,
+  redrawOptions,
   onSetup,
   onReplay,
 }: {
   session: BoardSession;
+  redrawOptions?: ReefRedrawOptions;
   onSetup: () => void;
   onReplay: () => void;
 }) {
@@ -245,24 +258,37 @@ function Round({
     engine = engines[s.game],
     p = s.position,
     insets = useSafeAreaInsets(),
-    { width, height } = useWindowDimensions(),
+    { width, height, fontScale } = useWindowDimensions(),
     play = useSounds(store.save.settings.sound);
-  const wide = width >= 900 && width > height;
-  const available = Math.max(280, Math.min(wide ? width * 0.52 - 60 : width - insets.left - insets.right - 40, wide ? 440 : 560));
+  const wide = s.game === "reef-sweep" ? width >= 660 && width > height : width >= 900 && width > height;
+  const buttonCap = atLarge(fontScale, 1.3);
+  const copyCap = atLarge(fontScale, CHROME_MAX);
+  const available = Math.max(
+    280,
+    Math.min(
+      wide ? width * (s.game === "reef-sweep" ? 0.56 : 0.52) - 48 : width - insets.left - insets.right - 40,
+      wide ? Math.min(440, height - insets.top - insets.bottom - 96) : 560
+    )
+  );
   const success = p.outcome !== null && p.outcome !== "draw" && (s.mode !== "solo" || p.outcome === 0);
   const [help, setHelp] = useState(false),
     [demo, setDemo] = useState(0),
     [visible, setVisible] = useState<string | null>(null),
     [hint, setHint] = useState<number | null>(null),
+    [reefHintStage, setReefHintStage] = useState<0 | 1 | 2 | null>(null),
+    [reefHintStep, setReefHintStep] = useState<PublicStep | null>(null),
+    [redrawing, setRedrawing] = useState(false),
+    [fallbackOffer, setFallbackOffer] = useState<{ tappedCell: number; candidate: FallbackCandidate } | null>(null),
     [flag, setFlag] = useState(false),
     [notice, setNotice] = useState("");
+  const redrawRun = useRef<RedrawCancel | null>(null);
   const teaching = help || !s.taught,
     token = `${store.epoch}:${s.id}:${p.moves.length}:${p.turn}`;
   const secret = s.game === "hidden-canoes" && p.outcome === null,
     ai = s.mode === "solo" && p.turn === 1 && s.game !== "reef-sweep" && p.outcome === null;
   // Only two players sharing the device need the handover; against the computer nobody else looks.
   const concealed = secret && !ai && s.mode === "together" && visible !== token,
-    locked = teaching || ai || concealed;
+    locked = teaching || ai || concealed || redrawing;
   const conceal = useCallback(() => setVisible(null), []);
   useFocusEffect(
     useCallback(
@@ -320,6 +346,7 @@ function Round({
   useEffect(
     () => () => {
       if (hintRun.current) hintRun.current.cancelled = true;
+      if (redrawRun.current) redrawRun.current.cancelled = true;
     },
     [token]
   );
@@ -349,8 +376,7 @@ function Round({
     });
     play("tap");
   };
-  const move = (action: number) => {
-    if (locked) return;
+  const commitMove = (action: number) => {
     const position = engine.move(p, action);
     if (position === p) {
       setNotice(
@@ -364,6 +390,9 @@ function Round({
     }
     if (commit({ ...s, position })) {
       setHint(null);
+      setReefHintStage(null);
+      setReefHintStep(null);
+      setFallbackOffer(null);
       setNotice("");
       if (secret) conceal();
       play(
@@ -380,8 +409,83 @@ function Round({
       }
     }
   };
+  const move = (action: number) => {
+    if (locked) return;
+    if (
+      s.game === "reef-sweep" &&
+      p.rules === 2 &&
+      !p.fallback &&
+      !p.marks.includes(1) &&
+      action < p.board.length &&
+      p.marks[action] === 0
+    ) {
+      // First-tap no-guess redraw runs in bounded async slices off the frame callback.
+      const cancel: RedrawCancel = { cancelled: false };
+      if (redrawRun.current) redrawRun.current.cancelled = true;
+      redrawRun.current = cancel;
+      setRedrawing(true);
+      setFallbackOffer(null);
+      setNotice("Setting up a no-guess reef…");
+      void redrawBoardTask(p.seed, p.size, action, cancel, redrawOptions).then(async (res) => {
+        if (cancel.cancelled) return;
+        if (res.status === "found") {
+          setRedrawing(false);
+          commitMove(action);
+        } else if (res.status === "exhausted") {
+          const candidate = await loadCertifiedFallback(p.size, p.seed);
+          if (cancel.cancelled) return;
+          setRedrawing(false);
+          setFallbackOffer({ tappedCell: action, candidate });
+          setNotice("");
+        } else {
+          setRedrawing(false);
+        }
+      });
+      return;
+    }
+    commitMove(action);
+  };
   const showHint = () => {
-    if (s.game === "reef-sweep") return explain(engine.choose(p, "challenge"));
+    if (s.game === "reef-sweep") {
+      const step = publicHintStep(p);
+      if (!step) {
+        setHint(null);
+        setReefHintStage(null);
+        setReefHintStep(null);
+        setNotice(
+          p.rules === undefined
+            ? "This older saved reef has no certain next step from the visible numbers. New reefs never need a guess."
+            : "No certain next step is available right now. Check any flags or start a fresh reef."
+        );
+        return;
+      }
+      if (reefHintStage === null) {
+        setReefHintStep(step);
+        setReefHintStage(0);
+        setHint(null);
+        setNotice(step.reason.look);
+        play("tap");
+      } else if (reefHintStage === 0) {
+        setReefHintStep(step);
+        setReefHintStage(1);
+        setHint(null);
+        setNotice(step.reason.think);
+        play("tap");
+      } else if (reefHintStage === 1) {
+        setReefHintStep(step);
+        setReefHintStage(2);
+        const targetAction = step.kind === "open" ? step.cell : step.cell + p.board.length;
+        setHint(targetAction);
+        if (step.kind === "flag") setFlag(true);
+        else if (step.kind === "open") setFlag(false);
+        setNotice(step.reason.oneStep);
+        play("tap");
+      } else {
+        const targetAction = step.kind === "open" ? step.cell : step.cell + p.board.length;
+        move(targetAction);
+      }
+      return;
+    }
     const task = hintTask(s);
     if (!task) return explain(null);
     const cancel: Cancel = { cancelled: false };
@@ -395,11 +499,7 @@ function Round({
   const explain = (action: number | null) => {
     setHint(action);
     if (action === null) {
-      setNotice(
-        s.game === "reef-sweep"
-          ? "No certain next step from the visible numbers. Check your flags; a careful guess may be needed."
-          : "No move is available."
-      );
+      setNotice("No move is available.");
       return;
     }
     if (s.game === "coconut-drop")
@@ -414,16 +514,6 @@ function Round({
       setNotice(`Try tying ${dot(a)} to ${dot(b)}. ${netsHintReason(p, action)}`);
     } else if (s.game === "hidden-canoes")
       setNotice(`Try ${coordinate(action)}. Search beside a find, then explore new water.`);
-    else {
-      setFlag(action >= p.board.length);
-      setNotice(
-        !p.marks.includes(1)
-          ? "Your first opening and all touching spaces are safe."
-          : action >= p.board.length
-            ? "A visible number needs every remaining touching space to be an urchin. Flag the ringed tile if your other flags are correct."
-            : "A visible number already has all its urchins flagged. The ringed tile is safe if those flags are correct."
-      );
-    }
     play("tap");
   };
   const finishTeaching = () => {
@@ -500,7 +590,11 @@ function Round({
                   : "You can undo the last opening or try a new reef. Take your time."
                 : "Your family score includes this round. Play again to carry it forward."
               : s.game === "reef-sweep"
-                ? "First tap is safe. Open every pearl space."
+                ? p.fallback && !p.marks.includes(1)
+                  ? `Certified no-guess reef · tap the ringed start at ${reefCoordinate(p.size, p.fallback.start)}.`
+                  : p.rules === 2
+                    ? "First tap is safe · every new reef solves with no guessing."
+                    : "First tap is safe. Open every pearl space."
                 : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`
           }
         />
@@ -532,12 +626,22 @@ function Round({
         )}
         <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>
           {p.outcome === null && !concealed && (
-            <Button quiet compact disabled={locked || hinting} onPress={showHint}>
-              {hinting ? "Thinking…" : "Hint"}
+            <Button quiet compact maxFontSizeMultiplier={buttonCap} disabled={locked || hinting} onPress={showHint}>
+              {hinting
+                ? "Thinking…"
+                : s.game === "reef-sweep"
+                  ? reefHintStage === null
+                    ? "Hint · Look"
+                    : reefHintStage === 0
+                      ? "Hint · Think"
+                      : reefHintStage === 1
+                        ? "Hint · One step"
+                        : "Hint · Show me"
+                  : "Hint"}
             </Button>
           )}
           {p.outcome !== null && s.game !== "reef-sweep" && reviewSeat !== null && review === null && (
-            <Button quiet compact onPress={seeBestMove}>
+            <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={seeBestMove}>
               See the best move
             </Button>
           )}
@@ -545,11 +649,15 @@ function Round({
             <Button
               quiet
               compact
-              disabled={teaching || undo(s) === s}
+              maxFontSizeMultiplier={buttonCap}
+              disabled={teaching || redrawing || undo(s) === s}
               onPress={() => {
                 const next = undo(s);
                 if (commit(next)) {
                   setHint(null);
+                  setReefHintStage(null);
+                  setReefHintStep(null);
+                  setFallbackOffer(null);
                   setNotice("");
                   play("tap");
                 }
@@ -559,14 +667,15 @@ function Round({
             </Button>
           )}
           {secret && !concealed && !ai && (
-            <Button quiet compact onPress={conceal}>
+            <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={conceal}>
               Cover my turn
             </Button>
           )}
-          {p.outcome !== null && <Button onPress={onReplay}>Play again</Button>}
+          {p.outcome !== null && <Button maxFontSizeMultiplier={buttonCap} onPress={onReplay}>Play again</Button>}
           <Button
             quiet
             compact
+            maxFontSizeMultiplier={buttonCap}
             onPress={() => {
               conceal();
               onSetup();
@@ -575,6 +684,58 @@ function Round({
             New game
           </Button>
         </View>
+        {s.game === "reef-sweep" && fallbackOffer && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{ gap: 10, padding: 14, backgroundColor: "#FFF4D6", borderRadius: 16 }}
+          >
+            <Heading
+              maxFontSizeMultiplier={atLarge(fontScale, wordFitMultiplier("Try a certified reef?", 20, available, CHROME_MAX))}
+              style={{ fontSize: 20 }}
+            >
+              Try a certified reef?
+            </Heading>
+            <Copy maxFontSizeMultiplier={copyCap} style={{ color: C.ink }}>
+              Finding a no-guess reef from {reefCoordinate(p.size, fallbackOffer.tappedCell)} took too long. Your tap
+              was not moved. Would you like a certified no-guess reef that starts at{" "}
+              {reefCoordinate(p.size, fallbackOffer.candidate.start)}, or keep this reef and tap another space?
+            </Copy>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Button
+                compact
+                maxFontSizeMultiplier={buttonCap}
+                onPress={() => {
+                  const nextPos = createFallbackPosition(p.seed, p.size, {
+                    start: fallbackOffer.candidate.start,
+                    mines: fallbackOffer.candidate.mines,
+                  });
+                  if (commit({ ...s, position: nextPos })) {
+                    setFallbackOffer(null);
+                    setHint(null);
+                    setReefHintStage(null);
+                    setReefHintStep(null);
+                    setNotice("");
+                    play("tap");
+                  }
+                }}
+              >
+                Use certified reef (starts at {reefCoordinate(p.size, fallbackOffer.candidate.start)})
+              </Button>
+              <Button
+                quiet
+                compact
+                maxFontSizeMultiplier={buttonCap}
+                onPress={() => {
+                  setFallbackOffer(null);
+                  setNotice("");
+                  play("tap");
+                }}
+              >
+                Keep this reef
+              </Button>
+            </View>
+          </View>
+        )}
         <Copy style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
         </View>
         <View style={{ flex: wide ? 1.15 : undefined, gap: 12, justifyContent: "center" }}>
@@ -649,10 +810,10 @@ function Round({
           <>
             {s.game === "reef-sweep" && (
               <View style={[styles.row, { justifyContent: "center", flexWrap: "wrap" }]}>
-                <Chip selected={!flag} onPress={() => setFlag(false)}>
+                <Chip maxFontSizeMultiplier={buttonCap} selected={!flag} onPress={() => setFlag(false)}>
                   Open pearls
                 </Chip>
-                <Chip selected={flag} onPress={() => setFlag(true)}>
+                <Chip maxFontSizeMultiplier={buttonCap} selected={flag} onPress={() => setFlag(true)}>
                   Flag urchins
                 </Chip>
               </View>
@@ -665,6 +826,8 @@ function Round({
               onMove={move}
               locked={locked || p.outcome !== null}
               hint={hint}
+              hintFocus={s.game === "reef-sweep" && reefHintStage !== null && reefHintStep ? reefHintStep.clues : undefined}
+              startCell={s.game === "reef-sweep" && p.fallback ? p.fallback.start : null}
               flag={flag}
               speak={play}
             />
