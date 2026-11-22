@@ -33,7 +33,7 @@ import { translatedBounds } from "../scene/spatial";
 import { carriedCentre } from "./carry";
 import { prepareHits, pickEntity, onShapes } from "./pick";
 import { pickupScene, type PickupScene } from "./pickupScene";
-import { layoutToken } from "./layout";
+import { layoutToken, restingLayoutReady } from "./layout";
 import { acknowledgePoseIn, forgetPoseIn, poseLaidOut, type PoseAcks } from "./poseAck";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
@@ -1127,7 +1127,7 @@ export function useInteraction({
           const pose = entity && poseToken(entity.base, entity.facing, entity.action);
           return { id: s.id, phase: s.phase, committed: s.committed, finished: s.finished,
             revisionReady: s.revision === renderedRevision.value,
-            layoutReady: !!entity && laidOut.value[entity.id] === layoutTokens.value[entity.id],
+            layoutReady: !!entity && restingLayoutReady(entity, laidOut.value, layoutTokens.value),
             poseReady: !!pose && poseLaidOut(poseLayouts.value, s.id, pose),
             pose, poseKeys: Object.keys(poseLayouts.value),
           };
@@ -1269,9 +1269,8 @@ export function useInteraction({
                 { generation: slot.generation, epoch: slot.epoch });
             }
             const entity = prepared.value.entities[slot.restId ?? slot.id];
-            const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
-              (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
-                (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))))));
+            const nativeReady = slot.consumed || (entity && restingLayoutReady(entity, laidOut.value, layoutTokens.value) &&
+              (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))));
             if (!slot.mealPending && nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
