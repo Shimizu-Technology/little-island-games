@@ -79,4 +79,17 @@ describe('H5 storage on the live screen', () => {
     expect(persist).not.toHaveBeenCalled();
     expect(root.root.findAllByProps({testID:'storage-full-note'}).length).toBeGreaterThan(0);
   });
+  it('the second of two simultaneous drops gets full feedback and preserves its source', async()=>{
+    const s = labFixtures['rig-menu-0']();
+    s.rooms.home.instances=[instance('box','carry-basket',8,7),instance('first','mango',2,10),instance('second','ball',4,10),...Array.from({length:3},(_,n)=>({...instance(`toy-${n}`,'shell',0,0),in:'box'}))];s.rooms.home.characters=[];
+    const saves: HomeStateV2[]=[];
+    await open(s,next=>{saves.push(next);return true;});
+    const scene=buildScene(s), target=scene.rooms.home.targets.find(t=>t.kind==='container')!;
+    const proposals=['first','second'].map(id=>resolve(scene.rooms.home,scene.entities[`home/item/${id}`],target.contact,{scale:1,release:true,target:target.id}));
+    for(const p of proposals)await act(async()=>harness.options.onCommit(0,p,target.contact,{}));
+    expect(saves).toHaveLength(1);
+    expect(saves[0].rooms.home.instances.find(i=>i.id==='second')?.in).toBeUndefined();
+    expect(root.root.findAllByProps({testID:'storage-full-note'}).length).toBeGreaterThan(0);
+  });
+
 });

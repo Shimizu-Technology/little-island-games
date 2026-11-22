@@ -290,6 +290,7 @@ export function HomeScreen({
             const target = fresh.rooms[destination].targets.find(t => t.id === proposal.target);
             const contact = target && (proposal.kind === "hand" || (proposal.kind === "mouth" && proposal.consume === "drink")
               ? target.projectedContact ?? target.contact : target.contact);
+            if (target?.kind === "container" && target.closed) current.store.setMessage(STORAGE_FULL_MESSAGE);
             if (!target || target.closed || target.occupied ||
               contact!.x !== proposal.contact.x || contact!.y !== proposal.contact.y ||
               JSON.stringify(target.attachment) !== JSON.stringify(proposal.attachment)) return undefined;
@@ -319,6 +320,7 @@ export function HomeScreen({
             target: proposal?.target,
           }
         );
+        if (resolved.refusal === "storage-capacity") { current.store.setMessage(STORAGE_FULL_MESSAGE); return undefined; }
         // A concurrent edit can invalidate a drop, but must never silently move it
         // somewhere the child did not preview. Rebase only the same destination.
         if (proposal && (resolved.kind !== proposal.kind || resolved.target !== proposal.target ||
