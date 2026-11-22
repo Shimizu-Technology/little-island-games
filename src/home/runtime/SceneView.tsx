@@ -299,9 +299,9 @@ const RestingEntity = memo(function RestingEntity({
       accessibilityElementsHidden={front}
       importantForAccessibility={front ? "no-hide-descendants" : "auto"}
       accessibilityState={{ selected: selected }}
-      accessibilityHint="Select, then choose a place."
+      accessibilityHint={entity.body?.container ? "Open or close. Choose an item picture to take it out." : "Select, then choose a place."}
       accessibilityActions={[
-        { name: "activate", label: "Select" },
+        { name: "activate", label: entity.body?.container ? "Open or close" : "Select" },
         ...["left", "right", "back", "forward", ...(!isPortion(entity.id) ? ["store"] : [])].map((name) => ({
           name,
           label: name,
