@@ -165,7 +165,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
       if (
         !source ||
         !cap?.dispenses?.includes(action.item) ||
-        (cap.toggle === "open" && !(source.powered ?? source.state === "active"))
+        (cap.toggle === "open" && !storageOpen(source))
       )
         return { state: save };
     }

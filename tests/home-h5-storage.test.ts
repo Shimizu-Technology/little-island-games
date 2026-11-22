@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { instance, migrateHome, starterHome, validHome, homeReducer, type HomeStateV2 } from '../src/home/model';
 import { storageCapacity, storageOpen } from '../src/home/storage';
+import { withPortions } from '../src/home/runtime/portions';
+import { itemShapes } from '../src/home/art/silhouettes';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve, apply } from '../src/home/scene/proposal';
 import { roomPoint } from '../src/home/scene/types';
@@ -75,6 +77,19 @@ describe('HS-01 / HS-02 storage', () => {
     const unpack = resolve({ ...scene.rooms.kitchen, entities: scene.entities }, stored, roomPoint(650, 525), { scale: 1, release: true, floorOnly: true });
     const result = apply(h.present, unpack);
     expect('state' in result && result.state.rooms.kitchen.instances.filter(i => i.in === basket.id)).toHaveLength(3);
+  });
+  it('fridge portions, hulls and dispensing obey the revision-1 door state over legacy power', () => {
+    let s = fixture('fridge');
+    s.rooms.home.instances[0].powered = true;
+    s = homeReducer(s, { type: 'toggle', id: 'box', roomId: 'home' }).state;
+    const box = s.rooms.home.instances[0];
+    expect(storageOpen(box)).toBe(false);
+    expect(Object.keys(withPortions(buildScene(s)).entities).filter(id => id.includes('portion-'))).toHaveLength(0);
+    expect(itemShapes(box, 336)).toEqual(itemShapes({ ...box, storage: undefined, powered: false, state: 'rest' }, 336));
+    const action = { type: 'dispense' as const, source: 'box', id: 'new-food', item: 'mango', x: 300, y: 520, roomId: 'home' as const };
+    expect(homeReducer(s, action).state).toBe(s);
+    s = homeReducer(s, { type: 'toggle', id: 'box', roomId: 'home' }).state;
+    expect(Object.keys(withPortions(buildScene(s)).entities).filter(id => id.includes('portion-'))).toHaveLength(4);
   });
   it('a friend carries the basket and every child; stale/interrupted proposals preserve the complete source', () => {
     const s = fixture('carry-basket', 4);

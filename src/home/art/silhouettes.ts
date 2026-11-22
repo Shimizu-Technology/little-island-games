@@ -1,3 +1,4 @@
+import { storageCapacity, storageOpen } from '../storage';
 import type { Bounds, HitShape, SceneEntity } from "../scene/types";
 import { itemIds, type ItemId } from "../catalog";
 
@@ -187,7 +188,7 @@ function rescale(prim: Prim, box: number, size: number, flip: boolean): HitShape
 export function itemShapes(item: NonNullable<SceneEntity["item"]>, size: number): HitShape[] {
   const entry = hullOf(item.item);
   if (!entry) return [];
-  const flip = item.mirrored !== item.rotation >= 180, active = item.powered ?? item.state === "active";
+  const flip = item.mirrored !== item.rotation >= 180, active = storageCapacity(item.item) ? storageOpen(item) : item.powered ?? item.state === "active";
   return (active && entry.open ? entry.open : entry.shapes).map((prim) => rescale(prim, entry.box, size, flip));
 }
 
