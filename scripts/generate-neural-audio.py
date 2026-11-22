@@ -44,12 +44,14 @@ def spoken(text):
     # The beach-ball buddy "Bibi" was heard as "Bibai" in both voices; the name is read "BEE-bee".
     text=re.sub(r'\bBibi\b', 'Bee-bee', text)
     # Inquiry units (S1a): "AU" was heard as "1.0", and kg/N/m/s² are letters to a child's ear. Speak the unit words.
+    text=re.sub(r'(?<![.\d])\b1 kg\b', '1 kilogram', text)
     text=re.sub(r'(?<=\d) kg(?= (?:crate|mass)\b)', ' kilogram', text)
     text=re.sub(r'(?<=\d) kg\b', ' kilograms', text)
+    text=re.sub(r'(?<![.\d])\b1 N\b', '1 newton', text)
     text=re.sub(r'(?<=\d) N\b', ' newtons', text)
-    text=re.sub(r'\b(1|One|each|per) AU\b', r'\1 astronomical unit', text)
-    text=re.sub(r'\bAU\b', 'astronomical units', text)
-    text=text.replace('m/s²', 'meters per second squared')
+    text=re.sub(r'(?<![.\d])\b(1|One|each|per) AU\b', r'\1 astronomical unit', text)
+    text=re.sub(r'(?<=\d) AU\b|\bboth AU\b', lambda m: 'both astronomical units' if m.group(0).startswith('both') else ' astronomical units', text)
+    text=re.sub(r'(?<![A-Za-z0-9_])m/s²', 'meters per second squared', text)
     # A short label ending in "Faith." was heard as "face"; exclaiming keeps the "th".
     text=re.sub(r'^Our Catholic Faith\.$', 'Our Catholic Faith!', text)
     return text.strip()

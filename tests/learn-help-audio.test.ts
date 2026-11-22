@@ -2,7 +2,7 @@ import {readFileSync,statSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {expect,it} from 'vitest';
 import {engines} from '../src/learn/engines';
-// Owner: lead — a help line staged for the next audio batch (scripts/learn/*.json) goes here. Remove an entry as soon as audio ships (W5a voiced the last five).
+// Owner: lead — a help line staged for the next audio batch (scripts/learn/*.json) goes here. Remove an entry as soon as audio ships (W5a voiced the last six).
 const knownMissing: string[] = [];
 /** Inspect the shipped require table without loading native audio assets into Node. */
 it('P2-6 every learning engine helpAudio resolves to a shipped source in both voices',()=>{

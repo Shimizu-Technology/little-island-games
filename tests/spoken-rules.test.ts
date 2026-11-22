@@ -18,6 +18,10 @@ it("speaks the inquiry units: kilograms, newtons, astronomical units, metres per
 it("leaves ordinary words and the other rules alone", () => {
   expect(spoken("Bibliography of bibs.")).toBe("Bibliography of bibs.");
   expect(spoken("An N and a kg stay letters when no number leads them.")).toBe("An N and a kg stay letters when no number leads them.");
+  expect(spoken("Shop hours for AU and NZ.")).toBe("Shop hours for AU and NZ.");
+  expect(spoken("21.1 AU")).toBe("21.1 astronomical units");
+  expect(spoken("1 kg bag weighs 1 N.")).toBe("1 kilogram bag weighs 1 newton.");
+  expect(spoken("2 km/s²")).toBe("2 km/s²");
   expect(spoken("Whaaat? uGogo")).toBe("What?! oo-Go-go");
   expect(spoken("3 + ? = 5")).toBe("3 plus blank equals 5");
 });
