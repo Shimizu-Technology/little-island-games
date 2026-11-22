@@ -24,3 +24,5 @@ export function roundTemplates(level: number, rng: () => number, avoid: readonly
     return from[Math.floor(rng() * from.length) % from.length];
   });
 }
+/** Every certified way to draw this picture at this level: the written one and its equally short alternatives. The hint aims at the nearest. */
+export const templateWinners = (level: number, index: number): Block[][] => [must(schoolTemplates[level - 1][index].blocks), ...schoolTemplates[level - 1][index].alts.map(must)];

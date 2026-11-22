@@ -159,7 +159,7 @@ describe('draw it: the engine, the replay and the save', () => {
       let s = move(start(top), winOps(dd)), blocked: Action | null = null, turn = false;
       // Going round a three-count detour once changes which plan is on the board when the log fills.
       if (detour) for (const count of [other, third, outer.times]) s = move(s, ['e', [[3, [-1, 0], count]]]);
-      for (let i = 0; i < 400 && !blocked; i++) { const action = turn ? back : away, next = registration.move(s, action); if (!next) blocked = action; else { s = next; turn = !turn; } }
+      for (let i = 0; i < 400 && !blocked; i++) { const action: Action = turn ? back : away, next = registration.move(s, action); if (!next) blocked = action; else { s = next; turn = !turn; } }
       expect(blocked).not.toBeNull();
       expect(registration.full?.(s, blocked!)).toBe(true);
       expect((s.payload as { actions: Action[] }).actions.length).toBeGreaterThan(100);

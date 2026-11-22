@@ -29,12 +29,14 @@ class EditorRuntime {
 
 const blockName = blockPosition;
 /** Tap and drag use exactly the same pure edit and admission path. No move saves on a frame. */
-export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, schoolGeometry = false, refusal, tray, songs = true, repeat = true }: {
+export function ProgramEditor({ program, cards, onChange, disabled, hear, condition, currentPath, iteration, onStep, onRestart, onFlat, maxHeight = 420, schoolGeometry = false, refusal, tray, songs = true, repeat = true, counts = [2, 3, 4, 6, 8] }: {
   program: Program; cards: Card[]; onChange: (program: Program) => boolean | {accepted:false;reason:string} | Promise<boolean | {accepted:false;reason:string}>; disabled: boolean;
   hear: (key: string) => void; condition?: string; currentPath?: string; iteration?: number[];
   onStep?: () => void; onRestart?: () => void; onFlat?: () => void; maxHeight?: number; schoolGeometry?: boolean; refusal?: string;
   /** A level's smaller block limit (every block counted), refused here before saving. */
   tray?: number; songs?: boolean; repeat?: boolean;
+  /** The Repeat counts the level's buttons offer. Defaults to the School counts. */
+  counts?: readonly number[];
 }) {
   const space = useBoardSpace(), school = schoolGeometry && !!space;
   const { fontScale } = useWindowDimensions(), cap = atLarge(fontScale, 1.5);
@@ -157,7 +159,7 @@ export function ProgramEditor({ program, cards, onChange, disabled, hear, condit
     {!!selection && selected && <View style={{ gap: 5 }}><Copy maxFontSizeMultiplier={cap}>Selected block. Tap a command to replace it.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
       <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={async () => { if (await accept(removeNode(program, selected.location, selected.at))) setTarget(main); }}>Remove block</Button>
       {repeat && <Button compact quiet maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => insert({ kind: 'repeat', times: 2, body: [selection] })}>Wrap ×2</Button>}
-      {selection.kind === 'repeat' && [2, 3, 4, 6, 8].map(times => <Button key={times} compact quiet label={`Repeat ${times} times`} maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => accept(replaceNode(program, selected.location, selected.at, { ...selection, times }))}>×{times}</Button>)}
+      {selection.kind === 'repeat' && counts.map(times => <Button key={times} compact quiet label={`Repeat ${times} times`} maxFontSizeMultiplier={cap} disabled={disabled||saving} onPress={() => accept(replaceNode(program, selected.location, selected.at, { ...selection, times }))}>×{times}</Button>)}
       <Button compact quiet maxFontSizeMultiplier={cap} onPress={() => setSelected(null)}>Keep block</Button>
     </View></View>}
   </>;

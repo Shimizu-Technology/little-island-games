@@ -13,9 +13,9 @@ it('reserves only measured chrome, grows back, and preserves the legibility floo
 it('uses real viewport, board position, card inset and bottom padding once each',()=>{
  expect(measuredBoardSpace(700,70,14,14)).toBe(602);expect(measuredBoardSpace(300,400,14,14)).toBe(0);
 });
-it.each([499,500,744,852])('entry reveal at %s keeps the approved strict short-window boundary and scopes AX to ported boards',height=>{
+it.each([499,500,744,852])('entry reveal at %s keeps the approved strict short-window boundary and scopes AX to ported boards (Turtle Draw was ported in C2c)',height=>{
  for(const id of ['crab-commands','shell-math','weather-watch','turtle-tales','turtle-draw']){
   expect(schoolEntryReveal(id,false,height)).toBe(height<500);
-  expect(schoolEntryReveal(id,true,height)).toBe(height<500||!['turtle-tales','turtle-draw'].includes(id));
+  expect(schoolEntryReveal(id,true,height)).toBe(height<500||!['turtle-tales'].includes(id));
  }
 });
