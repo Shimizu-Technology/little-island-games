@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/Text";
 import { Button, C, Chip, Copy, PressableScale, font } from "../../components/ui";
 import { CHROME_MAX, atLarge, wordFitMultiplier } from "../../components/wordFit";
@@ -20,6 +21,7 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
   const store = useStore();
   const play = useSounds(store.save.settings.sound);
   const { width: winW, height: winH, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [flagMode, setFlagMode] = useState(false);
 
   const d = s.descriptor;
@@ -44,11 +46,14 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
   const compactPhone = !wide && large && winH < 920;
   const shortLandscape = wide && winH < 500;
 
+  // ChallengeFrame clamps content to maxWidth 1080 inside SafeAreaView with 20pt horizontal padding.
+  const innerW = Math.max(240, Math.min(width, Math.min(1080, winW - insets.left - insets.right) - 40));
+  const usableH = Math.max(280, winH - insets.top - insets.bottom);
   const boardColW = wide
-    ? Math.min(Math.floor((width - 12) * 0.52), shortLandscape ? Math.max(280, winH - 76) : 406)
-    : width;
-  const leftColW = wide ? Math.max(220, width - 12 - boardColW) : width;
-  const maxCell = compactPhone ? 44 : shortLandscape ? Math.floor((winH - 76) / d.size) : 58;
+    ? Math.min(Math.floor((innerW - 12) * 0.52), shortLandscape ? Math.max(280, usableH - 72) : 406)
+    : innerW;
+  const leftColW = wide ? Math.max(220, innerW - 12 - boardColW) : innerW;
+  const maxCell = compactPhone ? 44 : shortLandscape ? Math.floor((usableH - 72) / d.size) : 58;
   const minCell = shortLandscape ? 40 : 42;
   const cell = Math.max(minCell, Math.min(Math.floor(boardColW / d.size), maxCell));
   const buttonCap = atLarge(fontScale, compactPhone || shortLandscape ? 1.2 : 1.3);
@@ -148,7 +153,8 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
         disabled={!active || (!s.history.length && effectiveStage === null) || solved}
         onPress={() => {
           setLocalHint(null);
-          send(["z"], "tap");
+          if (s.history.length > 0 || s.hintStage !== null) send(["z"], "tap");
+          else play("tap");
         }}
       >
         Start again
@@ -161,7 +167,7 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
       accessibilityLiveRegion="polite"
       maxFontSizeMultiplier={atLarge(
         fontScale,
-        wordFitMultiplier(hintText, compactPhone || shortLandscape ? 13 : 15, (wide ? leftColW : width) - 20, compactPhone || shortLandscape ? 1.2 : CHROME_MAX)
+        wordFitMultiplier(hintText, compactPhone || shortLandscape ? 13 : 15, (wide ? leftColW : innerW) - 20, compactPhone || shortLandscape ? 1.2 : CHROME_MAX)
       )}
       style={{
         padding: compactPhone || shortLandscape ? 8 : 12,
@@ -288,7 +294,7 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
   if (wide) {
     return (
       <View style={{ flexDirection: "row", gap: 12, width: "100%", alignItems: "flex-start", justifyContent: "center" }}>
-        <View style={{ width: leftColW, minWidth: 0, gap: 8, alignItems: "center" }}>
+        <View style={{ flex: 1, minWidth: 0, gap: 8, alignItems: "center" }}>
           <Copy
             accessibilityLiveRegion="polite"
             maxFontSizeMultiplier={copyCap}

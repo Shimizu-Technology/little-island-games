@@ -14,6 +14,7 @@ const fixture = vi.hoisted(() => ({
   openGame: vi.fn(),
   play: vi.fn(),
   dims: { width: 390, height: 844, fontScale: 1 },
+  insets: { left: 0, right: 0, top: 0, bottom: 0 },
   store: {
     ready: true,
     recovery: false,
@@ -42,7 +43,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-safe-area-context", () => ({
   SafeAreaView: "main",
-  useSafeAreaInsets: () => ({ left: 0, right: 0, top: 0, bottom: 0 }),
+  useSafeAreaInsets: () => fixture.insets,
 }));
 vi.mock("expo-router", () => ({
   router: { push: fixture.push, back: vi.fn(), canGoBack: () => true, replace: vi.fn() },
@@ -239,6 +240,20 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
       expect(wordsFit("Deduction puzzles", 15 * mult, dims.width - 40)).toBe(true);
       await act(() => r.unmount());
     }
+
+    // Landscape Challenge with native safe-area insets (iPhone 15 landscape) and wide iPad 13" clamps cleanly.
+    fixture.dims = { width: 852, height: 393, fontScale: 3.12 };
+    fixture.insets = { left: 59, right: 59, top: 0, bottom: 21 };
+    let wideR!: ReactTestRenderer;
+    await act(() => {
+      wideR = create(<ReefChallengeBoard state={state} dispatch={() => {}} active width={852 - 40} />);
+    });
+    const boardCol = wideR.root.find(
+      (n) => n.props.style && !Array.isArray(n.props.style) && typeof n.props.style.width === "number" && n.props.style.minWidth === 0
+    );
+    expect(boardCol.props.style.width).toBeLessThanOrEqual(852 - 118 - 40);
+    await act(() => wideR.unmount());
+    fixture.insets = { left: 0, right: 0, top: 0, bottom: 0 };
   });
 
   it("CV-10: lists Reef Sweep under Puzzle Cove's 'Also here' shortcut and opens the exact same save record", async () => {
