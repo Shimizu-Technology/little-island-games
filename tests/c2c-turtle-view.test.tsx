@@ -252,7 +252,7 @@ it('on a phone at the largest text the program shrinks to one wrapped line so th
   viewport.fontScale = 3.12;
   const d = challenge('predict', 5) as PredictDescriptor;
   await mount(<ChallengeBoard state={startState(d)} dispatch={vi.fn()} active width={353} />);
-  const program = tree!.root.findByProps({ testID: 'turtle-program' });
+  const program = tree!.root.findAllByProps({ testID: 'turtle-program' }).find(n => typeof n.type === 'string')!;
   expect(program.props.accessibilityLabel).toMatch(/^The program: Repeat ×5 \[/);
   expect(program.findAllByType('p')).toHaveLength(1);
   const cells = buttons().filter(b => /^Picture [A-D]\./.test(b.props.accessibilityLabel ?? ''));
