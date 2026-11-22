@@ -12,7 +12,7 @@ import { decodeProgram } from '../../program/codec';
 import { programOperations } from '../../program/operations';
 import { emptyProgram } from '../../program/model';
 import { draw, type Block, type Segment } from './engine';
-import { buildHint, predictHint, type Action, type BuildDescriptor, type PredictDescriptor, type State } from './challenge-engine';
+import { buildHint, predictHelpLeft, predictHint, type Action, type BuildDescriptor, type PredictDescriptor, type State } from './challenge-engine';
 import { deepCodes } from './program';
 import { DEEP_COUNTS } from './mincost';
 import { blockLabel } from './labels';
@@ -21,6 +21,8 @@ import { ASPECT, SandCanvas, Thumbnail } from './SandCanvas';
 import { bounds } from './picture';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
+/** What the editor shows, step ideas first (short sides, the new turns, Grow) and pen colours last. The command codes themselves never move. */
+const deepCards: [Block, number][] = (() => { const rank = (b: Block) => b.kind === 'forward' ? b.n : b.kind === 'turn' ? 200 + b.angle : b.kind === 'grow' ? 400 : 700; return deepCodes.map((b, c) => [b, c] as [Block, number]).sort((x, y) => rank(x[0]) - rank(y[0])); })();
 const RULES: Record<'build' | 'predict', string> = { build: 'c2c-turtle-build-rules', predict: 'c2c-turtle-predict-rules' };
 const picturesLabel = (lines: Segment[], letter: string, tone: string) => `Picture ${letter}. ${lines.length} ${lines.length === 1 ? 'line' : 'lines'}${lines.length > 1 && Math.hypot(lines[0].from.x - lines.at(-1)!.to.x, lines[0].from.y - lines.at(-1)!.to.y) < 1 ? ', ends where it began' : ''}.${tone}`;
 
@@ -57,10 +59,12 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
   const canvas = <SandCanvas width={side} goal={d.kind === 'build' || s.won ? goal : []} traced={shownLines} point={point} labels={d.kind === 'build'} label={d.kind === 'build' ? `Sand canvas with the faint picture to draw. ${shownLines.length} lines drawn.` : s.won ? `The program drew ${shownLines.length} of ${lines.length} lines.` : 'Sand canvas. The picture appears here after you check.'} />;
   // Nothing is drawn until the check, so the pictures take the room the empty sand would.
   const showCanvas = d.kind === 'build' || s.won || running;
-  const body = d.kind === 'build' ? <BuildControls room={Math.min(640, Math.max(420, win.height - 520))} s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
+  const body = d.kind === 'build' ? <BuildControls room={editorRoom(win.height, sideBySide)} s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
     : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide && showCanvas ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
   // Once settled, a right prediction keeps its drawing and program and leaves the room below for what comes next.
   if (!pinned && d.kind === 'predict' && s.won) return <View style={{ gap: 10 }}><View style={{ alignItems: 'center' }}>{canvas}</View><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>Yes! That is the picture.</Copy><ProgramList blocks={d.program} label="The program" testID="turtle-program" compact={large} /></View>;
+  // Settled and right: keep the drawing and the program, and leave the room below for what comes next.
+  if (!pinned && d.kind === 'build' && s.won) return <View style={{ gap: 10 }}><View style={{ alignItems: 'center' }}>{canvas}</View><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>You drew it!</Copy><ProgramList blocks={s.program} label="Your blocks" testID="turtle-program" compact={large} /></View>;
   if (!pinned) return <View style={{ gap: 10 }}>{showCanvas && <View style={{ alignItems: 'center' }}>{canvas}</View>}{body}</View>;
   const stack = <ScrollView style={{ flex: 1, minHeight: 0 }} contentContainerStyle={{ gap: 10, paddingBottom: 12 }} accessibilityLabel="Turtle program and help">{header}{body}{footer}</ScrollView>;
   return sideBySide && showCanvas
@@ -68,8 +72,12 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
     : <View style={{ flex: 1, minHeight: 0, gap: 8 }}>{showCanvas && <View style={{ alignItems: 'center' }}>{canvas}</View>}{stack}</View>;
 }
 
+/** Height for the block editor. Beside the canvas it has the whole column; stacked under it, most of the screen. */
+export const editorRoom = (windowHeight: number, sideBySide: boolean) => Math.min(640, Math.max(420, sideBySide ? windowHeight - 190 : Math.round(windowHeight * 0.7)));
 type Play = (key: string, automatic?: boolean) => unknown;
 function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, play, hear, room }: { room: number; s: State; d: BuildDescriptor; active: boolean; running: boolean; dispatch: (a: Action) => void; commit: ChallengeViewProps<State, Action>['commit']; sessionKey?: string; play: Play; hear: React.ReactNode }) {
+  // The editor keeps its place, undo history and scroll across edits. Only an explicit Reset plan starts it afresh; the round itself is keyed by the frame.
+  const [resets, setResets] = useState(0);
   const program = s.draft ? decodeProgram(s.draft, code => code < deepCodes.length) : null;
   const current = program ?? emptyProgram(), idle = !active || running || s.won;
   const hint = buildHint(d, s.program, s.hintStage);
@@ -79,15 +87,15 @@ function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, pl
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button maxFontSizeMultiplier={1.5} style={{ flexGrow: 1 }} disabled={idle || !s.program.length} onPress={() => dispatch(['g'])}>Go!</Button>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || s.hintStage >= 3} onPress={() => dispatch(['h'])}>{s.hintStage ? 'More help' : 'Help'}</Button>
-      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || (!s.draft && !s.program.length)} onPress={() => dispatch(['z'])}>Reset plan</Button>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || (!s.draft && !s.program.length)} onPress={() => { setResets(n => n + 1); dispatch(['z']); }}>Reset plan</Button>
       {hear}
     </View>
     {s.hintStage > 0 && !s.won && <View accessibilityLiveRegion="polite" testID="turtle-hint" style={{ gap: 6, padding: 10, borderRadius: 12, backgroundColor: C.soft }}>
       <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{hint.text}</Copy>
       {hint.reveal && <ProgramList blocks={hint.reveal} label="One way to draw the picture" testID="turtle-reveal" />}
     </View>}
-    <ProgramEditor key={`${sessionKey}:${s.draft === null}`} program={current} songs={false} tray={d.tray} maxHeight={room} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
-      cards={deepCodes.map((block, code) => ({ code, name: blockLabel(block), icon: <Copy maxFontSizeMultiplier={1.3}>{block.kind === 'forward' ? '↑' : block.kind === 'turn' ? '↻' : block.kind === 'grow' ? '＋' : '●'}</Copy>, speech: `k7-turtle-${code}` }))}
+    <ProgramEditor key={`plan-${resets}`} program={current} songs={false} tray={d.tray} maxHeight={room} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
+      cards={deepCards.map(([block, code]) => ({ code, name: blockLabel(block), icon: <Copy maxFontSizeMultiplier={1.3}>{block.kind === 'forward' ? '↑' : block.kind === 'turn' ? '↻' : block.kind === 'grow' ? '＋' : '●'}</Copy>, speech: `k7-turtle-${code}` }))}
       onChange={async next => !!commit && !!sessionKey && !!(await commit(['e', programOperations(current, next)], sessionKey))} />
   </View>;
 }
@@ -115,10 +123,10 @@ function PredictControls({ s, d, active, running, dispatch, play, width, large, 
     </View>;
   const actions = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button maxFontSizeMultiplier={1.5} style={{ flexGrow: 1 }} disabled={idle || s.pick === null} onPress={() => dispatch(['c'])}>Check my picture</Button>
-      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || stage >= 3} onPress={() => dispatch(['h'])}>{stage ? 'More help' : 'Help'}</Button>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || !predictHelpLeft(s, d)} onPress={() => dispatch(['h'])}>{stage ? 'More help' : 'Help'}</Button>
       {hear}
     </View>;
-  const hintPanel = stage > 0 && !s.won && <View accessibilityLiveRegion="polite" testID="turtle-hint" style={{ padding: 10, borderRadius: 12, backgroundColor: C.soft }}><Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{predictHint(d, stage)}</Copy></View>;
+  const hintPanel = stage > 0 && !s.won && <View accessibilityLiveRegion="polite" testID="turtle-hint" style={{ padding: 10, borderRadius: 12, backgroundColor: C.soft }}><Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{predictHint(d, stage, s.ruled)}</Copy></View>;
   // In a wide landscape window the program reads on the left and the pictures, Check and Help stay together on the right.
   return wide
     ? <View style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}><View style={{ flex: 1, minWidth: 0, gap: 8 }}>{messageLine}{program}</View><View style={{ width: columns * cell + (columns - 1) * 10, gap: 8 }}>{grid}{actions}{hintPanel}</View></View>

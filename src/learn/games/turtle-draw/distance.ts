@@ -47,13 +47,26 @@ export function align(a: readonly Block[], b: readonly Block[], prefix: number[]
   return go(0, 0, 0);
 }
 /** The nearest of several equally good certified programs, and its first edit. Null when the program already matches one. */
-export function nearestEdit(program: readonly Block[], winners: readonly (readonly Block[])[]): { edit: Edit; distance: number; winner: readonly Block[] } | null {
+export function nearestEdit(program: readonly Block[], winners: readonly (readonly Block[])[], options: { full?: boolean } = {}): { edit: Edit; distance: number; winner: readonly Block[] } | null {
   let best: { alignment: Alignment; winner: readonly Block[] } | null = null;
   for (const winner of winners) {
     const alignment = align(program, winner);
     if (!best || alignment.cost < best.alignment.cost) best = { alignment, winner };
   }
-  return best && best.alignment.cost > 0 ? { edit: best.alignment.edits[0], distance: best.alignment.cost, winner: best.winner } : null;
+  if (!best || best.alignment.cost === 0) return null;
+  const edits = best.alignment.edits;
+  let edit = edits[0];
+  // A full tray refuses any insert, so name the first edit that makes room instead (with its place worked out as if the inserts before it had not happened).
+  if (options.full && edit.op === 'insert') {
+    const later = edits.findIndex(e => e.op !== 'insert');
+    if (later > 0) {
+      const skipped = edits.slice(0, later);
+      const path = [...edits[later].path];
+      for (let j = 0; j < path.length; j++) path[j] -= skipped.filter(e => e.path.length === j + 1 && e.path.slice(0, j).every((v, k) => v === path[k]) && e.path[j] < path[j]).length;
+      edit = { ...edits[later], path } as Edit;
+    }
+  }
+  return { edit, distance: best.alignment.cost, winner: best.winner };
 }
 export function applyEdit(program: readonly Block[], edit: Edit): Block[] {
   const clone = JSON.parse(JSON.stringify(program)) as Block[];

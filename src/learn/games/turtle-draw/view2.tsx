@@ -14,6 +14,7 @@ import type { BoardProps } from '../../types';
 import { advance, draw, drawingFeedback, initialProgram, programIssue, replaceBlock, solves, wrapIssue, type Block, type TurtleState } from './engine';
 import { blockCost } from './dsl';
 import { editText, editsToGo, nearestEdit } from './distance';
+import { applyCardsOp, cardsHint, cardsText, COUNTS as CARD_COUNTS } from './cards';
 import { blockLabel } from './labels';
 import { programCodes, readTurtleDraft, turtleBlocks, turtleProgram } from './program';
 import { ASPECT, SandCanvas } from './SandCanvas';
@@ -71,22 +72,28 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
     update({ ...legacy, program, cursor: 0 }); setMessage(''); setEditing(null); setHint(0); sound('tap', true);
     return true;
   };
-  const add = (block: Block) => { if (change([...s.program, block])) coach.done(); };
-  const wrap = (times: number) => { const problem = wrapIssue(s.program, times); if (problem) setMessage(problem); else change([{ kind: 'repeat', times, body: s.program }]); };
+  const add = (block: Block) => { if (change(applyCardsOp(s.program, { op: 'add', block }))) coach.done(); };
+  const wrap = (times: number) => { const problem = wrapIssue(s.program, times); if (problem) setMessage(problem); else change(applyCardsOp(s.program, { op: 'wrap', times })); };
   const undo = () => { const previous = history.at(-1); if (!previous || s.running || !active) return; setHistory(h => h.slice(0, -1)); const { blockDraft: _, ...legacy } = s; update({ ...legacy, program: previous, cursor: 0 }); setMessage(''); setHint(0); sound('tap', true); };
   const run = () => { const problem = programIssue(s.program); if (problem) { setMessage(problem); return; } update({ ...s, cursor: 0, running: true, attempts: s.attempts + 1 }); setEditing(null); setMessage('Watch the turtle draw!'); };
   const next = () => { const done = s.done + 1; const { blockDraft: _, ...legacy } = s; update({ ...legacy, done, program: done < 4 ? initialProgram(s.tasks[done]) : [], cursor: 0, running: false, free: false }); };
   const showMe = () => { assistance?.(); const { blockDraft: _, ...legacy } = s; update({ ...legacy, program: task.target, cursor: 0, helped: true }); setEditing(null); setHint(0); setMessage('Here is one way. Press Draw!'); };
   const hintText = (): string => {
     if (hint === 0) return '';
-    const near = nearestEdit(s.program, winners);
-    if (!near) return 'Your blocks match the picture. Press Draw.';
-    if (hint === 1) return s.cursor > 0 && feedback ? feedback.message : `You are ${editsToGo(s.program, winners)} ${editsToGo(s.program, winners) === 1 ? 'change' : 'changes'} from the picture.`;
-    return editText(near.edit, s.program);
+    if (solves(task, s.program)) return 'Your blocks match the picture. Press Draw.';
+    // The cards board can only add at the end, remove, change a block or count, and wrap: hint in those moves. The block editor can place a block anywhere.
+    const move = !blocks ? cardsHint(task, s.program) : null;
+    const near = nearestEdit(s.program, winners, { full: blockCost(s.program) >= limit });
+    if (!near && !move) return 'Your blocks match the picture. Press Draw.';
+    if (hint === 1) { const n = editsToGo(s.program, winners); return s.cursor > 0 && feedback ? feedback.message : move ? 'Not there yet. The next hint shows what to tap.' : `You are ${n} ${n === 1 ? 'change' : 'changes'} from the picture.`; }
+    if (move) return cardsText(move);
+    return `${editText(near!.edit, s.program)}${!blocks && task.blockEditor ? ' The Block editor can make this change.' : ''}`;
   };
 
   const geometry = useBoardGeometry('turtle-draw', Math.min(Math.max(width, 120) * ASPECT, 288), SCHOOL_BOARD_MIN['turtle-draw'], !blocks);
-  const side = blocks ? Math.min(Math.max(width, 120), 230) : Math.min(Math.max(width, 120), geometry.height / ASPECT);
+  // Beside the controls the canvas keeps to its 46% column (BoardColumns), so it never reaches into them.
+  const room = wide ? width * 0.46 : width;
+  const side = blocks ? Math.min(Math.max(room, 120), 230) : Math.min(Math.max(room, 120), geometry.height / ASPECT);
   const point = traced.at(-1)?.to || origin || { x: 100, y: 80 };
   const lengths = [...new Set(goal.map(a => Math.round(Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y))))].join(', ');
   const canvas = <View testID={geometry.testID} onLayout={geometry.onLayout} style={{ alignItems: 'center' }}>
@@ -94,20 +101,21 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   </View>;
 
   const programLine = free ? `Free drawing · ${s.program.length} ${s.program.length === 1 ? 'block' : 'blocks'}` : `Your program: ${blockCost(s.program)} of ${task.limit} blocks`;
-  const status = <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite" style={{ fontSize: 15, color: C.ink }}>{message || programLine}</Copy>;
+  const status = <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite" style={{ fontSize: 15, color: C.ink }}>{message || (blocks ? '' : programLine)}</Copy>;
   const controlsOff = !active || s.running;
   // A recording appears only once the lead has generated its audio; until then the printed words carry everything.
   const speech = task.debug ? 'c2c-turtle-fix' : s.level === 4 ? 'c2c-turtle-angles' : null;
   const hear = speech && learnSources[speech] && !free && !won ? <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => sound(speech, true)}>Hear this</Button> : null;
   const runRow = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-    {won || free ? <>
-      <Button style={{ flexGrow: 1 }} onPress={next}>{s.done === 3 ? 'Finish!' : 'Next shape'}</Button>
-      {won && <Button quiet onPress={() => { const { blockDraft: _, ...legacy } = s; update({ ...legacy, free: true, program: [], cursor: 0 }); setMessage('Free draw: add any blocks!'); }}>Free draw</Button>}
-    </> : <>
+    {(won || free) && <Button style={{ flexGrow: 1 }} onPress={next}>{s.done === 3 ? 'Finish!' : 'Next shape'}</Button>}
+    {won && <Button quiet onPress={() => { const { blockDraft: _, ...legacy } = s; update({ ...legacy, free: true, program: [], cursor: 0 }); setMessage('Free draw: add any blocks!'); }}>Free draw</Button>}
+    {(!won || free) && <>
       <Button style={{ flexGrow: 1 }} maxFontSizeMultiplier={1.5} disabled={controlsOff || !s.program.length} onPress={run}>Draw ▶</Button>
       {!blocks && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || !history.length} onPress={undo}>Undo</Button>}
-      {!free && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || hint >= 2} onPress={() => { assistance?.(); setHint(h => Math.min(2, h + 1)); sound('tap', true); }}>{hint === 0 ? 'Hint' : 'More hint'}</Button>}
-      {!free && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={showMe}>Show me</Button>}
+    </>}
+    {!won && !free && <>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || hint >= 2} onPress={() => { assistance?.(); setHint(h => Math.min(2, h + 1)); sound('tap', true); }}>{hint === 0 ? 'Hint' : 'More hint'}</Button>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={showMe}>Show me</Button>
       {hear}
     </>}
   </View>;
@@ -120,16 +128,16 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   </View>;
   const renderBlock = (block: Block, path: number[]): React.ReactNode => <View key={path.join('.')} style={{ gap: 5, padding: 7, borderRadius: 10, backgroundColor: block.kind === 'repeat' ? '#F5D398' : '#DCE9E3', borderLeftWidth: path.length > 1 ? 3 : 0, borderColor: '#648B80' }}>
     <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-      {block.kind === 'repeat' ? <Copy maxFontSizeMultiplier={1.5} style={{ flex: 1, fontWeight: '800' }}>{blockLabel(block)} · body below</Copy>
+      {block.kind === 'repeat' ? <Button compact quiet maxFontSizeMultiplier={1.5} style={{ flex: 1 }} label={`Edit block ${path.map(i => i + 1).join('.')}: ${blockLabel(block)}`} disabled={controlsOff || won} onPress={() => setEditing({ path, block })}>{blockLabel(block)} · body below ✎</Button>
         : <Button compact quiet maxFontSizeMultiplier={1.5} style={{ flex: 1 }} label={`Edit block ${path.map(i => i + 1).join('.')}: ${blockLabel(block)}`} disabled={controlsOff || won} onPress={() => setEditing({ path, block })}>{blockLabel(block)} ✎</Button>}
-      {path.length === 1 && <Button compact quiet maxFontSizeMultiplier={1.5} label={`Remove block ${path[0] + 1}`} disabled={controlsOff || won} onPress={() => change(s.program.filter((_, i) => i !== path[0]))}>✕</Button>}
+      {path.length === 1 && <Button compact quiet maxFontSizeMultiplier={1.5} label={`Remove block ${path[0] + 1}`} disabled={controlsOff || won} onPress={() => change(applyCardsOp(s.program, { op: 'remove', index: path[0], block }))}>✕</Button>}
     </View>
     {block.kind === 'repeat' && block.body.map((child, i) => renderBlock(child, [...path, i]))}
   </View>;
   const editor = editing && <View style={{ gap: 6, padding: 10, backgroundColor: '#FFF4D4', borderRadius: 12 }}>
-    <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>Change {blockLabel(editing.block)} · keep the rest of the loop</Copy>
+    <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>{editing.block.kind === 'repeat' ? `How many times should ${blockLabel(editing.block)} run?` : `Change ${blockLabel(editing.block)} · keep the rest of the loop`}</Copy>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-      {(editing.block.kind === 'forward' ? FORWARD.map(n => ({ kind: 'forward', n } as Block)) : editing.block.kind === 'turn' ? TURNS.map(angle => ({ kind: 'turn', angle } as Block)) : PENS.map(color => ({ kind: 'color', color } as Block))).map(b => <Button key={blockLabel(b)} compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => change(replaceBlock(s.program, editing.path, b))}>{blockLabel(b)}</Button>)}
+      {(editing.block.kind === 'repeat' ? CARD_COUNTS.filter(n => n !== (editing.block as Extract<Block, { kind: 'repeat' }>).times).map(times => ({ ...(editing.block as Extract<Block, { kind: 'repeat' }>), times } as Block)) : editing.block.kind === 'forward' ? FORWARD.map(n => ({ kind: 'forward', n } as Block)) : editing.block.kind === 'turn' ? TURNS.map(angle => ({ kind: 'turn', angle } as Block)) : PENS.map(color => ({ kind: 'color', color } as Block))).map(b => <Button key={blockLabel(b)} compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => change(replaceBlock(s.program, editing.path, b))}>{blockLabel(b)}</Button>)}
       <Button compact quiet maxFontSizeMultiplier={1.5} onPress={() => setEditing(null)}>Cancel edit</Button>
     </View>
   </View>;
@@ -147,7 +155,7 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
       if (sessionBytes({ ...session, state: nextState }) > 4096) return false;
       update(nextState); setMessage(''); setHint(0); return true;
     }}
-    onStep={() => { if (s.cursor >= steps) return; update({ ...advance({ ...s, running: true }), running: false }); if (s.cursor + 1 >= steps) finish(s); else sound('tap', true); }}
+    onStep={!s.program.length ? undefined : () => { if (s.cursor >= steps) return; update({ ...advance({ ...s, running: true }), running: false }); if (s.cursor + 1 >= steps) finish(s); else sound('tap', true); }}
     onRestart={() => update({ ...s, cursor: 0, running: false })} />;
 
   const cardsPrimary = <>{status}{runRow}{hintPanel}{!won && palette('forward')}</>;

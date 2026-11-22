@@ -39,7 +39,8 @@ registration.restart = (session, id, progress) => {
     if (next.correct === false) failed = true;
     state = next.state;
   }
-  const prior = { runs: Math.min(65535, (payload.initial.prior?.runs ?? 0) + state.runs), failed, edits: Math.min(65535, state.edits), hints: Math.min(65535, state.hints) };
+  // Help counts as a miss for independence, so Keep my plan cannot launder it.
+  const prior = { runs: Math.min(65535, (payload.initial.prior?.runs ?? 0) + state.runs), failed: failed || state.hints > 0, edits: Math.min(65535, state.edits), hints: Math.min(65535, state.hints) };
   const initial: Initial = { version: 1, prior, ...(state.draft ? { draft: state.draft } : {}) };
   const started = registration.start(session.puzzle, session.owner, id, progress, payload.options, session.selectedDares);
   const next: ChallengeSession = { ...started, payload: { ...(started.payload as Payload), initial } };

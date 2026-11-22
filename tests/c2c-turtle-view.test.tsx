@@ -7,6 +7,9 @@ import { challengeEngine, type BuildDescriptor, type PredictDescriptor } from '.
 import { turtlePuzzles } from '../src/learn/games/turtle-draw/challenge-content';
 import { engine as turtle, task as legacyTask, type TurtleState } from '../src/learn/games/turtle-draw/engine';
 import { blockCost } from '../src/learn/games/turtle-draw/dsl';
+import { deepCodes, turtleProgram } from '../src/learn/games/turtle-draw/program';
+import { programOperations } from '../src/learn/program/operations';
+import { emptyProgram } from '../src/learn/program/model';
 import { BoardSpaceProvider, BoardSpaceContent } from '../src/learn/BoardSpace';
 import { MEASURED_SCHOOL_BOARDS, SCHOOL_BOARD_MIN, schoolEntryReveal } from '../src/learn/boardGeometry';
 import { LARGE_TEXT } from '../src/components/wordFit';
@@ -78,9 +81,10 @@ it('Undo takes back the last block, and Hint walks from where you are to one edi
   await press('Hint');
   expect(p.assistance).toHaveBeenCalledTimes(1);
   const hint = () => tree!.root.findAllByProps({ testID: 'turtle-hint' }).map(text).join('');
-  expect(hint()).toMatch(/change/i);
+  expect(hint()).toMatch(/Not there yet/);
   await press('More hint');
-  expect(hint()).toMatch(/^Add Repeat ×\d at the start\.$/);
+  // The cards board adds at the end, so the empty plan is told to start with a block, not a Repeat.
+  expect(hint()).toMatch(/^Tap .* to add it at the end\.$/);
   expect(labelled('More hint')!.props.disabled).toBe(true);
 });
 
@@ -262,4 +266,78 @@ it('on a phone at the largest text the program shrinks to one wrapped line so th
   // The explanation moves below the controls.
   const order = tree!.root.findAll(n => n.props.testID === 'turtle-message' || n.props.accessibilityLabel === 'Four pictures').map(n => n.props.testID ?? 'pictures');
   expect(order[0]).toBe('pictures');
+});
+
+it('P0-2: free drawing keeps Draw ▶ and Undo (and no Hint or Show me): enter it, add blocks, undo, draw', async () => {
+  vi.useFakeTimers();
+  const state = roundAt(3), task = state.tasks[0];
+  const won: TurtleState = { ...state, program: task.target, cursor: 3, running: false };
+  const p = props(won);
+  await mount(<Board {...as(p)} />);
+  await press('Free draw');
+  const free = p.update.mock.calls.at(-1)![0] as TurtleState;
+  expect(free.free).toBe(true);
+  // Render the state the button produced, as the frame would, and play it for real.
+  let current = free;
+  const live = () => props(current, { update: (n: TurtleState) => { current = n; p.update(n); }, practice: p.practice, cheer: p.cheer, sound: p.sound });
+  await act(async () => tree!.update(<Board {...as(live())} key="free" />));
+  expect(labelled('Draw ▶')).toBeDefined(); expect(labelled('Undo')).toBeDefined();
+  expect(labelled('Hint')).toBeUndefined(); expect(labelled('Show me')).toBeUndefined();
+  expect(labelled('Next shape')).toBeDefined();
+  expect(labelled('Draw ▶')!.props.disabled).toBe(true);
+  await press('Add forward 60');
+  await act(async () => tree!.update(<Board {...as(live())} key="free" />));
+  await press('Add turn 90 degrees');
+  await act(async () => tree!.update(<Board {...as(live())} key="free" />));
+  expect(current.program).toHaveLength(2);
+  expect(labelled('Undo')!.props.disabled).toBe(false);
+  await press('Undo');
+  await act(async () => tree!.update(<Board {...as(live())} key="free" />));
+  expect(current.program).toHaveLength(1);
+  expect(labelled('Draw ▶')!.props.disabled).toBe(false);
+  await press('Draw ▶');
+  expect(current.running).toBe(true);
+  await act(async () => tree!.update(<Board {...as(live())} key="free" />));
+  for (let i = 0; i < 4 && current.running; i++) { await act(async () => { vi.advanceTimersByTime(100); }); await act(async () => tree!.update(<Board {...as(live())} key="free" />)); }
+  expect(current.running).toBe(false);
+  expect(p.practice).not.toHaveBeenCalled();
+  expect(current.completed).toEqual(state.completed);
+});
+
+it('P2-2: beside the controls the School canvas keeps to its 46% column (iPhone 15 landscape, 852×393)', async () => {
+  viewport.width = 852; viewport.height = 393;
+  const space = { width: 780, height: 330, large: false };
+  const p = props(roundAt(3));
+  await mount(<BoardSpaceProvider space={space}><BoardSpaceContent><Board {...as({ ...p, width: 780 })} /></BoardSpaceContent></BoardSpaceProvider>);
+  const svg = tree!.root.findAllByType('svg' as never)[0];
+  expect(svg.props.width).toBeLessThanOrEqual(780 * 0.46);
+  expect(svg.props.width).toBeGreaterThanOrEqual(120);
+});
+
+it('P3: Step is not offered on an empty block plan, so it cannot record a miss', async () => {
+  const empty = { ...roundAt(5), program: [] as never[] };
+  const p = props({ ...empty, tasks: empty.tasks.map(t => ({ ...t, start: undefined })) } as TurtleState);
+  await mount(<Board {...as(p)} />);
+  const editor = tree!.root.findByType('block-editor' as never);
+  expect(editor.props.onStep).toBeUndefined();
+  const filled = props({ ...roundAt(5), program: roundAt(5).tasks[0].target });
+  await act(async () => tree!.update(<Board {...as({ ...filled, session: { ...filled.session, id: 'other' } })} />));
+  expect(tree!.root.findByType('block-editor' as never).props.onStep).toBeInstanceOf(Function);
+  expect(messages().filter(m => m.startsWith('Your program:'))).toHaveLength(0);
+});
+
+it('P2-4 and P1-2: a settled right Draw-It shows the drawing and program; Predict Help is disabled when nothing is left to cross out', async () => {
+  const d = challenge('build') as BuildDescriptor;
+  let s = startState(d);
+  s = challengeEngine.step(challengeEngine.step(s, ['e', programOperations(emptyProgram(), turtleProgram(d.target, deepCodes))], d)!.state, ['g'], d)!.state;
+  await mount(<ChallengeBoard state={s} dispatch={vi.fn()} active width={353} />);
+  expect(messages().some(m => m === 'You drew it!')).toBe(true);
+  expect(tree!.root.findAllByType('block-editor' as never)).toHaveLength(0);
+  expect(labelled('Go!')).toBeUndefined();
+  const pd = challenge('predict', 3) as PredictDescriptor, wrongs = [0, 1, 2, 3].filter(i => i !== pd.answer);
+  let ps = startState(pd);
+  for (const i of wrongs.slice(0, 2)) ps = challengeEngine.step(challengeEngine.step(ps, ['s', i], pd)!.state, ['c'], pd)!.state;
+  ps = challengeEngine.step(challengeEngine.step(ps, ['h'], pd)!.state, ['h'], pd)!.state;
+  await act(async () => tree!.update(<ChallengeBoard state={ps} dispatch={vi.fn()} active width={353} />));
+  expect(labelled('More help')!.props.disabled).toBe(true);
 });

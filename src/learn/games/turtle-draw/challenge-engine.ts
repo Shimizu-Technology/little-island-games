@@ -30,8 +30,9 @@ const empty = () => turtleProgram([], deepCodes);
 export function admit(draft: unknown, d: BuildDescriptor): { program: Program; blocks: Block[] } | null {
   const read = readTurtleDraft(draft, deepCodes);
   if (!read || read.program.songs.length) return null;
-  const countsOk = (list: Block[]): boolean => list.every(b => b.kind !== 'repeat' || DEEP_COUNTS.includes(b.times as 2) && countsOk(b.body));
-  if (!countsOk(read.blocks) || nodeCost(read.program) > d.tray || (read.blocks.length > 0 && !draw(read.blocks, d.origin))) return null;
+  // Check the saved tree itself: turtleBlocks drops empty Repeats and flattens groups, which would hide an illegal count or node.
+  const clean = (nodes: Program['body']): boolean => nodes.every(n => n.kind === 'command' ? n.command < deepCodes.length : n.kind === 'repeat' && (DEEP_COUNTS as readonly number[]).includes(n.times) && clean(n.body));
+  if (!clean(read.program.body) || nodeCost(read.program) > d.tray || (read.blocks.length > 0 && !draw(read.blocks, d.origin))) return null;
   return read;
 }
 /** The picture is right and the tray holds it. A different plan that draws the same picture counts. */
@@ -49,7 +50,8 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
     const read = d.kind === 'build' && initial.draft ? admit(initial.draft, d) : null;
     return { descriptor: d, draft: initial.draft ?? null, program: read?.blocks ?? [], edits: initial.prior?.edits ?? 0, runs: 0, won: false, hintStage: Math.min(3, initial.prior?.hints ?? 0), hints: initial.prior?.hints ?? 0, pick: null, wrong: [], ruled: [] };
   },
-  prior: initial => initial.prior ? { runs: initial.prior.runs, failed: initial.prior.failed } : null,
+  // Help used before Keep my plan stays on the record: a continued attempt is never independent after it.
+  prior: initial => initial.prior ? { runs: initial.prior.runs, failed: initial.prior.failed || initial.prior.hints > 0 } : null,
   validAction: (v): v is Action => Array.isArray(v) && Object.keys(v).length === v.length && (
     v[0] === 'e' ? v.length === 2 && validOperations(v[1])
     : v[0] === 's' ? v.length === 2 && uint(v[1], 3)
@@ -57,7 +59,13 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
   step: (s, a, d) => {
     if (s.won) return null;
     if (d.kind === 'predict') {
-      if (a[0] === 'h') return s.hintStage >= 3 ? null : { state: { ...s, hintStage: s.hintStage + 1, hints: s.hints + 1, ruled: s.hintStage >= 1 ? [...s.ruled, ruleOut(s, d)] : s.ruled }, event: 'help' };
+      if (a[0] === 'h') {
+        if (s.hintStage >= 3) return null;
+        // From the second press Help crosses a picture out; with none left to cross out there is nothing more to give.
+        const out = s.hintStage >= 1 ? ruleOut(s, d) : null;
+        if (s.hintStage >= 1 && out === null) return null;
+        return { state: { ...s, hintStage: s.hintStage + 1, hints: s.hints + 1, ruled: out === null ? s.ruled : [...s.ruled, out] }, event: 'help' };
+      }
       if (a[0] === 's') return a[1] === s.pick || s.wrong.includes(a[1]) || s.ruled.includes(a[1]) ? null : { state: { ...s, pick: a[1] }, event: 'edit' };
       if (a[0] === 'c') { if (s.pick === null) return null; const right = s.pick === d.answer; return { state: { ...s, runs: s.runs + 1, won: right, wrong: right ? s.wrong : [...s.wrong, s.pick], pick: right ? s.pick : null }, event: 'check', correct: right }; }
       return null;
@@ -81,20 +89,27 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
   }),
 };
 /** Help rules out the wrong picture that a skim would choose first, then another. Never the answer, never one already chosen. */
-export function ruleOut(s: State, d: PredictDescriptor): number {
+export function ruleOut(s: State, d: PredictDescriptor): number | null {
   const order = [...d.choices.keys()].filter(i => i !== d.answer && i !== s.pick && !s.wrong.includes(i) && !s.ruled.includes(i));
-  const skim = order.find(i => d.kinds[i] === 'once') ?? order[0];
-  return skim;
+  return order.find(i => d.kinds[i] === 'once') ?? order[0] ?? null;
 }
+/** True while another Help press would still give the child something. */
+export const predictHelpLeft = (s: State, d: PredictDescriptor): boolean => !s.won && s.hintStage < 3 && (s.hintStage < 1 || ruleOut(s, d) !== null);
 /** The board's Help for the current rung of the ladder: where you are, then one edit, then a whole plan. Pure, so a test can walk it. */
 export function buildHint(d: BuildDescriptor, program: Block[], stage: number): { text: string; reveal?: Block[] } {
   if (stage <= 0) return { text: '' };
-  const near = nearestEdit(program, d.winners);
+  // Any plan that already draws the picture inside the tray wins, written one or not.
+  if (solvesBuild(d, program)) return { text: 'Your blocks match. Press Go.' };
+  const near = nearestEdit(program, d.winners, { full: blockCost(program) >= d.tray });
   if (!near) return { text: 'Your blocks match. Press Go.' };
   if (stage === 1) return { text: program.length ? `Your picture is ${near.distance === 1 ? 'one change' : `${near.distance} changes`} from the goal.` : 'Start with a Repeat. The picture comes back to where it began, so the turns add up to a whole circle.' };
   if (stage === 2) return { text: editText(near.edit, program) };
   return { text: `One way to draw it, ${near.distance} ${near.distance === 1 ? 'edit' : 'edits'} from yours:`, reveal: [...near.winner] };
 }
-export function predictHint(d: PredictDescriptor, stage: number): string {
-  return stage <= 0 ? '' : stage === 1 ? 'Follow the program one block at a time. How far does a whole turn go before the repeat starts again?' : stage === 2 ? 'One picture is crossed out. It is the one a quick reading would give.' : 'Another picture is crossed out.';
+export function predictHint(d: PredictDescriptor, stage: number, ruled: readonly number[] = []): string {
+  if (stage <= 0) return '';
+  if (stage === 1) return 'Follow the program one block at a time. How far does a whole turn go before the repeat starts again?';
+  // Only the picture that really is the quick reading may be called that.
+  if (stage === 2) return ruled.length && d.kinds[ruled[0]] === 'once' ? 'One picture is crossed out. It is the one a quick reading would give.' : 'One picture is crossed out.';
+  return ruled.length > 1 ? 'Another picture is crossed out.' : 'There is no other picture to cross out. Look at the turns once more.';
 }
