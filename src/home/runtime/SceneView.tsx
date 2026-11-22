@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
+import { anchorsFor } from "../scene/species";
 import { restFrom, restTransform } from "./restFrom";
 import type { Meal } from "./meal";
 import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
@@ -453,12 +454,15 @@ export function SceneView({
     return () => { cancelAnimationFrame(first); if (second !== undefined) cancelAnimationFrame(second); };
   }, [offeredId, standbyKey]);
   const offeredEntity = offered?.entity;
-  const initialStandbyOwner = offeredEntity && Object.values(scene.entities)
-    .filter(e => e.character && e.room === offeredEntity.room && !sleeping[e.id])
-    .sort((a,b) => Math.hypot(a.contact.x-offeredEntity.contact.x,a.contact.y-offeredEntity.contact.y) -
-      Math.hypot(b.contact.x-offeredEntity.contact.x,b.contact.y-offeredEntity.contact.y))[0]?.id;
   const standbyCandidates = useMemo(() => Object.values(scene.entities).filter(e => e.character && !sleeping[e.id])
-    .map(e => ({id:e.id,room:e.room,x:e.contact.x,y:e.contact.y})), [scene,sleeping]);
+    .map(e => {
+      const face=anchorsFor(e.character!.slot,e.base,e.facing,e.action).head;
+      return {id:e.id,room:e.room,x:e.contact.x+face.x,y:e.contact.y+face.y};
+    }), [scene,sleeping]);
+  const foodOffset = offeredEntity?.visual ?? {x:0,y:0};
+  const initialStandbyOwner = offeredEntity && standbyCandidates.filter(e => e.room === offeredEntity.room)
+    .sort((a,b) => Math.hypot(a.x-offeredEntity.contact.x-foodOffset.x,a.y-offeredEntity.contact.y-foodOffset.y) -
+      Math.hypot(b.x-offeredEntity.contact.x-foodOffset.x,b.y-offeredEntity.contact.y-foodOffset.y))[0]?.id;
   const [approachChoice, setApproachChoice] = React.useState<{key:string;owner:string}>();
   const publishStandbyOwner = React.useCallback((owner:string) => setApproachChoice({key:standbyKey,owner}),[standbyKey]);
   const dragSlots = interaction.slots;
@@ -469,7 +473,7 @@ export function SceneView({
     const origin = room ? roomOrigin(roomIds.indexOf(room),building) : {x:0,y:0};
     let closest: string | undefined, distance = Infinity;
     for (const actor of standbyCandidates) {
-      const d = Math.hypot(actor.x-slot.x+origin.x,actor.y-slot.y+origin.y);
+      const d = Math.hypot(actor.x-slot.x+origin.x-foodOffset.x,actor.y-slot.y+origin.y-foodOffset.y);
       if (actor.room === room && d < distance) { closest=actor.id; distance=d; }
     }
     return closest;
