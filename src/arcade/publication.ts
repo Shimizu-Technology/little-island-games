@@ -23,6 +23,8 @@ export function palmHud(s: PalmState) {
   "worklet";
   const config = palmConfig(s);
   return { level: s.level === "endless" ? "endless" as const : { waves: s.level.waves }, world: config.world, helped: s.helped, wave: s.wave, waves: config.waves, relay: s.relay, relays: config.relays, caught: s.caught, score: s.score, lives: hearts(s.lives), shields: s.shields, prompt: s.prompt, answer: s.answer, feedback: s.feedback, shots: s.shots, event: s.event, cue: s.cue, tip: s.time < 4,
+    // AR-05 breather: the formation holds mid-wave while the 2 s break runs.
+    breather: s.waveWait > 0 && s.beetles.some(b => !b.caught),
     answers: config.world === "learn" ? s.beetles.map(b => ({ id: b.id, value: b.value })) : [] };
 }
 export function beachHud(s: BeachState) {

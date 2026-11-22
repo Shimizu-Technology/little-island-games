@@ -453,8 +453,8 @@
         "G",
         "H"
       ],
-      "door": "Cove",
-      "maxBoard": "Canoe Seats H plus fib; Logic Grid largest clue/seat set",
+      "door": "School",
+      "maxBoard": "Canoe Seats H: five friends with hats and fruit, up to 13 clue cards paged on a phone (fib arrives with OR-02b); Logic Grid largest clue/seat set",
       "firstAction": "Start the teaching band; make one legal seat and clue cards action"
     },
     {
@@ -1576,7 +1576,7 @@
         "canoe-seats",
         "logic-grid"
       ],
-      "maxBoard": "Canoe Seats H plus fib; Logic Grid largest clue/seat set"
+      "maxBoard": "Canoe Seats H: five friends with hats and fruit, up to 13 clue cards paged on a phone (fib arrives with OR-02b); Logic Grid largest clue/seat set"
     },
     {
       "id": "M19",

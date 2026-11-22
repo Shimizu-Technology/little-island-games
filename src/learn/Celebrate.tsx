@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { easeOut, nativeDriver, useReducedMotion } from "../components/motion";
@@ -8,9 +8,10 @@ const COLORS = ["#E1B251", "#C56D50", "#246858", "#386C9A", "#79AB80", "#E58C8C"
 /**
  * A short burst of stars and a big check that plays once per `burst` change (a counter).
  * It owns a clipped layout cell so no frame can paint over text or characters. Under Reduce Motion
- * shows a brief still check instead.
+ * shows a brief still check instead. `onDone` reports the finished burst, so a host that remounts it can pass 0 for a
+ * burst that already played instead of playing it again.
  */
-export function Celebrate({ burst, big = false }: { burst: number; big?: boolean }) {
+export function Celebrate({ burst, big = false, onDone }: { burst: number; big?: boolean; onDone?: (burst: number) => void }) {
   const reduced = useReducedMotion();
   const [t] = useState(() => new Animated.Value(0));
   const [visible, setVisible] = useState(false);
@@ -23,6 +24,12 @@ export function Celebrate({ burst, big = false }: { burst: number; big?: boolean
     anim.start(({ finished }) => finished && setVisible(false));
     return () => anim.stop();
   }, [burst, big, reduced, t]);
+  // The overlay hiding itself is the end of the burst; the host is told which one ended.
+  const shown = useRef(false);
+  useEffect(() => {
+    if (visible) shown.current = true;
+    else if (shown.current) { shown.current = false; onDone?.(burst); }
+  }, [visible, burst, onDone]);
   if (!burst) return null;
   const pieces = big ? 14 : 8;
   return (

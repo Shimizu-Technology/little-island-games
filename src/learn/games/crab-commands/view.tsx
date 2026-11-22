@@ -507,8 +507,15 @@ export function Board({
               : l.tray !== undefined && !s.program.length
                 ? `The tray holds ${l.tray} blocks. Build with Repeat!`
                 : "Plan the crab's path, then Go!";
-  // C1d's Level 4–5 prompt lines (c1d-crab-bug, c1d-crab-tray) wait for the lead's audio batch; the recorded plan line plays meanwhile.
-  const promptKey = won ? "crab-commands-home" : w.bump ? "crab-commands-bump" : "crab-commands-plan";
+  const promptKey = won
+    ? "crab-commands-home"
+    : w.bump
+      ? "crab-commands-bump"
+      : buggy
+        ? "c1d-crab-bug"
+        : l.tray !== undefined && !s.program.length
+          ? "c1d-crab-tray"
+          : "crab-commands-plan";
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>

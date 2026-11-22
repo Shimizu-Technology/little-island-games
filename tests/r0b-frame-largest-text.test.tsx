@@ -74,7 +74,8 @@ const byType = (r: ReactTestRenderer, type: string) => r.root.findAll(n => Strin
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 const inside = (n: ReactTestInstance, parent: ReactTestInstance) => { for (let p: ReactTestInstance | null = n; p; p = p.parent) if (p === parent) return true; return false; };
 
-it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
+// F-frame-3: the card's real content width, 393 less 16-pt gutters, a 2-pt border and 12-pt padding (it was 337).
+it.each([[3.12, { width: 333, ceiling: 2, maxSize: 44 }], [1, null]])('at text scale %s the board gets the text region %o', async (fontScale, fit) => {
   Object.assign(viewport, { fontScale });
   const r = await mount('turtle-tales');
   expect(byType(r, 'Board')[0].props.fit).toEqual(fit);
@@ -83,7 +84,7 @@ it.each([[3.12, { width: 337, ceiling: 2, maxSize: 44 }], [1, null]])('at text s
 it('an iPad board region is the board width beside the companion', async () => {
   Object.assign(viewport, { width: 1133, height: 744 });
   const r = await mount('turtle-tales');
-  // 1133 - 56, less the 88-pt companion column on a wide screen.
+  // The unmeasured board keeps its earlier cap beside the companion, 900 - 88 (the card itself is 942 pt wide here).
   expect(byType(r, 'Board')[0].props.fit).toEqual({ width: 900 - 88, ceiling: 2, maxSize: 44 });
 });
 
@@ -145,7 +146,7 @@ it('measures actual card width and space below the real header instead of passin
   vi.stubGlobal('cancelAnimationFrame', () => {});
   const r = await mount('crab-commands');
   await act(async () => {
-    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640 } } });
+    byType(r, 'ScrollView')[0].props.onLayout({ nativeEvent: { layout: { height: 640, width: 393 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board')[0].props.onLayout({ nativeEvent: { layout: { y: 86 } } });
     r.root.findAll(n => String(n.type) === 'View' && n.props.testID === 'learn-board-inset')[0].props.onLayout({ nativeEvent: { layout: { y: 14, width: 333, height: 400 } } });
   });
@@ -155,7 +156,7 @@ it('measures actual card width and space below the real header instead of passin
 
 async function measureFrame(r: ReactTestRenderer, height=556, top=56, inset=14, width=333) {
   await act(async()=>{
-    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height}}});
+    byType(r,'ScrollView')[0].props.onLayout({nativeEvent:{layout:{height,width:viewport.width}}});
     r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board')[0].props.onLayout({nativeEvent:{layout:{y:top}}});
     r.root.findAll(n=>String(n.type)==='View'&&n.props.testID==='learn-board-inset')[0].props.onLayout({nativeEvent:{layout:{y:inset,width,height:400}}});
   });

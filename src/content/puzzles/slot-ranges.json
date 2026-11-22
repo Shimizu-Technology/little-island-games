@@ -16,6 +16,7 @@
     { "owner": "t1-logic-lagoon", "first": 260, "last": 279 },
     { "owner": "o1-slip-tide-inline", "first": 298, "last": 299 },
     { "owner": "other-originals", "first": 300, "last": 399, "note": "O2-O6: assigned per slice." },
+    { "owner": "o2-canoe-seats", "first": 300, "last": 309, "note": "O2 Canoe Seats. Packed Endless Tide plus inline School/Deep Water banks; dares 2000-2099." },
     { "owner": "science", "first": 400, "last": 419, "note": "S1-S3: assigned per slice." },
     { "owner": "numbers", "first": 420, "last": 439, "note": "N1-N4: assigned per slice." },
     { "owner": "n1a", "first": 420, "last": 429 },

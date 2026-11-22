@@ -19,15 +19,15 @@ vi.mock('../src/learn/program/ProgramEditor', () => ({ ProgramEditor: 'block-edi
 vi.mock('../src/learn/games/crab-commands/useCrabHint', () => ({ useCrabHint: () => null }));
 let tree: ReactTestRenderer | undefined;
 afterEach(async () => { if (tree) await act(async () => tree!.unmount()); tree = undefined; vi.unstubAllGlobals(); });
-const mount = async (state: CrabState, level: 4 | 5, update = vi.fn()) => {
+const mount = async (state: CrabState, level: 4 | 5, update = vi.fn(), sound = vi.fn()) => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const options = optionsAtLevel({ mode: 'solo', pace: 'medium' }, level);
   expect(engine.validate(state, options)).toBe(true);
-  await act(async () => { tree = create(<Board session={{ game: 'crab-commands', version: 1, id: `c1d-${level}`, revision: 1, options, state }} update={update} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={vi.fn()} stopSound={vi.fn()} soundOn={false} width={361} height={700} active coach={{ active: false, done: vi.fn() }} cheer={vi.fn()} />); });
+  await act(async () => { tree = create(<Board session={{ game: 'crab-commands', version: 1, id: `c1d-${level}`, revision: 1, options, state }} update={update} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={sound} stopSound={vi.fn()} soundOn={false} width={361} height={700} active coach={{ active: false, done: vi.fn() }} cheer={vi.fn()} />); });
   return update;
 };
 const text = () => tree!.root.findAllByType('p' as never).map(p => p.children.join('')).join(' | ');
-const button = (label: string) => tree!.root.findAllByType('button' as never).find(b => b.children.join('') === label);
+const button = (label: string) => tree!.root.findAllByType('button' as never).find(b => b.children.join('') === label || b.props.label === label);
 
 it('Level 4 opens on the planted bug, offers Undo and Start over, and a fixed plan wins', async () => {
   const l = levels.find(x => x.stage === 'stretch' && x.tier === 0)!, others = levels.filter(x => x.stage === 'stretch' && x.tier > 0).slice(0, 2).map(x => x.id);
@@ -61,4 +61,22 @@ it('Level 5 opens straight into blocks with the tray, no arrow editor, no songs 
   expect(text()).toContain(`The tray holds ${l.tray} blocks. Build with Repeat!`);
   // The tray is enforced on save as well: a flat plan over the tray is refused.
   expect(await editor.props.onChange({ version: 1, songs: [], body: solve(l).map(c => ({ kind: 'command', command: ['up','right','down','left','forward','turn-left','turn-right','repeat'].indexOf(c) })) })).toBe(false);
+});
+
+it('W5a: Hear this instruction plays the dedicated Level 4 bug and Level 5 tray prompts', async () => {
+  const l4 = levels.find(x => x.stage === 'stretch' && x.tier === 0)!, o4 = levels.filter(x => x.stage === 'stretch' && x.tier > 0).slice(0, 2).map(x => x.id);
+  const sound4 = vi.fn();
+  await mount({ levels: [l4.id, ...o4], completed: [], program: [...l4.starter!], cursor: 0, running: false, starter: 0, cards: l4.starter!.length, debugging: false }, 4, vi.fn(), sound4);
+  await act(async () => button('Hear this instruction')!.props.onPress());
+  expect(sound4).toHaveBeenLastCalledWith('c1d-crab-bug');
+  // Once the child edits the starter plan, the prompt falls back to the general plan instruction.
+  await act(async () => { tree!.update(<Board session={{ game: 'crab-commands', version: 1, id: 'c1d-4', revision: 2, options: optionsAtLevel({ mode: 'solo', pace: 'medium' }, 4), state: { levels: [l4.id, ...o4], completed: [], program: l4.starter!.slice(1), cursor: 0, running: false, starter: 0, cards: l4.starter!.length, debugging: false } }} update={vi.fn()} practice={vi.fn()} assistance={vi.fn()} skills={{}} sound={sound4} stopSound={vi.fn()} soundOn={false} width={361} height={700} active coach={{ active: false, done: vi.fn() }} cheer={vi.fn()} />); });
+  await act(async () => button('Hear this instruction')!.props.onPress());
+  expect(sound4).toHaveBeenLastCalledWith('crab-commands-plan');
+
+  const l5 = levels.find(x => x.stage === 'deep' && x.tier === 0)!, o5 = levels.filter(x => x.stage === 'deep' && x.tier > 0).slice(0, 2).map(x => x.id);
+  const sound5 = vi.fn();
+  await mount({ levels: [l5.id, ...o5], completed: [], program: [], cursor: 0, running: false, starter: 0, cards: 0, debugging: false }, 5, vi.fn(), sound5);
+  await act(async () => button('Hear this instruction')!.props.onPress());
+  expect(sound5).toHaveBeenLastCalledWith('c1d-crab-tray');
 });
