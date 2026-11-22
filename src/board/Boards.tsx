@@ -460,19 +460,21 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
 }
 function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], startCell = null, compact = false }: Props) {
   const { fontScale } = useWindowDimensions();
-  const minCell = compact ? 40 : 42,
-    maxCell = compact ? 44 : 58,
+  const tileMargin = compact ? 1 : 2,
+    minCell = compact ? 42 : 42,
+    maxCell = compact ? 46 : 58,
     cell = Math.max(minCell, Math.min(Math.floor(width / s.size), maxCell)),
     boardW = cell * s.size,
     captionMax = Math.max(boardW, width),
     count = s.board.length,
     unopened = !s.marks.includes(1),
+    flagCount = s.marks.filter((m) => m === 2).length,
     copyCap = atLarge(fontScale, CHROME_MAX);
   return (
     <View style={{ width: "100%", alignItems: "center", gap: compact ? 6 : 10 }}>
       {!compact && (
         <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 14, textAlign: "center", width: "100%", maxWidth: captionMax }}>
-          {urchins(s.size)} sea urchins · {s.marks.filter((m) => m === 2).length} flags · {s.scores[0]} pearls
+          {urchins(s.size)} sea urchins · {flagCount} {flagCount === 1 ? "flag" : "flags"} · {s.scores[0]} {s.scores[0] === 1 ? "pearl" : "pearls"}
         </Copy>
       )}
       <View style={{ width: boardW, backgroundColor: "#CADFD0", borderRadius: 18, overflow: "hidden" }}>
@@ -511,10 +513,10 @@ function Reef({ state: s, width, onMove, locked, hint, flag, hintFocus = [], sta
                     if (!locked && !revealed && s.outcome === null) onMove(i + count);
                   }}
                   style={{
-                    width: cell - 4,
-                    height: cell - 4,
+                    width: cell - tileMargin * 2,
+                    height: cell - tileMargin * 2,
                     minHeight: 40,
-                    margin: 2,
+                    margin: tileMargin,
                     borderRadius: 10,
                     backgroundColor: showUrchin
                       ? "#EBD7E0"

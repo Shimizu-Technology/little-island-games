@@ -300,7 +300,8 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     expect(text(r)).toContain("Undo");
     await act(() => r.unmount());
 
-    fixture.dims = { width: 393, height: 852, fontScale: 1 };
+    // Tall tablet portrait keeps the full Status card without font-scale capping at default text size.
+    fixture.dims = { width: 744, height: 1133, fontScale: 1 };
     await act(() => {
       r = create(<BoardScreen game="reef-sweep" />);
     });

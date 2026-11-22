@@ -50,11 +50,13 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
   const innerW = Math.max(240, Math.min(width, Math.min(1080, winW - insets.left - insets.right) - 40));
   const usableH = Math.max(280, winH - insets.top - insets.bottom);
   const boardColW = wide
-    ? Math.min(Math.floor((innerW - 12) * 0.52), shortLandscape ? Math.max(280, usableH - 72) : 406)
+    ? Math.min(Math.floor((innerW - 12) * 0.52), shortLandscape ? Math.min(294, Math.max(280, usableH - 78)) : 406)
     : innerW;
   const leftColW = wide ? Math.max(220, innerW - 12 - boardColW) : innerW;
-  const maxCell = compactPhone ? 44 : shortLandscape ? Math.floor((usableH - 72) / d.size) : 58;
-  const minCell = shortLandscape ? 40 : 42;
+  const compactTiles = compactPhone || shortLandscape;
+  const tileMargin = compactTiles ? 1 : 2;
+  const maxCell = compactPhone ? 42 : shortLandscape ? Math.min(42, Math.floor((usableH - 78) / d.size)) : 58;
+  const minCell = 42;
   const cell = Math.max(minCell, Math.min(Math.floor(boardColW / d.size), maxCell));
   const buttonCap = atLarge(fontScale, compactPhone || shortLandscape ? 1.2 : 1.3);
   const copyCap = atLarge(fontScale, compactPhone || shortLandscape ? 1.25 : CHROME_MAX);
@@ -113,8 +115,8 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
       : unopened
         ? `Tap the ringed safe start at ${coordinate(d.size, d.start)} to begin.`
         : compactPhone || shortLandscape
-          ? `${d.mines.length} urchins · ${flagsPlaced} flags · ${pearlsFound}/${totalPearls} pearls`
-          : `${d.mines.length} sea urchins · ${flagsPlaced} flags · ${pearlsFound} of ${totalPearls} pearls`;
+          ? `${d.mines.length} urchins · ${flagsPlaced} ${flagsPlaced === 1 ? "flag" : "flags"} · ${pearlsFound}/${totalPearls} pearls`
+          : `${d.mines.length} sea urchins · ${flagsPlaced} ${flagsPlaced === 1 ? "flag" : "flags"} · ${pearlsFound} of ${totalPearls} pearls`;
 
   const modeChips = !solved && !hitUrchin && (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
@@ -237,10 +239,10 @@ export function ReefChallengeBoard({ state: s, dispatch, active, width }: Challe
                   }
                 }}
                 style={{
-                  width: cell - 4,
-                  height: cell - 4,
-                  minHeight: Math.min(40, cell - 4),
-                  margin: 2,
+                  width: cell - tileMargin * 2,
+                  height: cell - tileMargin * 2,
+                  minHeight: 40,
+                  margin: tileMargin,
                   borderRadius: 10,
                   backgroundColor: showUrchin
                     ? "#EBD7E0"

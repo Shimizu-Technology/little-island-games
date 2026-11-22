@@ -271,7 +271,7 @@ function Round({
     play = useSounds(store.save.settings.sound);
   const wide = s.game === "reef-sweep" ? width >= 660 && width > height : width >= 900 && width > height;
   const large = fontScale >= 1.5;
-  const reefCompactPortrait = s.game === "reef-sweep" && !wide && large && height < 920;
+  const reefCompactPortrait = s.game === "reef-sweep" && !wide && height < 920;
   const reefShortLandscape = s.game === "reef-sweep" && wide && height < 500;
   const reefCompact = reefCompactPortrait || reefShortLandscape;
   const buttonCap = atLarge(fontScale, reefCompact ? 1.2 : 1.3);
@@ -280,7 +280,7 @@ function Round({
   const contentWidth = Math.min(wide ? 1120 : 680, width - insets.left - insets.right);
   const innerWidth = Math.max(240, contentWidth - horizontalPad * 2);
   const reefBoardSide = reefShortLandscape
-    ? Math.min(308, Math.max(280, height - insets.top - insets.bottom - 70))
+    ? Math.min(294, Math.max(280, height - insets.top - insets.bottom - 78))
     : Math.min(420, height - insets.top - insets.bottom - 120);
   const reefBoardCol = Math.min(Math.floor((innerWidth - 12) * 0.52), reefBoardSide);
   const reefLeftCol = Math.max(220, innerWidth - 12 - reefBoardCol);
@@ -288,7 +288,7 @@ function Round({
     s.game === "reef-sweep" && wide
       ? Math.max(280, reefBoardCol)
       : reefCompactPortrait
-        ? Math.min(308, innerWidth)
+        ? Math.min(large ? 308 : 322, innerWidth)
         : Math.max(
             280,
             Math.min(
@@ -589,7 +589,8 @@ function Round({
             ? "First tap is safe · every new reef solves with no guessing."
             : "First tap is safe. Open every pearl space."
         : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`;
-  const reefCounterText = `${urchins(p.size)} ${reefCompact ? "urchins" : "sea urchins"} · ${p.marks.filter((m) => m === 2).length} flags · ${p.scores[0]} pearls`;
+  const reefFlagCount = p.marks.filter((m) => m === 2).length;
+  const reefCounterText = `${urchins(p.size)} ${reefCompact ? "urchins" : "sea urchins"} · ${reefFlagCount} ${reefFlagCount === 1 ? "flag" : "flags"} · ${p.scores[0]} ${p.scores[0] === 1 ? "pearl" : "pearls"}`;
   const reefModeChips = s.game === "reef-sweep" && p.outcome === null && (
     <View style={[styles.row, { justifyContent: "center", flexWrap: "wrap", gap: reefCompact ? 6 : 8 }]}>
       <Chip maxFontSizeMultiplier={buttonCap} selected={!flag} onPress={() => setFlag(false)}>
