@@ -12,6 +12,7 @@
     { "owner": "g7a-solitaire", "first": 100, "last": 109 },
     { "owner": "c2a-beep", "first": 200, "last": 219 },
     { "owner": "school-coding", "first": 220, "last": 259, "note": "C2b-C4: assigned per slice." },
+    { "owner": "c2c-turtle", "first": 220, "last": 229 },
     { "owner": "thinking", "first": 260, "last": 297, "note": "T1/T2; T2 not yet assigned." },
     { "owner": "t1-logic-lagoon", "first": 260, "last": 279 },
     { "owner": "o1-slip-tide-inline", "first": 298, "last": 299 },
