@@ -5,7 +5,7 @@ import Svg, { ClipPath, Defs, G, Path } from 'react-native-svg';
 import {mealPaths} from './MealPaths';
 import {heldDrinkScale} from '../art/heldDrink';
 import { HandProp } from '../art/PropShape';
-import type { HoldableId } from '../art/living';
+import { drinkIds, type HoldableId } from '../art/living';
 import { HomeCharacter, type CharacterRenderer } from '../characterRenderer';
 import type { CharacterRenderInput } from '../../islander/rig/character';
 import { islanderAnchors, pipAnchors, crabAnchors } from '../../islander/rig/anchors';
@@ -15,7 +15,7 @@ const AnimatedGroup = Animated.createAnimatedComponent(G);
 // Keep one caller-owned clock. An epoch prevents a newer meal from briefly
 // displaying the preceding meal's frame before its native clock starts.
 const EPOCH = 1000;
-type MealClock=SharedValue<{key:number;drink:boolean;releaseScale?:number}>;
+type MealClock=SharedValue<{key:number;drink:boolean;releaseScale?:number;foodItem?:string}>;
 function frameIndex(value:number) {
   'worklet';return value >= 0 && value < mealTimes.length ? value : 0;
 }
@@ -38,16 +38,16 @@ function foodArt(slot: CharacterRenderInput['slot'], meal: Meal, time: number, i
 function AuthoredFoodFrame({slot,meal,time,index,reduced}:{slot:CharacterRenderInput['slot'];meal:Meal;time:number;index:number;reduced:boolean}){
   return foodArt(slot,meal,time,index,reduced);
 }
-function FoodVariant({ current, clock, meal, input, reduced, after }: { current: SharedValue<number>; clock:MealClock; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
+function FoodVariant({ current, clock, meal, input, reduced, after, filter }: { filter?:string; current: SharedValue<number>; clock:MealClock; meal: Meal; input: CharacterRenderInput; reduced: boolean; after: boolean }) {
   const clipId=`meal-food-${React.useId().replace(/[^A-Za-z0-9_-]/g,'')}`;
   const time = after ? meal.action === 'eat' ? 360 : 660 : 0;
-  const style = useAnimatedStyle(() => ({ opacity: (mealTimes[frameIndex(current.value)] >= (clock.value.drink ? 660 : 360)) === after ? 1 : 0 }));
+  const style = useAnimatedStyle(() => ({ opacity: (!filter || clock.value.foodItem === filter) && (mealTimes[frameIndex(current.value)] >= (clock.value.drink ? 660 : 360)) === after ? 1 : 0 }));
   const unit = input.size / [132,160,120][input.slot];
-  return <Animated.View testID={`meal-food-${after ? 1 : 0}`} pointerEvents="none" style={[{ position:'absolute',left:-20*unit,top:-34*unit,width:40*unit,height:54*unit },style]}>
+  return <Animated.View testID={`meal-food-${after ? 1 : 0}${filter ? `-${filter}` : ""}`} pointerEvents="none" style={[{ position:'absolute',left:-20*unit,top:-34*unit,width:40*unit,height:54*unit },style]}>
     <Svg width={40*unit} height={54*unit} viewBox="-8 -22 40 54" accessible={false}>{foodArt(input.slot,meal,time,after ? 1 : 0,reduced,false,clipId)}</Svg>
   </Animated.View>;
 }
-/** Only two small food trees. Position/rotation/fade composite on the UI thread. */
+/** Two variants per recipe; both vessels stay mounted to keep pickup off SVG construction. */
 const Food = React.memo(function Food({ current, clock, progress, meal, input, reduced }: { current: SharedValue<number>; clock:MealClock; progress: SharedValue<number>; meal: Meal; input: CharacterRenderInput; reduced: boolean }) {
   const {slot,size,base,facing,tilt,limbLag} = input;
   const positions = useMemo(() => {
@@ -70,7 +70,13 @@ const Food = React.memo(function Food({ current, clock, progress, meal, input, r
       transform:[{translateX:point.x},{translateY:point.y},{rotate:`${point.angle}deg`},{scale:reduced ? 1 : 1+((clock.value.releaseScale ?? 1)-1)*Math.max(0,1-ms/180)}] };
   });
   return <Animated.View testID="meal-held-food" pointerEvents="none" style={[{position:'absolute',left:0,top:0,width:1,height:1,transformOrigin:[0,0,0]},style]}>
-    <FoodVariant {...{current,clock,meal,input,reduced}} after={false}/><FoodVariant {...{current,clock,meal,input,reduced}} after/>
+    {(meal.action === 'drink' ? drinkIds : [meal.food.item]).map(item => {
+      const recipe = meal.action === 'drink' ? {...meal,food:{...meal.food,item}} : meal;
+      return <React.Fragment key={meal.action === "drink" ? item : "food"}>
+        <FoodVariant {...{current,clock,input,reduced}} meal={recipe} filter={meal.action === 'drink' ? item : undefined} after={false}/>
+        <FoodVariant {...{current,clock,input,reduced}} meal={recipe} filter={meal.action === 'drink' ? item : undefined} after/>
+      </React.Fragment>;
+    })}
   </Animated.View>;
 }, (previous, next) => {
   const a = previous.input, b = next.input;
@@ -82,7 +88,7 @@ const Food = React.memo(function Food({ current, clock, progress, meal, input, r
     a.slot === b.slot && a.size === b.size && a.base === b.base && a.facing === b.facing &&
     a.tilt === b.tilt && a.limbLag === b.limbLag &&
     first.action === second.action && first.offered === second.offered &&
-    first.food.item === second.food.item && first.food.tint === second.food.tint &&
+    (first.food.item === second.food.item || first.action === "drink" && second.action === "drink") && first.food.tint === second.food.tint &&
     first.food.powered === second.food.powered;
 });
 /** Readiness changes the enclosing visibility, never the authored body. */
@@ -94,7 +100,7 @@ const MealDrawing=React.memo(function MealDrawing({input,meal,playback,renderCha
 export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderCharacter, onPresented, onFinished, visible = true }: {
   input: CharacterRenderInput; meal?: Meal; visible?:boolean; reduced: boolean; renderCharacter?: CharacterRenderer; onPresented?: () => void; onFinished?: () => void;
 }) {
-  const clock=useSharedValue<{key:number;drink:boolean;releaseScale?:number}>({key:0,drink:false});
+  const clock=useSharedValue<{key:number;drink:boolean;releaseScale?:number;foodItem?:string}>({key:0,drink:false});
   const progress = useSharedValue(0), key = meal?.key ?? 0, slot = input.slot, drink=meal?.action==='drink';
   const current = useDerivedValue(() => {
     const elapsed = progress.value - clock.value.key * EPOCH;
@@ -141,7 +147,7 @@ export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderC
     });
   },[key,onPresented,play]);
   useLayoutEffect(() => {
-    clock.set({key,drink,releaseScale:meal?.releaseScale});
+    clock.set({key,drink,releaseScale:meal?.releaseScale,foodItem:meal?.food.item});
     progress.set(key*EPOCH);
     live.current = true;
     if (laidOut.current) begin();
@@ -153,7 +159,7 @@ export const MealArt=React.memo(function MealArt({ input, meal, reduced, renderC
       if (frameRequest.current !== undefined) cancelAnimationFrame(frameRequest.current);
       cancelAnimation(progress);
     };
-  },[clock,key,drink,progress,begin,meal?.releaseScale]);
+  },[clock,key,drink,progress,begin,meal?.releaseScale,meal?.food.item]);
   useLayoutEffect(()=>{if(visible && prepared.current)play();},[visible,play]);
   return <View testID={meal ? 'meal-stage' : 'character-stage'} collapsable={false} onLayout={begin}
     style={{position:'absolute',left:0,top:0,right:0,bottom:0}}>
