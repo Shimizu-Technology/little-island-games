@@ -4,7 +4,7 @@ import { storageCapacity, storageOpen } from '../src/home/storage';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve, apply } from '../src/home/scene/proposal';
 import { roomPoint } from '../src/home/scene/types';
-import { editHistory, restoredHistory, savedHistory, type History } from '../src/home/useHomeStore';
+import { editHistory, restoredHistory, savedHistory, historyAdmits, type History } from '../src/home/useHomeStore';
 import { undoBytes, HOME_UNDO_BYTES, HOME_UNDO_READ_BYTES } from '../src/home/undoHistory';
 
 function fixture(container = 'carry-basket', count = 0): HomeStateV2 {
@@ -75,6 +75,36 @@ describe('HS-01 / HS-02 storage', () => {
     const unpack = resolve({ ...scene.rooms.kitchen, entities: scene.entities }, stored, roomPoint(650, 525), { scale: 1, release: true, floorOnly: true });
     const result = apply(h.present, unpack);
     expect('state' in result && result.state.rooms.kitchen.instances.filter(i => i.in === basket.id)).toHaveLength(3);
+  });
+  it('a friend carries the basket and every child; stale/interrupted proposals preserve the complete source', () => {
+    const s = fixture('carry-basket', 4);
+    s.rooms.home.characters = [{ slot: 0, anchor: 'floor', pose: 'stand', x: 8, y: 7, holding: 'box' }];
+    const before = JSON.stringify(s), scene = buildScene(s);
+    const p = resolve({ ...scene.rooms.kitchen, entities: scene.entities }, scene.entities['character/0'], roomPoint(500, 525), { scale: 1, floorOnly: true, release: true });
+    expect(p.moves).toHaveLength(6);
+    expect(JSON.stringify(s)).toBe(before); // Hover, background/cancel and a mid-carry regrab publish no partial save.
+    const changed = homeReducer(s, { type: 'toggle', id: 'box', roomId: 'home' }).state;
+    expect(apply(changed, p)).toEqual({ stale: true });
+    expect(changed.rooms.home.instances).toHaveLength(6);
+    const result = apply(s, p); expect('state' in result).toBe(true);
+    if ('state' in result) {
+      expect(validHome(result.state)).toBe(true);
+      expect(result.state.rooms.kitchen.characters[0].holding).toBeDefined();
+      expect(result.state.rooms.kitchen.instances.filter(i => i.in)).toHaveLength(4);
+      expect(result.state.rooms.home.instances.map(i => i.id)).toEqual(['loose']);
+    }
+  });
+  it('a dense 70-edit storage history stays within H3 budgets, and corruption inside undo is rejected', () => {
+    let h: History = { present: fixture('carry-basket', 4), past: [], future: [] };
+    for (let n = 0; n < 70; n++) h = editHistory(h, { type: 'toggle', id: 'box', roomId: 'home' });
+    const saved = savedHistory(h);
+    expect(saved.undo!.steps).toHaveLength(20);
+    expect(undoBytes(saved.undo!)).toBeLessThanOrEqual(HOME_UNDO_BYTES);
+    expect(historyAdmits(restoredHistory(saved))).toBe(true);
+    expect(validHome(saved)).toBe(true);
+    const corrupt = JSON.parse(JSON.stringify(saved));
+    corrupt.undo.steps.at(-1).home.instances.put[0].value.storage.version = 99;
+    expect(migrateHome(corrupt)).toBeUndefined();
   });
   it('legacy v4 saves stay untouched, unknown storage revisions/corrupt links fail closed, reset remains undoable', () => {
     const s = fixture('toy-box', 2), raw = JSON.stringify(s);
