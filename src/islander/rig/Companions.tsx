@@ -82,9 +82,9 @@ export function Pip({ base = 'stand', action = null, face, facing = 'right', siz
         <Ellipse cx={49} cy={95} rx={7} ry={4} fill="#E6986B" strokeWidth={0}/>{mealPlayback ? mealGroups(mealPlayback,f=>action==='drink'?'sip':f.meal.bite?'bite':f.face).map(({frame:f,indices}) => <MealLayer key={indices[0]} playback={mealPlayback} index={indices}><PetMouth meal={f.meal} x={34} y={94} face={action === 'drink' ? 'sip' : f.face}/></MealLayer>) : <PetMouth meal={meal} x={34} y={94} face={expression}/>}</G>
         {mealPlayback ? <MealMorph playback={mealPlayback}>{f=>{
           const c = companionContacts('pip', base, action, f.meal);
-          return <><Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${action ? 58 : 78} ${action ? 111 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 106 : 99} 68 98Z`} fill="#D89843"/>
+          return <><Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${action ? 58 : 78} ${action ? 120 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 40 : 57} ${action ? 100 : 99} 68 98Z`} fill="#F0C36A"/>
           {f.held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/>}</>;
-        }}</MealMorph> : <>        <Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${action ? 58 : 78} ${action ? 111 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 48 : 57} ${action ? 106 : 99} 68 98Z`} fill="#D89843"/>
+        }}</MealMorph> : <>        <Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${action ? 58 : 78} ${action ? 120 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 40 : 57} ${action ? 100 : 99} 68 98Z`} fill="#F0C36A"/>
         <Held at={c.hand} facing={facing}>{held}</Held>
         {held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/ >}</>}
 
