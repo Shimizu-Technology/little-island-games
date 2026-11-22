@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
 import { wordTokens } from './density.mjs';
-import { requireThat } from './core.mjs';
+import { requireThat, sha256, digest } from './core.mjs';
 
 export const hermesMagic = Buffer.from('c61fbc03c103191f', 'hex');
 
@@ -42,14 +42,38 @@ export function hermesStrings(bytes, options={}) {
   return strings;
 }
 
+export function isWordMapObject(node) {
+  if(!ts.isObjectLiteralExpression(node) || node.properties.length<3)return false;
+  const properties=node.properties;
+  return properties.every(property=>{
+    if(!ts.isPropertyAssignment(property) || !(ts.isStringLiteralLike(property.name) || ts.isIdentifier(property.name)))return false;
+    const value=property.initializer;
+    return ts.isCallExpression(value) || ts.isArrowFunction(value) || ts.isFunctionExpression(value) ||
+      ts.isObjectLiteralExpression(value) || ts.isStringLiteralLike(value);
+  }) && !properties.every(property=>ts.isStringLiteralLike(property.initializer) && /^#[a-f0-9]{3,8}$/i.test(property.initializer.text));
+}
+
+export function jsonWordMaps(value) {
+  const maps=[];
+  function visit(node) {
+    if(!node || typeof node!=='object')return;
+    const values=Object.values(node);
+    if(!Array.isArray(node) && values.length>=3 && values.every(v=>v && typeof v==='object' || typeof v==='string') &&
+      !values.every(v=>typeof v==='string' && /^#[a-f0-9]{3,8}$/i.test(v)))maps.push({keys:Object.keys(node)});
+    values.forEach(visit);
+  }
+  visit(value);
+  return maps;
+}
+
 /** The parser decodes escapes and template segments, and excludes variables,
  * member names, regex bodies and comments from the blocked-word content view.
  * Property names and comments remain in the partial-list leak view; only literals supply displayed-word checks.
  */
-export function javascriptStrings(text, teachings=[]) {
-  const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+export function javascriptStrings(text, teachings=[], fileName='artifact.js') {
+  const tree = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
-  const strings = [], keys = [], units = [], grids = [], sensitiveStrings=[], sensitiveGrids=[],decodedRanges=[];
+  const strings = [], keys = [], units = [], grids = [], sensitiveStrings=[], sensitiveGrids=[],decodedRanges=[],wordMaps=[];
   const propertyName=n=>n && (ts.isIdentifier(n)||ts.isStringLiteralLike(n))?n.text:undefined;
   function attachment(node) {
     let id,scope=false,field,record;
@@ -71,7 +95,19 @@ export function javascriptStrings(text, teachings=[]) {
     const names=new Set(n.properties.filter(ts.isPropertyAssignment).map(p=>propertyName(p.name)));
     return ['items','index','preview','bytes','fixtures'].every(key=>names.has(key));
   }
-  function addUnit(values,node) {values.library=attachment(node);values.origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree)};units.push(values);}
+  // Match a complete literal container across TS transpilation/minification.
+  // Decoded literal values and every syntax child remain part of its identity;
+  // formatting, quote style and comments do not. The source hash stays exact.
+  function syntax(node) {return [node.kind,node.text??null,...node.getChildren(tree).filter(child=>child.kind!==ts.SyntaxKind.CommaToken).map(child=>syntax(child))];}
+  const unitOrigins=new WeakMap();
+  function originFor(node) {
+    let origin=unitOrigins.get(node);
+    if(!origin){origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree),end:node.end,sourceSha256:sha256(node.getText(tree)),signature:digest(syntax(node))};unitOrigins.set(node,origin);}
+    return origin;
+  }
+  function addUnit(values,node) {
+    values.library=attachment(node);values.origin=originFor(node);units.push(values);
+  }
   function addCompact(values,node){values.compact=true;addUnit(values,node);}
   const comments=new Map();
   function recordComments(pos) {
@@ -79,6 +115,7 @@ export function javascriptStrings(text, teachings=[]) {
   }
   function visit(node) {
     recordComments(node.pos);recordComments(node.end);
+    if(isWordMapObject(node))wordMaps.push({keys:node.properties.map(property=>property.name.text),origin:()=>originFor(node)});
     // A container owns its immediate data, never strings in other records,
     // nested containers, callbacks or functions elsewhere in the bundle.
     if (ts.isArrayLiteralExpression(node)) {
@@ -119,7 +156,7 @@ export function javascriptStrings(text, teachings=[]) {
   keys.push(...comments.values());
   let cursor=0,densitySource='';
   for(const range of decodedRanges.sort((a,b)=>a.start-b.start)){densitySource+=text.slice(cursor,range.start)+' '+range.text+' ';cursor=range.end;}densitySource+=text.slice(cursor);
-  return { strings, keys, units, grids, sensitiveStrings, sensitiveGrids, densitySource };
+  return { strings, keys, units, grids, sensitiveStrings, sensitiveGrids, densitySource, wordMaps };
 }
 
 export function jsonStrings(value) {

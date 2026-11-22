@@ -1,0 +1,28 @@
+{
+ "format": 1,
+ "family": "canoe-seats",
+ "seedBase": 1,
+ "attempts": 6723,
+ "rejects": {
+  "duplicate-semantic": 131,
+  "template-cap": 0,
+  "layout-repeat": 0,
+  "construction": 2462,
+  "bot-beat": 122
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "a": 96,
+  "b": 200,
+  "c": 400,
+  "d": 600,
+  "e": 800,
+  "f": 600,
+  "g": 800,
+  "h": 512
+ },
+ "sourceSha": "cfe5ee035404e3a4704da2fa4dc1397cb3d07b85",
+ "status": "complete"
+}

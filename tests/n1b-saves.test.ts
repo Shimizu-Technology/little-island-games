@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { random } from "../src/games/types";
 import { engines } from "../src/learn/engines";
@@ -104,7 +104,7 @@ describe("wording and speech", () => {
     expect(Object.keys(staged).sort()).toEqual(["number-hop-help-v2", "quick-practice-help-v2"]);
     expect(staged[quickEngine.helpAudio!]).toBe(quickEngine.help);
     expect(staged[hopEngine.helpAudio!]).toBe(hopEngine.help);
-    expect(JSON.parse(readFileSync("scripts/learn/n1b-numbers.stage", "utf8"))).toEqual({ status: "design-only", shipping: false });
+    expect(existsSync("scripts/learn/n1b-numbers.stage"), "voiced in the W5a batch; the staging sidecar is gone").toBe(false);
     for (const g of games) {
       expect(engines[g].levelNames).toHaveLength(5);
       for (const level of [1, 2, 3, 4, 5] as const) expect(levelInfo(g, level).name).toBe(engines[g].levelNames![level - 1].name);
