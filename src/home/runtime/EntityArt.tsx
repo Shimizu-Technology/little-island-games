@@ -72,6 +72,7 @@ export const EntityArt = memo(function EntityArt({
   idleStyle,
   carryGrip,
   meal,
+  mealStandby,
   mealVisible = true,
   onMealPresented,
   onMealFinished,
@@ -79,6 +80,7 @@ export const EntityArt = memo(function EntityArt({
 }: {
   entity: SceneEntity;
   meal?: Meal;
+  mealStandby?: Meal;
   mealVisible?:boolean;
   onMealPresented?: () => void;
   onMealFinished?: () => void;
@@ -148,12 +150,12 @@ export const EntityArt = memo(function EntityArt({
           </Animated.View>
         </View>
         <View testID="prepared-meal" pointerEvents="none" collapsable={false} style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal && mealVisible?1:0}}>
-          <MealArt input={input} visible={!meal || mealVisible} meal={meal ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
+          <MealArt input={input} visible={!meal || mealVisible} meal={meal ?? mealStandby ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
         </View>
       </> : <CharacterDrawing input={input} renderCharacter={renderCharacter}/> }
     </View>
   );
-}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealVisible === b.mealVisible && a.idleStyle === b.idleStyle && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealStandby === b.mealStandby && a.mealVisible === b.mealVisible && a.idleStyle === b.idleStyle && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&

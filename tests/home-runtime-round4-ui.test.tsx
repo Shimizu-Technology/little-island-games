@@ -440,3 +440,23 @@ it('applies the anticipation fade only to the idle drawing during a meal', async
  expect(art.parent?.props.style?.evaluate).toBeUndefined();
  await act(async () => tree.unmount());
 });
+
+it('prepares a full picked-up drink in the resting actor’s hidden stage', async () => {
+ const c = context('');
+ c.interaction.slots.value = [emptyDragSlot(), emptyDragSlot()];
+ const state = labHome('rig-menu-1');
+ const scene = buildScene(state);
+ const drink = scene.entities['home/item/menu-4'];
+ const pickup = { id: drink.id, slot: 0, scene, generation: 1, epoch: 0 } as Pickup;
+ const props = {
+  state, scene, building: buildingLayout(4), viewport: { width: 402, height: 650 }, interaction: c.interaction,
+  reduced: false, reactions: {}, sleeping: {}, onNode: () => {}, onSelect: () => {}, onMove: () => {},
+ };
+ const { EntityArt } = await import('../src/home/runtime/EntityArt');
+ let tree!: TestRenderer.ReactTestRenderer;
+ await act(async () => { tree = TestRenderer.create(<SceneView {...props} pickups={[pickup]} />); });
+ const art = tree.root.findAllByType(EntityArt).find(node => node.props.prepareMeal)!;
+ expect(art.props.meal).toBeUndefined();
+ expect(art.props.mealStandby).toEqual({ key: 0, action: 'drink', offered: true, food: drink.item });
+ await act(async () => tree.unmount());
+});

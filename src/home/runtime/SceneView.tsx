@@ -56,6 +56,7 @@ const RestingEntity = memo(function RestingEntity({
   targetKey,
   action,
   meal,
+  mealStandby,
   mealVisible = true,
   onMealPresented,
   onMealFinished,
@@ -98,6 +99,7 @@ const RestingEntity = memo(function RestingEntity({
   targetKey: string;
   action?: "eat" | "drink";
   meal?: Meal;
+  mealStandby?: Meal;
   mealVisible?:boolean;
   onMealPresented?: (id: string, key: number) => void;
   onMealFinished?: (id: string, key: number) => void;
@@ -286,6 +288,7 @@ const RestingEntity = memo(function RestingEntity({
             prepareMeal={!!entity.character}
             idleStyle={character ? idleStyle : undefined}
             meal={meal}
+            mealStandby={mealStandby}
             mealVisible={mealVisible}
             onMealPresented={presented}
             onMealFinished={finished}
@@ -426,6 +429,12 @@ export function SceneView({
       if (retire !== undefined) cancelAnimationFrame(retire);
     };
   }, [completeMealHandoff, meals, mealReady]);
+  // Use the existing hidden meal stage to prepare a sip while the cup is
+  // already being carried. Key zero prepares art without starting playback.
+  const offeredDrink = pickups.map(pickup => pickup && pickup.scene.entities[pickup.id])
+    .find(entity => entity?.body?.edible === "drink" && entity.item && !entity.item.empty)?.item;
+  const mealStandby = useMemo<Meal | undefined>(() =>
+    offeredDrink && { key: 0, action: "drink", offered: true, food: offeredDrink }, [offeredDrink]);
   // HD-08: lamp shadows change only when the room's contents do.
   // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
   const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {
@@ -496,6 +505,7 @@ export function SceneView({
                 onNode={onNode}
                 action={reactions[entity.id]}
                 meal={meals[entity.id]}
+                mealStandby={entity.character && roomId === state.current ? mealStandby : undefined}
                 mealVisible={!mealReady || mealReady[entity.id]===meals[entity.id]?.key}
                 onMealPresented={onMealPresented}
                 onMealFinished={onMealFinished}
