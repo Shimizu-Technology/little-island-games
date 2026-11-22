@@ -34,13 +34,22 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
   // Keep selectedGapSlot pointing at a valid gap slot (or auto-advance to first unfilled gap).
   const activeSlot = selectedGapSlot < p.gaps.length ? selectedGapSlot : 0;
 
+  const compact = width < 420;
   const trailWidth = Math.min(Math.max(width - 28, 268), 430);
-  const trailHeight = 292;
+  const rowYs: [number, number, number] = compact ? [36, 114, 192] : [46, 142, 238];
+  const trailHeight = compact ? 228 : 284;
+  const stoneBox = compact ? 52 : 58;
+  const half = stoneBox / 2;
   const left = 36, middle = trailWidth / 2, right = trailWidth - 36;
   const matrix = p.tiles.length === 9;
   const points: [number, number][] = matrix
-    ? Array.from({ length: 9 }, (_, i) => [[left, middle, right][i % 3], [46, 143, 240][Math.floor(i / 3)]])
-    : [[left, 46], [middle, 46], [right, 46], [right, 143], [middle, 143], [left, 143], [left, 240], [middle, 240], [right, 240]];
+    ? Array.from({ length: 9 }, (_, i) => [[left, middle, right][i % 3], rowYs[Math.floor(i / 3)]])
+    : [
+        [left, rowYs[0]], [middle, rowYs[0]], [right, rowYs[0]],
+        [right, rowYs[1]], [middle, rowYs[1]], [left, rowYs[1]],
+        [left, rowYs[2]], [middle, rowYs[2]], [right, rowYs[2]],
+      ];
+  const trailPath = `M${left} ${rowYs[0]} Q${middle} ${rowYs[0] - 18} ${right} ${rowYs[0]} C${trailWidth + 3} ${Math.round((rowYs[0] + rowYs[1]) * 0.43)} ${trailWidth + 3} ${Math.round((rowYs[0] + rowYs[1]) * 0.6)} ${right} ${rowYs[1]} Q${middle} ${rowYs[1] + 18} ${left} ${rowYs[1]} C-3 ${Math.round((rowYs[1] + rowYs[2]) * 0.46)} -3 ${Math.round((rowYs[1] + rowYs[2]) * 0.56)} ${left} ${rowYs[2]} Q${middle} ${rowYs[2] - 18} ${right} ${rowYs[2]}`;
 
   const ready = completeDraft(state);
   const hintInfo = challengeHint(state);
@@ -76,18 +85,16 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
           : "Rule shown";
 
   return (
-    <View style={{ gap: 14, paddingVertical: 6 }}>
-      <Copy style={{ color: C.ink, fontSize: 20, fontWeight: "900" }}>{state.descriptor.title}</Copy>
-
-      <View style={{ backgroundColor: "#E4EED9", borderRadius: 24, paddingVertical: 12, alignItems: "center", overflow: "hidden" }}>
+    <View style={{ gap: compact ? 10 : 13, paddingVertical: 4 }}>
+      <View style={{ backgroundColor: "#E4EED9", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
         <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 16 }}>
           {matrix ? "3 × 3 PATTERN GRID" : p.gaps.length > 1 ? "TWO-GAP TRAIL" : "PATTERN TRAIL"}
         </Copy>
-        <View style={{ width: trailWidth, height: trailHeight, marginTop: 6 }}>
+        <View style={{ width: trailWidth, height: trailHeight, marginTop: compact ? 4 : 6 }}>
           {!matrix && (
             <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth + 3} 78 ${trailWidth + 3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#A4C69B" strokeWidth="18" strokeLinecap="round" />
-              <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth + 3} 78 ${trailWidth + 3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#A4C69B" strokeWidth={compact ? "16" : "18"} strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
             </Svg>
           )}
           {p.tiles.map((tile, i) => {
@@ -102,31 +109,31 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
               <>
                 {isGap ? (
                   pickedTile ? (
-                    <PatternGlyph token={pickedTile} size={pickedTile.startsWith("shells:") ? 38 : 42} />
+                    <PatternGlyph token={pickedTile} size={pickedTile.startsWith("shells:") ? (compact ? 34 : 38) : (compact ? 38 : 42)} />
                   ) : (
                     <>
-                      <Svg width={39} height={39} viewBox="0 0 40 40" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <Svg width={compact ? 35 : 39} height={compact ? 35 : 39} viewBox="0 0 40 40" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                         <Circle cx="20" cy="20" r="17" fill="#FFF9E5" stroke="#E9C36C" strokeWidth="2" strokeDasharray="3 3" />
                       </Svg>
-                      <Copy maxFontSizeMultiplier={1.4} style={{ position: "absolute", color: "#8E6B2C", fontSize: 20, fontWeight: "900" }}>?</Copy>
+                      <Copy allowFontScaling={false} style={{ position: "absolute", color: "#8E6B2C", fontSize: compact ? 18 : 20, fontWeight: "900" }}>?</Copy>
                     </>
                   )
                 ) : (
-                  <PatternGlyph token={tile} size={tile.startsWith("shells:") ? 38 : 42} />
+                  <PatternGlyph token={tile} size={tile.startsWith("shells:") ? (compact ? 34 : 38) : (compact ? 38 : 42)} />
                 )}
-                <View style={{ position: "absolute", right: -7, bottom: -8, width: 20, height: 20, borderRadius: 10, backgroundColor: selected ? "#B97D19" : "#3D6549", alignItems: "center", justifyContent: "center" }}>
-                  <Copy maxFontSizeMultiplier={1.2} style={{ color: "#FFFDF3", fontSize: 11, fontWeight: "900" }}>{i + 1}</Copy>
+                <View style={{ position: "absolute", right: -7, bottom: -7, width: 22, height: 22, borderRadius: 11, backgroundColor: selected ? "#B97D19" : "#3D6549", alignItems: "center", justifyContent: "center" }}>
+                  <Copy allowFontScaling={false} style={{ color: "#FFFDF3", fontSize: 11, lineHeight: 14, fontWeight: "900", includeFontPadding: false }}>{i + 1}</Copy>
                 </View>
               </>
             );
 
             const boxStyle = {
               position: "absolute" as const,
-              left: x - 29,
-              top: y - 29,
-              width: 58,
-              height: 58,
-              borderRadius: 19,
+              left: x - half,
+              top: y - half,
+              width: stoneBox,
+              height: stoneBox,
+              borderRadius: compact ? 17 : 19,
               alignItems: "center" as const,
               justifyContent: "center" as const,
               backgroundColor: state.won && isGap ? "#E2F4DF" : isGap ? (selected ? "#FFF0B8" : "#FFF8DB") : "#FFFDF3",

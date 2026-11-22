@@ -5,7 +5,7 @@ import {
   orientNet,
 } from "../../../src/learn/games/shape-shift/cubeNet";
 import type { Cell } from "../../../src/learn/games/shape-shift/legacy";
-import { POLY_BLUEPRINTS, TANGRAM_BASE, type TangramKind } from "../../../src/learn/games/shape-shift/silhouettes";
+import { POLY_BLUEPRINTS, TANGRAM_BASE, tangramTopology, type TangramKind } from "../../../src/learn/games/shape-shift/silhouettes";
 import {
   atomKey,
   normalizeAtoms,
@@ -137,6 +137,8 @@ function buildTangramCluster(
   const width = Math.max(...silhouette.map((a) => a[0])) + 1;
   const height = Math.max(...silhouette.map((a) => a[1])) + 1;
   if (width > 6 || height > 6) return null;
+  const topo = tangramTopology(silhouette);
+  if (topo.comps !== 1 || topo.pinches !== 0) return null;
   return { silhouette, pieces: kinds.map((k) => TANGRAM_BASE[k].cells), width, height };
 }
 

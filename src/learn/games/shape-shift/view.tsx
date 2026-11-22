@@ -100,7 +100,16 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
     [piece, turns, flipped],
   );
 
-  const step = Math.max(32, Math.min(48, Math.floor((Math.min(width - 36, 420)) / Math.max(task.width, 4))));
+  const compact = width < 420;
+  const maxBoardH = compact ? 205 : 296;
+  const step = Math.max(
+    26,
+    Math.min(
+      48,
+      Math.floor(Math.min(width - 36, 420) / Math.max(task.width, 4)),
+      Math.floor(maxBoardH / Math.max(task.height, 4)),
+    ),
+  );
   const silSet = useMemo(() => new Set(task.silhouette.map(atomKey)), [task.silhouette]);
 
   const placedVisuals: PlacedVisual[] = useMemo(
@@ -150,7 +159,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
             disabled={!active || reveal}
             onPress={() => update(setMode(s, m))}
             style={{
-              paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, minHeight: 44, justifyContent: "center",
+              paddingHorizontal: 14, paddingVertical: compact ? 6 : 8, borderRadius: 14, minHeight: compact ? 42 : 44, justifyContent: "center",
               backgroundColor: on ? "#3D6549" : "#E6EFE2",
               borderWidth: 2, borderColor: on ? "#2B4C35" : "#9BB593",
             }}
@@ -350,13 +359,13 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
   };
 
   return (
-    <View style={{ gap: 12, paddingVertical: 6 }}>
+    <View style={{ gap: compact ? 8 : 11, paddingVertical: compact ? 3 : 6 }}>
       {modeSwitcher}
-      <Copy style={{ fontSize: 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
-      <Copy maxFontSizeMultiplier={1.45} style={{ fontWeight: "800", color: "#365034" }}>
+      <Copy maxFontSizeMultiplier={1.65} style={{ fontSize: compact ? 18 : 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
+      <Copy maxFontSizeMultiplier={1.4} style={{ fontWeight: "800", color: "#365034", fontSize: compact ? 13 : 14 }}>
         {reveal
           ? `${task.picture.toUpperCase()} COMPLETE!`
-          : `PUZZLE ${s.index + 1} OF 4 · ${s.placed.length}/${task.pieces.length} PLACED · ${piece.name}`}
+          : `PUZZLE ${s.index + 1} OF 4 · ${s.placed.length}/${task.pieces.length} PLACED · Selected: ${piece.name}`}
       </Copy>
 
       {/* Interactive Silhouette Board */}
@@ -425,14 +434,19 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 disabled={!active}
                 onPress={() => setSelectedPiece(idx)}
                 style={{
-                  padding: 8, minWidth: 56, minHeight: 56, borderRadius: 14,
+                  padding: task.kind === "tangram" ? 5 : 7,
+                  width: task.kind === "tangram" ? (compact ? 54 : 60) : undefined,
+                  height: task.kind === "tangram" ? (compact ? 54 : 60) : undefined,
+                  minWidth: compact ? 52 : 56,
+                  minHeight: compact ? 52 : 56,
+                  borderRadius: 14,
                   alignItems: "center", justifyContent: "center",
                   backgroundColor: selected ? "#FFF1C8" : "#FFFDF3",
                   borderWidth: selected ? 3 : 1.5,
                   borderColor: selected ? "#C6861E" : "#9BB593",
                 }}
               >
-                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? 13 : 16} />
+                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? 11 : 15} />
               </PressableScale>
             );
           })}
@@ -471,7 +485,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
             Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : {},
           ]}
         >
-          <PiecePreview atoms={currentCells} color={piece.color} cellSize={Math.min(34, step - 4)} />
+          <PiecePreview atoms={currentCells} color={piece.color} cellSize={Math.min(compact ? 25 : 32, Math.max(20, step - 4))} />
         </View>
       )}
 
@@ -538,10 +552,12 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
         </PressableScale>
       </View>
 
-      <Copy maxFontSizeMultiplier={1.45} style={{ color: C.ink, textAlign: "center", fontSize: 14 }}>
+      <Copy maxFontSizeMultiplier={1.4} style={{ color: C.ink, textAlign: "center", fontSize: compact ? 13 : 14 }}>
         {task.showGoldCorner
           ? "Drag the piece onto the exact spot, or tap the gold corner."
-          : "Drag the piece onto the exact spot, or tap its top-left square. Tap a placed piece to lift it."}
+          : task.kind === "tangram"
+            ? "Drag a piece into the outline, or tap a square to place it. Tap a placed piece to lift it."
+            : "Drag the piece onto the exact spot, or tap its top-left square. Tap a placed piece to lift it."}
       </Copy>
 
       {wrong && (

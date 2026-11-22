@@ -1,0 +1,27 @@
+{
+ "format": 1,
+ "family": "shape-shift",
+ "seedBase": 1,
+ "attempts": 11323,
+ "rejects": {
+  "duplicate-semantic": 2,
+  "template-cap": 0,
+  "layout-repeat": 0,
+  "construction": 10537,
+  "bot-beat": 93,
+  "too-large": 391
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "a": 50,
+  "b": 50,
+  "c": 50,
+  "d": 50,
+  "e": 50,
+  "f": 50
+ },
+ "sourceSha": "9d9dabaec7050168908e017d4588d4fccae8b525",
+ "status": "complete"
+}

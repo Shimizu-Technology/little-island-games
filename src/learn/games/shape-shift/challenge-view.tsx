@@ -84,9 +84,10 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
     }
   };
 
+  const isCube = p.kind === "cube-opp" || p.kind === "cube-fold";
   const helpLabel =
     state.hintStage === 0
-      ? "Look"
+      ? isCube ? "Look (fold clue)" : "Look (shape clue)"
       : state.hintStage === 1
         ? "Think"
         : hintInfo.nextPlacement
@@ -98,12 +99,11 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
   // =========================================================================
   if (p.kind === "cube-opp" || p.kind === "cube-fold") {
     return (
-      <View style={{ gap: 14, paddingVertical: 6 }}>
-        <Copy style={{ color: C.ink, fontSize: 20, fontWeight: "900" }}>{state.descriptor.title}</Copy>
+      <View style={{ gap: 12, paddingVertical: 4 }}>
         {p.kind === "cube-opp" ? (
           <>
             <Copy style={{ color: C.ink, fontSize: 16 }}>
-              When this {p.netName.toLowerCase()} folds into a cube, which face is opposite <Copy style={{ fontWeight: "900" }}>{p.faces[p.askIndex]}</Copy>?
+              When this {p.netName === "T net" ? "T-net" : p.netName.toLowerCase()} folds into a cube, which face is opposite <Copy style={{ fontWeight: "900" }}>{p.faces[p.askIndex]}</Copy>?
             </Copy>
             <CubeNetView cells={p.cells} faces={p.faces} highlightIndex={p.askIndex} cellSize={Math.min(52, Math.floor((width - 60) / 5))} />
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
@@ -195,7 +195,16 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
   const safeOrient = orients.length ? orientIdx % orients.length : 0;
   const activeCells = orients[safeOrient] ?? [];
 
-  const step = Math.max(30, Math.min(46, Math.floor((Math.min(width - 28, 410)) / Math.max(p.width, 4))));
+  const compact = width < 420;
+  const maxBoardH = compact ? 205 : 296;
+  const step = Math.max(
+    26,
+    Math.min(
+      46,
+      Math.floor(Math.min(width - 28, 410) / Math.max(p.width, 4)),
+      Math.floor(maxBoardH / Math.max(p.height, 4)),
+    ),
+  );
   const silSet = new Set(p.silhouette.map(atomKey));
   const placedVisuals: PlacedVisual[] = state.placed.map((pl) => ({
     ...pl,
@@ -241,8 +250,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
   };
 
   return (
-    <View style={{ gap: 12, paddingVertical: 6 }}>
-      <Copy style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{state.descriptor.title}</Copy>
+    <View style={{ gap: compact ? 9 : 12, paddingVertical: 4 }}>
       {state.descriptor.hint && (
         <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontSize: 14 }}>{state.descriptor.hint}</Copy>
       )}
@@ -306,14 +314,17 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                   disabled={!active}
                   onPress={() => setSelectedPiece(idx)}
                   style={{
-                    padding: 7, minWidth: 52, minHeight: 52, borderRadius: 14,
+                    padding: p.kind === "tangram" ? 5 : 7,
+                    width: p.kind === "tangram" ? (compact ? 52 : 58) : undefined,
+                    height: p.kind === "tangram" ? (compact ? 52 : 58) : undefined,
+                    minWidth: 52, minHeight: 52, borderRadius: 14,
                     alignItems: "center", justifyContent: "center",
                     backgroundColor: selected ? "#FFF1C8" : "#FFFDF3",
                     borderWidth: selected ? 3 : 1.5,
                     borderColor: selected ? "#C6861E" : "#9BB593",
                   }}
                 >
-                  <PiecePreview atoms={p.pieces[idx]} color={PIECE_COLORS[idx % PIECE_COLORS.length]} cellSize={p.kind === "tangram" ? 13 : 16} />
+                  <PiecePreview atoms={p.pieces[idx]} color={PIECE_COLORS[idx % PIECE_COLORS.length]} cellSize={p.kind === "tangram" ? 11 : 15} />
                 </PressableScale>
               );
             })}

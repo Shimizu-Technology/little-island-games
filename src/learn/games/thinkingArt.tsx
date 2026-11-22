@@ -48,7 +48,8 @@ export function patternLabel(token: string): string {
 export function PatternGlyph({ token, size = 46 }: { token: string; size?: number }) {
   if (token.startsWith("stone:")) {
     const [, color, scale, turn] = token.split(":");
-    const stoneSize = scale && scale !== "0" ? Math.min(size, 25 + Number(scale) * 7) : size;
+    const factor = scale === "1" ? 0.56 : scale === "2" ? 0.78 : 1;
+    const stoneSize = scale && scale !== "0" ? Math.round(size * factor) : size;
     return <StoneGlyph color={color} size={stoneSize} turn={turn} />;
   }
   if (token.startsWith("shells:")) { const count = Number(token.split(":")[1]); return <View style={{ width: size + 10, flexDirection: "row", flexWrap: "wrap", justifyContent: "center" }}>{Array.from({ length: count }, (_, i) => <SeaGlyph key={i} kind="shell" size={count > 4 ? 17 : 22} />)}</View>; }

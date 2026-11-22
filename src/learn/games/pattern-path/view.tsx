@@ -29,13 +29,22 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
 
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
 
+  const compact = width < 420;
   const trailWidth = Math.min(Math.max(width - 32, 268), 430);
-  const trailHeight = 292;
+  const rowYs: [number, number, number] = compact ? [36, 114, 192] : [46, 142, 238];
+  const trailHeight = compact ? 228 : 284;
+  const stoneBox = compact ? 52 : 58;
+  const half = stoneBox / 2;
   const left = 36, middle = trailWidth / 2, right = trailWidth - 36;
   const matrix = task.tiles.length === 9;
   const points: [number, number][] = matrix
-    ? Array.from({ length: 9 }, (_, i) => [[left, middle, right][i % 3], [46, 143, 240][Math.floor(i / 3)]])
-    : [[left, 46], [middle, 46], [right, 46], [right, 143], [middle, 143], [left, 143], [left, 240], [middle, 240], [right, 240]];
+    ? Array.from({ length: 9 }, (_, i) => [[left, middle, right][i % 3], rowYs[Math.floor(i / 3)]])
+    : [
+        [left, rowYs[0]], [middle, rowYs[0]], [right, rowYs[0]],
+        [right, rowYs[1]], [middle, rowYs[1]], [left, rowYs[1]],
+        [left, rowYs[2]], [middle, rowYs[2]], [right, rowYs[2]],
+      ];
+  const trailPath = `M${left} ${rowYs[0]} Q${middle} ${rowYs[0] - 18} ${right} ${rowYs[0]} C${trailWidth + 3} ${Math.round((rowYs[0] + rowYs[1]) * 0.43)} ${trailWidth + 3} ${Math.round((rowYs[0] + rowYs[1]) * 0.6)} ${right} ${rowYs[1]} Q${middle} ${rowYs[1] + 18} ${left} ${rowYs[1]} C-3 ${Math.round((rowYs[1] + rowYs[2]) * 0.46)} -3 ${Math.round((rowYs[1] + rowYs[2]) * 0.56)} ${left} ${rowYs[2]} Q${middle} ${rowYs[2] - 18} ${right} ${rowYs[2]}`;
 
   const choose = (tile: string) => {
     if (hopAt !== null) return;
@@ -84,17 +93,17 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
   };
 
   return (
-    <View style={{ gap: 14, paddingVertical: 8 }}>
-      <Copy style={{ color: C.ink, fontSize: 22, fontWeight: "900" }}>{task.title}</Copy>
-      <View style={{ backgroundColor: "#E4EED9", borderRadius: 25, paddingVertical: 13, alignItems: "center", overflow: "hidden" }}>
-        <Copy maxFontSizeMultiplier={1.5} style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>
+    <View style={{ gap: compact ? 8 : 12, paddingVertical: compact ? 4 : 8 }}>
+      <Copy maxFontSizeMultiplier={1.65} style={{ color: C.ink, fontSize: compact ? 18 : 21, fontWeight: "900" }}>{task.title}</Copy>
+      <View style={{ backgroundColor: "#E4EED9", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
+        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>
           TRAIL {s.index + 1} OF 4
         </Copy>
-        <View style={{ width: trailWidth, height: trailHeight, marginTop: 7 }}>
+        <View style={{ width: trailWidth, height: trailHeight, marginTop: compact ? 4 : 7 }}>
           {!matrix && (
             <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth + 3} 78 ${trailWidth + 3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#A4C69B" strokeWidth="18" strokeLinecap="round" />
-              <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth + 3} 78 ${trailWidth + 3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#A4C69B" strokeWidth={compact ? "16" : "18"} strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
             </Svg>
           )}
           {task.tiles.map((tile, i) => {
@@ -105,7 +114,7 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
                 accessible
                 accessibilityLabel={missing ? `Stone ${i + 1}: missing stone` : `Stone ${i + 1}: ${patternLabel(tile)}`}
                 style={{
-                  position: "absolute", left: x - 29, top: y - 29, width: 58, height: 58, borderRadius: 19,
+                  position: "absolute", left: x - half, top: y - half, width: stoneBox, height: stoneBox, borderRadius: compact ? 17 : 19,
                   alignItems: "center", justifyContent: "center",
                   backgroundColor: missing ? "#FFF5CC" : "#FFFDF3",
                   borderWidth: missing ? 3 : 2,
@@ -116,27 +125,27 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
               >
                 {missing ? (
                   <>
-                    <CircleGap size={39} />
-                    <Copy maxFontSizeMultiplier={1.4} style={{ position: "absolute", color: "#8E6B2C", fontSize: 20, fontWeight: "900" }}>?</Copy>
+                    <CircleGap size={compact ? 35 : 39} />
+                    <Copy allowFontScaling={false} style={{ position: "absolute", color: "#8E6B2C", fontSize: compact ? 18 : 20, fontWeight: "900" }}>?</Copy>
                   </>
                 ) : (
-                  <PatternGlyph token={tile} size={tile.startsWith("shells:") ? 40 : 42} />
+                  <PatternGlyph token={tile} size={tile.startsWith("shells:") ? (compact ? 34 : 40) : (compact ? 38 : 42)} />
                 )}
-                <View style={{ position: "absolute", right: -7, bottom: -8, width: 20, height: 20, borderRadius: 10, backgroundColor: "#3D6549", alignItems: "center", justifyContent: "center" }}>
-                  <Copy maxFontSizeMultiplier={1.2} style={{ color: "#FFFDF3", fontSize: 11, fontWeight: "900" }}>{i + 1}</Copy>
+                <View style={{ position: "absolute", right: -7, bottom: -7, width: 22, height: 22, borderRadius: 11, backgroundColor: missing ? "#B97D19" : "#3D6549", alignItems: "center", justifyContent: "center" }}>
+                  <Copy allowFontScaling={false} style={{ color: "#FFFDF3", fontSize: 11, lineHeight: 14, fontWeight: "900", includeFontPadding: false }}>{i + 1}</Copy>
                 </View>
               </View>
             );
           })}
           {hopAt !== null && (
-            <View pointerEvents="none" style={{ position: "absolute", left: points[hopAt][0] - 16, top: points[hopAt][1] - 51 - (hopAt % 2 ? 8 : 0) }}>
-              <SeaGlyph kind="crab" size={34} />
+            <View pointerEvents="none" style={{ position: "absolute", left: points[hopAt][0] - 16, top: points[hopAt][1] - 48 - (hopAt % 2 ? 8 : 0) }}>
+              <SeaGlyph kind="crab" size={32} />
             </View>
           )}
         </View>
       </View>
 
-      <Copy maxFontSizeMultiplier={1.6} style={{ color: C.ink, fontWeight: "900", fontSize: 17 }}>
+      <Copy maxFontSizeMultiplier={1.55} style={{ color: C.ink, fontWeight: "900", fontSize: compact ? 16 : 17 }}>
         Which stone fills the glowing gap?
       </Copy>
 
@@ -150,12 +159,12 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
             disabled={!active || hopAt !== null}
             onPress={() => choose(tile)}
             style={{
-              minWidth: 68, minHeight: 64, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 18,
+              minWidth: compact ? 60 : 68, minHeight: compact ? 56 : 64, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 16,
               alignItems: "center", justifyContent: "center",
               backgroundColor: "#FFFDF2", borderWidth: 2, borderColor: "#7C9C75",
             }}
           >
-            <PatternGlyph token={tile} size={44} />
+            <PatternGlyph token={tile} size={compact ? 38 : 44} />
           </PressableScale>
         ))}
       </View>

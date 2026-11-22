@@ -333,9 +333,57 @@ export function buildTangramDef(id: string, name: string, placements: readonly T
 }
 
 /**
+ * Analyze the outer boundary topology of a Tangram quarter-triangle silhouette.
+ * A clean, seam-free outline-only Tangram silhouette has `comps === 1` (no interior holes or split islands)
+ * and `pinches === 0` (no corner-only pinches where degree > 2).
+ */
+export function tangramTopology(atoms: readonly TriCell[]): { edges: number; comps: number; pinches: number } {
+  const counts = new Map<string, { seg: [number, number, number, number]; n: number }>();
+  const addEdge = (ax: number, ay: number, bx: number, by: number) => {
+    const fwd = ax < bx || (ax === bx && ay < by);
+    const k = fwd ? `${ax},${ay}-${bx},${by}` : `${bx},${by}-${ax},${ay}`;
+    const prev = counts.get(k);
+    if (prev) prev.n++;
+    else counts.set(k, { seg: [ax, ay, bx, by], n: 1 });
+  };
+  for (const [x, y, q] of atoms) {
+    const x0 = x * 2, y0 = y * 2, x1 = x0 + 2, y1 = y0 + 2, cx = x0 + 1, cy = y0 + 1;
+    if (q === 0) { addEdge(x0, y0, x1, y0); addEdge(x1, y0, cx, cy); addEdge(cx, cy, x0, y0); }
+    else if (q === 1) { addEdge(x1, y0, x1, y1); addEdge(x1, y1, cx, cy); addEdge(cx, cy, x1, y0); }
+    else if (q === 2) { addEdge(x1, y1, x0, y1); addEdge(x0, y1, cx, cy); addEdge(cx, cy, x1, y1); }
+    else { addEdge(x0, y1, x0, y0); addEdge(x0, y0, cx, cy); addEdge(cx, cy, x0, y1); }
+  }
+  const edges = [...counts.values()].filter((e) => e.n === 1).map((e) => e.seg);
+  const adj = new Map<string, string[]>();
+  for (const [x1, y1, x2, y2] of edges) {
+    const k1 = `${x1},${y1}`, k2 = `${x2},${y2}`;
+    if (!adj.has(k1)) adj.set(k1, []);
+    if (!adj.has(k2)) adj.set(k2, []);
+    adj.get(k1)!.push(k2);
+    adj.get(k2)!.push(k1);
+  }
+  const pinches = [...adj.values()].filter((v) => v.length > 2).length;
+  const visited = new Set<string>();
+  let comps = 0;
+  for (const k of adj.keys()) {
+    if (visited.has(k)) continue;
+    comps++;
+    const stack = [k];
+    while (stack.length) {
+      const cur = stack.pop()!;
+      if (visited.has(cur)) continue;
+      visited.add(cur);
+      for (const n of adj.get(cur)!) if (!visited.has(n)) stack.push(n);
+    }
+  }
+  return { edges: edges.length, comps, pinches };
+}
+
+/**
  * Hand-crafted original Tangram silhouettes (SP-06).
- * Includes 4-piece gentle starter Tangrams + 12 full classic 7-piece Tangrams!
- * Every single silhouette is exact-cover verified in tests.
+ * Includes 2 gentle 4-piece starter Tangrams + 14 full classic 7-piece Tangrams.
+ * Every silhouette is exact-cover verified AND proved hole-free & pinch-free (`comps === 1 && pinches === 0`)
+ * so Outline-only mode renders one razor-sharp outer polygon with zero internal seam artifacts.
  */
 export const TANGRAM_SILHOUETTES: readonly TangramPuzzleDef[] = [
   // 1. Classic Square (7 pieces, 4x4 — multiple exact-cover solutions!)
@@ -349,163 +397,163 @@ export const TANGRAM_SILHOUETTES: readonly TangramPuzzleDef[] = [
     { kind: "M", turns: 1, x: 2, y: 2 },
   ]),
 
-  // 2. Island Sailboat (7 pieces, 7x6: tall left sail + pennant + jib sail + sleek hull)
+  // 2. Island Boat (7 pieces, 6x6 — single clean polygon)
   buildTangramDef("tg-boat", "Island boat", [
-    { kind: "L1", turns: 1, x: 1, y: 0 }, // left main sail
-    { kind: "S1", turns: 3, x: 3, y: 0 }, // pennant flag
-    { kind: "M", turns: 2, x: 3, y: 2 },  // right jib sail
-    { kind: "L2", turns: 0, x: 0, y: 4 }, // main hull
-    { kind: "P", turns: 0, x: 2, y: 5 },  // keel right
-    { kind: "S2", turns: 2, x: 3, y: 4 }, // stern deck
-    { kind: "SQ", turns: 0, x: 5, y: 3 }, // stern flag
+    { kind: "M", turns: 0, x: 3, y: 0 },
+    { kind: "S2", turns: 3, x: 3, y: 0 },
+    { kind: "L1", turns: 2, x: 2, y: 1 },
+    { kind: "L2", turns: 0, x: 1, y: 3 },
+    { kind: "S1", turns: 1, x: 3, y: 4 },
+    { kind: "SQ", turns: 0, x: 1, y: 4 },
+    { kind: "P", turns: 0, x: 0, y: 2 },
   ]),
 
-  // 3. Island House (7 pieces, 5x6: pitched roof + chimney + walls)
+  // 3. Island House (7 pieces, 5x6 — single clean polygon)
   buildTangramDef("tg-house", "Island house", [
-    { kind: "L1", turns: 2, x: 0, y: 0 }, // roof
-    { kind: "SQ", turns: 0, x: 3, y: 0 }, // chimney
-    { kind: "L2", turns: 3, x: 0, y: 2 }, // left wall
-    { kind: "M", turns: 0, x: 2, y: 2 },  // upper right wall
-    { kind: "P", turns: 1, x: 2, y: 2 },  // center pillar
-    { kind: "S1", turns: 3, x: 3, y: 3 }, // right lower wall (complements M's 3,3:NE!)
-    { kind: "S2", turns: 2, x: 1, y: 4 }, // front base
+    { kind: "S1", turns: 0, x: 3, y: 1 },
+    { kind: "SQ", turns: 0, x: 2, y: 1 },
+    { kind: "S2", turns: 2, x: 1, y: 2 },
+    { kind: "L2", turns: 0, x: 0, y: 0 },
+    { kind: "M", turns: 1, x: 2, y: 2 },
+    { kind: "L1", turns: 0, x: 1, y: 4 },
+    { kind: "P", turns: 0, flipped: true, x: 0, y: 5 },
   ]),
 
-  // 4. Island Cat (7 pieces, 7x6: twin ears + diamond head + seated body + tail)
+  // 4. Island Cat (7 pieces, 6x6 — single clean polygon)
   buildTangramDef("tg-cat", "Island cat", [
-    { kind: "S1", turns: 3, x: 0, y: 0 }, // left ear (0,0:SW 0,1:NW)
-    { kind: "S2", turns: 1, x: 1, y: 0 }, // right ear (1,0:SE 1,1:NE)
-    { kind: "SQ", turns: 0, x: 0, y: 1 }, // head (0,1:SE 1,1:SW 0,2:NE 1,2:NW)
-    { kind: "M", turns: 3, x: 0, y: 3 },  // chest (0,3:FULL 0,4:NW 1,3:NW)
-    { kind: "L1", turns: 2, x: 0, y: 4 }, // base paws (0,5:SE 1,4:SE 1,5:FULL 2,4:SW 2,5:FULL 3,5:SW)
-    { kind: "L2", turns: 1, x: 2, y: 1 }, // back (2,2:SE 2,3:NE 3,1:SE 3,2:FULL 3,3:FULL 3,4:NE)
-    { kind: "P", turns: 0, x: 4, y: 4 },  // tail (4,4:SE 5,4:FULL 6,4:NW)
-  ]),
-
-  // 5. Star Rocket (7 pieces, 6x6: pointed nose + flanked cabin + twin booster fins)
-  buildTangramDef("tg-rocket", "Star rocket", [
-    { kind: "L1", turns: 2, x: 1, y: 0 }, // nose cone (1,1:SE 2,0:SE 2,1:FULL 3,0:SW 3,1:FULL 4,1:SW)
-    { kind: "SQ", turns: 0, x: 2, y: 2 }, // cabin (2,2:SE 3,2:SW 2,3:NE 3,3:NW)
-    { kind: "S1", turns: 3, x: 1, y: 2 }, // left flank (1,2:SW 1,3:NW)
-    { kind: "S2", turns: 1, x: 4, y: 2 }, // right flank (4,2:SE 4,3:NE)
-    { kind: "L2", turns: 0, x: 1, y: 4 }, // thruster hull (1,4:NE 2,4:FULL 2,5:NE 3,4:FULL 3,5:NW 4,4:NW)
-    { kind: "M", turns: 2, x: 0, y: 4 },  // left booster fin (0,4:SW 0,5:FULL 1,5:SW)
-    { kind: "P", turns: 1, flipped: true, x: 4, y: 4 }, // right booster fin (4,4:SE 4,5:FULL 4,6:NW) — complements L2's 4,4:NW!
-  ]),
-
-  // 6. Reef Fish (7 pieces, 8x5: diamond body + forked tail + snout + lower fin)
-  buildTangramDef("tg-fish", "Reef fish", [
-    { kind: "L1", turns: 2, x: 2, y: 0 }, // upper back
-    { kind: "L2", turns: 0, x: 2, y: 2 }, // lower belly
-    { kind: "S1", turns: 0, x: 0, y: 0 }, // upper tail lobe
-    { kind: "M", turns: 1, x: 0, y: 1 },  // tail center
-    { kind: "S2", turns: 2, x: 0, y: 3 }, // lower tail lobe
-    { kind: "SQ", turns: 0, x: 6, y: 1 }, // snout
-    { kind: "P", turns: 0, x: 2, y: 4 },  // lower fin
-  ]),
-
-  // 7. Lagoon Swan (7 pieces, 7x6: beak + long neck + chest + raised wing + tail)
-  buildTangramDef("tg-swan", "Lagoon swan", [
-    { kind: "S1", turns: 0, x: 0, y: 0 },
-    { kind: "P", turns: 1, flipped: true, x: 1, y: 0 },
-    { kind: "SQ", turns: 0, x: 1, y: 2 },
-    { kind: "M", turns: 0, x: 2, y: 2 },
-    { kind: "L1", turns: 0, x: 2, y: 4 },
-    { kind: "L2", turns: 2, x: 3, y: 0 },
-    { kind: "S2", turns: 2, x: 5, y: 4 },
-  ]),
-
-  // 8. Twin Peaks (7 pieces, 7x4: two mountain peaks + solid base)
-  buildTangramDef("tg-peaks", "Twin peaks", [
-    { kind: "L1", turns: 2, x: 0, y: 1 },
-    { kind: "L2", turns: 2, x: 3, y: 0 },
-    { kind: "M", turns: 0, x: 3, y: 2 },
-    { kind: "SQ", turns: 0, x: 5, y: 2 },
-    { kind: "P", turns: 0, x: 0, y: 3 },
-    { kind: "S1", turns: 2, x: 2, y: 3 },
-    { kind: "S2", turns: 1, x: 6, y: 0 },
-  ]),
-
-  // 9. Island Fox (7 pieces, 7x7)
-  buildTangramDef("tg-fox", "Island fox", [
-    { kind: "S1", turns: 3, x: 0, y: 0 },
-    { kind: "S2", turns: 1, x: 1, y: 0 },
-    { kind: "SQ", turns: 0, x: 0, y: 1 },
-    { kind: "L1", turns: 3, x: 1, y: 3 },
-    { kind: "L2", turns: 1, x: 2, y: 2 },
-    { kind: "M", turns: 1, x: 3, y: 5 },
-    { kind: "P", turns: 0, x: 4, y: 4 },
-  ]),
-
-  // 10. Outrigger Canoe (7 pieces, 8x4)
-  buildTangramDef("tg-canoe", "Outrigger canoe", [
-    { kind: "L1", turns: 0, x: 0, y: 2 }, // left hull: 0,2:NE 1,2:FULL 1,3:NE 2,2:FULL 2,3:NW 3,2:NW
-    { kind: "L2", turns: 0, x: 4, y: 2 }, // right hull: 4,2:NE 5,2:FULL 5,3:NE 6,2:FULL 6,3:NW 7,2:NW
-    { kind: "S1", turns: 2, x: 3, y: 2 }, // center deck: 3,2:SE 4,2:SW (3,2:NW+SE = FULL, 4,2:NE+SW = FULL!)
-    { kind: "SQ", turns: 0, x: 3, y: 0 }, // sail: 3,0:SE 4,0:SW 3,1:NE 4,1:NW
-    { kind: "M", turns: 2, x: 1, y: 0 },  // left canopy: 1,0:SW 1,1:FULL 2,1:SW
-    { kind: "P", turns: 0, x: 5, y: 1 },  // outrigger arm: 5,1:SE 6,1:FULL 7,1:NW
-    { kind: "S2", turns: 2, x: 2, y: 3 }, // keel: 2,3:SE 3,3:SW (2,3:NW+SE = FULL!)
-  ]),
-
-  // 11. Sea Turtle Tangram (7 pieces, 7x5)
-  buildTangramDef("tg-turtle", "Sea turtle", [
-    { kind: "L1", turns: 2, x: 1, y: 0 },
-    { kind: "L2", turns: 0, x: 1, y: 2 },
-    { kind: "SQ", turns: 0, x: 5, y: 1 },
-    { kind: "S1", turns: 1, x: 0, y: 1 },
-    { kind: "M", turns: 3, x: 0, y: 3 },
-    { kind: "P", turns: 0, x: 3, y: 3 },
-    { kind: "S2", turns: 2, x: 4, y: 0 },
-  ]),
-
-  // 12. Island Tower / Pagoda (7 pieces, 5x8)
-  buildTangramDef("tg-pagoda", "Island tower", [
-    { kind: "S1", turns: 2, x: 1, y: 0 },
-    { kind: "SQ", turns: 0, x: 1, y: 1 },
-    { kind: "L1", turns: 2, x: 0, y: 3 },
-    { kind: "L2", turns: 0, x: 0, y: 5 },
-    { kind: "M", turns: 2, x: 0, y: 6 },
-    { kind: "P", turns: 0, x: 2, y: 6 },
-    { kind: "S2", turns: 2, x: 3, y: 5 },
-  ]),
-
-  // 13. Butterfly Tangram (7 pieces, 6x6)
-  buildTangramDef("tg-butterfly", "Butterfly", [
-    { kind: "L1", turns: 1, x: 0, y: 0 },
-    { kind: "L2", turns: 3, x: 2, y: 0 },
-    { kind: "SQ", turns: 0, x: 1, y: 4 },
-    { kind: "S1", turns: 2, x: 0, y: 3 },
-    { kind: "S2", turns: 2, x: 2, y: 3 },
-    { kind: "M", turns: 0, x: 3, y: 1 },
-    { kind: "P", turns: 0, x: 3, y: 4 },
-  ]),
-
-  // 14. Blue Whale Tangram (7 pieces, 7x4)
-  buildTangramDef("tg-whale", "Blue whale", [
-    { kind: "L1", turns: 2, x: 2, y: 0 },
-    { kind: "L2", turns: 0, x: 2, y: 2 },
-    { kind: "SQ", turns: 0, x: 0, y: 2 },
-    { kind: "S1", turns: 3, x: 0, y: 0 },
-    { kind: "S2", turns: 1, x: 1, y: 0 },
-    { kind: "M", turns: 0, x: 5, y: 1 },
-    { kind: "P", turns: 0, x: 4, y: 3 },
-  ]),
-
-  // 15. Mini Tangram Starter A (4 pieces: 2 Large + Medium + Square — Arrow!)
-  buildTangramDef("tg-mini-arrow", "Island arrow", [
+    { kind: "L2", turns: 0, x: 1, y: 3 },
+    { kind: "P", turns: 0, flipped: true, x: 0, y: 2 },
+    { kind: "S1", turns: 0, x: 2, y: 2 },
+    { kind: "M", turns: 2, x: 0, y: 2 },
+    { kind: "SQ", turns: 0, x: 3, y: 4 },
+    { kind: "S2", turns: 2, x: 4, y: 5 },
     { kind: "L1", turns: 2, x: 0, y: 0 },
-    { kind: "L2", turns: 0, x: 0, y: 2 },
-    { kind: "SQ", turns: 0, x: 4, y: 1 },
-    { kind: "M", turns: 0, x: 4, y: 0 },
   ]),
 
-  // 16. Mini Tangram Starter B (4 pieces: Large + Medium + Small + Square — Sail!)
+  // 5. Star Rocket (7 pieces, 5x6 — single clean polygon)
+  buildTangramDef("tg-rocket", "Star rocket", [
+    { kind: "L1", turns: 2, x: 1, y: 3 },
+    { kind: "SQ", turns: 0, x: 3, y: 2 },
+    { kind: "L2", turns: 3, x: 2, y: 0 },
+    { kind: "P", turns: 0, x: 1, y: 5 },
+    { kind: "S1", turns: 1, x: 4, y: 3 },
+    { kind: "M", turns: 1, x: 0, y: 0 },
+    { kind: "S2", turns: 0, x: 3, y: 1 },
+  ]),
+
+  // 6. Reef Fish (7 pieces, 5x6 — single clean polygon)
+  buildTangramDef("tg-fish", "Reef fish", [
+    { kind: "M", turns: 0, x: 2, y: 4 },
+    { kind: "S2", turns: 3, x: 2, y: 4 },
+    { kind: "P", turns: 1, x: 1, y: 3 },
+    { kind: "S1", turns: 2, x: 2, y: 3 },
+    { kind: "L2", turns: 1, x: 3, y: 1 },
+    { kind: "SQ", turns: 0, x: 3, y: 0 },
+    { kind: "L1", turns: 2, x: 0, y: 0 },
+  ]),
+
+  // 7. Lagoon Swan (7 pieces, 5x6 — single clean polygon)
+  buildTangramDef("tg-swan", "Lagoon swan", [
+    { kind: "P", turns: 0, x: 0, y: 0 },
+    { kind: "SQ", turns: 0, x: 2, y: 0 },
+    { kind: "S1", turns: 1, x: 3, y: 1 },
+    { kind: "S2", turns: 2, x: 2, y: 2 },
+    { kind: "L2", turns: 0, x: 1, y: 3 },
+    { kind: "L1", turns: 2, x: 0, y: 4 },
+    { kind: "M", turns: 1, x: 3, y: 3 },
+  ]),
+
+  // 8. Twin Peaks (7 pieces, 6x6 — single clean polygon)
+  buildTangramDef("tg-peaks", "Twin peaks", [
+    { kind: "L1", turns: 3, x: 4, y: 1 },
+    { kind: "M", turns: 1, x: 2, y: 2 },
+    { kind: "S1", turns: 1, x: 5, y: 3 },
+    { kind: "P", turns: 0, x: 1, y: 2 },
+    { kind: "S2", turns: 1, x: 5, y: 1 },
+    { kind: "L2", turns: 3, x: 0, y: 0 },
+    { kind: "SQ", turns: 0, x: 4, y: 4 },
+  ]),
+
+  // 9. Island Fox (7 pieces, 5x6 — single clean polygon)
+  buildTangramDef("tg-fox", "Island fox", [
+    { kind: "L1", turns: 3, x: 1, y: 0 },
+    { kind: "S2", turns: 1, x: 0, y: 2 },
+    { kind: "SQ", turns: 0, x: 2, y: 0 },
+    { kind: "L2", turns: 1, x: 2, y: 1 },
+    { kind: "P", turns: 1, x: 0, y: 3 },
+    { kind: "M", turns: 2, x: 3, y: 4 },
+    { kind: "S1", turns: 3, x: 0, y: 1 },
+  ]),
+
+  // 10. Outrigger Canoe (7 pieces, 5x5 — single clean polygon)
+  buildTangramDef("tg-canoe", "Outrigger canoe", [
+    { kind: "S1", turns: 2, x: 1, y: 4 },
+    { kind: "L1", turns: 1, x: 1, y: 1 },
+    { kind: "L2", turns: 3, x: 3, y: 1 },
+    { kind: "S2", turns: 0, x: 0, y: 2 },
+    { kind: "M", turns: 0, x: 3, y: 1 },
+    { kind: "SQ", turns: 0, x: 1, y: 0 },
+    { kind: "P", turns: 0, flipped: true, x: 2, y: 0 },
+  ]),
+
+  // 11. Sea Turtle Tangram (7 pieces, 6x5 — single clean polygon)
+  buildTangramDef("tg-turtle", "Sea turtle", [
+    { kind: "L1", turns: 2, x: 2, y: 0 },
+    { kind: "M", turns: 0, x: 4, y: 0 },
+    { kind: "S1", turns: 0, x: 2, y: 2 },
+    { kind: "SQ", turns: 0, x: 1, y: 0 },
+    { kind: "S2", turns: 1, x: 3, y: 2 },
+    { kind: "P", turns: 1, x: 4, y: 2 },
+    { kind: "L2", turns: 3, x: 0, y: 0 },
+  ]),
+
+  // 12. Island Tower / Pagoda (7 pieces, 6x5 — single clean polygon)
+  buildTangramDef("tg-pagoda", "Island tower", [
+    { kind: "SQ", turns: 0, x: 2, y: 0 },
+    { kind: "M", turns: 0, x: 3, y: 0 },
+    { kind: "L1", turns: 2, x: 2, y: 1 },
+    { kind: "P", turns: 0, flipped: true, x: 0, y: 1 },
+    { kind: "L2", turns: 0, x: 2, y: 3 },
+    { kind: "S1", turns: 3, x: 5, y: 0 },
+    { kind: "S2", turns: 3, x: 0, y: 1 },
+  ]),
+
+  // 13. Butterfly Tangram (7 pieces, 6x5 — single clean polygon)
+  buildTangramDef("tg-butterfly", "Butterfly", [
+    { kind: "L2", turns: 2, x: 2, y: 0 },
+    { kind: "SQ", turns: 0, x: 1, y: 0 },
+    { kind: "M", turns: 3, x: 2, y: 2 },
+    { kind: "P", turns: 1, flipped: true, x: 1, y: 2 },
+    { kind: "L1", turns: 3, x: 0, y: 0 },
+    { kind: "S1", turns: 2, x: 3, y: 2 },
+    { kind: "S2", turns: 0, x: 3, y: 3 },
+  ]),
+
+  // 14. Blue Whale Tangram (7 pieces, 5x6 — single clean polygon)
+  buildTangramDef("tg-whale", "Blue whale", [
+    { kind: "S1", turns: 0, x: 1, y: 2 },
+    { kind: "L2", turns: 2, x: 1, y: 0 },
+    { kind: "L1", turns: 1, x: 1, y: 2 },
+    { kind: "S2", turns: 3, x: 3, y: 3 },
+    { kind: "SQ", turns: 0, x: 3, y: 4 },
+    { kind: "M", turns: 3, x: 0, y: 1 },
+    { kind: "P", turns: 0, x: 0, y: 0 },
+  ]),
+
+  // 15. Mini Tangram Starter A (4 pieces, 5x4 — single clean polygon)
+  buildTangramDef("tg-mini-arrow", "Island arrow", [
+    { kind: "SQ", turns: 0, x: 1, y: 0 },
+    { kind: "L1", turns: 3, x: 0, y: 0 },
+    { kind: "M", turns: 0, x: 2, y: 0 },
+    { kind: "L2", turns: 2, x: 1, y: 1 },
+  ]),
+
+  // 16. Mini Tangram Starter B (4 pieces, 5x4 — single clean polygon)
   buildTangramDef("tg-mini-sail", "Little sail", [
-    { kind: "L1", turns: 1, x: 0, y: 0 },
-    { kind: "M", turns: 2, x: 2, y: 2 },
+    { kind: "M", turns: 0, x: 0, y: 2 },
     { kind: "S1", turns: 2, x: 0, y: 3 },
-    { kind: "SQ", turns: 0, x: 1, y: 4 },
+    { kind: "L1", turns: 3, x: 2, y: 0 },
+    { kind: "SQ", turns: 0, x: 3, y: 2 },
   ]),
 ];
 

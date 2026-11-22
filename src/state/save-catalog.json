@@ -1475,7 +1475,7 @@
         },
         {
           "ordinal": 292868,
-          "hash": "e7aa4b6137a028556730bdeb2431f94e9e357bcbe4779e5d92f7fad98b117023"
+          "hash": "15c5d7b2d22310550a3df15f6c25f8ef2d1f6e8578931db569cfa8217b5b9d5c"
         },
         {
           "ordinal": 292869,
@@ -1491,11 +1491,11 @@
         },
         {
           "ordinal": 292872,
-          "hash": "f83b4cb14243be1be72141c1df503e1ef8c3b297e63081cef1aa3a54fd22e63d"
+          "hash": "322725845c788fca7ee2b77505cbdbb670986f3398f3c178105f62ca598768bc"
         },
         {
           "ordinal": 292873,
-          "hash": "463d05cc35574381a9419d0d97a42944e129280c33d110120afaa9a8aeb20d44"
+          "hash": "36bfb0951fbd602eadcdffe3903ed2cc7984d0dc09e8c5a642c9d3fda3d2d665"
         },
         {
           "ordinal": 292874,
@@ -1507,7 +1507,7 @@
         },
         {
           "ordinal": 292876,
-          "hash": "5cc25936fa5c8d99aaf90a41fc7247ed66bf991226c978ef00761ac0f63edd6f"
+          "hash": "14a71255d81e2df014392f79bcf42540d3a90ca79a815f7d0bd2c1ddc71e1c18"
         },
         {
           "ordinal": 292877,
@@ -1639,7 +1639,7 @@
       "first": 294912,
       "count": 50,
       "family": "shape-shift",
-      "packHash": "8a831bf4ba410353eade35710d44f48b5111ac3101d7baf883e1de2806c3f401",
+      "packHash": "1f4884f1a7a18c6bd4756716a77313720e1612196bf2e4795e98e692454a6a66",
       "awards": 1,
       "cove": false
     },
@@ -1650,7 +1650,7 @@
       "first": 295936,
       "count": 50,
       "family": "shape-shift",
-      "packHash": "273e3057f82d53f84c27bf69ad72ef8c10e5d5a78ae2970fef3bc44731798fb0",
+      "packHash": "5a4adf5f3747a31a333b4c63371f1e183bcbf7b8acf3f66cadc28af518ade0f2",
       "awards": 1,
       "cove": false
     },
@@ -1661,7 +1661,7 @@
       "first": 296960,
       "count": 50,
       "family": "shape-shift",
-      "packHash": "6a895591a0d87fdd29defbda84e5111ac010ba52b3ff6c91816d41ca312982fd",
+      "packHash": "fc8ab01212c613e3b838d5a9d2cf6c50358c3fa47302b0cc671a0c6ee3064aac",
       "awards": 1,
       "cove": false
     },
@@ -1672,7 +1672,7 @@
       "first": 297984,
       "count": 50,
       "family": "shape-shift",
-      "packHash": "1a59b820835c23f45693200dee831e7ad927e5a03c7ec5ec41477b6913634c3f",
+      "packHash": "27ae908717b63066647cabe60b9630d575139a54902519ac4f515b92c283dd03",
       "awards": 1,
       "cove": false
     },
@@ -1683,7 +1683,7 @@
       "first": 299008,
       "count": 50,
       "family": "shape-shift",
-      "packHash": "0ab499fda3f9ff1ecfaa5b41f1c0bf54831862017f57af1df9cc53001cac3ed6",
+      "packHash": "d71c7162bf4b6c77e314b498847dcc83f75f08f74dd1e9c941ca0f17e1e31e73",
       "awards": 1,
       "cove": false
     },
@@ -1694,7 +1694,7 @@
       "first": 300032,
       "count": 50,
       "family": "shape-shift",
-      "packHash": "71a453b43625344835964c98db1925a2bdfaefc353226f72217c64518609fd0a",
+      "packHash": "30237a9c3a3ec5c4a719eb914c1d76511f6fd68cb87aa202ae5f0a0a66847bbf",
       "awards": 1,
       "cove": false
     },
@@ -1909,47 +1909,47 @@
         },
         {
           "ordinal": 303105,
-          "hash": "16f52c7a6aec82c33022c5464f6ab6d20eac778a0f2e48e4f918db89f59ae777"
+          "hash": "1f39bf886d3cad81fc608045d5472364ea87868e0dcf5ba6e7cd650fcc8e6d92"
         },
         {
           "ordinal": 303106,
-          "hash": "aa60901b532eeeaac4e94bae07bad4ab9356b5df4f4373d4211f5b25ce08dbe4"
+          "hash": "b53a55886e15d9ed7855708204996d5f70506b7f9e26d12b93e56dd5912ea468"
         },
         {
           "ordinal": 303107,
-          "hash": "904df60c14d7cabe583018d8314c8283dcbdceb32fcff1e28872218e556d34d0"
+          "hash": "2b37d200d8373062287eb28b467b2f07044e1c12f8a8106a14ae4cfbd24e8d88"
         },
         {
           "ordinal": 303108,
-          "hash": "734807cee1fe4d1e9a9df344dbc7c35b64a12b2268f93ed011be66c34f62de46"
+          "hash": "2e580726f7800fd967c15578e8e511d272e5095ac086d67c0d1153088bd06691"
         },
         {
           "ordinal": 303109,
-          "hash": "d2770e5088833f9ae39fe1263c0244e2a9a37661ba41d2c989f76e1f2bdefaf3"
+          "hash": "6f2a8b4c1a17e6aff7df6334515cc24c2236957c2221fac68f41432e10890e7a"
         },
         {
           "ordinal": 303110,
-          "hash": "013fec225a0a671859efddfa964b5bf3d47b5480a5e816d728c61a752b57b210"
+          "hash": "546003eb835a1c6923b1b02e1207780e86d67e6cd5ee4707b5be6955522b1a56"
         },
         {
           "ordinal": 303111,
-          "hash": "461c0e4e7d4fc2ae286ec1956180f731c1ea74a095149230ba801007030712b6"
+          "hash": "5e4e080e4ad561de013e6649c6d4d129b4bf4e840b95425942ef5aa6a41a658b"
         },
         {
           "ordinal": 303112,
-          "hash": "7527f2ad3202bf74c4dafcb467f59384085400963a07eb2f854a7ff783770490"
+          "hash": "fe6844f963b11825042e5ca54f9a5e8d04ab33a3e53030dff5c71beb9c60a0bc"
         },
         {
           "ordinal": 303113,
-          "hash": "eb2c15de08c8a020a5109958c099e1872ff33482fd47c4cf73ffa0c804253a1a"
+          "hash": "146666f7b6b43ca012404d9f6fe42796e15c5a930e4b0606cb1b64dc40db6499"
         },
         {
           "ordinal": 303114,
-          "hash": "5fb5466cebd4a229ada9224623265845fdd0b5e3b1531a9a88052114ed25ed9d"
+          "hash": "feb29ad7cab8773ce4e70ba163cb96cc3a4783b9ccf37d14900a2abfa98bceae"
         },
         {
           "ordinal": 303115,
-          "hash": "39ea88dff1781500364d4eb840e543d85ab22a4bc3fd32b0a34b748ef78769d6"
+          "hash": "36494dcd3fc3674568e4c86a923b545ad436cc34b17a2502e4ff9ca8ea18043c"
         }
       ],
       "awards": [
@@ -5452,8 +5452,8 @@
     [
       977,
       {
-        "kind": "clean",
-        "help": "independent",
+        "kind": "two-ways",
+        "help": "allowed",
         "bank": 296,
         "puzzle": 1
       }
@@ -5461,8 +5461,8 @@
     [
       978,
       {
-        "kind": "two-ways",
-        "help": "allowed",
+        "kind": "clean",
+        "help": "independent",
         "bank": 296,
         "puzzle": 2
       }
@@ -5470,8 +5470,8 @@
     [
       979,
       {
-        "kind": "clean",
-        "help": "independent",
+        "kind": "two-ways",
+        "help": "allowed",
         "bank": 296,
         "puzzle": 3
       }
@@ -5479,8 +5479,8 @@
     [
       980,
       {
-        "kind": "clean",
-        "help": "independent",
+        "kind": "two-ways",
+        "help": "allowed",
         "bank": 296,
         "puzzle": 4
       }
@@ -5497,8 +5497,8 @@
     [
       982,
       {
-        "kind": "clean",
-        "help": "independent",
+        "kind": "two-ways",
+        "help": "allowed",
         "bank": 296,
         "puzzle": 6
       }
@@ -5515,8 +5515,8 @@
     [
       984,
       {
-        "kind": "clean",
-        "help": "independent",
+        "kind": "two-ways",
+        "help": "allowed",
         "bank": 296,
         "puzzle": 8
       }
@@ -5524,8 +5524,8 @@
     [
       985,
       {
-        "kind": "clean",
-        "help": "independent",
+        "kind": "two-ways",
+        "help": "allowed",
         "bank": 296,
         "puzzle": 9
       }

@@ -78,9 +78,10 @@ function buildDeepSpecs(): DeepSpec[] {
   const twoGap4 = makeSeededPayload("num-add", 28604, { twoGaps: true });
 
   // 2. Develop — Two rules (Tide 4), opening with SPEC.md's exact example: 3, 6, 5, 10, 9, 18, ? (double, take 1 -> 17)
+  // Titles on Say-the-rule puzzles stay neutral so they never leak the rule name.
   const twoRule1Tiles = ["3", "6", "5", "10", "9", "18", "17"];
   const twoRule1: PatternChallengeDescriptor = {
-    title: "Two rules · Double, take 1",
+    title: "Two rules · Mystery trail",
     ruleHint: "Two rules take turns: double the stone, then take away 1.",
     thinkHint: "Stone 6 doubled stone 5, so stone 7 takes away 1.",
     payload: verifyHandcrafted(
@@ -88,7 +89,7 @@ function buildDeepSpecs(): DeepSpec[] {
       twoRule1Tiles,
       [6],
       buildNumberChoices(twoRule1Tiles, [6], 28605, [36, 19, 16, 15, 20]),
-      ["two-double-sub", "two-add-sub", "num-double", "num-grow-step"],
+      ["num-double", "two-add-sub", "two-double-sub", "num-grow-step"],
     ),
   };
   const twoRule2 = makeSeededPayload("two-add-sub", 28606, { ruleChoices: true });
@@ -98,7 +99,7 @@ function buildDeepSpecs(): DeepSpec[] {
   // 3. Twist — Growing steps & stacked squares (Tide 5), including SPEC.md's 1, 2, 4, 7, 11, 16, ? (-> 22) and adult 2, 5, 10, 17, 26, ? (-> 37)
   const grow1Tiles = ["1", "2", "4", "7", "11", "16", "22"];
   const grow1: PatternChallengeDescriptor = {
-    title: "Growing steps · Bigger jumps",
+    title: "Deep trail · Hidden rule 1",
     ruleHint: "Each jump grows by 1: +1, +2, +3, +4, +5, +6.",
     thinkHint: "From 11 to 16 was +5, so add 6 next.",
     payload: verifyHandcrafted(
@@ -106,12 +107,12 @@ function buildDeepSpecs(): DeepSpec[] {
       grow1Tiles,
       [6],
       buildNumberChoices(grow1Tiles, [6], 28609, [21, 23, 24, 20, 32]),
-      ["num-grow-step", "num-square", "num-fib", "num-add"],
+      ["num-square", "num-grow-step", "num-fib", "num-add"],
     ),
   };
   const grow2Tiles = ["2", "5", "10", "17", "26", "37", "50"];
   const grow2: PatternChallengeDescriptor = {
-    title: "Growing steps · Squares plus 1",
+    title: "Deep trail · Hidden rule 2",
     ruleHint: "Take each square number (1, 4, 9, 16, 25, 36…) and add 1.",
     thinkHint: "Stone 6 is one more than 6 × 6.",
     payload: verifyHandcrafted(
@@ -119,7 +120,7 @@ function buildDeepSpecs(): DeepSpec[] {
       grow2Tiles,
       [5],
       buildNumberChoices(grow2Tiles, [5], 28610, [35, 36, 38, 39, 41]),
-      ["num-square-plus", "num-square", "num-grow-step", "two-add-mul"],
+      ["num-square", "num-grow-step", "num-square-plus", "two-add-mul"],
     ),
   };
   const grow3 = makeSeededPayload("num-grow-step", 28611, { twoGaps: true });
@@ -128,7 +129,7 @@ function buildDeepSpecs(): DeepSpec[] {
   // 4. Hard — 3x3 Pattern Grids (Tide 6), opening with SPEC.md's exact example: 2 3 6 / 4 5 20 / 3 7 ? (-> 21)
   const grid1Tiles = ["2", "3", "6", "4", "5", "20", "3", "7", "21"];
   const grid1: PatternChallengeDescriptor = {
-    title: "Pattern grids · Product reef",
+    title: "Pattern grids · Mystery reef",
     ruleHint: "In each row, multiply the first two numbers to make the third.",
     thinkHint: "Check row 1 (2 × 3 = 6) and row 2 (4 × 5 = 20), then multiply row 3.",
     payload: verifyHandcrafted(
@@ -136,7 +137,7 @@ function buildDeepSpecs(): DeepSpec[] {
       grid1Tiles,
       [8],
       buildNumberChoices(grid1Tiles, [8], 28613, [10, 14, 24, 28, 18]),
-      ["grid-row-mul", "grid-add-rc", "num-add", "num-double"],
+      ["grid-add-rc", "grid-row-mul", "num-add", "num-double"],
     ),
   };
   const grid2 = makeSeededPayload("grid-add-rc", 28614, { twoGaps: true });
@@ -146,7 +147,7 @@ function buildDeepSpecs(): DeepSpec[] {
     stone("plum", 0, "up"), stone("plum", 0, "right"), stone("plum", 0, "down"),
   ];
   const grid3: PatternChallengeDescriptor = {
-    title: "Pattern grids · Color & turn reef",
+    title: "Pattern grids · Reef mosaic",
     ruleHint: "Each row keeps one color; moving right turns the pointer one quarter turn clockwise.",
     thinkHint: "Match the color of the gap's row and the pointer turn of its column.",
     payload: verifyHandcrafted(
@@ -171,19 +172,19 @@ function buildDeepSpecs(): DeepSpec[] {
     { tier: 3, title: "Two gaps 3 · Color & turn", descriptor: { title: "Two gaps · Color & turn", ...twoGap3 }, dareLabel: "First try (both gaps)", dareRule: { kind: "clean" } },
     { tier: 3, title: "Two gaps 4 · Skip trail", descriptor: { title: "Two gaps · Skip trail", ...twoGap4 }, dareLabel: "First try (both gaps)", dareRule: { kind: "clean" } },
 
-    { tier: 4, title: "Two rules 1 · Double, take 1", descriptor: twoRule1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 4, title: "Two rules 2 · Up then down", descriptor: { title: "Two rules · Up then down", ...twoRule2 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 4, title: "Two rules 3 · Add then double", descriptor: { title: "Two rules · Add then double", ...twoRule3 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 4, title: "Two rules 4 · Woven paths", descriptor: { title: "Two rules · Woven paths", ...twoRule4 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Two rules 1 · Mystery trail", descriptor: twoRule1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Two rules 2 · Twin steps", descriptor: { title: "Two rules · Twin steps", ...twoRule2 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Two rules 3 · Reef path", descriptor: { title: "Two rules · Reef path", ...twoRule3 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Two rules 4 · Coral weave", descriptor: { title: "Two rules · Coral weave", ...twoRule4 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
 
-    { tier: 5, title: "Growing steps 1 · Bigger jumps", descriptor: grow1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 5, title: "Growing steps 2 · Squares plus 1", descriptor: grow2, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 5, title: "Deep trail 1 · Hidden rule", descriptor: grow1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 5, title: "Deep trail 2 · Hidden rule", descriptor: grow2, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
     { tier: 5, title: "Growing steps 3 · Two gaps", descriptor: { title: "Growing steps · Two gaps", ...grow3 }, dareLabel: "First try (no help)", dareRule: { kind: "clean" } },
     { tier: 5, title: "Growing steps 4 · Pair sums", descriptor: { title: "Growing steps · Pair sums", ...grow4 }, dareLabel: "First try (no help)", dareRule: { kind: "clean" } },
 
-    { tier: 6, title: "Pattern grids 1 · Product reef", descriptor: grid1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 6, title: "Pattern grids 1 · Mystery reef", descriptor: grid1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
     { tier: 6, title: "Pattern grids 2 · Row & column jumps", descriptor: { title: "Pattern grids · Row & column jumps", ...grid2 }, dareLabel: "First try (no help)", dareRule: { kind: "clean" } },
-    { tier: 6, title: "Pattern grids 3 · Color & turn reef", descriptor: grid3, dareLabel: "First try (no help)", dareRule: { kind: "clean" } },
+    { tier: 6, title: "Pattern grids 3 · Reef mosaic", descriptor: grid3, dareLabel: "First try (no help)", dareRule: { kind: "clean" } },
     { tier: 6, title: "Pattern grids 4 · Double product", descriptor: { title: "Pattern grids · Double product", ...grid4 }, dareLabel: "First try (no help)", dareRule: { kind: "clean" } },
   ];
 }

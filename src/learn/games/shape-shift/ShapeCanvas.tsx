@@ -144,8 +144,8 @@ export function SilhouetteSvg({
             width={step - 2}
             height={step - 2}
             rx={tri ? 2 : 6}
-            fill="#D8E5D3"
-            opacity={0.45}
+            fill="#C6D9BF"
+            opacity={0.62}
           />
         )),
       )}
@@ -267,13 +267,13 @@ export function CubeNetView({
                   borderRadius: 7,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: idx === undefined ? "transparent" : isHighlighted ? "#E9BF5C" : "#B889B9",
+                  backgroundColor: idx === undefined ? "transparent" : isHighlighted ? "#F4C95D" : "#E6D6F2",
                   borderWidth: idx === undefined ? 0 : isHighlighted ? 3 : 2,
-                  borderColor: isHighlighted ? "#8E5E12" : INK,
+                  borderColor: isHighlighted ? "#8E5E12" : "#6C527D",
                 }}
               >
                 {idx !== undefined && faces && (
-                  <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: Math.round(cellSize * 0.44), fontWeight: "900", color: INK }}>
+                  <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: Math.round(cellSize * 0.44), fontWeight: "900", color: "#223624" }}>
                     {faces[idx]}
                   </Copy>
                 )}

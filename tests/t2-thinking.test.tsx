@@ -40,6 +40,7 @@ import {
   DEEP_POLY_DEFS,
   POLY_BLUEPRINTS,
   TANGRAM_SILHOUETTES,
+  tangramTopology,
 } from "../src/learn/games/shape-shift/silhouettes";
 import {
   canonicalTilingHash,
@@ -400,9 +401,12 @@ describe("W0-06 + SC-08 + SP-06: Shape Shift drop fix, varied nets, exact-cover,
     }
   });
 
-  it("SP-06 Tangram mode: all 16 original silhouettes pass exact-cover proof and play inside Shape Shift", () => {
+  it("SP-06 Tangram mode: all 16 original silhouettes are hole-free, pinch-free, exact-cover proved, and play inside Shape Shift", () => {
     expect(TANGRAM_SILHOUETTES).toHaveLength(16);
     for (const tg of TANGRAM_SILHOUETTES) {
+      const topo = tangramTopology(tg.silhouette);
+      expect(topo.comps, `${tg.id} outer loop count`).toBe(1);
+      expect(topo.pinches, `${tg.id} pinch vertices`).toBe(0);
       const res = solveExactCover(tg.silhouette, tg.pieces.map((p) => p.baseCells), { maxSolutions: 2 });
       expect(res.count, tg.id).toBeGreaterThanOrEqual(1);
     }
@@ -464,9 +468,28 @@ describe("T2 UI, AX5 rendering, and design-only speech staging", () => {
 
       const sCh = shapeChallengePuzzles[shapeChallengePuzzles.length - 1]; // Tangram Deep Water
       const sChState = shapeChallengeEngine.create(sCh.descriptor, 0, { supportOff: false, ownRead: false });
-      expect(renderToStaticMarkup(<ShapeChallengeBoard state={sChState} dispatch={() => {}} active width={350} />)).toContain("Tangram");
+      expect(renderToStaticMarkup(<ShapeChallengeBoard state={sChState} dispatch={() => {}} active width={350} />)).toContain("Look (shape clue)");
+
+      // Cube net prompt preserves "T-net" capitalization (no lowercase "this t net") and clarifies fold clue.
+      const tNetCh = shapeChallengePuzzles.find((p) => p.descriptor.payload.kind === "cube-opp" && p.descriptor.payload.netName === "T net")!;
+      const tNetState = shapeChallengeEngine.create(tNetCh.descriptor, 0, { supportOff: false, ownRead: false });
+      const tNetHtml = renderToStaticMarkup(<ShapeChallengeBoard state={tNetState} dispatch={() => {}} active width={350} />);
+      expect(tNetHtml).toContain("T-net");
+      expect(tNetHtml).toContain("Look (fold clue)");
+      expect(tNetHtml).not.toContain("this t net");
     }
     viewport.fontScale = 1;
+  });
+
+  it("Say-the-rule puzzle titles never leak the rule answer", () => {
+    const spoilers = [/double/i, /take 1/i, /square/i, /product/i, /bigger jump/i, /up then down/i, /add then/i];
+    for (const p of patternChallengePuzzles) {
+      if (!p.descriptor.payload.ruleChoices) continue;
+      for (const re of spoilers) {
+        expect(p.title, `${p.title} leaked ${re}`).not.toMatch(re);
+        expect(p.descriptor.title, `${p.descriptor.title} leaked ${re}`).not.toMatch(re);
+      }
+    }
   });
 
   it("stages T2 speech lines as design-only without generating unvoiced audio or broken Hear buttons", () => {

@@ -11,7 +11,7 @@ export const puzzleAssets: Record<string, () => number> = {
   "f-loop-22753a4952f7": () => require("./assets/f-loop-22753a4952f7.lipuzzle"),
   "f-pattern-path-813d4ed2784b": () => require("./assets/f-pattern-path-813d4ed2784b.lipuzzle"),
   "f-pearl-loop-32717b5d6772": () => require("./assets/f-pearl-loop-32717b5d6772.lipuzzle"),
-  "f-shape-shift-c946016927ef": () => require("./assets/f-shape-shift-c946016927ef.lipuzzle"),
+  "f-shape-shift-750f33405d7f": () => require("./assets/f-shape-shift-750f33405d7f.lipuzzle"),
   "f-skyline-3d7b4c2997b9": () => require("./assets/f-skyline-3d7b4c2997b9.lipuzzle"),
   "f-slip-tide-b1d1f7aa7ec1": () => require("./assets/f-slip-tide-b1d1f7aa7ec1.lipuzzle"),
   "f-solitaire-df3ab2472881": () => require("./assets/f-solitaire-df3ab2472881.lipuzzle"),
