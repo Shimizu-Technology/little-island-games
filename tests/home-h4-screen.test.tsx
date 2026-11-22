@@ -442,6 +442,22 @@ it('H4b retains only transient food art after consumption, replaces it for a new
   expect(harness.scene.reactions[friend.id]).toBeUndefined();
 });
 
+it('keeps the original carry art mounted at the accepted mouth release', async () => {
+  const state = labFixtures['rig-menu-0']();
+  await open(state);
+  const scene = harness.scene.scene;
+  const id = 'home/item/menu-0';
+  const capture = { generation: 1, epoch: 0 };
+  const mouth = scene.rooms.home.targets.find((target: any) => target.kind === 'mouth');
+  harness.slots = [{ id, ...capture }, {}];
+  await act(async () => harness.options.onPickup({ id, slot: 0, scene, ...capture }));
+  const pickup = harness.scene.pickups[0];
+  expect(pickup.id).toBe(id);
+  expect((await drop(state, id, 'home', mouth.contact, { previousTarget: mouth.id })).kind).toBe('mouth');
+  expect(harness.scene.pickups[0]).toBe(pickup);
+  expect(harness.scene.meals['character/0'].source).toBe(id);
+});
+
 it('H4b undo during the bite removes transient art and restores the consumed food atomically', async () => {
   const state = labFixtures['delight-feast']();
   await open(state);

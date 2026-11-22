@@ -6,7 +6,8 @@ import type { Meal } from "./meal";
 import type { Gaze, CarryGrip } from "../../islander/rig/character";
 import { type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
-import { View } from "react-native";
+import { View, type StyleProp, type ViewStyle } from "react-native";
+import Animated from "react-native-reanimated";
 import Svg, { G } from 'react-native-svg';
 import { HandProp } from '../art/PropShape';
 import { species } from '../scene/species';
@@ -68,6 +69,7 @@ export const EntityArt = memo(function EntityArt({
   limbLag = 0,
   blink = false,
   prepareMeal = false,
+  idleStyle,
   carryGrip,
   meal,
   mealVisible = true,
@@ -85,6 +87,7 @@ export const EntityArt = memo(function EntityArt({
   blink?: boolean;
   /** Only the visible resting drawing owns a prewarmed meal stage. */
   prepareMeal?: boolean;
+  idleStyle?: StyleProp<ViewStyle>;
   carryGrip?:CarryGrip;
   tilt?: number;
   limbLag?: number;
@@ -140,7 +143,9 @@ export const EntityArt = memo(function EntityArt({
     <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
       {!carry && !blink && !preview && (prepareMeal || meal) ? <>
         <View pointerEvents="none" style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal && mealVisible?0:1}}>
-          <IdleDrawing input={input} mealActive={!!meal} renderCharacter={renderCharacter}/>
+          <Animated.View style={idleStyle}>
+            <IdleDrawing input={input} mealActive={!!meal} renderCharacter={renderCharacter}/>
+          </Animated.View>
         </View>
         <View testID="prepared-meal" pointerEvents="none" collapsable={false} style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:meal && mealVisible?1:0}}>
           <MealArt input={input} visible={!meal || mealVisible} meal={meal ?? preparedMeal} reduced={reduced} renderCharacter={renderCharacter} onPresented={meal ? onMealPresented : undefined} onFinished={meal ? onMealFinished : undefined}/>
@@ -148,7 +153,7 @@ export const EntityArt = memo(function EntityArt({
       </> : <CharacterDrawing input={input} renderCharacter={renderCharacter}/> }
     </View>
   );
-}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealVisible === b.mealVisible && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealVisible === b.mealVisible && a.idleStyle === b.idleStyle && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&

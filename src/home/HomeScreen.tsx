@@ -412,13 +412,17 @@ export function HomeScreen({
         showReaction(result.proposal, mealFood, true, proposal.id, token);
         const before = live.current.scene;
         const destination = buildRuntimeScene(result.state);
-        setPickups((current) =>
-          current.map((p, i) =>
-            i === index && p
-              ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
-              : p
-          )
-        );
+        // A mouth release keeps the original carry drawing in place until the
+        // meal takes over. Only a landing needs the destination drawing.
+        if (result.proposal.kind !== "mouth") {
+          setPickups((current) =>
+            current.map((p, i) =>
+              i === index && p
+                ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
+                : p
+            )
+          );
+        }
         runtime.current!.finish(
           index,
           true,

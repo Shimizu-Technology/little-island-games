@@ -404,3 +404,23 @@ it('retires the offered item after the visible meal has had a native paint', asy
   vi.unstubAllGlobals();
  }
 });
+
+it('applies the anticipation fade only to the idle drawing during a meal', async () => {
+ const c = context('');
+ c.interaction.slots.value = [emptyDragSlot(), emptyDragSlot()];
+ const state = labHome('rig-menu-0');
+ const scene = buildScene(state);
+ const meal = { key: 6, action: 'eat' as const, food: scene.entities['home/item/menu-0'].item! };
+ const { EntityArt } = await import('../src/home/runtime/EntityArt');
+ let tree!: TestRenderer.ReactTestRenderer;
+ await act(async () => {
+  tree = TestRenderer.create(<SceneView state={state} scene={scene} building={buildingLayout(4)}
+   viewport={{ width: 402, height: 650 }} interaction={c.interaction} pickups={[]} reduced={false}
+   reactions={{}} sleeping={{}} meals={{ 'character/0': meal }} mealReady={{ 'character/0': 6 }}
+   onNode={() => {}} onSelect={() => {}} onMove={() => {}} />);
+ });
+ const art = tree.root.findAllByType(EntityArt).find(node => node.props.meal === meal)!;
+ expect(art.props.idleStyle.evaluate()).toHaveProperty('opacity');
+ expect(art.parent?.props.style?.evaluate).toBeUndefined();
+ await act(async () => tree.unmount());
+});

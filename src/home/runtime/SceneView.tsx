@@ -183,9 +183,6 @@ const RestingEntity = memo(function RestingEntity({
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
-  // The open-eyed art always keeps this style. Dropping it when the clock goes (a friend falls
-  // asleep) left the last native value behind: asleep mid-blink, the friend vanished for good.
-  const open = useAnimatedStyle(() => ({ opacity: !meal && life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed, meal]);
   const closed = useAnimatedStyle(() => ({ opacity: !meal && life && lifeBlink(life.value, seed) ? 1 : 0 }));
 
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
@@ -196,8 +193,12 @@ const RestingEntity = memo(function RestingEntity({
     for (const n of restingFlags.value.notice) if (n.id === id && n.food) return 1;
     return 0;
   });
-  const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
+  // A lingering native anticipation or blink must never cover the meal layer.
+  const idleStyle = useAnimatedStyle(() => ({
+    opacity: !meal && life && lifeBlink(life.value, seed) ? 0 : 1 - anticipating.value,
+  }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
+  const mealShowing = !!meal && mealVisible;
   return (
     <View
       ref={bindNode}
@@ -272,17 +273,17 @@ const RestingEntity = memo(function RestingEntity({
         />
       )}
       <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
-        style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
-      {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
-      <Animated.View style={normal}>
-        <Animated.View collapsable={ownerId ? false : undefined} style={character ? open : { opacity: mealHeld ? 0 : 1 }}>
+        <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
+          style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
+        {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
+        <View collapsable={ownerId ? false : undefined} style={character ? undefined : { opacity: mealHeld ? 0 : 1 }}>
           {/* Keep the saved cup painted under the transient sip so the final
               frame can reveal it without mounting a new native SVG. */}
           <EntityArt
             entity={entity}
             actionOverride={action}
             prepareMeal={!!entity.character}
+            idleStyle={character ? idleStyle : undefined}
             meal={meal}
             mealVisible={mealVisible}
             onMealPresented={presented}
@@ -293,18 +294,21 @@ const RestingEntity = memo(function RestingEntity({
             reduced={reduced}
             renderCharacter={renderCharacter}
           />
-        </Animated.View>
+        </View>
         {cacheBlink && (
-          <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
-          </Animated.View>
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
+            <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            </Animated.View>
+          </View>
         )}
-      </Animated.View>
-      {entity.character && (
-        <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
-          <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
-        </Animated.View>
-      )}
+        {character && (
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
+            <Animated.View style={anticipate}>
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
+            </Animated.View>
+          </View>
+        )}
       </Animated.View>
     </View>
   );
