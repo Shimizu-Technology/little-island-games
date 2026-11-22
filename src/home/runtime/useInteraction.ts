@@ -1439,7 +1439,7 @@ export function useInteraction({
   const animateProposal = (proposal: DropProposal, subjectOverride?: SceneEntity, start?: { x: number; y: number }, onAccepted?: (accepted: boolean) => void) => {
     const subject = subjectOverride ?? subjectFor(proposal.id);
     const current = slots.get();
-    if (!subject || current.some(s => s.id === subject.id || s.restId === subject.id)) return false;
+    if (!subject || current.some(s => !!s.id && (s.id === subject.id || s.restId === subject.id))) return false;
     const index = current.findIndex(s => !s.id);
     if (index < 0) return false;
     const origin = roomOrigin(roomIds.indexOf(subject.room), building);
@@ -1459,7 +1459,7 @@ export function useInteraction({
       if (epoch.value !== requestedEpoch) { if (onAccepted) runOnJS(onAccepted)(false); return; }
       const current = slots.value;
       const index = current.findIndex(s => !s.id);
-      if (index < 0 || current.some(s => s.id === subject.id || s.restId === subject.id)) {
+      if (index < 0 || current.some(s => !!s.id && (s.id === subject.id || s.restId === subject.id))) {
         if (onAccepted) runOnJS(onAccepted)(false); return;
       }
       const generation = captureSequence.value + 1;

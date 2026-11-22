@@ -6,7 +6,7 @@ import { useInteraction, type Pickup, type Interaction } from "../src/home/runti
 import { DragOverlay } from "../src/home/runtime/DragOverlay";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
-import { type SceneEntity } from "../src/home/scene/types";
+import { roomPoint, type SceneEntity } from "../src/home/scene/types";
 import { migrateHome, starterHome, instance, type HomeStateV2 } from "../src/home/model";
 import { buildScene } from "../src/home/scene/graph";
 import { apply, resolve } from "../src/home/scene/proposal";
@@ -111,5 +111,12 @@ it('HS-01: three successive stored props retire their overlays using only the co
     expect(current.slots.get().every(s=>!s.id)).toBe(true);
     expect(settled.rooms.home.instances.filter(i=>i.in==='box')).toHaveLength(n+1);
   }
+  // The last retired slot remembers this id for diagnostics, but must not own it.
+  const scene=buildScene(settled);
+  const take=resolve(scene.rooms.home,scene.entities['home/item/prop2'],roomPoint(650,525),{scale:1,release:true,floorOnly:true});
+  await act(async()=>{expect(current.animateProposal(take)).toBe(true);});await flush();await frames(90);
+  expect(commits).toBe(4);
+  expect(settled.rooms.home.instances.filter(i=>i.in==='box')).toHaveLength(2);
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
   await act(async()=>tree.unmount());vi.useRealTimers();
 });
