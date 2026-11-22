@@ -77,11 +77,11 @@ const mapRepeats = (blocks: Block[], fn: (b: Extract<Block, { kind: 'repeat' }>,
 const repeatCount = (blocks: Block[]) => { let n = 0; mapRepeats(blocks, b => { n++; return b; }); return n; };
 export const misreads = {
   /** Read every Repeat as "once". */
-  once: (blocks: Block[]): Block[] => blocks.flatMap(b => b.kind === 'repeat' ? misreads.once(b.body) : [b]),
+  once: (blocks: Block[]): Block[] => blocks.flatMap<Block>(b => b.kind === 'repeat' ? misreads.once(b.body) : [b]),
   outerCount: (blocks: Block[]): Block[] => { const times = (blocks.find(b => b.kind === 'repeat') as Extract<Block, { kind: 'repeat' }> | undefined)?.times ?? 4; const to = DEEP_COUNTS.filter(n => n !== times).sort((a, b) => Math.abs(a - times) - Math.abs(b - times))[0]; return blocks.map(b => b === blocks.find(x => x.kind === 'repeat') ? { ...(b as Extract<Block, { kind: 'repeat' }>), times: to } : b); },
   innerCount: (blocks: Block[]): Block[] => { const total = repeatCount(blocks); return total < 2 ? [] : mapRepeats(blocks, (b, i) => i === 0 ? { ...b, times: DEEP_COUNTS.filter(n => n !== b.times).sort((x, y) => Math.abs(x - b.times) - Math.abs(y - b.times))[0] } : b); },
   firstTurn: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind === 'repeat') return { ...b, body: go(b.body) }; if (b.kind === 'turn' && !done) { done = true; return { kind: 'turn', angle: DEEP_TURNS.filter(a => a !== b.angle).sort((x, y) => Math.abs(x - b.angle) - Math.abs(y - b.angle))[0] }; } return b; }); return go(blocks); },
-  noGrow: (blocks: Block[]): Block[] => blocks.flatMap(b => b.kind === 'grow' ? [] : b.kind === 'repeat' ? [{ ...b, body: misreads.noGrow(b.body) }] : [b]),
+  noGrow: (blocks: Block[]): Block[] => blocks.flatMap<Block>(b => b.kind === 'grow' ? [] : b.kind === 'repeat' ? [{ ...b, body: misreads.noGrow(b.body) }] : [b]),
   firstLength: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind === 'repeat') return { ...b, body: go(b.body) }; if (b.kind === 'forward' && !done) { done = true; return { kind: 'forward', n: b.n >= 100 ? b.n - 10 : b.n + 10 }; } return b; }); return go(blocks); },
 };
 export type Misread = keyof typeof misreads;

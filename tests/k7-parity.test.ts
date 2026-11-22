@@ -30,7 +30,7 @@ function oldBeep(p: Puzzle, plan: Arrow[]) {
 function oldDraw(blocks: Block[]): Segment[] {
   const flat = (body: Block[]): Exclude<Block, { kind: 'repeat' }>[] => body.flatMap(b => b.kind === 'repeat' ? Array.from({ length: b.times }, () => flat(b.body)).flat() : [b]);
   let x = 100, y = 80, angle = 0, color = 'teal'; const out: Segment[] = [];
-  for (const b of flat(blocks)) { if (b.kind === 'turn') angle = (angle + b.angle) % 360; else if (b.kind === 'color') color = b.color; else { const nx = Math.round((x + Math.cos(angle * Math.PI / 180) * b.n) * 100) / 100, ny = Math.round((y + Math.sin(angle * Math.PI / 180) * b.n) * 100) / 100; out.push({ from: { x, y }, to: { x: nx, y: ny }, color }); x = nx; y = ny; } }
+  for (const b of flat(blocks)) { if (b.kind === 'turn') angle = (angle + b.angle) % 360; else if (b.kind === 'color') color = b.color; else if (b.kind === 'forward') { const nx = Math.round((x + Math.cos(angle * Math.PI / 180) * b.n) * 100) / 100, ny = Math.round((y + Math.sin(angle * Math.PI / 180) * b.n) * 100) / 100; out.push({ from: { x, y }, to: { x: nx, y: ny }, color }); x = nx; y = ny; } }
   return out;
 }
 

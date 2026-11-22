@@ -8,8 +8,9 @@ import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { Button, C, Copy } from '../../../components/ui';
 import { useReducedMotion } from '../../../components/motion';
 import type { BoardProps } from '../../types';
+import { blockLabel } from './labels';
 import { advance, canWrap, draw, drawingFeedback, initialProgram, programIssue, replaceBlock, solves, wrapIssue, type Block, type TurtleState } from './engine';
-const name = (b: Block): string => b.kind === 'forward' ? `Forward ${b.n}` : b.kind === 'turn' ? `Turn ${b.angle}°` : b.kind === 'color' ? `${b.color} pen` : `Repeat ×${b.times}`;
+const name = blockLabel;
 export function Art({ size }: { size: number }) { return <Svg width={size} height={size} viewBox="0 0 80 80"><Circle cx={40} cy={39} r={27} fill="#83BEAD" stroke="#315F60" strokeWidth={3}/><Path d="M20 43Q40 18 60 43M24 48h32M40 21v37" stroke="#5A9383" strokeWidth={3} fill="none"/><Circle cx={61} cy={37} r={3} fill="#315F60"/></Svg>; }
 export function Board({ session, update, practice, assistance, cheer, sound, width, active, coach }: BoardProps<TurtleState>) {
   const s = session.state, task = s.tasks[Math.min(s.done, 3)], goal = draw(task.target) || [], fullTrace = draw(s.program) || [], traced = fullTrace.slice(0, s.cursor), steps = Math.max(1, fullTrace.length);
