@@ -210,6 +210,37 @@ it.each([500,852])('AX5 height %s reveals ported Crab but leaves an unported rea
   await act(async()=>r.unmount());root=undefined;
  }
 });
+// S1a (P2-6): Star Station is a ported measured board, so AX entry reveals it like Crab.
+it.each([500,852])('AX5 height %s reveals the ported Star Station on entry',async height=>{
+ companion.event='waiting'; Object.assign(viewport,{width:393,height,fontScale:3.12});
+ const frames=new Map<number,FrameRequestCallback>();let n=0;
+ vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++n,f);return n;});vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ const r=await mount('space-station');scrolls.length=0;await measureFrame(r,height-93,180,24,333);
+ await act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
+ expect(scrolls).toEqual([196]);expect(scrollOptions.at(-1)).toEqual({y:196,animated:false});
+});
+it('AX5 Star Station: portrait-landscape-portrait keeps the round and reveals once per rotation, with no animation',async()=>{
+ companion.event='waiting'; Object.assign(viewport,{width:393,height:852,fontScale:3.12});
+ const frames=new Map<number,FrameRequestCallback>();let n=0;
+ vi.stubGlobal('requestAnimationFrame',(f:FrameRequestCallback)=>{frames.set(++n,f);return n;});
+ vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ const flush=async()=>act(async()=>{const queue=[...frames.values()];frames.clear();queue.forEach(f=>f(0));});
+ const r=await mount('space-station');await measureFrame(r);await flush();
+ const round=byType(r,'Board')[0].props.session;
+ scrolls.length=0;scrollOptions.length=0;
+ const rotate=async(width:number,height:number)=>{
+  Object.assign(viewport,{width,height});
+  await act(async()=>r.update(<StoreProvider><Probe id="space-station"/></StoreProvider>));
+  await measureFrame(r,width===393?556:372,width===393?56:247,width===393?14:24,width===393?333:654);
+  await flush();
+ };
+ await rotate(852,393);expect(scrolls).toEqual([263]);
+ await measureFrame(r,372,247,24,654);await flush();expect(scrolls).toEqual([263]);
+ await rotate(393,852);expect(scrolls).toEqual([263,62]);
+ await rotate(852,393);expect(scrolls).toEqual([263,62,263]);
+ expect(byType(r,'Board')[0].props.session).toBe(round);
+ expect(scrollOptions.every(o=>o.animated===false)).toBe(true);
+});
 it('a 499-pt next question retains the short-landscape reveal at default text',async()=>{
  Object.assign(viewport,{width:852,height:499,fontScale:1});
  vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
@@ -228,10 +259,18 @@ it('layout events arriving before the rotation dimensions still provide measured
  expect(byType(r,'Board')[0].props.boardSpace).toMatchObject({width:654,ready:true});
 });
 
-it.each(['food-web','space-station','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
+// Star Station became a measured board in S1a (K6); see the measured case below.
+it.each(['food-web','turtle-tales'] as const)('%s retains its legacy allocation and text width after measurement',async id=>{
  Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
  vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
  const r=await mount(id);await measureFrame(r,620,180,24,943);
  const board=byType(r,'Board')[0];
  expect(board.props.boardSpace).toBeNull();expect(board.props.width).toBe(812);expect(board.props.fit.width).toBe(812);
+});
+it('space-station is a measured School board after S1a, using the measured inner width',async()=>{
+ Object.assign(viewport,{width:1133,height:744,fontScale:3.12});
+ vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{});
+ const r=await mount('space-station');await measureFrame(r,620,180,24,943);
+ const board=byType(r,'Board')[0];
+ expect(board.props.boardSpace).toMatchObject({width:943,ready:true,large:true});expect(board.props.width).toBe(943);expect(board.props.fit.width).toBe(943);
 });

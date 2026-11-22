@@ -13,8 +13,12 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   Scrolling up must still expose Back, sound, Help and the learner switch in their
   existing VoiceOver order. At AX, entry/rotation reveal is limited to the ported
   measured School boards (Crab, Beep, Håfa Adai, Reef Race, Weather, Tide Pool,
-  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure) plus Shell Math,
-  which already had an AX entry reveal. Unported and reading boards keep their
+  Float/Sink, Tide Logic, Logic Lagoon, Slip Tide, Treasure, and Star Station
+  since S1a) plus Shell Math, which already had an AX entry reveal. Star Station's
+  port was approved by the lead in the S1a review brief (16 November 2026); a saved
+  version-1 Star Station round keeps its legacy drawing inside a geometry-off
+  provider. Proof: `tests/r0b-frame-largest-text.test.tsx` (Star Station AX entry
+  and rotation cases). Unported and reading boards keep their
   existing entry behavior at **>= 500 pt**. Default text keeps the strict 500-pt threshold.
   Next questions in short landscape retain the revealed board position.
   Rotation preserves the round and triggers at most one reveal per rotation;
