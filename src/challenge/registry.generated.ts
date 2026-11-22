@@ -45,8 +45,10 @@ import { registration as r21 } from './registrations/sudoku';
 import type { Payload as P21, Action as A21, State as S21 } from './registrations/sudoku';
 import { registration as r22 } from './registrations/tic-tac-toe';
 import type { Payload as P22, Action as A22, State as S22 } from './registrations/tic-tac-toe';
-import { registration as r23 } from './registrations/word-search';
-import type { Payload as P23, Action as A23, State as S23 } from './registrations/word-search';
+import { registration as r23 } from './registrations/turtle-draw';
+import type { Payload as P23, Action as A23, State as S23 } from './registrations/turtle-draw';
+import { registration as r24 } from './registrations/word-search';
+import type { Payload as P24, Action as A24, State as S24 } from './registrations/word-search';
 import type { ChallengeEntry, TypedRegistration } from "./types";
 export type Registry = Record<never, never> & {
   'beep-bot': { Payload: P0; Action: A0; State: S0 };
@@ -72,6 +74,7 @@ export type Registry = Record<never, never> & {
   'sound-boat': { Payload: P20; Action: A20; State: S20 };
   'sudoku': { Payload: P21; Action: A21; State: S21 };
   'tic-tac-toe': { Payload: P22; Action: A22; State: S22 };
-  'word-search': { Payload: P23; Action: A23; State: S23 };
+  'turtle-draw': { Payload: P23; Action: A23; State: S23 };
+  'word-search': { Payload: P24; Action: A24; State: S24 };
 };
-export const challengeEntries: readonly ChallengeEntry[] = [r0 satisfies TypedRegistration<P0, A0, S0>, r1 satisfies TypedRegistration<P1, A1, S1>, r2 satisfies TypedRegistration<P2, A2, S2>, r3 satisfies TypedRegistration<P3, A3, S3>, r4 satisfies TypedRegistration<P4, A4, S4>, r5 satisfies TypedRegistration<P5, A5, S5>, r6 satisfies TypedRegistration<P6, A6, S6>, r7 satisfies TypedRegistration<P7, A7, S7>, r8 satisfies TypedRegistration<P8, A8, S8>, r9 satisfies TypedRegistration<P9, A9, S9>, r10 satisfies TypedRegistration<P10, A10, S10>, r11 satisfies TypedRegistration<P11, A11, S11>, r12 satisfies TypedRegistration<P12, A12, S12>, r13 satisfies TypedRegistration<P13, A13, S13>, r14 satisfies TypedRegistration<P14, A14, S14>, r15 satisfies TypedRegistration<P15, A15, S15>, r16 satisfies TypedRegistration<P16, A16, S16>, r17 satisfies TypedRegistration<P17, A17, S17>, r18 satisfies TypedRegistration<P18, A18, S18>, r19 satisfies TypedRegistration<P19, A19, S19>, r20 satisfies TypedRegistration<P20, A20, S20>, r21 satisfies TypedRegistration<P21, A21, S21>, r22 satisfies TypedRegistration<P22, A22, S22>, r23 satisfies TypedRegistration<P23, A23, S23>];
+export const challengeEntries: readonly ChallengeEntry[] = [r0 satisfies TypedRegistration<P0, A0, S0>, r1 satisfies TypedRegistration<P1, A1, S1>, r2 satisfies TypedRegistration<P2, A2, S2>, r3 satisfies TypedRegistration<P3, A3, S3>, r4 satisfies TypedRegistration<P4, A4, S4>, r5 satisfies TypedRegistration<P5, A5, S5>, r6 satisfies TypedRegistration<P6, A6, S6>, r7 satisfies TypedRegistration<P7, A7, S7>, r8 satisfies TypedRegistration<P8, A8, S8>, r9 satisfies TypedRegistration<P9, A9, S9>, r10 satisfies TypedRegistration<P10, A10, S10>, r11 satisfies TypedRegistration<P11, A11, S11>, r12 satisfies TypedRegistration<P12, A12, S12>, r13 satisfies TypedRegistration<P13, A13, S13>, r14 satisfies TypedRegistration<P14, A14, S14>, r15 satisfies TypedRegistration<P15, A15, S15>, r16 satisfies TypedRegistration<P16, A16, S16>, r17 satisfies TypedRegistration<P17, A17, S17>, r18 satisfies TypedRegistration<P18, A18, S18>, r19 satisfies TypedRegistration<P19, A19, S19>, r20 satisfies TypedRegistration<P20, A20, S20>, r21 satisfies TypedRegistration<P21, A21, S21>, r22 satisfies TypedRegistration<P22, A22, S22>, r23 satisfies TypedRegistration<P23, A23, S23>, r24 satisfies TypedRegistration<P24, A24, S24>];

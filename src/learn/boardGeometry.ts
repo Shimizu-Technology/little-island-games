@@ -32,6 +32,8 @@ export const SCHOOL_BOARD_MIN = {
   'space-station': 120,
   // N1b: the hop line keeps its numbers, flag and frog readable down to this height; Quick Practice's optional number line likewise.
   'number-hop': 92, 'quick-practice': 64,
+  // C2c: the sand canvas keeps its length labels at 12 pt or more down to this height (tests/c2c-turtle-view.test.tsx).
+  'turtle-draw': 200,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 

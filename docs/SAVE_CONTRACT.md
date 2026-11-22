@@ -83,8 +83,8 @@ codecs; legacy flat sessions retain their compatibility boundary. A stopped Crab
 single-step debugging; ordinary legacy pause validation is unchanged. Existing
 game limits (Crab 80 executable cards, Beep 32, Turtle's 120 expanded commands and
 legacy body/turn/repeat constraints) still apply to their current levels. Turtle's
-old top-level goal limit remains unchanged until SC-03; K7 reports recursive cost
-without retroactively changing a saved task's win rule.
+old top-level goal limit remains unchanged for saved (version 1) rounds; SC-03 (C2c) makes fresh version 2 rounds count every block recursively, and K7 reports recursive cost
+without retroactively changing a saved task's win rule (`docs/TURTLE_DEPTH.md`).
 
 Only content descriptors with `blockEditor: true` offer the editor or accept nested replay edits. The flag is absent on every existing level/task and published Challenge puzzle. A draft does not grant opt-in. Existing card counts, Again usage, shortest-plan dares, par and best costs retain their flat executable-card semantics. An opted-in Crab dare also counts executed expanded cards (through home); Beep counts its full expanded plan. Recursive node cost is available to future explicitly authored block objectives, never substituted into existing card metrics.
 
