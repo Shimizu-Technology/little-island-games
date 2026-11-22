@@ -7,7 +7,7 @@ import { DragOverlay } from "../src/home/runtime/DragOverlay";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { roomPoint, type SceneEntity } from "../src/home/scene/types";
-import { migrateHome, starterHome, instance, type HomeStateV2 } from "../src/home/model";
+import { migrateHome, starterHome, instance, homeReducer, type HomeStateV2 } from "../src/home/model";
 import { buildScene } from "../src/home/scene/graph";
 import { apply, resolve } from "../src/home/scene/proposal";
 const harness = vi.hoisted(() => ({
@@ -76,6 +76,7 @@ const registry = { calls: [] as [number, boolean][], manageStateFrameCallback(id
 
 const building=buildingLayout(4,true), viewport={width:1000,height:600};
 let current: Interaction, settled:HomeStateV2, commits=0;
+let edit: (action: Parameters<typeof homeReducer>[1]) => void;
 function Host({initial}:{initial:HomeStateV2}) {
   const [state,setState]=React.useState(initial), [pickups,setPickups]=React.useState<(Pickup|undefined)[]>([undefined,undefined]);
   const scene=React.useMemo(()=>buildScene(state),[state]);
@@ -88,7 +89,7 @@ function Host({initial}:{initial:HomeStateV2}) {
       interaction.finish(index,true,proposal,buildScene(result.state).revision,buildScene(result.state),token,result.identities[proposal.id]);
     }});
   React.useLayoutEffect(()=>{
-    current=interaction;settled=state;
+    current=interaction;settled=state;edit=action=>setState(s=>homeReducer(s,action).state);
     for(const e of Object.values(scene.entities))if(e.attachment.kind!=='container')interaction.acknowledgeLayout(e.id,layoutToken(e));
   });
   return <DragOverlay scene={scene} activeRoom="home" pickups={pickups} interaction={interaction} building={building} reduced={false}/>;
@@ -118,5 +119,28 @@ it('HS-01: three successive stored props retire their overlays using only the co
   expect(commits).toBe(4);
   expect(settled.rooms.home.instances.filter(i=>i.in==='box')).toHaveLength(2);
   expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+it('HS-01: closing the chest during a take-out/store handoff still retires every slot',async()=>{
+  const initial=migrateHome(starterHome())!;
+  for(const r of Object.values(initial.rooms)){r.instances=[];r.characters=[];}
+  initial.rooms.home.instances=[instance('box','toy-box',2,4),instance('basket','carry-basket',10,8),{...instance('toy','teddy',0,0),in:'basket'}];
+  let tree!:TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<Host initial={initial}/>);});
+  let scene=buildScene(settled);
+  let p=resolve(scene.rooms.home,scene.entities['home/item/toy'],roomPoint(500,535),{scale:1,release:true,floorOnly:true});
+  await act(async()=>{expect(current.animateProposal(p)).toBe(true);});await flush();await frames(90);
+  scene=buildScene(settled);const target=scene.rooms.home.targets.find(t=>t.owner==='home/item/box'&&t.kind==='container')!;
+  p=resolve(scene.rooms.home,scene.entities['home/item/toy'],target.contact,{scale:1,release:true,target:target.id});
+  await act(async()=>{expect(current.animateProposal(p)).toBe(true);});await flush();
+  while(commits<2)await frames(1);
+  // The next edit arrives before the three-frame overlay retirement handshake.
+  await act(async()=>edit({type:'toggle',id:'box',roomId:'home'}));
+  await frames(90);
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  expect(current.controller.get().pointers).toHaveLength(0);
+  expect(settled.rooms.home.instances.find(i=>i.id==='toy')?.in).toBe('box');
+  expect(settled.rooms.home.instances.find(i=>i.id==='box')?.storage?.open).toBe(false);
   await act(async()=>tree.unmount());vi.useRealTimers();
 });
