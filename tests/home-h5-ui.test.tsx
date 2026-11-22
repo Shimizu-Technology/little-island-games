@@ -30,15 +30,17 @@ describe('HS-01 storage controls', () => {
     expect(restingVisible(f.scene.entities['home/item/toy'], f.scene)).toBe(false);
     await act(async () => root.update(<StorageTray {...fixture(false)} bottom={80} onTake={onTake} onClose={onClose}/>));
     expect(root.toJSON()).toBeNull();
+    await act(async () => root.update(<StorageTray {...fixture(false)} inspect bottom={80} onTake={onTake} onClose={onClose}/>));
+    expect(root.root.findAllByType('Pressable' as any).some(n => n.props.accessibilityLabel === 'Take out Teddy')).toBe(true);
     expect(storageDescription(fixture(false).entity)).toContain('closed, 2 of 4');
     await act(async () => root.unmount());
   });
   it('full feedback is visible, spoken, and dismissible without a reading timer', async () => {
     const dismiss = vi.fn(); let root!: ReturnType<typeof create>;
-    await act(async () => { root = create(<StorageFullNote top={100} onDismiss={dismiss}/>); });
+    await act(async () => { root = create(<StorageFullNote name="Carry basket" top={100} onDismiss={dismiss}/>); });
     const note = root.root.findByType('Pressable' as any);
     expect(note.props.accessibilityRole).toBe('alert');
-    expect(note.props.accessibilityLabel).toContain('Take something out');
+    expect(note.props.accessibilityLabel).toBe('Carry basket is full. Take something out first.');
     await act(async () => note.props.onPress()); expect(dismiss).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
   });

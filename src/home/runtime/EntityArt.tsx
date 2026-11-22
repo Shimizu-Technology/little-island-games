@@ -113,7 +113,10 @@ export const EntityArt = memo(function EntityArt({
       </G>
     </Svg>;
   }
-  if (entity.item)
+  if (entity.item) {
+    const basket = entity.item.item === 'carry-basket';
+    const peekWidth = frame.width * (basket ? .175 : .13);
+    const pictureWidth = frame.width * (basket ? .34 : .13);
     return (
       <View style={{ width: frame.width, height: frame.height }}>
         <DecorArt
@@ -123,12 +126,12 @@ export const EntityArt = memo(function EntityArt({
           }
           reduced={reduced}
         />
-        {!front && storageCapacity(entity.item.item) > 0 && storageOpen(entity.item) && !!entity.contents?.length && (
-          <View testID="storage-peek" pointerEvents="none" accessible={false} style={{ position: 'absolute', left: frame.width * .26, top: frame.height * .43, width: frame.width * .52, height: frame.height * .24, overflow: 'hidden', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>
+        {!front && storageCapacity(entity.item.item) > 0 && (storageOpen(entity.item) || basket) && !!entity.contents?.length && (
+          <View testID="storage-peek" pointerEvents="none" accessible={false} style={{ position: 'absolute', left: frame.width * (basket ? .15 : .26), top: frame.height * (basket ? .25 : .43), width: frame.width * (basket ? .7 : .52), height: frame.height * .24, overflow: 'hidden', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>
             {entity.contents.slice(0, 4).map(item => {
-              const size = itemSize(item), width = frame.width * .13, scale = width / size;
+              const size = itemSize(item), width = peekWidth, scale = pictureWidth / size;
               return <View key={item.id} style={{ width, height: frame.height * .24 }}>
-                <View style={{ width: size, height: size, transform: [{ scale }], transformOrigin: 'left top' }}>
+                <View style={{ position: 'absolute', left: (width - pictureWidth) / 2, top: 0, width: size, height: size, transform: [{ scale }], transformOrigin: 'left top' }}>
                   <DecorArt entity={{ ...entity, item, contents: undefined, children: [] }} reduced={reduced}/>
                 </View>
               </View>;
@@ -137,6 +140,7 @@ export const EntityArt = memo(function EntityArt({
         )}
       </View>
     );
+  }
   const character = entity.character!,
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);

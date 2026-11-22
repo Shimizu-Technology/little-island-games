@@ -9,11 +9,11 @@ import { MoreItemArt } from '../art/More';
 import { moreCatalog } from '../catalogMore';
 
 /** A real, bounded contents shelf. Taking one out uses the same resolver as a drag. */
-export function StorageTray({ entity, scene, bottom, large = false, onTake, onClose }: {
-  entity?: SceneEntity; scene: Scene; bottom: number; large?: boolean;
+export function StorageTray({ entity, scene, bottom, large = false, inspect = false, onTake, onClose }: {
+  entity?: SceneEntity; scene: Scene; bottom: number; large?: boolean; inspect?: boolean;
   onTake: (id: string) => void; onClose: () => void;
 }) {
-  if (!entity?.item || !storageOpen(entity.item)) return null;
+  if (!entity?.item || (!storageOpen(entity.item) && !inspect)) return null;
   const contents = entity.children.map(id => scene.entities[id]).filter(e => e?.attachment.kind === 'container');
   const capacity = storageCapacity(entity.item.item), cell = large ? 72 : 60;
   if (!capacity) return null;
@@ -35,10 +35,11 @@ export function StorageTray({ entity, scene, bottom, large = false, onTake, onCl
     </ScrollView>
   </View>;
 }
-export function StorageFullNote({ onDismiss, top }: { onDismiss: () => void; top: number }) {
-  return <Pressable testID="storage-full-note" accessibilityRole="alert" accessibilityLiveRegion="polite" accessibilityLabel={STORAGE_FULL_MESSAGE} accessibilityHint="Tap to close." onPress={onDismiss}
+export function StorageFullNote({ onDismiss, top, name = 'This' }: { onDismiss: () => void; top: number; name?: string }) {
+  const message = name === 'This' ? STORAGE_FULL_MESSAGE : `${name} is full. Take something out first.`;
+  return <Pressable testID="storage-full-note" accessibilityRole="alert" accessibilityLiveRegion="polite" accessibilityLabel={message} accessibilityHint="Tap to close." onPress={onDismiss}
     style={{ position: 'absolute', top, left: 12, right: 12, padding: 12, borderRadius: 20, backgroundColor: '#FFF8E9', borderWidth: 2, borderColor: '#D7C29A', zIndex: 46, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
     <View accessible={false} style={{ width: 48, height: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 4, backgroundColor: '#D7AE74', borderRadius: 8, padding: 5 }}>{[0,1,2,3].map(n => <View key={n} style={{ width: 16, height: 12, backgroundColor: '#79B090', borderRadius: 5 }}/>)}</View>
-    <Text maxFontSizeMultiplier={1.4} style={{ flex: 1, fontSize: 16, fontWeight: '600', color: '#284F4B' }}>{STORAGE_FULL_MESSAGE}</Text><Text accessible={false} maxFontSizeMultiplier={1} style={{ fontSize: 22, color: '#284F4B' }}>×</Text>
+    <Text maxFontSizeMultiplier={1.4} style={{ flex: 1, fontSize: 16, fontWeight: '600', color: '#284F4B' }}>{message}</Text><Text accessible={false} maxFontSizeMultiplier={1} style={{ fontSize: 22, color: '#284F4B' }}>×</Text>
   </Pressable>;
 }

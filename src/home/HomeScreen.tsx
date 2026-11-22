@@ -24,7 +24,7 @@ import {
 import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
-import { itemIds, type ItemId } from "./catalog";
+import { itemIds, itemSpec, type ItemId } from "./catalog";
 import { useHomeStore, RESTORE_NOTE, UNDO_NOTES } from "./useHomeStore";
 import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
@@ -131,6 +131,8 @@ export function HomeScreen({
   const [redoWindow, setRedoWindow] = useState(false);
   const redoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [storageId, setStorageId] = useState<string>();
+  const [storageInspect, setStorageInspect] = useState<string>();
+  const [storageFullName, setStorageFullName] = useState<string>();
   const [storageNoteGone, setStorageNoteGone] = useState(0);
   const [capacityGone, setCapacityGone] = useState(0);
   React.useEffect(() => () => clearTimeout(redoTimer.current), []);
@@ -235,6 +237,19 @@ export function HomeScreen({
     return () => cancelAnimationFrame(frame);
   }, [measure, viewport]);
 
+  // A refusal changes presentation only: the real contents remain available for recovery.
+  const showStorageFull = useCallback((targetId?: string) => {
+    const current = live.current;
+    const target = Object.values(current.scene.rooms).flatMap(index => index.targets).find(t => t.id === targetId);
+    const owner = target && current.scene.entities[target.owner];
+    setStorageFullName(owner?.item ? itemSpec(owner.item.item).name : undefined);
+    if (target) {
+      setStorageId(target.owner);
+      setStorageInspect(target.owner);
+      setSelected(undefined);
+    }
+    current.store.setMessage(STORAGE_FULL_MESSAGE);
+  }, []);
   const commitAt = useCallback(
     (
       id: string,
@@ -290,7 +305,7 @@ export function HomeScreen({
             const target = fresh.rooms[destination].targets.find(t => t.id === proposal.target);
             const contact = target && (proposal.kind === "hand" || (proposal.kind === "mouth" && proposal.consume === "drink")
               ? target.projectedContact ?? target.contact : target.contact);
-            if (target?.kind === "container" && target.closed) current.store.setMessage(STORAGE_FULL_MESSAGE);
+            if (target?.kind === "container" && target.closed) showStorageFull(target.id);
             if (!target || target.closed || target.occupied ||
               contact!.x !== proposal.contact.x || contact!.y !== proposal.contact.y ||
               JSON.stringify(target.attachment) !== JSON.stringify(proposal.attachment)) return undefined;
@@ -320,7 +335,7 @@ export function HomeScreen({
             target: proposal?.target,
           }
         );
-        if (resolved.refusal === "storage-capacity") { current.store.setMessage(STORAGE_FULL_MESSAGE); return undefined; }
+        if (resolved.refusal === "storage-capacity") { showStorageFull(resolved.target); return undefined; }
         // A concurrent edit can invalidate a drop, but must never silently move it
         // somewhere the child did not preview. Rebase only the same destination.
         if (proposal && (resolved.kind !== proposal.kind || resolved.target !== proposal.target ||
@@ -334,7 +349,7 @@ export function HomeScreen({
       }
       return { state: next, proposal: proposal!, identities: current.store.getCommittedIdentities() };
     },
-    [shoreRooms]
+    [shoreRooms, showStorageFull]
   );
   const showReaction = (proposal: DropProposal, food?: Meal["food"], offered = false, source = proposal.id, capture?:Meal["capture"]) => {
     if (proposal.kind !== "mouth") return;
@@ -405,7 +420,7 @@ export function HomeScreen({
     (index: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => {
       const stillCurrent = () => runtime.current!.isCurrent(index, token);
       if (!stillCurrent()) return;
-      if (proposal.refusal === "storage-capacity") { live.current.store.setMessage(STORAGE_FULL_MESSAGE); runtime.current!.finish(index, false, undefined, undefined, undefined, token); return; }
+      if (proposal.refusal === "storage-capacity") { showStorageFull(proposal.target); runtime.current!.finish(index, false, undefined, undefined, undefined, token); return; }
       const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
       // Catalog seeds and detached portions may exist only in the captured slot.
       const mealFood = live.current.scene.entities[proposal.id]?.item ??
@@ -456,7 +471,7 @@ export function HomeScreen({
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- showReaction reads refs; the delight callbacks are stable.
-    [building, commitAt, delightLanded, delightAte, watchCooking, buildRuntimeScene, trace]
+    [building, commitAt, delightLanded, delightAte, watchCooking, buildRuntimeScene, trace, showStorageFull]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {
@@ -489,7 +504,7 @@ export function HomeScreen({
   );
   const onClear = useCallback(
     (index: number, id?: string, reason?: "capacity" | "storage-capacity") => {
-      if (reason === "storage-capacity") live.current.store.setMessage(STORAGE_FULL_MESSAGE);
+      if (reason === "storage-capacity") showStorageFull();
       if (reason === "capacity") live.current.store.setMessage(CAPACITY_MESSAGE);
       if (id) clearCatalogSeed(catalogSeeds.current, id);
       // A cancelled carry puts food back in a hot pan: it starts cooking again.
@@ -502,7 +517,7 @@ export function HomeScreen({
         return current.map((p, i) => (i === index ? undefined : p));
       });
     },
-    [watchCooking]
+    [watchCooking, showStorageFull]
   );
   const onDestination = useCallback(
     (index: number, destination: Scene) =>
@@ -1116,8 +1131,8 @@ export function HomeScreen({
         />
       )}
       {!overview && !more && !friends && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
-        <StorageTray entity={scene.entities[storageId]} scene={scene} large={large} bottom={inset.bottom + navigationHeight + 8}
-          onClose={() => { const e = scene.entities[storageId]; if (e?.item) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); }}
+        <StorageTray entity={scene.entities[storageId]} scene={scene} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + 8}
+          onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
             const e = scene.entities[id], owner = scene.entities[storageId];
             if (!e || !owner) return;
@@ -1179,7 +1194,7 @@ export function HomeScreen({
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {UNDO_NOTES.includes(store.message) || store.message === STORAGE_FULL_MESSAGE ? "" : store.message}
       </Text>
-      {store.message === STORAGE_FULL_MESSAGE && storageNoteGone !== store.messageSerial && <StorageFullNote top={headerHeight + 10} onDismiss={() => setStorageNoteGone(store.messageSerial)}/>}
+      {store.message === STORAGE_FULL_MESSAGE && storageNoteGone !== store.messageSerial && <StorageFullNote name={storageFullName} top={headerHeight + 10} onDismiss={() => setStorageNoteGone(store.messageSerial)}/>}
       {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
       {undoNote && <UndoNote message={store.message} restored={Object.values(RESTORE_NOTE).includes(store.message)}
         top={headerHeight + 10}

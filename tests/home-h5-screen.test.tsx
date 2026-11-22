@@ -77,6 +77,8 @@ describe('H5 storage on the live screen', () => {
     await act(async()=>harness.options.onCommit(0,p,target.contact,{}));
     expect(persist).not.toHaveBeenCalled();
     expect(root.root.findAllByProps({testID:'storage-full-note'}).length).toBeGreaterThan(0);
+    expect(root.root.findAll(n=>n.props.accessibilityLabel==='Carry basket is full. Take something out first.').length).toBeGreaterThan(0);
+    expect(root.root.findAll(n=>n.props.accessibilityLabel==='Take out Seashell').length).toBeGreaterThan(0);
   });
   it('the second of two simultaneous drops gets full feedback and preserves its source', async()=>{
     const s = labFixtures['rig-menu-0']();
