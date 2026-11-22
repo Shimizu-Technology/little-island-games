@@ -44,7 +44,7 @@ export const POLY_BLUEPRINTS: readonly PolyBlueprint[] = [
   {
     id: "fish", name: "Fish", width: 6, height: 6,
     parts: [
-      { name: "Tail", color: "#E9BA61", cells: [[0, 1], [1, 2], [0, 3]] },
+      { name: "Tail", color: "#E9BA61", cells: [[0, 1], [0, 2], [1, 2], [0, 3]] },
       { name: "Back", color: "#63A9A5", cells: [[2, 1], [2, 2], [2, 3], [3, 0], [3, 1]] },
       { name: "Face", color: "#79C2B5", cells: [[3, 2], [4, 1], [4, 2], [5, 2]] },
       { name: "Fin", color: "#4F969C", cells: [[3, 3], [3, 4], [4, 3]] },
@@ -63,9 +63,9 @@ export const POLY_BLUEPRINTS: readonly PolyBlueprint[] = [
     id: "turtle", name: "Turtle", width: 6, height: 6,
     parts: [
       { name: "Shell top", color: "#5E9B75", cells: [[1, 1], [2, 1], [3, 1], [2, 0]] },
-      { name: "Shell low", color: "#4B8663", cells: [[1, 2], [2, 2], [3, 2], [2, 3]] },
+      { name: "Shell low", color: "#4B8663", cells: [[0, 2], [1, 2], [2, 2], [3, 2]] },
       { name: "Head", color: "#80B58E", cells: [[4, 1], [4, 2], [5, 1]] },
-      { name: "Flippers", color: "#6BA17F", cells: [[0, 2], [1, 3], [3, 3], [4, 3]] },
+      { name: "Flippers", color: "#6BA17F", cells: [[1, 3], [2, 3], [3, 3], [4, 3]] },
     ],
   },
   {
@@ -108,7 +108,7 @@ export const POLY_BLUEPRINTS: readonly PolyBlueprint[] = [
     id: "hut", name: "Beach hut", width: 6, height: 6,
     parts: [
       { name: "Thatch top", color: "#D4A359", cells: [[2, 0], [3, 0], [1, 1], [2, 1], [3, 1], [4, 1]] },
-      { name: "Eaves", color: "#C29049", cells: [[0, 2], [1, 2], [4, 2], [5, 2]] },
+      { name: "Eaves", color: "#C29049", cells: [[0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2]] },
       { name: "Post left", color: "#9C7552", cells: [[1, 3], [2, 3], [1, 4], [1, 5]] },
       { name: "Post right", color: "#B08962", cells: [[3, 3], [4, 3], [4, 4], [4, 5]] },
     ],
@@ -128,7 +128,7 @@ export const POLY_BLUEPRINTS: readonly PolyBlueprint[] = [
       { name: "Top arm", color: "#E7A854", cells: [[2, 0], [3, 0], [2, 1], [3, 1]] },
       { name: "Left arm", color: "#DC9747", cells: [[0, 2], [1, 2], [1, 3], [2, 2]] },
       { name: "Right arm", color: "#EDB768", cells: [[3, 2], [4, 2], [5, 2], [4, 3]] },
-      { name: "Bottom arms", color: "#CF893C", cells: [[2, 3], [3, 3], [1, 4], [4, 4]] },
+      { name: "Bottom arms", color: "#CF893C", cells: [[1, 4], [2, 4], [2, 3], [3, 3], [3, 4], [4, 4]] },
     ],
   },
   {
@@ -146,13 +146,13 @@ export const POLY_BLUEPRINTS: readonly PolyBlueprint[] = [
       { name: "Ring", color: "#688996", cells: [[2, 0], [3, 0], [2, 1]] },
       { name: "Crossbar", color: "#557684", cells: [[1, 2], [2, 2], [3, 2], [4, 2]] },
       { name: "Shank", color: "#7B9BA8", cells: [[2, 3], [2, 4], [3, 4]] },
-      { name: "Flukes", color: "#4A6875", cells: [[0, 4], [1, 5], [2, 5], [3, 5], [4, 5], [5, 4]] },
+      { name: "Flukes", color: "#4A6875", cells: [[0, 4], [0, 5], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [5, 4]] },
     ],
   },
   {
     id: "shell", name: "Sea shell", width: 6, height: 6,
     parts: [
-      { name: "Crown", color: "#E7A88C", cells: [[2, 0], [3, 0], [1, 1], [2, 1], [3, 1], [4, 1]] },
+      { name: "Top ridge", color: "#E7A88C", cells: [[2, 0], [3, 0], [1, 1], [2, 1], [3, 1], [4, 1]] },
       { name: "Left fan", color: "#DC9679", cells: [[0, 2], [1, 2], [2, 2], [1, 3]] },
       { name: "Right fan", color: "#EFB9A1", cells: [[3, 2], [4, 2], [5, 2], [4, 3]] },
       { name: "Hinge", color: "#C98268", cells: [[2, 3], [3, 3], [2, 4], [3, 4]] },
@@ -170,19 +170,19 @@ export const POLY_BLUEPRINTS: readonly PolyBlueprint[] = [
   {
     id: "crown", name: "Crown", width: 6, height: 6,
     parts: [
-      { name: "Left peak", color: "#E4B854", cells: [[0, 1], [0, 2], [1, 2], [1, 3]] },
+      { name: "Left peak", color: "#E4B854", cells: [[0, 1], [0, 2], [1, 2], [0, 3], [1, 3]] },
       { name: "Center peak", color: "#F0CB6E", cells: [[2, 0], [3, 0], [2, 1], [3, 1], [2, 2], [3, 2]] },
-      { name: "Right peak", color: "#D8A944", cells: [[5, 1], [5, 2], [4, 2], [4, 3]] },
-      { name: "Band", color: "#C79636", cells: [[0, 3], [2, 3], [3, 3], [5, 3], [1, 4], [2, 4], [3, 4], [4, 4]] },
+      { name: "Right peak", color: "#D8A944", cells: [[5, 1], [5, 2], [4, 2], [4, 3], [5, 3]] },
+      { name: "Band", color: "#C79636", cells: [[2, 3], [3, 3], [1, 4], [2, 4], [3, 4], [4, 4]] },
     ],
   },
   {
     id: "butterfly", name: "Butterfly", width: 6, height: 6,
     parts: [
-      { name: "Upper left", color: "#D6829B", cells: [[0, 1], [1, 1], [0, 2], [1, 2]] },
-      { name: "Upper right", color: "#C8708A", cells: [[4, 1], [5, 1], [4, 2], [5, 2]] },
-      { name: "Body", color: "#5E5468", cells: [[2, 1], [3, 1], [2, 2], [3, 2], [2, 3], [3, 3]] },
-      { name: "Lower wings", color: "#E6A3B6", cells: [[1, 3], [1, 4], [4, 3], [4, 4]] },
+      { name: "Left wing", color: "#D6829B", cells: [[0, 1], [1, 1], [0, 2], [1, 2], [1, 3]] },
+      { name: "Right wing", color: "#C8708A", cells: [[4, 1], [5, 1], [4, 2], [5, 2], [4, 3]] },
+      { name: "Body", color: "#5E5468", cells: [[2, 1], [3, 1], [2, 2], [3, 2]] },
+      { name: "Lower wings", color: "#E6A3B6", cells: [[1, 4], [2, 4], [2, 3], [3, 3], [3, 4], [4, 4]] },
     ],
   },
   {

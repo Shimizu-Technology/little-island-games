@@ -36,9 +36,9 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
 
   const compact = width < 420;
   const trailWidth = Math.min(Math.max(width - 28, 268), 430);
-  const rowYs: [number, number, number] = compact ? [36, 114, 192] : [46, 142, 238];
-  const trailHeight = compact ? 228 : 284;
-  const stoneBox = compact ? 52 : 58;
+  const rowYs: [number, number, number] = compact ? [32, 102, 172] : [46, 142, 238];
+  const trailHeight = compact ? 204 : 284;
+  const stoneBox = compact ? 48 : 58;
   const half = stoneBox / 2;
   const left = 36, middle = trailWidth / 2, right = trailWidth - 36;
   const matrix = p.tiles.length === 9;
@@ -172,11 +172,11 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
       </View>
 
       {p.ruleChoices && (
-        <View style={{ gap: 8 }}>
-          <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontWeight: "900", fontSize: 16 }}>
+        <View style={{ gap: compact ? 5 : 8 }}>
+          <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontWeight: "900", fontSize: compact ? 15 : 16 }}>
             1. Say the rule
           </Copy>
-          <View style={{ gap: 8 }}>
+          <View style={{ gap: compact ? 5 : 8 }}>
             {p.ruleChoices.map((id, idx) => {
               const chosen = state.rulePick === idx;
               return (
@@ -188,14 +188,14 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                   disabled={!active || state.won}
                   onPress={() => dispatch(ruleAction(idx))}
                   style={{
-                    paddingHorizontal: 14, paddingVertical: 11, borderRadius: 14, minHeight: 46,
+                    paddingHorizontal: 12, paddingVertical: compact ? 8 : 11, borderRadius: 13, minHeight: compact ? 42 : 46,
                     backgroundColor: chosen ? "#DCEFD6" : "#FFFDF4",
                     borderWidth: chosen ? 2.5 : 1.5,
                     borderColor: chosen ? "#3D7E4A" : "#9BB593",
                     justifyContent: "center",
                   }}
                 >
-                  <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontWeight: chosen ? "900" : "700", fontSize: 15 }}>
+                  <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontWeight: chosen ? "900" : "700", fontSize: compact ? 14 : 15 }}>
                     {RULE_BY_ID[id].card}
                   </Copy>
                 </PressableScale>
@@ -205,11 +205,11 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
         </View>
       )}
 
-      <View style={{ gap: 8 }}>
-        <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontWeight: "900", fontSize: 16 }}>
+      <View style={{ gap: compact ? 5 : 8 }}>
+        <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontWeight: "900", fontSize: compact ? 15 : 16 }}>
           {p.ruleChoices ? "2. Pick the missing stone" : p.gaps.length > 1 ? `Pick stone for gap ${p.gaps[activeSlot] + 1}` : "Pick the missing stone"}
         </Copy>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: compact ? 6 : 8, justifyContent: "center" }}>
           {p.choices.map((tile, idx) => {
             const chosen = state.picks[activeSlot] === idx;
             return (
@@ -222,14 +222,15 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                 disabled={!active || state.won}
                 onPress={() => pickChoice(idx)}
                 style={{
-                  minWidth: 66, minHeight: 62, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 18,
+                  width: compact && p.choices.length === 6 ? "30%" : undefined,
+                  minWidth: compact ? 58 : 66, minHeight: compact ? 50 : 62, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 16,
                   alignItems: "center", justifyContent: "center",
                   backgroundColor: chosen ? "#DCEFD6" : "#FFFDF2",
                   borderWidth: chosen ? 3 : 2,
                   borderColor: chosen ? "#3D7E4A" : "#7C9C75",
                 }}
               >
-                <PatternGlyph token={tile} size={42} />
+                <PatternGlyph token={tile} size={compact ? 36 : 42} />
               </PressableScale>
             );
           })}

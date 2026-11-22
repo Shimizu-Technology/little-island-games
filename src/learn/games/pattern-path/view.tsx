@@ -31,9 +31,9 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
 
   const compact = width < 420;
   const trailWidth = Math.min(Math.max(width - 32, 268), 430);
-  const rowYs: [number, number, number] = compact ? [36, 114, 192] : [46, 142, 238];
-  const trailHeight = compact ? 228 : 284;
-  const stoneBox = compact ? 52 : 58;
+  const rowYs: [number, number, number] = compact ? [34, 106, 178] : [46, 142, 238];
+  const trailHeight = compact ? 212 : 284;
+  const stoneBox = compact ? 50 : 58;
   const half = stoneBox / 2;
   const left = 36, middle = trailWidth / 2, right = trailWidth - 36;
   const matrix = task.tiles.length === 9;
@@ -149,7 +149,7 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
         Which stone fills the glowing gap?
       </Copy>
 
-      <View testID="pattern-choices" style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+      <View testID="pattern-choices" style={{ flexDirection: "row", flexWrap: "wrap", gap: compact ? 6 : 8, justifyContent: "center" }}>
         {task.choices.map((tile, i) => (
           <PressableScale
             key={`${tile}-${i}`}
@@ -159,12 +159,13 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
             disabled={!active || hopAt !== null}
             onPress={() => choose(tile)}
             style={{
-              minWidth: compact ? 60 : 68, minHeight: compact ? 56 : 64, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 16,
+              width: compact && task.choices.length === 6 ? "30%" : undefined,
+              minWidth: compact ? 60 : 68, minHeight: compact ? 52 : 64, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 16,
               alignItems: "center", justifyContent: "center",
               backgroundColor: "#FFFDF2", borderWidth: 2, borderColor: "#7C9C75",
             }}
           >
-            <PatternGlyph token={tile} size={compact ? 38 : 44} />
+            <PatternGlyph token={tile} size={compact ? 36 : 44} />
           </PressableScale>
         ))}
       </View>

@@ -22,7 +22,7 @@ export function StoneGlyph({ color, size = 46, turn }: { color: string; size?: n
     <Circle cx="25" cy="23" r="21" fill={stone.fill} stroke={ink} strokeWidth="2.5" />
     <Path d="M12 17Q16 9 25 8" fill="none" stroke="#FFF8E6" strokeWidth="3" strokeLinecap="round" opacity={0.65} />
     {stone.mark}
-    {deg !== undefined && <Path d="M25 2L32 13H18Z" fill="#FFF8E6" stroke={ink} strokeWidth="2.2" strokeLinejoin="round" />}
+    {deg !== undefined && <Path d="M25 0L34 15H16Z" fill="#FFF8E6" stroke={ink} strokeWidth="2.4" strokeLinejoin="round" />}
   </Svg>;
 }
 
@@ -48,7 +48,7 @@ export function patternLabel(token: string): string {
 export function PatternGlyph({ token, size = 46 }: { token: string; size?: number }) {
   if (token.startsWith("stone:")) {
     const [, color, scale, turn] = token.split(":");
-    const factor = scale === "1" ? 0.56 : scale === "2" ? 0.78 : 1;
+    const factor = scale === "1" ? 0.52 : scale === "2" ? 0.76 : 1;
     const stoneSize = scale && scale !== "0" ? Math.round(size * factor) : size;
     return <StoneGlyph color={color} size={stoneSize} turn={turn} />;
   }

@@ -81,7 +81,7 @@ function buildDeepSpecs(): DeepSpec[] {
   // Titles on Say-the-rule puzzles stay neutral so they never leak the rule name.
   const twoRule1Tiles = ["3", "6", "5", "10", "9", "18", "17"];
   const twoRule1: PatternChallengeDescriptor = {
-    title: "Two rules · Mystery trail",
+    title: "Mystery trail 1",
     ruleHint: "Two rules take turns: double the stone, then take away 1.",
     thinkHint: "Stone 6 doubled stone 5, so stone 7 takes away 1.",
     payload: verifyHandcrafted(
@@ -172,10 +172,10 @@ function buildDeepSpecs(): DeepSpec[] {
     { tier: 3, title: "Two gaps 3 · Color & turn", descriptor: { title: "Two gaps · Color & turn", ...twoGap3 }, dareLabel: "First try (both gaps)", dareRule: { kind: "clean" } },
     { tier: 3, title: "Two gaps 4 · Skip trail", descriptor: { title: "Two gaps · Skip trail", ...twoGap4 }, dareLabel: "First try (both gaps)", dareRule: { kind: "clean" } },
 
-    { tier: 4, title: "Two rules 1 · Mystery trail", descriptor: twoRule1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 4, title: "Two rules 2 · Twin steps", descriptor: { title: "Two rules · Twin steps", ...twoRule2 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 4, title: "Two rules 3 · Reef path", descriptor: { title: "Two rules · Reef path", ...twoRule3 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
-    { tier: 4, title: "Two rules 4 · Coral weave", descriptor: { title: "Two rules · Coral weave", ...twoRule4 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Mystery trail 1 · Tide path", descriptor: twoRule1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Mystery trail 2 · Twin steps", descriptor: { title: "Mystery trail 2", ...twoRule2 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Mystery trail 3 · Reef path", descriptor: { title: "Mystery trail 3", ...twoRule3 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
+    { tier: 4, title: "Mystery trail 4 · Coral weave", descriptor: { title: "Mystery trail 4", ...twoRule4 }, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
 
     { tier: 5, title: "Deep trail 1 · Hidden rule", descriptor: grow1, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },
     { tier: 5, title: "Deep trail 2 · Hidden rule", descriptor: grow2, dareLabel: "Say the rule on first Check", dareRule: { kind: "whole" } },

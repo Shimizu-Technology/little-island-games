@@ -2,16 +2,16 @@
  "format": 1,
  "family": "shape-shift",
  "slot": 288,
- "catalogRevision": 26,
+ "catalogRevision": 27,
  "band": "a",
  "ordinals": [
   294912,
   50
  ],
- "sourceSha": "9d9dabaec7050168908e017d4588d4fccae8b525",
+ "sourceSha": "347ef68c82d962ae8bcf2bdb4bb48dabb80d8d04",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "d3cc174d0d09d4c30aad1af513853ef1b8866eb590eb13e6aeab325bc8214409"
+  "family": "bfaf92d9bdf53c047607b9233b52949f21053a4a6073acb80e9165570f83c256"
  },
  "rng": 1,
  "rules": 1,
@@ -179,16 +179,16 @@
   "exact": 50
  },
  "proofHashes": {
-  "witness": "bc9c16e798170d344381718d1cd767b2a1ac59cef7df2831a6796f1cae38706f",
+  "witness": "48be5da9797502f0c6ef39984769d2eeb94ea21d00f0471fd71f766a40cc225f",
   "trace": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "claims": "c6184bb64c346eeab86c24853dfa9d0f9806822a37ede96daed9abdf8cc8e0a7"
  },
  "bots": {
   "repeat-first": 15,
-  "repeat-last": 7,
+  "repeat-last": 6,
   "alternate": 12,
   "cycle": 12,
-  "random": 3,
+  "random": 2,
   "scan": 15
  },
  "provenance": {
@@ -202,10 +202,10 @@
  },
  "speech": 0,
  "bytes": {
-  "raw": 8424,
-  "gzip": 1546
+  "raw": 8453,
+  "gzip": 1542
  },
- "sha256": "1f4884f1a7a18c6bd4756716a77313720e1612196bf2e4795e98e692454a6a66",
+ "sha256": "b2fdfbf6961ae5bec24781c26b3fc03c6ecf2d3073e6de1e6fd3b6d9a3e709c0",
  "native": [],
  "machineGates": true,
  "allShippingGates": false

@@ -333,12 +333,44 @@ describe("W0-06 + SC-08 + SP-06: Shape Shift drop fix, varied nets, exact-cover,
     expect(c1).not.toEqual(c2);
   });
 
-  it("SC-08 progression: 20 blueprints, free piece order from L2, no gold corner at L3, outline-only at L4", () => {
+  it("SC-08 progression: 20 blueprints (every part & silhouette 4-connected), free piece order from L2, no gold corner at L3, outline-only at L4", () => {
+    const is4Connected = (cells: readonly [number, number][]) => {
+      if (cells.length === 0) return true;
+      const set = new Set(cells.map(([x, y]) => `${x},${y}`));
+      const seen = new Set([`${cells[0][0]},${cells[0][1]}`]);
+      const q: [number, number][] = [cells[0]];
+      while (q.length) {
+        const [x, y] = q.pop()!;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const k = `${x + dx},${y + dy}`;
+          if (set.has(k) && !seen.has(k)) { seen.add(k); q.push([x + dx, y + dy]); }
+        }
+      }
+      return seen.size === set.size;
+    };
+
     expect(POLY_BLUEPRINTS).toHaveLength(20);
     for (const bp of POLY_BLUEPRINTS) {
+      for (const part of bp.parts) {
+        expect(is4Connected(part.cells), `${bp.id}:${part.name} must be 4-connected`).toBe(true);
+      }
       const sil = bp.parts.flatMap((p) => p.cells);
+      expect(is4Connected(sil), `${bp.id} silhouette must be 4-connected`).toBe(true);
       const res = solveExactCover(sil, bp.parts.map((p) => p.cells), { maxSolutions: 2 });
       expect(res.count, bp.id).toBeGreaterThanOrEqual(1);
+    }
+    for (const def of DEEP_POLY_DEFS) {
+      for (const p of def.pieces) expect(is4Connected(p.cells), `${def.id}:${p.name}`).toBe(true);
+      expect(is4Connected(def.silhouette), `${def.id} sil`).toBe(true);
+    }
+    // Every merged L1-L4 School piece is ALSO strictly 4-connected!
+    for (const level of [1, 2, 3, 4] as const) {
+      for (let seed = 1; seed <= 25; seed++) {
+        for (let index = 0; index < 4; index++) {
+          const t = shapeTaskAt({ version: 2, level, mode: "poly", seed: seed * 101, index, total: 4, placed: [], helped: false, hintPiece: null });
+          for (const p of t.pieces) expect(is4Connected(p.cells as [number, number][]), `L${level}:${t.pictureId}:${p.name}`).toBe(true);
+        }
+      }
     }
 
     const s1 = shapeEngine.create(optionsAtLevel(base, 1), ctx(11)) as Extract<ShapeState, { version: 2 }>;
@@ -419,6 +451,11 @@ describe("W0-06 + SC-08 + SP-06: Shape Shift drop fix, varied nets, exact-cover,
     const tgTask = shapeTaskAt(tgState);
     expect(tgTask.kind).toBe("tangram");
     expect(tgTask.pieces.length).toBe(7);
+    // Unique Tangram pieces never get a redundant "1" suffix!
+    expect(tgTask.pieces.map((p) => p.name)).toContain("Medium triangle");
+    expect(tgTask.pieces.map((p) => p.name)).toContain("Square");
+    expect(tgTask.pieces.map((p) => p.name)).toContain("Parallelogram");
+    expect(tgTask.pieces.map((p) => p.name)).not.toContain("Medium triangle 1");
 
     // Solve all 7 pieces of the Tangram task via shared exact-cover hint!
     let cur: ShapeState = tgState;
@@ -482,7 +519,7 @@ describe("T2 UI, AX5 rendering, and design-only speech staging", () => {
   });
 
   it("Say-the-rule puzzle titles never leak the rule answer", () => {
-    const spoilers = [/double/i, /take 1/i, /square/i, /product/i, /bigger jump/i, /up then down/i, /add then/i];
+    const spoilers = [/two rules/i, /double/i, /take 1/i, /square/i, /product/i, /bigger jump/i, /up then down/i, /add then/i];
     for (const p of patternChallengePuzzles) {
       if (!p.descriptor.payload.ruleChoices) continue;
       for (const re of spoilers) {

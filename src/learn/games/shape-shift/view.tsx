@@ -101,9 +101,9 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
   );
 
   const compact = width < 420;
-  const maxBoardH = compact ? 205 : 296;
+  const maxBoardH = compact ? 156 : 296;
   const step = Math.max(
-    26,
+    24,
     Math.min(
       48,
       Math.floor(Math.min(width - 36, 420) / Math.max(task.width, 4)),
@@ -359,14 +359,23 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
   };
 
   return (
-    <View style={{ gap: compact ? 8 : 11, paddingVertical: compact ? 3 : 6 }}>
+    <View style={{ gap: compact ? 6 : 11, paddingVertical: compact ? 2 : 6 }}>
       {modeSwitcher}
-      <Copy maxFontSizeMultiplier={1.65} style={{ fontSize: compact ? 18 : 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
-      <Copy maxFontSizeMultiplier={1.4} style={{ fontWeight: "800", color: "#365034", fontSize: compact ? 13 : 14 }}>
-        {reveal
-          ? `${task.picture.toUpperCase()} COMPLETE!`
-          : `PUZZLE ${s.index + 1} OF 4 · ${s.placed.length}/${task.pieces.length} PLACED · Selected: ${piece.name}`}
-      </Copy>
+      <Copy maxFontSizeMultiplier={1.65} style={{ fontSize: compact ? 17 : 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
+      {reveal ? (
+        <Copy maxFontSizeMultiplier={1.4} style={{ fontWeight: "800", color: "#365034", fontSize: compact ? 13 : 14 }}>
+          {`${task.picture.toUpperCase()} COMPLETE!`}
+        </Copy>
+      ) : (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 2, alignItems: "center" }}>
+          <Copy maxFontSizeMultiplier={1.35} style={{ fontWeight: "800", color: "#365034", fontSize: compact ? 12 : 14 }}>
+            {`PUZZLE ${s.index + 1} OF 4 · ${s.placed.length}/${task.pieces.length} PLACED`}
+          </Copy>
+          <Copy maxFontSizeMultiplier={1.35} style={{ fontWeight: "900", color: C.ink, fontSize: compact ? 12 : 14 }}>
+            {`Selected: ${piece.name}`}
+          </Copy>
+        </View>
+      )}
 
       {/* Interactive Silhouette Board */}
       <View
@@ -420,7 +429,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
 
       {/* Free Piece Tray Selector (Levels 2–5 and Tangrams) */}
       {task.freeOrder && !reveal && (
-        <View testID="shape-tray" style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        <View testID="shape-tray" style={{ flexDirection: "row", flexWrap: "wrap", gap: compact ? 5 : 8, justifyContent: "center" }}>
           {unplaced.map((idx) => {
             const p = task.pieces[idx];
             const selected = idx === activePieceIdx;
@@ -434,122 +443,124 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 disabled={!active}
                 onPress={() => setSelectedPiece(idx)}
                 style={{
-                  padding: task.kind === "tangram" ? 5 : 7,
-                  width: task.kind === "tangram" ? (compact ? 54 : 60) : undefined,
-                  height: task.kind === "tangram" ? (compact ? 54 : 60) : undefined,
-                  minWidth: compact ? 52 : 56,
-                  minHeight: compact ? 52 : 56,
-                  borderRadius: 14,
+                  padding: task.kind === "tangram" ? (compact ? 3 : 5) : (compact ? 5 : 7),
+                  width: task.kind === "tangram" ? (compact ? 43 : 60) : undefined,
+                  height: task.kind === "tangram" ? (compact ? 43 : 60) : undefined,
+                  minWidth: compact ? 43 : 56,
+                  minHeight: compact ? 43 : 56,
+                  borderRadius: compact ? 11 : 14,
                   alignItems: "center", justifyContent: "center",
                   backgroundColor: selected ? "#FFF1C8" : "#FFFDF3",
-                  borderWidth: selected ? 3 : 1.5,
+                  borderWidth: selected ? 2.5 : 1.5,
                   borderColor: selected ? "#C6861E" : "#9BB593",
                 }}
               >
-                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? 11 : 15} />
+                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? (compact ? 8.5 : 11) : (compact ? 11 : 15)} />
               </PressableScale>
             );
           })}
         </View>
       )}
 
-      {/* Draggable Active Piece Stage */}
-      {!reveal && (
-        <View
-          testID="shape-active-piece"
-          accessible
-          accessibilityLabel={`Drag ${piece.name} to the outline`}
-          onStartShouldSetResponder={() => active}
-          onMoveShouldSetResponder={() => active}
-          onResponderTerminationRequest={() => false}
-          onResponderGrant={(e) => {
-            dragStart.current = [e.nativeEvent.pageX, e.nativeEvent.pageY];
-            boardRef.current?.measureInWindow((left, top) => {
-              boardBox.current = { left, top };
-            });
-          }}
-          onResponderMove={(e) => handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-          onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-          onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }}
-          style={[
-            {
-              alignSelf: "center",
-              padding: 10,
-              backgroundColor: "#FFF9E9",
-              borderRadius: 18,
-              borderWidth: 2,
-              borderColor: piece.color,
-              transform: [{ translateX: dragOffset[0] }, { translateY: dragOffset[1] }],
-              zIndex: 5,
-            },
-            Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : {},
-          ]}
-        >
-          <PiecePreview atoms={currentCells} color={piece.color} cellSize={Math.min(compact ? 25 : 32, Math.max(20, step - 4))} />
-        </View>
-      )}
+      {/* Draggable Active Piece Stage + Controls (side-by-side on compact phone so everything stays above the fold!) */}
+      <View style={compact ? { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "center" } : { gap: 10, alignItems: "center" }}>
+        {!reveal && (
+          <View
+            testID="shape-active-piece"
+            accessible
+            accessibilityLabel={`Drag ${piece.name} to the outline`}
+            onStartShouldSetResponder={() => active}
+            onMoveShouldSetResponder={() => active}
+            onResponderTerminationRequest={() => false}
+            onResponderGrant={(e) => {
+              dragStart.current = [e.nativeEvent.pageX, e.nativeEvent.pageY];
+              boardRef.current?.measureInWindow((left, top) => {
+                boardBox.current = { left, top };
+              });
+            }}
+            onResponderMove={(e) => handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY)}
+            onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)}
+            onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }}
+            style={[
+              {
+                alignSelf: "center",
+                padding: compact ? 6 : 10,
+                backgroundColor: "#FFF9E9",
+                borderRadius: compact ? 14 : 18,
+                borderWidth: 2,
+                borderColor: piece.color,
+                transform: [{ translateX: dragOffset[0] }, { translateY: dragOffset[1] }],
+                zIndex: 5,
+              },
+              Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : {},
+            ]}
+          >
+            <PiecePreview atoms={currentCells} color={piece.color} cellSize={compact ? 16 : Math.min(32, Math.max(20, step - 4))} />
+          </View>
+        )}
 
-      {/* Controls: Turn, Flip, Undo, Help */}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-        {task.allowRotate && (
+        {/* Controls: Turn, Flip, Undo, Help */}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: compact ? 6 : 8, justifyContent: "center" }}>
+          {task.allowRotate && (
+            <PressableScale
+              testID="shape-turn"
+              accessibilityRole="button"
+              accessibilityLabel="Turn piece clockwise"
+              disabled={!active || reveal}
+              onPress={() => setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3)}
+              style={{ backgroundColor: "#E2EFE2", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+            >
+              <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>↻ Turn</Copy>
+            </PressableScale>
+          )}
+          {task.allowFlip && (
+            <PressableScale
+              testID="shape-flip"
+              accessibilityRole="button"
+              accessibilityLabel="Flip piece"
+              disabled={!active || reveal}
+              onPress={() => setFlipped(!flipped)}
+              style={{ backgroundColor: "#E2EFE2", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+            >
+              <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>⇄ Flip</Copy>
+            </PressableScale>
+          )}
+          {s.placed.length > 0 && (
+            <PressableScale
+              testID="shape-undo"
+              accessibilityRole="button"
+              accessibilityLabel="Undo last placed piece"
+              disabled={!active || reveal}
+              onPress={() => {
+                const last = s.placed[s.placed.length - 1];
+                update(removePlaced(s, last.pieceIndex));
+                setSelectedPiece(last.pieceIndex);
+                setWrong(false);
+              }}
+              style={{ backgroundColor: "#F0ECE0", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+            >
+              <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>Undo</Copy>
+            </PressableScale>
+          )}
           <PressableScale
-            testID="shape-turn"
+            testID="shape-help-button"
             accessibilityRole="button"
-            accessibilityLabel="Turn piece clockwise"
-            disabled={!active || reveal}
-            onPress={() => setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3)}
-            style={{ backgroundColor: "#E2EFE2", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
-          >
-            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>↻ Turn</Copy>
-          </PressableScale>
-        )}
-        {task.allowFlip && (
-          <PressableScale
-            testID="shape-flip"
-            accessibilityRole="button"
-            accessibilityLabel="Flip piece"
-            disabled={!active || reveal}
-            onPress={() => setFlipped(!flipped)}
-            style={{ backgroundColor: "#E2EFE2", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
-          >
-            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>⇄ Flip</Copy>
-          </PressableScale>
-        )}
-        {s.placed.length > 0 && (
-          <PressableScale
-            testID="shape-undo"
-            accessibilityRole="button"
-            accessibilityLabel="Undo last placed piece"
+            accessibilityLabel="Help with this shape"
             disabled={!active || reveal}
             onPress={() => {
-              const last = s.placed[s.placed.length - 1];
-              update(removePlaced(s, last.pieceIndex));
-              setSelectedPiece(last.pieceIndex);
-              setWrong(false);
+              assistance?.();
+              const next = help(s);
+              update(next);
+              setHintOpen(true);
+              if (next.version === 2 && next.hintPiece !== null && task.freeOrder) {
+                setSelectedPiece(next.hintPiece);
+              }
             }}
-            style={{ backgroundColor: "#F0ECE0", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
+            style={{ backgroundColor: "#E8F2DF", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
           >
-            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Undo</Copy>
+            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>Help</Copy>
           </PressableScale>
-        )}
-        <PressableScale
-          testID="shape-help-button"
-          accessibilityRole="button"
-          accessibilityLabel="Help with this shape"
-          disabled={!active || reveal}
-          onPress={() => {
-            assistance?.();
-            const next = help(s);
-            update(next);
-            setHintOpen(true);
-            if (next.version === 2 && next.hintPiece !== null && task.freeOrder) {
-              setSelectedPiece(next.hintPiece);
-            }
-          }}
-          style={{ backgroundColor: "#E8F2DF", borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, minHeight: 46, justifyContent: "center" }}
-        >
-          <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Help</Copy>
-        </PressableScale>
+        </View>
       </View>
 
       <Copy maxFontSizeMultiplier={1.4} style={{ color: C.ink, textAlign: "center", fontSize: compact ? 13 : 14 }}>

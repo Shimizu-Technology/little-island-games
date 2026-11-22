@@ -203,15 +203,22 @@ function buildTangramTask(level: number, seed: number, index: number): ShapeTask
   const allowRotate = level >= 2;
   const allowFlip = level >= 3;
 
-  const pieces: ShapePiece[] = def.pieces.map((p, i) => {
+  const nameCounts = new Map<string, number>();
+  for (const p of def.pieces) nameCounts.set(p.name, (nameCounts.get(p.name) ?? 0) + 1);
+  const nameSeen = new Map<string, number>();
+
+  const pieces: ShapePiece[] = def.pieces.map((p) => {
     let cells: TriCell[] = normalizeAtoms(p.target) as TriCell[];
     if (allowFlip && rng.below(2) === 1) cells = flipAtoms(cells) as TriCell[];
     if (allowRotate) {
       const turns = 1 + rng.below(3);
       for (let t = 0; t < turns; t++) cells = rotateAtoms(cells) as TriCell[];
     }
+    const n = (nameSeen.get(p.name) ?? 0) + 1;
+    nameSeen.set(p.name, n);
+    const label = (nameCounts.get(p.name) ?? 1) > 1 ? `${p.name} ${n}` : p.name;
     return {
-      name: `${p.name} ${i + 1}`,
+      name: label,
       cells: normalizeAtoms(cells),
       target: p.target,
       color: p.color,
@@ -234,6 +241,42 @@ function buildTangramTask(level: number, seed: number, index: number): ShapeTask
     allowRotate,
     allowFlip,
   };
+}
+
+function groupsTouch4(a: readonly Cell[], b: readonly Cell[]): boolean {
+  const bSet = new Set(b.map(([x, y]) => `${x},${y}`));
+  for (const [x, y] of a) {
+    if (bSet.has(`${x + 1},${y}`) || bSet.has(`${x - 1},${y}`) || bSet.has(`${x},${y + 1}`) || bSet.has(`${x},${y - 1}`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Merge 4-connected blueprint parts down to `targetCount` pieces so every merged piece stays strictly 4-connected. */
+function connectedGroups(parts: readonly { cells: Cell[] }[], targetCount: number): number[][] {
+  const groups = parts.map((_, i) => [i]);
+  while (groups.length > targetCount) {
+    let best: [number, number] | null = null;
+    let bestSize = Infinity;
+    for (let i = 0; i < groups.length; i++) {
+      const cellsI = groups[i].flatMap((idx) => parts[idx].cells);
+      for (let j = i + 1; j < groups.length; j++) {
+        const cellsJ = groups[j].flatMap((idx) => parts[idx].cells);
+        if (!groupsTouch4(cellsI, cellsJ)) continue;
+        const sz = cellsI.length + cellsJ.length;
+        if (sz < bestSize) {
+          bestSize = sz;
+          best = [i, j];
+        }
+      }
+    }
+    if (!best) break;
+    const [i, j] = best;
+    groups[i] = [...groups[i], ...groups[j]];
+    groups.splice(j, 1);
+  }
+  return groups;
 }
 
 const taskCache = new Map<string, ShapeTask>();
@@ -290,14 +333,7 @@ export function taskAt(s: ShapeState): ShapeTask {
     const order = rng.shuffle(POLY_BLUEPRINTS.map((_, i) => i));
     const bp = POLY_BLUEPRINTS[order[(s.index + s.level * 3) % order.length]];
     const count = s.level === 1 ? 2 : s.level === 2 ? (s.index % 2 === 0 ? 2 : 3) : s.level === 3 ? 3 : 4;
-    const groups =
-      count === 2
-        ? bp.id === "rocket"
-          ? [[0, 1, 2], [3]]
-          : [[0, 1], [2, 3]]
-        : count === 3
-          ? [[0, 1], [2], [3]]
-          : [[0], [1], [2], [3]];
+    const groups = connectedGroups(bp.parts, count);
 
     const allowRotate = s.level >= 2;
     const allowFlip = s.level >= 3;
