@@ -47,6 +47,8 @@ export const rowPuzzle = (row: string): CanoePuzzle => {
 export const setFor = (level: number): LevelSet => levelSets[String(level)] ?? { teach: {}, rows: [] };
 export const puzzleAt = (s: Pick<CanoeState, 'puzzles' | 'index'>) => (s.puzzles[s.index] ? tuplePuzzle(s.puzzles[s.index]) : null);
 const toTuple = (row: string) => puzzleTuple(rowPuzzle(row));
+const isCanoeTuple = (t: unknown): t is CanoeTuple =>
+  Array.isArray(t) && t.length === 4 && Number.isInteger(t[0]) && Number.isInteger(t[1]) && typeof t[2] === 'string' && typeof t[3] === 'string';
 const key = (t: CanoeTuple) => t.join('|');
 
 function pick(rows: readonly string[], rng: () => number, avoid: ReadonlySet<string>, count: number): CanoeTuple[] {
@@ -125,7 +127,7 @@ const fresh = (s: CanoeState, puzzles: CanoeTuple[], index: number): CanoeState 
 /** A different board of the same kind: after Show me, or when the child wants another. Nothing is recorded. */
 /** The new kind of clue a teaching board introduces, or null for an ordinary board. */
 export function teachKindOf(level: number, tuple: CanoeTuple | undefined): Kind | 'whatif' | null {
-  if (!tuple) return null;
+  if (!isCanoeTuple(tuple)) return null;
   const set = setFor(level), want = key(tuple);
   return (Object.entries(set.teach).find(([, rows]) => rows.some(r => key(toTuple(r)) === want))?.[0] as Kind | 'whatif' | undefined) ?? null;
 }
@@ -167,9 +169,16 @@ export function validCanoe(v: unknown, level?: number): v is CanoeState {
   if (!Array.isArray(s.undo) || s.undo.length > UNDO_LIMIT || !Array.isArray(s.done) || s.done.length !== s.index || !s.done.every(d => Array.isArray(d) && d.length === 2 && nat(d[0]) && typeof d[1] === 'boolean')) return false;
   if (!s.lights && !lightsChoice(s.level) || !Number.isInteger(s.used) || s.used < 0) return false;
   const rows = certifiedAt(s.level);
-  if (!s.puzzles.every(t => Array.isArray(t) && rows.has(key(t)))) return false;
+  const decoded: CanoePuzzle[] = [];
+  for (const t of s.puzzles) {
+    if (!isCanoeTuple(t) || !rows.has(key(t))) return false;
+    const parsed = tuplePuzzle(t);
+    if (!parsed) return false;
+    decoded.push(parsed);
+  }
   if (s.index === ROUND) return Array.isArray(s.pos) && !s.pos.length && !s.undo.length && !s.moves && !s.checks && !s.won && !s.helped && !s.used && !s.checked && !s.cover;
-  const p = tuplePuzzle(s.puzzles[s.index])!;
+  const p = decoded[s.index];
+  if (!p) return false;
   if (!validSeating(p, s.pos) || !s.undo.every(u => validSeating(p, u)) || s.used >= 1 << p.clues.length) return false;
   if (s.won !== (s.lights ? accepts(p, s.pos) : s.won) || s.won && !accepts(p, s.pos)) return false;
   if (s.checked && (s.won || s.lights || !complete(p, s.pos) || !s.misses)) return false;

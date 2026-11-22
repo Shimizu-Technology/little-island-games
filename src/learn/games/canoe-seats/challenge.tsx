@@ -114,7 +114,7 @@ function LazyBoard(props: ChallengeViewProps<State, Action>) {
 export const registration = defineReplayGame({
   game: 'canoe-seats', codec: 'canoe-seats-replay-v1', context: 'canoe', cove: false, budget: { wrapper: 700, draft: 3396, undo: 0, audit: 0 }, puzzles, objectives: [], engine,
   helpUI: 'board',
-  assistance: { bytes: ASSIST_BYTES, actions: ASSIST_ACTIONS, idempotentHelp: true, isAction: a => a >= HINTED },
+  assistance: { bytes: ASSIST_BYTES, actions: ASSIST_ACTIONS, idempotentHelp: true, isAction: assisted },
   completionText: () => 'Everyone has a seat, and every clue is true.',
   Board: LazyBoard, controls: { help: (): Action => HELP, reset: (): Action => RESET },
   packed: {

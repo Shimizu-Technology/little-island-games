@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
+import { View, useWindowDimensions, type AccessibilityActionEvent, type GestureResponderEvent } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { BoardPrimary, useBoardGeometry, useBoardSpace } from '../../BoardSpace';
 import { CoachSpot } from '../../Coach';
@@ -93,9 +93,19 @@ export function CanoeBoard(props: CanoeBoardProps) {
   const hullW = canoeWidth(seat, p.n), hullH = canoeHeight(seat, p.attrs), pad = seat * HULL_PAD;
   const focus = won ? { clue: null, cross: null } : focusOf(cue);
   const covered = !!keepers?.cover;
+  const keeperId = keepers ? keepers.keeper : null;
+  const [keeperSync, setKeeperSync] = useState<{ keeper: 0 | 1 | null; cover: boolean }>({ keeper: keeperId, cover: covered });
+  // Clear keeper-local caption, heard and selection state on every handover or cover transition so an outgoing keeper's caption never reappears after reveal.
+  if (keeperSync.keeper !== keeperId || keeperSync.cover !== covered) {
+    setKeeperSync({ keeper: keeperId, cover: covered });
+    setPicked(null);
+    setHeard(null);
+    setCaption('');
+  }
+  const keeperSettled = keeperSync.keeper === keeperId && keeperSync.cover === covered;
   // Hosts key the board by puzzle, so a new board starts with nothing picked up. A win, a hand-over
   // or a pause puts down whatever was held.
-  const live = !won && active && !covered, picked = live ? held : null;
+  const live = !won && active && !covered, picked = live && keeperSettled ? held : null;
 
   const drop = useCallback((item: number, seatIndex: number) => {
     if (!live) return;
@@ -129,11 +139,29 @@ export function CanoeBoard(props: CanoeBoardProps) {
   const seatViews = Array.from({ length: p.n }, (_, s) => {
     const here = pos.map((x, i) => (x === s ? i : -1)).filter(i => i >= 0);
     const friend = here.find(i => attrOf(p, i) === 0), hat = here.find(i => attrOf(p, i) === 1), fruit = here.find(i => attrOf(p, i) === 2);
+    const seatedItems = [friend, hat, fruit].filter((i): i is number => i !== undefined);
     const crossed = focus.cross && focus.cross.seat === s ? focus.cross.item : null;
     const art = seat * 0.9, hatTop = p.attrs >= 2 ? seat * 0.34 : 0;
     const label = `Seat ${s + 1}${s === 0 ? ', at the front' : s === p.n - 1 ? ', at the back' : ''}: ${seatWords(p, pos, s)}`;
-    const hint = picked !== null ? `Double-tap to seat ${the(p, picked)} here.` : here.length ? 'Double-tap to pick up who sits here.' : undefined;
-    return <PressableScale key={s} testID={`canoe-seat-${s}`} accessibilityRole="button" accessibilityLabel={label} accessibilityHint={hint} disabled={!live}
+    const seatActions = live && picked === null && seatedItems.length > 0
+      ? seatedItems.map(i => ({ name: `pick-${i}`, label: `Pick up ${the(p, i)}` }))
+      : undefined;
+    const onSeatAction = seatActions ? (e: AccessibilityActionEvent) => {
+      if (!live || picked !== null) return;
+      const name = e.nativeEvent.actionName;
+      if (!name.startsWith('pick-')) return;
+      const item = Number(name.slice(5));
+      if (Number.isInteger(item) && here.includes(item)) setPicked(item);
+    } : undefined;
+    const hint = picked !== null
+      ? `Double-tap to seat ${the(p, picked)} here.`
+      : seatedItems.length > 1
+        ? `Double-tap to pick up ${the(p, seatedItems[0])}, or use actions to pick up ${seatedItems.slice(1).map(i => the(p, i)).join(' or ')}.`
+        : seatedItems.length === 1
+          ? `Double-tap to pick up ${the(p, seatedItems[0])}.`
+          : undefined;
+    return <PressableScale key={s} testID={`canoe-seat-${s}`} accessibilityRole="button" accessibilityLabel={label} accessibilityHint={hint}
+      accessibilityActions={seatActions} onAccessibilityAction={onSeatAction} disabled={!live}
       onPress={e => tapSeat(s, e)} style={{ position: 'absolute', left: pad + s * seat, top: 0, width: seat, height: hullH - seat * 0.18, alignItems: 'center', borderRadius: 14,
         backgroundColor: picked !== null && live ? 'rgba(255,240,170,.45)' : 'transparent', borderWidth: picked !== null && live ? 2 : 0, borderColor: '#E1B251', borderStyle: 'dashed' }}>
       <View pointerEvents="none" style={{ position: 'absolute', top: hatTop + seat * 0.02, left: (seat - art) / 2, width: art, height: art }}>
@@ -236,11 +264,12 @@ export function CanoeBoard(props: CanoeBoardProps) {
   const lightsRow = onLights && !won && !covered ? <View style={{ alignItems: 'center' }}>
     <Button quiet compact maxFontSizeMultiplier={1.5} disabled={!active} onPress={() => onLights(!lights)} label={lights ? 'Clue lights are on. Turn them off and Check at the end' : 'Clue lights are off. Turn them on'}>{lights ? 'Clue lights: on' : 'Clue lights: off'}</Button>
   </View> : null;
-  const check = !lights && !won && onCheck ? <View style={{ alignItems: 'center', gap: 6 }}>
+  const check = !lights && !won && onCheck ? <View testID="canoe-check" style={{ alignItems: 'center', gap: 6 }}>
     {missed && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ color: C.ink, textAlign: 'center' }}>Not quite yet. Everyone is still in their seats.</Copy>}
     <Button maxFontSizeMultiplier={1.5} disabled={!active || !canCheck || covered} onPress={onCheck}>Check</Button>
   </View> : null;
-  const captionView = caption && !covered ? <View accessibilityLiveRegion="polite" style={{ alignSelf: 'stretch', backgroundColor: '#FFF8E6', borderRadius: 14, borderWidth: 1.5, borderColor: '#E1B251', padding: 8 }}>
+  const checkAboveCards = large && pages > 1;
+  const captionView = caption && !covered && keeperSettled ? <View accessibilityLiveRegion="polite" style={{ alignSelf: 'stretch', backgroundColor: '#FFF8E6', borderRadius: 14, borderWidth: 1.5, borderColor: '#E1B251', padding: 8 }}>
     <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontSize: 15, textAlign: 'center' }}>{caption}</Copy>
   </View> : null;
   return <View style={{ gap: 10, alignItems: 'center', alignSelf: 'stretch' }}>
@@ -251,10 +280,11 @@ export function CanoeBoard(props: CanoeBoardProps) {
       {shore}
       {keeperBar}
       {teachNote && !met && !covered && (!keepers || p.clues.some((c, i) => c.k === teach && keepers.owner(i) === keepers.keeper)) && <Copy testID="canoe-teach-note" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ alignSelf: 'stretch', color: C.ink, fontWeight: '800', fontSize: 15, textAlign: 'center' }}>{teachNote}</Copy>}
+      {checkAboveCards && check}
       {cards}
       {pager}
       {captionView}
-      {check}
+      {!checkAboveCards && check}
       {school && <BoardPrimary />}
       {lightsRow}
       {help && <View style={{ alignSelf: 'stretch' }}>{help}</View>}

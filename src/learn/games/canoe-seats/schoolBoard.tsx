@@ -13,8 +13,8 @@ import {
 import { canoeHelpRules, canoeView, type CanoeView, type HelpMove } from './help';
 import { clueKey, teachCaptions } from './speech';
 
-/** The help key names this exact board and seating, so a hint for any other position is never shown or applied. */
-const keyOf = (s: CanoeState) => `${s.index}:${s.puzzles[s.index]?.join('|') ?? ''}:${s.pos.join(',')}:${s.lights ? 1 : 0}:${s.checks}:${s.helped ? 1 : 0}:${s.won ? 1 : 0}`;
+/** The help key names this exact board, seating, and keeper visibility, so a hint for any other position or keeper is never shown or applied. */
+const keyOf = (s: CanoeState) => `${s.index}:${s.puzzles[s.index]?.join('|') ?? ''}:${s.pos.join(',')}:${s.lights ? 1 : 0}:${s.checks}:${s.helped ? 1 : 0}:${s.won ? 1 : 0}:${s.keeper}:${s.cover ? 1 : 0}`;
 export function SchoolBoard({ session, update, practice, assistance, cheer, coach, active, width, sound, soundOn }: BoardProps<CanoeState>) {
   const state = session.state, together = session.options.mode === 'together';
   const puzzle = useMemo(() => puzzleAt(state), [state.index, state.puzzles]); // eslint-disable-line react-hooks/exhaustive-deps -- index and tuples identify the board.
@@ -43,7 +43,8 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     if (next.won) won(next, false);
     else sound('canoe-not-yet');
   }, [commit, sound, won]);
-  const rules = useMemo(() => puzzle && canoeHelpRules(puzzle, !state.lights, together), [puzzle, state.lights, together]);
+  const visibleClues = useMemo(() => (puzzle && together ? puzzle.clues.map((_, i) => i).filter(i => keeperOf(i) === state.keeper) : undefined), [puzzle, together, state.keeper]);
+  const rules = useMemo(() => puzzle && canoeHelpRules(puzzle, !state.lights, visibleClues), [puzzle, state.lights, visibleClues]);
   const snapshot = useMemo<HintSnapshot<CanoeView> | null>(() => puzzle && { key: keyOf(state), view: canoeView(puzzle, state.pos, !state.lights) }, [puzzle, state]);
   /** Help is recorded on the round before any cue shows; helped placements use the same rule as play. */
   const helpCommit = useCallback(async (event: HintCommit<HelpMove>, expected: string): Promise<HintSnapshot<CanoeView> | null> => {
@@ -87,6 +88,6 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     onPlace={(item, seat) => placeOne(item, seat, false)} onToggleUsed={clue => commit(toggleUsed(latest.current, clue))} onCheck={check}
     onUndo={() => commit(undoSeat(latest.current))} onReset={() => commit(resetSeats(latest.current))} canUndo={state.undo.length > 0} canReset={state.pos.some(s => s !== -1)}
     onLights={lightsChoice(state.level) ? on => commit(setLights(latest.current, on)) : undefined}
-    keepers={together ? { names, keeper: state.keeper, cover: state.cover, owner: keeperOf, onPass: () => { if (commit(passClues(latest.current))) sound('canoe-pass'); }, onReveal: () => commit(revealClues(latest.current)) } : undefined}
-    help={<PuzzleHelp key={`${boardKey}:${state.lights ? 1 : 0}`} snapshot={snapshot} rules={rules} commit={helpCommit} onFresh={() => { commit(dealFresh(latest.current, Math.random)); setNotice('Your turn on a new one!'); }} kind="grid" failedRuns={0} active={active && !state.cover} onCue={onCue} />} />;
+    keepers={together ? { names, keeper: state.keeper, cover: state.cover, owner: keeperOf, onPass: () => { setCue(null); if (commit(passClues(latest.current))) sound('canoe-pass'); }, onReveal: () => { setCue(null); commit(revealClues(latest.current)); } } : undefined}
+    help={<PuzzleHelp key={`${boardKey}:${state.lights ? 1 : 0}:${together ? `${state.keeper}:${state.cover ? 1 : 0}` : 'solo'}`} snapshot={snapshot} rules={rules} commit={helpCommit} onFresh={() => { commit(dealFresh(latest.current, Math.random)); setNotice('Your turn on a new one!'); }} kind="grid" failedRuns={0} active={active && !state.cover} onCue={onCue} />} />;
 }

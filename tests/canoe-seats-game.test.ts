@@ -3,8 +3,12 @@ import {
   boardsFor, canCheck, checkSeats, dealFresh, engine, keeperOf, levelTeach, lightsByDefault, nextBoard, passClues, placeItem, puzzleAt, resetSeats, revealClues, ROUND,
   rowPuzzle, setFor, setLights, startRound, teachKindOf, toggleUsed, undoSeat, UNDO_LIMIT, validCanoe, type CanoeState,
 } from '../src/learn/games/canoe-seats/engine';
-import { accepts, answerOf, countSeatings, items, type CanoePuzzle } from '../src/learn/games/canoe-seats/rules';
-import { registration, puzzles, packedBanks, CHECK, HELP, RESET, UNDO, USED, hinted, ASSIST_ACTIONS, lightsBand, DEEP_BANK, DARE_BANK, type Payload } from '../src/learn/games/canoe-seats/challenge';
+import { accepts, answerOf, countSeatings, emptySeating, items, place, type CanoePuzzle } from '../src/learn/games/canoe-seats/rules';
+import { canoeHelpRules, canoeView } from '../src/learn/games/canoe-seats/help';
+import { requestHint } from '../src/puzzles/hints';
+import { startSession, validLearnSession } from '../src/learn/session';
+import { optionsAtLevel } from '../src/learn/levels';
+import { registration, puzzles, packedBanks, CHECK, HELP, UNDO, USED, hinted, ORDINARY_LIMIT, lightsBand, DEEP_BANK, DARE_BANK, type Payload } from '../src/learn/games/canoe-seats/challenge';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { encodeAction } from '../src/puzzles/adapters/canoe-seats';
 import { readCatalog, productionDirs } from '../scripts/puzzles/pipeline';
@@ -103,6 +107,37 @@ describe('School rounds', () => {
     expect(validCanoe({ ...solve(s), won: false })).toBe(false); // lights on would already have finished it
     expect(validCanoe(s, 4)).toBe(false);
   });
+  it('rejects coerced tuple types and nested arrays on current and future puzzles during session import without throwing or mutating', () => {
+    const base = startSession('canoe-seats', { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, 3) }, {}, 42);
+    expect(validLearnSession(base, 'canoe-seats')).toBe(true);
+    const badCurrent = structuredClone(base);
+    const currentTuple = (badCurrent.state as CanoeState).puzzles[0] as unknown[];
+    currentTuple[0] = String(currentTuple[0]);
+    expect(() => validCanoe(badCurrent.state)).not.toThrow();
+    expect(validCanoe(badCurrent.state)).toBe(false);
+    expect(validLearnSession(badCurrent, 'canoe-seats')).toBe(false);
+    expect(currentTuple[0]).toBe('4'); // input is never mutated
+
+    const badFuture = structuredClone(base);
+    const futureTuple = (badFuture.state as CanoeState).puzzles[1] as unknown[];
+    futureTuple[0] = String(futureTuple[0]);
+    expect(() => validCanoe(badFuture.state)).not.toThrow();
+    expect(validCanoe(badFuture.state)).toBe(false);
+    expect(validLearnSession(badFuture, 'canoe-seats')).toBe(false);
+
+    const nestedCurrent = structuredClone(base);
+    ((nestedCurrent.state as CanoeState).puzzles[0] as unknown[])[0] = [4];
+    expect(() => validCanoe(nestedCurrent.state)).not.toThrow();
+    expect(validCanoe(nestedCurrent.state)).toBe(false);
+    expect(validLearnSession(nestedCurrent, 'canoe-seats')).toBe(false);
+
+    const nestedFuture = structuredClone(base);
+    const origClues = (nestedFuture.state as CanoeState).puzzles[2][3];
+    ((nestedFuture.state as CanoeState).puzzles[2] as unknown[])[3] = [origClues];
+    expect(() => validCanoe(nestedFuture.state)).not.toThrow();
+    expect(validCanoe(nestedFuture.state)).toBe(false);
+    expect(validLearnSession(nestedFuture, 'canoe-seats')).toBe(false);
+  });
   it('deals a fresh board of the same kind, keeping a teaching board a teaching board', () => {
     const s = startRound(2, rng), fresh = dealFresh(s, rng);
     expect(fresh.puzzles[0].join()).not.toBe(s.puzzles[0].join());
@@ -131,6 +166,41 @@ describe('Clue keepers', () => {
     expect(placeItem(passed, 0, 0)).toBe(passed);
     expect(validCanoe(passed)).toBe(true);
     expect(revealClues(passed)).toMatchObject({ cover: false, keeper: 1 });
+  });
+  it('restricts Together Help strictly to the active keeper’s visible cards without leaking hidden deductions or combined answers', async () => {
+    const s = startRound(3, () => 0.4), p = puzzleAt(s)!;
+    expect(s.puzzles[0]).toEqual([4, 1, '3524', 'Fcd,Sc1,Sa3']);
+    const visible0 = p.clues.map((_, i) => i).filter(i => keeperOf(i) === 0);
+    const rules0Whole = canoeHelpRules(p, true, visible0);
+    const rules0Lit = canoeHelpRules(p, false, visible0);
+    const blank = canoeView(p, emptySeating(p), true);
+
+    const look0 = rules0Whole.look(blank);
+    expect(look0.focus).toEqual(['clue:2']);
+    const think0 = rules0Whole.think(blank);
+    expect(think0.text).not.toContain('the fish cannot sit in seat 2');
+    expect(think0.focus).not.toContain('clue:1');
+    expect(think0.focus).not.toContain('cross:2-1');
+    expect(think0.focus).toContain('clue:2');
+
+    const ac = new AbortController();
+    expect(await requestHint(rules0Whole, blank, 'one-step', ac.signal)).toEqual({ status: 'unavailable' });
+    expect(await requestHint(rules0Whole, blank, 'show-me', ac.signal)).toEqual({ status: 'unavailable' });
+    expect(await requestHint(rules0Lit, canoeView(p, emptySeating(p), false), 'one-step', ac.signal)).toEqual({ status: 'unavailable' });
+    expect(await requestHint(rules0Lit, canoeView(p, emptySeating(p), false), 'show-me', ac.signal)).toEqual({ status: 'unavailable' });
+    expect(rules0Whole.unavailable).toMatch(/partner|pass/i);
+
+    // A keeper whose visible cards rule out nothing alone gets a partner prompt rather than a hidden deduction.
+    const rulesOnlyFar = canoeHelpRules(p, false, [0]);
+    const thinkFar = rulesOnlyFar.think(canoeView(p, emptySeating(p), false));
+    expect(thinkFar.focus).toEqual([]);
+    expect(thinkFar.text).toMatch(/partner|pass/i);
+
+    // Level 1 (single clue): keeper 1 holds zero clues and never gets keeper 0's card or answer.
+    const l1 = startRound(1, rng), p1 = puzzleAt(l1)!;
+    const rulesK1 = canoeHelpRules(p1, false, []);
+    expect(rulesK1.look(canoeView(p1, emptySeating(p1), false)).focus).toEqual([]);
+    expect(await requestHint(rulesK1, canoeView(p1, emptySeating(p1), false), 'show-me', ac.signal)).toEqual({ status: 'unavailable' });
   });
 });
 
@@ -178,14 +248,61 @@ describe('Challenge replay', () => {
     s = play(s, [encodeAction(0, answer[0]), CHECK]);
     expect(s.result).toMatchObject({ event: 'helped', dares: [] });
   });
-  it('help can always finish inside its reserve, even after a full log of ordinary play', () => {
-    const index = puzzles.findIndex(p => p.descriptor.band === 'h');
-    const p = puzzles[index].descriptor.puzzle;
-    let s = start(index);
-    for (let i = 0; i < 600; i++) { const next = registration.move(s, encodeAction(i % items(p), (i * 2) % p.n)); if (!next) break; s = next; }
+  it('Rung H One step from empty and Show me succeed via real requestHint, and finish inside the reserve after a full ordinary log', async () => {
+    const hEntries = puzzles.filter(entry => entry.descriptor.band === 'h');
+    const firstH = puzzles.findIndex(entry => entry.ref.bank === DEEP_BANK && entry.ref.puzzle === 14);
+    expect(firstH).toBeGreaterThanOrEqual(0);
+    const ac = new AbortController();
+
+    // Every shipped inline Rung H board succeeds on blank One step, blank Show me, and messy Show me.
+    for (const entry of hEntries) {
+      const p = entry.descriptor.puzzle, answer = answerOf(p)!;
+      const blank = canoeView(p, emptySeating(p), true);
+      const one = await requestHint(canoeHelpRules(p, true), blank, 'one-step', ac.signal);
+      expect(one.status, `${entry.ref.bank}:${entry.ref.puzzle}`).toBe('route');
+      const show = await requestHint(canoeHelpRules(p, true), blank, 'show-me', ac.signal);
+      expect(show.status, `${entry.ref.bank}:${entry.ref.puzzle}`).toBe('example');
+
+      // Messy draft: every item shifted by one seat.
+      let messy = emptySeating(p);
+      for (let i = 0; i < items(p); i++) messy = place(p, messy, i, (answer[i] + 1) % p.n);
+      const showMessy = await requestHint(canoeHelpRules(p, true), canoeView(p, messy, true), 'show-me', ac.signal);
+      expect(showMessy.status).toBe('example');
+      const route = await requestHint(canoeHelpRules(p, false), canoeView(p, messy, false), 'show-me', ac.signal);
+      expect(route.status).toBe('route');
+      if (route.status === 'route') {
+        expect(route.actions.length).toBeLessThanOrEqual(items(p));
+        const end = route.actions.reduce((pos, a) => place(p, pos, Math.floor(a / 8), (a % 8) - 1), messy);
+        expect(accepts(p, end)).toBe(true);
+      }
+    }
+
+    // Full ordinary-action log on inline bank 308 puzzle 14, then real hint route + Check -> helped.
+    const p = puzzles[firstH].descriptor.puzzle, answer = answerOf(p)!;
+    let s = start(firstH), pos = emptySeating(p);
+    // Start with a messy full seating, then toggle item 0 back and forth until ordinary actions hit the reserve.
+    for (let i = 0; i < items(p); i++) {
+      const seat = (answer[i] + 1) % p.n;
+      s = play(s, [encodeAction(i, seat)]);
+      pos = place(p, pos, i, seat);
+    }
+    for (let step = 0; step < 600; step++) {
+      const targetSeat = pos[0] === 0 ? 1 : 0;
+      const next = registration.move(s, encodeAction(0, targetSeat));
+      if (!next) break;
+      s = next;
+      pos = place(p, pos, 0, targetSeat);
+    }
     const payload = s.payload as Payload;
-    expect(payload.actions.length).toBeLessThanOrEqual(512 - ASSIST_ACTIONS);
-    s = play(s, [HELP, RESET]); // reset is ordinary, so it may be refused past the limit; help never is
+    expect(payload.actions.length).toBe(ORDINARY_LIMIT);
+    expect(registration.move(s, encodeAction(0, pos[0] === 0 ? 1 : 0))).toBeNull();
+
+    const route = await requestHint(canoeHelpRules(p, false), canoeView(p, pos, false), 'show-me', ac.signal);
+    expect(route.status).toBe('route');
+    if (route.status !== 'route') return;
+    expect(route.actions.length).toBeLessThanOrEqual(items(p));
+    s = play(s, [HELP, ...route.actions.map(hinted), CHECK]);
+    expect(s.result).toMatchObject({ event: 'helped', dares: [] });
   });
   it('marks a clue card done as an ordinary replayed action, and rejects unknown cards', () => {
     const s = start(0), p = puzzles[0].descriptor.puzzle;

@@ -1,10 +1,11 @@
 import type { HintCue, PublicHintRules } from '../../../puzzles/hints';
-import { accepts, answerOf, attrOf, clueText, complete, emptySeating, mostUseful, nameOf, oneImpossible, place, SHORE, type CanoePuzzle, type Seating } from './rules';
+import { accepts, answerOf, attrOf, clueText, complete, emptySeating, itemsOf, mostUseful, nameOf, oneImpossible, place, SHORE, type CanoePuzzle, type Seating } from './rules';
 
 /**
- * Everything on a Canoe Seats board is public: the seats, the cast and every clue card. The answer
- * follows from the cards, so help works it out from them and never from a stored solution.
- * `whole` is Check-at-the-end play, where help may not judge the seats a child has filled.
+ * Everything on a Canoe Seats board is public: the seats, the cast and every visible clue card.
+ * The answer follows from those cards, so help works it out from them and never from a stored
+ * solution or another keeper's hidden cards. `whole` is Check-at-the-end play, where help may not
+ * judge the seats a child has filled.
  */
 export type CanoeView = { puzzle: CanoePuzzle; pos: Seating; whole: boolean };
 export const canoeView = (puzzle: CanoePuzzle, pos: Seating, whole: boolean): CanoeView => ({ puzzle, pos, whole });
@@ -34,25 +35,48 @@ export function focusOf(cue: HintCue | null): CanoeFocus {
   return { clue: clue ? Number(clue.slice(5)) : null, cross: cross ? { item, seat } : null };
 }
 const moveOf = (item: number, seat: number) => item * 8 + seat + 1;
-/** The placements that bring an item to the seat the clues give it. Only these are searched. */
-function toward(p: CanoePuzzle, pos: Seating): HelpMove[] {
-  const answer = answerOf(p);
+/**
+ * One canonical placement toward the clue-derived answer: prefer a shore item going to an empty
+ * seat, then a seated item going to an empty seat, then breaking a cycle. Fixing a canonical order
+ * avoids searching equivalent permutations (2^15 subsets on Rung H) and always finishes in <= items(p) moves.
+ */
+function stepToward(p: CanoePuzzle, pos: Seating, answer: Seating | null): HelpMove[] {
   if (!answer) return [];
-  return answer.flatMap((seat, i) => (pos[i] === seat ? [] : [moveOf(i, seat)]));
+  const wrong = answer.map((_, i) => i).filter(i => pos[i] !== answer[i]);
+  if (!wrong.length) return [];
+  const free = (i: number) => !itemsOf(p, attrOf(p, i)).some(j => j !== i && pos[j] === answer[i]);
+  const pick = wrong.find(i => pos[i] === SHORE && free(i)) ?? wrong.find(free) ?? wrong[0];
+  return [moveOf(pick, answer[pick])];
 }
 /**
- * Shared four-step help. Look points at the card that tells the most on its own. Think crosses out
- * one seat that card rules out. One step seats one friend; Show me seats the rest. With lights off,
- * One step waits while seats are filled and Show me shows an example, so help never judges a seat.
+ * Shared four-step help. Look points at the visible card that tells the most on its own. Think
+ * crosses out one seat that card rules out. One step seats one friend; Show me seats the rest.
+ * With lights off, One step waits while seats are filled and Show me shows an example, so help
+ * never judges a seat. When `visibleClues` is supplied (Together keepers mode), every deduction,
+ * placement and reveal is derived strictly from those visible cards alone.
  */
-export function canoeHelpRules(puzzle: CanoePuzzle, whole: boolean, keepers = false): PublicHintRules<CanoeView, HelpMove> {
-  const first = mostUseful(puzzle), impossible = oneImpossible(puzzle);
-  // Clue keepers hide some cards from whoever holds the device, so help points at a card without saying it.
-  const say = (clue: number) => (keepers ? 'Whoever holds that card can say it out loud.' : clueText(puzzle, puzzle.clues[clue]));
-  const look = (): HintCue => ({ text: `Look at this clue first. ${say(first)}`, focus: [`clue:${first}`] });
-  const think = (): HintCue => impossible
+export function canoeHelpRules(puzzle: CanoePuzzle, whole: boolean, visibleClues?: readonly number[]): PublicHintRules<CanoeView, HelpMove> {
+  const keepers = visibleClues !== undefined;
+  const visible = keepers
+    ? visibleClues.filter((i, idx, arr) => Number.isInteger(i) && i >= 0 && i < puzzle.clues.length && arr.indexOf(i) === idx)
+    : puzzle.clues.map((_, i) => i);
+  const publicPuzzle: CanoePuzzle = keepers ? { ...puzzle, clues: visible.map(i => puzzle.clues[i]) } : puzzle;
+  const answer = visible.length > 0 ? answerOf(publicPuzzle) : null;
+  const firstLocal = visible.length > 0 ? mostUseful(publicPuzzle) : -1;
+  const first = firstLocal >= 0 ? visible[firstLocal] : -1;
+  const imp = visible.length > 0 ? oneImpossible(publicPuzzle) : null;
+  const impossible = imp ? { item: imp.item, seat: imp.seat, clue: visible[imp.clue] } : null;
+  const partnerNeed = 'Ask your partner for a clue, or pass the device.';
+  // Clue keepers hide cards from the other player, so help never reads a clue sentence aloud in keepers mode.
+  const say = (clue: number) => (keepers ? 'Share this card with your partner.' : clueText(puzzle, puzzle.clues[clue]));
+  const look = (): HintCue => (first >= 0
+    ? { text: `Look at this clue first. ${say(first)}`, focus: [`clue:${first}`] }
+    : { text: `Your partner holds the clues for this canoe. ${partnerNeed}`, focus: [] });
+  const think = (): HintCue => (impossible
     ? { text: `Think: ${the(puzzle, impossible.item)} cannot sit in seat ${impossible.seat + 1}. ${say(impossible.clue)}`, focus: [`clue:${impossible.clue}`, `cross:${impossible.item}-${impossible.seat}`] }
-    : look();
+    : keepers
+      ? { text: `Your clues alone do not rule out a seat yet. ${partnerNeed}`, focus: [] }
+      : look());
   const draft = {
     hasEntries: (v: CanoeView) => v.pos.some(s => s !== SHORE),
     complete: (v: CanoeView) => complete(v.puzzle, v.pos),
@@ -63,18 +87,20 @@ export function canoeHelpRules(puzzle: CanoePuzzle, whole: boolean, keepers = fa
     },
   };
   return {
-    draft: whole ? draft : null,
+    draft: whole && (!keepers || answer !== null) ? draft : null,
     look, think,
     problem: start => ({
       start, nodeBudget: 20_000,
       key: v => v.pos.join(),
-      goal: v => accepts(v.puzzle, v.pos),
-      moves: v => toward(v.puzzle, v.pos),
+      goal: v => answer !== null && accepts(publicPuzzle, v.pos),
+      moves: v => stepToward(v.puzzle, v.pos, answer),
       apply: (v, a) => { const { item, seat } = decode(a), pos = place(v.puzzle, v.pos, item, seat); return pos === v.pos ? v : { ...v, pos }; },
       // Each placement fixes at most two items (a swap), so half the misplaced items never overestimates.
-      heuristic: v => { const answer = answerOf(v.puzzle); return answer ? Math.ceil(answer.filter((s, i) => v.pos[i] !== s).length / 2) : 0; },
+      heuristic: v => (answer ? Math.ceil(answer.filter((s, i) => v.pos[i] !== s).length / 2) : 0),
     }),
     preserves: () => true,
-    unavailable: 'These clues have no answer from here. Undo or Reset, and nothing is lost.',
+    unavailable: keepers && answer === null
+      ? `Your clues alone can fit more than one seating. ${partnerNeed}`
+      : 'These clues have no answer from here. Undo or Reset, and nothing is lost.',
   };
 }
