@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
 import { instance, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
-import { roomPoint } from '../src/home/scene/types';
 import { resolve } from '../src/home/scene/proposal';
 import { labFixtures } from '../src/home/runtime/lab';
 const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
@@ -46,7 +45,7 @@ vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
 beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
-async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
+async function open(state: HomeStateV2, persist: (state: HomeStateV2) => boolean = vi.fn((_s: HomeStateV2) => true)) {
   await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
   return persist;
 }
@@ -62,7 +61,7 @@ describe('H5 storage on the live screen', () => {
     await open(s, next => { saves.push(JSON.parse(JSON.stringify(next))); return true; });
     await act(async()=>harness.scene.onSelect('home/item/box'));
     expect(root.root.findAllByProps({testID:'storage-tray'}).length).toBeGreaterThan(0);
-    const take = root.root.findAll(n => n.props.accessibilityLabel==='Take out Teddy' && n.type==='Pressable')[0];
+    const take = root.root.findAll(n => n.props.accessibilityLabel==='Take out Teddy' && (n.type as unknown)==='Pressable')[0];
     await act(async()=>take.props.onPress());
     const p = harness.handoffs.at(-1);
     expect(p.id).toBe('home/item/toy'); expect(p.attachment.kind).toBe('floor');

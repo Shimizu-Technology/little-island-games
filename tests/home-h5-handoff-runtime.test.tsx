@@ -6,7 +6,7 @@ import { useInteraction, type Pickup, type Interaction } from "../src/home/runti
 import { DragOverlay } from "../src/home/runtime/DragOverlay";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
-import { roomPoint, type SceneEntity } from "../src/home/scene/types";
+import { type SceneEntity } from "../src/home/scene/types";
 import { migrateHome, starterHome, instance, type HomeStateV2 } from "../src/home/model";
 import { buildScene } from "../src/home/scene/graph";
 import { apply, resolve } from "../src/home/scene/proposal";
@@ -84,11 +84,11 @@ function Host({initial}:{initial:HomeStateV2}) {
     onClear:index=>setPickups(all=>all.map((p,i)=>i===index?undefined:p)),
     onCommit:(index,proposal,_at,token)=>{
       const result=apply(state,proposal); if(!('state' in result))throw Error('Rejected fixture');
-      commits++;setState(result.state);settled=result.state;
+      commits++;setState(result.state);
       interaction.finish(index,true,proposal,buildScene(result.state).revision,buildScene(result.state),token,result.identities[proposal.id]);
     }});
   React.useLayoutEffect(()=>{
-    current=interaction;
+    current=interaction;settled=state;
     for(const e of Object.values(scene.entities))if(e.attachment.kind!=='container')interaction.acknowledgeLayout(e.id,layoutToken(e));
   });
   return <DragOverlay scene={scene} activeRoom="home" pickups={pickups} interaction={interaction} building={building} reduced={false}/>;
