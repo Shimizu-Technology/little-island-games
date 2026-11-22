@@ -1,6 +1,6 @@
 /** Build-time content: Deep Water (SC-03). Five steps, each a bank of twelve "draw it" puzzles and a bank of twelve "predict the picture"
  * puzzles, every picture closed, on the canvas and new to the whole set. Pure and deterministic; the bake and the tests both call it. */
-import { draw, flatten, type Block, type Segment } from './engine';
+import { draw, type Block, type Segment } from './engine';
 import { blockCost, blockDepth, flatCost, formatBlocks } from './dsl';
 import { samePicture } from './picture';
 import { DEEP_COUNTS } from './mincost';
@@ -85,7 +85,6 @@ export const misreads = {
   firstLength: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind === 'repeat') return { ...b, body: go(b.body) }; if (b.kind === 'forward' && !done) { done = true; return { kind: 'forward', n: b.n >= 100 ? b.n - 10 : b.n + 10 }; } return b; }); return go(blocks); },
 };
 export type Misread = keyof typeof misreads;
-const KINDS: Misread[] = ['firstTurn', 'firstLength', 'noGrow', 'outerCount', 'innerCount', 'once'];
 /** Pictures that a reader who skimmed would draw. At the top rungs the first is always "ignore the Repeat". */
 export function choicesFor(program: Block[], tier: number, rotate: number): { blocks: Block[][]; answer: number; kinds: (Misread | 'answer')[] } {
   const answer = draw(program, undefined)!, seen: Segment[][] = [answer], wrong: { blocks: Block[]; kind: Misread }[] = [];

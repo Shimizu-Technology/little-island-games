@@ -19,7 +19,6 @@ export type Proved = { family: string; tier: 1 | 2 | 3 | 4; blocks: Block[]; sta
 
 /** `count` entries spread evenly over a list, so one family covers its whole range. */
 export const spread = <T,>(list: readonly T[], count: number): T[] => count >= list.length ? [...list] : Array.from({ length: count }, (_, i) => list[Math.floor((i * list.length) / count + list.length / count / 2)]);
-const pairs = (distinct: boolean) => lengths.flatMap(a => lengths.flatMap(b => distinct && a === b ? [] : [[a, b] as const]));
 
 /** Origin, fit and closing, or null when this picture cannot sit on the canvas as drawn. */
 export function place(blocks: Block[], open = false): { origin: { x: number; y: number }; lines: Segment[] } | null {

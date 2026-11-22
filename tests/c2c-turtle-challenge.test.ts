@@ -4,7 +4,7 @@ import { registration, turtleAssistance } from '../src/learn/games/turtle-draw/c
 import { turtlePuzzles, FIRST_DARE } from '../src/learn/games/turtle-draw/challenge-content';
 import { admit, buildHint, challengeEngine, ruleOut, solvesBuild, type Action, type BuildDescriptor, type Descriptor, type PredictDescriptor, type State } from '../src/learn/games/turtle-draw/challenge-engine';
 import { deepCodes, turtleProgram } from '../src/learn/games/turtle-draw/program';
-import { draw, flatten, type Block } from '../src/learn/games/turtle-draw/engine';
+import { draw, type Block } from '../src/learn/games/turtle-draw/engine';
 import { blockCost, flatCost } from '../src/learn/games/turtle-draw/dsl';
 import { DEEP_COUNTS } from '../src/learn/games/turtle-draw/mincost';
 import { misreads } from '../src/learn/games/turtle-draw/deep';
@@ -19,7 +19,6 @@ vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }))
 
 const options = { supportOff: false, ownRead: false };
 const owner = 'learner-1';
-const puzzleOf = (bank: number, puzzle: number) => turtlePuzzles.find(p => p.ref.bank === bank && p.ref.puzzle === puzzle)!;
 const builds = turtlePuzzles.filter(p => p.descriptor.kind === 'build'), predicts = turtlePuzzles.filter(p => p.descriptor.kind === 'predict');
 const start = (p: (typeof turtlePuzzles)[number], dares: number[] = []) => registration.start(p.ref, owner, 'round-1', emptyChallenge(), options, dares);
 const move = (s: ChallengeSession, a: Action): ChallengeSession => { const next = registration.move(s, a); if (!next) throw new Error(`refused ${JSON.stringify(a)}`); return next; };
