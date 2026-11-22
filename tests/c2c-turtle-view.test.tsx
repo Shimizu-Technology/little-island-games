@@ -247,3 +247,17 @@ it('in a wide landscape window the program reads on the left and the four pictur
   expect(column.findAllByProps({ testID: 'turtle-program' })).toHaveLength(0);
   expect(grid.props.style.width).toBeLessThanOrEqual(400);
 });
+
+it('on a phone at the largest text the program shrinks to one wrapped line so the four pictures and Check come up with it', async () => {
+  viewport.fontScale = 3.12;
+  const d = challenge('predict', 5) as PredictDescriptor;
+  await mount(<ChallengeBoard state={startState(d)} dispatch={vi.fn()} active width={353} />);
+  const program = tree!.root.findByProps({ testID: 'turtle-program' });
+  expect(program.props.accessibilityLabel).toMatch(/^The program: Repeat ×5 \[/);
+  expect(program.findAllByType('p')).toHaveLength(1);
+  const cells = buttons().filter(b => /^Picture [A-D]\./.test(b.props.accessibilityLabel ?? ''));
+  expect(cells.every(c => c.props.style.width === 130)).toBe(true);
+  // The explanation moves below the controls.
+  const order = tree!.root.findAll(n => n.props.testID === 'turtle-message' || n.props.accessibilityLabel === 'Four pictures').map(n => n.props.testID ?? 'pictures');
+  expect(order[0]).toBe('pictures');
+});
