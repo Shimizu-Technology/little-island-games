@@ -7,17 +7,10 @@ export const urchins = (n: number) => (n === 5 ? 3 : n === 6 ? 5 : 8);
 export const REDRAW_MAX_ATTEMPTS = 128;
 /** Bounded per-candidate solver node budget so one candidate never stalls the device. */
 export const REDRAW_NODE_BUDGET = 12_000;
-/** Time-slice yield cadence (ms) when running off the frame callback. */
-export const REDRAW_SLICE_MS = 8;
-/** Overall wall-clock budget (ms) for on-device async redraw before asking to use a certified fallback. */
-export const REDRAW_BUDGET_MS = 250;
 
-export type RedrawCancel = { cancelled: boolean };
-
-export type RedrawResult =
-  | { status: "found"; board: number[]; mines: number[]; attempt: number; ceiling: DeductionTier; elapsedMs: number }
-  | { status: "exhausted"; attempts: number; elapsedMs: number }
-  | { status: "cancelled"; attempts: number; elapsedMs: number };
+export type PureRedrawResult =
+  | { status: "found"; board: number[]; mines: number[]; attempt: number; ceiling: DeductionTier }
+  | { status: "exhausted"; attempts: number };
 
 /** Builds a full Reef Sweep board array (-1 for urchins, 0..8 for pearl counts) from sorted mine indices. */
 export function boardFromMines(size: number, mines: readonly number[]): number[] {
@@ -73,9 +66,6 @@ export function candidateMines(
     .sort((a, b) => a - b);
 }
 
-const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
-const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-
 /**
  * Deterministic bounded first-tap no-guess redraw.
  * Preserves the player's exact `firstCell` and proves zero-guess solvability via `solvePublicNoGuess`.
@@ -85,74 +75,18 @@ export function redrawBoard(
   size: number,
   firstCell: number,
   options: { maxAttempts?: number; nodeBudget?: number; mineCount?: number } = {}
-): Exclude<RedrawResult, { status: "cancelled" }> {
+): PureRedrawResult {
   const maxAttempts = options.maxAttempts ?? REDRAW_MAX_ATTEMPTS;
   const nodeBudget = options.nodeBudget ?? REDRAW_NODE_BUDGET;
   const mineCount = options.mineCount ?? urchins(size);
-  const started = nowMs();
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const mines = candidateMines(seed, size, firstCell, attempt, mineCount);
     const board = boardFromMines(size, mines);
     const solved = solvePublicNoGuess(board, size, firstCell, { nodeBudget });
     if (solved.status === "solved") {
-      return { status: "found", board, mines, attempt, ceiling: solved.ceiling, elapsedMs: nowMs() - started };
+      return { status: "found", board, mines, attempt, ceiling: solved.ceiling };
     }
   }
-  return { status: "exhausted", attempts: maxAttempts, elapsedMs: nowMs() - started };
-}
-
-/**
- * Sliced, cancellable async first-tap no-guess redraw.
- * Never blocks a UI frame callback: yields after `sliceMs` (default 8 ms) and stops cleanly
- * if cancelled, if `maxAttempts` is reached, or if `budgetMs` elapses.
- */
-export async function redrawBoardTask(
-  seed: number,
-  size: number,
-  firstCell: number,
-  cancel: RedrawCancel,
-  options: {
-    maxAttempts?: number;
-    nodeBudget?: number;
-    mineCount?: number;
-    sliceMs?: number;
-    budgetMs?: number;
-    yieldTurn?: () => Promise<void>;
-    now?: () => number;
-  } = {}
-): Promise<RedrawResult> {
-  const maxAttempts = options.maxAttempts ?? REDRAW_MAX_ATTEMPTS;
-  const nodeBudget = options.nodeBudget ?? REDRAW_NODE_BUDGET;
-  const mineCount = options.mineCount ?? urchins(size);
-  const sliceMs = options.sliceMs ?? REDRAW_SLICE_MS;
-  const budgetMs = options.budgetMs ?? REDRAW_BUDGET_MS;
-  const pause = options.yieldTurn ?? nextTurn;
-  const clock = options.now ?? nowMs;
-
-  const started = clock();
-  let sliceStart = started;
-
-  // Yield once before heavy work so the tap callback returns immediately on the current frame.
-  await pause();
-  if (cancel.cancelled) return { status: "cancelled", attempts: 0, elapsedMs: clock() - started };
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    if (cancel.cancelled) return { status: "cancelled", attempts: attempt, elapsedMs: clock() - started };
-    const elapsed = clock() - started;
-    if (elapsed >= budgetMs) return { status: "exhausted", attempts: attempt, elapsedMs: elapsed };
-
-    const mines = candidateMines(seed, size, firstCell, attempt, mineCount);
-    const board = boardFromMines(size, mines);
-    const solved = solvePublicNoGuess(board, size, firstCell, { nodeBudget });
-    if (solved.status === "solved") {
-      return { status: "found", board, mines, attempt, ceiling: solved.ceiling, elapsedMs: clock() - started };
-    }
-
-    if (clock() - sliceStart >= sliceMs) {
-      await pause();
-      sliceStart = clock();
-    }
-  }
-  return { status: "exhausted", attempts: maxAttempts, elapsedMs: clock() - started };
+  return { status: "exhausted", attempts: maxAttempts };
 }

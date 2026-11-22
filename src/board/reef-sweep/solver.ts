@@ -122,7 +122,7 @@ type Constraint = {
 
 type Provenance = {
   tier: DeductionTier;
-  clues: number[];
+  anchors: number[];
   rule: "single-safe" | "single-urchin" | "subset" | "coupled-component" | "coupled-count";
 };
 
@@ -135,7 +135,7 @@ function buildReason(
   prov: Provenance
 ): DeductionReason {
   const at = coordinate(size, cell);
-  const clueList = prov.clues.map((c) => `${visible[c]} at ${coordinate(size, c)}`);
+  const clueList = prov.anchors.map((c) => `${visible[c]} at ${coordinate(size, c)}`);
   if (kind === "unflag") {
     const clueText = clueList.length ? `Look at ${clueList.join(" and ")}.` : "Count the remaining sea urchins on the reef.";
     return {
@@ -144,8 +144,8 @@ function buildReason(
       oneStep: `Remove the flag at ${at}: the visible numbers prove ${at} is a safe pearl space.`,
     };
   }
-  if (prov.tier === "single-cell") {
-    const clue = prov.clues[0];
+  if (prov.rule === "single-safe" || prov.rule === "single-urchin") {
+    const clue = prov.anchors[0];
     const clueCoord = clue !== undefined ? coordinate(size, clue) : at;
     const val = clue !== undefined ? visible[clue] : 0;
     if (kind === "flag") {
@@ -161,8 +161,8 @@ function buildReason(
       oneStep: `Open ${at}: the ${val} at ${clueCoord} already has all its urchins placed.`,
     };
   }
-  if (prov.tier === "subset") {
-    const [a, b] = prov.clues;
+  if (prov.rule === "subset") {
+    const [a, b] = prov.anchors;
     const labelA = a !== undefined ? `the ${visible[a]} at ${coordinate(size, a)}` : "one clue";
     const labelB = b !== undefined ? `the ${visible[b]} at ${coordinate(size, b)}` : "its neighbor";
     return {
@@ -350,11 +350,11 @@ export function deducePublic(
       for (const c of cs) {
         if (c.rem === 0) {
           for (const cell of c.cells) {
-            if (recordSafe(cell, { tier: ceilingSoFar, clues: [c.clue], rule: "single-safe" })) progress = true;
+            if (recordSafe(cell, { tier: ceilingSoFar, anchors: [c.clue], rule: "single-safe" })) progress = true;
           }
         } else if (c.rem === c.cells.length) {
           for (const cell of c.cells) {
-            if (recordUrchin(cell, { tier: ceilingSoFar, clues: [c.clue], rule: "single-urchin" })) progress = true;
+            if (recordUrchin(cell, { tier: ceilingSoFar, anchors: [c.clue], rule: "single-urchin" })) progress = true;
           }
         }
       }
@@ -388,17 +388,17 @@ export function deducePublic(
         const diff = a.rem - b.rem;
         if (diff === onlyA.length) {
           for (const x of onlyA) {
-            if (recordUrchin(x, { tier: ceilingSoFar, clues: [a.clue, b.clue], rule: "subset" })) progress = true;
+            if (recordUrchin(x, { tier: ceilingSoFar, anchors: [a.clue, b.clue], rule: "subset" })) progress = true;
           }
           for (const x of onlyB) {
-            if (recordSafe(x, { tier: ceilingSoFar, clues: [a.clue, b.clue], rule: "subset" })) progress = true;
+            if (recordSafe(x, { tier: ceilingSoFar, anchors: [a.clue, b.clue], rule: "subset" })) progress = true;
           }
         } else if (-diff === onlyB.length) {
           for (const x of onlyB) {
-            if (recordUrchin(x, { tier: ceilingSoFar, clues: [a.clue, b.clue], rule: "subset" })) progress = true;
+            if (recordUrchin(x, { tier: ceilingSoFar, anchors: [a.clue, b.clue], rule: "subset" })) progress = true;
           }
           for (const x of onlyA) {
-            if (recordSafe(x, { tier: ceilingSoFar, clues: [a.clue, b.clue], rule: "subset" })) progress = true;
+            if (recordSafe(x, { tier: ceilingSoFar, anchors: [a.clue, b.clue], rule: "subset" })) progress = true;
           }
         }
       }
@@ -418,14 +418,14 @@ export function deducePublic(
     if (remTotal === 0 && allUnknown.length > 0) {
       let progress = false;
       for (const cell of allUnknown) {
-        if (recordSafe(cell, { tier: "coupled", clues: [], rule: "coupled-count" })) progress = true;
+        if (recordSafe(cell, { tier: "coupled", anchors: [], rule: "coupled-count" })) progress = true;
       }
       return { changed: progress, exhausted: false };
     }
     if (remTotal === allUnknown.length && allUnknown.length > 0) {
       let progress = false;
       for (const cell of allUnknown) {
-        if (recordUrchin(cell, { tier: "coupled", clues: [], rule: "coupled-count" })) progress = true;
+        if (recordUrchin(cell, { tier: "coupled", anchors: [], rule: "coupled-count" })) progress = true;
       }
       return { changed: progress, exhausted: false };
     }
@@ -535,9 +535,9 @@ export function deducePublic(
       for (let bit = 0; bit < m; bit++) {
         const cell = sol.vars[bit];
         if ((alwaysOne & (1 << bit)) !== 0) {
-          if (recordUrchin(cell, { tier: "coupled", clues: topClues, rule: "coupled-component" })) progress = true;
+          if (recordUrchin(cell, { tier: "coupled", anchors: topClues, rule: "coupled-component" })) progress = true;
         } else if ((alwaysZero & (1 << bit)) !== 0) {
-          if (recordSafe(cell, { tier: "coupled", clues: topClues, rule: "coupled-component" })) progress = true;
+          if (recordSafe(cell, { tier: "coupled", anchors: topClues, rule: "coupled-component" })) progress = true;
         }
       }
     }
@@ -550,11 +550,11 @@ export function deducePublic(
         const topClues = cs.slice(0, 3).map((c) => c.clue);
         if (minSum === remTotal) {
           for (const cell of outsideVars) {
-            if (recordSafe(cell, { tier: "coupled", clues: topClues, rule: "coupled-count" })) progress = true;
+            if (recordSafe(cell, { tier: "coupled", anchors: topClues, rule: "coupled-count" })) progress = true;
           }
         } else if (maxSum === remTotal - outsideVars.length) {
           for (const cell of outsideVars) {
-            if (recordUrchin(cell, { tier: "coupled", clues: topClues, rule: "coupled-count" })) progress = true;
+            if (recordUrchin(cell, { tier: "coupled", anchors: topClues, rule: "coupled-count" })) progress = true;
           }
         }
       }
@@ -563,8 +563,6 @@ export function deducePublic(
     return { changed: progress, exhausted: false };
   };
 
-  let highestTier: DeductionTier = "single-cell";
-
   // Escalate strictly tier-by-tier only while no proven safe cell is available yet.
   runSingleCell("single-cell");
 
@@ -572,7 +570,6 @@ export function deducePublic(
     for (;;) {
       const sub = runSubset("subset");
       if (!sub) break;
-      highestTier = "subset";
       runSingleCell("subset");
       if (provenSafe.size > 0) break;
     }
@@ -583,7 +580,6 @@ export function deducePublic(
       const res = runCoupled();
       if (res.exhausted) return { status: "budget-exhausted", nodes: usedNodes };
       if (!res.changed) break;
-      highestTier = "coupled";
       runSingleCell("coupled");
       if (provenSafe.size > 0) break;
       if (runSubset("coupled")) {
@@ -621,18 +617,18 @@ export function deducePublic(
     cell = wrongFlags[0];
   } else {
     kind = "flag";
-    cell = unflaggedUrchins[0];
+    cell = unflaggedUrchins.sort((a, b) => tierRank(provenance.get(a)!.tier) - tierRank(provenance.get(b)!.tier) || a - b)[0];
   }
 
   const prov = provenance.get(cell)!;
-  const stepTier = tierRank(prov.tier) > tierRank(highestTier) ? prov.tier : prov.tier;
+  const stepTier = prov.tier;
   return {
     status: "deduced",
     step: {
       kind,
       cell,
       tier: stepTier,
-      clues: prov.clues,
+      clues: prov.anchors,
       reason: buildReason(size, visible, totalUrchins, kind, cell, prov),
     },
     safe,

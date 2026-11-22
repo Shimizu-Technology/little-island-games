@@ -7,9 +7,9 @@ import {
   legacyBoard,
   REDRAW_MAX_ATTEMPTS,
   redrawBoard,
-  redrawBoardTask,
   urchins,
 } from "../src/board/reef-sweep/redraw";
+import { redrawBoardTask } from "../src/board/reef-sweep/redrawTask";
 import {
   deducePublic,
   findCounterfactualTwins,

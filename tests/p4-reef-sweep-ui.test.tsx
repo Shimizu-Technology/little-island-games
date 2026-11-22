@@ -289,5 +289,23 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     const defaultHeading = r.root.findAll((n) => n.props.children === "A little pearl hunt")[0];
     expect(defaultHeading.props.maxFontSizeMultiplier).toBeUndefined();
     await act(() => r.unmount());
+
+    // Landscape AX5 on iPhone 15 keeps both flex columns shrinkable (minWidth: 0) with no horizontal overflow.
+    fixture.dims = { width: 852, height: 393, fontScale: 3.12 };
+    await act(() => {
+      r = create(<BoardScreen game="reef-sweep" />);
+    });
+    const splitCols = r.root.findAll(
+      (n) =>
+        n.props.style &&
+        !Array.isArray(n.props.style) &&
+        n.props.style.gap === 8 &&
+        (n.props.style.flex === 1 || n.props.style.flex === 1.15)
+    );
+    expect(splitCols.length).toBeGreaterThanOrEqual(2);
+    for (const col of splitCols) {
+      expect(col.props.style.minWidth).toBe(0);
+    }
+    await act(() => r.unmount());
   });
 });

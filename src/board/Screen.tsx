@@ -28,7 +28,7 @@ import { hintReason as coconutHintReason } from "./coconut-drop/engine";
 import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
 import { coordinate as reefCoordinate, createFallbackPosition, publicHintStep, urchins, type PublicStep } from "./reef-sweep/engine";
 import { loadCertifiedFallback, type FallbackCandidate } from "./reef-sweep/fallback";
-import { redrawBoardTask, type RedrawCancel } from "./reef-sweep/redraw";
+import { redrawBoardTask, type RedrawCancel } from "./reef-sweep/redrawTask";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
 /** Each board's Challenge puzzles, reached from its setup, and the Challenge ID they're registered under. */
 const puzzleLinks = {
@@ -265,13 +265,18 @@ function Round({
   const wide = s.game === "reef-sweep" ? width >= 660 && width > height : width >= 900 && width > height;
   const buttonCap = atLarge(fontScale, 1.3);
   const copyCap = atLarge(fontScale, CHROME_MAX);
-  const available = Math.max(
-    280,
-    Math.min(
-      wide ? width * (s.game === "reef-sweep" ? 0.56 : 0.52) - 48 : width - insets.left - insets.right - 40,
-      wide ? Math.min(440, height - insets.top - insets.bottom - 96) : 560
-    )
-  );
+  const innerWidth = Math.max(240, width - insets.left - insets.right - 40);
+  const reefWideCol = Math.floor((innerWidth - 16) * (1.15 / 2.15));
+  const available =
+    s.game === "reef-sweep" && wide
+      ? Math.max(220, Math.min(reefWideCol, Math.min(440, height - insets.top - insets.bottom - 120)))
+      : Math.max(
+          280,
+          Math.min(
+            wide ? width * 0.52 - 48 : innerWidth,
+            wide ? Math.min(440, height - insets.top - insets.bottom - 96) : 560
+          )
+        );
   const success = p.outcome !== null && p.outcome !== "draw" && (s.mode !== "solo" || p.outcome === 0);
   const [help, setHelp] = useState(false),
     [demo, setDemo] = useState(0),
@@ -576,8 +581,8 @@ function Round({
           }}
         />
         <SaveStatus />
-        <View style={{ flexDirection: wide ? "row" : "column", gap: 16 }}>
-        <View style={{ flex: 1, gap: 12 }}>
+        <View style={{ flexDirection: wide ? "row" : "column", gap: 16, width: "100%" }}>
+        <View style={{ flex: 1, minWidth: 0, gap: wide && s.game === "reef-sweep" ? 8 : 12 }}>
         {s.game !== "reef-sweep" && (
           <Scoreboard solo={s.mode === "solo"}
             match={s.match}
@@ -745,7 +750,7 @@ function Round({
         )}
         <Copy maxFontSizeMultiplier={copyCap} style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
         </View>
-        <View style={{ flex: wide ? 1.15 : undefined, gap: 12, justifyContent: "center" }}>
+        <View style={{ flex: wide ? 1.15 : undefined, minWidth: 0, gap: wide && s.game === "reef-sweep" ? 8 : 12, justifyContent: "center" }}>
         {p.outcome !== null && review !== null ? (
           <View accessibilityLiveRegion="polite" style={{ gap: 10, padding: 14, backgroundColor: C.paper, borderRadius: 20 }}>
             {review === "working" ? (
@@ -829,7 +834,15 @@ function Round({
               <Copy
                 maxFontSizeMultiplier={copyCap}
                 accessibilityLiveRegion="polite"
-                style={{ padding: 12, backgroundColor: C.sand, borderRadius: 12, color: C.ink }}
+                style={{
+                  width: "100%",
+                  maxWidth: wide ? Math.min(reefWideCol, Math.max(available, 320)) : undefined,
+                  alignSelf: "center",
+                  padding: wide ? 10 : 12,
+                  backgroundColor: C.sand,
+                  borderRadius: 12,
+                  color: C.ink,
+                }}
               >
                 {notice}
               </Copy>
