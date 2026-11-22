@@ -1,0 +1,489 @@
+{
+ "hash": "314afce9708fc349e99fb9ca98bc2b92b8aa44ef42a2169e088732830036393d",
+ "levels": {
+  "1": {
+   "teach": {
+    "at": [
+     "[8,\"bow-1\",\"teach-at\",[2,1,\"16\",\"Sa1\"],[\"placements\",2,2],0,0,[\"at\"]]",
+     "[16,\"bow-4\",\"teach-at\",[2,1,\"46\",\"Sb2\"],[\"placements\",2,2],0,0,[\"at\"]]",
+     "[40,\"bow-7\",\"teach-at\",[2,1,\"27\",\"Sa2\"],[\"placements\",2,2],0,0,[\"at\"]]",
+     "[24,\"bow-6\",\"teach-at\",[2,1,\"61\",\"Sa1\"],[\"placements\",2,2],0,0,[\"at\"]]",
+     "[32,\"bow-4\",\"teach-at\",[2,1,\"40\",\"Sa1\"],[\"placements\",2,2],0,0,[\"at\"]]",
+     "[64,\"bow-3\",\"teach-at\",[2,1,\"37\",\"Sb2\"],[\"placements\",2,2],0,0,[\"at\"]]"
+    ]
+   },
+   "rows": [
+    "[2,\"bow-2\",\"t5\",[2,1,\"32\",\"Sa2\"],[\"placements\",2,2]]",
+    "[3,\"bow-3\",\"t6\",[2,1,\"34\",\"Sb2\"],[\"placements\",2,2]]",
+    "[4,\"bow-7\",\"t2\",[2,1,\"47\",\"Sb1\"],[\"placements\",2,2]]",
+    "[11,\"bow-6\",\"t1\",[2,1,\"76\",\"Sa2\"],[\"placements\",2,2]]",
+    "[20,\"bow-2\",\"t2\",[2,1,\"26\",\"Sa1\"],[\"placements\",2,2]]",
+    "[7,\"bow-3\",\"t6\",[2,1,\"30\",\"Sa1\"],[\"placements\",2,2]]",
+    "[9,\"bow-7\",\"t4\",[2,1,\"70\",\"Sb2\"],[\"placements\",2,2]]",
+    "[18,\"bow-6\",\"t4\",[2,1,\"60\",\"Sa1\"],[\"placements\",2,2]]",
+    "[42,\"bow-2\",\"t5\",[2,1,\"32\",\"Sb1\"],[\"placements\",2,2]]",
+    "[10,\"bow-3\",\"t7\",[2,1,\"53\",\"Sb1\"],[\"placements\",2,2]]",
+    "[31,\"bow-7\",\"t5\",[2,1,\"73\",\"Sa1\"],[\"placements\",2,2]]",
+    "[21,\"bow-6\",\"t3\",[2,1,\"64\",\"Sb2\"],[\"placements\",2,2]]",
+    "[12,\"bow-1\",\"t7\",[2,1,\"15\",\"Sa1\"],[\"placements\",2,2]]",
+    "[19,\"bow-4\",\"t3\",[2,1,\"45\",\"Sb2\"],[\"placements\",2,2]]",
+    "[1,\"bow-5\",\"t1\",[2,1,\"75\",\"Sb1\"],[\"placements\",2,2]]",
+    "[57,\"bow-2\",\"t1\",[2,1,\"52\",\"Sa2\"],[\"placements\",2,2]]",
+    "[23,\"bow-3\",\"t2\",[2,1,\"63\",\"Sa2\"],[\"placements\",2,2]]",
+    "[34,\"bow-7\",\"t4\",[2,1,\"73\",\"Sb2\"],[\"placements\",2,2]]",
+    "[22,\"bow-6\",\"t1\",[2,1,\"56\",\"Sb1\"],[\"placements\",2,2]]",
+    "[14,\"bow-1\",\"t2\",[2,1,\"01\",\"Sb1\"],[\"placements\",2,2]]",
+    "[30,\"bow-4\",\"t1\",[2,1,\"24\",\"Sa2\"],[\"placements\",2,2]]",
+    "[5,\"bow-5\",\"t6\",[2,1,\"45\",\"Sa2\"],[\"placements\",2,2]]",
+    "[61,\"bow-2\",\"t3\",[2,1,\"26\",\"Sb2\"],[\"placements\",2,2]]",
+    "[47,\"bow-3\",\"t0\",[2,1,\"03\",\"Sa2\"],[\"placements\",2,2]]",
+    "[39,\"bow-1\",\"t2\",[2,1,\"01\",\"Sa2\"],[\"placements\",2,2]]",
+    "[6,\"bow-5\",\"t2\",[2,1,\"56\",\"Sa1\"],[\"placements\",2,2]]",
+    "[37,\"bow-0\",\"t3\",[2,1,\"30\",\"Sa2\"],[\"placements\",2,2]]",
+    "[70,\"bow-2\",\"t7\",[2,1,\"02\",\"Sa2\"],[\"placements\",2,2]]",
+    "[55,\"bow-3\",\"t1\",[2,1,\"73\",\"Sb1\"],[\"placements\",2,2]]",
+    "[49,\"bow-7\",\"t4\",[2,1,\"71\",\"Sb2\"],[\"placements\",2,2]]",
+    "[27,\"bow-6\",\"t0\",[2,1,\"46\",\"Sb1\"],[\"placements\",2,2]]",
+    "[43,\"bow-1\",\"t6\",[2,1,\"31\",\"Sa2\"],[\"placements\",2,2]]",
+    "[44,\"bow-4\",\"t5\",[2,1,\"04\",\"Sa2\"],[\"placements\",2,2]]",
+    "[15,\"bow-5\",\"t4\",[2,1,\"52\",\"Sa1\"],[\"placements\",2,2]]",
+    "[45,\"bow-0\",\"t7\",[2,1,\"50\",\"Sa2\"],[\"placements\",2,2]]",
+    "[84,\"bow-2\",\"t5\",[2,1,\"27\",\"Sb2\"],[\"placements\",2,2]]",
+    "[60,\"bow-3\",\"t4\",[2,1,\"34\",\"Sa1\"],[\"placements\",2,2]]",
+    "[73,\"bow-7\",\"t4\",[2,1,\"67\",\"Sb1\"],[\"placements\",2,2]]",
+    "[36,\"bow-6\",\"t7\",[2,1,\"62\",\"Sb2\"],[\"placements\",2,2]]",
+    "[59,\"bow-1\",\"t1\",[2,1,\"71\",\"Sb1\"],[\"placements\",2,2]]",
+    "[58,\"bow-4\",\"t5\",[2,1,\"14\",\"Sa2\"],[\"placements\",2,2]]",
+    "[17,\"bow-5\",\"t2\",[2,1,\"53\",\"Sb2\"],[\"placements\",2,2]]",
+    "[53,\"bow-0\",\"t1\",[2,1,\"40\",\"Sa2\"],[\"placements\",2,2]]",
+    "[92,\"bow-2\",\"t3\",[2,1,\"12\",\"Sa2\"],[\"placements\",2,2]]",
+    "[91,\"bow-7\",\"t4\",[2,1,\"47\",\"Sa2\"],[\"placements\",2,2]]",
+    "[51,\"bow-6\",\"t7\",[2,1,\"56\",\"Sa2\"],[\"placements\",2,2]]",
+    "[75,\"bow-1\",\"t6\",[2,1,\"15\",\"Sb2\"],[\"placements\",2,2]]",
+    "[89,\"bow-4\",\"t3\",[2,1,\"43\",\"Sa1\"],[\"placements\",2,2]]"
+   ]
+  },
+  "2": {
+   "teach": {
+    "end": [
+     "[16777240,\"bow-3\",\"teach-end\",[3,1,\"034\",\"Sc3,Eb\"],[\"placements\",3,3],0,0,[\"end\"]]",
+     "[16777360,\"bow-1\",\"teach-end\",[3,1,\"314\",\"Sa3,Eb\"],[\"placements\",3,3],0,0,[\"end\"]]",
+     "[16777312,\"bow-6\",\"teach-end\",[3,1,\"146\",\"Eb,Sc1\"],[\"placements\",3,3],0,0,[\"end\"]]",
+     "[16777408,\"bow-6\",\"teach-end\",[3,1,\"526\",\"Sc1,Ea\"],[\"placements\",3,3],0,0,[\"end\"]]",
+     "[16777432,\"bow-6\",\"teach-end\",[3,1,\"326\",\"Sa3,Ec\"],[\"placements\",3,3],0,0,[\"end\"]]",
+     "[16777480,\"bow-4\",\"teach-end\",[3,1,\"754\",\"Eb,Sc1\"],[\"placements\",3,3],0,0,[\"end\"]]"
+    ],
+    "next": [
+     "[16777280,\"bow-1\",\"teach-next\",[3,1,\"451\",\"Sa3,Nab\"],[\"placements\",3,3],0,0,[\"next\"]]",
+     "[16777256,\"bow-3\",\"teach-next\",[3,1,\"437\",\"Nbc,Sb1\"],[\"placements\",3,3],0,0,[\"next\"]]",
+     "[16777304,\"bow-6\",\"teach-next\",[3,1,\"063\",\"Nbc,Sb1\"],[\"placements\",3,3],0,0,[\"next\"]]",
+     "[16777352,\"bow-4\",\"teach-next\",[3,1,\"104\",\"Sa3,Nab\"],[\"placements\",3,3],0,0,[\"next\"]]",
+     "[16777400,\"bow-7\",\"teach-next\",[3,1,\"367\",\"Sc1,Nac\"],[\"placements\",3,3],0,0,[\"next\"]]",
+     "[16777520,\"bow-0\",\"teach-next\",[3,1,\"021\",\"Nbc,Sc3\"],[\"placements\",3,3],0,0,[\"next\"]]"
+    ],
+    "ahead": [
+     "[16777272,\"bow-3\",\"teach-ahead\",[3,1,\"315\",\"Abc,Sa1\"],[\"placements\",3,3],0,0,[\"ahead\"]]",
+     "[16777224,\"bow-5\",\"teach-ahead\",[3,1,\"150\",\"Aba,Sa2\"],[\"placements\",3,3],0,0,[\"ahead\"]]",
+     "[16777320,\"bow-3\",\"teach-ahead\",[3,1,\"613\",\"Sb2,Aba\"],[\"placements\",3,3],0,0,[\"ahead\"]]",
+     "[16777296,\"bow-4\",\"teach-ahead\",[3,1,\"457\",\"Sa1,Acb\"],[\"placements\",3,3],0,0,[\"ahead\"]]",
+     "[16777248,\"bow-5\",\"teach-ahead\",[3,1,\"125\",\"Aba,Sc1\"],[\"placements\",3,3],0,0,[\"ahead\"]]",
+     "[16777368,\"bow-3\",\"teach-ahead\",[3,1,\"037\",\"Aba,Sc2\"],[\"placements\",3,3],0,0,[\"ahead\"]]"
+    ]
+   },
+   "rows": [
+    "[16777238,\"bow-1\",\"t6\",[3,1,\"701\",\"Sa3,Nab\"],[\"placements\",3,3]]",
+    "[16777230,\"bow-3\",\"t5\",[3,1,\"351\",\"Sc2,Aac\"],[\"placements\",3,3]]",
+    "[16777243,\"bow-1\",\"t5\",[3,1,\"215\",\"Eb,Sa3\"],[\"placements\",3,3]]",
+    "[16777247,\"bow-1\",\"t4\",[3,1,\"071\",\"Sc1,Aba\"],[\"placements\",3,3]]",
+    "[16777234,\"bow-0\",\"t2\",[3,1,\"503\",\"Abc,Sa3\"],[\"placements\",3,3]]",
+    "[16777249,\"bow-1\",\"t1\",[3,1,\"120\",\"Aac,Sb2\"],[\"placements\",3,3]]",
+    "[16777252,\"bow-3\",\"t6\",[3,1,\"352\",\"Aab,Sb2\"],[\"placements\",3,3]]",
+    "[16777273,\"bow-1\",\"t5\",[3,1,\"521\",\"Sc1,Eb\"],[\"placements\",3,3]]",
+    "[16777262,\"bow-0\",\"t7\",[3,1,\"032\",\"Sb2,Aac\"],[\"placements\",3,3]]",
+    "[16777284,\"bow-1\",\"t2\",[3,1,\"162\",\"Ec,Sa1\"],[\"placements\",3,3]]",
+    "[16777271,\"bow-0\",\"t1\",[3,1,\"160\",\"Sc1,Eb\"],[\"placements\",3,3]]",
+    "[16777309,\"bow-1\",\"t2\",[3,1,\"107\",\"Sc2,Aac\"],[\"placements\",3,3]]",
+    "[16777267,\"bow-3\",\"t2\",[3,1,\"203\",\"Aab,Sc1\"],[\"placements\",3,3]]",
+    "[16777311,\"bow-0\",\"t7\",[3,1,\"250\",\"Sa2,Acb\"],[\"placements\",3,3]]",
+    "[16777315,\"bow-1\",\"t2\",[3,1,\"160\",\"Sa1,Eb\"],[\"placements\",3,3]]",
+    "[16777270,\"bow-3\",\"t7\",[3,1,\"342\",\"Sa1,Nac\"],[\"placements\",3,3]]",
+    "[16777318,\"bow-0\",\"t4\",[3,1,\"012\",\"Nbc,Sc3\"],[\"placements\",3,3]]",
+    "[16777326,\"bow-1\",\"t0\",[3,1,\"125\",\"Sb2,Aab\"],[\"placements\",3,3]]",
+    "[16777331,\"bow-0\",\"t5\",[3,1,\"501\",\"Abc,Sc2\"],[\"placements\",3,3]]",
+    "[16777281,\"bow-6\",\"t7\",[3,1,\"756\",\"Nab,Sa3\"],[\"placements\",3,3]]",
+    "[16777334,\"bow-1\",\"t2\",[3,1,\"104\",\"Sa1,Ec\"],[\"placements\",3,3]]",
+    "[16777274,\"bow-3\",\"t1\",[3,1,\"314\",\"Sc2,Aab\"],[\"placements\",3,3]]",
+    "[16777332,\"bow-0\",\"t1\",[3,1,\"706\",\"Sb1,Nbc\"],[\"placements\",3,3]]",
+    "[16777287,\"bow-6\",\"t1\",[3,1,\"267\",\"Nac,Sc3\"],[\"placements\",3,3]]",
+    "[16777250,\"bow-4\",\"t0\",[3,1,\"640\",\"Sb1,Nab\"],[\"placements\",3,3]]",
+    "[16777350,\"bow-1\",\"t3\",[3,1,\"071\",\"Sc1,Nbc\"],[\"placements\",3,3]]",
+    "[16777278,\"bow-3\",\"t5\",[3,1,\"231\",\"Nbc,Sb1\"],[\"placements\",3,3]]",
+    "[16777348,\"bow-0\",\"t5\",[3,1,\"064\",\"Sc2,Aac\"],[\"placements\",3,3]]",
+    "[16777293,\"bow-6\",\"t7\",[3,1,\"546\",\"Sb3,Ec\"],[\"placements\",3,3]]",
+    "[16777259,\"bow-4\",\"t3\",[3,1,\"645\",\"Aac,Sa2\"],[\"placements\",3,3]]",
+    "[16777223,\"bow-5\",\"t4\",[3,1,\"625\",\"Sa3,Ec\"],[\"placements\",3,3]]",
+    "[16777283,\"bow-3\",\"t2\",[3,1,\"364\",\"Ea,Sc3\"],[\"placements\",3,3]]",
+    "[16777351,\"bow-0\",\"t6\",[3,1,\"046\",\"Sa1,Abc\"],[\"placements\",3,3]]",
+    "[16777297,\"bow-6\",\"t7\",[3,1,\"674\",\"Aac,Sb2\"],[\"placements\",3,3]]",
+    "[16777276,\"bow-4\",\"t6\",[3,1,\"604\",\"Sc1,Ea\"],[\"placements\",3,3]]",
+    "[16777369,\"bow-1\",\"t1\",[3,1,\"120\",\"Sa1,Nab\"],[\"placements\",3,3]]",
+    "[16777316,\"bow-3\",\"t2\",[3,1,\"563\",\"Sb3,Aca\"],[\"placements\",3,3]]",
+    "[16777353,\"bow-0\",\"t0\",[3,1,\"150\",\"Sb2,Aba\"],[\"placements\",3,3]]",
+    "[16777286,\"bow-4\",\"t3\",[3,1,\"423\",\"Sa1,Nab\"],[\"placements\",3,3]]",
+    "[16777226,\"bow-5\",\"t5\",[3,1,\"256\",\"Sc3,Nac\"],[\"placements\",3,3]]",
+    "[16777236,\"bow-2\",\"t3\",[3,1,\"524\",\"Sa2,Abc\"],[\"placements\",3,3]]",
+    "[16777372,\"bow-1\",\"t6\",[3,1,\"412\",\"Eb,Sa3\"],[\"placements\",3,3]]",
+    "[16777354,\"bow-0\",\"t2\",[3,1,\"027\",\"Sa1,Acb\"],[\"placements\",3,3]]",
+    "[16777305,\"bow-6\",\"t6\",[3,1,\"126\",\"Sc1,Aab\"],[\"placements\",3,3]]",
+    "[16777241,\"bow-5\",\"t0\",[3,1,\"501\",\"Acb,Sa1\"],[\"placements\",3,3]]",
+    "[16777246,\"bow-2\",\"t0\",[3,1,\"320\",\"Aba,Sc3\"],[\"placements\",3,3]]",
+    "[16777308,\"bow-7\",\"t2\",[3,1,\"735\",\"Nbc,Sb3\"],[\"placements\",3,3]]",
+    "[16777377,\"bow-1\",\"t0\",[3,1,\"104\",\"Sb2,Abc\"],[\"placements\",3,3]]"
+   ]
+  },
+  "3": {
+   "teach": {
+    "far": [
+     "[33554440,\"bow-5\",\"teach-far\",[4,1,\"1054\",\"Sd3,Sb2,Fcd\"],[\"placements\",4,4],0,0,[\"far\"]]",
+     "[33554448,\"bow-0\",\"teach-far\",[4,1,\"0415\",\"Fad,Sd3,Sb2\"],[\"placements\",4,4],0,0,[\"far\"]]",
+     "[33554456,\"bow-0\",\"teach-far\",[4,1,\"1037\",\"Fbc,Sc4,Sd2\"],[\"placements\",4,4],0,0,[\"far\"]]",
+     "[33554488,\"bow-5\",\"teach-far\",[4,1,\"0513\",\"Sd4,Fab,Sb1\"],[\"placements\",4,4],0,0,[\"far\"]]",
+     "[33554464,\"bow-2\",\"teach-far\",[4,1,\"3524\",\"Fcd,Sc1,Sa3\"],[\"placements\",4,4],0,0,[\"far\"]]",
+     "[33554536,\"bow-5\",\"teach-far\",[4,1,\"1053\",\"Fcd,Sc1,Sb3\"],[\"placements\",4,4],0,0,[\"far\"]]"
+    ]
+   },
+   "rows": [
+    "[33554433,\"bow-0\",\"t5\",[4,1,\"4203\",\"Aba,Acb,Fbc\"],[\"placements\",4,4]]",
+    "[33554443,\"bow-5\",\"t4\",[4,1,\"7520\",\"Abd,Ec,Abc,Fab\"],[\"placements\",4,4]]",
+    "[33554435,\"bow-3\",\"t2\",[4,1,\"5603\",\"Nac,Nad,Sa2,Ed\"],[\"placements\",4,4]]",
+    "[33554452,\"bow-5\",\"t0\",[4,1,\"2654\",\"Ada,Sc1,Sb4\"],[\"placements\",4,4]]",
+    "[33554438,\"bow-0\",\"t6\",[4,1,\"3610\",\"Ed,Fac,Aca,Ncd\"],[\"placements\",4,4]]",
+    "[33554463,\"bow-5\",\"t3\",[4,1,\"2510\",\"Fbd,Aad,Ec,Aac\"],[\"placements\",4,4]]",
+    "[33554454,\"bow-3\",\"t4\",[4,1,\"0732\",\"Sb2,Ec,Ed,Acd\"],[\"placements\",4,4]]",
+    "[33554465,\"bow-5\",\"t0\",[4,1,\"7652\",\"Sa3,Sd2,Acb\"],[\"placements\",4,4]]",
+    "[33554446,\"bow-0\",\"t5\",[4,1,\"0641\",\"Abd,Aab,Fbd\"],[\"placements\",4,4]]",
+    "[33554473,\"bow-5\",\"t5\",[4,1,\"2745\",\"Fab,Sa2,Sd1\"],[\"placements\",4,4]]",
+    "[33554466,\"bow-3\",\"t4\",[4,1,\"2306\",\"Aad,Fbc,Sb1,Nac\"],[\"placements\",4,4]]",
+    "[33554444,\"bow-6\",\"t0\",[4,1,\"0671\",\"Acd,Sa2,Abc\"],[\"placements\",4,4]]",
+    "[33554484,\"bow-5\",\"t2\",[4,1,\"7105\",\"Fad,Sb4,Adc\"],[\"placements\",4,4]]",
+    "[33554468,\"bow-3\",\"t1\",[4,1,\"2317\",\"Eb,Abc,Ea,Adc\"],[\"placements\",4,4]]",
+    "[33554447,\"bow-6\",\"t4\",[4,1,\"2546\",\"Fad,Ec,Aba,Aac\"],[\"placements\",4,4]]",
+    "[33554485,\"bow-5\",\"t2\",[4,1,\"2503\",\"Aad,Aac,Sa2,Nad\"],[\"placements\",4,4]]",
+    "[33554481,\"bow-3\",\"t6\",[4,1,\"3210\",\"Sd4,Ea,Acb\"],[\"placements\",4,4]]",
+    "[33554449,\"bow-6\",\"t7\",[4,1,\"4762\",\"Sc1,Eb,Fbd\"],[\"placements\",4,4]]",
+    "[33554436,\"bow-2\",\"t6\",[4,1,\"4721\",\"Acd,Fad,Sa4\"],[\"placements\",4,4]]",
+    "[33554459,\"bow-0\",\"t6\",[4,1,\"6401\",\"Sc1,Ea,Ncd\"],[\"placements\",4,4]]",
+    "[33554486,\"bow-3\",\"t6\",[4,1,\"3615\",\"Nbd,Adb,Acb,Aac\"],[\"placements\",4,4]]",
+    "[33554460,\"bow-6\",\"t7\",[4,1,\"0346\",\"Ec,Aac,Sa2,Adb\"],[\"placements\",4,4]]",
+    "[33554441,\"bow-2\",\"t1\",[4,1,\"5214\",\"Sc4,Aba,Aad\"],[\"placements\",4,4]]",
+    "[33554489,\"bow-5\",\"t3\",[4,1,\"3506\",\"Sb1,Fad,Fab\"],[\"placements\",4,4]]",
+    "[33554462,\"bow-0\",\"t0\",[4,1,\"0312\",\"Fbc,Abc,Sa1\"],[\"placements\",4,4]]",
+    "[33554508,\"bow-3\",\"t0\",[4,1,\"3417\",\"Ea,Ncd,Sc4\"],[\"placements\",4,4]]",
+    "[33554469,\"bow-6\",\"t4\",[4,1,\"5617\",\"Eb,Aad,Fbd,Aca\"],[\"placements\",4,4]]",
+    "[33554510,\"bow-5\",\"t7\",[4,1,\"7250\",\"Sd3,Sb2,Aba\"],[\"placements\",4,4]]",
+    "[33554467,\"bow-0\",\"t6\",[4,1,\"6270\",\"Sb3,Abc,Ada\"],[\"placements\",4,4]]",
+    "[33554514,\"bow-3\",\"t0\",[4,1,\"4310\",\"Nac,Ncd,Sc3,Ea\"],[\"placements\",4,4]]",
+    "[33554494,\"bow-6\",\"t6\",[4,1,\"3165\",\"Sb2,Abd,Fab\"],[\"placements\",4,4]]",
+    "[33554474,\"bow-2\",\"t3\",[4,1,\"2543\",\"Sa1,Fbc,Nab\"],[\"placements\",4,4]]",
+    "[33554439,\"bow-4\",\"t6\",[4,1,\"4256\",\"Adc,Aab,Sd3\"],[\"placements\",4,4]]",
+    "[33554516,\"bow-5\",\"t0\",[4,1,\"6507\",\"Nad,Nab,Sd3\"],[\"placements\",4,4]]",
+    "[33554478,\"bow-0\",\"t1\",[4,1,\"1037\",\"Sa4,Eb,Fad\"],[\"placements\",4,4]]",
+    "[33554524,\"bow-3\",\"t4\",[4,1,\"0231\",\"Fbc,Abd,Aab,Nac\"],[\"placements\",4,4]]",
+    "[33554500,\"bow-6\",\"t4\",[4,1,\"5364\",\"Ada,Nbd,Sd3\"],[\"placements\",4,4]]",
+    "[33554479,\"bow-2\",\"t3\",[4,1,\"7452\",\"Abc,Nbc,Sa2\"],[\"placements\",4,4]]",
+    "[33554445,\"bow-4\",\"t6\",[4,1,\"3746\",\"Sa4,Nbd,Sd3\"],[\"placements\",4,4]]",
+    "[33554501,\"bow-6\",\"t6\",[4,1,\"6407\",\"Fac,Eb,Acb,Aad\"],[\"placements\",4,4]]",
+    "[33554482,\"bow-2\",\"t2\",[4,1,\"0256\",\"Sb1,Nac,Ea\"],[\"placements\",4,4]]",
+    "[33554457,\"bow-4\",\"t7\",[4,1,\"4370\",\"Abc,Sb3,Ea\"],[\"placements\",4,4]]",
+    "[33554455,\"bow-7\",\"t2\",[4,1,\"4750\",\"Sa3,Sd2,Nac\"],[\"placements\",4,4]]",
+    "[33554540,\"bow-5\",\"t3\",[4,1,\"1542\",\"Sb1,Fbc,Ea\"],[\"placements\",4,4]]",
+    "[33554487,\"bow-0\",\"t7\",[4,1,\"5704\",\"Aab,Sd2,Fbc\"],[\"placements\",4,4]]",
+    "[33554538,\"bow-3\",\"t2\",[4,1,\"6032\",\"Sb2,Acd,Aca,Ed\"],[\"placements\",4,4]]",
+    "[33554506,\"bow-6\",\"t5\",[4,1,\"3461\",\"Abd,Sd3,Sc1\"],[\"placements\",4,4]]",
+    "[33554491,\"bow-2\",\"t2\",[4,1,\"7241\",\"Abc,Eb,Nbc,Ea\"],[\"placements\",4,4]]"
+   ]
+  },
+  "4": {
+   "teach": {
+    "mid": [
+     "[50331672,\"bow-5\",\"teach-mid\",[5,1,\"16524\",\"Me,Sb3,Sc1,Sd2\"],[\"placements\",5,5],0,0,[\"mid\"]]",
+     "[50331704,\"bow-0\",\"teach-mid\",[5,1,\"62041\",\"Sb2,Sa4,Md,Se5\"],[\"placements\",5,5],0,0,[\"mid\"]]",
+     "[50331688,\"bow-7\",\"teach-mid\",[5,1,\"76512\",\"Sc5,Sd3,Sb2,Me\"],[\"placements\",5,5],0,0,[\"mid\"]]",
+     "[50331752,\"bow-0\",\"teach-mid\",[5,1,\"71063\",\"Mb,Sc1,Sa4,Sd3\"],[\"placements\",5,5],0,0,[\"mid\"]]",
+     "[50331864,\"bow-2\",\"teach-mid\",[5,1,\"24516\",\"Sc3,Sa1,Mb,Se2\"],[\"placements\",5,5],0,0,[\"mid\"]]",
+     "[50331784,\"bow-5\",\"teach-mid\",[5,1,\"03165\",\"Ma,Sc4,Sd3,Se1\"],[\"placements\",5,5],0,0,[\"mid\"]]"
+    ],
+    "gap": [
+     "[50331712,\"bow-5\",\"teach-gap\",[5,1,\"45376\",\"Sc2,Sb1,Gcd,Se5\"],[\"placements\",5,5],0,0,[\"gap\"]]",
+     "[50331696,\"bow-0\",\"teach-gap\",[5,1,\"60452\",\"Gab,Sd4,Se2,Sb1\"],[\"placements\",5,5],0,0,[\"gap\"]]",
+     "[50331664,\"bow-3\",\"teach-gap\",[5,1,\"71536\",\"Sc4,Gbd,Sa5,Sb3\"],[\"placements\",5,5],0,0,[\"gap\"]]",
+     "[50331680,\"bow-3\",\"teach-gap\",[5,1,\"70534\",\"Sd1,Se4,Sa3,Gab\"],[\"placements\",5,5],0,0,[\"gap\"]]",
+     "[50331744,\"bow-6\",\"teach-gap\",[5,1,\"60754\",\"Se5,Sd2,Sa1,Gab\"],[\"placements\",5,5],0,0,[\"gap\"]]",
+     "[50331776,\"bow-5\",\"teach-gap\",[5,1,\"70415\",\"Sb2,Gcd,Se1,Sc5\"],[\"placements\",5,5],0,0,[\"gap\"]]"
+    ]
+   },
+   "rows": [
+    "[50331653,\"bow-2\",\"t0\",[5,1,\"24516\",\"Fce,Adb,Aec,Nbe,Aad\"],[\"placements\",5,5]]",
+    "[50331652,\"bow-5\",\"t7\",[5,1,\"72451\",\"Fad,Gce,Aec,Ade,Gbd\"],[\"placements\",5,5]]",
+    "[50331711,\"bow-2\",\"t2\",[5,1,\"23065\",\"Acd,Ea,Nac,Gcd,Eb\"],[\"placements\",5,5]]",
+    "[50331658,\"bow-5\",\"t7\",[5,1,\"15632\",\"Aed,Ma,Fde,Mc,Ace\"],[\"placements\",5,5]]",
+    "[50331740,\"bow-2\",\"t3\",[5,1,\"62430\",\"Eb,Abe,Aae,Gbe,Gad\"],[\"placements\",5,5]]",
+    "[50331661,\"bow-0\",\"t0\",[5,1,\"13056\",\"Gbe,Ade,Ee,Abd,Gad\"],[\"placements\",5,5]]",
+    "[50331741,\"bow-2\",\"t3\",[5,1,\"27150\",\"Aac,Abd,Fbd,Ea,Adc\"],[\"placements\",5,5]]",
+    "[50331751,\"bow-2\",\"t6\",[5,1,\"41526\",\"Ed,Ee,Fce,Abe,Aac\"],[\"placements\",5,5]]",
+    "[50331666,\"bow-0\",\"t5\",[5,1,\"20673\",\"Aae,Ee,Fbd,Fbc,Gce\"],[\"placements\",5,5]]",
+    "[50331753,\"bow-2\",\"t7\",[5,1,\"05612\",\"Fce,Eb,Aea,Gcd,Gab\"],[\"placements\",5,5]]",
+    "[50331703,\"bow-5\",\"t3\",[5,1,\"05641\",\"Nae,Aba,Ea,Gac,Abd\"],[\"placements\",5,5]]",
+    "[50331767,\"bow-2\",\"t5\",[5,1,\"70623\",\"Gac,Aae,Aab,Eb,Ed\"],[\"placements\",5,5]]",
+    "[50331679,\"bow-0\",\"t2\",[5,1,\"36510\",\"Aeb,Fde,Adc,Fad,Abc,Aba\"],[\"placements\",5,5]]",
+    "[50331662,\"bow-3\",\"t5\",[5,1,\"71326\",\"Acb,Fab,Aae,Aba\"],[\"placements\",5,5]]",
+    "[50331772,\"bow-2\",\"t6\",[5,1,\"42173\",\"Gbd,Mc,Abd,Fab,Ma\"],[\"placements\",5,5]]",
+    "[50331788,\"bow-2\",\"t0\",[5,1,\"46203\",\"Nbe,Acb,Eb,Ada,Ec\"],[\"placements\",5,5]]",
+    "[50331722,\"bow-5\",\"t1\",[5,1,\"76504\",\"Fab,Ec,Nce,Ea,Acb\"],[\"placements\",5,5]]",
+    "[50331665,\"bow-3\",\"t3\",[5,1,\"13746\",\"Abe,Eb,Ace,Nab,Ncd,Fad\"],[\"placements\",5,5]]",
+    "[50331668,\"bow-6\",\"t2\",[5,1,\"50126\",\"Nbc,Fac,Ma,Gcd,Aad\"],[\"placements\",5,5]]",
+    "[50331684,\"bow-7\",\"t1\",[5,1,\"31657\",\"Acb,Aeb,Ee,Ed,Gcd\"],[\"placements\",5,5]]",
+    "[50331817,\"bow-2\",\"t4\",[5,1,\"21764\",\"Adb,Aac,Gce,Ea,Nbe,Fad\"],[\"placements\",5,5]]",
+    "[50331731,\"bow-5\",\"t1\",[5,1,\"62357\",\"Ea,Acb,Gbe,Nab,Adc\"],[\"placements\",5,5]]",
+    "[50331730,\"bow-0\",\"t3\",[5,1,\"76230\",\"Nbc,Gae,Ee,Aab,Fac\"],[\"placements\",5,5]]",
+    "[50331676,\"bow-3\",\"t2\",[5,1,\"02435\",\"Aab,Ada,Nce,Ec,Aac\"],[\"placements\",5,5]]",
+    "[50331719,\"bow-6\",\"t7\",[5,1,\"62140\",\"Fcd,Aab,Mc,Fbc,Acd,Nde\"],[\"placements\",5,5]]",
+    "[50331843,\"bow-2\",\"t0\",[5,1,\"72650\",\"Eb,Aac,Fac,Nbd,Abd\"],[\"placements\",5,5]]",
+    "[50331755,\"bow-5\",\"t3\",[5,1,\"53712\",\"Fbe,Ace,Aad,Nad,Ea\"],[\"placements\",5,5]]",
+    "[50331738,\"bow-0\",\"t2\",[5,1,\"15720\",\"Aeb,Adb,Fad,Fbe,Fde,Mb\"],[\"placements\",5,5]]",
+    "[50331737,\"bow-6\",\"t3\",[5,1,\"76245\",\"Abe,Ma,Fce,Gcd,Aea\"],[\"placements\",5,5]]",
+    "[50331708,\"bow-7\",\"t5\",[5,1,\"06274\",\"Aec,Fde,Ade,Aca\"],[\"placements\",5,5]]",
+    "[50331851,\"bow-2\",\"t3\",[5,1,\"27530\",\"Nbe,Aed,Acb,Gbc,Aad,Ea\"],[\"placements\",5,5]]",
+    "[50331774,\"bow-5\",\"t0\",[5,1,\"21045\",\"Fde,Aca,Aed,Ncd,Aab\"],[\"placements\",5,5]]",
+    "[50331682,\"bow-3\",\"t2\",[5,1,\"62301\",\"Aba,Fbc,Abd,Aeb,Acd,Ea\"],[\"placements\",5,5]]",
+    "[50331709,\"bow-7\",\"t0\",[5,1,\"72350\",\"Ee,Gce,Acd,Ade,Gbd\"],[\"placements\",5,5]]",
+    "[50331766,\"bow-0\",\"t7\",[5,1,\"53047\",\"Ea,Aeb,Acd,Ec,Gde\"],[\"placements\",5,5]]",
+    "[50331693,\"bow-3\",\"t7\",[5,1,\"40376\",\"Aad,Fab,Ma,Fcd,Gbd\"],[\"placements\",5,5]]",
+    "[50331763,\"bow-6\",\"t4\",[5,1,\"16572\",\"Mc,Fac,Aba,Ma,Ncd,Fab\"],[\"placements\",5,5]]",
+    "[50331650,\"bow-4\",\"t7\",[5,1,\"60154\",\"Md,Aec,Ma,Nab,Aba,Ada\"],[\"placements\",5,5]]",
+    "[50331877,\"bow-2\",\"t4\",[5,1,\"42317\",\"Eb,Adc,Abd,Nce,Gbc\"],[\"placements\",5,5]]",
+    "[50331786,\"bow-0\",\"t2\",[5,1,\"43701\",\"Abc,Ed,Ada,Gac,Nad\"],[\"placements\",5,5]]",
+    "[50331713,\"bow-3\",\"t4\",[5,1,\"13627\",\"Adc,Aed,Mc,Gbd,Abc\"],[\"placements\",5,5]]",
+    "[50331782,\"bow-6\",\"t1\",[5,1,\"70356\",\"Acb,Aec,Gae,Mb\"],[\"placements\",5,5]]",
+    "[50331758,\"bow-7\",\"t5\",[5,1,\"27304\",\"Aae,Ed,Eb,Gab,Abe\"],[\"placements\",5,5]]",
+    "[50331669,\"bow-4\",\"t4\",[5,1,\"57412\",\"Abe,Ada,Md,Aab\"],[\"placements\",5,5]]",
+    "[50331791,\"bow-5\",\"t0\",[5,1,\"05461\",\"Ada,Eb,Ade,Aec,Abe,Fae\"],[\"placements\",5,5]]",
+    "[50331790,\"bow-0\",\"t4\",[5,1,\"36017\",\"Aed,Aae,Aba,Mb\"],[\"placements\",5,5]]",
+    "[50331723,\"bow-3\",\"t4\",[5,1,\"31406\",\"Aeb,Gad,Me,Aed,Ncd\"],[\"placements\",5,5]]",
+    "[50331804,\"bow-6\",\"t7\",[5,1,\"56703\",\"Nae,Nac,Ed,Ace,Nde\"],[\"placements\",5,5]]"
+   ]
+  },
+  "5": {
+   "teach": {
+    "whatif": [
+     "[67108992,\"bow-0\",\"teach-whatif\",[5,1,\"61407\",\"Gbc,Adc,Aba,Gbd\"],[\"placements\",5,5],0,[[\"placements\",5]],[\"whatif\"]]",
+     "[67109392,\"bow-7\",\"teach-whatif\",[5,1,\"05743\",\"Fac,Gbd,Gbc,Aca\"],[\"placements\",5,5],0,[[\"placements\",5]],[\"whatif\"]]",
+     "[67109128,\"bow-3\",\"teach-whatif\",[5,1,\"23506\",\"Ncd,Gad,Abd,Nbc\"],[\"placements\",5,5],0,[[\"placements\",5]],[\"whatif\"]]",
+     "[67109056,\"bow-5\",\"teach-whatif\",[5,1,\"75432\",\"Gbd,Fbc,Gde,Aba\"],[\"placements\",5,5],0,[[\"placements\",5]],[\"whatif\"]]",
+     "[67109424,\"bow-7\",\"teach-whatif\",[5,1,\"71325\",\"Aac,Nad,Gbc,Ncd\"],[\"placements\",5,5],0,[[\"placements\",5]],[\"whatif\"]]",
+     "[67109096,\"bow-5\",\"teach-whatif\",[5,1,\"57614\",\"Gae,Aac,Aeb,Gce\"],[\"placements\",5,5],0,[[\"placements\",5]],[\"whatif\"]]"
+    ]
+   },
+   "rows": [
+    "[67108871,\"bow-7\",\"t0\",[5,1,\"01743\",\"Fce,Acd,Gde,Aba,Aad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108866,\"bow-2\",\"t7\",[5,1,\"62317\",\"Fab,Aed,Aac,Abc,Gac\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108882,\"bow-7\",\"t7\",[5,1,\"27354\",\"Acd,Gcd,Fbd,Abe,Fde\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108883,\"bow-2\",\"t3\",[5,1,\"23741\",\"Aae,Aed,Gbd,Nae,Abc\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108884,\"bow-7\",\"t1\",[5,1,\"07124\",\"Fce,Nac,Aba,Fbd,Aac,Fbe\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108889,\"bow-6\",\"t0\",[5,1,\"13670\",\"Nab,Gcd,Md,Gbe,Acd\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108899,\"bow-7\",\"t0\",[5,1,\"23457\",\"Mc,Acd,Aea,Ncd,Gbe\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108892,\"bow-2\",\"t6\",[5,1,\"27541\",\"Aae,Aab,Nab,Gde,Adc\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108901,\"bow-7\",\"t2\",[5,1,\"17235\",\"Acd,Fbd,Nac,Nde,Aca,Gce\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108925,\"bow-6\",\"t1\",[5,1,\"05163\",\"Gce,Gde,Fad,Adb\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108908,\"bow-7\",\"t3\",[5,1,\"73465\",\"Fae,Aae,Nbc,Mc,Aeb\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108919,\"bow-2\",\"t3\",[5,1,\"54721\",\"Gad,Fbc,Gab,Acb\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108921,\"bow-7\",\"t2\",[5,1,\"10374\",\"Nbe,Ed,Nde,Aea,Fbc\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108941,\"bow-6\",\"t1\",[5,1,\"61475\",\"Adc,Nce,Aad,Fbc,Gbe\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108931,\"bow-7\",\"t1\",[5,1,\"35127\",\"Adb,Gcd,Fce,Aeb,Fde\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108927,\"bow-2\",\"t4\",[5,1,\"34502\",\"Aec,Fde,Aba,Adb,Ncd\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108951,\"bow-7\",\"t0\",[5,1,\"36571\",\"Nbc,Ncd,Ada,Abe,Nab\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108946,\"bow-6\",\"t3\",[5,1,\"65472\",\"Md,Nce,Fab,Fae,Fad,Aab\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108958,\"bow-7\",\"t6\",[5,1,\"45167\",\"Gad,Fbe,Gde,Aea\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108865,\"bow-4\",\"t4\",[5,1,\"02674\",\"Fbc,Acb,Ma,Aed,Mc,Gcd\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108970,\"bow-7\",\"t3\",[5,1,\"74032\",\"Md,Mb,Aad,Nce,Fab,Gde\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108953,\"bow-2\",\"t6\",[5,1,\"16725\",\"Gae,Aab,Ade,Aae,Fad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109012,\"bow-7\",\"t1\",[5,1,\"23674\",\"Nae,Nde,Aea,Mb,Adc\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108993,\"bow-6\",\"t4\",[5,1,\"12576\",\"Aed,Gac,Aba,Nde,Aea\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109028,\"bow-7\",\"t7\",[5,1,\"20137\",\"Aec,Aba,Gab,Ee,Fad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108895,\"bow-4\",\"t6\",[5,1,\"27304\",\"Aec,Ncd,Aab,Aea,Nde\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109045,\"bow-7\",\"t5\",[5,1,\"27051\",\"Gae,Fab,Aae,Ada,Abc\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108961,\"bow-2\",\"t7\",[5,1,\"12703\",\"Acd,Gbc,Gce,Aba\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109046,\"bow-7\",\"t0\",[5,1,\"56107\",\"Gbc,Fce,Aea,Acb,Aad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108996,\"bow-6\",\"t4\",[5,1,\"15670\",\"Nac,Gab,Aae,Acd,Adb\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109055,\"bow-7\",\"t2\",[5,1,\"76240\",\"Nab,Fce,Me,Abd,Ea\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108902,\"bow-4\",\"t6\",[5,1,\"24675\",\"Md,Fbd,Fad,Abe,Gbe\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109076,\"bow-7\",\"t2\",[5,1,\"37102\",\"Fbc,Fad,Fab,Gcd,Aca\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108878,\"bow-3\",\"t6\",[5,1,\"43570\",\"Nac,Abe,Nae,Gbc\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109077,\"bow-7\",\"t0\",[5,1,\"67045\",\"Gbc,Fbe,Aae,Gcd\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108972,\"bow-2\",\"t1\",[5,1,\"72350\",\"Abd,Fde,Gce,Gad,Fbd\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109095,\"bow-7\",\"t5\",[5,1,\"20571\",\"Gce,Mb,Ade,Nbd,Aca\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108999,\"bow-6\",\"t7\",[5,1,\"06342\",\"Gab,Nae,Nde,Aca\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109105,\"bow-7\",\"t4\",[5,1,\"63107\",\"Fbd,Fbc,Adb,Aed,Gac\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108903,\"bow-4\",\"t1\",[5,1,\"54721\",\"Abe,Gac,Aea,Abd,Fad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109130,\"bow-7\",\"t3\",[5,1,\"10765\",\"Ec,Aad,Fad,Eb,Fab\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108916,\"bow-3\",\"t7\",[5,1,\"32605\",\"Mc,Gac,Fab,Fbc,Adb,Fbe\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109149,\"bow-7\",\"t6\",[5,1,\"23710\",\"Nae,Acd,Nad,Gce\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108990,\"bow-2\",\"t0\",[5,1,\"32641\",\"Abe,Fab,Gbe,Gce\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109203,\"bow-7\",\"t7\",[5,1,\"61057\",\"Fae,Aba,Mb,Gad,Fab\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109037,\"bow-6\",\"t3\",[5,1,\"76145\",\"Adc,Aea,Fcd,Fbc,Gbd,Nad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109206,\"bow-7\",\"t5\",[5,1,\"37024\",\"Abe,Aca,Fbe,Nac,Aed\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108905,\"bow-4\",\"t4\",[5,1,\"34216\",\"Fcd,Ma,Adc,Md,Gde,Abe\"],[\"placements\",5,5],0,[[\"placements\",5]]]"
+   ]
+  }
+ },
+ "challenge": [
+  {
+   "path": "deep",
+   "band": "f",
+   "rows": [
+    "[83886144,\"bow-4\",\"teach-same\",[4,2,\"54701304\",\"Sa2,Sh3,Sd4,Sf2,Wbe\"],[\"placements\",8,8],0,[[\"placements\",8]],[\"same\"]]",
+    "[83886104,\"bow-6\",\"teach-diff\",[4,2,\"41564102\",\"Sf1,Sa4,Sg4,Se2,Xcf,Sb2\"],[\"placements\",8,8],0,[[\"placements\",8]],[\"diff\"]]",
+    "[83886081,\"bow-5\",\"t3\",[4,2,\"54761304\",\"Xde,Sc4,Ndf,Xae,Sa1,Wbh\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886093,\"bow-4\",\"t0\",[4,2,\"13462401\",\"Sd3,Wch,Aca,Fbc,Aef,Wde\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886090,\"bow-5\",\"t6\",[4,2,\"46514301\",\"Wde,Sc1,Xah,Feg,Nad,Aeh\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886101,\"bow-4\",\"t4\",[4,2,\"36450143\",\"Sd2,Ffh,Se4,Adh,Nae,Xbf\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886098,\"bow-5\",\"t3\",[4,2,\"53743201\",\"Aae,Aef,Afg,Xbe,Wcf\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886113,\"bow-4\",\"t7\",[4,2,\"25344023\",\"Sd1,Afe,Waf,Afg,Agc\"],[\"placements\",8,8],0,[[\"placements\",8]]]"
+   ]
+  },
+  {
+   "path": "deep",
+   "band": "g",
+   "rows": [
+    "[100663314,\"bow-0\",\"t0\",[5,2,\"5017331402\",\"Waf,Geh,Aie,Wci,Gfj,Abd,Nfg,Aja,Nei\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663300,\"bow-4\",\"t2\",[5,2,\"6745131042\",\"Gab,Abh,Aif,Acg,Fbd,Xaf,Nbg,Geh\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663323,\"bow-0\",\"t6\",[5,2,\"2076404312\",\"Ahj,Xci,Gej,Nce,Xdi,Waf,Aba,Nei,Nhj\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663306,\"bow-4\",\"t4\",[5,2,\"0467314230\",\"Wcg,Nad,Afe,Wbf,Gdi,Ej,Nch\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663325,\"bow-0\",\"t0\",[5,2,\"2061534201\",\"Ahc,Ajg,Wei,Afa,Gab,Xcg,Naf,Fbe,Nai,Eg\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663310,\"bow-4\",\"t1\",[5,2,\"1320432401\",\"Nce,Ggj,Adb,Xdg,Xaf,Gbh,Xcg,Aja,Agj\"],[\"placements\",10,10],0,[[\"placements\",10]]]"
+   ]
+  },
+  {
+   "path": "deep",
+   "band": "h",
+   "rows": [
+    "[117440549,\"bow-1\",\"t3\",[5,3,\"613404203103124\",\"Ncn,Wfm,Gbc,Gal,Alm,Adh,Nfj,Nco,Gin,Aea\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440655,\"bow-4\",\"t4\",[5,3,\"143571240310234\",\"Wai,Ed,Gem,Ggm,Njo,Ncl,Agl,Afn,Wio,And\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440569,\"bow-6\",\"t5\",[5,3,\"732611203401342\",\"Wgm,Waf,Gin,Nak,Gae,Ado,Mb,Gjn,Ana,Ajk\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440836,\"bow-1\",\"t7\",[5,3,\"124763012403421\",\"Aje,Aam,Nhl,Wjm,Wdg,Ajg,Ani,Nem,Wbi,Gkm\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440738,\"bow-4\",\"t0\",[5,3,\"216451342034102\",\"Adf,Njm,Gkl,Akc,Ngm,Wio,Weg,Ace,Abk,Anh\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440671,\"bow-0\",\"t5\",[5,3,\"074563042101243\",\"Glm,Amo,Aim,Aef,Abe,Aan,Wbh,Wel,Xgl,Nco\"],[\"placements\",15,15],0,[[\"placements\",15]]]"
+   ]
+  },
+  {
+   "path": "endless",
+   "band": "c",
+   "rows": [
+    "[33554458,\"bow-4\",\"t1\",[4,1,\"5734\",\"Sc3,Ed,Nad\"],[\"placements\",4,4]]",
+    "[33554541,\"bow-5\",\"t7\",[4,1,\"6512\",\"Ada,Fbc,Nad,Abd\"],[\"placements\",4,4]]",
+    "[33554495,\"bow-0\",\"t1\",[4,1,\"0627\",\"Nbc,Ncd,Sb4\"],[\"placements\",4,4]]",
+    "[33554507,\"bow-6\",\"t5\",[4,1,\"0615\",\"Adc,Nac,Ec,Eb\"],[\"placements\",4,4]]"
+   ]
+  },
+  {
+   "path": "endless",
+   "band": "d",
+   "rows": [
+    "[50331761,\"bow-7\",\"t7\",[5,1,\"40761\",\"Aab,Ec,Nbe,Gcd,Fbd\"],[\"placements\",5,5]]",
+    "[50331675,\"bow-4\",\"t4\",[5,1,\"40376\",\"Aab,Ea,Ace,Adc,Fce\"],[\"placements\",5,5]]",
+    "[50331909,\"bow-2\",\"t7\",[5,1,\"02167\",\"Ace,Fbd,Abc,Eb,Adc\"],[\"placements\",5,5]]",
+    "[50331727,\"bow-3\",\"t6\",[5,1,\"34052\",\"Abc,Ea,Aeb,Gae\"],[\"placements\",5,5]]"
+   ]
+  },
+  {
+   "path": "endless",
+   "band": "e",
+   "rows": [
+    "[67109220,\"bow-7\",\"t6\",[5,1,\"65147\",\"Nab,Ncd,Acd,Nce,Ada,Eb\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108950,\"bow-3\",\"t0\",[5,1,\"06513\",\"Aea,Fbd,Aab,Nab,Aad\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67109222,\"bow-7\",\"t1\",[5,1,\"74650\",\"Nad,Mc,Nce,Ea,Aab,Nbe\"],[\"placements\",5,5],0,[[\"placements\",5]]]",
+    "[67108891,\"bow-0\",\"t4\",[5,1,\"74105\",\"Fcd,Aec,Adb,Gde,Gac\"],[\"placements\",5,5],0,[[\"placements\",5]]]"
+   ]
+  },
+  {
+   "path": "endless",
+   "band": "f",
+   "rows": [
+    "[83886100,\"bow-5\",\"t6\",[4,2,\"75461403\",\"Wcf,Ef,Abd,Wde,Adh,Nch\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886118,\"bow-4\",\"t5\",[4,2,\"45063012\",\"Neh,Abe,Xbg,Aef,Aae,Acd\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886117,\"bow-5\",\"t0\",[4,2,\"03450413\",\"Sd1,Aha,Ffh,Xch,Wdg,Xaf\"],[\"placements\",8,8],0,[[\"placements\",8]]]",
+    "[83886132,\"bow-4\",\"t2\",[4,2,\"64371230\",\"Fbd,Sh1,Ee,Adc,Agd\"],[\"placements\",8,8],0,[[\"placements\",8]]]"
+   ]
+  },
+  {
+   "path": "endless",
+   "band": "g",
+   "rows": [
+    "[100663344,\"bow-0\",\"t2\",[5,2,\"5061410423\",\"Gah,Aef,Agi,Gac,Nbd,Aec,Nad,Xei\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663311,\"bow-4\",\"t3\",[5,2,\"3104204231\",\"Ndh,Afa,Nfh,Gai,Ghj,Aea,Gef,Xbh\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663362,\"bow-0\",\"t1\",[5,2,\"7410524013\",\"Aci,Acj,Gei,Nbc,Ncd,Aig,Gbh,Ngi\"],[\"placements\",10,10],0,[[\"placements\",10]]]",
+    "[100663330,\"bow-4\",\"t4\",[5,2,\"1640520413\",\"Aih,Aci,Gac,Neg,Aeg,Geh,Xcj,Ffj,Xbj\"],[\"placements\",10,10],0,[[\"placements\",10]]]"
+   ]
+  },
+  {
+   "path": "endless",
+   "band": "h",
+   "rows": [
+    "[117440544,\"bow-1\",\"t2\",[5,3,\"175303402124130\",\"Ajc,Xdg,Nlm,Win,Gfn,Wdk,Ea,Wfl,Anb,And,Ncn\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440539,\"bow-4\",\"t3\",[5,3,\"025143201424130\",\"Wfl,Xdi,Fkn,Gdj,Nik,Abh,Ej,Aei,Nln,Xgo,Gbc,Gio\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440545,\"bow-4\",\"t5\",[5,3,\"704320214332401\",\"Xdk,Mg,Nfl,Nch,Ncl,Ang,Gae,Xei,Nno,Nhn,And,Nhm,Gim\"],[\"placements\",15,15],0,[[\"placements\",15]]]",
+    "[117440566,\"bow-1\",\"t3\",[5,3,\"162074230140132\",\"Nam,Ahf,Agb,Gkn,Aai,Weh,Xjn,Fgj,Xhm,Nbd,Ndg,Aob,Ea\"],[\"placements\",15,15],0,[[\"placements\",15]]]"
+   ]
+  }
+ ],
+ "packed": [
+  [
+   302,
+   309248,
+   400,
+   "a9de00f598dd370917a28e6e61c061a90594581487e11169c18e92af3bcbfead",
+   1,
+   "c"
+  ],
+  [
+   303,
+   310272,
+   600,
+   "b247c83bd5b8d15be317d8f82f2e888899206469afc247ffb9694eda1ea71295",
+   1,
+   "d"
+  ],
+  [
+   304,
+   311296,
+   800,
+   "918a00e97a1f2284a7815cec32e08db3c84ca81056f5614e94c6da5026e8771a",
+   1,
+   "e"
+  ],
+  [
+   305,
+   312320,
+   600,
+   "8b17e1a9f9c5f698d1b12a0ff1bf676b54f01abfefbb2591cb725dcb77c99bbf",
+   1,
+   "f"
+  ],
+  [
+   306,
+   313344,
+   800,
+   "c4eb30080981bcf1ae05ad0dd2c50b521bad18e9991aa9acbdc8d2314fdc14e2",
+   1,
+   "g"
+  ],
+  [
+   307,
+   314368,
+   512,
+   "41775c42988591468273b84045642f5ef25def822d0a24d9d8f42e2e4d7c853b",
+   1,
+   "h"
+  ]
+ ]
+}

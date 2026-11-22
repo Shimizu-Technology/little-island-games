@@ -269,3 +269,88 @@ For preview IPA delivery, first run `npm run ios:preview-bundle-prep`, keep
 run `npm run ios:restore-generated` after completion. The wrapper verifies fresh
 preview JavaScript against embedded Hermes before any delivery command. A default
 export does not validate a preview IPA. This worker does not authorize delivery.
+
+### Reviewed source-unit collisions
+
+A source list can contain ordinary authored words that also occur in the broad
+scan policy. Review that complete unit instead of renaming content to avoid the
+guard. The private policy accepts `sourceUnitExceptions`, an array of entries
+with an exact repository-relative `path` under `src/` and a nonempty `units`
+array. Each unit has `sha256` (SHA-256 of the exact source expression text),
+`occurrences` (positive exact source count), and nonempty `terms`. Each term
+requires `term`, `check: "broad"`, a specific `reason`, and review `evidence`.
+Keep all real terms and unit hashes in private artifacts outside Git.
+
+The operator must inspect the unit at the specified commit, verify each term's
+review records, and update the locked policy bytes and policy hash. Core, exact,
+and lemma terms cannot receive an exception, including normalized equivalents.
+Every listed term must occur in the unit's broad finding, with no unreviewed
+broad terms. Missing paths, edited text, changed counts, duplicate entries, and
+unused entries fail closed. Remove obsolete exceptions when removing content.
+These are collision annotations; they do not change bank content-policy hashes
+or grant word, clue, grid, shipping, or family approval.
+
+The guard checks the exact source unit first. Its full syntax and decoded literal
+values then identify the corresponding JavaScript container in web and native
+JavaScript exports, allowing formatting, quote, and trailing-comma changes. A
+changed/reordered container or an extra copy receives the ordinary list check.
+The occurrence limit applies independently to each export file. Hermes retains
+its existing string-table checks and the release gate's companion native
+JavaScript scan. Only that container's list finding is suppressed: strings,
+other units, literals, density, grids, raw policy blobs/hashes, canaries, and
+private filenames still get every check. The result reports
+`sourceUnitExceptionsUsed` and `exportedSourceUnitExceptionsUsed` as matched
+source/export container counts; no private terms are printed.
+
+### Identifier provenance and opaque asset names
+
+An exported identifier-map key can trace verbatim to one specific identifier
+position in a repository source file that passes the source scan. Runtime
+property and declaration names qualify. Map keys in the same shape as an export
+map cannot donate provenance, and type declarations, ambient declarations,
+type-only exports, displayed strings, comments and near matches are ineligible.
+The generated Challenge registry receives its own source scan. A key containing
+a normalized core, exact or lemma token must use ordinary vocabulary admission.
+Keys with ordinary vocabulary admission use that path first. A map with at
+least three distinct broad tokens among its identifier-traced keys
+requires a `sourceUnitExceptions` binding for the exact source object and its
+complete set of broad key tokens. The binding is checked against the full
+exported object syntax, including function values. The result counts distinct
+traced repository keys in `tracedIdentifiersUsed`. Identifier provenance
+applies only to map keys and leaves the other artifact checks in force.
+
+For third-party names the operator can supply private
+`dependencyIdentifierProvenance` entries with `package`, exact `version`,
+lockfile `integrity`, package-relative `path`, lowercase hexadecimal
+`sha256` of the installed file bytes, verbatim `identifier`, source character
+`offset` and a nonempty `reason`. Review each runtime property or export name in
+the generated native/module map. The package's lockfile entry, installed
+manifest, file bytes and exact identifier position must agree with the pin. The
+source file must also pass the scan. Missing or symlinked files, changed bytes,
+wrong positions, changed versions or integrity values, duplicate identifiers and
+stale entries fail even if that export does not use the entry.
+`dependencyIdentifiersUsed` reports distinct used entries; an intact
+entry can legitimately be unused on another platform. There is no package-wide
+allowance. Keep entries and their source evidence outside Git. This collision
+metadata stays outside bank content-policy digests, while the operator lock
+binds all policy bytes.
+
+An opaque asset basename skips filename word checks only when its complete
+extension-free name equals the MD5, SHA-1 or SHA-256 of its own bytes. Random hex,
+wrong content hashes and renamed assets retain filename checks. The file's
+contents still receive all ordinary checks.
+
+Native export can also remove a puzzle pack's extension. Pack-shaped JSON
+headers are detected from bytes and decoded through the exporting source's
+registered codec before semantic scanning. Malformed or unknown codecs fail
+closed. Decoded grids, literals and word admission retain the same checks as
+named `.lipuzzle` files; raw private-byte and density checks still apply.
+
+Run `LITTLE_ISLAND_WORD_POLICY_LOCK=<private-lock> npm run check:words:ios` to
+validate Library inputs, regenerate the selected Library mode, export fresh iOS
+JavaScript without bytecode/minification, and run the complete export guard. The
+command requires a lock, reports `runtimeSeconds` and removes its temporary
+export on success or failure. Restore default generated Library files after a
+preview run. Measured runtimes and source commits belong in the external slice
+report. This command does not establish Hermes, installed-device or family
+acceptance; release retains its separate native compiler/bytecode binding gate.

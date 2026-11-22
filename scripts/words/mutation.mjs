@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync, sy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','bake-reading','registry','morphology','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','puzzle-admission','preview','ci'];
+const files=['bake','bake-reading','registry','morphology','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','compiler','text-views','media-structure','generated-admission','identifier-provenance','puzzle-admission','preview','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
 // The shared word-parts validator is app TypeScript under src/; the harness loads the copy named by WORD_TEST_MORPHOLOGY_FILE.
 const toolFile=file=>file==='morphology'?'morphology.ts':`${file}.mjs`;
@@ -65,6 +65,48 @@ custom('bake','asset listed raw object',sources.get('bake').replace('listed:list
 custom('bake','asset raw word object',sources.get('bake').replace('words.map(w => ({ id:w.id,','words.map(w => ({ ...w, id:w.id,'),['successful synthetic bake has exact safe asset projection']);
 custom('bake','asset whole policy',sources.get('bake').replace('const asset = { schemaVersion:1,','const asset = { policy, schemaVersion:1,'),['successful synthetic bake has exact safe asset projection']);
 custom('paths','symlink ancestor canonicalization',sources.get('paths').replace('realpathSync.native(parent)','parent'),['privatePath resolves symlink ancestors']);
+// Wguard2: every source/export binding edge has its own negative probe.
+const sourceUnitEdges=[
+ ['path binding','sourceBindings.filter(binding=>binding.path===name)','sourceBindings',['Wguard2 wrong source cannot borrow review']],
+ ['exact source hash','origin.sourceSha256===item.sha256','true',['Wguard2 changed unit']],
+ ['export identity','if(!binding.signatures.has(hit.origin.signature))continue;','',['Wguard2 extra term','Wguard2 reordered export','Wguard2 extra neutral export','Wguard2 fix2 function map review binds complete syntax']],
+ ['parser occurrence identity','identity=hit.origin','identity=hit.origin.offset+\":\"+hit.origin.signature',['Wguard2 repeated worklets cannot share occurrence identity']],
+ ['export occurrence cap','if(!origins.has(identity) && origins.size>=binding.item.occurrences)continue;','',['Wguard2 duplicate export']],
+ ['all reviewed broad terms','terms.size===new Set(hit.broad).size && hit.broad.every(term=>terms.has(term))','true',['Wguard2 missing term','Wguard2 unused terms']],
+ ['broad only',"e.check==='broad' && typeof e.term==='string'","typeof e.term==='string'",['Wguard2 requires check']],
+ ['never hard terms','![...policy.core,...policy.exact,...policy.lemmas].some(term=>normalizedText(term)===normalizedText(e.term))','true',['Wguard2 requires core','Wguard2 requires exact','Wguard2 requires lemma normalized']],
+];
+for(const [label,before,after,tests] of sourceUnitEdges){const source=sources.get('guard');if(!source.includes(before))throw new Error('Missing source-unit mutation target');custom('guard','Wguard2 '+label,source.replace(before,after),tests);}
+const provenanceEdges=[
+ ['guard','native pack header detection',' || puzzleCarrier(e.bytes)','',['Wguard2 native pack encoded collision','Wguard2 native pack decoded grid','Wguard2 native pack invalid codec fails closed']],
+ ['guard','native pack whitespace header','while(start<bytes.length && [9,10,13,32].includes(bytes[start]))start++;','',['Wguard2 native pack padded header']],
+ ['guard','native pack BOM fails closed',"bytes.subarray(0,3).equals(Buffer.from([0xef,0xbb,0xbf]))?3:0",'0',['Wguard2 native pack BOM fails closed']],
+ ['guard','near-match authored identifier','identifiers.get(entry)','identifiers.get(entry)??[...identifiers].find(([id])=>entry.startsWith(id))?.[1]',['Wguard2 identifier near miss']],
+ ['identifier-provenance','source scan prerequisite','!passedSources.has(path)','false',['Wguard2 identifier failed source excluded from provenance']],
+ ['identifier-provenance','dependency exact identifier','position.identifier===rule.identifier','true',['Wguard2 dependency near miss']],
+ ['identifier-provenance','dependency exact offset','position.offset===rule.offset','true',['Wguard2 dependency wrong offset']],
+ ['identifier-provenance','displayed dependency string','(property || declaration || exported)','true',['Wguard2 dependency string position','Wguard2 identifier displayed text supplies no identifier provenance']],
+ ['identifier-provenance','verbatim spelling','node.getText(tree)===node.text','true',['Wguard2 identifier escaped spelling is not verbatim']],
+ ['identifier-provenance','own bytes hash equality',"createHash(algorithm).update(bytes).digest('hex')===stem",'true',['Wguard2 own hash mismatch fails','Wguard2 own hash md5']],
+ ['guard','opaque basename exemption','const opaqueName=ownContentHash(name,bytes);','const opaqueName=true;',['Wguard2 own hash guard and renamed asset']],
+ ['guard','opaque content still scanned','if(literalHits.size)','if(!opaqueName && literalHits.size)',['Wguard2 own hash never hides content']],
+ ['guard','fix2 hard key from a runtime donor',' && !tokens.some(token=>hardTerms.has(token))','',['Wguard2 fix2 hard map key via runtime declaration core','Wguard2 fix2 hard map key via runtime declaration exact','Wguard2 fix2 hard map key via runtime declaration lemma']],
+ ['identifier-provenance','fix2 self-map key donates provenance',' && !mapObjects.has(parent.parent)','',['Wguard2 fix2 broad map cannot donate its own keys','Wguard2 fix2 hard map key via self-authored map']],
+ ['identifier-provenance','fix2 ambient donor','if(ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier=>modifier.kind===ts.SyntaxKind.DeclareKeyword))return;','',['Wguard2 fix2 repository type-only donor declare block','Wguard2 fix2 repository type-only donor declare property']],
+ ['identifier-provenance','fix2 declaration-file donor','if(tree.isDeclarationFile)return positions;','',['Wguard2 fix2 declaration file supplies no donor']],
+ ['identifier-provenance','fix2 type-only export declaration',' && !parent.parent.parent.isTypeOnly','',['Wguard2 fix2 type-only re-export declaration']],
+ ['identifier-provenance','fix2 type-only export specifier',' && !parent.isTypeOnly','',['Wguard2 fix2 type-only re-export specifier']],
+ ['guard','fix2 identifier map list threshold','if(mapTerms(identifierKeys).length>=3)mapHits.push(mapListHit(map));','',['Wguard2 fix2 function map needs reviewed list binding']],
+ ['guard','fix2 require three distinct map tokens','if(mapTerms(identifierKeys).length>=3)','if(identifierKeys.length>=3)',['Wguard2 fix2 list threshold counts distinct tokens']],
+ ['guard','fix2 prefer ordinary vocabulary','if(!tokens.length || admitted(key,tokens))continue;\n          if(traceMapKey(key,tokens))identifierKeys.push(key);\n          else findings.push','if(!tokens.length)continue;\n          if(traceMapKey(key,tokens))identifierKeys.push(key);\n          else if(!admitted(key,tokens))findings.push',['Wguard2 fix2 ordinary vocabulary takes precedence over identifier donors']],
+ ['artifact-views','fix2 keep maps separately scoped','densitySource, wordMaps };','densitySource, wordMaps:[{keys:wordMaps.flatMap(map=>map.keys)}] };',['Wguard2 fix2 list threshold belongs to each map']],
+];
+for(const [file,label,before,after,tests] of provenanceEdges){const source=sources.get(file);if(source.split(before).length!==2)throw new Error('Missing or ambiguous provenance mutation target');custom(file,'Wguard2 '+label,source.replace(before,after),tests);}
+const identifierSource=sources.get('identifier-provenance');
+const typeBarrier='if(ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isTypeNode(node))return;';
+const runtimeProperty='!dependency && ts.isPropertyDeclaration(parent)';
+if([typeBarrier,runtimeProperty].some(target=>identifierSource.split(target).length!==2))throw new Error('Missing or ambiguous type donor mutation target');
+custom('identifier-provenance','Wguard2 fix2 type-member donor',identifierSource.replace(typeBarrier,'').replace(runtimeProperty,'!dependency && (ts.isPropertyDeclaration(parent) || ts.isPropertySignature(parent))'),['Wguard2 fix2 repository type-only donor property signature','Wguard2 fix2 repository type-only donor type alias','Wguard2 fix2 hard map key via interface member']);
 custom('guard','partial-list detector',sources.get('guard').replaceAll('new Set(hit.broad).size>=3','false'),['guard partial-array','guard newlines','guard three broad JS words','guard packed metadata partial list']);
 custom('guard','original Hermes hard-term gate',sources.get('guard').replace('if(scanned.hardHermesFailure)','if(false)'),['R4 original Hermes hard term technical','R4 original Hermes hard term worklet','R4 original Hermes hard term vector','R4 original Hermes hard term short exact']);
 custom('guard','individual blocked-literal detector',sources.get('guard').replace('if(literalHits.size)','if(false)'),['guard core','guard blocked visible string']);
@@ -207,10 +249,14 @@ r4Edges.push(
  ['guard','Hermes artificial adjacency',"if(!isHermes && !isJavaScript)textViews.push([...strings,...keys].join(' '));","textViews.push([...strings,...keys].join(' '));",['R4 Hermes entry density separate strings']]
 );
 r4Edges.push(
- ['artifact-views','decoded source position view','sensitiveGrids, densitySource };','sensitiveGrids, densitySource:undefined };',['R4 decoded JavaScript source proximity']]
+ ['artifact-views','decoded source position view','sensitiveGrids, densitySource, wordMaps };','sensitiveGrids, densitySource:undefined, wordMaps };',['R4 decoded JavaScript source proximity']]
 );
+// Bind this existing release mutation to its export call; the standalone iOS
+// helper uses the same flag and must not capture a first-match replacement.
+const releaseExportPrefix="\n    run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--no-minify',";
+if(sources.get('check').split(releaseExportPrefix).length!==2)throw new Error('Missing or ambiguous release export mutation target');
 r4Edges.push(
- ['check','native compiler input names',"'--no-minify',",'', ['release gate requires Hermes and checks current receipt artifacts']]
+ ['check','native compiler input names',releaseExportPrefix,releaseExportPrefix.replace("'--no-minify',",''), ['release gate requires Hermes and checks current receipt artifacts']]
 );
 r4Edges.push(
  ['artifact-views','prose before inline enumeration','if(sentence)return false;','',['R4 prose before inline enum']]
@@ -226,9 +272,9 @@ r4Edges.push(
  ['text-views','UTF16 byte order',"if(bom==='feff')content.swap16();",'',['R4 UTF16 be density']]
 );
 const r5Edges=[
- ['generated-admission','lazy map admission',' || ts.isArrowFunction(p.initializer) || ts.isFunctionExpression(p.initializer)','',['R5 diluted lazy map']],
- ['generated-admission','dictionary map admission'," || ts.isStringLiteralLike(p.initializer)))"," || ts.isStringLiteralLike(p.initializer) && /\\.(?:m4a|mp3|wav|png|svg)$/.test(p.initializer.text)))",['R5 diluted dictionary map']],
- ['generated-admission','mixed map key admission',"(ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && (ts.isCallExpression","(ts.isStringLiteralLike(p.name)||ts.isIdentifier(p.name)) && /^\\p{L}+$/u.test(p.name.text) && (ts.isCallExpression",['R5 diluted map with mixed ids']],
+ ['artifact-views','lazy map admission',' || ts.isArrowFunction(value) || ts.isFunctionExpression(value)','',['R5 diluted lazy map']],
+ ['artifact-views','dictionary map admission',"ts.isObjectLiteralExpression(value) || ts.isStringLiteralLike(value);","ts.isObjectLiteralExpression(value) || ts.isStringLiteralLike(value) && /\\.(?:m4a|mp3|wav|png|svg)$/.test(value.text);",['R5 diluted dictionary map']],
+ ['artifact-views','mixed map key admission',"!(ts.isStringLiteralLike(property.name) || ts.isIdentifier(property.name)))return false;","!(ts.isStringLiteralLike(property.name) || ts.isIdentifier(property.name)) || !/^\\p{L}+$/u.test(property.name.text))return false;",['R5 diluted map with mixed ids']],
  ['text-views','lenient fallback',"else views.push(new TextDecoder('windows-1252').decode(bytes),bytes.toString('latin1'),bytes.toString('utf8'));","else views.push(bytes.toString('utf8'));",['R5 encoded Latin1 JSON literal','R5 encoded Latin1 text literal']],
  ['text-views','known magic only','const kind=binaryKind(bytes);',"const kind='media';",['R5 text CSV cp1252','R5 text XML latin1','R5 text ANSI core']],
  ['text-views','ANSI stripping',".replace(/\\x1b\\[[0-?]*[ -/]*[@-~]/g,'')",'', ['R5 ANSI middle word']],
@@ -236,15 +282,15 @@ const r5Edges=[
  ['artifact-views','record excludes fields only','keys.filter(key=>!excluded.has(key))',"(keys.some(key=>excluded.has(key))?[]:keys)",['R5 records 5 id data.json']],
  ['artifact-views','object record key unit',"values.every(v=>v && !Array.isArray(v) && typeof v==='object' && JSON.stringify(Object.keys(v).sort())===JSON.stringify(Object.keys(values[0]).sort()))",'false',['R5 object record key structure']],
  ['guard','compact mixed share','compactBroadShare(remaining,broad)>=(unit.catalog?0.5:0.25)','compactBroadShare(remaining,broad)>=0.5',['R5 mixed filenames','R5 mixed ids']],
- ['guard','export map provenance',"if(mapKeys.some(key=>policyTokens(key).length && !admitted(key)))","if(false)",['R5 diluted map 7600 plus 300']],
- ['guard','export file provenance',"if(policyTokens(stem).length && !admittedFilename(stem))","if(false)",['R5 diluted 300 audio files']],
+ ['guard','export map provenance',"else findings.push('artifact-'+fileHash+':untraced-word-map');","else continue;",['R5 diluted map 7600 plus 300']],
+ ['guard','export file provenance',"if(!opaqueName && policyTokens(stem).length && !admittedFilename(stem))","if(false)",['R5 diluted 300 audio files']],
  ['density','camel case tokens',"text.replace(/([a-z])([A-Z])/g,'$1 $2')",'text',['R5 camelCase density']],
  ['check','CI any truthy value',"!isCI(process.env.CI)","process.env.CI!=='true'",['R5 CI 1 missing policy']],
  ['generated-admission','exclude output sources',' || outputPath.test(name)','',['R5 generator rejects output self admission']],
  ['generated-admission','exclude word map property keys',"if(ts.isStringLiteralLike(n) && n.parent?.name===n)return;",'', ['R5 generator rejects unknown map self admission']],
  ['generated-admission','source required','!!source','true',['R5 generator rejects untraced word']],
 ];
-for(const [file,label,before,after,tests] of r5Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R5 mutation target '+label);custom(file,'R5 '+label,original.replace(before,after),tests);}
+for(const [file,label,before,after,tests] of r5Edges){const original=sources.get(file);if(original.split(before).length!==2)throw new Error('Missing or ambiguous R5 mutation target '+label);custom(file,'R5 '+label,original.replace(before,after),tests);}
 custom('text-views','R4 UTF16 text decoding',sources.get('text-views').replace("if(bom==='fffe'||bom==='feff')",'if(false)').replace('if(sample.length>=4 && Math.max(...zero)>sample.length/8)','if(false)'),['R4 UTF16 le density','R4 UTF16 core']);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 const r6Edges=[
@@ -256,7 +302,7 @@ const r6Edges=[
  ['generated-admission','frozen key identity','row.keySha256===sha256(key)','true',['R6 published inherited key and word frozen']],
  ['generated-admission','frozen transcript identity','row.transcriptSha256===sha256(text)','true',['R6 published inherited key and word frozen']],
  ['guard','source literal check','if(view.literalHits.size || view.hardHermesFailure)','if(false)',['R6 source scan scripts/learn/spelling.json core','R6 source scan scripts/quality-audio.json exact']],
- ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
+ ['guard','source list check',"if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))",'if(false)',['R6 source scan scripts/learn/spelling.json list']],
  ['guard','source density check','if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)','if(false)',['R6 source scan scripts/learn/spelling.json density']],
  ['guard','policy token vocabulary','tokens.every(token=>admission.sources.words.has(token))','true',['R7 identifier vocabulary clue file scan']],
  ['guard','camel word file tokens','policyTokens(stem).length',"policyNames(normalizedText(stem)).size",['R6 word asset camel']],
@@ -274,7 +320,9 @@ const r6Edges=[
 custom('guard','R6 decoded word pack admission',sources.get('guard').replace("admitPuzzlePack(sourceRoot,pack.metadata?.header?.family??'',pack.metadata?.engine??'',pack.rows??[])",'undefined'),['R6 guard word pack vocabulary admission']);
 custom('media-structure','R6 MP4 complete box bounds',sources.get('media-structure').replace('at+size>b.length','false').replace('return ftyp && at===b.length;','return ftyp;'),['R6 invalid media M4A size']);
 for(const [file,label,before,after,tests] of r6Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R6 mutation target '+label);custom(file,'R6 '+label,original.replace(before,after),tests);}
-custom('guard','R7 whole-key admission bypass',sources.get('guard').replace('const tokens=policyTokens(entry);',"if(admission.sources.exact.has(normalizedText(entry)))return true;const tokens=policyTokens(entry);"),['R7 identifier vocabulary clue file scan','R7 identifier vocabulary clue js scan','R7 identifier vocabulary clue registry scan']);
+const vocabularyTokenGate='if(!tokens.every(token=>admission.sources.words.has(token)))return false;';
+if(sources.get('guard').split(vocabularyTokenGate).length!==2)throw new Error('Missing or ambiguous vocabulary token mutation target');
+custom('guard','R7 whole-key admission bypass',sources.get('guard').replace(vocabularyTokenGate,"if(admission.sources.exact.has(normalizedText(entry)))return true;"+vocabularyTokenGate),['R7 identifier vocabulary clue file scan','R7 identifier vocabulary clue js scan','R7 identifier vocabulary clue registry scan']);
 custom('guard','R7 every matching component required',sources.get('guard').replace('tokens.every(token=>admission.sources.words.has(token))','tokens.some(token=>admission.sources.words.has(token))'),['R7 every matching component file','R7 token control ordinary']);
 custom('guard','R7 all policy groups in identifiers',sources.get('guard').replace('[...policy.scan,...policy.core,...policy.exact,...policy.lemmas].map(normalizedText)','policy.scan.map(normalizedText)'),['R7 camel policy group core js','R7 camel policy group exact js','R7 camel policy group lemmas js']);
 custom('generated-admission','R7 preserve original identifier tokens',sources.get('generated-admission').replace('identifier:entry','identifier:key'),['R7 registry preserves camel token boundaries']);

@@ -1,5 +1,5 @@
 /** S1a: the K6 inquiry kit and Star Station on it (SC-09). */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   HISTORY_CAP, clean, create, describeSetup as describeScene, hintText, investigationBound, move, replay, solve, strictLevel, testedBefore, undo, validSetup, validState,
@@ -359,10 +359,10 @@ function speakable(seeds: number): Record<string, string> {
     for (const text of [`${q.title}. ${q.question}`, q.rule]) lines[inquirySpeechKey(text)] = text;
   return Object.fromEntries(Object.entries(lines).sort(([a], [b]) => a.localeCompare(b)));
 }
-it("registers every goal and model rule the board can speak in scripts/learn/s1a-inquiry.json (design-only stage)", () => {
+it("registers every goal and model rule the board can speak in scripts/learn/s1a-inquiry.json (voiced in the W5a batch)", () => {
   const path = new URL("../scripts/learn/s1a-inquiry.json", import.meta.url);
   if (process.env.LITTLE_ISLAND_WRITE_INQUIRY_SPEECH === "1") writeFileSync(path, JSON.stringify(speakable(40000), null, 1) + "\n");
   const lines = JSON.parse(readFileSync(path, "utf8")) as Record<string, string>;
   for (const [key, text] of Object.entries(speakable(3000))) expect(lines[key], text).toBe(text);
-  expect(JSON.parse(readFileSync(new URL("../scripts/learn/s1a-inquiry.stage", import.meta.url), "utf8"))).toEqual({ status: "design-only", shipping: false });
+  expect(existsSync(new URL("../scripts/learn/s1a-inquiry.stage", import.meta.url)), "voiced in the W5a batch; the staging sidecar is gone").toBe(false);
 });

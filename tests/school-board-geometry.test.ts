@@ -19,3 +19,7 @@ it.each([499,500,744,852])('entry reveal at %s keeps the approved strict short-w
   expect(schoolEntryReveal(id,true,height)).toBe(height<500||!['turtle-tales'].includes(id));
  }
 });
+it.each([499,500,744,852])('Canoe Seats at %s takes the same strict boundary and the AX reveal of a ported board',height=>{
+ expect(schoolEntryReveal('canoe-seats',false,height)).toBe(height<500);
+ expect(schoolEntryReveal('canoe-seats',true,height)).toBe(true);
+});
