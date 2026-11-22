@@ -1,5 +1,6 @@
 import { syncBuiltinESMExports } from 'node:module';
 import { Buffer } from 'node:buffer';
+import { createHash } from 'node:crypto';
 // Synthetic gate proof only. No content, reviewer or family approval is created.
 import { test as nodeTest, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -50,7 +51,8 @@ const generatedAdmission=await import(pathToFileURL(join(root,'scripts/words/gen
 const {scanTexts}=await import(pathToFileURL(join(root,'scripts/words/scan.mjs')));
 const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mjs')));
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
-const {checkExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const {checkExport,checkIOSExport,checkRelease:rawCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const identifierTools=await import(pathToFileURL(join(root,'scripts/words/identifier-provenance.mjs')));
 const {prepareCompilerCapture,compilerIdentity,bytecodeFiles,verifyCompilerCapture,captureNativeBuild}=await import(pathToFileURL(join(root,'scripts/words/compiler.mjs')));
 const compilerCapture=prepareCompilerCapture(root);after(()=>compilerCapture.cleanup());let nativeFixture=0;
 function realCheckRelease(...args) {
@@ -358,7 +360,7 @@ for(const [name,source,fail] of [
 
 // Synthetic codec uses the real row decoder, with isolated family bindings.
 // Its symbol string stands for numeric cells, like cage IDs in numeric packs.
-function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='synthetic',authored=[]) {
+function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='synthetic',authored=[],carrier='extension') {
  test(name,()=>{
   const source=join(scratch,`pack-source-${name.replaceAll(' ','-')}`),dir=join(source,'dist');
   mkdirSync(join(source,'scripts/puzzles/families'),{recursive:true});mkdirSync(join(source,'src/puzzles'),{recursive:true});mkdirSync(join(source,'src/state'));mkdirSync(dir);
@@ -367,7 +369,8 @@ function packedCase(name,encoded,decoded,rejected=false,objectives=0,family='syn
   writeFileSync(join(source,'scripts/puzzles/families/index.ts'),`export const families=[{id:${JSON.stringify(family)},bands:[{id:'a'}],adapter:{rules:1,decodePayload:x=>x===${JSON.stringify(encoded)}?${JSON.stringify(decoded)}:null,isPayload:x=>!!x}}];`);
   if(authored.length){mkdirSync(join(source,'src/app'),{recursive:true});writeFileSync(join(source,'src/app/index.ts'),'export const words='+JSON.stringify(authored)+';');}
   const header={format:1,family,slot:0,first:0,count:1,band:'a',rules:1,rng:1};
-  writeFileSync(join(dir,'p0.lipuzzle'),JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded,0,objectives]));
+  const bytes=(carrier==='padded-hash'?' '.repeat(128):'')+JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded,0,objectives]);
+  writeFileSync(join(dir,carrier.endsWith('hash')?createHash('md5').update(bytes).digest('hex'):carrier==='renamed'?'native-carrier':'p0.lipuzzle'),bytes);
   const original=process.cwd();try{process.chdir(source);if(rejected)assert.throws(()=>guardTree(dir,policy),/leaked|no admitted authored source/);else assert.equal(guardTree(dir,policy).passed,true);}finally{process.chdir(original);}
  });
 }
@@ -375,6 +378,14 @@ packedCase('guard numeric encoded pack collision','COLD',{values:[2,14,11,3]});
 packedCase('guard base64 numeric pack collision','XCOLDbXALPHANONSENSEBETANONSENSEGAMMANONSENSEZ==',{values:[1,2,3]});
 packedCase('guard decoded packed word grid','numeric-code',{language:'en',cells:[['C','O','L','D']]},true);
 packedCase('guard decoded packed visible word','numeric-code',{clue:'COLD'},true);
+packedCase('Wguard2 native pack encoded collision','COLD',{values:[2,14,11,3]},false,0,'synthetic',[],'hash');
+packedCase('Wguard2 renamed native pack encoded collision','COLD',{values:[2,14,11,3]},false,0,'synthetic',[],'renamed');
+packedCase('Wguard2 native pack padded header','COLD',{values:[2,14,11,3]},false,0,'synthetic',[],'padded-hash');
+packedCase('Wguard2 native pack decoded grid','numeric-code',{language:'en',cells:[['C','O','L','D']]},true,0,'synthetic',[],'hash');
+packedCase('Wguard2 native pack decoded literal','numeric-code',{clue:'COLD'},true,0,'synthetic',[],'hash');
+packedCase('Wguard2 native pack word admission','numeric-code',{language:'en',answers:['ZQUNKNOWNX']},true,0,'word-search',[],'hash');
+test('Wguard2 native pack invalid codec fails closed',()=>{const dir=join(scratch,'unknown-native-pack');mkdirSync(dir);const text=JSON.stringify({format:2,family:'unknown',slot:0,count:1})+'\n[1,"layout","template",0]';writeFileSync(join(dir,createHash('md5').update(text).digest('hex')),text);assert.throws(()=>guardTree(dir,policy),/Cannot decode exported puzzle packs/);});
+test('Wguard2 native pack BOM fails closed',()=>{const dir=join(scratch,'bom-native-pack');mkdirSync(dir);const text='\ufeff'+JSON.stringify({format:1,family:'unknown',slot:0,count:1})+'\n[1,"layout","template",0]';writeFileSync(join(dir,createHash('md5').update(text).digest('hex')),text);assert.throws(()=>guardTree(dir,policy),/Cannot decode exported puzzle packs/);});
 exportCase('guard partial list comment','app.js','// ALPHANONSENSE BETANONSENSE GAMMANONSENSE\nglobalThis.label="safe";',policy,true);
 exportCase('guard row string grid','bank.json',JSON.stringify({grid:['COLD']}),policy,true);
 exportCase('guard word list is not a grid','bank.json',JSON.stringify({language:'en',words:['XCOL','DXXX']}));
@@ -1302,3 +1313,203 @@ manifestCase('manifest bank list',stagedReading,m=>{m.banks={};},/Invalid word b
 manifestCase('manifest duplicate path',stagedReading,m=>{m.banks.push({...m.banks[0]});},/Invalid word bank manifest/);
 for(const [label,second] of [['id',{...reading('sundog',{chunks:['sun','dog'],distractors:['sin','dig']}),id:'r-sunset'}],['word',{...reading(),id:'r-sunset-2'}]])test(`reading banks repeat a record ${label} across banks`,()=>{const staged=stagedReading();try{const bytes=JSON.stringify({schemaVersion:1,kind:'reading-parts',words:[second]}),name='content/words/banks/reading-two.json';writeFileSync(join(staged.dir,name),bytes);const m=staged.manifest;m.banks.push({path:name,kind:'reading-parts',sha256:sha256(bytes),bytes:Buffer.byteLength(bytes),words:1});writeFileSync(join(staged.dir,'content/words/banks.manifest.json'),JSON.stringify(m));writeFileSync(join(staged.dir,'content/words/registry.generated.ts'),registrySource(m));assert.throws(()=>checkShippingTree(staged.dir),/Reading banks repeat a record/);}finally{cleanup(staged.dir);}});
 test('reading and word registries reject an unsafe bank path',()=>{for(const kind of ['reading-parts',undefined])assert.throws(()=>registrySource({schemaVersion:1,banks:[{path:'content/words/banks/../x.json',kind}]}),/Invalid bank registry path/);});
+
+// Wguard2: synthetic reviewed source containers; no real policy vocabulary.
+const reviewedSourceText='["ALPHANONSENSE", "BETANONSENSE", "GAMMANONSENSE",]';
+function sourceUnitCase(run) {
+ const dir=mkdtempSync(join(scratch,'source-unit-')),sourcePath='src/reviewed-unit.ts',sourceFile=join(root,sourcePath);
+ const p={...policy,scan:[...policy.scan,'DELTANONSENSE'],sourceUnitExceptions:[{path:sourcePath,units:[{sha256:sha256(reviewedSourceText),occurrences:1,terms:policy.scan.slice(1).map(term=>({term,check:'broad',reason:'Synthetic cast collision',evidence:'Synthetic blind review'}))}]}]};
+ const source=text=>writeFileSync(sourceFile,'export const cast='+text+' as const;');
+ const artifact=text=>writeFileSync(join(dir,'app.js'),text);
+ source(reviewedSourceText);artifact("globalThis.cast=['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'];");
+ try {run({p,dir,source,artifact,rule:p.sourceUnitExceptions[0],item:p.sourceUnitExceptions[0].units[0],check:()=>guardTree(dir,p)});} finally {rmSync(sourceFile,{force:true});rmSync(dir,{recursive:true,force:true});}
+}
+test('Wguard2 reviewed source and minified export pass',()=>sourceUnitCase(({check})=>{const r=check();assert.equal(r.passed,true);assert.equal(r.sourceUnitExceptionsUsed,1);assert.equal(r.exportedSourceUnitExceptionsUsed,1);}));
+for(const [name,change,rx] of [
+ ['wrong path',({rule})=>rule.path='src/elsewhere.ts',/Stale source unit/],
+ ['changed unit',({source})=>source(reviewedSourceText.replace('[','[ ')),/Stale source unit/],
+ ['extra term',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE","DELTANONSENSE"];'),/partial-list/],
+ ['reordered export',({artifact})=>artifact('globalThis.cast=["BETANONSENSE","ALPHANONSENSE","GAMMANONSENSE"];'),/partial-list/],
+ ['extra neutral export',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE","NEUTRAL"];'),/partial-list/],
+ ['duplicate export',({artifact})=>artifact('globalThis.a=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.b=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];'),/partial-list/],
+ ['unrelated string',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.label="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";'),/partial-list/],
+ ['literal outside unit',({artifact})=>artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.label="Tap COLD now";'),/blocked-literal/],
+ ['stale hash',({item})=>item.sha256='e'.repeat(64),/Stale source unit/],
+ ['stale count',({item})=>item.occurrences=2,/Stale source unit/],
+ ['unused terms',({item})=>item.terms.push({...item.terms[0],term:'DELTANONSENSE'}),/Unused source unit/],
+ ['missing term',({item})=>item.terms.pop(),/Unused source unit/],
+ ['duplicate entry',({rule,item})=>rule.units.push(structuredClone(item)),/Duplicate source unit/],
+ ['no source exceptions',({p})=>delete p.sourceUnitExceptions,/blocked-source-list/],
+])test(`Wguard2 ${name}`,()=>sourceUnitCase(f=>{change(f);assert.throws(f.check,rx);}));
+for(const [name,change,rx] of [
+ ['array',({p})=>p.sourceUnitExceptions={},/Invalid source unit exceptions/],
+ ['absolute path',({rule})=>rule.path='/src/reviewed-unit.ts',/exception path/],
+ ['parent path',({rule})=>rule.path='src/../src/reviewed-unit.ts',/exception path/],
+ ['wildcard path',({rule})=>rule.path='src/*.ts',/exception path/],
+ ['backslash path',({rule})=>rule.path='src/reviewed\\unit.ts',/exception path/],
+ ['units',({rule})=>rule.units=[],/exception path/],
+ ['hash',({item})=>item.sha256='bad',/Invalid source unit exception/],
+ ['count',({item})=>item.occurrences=0,/Invalid source unit exception/],
+ ['terms',({item})=>item.terms=[],/Invalid source unit exception/],
+ ['check',({item})=>item.terms[0].check='literal',/Unreviewed source unit/],
+ ['core',({p})=>p.core=[...p.core,'ALPHANONSENSE'],/Unreviewed source unit/],
+ ['exact',({p})=>p.exact=[...p.exact,'ALPHANONSENSE'],/Unreviewed source unit/],
+ ['lemma normalized',({p})=>p.lemmas=[...p.lemmas,'alphano\u200bnsense'],/Unreviewed source unit/],
+ ['not broad',({item})=>item.terms[0].term='NEUTRAL',/Unreviewed source unit/],
+ ['reason',({item})=>item.terms[0].reason=' ',/Unreviewed source unit/],
+ ['evidence',({item})=>item.terms[0].evidence='',/Unreviewed source unit/],
+])test(`Wguard2 requires ${name}`,()=>sourceUnitCase(f=>{change(f);assert.throws(f.check,rx);}));
+test('Wguard2 density still fails',()=>sourceUnitCase(({p,artifact,check})=>{const terms=Array.from({length:16},(_,i)=>'NONSENSE'+String.fromCharCode(65+i));p.scan.push(...terms);artifact('globalThis.cast=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.prose='+JSON.stringify(terms.join(' and the '))+';');assert.throws(check,/broad-density/);}));
+test('Wguard2 metadata preserves bank content policy',async()=>{const {contentPolicy}=await import(pathToFileURL(join(root,'scripts/words/policy.mjs')));assert.deepEqual(contentPolicy({...policy,sourceUnitExceptions:[]}),contentPolicy(policy));});
+test('Wguard2 core inside reviewed unit still fails',()=>sourceUnitCase(({source,artifact,item,check})=>{const text=reviewedSourceText.replace(',]',',"COLD"]');source(text);artifact('globalThis.cast='+text+';');item.sha256=sha256(text);assert.throws(check,/blocked-source-literal|blocked-literal/);}));
+test('Wguard2 extra stale entry fails',()=>sourceUnitCase(({rule,item,check})=>{rule.units.push({...structuredClone(item),sha256:'f'.repeat(64)});assert.throws(check,/Stale source unit/);}));
+test('Wguard2 wrong source cannot borrow review',()=>sourceUnitCase(({source,check})=>{const other=join(root,'src/unreviewed-unit.ts');writeFileSync(other,'export const unreviewed='+reviewedSourceText+';');try{source(reviewedSourceText);assert.throws(check,/blocked-source-list/);}finally{rmSync(other,{force:true});}}));
+test('Wguard2 repeated worklets cannot share occurrence identity',()=>sourceUnitCase(({artifact,check})=>{const code=JSON.stringify('function f(){return ["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];}');artifact('globalThis.a='+code+';globalThis.b='+code+';');assert.throws(check,/partial-list/);}));
+
+const technicalKey='bridgeZqunknownx';
+async function identifierCase(name,run) {
+ const {dir}=await admissionFixture('identifier-'+name),out=join(dir,'dist');mkdirSync(out);
+ const file=join(dir,'src/content/authored.ts'),text='export const registration={'+technicalKey+':()=>null};';
+ writeFileSync(file,text);const artifact=join(out,'entry.js');writeFileSync(artifact,'globalThis.nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};');
+ const p={scan:['ZQUNKNOWNX'],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]};
+ await run({dir,out,file,text,artifact,p,check:()=>guardTree(out,p,[],{sourceRoot:dir})});
+}
+test('Wguard2 identifier exact authored property',()=>identifierCase('exact',({check})=>{const r=check();assert.equal(r.tracedIdentifiersUsed,1);assert.equal(r.dependencyIdentifiersUsed,0);}));
+test('Wguard2 identifier near miss',()=>identifierCase('near',({artifact,check})=>{writeFileSync(artifact,readFileSync(artifact,'utf8').replace(technicalKey,technicalKey+'Extra'));assert.throws(check,/untraced-word-map/);}));
+test('Wguard2 identifier displayed text supplies no identifier provenance',()=>identifierCase('display',({dir,file,check})=>{
+ writeFileSync(file,'export const text="Plain reef beach";');
+ writeFileSync(join(dir,'src/content/unreachable.ts'),'export const text="'+technicalKey+'";');
+ assert.throws(check,/untraced-word-map/);
+}));
+test('Wguard2 identifier source must pass',()=>identifierCase('failed',({file,p,check})=>{p.core=['COLD'];writeFileSync(file,readFileSync(file,'utf8')+'export const text="COLD";');assert.throws(check,/blocked-source-literal/);}));
+test('Wguard2 identifier failed source excluded from provenance',()=>{const input=new Map([['src/native.ts',Buffer.from('export const '+technicalKey+'=1;')]]);assert.equal(identifierTools.authoredIdentifiers(input,new Set()).has(technicalKey),false);});
+test('Wguard2 identifier generated registry',()=>identifierCase('registry',({dir,file,text,check})=>{writeFileSync(file,'export const text="Plain reef beach";');mkdirSync(join(dir,'src/challenge'));writeFileSync(join(dir,'src/challenge/registry.generated.ts'),text);assert.equal(check().tracedIdentifiersUsed,1);}));
+test('Wguard2 identifier registry symlink',()=>identifierCase('registry-link',({dir,file,check})=>{mkdirSync(join(dir,'src/challenge'));symlinkSync(file,join(dir,'src/challenge/registry.generated.ts'));assert.throws(check,/Symlink/);}));
+test('Wguard2 identifier escaped spelling is not verbatim',()=>{const source='export const bridgeZq\\u0075nknownx=1;';assert.equal(identifierTools.identifierPositions(source,'source.ts').some(p=>p.identifier===technicalKey),false);});
+test('Wguard2 identifier does not donate filenames',()=>identifierCase('filename',({out,check})=>{writeFileSync(join(out,technicalKey+'.m4a'),validM4a);assert.throws(check,/untraced-word-file/);}));
+test('Wguard2 identifier visible hard text still fails',()=>identifierCase('hard',({artifact,p,check})=>{p.core=['COLD'];writeFileSync(artifact,readFileSync(artifact,'utf8')+'globalThis.label="COLD";');assert.throws(check,/blocked-literal/);}));
+
+const functionMap=(...keys)=>'{'+keys.map(key=>key+':()=>null').join(',')+'}';
+test('Wguard2 fix2 broad map cannot donate its own keys',()=>identifierCase('self-map',({file,artifact,check})=>{
+ const map=functionMap(technicalKey,'ordinary','another');
+ writeFileSync(file,'export const map='+map+';');writeFileSync(artifact,'globalThis.map='+map+';');
+ assert.throws(check,/untraced-word-map/);
+}));
+for(const [kind,source] of [
+ ['interface',`export interface Sound { ${technicalKey}(): void }`],
+ ['property signature',`export interface Sound { ${technicalKey}: string }`],
+ ['type alias',`export type Sound = { ${technicalKey}: string };`],
+ ['declare block',`declare global { const ${technicalKey}: string; }`],
+ ['declare property',`declare class Sound { ${technicalKey}: string }`],
+])test('Wguard2 fix2 repository type-only donor '+kind,()=>identifierCase('donor-'+kind.replaceAll(' ','-'),({file,check})=>{
+ writeFileSync(file,source);assert.throws(check,/untraced-word-map/);
+}));
+test('Wguard2 fix2 declaration file supplies no donor',()=>{
+ assert.deepEqual(identifierTools.identifierPositions(`export const ${technicalKey}: string;`,'source.d.ts'),[]);
+});
+for(const [kind,group,source] of [
+ ['self-authored map','core',`export const map=${functionMap(technicalKey,'ordinary','another')};`],
+ ['interface member','exact',`export interface Sound { ${technicalKey}: string }`],
+ ['runtime declaration core','core',`export const ${technicalKey}=null;`],
+ ['runtime declaration exact','exact',`export const ${technicalKey}=null;`],
+ ['runtime declaration lemma','lemmas',`export const ${technicalKey}=null;`],
+])test('Wguard2 fix2 hard map key via '+kind,()=>identifierCase('hard-'+kind.replaceAll(' ','-'),({file,p,check})=>{
+ p[group]=['zqúnknownx'];writeFileSync(file,source);assert.throws(check,/untraced-word-map/);
+}));
+const mapTerms=['zqbroadax','zqbroadbx','zqbroadcx'];
+function broadFunctionMap(name,run) {
+ return identifierCase(name,({file,artifact,p,check})=>{
+  const map=functionMap(...mapTerms);
+  p.scan=mapTerms;writeFileSync(file,mapTerms.map(key=>`export const ${key}=null;`).join('\n'));
+  writeFileSync(artifact,'globalThis.map='+map+';');
+  return run({file,artifact,p,check,map});
+ });
+}
+test('Wguard2 fix2 function map needs reviewed list binding',()=>broadFunctionMap('map-list',({check})=>{
+ assert.throws(check,/partial-list/);
+}));
+test('Wguard2 fix2 ordinary vocabulary takes precedence over identifier donors',()=>broadFunctionMap('map-vocabulary',({file,check})=>{
+ const prose=`A note describes ${mapTerms[0]} beside a synthetic path before ${mapTerms[1]} passes farther along and finally reaches ${mapTerms[2]}.`;
+ writeFileSync(file,readFileSync(file,'utf8')+`\nexport const label="${prose}";`);
+ assert.equal(check().tracedIdentifiersUsed,0);
+}));
+test('Wguard2 fix2 list threshold belongs to each map',()=>broadFunctionMap('separate-maps',({artifact,check})=>{
+ writeFileSync(artifact,`globalThis.a=${functionMap(...mapTerms.slice(0,2),'ordinary')};globalThis.b=${functionMap(mapTerms[2],'ordinary','another')};`);
+ assert.equal(check().tracedIdentifiersUsed,3);
+}));
+test('Wguard2 fix2 list threshold counts distinct tokens',()=>broadFunctionMap('repeated-map-terms',({file,artifact,check})=>{
+ const keys=[mapTerms[0],mapTerms[1],`prefix${mapTerms[0][0].toUpperCase()}${mapTerms[0].slice(1)}`];
+ writeFileSync(file,keys.map(key=>`export const ${key}=null;`).join('\n')+`\nexport const label="A synthetic description includes ${mapTerms[2]}.";`);
+ writeFileSync(artifact,'globalThis.map='+functionMap(...keys,mapTerms[2])+';');assert.equal(check().tracedIdentifiersUsed,3);
+}));
+test('Wguard2 fix2 function map review binds complete syntax',()=>broadFunctionMap('reviewed-map',({file,artifact,p,check,map})=>{
+ writeFileSync(file,readFileSync(file,'utf8')+'\nexport const map='+map+';');
+ p.sourceUnitExceptions=[{path:'src/content/authored.ts',units:[{sha256:sha256(map),occurrences:1,terms:mapTerms.map(term=>({term,check:'broad',reason:'Synthetic reason',evidence:'Synthetic evidence'}))}]}];
+ const result=check();assert.equal(result.sourceUnitExceptionsUsed,1);assert.equal(result.exportedSourceUnitExceptionsUsed,1);
+ writeFileSync(artifact,'globalThis.map='+map.replace('()=>null','()=>false')+';');assert.throws(check,/partial-list/);
+}));
+for(const [name,source] of [
+ ['declaration',`export type { ${technicalKey} } from './other';`],
+ ['specifier',`export { type ${technicalKey} } from './other';`],
+])test('Wguard2 fix2 type-only re-export '+name,()=>{
+ for(const dependency of [false,true])assert.deepEqual(identifierTools.identifierPositions(source,'source.ts',dependency),[]);
+});
+
+async function dependencyCase(name,run) {
+ return identifierCase('dep-'+name,async f=>{
+  writeFileSync(f.file,'export const text="Plain reef beach";');
+  const packageName='synthetic-native',version='1.2.3',integrity='sha512-'+Buffer.alloc(64,7).toString('base64'),path='generated/native.js',packageDir=join(f.dir,'node_modules',packageName);
+  mkdirSync(join(packageDir,'generated'),{recursive:true});writeFileSync(join(packageDir,'package.json'),JSON.stringify({name:packageName,version}));
+  const dependencyFile=join(packageDir,path),source='export const nativeMap={'+technicalKey+':()=>null,ordinary:()=>null,another:()=>null};';writeFileSync(dependencyFile,source);
+  const lock={lockfileVersion:3,packages:{['node_modules/'+packageName]:{version,integrity}}},lockPath=join(f.dir,'package-lock.json');writeFileSync(lockPath,JSON.stringify(lock));
+  const rule={package:packageName,version,integrity,path,sha256:sha256(source),identifier:technicalKey,offset:source.indexOf(technicalKey),reason:'Synthetic generated native property'};f.p.dependencyIdentifierProvenance=[rule];
+  await run({...f,rule,lock,lockPath,dependencyFile,packageDir});
+ });
+}
+test('Wguard2 dependency exact pin and count',()=>dependencyCase('pass',({check})=>{const r=check();assert.equal(r.dependencyIdentifiersUsed,1);assert.equal(r.tracedIdentifiersUsed,0);}));
+test('Wguard2 fix2 dependency byte change at same offset fails',()=>dependencyCase('changed-bytes',({dependencyFile,check})=>{
+ writeFileSync(dependencyFile,readFileSync(dependencyFile,'utf8')+'\n// synthetic patch');assert.throws(check,/Stale dependency identifier file hash/);
+}));
+test('Wguard2 fix2 dependency file hash is required and lowercase',()=>dependencyCase('bad-file-hash',({rule,check})=>{
+ const fileHash=rule.sha256;delete rule.sha256;assert.throws(check,/Invalid dependency identifier file hash/);
+ rule.sha256=fileHash.toUpperCase();assert.throws(check,/Invalid dependency identifier file hash/);
+}));
+for(const [name,change,rx] of [
+ ['version bump',f=>{f.lock.packages['node_modules/synthetic-native'].version='1.2.4';writeFileSync(f.lockPath,JSON.stringify(f.lock));},/Stale dependency identifier version/],
+ ['wrong path',f=>{f.rule.path='generated/other.js';writeFileSync(join(f.packageDir,f.rule.path),'export const other=1;');},/Stale dependency identifier position/],
+ ['integrity mismatch',f=>{f.rule.integrity='sha512-'+Buffer.alloc(64,8).toString('base64');},/Stale dependency identifier integrity/],
+ ['string position',f=>{const source='export const text="'+technicalKey+'";';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf('"');},/Stale dependency identifier position/],
+ ['type position',f=>{const source='export type NativeMap={'+technicalKey+':string};';writeFileSync(f.dependencyFile,source);f.rule.offset=source.indexOf(technicalKey);},/Stale dependency identifier position/],
+ ['near miss',f=>{writeFileSync(f.dependencyFile,readFileSync(f.dependencyFile,'utf8').replace(technicalKey,technicalKey+'Extra'));},/Stale dependency identifier position/],
+ ['wrong offset',f=>{f.rule.offset++;},/Stale dependency identifier position/],
+ ['source fails',f=>{f.p.core=['COLD'];writeFileSync(f.dependencyFile,readFileSync(f.dependencyFile,'utf8')+'export const label="COLD";');},/Dependency identifier source failed scan/],
+ ['installed version',f=>{writeFileSync(join(f.packageDir,'package.json'),JSON.stringify({name:'synthetic-native',version:'1.2.4'}));},/Installed dependency identifier version mismatch/],
+ ['missing source',f=>rmSync(f.dependencyFile),/Missing or symlinked/],
+ ['symlink source',f=>{rmSync(f.dependencyFile);symlinkSync(f.file,f.dependencyFile);},/Missing or symlinked/],
+ ['directory source',f=>{rmSync(f.dependencyFile);mkdirSync(f.dependencyFile);},/must be a file/],
+ ['parent path',f=>{f.rule.path='../outside.js';},/Invalid dependency identifier path/],
+ ['empty path',f=>{f.rule.path='';},/Invalid dependency identifier path/],
+ ['duplicate',f=>{f.p.dependencyIdentifierProvenance.push({...f.rule});},/Duplicate dependency identifier/],
+ ['stale without export',f=>{writeFileSync(f.artifact,'globalThis.safe=1;');f.rule.offset++;},/Stale dependency identifier position/],
+ ['missing reason',f=>{delete f.rule.reason;},/Invalid dependency identifier provenance entry/],
+ ['invalid rules',f=>{f.p.dependencyIdentifierProvenance={};},/Invalid dependency identifier provenance/],
+])test('Wguard2 dependency '+name,()=>dependencyCase(name,f=>{
+ change(f);
+ if(['wrong path','string position','type position','near miss','source fails'].includes(name))f.rule.sha256=sha256(readFileSync(join(f.packageDir,f.rule.path)));
+ assert.throws(f.check,rx);
+}));
+test('Wguard2 dependency metadata preserves content policy',async()=>{const {contentPolicy}=await import(pathToFileURL(join(root,'scripts/words/policy.mjs')));assert.deepEqual(contentPolicy({...policy,dependencyIdentifierProvenance:[]}),contentPolicy(policy));});
+
+for(const algorithm of ['md5','sha1','sha256'])test('Wguard2 own hash '+algorithm,()=>{const stem=createHash(algorithm).update(validM4a).digest('hex');assert.equal(identifierTools.ownContentHash('assets/'+stem+'.m4a',validM4a),true);assert.equal(identifierTools.ownContentHash(stem,validM4a),true);assert.equal(identifierTools.ownContentHash(stem+'.m4a',Buffer.concat([validM4a,Buffer.from('x')])),false);});
+test('Wguard2 own hash guard and renamed asset',()=>{
+ const dir=join(scratch,'own-hash');mkdirSync(dir);const stem=createHash('md5').update(validM4a).digest('hex'),tokens=densityTools.wordTokens(stem),p={scan:tokens,core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]};
+ const path=join(dir,stem+'.m4a');writeFileSync(path,validM4a);assert.equal(guardTree(dir,p).passed,true);rmSync(path);writeFileSync(join(dir,tokens[0]+'.m4a'),validM4a);assert.throws(()=>guardTree(dir,p),/untraced-word-file/);
+});
+test('Wguard2 own hash mismatch fails',()=>{const dir=join(scratch,'own-hash-mismatch');mkdirSync(dir);const stem=createHash('md5').update('different bytes').digest('hex');writeFileSync(join(dir,stem+'.m4a'),validM4a);assert.throws(()=>guardTree(dir,{scan:densityTools.wordTokens(stem),core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}),/untraced-word-file/);});
+test('Wguard2 own hash never hides content',()=>{const dir=join(scratch,'own-hash-content');mkdirSync(dir);const bytes=Buffer.from('Say COLD now'),stem=createHash('sha256').update(bytes).digest('hex');writeFileSync(join(dir,stem+'.txt'),bytes);assert.throws(()=>guardTree(dir,{scan:[],core:['COLD'],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}),/blocked-literal/);});
+test('Wguard2 own hash rejects arbitrary names',()=>{for(const name of ['a'.repeat(32)+'.m4a','random-name.m4a','prefix-'+createHash('md5').update(validM4a).digest('hex')+'.m4a'])assert.equal(identifierTools.ownContentHash(name,validM4a),false);});
+
+test('Wguard2 standalone iOS scan uses complete guard and cleans output',()=>{let directory;const r=checkIOSExport(root,(_cmd,args)=>{directory=args.at(-1);assert.ok(args.includes('--no-bytecode') && args.includes('--no-minify') && args.includes('ios'));writeFileSync(join(directory,'native.js'),'globalThis.safe=1;');});assert.equal(r.guard.passed,true);assert.equal(fs.existsSync(directory),false);assert.ok(r.runtimeSeconds>=0);});
+test('Wguard2 standalone iOS scan rejects leaks and cleans output',()=>{let directory;assert.throws(()=>checkIOSExport(root,(_cmd,args)=>{directory=args.at(-1);writeFileSync(join(directory,'native.js'),'globalThis.label="COLD";');}),/blocked-literal/);assert.equal(fs.existsSync(directory),false);});
+test('Wguard2 standalone iOS scan requires JavaScript',()=>{assert.throws(()=>checkIOSExport(root,()=>{}),/Native platform JavaScript export required/);});
+test('Wguard2 standalone iOS scan requires policy',()=>{const saved=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;delete process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;try{assert.throws(()=>checkIOSExport(root,()=>{}),/Private policy lock required/);}finally{process.env.LITTLE_ISLAND_WORD_POLICY_LOCK=saved;}});
