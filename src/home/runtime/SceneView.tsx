@@ -171,7 +171,7 @@ const RestingEntity = memo(function RestingEntity({
     const bob = reduced ? undefined : motion.bob[presenter];
     const hidden = (front && flags.fronts.includes(entity.id)) || (rest?.hide ?? false);
     const dim = motion.dim[presenter] ?? 1;
-    return { opacity: hidden || mealHeld ? 0 : dim,
+    return { opacity: hidden ? 0 : dim,
       transformOrigin: rest ? [rest.gx - frame.left, rest.gy - frame.top, 0]
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
@@ -276,7 +276,7 @@ const RestingEntity = memo(function RestingEntity({
         style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
       {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
       <Animated.View style={normal}>
-        <Animated.View style={open}>
+        <Animated.View collapsable={ownerId ? false : undefined} style={character ? open : { opacity: mealHeld ? 0 : 1 }}>
           {/* Keep the saved cup painted under the transient sip so the final
               frame can reveal it without mounting a new native SVG. */}
           <EntityArt
@@ -401,10 +401,26 @@ export function SceneView({
   onMove: (id: string, action: string) => void;
 }) {
   const { camera,completeMealHandoff } = interaction;
-  React.useLayoutEffect(()=>{
-    for(const [id,meal]of Object.entries(meals))if(meal.source && meal.capture && (!mealReady || mealReady[id]===meal.key))
-      completeMealHandoff?.(meal.source,meal.capture);
-  },[completeMealHandoff,meals,mealReady]);
+  React.useLayoutEffect(() => {
+    if (!completeMealHandoff) return;
+    const ready = Object.entries(meals).flatMap(([id, meal]) =>
+      meal.source && meal.capture && (!mealReady || mealReady[id] === meal.key)
+        ? [{ source: meal.source, capture: meal.capture }]
+        : []);
+    if (!ready.length) return;
+    // React changes both layers' opacity together. A worklet must keep the
+    // carry slot alive until that native commit has had a frame to paint.
+    let retire: number | undefined;
+    const publish = requestAnimationFrame(() => {
+      retire = requestAnimationFrame(() => {
+        for (const { source, capture } of ready) completeMealHandoff(source, capture);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(publish);
+      if (retire !== undefined) cancelAnimationFrame(retire);
+    };
+  }, [completeMealHandoff, meals, mealReady]);
   // HD-08: lamp shadows change only when the room's contents do.
   // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
   const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {

@@ -277,13 +277,11 @@ it('one meal stage hides its real cup atomically, while restored drinks remain v
  const art=tree.root.findAllByType(EntityArt);
  expect(art.filter(n=>n.props.meal)).toHaveLength(1);
  const cup = tree.root.findByProps({testID:'object-rig-drink'});
- const hiddenPaint = cup.findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0];
- expect(hiddenPaint.props.style.evaluate().opacity).toBe(0);
  const mountedCup = cup.findByType(EntityArt);
+ expect(mountedCup.parent?.props.style.opacity).toBe(0);
  await act(async()=>{tree.update(<SceneView state={state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
  const drink=tree.root.findByProps({testID:'object-rig-drink'});
- const paint=drink.findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0];
- expect(paint.props.style.evaluate().opacity).toBe(1);
+ expect(drink.findByType(EntityArt).parent?.props.style.opacity).toBe(1);
  expect(drink.findByType(EntityArt)).toBe(mountedCup);
  await act(async()=>tree.unmount());
 });
@@ -372,4 +370,37 @@ it('retains an unchanged resting entity through a meal in another room', async (
  await act(async () => tree.update(<SceneView {...props} state={state} scene={next} />));
  expect(fridgeAction()).toBe(originalAction);
  await act(async () => tree.unmount());
+});
+
+it('retires the offered item after the visible meal has had a native paint', async () => {
+ const c = context('');
+ c.interaction.slots.value = [emptyDragSlot(), emptyDragSlot()];
+ const completeMealHandoff = vi.fn();
+ const frames: FrameRequestCallback[] = [];
+ vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
+ vi.stubGlobal('cancelAnimationFrame', () => {});
+ const state = labHome('rig-menu-0');
+ const scene = buildScene(state);
+ const source = 'home/item/menu-0';
+ const capture = { generation: 2, epoch: 1 };
+ const meals = { 'character/0': { key: 5, source, capture, action: 'eat' as const, food: scene.entities[source].item! } };
+ const props = {
+  state, scene, building: buildingLayout(4), viewport: { width: 402, height: 650 },
+  interaction: { ...c.interaction, completeMealHandoff }, pickups: [], reduced: false, reactions: {}, sleeping: {},
+  meals, onNode: () => {}, onSelect: () => {}, onMove: () => {},
+ };
+ let tree!: TestRenderer.ReactTestRenderer;
+ try {
+  await act(async () => { tree = TestRenderer.create(<SceneView {...props} mealReady={{}} />); });
+  expect(completeMealHandoff).not.toHaveBeenCalled();
+  await act(async () => tree.update(<SceneView {...props} mealReady={{ 'character/0': 5 }} />));
+  expect(completeMealHandoff).not.toHaveBeenCalled();
+  frames.shift()!(0);
+  expect(completeMealHandoff).not.toHaveBeenCalled();
+  frames.shift()!(16.67);
+  expect(completeMealHandoff).toHaveBeenCalledExactlyOnceWith(source, capture);
+ } finally {
+  if (tree) await act(async () => tree.unmount());
+  vi.unstubAllGlobals();
+ }
 });
