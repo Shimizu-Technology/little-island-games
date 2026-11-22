@@ -35,7 +35,9 @@ function CarryFrame({
   renderCharacter?: CharacterRender;
 }) {
   const options = carrySample(sample),
-    frame = renderAnchors(entity, true, options.tilt, options.limbLag).bounds;
+    // Pip's hold hull reserves room for a separate vessel. Keep the cached
+    // body canvas on its loose hull; the held prop has its own drawing.
+    frame = renderAnchors(bank && entity.character?.slot === 1 ? {...entity,children:[]} : entity, true, options.tilt, options.limbLag).bounds;
   const code = sample * 3 + face;
   const holding=useSharedValue(entity.children.length>0);
   // Only the next hidden canvas warms. A visible frame always gets its grip
@@ -87,7 +89,7 @@ export function CarriedCharacter(props: {
     const d = carryDisplay(slots.value[index], clock.value, reduced);
     return d.sample * 3 + d.face;
   });
-  const held=props.entity.children.length>0,human=props.entity.character?.slot===0,id=props.entity.id;
+  const held=props.entity.children.length>0,warmGrip=!!props.entity.character,id=props.entity.id;
   const requested=useSharedValue(held),cursor=useSharedValue(15),cycle=useSharedValue(0);
   const cycleRef=React.useRef(0);
   const active=useDerivedValue(()=>slots.value[index].id===id);
@@ -105,12 +107,12 @@ export function CarriedCharacter(props: {
   const warming=useFrameCallback(tick,false);
   React.useLayoutEffect(()=>{stopRef.current=()=>warming.setActive(false);return()=>{stopRef.current=undefined;};},[warming]);
   React.useEffect(()=>{
-    if(!human)return;
+    if(!warmGrip)return;
     const key=++cycleRef.current;
     runOnUI((next:boolean,key:number)=>{'worklet';cursor.set(0);requested.set(next);cycle.set(key);})(held,key);
     warming.setActive(true);
-  },[held,human,requested,cursor,warming,count,cycle]);
-  const bank=React.useMemo<GripBank|undefined>(()=>human?{requested,cursor,active,display}:undefined,[human,requested,cursor,active,display]);
+  },[held,warmGrip,requested,cursor,warming,count,cycle]);
+  const bank=React.useMemo<GripBank|undefined>(()=>warmGrip?{requested,cursor,active,display}:undefined,[warmGrip,requested,cursor,active,display]);
   return (
     <>
       {samples.map((sample) => (

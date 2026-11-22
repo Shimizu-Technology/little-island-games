@@ -102,7 +102,7 @@ export const EntityArt = memo(function EntityArt({
   actionOverride?: CharacterAction;
   faceOverride?: Face;
 }) {
-  const frame = entity.character ? renderAnchors(entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
+  const frame = entity.character ? renderAnchors(carry && carryGrip && entity.character.slot === 1 ? {...entity,children:[]} : entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
   if (entity.item && entity.attachment.kind === 'hand' && capabilityOf(entity.item.item).edible === 'drink') {
     const slot = Number(entity.attachment.character.split('/').at(-1)) as 0 | 1 | 2;
     const unit = heldDrinkScale(species[slot].unit,slot);

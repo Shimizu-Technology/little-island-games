@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import { companionContacts, crabAnchors, crabOrigin, pipAnchors, pipOrigin, rigTransform } from './anchors';
-import { clampRig, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback } from './character';
+import { clampRig, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife, type Gaze, type MealFrame, type MealPlayback, type CarryGrip } from './character';
 import { MealLayer, MealMorph, mealGroups } from './MealLayer';
 
 export type CompanionProps = RigLife & {
@@ -14,6 +14,7 @@ export type CompanionProps = RigLife & {
   gaze?: Gaze;
   meal?: MealFrame;
   mealPlayback?: MealPlayback;
+  carryGrip?: CarryGrip;
   tilt?: number;
   limbLag?: number;
   reduced?: boolean;
@@ -65,12 +66,13 @@ export function RigCrab({ base = 'stand', action = null, face, facing = 'right',
 
 /** Pip keeps ReefFish's honey body, coral tail, two pale stripes and one eye.
  * Stand=float, sit/bathe=tucked bowl posture, lie=rest curl, carry=loose fins. */
-export function Pip({ base = 'stand', action = null, face, facing = 'right', size = 120, held, tilt, limbLag, reduced = false, mood, clock, seed, blink, breath, gaze, meal, mealPlayback }: CompanionProps) {
+export function Pip({ base = 'stand', action = null, face, facing = 'right', size = 120, held, tilt, limbLag, reduced = false, mood, clock, seed, blink, breath, gaze, meal, mealPlayback, carryGrip }: CompanionProps) {
   const life = rigIdle(clock, seed, reduced), options = { action, tilt, limbLag, reduced, meal, gaze, breath: breath ?? life.breath };
   const box = pipAnchors(base, facing, options).bounds, origin = pipOrigin(base);
   const c = companionContacts('pip', base, action, meal), expression = rigFace(face, mood, action);
   const carry = base === 'carry', rest = base === 'lie', tucked = base === 'sit' || base === 'bathe';
   const lag = reduced ? 0 : -clampRig(limbLag, 0, 1) * clampRig(tilt, -6, 6) / 6 * 10 * (facing === 'left' ? -1 : 1);
+  const fin=(finAction:CharacterAction)=><Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${finAction ? 58 : 78} ${finAction ? 120 : 115} ${c.hand[0]} ${c.hand[1]}Q${finAction ? 40 : 57} ${finAction ? 100 : 99} 68 98Z`} fill="#F0C36A"/>;
   return <Svg style={{overflow:'visible'}} width={box.width*size/160} height={box.height*size/160} viewBox={`${box.left} ${box.top} ${box.width} ${box.height}`} accessible={false}>
     <G data-rig="pip" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)} stroke={ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <G transform={`translate(${-origin[0]} ${-origin[1]}) rotate(${rest ? -18 : 0} ${origin[0]} ${origin[1]})`}>
@@ -84,7 +86,7 @@ export function Pip({ base = 'stand', action = null, face, facing = 'right', siz
           const c = companionContacts('pip', base, action, f.meal);
           return <><Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${action ? 58 : 78} ${action ? 120 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 40 : 57} ${action ? 100 : 99} 68 98Z`} fill="#F0C36A"/>
           {f.held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/>}</>;
-        }}</MealMorph> : <>        <Path data-joint="fin" stroke="#D89843" strokeWidth={1.5} d={`M68 98Q${action ? 58 : 78} ${action ? 120 : 115} ${c.hand[0]} ${c.hand[1]}Q${action ? 40 : 57} ${action ? 100 : 99} 68 98Z`} fill="#F0C36A"/>
+        }}</MealMorph> : <>        {carryGrip ? <>{carryGrip.renderLayer(false,fin(null))}{carryGrip.renderLayer(true,fin('hold'))}</> : fin(action)}
         <Held at={c.hand} facing={facing}>{held}</Held>
         {held && <Path d={`M${c.hand[0]-3} ${c.hand[1]+4}q5 4 8-1`} fill="none" stroke="#D89843" strokeWidth={4}/ >}</>}
 

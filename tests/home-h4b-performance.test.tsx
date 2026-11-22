@@ -155,9 +155,9 @@ it('does not repaint prewarmed carry and landing rigs for a resting friends tran
  await act(async()=>tree.unmount());
 });
 
-it('receiving a cup switches prebuilt carry grips without repainting whole characters',async()=>{
+for(const slot of [0,1,2]as const)it(`actor ${slot} receiving a cup switches prebuilt carry grips without repainting whole characters`,async()=>{
  const {CarriedCharacter}=await import('../src/home/runtime/CarriedCharacter');
- const scene=buildScene(labFixtures['rig-meal']()),hero=scene.entities['character/0'];
+ const scene=buildScene(labFixtures[`rig-menu-${slot}`]()),hero=scene.entities[`character/${slot}`];
  const interaction={slots:{value:[{},{}]},clock:{value:0}}as any;
  const inputs:any[]=[];const render=vi.fn((input:any)=>{inputs.push(input);return React.createElement('body');});
  let tree!:ReturnType<typeof create>;
@@ -412,4 +412,32 @@ it('switches a prepared drink by clock without replacing either vessel drawing',
  expect(bank().findByProps({testID:'meal-food-0-juice'}).props.style[1].evaluate().opacity).toBe(1);
  expect(bank().findByProps({testID:'meal-food-0-coconut-drink'}).props.style[1].evaluate().opacity).toBe(0);
  await act(async()=>tree.unmount());
+});
+
+it('Pip prebuilt carry fins preserve authored loose/holding paths and one canvas at every lean',async()=>{
+ const {G}=await import('react-native-svg');
+ const {renderAnchors}=await import('../src/home/runtime/rigGeometry');
+ const hero=buildScene(labFixtures['rig-menu-1']()).entities['character/1'];
+ const grip={renderLayer:(holding:boolean,children:React.ReactNode)=><G data-carry-state={String(holding)}>{children}</G>};
+ for(const facing of ['front','left']as const)for(const lean of [-1,0,1]){
+  let tree!:ReturnType<typeof create>;
+  await act(async()=>{tree=create(<EntityArt entity={{...hero,facing}} carry carryGrip={grip} reduced={false} tilt={lean*6} limbLag={Math.abs(lean)}/>);});
+  for(const held of [false,true]){
+   let reference!:ReturnType<typeof create>;
+   const entity={...hero,facing,children:held?['cup']:[]};
+   await act(async()=>tree.update(<EntityArt entity={entity} carry carryGrip={grip} reduced={false} tilt={lean*6} limbLag={Math.abs(lean)}/>));
+   await act(async()=>{reference=create(<HomeCharacter input={{slot:1,base:'carry',facing:facing==='left'?'left':'right',size:170,face:null,action:held?'hold':null,tilt:lean*6,limbLag:Math.abs(lean),gaze:{x:0,y:-1}}}/>);});
+   const fin=tree.root.findAll(n=>typeof n.type==='string'&&n.props['data-joint']==='fin').find(n=>{let p=n.parent;while(p){if(p.props['data-carry-state']!==undefined)return p.props['data-carry-state']===String(held);p=p.parent;}return false;});
+   const authored=reference.root.findAll(n=>typeof n.type==='string'&&n.props['data-joint']==='fin')[0];
+   expect(fin?.props.d).toBe(authored.props.d);
+   const svg=tree.root.findAll(n=>n.type==='svg')[0],ref=reference.root.findAll(n=>n.type==='svg')[0];
+   const view=svg.props.viewBox.split(' ').map(Number),refView=ref.props.viewBox.split(' ').map(Number);
+   const canonical=renderAnchors({...entity,children:[]},true,lean*6,Math.abs(lean)).bounds;
+   const actual=renderAnchors(entity,true,lean*6,Math.abs(lean)).bounds,unit=170/160;
+   expect(canonical.left-view[0]*unit).toBeCloseTo(actual.left-refView[0]*unit);
+   expect(canonical.top-view[1]*unit).toBeCloseTo(actual.top-refView[1]*unit);
+   await act(async()=>reference.unmount());
+  }
+  await act(async()=>tree.unmount());
+ }
 });
