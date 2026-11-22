@@ -43,11 +43,12 @@ function ancestors(entity: SceneEntity, scene: Scene): string[] {
 /** A displaced cup gets a fresh zero-valued native style on its first paint.
  * Reusing the resting entity's finished clock can show the floor pose before
  * the new worklet and clock reset arrive, then jump back into the tween. */
-function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:string;from:NonNullable<ReturnType<typeof restFrom>>;frame:{left:number;top:number};reduced:boolean;onFinished:()=>void;shadow?:React.ComponentProps<typeof View>['style'];children:React.ReactNode}) {
+function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:string;from:NonNullable<ReturnType<typeof restFrom>>;frame:{left:number;top:number;width:number;height:number};reduced:boolean;onFinished:()=>void;shadow?:React.ComponentProps<typeof View>['style'];children:React.ReactNode}) {
   const elapsed=useSharedValue(0);
+  const start=restTransform(from,0,reduced);
   const motion=useAnimatedStyle(()=>{
     const pose=restTransform(from,elapsed.value,reduced);
-    return {transform:[{translateX:pose.dx},{translateY:pose.dy},{scale:pose.scale}]};
+    return {transform:[{translateX:(pose.dx-start.dx)/start.scale},{translateY:(pose.dy-start.dy)/start.scale},{scale:pose.scale/start.scale}]};
   });
   const shade=useAnimatedStyle(()=>({opacity:.16*(reduced?1:Math.max(0,Math.min(1,(elapsed.value-120)/100)))}));
   const started=React.useRef(false),request=React.useRef<number|undefined>(undefined);
@@ -64,7 +65,12 @@ function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:st
   },[elapsed]);
   return <>
     {shadow && <Animated.View testID={`drink-ground-shadow-${id}`} pointerEvents="none" accessible={false} style={[shadow,shade]}/>}
-    <Animated.View collapsable={false} onLayout={begin} testID={`rest-set-down-${id}`} pointerEvents="none" style={[{transformOrigin:[-frame.left,-frame.top,0]},motion]}>{children}</Animated.View>
+    {/* The native layout starts in the hand even before Reanimated attaches.
+        The animated child starts at identity and cancels this basis on arrival. */}
+    <View testID={`rest-set-down-origin-${id}`} pointerEvents="none" accessible={false}
+      style={{width:frame.width,height:frame.height,transformOrigin:[-frame.left,-frame.top,0],transform:[{translateX:start.dx},{translateY:start.dy},{scale:start.scale}]}}>
+      <Animated.View collapsable={false} onLayout={begin} testID={`rest-set-down-${id}`} pointerEvents="none" style={[{width:frame.width,height:frame.height,transformOrigin:[-frame.left,-frame.top,0]},motion]}>{children}</Animated.View>
+    </View>
   </>;
 }
 /** Hidden copies retain their last idle props until the visible meal finishes. */
@@ -153,8 +159,10 @@ const RestingEntity = memo(function RestingEntity({
     if (meal) onMealFinished?.(entity.id, meal.key);
   }, [meal, entity.id, onMealFinished]);
   const [restState, setRestState] = React.useState<{entity:SceneEntity;from:ReturnType<typeof restFrom>}>({entity,from:undefined});
-  if (restState.entity !== entity) setRestState({entity,from:restFrom(restState.entity,entity)});
-  const from = restState.from;
+  // Derive the new transition on this render too. A worklet initializer must
+  // never observe the previous entity's absent transition on a render retry.
+  const from = restState.entity !== entity ? restFrom(restState.entity,entity) : restState.from;
+  if (restState.entity !== entity) setRestState({entity,from});
   const finishSetDown=React.useCallback(()=>setRestState(current=>current.entity===entity && current.from ? {entity,from:undefined} : current),[entity]);
   const frame = artFrame(entity);
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';

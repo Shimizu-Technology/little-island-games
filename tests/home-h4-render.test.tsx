@@ -168,14 +168,20 @@ for(const slot of [0,1,2]as const)for(const reduced of [false,true])it(`actor ${
  expect(cup().props.style[0].zIndex).toBe(1000);
  const setDown=cup().findByProps({testID:`rest-set-down-${Object.values(scene.entities).find(e=>e.item?.id===coconut.id)!.id}`});
  const initial=setDown.props.style[1].initial;
- if(reduced)expect(initial.transform).toEqual([{translateX:0},{translateY:0},{scale:1}]);
- else {expect(initial.transform[0].translateX).not.toBe(0);expect(initial.transform[2].scale).not.toBe(1);}
+ const origin=cup().findByProps({testID:`rest-set-down-origin-${Object.values(scene.entities).find(e=>e.item?.id===coconut.id)!.id}`}).props.style;
+ expect(initial.transform).toEqual([{translateX:0},{translateY:0},{scale:1}]);
+ if(reduced)expect(origin.transform).toEqual([{translateX:0},{translateY:0},{scale:1}]);
+ else {expect(origin.transform[0].translateX).not.toBe(0);expect(origin.transform[2].scale).not.toBe(1);}
 
  const shadow=cup().findByProps({testID:`drink-ground-shadow-${Object.values(scene.entities).find(e=>e.item?.id===coconut.id)!.id}`});
  expect(shadow.props.style[1].evaluate().opacity).toBe(reduced?.16:0);
  expect(setDownClock.done).toHaveLength(0);
  await act(async()=>{setDown.props.onLayout();setDownClock.raf.shift()!();});
  expect(shadow.props.style[1].evaluate().opacity).toBe(.16);
+ const end=setDown.props.style[1].evaluate().transform,base=origin.transform,scale=base[2].scale;
+ expect(base[0].translateX+scale*end[0].translateX).toBeCloseTo(0);
+ expect(base[1].translateY+scale*end[1].translateY).toBeCloseTo(0);
+ expect(scale*end[2].scale).toBeCloseTo(1);
  expect(shadow.props.style[0].transform).toBeUndefined();
  expect(setDownClock.done).toHaveLength(1);
  await act(async()=>setDownClock.done[0](true));
