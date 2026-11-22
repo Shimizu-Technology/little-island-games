@@ -1,3 +1,4 @@
+import {heldDrinkGeometry,heldDrinkScale} from '../art/heldDrink';
 import { worldRevision, translatedBounds, standingContact, occludedFraction, catalogSamples, catalogNeighbours } from "./spatial";
 
 import { roomIds, type RoomId } from "../catalogMore";
@@ -169,6 +170,11 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       entity.contact = roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
       entity.band = parent.band;
       entity.depth = parent.depth + 0.1;
+      if (entity.item && capabilityOf(entity.item.item).edible === 'drink') {
+        const slot=parent.character.slot;
+        Object.assign(entity,heldDrinkGeometry(entity.item,heldDrinkScale(species[slot].unit,slot),false));
+        entity.hitProxies=[entity.bounds];
+      }
     } else if (parent && entity.attachment.kind === "container") {
       entity.contact = parent.contact;
     } else if (parent) {

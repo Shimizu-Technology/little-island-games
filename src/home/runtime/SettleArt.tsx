@@ -53,7 +53,7 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
     <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, from]}>
       <CarriedCharacter entity={source} interaction={interaction} index={index} reduced={reduced} renderCharacter={renderCharacter} />
     </Animated.View>
-    {mounted.map((entity) => <TargetPose key={poseToken(entity.base, entity.facing, entity.action)}
+    {mounted.map((entity) => <TargetPose key={poseToken(entity.base, entity.facing, null)}
       entity={entity} source={source} startHead={{ x: head.x + start.x, y: head.y + start.y }}
       interaction={interaction} index={index} reduced={reduced} supportPlanes={supportPlanes} renderCharacter={renderCharacter} />)}
   </>;

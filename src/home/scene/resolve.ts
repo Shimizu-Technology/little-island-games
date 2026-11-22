@@ -516,10 +516,19 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
           : undefined;
     if (previousHeld && previousHeld !== subject.id) {
       const displaced = index.entities[previousHeld];
-      const fallback = resolve(index, displaced, roomPoint(target.contact.x + 60, target.contact.y + 84), {
-        scale: ctx.scale,
-        floorOnly: true,
-        release: true,
+      const actor = index.entities[target.owner];
+      const hand = actor.character && anchorsFor(actor.character.slot, actor.base, actor.facing, "hold").hand;
+      // Set a replaced drink beside the feet, on the side opposite the resting hand.
+      // A reachable free table/counter is preferable to the floor.
+      const side = hand && hand.x < 0 ? 1 : -1;
+      const point = roomPoint(actor.contact.x + side * (actor.bounds.width / 2 + displaced.body!.w * 37.5 / 2 + 14), actor.contact.y);
+      const surface = index.targets.filter(t => t.kind === "surface" && !t.occupied && !t.hidden && !t.closed &&
+        Math.hypot(t.contact.x - actor.contact.x, t.contact.y - actor.contact.y) <= actor.bounds.width + 90)
+        .sort((a,b) => Math.hypot(a.contact.x-point.x,a.contact.y-point.y)-Math.hypot(b.contact.x-point.x,b.contact.y-point.y))
+        .map(t => resolve(index, displaced, t.contact, {scale:ctx.scale, contact:t.contact, target:t.id, kinds:["surface"], release:true}))
+        .find(p => p.kind === "surface");
+      const fallback = surface ?? resolve(index, displaced, point, {
+        scale: ctx.scale, floorOnly: true, release: true,
       });
       proposal.moves.push(...fallback.moves);
     }

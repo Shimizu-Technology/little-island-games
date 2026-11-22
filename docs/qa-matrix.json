@@ -11264,6 +11264,16 @@
           "result": "passed",
           "scope": "Final native affected recovery/history checks, retained room state and physical limits recorded. Not a full Home semantic fixture or A9 performance pass.",
           "sha": "63d1810ad9686971d2aaf949edd5994ed4489fe1"
+        },
+        {
+          "build": "Focused Vitest on clean source; 114 tests across seven suites",
+          "coverage": "partial",
+          "device": "macOS host; no physical-device acceptance",
+          "evidenceKind": "host",
+          "path": "v4/wave2/h4b-rig/results/HOST-VERIFICATION.md",
+          "result": "passed",
+          "scope": "Transient meal presentation, exact sampled frames, gaze clamps, mouth and footprint cues, pickup/replacement/Undo, and quiet crumbs. Native and whole-row acceptance remain separate.",
+          "sha": "1202c8bf64241204cfdaaabc49598781f68c1a6c"
         }
       ],
       "status": "not run",
@@ -15500,6 +15510,16 @@
           "result": "passed",
           "scope": "Aim/feeding/drop repair evidence and planned-touch fixtures. Physical adult/child target measures and full semantic/zoom sweep remain.",
           "sha": "4f83680d67c691dc1de109327568cb69c11de8f5"
+        },
+        {
+          "build": "Focused Vitest on clean source; 114 tests across seven suites",
+          "coverage": "partial",
+          "device": "macOS host; no physical-device acceptance",
+          "evidenceKind": "host",
+          "path": "v4/wave2/h4b-rig/results/HOST-VERIFICATION.md",
+          "result": "passed",
+          "scope": "Transient meal presentation, exact sampled frames, gaze clamps, mouth and footprint cues, pickup/replacement/Undo, and quiet crumbs. Native and whole-row acceptance remain separate.",
+          "sha": "1202c8bf64241204cfdaaabc49598781f68c1a6c"
         }
       ],
       "status": "not run",
@@ -15602,6 +15622,16 @@
           "result": "passed",
           "scope": "Navigation/carry, drawer, saved Undo, larger controls and H2 feeding retest recorded. Simulator timing is relative under host load; Home A1–A10 and physical P1–P6 remain incomplete.",
           "sha": "4cb0f58338fd68a73e2282ec2b24d01d41a8e54e"
+        },
+        {
+          "build": "Focused Vitest on clean source; 114 tests across seven suites",
+          "coverage": "partial",
+          "device": "macOS host; no physical-device acceptance",
+          "evidenceKind": "host",
+          "path": "v4/wave2/h4b-rig/results/HOST-VERIFICATION.md",
+          "result": "passed",
+          "scope": "Transient meal presentation, exact sampled frames, gaze clamps, mouth and footprint cues, pickup/replacement/Undo, and quiet crumbs. Native and whole-row acceptance remain separate.",
+          "sha": "1202c8bf64241204cfdaaabc49598781f68c1a6c"
         }
       ],
       "status": "not run",

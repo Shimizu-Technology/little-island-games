@@ -100,7 +100,7 @@ describe('caller-controlled life', () => {
   it('restores the child mood beneath temporary action faces', () => {
     expect(rigFace('happy','thinking')).toBe('happy');
     expect(rigFace(null,'thinking')).toBe('thinking');
-    expect(rigFace(undefined,'thinking','eat')).toBe('anticipate');
+    expect(rigFace(undefined,'thinking','eat')).toBe('chew');
     expect(rigFace('chew','thinking','eat')).toBe('chew');
   });
   it('Reduced Motion removes idle inputs and secondary movement but preserves sleepy eyes', () => {

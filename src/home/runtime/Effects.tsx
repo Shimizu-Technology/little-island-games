@@ -22,8 +22,8 @@ export function particlesOf(kind: EffectKind, seed: number): Particle[] {
   const r = (i: number) => spread(seed, i);
   switch (kind) {
     case "crumbs":
-      return Array.from({ length: 8 }, (_, i) => ({ x0: (r(i) - 0.5) * 18, y0: 4, x1: (r(i) - 0.5) * 70, y1: 60 + r(i + 9) * 30,
-        size: 8 + r(i + 3) * 5, color: ["#B87436", "#E3B061", "#9C5F2C"][i % 3], delay: i * 30 }));
+      return Array.from({ length: 3 }, (_, i) => ({ x0: (r(i) - 0.5) * 10, y0: 5, x1: (r(i) - 0.5) * 28, y1: 18 + r(i + 9) * 10,
+        size: 4 + r(i + 3) * 2, color: ["#B87436", "#E3B061", "#9C5F2C"][i % 3], delay: i * 30 }));
     case "bubbles":
       // From the tub's two ends, rising up and out, so they never cross a bathing friend's face.
       return Array.from({ length: 8 }, (_, i) => { const side = i % 2 ? 1 : -1;

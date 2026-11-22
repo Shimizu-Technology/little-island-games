@@ -71,6 +71,8 @@ export type DragSlot = CaptureToken & {
   landedAt?: number;
   phase: "pending" | "dragging" | "settling";
   consumed: boolean;
+  /** A consumed release stays painted until its meal SVG has presented. */
+  mealPending?: boolean;
   absoluteX: number;
   absoluteY: number;
   x: number;
@@ -289,9 +291,9 @@ export function useInteraction({
   const forgetPose = useCallback((actor: string, token: string, mount: number) => {
     poseLayouts.modify((current) => { "worklet"; return forgetPoseIn(current, actor, token, mount); });
   }, [poseLayouts]);
-  const acknowledgeLayout = (id: string, token: string) => {
+  const acknowledgeLayout = useCallback((id: string, token: string) => {
     laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
-  };
+  }, [laidOut]);
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptyDragSlot(), emptyDragSlot()]);
   const frameTimes = useSharedValue<number[]>([]);
@@ -341,6 +343,9 @@ export function useInteraction({
     "worklet";
     idleFrames.set(0);
     if (framesOn.value) return;
+    // Start the probe at input wake, excluding stopped idle time while keeping
+    // the real input-to-first-frame delay in the pickup window.
+    probeLastAt.set(eventTime());
     framesOn.set(true);
     restarted.set(true);
     if (onTrace) runOnJS(onTrace)({ type: "frames-active", at: eventTime() });
@@ -508,7 +513,8 @@ export function useInteraction({
     revision?: string,
     destination?: Scene,
     token?: CaptureToken,
-    identity?: string
+    identity?: string,
+    mealPending = false
   ) => {
     if (token && !isCurrent(index, token)) return;
     const current = slots.get();
@@ -519,7 +525,7 @@ export function useInteraction({
     const origin = proposal?.kind === "staging" && slot.stagingAt
       ? { x: slot.stagingAt.x - proposal.contact.x, y: slot.stagingAt.y - proposal.contact.y } : room;
     const restEntity = destination && destination.entities[identity ?? proposal?.id ?? slot.restId ?? slot.id];
-    const retargeted = committed && proposal && !(slot.synthetic && proposal.kind === "staging") &&
+    const retargeted = committed && proposal && proposal.kind !== "mouth" && !(slot.synthetic && proposal.kind === "staging") &&
       (Math.abs(origin.x + proposal.contact.x - slot.targetX) > .01 || Math.abs(origin.y + proposal.contact.y - slot.targetY) > .01);
     slots.set(
       current.map((s, i) =>
@@ -530,9 +536,12 @@ export function useInteraction({
               phase: "settling",
               releaseX: s.settleAt && committed && !retargeted ? s.releaseX : s.x,
               releaseY: s.settleAt && committed && !retargeted ? s.releaseY : s.y,
-              targetX: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
-              targetY: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
+              targetX: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
+              targetY: committed && proposal ? proposal.kind === "mouth" || s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
               proposal,
+              // A refused stationary mouth drop still travels back to its source.
+              duration: !committed && s.duration === 0 ? undefined : s.duration,
+              mealPending: committed && mealPending,
               consumed: s.catalog && !committed || committed && proposal?.kind === "mouth" && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
               subject: restEntity ?? s.subject,
@@ -547,6 +556,13 @@ export function useInteraction({
       )
     );
   };
+  const completeMealHandoff=useCallback((id:string,token:CaptureToken)=>{
+    slots.modify(current=>{
+      'worklet';
+      for(const slot of current)if(slot.id===id && slot.generation===token.generation && slot.epoch===token.epoch)slot.mealPending=false;
+      return current;
+    });
+  },[slots]);
   const unready = useCallback((id: string) => {
     overlayLayouts.modify(layouts => { "worklet"; delete layouts[id]; return layouts; });
   }, [overlayLayouts]);
@@ -722,8 +738,9 @@ export function useInteraction({
         };
         captureSequence.set(Math.max(captureSequence.value, slot.generation));
         slots.set(slots.value.map((s, i) => (i === index ? slot : s)));
-        if (existing < 0 || !visible?.ready)
-          runOnJS(onPickup)({
+        if (onReleaseProbe && effect.type === "pickup") probePending.set([...probePending.value,
+          {at:eventTime(),phase:"pickup",id:entity.id,kind:"pickup"}]);
+        if (existing < 0 || !visible?.ready) runOnJS(onPickup)({
             id: effect.entity,
             slot: index,
             scene: pickupScene(prepared.value, entity),
@@ -767,7 +784,7 @@ export function useInteraction({
         const slot = slots.value[index];
         if (!slot) continue;
         const origin = roomOrigin(roomIds.indexOf(effect.proposal.room), building);
-        const at = effect.proposal.kind === "staging" && slot.stagingAt ? slot.stagingAt
+        const at = effect.proposal.kind === "mouth" ? {x:slot.x,y:slot.y} : effect.proposal.kind === "staging" && slot.stagingAt ? slot.stagingAt
           : { x: origin.x + effect.proposal.contact.x, y: origin.y + effect.proposal.contact.y };
         slots.set(
           slots.value.map((s, i) =>
@@ -776,6 +793,9 @@ export function useInteraction({
               targetX: at.x, targetY: at.y,
               x: reduced ? at.x : s.x,
               y: reduced ? at.y : s.y,
+              // A mouth release stays at its dropped point: there is no travel
+              // to wait for. The meal's native presentation gate owns the handoff.
+              duration: effect.proposal.kind === "mouth" ? 0 : s.duration,
               settleAt: eventTime(), travelDelay: 0, finished: false, commitRequested: false } : s
           )
         );
@@ -1237,7 +1257,7 @@ export function useInteraction({
             const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
-            slot.tilt *= 1 - progress;
+            if(slot.proposal?.kind !== "mouth")slot.tilt *= 1 - progress;
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
             if (slot.finished && slot.catalog && !slot.landedAt) slot.landedAt = now;
@@ -1252,7 +1272,7 @@ export function useInteraction({
             const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
               (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
                 (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))))));
-            if (nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
+            if (!slot.mealPending && nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
                 const bounds = translatedBounds(
@@ -1545,6 +1565,7 @@ export function useInteraction({
     ready,
     unready,
     finish,
+    completeMealHandoff,
     cancelAll,
     frameTimes,
     renderedRevision,

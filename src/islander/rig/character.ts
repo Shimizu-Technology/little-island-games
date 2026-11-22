@@ -1,10 +1,17 @@
 import type { ReactNode } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 import { resolvePose, solve, type Expression, type Joint, type Point, type Pose } from './poses';
 
 /** Structural match for the CORE scene contract; no runtime/model dependency. */
 export type CharacterBase = 'stand' | 'sit' | 'lie' | 'bathe' | 'carry';
 export type CharacterAction = 'eat' | 'drink' | 'hold' | null;
 export type CharacterFace = 'neutral' | 'anticipate' | 'chew' | 'happy' | 'sleepy' | 'surprised';
+export type Gaze = Readonly<{ x: number; y: number }>;
+/** Transient meal progress; never part of a saved character. */
+export type MealFrame = Readonly<{ reach: number; bite: boolean; chew: boolean }>;
+export type MealPose = Readonly<{ time: number; meal: MealFrame; held: ReactNode; face: CharacterFace }>;
+export type MealPlayback = Readonly<{ progress: SharedValue<number>; frames: readonly MealPose[]; renderMorph?: (frames: readonly ReactNode[]) => ReactNode; renderLayer: (index: number | readonly number[], children: ReactNode) => ReactNode }>;
+export type CarryGrip = Readonly<{renderLayer:(holding:boolean,children:ReactNode)=>ReactNode}>;
 export type Facing = 'left' | 'right';
 export type CharacterRenderInput = Readonly<{
   slot: 0 | 1 | 2;
@@ -14,6 +21,10 @@ export type CharacterRenderInput = Readonly<{
   facing: Facing;
   size: number;
   held?: ReactNode;
+  gaze?: Gaze;
+  meal?: MealFrame;
+  mealPlayback?: MealPlayback;
+  carryGrip?:CarryGrip;
   tilt?: number;
   limbLag?: number;
   reduced?: boolean;
@@ -38,7 +49,7 @@ export function rotatePoint(p: Point, origin: Point, degrees: number): Point {
 
 const baseIds: Record<CharacterBase, string> = { stand: 'idle', sit: 'sit-relaxed', lie: 'lie', bathe: 'bathe', carry: 'carry' };
 /** Action alters only one arm; the base ID, pelvis, head and lower body survive. */
-export function characterPose(base: CharacterBase, action: CharacterAction = null, limbLag = 0, tilt = 0): Pose {
+export function characterPose(base: CharacterBase, action: CharacterAction = null, limbLag = 0, tilt = 0, meal?: MealFrame, gaze?: Gaze): Pose {
   const pose = resolvePose('front', baseIds[base]);
   const joints = { ...pose.joints } as Record<Joint, Point>;
   if (base === 'carry') {
@@ -50,9 +61,13 @@ export function characterPose(base: CharacterBase, action: CharacterAction = nul
     }
   }
   if (action) {
-    const target: Point = action === 'hold' ? [61, 88] : action === 'drink' ? [36, 69] : [45, 58];
-    [joints.rightElbow, joints.rightHand] = solve(joints.rightShoulder, target, [72, 76], 16);
+    // Approach from below the chin, with the elbow below the hand. A restored
+    // action has no transient food: keep its empty hand down while it chews.
+    const reach = clampRig(meal?.reach, 0, 1);
+    const target: Point = action === 'hold' ? [61, 88] : action === 'drink' ? [61 - 14 * reach, 88 - 22 * reach] : [58 - 11 * reach, 91 - 25 * reach];
+    [joints.rightElbow, joints.rightHand] = solve(joints.rightShoulder, target, action === 'hold' ? [72, 76] : [68, 94], 16);
   }
+  joints.head = [joints.head[0] + clampRig(gaze?.x, -1, 1) * 1.4, joints.head[1] + clampRig(gaze?.y, -1, 1) * .6];
   return { ...pose, joints };
 }
 
@@ -67,5 +82,5 @@ export function rigIdle(clock = 0, seed = 0, reduced = false) {
   return { blink, breath: (1 - Math.cos(time * Math.PI * 2 / 3600)) / 2 };
 }
 export function rigFace(face: CharacterFace | null | undefined, mood: Expression = 'neutral', action: CharacterAction = null): Expression {
-  return face ?? (action === 'eat' || action === 'drink' ? 'anticipate' : mood);
+  return face ?? (action === 'eat' || action === 'drink' ? 'chew' : mood);
 }

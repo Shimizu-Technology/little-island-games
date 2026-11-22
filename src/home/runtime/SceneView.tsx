@@ -1,6 +1,11 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import { anchorsFor } from "../scene/species";
+import { restFrom, restTransform } from "./restFrom";
+import type { Meal } from "./meal";
+import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
+import { capabilityOf } from '../world';
+import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -35,9 +40,45 @@ function ancestors(entity: SceneEntity, scene: Scene): string[] {
   }
   return result;
 }
+/** A displaced cup gets a fresh zero-valued native style on its first paint.
+ * Reusing the resting entity's finished clock can show the floor pose before
+ * the new worklet and clock reset arrive, then jump back into the tween. */
+function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:string;from:NonNullable<ReturnType<typeof restFrom>>;frame:{left:number;top:number;width:number;height:number};reduced:boolean;onFinished:()=>void;shadow?:React.ComponentProps<typeof View>['style'];children:React.ReactNode}) {
+  const elapsed=useSharedValue(0);
+  const start=restTransform(from,0,reduced);
+  const motion=useAnimatedStyle(()=>{
+    const pose=restTransform(from,elapsed.value,reduced);
+    return {transform:[{translateX:(pose.dx-start.dx)/start.scale},{translateY:(pose.dy-start.dy)/start.scale},{scale:pose.scale/start.scale}]};
+  });
+  const shade=useAnimatedStyle(()=>({opacity:.16*(reduced?1:Math.max(0,Math.min(1,(elapsed.value-120)/100)))}));
+  const started=React.useRef(false),request=React.useRef<number|undefined>(undefined);
+  const begin=React.useCallback(()=>{
+    if(started.current)return;
+    started.current=true;
+    request.current=requestAnimationFrame(()=>{
+      elapsed.set(withTiming(220,{duration:reduced?0:220,easing:Easing.linear},done=>{if(done)runOnJS(onFinished)();}));
+    });
+  },[elapsed,reduced,onFinished]);
+  React.useLayoutEffect(()=>()=>{
+    if(request.current!==undefined)cancelAnimationFrame(request.current);
+    cancelAnimation(elapsed);
+  },[elapsed]);
+  return <>
+    {shadow && <Animated.View testID={`drink-ground-shadow-${id}`} pointerEvents="none" accessible={false} style={[shadow,shade]}/>}
+    {/* The native layout starts in the hand even before Reanimated attaches.
+        The animated child starts at identity and cancels this basis on arrival. */}
+    <View testID={`rest-set-down-origin-${id}`} pointerEvents="none" accessible={false}
+      style={{width:frame.width,height:frame.height,transformOrigin:[-frame.left,-frame.top,0],transform:[{translateX:start.dx},{translateY:start.dy},{scale:start.scale}]}}>
+      <Animated.View collapsable={false} onLayout={begin} testID={`rest-set-down-${id}`} pointerEvents="none" style={[{width:frame.width,height:frame.height,transformOrigin:[-frame.left,-frame.top,0]},motion]}>{children}</Animated.View>
+    </View>
+  </>;
+}
+/** Hidden copies retain their last idle props until the visible meal finishes. */
+const IdleEntityDrawing=memo(function IdleEntityDrawing({mealActive:_mealActive,...props}:React.ComponentProps<typeof EntityArt>&{mealActive:boolean}) {
+  return <EntityArt {...props}/>;
+},(_previous,next)=>next.mealActive);
 const RestingEntity = memo(function RestingEntity({
   entity,
-  sceneRevision,
   name,
   ownerKey,
   restingFlags,
@@ -51,6 +92,13 @@ const RestingEntity = memo(function RestingEntity({
   selected,
   targetKey,
   action,
+  meal,
+  mealStandby,
+  mealVisible = true,
+  onMealPresented,
+  onMealFinished,
+  mealHeld = false,
+  cacheBlink = false,
   sleeping,
   front = false,
   onNode,
@@ -67,13 +115,14 @@ const RestingEntity = memo(function RestingEntity({
   ownerPivot?: { x: number; y: number };
   /** HM-11: the shared life clock, given only to friends at rest in the room on screen. */
   life?: SharedValue<number>;
+  /** Keep the visible room's static closed-eye drawing mounted across meals. */
+  cacheBlink?: boolean;
   /** H4: a short expression after eating, a greeting or a burp. */
   mood?: Face;
   /** HD-08: a soft shadow thrown by a lit lamp nearby. */
   shadow?: LampShadow;
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
-  sceneRevision: string;
   /** Accessible name; numbered when the room holds several of the same thing. */
   name: string;
   ownerKey: string;
@@ -86,6 +135,12 @@ const RestingEntity = memo(function RestingEntity({
   selected: boolean;
   targetKey: string;
   action?: "eat" | "drink";
+  meal?: Meal;
+  mealStandby?: Meal;
+  mealVisible?:boolean;
+  onMealPresented?: (id: string, key: number) => void;
+  onMealFinished?: (id: string, key: number) => void;
+  mealHeld?: boolean;
   sleeping: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
@@ -97,7 +152,22 @@ const RestingEntity = memo(function RestingEntity({
     },
     [entity.id, front, onNode]
   );
+  const presented = React.useCallback(() => {
+    if (meal) onMealPresented?.(entity.id, meal.key);
+  }, [meal, entity.id, onMealPresented]);
+  const finished = React.useCallback(() => {
+    if (meal) onMealFinished?.(entity.id, meal.key);
+  }, [meal, entity.id, onMealFinished]);
+  const [restState, setRestState] = React.useState<{entity:SceneEntity;from:ReturnType<typeof restFrom>}>({entity,from:undefined});
+  // Derive the new transition on this render too. A worklet initializer must
+  // never observe the previous entity's absent transition on a render retry.
+  const from = restState.entity !== entity ? restFrom(restState.entity,entity) : restState.from;
+  if (restState.entity !== entity) setRestState({entity,from});
+  const finishSetDown=React.useCallback(()=>setRestState(current=>current.entity===entity && current.from ? {entity,from:undefined} : current),[entity]);
   const frame = artFrame(entity);
+  const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
+  const drinkSize=entity.item ? itemSize(entity.item) : 0;
+  const groundShadow={position:'absolute' as const,left:drinkSize*.32,top:drinkSize*.71,width:drinkSize*.36,height:drinkSize*.08,borderRadius:drinkSize*.1,backgroundColor:'#385451'};
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
   const [stamp, setStamp] = React.useState({ token, value: 1 });
@@ -115,6 +185,20 @@ const RestingEntity = memo(function RestingEntity({
   // The friend whose lean this art shows: itself, or the friend holding it.
   const leaner = character ? id : ownerId;
   const lean = useSharedValue(0);
+  const [gazeCode, setGazeCode] = React.useState(0);
+  const gazeRef = React.useRef(0);
+  const publishGaze = React.useCallback((code: number) => {
+    if (gazeRef.current === code) return;
+    gazeRef.current = code;
+    setGazeCode(code);
+  }, []);
+  useAnimatedReaction(() => {
+    if (!character || sleeping) return 0;
+    const notice = restingFlags.value.notice.find(n => n.id === id);
+    return notice ? notice.dir * 4 + (notice.vertical ?? 0) : 0;
+  }, (dir, before) => { if (dir !== before) runOnJS(publishGaze)(dir); }, [character, sleeping, id]);
+  const gazeDir = Math.round(gazeCode / 4);
+  const gaze = { x: gazeDir * (entity.facing === "left" ? -1 : 1), y: gazeCode - gazeDir * 4 };
   useAnimatedReaction(() => {
     if (!leaner || sleeping || reduced) return 0;
     for (const n of restingFlags.value.notice) if (n.id === leaner) return n.dir;
@@ -147,21 +231,62 @@ const RestingEntity = memo(function RestingEntity({
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
       ] };
   });
-  // The open-eyed art always keeps this style. Dropping it when the clock goes (a friend falls
-  // asleep) left the last native value behind: asleep mid-blink, the friend vanished for good.
-  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }), [life, seed]);
-  const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
-  const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
   const anticipating = useDerivedValue(() => {
-    if (!character) return 0;
+    if (!character || action || entity.action === "eat" || entity.action === "drink") return 0;
     if (anyIn(restingFlags.value.targets, anticipationTargets)) return 1;
     if (sleeping) return 0;
     for (const n of restingFlags.value.notice) if (n.id === id && n.food) return 1;
     return 0;
   });
-  const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
+  // A lingering native anticipation or blink must never cover the meal layer.
+  const idleStyle = useAnimatedStyle(() => ({
+    opacity: !meal && life && lifeBlink(life.value, seed) ? 0 : 1 - anticipating.value,
+  }));
+  const closed = useAnimatedStyle(() => ({
+    opacity: !meal && life && lifeBlink(life.value, seed) ? 1 - anticipating.value : 0,
+  }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
+  const mealShowing = !!meal && mealVisible;
+  const drawing=(<Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
+          style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
+        {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
+        <View collapsable={ownerId ? false : undefined} style={character ? undefined : { opacity: mealHeld ? 0 : 1 }}>
+          {/* Keep the saved cup painted under the transient sip so the final
+              frame can reveal it without mounting a new native SVG. */}
+          <EntityArt
+            entity={entity}
+            actionOverride={action}
+            prepareMeal={!!entity.character}
+            idleStyle={character ? idleStyle : undefined}
+            meal={meal}
+            mealStandby={mealStandby}
+            mealVisible={mealVisible}
+            onMealPresented={presented}
+            onMealFinished={finished}
+            gaze={gaze}
+            faceOverride={sleeping ? "sleepy" : mood}
+            front={front}
+            reduced={reduced}
+            renderCharacter={renderCharacter}
+          />
+        </View>
+        {cacheBlink && (
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
+            <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+            </Animated.View>
+          </View>
+        )}
+        {character && (
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
+            <Animated.View style={anticipate}>
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
+            </Animated.View>
+          </View>
+        )}
+      </Animated.View>);
   return (
     <View
       ref={bindNode}
@@ -216,9 +341,13 @@ const RestingEntity = memo(function RestingEntity({
           top: entity.contact.y + frame.top,
           width: frame.width,
           height: frame.height,
+          // A displaced cup crosses the actor's silhouette. Keep it in front
+          // until it is down, then return to ordinary floor depth.
+          zIndex: from ? 1000 : undefined,
         },
       ]}
     >
+      {!from && floorDrink && <View testID={`drink-ground-shadow-${entity.id}`} pointerEvents="none" accessible={false} style={[groundShadow,{opacity:.16}]}/>}
       {selected && !front && (
         <View
           pointerEvents="none"
@@ -235,36 +364,7 @@ const RestingEntity = memo(function RestingEntity({
           }}
         />
       )}
-      <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
-        style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
-      {!entity.character && !front && <Animated.View testID={`landing-rim-${entity.id}`} pointerEvents="none"
-        style={[{ position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "4%", borderRadius: 18,
-          borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
-      {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
-      <Animated.View style={normal}>
-        <Animated.View style={open}>
-          <EntityArt
-            entity={entity}
-            actionOverride={action}
-            faceOverride={sleeping ? "sleepy" : mood}
-            front={front}
-            reduced={reduced}
-            renderCharacter={renderCharacter}
-          />
-        </Animated.View>
-        {life && (
-          <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-            <EntityArt entity={entity} actionOverride={action} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
-          </Animated.View>
-        )}
-      </Animated.View>
-      {entity.character && (
-        <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
-          <EntityArt entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
-        </Animated.View>
-      )}
-      </Animated.View>
+      {from ? <SetDownMotion key={token} id={entity.id} from={from} frame={frame} reduced={reduced} onFinished={finishSetDown} shadow={floorDrink?groundShadow:undefined}>{drawing}</SetDownMotion> : drawing}
     </View>
   );
 });
@@ -313,6 +413,10 @@ export function SceneView({
   onMove,
   stress = false,
   reactions,
+  meals = {},
+  mealReady,
+  onMealPresented,
+  onMealFinished,
   sleeping,
   onNode,
   badges = [],
@@ -347,11 +451,78 @@ export function SceneView({
   selected?: string;
   stress?: boolean;
   reactions: Record<string, "eat" | "drink">;
+  meals?: Record<string, Meal>;
+  mealReady?:Record<string,number>;
+  onMealPresented?: (id: string, key: number) => void;
+  onMealFinished?: (id: string, key: number) => void;
   sleeping: Record<string, boolean>;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
 }) {
-  const { camera } = interaction;
+  const { camera,completeMealHandoff } = interaction;
+  React.useLayoutEffect(() => {
+    if (!completeMealHandoff) return;
+    const ready = Object.entries(meals).flatMap(([id, meal]) =>
+      meal.source && meal.capture && (!mealReady || mealReady[id] === meal.key)
+        ? [{ source: meal.source, capture: meal.capture }]
+        : []);
+    if (!ready.length) return;
+    // React changes both layers' opacity together. A worklet must keep the
+    // carry slot alive until that native commit has had a frame to paint.
+    let retire: number | undefined;
+    const publish = requestAnimationFrame(() => {
+      retire = requestAnimationFrame(() => {
+        for (const { source, capture } of ready) completeMealHandoff(source, capture);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(publish);
+      if (retire !== undefined) cancelAnimationFrame(retire);
+    };
+  }, [completeMealHandoff, meals, mealReady]);
+  // Use the existing hidden meal stage to prepare a sip while the cup is
+  // already being carried. Key zero prepares art without starting playback.
+  const offered = pickups.map(pickup => pickup && {pickup, entity:pickup.scene.entities[pickup.id]})
+    .find(value => value?.entity?.body?.edible === "drink" && !value.entity.item?.empty);
+  const offeredId = offered?.entity.id, offeredGeneration = offered?.pickup.generation;
+  const [standbyId, setStandbyId] = React.useState<string>();
+  const standbyKey = `${offeredId}:${offeredGeneration}`;
+  React.useEffect(() => {
+    if (!offeredId) return;
+    // Two callbacks guarantee a presented lift frame before constructing the sip bank.
+    let second: number | undefined;
+    const first = requestAnimationFrame(() => { second = requestAnimationFrame(() => setStandbyId(standbyKey)); });
+    return () => { cancelAnimationFrame(first); if (second !== undefined) cancelAnimationFrame(second); };
+  }, [offeredId, standbyKey]);
+  const offeredEntity = offered?.entity;
+  const standbyCandidates = useMemo(() => Object.values(scene.entities).filter(e => e.character && !sleeping[e.id])
+    .map(e => {
+      const face=anchorsFor(e.character!.slot,e.base,e.facing,e.action).head;
+      return {id:e.id,room:e.room,x:e.contact.x+face.x,y:e.contact.y+face.y};
+    }), [scene,sleeping]);
+  const foodOffset = offeredEntity?.visual ?? {x:0,y:0};
+  const initialStandbyOwner = offeredEntity && standbyCandidates.filter(e => e.room === offeredEntity.room)
+    .sort((a,b) => Math.hypot(a.x-offeredEntity.contact.x-foodOffset.x,a.y-offeredEntity.contact.y-foodOffset.y) -
+      Math.hypot(b.x-offeredEntity.contact.x-foodOffset.x,b.y-offeredEntity.contact.y-foodOffset.y))[0]?.id;
+  const [approachChoice, setApproachChoice] = React.useState<{key:string;owner:string}>();
+  const publishStandbyOwner = React.useCallback((owner:string) => setApproachChoice({key:standbyKey,owner}),[standbyKey]);
+  const dragSlots = interaction.slots;
+  useAnimatedReaction(() => {
+    const slot = dragSlots.value.find(s => s.id === offeredId && s.phase === "dragging");
+    if (!slot) return undefined;
+    const room = slot.proposal?.room ?? offeredEntity?.room;
+    const origin = room ? roomOrigin(roomIds.indexOf(room),building) : {x:0,y:0};
+    let closest: string | undefined, distance = Infinity;
+    for (const actor of standbyCandidates) {
+      const d = Math.hypot(actor.x-slot.x+origin.x-foodOffset.x,actor.y-slot.y+origin.y-foodOffset.y);
+      if (actor.room === room && d < distance) { closest=actor.id; distance=d; }
+    }
+    return closest;
+  }, (owner,before) => { if(owner && owner !== before) runOnJS(publishStandbyOwner)(owner); }, [offeredId,offeredEntity?.room,standbyCandidates,building]);
+  const standbyOwner = approachChoice?.key === standbyKey ? approachChoice.owner : initialStandbyOwner;
+  const mealStandby = useMemo<Meal | undefined>(() =>
+    standbyId === standbyKey && offeredEntity?.item ? { key: 0, action: "drink", offered: true, food: offeredEntity.item } : undefined,
+    [standbyId, standbyKey, offeredEntity]);
   // HD-08: lamp shadows change only when the room's contents do.
   // Keyed by their contents, so an edit elsewhere never hands a resting friend a new shadow object.
   const shadowKey = useMemo(() => JSON.stringify(Object.fromEntries(Object.values(scene.entities).flatMap((e) => {
@@ -416,11 +587,17 @@ export function SceneView({
               <RestingEntity
                 key={front ? `front:${entity.id}` : entity.id}
                 front={front}
+                cacheBlink={!front && !!entity.character && entity.room === liveRoom && !reduced}
                 entity={entity}
-                sceneRevision={scene.revision}
                 name={names[entity.id]}
                 onNode={onNode}
                 action={reactions[entity.id]}
+                meal={meals[entity.id]}
+                mealStandby={entity.id === standbyOwner ? mealStandby : undefined}
+                mealVisible={!mealReady || mealReady[entity.id]===meals[entity.id]?.key}
+                onMealPresented={onMealPresented}
+                onMealFinished={onMealFinished}
+                mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
                 sleeping={!!sleeping[entity.id]}
                 ownerKey={ancestors(entity, scene).join("|")}
                 targetKey={scene.rooms[roomId].targets
@@ -477,7 +654,7 @@ export function SceneView({
                         : []),
                       resting(entity, front),
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}
@@ -511,6 +688,7 @@ export function SceneView({
             activeRoom={state.current}
             scene={scene}
             pickups={pickups}
+            hiddenByMeal={Object.entries(meals).flatMap(([id,m])=>m.source && (!mealReady || mealReady[id]===m.key)?[m.source]:[])}
             interaction={interaction}
             building={building}
             reduced={reduced}

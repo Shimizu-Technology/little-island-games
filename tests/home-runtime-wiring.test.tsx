@@ -6,7 +6,7 @@ import { layoutToken } from "../src/home/runtime/layout";
 import { poseToken } from "../src/home/runtime/poseBank";
 import { poseLaidOut } from "../src/home/runtime/poseAck";
 import { useInteraction, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
-import { buildingLayout } from "../src/home/camera";
+import { buildingLayout, roomOrigin } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, screenPoint, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
@@ -154,8 +154,9 @@ const commitFixture: Parameters<typeof useInteraction>[0]["onCommit"] = (index, 
   committed++; committedId = proposal.id; committedContact = proposal.contact;
   current.finish(index, true, proposal, "committed", undefined, token);
 };
-function Probe({ scene, layout = true, designing = false, reduced = false }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean }) {
+function Probe({ scene, layout = true, designing = false, reduced = false, onReleaseProbe }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean; onReleaseProbe?: Parameters<typeof useInteraction>[0]["onReleaseProbe"] }) {
   const interaction = useInteraction({
+    onReleaseProbe,
     scene,
     building: fixtureBuilding,
     viewport: fixtureViewport,
@@ -1132,5 +1133,91 @@ it('R2-P1-2 pickup publication leaves resolver-only sample caches on UI',async()
  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
  touch('down',120,300);touch('move',180,400);flushJS();const pickup=harness.pickups.at(-1)!;
  expect(pickup.scene.entities[entity.id].catalogSamples).toBeUndefined();expect(pickup.scene).not.toHaveProperty("rooms");
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+it('mouth consumption never retargets the released overlay toward the nose while layout catches up',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ touch('down',120,300);touch('move',150,320);flushJS();touch('up',150,320);
+ const at={...current.slots.get()[0]};
+ const proposal={...at.proposal!,kind:'mouth' as const,consume:'food' as const,contact:roomPoint(400,100)};
+ current.slots.set(current.slots.get().map((s,i)=>i? s:{...s,proposal,targetX:at.x,targetY:at.y,finished:true}));
+ const destination=fixture('consumed');destination.entities={};destination.rooms.home.entities={};
+ current.finish(0,true,proposal,'consumed',destination);
+ const final=current.slots.get()[0];
+ expect(final.targetX).toBe(at.x);expect(final.targetY).toBe(at.y);expect(final.finished).toBe(true);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+
+it('keeps a consumed release visible until its own meal drawing is presented',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ touch('down',120,300);touch('move',150,320);flushJS();touch('up',150,320);
+ const at={...current.slots.get()[0]};
+ const proposal={...at.proposal!,kind:'mouth' as const,consume:'food' as const};
+ const destination=fixture('consumed');destination.entities={};destination.rooms.home.entities={};
+ current.finish(0,true,proposal,'consumed',destination,at,undefined,true);
+ await act(async()=>tree.update(<Probe scene={destination}/>));
+ for(let n=0;n<35;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+ expect(current.slots.get()[0].id).toBe(at.id);
+ expect(current.slots.get()[0].consumed).toBe(true);
+ current.completeMealHandoff(at.id,{generation:at.generation+1,epoch:at.epoch});
+ expect(current.slots.get()[0].mealPending).toBe(true);
+ current.completeMealHandoff(at.id,at);
+ expect(current.slots.get()[0].mealPending).toBe(false);
+ vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});
+ expect(current.slots.get()[0].id).toBe('');
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+
+async function offeredMouthDrop(){
+ const {labHome}=await import('../src/home/runtime/lab'),{buildScene}=await import('../src/home/scene/graph');
+ const scene=buildScene(labHome('rig-menu-0')),food=scene.entities['home/item/menu-0'],mouth=scene.rooms.home.targets.find(t=>t.id==='character/0/mouth')!;
+ const origin=roomOrigin(0,fixtureBuilding);
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ const source={x:origin.x+food.contact.x+food.bounds.left+food.bounds.width/2,y:origin.y+food.contact.y+food.bounds.top+food.bounds.height/2};
+ touch('down',source.x,source.y);touch('move',source.x+16,source.y);flushJS();
+ vi.advanceTimersByTime(120);harness.frames[0]({timeSincePreviousFrame:17});
+ let drop={x:origin.x+mouth.contact.x,y:origin.y+mouth.contact.y+18};
+ for(const lift of [18,12,24,6,0,30]){
+  drop={x:origin.x+mouth.contact.x,y:origin.y+mouth.contact.y+lift};touch('move',drop.x,drop.y);
+  if(current.slots.get()[0].proposal?.kind==='mouth')break;
+ }
+ expect(current.slots.get()[0].proposal?.kind).toBe('mouth');
+ touch('up',drop.x,drop.y);
+ return tree;
+}
+it('starts a stationary mouth presentation on the first released frame, without a floor-travel wait',async()=>{
+ const tree=await offeredMouthDrop();expect(committed).toBe(0);
+ harness.frames[0]({timeSincePreviousFrame:17});flushJS();
+ expect(committed).toBe(1);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('a refused stationary mouth drop keeps its normal return motion',async()=>{
+ const tree=await offeredMouthDrop(),released={...current.slots.get()[0]};
+ current.finish(0,false,undefined,undefined,undefined,released);
+ harness.frames[0]({timeSincePreviousFrame:17});
+ expect(current.slots.get()[0].finished).toBe(false);
+ expect(current.slots.get()[0].x).toBeCloseTo(released.x);
+ vi.advanceTimersByTime(100);harness.frames[0]({timeSincePreviousFrame:17});
+ const returning=current.slots.get()[0];expect(returning.finished).toBe(false);
+ expect(Math.abs(returning.x-returning.sourceX)).toBeLessThan(Math.abs(released.x-released.sourceX));
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+it('pickup probing excludes stopped idle time but preserves the first actual wake stall',async()=>{
+ const reports:any[]=[];let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()} onReleaseProbe={p=>reports.push(p)}/>);});
+ for(let i=0;i<20;i++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+ vi.advanceTimersByTime(10000);
+ touch('down',120,300);touch('move',200,380);flushJS();
+ vi.advanceTimersByTime(120);harness.frames[0]({timeSincePreviousFrame:10120});
+ for(let i=0;i<35;i++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});flushJS();}
+ const pickup=reports.find(p=>p.phase==='pickup');
+ expect(pickup).toBeDefined();
+ expect(pickup.frames[0].delta).toBe(120);
+ expect(pickup.frames.every((f:any)=>f.delta<1000)).toBe(true);
+ touch('cancel',200,380);flushJS();
  await act(async()=>tree.unmount());vi.useRealTimers();
 });

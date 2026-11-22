@@ -11,8 +11,10 @@ import { carryBinding, renderAnchors, limbBottom } from "../src/home/runtime/rig
 import { artFrame } from "../src/home/runtime/EntityArt";
 import { paintedBounds } from "../src/home/art/silhouettes";
 import type { Interaction } from "../src/home/runtime/useInteraction";
+vi.mock("react-native-svg",()=>({G:"G"}));
 vi.mock("react-native", () => ({ View: "View" }));
-vi.mock("react-native-reanimated", () => ({ default: { View: "AnimatedView" },
+vi.mock("react-native-reanimated", () => ({ default: { View: "AnimatedView", createAnimatedComponent:()=>"AnimatedGroup" }, useAnimatedProps:(fn:()=>unknown)=>({evaluate:fn}), useSharedValue:(v:any)=>React.useRef({value:v,set(n:any){this.value=n;},get(){return this.value;}}).current,
+ useAnimatedReaction:()=>{},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn,useFrameCallback:()=>React.useRef({setActive:()=>{}}).current,
  useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }), useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }) }));
 vi.mock("../src/home/runtime/EntityArt", async () => {
  // Keep geometry independent of native SVG rendering.

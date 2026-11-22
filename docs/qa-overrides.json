@@ -211,6 +211,16 @@
       "result": "passed",
       "scope": "Probe recovery, held writes and cold reopen recorded; this supports persistence/recovery only, not complete backup, rollback or real installed-update journey.",
       "sha": "f5b680014994d0a29cd54b2f3e64cd9e6021a9dd"
+    },
+    "E-H4B": {
+      "build": "Focused Vitest on clean source; 114 tests across seven suites",
+      "coverage": "partial",
+      "device": "macOS host; no physical-device acceptance",
+      "evidenceKind": "host",
+      "path": "v4/wave2/h4b-rig/results/HOST-VERIFICATION.md",
+      "result": "passed",
+      "scope": "Transient meal presentation, exact sampled frames, gaze clamps, mouth and footprint cues, pickup/replacement/Undo, and quiet crumbs. Native and whole-row acceptance remain separate.",
+      "sha": "1202c8bf64241204cfdaaabc49598781f68c1a6c"
     }
   },
   "rows": {
@@ -532,7 +542,8 @@
       "evidence": [
         "E16",
         "E17",
-        "E18"
+        "E18",
+        "E-H4B"
       ]
     },
     "J01": {
@@ -686,7 +697,8 @@
     },
     "H-A3": {
       "evidence": [
-        "E16"
+        "E16",
+        "E-H4B"
       ]
     },
     "H-A4": {
@@ -697,7 +709,8 @@
     },
     "H-A5": {
       "evidence": [
-        "E17"
+        "E17",
+        "E-H4B"
       ]
     },
     "H-A6": {

@@ -52,7 +52,7 @@ export function restingFlagsOf(slots: readonly DragSlot[], pointers: readonly Po
       const b = subject.bounds, visual = subject.visual;
       const point = visual ? { x: s.x + visual.x, y: s.y + visual.y } : { x: s.x + b.left + b.width / 2, y: s.y + b.top + b.height / 2 };
       const seen = noticesFor(point, !subject.character, watchers, [s.id, s.restId ?? s.id]);
-      for (const n of seen) { flags.notice.push(n); key += `n${n.id}:${n.dir}:${n.food ? 1 : 0};`; }
+      for (const n of seen) { flags.notice.push(n); key += `n${n.id}:${n.dir}:${n.vertical ?? 0}:${n.food ? 1 : 0};`; }
     }
     const hide = !s.revealFrame && s.ready && s.painted !== false && (s.phase !== "pending" || s.committed || s.pausedElapsed > 0);
     const owner = s.restId ?? s.id;

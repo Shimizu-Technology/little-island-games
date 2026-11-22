@@ -167,7 +167,7 @@ export function cueMotion(cue: Cue, now: number): { deg: number; dy: number; sy:
 export const NOTICE_RADIUS = 230;
 export const NOTICE_DEGREES = 5;
 export type Watcher = { id: string; x: number; y: number };
-export type Notice = { id: string; dir: number; food: boolean };
+export type Notice = { id: string; dir: number; food: boolean; vertical?: number };
 /** Friends' heads in house units, for the UI thread. Friends waiting in the drawer see nothing. */
 export function watchersOf(scene: Scene, building: Building): Watcher[] {
   return Object.values(scene.entities).flatMap((e) => {
@@ -186,7 +186,8 @@ export function noticesFor(point: { x: number; y: number }, food: boolean, watch
     if (skip.includes(w.id)) continue;
     const dx = point.x - w.x, dy = point.y - w.y;
     if (dx * dx + dy * dy > NOTICE_RADIUS * NOTICE_RADIUS) continue;
-    out.push({ id: w.id, dir: dx < 0 ? -1 : 1, food });
+    const vertical = Math.abs(dy) < 24 ? 0 : dy < 0 ? -1 : 1;
+    out.push({ id: w.id, dir: dx < 0 ? -1 : 1, food, ...(vertical ? { vertical } : {}) });
   }
   return out;
 }

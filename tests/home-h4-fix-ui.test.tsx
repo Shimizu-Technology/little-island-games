@@ -17,7 +17,7 @@ const timing = vi.hoisted(() => ({ configs: [] as any[] }));
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' } }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({
-  default: { View: 'AnimatedView' },
+  default: { View: 'AnimatedView' }, cancelAnimation:()=>{},
   useSharedValue: (v: any) => React.useRef({ value: v, set(n: any) { this.value = n; }, get() { return this.value; } }).current,
   // The real driver under system Reduce Motion jumps to the end unless reduceMotion is Never.
   withTiming: (to: any, config?: any) => { timing.configs.push(config); return to; },

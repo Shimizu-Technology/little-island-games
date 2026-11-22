@@ -10,6 +10,7 @@ import { settleProgress } from "./settle";
 import type { CharacterBase, Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
 import { LandingPreview } from "./LandingPreview";
+import { floorCueMask, floorCueHidden } from './floorCues';
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { emptyDragSlot, zoneAt, type Interaction, type Pickup } from "./useInteraction";
@@ -23,6 +24,18 @@ export function socketBasesOf(scene: Scene): SocketBases {
   return Object.fromEntries(Object.entries(scene.rooms).map(([room, index]) =>
     [room, [...new Set(index.targets.filter((t) => t.kind === "socket").map((t) => t.base))].sort()]));
 }
+
+function isLooseFood(entity?: SceneEntity): entity is SceneEntity {
+  return !!entity?.body?.edible && entity.attachment.kind === "floor" && !entity.children.length;
+}
+
+function samePreparedFood(previous: Pickup, next: Pickup): boolean {
+  if (previous.generation !== 0 || next.generation !== 0 || previous.id !== next.id) return false;
+  const before = previous.scene.entities[previous.id];
+  const after = next.scene.entities[next.id];
+  return isLooseFood(before) && isLooseFood(after) && JSON.stringify(before) === JSON.stringify(after);
+}
+
 const OverlayGroup = memo(function OverlayGroup({
   pickup,
   interaction,
@@ -30,6 +43,7 @@ const OverlayGroup = memo(function OverlayGroup({
   reduced,
   renderCharacter,
   socketBases,
+  hidden = false,
 }: {
   pickup: Pickup;
   interaction: Interaction;
@@ -37,11 +51,18 @@ const OverlayGroup = memo(function OverlayGroup({
   reduced: boolean;
   renderCharacter?: CharacterRender;
   socketBases?: SocketBases;
+  hidden?:boolean;
 }) {
   const { scene, id } = pickup;
+  const active = pickup.generation > 0;
   const unready = interaction.unready;
   useEffect(() => () => unready?.(id), [id, unready]);
-  const root = scene.entities[id];
+  const original=scene.entities[id];
+  // Idle landing/carry banks never play a resting friend's transient meal.
+  // The live capture still uses its exact source and destination.
+  const root=useMemo<SceneEntity>(()=>pickup.generation===0 && original.character
+    ? {...original,action:original.children.length?'hold':null}:original,[original,pickup.generation]);
+  const trackSocketOwner = active || !isLooseFood(root);
   const index = root.character ? pickup.slot : 0;
   const globalSlots = interaction.slots, globalClock = interaction.clock;
   const idle = useMemo(() => [emptyDragSlot(), emptyDragSlot()], []);
@@ -126,13 +147,14 @@ const OverlayGroup = memo(function OverlayGroup({
     return { transform: [{ scaleX: s.sx }, { scaleY: s.sy }] };
   });
   const footprint = footprintShadow(root);
+  const floorMask=useMemo(()=>floorCueMask(scene),[scene]);
   const shadow = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const p = slot.proposal,
       dest = p ? roomOrigin(roomIds.indexOf(p.room), building) : origin;
     let groundX = p ? dest.x + p.contact.x : slot.x,
       groundY = p ? dest.y + p.contact.y : slot.y;
-    if (p && p.attachment.kind === "socket") {
+    if (trackSocketOwner && p?.attachment.kind === "socket") {
       const owner = scene.entities[p.attachment.item];
       if (owner) {
         groundX = dest.x + owner.contact.x;
@@ -146,14 +168,16 @@ const OverlayGroup = memo(function OverlayGroup({
         : Math.max(0, Math.min(1, (clock.value - slot.liftedAt) / 90));
     const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
     const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced, slot.duration) : 1;
+    const aim={x:slot.x-dest.x+(root.visual?.x ?? root.bounds.left+root.bounds.width/2),y:slot.y-dest.y+(root.visual?.y ?? root.bounds.top+root.bounds.height/2)};
+    const obscured=!root.character && p?.kind==='floor' && floorCueHidden(floorMask,root,p.room,p.contact,aim,camera.value.a,footprint);
     return {
-      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
+      opacity: !obscured && p?.kind !== "mouth" && slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
       transform: [{ translateX: groundX - footprint.width / 2 }, { translateY: groundY - footprint.height / 2 }, { scale: 1 - 0.15 * lift }],
     };
   });
   return (
-    <>
-      {pickup.generation > 0 && <LandingPreview source={root} interaction={interaction}
+    <View testID={`meal-handoff-source-${id}`} pointerEvents="none" style={{position:"absolute",left:0,top:0,right:0,bottom:0,opacity:hidden?0:1}}>
+      {active && <LandingPreview scene={scene} reduced={reduced} source={root} interaction={interaction}
         building={building} renderCharacter={renderCharacter} />}
       <Animated.View
         testID={`drag-shadow-${id}`}
@@ -252,9 +276,10 @@ const OverlayGroup = memo(function OverlayGroup({
           ))}
         </Animated.View>
       </Animated.View>
-    </>
+    </View>
   );
-}, (previous, next) => previous.pickup === next.pickup && previous.building === next.building && previous.socketBases === next.socketBases &&
+}, (previous, next) => (previous.pickup === next.pickup || samePreparedFood(previous.pickup, next.pickup)) &&
+  previous.hidden === next.hidden && previous.building === next.building && previous.socketBases === next.socketBases &&
   previous.reduced === next.reduced && previous.renderCharacter === next.renderCharacter &&
   previous.interaction.slots === next.interaction.slots && previous.interaction.camera === next.interaction.camera);
 
@@ -330,6 +355,7 @@ function Front({ entity, root, reduced }: { entity: SceneEntity; root: SceneEnti
 export function DragOverlay(props: {
   scene: Scene;
   activeRoom?: SceneEntity["room"];
+  hiddenByMeal?:readonly string[];
   pickups: (Pickup | undefined)[];
   interaction: Interaction;
   building: Building;
@@ -346,6 +372,9 @@ export function DragOverlay(props: {
   const items: Pickup[] = warm.map(p => props.pickups.find(active => active?.id === p.id) ?? p);
   for (const pickup of props.pickups) if (pickup && !pickup.scene.entities[pickup.id]?.character &&
     !items.some(p => p.id === pickup.id)) items.push(pickup);
+  // Consumed food leaves the warm list before its meal is presented. Keep its
+  // carry art in the same native position while the active pickup owns it.
+  items.sort((a, b) => a.id.localeCompare(b.id));
   return (
     <View
       testID={Platform.OS === "web" ? "building-drag-overlay" : undefined}
@@ -359,7 +388,7 @@ export function DragOverlay(props: {
           { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 };
         return <OverlayGroup key={entity.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} socketBases={socketBases} />;
       })}
-      {items.map(pickup => <OverlayGroup key={pickup.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />)}
+      {items.map(pickup => <OverlayGroup key={pickup.id} hidden={props.hiddenByMeal?.includes(pickup.id)} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />)}
       <SupportFronts scene={props.scene} interaction={props.interaction} building={props.building} reduced={props.reduced} />
     </View>
   );

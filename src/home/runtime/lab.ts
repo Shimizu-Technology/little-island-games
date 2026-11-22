@@ -16,8 +16,44 @@ function reviewRoom(items: Instance[], hero = false): HomeStateV2 {
   if (hero) state.rooms.home.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 10, y: 8 }];
   return state;
 }
+function menuItem(index: number, item: Instance["item"]): Instance {
+  return { ...instance(`menu-${index}`, item, 0, 0), at: roomPoint(220 + index * 85, 525) };
+}
+function mealMenuRoom(slot: 0 | 1 | 2): HomeStateV2 {
+  const state = reviewRoom([
+    menuItem(0, "mango"),
+    menuItem(1, "banana"),
+    menuItem(2, "rice-ball"),
+    menuItem(3, "cupcake"),
+    menuItem(4, "coconut-drink"),
+    menuItem(5, "juice"),
+  ]);
+  state.rooms.home.characters = [{ slot, anchor: "floor", pose: "stand", x: 8, y: 7 }];
+  return state;
+}
 /** Fixtures for recorded gesture QA. None of them can reach a learner's saved world. */
 export const labFixtures: Record<string, () => HomeStateV2> = {
+  // H4b: uncluttered, reachable meal and drink art at the normal room camera.
+  "rig-meal": () => {
+    const state = reviewRoom([
+      { ...instance("rig-fruit", "mango", 0, 0), at: roomPoint(270, 505) },
+      { ...instance("rig-snack", "rice-ball", 0, 0), at: roomPoint(390, 505) },
+      { ...instance("rig-drink", "juice", 0, 0), at: roomPoint(510, 505) },
+    ], true);
+    state.rooms.home.characters[0] = { slot: 0, anchor: "floor", pose: "stand", x: 8, y: 7 };
+    return state;
+  },
+  "rig-menu-0": () => mealMenuRoom(0),
+  "rig-menu-1": () => mealMenuRoom(1),
+  "rig-menu-2": () => mealMenuRoom(2),
+  ...Object.fromEntries((['stool','chair','bed','bubble-bath','fridge'] as const).map(item=>[`rig-landing-${item}`,()=>{
+    const state=reviewRoom([
+      {...instance('landing',item,11,7),at:roomPoint(520,item==='fridge'?490:510),powered:item==='fridge'},
+      {...instance('snack','mango',3,10),at:roomPoint(220,525)},
+    ]);
+    state.rooms.home.characters=[{slot:0,anchor:'floor',pose:'stand',x:6,y:7}];
+    return state;
+  }])),
   starter: () => migrateHome(starterHome()) ?? starterHome(),
   "feed-stand": () => feedRoom([], { slot: 0, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   "feed-sit": () => feedRoom([instance("seat", "stool", 6, 7)], { slot: 0, anchor: "seat", pose: "sit", seatId: "seat", socket: { itemId: "seat", socketId: "seat" } }),

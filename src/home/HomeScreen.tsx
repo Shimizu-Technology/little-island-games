@@ -40,11 +40,12 @@ import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
 import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
+import { MEAL_MS, type Meal } from "./runtime/meal";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { groupIds, restingVisible } from "./runtime/group";
-import { anchorsFor } from "./scene/species";
+import { anchorsFor, species } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
 import { freshHints, nextHintAt, takeHint, touchedHints, type HintState } from "./runtime/quietHints";
@@ -100,6 +101,10 @@ export function HomeScreen({
   const [debug, setDebug] = useState(lab),
     [stress, setStress] = useState(false);
   const [reactions, setReactions] = useState<Record<string, "eat" | "drink">>({});
+  const [meals, setMeals] = useState<Record<string, Meal>>({});
+  const [mealReady,setMealReady]=useState<Record<string,number>>({});
+  const mealSerial = useRef(0);
+  const mealFinishers = useRef<Record<string, { key: number; finish: () => void; presented: boolean }>>({});
   const entityNodes = useRef<Record<string, View>>({});
   const [focusId, restoreFocus] = useState<string>();
   const onNode = useCallback((id: string, node: View | null) => {
@@ -107,7 +112,18 @@ export function HomeScreen({
     else delete entityNodes.current[id];
   }, []);
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
+  React.useEffect(() => () => {
+    Object.values(reactionTimers.current).forEach(clearTimeout);
+    mealFinishers.current = {};
+  }, []);
+  const clearMealArt = useCallback(() => {
+    Object.values(reactionTimers.current).forEach(clearTimeout);
+    reactionTimers.current = {};
+    mealFinishers.current = {};
+    setMeals({});
+    setMealReady({});
+    setReactions({});
+  }, []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
   // HM-18: Redo shows in Play for 10 s after an Undo; a full room shows a picture, not just words.
   const [redoWindow, setRedoWindow] = useState(false);
@@ -182,9 +198,9 @@ export function HomeScreen({
   // F3: an undo note stays until the next message or a tap; reading is never timed.
   const [noteGone, setNoteGone] = useState<number>();
   const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
-  const live = useRef({ store, scene, selected, placing, room, designing });
+  const live = useRef({ store, scene, selected, placing, room, designing, meals });
   useLayoutEffect(() => {
-    live.current = { store, scene, selected, placing, room, designing };
+    live.current = { store, scene, selected, placing, room, designing, meals };
   });
   // H4: reactions, effects, sounds and cooking.
   const delight = useDelight({
@@ -314,18 +330,32 @@ export function HomeScreen({
     },
     [shoreRooms]
   );
-  const showReaction = (proposal: DropProposal) => {
+  const showReaction = (proposal: DropProposal, food?: Meal["food"], offered = false, source = proposal.id, capture?:Meal["capture"]) => {
     if (proposal.kind !== "mouth") return;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
     if (!target) return;
     wake(target.owner);
     const action = proposal.consume === "drink" ? "drink" : "eat";
+    const previousMeal=live.current.meals[target.owner];
+    if(previousMeal?.source && previousMeal.capture)runtime.current?.completeMealHandoff(previousMeal.source,previousMeal.capture);
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
+    const key = ++mealSerial.current;
+    setMealReady(current=>{const next={...current};delete next[target.owner];return next;});
+    const drag = runtime.current?.slots.get().find(s => s.id === source);
+    const recipient = live.current.scene.entities[target.owner];
+    const heldWidth = recipient?.character ? 24 * species[recipient.character.slot].unit * (action === 'drink' && recipient.character.slot === 1 ? 1.25 : 1) : 24;
+    const releaseScale = drag?.subject ? drag.subject.bounds.width * 1.08 / heldWidth : 1;
+    if (food) setMeals(current => ({ ...current, [target.owner]: { key, source, capture, offered, releaseScale, food: { ...food }, action } }));
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
-    reactionTimers.current[target.owner] = setTimeout(() => {
+    const finish = () => {
+      if (mealFinishers.current[target.owner]?.key !== key) return;
+      delete mealFinishers.current[target.owner];
       delete reactionTimers.current[target.owner];
+      const presentedMeal=live.current.meals[target.owner];
+      if(presentedMeal?.source && presentedMeal.capture)runtime.current?.completeMealHandoff(presentedMeal.source,presentedMeal.capture);
+      setMeals(current => { const next = { ...current }; delete next[target.owner]; return next; });
       const owner = live.current.scene.entities[target.owner];
       if (owner?.character)
         live.current.store.dispatch({ type: "finish-action", slot: owner.character.slot, roomId: owner.room });
@@ -334,12 +364,27 @@ export function HomeScreen({
         delete next[target.owner];
         return next;
       });
-    }, 750);
+    };
+    mealFinishers.current[target.owner] = { key, finish, presented: false };
+    // Only an action without presentation uses a timer. Visible art completes from playback.
+    if (!food) reactionTimers.current[target.owner] = setTimeout(finish, MEAL_MS);
   };
+  const onMealPresented = useCallback((id: string, key: number) => {
+    const entry = mealFinishers.current[id];
+    if (!entry || entry.key !== key || entry.presented || live.current.meals[id]?.key !== key) return;
+    entry.presented = true;
+    setMealReady(current=>({...current,[id]:key}));
+    clearTimeout(reactionTimers.current[id]);
+    delete reactionTimers.current[id];
+  }, []);
+  const onMealFinished = useCallback((id: string, key: number) => {
+    const entry = mealFinishers.current[id];
+    if (entry?.key === key && entry.presented) entry.finish();
+  }, []);
   React.useEffect(() => {
     // A restored or interrupted action completes without changing its supported base.
     for (const entity of Object.values(scene.entities)) {
-      if (!entity.character || !["eat", "drink"].includes(entity.action ?? "") || reactionTimers.current[entity.id])
+      if (!entity.character || !["eat", "drink"].includes(entity.action ?? "") || meals[entity.id] || reactionTimers.current[entity.id])
         continue;
       reactionTimers.current[entity.id] = setTimeout(() => {
         delete reactionTimers.current[entity.id];
@@ -348,13 +393,16 @@ export function HomeScreen({
           live.current.store.dispatch({ type: "finish-action", slot: latest.character.slot, roomId: latest.room });
       }, 750);
     }
-  }, [scene]);
+  }, [scene, meals]);
 
   const onCommit = useCallback(
     (index: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => {
       const stillCurrent = () => runtime.current!.isCurrent(index, token);
       if (!stillCurrent()) return;
       const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
+      // Catalog seeds and detached portions may exist only in the captured slot.
+      const mealFood = live.current.scene.entities[proposal.id]?.item ??
+        runtime.current?.slots.get()[index]?.subject?.item ?? proposal.item;
       const result = commitAt(
         proposal.id,
         proposal.room,
@@ -365,16 +413,20 @@ export function HomeScreen({
       if (result) {
         if (labKit && trace)
           trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
-        showReaction(result.proposal);
+        showReaction(result.proposal, mealFood, true, proposal.id, token);
         const before = live.current.scene;
         const destination = buildRuntimeScene(result.state);
-        setPickups((current) =>
-          current.map((p, i) =>
-            i === index && p
-              ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
-              : p
-          )
-        );
+        // A mouth release keeps the original carry drawing in place until the
+        // meal takes over. Only a landing needs the destination drawing.
+        if (result.proposal.kind !== "mouth") {
+          setPickups((current) =>
+            current.map((p, i) =>
+              i === index && p
+                ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
+                : p
+            )
+          );
+        }
         runtime.current!.finish(
           index,
           true,
@@ -382,7 +434,8 @@ export function HomeScreen({
           destination.revision,
           destination,
           token,
-          result.identities[result.proposal.id]
+          result.identities[result.proposal.id],
+          result.proposal.kind === "mouth" && !!mealFood
         );
         setRoom(result.proposal.room);
         if (runtime.current!.slots.get()[index]?.synthetic) {
@@ -402,8 +455,21 @@ export function HomeScreen({
       const current = runtime.current!.slots.get()[pickup.slot];
       if (current.id !== pickup.id || current.generation !== pickup.generation || current.epoch !== pickup.epoch)
         return;
-      for (const id of groupIds(pickup.scene, pickup.id)) {
-        if (pickup.scene.entities[id]?.character) wake(id);
+      const captured = pickup.scene.entities[pickup.id];
+      // A committed drink remains a recoverable hand object. Regrabbing it ends
+      // its owner's transient sip art, just as regrabbing the friend does.
+      const owner = captured?.attachment.kind === "hand" ? captured.attachment.character : undefined;
+      for (const id of new Set([...groupIds(pickup.scene, pickup.id), ...(owner ? [owner] : [])])) {
+        if (pickup.scene.entities[id]?.character) {
+          wake(id);
+          clearTimeout(reactionTimers.current[id]);
+          delete reactionTimers.current[id];
+          delete mealFinishers.current[id];
+          const interrupted=live.current.meals[id];
+          if(interrupted?.source && interrupted.capture)runtime.current?.completeMealHandoff(interrupted.source,interrupted.capture);
+          setMeals(current => { const next = { ...current }; delete next[id]; return next; });
+          setReactions(current => { const next = { ...current }; delete next[id]; return next; });
+        }
       }
       delightPickup(pickup.scene.entities[pickup.id]);
       watchCooking(live.current.scene);
@@ -455,12 +521,26 @@ export function HomeScreen({
     );
     if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
   };
-  const choose = (id: string) => {
+  const floorOf = useCallback((id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns), [building.columns]);
+  const goRoom = useCallback((id: RoomId) => {
+    const interaction = runtime.current!;
+    interaction.cancelAll();
+    setSelected(undefined);
+    setMore(false);
+    setFriends(false);
+    setRoom(id);
+    setOverview(false);
+    live.current.store.dispatch({ type: "room", room: id });
+    // HR-02: another floor is a door, not a jump; the same floor eases across.
+    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
+      !overview && floorOf(id) !== floorOf(room));
+  }, [building, floorOf, overview, room, viewport]);
+  const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
     else setSelected(id);
-  };
+  }, [designing, goRoom, overview]);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
     // Overview room taps always navigate, even over an object or with a previous selection.
@@ -663,7 +743,7 @@ export function HomeScreen({
   }, [viewport, building]);
   React.useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") interaction.cancelAll();
+      if (state !== "active") { interaction.cancelAll(); clearMealArt(); }
     });
     return () => {
       sub.remove();
@@ -672,19 +752,6 @@ export function HomeScreen({
     // Stable shared handles; never re-register cancellation on a settled edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const goRoom = (id: RoomId) => {
-    interaction.cancelAll();
-    setSelected(undefined);
-    setMore(false);
-    setFriends(false);
-    setRoom(id);
-    setOverview(false);
-    store.dispatch({ type: "room", room: id });
-    // HR-02: another floor is a door, not a jump; the same floor eases across.
-    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
-      !overview && floorOf(id) !== floorOf(room));
-  };
-  const floorOf = (id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns);
   // HR-02 (rule 52): after 6 s without a touch, one thing you can use gives one small wiggle.
   // A JS timer, not a frame loop: nothing runs while waiting. Any touch starts the quiet over.
   const hints = useRef<HintState>(freshHints(0));
@@ -853,6 +920,7 @@ export function HomeScreen({
         onBack={() => router.back()}
         onUndo={() => {
           interaction.cancelAll();
+          clearMealArt();
           store.dispatch({ type: "undo" });
           setRedoWindow(true);
           clearTimeout(redoTimer.current);
@@ -861,6 +929,7 @@ export function HomeScreen({
         showRedo={redoWindow && store.canRedo}
         onRedo={() => {
           interaction.cancelAll();
+          clearMealArt();
           store.dispatch({ type: "redo" });
         }}
         onFind={find}
@@ -914,6 +983,10 @@ export function HomeScreen({
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
             reactions={reactions}
+            meals={meals}
+            mealReady={mealReady}
+            onMealPresented={onMealPresented}
+            onMealFinished={onMealFinished}
             sleeping={sleeping}
             moods={delight.moods}
             effects={delight.effects}
@@ -938,7 +1011,7 @@ export function HomeScreen({
               }}
             />
           )}
-          {lab && <View pointerEvents="none" accessible accessibilityLabel="Release frame probe"
+          {lab && debug && <View pointerEvents="none" accessible accessibilityLabel="Release frame probe"
             style={{ position: "absolute", left: 8, bottom: 60, backgroundColor: "#FFF8E9", padding: 8, borderRadius: 8, maxWidth: "96%" }}>
             <Text style={{ fontSize: 12, color: "#284F4B" }}>Release ±500ms · max {probeMax.toFixed(1)}ms</Text>
             {releaseProbes.map((probe) => <Text key={probe.at} style={{ fontSize: 11, color: "#284F4B" }}>
@@ -957,7 +1030,7 @@ export function HomeScreen({
                   setFrameReport(interaction.frameTimes.get());
                 }}
               >
-                <Text style={{ backgroundColor: "#FFF8E9", padding: 12 }}>Frames</Text>
+                <Text maxFontSizeMultiplier={1.2} style={{ backgroundColor: "#FFF8E9", padding: 12 }}>Frames</Text>
               </Pressable>
             </View>
           )}

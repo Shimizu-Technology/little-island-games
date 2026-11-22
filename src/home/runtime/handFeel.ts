@@ -34,7 +34,7 @@ export function pickupTransform(slot: DragSlot, root: SceneEntity, scale: number
   const settling = slot.phase === 'settling' && slot.settleAt > 0 || slot.phase === 'pending' && slot.pausedElapsed > 0;
   const elapsed = settling ? slot.phase === 'pending' ? slot.pausedElapsed : now - slot.settleAt : 0;
   const lift = reduced || !slot.ready ? 0 : Math.min(1, Math.max(0, (now - slot.liftedAt) / 90));
-  const blend = settling ? Math.max(0, 1 - elapsed / 140) : 1;
+  const blend = settling && slot.proposal?.kind !== 'mouth' ? Math.max(0, 1 - elapsed / 140) : 1;
   const growth = root.character ? .04 : carriedPropGrowth;
   const p = settling ? settleProgress(elapsed - slot.travelDelay, reduced, slot.duration) : 0;
   const hop = !reduced && slot.synthetic && root.character && settling
