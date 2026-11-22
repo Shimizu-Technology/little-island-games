@@ -7,8 +7,8 @@ import { deepCodes, turtleProgram } from '../src/learn/games/turtle-draw/program
 import { draw, type Block } from '../src/learn/games/turtle-draw/engine';
 import { blockCost, flatCost } from '../src/learn/games/turtle-draw/dsl';
 import { DEEP_COUNTS } from '../src/learn/games/turtle-draw/mincost';
-import { misreads } from '../src/learn/games/turtle-draw/deep';
-import { samePicture } from '../src/learn/games/turtle-draw/picture';
+import { MIN_GAP, misreads } from '../src/learn/games/turtle-draw/deep';
+import { pictureGap, samePicture } from '../src/learn/games/turtle-draw/picture';
 import { applyEdit, nearestEdit } from '../src/learn/games/turtle-draw/distance';
 import { programOperations } from '../src/learn/program/operations';
 import { encodeProgram } from '../src/learn/program/codec';
@@ -193,7 +193,8 @@ describe('predict the picture: the engine, the replay and the dumb player', () =
       const dd = q.descriptor as PredictDescriptor, lines = dd.choices.map(c => draw(c, dd.origin)!);
       expect(dd.choices).toHaveLength(4);
       expect(samePicture(lines[dd.answer], draw(dd.program, dd.origin)!)).toBe(true);
-      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) expect(samePicture(lines[i], lines[j])).toBe(false);
+      // Different enough to tell apart at thumbnail size, not merely different by a stroke.
+      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) { expect(samePicture(lines[i], lines[j])).toBe(false); expect(pictureGap(lines[i], lines[j]), `${q.title}: ${i} vs ${j}`).toBeGreaterThanOrEqual(MIN_GAP); }
       expect(dd.kinds[dd.answer]).toBe('answer');
       expect(blockCost(dd.program)).toBeLessThanOrEqual(14);
     }

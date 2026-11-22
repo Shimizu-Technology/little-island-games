@@ -5,6 +5,8 @@ import { START } from './picture';
 /** The sand canvas: a faint target, the lines drawn so far, and the turtle. Width is height ÷ ASPECT. */
 export const ASPECT = 0.8;
 export const lengthOf = (a: Segment) => Math.round(Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y));
+/** One label per distinct length, on the first line of that length: equal sides share a number instead of crowding the picture. */
+const labelled = (goal: Segment[]): Segment[] => { const seen = new Set<number>(); return goal.filter(a => { const n = lengthOf(a); if (seen.has(n) || seen.size >= 4) return false; seen.add(n); return true; }); };
 const colorOf = (color: string) => color === 'coral' ? '#E68E82' : color === 'gold' ? '#B9861E' : '#348B7E';
 export function SandCanvas({ width, goal, traced, point = START, wrongLine = null, labels = true, label }: {
   width: number; goal: Segment[]; traced: Segment[]; point?: Point; wrongLine?: number | null; labels?: boolean; label: string;
@@ -19,7 +21,7 @@ export function SandCanvas({ width, goal, traced, point = START, wrongLine = nul
     {[0, 50, 100].map((n, i) => <SvgText key={n} x={-25 + i * 50} y={-28} fontSize={13} fill="#58462E" textAnchor="middle">{n}</SvgText>)}
     {goal.map((a, i) => <Path key={i} d={`M${a.from.x} ${a.from.y}L${a.to.x} ${a.to.y}`} stroke={wrongLine === i ? '#AD4D35' : '#9B8868'} strokeWidth={wrongLine === i ? 10 : 7} strokeDasharray="2 7" strokeLinecap="round" fill="none" />)}
     {traced.map((a, i) => <Path key={i} d={`M${a.from.x} ${a.from.y}L${a.to.x} ${a.to.y}`} stroke={wrongLine === i ? '#AD4D35' : colorOf(a.color)} strokeWidth={4} strokeLinecap="round" fill="none" />)}
-    {labels && goal.slice(0, 4).map((a, i) => <SvgText key={i} x={(a.from.x + a.to.x) / 2} y={(a.from.y + a.to.y) / 2 - font * .6} fontWeight="bold" fontSize={font} fill="#58462E">{lengthOf(a)}</SvgText>)}
+    {labels && labelled(goal).map(a => <SvgText key={`${a.from.x},${a.from.y}`} x={(a.from.x + a.to.x) / 2} y={(a.from.y + a.to.y) / 2 - font * .6} fontWeight="bold" fontSize={font} fill="#58462E">{lengthOf(a)}</SvgText>)}
     <Circle cx={point.x} cy={point.y} r={10} fill="#6CB5A4" stroke="#2D756B" strokeWidth={2} /><Circle cx={point.x + 5} cy={point.y - 3} r={2} fill="#234B4F" />
   </Svg>;
 }

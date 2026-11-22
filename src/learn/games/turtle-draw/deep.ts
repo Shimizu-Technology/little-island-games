@@ -2,7 +2,7 @@
  * puzzles, every picture closed, on the canvas and new to the whole set. Pure and deterministic; the bake and the tests both call it. */
 import { draw, type Block, type Segment } from './engine';
 import { blockCost, blockDepth, flatCost, formatBlocks } from './dsl';
-import { samePicture } from './picture';
+import { pictureGap, samePicture } from './picture';
 import { DEEP_COUNTS } from './mincost';
 import { f, k, prove, r, spread, t, type Candidate, type Proved } from './generate';
 
@@ -83,18 +83,27 @@ export const misreads = {
   innerCount: (blocks: Block[]): Block[] => { const total = repeatCount(blocks); return total < 2 ? [] : mapRepeats(blocks, (b, i) => i === 0 ? { ...b, times: DEEP_COUNTS.filter(n => n !== b.times).sort((x, y) => Math.abs(x - b.times) - Math.abs(y - b.times))[0] } : b); },
   firstTurn: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind === 'repeat') return { ...b, body: go(b.body) }; if (b.kind === 'turn' && !done) { done = true; return { kind: 'turn', angle: DEEP_TURNS.filter(a => a !== b.angle).sort((x, y) => Math.abs(x - b.angle) - Math.abs(y - b.angle))[0] }; } return b; }); return go(blocks); },
   noGrow: (blocks: Block[]): Block[] => blocks.flatMap<Block>(b => b.kind === 'grow' ? [] : b.kind === 'repeat' ? [{ ...b, body: misreads.noGrow(b.body) }] : [b]),
+  /** Every side 30 longer (or shorter, from 70 up). */
+  bigLength: (blocks: Block[]): Block[] => blocks.map(b => b.kind === 'repeat' ? { ...b, body: misreads.bigLength(b.body) } : b.kind === 'forward' ? { kind: 'forward', n: b.n >= 70 ? b.n - 30 : b.n + 30 } : b),
+  /** The first Repeat's blocks read in the other order, so the turn comes first. */
+  reverseBody: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind !== 'repeat') return b; if (!done) { done = true; return { ...b, body: [...b.body].reverse() }; } return { ...b, body: go(b.body) }; }); return go(blocks); },
+  /** The first turn read as the angle farthest from it. */
+  farTurn: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind === 'repeat') return { ...b, body: go(b.body) }; if (b.kind === 'turn' && !done) { done = true; return { kind: 'turn', angle: DEEP_TURNS.filter(a => a !== b.angle).sort((x, y) => Math.abs(y - b.angle) - Math.abs(x - b.angle))[0] }; } return b; }); return go(blocks); },
   firstLength: (blocks: Block[]): Block[] => { let done = false; const go = (list: Block[]): Block[] => list.map(b => { if (b.kind === 'repeat') return { ...b, body: go(b.body) }; if (b.kind === 'forward' && !done) { done = true; return { kind: 'forward', n: b.n >= 100 ? b.n - 10 : b.n + 10 }; } return b; }); return go(blocks); },
 };
 export type Misread = keyof typeof misreads;
+/** Wrong pictures must sit at least this far (in sand units) from each other and from the answer. */
+export const MIN_GAP = 12;
 /** Pictures that a reader who skimmed would draw. At the top rungs the first is always "ignore the Repeat". */
 export function choicesFor(program: Block[], tier: number, rotate: number): { blocks: Block[][]; answer: number; kinds: (Misread | 'answer')[] } {
   const answer = draw(program, undefined)!, seen: Segment[][] = [answer], wrong: { blocks: Block[]; kind: Misread }[] = [];
-  const order: Misread[] = tier >= 5 ? ['once', 'outerCount', 'firstTurn', 'innerCount', 'firstLength', 'noGrow'] : tier >= 3 ? ['firstTurn', 'outerCount', 'firstLength', 'noGrow', 'innerCount', 'once'] : ['firstTurn', 'firstLength', 'noGrow', 'outerCount', 'innerCount', 'once'];
+  const order: Misread[] = tier >= 5 ? ['once', 'outerCount', 'firstTurn', 'innerCount', 'reverseBody', 'bigLength', 'farTurn', 'firstLength', 'noGrow'] : tier >= 3 ? ['firstTurn', 'outerCount', 'reverseBody', 'bigLength', 'farTurn', 'noGrow', 'innerCount', 'firstLength', 'once'] : ['firstTurn', 'bigLength', 'reverseBody', 'outerCount', 'farTurn', 'noGrow', 'innerCount', 'firstLength', 'once'];
   for (const kind of order) {
     if (wrong.length === 3) break;
     const blocks = misreads[kind](program);
     const lines = blocks.length ? draw(blocks) : null;
-    if (!lines || !lines.length || seen.some(s => samePicture(s, lines))) continue;
+    // A wrong picture a child can tell from the others at thumbnail size: at least 12 units from every one already chosen.
+    if (!lines || !lines.length || seen.some(s => samePicture(s, lines) || pictureGap(s, lines) < MIN_GAP)) continue;
     wrong.push({ blocks, kind }); seen.push(lines);
   }
   if (wrong.length < 3) throw new Error(`Predict ${formatBlocks(program)}: only ${wrong.length} different misreadings`);

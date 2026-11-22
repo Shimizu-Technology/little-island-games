@@ -57,8 +57,10 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
   const canvas = <SandCanvas width={side} goal={d.kind === 'build' || s.won ? goal : []} traced={shownLines} point={point} labels={d.kind === 'build'} label={d.kind === 'build' ? `Sand canvas with the faint picture to draw. ${shownLines.length} lines drawn.` : s.won ? `The program drew ${shownLines.length} of ${lines.length} lines.` : 'Sand canvas. The picture appears here after you check.'} />;
   // Nothing is drawn until the check, so the pictures take the room the empty sand would.
   const showCanvas = d.kind === 'build' || s.won || running;
-  const body = d.kind === 'build' ? <BuildControls s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
+  const body = d.kind === 'build' ? <BuildControls room={Math.min(640, Math.max(420, win.height - 520))} s={s} d={d} active={active} running={running} dispatch={dispatch} commit={commit} sessionKey={sessionKey} play={play} hear={<>{hearRules}{hearGrow}</>} />
     : <PredictControls s={s} d={d} active={active} running={running} dispatch={dispatch} play={play} width={sideBySide && showCanvas ? width - side - 12 : width} large={large} hear={<>{hearRules}{hearGrow}</>} />;
+  // Once settled, a right prediction keeps its drawing and program and leaves the room below for what comes next.
+  if (!pinned && d.kind === 'predict' && s.won) return <View style={{ gap: 10 }}><View style={{ alignItems: 'center' }}>{canvas}</View><Copy testID="turtle-message" maxFontSizeMultiplier={1.5}>Yes! That is the picture.</Copy><ProgramList blocks={d.program} label="The program" testID="turtle-program" compact={large} /></View>;
   if (!pinned) return <View style={{ gap: 10 }}>{showCanvas && <View style={{ alignItems: 'center' }}>{canvas}</View>}{body}</View>;
   const stack = <ScrollView style={{ flex: 1, minHeight: 0 }} contentContainerStyle={{ gap: 10, paddingBottom: 12 }} accessibilityLabel="Turtle program and help">{header}{body}{footer}</ScrollView>;
   return sideBySide && showCanvas
@@ -67,7 +69,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width, onSettled, h
 }
 
 type Play = (key: string, automatic?: boolean) => unknown;
-function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, play, hear }: { s: State; d: BuildDescriptor; active: boolean; running: boolean; dispatch: (a: Action) => void; commit: ChallengeViewProps<State, Action>['commit']; sessionKey?: string; play: Play; hear: React.ReactNode }) {
+function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, play, hear, room }: { room: number; s: State; d: BuildDescriptor; active: boolean; running: boolean; dispatch: (a: Action) => void; commit: ChallengeViewProps<State, Action>['commit']; sessionKey?: string; play: Play; hear: React.ReactNode }) {
   const program = s.draft ? decodeProgram(s.draft, code => code < deepCodes.length) : null;
   const current = program ?? emptyProgram(), idle = !active || running || s.won;
   const hint = buildHint(d, s.program, s.hintStage);
@@ -84,7 +86,7 @@ function BuildControls({ s, d, active, running, dispatch, commit, sessionKey, pl
       <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{hint.text}</Copy>
       {hint.reveal && <ProgramList blocks={hint.reveal} label="One way to draw the picture" testID="turtle-reveal" />}
     </View>}
-    <ProgramEditor key={`${sessionKey}:${s.draft === null}`} program={current} songs={false} tray={d.tray} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
+    <ProgramEditor key={`${sessionKey}:${s.draft === null}`} program={current} songs={false} tray={d.tray} maxHeight={room} counts={DEEP_COUNTS} disabled={idle} hear={name => play(name, true)}
       cards={deepCodes.map((block, code) => ({ code, name: blockLabel(block), icon: <Copy maxFontSizeMultiplier={1.3}>{block.kind === 'forward' ? '↑' : block.kind === 'turn' ? '↻' : block.kind === 'grow' ? '＋' : '●'}</Copy>, speech: `k7-turtle-${code}` }))}
       onChange={async next => !!commit && !!sessionKey && !!(await commit(['e', programOperations(current, next)], sessionKey))} />
   </View>;
@@ -97,7 +99,7 @@ function PredictControls({ s, d, active, running, dispatch, play, width, large, 
   const win = useWindowDimensions(), wide = win.width > win.height && width >= 720, tight = large && !wide && width < 500;
   const idle = !active || running || s.won, columns = width >= 300 ? 2 : 1, cell = Math.max(96, Math.min(wide ? 180 : tight ? 130 : width < 500 ? 140 : 230, Math.floor((Math.min(wide ? 400 : width, 520) - 10 * (columns - 1)) / columns)));
   const stage = s.hintStage;
-  const message = s.won ? 'Yes! That is the picture. Watch it drawn.' : s.wrong.length && s.pick === null ? 'Not that one. It is crossed out. Choose again.' : 'Pick the picture this program draws. Nothing draws until you check.';
+  const message = s.won ? 'Yes! That is the picture.' : s.wrong.length && s.pick === null ? 'Not that one. It is crossed out. Choose again.' : 'Pick the picture this program draws. Nothing draws until you check.';
   const messageLine = <Copy testID="turtle-message" maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{message}</Copy>;
   const program = <ProgramList blocks={d.program} label="The program" testID="turtle-program" compact={tight} />;
   const grid = <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: columns * cell + (columns - 1) * 10, alignSelf: 'center' }} accessibilityLabel="Four pictures">

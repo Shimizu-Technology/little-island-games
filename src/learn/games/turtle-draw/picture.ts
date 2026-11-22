@@ -51,3 +51,10 @@ export function samePicture(a: readonly Segment[], b: readonly Segment[], tolera
   return a.every(s => has(b, s)) && b.every(s => has(a, s));
 }
 export const distinctLines = (lines: readonly Segment[]): number => canonical(lines).length;
+/** How far apart two pictures look: the largest distance from a point on either to the nearest point on the other (a Hausdorff distance on points every 5 units). */
+export function pictureGap(a: readonly Segment[], b: readonly Segment[]): number {
+  const points = (lines: readonly Segment[]): Point[] => lines.flatMap(l => { const n = Math.max(1, Math.ceil(Math.hypot(l.to.x - l.from.x, l.to.y - l.from.y) / 5)); return Array.from({ length: n + 1 }, (_, i) => ({ x: l.from.x + (l.to.x - l.from.x) * i / n, y: l.from.y + (l.to.y - l.from.y) * i / n })); });
+  const pa = points(a), pb = points(b);
+  const reach = (from: Point[], to: Point[]) => Math.max(...from.map(p => Math.min(...to.map(q => Math.hypot(p.x - q.x, p.y - q.y)))));
+  return Math.max(reach(pa, pb), reach(pb, pa));
+}

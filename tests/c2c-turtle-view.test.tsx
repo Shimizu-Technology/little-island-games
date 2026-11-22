@@ -182,7 +182,9 @@ it('Deep Water predict shows the program and four lettered pictures, checks one,
   expect(messages().some(m => m.startsWith('Not that one'))).toBe(true);
   s = challengeEngine.step(challengeEngine.step(s, ['s', d.answer], d)!.state, ['c'], d)!.state;
   await act(async () => tree!.update(<ChallengeBoard state={s} dispatch={dispatch} active width={353} />));
-  expect(labelled('Check my picture')!.props.disabled).toBe(true);
+  // Settled and right: the drawing and the program stay, and the room below goes to what comes next.
+  expect(labelled('Check my picture')).toBeUndefined();
+  expect(buttons().filter(b => /^Picture [A-D]\./.test(b.props.accessibilityLabel ?? ''))).toHaveLength(0);
   expect(messages().some(m => m.startsWith('Yes!'))).toBe(true);
 });
 
@@ -253,7 +255,7 @@ it('on a phone at the largest text the program shrinks to one wrapped line so th
   const d = challenge('predict', 5) as PredictDescriptor;
   await mount(<ChallengeBoard state={startState(d)} dispatch={vi.fn()} active width={353} />);
   const program = tree!.root.findAllByProps({ testID: 'turtle-program' }).find(n => typeof n.type === 'string')!;
-  expect(program.props.accessibilityLabel).toMatch(/^The program: Repeat ×5 \[/);
+  expect(program.props.accessibilityLabel).toMatch(/^The program: Repeat\s×5\s\[/);
   expect(program.findAllByType('p')).toHaveLength(1);
   const cells = buttons().filter(b => /^Picture [A-D]\./.test(b.props.accessibilityLabel ?? ''));
   expect(cells.every(c => c.props.style.width === 130)).toBe(true);
