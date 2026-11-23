@@ -50,8 +50,10 @@ export type SceneEntity = {
   occluders?: Bounds[];
   /** Middle of the painted art, relative to contact. Food aims from here, not from its base. */
   visual?: { x: number; y: number };
-  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink"; portable?: boolean; underfoot?: boolean };
+  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink"; portable?: boolean; container?: boolean; underfoot?: boolean };
   item?: Instance;
+  /** Direct stored items for pictorial peeks; copies stay outside the saved schema. */
+  contents?: Instance[];
   /** HD-07: the stove whose pan this food is drawn in (saved on the floor in front of it). */
   pan?: EntityId;
   character?: Character;

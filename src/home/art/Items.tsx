@@ -216,16 +216,7 @@ export function ItemArt({
             <>
               <Path d="M24 66L121 61V109Q72 127 24 110Z" fill={`url(#item-coral-${item})`} />
               <Path d={active ? "M24 64L36 28L128 26L121 61Z" : "M24 66L33 52L128 49L121 61Z"} fill="#E9BA76" />
-              {active && (
-                <>
-                  <Circle cx={55} cy={65} r={15} fill="#DFC282" />
-                  <Circle cx={44} cy={52} r={6} fill="#DFC282" />
-                  <Circle cx={65} cy={52} r={6} fill="#DFC282" />
-                  <Circle cx={50} cy={61} r={1.5} />
-                  <Circle cx={59} cy={61} r={1.5} />
-                  <Path d={star} transform="translate(96 60)" fill={`url(#item-teal-${item})`} />
-                </>
-              )}
+              {active && <Path d="M28 68Q73 51 118 64L114 80Q72 90 29 79Z" fill="#8A6450" />}
               <Path d={star} transform="translate(74 92)" fill={pale} />
               <Path d="M33 106Q73 119 111 107" fill="none" stroke={tint === "original" ? "#C67D69" : shade(material(tint, defaultCoral), -.18)} />
             </>

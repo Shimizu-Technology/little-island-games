@@ -1,3 +1,4 @@
+import { storageOpen } from '../storage';
 import { paintDepth, restingVisible } from "./group";
 import { capabilityOf } from "../world";
 import { itemSize } from "../geometry";
@@ -18,7 +19,7 @@ export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = []): 
   for (const source of Object.values(scene.entities)) {
     if (!source.item || !restingVisible(source, scene)) continue;
     const choices = capabilityOf(source.item.item).dispenses;
-    if (!choices || (source.item.item === "fridge" && !(source.item.powered ?? source.item.state === "active")))
+    if (!choices || (source.item.item === "fridge" && !storageOpen(source.item)))
       continue;
     const index = {
       ...rooms[source.room],

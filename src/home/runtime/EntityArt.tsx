@@ -1,3 +1,4 @@
+import { storageCapacity, storageOpen } from '../storage';
 import {instance} from '../model';
 import {heldDrinkScale} from '../art/heldDrink';
 import {CharacterDrawing} from "./CharacterDrawing";
@@ -41,8 +42,8 @@ export const DecorArt = memo(function DecorArt({
     tint: item.tint,
     layer,
     reduced,
-    active: item.powered ?? item.state === "active",
-    state: { on: item.powered ?? item.state === "active", empty: item.empty },
+    active: storageCapacity(item.item) ? storageOpen(item) : item.powered ?? item.state === "active",
+    state: { on: storageCapacity(item.item) ? storageOpen(item) : item.powered ?? item.state === "active", empty: item.empty },
   };
   return moreCatalog[item.item] ? <MoreItemArt id={item.item} {...props} /> : <ItemArt item={item.item} {...props} />;
 });
@@ -112,7 +113,10 @@ export const EntityArt = memo(function EntityArt({
       </G>
     </Svg>;
   }
-  if (entity.item)
+  if (entity.item) {
+    const basket = entity.item.item === 'carry-basket';
+    const peekWidth = frame.width * (basket ? .175 : .13);
+    const pictureWidth = frame.width * (basket ? .34 : .13);
     return (
       <View style={{ width: frame.width, height: frame.height }}>
         <DecorArt
@@ -122,8 +126,21 @@ export const EntityArt = memo(function EntityArt({
           }
           reduced={reduced}
         />
+        {!front && storageCapacity(entity.item.item) > 0 && (storageOpen(entity.item) || basket) && !!entity.contents?.length && (
+          <View testID="storage-peek" pointerEvents="none" accessible={false} style={{ position: 'absolute', left: frame.width * (basket ? .15 : .26), top: frame.height * (basket ? .25 : .43), width: frame.width * (basket ? .7 : .52), height: frame.height * .24, overflow: 'hidden', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>
+            {entity.contents.slice(0, 4).map(item => {
+              const size = itemSize(item), width = peekWidth, scale = pictureWidth / size;
+              return <View key={item.id} style={{ width, height: frame.height * .24 }}>
+                <View style={{ position: 'absolute', left: (width - pictureWidth) / 2, top: 0, width: size, height: size, transform: [{ scale }], transformOrigin: 'left top' }}>
+                  <DecorArt entity={{ ...entity, item, contents: undefined, children: [] }} reduced={reduced}/>
+                </View>
+              </View>;
+            })}
+          </View>
+        )}
       </View>
     );
+  }
   const character = entity.character!,
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
@@ -171,7 +188,7 @@ export const EntityArt = memo(function EntityArt({
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&
   a.entity.character?.slot === b.entity.character?.slot && (a.entity.children.length === b.entity.children.length || !!a.carry && !!b.carry && !!a.carryGrip && a.carryGrip === b.carryGrip) &&
-  JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));
+  JSON.stringify(a.entity.contents) === JSON.stringify(b.entity.contents) && JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));
 
 
 const IdleDrawing=memo(function IdleDrawing({input,renderCharacter}:{input:Parameters<typeof CharacterDrawing>[0]['input'];mealActive:boolean;renderCharacter?:CharacterRender}) {

@@ -42,7 +42,7 @@ type ProposalData = EntityMove & {
   /** Geometry used by the preview, retained for authoritative catalog revalidation. */
   catalogIntent?: Pick<ResolveContext, "scale" | "aim" | "contact">;
   reason: string;
-  refusal?: "capacity";
+  refusal?: "capacity" | "storage-capacity";
   /** Includes the subject, descendants and displaced objects, exactly once. */
   moves: EntityMove[];
   target?: string;
@@ -144,7 +144,8 @@ function eligible(
   if (target.kind === "mouth") return !!subject.body.edible;
   // HD-07: the stove's pan takes food only; a toy dropped there lands on the floor as usual.
   if (target.pan) return subject.body.edible === "food" && !subject.children.length;
-  if (target.kind === "surface" || target.kind === "container") return !!subject.body.small;
+  if (target.kind === "container") return !!subject.body.small && !subject.body.container && group.length === 1;
+  if (target.kind === "surface") return !!subject.body.small;
   return false;
 }
 function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[]): EntityMove[] {
@@ -191,6 +192,7 @@ function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gro
   const moves = movedGroup(index, subject, root, group);
   return moves.every((move) => {
     const entity = move.id === subject.id ? subject : index.entities[move.id];
+    if (move.attachment.kind === "container") return true;
     const bounds = entity.character ? anchorsFor(entity.character.slot, move.base, move.facing).bounds : entity.bounds;
     const placed = translatedBounds(bounds, move.contact);
     if (!contained(placed)) return false;
@@ -349,7 +351,7 @@ function floorCellAllowed(index: RoomIndex, subject: SceneEntity, group: SceneEn
 function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint, group: SceneEntity[], ctx: ResolveContext): EntityMove | undefined {
   "worklet";
   const slot = subject.character?.slot;
-  if (slot === undefined && !(subject.body?.portable && !subject.children.length && subject.body.layer !== "wall")) return;
+  if (slot === undefined && !(subject.body?.portable && (!subject.children.length || subject.body.container) && subject.body.layer !== "wall")) return;
   const contact = slot !== undefined ? standingContact(point, slot) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(350, Math.min(552, point.y)));
   // The exact contact decides containment and visibility. The bounded grid cell only decides
   // occupancy, including the legal floor strip above row zero and the room edges.
@@ -534,6 +536,11 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     }
     return { ...proposal, catalogIntent };
   }
+  const full = !ctx.floorOnly && subject.body?.small && !subject.body.container && group.length === 1 && index.targets.find(t =>
+    t.kind === "container" && t.closed && (!ctx.target || t.id === ctx.target) &&
+    !group.some(e => e.id === t.owner) && subject.parent !== t.owner &&
+    contains(t.core, point));
+  if (full) return { ...makeProposal(index, subject, rootMove(subject, subject.room, subject.attachment, subject.contact), group, "floor", "Container full", full), refusal: "storage-capacity" };
   let best: EntityMove | undefined;
   let bestDistance = Infinity;
   const wall = subject.body?.layer === "wall";

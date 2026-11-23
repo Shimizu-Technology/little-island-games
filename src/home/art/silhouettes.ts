@@ -1,3 +1,4 @@
+import { storageCapacity, storageOpen } from '../storage';
 import type { Bounds, HitShape, SceneEntity } from "../scene/types";
 import { itemIds, type ItemId } from "../catalog";
 
@@ -110,6 +111,8 @@ const hulls: Record<string, Hull> = {
   desk: hull(130, ...deskTop((x, y) => [x, y], true)),
   "side-table": hull(130, ...deskTop((x, y) => [20 + x * .73, y - 5], false)),
   "coffee-table": hull(130, ...deskTop((x, y) => [x, 32 + y * .73], false)),
+  "carry-basket": hull(130, ["r", 22, 14, 107, 105]),
+  cupboard: opened(hull(130, ["r", 24, 16, 107, 108]), ["r", 23, 16, 125, 109]),
   dresser: hull(130, ["p", 26, 24, 111, 16, 129, 28, 129, 102, 43, 115, 26, 104], ["c", 33, 100, 29, 116, 4], ["c", 115, 100, 120, 111, 4]),
   bookcase: hull(130, ["p", 26, 24, 111, 16, 129, 28, 129, 102, 43, 115, 26, 104], ["c", 33, 100, 29, 116, 4], ["c", 115, 100, 120, 111, 4]),
   "cake-stand": hull(130, ["e", 75, 112, 31, 8], ["c", 75, 110, 75, 83, 5.5], ["e", 75, 81, 50, 13], ["p", 41, 54, 75, 43, 109, 54, 109, 77, 75, 90, 41, 77], ["e", 76, 43, 7, 7]),
@@ -185,7 +188,7 @@ function rescale(prim: Prim, box: number, size: number, flip: boolean): HitShape
 export function itemShapes(item: NonNullable<SceneEntity["item"]>, size: number): HitShape[] {
   const entry = hullOf(item.item);
   if (!entry) return [];
-  const flip = item.mirrored !== item.rotation >= 180, active = item.powered ?? item.state === "active";
+  const flip = item.mirrored !== item.rotation >= 180, active = storageCapacity(item.item) ? storageOpen(item) : item.powered ?? item.state === "active";
   return (active && entry.open ? entry.open : entry.shapes).map((prim) => rescale(prim, entry.box, size, flip));
 }
 

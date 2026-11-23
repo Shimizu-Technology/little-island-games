@@ -1,0 +1,7 @@
+{
+ "c2c-turtle-angles": "A full turn is three hundred sixty degrees. Split it by the number of sides to find each turn. Then put the turn and the side in a Repeat.",
+ "c2c-turtle-fix": "One block in this program is wrong. Press Draw and look at the picture. Then change that one block.",
+ "c2c-turtle-build-rules": "Build blocks that draw the faint picture. A Repeat holds blocks that run again. Go draws your plan. If it is not right yet, your blocks stay so you can change one.",
+ "c2c-turtle-predict-rules": "Read the program. Then choose the picture it draws. Nothing is drawn until you check. A wrong pick is only crossed out, and Help is always here.",
+ "c2c-turtle-grow": "Grow plus ten makes every side after it ten longer. Put it inside a Repeat and each turn of the Repeat gets bigger."
+}

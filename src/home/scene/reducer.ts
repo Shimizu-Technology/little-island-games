@@ -1,3 +1,4 @@
+import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
 import { decorSpec, itemSpec } from "../catalog";
 import { roomIds, tintIds } from "../catalogMore";
 import { capabilityOf } from "../world";
@@ -21,6 +22,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
   const finish = (next: HomeStateV2): HomeResult =>
     validHome(next) ? { state: next } : fail("Your original room has been kept.");
   if (action.type === "apply-proposal") {
+    if (action.proposal.refusal === "storage-capacity") return fail(STORAGE_FULL_MESSAGE);
     const candidate = action.proposal.item;
     const existing = roomIds.some((room) =>
       save.rooms[room].instances.some((item) => itemEntityId(room, item.id) === action.proposal.id)
@@ -113,6 +115,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
   const scene = buildScene(save);
   const index = scene.rooms[roomId];
   const commit = (proposal: DropProposal): HomeResult => {
+    if (proposal.refusal === "storage-capacity") return fail(STORAGE_FULL_MESSAGE);
     const result = apply(save, proposal);
     return "state" in result ? { state: result.state } : fail("The room changed. Try that move again.");
   };
@@ -162,7 +165,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
       if (
         !source ||
         !cap?.dispenses?.includes(action.item) ||
-        (cap.toggle === "open" && !(source.powered ?? source.state === "active"))
+        (cap.toggle === "open" && !storageOpen(source))
       )
         return { state: save };
     }
@@ -297,7 +300,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
       ? { ...item, tint: action.tint }
       : {
           ...item,
-          ...(cap.toggle ? { powered: !(item.powered ?? item.state === "active") } : {}),
+          ...(storageCapacity(item.item) ? { storage: { version: 1 as const, open: !storageOpen(item) }, powered: !storageOpen(item) } : cap.toggle ? { powered: !(item.powered ?? item.state === "active") } : {}),
           state: spec.interactive ? (item.state === "rest" ? ("active" as const) : ("rest" as const)) : item.state,
         };
   return finish({
