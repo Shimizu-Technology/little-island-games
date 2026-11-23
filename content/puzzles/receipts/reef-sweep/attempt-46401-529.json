@@ -1,0 +1,23 @@
+{
+ "format": 1,
+ "family": "reef-sweep",
+ "seedBase": 46401,
+ "attempts": 529,
+ "rejects": {
+  "construction": 398,
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "duplicate-semantic": 1
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "single-5": 32,
+  "single-6": 32,
+  "subset-7": 32,
+  "coupled-7": 32
+ },
+ "sourceSha": "b85849a9fd1e758c3572e8109033a0452a5b8539",
+ "status": "complete"
+}

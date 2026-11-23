@@ -64,7 +64,7 @@ export const catalog: Record<
     description: "Find pearls. Give sea urchins room.",
     surface: "#E0EFE9",
     sizes: [5, 6, 7],
-    rule: "Open every pearl space without touching a sea urchin. Your first opening and its neighbors are safe. A number counts urchins in the eight touching spaces, including diagonals. Switch to Flag to mark a suspected urchin. Flags are reminders, not proof. Some boards need a careful guess.",
+    rule: "Open every pearl space without touching a sea urchin. Your first opening and its neighbors are safe, and every new reef can be solved by thinking with no guessing. A number counts urchins in the eight touching spaces, including diagonals. Switch to Flag urchins or press and hold a tile to mark a suspected urchin. Flags are reminders, not proof.",
     lesson:
       "This 1 touches one sea urchin, including diagonal neighbors. Mark the urchin with a flag, then open the other pearl spaces. Empty spaces open their neighbors for you.",
   },
@@ -178,9 +178,23 @@ export function undo(s: BoardSession): BoardSession {
   if (!s.position.moves.length || s.game === "hidden-canoes" || (s.mode === "together" && s.game !== "reef-sweep"))
     return s;
   const engine = engines[s.game],
-    states = [engine.create(s.position.seed, s.position.size, s.position.starter, s.position.edge)];
+    initial =
+      s.game === "reef-sweep"
+        ? reef.initialFrom(s.position)
+        : engine.create(s.position.seed, s.position.size, s.position.starter, s.position.edge),
+    states = [initial];
   for (const m of s.position.moves) states.push(engine.move(states[states.length - 1], m));
-  for (let i = states.length - 2; i >= 0; i--) if (states[i].turn === 0) return { ...s, position: states[i] };
+  for (let i = states.length - 2; i >= 0; i--) {
+    if (states[i].turn === 0) {
+      const pos = states[i];
+      if (s.game === "reef-sweep" && pos.attempt !== undefined && !pos.marks.includes(1)) {
+        const { attempt: _omit, ...unopened } = pos;
+        void _omit;
+        return { ...s, position: unopened };
+      }
+      return { ...s, position: pos };
+    }
+  }
   return s;
 }
 /** Compare-and-swap plus restore generation prevents delayed AI or old screens overwriting a new save. */
