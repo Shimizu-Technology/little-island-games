@@ -161,9 +161,18 @@ it('at AX5 on a phone in portrait the belt stays one sideways row, with labels c
   viewport.fontScale = 3.12;
   vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => setTimeout(() => f(0), 0) as unknown as number); vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id));
   await mount(<BoardSpaceProvider space={{ width: 353, height: 600, large: true }}><Board {...asBoard(props(round(5)))} /></BoardSpaceProvider>);
-  const belt = tree!.root.findAll(n => n.type === 'scroll' && n.props.testID === 'tide-cargo-scroll');
+  const belt = tree!.root.findAll(n => String(n.type) === 'scroll' && n.props.testID === 'tide-cargo-scroll');
   expect(belt).toHaveLength(1); expect(belt[0].props.horizontal).toBe(true);
   const labels = tree!.root.findAllByType('p').filter(n => /^\d+ · (big|small)$/.test(text(n)));
   expect(labels.length).toBe(currentRow(round(5))!.belt.length);
   for (const l of labels) expect(l.props.maxFontSizeMultiplier).toBe(1.3);
+});
+it('on a phone the Challenge belt is one sideways row, and a trace puts its rule above the belt', async () => {
+  const p = tidePuzzles.find(x => x.descriptor.kind === 'trace')!;
+  viewport.fontScale = 3.12;
+  await mount(<ChallengeBoard {...challengeProps(freshState(p))} />);
+  const scroll = tree!.root.findAll(n => String(n.type) === 'scroll')[0];
+  expect(scroll.props.horizontal).toBe(true);
+  const order = tree!.root.findAll(n => n.props.testID === 'tide-rule' || n.props.testID === 'tide-challenge-belt').map(n => n.props.testID);
+  expect(order[0]).toBe('tide-rule');
 });

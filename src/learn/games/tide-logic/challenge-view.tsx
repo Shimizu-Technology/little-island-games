@@ -1,6 +1,6 @@
 /** Tide Logic Challenge board (C4): write a rule, find the rule behind a sorted belt, or trace a flip gate. */
 import React, { useContext, useEffect, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Button, C, Copy } from '../../../components/ui';
 import { AudioPreferences, useSoundControls } from '../../../components/Audio';
 import { useReducedMotion } from '../../../components/motion';
@@ -18,6 +18,8 @@ const optionLabel = (kind: string, v: string) => kind === 'side' || kind === 'st
 export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeViewProps<State, Action>) {
   const d = s.d, f = FRAMES[d.frame], prefs = useContext(AudioPreferences), { play: tone, stop } = useSoundControls(prefs.sound ?? true), reduced = useReducedMotion();
   const win = useWindowDimensions(), large = win.fontScale >= LARGE_TEXT, wide = win.width > win.height && width >= 640;
+  // On a phone the belt is one sideways row, so the rule and its controls stay in view at every text size.
+  const oneRow = !wide && width < 600;
   const [editing, setEditing] = useState<number | null>(null);
   // Playback: after a Run every catch is tested in turn and lands where the rule sends it; a miss stops at the first wrong catch.
   const [playback, setPlayback] = useState({ run: s.runs, cursor: s.won ? d.belt.length : -1 });
@@ -42,7 +44,8 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
   const catchSize = width >= 600 ? 64 : 56;
   const goal = d.kind === 'write' ? goalSentence(f, d.target) : d.kind === 'find' ? 'Read the sorted belt. Build a rule that sorts every catch the same way.' : 'Follow the gate. Send each catch to the bucket the gate points at when it arrives.';
   const belt = <View style={{ backgroundColor: '#E2F3F2', borderRadius: 18, padding: 10, gap: 8 }}>
-    <View testID="tide-challenge-belt" style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
+    <ScrollView horizontal={oneRow} scrollEnabled={oneRow} nestedScrollEnabled accessibilityLabel={oneRow ? 'Cargo belt. Scroll sideways to see every catch.' : undefined} contentContainerStyle={oneRow ? { gap: 6, paddingRight: 4 } : undefined}>
+    <View testID="tide-challenge-belt" style={{ flexDirection: 'row', flexWrap: oneRow ? 'nowrap' : 'wrap', justifyContent: 'center', gap: 6 }}>
       {d.belt.map((c, i) => {
         const item = itemOf(c), tested = i < shown, wrong = s.miss === i && !playing && !s.won, landed = tested ? (d.kind === 'trace' ? s.draft[i] : sorted?.[i]) : undefined;
         const label = `Catch ${i + 1}: ${catchWords(c)}${d.kind === 'find' ? `, sorted ${SIDE[want[i]]}` : ''}${d.kind === 'trace' && s.draft[i] >= 0 ? `, you send it ${SIDE[s.draft[i]]}` : ''}${landed !== undefined && landed >= 0 ? `, ${landed === want[i] ? 'right' : 'wrong'} bucket` : ''}`;
@@ -55,6 +58,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
         </View>;
       })}
     </View>
+    </ScrollView>
     <View style={{ height: 9, borderRadius: 5, backgroundColor: '#B49C77' }} />
     <View testID="tide-buckets" style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 8 }}><Copy maxFontSizeMultiplier={1.5} style={{ flexShrink: 1 }}>{'← LEFT BUCKET'}</Copy><Copy maxFontSizeMultiplier={1.5} style={{ flexShrink: 1, textAlign: 'right' }}>{'RIGHT BUCKET →'}</Copy></View>
     {playing && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', fontWeight: '700' }}>{`Testing catch ${shown + 1}${f.id === 'bell' && bell(d.belt[shown]) ? ' · ♪ it rings' : ''}${f.id === 'bell' && shown > 0 && bell(d.belt[shown - 1]) ? ' · the catch before rang' : ''}`}</Copy>}
@@ -100,8 +104,10 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
       {prefs.sound !== false && (f.id === 'not' || f.id === 'bell') && !!learnSources[f.id === 'not' ? 'c4-tide-not' : 'c4-tide-bell'] && <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => tone(f.id === 'not' ? 'c4-tide-not' : 'c4-tide-bell', true)}>{f.id === 'not' ? 'Hear NOT' : 'Hear the bell'}</Button>}
     </View>
   </View>;
-  const goalLine = <Copy testID="tide-goal" maxFontSizeMultiplier={large ? 2 : undefined} style={{ fontWeight: '700' }}>{goal}</Copy>;
+  const goalLine = <Copy testID="tide-goal" maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ fontWeight: '700' }}>{goal}</Copy>;
+  // Tracing starts from the rule, so it comes first; writing and finding start from the goal and the belt.
+  const lead = d.kind === 'trace' ? <>{rule}{goalLine}</> : goalLine;
   return wide
-    ? <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}><View style={{ width: '50%', gap: 8 }}>{goalLine}{belt}</View><View style={{ flex: 1, minWidth: 0, gap: 8 }}>{rule}{controls}</View></View>
-    : <View style={{ gap: 8 }}>{goalLine}{belt}{rule}{controls}</View>;
+    ? <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}><View style={{ width: '50%', gap: 8 }}>{lead}{belt}</View><View style={{ flex: 1, minWidth: 0, gap: 8 }}>{d.kind === 'trace' ? null : rule}{controls}</View></View>
+    : <View style={{ gap: 8 }}>{lead}{belt}{d.kind === 'trace' ? null : rule}{controls}</View>;
 }
