@@ -315,16 +315,26 @@ export const RulePicture = memo(function RulePicture({ spec, width = 120, height
       return <MiniShell col={sh.col} big={sh.big} x={leftX + 7} y={9} s={26} />;
     }
     if (p.kind === 'pos') {
+      // Mini 3-slot horizontal strip matching Card C's [1st][2nd][3rd] visual language (width = 38px, centered vertically).
+      let cursor = leftX;
       return (
-        <G transform={`translate(${leftX}, 4)`}>
-          {/* Three compact position pips with breathing room above the icon box */}
-          {[0, 1, 2].map(slot => (
-            <Rect key={slot} x={2 + slot * 12} y={0} width={10} height={5} rx={2.5} fill={slot === p.pos ? '#2E8B57' : '#C7D4D1'} />
-          ))}
-          <Rect x={1} y={9} width={36} height={27} rx={7} fill="#EEF6F4" stroke={ink} strokeWidth={1.6} />
-          {p.col !== undefined
-            ? <MiniShell col={p.col} big={p.big ?? 1} x={9} y={13} s={20} />
-            : <NeutralSizeShell big={p.big ?? 1} x={9} y={12.5} s={20} />}
+        <G>
+          {[0, 1, 2].map(slot => {
+            const activeSlot = slot === p.pos;
+            const w = activeSlot ? 22 : 6;
+            const x = cursor;
+            cursor += w + 2;
+            return activeSlot ? (
+              <G key={slot}>
+                <Rect x={x} y={9} width={22} height={26} rx={6} fill="#DFF4E8" stroke={ink} strokeWidth={1.7} />
+                {p.col !== undefined
+                  ? <MiniShell col={p.col} big={p.big ?? 1} x={x + 2} y={13} s={18} />
+                  : <NeutralSizeShell big={p.big ?? 1} x={x + 2} y={13} s={18} />}
+              </G>
+            ) : (
+              <Rect key={slot} x={x} y={14} width={6} height={16} rx={3} fill="#EFECE4" stroke="#B8C4C2" strokeWidth={1.3} />
+            );
+          })}
         </G>
       );
     }
