@@ -1,0 +1,172 @@
+{
+ "format": 1,
+ "family": "shape-shift",
+ "slot": 292,
+ "catalogRevision": 29,
+ "band": "e",
+ "ordinals": [
+  299008,
+  50
+ ],
+ "sourceSha": "416bbbaf94e10bcfe4b61e05eacc12791be3fedb",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "32e02d5091965518385f3f33a74dc2f365b161f5bbf0a77696ea8a1e4050fe07"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 11323,
+  "kept": [
+   67108866,
+   67108876,
+   67108875,
+   67108877,
+   67108878,
+   67108868,
+   67108891,
+   67108872,
+   67108893,
+   67108884,
+   67108869,
+   67108881,
+   67108873,
+   67108874,
+   67108879,
+   67108908,
+   67108899,
+   67108887,
+   67108871,
+   67108892,
+   67108889,
+   67108883,
+   67108886,
+   67108912,
+   67108865,
+   67108867,
+   67108870,
+   67108880,
+   67108888,
+   67108902,
+   67108905,
+   67108909,
+   67108885,
+   67108910,
+   67108900,
+   67108901,
+   67108895,
+   67108914,
+   67108906,
+   67108896,
+   67108882,
+   67108897,
+   67108903,
+   67108907,
+   67108890,
+   67108894,
+   67108898,
+   67108904,
+   67108911,
+   67108913
+  ]
+ },
+ "rejects": {
+  "duplicate-semantic": 2,
+  "template-cap": 0,
+  "layout-repeat": 0,
+  "construction": 10537,
+  "bot-beat": 93,
+  "too-large": 391
+ },
+ "distinct": {
+  "exact": 50,
+  "semantic": 50
+ },
+ "histograms": {
+  "technique": {},
+  "template": {
+   "fold-cross": 2,
+   "fold-hook-": 6,
+   "fold-mid-w": 1,
+   "fold-offse": 2,
+   "fold-t-net": 2,
+   "fold-zigza": 2,
+   "opp-cross": 2,
+   "opp-double-3": 1,
+   "opp-hook-1": 7,
+   "opp-hook-2": 3,
+   "opp-hook-3": 2,
+   "opp-mid-wing": 3,
+   "opp-offset-1": 3,
+   "opp-offset-2": 5,
+   "opp-offset-3": 4,
+   "opp-t-net": 1,
+   "opp-zigzag": 4
+  },
+  "layout": {
+   "fold-cross": 2,
+   "fold-hook-1": 3,
+   "fold-hook-2": 2,
+   "fold-hook-3": 1,
+   "fold-mid-wing": 1,
+   "fold-offset-1": 1,
+   "fold-offset-3": 1,
+   "fold-t-net": 2,
+   "fold-zigzag": 2,
+   "opp-cross": 2,
+   "opp-double-3": 1,
+   "opp-hook-1": 7,
+   "opp-hook-2": 3,
+   "opp-hook-3": 2,
+   "opp-mid-wing": 3,
+   "opp-offset-1": 3,
+   "opp-offset-2": 5,
+   "opp-offset-3": 4,
+   "opp-t-net": 1,
+   "opp-zigzag": 4
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   1,
+   1
+  ],
+  "exact": 50
+ },
+ "proofHashes": {
+  "witness": "4a727d26af12d5d94f0d7b7339b0f2b88839e976027ef2529e0cca35cb549b38",
+  "trace": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "claims": "0fa671942d3a2a052827d02d4e75ecf18f23e741354a2d7b4f487109115eac87"
+ },
+ "bots": {
+  "repeat-first": 25,
+  "repeat-last": 17,
+  "alternate": 23,
+  "cycle": 40,
+  "random": 50,
+  "scan": 50
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Hand-crafted and exact-cover-certified island silhouettes, cube nets, and Tangram silhouettes."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 6681,
+  "gzip": 1163
+ },
+ "sha256": "5361c47fff4be27a4d297870287f651f150af561616c87bb22d0098e7321e469",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

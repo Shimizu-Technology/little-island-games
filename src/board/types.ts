@@ -1,6 +1,12 @@
 import { RoundResult, Seat, validSeat } from "../games/match";
 export const strengths = ["gentle", "growing", "challenge"] as const;
 export type Strength = (typeof strengths)[number];
+export type ReefFallback = {
+  /** Certified safe opening cell shown to the player before the first tap. */
+  start: number;
+  /** Sorted urchin cell indices of the certified fallback board. */
+  mines: number[];
+};
 /** Canonical engine state. marks is game-specific public bookkeeping. */
 export type Position = {
   seed: number;
@@ -17,6 +23,22 @@ export type Position = {
    * nonzero, so every older saved position keeps its exact shape.
    */
   edge?: [number, number];
+  /**
+   * Reef Sweep rules revision. Absent on legacy paused rounds (which keep their
+   * original single-shuffle layout); 2 enables deterministic first-tap no-guess redraw.
+   */
+  rules?: 2;
+  /**
+   * Proven redraw attempt index (0..REDRAW_MAX_ATTEMPTS-1) for a rules: 2 Reef Sweep board.
+   * Recorded on the first opening so commit, save validation, and undo reconstruct that exact
+   * candidate directly without re-searching earlier attempts.
+   */
+  attempt?: number;
+  /**
+   * Present only when the player explicitly accepted a certified fallback Reef Sweep board
+   * after bounded redraw exhausted its budget. Never set silently.
+   */
+  fallback?: ReefFallback;
 };
 export type Edge = [number, number];
 export type Engine = {
