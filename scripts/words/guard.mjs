@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
-import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts } from './generated-admission.mjs';
+import { admissionSources, admissionSourceFiles, speechInputs, generatedReceipts, tracedGameRegistries, gameRegistryPaths } from './generated-admission.mjs';
 import { admitPuzzlePack } from './puzzle-admission.mjs';
 import { exportTextViews } from './text-views.mjs';
 import { tmpdir } from 'node:os';
@@ -269,6 +269,19 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const sourceExceptions=policy.sourceUnitExceptions??[];
   requireThat(Array.isArray(sourceExceptions),'Invalid source unit exceptions');
   const sourceInputs=admissionSourceFiles(sourceRoot),sourceBindings=[];
+  const registryBindings=[...tracedGameRegistries(sourceRoot)].map(([path,ids])=>({path,sha256:sha256(JSON.stringify(ids)),signature:javascriptStrings('const ids='+JSON.stringify(ids)+';').units[0].origin.signature}));
+  function admitRegistryUnits(hits,name,source=false) {
+    // Bind the complete JSON array, including IDs omitted from short-word views
+    // (digits and 65-80 character Challenge IDs are valid generator inputs).
+    const sourceHash=source && gameRegistryPaths.includes(name)?sha256(JSON.stringify(JSON.parse(sourceInputs.get(name)))):null;
+    for(const hit of hits)for(const binding of registryBindings) {
+      if(source ? name===binding.path && sourceHash===binding.sha256 : /\.(?:[cm]?js|bundle)$/i.test(name) && passedSources.has(binding.path) && hit.origin?.signature===binding.signature) {
+        // Only the complete traced array's broad-list view is admitted. Individual
+        // strings, hard terms, private bytes and density checks remain untouched.
+        hit.broad=[];
+      }
+    }
+  }
   const registryPath='src/challenge/registry.generated.ts',registryFile=join(sourceRoot,registryPath);
   if(existsSync(registryFile))sourceInputs.set(registryPath,readFileSync(registryFile));
   for(const rule of sourceExceptions) {
@@ -322,6 +335,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     const view=scan(Buffer.from(text),code?'source.js':name.endsWith('.py')?'source.json':name);
     const bindings=sourceBindings.filter(binding=>binding.path===name);
     if(bindings.length)reviewedSourceUnits([...view.unitHits,...view.wordMaps.map(mapListHit)],bindings,true);
+    if(gameRegistryPaths.includes(name) && !registryBindings.some(binding=>binding.path===name))findings.push(name+':blocked-source-list');
+    admitRegistryUnits(view.unitHits,name,true);
+    if(gameRegistryPaths.includes(name) && (view.strings.some(text=>sensitive(sensitiveText(text)).size) || hashes.has(sha256(bytes)) || view.uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))))findings.push(name+':blocked-source-literal');
     if(view.literalHits.size || view.hardHermesFailure)findings.push(name+':blocked-source-literal');
     if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
     if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
@@ -395,6 +411,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
         }
       }
       reviewedSourceUnits([...unitHits,...mapHits],sourceBindings);
+      admitRegistryUnits(unitHits,name);
       if([...stringHits,...unitHits,...mapHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3)) findings.push(`${name}:partial-list`);
       for(const hit of stringHits)if(hit.advisory && hit.broad.length && !advisories.some(row=>row.stringSha256===hit.sha256))advisories.push({file:name,stringSha256:hit.sha256,terms:hit.broad});
       if(literalHits.size) findings.push(`${name}:blocked-literal`);

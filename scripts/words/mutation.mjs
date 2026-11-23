@@ -65,6 +65,32 @@ custom('bake','asset listed raw object',sources.get('bake').replace('listed:list
 custom('bake','asset raw word object',sources.get('bake').replace('words.map(w => ({ id:w.id,','words.map(w => ({ ...w, id:w.id,'),['successful synthetic bake has exact safe asset projection']);
 custom('bake','asset whole policy',sources.get('bake').replace('const asset = { schemaVersion:1,','const asset = { policy, schemaVersion:1,'),['successful synthetic bake has exact safe asset projection']);
 custom('paths','symlink ancestor canonicalization',sources.get('paths').replace('realpathSync.native(parent)','parent'),['privatePath resolves symlink ancestors']);
+custom('ci','actual export guard command',sources.get('ci').replace('run: npm run check:words:export','run: echo skipped'),['package and CI run guard on the actual export']);
+// Wguard3: trace both authored registry contracts and scope broad-list admission.
+const registryEdges=[
+ ['guard','decoded registry private hashes','view.uppers.some(upper=>[...hashes]','byteViews(bytes).uppers.some(upper=>[...hashes]',['Wguard3 challenge private hash content encoded','Wguard3 learn private hash content encoded']],
+ ['guard','complete registry array rather than short-word view','sourceHash===binding.sha256','hit.sha256===binding.sha256',['Wguard3 challenge numeric and 80-character IDs','Wguard3 learn numeric and 80-character IDs']],
+ ['guard','registry requires trace even without broad terms',"if(gameRegistryPaths.includes(name) && !registryBindings.some(binding=>binding.path===name))findings.push(name+':blocked-source-list');",'',['Wguard3 challenge untraced ledger without broad terms','Wguard3 learn untraced ledger without broad terms']],
+ ['generated-admission','ledger exact equality',"if(JSON.stringify(ledger)!==JSON.stringify(ids))continue;",'', ['Wguard3 challenge untraced id','Wguard3 learn untraced id']],
+ ['generated-admission','Challenge filename contract',"if(!ids.every(id=>/^[a-z][a-z0-9-]{0,79}$/.test(id)))continue;",'', ['Wguard3 challenge invalid filename']],
+ ['generated-admission','School matching id','r.id!==id','false',['Wguard3 learn forged ledger cannot repair mismatched registration']],
+ ['generated-admission','School integer slot','!Number.isInteger(r.slot)','false',['Wguard3 learn noninteger slot']],
+ ['generated-admission','School nonnegative slot','r.slot<0','false',['Wguard3 learn invalid slot']],
+ ['generated-admission','School group',"!['levels','originals'].includes(r.group)",'false',['Wguard3 learn invalid group']],
+ ['generated-admission','School engine',"!existsSync(join(game,'engine.ts'))",'false',['Wguard3 learn missing engine.ts']],
+ ['generated-admission','School view',"!existsSync(join(game,'view.tsx'))",'false',['Wguard3 learn missing view.tsx']],
+ ['generated-admission','School complete registration','!complete || ','',['Wguard3 learn truncated ledger cannot hide incomplete registration']],
+ ['generated-admission','School unique slot','new Set(registrations.map(r=>r.slot)).size!==registrations.length','false',['Wguard3 learn duplicate slot']],
+ ['generated-admission','School slot ordering','registrations.sort((a,b)=>a.slot-b.slot)','registrations',['Wguard3 learn slot ordering and originals']],
+ ['guard','source registry path','name===binding.path && sourceHash===binding.sha256','sourceHash===binding.sha256',['Wguard3 challenge non-registry source JSON','Wguard3 learn near registry path'],["source && gameRegistryPaths.includes(name)?","source && name.endsWith('.json')?"]],
+ ['guard','export JSON carrier',"/\\.(?:[cm]?js|bundle)$/i.test(name) && passedSources.has(binding.path) && hit.origin?.signature===binding.signature",'passedSources.has(binding.path) && (hit.origin?.signature===binding.signature || hit.sha256===binding.sha256)',['Wguard3 challenge non-registry export JSON']],
+ ['guard','export complete syntax','hit.origin?.signature===binding.signature','true',['Wguard3 challenge extra export','Wguard3 challenge mixed export','Wguard3 challenge object export','Wguard3 challenge reordered export']],
+ ['guard','registry hard sensitive check','gameRegistryPaths.includes(name) && (view.strings.some(text=>sensitive(sensitiveText(text)).size)','gameRegistryPaths.includes(name) && (false',['Wguard3 challenge hard chamoruSensitive','Wguard3 learn hard chamoruSensitive']],
+ ['guard','registry source private file hash',' || hashes.has(sha256(bytes))','',['Wguard3 challenge private hash','Wguard3 learn private hash']],
+ ['guard','registry source private bytes'," || view.uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))",'', ['Wguard3 challenge private hash content','Wguard3 learn private hash content']],
+];
+// Relax both redundant path boundaries together; either alone still rejects other JSON.
+for(const [file,label,before,after,tests,also] of registryEdges){const original=sources.get(file);if(original.split(before).length!==2 || also && original.split(also[0]).length!==2)throw new Error('Missing or ambiguous Wguard3 mutation target '+label);let mutant=original.replace(before,after);if(also)mutant=mutant.replace(...also);custom(file,'Wguard3 '+label,mutant,tests);}
 // Wguard2: every source/export binding edge has its own negative probe.
 const sourceUnitEdges=[
  ['path binding','sourceBindings.filter(binding=>binding.path===name)','sourceBindings',['Wguard2 wrong source cannot borrow review']],
@@ -545,7 +571,7 @@ let failed=0;
 try{
  // Freeze all source files for this run.
  for(const [file,source] of sources){let patched=source;for(const p of patches.get(file).sort((a,b)=>b.start-a.start))patched=patched.slice(0,p.start)+`(${source.slice(p.start,p.end)} || (globalThis.__wordRecordGate?.(${p.id}), false))`+patched.slice(p.end);writeFileSync(join(toolRoot,toolFile(file)),patched);}
- const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs'),WORD_TEST_PREVIEW_FILE:join(toolRoot,'preview.mjs'),WORD_TEST_MORPHOLOGY_FILE:join(toolRoot,'morphology.ts')},timeout:process.env.LITTLE_ISLAND_SLOW_HOST==='1'?300000:120000,maxBuffer:8*1024*1024});
+ const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs'),WORD_TEST_CI_FILE:join(toolRoot,'ci.mjs'),WORD_TEST_PREVIEW_FILE:join(toolRoot,'preview.mjs'),WORD_TEST_MORPHOLOGY_FILE:join(toolRoot,'morphology.ts')},timeout:process.env.LITTLE_ISLAND_SLOW_HOST==='1'?300000:120000,maxBuffer:8*1024*1024});
  const baseline=run({WORD_MUTATION_TRACE:trace});
  if(baseline.status!==0){console.error(baseline.stdout+baseline.stderr);throw new Error('Instrumented unmutated baseline must pass');}
  for(const [file,source] of sources)writeFileSync(join(toolRoot,toolFile(file)),source);

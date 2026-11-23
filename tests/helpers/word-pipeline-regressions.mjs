@@ -1513,3 +1513,69 @@ test('Wguard2 standalone iOS scan uses complete guard and cleans output',()=>{le
 test('Wguard2 standalone iOS scan rejects leaks and cleans output',()=>{let directory;assert.throws(()=>checkIOSExport(root,(_cmd,args)=>{directory=args.at(-1);writeFileSync(join(directory,'native.js'),'globalThis.label="COLD";');}),/blocked-literal/);assert.equal(fs.existsSync(directory),false);});
 test('Wguard2 standalone iOS scan requires JavaScript',()=>{assert.throws(()=>checkIOSExport(root,()=>{}),/Native platform JavaScript export required/);});
 test('Wguard2 standalone iOS scan requires policy',()=>{const saved=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;delete process.env.LITTLE_ISLAND_WORD_POLICY_LOCK;try{assert.throws(()=>checkIOSExport(root,()=>{}),/Private policy lock required/);}finally{process.env.LITTLE_ISLAND_WORD_POLICY_LOCK=saved;}});
+
+// Wguard3: synthetic registry IDs, never private policy vocabulary or T2 source.
+const registryTerms=['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'];
+function gameRegistryCase(kind,run) {
+ const dir=mkdtempSync(join(scratch,'game-registry-')),out=join(dir,'dist');mkdirSync(out);
+ mkdirSync(join(dir,'src/learn/content'),{recursive:true});writeFileSync(join(dir,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
+ const path=`src/${kind}/registered-ids.json`,file=join(dir,path);
+ const ids=['alphanonsense-game','betanonsense-game','gammanonsense-game','pattern-path','shape-shift',...Array.from({length:23},(_,i)=>`neutral-${String.fromCharCode(97+i)}`)].sort();
+ const authored=[];
+ mkdirSync(join(dir,`src/${kind}`),{recursive:true});
+ for(const [slot,id] of ids.entries()) {
+  if(kind==='challenge') {
+   const registration=join(dir,`src/challenge/registrations/${id}.ts`);mkdirSync(join(registration,'..'),{recursive:true});writeFileSync(registration,'export const registration={};');authored.push(registration);
+  } else {
+   const game=join(dir,`src/learn/games/${id}`);mkdirSync(game,{recursive:true});
+   const registration=join(game,'registration.json');writeFileSync(registration,JSON.stringify({id,slot,group:'levels'}));
+   writeFileSync(join(game,'engine.ts'),'export const engine={};');writeFileSync(join(game,'view.tsx'),'export const View=()=>null;');authored.push(registration);
+  }
+ }
+ writeFileSync(file,JSON.stringify(ids));const artifact=join(out,'entry.js');writeFileSync(artifact,`globalThis.ids=${JSON.stringify(ids)};`);
+ const p={scan:registryTerms,core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]};
+ const check=()=>guardTree(out,p,[],{sourceRoot:dir});
+ try{return run({dir,out,path,file,ids,authored,artifact,p,check});}finally{rmSync(dir,{recursive:true,force:true});}
+}
+for(const kind of ['challenge','learn']) {
+ test(`Wguard3 ${kind} traced source and exported array`,()=>gameRegistryCase(kind,({check,ids})=>{assert.ok(ids.length>=26);assert.equal(check().passed,true);}));
+ for(const [name,change] of [
+  ['untraced id',f=>writeFileSync(f.file,JSON.stringify([...f.ids,'untraced-game']))],
+  ['missing registration',f=>rmSync(f.authored[0])],
+  ['reordered source',f=>writeFileSync(f.file,JSON.stringify([...f.ids].reverse()))],
+  ['duplicate source',f=>writeFileSync(f.file,JSON.stringify([...f.ids,f.ids[0]]))],
+  ['object source',f=>writeFileSync(f.file,JSON.stringify({ids:f.ids}))],
+  ['mixed source',f=>writeFileSync(f.file,JSON.stringify([...f.ids,17]))],
+  ['non-registry source JSON',f=>writeFileSync(join(f.dir,`src/${kind}/other.json`),JSON.stringify(f.ids))],
+  ['near registry path',f=>{const target=join(f.dir,`src/other/${kind}`);mkdirSync(target,{recursive:true});writeFileSync(join(target,'registered-ids.json'),JSON.stringify(f.ids));}],
+ ])test(`Wguard3 ${kind} ${name}`,()=>gameRegistryCase(kind,f=>{change(f);if(!['non-registry source JSON','near registry path'].includes(name))assert.equal(generatedAdmission.tracedGameRegistries(f.dir).has(f.path),false);assert.throws(f.check,/:blocked-source-list/);}));
+ for(const [name,source] of [
+  ['extra export',ids=>JSON.stringify([...ids,'untraced-game'])],
+  ['reordered export',ids=>JSON.stringify([...ids].reverse())],
+  ['mixed export',ids=>JSON.stringify([...ids,17])],
+  ['object export',ids=>JSON.stringify(Object.fromEntries(ids.map(id=>[id,1])))],
+ ])test(`Wguard3 ${kind} ${name}`,()=>gameRegistryCase(kind,f=>{writeFileSync(f.artifact,'globalThis.ids='+source(f.ids)+';');assert.throws(f.check,/partial-list/);}));
+ test(`Wguard3 ${kind} non-registry export JSON`,()=>gameRegistryCase(kind,f=>{rmSync(f.artifact);writeFileSync(join(f.out,'other.json'),JSON.stringify(f.ids));assert.throws(f.check,/partial-list/);}));
+ for(const field of ['core','exact','lemmas','chamoruSensitive'])test(`Wguard3 ${kind} hard ${field}`,()=>gameRegistryCase(kind,f=>{f.p[field]=['ALPHANONSENSE'];assert.throws(f.check,/blocked-source-literal|blocked-chamoru/);}));
+ test(`Wguard3 ${kind} private hash`,()=>gameRegistryCase(kind,f=>{const bytes=readFileSync(f.file);assert.throws(()=>guardTree(f.out,f.p,[{policySha256:sha256(bytes)}],{sourceRoot:f.dir}),/leaked/);}));
+}
+for(const [name,change] of [
+ ['mismatched id',r=>r.id='forged'],['invalid slot',r=>r.slot=-1],['noninteger slot',r=>r.slot=0.5],['invalid group',r=>r.group='forged'],['duplicate slot',r=>r.slot=1],
+])test(`Wguard3 learn ${name}`,()=>gameRegistryCase('learn',f=>{const r=JSON.parse(readFileSync(f.authored[0]));change(r);writeFileSync(f.authored[0],JSON.stringify(r));assert.equal(generatedAdmission.tracedGameRegistries(f.dir).has(f.path),false);assert.throws(f.check,/:blocked-source-list/);}));
+for(const file of ['engine.ts','view.tsx'])test(`Wguard3 learn missing ${file}`,()=>gameRegistryCase('learn',f=>{rmSync(join(f.authored[0],'..',file));assert.equal(generatedAdmission.tracedGameRegistries(f.dir).has(f.path),false);assert.throws(f.check,/:blocked-source-list/);}));
+test('Wguard3 challenge invalid filename',()=>gameRegistryCase('challenge',f=>{const id='Invalid-name';writeFileSync(join(f.dir,'src/challenge/registrations',id+'.ts'),'export const registration={};');writeFileSync(f.file,JSON.stringify([...f.ids,id].sort()));assert.equal(generatedAdmission.tracedGameRegistries(f.dir).has(f.path),false);assert.throws(f.check,/:blocked-source-list/);}));
+test('Wguard3 learn slot ordering and originals',()=>gameRegistryCase('learn',f=>{for(const [index,file] of f.authored.entries()){const r=JSON.parse(readFileSync(file));r.slot=f.ids.length-index;r.group='originals';writeFileSync(file,JSON.stringify(r));}f.ids.reverse();writeFileSync(f.file,JSON.stringify(f.ids));writeFileSync(f.artifact,`globalThis.ids=${JSON.stringify(f.ids)};`);assert.equal(f.check().passed,true);}));
+for(const kind of ['challenge','learn'])test(`Wguard3 ${kind} complete export gate`,()=>gameRegistryCase(kind,f=>{const result=checkExport(f.dir,f.out);assert.equal(result.admission.full,true);assert.equal(result.guard.policyDataChecked,true);assert.equal(result.guard.passed,true);writeFileSync(f.file,JSON.stringify([...f.ids,'untraced-game']));assert.throws(()=>checkExport(f.dir,f.out),/:blocked-source-list/);}));
+test('Wguard3 learn forged ledger cannot repair mismatched registration',()=>gameRegistryCase('learn',f=>{const r=JSON.parse(readFileSync(f.authored[0]));r.id='forged';writeFileSync(f.authored[0],JSON.stringify(r));writeFileSync(f.file,JSON.stringify([r.id,...f.ids.slice(1)]));assert.equal(generatedAdmission.tracedGameRegistries(f.dir).has(f.path),false);}));
+test('Wguard3 learn truncated ledger cannot hide incomplete registration',()=>gameRegistryCase('learn',f=>{const r=JSON.parse(readFileSync(f.authored[0]));r.group='forged';writeFileSync(f.authored[0],JSON.stringify(r));writeFileSync(f.file,'[]');assert.equal(generatedAdmission.tracedGameRegistries(f.dir).has(f.path),false);}));
+for(const kind of ['challenge','learn'])for(const encoded of [false,true])test(`Wguard3 ${kind} private hash content${encoded?' encoded':''}`,()=>gameRegistryCase(kind,f=>{const hash=encoded?'a1'.repeat(32):'a'.repeat(64);let ids;
+ if(kind==='challenge'){writeFileSync(join(f.dir,'src/challenge/registrations',hash+'.ts'),'export const registration={};');ids=[...f.ids,hash].sort();}
+ else {const game=join(f.dir,'src/learn/games',hash);mkdirSync(game);writeFileSync(join(game,'registration.json'),JSON.stringify({id:hash,slot:f.ids.length,group:'levels'}));writeFileSync(join(game,'engine.ts'),'export const engine={};');writeFileSync(join(game,'view.tsx'),'export const View=()=>null;');ids=[...f.ids,hash];}
+ const text=JSON.stringify(ids);writeFileSync(f.file,encoded?text.replace(hash,[...hash].map(c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')).join('')):text);writeFileSync(f.artifact,'globalThis.safe=1;');assert.throws(()=>guardTree(f.out,f.p,[{vocabularySha256:hash}],{sourceRoot:f.dir}),/:blocked-source-literal/);
+}));
+for(const kind of ['challenge','learn'])test(`Wguard3 ${kind} untraced ledger without broad terms`,()=>gameRegistryCase(kind,f=>{f.p.scan=[];writeFileSync(f.file,JSON.stringify([...f.ids,'untraced-game']));assert.throws(f.check,/:blocked-source-list/);}));
+for(const kind of ['challenge','learn'])test(`Wguard3 ${kind} numeric and 80-character IDs`,()=>gameRegistryCase(kind,f=>{
+ const extra=['game-2','long-'+ 'z'.repeat(75)];assert.equal(extra[1].length,80);
+ for(const [index,id] of extra.entries())if(kind==='challenge')writeFileSync(join(f.dir,'src/challenge/registrations',id+'.ts'),'export const registration={};');else {const game=join(f.dir,'src/learn/games',id);mkdirSync(game);writeFileSync(join(game,'registration.json'),JSON.stringify({id,slot:f.ids.length+index,group:'levels'}));writeFileSync(join(game,'engine.ts'),'export const engine={};');writeFileSync(join(game,'view.tsx'),'export const View=()=>null;');}
+ const ids=[...f.ids,...extra];if(kind==='challenge')ids.sort();writeFileSync(f.file,JSON.stringify(ids));writeFileSync(f.artifact,`globalThis.ids=${JSON.stringify(ids)};`);assert.equal(f.check().passed,true);
+}));
