@@ -23,8 +23,18 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: 
     <ScrollView ref={scroll} nestedScrollEnabled style={{ height: paneHeight, flexGrow: 0, borderRadius: 12, backgroundColor: '#23334D' }} contentContainerStyle={{ padding: 8, gap: 2 }} accessibilityLabel="Python program, scroll for all lines">
       {shown.map((line, i) => {
         const edit = d.slots.findIndex(s => s.line === i), chosen = d.mode === 'build' && edit === slot;
-        const text = <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, color: '#FFFFFF', flexShrink: 1 }}>{`${String(i + 1).padStart(2)}  ${line}`}</Copy>;
-        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Edit line ${i + 1}: ${line.trim()}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7 }}>{text}</PressableScale> : <View key={i} style={{ padding: 4, backgroundColor: frame?.line === i ? '#425372' : 'transparent' }}>{text}</View>;
+        const depth = (line.length - line.trimStart().length) / 4;
+        const spoken = `Line ${i + 1}${depth ? `, inside ${depth} ${depth === 1 ? 'block' : 'blocks'}` : ''}: ${line.trim()}`;
+        // A separate gutter keeps every wrapped continuation attached to its numbered statement.
+        // Display indentation is compact; the spoken/source form retains the exact Python blocks.
+        const text = <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 7 }}>
+          <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#B9CADE', width: 25, textAlign: 'right' }}>{i + 1}</Copy>
+          <View testID="lab-code-statement" style={{ flex: 1, minWidth: 0, paddingLeft: depth * 12, borderLeftWidth: depth ? 1 : 0, borderLeftColor: '#657995' }}>
+            <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#FFFFFF' }}>{line.trimStart()}</Copy>
+          </View>
+        </View>;
+        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7 }}>{text}</PressableScale> : <View key={i} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 4, backgroundColor: frame?.line === i ? '#425372' : 'transparent' }}>{text}</View>;
+
       })}
     </ScrollView>
   </View>;
@@ -36,7 +46,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: 
       </View>
     </>}
     {d.mode === 'predict' && !s.won && <ScrollView nestedScrollEnabled style={{ maxHeight: wide ? Math.max(120, win.height - 255) : large ? 140 : 200, flexGrow: 0 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Four possible outputs">
-      {d.choices.map((choice, i) => <Button compact quiet key={i} maxFontSizeMultiplier={codeCap} textStyle={{ fontFamily: face, fontSize: 14, textAlign: 'left' }} style={{ alignItems: 'stretch' }} label={`Output ${'ABCD'[i]}: ${choice.replace(/\n/g, ', then ')}${s.wrong.includes(i) ? ', crossed out' : ''}`} selected={s.prediction === i} disabled={inactive || s.wrong.includes(i) || s.edits >= FREE_EDITS && i !== d.answer} onPress={() => send(['p', i])}>{`${'ABCD'[i]}   ${choice || '(nothing)'}${s.wrong.includes(i) ? '  ×' : ''}`}</Button>)}
+      {d.choices.map((choice, i) => <Button compact quiet key={i} maxFontSizeMultiplier={codeCap} textStyle={{ fontFamily: face, fontSize: 14, textAlign: 'left' }} style={{ alignItems: 'stretch' }} label={`Output ${'ABCD'[i]}: ${choice.replace(/\n/g, ', then ')}${s.wrong.includes(i) ? ', crossed out' : ''}`} selected={s.prediction === i} disabled={inactive || s.wrong.includes(i) || s.edits >= FREE_EDITS && i !== d.answer} onPress={() => send(['p', i])}>{`${'ABCD'[i]}   ${choice.replace(/\n/g, ' · then ') || '(nothing)'}${s.wrong.includes(i) ? '  ×' : ''}`}</Button>)}
     </ScrollView>}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
       {s.won ? onNext && <Button compact maxFontSizeMultiplier={cap} onPress={onNext} disabled={!active}>Next program</Button> : <Button compact maxFontSizeMultiplier={cap} disabled={inactive || !ready(s, d)} onPress={() => { setTraceAt(0); send(['c']); }}>{d.mode === 'predict' ? 'Check prediction' : 'Run code'}</Button>}

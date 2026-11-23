@@ -36,3 +36,14 @@ it('a Predict answer is chosen before Check and a missed answer is crossed out a
   await act(async()=>tree!.update(<ProgramPanel d={d} state={state} send={send} active width={335}/>));
   expect(tree!.root.findAllByType('button').find(b=>b.props.label?.startsWith(`Output ${'ABCD'[wrong]}`))?.props.label).toContain('crossed out');
 });
+
+it('keeps code continuations inside a separate numbered/indented statement column and names output line breaks', async () => {
+  Object.assign(win,{width:393,height:852,fontScale:3.12});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  const d=deepPrograms.at(-1)!;await act(async()=>{tree=create(<ProgramPanel d={d} state={initialAttempt(d)} send={vi.fn()} active width={335}/>);});
+  const statements=tree!.root.findAllByProps({testID:'lab-code-statement'});expect(statements).toHaveLength(d.lines.length);
+  expect(statements.every(s=>s.props.style.flex===1&&s.props.style.minWidth===0)).toBe(true);
+  expect(statements.some(s=>s.props.style.paddingLeft>=24)).toBe(true);
+  expect(tree!.root.findAllByType('button').some(b=>b.props.accessibilityLabel?.includes('inside'))).toBe(true);
+  const p=schoolPrograms[4][0];await act(async()=>tree!.update(<ProgramPanel d={p} state={initialAttempt(p)} send={vi.fn()} active width={335}/>));
+  const choice=tree!.root.findAllByType('button').find(b=>b.props.label?.includes('6, then 0'))!;expect(text(choice)).toContain('6 · then 0');
+});
