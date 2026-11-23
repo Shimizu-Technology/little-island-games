@@ -54,7 +54,7 @@ it('a finished Challenge can inspect its trace even when the host disables furth
   const d=schoolPrograms[4][0],send=vi.fn();let state=step(initialAttempt(d),['p',d.answer],d)!;state=step(state,['c'],d)!;
   await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={send} active={false} width={704}/>);});
   const last=tree!.root.findAllByType('button').find(b=>text(b)==='Last line')!;expect(last.props.disabled).toBe(false);
-  await act(async()=>last.props.onPress());expect(send).not.toHaveBeenCalled();expect(tree!.root.findAllByType('p').some(p=>text(p)==='Trace · line 3')).toBe(true);
+  await act(async()=>last.props.onPress());expect(send).not.toHaveBeenCalled();expect(tree!.root.findAllByType('p').some(p=>text(p)==='Trace · line 3')).toBe(true);expect(tree!.root.findAllByType('p').some(p=>text(p)==='Scroll the finished program')).toBe(true);
 });
 
 it('only shows a checked draft trace; Undo restores it with Run disabled and a clamped cursor',async()=>{
@@ -120,5 +120,6 @@ it('shows the return goal and actual return when printed output alone matches',a
  await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={vi.fn()} active width={335}/>);});
  const copy=tree!.root.findAllByType('p').map(text).join('\n');
  expect(copy).toContain('Goal: 3');expect(copy).toContain('Last return goal: 2');
- expect(copy).toContain('Result: 3');expect(copy).toContain('Last return: 0');
+ expect(copy).toContain('Result: 3 (goal: 3)');expect(copy).toContain('Last return: 0 (goal: 2)');
+ expect(copy).toContain('did not match the goal');expect(copy).toContain('Scroll code · tap a blank');
 });
