@@ -1,0 +1,100 @@
+{
+ "format": 1,
+ "family": "shell-scale",
+ "slot": 364,
+ "catalogRevision": 24,
+ "band": "e",
+ "ordinals": [
+  372736,
+  6
+ ],
+ "sourceSha": "f75f15f62774b78a3dc3ca3ca67f97244bbc17ab",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "26dc29b970dcab31f5503563010870e061a61c17af8f31e15a387fa2ad86e1b5"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 51,
+  "kept": [
+   67108866,
+   67108869,
+   67108867,
+   67108871,
+   67108872,
+   67108870
+  ]
+ },
+ "rejects": {
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "construction": 16,
+  "bot-beat": 1
+ },
+ "distinct": {
+  "exact": 6,
+  "semantic": 6
+ },
+ "histograms": {
+  "technique": {
+   "sort-5-par-7": 6
+  },
+  "template": {
+   "e-20341": 1,
+   "e-20431": 1,
+   "e-23041": 1,
+   "e-23410": 1,
+   "e-31042": 1,
+   "e-40213": 1
+  },
+  "layout": {
+   "sort5-h0": 1,
+   "sort5-h2": 2,
+   "sort5-h3": 3
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   7,
+   7
+  ],
+  "exact": 6
+ },
+ "proofHashes": {
+  "witness": "5c85bc52beb2bdbe5161a08ab3f7ab93eee522f36c032f3dae75be5d32cbd1fa",
+  "trace": "75350fc557d4e9efdc96396cbaa40165ad08c4ce1a6adecd7c0e28016ac8afe2",
+  "claims": "2b4594ddd1606dce2a4d9bdecf0b9fd3c6978ad2f4f639034492d571a5f12024"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original balance-scale sorting (2-6 shells, par 1,3,5,7,10) and odd-pearl group weighing (9-pearl heavy par 2, 12-pearl heavy-or-light par 3) insight puzzles. Par table proven by exhaustive minimax search; every entry certified through public-knowledge twin tests."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 724,
+  "gzip": 261
+ },
+ "sha256": "3d3c7c1bc2e249569ddb6a2359c84fa3c064909d0ae3b0168ded45b18f81ab8a",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

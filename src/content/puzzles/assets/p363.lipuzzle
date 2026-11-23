@@ -1,0 +1,7 @@
+{"format":1,"family":"shell-scale","slot":363,"first":371712,"count":6,"band":"d","rules":1,"rng":1}
+[50331649,"group-left","d0-left-first",["h",9,0,0],["turns",2,2],0,[["turns",2]],["group-weigh-3v3"]]
+[50331650,"group-right","d1-right-mid",["h",9,1,4],["turns",2,2],0,[["turns",2]]]
+[50331651,"group-off","d2-off-first",["h",9,2,6],["turns",2,2],0,[["turns",2]]]
+[50331652,"group-left","d3-left-mid",["h",9,3,1],["turns",2,2],0,[["turns",2]]]
+[50331653,"group-right","d4-right-last",["h",9,4,5],["turns",2,2],0,[["turns",2]]]
+[50331654,"group-off","d5-off-mid",["h",9,5,7],["turns",2,2],0,[["turns",2]]]

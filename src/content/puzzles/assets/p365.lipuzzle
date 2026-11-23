@@ -1,0 +1,7 @@
+{"format":1,"family":"shell-scale","slot":365,"first":373760,"count":6,"band":"f","rules":1,"rng":1}
+[83886091,"sort6-h5","f-120435",["s",6,"351420","120435"],["turns",10,10],0,[["turns",10]],["six-in-ten"]]
+[83886082,"pearl12-left","f3-12p-left-heavy",["e",12,0,1,0],["turns",3,3],0,[["turns",3]],["group-weigh-12-either"]]
+[83886093,"sort6-h5","f-140235",["s",6,"241350","140235"],["turns",10,10],0,[["turns",10]],["six-in-ten"]]
+[83886083,"sort6-h0","f-534102",["s",6,"214503","534102"],["turns",10,10],0,[["turns",10]],["six-in-ten"]]
+[83886084,"pearl12-right","f4-12p-right-light",["e",12,2,6,1],["turns",3,3],0,[["turns",3]]]
+[83886086,"pearl12-off","f5-12p-off-heavy",["e",12,4,10,0],["turns",3,3],0,[["turns",3]]]

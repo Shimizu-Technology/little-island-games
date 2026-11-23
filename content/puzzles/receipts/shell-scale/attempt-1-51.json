@@ -1,0 +1,25 @@
+{
+ "format": 1,
+ "family": "shell-scale",
+ "seedBase": 1,
+ "attempts": 51,
+ "rejects": {
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "construction": 16,
+  "bot-beat": 1
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "a": 4,
+  "b": 4,
+  "c": 6,
+  "d": 6,
+  "e": 6,
+  "f": 6
+ },
+ "sourceSha": "f75f15f62774b78a3dc3ca3ca67f97244bbc17ab",
+ "status": "complete"
+}

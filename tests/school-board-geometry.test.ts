@@ -23,3 +23,7 @@ it.each([499,500,744,852])('Canoe Seats at %s takes the same strict boundary and
  expect(schoolEntryReveal('canoe-seats',false,height)).toBe(height<500);
  expect(schoolEntryReveal('canoe-seats',true,height)).toBe(true);
 });
+it.each([499,500,744,852])('Shell Scale at %s takes the same strict boundary and the AX reveal of a ported board',height=>{
+ expect(schoolEntryReveal('shell-scale',false,height)).toBe(height<500);
+ expect(schoolEntryReveal('shell-scale',true,height)).toBe(true);
+});

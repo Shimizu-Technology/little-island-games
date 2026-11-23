@@ -34,6 +34,8 @@ export const SCHOOL_BOARD_MIN = {
   'number-hop': 92, 'quick-practice': 64,
   // C2c: the sand canvas keeps its length labels at 12 pt or more down to this height (tests/c2c-turtle-view.test.tsx).
   'turtle-draw': 200,
+  // O5: the balance scale keeps its beam, hanging pans and shells readable down to this height.
+  'shell-scale': 170,
 } as const;
 export type SchoolBoard = keyof typeof SCHOOL_BOARD_MIN;
 
