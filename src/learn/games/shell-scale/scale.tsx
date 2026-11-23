@@ -57,9 +57,11 @@ export function BalanceScale({
     }
   }, [outcome, weighCount, reduced, targetDeg, tilt]);
 
-  const armHalf = Math.min(width * 0.34, 128);
-  const panW = Math.min(Math.max(width * 0.36, 102), 156);
+  const panW = Math.min(Math.max(width * 0.36, 102), 152);
+  const armHalf = Math.min(width * 0.31, width / 2 - panW / 2 - 4, 124);
   const panH = Math.min(Math.max(height * 0.38, 60), 84);
+  const totalPanH = panH + 26;
+  const cordEndY = totalPanH - 19;
   const pivotY = Math.round(height * 0.23);
   const panRestY = pivotY + 5;
   const radFactor = Math.PI / 180;
@@ -67,12 +69,24 @@ export function BalanceScale({
   const beamStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${tilt.get()}deg` }],
   }));
-  const leftPanStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -Math.sin(tilt.get() * radFactor) * armHalf }],
-  }));
-  const rightPanStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: Math.sin(tilt.get() * radFactor) * armHalf }],
-  }));
+  const leftPanStyle = useAnimatedStyle(() => {
+    const rad = tilt.get() * radFactor;
+    return {
+      transform: [
+        { translateX: armHalf * (1 - Math.cos(rad)) - 3 * Math.sin(rad) },
+        { translateY: -armHalf * Math.sin(rad) + 3 * (Math.cos(rad) - 1) },
+      ],
+    };
+  });
+  const rightPanStyle = useAnimatedStyle(() => {
+    const rad = tilt.get() * radFactor;
+    return {
+      transform: [
+        { translateX: -armHalf * (1 - Math.cos(rad)) - 3 * Math.sin(rad) },
+        { translateY: armHalf * Math.sin(rad) + 3 * (Math.cos(rad) - 1) },
+      ],
+    };
+  });
 
   const beamW = armHalf * 2 + 28;
   const centerX = width / 2;
@@ -144,39 +158,37 @@ export function BalanceScale({
         style={[
           {
             position: 'absolute',
-            left: Math.max(2, centerX - armHalf - panW / 2),
+            left: centerX - armHalf - panW / 2,
             top: panRestY,
             width: panW,
-            height: panH + 26,
+            height: totalPanH,
             alignItems: 'center',
           },
           leftPanStyle,
         ]}
       >
-        <View pointerEvents="none" style={{ width: panW, height: 26 }}>
-          <Svg width={panW} height={26} viewBox={`0 0 ${panW} 26`}>
-            <Line x1={panW / 2} y1={0} x2={9} y2={26} stroke={panRim} strokeWidth={2.2} />
-            <Line x1={panW / 2} y1={0} x2={panW - 9} y2={26} stroke={panRim} strokeWidth={2.2} />
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width: panW, height: cordEndY + 2, zIndex: 0 }}>
+          <Svg width={panW} height={cordEndY + 2} viewBox={`0 0 ${panW} ${cordEndY + 2}`}>
+            <Line x1={panW / 2} y1={0} x2={7} y2={cordEndY} stroke={panRim} strokeWidth={2.2} strokeLinecap="round" />
+            <Line x1={panW / 2} y1={0} x2={panW - 7} y2={cordEndY} stroke={panRim} strokeWidth={2.2} strokeLinecap="round" />
           </Svg>
         </View>
-        <View style={{ width: panW, height: panH, alignItems: 'center', justifyContent: 'flex-end', position: 'relative' }}>
-          <View pointerEvents="none" style={{ position: 'absolute', bottom: 14, left: 4, width: panW - 8, height: 12, zIndex: 1 }}>
-            <Svg width={panW - 8} height={12} viewBox={`0 0 ${panW - 8} 12`}>
-              <Ellipse cx={(panW - 8) / 2} cy={7} rx={(panW - 12) / 2} ry={5} fill="#C69745" stroke={ink} strokeWidth={1.8} />
-            </Svg>
-          </View>
-          <View style={{ zIndex: 2, width: panW - 14, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 15 }}>
-            {leftContent}
-          </View>
-          <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, width: panW, height: 22, zIndex: 3 }}>
-            <Svg width={panW} height={22} viewBox={`0 0 ${panW} 22`}>
-              <Path d={`M4 2 L${panW - 4} 2 Q${panW - 10} 20 ${panW / 2} 20 Q10 20 4 2 Z`} fill={panGold} stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />
-              <Line x1={12} y1={7} x2={panW - 12} y2={7} stroke="#FFF5D6" strokeWidth={2} strokeLinecap="round" />
-              <SvgText x={panW / 2} y={16.5} textAnchor="middle" fontSize={9.5} fontWeight="900" fill={woodDark}>
-                {leftLabel ?? 'LEFT'}
-              </SvgText>
-            </Svg>
-          </View>
+        <View pointerEvents="none" style={{ position: 'absolute', bottom: 14, left: 4, width: panW - 8, height: 12, zIndex: 1 }}>
+          <Svg width={panW - 8} height={12} viewBox={`0 0 ${panW - 8} 12`}>
+            <Ellipse cx={(panW - 8) / 2} cy={7} rx={(panW - 12) / 2} ry={5} fill="#C69745" stroke={ink} strokeWidth={1.8} />
+          </Svg>
+        </View>
+        <View style={{ position: 'absolute', bottom: 18, left: 7, width: panW - 14, alignItems: 'center', justifyContent: 'flex-end', zIndex: 2 }}>
+          {leftContent}
+        </View>
+        <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, width: panW, height: 22, zIndex: 3 }}>
+          <Svg width={panW} height={22} viewBox={`0 0 ${panW} 22`}>
+            <Path d={`M4 2 L${panW - 4} 2 Q${panW - 10} 20 ${panW / 2} 20 Q10 20 4 2 Z`} fill={panGold} stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />
+            <Line x1={12} y1={7} x2={panW - 12} y2={7} stroke="#FFF5D6" strokeWidth={2} strokeLinecap="round" />
+            <SvgText x={panW / 2} y={16.5} textAnchor="middle" fontSize={9.5} fontWeight="900" fill={woodDark}>
+              {leftLabel ?? 'LEFT'}
+            </SvgText>
+          </Svg>
         </View>
       </Animated.View>
 
@@ -185,39 +197,37 @@ export function BalanceScale({
         style={[
           {
             position: 'absolute',
-            left: Math.min(width - panW - 2, centerX + armHalf - panW / 2),
+            left: centerX + armHalf - panW / 2,
             top: panRestY,
             width: panW,
-            height: panH + 26,
+            height: totalPanH,
             alignItems: 'center',
           },
           rightPanStyle,
         ]}
       >
-        <View pointerEvents="none" style={{ width: panW, height: 26 }}>
-          <Svg width={panW} height={26} viewBox={`0 0 ${panW} 26`}>
-            <Line x1={panW / 2} y1={0} x2={9} y2={26} stroke={panRim} strokeWidth={2.2} />
-            <Line x1={panW / 2} y1={0} x2={panW - 9} y2={26} stroke={panRim} strokeWidth={2.2} />
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width: panW, height: cordEndY + 2, zIndex: 0 }}>
+          <Svg width={panW} height={cordEndY + 2} viewBox={`0 0 ${panW} ${cordEndY + 2}`}>
+            <Line x1={panW / 2} y1={0} x2={7} y2={cordEndY} stroke={panRim} strokeWidth={2.2} strokeLinecap="round" />
+            <Line x1={panW / 2} y1={0} x2={panW - 7} y2={cordEndY} stroke={panRim} strokeWidth={2.2} strokeLinecap="round" />
           </Svg>
         </View>
-        <View style={{ width: panW, height: panH, alignItems: 'center', justifyContent: 'flex-end', position: 'relative' }}>
-          <View pointerEvents="none" style={{ position: 'absolute', bottom: 14, left: 4, width: panW - 8, height: 12, zIndex: 1 }}>
-            <Svg width={panW - 8} height={12} viewBox={`0 0 ${panW - 8} 12`}>
-              <Ellipse cx={(panW - 8) / 2} cy={7} rx={(panW - 12) / 2} ry={5} fill="#C69745" stroke={ink} strokeWidth={1.8} />
-            </Svg>
-          </View>
-          <View style={{ zIndex: 2, width: panW - 14, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 15 }}>
-            {rightContent}
-          </View>
-          <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, width: panW, height: 22, zIndex: 3 }}>
-            <Svg width={panW} height={22} viewBox={`0 0 ${panW} 22`}>
-              <Path d={`M4 2 L${panW - 4} 2 Q${panW - 10} 20 ${panW / 2} 20 Q10 20 4 2 Z`} fill={panGold} stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />
-              <Line x1={12} y1={7} x2={panW - 12} y2={7} stroke="#FFF5D6" strokeWidth={2} strokeLinecap="round" />
-              <SvgText x={panW / 2} y={16.5} textAnchor="middle" fontSize={9.5} fontWeight="900" fill={woodDark}>
-                {rightLabel ?? 'RIGHT'}
-              </SvgText>
-            </Svg>
-          </View>
+        <View pointerEvents="none" style={{ position: 'absolute', bottom: 14, left: 4, width: panW - 8, height: 12, zIndex: 1 }}>
+          <Svg width={panW - 8} height={12} viewBox={`0 0 ${panW - 8} 12`}>
+            <Ellipse cx={(panW - 8) / 2} cy={7} rx={(panW - 12) / 2} ry={5} fill="#C69745" stroke={ink} strokeWidth={1.8} />
+          </Svg>
+        </View>
+        <View style={{ position: 'absolute', bottom: 18, left: 7, width: panW - 14, alignItems: 'center', justifyContent: 'flex-end', zIndex: 2 }}>
+          {rightContent}
+        </View>
+        <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, width: panW, height: 22, zIndex: 3 }}>
+          <Svg width={panW} height={22} viewBox={`0 0 ${panW} 22`}>
+            <Path d={`M4 2 L${panW - 4} 2 Q${panW - 10} 20 ${panW / 2} 20 Q10 20 4 2 Z`} fill={panGold} stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />
+            <Line x1={12} y1={7} x2={panW - 12} y2={7} stroke="#FFF5D6" strokeWidth={2} strokeLinecap="round" />
+            <SvgText x={panW / 2} y={16.5} textAnchor="middle" fontSize={9.5} fontWeight="900" fill={woodDark}>
+              {rightLabel ?? 'RIGHT'}
+            </SvgText>
+          </Svg>
         </View>
       </Animated.View>
     </View>
