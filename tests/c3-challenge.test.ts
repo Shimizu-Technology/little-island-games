@@ -55,3 +55,11 @@ it('validates saved School rounds, selects 4 of 16 without repeats and preserves
   }
   expect(validAttempt({...initialAttempt(schoolPrograms[0][0]),edits:1000},schoolPrograms[0][0])).toBe(false);expect(validAction(['e',0,99])).toBe(false);
 });
+
+it('automatic reserve guidance records assistance even with no misses and no explicit Help', () => {
+  const p = labPuzzles.find(p => p.descriptor.mode === 'build')!, d=p.descriptor;
+  let s = start(p);
+  for(let i=0;i<96;i++) { const next = registration.move(s,['e',0,i%2]);expect(next).not.toBeNull();s=next!; }
+  const finished = finish(s,d);expect(finished.result?.event).toBe('helped');expect(finished.result?.awards).toBe(0);
+  expect(registration.completionFacts?.(finished)?.helpUsed).toBe(true);
+});

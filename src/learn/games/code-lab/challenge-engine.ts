@@ -14,7 +14,7 @@ export const challengeEngine: ReplayEngine<LabProgram, Initial, Action, State> =
   create: d => ({ ...initialAttempt(d), descriptor: d }),
   step: (s, a, d) => {
     const next = step(s, a, d); if (!next) return null;
-    return { state: { ...next, descriptor: d }, event: a[0] === 'h' ? 'help' : a[0] === 'c' ? d.mode === 'predict' ? 'check' : 'run' : a[0] === 'z' ? 'reset' : 'edit', ...(a[0] === 'c' ? { correct: next.won } : {}) };
+    return { state: { ...next, descriptor: d }, event: a[0] === 'h' || next.help > s.help ? 'help' : a[0] === 'c' ? d.mode === 'predict' ? 'check' : 'run' : a[0] === 'z' ? 'reset' : 'edit', ...(a[0] === 'c' ? { correct: next.won } : {}) };
   },
   inspect: s => ({ solved: s.won, metrics: {}, edits: s.edits, solution: s.won ? sha256Hex(JSON.stringify(s.descriptor.mode === 'predict' ? s.prediction : s.picks)) : null, objectives: [] }),
 };

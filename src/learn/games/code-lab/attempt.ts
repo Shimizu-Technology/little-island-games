@@ -53,7 +53,7 @@ export function validAction(v: unknown): v is Action {
 export function step(s: Attempt, a: Action, d: LabProgram): Attempt | null {
   if (s.won) return null;
   if (a[0] === 'h') return a[1] <= s.help ? null : { ...s, help: a[1] };
-  if (a[0] === 'p') return d.mode !== 'predict' || s.prediction === a[1] || s.wrong.includes(a[1]) || s.edits >= FREE_EDITS && a[1] !== d.answer ? null : { ...s, prediction: a[1], edits: s.edits + 1 };
+  if (a[0] === 'p') return d.mode !== 'predict' || s.prediction === a[1] || s.wrong.includes(a[1]) || s.edits >= FREE_EDITS && a[1] !== d.answer ? null : { ...s, prediction: a[1], edits: s.edits + 1, help: s.edits + 1 >= FREE_EDITS ? Math.max(1, s.help) : s.help };
   if (a[0] === 'c') {
     if (!ready(s, d)) return null;
     const signature = d.mode === 'predict' ? s.prediction! : key(s.picks);
@@ -70,7 +70,7 @@ export function step(s: Attempt, a: Action, d: LabProgram): Attempt | null {
   else if (a[0] === 'z') { if (s.picks.every(i => i === -1)) return null; picks = d.slots.map(() => -1); undo = [...s.undo.slice(-15), [...s.picks]]; }
   else return null;
   if (s.edits >= FREE_EDITS && nearest(d, picks).distance >= nearest(d, s.picks).distance) return null;
-  return { ...s, picks, undo, edits: s.edits + 1 };
+  return { ...s, picks, undo, edits: s.edits + 1, help: s.edits + 1 >= FREE_EDITS ? Math.max(1, s.help) : s.help };
 }
 export function validAttempt(v: unknown, d: LabProgram): v is Attempt {
   if (!plain(v) || !exactKeys(v, ['picks', 'undo', 'prediction', 'wrong', 'checked', 'edits', 'help', 'won', 'runs', 'failed'])) return false;
