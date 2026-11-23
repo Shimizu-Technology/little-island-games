@@ -78,7 +78,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const ruleView = (slot: number) => {
     const option = s.rule[slot], slotDef = f.slots[slot], value = option >= 0 ? slotDef.options[option] : "";
     const text = slotDef.kind === "side" ? bucketLabel(value) : slotDef.kind === "when" ? (value ? whenLabel(value) : "on which catch? +") : slotDef.kind === "join" ? (value ? value.toUpperCase() : "AND/OR +") : value ? clueLabel(value, s.level) : "clue +";
-    return <Button key={slot} compact quiet selected={editing === slot} onPress={() => setEditing(editing === slot ? null : slot)} disabled={!active || s.running >= 0} label={`Choose ${slotDef.name}, currently ${value || "empty"}`}>{text}</Button>;
+    return <Button key={slot} maxFontSizeMultiplier={1.5} compact quiet selected={editing === slot} onPress={() => setEditing(editing === slot ? null : slot)} disabled={!active || s.running >= 0} label={`Choose ${slotDef.name}, currently ${value || "empty"}`}>{text}</Button>;
   };
   const bellNote = (i: number) => {
     if (!row || f.id !== "bell") return "";
@@ -88,7 +88,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   return <View style={{ gap: compact ? 4 : 12, paddingBottom: 20 }}>
     <Heading>{done ? "Dock sorter complete!" : `Belt ${s.index + 1} of 4`}</Heading>
     {row && <>
-      <Copy testID="tide-goal">{goalSentence(f, row.target)}</Copy>
+      <Copy testID="tide-goal" maxFontSizeMultiplier={2}>{goalSentence(f, row.target)}</Copy>
       {/* The column centres its child; stretching keeps the belt inside the column so it wraps instead of spilling under the rule. */}
       <BoardColumns drawing={<View testID="tide-belt-panel" style={{ alignSelf: "stretch", backgroundColor: "#E2F3F2", borderRadius: 18, padding: compact ? 8 : 12, gap: compact ? 6 : 8 }}>
         <CargoViewport {...(singleRow ? { ref: cargoScroll, horizontal: true, nestedScrollEnabled: true, testID: "tide-cargo-scroll", accessibilityLabel: "Cargo belt. Scroll sideways to see every catch." } : {})}>
@@ -103,26 +103,26 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
         {failure !== null && <Copy style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>Look at the outlined catch: the sorter found a bug.</Copy>}
       </View>
       }><View style={{ borderWidth: 2, borderColor: "#287A82", backgroundColor: "#FFF9EA", borderRadius: 16, padding: compact ? 8 : 12, gap: compact ? 5 : 7 }}>
-        <Copy style={{ fontWeight: "700" }}>BUILD THE RULE</Copy>
+        <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: "700" }}>BUILD THE RULE</Copy>
         <View testID="tide-rule" style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-          <Copy>IF</Copy>
-          {f.id === "bell" && <Copy>{"🔔 rings"}</Copy>}
-          {f.slots.map((slot, i) => slot.kind === "side" ? null : <React.Fragment key={i}>{f.id === "bell" && i === 1 && <Copy>AND</Copy>}{ruleView(i)}</React.Fragment>)}
-          <Copy>→</Copy>{s.level === 1 && <BucketPicture side={chosenSide === 1 ? "right" : "left"}/>}{ruleView(sideSlot)}
-          <Copy>{"ELSE → "}{bucketLabel(chosenSide < 0 ? "" : SIDE[1 - chosenSide])}</Copy>
+          <Copy maxFontSizeMultiplier={1.5}>IF</Copy>
+          {f.id === "bell" && <Copy maxFontSizeMultiplier={1.5}>{"🔔 rings"}</Copy>}
+          {f.slots.map((slot, i) => slot.kind === "side" ? null : <React.Fragment key={i}>{f.id === "bell" && i === 1 && <Copy maxFontSizeMultiplier={1.5}>AND</Copy>}{ruleView(i)}</React.Fragment>)}
+          <Copy maxFontSizeMultiplier={1.5}>→</Copy>{s.level === 1 && <BucketPicture side={chosenSide === 1 ? "right" : "left"}/>}{ruleView(sideSlot)}
+          <Copy maxFontSizeMultiplier={1.5}>{"ELSE → "}{bucketLabel(chosenSide < 0 ? "" : SIDE[1 - chosenSide])}</Copy>
         </View>
       </View>
-      {editing !== null && <View testID="tide-options" style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{f.slots[editing].options.map((v, o) => <Button key={v} compact selected={s.rule[editing] === o} onPress={() => change(editing, o)}>{f.slots[editing].kind === "side" ? bucketLabel(v) : f.slots[editing].kind === "when" ? whenLabel(v) : f.slots[editing].kind === "join" ? v.toUpperCase() : clueLabel(v, s.level)}</Button>)}</View>}
-      {traceAt >= 0 && s.running < 0 && complete(f, s.rule) && <View style={{ gap: 6, backgroundColor: "#E8F3EA", borderRadius: 14, padding: 10 }}><Copy style={{ fontWeight: "700" }}>TRACE IT · Catch {traceAt + 1}, the {catchWords(row.belt[traceAt])}: which bucket will your rule send it to?</Copy><View style={{ flexDirection: "row", gap: 8 }}>{([0, 1] as Side[]).map(bucket => <Button key={bucket} compact quiet selected={guess === bucket} onPress={() => { setGuess(bucket); sound("tap", true); if (bucket !== traced) { practice("think.code-logic", false); setMessage("Follow your rule one clue at a time. Try again."); } else setMessage("You traced it! Now run the belt to see if it sorts every catch."); }}>{bucket === 0 ? "← Left" : "Right →"}</Button>)}</View></View>}
-      {!!message && <Copy accessibilityLiveRegion="polite" testID="tide-message">{message}</Copy>}
-      {!!helpLine && s.running < 0 && <View testID="tide-hint" accessibilityLiveRegion="polite" style={{ padding: 10, borderRadius: 12, backgroundColor: "#FFF5CC" }}><Copy>{helpLine}</Copy></View>}
+      {editing !== null && <View testID="tide-options" style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{f.slots[editing].options.map((v, o) => <Button maxFontSizeMultiplier={1.5} key={v} compact selected={s.rule[editing] === o} onPress={() => change(editing, o)}>{f.slots[editing].kind === "side" ? bucketLabel(v) : f.slots[editing].kind === "when" ? whenLabel(v) : f.slots[editing].kind === "join" ? v.toUpperCase() : clueLabel(v, s.level)}</Button>)}</View>}
+      {traceAt >= 0 && s.running < 0 && complete(f, s.rule) && <View style={{ gap: 6, backgroundColor: "#E8F3EA", borderRadius: 14, padding: 10 }}><Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: "700" }}>TRACE IT · Catch {traceAt + 1}, the {catchWords(row.belt[traceAt])}: which bucket will your rule send it to?</Copy><View style={{ flexDirection: "row", gap: 8 }}>{([0, 1] as Side[]).map(bucket => <Button maxFontSizeMultiplier={1.5} key={bucket} compact quiet selected={guess === bucket} onPress={() => { setGuess(bucket); sound("tap", true); if (bucket !== traced) { practice("think.code-logic", false); setMessage("Follow your rule one clue at a time. Try again."); } else setMessage("You traced it! Now run the belt to see if it sorts every catch."); }}>{bucket === 0 ? "← Left" : "Right →"}</Button>)}</View></View>}
+      {!!message && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite" testID="tide-message">{message}</Copy>}
+      {!!helpLine && s.running < 0 && <View testID="tide-hint" accessibilityLiveRegion="polite" style={{ padding: 10, borderRadius: 12, backgroundColor: "#FFF5CC" }}><Copy maxFontSizeMultiplier={1.5}>{helpLine}</Copy></View>}
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-        {s.running < 0 ? <Button onPress={tryRun} disabled={!active || !complete(f, s.rule) || (traceAt >= 0 && guess !== traced)}>▶ Run the belt</Button> : <Button onPress={step} disabled={!active}>{s.running < row.belt.length ? "Next catch →" : "Next belt →"}</Button>}
-        {s.running < 0 && <Button quiet compact onPress={() => { if (accepted(undo(s))) setEditing(null); }} disabled={!active || !s.undo.length}>↶ Undo</Button>}
-        {s.running < 0 && <Button quiet compact onPress={() => { if (accepted(clear(s))) setEditing(null); }} disabled={!active || s.rule.every(x => x < 0)}>Clear</Button>}
+        {s.running < 0 ? <Button maxFontSizeMultiplier={1.5} onPress={tryRun} disabled={!active || !complete(f, s.rule) || (traceAt >= 0 && guess !== traced)}>▶ Run the belt</Button> : <Button maxFontSizeMultiplier={1.5} onPress={step} disabled={!active}>{s.running < row.belt.length ? "Next catch →" : "Next belt →"}</Button>}
+        {s.running < 0 && <Button maxFontSizeMultiplier={1.5} quiet compact onPress={() => { if (accepted(undo(s))) setEditing(null); }} disabled={!active || !s.undo.length}>↶ Undo</Button>}
+        {s.running < 0 && <Button maxFontSizeMultiplier={1.5} quiet compact onPress={() => { if (accepted(clear(s))) setEditing(null); }} disabled={!active || s.rule.every(x => x < 0)}>Clear</Button>}
       </View>
       </BoardColumns>
-      <Button quiet onPress={askHelp} disabled={!active || s.running >= 0 || s.hint >= 3}>{s.hint === 0 ? "Help: look" : s.hint === 1 ? "Help: one step" : s.hint === 2 ? "Help: show rule" : "Help used"}</Button>
+      <Button maxFontSizeMultiplier={1.5} quiet onPress={askHelp} disabled={!active || s.running >= 0 || s.hint >= 3}>{s.hint === 0 ? "Help: look" : s.hint === 1 ? "Help: one step" : s.hint === 2 ? "Help: show rule" : "Help used"}</Button>
     </>}
   </View>;
 }

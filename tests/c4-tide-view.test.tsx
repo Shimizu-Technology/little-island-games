@@ -196,3 +196,12 @@ it('in a wide landscape board the belt panel stretches to its column, so it wrap
   expect(panel.props.style.alignSelf).toBe('stretch');
   expect(tree!.root.findAll(n => String(n.type) === 'scroll' && n.props.testID === 'tide-cargo-scroll')).toHaveLength(0);
 });
+it('School chrome caps at 1.5x and the goal at 2x, so Run stays with the belt at AX5', async () => {
+  viewport.fontScale = 3.12;
+  const s = round(5);
+  await mount(<Board {...asBoard(props({ ...s, rule: [...currentRow(s)!.target] }))} />);
+  for (const b of buttons()) expect(b.props.maxFontSizeMultiplier, text(b)).toBeLessThanOrEqual(1.5);
+  expect(tree!.root.findAll(n => n.props.testID === 'tide-goal')[0].props.maxFontSizeMultiplier).toBe(2);
+  const trace = tree!.root.findAllByType('p').find(n => text(n).startsWith('TRACE IT'))!;
+  expect(trace.props.maxFontSizeMultiplier).toBe(1.5);
+});
