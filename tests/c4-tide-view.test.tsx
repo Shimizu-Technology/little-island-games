@@ -7,6 +7,7 @@ import { tidePuzzles } from '../src/learn/games/tide-logic/challenge-content';
 import { HELP, RUN, challengeEngine, pick, setBlock, type Action, type State } from '../src/learn/games/tide-logic/challenge-engine';
 import { engine, type LegacyTide, type TideV3 } from '../src/learn/games/tide-logic/engine';
 import { currentRow, frameOf } from '../src/learn/games/tide-logic/school';
+import { BoardSpaceProvider } from '../src/learn/BoardSpace';
 import { FRAMES, goalSentence, usesRuleWords } from '../src/learn/games/tide-logic/rules';
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
@@ -155,4 +156,14 @@ it('Hear rules appears only once the lead has voiced its line', async () => {
   await press('Hear rules');
   expect(heard.play).toHaveBeenCalledWith('c4-tide-find-rules', true);
   delete sources['c4-tide-find-rules'];
+});
+it('at AX5 on a phone in portrait the belt stays one sideways row, with labels capped, so the rule and Run stay in view', async () => {
+  viewport.fontScale = 3.12;
+  vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => setTimeout(() => f(0), 0) as unknown as number); vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id));
+  await mount(<BoardSpaceProvider space={{ width: 353, height: 600, large: true }}><Board {...asBoard(props(round(5)))} /></BoardSpaceProvider>);
+  const belt = tree!.root.findAll(n => n.type === 'scroll' && n.props.testID === 'tide-cargo-scroll');
+  expect(belt).toHaveLength(1); expect(belt[0].props.horizontal).toBe(true);
+  const labels = tree!.root.findAllByType('p').filter(n => /^\d+ · (big|small)$/.test(text(n)));
+  expect(labels.length).toBe(currentRow(round(5))!.belt.length);
+  for (const l of labels) expect(l.props.maxFontSizeMultiplier).toBe(1.3);
 });
