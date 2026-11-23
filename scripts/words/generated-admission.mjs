@@ -49,6 +49,36 @@ function literals(text,name) {
   const tree=ts.createSourceFile(name,text,ts.ScriptTarget.Latest,true,/tsx$/.test(name)?ts.ScriptKind.TSX:ts.ScriptKind.TS),out=[];
   function visit(n){if(ts.isStringLiteralLike(n) && n.parent?.name===n)return;if(ts.isStringLiteralLike(n) && (ts.isImportDeclaration(n.parent) || ts.isExportDeclaration(n.parent) || ts.isCallExpression(n.parent) && (n.parent.expression.getText(tree)==='require' || n.parent.expression.kind===ts.SyntaxKind.ImportKeyword)))return;if(ts.isStringLiteralLike(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n) || ts.isJsxText(n))out.push(n.text);ts.forEachChild(n,visit);}visit(tree);return out;
 }
+export const gameRegistryPaths=['src/challenge/registered-ids.json','src/learn/registered-ids.json'];
+// Mirror generate-game-registry.mjs: outputs never establish their own IDs.
+// A stale/forged ledger receives no admission and is scanned as an ordinary list.
+export function tracedGameRegistries(root) {
+  const traced=new Map();
+  for(const path of gameRegistryPaths) {
+    try {
+      const ledger=JSON.parse(readFileSync(join(root,path),'utf8'));let ids;
+      if(path==='src/challenge/registered-ids.json') {
+        ids=readdirSync(join(root,'src/challenge/registrations')).filter(name=>name.endsWith('.ts')).map(name=>name.slice(0,-3)).sort();
+        if(!ids.every(id=>/^[a-z][a-z0-9-]{0,79}$/.test(id)))continue;
+      } else {
+        const games=join(root,'src/learn/games'),registrations=[];
+        let complete=true;
+        for(const id of readdirSync(games)) {
+          const game=join(games,id),file=join(game,'registration.json');
+          if(!existsSync(file))continue;
+          const r=JSON.parse(readFileSync(file,'utf8'));
+          if(r.id!==id || !Number.isInteger(r.slot) || r.slot<0 || !['levels','originals'].includes(r.group) || !existsSync(join(game,'engine.ts')) || !existsSync(join(game,'view.tsx'))) {complete=false;break;}
+          registrations.push(r);
+        }
+        if(!complete || new Set(registrations.map(r=>r.slot)).size!==registrations.length)continue;
+        ids=registrations.sort((a,b)=>a.slot-b.slot).map(r=>r.id);
+      }
+      if(JSON.stringify(ledger)!==JSON.stringify(ids))continue;
+      traced.set(path,ids);
+    } catch { /* Missing/malformed authored registrations cannot admit a list. */ }
+  }
+  return traced;
+}
 // Expo Router's entry imports the route context; each route module is an entry.
 // Follow runtime imports/exports, literal require and dynamic import edges only.
 export function reachableAppModules(root) {
