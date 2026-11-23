@@ -67,10 +67,11 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: 
     <View testID="lab-workspace" style={{ flexDirection: wide ? 'row' : 'column', gap: 10, alignItems: 'stretch' }}>{code}{controls}</View>
     {!!s.help && !s.won && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, backgroundColor: C.soft, padding: 9 }} accessibilityLiveRegion="polite">{hint(d, s)}</Copy>}
     {showTrace && <View style={{ gap: 6 }}>
+      <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>Result: {result.output.join(' · then ') || '(nothing printed)'}</Copy>
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, fontWeight: '700' }}>Trace · line {(frame?.line ?? 0) + 1}</Copy>
       <ScrollView nestedScrollEnabled style={{ maxHeight: 100, flexGrow: 0 }} accessibilityLabel="Values and printed output"><Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>{frame ? Object.entries(frame.watch).map(([k, v]) => `${k} = ${pythonText(v)}`).join(' · ') : 'No values yet'}{'\n'}Printed: {frame?.output.join(' · ') || '(nothing yet)'}</Copy></ScrollView>
       {result.error && <Copy maxFontSizeMultiplier={cap}>{result.error}</Copy>}
-      <View style={{ flexDirection: 'row', gap: 6 }}><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt === 0} onPress={() => { const next = traceAt - 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Earlier line</Button><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt >= result.trace.length - 1} onPress={() => { const next = traceAt + 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Next line</Button></View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt === 0} onPress={() => { const next = traceAt - 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Earlier line</Button><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt >= result.trace.length - 1} onPress={() => { const next = traceAt + 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Next line</Button><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt >= result.trace.length - 1} onPress={() => { const next = result.trace.length - 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Last line</Button></View>
     </View>}
   </View>;
 }
