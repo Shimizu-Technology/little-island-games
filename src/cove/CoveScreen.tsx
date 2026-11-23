@@ -117,10 +117,19 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
       {rowNames.map(name => {
         const games = items.filter(e => infoFor(e.game).row === name);
         const children: React.ReactNode[] = games.map(e => <View key={e.game} style={{ gap: 6 }}>{tile(e.game, infoFor(e.game).name, `${shownCount(e, [], packedHidden[e.game] ?? 0)} puzzles · all bands open`, () => choose(e))}<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}><Button quiet compact maxFontSizeMultiplier={buttonMax} onPress={() => setBrowse(e)}>Bands & packs</Button><Button quiet compact maxFontSizeMultiplier={buttonMax} disabled={!local.ready} onPress={() => void local.change({ type: 'favorite', game: e.game })}>{local.data.favorites.includes(e.game) ? '★ Favorite' : '☆ Favorite'}</Button></View></View>);
-        if (name === 'Logic') children.push(tile('reef-sweep', 'Reef Sweep', 'A shortcut to the same saved game in the Hall', () => void leave(() => openGame('reef-sweep'))));
         if (name === 'Island originals') children.push(...shelfGames.filter(g => (learningGroups as Partial<Record<string, 'levels' | 'originals'>>)[g.id] === 'originals').map(g => tile(g.id, g.name, 'Same game, same saved work as School', () => void leave(() => openGame(g.id)))));
         return row(name, children);
       })}
+      {row('Also here', [
+        tile(
+          'reef-sweep',
+          'Reef Sweep',
+          store.save.board?.['reef-sweep']?.position.outcome === null
+            ? 'Continue your saved reef · same save as Game Hall'
+            : 'No-guess pearl hunt · same save as Game Hall',
+          () => void leave(() => openGame('reef-sweep'))
+        ),
+      ])}
 
       <View style={{ gap: 8 }}><Heading maxFontSizeMultiplier={cap('Solve together', 22)} style={{ fontSize: 22 }}>Solve together</Heading><Copy maxFontSizeMultiplier={CHROME_MAX}>Choose a partner before opening a new puzzle. Both people get a Together finish. You can also confirm a partner at the finish. A paused Together puzzle keeps its original people.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Chip maxFontSizeMultiplier={buttonMax} selected={partner === null} onPress={() => setPartner(null)}>On my own</Chip>{people.filter(p => p.id !== owner).map(p => <Chip key={p.id} maxFontSizeMultiplier={buttonMax} numberOfLines={1} label={p.name} selected={partner === p.id} onPress={() => setPartner(p.id)}>{p.name}</Chip>)}</View></View>
       <Button quiet maxFontSizeMultiplier={buttonMax} onPress={() => setOptions(true)}>Reader level, mistake settings and grown-up choices</Button>

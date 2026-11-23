@@ -1,0 +1,4 @@
+{
+  "p4-reef-sweep-rules": "Open every pearl space without touching a sea urchin. Your first opening and its neighbors are safe, and every new reef can be solved by thinking with no guessing. A number counts urchins in the eight touching spaces, including diagonals. Switch to Flag urchins or press and hold a tile to mark a suspected urchin. Flags are reminders, not proof.",
+  "p4-reef-sweep-challenge-intro": "Every certified reef can be solved by public clues with zero guessing. Start at the ringed space and work from single clues up to overlapping numbers and remaining urchin counts."
+}
