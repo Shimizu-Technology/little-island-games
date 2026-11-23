@@ -25,6 +25,7 @@ import { POLY_BLUEPRINTS, TANGRAM_SILHOUETTES, type TangramPuzzleDef } from "./s
 import {
   atomKey,
   canPlaceAtoms,
+  connectedGroups,
   flipAtoms,
   normalizeAtoms,
   rotateAtoms,
@@ -241,42 +242,6 @@ function buildTangramTask(level: number, seed: number, index: number): ShapeTask
     allowRotate,
     allowFlip,
   };
-}
-
-function groupsTouch4(a: readonly Cell[], b: readonly Cell[]): boolean {
-  const bSet = new Set(b.map(([x, y]) => `${x},${y}`));
-  for (const [x, y] of a) {
-    if (bSet.has(`${x + 1},${y}`) || bSet.has(`${x - 1},${y}`) || bSet.has(`${x},${y + 1}`) || bSet.has(`${x},${y - 1}`)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/** Merge 4-connected blueprint parts down to `targetCount` pieces so every merged piece stays strictly 4-connected. */
-function connectedGroups(parts: readonly { cells: Cell[] }[], targetCount: number): number[][] {
-  const groups = parts.map((_, i) => [i]);
-  while (groups.length > targetCount) {
-    let best: [number, number] | null = null;
-    let bestSize = Infinity;
-    for (let i = 0; i < groups.length; i++) {
-      const cellsI = groups[i].flatMap((idx) => parts[idx].cells);
-      for (let j = i + 1; j < groups.length; j++) {
-        const cellsJ = groups[j].flatMap((idx) => parts[idx].cells);
-        if (!groupsTouch4(cellsI, cellsJ)) continue;
-        const sz = cellsI.length + cellsJ.length;
-        if (sz < bestSize) {
-          bestSize = sz;
-          best = [i, j];
-        }
-      }
-    }
-    if (!best) break;
-    const [i, j] = best;
-    groups[i] = [...groups[i], ...groups[j]];
-    groups.splice(j, 1);
-  }
-  return groups;
 }
 
 const taskCache = new Map<string, ShapeTask>();
@@ -515,7 +480,9 @@ export function shapeHint(s: ShapeState): {
       suggestion: null,
     };
   }
-  const nextMove = res.solutions[0].find((pl) => !s.placed.some((r) => r.pieceIndex === pl.pieceIndex)) ?? null;
+  const nextMove = !task.freeOrder
+    ? res.solutions[0].find((pl) => pl.pieceIndex === s.placed.length) ?? null
+    : res.solutions[0].find((pl) => !s.placed.some((r) => r.pieceIndex === pl.pieceIndex)) ?? null;
   if (!nextMove) return { deadEnd: false, text: task.hint, suggestion: null };
   const pieceName = task.pieces[nextMove.pieceIndex].name;
   return {

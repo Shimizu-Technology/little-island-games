@@ -398,19 +398,45 @@ export function matchCatalogRule(ruleId: RuleId, visible: readonly (string | nul
       case "two-interleaved": {
         if (!isNumber) return [];
         const vals = visible.map((v) => (v === null ? null : Number(v)));
-        // Determine even track (indices 0,2,4,6) and odd track (indices 1,3,5) independently.
-        const evens = [0, 2, 4, 6].filter((i) => vals[i] !== null);
-        const odds = [1, 3, 5].filter((i) => vals[i] !== null);
-        if (evens.length < 2 || odds.length < 2) return [];
-        const ed = vals[evens[1]]! - vals[evens[0]]!, es = (evens[1] - evens[0]) / 2;
-        const od = vals[odds[1]]! - vals[odds[0]]!, os = (odds[1] - odds[0]) / 2;
-        if (ed <= 0 || od <= 0 || ed % es !== 0 || od % os !== 0) return [];
-        const p = ed / es, q = od / os;
-        if (p < 1 || p > 9 || q < 1 || q > 9 || p === q) return [];
-        const a = vals[evens[0]]! - (evens[0] / 2) * p;
-        const b = vals[odds[0]]! - ((odds[0] - 1) / 2) * q;
-        if (a < 1 || a > 30 || b < 1 || b > 30) return [];
-        record([0, 1, 2, 3, 4, 5, 6].map((i) => String(i % 2 === 0 ? a + (i / 2) * p : b + ((i - 1) / 2) * q)));
+        // Enumerate all valid catalog (a, p) for even track (0,2,4,6) and (b, q) for odd track (1,3,5)
+        // matching every visible stone — never treat an underdetermined track (< 2 visible stones) as ruled out.
+        const evenOpts: [number, number][] = [];
+        const aLo = vals[0] !== null ? Math.max(1, vals[0]) : 1;
+        const aHi = vals[0] !== null ? Math.min(30, vals[0]) : 30;
+        for (let a = aLo; a <= aHi; a++) {
+          for (let p = 1; p <= 9; p++) {
+            if (
+              (vals[0] === null || vals[0] === a) &&
+              (vals[2] === null || vals[2] === a + p) &&
+              (vals[4] === null || vals[4] === a + 2 * p) &&
+              (vals[6] === null || vals[6] === a + 3 * p)
+            ) {
+              evenOpts.push([a, p]);
+            }
+          }
+        }
+        if (evenOpts.length === 0) return [];
+        const oddOpts: [number, number][] = [];
+        const bLo = vals[1] !== null ? Math.max(1, vals[1]) : 1;
+        const bHi = vals[1] !== null ? Math.min(30, vals[1]) : 30;
+        for (let b = bLo; b <= bHi; b++) {
+          for (let q = 1; q <= 9; q++) {
+            if (
+              (vals[1] === null || vals[1] === b) &&
+              (vals[3] === null || vals[3] === b + q) &&
+              (vals[5] === null || vals[5] === b + 2 * q)
+            ) {
+              oddOpts.push([b, q]);
+            }
+          }
+        }
+        for (const [a, p] of evenOpts) {
+          for (const [b, q] of oddOpts) {
+            if (p === q) continue;
+            record([0, 1, 2, 3, 4, 5, 6].map((i) => String(i % 2 === 0 ? a + (i / 2) * p : b + ((i - 1) / 2) * q)));
+            if (solutions.length >= 2) return solutions;
+          }
+        }
         return solutions;
       }
       default:
@@ -461,10 +487,11 @@ export function matchCatalogRule(ruleId: RuleId, visible: readonly (string | nul
               rowOpts[r].push([a, b, c]);
             }
           }
-          if (rowOpts[r].length === 0 || rowOpts[r].length > 16) return [];
+          if (rowOpts[r].length === 0) return [];
         }
         for (const r0 of rowOpts[0]) for (const r1 of rowOpts[1]) for (const r2 of rowOpts[2]) {
           record([...r0, ...r1, ...r2].map(String));
+          if (solutions.length >= 2) return solutions;
         }
         return solutions;
       }

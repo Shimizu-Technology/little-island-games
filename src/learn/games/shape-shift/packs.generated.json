@@ -3,7 +3,7 @@
     "slot": 288,
     "first": 294912,
     "count": 50,
-    "packHash": "b2fdfbf6961ae5bec24781c26b3fc03c6ecf2d3073e6de1e6fd3b6d9a3e709c0",
+    "packHash": "7ab5bc9fdc54722b714c9b5669d1b92e9ea5857a9a38dc205d9f37eaf904d82e",
     "rules": 1,
     "band": "a"
   },
@@ -35,7 +35,7 @@
     "slot": 292,
     "first": 299008,
     "count": 50,
-    "packHash": "d71c7162bf4b6c77e314b498847dcc83f75f08f74dd1e9c941ca0f17e1e31e73",
+    "packHash": "5361c47fff4be27a4d297870287f651f150af561616c87bb22d0098e7321e469",
     "rules": 1,
     "band": "e"
   },

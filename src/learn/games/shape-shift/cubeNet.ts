@@ -95,7 +95,7 @@ export const VALID_CUBE_NETS: readonly CubeNetTemplate[] = [
 export const INVALID_CUBE_NETS: readonly CubeNetTemplate[] = [
   { id: "bad-l4", name: "Long L", valid: false, cells: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [0, 2]] },
   { id: "bad-rect", name: "2 by 3 block", valid: false, cells: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]] },
-  { id: "bad-u", name: "U frame", valid: false, cells: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 2]] },
+  { id: "bad-u", name: "C hook", valid: false, cells: [[0, 0], [1, 0], [0, 1], [0, 2], [1, 2], [2, 2]] },
   { id: "bad-line", name: "Five-in-a-row", valid: false, cells: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [2, 1]] },
   { id: "bad-clump", name: "Box with tail", valid: false, cells: [[0, 0], [1, 0], [0, 1], [1, 1], [2, 1], [3, 1]] },
   { id: "bad-same-side", name: "Two wings same side", valid: false, cells: [[0, 0], [1, 0], [1, 1], [0, 2], [1, 2], [1, 3]] },

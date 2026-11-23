@@ -10,7 +10,7 @@ import {
 } from "./cubeNet";
 import type { Cell } from "./legacy";
 import { DEEP_POLY_DEFS, POLY_BLUEPRINTS, TANGRAM_SILHOUETTES } from "./silhouettes";
-import { normalizeAtoms, solveExactCover } from "./solver";
+import { connectedGroups, normalizeAtoms, solveExactCover } from "./solver";
 
 // Inline Challenge puzzles for Shape Shift use banks 294, 295, and 296 with dares 940 through 987.
 export const DEEP_BANK = 294;
@@ -223,10 +223,8 @@ function buildSchoolDarePuzzles(): Puzzle<ShapeChallengeDescriptor>[] {
   // Level 2: Fewest turns (Par on metric 'turns') — 4 blueprints
   for (let i = 0; i < 4; i++) {
     const bp = POLY_BLUEPRINTS[i];
-    const pieces = [
-      normalizeAtoms([...bp.parts[0].cells, ...bp.parts[1].cells]) as Cell[],
-      normalizeAtoms([...bp.parts[2].cells, ...bp.parts[3].cells]) as Cell[],
-    ];
+    const groups = connectedGroups(bp.parts, 2);
+    const pieces = groups.map((g) => normalizeAtoms(g.flatMap((j) => bp.parts[j].cells)) as Cell[]);
     const silhouette = normalizeAtoms(bp.parts.flatMap((pt) => pt.cells)) as Cell[];
     const payload: ShapePackPayload = {
       kind: "poly",
@@ -263,11 +261,8 @@ function buildSchoolDarePuzzles(): Puzzle<ShapeChallengeDescriptor>[] {
   // Level 3: No gold corner (Blind) — 4 blueprints (3 pieces)
   for (let i = 0; i < 4; i++) {
     const bp = POLY_BLUEPRINTS[4 + i];
-    const pieces = [
-      normalizeAtoms([...bp.parts[0].cells, ...bp.parts[1].cells]) as Cell[],
-      normalizeAtoms(bp.parts[2].cells) as Cell[],
-      normalizeAtoms(bp.parts[3].cells) as Cell[],
-    ];
+    const groups = connectedGroups(bp.parts, 3);
+    const pieces = groups.map((g) => normalizeAtoms(g.flatMap((j) => bp.parts[j].cells)) as Cell[]);
     const silhouette = normalizeAtoms(bp.parts.flatMap((pt) => pt.cells)) as Cell[];
     const payload: ShapePackPayload = {
       kind: "poly",

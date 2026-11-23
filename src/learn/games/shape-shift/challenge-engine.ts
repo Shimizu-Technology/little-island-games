@@ -36,8 +36,10 @@ export type ShapeChallengeDescriptor = {
  * - `['c']` — whole-answer Check
  * - `['k', choiceIdx]` — pick cube face or fold-net option
  * - `['z']` — reset draft
- * - `['h']` — Help ladder step (Look -> Think -> One step)
+ * - `['h']` — Help ladder step (Look -> Think / reveal answer; bounded so saturated Help never fills the log)
  * - `['s', pieceIndex, orientIndex, x, y]` — hinted One-step placement (records help!)
+ * - `['x']` / `['x', pieceIndex]` — assisted clear of a dead-end board or lift of one placed piece (records help and fits inside the assistance reserve)
+ * - `['a', choiceIdx]` — assisted cube face/net selection after Help (records help and fits inside the assistance reserve)
  */
 export type Action =
   | readonly ["p", number, number, number, number, number]
@@ -47,7 +49,10 @@ export type Action =
   | readonly ["k", number]
   | readonly ["z"]
   | readonly ["h"]
-  | readonly ["s", number, number, number, number];
+  | readonly ["s", number, number, number, number]
+  | readonly ["x"]
+  | readonly ["x", number]
+  | readonly ["a", number];
 
 export type Initial = 0;
 export type Payload = ReplayPayload<Initial, Action>;
@@ -66,16 +71,18 @@ export type State = {
   lastFeedback: string | null;
 };
 
-export const ASSIST_ACTIONS = 14;
-export const ASSIST_BYTES = 560;
-export const isHelpAction = (a: Action): boolean => a[0] === "h" || a[0] === "s";
+// Worst-case recovery reserve: 1st miss (1) + 2 Help steps (2) + assisted clear (1) + up to 7 Tangram placements (7) + Check (1) + terminal result payload (~260 B) <= 16 actions / 600 bytes.
+export const ASSIST_ACTIONS = 16;
+export const ASSIST_BYTES = 600;
+export const isHelpAction = (a: Action): boolean => a[0] === "h" || a[0] === "s" || a[0] === "x" || a[0] === "a";
 
 export function isAction(v: unknown): v is Action {
   if (!Array.isArray(v) || v.length === 0) return false;
   const tag = v[0];
   if (tag === "m" || tag === "c" || tag === "z" || tag === "h") return v.length === 1;
+  if (tag === "x") return v.length === 1 || (v.length === 2 && uint(v[1], 7));
   if (tag === "r") return v.length === 2 && uint(v[1], 7);
-  if (tag === "k") return v.length === 2 && uint(v[1], 5);
+  if (tag === "k" || tag === "a") return v.length === 2 && uint(v[1], 5);
   if (tag === "p") return v.length === 6 && uint(v[1], 7) && uint(v[2], 7) && uint(v[3], 12) && uint(v[4], 12) && uint(v[5], 12);
   if (tag === "s") return v.length === 5 && uint(v[1], 7) && uint(v[2], 7) && uint(v[3], 12) && uint(v[4], 12);
   return false;
@@ -95,16 +102,20 @@ export function challengeShapeHint(s: State): {
   text: string;
   deadEnd: boolean;
   nextPlacement: readonly [number, number, number, number] | null;
+  nextCubePick: number | null;
 } {
   const p = s.descriptor.payload;
   if (p.kind === "cube-opp") {
     const face = p.faces[p.askIndex];
-    if (s.hintStage <= 1) return { text: `Picture ${face} resting flat on the table and fold its touching squares straight up.`, deadEnd: false, nextPlacement: null };
-    return { text: `Across the folded cube from ${face}, the opposite face is ${p.answer}.`, deadEnd: false, nextPlacement: null };
+    const correctIdx = p.faces.indexOf(p.answer);
+    const nextCubePick = correctIdx >= 0 && s.cubePick !== correctIdx ? correctIdx : null;
+    if (s.hintStage <= 1) return { text: `Picture ${face} resting flat on the table and fold its touching squares straight up.`, deadEnd: false, nextPlacement: null, nextCubePick };
+    return { text: `Across the folded cube from ${face}, the opposite face is ${p.answer}.`, deadEnd: false, nextPlacement: null, nextCubePick };
   }
   if (p.kind === "cube-fold") {
-    if (s.hintStage <= 1) return { text: "Check if any two squares fold onto the same side of the cube. A valid net covers all 6 sides with no overlap.", deadEnd: false, nextPlacement: null };
-    return { text: `Net ${p.answerIndex + 1} folds into a closed cube with all 6 sides covered.`, deadEnd: false, nextPlacement: null };
+    const nextCubePick = s.cubePick !== p.answerIndex ? p.answerIndex : null;
+    if (s.hintStage <= 1) return { text: "Check if any two squares fold onto the same side of the cube. A valid net covers all 6 sides with no overlap.", deadEnd: false, nextPlacement: null, nextCubePick };
+    return { text: `Net ${p.answerIndex + 1} folds into a closed cube with all 6 sides covered.`, deadEnd: false, nextPlacement: null, nextCubePick };
   }
 
   const res = solveExactCover(p.silhouette, p.pieces, {
@@ -115,14 +126,15 @@ export function challengeShapeHint(s: State): {
   });
   if (res.count === 0) {
     return {
-      text: "The placed pieces leave a gap no remaining piece can fill. Tap a placed piece to lift it back.",
+      text: "The placed pieces leave a gap no remaining piece can fill. Tap Clear dead end or tap a placed piece to lift it back.",
       deadEnd: true,
       nextPlacement: null,
+      nextCubePick: null,
     };
   }
   const next = res.solutions[0].find((pl) => !s.placed.some((e) => e.pieceIndex === pl.pieceIndex));
   if (!next) {
-    return { text: "Every square is covered! Tap Check to finish.", deadEnd: false, nextPlacement: null };
+    return { text: "Every square is covered! Tap Check to finish.", deadEnd: false, nextPlacement: null, nextCubePick: null };
   }
   const orients = uniqueOrientations(p.pieces[next.pieceIndex], p.allowRotate, p.allowFlip);
   const sig = normalizeAtoms(next.cells).map(atomKey).join(";");
@@ -133,12 +145,14 @@ export function challengeShapeHint(s: State): {
       text: `Look at piece ${next.pieceIndex + 1}: it fits snugly around column ${next.x + 1}, row ${next.y + 1}.`,
       deadEnd: false,
       nextPlacement: [next.pieceIndex, oIdx, next.x, next.y],
+      nextCubePick: null,
     };
   }
   return {
     text: `Turn or flip piece ${next.pieceIndex + 1} to match the outline at column ${next.x + 1}, row ${next.y + 1}, or tap One step.`,
     deadEnd: false,
     nextPlacement: [next.pieceIndex, oIdx, next.x, next.y],
+    nextCubePick: null,
   };
 }
 
@@ -164,8 +178,9 @@ export const challengeEngine: ReplayEngine<ShapeChallengeDescriptor, Initial, Ac
     const p = d.payload;
 
     if (a[0] === "h") {
+      if (s.hintStage >= 2) return null;
       return {
-        state: { ...s, hintStage: Math.min(s.hintStage + 1, 3) },
+        state: { ...s, hintStage: s.hintStage + 1 },
         event: "help",
       };
     }
@@ -178,16 +193,37 @@ export const challengeEngine: ReplayEngine<ShapeChallengeDescriptor, Initial, Ac
       };
     }
 
-    if (a[0] === "m") {
-      // A wrong drop counts as a failed attempt (run with correct: false) so Plan ("First drop each piece") is honest!
+    if (a[0] === "x") {
+      if ((p.kind !== "poly" && p.kind !== "tangram") || s.placed.length === 0) return null;
+      if (a.length === 2) {
+        const idx = a[1];
+        if (!s.placed.some((pl) => pl.pieceIndex === idx)) return null;
+        return {
+          state: { ...s, placed: s.placed.filter((pl) => pl.pieceIndex !== idx), checked: false, lastFeedback: null },
+          event: "help",
+        };
+      }
       return {
-        state: { ...s, misses: s.misses + 1, lastFeedback: "It did not fit at that spot. Try another square, turn, or flip!" },
-        event: "run",
-        correct: false,
+        state: { ...s, placed: [], checked: false, lastFeedback: null },
+        event: "help",
       };
     }
 
-    if (a[0] === "k") {
+    if (a[0] === "m") {
+      // First wrong drop emits a failed run (locking monotonic failed evidence for Plan/Clean dares);
+      // further misses stay ordinary edits so repeated misses cannot spend the completion/assistance reserve.
+      const nextState = {
+        ...s,
+        misses: s.misses + 1,
+        lastFeedback: "It did not fit at that spot. Try another square, turn, or flip!",
+      };
+      if (s.misses === 0) {
+        return { state: nextState, event: "run", correct: false };
+      }
+      return { state: nextState, event: "edit" };
+    }
+
+    if (a[0] === "k" || a[0] === "a") {
       if (p.kind !== "cube-opp" && p.kind !== "cube-fold") return null;
       const idx = a[1];
       if (p.kind === "cube-opp" && (idx > 5 || idx === p.askIndex)) return null;
@@ -195,7 +231,7 @@ export const challengeEngine: ReplayEngine<ShapeChallengeDescriptor, Initial, Ac
       if (s.cubePick === idx) return null;
       return {
         state: { ...s, cubePick: idx, checked: false, lastFeedback: null },
-        event: "edit",
+        event: a[0] === "a" ? "help" : "edit",
       };
     }
 

@@ -35,6 +35,7 @@ import {
   INVALID_CUBE_NETS,
   VALID_CUBE_NETS,
   foldCubeNet,
+  orientNet,
 } from "../src/learn/games/shape-shift/cubeNet";
 import {
   DEEP_POLY_DEFS,
@@ -43,8 +44,10 @@ import {
   tangramTopology,
 } from "../src/learn/games/shape-shift/silhouettes";
 import {
+  atomsSignature,
   canonicalTilingHash,
   countExactCoverIndependent,
+  is4Connected,
   normalizeAtoms,
   solveExactCover,
   uniqueOrientations,
@@ -63,9 +66,20 @@ import {
 } from "../src/learn/games/shape-shift/engine";
 import { Board as ShapeBoard } from "../src/learn/games/shape-shift/view";
 import { dropGridCoord } from "../src/learn/games/shape-shift/ShapeCanvas";
-import { challengeEngine as shapeChallengeEngine } from "../src/learn/games/shape-shift/challenge-engine";
+import {
+  challengeEngine as shapeChallengeEngine,
+  challengeShapeHint,
+  type Payload as ShapePayload,
+} from "../src/learn/games/shape-shift/challenge-engine";
 import { shapeChallengePuzzles } from "../src/learn/games/shape-shift/challenge-content";
 import { ChallengeBoard as ShapeChallengeBoard } from "../src/learn/games/shape-shift/challenge-view";
+import { registration as patternChallengeReg } from "../src/learn/games/pattern-path/challenge";
+import { registration as shapeChallengeReg } from "../src/learn/games/shape-shift/challenge";
+import { type Payload as PatternPayload } from "../src/learn/games/pattern-path/challenge-engine";
+import { emptyChallenge } from "../src/state/challenge";
+import { decodeShapeTuple } from "../src/puzzles/adapters/shape-shift";
+import { decodePatternTuple } from "../src/puzzles/adapters/pattern-path";
+import type { Cell } from "../src/learn/games/shape-shift/legacy";
 
 const { Pass } = vi.hoisted(() => ({ Pass: ({ children }: { children?: unknown }) => children as never }));
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
@@ -536,5 +550,332 @@ describe("T2 UI, AX5 rendering, and design-only speech staging", () => {
     expect(stage).toEqual({ status: "design-only", shipping: false });
     const lines = JSON.parse(readFileSync("scripts/learn/t2-thinking.json", "utf8")) as Record<string, string>;
     expect(Object.keys(lines).length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("T2 Fix Round 1 regressions (R1–R6)", () => {
+  const canonicalNetKey = (cells: readonly Cell[]): string => {
+    let best = "";
+    for (const m of [false, true]) {
+      for (let t = 0; t < 4; t++) {
+        const key = orientNet(cells, t, m).map(([x, y]) => `${x},${y}`).join(";");
+        if (!best || key < best) best = key;
+      }
+    }
+    return best;
+  };
+
+  it("R1: underdetermined two-interleaved odd track is rejected (14, 18, 16, ?, 18, ?, 20) and all packed pattern rows are unique", () => {
+    const counter = checkUniqueCatalogRule(["14", "18", "16", "20", "18", "22", "20"], [3, 5]);
+    expect(counter.unique).toBe(false);
+    expect(counter.matchingRules).toContain("two-add-sub");
+    expect(counter.matchingRules).toContain("two-interleaved");
+
+    for (const bank of [280, 281, 282, 283, 284, 285]) {
+      const lines = readFileSync(`src/content/puzzles/assets/p${bank}.lipuzzle`, "utf8").trim().split("\n");
+      lines.shift();
+      for (let i = 0; i < lines.length; i++) {
+        const row = JSON.parse(lines[i]) as unknown[];
+        const pay = decodePatternTuple(row[3])!;
+        expect(pay, `${bank}:${i}`).not.toBeNull();
+        const v = checkUniqueCatalogRule(pay.tiles, pay.gaps);
+        expect(v.unique, `${bank}:${i} (${pay.ruleId})`).toBe(true);
+        expect(v.matchingRules, `${bank}:${i}`).toEqual([pay.ruleId]);
+      }
+    }
+  });
+
+  it("R2: Shape Shift repeat misses preserve completion reserve + failed evidence; saturated Help stays bounded", () => {
+    // Repeat miss on 294:0
+    const pShape = shapeChallengePuzzles[0];
+    let s = shapeChallengeReg.start(
+      pShape.ref,
+      "a",
+      "r2-repeat-miss",
+      emptyChallenge(),
+      { supportOff: false, ownRead: false },
+      pShape.dares.map((d) => d.slot),
+    );
+    while (true) {
+      const next = shapeChallengeReg.move(s, ["m"]);
+      if (!next) break;
+      s = next;
+    }
+    const payload = s.payload as ShapePayload;
+    expect(payload.actions.length).toBeLessThan(512);
+
+    // Help -> One step -> ... -> Check still succeeds and yields helped with no independent dares!
+    s = shapeChallengeReg.move(s, ["h"])!;
+    expect(s).toBeTruthy();
+    s = shapeChallengeReg.move(s, ["h"])!;
+    expect(s).toBeTruthy();
+    const shapeState = (sess: typeof s) => {
+      const pl = sess.payload as ShapePayload;
+      return pl.actions.reduce(
+        (st, act) => shapeChallengeEngine.step(st, act, pShape.descriptor)!.state,
+        shapeChallengeEngine.create(pShape.descriptor, 0, pl.options),
+      );
+    };
+    expect(shapeState(s).misses).toBeGreaterThan(0);
+    for (let i = 0; i < 8; i++) {
+      const h = challengeShapeHint(shapeState(s));
+      if (!h.nextPlacement) break;
+      s = shapeChallengeReg.move(s, ["s", ...h.nextPlacement])!;
+      expect(s).toBeTruthy();
+    }
+    s = shapeChallengeReg.move(s, ["c"])!;
+    expect(s.result?.event).toBe("helped");
+    expect(s.result?.dares).toEqual([]);
+
+    // Also verify a single miss without Help STILL blocks Clean/Plan dares on win!
+    let ms = shapeChallengeReg.start(
+      pShape.ref,
+      "a",
+      "r2-miss-monotone",
+      emptyChallenge(),
+      { supportOff: false, ownRead: false },
+      pShape.dares.map((d) => d.slot),
+    );
+    ms = shapeChallengeReg.move(ms, ["m"])!;
+    ms = shapeChallengeReg.move(ms, ["m"])!;
+    const p0Pay = pShape.descriptor.payload;
+    if (p0Pay.kind !== "poly") throw new Error("expected poly");
+    const solMiss = solveExactCover(p0Pay.silhouette, p0Pay.pieces, { maxSolutions: 1 }).solutions[0];
+    for (const pl of solMiss) {
+      const os = uniqueOrientations(p0Pay.pieces[pl.pieceIndex], p0Pay.allowRotate, p0Pay.allowFlip);
+      const oi = os.findIndex((o) => atomsSignature(o) === atomsSignature(pl.cells));
+      ms = shapeChallengeReg.move(ms, ["p", pl.pieceIndex, oi, pl.x, pl.y, 0])!;
+    }
+    ms = shapeChallengeReg.move(ms, ["c"])!;
+    expect(ms.result?.event).toBe("helped");
+    expect(shapeChallengeReg.completionFacts?.(ms)).toEqual({ helpUsed: false, failed: true });
+    expect(ms.result?.dares).toEqual([]);
+
+    // Saturated Help on completed drafts in BOTH Pattern Path & Shape Shift
+    const pPat = patternChallengePuzzles[0];
+    let ps = patternChallengeReg.start(
+      pPat.ref,
+      "a",
+      "r2-sat-pat",
+      emptyChallenge(),
+      { supportOff: false, ownRead: false },
+      pPat.dares.map((d) => d.slot),
+    );
+    const pPay = pPat.descriptor.payload;
+    if (pPay.ruleChoices) ps = patternChallengeReg.move(ps, ruleAction(pPay.ruleChoices.indexOf(pPay.ruleId)))!;
+    for (let slot = 0; slot < pPay.gaps.length; slot++) {
+      ps = patternChallengeReg.move(ps, gapAction(slot, pPay.choices.indexOf(pPay.tiles[pPay.gaps[slot]])))!;
+    }
+    while (true) {
+      const n = patternChallengeReg.move(ps, P_HELP);
+      if (!n) break;
+      ps = n;
+    }
+    expect((ps.payload as PatternPayload).actions.length).toBeLessThan(20);
+    const pDone = patternChallengeReg.move(ps, P_CHECK);
+    expect(pDone?.result?.event).toBe("helped");
+    expect(pDone?.result?.dares).toEqual([]);
+
+    let ss = shapeChallengeReg.start(
+      pShape.ref,
+      "a",
+      "r2-sat-shape",
+      emptyChallenge(),
+      { supportOff: false, ownRead: false },
+      pShape.dares.map((d) => d.slot),
+    );
+    const sPay = pShape.descriptor.payload;
+    if (sPay.kind !== "poly") throw new Error("expected poly");
+    const sol0 = solveExactCover(sPay.silhouette, sPay.pieces, { maxSolutions: 1 }).solutions[0];
+    for (const pl of sol0) {
+      const os = uniqueOrientations(sPay.pieces[pl.pieceIndex], sPay.allowRotate, sPay.allowFlip);
+      const oi = os.findIndex((o) => atomsSignature(o) === atomsSignature(pl.cells));
+      ss = shapeChallengeReg.move(ss, ["p", pl.pieceIndex, oi, pl.x, pl.y, 0])!;
+    }
+    while (true) {
+      const n = shapeChallengeReg.move(ss, ["h"]);
+      if (!n) break;
+      ss = n;
+    }
+    expect((ss.payload as ShapePayload).actions.length).toBeLessThan(20);
+    const sDone = shapeChallengeReg.move(ss, ["c"]);
+    expect(sDone?.result?.event).toBe("helped");
+    expect(sDone?.result?.dares).toEqual([]);
+  });
+
+  it("R3: dead-end recovery (['x'] & ['x', piece]) and cube assisted selection (['a', idx]) win from ordinary-play cap", () => {
+    // Fit dead-end at ordinary cap on 294:0
+    const pFit = shapeChallengePuzzles[0];
+    const getFitState = (sess: ReturnType<typeof shapeChallengeReg.start>) => {
+      const pl = sess.payload as ShapePayload;
+      return pl.actions.reduce(
+        (st, act) => shapeChallengeEngine.step(st, act, pFit.descriptor)!.state,
+        shapeChallengeEngine.create(pFit.descriptor, 0, pl.options),
+      );
+    };
+
+    for (const recoveryAction of [["x"] as const, ["x", 0] as const]) {
+      let s = shapeChallengeReg.start(
+        pFit.ref,
+        "a",
+        "r3-dead-end",
+        emptyChallenge(),
+        { supportOff: false, ownRead: false },
+        pFit.dares.map((d) => d.slot),
+      );
+      s = shapeChallengeReg.move(s, ["p", 0, 0, 1, 2, 0])!;
+      while (true) {
+        const next = shapeChallengeReg.move(s, ["m"]);
+        if (!next) break;
+        s = next;
+      }
+      expect(challengeShapeHint(getFitState(s)).deadEnd).toBe(true);
+      s = shapeChallengeReg.move(s, ["h"])!;
+      s = shapeChallengeReg.move(s, recoveryAction)!;
+      expect(getFitState(s).placed).toEqual([]);
+      s = shapeChallengeReg.move(s, ["h"])!;
+      for (let i = 0; i < 8; i++) {
+        const h = challengeShapeHint(getFitState(s));
+        if (!h.nextPlacement) break;
+        s = shapeChallengeReg.move(s, ["s", ...h.nextPlacement])!;
+      }
+      s = shapeChallengeReg.move(s, ["c"])!;
+      expect(s.result?.event).toBe("helped");
+      expect(s.result?.dares).toEqual([]);
+    }
+
+    // All 9 inline cube puzzles at ordinary cap -> ["h"], ["h"], ["a", ans], ["c"]
+    const cubePuzzles = shapeChallengePuzzles.filter(
+      (p) => p.descriptor.payload.kind === "cube-opp" || p.descriptor.payload.kind === "cube-fold",
+    );
+    expect(cubePuzzles).toHaveLength(9);
+    for (const p of cubePuzzles) {
+      const pay = p.descriptor.payload;
+      if (pay.kind !== "cube-opp" && pay.kind !== "cube-fold") continue;
+      let s = shapeChallengeReg.start(
+        p.ref,
+        "a",
+        `r3-cube-${p.ref.bank}-${p.ref.puzzle}`,
+        emptyChallenge(),
+        { supportOff: false, ownRead: false },
+        p.dares.map((d) => d.slot),
+      );
+      const ans = pay.kind === "cube-fold" ? pay.answerIndex : pay.faces.indexOf(pay.answer);
+      const wrongs = Array.from({ length: pay.kind === "cube-fold" ? 3 : 6 }, (_, i) => i).filter(
+        (i) => i !== ans && (pay.kind === "cube-fold" || i !== pay.askIndex),
+      );
+      let k = 0;
+      while (true) {
+        const n = shapeChallengeReg.move(s, ["k", wrongs[k++ % wrongs.length]]);
+        if (!n) break;
+        s = n;
+      }
+      s = shapeChallengeReg.move(s, ["h"])!;
+      s = shapeChallengeReg.move(s, ["h"])!;
+      s = shapeChallengeReg.move(s, ["a", ans])!;
+      s = shapeChallengeReg.move(s, ["c"])!;
+      expect(s.result?.event, `${p.ref.bank}:${p.ref.puzzle}`).toBe("helped");
+      expect(s.result?.dares, `${p.ref.bank}:${p.ref.puzzle}`).toEqual([]);
+    }
+  });
+
+  it("R4: every packed (p288–p291) and inline (294–295) polyomino piece is strictly 4-connected", () => {
+    for (const bank of [288, 289, 290, 291]) {
+      const lines = readFileSync(`src/content/puzzles/assets/p${bank}.lipuzzle`, "utf8").trim().split("\n");
+      lines.shift();
+      for (let i = 0; i < lines.length; i++) {
+        const row = JSON.parse(lines[i]) as unknown[];
+        const pay = decodeShapeTuple(row[3])!;
+        expect(pay, `${bank}:${i}`).not.toBeNull();
+        if (pay.kind === "poly") {
+          for (let pi = 0; pi < pay.pieces.length; pi++) {
+            expect(is4Connected(pay.pieces[pi] as Cell[]), `${bank}:${i} piece ${pi}`).toBe(true);
+          }
+        }
+      }
+    }
+    for (const p of shapeChallengePuzzles) {
+      const pay = p.descriptor.payload;
+      if (pay.kind === "poly") {
+        for (let pi = 0; pi < pay.pieces.length; pi++) {
+          expect(is4Connected(pay.pieces[pi] as Cell[]), `${p.ref.bank}:${p.ref.puzzle} piece ${pi}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("R5: all 6 invalid cube nets (including bad-u) are 4-connected, fail 3D fold, and are D4-distinct; p292 nets are 4-connected", () => {
+    const validKeys = new Set(VALID_CUBE_NETS.map((n) => canonicalNetKey(n.cells)));
+    const invalidKeys = new Set<string>();
+    for (const bad of INVALID_CUBE_NETS) {
+      expect(is4Connected(bad.cells), `${bad.id} must be 4-connected`).toBe(true);
+      expect(foldCubeNet(bad.cells).valid, `${bad.id} must fail 3D fold`).toBe(false);
+      const key = canonicalNetKey(bad.cells);
+      expect(validKeys.has(key), `${bad.id} must not equal a valid net`).toBe(false);
+      invalidKeys.add(key);
+    }
+    expect(invalidKeys.size).toBe(INVALID_CUBE_NETS.length);
+
+    const lines = readFileSync("src/content/puzzles/assets/p292.lipuzzle", "utf8").trim().split("\n");
+    lines.shift();
+    for (let i = 0; i < lines.length; i++) {
+      const row = JSON.parse(lines[i]) as unknown[];
+      const pay = decodeShapeTuple(row[3])!;
+      expect(pay, `p292:${i}`).not.toBeNull();
+      if (pay.kind === "cube-fold") {
+        for (let oi = 0; oi < pay.options.length; oi++) {
+          expect(is4Connected(pay.options[oi]), `p292:${i} option ${oi}`).toBe(true);
+        }
+      } else if (pay.kind === "cube-opp") {
+        expect(is4Connected(pay.cells), `p292:${i}`).toBe(true);
+      }
+    }
+  });
+
+  it("R6: fixed-order Level 1 School shapeHint always suggests the permitted piece s.placed.length", () => {
+    // Exact Codex counterexample: { version: 2, level: 1, mode: 'poly', seed: 1, index: 0 }
+    const s: ShapeState = {
+      version: 2,
+      level: 1,
+      mode: "poly",
+      seed: 1,
+      index: 0,
+      total: 4,
+      placed: [],
+      helped: false,
+      hintPiece: null,
+    };
+    const h0 = shapeHint(s);
+    expect(h0.suggestion).not.toBeNull();
+    expect(h0.suggestion!.pieceIndex).toBe(0);
+    const next = shapePlace(s, h0.suggestion!.pieceIndex, h0.suggestion!.cells, h0.suggestion!.x, h0.suggestion!.y);
+    expect(next).not.toBe(s);
+
+    // Exhaustive sweep across 100 seeds × 4 indices (400 tasks), solving every piece via shapeHint!
+    for (let seed = 1; seed <= 100; seed++) {
+      for (let index = 0; index < 4; index++) {
+        let cur: ShapeState = {
+          version: 2,
+          level: 1,
+          mode: "poly",
+          seed,
+          index,
+          total: 4,
+          placed: [],
+          helped: false,
+          hintPiece: null,
+        };
+        const t = shapeTaskAt(cur);
+        for (let step = 0; step < t.pieces.length; step++) {
+          const h = shapeHint(cur);
+          expect(h.suggestion, `seed=${seed} idx=${index} step=${step}`).not.toBeNull();
+          expect(h.suggestion!.pieceIndex, `seed=${seed} idx=${index} step=${step}`).toBe(step);
+          const placed = shapePlace(cur, h.suggestion!.pieceIndex, h.suggestion!.cells, h.suggestion!.x, h.suggestion!.y);
+          expect(placed, `seed=${seed} idx=${index} step=${step} must advance`).not.toBe(cur);
+          cur = placed;
+        }
+        expect(cur.index).toBe(index + 1);
+      }
+    }
   });
 });

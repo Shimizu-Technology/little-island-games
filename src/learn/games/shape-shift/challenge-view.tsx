@@ -74,25 +74,47 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
   const hintInfo = useMemo(() => challengeShapeHint(state), [state]);
   const ready = completeShapeDraft(state);
 
+  const isCube = p.kind === "cube-opp" || p.kind === "cube-fold";
+  const helpSaturated =
+    state.hintStage >= 2 &&
+    (isCube ? hintInfo.nextCubePick === null : !hintInfo.deadEnd && !hintInfo.nextPlacement);
+
   const applyHint = () => {
-    if (!active || state.won) return;
-    if (state.hintStage < 2 || !hintInfo.nextPlacement) {
+    if (!active || state.won || helpSaturated) return;
+    if (isCube) {
+      if (state.hintStage < 2) {
+        dispatch(["h"]);
+      } else if (hintInfo.nextCubePick !== null) {
+        dispatch(["a", hintInfo.nextCubePick]);
+      }
+      return;
+    }
+    if (state.hintStage >= 1 && hintInfo.deadEnd) {
+      dispatch(["x"]);
+    } else if (state.hintStage < 2) {
       dispatch(["h"]);
-    } else {
+    } else if (hintInfo.nextPlacement) {
       const [pi, oi, x, y] = hintInfo.nextPlacement;
       dispatch(["s", pi, oi, x, y]);
     }
   };
 
-  const isCube = p.kind === "cube-opp" || p.kind === "cube-fold";
   const helpLabel =
     state.hintStage === 0
       ? isCube ? "Look (fold clue)" : "Look (shape clue)"
-      : state.hintStage === 1
-        ? "Think"
-        : hintInfo.nextPlacement
-          ? "One step"
-          : "Hint shown";
+      : isCube
+        ? state.hintStage === 1
+          ? "Reveal answer"
+          : hintInfo.nextCubePick !== null
+            ? "Select answer"
+            : "Answer selected"
+        : hintInfo.deadEnd
+          ? "Clear dead end"
+          : state.hintStage === 1
+            ? "Think"
+            : hintInfo.nextPlacement
+              ? "One step"
+              : "Hint shown";
 
   // =========================================================================
   // Cube Net Challenge Board (opposite face & fold check)
@@ -117,7 +139,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     accessibilityRole="button"
                     accessibilityState={{ selected: chosen }}
                     disabled={!active || state.won}
-                    onPress={() => dispatch(["k", idx])}
+                    onPress={() => dispatch(state.hintStage >= 1 ? ["a", idx] : ["k", idx])}
                     style={{
                       width: 54, minHeight: 54, alignItems: "center", justifyContent: "center",
                       borderRadius: 14, backgroundColor: chosen ? "#DCEFD6" : "#FFF8E8",
@@ -145,7 +167,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     accessibilityRole="button"
                     accessibilityState={{ selected: chosen }}
                     disabled={!active || state.won}
-                    onPress={() => dispatch(["k", idx])}
+                    onPress={() => dispatch(state.hintStage >= 1 ? ["a", idx] : ["k", idx])}
                     style={{
                       padding: 10, borderRadius: 16,
                       backgroundColor: chosen ? "#DCEFD6" : "#FFFDF3",
@@ -174,7 +196,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
             <Button disabled={!active || !ready || state.checked} maxFontSizeMultiplier={buttonCap} onPress={() => dispatch(["c"])}>
               Check
             </Button>
-            <Button quiet disabled={!active} maxFontSizeMultiplier={buttonCap} onPress={applyHint}>
+            <Button quiet disabled={!active || helpSaturated} maxFontSizeMultiplier={buttonCap} onPress={applyHint}>
               {helpLabel}
             </Button>
           </View>
@@ -233,7 +255,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
     if (!active || state.won) return;
     const owner = placedPieceAtCell(placedVisuals, x, y);
     if (owner !== null && (activePieceIdx < 0 || !canPlaceAtoms(silSet, occSet, activeCells, x, y))) {
-      dispatch(["r", owner]);
+      dispatch(state.hintStage >= 1 ? ["x", owner] : ["r", owner]);
       setSelectedPiece(owner);
       return;
     }
@@ -400,13 +422,13 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
             quiet
             disabled={!active || state.placed.length === 0}
             maxFontSizeMultiplier={buttonCap}
-            onPress={() => dispatch(["z"])}
+            onPress={() => dispatch(state.hintStage >= 1 ? ["x"] : ["z"])}
           >
             Clear
           </Button>
           <Button
             quiet
-            disabled={!active}
+            disabled={!active || helpSaturated}
             maxFontSizeMultiplier={buttonCap}
             onPress={applyHint}
           >

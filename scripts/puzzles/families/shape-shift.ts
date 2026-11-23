@@ -8,6 +8,7 @@ import type { Cell } from "../../../src/learn/games/shape-shift/legacy";
 import { POLY_BLUEPRINTS, TANGRAM_BASE, tangramTopology, type TangramKind } from "../../../src/learn/games/shape-shift/silhouettes";
 import {
   atomKey,
+  connectedGroups,
   normalizeAtoms,
   solveExactCover,
   translateAtoms,
@@ -178,7 +179,7 @@ export const shapeShiftFamily: FamilySpec<ShapePackPayload> = {
       if (useBlueprint) {
         const bp = POLY_BLUEPRINTS[rng.below(POLY_BLUEPRINTS.length)];
         const groupMode = rng.below(3);
-        const groups = groupMode === 0 ? [[0, 1], [2, 3]] : groupMode === 1 ? [[0, 1], [2], [3]] : [[0], [1], [2], [3]];
+        const groups = connectedGroups(bp.parts, groupMode === 0 ? 2 : groupMode === 1 ? 3 : 4);
         const pieces = groups.map((g) => normalizeAtoms(g.flatMap((j) => bp.parts[j].cells)) as Cell[]);
         const sil = normalizeAtoms(bp.parts.flatMap((pt) => pt.cells)) as Cell[];
         const w = Math.max(...sil.map((c) => c[0])) + 1;

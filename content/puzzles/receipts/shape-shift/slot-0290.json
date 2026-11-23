@@ -2,16 +2,16 @@
  "format": 1,
  "family": "shape-shift",
  "slot": 290,
- "catalogRevision": 27,
+ "catalogRevision": 29,
  "band": "c",
  "ordinals": [
   296960,
   50
  ],
- "sourceSha": "347ef68c82d962ae8bcf2bdb4bb48dabb80d8d04",
+ "sourceSha": "416bbbaf94e10bcfe4b61e05eacc12791be3fedb",
  "hashes": {
   "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
-  "family": "bfaf92d9bdf53c047607b9233b52949f21053a4a6073acb80e9165570f83c256"
+  "family": "32e02d5091965518385f3f33a74dc2f365b161f5bbf0a77696ea8a1e4050fe07"
  },
  "rng": 1,
  "rules": 1,

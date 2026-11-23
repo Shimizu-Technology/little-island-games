@@ -139,8 +139,9 @@ export const challengeEngine: ReplayEngine<PatternChallengeDescriptor, Initial, 
     const p = d.payload;
 
     if (a === HELP) {
+      if (s.hintStage >= 3) return null;
       return {
-        state: { ...s, hintStage: Math.min(s.hintStage + 1, 3) },
+        state: { ...s, hintStage: s.hintStage + 1 },
         event: "help",
       };
     }

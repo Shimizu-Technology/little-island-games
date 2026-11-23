@@ -64,8 +64,10 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
     }
   };
 
+  const helpSaturated = state.hintStage >= 3 && hintInfo.nextAction === null;
+
   const applyHintStep = () => {
-    if (!active || state.won) return;
+    if (!active || state.won || helpSaturated) return;
     if (state.hintStage < 2) {
       dispatch(HELP);
     } else if (hintInfo.nextAction !== null) {
@@ -82,7 +84,9 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
         ? "Think (how to apply)"
         : hintInfo.nextAction !== null
           ? "One step"
-          : "Rule shown";
+          : state.hintStage < 3
+            ? "Show rule"
+            : "Rule shown";
 
   return (
     <View style={{ gap: compact ? 10 : 13, paddingVertical: 4 }}>
@@ -272,7 +276,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
           </Button>
           <Button
             quiet
-            disabled={!active}
+            disabled={!active || helpSaturated}
             maxFontSizeMultiplier={buttonCap}
             onPress={applyHintStep}
           >

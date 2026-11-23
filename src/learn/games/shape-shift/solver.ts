@@ -425,3 +425,59 @@ export function countExactCoverIndependent(
   dfs(0, silhouette.length);
   return exhausted ? { status: "budget-exhausted" } : { status: "counted", count: seenHashes.size };
 }
+
+/** True when a non-empty list of square cells forms a single 4-connected (edge-adjacent) component. */
+export function is4Connected(cells: readonly Cell[]): boolean {
+  if (cells.length === 0) return false;
+  const set = new Set(cells.map(([x, y]) => `${x},${y}`));
+  const seen = new Set<string>();
+  const q: Cell[] = [cells[0]];
+  seen.add(`${cells[0][0]},${cells[0][1]}`);
+  while (q.length > 0) {
+    const [x, y] = q.shift()!;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+      const k = `${x + dx},${y + dy}`;
+      if (set.has(k) && !seen.has(k)) {
+        seen.add(k);
+        q.push([x + dx, y + dy]);
+      }
+    }
+  }
+  return seen.size === set.size;
+}
+
+function groupsTouch4(a: readonly Cell[], b: readonly Cell[]): boolean {
+  const bSet = new Set(b.map(([x, y]) => `${x},${y}`));
+  for (const [x, y] of a) {
+    if (bSet.has(`${x + 1},${y}`) || bSet.has(`${x - 1},${y}`) || bSet.has(`${x},${y + 1}`) || bSet.has(`${x},${y - 1}`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Merge 4-connected blueprint parts down to `targetCount` groups so every merged piece stays strictly 4-connected. */
+export function connectedGroups(parts: readonly { cells: Cell[] }[], targetCount: number): number[][] {
+  const groups = parts.map((_, i) => [i]);
+  while (groups.length > targetCount) {
+    let best: [number, number] | null = null;
+    let bestSize = Infinity;
+    for (let i = 0; i < groups.length; i++) {
+      const cellsI = groups[i].flatMap((idx) => parts[idx].cells);
+      for (let j = i + 1; j < groups.length; j++) {
+        const cellsJ = groups[j].flatMap((idx) => parts[idx].cells);
+        if (!groupsTouch4(cellsI, cellsJ)) continue;
+        const sz = cellsI.length + cellsJ.length;
+        if (sz < bestSize) {
+          bestSize = sz;
+          best = [i, j];
+        }
+      }
+    }
+    if (!best) break;
+    const [i, j] = best;
+    groups[i] = [...groups[i], ...groups[j]];
+    groups.splice(j, 1);
+  }
+  return groups;
+}
