@@ -173,7 +173,7 @@ describe('Shell Scale board interactions, AX5 & VoiceOver', () => {
       Object.assign(viewport, vp);
       mount({ onToggleLinks: () => {}, width: vp.width - 40 });
       const header = byId('board-header');
-      expect(header.props.style.flexDirection).toBeUndefined();
+      expect(header.props.style.flexDirection).toBe(vp.width - 40 < 560 ? undefined : 'row');
       for (const n of root!.root.findAll(n => String(n.type) === 'Copy' || String(n.type) === 'Button')) {
         expect(n.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
       }

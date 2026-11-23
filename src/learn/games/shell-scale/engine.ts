@@ -395,7 +395,7 @@ export const engine: Omit<LearnEngine<ScaleState>, 'id'> & { id: 'shell-scale' }
   color: '#2B6E75',
   surface: '#E2F1F3',
   modes: ['solo', 'together'],
-  modeLabels: { solo: 'On my own', together: 'Together: scale holder' },
+  modeLabels: { solo: 'On my own', together: 'Scale holder' },
   ages: [4, 14],
   ownLevels: true,
   levelNames: levelInfo,

@@ -6,15 +6,15 @@
 export const SCALE_FLOOR = 170;
 
 export function scaleHeight(width: number, large: boolean): number {
-  if (width >= 600) return large ? 200 : 220;
-  return large ? 176 : 196;
+  if (width >= 600) return large ? 176 : 210;
+  return large ? 172 : 196;
 }
 
 export function shellTokenSize(width: number, n: number, large: boolean): number {
   const cols = Math.min(n, 6);
   const avail = Math.max(240, width - 16);
   const byWidth = Math.floor((avail - (cols - 1) * 8) / cols);
-  const cap = width >= 600 ? 68 : large ? 54 : 60;
+  const cap = width >= 600 ? (large ? 56 : 66) : large ? 54 : 60;
   return Math.max(46, Math.min(cap, byWidth));
 }
 

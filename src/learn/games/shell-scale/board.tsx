@@ -132,6 +132,7 @@ export function ScaleBoard(props: ScaleBoardProps) {
               The secret weights are hidden. Ready to see how the scale tipped?
             </Copy>
             <Button
+              quiet
               compact
               maxFontSizeMultiplier={1.5}
               disabled={!active}
@@ -159,6 +160,7 @@ export function ScaleBoard(props: ScaleBoardProps) {
               {`${guesserName} asked for a weighing. No peeking!`}
             </Copy>
             <Button
+              quiet
               compact
               maxFontSizeMultiplier={1.5}
               disabled={!active}
@@ -198,12 +200,22 @@ export function ScaleBoard(props: ScaleBoardProps) {
             <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 14, color: C.muted, fontWeight: '700' }}>
               {`${guesserName} asks to weigh:`}
             </Copy>
-            <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 16, color: ink, fontWeight: '800' }}>
-              {`Left pan: ${panLabel(board, sec.pendingLeft)}`}
-            </Copy>
-            <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 16, color: ink, fontWeight: '800' }}>
-              {`Right pan: ${panLabel(board, sec.pendingRight)}`}
-            </Copy>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {board.kind === 'sort' && bitsOf(sec.pendingLeft, board.n).length === 1 && (
+                <ShellArt pool={board.cast[bitsOf(sec.pendingLeft, board.n)[0]] ?? bitsOf(sec.pendingLeft, board.n)[0]} size={22} />
+              )}
+              <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 16, color: ink, fontWeight: '800' }}>
+                {`Left pan: ${panLabel(board, sec.pendingLeft)}`}
+              </Copy>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {board.kind === 'sort' && bitsOf(sec.pendingRight, board.n).length === 1 && (
+                <ShellArt pool={board.cast[bitsOf(sec.pendingRight, board.n)[0]] ?? bitsOf(sec.pendingRight, board.n)[0]} size={22} />
+              )}
+              <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 16, color: ink, fontWeight: '800' }}>
+                {`Right pan: ${panLabel(board, sec.pendingRight)}`}
+              </Copy>
+            </View>
           </View>
           <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 14, color: ink }}>
             Tap how the scale answers:
@@ -325,7 +337,7 @@ export function ScaleBoard(props: ScaleBoardProps) {
     const items = bitsOf(mask, board.n);
     if (!items.length) {
       return (
-        <Copy maxFontSizeMultiplier={1.2} style={{ fontSize: 12, color: C.muted, fontWeight: '700' }}>
+        <Copy maxFontSizeMultiplier={1.2} style={{ fontSize: 12, color: C.muted, fontWeight: '700', paddingBottom: 3 }}>
           Empty
         </Copy>
       );
@@ -334,11 +346,11 @@ export function ScaleBoard(props: ScaleBoardProps) {
       const idx = items[0];
       return <ShellArt pool={board.cast[idx] ?? idx} size={42} />;
     }
-    const pSize = items.length <= 2 ? 32 : items.length <= 4 ? 26 : 22;
+    const pSize = items.length <= 2 ? 28 : items.length === 3 ? 21 : 17;
     return (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 2, maxWidth: 128 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 1.5, maxWidth: items.length === 4 ? 76 : 90 }}>
         {items.map(i => (
-          <PearlArt key={i} number={i + 1} size={pSize} theme={board.cast[0] ?? 0} tone="normal" />
+          <PearlArt key={i} number={i + 1} size={pSize} theme={0} tone="normal" />
         ))}
       </View>
     );
@@ -654,7 +666,7 @@ export function ScaleBoard(props: ScaleBoardProps) {
                   opacity: ruledOut && !onL && !onR && !isPicked ? 0.52 : 1,
                 }}
               >
-                <PearlArt number={i + 1} size={pToken - 2} theme={board.cast[0] ?? 0} tone={tone} />
+                <PearlArt number={i + 1} size={pToken - 2} theme={0} tone={tone} />
               </PressableScale>
             );
             return i === 0 && coach?.active ? (
@@ -719,10 +731,19 @@ export function ScaleBoard(props: ScaleBoardProps) {
             {sortInfo.links.map(([lo, hi]) => (
               <View
                 key={`${lo}-${hi}`}
-                style={{ backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: '#B8CFB6', paddingHorizontal: 8, paddingVertical: 4 }}
+                style={{
+                  backgroundColor: focus.greyKnown ? '#E6E9E7' : '#FFFFFF',
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderStyle: focus.greyKnown ? 'dashed' : 'solid',
+                  borderColor: focus.greyKnown ? '#9CA8A4' : '#B8CFB6',
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  opacity: focus.greyKnown ? 0.72 : 1,
+                }}
               >
-                <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '700', color: ink }}>
-                  {`${itemName(board, lo)} < ${itemName(board, hi)}`}
+                <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '700', color: focus.greyKnown ? C.muted : ink }}>
+                  {focus.greyKnown ? `✓ ${itemName(board, lo)} < ${itemName(board, hi)} (known)` : `${itemName(board, lo)} < ${itemName(board, hi)}`}
                 </Copy>
               </View>
             ))}
@@ -785,11 +806,12 @@ export function ScaleBoard(props: ScaleBoardProps) {
       ? 'The scale disagrees. Weigh another pair or adjust your row, then Check again.'
       : notice || title;
 
+  const stackHeader = large && width < 560;
   const head = (
     <View
       testID="board-header"
       style={
-        large
+        stackHeader
           ? { alignSelf: 'stretch', gap: 8 }
           : { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignSelf: 'stretch', gap: 8, minHeight: 42 }
       }
@@ -797,7 +819,7 @@ export function ScaleBoard(props: ScaleBoardProps) {
       <Copy
         accessibilityLiveRegion="polite"
         maxFontSizeMultiplier={1.5}
-        style={{ flex: large ? undefined : 1, fontWeight: '800', fontSize: 16, color: missed ? '#B54132' : ink }}
+        style={{ flex: stackHeader ? undefined : 1, fontWeight: '800', fontSize: 16, color: missed ? '#B54132' : ink }}
       >
         {caption0}
       </Copy>
