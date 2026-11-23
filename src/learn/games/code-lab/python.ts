@@ -63,9 +63,10 @@ function program(source: readonly string[]): Node[] {
 }
 /** Bounded even for while True and recursive functions. */
 export function runPython(source: readonly string[], limit = 2048): Execution {
+  const budget = Number.isFinite(limit) ? Math.min(4096, Math.max(1, Math.floor(limit))) : 2048;
   const result: Execution = { output: [], returned: null, trace: [], error: null, steps: 0 };
   const globals: Scope = {}, functions = new Map<string, { params: string[]; body: Node[] }>();
-  const fuel = () => { if (++result.steps > Math.min(4096, Math.max(1, limit))) throw Error('This program reached the step limit. Try a smaller loop.'); };
+  const fuel = () => { if (++result.steps > budget) throw Error('This program reached the step limit. Try a smaller loop.'); };
   const number = (v: Value): number => { if (typeof v === 'number') return v; if (typeof v === 'boolean') return v ? 1 : 0; throw Error('That operation needs a number.'); };
   const checked = (v: Value): Value => { if (typeof v === 'number' && (!Number.isFinite(v) || Math.abs(v) > 1e9) || typeof v === 'string' && v.length > 1024 || Array.isArray(v) && v.length > 128) throw Error('That value is too large for this lab.'); return v; };
   const evaluate = (e: Expr, scope: Scope, depth = 0): Value => {

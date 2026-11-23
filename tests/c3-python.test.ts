@@ -48,3 +48,9 @@ it('binds the committed receipt to the current source/semantic proofs and defeat
   allPrograms.forEach((d,i)=>{expect(receipt.entries[i].source).toBe(sha256Hex(d.lines.join('\n')));expect(receipt.entries[i].semantic).toBe(sha256Hex(JSON.stringify(runPython(d.lines).trace)));});
   const top = deepPrograms.filter(d=>d.band>=5&&d.mode==='build');expect(top.filter(d=>solves(d,d.slots.map(()=>0))).length).toBeLessThan(top.length/4);
 });
+
+it('keeps the interpreter bounded even when a caller supplies NaN or an infinite step limit', () => {
+  const script = `import {runPython} from './src/learn/games/code-lab/python.ts'; const rows=[NaN,Infinity,-Infinity].map(limit=>runPython(['while True:','    n = 1'],limit)); console.log(JSON.stringify(rows.map(r=>({error:r.error,steps:r.steps}))));`;
+  const rows=JSON.parse(execFileSync(process.execPath,['--import','./scripts/puzzles/register.mjs','--input-type=module','-e',script],{encoding:'utf8',timeout:10000}));
+  for(const row of rows){expect(row.error).toContain('step limit');expect(row.steps).toBeLessThanOrEqual(2049);}
+});
