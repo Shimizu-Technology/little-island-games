@@ -1,0 +1,129 @@
+{
+ "format": 1,
+ "family": "reef-sweep",
+ "slot": 467,
+ "catalogRevision": 23,
+ "band": "coupled-7",
+ "ordinals": [
+  478208,
+  32
+ ],
+ "sourceSha": "b85849a9fd1e758c3572e8109033a0452a5b8539",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "358242f74db680206da06ea561b064dde2eb311fde3a62841a90d32f808e1238"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 46401,
+  "attempts": 529,
+  "kept": [
+   50378063,
+   50378085,
+   50378088,
+   50378107,
+   50378051,
+   50378146,
+   50378116,
+   50378105,
+   50378193,
+   50378151,
+   50378128,
+   50378054,
+   50378213,
+   50378166,
+   50378142,
+   50378148,
+   50378221,
+   50378189,
+   50378152,
+   50378150,
+   50378233,
+   50378206,
+   50378194,
+   50378256,
+   50378245,
+   50378267,
+   50378222,
+   50378313,
+   50378302,
+   50378297,
+   50378316,
+   50378320
+  ]
+ },
+ "rejects": {
+  "construction": 398,
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "duplicate-semantic": 1
+ },
+ "distinct": {
+  "exact": 32,
+  "semantic": 32
+ },
+ "histograms": {
+  "technique": {
+   "coupled": 32
+  },
+  "template": {
+   "t0": 4,
+   "t1": 8,
+   "t2": 2,
+   "t3": 1,
+   "t4": 6,
+   "t5": 2,
+   "t6": 4,
+   "t7": 5
+  },
+  "layout": {
+   "q00": 9,
+   "q01": 9,
+   "q10": 8,
+   "q11": 6
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   6,
+   24
+  ],
+  "exact": 14
+ },
+ "proofHashes": {
+  "witness": "b73020e4b3b267399393bcfff4166e3ab16c45ea2564df6e51f155d46da0c4d7",
+  "trace": "deea93aa535e91dfa81f203fc8f291c1137b0590d6d3940f9a26e506697b6054",
+  "claims": "a8127db51469251016f78f4ed6646ac52682bae28cef58840b8804c505a9d809"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Generated from fixed deterministic seeds and proven no-guess solvable by the pure public-constraint deduction solver with counterfactual hidden-world verification."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 3011,
+  "gzip": 819
+ },
+ "sha256": "6d1e253770c39ec17fee9955ea1e0838138a32867ec9689a0e8c41076e03dbfb",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

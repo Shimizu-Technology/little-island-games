@@ -37,8 +37,16 @@ export function defineReplayGame<D,P,A,S>(config: {
   helpUI?: 'board';
   /** Worst-case full help sequence, including terminal result overhead, certified by each adopter.
    * `idempotentHelp: true` certifies that repeated Help only records assistance, so it is coalesced.
-   * A stateful ladder (each press reveals more) declares `false` and every press is kept. */
-  assistance?: { bytes: number; actions: number; idempotentHelp: boolean; isAction: (action: A) => boolean };
+   * A stateful ladder (each press reveals more) declares `false` and every press is kept.
+   * Optional `isRecovery` admits state-dependent post-miss recovery actions (e.g. Undo/Reset after a miss)
+   * inside the reserve without marking clean non-miss actions as Help. */
+  assistance?: {
+    bytes: number;
+    actions: number;
+    idempotentHelp: boolean;
+    isAction: (action: A) => boolean;
+    isRecovery?: (state: S, action: A) => boolean;
+  };
   puzzles: readonly Puzzle<D>[]; objectives?: readonly string[]; engine: ReplayEngine<D,P,A,S>;
   Board: ComponentType<ChallengeViewProps<S,A>>; controls: { help: () => A; reset: () => A };
   packed?: PackedReplay<D>;
@@ -195,7 +203,8 @@ export function defineReplayGame<D,P,A,S>(config: {
       const restored = replay(next);
       if(!restored)return null;
       const checked = !!previous && restored.evidence.runs > previous.evidence.runs;
-      const assisted = reserve.isAction(action) || restored.evidence.solved || checked;
+      const recovering = !!previous && config.assistance?.isRecovery?.(previous.state, action as A) === true;
+      const assisted = reserve.isAction(action) || recovering || restored.evidence.solved || checked;
       // Ordinary play cannot spend the bytes/actions reserved for the full help sequence.
       if (!assisted && (jsonBytes(next) > 4096 - reserve.bytes || next.payload.actions.length > 512 - reserve.actions)) return null;
       const result={...next,result:evaluate(next)};

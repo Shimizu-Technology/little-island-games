@@ -169,7 +169,7 @@ describe('the published catalog under the register', () => {
     // Mirrors the lead's SLOTS.md, including the wave-1 slices nested in their groups.
     const owner = (first: number, last: number) => reservationFor(ranges, { first, last }).owner;
     expect([owner(40, 59), owner(60, 79), owner(80, 99), owner(100, 109), owner(110, 199), owner(260, 279), owner(280, 297), owner(420, 429), owner(440, 449), owner(500, 511)])
-      .toEqual(['g3-latin', 'g5-edges', 'g6-word-search', 'g7a-solitaire', 'other-cove', 't1-logic-lagoon', 'thinking', 'n1a', 'r1a', 'a1-arcade']);
+      .toEqual(['g3-latin', 'g5-edges', 'g6-word-search', 'g7a-solitaire', 'other-cove', 't1-logic-lagoon', 't2-thinking', 'n1a', 'r1a', 'a1-arcade']);
   });
   it('lets G6, G7a, T1 and G5\'s free tail claim below nextSlot, refuses published slots, and changes no published byte', () => {
     const before = files(), { root, families } = readCatalog(productionDirs), claim = (range: string) => { const r = parseRange(range); return slotClaim(productionDirs, families.values(), r, reservationFor(readReservations(productionDirs), r).owner, sources); };
