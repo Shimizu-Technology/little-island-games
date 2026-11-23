@@ -271,8 +271,11 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const sourceInputs=admissionSourceFiles(sourceRoot),sourceBindings=[];
   const registryBindings=[...tracedGameRegistries(sourceRoot)].map(([path,ids])=>({path,sha256:sha256(JSON.stringify(ids)),signature:javascriptStrings('const ids='+JSON.stringify(ids)+';').units[0].origin.signature}));
   function admitRegistryUnits(hits,name,source=false) {
+    // Bind the complete JSON array, including IDs omitted from short-word views
+    // (digits and 65-80 character Challenge IDs are valid generator inputs).
+    const sourceHash=source && gameRegistryPaths.includes(name)?sha256(JSON.stringify(JSON.parse(sourceInputs.get(name)))):null;
     for(const hit of hits)for(const binding of registryBindings) {
-      if(source ? name===binding.path && hit.sha256===binding.sha256 : /\.(?:[cm]?js|bundle)$/i.test(name) && passedSources.has(binding.path) && hit.origin?.signature===binding.signature) {
+      if(source ? name===binding.path && sourceHash===binding.sha256 : /\.(?:[cm]?js|bundle)$/i.test(name) && passedSources.has(binding.path) && hit.origin?.signature===binding.signature) {
         // Only the complete traced array's broad-list view is admitted. Individual
         // strings, hard terms, private bytes and density checks remain untouched.
         hit.broad=[];
@@ -334,7 +337,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     if(bindings.length)reviewedSourceUnits([...view.unitHits,...view.wordMaps.map(mapListHit)],bindings,true);
     if(gameRegistryPaths.includes(name) && !registryBindings.some(binding=>binding.path===name))findings.push(name+':blocked-source-list');
     admitRegistryUnits(view.unitHits,name,true);
-    if(gameRegistryPaths.includes(name) && (view.strings.some(text=>sensitive(sensitiveText(text)).size) || hashes.has(sha256(bytes)) || byteViews(bytes).uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))))findings.push(name+':blocked-source-literal');
+    if(gameRegistryPaths.includes(name) && (view.strings.some(text=>sensitive(sensitiveText(text)).size) || hashes.has(sha256(bytes)) || view.uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))))findings.push(name+':blocked-source-literal');
     if(view.literalHits.size || view.hardHermesFailure)findings.push(name+':blocked-source-literal');
     if([...view.stringHits,...view.unitHits].some(hit=>!hit.reviewedSourceUnit && hit.listShaped && new Set(hit.broad).size>=3))findings.push(name+':blocked-source-list');
     if(view.densityMaximum>densityThreshold || view.shortDensityMaximum>shortDensityThreshold)findings.push(name+':blocked-source-density');
