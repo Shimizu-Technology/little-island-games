@@ -47,3 +47,11 @@ it('keeps code continuations inside a separate numbered/indented statement colum
   const p=schoolPrograms[4][0];await act(async()=>tree!.update(<ProgramPanel d={p} state={initialAttempt(p)} send={vi.fn()} active width={335}/>));
   const choice=tree!.root.findAllByType('button').find(b=>b.props.label?.includes('6, then 0'))!;expect(text(choice)).toContain('6 · then 0');
 });
+
+it('a finished Challenge can inspect its trace even when the host disables further game actions', async () => {
+  Object.assign(win,{width:744,height:1133,fontScale:1});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  const d=schoolPrograms[4][0],send=vi.fn();let state=step(initialAttempt(d),['p',d.answer],d)!;state=step(state,['c'],d)!;
+  await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={send} active={false} width={704}/>);});
+  const last=tree!.root.findAllByType('button').find(b=>text(b)==='Last line')!;expect(last.props.disabled).toBe(false);
+  await act(async()=>last.props.onPress());expect(send).not.toHaveBeenCalled();expect(tree!.root.findAllByType('p').some(p=>text(p)==='Trace · line 3')).toBe(true);
+});
