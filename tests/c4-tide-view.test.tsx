@@ -188,3 +188,11 @@ it('a winning run plays every catch to its bucket even though the frame shows th
   expect(words()).toContain('Every catch traced right.');
   expect(heard.play).toHaveBeenCalledWith('win', true);
 });
+it('in a wide landscape board the belt panel stretches to its column, so it wraps rather than spilling under the rule', async () => {
+  viewport.width = 852; viewport.height = 393; viewport.fontScale = 3.12;
+  vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => setTimeout(() => f(0), 0) as unknown as number); vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id));
+  await mount(<BoardSpaceProvider space={{ width: 760, height: 330, large: true }}><Board {...asBoard({ ...props(round(4)), width: 760 })} /></BoardSpaceProvider>);
+  const panel = tree!.root.findAll(n => n.props.testID === 'tide-belt-panel')[0];
+  expect(panel.props.style.alignSelf).toBe('stretch');
+  expect(tree!.root.findAll(n => String(n.type) === 'scroll' && n.props.testID === 'tide-cargo-scroll')).toHaveLength(0);
+});
