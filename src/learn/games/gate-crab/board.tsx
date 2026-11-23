@@ -168,7 +168,7 @@ export function GateCrabBoard(props: GateCrabBoardProps) {
             {makerName}: choose a secret rule
           </Heading>
           <Copy maxFontSizeMultiplier={btnMax} style={{ fontSize: 14, color: ink }}>
-            Pick a rule card below, or tap Surprise me. Then tap Lock and hide before handing over the device.
+            Pick a rule card below, or tap Surprise me. Then tap Lock secret rule & hide before handing over the device.
           </Copy>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
             <Button maxFontSizeMultiplier={btnMax} disabled={!active} onPress={together.onLockRule}>
@@ -334,7 +334,7 @@ export function GateCrabBoard(props: GateCrabBoardProps) {
   );
 
   return (
-    <View testID="gate-crab-board" style={{ gap: 12 }}>
+    <View testID="gate-crab-board" style={{ gap: 12, width: '100%', maxWidth: width }}>
       {header}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <Copy maxFontSizeMultiplier={titleMax} style={{ fontWeight: '900', fontSize: 16, color: ink, flexShrink: 1 }}>
@@ -530,43 +530,60 @@ export function GateCrabBoard(props: GateCrabBoardProps) {
             })}
           </View>
 
-          {/* 6-Shell Picker Tray */}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
-            {ALL_SHELL_CODES.map(code => {
-              const activeShell = builder[safeSlot] === code;
-              return (
-                <PressableScale
-                  key={code}
-                  testID={`gate-pick-${code}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Put ${shellButtonLabel(code)} in slot ${safeSlot + 1}`}
-                  accessibilityState={{ selected: activeShell }}
-                  disabled={!active || testDisabled}
-                  onPress={() => {
-                    coach?.done();
-                    onSetBuilderSlot(safeSlot, code);
-                    if (readRows) setSpokenLine(shellButtonLabel(code));
-                  }}
-                  style={{
-                    width: pCols === 6 ? pShell + 6 : Math.floor((boardW - 44) / 3),
-                    minHeight: 52,
-                    borderRadius: 14,
-                    backgroundColor: activeShell ? '#FFF2BD' : '#FFFDF6',
-                    borderWidth: activeShell ? 2.4 : 1.4,
-                    borderColor: activeShell ? '#D99B16' : '#CBDAD8',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingVertical: 4,
-                    paddingHorizontal: 2,
-                  }}
-                >
-                  <ShellArt code={code} size={Math.min(44, pShell - 4)} />
-                  <Copy maxFontSizeMultiplier={atLarge(fontScale, 1.15)} style={{ fontSize: 11, fontWeight: '700', color: ink }}>
-                    {shellShort(code)}
-                  </Copy>
-                </PressableScale>
-              );
-            })}
+          {/* Subtle divider between the row slots and the 6-shell picker tray */}
+          <View style={{ height: 1, backgroundColor: '#E3D7C3', marginVertical: 2 }} />
+
+          {/* 6-Shell Picker Tray: explicit 6x1 or 3x2 rows so narrow/Challenge/AX5 screens never wrap 2x3 or overflow */}
+          <View style={{ gap: 8, alignItems: 'center', width: '100%' }}>
+            {(pCols === 6 ? [ALL_SHELL_CODES] : [ALL_SHELL_CODES.slice(0, 3), ALL_SHELL_CODES.slice(3, 6)]).map((rowCodesList, rIdx) => (
+              <View
+                key={rIdx}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 8,
+                  width: '100%',
+                  maxWidth: pCols === 6 ? 6 * (pShell + 10) + 5 * 8 : Math.min(boardW, 560),
+                }}
+              >
+                {rowCodesList.map(code => {
+                  const activeShell = builder[safeSlot] === code;
+                  return (
+                    <PressableScale
+                      key={code}
+                      testID={`gate-pick-${code}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Put ${shellButtonLabel(code)} in slot ${safeSlot + 1}`}
+                      accessibilityState={{ selected: activeShell }}
+                      disabled={!active || testDisabled}
+                      onPress={() => {
+                        coach?.done();
+                        onSetBuilderSlot(safeSlot, code);
+                        if (readRows) setSpokenLine(shellButtonLabel(code));
+                      }}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        minHeight: 52,
+                        borderRadius: 14,
+                        backgroundColor: activeShell ? '#FFF2BD' : '#FFFDF6',
+                        borderWidth: activeShell ? 2.4 : 1.4,
+                        borderColor: activeShell ? '#D99B16' : '#CBDAD8',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 4,
+                        paddingHorizontal: 2,
+                      }}
+                    >
+                      <ShellArt code={code} size={Math.min(44, pShell - 4)} />
+                      <Copy maxFontSizeMultiplier={atLarge(fontScale, 1.15)} style={{ fontSize: 11, fontWeight: '700', color: ink }}>
+                        {shellShort(code)}
+                      </Copy>
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            ))}
           </View>
 
           {/* Primary Test Action + Quiz Shortcut + Undo */}
