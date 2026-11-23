@@ -86,18 +86,18 @@ export function step(s: Attempt, a: Action, d: LabProgram): Attempt | null {
 }
 export function validAttempt(v: unknown, d: LabProgram): v is Attempt {
   if (!plain(v) || !exactKeys(v, ['picks', 'undo', 'prediction', 'wrong', 'checked', 'edits', 'help', 'won', 'runs', 'failed'])) return false;
-  const picks = (p: unknown): p is number[] => Array.isArray(p) && p.length === d.slots.length && p.every((n, i) => Number.isInteger(n) && n >= -1 && n < d.slots[i].choices.length);
-  const nums = (p: unknown, max: number, length: number) => Array.isArray(p) && p.length <= length && new Set(p).size === p.length && p.every(n => uint(n, max));
-  if (!picks(v.picks) || !Array.isArray(v.undo) || v.undo.length > 16 || !v.undo.every(picks) || !(v.prediction === null || uint(v.prediction, 3)) || !nums(v.wrong, 3, 3) || !nums(v.checked, 255, 104) || !uint(v.edits, 100) || !uint(v.help, 3) || !uint(v.runs, 104) || v.runs !== (v.checked as unknown[]).length || typeof v.won !== 'boolean' || typeof v.failed !== 'boolean') return false;
+  const picks = (p: unknown): p is number[] => Array.isArray(p) && Object.keys(p).length === p.length && p.length === d.slots.length && p.every((n, i) => Number.isInteger(n) && n >= -1 && n < d.slots[i].choices.length);
+  const nums = (p: unknown, max: number, length: number) => Array.isArray(p) && Object.keys(p).length === p.length && p.length <= length && new Set(p).size === p.length && p.every(n => uint(n, max));
+  if (!picks(v.picks) || !Array.isArray(v.undo) || Object.keys(v.undo).length !== v.undo.length || v.undo.length > 16 || !v.undo.every(picks) || !(v.prediction === null || uint(v.prediction, 3)) || !nums(v.wrong, 3, 3) || !nums(v.checked, 255, 104) || !uint(v.edits, 100) || !uint(v.help, 3) || !uint(v.runs, 104) || v.runs !== (v.checked as unknown[]).length || typeof v.won !== 'boolean' || typeof v.failed !== 'boolean') return false;
   const s = v as Attempt;
   if (s.edits >= FREE_EDITS && s.help === 0) return false;
   if (d.mode === 'predict') {
-    if (s.undo.length || s.picks.some(i => i !== -1) || s.prediction !== null && s.wrong.includes(s.prediction) || s.checked.some(i => i > 3) || s.edits < s.runs) return false;
+    if (s.edits > FREE_EDITS + 1 || s.edits === FREE_EDITS + 1 && s.prediction !== d.answer || s.undo.length || s.picks.some(i => i !== -1) || s.prediction !== null && s.wrong.includes(s.prediction) || s.checked.some(i => i > 3) || s.edits < s.runs) return false;
     const wrong = s.checked.filter(i => i !== d.answer), at = s.checked.indexOf(d.answer);
     return JSON.stringify(wrong) === JSON.stringify(s.wrong) && s.failed === (wrong.length > 0)
       && (s.won ? at === s.checked.length - 1 && at >= 0 && s.prediction === d.answer : at < 0);
   }
-  if (s.prediction !== null || s.wrong.length) return false;
+  if (s.prediction !== null || s.wrong.length || s.edits >= FREE_EDITS && s.edits + nearest(d, s.picks).distance > FREE_EDITS + d.slots.length) return false;
   const checks: boolean[] = [];
   for (const signature of s.checked) { const picks = checkedPicks(signature, d); if (!picks) return false; checks.push(solves(d, picks)); }
   const at = checks.indexOf(true);

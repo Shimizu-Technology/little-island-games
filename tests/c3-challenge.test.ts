@@ -72,6 +72,9 @@ it('rejects contradictory restored check history that could otherwise block ever
   expect(validAttempt({...pb,checked:[255],runs:1,edits:1,failed:true},p)).toBe(false);
   expect(validAttempt({...pb,checked:[p.answer],runs:1,edits:1,won:false},p)).toBe(false);
   expect(validAttempt({...base,edits:96,help:0},d)).toBe(false);
+  expect(validAttempt({...base,edits:100,help:1},d)).toBe(false);
+  expect(validAttempt({...pb,edits:100,help:1},p)).toBe(false);
+  expect(validAttempt({...base,picks:Array(d.slots.length)},d)).toBe(false);
   let won=base;d.slots.forEach((s,i)=>{won=step(won,['e',i,s.answer],d)!;});won=step(won,['c'],d)!;expect(validAttempt(won,d)).toBe(true);
   expect(validAttempt({...won,checked:[...won.checked,0],runs:2},d)).toBe(false);
 });
