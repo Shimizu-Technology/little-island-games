@@ -37,7 +37,7 @@ describe("Coding boards and shared journey", () => {
         if (id === "code-lab") {
           expect(html).toContain("Check prediction");
           expect(html).toContain("Program 1 of 4");
-          expect(roundProgress({ ...session, state: { ...state, index: 4 } })).toEqual({ current: 4, total: 4 });
+          expect(roundProgress({ ...session, state: { ...(state as Record<string, unknown>), index: 4 } })).toEqual({ current: 4, total: 4 });
           expect(roundProgress({ ...session, state: { version: 1, ids: [0, 1, 2, 3], index: 2 } })).toEqual({ current: 2, total: 4 });
         }
         expect(html).not.toMatch(/NaN|undefined|Coming soon/);
