@@ -63,3 +63,15 @@ it('automatic reserve guidance records assistance even with no misses and no exp
   const finished = finish(s,d);expect(finished.result?.event).toBe('helped');expect(finished.result?.awards).toBe(0);
   expect(registration.completionFacts?.(finished)?.helpUsed).toBe(true);
 });
+
+it('rejects contradictory restored check history that could otherwise block every way to finish', () => {
+  const d=schoolPrograms[0][1], base=initialAttempt(d), picks=d.slots.map(s=>s.answer), signature=picks.reduce((n,v)=>n*4+v+1,0);
+  expect(validAttempt({...base,picks,checked:[signature],runs:1,won:false,failed:true},d)).toBe(false);
+  expect(validAttempt({...base,checked:[0],runs:1,failed:true},d)).toBe(false);
+  const p=schoolPrograms[0][0], pb=initialAttempt(p);
+  expect(validAttempt({...pb,checked:[255],runs:1,edits:1,failed:true},p)).toBe(false);
+  expect(validAttempt({...pb,checked:[p.answer],runs:1,edits:1,won:false},p)).toBe(false);
+  expect(validAttempt({...base,edits:96,help:0},d)).toBe(false);
+  let won=base;d.slots.forEach((s,i)=>{won=step(won,['e',i,s.answer],d)!;});won=step(won,['c'],d)!;expect(validAttempt(won,d)).toBe(true);
+  expect(validAttempt({...won,checked:[...won.checked,0],runs:2},d)).toBe(false);
+});

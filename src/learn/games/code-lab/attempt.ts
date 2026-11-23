@@ -12,11 +12,23 @@ export const initialAttempt = (d: LabProgram): Attempt => ({ picks: d.slots.map(
 export const sourceFor = (d: LabProgram, picks: readonly number[]): string[] => d.lines.map((line, i) => { const slot = d.slots.findIndex(s => s.line === i); if (slot < 0) return line; const s = d.slots[slot]; return s.before + (picks[slot] < 0 ? '□' : s.choices[picks[slot]]) + s.after; });
 export const ready = (s: Attempt, d: LabProgram) => d.mode === 'predict' ? s.prediction !== null : s.picks.every(i => i >= 0);
 const key = (picks: readonly number[]) => picks.reduce((n, v) => n * 4 + v + 1, 0);
+const checkedProofs = new WeakMap<LabProgram, Map<number, boolean>>();
 export function solves(d: LabProgram, picks: readonly number[]): boolean {
-  if (picks.some(i => i < 0)) return false;
+  if (picks.length !== d.slots.length || picks.some((i, slot) => !Number.isInteger(i) || i < 0 || i >= d.slots[slot].choices.length)) return false;
+  const signature = key(picks), proofs = checkedProofs.get(d) ?? new Map<number, boolean>();
+  checkedProofs.set(d, proofs);
+  if (proofs.has(signature)) return proofs.get(signature)!;
   const r = runPython(sourceFor(d, picks));
-  return !r.error && r.output.join('\n') === d.output && JSON.stringify(r.returned) === JSON.stringify(d.returned);
+  const correct = !r.error && r.output.join('\n') === d.output && JSON.stringify(r.returned) === JSON.stringify(d.returned);
+  proofs.set(signature, correct); return correct;
 }
+/** The saved check key is a base-four draft with no empty digits. */
+function checkedPicks(signature: number, d: LabProgram): number[] | null {
+  const picks = d.slots.map(() => 0);
+  for (let i = picks.length - 1; i >= 0; i--) { picks[i] = signature % 4 - 1; signature = Math.floor(signature / 4); }
+  return signature === 0 && picks.every((v, i) => v >= 0 && v < d.slots[i].choices.length) ? picks : null;
+}
+
 const cache = new WeakMap<LabProgram, number[][]>();
 export function solutions(d: LabProgram): readonly number[][] {
   let rows = cache.get(d);
@@ -78,7 +90,16 @@ export function validAttempt(v: unknown, d: LabProgram): v is Attempt {
   const nums = (p: unknown, max: number, length: number) => Array.isArray(p) && p.length <= length && new Set(p).size === p.length && p.every(n => uint(n, max));
   if (!picks(v.picks) || !Array.isArray(v.undo) || v.undo.length > 16 || !v.undo.every(picks) || !(v.prediction === null || uint(v.prediction, 3)) || !nums(v.wrong, 3, 3) || !nums(v.checked, 255, 104) || !uint(v.edits, 100) || !uint(v.help, 3) || !uint(v.runs, 104) || v.runs !== (v.checked as unknown[]).length || typeof v.won !== 'boolean' || typeof v.failed !== 'boolean') return false;
   const s = v as Attempt;
-  if (d.mode === 'predict' && (s.undo.length || s.picks.some(i => i !== -1) || s.prediction !== null && s.wrong.includes(s.prediction) || s.wrong.some(i => i === d.answer || !s.checked.includes(i)))) return false;
-  if (d.mode === 'build' && (s.prediction !== null || s.wrong.length)) return false;
-  return (!s.won || ready(s, d) && (d.mode === 'predict' ? s.prediction === d.answer : solves(d, s.picks))) && (!s.failed || s.runs > 0);
+  if (s.edits >= FREE_EDITS && s.help === 0) return false;
+  if (d.mode === 'predict') {
+    if (s.undo.length || s.picks.some(i => i !== -1) || s.prediction !== null && s.wrong.includes(s.prediction) || s.checked.some(i => i > 3) || s.edits < s.runs) return false;
+    const wrong = s.checked.filter(i => i !== d.answer), at = s.checked.indexOf(d.answer);
+    return JSON.stringify(wrong) === JSON.stringify(s.wrong) && s.failed === (wrong.length > 0)
+      && (s.won ? at === s.checked.length - 1 && at >= 0 && s.prediction === d.answer : at < 0);
+  }
+  if (s.prediction !== null || s.wrong.length) return false;
+  const checks: boolean[] = [];
+  for (const signature of s.checked) { const picks = checkedPicks(signature, d); if (!picks) return false; checks.push(solves(d, picks)); }
+  const at = checks.indexOf(true);
+  return s.failed === checks.includes(false) && (s.won ? at >= 0 && at === checks.length - 1 && s.checked.at(-1) === key(s.picks) && solves(d, s.picks) : at < 0);
 }
