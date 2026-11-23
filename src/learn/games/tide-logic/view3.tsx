@@ -28,7 +28,6 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const [message, setMessage] = useState("");
   const [guess, setGuess] = useState<Side | null>(null);
   const [failure, setFailure] = useState<number | null>(null);
-  const [focus, setFocus] = useState<number[]>([]);
   const CargoViewport = singleRow ? ScrollView : React.Fragment;
   const cargoScroll = useRef<ScrollView | null>(null), cargoPositions = useRef<number[]>([]);
   const current = row && s.running >= 0 ? Math.min(s.running, row.belt.length - 1) : 0;
@@ -40,7 +39,8 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const placed = row && complete(f, s.rule) ? routes(f, s.rule, row.belt) : null;
   // Level 5 traces the child's own rule on one catch before it runs: the catch where the target and its most tempting wrong rule part ways.
   const traceAt = row?.trace ?? -1, traced = row && traceAt >= 0 && complete(f, s.rule) ? routes(f, s.rule, row.belt)[traceAt] : null;
-  const accepted = (next: TideV3 | null, say = "") => { if (!next) return false; update(next); setMessage(say); setFailure(null); setFocus([]); sound("tap", true); return true; };
+  // A changed rule must be traced again before it runs.
+  const accepted = (next: TideV3 | null, say = "") => { if (!next) return false; update(next); setMessage(say); setFailure(null); setGuess(null); sound("tap", true); return true; };
   const change = (slot: number, option: number) => { if (accepted(choose(s, slot, option))) { setEditing(null); coach.done(); } };
   const tryRun = () => {
     if (!row || (traceAt >= 0 && guess !== traced)) return;
@@ -49,7 +49,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
     update(result.state);
     if (result.miss !== null) {
       const got = routes(f, s.rule, row.belt)[result.miss];
-      setFailure(result.miss); setFocus([]);
+      setFailure(result.miss);
       practice(s.level === 4 ? "think.code-events" : s.level >= 3 ? "think.code-logic" : "think.code-condition", false);
       sound("wrong", true);
       setMessage(`Catch ${result.miss + 1}, the ${catchWords(row.belt[result.miss])}, would go ${SIDE[got].toUpperCase()}, but it belongs ${SIDE[1 - got].toUpperCase()}. Change a block and run again.`);
@@ -60,7 +60,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const step = () => {
     if (!row) return;
     const next = advance(s); update(next);
-    if (s.running >= row.belt.length) { setMessage(""); setGuess(null); setFailure(null); setFocus([]); if (next.index >= 4) cheer("big"); return; }
+    if (s.running >= row.belt.length) { setMessage(""); setGuess(null); setFailure(null); if (next.index >= 4) cheer("big"); return; }
     sound("tap", true);
     if (next.running === row.belt.length) { practice(s.level === 4 ? "think.code-events" : s.level >= 3 ? "think.code-logic" : "think.code-condition", true); cheer("right"); }
   };
@@ -68,10 +68,12 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
     if (!row) return;
     const next = help(s);
     if (!next) { setMessage("Your rule already sorts every catch. Press Run."); return; }
-    assistance?.(); update(next); setEditing(null); setFailure(null);
-    if (next.hint === 1) { const look = lookText(f, s.rule, row.target, row.belt); setMessage(look.text); setFocus(look.focus); }
-    else { setFocus([]); setMessage(next.hint === 2 ? "Help set one block right. Look at the rule, then press Run." : "Help filled the rule. Press Run to see why each catch goes there."); }
+    assistance?.(); update(next); setEditing(null); setFailure(null); setMessage(""); if (next.rule !== s.rule) setGuess(null);
   };
+  // Help's words come from the saved rung, so a resumed round shows the same help it left with.
+  const look = row && s.hint === 1 ? lookText(f, s.rule, row.target, row.belt) : null;
+  const helpLine = !row || s.hint === 0 ? "" : look ? look.text : s.hint === 2 ? "Help set one block right. Look at the rule, then press Run." : "Help filled the rule. Press Run to see why each catch goes there.";
+  const lit = look?.focus ?? [];
   const ruleView = (slot: number) => {
     const option = s.rule[slot], slotDef = f.slots[slot], value = option >= 0 ? slotDef.options[option] : "";
     const text = slotDef.kind === "side" ? bucketLabel(value) : slotDef.kind === "when" ? (value ? whenLabel(value) : "on which catch? +") : slotDef.kind === "join" ? (value ? value.toUpperCase() : "AND/OR +") : value ? clueLabel(value, s.level) : "clue +";
@@ -89,7 +91,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
       <BoardColumns drawing={<View style={{ backgroundColor: "#E2F3F2", borderRadius: 18, padding: compact ? 8 : 12, gap: compact ? 6 : 8 }}>
         <CargoViewport {...(singleRow ? { ref: cargoScroll, horizontal: true, nestedScrollEnabled: true, testID: "tide-cargo-scroll", accessibilityLabel: "Cargo belt. Scroll sideways to see every catch." } : {})}>
         <View testID={geometry.testID} onLayout={event => { geometry.onLayout?.(event); const fixed = Math.max(0, event.nativeEvent.layout.height - cargoRows * cargoSize); setCargoChrome(old => Math.abs(old - fixed) < 1 ? old : fixed); }} style={{ flexDirection: "row", flexWrap: singleRow ? "nowrap" : "wrap", justifyContent: "center", gap: 5 }}>
-          {row.belt.map((c, i) => { const item = itemOf(c), wrong = i === failure, marked = wrong || focus.includes(i) || s.running === i; return <View key={i} accessibilityLabel={`Catch ${i + 1}: ${catchWords(c)}${s.running > i && placed ? `, sorted ${SIDE[placed[i]]}` : ""}`} onLayout={singleRow ? event => { cargoPositions.current[i] = event.nativeEvent.layout.x; if (s.running === i) cargoScroll.current?.scrollTo({ x: event.nativeEvent.layout.x, animated: false }); } : undefined} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: marked ? 3 : 0, borderColor: wrong ? "#B74431" : focus.includes(i) ? "#8A6A00" : "#287A82", borderRadius: 12, backgroundColor: wrong ? "#FFE0D8" : focus.includes(i) ? "#FFF5CC" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{`${i + 1} · ${item.size}`}</Copy></View>; })}
+          {row.belt.map((c, i) => { const item = itemOf(c), wrong = i === failure, marked = wrong || lit.includes(i) || s.running === i; return <View key={i} accessibilityLabel={`Catch ${i + 1}: ${catchWords(c)}${s.running > i && placed ? `, sorted ${SIDE[placed[i]]}` : ""}`} onLayout={singleRow ? event => { cargoPositions.current[i] = event.nativeEvent.layout.x; if (s.running === i) cargoScroll.current?.scrollTo({ x: event.nativeEvent.layout.x, animated: false }); } : undefined} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: marked ? 3 : 0, borderColor: wrong ? "#B74431" : lit.includes(i) ? "#8A6A00" : "#287A82", borderRadius: 12, backgroundColor: wrong ? "#FFE0D8" : lit.includes(i) ? "#FFF5CC" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{`${i + 1} · ${item.size}`}</Copy></View>; })}
         </View>
         </CargoViewport>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
@@ -111,6 +113,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
       {editing !== null && <View testID="tide-options" style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{f.slots[editing].options.map((v, o) => <Button key={v} compact selected={s.rule[editing] === o} onPress={() => change(editing, o)}>{f.slots[editing].kind === "side" ? bucketLabel(v) : f.slots[editing].kind === "when" ? whenLabel(v) : f.slots[editing].kind === "join" ? v.toUpperCase() : clueLabel(v, s.level)}</Button>)}</View>}
       {traceAt >= 0 && s.running < 0 && complete(f, s.rule) && <View style={{ gap: 6, backgroundColor: "#E8F3EA", borderRadius: 14, padding: 10 }}><Copy style={{ fontWeight: "700" }}>TRACE IT · Catch {traceAt + 1}, the {catchWords(row.belt[traceAt])}: which bucket will your rule send it to?</Copy><View style={{ flexDirection: "row", gap: 8 }}>{([0, 1] as Side[]).map(bucket => <Button key={bucket} compact quiet selected={guess === bucket} onPress={() => { setGuess(bucket); sound("tap", true); if (bucket !== traced) { practice("think.code-logic", false); setMessage("Follow your rule one clue at a time. Try again."); } else setMessage("You traced it! Now run the belt to see if it sorts every catch."); }}>{bucket === 0 ? "← Left" : "Right →"}</Button>)}</View></View>}
       {!!message && <Copy accessibilityLiveRegion="polite" testID="tide-message">{message}</Copy>}
+      {!!helpLine && s.running < 0 && <View testID="tide-hint" accessibilityLiveRegion="polite" style={{ padding: 10, borderRadius: 12, backgroundColor: "#FFF5CC" }}><Copy>{helpLine}</Copy></View>}
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         {s.running < 0 ? <Button onPress={tryRun} disabled={!active || !complete(f, s.rule) || (traceAt >= 0 && guess !== traced)}>▶ Run the belt</Button> : <Button onPress={step} disabled={!active}>{s.running < row.belt.length ? "Next catch →" : "Next belt →"}</Button>}
         {s.running < 0 && <Button quiet compact onPress={() => { if (accepted(undo(s))) setEditing(null); }} disabled={!active || !s.undo.length}>↶ Undo</Button>}
