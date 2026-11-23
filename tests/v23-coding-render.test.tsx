@@ -8,12 +8,13 @@ import { roundProgress } from "../src/learn/LearnChrome";
 import { optionsAtLevel, type LearningLevel } from "../src/learn/levelOptions";
 import type { BoardProps, LearnId } from "../src/learn/types";
 const { renderToStaticMarkup } = createRequire(import.meta.url)("react-dom/server");
-vi.mock("react-native", () => ({ View: ({ children }: { children: React.ReactNode }) => <div>{children}</div>, Platform: { select: (o: Record<string, unknown>) => o.ios }, useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
+vi.mock("react-native", () => ({ View: ({ children }: { children: React.ReactNode }) => <div>{children}</div>, ScrollView: ({ children }: { children: React.ReactNode }) => <section>{children}</section>, Platform: { select: (o: Record<string, unknown>) => o.ios }, useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
 vi.mock("../src/components/ui", () => ({
   C: { ink: "#123", paper: "#fff" },
   Copy: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   Heading: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
   Button: ({ children, label }: { children: React.ReactNode; label?: string }) => <button aria-label={label}>{children}</button>,
+  PressableScale: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 vi.mock("../src/components/GameIcon", () => ({ GameIcon: ({ id }: { id: string }) => <svg data-game={id}/> }));
 vi.mock("react-native-svg", () => ({
@@ -32,7 +33,13 @@ describe("Coding boards and shared journey", () => {
         expect(roundProgress(session)).toEqual({ current: 0, total: 4 });
         const Board = view.Board as unknown as React.ComponentType<BoardProps<unknown>>;
         const html = renderToStaticMarkup(<Board {...props}/>);
-        expect(html).toContain(id === "code-lab" ? "PYTHON-LIKE CODE" : "BUILD THE RULE");
+        expect(html).toContain(id === "code-lab" ? "Read the program" : "BUILD THE RULE");
+        if (id === "code-lab") {
+          expect(html).toContain("Check prediction");
+          expect(html).toContain("Program 1 of 4");
+          expect(roundProgress({ ...session, state: { ...state, index: 4 } })).toEqual({ current: 4, total: 4 });
+          expect(roundProgress({ ...session, state: { version: 1, ids: [0, 1, 2, 3], index: 2 } })).toEqual({ current: 2, total: 4 });
+        }
         expect(html).not.toMatch(/NaN|undefined|Coming soon/);
         expect(renderToStaticMarkup(<view.Art size={80}/>)).toContain(`data-game="${id}"`);
       });
