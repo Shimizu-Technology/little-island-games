@@ -56,12 +56,13 @@ export function advance(s: TideV3): TideV3 {
 /** Catches already sorted to the bucket the child's rule names. Level 4's counter. */
 export function counted(s: TideV3): number {
   const row = currentRow(s);
-  if (!row || s.running <= 0) return 0;
+  if (!row || s.running < 0) return 0;
   // The child's own bucket: a right rule may name the other bucket (coral and no bell → left is blue or bell → right).
   const f = frameOf(s.level), side = s.rule[f.slots.length - 1];
   if (!complete(f, s.rule)) return 0;
   const got = routes(f, s.rule, row.belt);
-  return got.slice(0, s.running).filter(x => x === side).length;
+  // The board shows catch `running` as already sorted, so it counts too.
+  return got.slice(0, Math.min(row.belt.length, s.running + 1)).filter(x => x === side).length;
 }
 const validRule = (f: Frame, r: unknown, allowEmpty: boolean): r is number[] => Array.isArray(r) && r.length === f.slots.length && Object.keys(r).length === r.length && r.every((o, i) => Number.isInteger(o) && o >= (allowEmpty ? -1 : 0) && o < f.slots[i].options.length);
 export function validV3(x: Record<string, unknown>, level: number): x is TideV3 {

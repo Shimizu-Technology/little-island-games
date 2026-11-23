@@ -29,6 +29,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const [message, setMessage] = useState("");
   const [guess, setGuess] = useState<Side | null>(null);
   const [failure, setFailure] = useState<number | null>(null);
+  const [missText, setMissText] = useState("");
   const CargoViewport = singleRow ? ScrollView : React.Fragment;
   const cargoScroll = useRef<ScrollView | null>(null), cargoPositions = useRef<number[]>([]);
   const current = row && s.running >= 0 ? Math.min(s.running, row.belt.length - 1) : 0;
@@ -53,7 +54,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
       setFailure(result.miss);
       practice(s.level === 4 ? "think.code-events" : s.level >= 3 ? "think.code-logic" : "think.code-condition", false);
       sound("wrong", true);
-      setMessage(`Catch ${result.miss + 1}, the ${catchWords(row.belt[result.miss])}, would go ${SIDE[got].toUpperCase()}, but it belongs ${SIDE[1 - got].toUpperCase()}. Change a block and run again.`);
+      setMessage(""); setMissText(`Catch ${result.miss + 1}, the ${catchWords(row.belt[result.miss])}, would go ${SIDE[got].toUpperCase()}, but it belongs ${SIDE[1 - got].toUpperCase()}. Change a block and run again.`);
       return;
     }
     setFailure(null); setMessage("Watch each catch reach its bucket."); cheer("right");
@@ -83,7 +84,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const bellNote = (i: number) => {
     if (!row || f.id !== "bell") return "";
     const rings = bell(row.belt[i]), before = i > 0 && bell(row.belt[i - 1]);
-    return `${rings ? " · ♪ this catch rings" : ""}${before ? " · the catch before rang" : ""}`;
+    return `${rings ? " · 🔔 this catch rings" : ""}${before ? " · the catch before rang" : ""}`;
   };
   return <View style={{ gap: compact ? 4 : 12, paddingBottom: 20 }}>
     <Heading>{done ? "Dock sorter complete!" : `Belt ${s.index + 1} of 4`}</Heading>
@@ -93,14 +94,15 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
       <BoardColumns drawing={<View testID="tide-belt-panel" style={{ alignSelf: "stretch", backgroundColor: "#E2F3F2", borderRadius: 18, padding: compact ? 8 : 12, gap: compact ? 6 : 8 }}>
         <CargoViewport {...(singleRow ? { ref: cargoScroll, horizontal: true, nestedScrollEnabled: true, testID: "tide-cargo-scroll", accessibilityLabel: "Cargo belt. Scroll sideways to see every catch." } : {})}>
         <View testID={geometry.testID} onLayout={event => { geometry.onLayout?.(event); const fixed = Math.max(0, event.nativeEvent.layout.height - cargoRows * cargoSize); setCargoChrome(old => Math.abs(old - fixed) < 1 ? old : fixed); }} style={{ flexDirection: "row", flexWrap: singleRow ? "nowrap" : "wrap", justifyContent: "center", gap: 5 }}>
-          {row.belt.map((c, i) => { const item = itemOf(c), wrong = i === failure, marked = wrong || lit.includes(i) || s.running === i; return <View key={i} accessibilityLabel={`Catch ${i + 1}: ${catchWords(c)}${s.running > i && placed ? `, sorted ${SIDE[placed[i]]}` : ""}`} onLayout={singleRow ? event => { cargoPositions.current[i] = event.nativeEvent.layout.x; if (s.running === i) cargoScroll.current?.scrollTo({ x: event.nativeEvent.layout.x, animated: false }); } : undefined} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: marked ? 3 : 0, borderColor: wrong ? "#B74431" : lit.includes(i) ? "#8A6A00" : "#287A82", borderRadius: 12, backgroundColor: wrong ? "#FFE0D8" : lit.includes(i) ? "#FFF5CC" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: "700" }}>{`${i + 1} · ${item.size}`}</Copy></View>; })}
+          {row.belt.map((c, i) => { const item = itemOf(c), wrong = i === failure, marked = wrong || lit.includes(i) || s.running === i; return <View key={i} accessibilityLabel={`Catch ${i + 1}: ${catchWords(c)}${s.running > i && placed ? `, sorted ${SIDE[placed[i]]}` : ""}`} onLayout={singleRow ? event => { cargoPositions.current[i] = event.nativeEvent.layout.x; if (s.running === i) cargoScroll.current?.scrollTo({ x: event.nativeEvent.layout.x, animated: false }); } : undefined} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: marked ? 3 : 0, borderColor: wrong ? "#B74431" : lit.includes(i) ? "#8A6A00" : "#287A82", borderRadius: 12, backgroundColor: wrong ? "#FFE0D8" : lit.includes(i) ? "#FFF5CC" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}>{/* A small catch sits on the same line as a big one, so every label lines up. */}{item.size === "small" && <View style={{ height: cargoSize * 15 / 64 }}/>}<Cargo item={item} size={item.size === "big" ? cargoSize : cargoSize * 49 / 64}/><Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: "700" }}>{`${i + 1} · ${item.size}`}</Copy></View>; })}
         </View>
         </CargoViewport>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
         <View testID="tide-buckets" style={{ flexDirection: "row", justifyContent: "space-around", gap: 8 }}><Copy maxFontSizeMultiplier={bucketMax} style={{ flexShrink: 1 }}>{"← LEFT BUCKET"}</Copy><Copy maxFontSizeMultiplier={bucketMax} style={{ flexShrink: 1, textAlign: "right" }}>{"RIGHT BUCKET →"}</Copy></View>
-        {s.level === 4 && <View accessibilityLiveRegion="polite" style={{ padding: 10, borderRadius: 12, backgroundColor: "#FFF2BA" }}><Copy style={{ fontSize: 22, fontWeight: "800" }}>Counter: {counted(s)}</Copy><Copy>{s.running < 0 ? `Starts at 0. It counts the catches sent ${chosenSide >= 0 ? SIDE[chosenSide] : "to the rule's bucket"}.` : s.running < row.belt.length ? `Next: catch ${s.running + 1}${bellNote(s.running)}` : "Final count · every catch counted once"}</Copy></View>}
+        {s.level === 4 && <View accessibilityLiveRegion="polite" style={{ padding: 10, borderRadius: 12, backgroundColor: "#FFF2BA" }}><Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 22, fontWeight: "800" }}>Counter: {counted(s)}</Copy><Copy maxFontSizeMultiplier={1.5}>{s.running >= row.belt.length ? "Final count · every catch counted once" : `It counts the catches sent ${chosenSide >= 0 ? SIDE[chosenSide] : "to the rule's bucket"}.`}</Copy></View>}
         {s.running >= 0 && placed && <Copy accessibilityLiveRegion="polite" style={{ textAlign: "center", fontWeight: "700" }}>{s.running < row.belt.length ? `Catch ${s.running + 1}: ${SIDE[placed[s.running]].toUpperCase()} ✓${bellNote(s.running)}` : `All sorted! ${placed.filter(x => x === 0).length} left · ${placed.filter(x => x === 1).length} right`}</Copy>}
-        {failure !== null && <Copy style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>Look at the outlined catch: the sorter found a bug.</Copy>}
+        {/* The miss itself, by the belt, so it stays in view with the outlined catch. */}
+        {failure !== null && !!missText && <Copy testID="tide-miss" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>{missText}</Copy>}
       </View>
       }><View style={{ borderWidth: 2, borderColor: "#287A82", backgroundColor: "#FFF9EA", borderRadius: 16, padding: compact ? 8 : 12, gap: compact ? 5 : 7 }}>
         <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: "700" }}>BUILD THE RULE</Copy>
@@ -109,7 +111,7 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
           {f.id === "bell" && <Copy maxFontSizeMultiplier={1.5}>{"🔔 rings"}</Copy>}
           {f.slots.map((slot, i) => slot.kind === "side" ? null : <React.Fragment key={i}>{f.id === "bell" && i === 1 && <Copy maxFontSizeMultiplier={1.5}>AND</Copy>}{ruleView(i)}</React.Fragment>)}
           <Copy maxFontSizeMultiplier={1.5}>→</Copy>{s.level === 1 && <BucketPicture side={chosenSide === 1 ? "right" : "left"}/>}{ruleView(sideSlot)}
-          <Copy maxFontSizeMultiplier={1.5}>{"ELSE → "}{bucketLabel(chosenSide < 0 ? "" : SIDE[1 - chosenSide])}</Copy>
+          <Copy maxFontSizeMultiplier={1.5}>{chosenSide < 0 ? "ELSE\u00a0→ choose bucket" : `ELSE\u00a0→ ${SIDE[1 - chosenSide]} bucket`}</Copy>
         </View>
       </View>
       {editing !== null && <View testID="tide-options" style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{f.slots[editing].options.map((v, o) => <Button maxFontSizeMultiplier={1.5} key={v} compact selected={s.rule[editing] === o} onPress={() => change(editing, o)}>{f.slots[editing].kind === "side" ? bucketLabel(v) : f.slots[editing].kind === "when" ? whenLabel(v) : f.slots[editing].kind === "join" ? v.toUpperCase() : clueLabel(v, s.level)}</Button>)}</View>}

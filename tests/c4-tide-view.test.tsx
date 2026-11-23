@@ -6,10 +6,12 @@ import { ChallengeBoard } from '../src/learn/games/tide-logic/challenge-view';
 import { tidePuzzles } from '../src/learn/games/tide-logic/challenge-content';
 import { HELP, RUN, answerOf, challengeEngine, pick, setBlock, type Action, type State } from '../src/learn/games/tide-logic/challenge-engine';
 import { engine, type LegacyTide, type TideV3 } from '../src/learn/games/tide-logic/engine';
-import { currentRow, frameOf } from '../src/learn/games/tide-logic/school';
+import { currentRow, frameOf, run } from '../src/learn/games/tide-logic/school';
 import { BoardSpaceProvider } from '../src/learn/BoardSpace';
 import { FRAMES, goalSentence, usesRuleWords } from '../src/learn/games/tide-logic/rules';
 
+const must = <T,>(x: T | null): T => { if (x === null) throw new Error('refused'); return x; };
+const setRuleState = (s: TideV3, rule: number[]): TideV3 => ({ ...s, rule: [...rule] });
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 vi.mock('react-native', () => ({ View: 'div', ScrollView: 'scroll', useWindowDimensions: () => viewport }));
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Path: 'path', Rect: 'rect', Text: 'text' }));
@@ -204,4 +206,17 @@ it('School chrome caps at 1.5x and the goal at 2x, so Run stays with the belt at
   expect(tree!.root.findAll(n => n.props.testID === 'tide-goal')[0].props.maxFontSizeMultiplier).toBe(2);
   const trace = tree!.root.findAllByType('p').find(n => text(n).startsWith('TRACE IT'))!;
   expect(trace.props.maxFontSizeMultiplier).toBe(1.5);
+});
+it('a miss is said by the belt (not a vague line), the counter never repeats the catch line, and ELSE shows one arrow', async () => {
+  const s = round(4), row = currentRow(s)!, wrong = [1 - row.target[0], row.target[1], row.target[2]];
+  const p = props({ ...s, rule: wrong });
+  await mount(<Board {...asBoard(p)} />);
+  await press('▶ Run the belt');
+  const miss = tree!.root.findAll(n => n.props.testID === 'tide-miss')[0];
+  expect(text(miss)).toMatch(/^Catch \d+, the .+, would go (LEFT|RIGHT), but it belongs (LEFT|RIGHT)\./);
+  expect(words().some(w => /found a bug/.test(w))).toBe(false);
+  expect(words().filter(w => w.startsWith('ELSE')).every(w => (w.match(/[←→]/g) ?? []).length === 1)).toBe(true);
+  const running = must(run(setRuleState(s, row.target))).state;
+  await act(async () => tree!.update(<Board {...asBoard(props({ ...running, running: 2 }))} />));
+  expect(words().some(w => w.startsWith('Next:'))).toBe(false);
 });

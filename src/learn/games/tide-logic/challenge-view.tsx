@@ -43,6 +43,8 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
   // Marks belong to the draft that ran; an edit since then clears them.
   const ran = s.last === s.draft.join(','), shown = playback.cursor < 0 || !ran ? 0 : Math.min(playback.cursor, end);
   const catchSize = width >= 600 ? 64 : 56;
+  // The first wrong catch, said by the belt itself so it stays in view with the outlined catch.
+  const missLine = s.won || s.miss === null ? '' : d.kind === 'trace' ? `Catch ${s.miss + 1} is not where the gate sends it. Follow the gate from catch 1.` : `Catch ${s.miss + 1}, the ${catchWords(d.belt[s.miss])}, goes ${SIDE[(sorted ?? want)[s.miss]].toUpperCase()} with your rule, but it belongs ${SIDE[want[s.miss]].toUpperCase()}. Change a block and run again.`;
   const goal = d.kind === 'write' ? goalSentence(f, d.target) : d.kind === 'find' ? 'Read the sorted belt. Build a rule that sorts every catch the same way.' : '';
   const belt = <View style={{ backgroundColor: '#E2F3F2', borderRadius: 18, padding: 10, gap: 8 }}>
     <ScrollView horizontal={oneRow} scrollEnabled={oneRow} nestedScrollEnabled accessibilityLabel={oneRow ? 'Cargo belt. Scroll sideways to see every catch.' : undefined} contentContainerStyle={oneRow ? { gap: 6, paddingRight: 4 } : undefined}>
@@ -51,7 +53,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
         const item = itemOf(c), tested = i < shown, wrong = s.miss === i && !playing && !s.won, landed = tested ? (d.kind === 'trace' ? s.draft[i] : sorted?.[i]) : undefined;
         const label = `Catch ${i + 1}: ${catchWords(c)}${d.kind === 'find' ? `, sorted ${SIDE[want[i]]}` : ''}${d.kind === 'trace' && s.draft[i] >= 0 ? `, you send it ${SIDE[s.draft[i]]}` : ''}${landed !== undefined && landed >= 0 ? `, ${landed === want[i] ? 'right' : 'wrong'} bucket` : ''}`;
         return <View key={i} accessible={d.kind !== 'trace'} accessibilityLabel={label} style={{ alignItems: 'center', minWidth: d.kind === 'trace' ? 96 : 64, padding: 3, borderRadius: 12, borderWidth: wrong || playing && i === shown ? 3 : 0, borderColor: wrong ? '#B74431' : '#287A82', backgroundColor: wrong ? '#FFE0D8' : playing && i === shown ? '#FFF2BA' : 'transparent' }}>
-          <Cargo item={item} size={item.size === 'big' ? catchSize : catchSize * 49 / 64} />
+          <View style={{ height: catchSize, justifyContent: 'flex-end' }}><Cargo item={item} size={item.size === 'big' ? catchSize : catchSize * 49 / 64} /></View>
           <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '700' }}>{`${i + 1} · ${item.size}`}</Copy>
           {d.kind === 'find' && <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '800', color: want[i] ? '#9A4A2E' : '#22686F' }}>{want[i] ? 'right →' : '← left'}</Copy>}
           {d.kind === 'trace' && <View style={{ flexDirection: 'row', gap: 4 }}>{([0, 1] as Side[]).map(side => <Button key={side} compact quiet maxFontSizeMultiplier={1.3} selected={s.draft[i] === side} disabled={idle} label={`Send catch ${i + 1} ${SIDE[side]}${s.draft[i] === side ? ', chosen' : ''}`} onPress={() => send(pick(i, side))}>{side ? '→' : '←'}</Button>)}</View>}
@@ -62,7 +64,8 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
     </ScrollView>
     <View style={{ height: 9, borderRadius: 5, backgroundColor: '#B49C77' }} />
     <View testID="tide-buckets" style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 8 }}><Copy maxFontSizeMultiplier={1.3} style={{ flexShrink: 1 }}>{'← LEFT BUCKET'}</Copy><Copy maxFontSizeMultiplier={1.3} style={{ flexShrink: 1, textAlign: 'right' }}>{'RIGHT BUCKET →'}</Copy></View>
-    {playing && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', fontWeight: '700' }}>{`Testing catch ${shown + 1}${f.id === 'bell' && bell(d.belt[shown]) ? ' · ♪ it rings' : ''}${f.id === 'bell' && shown > 0 && bell(d.belt[shown - 1]) ? ' · the catch before rang' : ''}`}</Copy>}
+    {!playing && !!missLine && <Copy testID="tide-miss" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', color: '#8D3528', fontWeight: '800' }}>{missLine}</Copy>}
+    {playing && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', fontWeight: '700' }}>{`Testing catch ${shown + 1}${f.id === 'bell' && bell(d.belt[shown]) ? ' · 🔔 it rings' : ''}${f.id === 'bell' && shown > 0 && bell(d.belt[shown - 1]) ? ' · the catch before rang' : ''}`}</Copy>}
   </View>;
   const rule = d.kind === 'trace'
     ? <View testID="tide-rule" style={{ padding: 10, borderRadius: 14, borderWidth: 2, borderColor: '#287A82', backgroundColor: '#FFF9EA', gap: 4 }}><Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>THE RULE</Copy><Copy maxFontSizeMultiplier={1.5}>{ruleWords(f, d.target)}</Copy><Copy maxFontSizeMultiplier={1.5}>{goalSentence(f, d.target)}</Copy></View>
@@ -77,21 +80,21 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
           return <React.Fragment key={i}>
             {f.id === 'flip' && i === 0 && <Copy maxFontSizeMultiplier={1.5}>· EVERY</Copy>}
             {f.id === 'bell' && i === 1 && <Copy maxFontSizeMultiplier={1.5}>AND</Copy>}
-            {f.id === 'three' && i === 2 && <Copy maxFontSizeMultiplier={1.5}>(</Copy>}
+            {f.id === 'three' && i === 2 && <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 28, fontWeight: '900', color: '#287A82' }}>(</Copy>}
             {slot.kind === 'side' && <Copy maxFontSizeMultiplier={1.5}>→</Copy>}
             <Button compact quiet maxFontSizeMultiplier={1.5} selected={editing === i} disabled={idle} label={`Choose ${slot.name}, currently ${v || 'empty'}`} onPress={() => setEditing(editing === i ? null : i)}>{v ? optionLabel(slot.kind, v) : empty}</Button>
-            {f.id === 'three' && i === 4 && <Copy maxFontSizeMultiplier={1.5}>)</Copy>}
+            {f.id === 'three' && i === 4 && <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 28, fontWeight: '900', color: '#287A82' }}>)</Copy>}
             {f.id === 'flip' && i === 0 && <Copy maxFontSizeMultiplier={1.5}>FLIPS IT</Copy>}
           </React.Fragment>;
         })}
-        {f.id !== 'flip' && <Copy maxFontSizeMultiplier={1.5}>{'ELSE → '}{bucketLabel(s.draft[f.slots.length - 1] < 0 ? '' : SIDE[1 - s.draft[f.slots.length - 1]])}</Copy>}
+        {f.id !== 'flip' && <Copy maxFontSizeMultiplier={1.5}>{s.draft[f.slots.length - 1] < 0 ? 'ELSE\u00a0→ choose bucket' : `ELSE\u00a0→ ${SIDE[1 - s.draft[f.slots.length - 1]]} bucket`}</Copy>}
       </View>
       {editing !== null && <View testID="tide-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{f.slots[editing].options.map((v, o) => <Button key={v} compact maxFontSizeMultiplier={1.5} selected={s.draft[editing] === o} disabled={idle} onPress={() => { send(setBlock(editing, o)); setEditing(null); }}>{optionLabel(f.slots[editing].kind, v)}</Button>)}</View>}
     </View>;
   const filled = s.draft.every(x => x >= 0);
   const message = s.won ? (playing ? 'Watch every catch land.' : d.kind === 'trace' ? 'Every catch traced right.' : 'Your rule sorts every catch.')
     : playing ? 'Testing each catch against your rule.'
-    : s.miss !== null ? (d.kind === 'trace' ? `Catch ${s.miss + 1} is not where the gate sends it. Follow the gate from catch 1.` : `Catch ${s.miss + 1}, the ${catchWords(d.belt[s.miss])}, goes ${SIDE[(sorted ?? want)[s.miss]].toUpperCase()} with your rule, but it belongs ${SIDE[want[s.miss]].toUpperCase()}. Change a block and run again.`)
+    : s.miss !== null ? ''
     : s.runs > 0 && s.last === s.draft.join(',') ? 'Change something before you run again.' : '';
   const controls = <View style={{ gap: 8 }}>
     {!!message && <Copy testID="tide-message" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5}>{message}</Copy>}
@@ -100,7 +103,7 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
       <Button maxFontSizeMultiplier={1.5} style={{ flexGrow: 1 }} disabled={idle || !filled || s.last === s.draft.join(',')} onPress={() => send(RUN)}>{d.kind === 'trace' ? 'Check' : '▶ Run the belt'}</Button>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || !s.undo.length} onPress={() => send(UNDO)}>↶ Undo</Button>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || s.draft.every(x => x < 0)} onPress={() => send(CLEAR)}>Clear</Button>
-      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || !helpLeft(s)} onPress={() => send(HELP)}>{s.hint === 0 ? 'Help' : 'More help'}</Button>
+      {!s.won && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || !helpLeft(s)} onPress={() => send(HELP)}>{s.hint === 0 ? 'Help' : 'More help'}</Button>}
       {prefs.sound !== false && !!learnSources[RULES[d.kind]] && <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => tone(RULES[d.kind], true)}>Hear rules</Button>}
       {prefs.sound !== false && (f.id === 'not' || f.id === 'bell') && !!learnSources[f.id === 'not' ? 'c4-tide-not' : 'c4-tide-bell'] && <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => tone(f.id === 'not' ? 'c4-tide-not' : 'c4-tide-bell', true)}>{f.id === 'not' ? 'Hear NOT' : 'Hear the bell'}</Button>}
     </View>

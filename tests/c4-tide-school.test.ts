@@ -86,13 +86,14 @@ describe('School version 3 rounds', () => {
     expect(busy.undo.length).toBe(UNDO_DEPTH);
     expect(validV3(JSON.parse(JSON.stringify(busy)), 3)).toBe(true);
   });
-  it('Level 4 counts the catches its rule sends to the bucket the child chose, once each', () => {
+  it('Level 4 counts the catches its rule sends to the bucket the child chose, once each, including the one on show', () => {
     let s = fresh(4);
     const row = currentRow(s)!;
     s = must(run(setRule(s, row.target))).state;
     const side = row.target[2];
     for (let i = 0; i <= row.belt.length; i++) {
-      expect(counted(s)).toBe(routes(frameOf(4), row.target, row.belt).slice(0, i).filter(x => x === side).length);
+      // The catch on show counts as sorted, as the board says ("Catch 3: LEFT ✓").
+      expect(counted(s)).toBe(routes(frameOf(4), row.target, row.belt).slice(0, Math.min(row.belt.length, i + 1)).filter(x => x === side).length);
       if (i < row.belt.length) s = advance(s);
     }
   });
