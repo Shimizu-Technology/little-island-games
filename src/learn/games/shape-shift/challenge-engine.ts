@@ -195,6 +195,14 @@ export const challengeEngine: ReplayEngine<ShapeChallengeDescriptor, Initial, Ac
 
     if (a[0] === "x") {
       if ((p.kind !== "poly" && p.kind !== "tangram") || s.placed.length === 0) return null;
+      // Assisted clear/lift is strictly for uncompletable dead-end drafts so One step -> Clear can never cycle inside the reserve.
+      const res = solveExactCover(p.silhouette, p.pieces, {
+        allowRotate: p.allowRotate,
+        allowFlip: p.allowFlip,
+        maxSolutions: 1,
+        alreadyPlaced: s.placed,
+      });
+      if (res.count > 0) return null;
       if (a.length === 2) {
         const idx = a[1];
         if (!s.placed.some((pl) => pl.pieceIndex === idx)) return null;
@@ -228,6 +236,11 @@ export const challengeEngine: ReplayEngine<ShapeChallengeDescriptor, Initial, Ac
       const idx = a[1];
       if (p.kind === "cube-opp" && (idx > 5 || idx === p.askIndex)) return null;
       if (p.kind === "cube-fold" && idx > 2) return null;
+      if (a[0] === "a") {
+        // Assisted cube selection is strictly for the puzzle's correct answer so wrong guesses can never spend the reserve.
+        const correctIdx = p.kind === "cube-fold" ? p.answerIndex : p.faces.indexOf(p.answer);
+        if (idx !== correctIdx) return null;
+      }
       if (s.cubePick === idx) return null;
       return {
         state: { ...s, cubePick: idx, checked: false, lastFeedback: null },
@@ -280,6 +293,16 @@ export const challengeEngine: ReplayEngine<ShapeChallengeDescriptor, Initial, Ac
     if (!canPlaceAtoms(silSet, occ, cells, x, y)) return null;
 
     const placed = [...s.placed, { pieceIndex: pIdx, cells, x, y }];
+    if (isHinted) {
+      // Hinted One-step placements must keep the board completable so ['s'] -> ['x'] can never cycle inside the reserve.
+      const nextRes = solveExactCover(p.silhouette, p.pieces, {
+        allowRotate: p.allowRotate,
+        allowFlip: p.allowFlip,
+        maxSolutions: 1,
+        alreadyPlaced: placed,
+      });
+      if (nextRes.count === 0) return null;
+    }
     return {
       state: {
         ...s,

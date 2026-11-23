@@ -139,7 +139,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     accessibilityRole="button"
                     accessibilityState={{ selected: chosen }}
                     disabled={!active || state.won}
-                    onPress={() => dispatch(state.hintStage >= 1 ? ["a", idx] : ["k", idx])}
+                    onPress={() => dispatch(["k", idx])}
                     style={{
                       width: 54, minHeight: 54, alignItems: "center", justifyContent: "center",
                       borderRadius: 14, backgroundColor: chosen ? "#DCEFD6" : "#FFF8E8",
@@ -167,7 +167,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     accessibilityRole="button"
                     accessibilityState={{ selected: chosen }}
                     disabled={!active || state.won}
-                    onPress={() => dispatch(state.hintStage >= 1 ? ["a", idx] : ["k", idx])}
+                    onPress={() => dispatch(["k", idx])}
                     style={{
                       padding: 10, borderRadius: 16,
                       backgroundColor: chosen ? "#DCEFD6" : "#FFFDF3",
@@ -255,7 +255,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
     if (!active || state.won) return;
     const owner = placedPieceAtCell(placedVisuals, x, y);
     if (owner !== null && (activePieceIdx < 0 || !canPlaceAtoms(silSet, occSet, activeCells, x, y))) {
-      dispatch(state.hintStage >= 1 ? ["x", owner] : ["r", owner]);
+      dispatch(state.hintStage >= 1 && hintInfo.deadEnd ? ["x", owner] : ["r", owner]);
       setSelectedPiece(owner);
       return;
     }
@@ -422,7 +422,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
             quiet
             disabled={!active || state.placed.length === 0}
             maxFontSizeMultiplier={buttonCap}
-            onPress={() => dispatch(state.hintStage >= 1 ? ["x"] : ["z"])}
+            onPress={() => dispatch(state.hintStage >= 1 && hintInfo.deadEnd ? ["x"] : ["z"])}
           >
             Clear
           </Button>

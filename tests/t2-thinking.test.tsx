@@ -879,3 +879,131 @@ describe("T2 Fix Round 1 regressions (R1–R6)", () => {
     }
   });
 });
+
+describe("T2 Fix Round 2 regressions (R2-1: zero reserve-burning cycles)", () => {
+  it("R2-1a (Cube 294:15): wrong ['a', idx] & post-cap ['k', idx] cannot spend reserve; ['h'] -> ['a', ans] -> ['c'] succeeds", () => {
+    const pCube = shapeChallengePuzzles.find((p) => p.ref.bank === 294 && p.ref.puzzle === 15)!;
+    const pay = pCube.descriptor.payload;
+    if (pay.kind !== "cube-opp") throw new Error("expected cube-opp");
+    const ans = pay.faces.indexOf(pay.answer);
+    const wrongs = pay.faces.map((_, i) => i).filter((i) => i !== ans && i !== pay.askIndex);
+
+    let s = shapeChallengeReg.start(
+      pCube.ref,
+      "a",
+      "r2-1-cube",
+      emptyChallenge(),
+      { supportOff: false, ownRead: false },
+      pCube.dares.map((d) => d.slot),
+    );
+    let n = 0;
+    while (true) {
+      const next = shapeChallengeReg.move(s, ["k", wrongs[n++ % wrongs.length]]);
+      if (!next) break;
+      s = next;
+    }
+    s = shapeChallengeReg.move(s, ["h"])!;
+    expect(s).toBeTruthy();
+
+    // Neither wrong ['a', idx] nor ordinary wrong ['k', idx] can spend the completion reserve!
+    for (const w of wrongs) {
+      expect(shapeChallengeReg.move(s, ["a", w])).toBeNull();
+      expect(shapeChallengeReg.move(s, ["k", w])).toBeNull();
+    }
+
+    s = shapeChallengeReg.move(s, ["h"])!;
+    expect(s).toBeTruthy();
+    s = shapeChallengeReg.move(s, ["a", ans])!;
+    expect(s).toBeTruthy();
+    // Repeating ['a', ans] is rejected once selected.
+    expect(shapeChallengeReg.move(s, ["a", ans])).toBeNull();
+    s = shapeChallengeReg.move(s, ["c"])!;
+    expect(s.result?.event).toBe("helped");
+    expect(s.result?.dares).toEqual([]);
+    expect(s.result?.awards).toBe(0);
+    expect(shapeChallengeReg.completionFacts?.(s)).toEqual({ helpUsed: true, failed: false });
+  });
+
+  it("R2-1b (Fit 294:0): completable partial draft rejects ['x']/['z']/['r'] and dead-end ['s'], preventing One step -> Clear cycles", () => {
+    const pFit = shapeChallengePuzzles[0];
+    const getState = (sess: ReturnType<typeof shapeChallengeReg.start>) => {
+      const pl = sess.payload as ShapePayload;
+      return pl.actions.reduce(
+        (st, act) => shapeChallengeEngine.step(st, act, pFit.descriptor)!.state,
+        shapeChallengeEngine.create(pFit.descriptor, 0, pl.options),
+      );
+    };
+
+    let s = shapeChallengeReg.start(
+      pFit.ref,
+      "a",
+      "r2-1-fit",
+      emptyChallenge(),
+      { supportOff: false, ownRead: false },
+      pFit.dares.map((d) => d.slot),
+    );
+    while (true) {
+      const next = shapeChallengeReg.move(s, ["m"]);
+      if (!next) break;
+      s = next;
+    }
+    s = shapeChallengeReg.move(s, ["h"])!;
+    s = shapeChallengeReg.move(s, ["h"])!;
+
+    // Dead-end placement via assisted ['s'] is rejected so assisted play cannot manufacture a dead end.
+    expect(shapeChallengeReg.move(s, ["s", 0, 0, 1, 2])).toBeNull();
+
+    // Valid One-step placement succeeds, and attempting Clear/lift on the completable draft is rejected (0 cycles!).
+    const h0 = challengeShapeHint(getState(s));
+    expect(h0.nextPlacement).not.toBeNull();
+    s = shapeChallengeReg.move(s, ["s", ...h0.nextPlacement!])!;
+    expect(s).toBeTruthy();
+    expect(shapeChallengeReg.move(s, ["x"])).toBeNull();
+    expect(shapeChallengeReg.move(s, ["x", h0.nextPlacement![0]])).toBeNull();
+    expect(shapeChallengeReg.move(s, ["z"])).toBeNull();
+    expect(shapeChallengeReg.move(s, ["r", h0.nextPlacement![0]])).toBeNull();
+
+    // Continuing One step -> Check finishes cleanly with failed + helped evidence preserved!
+    for (let i = 0; i < 8; i++) {
+      const h = challengeShapeHint(getState(s));
+      if (!h.nextPlacement) break;
+      s = shapeChallengeReg.move(s, ["s", ...h.nextPlacement])!;
+      expect(s).toBeTruthy();
+    }
+    s = shapeChallengeReg.move(s, ["c"])!;
+    expect(s.result?.event).toBe("helped");
+    expect(s.result?.dares).toEqual([]);
+    expect(s.result?.awards).toBe(0);
+    expect(shapeChallengeReg.completionFacts?.(s)).toEqual({ helpUsed: true, failed: true });
+  });
+
+  it("R2-1c (Dead-end non-laundering): direct ['x'] / ['x', 0] on dead end without ['h'] still marks helpUsed and blocks dares", () => {
+    const pFit = shapeChallengePuzzles[0];
+    const pay = pFit.descriptor.payload;
+    if (pay.kind !== "poly") throw new Error("expected poly");
+    const sol0 = solveExactCover(pay.silhouette, pay.pieces, { maxSolutions: 1 }).solutions[0];
+
+    for (const act of [["x"] as const, ["x", 0] as const]) {
+      let s = shapeChallengeReg.start(
+        pFit.ref,
+        "a",
+        "r2-1-direct-x",
+        emptyChallenge(),
+        { supportOff: false, ownRead: false },
+        pFit.dares.map((d) => d.slot),
+      );
+      s = shapeChallengeReg.move(s, ["p", 0, 0, 1, 2, 0])!;
+      s = shapeChallengeReg.move(s, act)!;
+      expect(shapeChallengeReg.completionFacts?.(s)).toEqual({ helpUsed: true, failed: false });
+      for (const pl of sol0) {
+        const os = uniqueOrientations(pay.pieces[pl.pieceIndex], pay.allowRotate, pay.allowFlip);
+        const oi = os.findIndex((o) => atomsSignature(o) === atomsSignature(pl.cells));
+        s = shapeChallengeReg.move(s, ["p", pl.pieceIndex, oi, pl.x, pl.y, 0])!;
+      }
+      s = shapeChallengeReg.move(s, ["c"])!;
+      expect(s.result?.event).toBe("helped");
+      expect(s.result?.dares).toEqual([]);
+      expect(s.result?.awards).toBe(0);
+    }
+  });
+});
