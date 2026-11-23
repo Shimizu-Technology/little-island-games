@@ -6,7 +6,8 @@ import { useReducedMotion } from '../../../components/motion';
 import { LARGE_TEXT } from '../../../components/wordFit';
 import { Button, C, Chip, Copy, PressableScale } from '../../../components/ui';
 import type { HintCue } from '../../../puzzles/hints';
-import { BalanceScale, PearlArt, ShellArt, ink, type PearlTone } from './art';
+import { PearlArt, ShellArt, ink, type PearlTone } from './art';
+import { BalanceScale } from './scale';
 import { describeScale, focusOf } from './help';
 import { SCALE_FLOOR, pearlTokenSize, scaleHeight, shellTokenSize } from './layout';
 import {

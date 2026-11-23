@@ -54,11 +54,13 @@ vi.mock('../src/learn/BoardSpace', () => ({
   useBoardGeometry: (_id: string, natural: number) => ({ height: natural, measured: false }),
 }));
 vi.mock('../src/learn/games/shell-scale/art', () => ({
-  BalanceScale: 'BalanceScale',
   PearlArt: 'PearlArt',
   ShellArt: 'ShellArt',
   ShelfArt: 'ShelfArt',
   ink: '#000',
+}));
+vi.mock('../src/learn/games/shell-scale/scale', () => ({
+  BalanceScale: 'BalanceScale',
 }));
 
 const { ScaleBoard } = await import('../src/learn/games/shell-scale/board');
