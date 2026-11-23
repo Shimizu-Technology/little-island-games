@@ -97,21 +97,29 @@ function ConchBody({ col = 2 as ColorIdx }: { col?: ColorIdx }) {
   </>;
 }
 
-/** Neutral colour-agnostic shell silhouette for size-only rules (reads clearly as a shell, never implies a colour). */
+/** Colour-neutral token silhouette for size-only rules (never matches Coral fan, Blue spiral, or Gold crown). */
 function NeutralShellBody({ big = 1 as SizeIdx }: { big?: SizeIdx }) {
   return <>
-    <Path
-      d="M50 84 C31 84 12 69 10 46 C9 35 16 25 23 24 C27 15 37 12 43 16 C47 9 53 9 57 16 C63 12 73 15 77 24 C84 25 91 35 90 46 C88 69 69 84 50 84 Z"
-      fill={big ? '#E4ECEB' : '#EEF3F2'}
+    <Rect
+      x="14"
+      y="14"
+      width="72"
+      height="72"
+      rx="20"
+      fill={big ? '#D3E1DF' : '#DCE7E5'}
       stroke={ink}
-      strokeWidth={4.2}
-      strokeLinejoin="round"
+      strokeWidth={5.2}
     />
-    <G stroke="#6B8A8C" strokeWidth={3.4} strokeLinecap="round" fill="none">
-      <Path d="M50 78 L50 22" />
-      <Path d="M46 78 L31 28" />
-      <Path d="M54 78 L69 28" />
-    </G>
+    <SvgText
+      x="50"
+      y="67"
+      fontSize="46"
+      fontWeight="900"
+      fill={ink}
+      textAnchor="middle"
+    >
+      ?
+    </SvgText>
   </>;
 }
 
@@ -194,8 +202,9 @@ export const GateCrabArt = memo(function GateCrabArt({ mood = 'idle', width = 26
         </G>
       ) : (
         <G>
-          <Path d="M50 38 L86 44 L86 102 L50 106 Z" fill="#D5A367" {...line} strokeWidth={2.4} opacity={0.9} />
-          <Path d="M210 38 L174 44 L174 102 L210 106 Z" fill="#D5A367" {...line} strokeWidth={2.4} opacity={0.9} />
+          {/* Half-ajar doors so Idle -> wide-open PASS -> shut BLOCK reads at a glance */}
+          <Path d="M50 38 L98 46 L98 100 L50 106 Z" fill="#D5A367" {...line} strokeWidth={2.4} opacity={0.94} />
+          <Path d="M210 38 L162 46 L162 100 L210 106 Z" fill="#D5A367" {...line} strokeWidth={2.4} opacity={0.94} />
           <Circle cx="130" cy="24" r="11" fill="#F2B830" stroke={ink} strokeWidth={2.2} />
           <Circle cx="130" cy="24" r="4.5" fill="#FFFDF6" />
         </G>
@@ -266,19 +275,22 @@ function MiniShell({ col, big, x, y, s = 26 }: { col: ColorIdx; big: SizeIdx; x:
   );
 }
 
-/** Colour-agnostic size shell glyph: crisp scallop silhouette + dashed ring (small) or gold sparkles (BIG). */
+/** Colour-agnostic size glyph: neutral '?' token + crisp dashed ring (small) or inset gold sparkles (BIG). */
 function NeutralSizeShell({ big, x, y, s = 30 }: { big: SizeIdx; x: number; y: number; s?: number }) {
-  const sc = (s / 100) * (big ? 0.92 : 0.6);
-  const pad = big ? s * 0.04 : s * 0.2;
+  const sc = (s / 100) * (big ? 0.78 : 0.56);
+  const pad = big ? s * 0.11 : s * 0.22;
   return (
     <G transform={`translate(${x}, ${y})`}>
       {!big && (
-        <Circle cx={s / 2} cy={s * 0.56} r={s * 0.36} fill="none" stroke="#6E8D8B" strokeWidth={1.8} strokeDasharray="3.5 3" />
+        <Circle cx={s / 2} cy={s / 2} r={s * 0.4} fill="none" stroke="#4B6E70" strokeWidth={2} strokeDasharray="3.2 2.6" />
       )}
       {big === 1 && (
-        <Path d={`M${s * 0.12} ${s * 0.2} L${s * 0.18} ${s * 0.06} L${s * 0.24} ${s * 0.2} L${s * 0.36} ${s * 0.25} L${s * 0.24} ${s * 0.3} L${s * 0.18} ${s * 0.42} L${s * 0.12} ${s * 0.3} L0 ${s * 0.25} Z`} fill="#FFD24A" stroke={ink} strokeWidth={1.1} />
+        <G>
+          <Path d={`M${s * 0.14} ${s * 0.18} L${s * 0.19} ${s * 0.06} L${s * 0.24} ${s * 0.18} L${s * 0.34} ${s * 0.23} L${s * 0.24} ${s * 0.28} L${s * 0.19} ${s * 0.38} L${s * 0.14} ${s * 0.28} L${s * 0.04} ${s * 0.23} Z`} fill="#FFD24A" stroke={ink} strokeWidth={1.1} />
+          <Path d={`M${s * 0.82} ${s * 0.16} L${s * 0.86} ${s * 0.06} L${s * 0.9} ${s * 0.16} L${s * 0.98} ${s * 0.2} L${s * 0.9} ${s * 0.24} L${s * 0.86} ${s * 0.32} L${s * 0.82} ${s * 0.24} L${s * 0.74} ${s * 0.2} Z`} fill="#FFD24A" stroke={ink} strokeWidth={1} />
+        </G>
       )}
-      <G transform={`translate(${pad}, ${pad + (big ? 1 : 2)}) scale(${sc})`}>
+      <G transform={`translate(${pad}, ${pad}) scale(${sc})`}>
         <NeutralShellBody big={big} />
       </G>
     </G>
@@ -287,32 +299,32 @@ function NeutralSizeShell({ big, x, y, s = 30 }: { big: SizeIdx; x: number; y: n
 
 /** Picture-first icon for any rule, cleanly centered in 120x44 pill for Rule-Maker menu & reveal. */
 export const RulePicture = memo(function RulePicture({ spec, width = 120, height = 44 }: { spec: RulePictureSpec; width?: number; height?: number }) {
-  const badge = (text: string, x: number, bg = '#20474A', w = 30) => (
+  const badge = (text: string, x: number, bg = '#20474A', w = 30, fontSize = 11.5) => (
     <G>
       <Rect x={x} y="10" width={w} height="24" rx="8" fill={bg} />
-      <SvgText x={x + w / 2} y="26.5" fontSize="11.5" fontWeight="900" fill="#FFFDF6" textAnchor="middle">{text}</SvgText>
+      <SvgText x={x + w / 2} y="26.5" fontSize={fontSize} fontWeight="900" fill="#FFFDF6" textAnchor="middle">{text}</SvgText>
     </G>
   );
 
-  /** Compact 3-slot position mini-diagram for compound rules (matches Cards 6-7 visual language). */
+  /** Compact 3-slot position mini-diagram for compound rules with clear padding and no border collisions. */
   const compactClause = (p: RulePictureSpec, leftX: number): React.ReactNode => {
     if (p.kind === 'has-color') return <MiniShell col={p.col} big={1} x={leftX + 7} y={9} s={26} />;
-    if (p.kind === 'has-size') return <NeutralSizeShell big={p.big} x={leftX + 7} y={8} s={28} />;
+    if (p.kind === 'has-size') return <NeutralSizeShell big={p.big} x={leftX + 6} y={8} s={28} />;
     if (p.kind === 'has-shell') {
       const sh = shellOf(p.shell);
       return <MiniShell col={sh.col} big={sh.big} x={leftX + 7} y={9} s={26} />;
     }
     if (p.kind === 'pos') {
       return (
-        <G transform={`translate(${leftX}, 6)`}>
-          {/* Three compact position pips showing exact slot 1/2/3 */}
+        <G transform={`translate(${leftX}, 4)`}>
+          {/* Three compact position pips with breathing room above the icon box */}
           {[0, 1, 2].map(slot => (
-            <Rect key={slot} x={slot * 13} y={0} width={11} height={6} rx={2.5} fill={slot === p.pos ? '#2E8B57' : '#D2DDD9'} />
+            <Rect key={slot} x={2 + slot * 12} y={0} width={10} height={5} rx={2.5} fill={slot === p.pos ? '#2E8B57' : '#C7D4D1'} />
           ))}
-          <Rect x={2} y={8} width={33} height={24} rx={6} fill="#EEF6F4" stroke={ink} strokeWidth={1.6} />
+          <Rect x={1} y={9} width={36} height={27} rx={7} fill="#EEF6F4" stroke={ink} strokeWidth={1.6} />
           {p.col !== undefined
-            ? <MiniShell col={p.col} big={p.big ?? 1} x={8.5} y={10} s={20} />
-            : <NeutralSizeShell big={p.big ?? 1} x={8.5} y={10} s={20} />}
+            ? <MiniShell col={p.col} big={p.big ?? 1} x={9} y={13} s={20} />
+            : <NeutralSizeShell big={p.big ?? 1} x={9} y={12.5} s={20} />}
         </G>
       );
     }
@@ -337,10 +349,9 @@ export const RulePicture = memo(function RulePicture({ spec, width = 120, height
           </G>
         ) : (
           <G>
-            <NeutralSizeShell big={p.big} x={18} y={5} s={34} />
-            {badge(p.big ? 'BIG' : 'TINY', 56, '#20474A', 34)}
-            <Circle cx="101" cy="22" r="8" fill="#2E8B57" />
-            <Path d="M97.5 22 L100 24.5 L105 19.5" fill="none" stroke="#FFFDF6" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+            <NeutralSizeShell big={p.big} x={10} y={6} s={32} />
+            {badge(p.big ? 'BIG' : 'SMALL', 46, '#20474A', 38, 10.5)}
+            {badge('✓', 88, '#2E8B57', 22, 12)}
           </G>
         );
       case 'has-shell': {
