@@ -363,7 +363,7 @@
       "family": "school-1-idea-0",
       "idea": "Say in order",
       "band": 1,
-      "steps": 6,
+      "steps": 10,
       "python": true
     },
     {
@@ -373,7 +373,7 @@
       "family": "school-1-idea-0",
       "idea": "Say in order",
       "band": 1,
-      "steps": 8,
+      "steps": 12,
       "python": true
     },
     {
@@ -383,7 +383,7 @@
       "family": "school-1-idea-0",
       "idea": "Say in order",
       "band": 1,
-      "steps": 8,
+      "steps": 12,
       "python": true
     },
     {
@@ -393,7 +393,7 @@
       "family": "school-1-idea-0",
       "idea": "Say in order",
       "band": 1,
-      "steps": 11,
+      "steps": 17,
       "python": true
     },
     {
@@ -403,7 +403,7 @@
       "family": "school-1-idea-1",
       "idea": "Say in order",
       "band": 1,
-      "steps": 6,
+      "steps": 11,
       "python": true
     },
     {
@@ -413,7 +413,7 @@
       "family": "school-1-idea-1",
       "idea": "Say in order",
       "band": 1,
-      "steps": 6,
+      "steps": 11,
       "python": true
     },
     {
@@ -423,7 +423,7 @@
       "family": "school-1-idea-1",
       "idea": "Say in order",
       "band": 1,
-      "steps": 8,
+      "steps": 13,
       "python": true
     },
     {
@@ -433,7 +433,7 @@
       "family": "school-1-idea-1",
       "idea": "Say in order",
       "band": 1,
-      "steps": 9,
+      "steps": 16,
       "python": true
     },
     {
@@ -443,7 +443,7 @@
       "family": "school-1-idea-2",
       "idea": "Say in order",
       "band": 1,
-      "steps": 8,
+      "steps": 12,
       "python": true
     },
     {
@@ -453,7 +453,7 @@
       "family": "school-1-idea-2",
       "idea": "Say in order",
       "band": 1,
-      "steps": 10,
+      "steps": 14,
       "python": true
     },
     {
@@ -463,7 +463,7 @@
       "family": "school-1-idea-2",
       "idea": "Say in order",
       "band": 1,
-      "steps": 11,
+      "steps": 17,
       "python": true
     },
     {
@@ -473,7 +473,7 @@
       "family": "school-1-idea-2",
       "idea": "Say in order",
       "band": 1,
-      "steps": 11,
+      "steps": 17,
       "python": true
     },
     {
@@ -483,7 +483,7 @@
       "family": "school-1-idea-3",
       "idea": "Say in order",
       "band": 1,
-      "steps": 8,
+      "steps": 13,
       "python": true
     },
     {
@@ -493,7 +493,7 @@
       "family": "school-1-idea-3",
       "idea": "Say in order",
       "band": 1,
-      "steps": 10,
+      "steps": 15,
       "python": true
     },
     {
@@ -503,7 +503,7 @@
       "family": "school-1-idea-3",
       "idea": "Say in order",
       "band": 1,
-      "steps": 8,
+      "steps": 13,
       "python": true
     },
     {
@@ -513,7 +513,7 @@
       "family": "school-1-idea-3",
       "idea": "Say in order",
       "band": 1,
-      "steps": 11,
+      "steps": 18,
       "python": true
     },
     {
@@ -523,7 +523,7 @@
       "family": "school-2-idea-0",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 13,
+      "steps": 22,
       "python": true
     },
     {
@@ -533,7 +533,7 @@
       "family": "school-2-idea-0",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 13,
+      "steps": 22,
       "python": true
     },
     {
@@ -543,7 +543,7 @@
       "family": "school-2-idea-0",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 16,
+      "steps": 28,
       "python": true
     },
     {
@@ -553,7 +553,7 @@
       "family": "school-2-idea-0",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 11,
+      "steps": 20,
       "python": true
     },
     {
@@ -563,7 +563,7 @@
       "family": "school-2-idea-1",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 26,
+      "steps": 43,
       "python": true
     },
     {
@@ -573,7 +573,7 @@
       "family": "school-2-idea-1",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 20,
+      "steps": 34,
       "python": true
     },
     {
@@ -583,7 +583,7 @@
       "family": "school-2-idea-1",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 26,
+      "steps": 43,
       "python": true
     },
     {
@@ -593,7 +593,7 @@
       "family": "school-2-idea-1",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 33,
+      "steps": 58,
       "python": true
     },
     {
@@ -603,7 +603,7 @@
       "family": "school-2-idea-2",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 12,
+      "steps": 22,
       "python": true
     },
     {
@@ -613,7 +613,7 @@
       "family": "school-2-idea-2",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 14,
+      "steps": 30,
       "python": true
     },
     {
@@ -623,7 +623,7 @@
       "family": "school-2-idea-2",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 11,
+      "steps": 23,
       "python": true
     },
     {
@@ -633,7 +633,7 @@
       "family": "school-2-idea-2",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 16,
+      "steps": 43,
       "python": true
     },
     {
@@ -643,7 +643,7 @@
       "family": "school-2-idea-3",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 23,
+      "steps": 36,
       "python": true
     },
     {
@@ -653,7 +653,7 @@
       "family": "school-2-idea-3",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 20,
+      "steps": 34,
       "python": true
     },
     {
@@ -663,7 +663,7 @@
       "family": "school-2-idea-3",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 27,
+      "steps": 44,
       "python": true
     },
     {
@@ -673,7 +673,7 @@
       "family": "school-2-idea-3",
       "idea": "Keep track of values",
       "band": 2,
-      "steps": 36,
+      "steps": 65,
       "python": true
     },
     {
@@ -683,7 +683,7 @@
       "family": "school-3-idea-0",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 11,
+      "steps": 17,
       "python": true
     },
     {
@@ -693,7 +693,7 @@
       "family": "school-3-idea-0",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 11,
+      "steps": 19,
       "python": true
     },
     {
@@ -703,7 +703,7 @@
       "family": "school-3-idea-0",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 11,
+      "steps": 17,
       "python": true
     },
     {
@@ -713,7 +713,7 @@
       "family": "school-3-idea-0",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 14,
+      "steps": 23,
       "python": true
     },
     {
@@ -723,7 +723,7 @@
       "family": "school-3-idea-1",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 22,
+      "steps": 38,
       "python": true
     },
     {
@@ -733,7 +733,7 @@
       "family": "school-3-idea-1",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 36,
+      "steps": 66,
       "python": true
     },
     {
@@ -743,7 +743,7 @@
       "family": "school-3-idea-1",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 23,
+      "steps": 38,
       "python": true
     },
     {
@@ -753,7 +753,7 @@
       "family": "school-3-idea-1",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 22,
+      "steps": 37,
       "python": true
     },
     {
@@ -763,7 +763,7 @@
       "family": "school-3-idea-2",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 16,
+      "steps": 31,
       "python": true
     },
     {
@@ -773,7 +773,7 @@
       "family": "school-3-idea-2",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 16,
+      "steps": 28,
       "python": true
     },
     {
@@ -783,7 +783,7 @@
       "family": "school-3-idea-2",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 12,
+      "steps": 21,
       "python": true
     },
     {
@@ -793,7 +793,7 @@
       "family": "school-3-idea-2",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 20,
+      "steps": 33,
       "python": true
     },
     {
@@ -803,7 +803,7 @@
       "family": "school-3-idea-3",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 11,
+      "steps": 19,
       "python": true
     },
     {
@@ -813,7 +813,7 @@
       "family": "school-3-idea-3",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 19,
+      "steps": 28,
       "python": true
     },
     {
@@ -823,7 +823,7 @@
       "family": "school-3-idea-3",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 12,
+      "steps": 19,
       "python": true
     },
     {
@@ -833,7 +833,7 @@
       "family": "school-3-idea-3",
       "idea": "Functions and scope",
       "band": 3,
-      "steps": 15,
+      "steps": 28,
       "python": true
     },
     {
@@ -843,7 +843,7 @@
       "family": "school-4-idea-0",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 9,
+      "steps": 17,
       "python": true
     },
     {
@@ -853,7 +853,7 @@
       "family": "school-4-idea-0",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 11,
+      "steps": 19,
       "python": true
     },
     {
@@ -863,7 +863,7 @@
       "family": "school-4-idea-0",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 7,
+      "steps": 14,
       "python": true
     },
     {
@@ -873,7 +873,7 @@
       "family": "school-4-idea-0",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 22,
       "python": true
     },
     {
@@ -883,7 +883,7 @@
       "family": "school-4-idea-1",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 40,
+      "steps": 66,
       "python": true
     },
     {
@@ -893,7 +893,7 @@
       "family": "school-4-idea-1",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 30,
+      "steps": 50,
       "python": true
     },
     {
@@ -903,7 +903,7 @@
       "family": "school-4-idea-1",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 49,
+      "steps": 79,
       "python": true
     },
     {
@@ -913,7 +913,7 @@
       "family": "school-4-idea-1",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 38,
+      "steps": 64,
       "python": true
     },
     {
@@ -923,7 +923,7 @@
       "family": "school-4-idea-2",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 21,
       "python": true
     },
     {
@@ -933,7 +933,7 @@
       "family": "school-4-idea-2",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 22,
       "python": true
     },
     {
@@ -943,7 +943,7 @@
       "family": "school-4-idea-2",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 11,
+      "steps": 19,
       "python": true
     },
     {
@@ -953,7 +953,7 @@
       "family": "school-4-idea-2",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 21,
       "python": true
     },
     {
@@ -963,7 +963,7 @@
       "family": "school-4-idea-3",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 20,
       "python": true
     },
     {
@@ -973,7 +973,7 @@
       "family": "school-4-idea-3",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 23,
       "python": true
     },
     {
@@ -983,7 +983,7 @@
       "family": "school-4-idea-3",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 8,
+      "steps": 15,
       "python": true
     },
     {
@@ -993,7 +993,7 @@
       "family": "school-4-idea-3",
       "idea": "Choose a branch",
       "band": 4,
-      "steps": 13,
+      "steps": 22,
       "python": true
     },
     {
@@ -1003,7 +1003,7 @@
       "family": "school-5-idea-0",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 11,
+      "steps": 32,
       "python": true
     },
     {
@@ -1013,7 +1013,7 @@
       "family": "school-5-idea-0",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 14,
+      "steps": 31,
       "python": true
     },
     {
@@ -1023,7 +1023,7 @@
       "family": "school-5-idea-0",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 12,
+      "steps": 30,
       "python": true
     },
     {
@@ -1033,7 +1033,7 @@
       "family": "school-5-idea-0",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -1043,7 +1043,7 @@
       "family": "school-5-idea-1",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 27,
+      "steps": 73,
       "python": true
     },
     {
@@ -1053,7 +1053,7 @@
       "family": "school-5-idea-1",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 35,
+      "steps": 95,
       "python": true
     },
     {
@@ -1063,7 +1063,7 @@
       "family": "school-5-idea-1",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 36,
+      "steps": 67,
       "python": true
     },
     {
@@ -1073,7 +1073,7 @@
       "family": "school-5-idea-1",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 33,
+      "steps": 62,
       "python": true
     },
     {
@@ -1083,7 +1083,7 @@
       "family": "school-5-idea-2",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 33,
+      "steps": 84,
       "python": true
     },
     {
@@ -1093,7 +1093,7 @@
       "family": "school-5-idea-2",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 29,
+      "steps": 73,
       "python": true
     },
     {
@@ -1103,7 +1103,7 @@
       "family": "school-5-idea-2",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 17,
+      "steps": 26,
       "python": true
     },
     {
@@ -1113,17 +1113,17 @@
       "family": "school-5-idea-2",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 16,
+      "steps": 38,
       "python": true
     },
     {
       "id": "school-5-12",
       "source": "b2bf40f87b2711aafc99073736a6f45dbf201dd9f1548d18b9bd76e8ef6be27d",
-      "semantic": "14b0a8dfd597bbbe0f0061ef49aefca83d8fd02c7f1f55021b80e81b12842583",
+      "semantic": "107c704220363320d5488c36ff185600ad7da5cea060a4a090308e9c4e4f5c40",
       "family": "school-5-idea-3",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 47,
+      "steps": 86,
       "python": true
     },
     {
@@ -1133,7 +1133,7 @@
       "family": "school-5-idea-3",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 71,
+      "steps": 115,
       "python": true
     },
     {
@@ -1143,7 +1143,7 @@
       "family": "school-5-idea-3",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 70,
+      "steps": 144,
       "python": true
     },
     {
@@ -1153,7 +1153,7 @@
       "family": "school-5-idea-3",
       "idea": "Lists and loops",
       "band": 5,
-      "steps": 44,
+      "steps": 114,
       "python": true
     },
     {
@@ -1163,7 +1163,7 @@
       "family": "deep-0-technique-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 21,
+      "steps": 35,
       "python": true
     },
     {
@@ -1173,7 +1173,7 @@
       "family": "deep-0-technique-1",
       "idea": "Running totals",
       "band": 1,
-      "steps": 33,
+      "steps": 50,
       "python": true
     },
     {
@@ -1183,7 +1183,7 @@
       "family": "deep-0-technique-2",
       "idea": "Running totals",
       "band": 2,
-      "steps": 49,
+      "steps": 79,
       "python": true
     },
     {
@@ -1193,7 +1193,7 @@
       "family": "deep-0-technique-3",
       "idea": "Running totals",
       "band": 2,
-      "steps": 32,
+      "steps": 57,
       "python": true
     },
     {
@@ -1203,7 +1203,7 @@
       "family": "deep-0-technique-4",
       "idea": "Running totals",
       "band": 3,
-      "steps": 80,
+      "steps": 149,
       "python": true
     },
     {
@@ -1213,7 +1213,7 @@
       "family": "deep-0-technique-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 24,
+      "steps": 41,
       "python": true
     },
     {
@@ -1223,7 +1223,7 @@
       "family": "deep-0-technique-1",
       "idea": "Running totals",
       "band": 4,
-      "steps": 36,
+      "steps": 56,
       "python": true
     },
     {
@@ -1233,17 +1233,17 @@
       "family": "deep-0-technique-2",
       "idea": "Running totals",
       "band": 5,
-      "steps": 52,
+      "steps": 85,
       "python": true
     },
     {
       "id": "deep-0-8",
-      "source": "cbb85b783977b74bbb90b8bf3fdbeced5fa5476a1d5688c189cf24f97cc12e2e",
-      "semantic": "1a450ecd79d7be357ba0287644f4a3e869378df4975e012e7d1a7163127a970a",
+      "source": "45892856cd5a01a4d41b306862c5dcad89aa41b714947c3621636567af23d202",
+      "semantic": "417f9cd5eee109a96718972ce470097ee93548eeab72fe8ad67ab82263d03b3e",
       "family": "deep-0-technique-3",
       "idea": "Running totals",
       "band": 5,
-      "steps": 36,
+      "steps": 62,
       "python": true
     },
     {
@@ -1253,7 +1253,7 @@
       "family": "deep-0-technique-4",
       "idea": "Running totals",
       "band": 6,
-      "steps": 83,
+      "steps": 155,
       "python": true
     },
     {
@@ -1263,7 +1263,7 @@
       "family": "deep-1-technique-0",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 47,
+      "steps": 143,
       "python": true
     },
     {
@@ -1273,7 +1273,7 @@
       "family": "deep-1-technique-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 53,
+      "steps": 142,
       "python": true
     },
     {
@@ -1283,7 +1283,7 @@
       "family": "deep-1-technique-2",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 54,
+      "steps": 131,
       "python": true
     },
     {
@@ -1293,7 +1293,7 @@
       "family": "deep-1-technique-3",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 49,
+      "steps": 142,
       "python": true
     },
     {
@@ -1303,7 +1303,7 @@
       "family": "deep-1-technique-4",
       "idea": "Count the matches",
       "band": 3,
-      "steps": 41,
+      "steps": 122,
       "python": true
     },
     {
@@ -1313,7 +1313,7 @@
       "family": "deep-1-technique-0",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 50,
+      "steps": 149,
       "python": true
     },
     {
@@ -1323,7 +1323,7 @@
       "family": "deep-1-technique-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 56,
+      "steps": 148,
       "python": true
     },
     {
@@ -1333,7 +1333,7 @@
       "family": "deep-1-technique-2",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 57,
+      "steps": 137,
       "python": true
     },
     {
@@ -1343,7 +1343,7 @@
       "family": "deep-1-technique-3",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 52,
+      "steps": 148,
       "python": true
     },
     {
@@ -1353,7 +1353,7 @@
       "family": "deep-1-technique-4",
       "idea": "Count the matches",
       "band": 6,
-      "steps": 44,
+      "steps": 128,
       "python": true
     },
     {
@@ -1363,7 +1363,7 @@
       "family": "deep-2-technique-0",
       "idea": "List positions",
       "band": 1,
-      "steps": 18,
+      "steps": 42,
       "python": true
     },
     {
@@ -1373,7 +1373,7 @@
       "family": "deep-2-technique-1",
       "idea": "List positions",
       "band": 1,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -1383,7 +1383,7 @@
       "family": "deep-2-technique-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 44,
+      "steps": 90,
       "python": true
     },
     {
@@ -1393,7 +1393,7 @@
       "family": "deep-2-technique-3",
       "idea": "List positions",
       "band": 2,
-      "steps": 34,
+      "steps": 80,
       "python": true
     },
     {
@@ -1403,7 +1403,7 @@
       "family": "deep-2-technique-4",
       "idea": "List positions",
       "band": 3,
-      "steps": 27,
+      "steps": 51,
       "python": true
     },
     {
@@ -1413,7 +1413,7 @@
       "family": "deep-2-technique-0",
       "idea": "List positions",
       "band": 4,
-      "steps": 21,
+      "steps": 48,
       "python": true
     },
     {
@@ -1423,7 +1423,7 @@
       "family": "deep-2-technique-1",
       "idea": "List positions",
       "band": 4,
-      "steps": 18,
+      "steps": 32,
       "python": true
     },
     {
@@ -1433,7 +1433,7 @@
       "family": "deep-2-technique-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 47,
+      "steps": 96,
       "python": true
     },
     {
@@ -1443,7 +1443,7 @@
       "family": "deep-2-technique-3",
       "idea": "List positions",
       "band": 5,
-      "steps": 37,
+      "steps": 86,
       "python": true
     },
     {
@@ -1453,7 +1453,7 @@
       "family": "deep-2-technique-4",
       "idea": "List positions",
       "band": 6,
-      "steps": 30,
+      "steps": 57,
       "python": true
     },
     {
@@ -1463,7 +1463,7 @@
       "family": "deep-3-technique-0",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
@@ -1473,7 +1473,7 @@
       "family": "deep-3-technique-1",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 35,
+      "steps": 93,
       "python": true
     },
     {
@@ -1483,7 +1483,7 @@
       "family": "deep-3-technique-2",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
@@ -1493,7 +1493,7 @@
       "family": "deep-3-technique-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 55,
+      "steps": 141,
       "python": true
     },
     {
@@ -1503,7 +1503,7 @@
       "family": "deep-3-technique-4",
       "idea": "Functions with loops",
       "band": 3,
-      "steps": 43,
+      "steps": 117,
       "python": true
     },
     {
@@ -1513,7 +1513,7 @@
       "family": "deep-3-technique-0",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
@@ -1523,7 +1523,7 @@
       "family": "deep-3-technique-1",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
@@ -1533,7 +1533,7 @@
       "family": "deep-3-technique-2",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
@@ -1543,7 +1543,7 @@
       "family": "deep-3-technique-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 57,
+      "steps": 143,
       "python": true
     },
     {
@@ -1553,107 +1553,107 @@
       "family": "deep-3-technique-4",
       "idea": "Functions with loops",
       "band": 6,
-      "steps": 45,
+      "steps": 119,
       "python": true
     },
     {
       "id": "deep-4-0",
       "source": "7fb70e7f981cb2d816e7c484f5bc0dc7fe4180334c723cfbbe01697e4d9f3241",
-      "semantic": "569f2671be54503cb08f0c1e96ecf8f53c7d80434633bb885fd23c2461b549db",
+      "semantic": "92fd40da5123195e4416940d69115de0870229cc8c38238c9f411f9d62734a18",
       "family": "deep-4-technique-0",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 47,
+      "steps": 86,
       "python": true
     },
     {
       "id": "deep-4-1",
       "source": "c25d4123192864cb99ceaab3ea822615e309b328b6a46646afc1cbfd3137dfef",
-      "semantic": "53822bef482854aa09312bb5c8e2515c6593411d5b5020edb640de5c0195cc5b",
+      "semantic": "d47db723259239c2dc692f1ca204d0c5119c654d9b21ff14294788590b0a6972",
       "family": "deep-4-technique-1",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 67,
+      "steps": 115,
       "python": true
     },
     {
       "id": "deep-4-2",
       "source": "fd6beaa50b19a27e280c47dd890b3c9da57633bcf822b69529d973fa3e3448e9",
-      "semantic": "ff78e30eb868d9d627ef64f8e2edcf747d4187aa4d5b8f0b64079815c85dffb5",
+      "semantic": "ae82332e670329452c8142035b0da4275bd3040f4c9607263152f24d26cb76ed",
       "family": "deep-4-technique-2",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 41,
+      "steps": 80,
       "python": true
     },
     {
       "id": "deep-4-3",
       "source": "406acafaf3d3414896e782a80da750ca87d9b7cc2daf47963120a5648e9c9a48",
-      "semantic": "dd85e8c1fd2f630f8794215528304aa44b606b299eca0a546846b87ac95bde61",
+      "semantic": "182d0355c4f93eb48319225a2924d3eaa4ade428f7288262fbd4885423b6b4eb",
       "family": "deep-4-technique-3",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 61,
+      "steps": 109,
       "python": true
     },
     {
       "id": "deep-4-4",
       "source": "daac4d57fd69fdbd460efed6c7be497bce84c67eb586c3fbb2444eab08ee9c9b",
-      "semantic": "7c2c46a88164ac1f5f22eddffff63cac75118412e52d82a8d7628f22c25fcbf1",
+      "semantic": "ee8eaa5d9a3e58dd7d91a6f96f05944201a57d0f503e6bc947a5b340abd64183",
       "family": "deep-4-technique-4",
       "idea": "Halve and stop",
       "band": 3,
-      "steps": 60,
+      "steps": 142,
       "python": true
     },
     {
       "id": "deep-4-5",
       "source": "c7eff267196258ae46b42e5c1b7c0d01d6ad9d9603bfcd36f1fab74217549fee",
-      "semantic": "45dcc439367ac42e723a5044ca93488ab3daf68a1e249cf38b737ee0b165d1de",
+      "semantic": "830719b561593d2e1394ddf7593a32b642727e62b73256c309238c984e54acc4",
       "family": "deep-4-technique-0",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 50,
+      "steps": 92,
       "python": true
     },
     {
       "id": "deep-4-6",
       "source": "893a9b80279542ede24cc9e381a67b20591c1126a209bbcc7789166bd22fd924",
-      "semantic": "e2134ccc5fd7d3f15929209c92916f7a623093a0f790f836ca4e87f827f37147",
+      "semantic": "30e49ed3fe5914cd6a8fdaeb232538343ad964c459fbdf111a27704efb5eb7ef",
       "family": "deep-4-technique-1",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 70,
+      "steps": 121,
       "python": true
     },
     {
       "id": "deep-4-7",
       "source": "173305c4b9955923519b56e10e8ce27f0a56e55d26318b639e55cd9e588afbfb",
-      "semantic": "ee96739d0298bcae0d9e797c7c59e4f38d5fe6a2f3947b88d7ad31d57c29a49e",
+      "semantic": "b4673c6a88e15758392b3957f4641adebd14bb66fded6bb4d05ad289d9bc1450",
       "family": "deep-4-technique-2",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 44,
+      "steps": 86,
       "python": true
     },
     {
       "id": "deep-4-8",
       "source": "4efea05859a9a68a19929f2da3028e98c82853b52c18f939614d19d2f844b44e",
-      "semantic": "c0623f00e56d3db3ec627251b7b8e11931b8cc32f104a193c7673864ffda8114",
+      "semantic": "734a2836857717c10bdc15508733d8c4343e00c1e455d8518ae6cb20604adfec",
       "family": "deep-4-technique-3",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 64,
+      "steps": 115,
       "python": true
     },
     {
       "id": "deep-4-9",
       "source": "1bb861e3e6107f9435643a06aa150a4e44278c105d4270a96986098fb37b6c4a",
-      "semantic": "fbb272ce301a1363acc40f62e3b40cc94965f79c2768f354461d84b10e48410d",
+      "semantic": "a4f3ab95e93ccc1e82552a924f8a83e7de190c737c4f571728e78fe1de05b9bf",
       "family": "deep-4-technique-4",
       "idea": "Halve and stop",
       "band": 6,
-      "steps": 63,
+      "steps": 148,
       "python": true
     },
     {
@@ -1663,7 +1663,7 @@
       "family": "deep-5-technique-0",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 42,
+      "steps": 86,
       "python": true
     },
     {
@@ -1673,7 +1673,7 @@
       "family": "deep-5-technique-1",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 64,
+      "steps": 111,
       "python": true
     },
     {
@@ -1683,7 +1683,7 @@
       "family": "deep-5-technique-2",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 159,
+      "steps": 283,
       "python": true
     },
     {
@@ -1693,7 +1693,7 @@
       "family": "deep-5-technique-3",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 185,
+      "steps": 428,
       "python": true
     },
     {
@@ -1703,17 +1703,17 @@
       "family": "deep-5-technique-4",
       "idea": "Loops inside loops",
       "band": 3,
-      "steps": 279,
+      "steps": 437,
       "python": true
     },
     {
       "id": "deep-5-5",
-      "source": "9f8d357488a38ebce58d0472fb3988e70f9ab19b2b8d1cd945e8b08b64d61afc",
-      "semantic": "94e31c5cdbb6f53532b0cb44ad6b8365efa60becc5d3c892321a1b77f45b4e36",
+      "source": "98d113071eae5e96c3699ae19abe1ba3be9444b8bc9fe6e5fdd6916ed1f6a4f8",
+      "semantic": "2d37ac5e44cdf84f1d60670af61918a0f404b85c71d99c1d1f0eb175244ac67d",
       "family": "deep-5-technique-0",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 46,
+      "steps": 91,
       "python": true
     },
     {
@@ -1723,7 +1723,7 @@
       "family": "deep-5-technique-1",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 67,
+      "steps": 117,
       "python": true
     },
     {
@@ -1733,7 +1733,7 @@
       "family": "deep-5-technique-2",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 162,
+      "steps": 289,
       "python": true
     },
     {
@@ -1743,7 +1743,7 @@
       "family": "deep-5-technique-3",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 188,
+      "steps": 434,
       "python": true
     },
     {
@@ -1753,7 +1753,7 @@
       "family": "deep-5-technique-4",
       "idea": "Loops inside loops",
       "band": 6,
-      "steps": 282,
+      "steps": 443,
       "python": true
     },
     {
@@ -1763,7 +1763,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 123,
+      "steps": 188,
       "python": true
     },
     {
@@ -1773,7 +1773,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 51,
+      "steps": 156,
       "python": true
     },
     {
@@ -1783,7 +1783,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 18,
+      "steps": 42,
       "python": true
     },
     {
@@ -1793,17 +1793,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-4",
       "source": "af393b98c077f2e54614f699c225083721927dccc2bce2333b2295fe45fbbd06",
-      "semantic": "e273da35d2e001ea797c806e8df2641e892f0866c95eb3cbe7362aff19dbfeab",
+      "semantic": "028efd548434980cc2145cc5e427f652a0ac3d60c10747da5abef94a367dd401",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 83,
+      "steps": 149,
       "python": true
     },
     {
@@ -1813,7 +1813,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 242,
+      "steps": 486,
       "python": true
     },
     {
@@ -1823,7 +1823,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 169,
+      "steps": 237,
       "python": true
     },
     {
@@ -1833,7 +1833,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 49,
+      "steps": 130,
       "python": true
     },
     {
@@ -1843,7 +1843,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -1853,17 +1853,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 35,
+      "steps": 93,
       "python": true
     },
     {
       "id": "number-10",
       "source": "8700f577ea10b688b75827af4f2fd96c2013d4d5307d824d159a4f987316b3be",
-      "semantic": "e9dbff04d2a56561889e71097367fb4fa826b3add2836a259b1eb419b089290a",
+      "semantic": "80259029f45e2c4eda7455748fbc884c30a2b034fe682e357196db619dd760ab",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 95,
+      "steps": 161,
       "python": true
     },
     {
@@ -1873,7 +1873,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 216,
+      "steps": 367,
       "python": true
     },
     {
@@ -1883,7 +1883,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 217,
+      "steps": 339,
       "python": true
     },
     {
@@ -1893,7 +1893,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 50,
+      "steps": 119,
       "python": true
     },
     {
@@ -1903,7 +1903,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 44,
+      "steps": 90,
       "python": true
     },
     {
@@ -1913,17 +1913,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 41,
+      "steps": 115,
       "python": true
     },
     {
       "id": "number-16",
       "source": "c5e3a1744dc9d1a65c13b42e2aa5d5ef4e8cc2cd9cfb933a6396826add011016",
-      "semantic": "96899f47340c7b541f81e4945e3199244aa552f9749f025f0976a6ed525f1357",
+      "semantic": "3e5b8cd83130ce34cc9cded427038c5ba460284a6e65d795d5273fa4c8d5229d",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 71,
+      "steps": 137,
       "python": true
     },
     {
@@ -1933,7 +1933,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 264,
+      "steps": 472,
       "python": true
     },
     {
@@ -1943,7 +1943,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 32,
+      "steps": 57,
       "python": true
     },
     {
@@ -1953,7 +1953,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 49,
+      "steps": 142,
       "python": true
     },
     {
@@ -1963,7 +1963,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 34,
+      "steps": 80,
       "python": true
     },
     {
@@ -1973,17 +1973,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 51,
+      "steps": 129,
       "python": true
     },
     {
       "id": "number-22",
       "source": "edc95e0b07e634911d0c1cb27db8edc301418a5a7f35b9b028e4efe8fda80cf9",
-      "semantic": "9ec26b75fa3e51c30cb1aa6f04729e4880da5dda8f129d859b8ba3909d96ea1b",
+      "semantic": "88582c43b9a0feeba036e1ddca8913ea8a8bbd84fc6dbd4be857d4b334bc462c",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 89,
+      "steps": 157,
       "python": true
     },
     {
@@ -1993,7 +1993,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 311,
+      "steps": 760,
       "python": true
     },
     {
@@ -2003,7 +2003,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 3,
-      "steps": 250,
+      "steps": 455,
       "python": true
     },
     {
@@ -2013,7 +2013,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 3,
-      "steps": 41,
+      "steps": 122,
       "python": true
     },
     {
@@ -2023,7 +2023,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 3,
-      "steps": 27,
+      "steps": 51,
       "python": true
     },
     {
@@ -2033,17 +2033,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 3,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
       "id": "number-28",
       "source": "3133acaad7daa8e7325de75ba9dd14128fd93690eaebed28f054f7bc2748c1fb",
-      "semantic": "acfb024d42497aee0432e57f467e97ca16f91b2d2105cb25bd3e32d2901bfc00",
+      "semantic": "9b924c135874e8415664d42f5de2948ef704b25da7f13e4bc0088e07c41cf9df",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 3,
-      "steps": 84,
+      "steps": 219,
       "python": true
     },
     {
@@ -2053,7 +2053,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 3,
-      "steps": 327,
+      "steps": 512,
       "python": true
     },
     {
@@ -2063,7 +2063,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 156,
+      "steps": 239,
       "python": true
     },
     {
@@ -2073,7 +2073,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 54,
+      "steps": 162,
       "python": true
     },
     {
@@ -2083,7 +2083,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 21,
+      "steps": 48,
       "python": true
     },
     {
@@ -2093,27 +2093,27 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 39,
+      "steps": 97,
       "python": true
     },
     {
       "id": "number-34",
       "source": "81366e6f08d6f7408acfbd0e4f4e381063942d4bd2c43904bafbff3166fb0256",
-      "semantic": "5df1850d56632b8f2febc48667ea83c310f67cfa850a98d7dca4e61ad67865b5",
+      "semantic": "78067ada16fd807743f2da1908d4c8b22fdce5a6782599092f08b3e6e50ab763",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 86,
+      "steps": 155,
       "python": true
     },
     {
       "id": "number-35",
-      "source": "9c2fec36564558bbd4695da295f2044f7b5b6206556ec8fd454c64b8f6f59109",
-      "semantic": "19ef418bbc0414d6d2de27d5cb94482cb579abbcda87190ff3c1e8d3b6c6083f",
+      "source": "4305b95072346d428f1bbc05c49975544f6df247dfbb117cdc33247a11d1d61c",
+      "semantic": "392ce844639127ddb13e9305627ef452f0c02f6b0d12370283813e4e08a9aa40",
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 246,
+      "steps": 491,
       "python": true
     },
     {
@@ -2123,7 +2123,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 212,
+      "steps": 298,
       "python": true
     },
     {
@@ -2133,7 +2133,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 56,
+      "steps": 148,
       "python": true
     },
     {
@@ -2143,7 +2143,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 18,
+      "steps": 32,
       "python": true
     },
     {
@@ -2153,17 +2153,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-40",
       "source": "4bd0008f90b5ccfa6a0404b4b3fbafeeb4c38e2f63197c8b90dc95f38cc9972b",
-      "semantic": "e7b9cd16ff0fbf98c36fdf79ab0c90e6be3912fc0922ec64de9ba7c2aa06f30e",
+      "semantic": "7fe212c67326f26cde8285bae69a23594ba3092870e9b0e66bbd9acf470a3965",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 98,
+      "steps": 167,
       "python": true
     },
     {
@@ -2173,7 +2173,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 219,
+      "steps": 373,
       "python": true
     },
     {
@@ -2183,7 +2183,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 272,
+      "steps": 426,
       "python": true
     },
     {
@@ -2193,7 +2193,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 53,
+      "steps": 125,
       "python": true
     },
     {
@@ -2203,7 +2203,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 47,
+      "steps": 96,
       "python": true
     },
     {
@@ -2213,17 +2213,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 43,
+      "steps": 117,
       "python": true
     },
     {
       "id": "number-46",
       "source": "f8f2c2d6024ceb0357081790ec0d6f132c6520021c30625776f60f317c5a95b4",
-      "semantic": "5effc3defbdd5717ecdb64abcb3d1ea9bb3a4d9a4f1170d9cac30e0e235f29d3",
+      "semantic": "cf687efc7252173744df251cb09387a9c69a20de8b3a6c217937a81d553a3329",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 74,
+      "steps": 143,
       "python": true
     },
     {
@@ -2233,17 +2233,17 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 267,
+      "steps": 478,
       "python": true
     },
     {
       "id": "number-48",
-      "source": "d2c9c3f5dcbcb5299b99b62c9329df428f50e56d0771e92f62b6c5a9a79c003e",
-      "semantic": "b44d3a1f7bfbdcabb023f6b6eda79890bda4001d4762cec3bf5d556b713fe8d7",
+      "source": "a347644a30604271f92c47809f83b6d772d68e9336796a503524c9b927f48d30",
+      "semantic": "1b5a9918c7006cd70f66cbb57ca7f8b70b01d0eec2d1567c38b3eca291b33f48",
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 36,
+      "steps": 62,
       "python": true
     },
     {
@@ -2253,7 +2253,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 52,
+      "steps": 148,
       "python": true
     },
     {
@@ -2263,7 +2263,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 37,
+      "steps": 86,
       "python": true
     },
     {
@@ -2273,17 +2273,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 57,
+      "steps": 143,
       "python": true
     },
     {
       "id": "number-52",
       "source": "ff9c5c482788774dd29a48c31fdddc67c978ae16fd0fb0a5f842d05979096144",
-      "semantic": "50026a77e33b457e26e3aa17cacb566ddfc2ac8654bbd14510241c40946ca5c5",
+      "semantic": "69b23fa6d1298d3f699fb719f05177c1640612115b34b1909a4ab63aba687a77",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 96,
+      "steps": 170,
       "python": true
     },
     {
@@ -2293,7 +2293,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 314,
+      "steps": 766,
       "python": true
     },
     {
@@ -2303,7 +2303,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 6,
-      "steps": 303,
+      "steps": 551,
       "python": true
     },
     {
@@ -2313,7 +2313,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 6,
-      "steps": 44,
+      "steps": 128,
       "python": true
     },
     {
@@ -2323,7 +2323,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 6,
-      "steps": 30,
+      "steps": 57,
       "python": true
     },
     {
@@ -2333,17 +2333,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 6,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
       "id": "number-58",
       "source": "0e4862493fca09b5792046cc49db3b4557837c8c222d78b9f75a49672cc9e636",
-      "semantic": "88ec3a9c53b77dc70c23a6945b23cc45c0e386e8706ae6d56b39b50a96b69b9b",
+      "semantic": "464351edac4c85c9c0841a94f04abf4f10abbf894e34e7fa47ae05a1d0e7ca41",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 6,
-      "steps": 87,
+      "steps": 225,
       "python": true
     },
     {
@@ -2353,7 +2353,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 6,
-      "steps": 330,
+      "steps": 518,
       "python": true
     },
     {
@@ -2363,7 +2363,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 183,
+      "steps": 278,
       "python": true
     },
     {
@@ -2373,7 +2373,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 51,
+      "steps": 156,
       "python": true
     },
     {
@@ -2383,7 +2383,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 18,
+      "steps": 42,
       "python": true
     },
     {
@@ -2393,17 +2393,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-64",
       "source": "c9f909ca09068aad21e568ce2e984c4c0d89ea7f14db50abdfbec6a712f98251",
-      "semantic": "cb8c6f29da8136641c666189576199e5d3c3dc9c644e714c236b5a944f43d9b2",
+      "semantic": "74dca43a7c243c109927eb2a4725327adfb88a8fe89efcb2c2f45ae6d510b755",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 83,
+      "steps": 149,
       "python": true
     },
     {
@@ -2413,7 +2413,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 300,
+      "steps": 599,
       "python": true
     },
     {
@@ -2423,7 +2423,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 249,
+      "steps": 347,
       "python": true
     },
     {
@@ -2433,7 +2433,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 49,
+      "steps": 130,
       "python": true
     },
     {
@@ -2443,7 +2443,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -2453,17 +2453,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 35,
+      "steps": 93,
       "python": true
     },
     {
       "id": "number-70",
       "source": "7a37525ff6eddb063f5a83255d0fe8f67211aacae010c0e439a1ced378a6b9af",
-      "semantic": "93d8a5d5c22542d09bd329c6fd5215560b82e36fc498bd802de12c2d77776dbe",
+      "semantic": "d2426e49fc2a06775a028df1f38df7ea27f6c8f53e44fc2104752e6c7bac4b32",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 95,
+      "steps": 161,
       "python": true
     },
     {
@@ -2473,7 +2473,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 269,
+      "steps": 456,
       "python": true
     },
     {
@@ -2483,7 +2483,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 317,
+      "steps": 494,
       "python": true
     },
     {
@@ -2493,7 +2493,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 50,
+      "steps": 119,
       "python": true
     },
     {
@@ -2503,7 +2503,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 44,
+      "steps": 90,
       "python": true
     },
     {
@@ -2513,17 +2513,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 41,
+      "steps": 115,
       "python": true
     },
     {
       "id": "number-76",
       "source": "a840fcb05faf3c7180ac3c78f8991b101b8be1d6c336ed49a2383c990fb6a9cc",
-      "semantic": "8a2c8531e063dc62859fa0b30102f5ddf6c620aacef18332cfd107deb95e27ec",
+      "semantic": "38a38d2b2eea3b688259c41b97a82e49364c184f18490950681a1ff7b0deac2a",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 71,
+      "steps": 137,
       "python": true
     },
     {
@@ -2533,7 +2533,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 299,
+      "steps": 535,
       "python": true
     },
     {
@@ -2543,7 +2543,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 32,
+      "steps": 57,
       "python": true
     },
     {
@@ -2553,7 +2553,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 49,
+      "steps": 142,
       "python": true
     },
     {
@@ -2563,7 +2563,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 34,
+      "steps": 80,
       "python": true
     },
     {
@@ -2573,17 +2573,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 51,
+      "steps": 129,
       "python": true
     },
     {
       "id": "number-82",
       "source": "7c04dcad4fe8ae0c815c17cf6909566e7735650bc6adf620cac4d3e28b254002",
-      "semantic": "9ddc67f18530c0ee396aa34275f9e86e4874c308c838d3775071d3066289411f",
+      "semantic": "a8d657e3371a5d83ce2bf6308aa53ca7d66e1ab42ebce9d96dc33196d5332ea7",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 115,
+      "steps": 202,
       "python": true
     },
     {
@@ -2593,7 +2593,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 386,
+      "steps": 970,
       "python": true
     },
     {
@@ -2603,7 +2603,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 3,
-      "steps": 350,
+      "steps": 635,
       "python": true
     },
     {
@@ -2613,7 +2613,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 3,
-      "steps": 41,
+      "steps": 122,
       "python": true
     },
     {
@@ -2623,7 +2623,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 3,
-      "steps": 27,
+      "steps": 51,
       "python": true
     },
     {
@@ -2633,17 +2633,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 3,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
       "id": "number-88",
       "source": "322a1ec761ac78ca3fdf9835508b555f27bf491373ac4c2104f6c34418dbe94f",
-      "semantic": "73209c9a5b749c274d51c29f7cceff63ce10fea33569ac5401d4e2fdb87c62dd",
+      "semantic": "357838338825edad856a19a82d08ddf7f4937f423032c8f68ee1357a0c8520b5",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 3,
-      "steps": 84,
+      "steps": 219,
       "python": true
     },
     {
@@ -2653,7 +2653,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 3,
-      "steps": 369,
+      "steps": 577,
       "python": true
     },
     {
@@ -2663,7 +2663,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 216,
+      "steps": 329,
       "python": true
     },
     {
@@ -2673,7 +2673,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 54,
+      "steps": 162,
       "python": true
     },
     {
@@ -2683,7 +2683,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 21,
+      "steps": 48,
       "python": true
     },
     {
@@ -2693,27 +2693,27 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 39,
+      "steps": 97,
       "python": true
     },
     {
       "id": "number-94",
       "source": "fd83fd530bdce0790bd3898de6696ecd88b2977fceb77460bb5543b8d13e6e2c",
-      "semantic": "df3256378549895e8c348a904432b36ff0b57ddc48bf9e081b79d27a9ef7b2e9",
+      "semantic": "0cb4ec2749da874db04ee5d44d69d541f72237fc27853abf5304c47e3910ac91",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 98,
+      "steps": 176,
       "python": true
     },
     {
       "id": "number-95",
-      "source": "093a337cecc39b16007021d14c2c14b8c388186a3a677d4c1f920061d42b6443",
-      "semantic": "d311355f29b2a55ab7d07d83d171891605cdf7637d0f03e5e350ea568e33d4e5",
+      "source": "b50db84bf2874fdcb0f2f28fe94f3f94bac68ec82aba4824a2a9592f2920728e",
+      "semantic": "b02061687378334648e81169313abdaab0034ecbeadcfedd6e2f397eafe78381",
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 304,
+      "steps": 604,
       "python": true
     },
     {
@@ -2723,7 +2723,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 292,
+      "steps": 408,
       "python": true
     },
     {
@@ -2733,7 +2733,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 56,
+      "steps": 148,
       "python": true
     },
     {
@@ -2743,7 +2743,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 18,
+      "steps": 32,
       "python": true
     },
     {
@@ -2753,17 +2753,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-100",
       "source": "eba7b8c7f3fffff5587ddcc09ddddedac5da2ae10956239f59552e9b50b581a5",
-      "semantic": "21991460f4b3a0c2299eafb2905b22e7194d1a52277e3cf174e0cf2dd770c3f8",
+      "semantic": "aac8a23755499b1ac1db937717a01a256189c5acd0c20352abad26f094851b9a",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 112,
+      "steps": 190,
       "python": true
     },
     {
@@ -2773,7 +2773,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 272,
+      "steps": 462,
       "python": true
     },
     {
@@ -2783,7 +2783,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 372,
+      "steps": 581,
       "python": true
     },
     {
@@ -2793,7 +2793,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 53,
+      "steps": 125,
       "python": true
     },
     {
@@ -2803,7 +2803,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 47,
+      "steps": 96,
       "python": true
     },
     {
@@ -2813,17 +2813,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 43,
+      "steps": 117,
       "python": true
     },
     {
       "id": "number-106",
       "source": "8cb4d786d1b3a8a2735e5ae2e8e19f0d4d6b8013415a2f9716adb107dd784367",
-      "semantic": "eb869ec5a53b15adc19b22e9527ea5b40c72d32ce8c253752d087fc2fe94447d",
+      "semantic": "b6c9f5a2705855b0619ade36079c0f257156a8cb5b904a3d3c265870fa0f6ca9",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 74,
+      "steps": 143,
       "python": true
     },
     {
@@ -2833,17 +2833,17 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 302,
+      "steps": 541,
       "python": true
     },
     {
       "id": "number-108",
-      "source": "d2f2fa3023b1fcef5b18d3ee8980ae098401a3b49e9e309b35fe1f65e5177b25",
-      "semantic": "65eefbe80816a5a91c72c9c65bfd274ccad37e7379fcbb4daf032dd5c047975a",
+      "source": "013102054d735ad47bda4ab4531c662f4e67c237de5c4182e1b3c88c976ef4fd",
+      "semantic": "3f3d9b2bab24362eae576cbddc400777ab69825d2715474863239118c903c3ea",
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 36,
+      "steps": 62,
       "python": true
     },
     {
@@ -2853,7 +2853,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 52,
+      "steps": 148,
       "python": true
     },
     {
@@ -2863,7 +2863,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 37,
+      "steps": 86,
       "python": true
     },
     {
@@ -2873,17 +2873,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 57,
+      "steps": 143,
       "python": true
     },
     {
       "id": "number-112",
       "source": "49fcc76c5b3da4afa35944d7747e13525629d0a8b27f012042745e62e8a2a4bc",
-      "semantic": "41880c39219fa1e8372395ae8c92cbf5bb4ca3adea965b6f7579854b98ba6ffe",
+      "semantic": "6f9b7f2e95d2915ca8813a03c5114264397fa9e50f2022670819d00aa5249d71",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 114,
+      "steps": 201,
       "python": true
     },
     {
@@ -2893,7 +2893,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 389,
+      "steps": 976,
       "python": true
     },
     {
@@ -2903,7 +2903,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 6,
-      "steps": 403,
+      "steps": 731,
       "python": true
     },
     {
@@ -2913,7 +2913,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 6,
-      "steps": 44,
+      "steps": 128,
       "python": true
     },
     {
@@ -2923,7 +2923,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 6,
-      "steps": 30,
+      "steps": 57,
       "python": true
     },
     {
@@ -2933,17 +2933,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 6,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
       "id": "number-118",
       "source": "a8389d9bc393f44c38bd26756241669361ab4afd2a5788435548b202edb4898b",
-      "semantic": "1d0db9807506310b31d81cdba749421c007f674764fd809733e0ad30fb84da39",
+      "semantic": "dce8b6e74a432dfc5af65549e00e00a56d82d4e8264e66b696f8797312990692",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 6,
-      "steps": 87,
+      "steps": 225,
       "python": true
     },
     {
@@ -2953,7 +2953,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 6,
-      "steps": 372,
+      "steps": 583,
       "python": true
     },
     {
@@ -2963,7 +2963,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 243,
+      "steps": 368,
       "python": true
     },
     {
@@ -2973,7 +2973,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 51,
+      "steps": 156,
       "python": true
     },
     {
@@ -2983,7 +2983,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 18,
+      "steps": 42,
       "python": true
     },
     {
@@ -2993,17 +2993,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-124",
       "source": "9a1ef1f058045c239464a0cbacbfcd6cfbe671ce2f6579df73566421a0f83a91",
-      "semantic": "695f62c5e1684736a9e95a0f028cce48e30e4d4d2db0d369ebe4e1a50b69d3f6",
+      "semantic": "36a6127cc0a5fdeb27fe340ec8b029c65ed8e02893f8e0c6395c69587bc3fb2d",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 95,
+      "steps": 170,
       "python": true
     },
     {
@@ -3013,7 +3013,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 364,
+      "steps": 723,
       "python": true
     },
     {
@@ -3023,7 +3023,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 329,
+      "steps": 457,
       "python": true
     },
     {
@@ -3033,7 +3033,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 49,
+      "steps": 130,
       "python": true
     },
     {
@@ -3043,7 +3043,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -3053,17 +3053,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 35,
+      "steps": 93,
       "python": true
     },
     {
       "id": "number-130",
       "source": "2647bf5f4997eebaf4fc30a175c75b9e7043e0f9a51dc36773b2520e45232ed5",
-      "semantic": "b816bdb0c1f5a40699535d3d6820f9013763359a2258a0a07053cc8a023eb18b",
+      "semantic": "1b69573cf6a5944e4634cb4091495491ba8e39ad3229bee1804ef8d5e10d30b5",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 109,
+      "steps": 184,
       "python": true
     },
     {
@@ -3073,7 +3073,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 328,
+      "steps": 555,
       "python": true
     },
     {
@@ -3083,7 +3083,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 417,
+      "steps": 649,
       "python": true
     },
     {
@@ -3093,7 +3093,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 50,
+      "steps": 119,
       "python": true
     },
     {
@@ -3103,7 +3103,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 44,
+      "steps": 90,
       "python": true
     },
     {
@@ -3113,17 +3113,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 41,
+      "steps": 115,
       "python": true
     },
     {
       "id": "number-136",
       "source": "74847a64e249b29d3d43273bf89ffdaefe5e834584e951f2e2b945c1df9b626c",
-      "semantic": "3df3c368395d916f352c72512401376209171262625307a94c305b603dd7c0ed",
+      "semantic": "ec35cb654f0cfc977e2cfae9be895cf36d661d3f200f549de95ff77fcb2b3da4",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 71,
+      "steps": 137,
       "python": true
     },
     {
@@ -3133,7 +3133,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 334,
+      "steps": 598,
       "python": true
     },
     {
@@ -3143,7 +3143,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 32,
+      "steps": 57,
       "python": true
     },
     {
@@ -3153,7 +3153,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 49,
+      "steps": 142,
       "python": true
     },
     {
@@ -3163,7 +3163,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 34,
+      "steps": 80,
       "python": true
     },
     {
@@ -3173,17 +3173,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 51,
+      "steps": 129,
       "python": true
     },
     {
       "id": "number-142",
       "source": "14afecbc577208786ee2d3f0e449e6441ad9d93867a289f4d64154c56d84e5c4",
-      "semantic": "de4df281006a8a50bc910d3118975111a8f93f34ecd21b6398a0bdd52267e5e7",
+      "semantic": "e82e6fcab2cf53e9e7d2765b71435d21afafd7cfb2b5d4a4cdc8667f82989daa",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 107,
+      "steps": 188,
       "python": true
     },
     {
@@ -3193,7 +3193,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 469,
+      "steps": 1212,
       "python": true
     },
     {
@@ -3203,7 +3203,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 3,
-      "steps": 450,
+      "steps": 815,
       "python": true
     },
     {
@@ -3213,7 +3213,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 3,
-      "steps": 41,
+      "steps": 122,
       "python": true
     },
     {
@@ -3223,7 +3223,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 3,
-      "steps": 27,
+      "steps": 51,
       "python": true
     },
     {
@@ -3233,17 +3233,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 3,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
       "id": "number-148",
       "source": "c9e7dd7fae1a3ae642449532cceabfc6e5ae3fe5d6c9d105e606cccc6e84b5d2",
-      "semantic": "dd1e3d9b6143d347090ed4296fba0d0b641533d1b560564f561286b54e5fff5f",
+      "semantic": "051fb9be8c6efa03639abc23a0489c7f5d828371539150722a7240e0f6712a28",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 3,
-      "steps": 96,
+      "steps": 262,
       "python": true
     },
     {
@@ -3253,7 +3253,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 3,
-      "steps": 417,
+      "steps": 652,
       "python": true
     },
     {
@@ -3263,7 +3263,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 276,
+      "steps": 419,
       "python": true
     },
     {
@@ -3273,7 +3273,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 54,
+      "steps": 162,
       "python": true
     },
     {
@@ -3283,7 +3283,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 21,
+      "steps": 48,
       "python": true
     },
     {
@@ -3293,27 +3293,27 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 39,
+      "steps": 97,
       "python": true
     },
     {
       "id": "number-154",
       "source": "0e8c0544f54c921d7f05a7b25ecaf33fc3bb2caa86d50a558c86b4bf5d5eb5c7",
-      "semantic": "96f78eb1459e6c2b04f2f62d01e3797a67ce61916fcb44eed732211173228112",
+      "semantic": "dee3459c54b7224d36ab3c5a86c7616abea4fa16b6848300a246774f2a583f94",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 98,
+      "steps": 176,
       "python": true
     },
     {
       "id": "number-155",
-      "source": "de428df1eb33706f824be4c03aae6b27aacd36521360601133b24c3914ad28a3",
-      "semantic": "224f2796e72cd2fe7d915c08e18d5e16c9646d0c25f38a1125ec2a8bff1e82f3",
+      "source": "a91de48752ab38a0c9e27df5ee5ba026df5419e9cfe8dcfe638699ef74d3147b",
+      "semantic": "166783b8fe592ab54615a51a19ffe6cf314b64f46efdd06628c9486107b4cbf4",
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 368,
+      "steps": 728,
       "python": true
     },
     {
@@ -3323,7 +3323,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 372,
+      "steps": 518,
       "python": true
     },
     {
@@ -3333,7 +3333,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 56,
+      "steps": 148,
       "python": true
     },
     {
@@ -3343,7 +3343,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 18,
+      "steps": 32,
       "python": true
     },
     {
@@ -3353,17 +3353,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-160",
       "source": "7d4fb1b171f15855ea48e15614627e1527148747ddf6c1a25f55fad398fd2aaa",
-      "semantic": "8fbacc70b8606fa4ef20d65f3888795a3b2a3c25586d0004b874ae75c83b4b51",
+      "semantic": "7f97ed961cd8832fdd338460cd1c422272671a1baa8ece8e8e3a98bcb039eef7",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 112,
+      "steps": 190,
       "python": true
     },
     {
@@ -3373,7 +3373,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 331,
+      "steps": 561,
       "python": true
     },
     {
@@ -3383,7 +3383,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 472,
+      "steps": 736,
       "python": true
     },
     {
@@ -3393,7 +3393,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 53,
+      "steps": 125,
       "python": true
     },
     {
@@ -3403,7 +3403,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 47,
+      "steps": 96,
       "python": true
     },
     {
@@ -3413,17 +3413,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 43,
+      "steps": 117,
       "python": true
     },
     {
       "id": "number-166",
       "source": "6cfb851e92dca47982ae2f6c2d000466e521f214f789525c080953560ca47d73",
-      "semantic": "69fabcf51fa1b0f78828aef59f6f177e8ad909c254622e1e2aae75f26db78a00",
+      "semantic": "4a76ef15ed14c1a8ba852fe667eeccec8944df7acbfa8274ea5701a5762477f8",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 84,
+      "steps": 162,
       "python": true
     },
     {
@@ -3433,17 +3433,17 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 337,
+      "steps": 604,
       "python": true
     },
     {
       "id": "number-168",
-      "source": "d3cfec0dffdec5893e8a39627206a5b84bb1e6be098a31e8e5a707d3c463da23",
-      "semantic": "6449ba6dc64961b221aa5c976f81c3327087a407c68133a1a913672bdd97c8ca",
+      "source": "13b1007d29e3b99ba1e7affe24ccdcc2519e51bb365337799f485e9f601bb4e3",
+      "semantic": "ca82913302a43a5b604b02cfa76214dcc014add7bc3330f682e699a89da10f8c",
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 36,
+      "steps": 62,
       "python": true
     },
     {
@@ -3453,7 +3453,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 52,
+      "steps": 148,
       "python": true
     },
     {
@@ -3463,7 +3463,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 37,
+      "steps": 86,
       "python": true
     },
     {
@@ -3473,17 +3473,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 57,
+      "steps": 143,
       "python": true
     },
     {
       "id": "number-172",
       "source": "45d901a65bf024cd13ad1c10af714d5441976f7ac4b6658315f00667f63cb01a",
-      "semantic": "ff7355ea48eec4f8f58c2a9e1e87b571f8012c98e1af658bc9f2b27add3fe6de",
+      "semantic": "bc3f626484f10f5d639cf6c3eae685ff6ed9073fd0e78f47ee0ccc53079fe01c",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 118,
+      "steps": 208,
       "python": true
     },
     {
@@ -3493,7 +3493,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 472,
+      "steps": 1218,
       "python": true
     },
     {
@@ -3503,7 +3503,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 6,
-      "steps": 503,
+      "steps": 911,
       "python": true
     },
     {
@@ -3513,7 +3513,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 6,
-      "steps": 44,
+      "steps": 128,
       "python": true
     },
     {
@@ -3523,7 +3523,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 6,
-      "steps": 30,
+      "steps": 57,
       "python": true
     },
     {
@@ -3533,17 +3533,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 6,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
       "id": "number-178",
       "source": "6145016b94f54fa92ab4a44a528adc2af9f0d8233340d8bb35c37b3d5e022253",
-      "semantic": "ab21c547d096e3f089cb265592ac31352df8a922f0390b36a81c30578e5554e8",
+      "semantic": "60bb8c4e8d316f64af530df30853fc29beeb6bd2361e15f441e724b4a59eccca",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 6,
-      "steps": 99,
+      "steps": 268,
       "python": true
     },
     {
@@ -3553,7 +3553,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 6,
-      "steps": 420,
+      "steps": 658,
       "python": true
     },
     {
@@ -3563,7 +3563,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 303,
+      "steps": 458,
       "python": true
     },
     {
@@ -3573,7 +3573,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 51,
+      "steps": 156,
       "python": true
     },
     {
@@ -3583,7 +3583,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 18,
+      "steps": 42,
       "python": true
     },
     {
@@ -3593,17 +3593,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-184",
       "source": "8bf02837fe10c5f1c81bef15208acda6d7b09096584ee369b8c221b6fc4cbffd",
-      "semantic": "adf2a11c8dfb9f5313bdc043021f5095c90b659b7c53f29f89ef8d508c253a62",
+      "semantic": "cbef099f2b9623d2bc7a2126001124c740e06a43b2cdb520611973f145e2ed5c",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 95,
+      "steps": 170,
       "python": true
     },
     {
@@ -3613,7 +3613,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 434,
+      "steps": 858,
       "python": true
     },
     {
@@ -3623,7 +3623,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 409,
+      "steps": 567,
       "python": true
     },
     {
@@ -3633,7 +3633,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 49,
+      "steps": 130,
       "python": true
     },
     {
@@ -3643,7 +3643,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -3653,17 +3653,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 35,
+      "steps": 93,
       "python": true
     },
     {
       "id": "number-190",
       "source": "e08b198be8c3544aa8b81ef7c2ae7dda82a4a5cec750a2512d2699173e837e80",
-      "semantic": "b41c4e580921bab72e4e7df41bbcf154f6a608e857e69a8728f3353d17816a3a",
+      "semantic": "a903d6b7b45bf93a0d35ab79bcade3a7f40bc194a9864b63a1eec7e0a147af30",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 109,
+      "steps": 184,
       "python": true
     },
     {
@@ -3673,7 +3673,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 393,
+      "steps": 664,
       "python": true
     },
     {
@@ -3683,7 +3683,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 517,
+      "steps": 804,
       "python": true
     },
     {
@@ -3693,7 +3693,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 50,
+      "steps": 119,
       "python": true
     },
     {
@@ -3703,7 +3703,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 44,
+      "steps": 90,
       "python": true
     },
     {
@@ -3713,17 +3713,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 41,
+      "steps": 115,
       "python": true
     },
     {
       "id": "number-196",
       "source": "715b01037d23e1e423f0bb108ec5f4cefadd6ce37277fb80dc6541d2875173a5",
-      "semantic": "32c00267bc2f25cdab0bebe2aabbfea19b4710ab08f014a6a3ce58a5481211c3",
+      "semantic": "fff80de18d8805a206bd33d5daf8baf4188772543f6168b8c7bd414854cb12e0",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 81,
+      "steps": 156,
       "python": true
     },
     {
@@ -3733,7 +3733,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 369,
+      "steps": 661,
       "python": true
     },
     {
@@ -3743,7 +3743,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 32,
+      "steps": 57,
       "python": true
     },
     {
@@ -3753,7 +3753,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 49,
+      "steps": 142,
       "python": true
     },
     {
@@ -3763,7 +3763,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 34,
+      "steps": 80,
       "python": true
     },
     {
@@ -3773,17 +3773,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 51,
+      "steps": 129,
       "python": true
     },
     {
       "id": "number-202",
       "source": "e9025e84eb45b457d86e1d73adc5c51eebb9d4c654a29e79bee2e1f535d64358",
-      "semantic": "ace200038b35f046aceb8ec0b19e0d89f7af9b857ad850db626a4ae10aeeb9f3",
+      "semantic": "cfc1b58049b26da4d515f37867e9a8facae2f7c726f51c7c08c9eb0296760d14",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 107,
+      "steps": 188,
       "python": true
     },
     {
@@ -3793,7 +3793,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 560,
+      "steps": 1488,
       "python": true
     },
     {
@@ -3803,7 +3803,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 3,
-      "steps": 550,
+      "steps": 995,
       "python": true
     },
     {
@@ -3813,7 +3813,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 3,
-      "steps": 41,
+      "steps": 122,
       "python": true
     },
     {
@@ -3823,7 +3823,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 3,
-      "steps": 27,
+      "steps": 51,
       "python": true
     },
     {
@@ -3833,17 +3833,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 3,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
       "id": "number-208",
       "source": "59d413aaf7467c26f4d1e4387da6938f6cdb73ed26994a657c3719b33d5de7c8",
-      "semantic": "c407701aa59da723273102c5e6339b5aa1a2c204320cdf8d5291420bcdea8f01",
+      "semantic": "208ca4a3a26d80843cd75887b418a957dc0789282c874ddd84cdf7d755d99fc0",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 3,
-      "steps": 96,
+      "steps": 262,
       "python": true
     },
     {
@@ -3853,7 +3853,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 3,
-      "steps": 459,
+      "steps": 717,
       "python": true
     },
     {
@@ -3863,7 +3863,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 336,
+      "steps": 509,
       "python": true
     },
     {
@@ -3873,7 +3873,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 54,
+      "steps": 162,
       "python": true
     },
     {
@@ -3883,7 +3883,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 21,
+      "steps": 48,
       "python": true
     },
     {
@@ -3893,27 +3893,27 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 39,
+      "steps": 97,
       "python": true
     },
     {
       "id": "number-214",
       "source": "537264fe3426287fc3073963ea67ea7795a35212729a022b9aa0dd6676ce7907",
-      "semantic": "df5cba02acc2e978c3d68d25bb6329df2696f54746ffba5ed0601939dbc4f5e5",
+      "semantic": "ed493877825c3c15ffb9097a67bc486245c5f8ca7d80dbe5a98266d2ea7e8c07",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 98,
+      "steps": 176,
       "python": true
     },
     {
       "id": "number-215",
-      "source": "10165333a4d8b2e303ed0f25d3c889d50e9cbf0d46032ba25653f7e0cac31ceb",
-      "semantic": "ceec6ef0be8a7f9e1e76564b5429c2666183b7b73af70b69a1e7893a931596b1",
+      "source": "8d8942ad04505bcda5bc2d756357568f70f33a31df9352eccdf80c47e2005c86",
+      "semantic": "e869e53908452923ed7e74749a6c40da3915f61f1ebc31f486ecdde4aaca6c8d",
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 438,
+      "steps": 863,
       "python": true
     },
     {
@@ -3923,7 +3923,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 452,
+      "steps": 628,
       "python": true
     },
     {
@@ -3933,7 +3933,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 56,
+      "steps": 148,
       "python": true
     },
     {
@@ -3943,7 +3943,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 18,
+      "steps": 32,
       "python": true
     },
     {
@@ -3953,17 +3953,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-220",
       "source": "3e264714c76b37a272b6bd4987f28c20a0b177b79ba5b678839eea2d529e0dc1",
-      "semantic": "6c83b442572355b59cc3fcf64379a32edd7d71dd2f747e981702db07284e285c",
+      "semantic": "f819649674f29d1ef17d8c1a85bd23b773b7c6da334b11e0f867e8dc8dda839c",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 112,
+      "steps": 190,
       "python": true
     },
     {
@@ -3973,7 +3973,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 396,
+      "steps": 670,
       "python": true
     },
     {
@@ -3983,7 +3983,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 572,
+      "steps": 891,
       "python": true
     },
     {
@@ -3993,7 +3993,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 53,
+      "steps": 125,
       "python": true
     },
     {
@@ -4003,7 +4003,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 47,
+      "steps": 96,
       "python": true
     },
     {
@@ -4013,17 +4013,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 43,
+      "steps": 117,
       "python": true
     },
     {
       "id": "number-226",
       "source": "001219f9585fd81853c22d82230ed22746add84c9a9a4bdd63138235abd7d0b5",
-      "semantic": "3a1e860c1fa1a16b8795fbc51cf898c065b262e83d980e3991b937d55497269b",
+      "semantic": "440c6ee5cfd6abc0a9f1754fdacf577331c848835954519b29bb5c41f907da1d",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 84,
+      "steps": 162,
       "python": true
     },
     {
@@ -4033,17 +4033,17 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 372,
+      "steps": 667,
       "python": true
     },
     {
       "id": "number-228",
-      "source": "01cecc75f7eb6b61bfc2e30e8290d13ca5e311060b826208cd6ef50b7376425f",
-      "semantic": "f2ee3b4d247d268d54aa6136c8afab7c6d09367d511131047079553ce57473b5",
+      "source": "9baee7d9407e9d637ed5aeffe505850ee5c972dd1ad771a00280ac4d2c0b33a5",
+      "semantic": "60d22254703c335b1bf12308cba78fae20825a1db8271fd9d4119ecb0c6d200a",
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 36,
+      "steps": 62,
       "python": true
     },
     {
@@ -4053,7 +4053,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 52,
+      "steps": 148,
       "python": true
     },
     {
@@ -4063,7 +4063,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 37,
+      "steps": 86,
       "python": true
     },
     {
@@ -4073,17 +4073,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 57,
+      "steps": 143,
       "python": true
     },
     {
       "id": "number-232",
       "source": "78fbeb5d5328846d673edccb7d7a653e92872aa32ae747da4f1f52bd46111fce",
-      "semantic": "9ab10f745f7dec8929c6541eaf7443bb8d89e0cdb8d7aed5014575305d447048",
+      "semantic": "40810cc03b0e25e85af41c136f4c6d268b82543b39217332c80505846957b010",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 110,
+      "steps": 194,
       "python": true
     },
     {
@@ -4093,7 +4093,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 563,
+      "steps": 1494,
       "python": true
     },
     {
@@ -4103,7 +4103,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 6,
-      "steps": 603,
+      "steps": 1091,
       "python": true
     },
     {
@@ -4113,7 +4113,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 6,
-      "steps": 44,
+      "steps": 128,
       "python": true
     },
     {
@@ -4123,7 +4123,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 6,
-      "steps": 30,
+      "steps": 57,
       "python": true
     },
     {
@@ -4133,17 +4133,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 6,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
       "id": "number-238",
       "source": "d92f835f10ca420b9ed1c2aba9045d9f689919baf776483e73294cd0d0b2250f",
-      "semantic": "6196418f27ba085bb6e253d2c3f733bcaf9e5b12de42cc5c9ca5bb47ceed7ab3",
+      "semantic": "b68b0acd8483dd2806a622a1288ca018c144bcbfa73ff47ad164d1b2f3d3120e",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 6,
-      "steps": 99,
+      "steps": 268,
       "python": true
     },
     {
@@ -4153,7 +4153,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 6,
-      "steps": 462,
+      "steps": 723,
       "python": true
     },
     {
@@ -4163,7 +4163,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 363,
+      "steps": 548,
       "python": true
     },
     {
@@ -4173,7 +4173,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 51,
+      "steps": 156,
       "python": true
     },
     {
@@ -4183,7 +4183,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 18,
+      "steps": 42,
       "python": true
     },
     {
@@ -4193,17 +4193,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-244",
       "source": "9694fa8f229388037d7902e7053cb448a43d9c76eb59326a45bc457195ac98ff",
-      "semantic": "9cb7fcf2a36156ad0f225d872e6b18865297140925a4d33bd6a2f417df24c23d",
+      "semantic": "2349498a91a4774050ecd43f1857af39d7aaa07117a16a8fe8c88519007a90f3",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 95,
+      "steps": 170,
       "python": true
     },
     {
@@ -4213,7 +4213,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 510,
+      "steps": 1004,
       "python": true
     },
     {
@@ -4223,7 +4223,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 1,
-      "steps": 489,
+      "steps": 677,
       "python": true
     },
     {
@@ -4233,7 +4233,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 1,
-      "steps": 49,
+      "steps": 130,
       "python": true
     },
     {
@@ -4243,7 +4243,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 1,
-      "steps": 15,
+      "steps": 26,
       "python": true
     },
     {
@@ -4253,17 +4253,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 1,
-      "steps": 35,
+      "steps": 93,
       "python": true
     },
     {
       "id": "number-250",
       "source": "1a3147a1b32eefa10813c0694a1312f6db3cf34a5acea998c5a9550954308679",
-      "semantic": "15843236c96d5d04546ce99a8140fce6131626e824e7a8b7fccf450d260cf10b",
+      "semantic": "9a3d1b677e2867aaf3b18655ac179655a38195f0d08026461736376b41e3f03f",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 1,
-      "steps": 109,
+      "steps": 184,
       "python": true
     },
     {
@@ -4273,7 +4273,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 1,
-      "steps": 464,
+      "steps": 783,
       "python": true
     },
     {
@@ -4283,7 +4283,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 617,
+      "steps": 959,
       "python": true
     },
     {
@@ -4293,7 +4293,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 50,
+      "steps": 119,
       "python": true
     },
     {
@@ -4303,7 +4303,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 44,
+      "steps": 90,
       "python": true
     },
     {
@@ -4313,17 +4313,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 41,
+      "steps": 115,
       "python": true
     },
     {
       "id": "number-256",
       "source": "891013e7d957f0b08e6a8b7dd42c601be1d2c10b8f00576ffe238112923c6887",
-      "semantic": "df116c8b88abc53cf9dfc35c352727589819e222b16a348108aa1e73a6528c73",
+      "semantic": "ee12c130bf43df7fbf276362fa7c54d8af6271ac5072eed13f9ee8ec56d92c63",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 81,
+      "steps": 156,
       "python": true
     },
     {
@@ -4333,7 +4333,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 404,
+      "steps": 724,
       "python": true
     },
     {
@@ -4343,7 +4343,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 2,
-      "steps": 32,
+      "steps": 57,
       "python": true
     },
     {
@@ -4353,7 +4353,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 2,
-      "steps": 49,
+      "steps": 142,
       "python": true
     },
     {
@@ -4363,7 +4363,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 2,
-      "steps": 34,
+      "steps": 80,
       "python": true
     },
     {
@@ -4373,17 +4373,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 2,
-      "steps": 51,
+      "steps": 129,
       "python": true
     },
     {
       "id": "number-262",
       "source": "611ab1e0fd9a52776bfc04ba0e7e02c66b614347082474061d808330ec6eb9b6",
-      "semantic": "30f103af6bac465d452582503ec87046d5e51a35a079d20ac6a045c0ac9f6e5d",
+      "semantic": "ba3a91e586029361fa324fdb1b1ecac8b16a493d0a113ccaf43139b4b3d3c29a",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 2,
-      "steps": 99,
+      "steps": 174,
       "python": true
     },
     {
@@ -4393,7 +4393,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 2,
-      "steps": 659,
+      "steps": 1800,
       "python": true
     },
     {
@@ -4403,7 +4403,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 3,
-      "steps": 650,
+      "steps": 1175,
       "python": true
     },
     {
@@ -4413,7 +4413,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 3,
-      "steps": 41,
+      "steps": 122,
       "python": true
     },
     {
@@ -4423,7 +4423,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 3,
-      "steps": 27,
+      "steps": 51,
       "python": true
     },
     {
@@ -4433,17 +4433,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 3,
-      "steps": 39,
+      "steps": 105,
       "python": true
     },
     {
       "id": "number-268",
       "source": "c2a48b7aa43db0821f54b5a723bb060063ae3611d39c6c3c379bbaa65b1579dd",
-      "semantic": "a95748e8fe5e9474d73db37e930dbc84382b22453ef36c5e3b96f022aa447259",
+      "semantic": "41ef1e44820317a256c495c560dcd35cb7354f65fbdcda087b40f6b4fdd5c60c",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 3,
-      "steps": 96,
+      "steps": 262,
       "python": true
     },
     {
@@ -4453,7 +4453,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 3,
-      "steps": 507,
+      "steps": 792,
       "python": true
     },
     {
@@ -4463,7 +4463,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 396,
+      "steps": 599,
       "python": true
     },
     {
@@ -4473,7 +4473,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 54,
+      "steps": 162,
       "python": true
     },
     {
@@ -4483,7 +4483,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 21,
+      "steps": 48,
       "python": true
     },
     {
@@ -4493,27 +4493,27 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 39,
+      "steps": 97,
       "python": true
     },
     {
       "id": "number-274",
       "source": "3a11be75a4d9f582bd227650dfca961e695243dd29097a69b3fb6f0a858bf1ba",
-      "semantic": "54e0dec9b09997328f14570e404fc496d04e7f163f1a03de525548c5400bf3c6",
+      "semantic": "5498d722ada204f091f8b376c3401e0e94f122704191a152bd42bb78d9f1ba97",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 110,
+      "steps": 197,
       "python": true
     },
     {
       "id": "number-275",
-      "source": "44a1f42c501fa246a0f8509719ab393b97adb6a185f27b83afe8a64c2661a4d5",
-      "semantic": "080c170106777ba55f26483e5f0de4297a77e42d95858d36a542dea15aebbcf5",
+      "source": "dff9d82d0f698f268a8604032dc33baf4e9166a3f62c9078e4d6589a695b62d9",
+      "semantic": "3b99306642dbd86818c789117170be0ead7a878042ad467ec134b5b599ec9149",
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 514,
+      "steps": 1009,
       "python": true
     },
     {
@@ -4523,7 +4523,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 4,
-      "steps": 532,
+      "steps": 738,
       "python": true
     },
     {
@@ -4533,7 +4533,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 4,
-      "steps": 56,
+      "steps": 148,
       "python": true
     },
     {
@@ -4543,7 +4543,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 4,
-      "steps": 18,
+      "steps": 32,
       "python": true
     },
     {
@@ -4553,17 +4553,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 4,
-      "steps": 37,
+      "steps": 95,
       "python": true
     },
     {
       "id": "number-280",
       "source": "addb5c079e1ac9c0693898d5d1ced82873a21b160955c9258a00929cb18a06a3",
-      "semantic": "9ca117327c350111cb352e3a3dca382e6e5c3466e50dde6a59bef91dc021e2d0",
+      "semantic": "24397156d0e2634dc6efd240a68d82ff8a323adb25a0062e6a919e9ea21aaf07",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 4,
-      "steps": 126,
+      "steps": 213,
       "python": true
     },
     {
@@ -4573,7 +4573,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 4,
-      "steps": 467,
+      "steps": 789,
       "python": true
     },
     {
@@ -4583,7 +4583,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 672,
+      "steps": 1046,
       "python": true
     },
     {
@@ -4593,7 +4593,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 53,
+      "steps": 125,
       "python": true
     },
     {
@@ -4603,7 +4603,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 47,
+      "steps": 96,
       "python": true
     },
     {
@@ -4613,17 +4613,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 43,
+      "steps": 117,
       "python": true
     },
     {
       "id": "number-286",
       "source": "e603c07ad1990acefdc5fca16eb3910bb1bd96e1f5130953a11861af2d92a113",
-      "semantic": "2287338fc45d0f31dc435daeb25c8b39222dc9da9d49ff65159fc1f10d2fbf67",
+      "semantic": "8cfc895b7186a71fa2f843166bf004eeb54d08c968edcb8a0444c60d1711cf08",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 84,
+      "steps": 162,
       "python": true
     },
     {
@@ -4633,17 +4633,17 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 407,
+      "steps": 730,
       "python": true
     },
     {
       "id": "number-288",
-      "source": "1bcdbca5f11798dab3451130a7d651d7fc5c77fb7c09300f37d9641b3a2d6096",
-      "semantic": "58e891eca3c1a27e94b8488eddc2f18ed0aa2cfe0908be66f11ff7ebe06f8101",
+      "source": "f89d6a9d2a5ef3e8488d10c9171eedea3b8871abb5848224a013ab4c9d75c320",
+      "semantic": "db4fbbbf6f33abfc101ba11af09cf771523400bc727e40d2971374bd4c8c3125",
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 5,
-      "steps": 36,
+      "steps": 62,
       "python": true
     },
     {
@@ -4653,7 +4653,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 5,
-      "steps": 52,
+      "steps": 148,
       "python": true
     },
     {
@@ -4663,7 +4663,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 5,
-      "steps": 37,
+      "steps": 86,
       "python": true
     },
     {
@@ -4673,17 +4673,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 5,
-      "steps": 57,
+      "steps": 143,
       "python": true
     },
     {
       "id": "number-292",
       "source": "b75f16e3c1944b03da87b9627691c622a18b8c08687466fab6e105c0813e6d87",
-      "semantic": "197338a411ed32ab8c5f55ea99c957514d44321ab2dcfe61a007491b89fa0c8e",
+      "semantic": "d2c3a50446957e7111cefbc7ad0d1ae73d1b282e57e7615658f3ec6d50d801b8",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 5,
-      "steps": 136,
+      "steps": 239,
       "python": true
     },
     {
@@ -4693,7 +4693,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 5,
-      "steps": 662,
+      "steps": 1806,
       "python": true
     },
     {
@@ -4703,7 +4703,7 @@
       "family": "number-idea-0",
       "idea": "Running totals",
       "band": 6,
-      "steps": 703,
+      "steps": 1271,
       "python": true
     },
     {
@@ -4713,7 +4713,7 @@
       "family": "number-idea-1",
       "idea": "Count the matches",
       "band": 6,
-      "steps": 44,
+      "steps": 128,
       "python": true
     },
     {
@@ -4723,7 +4723,7 @@
       "family": "number-idea-2",
       "idea": "List positions",
       "band": 6,
-      "steps": 30,
+      "steps": 57,
       "python": true
     },
     {
@@ -4733,17 +4733,17 @@
       "family": "number-idea-3",
       "idea": "Functions with loops",
       "band": 6,
-      "steps": 41,
+      "steps": 107,
       "python": true
     },
     {
       "id": "number-298",
       "source": "e6eea4951fdef4ae63653ce1e4e29265efa6b904327572567c8b1531edd91f34",
-      "semantic": "ca8ebe9091d325782fa83af1136c8e27f6a30cea947c10db75d4e677e11ea7ea",
+      "semantic": "3815003553f25c624ad68373887434eb26074e04108d0e2fb1074c2eaa7e68f1",
       "family": "number-idea-4",
       "idea": "Halve and stop",
       "band": 6,
-      "steps": 99,
+      "steps": 268,
       "python": true
     },
     {
@@ -4753,7 +4753,7 @@
       "family": "number-idea-5",
       "idea": "Loops inside loops",
       "band": 6,
-      "steps": 510,
+      "steps": 798,
       "python": true
     }
   ]

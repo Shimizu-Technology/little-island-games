@@ -25,10 +25,12 @@ export function selectPrograms(level: number, seed: number, prior: readonly numb
   return [p, b, q, c];
 }
 export const programAt = (s: ModernState): LabProgram => schoolPrograms[s.level - 1][s.programs[Math.min(s.index, 3)]];
+const modernHelp = 'Predict: read the code and choose what it prints before Run. Build: tap a blank line, then a value. Run checks the whole program. Undo takes back an edit. Look, One step and Clear help you follow the real trace. There is no timer.';
+export const helpForState = (state: unknown): string => plain(state) && state.version === 1 ? legacyEngine.help : modernHelp;
 export const engine: LearnEngine<LabState> = {
   ...legacyEngine, notWon: undefined, turn: undefined,
   tagline: 'Read code. Build a working plan.', description: 'Predict what real Python prints, then build and fix programs with touch choices. Ages 9–14, with deeper puzzles for older learners and adults.',
-  help: 'Predict: read the code and choose what it prints before Run. Build: tap a blank line, then a value. Run checks the whole program. Undo takes back an edit. Look, One step and Clear help you follow the real trace. There is no timer.',
+  help: modernHelp,
   levelNames: [
     { name: 'Say in order', description: 'Read the order of printed lines and build a short plan.' },
     { name: 'Scores and loops', description: 'Track changing values through every line of a loop.' },

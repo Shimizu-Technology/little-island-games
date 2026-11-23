@@ -1117,7 +1117,7 @@
         "iPhone / iOS 26.5 / portrait / default text"
       ],
       "executor": "Lead, private offline Release simulator",
-      "steps": "Map → School → Code Lab. Start L1 Predict, choose an output and Check; Build: tap a line then a value. Test misses, Undo, Look/One step/Clear, quit/resume and finish. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: C3 School lists/functions and Deep Water nested loops; 4 touch slots; Predict outputs and engine trace. Challenge surfaces: code-lab.",
+      "steps": "Map → School → Code Lab. Start L1 Predict, choose an output and Check. After a correct prediction tap Next program to enter Build; tap a blank then a value and Run. Test a miss, Undo, Look/One step/Clear and quit/resume. After each successful check tap Next program, including after the fourth program to reach the quiet ending. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: C3 School lists/functions and Deep Water nested loops; 4 touch slots; Predict outputs and engine trace. Challenge surfaces: code-lab.",
       "savedOutcome": "Same owner, immutable ref, board, choices and help/attempt counters after resume; one accepted result/award. Real-time Arcade restarts with accepted stars/best retained; family-only play saves only supported outcomes.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -6341,7 +6341,7 @@
         "iPhone / iOS 26.5 / portrait / default text"
       ],
       "executor": "Lead, private offline Release simulator",
-      "steps": "Map → School → Code Lab → Challenge (code-lab); choose teaching and hardest tier without stars. Start explicitly, make a legal action, wrong Check, edit, Help, Undo, quit/resume, finish, reopen, replay dare. Fill paused spaces and attempt another Start; cancel and retain every draft.",
+      "steps": "Map → School → Code Lab → Challenge; choose teaching and hardest tiers without stars. Start explicitly, make a wrong Run, edit (old trace must disappear), Undo (old checked trace returns; Run disabled), try a different draft, use Help, quit/resume, finish and reopen. Inspect Earlier/Next/Last line after long and short checked traces. On a Clean dare with no existing mark, replay, select Clear and finish; verify the finish is saved and no Clean mark is awarded. Separately finish an unassisted replay as a positive control; verify the Clean mark is awarded and never decreases. Fill paused spaces and attempt another Start; cancel and retain every draft.",
       "savedOutcome": "Challenge ref, draft, help/miss/edit/run counters and owner resume exactly. One award; marks never decrease; helped replay cannot claim clean. Full paused spaces preserves drafts and School state.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -10469,7 +10469,7 @@
       "games": [
         "code-lab"
       ],
-      "maxBoard": "Code Lab Deep Water longest arrange/predict/build program",
+      "maxBoard": "Frozen v1 School Arrange fixture, plus separate v2 School/Deep Water Predict and Build fixtures at the longest source",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text",
@@ -10480,7 +10480,7 @@
       ],
       "executionCases": 6,
       "executor": "Lead, private offline Release simulator",
-      "steps": "Fixture: Code Lab Deep Water longest arrange/predict/build program. Exercise code arrange, predict and build in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
+      "steps": "Use a frozen v1 School save for Arrange and separate v2 Predict and Build fixtures; Deep Water has no Arrange mode. Verify each saved-state-specific How to play guide. Exercise each input, rejection, Undo, Help, rotate and force-close mid-draft on every listed dimension, twice. For v2 first-move coaching, the Predict ring surrounds the answer group without identifying an answer; Build highlights an editable line. Check code, trace and controls together at AX5, and restore exact draft, miss and Help counts.",
       "savedOutcome": "Exact owner/draft/pending choices after force-close; no duplicate move, leaked secret or unsolicited help. Free creation remains ungraded.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",

@@ -57,7 +57,7 @@ function deepSource(idea: number, row: number, n: number): string[] {
   else if (top) {
     // Turn the final printed value(s) into a local function. Return makes the order of effects matter.
     const body = source.replace(/\nprint\(([^\n]*)\)$/, '\nreturn $1');
-    source = `def solve():\n${body.split('\n').map(s => '    ' + s).join('\n')}\nprint(solve())`;
+    source = `def solve():\n${body.split('\n').map(s => '    ' + s).join('\n')}\n${body !== source ? 'print(solve())' : 'solve()'}`;
   }
   if (idea === 3 && top) source = source.replace('print(solve(', 'print(1 + solve(');
   return lines(source);

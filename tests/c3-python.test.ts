@@ -45,7 +45,7 @@ it('keeps the old twenty programs and original save validator on their compatibi
 it('binds the committed receipt to the current source/semantic proofs and defeats a first-choice bot at the top', () => {
   const receipt = JSON.parse(readFileSync('docs/code-lab-receipt.json','utf8'));
   expect(receipt.count).toBe(440);expect(receipt.parity).toBe(440);expect(receipt.semanticDistinct).toBe(440);
-  allPrograms.forEach((d,i)=>{expect(receipt.entries[i].source).toBe(sha256Hex(d.lines.join('\n')));expect(receipt.entries[i].semantic).toBe(sha256Hex(JSON.stringify(runPython(d.lines).trace)));});
+  allPrograms.forEach((d,i)=>{expect(receipt.entries[i].steps).toBe(runPython(d.lines).steps);expect(receipt.entries[i].source).toBe(sha256Hex(d.lines.join('\n')));expect(receipt.entries[i].semantic).toBe(sha256Hex(JSON.stringify(runPython(d.lines).trace)));});
   const top = deepPrograms.filter(d=>d.band>=5&&d.mode==='build');expect(top.filter(d=>solves(d,d.slots.map(()=>0))).length).toBeLessThan(top.length/4);
 });
 

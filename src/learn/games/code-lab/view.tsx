@@ -20,10 +20,10 @@ function ModernBoard({ session, update, active, width, sound, cheer, practice, a
     if (action[0] === 'h') assistance?.();
     update({ ...s, attempt: next, helped: s.helped || next.failed || next.help > 0 });
     coach.done(); sound('tap', true);
-    if (action[0] === 'c') { practice('think.code-debug', next.won); if (next.won) cheer('right'); }
+    if (action[0] === 'c') { practice(s.level === 1 ? 'think.code-sequence' : s.level === 3 ? 'think.code-functions' : s.level === 4 ? 'think.code-debug' : 'think.code-variables', next.won); if (next.won) cheer('right'); }
   };
   return <View style={{ gap: 8 }}>
     <Copy maxFontSizeMultiplier={1.5}>Program {Math.min(4, s.index + 1)} of 4</Copy>
-    <ProgramPanel key={`${session.id}-${s.index}`} d={d} state={s.attempt} send={send} active={active} width={width} onNext={() => update(s.index < 3 ? { ...s, index: s.index + 1, attempt: initialAttempt(programAt({ ...s, index: s.index + 1 })) } : { ...s, index: 4 })} />
+    <ProgramPanel key={`${session.id}-${s.index}`} d={d} state={s.attempt} send={send} active={active} coaching={coach.active} width={width} onNext={() => update(s.index < 3 ? { ...s, index: s.index + 1, attempt: initialAttempt(programAt({ ...s, index: s.index + 1 })) } : { ...s, index: 4 })} />
   </View>;
 }

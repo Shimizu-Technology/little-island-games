@@ -7,6 +7,7 @@ import { schoolPrograms, deepPrograms } from '../src/learn/games/code-lab/conten
 const win = vi.hoisted(()=>({width:393,height:852,fontScale:1}));
 vi.mock('react-native',()=>({Platform:{select:()=> 'Menlo'},View:'div',ScrollView:'scroll',useWindowDimensions:()=>win}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',PressableScale:'button',C:{soft:'#eee'}}));
+vi.mock('../src/learn/Coach',()=>({CoachSpot:({children,...props}:{children:React.ReactNode})=><div data-coach {...props}>{children}</div>}));
 let tree: ReactTestRenderer | undefined;
 afterEach(async()=>{if(tree)await act(async()=>tree!.unmount());tree=undefined;vi.unstubAllGlobals();});
 const text=(node: {children: readonly unknown[]}):string=>node.children.map(c=>typeof c==='string'?c:c&&typeof c==='object'&&'children'in c?text(c as {children: readonly unknown[]}):'').join('');
@@ -54,4 +55,49 @@ it('a finished Challenge can inspect its trace even when the host disables furth
   await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={send} active={false} width={704}/>);});
   const last=tree!.root.findAllByType('button').find(b=>text(b)==='Last line')!;expect(last.props.disabled).toBe(false);
   await act(async()=>last.props.onPress());expect(send).not.toHaveBeenCalled();expect(tree!.root.findAllByType('p').some(p=>text(p)==='Trace · line 3')).toBe(true);
+});
+
+it('only shows a checked draft trace; Undo restores it with Run disabled and a clamped cursor',async()=>{
+ Object.assign(win,{width:393,height:852,fontScale:1});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const d=deepPrograms.at(-1)!,send=vi.fn();let state=initialAttempt(d);
+ for(let i=0;i<d.slots.length;i++)state=step(state,['e',i,d.slots[i].answer],d)!;
+ // A wrong return retains the long loop trace without completing the puzzle.
+ const slot=d.slots.findIndex(s=>s.before.trim()==='return');
+ state=step(state,['e',slot,(d.slots[slot].answer+1)%3],d)!;state=step(state,['c'],d)!;
+ const render=async()=>{await act(async()=>{const node=<ProgramPanel d={d} state={state} send={send} active width={335}/>;if(tree)tree.update(node);else tree=create(node);});};
+ const button=(label:string)=>tree!.root.findAllByType('button').find(b=>text(b)===label)!;
+ await render();await act(async()=>button('Last line').props.onPress());
+ state=step(state,['e',1,(state.picks[1]+1)%3],d)!;await render();
+ expect(tree!.root.findAllByType('p').some(p=>text(p).startsWith('Result:'))).toBe(false);
+ state=step(state,['u'],d)!;await render();expect(button('Run code').props.disabled).toBe(true);
+ expect(tree!.root.findAllByType('p').some(p=>text(p).includes('already run'))).toBe(true);
+ // A different, shorter, checked trace must not leave Earlier line indexing the old trace length.
+ state=step(state,['e',1,(state.picks[1]+1)%3],d)!;state=step(state,['c'],d)!;await render();
+ if(!button('Earlier line').props.disabled)await act(async()=>button('Earlier line').props.onPress());
+});
+
+it('coaches a Build line and the whole Predict choice group without pointing at an answer',async()=>{
+ Object.assign(win,{width:393,height:852,fontScale:1});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ for(const mode of ['build','predict']){
+ const d=schoolPrograms[0].find(d=>d.mode===mode)!;
+ await act(async()=>{const node=<ProgramPanel d={d} state={initialAttempt(d)} send={vi.fn()} active coaching width={335}/>;if(tree)tree.update(node);else tree=create(node);});
+ const spots=tree!.root.findAllByType('div').filter(n=>n.props['data-coach']);expect(spots).toHaveLength(1);expect(spots[0].props.active).toBe(true);expect(spots[0].props.handAt).toBe(mode==='predict'?'none':undefined);
+ if(mode==='predict')expect(spots[0].findAllByType('button')).toHaveLength(4);
+ }
+});
+
+vi.mock('../src/learn/games/code-lab/LegacyBoard',()=>({Board:()=>null,Art:()=>null}));
+vi.mock('../src/learn/stepReveal',()=>({useStepReveal:()=>undefined}));
+it('records each School level in its own skill and dismisses the first-move coach on an accepted check',async()=>{
+ const {Board}=await import('../src/learn/games/code-lab/view');const {engine}=await import('../src/learn/games/code-lab/engine');
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const skills=['think.code-sequence','think.code-variables','think.code-functions','think.code-debug','think.code-variables'];
+ for(let level=1;level<=5;level++){
+ const options={mode:'solo',pace:'easy'};const s=engine.create(options as never,{rng:()=>0,skills:{},starter:0,today:0}) as import('../src/learn/games/code-lab/engine').ModernState;
+ s.level=level;s.programs=[0,1,2,3];const d=schoolPrograms[level-1][0];s.attempt=step(initialAttempt(d),['p',d.answer],d)!;
+ const practice=vi.fn(),done=vi.fn(),update=vi.fn();const props={session:{id:'skill-check',state:s},update,active:true,width:335,sound:vi.fn(),cheer:vi.fn(),practice,coach:{active:true,done}};
+ await act(async()=>{const node=<Board {...props as unknown as Parameters<typeof Board>[0]}/>;if(tree)tree.update(node);else tree=create(node);});
+ expect(tree!.root.findByType(ProgramPanel).props.coaching).toBe(true);
+ await act(async()=>tree!.root.findByType(ProgramPanel).props.send(['c']));expect(practice).toHaveBeenCalledWith(skills[level-1],true);expect(done).toHaveBeenCalledOnce();expect(update).toHaveBeenCalledOnce();
+ }
 });

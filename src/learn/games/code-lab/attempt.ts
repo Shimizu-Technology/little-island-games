@@ -12,6 +12,7 @@ export const initialAttempt = (d: LabProgram): Attempt => ({ picks: d.slots.map(
 export const sourceFor = (d: LabProgram, picks: readonly number[]): string[] => d.lines.map((line, i) => { const slot = d.slots.findIndex(s => s.line === i); if (slot < 0) return line; const s = d.slots[slot]; return s.before + (picks[slot] < 0 ? '□' : s.choices[picks[slot]]) + s.after; });
 export const ready = (s: Attempt, d: LabProgram) => d.mode === 'predict' ? s.prediction !== null : s.picks.every(i => i >= 0);
 const key = (picks: readonly number[]) => picks.reduce((n, v) => n * 4 + v + 1, 0);
+export const checkedDraft = (s: Attempt, d: LabProgram): boolean => ready(s, d) && s.checked.includes(d.mode === 'predict' ? s.prediction! : key(s.picks));
 const checkedProofs = new WeakMap<LabProgram, Map<number, boolean>>();
 export function solves(d: LabProgram, picks: readonly number[]): boolean {
   if (picks.length !== d.slots.length || picks.some((i, slot) => !Number.isInteger(i) || i < 0 || i >= d.slots[slot].choices.length)) return false;
