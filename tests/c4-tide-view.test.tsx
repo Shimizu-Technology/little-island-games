@@ -17,6 +17,8 @@ vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 const heard = vi.hoisted(() => ({ play: vi.fn(), stop: vi.fn() }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({ sound: true }), useSoundControls: () => ({ play: heard.play, stop: heard.stop }) }));
 vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
+const sources = vi.hoisted(() => ({} as Record<string, number>));
+vi.mock('../src/content/learnAudio', () => ({ learnSources: sources }));
 
 let tree: ReactTestRenderer | undefined;
 beforeEach(() => { viewport.width = 393; viewport.height = 852; viewport.fontScale = 1; heard.play.mockClear(); });
@@ -142,4 +144,15 @@ it.each([[393, 852, 1], [393, 852, 3.12], [1133, 744, 3.12]])('every Challenge k
     for (const b of buttons()) expect(b.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
     await act(async () => tree!.unmount()); tree = undefined;
   }
+});
+it('Hear rules appears only once the lead has voiced its line', async () => {
+  const p = tidePuzzles.find(x => x.descriptor.kind === 'find')!;
+  await mount(<ChallengeBoard {...challengeProps(freshState(p))} />);
+  expect(labelled('Hear rules')).toBeUndefined();
+  await act(async () => tree!.unmount()); tree = undefined;
+  sources['c4-tide-find-rules'] = 1;
+  await mount(<ChallengeBoard {...challengeProps(freshState(p))} />);
+  await press('Hear rules');
+  expect(heard.play).toHaveBeenCalledWith('c4-tide-find-rules', true);
+  delete sources['c4-tide-find-rules'];
 });

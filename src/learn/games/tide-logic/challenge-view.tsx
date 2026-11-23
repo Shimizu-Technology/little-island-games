@@ -6,11 +6,14 @@ import { AudioPreferences, useSoundControls } from '../../../components/Audio';
 import { useReducedMotion } from '../../../components/motion';
 import { LARGE_TEXT } from '../../../components/wordFit';
 import type { ChallengeViewProps } from '../../../challenge/types';
+import { learnSources } from '../../../content/learnAudio';
 import { Cargo, bucketLabel, itemOf } from './art';
 import { FRAMES, bell, catchWords, goalSentence, routes, ruleWords, type Side } from './rules';
 import { CLEAR, HELP, RUN, UNDO, answerOf, challengeEngine, helpLeft, hintText, pick, setBlock, type Action, type State } from './challenge-engine';
 
 const SIDE = ['left', 'right'] as const;
+/** Voiced by the lead in a later audio batch (scripts/learn/c4-tide-logic.json); each button appears only once its line resolves. */
+const RULES = { write: 'c4-tide-write-rules', find: 'c4-tide-find-rules', trace: 'c4-tide-trace-rules' } as const;
 const optionLabel = (kind: string, v: string) => kind === 'side' || kind === 'start' ? bucketLabel(v) : kind === 'when' ? (v === 'on' ? 'on this catch' : 'on the catch before') : kind === 'join' ? v.toUpperCase() : v === 'not bell' ? 'NO bell' : v.startsWith('not ') ? `NOT ${v.slice(4)}` : v === 'bell' ? '🔔 bell' : v;
 export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeViewProps<State, Action>) {
   const d = s.d, f = FRAMES[d.frame], prefs = useContext(AudioPreferences), { play: tone, stop } = useSoundControls(prefs.sound ?? true), reduced = useReducedMotion();
@@ -93,6 +96,8 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || !s.undo.length} onPress={() => send(UNDO)}>↶ Undo</Button>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || s.draft.every(x => x < 0)} onPress={() => send(CLEAR)}>Clear</Button>
       <Button quiet compact maxFontSizeMultiplier={1.5} disabled={idle || !helpLeft(s)} onPress={() => send(HELP)}>{s.hint === 0 ? 'Help' : 'More help'}</Button>
+      {prefs.sound !== false && !!learnSources[RULES[d.kind]] && <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => tone(RULES[d.kind], true)}>Hear rules</Button>}
+      {prefs.sound !== false && (f.id === 'not' || f.id === 'bell') && !!learnSources[f.id === 'not' ? 'c4-tide-not' : 'c4-tide-bell'] && <Button quiet compact maxFontSizeMultiplier={1.5} onPress={() => tone(f.id === 'not' ? 'c4-tide-not' : 'c4-tide-bell', true)}>{f.id === 'not' ? 'Hear NOT' : 'Hear the bell'}</Button>}
     </View>
   </View>;
   const goalLine = <Copy testID="tide-goal" maxFontSizeMultiplier={large ? 2 : undefined} style={{ fontWeight: '700' }}>{goal}</Copy>;
