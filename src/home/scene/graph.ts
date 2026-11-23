@@ -1,3 +1,4 @@
+import { storageCapacity } from '../storage';
 import {heldDrinkGeometry,heldDrinkScale} from '../art/heldDrink';
 import { worldRevision, translatedBounds, standingContact, occludedFraction, catalogSamples, catalogNeighbours } from "./spatial";
 
@@ -82,6 +83,7 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
       w: item.rotation % 180 ? b * 2 : a * 2,
       h: item.rotation % 180 ? a * 2 : b * 2,
       layer: item.layer,
+      container: storageCapacity(item.item) > 0,
       small: !!decorSpec(item.item).small,
       holdable: canHold(item),
       edible: item.empty ? undefined : capability.edible,
@@ -155,6 +157,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     entity.parent = parentId(entity.attachment);
     if (entity.parent && entities[entity.parent]) entities[entity.parent].children.push(entity.id);
   }
+  for (const e of Object.values(entities)) if (e.body?.container) e.contents = e.children.flatMap(id => entities[id].attachment.kind === "container" && entities[id].item ? [entities[id].item!] : []);
   const originalContacts = Object.fromEntries(Object.values(entities).map((e) => [e.id, e.contact]));
   const visited = new Set<string>();
   const transform = (entity: SceneEntity): void => {
@@ -176,7 +179,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         entity.hitProxies=[entity.bounds];
       }
     } else if (parent && entity.attachment.kind === "container") {
-      entity.contact = parent.contact;
+      entity.contact = roomPoint(parent.contact.x, parent.contact.y - (parent.item ? itemSize(parent.item) * .3 : 0));
     } else if (parent) {
       entity.contact = roomPoint(
         parent.contact.x + originalContacts[entity.id].x - originalContacts[parent.id].x,
@@ -332,17 +335,18 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         cell,
       });
     }
-    if (capabilityOf(item.item).toggle === "open") {
+    if (storageCapacity(item.item)) {
+      const contact = roomPoint(entity.contact.x, entity.contact.y - itemSize(item) * .3);
       targets.push({
         id: `${entity.id}/container`,
         kind: "container",
         owner: entity.id,
         attachment: { kind: "container", parent: entity.id },
-        contact: entity.contact,
-        core: rectCore(entity.contact, 22),
+        contact,
+        core: { left: contact.x - itemSize(item) * .26, top: contact.y - itemSize(item) * .2, width: itemSize(item) * .52, height: itemSize(item) * .4 },
         base: "stand",
         facing: "front",
-        closed: !(item.powered ?? item.state === "active") || entity.children.length >= 8,
+        closed: Object.values(entities).filter(e => e.attachment.kind === "container" && e.parent === entity.id).length >= storageCapacity(item.item),
       });
     }
   }

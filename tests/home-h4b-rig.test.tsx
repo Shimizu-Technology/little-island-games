@@ -65,10 +65,10 @@ it('Pip keeps its drinking vessel below and in front of its mouth at contact', (
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 it('each furniture socket and container owns one visible outline', async () => {
  for (const kind of ['socket','container'] as const) {
-  const target: any={id:'mouth',kind,contact:{x:300,y:300}};
+  const target: any={id:'mouth',kind,contact:{x:300,y:300},core:{left:274,top:280,width:52,height:40}};
   let root!:ReturnType<typeof create>;
   await act(async()=>{root=create(<TargetCue target={target} interaction={interaction(kind)}/>);});
-  expect(root.root.findByProps({testID:'socket-landing-outline'}).props.style[1].opacity).toBe(1);
+  expect(root.root.findByProps({testID:kind==='container'?'storage-landing-cue':'socket-landing-outline'}).props.style[1].opacity).toBe(1);
   await act(async()=>root.unmount());
  }
 });

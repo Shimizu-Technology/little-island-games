@@ -428,7 +428,8 @@ describe("attachment transactions and contention", () => {
     expect(validHome(state)).toBe(true);
     const scene = buildScene(state),
       index = scene.rooms.home;
-    expect(index.targets.find((t) => t.kind === "container")?.closed).toBe(true);
+    // HS-01: a shut door still offers a landing cue; only capacity closes admission.
+    expect(index.targets.find((t) => t.kind === "container")?.closed).toBe(false);
     const proposal = resolve(index, index.entities["home/item/fridge"], roomPoint(600, 500), {
       scale: 1,
       floorOnly: true,

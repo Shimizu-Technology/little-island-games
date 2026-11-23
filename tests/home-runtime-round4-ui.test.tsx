@@ -61,7 +61,7 @@ describe('round4 rendered runtime contracts',()=>{
    pickups:[],reduced:false,selected:undefined,reactions:{},sleeping:{},onNode:()=>{},onSelect:()=>{},onMove:()=>{}};
   await act(async()=>{tree=TestRenderer.create(<SceneView {...props}/>);});
   expect(tree.root.findAll(n=>typeof n.type==='string' && n.props.testID?.startsWith('home-scene-'))).toHaveLength(0);
-  const labels=tree.root.findAllByProps({accessibilityLabel:'Fridge, Kitchen'}).filter(n=>typeof n.type==='string');
+  const labels=tree.root.findAllByProps({accessibilityLabel:'Fridge, Kitchen, open, 0 of 8 items, empty'}).filter(n=>typeof n.type==='string');
   expect(labels).toHaveLength(1);
   c.clock.value=1030;const rotation=()=>labels[0].findAll(n=>String(n.type)==='AnimatedView' && n.props.style?.evaluate)[0].props.style.evaluate().transform.find((t:any)=>'rotate'in t)?.rotate;
   const angle=parseFloat(rotation());expect(Math.abs(angle)).toBeGreaterThan(.1);expect(Math.abs(angle)).toBeLessThanOrEqual(1.5);
@@ -84,10 +84,10 @@ describe('round4 rendered runtime contracts',()=>{
    return node.children.flatMap(n=>typeof n==='string'?[]:ax(n));
   }
   const elements=ax(tree.root);
-  expect(elements.filter(e=>e.label.endsWith(', Kitchen'))).toMatchInlineSnapshot(`
+  expect(elements.filter(e=>e.label.includes(', Kitchen'))).toMatchInlineSnapshot(`
     [
       {
-        "label": "Fridge, Kitchen",
+        "label": "Fridge, Kitchen, open, 0 of 8 items, empty",
         "role": "button",
       },
       {
@@ -102,7 +102,7 @@ describe('round4 rendered runtime contracts',()=>{
   `);
   expect(elements.filter(e=>e.label.startsWith('Badge board'))).toEqual([{role:'button',label:'Badge board, 6 of 28 earned. Open My badges'}]);
   expect(elements.every(e=>!e.label.includes('house-')&&!e.label.includes('home-scene-')&&!e.label.includes('overlay'))).toBe(true);
-  for(const element of elements.filter(e=>e.label.endsWith(', Kitchen')))expect(elements.filter(e=>e.label===element.label)).toHaveLength(1);
+  for(const element of elements.filter(e=>e.label.includes(', Kitchen')))expect(elements.filter(e=>e.label===element.label)).toHaveLength(1);
   await act(async()=>tree.unmount());
  });
 
@@ -467,4 +467,22 @@ it('defers the full picked-up drink past lift and prepares one resting actor', a
  expect(tree.root.findAllByType(EntityArt).filter(n=>n.props.mealStandby)).toHaveLength(1);
  expect(tree.root.findAllByType(EntityArt).find(n=>n.props.mealStandby)!.props.mealStandby).toEqual({ key: 0, action: 'drink', offered: true, food: drink.item });
  await act(async () => tree.unmount());
+});
+
+it.each(['fridge','toy-box','dresser','cupboard','carry-basket'])('H5 %s exposes separate select and open accessibility actions', async kind => {
+ const c=context(''); c.state.rooms.home.instances=[{...c.state.rooms.kitchen.instances.find(i=>i.id==='fridge')!,id:'box',item:kind}];
+ c.state.rooms.home.characters=[];
+ const scene=buildScene(c.state), onSelect=vi.fn(), onMove=vi.fn();
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<SceneView state={c.state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={onSelect} onMove={onMove}/>);});
+ const view=tree.root.findAllByProps({testID:'object-box'}).find(n=>typeof n.type==='string')!;
+ expect(view.props.accessibilityActions).toContainEqual({name:'open',label:'Open or close'});
+ await act(async()=>view.props.onAccessibilityAction({nativeEvent:{actionName:'activate'}}));
+ expect(onSelect).toHaveBeenCalledWith('home/item/box');
+ await act(async()=>view.props.onAccessibilityAction({nativeEvent:{actionName:'open'}}));
+ expect(onMove).toHaveBeenCalledWith('home/item/box','open');
+ await act(async()=>tree.update(<SceneView state={c.state} scene={scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced designing reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={onSelect} onMove={onMove}/>));
+ const designView=tree.root.findAllByProps({testID:'object-box'}).find(n=>typeof n.type==='string')!;
+ expect(designView.props.accessibilityActions).toContainEqual({name:'activate',label:'Select'});
+ await act(async()=>tree.unmount());
 });

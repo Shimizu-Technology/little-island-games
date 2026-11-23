@@ -1,3 +1,4 @@
+import { storageCapacity, type StorageState } from './storage';
 import { MAX_INSTANCES } from "./limits";
 import { anchorsFor } from "./scene/species";
 import type { DropProposal } from "./scene/proposal";
@@ -39,6 +40,8 @@ export type Instance = {
   empty?: boolean;
   staged?: boolean;
   in?: string;
+  /** HS-01 additive v4 field. Missing means the legacy powered/state representation. */
+  storage?: StorageState;
   /** Exact room point a loose item was dropped on. Grid x/y stay the collision cell. */
   at?: { x: number; y: number };
 };
@@ -166,7 +169,7 @@ export function validInstance(v: unknown, legacy = false, canonicalV4 = false): 
       "state",
       ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "tint") ? ["tint"] : []),
       ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "on") ? ["on"] : []),
-      ...["staged", "in", "at"].filter((k) => canonicalV4 && v && typeof v === "object" && Object.hasOwn(v, k)),
+      ...["staged", "in", "at", "storage"].filter((k) => canonicalV4 && v && typeof v === "object" && Object.hasOwn(v, k)),
       ...["powered", "empty"].filter((k) => !legacy && v && typeof v === "object" && Object.hasOwn(v, k)),
     ]) ||
     typeof v.id !== "string" ||
@@ -182,6 +185,7 @@ export function validInstance(v: unknown, legacy = false, canonicalV4 = false): 
     (!Object.hasOwn(v, "staged") || v.staged === true) &&
     (!Object.hasOwn(v, "in") || typeof v.in === "string") &&
     (!Object.hasOwn(v, "at") || validRoomPoint(v.at)) &&
+    (!Object.hasOwn(v, "storage") || (storageCapacity(v.item as string) > 0 && exact(v.storage, ["version", "open"]) && v.storage.version === 1 && typeof v.storage.open === "boolean")) &&
     !(Object.hasOwn(v, "on") && Object.hasOwn(v, "in")) &&
     (!Object.hasOwn(v, "powered") || typeof v.powered === "boolean") &&
     (!Object.hasOwn(v, "empty") ||
@@ -264,8 +268,8 @@ function validContainers(items: readonly Instance[]): boolean {
     if (item.staged && (item.on || item.in)) return false;
     if (!item.in) continue;
     const parent = items.find((i) => i.id === item.in);
-    if (!parent || !decorSpec(item.item).small || capabilityOf(parent.item).toggle !== "open") return false;
-    if (items.filter((i) => i.in === parent.id).length > 8) return false;
+    if (!parent || !decorSpec(item.item).small || storageCapacity(item.item) || !storageCapacity(parent.item) || items.some(i => i.on === item.id || i.in === item.id)) return false;
+    if (items.filter((i) => i.in === parent.id).length > storageCapacity(parent.item)) return false;
     const seen = new Set([item.id]);
     let cursor: Instance | undefined = parent;
     while (cursor) {
@@ -322,7 +326,7 @@ function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
     const room = s.rooms[id],
       occupied = room.characters.filter((c) => c.socket).map((c) => `${c.socket!.itemId}:${c.socket!.socketId}`),
       held = room.characters.flatMap((c) => (c.holding ? [c.holding] : []));
-    return new Set(occupied).size === occupied.length && new Set(held).size === held.length;
+    return new Set(occupied).size === occupied.length && new Set(held).size === held.length && held.every(id => !room.instances.find(i => i.id === id)?.in);
   });
 }
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */

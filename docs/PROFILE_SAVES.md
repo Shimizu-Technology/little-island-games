@@ -83,3 +83,7 @@ Rollback rehearsal: on the archived 3.0.x game source, envelope 3 opens recovery
 Number Island records are an optional `numberRecords: { version: 1, bestRemaining: { 6?: number, 9?: number, 12?: number } }` field in unreleased profile version 2. The validator accepts its absence; migration enriches only finished owned rounds and keeps unassigned rounds unchanged. Assigning an earlier finished round updates the chosen learner's record immediately. This is part of the program's single envelope-3/profile-2 schema bump.
 
 Number bests may include endings explored with Undo and a known next roll. They are personal exploration records. Legacy per-round `bestRemaining` stays in the saved round but is not attributed across board sizes; the display uses the learner's board-specific record.
+
+### Home storage (HS-01 / HS-02)
+
+Home v4 instances may contain `storage: { version: 1, open: boolean }`. Missing state uses the legacy door state without changing the loaded object; the first accepted container edit writes revision 1. The existing `in` parent field holds contents. Validation checks the authored per-container limit, acyclic leaf ownership and complete cross-room references. Restore and launch keep their existing preserve-before-replace behavior. Storage uses the same 15,000-byte write / 20,480-byte read undo limits; it does not increase the whole-save ceiling.

@@ -1,3 +1,4 @@
+import { storageCapacity, storageOpen } from '../storage';
 import { itemSpec } from "../catalog";
 import type { EntityId, SceneEntity } from "./types";
 
@@ -27,4 +28,11 @@ export function entityLabels(entities: readonly SceneEntity[]): Record<EntityId,
       labels[entity.id] = ordered.length > 1 ? `${entityName(entity)} ${index + 1} of ${ordered.length}` : entityName(entity);
   }
   return labels;
+}
+
+/** State/count/names stay in the same VoiceOver element as the real container. */
+export function storageDescription(entity: SceneEntity): string {
+  if (!entity.item || !storageCapacity(entity.item.item)) return '';
+  const contents = entity.contents ?? [];
+  return `${storageOpen(entity.item) ? 'open' : 'closed'}, ${contents.length} of ${storageCapacity(entity.item.item)} items${contents.length ? ': ' + contents.map(i => itemSpec(i.item).name).join(', ') : ', empty'}`;
 }

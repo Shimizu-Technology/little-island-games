@@ -33,7 +33,7 @@ import { translatedBounds } from "../scene/spatial";
 import { carriedCentre } from "./carry";
 import { prepareHits, pickEntity, onShapes } from "./pick";
 import { pickupScene, type PickupScene } from "./pickupScene";
-import { layoutToken } from "./layout";
+import { layoutToken, restingLayoutReady } from "./layout";
 import { acknowledgePoseIn, forgetPoseIn, poseLaidOut, type PoseAcks } from "./poseAck";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
@@ -240,7 +240,7 @@ export function useInteraction({
   onPickup: (pickup: Pickup) => void;
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
   onTap: (id: EntityId | undefined, point: ScreenPoint, now: number) => void;
-  onClear: (slot: number, id?: string, reason?: "capacity") => void;
+  onClear: (slot: number, id?: string, reason?: "capacity" | "storage-capacity") => void;
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
   onReleaseProbe?: (probe: ReleaseProbe) => void;
@@ -619,7 +619,7 @@ export function useInteraction({
       return;
     }
     if (replay && event.type === "down" && event.entity) {
-      const id = event.entity, slot = slots.value.find((s) => s.id === id || s.restId === id);
+      const id = event.entity, slot = slots.value.find((s) => !!s.id && (s.id === id || s.restId === id));
       if (slot) {
         const origin = originFor(slot.id);
         event = { ...event, entity: slot.id, contact: roomPoint(slot.x - origin.x, slot.y - origin.y) };
@@ -780,7 +780,7 @@ export function useInteraction({
           : undefined;
         slots.set(slots.value.map((s, i) => (i === index ? nextSlot : s)));
       } else if (effect.type === "commit") {
-        const index = slots.value.findIndex((s) => s.id === effect.entity || s.restId === effect.entity);
+        const index = slots.value.findIndex((s) => !!s.id && (s.id === effect.entity || s.restId === effect.entity));
         const slot = slots.value[index];
         if (!slot) continue;
         const origin = roomOrigin(roomIds.indexOf(effect.proposal.room), building);
@@ -1127,7 +1127,7 @@ export function useInteraction({
           const pose = entity && poseToken(entity.base, entity.facing, entity.action);
           return { id: s.id, phase: s.phase, committed: s.committed, finished: s.finished,
             revisionReady: s.revision === renderedRevision.value,
-            layoutReady: !!entity && laidOut.value[entity.id] === layoutTokens.value[entity.id],
+            layoutReady: !!entity && restingLayoutReady(entity, laidOut.value, layoutTokens.value),
             poseReady: !!pose && poseLaidOut(poseLayouts.value, s.id, pose),
             pose, poseKeys: Object.keys(poseLayouts.value),
           };
@@ -1269,9 +1269,8 @@ export function useInteraction({
                 { generation: slot.generation, epoch: slot.epoch });
             }
             const entity = prepared.value.entities[slot.restId ?? slot.id];
-            const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
-              (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
-                (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))))));
+            const nativeReady = slot.consumed || (entity && restingLayoutReady(entity, laidOut.value, layoutTokens.value) &&
+              (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))));
             if (!slot.mealPending && nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
@@ -1440,7 +1439,7 @@ export function useInteraction({
   const animateProposal = (proposal: DropProposal, subjectOverride?: SceneEntity, start?: { x: number; y: number }, onAccepted?: (accepted: boolean) => void) => {
     const subject = subjectOverride ?? subjectFor(proposal.id);
     const current = slots.get();
-    if (!subject || current.some(s => s.id === subject.id || s.restId === subject.id)) return false;
+    if (!subject || current.some(s => !!s.id && (s.id === subject.id || s.restId === subject.id))) return false;
     const index = current.findIndex(s => !s.id);
     if (index < 0) return false;
     const origin = roomOrigin(roomIds.indexOf(subject.room), building);
@@ -1460,7 +1459,7 @@ export function useInteraction({
       if (epoch.value !== requestedEpoch) { if (onAccepted) runOnJS(onAccepted)(false); return; }
       const current = slots.value;
       const index = current.findIndex(s => !s.id);
-      if (index < 0 || current.some(s => s.id === subject.id || s.restId === subject.id)) {
+      if (index < 0 || current.some(s => !!s.id && (s.id === subject.id || s.restId === subject.id))) {
         if (onAccepted) runOnJS(onAccepted)(false); return;
       }
       const generation = captureSequence.value + 1;
