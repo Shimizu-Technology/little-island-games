@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, View, useWindowDimensions } from 'react-native';
 import { Button, Copy, PressableScale, C } from '../../../components/ui';
 import { atLarge, LARGE_TEXT } from '../../../components/wordFit';
@@ -10,8 +10,11 @@ const face = Platform.select({ ios: 'Menlo', default: 'monospace' });
 export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: LabProgram; state: Attempt; send: (a: Action) => void; active: boolean; width: number; onNext?: () => void }) {
   const win = useWindowDimensions(), cap = atLarge(win.fontScale, 1.5), codeCap = atLarge(win.fontScale, 1.3);
   const wide = win.width > win.height && width >= 520, large = win.fontScale >= LARGE_TEXT;
-  const [slot, setSlot] = useState(0), [traceAt, setTraceAt] = useState(0);
-  const scroll = useRef<ScrollView>(null);
+  const [slot, setSlot] = useState(() => Math.max(0, s.picks.findIndex(i => i < 0))), [traceAt, setTraceAt] = useState(0);
+  const scroll = useRef<ScrollView>(null), positions = useRef(new Map<number, number>());
+  const revealLine = (line: number) => scroll.current?.scrollTo({ y: Math.max(0, (positions.current.get(line) ?? 0) - 6), animated: false });
+  const focusLine = d.mode === 'build' && !s.won ? d.slots[slot].line : 0;
+  useLayoutEffect(() => { scroll.current?.scrollTo({ y: Math.max(0, (positions.current.get(focusLine) ?? 0) - 6), animated: false }); }, [focusLine, win.width, win.fontScale]);
   const shown = d.mode === 'predict' ? d.lines : sourceFor(d, s.picks);
   const result = runPython(shown), showTrace = s.won || s.checked.length > 0 && d.mode === 'build';
   const frame = showTrace ? result.trace[Math.min(traceAt, result.trace.length - 1)] : undefined;
@@ -27,13 +30,14 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: 
         const spoken = `Line ${i + 1}${depth ? `, inside ${depth} ${depth === 1 ? 'block' : 'blocks'}` : ''}: ${line.trim()}`;
         // A separate gutter keeps every wrapped continuation attached to its numbered statement.
         // Display indentation is compact; the spoken/source form retains the exact Python blocks.
+        const measured = (event: import('react-native').LayoutChangeEvent) => { positions.current.set(i, event.nativeEvent.layout.y); if (i === focusLine) revealLine(i); };
         const text = <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 7 }}>
           <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#B9CADE', width: 25, textAlign: 'right' }}>{i + 1}</Copy>
           <View testID="lab-code-statement" style={{ flex: 1, minWidth: 0, paddingLeft: depth * 12, borderLeftWidth: depth ? 1 : 0, borderLeftColor: '#657995' }}>
             <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#FFFFFF' }}>{line.trimStart()}</Copy>
           </View>
         </View>;
-        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7 }}>{text}</PressableScale> : <View key={i} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 4, backgroundColor: frame?.line === i ? '#425372' : 'transparent' }}>{text}</View>;
+        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} onLayout={measured} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7 }}>{text}</PressableScale> : <View key={i} onLayout={measured} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 4, backgroundColor: frame?.line === i ? '#425372' : 'transparent' }}>{text}</View>;
 
       })}
     </ScrollView>
@@ -42,7 +46,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: 
     {d.mode === 'build' && !s.won && <>
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>{`Line ${selected.line + 1}: choose a value`}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }} accessibilityLabel="Touch values">
-        {selected.choices.map((value, i) => <Button compact quiet key={i} maxFontSizeMultiplier={cap} selected={s.picks[slot] === i} disabled={inactive || !!near && nearest(d, s.picks.map((v, j) => j === slot ? i : v)).distance >= near.distance} onPress={() => { send(['e', slot, i]); const next = s.picks.findIndex((v, j) => j > slot && v < 0); if (next >= 0) { setSlot(next); scroll.current?.scrollTo({ y: Math.max(0, d.slots[next].line * 30 - 20), animated: false }); } }} label={`Line ${selected.line + 1}, choose ${value}`}>{value}</Button>)}
+        {selected.choices.map((value, i) => <Button compact quiet key={i} maxFontSizeMultiplier={cap} selected={s.picks[slot] === i} disabled={inactive || !!near && nearest(d, s.picks.map((v, j) => j === slot ? i : v)).distance >= near.distance} onPress={() => { send(['e', slot, i]); const next = s.picks.findIndex((v, j) => j > slot && v < 0); if (next >= 0) { setSlot(next); } }} label={`Line ${selected.line + 1}, choose ${value}`}>{value}</Button>)}
       </View>
     </>}
     {d.mode === 'predict' && !s.won && <ScrollView nestedScrollEnabled style={{ maxHeight: wide ? Math.max(120, win.height - 255) : large ? 140 : 200, flexGrow: 0 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Four possible outputs">
@@ -66,7 +70,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext }: { d: 
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, fontWeight: '700' }}>Trace · line {(frame?.line ?? 0) + 1}</Copy>
       <ScrollView nestedScrollEnabled style={{ maxHeight: 100, flexGrow: 0 }} accessibilityLabel="Values and printed output"><Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>{frame ? Object.entries(frame.watch).map(([k, v]) => `${k} = ${pythonText(v)}`).join(' · ') : 'No values yet'}{'\n'}Printed: {frame?.output.join(' · ') || '(nothing yet)'}</Copy></ScrollView>
       {result.error && <Copy maxFontSizeMultiplier={cap}>{result.error}</Copy>}
-      <View style={{ flexDirection: 'row', gap: 6 }}><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt === 0} onPress={() => setTraceAt(n => n - 1)}>Earlier line</Button><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt >= result.trace.length - 1} onPress={() => setTraceAt(n => n + 1)}>Next line</Button></View>
+      <View style={{ flexDirection: 'row', gap: 6 }}><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt === 0} onPress={() => { const next = traceAt - 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Earlier line</Button><Button compact quiet maxFontSizeMultiplier={cap} disabled={!active || traceAt >= result.trace.length - 1} onPress={() => { const next = traceAt + 1; setTraceAt(next); revealLine(result.trace[next].line); }}>Next line</Button></View>
     </View>}
   </View>;
 }
