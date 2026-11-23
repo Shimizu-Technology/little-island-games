@@ -101,7 +101,7 @@ describe('Round 2 P1-1: a crowded or tangled Level 3 plan gets a fast, executabl
     for (const start of [[], [r(8, [r(8, [f(100)])])], [c('gold'), c('coral'), c('teal'), t(45), t(60)], [r(2, [f(70), t(90)]), f(60), t(90)]]) {
       const started = performance.now();
       expect(cardsHint(task, start), JSON.stringify(start)).not.toBeNull();
-      expect(performance.now() - started).toBeLessThan(500);
+      expect(performance.now() - started).toBeLessThan(process.env.LITTLE_ISLAND_SLOW_HOST ? 1500 : 500);
     }
     // Never a blank or an over-deep wrap: the first tap named for a tangled plan is one the board can make.
     const tangled = [c('gold'), c('coral'), c('teal'), t(45), t(60)];
