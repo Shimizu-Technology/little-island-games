@@ -111,3 +111,14 @@ it('keeps the Predict scroll container mounted when the first choice dismisses c
  await act(async()=>tree!.update(<ProgramPanel d={d} state={state} send={send} active coaching={false} width={335}/>));
  expect(tree!.root.findByProps({accessibilityLabel:'Four possible outputs'})).toBe(before);
 });
+
+it('shows the return goal and actual return when printed output alone matches',async()=>{
+ Object.assign(win,{width:393,height:852,fontScale:3.12});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const d=deepPrograms.find(d=>d.id==='deep-3-7')!;let state=initialAttempt(d);
+ for(const [i,pick]of [0,0,0,2].entries())state=step(state,['e',i,pick],d)!;
+ state=step(state,['c'],d)!;expect(state.won).toBe(false);
+ await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={vi.fn()} active width={335}/>);});
+ const copy=tree!.root.findAllByType('p').map(text).join('\n');
+ expect(copy).toContain('Goal: 3');expect(copy).toContain('Last return goal: 2');
+ expect(copy).toContain('Result: 3');expect(copy).toContain('Last return: 0');
+});

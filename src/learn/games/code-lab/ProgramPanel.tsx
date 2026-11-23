@@ -16,6 +16,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
   const revealLine = (line: number) => scroll.current?.scrollTo({ y: Math.max(0, (positions.current.get(line) ?? 0) - 6), animated: false });
   const focusLine = d.mode === 'build' && !s.won ? d.slots[slot].line : 0;
   useLayoutEffect(() => { scroll.current?.scrollTo({ y: Math.max(0, (positions.current.get(focusLine) ?? 0) - 6), animated: false }); }, [focusLine, win.width, win.fontScale]);
+  const hasFunction = d.lines.some(line => line.startsWith('def '));
   const shown = d.mode === 'predict' ? d.lines : sourceFor(d, s.picks);
   const alreadyRun = checkedDraft(s, d), showTrace = s.won || alreadyRun && d.mode === 'build';
   const result = showTrace ? runPython(shown) : { output: [], trace: [], error: null };
@@ -64,15 +65,15 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
     {!s.won && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
       {(['Look', 'One step', 'Clear'] as const).map((word, i) => <Button key={word} compact quiet maxFontSizeMultiplier={codeCap} textStyle={{ fontSize: 14 }} label={`${word} help`} disabled={inactive || s.help >= i + 1} onPress={() => send(['h', (i + 1) as 1|2|3])}>{word}</Button>)}
     </View>}
-    <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite" style={{ fontSize: 15 }}>{s.won ? 'That works. Take a look at the trace, or leave it here.' : alreadyRun ? 'This plan was already run. Change a choice to try another plan.' : s.failed ? 'Not yet. Your work is kept. Change a choice and try again.' : d.mode === 'predict' ? 'Choose what prints before you run.' : near ? 'Your plan is kept. The choices now point toward a working plan.' : 'Build the goal with the touch values.'}</Copy>
+    <Copy maxFontSizeMultiplier={cap} accessibilityLiveRegion="polite" style={{ fontSize: 15 }}>{s.won ? 'That works. Take a look at the trace, or leave it here.' : alreadyRun ? 'This plan was already run. Change a choice to try another plan.' : s.failed ? 'Not yet. Your work is kept. Change a choice and try again.' : d.mode === 'predict' ? 'Choose what prints before you run.' : near ? 'Your plan is kept. The choices now point toward a working plan.' : hasFunction ? 'Match the printed output and the last function return.' : 'Build the goal with the touch values.'}</Copy>
   </View>;
   return <View style={{ gap: 8 }}>
     <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 16, fontWeight: '700' }}>{`${d.idea} · ${d.mode === 'predict' ? 'Predict' : 'Build'}`}</Copy>
-    {d.mode === 'build' && <ScrollView nestedScrollEnabled style={{ maxHeight: 64, flexGrow: 0 }} accessibilityLabel="Goal output"><Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>Goal: {d.output.replace(/\n/g, ' · ')}</Copy></ScrollView>}
+    {d.mode === 'build' && <ScrollView nestedScrollEnabled style={{ maxHeight: 64, flexGrow: 0 }} accessibilityLabel="Goal output and last function return"><Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>Goal: {d.output.replace(/\n/g, ' · ')}{hasFunction ? `\nLast return goal: ${pythonText(d.returned)}` : ''}</Copy></ScrollView>}
     <View testID="lab-workspace" style={{ flexDirection: wide ? 'row' : 'column', gap: 10, alignItems: 'stretch' }}>{code}{controls}</View>
     {!!s.help && !s.won && <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, backgroundColor: C.soft, padding: 9 }} accessibilityLiveRegion="polite">{hint(d, s)}</Copy>}
     {showTrace && <View style={{ gap: 6 }}>
-      <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>Result: {result.output.join(' · then ') || '(nothing printed)'}</Copy>
+      <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>Result: {result.output.join(' · then ') || '(nothing printed)'}{hasFunction && 'returned' in result ? `\nLast return: ${pythonText(result.returned)}` : ''}</Copy>
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, fontWeight: '700' }}>Trace · line {(frame?.line ?? 0) + 1}</Copy>
       <ScrollView nestedScrollEnabled style={{ maxHeight: 100, flexGrow: 0 }} accessibilityLabel="Values and printed output"><Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14 }}>{frame ? Object.entries(frame.watch).map(([k, v]) => `${k} = ${pythonText(v)}`).join(' · ') : 'No values yet'}{'\n'}Printed: {frame?.output.join(' · ') || '(nothing yet)'}</Copy></ScrollView>
       {result.error && <Copy maxFontSizeMultiplier={cap}>{result.error}</Copy>}
