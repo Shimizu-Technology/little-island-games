@@ -12,15 +12,7 @@ import type { Cell } from "./legacy";
 import { DEEP_POLY_DEFS, POLY_BLUEPRINTS, TANGRAM_SILHOUETTES } from "./silhouettes";
 import { normalizeAtoms, solveExactCover } from "./solver";
 
-/**
- * Shape Shift inline Challenge banks (inside T2's reserved 280–297 / dares 900–999):
- * - Bank 294: Deep Water (20 puzzles: 5 unique 5-piece, 5 spare-piece, 5 find-two-ways, 5 varied cube nets & fold checks)
- * - Bank 295: School Dares (16 puzzles: L2 Fewest turns [Par], L3 No gold corner [Blind], L4 First drop [Plan], L5 Fold [Whole])
- * - Bank 296: Tangram Showcase (12 hand-crafted 7-piece original Tangrams, inside Shape Shift Challenge!)
- * - Dares 940–955: School Dares (bank 295)
- * - Dares 956–975: Deep Water Dares (bank 294)
- * - Dares 976–987: Tangram Dares (bank 296)
- */
+// Inline Challenge puzzles for Shape Shift use banks 294, 295, and 296 with dares 940 through 987.
 export const DEEP_BANK = 294;
 export const SCHOOL_DARE_BANK = 295;
 export const TANGRAM_BANK = 296;
@@ -139,10 +131,10 @@ function buildDeepPuzzles(): Puzzle<ShapeChallengeDescriptor>[] {
     idx++;
   }
 
-  // 4. Hard (Tide 6, 5 puzzles): Varied cube nets (T-net D opp F, Zigzag A opp D, Lantern net, & 2 fold checks including ####/#.../#...)
-  const tNet = VALID_CUBE_NETS[0]; // T-net: A B C top, D E F below B -> D (idx 3) opposite F (idx 5)!
+  // Build five varied cube-net puzzles for the highest tier.
+  const tNet = VALID_CUBE_NETS[0];
   const tFold = foldCubeNet(tNet.cells);
-  const zigNet = VALID_CUBE_NETS[9]; // Zigzag 2-2-2: A (idx 0) opposite D (idx 3)!
+  const zigNet = VALID_CUBE_NETS[9];
   const zigFold = foldCubeNet(zigNet.cells);
   const lanternNet = VALID_CUBE_NETS[7];
   const lanternFold = foldCubeNet(lanternNet.cells);
@@ -309,7 +301,7 @@ function buildSchoolDarePuzzles(): Puzzle<ShapeChallengeDescriptor>[] {
     idx++;
   }
 
-  // Level 4: First drop each piece (Plan max 1 — no wrong drops, solved on first Check!) — 4 blueprints (4 pieces, outline-only)
+  // Build four outline-only puzzles where the player drops each piece on the first try.
   for (let i = 0; i < 4; i++) {
     const bp = POLY_BLUEPRINTS[8 + i];
     const pieces = bp.parts.map((pt) => normalizeAtoms(pt.cells) as Cell[]);
