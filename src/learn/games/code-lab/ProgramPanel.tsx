@@ -46,7 +46,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
       })}
     </ScrollView>
   </View>;
-  const guide = (children: React.ReactNode) => coaching && active ? <CoachSpot active handAt="none">{children}</CoachSpot> : children;
+  const guide = (children: React.ReactNode) => <CoachSpot active={coaching && active} handAt="none">{children}</CoachSpot>;
   const controls = <View style={{ flex: wide ? 1 : undefined, minWidth: 0, gap: 7 }}>
     {d.mode === 'build' && !s.won && <>
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>{`Line ${selected.line + 1}: choose a value`}</Copy>

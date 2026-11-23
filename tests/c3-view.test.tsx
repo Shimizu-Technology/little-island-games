@@ -101,3 +101,13 @@ it('records each School level in its own skill and dismisses the first-move coac
  await act(async()=>tree!.root.findByType(ProgramPanel).props.send(['c']));expect(practice).toHaveBeenCalledWith(skills[level-1],true);expect(done).toHaveBeenCalledOnce();expect(update).toHaveBeenCalledOnce();
  }
 });
+
+it('keeps the Predict scroll container mounted when the first choice dismisses coaching',async()=>{
+ Object.assign(win,{width:393,height:852,fontScale:3.12});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const d=schoolPrograms[4][0],send=vi.fn();let state=initialAttempt(d);
+ await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={send} active coaching width={335}/>);});
+ const before=tree!.root.findByProps({accessibilityLabel:'Four possible outputs'});
+ state=step(state,['p',d.answer],d)!;
+ await act(async()=>tree!.update(<ProgramPanel d={d} state={state} send={send} active coaching={false} width={335}/>));
+ expect(tree!.root.findByProps({accessibilityLabel:'Four possible outputs'})).toBe(before);
+});
