@@ -236,11 +236,18 @@
         "L2",
         "L3",
         "L4",
-        "L5"
+        "L5",
+        "Running totals",
+        "Count the matches",
+        "List positions",
+        "Functions with loops",
+        "Halve and stop",
+        "Loops inside loops",
+        "Endless number variants"
       ],
       "door": "School",
-      "maxBoard": "Code Lab Deep Water longest arrange/predict/build program",
-      "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
+      "maxBoard": "C3 School lists/functions and Deep Water nested loops; 4 touch slots; Predict outputs and engine trace",
+      "firstAction": "Start L1 Predict, choose an output and Check; Build: tap a line then a value. Test misses, Undo, Look/One step/Clear, quit/resume and finish"
     },
     {
       "id": "pattern-path",
