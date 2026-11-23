@@ -121,5 +121,5 @@ it('shows the return goal and actual return when printed output alone matches',a
  const copy=tree!.root.findAllByType('p').map(text).join('\n');
  expect(copy).toContain('Goal: 3');expect(copy).toContain('Last return goal: 2');
  expect(copy).toContain('Result: 3 (goal: 3)');expect(copy).toContain('Last return: 0 (goal: 2)');
- expect(copy).toContain('did not match the goal');expect(copy).toContain('Scroll code · tap a blank');
+ expect(copy).toContain('No variables here');expect(copy).not.toContain('No values yet');expect(copy).toContain('did not match the goal');expect(copy).toContain('Scroll code · tap a blank');
 });
