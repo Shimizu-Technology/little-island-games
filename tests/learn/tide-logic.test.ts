@@ -1,11 +1,12 @@
 import "../../src/learn/engines";
 import { describe, expect, it } from "vitest";
-import { advance, complete, correct, engine, route, taskAt } from "../../src/learn/games/tide-logic/engine";
+import { advance, complete, correct, engine, route, taskAt, type LegacyTide } from "../../src/learn/games/tide-logic/engine";
 import type { LearnOptions } from "../../src/learn/types";
 const options = (level: number): LearnOptions => ({ mode: "solo", pace: level === 1 ? "easy" : level === 2 ? "medium" : "hard", ...(level === 4 ? { stage: "stretch" } : level === 5 ? { stage: "deep" } : {}) });
 describe("Tide Logic", () => {
-  for (let level = 1; level <= 5; level++) it(`plays and validates level ${level}`, () => {
-    const o = options(level), s = engine.create(o, { skills: {}, rng: () => .42, starter: 0, today: 0 });
+  // New rounds are version 3 (tests/c4-tide-school.test.ts); a saved version 2 round still plays to the end.
+  for (let level = 1; level <= 5; level++) it(`plays and validates a saved version 2 round at level ${level}`, () => {
+    const o = options(level), s: LegacyTide = { version: 2, level, seed: 42000, index: 0, total: 4, rule: { first: "", join: "", second: "", action: "" }, running: -1, helped: false };
     expect(s.level).toBe(level); expect(engine.validate(JSON.parse(JSON.stringify(s)), o)).toBe(true);
     let state = s;
     for (let task = 0; task < 4; task++) {

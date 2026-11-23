@@ -1,5 +1,7 @@
 import type { LearnEngine } from "../../types";
 import { levelOf } from "../../levelOptions";
+import { blank, frameOf, roundPicks, validV3, type TideV3 } from "./school";
+export type { TideV3 } from "./school";
 
 type Color = "blue" | "coral";
 type Size = "big" | "small";
@@ -7,7 +9,11 @@ type Kind = "fish" | "shell";
 export type Item = { color: Color; size: Size; kind: Kind; bell: boolean };
 export type Rule = { first: string; join: string; second: string; action: string };
 export type Task = { items: Item[]; target: Rule; prompt: string; slots: (keyof Rule)[] };
-export type TideState = { version: 1 | 2; level: number; seed: number; index: number; total: 4; rule: Rule; running: number; helped: boolean };
+/** Rounds saved before C4 (versions 1 and 2): seeded tasks, kept exactly as they were made. */
+export type LegacyTide = { version: 1 | 2; level: number; seed: number; index: number; total: 4; rule: Rule; running: number; helped: boolean };
+/** New rounds are version 3 (C4, school.ts): certified belts. */
+export type TideState = LegacyTide | TideV3;
+export const isV3 = (s: TideState): s is TideV3 => s.version === 3;
 const terms = ["blue", "coral", "big", "small", "fish", "shell", "bell"];
 export const choices: Record<keyof Rule, string[]> = {
   first: terms, join: ["and", "or", "then"], second: terms, action: ["left", "right", "count left"],
@@ -50,42 +56,47 @@ export function route(item: Item, rule: Rule): "left" | "right" {
   return yes ? (rule.action === "right" ? "right" : "left") : (rule.action === "right" ? "left" : "right");
 }
 /** running is the next catch to process; count only catches already processed. */
-export function counterAt(s: TideState): number {
+export function counterAt(s: LegacyTide): number {
   if (s.index >= 4 || s.rule.action !== "count left") return 0;
   return taskAt(s.level,s.seed,s.index,s.version).items.slice(0,Math.max(0,s.running)).filter(item => route(item,s.rule) === "left").length;
 }
-export function advance(s: TideState): TideState {
+export function advance(s: LegacyTide): LegacyTide {
   const t = taskAt(s.level, s.seed, s.index, s.version);
   if (s.running < 0) return s;
   if (s.running < t.items.length) return { ...s, running: s.running + 1 };
   return { ...s, version: 2, index: s.index + 1, rule: empty, running: -1, helped: false };
 }
 export const complete = (s: TideState) => s.index >= 4;
-export function ready(s: TideState): boolean {
+export function ready(s: LegacyTide): boolean {
   const t = taskAt(s.level, s.seed, s.index, s.version);
   return t.slots.every((slot) => s.rule[slot] !== "");
 }
-export function correct(s: TideState): boolean {
+export function correct(s: LegacyTide): boolean {
   const t = taskAt(s.level, s.seed, s.index, s.version);
   return t.items.every((item) => route(item, s.rule) === route(item, t.target)) && (s.level !== 4 || s.rule.action === t.target.action);
 }
 export const engine: LearnEngine<TideState> = {
   id: "tide-logic", name: "Tide Logic", island: "coding", ages: [7, 12], ownLevels: true,
-  tagline: "Build rules for the dock sorter.", description: "Build if/else rules, then run the belt to sort every catch.",
-  help: "Tap each empty rule block and choose a word. Blue fish and coral shells show the clues. Press Run to test your rule. Watch each item travel to a bucket. If the rule misses, try another block. The bell is an event: it happens when that item arrives. Help fills a rule, and your work still counts.",
+  tagline: "Build rules for the dock sorter.", description: "Write if/else rules, then run the belt to sort every catch.",
+  help: "Read where the catches should go, then tap each empty rule block and choose a word. Press Run to test your rule on the whole belt. Every wrong rule fails somewhere on the belt, and the sorter shows the first catch it sends the wrong way. From Level 3 the goal is in everyday words: turn it into AND or OR yourself. At Level 4 the bell can ring on a catch or on the catch before it. Help shows a clue first, then fixes one block, then shows the whole rule. Undo takes back a block, and Clear empties the rule.",
   color: "#287A82", surface: "#E6F3F2", modes: ["solo", "together"],
   skills: { "think.code-condition": "Making if and else rules", "think.code-events": "Reacting to events", "think.code-logic": "Joining conditions" },
   levelNames: [
     { name: "Colour gates", description: "Sort by one colour." },
     { name: "Big or small", description: "Sort by size." },
-    { name: "Two clues", description: "Join clues with and or or." },
-    { name: "Bell and counter", description: "Respond when the bell rings and count." },
-    { name: "Trace the rule", description: "Combine two clues and follow every item." },
+    { name: "Two clues", description: "Turn everyday words into AND or OR." },
+    { name: "The real bell", description: "Does the bell ring on this catch or the one before?" },
+    { name: "Trace the rule", description: "Bell clues, then trace a catch before you run." },
   ],
-  create: (o, c) => ({ version: 2, level: levelOf(o), seed: Math.floor(c.rng() * 100000), index: 0, total: 4, rule: empty, running: -1, helped: false }),
+  create: (o, c) => {
+    const level = levelOf(o), prev = c.previous as Partial<TideV3> | undefined;
+    const seen = prev?.version === 3 && prev.level === level && Array.isArray(prev.picks) ? prev.picks : [];
+    return { version: 3, level, picks: roundPicks(c.rng, seen), index: 0, total: 4, rule: blank(frameOf(level)), running: -1, helped: false, hint: 0, undo: [], misses: 0 };
+  },
   validate: (x, o): x is TideState => {
     if (!x || typeof x !== "object" || Array.isArray(x)) return false;
-    const s = x as TideState;
+    if ((x as { version?: unknown }).version === 3) return validV3(x as Record<string, unknown>, levelOf(o));
+    const s = x as LegacyTide;
     if (Object.keys(s).sort().join() !== "helped,index,level,rule,running,seed,total,version" || (s.version !== 1 && s.version !== 2) || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 100000 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || s.total !== 4 || typeof s.helped !== "boolean") return false;
     if (!s.rule || typeof s.rule !== "object" || Object.keys(s.rule).sort().join() !== "action,first,join,second") return false;
     if (!(["first", "join", "second", "action"] as const).every((k) => s.rule[k] === "" || choices[k].includes(s.rule[k]))) return false;
@@ -96,4 +107,6 @@ export const engine: LearnEngine<TideState> = {
     return s.running === -1 || (ready(s) && correct(s));
   },
   outcome: (s) => complete(s) ? "done" : null,
+  // A version 3 round's own record of Help or a wrong run; legacy rounds keep the frame's flag.
+  helpedWork: (s) => isV3(s) && (s.helped || s.misses > 0),
 };
