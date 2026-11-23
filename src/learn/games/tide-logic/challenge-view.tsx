@@ -25,15 +25,16 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
   const [playback, setPlayback] = useState({ run: s.runs, cursor: s.won ? d.belt.length : -1 });
   if (playback.run !== s.runs) setPlayback({ run: s.runs, cursor: 0 });
   const end = s.won || s.miss === null ? d.belt.length : s.miss + 1, playing = playback.cursor >= 0 && playback.cursor < end;
+  // Playback is only display, so it also runs on a solved board, which the frame shows inactive; edits stay blocked by `idle`.
   useEffect(() => {
-    if (!active || !playing) return;
+    if (!playing) return;
     const timer = setTimeout(() => {
       const next = playback.cursor + 1;
       setPlayback(p => ({ ...p, cursor: next }));
       tone(next >= end ? (s.won ? 'win' : 'wrong') : 'tap', true);
     }, reduced ? 20 : 260);
     return () => clearTimeout(timer);
-  }, [active, playing, playback.cursor, end, reduced, s.won, tone]);
+  }, [playing, playback.cursor, end, reduced, s.won, tone]);
   useEffect(() => { if (!active) stop(); return stop; }, [active, stop]);
   const idle = !active || s.won || playing;
   const send = (a: Action) => { if (idle || !challengeEngine.step(s, a, d)) return; tone('tap', true); dispatch(a); };

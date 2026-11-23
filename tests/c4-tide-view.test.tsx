@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { Board } from '../src/learn/games/tide-logic/view';
 import { ChallengeBoard } from '../src/learn/games/tide-logic/challenge-view';
 import { tidePuzzles } from '../src/learn/games/tide-logic/challenge-content';
-import { HELP, RUN, challengeEngine, pick, setBlock, type Action, type State } from '../src/learn/games/tide-logic/challenge-engine';
+import { HELP, RUN, answerOf, challengeEngine, pick, setBlock, type Action, type State } from '../src/learn/games/tide-logic/challenge-engine';
 import { engine, type LegacyTide, type TideV3 } from '../src/learn/games/tide-logic/engine';
 import { currentRow, frameOf } from '../src/learn/games/tide-logic/school';
 import { BoardSpaceProvider } from '../src/learn/BoardSpace';
@@ -175,4 +175,16 @@ it('on a phone the Challenge belt is one sideways row, and a trace puts its rule
   expect(scroll.props.horizontal).toBe(true);
   const order = tree!.root.findAll(n => n.props.testID === 'tide-rule' || n.props.testID === 'tide-challenge-belt').map(n => n.props.testID);
   expect(order[0]).toBe('tide-rule');
+});
+it('a winning run plays every catch to its bucket even though the frame shows the solved board inactive', async () => {
+  vi.useFakeTimers();
+  const p = tidePuzzles.find(x => x.descriptor.kind === 'trace')!, d = p.descriptor;
+  const before = after(p, answerOf(d).map((side, i) => pick(i, side as 0 | 1)));
+  await mount(<ChallengeBoard {...challengeProps(before)} />);
+  const won = challengeEngine.step(before, RUN, d)!.state;
+  await act(async () => tree!.update(<ChallengeBoard {...challengeProps(won)} active={false} />));
+  expect(words()).toContain('Watch every catch land.');
+  for (let i = 0; i <= d.belt.length; i++) await act(async () => { vi.advanceTimersByTime(30); });
+  expect(words()).toContain('Every catch traced right.');
+  expect(heard.play).toHaveBeenCalledWith('win', true);
 });
