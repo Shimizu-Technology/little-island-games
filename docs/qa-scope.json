@@ -469,9 +469,9 @@
         "E",
         "F"
       ],
-      "door": "Cove",
+      "door": "School",
       "maxBoard": "Last School level picture choices and full trace; Gate Crab F",
-      "firstAction": "Start the teaching band; make one legal existing picture choice and trace action"
+      "firstAction": "Start the teaching band; build and test one shell row at the gate, then sort 5 quiz rows"
     },
     {
       "id": "every-stone",

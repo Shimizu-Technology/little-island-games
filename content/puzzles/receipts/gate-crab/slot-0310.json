@@ -1,0 +1,116 @@
+{
+ "format": 1,
+ "family": "gate-crab",
+ "slot": 310,
+ "catalogRevision": 24,
+ "band": "a",
+ "ordinals": [
+  317440,
+  16
+ ],
+ "sourceSha": "dd77651bfc7f82965dbcae616e628cfc2e4878bf",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "5792a734bda184946c4eeb925976f6874ab1a7a0bb778a7f600a10a586cf3bc3"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 462,
+  "kept": [
+   1,
+   2,
+   4,
+   6,
+   8,
+   10,
+   5,
+   7,
+   14,
+   16,
+   3,
+   9,
+   11,
+   12,
+   13,
+   15
+  ]
+ },
+ "rejects": {
+  "template-cap": 78,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 16,
+  "semantic": 16
+ },
+ "histograms": {
+  "technique": {
+   "one-clue": 16
+  },
+  "template": {
+   "a-has-big-shell": 3,
+   "a-has-color": 3,
+   "a-has-small-shell": 3,
+   "a-no-big-shell": 3,
+   "a-size": 4
+  },
+  "layout": {
+   "s0-2": 2,
+   "s1-2": 2,
+   "s1-3": 1,
+   "s2-2": 1,
+   "s2-3": 2,
+   "s3-3": 2,
+   "s4-1": 2,
+   "s5-0": 1,
+   "s5-1": 1,
+   "s5-2": 1,
+   "s5-3": 1
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   1,
+   2
+  ],
+  "exact": 12
+ },
+ "proofHashes": {
+  "witness": "19c6f61f5406f4fa2ddc21bda03c0fd977814df0d457f757ef6f3c17500be5d6",
+  "trace": "8bd69f60cdc964b452b33239a9e65fa9837c66be9dac618afaba052398df9a3e",
+  "claims": "3b30a4e9f74ca49ed858e8274d2f45ea24e56dbff3ff40432a08a56b1975e29d"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 3,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original inductive rule-discovery puzzles across the 216-row shell space (2-shell rows on Rung A, 3-shell rows on Rungs B-F). Rules are deduplicated canonically by their full 216-row truth table; quizzes select high-disagreement balanced rows that foil nearest-neighbor copying; hints use public evidence minimax splitting with proven twin-world non-leakage."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 1841,
+  "gzip": 646
+ },
+ "sha256": "30de8d1e780603db4a1a8dfc55eb0c70ceeb99d6a85a5cbe416eb907c6175d50",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}
