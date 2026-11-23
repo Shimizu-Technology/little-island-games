@@ -1,0 +1,129 @@
+{
+ "format": 1,
+ "family": "reef-sweep",
+ "slot": 464,
+ "catalogRevision": 23,
+ "band": "single-5",
+ "ordinals": [
+  475136,
+  32
+ ],
+ "sourceSha": "b85849a9fd1e758c3572e8109033a0452a5b8539",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "358242f74db680206da06ea561b064dde2eb311fde3a62841a90d32f808e1238"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 46401,
+  "attempts": 529,
+  "kept": [
+   46401,
+   46406,
+   46405,
+   46409,
+   46419,
+   46412,
+   46422,
+   46426,
+   46424,
+   46416,
+   46442,
+   46403,
+   46452,
+   46430,
+   46429,
+   46420,
+   46455,
+   46434,
+   46432,
+   46443,
+   46470,
+   46444,
+   46453,
+   46458,
+   46471,
+   46445,
+   46457,
+   46463,
+   46476,
+   46451,
+   46460,
+   46477
+  ]
+ },
+ "rejects": {
+  "construction": 398,
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "duplicate-semantic": 1
+ },
+ "distinct": {
+  "exact": 32,
+  "semantic": 32
+ },
+ "histograms": {
+  "technique": {
+   "single-cell": 32
+  },
+  "template": {
+   "t0": 5,
+   "t1": 4,
+   "t2": 4,
+   "t3": 3,
+   "t4": 3,
+   "t5": 8,
+   "t6": 2,
+   "t7": 3
+  },
+  "layout": {
+   "q00": 11,
+   "q01": 8,
+   "q10": 7,
+   "q11": 6
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   2,
+   9
+  ],
+  "exact": 22
+ },
+ "proofHashes": {
+  "witness": "dc4edbf19dd5a28515fea4ffbe5fb74007a967e3ce6bf21dae22a6cfed70f451",
+  "trace": "473c711e45667473a0594288f10fcf18cbb283507a3918e7341ace2192be5d3f",
+  "claims": "81646c23a7aa564ecc0cb0d41cbdc0ca0f41dc85e9bd2ea2c21d118557f850eb"
+ },
+ "bots": {
+  "repeat-first": 3,
+  "repeat-last": 1,
+  "alternate": 0,
+  "cycle": 2,
+  "random": 2,
+  "scan": 3
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Generated from fixed deterministic seeds and proven no-guess solvable by the pure public-constraint deduction solver with counterfactual hidden-world verification."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 2329,
+  "gzip": 560
+ },
+ "sha256": "ebfd266092ec8ae60230d20cb715c783297d766f84f72dc07769fddc92329c21",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}
