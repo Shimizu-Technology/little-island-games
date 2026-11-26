@@ -12,7 +12,7 @@ import {labFixtures} from '../src/home/runtime/lab';
 import {instance} from '../src/home/model';
 const clock=vi.hoisted(()=>({shared:undefined as any,animations:0,deferJS:false,js:[]as any[],reactions:[] as any[],frames:[] as any[]}));
 vi.mock('react-native-gesture-handler',()=>({Gesture:{Manual:()=>({})}}));
-vi.mock('react-native',()=>({View:'view',Platform:{OS:'ios'}}));
+vi.mock('react-native',()=>({View:'view',Image:'image',Platform:{OS:'ios'}}));
 vi.mock('react-native-svg',()=>Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
 vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>{clock.animations++;return v;},useAnimatedReaction:(prepare:any,react:any)=>{
   const latest=React.useRef({prepare,react});React.useLayoutEffect(()=>{latest.current={prepare,react};});
@@ -256,7 +256,7 @@ it('prepares food behind the resting drawing until the native handoff is ready',
 
 
 it('waits for visibility before playing a prepared meal, without repainting its body',async()=>{
- const frames:Array<()=>void>=[];vi.stubGlobal('requestAnimationFrame',(fn:()=>void)=>{frames.push(fn);return frames.length;});
+ const frames:(()=>void)[]=[];vi.stubGlobal('requestAnimationFrame',(fn:()=>void)=>{frames.push(fn);return frames.length;});
  const input={slot:0 as const,base:'stand' as const,action:null,face:null,facing:'right' as const,size:224};
  const meal={key:100,action:'eat' as const,food:instance('snack','mango',0,0)},presented=vi.fn(),render=vi.fn(()=>React.createElement('body'));
  let tree!:ReturnType<typeof create>;clock.animations=0;

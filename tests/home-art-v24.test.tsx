@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createElement as nativeElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { describe, it, expect, vi } from 'vitest';
@@ -66,3 +66,8 @@ describe('2.4 art and socket contract',()=>{
   expect(cards).not.toMatch(/NaN|Infinity/);
  });
 });
+
+vi.mock('react-native', () => ({
+  View: ({children, ...p}: any) => nativeElement('div', p, children),
+  Image: ({source, ...p}: any) => nativeElement('img', {...p, src: typeof source === 'string' ? source : source?.uri}),
+}));

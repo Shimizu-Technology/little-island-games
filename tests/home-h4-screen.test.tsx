@@ -2,7 +2,7 @@ import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
-import { instance, type HomeStateV2 } from '../src/home/model';
+import { starterHome, instance, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { roomPoint } from '../src/home/scene/types';
 import { apply, resolve } from '../src/home/scene/proposal';
@@ -94,14 +94,14 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.played).toEqual(['lift', 'pick']);
     expect(harness.haptics).toEqual(['pickup', 'pickup']);
   });
-  it('HD-03: a landing sounds like what landed; a seat gives a light attach tap, the floor does not', async () => {
+  it('HD-03: a landing sounds like what landed; seats and floor drops give a light settling tap', async () => {
     const state = labFixtures.delight();
     await open(state);
     const scene = buildScene(state);
     const rice = Object.values(scene.entities).find((e) => e.item?.item === 'rice-ball')!;
     await drop(state, rice.id, 'kitchen', { x: rice.contact.x + 90, y: rice.contact.y });
     expect(harness.played).toEqual(['cloth']);
-    expect(harness.haptics).toEqual([]);
+    expect(harness.haptics).toEqual(['attach']);
   });
   it('HD-06: friends near a friend set down turn to greet and both smile', async () => {
     const state = labFixtures.delight();
@@ -370,7 +370,7 @@ describe('H4 on the Island Home screen', () => {
     expect(harness.cues).toContainEqual([sleeper.id, 'stir', undefined]);
     expect(harness.scene.effects.some((e: any) => e.kind === 'zzz')).toBe(true);
   });
-  it('HC-01: a painted jar, pan and book answer a touch with their own motion and sound', async () => {
+  it('painted room backgrounds have no invisible legacy jar, pan or shelf-book targets', async () => {
     const state = labFixtures.delight();
     await open(state);
     const tapPiece = async (room: keyof HomeStateV2['rooms'], id: string) => {
@@ -381,12 +381,23 @@ describe('H4 on the Island Home screen', () => {
       return piece;
     };
     await tapPiece('kitchen', 'kitchen-left-jar-1');
-    expect(harness.scene.poke).toMatchObject({ id: 'kitchen-left-jar-1' });
+    expect(harness.scene.poke).toBeUndefined();
     await tapPiece('kitchen', 'kitchen-pan-1');
-    expect(harness.scene.poke).toMatchObject({ id: 'kitchen-pan-1' });
+    expect(harness.scene.poke).toBeUndefined();
     await tapPiece('home', 'home-shelf-book-2');
-    expect(harness.scene.poke).toMatchObject({ id: 'home-shelf-book-2' });
-    expect(harness.played).toEqual(['shell', 'clang', 'wood']);
+    expect(harness.scene.poke).toBeUndefined();
+    expect(harness.played).toEqual([]);
+  });
+  it('cycles six expressive taps on the live standing friend without changing saved placement', async () => {
+    const state = starterHome();
+    await open(state);
+    for (const face of ['happy', 'proud', 'surprised', 'cheer', 'yum', 'sleepy']) {
+      await tap('character/0');
+      expect(harness.scene.moods['character/0']).toBe(face);
+      expect(harness.scene.effects.some((e: any) => e.kind === 'bubbles')).toBe(true);
+    }
+    expect(harness.played.filter((s: string) => s === 'lift')).toHaveLength(5);
+    expect(harness.played).toContain('rustle');
   });
   it('HC-01: an empty stool answers a tap with a small wiggle and its sound; a table holding things gives the sound alone', async () => {
     const state = labFixtures.delight();

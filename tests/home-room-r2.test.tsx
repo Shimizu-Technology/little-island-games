@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createElement as nativeElement } from 'react';
 import { it, expect, vi } from 'vitest';
 import { renderToStaticMarkup as render } from 'react-dom/server';
 import { writeFileSync } from 'node:fs';
@@ -43,3 +43,8 @@ it('keeps all paint and clip references local when several room previews share a
   expect(new Set(ids).size).toBe(ids.length);
   for (const [, id] of svg.matchAll(/url\(#([^)]+)\)/g)) expect(ids).toContain(id);
 });
+
+vi.mock('react-native', () => ({
+  View: ({children, ...p}: any) => nativeElement('div', p, children),
+  Image: ({source, ...p}: any) => nativeElement('img', {...p, src: typeof source === 'string' ? source : source?.uri}),
+}));

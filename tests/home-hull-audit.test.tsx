@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createElement as nativeElement } from 'react';
 import { describe, it, vi, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { execFileSync } from "node:child_process";
@@ -120,3 +120,8 @@ describe.skipIf(!out)("hull raster audit", () => {
     expect(report.length).toBeGreaterThan(70);
   }, 600000);
 });
+
+vi.mock('react-native', () => ({
+  View: ({children, ...p}: any) => nativeElement('div', p, children),
+  Image: ({source, ...p}: any) => nativeElement('img', {...p, src: typeof source === 'string' ? source : source?.uri}),
+}));

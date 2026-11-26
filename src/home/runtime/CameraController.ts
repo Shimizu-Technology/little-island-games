@@ -39,7 +39,7 @@ export function focusCamera(index: number, view: Viewport, building: Building, a
   "worklet";
   const origin = roomOrigin(index, building);
   const scale = roomScale(view);
-  // A phone opens the complete room, including when Find locates an actor near an edge.
+  // Legacy complete-room camera remains available to geometry fixtures and embedders.
   const centerX = portraitPhone(view) ? 400 : at.x;
   return boundCamera(
     {
@@ -76,7 +76,7 @@ export function zoomCamera(
 ): CameraMatrix {
   "worklet";
   const minimum = fitCamera(view, building).a;
-  const maximum = (view.height / 620) * 1.75;
+  const maximum = Math.max(view.width / 800, view.height / 560) * 1.75;
   const scale = Math.max(minimum, Math.min(maximum, camera.a * ratio));
   const factor = scale / camera.a;
   return boundCamera(
@@ -119,4 +119,17 @@ export function panInertia(velocity: number, dt: number, elapsed: number, reduce
   "worklet";
   if (reduced || elapsed >= 500 || Math.abs(velocity) < 8) return 0;
   return Math.max(-1200, Math.min(1200, velocity)) * Math.exp(-dt / 140);
+}
+
+/** Room-first play camera. A portrait phone sees large actors and pans across one room. */
+export function cozyRoomScale(view: Viewport): number {
+  'worklet';
+  return portraitPhone(view) ? Math.max(view.width / 560, view.height / 560) : Math.max(view.width / 800, view.height / 560);
+}
+export function cozyFocusCamera(index: number, view: Viewport, building: Building, at = { x: 400, y: view.width > view.height ? 390 : 280 }): CameraMatrix {
+  'worklet';
+  const origin = roomOrigin(index, building), scale = cozyRoomScale(view);
+  return boundCamera({ a: scale, b: 0, c: 0, d: scale,
+    tx: view.width / 2 - (origin.x + at.x) * scale,
+    ty: view.height / 2 - (origin.y + at.y) * scale }, view, building);
 }

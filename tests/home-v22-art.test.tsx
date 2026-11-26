@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createElement as nativeElement } from 'react';
 import { it, expect, vi } from 'vitest';
 import { renderToStaticMarkup as render } from 'react-dom/server';
 import { writeFileSync } from 'node:fs';
@@ -22,8 +22,8 @@ const furniture: Record<'home'|'kitchen'|'treehouse'|'beach',readonly (readonly 
 it('keeps every item art and the four furnished rooms renderable',()=>{
   const ids=[...Object.keys(catalog),...Object.keys(moreCatalog)];
   expect(ids).toHaveLength(82);
-  for(const id of ids) expect(render(id in moreCatalog?<MoreItemArt id={id}/>:<ItemArt item={id as keyof typeof catalog}/>)).toContain('<svg');
-  expect(render(<MoreItemArt id="sofa" active animated/>)).not.toBe(render(<MoreItemArt id="sofa" active animated reduced/>));
+  for(const id of ids) expect(render(id in moreCatalog?<MoreItemArt id={id}/>:<ItemArt item={id as keyof typeof catalog}/>)).toMatch(/<(svg|img)/);
+  expect(render(<MoreItemArt id="sofa" active animated/>)).toBe(render(<MoreItemArt id="sofa" active animated reduced/>)); // occupied painted seats keep stable contact.
   expect(render(<ItemArt item="aquarium" active animated/>)).not.toBe(render(<ItemArt item="aquarium" active animated reduced/>));
   expect(render(<RoomArt theme={roomDefaultTheme.home}/>)).toContain('viewBox="0 0 800 560"');
   for(const room of ['kitchen','treehouse','beach'] as const) expect(render(<RoomShellArt room={room} theme={roomDefaultTheme[room]}/>)).toContain('viewBox="0 0 800 560"');
@@ -46,3 +46,8 @@ it('keeps every item art and the four furnished rooms renderable',()=>{
   writeFileSync(`${dir}/all-items-120.html`,sheet);
   writeFileSync(`${dir}/outdoors.html`,`<!doctype html><meta charset="utf-8">${style}<main style="width:390px">${render(<SkyArt/>)}${render(<ShoreArt/>)}</main>`);
 }, 30000);
+
+vi.mock('react-native', () => ({
+  View: ({children, ...p}: any) => nativeElement('div', p, children),
+  Image: ({source, ...p}: any) => nativeElement('img', {...p, src: typeof source === 'string' ? source : source?.uri}),
+}));

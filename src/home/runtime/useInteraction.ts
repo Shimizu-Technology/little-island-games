@@ -807,7 +807,7 @@ export function useInteraction({
           pointerY: pointer.point.y,
           absoluteX: pointer.point.x + offset.value.x,
           absoluteY: pointer.point.y + offset.value.y,
-          tilt: reduced ? 0 : slot.tilt + (Math.max(-6, Math.min(6, (vx / 500) * 6)) - slot.tilt) * alpha,
+          tilt: reduced ? 0 : slot.tilt + (Math.max(-7, Math.min(7, (vx / 500) * 7)) - slot.tilt) * alpha,
           lag: reduced ? 0 : slot.lag + (Math.max(-10, Math.min(10, (-vx / 500) * 10)) - slot.lag) * alpha,
           edgeAt: pointer.point.x < EDGE_BAND || pointer.point.x > viewport.width - EDGE_BAND ? slot.edgeAt || now : 0,
         };

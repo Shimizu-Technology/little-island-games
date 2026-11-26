@@ -8,7 +8,7 @@ import { roomPoint } from '../src/home/scene/types';
 import { resolve } from '../src/home/scene/proposal';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { roomIds } from '../src/home/catalogMore';
-const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, finish: vi.fn(), hint: vi.fn(), reduced: false }));
+const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, finish: vi.fn(), hint: vi.fn(), reduced: false, camera: undefined as any }));
 vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
 vi.mock('expo-router', () => ({ router: {}, useFocusEffect: () => {} }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }) }));
@@ -18,7 +18,7 @@ vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.red
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: {} } }) }));
 vi.mock('../src/components/Audio', () => ({ useSounds: () => () => {} }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: {}, wake: () => {} }) }));
-vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: harness.finish, camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => [{}, {}] }, cancelAll: () => {}, animateCamera: () => {}, showHint: harness.hint, dropZones: { set: () => {} } }; } }));
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: harness.finish, camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => [{}, {}] }, cancelAll: () => {}, animateCamera: (camera: any) => { harness.camera = camera; }, showHint: harness.hint, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
@@ -136,4 +136,14 @@ it('HR-02 nothing wiggles under Reduced Motion, in Design, or with a panel open'
   await act(async () => harness.chrome.onFriends());
   await act(async () => { vi.advanceTimersByTime(30000); });
   expect(harness.hint).not.toHaveBeenCalled();
+});
+
+it('Find centres the visible Islander body rather than putting the feet in the middle of a close-up', async () => {
+  const state=starterHome();
+  await act(async()=>{root=create(<HomeScreen initialState={state} persist={()=>true}/>);});
+  await act(async()=>harness.chrome.onFind());
+  const hero=buildScene(state).entities['character/0'], c=harness.camera;
+  const origin=roomOrigin(0,harness.options.building);
+  const centreY=origin.y+hero.contact.y+hero.bounds.top+hero.bounds.height/2;
+  expect(centreY*c.a+c.ty).toBeCloseTo(harness.options.viewport.height/2);
 });

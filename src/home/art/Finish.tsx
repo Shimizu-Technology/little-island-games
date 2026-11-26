@@ -120,3 +120,20 @@ function AnimatedItemMotion({ children, active }: { children: React.ReactNode; a
   const props = useAnimatedProps(() => ({ transform: [{ translateY: lift.value }] }));
   return <AnimatedGroup animatedProps={props}>{children}</AnimatedGroup>;
 }
+
+/** A single water shimmer / note float on switching on, then a quiet resting picture.
+ * No perpetual clocks in hidden carry banks, and no movement under Reduce Motion. */
+export function LivingAccent({ on, reduced, children }: { on: boolean; reduced: boolean; children: React.ReactNode }) {
+  const progress = useSharedValue(1);
+  useEffect(() => {
+    cancelAnimation(progress);
+    progress.set(on && !reduced ? 0 : 1);
+    if (on && !reduced) progress.set(withTiming(1, { duration: 900, easing: Easing.linear }));
+    return () => cancelAnimation(progress);
+  }, [on, reduced, progress]);
+  const props = useAnimatedProps(() => ({
+    transform: [{ translateY: reduced ? 0 : 8 * (1 - progress.value) }],
+    opacity: reduced ? 1 : .65 + .35 * progress.value,
+  }));
+  return <AnimatedGroup animatedProps={props}>{children}</AnimatedGroup>;
+}

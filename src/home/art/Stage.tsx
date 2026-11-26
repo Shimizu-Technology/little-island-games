@@ -1,4 +1,7 @@
 import React from "react";
+import { Image, View } from "react-native";
+import { illustratedRooms } from "./illustrated";
+import { roomDefaultTheme } from "./roomDefaults";
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Pattern, Rect, Stop } from "react-native-svg";
 import type { HomeState } from "../model";
 import type { RoomId } from "../catalogMore";
@@ -140,7 +143,7 @@ export const stagePieces: Record<Room, readonly StagePiece[]> = {
 const drawn = (room: Room, prefix: string) => stagePieces[room].filter((p) => p.id.startsWith(prefix) && p.kind !== "sink")
   .map((p) => <G key={p.id}>{p.draw()}</G>);
 
-export function StageRoom({ room, theme, badges = [], live = false }: { room: Room; theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void;
+function VectorRoom({ room, theme, badges = [], live = false }: { room: Room; theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void;
   /** HC-01: the live room draws its touchable pieces in their own layer. */
   live?: boolean }) {
   const tree = room === "treehouse", kitchen = room === "kitchen", beach = room === "beach";
@@ -218,4 +221,32 @@ export function StageRoom({ room, theme, badges = [], live = false }: { room: Ro
     {tree && <G stroke={ink} strokeWidth={2}><Path d="M0 293h173v55H0Z" fill="#B98A5F"/><Path d="M11 304h151m-151 30h151M62 304v30m53-30v30" stroke="#E7BE88" strokeWidth={3}/><Rect x={14} y={271} width={31} height={21} rx={4} fill="#E7C18C"/><Rect x={52} y={275} width={26} height={17} rx={4} fill="#8CB3A0"/><Path d="M646 300h154v48H646Z" fill="#B98A5F"/><Path d="M655 311h136m-136 26h136" stroke="#E7BE88" strokeWidth={3}/></G>}
     {beach && <G stroke={ink} strokeWidth={2}><Path d="M0 314h170v34H0Z" fill="#CDAF83"/><Path d="M0 312h170" stroke={ivory} strokeWidth={6}/><Path d="M631 316h169v32H631Z" fill="#CDAF83"/><Path d="M640 320q12-12 24 0l-4 22h-16Zm45 0q12-12 24 0l-4 22h-16Zm45 0q12-12 24 0l-4 22h-16Z" fill="#E9CE9C"/><Path d="M640 330h114" stroke="#AD8C61" strokeWidth={2}/></G>}
   </Svg>;
+}
+
+/** 960×672 and 800×560 share an exact aspect ratio: the painted baseboard stays at y=352. */
+export function StageRoom({ room, theme, badges = [], onBadgePress, live = false }: {
+  room: Room; theme: HomeState['theme']; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; live?: boolean;
+}) {
+  const defaults = roomDefaultTheme[room];
+  const [paintedRoom, setPaintedRoom] = React.useState<Room>();
+  return <View style={{ width: '100%', height: '100%' }} accessible={false}>
+    {paintedRoom !== room && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
+    <Image testID={`painted-room-${room}`} source={illustratedRooms[room]()} onLoad={() => setPaintedRoom(room)} onError={() => setPaintedRoom(undefined)} resizeMode="cover" fadeDuration={0}
+      accessible={false} style={{ position: 'absolute', width: '100%', height: '100%' }}/>
+    <Svg width="100%" height="100%" viewBox="0 0 800 560" style={{ position: 'absolute' }} accessible={false}>
+      {theme.wallpaper !== defaults.wallpaper && <Rect data-theme="wall" width={800} height={352} fill={wallColors[theme.wallpaper]} opacity={.28}/>}
+      {theme.floor !== defaults.floor && <Rect data-theme="floor" y={352} width={800} height={208} fill={floorColors[theme.floor]} opacity={.3}/>}
+      {room === 'home' && <G>
+        <Rect x={524} y={26} width={178} height={172} rx={11} fill="#B88562" stroke={ink} strokeWidth={3}/>
+        <Rect x={531} y={33} width={164} height={158} rx={7} fill="#E9CC9E"/>
+        {tracks.flatMap((track, row) => ([1,2,3,4] as const).map((tier, col) => {
+          const id: BadgeId = `${track}-${tier}`, earned = badges.includes(id);
+          return <G key={id} onPress={onBadgePress ? () => onBadgePress(id) : undefined} transform={`translate(${536+col*39} ${37+row*22})`}>
+            <Rect width={34} height={22} rx={4} fill={earned ? '#FFF3D4' : '#CFAE88'} stroke="#B28D66"/>
+            <G transform="translate(4 0) scale(.25)"><BadgeGlyph id={id} earned={earned}/></G>
+          </G>;
+        }))}
+      </G>}
+    </Svg>
+  </View>;
 }

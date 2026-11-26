@@ -1,3 +1,5 @@
+import { paintedProp } from './illustrated';
+import { PaintedProp } from './PropShape';
 import { LivingArt, hasLivingArt } from './LivingArt';
 import { SeatArt, hasSeatArt } from './SeatArt';
 import type { ArtLayer, ItemVisualState } from '../world';
@@ -40,7 +42,9 @@ export function ItemArt({
   reduced = false,
   layer = "all",
   state,
+  occupied = false,
 }: {
+  occupied?: boolean;
   layer?: ArtLayer;
   state?: ItemVisualState;
   item: ItemId;
@@ -56,8 +60,10 @@ export function ItemArt({
 }) {
   const uid = React.useId().replace(/[^A-Za-z0-9_-]/g, "");
   if (hasLivingArt(item)) return layer === 'front' ? null : <LivingArt id={item} size={size} state={state ?? {on: active}} mirrored={mirrored} rotation={rotation} tint={tint} reduced={reduced}/>;
-  if (hasSeatArt(item)) return <SeatArt id={item} size={size} layer={foreground ? "front" : layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? {on: active}} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>}/>;
+  if (hasSeatArt(item)) return <SeatArt occupied={occupied} id={item} size={size} layer={foreground ? "front" : layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? {on: active}} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>}/>;
   if (layer === 'front') return null;
+  const painted = paintedProp(item);
+  if (painted) return <PaintedProp id={painted} size={size} mirrored={mirrored} rotation={rotation} tint={tint} active={active}/>;
 
   const coral = item === "aquarium" ? defaultCoral : material(tint, defaultCoral);
   const teal = ["plant", "aquarium"].includes(item) ? defaultTeal : item === "surfboard" && tint !== "original" ? shade(material(tint, defaultTeal), 0.35) : material(tint, defaultTeal);
