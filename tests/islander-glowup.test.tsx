@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Islander } from '../src/islander/rig/Islander';
 import { RigCrab, Pip } from '../src/islander/rig/Companions';
 import { defaultLook, hairStyles, hats, skinTones, type IslanderLook } from '../src/islander/look';
-import { frontPoses } from '../src/islander/rig/poses';
+import { backPose, frontPoses } from '../src/islander/rig/poses';
 
 vi.mock('react-native-svg', () => ({
   default: 'svg',
@@ -65,6 +65,43 @@ describe('Little Island 4.0 Islander storybook rebuild invariants', () => {
     expect(front).toContain('#FFF8E8');
     expect(back).not.toContain('#E88D7D');
     expect(back).not.toContain('#F47968');
+  });
+
+  it('scales compact rolling-pose ears proportionally to the r=12 head across frames 11-13 and all skin tones', () => {
+    for (const frame of [11, 12, 13] as const) {
+      const [hx, hy] = backPose(frame).joints.head;
+      for (const skinTone of Object.keys(skinTones) as (keyof typeof skinTones)[]) {
+        const html = renderToStaticMarkup(
+          <Islander view="back" pose={frame} look={{ ...defaultLook, hairStyle: 'crop', skinTone }} />
+        );
+        const bodyMatch = /<g data-layer="body"><path[^>]*d="([^"]+)"/.exec(html);
+        expect(bodyMatch, `body path missing for frame ${frame} (${skinTone})`).not.toBeNull();
+        const bodyPath = bodyMatch![1];
+        const zIdx = bodyPath.indexOf('Z');
+        expect(zIdx).toBeGreaterThan(0);
+        const earPart = bodyPath.slice(zIdx + 1).trim();
+        expect(earPart.match(/M/g)).toHaveLength(2);
+        const nums = [...earPart.matchAll(/-?\d+(?:\.\d+)?/g)].map(m => Number(m[0]));
+        expect(nums.length).toBeGreaterThanOrEqual(28);
+        expect(nums.length % 2).toBe(0);
+        for (let i = 0; i < nums.length; i += 2) {
+          const dx = Math.abs(nums[i] - hx);
+          const dy = nums[i + 1] - hy;
+          expect(dx).toBeGreaterThanOrEqual(11.5);
+          expect(dx).toBeLessThanOrEqual(15.5);
+          expect(dy).toBeGreaterThanOrEqual(0);
+          expect(dy).toBeLessThanOrEqual(8);
+        }
+      }
+    }
+  });
+
+  it('gives tortoiseshell glasses a continuous warm amber inner rim highlight for clarity on dark skin', () => {
+    const html = renderToStaticMarkup(
+      <Islander view="front" pose="idle" look={{ ...defaultLook, skinTone: 'cocoa', accessory: 'glasses' }} />
+    );
+    expect(html).toContain('stroke="#4E2816"');
+    expect(html).toContain('stroke="#D88E4A"');
   });
 
   it('exports a high-res visual proof showcase when ISLANDER_GLOWUP_SHEET is set', () => {
@@ -131,6 +168,33 @@ describe('Little Island 4.0 Islander storybook rebuild invariants', () => {
     writeFileSync(
       join(dir, 'glowup-hair-hats-pets.html'),
       `<!doctype html><meta charset="utf-8"><title>Hair, Hats & Companions</title><style>*{box-sizing:border-box}body{margin:0;padding:20px;background:#FFFDF8;color:#3B2418;font:600 13px -apple-system,sans-serif}h2{margin:14px 0 8px;font-size:17px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#FFF8EC;border:1.5px solid #EFE0C6;border-radius:18px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:6px}.stage{height:142px;display:flex;align-items:center;justify-content:center;width:100%;background:#EBF6F2;border-radius:12px}.lbl{text-align:center;font-size:11px}</style><h2>All 14 Hairstyles (Sampled Across 5 Skin Tones &amp; Hair Colors)</h2><div class="grid">${hairCards}</div><h2>All 8 Hats (with Long Wavy Hair)</h2><div class="grid4">${hatCards}</div><h2>Companions (RigCrab & Pip)</h2><div class="grid4">${pets}</div>`
+    );
+    const rollingCards = ([11, 12, 13] as const)
+      .flatMap(frame =>
+        (Object.keys(skinTones) as (keyof typeof skinTones)[]).map(skinTone =>
+          `<div class="card"><div class="stage">${fixSvg(renderToStaticMarkup(<Islander view="back" pose={frame} look={{ ...defaultLook, hairStyle: 'crop', skinTone }} size={160} />))}</div><div class="lbl">Roll frame ${frame} · ${skinTone} · crop</div></div>`
+        )
+      )
+      .join('');
+    const glassesCloseups = (['cocoa', 'earth', 'honey', 'shell'] as const)
+      .map(skinTone =>
+        `<div class="card"><div class="stage">${fixSvg(renderToStaticMarkup(<Islander view="front" pose="idle" look={{ ...defaultLook, skinTone, hairStyle: 'afro-puffs', hairColor: 'espresso', outfit: 'hoodie', palette: 'star-sneakers', accessory: 'glasses', cheeks: 'rosy' }} size={220} />))}</div><div class="lbl">Tortoiseshell · ${skinTone}</div></div>`
+      )
+      .join('');
+    const portraitSamples = ([
+      { label: 'Chip 36px · Ponytail', size: 36, look: { ...defaultLook, hairStyle: 'ponytail' as const } },
+      { label: 'Chip 44px · Ponytail', size: 44, look: { ...defaultLook, hairStyle: 'ponytail' as const } },
+      { label: 'Chip 36px · Afro Puffs + Glasses', size: 36, look: { ...defaultLook, skinTone: 'cocoa' as const, hairStyle: 'afro-puffs' as const, accessory: 'glasses' as const } },
+      { label: 'Chip 44px · Sunhat', size: 44, look: { ...defaultLook, hairStyle: 'crop' as const, hat: 'sunhat' as const } },
+    ]).map(({ label, size, look }) => {
+      const border = size >= 44 ? 2 : 1.5, inner = size - border * 2, body = size * 1.74;
+      const left = (inner - body * 80 / 132) / 2, glowLeft = (inner - size * .74) / 2;
+      const medallion = `<div style="position:relative;width:${size}px;height:${size}px;border-radius:${size / 2}px;overflow:hidden;background:#DFF2EC;border:${border}px solid #FFF8EC;box-shadow:0 2px 6px rgba(59,36,24,.12)"><div style="position:absolute;width:${size * .74}px;height:${size * .74}px;border-radius:${size * .37}px;top:${size * .06}px;left:${glowLeft}px;background:#FFF5DA;opacity:.75"></div><div style="position:absolute;top:${size * .01}px;left:${left}px">${fixSvg(renderToStaticMarkup(<Islander look={look} view="front" pose="idle" size={body} />))}</div></div>`;
+      return `<div class="card"><div class="stage" style="gap:18px">${medallion}<div style="transform:scale(2.4);transform-origin:center">${medallion}</div></div><div class="lbl">${label} (1× &amp; 2.4×)</div></div>`;
+    }).join('');
+    writeFileSync(
+      join(dir, 'glowup-r1-fixes.html'),
+      `<!doctype html><meta charset="utf-8"><title>Avatar V4 R1 Fixes Check</title><style>*{box-sizing:border-box}body{margin:0;padding:20px;background:#FFFDF8;color:#3B2418;font:600 13px -apple-system,sans-serif}h2{margin:14px 0 8px;font-size:17px}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#FFF8EC;border:1.5px solid #EFE0C6;border-radius:18px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px}.stage{height:176px;display:flex;align-items:center;justify-content:center;width:100%;background:radial-gradient(circle at 50% 42%,#FFFDF8 0%,#E6F5F1 68%,#FCECD2 100%);border-radius:12px;overflow:hidden}.lbl{text-align:center;font-size:11px}</style><h2>Compact Rolling Frames 11–13 · Ears Attachment Across All 5 Skin Tones (crop hair)</h2><div class="grid5">${rollingCards}</div><h2>Tortoiseshell Glasses Clarity Across Skin Tones</h2><div class="grid4">${glassesCloseups}</div><h2>Portrait Medallion Framing (Chin Breathing Room)</h2><div class="grid4">${portraitSamples}</div>`
     );
   });
 });

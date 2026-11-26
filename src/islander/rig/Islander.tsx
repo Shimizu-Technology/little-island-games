@@ -127,8 +127,10 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
 
   // Soft cheek-heavy rounded storybook head contour: crown aligns at ±27.6/-9..0/-28 for hats & buzz-cut, cheeks swell warmly to ±29.6.
   const headPath = `M${hx-27.6} ${hy-9}C${hx-27.6} ${hy-21.5} ${hx-16.5} ${hy-28} ${hx} ${hy-28}C${hx+16.5} ${hy-28} ${hx+27.6} ${hy-21.5} ${hx+27.6} ${hy-9}C${hx+28.2} ${hy-1} ${hx+30.2} ${hy+5.8} ${hx+29.4} ${hy+12.8}C${hx+28.2} ${hy+22.4} ${hx+15.6} ${hy+27.6} ${hx} ${hy+27.6}C${hx-15.6} ${hy+27.6} ${hx-28.2} ${hy+22.4} ${hx-29.4} ${hy+12.8}C${hx-30.2} ${hy+5.8} ${hx-28.2} ${hy-1} ${hx-27.6} ${hy-9}Z`;
-  const earsPath = earsVisible ? `M${hx-28.5} ${hy+4.4}C${hx-34.0} ${hy+3.8} ${hx-35.0} ${hy+10.4} ${hx-32.6} ${hy+14.0}C${hx-31.0} ${hy+16.4} ${hx-28.4} ${hy+15.4} ${hx-27.8} ${hy+13.2}M${hx+28.5} ${hy+4.4}C${hx+34.0} ${hy+3.8} ${hx+35.0} ${hy+10.4} ${hx+32.6} ${hy+14.0}C${hx+31.0} ${hy+16.4} ${hx+28.4} ${hy+15.4} ${hx+27.8} ${hy+13.2}` : '';
-  const earInnerShade = earsVisible ? `M${hx-29.2} ${hy+7.2}Q${hx-32.4} ${hy+9.4} ${hx-29.4} ${hy+12.4}Q${hx-30.6} ${hy+9.8} ${hx-29.2} ${hy+7.2}ZM${hx+29.2} ${hy+7.2}Q${hx+32.4} ${hy+9.4} ${hx+29.4} ${hy+12.4}Q${hx+30.6} ${hy+9.8} ${hx+29.2} ${hy+7.2}Z` : '';
+  // Scale ear coordinates proportionally by r / 28 around (hx, hy) so compact rolling poses (r = 12) stay attached to the head.
+  const earScale = r / 28, ex = (dx: number) => +(hx + dx * earScale).toFixed(2), ey = (dy: number) => +(hy + dy * earScale).toFixed(2);
+  const earsPath = earsVisible ? `M${ex(-28.5)} ${ey(4.4)}C${ex(-34.0)} ${ey(3.8)} ${ex(-35.0)} ${ey(10.4)} ${ex(-32.6)} ${ey(14.0)}C${ex(-31.0)} ${ey(16.4)} ${ex(-28.4)} ${ey(15.4)} ${ex(-27.8)} ${ey(13.2)}M${ex(28.5)} ${ey(4.4)}C${ex(34.0)} ${ey(3.8)} ${ex(35.0)} ${ey(10.4)} ${ex(32.6)} ${ey(14.0)}C${ex(31.0)} ${ey(16.4)} ${ex(28.4)} ${ey(15.4)} ${ex(27.8)} ${ey(13.2)}` : '';
+  const earInnerShade = earsVisible ? `M${ex(-29.2)} ${ey(7.2)}Q${ex(-32.4)} ${ey(9.4)} ${ex(-29.4)} ${ey(12.4)}Q${ex(-30.6)} ${ey(9.8)} ${ex(-29.2)} ${ey(7.2)}ZM${ex(29.2)} ${ey(7.2)}Q${ex(32.4)} ${ey(9.4)} ${ex(29.4)} ${ey(12.4)}Q${ex(30.6)} ${ey(9.8)} ${ex(29.2)} ${ey(7.2)}Z` : '';
 
   return <G transform={isLying(pose) ? 'translate(6 86) rotate(-90) scale(1 1)' : 'translate(0 0) rotate(0) scale(1 1)'}>
     {useGrad && <Defs>
@@ -189,12 +191,17 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
       </G>}
     </G>
     <RewardArt look={look} pose={pose} layer="hat"/><G data-layer="foreground-accessory"><RewardArt look={look} pose={pose} layer="accessory"/>{look.accessory === 'backpack' && (!front ? !compact && backpack : <G fill="none" stroke="#D59A4B" strokeWidth={3.1}><Path d={`M28 ${sy}L31 ${hip - 9}M52 ${sy}L49 ${hip - 9}`}/></G>)}
-      {look.accessory === 'glasses' && front && <G fill="#FFF4DC" fillOpacity={.18} stroke="#5A301B" strokeWidth={2.05}>
+      {look.accessory === 'glasses' && front && <G fill="#FFF4DC" fillOpacity={.18} stroke="#4E2816" strokeWidth={2.35}>
         <Rect x={hx - 17.2} y={hy + 0} width={14.0} height={12.8} rx={6.4}/>
         <Rect x={hx + 3.2} y={hy + 0} width={14.0} height={12.8} rx={6.4}/>
-        <Path d={`M${hx - 14.2} ${hy + 3.0}l3.2-1.8M${hx + 6.2} ${hy + 3.0}l3.2-1.8`} fill="none" stroke="#FFFFFF" strokeOpacity={.85} strokeWidth={1.25}/>
-        <Path d={`M${hx - 15.8} ${hy + 2.2}q2.8 -1.8 5.4 -.8M${hx + 10.4} ${hy + 1.4}q2.6 -.8 5.4 .8`} fill="none" stroke="#C87A3C" strokeWidth={1.35}/>
         <Path d={`M${hx - 3.2} ${hy + 5.6}Q${hx} ${hy + 4.2} ${hx + 3.2} ${hy + 5.6}M${hx - 20.6} ${hy + 4.8}L${hx - 17.2} ${hy + 5.4}M${hx + 17.2} ${hy + 5.4}L${hx + 20.6} ${hy + 4.8}`} fill="none"/>
+        <G fill="none" stroke="#D88E4A" strokeWidth={1.05}>
+          <Rect x={hx - 16.95} y={hy + .25} width={13.5} height={12.3} rx={6.15}/>
+          <Rect x={hx + 3.45} y={hy + .25} width={13.5} height={12.3} rx={6.15}/>
+          <Path d={`M${hx - 3.2} ${hy + 5.6}Q${hx} ${hy + 4.2} ${hx + 3.2} ${hy + 5.6}M${hx - 20.2} ${hy + 4.9}L${hx - 17.2} ${hy + 5.4}M${hx + 17.2} ${hy + 5.4}L${hx + 20.2} ${hy + 4.9}`} strokeWidth={.95}/>
+        </G>
+        <Path d={`M${hx - 15.6} ${hy + 2.0}q2.8 -1.6 5.4 -.7M${hx + 10.2} ${hy + 1.3}q2.6 -.9 5.4 .7`} fill="none" stroke="#F0B168" strokeWidth={1.05}/>
+        <Path d={`M${hx - 14.2} ${hy + 3.0}l3.2-1.8M${hx + 6.2} ${hy + 3.0}l3.2-1.8`} fill="none" stroke="#FFFFFF" strokeOpacity={.85} strokeWidth={1.25}/>
       </G>}
       {look.accessory === 'glasses' && !front && <Path d={`M${hx - r} ${hy + 1}l-2-2M${hx + r} ${hy + 1}l2-2`} fill="none"/>}
     </G>
