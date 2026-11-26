@@ -108,6 +108,7 @@ function parseSvgSegments(d: string): PathSegment[] {
 
 describe('shared sandy footpaths and guide waypoints', () => {
  const cases: [number, number, number][] = [
+  [320, 378, 1], [844, 250, 1],
   [320, 568, 1], [320, 568, 1.5], [320, 568, 2],
   [390, 844, 1], [390, 844, 1.5], [390, 844, 2],
   [844, 390, 1], [844, 390, 1.5], [844, 390, 2],
@@ -188,5 +189,21 @@ describe('shared sandy footpaths and guide waypoints', () => {
   }
 
   await act(() => screen.unmount());
+ });
+});
+
+describe('wide horizontal crossroads', () => {
+ it.each([[844,250],[1024,628]])('rests between columns on the horizontal sand spine at %s×%s', (width,height) => {
+  const layout = mapLayout(width,height), start = guideStartPoint(layout,width,height);
+  const school = layout.targets.find(t => t.id === 'school')!;
+  const library = layout.targets.find(t => t.id === 'library')!;
+  expect(start.x).toBe((school.door.x + library.door.x) / 2);
+  const ys = layout.targets.map(t => t.door.y);
+  expect(start.y).toBe((Math.min(...ys) + Math.max(...ys)) / 2);
+  expect(terrainBranches(layout,width)[0].every(p => p.y === start.y)).toBe(true);
+  for (const target of layout.targets) {
+   const size = Math.min(96,width*.24,height*.20);
+   expect(start.x-size*.303 < target.left+target.width && target.left < start.x+size*.304 && start.y-size < target.top+target.height && target.top < start.y).toBe(false);
+  }
  });
 });

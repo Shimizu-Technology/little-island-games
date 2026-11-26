@@ -32,7 +32,8 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const x = useSharedValue(start.x), y = useSharedValue(start.y), bob = useSharedValue(0), zoom = useSharedValue(1), cameraX = useSharedValue(0), cameraY = useSharedValue(0), opacity = useSharedValue(1);
  const [walking, setWalking] = useState(false);
  const departing = useRef(false), wasActive = useRef(active);
- const guideSize = Math.min(123, Math.max(96, width*.19));
+ const pathGap = layout.wide ? Infinity : Math.min(...layout.targets.filter(t => t.x > .5).map(t => t.left)) - Math.max(...layout.targets.filter(t => t.x < .5).map(t => t.left + t.width));
+ const guideSize = Math.min(96, width * .24, height * .20, (pathGap - 8) / .607);
  const settle = useMemo(() => (place: PlaceId) => {
   const target = mapLayout(width, height, fontScale).targets.find(item => item.id === place)!.door;
   cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY);

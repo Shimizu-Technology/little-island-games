@@ -84,7 +84,12 @@ export type MapLayout = ReturnType<typeof mapLayout>;
 export function guideStartPoint(layout: MapLayout, width: number, height: number): Point {
   const ys = layout.targets.map(target => target.door.y);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const preferredY = height * (layout.wide ? .62 : .55);
+  if (layout.wide) {
+    const left = layout.targets.find(target => target.id === 'school')!.door.x;
+    const center = layout.targets.find(target => target.id === 'library')!.door.x;
+    return { x: (left + center) / 2, y: (minY + maxY) / 2 };
+  }
+  const preferredY = height * .60;
   return { x: width * .5, y: Math.min(maxY, Math.max(minY, preferredY)) };
 }
 /** Shared sandy path centerlines in scene coordinates (pt), derived directly from actual door positions. */
@@ -92,6 +97,14 @@ export function terrainBranches(layout: MapLayout, width: number, _height?: numb
   const spineX = width * .5;
   const ys = layout.targets.map(target => target.door.y);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
+  if (layout.wide) {
+    const spineY = (minY + maxY) / 2;
+    const xs = layout.targets.map(target => target.door.x);
+    return [
+      [{ x: Math.min(...xs), y: spineY }, { x: Math.max(...xs), y: spineY }],
+      ...layout.targets.map(target => [target.door, { x: target.door.x, y: spineY }] as PathSegment),
+    ];
+  }
   const segments: PathSegment[] = [[{ x: spineX, y: minY }, { x: spineX, y: maxY }]];
   const rows = new Map<number, { y: number; xs: number[] }>();
   for (const target of layout.targets) {
@@ -116,13 +129,24 @@ export function terrainPathData(layout: MapLayout, width: number, height: number
 }
 /** Ordered polyline waypoints for the walking guide; every segment lies directly on `terrainBranches`. */
 export function guideWaypoints(from: Point, to: Point, layout: MapLayout, width: number, _height?: number): Point[] {
-  void layout;
+
   const spineX = width * .5;
   const points: Point[] = [from];
   const push = (pt: Point) => {
     const prev = points[points.length - 1];
     if (Math.hypot(pt.x - prev.x, pt.y - prev.y) > 0.01) points.push(pt);
   };
+  if (layout.wide) {
+    const ys = layout.targets.map(target => target.door.y);
+    const spineY = (Math.min(...ys) + Math.max(...ys)) / 2;
+    if (Math.abs(from.x - to.x) <= .01) push(to);
+    else {
+      push({ x: from.x, y: spineY });
+      push({ x: to.x, y: spineY });
+      push(to);
+    }
+    return points;
+  }
   if (Math.abs(from.y - to.y) <= 0.01) {
     push(to);
   } else {

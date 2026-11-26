@@ -37,10 +37,17 @@ export default function HubScreen() {
  const singleRowMinWidth = 120 + Math.ceil(190 * Math.min(fontScale, 1.3)) + 88 + 18 + 28;
  const stackHeader = width < singleRowMinWidth || (fontScale >= 1.35 && width < 560);
  const sceneWidth = Math.min(width - insets.left - insets.right, 1100);
- const sceneHeight = Math.max(height - insets.top - insets.bottom - 134, 590);
+
  const learner = activeLearner(store.save.learning), resume = homeContinue(store.save), coveResume = coveContinue(store.save);
  const dockCount = 2 + (coveResume ? 1 : 0) + (resume ? 1 : 0);
  const dockWrap = (width < 380 || fontScale >= 1.35) && dockCount >= 3;
+ // Measure the actual flex viewport: header, dock, safe areas and save banners
+ // can all change height with text size or saved Continue buttons.
+ const [availableHeight, setAvailableHeight] = useState(0);
+ const headerHeight = stackHeader ? 109 : 59;
+ const dockHeight = dockWrap ? 142 : 81;
+ const fallbackHeight = height - insets.top - insets.bottom - headerHeight - dockHeight;
+ const sceneHeight = Math.max(availableHeight || fallbackHeight, fontScale >= 1.25 ? 590 : 0);
  const arrive = useCallback((place: PlaceId) => { setDoor(place); router.push(placeRoute(place)); }, []);
  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Heading>Getting your island ready…</Heading></SafeAreaView>;
  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Recovery/></SafeAreaView>;
@@ -64,7 +71,7 @@ export default function HubScreen() {
    <Text variant="section" maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78} style={{ fontSize: narrow ? 13 : 14, lineHeight: 18, color: theme.colors.ink, textAlign: 'center' }}>{label}</Text>
   </PressableScale>
  );
- return <SafeAreaView style={{ flex: 1, backgroundColor: '#AFDAD6' }} edges={['top', 'left', 'right', 'bottom']}>
+ return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top', 'left', 'right', 'bottom']}>
   {stackHeader ? (
    <View testID="hub-header" style={{ paddingHorizontal: narrow ? 10 : 14, paddingVertical: 6, gap: 6, backgroundColor: theme.colors.bg, borderBottomWidth: 1, borderBottomColor: theme.colors.hairline }}>
     <View testID="hub-header-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>{brand}{actions}</View>
@@ -78,11 +85,11 @@ export default function HubScreen() {
    </View>
   )}
   <SaveStatus/>
-  <ScrollView style={{ flex: 1 }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
+  <ScrollView onLayout={event => setAvailableHeight(event.nativeEvent.layout.height)} style={{ flex: 1, backgroundColor: '#1F8EA0' }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
    <IslandScene width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear} door={door} onArrive={arrive}/>
   </ScrollView>
   <CovePersonResume/>
-  <View style={{ paddingHorizontal: narrow ? 10 : 18, paddingVertical: 8, backgroundColor: '#AFDAD6' }}>
+  <View style={{ paddingHorizontal: narrow ? 10 : 18, paddingVertical: 8, backgroundColor: theme.colors.bg, borderTopWidth: 1, borderTopColor: theme.colors.hairline }}>
    <View testID="hub-dock" style={{ flexDirection: 'row', flexWrap: dockWrap ? 'wrap' : 'nowrap', gap: 4, padding: 4, maxWidth: 540, width: '100%', alignSelf: 'center', backgroundColor: theme.colors.bg, borderRadius: theme.radius.tile, borderWidth: 1, borderColor: '#91B7A9', ...theme.shadow }}>
     {coveResume ? dock('Continue', Play, () => router.push({ pathname: '/cove', params: { game: coveResume.game, resume: '1' } }), infoFor(coveResume.game).name, 'hub-dock-continue', true) : null}
     {resume && dock('School', BookOpen, () => openGame(resume), shelfGames.find(game => game.id === resume)?.name, 'hub-dock-school')}
