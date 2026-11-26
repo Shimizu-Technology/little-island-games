@@ -10,7 +10,7 @@ import { moreCatalog } from '../src/home/catalogMore';
 import { catalog } from '../src/home/catalog';
 import { Islander } from '../src/islander/rig/Islander';
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:React.ElementType)=>({animatedProps:_a,...props}:Record<string,unknown>)=>React.createElement(c,{...props,'data-animated':true})},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
-vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',LinearGradient:'linearGradient',Stop:'stop',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
+vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',LinearGradient:'linearGradient',RadialGradient:'radialGradient',Stop:'stop',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
 vi.mock('../src/arcade/Art',()=>({StickerArt:()=>null}));
 vi.mock('../src/badges/BadgeArt',()=>({BadgeGlyph:()=>null}));
 const furniture: Record<'home'|'kitchen'|'treehouse'|'beach',readonly (readonly [string,number,number,number])[]> = {
@@ -27,6 +27,10 @@ it('keeps every item art and the four furnished rooms renderable',()=>{
   expect(render(<ItemArt item="aquarium" active animated/>)).not.toBe(render(<ItemArt item="aquarium" active animated reduced/>));
   expect(render(<RoomArt theme={roomDefaultTheme.home}/>)).toContain('viewBox="0 0 800 560"');
   for(const room of ['kitchen','treehouse','beach'] as const) expect(render(<RoomShellArt room={room} theme={roomDefaultTheme[room]}/>)).toContain('viewBox="0 0 800 560"');
+  expect(render(<SkyArt/>)).toContain('<radialGradient');
+  const outdoors=render(<><SkyArt/><SkyArt/><ShoreArt/><ShoreArt/></>);
+  const paintIds=[...outdoors.matchAll(/ id="([^"]+)"/g)].map(match=>match[1]);
+  expect(new Set(paintIds).size).toBe(paintIds.length);
   const dir=process.env.HOME_V22_EVIDENCE;if(!dir)return;
   const style='<style>body{margin:0;background:#f9f1e5;color:#3c524d;font:14px system-ui}h1{font-size:18px;margin:8px}h2{font-size:15px;margin:8px}.scene{position:relative;width:800px;height:560px;overflow:hidden;transform-origin:top left;transform:scale(var(--scale,1))}.viewport{overflow:hidden;height:var(--height,560px)}.scene>svg{position:absolute;inset:0;width:100%;height:100%}.item{position:absolute}.item svg{width:100%;height:100%}.reference{display:block;width:100%;height:auto}.label{padding:5px;background:#f5e9d1}</style>';
   for(const width of [390,1024])for(const room of ['home','kitchen','treehouse','beach'] as const){

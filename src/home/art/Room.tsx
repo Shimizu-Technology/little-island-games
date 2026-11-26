@@ -54,7 +54,7 @@ export function ShoreArt({ depth = 215 }: { depth?: number }) {
     <Path d={`M0 27Q245 45 491 17T800 19V${depth}H0Z`} fill="#F7E5BA" opacity={.55}/>
     <Path d="M130 0L780 0L760 35L158 50L85 20Z" fill="#C79A70" stroke="#577162" strokeWidth={3}/>
     <Path d="M128 18L767 8M142 34L759 22" stroke="#8F5E43" strokeWidth={2}/>
-    {[184,277,370,463,556,649,742].map((x,i) => <G key={x}>
+    {[184,277,370,463,556,649].map((x,i) => <G key={x}>
       <Path d={`M${x} ${i%2 ? 0 : 17}l-10 17m24 1q19-4 40-2`} stroke="#9B6747" fill="none" strokeWidth={1.5}/>
       <Path d={`M${x+9} 12q18-5 33-1`} stroke="#F5CC97" fill="none" strokeWidth={2}/>
       <Circle cx={x+5} cy={i%2 ? 6 : 24} r={1.7} fill="#704D3A"/>

@@ -48,7 +48,7 @@ function Window({ room, prefix }: { room: Room; prefix: string }) {
       <Path d={`M${x-8} ${y+h+6}h${w+16}`} stroke="#FFD8A2" strokeWidth={3}/></>}
     {!round && !veranda && <G fill={room === "home" ? "#E99383" : ivory} stroke={ink} strokeWidth={2}>
       <Path d={`M${x-14} ${y-10}h51q-2 58-35 111q7 28 25 52l-43 7q10-74 2-170Zm${w+26} 0h-51q2 58 35 111q-7 28-25 52l43 7q-10-74-2-170Z`}/>
-      <Path d={`M${x-13} ${y+92}l19 8m${w+4} 0l19-8`} stroke="#AB764C" strokeWidth={6}/>
+      <Path d={`M${x-13} ${y+92}l19 8M${x+w-8} ${y+100}l19-8`} stroke="#AB764C" strokeWidth={6}/>
     </G>}
   </G>;
 }
@@ -150,7 +150,7 @@ export function StageRoom({ room, theme, badges = [], live = false }: { room: Ro
   return <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
     <Defs>
       <LinearGradient id={prefix + "-wall"} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor="#FFF3D3"/><Stop offset=".44" stopColor={wall}/><Stop offset="1" stopColor={wall}/></LinearGradient>
-      <LinearGradient id={prefix + "-floor"} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={floor}/><Stop offset=".66" stopColor="#FFE8B2" stopOpacity={.78}/><Stop offset="1" stopColor={floor}/></LinearGradient>
+      <LinearGradient id={prefix + "-floor"} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={floor}/><Stop offset=".66" stopColor="#FFE8B2"/><Stop offset="1" stopColor={floor}/></LinearGradient>
       <Pattern id={prefix + "-wall-lines"} width={tree?88:beach?24:52} height={tree?31:beach?70:52} patternUnits="userSpaceOnUse"><Path d={tree?"M0 30H88M21 4q24-4 43 1":beach?"M3 0V70M17 0V70":"M2 0V52"} stroke={tree?"#8C6849":beach?"#B89C75":"#FFFFFF"} strokeWidth={tree?3:2} opacity={.28} fill="none"/></Pattern>
       <Pattern id={prefix + "-floor-lines"} width={kitchen?50:100} height={kitchen?50:46} patternUnits="userSpaceOnUse"><Path d={kitchen?"M0 0H50M0 0V50":"M0 0H100M50 0V23M0 23H100M0 23V46M7 11q15-4 29 0m24 22q13-4 30 0"} stroke={kitchen?"#8EB4A8":"#8F6E53"} opacity={.35} fill="none" strokeWidth={2}/></Pattern>
       {(["math-lab","library","night-sky","arcade-neon"] as const).map((name,n)=><Pattern key={name} id={prefix + "-" + name} width={64} height={64} patternUnits="userSpaceOnUse"><Path d={n===1?"M4 53h56M10 18v35m12-28v28m14-38v38m12-31v31":"M0 0h64M0 0v64M32 0v64"} stroke={n===2?"#FFF0C5":"#77978D"} strokeWidth={2} opacity={.45}/></Pattern>)}
