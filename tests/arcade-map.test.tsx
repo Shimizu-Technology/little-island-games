@@ -7,7 +7,8 @@ import { songLevels } from "../src/arcade/games/shell-song/engine";
 import { emptyArcadeLearner } from "../src/arcade/progress";
 import { allLevelIds } from "../src/arcade/types";
 const viewport = vi.hoisted(() => ({ width: 390, height: 844 }));
-vi.mock("react-native", () => ({ View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) => <div data-testid={testID}>{children}</div>, Switch: ({ value, accessibilityLabel }: { value: boolean; accessibilityLabel?: string }) => <input type="checkbox" aria-label={accessibilityLabel} checked={value} readOnly/>, useWindowDimensions: () => viewport }));
+vi.mock("react-native", () => ({ View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) => <div data-testid={testID}>{children}</div>, ScrollView: ({ children, testID }: { children?: React.ReactNode; testID?: string }) => <div data-testid={testID}>{children}</div>, Switch: ({ value, accessibilityLabel }: { value: boolean; accessibilityLabel?: string }) => <input type="checkbox" aria-label={accessibilityLabel} checked={value} readOnly/>, useWindowDimensions: () => viewport }));
+vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
 vi.mock("react-native-reanimated", () => ({ default: { View: ({ children }: { children?: React.ReactNode }) => <div>{children}</div> }, useSharedValue: (value: unknown) => ({ value }), useAnimatedStyle: () => ({}), cancelAnimation: () => {}, Easing: {}, withDelay: () => {}, withRepeat: () => {}, withSequence: () => {}, withTiming: () => {} }));
 vi.mock("react-native-svg", () => ({ default: () => null, Circle: () => null, Path: () => null, Rect: () => null }));
 vi.mock("../src/components/ui", () => {
@@ -29,7 +30,7 @@ describe("shared 56-level map", () => {
     // No lock art, locked label or disabled level remains anywhere in the map.
     expect(locked).not.toContain("locked"); expect(locked).not.toContain("stars to explore");
     for (let world = 1; world <= 6; world++) expect(locked).toContain(`World ${world}`);
-    expect(locked).toContain("Discover"); expect(locked).toContain("Current level");
+    expect(locked).toContain("Discover"); expect(locked).toContain("Play · W1-1");
     expect(locked).toContain('data-testid="world-w1"');
     expect(locked).not.toContain('data-testid="world-w2"');
     for (const level of allLevelIds.filter(id => id.startsWith("w1-"))) expect(locked).toContain(`data-testid="level-${level}"`);

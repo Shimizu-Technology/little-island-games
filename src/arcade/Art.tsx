@@ -1,20 +1,90 @@
 import React, { useId } from "react";
+import { View } from "react-native";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
-import { CargoCaptain } from "./games/canoe-cargo/Art";
-import { ScrollHero } from "./games/scrolling/Art";
-import { GridHero } from "./games/grid/Art";
-import { ActionHero } from "./action/Art";
+import { ArcadeArt as IllustratedArcadeArt, hasArcadeArt } from "../art/illustrated";
 import type { ArcadeId } from "./types";
 import type { OutfitId, StickerId } from "./progress";
+
 export const shellColors = ["#F08E97", "#6DBEE7", "#F4C365", "#B19CE4", "#6BCEB0", "#E995C1"];
 const shellLitColors = ["#FFB0B8", "#99D9F5", "#FFDA87", "#CCB9F7", "#93E7C8", "#F6B5DB"];
 const star = "M0-12L3.5-4L12-3L6 3L7 12L0 8L-7 12L-6 3L-12-3L-3.5-4Z";
+/** Plump rounded storybook 5-point star centered at (0, 0) in a ~28×28 box. */
+const plumpStar =
+  "M0-12.5 C1.5-12.5 2.7-7.2 4.1-5.8 C5.5-4.4 11.4-4.5 12-3.1 C12.6-1.7 7.8 1.5 7.4 3.4 C7 5.3 9.1 10.6 7.8 11.6 C6.5 12.6 1.9 9.2 0 9.2 C-1.9 9.2 -6.5 12.6 -7.8 11.6 C-9.1 10.6 -7 5.3 -7.4 3.4 C-7.8 1.5 -12.6-1.7 -12-3.1 C-11.4-4.5 -5.5-4.4 -4.1-5.8 C-2.7-7.2 -1.5-12.5 0-12.5 Z";
+
+const medallionSurfaces: Record<ArcadeId, string> = {
+  "reef-builder": "#DDF2EC",
+  "shell-song": "#EFE8FA",
+  "rail-parade": "#EAF2D8",
+  "crab-crossing": "#DCF1F2",
+  "palm-patrol": "#ECF3D6",
+  "beach-ball": "#DCF0F5",
+  "fruit-bat-flight": "#EAE7F7",
+  "lagoon-run": "#DDF2EC",
+  "canoe-cargo": "#F9EBD2",
+};
+
+const outfitRing: Record<OutfitId, string> = {
+  island: "#E8D8BE",
+  sunhat: "#E8A938",
+  explorer: "#24867E",
+  starlight: "#936CC4",
+};
+
+function OutfitBadge({ outfit, size }: { outfit: Exclude<OutfitId, "island">; size: number }) {
+  const badge = Math.max(24, Math.round(size * 0.34));
+  const bg = outfit === "sunhat" ? "#FFF2C8" : outfit === "explorer" ? "#DAF4EF" : "#F0E6FA";
+  return (
+    <View
+      testID={`outfit-badge-${outfit}`}
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        right: -Math.round(badge * 0.08),
+        top: -Math.round(badge * 0.08),
+        width: badge,
+        height: badge,
+        borderRadius: badge / 2,
+        backgroundColor: bg,
+        borderWidth: 2,
+        borderColor: "#3D2B24",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 2px 0 rgba(61, 43, 36, 0.22)",
+      }}
+    >
+      <Svg width={Math.round(badge * 0.78)} height={Math.round(badge * 0.78)} viewBox="0 0 36 36" accessible={false}>
+        {outfit === "sunhat" ? (
+          <G>
+            <Ellipse cx={18} cy={23} rx={15} ry={4.2} fill="#E5AE44" stroke="#3D2B24" strokeWidth={2} />
+            <Path d="M9 22 Q9 10 18 10 Q27 10 27 22 Z" fill="#FFD977" stroke="#3D2B24" strokeWidth={2} />
+            <Path d="M9.5 19.5 H26.5" stroke="#FF7A5C" strokeWidth={3.2} strokeLinecap="round" />
+          </G>
+        ) : outfit === "explorer" ? (
+          <G>
+            <Rect x={5} y={13} width={21} height={11} rx={5.5} fill="#8FE4DA" stroke="#3D2B24" strokeWidth={2.2} />
+            <Path d="M15.5 14 V23" stroke="#3D2B24" strokeWidth={2} />
+            <Path d="M9 17 L12 16" stroke="#FFFDF8" strokeWidth={2} strokeLinecap="round" />
+            <Path d="M26 18 H30 V9 Q30 6 33 6" fill="none" stroke="#FF7A5C" strokeWidth={3} strokeLinecap="round" />
+          </G>
+        ) : (
+          <G>
+            <Path d={plumpStar} transform="translate(17 18) scale(.78)" fill="#FFCE45" stroke="#3D2B24" strokeWidth={2.4} strokeLinejoin="round" />
+            <Circle cx={29} cy={9} r={2.4} fill="#FFCE45" stroke="#3D2B24" strokeWidth={1.3} />
+          </G>
+        )}
+      </Svg>
+    </View>
+  );
+}
+
 function Hat({ outfit }: { outfit: OutfitId }) {
   if (outfit === "sunhat") return <G><Ellipse cx={72} cy={49} rx={39} ry={7} fill="#D4A046"/><Path d="M47 48Q47 20 71 24Q94 24 97 49Z" fill="#F1CF76"/><Path d="M47 43L96 43" stroke="#CF785D" strokeWidth={6}/></G>;
   if (outfit === "explorer") return <G><Rect x={33} y={67} width={54} height={23} rx={9} fill="#C9F2EC" stroke="#294D58" strokeWidth={5}/><Path d="M88 77H106V48Q106 40 114 40" fill="none" stroke="#E18F55" strokeWidth={7}/></G>;
   if (outfit === "starlight") return <G fill="#FFE49A" stroke="#996B30" strokeWidth={1}><Path d={star} transform="translate(55 35) scale(.8)"/><Path d={star} transform="translate(88 28) scale(.55)"/><Path d={star} transform="translate(108 45) scale(.4)"/></G>;
   return null;
 }
+
 export function ReefFish({ size = 120, outfit = "island" }: { size?: number; outfit?: OutfitId }) {
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}>
     <Ellipse cx={78} cy={135} rx={50} ry={7} fill="#B5D8CE"/>
@@ -27,6 +97,7 @@ export function ReefFish({ size = 120, outfit = "island" }: { size?: number; out
     <Hat outfit={outfit}/><Circle cx={20} cy={49} r={5} fill="none" stroke="#83BDB4" strokeWidth={2}/><Circle cx={33} cy={30} r={3} fill="none" stroke="#83BDB4" strokeWidth={2}/>
   </Svg>;
 }
+
 export function Shell({ size = 120, index = 0, glowing = false, outfit = "island" }: { size?: number; index?: number; glowing?: boolean; outfit?: OutfitId }) {
   const gradient = useId().replace(/:/g, "");
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}>
@@ -43,14 +114,96 @@ export function Shell({ size = 120, index = 0, glowing = false, outfit = "island
     <G transform={outfit === "sunhat" ? "translate(8 -17)" : outfit === "explorer" ? "translate(20 16)" : "translate(0 -7)"}><Hat outfit={outfit}/></G>
   </Svg>;
 }
-export function ArcadeArt({ game, size = 120, outfit, happy = false, dizzy = false }: { game?: ArcadeId; size?: number; outfit?: OutfitId; happy?: boolean; dizzy?: boolean }) { return game === "canoe-cargo" ? <CargoCaptain size={size} outfit={outfit} happy={happy} dizzy={dizzy}/> : game === "fruit-bat-flight" || game === "lagoon-run" ? <ScrollHero game={game} size={size} outfit={outfit} happy={happy} dizzy={dizzy}/> : game === "palm-patrol" || game === "beach-ball" ? <ActionHero palm={game === "palm-patrol"} size={size} outfit={outfit} happy={happy}/> : game === "rail-parade" || game === "crab-crossing" ? <GridHero crab={game === "crab-crossing"} size={size} outfit={outfit} happy={happy}/> : game === "shell-song" ? <Shell size={size} outfit={outfit}/> : <ReefFish size={size} outfit={outfit}/>; }
+
+/**
+ * Hand-painted Warm Island Storybook medallion for all nine Arcade games.
+ * Replaces legacy flat SVG hero mascots across LevelMap, StartCard, ResultScreen, Pause, and OutfitCloset.
+ */
+export function ArcadeArt({ game, size = 120, outfit = "island", happy = false, dizzy = false }: { game?: ArcadeId; size?: number; outfit?: OutfitId; happy?: boolean; dizzy?: boolean }) {
+  if (!game || !hasArcadeArt(game)) {
+    return <ReefFish size={size} outfit={outfit} />;
+  }
+  const ring = outfitRing[outfit];
+  const borderWidth = Math.max(2, Math.round(size * (outfit === "island" ? 0.025 : 0.036)));
+  const artSize = Math.round(size * 0.84);
+  return (
+    <View
+      testID={`arcade-medallion-${game}`}
+      accessible={false}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: medallionSurfaces[game],
+        borderWidth,
+        borderColor: ring,
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: happy
+          ? "0 4px 0 rgba(61, 43, 36, 0.16), 0 0 0 4px rgba(255, 206, 69, 0.35)"
+          : "0 4px 0 rgba(61, 43, 36, 0.14), 0 6px 14px rgba(61, 43, 36, 0.08)",
+      }}
+    >
+      <View style={{ opacity: dizzy ? 0.88 : 1, transform: dizzy ? [{ rotate: "-6deg" }] : undefined }}>
+        <IllustratedArcadeArt id={game} size={artSize} />
+      </View>
+      {happy && (
+        <View pointerEvents="none" style={{ position: "absolute", left: -4, top: 2 }}>
+          <Svg width={Math.max(18, Math.round(size * 0.22))} height={Math.max(18, Math.round(size * 0.22))} viewBox="0 0 28 28" accessible={false}>
+            <Path d={plumpStar} transform="translate(14 14) scale(.75)" fill="#FFCE45" stroke="#3D2B24" strokeWidth={2.2} strokeLinejoin="round" />
+          </Svg>
+        </View>
+      )}
+      {outfit !== "island" && <OutfitBadge outfit={outfit} size={size} />}
+    </View>
+  );
+}
+
 export function ArcadeIsland({ size = 100 }: { size?: number }) {
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}><Defs><LinearGradient id="sea" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#BADFD7"/><Stop offset="1" stopColor="#85B8C9"/></LinearGradient></Defs><Ellipse cx={80} cy={107} rx={72} ry={35} fill="url(#sea)" stroke="#397F8E" strokeWidth={2}/><Path d="M14 111Q40 142 81 138Q120 140 145 110" fill="none" stroke="#E3F6DB" strokeWidth={3}/><Path d="M22 100Q31 62 77 70Q111 57 137 101Q92 134 22 100" fill="#F0D8A4"/><Path d="M74 83Q65 58 72 36" stroke="#A46E42" strokeWidth={9} fill="none"/><Path d="M72 37Q45 18 31 42Q54 36 72 37M72 37Q92 12 116 36Q94 30 72 37M72 37Q48 40 43 62Q66 51 72 37M72 37Q94 36 104 59Q81 48 72 37" fill="#4D8C68"/><G transform="translate(25 82) scale(.32)"><Path d="M106 81L147 54V109Z" fill="#DA7C61"/><Ellipse cx={75} cy={85} rx={49} ry={32} fill="#F0C36A"/><Circle cx={47} cy={79} r={6} fill="#234846"/></G><Path d="M101 109Q82 80 99 78Q105 64 113 79Q133 80 118 109Z" fill="#987EA7" stroke="#625778" strokeWidth={2}/><Path d="M109 104V81M104 104L99 85M114 104L121 85" stroke="#E9C4BE" strokeWidth={2}/><G transform="translate(81 103) rotate(-8)"><Path d="M0 9Q0 0 9 0H30Q39 0 39 9V28Q38 33 31 33H8Q1 33 0 28Z" fill="#A86A42" stroke="#604B4D" strokeWidth={2}/><Path d="M0 13H39M8 1V32M31 1V32" stroke="#F3CF7E" strokeWidth={4}/><Rect x={16} y={11} width={8} height={10} rx={2} fill="#FFDE87" stroke="#8B6043" strokeWidth={1.5}/></G><Path d={star} transform="translate(131 48) scale(.55)" fill="#FFD675" stroke="#967046" strokeWidth={2}/><Path d={star} transform="translate(22 67) scale(.38)" fill="#FFD675" stroke="#967046" strokeWidth={2}/><Circle cx={21} cy={130} r={3} fill="#F0C36A"/><Path d={star} transform="translate(133 131) scale(.5)" fill="#F0C36A"/></Svg>;
 }
+
 export function StarDisplay({ stars, size = 30 }: { stars: number; size?: number }) {
-  return <Svg width={size * 3 + 12} height={size + 6} viewBox="0 0 108 36" accessibilityLabel={`${stars} of 3 stars`} accessible>{[0, 1, 2].map(i => <Path key={i} d={star} transform={`translate(${18 + i * 36} 17)`} fill={i < stars ? "#EBC76B" : "#E8E9E2"} stroke={i < stars ? "#936D2D" : "#A9B9B2"} strokeWidth={1.5}/>)}</Svg>;
+  const uid = useId().replace(/:/g, "");
+  return (
+    <Svg width={size * 3 + 12} height={size + 6} viewBox="0 0 108 36" accessibilityLabel={`${stars} of 3 stars`} accessible>
+      <Defs>
+        <LinearGradient id={`star-gold-${uid}`} x1="0" y1="0" x2="0.2" y2="1">
+          <Stop offset="0" stopColor="#FFE066" />
+          <Stop offset="0.48" stopColor="#FFCE45" />
+          <Stop offset="1" stopColor="#F5B425" />
+        </LinearGradient>
+      </Defs>
+      {[0, 1, 2].map(i => {
+        const earned = i < stars;
+        return (
+          <G key={i} transform={`translate(${18 + i * 36} 18)`}>
+            <Path
+              d={plumpStar}
+              fill={earned ? `url(#star-gold-${uid})` : "#E8DCC8"}
+              stroke={earned ? "#3D2B24" : "#BFA98A"}
+              strokeWidth={earned ? 2.2 : 1.8}
+              strokeLinejoin="round"
+            />
+            {earned && (
+              <Path
+                d="M-1.5-8.5 C-3-5.2 -4.8-3.6 -8-2.6"
+                stroke="#FFFBE6"
+                strokeWidth={2.2}
+                strokeLinecap="round"
+                fill="none"
+                opacity={0.9}
+              />
+            )}
+          </G>
+        );
+      })}
+    </Svg>
+  );
 }
+
 export const stickerNames: Record<StickerId, string> = { "reef-fish": "Pip's first reef", "singing-shell": "Mina's melody", "little-crab": "Sideways friend", "sea-turtle": "Lagoon traveler", "moon-canoe": "Moon canoe", "sun-coral": "Sun coral", "rainbow-fish": "Rainbow swimmer", "star-shell": "Starry shell", coconut: "Coconut shade", "flying-fox": "Night gardener", "lagoon-ray": "Gentle glider", "island-flower": "Island blossom", "tiny-rail": "Little rail", "hermit-home": "A shell to call home", "sea-star": "Five bright arms", "jelly-light": "Jelly glow" };
+
 export function StickerArt({ id, size = 90 }: { id: StickerId; size?: number }) {
   if (["reef-fish", "rainbow-fish"].includes(id)) return <ReefFish size={size} outfit={id === "rainbow-fish" ? "starlight" : "island"}/>;
   if (["singing-shell", "star-shell", "hermit-home"].includes(id)) return <Shell size={size} index={id === "star-shell" ? 3 : 0} outfit={id === "star-shell" ? "starlight" : "island"}/>;

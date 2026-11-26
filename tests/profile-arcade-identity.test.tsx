@@ -10,6 +10,7 @@ import { arcadeTransition, arcadeLearner, gameProgress, levelOpen } from '../src
 import type { ArcadeGame } from '../src/arcade/types';
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{}}}));
+vi.mock('../src/ui/fonts',()=>({useNunitoLoaded:()=>false}));
 vi.mock('react-native',()=>({View:'View',TextInput:'TextInput',ScrollView:'ScrollView',useWindowDimensions:()=>({width:390,height:844}),AppState:{addEventListener:()=>({remove(){}})}}));
 vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bottom:0,left:0,right:0})}));
 vi.mock('react-native-svg',()=>({default:'Svg',Rect:'Rect'}));
