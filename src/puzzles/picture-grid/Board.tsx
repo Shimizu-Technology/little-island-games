@@ -83,13 +83,15 @@ export function Board({ picture, draft, dispatch, active, width, band, onBack, o
     ...(onDraw ? [{ label: 'Draw a Puzzle', icon: 'Sparkle' as const, run: onDraw }] : []),
   ];
   const moreActions = extraActions.length ? extraActions : undefined;
+  const localPlay = Boolean(onBack);
   const host = useBoardHud(done
-    ? { extraActions: moreActions }
+    ? { extraActions: moreActions, localPlay }
     : {
         hint: { run: ask, disabled: !canEdit || draft.showingHint },
         undo: { run: () => dispatch({ type: 'undo' }), disabled: !canEdit || !draft.undo.length },
         reset: { run: () => dispatch({ type: 'reset' }), disabled: !canEdit || (draft.marks.every(m => m === EMPTY) && !draft.undo.length) },
         extraActions: moreActions,
+        localPlay,
       });
   const hosted = !!host;
   const sheetOpen = !hosted && more;

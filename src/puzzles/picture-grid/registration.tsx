@@ -50,12 +50,15 @@ function loadReactNative(importer: ReactNativeImporter): Promise<typeof import('
   return next;
 }
 
+const MAX_RN_RETRIES = 2;
+
 export function PlayScreenLoader({
   loadScreen = defaultLoadPlayScreen,
   loadRN = defaultLoadReactNative,
   ...props
 }: PictureBoardProps & { loadScreen?: PlayScreenImporter; loadRN?: ReactNativeImporter }) {
   const [loadedRn, setLoadedRn] = useState<typeof import('react-native') | null>(() => loadedReactNative.get(loadRN) ?? null);
+  const [rnRetry, setRnRetry] = useState(0);
   const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; attempt: number }>(() => ({
     status: loadedScreens.has(loadScreen) ? 'ready' : 'loading',
     attempt: 0,
@@ -69,11 +72,12 @@ export function PlayScreenLoader({
         if (!cancelled) setLoadedRn(m);
       },
       () => {
-        // Rejection cleared from pendingReactNative so a subsequent retry or remount can recover cleanly.
+        // Rejection cleared from pendingReactNative; retry bounded times so a late rejection after loadScreen failed still recovers.
+        if (!cancelled) setRnRetry(count => (count < MAX_RN_RETRIES ? count + 1 : count));
       },
     );
     return () => { cancelled = true; };
-  }, [loadRN, state.status, state.attempt]);
+  }, [loadRN, state.status, state.attempt, rnRetry]);
 
   useEffect(() => {
     if (loadedScreens.has(loadScreen)) return;

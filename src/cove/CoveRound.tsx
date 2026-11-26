@@ -25,12 +25,14 @@ type HudShape = {
   undo?: { disabled: boolean };
   reset?: { disabled: boolean };
   extraActions?: { label: string; disabled: boolean; icon?: BoardMoreAction['icon'] }[];
+  localPlay?: boolean;
 } | null;
 const shapeOf = (c: BoardCommands | null): HudShape => c && {
   ...(c.hint ? { hint: { disabled: !!c.hint.disabled, ...(c.hint.label ? { label: c.hint.label } : {}) } } : {}),
   ...(c.undo ? { undo: { disabled: !!c.undo.disabled } } : {}),
   ...(c.reset ? { reset: { disabled: !!c.reset.disabled } } : {}),
   ...(c.extraActions?.length ? { extraActions: c.extraActions.map(a => ({ label: a.label, disabled: !!a.disabled, ...(a.icon ? { icon: a.icon } : {}) })) } : {}),
+  ...(c.localPlay ? { localPlay: true } : {}),
 };
 /** A board shrunk above More never goes narrower than this (or the full width, when that is less): its keys and pads keep their minimums. */
 const MIN_BOARD = 280;
@@ -160,11 +162,17 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);
   const people = solvingPeople(store.save), others = people.filter(p => p.id !== owner), together = round?.partner ? people.find(p => p.id === round.partner)?.name ?? 'family' : null;
   const name = infoFor(entry.game).name, tier = actual?.tier ?? card.tier, frameHint = hudActions(entry).hint, playing = !!round && !round.result && !pending && !changeAttempt;
+  const localPlay = !!hud?.localPlay, hudActive = playing || localPlay;
   const ref = round?.puzzle ?? card.ref, title = boardTitle(entry, ref, tier), host = { commands: register, title };
   // Restart keeps this attempt: the board's own Start over (an engine reset that keeps its options and help audit).
   // A table whose log is full cannot take another reset, so it restarts the deal the documented way.
-  const reset = engineReset(entry), canRestart = !!saved && playing && !!hud?.reset && reset !== undefined;
-  const restart = () => { if (!saved) return; if (entry.full?.(saved, reset)) void launch(true); else commands.current?.reset?.run(); };
+  // A local board (such as Picture Grid's family solver) keeps its own reset even over a finished Cove round.
+  const reset = engineReset(entry), canRestart = localPlay ? !!hud?.reset : !!saved && playing && !!hud?.reset && reset !== undefined;
+  const restart = () => {
+    if (commands.current?.localPlay) { commands.current.reset?.run(); return; }
+    if (!saved) return;
+    if (entry.full?.(saved, reset)) void launch(true); else commands.current?.reset?.run();
+  };
   // While More is open the board shrinks, in proportion to its measured full-width height, to the room above the sheet
   // inside this screen's own (safe-area) height, never below its minimum width.
   const room = (screenHeight || height) - sheetHeight(height, 'small') - chromeHeight - theme.space.xl, fit = boardHeight > room ? room / boardHeight : 1;
@@ -180,8 +188,8 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   return <View style={styles.screen} onLayout={e => setScreenHeight(e.nativeEvent.layout.height)}>
     <View onLayout={e => setChromeHeight(e.nativeEvent.layout.height)}>
       <Hud title={name} subtitle={[playLabel(entry, ref, tier), together && `with ${together}`].filter(Boolean).join(' · ')} onBack={close} backLabel="Save and leave"
-        onUndo={playing && hud?.undo ? () => commands.current?.undo?.run() : undefined} canUndo={!hud?.undo?.disabled && !busy}
-        onHint={playing && hud?.hint ? () => commands.current?.hint?.run() : playing && frameHint !== undefined ? () => void dispatch(frameHint, true) : undefined}
+        onUndo={hudActive && hud?.undo ? () => commands.current?.undo?.run() : undefined} canUndo={!hud?.undo?.disabled && !busy}
+        onHint={hudActive && hud?.hint ? () => commands.current?.hint?.run() : playing && frameHint !== undefined ? () => void dispatch(frameHint, true) : undefined}
         canHint={!hud?.hint?.disabled && !busy} hintLabel={hud?.hint?.label}
         onMore={changeAttempt ? undefined : () => setMore(true)}/>
       <SaveStatus/>
@@ -220,7 +228,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     {/* A finish waiting for its partner choice lives only here, so nothing in More may replace this round until it is saved. */}
     <RoundMore visible={more && !choosing} onClose={() => setMore(false)} game={entry.game} busy={busy} held={pending ? 'Save your finish first.' : undefined}
       mistakes={honorsMistakes(entry) ? choices.mistakes : undefined} onMistakes={honorsMistakes(entry) ? choices.onMistakes : undefined}
-      onRestart={canRestart ? restart : undefined} restartDisabled={canRestart && !!hud?.reset?.disabled && !entry.full?.(saved!, reset)}
+      onRestart={canRestart ? restart : undefined} restartDisabled={canRestart && !!hud?.reset?.disabled && (localPlay || !entry.full?.(saved!, reset))}
       extraActions={hud?.extraActions?.map((action, index) => ({
         label: action.label,
         disabled: action.disabled,
