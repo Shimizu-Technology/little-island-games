@@ -148,7 +148,7 @@ Deferred, not on the 4.0 shelf: Carve the Islands, Canoe Charts, Two Shells, One
 ### My Home (Toca room)
 
 - Full-screen room. The room is the main action: touch things directly. Lights toggle, the radio plays, the fridge opens, food can be eaten, friends and props drag and drop (existing `H1–H5` runtime and physics).
-- **Top bar:** `←` (map), the room's name as a pill with left/right arrows to walk between rooms (or swipe), and Undo while decorating.
+- **Top bar:** `←` (map), no profile pill, the room's name as a pill with left/right arrows to walk between rooms (or swipe), and Undo while decorating.
 - **Bottom bar:** **Closet** (hanger), **Badges** (star frame), **Decorate** (pencil), **Tidy up** in Decorate's More. 64 pt each.
 - **Closet** (Locker, folded in): the wardrobe in the room and the Closet button both open an undimmed sheet (about 45%). The Islander stays visible in the room above the sheet and changes live as clothes are tapped. Tabs are pictures only: hair, tops, bottoms, hats, extras. Earned items carry their existing rules; unearned items show as soft outlines that say how to earn them when tapped.
 - **Badge Wall** (Badges, folded in): the frame on the wall and the Badges button open a sheet grid of the 24 milestone badges. Earned ones are full color; others are outlines. Tap one for its picture and one line.
@@ -188,8 +188,8 @@ Built in Phase 1C, matching TraceBuddy's kit:
 - `Tile`: picture + name on a pastel; press scale; long-press.
 - `Sheet`: native `formSheet` options (small 0.40 and start 0.55 detents, grabber, undimmed in-game), and a bottom-card fallback for iPad and landscape.
 - `HoldButton`: two-second hold gate.
-- `PageHeader`: `←` + title + profile pill.
-- `ProfilePill`: wraps the existing learner chip logic.
+- `PageHeader`: `←` + title + compact profile pill (face only; the name shows on the map).
+- `ProfilePill`: wraps the existing learner chip logic. Full (face + name) on the map, compact elsewhere.
 - `Hud`: the board HUD row.
 
 No file over about 600 lines. Feature screens import from `src/ui/` only.
