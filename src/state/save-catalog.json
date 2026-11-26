@@ -6401,6 +6401,140 @@
       "cove": false
     },
     {
+      "slot": 362,
+      "engine": "shell-scale",
+      "rules": 1,
+      "first": 370688,
+      "count": 6,
+      "family": "shell-scale",
+      "packHash": "ed4b98bf07b52dd96d625ad596afb62f5186b849d64c188d1640a8f35ba7c840",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 363,
+      "engine": "shell-scale",
+      "rules": 1,
+      "first": 371712,
+      "count": 6,
+      "family": "shell-scale",
+      "packHash": "7f263239a1c9b0b60f6b59a64219cc7600f6df88ec9a9eb40c72363bb548cdd5",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 364,
+      "engine": "shell-scale",
+      "rules": 1,
+      "first": 372736,
+      "count": 6,
+      "family": "shell-scale",
+      "packHash": "3d3c7c1bc2e249569ddb6a2359c84fa3c064909d0ae3b0168ded45b18f81ab8a",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 365,
+      "engine": "shell-scale",
+      "rules": 1,
+      "first": 373760,
+      "count": 6,
+      "family": "shell-scale",
+      "packHash": "460d9a01bb0101259efbf303c3e0bc5d638862c79cd8e4fca6262ede9a5462d2",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 366,
+      "engine": "shell-scale",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 374784,
+          "hash": "483b69a5c14974a004d42b8c8de69a75e80a243b7fd38b4b5d45efceb131f9b0"
+        },
+        {
+          "ordinal": 374785,
+          "hash": "18249cc9458f8c97037d48be567ae1cae4f89739999d016d72a52e4084bbe7ac"
+        },
+        {
+          "ordinal": 374786,
+          "hash": "558e094910508897209c6100f727c0c97a89b5b5ef6d3efe9c854928f8b1cb62"
+        },
+        {
+          "ordinal": 374787,
+          "hash": "f8dc324943f41819b6d7391eafe6d4e01f87bb015c74bdd684359dbca32f4cd3"
+        },
+        {
+          "ordinal": 374788,
+          "hash": "79920b520b3b67ddc6a0064c0abaaef357fffdf714d60ef1be2d2bb630625196"
+        },
+        {
+          "ordinal": 374789,
+          "hash": "f9ebfc54784ed893fb437033ecc5d3a76a8035e156411e9a3f08b36fba723391"
+        }
+      ],
+      "awards": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "cove": false
+    },
+    {
+      "slot": 367,
+      "engine": "shell-scale",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 375808,
+          "hash": "e12298ceaaf656e17d881f49dccd2b6de9f04af2fb5773a493ddac6f391eed55"
+        },
+        {
+          "ordinal": 375809,
+          "hash": "dd0506bb5c05f52f2265f617bc9294ac5490d3798cd4168b6a40cd0366753a18"
+        },
+        {
+          "ordinal": 375810,
+          "hash": "ceb9ecdb1401b02a0b55ec13d295ffb53e53f18ea2c9653597516a82fedd3810"
+        },
+        {
+          "ordinal": 375811,
+          "hash": "a94a6b264ec22ba324322816f993e0538c87011c0fa091215ecae4434306c55a"
+        },
+        {
+          "ordinal": 375812,
+          "hash": "fea0f2f6584e7d342c3c7b2674e019223efd8a6504fcfdfdef3cffa278d3cfca"
+        },
+        {
+          "ordinal": 375813,
+          "hash": "65d63895ca32c25b3afc83218db3b567bb93aec52ae9075f45fb45cc2e00480b"
+        },
+        {
+          "ordinal": 375814,
+          "hash": "483b69a5c14974a004d42b8c8de69a75e80a243b7fd38b4b5d45efceb131f9b0"
+        },
+        {
+          "ordinal": 375815,
+          "hash": "18249cc9458f8c97037d48be567ae1cae4f89739999d016d72a52e4084bbe7ac"
+        }
+      ],
+      "awards": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "cove": false
+    },
+    {
       "slot": 420,
       "engine": "shell-math",
       "rules": 1,
@@ -14173,6 +14307,258 @@
       }
     ],
     [
+      2400,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 0
+      }
+    ],
+    [
+      2401,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 0
+      }
+    ],
+    [
+      2402,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 1
+      }
+    ],
+    [
+      2403,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 1
+      }
+    ],
+    [
+      2404,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 2
+      }
+    ],
+    [
+      2405,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 2
+      }
+    ],
+    [
+      2406,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 3
+      }
+    ],
+    [
+      2407,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 3
+      }
+    ],
+    [
+      2408,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 4
+      }
+    ],
+    [
+      2409,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 4
+      }
+    ],
+    [
+      2410,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 5
+      }
+    ],
+    [
+      2411,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 366,
+        "puzzle": 5
+      }
+    ],
+    [
+      2412,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 0
+      }
+    ],
+    [
+      2413,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 0
+      }
+    ],
+    [
+      2414,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 1
+      }
+    ],
+    [
+      2415,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 1
+      }
+    ],
+    [
+      2416,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 2
+      }
+    ],
+    [
+      2417,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 2
+      }
+    ],
+    [
+      2418,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 3
+      }
+    ],
+    [
+      2419,
+      {
+        "kind": "blind",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 3
+      }
+    ],
+    [
+      2420,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 4
+      }
+    ],
+    [
+      2421,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 4
+      }
+    ],
+    [
+      2422,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 5
+      }
+    ],
+    [
+      2423,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 5
+      }
+    ],
+    [
+      2424,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 6
+      }
+    ],
+    [
+      2425,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 6
+      }
+    ],
+    [
+      2426,
+      {
+        "kind": "par",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 7
+      }
+    ],
+    [
+      2427,
+      {
+        "kind": "whole",
+        "help": "independent",
+        "bank": 367,
+        "puzzle": 7
+      }
+    ],
+    [
       3000,
       {
         "kind": "clean",
@@ -16112,17 +16498,21 @@
     "shape-4",
     "shape-5",
     "shape-6",
+    "s30-1",
+    "s30-2",
+    "s30-3",
+    "s30-4",
+    "s30-5",
+    "scale-1",
+    "scale-2",
+    "scale-3",
+    "scale-4",
     "gate-1",
     "gate-2",
     "gate-3",
     "gate-4",
     "gate-5",
     "gate-6",
-    "s30-1",
-    "s30-2",
-    "s30-3",
-    "s30-4",
-    "s30-5",
     "tide-1",
     "tide-2",
     "tide-3",
@@ -16134,6 +16524,11 @@
     "code-lab-3",
     "code-lab-4",
     "code-lab-5",
-    "code-lab-6"
+    "code-lab-6",
+    "s31-1",
+    "s31-2",
+    "s31-3",
+    "s31-4",
+    "s31-5"
   ]
 }

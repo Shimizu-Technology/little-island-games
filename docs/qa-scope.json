@@ -510,9 +510,9 @@
         "E",
         "F"
       ],
-      "door": "Cove",
-      "maxBoard": "Shell Scale longest six-in-ten shell row; Shell Scale six-in-ten, both full pans",
-      "firstAction": "Start the teaching band; make one legal shell row builder action"
+      "door": "School",
+      "maxBoard": "Shell Scale F: 6-shell sort (par 10) and 12-pearl heavy-or-light group weighing (par 3) with full pans, plus Scale-Holder co-play",
+      "firstAction": "Start the teaching band; place shells on both pans and tap Weigh, then place in the order row"
     },
     {
       "id": "sail-fold",

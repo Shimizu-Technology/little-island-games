@@ -1,0 +1,16 @@
+{
+  "scale-intro": "Weigh shells on the balance scale to find their hidden weights.",
+  "scale-help": "Place shells on the left and right pans, then tap Weigh. The scale tips toward the heavier side. Line the shells up from lightest to heaviest, or pick the odd pearl, then tap Check.",
+  "scale-coach": "Tap a shell to place it on a pan, then tap Weigh.",
+  "scale-tip-left": "The left side is heavier.",
+  "scale-tip-right": "The right side is heavier.",
+  "scale-balanced": "Both sides weigh the same.",
+  "scale-sorted": "You figured out every weight!",
+  "scale-over-par": "You got it! The tide thinks it can be done in fewer weighings — want to try again?",
+  "scale-not-yet": "The scale disagrees. Try another weighing, then check again.",
+  "scale-holder-intro": "One person holds the secret scale and taps which side tips. The other chooses what to weigh and keeps the row.",
+  "scale-pass-holder": "Pass to the Scale Holder. No peeking!",
+  "scale-pass-guesser": "Pass back to see how the scale tipped.",
+  "scale-hint-look": "Look at the pairs and pearls already known from the scale.",
+  "scale-hint-think": "Think about which weighing splits what is left most evenly."
+}

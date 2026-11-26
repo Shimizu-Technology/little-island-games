@@ -2,10 +2,12 @@
 import { Art as a0 } from '../games/slip-tide/view';
 import { Art as a1 } from '../games/canoe-seats/view';
 import { Art as a2 } from '../games/gate-crab/view';
+import { Art as a3 } from '../games/shell-scale/view';
 import type { ComponentType } from 'react';
 import type { LearnId } from '../types';
 export const additionalArt: Partial<Record<LearnId,ComponentType<{size:number}>>> = {
   'slip-tide': a0,
   'canoe-seats': a1,
   'gate-crab': a2,
+  'shell-scale': a3,
 };

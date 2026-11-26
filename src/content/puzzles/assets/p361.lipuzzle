@@ -1,0 +1,5 @@
+{"format":1,"family":"shell-scale","slot":361,"first":369664,"count":4,"band":"b","rules":1,"rng":1}
+[16777217,"mid-last","b0-s3-ml",["s",3,"012","021"],["turns",3,3],0,0,["transitivity"]]
+[16777218,"mid-hi","b1-s3-mh",["s",3,"123","201"],["turns",3,3]]
+[16777219,"mid-last","b2-s3-ml",["s",3,"234","021"],["turns",3,3]]
+[16777220,"mid-hi","b3-s3-mh",["s",3,"345","201"],["turns",3,3]]

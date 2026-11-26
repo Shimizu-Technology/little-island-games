@@ -6,7 +6,7 @@ import { games } from "../games";
 import { catalog as boardCatalog } from "../board";
 import { parseSave, type Save } from './validation';
 import { familyLearners, type Learners } from '../learn/learners';
-import { backfillSchool, validSchool, type SchoolProgress } from '../learn/schoolProgress';
+import { backfillSchool, validSchool, validSchoolTogether, type SchoolProgress, type SchoolTogetherProgress } from '../learn/schoolProgress';
 import { finished } from '../learn/session';
 import { libraryChild, newLibraryChild, validLegacyExplore, worldCategory, type LegacyExplore } from '../library/state';
 import { validSkills } from '../learn/skills';
@@ -16,10 +16,10 @@ import type { LearnId, SkillProgress } from '../learn/types';
 import { arcadeIds } from '../arcade/types';
 
 /** Top-level game fields are the active learner's view. Only these canonical slots are encoded. */
-export type ProfileProgress = Pick<Save, 'sessions' | 'recent' | 'learn' | 'board' | 'activities' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'favoriteGames' | 'coached' | 'wordRecords' | 'raceRecords' | 'numberRecords'> & { challenge?: ChallengeProgress; recentArcade?: import('../arcade').ArcadeId | null; school?: SchoolProgress };
+export type ProfileProgress = Pick<Save, 'sessions' | 'recent' | 'learn' | 'board' | 'activities' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'favoriteGames' | 'coached' | 'wordRecords' | 'raceRecords' | 'numberRecords'> & { challenge?: ChallengeProgress; recentArcade?: import('../arcade').ArcadeId | null; school?: SchoolProgress; schoolTogether?: SchoolTogetherProgress };
 export type EarlierWork = { rounds: ProfileProgress; explore?: LegacyExplore; exploreUntouched?: string[]; skills?: SkillProgress; preferences?: Pick<ProfileProgress, 'favoriteGames' | 'coached' | 'recent' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'recentArcade'> };
 export type Profiles = { version: 1 | 2; people: Record<string, ProfileProgress>; earlier: { wordRecords?: Save['wordRecords']; raceRecords?: Save['raceRecords'] }; unassigned: EarlierWork };
-const fields = ['sessions','recent','learn','board','activities','recentLearn','recentBoard','recentActivity','favoriteGames','coached','wordRecords','raceRecords','numberRecords','school','challenge'] as const;
+const fields = ['sessions','recent','learn','board','activities','recentLearn','recentBoard','recentActivity','favoriteGames','coached','wordRecords','raceRecords','numberRecords','school','schoolTogether','challenge'] as const;
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 export const emptyProfile = (): ProfileProgress => ({ sessions: {}, recent: null });
 export function captureProfile(save: Save): ProfileProgress {
@@ -106,9 +106,10 @@ const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v ===
 function validProgress(v: unknown, learning: Learners, owner?: string, challenge = false): v is ProfileProgress {
   if (!object(v) || Object.keys(v).some(k => ![...fields,'recentArcade'].includes(k as typeof fields[number])) || !Object.hasOwn(v,'sessions') || !Object.hasOwn(v,'recent') || (v.school !== undefined && !validSchool(v.school)) || (v.recentArcade !== undefined && v.recentArcade !== null && !arcadeIds.includes(v.recentArcade as import('../arcade').ArcadeId))) return false;
   if (v.numberRecords !== undefined && (!challenge || !validNumberRecords(v.numberRecords))) return false;
+  if (v.schoolTogether !== undefined && (!challenge || !validSchoolTogether(v.schoolTogether))) return false;
   if (challenge ? !owner || !validChallengeProgress(v.challenge, owner) : v.challenge !== undefined) return false;
   try {
-    const { challenge: _challenge, numberRecords: _numberRecords, ...legacy } = v;
+    const { challenge: _challenge, numberRecords: _numberRecords, schoolTogether: _schoolTogether, ...legacy } = v;
     const test = parseSave(JSON.stringify({ version: 1, settings: {sound:true,help:true}, ...legacy, learning }));
     return !owner || Object.values(test.learn ?? {}).every(round => (round?.learner ?? 'family') === owner);
   } catch { return false; }

@@ -3,6 +3,7 @@ import type { FamilySpec } from '../../../src/puzzles/types';
 import { slipTideFamily } from './slip-tide';
 import { canoeSeatsFamily } from './canoe-seats';
 import { gateCrabFamily } from './gate-crab';
+import { shellScaleFamily } from './shell-scale';
 import { patternPathFamily } from './pattern-path';
 import { shapeShiftFamily } from './shape-shift';
 import { sudoku } from './sudoku';
@@ -14,4 +15,4 @@ import { reefSweepFamily } from './reef-sweep';
 import {klondike,freecell} from '../solitaire/family';
 import root from '../../../src/content/puzzles/root.json';
 /** Add one registered family per owner slice. Proof families stay in proof-families.ts and never ship. */
-export const families: FamilySpec<unknown>[] = [logicLagoonFamily as unknown as FamilySpec<unknown>, slipTideFamily as unknown as FamilySpec<unknown>, canoeSeatsFamily as unknown as FamilySpec<unknown>, gateCrabFamily as unknown as FamilySpec<unknown>, reefSweepFamily as unknown as FamilySpec<unknown>, patternPathFamily as unknown as FamilySpec<unknown>, shapeShiftFamily as unknown as FamilySpec<unknown>, ...[...(root.families.some(row=>row[0]==='solitaire')?[klondike]:[]), ...(root.families.some(row=>row[0]==='freecell')?[freecell]:[]), sudoku, cageMath, greaterThan, skyline, killer, bridges, loop, pearlLoop, ...(root.families.some(row=>row[0]==='word-search') ? [wordSearch] : [])] as FamilySpec<unknown>[]];
+export const families: FamilySpec<unknown>[] = [logicLagoonFamily as unknown as FamilySpec<unknown>, slipTideFamily as unknown as FamilySpec<unknown>, canoeSeatsFamily as unknown as FamilySpec<unknown>, gateCrabFamily as unknown as FamilySpec<unknown>, reefSweepFamily as unknown as FamilySpec<unknown>, patternPathFamily as unknown as FamilySpec<unknown>, shapeShiftFamily as unknown as FamilySpec<unknown>, shellScaleFamily as unknown as FamilySpec<unknown>, ...[...(root.families.some(row=>row[0]==='solitaire')?[klondike]:[]), ...(root.families.some(row=>row[0]==='freecell')?[freecell]:[]), sudoku, cageMath, greaterThan, skyline, killer, bridges, loop, pearlLoop, ...(root.families.some(row=>row[0]==='word-search') ? [wordSearch] : [])] as FamilySpec<unknown>[]];

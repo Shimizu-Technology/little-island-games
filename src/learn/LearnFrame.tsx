@@ -33,7 +33,8 @@ import type { GrowthState } from "./growth/types";
 import { LevelPath } from "./LevelPath";
 import { levelOf, levelTitle, optionsAtLevel, type LearningLevel } from "./levels";
 import { roundStars } from "./schoolProgress";
-import { activeLearner } from "./learners";
+import { activeLearner, familyLearners } from "./learners";
+import { setPartner as setScalePartner, type ScaleState } from "./games/shell-scale/engine";
 import { views } from "./views";
 import { GridInteraction } from "../puzzles/grid/preferences";
 import { LastPicnicWord } from "./games/hafa-adai/view";
@@ -104,6 +105,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, []);
   const reveal = useCallback(() => { if (large) revealBoard(); }, [large, revealBoard]);
   const learner = activeLearner(store.save.learning);
+  const partners = useMemo(
+    () => (store.save.learning ?? familyLearners()).people.filter(p => p.id !== learner.id).map(p => ({ id: p.id, name: p.name })),
+    [store.save.learning, learner.id],
+  );
   const comfort = learningComfort(store.save, learner.id);
   const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
   const epoch = store.epoch;
@@ -126,6 +131,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
     [alternate, setAlternate] = useState(saved?.match?.alternate ?? true),
     [appActive, setAppActive] = useState(AppState.currentState === "active" || AppState.currentState == null);
   const identity = `${learner.id}:${epoch}`;
+  const [partnerChoice, setPartnerChoice] = useState<{ identity: string; id: string | null }>(() => ({
+    identity,
+    id: id === "shell-scale" && saved && (saved.learner ?? "family") === learner.id ? (saved.state as ScaleState).partner ?? null : null,
+  }));
+  const partnerId = partnerChoice.identity === identity
+    ? partnerChoice.id
+    : (id === "shell-scale" && saved && (saved.learner ?? "family") === learner.id ? (saved.state as ScaleState).partner ?? null : null);
+  const setPartnerId = (next: string | null) => setPartnerChoice({ identity, id: next });
   const previousIdentity = useRef(identity);
   useLayoutEffect(() => {
     if (previousIdentity.current === identity) return;
@@ -245,7 +258,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, [saved, boardActive, practiceOwned, id, epoch, assistance, reactCompanion]);
   const update = useCallback(
     (state: unknown) => {
-      if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return;
+      if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return false;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
       if (save({ ...saved, state, revision })) {
         if (isGrowth(saved.state)) {
@@ -255,15 +268,20 @@ export function LearnFrame({ id }: { id: LearnId }) {
             reactCompanion(progress.solved ? "correct" : "incorrect");
           }
         } else if (isMathGame(id) && (state as MathRound).wrong !== null && !(state as MathRound).solved) reactCompanion("incorrect");
+        return true;
       }
+      return false;
     },
     [saved, save, boardActive, store.epoch, epoch, id, reactCompanion]
   );
 
   function start() {
-    const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, learningSkills);
+    const chosenPartner = id === "shell-scale" && options.mode === "together" && partnerId ? partners.find(p => p.id === partnerId) ?? null : null;
+    const startNames: [string, string] = chosenPartner && !names[0].trim() && !names[1].trim() ? [learner.name, chosenPartner.name] : names;
+    let next = startSession(id, { options, names: startNames, starter: options.mode === "solo" ? 0 : starter, alternate }, learningSkills);
+    if (chosenPartner) next = { ...next, state: setScalePartner(next.state as ScaleState, chosenPartner.id) };
     next.learner = learner.id;
-    if (options.mode !== "solo") store.rememberPlayers(names);
+    if (options.mode !== "solo") store.rememberPlayers(startNames);
     if (save(next)) { stopSound(); setBurst({ n: 0, big: false, done: 0 }); setSetup(false); }
   }
   function replay() {
@@ -280,6 +298,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       setOptions((saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id] ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) });
       setAlternate(saved.match?.alternate ?? true);
       setStarter(saved.starter ?? 0);
+      if (id === "shell-scale") setPartnerId((saved.state as ScaleState).partner ?? null);
     }
     setSetup(true);
   }
@@ -468,6 +487,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               practice={practice}
               notePractice={store.notePractice}
               assistance={assistance}
+              partners={partners}
               skills={learningSkills ?? {}}
               sound={boardSound}
               stopSound={stopSound}
@@ -503,9 +523,24 @@ export function LearnFrame({ id }: { id: LearnId }) {
                     ? `${saved.match?.names[result] ?? saved.names?.[result] ?? "You"} won this round!`
                     : result === "draw"
                       ? "A tie! Great playing."
-                      : (notWon ?? "You did it!")}
+                      : saved.game === "shell-scale" && saved.options.mode === "together"
+                        ? "You weighed it out together!"
+                        : (notWon ?? "You did it!")}
                 </Heading>
-                <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>{notWon ? "Ready to try the island again?" : "Your stars are shining. Ready for another adventure?"}</Copy>
+                <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>
+                  {saved.game === "shell-scale" && saved.options.mode === "together"
+                    ? (() => {
+                        const partner = (saved.state as ScaleState).partner ?? null;
+                        const owner = saved.learner ?? "family";
+                        const creditedPartner = !!(partner && partner !== owner && store.save.learning?.people.some(p => p.id === partner));
+                        return creditedPartner
+                          ? "Both people keep this Together finish. Ready for another round?"
+                          : "Your Together finish is saved. Ready for another round?";
+                      })()
+                    : notWon
+                      ? "Ready to try the island again?"
+                      : "Your stars are shining. Ready for another adventure?"}
+                </Copy>
                 {ownsResult&&learner.id!=='family'&&challengeProgress&&<ResultOffer progress={challengeProgress} context={context} comfort={comfort} facts={offerFacts} samePuzzle={!!sameBeach} onHear={soundOn&&resultOffer(signal,comfort,offerFacts)?.kind==='harder'&&levelOf(saved.options)<5?()=>sound(`learning-try-level-${levelOf(saved.options)+1}`):undefined} onChange={changeWorking} onChoose={kind=>{
                   if(kind==='dare'||kind==='harder'&&levelOf(saved.options)===5)openChallenge(kind==='dare');
                   else {chooseLevel(Math.max(1,Math.min(5,levelOf(saved.options)+(kind==='easier'?-1:1))) as LearningLevel,saved.options);setSetup(true);}
@@ -556,6 +591,19 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         {twoPlayer && (
           <>
+            {id === "shell-scale" && options.mode === "together" && partners.length > 0 && (
+              <>
+                <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("Playing together with", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>Playing together with</Heading>
+                <View style={[styles.row, { flexWrap: "wrap" }]}>
+                  <Chip selected={partnerId === null} onPress={() => setPartnerId(null)}>Choose at finish</Chip>
+                  {partners.map((p) => (
+                    <Chip key={p.id} selected={partnerId === p.id} onPress={() => setPartnerId(p.id)}>
+                      {p.name}
+                    </Chip>
+                  ))}
+                </View>
+              </>
+            )}
             <PlayerNames names={names} onChange={setNames} remembered={remembered} labels={["First player", "Second player"]} />
             <Heading maxFontSizeMultiplier={large ? wordFitMultiplier("Who goes first?", 18, sheetLine, 2) : undefined} style={{ fontSize: 18 }}>Who goes first?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>

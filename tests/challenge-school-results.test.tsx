@@ -15,6 +15,11 @@ import { optionsAtLevel } from '../src/learn/levels';
 import { router } from 'expo-router';
 const route=vi.hoisted(()=>({focused:true}));
 const db=vi.hoisted(()=>({raw:null as string|null}));const sound=vi.hoisted(()=>vi.fn());
+const saveByteCap=vi.hoisted(()=>({max:null as number|null}));
+vi.mock('../src/state/validation',async(orig)=>{
+ const mod=await orig<typeof import('../src/state/validation')>();
+ return {...mod,withinSaveLimit:(raw:string)=>(saveByteCap.max===null?mod.withinSaveLimit(raw):raw.length<=saveByteCap.max)};
+});
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(s:string)=>{db.raw=s;},preserve:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:320,height:667}),AppState:{addEventListener:()=>({remove(){}})}}));
 vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'main',useSafeAreaInsets:()=>({top:0,bottom:0,left:0,right:0})}));
@@ -104,4 +109,70 @@ it('a board that owns a touch holds the School page scroll until release',async(
   await act(async()=>boardHold.fn!(true));expect(page().props.scrollEnabled).toBe(false);
   await act(async()=>boardHold.fn!(false));expect(page().props.scrollEnabled).toBe(true);
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+function ScaleProbe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return s.ready?<LearnFrame id="shell-scale"/>:null;}
+it.each([
+ ['b', 'Both people keep this Together finish. Ready for another round?'],
+ [null, 'Your Together finish is saved. Ready for another round?'],
+] as const)('R2 P2-2: Shell Scale Together result copy matches whether a saved partner was credited (partner=%s)',async(partner,expectedCopy)=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const { startRound, setPartner } = await import('../src/learn/games/shell-scale/engine');
+ let save=migrateProfiles({...emptySave(),learning:addLearner(addLearner(undefined,'Alex','a'),'Maya','b')});
+ save.learning={...save.learning!,active:'a'};
+ const base=startRound(1,()=>0.25);
+ const finishedState={...setPartner(base,partner),index:4,done:[[1,false],[1,false],[1,false],[1,false]] as [number,boolean][],order:[],oddPick:null,oddDir:null,history:[],undo:[],won:false,checked:false,checks:0,misses:0,phase:'guesser' as const,pendingWeigh:null};
+ const round={...startSession('shell-scale',{options:optionsAtLevel({mode:'together',pace:'easy'},1),names:['Alex','Maya']}, {},42),learner:'a',state:finishedState};
+ save.learn={'shell-scale':round};
+ db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ try{
+  await act(async()=>{r=create(<StoreProvider><ScaleProbe/></StoreProvider>);});
+  const rendered=JSON.stringify(r.toJSON());
+  expect(rendered).toContain('You weighed it out together!');
+  expect(rendered).toContain(expectedCopy);
+  if(partner===null)expect(rendered).not.toContain('Both people keep this Together finish');
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it('R2 P2-2: Store.learnUpdate rejects Shell Scale Together finish when save admission fails, surfaces error, and retries cleanly once room exists',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const { nextBoard, setPartner, startRound } = await import('../src/learn/games/shell-scale/engine');
+ const { trueSortOrder } = await import('../src/learn/games/shell-scale/rules');
+ const { progressFor } = await import('../src/state/challengeDrafts');
+ let save=migrateProfiles({...emptySave(),learning:addLearner(addLearner(undefined,'Alex','a'),'Maya','b')});
+ save.learning={...save.learning!,active:'a'};
+ let st=startRound(3,()=>0.25);
+ for(let i=0;i<4;i++){
+  const t=st.puzzles[st.index],w=[...(t[3] as string)].map(Number),ord=trueSortOrder({kind:'sort',n:4,cast:[0,1,2,3],weights:w});
+  st={...st,order:ord,checks:1,won:true};
+  if(i<3)st=nextBoard(st);
+ }
+ const round={...startSession('shell-scale',{options:optionsAtLevel({mode:'together',pace:'hard'},3),names:['Alex','Maya']}, {},42),learner:'a',revision:3,state:st};
+ save.learn={'shell-scale':round};
+ const encodedBefore=encodeSave(save);
+ db.raw=encodedBefore;let r!:ReactTestRenderer;
+ try{
+  await act(async()=>{r=create(<StoreProvider><ScaleProbe/></StoreProvider>);});
+  expect(store.ready).toBe(true);
+  expect(store.recovery).toBeNull();
+  const nextSession={...round,revision:round.revision+1,state:nextBoard(setPartner(st,'b'))};
+  // Tight cap: enough for the current unfinished save, too small for adding Together credits.
+  saveByteCap.max=encodedBefore.length+4;
+  let ok=true;
+  await act(async()=>{ok=store.learnUpdate('shell-scale',nextSession,{id:round.id,revision:round.revision,epoch:store.epoch});});
+  expect(ok).toBe(false);
+  expect(store.error).toContain('save limit');
+  expect((store.save.learn!['shell-scale']!.state as {index:number}).index).toBe(3);
+  expect(progressFor(store.save,'a')!.banks.find(b=>b[0]===362)).toBeUndefined();
+  expect(progressFor(store.save,'b')!.banks.find(b=>b[0]===362)).toBeUndefined();
+  // Once room is freed, retrying the exact same finish succeeds and credits BOTH players!
+  saveByteCap.max=null;
+  await act(async()=>{ok=store.learnUpdate('shell-scale',nextSession,{id:round.id,revision:round.revision,epoch:store.epoch});});
+  expect(ok).toBe(true);
+  expect((store.save.learn!['shell-scale']!.state as {index:number}).index).toBe(4);
+  expect(progressFor(store.save,'a')!.banks.find(b=>b[0]===362)).toBeDefined();
+  expect(progressFor(store.save,'b')!.banks.find(b=>b[0]===362)).toBeDefined();
+  expect(store.save.profiles!.people.a.schoolTogether?.['shell-scale']?.[3]).toEqual({completed:1,rounds:[round.id]});
+  expect(store.save.profiles!.people.b.schoolTogether?.['shell-scale']?.[3]).toEqual({completed:1,rounds:[round.id]});
+ }finally{saveByteCap.max=null;if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });

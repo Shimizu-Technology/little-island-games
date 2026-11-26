@@ -1,0 +1,100 @@
+{
+ "format": 1,
+ "family": "shell-scale",
+ "slot": 363,
+ "catalogRevision": 24,
+ "band": "d",
+ "ordinals": [
+  371712,
+  6
+ ],
+ "sourceSha": "f75f15f62774b78a3dc3ca3ca67f97244bbc17ab",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "26dc29b970dcab31f5503563010870e061a61c17af8f31e15a387fa2ad86e1b5"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 51,
+  "kept": [
+   50331649,
+   50331650,
+   50331651,
+   50331652,
+   50331653,
+   50331654
+  ]
+ },
+ "rejects": {
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "construction": 16,
+  "bot-beat": 1
+ },
+ "distinct": {
+  "exact": 6,
+  "semantic": 6
+ },
+ "histograms": {
+  "technique": {
+   "group-9-heavy-par-2": 6
+  },
+  "template": {
+   "d0-left-first": 1,
+   "d1-right-mid": 1,
+   "d2-off-first": 1,
+   "d3-left-mid": 1,
+   "d4-right-last": 1,
+   "d5-off-mid": 1
+  },
+  "layout": {
+   "group-left": 2,
+   "group-off": 2,
+   "group-right": 2
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   2,
+   2
+  ],
+  "exact": 6
+ },
+ "proofHashes": {
+  "witness": "384f9fa17b6f7b8f80465b7bf6c4668da1e33be0d3b695eb3da5b57e2c9e662b",
+  "trace": "6644a94e1aa9272e2a2aa55e51b6e9c5a65c1daf066f8282345c71ae1f070020",
+  "claims": "d5f8579cab79fae02787f95a3569001a276a2f6add71d77dd407e6b996c78d6e"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original balance-scale sorting (2-6 shells, par 1,3,5,7,10) and odd-pearl group weighing (9-pearl heavy par 2, 12-pearl heavy-or-light par 3) insight puzzles. Par table proven by exhaustive minimax search; every entry certified through public-knowledge twin tests."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 605,
+  "gzip": 248
+ },
+ "sha256": "7f263239a1c9b0b60f6b59a64219cc7600f6df88ec9a9eb40c72363bb548cdd5",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

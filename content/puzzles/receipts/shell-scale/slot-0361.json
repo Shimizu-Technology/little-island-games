@@ -1,0 +1,95 @@
+{
+ "format": 1,
+ "family": "shell-scale",
+ "slot": 361,
+ "catalogRevision": 24,
+ "band": "b",
+ "ordinals": [
+  369664,
+  4
+ ],
+ "sourceSha": "f75f15f62774b78a3dc3ca3ca67f97244bbc17ab",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "26dc29b970dcab31f5503563010870e061a61c17af8f31e15a387fa2ad86e1b5"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 51,
+  "kept": [
+   16777217,
+   16777218,
+   16777219,
+   16777220
+  ]
+ },
+ "rejects": {
+  "template-cap": 2,
+  "layout-repeat": 0,
+  "construction": 16,
+  "bot-beat": 1
+ },
+ "distinct": {
+  "exact": 4,
+  "semantic": 4
+ },
+ "histograms": {
+  "technique": {
+   "sort-3-par-3": 4
+  },
+  "template": {
+   "b0-s3-ml": 1,
+   "b1-s3-mh": 1,
+   "b2-s3-ml": 1,
+   "b3-s3-mh": 1
+  },
+  "layout": {
+   "mid-hi": 2,
+   "mid-last": 2
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   3,
+   3
+  ],
+  "exact": 4
+ },
+ "proofHashes": {
+  "witness": "536d74497890a901902cb6d36780dd89b5a0ba8ba99ed9a65a566e00a92d6f58",
+  "trace": "99ca838cc5928aacbcda54b68ffb3184249212a74f5cafa44016fc766e4dc823",
+  "claims": "ebad5c32ec8f96bcddd9ddde98b4a30feb5e383aaefa3e2f421bc9bb13f01387"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 4,
+  "random": 4,
+  "scan": 4
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original balance-scale sorting (2-6 shells, par 1,3,5,7,10) and odd-pearl group weighing (9-pearl heavy par 2, 12-pearl heavy-or-light par 3) insight puzzles. Par table proven by exhaustive minimax search; every entry certified through public-knowledge twin tests."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 385,
+  "gzip": 211
+ },
+ "sha256": "04fc289f3b14373329ab17c1a20646785fc5a2dd1c3a583d7dc97357e9087af7",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

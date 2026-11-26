@@ -30,7 +30,7 @@ import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSetti
 import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave } from "../arcade";
 import { validPersonalization, type Personalization } from "../personalization/model";
 import { validProfiles, projectProfile, type Profiles } from "./profiles";
-import { validSchool, type SchoolProgress } from "../learn/schoolProgress";
+import { validSchool, validSchoolTogether, type SchoolProgress, type SchoolTogetherProgress } from "../learn/schoolProgress";
 export type Settings = { learningBridges?: Partial<Record<string, LearnId[]>>; learningComfort?: Partial<Record<string, Comfort>>; sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   profiles?: Profiles;
@@ -39,6 +39,7 @@ export type Save = {
   saveRevision?: string;
   cove?: CovePeople;
   school?: SchoolProgress;
+  schoolTogether?: SchoolTogetherProgress;
   version: 1 | 2 | 3;
   roundOwners?: RoundOwners;
   /** Versioned per-child Library state; legacy Explore remains intact. */
@@ -433,6 +434,7 @@ export function parseSave(raw: string): Save {
         !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds, ...boardIds, ...arcadeIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
     (v.numberRecords !== undefined && (v.version !== 3 || !validNumberRecords(v.numberRecords))) ||
+    (v.schoolTogether !== undefined && (v.version !== 3 || !validSchoolTogether(v.schoolTogether))) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&
       v.recentActivity !== null &&
