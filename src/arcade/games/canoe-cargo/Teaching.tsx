@@ -14,7 +14,7 @@ export function CargoTeaching({ learning, onHear, onPlay }: { learning: boolean;
     return () => { animation.stop(); timers.forEach(clearTimeout); };
   }, [demo, reduced, replay]);
   return <View style={{ alignItems: "center", gap: 14 }}><CargoCaptain size={90}/><Heading style={{ textAlign: "center" }}>{learning ? "Make the sum. Sail twice!" : "Pack it. Drop it. Sail!"}</Heading>
-    <View testID="cargo-demo" style={{ width: 288, height: 150, backgroundColor: "#1E4755", borderRadius: 18, overflow: "hidden" }}>
+    <View testID="cargo-demo" style={{ width: "100%", maxWidth: 296, height: 158, backgroundColor: "#225F68", borderColor: "#DFA751", borderWidth: 4, borderRadius: 18, overflow: "hidden" }}>
       {!reduced && phase < 3 && [0, 1, 2, 7, 8].map(c => <View key={c} style={{ position: "absolute", left: c * 32, top: 92 }}><CargoTile kind="crate" value={learning ? 1 : 0}/></View>)}
       {!reduced && phase < 3 && <Animated.View style={{ position: "absolute", left: 96, top: 0, flexDirection: "row", transform: [{ translateX: demo.interpolate({ inputRange: [0, .12, .24, 1], outputRange: [-64, -64, 0, 0] }) }, { translateY: demo.interpolate({ inputRange: [0, .4, .43, 1], outputRange: [6, 6, 92, 92] }) }] }}>{[0, 1, 2, 3].map(i => <CargoTile key={i} kind="coconut" value={learning ? 1 : 0}/>)}</Animated.View>}
       {(reduced || phase === 3) && <Animated.View style={{ position: "absolute", top: 70, transform: [{ translateX: reduced ? 96 : demo.interpolate({ inputRange: [0, .6, 1], outputRange: [96, 96, 290] }) }] }}><CargoCanoe size={100}/></Animated.View>}
