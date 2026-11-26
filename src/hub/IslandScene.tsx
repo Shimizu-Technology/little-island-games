@@ -14,13 +14,14 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelHe
  const pressed = useSharedValue(1), [focused, setFocused] = useState(false);
  const style = useAnimatedStyle(() => ({ transform: [{ scale: pressed.get() }] }));
  const tight = width < 140;
+ const labelFontSize = Math.min(tight ? 15 : 16, Math.max(8, (width - 15) / 5.4));
  return <AnimatedPressable testID={`place-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${name}`} onPress={() => visit(id)}
   onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
   onPressIn={() => pressed.set(reduced ? 1 : withTiming(.97, { duration: 90 }))} onPressOut={() => pressed.set(withTiming(1, { duration: 150 }))}
   style={[{ position: 'absolute', left, top, width, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
    <View pointerEvents="none" style={{ width, height }}><Landmark id={id}/></View>
-   <View testID={`place-label-${id}`} style={{ minHeight: labelHeight, width: width < 140 ? '100%' : undefined, maxWidth: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF7E4', paddingHorizontal: tight ? 6 : 12, paddingVertical: 3, borderRadius: 12, borderWidth: 1.5, borderColor: '#B59E76', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
-    <Text variant="section" maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ fontSize: tight ? 15 : 16, lineHeight: tight ? 19 : 20, color: theme.colors.ink, textAlign: 'center' }}>{name}</Text>
+   <View testID={`place-label-${id}`} style={{ minHeight: labelHeight, width: width < 140 ? '100%' : undefined, maxWidth: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF7E4', paddingHorizontal: tight ? 2 : 12, paddingVertical: 3, borderRadius: 12, borderWidth: 1.5, borderColor: '#B59E76', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
+    <Text variant="section" maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ fontSize: labelFontSize, lineHeight: labelFontSize + 4, color: theme.colors.ink, textAlign: 'center' }}>{name}</Text>
    </View>
  </AnimatedPressable>;
 });

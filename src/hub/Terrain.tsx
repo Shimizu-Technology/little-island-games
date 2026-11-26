@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { Image, View, type ImageSourcePropType } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import { mapLayout, SAND_PATH_STROKE_WIDTH, TERRAIN_VIEWBOX, terrainPathData, type MapLayout } from './model';
 export const Palm = memo(function Palm() {
@@ -9,12 +10,18 @@ export const Palm = memo(function Palm() {
   <Circle cx={3} cy={5} r={4} fill="#A48C5C"/><Circle cx={10} cy={7} r={4} fill="#A48C5C"/>
  </G>;
 });
+// Literal require thunks keep both orientations bundled by Metro without loading either at import time.
+const paintedTerrain: Record<'portrait' | 'landscape', () => ImageSourcePropType> = {
+ portrait: () => require('../../assets/art/map/island-portrait.webp'),
+ landscape: () => require('../../assets/art/map/island-landscape.webp'),
+};
 export const Terrain = memo(function Terrain({ wide, layout, width, height }: { wide?: boolean; layout?: MapLayout; width: number; height: number }) {
  const activeLayout = layout ?? mapLayout(width, height);
  const isWide = wide ?? activeLayout.wide;
  const palmScale = `${height*TERRAIN_VIEWBOX.width/(width*TERRAIN_VIEWBOX.height)*(isWide ? 1.4 : 1)} ${isWide ? 1.4 : 1}`;
  const paths = terrainPathData(activeLayout, width, height);
- return <Svg width="100%" height="100%" viewBox={`0 0 ${TERRAIN_VIEWBOX.width} ${TERRAIN_VIEWBOX.height}`} preserveAspectRatio="none" accessible={false}>
+ return <View pointerEvents="none" accessible={false} style={{ width, height, backgroundColor: '#2C93A1' }}>
+  <Svg width="100%" height="100%" viewBox={`0 0 ${TERRAIN_VIEWBOX.width} ${TERRAIN_VIEWBOX.height}`} preserveAspectRatio="none" accessible={false}>
   <Path d="M23 84Q47 14 146 27Q207 -2 263 30Q363 9 379 112Q411 203 377 292Q411 405 359 489Q344 601 250 636Q155 677 78 606Q2 561 26 471Q-5 392 20 308Q-17 187 23 84Z" fill="#93C9C8"/>
   <Path d="M23 74Q47 4 146 17Q207 -12 263 20Q363 -1 379 102Q411 193 377 282Q411 395 359 479Q344 591 250 626Q155 667 78 596Q2 551 26 461Q-5 382 20 298Q-17 177 23 74Z" fill="#F0DFB2" stroke="#D7C594" strokeWidth={2.5}/>
   <Path d="M35 81Q57 20 147 30Q207 2 261 33Q350 14 366 108Q398 193 365 281Q399 394 346 474Q332 580 246 612Q159 652 89 585Q15 545 39 460Q8 381 33 297Q-3 179 35 81Z" fill="#D1DFAF"/>
@@ -38,5 +45,8 @@ export const Terrain = memo(function Terrain({ wide, layout, width, height }: { 
    <Path d="M70 590L89 602M63 600L82 613M56 610L75 624M49 620L68 634M41 630L61 644"/>
    <Path d="M74 582V573M96 598V589M37 635V626M59 651V642" strokeWidth={4}/>
   </G>
- </Svg>;
+ </Svg>
+  {/* Keep the instant vector frame underneath, including when the bitmap fails to load. */}
+  <Image key={isWide ? 'landscape' : 'portrait'} testID="painted-island-terrain" source={paintedTerrain[isWide ? 'landscape' : 'portrait']()} resizeMode="cover" fadeDuration={0} accessible={false} style={{ position: 'absolute', width, height }}/>
+ </View>;
 });
