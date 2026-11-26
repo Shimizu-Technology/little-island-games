@@ -51,8 +51,13 @@ describe('free home art contract', () => {
       const svg = render(<RoomShellArt room={room} theme={{wallpaper:'cream',floor:'sand'}}/>);
       expect(svg).toContain('viewBox="0 0 800 560"');
       expect(svg).toContain('M0 352H800V560H0Z');
-      expect(svg).toContain('stage-floor-lines');
-      expect(render(<RoomShellArt room={room} theme={{wallpaper:'night-sky',floor:'game-room'}}/>)).toContain('url(#night-sky)');
+      const grid = svg.match(/<pattern[^>]*id="([^"]+-floor-lines)"/)?.[1];
+      expect(grid).toBeDefined();
+      expect(svg).toContain(`url(#${grid})`);
+      const patterned = render(<RoomShellArt room={room} theme={{wallpaper:'night-sky',floor:'game-room'}}/>);
+      const wallpaper = patterned.match(/<pattern[^>]*id="([^"]+-night-sky)"/)?.[1];
+      expect(wallpaper).toBeDefined();
+      expect(patterned).toContain(`url(#${wallpaper})`);
     }
   });
   it('writes the reproducible review sheets when HOME_ART_EVIDENCE is set', () => {

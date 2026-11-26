@@ -69,3 +69,23 @@ export function ShellFloorDetails({room, patterned=false}:{room:Exclude<RoomId,'
     return <Path key={`${u}-${v}`} d={`M${p.map(a=>a.join(' ')).join('L')}Z`}/>;
   }))}</G>;
 }
+
+/** The room-side edge of the cottage eaves, inside the original stage bounds. */
+export function CottageFascia({ room }: { room: RoomId }) {
+  return <G pointerEvents="none">
+    <Rect width={800} height={15} fill="#A44F3E"/>
+    {Array.from({ length: 27 }, (_, n) => <Path key={n} d={`M${n*30} 0h28v7q-14 10-28 0Z`}
+      fill={['#E79672','#D77B60','#CE6A52'][n%3]} stroke="#9B4E3D" strokeWidth={1}/>)}
+    <Path d="M0 15h800" stroke="#875537" strokeWidth={8}/>
+    <Path d="M0 13h800" stroke="#F2BE88" strokeWidth={3}/>
+    <Path d="M0 22h800" stroke="#FFF0CC" strokeWidth={4}/>
+    {room === 'beach' && <>
+      <Path d="M4 26q38 20 82 4t79-5M634 25q44 16 83 4t79 1" fill="none" stroke="#54815B" strokeWidth={4}/>
+      {[37,78,124,665,708,760].map((x,i) => <G key={x} transform={`translate(${x} ${32+i%2*5})`}>
+        <Path d="M0 0q-22 3-19-11Q-4-12 0 0q12-17 22-9Q17 3 0 0Z" fill="#6B9C68"/>
+        <Path d="M0-4q-9-7-9 2q-5 6 4 7q-1 8 6 4q8 3 7-4q8-5 0-9q-3-6-8 0Z" fill="#DF7866"/>
+        <Circle r={2.5} fill="#FFE1A0"/>
+      </G>)}
+    </>}
+  </G>;
+}

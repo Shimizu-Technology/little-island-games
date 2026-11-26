@@ -1,28 +1,55 @@
 import React from "react";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Pattern, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Pattern, Rect, Stop } from "react-native-svg";
 import type { HomeState } from "../model";
 import type { RoomId } from "../catalogMore";
 import { BadgeGlyph } from "../../badges/BadgeArt";
 import { tracks, type BadgeId } from "../../badges/engine";
+import { RoomTrim } from "./RoomFinish";
+import { CottageFascia } from "./ShellDetails";
 
-export const ink = "#64554C";
-export const wood = "#BD8C66";
-export const ivory = "#FFF4DE";
+export const ink = "#4A3328";
+export const wood = "#C88E5B";
+export const ivory = "#FFF7E6";
 const wallColors: Record<HomeState["theme"]["wallpaper"], string> = {cream:"#F5E6C8",lagoon:"#C5DED3",night:"#A5ADC9",peach:"#F1CEC0","math-lab":"#B6CABE",library:"#E7CFAD","night-sky":"#B5BDD3","arcade-neon":"#C9C5DA"};
 const floorColors: Record<HomeState["theme"]["floor"], string> = {sand:"#EBD7B2",honey:"#DDAE7D",seafoam:"#AACDC1",rose:"#DCB9AA","island-breeze":"#D9C79B","game-room":"#BCCBC0"};
 type Room = RoomId;
 
-function Window({ round = false, wide = false }: { round?: boolean; wide?: boolean }) {
-  const x = wide ? 245 : 112, y = wide ? 75 : 86, w = wide ? 310 : 200, h = wide ? 210 : 205;
-  return <G>
-    {round ? <><Circle cx={400} cy={181} r={104} fill="#A5D9DB" stroke={wood} strokeWidth={19}/><Circle cx={400} cy={181} r={83} fill="#D7E9CE"/><Path d="M316 207Q408 124 483 182V255H316Z" fill="#7FAF9A"/><Path d="M320 227Q406 193 480 220" stroke="#F6F0D8" strokeWidth={7} fill="none"/><Circle cx={400} cy={181} r={102} fill="none" stroke={ink} strokeWidth={3}/></> :
-      <><Rect x={x} y={y} width={w} height={h} rx={18} fill="#A4D4D8" stroke={ink} strokeWidth={3}/>
-        <Circle cx={x+w-44} cy={y+52} r={29} fill="#FFF0C1"/>
-        <Path d={`M${x} ${y+133}Q${x+70} ${y+89} ${x+145} ${y+129}T${x+w} ${y+112}V${y+h}H${x}Z`} fill="#9FC5A4"/>
-        <Path d={`M${x} ${y+164}Q${x+110} ${y+130} ${x+w} ${y+166}V${y+h}H${x}Z`} fill="#78B9AF"/>
-        <Path d={`M${x+w/2} ${y}V${y+h}M${x} ${y+h/2}H${x+w}`} stroke={ivory} strokeWidth={10}/>
-        <Rect x={x-10} y={y-10} width={w+20} height={h+20} rx={23} fill="none" stroke={wood} strokeWidth={14}/>
-        <Path d={`M${x-17} ${y+h+12}h${w+34}`} stroke={ink} strokeWidth={4}/></>}
+function Window({ room, prefix }: { room: Room; prefix: string }) {
+  const round = room === "treehouse";
+  const veranda = room === "beach";
+  const [x, y, w, h] = round ? [296, 77, 208, 208] : room === "home" ? [112, 86, 200, 205] : [245, 75, 310, 210];
+  const pane = <Rect x={x} y={y} width={w} height={h} rx={round ? 104 : 20}/>;
+  return <G pointerEvents="none">
+    <Defs>
+      <ClipPath id={prefix + "-pane"}>{pane}</ClipPath>
+      <LinearGradient id={prefix + "-lagoon"} x1="0" x2="0" y1="0" y2="1">
+        <Stop offset="0" stopColor="#71CBE0"/><Stop offset=".57" stopColor="#F5F1C5"/>
+        <Stop offset=".59" stopColor="#77D6C6"/><Stop offset="1" stopColor="#299EAB"/>
+      </LinearGradient>
+    </Defs>
+    <Rect x={x-7} y={y-5} width={w+14} height={h+18} rx={round ? 107 : 23} fill={ink} opacity={.23}/>
+    <G clipPath={`url(#${prefix}-pane)`}>
+      <Rect x={x} y={y} width={w} height={h} fill={`url(#${prefix}-lagoon)`}/>
+      <G transform={`translate(${x} ${y}) scale(${w/200} ${h/200})`}>
+        <Circle cx={146} cy={56} r={35} fill="#FFF4C3" opacity={.5}/>
+        <Circle cx={146} cy={56} r={23} fill="#FFF5CC"/>
+        <Path d="M10 73q8-12 22-10q9-22 27-14q12-11 26 6q18-3 23 14q-37 13-98 4ZM105 94q10-9 19-8q14-22 30-5q17-7 29 9q7 0 13 7q-43 8-91-3Z" fill="#FFF9E7"/>
+        <Path d="M0 126v-13Q31 88 62 109q27-8 49 12q51-16 89 1Z" fill="#76BCA1"/>
+        <Path d="M0 127v-15q31-11 59 13l34 3ZM140 128q28-18 60-12v13Z" fill="#4F9D85"/>
+        <Path d="M167 123q-5-19 4-39m0 0q-14-13-24-3q9-1 24 3q7-14 21-8q-12 2-21 8q14-5 21 10q-10-7-21-10q-12 1-17 13" stroke="#377E70" fill="none" strokeWidth={3} strokeLinecap="round"/>
+        <Path d="M7 142q24-6 48 0m56-9h26m22 15h24m-160 14h22m31-9q20-4 44 0m-10 21h40m9 11h21m-129 0h24" stroke="#FFF8D9" strokeWidth={2} fill="none" strokeLinecap="round" opacity={.75}/>
+      </G>
+      <Path d={`M${x+w/2} ${y}v${h}M${x} ${y+h*.57}h${w}`} stroke={wood} strokeWidth={9}/>
+      <Path d={`M${x+w/2-2} ${y}v${h}M${x} ${y+h*.57-2}h${w}`} stroke="#F5CA96" strokeWidth={2}/>
+    </G>
+    <Rect x={x} y={y} width={w} height={h} rx={round ? 104 : 20} fill="none" stroke={wood} strokeWidth={13}/>
+    <Rect x={x-6} y={y-6} width={w+12} height={h+12} rx={round ? 110 : 26} fill="none" stroke={ink} strokeWidth={2}/>
+    {!round && <><Rect x={x-15} y={y+h+3} width={w+30} height={13} rx={5} fill={wood} stroke={ink} strokeWidth={2}/>
+      <Path d={`M${x-8} ${y+h+6}h${w+16}`} stroke="#FFD8A2" strokeWidth={3}/></>}
+    {!round && !veranda && <G fill={room === "home" ? "#E99383" : ivory} stroke={ink} strokeWidth={2}>
+      <Path d={`M${x-14} ${y-10}h51q-2 58-35 111q7 28 25 52l-43 7q10-74 2-170Zm${w+26} 0h-51q2 58 35 111q-7 28-25 52l43 7q-10-74-2-170Z`}/>
+      <Path d={`M${x-13} ${y+92}l19 8m${w+4} 0l19-8`} stroke="#AB764C" strokeWidth={6}/>
+    </G>}
   </G>;
 }
 
@@ -117,29 +144,34 @@ export function StageRoom({ room, theme, badges = [], live = false }: { room: Ro
   /** HC-01: the live room draws its touchable pieces in their own layer. */
   live?: boolean }) {
   const tree = room === "treehouse", kitchen = room === "kitchen", beach = room === "beach";
+  const prefix = `${room}-stage-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const paint = (name: string) => `url(#${prefix}-${name})`;
   const wall = wallColors[theme.wallpaper], floor = floorColors[theme.floor];
   return <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
     <Defs>
-      <LinearGradient id="stage-wall" x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={wall}/><Stop offset="1" stopColor={tree?"#C9A37D":beach?"#E9D4B2":"#F1DFC1"}/></LinearGradient>
-      <LinearGradient id="stage-floor" x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={floor}/><Stop offset="1" stopColor={tree?"#B88559":beach?"#F5E0B6":"#D5AB82"}/></LinearGradient>
-      <Pattern id="stage-wall-lines" width={tree?88:beach?24:52} height={tree?31:beach?70:52} patternUnits="userSpaceOnUse"><Path d={tree?"M0 30H88M21 4q24-4 43 1":beach?"M3 0V70M17 0V70":"M2 0V52"} stroke={tree?"#8C6849":beach?"#B89C75":"#FFFFFF"} strokeWidth={tree?3:2} opacity={.28} fill="none"/></Pattern>
-      <Pattern id="stage-floor-lines" width={kitchen?50:100} height={kitchen?50:46} patternUnits="userSpaceOnUse"><Path d={kitchen?"M0 0H50M0 0V50":"M0 0H100M50 0V46"} stroke={kitchen?"#8EB4A8":"#8F6E53"} opacity={.35} fill="none" strokeWidth={2}/></Pattern>
-      {(["math-lab","library","night-sky","arcade-neon"] as const).map((name,n)=><Pattern key={name} id={name} width={64} height={64} patternUnits="userSpaceOnUse"><Rect width={64} height={64} fill={wallColors[name]}/><Path d={n===1?"M4 53h56M10 18v35m12-28v28m14-38v38m12-31v31":"M0 0h64M0 0v64M32 0v64"} stroke={n===2?"#FFF0C5":"#77978D"} strokeWidth={2} opacity={.45}/></Pattern>)}
-      {(["island-breeze","game-room"] as const).map(name=><Pattern key={name} id={name} width={48} height={48} patternUnits="userSpaceOnUse"><Rect width={48} height={48} fill={floorColors[name]}/><Path d="M0 0h48M0 0v48M24 0v48" stroke="#8D9C83" strokeWidth={2}/></Pattern>)}
+      <LinearGradient id={prefix + "-wall"} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor="#FFF3D3"/><Stop offset=".44" stopColor={wall}/><Stop offset="1" stopColor={wall}/></LinearGradient>
+      <LinearGradient id={prefix + "-floor"} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={floor}/><Stop offset=".66" stopColor="#FFE8B2" stopOpacity={.78}/><Stop offset="1" stopColor={floor}/></LinearGradient>
+      <Pattern id={prefix + "-wall-lines"} width={tree?88:beach?24:52} height={tree?31:beach?70:52} patternUnits="userSpaceOnUse"><Path d={tree?"M0 30H88M21 4q24-4 43 1":beach?"M3 0V70M17 0V70":"M2 0V52"} stroke={tree?"#8C6849":beach?"#B89C75":"#FFFFFF"} strokeWidth={tree?3:2} opacity={.28} fill="none"/></Pattern>
+      <Pattern id={prefix + "-floor-lines"} width={kitchen?50:100} height={kitchen?50:46} patternUnits="userSpaceOnUse"><Path d={kitchen?"M0 0H50M0 0V50":"M0 0H100M50 0V23M0 23H100M0 23V46M7 11q15-4 29 0m24 22q13-4 30 0"} stroke={kitchen?"#8EB4A8":"#8F6E53"} opacity={.35} fill="none" strokeWidth={2}/></Pattern>
+      {(["math-lab","library","night-sky","arcade-neon"] as const).map((name,n)=><Pattern key={name} id={prefix + "-" + name} width={64} height={64} patternUnits="userSpaceOnUse"><Path d={n===1?"M4 53h56M10 18v35m12-28v28m14-38v38m12-31v31":"M0 0h64M0 0v64M32 0v64"} stroke={n===2?"#FFF0C5":"#77978D"} strokeWidth={2} opacity={.45}/></Pattern>)}
+      {(["island-breeze","game-room"] as const).map(name=><Pattern key={name} id={prefix + "-" + name} width={48} height={48} patternUnits="userSpaceOnUse"><Path d="M0 0h48M0 0v48M24 0v48" stroke="#8D9C83" strokeWidth={2}/></Pattern>)}
     </Defs>
-    <Rect width={800} height={560} fill={theme.wallpaper in {"math-lab":1,library:1,"night-sky":1,"arcade-neon":1}?`url(#${theme.wallpaper})`:"url(#stage-wall)"}/>
-    <Rect width={800} height={352} fill="url(#stage-wall-lines)"/>
+    <Rect width={800} height={352} fill={paint("wall")}/>
+    <Rect width={800} height={352} fill={theme.wallpaper in {"math-lab":1,library:1,"night-sky":1,"arcade-neon":1}?paint(theme.wallpaper):"none"}/>
+    <Rect width={800} height={352} fill={paint("wall-lines")}/>
     {kitchen && <><Rect y={244} width={800} height={108} fill="#D9E5D9"/>{Array.from({length:20},(_,n)=><Path key={n} d={`M${n*42} 244v108`} stroke="#A5C6B7" strokeWidth={2}/>)}{[272,300,328].map(y=><Path key={y} d={`M0 ${y}h800`} stroke="#A5C6B7" strokeWidth={2}/>)}</>}
     {tree && <G>{Array.from({length:9},(_,n)=><Path key={n} d={`M0 ${n*39}h800`} stroke="#956D4D" opacity={.42} strokeWidth={4}/>)}</G>}
-    <Path d="M0 352H800V560H0Z" fill={theme.floor === "island-breeze" || theme.floor === "game-room"?`url(#${theme.floor})`:"url(#stage-floor)"} stroke={ink} strokeWidth={3}/>
-    <Rect y={352} width={800} height={208} fill="url(#stage-floor-lines)"/>
+    <Path d="M0 352H800V560H0Z" fill={paint("floor")} stroke={ink} strokeWidth={3}/>
+    <Rect y={352} width={800} height={208} fill={theme.floor === "island-breeze" || theme.floor === "game-room"?paint(theme.floor):"none"}/>
+    <Rect y={352} width={800} height={208} fill={paint("floor-lines")}/>
+    <RoomTrim room={room} prefix={prefix}/>
+    <CottageFascia room={room}/>
     <Path d="M0 351H800" stroke={ivory} strokeWidth={13}/>
     <Path d="M0 360H800" stroke={wood} strokeWidth={6}/>
     <Path d="M240 360L60 560M560 360L740 560" stroke="#9A795C" strokeWidth={2} opacity={.18}/>
     <Path d="M340 355L465 355L570 545L260 545Z" fill={beach?"#FFF4D9":"#FFF3DF"} opacity={.17}/>
     {room==="home" && <>
-      <Window/><Path d="M100 75q27 68 0 206l30 9q-16-103 3-215ZM324 76q-17 82 4 210l-31 3q14-112-7-213Z" fill="#E5A7A0" stroke={ink} strokeWidth={2}/>
-      <Path d="M112 90q13 77 1 169m201-171q-15 77-3 174" stroke={ivory} fill="none" strokeWidth={3}/>
+      <Window room={room} prefix={prefix}/>
       <Path d="M18 50Q190 100 395 55" stroke={wood} strokeWidth={3} fill="none"/>
       {[54,103,151,200,249,298,345].map((x,n)=><G key={x}><Path d={`M${x} ${65+n%2*6}v13`} stroke={wood} strokeWidth={2}/><Circle cx={x} cy={80+n%2*6} r={6} fill={n%2?"#F4D391":"#F6C7B6"} stroke={ink} strokeWidth={1}/></G>)}
       <Shelf x={516} y={224} live/>{!live && drawn("home", "home-shelf")}{!live && drawn("home", "home-plant")}
@@ -158,7 +190,7 @@ export function StageRoom({ room, theme, badges = [], live = false }: { room: Ro
       <Circle cx={772} cy={130} r={16} fill="#F6D995"/><Path d="M772 146v47" stroke={wood} strokeWidth={5}/>
     </>}
     {kitchen && <>
-      <Window wide/><Shelf x={31} y={111} kitchen live/>{!live && drawn("kitchen", "kitchen-left")}<Shelf x={563} y={110} kitchen live/>{!live && drawn("kitchen", "kitchen-right")}
+      <Window room={room} prefix={prefix}/><Shelf x={31} y={111} kitchen live/>{!live && drawn("kitchen", "kitchen-left")}<Shelf x={563} y={110} kitchen live/>{!live && drawn("kitchen", "kitchen-right")}
       <Path d="M240 291h321" stroke={wood} strokeWidth={11}/><Path d="M251 285h299" stroke={ivory} strokeWidth={3}/>
       {!live && drawn("kitchen", "kitchen-jar")}
       <Path d="M593 225h160" stroke={wood} strokeWidth={8}/>{!live && drawn("kitchen", "kitchen-pan")}
@@ -166,16 +198,17 @@ export function StageRoom({ room, theme, badges = [], live = false }: { room: Ro
       <Rect x={584} y={42} width={160} height={46} rx={5} fill="#DEB18B" stroke={ink} strokeWidth={3}/>
     </>}
     {tree && <>
-      <Window round/><Path d="M70 0v330M730 0v330" stroke="#8C6849" strokeWidth={24}/><Path d="M69 0v330M729 0v330" stroke="#D4AD79" strokeWidth={10}/>
+      <Window room={room} prefix={prefix}/><Path d="M70 0v330M730 0v330" stroke="#8C6849" strokeWidth={24}/><Path d="M69 0v330M729 0v330" stroke="#D4AD79" strokeWidth={10}/>
       <Path d="M535 0q-32 105-8 196M579 0q-28 124-7 219" fill="none" stroke="#6F9A6C" strokeWidth={8}/>
       {!live && drawn("treehouse", "treehouse-plant")}<Shelf x={100} y={148} live/>{!live && drawn("treehouse", "treehouse-shelf")}
       {!live && drawn("treehouse", "treehouse-lantern")}
       {!live && drawn("treehouse", "treehouse-basket")}
     </>}
     {beach && <>
-      <Window wide/><Path d="M228 62v225m345-225v225" stroke={wood} strokeWidth={15}/>
+      <Window room={room} prefix={prefix}/><Path d="M228 62v225m345-225v225" stroke={wood} strokeWidth={15}/>
       <Path d="M240 50q157 48 320 0" stroke={wood} strokeWidth={3} fill="none"/>{[270,315,360,405,450,495,540].map((x,n)=><G key={x}><Path d={`M${x} ${58+Math.sin(n/6*Math.PI)*17}v17`} stroke={wood} strokeWidth={2}/><Path d={`M${x-8} ${78+Math.sin(n/6*Math.PI)*17}q8-18 16 0q-8 12-16 0`} fill={n%2?"#F5D0AC":"#F8EDD4"} stroke={ink}/></G>)}
       <Path d="M226 90l-86 62v139l88-40ZM573 90l88 63v138l-88-40Z" fill="#D5AB79" stroke={ink} strokeWidth={3}/>
+      {[0,1,2,3,4,5].map(n => <Path key={n} d={`M148 ${161+n*18}l69-41m365 0l70 41`} stroke="#FFF0CC" strokeWidth={4}/>)}
       <Path d="M91 96h45v210H91Z" fill="#7BB6B0" stroke={ink} strokeWidth={3}/><Path d="M154 79h46v228h-46Z" fill="#E8B58D" stroke={ink} strokeWidth={3}/><Path d="M99 170h96M108 99v198m70-209v209" stroke={ivory} strokeWidth={4}/>
       <Path d="M75 311h160" stroke={wood} strokeWidth={13}/>{!live && drawn("beach", "beach-plant")}
       <Path d="M589 81q78 15 146 0" fill="none" stroke={wood} strokeWidth={3}/>{[605,634,665,695,723].map((x,n)=><G key={x}><Path d={`M${x} 88v22`} stroke={wood}/><Path d={`M${x-8} 111q8-20 16 0q-8 10-16 0`} fill={n%2?"#F3C9AD":"#FFF0D7"} stroke={ink}/></G>)}
