@@ -94,7 +94,7 @@ function CrosswordGrid({ puzzle, state, cellSize, dispatch, enabled }: BoardCont
             const letter = crosswordLetter(state.cells[cell]);
             const selected = cell === state.cursor.cell;
             const wrong = conflicts?.has(cell);
-            const locked = state.cells[cell] >= CROSSWORD_LOCK;
+            const revealed = state.cells[cell] >= CROSSWORD_LOCK;
             const number = puzzle.numbers[cell];
             const position = `Row ${row + 1}, Column ${col + 1}, ${containingClue.number} ${containingClue.direction}`;
             return (
@@ -102,7 +102,7 @@ function CrosswordGrid({ puzzle, state, cellSize, dispatch, enabled }: BoardCont
                 key={cell}
                 testID={`crossword-cell-${cell}`}
                 accessibilityRole="button"
-                accessibilityLabel={`${position}, ${letter || 'blank'}${locked ? ', revealed' : ''}${wrong ? ', try again' : ''}`}
+                accessibilityLabel={`${position}, ${letter || 'blank'}${revealed ? ', revealed' : ''}${wrong ? ', try again' : ''}`}
                 accessibilityState={{ selected, disabled: !enabled }}
                 accessibilityHint={selected ? 'Activate to change clue direction' : undefined}
                 disabled={!enabled}
@@ -110,7 +110,7 @@ function CrosswordGrid({ puzzle, state, cellSize, dispatch, enabled }: BoardCont
                 onPress={() => dispatch({ type: 'select', cell })}
                 style={[
                   styles.cell, size, clue.cells.includes(cell) && styles.activeWord,
-                  locked && styles.lockedCell, wrong && styles.conflictCell,
+                  revealed && styles.revealedCell, wrong && styles.conflictCell,
                 ]}
               >
                 {!!number && <Text allowFontScaling={false} style={[styles.number, { fontSize: numberSize, lineHeight: numberSize + 1 }]}>{number}</Text>}
@@ -119,7 +119,7 @@ function CrosswordGrid({ puzzle, state, cellSize, dispatch, enabled }: BoardCont
                   style={[
                     styles.letter,
                     { fontSize: letterSize, lineHeight: letterSize + 2, marginTop: numberSize + 1 },
-                    locked && styles.lockedLetter, wrong && styles.conflictLetter,
+                    revealed && styles.revealedLetter, wrong && styles.conflictLetter,
                   ]}
                 >
                   {letter}
@@ -421,12 +421,12 @@ const styles = StyleSheet.create({
   block: { backgroundColor: colors.ink },
   cell: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.muted },
   activeWord: { backgroundColor: colors.lagoonSoft },
-  lockedCell: { backgroundColor: colors.successSoft },
+  revealedCell: { backgroundColor: colors.successSoft },
   conflictCell: { backgroundColor: colors.conflictSoft },
   cellFocus: { ...StyleSheet.absoluteFill, borderWidth: 2, borderColor: colors.lagoon },
   number: { position: 'absolute', left: 2, top: 0, includeFontPadding: false },
   letter: { fontWeight: '800', includeFontPadding: false },
-  lockedLetter: { color: colors.success },
+  revealedLetter: { color: colors.success },
   conflictLetter: { color: colors.conflict, textDecorationLine: 'underline' },
   dock: { gap: space.xs, flexShrink: 0 },
   status: { alignSelf: 'center', textAlign: 'center', fontWeight: '700' },

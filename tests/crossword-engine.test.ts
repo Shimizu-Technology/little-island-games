@@ -172,19 +172,19 @@ describe('crossword play', () => {
     expect(play([select(3), type('é'), type('AB')], down)).toBe(down);
   });
 
-  it('skips filled crossing letters when requested and always skips locked letters', () => {
+  it('skips filled crossing letters when requested and always skips revealed letters', () => {
     const firstClue = activeCrosswordClue(puzzle, createCrossword(puzzle).cursor);
     const [first, middle, last] = firstClue.cells;
     const crossed = play([select(middle), type('g'), select(first)]);
     expect(play([type('e')], crossed).cursor.cell).toBe(middle);
     const skipped = play([{ type: 'skip-filled', value: true }, type('e')], crossed);
     expect(skipped.cursor.cell).toBe(last);
-    const locked = play([hint('reveal-letter'), type('g')], crossed);
-    expect(locked.cells[first]).toBe(CROSSWORD_LOCK + crosswordLetterCode('E'));
-    expect(crosswordLetter(locked.cells[middle])).toBe('G');
-    const skipLockedAndFilled = play([{ type: 'skip-filled', value: true }, select(first), type('z')], locked);
-    expect(crosswordLetter(skipLockedAndFilled.cells[last])).toBe('Z');
-    expect(play([{ type: 'backspace' }], skipLockedAndFilled).cells[first]).toBe(locked.cells[first]);
+    const revealed = play([hint('reveal-letter'), type('g')], crossed);
+    expect(revealed.cells[first]).toBe(CROSSWORD_LOCK + crosswordLetterCode('E'));
+    expect(crosswordLetter(revealed.cells[middle])).toBe('G');
+    const skipRevealedAndFilled = play([{ type: 'skip-filled', value: true }, select(first), type('z')], revealed);
+    expect(crosswordLetter(skipRevealedAndFilled.cells[last])).toBe('Z');
+    expect(play([{ type: 'backspace' }], skipRevealedAndFilled).cells[first]).toBe(revealed.cells[first]);
   });
 
   it('counts only blanks on a partial Check without even reading the solution', () => {
@@ -313,7 +313,7 @@ describe('crossword saves', () => {
     expect(play([{ type: 'undo' }], loaded)).toEqual(play([{ type: 'undo' }], state));
   });
 
-  it('keeps exactly the latest 256 moves through a 15x15 save including 225 locked cells', () => {
+  it('keeps exactly the latest 256 moves through a 15x15 save including 225 revealed cells', () => {
     const board = testGrid();
     let state = createCrossword(board);
     const change = (action: CrosswordAction) => { state = crosswordReducer(board, state, action); };

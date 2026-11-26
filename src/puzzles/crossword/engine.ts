@@ -110,7 +110,7 @@ export type CrosswordFeedback =
   | { readonly type: 'reveal-letter' | 'reveal-word' | 'already-revealed' }
   | { readonly type: 'rewind'; readonly result: 'restored' | 'clear' | 'unavailable' };
 
-/** Each cell is blank (0), a draft letter (1–26), or a locked revealed letter (33–58). */
+/** Each cell is blank (0), a draft letter (1–26), or a fixed revealed letter (33–58). */
 export const CROSSWORD_LOCK = 32;
 export const CROSSWORD_UNDO_LIMIT = 256;
 export type CrosswordDelta = {
