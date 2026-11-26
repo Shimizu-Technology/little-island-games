@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useEffectEvent } from 'react';
 import { View } from 'react-native';
-import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, ReduceMotion, cancelAnimation, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { IllustratedArt, puzzleArt } from '../art/illustrated';
 import { feel } from '../components/feel';
+import { useReducedMotion } from '../components/motion';
 import { GameIcon, hasGameArt } from '../components/GameIcon';
 import { Landmark } from '../hub/Landmarks';
 import type { ShelfId } from '../learn/home';
@@ -38,13 +39,23 @@ export const surfaceFor = (pastel: keyof typeof theme.pastels) => theme.pastels[
 const GOLD = '#E8B958';
 /** Under Reduce Motion each run jumps to its end, where these marks are invisible. */
 const once = (value: SharedValue<number>, duration: number) => { value.set(0); value.set(withTiming(1, { duration, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.System })); };
+/**
+ * Runs `once` on each `run` change unless Reduce Motion is on, read live: turning it on mid-run stops the run at its
+ * invisible end, and the caller draws nothing while it stays on.
+ */
+function useOnce(t: SharedValue<number>, duration: number, run: unknown) {
+  const reduced = useReducedMotion();
+  const play = useEffectEvent(() => { if (!reduced) once(t, duration); });
+  useEffect(() => { play(); }, [run]);
+  useEffect(() => { if (reduced) { cancelAnimation(t); t.set(1); } }, [reduced, t]);
+  return reduced;
+}
 
 /** A quick golden ring that swells and fades over a just-placed cell. */
 function PlacePop({ left, top, size, nonce }: { left: number; top: number; size: number; nonce: number }) {
-  const t = useSharedValue(1);
-  useEffect(() => { once(t, 260); }, [nonce, t]);
+  const t = useSharedValue(1), reduced = useOnce(t, 260, nonce);
   const style = useAnimatedStyle(() => ({ opacity: 0.9 * (1 - t.get()), transform: [{ scale: 0.86 + 0.26 * t.get() }] }));
-  return <Animated.View pointerEvents="none" accessible={false} style={[{ position: 'absolute', left, top, width: size, height: size, borderRadius: 6, borderWidth: 3, borderColor: GOLD }, style]}/>;
+  return reduced ? null : <Animated.View pointerEvents="none" accessible={false} style={[{ position: 'absolute', left, top, width: size, height: size, borderRadius: 6, borderWidth: 3, borderColor: GOLD }, style]}/>;
 }
 /** Puzzles rounds' board feel: the placement pop and a selection tick (a no-op on web). */
 export const BOARD_FEEL: GridFeelValue = { Pop: PlacePop, select: () => feel('select') };
@@ -59,9 +70,8 @@ function Spark({ angle, reach, size, color, t }: typeof SPARKS[number] & { t: Sh
 }
 /** One golden and coral burst behind a fresh finish's picture. Decorative, never input. */
 export function FinishBurst() {
-  const t = useSharedValue(1);
-  useEffect(() => { once(t, 900); }, [t]);
+  const t = useSharedValue(1), reduced = useOnce(t, 900, t);
   return <View testID="cove-finish-burst" pointerEvents="none" accessible={false} importantForAccessibility="no-hide-descendants" style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
-    {SPARKS.map((spark, i) => <Spark key={i} {...spark} t={t}/>)}
+    {!reduced && SPARKS.map((spark, i) => <Spark key={i} {...spark} t={t}/>)}
   </View>;
 }

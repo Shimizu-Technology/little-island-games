@@ -13,20 +13,23 @@ import { cornerGridGeometry, cornerNoteLayout, type CornerClue, type CornerClues
 import { theme } from '../../ui/theme';
 
 /** This memoized layer never changes during selection, notes, painting or panning. */
-export const GridLines = memo(function GridLines({ rows, columns, cell, borders = '' }: { rows: number; columns: number; cell: number; borders?: string }) {
+export const GridLines = memo(function GridLines({ rows, columns, cell, borders = '', stroke = '#A1B4A9' }: { rows: number; columns: number; cell: number; borders?: string; stroke?: string }) {
   let d = '';
   for (let r = 0; r <= rows; r++) d += `M0 ${r * cell}H${columns * cell}`;
   for (let c = 0; c <= columns; c++) d += `M${c * cell} 0V${rows * cell}`;
-  return <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0 }}><Svg width={columns * cell} height={rows * cell}><Path d={d} stroke="#A1B4A9" strokeWidth={1} fill="none"/>{!!borders && <Path d={borders} stroke={C.ink} strokeWidth={2.5} fill="none"/>}</Svg></View>;
+  return <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0 }}><Svg width={columns * cell} height={rows * cell}><Path d={d} stroke={stroke} strokeWidth={1} fill="none"/>{!!borders && <Path d={borders} stroke={C.ink} strokeWidth={2.5} fill="none"/>}</Svg></View>;
 });
-/** A square's fill. A peer shares the selected square's row, column or box (a soft lagoon wash); a tint or the selection wins. */
+/** A square's fill. A peer shares the selected square's row, column or box (a warm lagoon wash, about 1.16:1 on an empty square); a tint or the selection wins. */
 const cellFill = ({ paint, value, tint, selected, peer, given }: { paint: boolean; value: number; tint: GridTint; selected: boolean; peer: boolean; given: boolean }) =>
-  paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : peer ? given ? '#E3EDE7' : '#EDF6F2' : given ? '#F0EDDF' : '#FFFDF7';
-/** Puzzles boards' espresso frame (with a bottom lip) and its keys' lip. */
-const FRAME = theme.colors.frame, KEY_LIP = { borderBottomWidth: 4, borderBottomColor: 'rgba(61,43,36,0.24)' } as const;
-/** The frame's wood shows as a 3-point lip under the board; without a host's feel the board is unframed. */
+  paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : peer ? given ? '#E1E7D6' : '#E3F0E5' : given ? '#F0EDDF' : '#FFFDF7';
+/**
+ * Puzzles boards' espresso frame (with a bottom lip), their cell lines (at least 3:1 on every fill) and the keys' lip.
+ * The frame is wood around the board, never over it, so an edge square's selection and conflict borders stay whole.
+ */
+const FRAME = theme.colors.frame, TRIM = 3, LINE = '#6B7D72', KEY_LIP = { borderBottomWidth: 4, borderBottomColor: 'rgba(61,43,36,0.24)' } as const;
+/** Without a host's feel the board is unframed. */
 function Framed({ on, children }: { on: boolean; children: React.ReactNode }) {
-  return on ? <View testID="cove-grid-frame" style={{ alignSelf: 'center', borderRadius: 10, paddingBottom: 3, backgroundColor: FRAME }}>{children}</View> : <>{children}</>;
+  return on ? <View testID="cove-grid-frame" style={{ alignSelf: 'center', borderRadius: 8 + TRIM, padding: TRIM, paddingBottom: 2 * TRIM, backgroundColor: FRAME }}>{children}</View> : <>{children}</>;
 }
 /** Tint 3 and 4 are the two colours of a hint's chain: a dot and a ring, never colour alone. */
 const chainMark: Record<number, { ring: boolean; words: string }> = { 3: { ring: false, words: ', chain dot' }, 4: { ring: true, words: ', chain ring' } };
@@ -69,9 +72,10 @@ export type GridShellProps = {
 export type GridTint = 0 | 1 | 2 | 3 | 4;
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
 export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, cornerClues, schoolLayout, status, hosted = false, peers }: GridShellProps) {
-  // A clue frame takes its share of the width, so the board's cells stay square and centred.
-  const width = frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer;
-  const feedback = useContext(GridFeedback), feel = useContext(GridFeel), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
+  const feel = useContext(GridFeel);
+  // A clue frame takes its share of the width, so the board's cells stay square and centred; a host's wood frame takes its trim.
+  const width = (frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer) - (feel ? 2 * TRIM : 0);
+  const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), large = (fontScale ?? 1) >= LARGE_TEXT, chrome = useContext(GridChromeContext);
   // At accessibility sizes the board, its clue gutters and the keys share one height budget; below them it is the base share of the window.
   const viewportMax = schoolLayout ? Math.max(schoolLayout.height, schoolLayout.minimumCell * spec.rows) : gridViewportMax(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: true, sentence: status }), height, spec.rows, frame?.size ?? 0);
@@ -90,15 +94,18 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   const acceptedEdits = useRef(state.edits);
   useEffect(() => { if (state.edits > acceptedEdits.current) (onAccepted ?? feedback)(); acceptedEdits.current = state.edits; }, [state.edits, onAccepted, feedback]);
   useEffect(() => () => interaction(false), [interaction]);
-  // With a host's feel, a newly placed symbol pops (the first square whose value became a new non-empty one) and a new selection ticks.
-  const [seen, setSeen] = useState(state.values), [pop, setPop] = useState<{ at: number; nonce: number } | null>(null);
-  if (feel && seen !== state.values) {
-    setSeen(state.values);
-    const at = state.values.findIndex((v, i) => v > 0 && v !== seen[i]);
-    if (at >= 0) setPop(before => ({ at, nonce: (before?.nonce ?? 0) + 1 }));
+  // With a host's feel, a symbol the player places pops once it is accepted, and a square the player chooses ticks.
+  // Undo, Redo, hints and Start over change the board without either; clearing the popped square removes its ring.
+  const [placing, setPlacing] = useState<{ cells: readonly number[]; value: number } | null>(null);
+  const [seen, setSeen] = useState({ edits: state.edits, values: state.values }), [pop, setPop] = useState<{ at: number; value: number; nonce: number } | null>(null);
+  if (feel && seen.edits !== state.edits) {
+    setSeen({ edits: state.edits, values: state.values }); setPlacing(null);
+    const at = placing ? state.values.findIndex((v, i) => v > 0 && v === placing.value && v !== seen.values[i] && placing.cells.includes(i)) : -1;
+    if (at >= 0) setPop(before => ({ at, value: state.values[at], nonce: (before?.nonce ?? 0) + 1 }));
+    else if (pop && state.values[pop.at] !== pop.value) setPop(null);
   }
-  const ticked = useRef(state.selected);
-  useEffect(() => { if (ticked.current !== state.selected) { ticked.current = state.selected; feel?.select(); } }, [state.selected, feel]);
+  const ticked = useRef(state.selected), chosen = useRef<number | null>(null);
+  useEffect(() => { if (ticked.current !== state.selected) { ticked.current = state.selected; if (chosen.current === state.selected) feel?.select(); chosen.current = null; } }, [state.selected, feel]);
   const peerOf = (i: number) => {
     if (!peers || i === state.selected) return false;
     const r = Math.floor(i / spec.columns), c = i % spec.columns, sr = Math.floor(state.selected / spec.columns), sc = state.selected % spec.columns, box = peers.box;
@@ -110,6 +117,8 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   const drag = useRef<{ start: number; end: number; axis: 'row' | 'column' | null; cells: number[]; pan: boolean; dx: number; dy: number; px: number; py: number } | null>(null);
   const live = useRef({ state, active });
   useEffect(() => { live.current = { state, active }; }, [state, active]);
+  /** A square the player moves the selection to (a tap, a drag's end or an arrow key). */
+  const choose = useCallback((index: number) => { chosen.current = index === live.current.state.selected ? null : index; }, []);
   useEffect(() => { panX.set(0); panY.set(0); cursorOn.set(0); drag.current = null; interaction(false); }, [width, height, enlarged, spec.rows, spec.columns, panX, panY, cursorOn, interaction]);
   useEffect(() => {
     if (!enlarged) return;
@@ -120,27 +129,28 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   }, [enlarged, state.selected, spec.columns, cell, width, viewportMax, panX, panY]);
   const send = useCallback((action: GridAction) => {
     if (!active) return;
+    if (action.type === 'write') setPlacing({ cells: action.cells, value: action.value });
     dispatch(action);
   }, [active, dispatch]);
   const select = useCallback((index: number) => {
     if (!active) return;
     const changes = first || spec.kind === 'paint' || spec.kind === 'cells', now = Date.now();
     if (!acceptTouch(last.current, index, now, changes)) return;
-    last.current = { cell: index, at: now };
+    last.current = { cell: index, at: now }; choose(index);
     if (changes) send({ type: 'write', cells: [index], value: state.tool, selected: index });
     else dispatch({ type: 'select', cell: index });
-  }, [active, first, spec.kind, dispatch, send, state.tool]);
+  }, [active, first, spec.kind, dispatch, send, state.tool, choose]);
   const selectRef = useRef(select);
   const stableSelect = useCallback((index: number) => selectRef.current(index), []);
   useEffect(() => { selectRef.current = select; }, [select]);
   const keyAction = useCallback((key: string) => {
     if (!active) return false;
-    if (key.startsWith('Arrow')) { dispatch({ type: 'select', cell: moveSelection(state.selected, key, spec) }); return true; }
+    if (key.startsWith('Arrow')) { const cell = moveSelection(state.selected, key, spec); choose(cell); dispatch({ type: 'select', cell }); return true; }
     if (key.toLowerCase() === 'n' && spec.kind === 'digits') { send({ type: 'pencil' }); return true; }
     const erase = ['Backspace', 'Delete', '0'].includes(key), value = erase ? 0 : spec.symbols.findIndex(s => s.toLocaleLowerCase() === key.toLocaleLowerCase()) + 1;
     if (value || erase) { send({ type: 'write', cells: [state.selected], value }); return true; }
     return false;
-  }, [active, state.selected, spec, send, dispatch]);
+  }, [active, state.selected, spec, send, dispatch, choose]);
   useEffect(() => { if (!active) { nativeKeyboard.current?.blur(); interaction(false); } }, [active, interaction]);
   useEffect(() => {
     if (Platform.OS !== 'web' || !active) return;
@@ -183,13 +193,13 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
       if (spec.kind === 'paint') {
         // eslint-disable-next-line react-hooks/purity -- This runs only on a gesture release, never during render.
         const now = Date.now(); if (!acceptTouch(last.current, d.start, now, d.cells.length === 1)) return;
-        last.current = { cell: d.start, at: now }; send({ type: 'write', cells: d.cells, value: live.current.state.tool, selected: d.end });
+        last.current = { cell: d.start, at: now }; choose(d.end); send({ type: 'write', cells: d.cells, value: live.current.state.tool, selected: d.end });
       } else selectRef.current(d.end);
     },
     onPanResponderTerminate: () => { interaction(false); drag.current = null; cursorOn.set(0); setLine([]); },
     onPanResponderTerminationRequest: () => false,
     onShouldBlockNativeResponder: () => true,
-  }), [active, spec, zoom, cell, panX, panY, cursorX, cursorY, cursorOn, width, viewportMax, geometry.width, geometry.height, interaction, send]);
+  }), [active, spec, zoom, cell, panX, panY, cursorX, cursorY, cursorOn, width, viewportMax, geometry.width, geometry.height, interaction, send, choose]);
   const panStyle = useAnimatedStyle(() => ({ transform: [{ translateX: panX.get() }, { translateY: panY.get() }] }));
   const cursorStyle = useAnimatedStyle(() => ({ opacity: cursorOn.get(), transform: [{ translateX: cursorX.get() }, { translateY: cursorY.get() }] }));
   // Below the accessibility sizes the zoom controls sit between the board and the keys, as they always did. At them the keys
@@ -211,18 +221,17 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
       <Animated.View style={[{ width: geometry.width, height: geometry.height }, panStyle]}>
         {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)} corner={corners?.get(i)} peer={peerOf(i)} {...(schoolLayout ? { school: true } : {})}/>; })}</View>)}
         {line.map(i => <View key={`stroke-${i}`} testID={`stroke-${i}`} pointerEvents="none" accessible={false} style={{ position: 'absolute', left: i % spec.columns * cell, top: Math.floor(i / spec.columns) * cell, width: cell, height: cell, backgroundColor: state.tool === 1 ? '#246858' : '#FFFDF7', opacity: .7, borderWidth: 2, borderColor: C.gold }}/>) }
-        {!corners?.size && <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>}
+        {!corners?.size && <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders} {...(feel ? { stroke: LINE } : {})}/>}
         {overlay && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{overlay(cell)}</View>}
         {!!corners?.size && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{[...corners!].map(([i, clue]) => {
           const hasNotes = !!state.notes[i], tint = tints?.get(i) ?? 0;
           const background = cellFill({ paint: false, value: state.values[i], tint, selected: state.selected === i, peer: peerOf(i), given: !!spec.givens[i] });
           return <Text key={i} testID={`corner-clue-${i}`} allowFontScaling={false} numberOfLines={1} style={{ position: 'absolute', left: i % spec.columns * cell + (hasNotes ? 0 : clue.left), top: Math.floor(i / spec.columns) * cell + (hasNotes ? 0 : clue.top), width: clue.width, height: hasNotes ? clue.fontSize : clue.lineHeight, fontSize: clue.fontSize, lineHeight: hasNotes ? clue.fontSize : clue.lineHeight, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'], ...(hasNotes ? { backgroundColor: background } : {}) }}>{clue.text}</Text>;
         })}</View>}
-        {!!corners?.size && <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>}
+        {!!corners?.size && <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders} {...(feel ? { stroke: LINE } : {})}/>}
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
         {feel && pop && <feel.Pop left={pop.at % spec.columns * cell} top={Math.floor(pop.at / spec.columns) * cell} size={cell} nonce={pop.nonce}/>}
       </Animated.View>
-      {feel && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', inset: 0, borderRadius: 8, borderWidth: 2.5, borderColor: FRAME }}/>}
       <View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/>
     </View>
     </Framed>
