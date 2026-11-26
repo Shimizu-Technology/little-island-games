@@ -28,16 +28,14 @@ export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120,
       >
         <G
           transform={
-            asleep
-              ? 'translate(0 8) rotate(0) scale(1 1)'
-              : tucked
-                ? 'translate(0 6) rotate(0) scale(1 1)'
-                : 'translate(0 0) rotate(0) scale(1 1)'
+            tucked
+              ? 'translate(0 6) rotate(0) scale(1 1)'
+              : 'translate(0 0) rotate(0) scale(1 1)'
           }
         >
           {/* Soft warm ground contact shadow when resting/standing */}
           {pose !== 'held' && (
-            <Ellipse cx={60} cy={asleep ? 88 : tucked ? 90 : 96} rx={asleep ? 34 : 30} ry={4.5} fill={ink} opacity={0.14} stroke="none" />
+            <Ellipse cx={60} cy={tucked ? 90 : 96} rx={asleep ? 36 : 30} ry={4.5} fill={ink} opacity={0.14} stroke="none" />
           )}
           {/* Cozy crab legs — curled snug underneath when asleep or tucked */}
           {[0, 1, 2].map((n) => (
@@ -45,7 +43,7 @@ export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120,
               key={n}
               d={
                 asleep
-                  ? `M36 ${72 + n * 5}Q24 ${76 + n * 5} 28 ${84 + n * 2}M84 ${72 + n * 5}Q96 ${76 + n * 5} 92 ${84 + n * 2}`
+                  ? `M${32 + n * 2} ${76 + n * 4.5}Q${21 + n * 2} ${80 + n * 4.5} ${25 + n * 2.5} ${87 + n * 3.5}M${88 - n * 2} ${76 + n * 4.5}Q${99 - n * 2} ${80 + n * 4.5} ${95 - n * 2.5} ${87 + n * 3.5}`
                   : `M37 ${68 + n * 6}L${tucked ? 29 : 18 - n * 2} ${75 + n * 7}l${tucked ? 5 : -6} 9M83 ${68 + n * 6}L${tucked ? 91 : 102 + n * 2} ${75 + n * 7}l${tucked ? -5 : 6} 9`
               }
               fill="none"
@@ -56,8 +54,8 @@ export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120,
           {/* Claw arms + expressive plump claws */}
           {asleep ? (
             <>
-              <Path d="M35 70Q25 76 31 82M85 70Q95 76 89 82" fill="none" stroke={shell} strokeWidth={7} />
-              <Path d="M24 79Q18 68 32 68L30 76L38 74Q38 87 24 79ZM96 79Q102 68 88 68L90 76L82 74Q82 87 96 79Z" fill={shell} />
+              <Path d="M34 72Q24 77 29 83M86 72Q96 77 91 83" fill="none" stroke={shell} strokeWidth={7} />
+              <Path d="M22 80Q16 69 30 69L28 77L36 75Q36 88 22 80ZM98 80Q104 69 90 69L92 77L84 75Q84 88 98 80Z" fill={shell} />
             </>
           ) : (
             <>
@@ -68,18 +66,23 @@ export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120,
             </>
           )}
           {/* Plump warm coral-orange shell with sunlit highlight & deep under-shade */}
-          <Ellipse cx={60} cy={73} rx={33} ry={23.5} fill={shell} />
-          <Path d="M31 78Q60 99 89 78Q85 95 60 96Q35 95 31 78Z" fill={shellDark} stroke="none" opacity={0.45} />
-          <Path d="M38 61Q60 51 82 61" fill="none" stroke={shellLight} strokeWidth={4} opacity={0.85} />
+          <Ellipse cx={60} cy={asleep ? 74.5 : 73} rx={asleep ? 34 : 33} ry={asleep ? 20.5 : 23.5} fill={shell} />
+          <Path
+            d={asleep ? 'M30 80Q60 97 90 80Q85 94.5 60 95Q35 94.5 30 80Z' : 'M31 78Q60 99 89 78Q85 95 60 96Q35 95 31 78Z'}
+            fill={shellDark}
+            stroke="none"
+            opacity={0.45}
+          />
+          <Path d={asleep ? 'M37 64Q60 55 83 64' : 'M38 61Q60 51 82 61'} fill="none" stroke={shellLight} strokeWidth={4} opacity={0.85} />
           {/* Warm golden-cream belly */}
-          <Ellipse cx={60} cy={82} rx={22} ry={11.5} fill={belly} />
-          <Ellipse cx={60} cy={80} rx={14} ry={5.5} fill={bellyShine} stroke="none" opacity={0.75} />
+          <Ellipse cx={60} cy={asleep ? 83 : 82} rx={22} ry={asleep ? 10 : 11.5} fill={belly} />
+          <Ellipse cx={60} cy={asleep ? 81 : 80} rx={14} ry={asleep ? 4.8 : 5.5} fill={bellyShine} stroke="none" opacity={0.75} />
           {/* Eye stalks */}
-          <Path d={asleep ? 'M46 56V47M74 56V47' : 'M45 55V42M75 55V42'} fill="none" stroke={ink} strokeWidth={10} />
-          <Path d={asleep ? 'M46 56V47M74 56V47' : 'M45 55V42M75 55V42'} fill="none" stroke={shell} strokeWidth={6} />
+          <Path d={asleep ? 'M46 59V50M74 59V50' : 'M45 55V42M75 55V42'} fill="none" stroke={ink} strokeWidth={10} />
+          <Path d={asleep ? 'M46 59V50M74 59V50' : 'M45 55V42M75 55V42'} fill="none" stroke={shell} strokeWidth={6} />
           {/* Glossy dual-catchlight eyes or peaceful closed sleeping lids */}
           {[45, 75].map((x) => {
-            const cy = asleep ? 44 : 37;
+            const cy = asleep ? 47 : 37;
             return (
               <G key={x}>
                 <Circle cx={x} cy={cy} r={10} fill={cream} />
@@ -96,9 +99,9 @@ export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120,
             );
           })}
           {/* Cute rosy coral-pink cheeks & cheerful smile */}
-          <Ellipse cx={42} cy={72} rx={4.8} ry={3} fill="#FF9C90" stroke="none" opacity={0.75} />
-          <Ellipse cx={78} cy={72} rx={4.8} ry={3} fill="#FF9C90" stroke="none" opacity={0.75} />
-          <Path d={asleep ? 'M56 72Q60 75.5 64 72' : 'M53 71Q60 79 67 71'} fill="none" stroke={deepInk} strokeWidth={2.3} />
+          <Ellipse cx={42} cy={asleep ? 74.5 : 72} rx={4.8} ry={3} fill="#FF9C90" stroke="none" opacity={0.75} />
+          <Ellipse cx={78} cy={asleep ? 74.5 : 72} rx={4.8} ry={3} fill="#FF9C90" stroke="none" opacity={0.75} />
+          <Path d={asleep ? 'M56 74.5Q60 78 64 74.5' : 'M53 71Q60 79 67 71'} fill="none" stroke={deepInk} strokeWidth={2.3} />
         </G>
         {asleep && !reduced && (
           <G stroke="#4FA99F" strokeWidth={2.4} fill="none">
