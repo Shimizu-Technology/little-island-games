@@ -26,6 +26,7 @@ export default function SchoolScreen() {
   const nunitoLoaded = useNunitoLoaded();
   const columns = fontScale > 1.5 || width < 340 ? 1 : width > 650 ? 3 : 2;
   const large = fontScale >= LARGE_TEXT;
+  const stackHero = large || width < 380;
   const line = Math.min(width - 40, 900);
   const tile = (line - (columns - 1) * 12) / columns;
 
@@ -63,7 +64,7 @@ export default function SchoolScreen() {
 
         <View
           style={{
-            flexDirection: large ? 'column' : 'row',
+            flexDirection: stackHero ? 'column' : 'row',
             alignItems: 'center',
             gap: 16,
             padding: 18,
@@ -91,16 +92,16 @@ export default function SchoolScreen() {
           >
             <Landmark id="school" />
           </View>
-          <View style={{ flex: 1, gap: 4, ...(large ? { alignSelf: 'stretch' as const } : {}) }}>
+          <View style={{ flex: 1, gap: 4, ...(stackHero ? { alignSelf: 'stretch' as const } : {}) }}>
             <Heading
-              maxFontSizeMultiplier={fit('What are you curious about?', 24, large ? line - 38 : line - 166)}
-              style={{ ...schoolHeading, fontSize: 24, textAlign: large ? 'center' : 'left' }}
+              maxFontSizeMultiplier={fit('What are you curious about?', 24, stackHero ? line - 38 : line - 166)}
+              style={{ ...schoolHeading, fontSize: 24, textAlign: stackHero ? 'center' : 'left' }}
             >
               What are you curious about?
             </Heading>
             <Copy
               maxFontSizeMultiplier={atLarge(fontScale, CHROME_MAX)}
-              style={{ ...schoolBody, color: schoolMuted, textAlign: large ? 'center' : 'left' }}
+              style={{ ...schoolBody, color: schoolMuted, textAlign: stackHero ? 'center' : 'left' }}
             >
               Six little islands. Take your time.
             </Copy>

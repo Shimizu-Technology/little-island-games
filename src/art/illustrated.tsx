@@ -52,18 +52,18 @@ export function ArcadeArt({ id, size }: { id: ArcadeId; size?: number }) {
 
 export type LearnSubjectId = 'reading' | 'numbers' | 'science' | 'thinking' | 'coding' | 'chamoru';
 
-const learnSubjectSources: Readonly<Record<LearnSubjectId, ImageSourcePropType>> = {
-  reading: require('../../assets/art/learn/reading.webp'),
-  numbers: require('../../assets/art/learn/numbers.webp'),
-  science: require('../../assets/art/learn/science.webp'),
-  thinking: require('../../assets/art/learn/thinking.webp'),
-  coding: require('../../assets/art/learn/coding.webp'),
-  chamoru: require('../../assets/art/learn/chamoru.webp'),
+const learnSubjectSources: Readonly<Record<LearnSubjectId, () => ImageSourcePropType>> = {
+  reading: () => require('../../assets/art/learn/reading.webp'),
+  numbers: () => require('../../assets/art/learn/numbers.webp'),
+  science: () => require('../../assets/art/learn/science.webp'),
+  thinking: () => require('../../assets/art/learn/thinking.webp'),
+  coding: () => require('../../assets/art/learn/coding.webp'),
+  chamoru: () => require('../../assets/art/learn/chamoru.webp'),
 };
 export const hasLearnSubjectArt = (id: string): id is LearnSubjectId => Object.hasOwn(learnSubjectSources, id);
 
 export function LearnSubjectArt({ id, size }: { id: LearnSubjectId; size?: number }) {
-  return <IllustratedArt source={learnSubjectSources[id]} size={size}/>;
+  return <IllustratedArt source={learnSubjectSources[id]()} size={size}/>;
 }
 
 /** One illustration, square at `size` or filling `style`. Decorative: whatever holds it names it. */

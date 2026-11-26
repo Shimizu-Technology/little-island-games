@@ -81,6 +81,8 @@ it('bundles all six Learn subject illustrations as transparent 512×512 WebPs wi
   const required = [...illustratedSource.matchAll(/require\(([^)]*\/learn\/[^)]*)\)/g)].map(match => match[1]);
   expect(required).toHaveLength(6);
   for (const arg of required) expect(arg).toMatch(/^'\.\.\/\.\.\/assets\/art\/learn\/[a-z]+\.webp'$/);
+  const thunks = [...illustratedSource.matchAll(/:\s*\(\)\s*=>\s*require\(([^)]*\/learn\/[^)]*)\)/g)].map(match => match[1]);
+  expect(thunks).toEqual(required);
 
   for (const id of subjectIds) {
     expect(hasLearnSubjectArt(id), id).toBe(true);
@@ -222,4 +224,45 @@ it('stacks into one column with shared word-fit at AX5 (320×568, fontScale 2.0)
   for (const tile of wideTiles) {
     expect(StyleSheet.flatten(tile.props.style).width).toBe(threeColumnWidth);
   }
+});
+
+it('stacks the School hero on compact widths (320×568, fontScale 1.35) so headings get full card width', async () => {
+  const nearestView = (node: ReactTestInstance | null): ReactTestInstance => {
+    let cur = node;
+    while (cur && cur.type !== View) cur = cur.parent;
+    if (!cur) throw new Error('Expected ancestor View');
+    return cur;
+  };
+
+  Object.assign(viewport, { width: 320, height: 568, fontScale: 1.35 });
+  await mount(<SchoolScreen/>);
+
+  const heroHeading = screen!.root.find(
+    node => node.type === Text && node.props.accessibilityRole === 'header' && textOf(node) === 'What are you curious about?',
+  );
+  const heroCopy = screen!.root.find(
+    node => node.type === Text && textOf(node) === 'Six little islands. Take your time.',
+  );
+  const heroTextWrap = nearestView(heroHeading.parent);
+  const heroCard = nearestView(heroTextWrap.parent);
+
+  expect(StyleSheet.flatten(heroCard.props.style).flexDirection).toBe('column');
+  expect(StyleSheet.flatten(heroTextWrap.props.style).alignSelf).toBe('stretch');
+  expect(StyleSheet.flatten(heroHeading.props.style).textAlign).toBe('center');
+  expect(StyleSheet.flatten(heroCopy.props.style).textAlign).toBe('center');
+  expect(heroHeading.props.maxFontSizeMultiplier).toBeUndefined();
+  expect(wordWidth('curious') * 24 * 1.35).toBeLessThanOrEqual(320 - 40 - 38);
+
+  await act(async () => { screen!.unmount(); });
+  screen = undefined;
+
+  Object.assign(viewport, { width: 393, height: 852, fontScale: 1.35 });
+  await mount(<SchoolScreen/>);
+
+  const wideHeading = screen!.root.find(
+    node => node.type === Text && node.props.accessibilityRole === 'header' && textOf(node) === 'What are you curious about?',
+  );
+  const wideHeroCard = nearestView(nearestView(wideHeading.parent).parent);
+  expect(StyleSheet.flatten(wideHeroCard.props.style).flexDirection).toBe('row');
+  expect(StyleSheet.flatten(wideHeading.props.style).textAlign).toBe('left');
 });
