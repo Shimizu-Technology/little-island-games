@@ -427,6 +427,47 @@ describe("HM-14 room buttons are drop targets (D7)", () => {
     expect(current.slots.get()[0].proposal).toMatchObject({ room: "kitchen" });
     await act(async () => renderer.unmount());
   });
+  it("P1-2: holding over a Next room arrow keeps the latched destination stable without cascading or dropping one room farther", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Hover scene={fixture()} />); });
+    current.dropZones.set([zone]);
+    touch("down", 100, 200); flushJS();
+    touch("move", 160, 260); frames(2);
+    // Move onto Next room arrow (initially kitchen) and hold past 300ms.
+    touch("move", 420, 580); frames(22);
+    expect(hovered).toHaveBeenCalledTimes(1);
+    expect(hovered).toHaveBeenCalledWith("kitchen");
+    // Simulate HomeChrome reassigning the exact same Next arrow rect to treehouse once room becomes kitchen.
+    current.dropZones.set([{ kind: "room", room: "treehouse", x: 400, y: 560, width: 48, height: 48 }]);
+    // Keep holding at the same finger position for 600+ ms -> MUST NOT cascade to treehouse!
+    frames(40);
+    expect(hovered).toHaveBeenCalledTimes(1);
+    expect(current.slots.get()[0].proposal).toMatchObject({ room: "kitchen", kind: "floor" });
+    // Releasing right there drops into kitchen, NOT one room farther into treehouse!
+    touch("up", 420, 580); flushJS();
+    expect(hovered).toHaveBeenCalledTimes(1);
+    expect(current.slots.get()[0].proposal).toMatchObject({ room: "kitchen" });
+    await act(async () => renderer.unmount());
+  });
+  it("P1-2: leaving the room arrow clears the latch so re-entering steps to the reassigned room", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Hover scene={fixture()} />); });
+    current.dropZones.set([zone]);
+    touch("down", 100, 200); flushJS();
+    touch("move", 160, 260); frames(2);
+    touch("move", 420, 580); frames(22);
+    expect(hovered).toHaveBeenCalledWith("kitchen");
+    current.dropZones.set([{ kind: "room", room: "treehouse", x: 400, y: 560, width: 48, height: 48 }]);
+    // Leave the arrow into the room canvas -> clears latch.
+    touch("move", 500, 300); frames(2);
+    expect(current.roomHover.get()).toBeNull();
+    // Re-enter the arrow -> now steps cleanly to treehouse!
+    touch("move", 420, 580); frames(22);
+    expect(hovered).toHaveBeenCalledTimes(2);
+    expect(hovered).toHaveBeenLastCalledWith("treehouse");
+    expect(current.slots.get()[0].proposal).toMatchObject({ room: "treehouse", kind: "floor" });
+    await act(async () => renderer.unmount());
+  });
   it("a friend's held prop and pose travel with them to the other room", () => {
     let state = labHome();
     let scene = buildScene(state);

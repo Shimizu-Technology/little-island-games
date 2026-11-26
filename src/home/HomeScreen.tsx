@@ -1,4 +1,5 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import * as ReactNative from "react-native";
 import { AccessibilityInfo, Platform, AppState, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,7 +9,12 @@ import { useDelight } from "./runtime/useDelight";
 import { pieceAt } from "./runtime/SetPieces";
 import { useStore } from "../state/Store";
 import type { BadgeId } from "../badges/engine";
-import { buildingLayout, roomOrigin } from "./camera";
+import type { IslanderLook } from "../islander/look";
+import { lockedReason, lookWithStyle, styleCatalog, type StyleItem } from "../personalization/catalog";
+import { HomeClosetSheet, closetSheetHeightRatio } from "./HomeClosetSheet";
+import { HomeBadgesSheet } from "./HomeBadgesSheet";
+import { registerWebPopStateHandler } from "./webPopState";
+import { buildingLayout, roomOrigin, type Building } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
 import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
@@ -30,7 +36,7 @@ import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
-import { screenToRoom } from "./scene/camera";
+import { screenToRoom, type CameraMatrix } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
 import { FriendDrawer } from "./runtime/FriendDrawer";
@@ -44,7 +50,7 @@ import { DebugOverlay } from "./runtime/DebugOverlay";
 import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
 import { MEAL_MS, type Meal } from "./runtime/meal";
 import { type CharacterRender } from "./runtime/EntityArt";
-import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
+import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera, type Viewport } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { groupIds, restingVisible } from "./runtime/group";
 import { anchorsFor, species } from "./scene/species";
@@ -59,24 +65,116 @@ import type { HomeTrace } from "./runtime/trace";
 /** Metro folds this branch away, so a build without the lab flag carries none of this code. */
 const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import("./runtime/HullOverlay") } | undefined =
   __DEV__ || process.env.EXPO_PUBLIC_HOME_LAB === "1"
-    ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
+    ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") } // eslint-disable-line @typescript-eslint/no-require-imports -- Metro folds dev/lab require away.
     : undefined;
 
+/** Available vertical viewport height above the undimmed Closet sheet (shared across cold links & dock opens). */
+export function closetAboveSheetHeight(windowHeight: number, headerHeight: number): number {
+  const sheetHeight = Math.floor(windowHeight * closetSheetHeightRatio(windowHeight));
+  return Math.max(0, windowHeight - sheetHeight - headerHeight);
+}
+
+/**
+ * Shared above-sheet camera framing helper for both cold `/locker` landings and in-room dock Closet opens.
+ * Switches to the Islander's room and keeps the Islander's full head-to-feet bounds strictly above the sheet.
+ */
+export function closetCameraFor(
+  hero: SceneEntity | undefined,
+  fallbackRoom: RoomId,
+  viewport: Viewport,
+  windowHeight: number,
+  headerHeight: number,
+  building: Building
+): { room: RoomId; camera: CameraMatrix } {
+  const room = hero?.room ?? fallbackRoom;
+  const index = Math.max(0, roomIds.indexOf(room));
+  const visibleHeight = closetAboveSheetHeight(windowHeight, headerHeight);
+  const safeHeight = Math.max(1, visibleHeight);
+  const aboveSheet: Viewport = { width: viewport.width, height: safeHeight };
+  const origin = roomOrigin(index, building);
+  // P1-3: hero.bounds is contact-relative (graph.ts); add hero.contact for the true room-space head-to-feet box.
+  const heroRoomLeft = hero ? hero.contact.x + hero.bounds.left : 360;
+  const heroRoomTop = hero ? hero.contact.y + hero.bounds.top : 320;
+  const heroRoomBottom = hero ? heroRoomTop + hero.bounds.height : 480;
+  const at = hero
+    ? {
+        x: heroRoomLeft + hero.bounds.width * 0.5,
+        y: heroRoomTop + hero.bounds.height * 0.5,
+      }
+    : { x: 400, y: 400 };
+  const margin = Math.min(8, Math.floor(safeHeight * 0.1));
+  const baseScale = roomScale(aboveSheet);
+  const heroHeight = hero ? Math.max(120, hero.bounds.height) : 160;
+  const maxHeroScale = Math.max(0.05, (safeHeight - margin * 2) / heroHeight);
+  const scale = Math.min(maxHeroScale, Math.max(fitCamera(aboveSheet, building).a, Math.min(baseScale, maxHeroScale)));
+  const raw: CameraMatrix = {
+    a: scale,
+    b: 0,
+    c: 0,
+    d: scale,
+    tx: aboveSheet.width / 2 - (origin.x + at.x) * scale,
+    ty: safeHeight / 2 - (origin.y + at.y) * scale,
+  };
+  const bounded = boundCamera(raw, aboveSheet, building);
+  if (hero) {
+    const heroTop = (origin.y + heroRoomTop) * bounded.d + bounded.ty;
+    const heroBottom = (origin.y + heroRoomBottom) * bounded.d + bounded.ty;
+    let dy = 0;
+    if (heroBottom > safeHeight - margin) dy = safeHeight - margin - heroBottom;
+    if (heroTop + dy < margin) dy = margin - heroTop;
+    const heroLeft = (origin.x + heroRoomLeft) * bounded.a + bounded.tx;
+    const heroRight = heroLeft + hero.bounds.width * bounded.a;
+    let dx = 0;
+    if (heroRight > aboveSheet.width - margin) dx = aboveSheet.width - margin - heroRight;
+    if (heroLeft + dx < margin) dx = margin - heroLeft;
+    return { room, camera: dx || dy ? { ...bounded, tx: bounded.tx + dx, ty: bounded.ty + dy } : bounded };
+  }
+  return { room, camera: bounded };
+}
+
+function heroRoomInState(state: HomeStateV2): RoomId {
+  return roomIds.find((id) => state.rooms[id].characters.some((c) => c.slot === 0)) ?? state.current;
+}
+
 export const REDO_VISIBLE_MS = 10000;
+export type HomeSheet = "closet" | "badges";
+export type HomeClosetConfig = {
+  look: IslanderLook;
+  earned: readonly string[];
+  unseen: readonly string[];
+  onWear: (look: IslanderLook) => boolean;
+  onSeen?: (id: string) => boolean | void;
+  onSeenAll?: () => boolean | void;
+  renderCharacter?: (look: IslanderLook) => CharacterRender;
+};
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
+  milestones?: readonly string[];
   initialItem?: string;
+  initialSheet?: HomeSheet;
+  initialClosetItem?: StyleItem;
+  initialBadge?: BadgeId;
+  onConsumeIntent?: () => void;
+  closet?: HomeClosetConfig;
   renderCharacter?: CharacterRender;
   initialState?: unknown;
   persist?: (state: HomeStateV2) => boolean;
   saveStatus?: ReactNode;
+  sheetSaveStatus?: ReactNode;
   lab?: boolean;
 };
 export function HomeScreen({
   initialState,
   initialItem,
+  initialSheet,
+  initialClosetItem,
+  initialBadge,
+  onConsumeIntent,
+  milestones = [],
+  closet,
   persist,
   saveStatus,
+  sheetSaveStatus,
   renderCharacter,
   lab = false,
   ...ownership
@@ -95,9 +193,51 @@ export function HomeScreen({
     initialItem && itemIds.includes(initialItem) ? initialItem : undefined
   );
   const [overview, setOverview] = useState(false),
-    [room, setRoom] = useState(store.state.current);
+    [room, setRoom] = useState<RoomId>(() =>
+      initialSheet === "closet" ? heroRoomInState(store.state) : store.state.current
+    );
   const [more, setMore] = useState(false),
     [friends, setFriends] = useState(false);
+  const [activeSheet, setActiveSheet] = useState<HomeSheet | null>(initialSheet ?? null);
+  const [closetInitialItem, setClosetInitialItem] = useState<StyleItem | undefined>(
+    initialSheet === "closet" ? initialClosetItem : undefined
+  );
+  const [badgeInitial, setBadgeInitial] = useState<BadgeId | undefined>(
+    initialSheet === "badges" ? initialBadge : undefined
+  );
+  const [previewLook, setPreviewLook] = useState<IslanderLook | undefined>(() =>
+    initialSheet === "closet" && initialClosetItem && closet && !lockedReason(initialClosetItem, closet.earned)
+      ? lookWithStyle(closet.look, initialClosetItem)
+      : undefined
+  );
+  const closetButtonRef = useRef<View | null>(null);
+  const markedInitialItem = useRef<string | undefined>(undefined);
+  React.useEffect(() => {
+    if (
+      activeSheet === "closet" &&
+      closetInitialItem &&
+      closet?.onSeen &&
+      closet.unseen.includes(closetInitialItem.id) &&
+      markedInitialItem.current !== closetInitialItem.id
+    ) {
+      // P2-5: Keep acknowledgement pending if Store refuses the write so a retry/tap can complete it.
+      const accepted = closet.onSeen(closetInitialItem.id);
+      if (accepted !== false) {
+        markedInitialItem.current = closetInitialItem.id;
+      }
+    }
+  }, [activeSheet, closetInitialItem, closet]);
+  const effectiveLook = previewLook ?? closet?.look;
+  const characterRenderer = useMemo<CharacterRender | undefined>(
+    () =>
+      renderCharacter ??
+      (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined),
+    [renderCharacter, effectiveLook, closet]
+  );
+  const hasNewCloset = useMemo(
+    () => !!closet?.unseen.some((id) => styleCatalog.some((item) => item.id === id)),
+    [closet?.unseen]
+  );
   const lastTap = useRef({ x: 0, y: 0, at: 0 });
   const [pickups, setPickups] = useState<(Pickup | undefined)[]>([undefined, undefined]);
   const [debug, setDebug] = useState(lab),
@@ -176,7 +316,8 @@ export function HomeScreen({
     [window.width, window.height]
   );
   const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
-  const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Navigation is outside the scene revision.
+  const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]);
   // HC-02: ground-floor rooms have a beach whose shells can be picked up.
   const shoreRooms = useMemo(() => roomIds.slice(0, building.columns), [building.columns]);
   const scene = useMemo(() => withPortions(baseScene, shoreRooms), [baseScene, shoreRooms]);
@@ -204,9 +345,9 @@ export function HomeScreen({
   // F3: an undo note stays until the next message or a tap; reading is never timed.
   const [noteGone, setNoteGone] = useState<number>();
   const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
-  const live = useRef({ store, scene, selected, placing, room, designing, meals });
+  const live = useRef({ store, scene, selected, placing, room, designing, meals, activeSheet });
   useLayoutEffect(() => {
-    live.current = { store, scene, selected, placing, room, designing, meals };
+    live.current = { store, scene, selected, placing, room, designing, meals, activeSheet };
   });
   // H4: reactions, effects, sounds and cooking.
   const delight = useDelight({
@@ -546,10 +687,37 @@ export function HomeScreen({
     );
     if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
   };
+  const sheetHistoryPushed = useRef(false);
+  const suppressNextPop = useRef(false);
+  const navigatingToMap = useRef(false);
+  const initialAliasSheet = useRef(initialSheet);
+  const coldBaseSeeded = useRef(false);
+  const popWebSheetHistory = useCallback(() => {
+    if (Platform.OS !== "web" || !sheetHistoryPushed.current) return;
+    sheetHistoryPushed.current = false;
+    const host = globalThis as { window?: { history?: { back?: () => void } } };
+    if (typeof host.window?.history?.back === "function") {
+      suppressNextPop.current = true;
+      host.window.history.back();
+    }
+  }, []);
+  const clearClosetDraft = useCallback(
+    (fromPopState = false) => {
+      markedInitialItem.current = undefined;
+      setPreviewLook(undefined);
+      setClosetInitialItem(undefined);
+      setActiveSheet(null);
+      onConsumeIntent?.();
+      if (!fromPopState) popWebSheetHistory();
+    },
+    [onConsumeIntent, popWebSheetHistory]
+  );
   const floorOf = useCallback((id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns), [building.columns]);
   const goRoom = useCallback((id: RoomId) => {
     const interaction = runtime.current!;
     interaction.cancelAll();
+    // P1-3: Switching rooms cancels any open Closet try-on draft so it never stays active offscreen.
+    if (live.current.activeSheet === "closet") clearClosetDraft();
     setSelected(undefined);
     setMore(false);
     setFriends(false);
@@ -559,7 +727,7 @@ export function HomeScreen({
     // HR-02: another floor is a door, not a jump; the same floor eases across.
     interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
       !overview && floorOf(id) !== floorOf(room));
-  }, [building, floorOf, overview, room, viewport]);
+  }, [building, clearClosetDraft, floorOf, overview, room, viewport]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     if (!designing && entity?.item && storageCapacity(entity.item.item) && !capabilityOf(entity.item.item).moveInPlay && !overview) {
@@ -572,6 +740,218 @@ export function HomeScreen({
     if (overview && entity) goRoom(entity.room);
     else { setStorageId(undefined); setStorageInspect(undefined); setSelected(id); }
   }, [designing, goRoom, overview]);
+  const openCloset = useCallback(
+    (item?: StyleItem) => {
+      runtime.current?.cancelAll();
+      setDesigning(false);
+      setPlacing(undefined);
+      setSelected(undefined);
+      setMore(false);
+      setFriends(false);
+      setOverview(false);
+      setClosetInitialItem(item);
+      setBadgeInitial(undefined);
+      setPreviewLook(
+        item && closet && !lockedReason(item, closet.earned) ? lookWithStyle(closet.look, item) : undefined
+      );
+      setActiveSheet("closet");
+      const hero = live.current.scene.entities["character/0"];
+      const framed = closetCameraFor(hero, live.current.room, viewport, window.height, headerHeight, building);
+      if (framed.room !== live.current.room) setRoom(framed.room);
+      runtime.current?.animateCamera(framed.camera, false);
+    },
+    [building, closet, headerHeight, viewport, window.height]
+  );
+  const closeCloset = useCallback(
+    (fromPopState = false) => {
+      clearClosetDraft(fromPopState);
+      runtime.current?.animateCamera(
+        focusCamera(roomIds.indexOf(live.current.room), viewport, building),
+        false
+      );
+    },
+    [building, clearClosetDraft, viewport]
+  );
+  const openBadges = useCallback((badge?: BadgeId) => {
+    runtime.current?.cancelAll();
+    setDesigning(false);
+    setPlacing(undefined);
+    setSelected(undefined);
+    setMore(false);
+    setFriends(false);
+    setPreviewLook(undefined);
+    setClosetInitialItem(undefined);
+    setBadgeInitial(badge);
+    setActiveSheet("badges");
+  }, []);
+  const closeBadges = useCallback(
+    (fromPopState = false) => {
+      setBadgeInitial(undefined);
+      setActiveSheet(null);
+      onConsumeIntent?.();
+      if (!fromPopState) popWebSheetHistory();
+    },
+    [onConsumeIntent, popWebSheetHistory]
+  );
+  const goToMap = useCallback(() => {
+    navigatingToMap.current = true;
+    const r = router as typeof router & { dismissTo?: (href: string) => void };
+    if (router.canGoBack?.() && typeof r.dismissTo === "function") r.dismissTo("/");
+    else router.replace?.("/");
+  }, []);
+  const handleBack = useCallback(() => {
+    // P1-1: First Back closes an open Closet/Badges sheet; second Back reaches `/` (Map).
+    if (activeSheet === "closet") {
+      closeCloset();
+      return;
+    }
+    if (activeSheet === "badges") {
+      closeBadges();
+      return;
+    }
+    goToMap();
+  }, [activeSheet, closeCloset, closeBadges, goToMap]);
+  const closeClosetRef = useRef(closeCloset);
+  const closeBadgesRef = useRef(closeBadges);
+  const goToMapRef = useRef(goToMap);
+  const handleBackRef = useRef(handleBack);
+  useLayoutEffect(() => {
+    closeClosetRef.current = closeCloset;
+    closeBadgesRef.current = closeBadges;
+    goToMapRef.current = goToMap;
+    handleBackRef.current = handleBack;
+  });
+  // P1-1: Android hardware Back closes an open Closet/Badges sheet first, then lands on "/" (Map).
+  React.useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const rn = ReactNative as Record<string, unknown>;
+    const bh =
+      "BackHandler" in rn
+        ? (rn.BackHandler as {
+            addEventListener?: (event: string, handler: () => boolean) => { remove: () => void };
+          })
+        : undefined;
+    if (!bh?.addEventListener) return;
+    const sub = bh.addEventListener("hardwareBackPress", () => {
+      handleBackRef.current();
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+  // P1-1: Seed a clean 2-step Web history stack on cold/alias entries ([map] -> [home] -> [sheet]) on the SAME URL
+  // (keeping Expo Router's history.state id intact so closing or pressing Back never triggers a cross-route reset/reload
+  // that drops an in-memory pending save), and push a single sheet sentinel when opened from the Home dock.
+  const sheetOpen = activeSheet !== null;
+  React.useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const host = globalThis as {
+      window?: {
+        history?: {
+          length?: number;
+          state?: unknown;
+          pushState?: (data: unknown, unused: string, url?: string) => void;
+          replaceState?: (data: unknown, unused: string, url?: string) => void;
+        };
+        location?: { href?: string };
+      };
+    };
+    const win = host.window;
+    const history = win?.history;
+    if (!win || typeof history?.pushState !== "function") return;
+    const currentState =
+      history.state && typeof history.state === "object" ? (history.state as Record<string, unknown>) : {};
+    const sentinel = currentState.__homeSentinel;
+    const currentHref = win.location?.href ?? "";
+
+    if (sheetOpen) {
+      if (sheetHistoryPushed.current || sentinel === "sheet") {
+        sheetHistoryPushed.current = true;
+        return;
+      }
+      sheetHistoryPushed.current = true;
+      const openedFromAlias = initialAliasSheet.current !== undefined && !coldBaseSeeded.current;
+      if (openedFromAlias) {
+        coldBaseSeeded.current = true;
+        if (sentinel !== "home") {
+          if (typeof history.replaceState === "function") {
+            history.replaceState({ ...currentState, __homeSentinel: "map" }, "", currentHref);
+          }
+          history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
+        }
+        history.pushState(
+          { ...currentState, __homeSentinel: "sheet", __homeSheet: live.current.activeSheet },
+          "",
+          currentHref
+        );
+        return;
+      }
+      if (!coldBaseSeeded.current && sentinel !== "home" && !router.canGoBack?.() && (history.length ?? 1) <= 1) {
+        coldBaseSeeded.current = true;
+        if (typeof history.replaceState === "function") {
+          history.replaceState({ ...currentState, __homeSentinel: "map" }, "", currentHref);
+          history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
+        }
+      }
+      history.pushState(
+        { ...currentState, __homeSentinel: "sheet", __homeSheet: live.current.activeSheet },
+        "",
+        currentHref
+      );
+      return;
+    }
+
+    if (!coldBaseSeeded.current && sentinel !== "home" && !router.canGoBack?.() && (history.length ?? 1) <= 1) {
+      coldBaseSeeded.current = true;
+      if (typeof history.replaceState === "function") {
+        history.replaceState({ ...currentState, __homeSentinel: "map" }, "", currentHref);
+        history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
+      }
+    }
+  }, [sheetOpen]);
+  React.useEffect(() => {
+    if (Platform.OS !== "web") return;
+    navigatingToMap.current = false;
+    const host = globalThis as {
+      window?: {
+        history?: { state?: unknown };
+        location?: { pathname?: string };
+      };
+    };
+    const onPopState = (event: PopStateEvent): boolean => {
+      if (navigatingToMap.current) {
+        // Let Expo Router's own history.go(...) settle cleanly while dismissing to "/".
+        return false;
+      }
+      if (suppressNextPop.current) {
+        suppressNextPop.current = false;
+        return true;
+      }
+      if (sheetHistoryPushed.current && live.current.activeSheet) {
+        sheetHistoryPushed.current = false;
+        if (live.current.activeSheet === "closet") closeClosetRef.current(true);
+        else if (live.current.activeSheet === "badges") closeBadgesRef.current(true);
+        return true;
+      }
+      // Second browser Back (no sheet open): always reach "/" (Map), never pop back into a game.
+      const state = (event.state ?? host.window?.history?.state) as Record<string, unknown> | null | undefined;
+      const isSeededMap = state?.__homeSentinel === "map";
+      const pathname = host.window?.location?.pathname ?? "";
+      if (!isSeededMap && pathname === "/") {
+        // Browser Back already landed on the real Map "/" entry; let Expo Router settle without double-popping.
+        navigatingToMap.current = true;
+        return false;
+      }
+      goToMapRef.current();
+      return true;
+    };
+    const unregister = registerWebPopStateHandler(onPopState);
+    return () => {
+      unregister();
+      sheetHistoryPushed.current = false;
+      suppressNextPop.current = false;
+      navigatingToMap.current = false;
+    };
+  }, []);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
     // Overview room taps always navigate, even over an object or with a previous selection.
@@ -584,7 +964,7 @@ export function HomeScreen({
       const origin = roomOrigin(roomIds.indexOf("home"), building);
       const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
       if (local.x >= 524 && local.x <= 702 && local.y >= 26 && local.y <= 198) {
-        router.push("/badges");
+        openBadges();
         return;
       }
       // HC-01: a painted jar, pan, book, plant or lantern answers the touch.
@@ -643,16 +1023,27 @@ export function HomeScreen({
       }
     }
   };
+  const initialCamera =
+    initialSheet === "closet"
+      ? closetCameraFor(scene.entities["character/0"], room, viewport, window.height, headerHeight, building).camera
+      : focusCamera(roomIds.indexOf(room), viewport, building);
   const interaction = useInteraction({
     scene,
     building,
     viewport,
-    initialCamera: focusCamera(roomIds.indexOf(room), viewport, building),
+    initialCamera,
     reduced,
     designing,
     onCameraChange: (all, index) => {
       setOverview(all);
       if (index >= 0) setRoom(roomIds[index]);
+      // P1-3: Swiping or panning to another room / overview cancels an active Closet try-on draft.
+      if (live.current.activeSheet === "closet") {
+        const heroRoom = live.current.scene.entities["character/0"]?.room ?? live.current.room;
+        if (all || (index >= 0 && roomIds[index] !== heroRoom)) {
+          clearClosetDraft();
+        }
+      }
     },
     onPickup,
     onCommit,
@@ -666,6 +1057,10 @@ export function HomeScreen({
     currentRoom: room,
     // HM-14: a carried thing held on a room button takes the child there, still carried.
     onRoomHover: (next) => {
+      if (live.current.activeSheet === "closet") {
+        const heroRoom = live.current.scene.entities["character/0"]?.room ?? live.current.room;
+        if (next !== heroRoom) clearClosetDraft();
+      }
       setOverview(false);
       setRoom(next);
       live.current.store.dispatch({ type: "room", room: next });
@@ -674,8 +1069,9 @@ export function HomeScreen({
   const zoneRects = useRef<Record<string, { x: number; y: number; width: number; height: number }>>({});
   const publishZones = useCallback(() => runtime.current?.dropZones.set(Object.entries(zoneRects.current).map(([id, r]) =>
     id === "drawer" ? { kind: "drawer" as const, ...r } : { kind: "room" as const, room: id as RoomId, ...r })), []);
-  const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number }) => {
-    zoneRects.current[id] = rect;
+  const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number } | null) => {
+    if (rect) zoneRects.current[id] = rect;
+    else delete zoneRects.current[id];
     publishZones();
   }, [publishZones]);
   // HR-01: the Friends button is where a carried friend goes to wait.
@@ -752,6 +1148,13 @@ export function HomeScreen({
     const old = previousView.current;
     previousView.current = { viewport, building };
     if (old.viewport === viewport && old.building === building) return;
+    // P1-3: Keep above-sheet Islander framing intact when headerHeight/viewport settles while Closet is open.
+    if (activeSheet === "closet") {
+      const hero = live.current.scene.entities["character/0"];
+      const framed = closetCameraFor(hero, room, viewport, window.height, headerHeight, building);
+      interaction.camera.set(framed.camera);
+      return;
+    }
     const before = interaction.camera.get();
     const oldOrigin = roomOrigin(roomIds.indexOf(room), old.building),
       nextOrigin = roomOrigin(roomIds.indexOf(room), building);
@@ -779,7 +1182,7 @@ export function HomeScreen({
     );
     // Refit only on viewport changes. Ordinary edits and drops never move the camera.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewport, building]);
+  }, [viewport, building, activeSheet, window.height, headerHeight]);
   React.useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state !== "active") { interaction.cancelAll(); clearMealArt(); }
@@ -796,7 +1199,7 @@ export function HomeScreen({
   const hints = useRef<HintState>(freshHints(0));
   // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
   React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
-  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends;
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -964,7 +1367,7 @@ export function HomeScreen({
           setSelected(undefined);
         }}
         onHeaderLayout={setHeaderHeight}
-        onBack={() => router.back()}
+        onBack={handleBack}
         onUndo={() => {
           interaction.cancelAll();
           clearMealArt();
@@ -989,19 +1392,29 @@ export function HomeScreen({
         }}
         onOverview={() => {
           interaction.cancelAll();
+          if (activeSheet === "closet") clearClosetDraft();
           setSelected(undefined);
           setMore(false);
           setFriends(false);
-          const next = true;
+          const next = !overview;
           setOverview(next);
           interaction.animateCamera(
             next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
           );
         }}
         onDesign={() => {
+          if (activeSheet === "closet") closeCloset();
+          else if (activeSheet === "badges") closeBadges();
+          if (designing) onConsumeIntent?.();
           setDesigning(!designing);
           setPlacing(undefined);
         }}
+        onCloset={() => (activeSheet === "closet" ? closeCloset() : openCloset())}
+        onBadges={() => (activeSheet === "badges" ? closeBadges() : openBadges())}
+        closetOpen={activeSheet === "closet"}
+        badgesOpen={activeSheet === "badges"}
+        hasNewCloset={hasNewCloset}
+        closetButtonRef={closetButtonRef}
         onRoom={goRoom}
         roomHover={interaction.roomHover}
         onRoomRect={onRoomRect}
@@ -1010,7 +1423,6 @@ export function HomeScreen({
         onDrawerRect={onDrawerRect}
         large={large}
         width={window.width}
-        saveStatus={saveStatus}
       />
       {/* Above the bars (zIndex 30) so carried art is never hidden under them; box-none keeps the bars touchable. */}
       <View pointerEvents="box-none" style={{ flex: 1, flexDirection: vertical ? "row" : "column", zIndex: 31 }}>
@@ -1018,14 +1430,14 @@ export function HomeScreen({
           <SceneView
             state={{ ...store.state, current: room }}
             badges={ownership.badges}
-            onBadges={() => router.push("/badges")}
+            onBadges={() => openBadges()}
             scene={scene}
             building={building}
             viewport={viewport}
             interaction={interaction}
             pickups={pickups}
             reduced={reduced}
-            renderCharacter={renderCharacter}
+            renderCharacter={characterRenderer}
             liveRoom={overview || !visible ? undefined : room}
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
@@ -1114,14 +1526,17 @@ export function HomeScreen({
             interaction={interaction}
             offset={viewportOffset}
             dispatch={dispatch}
-            onClose={() => setDesigning(false)}
+            onClose={() => {
+              setDesigning(false);
+              onConsumeIntent?.();
+            }}
             large={large}
             restoreCost={() => store.restoreCost(room)}
             onRestoreAnyway={() => store.dispatch({ type: "reset", roomId: room } as HomeAction, { anyway: true })}
           />
         )}
       </View>
-      {!overview && !more && !friends && (
+      {!overview && !more && !friends && !activeSheet && (
         <Destinations
           scene={scene}
           selected={selected === storageId ? undefined : selected}
@@ -1131,7 +1546,7 @@ export function HomeScreen({
           building={building}
           canvasTop={headerHeight}
           windowHeight={window.height}
-          renderCharacter={renderCharacter}
+          renderCharacter={characterRenderer}
           large={large}
           onSelect={setSelected}
           bottom={
@@ -1145,7 +1560,7 @@ export function HomeScreen({
           }}
         />
       )}
-      {!overview && !more && !friends && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+      {!overview && !more && !friends && !activeSheet && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
@@ -1162,7 +1577,7 @@ export function HomeScreen({
         offset={viewportOffset}
         interaction={interaction}
         reduced={reduced}
-        renderCharacter={renderCharacter}
+        renderCharacter={characterRenderer}
         onSelect={setSelected}
       />
       <HomePanels
@@ -1170,7 +1585,7 @@ export function HomeScreen({
         friends={friends}
         bottom={inset.bottom + navigationHeight}
         scene={scene}
-        renderCharacter={renderCharacter}
+        renderCharacter={characterRenderer}
         onClose={() => {
           setMore(false);
           setFriends(false);
@@ -1179,6 +1594,20 @@ export function HomeScreen({
           setMore(false);
           setFriends(true);
         }}
+        overview={overview}
+        onOverview={() => {
+          interaction.cancelAll();
+          if (activeSheet === "closet") clearClosetDraft();
+          setSelected(undefined);
+          setMore(false);
+          setFriends(false);
+          const next = !overview;
+          setOverview(next);
+          interaction.animateCamera(
+            next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
+          );
+        }}
+        onFind={find}
         onZoom={(ratio) => {
           interaction.cancelAll();
           interaction.animateCamera(
@@ -1191,7 +1620,7 @@ export function HomeScreen({
         onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
       <FriendDrawer
-        open={friends && !overview && !more}
+        open={friends && !overview && !more && !activeSheet}
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}
@@ -1200,11 +1629,65 @@ export function HomeScreen({
         offset={viewportOffset}
         reduced={reduced}
         large={large}
-        renderCharacter={renderCharacter}
+        renderCharacter={characterRenderer}
         onBring={bring}
         onClose={() => setFriends(false)}
         onCarry={(carrying) => { if (!carrying) setFriends(false); }}
       />
+      {closet && (
+        <HomeClosetSheet
+          visible={activeSheet === "closet"}
+          onClose={() => closeCloset()}
+          look={effectiveLook ?? closet.look}
+          equipped={closet.look}
+          earned={closet.earned}
+          unseen={closet.unseen}
+          initialItem={closetInitialItem}
+          saving={app.saving}
+          saveError={app.error}
+          returnFocusRef={closetButtonRef}
+          onTryOn={(nextLook) => setPreviewLook(nextLook)}
+          onWear={(nextLook) => {
+            const saved = closet.onWear(nextLook);
+            if (saved) setPreviewLook(undefined);
+            return saved;
+          }}
+          onSeen={closet.onSeen}
+          onSeenAll={closet.onSeenAll}
+        />
+      )}
+      <HomeBadgesSheet
+        visible={activeSheet === "badges"}
+        onClose={() => closeBadges()}
+        badges={ownership.badges ?? []}
+        milestones={milestones}
+        initialBadge={badgeInitial}
+        saveStatus={sheetSaveStatus ?? saveStatus}
+      />
+      {/* P1-5: Keep SaveStatus strictly above Closet's sheetTop (never touching Close) and below Badge Wall's header inside its Modal. */}
+      {saveStatus && activeSheet !== "badges" && (
+        <View
+          testID="home-save-status"
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            right: 8,
+            maxWidth: Math.min(380, window.width - 16),
+            ...(activeSheet === "closet"
+              ? {
+                  top: headerHeight + 4,
+                  bottom: Math.floor(window.height * closetSheetHeightRatio(window.height)) + 4,
+                  justifyContent: "flex-start",
+                  overflow: "hidden",
+                }
+              : { bottom: inset.bottom + navigationHeight + 8 }),
+            zIndex: 100,
+            elevation: 100,
+          }}
+        >
+          {activeSheet === "closet" ? (sheetSaveStatus ?? saveStatus) : saveStatus}
+        </View>
+      )}
       {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {UNDO_NOTES.includes(store.message) || store.message === STORAGE_FULL_MESSAGE ? "" : store.message}

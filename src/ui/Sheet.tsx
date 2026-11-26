@@ -38,10 +38,22 @@ export const shouldDismiss = (dy: number, vy: number) => dy > theme.sheet.dismis
  * board stays reachable by keyboard. iPhone start sheets use the native route presentation instead
  * (`nativeFormSheetOptions`).
  */
-export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Close", children }: {
+export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, compactHeader = false, onTitleRef, headerAction, banner, title, closeLabel = "Close", children }: {
   visible: boolean;
   onClose: () => void;
   mode?: SheetMode;
+  /** Optional share of windowHeight (e.g. 0.45 for the undimmed Closet sheet). */
+  heightRatio?: number;
+  /** Whether the sheet wraps children in its own ScrollView. Defaults to `mode !== "large"`. */
+  scroll?: boolean;
+  /** Tighter grabber and title header for short / landscape phone viewports. */
+  compactHeader?: boolean;
+  /** Optional callback receiving the title (or sheet) host node for native accessibility focus. */
+  onTitleRef?: (node: unknown) => void;
+  /** Optional compact action rendered in the header row between the title and Close button. */
+  headerAction?: React.ReactNode;
+  /** Optional in-flow banner rendered directly below the sheet header bar so it never covers Close. */
+  banner?: React.ReactNode;
   /** Spoken and shown first; it takes focus when the sheet opens on Web. */
   title?: string;
   closeLabel?: string;
@@ -51,7 +63,8 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const dim = mode !== "small", large = mode === "large";
-  const height = sheetHeight(windowHeight, mode);
+  const scrolls = scroll ?? !large;
+  const height = heightRatio != null ? Math.floor(windowHeight * heightRatio) : sheetHeight(windowHeight, mode);
 
   const [shown, setShown] = useState(visible);
   const progress = useSharedValue(visible ? 1 : 0);
@@ -61,9 +74,12 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
   const web = Platform.OS === "web";
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  const onTitleRefRef = useRef(onTitleRef);
+  useEffect(() => { onTitleRefRef.current = onTitleRef; }, [onTitleRef]);
   const opener = useRef<HTMLElement | null>(null);
   // The ref callback runs before the sheet takes focus, so the opener is whatever held focus when the sheet mounted.
   const focusOnMount = useCallback((node: unknown) => {
+    onTitleRefRef.current?.(node);
     if (!web || !node) return;
     if (!opener.current && typeof document !== "undefined") opener.current = document.activeElement as HTMLElement | null;
     (node as { focus?: () => void }).focus?.();
@@ -148,16 +164,32 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
           tabIndex={-1}
           accessibilityViewIsModal={dim}
           onAccessibilityEscape={onClose}
-          style={[styles.panel, theme.shadow, large ? { height, width: Math.min(width, 960) } : { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
+          style={[styles.panel, theme.shadow, large ? { height, width: Math.min(width, 960) } : scrolls ? { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) } : { height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
         >
-          <View {...pan.panHandlers} style={styles.top}>
+          <View {...pan.panHandlers} style={[styles.top, compactHeader && styles.topCompact]}>
             <View testID="sheet-grabber" style={styles.grabber} />
-            <View style={styles.closeRow}>
-              {title ? <View ref={focusOnMount} testID="sheet-title" tabIndex={-1} accessibilityRole="header" style={styles.title}><Text variant="section">{title}</Text></View> : <View style={styles.title} />}
-              <IconButton glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
+            <View style={[styles.closeRow, compactHeader && styles.closeRowCompact]}>
+              {title ? (
+                <View
+                  ref={focusOnMount}
+                  testID="sheet-title"
+                  tabIndex={-1}
+                  accessible
+                  accessibilityRole="header"
+                  accessibilityLabel={title}
+                  style={styles.title}
+                >
+                  <Text variant={compactHeader ? "body" : "section"}>{title}</Text>
+                </View>
+              ) : (
+                <View style={styles.title} />
+              )}
+              {headerAction}
+              <IconButton testID="sheet-close" glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
             </View>
           </View>
-          {large
+          {banner}
+          {!scrolls
             ? <View style={[styles.fill, { paddingBottom: insets.bottom }]}>{children}</View>
             : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: theme.space.lg + insets.bottom }]}>
               {children}
@@ -169,11 +201,12 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
 
   return dim
     ? <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>{body}</Modal>
-    : <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>{body}</View>;
+    : <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, styles.undimmedOverlay]}>{body}</View>;
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  fill: { flex: 1, minHeight: 0 },
+  undimmedOverlay: { zIndex: 50 },
   scrim: { backgroundColor: theme.colors.scrim },
   dock: { flex: 1, justifyContent: "flex-end", alignItems: "center" },
   panel: {
@@ -183,8 +216,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   top: { paddingTop: theme.space.sm, alignItems: "center" },
+  topCompact: { paddingTop: 4 },
   grabber: { width: 40, height: 5, borderRadius: theme.radius.full, backgroundColor: theme.colors.hairline },
-  closeRow: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", paddingLeft: theme.space.xl, paddingRight: theme.space.sm },
+  closeRow: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", gap: theme.space.xs, paddingLeft: theme.space.xl, paddingRight: theme.space.sm },
+  closeRowCompact: { paddingLeft: theme.space.lg, paddingRight: theme.space.xs, minHeight: theme.target.adult },
   title: { flex: 1 },
   content: { paddingHorizontal: theme.space.xl, paddingTop: theme.space.sm, gap: theme.space.lg },
 });

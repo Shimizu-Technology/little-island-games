@@ -101,6 +101,8 @@ export type DragSlot = CaptureToken & {
   commitRequested?: boolean;
   /** Resting art and overlay overlap for two presented ticks before clearing. */
   revealFrame?: number;
+  /** Latched room drop target so a room switch never cascades or shifts drop destination under one finger. */
+  latchedRoomZone?: LatchedRoomZone;
   proposal?: DropProposal;
 };
 export type Pickup = CaptureToken & {
@@ -114,6 +116,7 @@ export type Pickup = CaptureToken & {
 };
 export const ROOM_HOVER_MS = 300;
 export const BACKGROUND_TAP_MS = 500;
+export type LatchedRoomZone = { room: RoomId; x: number; y: number; width: number; height: number };
 export type DropZone =
   | { kind: "room"; room: RoomId; x: number; y: number; width: number; height: number }
   | { kind: "drawer"; x: number; y: number; width: number; height: number };
@@ -123,6 +126,39 @@ export function zoneAt(zones: readonly DropZone[], x: number, y: number): DropZo
   "worklet";
   for (const zone of zones) if (x >= zone.x && x <= zone.x + zone.width && y >= zone.y && y <= zone.y + zone.height) return zone;
   return undefined;
+}
+/**
+ * Keeps a room-arrow carry destination stable under the same finger after a room switch
+ * reassigns that arrow to the next room, until the pointer leaves the target or drag ends.
+ */
+export function resolveDropZone(
+  zones: readonly DropZone[],
+  x: number,
+  y: number,
+  latched?: LatchedRoomZone
+): { zone: DropZone | undefined; latched: LatchedRoomZone | undefined } {
+  "worklet";
+  const hit = zoneAt(zones, x, y);
+  if (latched) {
+    const insideLatched =
+      x >= latched.x && x <= latched.x + latched.width && y >= latched.y && y <= latched.y + latched.height;
+    const overlapsLatched =
+      hit?.kind === "room" &&
+      latched.x < hit.x + hit.width &&
+      latched.x + latched.width > hit.x &&
+      latched.y < hit.y + hit.height &&
+      latched.y + latched.height > hit.y;
+    if (insideLatched || overlapsLatched) {
+      return { zone: { kind: "room", ...latched }, latched };
+    }
+  }
+  if (hit?.kind === "room") {
+    return {
+      zone: hit,
+      latched: { room: hit.room, x: hit.x, y: hit.y, width: hit.width, height: hit.height },
+    };
+  }
+  return { zone: hit, latched: undefined };
 }
 export const CAMERA_EASE_MS = 180;
 export const DOOR_MS = 180;
@@ -439,7 +475,9 @@ export function useInteraction({
     "worklet";
     const subject = subjectFor(slot.id);
     if (!subject) return undefined;
-    const zone = slot.catalog ? undefined : zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY);
+    const zone = slot.catalog
+      ? undefined
+      : resolveDropZone(dropZones.value, slot.absoluteX, slot.absoluteY, slot.latchedRoomZone).zone;
     if (zone?.kind === "room")
       // A room button is a destination: the open floor in front of that room.
       return resolve(prepared.value.rooms[zone.room], subject, roomPoint(400, 480), { scale: camera.value.a, floorOnly: true, release: true });
@@ -773,8 +811,12 @@ export function useInteraction({
           lag: reduced ? 0 : slot.lag + (Math.max(-10, Math.min(10, (-vx / 500) * 10)) - slot.lag) * alpha,
           edgeAt: pointer.point.x < EDGE_BAND || pointer.point.x > viewport.width - EDGE_BAND ? slot.edgeAt || now : 0,
         };
+        const resolvedZone = nextSlot.catalog
+          ? { zone: undefined, latched: undefined }
+          : resolveDropZone(dropZones.value, nextSlot.absoluteX, nextSlot.absoluteY, nextSlot.latchedRoomZone);
+        nextSlot.latchedRoomZone = resolvedZone.latched;
         nextSlot.proposal = proposalFor(nextSlot);
-        const zone = nextSlot.catalog ? undefined : zoneAt(dropZones.value, nextSlot.absoluteX, nextSlot.absoluteY);
+        const zone = resolvedZone.zone;
         nextSlot.stagingAt = zone?.kind === "drawer" && nextSlot.proposal?.kind === "staging"
           ? screenToRoom(screenPoint(zone.x + zone.width / 2 - offset.value.x, zone.y + zone.height / 2 - offset.value.y), camera.value, housePoint(0, 0))
           : undefined;
@@ -1073,7 +1115,10 @@ export function useInteraction({
             runOnJS(onTrace)({ type: "release", at: eventTime(), id: slot.id, kind: proposal?.kind ?? "restore", target: proposal?.target,
               finger: { x: touch.x, y: touch.y }, anchor: { x: slot.x - origin.x, y: slot.y - origin.y }, contact: proposal?.contact, room: proposal?.room });
           }
-          const dropZone = slot && !slot.catalog ? zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY) : undefined;
+          const dropZone =
+            slot && !slot.catalog
+              ? resolveDropZone(dropZones.value, slot.absoluteX, slot.absoluteY, slot.latchedRoomZone).zone
+              : undefined;
           if (dropZone?.kind === "room" && proposal) switchRoom(dropZone.room);
           if (onReleaseProbe && capture?.phase === "dragging" && slot)
             probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
@@ -1241,6 +1286,21 @@ export function useInteraction({
               slot.pointerY = pointerY;
               slot.proposal = proposalFor(slot);
             }
+            if (!slot.catalog) {
+              const resolvedZone = resolveDropZone(
+                dropZones.value,
+                slot.absoluteX,
+                slot.absoluteY,
+                slot.latchedRoomZone
+              );
+              if (
+                slot.latchedRoomZone?.room !== resolvedZone.latched?.room ||
+                Boolean(slot.latchedRoomZone) !== Boolean(resolvedZone.latched)
+              ) {
+                slot.latchedRoomZone = resolvedZone.latched;
+                slot.proposal = proposalFor(slot);
+              }
+            }
           }
           const earlyLayout = overlayLayouts.value[slot.id];
           if (!slot.ready && earlyLayout && (earlyLayout.generation === slot.generation || slot.subject?.body?.small)) {
@@ -1322,7 +1382,7 @@ export function useInteraction({
     let hovering: RoomId | undefined, overDrawer = false;
     for (const slot of slots.value) {
       if (!slot.id || slot.phase !== "dragging" || slot.catalog) continue;
-      const zone = zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY);
+      const zone = resolveDropZone(dropZones.value, slot.absoluteX, slot.absoluteY, slot.latchedRoomZone).zone;
       if (zone?.kind === "room") hovering = zone.room;
       if (zone?.kind === "drawer" && slot.proposal?.kind === "staging" && slot.subject?.character) overDrawer = true;
     }
@@ -1378,6 +1438,7 @@ export function useInteraction({
     externalSubjects.set({});
     drawerPointers.set([]);
     slots.set([emptyDragSlot(), emptyDragSlot()]);
+    roomHover.set(null);
     restingFlags.set(emptyRestingFlags());
     restingMotion.set(emptyRestingMotion());
     onClear(0);

@@ -1,6 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet } from "react-native";
-import type { PressableProps, StyleProp, ViewStyle } from "react-native";
+import { Pressable, StyleSheet, type PressableProps, type StyleProp, type View, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useReducedMotion } from "../components/motion";
@@ -12,6 +11,8 @@ export type PressTargetProps = Pick<
   "accessibilityLabel" | "accessibilityHint" | "disabled" | "onPress" | "onPressIn" | "onPressOut" | "onLongPress" | "delayLongPress" | "onAccessibilityAction" | "accessibilityActions" | "testID" | "tabIndex"
 > & {
   children: React.ReactNode;
+  /** Optional ref to the underlying Pressable for native accessibility focus restoration. */
+  targetRef?: React.Ref<View>;
   /** Floor for the hit area: `child` 64, `adult` 48, `min` 44. Defaults to `adult`. */
   target?: TargetSize;
   haptic?: boolean;
@@ -32,7 +33,7 @@ export const targetFloor = (target: TargetSize) => theme.target[target];
  * and a hit area that is never under its size floor: the floor is applied after the caller's style, which may
  * raise a minimum but never lower it.
  */
-export function PressTarget({ target = "adult", haptic = false, role = "button", selected, checked, disabled, onPress, onPressIn, onPressOut, onLongPress, style, ...props }: PressTargetProps) {
+export function PressTarget({ targetRef, target = "adult", haptic = false, role = "button", selected, checked, disabled, onPress, onPressIn, onPressOut, onLongPress, style, ...props }: PressTargetProps) {
   const reduced = useReducedMotion();
   const scale = useSharedValue(1);
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
@@ -52,6 +53,7 @@ export function PressTarget({ target = "adult", haptic = false, role = "button",
   return (
     <AnimatedPressable
       {...props}
+      ref={targetRef as never}
       accessibilityRole={role}
       accessibilityState={{ disabled: !!inert, selected, ...(checked !== undefined && { checked }) }}
       disabled={inert}
