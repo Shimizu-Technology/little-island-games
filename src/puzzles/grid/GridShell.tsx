@@ -129,9 +129,12 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   }, [enlarged, state.selected, spec.columns, cell, width, viewportMax, panX, panY]);
   const send = useCallback((action: GridAction) => {
     if (!active) return;
-    if (action.type === 'write') setPlacing({ cells: action.cells, value: action.value });
+    if (action.type === 'write') {
+      setPlacing({ cells: action.cells, value: action.value });
+      if (action.selected !== undefined) choose(action.selected);
+    }
     dispatch(action);
-  }, [active, dispatch]);
+  }, [active, dispatch, choose]);
   const select = useCallback((index: number) => {
     if (!active) return;
     const changes = first || spec.kind === 'paint' || spec.kind === 'cells', now = Date.now();
@@ -193,13 +196,13 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
       if (spec.kind === 'paint') {
         // eslint-disable-next-line react-hooks/purity -- This runs only on a gesture release, never during render.
         const now = Date.now(); if (!acceptTouch(last.current, d.start, now, d.cells.length === 1)) return;
-        last.current = { cell: d.start, at: now }; choose(d.end); send({ type: 'write', cells: d.cells, value: live.current.state.tool, selected: d.end });
+        last.current = { cell: d.start, at: now }; send({ type: 'write', cells: d.cells, value: live.current.state.tool, selected: d.end });
       } else selectRef.current(d.end);
     },
     onPanResponderTerminate: () => { interaction(false); drag.current = null; cursorOn.set(0); setLine([]); },
     onPanResponderTerminationRequest: () => false,
     onShouldBlockNativeResponder: () => true,
-  }), [active, spec, zoom, cell, panX, panY, cursorX, cursorY, cursorOn, width, viewportMax, geometry.width, geometry.height, interaction, send, choose]);
+  }), [active, spec, zoom, cell, panX, panY, cursorX, cursorY, cursorOn, width, viewportMax, geometry.width, geometry.height, interaction, send]);
   const panStyle = useAnimatedStyle(() => ({ transform: [{ translateX: panX.get() }, { translateY: panY.get() }] }));
   const cursorStyle = useAnimatedStyle(() => ({ opacity: cursorOn.get(), transform: [{ translateX: cursorX.get() }, { translateY: cursorY.get() }] }));
   // Below the accessibility sizes the zoom controls sit between the board and the keys, as they always did. At them the keys
