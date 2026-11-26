@@ -9,17 +9,24 @@ export function StudioCard({ open, children }: { open: boolean; children: React.
       style={{
         position: "absolute",
         bottom: 86,
-        left: 8,
-        right: 8,
+        left: 10,
+        right: 10,
         maxHeight: "70%",
         zIndex: 3,
-        backgroundColor: "#FFFBEF",
-        borderRadius: 22,
-        borderWidth: 1,
-        borderColor: "#A5BFB2",
-        boxShadow: "0 4px 18px #254E4B22",
+        backgroundColor: "#FFFDF8",
+        borderRadius: 24,
+        borderWidth: 1.5,
+        borderColor: "#E8D8BE",
+        borderBottomWidth: 3.5,
+        borderBottomColor: "rgba(61, 43, 36, 0.16)",
+        shadowColor: "#3D2B24",
+        shadowOpacity: 0.14,
+        shadowOffset: { width: 0, height: 6 },
+        shadowRadius: 18,
+        elevation: 6,
+        boxShadow: "0 6px 20px rgba(61, 43, 36, 0.14)",
       }}
-      contentContainerStyle={{ padding: 16, gap: 10 }}
+      contentContainerStyle={{ padding: 18, gap: 12 }}
     >
       {children}
     </ScrollView>

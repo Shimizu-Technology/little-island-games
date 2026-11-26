@@ -5,6 +5,8 @@ import { Image, Pressable, StyleSheet, View } from "react-native";
 import { LibraryGlyph } from "./LibraryGlyph";
 import { Text } from "../components/Text";
 import { font } from "../components/ui";
+import { useNunitoLoaded } from "../ui/fonts";
+import { theme } from "../ui/theme";
 import { Motif, TopicArt } from "../explore/ExploreArt";
 import { SceneBackdrop } from "./SceneBackdrop";
 import { sceneCategory, sceneDecor } from "./sceneContext";
@@ -13,12 +15,18 @@ import { LibraryArt } from "./LibraryArt";
 import { libraryAssets } from "./assets.generated";
 import type { CatalogItem } from "./catalog";
 export const palette = {
-  ink: "#254E4B",
-  paper: "#FCFAF4",
-  sage: "#DCE9D8",
-  lagoon: "#C4E1DC",
-  sand: "#EBD3A0",
-  muted: "#536B65",
+  canvas: "#FFF6E5",
+  ink: "#3D2B24",
+  paper: "#FFFDF8",
+  card: "#FFFDF8",
+  border: "#E8D8BE",
+  rim: "rgba(61, 43, 36, 0.16)",
+  sage: "#E3EFE2",
+  lagoon: "#DDF1EE",
+  lagoonInk: "#1E6B66",
+  sand: "#F6E5C6",
+  warmTint: "#FFF3DA",
+  muted: "#665247",
   coral: "#B75C49",
 };
 export function LibraryIcon({ name, size = 28 }: { name: string; size?: number }) {
@@ -40,6 +48,10 @@ export function Action({
   disabled?: boolean;
   expanded?: boolean;
 }) {
+  const nunitoLoaded = useNunitoLoaded();
+  const actionFont = nunitoLoaded
+    ? ({ fontFamily: theme.fontFamily["700"], fontWeight: "normal" } as const)
+    : ({ fontWeight: "700" } as const);
   return (
     <Pressable
       accessibilityRole="button"
@@ -53,11 +65,17 @@ export function Action({
         s.action,
         selected && s.selected,
         disabled && { opacity: 0.45 },
-        pressed && { opacity: 0.7 },
+        pressed && { opacity: 0.78 },
       ]}
     >
       {React.Children.map(children, (child) =>
-        typeof child === "string" || typeof child === "number" ? <Text maxFontSizeMultiplier={1.3} style={s.actionText}>{child}</Text> : child
+        typeof child === "string" || typeof child === "number" ? (
+          <Text maxFontSizeMultiplier={1.3} style={[s.actionText, actionFont]}>
+            {child}
+          </Text>
+        ) : (
+          child
+        )
       )}
     </Pressable>
   );
@@ -125,69 +143,111 @@ export function ItemPicture({
   );
 }
 export const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: palette.paper },
+  page: { flex: 1, backgroundColor: palette.canvas },
   header: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 6,
+    gap: 4,
+    backgroundColor: palette.canvas,
     borderBottomWidth: 1,
-    borderColor: "#D9E3DB",
+    borderColor: palette.border,
   },
   title: { fontFamily: font, color: palette.ink, fontSize: 30, fontWeight: "800", lineHeight: 38 },
-  heading: { fontFamily: font, color: palette.ink, fontSize: 23, fontWeight: "700", marginTop: 12 },
-  body: { fontFamily: font, color: palette.ink, fontSize: 22, lineHeight: 34 },
+  heading: { fontFamily: font, color: palette.ink, fontSize: 22, fontWeight: "800", lineHeight: 28, marginTop: 10 },
+  body: { fontFamily: font, color: palette.ink, fontSize: 20, lineHeight: 31 },
   small: { fontFamily: font, color: palette.muted, fontSize: 14, lineHeight: 21 },
   action: {
-    minHeight: 48,
-    minWidth: 48,
+    minHeight: 46,
+    minWidth: 46,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: "#C2D3C7",
-    backgroundColor: "#EFF3E7",
+    borderColor: palette.border,
+    borderBottomWidth: 3,
+    borderBottomColor: palette.rim,
+    backgroundColor: palette.card,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 1,
   },
-  actionText: { fontFamily: font, fontSize: 16, fontWeight: "600", color: palette.ink, textAlign: "center" },
-  selected: { backgroundColor: "#C4E1DC", borderColor: palette.ink },
-  row: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 9 },
-  content: { padding: 18, gap: 14, maxWidth: 1060, width: "100%", alignSelf: "center", paddingBottom: 36 },
+  actionText: { fontFamily: font, fontSize: 16, fontWeight: "700", color: palette.ink, textAlign: "center" },
+  selected: {
+    backgroundColor: palette.lagoon,
+    borderColor: palette.lagoonInk,
+    borderBottomColor: palette.lagoonInk,
+  },
+  row: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10 },
+  content: { padding: 18, gap: 16, maxWidth: 1060, width: "100%", alignSelf: "center", paddingBottom: 36 },
   input: {
     fontFamily: font,
     color: palette.ink,
-    minHeight: 52,
-    fontSize: 18,
-    padding: 14,
+    minHeight: 50,
+    fontSize: 17,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderWidth: 1.5,
-    borderColor: "#A5BFB2",
-    backgroundColor: "white",
-    borderRadius: 16,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
+    borderRadius: 18,
+    shadowColor: palette.ink,
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 1,
   },
   card: {
     flex: 1,
     minWidth: 0,
     margin: 6,
-    borderRadius: 24,
-    borderColor: "#A4C1AE",
+    borderRadius: 22,
+    borderColor: palette.border,
     borderWidth: 1.5,
+    borderBottomWidth: 3.5,
+    borderBottomColor: palette.rim,
     overflow: "hidden",
-    backgroundColor: "#F0F2DE",
+    backgroundColor: palette.card,
+    shadowColor: palette.ink,
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 3,
   },
-  cardTitle: { fontFamily: font, color: palette.ink, fontSize: 17, fontWeight: "700", padding: 12, minHeight: 62 },
-  notice: { backgroundColor: "#F2E5BF", padding: 12, borderRadius: 14, margin: 10 },
+  cardTitle: { fontFamily: font, color: palette.ink, fontSize: 17, fontWeight: "800", lineHeight: 23, padding: 12, minHeight: 58 },
+  notice: {
+    backgroundColor: palette.warmTint,
+    borderWidth: 1.5,
+    borderColor: "#E4C994",
+    padding: 14,
+    borderRadius: 18,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    gap: 10,
+  },
   tabs: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#E4EDDD",
-    borderTopWidth: 1,
-    borderColor: "#BACDBE",
+    gap: 4,
+    backgroundColor: palette.card,
+    borderTopWidth: 1.5,
+    borderColor: palette.border,
+    paddingHorizontal: 4,
     paddingTop: 8,
     paddingBottom: 6,
   },
-  tab: { flex: 1, minHeight: 62, alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 16 },
+  tab: {
+    flex: 1,
+    minHeight: 58,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
 });

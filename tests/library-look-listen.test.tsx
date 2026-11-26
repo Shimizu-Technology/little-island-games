@@ -9,6 +9,7 @@ vi.mock("react-native", () => ({
   PanResponder: { create: (handlers: object) => ({ panHandlers: handlers }) },
 }));
 vi.mock("../src/components/Text", () => ({ Text: "Text" }));
+vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
 vi.mock("../src/library/ui", () => ({ ItemPicture: "Picture", LibraryIcon: "Icon", s: {} }));
 vi.mock("../src/library/catalog", () => ({
   namingLabel: (record: { title: string }) => record.title,

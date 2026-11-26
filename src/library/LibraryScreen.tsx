@@ -7,6 +7,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../components/Text";
 import { Recovery } from "../components/Recovery";
 import { SaveStatus } from "../components/SaveStatus";
+import { useNunitoLoaded } from "../ui/fonts";
+import { theme } from "../ui/theme";
 import { useStore } from "../state/Store";
 import { familyLearners } from "../learn/learners";
 import { learnIds, type LearnId } from "../learn/types";
@@ -50,18 +52,33 @@ import { canonicalDestination, exhibitWorld as resolveExhibitWorld, hearTitleLab
 import { canonicalLibraryId, rememberLibraryDestination } from "./ids";
 import type { ReadingLayer } from "./schema";
 const extensions = new Map<string, number>();
+const storyCard = {
+  backgroundColor: "#FFFDF8",
+  borderWidth: 1.5,
+  borderColor: "#E8D8BE",
+  borderBottomWidth: 3.5,
+  borderBottomColor: "rgba(61, 43, 36, 0.16)",
+  borderRadius: 24,
+  shadowColor: "#3D2B24",
+  shadowOpacity: 0.08,
+  shadowOffset: { width: 0, height: 4 },
+  shadowRadius: 10,
+  elevation: 3,
+} as const;
 export default function LibraryScreen() {
   const store = useStore();
   const route = useLocalSearchParams<{ place?: string; id?: string }>();
   if (!store.ready)
     return (
-      <SafeAreaView style={s.page}>
-        <Text style={s.body}>Opening your Library…</Text>
+      <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]}>
+        <View style={s.content}>
+          <Text style={[s.body, { color: "#3D2B24" }]}>Opening your Library…</Text>
+        </View>
       </SafeAreaView>
     );
   if (store.recovery)
     return (
-      <SafeAreaView style={s.page}>
+      <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]}>
         <Recovery />
       </SafeAreaView>
     );
@@ -73,6 +90,16 @@ export default function LibraryScreen() {
 }
 function LibraryReady() {
   const store = useStore();
+  const nunitoLoaded = useNunitoLoaded();
+  const displayBold = nunitoLoaded
+    ? ({ fontFamily: theme.fontFamily["800"], fontWeight: "normal" } as const)
+    : ({ fontWeight: "800" } as const);
+  const headingBold = nunitoLoaded
+    ? ({ fontFamily: theme.fontFamily["700"], fontWeight: "normal" } as const)
+    : ({ fontWeight: "700" } as const);
+  const bodyFont = nunitoLoaded
+    ? ({ fontFamily: theme.fontFamily["600"], fontWeight: "normal" } as const)
+    : undefined;
   const { width, fontScale } = useWindowDimensions();
   const focused = useIsFocused();
   const params = useLocalSearchParams<{ place?: string; id?: string; resume?: string }>();
@@ -279,6 +306,13 @@ function LibraryReady() {
     scrollTimer.current = setTimeout(() => rememberRef.current(), 250);
   };
   const cols = fontScale > 1.6 ? 1 : width < 650 ? 2 : width < 1000 ? 3 : 4;
+  const contentWidth = Math.min(width, 1200) - 20;
+  const headerInnerWidth = Math.max(240, contentWidth - 16);
+  const categoryCols = fontScale > 1.6 || expandedCategoryLabels ? 1 : width < 650 ? 2 : width < 1000 ? 3 : 4;
+  const categoryTileWidth = Math.floor((headerInnerWidth - (categoryCols - 1) * 12) / categoryCols);
+  const shelfInnerWidth = contentWidth - (cols > 1 ? 14 : 0);
+  const bookCardWidth = Math.max(120, Math.floor(shelfInnerWidth / cols) - 12);
+  const stackHero = fontScale > 1.5 || (width < 340 && fontScale > 1.25);
   const results = useMemo(
     () =>
       search(
@@ -309,15 +343,15 @@ function LibraryReady() {
       style={[
         s.card,
         item.item?.type === "book" && {
-          backgroundColor: "#E9D6AF",
-          borderColor: "#A77F56",
-          borderBottomWidth: 12,
-          borderBottomColor: "#A77F56",
-          borderRadius: 12,
+          backgroundColor: "#FFFDF8",
+          borderColor: "#DEC59D",
+          borderBottomWidth: 6,
+          borderBottomColor: "#C89F6E",
+          borderRadius: 16,
           flex: 0,
-          flexBasis: (Math.min(width, 1200) - 20) / cols - 12,
+          flexBasis: bookCardWidth,
           flexShrink: 0,
-          width: (Math.min(width, 1200) - 20) / cols - 12,
+          width: bookCardWidth,
         },
       ]}
     >
@@ -333,8 +367,10 @@ function LibraryReady() {
           audio.speak(speech.key, speech.sentence);
         }}
       >
-        <ItemPicture record={item} pictureHeight={item.item?.type === "book" ? (width < 650 ? 210 : 300) : undefined} />
-        <Text maxFontSizeMultiplier={1.5} style={s.cardTitle}>{item.title}</Text>
+        <ItemPicture record={item} pictureHeight={item.item?.type === "book" ? (width < 650 ? 200 : 280) : undefined} />
+        <Text maxFontSizeMultiplier={1.5} style={[s.cardTitle, headingBold, { color: "#3D2B24" }]}>
+          {item.title}
+        </Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -343,18 +379,26 @@ function LibraryReady() {
           const speech = recordSpeech(item);
           audio.speak(speech.key, speech.sentence);
         }}
-        style={{
+        style={({ pressed }) => ({
           position: "absolute",
-          right: 5,
-          top: 5,
+          right: 8,
+          top: 8,
           minWidth: 44,
           minHeight: 44,
           alignItems: "center",
           justifyContent: "center",
           padding: 8,
-          borderRadius: 25,
-          backgroundColor: "#FFFBEF",
-        }}
+          borderRadius: 22,
+          backgroundColor: "#FFFDF8",
+          borderWidth: 1.5,
+          borderColor: "#E8D8BE",
+          shadowColor: "#3D2B24",
+          shadowOpacity: 0.12,
+          shadowOffset: { width: 0, height: 2 },
+          shadowRadius: 5,
+          elevation: 2,
+          opacity: pressed ? 0.78 : 1,
+        })}
       >
         <LibraryIcon name="sound" size={22} />
       </Pressable>
@@ -362,14 +406,14 @@ function LibraryReady() {
   );
   if (place === "little" && open && !paused)
     return (
-      <SafeAreaView style={s.page}>
+      <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]}>
         <LookListen
           items={allowed.filter((item) => item.item?.type !== "book" && item.item?.type !== "exhibit")}
           speak={audio.speak}
           stop={audio.stop}
           onExit={() => visit("wonder", "", true)}
         />
-        {audio.notice && <Text style={s.small}>{audio.notice}</Text>}
+        {audio.notice && <Text style={[s.small, bodyFont, { color: "#665247", paddingHorizontal: 14 }]}>{audio.notice}</Text>}
       </SafeAreaView>
     );
   const blocked = (paused || (!open && !safePage)) && place !== "grownups";
@@ -377,15 +421,18 @@ function LibraryReady() {
   const readerAvailable = place === "reader" && !restricted && !blocked && record?.item?.type === "book";
   const authoredExhibit = record?.item?.type === "exhibit" ? record.item : undefined;
   const exhibitWorld = place === "exhibit" ? (id as WorldId) : resolveExhibitWorld(record);
+  const headerFontSize = place === "reader" ? 16 : width < 360 ? 16 : 20;
+  const tabFontSize = width < 360 ? 12.5 : 13.5;
+  const activeTabBg = { backgroundColor: "#F9EBD0", borderColor: "#DEC496" } as const;
   return (
-    <SafeAreaView style={s.page} edges={["top", "left", "right", "bottom"]}>
+    <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]} edges={["top", "left", "right", "bottom"]}>
       <View style={s.header}>
         <Action onPress={back} label="Back">
           <LibraryIcon name="back" size={24} />
         </Action>
         <Text
-          maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit
-          style={[s.heading, { marginTop: 0, flex: 1, fontSize: place === "reader" ? 17 : 20, textAlign: "center" }]}
+          maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
+          style={[s.heading, displayBold, { marginTop: 0, flex: 1, fontSize: headerFontSize, textAlign: "center", color: "#3D2B24" }]}
         >
           {readerAvailable ? record.title : "Island Library"}
         </Text>
@@ -419,39 +466,49 @@ function LibraryReady() {
       {!!store.error && <SaveStatus />}
       {!!(notice || audio.notice) && (
         <View style={s.notice}>
-          <Text accessibilityLiveRegion="polite" style={s.small}>
+          <Text accessibilityLiveRegion="polite" style={[s.small, bodyFont, { color: "#665247" }]}>
             {notice || audio.notice}
           </Text>
         </View>
       )}
       {!open && safePage && !paused && (
         <View style={s.notice}>
-          <Text style={s.body}>Finish this page, then we’ll pause.</Text>
-          <Action
-            onPress={() => {
-              void pause();
-            }}
-          >
-            Save and pause
-          </Action>
-          <Action onPress={() => visit("grownups")}>Grown-ups</Action>
+          <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>Finish this page, then we’ll pause.</Text>
+          <View style={s.row}>
+            <Action
+              onPress={() => {
+                void pause();
+              }}
+            >
+              Save and pause
+            </Action>
+            <Action onPress={() => visit("grownups")}>Grown-ups</Action>
+          </View>
         </View>
       )}
       {blocked ? (
         <View style={s.content}>
-          <Text maxFontSizeMultiplier={1.5} style={s.title}>{paused ? "A good place to pause" : "The Library is resting"}</Text>
-          <Text style={s.body}>
-            {paused ? "Your work is saved in My Shelf." : "Your saved pages and places are here for your next visit."}
-          </Text>
-          <Action onPress={() => visit("grownups")}>Grown-ups</Action>
-          <Action onPress={() => router.replace("/")}>Return to the Island</Action>
+          <View style={[storyCard, { padding: 20, gap: 14 }]}>
+            <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { color: "#3D2B24" }]}>
+              {paused ? "A good place to pause" : "The Library is resting"}
+            </Text>
+            <Text style={[s.body, bodyFont, { color: "#665247" }]}>
+              {paused ? "Your work is saved in My Shelf." : "Your saved pages and places are here for your next visit."}
+            </Text>
+            <View style={s.row}>
+              <Action onPress={() => visit("grownups")}>Grown-ups</Action>
+              <Action onPress={() => router.replace("/")}>Return to the Island</Action>
+            </View>
+          </View>
         </View>
       ) : restricted ? (
         <View style={s.content}>
-          <Text style={s.body}>
-            {collectionEmptyMessage(record?.category ?? "", child.policy.collections)}
-          </Text>
-          <Action onPress={() => visit("wonder", "", true)}>Choose another picture</Action>
+          <View style={[storyCard, { padding: 20, gap: 14 }]}>
+            <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
+              {collectionEmptyMessage(record?.category ?? "", child.policy.collections)}
+            </Text>
+            <Action onPress={() => visit("wonder", "", true)}>Choose another picture</Action>
+          </View>
         </View>
       ) : showGrid ? (
         <FlatList
@@ -459,16 +516,20 @@ function LibraryReady() {
           key={`${place}:${cols}`}
           data={place === "books" ? allowed.filter((item) => item.item?.type === "book") : results}
           numColumns={cols}
-          style={place === "books" ? { backgroundColor: "#F0E1C6" } : undefined}
+          style={{ backgroundColor: "#FFF6E5" }}
           columnWrapperStyle={
             place === "books" && cols > 1
               ? {
-                  backgroundColor: "#E5D0AC",
-                  borderBottomWidth: 12,
-                  borderColor: "#9B724E",
-                  marginBottom: 24,
-                  borderRadius: 12,
+                  backgroundColor: "#F3E4C8",
+                  borderWidth: 1,
+                  borderColor: "#E4CFA9",
+                  borderBottomWidth: 10,
+                  borderBottomColor: "#C89F6E",
+                  marginBottom: 20,
+                  borderRadius: 18,
                   paddingTop: 14,
+                  paddingBottom: 8,
+                  paddingHorizontal: 6,
                 }
               : undefined
           }
@@ -490,34 +551,52 @@ function LibraryReady() {
           }}
           ListHeaderComponent={
             place === "books" ? (
-              <View style={[s.content, { backgroundColor: "#F0E1C6", borderRadius: 24, marginBottom: 16 }]}>
-                <Text maxFontSizeMultiplier={1.5} style={s.title}>Our story shelf</Text>
-                <Text style={s.body}>A shelf of stories to share.</Text>
+              <View style={[storyCard, { padding: 20, gap: 6, marginHorizontal: 6, marginBottom: 18 }]}>
+                <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { fontSize: 28, lineHeight: 35, color: "#3D2B24" }]}>
+                  Our story shelf
+                </Text>
+                <Text style={[s.body, bodyFont, { fontSize: 18, lineHeight: 26, color: "#665247" }]}>
+                  A shelf of stories to share.
+                </Text>
               </View>
             ) : (
               <View style={{ padding: 8, gap: 14 }}>
-                <Text maxFontSizeMultiplier={1.5} style={[s.title, { fontSize: 28 }]}>What do you wonder?</Text>
+                <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { fontSize: width < 360 ? 25 : 28, lineHeight: width < 360 ? 32 : 36, color: "#3D2B24" }]}>
+                  What do you wonder?
+                </Text>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Look & Listen"
                   onPress={() => visit("little")}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "#FFF3D4",
-                    borderWidth: 2,
-                    borderColor: "#577E69",
-                    borderRadius: 26,
-                    overflow: "hidden",
-                    opacity: pressed ? 0.8 : 1,
-                  })}
+                  style={({ pressed }) => [
+                    storyCard,
+                    {
+                      flexDirection: stackHero ? "column" : "row",
+                      alignItems: "center",
+                      padding: 12,
+                      gap: 12,
+                      borderRadius: 26,
+                      overflow: "hidden",
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
                 >
-                  <View style={{ width: "45%", height: 130 }}>
+                  <View
+                    style={{
+                      width: stackHero ? "100%" : "42%",
+                      height: stackHero ? 120 : 124,
+                      borderRadius: 18,
+                      overflow: "hidden",
+                      backgroundColor: "#DDF1EE",
+                    }}
+                  >
                     <LibraryArt kind="turtle" />
                   </View>
-                  <View style={{ flex: 1, padding: 12, gap: 8, alignItems: "center" }}>
-                    <LibraryIcon name="listen" size={36} />
-                    <Text maxFontSizeMultiplier={1.6} style={[s.heading, { marginTop: 0, textAlign: "center", fontSize: 21 }]}>Look & Listen</Text>
+                  <View style={{ flex: 1, paddingHorizontal: 6, paddingVertical: 4, gap: 6, alignItems: "center" }}>
+                    <LibraryIcon name="listen" size={34} />
+                    <Text maxFontSizeMultiplier={1.5} style={[s.heading, displayBold, { marginTop: 0, textAlign: "center", fontSize: 21, color: "#3D2B24" }]}>
+                      Look & Listen
+                    </Text>
                   </View>
                 </Pressable>
                 <TextInput
@@ -528,8 +607,9 @@ function LibraryReady() {
                     update({ query, category: categoryAfterTyping(query, live.current.category) });
                   }}
                   maxLength={120}
-                  style={s.input}
+                  style={[s.input, bodyFont]}
                   placeholder="Find a wonder…"
+                  placeholderTextColor="#665247"
                   autoCorrect={false}
                   returnKeyType="search"
                 />
@@ -537,16 +617,18 @@ function LibraryReady() {
                   selected={child.category === "all" && !child.query}
                   onPress={() => update({ category: "all", query: "", onlyFavorites: false })}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-                    <LibraryIcon name="wonder" size={36} />
-                    <Text maxFontSizeMultiplier={1.4} numberOfLines={2} style={[s.actionText, { fontSize: 19, flexShrink: 1 }]}>All pictures</Text>
-                    <View style={{ width: 80, height: 48, flexShrink: 0, overflow: "hidden", borderRadius: 14 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12, width: "100%", justifyContent: "center" }}>
+                    <LibraryIcon name="wonder" size={32} />
+                    <Text maxFontSizeMultiplier={1.4} numberOfLines={2} style={[s.actionText, displayBold, { fontSize: 18, flexShrink: 1, color: "#3D2B24" }]}>
+                      All pictures
+                    </Text>
+                    <View style={{ width: width < 360 ? 64 : 78, height: 46, flexShrink: 0, overflow: "hidden", borderRadius: 14, backgroundColor: "#E5ECD8" }}>
                       <LibraryArt kind="butterfly" />
                     </View>
                   </View>
                 </Action>
                 {!child.query && child.category === "all" && (
-                  <View style={s.row}>
+                  <View style={[s.row, { gap: 12 }]}>
                     {categories
                       .filter((category) => category.id !== "books" && child.policy.collections.includes(category.id))
                       .map((category) => (
@@ -560,25 +642,31 @@ function LibraryReady() {
                             update({ category: child.category === category.id ? "all" : category.id });
                           }}
                           onLongPress={() => audio.speak(category.speechKey)}
-                          style={[
+                          style={({ pressed }) => [
+                            storyCard,
                             {
-                              width: fontScale > 1.6 || expandedCategoryLabels ? "100%" : width < 650 ? "48%" : width < 1000 ? "31%" : "23.5%",
-                              backgroundColor: category.tint,
-                              borderRadius: 24,
+                              width: categoryTileWidth,
                               overflow: "hidden",
-                              borderWidth: 2,
-                              borderColor: "#577E69",
+                              opacity: pressed ? 0.85 : 1,
                             },
                             child.category === category.id && s.selected,
                           ]}
                         >
-                          <View style={{ width: "100%", height: width < 650 ? 142 : 164 }}>
+                          <View style={{ width: "100%", height: width < 650 ? 132 : 158, backgroundColor: category.tint }}>
                             <LibraryArt kind={categoryScene(category)} />
                           </View>
-                          <WordLabel textStyle={s.actionText}
+                          <WordLabel
+                            textStyle={[s.actionText, headingBold, { color: "#3D2B24" }]}
                             onWordLayout={(event) => setExpandedCategoryLabels(event.nativeEvent.layout.height > 28)}
-                            style={{ padding: 10, minHeight: 54, backgroundColor: "#FFF3D4",
-                              borderTopWidth: 2, borderColor: "#A2B18A" }}>
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 10,
+                              minHeight: 54,
+                              backgroundColor: child.category === category.id ? "#DDF1EE" : "#FFFDF8",
+                              borderTopWidth: 1,
+                              borderColor: "#EFE3CE",
+                            }}
+                          >
                             {category.title}
                           </WordLabel>
                         </Pressable>
@@ -587,7 +675,9 @@ function LibraryReady() {
                 )}
                 {!child.query && (
                   <>
-                    <Text maxFontSizeMultiplier={1.6} style={s.heading}>Try an exhibit</Text>
+                    <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                      Try an exhibit
+                    </Text>
                     <View style={s.row}>
                       {exhibits
                         .filter((exhibit) => child.policy.collections.includes(exhibit.category))
@@ -603,10 +693,11 @@ function LibraryReady() {
                           >
                             <View
                               style={{
-                                width: width < 650 ? 128 : 160,
-                                height: 88,
+                                width: width < 380 ? 112 : width < 650 ? 128 : 160,
+                                height: 84,
                                 overflow: "hidden",
                                 borderRadius: 16,
+                                marginBottom: 6,
                               }}
                             >
                               <LibraryArt kind={exhibit.motif} />
@@ -625,20 +716,24 @@ function LibraryReady() {
                     Saved pictures
                   </Action>
                 </View>
-                <Text maxFontSizeMultiplier={1.6} style={s.heading}>{child.query ? "Your discoveries" : "Follow a picture"}</Text>
+                <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                  {child.query ? "Your discoveries" : "Follow a picture"}
+                </Text>
               </View>
             )
           }
           ListEmptyComponent={
-            <View style={s.content}>
-              <Text style={s.body}>
-                {place === "books" ? collectionEmptyMessage("books", child.policy.collections) : "No picture found yet. Try another word, or choose a picture above."}
-              </Text>
-              {place !== "books" && (
-                <Action onPress={() => update({ query: "", category: "all", onlyFavorites: false })}>
-                  Back to pictures
-                </Action>
-              )}
+            <View style={{ paddingHorizontal: 6, paddingTop: 4, maxWidth: 1060, width: "100%", alignSelf: "center" }}>
+              <View style={[storyCard, { padding: 20, gap: 14 }]}>
+                <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
+                  {place === "books" ? collectionEmptyMessage("books", child.policy.collections) : "No picture found yet. Try another word, or choose a picture above."}
+                </Text>
+                {place !== "books" && (
+                  <Action onPress={() => update({ query: "", category: "all", onlyFavorites: false })}>
+                    Back to pictures
+                  </Action>
+                )}
+              </View>
             </View>
           }
         />
@@ -716,9 +811,15 @@ function LibraryReady() {
               />
             ) : (
               <View style={{ gap: 18 }}>
-                <Text maxFontSizeMultiplier={1.5} style={s.title}>Make something yours</Text>
-                <Text style={s.body}>Draw freely, add pictures, and tell about a wonder.</Text>
-                <Action onPress={() => make()}>Make my page</Action>
+                <View style={[storyCard, { padding: 20, gap: 12 }]}>
+                  <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { color: "#3D2B24" }]}>
+                    Make something yours
+                  </Text>
+                  <Text style={[s.body, bodyFont, { fontSize: 18, lineHeight: 26, color: "#665247" }]}>
+                    Draw freely, add pictures, and tell about a wonder.
+                  </Text>
+                  <Action onPress={() => make()}>Make my page</Action>
+                </View>
                 {child.creations
                   .filter((page) => !page.sourceId || canOpen(page.sourceId, child.policy.collections))
                   .map((page) => (
@@ -730,34 +831,60 @@ function LibraryReady() {
             )
           ) : place === "shelf" ? (
             <>
-              <Text maxFontSizeMultiplier={1.5} style={s.title}>My Shelf</Text>
-              <Text style={s.small}>{people.people.find((person) => person.id === childId)?.name}</Text>
-              <Text maxFontSizeMultiplier={1.6} style={s.heading}>Saved wonders & books</Text>
+              <View style={[storyCard, { padding: 20, gap: 6 }]}>
+                <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { color: "#3D2B24" }]}>
+                  My Shelf
+                </Text>
+                <Text style={[s.small, bodyFont, { color: "#665247", fontSize: 15 }]}>
+                  {people.people.find((person) => person.id === childId)?.name}
+                </Text>
+              </View>
+              <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                Saved wonders & books
+              </Text>
               {child.saved
                 .filter((item) => canOpen(item, child.policy.collections))
                 .map((item) => (
-                  <View key={item}>
+                  <View key={item} style={[storyCard, { padding: 12, gap: 10 }]}>
                     {itemById(item) && card(itemById(item)!)}
                     <Action onPress={() => toggleSaved(item)}>Remove from My Shelf</Action>
                   </View>
                 ))}
               {!child.saved.length && (
-                <Text style={s.body}>Keep a wonder or book here when you find one you love.</Text>
+                <View style={[storyCard, { padding: 18 }]}>
+                  <Text style={[s.body, bodyFont, { fontSize: 18, lineHeight: 26, color: "#665247" }]}>
+                    Keep a wonder or book here when you find one you love.
+                  </Text>
+                </View>
               )}
-              <Text maxFontSizeMultiplier={1.6} style={s.heading}>My pages</Text>
+              <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                My pages
+              </Text>
               {child.creations
                 .filter((page) => !page.sourceId || canOpen(page.sourceId, child.policy.collections))
                 .map((page) => (
-                  <View key={page.id} style={{ gap: 8 }}>
+                  <View key={page.id} style={[storyCard, { padding: 14, gap: 10 }]}>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`Open my page: ${page.title}`}
                       onPress={() => visit("make", page.id)}
+                      style={{ gap: 8 }}
                     >
-                      <View style={{ width: "100%", height: 180 }}>
+                      <View
+                        style={{
+                          width: "100%",
+                          height: 180,
+                          borderRadius: 16,
+                          overflow: "hidden",
+                          borderWidth: 1,
+                          borderColor: "#E8D8BE",
+                        }}
+                      >
                         <DrawingArt drawing={page} />
                       </View>
-                      <Text maxFontSizeMultiplier={1.6} style={s.heading}>{page.title}</Text>
+                      <Text maxFontSizeMultiplier={1.6} style={[s.heading, headingBold, { marginTop: 2, color: "#3D2B24" }]}>
+                        {page.title}
+                      </Text>
                     </Pressable>
                     <Action
                       onPress={() => {
@@ -774,14 +901,18 @@ function LibraryReady() {
                     </Action>
                   </View>
                 ))}
-              <Text maxFontSizeMultiplier={1.6} style={s.heading}>Recent places</Text>
-              {child.recent
-                .filter((item) => canOpen(item, child.policy.collections))
-                .map((item) => (
-                  <Action key={item} onPress={() => openItem(item)}>
-                    {itemById(item)?.title ?? exhibits.find((exhibit) => `lab-${exhibit.world}` === item)?.title}
-                  </Action>
-                ))}
+              <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                Recent places
+              </Text>
+              <View style={s.row}>
+                {child.recent
+                  .filter((item) => canOpen(item, child.policy.collections))
+                  .map((item) => (
+                    <Action key={item} onPress={() => openItem(item)}>
+                      {itemById(item)?.title ?? exhibits.find((exhibit) => `lab-${exhibit.world}` === item)?.title}
+                    </Action>
+                  ))}
+              </View>
             </>
           ) : place === "grownups" ? (
             <GrownUps
@@ -828,33 +959,43 @@ function LibraryReady() {
               )}
             </>
           ) : (
-            <>
-              <Text style={s.body}>This page is not available. Your saved place is kept.</Text>
+            <View style={[storyCard, { padding: 20, gap: 14 }]}>
+              <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
+                This page is not available. Your saved place is kept.
+              </Text>
               <Action onPress={() => visit("wonder", "", true)}>Back to pictures</Action>
-            </>
+            </View>
           )}
         </ScrollView>
       )}
       {place !== "reader" && !blocked && (
         <View style={s.tabs}>
-          {(["wonder", "books", "make", "shelf"] as const).map((tab) => (
-            <Pressable
-              key={tab}
-              accessibilityRole="tab"
-              accessibilityLabel={tab === "shelf" ? "My Shelf" : tab[0].toUpperCase() + tab.slice(1)}
-              accessibilityState={{ selected: place === tab }}
-              onPress={() => {
-                remember();
-                visit(tab, "", true);
-              }}
-              style={[s.tab, place === tab && { backgroundColor: "#C1DCC8" }]}
-            >
-              <LibraryIcon name={tab} />
-              <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={[s.small, { fontWeight: "700" }]}>
-                {tab === "shelf" ? "My Shelf" : tab[0].toUpperCase() + tab.slice(1)}
-              </Text>
-            </Pressable>
-          ))}
+          {(["wonder", "books", "make", "shelf"] as const).map((tab) => {
+            const active = place === tab;
+            const tabLabelStyle = [
+              s.small,
+              active ? displayBold : headingBold,
+              { color: active ? "#3D2B24" : "#665247", fontSize: tabFontSize, lineHeight: 18 },
+            ];
+            return (
+              <Pressable
+                key={tab}
+                accessibilityRole="tab"
+                accessibilityLabel={tab === "shelf" ? "My Shelf" : tab[0].toUpperCase() + tab.slice(1)}
+                accessibilityState={{ selected: active }}
+                onPress={() => {
+                  remember();
+                  visit(tab, "", true);
+                }}
+                style={[s.tab, active && activeTabBg]}
+              >
+                <LibraryIcon name={tab} />
+                <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={tabLabelStyle}>
+                  {tab === "shelf" ? "My Shelf" : tab[0].toUpperCase() + tab.slice(1)}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       )}
     </SafeAreaView>
