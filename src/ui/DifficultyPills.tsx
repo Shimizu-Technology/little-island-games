@@ -26,7 +26,8 @@ export function nextRadioIndex(key: string, index: number, count: number): numbe
   return undefined;
 }
 
-type KeyEvent = { key?: string; nativeEvent?: { key?: string }; currentTarget?: unknown; preventDefault?: () => void };
+type RadioNode = { focus?: () => void; contains?: (other: unknown) => boolean };
+type KeyEvent = { key?: string; nativeEvent?: { key?: string }; target?: unknown; currentTarget?: unknown; preventDefault?: () => void };
 
 /**
  * Only the levels a game has, one pill each, wrapping to more rows rather than shrinking or clipping. A single-choice
@@ -39,19 +40,30 @@ export function DifficultyPills({ options, value, onChange, label = "Difficulty"
   label?: string;
 }) {
   const onKeyDown = (event: KeyEvent) => {
-    const index = options.findIndex(option => option.key === value);
-    const next = nextRadioIndex(event.key ?? event.nativeEvent?.key ?? "", Math.max(index, 0), options.length);
+    const key = event.key ?? event.nativeEvent?.key ?? "";
+    const group = event.currentTarget as { querySelectorAll?: (selector: string) => ArrayLike<RadioNode> } | undefined;
+    const radios = group?.querySelectorAll?.('[role="radio"]');
+    // Move from the radio that has focus; with no choice made yet that is the first, which holds the only tab stop.
+    let current = -1;
+    if (radios && event.target) current = Array.from(radios).findIndex(node => node === event.target || !!node.contains?.(event.target));
+    if (current < 0) current = Math.max(options.findIndex(option => option.key === value), 0);
+    if (key === " " || key === "Spacebar") {
+      event.preventDefault?.();
+      onChange(options[current].key);
+      return;
+    }
+    const next = nextRadioIndex(key, current, options.length);
     if (next === undefined) return;
     event.preventDefault?.();
     onChange(options[next].key);
-    const group = event.currentTarget as { querySelectorAll?: (selector: string) => ArrayLike<{ focus?: () => void }> } | undefined;
-    group?.querySelectorAll?.('[role="radio"]')?.[next]?.focus?.();
+    radios?.[next]?.focus?.();
   };
   // React Native Web forwards onKeyDown to the DOM; the native View type does not declare it.
   const webKeys = { onKeyDown } as object;
+  const chosen = options.some(o => o.key === value);
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.row} {...webKeys}>
-      {options.map((option) => {
+      {options.map((option, index) => {
         const selected = option.key === value;
         return (
           <PressTarget
@@ -60,7 +72,7 @@ export function DifficultyPills({ options, value, onChange, label = "Difficulty"
             haptic
             role="radio"
             checked={selected}
-            tabIndex={selected || !options.some(o => o.key === value) ? 0 : -1}
+            tabIndex={selected || (!chosen && index === 0) ? 0 : -1}
             testID={`difficulty-${option.key}`}
             accessibilityLabel={option.tag ? `${option.label}, ${option.tag}` : option.label}
             onPress={() => onChange(option.key)}

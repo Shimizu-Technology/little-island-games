@@ -57,13 +57,21 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
   const web = Platform.OS === "web";
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  const opener = useRef<HTMLElement | null>(null);
+  // The ref callback runs before the sheet takes focus, so the opener is whatever held focus when the sheet mounted.
   const focusOnMount = useCallback((node: unknown) => {
-    if (web && node) (node as { focus?: () => void }).focus?.();
+    if (!web || !node) return;
+    if (!opener.current && typeof document !== "undefined") opener.current = document.activeElement as HTMLElement | null;
+    (node as { focus?: () => void }).focus?.();
   }, [web]);
+  const restoreFocus = useCallback(() => {
+    const target = opener.current;
+    opener.current = null;
+    if (target?.isConnected) target.focus?.();
+  }, []);
 
   useEffect(() => {
     if (!web || !visible || typeof document === "undefined") return;
-    const opener = document.activeElement as HTMLElement | null;
     // Capture phase, so one Escape closes the sheet once even though a Modal also listens for it.
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
@@ -74,9 +82,14 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
     document.addEventListener("keydown", onKey, true);
     return () => {
       document.removeEventListener("keydown", onKey, true);
-      if (opener?.isConnected) opener.focus?.();
     };
   }, [web, visible]);
+
+  // Give focus back only once the exit has finished and a dim Modal has unmounted; before that it still traps focus.
+  useEffect(() => {
+    if (!shown) restoreFocus();
+  }, [shown, restoreFocus]);
+  useEffect(() => restoreFocus, [restoreFocus]);
 
   useEffect(() => {
     if (visible) {

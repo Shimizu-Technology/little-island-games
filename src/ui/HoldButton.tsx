@@ -51,6 +51,7 @@ export function HoldButton({ label, holdLabel = "Hold to open", confirmLabel = "
   const done = useRef(false);
   const onCompleteRef = useRef(onComplete);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  const disabledRef = useRef(!!disabled);
   const screenReader = useScreenReader();
 
   const reset = useCallback(() => {
@@ -59,9 +60,14 @@ export function HoldButton({ label, holdLabel = "Hold to open", confirmLabel = "
     progress.set(withTiming(0, { duration: 160, reduceMotion: ReduceMotion.Never }));
   }, [progress]);
   useEffect(() => () => clearTimeout(timer.current), []);
+  // Going disabled mid-hold drops the hold: no timer left to fire, and the ring empties.
+  useEffect(() => {
+    disabledRef.current = !!disabled;
+    if (disabled) reset();
+  }, [disabled, reset]);
 
   const finish = useCallback(() => {
-    if (done.current) return;
+    if (disabledRef.current || done.current) return;
     done.current = true;
     clearTimeout(timer.current);
     timer.current = undefined;

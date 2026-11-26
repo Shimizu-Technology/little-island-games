@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { LARGE_TEXT } from "../components/wordFit";
 import { Icon } from "./Icon";
 import type { IconGlyph } from "./Icon";
@@ -19,6 +19,13 @@ export function ToggleRow({ glyph, label, value, onChange, disabled }: {
   disabled?: boolean;
 }) {
   const stacked = useWindowDimensions().fontScale >= LARGE_TEXT;
+  // Web only treats Enter and Space as a press on button-like roles; a switch needs Space handled here.
+  const keyDown = (event: { key?: string; preventDefault?: () => void }) => {
+    if (event.key !== " " && event.key !== "Spacebar") return;
+    event.preventDefault?.();
+    if (!disabled) onChange(!value);
+  };
+  const webKeys = (Platform.OS === "web" ? { onKeyDown: keyDown } : {}) as object;
   return (
     <Pressable
       accessibilityRole="switch"
@@ -27,6 +34,7 @@ export function ToggleRow({ glyph, label, value, onChange, disabled }: {
       disabled={disabled}
       onPress={() => onChange(!value)}
       style={[styles.row, stacked && styles.stacked, disabled && { opacity: theme.opacity.disabled }]}
+      {...webKeys}
     >
       <View style={styles.words}>
         {glyph && <Icon glyph={glyph} tone="lagoon" />}

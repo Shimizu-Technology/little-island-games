@@ -327,6 +327,32 @@ describe("DifficultyPills", () => {
     expect([nextRadioIndex("ArrowLeft", 0, 4), nextRadioIndex("ArrowDown", 3, 4), nextRadioIndex("a", 0, 4)]).toEqual([3, 0, undefined]);
   });
 
+  it("gives only the first pill the tab stop when no option is chosen, and arrows start there", async () => {
+    const onChange = vi.fn();
+    const r = await mount(<DifficultyPills options={options} value={99} onChange={onChange} />);
+    expect(host(r, "button").map(p => p.props.tabIndex)).toEqual([0, -1, -1, -1, -1, -1]);
+    const group = r.findAll(n => n.props.accessibilityRole === "radiogroup")[0];
+    await act(async () => { group.props.onKeyDown({ key: "ArrowRight", preventDefault: vi.fn(), currentTarget: { querySelectorAll: () => [] } }); });
+    expect(onChange).toHaveBeenLastCalledWith(2);
+  });
+
+  it("moves arrows from the focused radio, and Space selects it on Web", async () => {
+    const onChange = vi.fn();
+    const r = await mount(<DifficultyPills options={options} value={1} onChange={onChange} />);
+    const group = r.findAll(n => n.props.accessibilityRole === "radiogroup")[0];
+    const radios = [0, 1, 2, 3].map(() => ({ focus: vi.fn(), contains: (_other?: unknown): boolean => false }));
+    const focused = radios[2];
+    focused.contains = () => true;
+    const currentTarget = { querySelectorAll: () => radios };
+    await act(async () => { group.props.onKeyDown({ key: "ArrowRight", preventDefault: vi.fn(), target: focused, currentTarget }); });
+    expect(onChange).toHaveBeenLastCalledWith(4);
+    expect(radios[3].focus).toHaveBeenCalledOnce();
+    const preventDefault = vi.fn();
+    await act(async () => { group.props.onKeyDown({ key: " ", preventDefault, target: focused, currentTarget }); });
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onChange).toHaveBeenLastCalledWith(3);
+  });
+
   it("wraps to more rows instead of shrinking at large text", async () => {
     const r = await mount(<DifficultyPills options={options} value={1} onChange={() => {}} />);
     expect(flat(r.findAll(n => n.props.accessibilityRole === "radiogroup")[0].props.style).flexWrap).toBe("wrap");
@@ -362,6 +388,21 @@ describe("ToggleRow", () => {
     expect(flat(on.props.style)).toMatchObject({ backgroundColor: theme.colors.lagoon, alignItems: "flex-end" });
     expect(flat(off.props.style)).toMatchObject({ backgroundColor: theme.colors.track, borderColor: theme.colors.muted, borderWidth: 2, alignItems: "flex-start" });
     expect(contrast(theme.colors.muted, theme.colors.surface)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("toggles on Space on Web, and not while disabled", async () => {
+    env.os = "web";
+    const onChange = vi.fn();
+    const r = await mount(<><ToggleRow label="Sound" value={false} onChange={onChange} /><ToggleRow label="Music" value disabled onChange={onChange} /></>);
+    const [sound, music] = host(r, "button");
+    const preventDefault = vi.fn();
+    await act(async () => { sound.props.onKeyDown({ key: " ", preventDefault }); });
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(onChange).toHaveBeenCalledWith(true);
+    await act(async () => { sound.props.onKeyDown({ key: "a", preventDefault }); });
+    await act(async () => { music.props.onKeyDown({ key: " ", preventDefault }); });
+    expect(onChange).toHaveBeenCalledOnce();
   });
 
   it("moves the switch below the words at accessibility text sizes", async () => {
@@ -523,6 +564,7 @@ describe("Sheet on Web", () => {
   });
 
   it("focuses its title on open and gives focus back to the opener on close", async () => {
+    vi.useFakeTimers();
     const web = setup();
     const el = (visible: boolean) => <TextLayoutProvider><Sheet visible={visible} title="Sudoku" onClose={() => {}}><Text>x</Text></Sheet></TextLayoutProvider>;
     await act(async () => { root = create(el(true), { createNodeMock: web.createNodeMock }); });
@@ -531,7 +573,24 @@ describe("Sheet on Web", () => {
     expect(root!.root.findByProps({ testID: "sheet-title" }).props.accessibilityRole).toBe("header");
     expect(web.opener.focus).not.toHaveBeenCalled();
     await act(async () => { root!.update(el(false)); });
+    await act(async () => { vi.advanceTimersByTime(200); });
     expect(web.opener.focus).toHaveBeenCalledOnce();
+  });
+
+  it("remembers the opener, not the sheet, when it is visible on first mount, and restores only after the exit", async () => {
+    vi.useFakeTimers();
+    const web = setup();
+    const doc = (globalThis as unknown as { document: { activeElement: unknown } }).document;
+    for (const node of ["sheet-title", "sheet"]) web.nodes[node] = { focus: vi.fn(() => { doc.activeElement = web.nodes[node]; }) };
+    const el = (visible: boolean) => <TextLayoutProvider><Sheet visible={visible} title="Sudoku" onClose={() => {}}><Text>x</Text></Sheet></TextLayoutProvider>;
+    await act(async () => { root = create(el(true), { createNodeMock: web.createNodeMock }); });
+    expect(doc.activeElement).toBe(web.nodes["sheet-title"]);
+    await act(async () => { root!.update(el(false)); });
+    // The dim Modal is still mounted and trapping focus while the exit plays.
+    expect(web.opener.focus).not.toHaveBeenCalled();
+    await act(async () => { vi.advanceTimersByTime(200); });
+    expect(web.opener.focus).toHaveBeenCalledOnce();
+    expect(web.nodes["sheet-title"].focus).toHaveBeenCalledOnce();
   });
 
   it("focuses the sheet itself when it has no title, and a re-render does not steal focus back", async () => {
@@ -675,6 +734,24 @@ describe("HoldButton", () => {
     await act(async () => { button.props.onKeyDown({ key: "Enter", preventDefault: vi.fn() }); });
     await press(button);
     expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("drops an in-flight hold when it becomes disabled, including keyboard and accessibility confirms", async () => {
+    vi.useFakeTimers();
+    env.os = "web";
+    const onComplete = vi.fn();
+    const el = (disabled: boolean) => <TextLayoutProvider><HoldButton label="Grown-ups" disabled={disabled} onComplete={onComplete} /></TextLayoutProvider>;
+    await act(async () => { root = create(el(false)); });
+    await hold(root!.root);
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    await act(async () => { root!.update(el(true)); });
+    expect(env.withTiming).toHaveBeenLastCalledWith(0, expect.objectContaining({ reduceMotion: "never" }));
+    await act(async () => { vi.advanceTimersByTime(5000); });
+    expect(onComplete).not.toHaveBeenCalled();
+    const button = host(root!.root, "button")[0];
+    await act(async () => { button.props.onKeyDown({ key: "Enter", preventDefault: vi.fn() }); });
+    await act(async () => { button.props.onAccessibilityAction({ nativeEvent: { actionName: "magicTap" } }); });
+    expect(onComplete).not.toHaveBeenCalled();
   });
 
   it("does nothing while disabled", async () => {
