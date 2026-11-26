@@ -17,9 +17,26 @@ const probe = vi.hoisted(() => ({
   reduced: vi.fn(() => false),
   timing: vi.fn(),
   move: undefined as ((d: Direction) => void) | undefined,
+  screenReader: false,
+  screenReaderListeners: new Set<(enabled: boolean) => void>(),
 }));
 
-vi.mock("react-native", () => ({ View: "View", Image: "Image", Platform: { OS: "android" } }));
+vi.mock("react-native", () => ({
+  View: "View",
+  Image: "Image",
+  Platform: { OS: "android" },
+  AccessibilityInfo: {
+    isScreenReaderEnabled: () => Promise.resolve(probe.screenReader),
+    addEventListener: (_event: string, listener: (enabled: boolean) => void) => {
+      probe.screenReaderListeners.add(listener);
+      return {
+        remove: () => {
+          probe.screenReaderListeners.delete(listener);
+        },
+      };
+    },
+  },
+}));
 vi.mock("react-native-svg", () => ({ default: "Svg", Circle: "Circle", Ellipse: "Ellipse", G: "G", Path: "Path", Rect: "Rect" }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "AnimatedView" },
@@ -68,6 +85,8 @@ afterEach(async () => {
   tree = undefined;
   probe.poses = undefined;
   probe.move = undefined;
+  probe.screenReader = false;
+  probe.screenReaderListeners.clear();
   probe.reduced.mockReset().mockReturnValue(false);
   probe.timing.mockClear();
   vi.useRealTimers();
@@ -342,3 +361,228 @@ it("ships three compact 22050 Hz, 16-bit mono PCM cues", () => {
   expect(total).toBeGreaterThan(25_000);
   expect(total).toBeLessThan(45_000);
 });
+
+it("updates the star HUD when crossing par in W1-1 while keeping within-tier steps at zero commits", async () => {
+  const level = railLevel("w1-1");
+  const initial: RailState = {
+    ...createRail(level, 120),
+    food: { x: 9, y: 0 },
+    moves: level.par - 1,
+    direction: "right",
+  };
+  const { frames, commits } = await start(initial);
+  const baseline = commits.mock.calls.length;
+  expect(host("rail-star-hud").props.accessibilityLabel).toBe("Star goal 3 of 3, score 0");
+
+  // Step 1: moves goes from par - 1 to par (still 3 stars -> 0 commits).
+  await frames(16);
+  expect(commits).toHaveBeenCalledTimes(baseline);
+  expect(host("rail-star-hud").props.accessibilityLabel).toBe("Star goal 3 of 3, score 0");
+
+  // Step 2: moves goes from par to par + 1 (crosses par into 2 stars -> publishes immediately).
+  await frames(16);
+  expect(commits).toHaveBeenCalledTimes(baseline + 1);
+  expect(host("rail-star-hud").props.accessibilityLabel).toBe("Star goal 2 of 3, score 0");
+
+  // Step 3: moves goes from par + 1 to par + 2 (stays in 2-star tier -> 0 additional commits).
+  await frames(16);
+  expect(commits).toHaveBeenCalledTimes(baseline + 1);
+  expect(host("rail-star-hud").props.accessibilityLabel).toBe("Star goal 2 of 3, score 0");
+});
+
+it.each(["onTouchEnd", "onTouchCancel"] as const)(
+  "defers clear result when a touch is held across the 320 ms delay and fires once on %s",
+  async (releaseEvent) => {
+    const level = railLevel("w1-1");
+    const atGoalNest: RailState = {
+      ...createRail(level, 120),
+      collected: level.target - 1,
+      score: (level.target - 1) * 40,
+      moves: 10,
+      food: { x: 3, y: 7 },
+    };
+    const { frames, onResult } = await start(atGoalNest);
+
+    // Clear the level with no finger held down so the 320 ms celebration timer starts.
+    await act(async () => probe.move!("right"));
+    await frames(18);
+    expect(onResult).not.toHaveBeenCalled();
+
+    // Press and hold during the 320 ms delay, then let the timer elapse while held.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120);
+      host("rail-world").props.onTouchStart();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(onResult).not.toHaveBeenCalled();
+
+    // Release or cancel delivers the stashed result immediately and exactly once.
+    await act(async () => host("rail-world").props[releaseEvent]());
+    expect(onResult).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ cleared: true }));
+
+    // Subsequent release/cancel or elapsed timers must not duplicate onResult.
+    await act(async () => {
+      host("rail-world").props.onTouchCancel();
+      await vi.advanceTimersByTimeAsync(400);
+    });
+    expect(onResult).toHaveBeenCalledTimes(1);
+  }
+);
+
+it("exposes live playfield coordinates for screen readers and clears Learn feedback messages immediately", async () => {
+  // Learn mode (screen reader off): decoy warning appears and clears on the next clean step.
+  const learnInitial: RailState = {
+    ...createRail(railLevel("learn-1"), 120),
+    food: { x: 9, y: 0 },
+    decoy: { x: 3, y: 7 },
+  };
+  const learnRun = await start(learnInitial);
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Rilla at column 3, row 8.");
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Tile 1 at column 10, row 1.");
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("0 steps");
+
+  await act(async () => probe.move!("right"));
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Find 1 first");
+
+  await act(async () => probe.move!("up"));
+  const clearedLabel = host("rail-playfield").props.accessibilityLabel as string;
+  expect(clearedLabel).not.toContain("Find 1 first");
+  expect(clearedLabel).toContain("Rilla at column 3, row 7.");
+  expect(clearedLabel).toContain("1 steps");
+
+  const afterClearCommits = learnRun.commits.mock.calls.length;
+  await act(async () => probe.move!("up"));
+  expect(learnRun.commits).toHaveBeenCalledTimes(afterClearCommits);
+
+  await act(async () => tree!.unmount());
+  tree = undefined;
+
+  // Scored mode with screen reader enabled: live coordinates update on every grid step.
+  probe.screenReader = true;
+  const scoredInitial: RailState = {
+    ...createRail(railLevel("w2-1"), 120),
+    food: { x: 9, y: 0 },
+  };
+  const scoredRun = await start(scoredInitial);
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Rilla at column 3, row 8.");
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Mango at column 10, row 1.");
+
+  await act(async () => probe.move!("up"));
+  await scoredRun.frames(16);
+  const liveLabel = host("rail-playfield").props.accessibilityLabel as string;
+  expect(liveLabel).toContain("Rilla at column 3, row 7.");
+  expect(liveLabel).toContain("1 steps");
+});
+
+it.each([false, true])(
+  "keeps Rilla unclipped at legal edge columns (col 1 and col 10) while clipping the rounded backdrop (%s)",
+  async (reduced) => {
+    const level = railLevel("w1-1");
+    const boardSize = viewport.size - 12;
+    const unit = (boardSize - 6) / 10;
+    const stageLeftInWorld = (viewport.size - boardSize) / 2 + 3;
+    const [inkX, inkY, inkW, inkH] = illustrated.rail.ink;
+    const [pxW, pxH] = illustrated.rail.pixels;
+
+    for (const edge of [
+      {
+        body: [
+          { x: 0, y: 7 },
+          { x: 1, y: 7 },
+          { x: 2, y: 7 },
+        ],
+        direction: "left" as const,
+      },
+      {
+        body: [
+          { x: 9, y: 7 },
+          { x: 8, y: 7 },
+          { x: 7, y: 7 },
+        ],
+        direction: "right" as const,
+      },
+    ]) {
+      const initial: RailState = {
+        ...createRail(level, 120),
+        body: edge.body,
+        previous: edge.body,
+        direction: edge.direction,
+        food: { x: 5, y: 3 },
+      };
+      await start(initial, reduced);
+
+      const frameStyle = styles(host("rail-playfield-frame"));
+      expect(frameStyle.overflow).toBe("hidden");
+      expect(frameStyle.borderRadius).toBe(25);
+
+      const stageStyle = styles(host("rail-playfield-stage"));
+      expect(stageStyle.left).toBe(3);
+      expect(stageStyle.top).toBe(3);
+      expect(stageStyle.width).toBe(boardSize - 6);
+      expect(stageStyle.height).toBe(boardSize - 6);
+      expect(stageStyle.overflow).toBe("visible");
+
+      // Walk every ancestor of Rilla up to rail-world and confirm none clips overflow.
+      const image = host("rail-rilla-art");
+      let cursor: ReactTestInstance | null = image.parent;
+      while (cursor) {
+        if (typeof cursor.type === "string" && cursor.props.style) {
+          expect(styles(cursor).overflow).not.toBe("hidden");
+        }
+        if (cursor.props?.testID === "rail-world") break;
+        cursor = cursor.parent;
+      }
+
+      const pose = probe.poses!.value[0];
+      const body = host("rail-rilla-body");
+      const wrapper = body.parent!;
+      const box = styles(wrapper);
+      const inner = styles(body);
+      const art = styles(image);
+      const [cx, cy] = box.transformOrigin;
+      const [ox, oy] = inner.transformOrigin;
+      const artScaleX = art.width / pxW;
+      const artScaleY = art.height / pxH;
+      const inkLeft = art.left + inkX * artScaleX;
+      const inkRight = inkLeft + inkW * artScaleX;
+      const inkTop = art.top + inkY * artScaleY;
+      const inkBottom = inkTop + inkH * artScaleY;
+
+      const scalesX = reduced ? [-1, 1] : [-1.03, -0.97, 0.97, 1.03];
+      const scalesY = reduced ? [1] : [1, 1.05];
+      const angles = reduced ? [0] : [-0.135, 0.135];
+      const outerScale = reduced ? 1 : 1.04;
+
+      for (const scaleX of scalesX) {
+        for (const scaleY of scalesY) {
+          for (const angle of angles) {
+            for (const x of [inkLeft, inkRight]) {
+              for (const y of [inkTop, inkBottom]) {
+                const dx = inner.left + ox + (x - ox) * scaleX - cx;
+                const dy = inner.top + oy + (y - oy) * scaleY - cy;
+                const px = cx + outerScale * (dx * Math.cos(angle) - dy * Math.sin(angle));
+                const py = cy + outerScale * (dx * Math.sin(angle) + dy * Math.cos(angle));
+                // Unclipped inside the padded Android sprite box.
+                expect(px).toBeGreaterThan(0);
+                expect(px).toBeLessThan(box.width);
+                expect(py).toBeGreaterThan(0);
+                expect(py).toBeLessThan(box.height);
+                // Unclipped inside the horizontal viewport bounds at col 1 and col 10.
+                const worldX = stageLeftInWorld + pose.x + box.left + px;
+                expect(worldX).toBeGreaterThan(0);
+                expect(worldX).toBeLessThan(viewport.size);
+              }
+            }
+          }
+        }
+      }
+
+      expect(Math.abs(pose.x + inner.width / 2 - (edge.body[0].x + 0.5) * unit)).toBeLessThan(1e-6);
+
+      await act(async () => tree!.unmount());
+      tree = undefined;
+    }
+  }
+);
