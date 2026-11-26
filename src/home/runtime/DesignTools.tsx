@@ -11,9 +11,10 @@ import { ItemArt } from "../art/Items";
 import type { ItemId } from "../catalog";
 import { screenPoint } from "../scene/types";
 import type { Interaction } from "./useInteraction";
-import { Tool } from "./HomeChrome";
+import { Tool } from "./HomeTool";
 import { UndoGonePicture } from "./UndoNote";
 import { RESTORE_QUESTION, type RestoreCost } from "../useHomeStore";
+import { theme } from "../../ui/theme";
 
 const categoryNames: Record<string, string> = {
   "beds-seats": "Beds & seats",
@@ -161,6 +162,7 @@ export function DesignTools({
           : "Furniture"
     ),
     [confirm, setConfirm] = useState(false),
+    [moreOpen, setMoreOpen] = useState(false),
     [cost, setCost] = useState<RestoreCost>();
   const items = itemIds.filter((id) =>
     tab === "Stickers"
@@ -201,6 +203,13 @@ export function DesignTools({
             <Text style={{ color: "#284F4B" }}>{categoryNames[name] ?? name}</Text>
           </Pressable>
         ))}
+        <Tool
+          label="More decorating"
+          symbol="···"
+          selected={moreOpen}
+          onPress={() => setMoreOpen(true)}
+          large={large}
+        />
         <Tool label="Close catalog" symbol="✓" onPress={onClose} large={large} />
       </ScrollView>
       {catalogVisible && (
@@ -260,7 +269,6 @@ export function DesignTools({
                 <Text>{id.replaceAll("-", " ")}</Text>
               </Pressable>
             ))}
-          <Tool label="Restore this room" symbol="↺" onPress={() => { setCost(restoreCost?.()); setConfirm(true); }} large={large} />
         </ScrollView>
       )}
       {tab === "Colours" && (
@@ -312,15 +320,69 @@ export function DesignTools({
           </View>
         )}
       </View>
+      {/* Decorate's More secondary sheet keeps Tidy up tucked out of reach of stray taps. */}
+      <Modal visible={moreOpen} transparent onRequestClose={() => setMoreOpen(false)} animationType="none">
+        <View style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: theme.colors.scrim }}>
+          <View
+            testID="decorate-more-sheet"
+            accessibilityViewIsModal
+            style={{
+              width: "100%",
+              maxWidth: theme.sheet.maxWidth,
+              backgroundColor: theme.colors.surface,
+              borderTopLeftRadius: theme.radius.sheet,
+              borderTopRightRadius: theme.radius.sheet,
+              padding: theme.space.xl,
+              gap: theme.space.md,
+            }}
+          >
+            <View style={{ alignSelf: "center", width: 40, height: 5, borderRadius: theme.radius.full, backgroundColor: theme.colors.hairline }} />
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.space.sm }}>
+              <Text accessibilityRole="header" style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "700" }}>
+                More
+              </Text>
+              <Tool label="Close decorating options" symbol="×" onPress={() => setMoreOpen(false)} large={large} />
+            </View>
+            <Pressable
+              testID="decorate-tidy-up-button"
+              accessibilityRole="button"
+              accessibilityLabel="Tidy up"
+              onPress={() => {
+                setMoreOpen(false);
+                setCost(restoreCost?.());
+                setConfirm(true);
+              }}
+              style={[
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: theme.space.lg,
+                  borderRadius: theme.radius.tile,
+                  backgroundColor: theme.colors.lagoonSoft,
+                  minHeight: 56,
+                },
+                big(large),
+              ]}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "700" }}>Tidy up</Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 15 }}>Put things back where they started</Text>
+              </View>
+              <Text allowFontScaling={false} style={{ color: theme.colors.ink, fontSize: 22 }}>↺</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={confirm} transparent onRequestClose={() => setConfirm(false)} animationType="none">
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#284F4B66" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.scrim }}>
           {cost === "no-undo" || cost === "drops-older" ? (
           // F3: Undo can't keep all of this restore. Say so first, in a picture and words; never refuse silently.
           <View testID="restore-anyway" accessibilityViewIsModal
-            style={{ backgroundColor: "#FFF8E9", padding: 24, borderRadius: 20, maxWidth: 340, gap: 14, alignItems: "center" }}>
+            style={{ backgroundColor: theme.colors.bg, padding: 24, borderRadius: 24, maxWidth: 340, gap: 14, alignItems: "center" }}>
             <UndoGonePicture size={112} />
             <Text accessibilityRole="header" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.6}
-              style={{ color: "#284F4B", fontSize: 17, fontWeight: "600", textAlign: "center" }}>
+              style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "600", textAlign: "center" }}>
               {RESTORE_QUESTION[cost]}
             </Text>
             <Pressable
@@ -339,20 +401,20 @@ export function DesignTools({
             </Pressable>
           </View>
           ) : (
-          <View style={{ backgroundColor: "#FFF8E9", padding: 24, borderRadius: 20, maxWidth: 340, gap: 14 }}>
-            <Text>Restore this room? Undo can bring it back.</Text>
+          <View style={{ backgroundColor: theme.colors.bg, padding: 24, borderRadius: 24, maxWidth: 340, gap: 14 }}>
+            <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "600" }}>Tidy up this room? Undo can bring it back.</Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => {
                 dispatch({ type: "reset" });
                 setConfirm(false);
               }}
-              style={[{ padding: 12 }, big(large), shape(large)]}
+              style={[{ padding: 12, alignItems: "center", backgroundColor: theme.colors.coral, borderRadius: theme.radius.full }, big(large), shape(large)]}
             >
-              <Text>Restore room</Text>
+              <Text style={{ color: theme.colors.ink, fontWeight: "700" }}>Tidy up</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={[{ padding: 12 }, big(large), shape(large)]}>
-              <Text>Keep playing</Text>
+            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={[{ padding: 12, alignItems: "center", backgroundColor: theme.colors.lagoonSoft, borderRadius: theme.radius.full }, big(large), shape(large)]}>
+              <Text style={{ color: theme.colors.ink, fontWeight: "700" }}>Keep playing</Text>
             </Pressable>
           </View>
           )}

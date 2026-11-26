@@ -22,6 +22,8 @@ vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: () => ({ 
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (p: any) => { harness.chrome = p; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
+vi.mock('../src/home/HomeClosetSheet', () => ({ HomeClosetSheet: () => null }));
+vi.mock('../src/home/HomeBadgesSheet', () => ({ HomeBadgesSheet: () => null }));
 vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: (p: any) => { harness.design = p; return null; }, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
 vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));

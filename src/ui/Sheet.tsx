@@ -38,10 +38,14 @@ export const shouldDismiss = (dy: number, vy: number) => dy > theme.sheet.dismis
  * board stays reachable by keyboard. iPhone start sheets use the native route presentation instead
  * (`nativeFormSheetOptions`).
  */
-export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Close", children }: {
+export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, title, closeLabel = "Close", children }: {
   visible: boolean;
   onClose: () => void;
   mode?: SheetMode;
+  /** Optional share of windowHeight (e.g. 0.45 for the undimmed Closet sheet). */
+  heightRatio?: number;
+  /** Whether the sheet wraps children in its own ScrollView. Defaults to `mode !== "large"`. */
+  scroll?: boolean;
   /** Spoken and shown first; it takes focus when the sheet opens on Web. */
   title?: string;
   closeLabel?: string;
@@ -51,7 +55,8 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const dim = mode !== "small", large = mode === "large";
-  const height = sheetHeight(windowHeight, mode);
+  const scrolls = scroll ?? !large;
+  const height = heightRatio != null ? Math.floor(windowHeight * heightRatio) : sheetHeight(windowHeight, mode);
 
   const [shown, setShown] = useState(visible);
   const progress = useSharedValue(visible ? 1 : 0);
@@ -148,7 +153,7 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
           tabIndex={-1}
           accessibilityViewIsModal={dim}
           onAccessibilityEscape={onClose}
-          style={[styles.panel, theme.shadow, large ? { height, width: Math.min(width, 960) } : { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
+          style={[styles.panel, theme.shadow, large ? { height, width: Math.min(width, 960) } : scrolls ? { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) } : { height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
         >
           <View {...pan.panHandlers} style={styles.top}>
             <View testID="sheet-grabber" style={styles.grabber} />
@@ -157,7 +162,7 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
               <IconButton glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
             </View>
           </View>
-          {large
+          {!scrolls
             ? <View style={[styles.fill, { paddingBottom: insets.bottom }]}>{children}</View>
             : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: theme.space.lg + insets.bottom }]}>
               {children}
@@ -169,11 +174,12 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
 
   return dim
     ? <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>{body}</Modal>
-    : <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>{body}</View>;
+    : <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, styles.undimmedOverlay]}>{body}</View>;
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  undimmedOverlay: { zIndex: 50 },
   scrim: { backgroundColor: theme.colors.scrim },
   dock: { flex: 1, justifyContent: "flex-end", alignItems: "center" },
   panel: {

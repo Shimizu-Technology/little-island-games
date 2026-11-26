@@ -63,14 +63,15 @@ describe('R5: larger-target mode covers More and Design', () => {
       await act(async () => button.props.onPress());
       check();
     }
-    await act(async () => { const room = pressables(tree).find((n) => n.props.accessibilityRole === 'tab' && label(n) === 'Room')!; room.props.onPress(); });
-    await act(async () => pressables(tree).find((n) => n.props.accessibilityLabel === 'Restore this room')!.props.onPress());
+    await act(async () => pressables(tree).find((n) => n.props.accessibilityLabel === 'More decorating')!.props.onPress());
     check();
-    for (const name of ['Restore room', 'Keep playing']) {
+    await act(async () => pressables(tree).find((n) => n.props.testID === 'decorate-tidy-up-button')!.props.onPress());
+    check();
+    for (const name of ['Tidy up', 'Keep playing']) {
       const button = pressables(tree).find((n) => label(n) === name)!;
       expect(flat(button.props.style).backgroundColor, name).toBeTruthy();
     }
-    for (const name of ['Close catalog', 'Rotate', 'Mirror', 'Put away', 'Restore this room', 'Restore room', 'Keep playing']) expect(checked, name).toContain(name);
+    for (const name of ['Close catalog', 'More decorating', 'Rotate', 'Mirror', 'Put away', 'Tidy up', 'Keep playing']) expect(checked, name).toContain(name);
     expect([...checked].some((n) => n.endsWith('colour'))).toBe(true);
     expect([...checked].some((n) => n.endsWith('walls'))).toBe(true);
     await act(async () => tree.unmount());

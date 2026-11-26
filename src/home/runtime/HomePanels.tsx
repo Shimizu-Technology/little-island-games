@@ -3,7 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { gateAccepts, makeGate } from "../../state/grownUpGate";
 import type { Scene } from "../scene/types";
 import type { CharacterRender } from "./EntityArt";
-import { FriendsIcon, Tool } from "./HomeChrome";
+import { FriendsIcon, Tool } from "./HomeTool";
 
 /** Explicit controls only: room/background taps never open a picker. */
 export function HomePanels({

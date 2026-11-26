@@ -8,6 +8,10 @@ import { useDelight } from "./runtime/useDelight";
 import { pieceAt } from "./runtime/SetPieces";
 import { useStore } from "../state/Store";
 import type { BadgeId } from "../badges/engine";
+import type { IslanderLook } from "../islander/look";
+import { lockedReason, lookWithStyle, styleCatalog, type StyleItem } from "../personalization/catalog";
+import { HomeClosetSheet } from "./HomeClosetSheet";
+import { HomeBadgesSheet } from "./HomeBadgesSheet";
 import { buildingLayout, roomOrigin } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
@@ -63,9 +67,23 @@ const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import(
     : undefined;
 
 export const REDO_VISIBLE_MS = 10000;
+export type HomeSheet = "closet" | "badges";
+export type HomeClosetConfig = {
+  look: IslanderLook;
+  earned: readonly string[];
+  unseen: readonly string[];
+  onWear: (look: IslanderLook) => boolean;
+  onSeen?: (id: string) => void;
+  renderCharacter?: (look: IslanderLook) => CharacterRender;
+};
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
+  milestones?: readonly string[];
   initialItem?: string;
+  initialSheet?: HomeSheet;
+  initialClosetItem?: StyleItem;
+  initialBadge?: BadgeId;
+  closet?: HomeClosetConfig;
   renderCharacter?: CharacterRender;
   initialState?: unknown;
   persist?: (state: HomeStateV2) => boolean;
@@ -75,6 +93,11 @@ export type HomeScreenProps = Ownership & {
 export function HomeScreen({
   initialState,
   initialItem,
+  initialSheet,
+  initialClosetItem,
+  initialBadge,
+  milestones = [],
+  closet,
   persist,
   saveStatus,
   renderCharacter,
@@ -98,6 +121,42 @@ export function HomeScreen({
     [room, setRoom] = useState(store.state.current);
   const [more, setMore] = useState(false),
     [friends, setFriends] = useState(false);
+  const [activeSheet, setActiveSheet] = useState<HomeSheet | null>(initialSheet ?? null);
+  const [closetInitialItem, setClosetInitialItem] = useState<StyleItem | undefined>(
+    initialSheet === "closet" ? initialClosetItem : undefined
+  );
+  const [badgeInitial, setBadgeInitial] = useState<BadgeId | undefined>(
+    initialSheet === "badges" ? initialBadge : undefined
+  );
+  const [previewLook, setPreviewLook] = useState<IslanderLook | undefined>(() =>
+    initialSheet === "closet" && initialClosetItem && closet && !lockedReason(initialClosetItem, closet.earned)
+      ? lookWithStyle(closet.look, initialClosetItem)
+      : undefined
+  );
+  const markedInitialItem = useRef<string | undefined>(undefined);
+  React.useEffect(() => {
+    if (
+      activeSheet === "closet" &&
+      closetInitialItem &&
+      closet?.onSeen &&
+      closet.unseen.includes(closetInitialItem.id) &&
+      markedInitialItem.current !== closetInitialItem.id
+    ) {
+      markedInitialItem.current = closetInitialItem.id;
+      closet.onSeen(closetInitialItem.id);
+    }
+  }, [activeSheet, closetInitialItem, closet]);
+  const effectiveLook = previewLook ?? closet?.look;
+  const characterRenderer = useMemo<CharacterRender | undefined>(
+    () =>
+      renderCharacter ??
+      (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined),
+    [renderCharacter, effectiveLook, closet]
+  );
+  const hasNewCloset = useMemo(
+    () => !!closet?.unseen.some((id) => styleCatalog.some((item) => item.id === id)),
+    [closet?.unseen]
+  );
   const lastTap = useRef({ x: 0, y: 0, at: 0 });
   const [pickups, setPickups] = useState<(Pickup | undefined)[]>([undefined, undefined]);
   const [debug, setDebug] = useState(lab),
@@ -572,6 +631,60 @@ export function HomeScreen({
     if (overview && entity) goRoom(entity.room);
     else { setStorageId(undefined); setStorageInspect(undefined); setSelected(id); }
   }, [designing, goRoom, overview]);
+  const openCloset = useCallback(
+    (item?: StyleItem) => {
+      runtime.current?.cancelAll();
+      setDesigning(false);
+      setPlacing(undefined);
+      setSelected(undefined);
+      setMore(false);
+      setFriends(false);
+      setOverview(false);
+      setClosetInitialItem(item);
+      setBadgeInitial(undefined);
+      setPreviewLook(
+        item && closet && !lockedReason(item, closet.earned) ? lookWithStyle(closet.look, item) : undefined
+      );
+      setActiveSheet("closet");
+      const hero = live.current.scene.entities["character/0"];
+      const targetRoom = hero?.room ?? live.current.room;
+      if (hero && hero.room !== live.current.room) setRoom(hero.room);
+      const aboveSheet = {
+        width: viewport.width,
+        height: Math.max(180, window.height * 0.55 - headerHeight),
+      };
+      runtime.current?.animateCamera(
+        focusCamera(roomIds.indexOf(targetRoom), aboveSheet, building, hero?.contact ?? { x: 400, y: 380 }),
+        false
+      );
+    },
+    [building, closet, headerHeight, viewport.width, window.height]
+  );
+  const closeCloset = useCallback(() => {
+    setPreviewLook(undefined);
+    setClosetInitialItem(undefined);
+    setActiveSheet(null);
+    runtime.current?.animateCamera(
+      focusCamera(roomIds.indexOf(live.current.room), viewport, building),
+      false
+    );
+  }, [building, viewport]);
+  const openBadges = useCallback((badge?: BadgeId) => {
+    runtime.current?.cancelAll();
+    setDesigning(false);
+    setPlacing(undefined);
+    setSelected(undefined);
+    setMore(false);
+    setFriends(false);
+    setPreviewLook(undefined);
+    setClosetInitialItem(undefined);
+    setBadgeInitial(badge);
+    setActiveSheet("badges");
+  }, []);
+  const closeBadges = useCallback(() => {
+    setBadgeInitial(undefined);
+    setActiveSheet(null);
+  }, []);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
     // Overview room taps always navigate, even over an object or with a previous selection.
@@ -584,7 +697,7 @@ export function HomeScreen({
       const origin = roomOrigin(roomIds.indexOf("home"), building);
       const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
       if (local.x >= 524 && local.x <= 702 && local.y >= 26 && local.y <= 198) {
-        router.push("/badges");
+        openBadges();
         return;
       }
       // HC-01: a painted jar, pan, book, plant or lantern answers the touch.
@@ -796,7 +909,7 @@ export function HomeScreen({
   const hints = useRef<HintState>(freshHints(0));
   // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
   React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
-  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends;
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -964,7 +1077,7 @@ export function HomeScreen({
           setSelected(undefined);
         }}
         onHeaderLayout={setHeaderHeight}
-        onBack={() => router.back()}
+        onBack={() => (router.canGoBack?.() ? router.back() : router.replace?.("/"))}
         onUndo={() => {
           interaction.cancelAll();
           clearMealArt();
@@ -999,9 +1112,16 @@ export function HomeScreen({
           );
         }}
         onDesign={() => {
+          if (activeSheet === "closet") closeCloset();
+          else if (activeSheet === "badges") closeBadges();
           setDesigning(!designing);
           setPlacing(undefined);
         }}
+        onCloset={() => (activeSheet === "closet" ? closeCloset() : openCloset())}
+        onBadges={() => (activeSheet === "badges" ? closeBadges() : openBadges())}
+        closetOpen={activeSheet === "closet"}
+        badgesOpen={activeSheet === "badges"}
+        hasNewCloset={hasNewCloset}
         onRoom={goRoom}
         roomHover={interaction.roomHover}
         onRoomRect={onRoomRect}
@@ -1018,14 +1138,14 @@ export function HomeScreen({
           <SceneView
             state={{ ...store.state, current: room }}
             badges={ownership.badges}
-            onBadges={() => router.push("/badges")}
+            onBadges={() => openBadges()}
             scene={scene}
             building={building}
             viewport={viewport}
             interaction={interaction}
             pickups={pickups}
             reduced={reduced}
-            renderCharacter={renderCharacter}
+            renderCharacter={characterRenderer}
             liveRoom={overview || !visible ? undefined : room}
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
@@ -1121,7 +1241,7 @@ export function HomeScreen({
           />
         )}
       </View>
-      {!overview && !more && !friends && (
+      {!overview && !more && !friends && !activeSheet && (
         <Destinations
           scene={scene}
           selected={selected === storageId ? undefined : selected}
@@ -1131,7 +1251,7 @@ export function HomeScreen({
           building={building}
           canvasTop={headerHeight}
           windowHeight={window.height}
-          renderCharacter={renderCharacter}
+          renderCharacter={characterRenderer}
           large={large}
           onSelect={setSelected}
           bottom={
@@ -1145,7 +1265,7 @@ export function HomeScreen({
           }}
         />
       )}
-      {!overview && !more && !friends && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+      {!overview && !more && !friends && !activeSheet && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
@@ -1162,7 +1282,7 @@ export function HomeScreen({
         offset={viewportOffset}
         interaction={interaction}
         reduced={reduced}
-        renderCharacter={renderCharacter}
+        renderCharacter={characterRenderer}
         onSelect={setSelected}
       />
       <HomePanels
@@ -1170,7 +1290,7 @@ export function HomeScreen({
         friends={friends}
         bottom={inset.bottom + navigationHeight}
         scene={scene}
-        renderCharacter={renderCharacter}
+        renderCharacter={characterRenderer}
         onClose={() => {
           setMore(false);
           setFriends(false);
@@ -1191,7 +1311,7 @@ export function HomeScreen({
         onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
       <FriendDrawer
-        open={friends && !overview && !more}
+        open={friends && !overview && !more && !activeSheet}
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}
@@ -1200,10 +1320,35 @@ export function HomeScreen({
         offset={viewportOffset}
         reduced={reduced}
         large={large}
-        renderCharacter={renderCharacter}
+        renderCharacter={characterRenderer}
         onBring={bring}
         onClose={() => setFriends(false)}
         onCarry={(carrying) => { if (!carrying) setFriends(false); }}
+      />
+      {closet && (
+        <HomeClosetSheet
+          visible={activeSheet === "closet"}
+          onClose={closeCloset}
+          look={effectiveLook ?? closet.look}
+          equipped={closet.look}
+          earned={closet.earned}
+          unseen={closet.unseen}
+          initialItem={closetInitialItem}
+          onTryOn={(nextLook) => setPreviewLook(nextLook)}
+          onWear={(nextLook) => {
+            const saved = closet.onWear(nextLook);
+            if (saved) setPreviewLook(undefined);
+            return saved;
+          }}
+          onSeen={closet.onSeen}
+        />
+      )}
+      <HomeBadgesSheet
+        visible={activeSheet === "badges"}
+        onClose={closeBadges}
+        badges={ownership.badges ?? []}
+        milestones={milestones}
+        initialBadge={badgeInitial}
       />
       {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>

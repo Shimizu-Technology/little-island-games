@@ -25,9 +25,11 @@ async function design(cost: RestoreCost | undefined, large = false) {
   let tree!: TestRenderer.ReactTestRenderer;
   await act(async () => { tree = TestRenderer.create(<DesignTools state={starterHome()} ownership={{}} vertical={false} ghost={ghost as any} onChoose={() => {}} onDrop={() => {}} onDragItem={() => {}}
     interaction={{} as any} offset={{ value: { x: 0, y: 0 } } as any} dispatch={dispatch} onClose={() => {}} large={large} restoreCost={() => cost} onRestoreAnyway={anyway} />); });
-  await act(async () => pressables(tree).find((n) => n.props.accessibilityRole === 'tab' && label(n) === 'Room')!.props.onPress());
-  const open = () => act(async () => pressables(tree).find((n) => n.props.accessibilityLabel === 'Restore this room')!.props.onPress());
-  const modal = () => tree.root.findByType('Modal' as never);
+  const open = async () => {
+    await act(async () => pressables(tree).find((n) => n.props.accessibilityLabel === 'More decorating')!.props.onPress());
+    await act(async () => pressables(tree).find((n) => n.props.testID === 'decorate-tidy-up-button')!.props.onPress());
+  };
+  const modal = () => tree.root.findAllByType('Modal' as never)[1];
   return { tree, dispatch, anyway, open, modal };
 }
 
@@ -43,7 +45,7 @@ describe('F3: Design asks before a Restore that Undo cannot keep', () => {
     expect(words).toHaveLength(1);
     expect(words[0].props.accessibilityRole).toBe('header');
     expect(flat(words[0].props.style).width).toBeUndefined();
-    expect(texts(tree)).not.toContain('Restore this room? Undo can bring it back.');
+    expect(texts(tree)).not.toContain('Tidy up this room? Undo can bring it back.');
     // Keep my room changes nothing.
     await press(tree, 'Keep my room');
     expect(modal().props.visible).toBe(false);
@@ -61,8 +63,9 @@ describe('F3: Design asks before a Restore that Undo cannot keep', () => {
     const { tree, dispatch, anyway, open } = await design('undoable');
     await open();
     expect(tree.root.findAllByProps({ testID: 'restore-anyway' })).toHaveLength(0);
-    expect(texts(tree)).toContain('Restore this room? Undo can bring it back.');
-    await press(tree, 'Restore room');
+    expect(texts(tree)).toContain('Tidy up this room? Undo can bring it back.');
+    const confirmTidy = pressables(tree).filter((n) => label(n) === 'Tidy up').at(-1)!;
+    await act(async () => confirmTidy.props.onPress());
     expect(dispatch).toHaveBeenCalledWith({ type: 'reset' });
     expect(anyway).not.toHaveBeenCalled();
     await act(async () => tree.unmount());

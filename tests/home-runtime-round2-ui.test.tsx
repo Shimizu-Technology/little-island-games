@@ -14,14 +14,33 @@ vi.mock("react-native", () => ({
   ScrollView: "ScrollView",
   Text: "Text",
   View: "View",
-  StyleSheet: { create: (v: unknown) => v },
+  Platform: { OS: "ios" },
+  useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
+  StyleSheet: {
+    create: (v: unknown) => v,
+    flatten: (s: unknown) => (Array.isArray(s) ? Object.assign({}, ...s.filter(Boolean)) : s || {}),
+  },
 }));
 vi.mock("react-native-svg", () => ({ default: "Svg", Circle: "Circle", Path: "Path" }));
 vi.mock("react-native-reanimated", () => ({
-  default: { View: "AnimatedView" },
+  default: { View: "AnimatedView", createAnimatedComponent: (c: unknown) => c },
+  ReduceMotion: { System: "system" },
+  useSharedValue: (v: number) => ({ get: () => v, set: () => {} }),
   useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
   useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }),
+  withTiming: (v: number) => v,
 }));
+vi.mock("expo-haptics", () => ({ impactAsync: () => Promise.resolve(), ImpactFeedbackStyle: { Light: "light" } }));
+vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
+vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
+vi.mock("../src/ui/icons", () => {
+  const glyph = (name: string) => () => React.createElement("Glyph", { name });
+  return Object.fromEntries(
+    ["ArrowCounterClockwise", "ArrowLeft", "CaretLeft", "CaretRight", "Check", "CoatHanger", "Medal", "PencilSimple", "X"].map(
+      (n) => [n, glyph(n)]
+    )
+  );
+});
 vi.mock("../src/home/runtime/CarriedCharacter", () => ({ CarriedCharacter: () => <div /> }));
 vi.mock("../src/home/runtime/EntityArt", async () => ({
   EntityArt: () => <div />,
@@ -62,9 +81,9 @@ describe("round 2 pose and chrome", () => {
     expect(tree.root.findAllByType("AnimatedView" as never)).toHaveLength(9);
     await act(async () => tree.unmount());
   });
-  it("R5 has one reserved bottom bar with Whole house first; zoom and friends are explicit", async () => {
+  it("R5 has one reserved bottom bar with Closet, Badges, Decorate and room arrow navigation", async () => {
     const onRoom = vi.fn(),
-      onFriends = vi.fn();
+      onCloset = vi.fn();
     let tree!: TestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = TestRenderer.create(
@@ -82,23 +101,27 @@ describe("round 2 pose and chrome", () => {
           onUndo={() => {}}
           onRedo={() => {}}
           onFind={() => {}}
-          onFriends={onFriends}
+          onFriends={() => {}}
           onOverview={() => {}}
           onDesign={() => {}}
           onRoom={onRoom}
+          onCloset={onCloset}
+          onBadges={() => {}}
         />
       );
     });
     const bar = tree.root.findByProps({ testID: "home-bottom-bar" });
-    expect(bar.findAllByType("Pressable" as never)[0].props.accessibilityLabel).toBe("Whole house");
+    expect(bar.findAllByType("Pressable" as never).map((n) => n.props.accessibilityLabel)).toEqual([
+      "Closet",
+      "Badges",
+      "Decorate",
+    ]);
     expect(tree.root.findAllByProps({ accessibilityLabel: "Zoom in" })).toHaveLength(0);
     expect(tree.root.findAllByProps({ accessibilityLabel: "Bring friends here" })).toHaveLength(0);
-    const kitchen = tree.root.findByProps({ accessibilityLabel: "Go to Kitchen" });
-    kitchen.props.onPress();
+    tree.root.findByProps({ testID: "home-room-next" }).props.onPress();
     expect(onRoom).toHaveBeenCalledWith("kitchen");
-    expect(onFriends).not.toHaveBeenCalled();
-    kitchen.props.onLongPress();
-    expect(onFriends).toHaveBeenCalledOnce();
+    bar.findByProps({ testID: "home-closet-button" }).props.onPress();
+    expect(onCloset).toHaveBeenCalledOnce();
     await act(async () => tree.unmount());
   });
   it("R6 opens a clearly labelled pictorial friend picker only when explicitly requested", async () => {
