@@ -31,6 +31,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
     <ScrollView ref={scroll} nestedScrollEnabled style={{ height: paneHeight, flexGrow: 0, borderRadius: 12, backgroundColor: '#23334D' }} contentContainerStyle={{ padding: 8, gap: 2 }} accessibilityLabel="Python program, scroll for all lines">
       {shown.map((line, i) => {
         const edit = d.slots.findIndex(s => s.line === i), chosen = d.mode === 'build' && edit === slot;
+        const backgroundColor = frame?.line === i ? '#425372' : 'transparent';
         const depth = (line.length - line.trimStart().length) / 4;
         const spoken = `Line ${i + 1}${depth ? `, inside ${depth} ${depth === 1 ? 'block' : 'blocks'}` : ''}: ${line.trim()}`;
         // A separate gutter keeps every wrapped continuation attached to its numbered statement.
@@ -42,7 +43,7 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
             <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#FFFFFF' }}>{line.trimStart()}</Copy>
           </View>
         </View>;
-        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} onLayout={measured} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7 }}>{coaching && active && chosen ? <CoachSpot active>{text}</CoachSpot> : text}</PressableScale> : <View key={i} onLayout={measured} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 4, backgroundColor: frame?.line === i ? '#425372' : 'transparent' }}>{text}</View>;
+        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} onLayout={measured} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7, backgroundColor }}>{coaching && active && chosen ? <CoachSpot active>{text}</CoachSpot> : text}</PressableScale> : <View key={i} onLayout={measured} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 4, backgroundColor }}>{text}</View>;
 
       })}
     </ScrollView>
@@ -52,11 +53,19 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
     {d.mode === 'build' && !s.won && <>
       <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15 }}>{`Line ${selected.line + 1}: choose a value`}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }} accessibilityLabel="Touch values">
-        {selected.choices.map((value, i) => <Button compact quiet key={i} maxFontSizeMultiplier={cap} selected={s.picks[slot] === i} disabled={inactive || !!near && nearest(d, s.picks.map((v, j) => j === slot ? i : v)).distance >= near.distance} onPress={() => { send(['e', slot, i]); const next = s.picks.findIndex((v, j) => j > slot && v < 0); if (next >= 0) { setSlot(next); } }} label={`Line ${selected.line + 1}, choose ${value}`}>{value}</Button>)}
+        {selected.choices.map((value, i) => <Button compact quiet key={i} maxFontSizeMultiplier={cap} selected={s.picks[slot] === i} disabled={inactive || !!near && nearest(d, s.picks.map((v, j) => j === slot ? i : v)).distance >= near.distance} onPress={() => {
+          if (s.picks[slot] === i) return;
+          send(['e', slot, i]);
+          const next = s.picks.findIndex((v, j) => j > slot && v < 0);
+          if (next >= 0) setSlot(next);
+        }} label={`Line ${selected.line + 1}, choose ${value}`}>{value}</Button>)}
       </View>
     </>}
     {d.mode === 'predict' && !s.won && guide(<View style={{ gap: 4 }}><Copy maxFontSizeMultiplier={codeCap} style={{ fontSize: 14 }}>Scroll for all 4 outputs</Copy><ScrollView nestedScrollEnabled style={{ maxHeight: wide ? Math.max(120, win.height - 255) : large ? 140 : 200, flexGrow: 0 }} contentContainerStyle={{ gap: 6 }} accessibilityLabel="Four possible outputs">
-      {d.choices.map((choice, i) => <Button compact quiet key={i} maxFontSizeMultiplier={codeCap} textStyle={{ fontFamily: face, fontSize: 14, textAlign: 'left' }} style={{ alignItems: 'stretch' }} label={`Output ${'ABCD'[i]}: ${choice.replace(/\n/g, ', then ')}${s.wrong.includes(i) ? ', crossed out' : ''}`} selected={s.prediction === i} disabled={inactive || s.wrong.includes(i) || s.edits >= FREE_EDITS && i !== d.answer} onPress={() => send(['p', i])}>{`${'ABCD'[i]}   ${choice.replace(/\n/g, ' · then ') || '(nothing)'}${s.wrong.includes(i) ? '  ×' : ''}`}</Button>)}
+      {d.choices.map((choice, i) => <Button compact quiet key={i} maxFontSizeMultiplier={codeCap} textStyle={{ fontFamily: face, fontSize: 14, textAlign: 'left' }} style={{ alignItems: 'stretch' }} label={`Output ${'ABCD'[i]}: ${choice.replace(/\n/g, ', then ')}${s.wrong.includes(i) ? ', crossed out' : ''}`} selected={s.prediction === i} disabled={inactive || s.wrong.includes(i) || s.edits >= FREE_EDITS && i !== d.answer} onPress={() => {
+        if (s.prediction === i) return;
+        send(['p', i]);
+      }}>{`${'ABCD'[i]}   ${choice.replace(/\n/g, ' · then ') || '(nothing)'}${s.wrong.includes(i) ? '  ×' : ''}`}</Button>)}
     </ScrollView></View>)}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
       {s.won ? onNext && <Button compact maxFontSizeMultiplier={cap} onPress={onNext} disabled={!active}>Next program</Button> : <Button compact maxFontSizeMultiplier={cap} disabled={inactive || !ready(s, d) || alreadyRun} onPress={() => { setTraceAt(0); send(['c']); }}>{d.mode === 'predict' ? 'Check prediction' : 'Run code'}</Button>}

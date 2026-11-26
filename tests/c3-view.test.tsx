@@ -2,15 +2,65 @@ import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ProgramPanel } from '../src/learn/games/code-lab/ProgramPanel';
+import { ChallengeBoard } from '../src/learn/games/code-lab/challenge-view';
 import { initialAttempt, step } from '../src/learn/games/code-lab/attempt';
 import { schoolPrograms, deepPrograms } from '../src/learn/games/code-lab/content';
 const win = vi.hoisted(()=>({width:393,height:852,fontScale:1}));
 vi.mock('react-native',()=>({Platform:{select:()=> 'Menlo'},View:'div',ScrollView:'scroll',useWindowDimensions:()=>win}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',PressableScale:'button',C:{soft:'#eee'}}));
+vi.mock('../src/components/Audio', () => ({
+  AudioPreferences: React.createContext({ sound: true }),
+  useSoundControls: () => ({ play: vi.fn() }),
+}));
 vi.mock('../src/learn/Coach',()=>({CoachSpot:({children,...props}:{children:React.ReactNode})=><div data-coach {...props}>{children}</div>}));
 let tree: ReactTestRenderer | undefined;
 afterEach(async()=>{if(tree)await act(async()=>tree!.unmount());tree=undefined;vi.unstubAllGlobals();});
 const text=(node: {children: readonly unknown[]}):string=>node.children.map(c=>typeof c==='string'?c:c&&typeof c==='object'&&'children'in c?text(c as {children: readonly unknown[]}):'').join('');
+
+it.each(['build', 'predict'] as const)('re-tapping a selected %s choice in Challenge keeps the selection without dispatching', async mode => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const d = schoolPrograms[0][mode === 'build' ? 1 : 0];
+  const attempt = step(initialAttempt(d), mode === 'build' ? ['e', 0, 0] : ['p', 0], d)!;
+  const dispatch = vi.fn();
+  await act(async () => {
+    tree = create(<ChallengeBoard state={{ ...attempt, descriptor: d }} dispatch={dispatch} active width={335} />);
+  });
+  const buttons = () => tree!.root.findAllByType('button');
+  if (mode === 'build') {
+    const firstLine = buttons().find(b => b.props.accessibilityLabel?.startsWith('Edit line 1:'))!;
+    await act(async () => firstLine.props.onPress());
+  }
+  const selected = buttons().find(b => b.props.selected)!;
+  expect(selected.props.disabled).toBe(false);
+  await act(async () => selected.props.onPress());
+  expect(dispatch).not.toHaveBeenCalled();
+  expect(buttons().find(b => b.props.selected)?.props.label).toBe(selected.props.label);
+
+  const other = buttons().find(b => b.props.label?.startsWith(mode === 'build' ? `Line 1, choose ${d.slots[0].choices[1]}` : 'Output B:'))!;
+  await act(async () => other.props.onPress());
+  expect(dispatch).toHaveBeenCalledExactlyOnceWith(mode === 'build' ? ['e', 0, 1] : ['p', 1]);
+});
+
+it('moves the failed Build trace highlight between editable lines while keeping the selected blank border', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const d = schoolPrograms[0][1];
+  let state = step(initialAttempt(d), ['e', 0, (d.slots[0].answer + 1) % 3], d)!;
+  state = step(state, ['e', 1, d.slots[1].answer], d)!;
+  state = step(state, ['c'], d)!;
+  expect(state.won).toBe(false);
+  await act(async () => {
+    tree = create(<ProgramPanel d={d} state={state} send={vi.fn()} active width={335} />);
+  });
+  const buttons = () => tree!.root.findAllByType('button');
+  const lineStyle = (line: number) => buttons().find(b => b.props.accessibilityLabel?.startsWith(`Edit line ${line}:`))!.props.style;
+  expect(lineStyle(1)).toMatchObject({ backgroundColor: '#425372', borderColor: '#F5D886' });
+  expect(lineStyle(2).backgroundColor).toBe('transparent');
+
+  await act(async () => buttons().find(b => text(b) === 'Next line')!.props.onPress());
+  expect(lineStyle(1)).toMatchObject({ backgroundColor: 'transparent', borderColor: '#F5D886' });
+  expect(lineStyle(2)).toMatchObject({ backgroundColor: '#425372', borderColor: 'transparent' });
+});
+
 it('touch selects a line/value, Undo sends an engine action, and saturated Help stays disabled through edits',async()=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);const d=schoolPrograms[4][9], send=vi.fn();let state=initialAttempt(d);
   await act(async()=>{tree=create(<ProgramPanel d={d} state={state} send={send} active width={335}/>);});
