@@ -75,7 +75,8 @@ export function exportPublic(target) {
       ...['song-loop', 'reef-loop', 'sticker', 'coral', 'clear', ...Array.from({ length: 6 }, (_, i) => `shell-${i}`)].map(n => `arcade/${n}.wav`),
       ...['goal', 'hop', 'splash'].map(n => `arcade/crab-sfx/${n}.wav`),
       ...['bonk', 'clear', 'flap', 'fruit'].map(n => `arcade/fruit-bat/${n}.wav`),
-      ...['snap', 'shell', 'power', 'thump'].map(n => `arcade/lagoon-sfx/${n}.wav`)]);
+      ...['snap', 'shell', 'power', 'thump'].map(n => `arcade/lagoon-sfx/${n}.wav`),
+      ...['chirp', 'nest', 'step'].map(n => `arcade/rail-sfx/${n}.wav`)]);
     if (receipt.speechReceipt.engine !== 'Kokoro-82M v1.0' || receipt.speechReceipt.modelLicense !== 'Apache-2.0' || speech.size !== receipt.speechReceipt.keysPerVoice * 2)
       throw new Error('Neural speech receipt and source map disagree.');
     // Staged Library recordings have an isolated, complete warm-only receipt.

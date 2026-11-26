@@ -6,13 +6,13 @@ import type { OutfitId } from "../../progress";
 import type { WorldId } from "../../types";
 export const palettes = {
   rail: {
-    w1: { sky: "#173F3D", ground: "#357955", light: "#A3CF71", accent: "#FFCE69" },
-    w2: { sky: "#153D56", ground: "#285A65", light: "#6EBE9A", accent: "#FFA56E" },
-    w3: { sky: "#282D55", ground: "#414965", light: "#9EBA87", accent: "#FFE49B" },
-    w4: { sky: "#36564A", ground: "#70865B", light: "#C2D596", accent: "#FFE2A0" },
-    w5: { sky: "#51415E", ground: "#7C6684", light: "#D5BAD3", accent: "#F6C4D6" },
-    w6: { sky: "#82544A", ground: "#A37C59", light: "#E6CD91", accent: "#FFE9A1" },
-    learn: { sky: "#59476C", ground: "#776C8B", light: "#BAD58E", accent: "#FFE49B" },
+    w1: { sky: "#2B6A49", ground: "#4E9259", light: "#C6E38B", accent: "#FFD87A" },
+    w2: { sky: "#1F5864", ground: "#377B72", light: "#8FD6AB", accent: "#FFB47B" },
+    w3: { sky: "#353E66", ground: "#4F6472", light: "#B7CF94", accent: "#FFE69F" },
+    w4: { sky: "#456B52", ground: "#7E9860", light: "#D3E2A0", accent: "#FFE5A3" },
+    w5: { sky: "#5E4D6B", ground: "#8A748C", light: "#DFC8DC", accent: "#FAD0DC" },
+    w6: { sky: "#8C5D4B", ground: "#B58A5E", light: "#EED69C", accent: "#FFECA6" },
+    learn: { sky: "#5B5478", ground: "#797E92", light: "#CBE09B", accent: "#FFE7A3" },
   },
   crab: {
     w1: { sky: "#0B5466", ground: "#0C8C9C", light: "#A9E4D7", accent: "#FFD481" },
