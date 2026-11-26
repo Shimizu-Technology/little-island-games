@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from "react";
-import { Platform, Pressable, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { anchorsFor } from "../scene/species";
 import { restFrom, restTransform } from "./restFrom";
 import type { Meal } from "./meal";
@@ -8,7 +8,7 @@ import { capabilityOf } from '../world';
 import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
-import { RoomArt, ShoreArt } from "../art/Room";
+import { RoomArt, ShoreArt, SkyArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
 import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
 import { roomOrigin, type Building } from "../camera";
@@ -572,6 +572,7 @@ export function SceneView({
             carried onto a room button or the Friends button stays visible above the bar. */}
         <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height,
           overflow: "hidden", backgroundColor: "#BEE4DD" }}>
+        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt /></View>
         <Animated.View
           testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}

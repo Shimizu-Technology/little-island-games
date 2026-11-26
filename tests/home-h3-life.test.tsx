@@ -12,7 +12,7 @@ import { LIFE_PERIOD, longestBlinkWait, lifeBlink, lifeSeed, BREATH_SCALE, nextL
 vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
 // These scene tests replace native art; the mouth cue now also imports SVG.
 vi.mock('react-native-svg',()=>({default:'Svg',Path:'Path'}));
-vi.mock('react-native',()=>({View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
+vi.mock('react-native',()=>({StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}},View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
 vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useSharedValue:(v:any)=>React.useRef({value:v,set(n:any){this.value=n;},get(){return this.value;}}).current,withRepeat:(x:any)=>x,withTiming:(x:any)=>x,cancelAnimation:()=>{},Easing:{linear:(t:number)=>t},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn}));
 const pans=vi.hoisted(()=>[] as any[]);
 vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',Gesture:{Pan:()=>{
@@ -20,7 +20,7 @@ vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',G
 }}}));
 vi.mock('../src/home/runtime/EntityArt',()=>({EntityArt:(props:any)=>React.createElement('EntityArt',{blink:!!props.blink,entityId:props.entity.id}),artFrame:(e:any)=>e.bounds}));
 vi.mock('../src/home/runtime/SettleArt',()=>({SettleArt:()=>null}));
-vi.mock('../src/home/art/Room',()=>({RoomArt:()=>null,ShoreArt:()=>null}));
+vi.mock('../src/home/art/Room',()=>({RoomArt:()=>null,ShoreArt:()=>null,SkyArt:()=>null}));
 vi.mock('../src/home/art/More',()=>({RoomShellArt:()=>null,MoreItemArt:()=>null}));
 vi.mock('../src/home/art/Items',()=>({ItemArt:()=>null}));
 vi.mock('../src/home/runtime/HomeChrome',()=>({Tool:()=>null}));

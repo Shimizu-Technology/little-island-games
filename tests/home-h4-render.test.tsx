@@ -16,8 +16,8 @@ import { emptyDragSlot } from '../src/home/runtime/useInteraction';
 import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
 import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import type { Interaction } from '../src/home/runtime/useInteraction';
-const setDownClock=vi.hoisted(()=>({done:[] as Array<(done:boolean)=>void>, raf:[]as Array<()=>void>}));
-vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' }, AppState: { addEventListener: () => ({ remove() {} }) } }));
+const setDownClock=vi.hoisted(()=>({done:[] as ((done:boolean)=>void)[], raf:[]as (()=>void)[]}));
+vi.mock('react-native', () => ({ StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}}, View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' }, AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView', createAnimatedComponent:()=> 'AnimatedGroup' }, useAnimatedProps:(fn:()=>unknown)=>({evaluate:fn}), useSharedValue: (v: any) => React.useRef({ value: v, set(n: any) { this.value = n; }, get() { return this.value; } }).current,
   cancelAnimation:()=>{}, withTiming: (x: any, _config:any, done?:(done:boolean)=>void) => {if(done)setDownClock.done.push(done);return x;}, ReduceMotion: { System: 'system', Always: 'always', Never: 'never' }, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ initial:fn(), evaluate: fn }),
@@ -25,7 +25,7 @@ vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView', cre
 vi.mock('react-native-gesture-handler', () => ({ GestureDetector: 'GestureDetector' }));
 vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: (props: any) => React.createElement('EntityArt', { idleStyle:props.idleStyle, face: props.faceOverride, carry: !!props.carry, entityId: props.entity.id, preview: !!props.preview, blink: !!props.blink }), artFrame: (e: any) => e.bounds }));
 vi.mock('../src/home/runtime/SettleArt', () => ({ SettleArt: () => null }));
-vi.mock('../src/home/art/Room', () => ({ RoomArt: () => null, ShoreArt: () => null }));
+vi.mock('../src/home/art/Room', () => ({ RoomArt: () => null, ShoreArt: () => null, SkyArt: () => null }));
 vi.mock('../src/home/art/More', () => ({ RoomShellArt: () => null, MoreItemArt: () => null }));
 vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
 vi.mock('../src/home/BuildingArt', () => ({ BuildingArt: () => null, BuildingTrim: () => null, TerraceArt: () => null }));
