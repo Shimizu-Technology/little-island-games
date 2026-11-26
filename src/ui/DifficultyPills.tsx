@@ -19,15 +19,38 @@ export type DifficultyOption = {
 export const difficultyOptions = (tags: readonly (string | undefined)[]): DifficultyOption[] =>
   tags.slice(0, DIFFICULTY_WORDS.length).map((tag, i) => ({ key: i + 1, label: DIFFICULTY_WORDS[i], tag }));
 
-/** Only the levels a game has, one pill each, wrapping to more rows rather than shrinking or clipping. */
+/** Index the arrow key moves the radio choice to, wrapping at both ends; `undefined` for any other key. */
+export function nextRadioIndex(key: string, index: number, count: number): number | undefined {
+  if (key === "ArrowRight" || key === "ArrowDown") return (index + 1) % count;
+  if (key === "ArrowLeft" || key === "ArrowUp") return (index + count - 1) % count;
+  return undefined;
+}
+
+type KeyEvent = { key?: string; nativeEvent?: { key?: string }; currentTarget?: unknown; preventDefault?: () => void };
+
+/**
+ * Only the levels a game has, one pill each, wrapping to more rows rather than shrinking or clipping. A single-choice
+ * radio group: the chosen pill is the one tab stop, and the arrow keys move the choice (Web).
+ */
 export function DifficultyPills({ options, value, onChange, label = "Difficulty" }: {
   options: readonly DifficultyOption[];
   value: DifficultyOption["key"];
   onChange: (key: DifficultyOption["key"]) => void;
   label?: string;
 }) {
+  const onKeyDown = (event: KeyEvent) => {
+    const index = options.findIndex(option => option.key === value);
+    const next = nextRadioIndex(event.key ?? event.nativeEvent?.key ?? "", Math.max(index, 0), options.length);
+    if (next === undefined) return;
+    event.preventDefault?.();
+    onChange(options[next].key);
+    const group = event.currentTarget as { querySelectorAll?: (selector: string) => ArrayLike<{ focus?: () => void }> } | undefined;
+    group?.querySelectorAll?.('[role="radio"]')?.[next]?.focus?.();
+  };
+  // React Native Web forwards onKeyDown to the DOM; the native View type does not declare it.
+  const webKeys = { onKeyDown } as object;
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.row}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.row} {...webKeys}>
       {options.map((option) => {
         const selected = option.key === value;
         return (
@@ -35,7 +58,9 @@ export function DifficultyPills({ options, value, onChange, label = "Difficulty"
             key={option.key}
             target="child"
             haptic
-            selected={selected}
+            role="radio"
+            checked={selected}
+            tabIndex={selected || !options.some(o => o.key === value) ? 0 : -1}
             testID={`difficulty-${option.key}`}
             accessibilityLabel={option.tag ? `${option.label}, ${option.tag}` : option.label}
             onPress={() => onChange(option.key)}

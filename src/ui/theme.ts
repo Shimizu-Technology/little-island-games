@@ -21,10 +21,11 @@ export const theme = {
     lagoonSoft: "#DDF1EE",
     /** Action coral. Text on it is always ink, never white. */
     coral: "#FF7A5C",
-    success: "#3E9B6A",
+    /** Text-safe green: 6.4:1 on the page, 5.6:1 on its soft fill. */
+    success: "#1E6B43",
     successSoft: "#DDF5E6",
-    /** Gentle conflict: never red alone, pair with a shape. */
-    conflict: "#C2410C",
+    /** Gentle conflict: never red alone, pair with a shape. 5.9:1 on the page, 4.9:1 on its soft fill. */
+    conflict: "#B53708",
     conflictSoft: "#FFE0EC",
     /** Switch track when off. */
     track: "#CFD8D5",
@@ -67,6 +68,10 @@ export const theme = {
     press: { scale: 0.96, duration: 140 },
   },
   opacity: { disabled: 0.55 },
+  /** Hold gate: two seconds, long enough to stop a stray tap and short enough to finish. */
+  hold: { ms: 2000 },
+  /** HUD row height. */
+  hud: { height: 56 },
   /** Sheet heights as a share of the window: start sheets about 55%, in-game sheets at most 40%. */
   sheet: { start: 0.55, small: 0.4, dismissDistance: 90, dismissVelocity: 0.9, maxWidth: 560 },
 } as const;

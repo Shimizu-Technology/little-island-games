@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Modal, PanResponder, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Modal, PanResponder, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useReducedMotion } from "../components/motion";
 import { useSheetPresence } from "../components/sheetPresence";
 import { IconButton } from "./IconButton";
+import { Text } from "./Text";
 import { X } from "./icons";
 import { theme } from "./theme";
 
@@ -24,13 +25,21 @@ export const shouldDismiss = (dy: number, vy: number) => dy > theme.sheet.dismis
 /**
  * Swipe-down bottom sheet. `dim` presents in a modal with a scrim; `small` is not a modal at all, it draws over the
  * bottom of its screen with the rest left touchable, so mount it as the last child of a full-screen view. Wide
- * windows get a centered bottom card. Reduce Motion fades instead of sliding. Close is a labelled button, a swipe
- * down, a scrim tap (dim) and the VoiceOver escape gesture.
+ * windows get a centered bottom card. Reduce Motion fades instead of sliding, and a swipe only decides whether to
+ * close; it never moves the panel. Close is a labelled button, a swipe down, a scrim tap (dim), the VoiceOver escape
+ * gesture and Escape on Web.
+ *
+ * Web focus: opening moves focus to the title (or the sheet when it has none), closing returns it to the control that
+ * opened the sheet. The scrim is not a tab stop. A dim sheet's Modal traps Tab; the in-game sheet does not, so the
+ * board stays reachable by keyboard. iPhone start sheets use the native route presentation instead
+ * (`nativeFormSheetOptions`).
  */
-export function Sheet({ visible, onClose, mode = "dim", closeLabel = "Close", children }: {
+export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Close", children }: {
   visible: boolean;
   onClose: () => void;
   mode?: SheetMode;
+  /** Spoken and shown first; it takes focus when the sheet opens on Web. */
+  title?: string;
   closeLabel?: string;
   children: React.ReactNode;
 }) {
@@ -44,6 +53,30 @@ export function Sheet({ visible, onClose, mode = "dim", closeLabel = "Close", ch
   const progress = useSharedValue(visible ? 1 : 0);
   const drag = useSharedValue(0);
   useSheetPresence(shown && dim);
+
+  const web = Platform.OS === "web";
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  const focusOnMount = useCallback((node: unknown) => {
+    if (web && node) (node as { focus?: () => void }).focus?.();
+  }, [web]);
+
+  useEffect(() => {
+    if (!web || !visible || typeof document === "undefined") return;
+    const opener = document.activeElement as HTMLElement | null;
+    // Capture phase, so one Escape closes the sheet once even though a Modal also listens for it.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onCloseRef.current();
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      if (opener?.isConnected) opener.focus?.();
+    };
+  }, [web, visible]);
 
   useEffect(() => {
     if (visible) {
@@ -62,17 +95,17 @@ export function Sheet({ visible, onClose, mode = "dim", closeLabel = "Close", ch
 
   const pan = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
-    onPanResponderMove: (_, g) => drag.set(Math.max(0, g.dy)),
+    onPanResponderMove: (_, g) => { if (!reduced) drag.set(Math.max(0, g.dy)); },
     onPanResponderRelease: (_, g) => {
       if (shouldDismiss(g.dy, g.vy)) onClose();
-      else drag.set(withSpring(0, { ...theme.motion.spring, reduceMotion: ReduceMotion.System }));
+      else if (!reduced) drag.set(withSpring(0, { ...theme.motion.spring, reduceMotion: ReduceMotion.System }));
     },
-    onPanResponderTerminate: () => drag.set(withSpring(0, { ...theme.motion.spring, reduceMotion: ReduceMotion.System })),
-  }), [drag, onClose]);
+    onPanResponderTerminate: () => { if (!reduced) drag.set(withSpring(0, { ...theme.motion.spring, reduceMotion: ReduceMotion.System })); },
+  }), [drag, onClose, reduced]);
 
   const scrim = useAnimatedStyle(() => ({ opacity: progress.get() }));
   const panel = useAnimatedStyle(() => reduced
-    ? { opacity: progress.get(), transform: [{ translateY: drag.get() }] }
+    ? { opacity: progress.get() }
     : { transform: [{ translateY: (1 - progress.get()) * (height + insets.bottom) + drag.get() }] });
 
   if (!shown) return null;
@@ -81,12 +114,21 @@ export function Sheet({ visible, onClose, mode = "dim", closeLabel = "Close", ch
     <View pointerEvents="box-none" style={styles.fill}>
       {dim && (
         <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, scrim]}>
-          <Pressable accessible={false} importantForAccessibility="no" tabIndex={-1} style={StyleSheet.absoluteFill} onPress={onClose} />
+          <View
+            testID="sheet-backdrop"
+            accessible={false}
+            importantForAccessibility="no"
+            style={StyleSheet.absoluteFill}
+            onStartShouldSetResponder={() => true}
+            onResponderRelease={onClose}
+          />
         </Animated.View>
       )}
       <View pointerEvents="box-none" style={styles.dock}>
         <Animated.View
+          ref={title ? undefined : focusOnMount}
           testID="sheet"
+          tabIndex={-1}
           accessibilityViewIsModal={dim}
           onAccessibilityEscape={onClose}
           style={[styles.panel, theme.shadow, { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
@@ -94,6 +136,7 @@ export function Sheet({ visible, onClose, mode = "dim", closeLabel = "Close", ch
           <View {...pan.panHandlers} style={styles.top}>
             <View testID="sheet-grabber" style={styles.grabber} />
             <View style={styles.closeRow}>
+              {title ? <View ref={focusOnMount} testID="sheet-title" tabIndex={-1} accessibilityRole="header" style={styles.title}><Text variant="section">{title}</Text></View> : <View style={styles.title} />}
               <IconButton glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
             </View>
           </View>
@@ -122,6 +165,7 @@ const styles = StyleSheet.create({
   },
   top: { paddingTop: theme.space.sm, alignItems: "center" },
   grabber: { width: 40, height: 5, borderRadius: theme.radius.full, backgroundColor: theme.colors.hairline },
-  closeRow: { alignSelf: "stretch", alignItems: "flex-end", paddingHorizontal: theme.space.sm },
+  closeRow: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", paddingLeft: theme.space.xl, paddingRight: theme.space.sm },
+  title: { flex: 1 },
   content: { paddingHorizontal: theme.space.xl, paddingTop: theme.space.sm, gap: theme.space.lg },
 });

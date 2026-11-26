@@ -3,7 +3,7 @@ import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TextLayoutProvider } from "../src/components/Text";
-import { Button, DifficultyPills, DIFFICULTY_WORDS, difficultyOptions, IconButton, PressTarget, Sheet, Text, Tile, ToggleRow, glyphs, sheetHeight, shouldDismiss, theme } from "../src/ui";
+import { Button, DifficultyPills, DIFFICULTY_WORDS, difficultyOptions, HoldButton, Hud, IconButton, nativeFormSheetOptions, nextRadioIndex, PageHeader, PressTarget, ProfilePill, Sheet, Text, Tile, ToggleRow, glyphs, sheetHeight, shouldDismiss, theme } from "../src/ui";
 
 const env = vi.hoisted(() => ({
   window: { width: 393, height: 852, fontScale: 1 },
@@ -11,12 +11,17 @@ const env = vi.hoisted(() => ({
   withTiming: vi.fn((value: number) => value),
   withSpring: vi.fn((value: number) => value),
   impact: vi.fn(() => Promise.resolve()),
+  notify: vi.fn(() => Promise.resolve()),
+  os: "ios",
+  screenReader: false,
 }));
 
 vi.mock("react-native", () => {
   const style = (s: unknown): Record<string, unknown> => Array.isArray(s) ? Object.assign({}, ...s.map(style)) : (s && typeof s === "object" ? s as Record<string, unknown> : {});
   return {
-    View: "div", Text: "span", Pressable: "button", ScrollView: "section", Modal: "dialog", Switch: "input",
+    View: "div", Text: "span", Pressable: "button", ScrollView: "section", Modal: "dialog",
+    Platform: { get OS() { return env.os; } },
+    AccessibilityInfo: { isScreenReaderEnabled: () => Promise.resolve(env.screenReader), addEventListener: () => ({ remove: () => undefined }) },
     StyleSheet: { create: <T,>(s: T) => s, flatten: style, absoluteFill: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } },
     PanResponder: { create: (config: object) => ({ panHandlers: config }) },
     useWindowDimensions: () => env.window,
@@ -24,14 +29,17 @@ vi.mock("react-native", () => {
 });
 vi.mock("react-native-reanimated", () => ({
   default: { View: "div", createAnimatedComponent: (component: unknown) => component },
-  ReduceMotion: { System: "system" },
+  ReduceMotion: { System: "system", Never: "never" },
+  Easing: { linear: "linear" },
+  useAnimatedProps: (fn: () => object) => fn(),
   useSharedValue: (initial: number) => { const box = { value: initial }; return { get: () => box.value, set: (v: number) => { box.value = v; } }; },
   useAnimatedStyle: (fn: () => object) => fn(),
   withTiming: env.withTiming,
   withSpring: env.withSpring,
 }));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }) }));
-vi.mock("expo-haptics", () => ({ impactAsync: env.impact, ImpactFeedbackStyle: { Light: "light" } }));
+vi.mock("react-native-svg", () => ({ default: "svg", Circle: "circle" }));
+vi.mock("expo-haptics", () => ({ impactAsync: env.impact, notificationAsync: env.notify, ImpactFeedbackStyle: { Light: "light" }, NotificationFeedbackType: { Success: "success" } }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => env.reduced }));
 vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false, NunitoProvider: "div" }));
 vi.mock("../src/ui/icons", () => {
@@ -44,6 +52,8 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   env.window = { width: 393, height: 852, fontScale: 1 };
   env.reduced = false;
+  env.os = "ios";
+  env.screenReader = false;
   vi.clearAllMocks();
 });
 afterEach(async () => {
@@ -53,8 +63,8 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-async function mount(element: React.ReactElement) {
-  await act(async () => { root = create(<TextLayoutProvider>{element}</TextLayoutProvider>); });
+async function mount(element: React.ReactElement, options?: Parameters<typeof create>[1]) {
+  await act(async () => { root = create(<TextLayoutProvider>{element}</TextLayoutProvider>, options); });
   return root!.root;
 }
 const flat = (style: unknown): Record<string, any> => Array.isArray(style) ? Object.assign({}, ...style.map(flat)) : (style && typeof style === "object" ? style as Record<string, any> : {});
@@ -96,6 +106,11 @@ describe("tokens", () => {
     expect(contrast(c.muted, c.lagoonSoft)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(c.surface, c.lagoon)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(c.lagoon, c.surface)).toBeGreaterThanOrEqual(4.5);
+    for (const status of [c.success, c.conflict]) {
+      for (const ground of [c.bg, c.surface]) expect(contrast(status, ground)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrast(c.success, c.successSoft)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(c.conflict, c.conflictSoft)).toBeGreaterThanOrEqual(4.5);
     for (const pastel of Object.values(theme.pastels)) expect(contrast(c.ink, pastel)).toBeGreaterThanOrEqual(7);
   });
 });
@@ -123,6 +138,16 @@ describe("press targets", () => {
   it.each([["min", 44], ["adult", 48], ["child", 64]] as const)("%s floor is %i pt", async (target, size) => {
     const r = await mount(<PressTarget target={target} onPress={() => {}} accessibilityLabel="Go"><Text>Go</Text></PressTarget>);
     expect(flat(host(r, "button")[0].props.style)).toMatchObject({ minWidth: size, minHeight: size });
+  });
+
+  it("never lets a caller's style shrink a target below its floor, but lets it grow", async () => {
+    const r = await mount(<>
+      <PressTarget target="child" onPress={() => {}} accessibilityLabel="A" style={{ minWidth: 10, minHeight: 0 }}><Text>A</Text></PressTarget>
+      <PressTarget target="adult" onPress={() => {}} accessibilityLabel="B" style={[{ minHeight: 30 }, { minWidth: 120 }]}><Text>B</Text></PressTarget>
+    </>);
+    const [a, b] = host(r, "button");
+    expect(flat(a.props.style)).toMatchObject({ minWidth: 64, minHeight: 64 });
+    expect(flat(b.props.style)).toMatchObject({ minWidth: 120, minHeight: 48 });
   });
 
   it("is an accessible button that fires onPress with a light haptic when asked", async () => {
@@ -270,7 +295,8 @@ describe("DifficultyPills", () => {
   it("marks the selected pill and says word and size to VoiceOver", async () => {
     const r = await mount(<DifficultyPills options={options} value={3} onChange={() => {}} />);
     const pills = host(r, "button");
-    expect(pills.map(p => p.props.accessibilityState.selected)).toEqual([false, false, true, false, false, false]);
+    expect(pills.map(p => p.props.accessibilityState.checked)).toEqual([false, false, true, false, false, false]);
+    expect(pills.every(p => p.props.accessibilityRole === "radio")).toBe(true);
     expect(pills[0].props.accessibilityLabel).toBe("Easy, 4×4");
     expect(flat(pills[2].props.style).backgroundColor).toBe(theme.colors.lagoon);
     expect(flat(pills[0].props.style).backgroundColor).toBe(theme.colors.lagoonSoft);
@@ -282,6 +308,23 @@ describe("DifficultyPills", () => {
     const r = await mount(<DifficultyPills options={options} value={1} onChange={onChange} />);
     await press(host(r, "button")[3]);
     expect(onChange).toHaveBeenCalledWith(4);
+  });
+
+  it("is a radio group with one tab stop, and arrow keys move the choice", async () => {
+    const onChange = vi.fn();
+    const r = await mount(<DifficultyPills options={options} value={2} onChange={onChange} />);
+    const group = r.findAll(n => n.props.accessibilityRole === "radiogroup")[0];
+    expect(host(r, "button").map(p => p.props.tabIndex)).toEqual([-1, 0, -1, -1, -1, -1]);
+    const focus = vi.fn();
+    const key = (k: string) => group.props.onKeyDown({ key: k, preventDefault: vi.fn(), currentTarget: { querySelectorAll: () => [{ focus: vi.fn() }, { focus: vi.fn() }, { focus }] } });
+    await act(async () => { key("ArrowRight"); });
+    expect(onChange).toHaveBeenLastCalledWith(3);
+    expect(focus).toHaveBeenCalledOnce();
+    await act(async () => { key("ArrowLeft"); });
+    expect(onChange).toHaveBeenLastCalledWith(1);
+    await act(async () => { key("Tab"); });
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect([nextRadioIndex("ArrowLeft", 0, 4), nextRadioIndex("ArrowDown", 3, 4), nextRadioIndex("a", 0, 4)]).toEqual([3, 0, undefined]);
   });
 
   it("wraps to more rows instead of shrinking at large text", async () => {
@@ -308,6 +351,17 @@ describe("ToggleRow", () => {
     await press(sound);
     expect(onChange).toHaveBeenCalledWith(false);
     expect(music.props.disabled).toBe(true);
+  });
+
+  it("has no second keyboard stop: the switch is plain, hidden views, and the off track has an outline", async () => {
+    const r = await mount(<><ToggleRow label="Sound" value onChange={() => {}} /><ToggleRow label="Music" value={false} onChange={() => {}} /></>);
+    expect(host(r, "input")).toHaveLength(0);
+    expect(host(r, "button")).toHaveLength(2);
+    const [on, off] = r.findAll(n => n.props.testID === "toggle-track");
+    expect(on.props.importantForAccessibility).toBe("no-hide-descendants");
+    expect(flat(on.props.style)).toMatchObject({ backgroundColor: theme.colors.lagoon, alignItems: "flex-end" });
+    expect(flat(off.props.style)).toMatchObject({ backgroundColor: theme.colors.track, borderColor: theme.colors.muted, borderWidth: 2, alignItems: "flex-start" });
+    expect(contrast(theme.colors.muted, theme.colors.surface)).toBeGreaterThanOrEqual(3);
   });
 
   it("moves the switch below the words at accessibility text sizes", async () => {
@@ -345,8 +399,8 @@ describe("Sheet", () => {
   it("closes from the scrim and from the VoiceOver escape gesture", async () => {
     const onClose = dismiss();
     const r = await mount(<Sheet visible onClose={onClose}><Text>x</Text></Sheet>);
-    const scrim = r.findAll(n => n.type === "button" && n.props.accessible === false)[0];
-    await press(scrim);
+    const scrim = r.findByProps({ testID: "sheet-backdrop" });
+    await press(scrim, "onResponderRelease");
     await act(async () => { r.findByProps({ testID: "sheet" }).props.onAccessibilityEscape(); });
     expect(onClose).toHaveBeenCalledTimes(2);
   });
@@ -357,7 +411,7 @@ describe("Sheet", () => {
     const sheet = r.findByProps({ testID: "sheet" });
     expect(sheet.props.accessibilityViewIsModal).toBe(false);
     expect(flat(sheet.props.style).maxHeight).toBeLessThanOrEqual(852 * 0.4);
-    expect(r.findAll(n => n.type === "button" && n.props.accessible === false)).toHaveLength(0);
+    expect(r.findAll(n => n.props.testID === "sheet-backdrop")).toHaveLength(0);
     expect(r.findAll(n => flat(n.props.style).backgroundColor === theme.colors.scrim)).toHaveLength(0);
   });
 
@@ -419,5 +473,297 @@ describe("Sheet", () => {
   it("renders nothing while closed", async () => {
     const r = await mount(<Sheet visible={false} onClose={() => {}}><Text>x</Text></Sheet>);
     expect(r.findAll(n => n.props.testID === "sheet")).toHaveLength(0);
+  });
+});
+
+describe("Sheet on Web", () => {
+  type Handler = (event: { key: string; defaultPrevented: boolean; preventDefault: () => void; stopPropagation: () => void }) => void;
+  const setup = () => {
+    env.os = "web";
+    const opener = { focus: vi.fn(), isConnected: true };
+    const handlers: Handler[] = [];
+    const doc = {
+      activeElement: opener,
+      addEventListener: vi.fn((type: string, fn: Handler, capture: boolean) => { if (type === "keydown" && capture) handlers.push(fn); }),
+      removeEventListener: vi.fn((type: string, fn: Handler) => { const i = handlers.indexOf(fn); if (type === "keydown" && i >= 0) handlers.splice(i, 1); }),
+    };
+    vi.stubGlobal("document", doc);
+    const nodes: Record<string, { focus: ReturnType<typeof vi.fn> }> = {};
+    const createNodeMock = (element: React.ReactElement) => (nodes[(element.props as { testID?: string }).testID ?? "?"] ??= { focus: vi.fn() });
+    const escape = () => {
+      const event = { key: "Escape", defaultPrevented: false, preventDefault: vi.fn(), stopPropagation: vi.fn() };
+      handlers.forEach(h => h(event));
+      return event;
+    };
+    return { opener, handlers, nodes, createNodeMock, escape };
+  };
+
+  it.each(["dim", "small"] as const)("closes a %s sheet on Escape, once", async (mode) => {
+    const web = setup();
+    const onClose = vi.fn();
+    await mount(<Sheet visible mode={mode} onClose={onClose}><Text>x</Text></Sheet>, { createNodeMock: web.createNodeMock });
+    expect(web.handlers).toHaveLength(1);
+    const event = web.escape();
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(event.stopPropagation).toHaveBeenCalled();
+    web.handlers.forEach(h => h({ key: "a", defaultPrevented: false, preventDefault: vi.fn(), stopPropagation: vi.fn() }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("ignores Escape while closed and stops listening once closed", async () => {
+    const web = setup();
+    const onClose = vi.fn();
+    const el = (visible: boolean) => <TextLayoutProvider><Sheet visible={visible} mode="small" onClose={onClose}><Text>x</Text></Sheet></TextLayoutProvider>;
+    await act(async () => { root = create(el(false), { createNodeMock: web.createNodeMock }); });
+    expect(web.handlers).toHaveLength(0);
+    await act(async () => { root!.update(el(true)); });
+    expect(web.handlers).toHaveLength(1);
+    await act(async () => { root!.update(el(false)); });
+    expect(web.handlers).toHaveLength(0);
+  });
+
+  it("focuses its title on open and gives focus back to the opener on close", async () => {
+    const web = setup();
+    const el = (visible: boolean) => <TextLayoutProvider><Sheet visible={visible} title="Sudoku" onClose={() => {}}><Text>x</Text></Sheet></TextLayoutProvider>;
+    await act(async () => { root = create(el(true), { createNodeMock: web.createNodeMock }); });
+    expect(web.nodes["sheet-title"].focus).toHaveBeenCalled();
+    expect(web.nodes.sheet).toBeUndefined();
+    expect(root!.root.findByProps({ testID: "sheet-title" }).props.accessibilityRole).toBe("header");
+    expect(web.opener.focus).not.toHaveBeenCalled();
+    await act(async () => { root!.update(el(false)); });
+    expect(web.opener.focus).toHaveBeenCalledOnce();
+  });
+
+  it("focuses the sheet itself when it has no title, and a re-render does not steal focus back", async () => {
+    const web = setup();
+    const el = (onClose: () => void) => <TextLayoutProvider><Sheet visible mode="small" onClose={onClose}><Text>x</Text></Sheet></TextLayoutProvider>;
+    await act(async () => { root = create(el(() => {}), { createNodeMock: web.createNodeMock }); });
+    expect(web.nodes.sheet.focus).toHaveBeenCalled();
+    expect(root!.root.findByProps({ testID: "sheet" }).props.tabIndex).toBe(-1);
+    await act(async () => { root!.update(el(() => {})); });
+    expect(web.opener.focus).not.toHaveBeenCalled();
+  });
+
+  it("keeps the scrim out of the tab order", async () => {
+    setup();
+    const r = await mount(<Sheet visible onClose={() => {}}><Text>x</Text></Sheet>);
+    const scrim = r.findByProps({ testID: "sheet-backdrop" });
+    expect(scrim.type).toBe("div");
+    expect(scrim.props.tabIndex).toBeUndefined();
+    expect(host(r, "button").map(b => b.props.accessibilityLabel)).toEqual(["Close"]);
+  });
+
+  it("takes no keyboard listener on native", async () => {
+    env.os = "ios";
+    const doc = { addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    vi.stubGlobal("document", doc);
+    await mount(<Sheet visible mode="small" onClose={() => {}}><Text>x</Text></Sheet>);
+    expect(doc.addEventListener).not.toHaveBeenCalled();
+  });
+});
+
+describe("Sheet and Reduce Motion", () => {
+  it("never translates the panel while swiping, but still closes past the threshold", async () => {
+    env.reduced = true;
+    const onClose = vi.fn();
+    const r = await mount(<Sheet visible onClose={onClose}><Text>x</Text></Sheet>);
+    expect(flat(r.findByProps({ testID: "sheet" }).props.style).transform).toBeUndefined();
+    const handle = r.findAll(n => n.type === "div" && n.props.onPanResponderRelease)[0];
+    env.withSpring.mockClear();
+    await act(async () => { handle.props.onPanResponderMove({}, { dy: 60, vy: 0.1 }); handle.props.onPanResponderRelease({}, { dy: 30, vy: 0.2 }); handle.props.onPanResponderTerminate(); });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(env.withSpring).not.toHaveBeenCalled();
+    expect(flat(r.findByProps({ testID: "sheet" }).props.style).transform).toBeUndefined();
+    await act(async () => { handle.props.onPanResponderRelease({}, { dy: 140, vy: 0.2 }); });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe("nativeFormSheetOptions", () => {
+  it("is a native formSheet with a grabber and the spec's detents", () => {
+    expect(nativeFormSheetOptions()).toMatchObject({
+      presentation: "formSheet",
+      sheetAllowedDetents: [0.55],
+      sheetInitialDetentIndex: 0,
+      sheetGrabberVisible: true,
+      sheetCornerRadius: 28,
+      sheetExpandsWhenScrolledToEdge: false,
+      gestureEnabled: true,
+      headerShown: false,
+    });
+    expect(nativeFormSheetOptions("small").sheetAllowedDetents).toEqual([0.4]);
+    expect(nativeFormSheetOptions("large").sheetAllowedDetents).toEqual([1]);
+  });
+});
+
+describe("HoldButton", () => {
+  const hold = async (r: ReactTestInstance) => { await act(async () => { host(r, "button")[0].props.onPressIn({}); }); };
+  const release = async (r: ReactTestInstance) => { await act(async () => { host(r, "button")[0].props.onPressOut({}); }); };
+
+  it("opens after a two-second hold, with a success haptic, and not before", async () => {
+    vi.useFakeTimers();
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={onComplete} />);
+    await hold(r);
+    expect(env.withTiming).toHaveBeenCalledWith(1, expect.objectContaining({ duration: 2000 }));
+    await act(async () => { vi.advanceTimersByTime(1999); });
+    expect(onComplete).not.toHaveBeenCalled();
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(onComplete).toHaveBeenCalledOnce();
+    expect(env.notify).toHaveBeenCalledWith("success");
+    await release(r);
+    await act(async () => { vi.advanceTimersByTime(5000); });
+    expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("starts over when let go early", async () => {
+    vi.useFakeTimers();
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={onComplete} />);
+    await hold(r);
+    await act(async () => { vi.advanceTimersByTime(1500); });
+    await release(r);
+    expect(env.withTiming).toHaveBeenLastCalledWith(0, expect.objectContaining({ reduceMotion: "never" }));
+    await act(async () => { vi.advanceTimersByTime(5000); });
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("is a 64 pt button with a ring and a spoken hold hint", async () => {
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={() => {}} />);
+    const button = host(r, "button")[0];
+    expect(flat(button.props.style).minHeight).toBe(64);
+    expect(button.props.accessibilityLabel).toBe("Grown-ups");
+    expect(button.props.accessibilityHint).toBe("Hold to open");
+    expect(r.findAll(n => n.props.testID === "hold-progress")).toHaveLength(1);
+  });
+
+  it("offers VoiceOver and Switch Control a confirm that is not timed", async () => {
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={onComplete} />);
+    const button = host(r, "button")[0];
+    expect(button.props.accessibilityActions).toContainEqual({ name: "magicTap", label: "Confirm without holding" });
+    await act(async () => { button.props.onAccessibilityAction({ nativeEvent: { actionName: "magicTap" } }); });
+    expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("opens on a plain activate while a screen reader is on", async () => {
+    env.screenReader = true;
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={onComplete} />);
+    const button = host(r, "button")[0];
+    expect(button.props.accessibilityHint).toBeUndefined();
+    await press(button);
+    expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("does not open on a quick tap without a screen reader", async () => {
+    vi.useFakeTimers();
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={onComplete} />);
+    await hold(r);
+    await release(r);
+    await press(host(r, "button")[0]);
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("opens from Enter or Space on Web, once even with a press event too", async () => {
+    env.os = "web";
+    env.screenReader = true;
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" onComplete={onComplete} />);
+    const button = host(r, "button")[0];
+    await act(async () => { button.props.onKeyDown({ key: "Enter", preventDefault: vi.fn() }); });
+    await press(button);
+    expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("does nothing while disabled", async () => {
+    vi.useFakeTimers();
+    const onComplete = vi.fn();
+    const r = await mount(<HoldButton label="Grown-ups" disabled onComplete={onComplete} />);
+    await hold(r);
+    await act(async () => { vi.advanceTimersByTime(3000); });
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+});
+
+describe("PageHeader", () => {
+  it("has a back button, a heading and an optional right slot", async () => {
+    const onBack = vi.fn();
+    const r = await mount(<PageHeader title="Puzzles" onBack={onBack} right={<div data-slot />} />);
+    const back = host(r, "button")[0];
+    expect(back.props.accessibilityLabel).toBe("Back");
+    expect(flat(back.props.style)).toMatchObject({ minWidth: 48, minHeight: 48 });
+    expect(host(r, "span").filter(n => n.props.accessibilityRole === "header").map(textOf)).toEqual(["Puzzles"]);
+    expect(r.findAll(n => n.props["data-slot"])).toHaveLength(1);
+    await press(back);
+    expect(onBack).toHaveBeenCalledOnce();
+  });
+
+  it("can close instead of go back, with its own label, and omits an empty slot", async () => {
+    const r = await mount(<PageHeader title="Closet" close onBack={() => {}} />);
+    expect(host(r, "button")[0].props.accessibilityLabel).toBe("Close");
+    expect(host(r, "svg")[0].props["data-glyph"]).toBe("X");
+    const custom = await mount(<PageHeader title="Closet" backLabel="Back to the map" onBack={() => {}} />);
+    expect(host(custom, "button")[0].props.accessibilityLabel).toBe("Back to the map");
+  });
+});
+
+describe("ProfilePill", () => {
+  const face = <div data-face />;
+
+  it("shows face and name at 64 pt on the map", async () => {
+    const onPress = vi.fn();
+    const r = await mount(<ProfilePill name="Mia" avatar={face} onPress={onPress} />);
+    const pill = host(r, "button")[0];
+    expect(flat(pill.props.style)).toMatchObject({ minWidth: 64, minHeight: 64, borderRadius: 999 });
+    expect(pill.props.accessibilityLabel).toBe("Who is playing: Mia. Switch learner");
+    expect(r.findAll(n => n.props["data-face"])).toHaveLength(1);
+    expect(host(r, "span").map(textOf)).toEqual(["Mia"]);
+    await press(pill);
+    expect(onPress).toHaveBeenCalledOnce();
+  });
+
+  it("is face-only and at least 48 pt when compact, still saying the name aloud", async () => {
+    const r = await mount(<ProfilePill compact name="Mia" avatar={face} onPress={() => {}} />);
+    const pill = host(r, "button")[0];
+    expect(flat(pill.props.style)).toMatchObject({ minWidth: 48, minHeight: 48 });
+    expect(host(r, "span")).toHaveLength(0);
+    expect(pill.props.accessibilityLabel).toContain("Mia");
+  });
+});
+
+describe("Hud", () => {
+  const actions = () => ({ onBack: vi.fn(), onUndo: vi.fn(), onHint: vi.fn(), onMore: vi.fn() });
+
+  it("is one 56 pt row: back, name and difficulty, Undo, Hint and More, each labelled", async () => {
+    const a = actions();
+    const r = await mount(<Hud title="Sudoku" subtitle="Medium 6×6" {...a} />);
+    expect(flat(r.findByProps({ testID: "hud" }).props.style)).toMatchObject({ minHeight: 56, flexDirection: "row" });
+    const buttons = host(r, "button");
+    expect(buttons.map(b => b.props.accessibilityLabel)).toEqual(["Back", "Undo", "Hint", "More"]);
+    expect(buttons.every(b => flat(b.props.style).minHeight >= 48)).toBe(true);
+    expect(host(r, "span").map(textOf)).toEqual(["Sudoku", "Medium 6×6"]);
+    for (const b of buttons) await press(b);
+    expect(a.onBack).toHaveBeenCalledOnce();
+    expect(a.onUndo).toHaveBeenCalledOnce();
+    expect(a.onHint).toHaveBeenCalledOnce();
+    expect(a.onMore).toHaveBeenCalledOnce();
+  });
+
+  it("shows icons only on a phone and short words on a wide window", async () => {
+    const phone = await mount(<Hud title="Sudoku" {...actions()} />);
+    expect(host(phone, "span").map(textOf)).toEqual(["Sudoku"]);
+    env.window = { ...env.window, width: 820 };
+    const ipad = await mount(<Hud title="Sudoku" {...actions()} />);
+    expect(host(ipad, "span").map(textOf)).toEqual(["Sudoku", "Undo", "Hint", "More"]);
+  });
+
+  it("leaves out buttons it has no handler for, and dims Undo when there is nothing to undo", async () => {
+    const r = await mount(<Hud title="Sudoku" onBack={() => {}} onUndo={() => {}} canUndo={false} />);
+    const buttons = host(r, "button");
+    expect(buttons.map(b => b.props.accessibilityLabel)).toEqual(["Back", "Undo"]);
+    expect(buttons[1].props.disabled).toBe(true);
+    expect(flat(buttons[1].props.style).opacity).toBe(theme.opacity.disabled);
   });
 });
