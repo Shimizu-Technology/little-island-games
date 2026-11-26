@@ -1,6 +1,6 @@
 /** R0c: the island's entry screens at the largest text size. The School subject chooser fits every subject name to its
- * tile (no word breaks mid-word, never past 2x), and Puzzle Cove's landing keeps its chrome compact, shows each Today
- * card with its family's picture, and leaves the default layout as it was. */
+ * tile (no word breaks mid-word, never past 2x), and Puzzles (4.0 Clean) has no paragraph at any size, caps its headings
+ * through the kit, keeps its picture tiles in a phone grid, and draws nothing smaller than the system size below AX. */
 import React from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -33,6 +33,10 @@ vi.mock('../src/cove/CoveRound', () => ({ CoveRound: () => null }));
 vi.mock('../src/cove/useCoveLocal', () => ({ useCoveLocal: () => fixture.local }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ ready: true, epoch: 1, save: emptySave(), covePerson: vi.fn() }) }));
 vi.mock('../src/hub/navigation', () => ({ openGame: vi.fn() }));
+vi.mock('react-native-reanimated', async () => (await import('./helpers/cove-ui')).reanimated);
+vi.mock('expo-haptics', async () => (await import('./helpers/cove-ui')).haptics);
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false, NunitoProvider: 'View' }));
+vi.mock('../src/ui/icons', async () => (await import('./helpers/cove-ui')).icons());
 vi.mock('../src/cove/catalog', async () => ({ ...await vi.importActual('../src/cove/catalog'), coveEntries: () => fixture.entries }));
 
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
@@ -91,49 +95,35 @@ async function mountCove(games = ['sudoku']) {
   await act(async () => { root = create(<Cove />); });
 }
 
-it('Puzzle Cove landing at AX5: title, intro, headings and tiles are capped so the first row of puzzles is within one screen', async () => {
-  await mountCove(['sudoku', 'cage-math', 'bridges']);
-  const room = 393 - 40;
-  expect(heading('Puzzle Cove').props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
-  expect(widest('Puzzle Cove', 28, heading('Puzzle Cove').props.maxFontSizeMultiplier)).toBeLessThanOrEqual(room);
-  expect(heading('Think as long as you like.').props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
+it('Puzzles home at AX5: no paragraph, every heading capped by the kit, Back is one labelled icon', async () => {
+  await mountCove(['sudoku', 'killer', 'bridges']);
+  const room = 393 - 32;
+  expect(heading('Puzzles').props.maxFontSizeMultiplier).toBeLessThanOrEqual(2);
   for (const h of texts().filter(n => n.props.accessibilityRole === 'header')) {
-    expect(h.props.maxFontSizeMultiplier ?? Infinity, textOf(h)).toBeLessThanOrEqual(1.5);
-    for (const w of textOf(h).split(' ')) expect(wordWidth(w) * 23 * Math.min(3.12, h.props.maxFontSizeMultiplier), `${w} in "${textOf(h)}"`).toBeLessThanOrEqual(room);
+    expect(h.props.maxFontSizeMultiplier ?? Infinity, textOf(h)).toBeLessThanOrEqual(2);
+    for (const w of textOf(h).split(' ')) expect(wordWidth(w) * 22 * Math.min(3.12, h.props.maxFontSizeMultiplier), `${w} in "${textOf(h)}"`).toBeLessThanOrEqual(room);
   }
-  // Back is an icon beside the title, so the title and Back share a row.
   expect(root!.root.findAll(n => n.props.accessibilityLabel === 'Back to map' && String(n.type) === 'Pressable')).toHaveLength(1);
-  expect(texts().filter(n => textOf(n) === '← Map')).toHaveLength(0);
-  // The intro picture is smaller than at default size.
-  const art = root!.root.findAll(n => flat(n.props.style).width === 72 && flat(n.props.style).height === 57);
-  expect(art.length).toBeGreaterThan(0);
-  // No paragraph, tile or button label is left uncapped.
-  const uncapped = texts().filter(n => n.props.maxFontSizeMultiplier === undefined && textOf(n).length > 12 && !/^[☆★]/.test(textOf(n)));
-  expect(uncapped.map(textOf)).toEqual([]);
+  // No status prose, no counts, no band words: every visible text is a short label.
+  for (const t of texts()) expect(textOf(t).length, textOf(t)).toBeLessThanOrEqual(24);
+  expect(texts().map(textOf).join(' ')).not.toMatch(/\b(?:Paddling|Shallows|Lagoon|Deep|Trench|bands?)\b|\bReef\b(?! Sweep)|puzzles ·/);
+  // Tile names keep to two lines.
+  for (const name of ['Sudoku', 'Cage Sudoku', 'Bridges']) expect(texts().find(t => textOf(t) === name)!.props.numberOfLines).toBe(2);
 });
 
-it('every Today card shows its puzzle family\'s picture in the hub tile style, and keeps its spoken label', async () => {
-  await mountCove(['sudoku', 'cage-math', 'bridges']);
-  const today = root!.root.findAll(n => String(n.type) === 'Pressable' && /^Open (Small|Medium|Large) · /.test(n.props.accessibilityLabel ?? ''));
-  expect(today).toHaveLength(3);
-  for (const card of today) {
-    expect(card.findAll(n => n.props.testID === 'cove-motif')).toHaveLength(1);
-    const s = flat(card.props.style);
-    expect(s.borderRadius).toBe(26); expect(['#F7EBD0', '#FBE6DC']).toContain(s.backgroundColor);
-    expect(card.props.accessibilityLabel).toMatch(/^Open (Small|Medium|Large) · [A-Za-z -]+\. Fixture \d$/);
-  }
+it('the Today tile shows a sun and opens from one labelled tile', async () => {
+  await mountCove(['sudoku', 'killer', 'bridges']);
+  const today = root!.root.find(n => String(n.type) === 'Pressable' && n.props.testID === 'cove-today');
+  expect(today.props.accessibilityLabel).toBe('Today');
+  expect(today.findAll(n => n.props.testID === 'cove-today-art')).toHaveLength(1);
 });
 
-it('Puzzle Cove at default size keeps its header, intro and tiles as they were', async () => {
+it('Puzzles home at default size lays tiles out two to a phone row under plain section headings', async () => {
   Object.assign(viewport, { fontScale: 1 });
-  await mountCove();
-  expect(texts().filter(n => textOf(n) === '← Map')).toHaveLength(1);
-  expect(root!.root.findAll(n => n.props.accessibilityLabel === 'Back to map')).toHaveLength(0);
-  expect(flat(heading('Puzzle Cove').props.style).fontSize).toBe(28);
-  expect(flat(heading('Think as long as you like.').props.style).fontSize).toBe(24);
-  expect(flat(viewAbove(heading('Think as long as you like.'), 2).props.style).flexDirection).toBe('row');
-  expect(root!.root.findAll(n => flat(n.props.style).width === 110 && flat(n.props.style).height === 90).length).toBeGreaterThan(0);
-  expect(flat(root!.root.findAll(n => String(n.type) === 'Pressable' && /^Open Small · /.test(n.props.accessibilityLabel ?? ''))[0].props.style).width).toBe(260);
+  await mountCove(['sudoku', 'killer', 'bridges', 'solitaire']);
+  for (const title of ['Numbers', 'Logic', 'Cards']) expect(heading(title)).toBeDefined();
+  const tile = root!.root.find(n => String(n.type) === 'Pressable' && n.props.testID === 'cove-tile-sudoku');
+  expect(flat(viewAbove(tile, 1).props.style).width).toBe(Math.floor((393 - 32 - 12) / 2));
 });
 
 // Fix round 1 (P2-1): below the accessibility threshold (text scale 1.5) every new cap is absent, so no text draws smaller than the system size.
@@ -148,8 +138,8 @@ it.each(belowAx)('School at text scale %s draws every text at the system size (n
   // The shared name size in particular: 28.35 pt at 1.35, not the 25.83 pt a 1.23 cap drew.
   for (const { name } of subjects) expect(heading(name).props.maxFontSizeMultiplier, name).toBeUndefined();
 });
-it.each(belowAx)('Puzzle Cove at text scale %s draws every text at the system size, today cards and buttons included', async fontScale => {
+it.each(belowAx)('Puzzles at text scale %s draws every text at the system size, tiles and buttons included', async fontScale => {
   Object.assign(viewport, { fontScale });
-  await mountCove(['sudoku', 'cage-math', 'bridges']);
+  await mountCove(['sudoku', 'killer', 'bridges']);
   expect(shrunk()).toEqual([]);
 });

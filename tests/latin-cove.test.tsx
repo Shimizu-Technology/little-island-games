@@ -25,6 +25,9 @@ vi.mock('react-native-reanimated', async () => { const { useRef } = await import
 vi.mock('react-native-svg', () => ({ default: 'svg', Path: 'path' }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: {} }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', C: {}, styles: {} }));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: db.play }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));

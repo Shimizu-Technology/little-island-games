@@ -20,6 +20,9 @@ vi.mock('react-native', () => ({AccessibilityInfo:{isScreenReaderEnabled:async()
 vi.mock('react-native-svg',()=>({default:'svg',Circle:'circle',Line:'line',SvgXml:'picture'}));
 vi.mock('expo-router',()=>({useIsFocused:()=>true,router:{}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',Heading:'h2',Chip:'button',C:{},styles:{}}));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/components/Text',()=>({Text:'span'}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play:db.played})}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));

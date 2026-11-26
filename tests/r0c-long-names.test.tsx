@@ -1,5 +1,6 @@
 /** R0c fix round 1 (P2-2): a valid 24-character wide name (WWWWWWWWWWWWWWWWWWWWWWWW) is wider than a phone's line at any
- * text size. Puzzle Cove's identity controls keep it on one line in their column, ending in an ellipsis, with the full name spoken. */
+ * text size. Puzzles' identity controls (4.0 Clean: the profile pill, Who's playing faces, Play together faces and pin
+ * cards) keep it on one line in a bounded column, or show only a face, with the full name spoken. */
 import React from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -31,6 +32,10 @@ vi.mock('../src/cove/CoveRound', () => ({ CoveRound: () => null }));
 vi.mock('../src/cove/useCoveLocal', () => ({ useCoveLocal: () => fixture.local }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ ready: true, epoch: 1, save: fixture.save, covePerson: vi.fn(), selectLearner: vi.fn() }) }));
 vi.mock('../src/hub/navigation', () => ({ openGame: vi.fn() }));
+vi.mock('react-native-reanimated', async () => (await import('./helpers/cove-ui')).reanimated);
+vi.mock('expo-haptics', async () => (await import('./helpers/cove-ui')).haptics);
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false, NunitoProvider: 'View' }));
+vi.mock('../src/ui/icons', async () => (await import('./helpers/cove-ui')).icons());
 vi.mock('../src/cove/catalog', async () => ({ ...await vi.importActual('../src/cove/catalog'), coveEntries: () => fixture.entries }));
 
 const NAME = 'W'.repeat(24);
@@ -39,100 +44,64 @@ const flat = (style: unknown): Record<string, unknown> => Array.isArray(style) ?
 let root: ReactTestRenderer | undefined;
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; Object.assign(viewport, { width: 393, height: 852, fontScale: 3.12 }); vi.unstubAllGlobals(); });
 const cards = [1, 2, 3].map((tier, i) => ({ tier, title: `Fixture ${i}`, ref: { bank: 10, puzzle: i, engine: 'sudoku', rules: 1, hash: String(i).repeat(64) } })) as ChallengeCard[];
-const entry = (game: string): ChallengeEntry => ({ game, cove: true, puzzles: cards.map(c => ({ ...c, ref: { ...c.ref, engine: game } })), codec: 'fixture', contextFor: () => 'fixture', start: () => { throw new Error('Fixture only'); }, move: () => null, render: () => null, controls: { help: () => null, reset: () => null }, catalog: { banks: new Map(), codecs: new Map(), contexts: new Set(), dares: new Map() } }) as unknown as ChallengeEntry;
-/** `current` makes the wide name the person solving; otherwise Family practice is solving and the wide name is a partner. */
-async function mountCove(current: boolean, options: { pin?: boolean; name?: string; game?: string; change?: () => Promise<boolean> } = {}) {
+const entry = (game: string): ChallengeEntry => ({ game, cove: true, puzzles: cards.map(c => ({ ...c, ref: { ...c.ref, engine: game } })), codec: 'fixture', contextFor: () => 'fixture', start: () => { throw new Error('Fixture only'); }, move: () => null, render: () => null, controls: { help: () => null, reset: () => null }, catalog: { banks: new Map(), codecs: new Map(), contexts: new Set(), dares: new Map() } });
+/** `current` makes the wide name the person playing; otherwise Family is playing and the wide name is a partner. */
+async function mountCove(current: boolean, options: { pin?: boolean; name?: string; game?: string } = {}) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const learning = addLearner(undefined, options.name ?? NAME, 'wide');
   fixture.save = { ...emptySave(), learning: current ? learning : selectLearner(learning, 'family') };
-  fixture.entries = [entry('sudoku')]; fixture.params = options.game ? { game: options.game } : {}; fixture.local = { data: emptyLocal(), ready: true, error: '', load: vi.fn(), reset: vi.fn(), change: vi.fn(options.change) };
-  // A pin from the wide-named person waits in Family practice's Keep going.
+  fixture.entries = [entry('sudoku')]; fixture.params = options.game ? { game: options.game } : {}; fixture.local = { data: emptyLocal(), ready: true, error: '', load: vi.fn(), reset: vi.fn(), change: vi.fn(async () => true) };
+  // A pin from the wide-named person waits in Family's Continue strip.
   if (options.pin) fixture.local.data.pins.family = [{ ref: cards[0].ref, from: 'wide' }];
   const { default: Cove } = await import('../src/cove/CoveScreen');
   await act(async () => { root = create(<Cove />); });
 }
 const inSheet = (n: ReactTestInstance) => { for (let p = n.parent; p; p = p.parent) if (String(p.type) === 'Modal') return true; return false; };
-const buttonOf = (label: string, sheet = false) => root!.root.find(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === label && inSheet(n) === sheet);
-/** The text a control draws, which must stay on one line in the control's column. */
-const labelText = (button: ReactTestInstance) => button.find(n => String(n.type) === 'Text' && textOf(n).startsWith(NAME));
+const pressable = (label: string, sheet: boolean) => root!.root.find(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === label && inSheet(n) === sheet);
+/** Every Text a control draws that starts with the wide name: each must keep to one line. */
+const nameTexts = (control: ReactTestInstance) => control.findAll(n => String(n.type) === 'Text' && textOf(n).startsWith(NAME));
 
 it.each([[3.12], [1]])('the premise: at text scale %s the wide name alone is wider than a 393-pt phone line', fontScale => {
   expect(wordWidth(NAME) * 15 * Math.min(fontScale, 1.3)).toBeGreaterThan(393 - 40);
 });
 
-it.each([[3.12], [1]])('Cove at text scale %s: the person solving, a 24-wide name, keeps to one line in its column and keeps its full spoken name', async fontScale => {
+it.each([[3.12], [1]])('Puzzles at text scale %s: the profile pill of a 24-wide name shows only the face and speaks the whole name', async fontScale => {
   Object.assign(viewport, { fontScale });
   await mountCove(true);
-  const picker = buttonOf(`Who is solving: ${NAME}`);
-  expect(flat(picker.props.style).maxWidth).toBe('100%');
-  const text = labelText(picker);
-  expect(text.props.numberOfLines).toBe(1);
-  expect(flat(text.props.style).flexShrink).toBe(1);
+  const pill = pressable(`Who's playing: ${NAME}. Switch`, false);
+  expect(nameTexts(pill)).toHaveLength(0);
+  expect(pill.findAll(n => n.props.testID === 'learner-portrait').length).toBeGreaterThan(0);
 });
 
-it.each([[3.12], [1]])('Cove at text scale %s: a partner with a 24-wide name is a chip bounded to its column, one line, full name spoken', async fontScale => {
+it.each([[3.12], [1]])("Puzzles at text scale %s: Who's playing bounds a 24-wide face name to one line in its column", async fontScale => {
   Object.assign(viewport, { fontScale });
-  await mountCove(false);
-  const chip = buttonOf(NAME);
-  expect(flat(chip.props.style).maxWidth).toBe('100%');
-  expect(flat(chip.props.style).flexShrink).toBe(1);
-  const text = labelText(chip);
-  expect(text.props.numberOfLines).toBe(1);
-  expect(flat(text.props.style).flexShrink).toBe(1);
-  // Other partners keep the chip they always had: no line limit, no shrink.
-  const other = root!.root.find(n => String(n.type) === 'Pressable' && !inSheet(n) && textOf(n) === 'On my own');
-  expect(flat(other.props.style).flexShrink).toBe(0);
-});
-
-it('Cove: the who-is-solving sheet bounds a 24-wide name the same way', async () => {
   await mountCove(true);
-  const row = buttonOf(NAME, true);
-  expect(flat(row.props.style).maxWidth).toBe('100%');
-  expect(labelText(row).props.numberOfLines).toBe(1);
+  await act(async () => pressable(`Who's playing: ${NAME}. Switch`, false).props.onPress());
+  const face = pressable(NAME, true);
+  expect(flat(face.props.style).width).toBe(88);
+  const texts = nameTexts(face);
+  expect(texts).toHaveLength(1);
+  expect(texts[0].props.numberOfLines).toBe(1);
 });
 
-/** R0c fix round 2 (P2-1): the Keep going tile's "Try this one · from NAME", the pin sheet's recipients and the "Pinned for NAME." line
- * give a valid 24-wide name the same one-line ellipsis, and keep the full name in what is spoken. */
-const pinTile = () => root!.root.find(n => String(n.type) === 'Pressable' && String(n.props.accessibilityLabel).includes('Try this one · from') && !inSheet(n));
-/** The recipient button in the pin sheet (the who-is-solving sheet, which comes first, lists the same names). */
-const pinRecipient = () => root!.root.find(n => String(n.type) === 'Modal' && textOf(n).includes('A quiet pin')).find(n => String(n.type) === 'Pressable' && textOf(n) === NAME);
-/** What a Text draws at its own size: the font size times the system scale, held to the Text's cap. */
-const drawnSize = (t: ReactTestInstance, fontScale: number) => (flat(t.props.style).fontSize as number) * Math.min(fontScale, t.props.maxFontSizeMultiplier ?? Infinity);
-it.each([[3.12], [1]])('Cove at text scale %s: a pinned puzzle from a 24-wide name shows the name on one line, ends in an ellipsis, and speaks the whole name', async fontScale => {
+it.each([[3.12], [1]])('Puzzles at text scale %s: a Play together partner with a 24-wide name is a bounded face, full name spoken', async fontScale => {
+  Object.assign(viewport, { fontScale });
+  await mountCove(false, { game: 'sudoku' });
+  await act(async () => pressable('Play together', true).props.onPress());
+  const face = pressable(`Play together with ${NAME}`, true);
+  expect(flat(face.props.style).width).toBe(88);
+  expect(nameTexts(face).every(t => t.props.numberOfLines === 1)).toBe(true);
+});
+
+it.each([[3.12], [1]])('Puzzles at text scale %s: a pin from a 24-wide name shows the sender as a face and speaks the whole name', async fontScale => {
   Object.assign(viewport, { fontScale });
   await mountCove(false, { pin: true });
-  const tile = pinTile(), text = tile.find(n => String(n.type) === 'Text');
-  expect(tile.props.accessibilityLabel).toContain(`Try this one · from ${NAME}`);
-  const detail = textOf(text).split('\n')[1], shown = detail.replace('Try this one · from ', '');
-  expect(shown.endsWith('…'), detail).toBe(true);
-  expect(shown.length).toBeGreaterThan(2);
-  // The shown name alone is a word that fits the tile's text column (the tile is 260 pt wide, less 42 for its padding).
-  expect(wordWidth(shown) * drawnSize(text, fontScale)).toBeLessThanOrEqual((Math.min(260, viewport.width - 52) - 42) * 0.92);
+  const card = pressable(`Fixture, from ${NAME}`.replace('Fixture', 'Sudoku'), false);
+  expect(nameTexts(card)).toHaveLength(0);
+  expect(card.findAll(n => n.props.testID === 'learner-portrait').length).toBeGreaterThan(0);
+  for (const t of card.findAll(n => String(n.type) === 'Text')) expect(t.props.numberOfLines, textOf(t)).toBe(1);
 });
-it.each([[3.12], [1]])('Cove at text scale %s: a short sender name is shown whole, exactly as before', async fontScale => {
-  Object.assign(viewport, { fontScale });
+it('Puzzles: a short sender name is spoken whole on its pin card', async () => {
   await mountCove(false, { pin: true, name: 'Mele' });
-  const tile = pinTile();
-  expect(tile.props.accessibilityLabel).toContain('Try this one · from Mele');
-  expect(textOf(tile.find(n => String(n.type) === 'Text')).split('\n')[1]).toBe('Try this one · from Mele');
-});
-it('Cove: the pin sheet bounds a 24-wide recipient to one line in its column, with the whole name spoken', async () => {
-  await mountCove(false, { game: 'sudoku' });
-  const row = pinRecipient();
-  expect(row.props.accessibilityLabel).toBe(NAME);
-  expect(flat(row.props.style).maxWidth).toBe('100%');
-  const text = labelText(row);
-  expect(text.props.numberOfLines).toBe(1);
-  expect(flat(text.props.style).flexShrink).toBe(1);
-});
-it.each([[3.12], [1]])('Cove at text scale %s: "Pinned for" a 24-wide name is one bounded word, spoken in full', async fontScale => {
-  Object.assign(viewport, { fontScale });
-  await mountCove(false, { game: 'sudoku', change: async () => true });
-  await act(async () => { pinRecipient().props.onPress(); });
-  const line = root!.root.find(n => String(n.type) === 'Text' && /^Pinned for /.test(textOf(n)) && !inSheet(n));
-  expect(line.props.accessibilityLabel).toBe(`Pinned for ${NAME}.`);
-  const shown = textOf(line).replace(/^Pinned for /, '').replace(/\.$/, '');
-  expect(shown.endsWith('…')).toBe(true);
-  // The line is the page's width less its 20-pt padding on each side; the name is a single word on it.
-  expect(wordWidth(shown) * drawnSize(line, fontScale)).toBeLessThanOrEqual((Math.min(viewport.width, 960) - 40) * 0.92);
+  expect(pressable('Sudoku, from Mele', false)).toBeDefined();
 });

@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { bands, packsFor, tideTable, coveEntries, mixedPack, completion, suggested, infoFor, completionLookup } from '../src/cove/catalog';
+import { packsFor, tideTable, coveEntries, mixedPack, completion, suggested, infoFor, completionLookup } from '../src/cove/catalog';
 import { defaults, emptyLocal, localAction, localRepository, validLocal } from '../src/cove/local';
 import { emptyChallenge, type ChallengeProgress } from '../src/state/challenge';
 import * as bits from '../src/state/saveBits';
 import { pack } from '../src/state/saveBits';
 import type { ChallengeCard, ChallengeEntry } from '../src/challenge/types';
 import { places } from '../src/hub/model';
+import { DIFFICULTY_WORDS, difficultyWord } from '../src/cove/shelf';
 const card = (puzzle: number, tier = 1): ChallengeCard => ({ ref: { bank: 10, puzzle, engine: 'sudoku', rules: 1, hash: puzzle.toString(16).padStart(64, '0') }, source: { kind: 'endless', bank: 10, puzzle }, path: 'endless', tier: tier as 1, title: `Row deductions ${puzzle}`, dares: [] });
 const cards = Array.from({ length: 64 }, (_, i) => card(i, i < 32 ? 1 : 2));
 const entry = { game: 'sudoku', cove: true, puzzles: cards, codec: 'fixture-only', contextFor: () => 'fixture', start: () => { throw new Error('metadata-only fixture'); }, move: () => null, render: () => null, controls: { help: () => null, reset: () => null }, catalog: { dares: new Map(), codecs: new Map(), contexts: new Set(), banks: new Map([[10, { slot: 10, engine: 'sudoku', rules: 1, cove: true, entries: cards.map((p, ordinal) => ({ hash: p.ref.hash, ordinal })), awards: cards.map(() => 0) }]]) } } as ChallengeEntry;
@@ -14,7 +15,9 @@ describe('Cove shelves, bands, packs and neutral history', () => {
   it('adds only the eighth door and leaves registration gating honest', () => {
     expect(places.at(-1)).toMatchObject({ id: 'cove', hint: 'Think as long as you like' });
     expect(coveEntries([entry, { ...entry, game: 'not-built', cove: false }])).toEqual([entry]);
-    expect(bands).toEqual(['Paddling', 'Shallows', 'Lagoon', 'Reef', 'Deep', 'Trench']);
+    // Six tiers keep their numbers in the save; the UI says them in plain words.
+    expect(DIFFICULTY_WORDS).toEqual(['Easy', 'Medium', 'Hard', 'Expert', 'Master', 'Master+']);
+    expect([1, 2, 3, 4, 5, 6].map(difficultyWord)).toEqual([...DIFFICULTY_WORDS]);
   });
   it.each([16, 24, 31, 32, 33, 40, 48, 65, 960])('packs %s immutable refs into 16–32 without inventing catalog entries', count => {
     const input = Array.from({ length: count }, (_, i) => card(i)), before = JSON.stringify(input), packs = packsFor(input);

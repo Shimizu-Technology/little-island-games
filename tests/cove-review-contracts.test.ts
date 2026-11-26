@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 const read = (name: string) => readFileSync(`src/${name}`, 'utf8');
 it('4 connects grid touch ownership to the enclosing page scroll', () => {
-  expect(read('cove/CoveScreen.tsx')).toContain('scrollEnabled={!gridTouch}');
+  expect(read('cove/CoveRound.tsx')).toContain('scrollEnabled={!gridTouch}');
+  expect(read('cove/CoveRound.tsx')).toContain('<GridInteraction.Provider value={hold}>');
   expect(read('puzzles/grid/GridShell.tsx')).toContain('interaction(true)');
   expect(read('puzzles/grid/GridShell.tsx')).toContain('interaction(false)');
 });
@@ -25,15 +26,16 @@ it('16 reads reader metadata and badges puzzle cards without locking bands', () 
   const s = read('cove/PuzzleBrowser.tsx'); expect(s).toContain('.readers'); expect(s).toContain('reader');
 });
 it('17 gates fill-notes authorization independently of reading choice', () => {
-  const s = read('cove/CoveScreen.tsx'); expect(s).toContain("adult && preferences.reader === 'Grown-up'"); expect(s).toContain('GridAdult');
+  expect(read('cove/CoveGrownUps.tsx')).toContain("adult && preferences.reader === 'Grown-up'"); expect(read('cove/CoveScreen.tsx')).toContain('GridAdult');
 });
 it('18 virtualizes the All puzzles list and avoids per-card linear index lookup', () => {
-  const s = read('cove/PuzzleBrowser.tsx'); expect(s).toContain('FlatList'); expect(s).not.toContain('entry.puzzles.indexOf');
+  expect(read('cove/ChooseGrid.tsx')).toContain('FlatList'); expect(read('cove/PuzzleBrowser.tsx')).not.toContain('entry.puzzles.indexOf');
 });
 it('20 filters hidden puzzles before Today selection', () => {
   const s = read('cove/CoveScreen.tsx'); expect(s).toContain('visibleEntries'); expect(s).not.toContain('items).filter(p => !hidden(p.card))');
 });
-it('25 displays errors in the active pin and grown-up sheets', () => {
-  const s = read('cove/CoveScreen.tsx'); expect(s).toContain('title="Try this one" onClose'); expect(s.match(/SheetError/g)?.length).toBeGreaterThanOrEqual(3);
+it('25 displays errors in the grown-up sheet and confirms a sent pin in place', () => {
+  expect(read('cove/CoveGrownUps.tsx')).toContain('{!!error && <Text'); expect(read('cove/CoveScreen.tsx')).toContain('error={local.error}');
+  expect(read('cove/RoundMore.tsx')).toContain('Sent to {sent}.');
 });
 it('26 matches the people name input limit to Store', () => expect(read('cove/PeoplePicker.tsx')).toContain('maxLength={24}'));

@@ -16,6 +16,9 @@ vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDi
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
 vi.mock('expo-router', () => ({ useIsFocused: () => db.focused, router: {} }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', styles: {} }));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: vi.fn() }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 let store: ReturnType<typeof useStore>;

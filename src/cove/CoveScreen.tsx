@@ -1,29 +1,31 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Button, C, Chip, Copy, Heading, IconButton, Sheet, ToggleRow, font } from '../components/ui';
-import { CHROME_MAX, LARGE_TEXT, atLarge, ellipsize, wordFitMultiplier } from '../components/wordFit';
 import { Recovery } from '../components/Recovery';
 import { SaveStatus } from '../components/SaveStatus';
 import { useStore } from '../state/Store';
-import { emptyChallenge } from '../state/challenge';
+import { emptyChallenge, type ChallengeSession, type PuzzleRef } from '../state/challenge';
 import { progressFor, selectedOwner } from '../state/challengeDrafts';
-import { makeGate, gateAccepts } from '../state/grownUpGate';
 import { shelfGames } from '../learn/home';
 import { learningGroups } from '../learn/generated/ids';
+import { challengeFor } from '../challenge/catalog';
 import type { ChallengeCard, ChallengeEntry } from '../challenge/types';
 import { openGame } from '../hub/navigation';
-import { Landmark } from '../hub/Landmarks';
-import { PeoplePicker, solvingPeople } from './PeoplePicker';
-import { cardFor, coveEntries, dealPacked, hiddenPackedCount, infoFor, readers, rowNames, shownCount, suggested, suggestedPacked, tideTable } from './catalog';
+import type { ShelfId } from '../learn/home';
+import { Button, Text, theme } from '../ui';
+import { solvingPeople } from './PeoplePicker';
+import { cardFor, completionLookup, coveEntries, dealPacked, infoFor, isSolved, sameRef, suggestedPacked, tideTable } from './catalog';
 import { civilDate } from '../puzzles/today';
-import { defaults } from './local';
+import { defaults, type Preferences } from './local';
 import { useCoveLocal } from './useCoveLocal';
 import { CoveRound } from './CoveRound';
-import { GridPreferences, GridInteraction, GridAdult } from '../puzzles/grid/preferences';
+import { GridPreferences, GridAdult } from '../puzzles/grid/preferences';
 import { PuzzleBrowser } from './PuzzleBrowser';
-import { TodayTile } from './CoveArt';
+import { CoveHome, type ContinueItem } from './CoveHome';
+import { StartSheet } from './StartSheet';
+import { CoveGrownUps } from './CoveGrownUps';
+import { nearestTier, pastelFor, shelfEntries, shelfSections, tierOf, type ShelfTile } from './shelf';
 
 export default function CoveScreen() {
   const store = useStore();
@@ -32,8 +34,8 @@ export default function CoveScreen() {
   // A cleanup captured before a person/restore change is rejected by Store's epoch guard.
   useFocusEffect(useCallback(() => () => { if (active) void covePerson({ type: 'select', id: null }, epoch); }, [active, epoch, covePerson]));
   // Recovery is a flex:1 ScrollView; without flex here it has no height and the screen looks blank.
-  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Heading>Getting your Cove ready…</Heading></SafeAreaView>;
-  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Recovery/></SafeAreaView>;
+  if (!store.ready) return <SafeAreaView style={styles.screen}><Text variant="section" style={styles.pad}>Opening Puzzles…</Text></SafeAreaView>;
+  if (store.recovery) return <SafeAreaView style={styles.screen}><Recovery/></SafeAreaView>;
   return <ResumeCovePerson><CoveLocalGate key={`${selectedOwner(store.save)}:${store.epoch}`}/></ResumeCovePerson>;
 }
 /** A named shortcut is an explicit request, never the launch identity. */
@@ -44,102 +46,128 @@ function ResumeCovePerson({ children }: { children: React.ReactNode }) {
     if (!requested || done || opening.current || !store.save.cove?.people[requested]) return;
     opening.current = true;
     if (await store.covePerson({ type: 'select', id: requested }, store.epoch)) setDone(true);
-    else setError('Could not open this person yet. Your saved work is kept. Try again.');
+    else setError('Could not open this person yet. Your saved work is kept.');
     opening.current = false;
   }, [requested, store, done]);
   useEffect(() => { if (requested && !done) void Promise.resolve().then(open); }, [requested, open, done]);
-  if (requested && store.save.cove?.people[requested] && store.save.cove.active !== requested && !done) return <SafeAreaView><Copy>{error || 'Opening your saved puzzle…'}</Copy>{!!error && <Button onPress={() => void open()}>Try again</Button>}</SafeAreaView>;
+  if (requested && store.save.cove?.people[requested] && store.save.cove.active !== requested && !done) return <SafeAreaView style={styles.screen}><View style={styles.pad}><Text variant="body" accessibilityLiveRegion="polite">{error || 'Opening your saved puzzle…'}</Text>{!!error && <Button label="Try again" onPress={() => void open()}/>}</View></SafeAreaView>;
   return <>{children}</>;
 }
-function SheetError({ local, message = '' }: { local: ReturnType<typeof useCoveLocal>; message?: string }) { return local.error || message ? <Copy accessibilityLiveRegion="polite">{local.error || message}</Copy> : null; }
 function CoveLocalGate() {
   const local = useCoveLocal();
-  if (!local.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><View style={{ padding: 20, gap: 12 }}><Heading>Puzzle Cove</Heading><Copy>{local.error || 'Getting your Cove choices ready…'}</Copy>{!!local.error && <><Button quiet onPress={local.load}>Retry Cove preferences</Button><Button quiet onPress={() => void local.reset()}>Use fresh Cove choices · keep original copy</Button></>}</View></SafeAreaView>;
+  if (!local.ready) return <SafeAreaView style={styles.screen}><View style={styles.pad}><Text variant="section" accessibilityRole="header">Puzzles</Text><Text variant="body" accessibilityLiveRegion="polite">{local.error || 'Opening Puzzles…'}</Text>{!!local.error && <><Button label="Try again" variant="secondary" target="adult" onPress={local.load}/><Button label="Start fresh · keep a copy" variant="quiet" target="adult" onPress={() => void local.reset()}/></>}</View></SafeAreaView>;
   return <CoveInterior local={local}/>;
 }
+type Selection = { entry: ChallengeEntry; card: ChallengeCard; replace: boolean; partner: string | null; seq: number };
+const schoolOriginals = shelfGames.filter(g => (learningGroups as Partial<Record<string, 'levels' | 'originals'>>)[g.id] === 'originals').map(g => ({ id: g.id, name: g.name }));
+
 function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
-  const store = useStore(), owner = selectedOwner(store.save), { width, fontScale } = useWindowDimensions();
+  const store = useStore(), owner = selectedOwner(store.save), { width } = useWindowDimensions();
   const params = useLocalSearchParams<{ game?: string }>(), entries = coveEntries(), progress = progressFor(store.save, owner) ?? emptyChallenge();
-  const [selection, setSelection] = useState<{ entry: ChallengeEntry; card: ChallengeCard; replace: boolean; remix?: string } | null>(() => { const entry = entries.find(e => e.game === params.game), saved = progress.paused.find(s => s.game === params.game && !s.result && !s.credited), allowed = entry?.puzzles.filter(p => !local.data.hidden.includes(p.ref.hash)); const card = saved ? cardFor(saved.puzzle, entries) ?? (entry?.puzzles.length ? suggested(entry, progress) : undefined) : allowed?.length ? suggested({ ...entry!, puzzles: allowed }, progress, (local.data.people[owner] ?? defaults()).band) : undefined; return entry && card ? { entry, card, replace: false } : null; });
-  const [gridTouch, setGridTouch] = useState(false), [browse, setBrowse] = useState<ChallengeEntry | null>(null), [partner, setPartner] = useState<string | null>(null), [options, setOptions] = useState(false), [pinning, setPinning] = useState(false), [adult, setAdult] = useState(false), [answer, setAnswer] = useState(''), [gate, setGate] = useState(makeGate), [message, setMessage] = useState('');
-  const preferences = local.data.people[owner] ?? defaults(), people = solvingPeople(store.save), cardWidth = Math.min(260, width - 52);
-  // Landing chrome stops at 1.5x (buttons at 1.3x) at accessibility sizes, and earlier where its longest word would break,
-  // so the first row of puzzles stays within about one screen of the top.
-  const large = fontScale >= LARGE_TEXT, room = Math.min(width, 960) - 40;
-  // Below the accessibility threshold every cap is absent, so the screen is drawn exactly as it was.
-  const cap = (text: string, size: number, ceiling = CHROME_MAX, width = room) => atLarge(fontScale, wordFitMultiplier(text, size, width, ceiling)), buttonMax = atLarge(fontScale, 1.3);
-  const [dealing, setDealing] = useState(false);
-  // Hidden packed puzzles are found by hash in their banks, only when something is hidden.
-  const [packedHidden, setPackedHidden] = useState<Record<string, number>>({}), hiddenKey = local.data.hidden.join('|');
-  useEffect(() => {
-    let live = true;
-    void Promise.all(entries.filter(e => e.packed).map(async e => [e.game, await hiddenPackedCount(e, local.data.hidden).catch(() => 0)] as const)).then(rows => { if (live) setPackedHidden(Object.fromEntries(rows)); });
-    return () => { live = false; };
-  }, [hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps -- Recount only when the hidden list changes.
-  /** A packed game deals its next entry here; content is verified before the round mounts. */
-  const deal = async (entry: ChallengeEntry, pick: () => Promise<ChallengeCard | undefined>, replace: boolean) => {
-    if (dealing) return;
-    setDealing(true); setMessage('');
-    try { const card = await pick(); if (card) { setBrowse(null); setSelection({ entry, card, replace }); } else setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
-    catch { setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
-    finally { setDealing(false); }
-  };
-  const choose = (entry: ChallengeEntry, card?: ChallengeCard, replace = false) => {
-    if (!card && !entry.puzzles.length && entry.packed) { void deal(entry, () => suggestedPacked(entry, progress, preferences.band, local.data.hidden), replace); return; }
-    setBrowse(null); setSelection({ entry, card: card ?? suggested({ ...entry, puzzles: entry.puzzles.filter(p => !local.data.hidden.includes(p.ref.hash)) }, progress, preferences.band), replace });
-  };
-  const opened = useRef(!!selection);
-  useEffect(() => { const entry = entries.find(e => e.game === params.game); if (!opened.current && !selection && entry?.packed && !entry.puzzles.length) { opened.current = true; choose(entry); } }); // A packed shortcut deals once on arrival.
+  const preferences = local.data.people[owner] ?? defaults(), people = solvingPeople(store.save), others = people.filter(p => p.id !== owner), hidden = local.data.hidden;
+  const pausedIn = (game: string) => progress.paused.find(s => s.game === game && !s.result && !s.credited);
+  // Every registered game resolves here, shelf or not: deep links, Continue and pins never depend on the shelf.
+  const linked = entries.find(e => e.game === params.game);
+  const [sheet, setSheet] = useState<ChallengeEntry | null>(linked ?? null), [sheetOpen, setSheetOpen] = useState(!!linked), [tier, setTier] = useState(() => linked ? nearestTier(linked, preferences.band) : 1), [partner, setPartner] = useState<string | null>(() => linked ? pausedIn(linked.game)?.partner ?? null : null);
+  const [selection, setSelection] = useState<Selection | null>(null), [browse, setBrowse] = useState<{ entry: ChallengeEntry; tier: number } | null>(null);
+  const [grownUps, setGrownUps] = useState(false), [adult, setAdult] = useState(false), [dealing, setDealing] = useState(false), [message, setMessage] = useState('');
+  const seq = useRef(0);
+  const openSheet = (entry: ChallengeEntry) => { setMessage(''); setSheet(entry); setSheetOpen(true); setTier(nearestTier(entry, preferences.band)); setPartner(pausedIn(entry.game)?.partner ?? null); };
+  // A link that arrives while Puzzles is already open opens its game's sheet too.
+  const [linkedGame, setLinkedGame] = useState(params.game);
+  if (params.game !== linkedGame) { setLinkedGame(params.game); if (linked) openSheet(linked); }
   useEffect(() => { if (owner.startsWith('cove-')) void local.change({ type: 'remember-person', owner }); }, [owner]); // eslint-disable-line react-hooks/exhaustive-deps -- Remember explicit identity changes only.
   const owners = people.map(p => p.id).sort().join('|');
   useEffect(() => { void local.change({ type: 'prune', owners: owners.split('|') }); }, [owners]); // eslint-disable-line react-hooks/exhaustive-deps -- Prune only when the actual people change.
-  const hidden = (card: ChallengeCard) => local.data.hidden.includes(card.ref.hash);
-  const visibleEntries = entries.map(e => ({ ...e, puzzles: e.puzzles.filter(p => !hidden(p)) })).filter(e => shownCount(e));
-  const items = entries.filter(e => shownCount(e, local.data.hidden));
-  const tile = (id: string, name: string, detail: string, action: () => void, spoken = detail) => <Button key={id} quiet onPress={action} maxFontSizeMultiplier={atLarge(fontScale, Math.min(wordFitMultiplier(name, 15, cardWidth - 42, 1.3), wordFitMultiplier(detail, 15, cardWidth - 42, 1.3)))} style={{ width: cardWidth, minHeight: 118 }} label={`Open ${name}. ${spoken}`}>{name}{'\n'}{detail}</Button>;
-  // A valid name can be 24 wide letters, wider than a tile: it ends in an ellipsis on its own line of the tile, and the spoken label keeps the whole name.
-  const nameFit = (person: string, size: number, column: number) => ellipsize(person, size * Math.min(fontScale, large ? 1.3 : Infinity), column);
-  const row = (title: string, children: React.ReactNode[], count = children.length) => <View key={title} style={{ gap: 8 }}><Heading maxFontSizeMultiplier={cap(`${title} · ${count}`, 23)} style={{ fontSize: 23 }}>{title} · {count}</Heading>{children.length ? <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>{children}</ScrollView> : <Copy maxFontSizeMultiplier={CHROME_MAX}>No puzzles here yet.</Copy>}</View>;
-  const goBack = () => void leave(() => router.canGoBack() ? router.back() : router.replace('/'));
-  const leave = async (next: () => void) => { if (store.save.cove?.active && !await store.covePerson({ type: 'select', id: null }, store.epoch)) { setMessage('Could not leave this person yet. Your saved work is kept. Try again.'); return; } next(); };
-  const close = () => { setSelection(null); setBrowse(null); };
-  const currentSaved = selection && progress.paused.find(s => s.game === selection.entry.game && !s.result && !s.credited);
-  const currentRef = currentSaved?.puzzle ?? selection?.card.ref;
-  if (browse && !selection) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><PeoplePicker/><PuzzleBrowser key={browse.game} entry={browse} progress={progress} initialBand={preferences.band} reader={preferences.reader} hidden={local.data.hidden} onBack={close} onBand={band => void local.change({ type: 'preferences', owner, value: { band } })} onChoose={card => choose(browse, card, true)} onRemix={(card, remix) => { setSelection({ entry: browse, card, replace: true, remix }); setBrowse(null); }}/></SafeAreaView>;
-  return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><ScrollView scrollEnabled={!gridTouch} contentContainerStyle={{ width: '100%', maxWidth: 960, alignSelf: 'center', padding: 20, gap: selection ? 12 : 22 }} keyboardShouldPersistTaps="handled">
-    {/* A round has its own back button; keep only who is solving above the board. */}
-    {selection ? <PeoplePicker/> : <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>{large ? <IconButton icon="back" label="Back to map" onPress={goBack}/> : <Button quiet compact onPress={goBack}>← Map</Button>}<Heading maxFontSizeMultiplier={cap('Puzzle Cove', 28)} style={{ fontSize: 28, flexShrink: 1 }}>Puzzle Cove</Heading><PeoplePicker/></View>}<SaveStatus/>
-    {!!local.error && <View style={{ gap: 8 }}><Copy accessibilityLiveRegion="polite">{local.error}</Copy><Button quiet onPress={local.load}>Retry Cove preferences</Button>{!local.ready && <Button quiet onPress={() => void local.reset()}>Use fresh Cove choices · keep original copy</Button>}</View>}
-    {selection ? <><GridInteraction.Provider value={setGridTouch}><GridAdult.Provider value={adult}><GridPreferences.Provider value={preferences}><CoveRound key={`${selection.entry.game}:${selection.card.ref.hash}:${selection.replace}:${selection.remix ?? ""}`} {...selection} partner={partner} width={Math.min(width, 960) - 40} onClose={close} onBrowse={() => { setBrowse(selection.entry); setSelection(null); }}/></GridPreferences.Provider></GridAdult.Provider></GridInteraction.Provider><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button quiet onPress={() => setPinning(true)}>Try this one · pin to a person</Button><Button quiet onPress={() => setOptions(true)}>Cove choices</Button></View></> : <>
-      <View style={{ flexDirection: 'row', gap: large ? 12 : 16, alignItems: 'center' }}><View style={{ width: large ? 72 : 110, height: large ? 57 : 90 }}><Landmark id="cove"/></View><View style={{ flex: 1 }}><Heading maxFontSizeMultiplier={cap('Think as long as you like.', 24, CHROME_MAX, room - 84)} style={{ fontSize: 24 }}>Think as long as you like.</Heading><Copy maxFontSizeMultiplier={CHROME_MAX}>Every band is open. Your puzzles wait for you.</Copy></View></View>
-      {row('Keep going', [...progress.paused.filter(s => !s.result && !s.credited).flatMap(s => { const entry = entries.find(e => e.game === s.game), card = cardFor(s.puzzle, entries); return entry && card ? [tile(s.id, infoFor(s.game).name, local.data.hidden.includes(card.ref.hash) ? 'Continue your saved puzzle · hidden from packs' : 'Continue your saved puzzle', () => choose(entry, card))] : []; }), ...(local.data.pins[owner] ?? []).flatMap(pin => { const entry = items.find(e => e.game === pin.ref.engine), card = cardFor(pin.ref, entries), from = people.find(p => p.id === pin.from)?.name ?? 'family'; return entry && card && !hidden(card) ? [<View key={`pin-${card.ref.hash}`} style={{ gap: 6 }}>{tile(card.ref.hash, infoFor(entry.game).name, `Try this one · from ${nameFit(from, 15, cardWidth - 42)}`, () => choose(entry, card, true), `Try this one · from ${from}`)}<Button quiet compact maxFontSizeMultiplier={buttonMax} onPress={() => void local.change({ type: 'unpin', owner, hash: pin.ref.hash })}>Put pin away</Button></View>] : []; })])}
-      {row('Today · Tide Table', tideTable(civilDate(new Date()), visibleEntries).map(p => <TodayTile key={p.size} name={`${p.size} · ${infoFor(p.entry.game).name}`} detail={p.title} game={p.entry.game} row={infoFor(p.entry.game).row} width={cardWidth} onPress={() => p.card ? choose(p.entry, p.card, true) : void deal(p.entry, () => dealPacked(p.entry, p.bank!, progress, local.data.hidden), true)}/>))}<Copy maxFontSizeMultiplier={CHROME_MAX}>Today is a shortcut into the packs. No expiry. Past days stay in their packs.</Copy>
-      {rowNames.map(name => {
-        const games = items.filter(e => infoFor(e.game).row === name);
-        const children: React.ReactNode[] = games.map(e => <View key={e.game} style={{ gap: 6 }}>{tile(e.game, infoFor(e.game).name, `${shownCount(e, [], packedHidden[e.game] ?? 0)} puzzles · all bands open`, () => choose(e))}<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}><Button quiet compact maxFontSizeMultiplier={buttonMax} onPress={() => setBrowse(e)}>Bands & packs</Button><Button quiet compact maxFontSizeMultiplier={buttonMax} disabled={!local.ready} onPress={() => void local.change({ type: 'favorite', game: e.game })}>{local.data.favorites.includes(e.game) ? '★ Favorite' : '☆ Favorite'}</Button></View></View>);
-        if (name === 'Island originals') children.push(...shelfGames.filter(g => (learningGroups as Partial<Record<string, 'levels' | 'originals'>>)[g.id] === 'originals').map(g => tile(g.id, g.name, 'Same game, same saved work as School', () => void leave(() => openGame(g.id)))));
-        return row(name, children);
-      })}
-      {row('Also here', [
-        tile(
-          'reef-sweep',
-          'Reef Sweep',
-          store.save.board?.['reef-sweep']?.position.outcome === null
-            ? 'Continue your saved reef · same save as Game Hall'
-            : 'No-guess pearl hunt · same save as Game Hall',
-          () => void leave(() => openGame('reef-sweep'))
-        ),
-      ])}
 
-      <View style={{ gap: 8 }}><Heading maxFontSizeMultiplier={cap('Solve together', 22)} style={{ fontSize: 22 }}>Solve together</Heading><Copy maxFontSizeMultiplier={CHROME_MAX}>Choose a partner before opening a new puzzle. Both people get a Together finish. You can also confirm a partner at the finish. A paused Together puzzle keeps its original people.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Chip maxFontSizeMultiplier={buttonMax} selected={partner === null} onPress={() => setPartner(null)}>On my own</Chip>{people.filter(p => p.id !== owner).map(p => <Chip key={p.id} maxFontSizeMultiplier={buttonMax} numberOfLines={1} label={p.name} selected={partner === p.id} onPress={() => setPartner(p.id)}>{p.name}</Chip>)}</View></View>
-      <Button quiet maxFontSizeMultiplier={buttonMax} onPress={() => setOptions(true)}>Reader level, mistake settings and grown-up choices</Button>
-    </>}
-    {dealing && <Copy accessibilityLiveRegion="polite">Opening your puzzle…</Copy>}
-    {!!message && <Copy accessibilityLiveRegion="polite" accessibilityLabel={message} maxFontSizeMultiplier={atLarge(fontScale, CHROME_MAX)}>{message.replace(/^Pinned for (.+)\.$/, (_, who: string) => `Pinned for ${ellipsize(who, 16 * Math.min(fontScale, large ? CHROME_MAX : Infinity), room)}.`)}</Copy>}
-  </ScrollView>
-    <Sheet visible={pinning} title="Try this one" onClose={() => setPinning(false)}><SheetError local={local}/><Copy>A quiet pin in their Keep going. No scores or notifications.</Copy>{people.filter(p => p.id !== owner).map(p => <Button key={p.id} quiet numberOfLines={1} label={p.name} style={{ maxWidth: '100%' }} textStyle={{ flexShrink: 1 }} disabled={!local.ready || !currentRef} onPress={() => { if (currentRef) void local.change({ type: 'pin', to: p.id, pin: { from: owner, ref: currentRef } }).then(ok => { if (ok) { setPinning(false); setMessage(`Pinned for ${p.name}.`); } }); }}>{p.name}</Button>)}</Sheet>
-    <Sheet visible={options} title="Cove choices" onClose={() => { setOptions(false); setAnswer(''); }}><SheetError local={local} message={message}/><Heading style={{ fontSize: 20 }}>Reader level</Heading><Copy>Choose reading separately from puzzle difficulty.</Copy><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{readers.map(reader => <Chip key={reader} selected={preferences.reader === reader} onPress={() => void local.change({ type: 'preferences', owner, value: { reader, fillNotes: reader === 'Grown-up' && preferences.fillNotes } })}>{reader}</Chip>)}</View><Heading style={{ fontSize: 20 }}>Mistakes</Heading><Copy>Friendly shows conflicts. Plain checks when you ask. Rewind offers a way back. There is never a mistake limit or game over.</Copy>{(['Friendly', 'Plain', 'Rewind'] as const).map(mistakes => <Chip key={mistakes} selected={preferences.mistakes === mistakes} onPress={() => void local.change({ type: 'preferences', owner, value: { mistakes } })}>{mistakes}</Chip>)}{adult && preferences.reader === 'Grown-up' && <ToggleRow label="Fill notes when supported" value={preferences.fillNotes} onChange={fillNotes => void local.change({ type: 'preferences', owner, value: { fillNotes } })}/>}<Copy>Cove choices and pins stay on this device. Puzzle progress and paused boards are included in the app backup.</Copy>
-      {adult ? <>{currentRef && <Button quiet onPress={() => void local.change({ type: 'hide', hash: currentRef.hash }).then(ok => { if (ok) { close(); setOptions(false); } })}>Hide this puzzle on this device</Button>}<Button quiet onPress={() => void local.change({ type: 'unhide' })}>Show all hidden puzzles ({local.data.hidden.length})</Button></> : <><Copy>For grown-ups · type {gate.a} × {gate.b} to change hidden puzzles or enable fill notes.</Copy><TextInput accessibilityLabel="Grown-up answer" keyboardType="number-pad" value={answer} onChangeText={setAnswer} style={{ minHeight: 48, padding: 12, borderColor: C.teal, borderWidth: 1, borderRadius: 12, fontSize: 18, fontFamily: font, color: C.ink }}/><Button quiet onPress={() => { if (gateAccepts(gate, answer)) setAdult(true); else { setGate(makeGate()); setMessage('A grown-up can try a new question.'); } setAnswer(''); }}>Open grown-up choices</Button></>}
-    </Sheet>
+  const play = (entry: ChallengeEntry, card: ChallengeCard, replace: boolean, withPerson: string | null = null) => { setSheetOpen(false); setBrowse(null); setMessage(''); setSelection({ entry, card, replace, partner: withPerson, seq: ++seq.current }); };
+  /** Packed content is verified before the round mounts; a failure keeps everything and says so calmly. */
+  const deal = async (pick: () => Promise<ChallengeCard | undefined>, then: (card: ChallengeCard) => void) => {
+    if (dealing) return;
+    setDealing(true); setMessage('');
+    try { const card = await pick(); if (card) then(card); else setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
+    catch { setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
+    finally { setDealing(false); }
+  };
+  /** A puzzle this person has not finished at this difficulty, never a hidden one, never `avoid`. */
+  const fresh = (entry: ChallengeEntry, at: number, avoid?: PuzzleRef): Promise<ChallengeCard | undefined> => {
+    if (entry.packed && !entry.puzzles.length) {
+      const bands = entry.packed.bands, band = bands.find(b => b.tier === at && b.bank === avoid?.bank) ?? bands.find(b => b.tier === at) ?? bands.find(b => b.tier === nearestTier(entry, at));
+      return band ? dealPacked(entry, band.bank, progress, hidden, avoid) : Promise.resolve(undefined);
+    }
+    const code = completionLookup(progress, entry), open = entry.puzzles.filter(p => !hidden.includes(p.ref.hash) && !(avoid && sameRef(p.ref, avoid))), level = open.filter(p => p.tier === at);
+    return Promise.resolve(level.find(p => !isSolved(code(p.ref))) ?? level[0] ?? open[0] ?? entry.puzzles[0]);
+  };
+  const start = (entry: ChallengeEntry, at: number, replace: boolean, withPerson: string | null, avoid?: PuzzleRef) => void deal(() => fresh(entry, at, avoid), card => play(entry, card, replace, withPerson));
+  /** Continue reopens the exact saved attempt with its own mode and partner. */
+  const resume = (entry: ChallengeEntry, saved: ChallengeSession) => {
+    const card = cardFor(saved.puzzle, entries);
+    if (card) play(entry, card, false, saved.partner);
+    else void deal(() => suggestedPacked(entry, progress, tierOf(entry, saved.puzzle) ?? 1, hidden), c => play(entry, c, false, saved.partner));
+  };
+  const leave = async (next: () => void) => { if (store.save.cove?.active && !await store.covePerson({ type: 'select', id: null }, store.epoch)) { setMessage('Could not leave this person yet. Your saved work is kept.'); return; } next(); };
+  const goBack = () => void leave(() => router.canGoBack() ? router.back() : router.replace('/'));
+  const openTile = (tile: ShelfTile) => {
+    if (tile.kind === 'cove') openSheet(tile.entry);
+    // Reef Sweep opens its own Challenge as the current learner, never a Puzzles-only grown-up.
+    else if (tile.kind === 'shortcut') void leave(() => router.push(tile.route));
+    else void leave(() => openGame(tile.id as ShelfId));
+  };
+  const favorite = (id: string) => void local.change({ type: 'favorite', game: id });
+  const changeBand = (band: number) => void local.change({ type: 'preferences', owner, value: { band } });
+  const changePreferences = (value: Partial<Preferences>) => void local.change({ type: 'preferences', owner, value });
+
+  // Today and every new choice draw from the shelf with hidden puzzles taken out first.
+  const visibleEntries = shelfEntries(entries).map(e => ({ ...e, puzzles: e.puzzles.filter(p => !hidden.includes(p.ref.hash)) }));
+  const sections = shelfSections({ entries, hidden, originals: schoolOriginals, registered: game => !!challengeFor(game) });
+  const today = tideTable(civilDate(new Date()), visibleEntries.filter(e => e.puzzles.length || e.packed?.bands.length)).find(p => p.size === 'Medium');
+  const onToday = today && (() => { const entry = entries.find(e => e.game === today.entry.game) ?? today.entry; if (today.card) play(entry, today.card, true); else void deal(() => dealPacked(entry, today.bank!, progress, hidden), card => play(entry, card, true)); });
+  const continueItems: ContinueItem[] = [
+    ...progress.paused.filter(s => !s.result && !s.credited).sort((a, b) => b.ordinal - a.ordinal).flatMap(s => { const entry = entries.find(e => e.game === s.game); return entry ? [{ key: s.id, game: s.game, name: infoFor(s.game).name, pastel: pastelFor(s.game), onPress: () => resume(entry, s) }] : []; }),
+    ...(local.data.pins[owner] ?? []).flatMap(pin => {
+      const entry = entries.find(e => e.game === pin.ref.engine), card = cardFor(pin.ref, entries), from = people.find(p => p.id === pin.from) ?? { id: pin.from, name: 'Family' };
+      return entry && card && !hidden.includes(card.ref.hash) ? [{ key: `pin-${card.ref.hash}`, game: entry.game, name: infoFor(entry.game).name, pastel: pastelFor(entry.game), from, onPress: () => play(entry, card, true), onLongPress: () => void local.change({ type: 'unpin', owner, hash: pin.ref.hash }) }] : [];
+    }),
+  ];
+  const shelf = sections.flatMap(s => s.tiles);
+  const favorites = local.data.favorites.flatMap(id => { const tile = shelf.find(t => t.id === id), entry = !tile && entries.find(e => e.game === id); return tile ? [{ ...tile, pastel: pastelFor(id) }] : entry ? [{ kind: 'cove' as const, id, name: infoFor(id).name, entry, pastel: pastelFor(id) }] : []; });
+
+  const saved = selection && pausedIn(selection.entry.game), currentRef = saved?.puzzle ?? selection?.card.ref;
+  const status = <>{!!local.error && <View style={styles.status}><Text variant="caption" accessibilityLiveRegion="polite">{local.error}</Text><Button label="Try again" variant="quiet" target="adult" onPress={local.load}/></View>}
+    {(dealing || !!message) && <Text variant="caption" accessibilityLiveRegion="polite">{dealing ? 'Opening your puzzle…' : message}</Text>}</>;
+  let body: React.ReactNode;
+  if (browse) body = <PuzzleBrowser key={`${browse.entry.game}:${browse.tier}`} entry={browse.entry} progress={progress} initialBand={browse.tier} reader={preferences.reader} hidden={hidden} onBack={() => setBrowse(null)} onBand={changeBand} onChoose={card => play(browse.entry, card, true, selection?.partner ?? null)}/>;
+  else if (selection) {
+    const { entry, card } = selection, at = tierOf(entry, currentRef ?? card.ref) ?? card.tier;
+    body = <>{status}<GridAdult.Provider value={adult}><GridPreferences.Provider value={preferences}>
+      <CoveRound key={`${entry.game}:${card.ref.hash}:${selection.replace}:${selection.seq}`} entry={entry} card={card} replace={selection.replace} partner={selection.partner} width={Math.min(width, 960) - 2 * theme.space.lg}
+        onClose={() => setSelection(null)} onBrowse={() => setBrowse({ entry, tier: at })}
+        choices={{
+          mistakes: preferences.mistakes, onMistakes: mistakes => changePreferences({ mistakes }),
+          onNext: () => start(entry, at, false, selection.partner, card.ref),
+          onNew: () => start(entry, at, true, selection.partner, currentRef),
+          onKeep: () => { const s = pausedIn(entry.game); if (s) resume(entry, s); else setSelection(null); },
+          onSend: (to, ref) => local.change({ type: 'pin', to, pin: { from: owner, ref } }),
+          onGrownUps: () => setGrownUps(true),
+        }}/>
+    </GridPreferences.Provider></GridAdult.Provider></>;
+  } else body = <CoveHome sections={sections} continueItems={continueItems} favorites={favorites} isFavorite={id => local.data.favorites.includes(id)} onBack={goBack} onTile={openTile} onFavorite={favorite} onToday={onToday} status={<><SaveStatus/>{status}</>}/>;
+
+  const sheetSaved = sheet ? pausedIn(sheet.game) : undefined;
+  return <SafeAreaView style={styles.screen}>
+    {body}
+    {sheet && <StartSheet entry={sheet} visible={sheetOpen} tier={tier} onTier={t => { setTier(t); changeBand(t); }} saved={sheetSaved} partners={others} partner={partner} onPartner={setPartner}
+      favorite={local.data.favorites.includes(sheet.game)} onFavorite={() => favorite(sheet.game)} busy={dealing} onClose={() => setSheetOpen(false)}
+      onPlay={() => start(sheet, tier, false, partner)} onContinue={() => sheetSaved && resume(sheet, sheetSaved)} onNew={() => start(sheet, tier, true, partner, sheetSaved?.puzzle)}/>}
+    <CoveGrownUps visible={grownUps} onClose={() => setGrownUps(false)} adult={adult} onAdult={() => setAdult(true)} preferences={preferences} onPreferences={changePreferences} error={local.error}
+      canHide={!!currentRef} onHide={() => { if (currentRef) void local.change({ type: 'hide', hash: currentRef.hash }).then(ok => { if (ok) { setGrownUps(false); setSelection(null); } }); }}
+      hiddenCount={hidden.length} onUnhide={() => void local.change({ type: 'unhide' })}/>
   </SafeAreaView>;
 }
+
+/** Plain style objects (React Native accepts them as they are). */
+const styles = {
+  screen: { flex: 1, backgroundColor: theme.colors.bg },
+  pad: { padding: theme.space.xl, gap: theme.space.md },
+  status: { gap: theme.space.xs },
+} as const;
