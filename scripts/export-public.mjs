@@ -73,6 +73,7 @@ export function exportPublic(target) {
       .matchAll(/require\("\.\.\/\.\.\/\.\.\/assets\/(home\/[a-z-]+\.wav)"\)/g)].map(m => m[1]);
     const tones = new Set(['audio/tap.wav', 'audio/match.wav', 'audio/win.wav', ...homeTones,
       ...['song-loop', 'reef-loop', 'sticker', 'coral', 'clear', ...Array.from({ length: 6 }, (_, i) => `shell-${i}`)].map(n => `arcade/${n}.wav`),
+      ...['goal', 'hop', 'splash'].map(n => `arcade/crab-sfx/${n}.wav`),
       ...['bonk', 'clear', 'flap', 'fruit'].map(n => `arcade/fruit-bat/${n}.wav`),
       ...['snap', 'shell', 'power', 'thump'].map(n => `arcade/lagoon-sfx/${n}.wav`)]);
     if (receipt.speechReceipt.engine !== 'Kokoro-82M v1.0' || receipt.speechReceipt.modelLicense !== 'Apache-2.0' || speech.size !== receipt.speechReceipt.keysPerVoice * 2)
