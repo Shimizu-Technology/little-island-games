@@ -12,7 +12,30 @@ import {
   reefSpriteMetrics,
   type ReefArtId,
 } from "../src/arcade/games/reef-builder/illustrated";
-import { computeReefBoardLayout, Coral, ReefArtSprite, ReefBoard } from "../src/arcade/games/reef-builder/View";
+import {
+  computeReefBoardLayout,
+  Coral,
+  LearnNumberBadge,
+  learnNumberBadgeMetrics,
+  REDUCED_CLEAR_DISMISS_MS,
+  ReefArtSprite,
+  ReefBoard,
+} from "../src/arcade/games/reef-builder/View";
+import { reefDrag, reefGrab } from "../src/arcade/games/reef-builder/geometry";
+
+type MockDragPoint = { x: number; y: number; down: boolean };
+type MockSharedValue<T> = { value: T; set(next: T): void };
+type MockGestureHandle = {
+  point: MockSharedValue<MockDragPoint>;
+  enabledFlag: boolean;
+  begin?: (e: { x: number; y: number }) => void;
+  end?: (e: { x: number; y: number }, success: boolean) => void;
+  enabled: (v: boolean) => MockGestureHandle;
+  onBegin: (fn: (e: { x: number; y: number }) => void) => MockGestureHandle;
+  onUpdate: (fn: (e: { x: number; y: number }) => void) => MockGestureHandle;
+  onEnd: (fn: (e: { x: number; y: number }, success: boolean) => void) => MockGestureHandle;
+  onFinalize: (fn: () => void) => MockGestureHandle;
+};
 
 const probe = vi.hoisted(() => ({
   reduced: vi.fn(() => false),
@@ -21,6 +44,7 @@ const probe = vi.hoisted(() => ({
   repeat: vi.fn(),
   sequence: vi.fn(),
   delay: vi.fn(),
+  measure: vi.fn<(target: unknown) => { pageX: number; pageY: number; width: number; height: number } | null>(() => null),
 }));
 
 vi.mock("react-native", () => ({
@@ -43,10 +67,11 @@ vi.mock("react-native-svg", () => ({
   Path: "Path",
   Rect: "Rect",
   Stop: "Stop",
+  Text: "SvgText",
 }));
 
 vi.mock("react-native-gesture-handler", () => ({
-  GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  GestureDetector: "GestureDetector",
 }));
 
 vi.mock("react-native-reanimated", () => ({
@@ -69,7 +94,7 @@ vi.mock("react-native-reanimated", () => ({
   useAnimatedRef: () => useRef(null),
   useAnimatedReaction: () => {},
   useAnimatedStyle: (style: () => unknown) => style,
-  measure: () => null,
+  measure: (ref: { current: unknown } | null) => probe.measure(ref?.current ?? null),
   runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
   cancelAnimation: () => {},
   withDelay: (ms: number, animation: unknown) => {
@@ -104,20 +129,35 @@ vi.mock("../src/components/ui", () => ({
 vi.mock("../src/islander/Companion", () => ({ Companion: "Companion" }));
 vi.mock("../src/arcade/Juice", () => ({ MiniStars: "MiniStars" }));
 vi.mock("../src/arcade/Input", () => {
-  const chain = () => {
-    const api = {
-      enabled: () => api,
-      onBegin: () => api,
-      onUpdate: () => api,
-      onEnd: () => api,
-      onFinalize: () => api,
+  const chain = (point: MockSharedValue<MockDragPoint>): MockGestureHandle => {
+    const api: MockGestureHandle = {
+      point,
+      enabledFlag: true,
+      enabled(v: boolean) {
+        api.enabledFlag = v;
+        return api;
+      },
+      onBegin(fn) {
+        api.begin = fn;
+        return api;
+      },
+      onUpdate() {
+        return api;
+      },
+      onEnd(fn) {
+        api.end = fn;
+        return api;
+      },
+      onFinalize() {
+        return api;
+      },
     };
     return api;
   };
   return {
     PressControl: "PressControl",
     PlayButton: "PlayButton",
-    uiThreadDrag: () => chain(),
+    uiThreadDrag: (point: MockSharedValue<MockDragPoint>) => chain(point),
   };
 });
 
@@ -131,6 +171,7 @@ afterEach(async () => {
   probe.repeat.mockClear();
   probe.sequence.mockClear();
   probe.delay.mockClear();
+  probe.measure.mockReset().mockReturnValue(null);
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -464,11 +505,273 @@ describe("ReefBoard rendering, interactions, illustrated celebrations, and Reduc
     expect(probe.delay).not.toHaveBeenCalled();
   });
 
-  it("replaces programmatic ReefFish with illustrated WebP assets and avoids animated SVG props", () => {
+  it("replaces programmatic ReefFish with illustrated WebP assets, avoids animated SVG props, and slices lagoon/seabed SVGs", () => {
     const viewSource = readFileSync("src/arcade/games/reef-builder/View.tsx", "utf8");
     expect(viewSource).not.toContain("ReefFish");
     expect(viewSource).not.toContain("useAnimatedProps");
+    expect(viewSource).not.toContain('preserveAspectRatio="none"');
     expect(viewSource).toContain('testID="reef-board"');
     expect(viewSource).toContain("borderWidth: 0");
+  });
+
+  it("renders Learn number badges inside scalable 40x40 SVGs immune to 1.3x font scaling across 27..72px cells and tray pieces", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+
+    for (const cell of [27, 32, 44, 56, 72]) {
+      for (const variant of ["cell", "fish", "tray"] as const) {
+        for (const value of [1, 4, 6, 9, 10]) {
+          const metrics = learnNumberBadgeMetrics(cell, variant, value);
+          expect(metrics.viewBoxSize).toBe(40);
+          expect(metrics.diameter).toBeGreaterThanOrEqual(14);
+          expect(metrics.diameter).toBeLessThanOrEqual(variant === "tray" ? cell - 2 : cell - 4);
+          // Circle + stroke stay strictly inside [0, 40].
+          expect(metrics.viewBoxSize / 2 - metrics.circleRadius - metrics.strokeWidth / 2).toBeGreaterThan(0);
+          expect(metrics.viewBoxSize / 2 + metrics.circleRadius + metrics.strokeWidth / 2).toBeLessThan(metrics.viewBoxSize);
+          // Glyph cap height stays cleanly inside the inner circle with generous padding.
+          expect(metrics.fontSize).toBeLessThan(metrics.innerDiameter);
+          expect(metrics.baselineY).toBeLessThan(metrics.viewBoxSize / 2 + metrics.innerDiameter / 2);
+          expect(metrics.baselineY - metrics.fontSize * 0.72).toBeGreaterThan(
+            metrics.viewBoxSize / 2 - metrics.innerDiameter / 2,
+          );
+        }
+      }
+    }
+
+    // Compact 320x568 with safe-area/header deduction (arena 320x482) + Helper produces 27px cells;
+    // verify all rendered Learn badges use Svg + SvgText, never RN Text.
+    const compactLayout = computeReefBoardLayout({ width: 320, height: 482, helper: true, endless: false });
+    expect(compactLayout.cell).toBe(27);
+
+    await act(async () => {
+      tree = create(
+        <ReefBoard
+          initial={createReef(reefLevel("learn-1"), 42, true)}
+          active
+          helper
+          onResult={vi.fn()}
+          onTone={vi.fn()}
+          width={320}
+          height={482}
+        />,
+      );
+    });
+
+    const fishBadges = findAllByTestID("reef-fish-number-badge");
+    const trayBadges = findAllByTestID("reef-tray-number-badge");
+    expect(fishBadges.length).toBeGreaterThan(0);
+    expect(trayBadges.length).toBeGreaterThan(0);
+
+    for (const badge of [...fishBadges, ...trayBadges]) {
+      const svgs = badge.findAll(node => String(node.type) === "Svg");
+      const svgTexts = badge.findAll(node => String(node.type) === "SvgText");
+      const rnTexts = badge.findAll(node => String(node.type) === "Text");
+      expect(svgs).toHaveLength(1);
+      expect(svgs[0].props.viewBox).toBe("0 0 40 40");
+      expect(svgTexts).toHaveLength(1);
+      expect(rnTexts).toHaveLength(0);
+    }
+
+    // Verify standalone LearnNumberBadge renders cleanly at compact 27px fish size.
+    await act(async () => {
+      tree!.unmount();
+      tree = create(<LearnNumberBadge value={4} cell={27} variant="fish" testID="standalone-badge" />);
+    });
+    const standalone = host("standalone-badge");
+    expect(standalone.findAll(node => String(node.type) === "Text")).toHaveLength(0);
+    expect(standalone.findAll(node => String(node.type) === "SvgText")[0].props.children).toBe(4);
+  });
+
+  it("dismisses static ClearEffects after the bounded celebration window under Reduce Motion without another move", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.useFakeTimers();
+    probe.reduced.mockReturnValue(true);
+
+    await act(async () => {
+      tree = create(
+        <ReefBoard
+          initial={createReef(reefLevel("learn-1"), 42, false)}
+          active
+          helper={false}
+          onResult={vi.fn()}
+          onTone={vi.fn()}
+          width={390}
+          height={782}
+        />,
+      );
+    });
+
+    // Nonterminal clear on learn-1 (target is 2 lines; clearing 1 line keeps status === "playing").
+    const clearCell = tree!.root.find(
+      node =>
+        String(node.type) === "PressControl" &&
+        typeof node.props.accessibilityLabel === "string" &&
+        node.props.accessibilityLabel.startsWith("Reef row 8, column 2,"),
+    );
+    await act(async () => {
+      clearCell.props.onPress();
+    });
+
+    expect(host("reef-clear-effects")).toBeDefined();
+    expect(host("reef-clear-pearl-pop")).toBeDefined();
+    expect(host("reef-clear-fish-0")).toBeDefined();
+    expect(probe.timing).not.toHaveBeenCalled();
+    expect(probe.spring).not.toHaveBeenCalled();
+
+    // Still visible just before dismissal window elapses.
+    await act(async () => {
+      vi.advanceTimersByTime(REDUCED_CLEAR_DISMISS_MS - 10);
+    });
+    expect(findAllByTestID("reef-clear-effects")).toHaveLength(1);
+
+    // Dismisses cleanly once the bounded timer fires, with no second move needed.
+    await act(async () => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(findAllByTestID("reef-clear-effects")).toHaveLength(0);
+    expect(findAllByTestID("reef-clear-pearl-pop")).toHaveLength(0);
+    expect(findAllByTestID("reef-clear-fish-0")).toHaveLength(0);
+  });
+
+  it("keeps ref={board} unscaled during placement pulse and matches 1:1 lifted geometry on an immediate second off-center drag", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const onTone = vi.fn();
+    const onSave = vi.fn();
+    const layout = computeReefBoardLayout({ width: 390, height: 782, helper: false, endless: false });
+    const boardOrigin = { pageX: 25, pageY: 110, width: layout.boardSize, height: layout.boardSize };
+    const cardOrigin = { pageX: 140, pageY: 540, width: layout.cardWidth, height: layout.cardHeight };
+    const artOrigin = { pageX: 162, pageY: 552, width: 54, height: 54 };
+
+    probe.measure.mockImplementation((target: unknown) => {
+      const kind = (target as { kind?: string } | null)?.kind;
+      if (kind === "board") return boardOrigin;
+      if (kind === "card") return cardOrigin;
+      if (kind === "art") return artOrigin;
+      return null;
+    });
+
+    await act(async () => {
+      tree = create(
+        <ReefBoard
+          initial={createReef(reefLevel("w1-1"), 42, false)}
+          active
+          helper={false}
+          onResult={vi.fn()}
+          onTone={onTone}
+          onSave={onSave}
+          width={390}
+          height={782}
+        />,
+        {
+          createNodeMock: element => {
+            const props = element.props as { testID?: string; collapsable?: boolean; style?: { zIndex?: number } };
+            if (props.testID === "reef-board") return { kind: "board" };
+            if (element.type === "AnimatedView" && props.collapsable === false) {
+              if (props.style && typeof props.style.zIndex === "number") return { kind: "card" };
+              return { kind: "art" };
+            }
+            return {};
+          },
+        },
+      );
+    });
+
+    // Assert lagoon and seabed SVGs both use explicit xMidYMid slice.
+    const svgs = tree!.root.findAll(node => String(node.type) === "Svg");
+    const lagoonSvg = svgs.find(node => node.props.viewBox === "0 0 800 800");
+    const seabedSvg = svgs.find(node => node.props.viewBox === "0 0 600 600");
+    expect(lagoonSvg?.props.preserveAspectRatio).toBe("xMidYMid slice");
+    expect(seabedSvg?.props.preserveAspectRatio).toBe("xMidYMid slice");
+
+    // Verify no ancestor of reef-board is an AnimatedView or carries a transform style.
+    const boardNode = host("reef-board");
+    let ancestor = boardNode.parent;
+    while (ancestor) {
+      if (typeof ancestor.type === "string") {
+        expect(ancestor.type).not.toBe("AnimatedView");
+        expect(styles(ancestor).transform).toBeUndefined();
+      }
+      ancestor = ancestor.parent;
+    }
+    // Decorative frame is a sibling inside reef-board-shell, not an ancestor of reef-board.
+    const shell = host("reef-board-shell");
+    expect(shell.findAll(node => node.props.testID === "reef-board-frame")).toHaveLength(1);
+    expect(shell.findAll(node => node.props.testID === "reef-board-pulse-glow")).toHaveLength(1);
+
+    // First placement (slot 0 at row 0, col 0) triggers the decorative frame pulse while reduced === false.
+    const cell00 = tree!.root.find(
+      node =>
+        String(node.type) === "PressControl" &&
+        typeof node.props.accessibilityLabel === "string" &&
+        node.props.accessibilityLabel.startsWith("Reef row 1, column 1,"),
+    );
+    await act(async () => {
+      cell00.props.onPress();
+    });
+    expect(onTone).toHaveBeenCalledWith("coral");
+    expect(probe.sequence).toHaveBeenCalled();
+
+    // Immediately start a second drag on slot 1 (2x2 square in w1-1) with an off-center grab on its [1, 1] cell!
+    const detectors = tree!.root.findAll(node => String(node.type) === "GestureDetector");
+    // Remaining pieces after slot 0 placed: slot 1 (first detector) and slot 2 (second detector).
+    const slot1Detector = detectors.find(d => d.findAll(n => n.props.testID === "coral-piece-1").length > 0)!;
+    const gesture = slot1Detector.props.gesture as MockGestureHandle;
+
+    // Grab inside bottom-right cell [1, 1] of the 2x2 piece (off-center from piece origin [0, 0]).
+    const availArt = Math.max(36, Math.min(layout.cardWidth - 18, layout.cardHeight - 30));
+    const trayCell = Math.min(27, availArt / 2);
+    const localArtX = 1.65 * trayCell;
+    const localArtY = 1.35 * trayCell;
+    const beginX = artOrigin.pageX - cardOrigin.pageX + localArtX;
+    const beginY = artOrigin.pageY - cardOrigin.pageY + localArtY;
+
+    const initialW1 = createReef(reefLevel("w1-1"), 42, false);
+    const slot1Piece = initialW1.pieces[1]!;
+    const expectedGrab = reefGrab(slot1Piece.cells, localArtX, localArtY, trayCell);
+    expect(expectedGrab.row).toBe(1);
+    expect(expectedGrab.col).toBe(1);
+
+    // Target board placement: top-left at row 2, col 3 (open area of w1-1).
+    const targetRow = 2;
+    const targetCol = 3;
+    const targetPointerPageX = boardOrigin.pageX + (targetCol + expectedGrab.col + expectedGrab.x) * layout.cell;
+    const targetPointerPageY = boardOrigin.pageY + (targetRow + expectedGrab.row + expectedGrab.y) * layout.cell + 72;
+    const dragX = targetPointerPageX - cardOrigin.pageX;
+    const dragY = targetPointerPageY - cardOrigin.pageY;
+
+    await act(async () => {
+      gesture.begin!({ x: beginX, y: beginY });
+      gesture.point.set({ x: dragX, y: dragY, down: true });
+    });
+
+    // Check lifted piece animated style: 1:1 scale (no scale !== 1) and exact reefDrag translation.
+    const liftStyle = styles(host("coral-lift-1")) as {
+      opacity: number;
+      transform: Record<string, number>[];
+    };
+    expect(liftStyle.opacity).toBe(1);
+    const scaleEntry = liftStyle.transform.find(t => "scale" in t);
+    expect(scaleEntry?.scale ?? 1).toBe(1);
+    const expectedSpot = reefDrag(
+      targetPointerPageX,
+      targetPointerPageY,
+      { x: boardOrigin.pageX, y: boardOrigin.pageY, cell: layout.cell },
+      expectedGrab,
+    );
+    expect(expectedSpot.row).toBe(targetRow);
+    expect(expectedSpot.col).toBe(targetCol);
+    const tx = liftStyle.transform.find(t => "translateX" in t)?.translateX;
+    const ty = liftStyle.transform.find(t => "translateY" in t)?.translateY;
+    expect(tx).toBeCloseTo(expectedSpot.left - cardOrigin.pageX);
+    expect(ty).toBeCloseTo(expectedSpot.top - cardOrigin.pageY);
+
+    // Release drag and confirm exact placement at (targetRow, targetCol).
+    await act(async () => {
+      gesture.end!({ x: dragX, y: dragY }, true);
+    });
+    expect(host("coral-slot-empty-1")).toBeDefined();
+    const lastSaved = onSave.mock.calls[onSave.mock.calls.length - 1][0] as { board: number[] };
+    for (const [dr, dc] of slot1Piece.cells) {
+      expect(lastSaved.board[(targetRow + dr) * 8 + (targetCol + dc)]).toBe(slot1Piece.value);
+    }
   });
 });

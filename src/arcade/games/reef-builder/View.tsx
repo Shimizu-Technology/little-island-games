@@ -19,7 +19,7 @@ import Animated, {
   type AnimatedRef,
 } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 import { Text } from "../../../components/Text";
 import { Button, Copy } from "../../../components/ui";
 import { useReducedMotion } from "../../../components/motion";
@@ -242,18 +242,103 @@ export const Coral = memo(function Coral({
   );
 });
 
+export function learnNumberBadgeMetrics(
+  cell: number,
+  variant: "cell" | "fish" | "tray",
+  value = 6,
+) {
+  const viewBoxSize = 40;
+  const circleRadius = 17.5;
+  const strokeWidth = 3.6;
+  const innerDiameter = (circleRadius - strokeWidth / 2) * 2;
+  const twoDigit = Math.abs(value) >= 10;
+  const fontSize = twoDigit ? 18 : 22;
+  const baselineY = twoDigit ? 26.4 : 27.6;
+  const diameter =
+    variant === "fish"
+      ? Math.max(14, Math.min(Math.max(14, cell - 6), Math.round(cell * 0.52)))
+      : variant === "tray"
+        ? Math.max(14, Math.min(Math.max(14, cell - 2), Math.round(cell * 0.62)))
+        : Math.max(16, Math.min(Math.max(16, cell - 5), Math.round(cell * 0.58)));
+  return {
+    diameter,
+    viewBoxSize,
+    circleRadius,
+    strokeWidth,
+    innerDiameter,
+    fontSize,
+    baselineY,
+  };
+}
+
+export const LearnNumberBadge = memo(function LearnNumberBadge({
+  value,
+  cell,
+  variant,
+  testID,
+}: {
+  value: number;
+  cell: number;
+  variant: "cell" | "fish" | "tray";
+  testID?: string;
+}) {
+  const metrics = learnNumberBadgeMetrics(cell, variant, value);
+  return (
+    <View
+      testID={testID}
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        ...(variant === "fish" ? { top: 1, right: 1 } : null),
+        width: metrics.diameter,
+        height: metrics.diameter,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Svg
+        width={metrics.diameter}
+        height={metrics.diameter}
+        viewBox={`0 0 ${metrics.viewBoxSize} ${metrics.viewBoxSize}`}
+        accessible={false}
+      >
+        <Circle
+          cx={metrics.viewBoxSize / 2}
+          cy={metrics.viewBoxSize / 2}
+          r={metrics.circleRadius}
+          fill={CREAM}
+          stroke={INK}
+          strokeWidth={metrics.strokeWidth}
+        />
+        <SvgText
+          x={metrics.viewBoxSize / 2}
+          y={metrics.baselineY}
+          fill={INK}
+          fontSize={metrics.fontSize}
+          fontWeight="900"
+          fontFamily="Avenir Next, Helvetica, Arial, sans-serif"
+          textAnchor="middle"
+        >
+          {value}
+        </SvgText>
+      </Svg>
+    </View>
+  );
+});
+
 function PieceArt({
   piece,
   cell = 26,
   numbers = false,
+  lifted = false,
 }: {
   piece: CoralPiece;
   cell?: number;
   numbers?: boolean;
+  lifted?: boolean;
 }) {
   const w = Math.max(...piece.cells.map(c => c[1])) + 1;
   const h = Math.max(...piece.cells.map(c => c[0])) + 1;
-  const badgeMin = Math.max(15, Math.round(cell * 0.62));
   return (
     <View style={{ width: w * cell, height: h * cell }}>
       {piece.cells.map(([r, c], i) => (
@@ -267,35 +352,22 @@ function PieceArt({
             height: cell,
             alignItems: "center",
             justifyContent: "center",
+            ...(lifted
+              ? {
+                  borderRadius: Math.max(6, Math.round(cell * 0.22)),
+                  boxShadow: "0 6px 12px #14434F59, 0 0 0 2px #FFF7C7B8",
+                }
+              : null),
           }}
         >
           <Coral color={coralColors[piece.color % 4]} variant={piece.color} size={cell} />
           {numbers && (
-            <View
-              style={{
-                position: "absolute",
-                minWidth: badgeMin,
-                height: badgeMin,
-                paddingHorizontal: 3,
-                backgroundColor: CREAM,
-                borderRadius: badgeMin / 2,
-                borderWidth: 1.6,
-                borderColor: INK,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: Math.max(10, Math.round(cell * 0.48)),
-                  lineHeight: Math.max(12, Math.round(cell * 0.54)),
-                  fontWeight: "900",
-                  color: INK,
-                }}
-              >
-                {piece.value}
-              </Text>
-            </View>
+            <LearnNumberBadge
+              value={piece.value}
+              cell={cell}
+              variant="tray"
+              testID={lifted ? "reef-lift-number-badge" : "reef-tray-number-badge"}
+            />
           )}
         </View>
       ))}
@@ -441,7 +513,6 @@ function DraggablePiece({
       transform: [
         { translateX: spot.left - o.x },
         { translateY: spot.top - o.y },
-        { scale: reduced ? 1 : dragging ? 1.04 : 0.92 },
       ],
     };
   });
@@ -512,7 +583,7 @@ function DraggablePiece({
           testID={`coral-lift-${slot}`}
           style={[{ position: "absolute", top: 0, left: 0 }, floating]}
         >
-          <PieceArt piece={piece} numbers={numbers} cell={cell} />
+          <PieceArt piece={piece} numbers={numbers} cell={cell} lifted />
         </Animated.View>
       </Animated.View>
     </GestureDetector>
@@ -636,6 +707,8 @@ function ClearFishSwimmer({
   );
 }
 
+export const REDUCED_CLEAR_DISMISS_MS = 650;
+
 function ClearEffects({
   state,
   cell,
@@ -649,6 +722,16 @@ function ClearEffects({
 }) {
   const age = useSharedValue(0);
   const pearlPop = useSharedValue(reduced ? 1 : 0);
+  const [dismissedMove, setDismissedMove] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!reduced) return;
+    const move = state.moves;
+    const timer = setTimeout(() => {
+      setDismissedMove(move);
+    }, REDUCED_CLEAR_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [reduced, state.moves]);
 
   useEffect(() => {
     age.value = 0;
@@ -677,6 +760,8 @@ function ClearEffects({
       { scale: reduced ? 1 : 0.85 + pearlPop.value * 0.15 },
     ],
   }));
+
+  if (reduced && dismissedMove === state.moves) return null;
 
   const at = state.lastClear[0] ?? 0;
   const clearedLines = Math.max(1, Math.round(state.lastClear.length / 8));
@@ -1090,7 +1175,12 @@ export function ReefBoard({
   const reduced = useReducedMotion();
   const shake = useSharedValue(0);
   const boardPulse = useSharedValue(1);
-  const boardMotionStyle = useAnimatedStyle(() => ({
+  const pulseGlow = useSharedValue(0);
+  const frameMotionStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shake.value }, { scale: boardPulse.value }],
+  }));
+  const frameGlowStyle = useAnimatedStyle(() => ({
+    opacity: pulseGlow.value,
     transform: [{ translateX: shake.value }, { scale: boardPulse.value }],
   }));
 
@@ -1098,8 +1188,9 @@ export function ReefBoard({
     return () => {
       cancelAnimation(shake);
       cancelAnimation(boardPulse);
+      cancelAnimation(pulseGlow);
     };
-  }, [shake, boardPulse]);
+  }, [shake, boardPulse, pulseGlow]);
 
   useEffect(() => {
     if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper });
@@ -1147,6 +1238,12 @@ export function ReefBoard({
               withSpring(1, { damping: 12, stiffness: 260 }),
             ),
           );
+          pulseGlow.set(
+            withSequence(
+              withTiming(next.lastClear.length ? 0.9 : 0.45, { duration: 75 }),
+              withTiming(0, { duration: 240, easing: Easing.out(Easing.quad) }),
+            ),
+          );
         }
       } else {
         setBumped(true);
@@ -1163,7 +1260,7 @@ export function ReefBoard({
         }
       }
     },
-    [active, state, dispatch, onTone, reduced, shake, boardPulse],
+    [active, state, dispatch, onTone, reduced, shake, boardPulse, pulseGlow],
   );
 
   const piece = selected === null ? null : s.pieces[selected];
@@ -1318,7 +1415,7 @@ export function ReefBoard({
     >
       {/* Sunlit tropical lagoon backdrop */}
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <Svg width="100%" height="100%" viewBox="0 0 800 800" preserveAspectRatio="none" accessible={false}>
+        <Svg width="100%" height="100%" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" accessible={false}>
           <Defs>
             <LinearGradient id="reef-lagoon-bg" x1="0" y1="0" x2="0.4" y2="1">
               <Stop offset="0" stopColor="#2E9EB0" />
@@ -1383,38 +1480,48 @@ export function ReefBoard({
           zIndex: 3,
         }}
       >
-        {/* Honey wood & sandy coral reef stone frame around exact 8x8 board ref */}
-        <Animated.View style={boardMotionStyle}>
-          <View
+        {/* Static anchor around exact 8x8 board ref; honey wood frame & glow animate as independent siblings */}
+        <View
+          testID="reef-board-shell"
+          style={{
+            position: "relative",
+            padding: layout.framePad + 2.5,
+          }}
+        >
+          <Animated.View
+            pointerEvents="none"
             testID="reef-board-frame"
-            style={{
-              padding: layout.framePad,
-              borderRadius: 24,
-              backgroundColor: "#E4B878",
-              borderWidth: 2.5,
-              borderColor: INK,
-              boxShadow: `0 ${layout.frameBevel}px 0 #9F6D34`,
-            }}
-          >
-            <View style={{ position: "relative", width: size, height: size }}>
-              <Animated.View
-                ref={board}
-                collapsable={false}
-                testID="reef-board"
-                style={{
-                  width: size,
-                  height: size,
-                  backgroundColor: "#BCE3C7",
-                  borderRadius: 16,
-                  borderWidth: 0,
-                  overflow: "hidden",
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                }}
-              >
-                {/* Luminous shallow-lagoon seabed & sunlit caustics */}
-                <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-                  <Svg width="100%" height="100%" viewBox="0 0 600 600" accessible={false}>
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: 24,
+                backgroundColor: "#E4B878",
+                borderWidth: 2.5,
+                borderColor: INK,
+                boxShadow: `0 ${layout.frameBevel}px 0 #9F6D34`,
+              },
+              frameMotionStyle,
+            ]}
+          />
+          <View style={{ position: "relative", width: size, height: size }}>
+            <Animated.View
+              ref={board}
+              collapsable={false}
+              testID="reef-board"
+              style={{
+                width: size,
+                height: size,
+                backgroundColor: "#BCE3C7",
+                borderRadius: 16,
+                borderWidth: 0,
+                overflow: "hidden",
+                flexDirection: "row",
+                flexWrap: "wrap",
+              }}
+            >
+              {/* Luminous shallow-lagoon seabed & sunlit caustics */}
+              <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                <Svg width="100%" height="100%" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" accessible={false}>
                     <Defs>
                       <LinearGradient id="reef-bed" x1="0" y1="0" x2="0.85" y2="1">
                         <Stop offset="0" stopColor="#7EDAD1" />
@@ -1466,7 +1573,6 @@ export function ReefBoard({
                       : s.appearance[i] >= 0
                         ? s.appearance[i]
                         : 0;
-                  const badgeSize = Math.max(16, Math.round(cell * 0.58));
 
                   return (
                     <PressControl
@@ -1526,36 +1632,19 @@ export function ReefBoard({
                               />
                             </View>
                             {target && (
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  ...(fish ? { top: 1, right: 1 } : {}),
-                                  minWidth: fish ? Math.max(14, Math.round(cell * 0.44)) : badgeSize,
-                                  height: fish ? Math.max(14, Math.round(cell * 0.44)) : badgeSize,
-                                  paddingHorizontal: fish ? 2 : 3,
-                                  backgroundColor: CREAM,
-                                  borderRadius: badgeSize / 2,
-                                  borderWidth: 1.6,
-                                  borderColor: INK,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    color: INK,
-                                    fontSize: Math.max(10, Math.round(cell * (fish ? 0.34 : 0.42))),
-                                    lineHeight: Math.max(12, Math.round(cell * (fish ? 0.38 : 0.48))),
-                                    fontWeight: "900",
-                                  }}
-                                >
-                                  {highlighted && piece ? piece.value : cellValue}
-                                </Text>
-                              </View>
+                              <LearnNumberBadge
+                                value={highlighted && piece ? piece.value : cellValue}
+                                cell={cell}
+                                variant={fish ? "fish" : "cell"}
+                                testID={fish ? "reef-fish-number-badge" : "reef-cell-number-badge"}
+                              />
                             )}
                           </>
                         ) : invalid ? (
-                          <Text style={{ color: "#7B1E2B", fontWeight: "900", fontSize: Math.max(12, Math.round(cell * 0.42)) }}>
+                          <Text
+                            allowFontScaling={false}
+                            style={{ color: "#7B1E2B", fontWeight: "900", fontSize: Math.max(12, Math.round(cell * 0.42)) }}
+                          >
                             ×
                           </Text>
                         ) : i % 7 === 0 ? (
@@ -1575,18 +1664,31 @@ export function ReefBoard({
                 })}
               </Animated.View>
 
-              {!!s.lastClear.length && (
-                <ClearEffects
-                  key={s.moves}
-                  state={s}
-                  cell={cell}
-                  boardSize={size}
-                  reduced={reduced}
-                />
-              )}
-            </View>
+            {!!s.lastClear.length && (
+              <ClearEffects
+                key={s.moves}
+                state={s}
+                cell={cell}
+                boardSize={size}
+                reduced={reduced}
+              />
+            )}
           </View>
-        </Animated.View>
+          <Animated.View
+            pointerEvents="none"
+            testID="reef-board-pulse-glow"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: 24,
+                borderWidth: 3.5,
+                borderColor: "#FFF5B8",
+                backgroundColor: "transparent",
+              },
+              frameGlowStyle,
+            ]}
+          />
+        </View>
 
         {/* Side Column (landscape) or Tray + Helper Block (portrait) */}
         <View
