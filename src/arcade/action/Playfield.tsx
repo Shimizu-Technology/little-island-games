@@ -342,16 +342,16 @@ export function PalmBoard({
               index={b.id}
               width={PALM_ACTOR_SIZE.beetle * scale}
               height={PALM_ACTOR_SIZE.beetle * scale}
-              padding={{ left: 0, top: 0, right: 0, bottom: 28 * scale }}
+              padding={{ left: 0, top: 0, right: 0, bottom: 32 * scale }}
             >
               <View
                 testID={`palm-answer-${b.id}`}
                 pointerEvents="none"
                 style={{
                   position: "absolute",
-                  left: 12 * scale,
+                  left: 4 * scale,
                   top: 48 * scale,
-                  width: 34 * scale,
+                  width: 50 * scale,
                   alignItems: "center",
                   backgroundColor: "#17382D",
                   borderColor: "#FFE6A6",
@@ -359,7 +359,7 @@ export function PalmBoard({
                   borderRadius: 10 * scale,
                 }}
               >
-                <Heading maxFontSizeMultiplier={1.3} style={{ color: "#FFF4CD", fontSize: 20 * scale }}>{b.value}</Heading>
+                <Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.3} style={{ color: "#FFF4CD", fontWeight: "700", fontSize: 20 * scale, lineHeight: 26 * scale }}>{b.value}</Text>
               </View>
             </ArcadeSprite>
           ))}

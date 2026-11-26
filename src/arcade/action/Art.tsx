@@ -240,7 +240,7 @@ const groveSkies = {
 function PalmGrove({ width, height, world, id }: { width: number; height: number; world: WorldId; id: string }) {
   const [sky, horizon] = groveSkies[world];
   return (
-    <Svg width={width} height={height} viewBox="0 0 360 600" style={{ position: "absolute" }} accessible={false}>
+    <Svg width={width} height={height} viewBox="0 0 360 600" preserveAspectRatio="xMidYMid slice" style={{ position: "absolute" }} accessible={false}>
       <Defs>
         <LinearGradient id={`palm-sky-${id}`} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={sky} />
@@ -252,6 +252,9 @@ function PalmGrove({ width, height, world, id }: { width: number; height: number
         </LinearGradient>
       </Defs>
       <Rect width={360} height={600} fill={`url(#palm-sky-${id})`} />
+      {world === "w3" && [22, 75, 135, 202, 330].map((x, i) => (
+        <Path key={x} d={star} fill="#FFF2CB" opacity={0.55 + (i % 3) * 0.18} transform={`translate(${x} ${42 + (i % 3) * 35}) scale(.35)`} />
+      ))}
       <G fill="#FFF5C5">
         <Circle cx={285} cy={115} r={78} opacity={0.12} />
         <Circle cx={285} cy={115} r={57} opacity={0.23} />

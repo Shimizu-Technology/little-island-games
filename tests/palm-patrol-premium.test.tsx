@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, expect, it, vi } from "vitest";
+import { Scene } from "../src/arcade/action/Art";
 import { PalmBoard } from "../src/arcade/action/Playfield";
 import { BUG_RADIUS_X, BUG_RADIUS_Y, HUSK_RADIUS, PALM_ACTOR_SIZE } from "../src/arcade/action/arena";
 import { createPalm, palmLevels, type PalmState } from "../src/arcade/games/palm-patrol/engine";
@@ -272,11 +273,40 @@ it("shows Number Grove answers over the beetles and keeps wrong-answer feedback"
   for (const b of learn.beetles) {
     const badge = host(`palm-answer-${b.id}`);
     expect(styles(badge).backgroundColor).toBe("#17382D");
-    const heading = badge.find(node => String(node.type) === "Heading");
+    const heading = badge.find(node => String(node.type) === "Text");
     expect(heading.props.children).toBe(b.value);
     expect(styles(heading).color).toBe("#FFF4CD");
     expect(styles(badge.parent!).height - styles(badge).top).toBeGreaterThan(styles(heading).fontSize * heading.props.maxFontSizeMultiplier);
   }
   expect(tree!.root.findAll(node => String(node.type) === "Text" && node.props.children === "Try another")).toHaveLength(1);
   expect(onTone.mock.calls).toEqual([["shell-2", true]]);
+});
+
+
+it.each([[390, 844], [844, 390], [1024, 768], [700, 430]])("fills Palm Grove backdrops at %i × %i and restores Moonlit Grove stars", async (width, height) => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  await act(async () => { tree = create(<Scene palm world="w3" width={width} height={height} />); });
+  const svg = tree!.root.find(node => String(node.type) === "Svg");
+  expect(svg.props.preserveAspectRatio).toBe("xMidYMid slice");
+  expect(tree!.root.findAll(node => String(node.type) === "Path" && node.props.fill === "#FFF2CB")).toHaveLength(5);
+});
+
+it("keeps learn-8 two-digit answers on one line with large-text clearance in compact landscape", async () => {
+  const level = palmLevels.find(level => level.id === "learn-8")!;
+  const learn = Array.from({ length: 100 }, (_, seed) => createPalm(level, seed * 104729))
+    .find(state => state.beetles.some(beetle => beetle.value === 21))!;
+  expect(learn.beetles.some(beetle => beetle.value === 21)).toBe(true);
+  await start(learn, false, 844, 328);
+  const scale = 328 / 600;
+  for (const beetle of learn.beetles) {
+    const badge = host(`palm-answer-${beetle.id}`), box = styles(badge);
+    const text = badge.find(node => String(node.type) === "Text");
+    expect(text.props.children).toBe(beetle.value);
+    expect(box.width).toBeCloseTo(50 * scale);
+    expect(box.left).toBeCloseTo(4 * scale);
+    expect(text.props.numberOfLines).toBe(1);
+    expect(text.props.adjustsFontSizeToFit).toBe(true);
+    expect(text.props.maxFontSizeMultiplier).toBe(1.3);
+    expect(styles(badge.parent!).height - box.top).toBeGreaterThan(styles(text).lineHeight * 1.3 + 2 * box.borderWidth);
+  }
 });
