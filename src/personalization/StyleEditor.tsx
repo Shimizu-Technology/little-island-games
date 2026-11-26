@@ -21,15 +21,17 @@ const labels: Record<string, string> = { presentation: 'Me', skinTone: 'Skin', h
 
 /** Sunlit tropical dressing-room backdrop behind the Islander preview (uses only Rect/Circle/Path). */
 function DressingRoomBackdrop() {
-  return <Svg width="100%" height="100%" viewBox="0 0 320 220" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', top: 0, left: 0 }} accessible={false}>
-    <Rect x={0} y={0} width={320} height={220} fill="#E6F5F1"/>
-    <Circle cx={256} cy={46} r={42} fill="#FFF5D4"/>
-    <Circle cx={256} cy={46} r={24} fill="#FFE39B"/>
-    <Path d="M-8 164Q76 144 160 156Q244 168 328 150V224H-8Z" fill="#FFF3DC"/>
-    <Path d="M-8 184Q88 170 164 178Q246 186 328 174V224H-8Z" fill="#FCE5BE"/>
-    <Path d="M-6 28Q24 10 52 30Q24 28 -6 44ZM-4 54Q28 38 56 62Q26 58 -4 72ZM326 24Q294 8 268 30Q296 28 326 42ZM324 54Q292 42 266 66Q296 60 324 72Z" fill="#BFE2D4"/>
-    <Path d="M114 196Q160 185 206 196Q160 207 114 196Z" fill="#E6CFA8"/>
-  </Svg>;
+  return <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0 }}>
+    <Svg width="100%" height="100%" viewBox="0 0 320 220" preserveAspectRatio="xMidYMid slice" accessible={false}>
+      <Rect x={0} y={0} width={320} height={220} fill="#E6F5F1"/>
+      <Circle cx={256} cy={46} r={42} fill="#FFF5D4"/>
+      <Circle cx={256} cy={46} r={24} fill="#FFE39B"/>
+      <Path d="M-8 164Q76 144 160 156Q244 168 328 150V224H-8Z" fill="#FFF3DC"/>
+      <Path d="M-8 184Q88 170 164 178Q246 186 328 174V224H-8Z" fill="#FCE5BE"/>
+      <Path d="M-6 28Q24 10 52 30Q24 28 -6 44ZM-4 54Q28 38 56 62Q26 58 -4 72ZM326 24Q294 8 268 30Q296 28 326 42ZM324 54Q292 42 266 66Q296 60 324 72Z" fill="#BFE2D4"/>
+      <Path d="M114 196Q160 185 206 196Q160 207 114 196Z" fill="#E6CFA8"/>
+    </Svg>
+  </View>;
 }
 
 function TabPicture({ tab, color }: { tab: Tab; color: string }) {
@@ -80,9 +82,11 @@ export function StyleEditor({ look, equipped, earned, unseen, onChange, onSeen, 
   const tight = landscape || (!!room && room < 420);
   const preview = <View testID="style-preview" style={{ minHeight: previewSize + 24, flexShrink: 0, borderRadius: 28, backgroundColor: '#FFF8EC', borderWidth: 1.5, borderColor: '#EFE0C6', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', paddingVertical: 12 }}>
     <DressingRoomBackdrop/>
-    <Islander view={back ? 'back' : 'front'} pose={back ? 0 : 'idle'} look={look} size={previewSize}/>
-    <PressableScale accessibilityRole="button" accessibilityLabel={back ? 'See the front' : 'See the back'} onPress={() => setBack(!back)} style={{ position: 'absolute', right: 10, top: 10, width: 46, height: 46, borderRadius: 23, backgroundColor: '#FFFDF8', borderWidth: 1.5, borderColor: '#EADBC2', alignItems: 'center', justifyContent: 'center' }}><Icon name="refresh"/></PressableScale>
-    {!!onBadges && <PressableScale accessibilityRole="button" accessibilityLabel="My badges" onPress={onBadges} style={{ position: 'absolute', right: 10, bottom: 10, paddingHorizontal: 14, minHeight: 44, borderRadius: 22, backgroundColor: '#FFFDF8', borderWidth: 1.5, borderColor: '#EADBC2', justifyContent: 'center' }}><Copy maxFontSizeMultiplier={1.3} style={{ color: C.ink, fontSize: 13, fontWeight: '700' }}>My badges</Copy></PressableScale>}
+    <View style={{ position: 'relative', zIndex: 1 }}>
+      <Islander view={back ? 'back' : 'front'} pose={back ? 0 : 'idle'} look={look} size={previewSize}/>
+    </View>
+    <PressableScale accessibilityRole="button" accessibilityLabel={back ? 'See the front' : 'See the back'} onPress={() => setBack(!back)} style={{ position: 'absolute', right: 10, top: 10, zIndex: 2, width: 46, height: 46, borderRadius: 23, backgroundColor: '#FFFDF8', borderWidth: 1.5, borderColor: '#EADBC2', alignItems: 'center', justifyContent: 'center' }}><Icon name="refresh"/></PressableScale>
+    {!!onBadges && <PressableScale accessibilityRole="button" accessibilityLabel="My badges" onPress={onBadges} style={{ position: 'absolute', right: 10, bottom: 10, zIndex: 2, paddingHorizontal: 14, minHeight: 44, borderRadius: 22, backgroundColor: '#FFFDF8', borderWidth: 1.5, borderColor: '#EADBC2', justifyContent: 'center' }}><Copy maxFontSizeMultiplier={1.3} style={{ color: C.ink, fontSize: 13, fontWeight: '700' }}>My badges</Copy></PressableScale>}
   </View>;
   const tabs = <View testID="style-tabs" onLayout={e => setTabsHeight(e.nativeEvent.layout.height)} style={{ borderRadius: 24, backgroundColor: '#FFF8EC', borderWidth: 1.5, borderColor: '#EFE0C6', paddingVertical: tight ? 4 : 8 }}>{!tight && <View accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-start', marginLeft: 12, marginBottom: 5, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12, backgroundColor: currentGroup.tint }}><Copy maxFontSizeMultiplier={1.2} style={{ color: C.ink, fontSize: 12, lineHeight: 16, fontWeight: '700' }}>{currentGroup.name}</Copy></View>}<ScrollView ref={tabScroll} horizontal snapToOffsets={snapOffsets} decelerationRate="fast" style={Platform.OS === 'web' ? { scrollSnapType: 'x mandatory' } as ViewStyle : undefined} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 8 }}>
     {visibleGroups.map(group => <View key={group.name} style={{ flexDirection: 'row', gap: 3, padding: 4, borderRadius: 20, backgroundColor: group.tint, alignItems: 'center' }}>{group.tabs.map(t => {

@@ -12,7 +12,7 @@ import type { CatalogItem } from "../src/library/catalog";
 import items from "../content/library/items.json";
 const f=vi.hoisted(()=>({height:844,fontScale:3.2,person:{} as any,personalize:vi.fn(),close:vi.fn()}));
 vi.mock("react-native",()=>({View:"View",Text:"Text",Pressable:"Pressable",useWindowDimensions:()=>({width:390,height:f.height,fontScale:f.fontScale}),StyleSheet:{create:(v:any)=>v},Platform:{OS:"ios"}}));
-vi.mock("react-native-svg",()=>({default:"Svg",Circle:"Circle",Path:"Path",Rect:"Rect",G:"G"}));
+vi.mock("react-native-svg",()=>({default:"Svg",Circle:"Circle",Ellipse:"Ellipse",Path:"Path",Rect:"Rect",G:"G"}));
 vi.mock("../src/components/Text",()=>({Text:"Text"}));
 vi.mock("../src/components/ui",()=>({C:{},styles:{},Sheet:({children,footer}:any)=><View>{children}<View testID="footer">{footer}</View></View>,
   Button:({children,...props}:any)=><button {...props}>{children}</button>,Copy:"Text",Heading:"Text",PressableScale:"Pressable",Chip:"Chip"}));
@@ -20,6 +20,7 @@ vi.mock("../src/state/Store",()=>({useStore:()=>({save:{learning:{}},epoch:0,per
 vi.mock("../src/learn/learners",()=>({activeLearner:()=>({id:"child",name:"Child"})}));
 vi.mock("../src/personalization/model",()=>({personFor:()=>f.person}));
 vi.mock("../src/personalization/catalog",()=>({canWear:()=>true}));
+vi.mock("../src/ui/fonts",()=>({useNunitoLoaded:()=>false}));
 vi.mock("../src/personalization/StyleEditor",()=>({StyleEditor:({onChange}:any)=><Button onPress={()=>onChange({...defaultLook,presentation:"girl"})}>Girl</Button>}));
 vi.mock("../src/learn/Coach",()=>({CoachSpot:({children}:any)=>children}));
 vi.mock("../src/learn/games/hafa-adai/pictures",()=>({WordPicture:"WordPicture"}));

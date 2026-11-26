@@ -16,11 +16,13 @@ const Thumb = memo(function Thumb({ item, muted, encoded, frame, selected }: { i
 export function StyleGrid({ category, look, equipped, earned, unseen, onChoose, catalog = styleCatalog, compact = false }: { category: Category; look: IslanderLook; equipped: IslanderLook; earned: string[]; unseen: string[]; onChoose: (item: StyleItem) => void; compact?: boolean; catalog?: readonly StyleItem[] }) {
   const { width } = useWindowDimensions();
   // Three across on phones, so a pinned preview still leaves several choices in view.
-  const phone = width < 420, tileWidth = phone ? '31%' : width < 700 ? '31%' : width < 1100 ? '47%' : '31%', frame = compact ? 72 : phone && width >= 360 ? 90 : 108;
+  const phone = width < 420, narrow = width < 360, tight = compact || narrow;
+  const tileWidth = narrow ? '31.5%' : phone ? '31%' : width < 700 ? '31%' : width < 1100 ? '47%' : '31%';
+  const frame = tight ? 72 : phone ? 90 : 108;
   const items = catalog.filter(i => i.category === category), sorted = items.some(i => i.audience);
-  const tiles = (list: readonly StyleItem[]) => <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: compact ? 6 : 10 }}>{list.map(item => {
+  const tiles = (list: readonly StyleItem[]) => <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: tight ? 6 : 10 }}>{list.map(item => {
     const selected = selectedValue(look, item.category) === item.value, worn = selectedValue(equipped, item.category) === item.value, reason = lockedReason(item, earned);
-    return <PressableScale key={item.id} accessibilityRole="button" accessibilityLabel={`${item.label}${reason ? ', locked. ' + reason : ''}${selected ? ', previewing' : ''}${worn ? ', wearing' : ''}`} accessibilityState={{ selected }} onPress={() => onChoose(item)} style={{ width: tileWidth, minWidth: 96, minHeight: compact ? 108 : phone ? 128 : 148, alignItems: 'center', justifyContent: 'center', gap: compact ? 2 : 4, padding: compact ? 4 : 6, borderWidth: selected ? 2.5 : 1.5, borderColor: selected ? '#FF7A5C' : '#EFE0C6', backgroundColor: selected ? '#FFF1E8' : '#FFFDF8', borderRadius: 24 }}>
+    return <PressableScale key={item.id} accessibilityRole="button" accessibilityLabel={`${item.label}${reason ? ', locked. ' + reason : ''}${selected ? ', previewing' : ''}${worn ? ', wearing' : ''}`} accessibilityState={{ selected }} onPress={() => onChoose(item)} style={{ width: tileWidth, minWidth: narrow ? 84 : 96, minHeight: compact ? 108 : narrow ? 118 : phone ? 128 : 148, alignItems: 'center', justifyContent: 'center', gap: tight ? 2 : 4, padding: tight ? 4 : 6, borderWidth: selected ? 2.5 : 1.5, borderColor: selected ? '#FF7A5C' : '#EFE0C6', backgroundColor: selected ? '#FFF1E8' : '#FFFDF8', borderRadius: narrow ? 20 : 24 }}>
       <Thumb item={item} muted={!!reason} encoded={JSON.stringify(lookWithStyle(look, item))} frame={frame} selected={selected}/>
       {!!reason && <LockBadge/>}
       <Copy maxFontSizeMultiplier={1.2} style={{ fontWeight: '700', fontSize: 14, lineHeight: 17, textAlign: 'center', color: C.ink }}>{item.label}</Copy>
