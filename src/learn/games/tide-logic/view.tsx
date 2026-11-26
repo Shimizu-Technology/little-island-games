@@ -2,24 +2,15 @@ import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '
 import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
-import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading } from "../../../components/ui";
 import { GameIcon } from "../../../components/GameIcon";
 import type { BoardProps } from "../../types";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
-import { advance, counterAt, choices, complete, correct, ready, route, taskAt, type Item, type TideState } from "./engine";
+import { advance, counterAt, choices, complete, correct, ready, route, taskAt, type LegacyTide, type TideState } from "./engine";
+import { BucketPicture, Cargo, bucketLabel } from "./art";
+import { BoardV3 } from "./view3";
 
-function Cargo({ item, size = 56 }: { item: Item; size?: number }) {
-  const fill = item.color === "blue" ? "#4E9BB9" : "#E9826B";
-  return <Svg width={size} height={size} viewBox="0 0 64 64" accessible accessibilityLabel={`${item.size} ${item.color} ${item.kind}${item.bell ? ", bell" : ""}`}>
-    {item.kind === "fish" ? <><Path d="M8 32 Q28 8 51 32 Q28 56 8 32 M48 32 L61 19 V45 Z" fill={fill} stroke={C.ink} strokeWidth="2"/><Circle cx="23" cy="28" r="2" fill={C.ink}/></> : <><Path d="M8 47 Q9 12 32 12 Q55 12 56 47 L32 56 Z" fill={fill} stroke={C.ink} strokeWidth="2"/><Path d="M32 15V51M18 23L28 51M46 23L36 51" stroke="#FFF" strokeWidth="2"/></>}
-    {item.bell && <><Circle cx="51" cy="12" r="10" fill="#F1C75A"/><SvgText x="51" y="16" textAnchor="middle" fontSize="13">♪</SvgText></>}
-  </Svg>;
-}
-// Arrows are joined to their words with no-break spaces, so a wrap never leaves "→" alone on a line.
-const bucketLabel = (value: string) => value === "left" ? "←\u00a0left bucket" : value === "right" ? "right bucket\u00a0→" : value === "count left" ? "←\u00a0left bucket + count" : "choose bucket";
-function BucketPicture({ side }: { side: "left" | "right" }) { return <Svg width={30} height={30} viewBox="0 0 32 32" accessible accessibilityLabel={`${side} bucket picture`}><Path d="M5 8H27L24 27H8Z" fill={side === "left" ? "#5AAAB5" : "#EB9A79"} stroke={C.ink} strokeWidth="2"/><Path d="M4 8Q16 -2 28 8" fill="none" stroke={C.ink} strokeWidth="2"/></Svg>; }
-export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<TideState>) {
+function LegacyBoard({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<LegacyTide>) {
   // Each bucket label has half the belt (12-pt padding, 8-pt gap); at large text its words stop where they fit it.
   const bucketMax = useWindowDimensions().fontScale >= LARGE_TEXT ? wordFitMultiplier("RIGHT BUCKET→", 16, (width - 32) / 2, 2) : undefined;
   const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
@@ -31,7 +22,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const cargoFloor = !space ? 64 : Math.ceil((width >= 600 ? 64 : SCHOOL_BOARD_MIN['tide-logic']) * 64 / 49);
   const geometry = useBoardGeometry('tide-logic', cargoFloor * cargoRows + cargoChrome, cargoFloor * cargoRows + cargoChrome);
   const cargoSize = (geometry.height - cargoChrome) / cargoRows;
-  const [editing, setEditing] = useState<keyof TideState["rule"] | null>(null);
+  const [editing, setEditing] = useState<keyof LegacyTide["rule"] | null>(null);
   const [message, setMessage] = useState("");
   const [showHelp, setShowHelp] = useState(false);
   const [guess, setGuess] = useState<"left" | "right" | null>(null);
@@ -44,7 +35,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   }, [singleRow,current,s.running]);
   const traceIndex = s.index % 2 ? 1 : 0;
   const traceAnswer = t ? route(t.items[traceIndex], t.target) : null;
-  const change = (slot: keyof TideState["rule"], value: string) => { update({ ...s, rule: { ...s.rule, [slot]: value } }); setEditing(null); setMessage(""); setFailure(null); coach.done(); };
+  const change = (slot: keyof LegacyTide["rule"], value: string) => { update({ ...s, rule: { ...s.rule, [slot]: value } }); setEditing(null); setMessage(""); setFailure(null); coach.done(); };
   const run = () => {
     if (!t || !ready(s) || (s.level === 5 && guess !== traceAnswer)) return;
     if (!correct(s)) {
@@ -96,5 +87,10 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
       {showHelp && <Copy>Help filled the rule. Press Run to see why each catch goes there.</Copy>}
     </>}
   </View>;
+}
+/** Rounds saved before C4 (versions 1 and 2) keep the board they were made with. */
+export function Board(props: BoardProps<TideState>) {
+  const s = props.session.state;
+  return s.version === 3 ? <BoardV3 {...props as BoardProps<typeof s>} /> : <LegacyBoard {...props as BoardProps<typeof s>} />;
 }
 export function Art({ size }: { size: number }) { return <GameIcon id="tide-logic" size={size}/>; }

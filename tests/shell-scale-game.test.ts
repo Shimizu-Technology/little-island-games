@@ -12,7 +12,7 @@ import {
 } from '../src/learn/games/shell-scale/challenge';
 import { shellHelpRules, type PublicScaleView } from '../src/learn/games/shell-scale/help';
 import {
-  bestPublicWeighing, emptyOrder, maskOf, provenPar, secretKey, trueSortOrder, validPanPair, weighOnScale,
+  bestPublicWeighing, emptyOrder, maskOf, provenPar, secretKey, trueSortOrder, tuplePuzzle, validPanPair, weighOnScale,
 } from '../src/learn/games/shell-scale/rules';
 import { scaleSpeechLines } from '../src/learn/games/shell-scale/speech';
 import { requestHint } from '../src/puzzles/hints';
@@ -200,6 +200,9 @@ describe('Scale-Holder co-play (OR-05b)', () => {
     expect(swappedFresh.history).toHaveLength(0);
     expect(swappedFresh.holderPeeked).toBe(false);
     expect(swappedFresh.puzzles[0]).not.toEqual(peeked.puzzles[0]);
+    const nextSecret = secretKey(tuplePuzzle(swappedFresh.puzzles[1])!);
+    expect(nextSecret).not.toBe(secretKey(puzzleAt(peeked)!));
+    expect(nextSecret).not.toBe(secretKey(puzzleAt(swappedFresh)!));
     expect(validScale(swappedFresh)).toBe(true);
   });
 
@@ -358,12 +361,11 @@ describe('Scale-Holder co-play (OR-05b)', () => {
     expect(validScale(exited, 3)).toBe(true);
   });
 
-  it('R2 P2-1: after a full-pool role swap (including RNG () => 0), neither the swapped board nor the next board repeats a seen secret', () => {
+  it('R3 P2: full-pool L1–L2 swaps change the current secret and avoid restoring a spoiled tuple', () => {
     for (const level of [1, 2] as const) {
       for (const fixed of [0, 0.25, 0.5, 0.75, 0.99]) {
         const rng = () => fixed;
-        let s = startRound(level, rng);
-        for (const swapIndex of [0, 1, 2] as const) {
+        for (const swapIndex of [0, 1, 2, 3] as const) {
           // Advance to `swapIndex` cleanly.
           let cur = startRound(level, rng);
           for (let k = 0; k < swapIndex; k++) {
@@ -391,6 +393,16 @@ describe('Scale-Holder co-play (OR-05b)', () => {
           let played = requestHolderWeigh(swapped, 1 << 0, 1 << 1);
           played = openHolderScreen(played);
           played = openGuesserScreen(answerHolderWeigh(played, weighOnScale(repPuzzle, 1 << 0, 1 << 1)!));
+
+          const swappedAgain = swapRoles(JSON.parse(JSON.stringify(played)) as ScaleState, rng);
+          expect(swappedAgain.holder).toBe(cur.holder);
+          expect(swappedAgain.history).toHaveLength(0);
+          expect(swappedAgain.puzzles[swapIndex].join('|')).not.toBe(origTuple);
+          expect(swappedAgain.puzzles[swapIndex].join('|')).not.toBe(repTuple);
+          expect(secretKey(puzzleAt(swappedAgain)!)).not.toBe(repSecret);
+          expect(validScale(swappedAgain, level)).toBe(true);
+
+          if (swapIndex === ROUND - 1) continue;
           played = solveSchoolBoard(played);
           const next = nextBoard(played);
           const followingPuzzle = puzzleAt(next)!;
@@ -399,9 +411,11 @@ describe('Scale-Holder co-play (OR-05b)', () => {
           expect(followingTuple).not.toBe(repTuple);
           expect(followingTuple).not.toBe(origTuple);
           expect(followingSecret).not.toBe(repSecret);
+          // The two certified keys are exhausted. The fallback reuses the older
+          // ordering only with a different cast, as checked above.
+          expect(followingSecret).toBe(origSecret);
           expect(validScale(next, level)).toBe(true);
         }
-        expect(validScale(s, level)).toBe(true);
       }
     }
   });

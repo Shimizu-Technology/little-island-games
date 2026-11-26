@@ -157,6 +157,15 @@ function pickReplacement(
     const p = tuplePuzzle(t);
     return !!p && secretKey(p) !== curSecret && tupleKey(t) !== curTuple;
   });
+  // L1–L2 each have four certified tuples in alternating secret order. Cycle
+  // through them so two consecutive peek-and-swaps cannot restore the original
+  // tuple, even when the only available secret is one from an earlier board.
+  if (level <= 2) {
+    const currentIndex = all.findIndex(t => tupleKey(t) === curTuple);
+    const inOrder = [...all.slice(currentIndex + 1), ...all.slice(0, currentIndex + 1)];
+    const replacement = inOrder.find(t => diffSecret.includes(t));
+    if (replacement) return replacement;
+  }
   const unusedDiff = diffSecret.filter(t => !avoidTuples.has(tupleKey(t)));
   const pool = unusedDiff.length
     ? unusedDiff
@@ -189,6 +198,7 @@ function reconcileQueueAfterSwap(
   const nextP = tuplePuzzle(nextPuzzle);
   if (!nextP) return out;
   const nextSecret = secretKey(nextP);
+  const oldSecret = secretKey(tuplePuzzle(oldTuple)!);
   const nextKey = tupleKey(nextPuzzle);
   const oldKey = tupleKey(oldTuple);
   const all = setFor(level).rows.map(toTuple);
@@ -206,10 +216,14 @@ function reconcileQueueAfterSwap(
     }
   }
 
-  const freshForFollowing = (t: ShellTuple) => {
+  const differentBoard = (t: ShellTuple) => {
     const p = tuplePuzzle(t);
     return !!p && tupleKey(t) !== nextKey && tupleKey(t) !== oldKey && secretKey(p) !== nextSecret;
   };
+  const unseen = (t: ShellTuple) => differentBoard(t) && secretKey(tuplePuzzle(t)!) !== oldSecret;
+  // L1–L2 exhaust both certified secrets here. Keep the replacement secret
+  // hidden from the next Guesser and use a different cast for the older secret.
+  const freshForFollowing = all.some(unseen) ? unseen : differentBoard;
 
   if (!freshForFollowing(out[index + 1])) {
     let swapped = false;

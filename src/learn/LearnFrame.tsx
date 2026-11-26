@@ -27,6 +27,7 @@ import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
 import { GrowthBoard } from "./growth/Board";
+import { helpForState as codeLabHelp } from "./games/code-lab/engine";
 import { growthProgress, growthQuestions, isGrowth } from "./growth/engine";
 import type { GrowthState } from "./growth/types";
 import { LevelPath } from "./LevelPath";
@@ -443,7 +444,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const pinned = phone ? (large ? bar : header) : null;
   const scrolled = phone ? (large ? largeLines : null) : large ? <View style={{ gap: 4 }}>{bar}{largeLines}</View> : header;
 
-  const helpText = <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>;
+  const helpText = <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : id === "code-lab" ? codeLabHelp(saved?.state) : engine.help}</Copy>;
   // Offered only when the guide has a shipped recording in the chosen voice; the written help is always here.
   const hear = !(saved && isGrowth(saved.state)) && engine.helpAudio && hasSpeech(engine.helpAudio, store.save.settings.voice) ? <>
             <Button icon="sound-on" maxFontSizeMultiplier={big} onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>

@@ -1,6 +1,6 @@
 import "../../src/learn/engines";
 import { describe, expect, it } from "vitest";
-import { complete, correct, engine, executionPlan, rendered, taskAt } from "../../src/learn/games/code-lab/engine";
+import { complete, correct, engine, executionPlan, rendered, taskAt } from "../../src/learn/games/code-lab/legacy";
 import type { LearnOptions } from "../../src/learn/types";
 const options = (level: number): LearnOptions => ({ mode: "solo", pace: level === 1 ? "easy" : level === 2 ? "medium" : "hard", ...(level === 4 ? { stage: "stretch" } : level === 5 ? { stage: "deep" } : {}) });
 describe("Code Lab", () => {

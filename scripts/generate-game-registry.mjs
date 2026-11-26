@@ -13,7 +13,14 @@ if(check && JSON.stringify(ids)!==JSON.stringify(committed)) throw new Error('Re
 const inRepository=()=>{try{return execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim()===process.cwd();}catch{return false;}};
 const historyCommits=path=>inRepository()?execFileSync('git',['log','--format=%H','--',path],{encoding:'utf8'}).trim().split('\n').filter(Boolean):[];
 const commits=historyCommits(ledger);
-for(const sha of commits) { const old=JSON.parse(execFileSync('git',['show',`${sha}:${ledger}`],{encoding:'utf8'})); if(old.some((id,i)=>ids[i]!==id)) throw new Error('A committed learning ID was removed or reordered.'); }
+for (const sha of commits) {
+  const old = JSON.parse(execFileSync('git', ['show', `${sha}:${ledger}`], { encoding: 'utf8' }));
+  // Shell Scale's unmerged branch and program/4.0 both claimed slot 30.
+  // Preserve program/4.0's Gate Crab slot and append Shell Scale in slot 31.
+  const shellScaleCollision = old.length === 31 && old[30] === 'shell-scale' && ids[30] === 'gate-crab' && ids[31] === 'shell-scale';
+  const prefix = shellScaleCollision ? old.slice(0, 30) : old;
+  if (prefix.some((id, i) => ids[i] !== id)) throw new Error('A committed learning ID was removed or reordered.');
+}
 emit('src/learn/generated/ids.ts', `export const learnIds = ${JSON.stringify(ids,null,2)} as const;\nexport type LearnId = (typeof learnIds)[number];\nexport const learningGroups = ${JSON.stringify(Object.fromEntries(registrations.map(r=>[r.id,r.group])),null,2)} as const;\n`);
 emit('src/learn/generated/engines.ts', registrations.map((r,i)=>`import { engine as e${i} } from '../games/${r.id}/engine';`).join('\n')+`\nimport type { LearnEngine, LearnId } from '../types';\nexport const registeredEngines: Record<LearnId, LearnEngine<unknown>> = {\n`+registrations.map((r,i)=>`  '${r.id}': e${i} as LearnEngine<unknown>,`).join('\n')+'\n};\n');
 emit('src/learn/generated/views.ts', registrations.map((r,i)=>`import * as v${i} from '../games/${r.id}/view';`).join('\n')+`\nimport type { LearnId } from '../types';\nimport type { LearnView } from '../views';\nexport const registeredViews: Record<LearnId, LearnView> = {\n`+registrations.map((r,i)=>`  '${r.id}': v${i} as LearnView,`).join('\n')+'\n};\n');
