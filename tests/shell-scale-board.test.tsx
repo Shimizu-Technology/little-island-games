@@ -8,8 +8,18 @@ import { emptyOrder, trueSortOrder, weighOnScale, type OddEitherPuzzle, type Odd
 import { MEASURED_SCHOOL_BOARDS, SCHOOL_BOARD_MIN } from '../src/learn/boardGeometry';
 import { learnIds, learningGroups } from '../src/learn/generated/ids';
 import { shelfGames, toggleShelfFavorite, homeContinue } from '../src/learn/home';
+import { addLearner, selectLearner } from '../src/learn/learners';
+import { recordLevelRound } from '../src/learn/levelEvidence';
+import { optionsAtLevel } from '../src/learn/levels';
+import { roundStars } from '../src/learn/schoolProgress';
+import { startSession } from '../src/learn/session';
 import type { LearnSession } from '../src/learn/types';
-import { emptySave } from '../src/state/validation';
+import { progressFor } from '../src/state/challengeDrafts';
+import { applyLearnSave } from '../src/state/learnAction';
+import { encodeSave, migrateProfiles } from '../src/state/profiles';
+import { unpack } from '../src/state/saveBits';
+import { emptySave, parseSave } from '../src/state/validation';
+import '../src/challenge/catalog';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
@@ -296,6 +306,186 @@ describe('Scale-Holder privacy across handover, force-close resume & role swap (
     expect(state.holder).toBe(1);
     expect(state.history).toHaveLength(0);
     expect(allText()).not.toContain('Lightest to heaviest:');
+  });
+
+  it('P1-2 UI: Random Practice keeps certified draft & Undo intact and offers Back to certified round after solve & relaunch', () => {
+    let state: ScaleState = startRound(3, () => 0.25);
+    const certifiedTuple = state.puzzles[0].join('|');
+    const makeSession = (): LearnSession<ScaleState> => ({
+      game: 'shell-scale',
+      version: 1,
+      id: 'scale-practice-preserve',
+      revision: 0,
+      options: { mode: 'solo', pace: 'hard' },
+      state,
+    });
+    const render = () => (
+      <SchoolBoard
+        session={makeSession()}
+        update={next => { state = next; }}
+        skills={{}}
+        practice={() => {}}
+        cheer={() => {}}
+        active
+        width={340}
+        height={640}
+        sound={() => {}}
+        stopSound={() => {}}
+        soundOn={false}
+        coach={{ active: false, done: () => {} }}
+      />
+    );
+    act(() => { root = create(render()); });
+
+    // Weigh once and place shell 0 into slot 0 on the certified board.
+    act(() => byId('scale-shell-0').props.onPress());
+    act(() => findBtn('Left pan')!.props.onPress());
+    act(() => byId('scale-shell-1').props.onPress());
+    act(() => findBtn('Right pan')!.props.onPress());
+    act(() => findBtn('Weigh')!.props.onPress());
+    act(() => root!.update(render()));
+    act(() => byId('scale-shell-0').props.onPress());
+    act(() => byId('scale-slot-0').props.onPress());
+    act(() => root!.update(render()));
+    expect(state.history).toHaveLength(1);
+    expect(state.order[0]).toBe(0);
+    expect(state.undo).toHaveLength(1);
+
+    // Open Random Practice (2 shells) and solve it!
+    act(() => findBtn('Random practice (any size)')!.props.onPress());
+    act(() => findChip('2 shells')!.props.onPress());
+    act(() => root!.update(render()));
+    expect(state.practice).toBe(true);
+    expect(findBtn('Back to certified round')).toBeDefined();
+
+    // Simulate app relaunch while in Random Practice.
+    act(() => root!.unmount());
+    root = undefined;
+    act(() => { root = create(render()); });
+    expect(findBtn('Back to certified round')).toBeDefined();
+
+    // Solve the 2-shell practice puzzle so finished card renders Back to certified round too.
+    const pracWeights = [...(state.puzzles[0][3] as string)].map(Number);
+    const pracOrder = pracWeights[0] < pracWeights[1] ? [0, 1] : [1, 0];
+    act(() => byId(`scale-shell-${pracOrder[0]}`).props.onPress());
+    act(() => byId('scale-slot-0').props.onPress());
+    act(() => root!.update(render()));
+    act(() => byId(`scale-shell-${pracOrder[1]}`).props.onPress());
+    act(() => byId('scale-slot-1').props.onPress());
+    act(() => root!.update(render()));
+    act(() => findBtn('Check')!.props.onPress());
+    act(() => root!.update(render()));
+    expect(state.won).toBe(true);
+    expect(byId('scale-finished-card')).toBeDefined();
+
+    // Tap Back to certified round -> exact certified puzzle, weighing, order, and Undo stack restored!
+    act(() => findBtn('Back to certified round')!.props.onPress());
+    act(() => root!.update(render()));
+    expect(state.practice).toBe(false);
+    expect(state.puzzles[0].join('|')).toBe(certifiedTuple);
+    expect(state.history).toHaveLength(1);
+    expect(state.order[0]).toBe(0);
+    expect(state.undo).toHaveLength(1);
+  });
+
+  it('P1-3 UI: Scale-Holder helped 4-board solve hides solo helped copy and credits BOTH saved learners via real finish path', async () => {
+    const learners = selectLearner(addLearner(addLearner(undefined, 'Alex', 'a'), 'Maya', 'b'), 'a');
+    let save = migrateProfiles({ ...emptySave(), learning: learners });
+    const opts = optionsAtLevel({ mode: 'together', pace: 'hard' }, 3);
+    let session = { ...startSession('shell-scale', { options: opts, names: ['Alex', 'Maya'] }, {}, 77), learner: 'a' } as LearnSession<ScaleState>;
+    save = applyLearnSave(save, 'shell-scale', session, { id: null, epoch: 1 }, 1);
+    const partners = [{ id: 'b', name: 'Maya' }, { id: 'family', name: 'Family practice' }];
+    const assistanceCalls = vi.fn();
+
+    const commitToSave = (nextState: ScaleState) => {
+      const nextSession: LearnSession<ScaleState> = { ...session, revision: session.revision + 1, state: nextState };
+      const updated = applyLearnSave(save, 'shell-scale', nextSession, { id: session.id, revision: session.revision, epoch: 1 }, 1);
+      save = recordLevelRound(save, updated, 'shell-scale', 100);
+      session = nextSession;
+    };
+
+    const render = () => (
+      <SchoolBoard
+        session={session}
+        update={commitToSave}
+        partners={partners}
+        assistance={assistanceCalls}
+        skills={{}}
+        practice={() => {}}
+        cheer={() => {}}
+        active
+        width={340}
+        height={640}
+        sound={() => {}}
+        stopSound={() => {}}
+        soundOn={false}
+        coach={{ active: false, done: () => {} }}
+      />
+    );
+    await act(async () => { root = create(render()); });
+
+    for (let boardIdx = 0; boardIdx < 4; boardIdx++) {
+      // Trigger real board Help on board 0!
+      if (boardIdx === 0) {
+        const helpBtn = findBtn('Help');
+        expect(helpBtn).toBeDefined();
+        await act(async () => {
+          await helpBtn!.props.onPress();
+          await new Promise(r => setTimeout(r, 0));
+        });
+        await act(async () => { root!.update(render()); });
+        const lookBtn = findBtn('Look');
+        if (lookBtn) {
+          await act(async () => {
+            await lookBtn.props.onPress();
+            await new Promise(r => setTimeout(r, 0));
+          });
+          await act(async () => { root!.update(render()); });
+        }
+        expect(session.state.helped).toBe(true);
+        expect(assistanceCalls).not.toHaveBeenCalled();
+      }
+
+      // Place true order and Check.
+      const tuple = session.state.puzzles[session.state.index];
+      const weights = [...(tuple[3] as string)].map(Number);
+      const ord = trueSortOrder({ kind: 'sort', n: 4, cast: [0, 1, 2, 3], weights });
+      for (let slot = 0; slot < 4; slot++) {
+        act(() => byId(`scale-shell-${ord[slot]}`).props.onPress());
+        act(() => byId(`scale-slot-${slot}`).props.onPress());
+        act(() => root!.update(render()));
+      }
+      act(() => findBtn('Check')!.props.onPress());
+      act(() => root!.update(render()));
+      expect(session.state.won).toBe(true);
+      // NEVER show solo "A helped finish counts too" copy in Scale-Holder Together mode!
+      expect(allText()).not.toContain('A helped finish counts too');
+
+      if (boardIdx < 3) {
+        act(() => findBtn('Next scale')!.props.onPress());
+        act(() => root!.update(render()));
+      } else {
+        // Confirm Together finish with Maya via the real one-tap button!
+        const finishWithMaya = findBtn('Finish together with Maya');
+        expect(finishWithMaya).toBeDefined();
+        act(() => finishWithMaya!.props.onPress());
+      }
+    }
+
+    // Verify BOTH saved learners ('a' and 'b') have Together credit (code 3, NOT helped code 2) & zero School stars!
+    for (const person of ['a', 'b'] as const) {
+      const prog = progressFor(save, person)!;
+      const bankRow = prog.banks.find(b => b[0] === 362);
+      expect(bankRow, `${person} bank 362`).toBeDefined();
+      const states = unpack(bankRow![1], 6, 3)!;
+      expect(states.filter(code => code === 3).length).toBe(4);
+      expect(states.includes(2)).toBe(false);
+      expect(save.profiles!.people[person].school?.['shell-scale']).toBeUndefined();
+      expect(prog.signals).toEqual([]);
+    }
+    expect(save.school?.['shell-scale']).toBeUndefined();
+    expect(roundStars(session, 3)).toBe(0);
+    expect(parseSave(encodeSave(save))).toBeTruthy();
   });
 });
 

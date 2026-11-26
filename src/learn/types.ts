@@ -115,6 +115,8 @@ export type BoardProps<S> = {
   notePractice?: (skill: string, helped: boolean) => void;
   /** Mark explicit assistance even when it does not change the board state. */
   assistance?: () => void;
+  /** Other saved learners on this device who can be credited in Together co-play. */
+  partners?: readonly { id: string; name: string }[];
   skills: SkillProgress;
   /** Feedback tones ("tap" | "match" | "win") and any registered speech key. */
   sound: (key: string, automatic?: boolean) => void;

@@ -192,9 +192,10 @@ export function tuplePuzzle(t: unknown): ShellPuzzle | null {
 
 /** Whether (leftMask, rightMask) is a legal weighing for this puzzle kind and item count. */
 export function validPanPair(p: Pick<PublicBoard, 'kind' | 'n'>, left: number, right: number): boolean {
-  if (!Number.isInteger(left) || !Number.isInteger(right)) return false;
+  if (!Number.isSafeInteger(left) || !Number.isSafeInteger(right)) return false;
+  if (!Number.isInteger(p.n) || p.n < 2 || p.n > MAX_PEARLS) return false;
   const full = (1 << p.n) - 1;
-  if (left <= 0 || right <= 0 || (left & ~full) !== 0 || (right & ~full) !== 0) return false;
+  if (left < 1 || left > full || right < 1 || right > full) return false;
   if ((left & right) !== 0) return false;
   const lc = popcount(left), rc = popcount(right);
   if (lc !== rc) return false;
@@ -732,8 +733,15 @@ export function publicContradiction(board: PublicBoard, order: readonly number[]
   return null;
 }
 
+/** Canonical secret identity (ignores decorative pearl theme so role swaps always deal a new secret). */
+export function secretKey(p: ShellPuzzle): string {
+  if (p.kind === 'sort') return `s:${p.n}:${p.weights.join('')}`;
+  if (p.kind === 'odd-heavy') return `h:${p.n}:${p.odd}`;
+  return `e:${p.n}:${p.odd}:${p.dir}`;
+}
+
 /** Generate a fresh open Random Practice puzzle (adds 0 catalog count, never blocks play). */
-export function randomPracticePuzzle(kind: PuzzleKind, n: number, rng: () => number): ShellPuzzle {
+export function randomPracticePuzzle(kind: PuzzleKind, n: number, rng: () => number, excludeSecret?: string): ShellPuzzle {
   const shuffle = <T,>(arr: T[]): T[] => {
     const copy = arr.slice();
     for (let i = copy.length - 1; i > 0; i--) {
@@ -745,13 +753,32 @@ export function randomPracticePuzzle(kind: PuzzleKind, n: number, rng: () => num
   if (kind === 'sort') {
     const count = Math.max(2, Math.min(MAX_SHELLS, n));
     const cast = shuffle([0, 1, 2, 3, 4, 5]).slice(0, count);
-    const weights = shuffle(Array.from({ length: count }, (_, i) => i));
-    return { kind: 'sort', n: count, cast, weights };
+    let weights = shuffle(Array.from({ length: count }, (_, i) => i));
+    let candidate: SortPuzzle = { kind: 'sort', n: count, cast, weights };
+    for (let tries = 0; excludeSecret && secretKey(candidate) === excludeSecret && tries < 8; tries++) {
+      weights = shuffle(Array.from({ length: count }, (_, i) => i));
+      candidate = { kind: 'sort', n: count, cast, weights };
+    }
+    if (excludeSecret && secretKey(candidate) === excludeSecret) {
+      weights = weights.slice();
+      [weights[0], weights[1]] = [weights[1], weights[0]];
+      candidate = { kind: 'sort', n: count, cast, weights };
+    }
+    return candidate;
   }
   const theme = Math.floor(rng() * 6);
   if (kind === 'odd-heavy') {
     const count = n === 3 ? 3 : 9;
-    return { kind: 'odd-heavy', n: count, cast: [theme], odd: Math.floor(rng() * count) };
+    const all = Array.from({ length: count }, (_, odd) => odd);
+    const pool = excludeSecret ? all.filter(odd => `h:${count}:${odd}` !== excludeSecret) : all;
+    const odd = pool[Math.floor(rng() * pool.length)] ?? all[0];
+    return { kind: 'odd-heavy', n: count, cast: [theme], odd };
   }
-  return { kind: 'odd-either', n: 12, cast: [theme], odd: Math.floor(rng() * 12), dir: rng() < 0.5 ? 'heavy' : 'light' };
+  const allEither: { odd: number; dir: OddDir }[] = [];
+  for (let odd = 0; odd < 12; odd++) {
+    allEither.push({ odd, dir: 'heavy' }, { odd, dir: 'light' });
+  }
+  const pool = excludeSecret ? allEither.filter(h => `e:12:${h.odd}:${h.dir}` !== excludeSecret) : allEither;
+  const pick = pool[Math.floor(rng() * pool.length)] ?? allEither[0];
+  return { kind: 'odd-either', n: 12, cast: [theme], odd: pick.odd, dir: pick.dir };
 }

@@ -6,16 +6,19 @@ import { PuzzleHelp, type HintCommit, type HintSnapshot } from '../../../puzzles
 import type { BoardProps } from '../../types';
 import { ScaleBoard, type HolderSecret } from './board';
 import {
-  answerHolderWeigh, canCheckAnswer, checkAnswer, dealFresh, levelInfo, linksChoice, markHelped,
+  answerHolderWeigh, canCheckAnswer, checkAnswer, dealFresh, exitRandomPractice, levelInfo, linksChoice, markHelped,
   nextBoard, openGuesserScreen, openHolderScreen, pickOddPearl, provenPar, puzzleAt, requestHolderWeigh,
-  resetDraft, setOddDirection, setOrderSlot, setShowLinks, startRandomPractice, swapRoles, undoDraft,
+  resetDraft, setOddDirection, setOrderSlot, setPartner, setShowLinks, startRandomPractice, swapRoles, undoDraft,
   weighSolo, type ScaleState,
 } from './engine';
 import { shellHelpRules, type PublicScaleView, type ScaleHelpAction } from './help';
 import { itemName, publicContradiction, trueSortOrder, weighOnScale, type PuzzleKind, type ScaleOutcome } from './rules';
 
+const historySig = (s: Pick<ScaleState, 'history'>) =>
+  `${s.history.length}:${s.history.map(w => `${w.left}-${w.right}-${w.outcome}`).join(',')}`;
+
 const keyOf = (s: ScaleState) =>
-  `${s.index}:${s.puzzles[s.index]?.join('|') ?? ''}:${s.history.length}:${s.order.join(',')}:${s.oddPick ?? -1}:${s.oddDir ?? ''}:${s.checks}:${s.helped ? 1 : 0}:${s.won ? 1 : 0}:${s.holder}:${s.phase}`;
+  `${s.practice ? 'p' : 'c'}:${s.index}:${s.puzzles[s.index]?.join('|') ?? ''}:${historySig(s)}:${s.order.join(',')}:${s.oddPick ?? -1}:${s.oddDir ?? ''}:${s.checks}:${s.helped ? 1 : 0}:${s.won ? 1 : 0}:${s.holder}:${s.phase}`;
 
 const PRACTICE_CHOICES: readonly { label: string; kind: PuzzleKind; n: number }[] = [
   { label: '2 shells', kind: 'sort', n: 2 },
@@ -27,7 +30,7 @@ const PRACTICE_CHOICES: readonly { label: string; kind: PuzzleKind; n: number }[
   { label: '12 pearls', kind: 'odd-either', n: 12 },
 ];
 
-export function SchoolBoard({ session, update, practice, assistance, cheer, coach, active, width, sound }: BoardProps<ScaleState>) {
+export function SchoolBoard({ session, update, practice, assistance, partners, cheer, coach, active, width, sound }: BoardProps<ScaleState>) {
   const state = session.state;
   const together = session.options.mode === 'together';
   const puzzle = useMemo(() => puzzleAt(state), [state.index, state.puzzles]); // eslint-disable-line react-hooks/exhaustive-deps -- index and tuples identify the board.
@@ -45,7 +48,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
    * and binds unlock strictly to the current (index, holder, history, pendingWeigh) token.
    */
   const holderKeyFor = (s: ScaleState) =>
-    `${s.index}:${s.holder}:${s.history.length}:${s.pendingWeigh ? `${s.pendingWeigh[0]}-${s.pendingWeigh[1]}` : 'none'}`;
+    `${s.practice ? 'p' : 'c'}:${s.index}:${s.holder}:${historySig(s)}:${s.pendingWeigh ? `${s.pendingWeigh[0]}-${s.pendingWeigh[1]}` : 'none'}`;
   const [unlockedHolderKey, setUnlockedHolderKey] = useState<string | null>(null);
   const [prevActive, setPrevActive] = useState(active);
   if (prevActive !== active) {
@@ -77,8 +80,8 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     } else {
       sound('match');
     }
-    if (!next.helped && next.misses === 0) practice('think.scale-deduction', true);
-  }, [cheer, practice, sound]);
+    if (!next.practice && !together && !next.helped && next.misses === 0) practice('think.scale-deduction', true);
+  }, [cheer, practice, sound, together]);
 
   const handleWeigh = useCallback((left: number, right: number) => {
     const before = latest.current;
@@ -150,7 +153,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
       const p = puzzleAt(at);
       if (!active || !p || keyOf(at) !== expected) return null;
       if (event.kind === 'help') {
-        assistance?.();
+        if (!at.practice && !together) assistance?.();
         commit(markHelped(at));
       } else if (event.kind === 'step') {
         const a = event.action;
@@ -215,6 +218,18 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
     ? `Random practice · ${puzzle.kind === 'sort' ? `${puzzle.n} shells` : `${puzzle.n} pearls`}`
     : `${levelInfo[state.level - 1].name} · Scale ${state.index + 1} of ${state.puzzles.length}`;
 
+  const availablePartners = partners ?? [];
+  const chosenPartner = state.partner ? availablePartners.find(p => p.id === state.partner) ?? null : null;
+  const finishLastBoard = state.index + 1 === state.puzzles.length;
+  const returnToCertified = () => {
+    const next = exitRandomPractice(latest.current);
+    if (!commit(next)) return;
+    setUnlockedHolderKey(null);
+    setCue(null);
+    setPracticeOpen(false);
+    setNotice('Back to your certified scale!');
+  };
+
   const finished = state.won ? (
     <View
       testID="scale-finished-card"
@@ -222,52 +237,143 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
       style={{ alignItems: 'center', gap: 10, alignSelf: 'stretch', backgroundColor: '#E2F2E4', borderRadius: 20, padding: 14 }}
     >
       <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', fontSize: 20, color: C.ink }}>
-        {overPar ? 'Sorted!' : 'Every weight found!'}
+        {together ? 'You weighed it out together!' : overPar ? 'Sorted!' : 'Every weight found!'}
       </Copy>
       <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontSize: 15, textAlign: 'center' }}>
         {overPar
           ? `Done in ${state.history.length} weighings. The tide thinks it can be done in ${par} — want to try another?`
           : `Done in ${state.history.length} ${state.history.length === 1 ? 'weighing' : 'weighings'} (par ${par})!`}
       </Copy>
-      {state.helped && (
+      {!together && state.helped && (
         <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontSize: 14, textAlign: 'center' }}>
           A helped finish counts too. Want to try a fresh one yourself?
         </Copy>
       )}
+      {!state.practice && together && finishLastBoard && !chosenPartner && availablePartners.length > 0 && (
+        <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink, fontSize: 14, textAlign: 'center' }}>
+          Who played together? One tap credits both people.
+        </Copy>
+      )}
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
         {state.practice ? (
-          <Button
-            compact
-            maxFontSizeMultiplier={1.45}
-            onPress={() => {
-              commit(startRandomPractice(latest.current, puzzle.kind, puzzle.n, Math.random));
-              setNotice('Fresh random weights!');
-            }}
-          >
-            Another random puzzle
-          </Button>
+          <>
+            <Button
+              compact
+              maxFontSizeMultiplier={1.45}
+              onPress={() => {
+                commit(startRandomPractice(latest.current, puzzle.kind, puzzle.n, Math.random));
+                setNotice('Fresh random weights!');
+              }}
+            >
+              Another random puzzle
+            </Button>
+            {state.certified && (
+              <Button quiet compact maxFontSizeMultiplier={1.4} onPress={returnToCertified}>
+                Back to certified round
+              </Button>
+            )}
+          </>
+        ) : together && finishLastBoard ? (
+          <>
+            {chosenPartner ? (
+              <>
+                <Button
+                  compact
+                  maxFontSizeMultiplier={1.45}
+                  onPress={() => commit(nextBoard(setPartner(latest.current, chosenPartner.id)))}
+                >
+                  {`Finish together with ${chosenPartner.name}`}
+                </Button>
+                {availablePartners
+                  .filter(p => p.id !== chosenPartner.id)
+                  .map(p => (
+                    <Button
+                      key={p.id}
+                      quiet
+                      compact
+                      maxFontSizeMultiplier={1.4}
+                      onPress={() => commit(nextBoard(setPartner(latest.current, p.id)))}
+                    >
+                      {`With ${p.name}`}
+                    </Button>
+                  ))}
+              </>
+            ) : availablePartners.length > 0 ? (
+              <>
+                {availablePartners.map(p => (
+                  <Button
+                    key={p.id}
+                    compact
+                    maxFontSizeMultiplier={1.45}
+                    onPress={() => commit(nextBoard(setPartner(latest.current, p.id)))}
+                  >
+                    {`Finish together with ${p.name}`}
+                  </Button>
+                ))}
+                <Button
+                  quiet
+                  compact
+                  maxFontSizeMultiplier={1.4}
+                  onPress={() => commit(nextBoard(setPartner(latest.current, null)))}
+                >
+                  Finish without partner
+                </Button>
+              </>
+            ) : (
+              <Button
+                compact
+                maxFontSizeMultiplier={1.45}
+                onPress={() => commit(nextBoard(setPartner(latest.current, null)))}
+              >
+                Finish together
+              </Button>
+            )}
+            <Button
+              quiet
+              compact
+              maxFontSizeMultiplier={1.4}
+              onPress={() => {
+                commit(dealFresh(latest.current, Math.random));
+                setNotice('Fresh weights ready!');
+              }}
+            >
+              Try another
+            </Button>
+          </>
         ) : (
-          <Button compact maxFontSizeMultiplier={1.45} onPress={() => commit(nextBoard(latest.current))}>
-            {state.index + 1 === state.puzzles.length ? 'Finish' : 'Next scale'}
-          </Button>
+          <>
+            <Button compact maxFontSizeMultiplier={1.45} onPress={() => commit(nextBoard(latest.current))}>
+              {finishLastBoard ? 'Finish' : 'Next scale'}
+            </Button>
+            <Button
+              quiet
+              compact
+              maxFontSizeMultiplier={1.4}
+              onPress={() => {
+                commit(dealFresh(latest.current, Math.random));
+                setNotice('Fresh weights ready!');
+              }}
+            >
+              Try another
+            </Button>
+          </>
         )}
-        <Button
-          quiet
-          compact
-          maxFontSizeMultiplier={1.4}
-          onPress={() => {
-            commit(dealFresh(latest.current, Math.random));
-            setNotice('Fresh weights ready!');
-          }}
-        >
-          Try another
-        </Button>
       </View>
     </View>
   ) : undefined;
 
   const practiceControls = (
     <View testID="scale-practice-bar" style={{ gap: 8, alignSelf: 'stretch', paddingTop: 4 }}>
+      {state.practice && state.certified && (
+        <Button
+          compact
+          maxFontSizeMultiplier={1.35}
+          disabled={!active}
+          onPress={returnToCertified}
+        >
+          Back to certified round
+        </Button>
+      )}
       <Button
         quiet
         compact
@@ -383,7 +489,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
       }
       help={
         <PuzzleHelp
-          key={`${boardKey}:${state.history.length}:${together ? `${state.holder}:${state.phase}` : 'solo'}`}
+          key={`${boardKey}:${historySig(state)}:${together ? `${state.holder}:${state.phase}` : 'solo'}`}
           snapshot={snapshot}
           rules={rules}
           commit={helpCommit}

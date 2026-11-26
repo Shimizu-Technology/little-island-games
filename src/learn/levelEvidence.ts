@@ -1,26 +1,67 @@
 import { schoolContext } from '../challenge/catalog';
 import { completedSignal } from '../challenge/offers';
 import { progressFor, putProgress } from '../state/challengeDrafts';
+import { creditProgress, saveCatalog, validChallengeProgress, challengeLimit, progressBytes } from '../state/challenge';
 import { independentRound , creditSchool } from './schoolProgress';
-import { progressBytes, challengeLimit } from '../state/challenge';
 import { encodeSave } from '../state/profiles';
 import { withinSaveLimit } from '../state/validation';
 import type { Save } from "../state/validation";
-import type { LearnId } from "./types";
+import type { LearnId, LearnSession } from "./types";
 import { engines } from "./engines";
 import { finished } from "./session";
 import { growthProgress, growthQuestions, isGrowth } from "./growth/engine";
 import type { GrowthState } from "./growth/types";
+import { scaleTogetherRefs, type ScaleState } from "./games/shell-scale/engine";
 import { levelRoundSkill, recordLearning } from "./learners";
 import { levelOf, levelStage } from "./levels";
 import { dayNumber } from "./skills";
+
+/** PLAN §8: Scale-Holder Together co-play credits both surviving people atomically without touching School stars or signals. */
+function creditShellScaleTogether(after: Save, next: LearnSession): Save {
+  const state = next.state as ScaleState;
+  const owner = next.learner ?? 'family';
+  const partner =
+    state.partner && state.partner !== owner && after.learning?.people.some(p => p.id === state.partner)
+      ? state.partner
+      : null;
+  const refs = scaleTogetherRefs(state);
+  if (!refs.length) return after;
+  const recipients = [...new Set([owner, ...(partner ? [partner] : [])])];
+  let candidate = after;
+  for (const person of recipients) {
+    let progress = progressFor(candidate, person);
+    if (!progress) continue;
+    for (const { bank: slot, puzzle } of refs) {
+      const bank = saveCatalog.banks.get(slot);
+      if (!bank) continue;
+      progress = creditProgress(
+        progress,
+        { bank: slot, puzzle, engine: 'shell-scale', rules: bank.rules, hash: '' },
+        { event: 'together', awards: 0, dares: [], cost: null, solution: null },
+        saveCatalog,
+        false,
+      );
+    }
+    if (!validChallengeProgress(progress, person, saveCatalog, false)) {
+      if (person === owner) return after;
+      continue;
+    }
+    candidate = putProgress(candidate, person, progress);
+  }
+  return withinSaveLimit(encodeSave(candidate)) ? candidate : after;
+}
 
 /** A round summary is separate from individual answers and optional warm-up practice. */
 
 export function recordLevelRound(before: Save, after: Save, game: LearnId, day = dayNumber()): Save {
   const old = before.learn?.[game], next = after.learn?.[game];
   if (old && next && old.id === next.id && !finished(old) && finished(next) &&
-      (next.learner ?? 'family') === (after.learning?.active ?? 'family')) after = { ...after, school: creditSchool(after.school, { ...next, levelHelped: old.levelHelped === false ? next.levelHelped : old.levelHelped }, day) };
+      (next.learner ?? 'family') === (after.learning?.active ?? 'family')) {
+    if (game === 'shell-scale' && next.options.mode === 'together') {
+      return creditShellScaleTogether(after, next);
+    }
+    after = { ...after, school: creditSchool(after.school, { ...next, levelHelped: old.levelHelped === false ? next.levelHelped : old.levelHelped }, day) };
+  }
   if (!old || !next || old.id !== next.id || finished(old) || !finished(next) || next.options.mode !== "solo" ||
     (next.learner ?? "family") === "family" || next.learner !== after.learning?.active ||
     old.levelHelped === undefined || next.levelHelped === undefined) return after;

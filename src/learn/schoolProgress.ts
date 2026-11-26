@@ -20,11 +20,12 @@ export function independentRound(round: LearnSession): boolean {
 }
 /** What this finished round shows: a lost round none, a helped round one, independent work the level's best. */
 export function roundStars(round: LearnSession, best: number): number {
+  if (round.game === 'shell-scale' && round.options.mode === 'together') return 0;
   if (engines[round.game].notWon?.(round.state, round.options)) return 0;
   return independentRound(round) ? best : 1;
 }
 export function creditSchool(progress: SchoolProgress = {}, round: LearnSession, day = dayNumber()): SchoolProgress {
-  if (!finished(round)) return progress;
+  if (!finished(round) || (round.game === 'shell-scale' && round.options.mode === 'together')) return progress;
   const level = levelOf(round.options), before = progress[round.game]?.[level];
   if (before?.rounds.includes(round.id)) return progress;
   const clean = independentRound(round), days = [...new Set([...(before?.days ?? []), ...(clean ? [day] : [])])].slice(-14);

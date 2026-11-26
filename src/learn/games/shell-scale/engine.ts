@@ -2,8 +2,8 @@ import type { LearnEngine, LearnOptions, Outcome } from '../../types';
 import { levelOf } from '../../levelOptions';
 import sets from './sets.generated.json';
 import {
-  acceptsAnswer, draftComplete, emptyOrder, placeInOrder, provenPar, puzzleTuple, randomPracticePuzzle,
-  tuplePuzzle, validOrder, validPanPair, validPuzzle, weighOnScale,
+  acceptsAnswer, analyzeOdd, draftComplete, emptyOrder, placeInOrder, provenPar, puzzleTuple, randomPracticePuzzle,
+  secretKey, sortRelation, tuplePuzzle, validOrder, validPanPair, validPuzzle, weighOnScale,
   type OddDir, type PuzzleKind, type ScaleOutcome, type ShellPuzzle, type ShellTuple, type Weighing,
 } from './rules';
 
@@ -31,6 +31,26 @@ export type DraftSnapshot = {
   oddDir: OddDir | null;
 };
 
+export type CertifiedRoundSnapshot = {
+  puzzles: ShellTuple[];
+  index: number;
+  history: Weighing[];
+  order: number[];
+  oddPick: number | null;
+  oddDir: OddDir | null;
+  undo: DraftSnapshot[];
+  checks: number;
+  misses: number;
+  checked: boolean;
+  won: boolean;
+  helped: boolean;
+  holder: 0 | 1;
+  phase: HolderPhase;
+  pendingWeigh: [number, number] | null;
+  holderPeeked: boolean;
+  done: [number, boolean][];
+};
+
 export type ScaleState = {
   version: 1;
   level: number;
@@ -38,6 +58,10 @@ export type ScaleState = {
   index: number;
   /** Open random practice mode (adds 0 catalog count, never blocks certified rounds). */
   practice: boolean;
+  /** Preserved certified School round while open Random Practice is active (restored on exit/relaunch). */
+  certified?: CertifiedRoundSnapshot;
+  /** Optional saved learner ID for Scale-Holder Together co-play credit (PLAN §8). */
+  partner?: string | null;
   /** Public weighing transcript (strictly public). */
   history: Weighing[];
   /** Current sort answer row (lightest -> heaviest), or [] for odd-pearl puzzles. */
@@ -69,6 +93,10 @@ export type ScaleState = {
 
 type LevelSet = { rows: string[] };
 const levelSets = sets.levels as unknown as Record<string, LevelSet>;
+const LEVEL_BAND: Readonly<Record<number, string>> = { 3: 'c', 4: 'd', 5: 'e' };
+const PACKED_SLOT_BY_BAND = new Map<string, number>(
+  (sets.packed as [number, number, number, string, number, string][]).map(([slot, , , , , band]) => [band, slot]),
+);
 
 export const rowPuzzle = (row: string): ShellPuzzle => {
   const parsed = tuplePuzzle(JSON.parse(row)[3]);
@@ -82,6 +110,26 @@ export const puzzleAt = (s: Pick<ScaleState, 'puzzles' | 'index'>): ShellPuzzle 
 
 const toTuple = (row: string) => puzzleTuple(rowPuzzle(row));
 const tupleKey = (t: ShellTuple) => t.join('|');
+const partnerIdOk = (v: unknown): v is string => typeof v === 'string' && /^[a-z0-9-]{1,40}$/.test(v);
+
+/** Map a finished certified School round's solved puzzles (Levels 3-5) to their exact catalog bank slots & indices. */
+export function scaleTogetherRefs(s: Pick<ScaleState, 'level' | 'puzzles' | 'practice'>): { bank: number; puzzle: number }[] {
+  if (s.practice) return [];
+  const band = LEVEL_BAND[s.level];
+  const bank = band ? PACKED_SLOT_BY_BAND.get(band) : undefined;
+  if (bank === undefined) return [];
+  const rows = setFor(s.level).rows.map(r => tupleKey(toTuple(r)));
+  const seen = new Set<number>();
+  const refs: { bank: number; puzzle: number }[] = [];
+  for (const t of s.puzzles) {
+    const idx = rows.indexOf(tupleKey(t));
+    if (idx >= 0 && !seen.has(idx)) {
+      seen.add(idx);
+      refs.push({ bank, puzzle: idx });
+    }
+  }
+  return refs;
+}
 
 function pick(rows: readonly string[], rng: () => number, avoid: ReadonlySet<string>, count: number): ShellTuple[] {
   const all = rows.map(toTuple);
@@ -95,14 +143,114 @@ function pick(rows: readonly string[], rng: () => number, avoid: ReadonlySet<str
   return shuffled.slice(0, count);
 }
 
+/** Pick a certified replacement whose secret strictly differs from `current`, even when all rows of the level are in `avoidTuples`. */
+function pickReplacement(
+  level: number,
+  current: ShellPuzzle,
+  avoidTuples: ReadonlySet<string>,
+  rng: () => number,
+): ShellTuple {
+  const curSecret = secretKey(current);
+  const curTuple = tupleKey(puzzleTuple(current));
+  const all = setFor(level).rows.map(toTuple);
+  const diffSecret = all.filter(t => {
+    const p = tuplePuzzle(t);
+    return !!p && secretKey(p) !== curSecret && tupleKey(t) !== curTuple;
+  });
+  const unusedDiff = diffSecret.filter(t => !avoidTuples.has(tupleKey(t)));
+  const pool = unusedDiff.length
+    ? unusedDiff
+    : diffSecret.length
+      ? diffSecret
+      : all.filter(t => tupleKey(t) !== curTuple);
+  if (pool.length) {
+    const idx = Math.floor(rng() * pool.length);
+    return pool[Math.max(0, Math.min(pool.length - 1, idx))];
+  }
+  return puzzleTuple(randomPracticePuzzle(current.kind, current.n, rng, curSecret));
+}
+
+const sameComparison = (a: Pick<Weighing, 'left' | 'right'>, b: Pick<Weighing, 'left' | 'right'>) =>
+  (a.left === b.left && a.right === b.right) || (a.left === b.right && a.right === b.left);
+
+/**
+ * Append a weighing while preserving full deduction capacity inside `HISTORY_LIMIT`.
+ * When `history` is at capacity, evicts one redundant weighing (exact duplicate first, else any
+ * deductively redundant entry whose removal leaves public knowledge identical) so School and
+ * Scale-Holder can never run out of capacity for new informative comparisons.
+ */
+function appendWeighing(p: ShellPuzzle, history: readonly Weighing[], next: Weighing): Weighing[] {
+  if (history.length < HISTORY_LIMIT) return [...history, next];
+  // 1. Prefer dropping an earlier duplicate of `next` or any repeated unordered pan comparison.
+  let dropIdx = history.findIndex(w => sameComparison(w, next));
+  if (dropIdx < 0) {
+    const seen = new Set<string>();
+    for (let i = 0; i < history.length; i++) {
+      const a = Math.min(history[i].left, history[i].right);
+      const b = Math.max(history[i].left, history[i].right);
+      const k = `${a}:${b}`;
+      if (seen.has(k)) {
+        dropIdx = history.findIndex(w => Math.min(w.left, w.right) === a && Math.max(w.left, w.right) === b);
+        break;
+      }
+      seen.add(k);
+    }
+  }
+  // 2. Fallback: drop the earliest deductively redundant entry (guaranteed to exist since max informative <= 23 << 200).
+  if (dropIdx < 0) {
+    if (p.kind === 'sort') {
+      const full = sortRelation(p.n, history);
+      for (let i = 0; i < history.length; i++) {
+        const sub = [...history.slice(0, i), ...history.slice(i + 1)];
+        const rel = sortRelation(p.n, sub);
+        if (rel.every((v, idx) => v === full[idx])) {
+          dropIdx = i;
+          break;
+        }
+      }
+    } else {
+      const fullCount = analyzeOdd(p.kind, p.n, history).hypotheses.length;
+      for (let i = 0; i < history.length; i++) {
+        const sub = [...history.slice(0, i), ...history.slice(i + 1)];
+        if (analyzeOdd(p.kind, p.n, sub).hypotheses.length === fullCount) {
+          dropIdx = i;
+          break;
+        }
+      }
+    }
+  }
+  if (dropIdx < 0) dropIdx = 0;
+  return [...history.slice(0, dropIdx), ...history.slice(dropIdx + 1), next];
+}
+
 const blankDraft = (p: ShellPuzzle | null): DraftSnapshot => ({
   order: p && p.kind === 'sort' ? emptyOrder(p.n) : [],
   oddPick: null,
   oddDir: null,
 });
 
+const captureCertified = (s: ScaleState): CertifiedRoundSnapshot => ({
+  puzzles: s.puzzles.map(t => [...t] as ShellTuple),
+  index: s.index,
+  history: s.history.map(w => ({ ...w })),
+  order: [...s.order],
+  oddPick: s.oddPick,
+  oddDir: s.oddDir,
+  undo: s.undo.map(u => ({ order: [...u.order], oddPick: u.oddPick, oddDir: u.oddDir })),
+  checks: s.checks,
+  misses: s.misses,
+  checked: s.checked,
+  won: s.won,
+  helped: s.helped,
+  holder: s.holder,
+  phase: s.phase,
+  pendingWeigh: s.pendingWeigh ? ([s.pendingWeigh[0], s.pendingWeigh[1]] as [number, number]) : null,
+  holderPeeked: s.holderPeeked,
+  done: s.done.map(d => [d[0], d[1]] as [number, boolean]),
+});
+
 const freshBoard = (
-  s: Pick<ScaleState, 'level' | 'showLinks' | 'holder' | 'done' | 'practice'>,
+  s: Pick<ScaleState, 'level' | 'showLinks' | 'holder' | 'done' | 'practice' | 'certified' | 'partner'>,
   puzzles: ShellTuple[],
   index: number,
 ): ScaleState => {
@@ -114,6 +262,8 @@ const freshBoard = (
     puzzles,
     index,
     practice: s.practice,
+    ...(s.practice && s.certified ? { certified: s.certified } : {}),
+    ...(s.partner !== undefined ? { partner: s.partner } : {}),
     history: [],
     order: draft.order,
     oddPick: draft.oddPick,
@@ -139,7 +289,11 @@ export function startRound(level: number, rng: () => number, previous?: ScaleSta
   const puzzles = pick(set.rows, rng, avoid, ROUND);
   if (puzzles.length !== ROUND) throw new Error('Shell Scale has no certified boards for that level.');
   const showLinks = previous?.level === level ? previous.showLinks : linksByDefault(level);
-  return freshBoard({ level, showLinks, holder: 0, done: [], practice: false }, puzzles, 0);
+  return freshBoard(
+    { level, showLinks, holder: 0, done: [], practice: false, ...(previous?.partner !== undefined ? { partner: previous.partner } : {}) },
+    puzzles,
+    0,
+  );
 }
 
 const pushUndo = (s: ScaleState): DraftSnapshot[] => [
@@ -150,16 +304,16 @@ const pushUndo = (s: ScaleState): DraftSnapshot[] => [
 /** Solo weighing: evaluates immediately against the hidden weights and appends to public history. */
 export function weighSolo(s: ScaleState, left: number, right: number): ScaleState {
   const p = puzzleAt(s);
-  if (!p || s.won || s.phase !== 'guesser' || s.history.length >= HISTORY_LIMIT) return s;
+  if (!p || s.won || s.phase !== 'guesser') return s;
   const outcome = weighOnScale(p, left, right);
   if (!outcome) return s;
-  return { ...s, history: [...s.history, { left, right, outcome }], checked: false };
+  return { ...s, history: appendWeighing(p, s.history, { left, right, outcome }), checked: false };
 }
 
 /** Scale-Holder step 1: Guesser requests a weighing; transitions to handover cover for Holder. */
 export function requestHolderWeigh(s: ScaleState, left: number, right: number): ScaleState {
   const p = puzzleAt(s);
-  if (!p || s.won || s.phase !== 'guesser' || s.history.length >= HISTORY_LIMIT) return s;
+  if (!p || s.won || s.phase !== 'guesser') return s;
   if (!validPanPair(p, left, right)) return s;
   return { ...s, phase: 'cover-to-holder', pendingWeigh: [left, right], checked: false };
 }
@@ -179,7 +333,7 @@ export function answerHolderWeigh(s: ScaleState, outcome: ScaleOutcome): ScaleSt
   if (!truth || outcome !== truth) return s;
   return {
     ...s,
-    history: [...s.history, { left, right, outcome }],
+    history: appendWeighing(p, s.history, { left, right, outcome }),
     pendingWeigh: null,
     phase: 'cover-to-guesser',
   };
@@ -193,8 +347,8 @@ export function openGuesserScreen(s: ScaleState): ScaleState {
 
 /**
  * Swap Scale Holder and Guesser cleanly on one device!
- * If the outgoing holder already peeked at this board's secret, deals a fresh board of the same
- * kind so the new Guesser never guesses a secret they just saw.
+ * If the outgoing holder already peeked at this board's secret, deals a fresh board with a
+ * genuinely different secret so the new Guesser never guesses a secret they just saw.
  */
 export function swapRoles(s: ScaleState, rng: () => number): ScaleState {
   const p = puzzleAt(s);
@@ -204,10 +358,30 @@ export function swapRoles(s: ScaleState, rng: () => number): ScaleState {
     return { ...s, holder: nextHolder };
   }
   const nextPuzzle = s.practice
-    ? puzzleTuple(randomPracticePuzzle(p.kind, p.n, rng))
-    : pick(setFor(s.level).rows, rng, new Set(s.puzzles.map(tupleKey)), 1)[0] ?? puzzleTuple(randomPracticePuzzle(p.kind, p.n, rng));
-  const puzzles = s.puzzles.map((t, i) => (i === s.index ? nextPuzzle : t));
-  return freshBoard({ level: s.level, showLinks: s.showLinks, holder: nextHolder, done: s.done, practice: s.practice }, puzzles, s.index);
+    ? puzzleTuple(randomPracticePuzzle(p.kind, p.n, rng, secretKey(p)))
+    : pickReplacement(s.level, p, new Set(s.puzzles.map(tupleKey)), rng);
+  const puzzles = s.practice
+    ? Array.from({ length: ROUND }, () => [...nextPuzzle] as ShellTuple)
+    : s.puzzles.map((t, i) => (i === s.index ? nextPuzzle : t));
+  return freshBoard(
+    {
+      level: s.level,
+      showLinks: s.showLinks,
+      holder: nextHolder,
+      done: s.done,
+      practice: s.practice,
+      certified: s.certified,
+      partner: s.partner,
+    },
+    puzzles,
+    s.index,
+  );
+}
+
+export function setPartner(s: ScaleState, partner: string | null): ScaleState {
+  if (partner !== null && !partnerIdOk(partner)) return s;
+  if ((s.partner ?? null) === partner) return s;
+  return { ...s, partner };
 }
 
 export function setOrderSlot(s: ScaleState, item: number, slot: number): ScaleState {
@@ -279,28 +453,76 @@ export function dealFresh(s: ScaleState, rng: () => number): ScaleState {
   const p = puzzleAt(s);
   if (!p) return s;
   if (s.practice) {
-    const next = puzzleTuple(randomPracticePuzzle(p.kind, p.n, rng));
-    return freshBoard({ level: s.level, showLinks: s.showLinks, holder: s.holder, done: s.done, practice: true }, s.puzzles.map((t, i) => (i === s.index ? next : t)), s.index);
+    const next = puzzleTuple(randomPracticePuzzle(p.kind, p.n, rng, secretKey(p)));
+    const puzzles: ShellTuple[] = Array.from({ length: ROUND }, () => [...next] as ShellTuple);
+    return freshBoard(
+      { level: s.level, showLinks: s.showLinks, holder: s.holder, done: [], practice: true, certified: s.certified, partner: s.partner },
+      puzzles,
+      0,
+    );
   }
-  const [next] = pick(setFor(s.level).rows, rng, new Set(s.puzzles.map(tupleKey)), 1);
+  const next = pickReplacement(s.level, p, new Set(s.puzzles.map(tupleKey)), rng);
   if (!next || tupleKey(next) === tupleKey(s.puzzles[s.index])) return s;
-  return freshBoard({ level: s.level, showLinks: s.showLinks, holder: s.holder, done: s.done, practice: false }, s.puzzles.map((t, i) => (i === s.index ? next : t)), s.index);
+  return freshBoard(
+    { level: s.level, showLinks: s.showLinks, holder: s.holder, done: s.done, practice: false, partner: s.partner },
+    s.puzzles.map((t, i) => (i === s.index ? next : t)),
+    s.index,
+  );
 }
 
-/** Open random practice on any supported configuration (2-6 shells, 9 pearls, 12 pearls), adding 0 catalog count. */
+/**
+ * Open random practice on any supported configuration (2-6 shells, 9 pearls, 12 pearls), adding 0 catalog count.
+ * Preserves the certified School round (weighings, answer draft, Undo stack, and done boards) intact!
+ */
 export function startRandomPractice(s: ScaleState, kind: PuzzleKind, n: number, rng: () => number): ScaleState {
-  const next = puzzleTuple(randomPracticePuzzle(kind, n, rng));
-  const puzzles = s.puzzles.length ? s.puzzles.map((t, i) => (i === s.index ? next : t)) : [next];
-  const idx = s.puzzles.length ? Math.min(s.index, puzzles.length - 1) : 0;
-  return freshBoard({ level: s.level, showLinks: s.showLinks, holder: s.holder, done: s.done, practice: true }, puzzles, idx);
+  const certified = s.practice ? s.certified : captureCertified(s);
+  const current = s.practice ? puzzleAt(s) : null;
+  const exclude = current && current.kind === kind && current.n === n ? secretKey(current) : undefined;
+  const next = puzzleTuple(randomPracticePuzzle(kind, n, rng, exclude));
+  const puzzles: ShellTuple[] = Array.from({ length: ROUND }, () => [...next] as ShellTuple);
+  return freshBoard(
+    { level: s.level, showLinks: s.showLinks, holder: s.holder, done: [], practice: true, certified, partner: s.partner },
+    puzzles,
+    0,
+  );
+}
+
+/** Return from Random Practice to the preserved certified School round (survives relaunch cleanly). */
+export function exitRandomPractice(s: ScaleState): ScaleState {
+  if (!s.practice || !s.certified) return s;
+  const c = s.certified;
+  return {
+    version: 1,
+    level: s.level,
+    showLinks: s.showLinks,
+    practice: false,
+    ...(s.partner !== undefined ? { partner: s.partner } : {}),
+    puzzles: c.puzzles.map(t => [...t] as ShellTuple),
+    index: c.index,
+    history: c.history.map(w => ({ ...w })),
+    order: [...c.order],
+    oddPick: c.oddPick,
+    oddDir: c.oddDir,
+    undo: c.undo.map(u => ({ order: [...u.order], oddPick: u.oddPick, oddDir: u.oddDir })),
+    checks: c.checks,
+    misses: c.misses,
+    checked: c.checked,
+    won: c.won,
+    helped: c.helped,
+    holder: c.holder,
+    phase: c.phase,
+    pendingWeigh: c.pendingWeigh ? ([c.pendingWeigh[0], c.pendingWeigh[1]] as [number, number]) : null,
+    holderPeeked: c.holderPeeked,
+    done: c.done.map(d => [d[0], d[1]] as [number, boolean]),
+  };
 }
 
 /** Advance to the next board in the round (alternating Scale Holder automatically in Together play). */
 export function nextBoard(s: ScaleState): ScaleState {
-  if (!puzzleAt(s) || !s.won) return s;
+  if (s.practice || !puzzleAt(s) || !s.won) return s;
   const nextHolder: 0 | 1 = s.holder === 0 ? 1 : 0;
   return freshBoard(
-    { level: s.level, showLinks: s.showLinks, holder: nextHolder, done: [...s.done, [s.history.length, s.helped]], practice: s.practice },
+    { level: s.level, showLinks: s.showLinks, holder: nextHolder, done: [...s.done, [s.history.length, s.helped]], practice: false, partner: s.partner },
     s.puzzles,
     s.index + 1,
   );
@@ -318,6 +540,10 @@ const certifiedAt = (level: number) => {
 };
 
 const isShellTuple = (t: unknown): t is ShellTuple => tuplePuzzle(t) !== null;
+const CERTIFIED_KEY_SIG = [
+  'puzzles', 'index', 'history', 'order', 'oddPick', 'oddDir', 'undo', 'checks', 'misses',
+  'checked', 'won', 'helped', 'holder', 'phase', 'pendingWeigh', 'holderPeeked', 'done',
+].sort().join();
 
 const validSnapshot = (p: ShellPuzzle, snap: unknown): snap is DraftSnapshot => {
   if (!snap || typeof snap !== 'object') return false;
@@ -333,6 +559,7 @@ export function validScale(v: unknown, level?: number): v is ScaleState {
   const s = v as ScaleState;
   if (!s || typeof s !== 'object' || s.version !== 1 || !nat(s.level, 5) || s.level < 1 || (level !== undefined && s.level !== level)) return false;
   if (typeof s.practice !== 'boolean' || !Array.isArray(s.puzzles) || s.puzzles.length !== ROUND || !nat(s.index, ROUND)) return false;
+  if (s.partner !== undefined && s.partner !== null && !partnerIdOk(s.partner)) return false;
   if (!nat(s.checks) || !nat(s.misses) || s.misses > s.checks) return false;
   if (![s.checked, s.won, s.helped, s.showLinks, s.holderPeeked].every(b => typeof b === 'boolean')) return false;
   if (s.holder !== 0 && s.holder !== 1) return false;
@@ -340,6 +567,39 @@ export function validScale(v: unknown, level?: number): v is ScaleState {
   if (!s.showLinks && !linksChoice(s.level)) return false;
   if (!Array.isArray(s.undo) || s.undo.length > UNDO_LIMIT || !Array.isArray(s.history) || s.history.length > HISTORY_LIMIT) return false;
   if (!Array.isArray(s.done) || s.done.length !== s.index || !s.done.every(d => Array.isArray(d) && d.length === 2 && nat(d[0], HISTORY_LIMIT) && typeof d[1] === 'boolean')) return false;
+
+  if (!s.practice) {
+    if (s.certified !== undefined) return false;
+  } else {
+    if (s.index >= ROUND || !s.certified || typeof s.certified !== 'object' || Array.isArray(s.certified)) return false;
+    if (Object.keys(s.certified).sort().join() !== CERTIFIED_KEY_SIG) return false;
+    const c = s.certified as CertifiedRoundSnapshot;
+    const restored: ScaleState = {
+      version: 1,
+      level: s.level,
+      showLinks: s.showLinks,
+      practice: false,
+      ...(s.partner !== undefined ? { partner: s.partner } : {}),
+      puzzles: c.puzzles,
+      index: c.index,
+      history: c.history,
+      order: c.order,
+      oddPick: c.oddPick,
+      oddDir: c.oddDir,
+      undo: c.undo,
+      checks: c.checks,
+      misses: c.misses,
+      checked: c.checked,
+      won: c.won,
+      helped: c.helped,
+      holder: c.holder,
+      phase: c.phase,
+      pendingWeigh: c.pendingWeigh,
+      holderPeeked: c.holderPeeked,
+      done: c.done,
+    };
+    if (!validScale(restored, s.level)) return false;
+  }
 
   const cert = certifiedAt(s.level);
   const decoded: ShellPuzzle[] = [];
@@ -400,9 +660,13 @@ export const engine: Omit<LearnEngine<ScaleState>, 'id'> & { id: 'shell-scale' }
   ownLevels: true,
   levelNames: levelInfo,
   skills: { 'think.scale-deduction': 'Using information on a balance scale' },
-  create: (options: LearnOptions, ctx) => startRound(levelOf(options), ctx.rng, ctx.previous),
-  validate: (state: unknown, options: LearnOptions): state is ScaleState => validScale(state, levelOf(options)),
-  outcome: (s: ScaleState): Outcome => (s.index >= ROUND ? 'done' : null),
+  create: (options: LearnOptions, ctx) => {
+    const base = startRound(levelOf(options), ctx.rng, ctx.previous);
+    return options.mode === 'together' ? base : { ...base, partner: undefined };
+  },
+  validate: (state: unknown, options: LearnOptions): state is ScaleState =>
+    validScale(state, levelOf(options)) && (options.mode === 'together' || (state.partner ?? null) === null),
+  outcome: (s: ScaleState): Outcome => (!s.practice && s.index >= ROUND ? 'done' : null),
 };
 
 export { provenPar };

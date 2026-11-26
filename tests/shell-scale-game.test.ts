@@ -1,22 +1,33 @@
 import { describe, expect, it } from 'vitest';
 import {
-  answerHolderWeigh, canCheckAnswer, checkAnswer, dealFresh, engine, linksByDefault, linksChoice,
-  nextBoard, openGuesserScreen, openHolderScreen, pickOddPearl, puzzleAt, requestHolderWeigh,
-  resetDraft, ROUND, setOddDirection, setOrderSlot, setShowLinks, startRandomPractice, startRound,
-  swapRoles, undoDraft, validScale, weighSolo, type ScaleState,
+  answerHolderWeigh, canCheckAnswer, checkAnswer, dealFresh, engine, exitRandomPractice, HISTORY_LIMIT,
+  linksByDefault, linksChoice, markHelped, nextBoard, openGuesserScreen, openHolderScreen, pickOddPearl,
+  puzzleAt, requestHolderWeigh, resetDraft, ROUND, scaleTogetherRefs, setOddDirection, setOrderSlot,
+  setPartner, setShowLinks, startRandomPractice, startRound, swapRoles, undoDraft, validScale, weighSolo,
+  type ScaleState,
 } from '../src/learn/games/shell-scale/engine';
 import {
   actPickOdd, actPlaceSort, actWeighFor, CHECK, DARE_BANK, DEEP_BANK, HELP, ORDINARY_GROUP_LIMIT,
   ORDINARY_LIMIT, packedBanks, puzzles, registration, RESET, scaleStep, UNDO, type Payload, type State,
 } from '../src/learn/games/shell-scale/challenge';
 import { shellHelpRules, type PublicScaleView } from '../src/learn/games/shell-scale/help';
-import { bestPublicWeighing, emptyOrder, maskOf, provenPar, trueSortOrder, weighOnScale } from '../src/learn/games/shell-scale/rules';
+import {
+  bestPublicWeighing, emptyOrder, maskOf, provenPar, secretKey, trueSortOrder, validPanPair, weighOnScale,
+} from '../src/learn/games/shell-scale/rules';
 import { scaleSpeechLines } from '../src/learn/games/shell-scale/speech';
 import { requestHint } from '../src/puzzles/hints';
 import { startSession, validLearnSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
+import { addLearner, selectLearner } from '../src/learn/learners';
+import { recordLevelRound } from '../src/learn/levelEvidence';
+import { creditSchool, roundStars } from '../src/learn/schoolProgress';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
-import { jsonBytes } from '../src/state/saveBits';
+import { encodeSave, migrateProfiles } from '../src/state/profiles';
+import { applyLearnSave } from '../src/state/learnAction';
+import { emptySave, parseSave } from '../src/state/validation';
+import { jsonBytes, unpack } from '../src/state/saveBits';
+import { progressFor } from '../src/state/challengeDrafts';
+import '../src/challenge/catalog';
 import { productionDirs, readCatalog } from '../scripts/puzzles/pipeline';
 import speechLines from '../scripts/learn/o5-shell-scale.json';
 
@@ -190,6 +201,199 @@ describe('Scale-Holder co-play (OR-05b)', () => {
     expect(swappedFresh.holderPeeked).toBe(false);
     expect(swappedFresh.puzzles[0]).not.toEqual(peeked.puzzles[0]);
     expect(validScale(swappedFresh)).toBe(true);
+  });
+
+  it('P1-1: role swap after peek NEVER repeats the seen secret on full-pool Levels 1-2 or 12-pearl Random Practice', () => {
+    // Levels 1 and 2 have 4 certified rows total (all 4 used in a round) — even constant RNGs must pick a different secret!
+    for (const level of [1, 2] as const) {
+      for (const fixed of [0, 0.25, 0.5, 0.75, 0.99]) {
+        let s = startRound(level, () => fixed);
+        const beforePuzzle = puzzleAt(s)!;
+        const beforeTuple = s.puzzles[s.index].join('|');
+        const beforeSecret = secretKey(beforePuzzle);
+        s = requestHolderWeigh(s, 1 << 0, 1 << 1);
+        s = openHolderScreen(s);
+        const truth = weighOnScale(beforePuzzle, 1 << 0, 1 << 1)!;
+        s = openGuesserScreen(answerHolderWeigh(s, truth));
+        const swapped = swapRoles(s, () => fixed);
+        const afterPuzzle = puzzleAt(swapped)!;
+        expect(swapped.puzzles[swapped.index].join('|')).not.toBe(beforeTuple);
+        expect(secretKey(afterPuzzle)).not.toBe(beforeSecret);
+        expect(validScale(swapped, level)).toBe(true);
+      }
+    }
+
+    // 12-pearl Random Practice: across 1,000 sampled swaps + constant RNG, (odd, dir) secret must NEVER repeat!
+    const rng = mkRng(2026);
+    let rand = startRandomPractice(startRound(4, rng), 'odd-either', 12, rng);
+    for (let i = 0; i < 1000; i++) {
+      const p = puzzleAt(rand)!;
+      const beforeSecret = secretKey(p);
+      const l = maskOf([0, 1, 2, 3]), r = maskOf([4, 5, 6, 7]);
+      let peeked = openHolderScreen(requestHolderWeigh(rand, l, r));
+      peeked = openGuesserScreen(answerHolderWeigh(peeked, weighOnScale(p, l, r)!));
+      rand = swapRoles(peeked, i % 50 === 0 ? () => 0 : rng);
+      const after = puzzleAt(rand)!;
+      expect(secretKey(after)).not.toBe(beforeSecret);
+      expect(validScale(rand, 4)).toBe(true);
+    }
+  });
+
+  it('P1-2: entering, playing, completing, and relaunching Random Practice preserves the certified School draft & Undo stack', () => {
+    const rng = mkRng(303);
+    let cert = startRound(3, rng);
+    cert = weighSolo(cert, 1 << 0, 1 << 1);
+    cert = setOrderSlot(cert, 0, 0);
+    const afterFirstPlace = cert;
+    cert = setOrderSlot(cert, 1, 1);
+    expect(cert.history).toHaveLength(1);
+    expect(cert.undo).toHaveLength(2);
+
+    // Enter Random Practice -> solve a 12-pearl board -> switch to 6-shell -> simulate JSON save/relaunch -> exit back!
+    let prac = startRandomPractice(cert, 'odd-either', 12, rng);
+    expect(prac.practice).toBe(true);
+    expect(validScale(prac, 3)).toBe(true);
+    prac = solveSchoolBoard(prac);
+    expect(prac.won).toBe(true);
+    expect(engine.outcome(prac, { mode: 'solo', pace: 'hard' })).toBeNull();
+    prac = startRandomPractice(prac, 'sort', 6, rng);
+    const reloaded = JSON.parse(JSON.stringify(prac)) as ScaleState;
+    expect(validScale(reloaded, 3)).toBe(true);
+
+    const restored = exitRandomPractice(reloaded);
+    expect(restored.practice).toBe(false);
+    expect(restored.certified).toBeUndefined();
+    expect(restored.puzzles).toEqual(cert.puzzles);
+    expect(restored.history).toEqual(cert.history);
+    expect(restored.order).toEqual(cert.order);
+    expect(restored.undo).toEqual(cert.undo);
+    expect(undoDraft(restored).order).toEqual(afterFirstPlace.order);
+    expect(validScale(restored, 3)).toBe(true);
+
+    // Validator rejects practice without certified snapshot or certified attached to non-practice.
+    expect(validScale({ ...prac, certified: undefined }, 3)).toBe(false);
+    expect(validScale({ ...cert, certified: prac.certified }, 3)).toBe(false);
+  });
+
+  it('P1-3: Scale-Holder co-play finish credits BOTH learners with Together (even when helped) and leaves School stars untouched', () => {
+    const learners = selectLearner(addLearner(addLearner(undefined, 'Alex', 'a'), 'Maya', 'b'), 'a');
+    let save = migrateProfiles({ ...emptySave(), learning: learners });
+    const opts = optionsAtLevel({ mode: 'together', pace: 'hard' }, 3);
+    let session = { ...startSession('shell-scale', { options: opts, names: ['Alex', 'Maya'] }, {}, 99), learner: 'a' };
+    save = applyLearnSave(save, 'shell-scale', session, { id: null, epoch: 1 }, 1);
+
+    // Play all 4 boards with Help marked on every board!
+    let st = session.state as ScaleState;
+    for (let i = 0; i < ROUND; i++) {
+      st = markHelped(st);
+      st = solveSchoolBoard(st);
+      if (i < ROUND - 1) {
+        st = nextBoard(st);
+      } else {
+        st = nextBoard(setPartner(st, 'b'));
+      }
+      const nextSession = { ...session, revision: session.revision + 1, levelHelped: true, state: st };
+      const updated = applyLearnSave(save, 'shell-scale', nextSession, { id: session.id, revision: session.revision, epoch: 1 }, 1);
+      save = recordLevelRound(save, updated, 'shell-scale', 100);
+      session = nextSession;
+    }
+
+    const refs = scaleTogetherRefs(st);
+    expect(refs).toHaveLength(ROUND);
+    // Both 'a' and 'b' receive Together completion (code 3, NEVER code 2 helped!) in bank 362.
+    for (const person of ['a', 'b'] as const) {
+      const prog = progressFor(save, person)!;
+      const bankRow = prog.banks.find(b => b[0] === 362);
+      expect(bankRow, `${person} bank 362`).toBeDefined();
+      const states = unpack(bankRow![1], 6, 3)!;
+      for (const r of refs) expect(states[r.puzzle], `${person} puzzle ${r.puzzle}`).toBe(3);
+      expect(prog.signals).toEqual([]);
+      expect(save.profiles!.people[person].school?.['shell-scale']).toBeUndefined();
+    }
+    expect(save.school?.['shell-scale']).toBeUndefined();
+    expect(roundStars(session, 3)).toBe(0);
+    expect(creditSchool({}, session, 100)).toEqual({});
+    expect(save.learning!.people.every(p => Object.keys(p.notes).length === 0)).toBe(true);
+    expect(parseSave(encodeSave(save))).toBeTruthy();
+
+    // Solo session with forged partner is rejected.
+    expect(engine.validate(setPartner(startRound(3, mkRng(7)), 'b'), optionsAtLevel({ mode: 'solo', pace: 'hard' }, 3))).toBe(false);
+
+    // Removed partner: only surviving owner receives credit without throwing.
+    let soloSave = migrateProfiles({ ...emptySave(), learning: selectLearner(addLearner(undefined, 'Alex', 'a'), 'a') });
+    let s2 = { ...startSession('shell-scale', { options: opts, names: ['Alex', 'Ghost'] }, {}, 101), learner: 'a' };
+    soloSave = applyLearnSave(soloSave, 'shell-scale', s2, { id: null, epoch: 1 }, 1);
+    let st2 = s2.state as ScaleState;
+    for (let i = 0; i < ROUND; i++) {
+      st2 = solveSchoolBoard(st2);
+      st2 = i < ROUND - 1 ? nextBoard(st2) : nextBoard(setPartner(st2, 'removed-id'));
+      const ns = { ...s2, revision: s2.revision + 1, state: st2 };
+      const upd = applyLearnSave(soloSave, 'shell-scale', ns, { id: s2.id, revision: s2.revision, epoch: 1 }, 1);
+      soloSave = recordLevelRound(soloSave, upd, 'shell-scale', 100);
+      s2 = ns;
+    }
+    const soloBank = progressFor(soloSave, 'a')!.banks.find(b => b[0] === 362);
+    expect(soloBank).toBeDefined();
+    expect(soloSave.school?.['shell-scale']).toBeUndefined();
+    expect(parseSave(encodeSave(soloSave))).toBeTruthy();
+  });
+
+  it('P2-1: 200 repeated comparisons never exhaust weighing capacity for manual, Scale-Holder, or Help deduction', async () => {
+    const rng = mkRng(404);
+    let s = startRound(3, rng); // 4 shells
+    for (let i = 0; i < HISTORY_LIMIT; i++) s = weighSolo(s, 1 << 0, 1 << 1);
+    expect(s.history).toHaveLength(HISTORY_LIMIT);
+    expect(validScale(s, 3)).toBe(true);
+
+    // Scale-Holder request & answer MUST still succeed at HISTORY_LIMIT!
+    const p = puzzleAt(s)!;
+    const req = requestHolderWeigh(s, 1 << 2, 1 << 3);
+    expect(req.phase).toBe('cover-to-holder');
+    const held = openHolderScreen(req);
+    const ans = answerHolderWeigh(held, weighOnScale(p, 1 << 2, 1 << 3)!);
+    expect(ans.phase).toBe('cover-to-guesser');
+    const afterHolder = openGuesserScreen(ans);
+    expect(afterHolder.history.length).toBeLessThanOrEqual(HISTORY_LIMIT);
+    expect(validScale(afterHolder, 3)).toBe(true);
+
+    // Real Help one-step weighing MUST succeed from 200-repeat state and solve the board cleanly!
+    const ac = new AbortController();
+    let cur = s;
+    for (let step = 0; step < 20 && !cur.won; step++) {
+      const view: PublicScaleView = {
+        kind: p.kind, n: p.n, cast: p.cast, history: cur.history, order: cur.order, oddPick: null, oddDir: null,
+      };
+      const hint = await requestHint(shellHelpRules(view), view, 'one-step', ac.signal);
+      if (hint.status === 'route' && hint.actions.length) {
+        const a = hint.actions[0];
+        if (a.kind === 'weigh') cur = weighSolo(cur, a.left, a.right);
+        else if (a.kind === 'place-sort') cur = setOrderSlot(cur, a.item, a.slot);
+      } else {
+        cur = checkAnswer(cur);
+      }
+      expect(cur.history.length).toBeLessThanOrEqual(HISTORY_LIMIT);
+      expect(validScale(cur, 3)).toBe(true);
+    }
+    expect(cur.won).toBe(true);
+  });
+
+  it('P2-2: validPanPair and validScale reject out-of-range pan masks like 2**32 + 1 before bitwise coercion', () => {
+    const rng = mkRng(505);
+    const s = startRound(1, rng); // 2 shells
+    const p = puzzleAt(s)!;
+    const truthfulOutcome = weighOnScale(p, 1, 2)!;
+    const overflowMask = 2 ** 32 + 1; // 4294967297
+
+    expect(validPanPair(p, overflowMask, 2)).toBe(false);
+    expect(validPanPair(p, 1, 2 ** 32 + 2)).toBe(false);
+    expect(validPanPair(p, 4, 2)).toBe(false);
+    expect(validPanPair(p, -1, 2)).toBe(false);
+    expect(validPanPair(p, 0, 2)).toBe(false);
+    expect(validPanPair(p, NaN, 2)).toBe(false);
+    expect(validPanPair(p, 1.5, 2)).toBe(false);
+
+    expect(validScale({ ...s, history: [{ left: overflowMask, right: 2, outcome: truthfulOutcome }] }, 1)).toBe(false);
+    expect(validScale({ ...s, phase: 'cover-to-holder', pendingWeigh: [overflowMask, 2] }, 1)).toBe(false);
   });
 });
 
