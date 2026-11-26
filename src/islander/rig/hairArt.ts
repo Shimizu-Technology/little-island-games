@@ -99,7 +99,7 @@ const partLine = wisp(0, -33, -.6, -28, 0, -22, .8);
 const dome = 'C-31 -6 -31.5 -18 -25 -26C-19 -32.5 -8 -34 0 -34C8 -34 19 -32.5 25 -26C31.5 -18 31 -6 28.7 6';
 const fullBack = `M-28.7 6${dome}L28.7 11Q28.7 28.7 0 28.7Q-28.7 28.7 -28.7 11Z`;
 const upNape = `M-28.7 6${dome}L28.7 9C28 18 19 25.6 0 25.6C-19 25.6 -28 18 -28.7 9Z`;
-const backShine = wisp(-25, -13, -18, -26, -5, -30, 2.1) + wisp(5, -30, 18, -26, 25, -13, 2.1);
+const backShine = wisp(-25, -13, -18, -26.5, -4, -30.5, 2.45) + wisp(4, -30.5, 18, -26.5, 25, -13, 2.45) + wisp(-16, -24, 0, -29.5, 16, -24, 1.3);
 const shortNape = [[28.7, 7], [27.6, 15], [20, 22], [13, 26.4], [6, 24.6], [0, 28], [-6, 24.6], [-13, 26.4], [-20, 22], [-27.6, 15], [-28.7, 7]] as const;
 const whorl = (x: number, y: number) => wisp(x, y, x - 22, y - 4, x - 25, y + 20, 1.5) + wisp(x, y, x - 14, y + 8, x - 12, y + 34, 1.5) + wisp(x, y, x - 4, y + 18, x + 4, y + 42, 1.5) + wisp(x, y, x + 8, y + 18, x + 18, y + 34, 1.5) + wisp(x, y, x + 20, y + 2, x + 24, y + 18, 1.4);
 
@@ -110,7 +110,7 @@ const crop: HairDrawing = {
   front: {
     base: `M-28.8 -3${soft(cropTop, .46)}${soft(cropTufts, .46)}Z`,
     shade: `${wisp(-19, -13, -22, -20, -19, -27, 1.3)}${wisp(-6, -14, -8.6, -22, -6.6, -30, 1.4)}${wisp(6, -14, 5, -22, 9, -32, 1.4)}${wisp(19, -13, 20, -20, 21, -27, 1.3)}${wisp(-12, -12, -13.6, -18, -11, -26, 1)}${wisp(0, -12, -1, -20, -2, -30, 1.1)}${wisp(12, -12, 13, -18, 15, -26, 1)}`,
-    shine: `${wisp(-26, -14, -23, -23, -16, -28, 1.8)}${wisp(-7, -29, -2, -31, 3, -30, 1.5)}${wisp(15, -28, 22, -25, 26.6, -16, 1.5)}`,
+    shine: `${wisp(-26, -14, -23, -23.5, -15, -28.5, 2.2)}${wisp(-8, -29.5, -1.5, -31.8, 5, -30, 1.9)}${wisp(14, -28.5, 22, -25, 26.6, -16, 1.9)}`,
   },
   back: {
     base: `M-28.8 -3${soft(cropTop, .46)}L28.7 7${soft(shortNape, .42)}L-28.8 -3Z`,
@@ -121,7 +121,7 @@ const crop: HairDrawing = {
 
 const curlTop = [[-31.5, 7], [-36, -3], [-36.5, -14], [-31, -24], [-22.5, -31.5], [-11.5, -36], [.5, -37.6], [12, -35.8], [23, -31.5], [31.5, -24], [36.5, -14], [36, -3], [31.5, 7]] as const;
 const curlMarks = wisp(-30, -9, -26, -14, -21, -11, 1.2) + wisp(-24, -21, -18, -27, -13, -22, 1.2) + wisp(-8, -28, -1, -33, 5, -27, 1.2) + wisp(12, -24, 18, -29, 24, -22, 1.2) + wisp(21, -11, 27, -15, 31, -9, 1.2) + wisp(-14, -12, -8, -16, -3, -12, 1.1) + wisp(4, -13, 10, -17, 15, -12, 1.1);
-const curlShine = wisp(-28, -14, -25, -18, -21, -16, 1.1) + wisp(-21, -27, -16, -31, -11, -27, 1.2) + wisp(-4, -33, 1, -35, 6, -32, 1.1) + wisp(16, -28, 21, -30, 25, -25, 1.1) + wisp(26, -13, 30, -16, 33, -12, 1);
+const curlShine = wisp(-28, -14, -25, -18.5, -20.5, -16, 1.45) + wisp(-21, -27, -16, -31.5, -10.5, -27, 1.55) + wisp(-4.5, -33, 1, -35.5, 6.5, -32, 1.45) + wisp(15.5, -28, 21, -30.5, 25.5, -25, 1.45) + wisp(26, -13, 30, -16.5, 33, -12, 1.35);
 const curlsHatFront = `M-31.5 7${lobes([[-31.5, 7], [-34.6, 0], [-34, -9], [-29.6, -15.4]], .5)}L0 -24L29.6 -15.4${lobes([[29.6, -15.4], [34, -9], [34.6, 0], [31.5, 7]], .5)}${lobes([[31.5, 7], [25.6, -2.5], [17, -7.4], [8.5, -8.8], [0, -7.4], [-8.5, -8.8], [-17, -7.4], [-25.6, -2.5], [-31.5, 7]], .42)}Z`;
 const curls: HairDrawing = {
   hairline: -7,
@@ -157,7 +157,7 @@ const ponytail: HairDrawing = {
   front: {
     base: pullBack,
     shade: `${wisp(-23, -10, -10, -27, 15, -30, 1.1)}${wisp(-8, -15.6, 1, -25, 15, -29.5, 1.1)}${wisp(9, -14.6, 12, -22, 17, -29, 1)}${wisp(23, -9.5, 22, -19, 19, -28, 1)}`,
-    shine: `${wisp(-25, -13, -18, -25, -4, -30, 2.2)}${wisp(19, -29, 25, -24, 28, -14, 1.3)}`,
+    shine: `${wisp(-25, -13, -18, -25.5, -3, -30.5, 2.55)}${wisp(-14, -22, -4, -26, 7, -26, 1.3)}${wisp(19, -29, 25, -24, 28, -14, 1.55)}`,
     ties: tie(17.5, -30.5, 38, 4.8, 2.3),
   },
   back: {
@@ -176,7 +176,7 @@ const ponytail: HairDrawing = {
 
 const partedCap = `M0 -34C-14 -35 -27 -29 -30 -14C-31.5 -6 -31 2 -29 9.6C-27 11.4 -25 11.6 -23 10.6C-22 4 -21 -2 -18 -6C-13 -11 -5 -15 0 -23C5 -15 13 -11 18 -6C21 -2 22 4 23 10.6C25 11.6 27 11.4 29 9.6C31 2 31.5 -6 30 -14C27 -29 14 -35 0 -34Z`;
 const capShade = `${partLine}${wisp(-27, 6, -24, -5, -14, -14, 1.3)}${wisp(27, 6, 24, -5, 14, -14, 1.3)}${wisp(-8, -28, -10, -22, -18, -14, 1)}${wisp(8, -28, 10, -22, 18, -14, 1)}`;
-const capShine = `${wisp(-25, -12, -19, -24, -5, -30, 2.2)}${wisp(5, -30, 19, -24, 25, -12, 2.2)}`;
+const capShine = `${wisp(-25, -12, -19, -24.5, -4.5, -30.5, 2.5)}${wisp(4.5, -30.5, 19, -24.5, 25, -12, 2.5)}${wisp(-14, -22, -8, -25.5, -2.5, -26, 1.25)}${wisp(2.5, -26, 8, -25.5, 14, -22, 1.25)}`;
 const braidL = plait([[-26.6, 9], [-27, 17], [-25.6, 25], [-22.6, 33], [-19.6, 40], [-17.4, 46.5]], 5.2);
 const braidTuft = 'M-19.8 46.8C-20.6 49.2 -20 52.2 -17.6 52.8C-15.2 52.2 -14.6 49.2 -15.4 46.8Z';
 const braidBackL = plait([[-12.6, 6], [-15, 13], [-17, 21], [-18.6, 29], [-20, 37], [-21, 45], [-21.6, 51]], 5);
@@ -286,7 +286,7 @@ const sidePart: HairDrawing = {
   front: {
     base: `M-29.4 4${sideTop}${sideEdge}Z`,
     shade: `${wisp(-11.6, -14.6, -12.6, -24, -11, -33, 1)}${wisp(-5, -15.6, 7, -26, 19, -31, 1.2)}${wisp(5, -12, 14, -20, 26, -24, 1.4)}${wisp(15, -8, 21, -13, 29, -14, 1.2)}${wisp(-16, -11, -20, -18, -23, -25, 1.1)}`,
-    shine: `${wisp(-8, -27, 4, -34.4, 18, -31.6, 2.2)}${wisp(22, -27, 26.6, -22, 27.6, -14, 1.3)}${wisp(-25, -13, -22, -22, -15.6, -28, 1.5)}`,
+    shine: `${wisp(-8, -27, 4, -34.6, 18.5, -31.8, 2.55)}${wisp(-2, -23, 8, -28.2, 18, -25, 1.3)}${wisp(22, -27, 26.6, -22, 27.6, -14, 1.55)}${wisp(-25, -13, -22, -22, -15.6, -28, 1.8)}`,
   },
   back: {
     base: `M-29.4 4${sideTop}C29.4 10 29 13 28 16C25 23 15 26.4 0 26.4C-15 26.4 -25 23 -28 16C-29 13 -29.4 10 -29.4 4Z`,
@@ -371,7 +371,7 @@ const topKnot: HairDrawing = {
   front: {
     base: 'M-28.8 7C-31 3 -31.5 -4 -30.6 -12C-29.6 -20 -28 -23 -25 -26C-19 -31 -9 -31.6 0 -31C9 -31.6 19 -31 25 -26C28 -23 29.6 -20 30.6 -12C31.5 -4 31 3 28.8 7C28 8.4 26.2 8 25.8 6.4C26 1 25.8 -4 24.6 -8C19 -12 9 -13.6 0 -13.6C-9 -13.6 -19 -12 -24.6 -8C-25.8 -4 -26 1 -25.8 6.4C-26.2 8 -28 8.4 -28.8 7Z',
     shade: `${wisp(-20, -11, -12, -20, -2, -29, 1.2)}${wisp(-9, -13, -6, -21, -1, -29.6, 1.1)}${wisp(20, -11, 12, -20, 2, -29, 1.2)}${wisp(9, -13, 6, -21, 1, -29.6, 1.1)}${wisp(0, -13.6, 0, -22, 0, -30, .9)}`,
-    shine: `${wisp(-26, -12, -21, -22, -11, -28, 2)}${wisp(11, -28, 21, -22, 26, -12, 2)}`,
+    shine: `${wisp(-26, -12, -21, -22.5, -10, -28.5, 2.4)}${wisp(10, -28.5, 21, -22.5, 26, -12, 2.4)}${wisp(-13, -21, 0, -25, 13, -21, 1.25)}`,
   },
   back: {
     base: upNape,
@@ -391,7 +391,7 @@ const longStraight: HairDrawing = {
   front: {
     base: straightFront,
     shade: `${wisp(-6, -7.2, -7, -15, -4, -24, 1.2)}${wisp(9, -7.4, 9.6, -15, 6, -24, 1.2)}${wisp(-14, -6.6, -16, -15, -14, -24, 1.1)}${wisp(16, -6.6, 18, -15, 15, -24, 1.1)}${both(wisp(-28.6, -6, -29.6, 16, -24, 45, 1.4) + wisp(-21, 30, -20, 36, -19.6, 44, 1.1))}`,
-    shine: `${both(wisp(-27, -13, -19, -26, -5, -30.6, 2.2) + wisp(-30, -6, -30.6, 12, -28.6, 38, 1.2))}`,
+    shine: `${both(wisp(-27, -13, -19, -26.5, -4, -30.8, 2.55) + wisp(-18, -16, -9, -20.5, -2, -20.5, 1.3) + wisp(-30, -6, -30.6, 12, -28.6, 38, 1.45))}`,
   },
   back: {
     base: straightDome,
@@ -418,7 +418,7 @@ const longWavy: HairDrawing = {
   front: {
     base: waveFront,
     shade: `${wisp(-13, -33, -13.6, -27, -13, -21, .8)}${wisp(-30, -8, -33, 6, -28, 14, 1.5)}${wisp(-28, 16, -33, 24, -26, 32, 1.5)}${wisp(-26, 32, -27, 37, -22, 41, 1.3)}${wisp(30, -8, 33, 6, 28, 14, 1.5)}${wisp(28, 16, 33, 24, 26, 32, 1.5)}${wisp(26, 32, 27, 37, 22, 41, 1.3)}${wisp(-7, -19, 4, -14, 17, -9.6, 1.4)}${wisp(-15, -18, -20, -14, -25, -8, 1.2)}`,
-    shine: `${wisp(-27, -13, -22, -26, -11, -31, 2)}${wisp(-4, -31, 14, -30, 27, -14, 2.3)}${wisp(-33, 8, -36, 15, -33.6, 22, 1.4)}${wisp(-33, 27, -35, 33, -31, 39, 1.3)}${wisp(33, 8, 36, 15, 33.6, 22, 1.4)}${wisp(33, 27, 35, 33, 31, 39, 1.3)}`,
+    shine: `${wisp(-27, -13, -22, -26.5, -10.5, -31.2, 2.4)}${wisp(-4, -31.2, 14, -30.2, 27, -14, 2.65)}${wisp(-3, -23.5, 9, -24, 20, -16.5, 1.35)}${wisp(-33, 8, -36, 15, -33.6, 22, 1.65)}${wisp(-33, 27, -35, 33, -31, 39, 1.5)}${wisp(33, 8, 36, 15, 33.6, 22, 1.65)}${wisp(33, 27, 35, 33, 31, 39, 1.5)}`,
   },
   back: {
     base: waveDome,
@@ -470,7 +470,7 @@ const bob: HairDrawing = {
   front: {
     base: bobFront,
     shade: `${wisp(13.4, -19, 13.4, -26, 12, -33, .9)}${wisp(5, -14, -2, -24, -12, -30, 1.3)}${wisp(-6, -6, -14, -15, -22, -22, 1.3)}${wisp(-15, -3, -21, -8, -27, -14, 1.2)}${wisp(19, -9, 23, -18, 21, -27, 1.2)}${both(wisp(-28, -7, -29.6, 8, -27, 22, 1.5) + 'M-22.2 1C-22.6 7 -22 13 -20.8 19C-20.5 21.5 -21 23.5 -23 24.5C-23.6 18 -24.6 9 -24.4 1Z')}`,
-    shine: `${wisp(-26, -16, -14, -28, 6, -31, 2.2)}${wisp(19, -30, 26, -24, 29, -13, 1.8)}${both(wisp(-31, -5, -32, 6, -30.6, 16, 1.5))}`,
+    shine: `${wisp(-26, -16, -14, -28.4, 6.5, -31.2, 2.55)}${wisp(-18, -14, -8, -20.5, 4, -22, 1.35)}${wisp(19, -30, 26, -24, 29, -13, 2.1)}${both(wisp(-31, -5, -32, 6, -30.6, 16, 1.75))}`,
   },
   back: {
     base: 'M0 -34.5C-17 -35.5 -31 -29 -33.5 -13C-35 -2 -35 8 -32 17C-29.6 23 -22 27 -12 27.6C-6 28 6 28 12 27.6C22 27 29.6 23 32 17C35 8 35 -2 33.5 -13C31 -29 17 -35.5 0 -34.5Z',
@@ -488,18 +488,18 @@ export const mix = (a: string, b: string, t: number) => { const x = hex(a), y = 
 const light = (c: string) => { const [r, g, b] = hex(c); return (.2126 * r + .7152 * g + .0722 * b) / 255; };
 export type HairTones = Readonly<{ base: string; under: string; shade: string; shine: string; sheen: string; line: string; fade: string; fadeHigh: string; backFade: string; napeFade: string }>;
 const toneCache = new Map<string, HairTones>();
-/** Shadow, base, shine and outline all come from the chosen colour. Dark hair gets a cool sheen so it keeps form. */
+/** Shadow, base, shine and outline all come from the chosen colour. Dark hair gets a silky cool-lavender sheen so it keeps form. */
 export function hairTones(color: IslanderLook['hairColor'], skin: IslanderLook['skinTone']): HairTones {
   const key = `${color}:${skin}`, found = toneCache.get(key); if (found) return found;
   const c = hairColors[color], s = skinTones[skin], l = light(c), dark = l < .2;
   const base = dark ? mix(c, '#5C6684', .1) : c;
-  const shine = color === 'galaxy' ? '#8A7BE0' : dark ? mix(c, '#9DB2E6', .42) : l > .62 ? mix(c, '#FFFFFF', .55) : mix(c, '#FFEFD2', .36);
-  const shade = color === 'galaxy' ? '#232149' : dark ? mix(c, '#000000', .3) : l > .5 ? mix(c, '#6B4656', .38) : mix(c, '#2A1A22', .3);
-  const line = dark ? mix(c, '#05060A', .55) : mix(c, '#33262A', l > .62 ? .8 : .72);
+  const shine = color === 'galaxy' ? '#9888F0' : dark ? mix(c, '#A8BEF2', .46) : l > .62 ? mix(c, '#FFFDF6', .62) : mix(c, '#FFF1D0', .44);
+  const shade = color === 'galaxy' ? '#221E48' : dark ? mix(c, '#06040A', .34) : l > .5 ? mix(c, '#6E3E44', .38) : mix(c, '#291519', .34);
+  const line = dark ? mix(c, '#120C10', .55) : mix(c, '#3B2418', l > .62 ? .78 : .70);
   // A short fade stays visibly hair on every skin tone, even blonde on sand or silver on cocoa.
   const apart = (tone: string, deep = .5) => Math.abs(light(tone) - light(s)) >= .06 ? tone : light(s) > .42 ? mix(tone, line, .4) : mix(tone, '#120B0A', deep), cool = color === 'galaxy' ? '#6B5FC8' : '#6F7892';
   const shorn = apart(dark ? mix(base, cool, .12) : mix(base, s, .04), .78);
-  const tones = { base, under: mix(shorn, shade, light(shorn) < light(shade) ? .22 : .32), shade, shine: color === 'lightning-streak' ? '#FFD84D' : shine, sheen: mix(shorn, shine, dark ? .5 : .3), line, fade: apart(dark ? mix(mix(base, s, .2), cool, .06) : mix(base, s, .3), .55), fadeHigh: shorn, backFade: dark ? mix(base, s, .08) : mix(base, s, .3), napeFade: mix(base, s, dark ? .2 : .3) };
+  const tones = { base, under: mix(shorn, shade, light(shorn) < light(shade) ? .24 : .34), shade, shine: color === 'lightning-streak' ? '#FFD84D' : shine, sheen: mix(shorn, shine, dark ? .52 : .34), line, fade: apart(dark ? mix(mix(base, s, .2), cool, .06) : mix(base, s, .3), .55), fadeHigh: shorn, backFade: dark ? mix(base, s, .08) : mix(base, s, .3), napeFade: mix(base, s, dark ? .2 : .3) };
   toneCache.set(key, tones);
   return tones;
 }

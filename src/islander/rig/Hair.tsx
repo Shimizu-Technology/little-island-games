@@ -36,6 +36,10 @@ export function Hair({ look, pose, rear = false }: { look: IslanderLook; pose: P
   if (rear) return <G {...shared}><Piece layer={art.crown} t={t} tie={tie}/><Piece layer={art.rear} t={t} tie={tie}/></G>;
   const length = art.swing && <G transform={`rotate(${swing} ${art.root![0]} ${art.root![1]})`}><Piece layer={art.swing} t={t} tie={tie}/></G>;
   const special = hairSpecial(style, look.hairColor, back, covered, compact);
+  const castY = art.hairline;
+  const bangShadow = !back && !compact && !shorn && !covered
+    ? <Path d={`M-24.5 ${castY + 1.5}Q-12 ${castY + 5.2} 0 ${castY + 3.2}Q12 ${castY + 5.2} 24.5 ${castY + 1.5}Q12 ${castY + 2} 0 ${castY + .4}Q-12 ${castY + 2} -24.5 ${castY + 1.5}Z`} fill="#6B3624" fillOpacity={.11} strokeWidth={0}/>
+    : null;
   return <G {...shared} data-back-hair={back ? style : undefined}>
     {back ? <>
       {!compact && <Piece layer={art.backCrown} t={t} tie={tie}/>}
@@ -43,7 +47,7 @@ export function Hair({ look, pose, rear = false }: { look: IslanderLook; pose: P
       {!compact && art.swingBehind && length}
       <Piece layer={art.back} t={t} tie={tie}/>
       {!compact && art.swing && !art.swingBehind && length}
-    </> : <Piece layer={art.front} t={t} tie={tie}/>}
+    </> : <>{bangShadow}<Piece layer={art.front} t={t} tie={tie}/></>}
     {special?.stars && <Path data-hair-special="galaxy" d={special.stars} fill="#FFF2B8" strokeWidth={0}/>}
     {special?.bolt && <Path data-hair-special="lightning" d={special.bolt} fill="#FFD84D" stroke="#B9791F" strokeWidth={.8}/>}
   </G>;
