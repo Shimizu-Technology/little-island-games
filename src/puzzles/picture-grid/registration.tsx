@@ -21,38 +21,59 @@ export type Action = PictureEvent;
 export type State = { picture: PictureGrid; draft: PictureDraft; band: PictureBand };
 export const pictureGridCodec = 'picture-grid-1';
 export type PlayScreenImporter = () => Promise<ComponentType<PictureBoardProps>>;
+export type ReactNativeImporter = () => Promise<typeof import('react-native')>;
 // The native view stays out of the Node registry/catalog tools until rendered.
 const defaultLoadPlayScreen: PlayScreenImporter = () => import('./PlayScreen').then(m => m.PlayScreen);
+const defaultLoadReactNative: ReactNativeImporter = () => import('react-native');
 // Cache only resolved modules (never rejected promises) so Try again genuinely retries a failed dynamic import.
 const loadedScreens = new WeakMap<PlayScreenImporter, ComponentType<PictureBoardProps>>();
+const loadedReactNative = new WeakMap<ReactNativeImporter, typeof import('react-native')>();
+const pendingReactNative = new WeakMap<ReactNativeImporter, Promise<typeof import('react-native')>>();
 
-let rnModule: typeof import('react-native') | null = null;
-let rnPromise: Promise<typeof import('react-native')> | null = null;
-
-function loadReactNative(): Promise<typeof import('react-native')> {
-  if (rnModule) return Promise.resolve(rnModule);
-  rnPromise ??= import('react-native').then(m => {
-    rnModule = m;
-    return m;
-  });
-  return rnPromise;
+function loadReactNative(importer: ReactNativeImporter): Promise<typeof import('react-native')> {
+  const cached = loadedReactNative.get(importer);
+  if (cached) return Promise.resolve(cached);
+  const pending = pendingReactNative.get(importer);
+  if (pending) return pending;
+  const next = importer().then(
+    m => {
+      loadedReactNative.set(importer, m);
+      pendingReactNative.delete(importer);
+      return m;
+    },
+    error => {
+      pendingReactNative.delete(importer);
+      throw error;
+    },
+  );
+  pendingReactNative.set(importer, next);
+  return next;
 }
 
-export function PlayScreenLoader({ loadScreen = defaultLoadPlayScreen, ...props }: PictureBoardProps & { loadScreen?: PlayScreenImporter }) {
-  const [rn, setRn] = useState<typeof import('react-native') | null>(() => rnModule);
+export function PlayScreenLoader({
+  loadScreen = defaultLoadPlayScreen,
+  loadRN = defaultLoadReactNative,
+  ...props
+}: PictureBoardProps & { loadScreen?: PlayScreenImporter; loadRN?: ReactNativeImporter }) {
+  const [loadedRn, setLoadedRn] = useState<typeof import('react-native') | null>(() => loadedReactNative.get(loadRN) ?? null);
   const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; attempt: number }>(() => ({
     status: loadedScreens.has(loadScreen) ? 'ready' : 'loading',
     attempt: 0,
   }));
 
   useEffect(() => {
-    if (rnModule) return;
+    if (loadedReactNative.has(loadRN)) return;
     let cancelled = false;
-    void loadReactNative().then(m => {
-      if (!cancelled) setRn(m);
-    });
+    void loadReactNative(loadRN).then(
+      m => {
+        if (!cancelled) setLoadedRn(m);
+      },
+      () => {
+        // Rejection cleared from pendingReactNative so a subsequent retry or remount can recover cleanly.
+      },
+    );
     return () => { cancelled = true; };
-  }, []);
+  }, [loadRN, state.status, state.attempt]);
 
   useEffect(() => {
     if (loadedScreens.has(loadScreen)) return;
@@ -71,6 +92,7 @@ export function PlayScreenLoader({ loadScreen = defaultLoadPlayScreen, ...props 
 
   const Ready = loadedScreens.get(loadScreen);
   if (Ready) return React.createElement(Ready, props);
+  const rn = loadedReactNative.get(loadRN) ?? loadedRn;
   if (!rn) return null;
   if (state.status === 'error') {
     return React.createElement(
@@ -121,10 +143,11 @@ export function pictureGridBankFacts(manifest: FamilyManifest): PictureBank[] {
 /** Bind once the lead has baked and registered the immutable banks. Authored names stay off cards until solved. */
 export function definePictureGrid(
   facts: readonly PictureBank[],
-  { loader = bankLoader, cleanDares = [], loadScreen = defaultLoadPlayScreen }: {
+  { loader = bankLoader, cleanDares = [], loadScreen = defaultLoadPlayScreen, loadRN = defaultLoadReactNative }: {
     loader?: () => Pick<BankLoader, 'entry' | 'savedHash'>;
     cleanDares?: readonly PictureDare[];
     loadScreen?: PlayScreenImporter;
+    loadRN?: ReactNativeImporter;
   } = {},
 ): TypedRegistration<Payload, Action, State> {
   const banks = new Map<number, PackedBank>();
@@ -266,7 +289,7 @@ export function definePictureGrid(
       const state = view(session);
       if (!state) return null;
       return <PlayScreenLoader key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
-        loadScreen={loadScreen} {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} />;
+        loadScreen={loadScreen} loadRN={loadRN} {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} />;
     },
   };
 }

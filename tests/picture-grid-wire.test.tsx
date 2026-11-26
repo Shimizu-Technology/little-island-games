@@ -15,7 +15,7 @@ import { pictureGridAdapter } from '../src/puzzles/picture-grid/adapter';
 import { decodePicture } from '../src/puzzles/picture-grid/checkpoint';
 import { FILL, pictureBands } from '../src/puzzles/picture-grid/engine';
 import { PlayScreen } from '../src/puzzles/picture-grid/PlayScreen';
-import { definePictureGrid, pictureGridBankFacts, type PlayScreenImporter } from '../src/puzzles/picture-grid/registration';
+import { definePictureGrid, pictureGridBankFacts, type PlayScreenImporter, type ReactNativeImporter } from '../src/puzzles/picture-grid/registration';
 import { provePicture } from '../src/puzzles/picture-grid/solver';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
@@ -291,8 +291,75 @@ describe('Picture Grid Cove wiring (G4a, banks 110–113)', () => {
     expect(byID('picture-cell-0').props.accessibilityLabel).toContain('filled');
     expect(byID('picture-pass').props.disabled).toBe(false);
 
-    await act(async () => { byLabel('Back from drawing').props.onPress(); });
+    // Complete Pass to solver -> Play handoff and verify strictly one More button (hud-more, zero picture-more-button).
+    await act(async () => { byID('picture-pass').props.onPress(); });
+    expect(hasID('picture-pass-cover')).toBe(true);
+    await act(async () => { byID('picture-family-play').props.onPress(); });
+    expect(hasID('picture-pass-cover')).toBe(false);
+    expect(hasID('picture-clue-row-0')).toBe(true);
+    const solverMoreButtons = screen!.root.findAll(node => typeof node.type === 'string' && node.props.accessibilityLabel === 'More');
+    expect(solverMoreButtons).toHaveLength(1);
+    expect(solverMoreButtons[0].props.testID).toBe('hud-more');
+    expect(hasID('picture-more-button')).toBe(false);
+
+    await act(async () => { byLabel('Back to puzzle').props.onPress(); });
     expect(hasID('picture-reveal')).toBe(true);
+  });
+
+  it('keeps strictly one More button through saved round -> Draw -> Pass to solver -> Play and preserves the paused puzzle', async () => {
+    const entry = challengeFor('picture-grid')!;
+    const ref = await entry.packed!.choose(110, emptyChallenge());
+    const card = entry.packed!.card(ref)!;
+
+    function Ready() {
+      const s = useStore();
+      return s.ready
+        ? <CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={null} width={360} onBrowse={() => {}} onClose={() => {}} />
+        : null;
+    }
+
+    await act(async () => {
+      screen = create(<StoreProvider><Probe /><Ready /></StoreProvider>);
+    });
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
+
+    const assertSingleMore = () => {
+      const moreButtons = screen!.root.findAll(node => typeof node.type === 'string' && node.props.accessibilityLabel === 'More');
+      expect(moreButtons).toHaveLength(1);
+      expect(moreButtons[0].props.testID).toBe('hud-more');
+      expect(hasID('picture-more-button')).toBe(false);
+    };
+
+    // Paint a cell on the saved Cove puzzle first.
+    await act(async () => { byID('picture-cell-0').props.onPress(); });
+    const session = () => progressFor(store.save, 'a')!.paused.find(s => s.game === 'picture-grid')!;
+    expect(decodePicture(session().payload, 5)?.marks[0]).toBe(FILL);
+    assertSingleMore();
+
+    // Draw -> fill cell -> Pass to solver -> Play.
+    await act(async () => { byID('hud-more').props.onPress(); });
+    await act(async () => { byID('more-Draw a Puzzle').props.onPress(); });
+    assertSingleMore();
+
+    await act(async () => { byID('picture-cell-2').props.onPress(); });
+    await act(async () => { byID('picture-pass').props.onPress(); });
+    expect(hasID('picture-pass-cover')).toBe(true);
+    assertSingleMore();
+
+    await act(async () => { byID('picture-family-play').props.onPress(); });
+    expect(hasID('picture-pass-cover')).toBe(false);
+    expect(hasID('picture-clue-row-0')).toBe(true);
+    assertSingleMore();
+
+    // Return via Cove's single More sheet and verify the paused Cove puzzle stayed intact.
+    await act(async () => { byID('hud-more').props.onPress(); });
+    expect(hasID('more-Back to puzzle')).toBe(true);
+    await act(async () => { byID('more-Back to puzzle').props.onPress(); });
+    assertSingleMore();
+    expect(byID('picture-cell-0').props.accessibilityLabel).toContain('filled');
+    expect(decodePicture(session().payload, 5)?.marks[0]).toBe(FILL);
   });
 
   it('shows a visible loading state for a delayed import and retries cleanly after a rejected import', async () => {
@@ -368,6 +435,54 @@ describe('Picture Grid Cove wiring (G4a, banks 110–113)', () => {
     });
 
     expect(attempts).toBe(2);
+    expect(hasID('picture-grid-load-error')).toBe(false);
+    expect(hasID('picture-cell-0')).toBe(true);
+  });
+
+  it('clears a rejected react-native fallback import so error and retry UI recover cleanly', async () => {
+    const facts = pictureGridBankFacts(manifest as unknown as FamilyManifest);
+    let rnAttempts = 0;
+    const flakyRN: ReactNativeImporter = () => {
+      rnAttempts += 1;
+      return rnAttempts === 1 ? Promise.reject(new Error('rn unavailable')) : import('react-native');
+    };
+    let screenAttempts = 0;
+    const flakyScreen: PlayScreenImporter = () => {
+      screenAttempts += 1;
+      return screenAttempts === 1 ? Promise.reject(new Error('screen unavailable')) : Promise.resolve(PlayScreen);
+    };
+    const entry = definePictureGrid(facts, { loader: () => db.loader!, loadScreen: flakyScreen, loadRN: flakyRN });
+    const ref = await entry.packed!.choose(110, emptyChallenge());
+    const card = entry.packed!.card(ref)!;
+
+    function Ready() {
+      const s = useStore();
+      return s.ready
+        ? <CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={entry} card={card} partner={null} width={360} onBrowse={() => {}} onClose={() => {}} />
+        : null;
+    }
+
+    await act(async () => {
+      screen = create(<StoreProvider><Probe /><Ready /></StoreProvider>);
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(rnAttempts).toBe(2);
+    expect(screenAttempts).toBe(1);
+    expect(hasID('picture-grid-load-error')).toBe(true);
+    expect(hasID('picture-grid-retry')).toBe(true);
+
+    await act(async () => {
+      byID('picture-grid-retry').props.onPress();
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screenAttempts).toBe(2);
     expect(hasID('picture-grid-load-error')).toBe(false);
     expect(hasID('picture-cell-0')).toBe(true);
   });

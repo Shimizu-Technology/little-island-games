@@ -78,14 +78,18 @@ export function Board({ picture, draft, dispatch, active, width, band, onBack, o
     if (pictureHint(picture, draft.marks)) dispatch({ type: 'hint' });
     else setAskedOn(draft);
   };
-  const extraActions = onDraw ? [{ label: 'Draw a Puzzle', icon: 'Sparkle' as const, run: onDraw }] : undefined;
+  const extraActions = [
+    ...(onBack ? [{ label: 'Back to puzzle', icon: 'PuzzlePiece' as const, run: onBack }] : []),
+    ...(onDraw ? [{ label: 'Draw a Puzzle', icon: 'Sparkle' as const, run: onDraw }] : []),
+  ];
+  const moreActions = extraActions.length ? extraActions : undefined;
   const host = useBoardHud(done
-    ? { extraActions }
+    ? { extraActions: moreActions }
     : {
         hint: { run: ask, disabled: !canEdit || draft.showingHint },
         undo: { run: () => dispatch({ type: 'undo' }), disabled: !canEdit || !draft.undo.length },
         reset: { run: () => dispatch({ type: 'reset' }), disabled: !canEdit || (draft.marks.every(m => m === EMPTY) && !draft.undo.length) },
-        extraActions,
+        extraActions: moreActions,
       });
   const hosted = !!host;
   const sheetOpen = !hosted && more;
@@ -101,7 +105,14 @@ export function Board({ picture, draft, dispatch, active, width, band, onBack, o
   const close = () => setMore(false);
   return <View style={styles.board}>
     {hosted ? (
-      <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+      onBack ? (
+        <View style={controlRow}>
+          <Control title="‹" label="Back to puzzle" onPress={onBack} />
+          <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+        </View>
+      ) : (
+        <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+      )
     ) : (
       <View style={[controlRow, styles.hud]}>
         {onBack && <Control title="‹" label="Back to Puzzles" onPress={onBack} />}

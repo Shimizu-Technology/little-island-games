@@ -4154,13 +4154,13 @@
         "Cove",
         "Challenge:picture-grid"
       ],
-      "maxBoard": "Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and pan/zoom at edge",
+      "maxBoard": "Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and Move grid panning to edge",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text"
       ],
       "executor": "Lead, private offline Release simulator",
-      "steps": "Map → Cove → Picture Grid. Choose Easy 5×5 (or Expert 15×15); make one legal tap or line-locked drag paint action. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and pan/zoom at edge. Challenge surfaces: picture-grid.",
+      "steps": "Map → Cove → Picture Grid. Choose Easy 5×5 (or Expert 15×15); make one legal tap or line-locked drag paint action. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and Move grid panning to edge. Challenge surfaces: picture-grid.",
       "savedOutcome": "Same owner, immutable ref, board, choices and help/attempt counters after resume; one accepted result/award. Real-time Arcade restarts with accepted stars/best retained; family-only play saves only supported outcomes.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -7082,7 +7082,7 @@
         "Challenge:picture-grid"
       ],
       "door": "Cove",
-      "maxBoard": "Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and pan/zoom at edge",
+      "maxBoard": "Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and Move grid panning to edge",
       "mechanics": [
         "M03",
         "M04"
@@ -8284,12 +8284,12 @@
     {
       "id": "M04",
       "group": "mechanics",
-      "title": "zoom with magnified line",
+      "title": "Move grid panning and zoomed line",
       "games": [
         "picture-grid",
         "word-search"
       ],
-      "maxBoard": "Picture Grid 15×15 and Word Search 16×16, zoomed line at edge",
+      "maxBoard": "Picture Grid 15×15 (Move grid panning to edge) and Word Search 16×16 (zoomed line at edge)",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text",
@@ -8300,7 +8300,7 @@
       ],
       "executionCases": 6,
       "executor": "Lead, private offline Release simulator",
-      "steps": "Fixture: Picture Grid 15×15 and Word Search 16×16, zoomed line at edge. Exercise zoom with magnified line in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
+      "steps": "Fixture: Picture Grid 15×15 (Move grid panning to edge) and Word Search 16×16 (zoomed line at edge). In Picture Grid, toggle Move grid to pan the fixed edit-size canvas to the edge and return to Edit grid; in Word Search, exercise zoomed line at edge. Test legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
       "savedOutcome": "Exact owner/draft/pending choices after force-close; no duplicate move, leaked secret or unsolicited help. Free creation remains ungraded.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -14502,8 +14502,8 @@
         "iPad mini / iOS 26.5 / landscape / default text"
       ],
       "executor": "Lead, Release simulator",
-      "steps": "Create Picture Grid freely, share locally, solve, leave and reopen.",
-      "savedOutcome": "Original creation retained; no grade/mark for free creation; solver checks shared task without mutating original.",
+      "steps": "From a saved or finished Picture Grid Cove round, open Draw a Puzzle (5×5, 8×8, or 10×10), draw cells, tap Pass to solver, tap Play to solve on the same device, and return to the Cove puzzle (then quit and reopen).",
+      "savedOutcome": "Same-device handoff hides the drawing behind the cover and starts the solver with empty cells; no grade/mark for free creation; returning and reopening preserves the saved Cove attempt intact.",
       "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
       "gate": "RC",
       "source": "PLAN §10 cross-cutting journeys",

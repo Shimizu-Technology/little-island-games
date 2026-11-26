@@ -573,8 +573,8 @@
         "iPad mini / iOS 26.5 / portrait and landscape"
       ],
       "executor": "Lead, Release simulator",
-      "steps": "Create Picture Grid freely, share locally, solve, leave and reopen.",
-      "savedOutcome": "Original creation retained; no grade/mark for free creation; solver checks shared task without mutating original.",
+      "steps": "From a saved or finished Picture Grid Cove round, open Draw a Puzzle (5×5, 8×8, or 10×10), draw cells, tap Pass to solver, tap Play to solve on the same device, and return to the Cove puzzle (then quit and reopen).",
+      "savedOutcome": "Same-device handoff hides the drawing behind the cover and starts the solver with empty cells; no grade/mark for free creation; returning and reopening preserves the saved Cove attempt intact.",
       "evidenceRequired": "Frame/recording and ledger with source SHA, build/bundle hash, manifest, device/OS, fixture, actual visible result and saved diff; record each required dimension and both passes.",
       "gate": "RC",
       "source": "PLAN §10 cross-cutting journeys"

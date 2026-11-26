@@ -935,7 +935,7 @@
         "Expert 15\u00d715"
       ],
       "door": "Cove",
-      "maxBoard": "Picture Grid 15\u00d715 Expert baked (10\u00d710 Draw a Puzzle); longest row/column stroke and pan/zoom at edge",
+      "maxBoard": "Picture Grid 15\u00d715 Expert baked (10\u00d710 Draw a Puzzle); longest row/column stroke and Move grid panning to edge",
       "firstAction": "Choose Easy 5\u00d75 (or Expert 15\u00d715); make one legal tap or line-locked drag paint action",
       "challengeSteps": "Map \u2192 Cove \u2192 Picture Grid (picture-grid); open Easy 5\u00d75 and Expert 15\u00d715 (no Check control or dares ship in this slice). Paint and cross out cells with tap and line-locked drag, use Hint, Undo, Restart this puzzle from More, open Draw a Puzzle (up to 10\u00d710) and return with the paused puzzle intact, quit/resume, finish to reveal the colored picture, and reopen the finished board (including interactive Draw a Puzzle). Fill paused spaces and attempt another Start; cancel and retain every draft."
     },
@@ -1452,12 +1452,13 @@
     },
     {
       "id": "M04",
-      "name": "zoom with magnified line",
+      "name": "Move grid panning and zoomed line",
       "games": [
         "picture-grid",
         "word-search"
       ],
-      "maxBoard": "Picture Grid 15\u00d715 and Word Search 16\u00d716, zoomed line at edge"
+      "maxBoard": "Picture Grid 15\u00d715 (Move grid panning to edge) and Word Search 16\u00d716 (zoomed line at edge)",
+      "steps": "Fixture: Picture Grid 15\u00d715 (Move grid panning to edge) and Word Search 16\u00d716 (zoomed line at edge). In Picture Grid, toggle Move grid to pan the fixed edit-size canvas to the edge and return to Edit grid; in Word Search, exercise zoomed line at edge. Test legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes."
     },
     {
       "id": "M05",
