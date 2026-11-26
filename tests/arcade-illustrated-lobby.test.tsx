@@ -1,20 +1,26 @@
 import React from 'react';
 import { readFileSync, readdirSync } from 'node:fs';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg from 'react-native-svg';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import Arcade from '../src/app/arcade';
 import { ArcadeLobby } from '../src/arcade/ArcadeScreen';
 import { emptyArcade, emptyArcadeLearner, emptyGameProgress } from '../src/arcade/progress';
 import { arcadeShelfGames } from '../src/arcade/registry';
 import { hasArcadeArt } from '../src/art/illustrated';
 import { GameIcon } from '../src/components/GameIcon';
+import { styles } from '../src/components/ui';
 import { addLearner } from '../src/learn/learners';
 import { emptySave } from '../src/state/validation';
+import { theme } from '../src/ui/theme';
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const routing = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 const fixture = vi.hoisted(() => ({
+  ready: true,
+  nunitoLoaded: false,
   save: {} as ReturnType<typeof import('../src/state/validation').emptySave>,
   toggleGameFavorite: vi.fn(),
 }));
@@ -29,9 +35,13 @@ vi.mock('react-native', () => {
       timing: () => ({ start: (callback?: (result: { finished: boolean }) => void) => callback?.({ finished: true }) }) },
   };
 });
-vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }) }));
+vi.mock('react-native-safe-area-context', () => ({
+  SafeAreaView: 'SafeAreaView',
+  useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
+}));
 vi.mock('react-native-svg', () => ({ default: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Path: 'Path', Rect: 'Rect', Text: 'SvgText' }));
-vi.mock('expo-router', () => ({ router: routing }));
+vi.mock('expo-router', () => ({ router: routing, useLocalSearchParams: () => ({}) }));
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => fixture.nunitoLoaded }));
 vi.mock('../src/components/motion', () => ({ easeOut: 0, nativeDriver: true, useReducedMotion: () => true }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: 'SaveStatus' }));
 vi.mock('../src/components/Settings', async () => {
@@ -39,6 +49,8 @@ vi.mock('../src/components/Settings', async () => {
   return { Settings: (props: { visible: boolean; onClose: () => void }) => <Sheet {...props} title="Settings">{null}</Sheet> };
 });
 vi.mock('../src/state/Store', () => ({ useStore: () => fixture }));
+vi.mock('../src/components/Recovery', () => ({ Recovery: () => null }));
+vi.mock('../src/arcade/RenderSpike', () => ({ RenderSpike: () => null }));
 vi.mock('../src/arcade/Scene', () => ({ ArcadeScene: () => null }));
 vi.mock('../src/arcade/Art', () => ({ ArcadeIsland: () => null }));
 vi.mock('../src/arcade/Collection', () => ({ StickerBook: 'StickerBook' }));
@@ -67,7 +79,13 @@ async function mount(element: React.ReactElement) {
 const button = (label: string) => screen.root.find(node => node.type === Pressable &&
   (node.props.accessibilityLabel ?? node.findAllByType(Text)[0]?.children.join('')) === label);
 
-beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  vi.clearAllMocks();
+  viewport.fontScale = 1;
+  fixture.nunitoLoaded = false;
+  fixture.save = emptySave();
+});
 afterEach(async () => { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); });
 
 it('bundles exactly the nine shelf illustrations as 512×512 WebPs with alpha', () => {
@@ -98,6 +116,25 @@ it('shows decorative arcade images in fixed-size tiles and keeps the other shelf
       expect(icon.findAllByType(Image)).toHaveLength(0);
       expect(icon.findByType(Svg).props.width).toBe(120);
     }
+  }
+});
+
+it('matches the lobby canvas at the route safe area when no game is selected', async () => {
+  await mount(<Arcade/>);
+  expect(screen.root.findByType(ArcadeLobby)).toBeDefined();
+  expect(StyleSheet.flatten(screen.root.findByType(SafeAreaView).props.style).backgroundColor).toBe('#FFF4DE');
+});
+
+it.each([false, true])('styles the lobby heading and all nine tile titles when Nunito loaded is %s', async (loaded) => {
+  fixture.nunitoLoaded = loaded;
+  await mount(<Arcade/>);
+
+  const lobby = screen.root.findByType(ArcadeLobby);
+  for (const title of ['Island Arcade', ...games.map(game => game.name)]) {
+    const heading = lobby.find(node => node.type === Text && node.props.accessibilityRole === 'header' && node.children.join('') === title);
+    const style = StyleSheet.flatten(heading.props.style);
+    expect(style.fontWeight).toBe(loaded ? 'normal' : '800');
+    expect(style.fontFamily).toBe(loaded ? theme.fontFamily['800'] : styles.heading.fontFamily);
   }
 });
 

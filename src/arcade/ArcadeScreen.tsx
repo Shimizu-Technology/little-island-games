@@ -48,7 +48,6 @@ import { allLevelIds, type ArcadeGame, type ArcadeLevel, type ArcadeResult, type
 const lobbyPaper = "#FFFDF7";
 const lobbyBorder = "#E4D5BF";
 const lobbyInk = theme.colors.frame;
-const lobbyHeading = { fontFamily: theme.fontFamily["800"], fontWeight: "normal", color: lobbyInk } as const;
 const lobbyCard = {
   backgroundColor: lobbyPaper,
   borderRadius: 28,
@@ -68,9 +67,12 @@ function LearnerSentence({ name, stickers, large }: { name: string; stickers: nu
     <Copy numberOfLines={1} style={{ color: lobbyInk, flexShrink: 1 }}>{name}</Copy><Copy style={{ color: lobbyInk, flexShrink: 0 }}>{large ? words : ` · ${words}`}</Copy>
   </View>;
 }
-export function ArcadeLobby() {
+export function ArcadeLobby({ nunitoLoaded = false }: { nunitoLoaded?: boolean }) {
   const store = useStore(), learner = activeLearner(store.save.learning), person = arcadeLearner(store.save.arcade, learner.id);
   const [sheet, setSheet] = useState<"book" | "settings" | null>(null);
+  const lobbyHeading = nunitoLoaded
+    ? { fontFamily: theme.fontFamily["800"], fontWeight: "normal", color: lobbyInk } as const
+    : { fontWeight: "800", color: lobbyInk } as const;
   // At accessibility sizes the lobby's words stop at 1.5x and fit their line; each world's card stacks its picture over its words.
   const { width, fontScale } = useWindowDimensions(), large = fontScale >= LARGE_TEXT, line = Math.min(width, 1000) - 40;
   // On a narrow row the title starts below the favorite button, retaining the full width beside the art.
