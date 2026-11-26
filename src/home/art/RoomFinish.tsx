@@ -1,5 +1,5 @@
 import React from 'react';
-import { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
+import { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
 /** Shared surface finish, drawn inside the original wall and floor polygons. */
 export function RoomWallFinish({ room }: { room: 'home' | 'kitchen' | 'treehouse' | 'beach' }) {
@@ -54,5 +54,32 @@ export function RoomFloorFinish({ room }: { room: 'home' | 'kitchen' | 'treehous
       {Array.from({length:14},(_,n)=><Path key={n} d={`M${230+n*23} ${436+(n%3)*5}q7 15 0 29`} stroke={room==='treehouse'?'#BA9B6C':'#C7B398'} strokeWidth={1.4} fill="none" opacity={.62}/>)}
     </G>}
     {room==='beach' && <G fill="#B89469" opacity={.55}>{Array.from({length:32},(_,n)=><Circle key={n} cx={90+(n*97)%680} cy={367+(n*43)%144} r={n%4===0?2:1}/>)}</G>}
+  </G>;
+}
+
+/** Static architectural lighting sits behind set pieces and the interactive badge wall. */
+export function RoomTrim({ room, prefix }: Parameters<typeof RoomWallFinish>[0] & { prefix: string }) {
+  const beamStart = room === 'home' ? 180 : 355;
+  return <G pointerEvents="none">
+    <Defs>
+      <LinearGradient id={prefix + '-recess'} x1="0" x2="0" y1="0" y2="1">
+        <Stop offset="0" stopColor="#70432D" stopOpacity={.32}/><Stop offset="1" stopColor="#70432D" stopOpacity={0}/>
+      </LinearGradient>
+      <LinearGradient id={prefix + '-sunlight'} x1="0" x2="1" y1="0" y2="1">
+        <Stop offset="0" stopColor="#FFF5BF" stopOpacity={.63}/><Stop offset="1" stopColor="#FFF5BF" stopOpacity={0}/>
+      </LinearGradient>
+    </Defs>
+    <Rect y={15} width={800} height={54} fill={`url(#${prefix}-recess)`}/>
+    <Path d="M0 20h12v330H0Zm788 0h12v330h-12Z" fill="#70432D" opacity={.14}/>
+    {room !== 'kitchen' && <>
+      <Rect y={270} width={800} height={82} fill={room === 'beach' ? '#D8AE78' : '#BA8155'} opacity={.42}/>
+      <Path d="M0 269h800" stroke="#9C6647" strokeWidth={11}/><Path d="M0 265h800" stroke="#F9D2A0" strokeWidth={4}/>
+      {Array.from({ length: 33 }, (_, i) => <Path key={i} d={`M${i*24+10} 276v68m3-68v68`} stroke="#835F42" strokeWidth={1} opacity={.35}/>)}
+    </>}
+    <Rect y={361} width={800} height={30} fill={`url(#${prefix}-recess)`}/>
+    <Path d={`M${beamStart} 177h43l235 175 179 149-234 26-106-175Z`} fill={`url(#${prefix}-sunlight)`}/>
+    <Path d={`M${beamStart+49} 190h19l229 162 145 121-60 13-132-134Z`} fill={`url(#${prefix}-sunlight)`} opacity={.55}/>
+    {room === 'treehouse' && [[104,70],[157,105],[244,61],[620,65],[699,98]].map(([x,y]) =>
+      <Path key={x} d={`M${x} ${y-8}l3 6 6 2-6 2-3 6-3-6-6-2 6-2Z`} fill="#FFF3C2" stroke="#AE774E"/>)}
   </G>;
 }

@@ -18,7 +18,7 @@ import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import type { Interaction } from '../src/home/runtime/useInteraction';
 const setDownClock=vi.hoisted(()=>({done:[] as Array<(done:boolean)=>void>, raf:[]as Array<()=>void>}));
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' }, AppState: { addEventListener: () => ({ remove() {} }) } }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
+vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView', createAnimatedComponent:()=> 'AnimatedGroup' }, useAnimatedProps:(fn:()=>unknown)=>({evaluate:fn}), useSharedValue: (v: any) => React.useRef({ value: v, set(n: any) { this.value = n; }, get() { return this.value; } }).current,
   cancelAnimation:()=>{}, withTiming: (x: any, _config:any, done?:(done:boolean)=>void) => {if(done)setDownClock.done.push(done);return x;}, ReduceMotion: { System: 'system', Always: 'always', Never: 'never' }, Easing: { linear: (t: number) => t }, useAnimatedStyle: (fn: () => unknown) => ({ initial:fn(), evaluate: fn }),
   useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }), useAnimatedReaction: () => {}, useFrameCallback:()=>React.useRef({setActive:()=>{}}).current, runOnJS: (f: any) => f, runOnUI: (f: any) => f }));

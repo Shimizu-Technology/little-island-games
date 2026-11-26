@@ -111,7 +111,7 @@ vi.mock("react-native-safe-area-context", () => ({
 }));
 
 vi.mock("react-native-svg", () => {
-  const tags = ["G", "Circle", "Ellipse", "Rect", "Path", "Defs", "Filter", "FeColorMatrix", "Pattern", "LinearGradient", "Stop"];
+  const tags = ["G", "Circle", "Ellipse", "Rect", "Path", "Defs", "ClipPath", "Filter", "FeColorMatrix", "Pattern", "LinearGradient", "Stop"];
   return { default: "Svg", ...Object.fromEntries(tags.map((t) => [t, t])) };
 });
 

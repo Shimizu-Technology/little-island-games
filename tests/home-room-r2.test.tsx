@@ -13,7 +13,10 @@ it('keeps child-selected palette and earned patterns on every distinct shell',()
     const svg=render(<RoomShellArt room={room} theme={{wallpaper:'peach',floor:'rose'}}/>);
     expect(svg).toContain('#F1CEC0');expect(svg).toContain('#DCB9AA');
     expect(svg).toContain('M0 352H800V560H0Z');
-    expect(render(<RoomShellArt room={room} theme={{wallpaper:'night-sky',floor:'island-breeze'}}/>)).toContain('url(#island-breeze)');
+    const patterned = render(<RoomShellArt room={room} theme={{wallpaper:'night-sky',floor:'island-breeze'}}/>);
+    const floorId = patterned.match(new RegExp(`<pattern[^>]*id="(${room}-stage-[^"]+-island-breeze)"`))?.[1];
+    expect(floorId).toBeDefined();
+    expect(patterned).toContain(`url(#${floorId})`);
     expect(roomDefaultTheme[room]).toBeDefined();
   }
 });
@@ -29,4 +32,14 @@ it('exports empty, six-item and theme-override comparison fixtures',()=>{
     html+='</div></section>';
   }
   writeFileSync(`${dir}/${process.env.ROOM_R2_BEFORE?'before':'after'}.html`,html);
+});
+
+it('keeps all paint and clip references local when several room previews share a page', () => {
+  const svg = render(<>{[...rooms, 'kitchen' as const].map((room, i) =>
+    <RoomShellArt key={i} room={room} theme={{wallpaper:'night-sky',floor:'island-breeze'}}/>
+  )}</>);
+  const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map(match => match[1]);
+  expect(ids.length).toBeGreaterThan(40);
+  expect(new Set(ids).size).toBe(ids.length);
+  for (const [, id] of svg.matchAll(/url\(#([^)]+)\)/g)) expect(ids).toContain(id);
 });
