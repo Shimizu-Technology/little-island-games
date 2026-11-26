@@ -19,7 +19,6 @@ export function HomePanels({
   overview = false,
   onOverview,
   onFind,
-  onTidyUp,
   large = false,
   onLarge,
 }: {
@@ -38,7 +37,6 @@ export function HomePanels({
   overview?: boolean;
   onOverview?: () => void;
   onFind?: () => void;
-  onTidyUp?: () => void;
 }) {
   // HR-01: friends live in the friends drawer now; this panel is only More.
   void friends; void scene; void renderCharacter; void onBring;
@@ -95,30 +93,6 @@ export function HomePanels({
         >
           <FriendsIcon />
         </Pressable>
-        {onTidyUp && (
-          <Pressable
-            testID="more-tidy-up-button"
-            accessibilityRole="button"
-            accessibilityLabel="Tidy up"
-            onPress={() => {
-              onClose();
-              onTidyUp();
-            }}
-            style={[
-              {
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: large ? 64 : 88,
-                minHeight: large ? 64 : 48,
-                paddingHorizontal: 14,
-                borderRadius: large ? 32 : 24,
-                backgroundColor: "#F1E6CF",
-              },
-            ]}
-          >
-            <Text style={{ color: ink, fontWeight: "700", fontSize: 15 }}>Tidy up</Text>
-          </Pressable>
-        )}
       </View>
       {onLarge && <GrownUpAccess large={large} onLarge={onLarge} />}
     </View>

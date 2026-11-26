@@ -38,23 +38,44 @@ export function closetItemsForTab(tab: ClosetTab): readonly StyleItem[] {
   return categories.flatMap((category) => styleCatalog.filter((item) => item.category === category));
 }
 
-/** Adaptive detent ratio: ~45% on portrait phones/tablets, ~72% on short/landscape phones (< 520 pt) so the grid stays usable. */
+/** Adaptive detent ratio: ~45% on portrait phones/tablets, ~65% on short/landscape phones (< 520 pt) so both Islander and grid fit. */
 export function closetSheetHeightRatio(windowHeight: number): number {
-  return windowHeight < 520 ? 0.72 : 0.45;
+  return windowHeight < 520 ? 0.65 : 0.45;
 }
 
-/** Layout metrics shared by Closet rendering and layout tests (including 844×390 phone landscape). */
-export function closetSheetMetrics(windowHeight: number) {
+export type ClosetLayoutOptions = {
+  bottomInset?: number;
+  hasLockedBanner?: boolean;
+  hasStatusLine?: boolean;
+};
+
+/** Layout metrics shared by Closet rendering and layout tests (including 844×390 phone landscape with bottom inset & banners). */
+export function closetSheetMetrics(windowHeight: number, options: ClosetLayoutOptions = {}) {
+  const { bottomInset = 0, hasLockedBanner = false, hasStatusLine = false } = options;
   const shortViewport = windowHeight < 520;
   const heightRatio = closetSheetHeightRatio(windowHeight);
   const sheetHeight = Math.floor(windowHeight * heightRatio);
   const headerBudget = shortViewport ? 57 : 68;
   const tabHeight = shortViewport ? theme.target.min : theme.target.adult;
-  const footerBudget = shortViewport ? 56 : 74;
+  const bannerBudget = hasLockedBanner ? (shortViewport ? 30 : 46) : 0;
+  const statusBudget = hasStatusLine ? (shortViewport ? 20 : 24) : 0;
+  const footerBudget = (shortViewport ? 53 : 74) + statusBudget;
   const gaps = shortViewport ? 8 : 16;
-  const availableGridHeight = Math.max(0, sheetHeight - headerBudget - tabHeight - footerBudget - gaps);
-  const minGridHeight = shortViewport ? Math.min(112, Math.max(96, availableGridHeight)) : 0;
-  return { shortViewport, heightRatio, sheetHeight, tabHeight, minGridHeight, availableGridHeight };
+  const fixedChromeHeight = headerBudget + bottomInset + tabHeight + bannerBudget + footerBudget + gaps;
+  const availableGridHeight = Math.max(0, sheetHeight - fixedChromeHeight);
+  const footerFits = fixedChromeHeight <= sheetHeight;
+  return {
+    shortViewport,
+    heightRatio,
+    sheetHeight,
+    headerBudget,
+    tabHeight,
+    bannerBudget,
+    footerBudget,
+    fixedChromeHeight,
+    availableGridHeight,
+    footerFits,
+  };
 }
 
 /** Next tab index for W3C Tabs arrow/Home/End navigation on Web; undefined for unrelated keys. */
@@ -165,6 +186,8 @@ export type HomeClosetSheetProps = {
   onTryOn: (nextLook: IslanderLook, item: StyleItem) => void;
   onWear: (nextLook: IslanderLook) => boolean;
   onSeen?: (id: string) => boolean | void;
+  /** Atomic batch acknowledgement for "Mark all seen"; falls back to calling `onSeen` per unseen unlocked item. */
+  onSeenAll?: () => boolean | void;
   /** Store async persistence state so Closet never announces success while saving or after a write error. */
   saving?: boolean;
   saveError?: string | null;
@@ -186,6 +209,7 @@ export function HomeClosetSheet({
   onTryOn,
   onWear,
   onSeen,
+  onSeenAll,
   saving,
   saveError,
   returnFocusRef,
@@ -196,6 +220,8 @@ export function HomeClosetSheet({
     initialItem ? lockedReason(initialItem, earned) : undefined
   );
   const [wearPhase, setWearPhase] = useState<WearPhase>("idle");
+  const wearAcceptedRef = useRef(false);
+  const prevSaveErrorRef = useRef(saveError);
   const gridRef = useRef<ScrollView>(null);
   const titleNodeRef = useRef<unknown>(null);
   const needsNativeFocusRef = useRef(false);
@@ -223,6 +249,7 @@ export function HomeClosetSheet({
       setLockedNote(undefined);
     }
     setWearPhase("idle");
+    wearAcceptedRef.current = false;
   }, [visible, initialItem, earned]);
 
   // P2-2: Native VoiceOver focus entry to Closet title on open and restoration to opener button on close.
@@ -259,8 +286,10 @@ export function HomeClosetSheet({
     return undefined;
   }, [visible, returnFocusRef]);
 
-  // P1-5: Reconcile queued/saving Wear writes with real Store persistence so errors are never masked as success.
+  // P1-5: Reconcile queued/saving/refused Wear writes with Store persistence and retry recovery.
   useEffect(() => {
+    const hadSaveError = !!prevSaveErrorRef.current;
+    prevSaveErrorRef.current = saveError;
     if (wearPhase === "queued") {
       if (saveError) {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- Reflects Store persistence failure honestly.
@@ -274,18 +303,39 @@ export function HomeClosetSheet({
     } else if (wearPhase === "saving" && saving === false) {
       if (saveError) {
         setWearPhase("refused");
-      } else {
+      } else if (wearAcceptedRef.current) {
         setWearPhase("saved");
         AccessibilityInfo.announceForAccessibility?.("Wearing your new look.");
+      } else {
+        setWearPhase("idle");
+      }
+    } else if (wearPhase === "refused") {
+      if (saving === true) {
+        setWearPhase("saving");
+      } else if (hadSaveError && !saveError && !saving) {
+        if (wearAcceptedRef.current) {
+          setWearPhase("saved");
+          AccessibilityInfo.announceForAccessibility?.("Wearing your new look.");
+        } else {
+          setWearPhase("idle");
+        }
       }
     }
   }, [wearPhase, saving, saveError]);
 
   const items = useMemo(() => closetItemsForTab(tab), [tab]);
+  const unseenUnlocked = useMemo(
+    () =>
+      unseen.filter((id) => {
+        const item = styleCatalog.find((entry) => entry.id === id);
+        return !!item && !lockedReason(item, earned);
+      }),
+    [unseen, earned]
+  );
   const changed = useMemo(() => JSON.stringify(look) !== JSON.stringify(equipped), [look, equipped]);
   const wearable = changed && canWear(look, earned);
   const metrics = closetSheetMetrics(windowHeight);
-  const { shortViewport, heightRatio, minGridHeight } = metrics;
+  const { shortViewport, heightRatio } = metrics;
   const compact = windowHeight < 700;
   const thumbSize = shortViewport ? 44 : compact ? 54 : 62;
 
@@ -320,18 +370,33 @@ export function HomeClosetSheet({
     if (reason) {
       setLockedNote(reason);
       setWearPhase("idle");
+      wearAcceptedRef.current = false;
       AccessibilityInfo.announceForAccessibility?.(reason);
       return;
     }
     setLockedNote(undefined);
     setWearPhase("idle");
+    wearAcceptedRef.current = false;
     onTryOn(lookWithStyle(look, item), item);
+  };
+
+  const markAllSeen = () => {
+    if (!unseenUnlocked.length) return;
+    if (onSeenAll) {
+      onSeenAll();
+      return;
+    }
+    if (!onSeen) return;
+    for (const id of unseenUnlocked) {
+      if (onSeen(id) === false) break;
+    }
   };
 
   const wear = () => {
     if (!wearable) return;
     setLockedNote(undefined);
     const accepted = onWear(look);
+    wearAcceptedRef.current = accepted;
     if (!accepted) {
       setWearPhase("refused");
       AccessibilityInfo.announceForAccessibility?.(REFUSED_WEAR_MESSAGE);
@@ -354,6 +419,20 @@ export function HomeClosetSheet({
 
   const webTablistProps = { role: "tablist", "aria-label": "Closet categories", onKeyDown: onTabsKeyDown } as object;
   const webTabpanelProps = { id: "closet-tabpanel", role: "tabpanel", "aria-labelledby": `closet-tab-${tab}` } as object;
+  const markAllSeenAction =
+    unseenUnlocked.length > 0 && (onSeenAll || onSeen) ? (
+      <Pressable
+        testID="closet-mark-all-seen"
+        accessibilityRole="button"
+        accessibilityLabel="Mark all seen"
+        onPress={markAllSeen}
+        style={styles.markAllSeenButton}
+      >
+        <Text variant="small" tone="lagoon" maxFontSizeMultiplier={1.2} numberOfLines={1} style={styles.markAllSeenText}>
+          Mark all seen
+        </Text>
+      </Pressable>
+    ) : undefined;
 
   return (
     <Sheet
@@ -363,6 +442,7 @@ export function HomeClosetSheet({
       heightRatio={heightRatio}
       compactHeader={shortViewport}
       onTitleRef={handleTitleRef}
+      headerAction={markAllSeenAction}
       scroll={false}
       title="Closet"
       closeLabel="Close closet"
@@ -412,7 +492,7 @@ export function HomeClosetSheet({
         <ScrollView
           ref={gridRef}
           testID="closet-grid"
-          style={[styles.gridScroll, { minHeight: minGridHeight }]}
+          style={styles.gridScroll}
           contentContainerStyle={[styles.grid, shortViewport && styles.gridCompact]}
           showsVerticalScrollIndicator={false}
           {...webTabpanelProps}
@@ -511,10 +591,11 @@ export function HomeClosetSheet({
             testID="closet-wear-button"
             label="Wear this"
             variant="primary"
-            target={compact ? "adult" : "child"}
+            target={shortViewport ? "min" : compact ? "adult" : "child"}
             fill
             disabled={!wearable}
             onPress={wear}
+            style={shortViewport ? styles.wearButtonCompact : undefined}
           />
         </View>
       </View>
@@ -525,6 +606,7 @@ export function HomeClosetSheet({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    minHeight: 0,
     paddingHorizontal: theme.space.lg,
     gap: theme.space.sm,
   },
@@ -536,6 +618,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: theme.space.xs,
+    flexShrink: 0,
   },
   tabButton: {
     flex: 1,
@@ -576,9 +659,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.pastels.arcade,
     borderWidth: 1,
     borderColor: theme.colors.hairline,
+    flexShrink: 0,
   },
   ruleBannerCompact: {
-    paddingVertical: 4,
+    paddingVertical: 3,
   },
   ruleText: {
     flex: 1,
@@ -668,11 +752,26 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.hairline,
     gap: theme.space.xs,
+    flexShrink: 0,
   },
   footerCompact: {
     paddingTop: 4,
     paddingBottom: 4,
     gap: 2,
+  },
+  wearButtonCompact: {
+    paddingVertical: theme.space.sm,
+  },
+  markAllSeenButton: {
+    minHeight: theme.target.min,
+    paddingHorizontal: theme.space.sm,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.lagoonSoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  markAllSeenText: {
+    fontWeight: "700",
   },
   statusText: {
     textAlign: "center",

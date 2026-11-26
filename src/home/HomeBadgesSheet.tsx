@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BadgeArt } from "../badges/BadgeArt";
 import { badgeInfo, progressForBadge, trackLabels, tracks, type BadgeId } from "../badges/engine";
 import { Sheet } from "../ui/Sheet";
@@ -26,6 +27,8 @@ export type HomeBadgesSheetProps = {
   badges: readonly BadgeId[];
   milestones: readonly string[];
   initialBadge?: BadgeId;
+  /** Optional save-status banner rendered inside the Badge Wall modal so Retry stays touch-reachable. */
+  saveStatus?: React.ReactNode;
 };
 
 export function HomeBadgesSheet({
@@ -34,7 +37,10 @@ export function HomeBadgesSheet({
   badges,
   milestones,
   initialBadge,
+  saveStatus,
 }: HomeBadgesSheetProps) {
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<BadgeId | undefined>(initialBadge);
   const latestData = useRef({ badges, milestones });
   useLayoutEffect(() => {
@@ -76,6 +82,23 @@ export function HomeBadgesSheet({
       mode="large"
       title="Badge Wall"
       closeLabel="Close badge wall"
+      topOverlay={
+        saveStatus ? (
+          <View
+            testID="home-save-status"
+            pointerEvents="box-none"
+            style={[
+              styles.saveStatusOverlay,
+              {
+                top: insets.top + 8,
+                maxWidth: Math.min(380, width - 16),
+              },
+            ]}
+          >
+            {saveStatus}
+          </View>
+        ) : undefined
+      }
     >
       <View testID="home-badges-sheet" style={styles.root}>
         <View
@@ -243,5 +266,11 @@ const styles = StyleSheet.create({
   frameName: {
     textAlign: "center",
     fontWeight: "700",
+  },
+  saveStatusOverlay: {
+    position: "absolute",
+    right: 8,
+    zIndex: 100,
+    elevation: 100,
   },
 });

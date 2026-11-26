@@ -30,8 +30,8 @@ import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, itemSpec, type ItemId } from "./catalog";
-import { useHomeStore, RESTORE_NOTE, RESTORE_QUESTION, UNDO_NOTES, type RestoreCost } from "./useHomeStore";
-import { UndoGonePicture, UndoNote } from "./runtime/UndoNote";
+import { useHomeStore, RESTORE_NOTE, UNDO_NOTES } from "./useHomeStore";
+import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
@@ -60,24 +60,22 @@ import { useHomeVisible } from "./runtime/visibility";
 import type { ReleaseProbe } from "./runtime/frameProbe";
 import { writeProbe } from "./runtime/probeReceipt";
 import type { HomeTrace } from "./runtime/trace";
-import { theme } from "../ui/theme";
 
 /** Metro folds this branch away, so a build without the lab flag carries none of this code. */
 const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import("./runtime/HullOverlay") } | undefined =
   __DEV__ || process.env.EXPO_PUBLIC_HOME_LAB === "1"
-    ? // eslint-disable-next-line @typescript-eslint/no-require-imports -- Metro folds dev/lab require away.
-      { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
+    ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") } // eslint-disable-line @typescript-eslint/no-require-imports -- Metro folds dev/lab require away.
     : undefined;
 
 /** Available vertical viewport height above the undimmed Closet sheet (shared across cold links & dock opens). */
 export function closetAboveSheetHeight(windowHeight: number, headerHeight: number): number {
   const sheetHeight = Math.floor(windowHeight * closetSheetHeightRatio(windowHeight));
-  return Math.max(120, windowHeight - sheetHeight - headerHeight);
+  return Math.max(0, windowHeight - sheetHeight - headerHeight);
 }
 
 /**
  * Shared above-sheet camera framing helper for both cold `/locker` landings and in-room dock Closet opens.
- * Switches to the Islander's room and keeps the Islander's full head-to-feet bounds above the sheet.
+ * Switches to the Islander's room and keeps the Islander's full head-to-feet bounds strictly above the sheet.
  */
 export function closetCameraFor(
   hero: SceneEntity | undefined,
@@ -90,7 +88,8 @@ export function closetCameraFor(
   const room = hero?.room ?? fallbackRoom;
   const index = Math.max(0, roomIds.indexOf(room));
   const visibleHeight = closetAboveSheetHeight(windowHeight, headerHeight);
-  const aboveSheet: Viewport = { width: viewport.width, height: visibleHeight };
+  const safeHeight = Math.max(1, visibleHeight);
+  const aboveSheet: Viewport = { width: viewport.width, height: safeHeight };
   const origin = roomOrigin(index, building);
   const at = hero
     ? {
@@ -98,9 +97,10 @@ export function closetCameraFor(
         y: hero.bounds.top + hero.bounds.height * 0.52,
       }
     : { x: 400, y: 400 };
+  const margin = Math.min(8, Math.floor(safeHeight * 0.1));
   const baseScale = roomScale(aboveSheet);
   const heroHeight = hero ? Math.max(120, hero.bounds.height) : 160;
-  const maxHeroScale = (visibleHeight * 0.78) / heroHeight;
+  const maxHeroScale = Math.max(0.05, (safeHeight - margin * 2) / heroHeight);
   const scale = Math.max(fitCamera(aboveSheet, building).a, Math.min(baseScale, maxHeroScale));
   const raw: CameraMatrix = {
     a: scale,
@@ -108,15 +108,15 @@ export function closetCameraFor(
     c: 0,
     d: scale,
     tx: aboveSheet.width / 2 - (origin.x + at.x) * scale,
-    ty: visibleHeight / 2 - (origin.y + at.y) * scale,
+    ty: safeHeight / 2 - (origin.y + at.y) * scale,
   };
   const bounded = boundCamera(raw, aboveSheet, building);
   if (hero) {
     const heroTop = (origin.y + hero.bounds.top) * bounded.d + bounded.ty;
     const heroBottom = (origin.y + hero.bounds.top + hero.bounds.height) * bounded.d + bounded.ty;
     let dy = 0;
-    if (heroBottom > visibleHeight - 8) dy = visibleHeight - 8 - heroBottom;
-    if (heroTop + dy < 8) dy = 8 - heroTop;
+    if (heroBottom > safeHeight - margin) dy = safeHeight - margin - heroBottom;
+    if (heroTop + dy < margin) dy = margin - heroTop;
     return { room, camera: dy ? { ...bounded, ty: bounded.ty + dy } : bounded };
   }
   return { room, camera: bounded };
@@ -134,6 +134,7 @@ export type HomeClosetConfig = {
   unseen: readonly string[];
   onWear: (look: IslanderLook) => boolean;
   onSeen?: (id: string) => boolean | void;
+  onSeenAll?: () => boolean | void;
   renderCharacter?: (look: IslanderLook) => CharacterRender;
 };
 export type HomeScreenProps = Ownership & {
@@ -185,8 +186,6 @@ export function HomeScreen({
     );
   const [more, setMore] = useState(false),
     [friends, setFriends] = useState(false);
-  const [tidyConfirm, setTidyConfirm] = useState(false);
-  const [tidyCost, setTidyCost] = useState<RestoreCost | undefined>(undefined);
   const [activeSheet, setActiveSheet] = useState<HomeSheet | null>(initialSheet ?? null);
   const [closetInitialItem, setClosetInitialItem] = useState<StyleItem | undefined>(
     initialSheet === "closet" ? initialClosetItem : undefined
@@ -796,27 +795,37 @@ export function HomeScreen({
     }
     goToMap();
   }, [activeSheet, closeCloset, closeBadges, goToMap]);
-  // P1-1: Android hardware Back closes an open Closet/Badges sheet first.
+  const closeClosetRef = useRef(closeCloset);
+  const closeBadgesRef = useRef(closeBadges);
+  const goToMapRef = useRef(goToMap);
+  const handleBackRef = useRef(handleBack);
+  useLayoutEffect(() => {
+    closeClosetRef.current = closeCloset;
+    closeBadgesRef.current = closeBadges;
+    goToMapRef.current = goToMap;
+    handleBackRef.current = handleBack;
+  });
+  // P1-1: Android hardware Back closes an open Closet/Badges sheet first, then lands on "/" (Map).
   React.useEffect(() => {
-    if (!activeSheet) return;
-    const bh = (
-      ReactNative as unknown as {
-        BackHandler?: {
-          addEventListener?: (event: string, handler: () => boolean) => { remove: () => void };
-        };
-      }
-    ).BackHandler;
+    if (Platform.OS !== "android") return;
+    const rn = ReactNative as Record<string, unknown>;
+    const bh =
+      "BackHandler" in rn
+        ? (rn.BackHandler as {
+            addEventListener?: (event: string, handler: () => boolean) => { remove: () => void };
+          })
+        : undefined;
     if (!bh?.addEventListener) return;
     const sub = bh.addEventListener("hardwareBackPress", () => {
-      if (activeSheet === "closet") closeCloset();
-      else if (activeSheet === "badges") closeBadges();
+      handleBackRef.current();
       return true;
     });
     return () => sub.remove();
-  }, [activeSheet, closeCloset, closeBadges]);
-  // P1-1: Lightweight Web history sentinel so first browser Back dismisses an open sheet to Home.
+  }, []);
+  // P1-1: Tie the Web history sentinel strictly to whether a sheet is open; refs keep it intact across viewport refits.
+  const sheetOpen = activeSheet !== null;
   React.useEffect(() => {
-    if (Platform.OS !== "web") return;
+    if (Platform.OS !== "web" || !sheetOpen) return;
     const host = globalThis as {
       window?: {
         history?: { state?: unknown; pushState?: (data: unknown, unused: string, url?: string) => void };
@@ -824,11 +833,15 @@ export function HomeScreen({
       };
     };
     const win = host.window;
-    if (!win || !activeSheet || sheetHistoryPushed.current || typeof win.history?.pushState !== "function") return;
+    if (!win || sheetHistoryPushed.current || typeof win.history?.pushState !== "function") return;
     sheetHistoryPushed.current = true;
     const currentState = win.history.state && typeof win.history.state === "object" ? win.history.state : {};
-    win.history.pushState({ ...(currentState as Record<string, unknown>), __homeSheet: activeSheet }, "", win.location?.href ?? "");
-  }, [activeSheet]);
+    win.history.pushState(
+      { ...(currentState as Record<string, unknown>), __homeSheet: live.current.activeSheet },
+      "",
+      win.location?.href ?? ""
+    );
+  }, [sheetOpen]);
   React.useEffect(() => {
     if (Platform.OS !== "web") return;
     const host = globalThis as {
@@ -848,9 +861,13 @@ export function HomeScreen({
       if (sheetHistoryPushed.current && live.current.activeSheet) {
         sheetHistoryPushed.current = false;
         event.stopImmediatePropagation?.();
-        if (live.current.activeSheet === "closet") closeCloset(true);
-        else if (live.current.activeSheet === "badges") closeBadges(true);
+        if (live.current.activeSheet === "closet") closeClosetRef.current(true);
+        else if (live.current.activeSheet === "badges") closeBadgesRef.current(true);
+        return;
       }
+      // Second browser Back (no sheet open): always reach "/" (Map), never pop back into a game.
+      event.stopImmediatePropagation?.();
+      goToMapRef.current();
     };
     win.addEventListener("popstate", onPopState, true);
     return () => {
@@ -858,7 +875,7 @@ export function HomeScreen({
       sheetHistoryPushed.current = false;
       suppressNextPop.current = false;
     };
-  }, [closeCloset, closeBadges]);
+  }, []);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
     // Overview room taps always navigate, even over an object or with a previous selection.
@@ -1515,10 +1532,6 @@ export function HomeScreen({
           );
         }}
         onFind={find}
-        onTidyUp={() => {
-          setTidyCost(store.restoreCost(room));
-          setTidyConfirm(true);
-        }}
         onZoom={(ratio) => {
           interaction.cancelAll();
           interaction.animateCamera(
@@ -1564,6 +1577,7 @@ export function HomeScreen({
             return saved;
           }}
           onSeen={closet.onSeen}
+          onSeenAll={closet.onSeenAll}
         />
       )}
       <HomeBadgesSheet
@@ -1572,122 +1586,10 @@ export function HomeScreen({
         badges={ownership.badges ?? []}
         milestones={milestones}
         initialBadge={badgeInitial}
+        saveStatus={saveStatus}
       />
-      {tidyConfirm && (
-        <View
-          testID="home-tidy-confirm"
-          accessibilityViewIsModal
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 90,
-            elevation: 90,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: theme.colors.scrim,
-            padding: 20,
-          }}
-        >
-          {tidyCost === "no-undo" || tidyCost === "drops-older" ? (
-            <View
-              testID="restore-anyway"
-              style={{
-                backgroundColor: theme.colors.bg,
-                padding: 24,
-                borderRadius: 24,
-                maxWidth: 340,
-                gap: 14,
-                alignItems: "center",
-              }}
-            >
-              <UndoGonePicture size={112} />
-              <Text
-                accessibilityRole="header"
-                accessibilityLiveRegion="polite"
-                maxFontSizeMultiplier={1.6}
-                style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "600", textAlign: "center" }}
-              >
-                {RESTORE_QUESTION[tidyCost]}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  store.dispatch({ type: "reset", roomId: room } as HomeAction, { anyway: true });
-                  setTidyConfirm(false);
-                }}
-                style={{
-                  padding: 12,
-                  minHeight: large ? 64 : 48,
-                  justifyContent: "center",
-                  alignSelf: "stretch",
-                  alignItems: "center",
-                  backgroundColor: "#F1E6CF",
-                  borderRadius: 14,
-                }}
-              >
-                <Text>Make it new</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setTidyConfirm(false)}
-                style={{
-                  padding: 12,
-                  minHeight: large ? 64 : 48,
-                  justifyContent: "center",
-                  alignSelf: "stretch",
-                  alignItems: "center",
-                  backgroundColor: "#CFE3D6",
-                  borderRadius: 14,
-                }}
-              >
-                <Text style={{ fontWeight: "600" }}>Keep my room</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={{ backgroundColor: theme.colors.bg, padding: 24, borderRadius: 24, maxWidth: 340, gap: 14 }}>
-              <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "600" }}>
-                Tidy up this room? Undo can bring it back.
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  dispatch({ type: "reset" });
-                  setTidyConfirm(false);
-                }}
-                style={{
-                  padding: 12,
-                  minHeight: large ? 64 : 48,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: theme.colors.coral,
-                  borderRadius: theme.radius.full,
-                }}
-              >
-                <Text style={{ color: theme.colors.ink, fontWeight: "700" }}>Tidy up</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setTidyConfirm(false)}
-                style={{
-                  padding: 12,
-                  minHeight: large ? 64 : 48,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: theme.colors.lagoonSoft,
-                  borderRadius: theme.radius.full,
-                }}
-              >
-                <Text style={{ color: theme.colors.ink, fontWeight: "700" }}>Keep playing</Text>
-              </Pressable>
-            </View>
-          )}
-        </View>
-      )}
-      {/* P1-5: Render SaveStatus above scene (31) and undimmed sheets (50) so Retry is always touch-reachable. */}
-      {saveStatus && (
+      {/* P1-5: Render SaveStatus above scene (31) and undimmed sheets (50); Badge Wall renders it inside its Modal. */}
+      {saveStatus && activeSheet !== "badges" && (
         <View
           testID="home-save-status"
           pointerEvents="box-none"

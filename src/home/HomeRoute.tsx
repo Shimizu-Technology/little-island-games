@@ -5,7 +5,7 @@ import { arcadeLearner } from "../arcade/progress";
 import { badgesFor } from "../badges/engine";
 import { Recovery } from "../components/Recovery";
 import { SaveStatus } from "../components/SaveStatus";
-import { styleCatalog } from "../personalization/catalog";
+import { lockedReason, styleCatalog } from "../personalization/catalog";
 import { personFor } from "../personalization/model";
 import { useStore } from "../state/Store";
 import { Text } from "../ui/Text";
@@ -105,6 +105,14 @@ export function HomeRoute({
         onSeen: (id) => {
           if (!person.unseen.includes(id)) return true;
           return store.personalize({ unseen: person.unseen.filter((entry) => entry !== id) }, expected);
+        },
+        onSeenAll: () => {
+          const remaining = person.unseen.filter((id) => {
+            const entry = styleCatalog.find((style) => style.id === id);
+            return !entry || !!lockedReason(entry, person.earned);
+          });
+          if (remaining.length === person.unseen.length) return true;
+          return store.personalize({ unseen: remaining }, expected);
         },
         renderCharacter: (look) => (input) => <HomeCharacter input={input} look={look} />,
       }}

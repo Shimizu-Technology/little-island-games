@@ -38,7 +38,7 @@ export const shouldDismiss = (dy: number, vy: number) => dy > theme.sheet.dismis
  * board stays reachable by keyboard. iPhone start sheets use the native route presentation instead
  * (`nativeFormSheetOptions`).
  */
-export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, compactHeader = false, onTitleRef, title, closeLabel = "Close", children }: {
+export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, compactHeader = false, onTitleRef, headerAction, topOverlay, title, closeLabel = "Close", children }: {
   visible: boolean;
   onClose: () => void;
   mode?: SheetMode;
@@ -50,6 +50,10 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
   compactHeader?: boolean;
   /** Optional callback receiving the title (or sheet) host node for native accessibility focus. */
   onTitleRef?: (node: unknown) => void;
+  /** Optional compact action rendered in the header row between the title and Close button. */
+  headerAction?: React.ReactNode;
+  /** Optional overlay rendered inside the sheet root (and inside Modal for dimmed sheets) above the panel. */
+  topOverlay?: React.ReactNode;
   /** Spoken and shown first; it takes focus when the sheet opens on Web. */
   title?: string;
   closeLabel?: string;
@@ -165,7 +169,22 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
           <View {...pan.panHandlers} style={[styles.top, compactHeader && styles.topCompact]}>
             <View testID="sheet-grabber" style={styles.grabber} />
             <View style={[styles.closeRow, compactHeader && styles.closeRowCompact]}>
-              {title ? <View ref={focusOnMount} testID="sheet-title" tabIndex={-1} accessibilityRole="header" style={styles.title}><Text variant={compactHeader ? "body" : "section"}>{title}</Text></View> : <View style={styles.title} />}
+              {title ? (
+                <View
+                  ref={focusOnMount}
+                  testID="sheet-title"
+                  tabIndex={-1}
+                  accessible
+                  accessibilityRole="header"
+                  accessibilityLabel={title}
+                  style={styles.title}
+                >
+                  <Text variant={compactHeader ? "body" : "section"}>{title}</Text>
+                </View>
+              ) : (
+                <View style={styles.title} />
+              )}
+              {headerAction}
               <IconButton glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
             </View>
           </View>
@@ -176,6 +195,7 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
             </ScrollView>}
         </Animated.View>
       </View>
+      {topOverlay}
     </View>
   );
 
@@ -185,7 +205,7 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  fill: { flex: 1, minHeight: 0 },
   undimmedOverlay: { zIndex: 50 },
   scrim: { backgroundColor: theme.colors.scrim },
   dock: { flex: 1, justifyContent: "flex-end", alignItems: "center" },
@@ -198,8 +218,8 @@ const styles = StyleSheet.create({
   top: { paddingTop: theme.space.sm, alignItems: "center" },
   topCompact: { paddingTop: 4 },
   grabber: { width: 40, height: 5, borderRadius: theme.radius.full, backgroundColor: theme.colors.hairline },
-  closeRow: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", paddingLeft: theme.space.xl, paddingRight: theme.space.sm },
-  closeRowCompact: { paddingLeft: theme.space.lg, paddingRight: theme.space.xs, minHeight: 48 },
+  closeRow: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", gap: theme.space.xs, paddingLeft: theme.space.xl, paddingRight: theme.space.sm },
+  closeRowCompact: { paddingLeft: theme.space.lg, paddingRight: theme.space.xs, minHeight: theme.target.adult },
   title: { flex: 1 },
   content: { paddingHorizontal: theme.space.xl, paddingTop: theme.space.sm, gap: theme.space.lg },
 });
