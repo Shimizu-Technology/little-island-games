@@ -18,6 +18,8 @@ vi.mock('../src/components/Settings', () => ({ Settings: () => null }));
 vi.mock('../src/hub/Landmarks', () => ({ Landmark: () => null }));
 vi.mock('../src/cove/HubCove', () => ({ CoveLists: () => null }));
 vi.mock('../src/cove/CoveRound', () => ({ CoveRound: () => null }));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/cove/PeoplePicker', () => ({ PeoplePicker: () => null, solvingPeople: () => [] }));
 vi.mock('../src/cove/useCoveLocal', () => ({ useCoveLocal: () => ({ ready: false }) }));
 vi.mock('../src/hub/navigation', () => ({ openGame: vi.fn(), placeRoute: vi.fn() }));

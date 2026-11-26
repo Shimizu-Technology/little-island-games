@@ -29,6 +29,9 @@ vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:0,bot
 vi.mock('react-native',()=>({View:'div',Pressable:'button',ScrollView:'section',Platform:{OS:'ios'},AppState:{addEventListener:()=>({remove(){}})},useWindowDimensions:()=>({width:393,height:852,fontScale:1}),PanResponder:{create:(h:unknown)=>({panHandlers:h})},Animated:{View:'aside',ValueXY:class{setValue(){}getTranslateTransform(){return[];}}}}));
 vi.mock('expo-router',()=>({useIsFocused:()=>true}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',Heading:'h2',C:{},styles:{}}));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/components/Text',()=>({Text:'span'}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({}),useSoundControls:()=>({play(){}})}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));

@@ -11,8 +11,10 @@ import type { Pastel } from "./theme";
  * Big picture tile: the game's art on its pastel with the name below. No border at rest, one soft shadow only when
  * selected. Tap opens, long-press favorites (with a haptic), and the favorite badge is a star on the picture.
  */
-export function Tile({ name, pastel, art, favorite, selected, onPress, onLongPress, testID }: {
+export function Tile({ name, pastel, art, favorite, selected, onPress, onLongPress, testID, nameMax }: {
   name: string;
+  /** A text-size ceiling for the name, so its longest word still fits the tile at the largest sizes (see `sharedWordFit`). */
+  nameMax?: number;
   pastel: Pastel;
   /** The picture. Decorative: the tile's own label names it. */
   art: React.ReactNode;
@@ -44,7 +46,7 @@ export function Tile({ name, pastel, art, favorite, selected, onPress, onLongPre
           </View>
         )}
       </View>
-      <Text variant="caption" numberOfLines={2} style={styles.name}>{name}</Text>
+      <Text variant="caption" numberOfLines={2} maxFontSizeMultiplier={nameMax} style={styles.name}>{name}</Text>
     </PressTarget>
   );
 }
