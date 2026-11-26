@@ -65,6 +65,7 @@ describe('Art Batch 1 illustrations', () => {
     const shelf = SECTIONS.flatMap(s => [...s.games]);
     expect(Object.keys(PUZZLE_TILE_ART).sort()).toEqual([...shelf].sort());
     expect(PUZZLE_TILE_ART.killer).toBe('assets/art/puzzles/cage-sudoku.webp');
+    expect(places).toHaveLength(6);
     expect(places.filter(p => DOOR_ART[p.id]).map(p => p.id).sort()).toEqual(['arcade', 'cove', 'hall', 'home', 'library', 'school']);
     expect(MAP_DOOR_ART[DOOR_ART.cove!]).toBe('assets/art/map/puzzles.webp');
     expect(MAP_DOOR_ART[DOOR_ART.school!]).toBe('assets/art/map/learn.webp');

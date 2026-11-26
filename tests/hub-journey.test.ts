@@ -20,12 +20,23 @@ describe('interruptible guide journey', () => {
   vi.useFakeTimers(); const open = vi.fn(), journey = createJourney(open);
   expect(journey.visit('library', true)).toBe(false); expect(open).toHaveBeenCalledWith('library');
   journey.visit('school', false); journey.cancel(); vi.runAllTimers(); expect(open).toHaveBeenCalledTimes(1);
-  expect(journey.visit('locker', false)).toBe(true); vi.runAllTimers(); expect(open).toHaveBeenLastCalledWith('locker');
+  expect(journey.visit('cove', false)).toBe(true); vi.runAllTimers(); expect(open).toHaveBeenLastCalledWith('cove');
  });
 });
 describe('map target geometry', () => {
- it.each([[195,590,1],[320,590,1],[390,590,1],[1100,590,1],[390,710,1],[430,798,1],[744,999,1],[1100,610,1],[390,1240,2],[320,1550,2.5]])('separates eight full targets at %s×%s / font scale %s', (width,height,scale) => {
-  const { targets } = mapLayout(width,height,scale);
+ it.each([
+  [195,590,1],[320,568,1],[320,568,1.5],[320,568,2],[320,590,1],
+  [390,590,1],[390,710,1],[390,844,1],[390,844,1.5],[390,844,2],
+  [430,798,1],[744,999,1],
+  [844,390,1],[844,390,1.5],[844,390,2],
+  [1024,768,1],[1024,768,1.5],[1024,768,2],
+  [1100,590,1],[1100,610,1],[390,1240,2],[320,1550,2.5],
+ ])('separates all six illustrated targets with zero overlap at %s×%s / font scale %s', (width,height,scale) => {
+  const { wide, targets } = mapLayout(width,height,scale);
+  expect(targets.map(t => t.id)).toEqual(['school','library','arcade','hall','home','cove']);
+  expect(wide).toBe(width > height * 1.15);
+  const distinctRows = new Set(targets.map(t => Math.round(t.top)));
+  expect(distinctRows.size).toBe(wide ? 2 : 3);
   for (const a of targets) {
    expect(a.left).toBeGreaterThanOrEqual(0); expect(a.top).toBeGreaterThanOrEqual(0);
    expect(a.left+a.width).toBeLessThanOrEqual(width); expect(a.top+a.height).toBeLessThanOrEqual(height);
