@@ -1,10 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import type { WorldId } from '../../types';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 import { lagoonLook } from './look';
 import { stageLayout } from './camera';
 import { StageContext } from './stage';
 import { RunAmbient, RunBackdrop, RunForeground } from './Backdrop';
+
+export type LagoonInsets = Pick<EdgeInsets, 'left' | 'right' | 'bottom'>;
 
 /**
  * Full-bleed Lagoon arena (no letterbox). The 390-wide track is fitted to the arena and the
@@ -22,8 +25,8 @@ export function RunArena({ world, children, hud, overlay, controls, active }: { 
     </StageContext.Provider>
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: layout.width, height: layout.height, transform: [{ scale: layout.scale }], transformOrigin: [0, 0, 0] }}><RunAmbient world={world} layout={layout} active={active}/></View>
     <RunForeground world={world} layout={layout} width={size.w} height={size.h}/>
-    <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>{hud}</View>
     {overlay}
+    <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>{hud}</View>
     <View pointerEvents="box-none" testID="run-controls" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>{controls}</View>
   </View>;
 }

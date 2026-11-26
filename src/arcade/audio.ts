@@ -1,20 +1,12 @@
 import { runEffects } from './games/lagoon-run/effects.generated';
 import { createAudioPlayer, useAudioPlayer, type AudioSource, type AudioPlayer } from "expo-audio";
 import { useCallback, useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { useSoundControls } from "../components/Audio";
 import { feel } from "../components/feel";
 import type { Settings } from "../state/validation";
 import type { ArcadeId } from "./types";
 const tones: Record<string, AudioSource> = {
-  "run-jump": runEffects.jump,
-  "run-roll": runEffects.roll,
-  "run-lane": require("../../assets/audio/tap.wav"),
-  "run-hit": runEffects.hit,
-  "run-near": runEffects.near,
-  "run-magnet": runEffects.power,
-  "run-kite": runEffects.power,
-  "run-sandals": runEffects.power,
-  "run-shield": runEffects.power,
   // Reuse the bundled dry tap for rail contact; wall callbacks always disable haptics.
   wall: require("../../assets/audio/tap.wav"),
   bump: require("../../assets/arcade/shell-0.wav"), coral: require("../../assets/arcade/coral.wav"), clear: require("../../assets/arcade/clear.wav"), sticker: require("../../assets/arcade/sticker.wav"),
@@ -26,15 +18,22 @@ const flightTones: Record<string, () => AudioSource> = {
   "flight-clear": () => require("../../assets/arcade/fruit-bat/clear.wav"),
   "flight-bump": () => require("../../assets/arcade/fruit-bat/bonk.wav"),
 };
+const lagoonTones: Record<string, () => AudioSource> = {
+  "lagoon-snap": () => require("../../assets/arcade/lagoon-sfx/snap.wav"),
+  "lagoon-shell": () => require("../../assets/arcade/lagoon-sfx/shell.wav"),
+  "lagoon-power": () => require("../../assets/arcade/lagoon-sfx/power.wav"),
+  "lagoon-thump": () => require("../../assets/arcade/lagoon-sfx/thump.wav"),
+  "run-near": () => runEffects.near,
+  "run-edge": () => require("../../assets/audio/tap.wav"),
+};
 const musicSources = { reef: require("../../assets/arcade/reef-loop.wav"), song: require("../../assets/arcade/song-loop.wav") };
 export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolean, active: boolean, sheetOpen = false) {
   // One preloaded player per effect. Swapping sources with replace() reloads the asset on the
   // main thread and stalled the frame on every flap/hop; rewinding a loaded player does not.
   const [effects] = useState<Record<string, AudioPlayer>>(() => {
     const players = Object.fromEntries(Object.entries(tones).map(([key, source]) => [key, createAudioPlayer(source)]));
-    if (game === "fruit-bat-flight") {
-      for (const [key, source] of Object.entries(flightTones)) players[key] = createAudioPlayer(source());
-    }
+    const gameTones = game === "fruit-bat-flight" ? flightTones : game === "lagoon-run" ? lagoonTones : {};
+    for (const [key, source] of Object.entries(gameTones)) players[key] = createAudioPlayer(source());
     return players;
   });
   useEffect(() => () => { for (const player of Object.values(effects)) { try { player.remove(); } catch { /* Already released. */ } } }, [effects]);
@@ -50,13 +49,15 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
   const tone = useCallback((key: string, haptic = true) => {
     if (!active || sheetOpen) return;
     if (haptic) {
-      if (key === "flight-flap" || key === "flight-fruit" || key === "flight-clear") feel("tap");
+      if (key.startsWith("lagoon-")) {
+        if (Platform.OS === "ios") feel(key === "lagoon-thump" ? "warning" : key === "lagoon-power" ? "medium" : "tap");
+      } else if (key === "flight-flap" || key === "flight-fruit" || key === "flight-clear") feel("tap");
       else if (key === "flight-bump") feel("warning");
       else feel(key === "clear" || key === "sticker" ? "success" : "select");
     }
     const player = effects[key];
     if (!settings.sound || settings.effects === false || !player) return;
-    try { void player.seekTo(0); player.play(); } catch { /* Visible feedback always accompanies a sound. */ }
+    try { void player.seekTo(0).catch(() => {}); player.play(); } catch { /* Visible feedback always accompanies a sound. */ }
   }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const say = useCallback((key: string, automatic = false) => { const played = speech.play(key, automatic); return played; }, [speech]);
   return { tone, say, stop: speech.stop };

@@ -1,3 +1,4 @@
+import type { LagoonInsets } from './games/lagoon-run/Arena';
 import React from "react";
 import { View } from "react-native";
 import type { PracticeSettings } from "../practice/types";
@@ -48,6 +49,7 @@ export type ArcadeBoardProps = {
   height: number;
   /** Height of the shared top bar when it overlays the arena (Crab, Lagoon); otherwise 0. */
   overlayTop?: number;
+  overlayInsets?: LagoonInsets;
   family: ArcadeFamily;
 };
 export type ArcadePlay = {

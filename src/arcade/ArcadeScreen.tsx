@@ -195,10 +195,16 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const cardHero = width > height && fontScale >= 2 ? 72 : 132;
   const overlaid = (game.id === "crab-crossing" || game.id === "lagoon-run") && playing, headerTextMax = 2;
   const flightChrome = playing && game.id === "fruit-bat-flight";
-  const board = level && playing ? <play.Board key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || (__DEV__ && !flightChrome)} {...arena} overlayTop={overlaid ? headerHeight : 0} family={family}/> : null;
-  return <View style={{ flex: 1, backgroundColor: game.color }}>
+  const lagoonGame = game.id === "lagoon-run", lagoonChrome = playing && lagoonGame;
+  const board = level && playing ? <play.Board key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || (__DEV__ && !flightChrome)} {...arena} overlayTop={overlaid ? headerHeight : 0} overlayInsets={lagoonChrome ? insets : undefined} family={family}/> : null;
+  return <View style={[{ flex: 1, backgroundColor: game.color }, lagoonGame && !playing && {
+    paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right,
+  }]}>
     {!flightChrome && <PlayScene Scene={play.Scene} game={game.id} world={level && level !== "endless" ? level.world : "w1"} active={foreground && !paused && !sheet}/>}
-    <View testID="arcade-header" onLayout={overlaid ? event => { const next = Math.ceil(event.nativeEvent.layout.height); setHeaderHeight(previous => previous === next ? previous : next); } : undefined} style={[{ paddingHorizontal: 12, paddingVertical: 7, gap: 8, backgroundColor: flightChrome ? FLIGHT_CHROME_TINT : "#24536A" }, overlaid && { position: "absolute", top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: "#173D4AAA" }]}>
+    <View testID="arcade-header" onLayout={overlaid ? event => { const next = Math.ceil(event.nativeEvent.layout.height); setHeaderHeight(previous => previous === next ? previous : next); } : undefined} style={[{ paddingHorizontal: 12, paddingVertical: 7, gap: 8, backgroundColor: flightChrome ? FLIGHT_CHROME_TINT : "#24536A" }, overlaid && { position: "absolute", top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: "#173D4AAA" }, lagoonChrome && {
+      paddingTop: 7 + insets.top, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right,
+      backgroundColor: "#204946CE",
+    }]}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 7, alignItems: "center" }}>
         <PressableScale accessibilityRole="button" accessibilityLabel={level ? "Map" : "Arcade"} onPress={() => { if (playing) setSheet("leave"); else if (level) { setLevel(null); setResult(null); toTop(); } else router.replace("/arcade"); }} style={{ minWidth: 48, minHeight: 48, borderRadius: 24, backgroundColor: flightChrome ? "#F2E6D6" : "#FFF3D7", alignItems: "center", justifyContent: "center" }}><Icon name="back" color="#2E596B"/></PressableScale>
         <View style={{ flex: 1, alignItems: "center" }}><Heading maxFontSizeMultiplier={headerTextMax} style={{ fontSize: playing ? 16 : 19, color: flightChrome ? "#173D3A" : "#FFF6DE" }}>{game.name}</Heading>{playing && <Copy maxFontSizeMultiplier={headerTextMax} style={[{ color: flightChrome ? "#47645D" : "#FFF1CE", fontSize: 12 }, game.id === "lagoon-run" && { lineHeight: 16, textAlign: "center" }]}>{level === "endless" ? "Free play" : `${game.worlds.find(w => w.id === level?.world)?.name ?? ""} · Level\u00a0${level?.index}${roundDare !== null ? `\u00a0· Dare: ${arcadeDare(roundDare)?.title ?? ""}` : ""}`}</Copy>}</View>
