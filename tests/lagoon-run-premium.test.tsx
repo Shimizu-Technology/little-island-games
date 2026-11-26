@@ -9,10 +9,10 @@ import { BakedCanoe, BakedHazard, BakedShell } from '../src/arcade/games/lagoon-
 import { LagoonFeedback, useRunFeedback } from '../src/arcade/games/lagoon-run/RunFeedback';
 import { actorImageFrame, illustrated, illustratedHazard } from '../src/arcade/games/lagoon-run/illustrated';
 import { impactMotion, runnerKinetics } from '../src/arcade/games/lagoon-run/kinetics';
-import { hazardBox } from '../src/arcade/games/lagoon-run/course';
-import { createRun, runLevels, type RunState } from '../src/arcade/games/lagoon-run/engine';
+import { HAZARDS, hazardBox } from '../src/arcade/games/lagoon-run/course';
+import { createRun, JUMP_SECONDS, rowSafe, runLevels, runnerHeight, type RunState } from '../src/arcade/games/lagoon-run/engine';
 import { HERO_SCALE, projectTrack } from '../src/arcade/games/lagoon-run/camera';
-import { CANOE_DEPTH, DUCK_MAX_ELEVATION } from '../src/arcade/games/lagoon-run/geometry';
+import { CANOE_DEPTH, DUCK_MAX_ELEVATION, visualRunHeight } from '../src/arcade/games/lagoon-run/geometry';
 import { runPoses, spritePoint } from '../src/arcade/games/scrolling/render';
 import { RUNNER_SOLE } from '../src/arcade/games/scrolling/runnerAnchors';
 import { surfaceProfile } from '../src/arcade/games/lagoon-run/surface';
@@ -138,6 +138,34 @@ describe('Lagoon Run illustrated actors', () => {
     }
     expect(illustrated.cooler.contactHeight).toBeLessThan(hazardBox('cooler').height);
     expect(illustrated.rock.contactHeight).toBeGreaterThan(illustrated.cooler.contactHeight);
+  });
+
+  it('draws the unjumpable rock taller than ordinary jump clearance and keeps the jumpable cooler below it', () => {
+    const start = createRun(runLevels[0], 771);
+    const apexState: RunState = { ...start, lane: 1, poseLane: 1, elevation: 0, jump: JUMP_SECONDS / 2, jumpDuration: JUMP_SECONDS, kite: 0 };
+    const apexLift = visualRunHeight(runnerHeight(apexState)) * 85;
+    expect(apexLift).toBeCloseTo(85);
+
+    const sandRow = (kind: 'rock' | 'cooler') => ({
+      ...start.rows[0], lane: 1, second: -1, third: false, shellLane: 0, kind, z: 1, passed: false, surface: 'sand' as const,
+    });
+    expect(HAZARDS.rock).toBe('lane');
+    expect(rowSafe(apexState, sandRow('rock'), true)).toBe(false);
+    expect(HAZARDS.cooler).toBe('jump');
+    expect(rowSafe(apexState, sandRow('cooler'), true)).toBe(true);
+
+    const renderedInkHeight = (kind: 'rock' | 'cooler') => {
+      const box = hazardBox(kind), art = illustrated[kind];
+      const frame = actorImageFrame(art, box.width, art.contactHeight, box.height);
+      const scale = frame.width / art.pixels;
+      return art.ink[3] * scale;
+    };
+    const rockHeight = renderedInkHeight('rock');
+    const coolerHeight = renderedInkHeight('cooler');
+    expect(rockHeight).toBeCloseTo(104);
+    expect(rockHeight).toBeGreaterThan(apexLift);
+    expect(coolerHeight).toBeCloseTo(42);
+    expect(coolerHeight).toBeLessThan(apexLift);
   });
 
   it('hangs the banner below the standing runner and above the highest safe rolling pose', () => {

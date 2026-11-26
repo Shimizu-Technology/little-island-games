@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
@@ -31,11 +31,26 @@ export const RunBackdrop = memo(function RunBackdrop({ world, layout, width, hei
   const look = lagoonLook(world), W = layout.width, H = layout.height, hz = layout.horizon, cx = W / 2;
   const [sx, sy, core, glow] = look.sun, sun = { x: W * sx, y: hz * sy };
   const horizon = look.id === 'morning' ? illustrated.horizonMorning() : undefined;
-  const painted = horizon !== undefined ? morningHorizonFrame(layout, width, height) : undefined;
+  const horizonFrame = horizon !== undefined ? morningHorizonFrame(layout, width, height) : undefined;
+  const [loaded, setLoaded] = useState(false);
+  const [trackedHorizon, setTrackedHorizon] = useState(horizon);
+  if (trackedHorizon !== horizon) {
+    setTrackedHorizon(horizon);
+    setLoaded(false);
+  }
+  const painted = horizonFrame !== undefined && loaded;
   return <>
-    {painted && (
-      <View testID="run-horizon-morning" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width, height: painted.clipHeight, overflow: 'hidden' }}>
-        <Image source={horizon} resizeMode="cover" fadeDuration={0} accessible={false} style={{ position: 'absolute', left: 0, top: painted.imageTop, width, height: painted.imageHeight }}/>
+    {horizon !== undefined && horizonFrame && (
+      <View testID="run-horizon-morning" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width, height: horizonFrame.clipHeight, overflow: 'hidden' }}>
+        <Image
+          source={horizon}
+          resizeMode="cover"
+          fadeDuration={0}
+          accessible={false}
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(false)}
+          style={{ position: 'absolute', left: 0, top: horizonFrame.imageTop, width, height: horizonFrame.imageHeight, opacity: loaded ? 1 : 0 }}
+        />
       </View>
     )}
     <Svg width={width} height={height} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute' }} accessible={false}>

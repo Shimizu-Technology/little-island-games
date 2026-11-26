@@ -32,7 +32,7 @@ export const illustrated: LagoonIllustrations = {
   // The lowest bunting pixel (row 121) has about 56 pt of deck clearance at contact.
   banner: { source: () => require('../../../../assets/arcade/lagoon/illustrated/banner.webp'), pixels: 384, ink: [21, 51, 342, 282], contactHeight: 74, buntingBottom: 121 },
   cooler: { source: () => require('../../../../assets/arcade/lagoon/illustrated/cooler.webp'), pixels: 256, ink: [16, 36, 224, 183], contactHeight: 42 },
-  rock: { source: () => require('../../../../assets/arcade/lagoon/illustrated/rock.webp'), pixels: 320, ink: [20, 45, 280, 230], contactHeight: 104 },
+  rock: { source: () => require('../../../../assets/arcade/lagoon/illustrated/rock.webp'), pixels: 320, ink: [107, 16, 106, 288], contactHeight: 104 },
   horizonMorning: () => require('../../../../assets/arcade/lagoon/illustrated/horizon-morning.webp'),
 };
 
