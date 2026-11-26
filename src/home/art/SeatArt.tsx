@@ -329,7 +329,7 @@ export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotat
     return <View pointerEvents="none" accessible={false} style={{ width: size, height: size, transform: [{ scaleX: flip ? -1 : 1 }] }}>
       {layer !== 'front' && <Image testID={`painted-seat-${id}`} source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false} style={{ width: size, height: size }}/>}
       {layer !== 'front' && tint && tint !== 'original' && <PaintedTint id={key} size={size} tint={tint}/>}
-      {layer !== 'back' && <View testID={`painted-seat-front-${id}`} style={{ position: 'absolute', left: left * size, top: top * size, width: (1-left) * size, height: (1-top) * size, overflow: 'hidden' }}>{sprite}</View>}
+      {occupied && layer !== 'back' && <View testID={`painted-seat-front-${id}`} style={{ position: 'absolute', left: left * size, top: top * size, width: (1-left) * size, height: (1-top) * size, overflow: 'hidden' }}>{sprite}</View>}
       {occupied && layer !== 'back' && (id === 'bed' || id === 'sofa') && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}>
         <G stroke="#326F66" strokeWidth={1.4} strokeLinejoin="round" fill="none">
           <Path d={id === 'bed' ? 'M59 64Q71 49 91 57Q113 50 144 63L145 96Q103 107 59 96Z' : 'M59 72Q75 62 100 69L134 76V103Q97 111 59 102Z'} fill={material(tint ?? 'original', '#319C93')}/>

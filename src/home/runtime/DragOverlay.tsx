@@ -24,7 +24,9 @@ export function pickupBounce(slot: ReturnType<typeof emptyDragSlot>, character: 
   if (reduced || !character || !slot.ready) return 0;
   const t = Math.max(0, now - slot.liftedAt) / 1000;
   const spring = 1 - Math.exp(-15*t) * Math.cos(22*t);
-  const release = slot.phase === 'settling' || slot.phase === 'pending' ? Math.max(0, 1 - (now-slot.settleAt)/140) : 1;
+  const settling = slot.phase === 'settling' && slot.settleAt > 0 || slot.phase === 'pending' && slot.pausedElapsed > 0;
+  const elapsed = settling ? slot.phase === 'pending' ? slot.pausedElapsed : now - slot.settleAt : 0;
+  const release = settling ? Math.max(0, 1 - elapsed / 140) : 1;
   return .04 * spring * release;
 }
 export type SocketBases = Record<string, readonly CharacterBase[]>;

@@ -1,4 +1,5 @@
 import React from 'react';
+import Module from 'node:module';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
@@ -10,12 +11,15 @@ import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { roomIds } from '../src/home/catalogMore';
 import { labFixtures } from '../src/home/runtime/lab';
 import { COOK_MS } from '../src/home/runtime/delight';
+import { crabAnchors, crabOrigin } from '../src/islander/rig/anchors';
+import { cozyRoomScale } from '../src/home/runtime/CameraController';
 import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
-const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
+vi.mock('../src/home/art/CrabFriend', () => ({ CrabFriend: 'CrabFriend' }));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
 vi.mock('../src/home/runtime/homeSound', () => ({
   useHomeFeedback: (live: boolean) => {
@@ -25,14 +29,14 @@ vi.mock('../src/home/runtime/homeSound', () => ({
   },
 }));
 vi.mock('expo-router', () => ({ router: { push: vi.fn() }, useFocusEffect: () => {} }));
-vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }), AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
+vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => harness.viewport, AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harness.settings } }) }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
 vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {}, completeMealHandoff:(...args:any[])=>harness.handoffs.push(args),
-  camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: () => {},
+  camera: { get: () => ({ a: cozyRoomScale(harness.options.viewport), b: 0, c: 0, d: cozyRoomScale(harness.options.viewport), tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: (camera: any) => { harness.zoom = camera; },
   showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
@@ -52,7 +56,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -568,4 +572,41 @@ it('reveals the meal only after presentation and releases its captured source on
  await act(async()=>harness.options.onPickup({id:owner,slot:0,scene:currentScene,generation:9,epoch:0}));
  expect(harness.scene.meals[owner]).toBeUndefined();
  expect(harness.handoffs).toContainEqual([source,meal.capture]);
+});
+
+it('double tapping empty space zooms in on an 844×390 landscape phone', async () => {
+  harness.viewport = { width: 844, height: 390 };
+  await open(starterHome());
+  const initial = cozyRoomScale(harness.options.viewport);
+  await act(async () => harness.options.onTap(undefined, { x: 200, y: 250 }, 1000));
+  await act(async () => harness.options.onTap(undefined, { x: 200, y: 250 }, 1100));
+  expect(initial).toBeCloseTo(1.055);
+  expect(harness.zoom.a).toBeCloseTo(initial * 1.4);
+  expect(harness.zoom.a).toBeGreaterThan(initial);
+});
+
+it('painted crab aligns each pose to its shared rig origin and respects tilted bounds', async () => {
+  await open(starterHome());
+  const loader = Module as any, originalLoad = loader._load;
+  const load = vi.spyOn(loader, '_load').mockImplementation((...args: any[]) =>
+    args[0] === './art/CrabFriend' ? { CrabFriend: 'CrabFriend' } : originalLoad.apply(loader, args));
+  try {
+  for (const base of ['stand', 'sit', 'lie', 'bathe', 'carry'] as const) {
+    for (const tilt of [0, 4]) {
+      const input = { slot: 2, base, facing: 'right', size: 240, tilt, limbLag: 3, reduced: false };
+      const tree = harness.scene.renderCharacter(input);
+      const bounds = crabAnchors(base, 'right', { tilt, limbLag: 3 }).bounds;
+      expect(tree.props.style.width).toBeCloseTo(bounds.width * 2);
+      expect(tree.props.children.props.style.top + crabOrigin(base)[1] * 2).toBeCloseTo(-bounds.top * 2);
+    }
+  }
+  } finally { load.mockRestore(); }
+});
+
+it('honors a caller supplied character renderer for the crab', async () => {
+  const renderCharacter = vi.fn(() => null);
+  await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} renderCharacter={renderCharacter}/>); });
+  const input = { slot: 2, base: 'carry', facing: 'right', size: 120 };
+  harness.scene.renderCharacter(input);
+  expect(renderCharacter).toHaveBeenCalledWith(input);
 });

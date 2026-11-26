@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "../components/motion";
 import { useDelight } from "./runtime/useDelight";
-import { crabAnchors } from '../islander/rig/anchors';
+import { crabAnchors, crabOrigin } from '../islander/rig/anchors';
 import { useStore } from "../state/Store";
 import type { BadgeId } from "../badges/engine";
 import type { IslanderLook } from "../islander/look";
@@ -232,7 +232,7 @@ export function HomeScreen({
     () => {
       const original = renderCharacter ?? (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined);
       return function PaintedCharacter(input) {
-        if (input.slot !== 2 || input.mealPlayback || input.action) {
+        if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action) {
           if (original) return original(input);
           // eslint-disable-next-line @typescript-eslint/no-require-imports -- load native rig only at the render boundary.
           const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
@@ -240,9 +240,9 @@ export function HomeScreen({
         }
         // eslint-disable-next-line @typescript-eslint/no-require-imports -- keep native art lazy for engine-only embedders.
         const { CrabFriend } = require('./art/CrabFriend') as typeof import('./art/CrabFriend');
-        const bounds = crabAnchors(input.base, input.facing).bounds, unit = input.size / 120;
+        const bounds = crabAnchors(input.base, input.facing, { tilt: input.tilt, limbLag: input.limbLag, reduced: input.reduced }).bounds, unit = input.size / 120;
         return <View pointerEvents="none" style={{ width: bounds.width * unit, height: bounds.height * unit }}>
-          <View style={{ position: 'absolute', left: (-bounds.left - 60) * unit, top: (-bounds.top - 96) * unit }}>
+          <View style={{ position: 'absolute', left: (-bounds.left - 60) * unit, top: (-bounds.top - crabOrigin(input.base)[1]) * unit }}>
             <CrabFriend size={input.size} pose={input.base === 'carry' ? 'held' : input.base === 'lie' ? 'lie' : input.base === 'sit' || input.base === 'bathe' ? 'sit' : 'stand'} mirrored={input.facing === 'left'} reduced={input.reduced}/>
           </View>
         </View>;
@@ -990,7 +990,7 @@ export function HomeScreen({
       lastTap.current = { ...point, at: now };
       if (now - prior.at < 300 && Math.hypot(point.x - prior.x, point.y - prior.y) < 28) {
         const c = runtime.current!.camera.get();
-        const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : (viewport.height / 620) * 1.4;
+        const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : roomScale(viewport) * 1.4;
         interaction.animateCamera(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
         lastTap.current.at = 0;
         return;

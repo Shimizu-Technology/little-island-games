@@ -79,7 +79,7 @@ describe('Track E2 Toca Boca Island Home props art contracts', () => {
   it('keeps back and front seat layers distinct and non-empty for every covered seat', () => {
     for (const id of ['bed', 'bunk-bed', 'hammock', 'sofa', 'armchair', 'beanbag', 'bathtub', 'bubble-bath']) {
       const back = render(<SeatArt id={id} layer="back" />);
-      const front = render(<SeatArt id={id} layer="front" />);
+      const front = render(<SeatArt id={id} layer="front" occupied />);
       expect(back).toMatch(/<(path|rect|ellipse|circle|image)/);
       expect(front).toMatch(/<(path|rect|ellipse|circle|image)/);
       expect(back).not.toBe(front);
@@ -89,6 +89,8 @@ describe('Track E2 Toca Boca Island Home props art contracts', () => {
   it('keeps the painted empty quilt and adds the raised tuck only around an occupant', () => {
     const empty=render(<SeatArt id="bed" layer="front"/>), occupied=render(<SeatArt id="bed" layer="front" occupied/>);
     expect(empty).not.toContain('M59 64');
+    expect(render(<SeatArt id="bed" layer="front" tint="lagoon"/>)).not.toContain('painted-seat-front-bed');
+    expect(render(<SeatArt id="bed" layer="front" occupied tint="lagoon"/>)).toContain('painted-seat-front-bed');
     expect(occupied).toContain('M59 64');
     expect(render(<SeatArt id="bed" layer="front" occupied tint="lagoon"/>)).toContain('#58B9B1');
   });

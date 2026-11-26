@@ -21,7 +21,7 @@ import {
   boundCamera,
   edgeVelocity,
   EDGE_BAND,
-  focusCamera,
+  cozyFocusCamera,
   panInertia,
   includeBounds,
   roomAtScreen,
@@ -644,7 +644,7 @@ export function useInteraction({
     const from = roomIds.indexOf(activeRoom.value as RoomId), to = roomIds.indexOf(room);
     const door = from >= 0 && Math.floor(from / building.columns) !== Math.floor(to / building.columns);
     activeRoom.set(room);
-    const target = focusCamera(to, viewport, building);
+    const target = cozyFocusCamera(to, viewport, building);
     if (reduced) camera.set(target);
     else cameraTween.set({ from: camera.value, to: target, since: eventTime(), duration: door ? DOOR_MS : CAMERA_EASE_MS, door });
     if (onRoomHover) runOnJS(onRoomHover)(room);

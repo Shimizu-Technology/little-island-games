@@ -11,7 +11,7 @@ import { roomIds } from "../src/home/catalogMore";
 import { buildScene } from "../src/home/scene/graph";
 import { apply, resolve as resolveDrop } from "../src/home/scene/proposal";
 import { labHome } from "../src/home/runtime/lab";
-import { EDGE_BAND, edgeVelocity, focusCamera } from "../src/home/runtime/CameraController";
+import { EDGE_BAND, edgeVelocity, cozyFocusCamera } from "../src/home/runtime/CameraController";
 import { withPortions, shoreShellId, shoreShells } from "../src/home/runtime/portions";
 import { prepareHits, pickEntity } from "../src/home/runtime/pick";
 import { settleProgress } from "../src/home/runtime/settle";
@@ -369,9 +369,9 @@ describe("HM-12 explicit camera moves ease on the UI thread", () => {
 });
 describe("HM-14 room buttons are drop targets (D7)", () => {
   const hovered = vi.fn();
-  function Hover({ scene, room = "home" }: { scene: Scene; room?: "home" | "kitchen" }) {
+  function Hover({ scene, room = "home", viewport = fixtureViewport }: { scene: Scene; room?: "home" | "kitchen"; viewport?: { width: number; height: number } }) {
     const interaction = useInteraction({
-      scene, building: fixtureBuilding, viewport: fixtureViewport, initialCamera: identityCamera, reduced: false, designing: false,
+      scene, building: fixtureBuilding, viewport, initialCamera: identityCamera, reduced: false, designing: false,
       onCameraChange: cameraChange, onPickup: (pickup) => { current.ready(pickup.slot, pickup.id); }, onTap: () => {}, onClear: noop,
       onCommit: commitFixture, currentRoom: room, onRoomHover: hovered,
     });
@@ -396,12 +396,25 @@ describe("HM-14 room buttons are drop targets (D7)", () => {
     expect(hovered).toHaveBeenCalledTimes(1);
     expect(current.slots.get()[0]).toMatchObject({ id: "character/0", phase: "dragging" });
     frames(14);
-    const kitchenCamera = focusCamera(roomIds.indexOf("kitchen"), fixtureViewport, fixtureBuilding);
+    const kitchenCamera = cozyFocusCamera(roomIds.indexOf("kitchen"), fixtureViewport, fixtureBuilding);
     expect(current.camera.get()).toEqual(kitchenCamera);
     // Moving back into the room view continues the same carry in the new room.
     touch("move", 500, 300); frames(1);
     expect(current.roomHover.get()).toBeNull();
     expect(current.slots.get()[0]).toMatchObject({ id: "character/0", phase: "dragging" });
+    await act(async () => renderer.unmount());
+  });
+  it("preserves cozy portrait scale when hovering a carried friend over a room button", async () => {
+    const viewport = { width: 390, height: 708 };
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Hover scene={fixture()} viewport={viewport}/>); });
+    current.dropZones.set([zone]);
+    touch("down", 100, 200); flushJS();
+    touch("move", 160, 260); frames(2);
+    touch("move", 420, 580); frames(40);
+    expect(current.slots.get()[0]).toMatchObject({ id: "character/0", phase: "dragging" });
+    expect(current.camera.get().a).toBe(cozyFocusCamera(roomIds.indexOf("kitchen"), viewport, fixtureBuilding).a);
+    expect(current.camera.get().a).toBeGreaterThan(1);
     await act(async () => renderer.unmount());
   });
   it("cancelling after the switch restores the friend to its own room, uncommitted", async () => {
