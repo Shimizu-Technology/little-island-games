@@ -10,8 +10,8 @@ import {
 } from './engine';
 
 const SEXTETS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-const VERSION = 1;
-export const CROSSWORD_SAVE_CAP = 4096;
+const VERSION = 2;
+export const CROSSWORD_SAVE_CAP = 3200;
 
 function packIndex(index: number): string {
   return SEXTETS[index >> 6] + SEXTETS[index & 63];
@@ -38,13 +38,15 @@ function unpackCursor(puzzle: CrosswordPuzzle, code: number): CrosswordCursor | 
  */
 export function encodeCrosswordSave(puzzle: CrosswordPuzzle, state: CrosswordState): string {
   const options = Number(state.mistakes === 'friendly') + Number(state.skipFilled) * 2
-    + Number(state.playTogether) * 4 + Number(state.clueLevel === 'harder') * 8;
+    + Number(state.playTogether) * 4 + Number(state.clueLevel === 'harder') * 8
+    + Number(state.mistakes === 'rewind') * 16;
   const undo = state.undo.map(delta => packIndex(packCursor(delta.cursor)) + SEXTETS[delta.before.length]
     + delta.before.map(([cell, code]) => packIndex(cell) + SEXTETS[code]).join('')).join('');
   const save = JSON.stringify({
     v: VERSION, puzzle: puzzle.fingerprint, cursor: packCursor(state.cursor),
     cells: state.cells.map(code => SEXTETS[code]).join(''),
-    undo, options, help: state.helpUsed,
+    undo, options, help: state.helpUsed, edits: state.edits,
+    checks: state.checks, failedChecks: state.failedChecks, checkedAt: state.checkedAt,
   });
   if (save.length > CROSSWORD_SAVE_CAP) throw new Error('Crossword checkpoint exceeds its byte budget');
   return save;
@@ -56,6 +58,10 @@ function record(value: unknown): value is Record<string, unknown> {
 
 function packed(value: unknown): value is string {
   return typeof value === 'string' && /^[A-Za-z0-9_-]*$/.test(value);
+}
+
+function counter(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 function validCell(puzzle: CrosswordPuzzle, at: number, code: number, help: boolean): boolean {
@@ -109,7 +115,8 @@ function parseUndo(puzzle: CrosswordPuzzle, packedUndo: string, cells: readonly 
       const target = clue.cells.indexOf(cell);
       if (current === 0 && target !== start) {
         if (target > start || (restored[cursor.cell] > 0 && restored[cursor.cell] < CROSSWORD_LOCK)) return null;
-        if (clue.cells.slice(target + 1, start).some(position => restored[position] < CROSSWORD_LOCK)) return null;
+        if (prev === 0 || clue.cells.slice(target + 1, start)
+          .some(position => restored[position] > 0 && restored[position] < CROSSWORD_LOCK)) return null;
       }
       if (current > 0) {
         if (target < start) return null;
@@ -135,22 +142,27 @@ export function decodeCrosswordSave(puzzle: CrosswordPuzzle, input: unknown): Cr
   } catch {
     return null;
   }
-  if (!record(save) || Object.keys(save).length !== 7 || save.v !== VERSION || save.puzzle !== puzzle.fingerprint
+  if (!record(save) || Object.keys(save).length !== 11 || save.v !== VERSION || save.puzzle !== puzzle.fingerprint
     || !packed(save.cells) || save.cells.length !== puzzle.solution.length || !packed(save.undo)
     || typeof save.cursor !== 'number' || typeof save.help !== 'boolean'
-    || typeof save.options !== 'number' || !Number.isInteger(save.options) || save.options < 0 || save.options > 15) {
+    || !counter(save.options) || save.options > 31 || (save.options & 17) === 17 || ((save.options & 1) && !save.help)
+    || !counter(save.edits) || !counter(save.checks) || !counter(save.failedChecks) || save.failedChecks > save.checks
+    || (save.checks === 0 ? save.checkedAt !== null
+      : !counter(save.checkedAt) || save.checkedAt < save.checks || save.checkedAt > save.edits)) {
     return null;
   }
-  const { help, options } = save;
+  const { help, options, edits, checks, failedChecks, checkedAt } = save;
   const cursor = unpackCursor(puzzle, save.cursor);
   if (!cursor) return null;
   const cells = Array.from(save.cells, char => SEXTETS.indexOf(char));
   if (cells.some((code, cell) => !validCell(puzzle, cell, code, help))) return null;
+  if (!edits && !help && cells.some(Boolean)) return null;
+  if (checkedAt === edits && cells.some((code, cell) => !code && puzzle.crossings[cell])) return null;
   const undo = parseUndo(puzzle, save.undo, cells);
-  if (!undo) return null;
+  if (!undo || undo.length > edits) return null;
   return {
-    cells, cursor, undo, helpUsed: help, feedback: null,
-    mistakes: options & 1 ? 'friendly' : 'neutral',
+    cells, cursor, undo, helpUsed: help, edits, checks, failedChecks, checkedAt: checkedAt as number | null, feedback: null,
+    mistakes: options & 16 ? 'rewind' : options & 1 ? 'friendly' : 'neutral',
     skipFilled: Boolean(options & 2), playTogether: Boolean(options & 4),
     clueLevel: options & 8 ? 'harder' : 'easy',
   };

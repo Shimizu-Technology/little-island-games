@@ -1,3 +1,4 @@
+import { existsSync, globSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   activeCrosswordClue,
@@ -22,8 +23,8 @@ import {
   decodeCrosswordSave,
   encodeCrosswordSave,
 } from '../src/puzzles/crossword/save';
-import { REVIEWED_CROSSWORD_CLUES } from '../src/puzzles/crossword/starterClues';
-import { STARTER_CROSSWORDS, STARTER_CROSSWORD_DEFINITIONS } from '../src/puzzles/crossword/starterSet';
+import { STARTER_CROSSWORD_CLUES } from './fixtures/crossword-starter/starterClues';
+import { STARTER_CROSSWORDS, STARTER_CROSSWORD_DEFINITIONS } from './fixtures/crossword-starter/starterSet';
 
 const puzzle = STARTER_CROSSWORDS.Easy[0];
 
@@ -35,19 +36,63 @@ const type = (letter: string) => ({ type: 'type', letter }) as const;
 const select = (cell: number) => ({ type: 'select', cell }) as const;
 const hint = (kind: 'check-letter' | 'reveal-letter' | 'reveal-word') => ({ type: 'hint', hint: kind }) as const;
 
-describe('curated starter crosswords', () => {
+function fillDraft(board = puzzle, mistake = -1) {
+  return [...board.solution].reduce((state, letter, cell) => letter === '#' ? state
+    : play([select(cell), type(cell === mistake ? 'Z' : letter)], state, board), createCrossword(board));
+}
+
+describe('draft starter crosswords', () => {
   const sizes = { Easy: 5, Medium: 7, Hard: 9, Expert: 11 } as const;
 
-  it('ships 12 distinct, correctly sized boards per tier and a reviewed clue for every answer', () => {
+  it('keeps the draft clue and grid modules out of app code and its imports', () => {
+    expect(existsSync('src/puzzles/crossword/starterSet.ts')).toBe(false);
+    expect(existsSync('src/puzzles/crossword/starterClues.ts')).toBe(false);
+    const importers = globSync(['src/**/*.{js,jsx,ts,tsx}', 'content/**/*.{js,jsx,ts,tsx}']).filter(path =>
+      /crossword-starter|STARTER_CROSSWORDS|STARTER_CROSSWORD_CLUES/.test(readFileSync(path, 'utf8')));
+    expect(importers).toEqual([]);
+  });
+
+  it('stages 12 distinct boards per tier with two clue readings per answer', () => {
     const tiers = Object.keys(sizes) as CrosswordTier[];
     const puzzles = tiers.flatMap(tier => STARTER_CROSSWORDS[tier]);
     const used = new Set(puzzles.flatMap(item => item.clues.map(clue => clue.answer)));
     expect(new Set(puzzles.map(item => item.id)).size).toBe(48);
     expect(new Set(puzzles.map(item => item.solution)).size).toBe(48);
-    expect(used).toEqual(new Set(Object.keys(REVIEWED_CROSSWORD_CLUES)));
+    expect(used).toEqual(new Set(Object.keys(STARTER_CROSSWORD_CLUES)));
     for (const tier of tiers) {
       expect(STARTER_CROSSWORDS[tier]).toHaveLength(12);
       expect(STARTER_CROSSWORDS[tier].every(item => item.tier === tier && item.size === sizes[tier])).toBe(true);
+    }
+  });
+
+  it('keeps exact answers out of all 1,512 draft clue readings', () => {
+    const readings = Object.entries(STARTER_CROSSWORD_CLUES).flatMap(([answer, clues]) =>
+      Object.values(clues).map(clue => ({ answer, clue })));
+    expect(readings).toHaveLength(1512);
+    expect(readings.filter(({ answer, clue }) => new RegExp(`\\b${answer}\\b`, 'i').test(clue))).toEqual([]);
+  });
+
+  it('uses simpler clues, US spelling, and a word-count cue for the two-word answer', () => {
+    const clues = STARTER_CROSSWORD_CLUES;
+    const readings = Object.values(clues).flatMap(clue => Object.values(clue)).join('\n');
+    expect(readings).not.toMatch(/\b(theatre|traveller|neighbour|travelled)\b/i);
+    expect(clues.ADD.easy).not.toBe(clues.ADDED.easy);
+    expect(clues.ALE.easy).toMatch(/ginger.*soda/i);
+    expect(clues.EWE.easy).toMatch(/lamb/);
+    expect(clues.ASSETS.easy).toMatch(/bike/);
+    expect(clues.SANS.easy).toMatch(/pickles/);
+    expect(clues.SIRE.easy).toMatch(/horse’s dad/);
+    expect(Object.values(clues.RUBBERBAND).every(clue => clue.endsWith('(2 words)'))).toBe(true);
+    expect(clues.GELS.harder).toContain('as a plan does');
+    expect(clues.RAGE.harder).toContain('all the ___');
+    const stems = {
+      TOAST: /toaster/i, KNEE: /kneel/i, KNEES: /kneel/i, SCOREBOARD: /\bboard\b/i,
+      TRUSTEE: /\btrust\b/i, CROSSWIND: /\bacross\b|\bwind\b/i, AUTO: /automatic/i,
+      CODE: /decoder/i, NAMED: /\bname\b/i, NUTS: /walnuts/i, BASES: /baseball/i,
+      TIMER: /\btime\b/i, PARTIALLY: /\bpart\b/i, ASIDE: /\bside\b/i,
+    };
+    for (const [answer, stem] of Object.entries(stems)) {
+      expect(Object.values(clues[answer]).join(' '), answer).not.toMatch(stem);
     }
   });
 
@@ -77,7 +122,7 @@ describe('curated starter crosswords', () => {
       answers.add(answer);
       const number = starts.indexOf(cells[0]) + 1;
       const clue = indexed.clues.find(item => item.number === number && item.direction === direction);
-      const vetted = REVIEWED_CROSSWORD_CLUES[answer];
+      const vetted = STARTER_CROSSWORD_CLUES[answer];
       expect(vetted).toBeDefined();
       expect(vetted.easy.trim()).not.toBe('');
       expect(vetted.harder.trim()).not.toBe('');
@@ -142,14 +187,66 @@ describe('crossword play', () => {
     expect(play([{ type: 'backspace' }], skipLockedAndFilled).cells[first]).toBe(locked.cells[first]);
   });
 
-  it('keeps drafts neutral until Check and checks without spending help', () => {
+  it('counts only blanks on a partial Check without even reading the solution', () => {
     const draft = play([type('z'), type('g')]);
     expect(draft.feedback).toBeNull();
-    const checked = play([{ type: 'check' }], draft);
-    expect(checked.feedback).toEqual({ type: 'check', wrong: 1, blanks: puzzle.crossings.filter(Boolean).length - 2 });
-    expect(checked.helpUsed).toBe(false);
-    expect(checkCrossword(puzzle, checked).wrong).toEqual([0]);
+    const hidden: CrosswordPuzzle = { ...puzzle, get solution(): never { throw new Error('Partial draft was judged'); } };
+    const checked = play([{ type: 'check' }], draft, hidden);
+    expect(checked.feedback).toEqual({ type: 'incomplete', blanks: puzzle.crossings.filter(Boolean).length - 2 });
+    expect(checked).toMatchObject({ checks: 0, failedChecks: 0, helpUsed: false, edits: 2 });
+    expect(isCrosswordComplete(hidden, checked)).toBe(false);
     expect(play([type('g')], checked).feedback).toBeNull();
+  });
+
+  it('audits new full checks, keeps their counts through Undo and reload, and ignores repeated submissions', () => {
+    const check = { type: 'check' } as const;
+    const wrong = fillDraft(puzzle, 0);
+    const checked = play([check], wrong);
+    expect(checked).toMatchObject({ checks: 1, failedChecks: 1, helpUsed: false, edits: wrong.edits, feedback: { type: 'check', wrong: 1 } });
+    expect(play([check], checked)).toBe(checked);
+    const reloaded = roundTrip(puzzle, checked);
+    expect(play([select(0), check], reloaded)).toMatchObject({ checks: 1, failedChecks: 1, feedback: { type: 'check', wrong: 1 } });
+    const rewrote = play([{ type: 'undo' }, select(0), type('E'), check], reloaded);
+    expect(rewrote).toMatchObject({ checks: 1, failedChecks: 1, feedback: { type: 'incomplete', blanks: 1 } });
+    const solved = play([check], fillDraft());
+    expect(solved).toMatchObject({ checks: 1, failedChecks: 0 });
+  });
+
+  it('records Friendly at creation or when selected, including after switching away and undoing', () => {
+    expect(roundTrip(puzzle, createCrossword(puzzle, { mistakes: 'friendly' })).helpUsed).toBe(true);
+    const neutral = play([type('Z'), { type: 'mistakes', value: 'friendly' }, { type: 'mistakes', value: 'neutral' }, { type: 'undo' }]);
+    expect(roundTrip(puzzle, neutral)).toMatchObject({ mistakes: 'neutral', helpUsed: true, edits: 2 });
+  });
+
+  it('rewinds to the nearest correct draft, preserving older Undo and auditing even a no-move rewind', () => {
+    const draft = play([type('E'), type('Z'), type('G'), { type: 'mistakes', value: 'rewind' }]);
+    expect(draft.helpUsed).toBe(false);
+    const rewound = play([{ type: 'rewind' }], roundTrip(puzzle, draft));
+    expect(rewound.cells.slice(0, 3).map(crosswordLetter)).toEqual(['E', '', '']);
+    expect(rewound.cursor).toEqual({ direction: 'Across', cell: 1 });
+    expect(rewound.undo).toEqual(draft.undo.slice(0, 1));
+    expect(roundTrip(puzzle, rewound)).toMatchObject({ helpUsed: true, edits: 4, mistakes: 'rewind' });
+    expect(play([{ type: 'undo' }], rewound)).toMatchObject({ helpUsed: true, edits: 5 });
+    const clear = createCrossword(puzzle, { mistakes: 'rewind' });
+    expect(play([{ type: 'rewind' }], clear)).toMatchObject({ helpUsed: true, feedback: { type: 'rewind', result: 'clear' } });
+  });
+
+  it('keeps the draft and audits Rewind when there is no correct snapshot in the undo ring', () => {
+    let state = play([type('Z'), { type: 'mistakes', value: 'rewind' }]);
+    for (let i = 0; i < CROSSWORD_UNDO_LIMIT; i++) state = play([select(1), type(i % 2 ? 'G' : 'X')], state);
+    const result = play([{ type: 'rewind' }], roundTrip(puzzle, state));
+    expect(result).toMatchObject({ helpUsed: true, feedback: { type: 'rewind', result: 'unavailable' } });
+    expect(result.cells).toEqual(state.cells);
+    expect(result.undo).toEqual(state.undo);
+  });
+
+  it('erases past blanks and wraps to the earlier blank after typing at the end with Skip filled', () => {
+    const draft = play([type('E'), select(2), { type: 'backspace' }]);
+    expect(draft.cells.slice(0, 3)).toEqual([0, 0, 0]);
+    expect(draft.cursor.cell).toBe(0);
+    roundTrip(puzzle, draft);
+    const wrapped = play([{ type: 'skip-filled', value: true }, select(2), type('G')]);
+    expect(wrapped.cursor.cell).toBe(0);
   });
 
   it('records assistance before giving an answer or its correctness and keeps it after Undo', () => {
@@ -181,10 +278,7 @@ describe('crossword play', () => {
   });
 
   it('completes only with all squares correct and Undo can reopen it', () => {
-    let state = createCrossword(puzzle);
-    for (const [cell, letter] of Array.from(puzzle.solution).entries()) {
-      if (letter !== '#') state = play([select(cell), type(letter)], state);
-    }
+    const state = fillDraft();
     expect(checkCrossword(puzzle, state)).toEqual({ wrong: [], blanks: 0, complete: true });
     expect(isCrosswordComplete(puzzle, state)).toBe(true);
     expect(isCrosswordComplete(puzzle, play([{ type: 'undo' }], state))).toBe(false);
@@ -265,7 +359,9 @@ describe('crossword saves', () => {
     expect(decodeCrosswordSave(STARTER_CROSSWORDS.Easy[1], valid)).toBeNull();
     const changes = [
       { v: 0 }, { puzzle: 'different' }, { cursor: 6 }, { cursor: 0.5 }, { cursor: 500 },
-      { options: -1 }, { options: 16 }, { help: false }, { help: 'true' },
+      { options: -1 }, { options: 17 }, { options: 32 }, { help: false }, { help: 'true' },
+      { options: 1, help: false }, { edits: 0 }, { edits: 1.5 }, { checks: -1 }, { failedChecks: 1 },
+      { checks: 1, checkedAt: 0 }, { checks: 1, checkedAt: 3 }, { checks: 1, checkedAt: 2 }, { checkedAt: 1 },
       { cells: 'A' }, { cells: 'h' + fields.cells.slice(1) }, { cells: '_' + fields.cells.slice(1) },
       { cells: fields.cells.slice(0, 3) + 'B' + fields.cells.slice(4) },
       { undo: 'AAAA' }, { undo: fields.undo.slice(0, -1) }, { undo: 'AAAAé' },
@@ -279,6 +375,13 @@ describe('crossword saves', () => {
     expect(decodeCrosswordSave(puzzle, valid + ' '.repeat(CROSSWORD_SAVE_CAP))).toBeNull();
     expect(decodeCrosswordSave(puzzle, '{not json}')).toBeNull();
     expect(decodeCrosswordSave(puzzle, fields)).toBeNull();
+  });
+
+  it('rejects an apparently solved save with no edits or help, even with an empty Undo ring', () => {
+    const forged = { ...fillDraft(), edits: 0, undo: [], helpUsed: false };
+    expect(isCrosswordComplete(puzzle, forged)).toBe(true);
+    expect(decodeCrosswordSave(puzzle, encodeCrosswordSave(puzzle, forged))).toBeNull();
+    expect(CROSSWORD_SAVE_CAP).toBe(3200);
   });
 
   it('refuses malformed grids before starting a session', () => {

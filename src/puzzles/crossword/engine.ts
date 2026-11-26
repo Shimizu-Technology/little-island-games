@@ -94,7 +94,7 @@ export function indexCrossword(definition: CrosswordDefinition): CrosswordPuzzle
 }
 
 export type CrosswordCursor = { readonly cell: number; readonly direction: CrosswordDirection };
-export type CrosswordMistakes = 'neutral' | 'friendly';
+export type CrosswordMistakes = 'neutral' | 'friendly' | 'rewind';
 export type CrosswordClueLevel = 'easy' | 'harder';
 export type CrosswordHint = 'check-letter' | 'reveal-letter' | 'reveal-word';
 export type CrosswordOptions = {
@@ -104,9 +104,11 @@ export type CrosswordOptions = {
   readonly clueLevel: CrosswordClueLevel;
 };
 export type CrosswordFeedback =
-  | { readonly type: 'check'; readonly wrong: number; readonly blanks: number }
+  | { readonly type: 'incomplete'; readonly blanks: number }
+  | { readonly type: 'check'; readonly wrong: number }
   | { readonly type: 'check-letter'; readonly result: 'blank' | 'correct' | 'wrong' }
-  | { readonly type: 'reveal-letter' | 'reveal-word' };
+  | { readonly type: 'reveal-letter' | 'reveal-word' | 'already-revealed' }
+  | { readonly type: 'rewind'; readonly result: 'restored' | 'clear' | 'unavailable' };
 
 /** Each cell is blank (0), a draft letter (1–26), or a locked revealed letter (33–58). */
 export const CROSSWORD_LOCK = 32;
@@ -120,14 +122,20 @@ export type CrosswordState = CrosswordOptions & {
   readonly cursor: CrosswordCursor;
   readonly undo: readonly CrosswordDelta[];
   readonly helpUsed: boolean;
+  readonly edits: number;
+  readonly checks: number;
+  readonly failedChecks: number;
+  /** Draft revision of the last full Check, so reload and selection cannot repeat a submission. */
+  readonly checkedAt: number | null;
   readonly feedback: CrosswordFeedback | null;
 };
 
 export type CrosswordAction =
   | { readonly type: 'select'; readonly cell: number }
+  | { readonly type: 'move'; readonly direction: 'up' | 'down' | 'left' | 'right' }
   | { readonly type: 'clue'; readonly step: -1 | 1 }
   | { readonly type: 'type'; readonly letter: string }
-  | { readonly type: 'backspace' | 'undo' | 'check' }
+  | { readonly type: 'backspace' | 'undo' | 'check' | 'rewind' | 'toggle-direction' }
   | { readonly type: 'hint'; readonly hint: CrosswordHint }
   | { readonly type: 'mistakes'; readonly value: CrosswordMistakes }
   | { readonly type: 'skip-filled' | 'play-together'; readonly value: boolean }
@@ -143,7 +151,11 @@ export function createCrossword(puzzle: CrosswordPuzzle, options: Partial<Crossw
     cells: Array<number>(puzzle.solution.length).fill(0),
     cursor: { cell: clue.cells[0], direction: clue.direction },
     undo: [],
-    helpUsed: false,
+    helpUsed: options.mistakes === 'friendly',
+    edits: 0,
+    checks: 0,
+    failedChecks: 0,
+    checkedAt: null,
     feedback: null,
   };
 }
@@ -173,7 +185,13 @@ export function checkCrossword(puzzle: CrosswordPuzzle, state: CrosswordState) {
 }
 
 export function isCrosswordComplete(puzzle: CrosswordPuzzle, state: CrosswordState): boolean {
-  return puzzle.crossings.every((crossing, cell) => !crossing || crosswordLetter(state.cells[cell]) === puzzle.solution[cell]);
+  // Check occupancy first, so even the board's automatic completion test leaves partial drafts unjudged.
+  return countBlanks(puzzle, state) === 0 && puzzle.crossings.every((crossing, cell) =>
+    !crossing || crosswordLetter(state.cells[cell]) === puzzle.solution[cell]);
+}
+
+function countBlanks(puzzle: CrosswordPuzzle, state: CrosswordState): number {
+  return puzzle.crossings.reduce((count, crossing, cell) => count + Number(!!crossing && !state.cells[cell]), 0);
 }
 
 function edit(
@@ -187,7 +205,7 @@ function edit(
   const cells = state.cells.slice();
   for (const [cell, code] of changes) cells[cell] = code;
   const undo = [...state.undo.slice(1 - CROSSWORD_UNDO_LIMIT), { cursor: state.cursor, before }];
-  return { ...state, cells, cursor, undo, feedback };
+  return { ...state, cells, cursor, undo, feedback, edits: state.edits + 1 };
 }
 
 function enterLetter(state: CrosswordState, clue: CrosswordClue, letter: string): CrosswordState {
@@ -198,8 +216,10 @@ function enterLetter(state: CrosswordState, clue: CrosswordClue, letter: string)
   const writable = remaining.find(cell => (!skipFilled || cell === cursor.cell)
     ? cells[cell] < CROSSWORD_LOCK : cells[cell] === 0);
   if (writable === undefined) return state;
-  const next = remaining.slice(remaining.indexOf(writable) + 1)
-    .find(cell => skipFilled ? cells[cell] === 0 : cells[cell] < CROSSWORD_LOCK);
+  const after = clue.cells.indexOf(writable) + 1;
+  const next = skipFilled
+    ? clue.cells.slice(after).concat(clue.cells.slice(0, start)).find(cell => cells[cell] === 0)
+    : clue.cells.slice(after).find(cell => cells[cell] < CROSSWORD_LOCK);
   return edit(state, [[writable, crosswordLetterCode(letter.toUpperCase())]], { ...cursor, cell: next ?? writable });
 }
 
@@ -208,7 +228,8 @@ function backspace(state: CrosswordState, clue: CrosswordClue): CrosswordState {
   if (cells[cursor.cell] > 0 && cells[cursor.cell] < CROSSWORD_LOCK) {
     return edit(state, [[cursor.cell, 0]]);
   }
-  const prior = clue.cells.slice(0, clue.cells.indexOf(cursor.cell)).reverse().find(cell => cells[cell] < CROSSWORD_LOCK);
+  const prior = clue.cells.slice(0, clue.cells.indexOf(cursor.cell)).reverse()
+    .find(cell => cells[cell] > 0 && cells[cell] < CROSSWORD_LOCK);
   return prior === undefined ? state : edit(state, [[prior, 0]], { ...cursor, cell: prior });
 }
 
@@ -223,7 +244,7 @@ function applyHint(puzzle: CrosswordPuzzle, state: CrosswordState, hint: Crosswo
 
   const targets = hint === 'reveal-letter' ? [cell] : activeCrosswordClue(puzzle, state.cursor).cells;
   const changes = targets.filter(at => state.cells[at] < CROSSWORD_LOCK);
-  if (!changes.length) return state;
+  if (!changes.length) return { ...state, feedback: { type: 'already-revealed' } };
   return edit(
     { ...state, helpUsed: true },
     changes.map(at => [at, CROSSWORD_LOCK + crosswordLetterCode(puzzle.solution[at])]),
@@ -232,13 +253,49 @@ function applyHint(puzzle: CrosswordPuzzle, state: CrosswordState, hint: Crosswo
   );
 }
 
+function restoreDelta(cells: number[], delta: CrosswordDelta) {
+  for (const [cell, code] of delta.before) cells[cell] = code;
+}
+
+function rewind(puzzle: CrosswordPuzzle, state: CrosswordState): CrosswordState {
+  const assisted = { ...state, helpUsed: true };
+  const cells = state.cells.slice();
+  let remaining = state.undo.length;
+  while (checkCrossword(puzzle, { ...state, cells }).wrong.length) {
+    if (!remaining) return { ...assisted, feedback: { type: 'rewind', result: 'unavailable' } };
+    restoreDelta(cells, state.undo[--remaining]);
+  }
+  if (remaining === state.undo.length) return { ...assisted, feedback: { type: 'rewind', result: 'clear' } };
+  return {
+    ...assisted, cells, edits: state.edits + 1, undo: state.undo.slice(0, remaining),
+    cursor: state.undo[remaining].cursor, feedback: { type: 'rewind', result: 'restored' },
+  };
+}
+
+function moveCursor(puzzle: CrosswordPuzzle, cursor: CrosswordCursor, direction: 'up' | 'down' | 'left' | 'right') {
+  const horizontal = direction === 'left' || direction === 'right';
+  const step = (direction === 'up' || direction === 'left' ? -1 : 1) * (horizontal ? 1 : puzzle.size);
+  const row = Math.floor(cursor.cell / puzzle.size);
+  for (let cell = cursor.cell + step; cell >= 0 && cell < puzzle.solution.length; cell += step) {
+    if (horizontal && Math.floor(cell / puzzle.size) !== row) break;
+    if (puzzle.crossings[cell]) return { ...cursor, cell };
+  }
+  return cursor;
+}
+
 export function crosswordReducer(puzzle: CrosswordPuzzle, state: CrosswordState, action: CrosswordAction): CrosswordState {
   switch (action.type) {
     case 'select': {
       const cell = action.cell;
       if (!puzzle.crossings[cell]) return state;
       const direction = state.cursor.cell === cell ? OTHER_DIRECTION[state.cursor.direction] : state.cursor.direction;
-      return { ...state, cursor: { cell, direction }, feedback: state.feedback?.type === 'check' ? state.feedback : null };
+      return { ...state, cursor: { cell, direction } };
+    }
+    case 'toggle-direction':
+      return { ...state, cursor: { ...state.cursor, direction: OTHER_DIRECTION[state.cursor.direction] } };
+    case 'move': {
+      const cursor = moveCursor(puzzle, state.cursor, action.direction);
+      return cursor === state.cursor ? state : { ...state, cursor };
     }
     case 'clue': {
       const { direction, cell } = state.cursor;
@@ -248,7 +305,6 @@ export function crosswordReducer(puzzle: CrosswordPuzzle, state: CrosswordState,
       return {
         ...state,
         cursor: { direction, cell: next.cells.find(at => !state.cells[at]) ?? next.cells[0] },
-        feedback: state.feedback?.type === 'check' ? state.feedback : null,
       };
     }
     case 'type':
@@ -259,17 +315,27 @@ export function crosswordReducer(puzzle: CrosswordPuzzle, state: CrosswordState,
       const last = state.undo.at(-1);
       if (!last) return state;
       const cells = state.cells.slice();
-      for (const [cell, code] of last.before) cells[cell] = code;
-      return { ...state, cells, cursor: last.cursor, undo: state.undo.slice(0, -1), feedback: null };
+      restoreDelta(cells, last);
+      return { ...state, cells, cursor: last.cursor, undo: state.undo.slice(0, -1), feedback: null, edits: state.edits + 1 };
     }
     case 'check': {
-      const { wrong, blanks } = checkCrossword(puzzle, state);
-      return { ...state, feedback: { type: 'check', wrong: wrong.length, blanks } };
+      const blanks = countBlanks(puzzle, state);
+      if (blanks) return { ...state, feedback: { type: 'incomplete', blanks } };
+      if (state.checkedAt === state.edits && state.feedback?.type === 'check') return state;
+      const { wrong } = checkCrossword(puzzle, state);
+      const feedback = { type: 'check', wrong: wrong.length } as const;
+      if (state.checkedAt === state.edits) return { ...state, feedback };
+      return {
+        ...state, checks: state.checks + 1, failedChecks: state.failedChecks + Number(wrong.length > 0),
+        checkedAt: state.edits, feedback,
+      };
     }
+    case 'rewind':
+      return state.mistakes === 'rewind' ? rewind(puzzle, state) : state;
     case 'hint':
       return applyHint(puzzle, state, action.hint);
     case 'mistakes':
-      return { ...state, mistakes: action.value };
+      return { ...state, mistakes: action.value, helpUsed: state.helpUsed || action.value === 'friendly' };
     case 'skip-filled':
       return { ...state, skipFilled: action.value };
     case 'play-together':

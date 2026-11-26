@@ -1,8 +1,8 @@
-import { indexCrossword, type CrosswordDefinition, type CrosswordPuzzle, type CrosswordTier } from './engine';
-import { REVIEWED_CROSSWORD_CLUES } from './starterClues';
+import { indexCrossword, type CrosswordDefinition, type CrosswordPuzzle, type CrosswordTier } from '../../../src/puzzles/crossword/engine';
+import { STARTER_CROSSWORD_CLUES } from './starterClues';
 
 const grids: readonly (readonly [id: string, title: string, tier: CrosswordTier, rows: readonly string[]])[] = [
-  ["crossword-easy-nest", "In the Nest", "Easy", ["EGG##", "BIRD#", "BROAD", "#LURE", "##PEN"]],
+  ["crossword-easy-egg", "Egg in the Nest", "Easy", ["EGG##", "BIRD#", "BROAD", "#LURE", "##PEN"]],
   ["crossword-easy-whale", "Whale Hello", "Easy", ["##HOW", "##EWE", "WHALE", "OUR##", "NET##"]],
   ["crossword-easy-mango", "Mango Time", "Easy", ["YES##", "ARE##", "MANGO", "##SUN", "##EYE"]],
   ["crossword-easy-toast", "Pop Goes the Toast", "Easy", ["##THE", "#SOIL", "SCARF", "EASE#", "ANT##"]],
@@ -53,7 +53,7 @@ const grids: readonly (readonly [id: string, title: string, tier: CrosswordTier,
 ];
 
 export const STARTER_CROSSWORD_DEFINITIONS: readonly CrosswordDefinition[] = grids.map(([id, title, tier, rows]) => ({
-  id, title, tier, rows, clues: REVIEWED_CROSSWORD_CLUES,
+  id, title, tier, rows, clues: STARTER_CROSSWORD_CLUES,
 }));
 
 const tiers: Record<CrosswordTier, CrosswordPuzzle[]> = { Easy: [], Medium: [], Hard: [], Expert: [] };
