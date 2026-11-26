@@ -3,7 +3,7 @@ import { learnIds, type LearnId } from '../learn/types';
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
-import { ArcadeArt, hasArcadeArt } from "../art/illustrated";
+import { ArcadeArt, hasArcadeArt, hasLearnSubjectArt, LearnSubjectArt, type LearnSubjectId } from "../art/illustrated";
 import type { ShelfId } from "../learn/home";
 
 // Original activity silhouettes. Keep one 100-unit canvas and a 3-unit outline:
@@ -128,9 +128,23 @@ export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) {
   const Art = !surface && learnIds.includes(id as LearnId) ? additionalArt[id as LearnId] : undefined;
   return Art ? <Art size={size}/> : <Tile size={size} surface={surface ?? cream}><Scene id={id}/></Tile>;
 }
+const learnSubjectSurfaces: Readonly<Record<LearnSubjectId, string>> = {
+  reading: "#E8EFF9",
+  numbers: "#F7EBD0",
+  science: "#DDEFF5",
+  thinking: "#FBE6DC",
+  coding: "#E3E9F7",
+  chamoru: "#F5DCCC",
+};
 export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?: number }) {
-  const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "pattern-path", coding: "beep-bot", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
-  if (island === "reading") return <Tile size={size} surface="#DFE8F4"><Book/></Tile>;
+  if (hasLearnSubjectArt(island)) {
+    return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, borderWidth: 1, borderColor: "#3D2B2433",
+        backgroundColor: learnSubjectSurfaces[island], alignItems: "center", justifyContent: "center" }}>
+      <LearnSubjectArt id={island} size={size * 0.92}/>
+    </View>;
+  }
+  const representative: Record<Exclude<IslandIconId, LearnSubjectId>, IconId> = { classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
   if (island === "arcade") return <Tile size={size} surface="#CDE8E2"><G transform="translate(-4 -5) scale(.8)"><Blocks falling/></G><Circle cx={73} cy={72} r={17} fill={purple}/><Line d="M64 72H82M73 63V81" color={cream} width={5}/></Tile>;
   return <GameIcon id={representative[island]} size={size}/>;
 }

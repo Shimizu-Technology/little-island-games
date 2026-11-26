@@ -15,6 +15,7 @@ vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/components/Recovery', () => ({ Recovery: () => null }));
 vi.mock('../src/components/Settings', () => ({ Settings: () => null }));
 vi.mock('../src/components/GameIcon', () => ({ GameIcon: () => null, IslandIcon: () => null }));
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 vi.mock('../src/components/GameShelf', () => ({ openShelfGame: (game:string) => fixture.push({game}) }));
 vi.mock('../src/state/Store', () => ({ useStore: () => fixture.store }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
