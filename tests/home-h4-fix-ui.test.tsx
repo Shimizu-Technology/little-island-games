@@ -14,7 +14,7 @@ import { instance, validHome, type HomeStateV2 } from '../src/home/model';
 import type { Interaction } from '../src/home/runtime/useInteraction';
 
 const timing = vi.hoisted(() => ({ configs: [] as any[] }));
-vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' } }));
+vi.mock('react-native', () => ({ StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}}, View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' } }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({
   default: { View: 'AnimatedView' }, cancelAnimation:()=>{},
@@ -33,7 +33,7 @@ vi.mock('react-native-gesture-handler', () => ({ GestureDetector: 'GestureDetect
 vi.mock('../src/home/runtime/EntityArt', () => ({ EntityArt: (props: any) => React.createElement('EntityArt', { entityId: props.entity.id }), artFrame: (e: any) => e.bounds }));
 vi.mock('../src/home/runtime/SettleArt', () => ({ SettleArt: () => null }));
 vi.mock('../src/home/runtime/SetPieces', async (importOriginal) => ({ ...(await importOriginal<any>()), SetPieces: () => null }));
-vi.mock('../src/home/art/Room', () => ({ RoomArt: () => null, ShoreArt: () => null }));
+vi.mock('../src/home/art/Room', () => ({ RoomArt: () => null, ShoreArt: () => null, SkyArt: () => null }));
 vi.mock('../src/home/art/More', () => ({ RoomShellArt: () => null, MoreItemArt: () => null }));
 vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
 vi.mock('../src/home/BuildingArt', () => ({ BuildingArt: () => null, BuildingTrim: () => null, TerraceArt: () => null }));
