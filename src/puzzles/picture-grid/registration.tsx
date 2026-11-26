@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { useEffect, useState, type ComponentType } from 'react';
 import type { ChallengeCard, PackedBand, RegisteredDare, TypedRegistration } from '../../challenge/types';
 import type { PackedOpen } from '../../cove/catalog';
 import { validChallengeSession, type ChallengeProgress, type ChallengeSession, type Dare, type PuzzleRef, type SaveCatalog, type SessionCodec, type Terminal } from '../../state/challenge';
@@ -9,6 +9,7 @@ import type { FamilyManifest } from '../bank';
 import { bankLoader } from '../catalog';
 import { BankError, type BankLoader } from '../loader';
 import { answerHash, pictureGridAdapter } from './adapter';
+import type { PictureBoardProps } from './Board';
 import { PICTURE_SAVE_BYTES, decodePicture, editPicture, encodePicture, freshPicture, validPictureEvent, type PictureDraft, type PictureEvent, type PictureSave } from './checkpoint';
 import { PICTURE_GRID, pictureBands, solved, type PictureBand, type PictureGrid } from './engine';
 import { pictureHint } from './help';
@@ -19,8 +20,94 @@ export type Payload = PictureSave;
 export type Action = PictureEvent;
 export type State = { picture: PictureGrid; draft: PictureDraft; band: PictureBand };
 export const pictureGridCodec = 'picture-grid-1';
+export type PlayScreenImporter = () => Promise<ComponentType<PictureBoardProps>>;
 // The native view stays out of the Node registry/catalog tools until rendered.
-const LazyPlayScreen = lazy(() => import('./PlayScreen').then(m => ({ default: m.PlayScreen })));
+const defaultLoadPlayScreen: PlayScreenImporter = () => import('./PlayScreen').then(m => m.PlayScreen);
+// Cache only resolved modules (never rejected promises) so Try again genuinely retries a failed dynamic import.
+const loadedScreens = new WeakMap<PlayScreenImporter, ComponentType<PictureBoardProps>>();
+
+let rnModule: typeof import('react-native') | null = null;
+let rnPromise: Promise<typeof import('react-native')> | null = null;
+
+function loadReactNative(): Promise<typeof import('react-native')> {
+  if (rnModule) return Promise.resolve(rnModule);
+  rnPromise ??= import('react-native').then(m => {
+    rnModule = m;
+    return m;
+  });
+  return rnPromise;
+}
+
+export function PlayScreenLoader({ loadScreen = defaultLoadPlayScreen, ...props }: PictureBoardProps & { loadScreen?: PlayScreenImporter }) {
+  const [rn, setRn] = useState<typeof import('react-native') | null>(() => rnModule);
+  const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; attempt: number }>(() => ({
+    status: loadedScreens.has(loadScreen) ? 'ready' : 'loading',
+    attempt: 0,
+  }));
+
+  useEffect(() => {
+    if (rnModule) return;
+    let cancelled = false;
+    void loadReactNative().then(m => {
+      if (!cancelled) setRn(m);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (loadedScreens.has(loadScreen)) return;
+    let cancelled = false;
+    void loadScreen().then(
+      Loaded => {
+        loadedScreens.set(loadScreen, Loaded);
+        if (!cancelled) setState(current => ({ ...current, status: 'ready' }));
+      },
+      () => {
+        if (!cancelled) setState(current => ({ ...current, status: 'error' }));
+      },
+    );
+    return () => { cancelled = true; };
+  }, [loadScreen, state.attempt]);
+
+  const Ready = loadedScreens.get(loadScreen);
+  if (Ready) return React.createElement(Ready, props);
+  if (!rn) return null;
+  if (state.status === 'error') {
+    return React.createElement(
+      rn.View,
+      {
+        testID: 'picture-grid-load-error',
+        accessibilityRole: 'alert',
+        style: { alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12, minHeight: 160 },
+      },
+      React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 17, fontWeight: '800', textAlign: 'center' } }, 'Picture Grid could not load.'),
+      React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 15, textAlign: 'center' } }, 'Your saved work is kept. Try again, or go back to Puzzles.'),
+      React.createElement(
+        rn.Pressable,
+        {
+          testID: 'picture-grid-retry',
+          accessibilityRole: 'button',
+          accessibilityLabel: 'Try again',
+          onPress: () => setState(current => ({ status: 'loading', attempt: current.attempt + 1 })),
+          style: { minWidth: 44, minHeight: 48, borderRadius: 24, paddingHorizontal: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F28270' },
+        },
+        React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 15, fontWeight: '700' } }, 'Try again'),
+      ),
+    );
+  }
+  return React.createElement(
+    rn.View,
+    {
+      testID: 'picture-grid-loading',
+      accessible: true,
+      accessibilityRole: 'progressbar',
+      accessibilityLabel: 'Loading Picture Grid…',
+      accessibilityLiveRegion: 'polite',
+      style: { alignItems: 'center', justifyContent: 'center', padding: 24, minHeight: 160 },
+    },
+    React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 16, fontWeight: '700', textAlign: 'center' } }, 'Loading Picture Grid…'),
+  );
+}
 
 export function pictureGridBankFacts(manifest: FamilyManifest): PictureBank[] {
   if (manifest.family !== PICTURE_GRID || manifest.engine !== PICTURE_GRID) throw new Error('Expected a Picture Grid manifest.');
@@ -34,7 +121,11 @@ export function pictureGridBankFacts(manifest: FamilyManifest): PictureBank[] {
 /** Bind once the lead has baked and registered the immutable banks. Authored names stay off cards until solved. */
 export function definePictureGrid(
   facts: readonly PictureBank[],
-  { loader = bankLoader, cleanDares = [] }: { loader?: () => Pick<BankLoader, 'entry' | 'savedHash'>; cleanDares?: readonly PictureDare[] } = {},
+  { loader = bankLoader, cleanDares = [], loadScreen = defaultLoadPlayScreen }: {
+    loader?: () => Pick<BankLoader, 'entry' | 'savedHash'>;
+    cleanDares?: readonly PictureDare[];
+    loadScreen?: PlayScreenImporter;
+  } = {},
 ): TypedRegistration<Payload, Action, State> {
   const banks = new Map<number, PackedBank>();
   const labels = new Map<number, PictureBand>();
@@ -174,8 +265,8 @@ export function definePictureGrid(
     render: (session, dispatch, active, width, host) => {
       const state = view(session);
       if (!state) return null;
-      return <Suspense fallback={null}><LazyPlayScreen key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
-        {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} /></Suspense>;
+      return <PlayScreenLoader key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
+        loadScreen={loadScreen} {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} />;
     },
   };
 }

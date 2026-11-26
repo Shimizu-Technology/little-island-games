@@ -905,7 +905,7 @@
         "Trench"
       ],
       "door": "Cove",
-      "maxBoard": "Picture Grid 25\u00d725 and Word Search 16\u00d716, zoomed line at edge; Word Search 16\u00d716; longest diagonal and reverse word; Word Search 16\u00d716 with \u00c5, \u00d1 and glota; H\u00e5fa Adai longest sourced term",
+      "maxBoard": "Picture Grid 15\u00d715 and Word Search 16\u00d716, zoomed line at edge; Word Search 16\u00d716; longest diagonal and reverse word; Word Search 16\u00d716 with \u00c5, \u00d1 and glota; H\u00e5fa Adai longest sourced term",
       "firstAction": "Choose Paddling (or first supported mode); make one legal zoom with magnified line action"
     },
     {
@@ -929,16 +929,15 @@
       "name": "Picture Grid",
       "family": "cove",
       "strata": [
-        "Paddling",
-        "Shallows",
-        "Lagoon",
-        "Reef",
-        "Deep",
-        "Trench"
+        "Easy 5\u00d75",
+        "Medium 8\u00d78\u201310\u00d710",
+        "Hard 12\u00d712",
+        "Expert 15\u00d715"
       ],
       "door": "Cove",
-      "maxBoard": "Picture Grid 15\u00d715 and 25\u00d725; longest row/column stroke; Picture Grid 25\u00d725 and Word Search 16\u00d716, zoomed line at edge",
-      "firstAction": "Choose Paddling (or first supported mode); make one legal drag paint with line lock action"
+      "maxBoard": "Picture Grid 15\u00d715 Expert baked (10\u00d710 Draw a Puzzle); longest row/column stroke and pan/zoom at edge",
+      "firstAction": "Choose Easy 5\u00d75 (or Expert 15\u00d715); make one legal tap or line-locked drag paint action",
+      "challengeSteps": "Map \u2192 Cove \u2192 Picture Grid (picture-grid); open Easy 5\u00d75 and Expert 15\u00d715 (no Check control or dares ship in this slice). Paint and cross out cells with tap and line-locked drag, use Hint, Undo, Restart this puzzle from More, open Draw a Puzzle (up to 10\u00d710) and return with the paused puzzle intact, quit/resume, finish to reveal the colored picture, and reopen the finished board (including interactive Draw a Puzzle). Fill paused spaces and attempt another Start; cancel and retain every draft."
     },
     {
       "id": "crossword",
@@ -1449,7 +1448,7 @@
       "games": [
         "picture-grid"
       ],
-      "maxBoard": "Picture Grid 15\u00d715 and 25\u00d725; longest row/column stroke"
+      "maxBoard": "Picture Grid 15\u00d715 baked (10\u00d710 Draw a Puzzle); longest row/column stroke"
     },
     {
       "id": "M04",
@@ -1458,7 +1457,7 @@
         "picture-grid",
         "word-search"
       ],
-      "maxBoard": "Picture Grid 25\u00d725 and Word Search 16\u00d716, zoomed line at edge"
+      "maxBoard": "Picture Grid 15\u00d715 and Word Search 16\u00d716, zoomed line at edge"
     },
     {
       "id": "M05",

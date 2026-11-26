@@ -17,14 +17,20 @@ import { presentationFor } from './presentation';
 import type { Mistakes } from './local';
 import { RoundMore } from './RoundMore';
 import { boardTitle, engineReset, honorsMistakes, hudActions, playLabel } from './shelf';
-import { BoardHud, type BoardCommands } from './boardHud';
+import { BoardHud, type BoardCommands, type BoardMoreAction } from './boardHud';
 
 /** What the HUD shows of a hosted board's commands; their handlers stay in a ref. */
-type HudShape = { hint?: { disabled: boolean; label?: string }; undo?: { disabled: boolean }; reset?: { disabled: boolean } } | null;
+type HudShape = {
+  hint?: { disabled: boolean; label?: string };
+  undo?: { disabled: boolean };
+  reset?: { disabled: boolean };
+  extraActions?: { label: string; disabled: boolean; icon?: BoardMoreAction['icon'] }[];
+} | null;
 const shapeOf = (c: BoardCommands | null): HudShape => c && {
   ...(c.hint ? { hint: { disabled: !!c.hint.disabled, ...(c.hint.label ? { label: c.hint.label } : {}) } } : {}),
   ...(c.undo ? { undo: { disabled: !!c.undo.disabled } } : {}),
   ...(c.reset ? { reset: { disabled: !!c.reset.disabled } } : {}),
+  ...(c.extraActions?.length ? { extraActions: c.extraActions.map(a => ({ label: a.label, disabled: !!a.disabled, ...(a.icon ? { icon: a.icon } : {}) })) } : {}),
 };
 /** A board shrunk above More never goes narrower than this (or the full width, when that is less): its keys and pads keep their minimums. */
 const MIN_BOARD = 280;
@@ -215,6 +221,12 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     <RoundMore visible={more && !choosing} onClose={() => setMore(false)} game={entry.game} busy={busy} held={pending ? 'Save your finish first.' : undefined}
       mistakes={honorsMistakes(entry) ? choices.mistakes : undefined} onMistakes={honorsMistakes(entry) ? choices.onMistakes : undefined}
       onRestart={canRestart ? restart : undefined} restartDisabled={canRestart && !!hud?.reset?.disabled && !entry.full?.(saved!, reset)}
+      extraActions={hud?.extraActions?.map((action, index) => ({
+        label: action.label,
+        disabled: action.disabled,
+        icon: action.icon,
+        onPress: () => commands.current?.extraActions?.[index]?.run(),
+      }))}
       onNew={choices.onNew} onChoose={onBrowse}
       people={others} onSend={choices.onSend && round ? to => choices.onSend!(to, round.puzzle) : undefined}
       role={round?.partner ? infoFor(entry.game).role : undefined} onGrownUps={choices.onGrownUps}/>

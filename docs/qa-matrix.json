@@ -4002,13 +4002,13 @@
         "Cove",
         "Challenge:word-search"
       ],
-      "maxBoard": "Picture Grid 25×25 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term",
+      "maxBoard": "Picture Grid 15×15 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text"
       ],
       "executor": "Lead, private offline Release simulator",
-      "steps": "Map → Cove → Word Search. Choose Paddling (or first supported mode); make one legal zoom with magnified line action. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: Picture Grid 25×25 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term. Challenge surfaces: word-search.",
+      "steps": "Map → Cove → Word Search. Choose Paddling (or first supported mode); make one legal zoom with magnified line action. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: Picture Grid 15×15 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term. Challenge surfaces: word-search.",
       "savedOutcome": "Same owner, immutable ref, board, choices and help/attempt counters after resume; one accepted result/award. Real-time Arcade restarts with accepted stars/best retained; family-only play saves only supported outcomes.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -4154,13 +4154,13 @@
         "Cove",
         "Challenge:picture-grid"
       ],
-      "maxBoard": "Picture Grid 15×15 and 25×25; longest row/column stroke; Picture Grid 25×25 and Word Search 16×16, zoomed line at edge",
+      "maxBoard": "Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and pan/zoom at edge",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text"
       ],
       "executor": "Lead, private offline Release simulator",
-      "steps": "Map → Cove → Picture Grid. Choose Paddling (or first supported mode); make one legal drag paint with line lock action. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: Picture Grid 15×15 and 25×25; longest row/column stroke; Picture Grid 25×25 and Word Search 16×16, zoomed line at edge. Challenge surfaces: picture-grid.",
+      "steps": "Map → Cove → Picture Grid. Choose Easy 5×5 (or Expert 15×15); make one legal tap or line-locked drag paint action. Quit → exact resume → finish → reopen result. Check legal move, terminal truth, shared-engine hint, undo/help and dare eligibility where supported. Maximum fixture: Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and pan/zoom at edge. Challenge surfaces: picture-grid.",
       "savedOutcome": "Same owner, immutable ref, board, choices and help/attempt counters after resume; one accepted result/award. Real-time Arcade restarts with accepted stars/best retained; family-only play saves only supported outcomes.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -7082,7 +7082,7 @@
         "Challenge:picture-grid"
       ],
       "door": "Cove",
-      "maxBoard": "Picture Grid 15×15 and 25×25; longest row/column stroke; Picture Grid 25×25 and Word Search 16×16, zoomed line at edge",
+      "maxBoard": "Picture Grid 15×15 Expert baked (10×10 Draw a Puzzle); longest row/column stroke and pan/zoom at edge",
       "mechanics": [
         "M03",
         "M04"
@@ -7092,7 +7092,7 @@
         "iPhone / iOS 26.5 / portrait / default text"
       ],
       "executor": "Lead, private offline Release simulator",
-      "steps": "Map → Cove → Picture Grid → Challenge (picture-grid); choose teaching and hardest tier without stars. Start explicitly, make a legal action, wrong Check, edit, Help, Undo, quit/resume, finish, reopen, replay dare. Fill paused spaces and attempt another Start; cancel and retain every draft.",
+      "steps": "Map → Cove → Picture Grid (picture-grid); open Easy 5×5 and Expert 15×15 (no Check control or dares ship in this slice). Paint and cross out cells with tap and line-locked drag, use Hint, Undo, Restart this puzzle from More, open Draw a Puzzle (up to 10×10) and return with the paused puzzle intact, quit/resume, finish to reveal the colored picture, and reopen the finished board (including interactive Draw a Puzzle). Fill paused spaces and attempt another Start; cancel and retain every draft.",
       "savedOutcome": "Challenge ref, draft, help/miss/edit/run counters and owner resume exactly. One award; marks never decrease; helped replay cannot claim clean. Full paused spaces preserves drafts and School state.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -7884,7 +7884,7 @@
         "Challenge:word-search"
       ],
       "door": "Cove",
-      "maxBoard": "Picture Grid 25×25 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term",
+      "maxBoard": "Picture Grid 15×15 and Word Search 16×16, zoomed line at edge; Word Search 16×16; longest diagonal and reverse word; Word Search 16×16 with Å, Ñ and glota; Håfa Adai longest sourced term",
       "mechanics": [
         "M04",
         "M07",
@@ -8185,7 +8185,7 @@
       "games": [
         "picture-grid"
       ],
-      "maxBoard": "Picture Grid 15×15 and 25×25; longest row/column stroke",
+      "maxBoard": "Picture Grid 15×15 baked (10×10 Draw a Puzzle); longest row/column stroke",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text",
@@ -8196,7 +8196,7 @@
       ],
       "executionCases": 6,
       "executor": "Lead, private offline Release simulator",
-      "steps": "Fixture: Picture Grid 15×15 and 25×25; longest row/column stroke. Exercise drag paint with line lock in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
+      "steps": "Fixture: Picture Grid 15×15 baked (10×10 Draw a Puzzle); longest row/column stroke. Exercise drag paint with line lock in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
       "savedOutcome": "Exact owner/draft/pending choices after force-close; no duplicate move, leaked secret or unsolicited help. Free creation remains ungraded.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -8289,7 +8289,7 @@
         "picture-grid",
         "word-search"
       ],
-      "maxBoard": "Picture Grid 25×25 and Word Search 16×16, zoomed line at edge",
+      "maxBoard": "Picture Grid 15×15 and Word Search 16×16, zoomed line at edge",
       "dimensions": [
         "iPhone / iOS 18.5 / portrait / default text",
         "iPhone / iOS 26.5 / portrait / default text",
@@ -8300,7 +8300,7 @@
       ],
       "executionCases": 6,
       "executor": "Lead, private offline Release simulator",
-      "steps": "Fixture: Picture Grid 25×25 and Word Search 16×16, zoomed line at edge. Exercise zoom with magnified line in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
+      "steps": "Fixture: Picture Grid 15×15 and Word Search 16×16, zoomed line at edge. Exercise zoom with magnified line in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.",
       "savedOutcome": "Exact owner/draft/pending choices after force-close; no duplicate move, leaked secret or unsolicited help. Free creation remains ungraded.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC",
@@ -29421,7 +29421,7 @@
     {
       "id": "B-picture-grid-01",
       "group": "bank-sampling",
-      "title": "Picture Grid / Paddling",
+      "title": "Picture Grid / Easy 5×5",
       "games": [
         "picture-grid"
       ],
@@ -29429,14 +29429,14 @@
         "Release phone or tablet / five distinct refs"
       ],
       "executor": "Lead, Release simulator; physical subset named by PH rows",
-      "steps": "Preflight Paddling manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
+      "steps": "Preflight Easy 5×5 manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
       "savedOutcome": "Exact draft/hint/help and owner resume per immutable ref; completion agrees with proof. Content quality separately observed.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC bank sampling",
       "source": "PLAN §§6,10; WORK-LEDGER BK allocation",
       "sampling": {
         "kind": "target level/band",
-        "stratum": "Paddling",
+        "stratum": "Easy 5×5",
         "randomSeed": 2501,
         "samples": [
           "teaching",
@@ -29463,7 +29463,7 @@
     {
       "id": "B-picture-grid-02",
       "group": "bank-sampling",
-      "title": "Picture Grid / Shallows",
+      "title": "Picture Grid / Medium 8×8–10×10",
       "games": [
         "picture-grid"
       ],
@@ -29471,14 +29471,14 @@
         "Release phone or tablet / five distinct refs"
       ],
       "executor": "Lead, Release simulator; physical subset named by PH rows",
-      "steps": "Preflight Shallows manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
+      "steps": "Preflight Medium 8×8–10×10 manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
       "savedOutcome": "Exact draft/hint/help and owner resume per immutable ref; completion agrees with proof. Content quality separately observed.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC bank sampling",
       "source": "PLAN §§6,10; WORK-LEDGER BK allocation",
       "sampling": {
         "kind": "target level/band",
-        "stratum": "Shallows",
+        "stratum": "Medium 8×8–10×10",
         "randomSeed": 2502,
         "samples": [
           "teaching",
@@ -29505,7 +29505,7 @@
     {
       "id": "B-picture-grid-03",
       "group": "bank-sampling",
-      "title": "Picture Grid / Lagoon",
+      "title": "Picture Grid / Hard 12×12",
       "games": [
         "picture-grid"
       ],
@@ -29513,14 +29513,14 @@
         "Release phone or tablet / five distinct refs"
       ],
       "executor": "Lead, Release simulator; physical subset named by PH rows",
-      "steps": "Preflight Lagoon manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
+      "steps": "Preflight Hard 12×12 manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
       "savedOutcome": "Exact draft/hint/help and owner resume per immutable ref; completion agrees with proof. Content quality separately observed.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC bank sampling",
       "source": "PLAN §§6,10; WORK-LEDGER BK allocation",
       "sampling": {
         "kind": "target level/band",
-        "stratum": "Lagoon",
+        "stratum": "Hard 12×12",
         "randomSeed": 2503,
         "samples": [
           "teaching",
@@ -29547,7 +29547,7 @@
     {
       "id": "B-picture-grid-04",
       "group": "bank-sampling",
-      "title": "Picture Grid / Reef",
+      "title": "Picture Grid / Expert 15×15",
       "games": [
         "picture-grid"
       ],
@@ -29555,14 +29555,14 @@
         "Release phone or tablet / five distinct refs"
       ],
       "executor": "Lead, Release simulator; physical subset named by PH rows",
-      "steps": "Preflight Reef manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
+      "steps": "Preflight Expert 15×15 manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
       "savedOutcome": "Exact draft/hint/help and owner resume per immutable ref; completion agrees with proof. Content quality separately observed.",
       "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
       "gate": "RC bank sampling",
       "source": "PLAN §§6,10; WORK-LEDGER BK allocation",
       "sampling": {
         "kind": "target level/band",
-        "stratum": "Reef",
+        "stratum": "Expert 15×15",
         "randomSeed": 2504,
         "samples": [
           "teaching",
@@ -29577,90 +29577,6 @@
       "evidence": [],
       "status": "not run",
       "order": 542,
-      "dimensionResults": [
-        {
-          "dimension": "Release phone or tablet / five distinct refs",
-          "pass": 1,
-          "status": "not run",
-          "evidence": []
-        }
-      ]
-    },
-    {
-      "id": "B-picture-grid-05",
-      "group": "bank-sampling",
-      "title": "Picture Grid / Deep",
-      "games": [
-        "picture-grid"
-      ],
-      "dimensions": [
-        "Release phone or tablet / five distinct refs"
-      ],
-      "executor": "Lead, Release simulator; physical subset named by PH rows",
-      "steps": "Preflight Deep manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
-      "savedOutcome": "Exact draft/hint/help and owner resume per immutable ref; completion agrees with proof. Content quality separately observed.",
-      "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
-      "gate": "RC bank sampling",
-      "source": "PLAN §§6,10; WORK-LEDGER BK allocation",
-      "sampling": {
-        "kind": "target level/band",
-        "stratum": "Deep",
-        "randomSeed": 2505,
-        "samples": [
-          "teaching",
-          "hardest",
-          "random-1",
-          "random-2",
-          "random-3"
-        ]
-      },
-      "availability": "registered",
-      "registeredGames": 1,
-      "evidence": [],
-      "status": "not run",
-      "order": 543,
-      "dimensionResults": [
-        {
-          "dimension": "Release phone or tablet / five distinct refs",
-          "pass": 1,
-          "status": "not run",
-          "evidence": []
-        }
-      ]
-    },
-    {
-      "id": "B-picture-grid-06",
-      "group": "bank-sampling",
-      "title": "Picture Grid / Trench",
-      "games": [
-        "picture-grid"
-      ],
-      "dimensions": [
-        "Release phone or tablet / five distinct refs"
-      ],
-      "executor": "Lead, Release simulator; physical subset named by PH rows",
-      "steps": "Preflight Trench manifest and eligible refs. Record teaching + hardest + three seeded random refs; input, each hint step, cancel, quit/resume and finish. Tiny pools sample all distinct entries and disclose shortfall. Free/family-only modes are exploratory, never scored banks.",
-      "savedOutcome": "Exact draft/hint/help and owner resume per immutable ref; completion agrees with proof. Content quality separately observed.",
-      "evidenceRequired": "Frame/recording and saved diff; tested source SHA, build/bundle/manifest, immutable fixture/ref and actual result per pass and device.",
-      "gate": "RC bank sampling",
-      "source": "PLAN §§6,10; WORK-LEDGER BK allocation",
-      "sampling": {
-        "kind": "target level/band",
-        "stratum": "Trench",
-        "randomSeed": 2506,
-        "samples": [
-          "teaching",
-          "hardest",
-          "random-1",
-          "random-2",
-          "random-3"
-        ]
-      },
-      "availability": "registered",
-      "registeredGames": 1,
-      "evidence": [],
-      "status": "not run",
-      "order": 544,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29702,7 +29618,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 545,
+      "order": 543,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29744,7 +29660,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 546,
+      "order": 544,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29786,7 +29702,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 547,
+      "order": 545,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29828,7 +29744,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 548,
+      "order": 546,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29870,7 +29786,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 549,
+      "order": 547,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29912,7 +29828,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 550,
+      "order": 548,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29954,7 +29870,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 551,
+      "order": 549,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -29996,7 +29912,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 552,
+      "order": 550,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30038,7 +29954,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 553,
+      "order": 551,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30080,7 +29996,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 554,
+      "order": 552,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30122,7 +30038,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 555,
+      "order": 553,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30164,7 +30080,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 556,
+      "order": 554,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30206,7 +30122,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 557,
+      "order": 555,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30248,7 +30164,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 558,
+      "order": 556,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30290,7 +30206,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 559,
+      "order": 557,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30332,7 +30248,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 560,
+      "order": 558,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30374,7 +30290,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 561,
+      "order": 559,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30416,7 +30332,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 562,
+      "order": 560,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30458,7 +30374,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 563,
+      "order": 561,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30500,7 +30416,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 564,
+      "order": 562,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30542,7 +30458,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 565,
+      "order": 563,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30584,7 +30500,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 566,
+      "order": 564,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30626,7 +30542,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 567,
+      "order": 565,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30668,7 +30584,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 568,
+      "order": 566,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30710,7 +30626,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 569,
+      "order": 567,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30752,7 +30668,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 570,
+      "order": 568,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30794,7 +30710,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 571,
+      "order": 569,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30836,7 +30752,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 572,
+      "order": 570,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30878,7 +30794,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 573,
+      "order": 571,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30920,7 +30836,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 574,
+      "order": 572,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -30962,7 +30878,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 575,
+      "order": 573,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31004,7 +30920,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 576,
+      "order": 574,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31046,7 +30962,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 577,
+      "order": 575,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31088,7 +31004,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 578,
+      "order": 576,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31130,7 +31046,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 579,
+      "order": 577,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31172,7 +31088,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 580,
+      "order": 578,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31214,7 +31130,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 581,
+      "order": 579,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31256,7 +31172,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 582,
+      "order": 580,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31298,7 +31214,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 583,
+      "order": 581,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31340,7 +31256,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 584,
+      "order": 582,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31382,7 +31298,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 585,
+      "order": 583,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31424,7 +31340,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 586,
+      "order": 584,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31466,7 +31382,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 587,
+      "order": 585,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31508,7 +31424,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 588,
+      "order": 586,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31550,7 +31466,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 589,
+      "order": 587,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31592,7 +31508,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 590,
+      "order": 588,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31634,7 +31550,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 591,
+      "order": 589,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31676,7 +31592,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 592,
+      "order": 590,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31718,7 +31634,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 593,
+      "order": 591,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31760,7 +31676,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 594,
+      "order": 592,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31802,7 +31718,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 595,
+      "order": 593,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31844,7 +31760,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 596,
+      "order": 594,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31886,7 +31802,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 597,
+      "order": 595,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31928,7 +31844,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 598,
+      "order": 596,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -31970,7 +31886,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 599,
+      "order": 597,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32012,7 +31928,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 600,
+      "order": 598,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32054,7 +31970,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 601,
+      "order": 599,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32096,7 +32012,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 602,
+      "order": 600,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32138,7 +32054,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 603,
+      "order": 601,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32180,7 +32096,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 604,
+      "order": 602,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32222,7 +32138,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 605,
+      "order": 603,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32264,7 +32180,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 606,
+      "order": 604,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32306,7 +32222,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 607,
+      "order": 605,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32348,7 +32264,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 608,
+      "order": 606,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32390,7 +32306,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 609,
+      "order": 607,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32432,7 +32348,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 610,
+      "order": 608,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32474,7 +32390,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 611,
+      "order": 609,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32516,7 +32432,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 612,
+      "order": 610,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32558,7 +32474,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 613,
+      "order": 611,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32600,7 +32516,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 614,
+      "order": 612,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32642,7 +32558,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 615,
+      "order": 613,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32684,7 +32600,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 616,
+      "order": 614,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32726,7 +32642,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 617,
+      "order": 615,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32768,7 +32684,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 618,
+      "order": 616,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32810,7 +32726,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 619,
+      "order": 617,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32852,7 +32768,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 620,
+      "order": 618,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32894,7 +32810,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 621,
+      "order": 619,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32936,7 +32852,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 622,
+      "order": 620,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -32978,7 +32894,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 623,
+      "order": 621,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33020,7 +32936,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 624,
+      "order": 622,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33062,7 +32978,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 625,
+      "order": 623,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33104,7 +33020,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 626,
+      "order": 624,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33146,7 +33062,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 627,
+      "order": 625,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33188,7 +33104,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 628,
+      "order": 626,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33230,7 +33146,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 629,
+      "order": 627,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33272,7 +33188,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 630,
+      "order": 628,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33314,7 +33230,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 631,
+      "order": 629,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33356,7 +33272,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 632,
+      "order": 630,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33398,7 +33314,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 633,
+      "order": 631,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33440,7 +33356,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 634,
+      "order": 632,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33482,7 +33398,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 635,
+      "order": 633,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33524,7 +33440,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 636,
+      "order": 634,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33566,7 +33482,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 637,
+      "order": 635,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33608,7 +33524,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 638,
+      "order": 636,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33650,7 +33566,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 639,
+      "order": 637,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33692,7 +33608,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 640,
+      "order": 638,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33734,7 +33650,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 641,
+      "order": 639,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33776,7 +33692,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 642,
+      "order": 640,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33818,7 +33734,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 643,
+      "order": 641,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33860,7 +33776,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 644,
+      "order": 642,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33902,7 +33818,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 645,
+      "order": 643,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33944,7 +33860,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 646,
+      "order": 644,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -33986,7 +33902,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 647,
+      "order": 645,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34028,7 +33944,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 648,
+      "order": 646,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34070,7 +33986,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 649,
+      "order": 647,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34112,7 +34028,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 650,
+      "order": 648,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34154,7 +34070,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 651,
+      "order": 649,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34196,7 +34112,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 652,
+      "order": 650,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34238,7 +34154,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 653,
+      "order": 651,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34280,7 +34196,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 654,
+      "order": 652,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34322,7 +34238,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 655,
+      "order": 653,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34364,7 +34280,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 656,
+      "order": 654,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34406,7 +34322,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 657,
+      "order": 655,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34448,7 +34364,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 658,
+      "order": 656,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34490,7 +34406,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 659,
+      "order": 657,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34532,7 +34448,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 660,
+      "order": 658,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34574,7 +34490,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 661,
+      "order": 659,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34616,7 +34532,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 662,
+      "order": 660,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34658,7 +34574,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 663,
+      "order": 661,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34700,7 +34616,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 664,
+      "order": 662,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34742,7 +34658,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 665,
+      "order": 663,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34784,7 +34700,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 666,
+      "order": 664,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34826,7 +34742,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 667,
+      "order": 665,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34868,7 +34784,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 668,
+      "order": 666,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34910,7 +34826,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 669,
+      "order": 667,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34952,7 +34868,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 670,
+      "order": 668,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -34994,7 +34910,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 671,
+      "order": 669,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35036,7 +34952,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 672,
+      "order": 670,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35078,7 +34994,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 673,
+      "order": 671,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35120,7 +35036,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 674,
+      "order": 672,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35162,7 +35078,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 675,
+      "order": 673,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35204,7 +35120,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 676,
+      "order": 674,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35246,7 +35162,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 677,
+      "order": 675,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35288,7 +35204,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 678,
+      "order": 676,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35330,7 +35246,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 679,
+      "order": 677,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35372,7 +35288,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 680,
+      "order": 678,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35414,7 +35330,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 681,
+      "order": 679,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35456,7 +35372,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 682,
+      "order": 680,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35498,7 +35414,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 683,
+      "order": 681,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35540,7 +35456,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 684,
+      "order": 682,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35582,7 +35498,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 685,
+      "order": 683,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35624,7 +35540,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 686,
+      "order": 684,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35666,7 +35582,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 687,
+      "order": 685,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35708,7 +35624,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 688,
+      "order": 686,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35750,7 +35666,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 689,
+      "order": 687,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35792,7 +35708,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 690,
+      "order": 688,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35834,7 +35750,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 691,
+      "order": 689,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35876,7 +35792,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 692,
+      "order": 690,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35918,7 +35834,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 693,
+      "order": 691,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -35960,7 +35876,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 694,
+      "order": 692,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36002,7 +35918,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 695,
+      "order": 693,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36044,7 +35960,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 696,
+      "order": 694,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36086,7 +36002,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 697,
+      "order": 695,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36128,7 +36044,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 698,
+      "order": 696,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36170,7 +36086,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 699,
+      "order": 697,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36212,7 +36128,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 700,
+      "order": 698,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36254,7 +36170,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 701,
+      "order": 699,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36296,7 +36212,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 702,
+      "order": 700,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36338,7 +36254,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 703,
+      "order": 701,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36380,7 +36296,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 704,
+      "order": 702,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36422,7 +36338,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 705,
+      "order": 703,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36464,7 +36380,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 706,
+      "order": 704,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36506,7 +36422,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 707,
+      "order": 705,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36548,7 +36464,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 708,
+      "order": 706,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36590,7 +36506,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 709,
+      "order": 707,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36632,7 +36548,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 710,
+      "order": 708,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36674,7 +36590,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 711,
+      "order": 709,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36716,7 +36632,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 712,
+      "order": 710,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36758,7 +36674,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 713,
+      "order": 711,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36800,7 +36716,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 714,
+      "order": 712,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36842,7 +36758,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 715,
+      "order": 713,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36884,7 +36800,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 716,
+      "order": 714,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36926,7 +36842,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 717,
+      "order": 715,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -36968,7 +36884,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 718,
+      "order": 716,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37010,7 +36926,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 719,
+      "order": 717,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37052,7 +36968,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 720,
+      "order": 718,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37094,7 +37010,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 721,
+      "order": 719,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37137,7 +37053,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 722,
+      "order": 720,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37180,7 +37096,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 723,
+      "order": 721,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37223,7 +37139,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 724,
+      "order": 722,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37266,7 +37182,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 725,
+      "order": 723,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37309,7 +37225,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 726,
+      "order": 724,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37352,7 +37268,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 727,
+      "order": 725,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37395,7 +37311,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 728,
+      "order": 726,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37438,7 +37354,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 729,
+      "order": 727,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37481,7 +37397,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 730,
+      "order": 728,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37524,7 +37440,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 731,
+      "order": 729,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37567,7 +37483,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 732,
+      "order": 730,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37610,7 +37526,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 733,
+      "order": 731,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37653,7 +37569,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 734,
+      "order": 732,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37696,7 +37612,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 735,
+      "order": 733,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37739,7 +37655,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 736,
+      "order": 734,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37782,7 +37698,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 737,
+      "order": 735,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37825,7 +37741,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 738,
+      "order": 736,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37868,7 +37784,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 739,
+      "order": 737,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37911,7 +37827,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 740,
+      "order": 738,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37954,7 +37870,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 741,
+      "order": 739,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -37997,7 +37913,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 742,
+      "order": 740,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38040,7 +37956,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 743,
+      "order": 741,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38083,7 +37999,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 744,
+      "order": 742,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38126,7 +38042,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 745,
+      "order": 743,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38169,7 +38085,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 746,
+      "order": 744,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38212,7 +38128,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 747,
+      "order": 745,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38255,7 +38171,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 748,
+      "order": 746,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38298,7 +38214,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 749,
+      "order": 747,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38341,7 +38257,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 750,
+      "order": 748,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38384,7 +38300,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 751,
+      "order": 749,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38427,7 +38343,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 752,
+      "order": 750,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38470,7 +38386,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 753,
+      "order": 751,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38513,7 +38429,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 754,
+      "order": 752,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38556,7 +38472,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 755,
+      "order": 753,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38599,7 +38515,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 756,
+      "order": 754,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38642,7 +38558,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 757,
+      "order": 755,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38685,7 +38601,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 758,
+      "order": 756,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38728,7 +38644,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 759,
+      "order": 757,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38771,7 +38687,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 760,
+      "order": 758,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38814,7 +38730,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 761,
+      "order": 759,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38857,7 +38773,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 762,
+      "order": 760,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38900,7 +38816,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 763,
+      "order": 761,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38943,7 +38859,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 764,
+      "order": 762,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -38986,7 +38902,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 765,
+      "order": 763,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39029,7 +38945,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 766,
+      "order": 764,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39072,7 +38988,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 767,
+      "order": 765,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39115,7 +39031,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 768,
+      "order": 766,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39158,7 +39074,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 769,
+      "order": 767,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39201,7 +39117,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 770,
+      "order": 768,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39244,7 +39160,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 771,
+      "order": 769,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39287,7 +39203,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 772,
+      "order": 770,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39330,7 +39246,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 773,
+      "order": 771,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39373,7 +39289,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 774,
+      "order": 772,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39416,7 +39332,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 775,
+      "order": 773,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39459,7 +39375,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 776,
+      "order": 774,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39502,7 +39418,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 777,
+      "order": 775,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39545,7 +39461,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 778,
+      "order": 776,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39588,7 +39504,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 779,
+      "order": 777,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39631,7 +39547,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 780,
+      "order": 778,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39674,7 +39590,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 781,
+      "order": 779,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39717,7 +39633,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 782,
+      "order": 780,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39760,7 +39676,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 783,
+      "order": 781,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39803,7 +39719,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 784,
+      "order": 782,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39846,7 +39762,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 785,
+      "order": 783,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39889,7 +39805,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 786,
+      "order": 784,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39932,7 +39848,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 787,
+      "order": 785,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -39975,7 +39891,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 788,
+      "order": 786,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40018,7 +39934,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 789,
+      "order": 787,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40061,7 +39977,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 790,
+      "order": 788,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40104,7 +40020,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 791,
+      "order": 789,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40147,7 +40063,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 792,
+      "order": 790,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40190,7 +40106,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 793,
+      "order": 791,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40233,7 +40149,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 794,
+      "order": 792,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40276,7 +40192,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 795,
+      "order": 793,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40319,7 +40235,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 796,
+      "order": 794,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40362,7 +40278,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 797,
+      "order": 795,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40405,7 +40321,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 798,
+      "order": 796,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40448,7 +40364,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 799,
+      "order": 797,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40491,7 +40407,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 800,
+      "order": 798,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40534,7 +40450,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 801,
+      "order": 799,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40577,7 +40493,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 802,
+      "order": 800,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40620,7 +40536,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 803,
+      "order": 801,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40663,7 +40579,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 804,
+      "order": 802,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40706,7 +40622,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 805,
+      "order": 803,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40749,7 +40665,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 806,
+      "order": 804,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40792,7 +40708,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 807,
+      "order": 805,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40835,7 +40751,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 808,
+      "order": 806,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40878,7 +40794,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 809,
+      "order": 807,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40921,7 +40837,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 810,
+      "order": 808,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -40964,7 +40880,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 811,
+      "order": 809,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41007,7 +40923,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 812,
+      "order": 810,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41050,7 +40966,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 813,
+      "order": 811,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41093,7 +41009,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 814,
+      "order": 812,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41136,7 +41052,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 815,
+      "order": 813,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41179,7 +41095,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 816,
+      "order": 814,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41222,7 +41138,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 817,
+      "order": 815,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41265,7 +41181,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 818,
+      "order": 816,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41308,7 +41224,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 819,
+      "order": 817,
       "dimensionResults": [
         {
           "dimension": "Release phone or tablet / five distinct refs",
@@ -41352,7 +41268,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 820,
+      "order": 818,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41402,7 +41318,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 821,
+      "order": 819,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41452,7 +41368,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 822,
+      "order": 820,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41502,7 +41418,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 823,
+      "order": 821,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41552,7 +41468,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 824,
+      "order": 822,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41602,7 +41518,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 825,
+      "order": 823,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41652,7 +41568,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 826,
+      "order": 824,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41702,7 +41618,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 827,
+      "order": 825,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41753,7 +41669,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 828,
+      "order": 826,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41803,7 +41719,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 829,
+      "order": 827,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41853,7 +41769,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 830,
+      "order": 828,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41903,7 +41819,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 831,
+      "order": 829,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -41953,7 +41869,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 832,
+      "order": 830,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42003,7 +41919,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 833,
+      "order": 831,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42053,7 +41969,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 834,
+      "order": 832,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42103,7 +42019,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 835,
+      "order": 833,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42153,7 +42069,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 836,
+      "order": 834,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42204,7 +42120,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 837,
+      "order": 835,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42255,7 +42171,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 838,
+      "order": 836,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42305,7 +42221,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 839,
+      "order": 837,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42355,7 +42271,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 840,
+      "order": 838,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42405,7 +42321,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 841,
+      "order": 839,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42455,7 +42371,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 842,
+      "order": 840,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42505,7 +42421,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 843,
+      "order": 841,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42555,7 +42471,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 844,
+      "order": 842,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42605,7 +42521,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 845,
+      "order": 843,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42655,7 +42571,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 846,
+      "order": 844,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42705,7 +42621,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 847,
+      "order": 845,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42755,7 +42671,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 848,
+      "order": 846,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42805,7 +42721,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 849,
+      "order": 847,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42855,7 +42771,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 850,
+      "order": 848,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42905,7 +42821,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 851,
+      "order": 849,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -42956,7 +42872,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 852,
+      "order": 850,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43007,7 +42923,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 853,
+      "order": 851,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43057,7 +42973,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 854,
+      "order": 852,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43107,7 +43023,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 855,
+      "order": 853,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43157,7 +43073,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 856,
+      "order": 854,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43207,7 +43123,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 857,
+      "order": 855,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43257,7 +43173,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 858,
+      "order": 856,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43307,7 +43223,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 859,
+      "order": 857,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43357,7 +43273,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 860,
+      "order": 858,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43407,7 +43323,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 861,
+      "order": 859,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43457,7 +43373,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 862,
+      "order": 860,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43507,7 +43423,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 863,
+      "order": 861,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43557,7 +43473,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 864,
+      "order": 862,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43607,7 +43523,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 865,
+      "order": 863,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43657,7 +43573,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 866,
+      "order": 864,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43707,7 +43623,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 867,
+      "order": 865,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43757,7 +43673,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 868,
+      "order": 866,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43807,7 +43723,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 869,
+      "order": 867,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43857,7 +43773,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 870,
+      "order": 868,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43907,7 +43823,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 871,
+      "order": 869,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -43957,7 +43873,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 872,
+      "order": 870,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44007,7 +43923,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 873,
+      "order": 871,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44057,7 +43973,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 874,
+      "order": 872,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44107,7 +44023,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 875,
+      "order": 873,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44157,7 +44073,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 876,
+      "order": 874,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44208,7 +44124,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 877,
+      "order": 875,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44258,7 +44174,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 878,
+      "order": 876,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44310,7 +44226,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 879,
+      "order": 877,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44361,7 +44277,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 880,
+      "order": 878,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44380,7 +44296,7 @@
     {
       "id": "PH-062",
       "group": "physical-sampling",
-      "title": "Picture Grid / Paddling / random-1",
+      "title": "Picture Grid / Hard 12×12 / random-1",
       "games": [
         "picture-grid"
       ],
@@ -44393,26 +44309,26 @@
         "physical iPad mini 6 / iOS 26"
       ],
       "executor": "Leon / named second adult, both real devices",
-      "steps": "Resolve B-picture-grid-01 / random-1 to an immutable ref using seed 2501; record it before interaction. Reuse the same ref on both devices; hint → input → quit/resume → finish. If unavailable remain not run/planned; never substitute an easier stratum silently.",
+      "steps": "Resolve B-picture-grid-03 / random-1 to an immutable ref using seed 2503; record it before interaction. Reuse the same ref on both devices; hint → input → quit/resume → finish. If unavailable remain not run/planned; never substitute an easier stratum silently.",
       "savedOutcome": "Same owner/ref/draft/help after resume and truthful completion on each device; one unique sampled ref across overlapping bank rows.",
       "evidenceRequired": "Physical ledger line per sample: ref/hash, source/build, both device results and saved diffs; video for touch defects.",
       "gate": "RC physical bank sample",
       "source": "PLAN §§6,10; deterministic allocation seed 2501",
       "sampling": {
         "kind": "physical slot",
-        "stratum": "Paddling",
-        "randomSeed": 2501,
+        "stratum": "Hard 12×12",
+        "randomSeed": 2503,
         "samples": [
           "random-1"
         ],
-        "target": "B-picture-grid-01",
+        "target": "B-picture-grid-03",
         "sample": "random-1"
       },
       "availability": "registered",
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 881,
+      "order": 879,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44462,7 +44378,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 882,
+      "order": 880,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44512,7 +44428,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 883,
+      "order": 881,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44562,7 +44478,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 884,
+      "order": 882,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44612,7 +44528,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 885,
+      "order": 883,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44662,7 +44578,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 886,
+      "order": 884,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44712,7 +44628,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 887,
+      "order": 885,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44762,7 +44678,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 888,
+      "order": 886,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44812,7 +44728,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 889,
+      "order": 887,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44862,7 +44778,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 890,
+      "order": 888,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44912,7 +44828,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 891,
+      "order": 889,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -44962,7 +44878,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 892,
+      "order": 890,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45012,7 +44928,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 893,
+      "order": 891,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45062,7 +44978,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 894,
+      "order": 892,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45112,7 +45028,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 895,
+      "order": 893,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45162,7 +45078,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 896,
+      "order": 894,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45212,7 +45128,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 897,
+      "order": 895,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45262,7 +45178,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 898,
+      "order": 896,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45312,7 +45228,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 899,
+      "order": 897,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45362,7 +45278,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 900,
+      "order": 898,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45412,7 +45328,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 901,
+      "order": 899,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45462,7 +45378,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 902,
+      "order": 900,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45513,7 +45429,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 903,
+      "order": 901,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45563,7 +45479,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 904,
+      "order": 902,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45613,7 +45529,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 905,
+      "order": 903,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45663,7 +45579,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 906,
+      "order": 904,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45713,7 +45629,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 907,
+      "order": 905,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45763,7 +45679,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 908,
+      "order": 906,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45813,7 +45729,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 909,
+      "order": 907,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45863,7 +45779,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 910,
+      "order": 908,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45913,7 +45829,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 911,
+      "order": 909,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -45963,7 +45879,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 912,
+      "order": 910,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46013,7 +45929,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 913,
+      "order": 911,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46063,7 +45979,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 914,
+      "order": 912,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46113,7 +46029,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 915,
+      "order": 913,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46163,7 +46079,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 916,
+      "order": 914,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46213,7 +46129,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 917,
+      "order": 915,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46263,7 +46179,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 918,
+      "order": 916,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46313,7 +46229,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 919,
+      "order": 917,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46364,7 +46280,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 920,
+      "order": 918,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46414,7 +46330,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 921,
+      "order": 919,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46464,7 +46380,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 922,
+      "order": 920,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46514,7 +46430,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 923,
+      "order": 921,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46564,7 +46480,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 924,
+      "order": 922,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46614,7 +46530,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 925,
+      "order": 923,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46664,7 +46580,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 926,
+      "order": 924,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46714,7 +46630,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 927,
+      "order": 925,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46764,7 +46680,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 928,
+      "order": 926,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46815,7 +46731,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 929,
+      "order": 927,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46866,7 +46782,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 930,
+      "order": 928,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46916,7 +46832,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 931,
+      "order": 929,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -46966,7 +46882,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 932,
+      "order": 930,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47016,7 +46932,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 933,
+      "order": 931,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47066,7 +46982,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 934,
+      "order": 932,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47116,7 +47032,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 935,
+      "order": 933,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47166,7 +47082,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 936,
+      "order": 934,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47216,7 +47132,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 937,
+      "order": 935,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47266,7 +47182,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 938,
+      "order": 936,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47316,7 +47232,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 939,
+      "order": 937,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47366,7 +47282,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 940,
+      "order": 938,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47416,7 +47332,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 941,
+      "order": 939,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47466,7 +47382,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 942,
+      "order": 940,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47516,7 +47432,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 943,
+      "order": 941,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47567,7 +47483,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 944,
+      "order": 942,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47618,7 +47534,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 945,
+      "order": 943,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47668,7 +47584,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 946,
+      "order": 944,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47718,7 +47634,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 947,
+      "order": 945,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47768,7 +47684,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 948,
+      "order": 946,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47818,7 +47734,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 949,
+      "order": 947,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47868,7 +47784,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 950,
+      "order": 948,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47918,7 +47834,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 951,
+      "order": 949,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -47968,7 +47884,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 952,
+      "order": 950,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48018,7 +47934,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 953,
+      "order": 951,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48068,7 +47984,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 954,
+      "order": 952,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48118,7 +48034,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 955,
+      "order": 953,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48168,7 +48084,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 956,
+      "order": 954,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48218,7 +48134,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 957,
+      "order": 955,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48268,7 +48184,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 958,
+      "order": 956,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48318,7 +48234,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 959,
+      "order": 957,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48368,7 +48284,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 960,
+      "order": 958,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48418,7 +48334,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 961,
+      "order": 959,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48468,7 +48384,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 962,
+      "order": 960,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48518,7 +48434,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 963,
+      "order": 961,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48568,7 +48484,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 964,
+      "order": 962,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48618,7 +48534,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 965,
+      "order": 963,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48668,7 +48584,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 966,
+      "order": 964,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48718,7 +48634,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 967,
+      "order": 965,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48768,7 +48684,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 968,
+      "order": 966,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48819,7 +48735,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 969,
+      "order": 967,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48869,7 +48785,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 970,
+      "order": 968,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48921,7 +48837,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 971,
+      "order": 969,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48972,7 +48888,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 972,
+      "order": 970,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -48991,7 +48907,7 @@
     {
       "id": "PH-154",
       "group": "physical-sampling",
-      "title": "Picture Grid / Shallows / random-2",
+      "title": "Picture Grid / Expert 15×15 / random-2",
       "games": [
         "picture-grid"
       ],
@@ -49004,26 +48920,26 @@
         "physical iPad mini 6 / iOS 26"
       ],
       "executor": "Leon / named second adult, both real devices",
-      "steps": "Resolve B-picture-grid-02 / random-2 to an immutable ref using seed 2502; record it before interaction. Reuse the same ref on both devices; hint → input → quit/resume → finish. If unavailable remain not run/planned; never substitute an easier stratum silently.",
+      "steps": "Resolve B-picture-grid-04 / random-2 to an immutable ref using seed 2504; record it before interaction. Reuse the same ref on both devices; hint → input → quit/resume → finish. If unavailable remain not run/planned; never substitute an easier stratum silently.",
       "savedOutcome": "Same owner/ref/draft/help after resume and truthful completion on each device; one unique sampled ref across overlapping bank rows.",
       "evidenceRequired": "Physical ledger line per sample: ref/hash, source/build, both device results and saved diffs; video for touch defects.",
       "gate": "RC physical bank sample",
       "source": "PLAN §§6,10; deterministic allocation seed 2501",
       "sampling": {
         "kind": "physical slot",
-        "stratum": "Shallows",
-        "randomSeed": 2502,
+        "stratum": "Expert 15×15",
+        "randomSeed": 2504,
         "samples": [
           "random-2"
         ],
-        "target": "B-picture-grid-02",
+        "target": "B-picture-grid-04",
         "sample": "random-2"
       },
       "availability": "registered",
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 973,
+      "order": 971,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49073,7 +48989,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 974,
+      "order": 972,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49123,7 +49039,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 975,
+      "order": 973,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49173,7 +49089,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 976,
+      "order": 974,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49223,7 +49139,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 977,
+      "order": 975,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49273,7 +49189,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 978,
+      "order": 976,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49323,7 +49239,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 979,
+      "order": 977,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49373,7 +49289,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 980,
+      "order": 978,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49423,7 +49339,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 981,
+      "order": 979,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49473,7 +49389,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 982,
+      "order": 980,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49523,7 +49439,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 983,
+      "order": 981,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49573,7 +49489,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 984,
+      "order": 982,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49623,7 +49539,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 985,
+      "order": 983,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49673,7 +49589,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 986,
+      "order": 984,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49723,7 +49639,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 987,
+      "order": 985,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49773,7 +49689,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 988,
+      "order": 986,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49823,7 +49739,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 989,
+      "order": 987,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49873,7 +49789,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 990,
+      "order": 988,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49923,7 +49839,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 991,
+      "order": 989,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -49973,7 +49889,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 992,
+      "order": 990,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50023,7 +49939,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 993,
+      "order": 991,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50073,7 +49989,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 994,
+      "order": 992,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50124,7 +50040,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 995,
+      "order": 993,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50174,7 +50090,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 996,
+      "order": 994,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50224,7 +50140,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 997,
+      "order": 995,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50274,7 +50190,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 998,
+      "order": 996,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50324,7 +50240,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 999,
+      "order": 997,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50374,7 +50290,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1000,
+      "order": 998,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50424,7 +50340,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1001,
+      "order": 999,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50474,7 +50390,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1002,
+      "order": 1000,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50524,7 +50440,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1003,
+      "order": 1001,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50574,7 +50490,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1004,
+      "order": 1002,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50624,7 +50540,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1005,
+      "order": 1003,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50674,7 +50590,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1006,
+      "order": 1004,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50724,7 +50640,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1007,
+      "order": 1005,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50774,7 +50690,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1008,
+      "order": 1006,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50824,7 +50740,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1009,
+      "order": 1007,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50874,7 +50790,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1010,
+      "order": 1008,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50924,7 +50840,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1011,
+      "order": 1009,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -50975,7 +50891,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1012,
+      "order": 1010,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51025,7 +50941,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1013,
+      "order": 1011,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51075,7 +50991,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1014,
+      "order": 1012,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51125,7 +51041,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1015,
+      "order": 1013,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51175,7 +51091,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1016,
+      "order": 1014,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51225,7 +51141,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1017,
+      "order": 1015,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51275,7 +51191,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1018,
+      "order": 1016,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51325,7 +51241,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1019,
+      "order": 1017,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51375,7 +51291,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1020,
+      "order": 1018,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51426,7 +51342,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1021,
+      "order": 1019,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51477,7 +51393,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1022,
+      "order": 1020,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51527,7 +51443,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1023,
+      "order": 1021,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51577,7 +51493,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1024,
+      "order": 1022,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51627,7 +51543,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1025,
+      "order": 1023,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51677,7 +51593,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1026,
+      "order": 1024,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51727,7 +51643,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1027,
+      "order": 1025,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51777,7 +51693,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1028,
+      "order": 1026,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51827,7 +51743,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1029,
+      "order": 1027,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51877,7 +51793,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1030,
+      "order": 1028,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51927,7 +51843,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1031,
+      "order": 1029,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -51977,7 +51893,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1032,
+      "order": 1030,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52027,7 +51943,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1033,
+      "order": 1031,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52077,7 +51993,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1034,
+      "order": 1032,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52127,7 +52043,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1035,
+      "order": 1033,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52178,7 +52094,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1036,
+      "order": 1034,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52229,7 +52145,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1037,
+      "order": 1035,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52279,7 +52195,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1038,
+      "order": 1036,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52329,7 +52245,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1039,
+      "order": 1037,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52379,7 +52295,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1040,
+      "order": 1038,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52429,7 +52345,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1041,
+      "order": 1039,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52479,7 +52395,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1042,
+      "order": 1040,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52529,7 +52445,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1043,
+      "order": 1041,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52579,7 +52495,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1044,
+      "order": 1042,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52629,7 +52545,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1045,
+      "order": 1043,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52679,7 +52595,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1046,
+      "order": 1044,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52729,7 +52645,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1047,
+      "order": 1045,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52779,7 +52695,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1048,
+      "order": 1046,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52829,7 +52745,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1049,
+      "order": 1047,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52879,7 +52795,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1050,
+      "order": 1048,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52929,7 +52845,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1051,
+      "order": 1049,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -52979,7 +52895,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1052,
+      "order": 1050,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53029,7 +52945,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1053,
+      "order": 1051,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53079,7 +52995,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1054,
+      "order": 1052,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53129,7 +53045,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1055,
+      "order": 1053,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53179,7 +53095,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1056,
+      "order": 1054,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53229,7 +53145,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1057,
+      "order": 1055,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53279,7 +53195,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1058,
+      "order": 1056,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53329,7 +53245,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1059,
+      "order": 1057,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53379,7 +53295,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1060,
+      "order": 1058,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53430,7 +53346,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1061,
+      "order": 1059,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53480,7 +53396,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1062,
+      "order": 1060,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53532,7 +53448,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1063,
+      "order": 1061,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53583,7 +53499,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1064,
+      "order": 1062,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53602,7 +53518,7 @@
     {
       "id": "PH-246",
       "group": "physical-sampling",
-      "title": "Picture Grid / Lagoon / random-3",
+      "title": "Picture Grid / Easy 5×5 / random-3",
       "games": [
         "picture-grid"
       ],
@@ -53615,26 +53531,26 @@
         "physical iPad mini 6 / iOS 26"
       ],
       "executor": "Leon / named second adult, both real devices",
-      "steps": "Resolve B-picture-grid-03 / random-3 to an immutable ref using seed 2503; record it before interaction. Reuse the same ref on both devices; hint → input → quit/resume → finish. If unavailable remain not run/planned; never substitute an easier stratum silently.",
+      "steps": "Resolve B-picture-grid-01 / random-3 to an immutable ref using seed 2501; record it before interaction. Reuse the same ref on both devices; hint → input → quit/resume → finish. If unavailable remain not run/planned; never substitute an easier stratum silently.",
       "savedOutcome": "Same owner/ref/draft/help after resume and truthful completion on each device; one unique sampled ref across overlapping bank rows.",
       "evidenceRequired": "Physical ledger line per sample: ref/hash, source/build, both device results and saved diffs; video for touch defects.",
       "gate": "RC physical bank sample",
       "source": "PLAN §§6,10; deterministic allocation seed 2501",
       "sampling": {
         "kind": "physical slot",
-        "stratum": "Lagoon",
-        "randomSeed": 2503,
+        "stratum": "Easy 5×5",
+        "randomSeed": 2501,
         "samples": [
           "random-3"
         ],
-        "target": "B-picture-grid-03",
+        "target": "B-picture-grid-01",
         "sample": "random-3"
       },
       "availability": "registered",
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1065,
+      "order": 1063,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53684,7 +53600,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1066,
+      "order": 1064,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53734,7 +53650,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1067,
+      "order": 1065,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53784,7 +53700,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1068,
+      "order": 1066,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53834,7 +53750,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1069,
+      "order": 1067,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53884,7 +53800,7 @@
       "registeredGames": 1,
       "evidence": [],
       "status": "not run",
-      "order": 1070,
+      "order": 1068,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53934,7 +53850,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1071,
+      "order": 1069,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -53984,7 +53900,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1072,
+      "order": 1070,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -54034,7 +53950,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1073,
+      "order": 1071,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -54084,7 +54000,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1074,
+      "order": 1072,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",
@@ -54134,7 +54050,7 @@
       "registeredGames": 0,
       "evidence": [],
       "status": "not run",
-      "order": 1075,
+      "order": 1073,
       "dimensionResults": [
         {
           "dimension": "physical iPhone 15 / iOS 18",

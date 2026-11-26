@@ -99,7 +99,7 @@ describe('the 4.0 shelf never hides saved work', () => {
     const sections = shelf.shelfSections({ originals: [{ id: 'slip-tide', name: 'Slip Tide' }, { id: 'canoe-seats', name: 'Canoe Seats' }], registered: game => challengeEntries.some(e => e.game === game) });
     const ids = Object.fromEntries(sections.map(s => [s.title, s.tiles.map(t => `${t.kind}:${t.id}`)]));
     expect(ids.Numbers).toEqual(['cove:sudoku', 'cove:killer']);
-    expect(ids.Logic).toEqual(['cove:bridges', 'cove:loop', 'shortcut:reef-sweep']);
+    expect(ids.Logic).toEqual(['cove:bridges', 'cove:loop', 'cove:picture-grid', 'shortcut:reef-sweep']);
     expect(ids.Cards).toEqual(['cove:solitaire']);
     expect(ids.Originals).toEqual(['school:slip-tide', 'school:canoe-seats']);
     // Deferred games stay registered Cove entries (saves, pins and links resolve), they are just not tiles.

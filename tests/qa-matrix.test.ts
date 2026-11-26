@@ -127,7 +127,8 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     const markdown = renderMatrix(matrix);
     expect(markdown).toContain(`${nativeCases(matrix)} device-dimension executions`);
     expect(markdown).toContain('[M01](#mechanics)');
-    expect(markdown).toContain('25×25');
+    expect(markdown).toContain('15×15');
+    expect(markdown).not.toContain('Picture Grid 25×25');
     expect(markdown).toContain('pass 2 not run');
     expect(markdown).toContain('host: passed (partial)');
   });
