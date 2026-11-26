@@ -37,7 +37,7 @@ describe('Hide this puzzle works for packed puzzles (review R5)', () => {
   it('Choose a puzzle leaves it out of the numbered grid', async () => {
     const ref = await packedOpen(sudoku)!.open!(first.bank, 0);
     let screen!: ReactTestRenderer;
-    await act(async () => { screen = create(<PackedBrowser entry={sudoku} progress={emptyChallenge()} initialBand={first.tier} hidden={[ref.hash]} onChoose={() => {}} onBand={() => {}} onBack={() => {}}/>); });
+    await act(async () => { screen = create(<PackedBrowser entry={sudoku} progress={emptyChallenge()} initialBand={first.tier} hidden={[ref.hash]} onChoose={() => {}} onBand={() => {}}/>); });
     try {
       await settle();
       const cells = screen.root.findAll(n => typeof n.props.testID === 'string' && /^puzzle-\d+$/.test(n.props.testID) && n.type === 'button').map(n => n.props.accessibilityLabel as string);

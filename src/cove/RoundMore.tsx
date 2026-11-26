@@ -25,13 +25,15 @@ type Step = 'main' | 'send' | 'tips' | 'roles' | 'restart';
  * Everything that is not playing lives here, each one tap away, with sub-steps (Send to…, How to play, Roles,
  * Restart) shown in place with a way back.
  */
-export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRestart, onNew, onChoose, people, onSend, role, onGrownUps, busy }: {
+export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRestart, restartDisabled, onNew, onChoose, people, onSend, role, onGrownUps, busy, held }: {
   visible: boolean;
   onClose: () => void;
   game: string;
   mistakes?: Mistakes;
   onMistakes?: (value: Mistakes) => void;
   onRestart?: () => void;
+  /** The board has nothing to restart yet. */
+  restartDisabled?: boolean;
   onNew?: () => void;
   onChoose?: () => void;
   /** People this puzzle can be sent to. */
@@ -41,10 +43,13 @@ export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRest
   role?: string;
   onGrownUps?: () => void;
   busy?: boolean;
+  /** Why the actions that replace or restart this round wait (a finish not saved yet); they stay in view, disabled. */
+  held?: string;
 }) {
-  const [view, setView] = useState<Step>('main'), [sent, setSent] = useState('');
-  const close = () => { setView('main'); setSent(''); onClose(); };
-  const back = <Button label="Back" variant="quiet" target="adult" onPress={() => { setView('main'); setSent(''); }}/>;
+  const [view, setView] = useState<Step>('main'), [sent, setSent] = useState(''), [sendError, setSendError] = useState('');
+  const close = () => { setView('main'); setSent(''); setSendError(''); onClose(); };
+  const back = <Button label="Back" variant="quiet" target="adult" onPress={() => { setView('main'); setSent(''); setSendError(''); }}/>;
+  const send = (person: { id: string; name: string }) => { setSendError(''); void onSend?.(person.id).then(ok => { if (ok) setSent(person.name); else setSendError(`This puzzle could not be sent to ${person.name}. They may have too many puzzles waiting. Nothing changed.`); }); };
   const tips = TIPS[game] ?? [];
   return <Sheet mode="small" visible={visible} title={view === 'send' ? 'Send to…' : view === 'tips' ? 'How to play' : view === 'roles' ? 'Roles' : view === 'restart' ? 'Restart this puzzle?' : 'More'} onClose={close}>
     {view === 'main' && <>
@@ -53,20 +58,24 @@ export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRest
           <Text variant="caption" tone={mistakes === m.value ? 'surface' : 'ink'} style={styles.rowWord}>{m.label}</Text>
         </PressTarget>)}
       </View>}
-      {onRestart && <Row glyph={glyphs.ArrowClockwise} label="Restart this puzzle" disabled={busy} onPress={() => setView('restart')}/>}
-      {onNew && <Row glyph={glyphs.Plus} label="New puzzle" disabled={busy} onPress={() => { close(); onNew(); }}/>}
-      {onChoose && <Row glyph={glyphs.GridFour} label="Choose a puzzle" onPress={() => { close(); onChoose(); }}/>}
+      {!!held && <Text variant="caption" tone="muted" accessibilityLiveRegion="polite">{held}</Text>}
+      {onRestart && <Row glyph={glyphs.ArrowClockwise} label="Restart this puzzle" disabled={busy || !!held || restartDisabled} onPress={() => setView('restart')}/>}
+      {onNew && <Row glyph={glyphs.Plus} label="New puzzle" disabled={busy || !!held} onPress={() => { close(); onNew(); }}/>}
+      {/* The chooser opens over the round; More steps aside meanwhile and returns when it closes. */}
+      {onChoose && <Row glyph={glyphs.GridFour} label="Choose a puzzle" disabled={!!held} onPress={onChoose}/>}
       {onSend && people.length > 0 && <Row glyph={glyphs.PaperPlaneTilt} label="Send to…" onPress={() => setView('send')}/>}
       {!!role && <Row glyph={glyphs.UsersThree} label="Roles" onPress={() => setView('roles')}/>}
       {tips.length > 0 && <Row glyph={glyphs.Question} label="How to play" onPress={() => setView('tips')}/>}
-      {onGrownUps && <Row glyph={glyphs.LockSimple} label="Grown-ups" onPress={() => { close(); onGrownUps(); }}/>}
+      {onGrownUps && <Row glyph={glyphs.LockSimple} label="Grown-ups" disabled={!!held} onPress={() => { close(); onGrownUps(); }}/>}
     </>}
     {view === 'restart' && <>
-      <Button testID="more-restart-confirm" label="Restart" disabled={busy} onPress={() => { close(); onRestart?.(); }}/>
+      <Text variant="caption" tone="muted">The same puzzle starts again from the beginning.</Text>
+      <Button testID="more-restart-confirm" label="Restart" disabled={busy || !!held} onPress={() => { close(); onRestart?.(); }}/>
       <Button label="Keep playing" variant="quiet" target="adult" onPress={() => setView('main')}/>
     </>}
     {view === 'send' && <>
-      {sent ? <Text variant="body" accessibilityLiveRegion="polite">Sent to {sent}.</Text> : <View style={styles.faces}>{people.map(p => <FaceButton key={p.id} id={p.id} name={p.name} label={`Send to ${p.name}`} onPress={() => void onSend?.(p.id).then(ok => { if (ok) setSent(p.name); })}/>)}</View>}
+      {sent ? <Text variant="body" numberOfLines={1} accessibilityLabel={`Sent to ${sent}.`} accessibilityLiveRegion="polite">Sent to {sent}.</Text> : <View style={styles.faces}>{people.map(p => <FaceButton key={p.id} id={p.id} name={p.name} label={`Send to ${p.name}`} onPress={() => send(p)}/>)}</View>}
+      {!!sendError && <Text variant="caption" testID="more-send-error" accessibilityLiveRegion="polite">{sendError}</Text>}
       {back}
     </>}
     {view === 'roles' && <><Text variant="body">{role}</Text>{back}</>}

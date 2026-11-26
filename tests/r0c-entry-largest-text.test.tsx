@@ -107,8 +107,16 @@ it('Puzzles home at AX5: no paragraph, every heading capped by the kit, Back is 
   // No status prose, no counts, no band words: every visible text is a short label.
   for (const t of texts()) expect(textOf(t).length, textOf(t)).toBeLessThanOrEqual(24);
   expect(texts().map(textOf).join(' ')).not.toMatch(/\b(?:Paddling|Shallows|Lagoon|Deep|Trench|bands?)\b|\bReef\b(?! Sweep)|puzzles ·/);
-  // Tile names keep to two lines.
-  for (const name of ['Sudoku', 'Cage Sudoku', 'Bridges']) expect(texts().find(t => textOf(t) === name)!.props.numberOfLines).toBe(2);
+  // Tile names keep to two lines, share one size, and every word fits its tile at that size (no word breaks mid-way).
+  const tile = Math.floor((393 - 32 - 12) / 2), names = ['Sudoku', 'Cage Sudoku', 'Bridges', 'Today'].map(name => texts().find(t => textOf(t) === name)!);
+  for (const t of names) {
+    expect(t.props.numberOfLines).toBe(2);
+    expect(t.props.maxFontSizeMultiplier, textOf(t)).toBeGreaterThanOrEqual(1); expect(t.props.maxFontSizeMultiplier, textOf(t)).toBeLessThanOrEqual(2);
+    expect(widest(textOf(t), 15, Math.min(3.12, t.props.maxFontSizeMultiplier)), textOf(t)).toBeLessThanOrEqual(tile);
+  }
+  expect(new Set(names.map(t => t.props.maxFontSizeMultiplier)).size).toBe(1);
+  // No paragraph, tile or button label is left uncapped.
+  expect(texts().filter(n => n.props.maxFontSizeMultiplier === undefined && textOf(n).length > 12).map(textOf)).toEqual([]);
 });
 
 it('the Today tile shows a sun and opens from one labelled tile', async () => {

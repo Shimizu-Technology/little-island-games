@@ -19,7 +19,7 @@ it('16 and 18 Choose a puzzle: one virtualized numbered grid per difficulty, rea
   const chosen = vi.fn(), band = vi.fn();
   let screen!: ReactTestRenderer;
   try {
-    await act(async () => { screen = create(<PuzzleBrowser entry={entry} progress={progress} initialBand={1} hidden={[cards[1].ref.hash]} reader="Little" onChoose={chosen} onBand={band} onBack={() => {}}/>); });
+    await act(async () => { screen = create(<PuzzleBrowser entry={entry} progress={progress} initialBand={1} hidden={[cards[1].ref.hash]} reader="Little" onChoose={chosen} onBand={band}/>); });
     const list = () => screen.root.findByType('list' as React.ElementType);
     expect(list().props.initialNumToRender).toBe(36); expect(list().props.numColumns).toBeGreaterThanOrEqual(3);
     // Every open puzzle at this difficulty, numbered in place: the hidden one leaves a gap.

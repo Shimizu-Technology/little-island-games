@@ -12,6 +12,8 @@ import { planHint } from './solver';
 import { cueFor, techniqueName, type Cue } from './teach';
 import { cageCorners, cageLayer, cellClueWords, clueWords, markLayer, sightFrame } from './clues';
 import type { LatinBoardProps, LatinEvent } from './registration';
+import type { Mistakes } from '../../cove/local';
+import { useBoardHud } from '../../cove/boardHud';
 
 /** Thick lines for box edges (Sudoku, Cage Sudoku) or cage edges (Cage Math), in pixels for one cell size. */
 export function boxBorders(p: LatinPuzzle) {
@@ -65,7 +67,11 @@ const closed = (edits: number, helpsAt: number): Ladder => ({ stage: 0, cue: nul
 export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   const { puzzle: p, state, spec } = view, preferences = useContext(GridPreferences);
   const statusMax = useStatusMax();
-  const [clashes, setClashes] = useState(preferences.mistakes !== 'Plain'), [howTo, setHowTo] = useState(false);
+  // The Mistakes choice is read live. Unhosted boards keep their own Show clashes toggle, which a new choice resets.
+  const policy = preferences.mistakes, [override, setOverride] = useState<{ policy: Mistakes; on: boolean }>(), [howTo, setHowTo] = useState(false);
+  const clashes = override?.policy === policy ? override.on : policy !== 'Plain';
+  // Check when I ask: Check marks clashes on this board until the next change.
+  const [checkedAt, setCheckedAt] = useState(-1);
   const [ladder, setLadder] = useState<Ladder>(() => closed(state.edits, view.helps));
   // The parent hands a fresh callback each render; the grid's gesture handler must survive that.
   const live = useRef({ view, dispatch, active });
@@ -90,6 +96,14 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   };
   const show = () => { if (!ladder.cue) return; setLadder(l => ({ ...l, placed: l.cue?.show ?? '' })); send({ type: 'hint' }); };
   const conflictCells = useMemo(() => conflicts(p, state.values), [p, state.values]);
+  // In a Puzzles round the HUD owns Hint (this board's Look step, never a move) and Undo; Start over moves to More.
+  const host = useBoardHud({
+    hint: { run: ask, disabled: !active || waiting || shown },
+    undo: { run: () => send({ type: 'undo' }), disabled: !active || !state.undo.length },
+    reset: { run: () => send({ type: 'reset' }), disabled: !active },
+  });
+  const hosted = !!host, title = host?.title || view.title, checking = hosted && policy === 'Plain' && checkedAt === state.edits;
+  const gridMistakes: Mistakes = hosted ? policy === 'Plain' ? checking ? 'Friendly' : 'Plain' : policy : clashes ? 'Friendly' : policy === 'Rewind' ? 'Rewind' : 'Plain';
   const tints = useMemo(() => {
     const out = new Map<number, GridTint>(), v = state.values[state.selected], cue = ladder.cue;
     // The quiet same-number echo would compete with a chain's two colours, so it rests meanwhile.
@@ -114,9 +128,9 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   // Wider than the page padding on phones, so a 9×9 cell stays about 42 points.
   const bleed = width < 520 ? 14 : 0, boardWidth = width + bleed * 2;
   return <View style={{ gap: 12 }}>
-    <PuzzleStatus title={view.title} skill={techniqueName(view.teaches) || undefined} count={`${solvedCount}/${total}`} countLabel={`${solvedCount} of ${total} cells filled`}>
+    <PuzzleStatus title={title} skill={techniqueName(view.teaches) || undefined} count={`${solvedCount}/${total}`} countLabel={`${solvedCount} of ${total} cells filled`}>
       {!!rules && <Button quiet compact maxFontSizeMultiplier={statusMax} selected={howTo} onPress={() => setHowTo(on => !on)}>How to play</Button>}
-      {!shown && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
+      {!shown && !hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
     </PuzzleStatus>
     {howTo && !!rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{rules}</Copy>}
     {!!placed && !shown && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{placed}</Copy>}
@@ -130,12 +144,15 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
       </View>
     </View>}
     <View style={{ marginHorizontal: -bleed }}>
-      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} overlay={overlay} cornerClues={cornerClues} frame={frame} cellWords={cellWords} status={statusSentence(view.title, techniqueName(view.teaches) || undefined, `${total}/${total}`)} fillNotes={() => send({ type: 'fill-notes' })}/>
+      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={gridMistakes} hosted={hosted} borders={borders} tints={tints} overlay={overlay} cornerClues={cornerClues} frame={frame} cellWords={cellWords} status={statusSentence(title, techniqueName(view.teaches) || undefined, `${total}/${total}`)} fillNotes={() => send({ type: 'fill-notes' })}/>
     </View>
     {!!words && p.kind !== 'sudoku' && <Copy accessibilityRole="text" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{words}</Copy>}
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      <Button quiet compact maxFontSizeMultiplier={statusMax} selected={clashes} disabled={!active} onPress={() => setClashes(on => !on)} label={`Show clashes ${clashes ? 'on' : 'off'}`}>{clashes ? 'Clashes shown' : 'Clashes hidden'}</Button>
+    {hosted ? policy === 'Plain' && <View style={{ gap: 6 }}>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} selected={checking} disabled={!active} onPress={() => setCheckedAt(state.edits)} label="Check for clashes">Check</Button>
+      {checking && <Copy maxFontSizeMultiplier={1.5} accessibilityLiveRegion="polite">{conflictCells.length ? `${conflictCells.length === 1 ? 'One square clashes' : `${conflictCells.length} squares clash`}. They are marked.` : 'No clashes so far.'}</Copy>}
+    </View> : <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      <Button quiet compact maxFontSizeMultiplier={statusMax} selected={clashes} disabled={!active} onPress={() => setOverride({ policy, on: !clashes })} label={`Show clashes ${clashes ? 'on' : 'off'}`}>{clashes ? 'Clashes shown' : 'Clashes hidden'}</Button>
       <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || state.values.every((v, i) => v === p.givens[i])} onPress={() => send({ type: 'reset' })}>Start over</Button>
-    </View>
+    </View>}
   </View>;
 }

@@ -78,7 +78,7 @@ it('13 confirms Together at a solo finish and credits both people in one save', 
     await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
     for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) await press(screen, 'Next legal step');
     expect(store.save.challenge!.paused).toHaveLength(1);
-    const confirm = screen.root.findAllByType('button').find(b => b.children.join('') === 'Solved together with Family practice'); expect(confirm).toBeDefined();
+    const confirm = screen.root.findAllByType('button').find(b => b.props.accessibilityLabel === 'Solved together with Family practice'); expect(confirm).toBeDefined();
     await act(async () => confirm!.props.onPress());
     expect(store.save.challenge!.paused).toEqual([]);
     expect(completion(progressFor(store.save, 'a')!, puzzle.ref, entry)).toBe(3);

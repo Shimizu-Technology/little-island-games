@@ -3,6 +3,7 @@ import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TextLayoutProvider } from "../src/components/Text";
+import { wordWidth } from "../src/components/wordFit";
 import { Button, DifficultyPills, DIFFICULTY_WORDS, difficultyOptions, HoldButton, Hud, IconButton, nativeFormSheetOptions, nextRadioIndex, PageHeader, PressTarget, ProfilePill, Sheet, Text, Tile, ToggleRow, glyphs, sheetHeight, shouldDismiss, theme } from "../src/ui";
 
 const env = vi.hoisted(() => ({
@@ -437,6 +438,21 @@ describe("Sheet", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("a large sheet (Choose a puzzle) is a dimmed modal of fixed height whose child fills it and scrolls itself", async () => {
+    const onClose = dismiss();
+    const r = await mount(<Sheet visible mode="large" title="Choose a puzzle" onClose={onClose}><Text>grid</Text></Sheet>);
+    expect(host(r, "dialog")).toHaveLength(1);
+    const panel = r.findByProps({ testID: "sheet" });
+    expect(panel.props.accessibilityViewIsModal).toBe(true);
+    expect(flat(panel.props.style).height).toBe(sheetHeight(852, "large"));
+    expect(sheetHeight(852, "large")).toBeGreaterThan(sheetHeight(852, "dim"));
+    // No ScrollView around the child: a virtualized list inside must own its own scrolling.
+    expect(host(panel, "section")).toHaveLength(0);
+    expect(r.findByProps({ testID: "sheet-title" })).toBeDefined();
+    await press(r.findAll(n => n.type === "button" && n.props.accessibilityLabel === "Close")[0]);
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it("closes from the scrim and from the VoiceOver escape gesture", async () => {
     const onClose = dismiss();
     const r = await mount(<Sheet visible onClose={onClose}><Text>x</Text></Sheet>);
@@ -834,6 +850,26 @@ describe("Hud", () => {
     env.window = { ...env.window, width: 820 };
     const ipad = await mount(<Hud title="Sudoku" {...actions()} />);
     expect(host(ipad, "span").map(textOf)).toEqual(["Sudoku", "Undo", "Hint", "More"]);
+  });
+
+  it.each([[320, 3.12], [393, 3.12], [320, 1]])("at %s pt and text scale %s the name and difficulty wrap and keep every word inside the room the icons leave", async (width, fontScale) => {
+    env.window = { width, height: 852, fontScale };
+    const r = await mount(<Hud title="Sudoku" subtitle="Master+ 9×9 · with Mele" {...actions()} />);
+    const [title, subtitle] = host(r, "span");
+    const room = width - 2 * theme.space.sm - 2 * theme.space.xs - 4 * (48 + theme.space.xs);
+    for (const [node, size] of [[title, theme.type.caption.fontSize], [subtitle, theme.type.small.fontSize]] as const) {
+      // No one-line clip: the words reflow, capped where the longest one still fits (never below the system size, never past 1.5x).
+      expect(node.props.numberOfLines).toBeUndefined();
+      // Above its cap the kit draws text at the capped size explicitly (allowFontScaling off), so read the size it draws.
+      const drawn = node.props.allowFontScaling === false ? flat(node.props.style).fontSize as number : size * Math.min(fontScale, node.props.maxFontSizeMultiplier ?? Infinity);
+      expect(drawn).toBeGreaterThanOrEqual(size); expect(drawn).toBeLessThanOrEqual(size * 1.5);
+      for (const word of textOf(node).split(/\s+/)) expect(wordWidth(word) * drawn, word).toBeLessThanOrEqual(room);
+    }
+  });
+
+  it("dims Hint when the board's hint cannot run now", async () => {
+    const r = await mount(<Hud title="Sudoku" onBack={() => {}} onHint={() => {}} canHint={false} />);
+    expect(host(r, "button")[1].props.disabled).toBe(true);
   });
 
   it("leaves out buttons it has no handler for, and dims Undo when there is nothing to undo", async () => {

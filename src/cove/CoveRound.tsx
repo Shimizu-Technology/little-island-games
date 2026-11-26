@@ -11,12 +11,23 @@ import { GridFeedback, GridInteraction } from '../puzzles/grid/preferences';
 import { SessionGate } from '../challenge/SessionGate';
 import { Button, Hud, Icon, Text, glyphs, sheetHeight, theme } from '../ui';
 import { infoFor, sameRef } from './catalog';
-import { solvingPeople } from './PeoplePicker';
+import { FaceButton, solvingPeople } from './PeoplePicker';
 import { SearchChrome } from '../puzzles/words/layout';
 import { presentationFor } from './presentation';
 import type { Mistakes } from './local';
 import { RoundMore } from './RoundMore';
-import { difficultyLabel, hudActions } from './shelf';
+import { boardTitle, engineReset, honorsMistakes, hudActions, playLabel } from './shelf';
+import { BoardHud, type BoardCommands } from './boardHud';
+
+/** What the HUD shows of a hosted board's commands; their handlers stay in a ref. */
+type HudShape = { hint?: { disabled: boolean; label?: string }; undo?: { disabled: boolean }; reset?: { disabled: boolean } } | null;
+const shapeOf = (c: BoardCommands | null): HudShape => c && {
+  ...(c.hint ? { hint: { disabled: !!c.hint.disabled, ...(c.hint.label ? { label: c.hint.label } : {}) } } : {}),
+  ...(c.undo ? { undo: { disabled: !!c.undo.disabled } } : {}),
+  ...(c.reset ? { reset: { disabled: !!c.reset.disabled } } : {}),
+};
+/** A board shrunk above More never goes narrower than this (or the full width, when that is less): its keys and pads keep their minimums. */
+const MIN_BOARD = 280;
 
 /** Board-side choices the Cove screen supplies. Each is optional; a missing one leaves its More item out. */
 export type RoundChoices = {
@@ -30,9 +41,14 @@ export type RoundChoices = {
 };
 
 /** All progress and autosave go through the existing owner/epoch-guarded Store. */
-export function CoveRound({ entry, card, partner, width, replace = false, onBrowse, onClose, remix, choices = {} }: { remix?: string; entry: ChallengeEntry; card: ChallengeCard; partner: string | null; width: number; replace?: boolean; onBrowse: () => void; onClose: () => void; choices?: RoundChoices }) {
+export function CoveRound({ entry, card, partner, width, replace = false, onBrowse, onClose, remix, choosing = false, choices = {} }: {
+  remix?: string; entry: ChallengeEntry; card: ChallengeCard; partner: string | null; width: number; replace?: boolean; onBrowse: () => void; onClose: () => void;
+  /** Choose a puzzle is open over this round: More steps aside and comes back when it closes. */
+  choosing?: boolean;
+  choices?: RoundChoices;
+}) {
   const { height = 800 } = useWindowDimensions();
-  const [chromeHeight, setChromeHeight] = useState(0), [boardHeight, setBoardHeight] = useState(0), [more, setMore] = useState(false), [gridTouch, setGridTouch] = useState(false);
+  const [chromeHeight, setChromeHeight] = useState(0), [boardHeight, setBoardHeight] = useState(0), [screenHeight, setScreenHeight] = useState(0), [more, setMore] = useState(false), [gridTouch, setGridTouch] = useState(false);
   const outerHold = useContext(GridInteraction);
   // The board's own scroll lock, still reported to any enclosing host.
   const hold = useCallback((held: boolean) => { setGridTouch(held); outerHold(held); }, [outerHold]);
@@ -62,6 +78,9 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     } catch { if (mounted.current) setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
     finally { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); }
   }
+  // A hosted board hands over its own staged Hint, Undo and Start over (BoardHud); the HUD re-renders only when their availability changes.
+  const commands = useRef<BoardCommands | null>(null), [hud, setHud] = useState<HudShape>(null);
+  const register = useCallback((next: BoardCommands | null) => { commands.current = next; const shape = shapeOf(next); setHud(before => JSON.stringify(before) === JSON.stringify(shape) ? before : shape); }, []);
   // One launch per mounted owner/epoch/ref. Parent keys this component at every identity boundary.
   useEffect(() => {
     // A resumed round already owns an attempt. Crediting it removes `saved`,
@@ -114,10 +133,16 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const open = entry.packed ? async (e: Parameters<typeof store.challengeOpen>[0]) => { await entry.packed!.prepare(round!.puzzle); return store.challengeOpen(e); } : store.challengeOpen;
   const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);
   const people = solvingPeople(store.save), others = people.filter(p => p.id !== owner), together = round?.partner ? people.find(p => p.id === round.partner)?.name ?? 'family' : null;
-  const name = infoFor(entry.game).name, tier = actual?.tier ?? card.tier, hud = hudActions(entry), playing = !!round && !round.result && !pending && !changeAttempt;
-  // While More is open the board shrinks, in proportion to its measured full-width height, to the room above the sheet.
-  const room = height - sheetHeight(height, 'small') - chromeHeight - theme.space.xl, fit = boardHeight > room ? room / boardHeight : 1;
-  const boardWidth = more ? Math.max(160, Math.floor(width * fit)) : width;
+  const name = infoFor(entry.game).name, tier = actual?.tier ?? card.tier, frameHint = hudActions(entry).hint, playing = !!round && !round.result && !pending && !changeAttempt;
+  const ref = round?.puzzle ?? card.ref, title = boardTitle(entry, ref, tier), host = { commands: register, title };
+  // Restart keeps this attempt: the board's own Start over (an engine reset that keeps its options and help audit).
+  // A table whose log is full cannot take another reset, so it restarts the deal the documented way.
+  const reset = engineReset(entry), canRestart = !!saved && playing && !!hud?.reset && reset !== undefined;
+  const restart = () => { if (!saved) return; if (entry.full?.(saved, reset)) void launch(true); else commands.current?.reset?.run(); };
+  // While More is open the board shrinks, in proportion to its measured full-width height, to the room above the sheet
+  // inside this screen's own (safe-area) height, never below its minimum width.
+  const room = (screenHeight || height) - sheetHeight(height, 'small') - chromeHeight - theme.space.xl, fit = boardHeight > room ? room / boardHeight : 1;
+  const boardWidth = more && !choosing ? Math.max(Math.min(width, MIN_BOARD), Math.floor(width * fit)) : width;
   const finishCard = (heading: string, children: React.ReactNode) => <View testID="cove-finish" style={[styles.card, theme.shadow]}>
     <Icon glyph={glyphs.Sparkle} weight="fill" size={40} tone="lagoon"/>
     <Text variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">{heading}</Text>
@@ -126,10 +151,12 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const question = (heading: string, line: string, children: React.ReactNode) => <View style={[styles.card, theme.shadow]}>
     <Text variant="section" accessibilityRole="header">{heading}</Text><Text variant="caption" tone="muted" style={styles.center}>{line}</Text>{children}
   </View>;
-  return <View style={styles.screen}>
+  return <View style={styles.screen} onLayout={e => setScreenHeight(e.nativeEvent.layout.height)}>
     <View onLayout={e => setChromeHeight(e.nativeEvent.layout.height)}>
-      <Hud title={name} subtitle={[difficultyLabel(entry, tier), together && `with ${together}`].filter(Boolean).join(' · ')} onBack={close} backLabel="Save and leave"
-        onUndo={playing && hud.undo ? () => void dispatch(hud.undo, true) : undefined} onHint={playing && hud.hint !== undefined ? () => void dispatch(hud.hint, true) : undefined}
+      <Hud title={name} subtitle={[playLabel(entry, ref, tier), together && `with ${together}`].filter(Boolean).join(' · ')} onBack={close} backLabel="Save and leave"
+        onUndo={playing && hud?.undo ? () => commands.current?.undo?.run() : undefined} canUndo={!hud?.undo?.disabled && !busy}
+        onHint={playing && hud?.hint ? () => commands.current?.hint?.run() : playing && frameHint !== undefined ? () => void dispatch(frameHint, true) : undefined}
+        canHint={!hud?.hint?.disabled && !busy} hintLabel={hud?.hint?.label}
         onMore={changeAttempt ? undefined : () => setMore(true)}/>
       <SaveStatus/>
     </View>
@@ -139,11 +166,12 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
         <Button label="Keep my puzzle" variant="quiet" target="adult" fill onPress={choices.onKeep ?? onClose}/>
       </>) : round ? <>
         {pending ? finishCard('Puzzle solved', <>
-          {others.map(p => <Button key={p.id} variant="secondary" target="adult" fill disabled={busy} label={`Solved together with ${p.name}`} onPress={() => void confirmFinish(p.id)}/>)}
+          <Text variant="caption" tone="muted">Solved together with…</Text>
+          <View style={styles.faces}>{others.map(p => <FaceButton key={p.id} id={p.id} name={p.name} label={`Solved together with ${p.name}`} disabled={busy} onPress={() => void confirmFinish(p.id)}/>)}</View>
           <Button label="Save my finish" fill disabled={busy} onPress={() => void confirmFinish(null)}/>
           <Button label="Back to my board" variant="quiet" target="adult" disabled={busy} onPress={() => setPending(undefined)}/>
         </>) : round.result ? <>
-          {entry.helpUI === 'board' && entry.render(round, () => {}, false, boardWidth)}
+          {entry.helpUI === 'board' && <BoardHud.Provider value={host}>{entry.render(round, () => {}, false, boardWidth)}</BoardHud.Provider>}
           {finishCard(round.result.event === 'together' ? 'Solved together' : 'Puzzle solved', <>
             {together && <Text variant="caption" tone="muted">Together with {together}</Text>}
             <Text variant="body" style={styles.center}>{entry.completionText?.(round.puzzle, round.result, entry.completionFacts?.(round) ?? null) ?? 'Your finished puzzle is kept.'}</Text>
@@ -152,7 +180,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
           </>)}
         </> : <SessionGate key={`${owner}:${store.epoch}:${round.id}`} open={open} expected={expected(round)} onStartFresh={() => store.challengeDiscard(expected(round))} render={() => <>
           {entry.game === 'solitaire' && entry.full?.(round, entry.controls.reset()) && <Button label="Start this deal again" disabled={busy || !focused} onPress={() => void launch(true)}/>}
-          <SearchChrome.Provider value={{ top: 60, bottom: 34, bar: entry.game === 'word-search' ? chromeHeight + 28 : 0 }}><GridInteraction.Provider value={hold}><GridFeedback.Provider value={() => { sound.play('tap'); }}><View testID="cove-board" onLayout={e => { if (!more) setBoardHeight(e.nativeEvent.layout.height); }} style={styles.boardBox}>{entry.render(round, a => void dispatch(a), focused && !busy, boardWidth)}</View></GridFeedback.Provider></GridInteraction.Provider></SearchChrome.Provider>
+          <SearchChrome.Provider value={{ top: 60, bottom: 34, bar: entry.game === 'word-search' ? chromeHeight + 28 : 0 }}><GridInteraction.Provider value={hold}><GridFeedback.Provider value={() => { sound.play('tap'); }}><View testID="cove-board" onLayout={e => { if (!more) setBoardHeight(e.nativeEvent.layout.height); }} style={styles.boardBox}><BoardHud.Provider value={host}>{entry.render(round, a => void dispatch(a), focused && !busy, boardWidth)}</BoardHud.Provider></View></GridFeedback.Provider></GridInteraction.Provider></SearchChrome.Provider>
         </>}/>}
       </> : full ? question('Too many paused puzzles', 'Pick one to replace.', <>
         {progress?.paused.filter(s => !s.credited).map(s => <Button key={s.id} variant={replacement?.id === s.id ? 'secondary' : 'quiet'} target="adult" fill selected={replacement?.id === s.id} label={`Replace ${infoFor(s.game).name}`} onPress={() => setReplacement(s)}/>)}
@@ -163,10 +191,11 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
       </>}
       {!!message && <Text variant="caption" accessibilityLiveRegion="polite" style={styles.center}>{message}</Text>}
     </ScrollView>
-    <RoundMore visible={more} onClose={() => setMore(false)} game={entry.game} busy={busy}
-      mistakes={choices.mistakes} onMistakes={choices.onMistakes}
-      onRestart={saved && playing ? () => void launch(true) : undefined}
-      onNew={choices.onNew} onChoose={() => leaveThen(onBrowse)}
+    {/* A finish waiting for its partner choice lives only here, so nothing in More may replace this round until it is saved. */}
+    <RoundMore visible={more && !choosing} onClose={() => setMore(false)} game={entry.game} busy={busy} held={pending ? 'Save your finish first.' : undefined}
+      mistakes={honorsMistakes(entry) ? choices.mistakes : undefined} onMistakes={honorsMistakes(entry) ? choices.onMistakes : undefined}
+      onRestart={canRestart ? restart : undefined} restartDisabled={canRestart && !!hud?.reset?.disabled && !entry.full?.(saved!, reset)}
+      onNew={choices.onNew} onChoose={onBrowse}
       people={others} onSend={choices.onSend && round ? to => choices.onSend!(to, round.puzzle) : undefined}
       role={round?.partner ? infoFor(entry.game).role : undefined} onGrownUps={choices.onGrownUps}/>
   </View>;
@@ -178,5 +207,6 @@ const styles = {
   board: { alignItems: 'center', gap: theme.space.md, paddingHorizontal: theme.space.lg, paddingTop: theme.space.sm },
   card: { alignSelf: 'center', maxWidth: 520, width: '100%', alignItems: 'center', gap: theme.space.md, padding: theme.space.xl, borderRadius: theme.radius.sheet, backgroundColor: theme.colors.surface },
   boardBox: { alignSelf: 'stretch', alignItems: 'center' },
+  faces: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: theme.space.md },
   center: { textAlign: 'center' },
 } as const;

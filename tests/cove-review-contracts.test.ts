@@ -36,6 +36,6 @@ it('20 filters hidden puzzles before Today selection', () => {
 });
 it('25 displays errors in the grown-up sheet and confirms a sent pin in place', () => {
   expect(read('cove/CoveGrownUps.tsx')).toContain('{!!error && <Text'); expect(read('cove/CoveScreen.tsx')).toContain('error={local.error}');
-  expect(read('cove/RoundMore.tsx')).toContain('Sent to {sent}.');
+  expect(read('cove/RoundMore.tsx')).toContain('Sent to {sent}.'); expect(read('cove/RoundMore.tsx')).toContain('could not be sent to');
 });
 it('26 matches the people name input limit to Store', () => expect(read('cove/PeoplePicker.tsx')).toContain('maxLength={24}'));

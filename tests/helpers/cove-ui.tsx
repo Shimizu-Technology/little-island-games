@@ -32,10 +32,10 @@ export const ui = {
   ToggleRow: ({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) => h('switch', { accessibilityLabel: label, 'aria-checked': value, onPress: () => onChange(!value) }),
   ProfilePill: ({ label, onPress, avatar }: { label: string; onPress: () => void; avatar?: React.ReactNode }) => button({ onPress, testID: 'profile-pill', accessibilityLabel: label, children: avatar }),
   PageHeader: ({ title, onBack, backLabel, right }: { title: string; onBack: () => void; backLabel?: string; right?: React.ReactNode }) => <header>{button({ onPress: onBack, testID: 'page-back', accessibilityLabel: backLabel ?? 'Back' })}<h1>{title}</h1>{right}</header>,
-  Hud: ({ title, subtitle, onBack, onUndo, onHint, onMore, backLabel = 'Back' }: { title: string; subtitle?: string; onBack: () => void; onUndo?: () => void; onHint?: () => void; onMore?: () => void; backLabel?: string }) => h('nav', { testID: 'hud', 'data-title': title, 'data-subtitle': subtitle },
+  Hud: ({ title, subtitle, onBack, onUndo, onHint, onMore, backLabel = 'Back', canUndo = true, canHint = true, undoLabel = 'Undo', hintLabel = 'Hint' }: { title: string; subtitle?: string; onBack: () => void; onUndo?: () => void; onHint?: () => void; onMore?: () => void; backLabel?: string; canUndo?: boolean; canHint?: boolean; undoLabel?: string; hintLabel?: string }) => h('nav', { testID: 'hud', 'data-title': title, 'data-subtitle': subtitle },
     button({ onPress: onBack, testID: 'hud-back', accessibilityLabel: backLabel }), <b key="t">{title}</b>, !!subtitle && <small key="s">{subtitle}</small>,
-    onUndo && button({ onPress: onUndo, testID: 'hud-undo', accessibilityLabel: 'Undo' }),
-    onHint && button({ onPress: onHint, testID: 'hud-hint', accessibilityLabel: 'Hint' }),
+    onUndo && button({ onPress: onUndo, disabled: !canUndo, testID: 'hud-undo', accessibilityLabel: undoLabel, children: undoLabel }),
+    onHint && button({ onPress: onHint, disabled: !canHint, testID: 'hud-hint', accessibilityLabel: hintLabel, children: hintLabel }),
     onMore && button({ onPress: onMore, testID: 'hud-more', accessibilityLabel: 'More' })),
   DifficultyPills: ({ options, value, onChange }: { options: readonly { key: number | string; label: string; tag?: string }[]; value: number | string; onChange: (k: number | string) => void }) => <div data-role="radiogroup">
     {options.map(o => <React.Fragment key={o.key}>{button({ onPress: () => onChange(o.key), testID: `difficulty-${o.key}`, accessibilityLabel: o.tag ? `${o.label}, ${o.tag}` : o.label, checked: o.key === value, children: o.tag ? `${o.label} ${o.tag}` : o.label })}</React.Fragment>)}

@@ -73,18 +73,32 @@ export function bankFacts(entry: ChallengeEntry, b: PackedBand): { size: string;
   const l = latinOf(entry.game, b);
   return l && { size: `${l.size}×${l.size}`, summary: l.summary };
 }
-/** A tier's size tag (`6×6`) when every bank in it has the same board size. */
+const GRID_SIZE = /^\d+×\d+$/, area = (size: string) => size.split('×').reduce((n, side) => n * Number(side), 1);
+/** A tier's size tag: `6×6` when every bank in it has that board size, `5×5–6×6` when its board sizes differ. */
 export function sizeTag(entry: ChallengeEntry, tier: number): string | undefined {
-  const sizes = new Set((entry.packed?.bands ?? []).filter(b => b.tier === tier).map(b => bankFacts(entry, b)?.size));
-  const [only] = [...sizes];
-  return sizes.size === 1 && only ? only : undefined;
+  const sizes = [...new Set((entry.packed?.bands ?? []).filter(b => b.tier === tier).map(b => bankFacts(entry, b)?.size))];
+  if (sizes.length === 1) return sizes[0];
+  const grids = sizes.filter((s): s is string => !!s && GRID_SIZE.test(s)).sort((a, b) => area(a) - area(b));
+  return grids.length === sizes.length && grids.length > 1 ? `${grids[0]}–${grids.at(-1)}` : undefined;
 }
 export const difficultyLabel = (entry: ChallengeEntry, tier: number) => [difficultyWord(tier), sizeTag(entry, tier)].filter(Boolean).join(' ');
 export const difficultyOptionsFor = (entry: ChallengeEntry) => tiersOf(entry).map(tier => ({ key: tier, label: difficultyWord(tier), tag: sizeTag(entry, tier) }));
+/** The exact board size of the bank a ref came from, when it has one (`6×6`). */
+const bankSize = (entry: ChallengeEntry, ref: PuzzleRef) => { const band = entry.packed?.bands.find(b => b.bank === ref.bank), size = band && bankFacts(entry, band)?.size; return size && GRID_SIZE.test(size) ? size : undefined; };
+/** The difficulty of a puzzle being played, with its exact board size (`Easy 6×6`), or the tier's tag when it has none. */
+export const playLabel = (entry: ChallengeEntry, ref: PuzzleRef, tier: number) => [difficultyWord(tier), bankSize(entry, ref) ?? sizeTag(entry, tier)].filter(Boolean).join(' ');
+/**
+ * The plain title a hosted board shows (`Hard · 9×9`, `Klondike draw 1 · Easy`), in place of its old bank title
+ * (`Lagoon 1`, `Shallows 1`, `Deep Channel 3`). Refs, bank facts and saves are untouched.
+ */
+export function boardTitle(entry: ChallengeEntry, ref: PuzzleRef, tier: number): string {
+  const band = entry.packed?.bands.find(b => b.bank === ref.bank), name = band ? plainTitle(band.title) : '';
+  return [name && !DEPTH_WORD.test(name) ? name : '', difficultyWord(tier), bankSize(entry, ref)].filter(Boolean).join(' · ');
+}
 /** The tier a saved ref was dealt at. */
 export const tierOf = (entry: ChallengeEntry, ref: PuzzleRef) => cardFor(ref, [entry])?.tier ?? entry.packed?.bands.find(b => b.bank === ref.bank)?.tier;
 
-const DEPTH = /^(?:Paddling|Shallows|Lagoon|Reef|Deep|Trench)$/;
+const DEPTH = /^(?:Paddling|Shallows|Lagoon|Reef|Deep|Trench)$/, DEPTH_WORD = /\b(?:Paddling|Shallows|Lagoon|Reef|Deep|Trench)\b/;
 /** A bank title without its old water-depth suffix (`Klondike draw 1 · Paddling` → `Klondike draw 1`). */
 export const plainTitle = (title: string) => title.replace(/\s*·\s*(?:Paddling|Shallows|Lagoon|Reef|Deep|Trench)$/, '');
 /** Names for the banks in one tier. Old depth-word pack names become `Set 1`, `Set 2`, … */
@@ -93,17 +107,19 @@ export function bankNames(bands: readonly PackedBand[]): string[] {
   return plain.some(t => DEPTH.test(t) || !t) || new Set(plain).size < plain.length ? plain.map((_, i) => `Set ${i + 1}`) : plain;
 }
 
-/**
- * Board actions the HUD can send for a game, per engine family. Every Cove board brings its own tool row; the HUD
- * repeats only the actions its engine already accepts: grid and edge boards take `{ type: 'undo' }` and a taught
- * `{ type: 'hint' }`; the card table takes `{ type: 'undo' }` (its hint needs a chosen card, so it stays on the table).
- */
 const LATIN = Object.keys(latinRungs), EDGES = ['bridges', 'loop', 'pearl-loop'], TABLE = ['solitaire'];
-export function hudActions(entry: ChallengeEntry): { undo?: unknown; hint?: unknown } {
-  if (LATIN.includes(entry.game) || EDGES.includes(entry.game)) return { undo: { type: 'undo' }, hint: { type: 'hint' } };
-  if (TABLE.includes(entry.game)) return { undo: { type: 'undo' } };
+/**
+ * What the HUD may send straight to an engine. A board that owns its help (`helpUI: 'board'`) hands the HUD its own
+ * staged Hint and Undo through `BoardHud` instead, so nothing here can reveal or change a draft. Only a frame-help game
+ * gets `controls.help()`, which records that help was asked for and changes nothing on the board.
+ */
+export function hudActions(entry: ChallengeEntry): { hint?: unknown } {
   return entry.helpUI === 'board' ? {} : { hint: entry.controls.help() };
 }
+/** Boards whose engine reset keeps the same attempt, its options and its help audit (Restart this puzzle). Word Search's `reset()` is an Undo, so it has none. */
+export const engineReset = (entry: ChallengeEntry): unknown => LATIN.includes(entry.game) || EDGES.includes(entry.game) || TABLE.includes(entry.game) ? entry.controls.reset() : undefined;
+/** Boards that read the Mistakes choice (Friendly, Check when I ask, Rewind) live. Others leave it out of More. */
+export const honorsMistakes = (entry: ChallengeEntry) => LATIN.includes(entry.game);
 
 /** Picture tips for How to play: a few words each, never a paragraph. */
 export const TIPS: Record<string, readonly string[]> = {

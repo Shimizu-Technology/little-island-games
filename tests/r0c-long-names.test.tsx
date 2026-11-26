@@ -105,3 +105,21 @@ it('Puzzles: a short sender name is spoken whole on its pin card', async () => {
   await mountCove(false, { pin: true, name: 'Mele' });
   expect(pressable('Sudoku, from Mele', false)).toBeDefined();
 });
+
+/** More → Send to…: a 24-wide recipient is a bounded face, and the "Sent to" line keeps to one line with the whole name spoken. */
+it.each([[3.12], [1]])('Puzzles at text scale %s: Send to… bounds a 24-wide recipient, and "Sent to" stays on one line with the full name spoken', async fontScale => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  Object.assign(viewport, { fontScale });
+  const { RoundMore } = await import('../src/cove/RoundMore');
+  const onSend = vi.fn(async () => true);
+  await act(async () => { root = create(<RoundMore visible game="sudoku" onClose={() => {}} people={[{ id: 'wide', name: NAME }, { id: 'mele', name: 'Mele' }]} onSend={onSend}/>); });
+  await act(async () => pressable('Send to…', false).props.onPress());
+  const face = pressable(`Send to ${NAME}`, false);
+  expect(flat(face.props.style).width).toBe(88);
+  expect(nameTexts(face)).toHaveLength(1); expect(nameTexts(face)[0].props.numberOfLines).toBe(1);
+  await act(async () => { face.props.onPress(); await Promise.resolve(); });
+  expect(onSend).toHaveBeenCalledWith('wide');
+  const sent = root!.root.find(n => String(n.type) === 'Text' && textOf(n) === `Sent to ${NAME}.`);
+  expect(sent.props.numberOfLines).toBe(1);
+  expect(sent.props.accessibilityLabel).toBe(`Sent to ${NAME}.`);
+});

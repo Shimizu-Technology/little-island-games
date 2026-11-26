@@ -7,12 +7,12 @@ import { ChooseGrid, type Filter } from './ChooseGrid';
 import { completionLookup, isSolved, mixedPack, type Reader } from './catalog';
 import { difficultyOptionsFor, nearestTier } from './shelf';
 
-export type BrowserProps = { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden: readonly string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void; onBack: () => void };
+export type BrowserProps = { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden: readonly string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void };
 /** Choose a puzzle, for inline and packed games alike. */
 export function PuzzleBrowser(props: BrowserProps) {
   return props.entry.packed && !props.entry.puzzles.length ? <PackedBrowser {...props}/> : <CardBrowser {...props}/>;
 }
-function CardBrowser({ entry, progress, initialBand, hidden, reader = 'Growing', onChoose, onBand, onBack }: BrowserProps) {
+function CardBrowser({ entry, progress, initialBand, hidden, reader = 'Growing', onChoose, onBand }: BrowserProps) {
   const [tier, setTier] = useState(() => nearestTier(entry, initialBand)), [filter, setFilter] = useState<Filter>('all');
   const presentation = presentationFor(entry);
   const code = useMemo(() => completionLookup(progress, entry), [progress, entry]);
@@ -22,7 +22,7 @@ function CardBrowser({ entry, progress, initialBand, hidden, reader = 'Growing',
   const number = useMemo(() => new Map(numbered.map(n => [n.card.ref.hash, n.number])), [numbered]);
   const shown = filter === 'mixed' ? mixed.map((card, i) => ({ card, number: number.get(card.ref.hash) ?? i + 1 })) : filter === 'finished' ? numbered.filter(n => isSolved(code(n.card.ref))) : numbered;
   const filters: { value: Filter; label: string }[] = [{ value: 'all', label: 'All' }, { value: 'finished', label: 'Finished' }, ...(mixed.length ? [{ value: 'mixed' as const, label: 'Mixed practice' }] : [])];
-  return <ChooseGrid title="Choose a puzzle" options={difficultyOptionsFor(entry)} tier={tier} onTier={t => { setTier(t); onBand(t); }} filters={filters} filter={filter} onFilter={setFilter} onClose={onBack}
+  return <ChooseGrid options={difficultyOptionsFor(entry)} tier={tier} onTier={t => { setTier(t); onBand(t); }} filters={filters} filter={filter} onFilter={setFilter}
     empty={filter === 'finished' ? 'Finished puzzles show here.' : 'Nothing here yet.'}
     cells={shown.map(({ card, number }) => { const readers = presentation.details(card).readers; return { key: card.ref.hash, number, finished: isSolved(code(card.ref)), readAlong: !!readers?.length && !readers.includes(reader), onPress: () => onChoose(card) }; })}/>;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, View, useWindowDimensions } from 'react-native';
-import { DifficultyPills, Icon, PageHeader, PressTarget, Text, glyphs, theme } from '../ui';
+import { DifficultyPills, Icon, PressTarget, Text, glyphs, theme } from '../ui';
 import type { DifficultyOption } from '../ui';
 
 export type Cell = { key: string; number: number; finished: boolean; readAlong?: boolean; onPress: () => void };
@@ -15,11 +15,11 @@ export function Chip({ label, selected, onPress, testID }: { label: string; sele
 }
 
 /**
- * Choose a puzzle: a full-height card with its own Close, the difficulty pills, an optional set row, a small filter,
- * then one numbered grid with ticks on finished puzzles. Hidden puzzles never reach the grid.
+ * Choose a puzzle: the difficulty pills, an optional set row, a small filter, then one numbered grid with ticks on
+ * finished puzzles. Hidden puzzles never reach the grid. It fills the large sheet the Puzzles screen opens it in, which
+ * owns its title, Close, swipe, Escape and focus.
  */
-export function ChooseGrid({ title, options, tier, onTier, sets, filters, filter, onFilter, cells, empty, status, onClose }: {
-  title: string;
+export function ChooseGrid({ options, tier, onTier, sets, filters, filter, onFilter, cells, empty, status }: {
   options: readonly DifficultyOption[];
   tier: number;
   onTier: (tier: number) => void;
@@ -31,7 +31,6 @@ export function ChooseGrid({ title, options, tier, onTier, sets, filters, filter
   cells: readonly Cell[];
   empty: string;
   status?: string;
-  onClose: () => void;
 }) {
   const { width } = useWindowDimensions(), room = Math.min(width, 960) - 2 * GUTTER, columns = Math.max(3, Math.floor((room + GAP) / (CELL + GAP)));
   const header = <View style={styles.header}>
@@ -40,8 +39,7 @@ export function ChooseGrid({ title, options, tier, onTier, sets, filters, filter
     {filters.length > 1 && <View accessibilityRole="radiogroup" accessibilityLabel="Show" style={styles.chips}>{filters.map(f => <Chip key={f.value} testID={`filter-${f.value}`} label={f.label} selected={filter === f.value} onPress={() => onFilter(f.value)}/>)}</View>}
     {!!status && <Text variant="caption" accessibilityLiveRegion="polite">{status}</Text>}
   </View>;
-  return <View style={styles.screen}>
-    <View style={styles.bar}><PageHeader title={title} close onBack={onClose} backLabel="Close"/></View>
+  return <View testID="choose-grid" style={styles.screen}>
     <FlatList key={columns} style={styles.list} contentContainerStyle={styles.content} columnWrapperStyle={styles.row} numColumns={columns} data={cells as Cell[]} keyExtractor={c => c.key}
       initialNumToRender={36} maxToRenderPerBatch={36} windowSize={5} ListHeaderComponent={header}
       ListEmptyComponent={<Text variant="body" tone="muted">{empty}</Text>}
@@ -55,8 +53,7 @@ export function ChooseGrid({ title, options, tier, onTier, sets, filters, filter
 
 /** Plain style objects (React Native accepts them as they are). */
 const styles = {
-  screen: { flex: 1, backgroundColor: theme.colors.bg },
-  bar: { width: '100%', maxWidth: 960, alignSelf: 'center' },
+  screen: { flex: 1 },
   list: { flex: 1 },
   content: { width: '100%', maxWidth: 960, alignSelf: 'center', paddingHorizontal: GUTTER, paddingBottom: theme.space.xxl, gap: GAP },
   header: { gap: theme.space.md, paddingBottom: theme.space.sm },

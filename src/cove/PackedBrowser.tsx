@@ -7,22 +7,23 @@ import { hiddenIn, isSolved, packedOpen } from './catalog';
 import { bankNames, difficultyOptionsFor, nearestTier } from './shelf';
 
 /** Choose a puzzle for a packed game: one numbered grid per bank. Entries load only when one is chosen. */
-export function PackedBrowser({ entry, progress, initialBand, hidden = [], onChoose, onBand, onBack }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden?: readonly string[]; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void; onBack: () => void }) {
+export function PackedBrowser({ entry, progress, initialBand, hidden = [], onChoose, onBand }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden?: readonly string[]; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void }) {
   const packed = entry.packed!, opener = packedOpen(entry);
   const [tier, setTier] = useState(() => nearestTier(entry, initialBand)), [bank, setBank] = useState<number>(), [filter, setFilter] = useState<Filter>('all');
   const [busy, setBusy] = useState(false), [message, setMessage] = useState('');
   const codes = useMemo(() => new Map(packed.bands.map(b => [b.bank, unpack(progress.banks.find(r => r[0] === b.bank)?.[1] ?? '', b.count, 3) ?? Array<number>(b.count).fill(0)])), [packed, progress]);
   // Puzzles a grown-up hid on this device leave the grid. A saved attempt on one still continues from the Puzzles home.
-  const [found, setFound] = useState<{ key: string; rows: ReadonlyMap<number, ReadonlySet<number>> }>({ key: '', rows: new Map() }), hiddenKey = hidden.join('|');
+  const [found, setFound] = useState<{ key: string; rows: ReadonlyMap<number, ReadonlySet<number>>; failed?: boolean }>({ key: '', rows: new Map() }), hiddenKey = hidden.join('|');
   const skipped = hidden.length && found.key === hiddenKey ? found.rows : new Map<number, ReadonlySet<number>>();
   useEffect(() => {
     let live = true;
     if (!hidden.length) return;
-    void Promise.all(packed.bands.map(async b => [b.bank, await hiddenIn(entry, b.bank, hidden).catch(() => new Set<number>())] as const)).then(rows => { if (live) setFound({ key: hiddenKey, rows: new Map(rows) }); });
+    // A lookup that fails offers nothing rather than treating "unknown" as "none hidden".
+    void Promise.all(packed.bands.map(async b => [b.bank, await hiddenIn(entry, b.bank, hidden)] as const)).then(rows => { if (live) setFound({ key: hiddenKey, rows: new Map(rows) }); }, () => { if (live) setFound({ key: hiddenKey, rows: new Map(), failed: true }); });
     return () => { live = false; };
   }, [entry, packed, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps -- The key stands for the hidden list.
   // Until the hidden rows are known, nothing is offered: a hidden puzzle must never flash up as a new choice.
-  const pendingHidden = hidden.length > 0 && found.key !== hiddenKey;
+  const pendingHidden = hidden.length > 0 && (found.key !== hiddenKey || !!found.failed), failed = hidden.length > 0 && found.key === hiddenKey && !!found.failed;
   const banks = packed.bands.filter(b => b.tier === tier), names = bankNames(banks), current = banks.find(b => b.bank === bank) ?? banks[0];
   const open = async (index: number) => {
     if (busy || !current) return;
@@ -32,9 +33,9 @@ export function PackedBrowser({ entry, progress, initialBand, hidden = [], onCho
     finally { setBusy(false); }
   };
   const rows = !current || pendingHidden ? [] : Array.from({ length: current.count }, (_, i) => i).filter(i => !(skipped.get(current.bank)?.has(i)) && (filter !== 'finished' || isSolved(codes.get(current.bank)?.[i] ?? 0)));
-  return <ChooseGrid title="Choose a puzzle" options={difficultyOptionsFor(entry)} tier={tier} onTier={t => { setTier(t); setBank(undefined); onBand(t); }}
+  return <ChooseGrid options={difficultyOptionsFor(entry)} tier={tier} onTier={t => { setTier(t); setBank(undefined); onBand(t); }}
     sets={banks.map((b, i) => ({ key: String(b.bank), label: names[i], selected: b === current, onPress: () => setBank(b.bank) }))}
-    filters={[{ value: 'all', label: 'All' }, { value: 'finished', label: 'Finished' }]} filter={filter} onFilter={setFilter} onClose={onBack}
-    status={busy ? 'Opening your puzzle…' : message} empty={filter === 'finished' ? 'Finished puzzles show here.' : pendingHidden ? '' : 'Nothing here yet.'}
+    filters={[{ value: 'all', label: 'All' }, { value: 'finished', label: 'Finished' }]} filter={filter} onFilter={setFilter}
+    status={busy ? 'Opening your puzzle…' : failed ? 'These puzzles could not be checked just now. Your saved work is kept. Close and try again.' : message} empty={filter === 'finished' ? 'Finished puzzles show here.' : pendingHidden ? '' : 'Nothing here yet.'}
     cells={rows.map(i => ({ key: `${current!.bank}:${i}`, number: i + 1, finished: isSolved(codes.get(current!.bank)?.[i] ?? 0), onPress: () => void open(i) }))}/>;
 }
