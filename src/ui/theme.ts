@@ -30,6 +30,11 @@ export const theme = {
     /** Switch track when off. */
     track: "#CFD8D5",
     scrim: "rgba(23,51,48,0.38)",
+    /** A card's warm bottom lip, on any pastel or surface. */
+    rim: "rgba(61,43,36,0.16)",
+    /** Puzzle boards: warm paper squares inside an espresso frame. */
+    paper: "#FFFDF8",
+    frame: "#3D2B24",
   },
   /** Door and category pastels. */
   pastels: {

@@ -233,12 +233,13 @@ describe("IconButton", () => {
 describe("Tile", () => {
   const art = <div data-art />;
 
-  it("shows the picture on its pastel with no border, and the name below", async () => {
+  it("shows the picture on its pastel with only a bottom rim, and the name below", async () => {
     const r = await mount(<Tile name="Sudoku" pastel="puzzles" art={art} onPress={() => {}} />);
     const picture = r.findAll(n => n.type === "div" && flat(n.props.style).backgroundColor === theme.pastels.puzzles)[0];
     expect(flat(picture.props.style)).toMatchObject({ borderRadius: 24 });
     expect(flat(picture.props.style).borderWidth).toBeUndefined();
     expect(flat(picture.props.style).shadowOpacity).toBeUndefined();
+    expect(flat(picture.props.style)).toMatchObject({ borderBottomWidth: 3, borderBottomColor: theme.colors.rim });
     expect(textOf(host(r, "span")[0])).toBe("Sudoku");
     expect(flat(host(r, "button")[0].props.style).minHeight).toBeGreaterThanOrEqual(64);
   });

@@ -7,7 +7,7 @@ import School from '../src/hub/SchoolScreen';
 import Everything from '../src/hub/EverythingScreen';
 const fixture = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), params: {} as {section?:string}, store: { ready:true, recovery:false, save: {} as ReturnType<typeof emptySave>, toggleGameFavorite: vi.fn() } }));
 vi.mock('expo-router', () => ({ router: { push: fixture.push, back: fixture.back, setParams: vi.fn() }, useLocalSearchParams: () => fixture.params }));
-vi.mock('react-native', () => ({ View: 'div', ScrollView: 'section', useWindowDimensions: () => ({ width:390, fontScale:1 }) }));
+vi.mock('react-native', () => ({ View: 'div', ScrollView: 'section', Image: 'img', useWindowDimensions: () => ({ width:390, fontScale:1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView:'main' }));
 vi.mock('react-native-svg', () => ({ default:'svg', G:'g', Circle:'circle', Path:'path', Rect:'rect', Ellipse:'ellipse' }));
 vi.mock('../src/components/ui', () => ({ C:{}, Heading:'h2', Copy:'p', PressableScale:'button', IconButton:'button', Button:'button' }));
@@ -33,6 +33,8 @@ describe('visible hub destinations and preserved list behavior', () => {
   const all=screen.root.findByProps({testID:'all-games'});
   expect(all.findAll(n=>n.type==='button' && n.props.accessibilityRole==='button').map(n=>n.props.accessibilityLabel)).toEqual(shelfGames.map(game=>`Play ${game.name}`));
   expect(screen.root.findAll(n=>n.type==='button' && n.props.accessibilityLabel?.startsWith('Visit '))).toHaveLength(8);
+  // The six core doors show their approved illustrations; Locker and Badges keep their drawn silhouettes.
+  expect(screen.root.findAll(n=>n.type==='img').map(n=>n.props.source)).toEqual(['learn','library','arcade','game-hall','home','puzzles'].map(door=>`assets/art/map/${door}.webp`));
   const star=all.findAll(n=>n.type==='button' && n.props.label?.startsWith('Favorite '))[0];
   await act(()=>star.props.onPress()); expect(fixture.store.toggleGameFavorite).toHaveBeenLastCalledWith(shelfGames[0].id);
   await act(()=>screen.unmount());

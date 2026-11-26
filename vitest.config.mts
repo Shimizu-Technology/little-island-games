@@ -6,6 +6,8 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.{ts,tsx}"],
     environment: "node",
+    // Illustration requires resolve to their file path (Metro gives an asset id).
+    setupFiles: ["tests/helpers/asset-modules.ts"],
     // Private Linux runners may expose only two cores: Vitest's cores-minus-one
     // default then serializes the suite. Keep isolation and use both cores.
     maxWorkers: process.env.GITHUB_ACTIONS === "true" ? 2 : undefined,

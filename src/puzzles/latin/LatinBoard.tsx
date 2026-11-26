@@ -117,6 +117,8 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     return out;
   }, [state.values, state.selected, shown, ladder.cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
+  // The selected square's row, column and box (boxBorders' shape: `box` rows by size / box columns).
+  const peers = useMemo(() => ({ box: p.box ? { rows: p.box, columns: p.size / p.box } : undefined }), [p]);
   const clues = useMemo(() => p.cages.length ? cageLayer(p, { labels: false }) : p.less.length ? markLayer(p) : undefined, [p]);
   const cornerClues = useMemo(() => p.cages.length ? cageCorners(p) : undefined, [p]);
   // A shown colour chain draws the lines that join it, under any clue layer.
@@ -144,7 +146,7 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
       </View>
     </View>}
     <View style={{ marginHorizontal: -bleed }}>
-      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={gridMistakes} hosted={hosted} borders={borders} tints={tints} overlay={overlay} cornerClues={cornerClues} frame={frame} cellWords={cellWords} status={statusSentence(title, techniqueName(view.teaches) || undefined, `${total}/${total}`)} fillNotes={() => send({ type: 'fill-notes' })}/>
+      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={gridMistakes} hosted={hosted} borders={borders} peers={peers} tints={tints} overlay={overlay} cornerClues={cornerClues} frame={frame} cellWords={cellWords} status={statusSentence(title, techniqueName(view.teaches) || undefined, `${total}/${total}`)} fillNotes={() => send({ type: 'fill-notes' })}/>
     </View>
     {!!words && p.kind !== 'sudoku' && <Copy accessibilityRole="text" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{words}</Copy>}
     {hosted ? policy === 'Plain' && <View style={{ gap: 6 }}>

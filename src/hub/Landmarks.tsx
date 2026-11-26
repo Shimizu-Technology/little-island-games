@@ -1,68 +1,17 @@
 import React, { memo } from 'react';
-import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
+import Svg, { Ellipse, G, Path } from 'react-native-svg';
+import { IllustratedArt, MAP_DOOR_ART, type MapDoor } from '../art/illustrated';
 import type { PlaceId } from './model';
 const ink = '#354E49';
-/** Authored silhouettes, not variants of a shared house. 2.5-unit island outlines. */
+/** The six core doors' approved storybook art. Locker and Badges keep their silhouettes until they fold into Home. */
+export const DOOR_ART: Partial<Record<PlaceId, MapDoor>> = { home: 'home', school: 'learn', arcade: 'arcade', cove: 'puzzles', hall: 'game-hall', library: 'library' };
+/** A door's illustration, or its authored silhouette (2.5-unit island outlines) when it has none. */
 export const Landmark = memo(function Landmark({ id }: { id: PlaceId }) {
+ const door = DOOR_ART[id];
+ if (door) return <IllustratedArt source={MAP_DOOR_ART[door]}/>;
  return <Svg width="100%" height="100%" viewBox="0 0 180 142" accessible={false}>
   <Ellipse cx={90} cy={130} rx={75} ry={9} fill="#739174" opacity={.18}/>
   <G stroke={ink} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
-   {id === 'school' && <>
-    <Path d="M15 119H167L174 132H8Z" fill="#E3D2A0"/><Path d="M23 65H151V121H23Z" fill="#F9E5AF"/>
-    <Path d="M14 67L39 39H137L161 67Z" fill="#D3915E"/><Path d="M38 48H137M29 58H147" stroke="#E9B07A"/>
-    <Path d="M70 64V28L88 12L106 28V64Z" fill="#FFF3CC"/><Path d="M65 29L88 8L112 29Z" fill="#B66F55"/>
-    <Path d="M80 48V36Q88 27 96 36V48Z" fill="#677A62"/><Path d="M84 37V42L81 47H95L92 42V37" fill="#E8B752"/><Circle cx={88} cy={50} r={2} fill="#E8B752"/>
-    <Path d="M75 121V85Q88 73 101 85V121" fill="#73958A"/><Path d="M29 79H58V101H29ZM117 79H145V101H117Z" fill="#B7DBD9"/>
-    <Path d="M43 80V101M30 90H57M131 80V101M118 90H144"/><Path d="M158 109V22"/>
-
-    <Path d="M19 111V132M10 118H32M142 119H171M150 113V130" stroke="#F9F0D9" strokeWidth={4}/>
-   </>}
-   {id === 'library' && <>
-    <Path d="M34 119V53H146V119Z" fill="#C5D8B8"/>
-    {/* The open book is the whole roof: its spine sits directly over the door. */}
-    <Path d="M21 29Q57 13 90 35Q123 13 159 29L155 59Q121 45 90 65Q59 45 25 59Z" fill="#658F80"/>
-    <Path d="M26 23Q59 11 90 32Q121 11 154 23L151 51Q119 39 90 59Q61 39 29 51Z" fill="#FFF6D8"/>
-    <Path d="M90 32V59M38 29Q61 25 79 37M38 38Q61 34 79 46M101 37Q123 25 142 29M101 46Q123 34 142 38" stroke="#BEA979"/>
-    <Path d="M72 120V91Q90 73 108 91V120" fill="#687F76"/>
-    <Rect x={43} y={69} width={19} height={28} rx={9} fill="#FFF1C5"/><Rect x={118} y={69} width={19} height={28} rx={9} fill="#FFF1C5"/>
-    <Path d="M52 70V96M44 83H61M127 70V96M119 83H136M90 88V119"/>
-    <Path d="M35 100H21V105"/><Rect x={15} y={104} width={13} height={19} rx={3} fill="#F0C86D"/><Path d="M21 108V119" stroke="#FFF2B8"/>
-    <Path d="M65 124H115M58 130H122" stroke="#CDB88A"/>
-   </>}
-   {id === 'arcade' && <>
-    <Path d="M25 60H151V125H25Z" fill="#E8A492"/><Path d="M151 60L170 48V115L151 125Z" fill="#BD7E75"/>
-    <Path d="M17 56L34 28H146L163 56Z" fill="#65AEB0"/><Rect x={35} y={25} width={111} height={40} rx={12} fill="#FFF0BC"/>
-    <Rect x={47} y={34} width={87} height={22} rx={7} fill="#336F72"/>
-    <Path d="M59 45Q70 29 80 45T103 45T124 45" stroke="#A9E2D5" strokeWidth={4}/>
-    {[43,62,81,100,119,138].map(x=><Circle key={x} cx={x} cy={29} r={2.4} fill="#EBA958" stroke="none"/>)}
-    <Path d="M65 125V87Q88 72 112 87V125" fill="#466B69"/>
-    <Path d="M87 82V124" stroke="#A8CFBB"/>
-    <Path d="M30 73H56V100H30Z" fill="#FFF4CC"/><Path d="M36 87H48M42 81V93"/>
-    <Path d="M122 76H144V102H122Z" fill="#DCE6C2"/><Circle cx={130} cy={85} r={2} fill={ink}/><Circle cx={137} cy={93} r={2} fill={ink}/>
-    <Path d="M57 128H119" stroke="#E2C08D" strokeWidth={5}/>
-   </>}
-   {id === 'hall' && <>
-    <Path d="M13 123H169L176 133H6Z" fill="#DCC9A1"/>
-    <Path d="M29 65V123M148 65V123M52 67V122M126 67V122" stroke="#9B7B53" strokeWidth={8}/>
-    <Path d="M15 67L48 27H132L165 67Z" fill="#E6E6BE"/>
-    <Path d="M48 27H69L58 47H32ZM90 27H111L125 47H90ZM58 47H90V67H42ZM125 47H149L165 67H139Z" fill="#6B9380"/>
-    <Path d="M48 27H132M32 47H149" stroke="#516D5A"/>
-    <Path d="M33 77Q90 101 146 77" fill="none"/><Path d="M43 81L49 97L60 85M76 90L86 104L97 90M116 86L129 98L135 81" fill="#D8987A"/>
-    <Path d="M64 113H117V122H64ZM73 108V116M108 108V116" fill="#BDA26E"/>
-    <Rect x={72} y={1} width={31} height={30} rx={6} fill="#FFF4CB" transform="rotate(9 88 16)"/>
-    <Circle cx={80} cy={9} r={2} fill={ink}/><Circle cx={94} cy={22} r={2} fill={ink}/><Circle cx={87} cy={16} r={2} fill={ink}/>
-   </>}
-   {id === 'home' && <>
-    {/* Same broad terracotta roof, round attic, timber floor beam and shoreline as BuildingArt. */}
-    <Path d="M21 52H158V120H21Z" fill="#D7B589"/><Path d="M15 53L34 11H146L165 53Z" fill="#C77760"/>
-    <Path d="M31 25H149M24 39H155" stroke="#E8AA80"/>
-    <Circle cx={90} cy={32} r={11} fill="#F6DFA9"/>
-    <Path d="M27 57H153V81H27Z" fill="#F1DEBA"/><Path d="M27 84H153" stroke="#A87852" strokeWidth={6}/>
-    <Path d="M31 61H59V76H31ZM120 61H148V76H120ZM31 94H59V113H31ZM120 94H148V113H120Z" fill="#A9CFC8"/>
-    <Path d="M73 119V92H105V119" fill="#6E9989"/><Path d="M81 62H101V79H81Z" fill="#B3D8CE"/>
-    <Path d="M18 120Q90 111 162 120V134H18Z" fill="#ECD3A0"/><Path d="M17 135Q48 125 77 135T165 135" stroke="#8EC8BE" strokeWidth={5}/>
-    <Path d="M129 16V4H142V24" fill="#C9AB83"/>
-   </>}
    {id === 'locker' && <>
     <Path d="M35 43H144V123H35Z" fill="#A8C6BF"/><Path d="M35 43L23 51L88 8L157 51L144 43Z" fill="#DBC28B"/>
     <Path d="M39 39L88 17L139 39M48 30L129 30" stroke="#B6A06E"/>
@@ -71,18 +20,6 @@ export const Landmark = memo(function Landmark({ id }: { id: PlaceId }) {
     <Path d="M112 76L102 84L109 94L113 90V113H133V90L137 94L144 84L133 76Q124 84 112 76Z" fill="#F8D46F"/>
     <Path d="M29 124H151M33 130H147" stroke="#D2B58B" strokeWidth={4}/>
     <Path d="M22 105Q8 80 20 76Q32 83 22 105ZM150 115Q145 94 161 91Q168 104 150 115Z" fill="#6FA78C"/>
-   </>}
-   {id === 'cove' && <>
-    <Path d="M14 122Q20 108 35 115H149Q166 111 171 128L161 135H23Z" fill="#E4C898"/>
-    <Path d="M24 119V68Q24 44 47 37Q55 15 90 20Q125 15 134 37Q157 44 157 68V119Z" fill="#A9C7BB"/>
-    <Path d="M24 80Q27 39 55 42Q60 23 90 30Q120 23 125 42Q154 39 157 80" fill="none" stroke="#719D91" strokeWidth={9}/>
-    <Path d="M69 121V83Q90 58 112 83V121Z" fill="#426D66"/>
-    <Path d="M47 58H70V80H47ZM111 48H136V71H111Z" fill="#FFF0BD"/>
-    <Path d="M47 69H70M58 58V80M111 60H136M123 48V71" stroke="#8F8963" strokeWidth={1.5}/>
-    <Path d="M48 100H58M53 95V105M129 95L136 102L129 109L122 102Z" fill="#E5B75B"/>
-    <Path d="M82 85H100V103H82ZM91 85V103M82 94H100" stroke="#F4E3B4" strokeWidth={2}/>
-    <Path d="M57 124H124M51 130H131" stroke="#C7AC7E" strokeWidth={4}/>
-    <Path d="M18 130Q31 125 43 131M139 130Q152 125 164 131" stroke="#82B9B0" fill="none"/>
    </>}
    {id === 'badges' && <>
     <Ellipse cx={90} cy={123} rx={72} ry={12} fill="#DBC8A2"/><Ellipse cx={90} cy={116} rx={57} ry={10} fill="#F3E5C5"/>

@@ -1,7 +1,8 @@
 import React, { useCallback, useContext, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
-import { GridInteraction } from '../grid/preferences';
+import { GridFeel, GridInteraction } from '../grid/preferences';
+import { theme } from '../../ui/theme';
 import { cellFloor, ink, paper } from './controls';
 import { CROSS, EMPTY, FILL, lineOf, lineSatisfied, type LineAxis, type Mark, type PictureClues } from './engine';
 import type { Paint } from './checkpoint';
@@ -48,7 +49,15 @@ function includesCell(stroke: Preview, index: number, size: number) {
 /** Clues stay pinned while the edit-size canvas pans. Each drag previews and commits one straight stroke. */
 export function GridCanvas({ layout, size, marks, clues, mode, active, moving, focusLine, onPaint }: Props) {
   const { cell, left, top, viewportWidth, viewportHeight, grid } = layout;
-  const hold = useContext(GridInteraction);
+  const hold = useContext(GridInteraction), feel = useContext(GridFeel);
+  // With a host's feel (a Puzzles round) the board is framed, its 5×5 blocks read firmer, and a newly painted square pops.
+  const [seen, setSeen] = useState(marks), [pop, setPop] = useState<{ at: number; nonce: number } | null>(null);
+  if (feel && seen !== marks) {
+    setSeen(marks);
+    const at = marks.findIndex((m, i) => m !== EMPTY && m !== seen[i]);
+    if (at >= 0) setPop(before => ({ at, nonce: (before?.nonce ?? 0) + 1 }));
+  }
+  const block = feel ? 2 : 1;
   const [focusedCell, setFocusedCell] = useState<number | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [xOffset, setXOffset] = useState(0), [yOffset, setYOffset] = useState(0);
@@ -143,9 +152,11 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
                 const shown = preview && includesCell(preview, index, size) ? preview.mark : mark;
                 const line = focusLine && (focusLine.axis === 'row' ? row : column) === focusLine.index;
                 const selected = focusLine?.cell === index;
+                const blockRight = column % 5 === 4 || column === size - 1, blockBottom = row % 5 === 4 || row === size - 1;
                 const border: ViewStyle = {
-                  borderRightColor: column % 5 === 4 || column === size - 1 ? frame : edge,
-                  borderBottomColor: row % 5 === 4 || row === size - 1 ? frame : edge,
+                  borderRightColor: blockRight ? frame : edge,
+                  borderBottomColor: blockBottom ? frame : edge,
+                  ...(blockRight && block > 1 ? { borderRightWidth: block } : {}), ...(blockBottom && block > 1 ? { borderBottomWidth: block } : {}),
                   borderTopWidth: row === 0 ? 1 : 0, borderLeftWidth: column === 0 ? 1 : 0,
                 };
                 const choose = (value: Mark) => onPaint({ type: 'paint', from: index, to: index, mark: value });
@@ -167,6 +178,8 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
                 </Pressable>;
               })}
             </View>)}
+            {feel && pop && <feel.Pop left={pop.at % size * cell} top={Math.floor(pop.at / size) * cell} size={cell} nonce={pop.nonce}/>}
+            {feel && <View pointerEvents="none" accessible={false} testID="picture-frame" style={[StyleSheet.absoluteFill, styles.frame]}/>}
             {active && !moving && <View {...responder.panHandlers} testID="picture-gesture-layer" collapsable={false}
               accessible={false} importantForAccessibility="no" style={[StyleSheet.absoluteFill, gestureStyle]} />}
           </View>
@@ -185,4 +198,5 @@ const styles = StyleSheet.create({
   clueFocus: { backgroundColor: '#FBD4BF', borderRadius: 6 },
   pill: { alignItems: 'center', justifyContent: 'center', borderRadius: 7, backgroundColor: '#EDE4F6', minHeight: 13 },
   matched: { backgroundColor: '#EDECED' },
+  frame: { borderWidth: 2.5, borderColor: theme.colors.frame, borderRadius: 4 },
 });

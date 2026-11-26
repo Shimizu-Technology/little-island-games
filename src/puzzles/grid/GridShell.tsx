@@ -7,9 +7,10 @@ import { Button, C, Copy } from '../../components/ui';
 import { LARGE_TEXT, atLarge, wordFitMultiplier, wordsFit } from '../../components/wordFit';
 import { acceptTouch, gridGeometry, moveSelection, nearestCell, paintLine, type GridAction, type GridSpec, type GridState } from './model';
 import type { Mistakes } from '../../cove/local';
-import { GridPreferences, GridFeedback, GridInteraction, GridAdult } from './preferences';
+import { GridPreferences, GridFeedback, GridFeel, GridInteraction, GridAdult } from './preferences';
 import { GridChromeContext, boardRoom, gridViewportMax } from './budget';
 import { cornerGridGeometry, cornerNoteLayout, type CornerClue, type CornerClues } from './cornerNotes';
+import { theme } from '../../ui/theme';
 
 /** This memoized layer never changes during selection, notes, painting or panning. */
 export const GridLines = memo(function GridLines({ rows, columns, cell, borders = '' }: { rows: number; columns: number; cell: number; borders?: string }) {
@@ -18,16 +19,25 @@ export const GridLines = memo(function GridLines({ rows, columns, cell, borders 
   for (let c = 0; c <= columns; c++) d += `M${c * cell} 0V${rows * cell}`;
   return <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0 }}><Svg width={columns * cell} height={rows * cell}><Path d={d} stroke="#A1B4A9" strokeWidth={1} fill="none"/>{!!borders && <Path d={borders} stroke={C.ink} strokeWidth={2.5} fill="none"/>}</Svg></View>;
 });
+/** A square's fill. A peer shares the selected square's row, column or box (a soft lagoon wash); a tint or the selection wins. */
+const cellFill = ({ paint, value, tint, selected, peer, given }: { paint: boolean; value: number; tint: GridTint; selected: boolean; peer: boolean; given: boolean }) =>
+  paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : peer ? given ? '#E3EDE7' : '#EDF6F2' : given ? '#F0EDDF' : '#FFFDF7';
+/** Puzzles boards' espresso frame (with a bottom lip) and its keys' lip. */
+const FRAME = theme.colors.frame, KEY_LIP = { borderBottomWidth: 4, borderBottomColor: 'rgba(61,43,36,0.24)' } as const;
+/** The frame's wood shows as a 3-point lip under the board; without a host's feel the board is unframed. */
+function Framed({ on, children }: { on: boolean; children: React.ReactNode }) {
+  return on ? <View testID="cove-grid-frame" style={{ alignSelf: 'center', borderRadius: 10, paddingBottom: 3, backgroundColor: FRAME }}>{children}</View> : <>{children}</>;
+}
 /** Tint 3 and 4 are the two colours of a hint's chain: a dot and a ring, never colour alone. */
 const chainMark: Record<number, { ring: boolean; words: string }> = { 3: { ring: false, words: ', chain dot' }, 4: { ring: true, words: ', chain ring' } };
-const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0, words = '', corner, school }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: GridTint; words?: string; corner?: CornerClue; school?: boolean }) {
+const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0, words = '', corner, school, peer = false }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: GridTint; words?: string; corner?: CornerClue; school?: boolean; peer?: boolean }) {
   const noteText = symbols.map((s, i) => notes & 1 << i ? s : '·').reduce((lines, s, i) => lines + s + (i % 3 === 2 ? '\n' : ' '), '').trim(), mark = chainMark[tint];
   const layout = corner && notes ? cornerNoteLayout(cell, symbols, corner, notes) : undefined;
   const border = selected ? 3 : conflict ? 2 : 0;
   const valueBand = school && corner ? Math.ceil(corner.top + corner.lineHeight) + 2 : 0;
   const valueFont = school ? Math.min(cell * .48, cell - valueBand - 6) : cell * .48;
   const label = `Row ${Math.floor(index / columns) + 1}, column ${index % columns + 1}, ${value ? symbols[value - 1] : notes ? `notes ${symbols.filter((_, i) => notes & 1 << i).join(', ')}` : 'empty'}${given ? ', given' : ''}${conflict ? ', conflict' : ''}${tint >= 2 ? ', hint focus' : ''}${mark?.words ?? ''}${words ? `, ${words}` : ''}`;
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : selected && !paint ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: border, borderColor: conflict ? C.error : C.teal, ...(valueBand && value ? { paddingTop: valueBand } : {}) }}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: cellFill({ paint, value, tint, selected, peer, given }), borderWidth: border, borderColor: conflict ? C.error : C.teal, ...(valueBand && value ? { paddingTop: valueBand } : {}) }}>
     {/* Centred and large on an empty square; small in the corner when the square shows notes or a number. */}
     {mark && (() => { const big = !value && !notes, size = Math.max(10, cell * (big ? .38 : .22)); return <View accessible={false} pointerEvents="none" style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, ...(big ? {} : { right: 2, bottom: 2 }), backgroundColor: mark.ring ? 'transparent' : C.ink, borderWidth: mark.ring ? Math.max(2.5, size * .16) : 0, borderColor: C.ink }}/>; })()}
     {notes ? layout ? layout.fits ? <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: -border, top: -border, width: cell, height: cell }}>{layout.boxes.map(({ symbolIndex, ...box }) => <Text key={symbolIndex} testID={`corner-note-${index}-${symbolIndex}`} maxFontSizeMultiplier={1} style={{ position: 'absolute', ...box, color: C.ink, fontSize: layout.fontSize, lineHeight: layout.lineHeight, fontFamily: Platform.OS === 'android' ? 'monospace' : 'ui-monospace', fontVariant: ['tabular-nums'], textAlign: 'center' }}>{symbols[symbolIndex]}</Text>)}</View> : null : <Text maxFontSizeMultiplier={1} style={{ color: C.ink, fontSize: Math.max(8, cell * .19), lineHeight: cell * .25, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{noteText}</Text> : value > 0 && (!paint || value !== 1) && <Text maxFontSizeMultiplier={school ? 1 : 1.4} adjustsFontSizeToFit numberOfLines={1} style={{ color: conflict ? C.error : C.ink, fontSize: valueFont, fontWeight: given ? '800' : '500', ...(school ? { lineHeight: valueFont } : {}) }}>{symbols[value - 1] ?? ''}</Text>}
@@ -53,13 +63,15 @@ export type GridShellProps = {
   frame?: { size: number; layer: (cell: number, gutter: number) => React.ReactNode };
   /** In a Puzzles round the HUD owns Undo and How to play holds the instructions, so the board leaves both out. */
   hosted?: boolean;
+  /** Wash the selected square's row and column, and its box when `box` is given (rows × columns). Presentation only. */
+  peers?: { box?: { rows: number; columns: number } };
 };
 export type GridTint = 0 | 1 | 2 | 3 | 4;
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
-export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, cornerClues, schoolLayout, status, hosted = false }: GridShellProps) {
+export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame, cellWords, cornerClues, schoolLayout, status, hosted = false, peers }: GridShellProps) {
   // A clue frame takes its share of the width, so the board's cells stay square and centred.
   const width = frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer;
-  const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
+  const feedback = useContext(GridFeedback), feel = useContext(GridFeel), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), large = (fontScale ?? 1) >= LARGE_TEXT, chrome = useContext(GridChromeContext);
   // At accessibility sizes the board, its clue gutters and the keys share one height budget; below them it is the base share of the window.
   const viewportMax = schoolLayout ? Math.max(schoolLayout.height, schoolLayout.minimumCell * spec.rows) : gridViewportMax(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: true, sentence: status }), height, spec.rows, frame?.size ?? 0);
@@ -78,6 +90,20 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
   const acceptedEdits = useRef(state.edits);
   useEffect(() => { if (state.edits > acceptedEdits.current) (onAccepted ?? feedback)(); acceptedEdits.current = state.edits; }, [state.edits, onAccepted, feedback]);
   useEffect(() => () => interaction(false), [interaction]);
+  // With a host's feel, a newly placed symbol pops (the first square whose value became a new non-empty one) and a new selection ticks.
+  const [seen, setSeen] = useState(state.values), [pop, setPop] = useState<{ at: number; nonce: number } | null>(null);
+  if (feel && seen !== state.values) {
+    setSeen(state.values);
+    const at = state.values.findIndex((v, i) => v > 0 && v !== seen[i]);
+    if (at >= 0) setPop(before => ({ at, nonce: (before?.nonce ?? 0) + 1 }));
+  }
+  const ticked = useRef(state.selected);
+  useEffect(() => { if (ticked.current !== state.selected) { ticked.current = state.selected; feel?.select(); } }, [state.selected, feel]);
+  const peerOf = (i: number) => {
+    if (!peers || i === state.selected) return false;
+    const r = Math.floor(i / spec.columns), c = i % spec.columns, sr = Math.floor(state.selected / spec.columns), sc = state.selected % spec.columns, box = peers.box;
+    return r === sr || c === sc || !!box && Math.floor(r / box.rows) === Math.floor(sr / box.rows) && Math.floor(c / box.columns) === Math.floor(sc / box.columns);
+  };
   const panX = useSharedValue(0), panY = useSharedValue(0), cursorX = useSharedValue(0), cursorY = useSharedValue(0), cursorOn = useSharedValue(0);
   const nativeKeyboard = useRef<TextInput>(null);
   const last = useRef<{ cell: number; at: number } | null>(null);
@@ -180,26 +206,30 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
     {(screenReader || !!state.notes[state.selected]) && <Copy>Selected row {Math.floor(state.selected / spec.columns) + 1}, column {state.selected % spec.columns + 1}{state.notes[state.selected] ? ` · Notes: ${spec.symbols.filter((_, i) => state.notes[state.selected] & 1 << i).join(', ')}` : ''}</Copy>}
     <View style={frame ? { alignSelf: 'center', padding: frame.size * cell } : { alignSelf: 'center' }}>
     {frame && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: (spec.columns + 2 * frame.size) * cell, height: (spec.rows + 2 * frame.size) * cell }}>{frame.layer(cell, frame.size * cell)}</View>}
+    <Framed on={!!feel}>
     <View {...(schoolLayout ? { testID: schoolLayout.testID, onLayout: schoolLayout.onLayout } : {})} style={{ width: Math.min(layoutWidth, geometry.width), alignSelf: 'center', height: Math.min(geometry.height, viewportMax), overflow: 'hidden', borderRadius: 8, ...(Platform.OS === 'web' ? { touchAction: spec.kind === 'paint' || zoom ? 'none' as const : 'auto' as const } : {}) }}>
       <Animated.View style={[{ width: geometry.width, height: geometry.height }, panStyle]}>
-        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)} corner={corners?.get(i)} {...(schoolLayout ? { school: true } : {})}/>; })}</View>)}
+        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0} words={cellWords?.(i)} corner={corners?.get(i)} peer={peerOf(i)} {...(schoolLayout ? { school: true } : {})}/>; })}</View>)}
         {line.map(i => <View key={`stroke-${i}`} testID={`stroke-${i}`} pointerEvents="none" accessible={false} style={{ position: 'absolute', left: i % spec.columns * cell, top: Math.floor(i / spec.columns) * cell, width: cell, height: cell, backgroundColor: state.tool === 1 ? '#246858' : '#FFFDF7', opacity: .7, borderWidth: 2, borderColor: C.gold }}/>) }
         {!corners?.size && <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>}
         {overlay && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{overlay(cell)}</View>}
         {!!corners?.size && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0, width: spec.columns * cell, height: spec.rows * cell }}>{[...corners!].map(([i, clue]) => {
           const hasNotes = !!state.notes[i], tint = tints?.get(i) ?? 0;
-          const background = tint === 2 || tint === 3 ? '#F6E3A8' : tint === 4 ? '#BCD0E2' : state.selected === i ? '#BFE0CC' : tint === 1 ? '#DCEBE2' : spec.givens[i] ? '#F0EDDF' : '#FFFDF7';
+          const background = cellFill({ paint: false, value: state.values[i], tint, selected: state.selected === i, peer: peerOf(i), given: !!spec.givens[i] });
           return <Text key={i} testID={`corner-clue-${i}`} allowFontScaling={false} numberOfLines={1} style={{ position: 'absolute', left: i % spec.columns * cell + (hasNotes ? 0 : clue.left), top: Math.floor(i / spec.columns) * cell + (hasNotes ? 0 : clue.top), width: clue.width, height: hasNotes ? clue.fontSize : clue.lineHeight, fontSize: clue.fontSize, lineHeight: hasNotes ? clue.fontSize : clue.lineHeight, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'], ...(hasNotes ? { backgroundColor: background } : {}) }}>{clue.text}</Text>;
         })}</View>}
         {!!corners?.size && <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>}
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
+        {feel && pop && <feel.Pop left={pop.at % spec.columns * cell} top={Math.floor(pop.at / spec.columns) * cell} size={cell} nonce={pop.nonce}/>}
       </Animated.View>
+      {feel && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', inset: 0, borderRadius: 8, borderWidth: 2.5, borderColor: FRAME }}/>}
       <View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/>
     </View>
+    </Framed>
     </View>
     {(enlarged || line.length > 0) && <Copy>Enlarged row {Math.floor((line[0] ?? state.selected) / spec.columns) + 1}: {state.values.slice(Math.floor((line[0] ?? state.selected) / spec.columns) * spec.columns, (Math.floor((line[0] ?? state.selected) / spec.columns) + 1) * spec.columns).map(v => spec.symbols[v - 1] ?? '·').join('  ')}</Copy>}
     {!large && zoomControls}
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, width: Math.min(outer, 560), alignSelf: 'center' }}>{[...spec.symbols, 'Erase'].map((symbol, i) => { const erasing = i === spec.symbols.length, value = erasing ? 0 : i + 1; return <Button key={i} compact stillOnly selected={first && state.tool === value} disabled={!active} style={{ minWidth: 52, minHeight: 56, width: padWidth, ...(erasing || large && symbol.length > 1 ? { paddingHorizontal: 4 } : {}) }} textStyle={symbol.length === 1 ? { fontSize: 26 } : undefined} maxFontSizeMultiplier={erasing ? eraseMax : symbol.length === 1 || !large ? buttonMax : wordFitMultiplier(symbol, 15, padWidth - 10, 1.3)} {...(erasing ? { numberOfLines: 1, icon: eraseIcon ? 'erase' as const : undefined } : {})} label={erasing ? 'Erase' : `${state.pencil ? 'Note' : 'Enter'} ${symbol}`}  onPress={() => first || spec.kind === 'paint' || spec.kind === 'cells' ? dispatch({ type: 'tool', value }) : send({ type: 'write', cells: [state.selected], value })}>{erasing && eraseIcon ? null : symbol}</Button>; })}</View>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, width: Math.min(outer, 560), alignSelf: 'center' }}>{[...spec.symbols, 'Erase'].map((symbol, i) => { const erasing = i === spec.symbols.length, value = erasing ? 0 : i + 1; return <Button key={i} compact stillOnly selected={first && state.tool === value} disabled={!active} style={{ minWidth: 52, minHeight: 56, width: padWidth, ...(erasing || large && symbol.length > 1 ? { paddingHorizontal: 4 } : {}), ...(feel ? KEY_LIP : {}) }} textStyle={symbol.length === 1 ? { fontSize: 26 } : undefined} maxFontSizeMultiplier={erasing ? eraseMax : symbol.length === 1 || !large ? buttonMax : wordFitMultiplier(symbol, 15, padWidth - 10, 1.3)} {...(erasing ? { numberOfLines: 1, icon: eraseIcon ? 'erase' as const : undefined } : {})} label={erasing ? 'Erase' : `${state.pencil ? 'Note' : 'Enter'} ${symbol}`}  onPress={() => first || spec.kind === 'paint' || spec.kind === 'cells' ? dispatch({ type: 'tool', value }) : send({ type: 'write', cells: [state.selected], value })}>{erasing && eraseIcon ? null : symbol}</Button>; })}</View>
     {large && zoomControls}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{!hosted && <Button quiet compact maxFontSizeMultiplier={buttonMax} disabled={!active || !state.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>}<Button quiet compact maxFontSizeMultiplier={buttonMax} disabled={!active || !state.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>{spec.kind === 'digits' && <><Button quiet compact maxFontSizeMultiplier={buttonMax} selected={state.pencil} disabled={!active} onPress={() => send({ type: 'pencil' })}>Notes {state.pencil ? 'on' : 'off'}</Button><Button quiet compact maxFontSizeMultiplier={buttonMax} selected={first} disabled={!active} onPress={() => setFirst(value => !value)}>Number first {first ? 'on' : 'off'}</Button></>}</View>
     {adult && preferences.reader === 'Grown-up' && preferences.fillNotes && fillNotes && <Button quiet disabled={!active} onPress={fillNotes}>Fill notes</Button>}

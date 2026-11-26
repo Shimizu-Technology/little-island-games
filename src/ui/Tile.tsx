@@ -8,8 +8,9 @@ import { theme } from "./theme";
 import type { Pastel } from "./theme";
 
 /**
- * Big picture tile: the game's art on its pastel with the name below. No border at rest, one soft shadow only when
- * selected. Tap opens, long-press favorites (with a haptic), and the favorite badge is a star on the picture.
+ * Big picture tile: the game's art on its pastel with the name below. A warm bottom rim makes the picture a card you
+ * can press (it scales in on touch, still under Reduce Motion); no full border, one soft shadow only when selected.
+ * Tap opens, long-press favorites (with a haptic), and the favorite badge is a star on the picture.
  */
 export function Tile({ name, pastel, art, favorite, selected, onPress, onLongPress, testID, nameMax }: {
   name: string;
@@ -51,7 +52,7 @@ export function Tile({ name, pastel, art, favorite, selected, onPress, onLongPre
   );
 }
 
-const BADGE = 32;
+const BADGE = 32, RIM = 3;
 
 const styles = StyleSheet.create({
   tile: { gap: theme.space.sm, alignItems: "stretch" },
@@ -62,6 +63,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+    borderBottomWidth: RIM,
+    borderBottomColor: theme.colors.rim,
   },
   badge: {
     position: "absolute",
