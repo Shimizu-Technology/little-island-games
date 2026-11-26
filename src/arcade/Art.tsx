@@ -204,12 +204,231 @@ export function StarDisplay({ stars, size = 30 }: { stars: number; size?: number
 
 export const stickerNames: Record<StickerId, string> = { "reef-fish": "Pip's first reef", "singing-shell": "Mina's melody", "little-crab": "Sideways friend", "sea-turtle": "Lagoon traveler", "moon-canoe": "Moon canoe", "sun-coral": "Sun coral", "rainbow-fish": "Rainbow swimmer", "star-shell": "Starry shell", coconut: "Coconut shade", "flying-fox": "Night gardener", "lagoon-ray": "Gentle glider", "island-flower": "Island blossom", "tiny-rail": "Little rail", "hermit-home": "A shell to call home", "sea-star": "Five bright arms", "jelly-light": "Jelly glow" };
 
+type StickerCharm =
+  | "bubble"
+  | "rainbow"
+  | "note"
+  | "star"
+  | "swirl"
+  | "heart"
+  | "wave"
+  | "ripple"
+  | "moon"
+  | "sun"
+  | "leaf"
+  | "sparkle"
+  | "frond"
+  | "blossom"
+  | "trail"
+  | "seastar";
+
+type StickerTheme = {
+  game: ArcadeId;
+  bg: string;
+  ring: string;
+  ribbon: string;
+  charmBg: string;
+  charm: StickerCharm;
+};
+
+export const stickerThemes: Record<StickerId, StickerTheme> = {
+  "moon-canoe": { game: "canoe-cargo", bg: "#F9EBD2", ring: "#D98E36", ribbon: "#4A66A0", charmBg: "#E8EEFC", charm: "moon" },
+  "flying-fox": { game: "fruit-bat-flight", bg: "#ECE6FA", ring: "#7C5CB8", ribbon: "#E6A93B", charmBg: "#FFF3CE", charm: "leaf" },
+  "jelly-light": { game: "fruit-bat-flight", bg: "#DFF4F1", ring: "#2D9A93", ribbon: "#9F72D8", charmBg: "#F3E8FC", charm: "sparkle" },
+  "sea-turtle": { game: "lagoon-run", bg: "#DDF3EC", ring: "#288E7D", ribbon: "#52B59C", charmBg: "#E3F8F2", charm: "wave" },
+  "lagoon-ray": { game: "lagoon-run", bg: "#DCEEFB", ring: "#3B84B8", ribbon: "#6CBCE6", charmBg: "#E8F5FE", charm: "ripple" },
+  "reef-fish": { game: "reef-builder", bg: "#DDF3EE", ring: "#2E9689", ribbon: "#FF7A5C", charmBg: "#FFEBE4", charm: "bubble" },
+  "rainbow-fish": { game: "reef-builder", bg: "#FFF0D6", ring: "#EB7E44", ribbon: "#FFCE45", charmBg: "#FFF5C8", charm: "rainbow" },
+  "singing-shell": { game: "shell-song", bg: "#F1E8FB", ring: "#9167C2", ribbon: "#EC7A9B", charmBg: "#FDE8F0", charm: "note" },
+  "star-shell": { game: "shell-song", bg: "#FFF3D6", ring: "#D99A2B", ribbon: "#9167C2", charmBg: "#F2E7FC", charm: "star" },
+  "tiny-rail": { game: "rail-parade", bg: "#E8F3D8", ring: "#5B9246", ribbon: "#C98548", charmBg: "#F8ECDA", charm: "trail" },
+  "island-flower": { game: "rail-parade", bg: "#FCE8EA", ring: "#DF6779", ribbon: "#FFCE45", charmBg: "#FFF3CA", charm: "blossom" },
+  "little-crab": { game: "crab-crossing", bg: "#FFEADF", ring: "#E66D4E", ribbon: "#2D9A93", charmBg: "#E0F6F3", charm: "swirl" },
+  "hermit-home": { game: "crab-crossing", bg: "#F9EED7", ring: "#C5883C", ribbon: "#E66D4E", charmBg: "#FFEBE5", charm: "heart" },
+  coconut: { game: "palm-patrol", bg: "#E9F4D8", ring: "#4B8E55", ribbon: "#9C693D", charmBg: "#F4E8D6", charm: "frond" },
+  "sun-coral": { game: "palm-patrol", bg: "#FFF0D8", ring: "#EA7844", ribbon: "#FFCE45", charmBg: "#FFF5C8", charm: "sun" },
+  "sea-star": { game: "beach-ball", bg: "#DFF1FA", ring: "#3B95C4", ribbon: "#FFCE45", charmBg: "#FFF3C6", charm: "seastar" },
+};
+
+function StickerCharmIcon({ charm, size }: { charm: StickerCharm; size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 28 28" accessible={false}>
+      {charm === "moon" ? (
+        <G>
+          <Path d="M16.5 6.5 A7.5 7.5 0 1 0 21.5 18.5 A6 6 0 1 1 16.5 6.5 Z" fill="#FFCE45" stroke="#3D2B24" strokeWidth={1.8} strokeLinejoin="round" />
+          <Circle cx={19.5} cy={9.5} r={1.6} fill="#4A66A0" />
+        </G>
+      ) : charm === "leaf" ? (
+        <G>
+          <Path d="M7 20 Q7 8 21 7 Q20 20 7 20 Z" fill="#6BB66B" stroke="#3D2B24" strokeWidth={1.8} strokeLinejoin="round" />
+          <Path d="M8.5 18.5 L16.5 11.5" stroke="#3D2B24" strokeWidth={1.6} strokeLinecap="round" />
+        </G>
+      ) : charm === "sparkle" ? (
+        <G>
+          <Path d="M14 4 L16.4 11.6 L24 14 L16.4 16.4 L14 24 L11.6 16.4 L4 14 L11.6 11.6 Z" fill="#B583EB" stroke="#3D2B24" strokeWidth={1.7} strokeLinejoin="round" />
+          <Circle cx={21} cy={7} r={1.8} fill="#FFCE45" stroke="#3D2B24" strokeWidth={1} />
+        </G>
+      ) : charm === "wave" ? (
+        <G fill="none" strokeLinecap="round">
+          <Path d="M4.5 13 Q8.5 8 12.5 13 T20.5 13 T23.5 12" stroke="#288E7D" strokeWidth={2.8} />
+          <Path d="M5.5 18.5 Q9.5 14 13.5 18.5 T21.5 18.5" stroke="#3D2B24" strokeWidth={2} />
+        </G>
+      ) : charm === "ripple" ? (
+        <G fill="none" strokeLinecap="round">
+          <Path d="M5 10.5 Q14 6.5 23 10.5" stroke="#3B84B8" strokeWidth={2.4} />
+          <Path d="M5 15 Q14 11 23 15" stroke="#3D2B24" strokeWidth={2} />
+          <Path d="M8 19.5 Q14 16.5 20 19.5" stroke="#3B84B8" strokeWidth={2.2} />
+        </G>
+      ) : charm === "bubble" ? (
+        <G>
+          <Circle cx={11.5} cy={16} r={5.5} fill="#8AE0D5" stroke="#3D2B24" strokeWidth={1.8} />
+          <Circle cx={19} cy={10} r={3.4} fill="#FF9E84" stroke="#3D2B24" strokeWidth={1.6} />
+          <Circle cx={9.8} cy={14.3} r={1.4} fill="#FFFDF8" />
+        </G>
+      ) : charm === "rainbow" ? (
+        <G fill="none" strokeLinecap="round">
+          <Path d="M5 19 A9 9 0 0 1 23 19" stroke="#FF7A5C" strokeWidth={2.8} />
+          <Path d="M8 19 A6 6 0 0 1 20 19" stroke="#FFCE45" strokeWidth={2.8} />
+          <Path d="M11 19 A3 3 0 0 1 17 19" stroke="#2E9689" strokeWidth={2.6} />
+        </G>
+      ) : charm === "note" ? (
+        <G>
+          <Path d="M12 18.5 V8.5 L21 6.5 V16.5" fill="none" stroke="#3D2B24" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+          <Ellipse cx={9.5} cy={19} rx={3.3} ry={2.4} fill="#EC7A9B" stroke="#3D2B24" strokeWidth={1.6} />
+          <Ellipse cx={18.5} cy={17} rx={3.3} ry={2.4} fill="#EC7A9B" stroke="#3D2B24" strokeWidth={1.6} />
+        </G>
+      ) : charm === "star" ? (
+        <G>
+          <Path d={plumpStar} transform="translate(14 14.5) scale(.74)" fill="#FFCE45" stroke="#3D2B24" strokeWidth={2.2} strokeLinejoin="round" />
+          <Circle cx={22} cy={7} r={1.6} fill="#9167C2" />
+        </G>
+      ) : charm === "trail" ? (
+        <G>
+          <Path d="M8 21 Q13 14 20 7" fill="none" stroke="#5B9246" strokeWidth={2.2} strokeLinecap="round" />
+          <Ellipse cx={10} cy={12} rx={3.2} ry={2} transform="rotate(-35 10 12)" fill="#7DC05C" stroke="#3D2B24" strokeWidth={1.4} />
+          <Ellipse cx={17.5} cy={16} rx={3.2} ry={2} transform="rotate(20 17.5 16)" fill="#C98548" stroke="#3D2B24" strokeWidth={1.4} />
+        </G>
+      ) : charm === "blossom" ? (
+        <G>
+          {[0, 72, 144, 216, 288].map(angle => (
+            <Ellipse key={angle} cx={14} cy={8.5} rx={3.1} ry={4.6} transform={`rotate(${angle} 14 14)`} fill="#F27E91" stroke="#3D2B24" strokeWidth={1.2} />
+          ))}
+          <Circle cx={14} cy={14} r={3.2} fill="#FFCE45" stroke="#3D2B24" strokeWidth={1.4} />
+        </G>
+      ) : charm === "swirl" ? (
+        <G fill="none" strokeLinecap="round">
+          <Path d="M14 14 C14 11.5 17 11.5 17 14 C17 17.5 11.5 18 10.5 14.5 C9.5 10 14.5 7 19 9 C22 10.5 22.5 15.5 19.5 19 C16 22.5 9.5 22 7 18" stroke="#E66D4E" strokeWidth={2.4} />
+          <Circle cx={14} cy={14} r={1.4} fill="#3D2B24" />
+        </G>
+      ) : charm === "heart" ? (
+        <Path
+          d="M14 21.5 C14 21.5 6 16.5 6 11 C6 8 8.3 6 10.8 6 C12.4 6 13.5 6.9 14 8 C14.5 6.9 15.6 6 17.2 6 C19.7 6 22 8 22 11 C22 16.5 14 21.5 14 21.5 Z"
+          fill="#FF7A5C"
+          stroke="#3D2B24"
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+        />
+      ) : charm === "frond" ? (
+        <G>
+          <Path d="M14 22 V10" stroke="#9C693D" strokeWidth={2.4} strokeLinecap="round" />
+          <Path d="M14 11 Q7 6 5 12 Q10 12 14 11 Z" fill="#4B8E55" stroke="#3D2B24" strokeWidth={1.4} strokeLinejoin="round" />
+          <Path d="M14 11 Q21 6 23 12 Q18 12 14 11 Z" fill="#6BB66B" stroke="#3D2B24" strokeWidth={1.4} strokeLinejoin="round" />
+          <Path d="M14 11 Q11 4 17 5 Q15.5 8.5 14 11 Z" fill="#7AC778" stroke="#3D2B24" strokeWidth={1.3} strokeLinejoin="round" />
+        </G>
+      ) : charm === "sun" ? (
+        <G>
+          <Circle cx={14} cy={14} r={5} fill="#FFCE45" stroke="#3D2B24" strokeWidth={1.8} />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+            <Path key={angle} d="M14 4.5 V6.8" transform={`rotate(${angle} 14 14)`} stroke="#EA7844" strokeWidth={2.2} strokeLinecap="round" />
+          ))}
+        </G>
+      ) : (
+        <Path d={plumpStar} transform="translate(14 14.5) scale(.76)" fill="#FFCE45" stroke="#3D2B24" strokeWidth={2.2} strokeLinejoin="round" />
+      )}
+    </Svg>
+  );
+}
+
+/**
+ * Storybook die-cut sticker medallion backed by the approved illustrated WebP artwork.
+ * Each sticker keeps a unique border palette, inner ribbon ring, and corner charm emblem.
+ */
 export function StickerArt({ id, size = 90 }: { id: StickerId; size?: number }) {
-  if (["reef-fish", "rainbow-fish"].includes(id)) return <ReefFish size={size} outfit={id === "rainbow-fish" ? "starlight" : "island"}/>;
-  if (["singing-shell", "star-shell", "hermit-home"].includes(id)) return <Shell size={size} index={id === "star-shell" ? 3 : 0} outfit={id === "star-shell" ? "starlight" : "island"}/>;
-  return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
-    <Circle cx={50} cy={50} r={44} fill="#FFF7DF" stroke="#EAD6A5" strokeWidth={2}/>
-    {id === "little-crab" ? <G fill="#DE8667" stroke="#A55B48" strokeWidth={2}><Ellipse cx={50} cy={57} rx={23} ry={16}/><Path d="M29 52L16 37L13 49L24 56M71 52L84 37L87 49L76 56M29 62L17 68M32 68L22 77M71 62L83 68M68 68L78 77" fill="none" strokeWidth={4}/><Circle cx={41} cy={38} r={4}/><Circle cx={59} cy={38} r={4}/></G> : id === "sea-turtle" ? <G fill="#79A789" stroke="#416D5A" strokeWidth={2}><Ellipse cx={50} cy={54} rx={22} ry={25}/><Ellipse cx={50} cy={23} rx={9} ry={10}/><Path d="M31 43Q10 34 17 57L31 55M69 43Q90 34 83 57L69 55M33 69L22 81L39 76M67 69L78 81L61 76"/><Path d="M50 35L63 46L59 66L42 69L35 50Z" fill="#B3CB8E"/></G> : id === "moon-canoe" ? <G><Path d="M19 59Q50 78 82 59L70 76H31Z" fill="#A37750"/><Path d="M46 57V23L70 56Z" fill="#D9A960"/><Path d="M26 19Q18 37 39 34Q26 46 18 35Q10 25 26 19" fill="#E6BD62"/></G> : id === "coconut" ? <G><Path d="M47 80Q63 56 52 29" stroke="#A3754B" strokeWidth={8} fill="none"/><Path d="M52 29Q23 10 15 38L52 29Q79 9 87 39L52 29Q28 32 28 56L52 29Q79 33 78 58Z" fill="#63916D"/><Circle cx={47} cy={36} r={6} fill="#996846"/></G> : id === "island-flower" ? <G fill="#DB8C86">{[0, 72, 144, 216, 288].map(a => <Ellipse key={a} cx={50} cy={31} rx={13} ry={22} transform={`rotate(${a} 50 50)`}/>)}<Circle cx={50} cy={50} r={11} fill="#E8BE61"/></G> : id === "flying-fox" ? <G fill="#735578"><Path d="M49 41Q20 24 12 61L35 55L50 75L65 55L88 61Q80 24 51 41"/><Circle cx={50} cy={42} r={12} fill="#BD855C"/><Path d="M41 35L40 23L48 31M59 35L60 23L52 31"/></G> : id === "lagoon-ray" ? <G><Path d="M50 27Q29 33 14 57L49 73L85 57Q69 33 50 27" fill="#81AFC0" stroke="#487A90" strokeWidth={2}/><Path d="M49 69Q61 91 70 80" stroke="#487A90" strokeWidth={3} fill="none"/></G> : id === "tiny-rail" ? <G><Ellipse cx={48} cy={55} rx={24} ry={19} fill="#A3815D"/><Circle cx={67} cy={36} r={12} fill="#8F6749"/><Path d="M76 33L91 38L77 42" fill="#C7A05E"/><Path d="M39 71L36 86M55 71L57 86" stroke="#B58A5E" strokeWidth={3}/></G> : id === "jelly-light" ? <G><Path d="M22 56Q23 17 50 23Q77 17 78 56Z" fill="#B9A6CF" stroke="#786495" strokeWidth={2}/><Path d="M33 57Q24 70 35 82M49 57Q60 72 49 85M65 57Q56 69 68 81" stroke="#A086B7" strokeWidth={4} fill="none"/></G> : id === "sun-coral" ? <G stroke="#D28B65" strokeWidth={9} strokeLinecap="round"><Path d="M50 80V31M50 56L29 46V31M50 65L72 51V39M50 45L67 31" fill="none"/></G> : <Path d="M50 18L59 40L83 40L64 56L71 81L50 67L29 81L36 56L17 40L41 40Z" fill="#E2B45F" stroke="#AC803E" strokeWidth={2}/>}
-    {!["island-flower", "coconut", "moon-canoe", "sun-coral"].includes(id) && <G fill="#314A4D"><Circle cx={43} cy={51} r={2}/><Circle cx={57} cy={51} r={2}/></G>}
-  </Svg>;
+  const spec = stickerThemes[id];
+  const outerBorder = Math.max(2, Math.round(size * 0.036));
+  const innerSize = Math.max(16, Math.round(size * 0.84));
+  const artSize = Math.max(14, Math.round(size * 0.68));
+  const badgeSize = Math.max(16, Math.round(size * 0.34));
+  const pipSize = Math.max(8, Math.round(size * 0.14));
+
+  return (
+    <View
+      testID={`sticker-art-${id}`}
+      accessible={false}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: "#FFFDF8",
+        borderWidth: outerBorder,
+        borderColor: spec.ring,
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 3px 0 rgba(61, 43, 36, 0.14)",
+      }}
+    >
+      <View
+        style={{
+          width: innerSize,
+          height: innerSize,
+          borderRadius: innerSize / 2,
+          backgroundColor: spec.bg,
+          borderWidth: Math.max(1.5, Math.round(size * 0.022)),
+          borderColor: spec.ribbon,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <IllustratedArcadeArt id={spec.game} size={artSize} />
+      </View>
+
+      {size >= 52 && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: Math.round(size * 0.04),
+            bottom: Math.round(size * 0.04),
+            width: pipSize,
+            height: pipSize,
+            borderRadius: pipSize / 2,
+            backgroundColor: spec.ribbon,
+            borderWidth: 1.5,
+            borderColor: "#FFFDF8",
+          }}
+        />
+      )}
+
+      <View
+        testID={`sticker-charm-${id}`}
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          right: -Math.round(badgeSize * 0.08),
+          top: -Math.round(badgeSize * 0.08),
+          width: badgeSize,
+          height: badgeSize,
+          borderRadius: badgeSize / 2,
+          backgroundColor: spec.charmBg,
+          borderWidth: size >= 48 ? 1.8 : 1.3,
+          borderColor: "#3D2B24",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 1.5px 0 rgba(61, 43, 36, 0.22)",
+        }}
+      >
+        <StickerCharmIcon charm={spec.charm} size={Math.round(badgeSize * 0.78)} />
+      </View>
+    </View>
+  );
 }

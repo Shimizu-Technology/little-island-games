@@ -575,8 +575,17 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
                 Fly again
               </Button>
             )}
+            {game.id !== "fruit-bat-flight" && !showNextPrimary && (
+              <Button
+                onPress={start}
+                style={{ width: "100%", minHeight: 54, borderRadius: 20, backgroundColor: SHELL_CORAL, borderWidth: 1.5, borderColor: "#D95D42", boxShadow: "0 4px 0 #C8573D" }}
+                textStyle={{ ...headingFace, color: SHELL_INK, fontSize: 18 }}
+              >
+                {result.cleared || result.outcome === "stopped" ? "Play again" : "Try again"}
+              </Button>
+            )}
             <View style={{ flexDirection: "row", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-              {game.id !== "fruit-bat-flight" && (
+              {game.id !== "fruit-bat-flight" && showNextPrimary && (
                 <Button
                   quiet
                   compact
@@ -584,7 +593,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
                   style={{ minHeight: 46, paddingHorizontal: 20, borderRadius: 999, backgroundColor: SHELL_PAPER, borderWidth: 1.5, borderColor: SHELL_BORDER, boxShadow: "0 2px 0 rgba(61, 43, 36, 0.08)" }}
                   textStyle={{ color: SHELL_INK, fontSize: 15, fontWeight: "800" }}
                 >
-                  {result.cleared || result.outcome === "stopped" ? "Play again" : "Try again"}
+                  Play again
                 </Button>
               )}
               <Button

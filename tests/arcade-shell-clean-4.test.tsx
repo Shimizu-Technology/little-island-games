@@ -2,13 +2,13 @@ import React, { createContext } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import TestRenderer, { act, type ReactTestInstance } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ArcadeArt, StarDisplay } from "../src/arcade/Art";
+import { ArcadeArt, StarDisplay, StickerArt, stickerNames, stickerThemes } from "../src/arcade/Art";
 import { OutfitCloset, StickerBook } from "../src/arcade/Collection";
 import { StarReveal } from "../src/arcade/Juice";
 import { LevelMap } from "../src/arcade/LevelMap";
 import { ArcadeGameScreen } from "../src/arcade/ArcadeScreen";
 import { arcadeGames } from "../src/arcade/registry";
-import { emptyArcadeLearner, emptyGameProgress } from "../src/arcade/progress";
+import { emptyArcadeLearner, emptyGameProgress, stickerIds } from "../src/arcade/progress";
 import { cargoLevels } from "../src/arcade/games/canoe-cargo/engine";
 import { StoreProvider } from "../src/state/Store";
 import { emptySave } from "../src/state/validation";
@@ -222,25 +222,97 @@ describe("Wave 1A Clean 4.0 Arcade shell overhaul", () => {
     expect(flat(heading.props.style)?.fontWeight).toBe("normal");
   });
 
-  it("renders OutfitCloset and StickerBook with warm storybook cards, illustrated medallions, and Nunito headings", async () => {
+  it("renders OutfitCloset and StickerBook with warm storybook cards, illustrated WebP medallions, and Nunito headings", async () => {
     fonts.loaded = true;
     const canoe = arcadeGames.find(g => g.id === "canoe-cargo")!;
     const person = emptyArcadeLearner();
-    person.stickers = ["moon-canoe"];
+    person.stickers = ["moon-canoe", "reef-fish", "singing-shell"];
     person.games["canoe-cargo"] = { ...emptyGameProgress(), unlockedOutfits: ["island", "sunhat"], outfit: "sunhat" };
     await act(async () => {
       root = TestRenderer.create(
         <View>
-          <OutfitCloset game={canoe} person={person} onSelect={() => {}} />
-          <StickerBook person={person} />
+          <View testID="closet-wrap"><OutfitCloset game={canoe} person={person} onSelect={() => {}} /></View>
+          <View testID="book-wrap"><StickerBook person={person} /></View>
         </View>,
       );
     });
-    expect(root!.root.findAllByType(Image).every(img => img.props.source === "assets/art/arcade/canoe-cargo.webp")).toBe(true);
-    expect(root!.root.findAllByType(Image)).toHaveLength(4);
+    const closetImages = root!.root.findByProps({ testID: "closet-wrap" }).findAllByType(Image);
+    expect(closetImages).toHaveLength(4);
+    expect(closetImages.every(img => img.props.source === "assets/art/arcade/canoe-cargo.webp")).toBe(true);
+
+    const bookWrap = root!.root.findByProps({ testID: "book-wrap" });
+    const bookImages = bookWrap.findAllByType(Image);
+    expect(bookImages).toHaveLength(stickerIds.length);
+    expect(bookImages.every(img => typeof img.props.source === "string" && /^assets\/art\/arcade\/[a-z-]+\.webp$/.test(img.props.source))).toBe(true);
+
+    // Every sticker keeps its own illustrated medallion, distinct theme border/charm, and earned/unearned label
+    const charms = new Set<string>();
+    for (const id of stickerIds) {
+      const stickerNode = bookWrap.findByProps({ testID: `sticker-art-${id}` });
+      expect(stickerNode.findByType(Image).props.source).toBe(`assets/art/arcade/${stickerThemes[id].game}.webp`);
+      expect(flat(stickerNode.props.style)?.borderColor).toBe(stickerThemes[id].ring);
+      expect(bookWrap.findByProps({ testID: `sticker-charm-${id}` })).toBeDefined();
+      charms.add(stickerThemes[id].charm);
+      const found = person.stickers.includes(id);
+      expect(bookWrap.findByProps({ accessibilityLabel: `${stickerNames[id]}, ${found ? "collected" : "waiting in a chest"}` })).toBeDefined();
+    }
+    expect(charms.size).toBe(stickerIds.length);
+    // Zero legacy flat SVG mascot viewBoxes (ReefFish/Shell 160×160 or flat 100×100 stickers) remain inside StickerBook
+    const bookSvgs = bookWrap.findAll(n => String(n.type) === "Svg");
+    expect(bookSvgs.every(svg => svg.props.viewBox === "0 0 28 28")).toBe(true);
+
     const dressHeading = root!.root.find(n => n.type === Text && textOf(n) === "Dress Poko");
     expect(flat(dressHeading.props.style)?.fontFamily).toBe(theme.fontFamily["800"]);
     expect(flat(dressHeading.props.style)?.fontWeight).toBe("normal");
+  });
+
+  it("renders StickerArt standalone with illustrated WebP art and zero legacy flat SVG mascots", async () => {
+    for (const id of stickerIds) {
+      await act(async () => { root = TestRenderer.create(<StickerArt id={id} size={84} />); });
+      const img = root!.root.findByType(Image);
+      expect(img.props.source).toBe(`assets/art/arcade/${stickerThemes[id].game}.webp`);
+      const svgs = root!.root.findAll(n => String(n.type) === "Svg");
+      expect(svgs).toHaveLength(1);
+      expect(svgs[0].props.viewBox).toBe("0 0 28 28");
+      await act(async () => { root!.unmount(); });
+      root = undefined;
+    }
+  });
+
+  it("emphasizes Try again / Play again with coral primary fill and espresso ink when Next level is absent", async () => {
+    fonts.loaded = true;
+    const canoe = arcadeGames.find(g => g.id === "canoe-cargo")!;
+    await act(async () => {
+      root = TestRenderer.create(<StoreProvider><ArcadeGameScreen game={canoe} /></StoreProvider>);
+    });
+    await act(async () => { root!.root.findByProps({ testID: "level-w1-1" }).props.onPress(); });
+    const startDock = root!.root.findByProps({ testID: "arcade-start-dock" });
+    await act(async () => { startDock.findAll(n => typeof n.props.onPress === "function")[0].props.onPress(); });
+    await act(async () => { root!.root.findByProps({ testID: "teach-play" }).props.onTouchEnd(); });
+
+    // Game over result -> Try again is the primary coral CTA with espresso ink
+    const board = root!.root.findAll(n => String(n.type) === "mock-board")[0];
+    await act(async () => {
+      board.props.onResult({ cleared: false, stars: 0, score: 60, detail: "Board filled up." });
+    });
+    const resultScreen = root!.root.findByProps({ testID: "arcade-result-screen" });
+    const tryAgainBtn = resultScreen.find(n => String(n.type) === "Pressable" && n.props.accessibilityRole === "button" && textOf(n) === "Try again");
+    expect(flat(tryAgainBtn.props.style)?.backgroundColor).toBe(theme.colors.coral);
+    const tryAgainText = tryAgainBtn.findByType(Text);
+    expect(flat(tryAgainText.props.style)?.color).toBe(theme.colors.frame);
+    const mapBtn = resultScreen.find(n => String(n.type) === "Pressable" && n.props.accessibilityRole === "button" && textOf(n) === "Map");
+    expect(flat(mapBtn.props.style)?.backgroundColor).toBe("#FFFDF8");
+
+    // Stopped result -> Play again is also the primary coral CTA with espresso ink
+    await act(async () => { tryAgainBtn.props.onPress(); });
+    const board2 = root!.root.findAll(n => String(n.type) === "mock-board")[0];
+    await act(async () => {
+      board2.props.onResult({ cleared: false, outcome: "stopped", stars: 0, score: 80, detail: "Stopped early." });
+    });
+    const resultScreen2 = root!.root.findByProps({ testID: "arcade-result-screen" });
+    const playAgainPrimary = resultScreen2.find(n => String(n.type) === "Pressable" && n.props.accessibilityRole === "button" && textOf(n) === "Play again");
+    expect(flat(playAgainPrimary.props.style)?.backgroundColor).toBe(theme.colors.coral);
+    expect(flat(playAgainPrimary.findByType(Text).props.style)?.color).toBe(theme.colors.frame);
   });
 
   it("renders LevelMap compactly at 320×568 with a single coral Play · W1-1 primary CTA", async () => {

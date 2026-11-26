@@ -67,11 +67,10 @@ export function StickerBook({ person }: { person: ArcadeLearner }) {
                 >
                   <View
                     style={{
-                      opacity: found ? 1 : 0.28,
+                      opacity: found ? 1 : 0.32,
+                      padding: 3,
+                      borderRadius: 50,
                       backgroundColor: found ? "#FFF6DF" : CREAM,
-                      borderRadius: 48,
-                      borderWidth: 2,
-                      borderColor: found ? "#F0D594" : BORDER,
                     }}
                   >
                     <StickerArt id={id} size={84} />
