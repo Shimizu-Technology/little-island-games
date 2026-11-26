@@ -7,6 +7,7 @@ import type { PackedOpen } from '../../cove/catalog';
 import { wordSearchAdapter } from './adapter';
 import { searchEngine, type Action, type Initial, type State } from './game';
 import type { SearchPuzzle } from './core';
+import { searchTier } from './tiers';
 const Board = lazy(() => import('./WordSearchBoard').then(m => ({ default: m.WordSearchBoard })));
 export type SearchBank = { slot: number; first: number; count: number; packHash: string; rules: number; band: string; title: string; tier: 1 | 2 | 3 | 4 | 5 | 6 };
 export function defineWordSearch(banks: readonly SearchBank[], puzzles: readonly Puzzle<SearchPuzzle>[] = [], loader?: PackedReplay<SearchPuzzle>['loader'], codec = 'word-search-v1') {
@@ -27,7 +28,7 @@ export function defineWordSearch(banks: readonly SearchBank[], puzzles: readonly
       const b=banks.find(b=>b.slot===bank);if(!b || !Number.isInteger(index) || index<0 || index>=b.count)throw Error('Unknown puzzle.');
       const d=await (loader??bankLoader)().entry(wordSearchAdapter(),'word-search',b.first+index);await entry.packed!.prepare(d.ref);return d.ref;
     },
-    describe: (bank: number) => {const b=banks.find(b=>b.slot===bank);return b ? {size:b.tier<=3?`${[6,8,10][b.tier-1]}×${[6,8,10][b.tier-1]}`:'Large grid',summary:b.tier===1?'Pictures and recordings, across and down.':b.tier>=5?'All directions, with look-alike trails.':'Themes and straight-line hunts.'}:undefined;},
+    describe: (bank: number) => {const b=banks.find(b=>b.slot===bank),t=b&&searchTier(b.tier);return b&&t?{size:t.size?`${t.size}×${t.size}`:'Large grid',summary:t.directions}:undefined;},
     hiddenRows: async (bank: number, hidden: readonly string[]) => {const b=entry.catalog.banks.get(bank),wanted=new Set(hidden),rows=new Set<number>();if(!b)return rows;for(let i=0;i<('count' in b?b.count:0);i++)if(wanted.has(await (loader??bankLoader)().savedHash(b as never,i)))rows.add(i);return rows;},
     chooseVisible: async (bank: number, progress: import('../../state/challenge').ChallengeProgress, skip: ReadonlySet<number>, avoid?: import('../../state/challenge').PuzzleRef) => {
       const b=banks.find(b=>b.slot===bank);if(!b)throw Error('Unknown bank.');const codes=unpack(progress.banks.find(([s])=>s===bank)?.[1]??'',b.count,3)??Array<number>(b.count).fill(0);
