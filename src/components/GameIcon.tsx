@@ -1,7 +1,9 @@
 import { additionalArt } from '../learn/generated/art';
 import { learnIds, type LearnId } from '../learn/types';
 import React from "react";
+import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
+import { ArcadeArt, hasArcadeArt } from "../art/illustrated";
 import type { ShelfId } from "../learn/home";
 
 // Original activity silhouettes. Keep one 100-unit canvas and a 3-unit outline:
@@ -111,10 +113,21 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
   }
 }
 function Tile({ size, surface, children }: { size: number; surface: string; children: React.ReactNode }) { return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Rect x={3} y={3} width={94} height={94} rx={23} fill={surface} stroke={ink} strokeWidth={3}/><G stroke={ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">{children}</G></Svg>; }
-/** Decorative inside a labelled game control; never adds a second screen-reader stop. */
 /** Whether a game has its own picture here; the rest show a plain "?" tile, so a caller can choose another motif. */
-export const hasGameArt = (id: string) => !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
-export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) { const Art=!surfaces[id]&&learnIds.includes(id as LearnId)?additionalArt[id as LearnId]:undefined;return Art?<Art size={size}/>:<Tile size={size} surface={surfaces[id]??cream}><Scene id={id}/></Tile>; }
+export const hasGameArt = (id: string) => hasArcadeArt(id) || !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
+/** Decorative inside a labelled game control; never adds a second screen-reader stop. */
+export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) {
+  const surface = surfaces[id];
+  if (hasArcadeArt(id)) {
+    return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, borderWidth: 1, borderColor: "#3D2B2433",
+        backgroundColor: surface ?? cream, alignItems: "center", justifyContent: "center" }}>
+      <ArcadeArt id={id} size={size * 0.92}/>
+    </View>;
+  }
+  const Art = !surface && learnIds.includes(id as LearnId) ? additionalArt[id as LearnId] : undefined;
+  return Art ? <Art size={size}/> : <Tile size={size} surface={surface ?? cream}><Scene id={id}/></Tile>;
+}
 export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?: number }) {
   const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "pattern-path", coding: "beep-bot", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
   if (island === "reading") return <Tile size={size} surface="#DFE8F4"><Book/></Tile>;
