@@ -71,11 +71,15 @@ export function mapLayout(width: number, height: number, fontScale = 1) {
   const verticalLimits = [rowBaselines[0] - topPad];
   for (let i = 1; i < rowBaselines.length; i++) verticalLimits.push(rowBaselines[i] - rowBaselines[i - 1] - labelHeight - gapY);
   const maxArtHeight = Math.max(44, Math.min(...verticalLimits));
-  const artWidth = Math.max(44, Math.min(maxArtWidthFromWidth, maxArtHeight / ART_ASPECT));
+  // Reserve a 30pt central corridor for the resting guide, independently of row height.
+  const horizontalBudget = wide ? Math.min(maxArtWidthFromWidth, minColDx - Math.min(96, width * .24, height * .20) * .607 - 8) : Math.min(maxArtWidthFromWidth, ...positioned.map(p => 2 * (Math.abs(p.x * width - width / 2) - 15)));
+  const labelWidth = Math.max(44, horizontalBudget);
+  const labelFontSize = width < 360 ? 12 : 14;
+  const artWidth = Math.max(44, Math.min(horizontalBudget, maxArtHeight / ART_ASPECT));
   const artHeight = artWidth * ART_ASPECT;
   return { wide, artWidth, artHeight, labelHeight, targets: positioned.map(place => ({ ...place,
     left: place.x * width - artWidth / 2, top: place.baseline - artHeight,
-    width: artWidth, height: artHeight + labelHeight,
+    width: artWidth, labelWidth, labelFontSize, height: artHeight + labelHeight,
     door: { x: place.x * width, y: place.baseline - artHeight * .09 },
   })) };
 }

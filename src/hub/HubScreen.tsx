@@ -43,11 +43,12 @@ export default function HubScreen() {
  const dockWrap = (width < 380 || fontScale >= 1.35) && dockCount >= 3;
  // Measure the actual flex viewport: header, dock, safe areas and save banners
  // can all change height with text size or saved Continue buttons.
- const [availableHeight, setAvailableHeight] = useState(0);
+ const [viewport, setViewport] = useState({ w: 0, h: 0, available: 0 });
  const headerHeight = stackHeader ? 109 : 59;
  const dockHeight = dockWrap ? 142 : 81;
  const fallbackHeight = height - insets.top - insets.bottom - headerHeight - dockHeight;
- const sceneHeight = Math.max(availableHeight || fallbackHeight, fontScale >= 1.25 ? 590 : 0);
+ const availableHeight = viewport.w === width && viewport.h === height ? viewport.available : 0;
+ const sceneHeight = Math.max(availableHeight || fallbackHeight, fontScale >= 1.25 ? 590 : width > height ? 245 : 355);
  const arrive = useCallback((place: PlaceId) => { setDoor(place); router.push(placeRoute(place)); }, []);
  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Heading>Getting your island ready…</Heading></SafeAreaView>;
  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Recovery/></SafeAreaView>;
@@ -85,7 +86,7 @@ export default function HubScreen() {
    </View>
   )}
   <SaveStatus/>
-  <ScrollView onLayout={event => setAvailableHeight(event.nativeEvent.layout.height)} style={{ flex: 1, backgroundColor: '#1F8EA0' }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
+  <ScrollView onLayout={event => setViewport({ w: width, h: height, available: event.nativeEvent.layout.height })} style={{ flex: 1, backgroundColor: '#1F8EA0' }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
    <IslandScene width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear} door={door} onArrive={arrive}/>
   </ScrollView>
   <CovePersonResume/>

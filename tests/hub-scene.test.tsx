@@ -176,7 +176,7 @@ describe('shared sandy footpaths and guide waypoints', () => {
 
    const pillStyle = pill.props.style as { minHeight: number; paddingHorizontal: number; paddingVertical: number; borderWidth: number };
    const textStyle = (Array.isArray(text.props.style) ? Object.assign({}, ...text.props.style) : text.props.style) as { fontSize: number; lineHeight: number };
-   const innerWidth = target.width - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
+   const innerWidth = target.labelWidth - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
    const drawnFontSize = textStyle.fontSize * effectiveScale;
    const drawnLineHeight = textStyle.lineHeight * effectiveScale;
 
@@ -206,4 +206,16 @@ describe('wide horizontal crossroads', () => {
    expect(start.x-size*.303 < target.left+target.width && target.left < start.x+size*.304 && start.y-size < target.top+target.height && target.top < start.y).toBe(false);
   }
  });
+ it.each([[1024, 627], [844, 249], [568, 245], [390, 653], [320, 377]])('keeps the resting guide clear of label pills at %s×%s', (width, height) => {
+  const layout = mapLayout(width, height);
+  const start = guideStartPoint(layout, width, height);
+  const gap = layout.wide ? Infinity : Math.min(...layout.targets.filter(t => t.x > .5).map(t => t.x * width - t.labelWidth / 2)) - Math.max(...layout.targets.filter(t => t.x < .5).map(t => t.x * width + t.labelWidth / 2));
+  const size = Math.max(28, Math.min(96, width * .24, height * .20, (gap - 8) / .607));
+  for (const t of layout.targets) {
+   const horizontal = Math.min(start.x + size * .304, t.x * width + t.labelWidth / 2) - Math.max(start.x - size * .303, t.x * width - t.labelWidth / 2);
+   const vertical = Math.min(start.y, t.top + t.height) - Math.max(start.y - size, t.baseline);
+   expect(Math.max(0, horizontal) * Math.max(0, vertical)).toBe(0);
+  }
+ });
+
 });
