@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, memo, useMemo, useState } from "react";
-import { AccessibilityInfo, View, Platform, type ViewStyle } from "react-native";
+import { AccessibilityInfo, View, Platform, type GestureResponderEvent, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { HeartsHud, HitReaction } from "../../LivesHud";
 import { GridFeedback } from "../grid/Feedback";
@@ -26,7 +26,9 @@ import {
   useRailFeedback,
 } from "./RailMotion";
 import {
+  RAIL_COLS,
   RAIL_LEARN_MOVE,
+  RAIL_ROWS,
   railHedges,
   railWaiting,
   railBodyPose,
@@ -44,8 +46,39 @@ import {
 
 const tick: RailInput = { type: "tick" };
 
+type AriaLabelHost = { setAttribute?: (name: string, value: string) => void };
+
 function railGoalStars(s: RailState) {
   return railStars({ ...s, phase: "cleared" });
+}
+
+function railPlayfieldLabel(s: RailState) {
+  const learning = railLearning(s);
+  const target = railTarget(s);
+  const sequence = s.level !== "endless" ? s.level.sequence : [];
+  const next = sequence[s.collected];
+  const atNest = !learning && target !== Infinity && s.collected >= target - 1;
+  const targetName = learning ? `Tile ${next ?? "finish"}` : atNest ? "Nest" : "Mango";
+  const objective = learning
+    ? `Find ${next ?? "the finish"}`
+    : atNest
+      ? "Reach the cozy nest"
+      : "Collect the mango";
+  return `Garden playfield. Rilla at column ${s.body[0].x + 1}, row ${s.body[0].y + 1}. ${targetName} at column ${s.food.x + 1}, row ${s.food.y + 1}. ${s.moves} steps, ${s.collected} collected, ${s.bumps} bumps. ${objective}.${s.message ? ` ${s.message}` : ""}`;
+}
+
+function railPlayfieldLabelChanged(before: RailState | null, after: RailState) {
+  return (
+    !before ||
+    before.body[0]?.x !== after.body[0]?.x ||
+    before.body[0]?.y !== after.body[0]?.y ||
+    before.food.x !== after.food.x ||
+    before.food.y !== after.food.y ||
+    before.moves !== after.moves ||
+    before.collected !== after.collected ||
+    before.bumps !== after.bumps ||
+    before.message !== after.message
+  );
 }
 
 function railHudChanged(before: RailState, after: RailState, screenReader = false) {
@@ -103,6 +136,9 @@ export function RailBoard({
   const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
 
   useEffect(() => {
+    // React Native Web 0.21.4 resolves isScreenReaderEnabled() to true unconditionally for all visitors.
+    // Keep native VoiceOver/TalkBack subscribed to React commits; on web, update DOM aria-label directly via ref.
+    if (Platform.OS === "web") return;
     let live = true;
     const query = AccessibilityInfo?.isScreenReaderEnabled?.();
     if (query && typeof query.then === "function") {
@@ -129,10 +165,28 @@ export function RailBoard({
   );
   const poses = useSharedValue<SpritePose[]>([]);
   const reduced = useReducedMotion();
-  const unit = (size - 6) / 10;
+  const unit = (size - 6) / RAIL_COLS;
   const heroSize = unit * 1.14;
   const chickSize = unit * 0.96;
   const feedback = useRailFeedback(initial, active, reduced, onTone);
+  const observeFeedback = feedback.observe;
+  const playfieldRef = useRef<View | null>(null);
+  const lastAriaState = useRef<RailState | null>(null);
+  const syncWebPlayfieldLabel = useCallback((current: RailState, force = false) => {
+    if (Platform.OS !== "web") return;
+    const node = playfieldRef.current as AriaLabelHost | null;
+    if (!node || typeof node.setAttribute !== "function") return;
+    if (!force && !railPlayfieldLabelChanged(lastAriaState.current, current)) return;
+    lastAriaState.current = current;
+    node.setAttribute("aria-label", railPlayfieldLabel(current));
+  }, []);
+  const observeFrame = useCallback(
+    (current: RailState) => {
+      observeFeedback(current);
+      syncWebPlayfieldLabel(current);
+    },
+    [observeFeedback, syncWebPlayfieldLabel]
+  );
   const clearVisual = useRef<{ state: RailState | null; started: number }>({ state: null, started: 0 });
   const facing = useRef<{ hit: number; left: boolean[]; length: number }>({
     hit: initial.lives.hit,
@@ -211,10 +265,12 @@ export function RailBoard({
         const verticalPitch = moving && dy !== 0 ? (dy < 0 ? -0.045 : 0.045) * (isLeft ? -1 : 1) : 0;
         const hopLift = bounce * unit * (i === 0 ? 0.08 : 0.06);
         const baseScale = i === 0 ? 1 : 0.94;
+        const cellX = Math.max(0, Math.min(RAIL_COLS - 1, p.x));
+        const cellY = Math.max(0, Math.min(RAIL_ROWS - 1, p.y));
         return {
           identity: s.lives.hit,
-          x: (p.x + 0.5) * unit - spriteSize / 2,
-          y: (p.y + 0.5) * unit - spriteSize / 2 - hopLift,
+          x: (cellX + 0.5) * unit - spriteSize / 2,
+          y: (cellY + 0.5) * unit - spriteSize / 2 - hopLift,
           opacity: 1,
           angle: waddle + verticalPitch,
           scale: baseScale + bounce * (i === 0 ? 0.04 : 0.03),
@@ -241,9 +297,10 @@ export function RailBoard({
     [chickSize, heroSize, reduced, unit]
   );
 
+  const liveScreenReader = Platform.OS !== "web" && screenReaderEnabled;
   const shouldPublish = useCallback(
-    (before: RailState, after: RailState) => railHudChanged(before, after, screenReaderEnabled),
-    [screenReaderEnabled]
+    (before: RailState, after: RailState) => railHudChanged(before, after, liveScreenReader),
+    [liveScreenReader]
   );
   const pose = useMemo(() => ({ build, target: poses, snapDistance: unit * 2 }), [build, poses, unit]);
   const {
@@ -258,14 +315,14 @@ export function RailBoard({
     input: tick,
     active,
     pose,
-    onFrame: feedback.observe,
+    onFrame: observeFrame,
     shouldPublish,
     measureBudget: debug,
   });
   const reported = useRef(false);
   const cleared = s.phase === "cleared";
 
-  const releaseTouch = useCallback(() => {
+  const clearTouchHold = useCallback(() => {
     if (!touchHeld.current) return;
     touchHeld.current = false;
     const pending = readyResult.current;
@@ -278,11 +335,28 @@ export function RailBoard({
     if (cleared) setTouchReleases((count) => count + 1);
   }, [cleared]);
 
+  const handleTouchStart = useCallback((event?: GestureResponderEvent) => {
+    const activeTouches = event?.nativeEvent?.touches?.length;
+    touchHeld.current = activeTouches === undefined ? true : activeTouches > 0;
+  }, []);
+
+  const handleTouchRelease = useCallback(
+    (event?: GestureResponderEvent) => {
+      const remainingTouches = event?.nativeEvent?.touches?.length ?? 0;
+      if (remainingTouches > 0) {
+        touchHeld.current = true;
+        return;
+      }
+      clearTouchHold();
+    },
+    [clearTouchHold]
+  );
+
   useEffect(() => {
-    if (Platform.OS !== "web") return;
-    window.addEventListener("blur", releaseTouch);
-    return () => window.removeEventListener("blur", releaseTouch);
-  }, [releaseTouch]);
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    window.addEventListener("blur", clearTouchHold);
+    return () => window.removeEventListener("blur", clearTouchHold);
+  }, [clearTouchHold]);
 
   useEffect(() => {
     if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper });
@@ -330,12 +404,11 @@ export function RailBoard({
   const hedges = useMemo(() => railHedges(initial), [initial]);
   const atNest = !learning && target !== Infinity && s.collected >= target - 1;
   const goalStars = railGoalStars(s);
-  const targetName = learning ? `Tile ${next ?? "finish"}` : atNest ? "Nest" : "Mango";
-  const objective = learning
-    ? `Find ${next ?? "the finish"}`
-    : atNest
-      ? "Reach the cozy nest"
-      : "Collect the mango";
+  const playfieldLabel = railPlayfieldLabel(s);
+  useLayoutEffect(() => {
+    if (Platform.OS !== "web") return;
+    syncWebPlayfieldLabel(state.current, state.current !== s);
+  }, [playfieldLabel, s, state, syncWebPlayfieldLabel]);
   const waitingVisible = feedback.waitingVisible;
   const earlyHintVisible = feedback.earlyHintVisible;
   const readyPromptStyle = useAnimatedStyle(() => ({ opacity: waitingVisible.value ? 1 : 0 }));
@@ -345,11 +418,9 @@ export function RailBoard({
   return (
     <View
       testID="rail-world"
-      onTouchStart={() => {
-        touchHeld.current = true;
-      }}
-      onTouchEnd={releaseTouch}
-      onTouchCancel={releaseTouch}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchRelease}
+      onTouchCancel={handleTouchRelease}
       style={{
         alignItems: "center",
         gap: 8,
@@ -425,9 +496,10 @@ export function RailBoard({
         )}
         <Shake event={s.bumps}>
           <View
+            ref={playfieldRef}
             {...pan}
             testID="rail-playfield"
-            accessibilityLabel={`Garden playfield. Rilla at column ${s.body[0].x + 1}, row ${s.body[0].y + 1}. ${targetName} at column ${s.food.x + 1}, row ${s.food.y + 1}. ${s.moves} steps, ${s.collected} collected, ${s.bumps} bumps. ${objective}.${s.message ? ` ${s.message}` : ""}`}
+            accessibilityLabel={playfieldLabel}
             style={{
               width: size,
               height: size,

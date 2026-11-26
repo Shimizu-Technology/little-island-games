@@ -1,12 +1,12 @@
 import React, { Profiler, useRef } from "react";
 import { readFileSync } from "node:fs";
-import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
+import { act, create, type ReactTestInstance, type ReactTestRenderer, type TestRendererOptions } from "react-test-renderer";
 import type { SharedValue } from "react-native-reanimated";
 import { afterEach, expect, it, vi } from "vitest";
 import { RailArt, RailFern } from "../src/arcade/games/grid/RailArt";
 import { COLLECT_MS, NEST_MS, RailCollectible } from "../src/arcade/games/rail-parade/RailMotion";
 import { RailBoard } from "../src/arcade/games/rail-parade/View";
-import { createRail, railLevel, type RailState } from "../src/arcade/games/rail-parade/engine";
+import { RAIL_COLS, RAIL_ROWS, createRail, railLevel, railTick, type RailState } from "../src/arcade/games/rail-parade/engine";
 import { illustrated, railActorFrame } from "../src/arcade/games/rail-parade/illustrated";
 import type { SpritePose } from "../src/arcade/poses";
 import type { Direction } from "../src/arcade/games/grid/rules";
@@ -17,6 +17,7 @@ const probe = vi.hoisted(() => ({
   reduced: vi.fn(() => false),
   timing: vi.fn(),
   move: undefined as ((d: Direction) => void) | undefined,
+  platform: "android" as "android" | "ios" | "web",
   screenReader: false,
   screenReaderListeners: new Set<(enabled: boolean) => void>(),
 }));
@@ -24,7 +25,11 @@ const probe = vi.hoisted(() => ({
 vi.mock("react-native", () => ({
   View: "View",
   Image: "Image",
-  Platform: { OS: "android" },
+  Platform: {
+    get OS() {
+      return probe.platform;
+    },
+  },
   AccessibilityInfo: {
     isScreenReaderEnabled: () => Promise.resolve(probe.screenReader),
     addEventListener: (_event: string, listener: (enabled: boolean) => void) => {
@@ -85,6 +90,7 @@ afterEach(async () => {
   tree = undefined;
   probe.poses = undefined;
   probe.move = undefined;
+  probe.platform = "android";
   probe.screenReader = false;
   probe.screenReaderListeners.clear();
   probe.reduced.mockReset().mockReturnValue(false);
@@ -168,7 +174,7 @@ it("renders illustrated RailArt, outfit badges, RailFern, and RailCollectible ac
 });
 
 const viewport = { size: 393, height: 740, wide: false };
-async function start(initial: RailState, reduced = false) {
+async function start(initial: RailState, reduced = false, options?: TestRendererOptions) {
   vi.useFakeTimers();
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   probe.reduced.mockReturnValue(reduced);
@@ -204,7 +210,8 @@ async function start(initial: RailState, reduced = false) {
           onResult={onResult}
           {...viewport}
         />
-      </Profiler>
+      </Profiler>,
+      options
     );
   });
   await frames(1);
@@ -580,6 +587,229 @@ it.each([false, true])(
       }
 
       expect(Math.abs(pose.x + inner.width / 2 - (edge.body[0].x + 0.5) * unit)).toBeLessThan(1e-6);
+
+      await act(async () => tree!.unmount());
+      tree = undefined;
+    }
+  }
+);
+
+it("keeps sighted web steps at zero React commits when isScreenReaderEnabled resolves true while updating DOM aria-label live", async () => {
+  probe.platform = "web";
+  probe.screenReader = true;
+  const blurListeners = new Set<() => void>();
+  vi.stubGlobal("window", {
+    addEventListener: (event: string, listener: () => void) => {
+      if (event === "blur") blurListeners.add(listener);
+    },
+    removeEventListener: (event: string, listener: () => void) => {
+      if (event === "blur") blurListeners.delete(listener);
+    },
+  });
+
+  const attrs = new Map<string, string>();
+  const setAttribute = vi.fn((name: string, value: string) => {
+    attrs.set(name, value);
+  });
+  const initial: RailState = {
+    ...createRail(railLevel("w2-1"), 120),
+    food: { x: 9, y: 0 },
+  };
+  const { frames, commits } = await start(initial, false, {
+    createNodeMock: (element) =>
+      (element.props as { testID?: string } | null)?.testID === "rail-playfield" ? { setAttribute } : null,
+  });
+  const baseline = commits.mock.calls.length;
+
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Rilla at column 3, row 8.");
+  expect(host("rail-playfield").props.accessibilityLabel).toContain("Mango at column 10, row 1.");
+  expect(attrs.get("aria-label")).toContain("Rilla at column 3, row 8.");
+
+  await act(async () => probe.move!("up"));
+  await frames(16);
+  expect(commits).toHaveBeenCalledTimes(baseline);
+  expect(attrs.get("aria-label")).toContain("Rilla at column 3, row 7.");
+  expect(attrs.get("aria-label")).toContain("1 steps");
+
+  await frames(16);
+  expect(commits).toHaveBeenCalledTimes(baseline);
+  expect(attrs.get("aria-label")).toContain("Rilla at column 3, row 6.");
+  expect(attrs.get("aria-label")).toContain("2 steps");
+});
+
+it("keeps clear result deferred across multi-touch until the last touch lifts and flushes once on web blur", async () => {
+  const level = railLevel("w1-1");
+  const atGoalNest: RailState = {
+    ...createRail(level, 120),
+    collected: level.target - 1,
+    score: (level.target - 1) * 40,
+    moves: 10,
+    food: { x: 3, y: 7 },
+  };
+  const run = await start(atGoalNest);
+
+  // Clear the level so the 320 ms celebration timer begins.
+  await act(async () => probe.move!("right"));
+  await run.frames(18);
+  expect(run.onResult).not.toHaveBeenCalled();
+
+  // Hold two touches across timer expiry.
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(120);
+    host("rail-world").props.onTouchStart({ nativeEvent: { touches: [{ identifier: 1 }] } });
+    host("rail-world").props.onTouchStart({ nativeEvent: { touches: [{ identifier: 1 }, { identifier: 2 }] } });
+  });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(300);
+  });
+  expect(run.onResult).not.toHaveBeenCalled();
+
+  // First touch lifts while second touch remains down: dialog MUST NOT open.
+  await act(async () => {
+    host("rail-world").props.onTouchEnd({ nativeEvent: { touches: [{ identifier: 2 }] } });
+  });
+  expect(run.onResult).not.toHaveBeenCalled();
+
+  // Cancelled extra touch while second touch still remains down: dialog MUST NOT open.
+  await act(async () => {
+    host("rail-world").props.onTouchCancel({ nativeEvent: { touches: [{ identifier: 2 }] } });
+  });
+  expect(run.onResult).not.toHaveBeenCalled();
+
+  // Second (final) touch lifts: dialog opens immediately and exactly once.
+  await act(async () => {
+    host("rail-world").props.onTouchEnd({ nativeEvent: { touches: [] } });
+  });
+  expect(run.onResult).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ cleared: true }));
+
+  await act(async () => {
+    host("rail-world").props.onTouchCancel({ nativeEvent: { touches: [] } });
+    await vi.advanceTimersByTimeAsync(400);
+  });
+  expect(run.onResult).toHaveBeenCalledTimes(1);
+
+  await act(async () => tree!.unmount());
+  tree = undefined;
+
+  // Web blur forcefully clears an active multi-touch hold and flushes once.
+  probe.platform = "web";
+  const blurListeners = new Set<() => void>();
+  vi.stubGlobal("window", {
+    addEventListener: (event: string, listener: () => void) => {
+      if (event === "blur") blurListeners.add(listener);
+    },
+    removeEventListener: (event: string, listener: () => void) => {
+      if (event === "blur") blurListeners.delete(listener);
+    },
+  });
+  const webRun = await start(atGoalNest);
+  await act(async () => probe.move!("right"));
+  await webRun.frames(18);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(120);
+    host("rail-world").props.onTouchStart({ nativeEvent: { touches: [{ identifier: 1 }, { identifier: 2 }] } });
+  });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(300);
+  });
+  expect(webRun.onResult).not.toHaveBeenCalled();
+
+  await act(async () => {
+    for (const listener of blurListeners) listener();
+  });
+  expect(webRun.onResult).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ cleared: true }));
+
+  await act(async () => {
+    for (const listener of blurListeners) listener();
+    host("rail-world").props.onTouchEnd({ nativeEvent: { touches: [] } });
+    await vi.advanceTimersByTimeAsync(400);
+  });
+  expect(webRun.onResult).toHaveBeenCalledTimes(1);
+});
+
+it.each([false, true])(
+  "bounds leader presentation pose inside [0, cols - 1] and [0, rows - 1] when projecting outward before a wall bump (%s)",
+  async (reduced) => {
+    const level = railLevel("w2-1");
+    const boardSize = viewport.size - 12;
+    const unit = (boardSize - 6) / RAIL_COLS;
+    const base = createRail(level, 120);
+    const stepElapsed = railTick(base) * 0.85;
+
+    for (const scenario of [
+      {
+        body: [
+          { x: 0, y: 7 },
+          { x: 1, y: 7 },
+          { x: 2, y: 7 },
+        ],
+        direction: "left" as const,
+        expectedX: 0,
+        expectedY: 7,
+      },
+      {
+        body: [
+          { x: 9, y: 7 },
+          { x: 8, y: 7 },
+          { x: 7, y: 7 },
+        ],
+        direction: "right" as const,
+        expectedX: RAIL_COLS - 1,
+        expectedY: 7,
+      },
+      {
+        body: [
+          { x: 4, y: 0 },
+          { x: 4, y: 1 },
+          { x: 4, y: 2 },
+        ],
+        direction: "up" as const,
+        expectedX: 4,
+        expectedY: 0,
+      },
+      {
+        body: [
+          { x: 4, y: 9 },
+          { x: 4, y: 8 },
+          { x: 4, y: 7 },
+        ],
+        direction: "down" as const,
+        expectedX: 4,
+        expectedY: RAIL_ROWS - 1,
+      },
+    ]) {
+      const initial: RailState = {
+        ...base,
+        body: scenario.body,
+        previous: scenario.body,
+        direction: scenario.direction,
+        moves: 3,
+        elapsed: stepElapsed,
+        food: { x: 5, y: 3 },
+      };
+      const { frames } = await start(initial, reduced);
+
+      for (const stepCount of [0, 1]) {
+        if (stepCount > 0) await frames(stepCount);
+        const pose = probe.poses!.value[0];
+        const inner = styles(host("rail-rilla-body"));
+        const centerCellX = (pose.x + inner.width / 2) / unit - 0.5;
+        const centerCellY = (pose.y + inner.height / 2) / unit - 0.5;
+
+        expect(centerCellX).toBeGreaterThanOrEqual(0);
+        expect(centerCellX).toBeLessThanOrEqual(RAIL_COLS - 1);
+        expect(centerCellX).toBeCloseTo(scenario.expectedX, 6);
+
+        if (reduced) {
+          expect(centerCellY).toBeGreaterThanOrEqual(0);
+          expect(centerCellY).toBeLessThanOrEqual(RAIL_ROWS - 1);
+          expect(centerCellY).toBeCloseTo(scenario.expectedY, 6);
+        } else {
+          // Only vertical hop lift (<= 0.08 cell) offsets Y from the clamped legal cell center.
+          expect(centerCellY).toBeLessThanOrEqual(scenario.expectedY + 1e-6);
+          expect(centerCellY).toBeGreaterThanOrEqual(scenario.expectedY - 0.08 - 1e-6);
+        }
+      }
 
       await act(async () => tree!.unmount());
       tree = undefined;
