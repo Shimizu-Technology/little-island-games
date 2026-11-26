@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { BadgeArt } from "../badges/BadgeArt";
 import { badgeInfo, progressForBadge, trackLabels, tracks, type BadgeId } from "../badges/engine";
@@ -36,17 +36,28 @@ export function HomeBadgesSheet({
   initialBadge,
 }: HomeBadgesSheetProps) {
   const [selected, setSelected] = useState<BadgeId | undefined>(initialBadge);
+  const latestData = useRef({ badges, milestones });
+  useLayoutEffect(() => {
+    latestData.current = { badges, milestones };
+  });
+  const initializedIntent = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!visible) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncs deep-link badge selection when sheet opens.
+    if (!visible) {
+      initializedIntent.current = null;
+      return;
+    }
+    const intent = initialBadge ?? "__bare__";
+    if (initializedIntent.current === intent) return;
+    initializedIntent.current = intent;
     setSelected(initialBadge);
     if (initialBadge) {
+      const { badges: currentBadges, milestones: currentMilestones } = latestData.current;
       AccessibilityInfo.announceForAccessibility?.(
-        badgeAnnouncement(initialBadge, badges.includes(initialBadge), milestones)
+        badgeAnnouncement(initialBadge, currentBadges.includes(initialBadge), currentMilestones)
       );
     }
-  }, [visible, initialBadge, badges, milestones]);
+  }, [visible, initialBadge]);
 
   const selectBadge = (id: BadgeId) => {
     setSelected(id);
@@ -122,6 +133,7 @@ export function HomeBadgesSheet({
                       accessibilityRole="button"
                       accessibilityLabel={`${info.name}. ${earned ? "Earned" : "Not earned yet"}. ${info.rule}`}
                       accessibilityState={{ selected: active }}
+                      {...({ "aria-pressed": active } as object)}
                       onPress={() => selectBadge(id)}
                       style={[
                         styles.frame,

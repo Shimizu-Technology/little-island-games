@@ -3,32 +3,51 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from "rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultLook, type IslanderLook } from "../src/islander/look";
 import { starterHome } from "../src/home/model";
+import { buildingLayout, roomOrigin } from "../src/home/camera";
 import { roomIds } from "../src/home/catalogMore";
+import { buildScene } from "../src/home/scene/graph";
 import { tracks, badgeInfo } from "../src/badges/engine";
 import { lockedReason, styleCatalog } from "../src/personalization/catalog";
 import { emptySave } from "../src/state/validation";
 import { starterPerson } from "../src/personalization/model";
 import { theme } from "../src/ui/theme";
+import IslandHomeRoute from "../src/app/island-home";
+import LockerRoute from "../src/app/locker";
+import BadgesRoute from "../src/app/badges";
+import { HomeClosetSheet, closetSheetMetrics, nextClosetTabIndex } from "../src/home/HomeClosetSheet";
+import { HomeBadgesSheet } from "../src/home/HomeBadgesSheet";
+import { closetAboveSheetHeight, closetCameraFor } from "../src/home/HomeScreen";
 
 const env = vi.hoisted(() => ({
+  os: "ios" as "ios" | "android" | "web",
   window: { width: 393, height: 852, fontScale: 1 },
   reduced: false,
   params: {} as Record<string, string | string[] | undefined>,
   canGoBack: false,
   back: vi.fn(),
   replace: vi.fn(),
+  dismissTo: undefined as undefined | ReturnType<typeof vi.fn>,
   push: vi.fn(),
   announce: vi.fn(),
+  sendA11yFocus: vi.fn(),
   withTiming: vi.fn((v: number) => v),
   withSpring: vi.fn((v: number) => v),
+  backHandlers: [] as (() => boolean)[],
+  interactionOpts: null as any,
+  animateCamera: vi.fn(),
+  cameraSet: vi.fn(),
+  dropZonesSet: vi.fn(),
   store: {
     ready: true,
     recovery: null as unknown,
     epoch: 1,
+    saving: false,
+    error: null as string | null,
     save: {} as any,
     personalize: vi.fn(),
   },
   sceneProps: null as any,
+  saveStatusVisible: false,
 }));
 
 const flat = (style: unknown): Record<string, any> =>
@@ -43,15 +62,31 @@ const flat = (style: unknown): Record<string, any> =>
 vi.mock("react-native", () => ({
   View: "View",
   Text: "Text",
+  TextInput: "TextInput",
   Pressable: "Pressable",
   ScrollView: "ScrollView",
   Modal: "Modal",
   FlatList: ({ data, renderItem }: any) => data.map((item: any) => renderItem({ item })),
-  Platform: { OS: "ios" },
+  Platform: {
+    get OS() {
+      return env.os;
+    },
+  },
+  BackHandler: {
+    addEventListener: (event: string, handler: () => boolean) => {
+      if (event === "hardwareBackPress") env.backHandlers.push(handler);
+      return {
+        remove: () => {
+          const i = env.backHandlers.indexOf(handler);
+          if (i >= 0) env.backHandlers.splice(i, 1);
+        },
+      };
+    },
+  },
   AppState: { addEventListener: () => ({ remove() {} }) },
   AccessibilityInfo: {
     announceForAccessibility: (...args: unknown[]) => env.announce(...args),
-    sendAccessibilityEvent: () => {},
+    sendAccessibilityEvent: (...args: unknown[]) => env.sendA11yFocus(...args),
   },
   PanResponder: { create: (cfg: object) => ({ panHandlers: cfg }) },
   Animated: { createAnimatedComponent: (c: unknown) => c, Value: class { constructor(public v: number) {} }, timing: () => ({ start: () => {} }) },
@@ -118,6 +153,9 @@ vi.mock("expo-router", () => ({
     canGoBack: () => env.canGoBack,
     back: (...args: unknown[]) => env.back(...args),
     replace: (...args: unknown[]) => env.replace(...args),
+    get dismissTo() {
+      return env.dismissTo;
+    },
     push: (...args: unknown[]) => env.push(...args),
   },
   useLocalSearchParams: () => env.params,
@@ -128,9 +166,14 @@ vi.mock("../src/components/motion", () => ({ useReducedMotion: () => env.reduced
 vi.mock("../src/components/sheetPresence", () => ({ useSheetPresence: () => {} }));
 vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
 vi.mock("../src/ui/icons", () => {
-  const glyph = (name: string) => () => React.createElement("Glyph", { name });
+  const glyph = (name: string) => {
+    const MockGlyph = () => React.createElement("Glyph", { name });
+    MockGlyph.displayName = name;
+    return MockGlyph;
+  };
   return Object.fromEntries(
     [
+      "ArrowClockwise",
       "ArrowCounterClockwise",
       "ArrowLeft",
       "BaseballCap",
@@ -141,18 +184,23 @@ vi.mock("../src/ui/icons", () => {
       "CoatHanger",
       "DotsThree",
       "LockSimple",
-      "Medal",
       "Pants",
       "PencilSimple",
       "Smiley",
       "Star",
       "Sunglasses",
       "TShirt",
+      "UsersThree",
       "X",
     ].map((n) => [n, glyph(n)])
   );
 });
-vi.mock("../src/components/SaveStatus", () => ({ SaveStatus: () => null }));
+vi.mock("../src/components/SaveStatus", () => ({
+  SaveStatus: () =>
+    env.saveStatusVisible
+      ? React.createElement("Pressable", { testID: "save-retry-button", accessibilityLabel: "Try saving again" }, "Try saving again")
+      : null,
+}));
 vi.mock("../src/components/Recovery", () => ({ Recovery: () => React.createElement("Recovery") }));
 vi.mock("../src/state/Store", () => ({ useStore: () => env.store }));
 vi.mock("../src/home/runtime/homeSound", () => ({
@@ -160,17 +208,20 @@ vi.mock("../src/home/runtime/homeSound", () => ({
 }));
 vi.mock("../src/home/runtime/useIdleCharacters", () => ({ useIdleCharacters: () => ({ sleeping: {}, wake: () => {} }) }));
 vi.mock("../src/home/runtime/useInteraction", () => ({
-  useInteraction: () => ({
-    isCurrent: () => true,
-    finish: () => {},
-    camera: { get: () => ({ a: 0.5, b: 0, c: 0, d: 0.5, tx: 0, ty: 0 }), set: () => {} },
-    slots: { get: () => [{}, {}] },
-    cancelAll: () => {},
-    animateCamera: () => {},
-    showHint: () => {},
-    dropZones: { set: () => {} },
-    veil: { value: 0 },
-  }),
+  useInteraction: (options: any) => {
+    env.interactionOpts = options;
+    return {
+      isCurrent: () => true,
+      finish: () => {},
+      camera: { get: () => options.initialCamera ?? { a: 0.5, b: 0, c: 0, d: 0.5, tx: 0, ty: 0 }, set: (...args: unknown[]) => env.cameraSet(...args) },
+      slots: { get: () => [{}, {}] },
+      cancelAll: () => {},
+      animateCamera: (...args: unknown[]) => env.animateCamera(...args),
+      showHint: () => {},
+      dropZones: { set: (...args: unknown[]) => env.dropZonesSet(...args) },
+      veil: { value: 0 },
+    };
+  },
 }));
 vi.mock("../src/home/runtime/SceneView", () => ({
   SceneView: (props: any) => {
@@ -206,21 +257,17 @@ vi.mock("../src/home/runtime/SetPieces", () => ({ SetPieces: () => null, pieceAt
 vi.mock("../src/home/runtime/StagingTray", () => ({ StagingTray: () => null }));
 vi.mock("../src/home/runtime/Destinations", () => ({ Destinations: () => null }));
 vi.mock("../src/home/runtime/DebugOverlay", () => ({ DebugOverlay: () => null }));
-vi.mock("../src/home/runtime/FriendDrawer", () => ({ FriendDrawer: () => null }));
-vi.mock("../src/home/runtime/HomePanels", () => ({ HomePanels: () => null }));
+vi.mock("../src/home/runtime/FriendDrawer", () => ({ FriendDrawer: (props: any) => (props.open ? React.createElement("FriendDrawer", { testID: "friend-drawer" }) : null) }));
 vi.mock("../src/home/runtime/CapacityCue", () => ({ CapacityCue: () => null, CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: "Put something away to make room." }));
 vi.mock("../src/home/runtime/UndoNote", () => ({ UndoNote: () => null, UndoGonePicture: () => null }));
 vi.mock("../src/home/art/Items", () => ({ ItemArt: () => null }));
 vi.mock("../src/home/art/More", () => ({ MoreItemArt: () => null }));
 
-import IslandHomeRoute from "../src/app/island-home";
-import LockerRoute from "../src/app/locker";
-import BadgesRoute from "../src/app/badges";
-import { HomeClosetSheet } from "../src/home/HomeClosetSheet";
-import { HomeBadgesSheet } from "../src/home/HomeBadgesSheet";
-
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-vi.stubGlobal("requestAnimationFrame", () => 1);
+vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+  cb(0);
+  return 1;
+});
 vi.stubGlobal("cancelAnimationFrame", () => {});
 
 let root: ReactTestRenderer | undefined;
@@ -232,30 +279,42 @@ function setupStore(overrides: {
   earned?: string[];
   unseen?: string[];
   milestones?: string[];
+  currentRoom?: "home" | "kitchen" | "treehouse" | "beach";
+  activeLearner?: string;
+  epoch?: number;
+  saving?: boolean;
+  error?: string | null;
 } = {}) {
   const base = emptySave();
+  const home = starterHome();
+  if (overrides.currentRoom) home.current = overrides.currentRoom;
   const person = {
     ...starterPerson(true),
-    home: starterHome(),
+    home,
     look: overrides.look ?? { ...defaultLook },
     earned: overrides.earned ?? [],
     unseen: overrides.unseen ?? [],
     milestones: overrides.milestones ?? [],
   };
+  const active = overrides.activeLearner ?? "family";
   env.store.ready = overrides.ready ?? true;
   env.store.recovery = overrides.recovery ?? null;
-  env.store.epoch = 1;
+  env.store.epoch = overrides.epoch ?? 1;
+  env.store.saving = overrides.saving ?? false;
+  env.store.error = overrides.error ?? null;
   env.store.save = {
     ...base,
-    personalization: { version: 1, catalogVersion: 1, people: { family: person } },
+    learning: { version: 1, active, people: [{ id: active, name: active }] },
+    personalization: { version: 1, catalogVersion: 1, people: { [active]: person } },
   };
   env.store.personalize = vi.fn((patch: Record<string, unknown>) => {
-    const current = env.store.save.personalization.people.family;
+    const owner = env.store.save.learning?.active ?? "family";
+    const current = env.store.save.personalization.people[owner];
     env.store.save = {
       ...env.store.save,
       personalization: {
         ...env.store.save.personalization,
-        people: { family: { ...current, ...patch } },
+        people: { ...env.store.save.personalization.people, [owner]: { ...current, ...patch } },
       },
     };
     return true;
@@ -269,17 +328,26 @@ const hostById = (node: ReactTestInstance, testID: string) =>
 
 beforeEach(() => {
   vi.useFakeTimers();
+  env.os = "ios";
   env.window = { width: 393, height: 852, fontScale: 1 };
   env.reduced = false;
   env.params = {};
   env.canGoBack = false;
+  env.dismissTo = undefined;
   env.back.mockReset();
   env.replace.mockReset();
   env.push.mockReset();
   env.announce.mockReset();
+  env.sendA11yFocus.mockReset();
   env.withTiming.mockClear();
   env.withSpring.mockClear();
+  env.animateCamera.mockReset();
+  env.cameraSet.mockReset();
+  env.dropZonesSet.mockReset();
+  env.backHandlers.length = 0;
+  env.interactionOpts = null;
   env.sceneProps = null;
+  env.saveStatusVisible = false;
   setupStore();
 });
 
@@ -320,23 +388,78 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
     expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
   });
 
-  it("/locker lands on My Home with Closet open; closing returns to Home room first, then Back returns to Map", async () => {
+  it("/locker lands on My Home with Closet open; first Back closes Closet, second Back reaches Map (never back to a game)", async () => {
+    env.canGoBack = true; // e.g., Reward "Try it on" pushed from a game.
+    env.dismissTo = vi.fn();
     await act(async () => { root = create(<LockerRoute />); });
     expect(root!.root.findAllByProps({ testID: "live-room-scene" })).toHaveLength(1);
     expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(1);
 
-    // Dismissing the landed Closet sheet returns to the Home room first (does not navigate away).
-    const closeBtn = root!.root.findByProps({ accessibilityLabel: "Close closet" });
-    await act(async () => closeBtn.props.onPress());
+    // P1-1: First top-left Back closes the active Closet sheet and keeps the user on Home.
+    await act(async () => root!.root.findByProps({ testID: "home-back-button" }).props.onPress());
     await act(async () => { vi.advanceTimersByTime(250); });
     expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
     expect(root!.root.findAllByProps({ testID: "live-room-scene" })).toHaveLength(1);
     expect(env.back).not.toHaveBeenCalled();
+    expect(env.dismissTo).not.toHaveBeenCalled();
     expect(env.replace).not.toHaveBeenCalled();
 
-    // Back from the Home room returns to the Map.
+    // P1-1: Second Back routes cleanly to "/" (Map), never calling router.back() into a game.
     await act(async () => root!.root.findByProps({ testID: "home-back-button" }).props.onPress());
-    expect(env.replace).toHaveBeenCalledWith("/");
+    expect(env.dismissTo).toHaveBeenCalledWith("/");
+    expect(env.back).not.toHaveBeenCalled();
+  });
+
+  it("P1-1: Android hardware Back and Web browser Back dismiss an open Closet/Badges sheet first", async () => {
+    // Android BackHandler closes Closet first.
+    env.os = "android";
+    await act(async () => { root = create(<LockerRoute />); });
+    expect(env.backHandlers).toHaveLength(1);
+    let handled = false;
+    await act(async () => { handled = env.backHandlers[0](); });
+    await act(async () => { vi.advanceTimersByTime(250); });
+    expect(handled).toBe(true);
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+    await act(async () => root!.unmount());
+
+    // Web browser Back (popstate) closes landed Closet sheet cleanly without leaving Home.
+    env.os = "web";
+    const popListeners: ((e: any) => void)[] = [];
+    const pushState = vi.fn();
+    const historyBack = vi.fn();
+    const fakeWin = {
+      history: { state: { id: "entry-1" }, pushState, back: historyBack },
+      location: { href: "http://localhost/locker?item=hat:sunhat" },
+      addEventListener: (type: string, fn: (e: any) => void) => {
+        if (type === "popstate") popListeners.push(fn);
+      },
+      removeEventListener: (type: string, fn: (e: any) => void) => {
+        const i = popListeners.indexOf(fn);
+        if (type === "popstate" && i >= 0) popListeners.splice(i, 1);
+      },
+    };
+    vi.stubGlobal("window", fakeWin);
+    try {
+      await act(async () => { root = create(<LockerRoute />); });
+      expect(pushState).toHaveBeenCalledWith(expect.objectContaining({ __homeSheet: "closet" }), "", expect.any(String));
+      expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(1);
+
+      const stopImmediatePropagation = vi.fn();
+      await act(async () => {
+        for (const fn of [...popListeners]) fn({ stopImmediatePropagation });
+      });
+      await act(async () => { vi.advanceTimersByTime(250); });
+      expect(stopImmediatePropagation).toHaveBeenCalledOnce();
+      expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+      expect(historyBack).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+        cb(0);
+        return 1;
+      });
+      vi.stubGlobal("cancelAnimationFrame", () => {});
+    }
   });
 
   it("/locker?item=<id> opens Closet on that item's tab, tries it on live without wearing, and marks it seen", async () => {
@@ -359,6 +482,65 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
     expect(root!.root.findByProps({ testID: "closet-wear-button" }).props.disabled).toBe(false);
   });
 
+  it("P2-5: refused deep-link onSeen keeps acknowledgement pending until accepted", async () => {
+    setupStore({
+      earned: ["hat:captain-cap"],
+      unseen: ["hat:captain-cap"],
+    });
+    env.store.personalize = vi.fn(() => false);
+    env.params = { item: "hat:captain-cap" };
+    await act(async () => { root = create(<LockerRoute />); });
+    expect(env.store.personalize).toHaveBeenCalledTimes(1);
+    expect(root!.root.findAllByProps({ testID: "closet-new-hat:captain-cap" })).toHaveLength(1);
+
+    // Retry on a subsequent render (e.g. Store recovers) succeeds and clears unseen.
+    env.store.personalize = vi.fn((patch: Record<string, unknown>) => {
+      const current = env.store.save.personalization.people.family;
+      env.store.save = {
+        ...env.store.save,
+        personalization: { ...env.store.save.personalization, people: { family: { ...current, ...patch } } },
+      };
+      return true;
+    });
+    await act(async () => { root!.update(<LockerRoute />); });
+    expect(env.store.personalize).toHaveBeenCalledWith({ unseen: [] }, { learner: "family", epoch: 1 });
+  });
+
+  it("P2-1: dismissed /locker or /badges alias never replays after learner switch or save-epoch remount", async () => {
+    setupStore({ earned: ["hat:captain-cap"], unseen: ["hat:captain-cap"] });
+    env.params = { item: "hat:captain-cap" };
+    await act(async () => { root = create(<LockerRoute />); });
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(1);
+
+    // Dismiss the sheet.
+    await act(async () => root!.root.findByProps({ accessibilityLabel: "Close closet" }).props.onPress());
+    await act(async () => { vi.advanceTimersByTime(250); });
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+
+    // Switch learner & bump epoch (remounting HomeScreen with the same URL params).
+    env.store.personalize.mockClear();
+    const secondPerson = {
+      ...starterPerson(true),
+      home: starterHome(),
+      earned: ["hat:captain-cap"],
+      unseen: ["hat:captain-cap"],
+    };
+    env.store.epoch = 2;
+    env.store.save = {
+      ...env.store.save,
+      learning: { version: 1, active: "kid-2", people: [{ id: "family", name: "Family" }, { id: "kid-2", name: "Kid 2" }] },
+      personalization: {
+        ...env.store.save.personalization,
+        people: { ...env.store.save.personalization.people, "kid-2": secondPerson },
+      },
+    };
+    await act(async () => { root!.update(<LockerRoute />); });
+
+    // Sheet stays closed and does NOT touch the second learner's unseen state!
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+    expect(env.store.personalize).not.toHaveBeenCalled();
+  });
+
   it("/locker?item=<unknown> lands calmly on My Home with Closet open and nothing preselected", async () => {
     env.params = { item: "hat:definitely-missing" };
     await act(async () => { root = create(<LockerRoute />); });
@@ -372,12 +554,14 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
     await act(async () => { root = create(<BadgesRoute />); });
     expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(1);
     expect(root!.root.findByProps({ testID: "badge-math-1" }).props.accessibilityState.selected).toBe(false);
+    expect(root!.root.findByProps({ testID: "badge-math-1" }).props["aria-pressed"]).toBe(false);
     expect(env.announce).not.toHaveBeenCalled();
     await act(async () => root!.unmount());
 
     env.params = { badge: "math-1" };
     await act(async () => { root = create(<BadgesRoute />); });
     expect(root!.root.findByProps({ testID: "badge-math-1" }).props.accessibilityState.selected).toBe(true);
+    expect(root!.root.findByProps({ testID: "badge-math-1" }).props["aria-pressed"]).toBe(true);
     expect(textOf(root!.root.findByProps({ testID: "badge-detail" }))).toContain(badgeInfo("math-1").name);
     expect(env.announce).toHaveBeenCalledWith(expect.stringContaining(badgeInfo("math-1").name));
     await act(async () => root!.unmount());
@@ -392,8 +576,84 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
   });
 });
 
-describe("Phase 3A: Folded Closet try-on, Wear this, cancel-restore, and undimmed live room", () => {
-  it("opens undimmed at ~45% height on phones / bottom card on iPad with 5 picture-only tabs", async () => {
+describe("Phase 3A: Closet camera framing, landscape layout, try-on, honest persistence, and accessibility", () => {
+  it("P1-3: cold /locker link switches to Islander room and frames full Islander above sheet across 320×568, 390×844, and 1024×768", async () => {
+    // Saved room is kitchen while Islander is in My room ("home").
+    setupStore({ currentRoom: "kitchen", earned: ["hat:sunhat"] });
+    env.params = { item: "hat:sunhat" };
+    await act(async () => { root = create(<LockerRoute />); });
+    expect(root!.root.findByProps({ testID: "live-room-scene" }).props.room).toBe("home");
+
+    // Verify exact head-to-feet screen bounds stay above the sheet across all target viewports.
+    const scene = buildScene(starterHome());
+    const hero = scene.entities["character/0"];
+    for (const [width, height] of [
+      [320, 568],
+      [390, 844],
+      [1024, 768],
+    ] as const) {
+      const building = buildingLayout(roomIds.length, width / height > 1.8);
+      const headerHeight = 60;
+      const framed = closetCameraFor(hero, "kitchen", { width, height: height - headerHeight - 76 }, height, headerHeight, building);
+      expect(framed.room).toBe("home");
+      const origin = roomOrigin(roomIds.indexOf(framed.room), building);
+      const heroTop = (origin.y + hero.bounds.top) * framed.camera.d + framed.camera.ty;
+      const heroBottom = (origin.y + hero.bounds.top + hero.bounds.height) * framed.camera.d + framed.camera.ty;
+      const heroCenterX = (origin.x + hero.contact.x) * framed.camera.a + framed.camera.tx;
+      const aboveHeight = closetAboveSheetHeight(height, headerHeight);
+      expect(heroTop, `${width}x${height} top`).toBeGreaterThanOrEqual(0);
+      expect(heroBottom, `${width}x${height} bottom`).toBeLessThanOrEqual(aboveHeight);
+      expect(heroCenterX, `${width}x${height} x`).toBeGreaterThan(0);
+      expect(heroCenterX, `${width}x${height} x`).toBeLessThan(width);
+    }
+  });
+
+  it("P1-3: switching rooms via arrows or canvas swipe while Closet is open cancels try-on draft and closes Closet", async () => {
+    setupStore({ earned: ["hat:captain-cap"] });
+    await act(async () => { root = create(<IslandHomeRoute />); });
+    const liveLook = () => root!.root.findByProps({ testID: "live-room-islander" }).props.look as IslanderLook;
+
+    // Open Closet and try on captain-cap.
+    await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
+    await act(async () => root!.root.findByProps({ testID: "closet-tab-hats" }).props.onPress());
+    await act(async () => root!.root.findByProps({ testID: "closet-item-hat:captain-cap" }).props.onPress());
+    expect(liveLook().hat).toBe("captain-cap");
+
+    // Switching rooms via top room arrow cancels try-on & closes Closet.
+    await act(async () => hostById(root!.root, "home-room-next")[0].props.onPress());
+    await act(async () => { vi.advanceTimersByTime(250); });
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+    expect(liveLook().hat).toBe(defaultLook.hat);
+
+    // Reopen Closet, try on again, then swipe camera to another room -> cancels try-on & closes Closet.
+    await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
+    await act(async () => root!.root.findByProps({ testID: "closet-tab-hats" }).props.onPress());
+    await act(async () => root!.root.findByProps({ testID: "closet-item-hat:captain-cap" }).props.onPress());
+    expect(liveLook().hat).toBe("captain-cap");
+
+    await act(async () => env.interactionOpts.onCameraChange(false, roomIds.indexOf("kitchen")));
+    await act(async () => { vi.advanceTimersByTime(250); });
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+    expect(liveLook().hat).toBe(defaultLook.hat);
+  });
+
+  it("P1-4: adapts Closet layout in 844×390 phone landscape so grid has non-zero height (>= 96 pt) and Wear this fits visibly", async () => {
+    env.window = { width: 844, height: 390, fontScale: 1 };
+    const metrics = closetSheetMetrics(390);
+    expect(metrics.shortViewport).toBe(true);
+    expect(metrics.availableGridHeight).toBeGreaterThanOrEqual(96);
+    expect(metrics.minGridHeight).toBeGreaterThanOrEqual(96);
+    expect(metrics.sheetHeight).toBeLessThanOrEqual(390);
+
+    await act(async () => { root = create(<LockerRoute />); });
+    const panel = root!.root.findByProps({ testID: "sheet" });
+    expect(flat(panel.props.style).height).toBe(metrics.sheetHeight);
+    const grid = root!.root.findByProps({ testID: "closet-grid" });
+    expect(flat(grid.props.style).minHeight).toBeGreaterThanOrEqual(96);
+    expect(root!.root.findAllByProps({ testID: "closet-wear-button" }).length).toBeGreaterThan(0);
+  });
+
+  it("opens undimmed at ~45% height on phones / bottom card on iPad with 5 picture-only tabs and W3C Web tabs ARIA", async () => {
     await act(async () => { root = create(<LockerRoute />); });
     // Undimmed: no Modal, no scrim, box-none wrapper so room above stays live & touchable.
     expect(root!.root.findAllByType("Modal" as never)).toHaveLength(0);
@@ -402,8 +662,10 @@ describe("Phase 3A: Folded Closet try-on, Wear this, cancel-restore, and undimme
     expect(panel.props.accessibilityViewIsModal).toBe(false);
     expect(flat(panel.props.style).height).toBe(Math.floor(852 * 0.45));
 
-    // 5 picture-only tabs (no visible Text children inside the tab buttons).
-    const tabs = root!.root.findByProps({ testID: "closet-tabs" }).findAllByProps({ accessibilityRole: "tab" });
+    // P2-3: W3C Tabs ARIA (role=tablist, role=tab, aria-selected, roving tabIndex, role=tabpanel, keyboard arrows).
+    const tablist = root!.root.findByProps({ testID: "closet-tabs" });
+    expect(tablist.props.role).toBe("tablist");
+    const tabs = tablist.findAllByProps({ accessibilityRole: "tab" });
     expect(tabs.map((t) => t.props.testID)).toEqual([
       "closet-tab-hair",
       "closet-tab-tops",
@@ -411,15 +673,116 @@ describe("Phase 3A: Folded Closet try-on, Wear this, cancel-restore, and undimme
       "closet-tab-hats",
       "closet-tab-extras",
     ]);
+    expect(tabs.map((t) => t.props["aria-selected"])).toEqual([true, false, false, false, false]);
+    expect(tabs.map((t) => t.props.tabIndex)).toEqual([0, -1, -1, -1, -1]);
     for (const tab of tabs) {
       expect(tab.props.accessibilityLabel).toBeTruthy();
+      expect(tab.props["aria-controls"]).toBe("closet-tabpanel");
       expect(tab.findAllByType("Text" as never)).toHaveLength(0);
     }
+    const grid = root!.root.findByProps({ testID: "closet-grid" });
+    expect(grid.props.role).toBe("tabpanel");
+    expect(grid.props["aria-labelledby"]).toBe("closet-tab-hair");
+
+    // ArrowRight moves selection and focus from Hair -> Tops.
+    const focus = vi.fn();
+    const preventDefault = vi.fn();
+    await act(async () => {
+      tablist.props.onKeyDown({
+        key: "ArrowRight",
+        preventDefault,
+        currentTarget: { querySelectorAll: () => [{ focus: vi.fn() }, { focus }] },
+      });
+    });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(focus).toHaveBeenCalledOnce();
+    expect(root!.root.findByProps({ testID: "closet-tab-tops" }).props["aria-selected"]).toBe(true);
+    expect(root!.root.findByProps({ testID: "closet-grid" }).props["aria-labelledby"]).toBe("closet-tab-tops");
+    expect([nextClosetTabIndex("ArrowLeft", 0, 5), nextClosetTabIndex("End", 0, 5), nextClosetTabIndex("Home", 3, 5)]).toEqual([4, 4, 0]);
 
     // iPad width renders a centered bottom card capped at sheet.maxWidth.
     env.window = { width: 1024, height: 768, fontScale: 1 };
     await act(async () => { root!.update(<LockerRoute />); });
     expect(flat(root!.root.findByProps({ testID: "sheet" }).props.style).width).toBe(theme.sheet.maxWidth);
+  });
+
+  it("P1-5: SaveStatus renders at zIndex 100 above Closet; failed personalize or Store write error never claims Wear succeeded", async () => {
+    setupStore({ earned: ["hat:captain-cap"] });
+    env.saveStatusVisible = true;
+    await act(async () => { root = create(<IslandHomeRoute />); });
+
+    // Open Closet and verify SaveStatus wrapper is stacked above undimmed sheet (zIndex 100 > 50).
+    await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
+    const statusWrap = root!.root.findByProps({ testID: "home-save-status" });
+    expect(flat(statusWrap.props.style).zIndex).toBe(100);
+
+    await act(async () => root!.root.findByProps({ testID: "closet-tab-hats" }).props.onPress());
+    await act(async () => root!.root.findByProps({ testID: "closet-item-hat:captain-cap" }).props.onPress());
+
+    // Case 1: personalize returns false synchronously -> keep preview, show error, never announce success.
+    env.store.personalize = vi.fn(() => false);
+    env.announce.mockClear();
+    await act(async () => hostById(root!.root, "closet-wear-button")[0].props.onPress());
+    expect(root!.root.findByProps({ testID: "live-room-islander" }).props.look.hat).toBe("captain-cap");
+    expect(hostById(root!.root, "closet-wear-error")).toHaveLength(1);
+    expect(hostById(root!.root, "closet-wear-saved")).toHaveLength(0);
+    expect(env.announce).not.toHaveBeenCalledWith("Wearing your new look.");
+
+    // Case 2: personalize returns true, Store starts async write (saving: true), then fails with store.error!
+    env.store.personalize = vi.fn(() => {
+      env.store.saving = true;
+      return true;
+    });
+    env.announce.mockClear();
+    await act(async () => hostById(root!.root, "closet-wear-button")[0].props.onPress());
+    await act(async () => root!.update(<IslandHomeRoute />));
+    expect(hostById(root!.root, "closet-wear-saving")).toHaveLength(1);
+    expect(hostById(root!.root, "closet-wear-saved")).toHaveLength(0);
+
+    // Disk write fails.
+    env.store.saving = false;
+    env.store.error = "Your latest changes could not be saved. Keep the app open and try again.";
+    await act(async () => root!.update(<IslandHomeRoute />));
+    expect(hostById(root!.root, "closet-wear-error")).toHaveLength(1);
+    expect(hostById(root!.root, "closet-wear-saved")).toHaveLength(0);
+    expect(env.announce).not.toHaveBeenCalledWith("Wearing your new look.");
+  });
+
+  it("P2-2 & P3-1: sends native VoiceOver focus to Closet title on open & opener on close, and reserves 'trying on' for unsaved drafts", async () => {
+    setupStore({ earned: ["hat:captain-cap"] });
+    const nodes: Record<string, object> = {};
+    const createNodeMock = (element: React.ReactElement) => {
+      const id = (element.props as { testID?: string }).testID;
+      if (!id) return { measureInWindow: () => {} };
+      nodes[id] ??= { id, measureInWindow: () => {} };
+      return nodes[id];
+    };
+    await act(async () => {
+      root = create(<IslandHomeRoute />, { createNodeMock });
+    });
+
+    // Open Closet -> native accessibility focus moves to sheet-title.
+    await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
+    await act(async () => { vi.advanceTimersByTime(20); });
+    expect(env.sendA11yFocus).toHaveBeenCalledWith(nodes["sheet-title"], "focus");
+
+    // P3-1: Equipped default hat ("None") says "wearing" WITHOUT "trying on".
+    await act(async () => root!.root.findByProps({ testID: "closet-tab-hats" }).props.onPress());
+    const noneTile = root!.root.findByProps({ testID: "closet-item-hat:none" });
+    expect(noneTile.props.accessibilityLabel).toContain("wearing");
+    expect(noneTile.props.accessibilityLabel).not.toContain("trying on");
+
+    // Try on captain-cap -> captain-cap says "trying on" (not "wearing"), while "None" stays "wearing" (not "trying on").
+    await act(async () => root!.root.findByProps({ testID: "closet-item-hat:captain-cap" }).props.onPress());
+    const capTile = root!.root.findByProps({ testID: "closet-item-hat:captain-cap" });
+    expect(capTile.props.accessibilityLabel).toContain("trying on");
+    expect(capTile.props.accessibilityLabel).not.toContain("wearing");
+
+    // Close Closet -> native accessibility focus returns to home-closet-button opener!
+    env.sendA11yFocus.mockClear();
+    await act(async () => root!.root.findByProps({ accessibilityLabel: "Close closet" }).props.onPress());
+    await act(async () => { vi.advanceTimersByTime(250); });
+    expect(env.sendA11yFocus).toHaveBeenCalledWith(nodes["home-closet-button"], "focus");
   });
 
   it("trying an earned item updates live Islander; closing without Wear restores old look; Wear this keeps it", async () => {
@@ -492,7 +855,38 @@ describe("Phase 3A: Folded Closet try-on, Wear this, cancel-restore, and undimme
   });
 });
 
-describe("Phase 3A: Badge Wall sheet, room hotspots, Tidy up placement, and Reduce Motion", () => {
+describe("Phase 3A: Badge Wall stability, room hotspots, More controls, Tidy up, and Reduce Motion", () => {
+  it("P2-4: Badge Wall keeps manual child selection and does not repeat link announcement on Store array recomputes", async () => {
+    await act(async () => {
+      root = create(<HomeBadgesSheet visible onClose={() => {}} badges={["classic-4"]} milestones={[]} initialBadge="classic-4" />);
+    });
+    expect(env.announce).toHaveBeenCalledTimes(1);
+    expect(textOf(root!.root.findByProps({ testID: "badge-detail" }))).toContain(badgeInfo("classic-4").name);
+
+    // Child manually chooses a different frame.
+    await act(async () => root!.root.findByProps({ testID: "badge-math-1" }).props.onPress());
+    expect(textOf(root!.root.findByProps({ testID: "badge-detail" }))).toContain(badgeInfo("math-1").name);
+    expect(env.announce).toHaveBeenCalledTimes(2);
+
+    // Store re-renders with brand-new badges & milestones array references -> manual choice MUST stay and NOT re-announce!
+    await act(async () => {
+      root!.update(
+        <HomeBadgesSheet
+          visible
+          onClose={() => {}}
+          badges={["classic-4", "math-1"]}
+          milestones={["learn:shell-math:1"]}
+          initialBadge="classic-4"
+        />
+      );
+    });
+    expect(root!.root.findByProps({ testID: "badge-math-1" }).props.accessibilityState.selected).toBe(true);
+    expect(root!.root.findByProps({ testID: "badge-math-1" }).props["aria-pressed"]).toBe(true);
+    expect(textOf(root!.root.findByProps({ testID: "badge-detail" }))).toContain(badgeInfo("math-1").name);
+    expect(textOf(root!.root.findByProps({ testID: "badge-detail" }))).toContain("Earned");
+    expect(env.announce).toHaveBeenCalledTimes(2);
+  });
+
   it("Badge Wall renders all 28 frames in fixed positions across 7 tracks; earning adds color without shifting frames", async () => {
     await act(async () => {
       root = create(<HomeBadgesSheet visible onClose={() => {}} badges={[]} milestones={[]} />);
@@ -518,6 +912,32 @@ describe("Phase 3A: Badge Wall sheet, room hotspots, Tidy up placement, and Redu
     expect(env.announce).toHaveBeenCalledWith(expect.stringContaining(badgeInfo("reading-2").name));
   });
 
+  it("P1-2: More panel exposes Whole house, Find, Zoom, Friends drawer, Larger targets, and Tidy up behind confirmation", async () => {
+    await act(async () => { root = create(<IslandHomeRoute />); });
+    // Tidy up is NOT on the top-level chrome.
+    expect(root!.root.findAllByProps({ accessibilityLabel: "Tidy up" })).toHaveLength(0);
+
+    // Open Friends drawer directly from top bar.
+    await act(async () => hostById(root!.root, "home-friends-button")[0].props.onPress());
+    expect(root!.root.findAllByProps({ testID: "friend-drawer" })).toHaveLength(1);
+
+    // Open More panel from top bar -> exposes Whole house, Find, Zoom, Friends, For grown-ups, and Tidy up.
+    await act(async () => hostById(root!.root, "home-more-button")[0].props.onPress());
+    const panel = root!.root.findByProps({ testID: "more-home-controls" });
+    expect(panel.findAllByProps({ accessibilityLabel: "Whole house" })).toHaveLength(1);
+    expect(panel.findAllByProps({ accessibilityLabel: "Find my Islander" })).toHaveLength(1);
+    expect(panel.findAllByProps({ accessibilityLabel: "Zoom in" })).toHaveLength(1);
+    expect(panel.findAllByProps({ accessibilityLabel: "Zoom out" })).toHaveLength(1);
+    expect(panel.findAllByProps({ accessibilityLabel: "Friends drawer" })).toHaveLength(1);
+    expect(panel.findAllByProps({ testID: "home-grown-ups" })).toHaveLength(1);
+    expect(panel.findAllByProps({ testID: "more-tidy-up-button" })).toHaveLength(1);
+
+    // Tapping Tidy up opens confirmation rather than resetting immediately.
+    await act(async () => panel.findByProps({ testID: "more-tidy-up-button" }).props.onPress());
+    expect(root!.root.findAllByProps({ testID: "home-tidy-confirm" })).toHaveLength(1);
+    expect(env.store.personalize).not.toHaveBeenCalled();
+  });
+
   it("wall badge board shortcut opens the exact same Badge Wall sheet inside My Home, and every room keeps the 3 bottom buttons without Tidy up", async () => {
     await act(async () => { root = create(<IslandHomeRoute />); });
     // Tidy up is NOT on the top-level chrome.
@@ -538,9 +958,10 @@ describe("Phase 3A: Badge Wall sheet, room hotspots, Tidy up placement, and Redu
       await act(async () => hostById(root!.root, "home-room-next")[0].props.onPress());
     }
 
-    // Open Decorate -> Undo appears in top bar, and Tidy up is tucked inside Decorate's More sheet.
+    // Open Decorate -> Undo & Redo appear in top bar, and Tidy up is tucked inside Decorate's More sheet.
     await act(async () => hostById(root!.root, "home-decorate-button")[0].props.onPress());
     expect(hostById(root!.root, "home-undo-button")).toHaveLength(1);
+    expect(hostById(root!.root, "home-redo-button")).toHaveLength(1);
     await act(async () => root!.root.findByProps({ accessibilityLabel: "More decorating" }).props.onPress());
     expect(hostById(root!.root, "decorate-more-sheet")).toHaveLength(1);
     expect(hostById(root!.root, "decorate-tidy-up-button")).toHaveLength(1);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { arcadeLearner } from "../arcade/progress";
@@ -54,6 +54,20 @@ export function HomeRoute({
   const store = useStore();
   const owner = store.save.learning?.active ?? "family";
   const person = personFor(store.save);
+  const resolvedHomeItem = validHomeItem(firstParam(item));
+  const resolvedClosetItemId = firstParam(closetItem);
+  const resolvedClosetItem = resolvedClosetItemId
+    ? styleCatalog.find((entry) => entry.id === resolvedClosetItemId)
+    : undefined;
+  const resolvedBadgeParam = firstParam(badge);
+  const resolvedBadge = validBadgeId(resolvedBadgeParam) ? resolvedBadgeParam : undefined;
+  // P2-1: Keep dismissed route intent consumed across learner/save-epoch remounts so an alias never replays.
+  const intentKey = `${initialSheet ?? ""}|${resolvedHomeItem ?? ""}|${resolvedClosetItem?.id ?? ""}|${resolvedBadge ?? ""}`;
+  const [consumedIntentKey, setConsumedIntentKey] = useState<string | null>(null);
+  const intentConsumed = consumedIntentKey === intentKey;
+  const consumeIntent = useCallback(() => {
+    setConsumedIntentKey(intentKey);
+  }, [intentKey]);
 
   if (!store.ready) {
     return (
@@ -71,22 +85,16 @@ export function HomeRoute({
   }
 
   const expected = { learner: owner, epoch: store.epoch };
-  const resolvedHomeItem = validHomeItem(firstParam(item));
-  const resolvedClosetItemId = firstParam(closetItem);
-  const resolvedClosetItem = resolvedClosetItemId
-    ? styleCatalog.find((entry) => entry.id === resolvedClosetItemId)
-    : undefined;
-  const resolvedBadgeParam = firstParam(badge);
-  const resolvedBadge = validBadgeId(resolvedBadgeParam) ? resolvedBadgeParam : undefined;
 
   return (
     <HomeScreen
       key={`${owner}:${store.epoch}`}
       initialState={person.home}
-      initialItem={resolvedHomeItem}
-      initialSheet={initialSheet}
-      initialClosetItem={resolvedClosetItem}
-      initialBadge={resolvedBadge}
+      initialItem={intentConsumed ? undefined : resolvedHomeItem}
+      initialSheet={intentConsumed ? undefined : initialSheet}
+      initialClosetItem={intentConsumed ? undefined : resolvedClosetItem}
+      initialBadge={intentConsumed ? undefined : resolvedBadge}
+      onConsumeIntent={consumeIntent}
       badges={badgesFor(person.milestones)}
       milestones={person.milestones}
       closet={{
@@ -95,9 +103,8 @@ export function HomeRoute({
         unseen: person.unseen,
         onWear: (look) => store.personalize({ look, made: true }, expected),
         onSeen: (id) => {
-          if (person.unseen.includes(id)) {
-            store.personalize({ unseen: person.unseen.filter((entry) => entry !== id) }, expected);
-          }
+          if (!person.unseen.includes(id)) return true;
+          return store.personalize({ unseen: person.unseen.filter((entry) => entry !== id) }, expected);
         },
         renderCharacter: (look) => (input) => <HomeCharacter input={input} look={look} />,
       }}

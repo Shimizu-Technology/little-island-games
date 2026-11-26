@@ -1,4 +1,5 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import * as ReactNative from "react-native";
 import { AccessibilityInfo, Platform, AppState, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,9 +11,9 @@ import { useStore } from "../state/Store";
 import type { BadgeId } from "../badges/engine";
 import type { IslanderLook } from "../islander/look";
 import { lockedReason, lookWithStyle, styleCatalog, type StyleItem } from "../personalization/catalog";
-import { HomeClosetSheet } from "./HomeClosetSheet";
+import { HomeClosetSheet, closetSheetHeightRatio } from "./HomeClosetSheet";
 import { HomeBadgesSheet } from "./HomeBadgesSheet";
-import { buildingLayout, roomOrigin } from "./camera";
+import { buildingLayout, roomOrigin, type Building } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
 import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
@@ -29,12 +30,12 @@ import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, itemSpec, type ItemId } from "./catalog";
-import { useHomeStore, RESTORE_NOTE, UNDO_NOTES } from "./useHomeStore";
-import { UndoNote } from "./runtime/UndoNote";
+import { useHomeStore, RESTORE_NOTE, RESTORE_QUESTION, UNDO_NOTES, type RestoreCost } from "./useHomeStore";
+import { UndoGonePicture, UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
-import { screenToRoom } from "./scene/camera";
+import { screenToRoom, type CameraMatrix } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
 import { FriendDrawer } from "./runtime/FriendDrawer";
@@ -48,7 +49,7 @@ import { DebugOverlay } from "./runtime/DebugOverlay";
 import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
 import { MEAL_MS, type Meal } from "./runtime/meal";
 import { type CharacterRender } from "./runtime/EntityArt";
-import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
+import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera, type Viewport } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { groupIds, restingVisible } from "./runtime/group";
 import { anchorsFor, species } from "./scene/species";
@@ -59,12 +60,71 @@ import { useHomeVisible } from "./runtime/visibility";
 import type { ReleaseProbe } from "./runtime/frameProbe";
 import { writeProbe } from "./runtime/probeReceipt";
 import type { HomeTrace } from "./runtime/trace";
+import { theme } from "../ui/theme";
 
 /** Metro folds this branch away, so a build without the lab flag carries none of this code. */
 const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import("./runtime/HullOverlay") } | undefined =
   __DEV__ || process.env.EXPO_PUBLIC_HOME_LAB === "1"
-    ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
+    ? // eslint-disable-next-line @typescript-eslint/no-require-imports -- Metro folds dev/lab require away.
+      { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
     : undefined;
+
+/** Available vertical viewport height above the undimmed Closet sheet (shared across cold links & dock opens). */
+export function closetAboveSheetHeight(windowHeight: number, headerHeight: number): number {
+  const sheetHeight = Math.floor(windowHeight * closetSheetHeightRatio(windowHeight));
+  return Math.max(120, windowHeight - sheetHeight - headerHeight);
+}
+
+/**
+ * Shared above-sheet camera framing helper for both cold `/locker` landings and in-room dock Closet opens.
+ * Switches to the Islander's room and keeps the Islander's full head-to-feet bounds above the sheet.
+ */
+export function closetCameraFor(
+  hero: SceneEntity | undefined,
+  fallbackRoom: RoomId,
+  viewport: Viewport,
+  windowHeight: number,
+  headerHeight: number,
+  building: Building
+): { room: RoomId; camera: CameraMatrix } {
+  const room = hero?.room ?? fallbackRoom;
+  const index = Math.max(0, roomIds.indexOf(room));
+  const visibleHeight = closetAboveSheetHeight(windowHeight, headerHeight);
+  const aboveSheet: Viewport = { width: viewport.width, height: visibleHeight };
+  const origin = roomOrigin(index, building);
+  const at = hero
+    ? {
+        x: hero.contact.x,
+        y: hero.bounds.top + hero.bounds.height * 0.52,
+      }
+    : { x: 400, y: 400 };
+  const baseScale = roomScale(aboveSheet);
+  const heroHeight = hero ? Math.max(120, hero.bounds.height) : 160;
+  const maxHeroScale = (visibleHeight * 0.78) / heroHeight;
+  const scale = Math.max(fitCamera(aboveSheet, building).a, Math.min(baseScale, maxHeroScale));
+  const raw: CameraMatrix = {
+    a: scale,
+    b: 0,
+    c: 0,
+    d: scale,
+    tx: aboveSheet.width / 2 - (origin.x + at.x) * scale,
+    ty: visibleHeight / 2 - (origin.y + at.y) * scale,
+  };
+  const bounded = boundCamera(raw, aboveSheet, building);
+  if (hero) {
+    const heroTop = (origin.y + hero.bounds.top) * bounded.d + bounded.ty;
+    const heroBottom = (origin.y + hero.bounds.top + hero.bounds.height) * bounded.d + bounded.ty;
+    let dy = 0;
+    if (heroBottom > visibleHeight - 8) dy = visibleHeight - 8 - heroBottom;
+    if (heroTop + dy < 8) dy = 8 - heroTop;
+    return { room, camera: dy ? { ...bounded, ty: bounded.ty + dy } : bounded };
+  }
+  return { room, camera: bounded };
+}
+
+function heroRoomInState(state: HomeStateV2): RoomId {
+  return roomIds.find((id) => state.rooms[id].characters.some((c) => c.slot === 0)) ?? state.current;
+}
 
 export const REDO_VISIBLE_MS = 10000;
 export type HomeSheet = "closet" | "badges";
@@ -73,7 +133,7 @@ export type HomeClosetConfig = {
   earned: readonly string[];
   unseen: readonly string[];
   onWear: (look: IslanderLook) => boolean;
-  onSeen?: (id: string) => void;
+  onSeen?: (id: string) => boolean | void;
   renderCharacter?: (look: IslanderLook) => CharacterRender;
 };
 export type HomeScreenProps = Ownership & {
@@ -83,6 +143,7 @@ export type HomeScreenProps = Ownership & {
   initialSheet?: HomeSheet;
   initialClosetItem?: StyleItem;
   initialBadge?: BadgeId;
+  onConsumeIntent?: () => void;
   closet?: HomeClosetConfig;
   renderCharacter?: CharacterRender;
   initialState?: unknown;
@@ -96,6 +157,7 @@ export function HomeScreen({
   initialSheet,
   initialClosetItem,
   initialBadge,
+  onConsumeIntent,
   milestones = [],
   closet,
   persist,
@@ -118,9 +180,13 @@ export function HomeScreen({
     initialItem && itemIds.includes(initialItem) ? initialItem : undefined
   );
   const [overview, setOverview] = useState(false),
-    [room, setRoom] = useState(store.state.current);
+    [room, setRoom] = useState<RoomId>(() =>
+      initialSheet === "closet" ? heroRoomInState(store.state) : store.state.current
+    );
   const [more, setMore] = useState(false),
     [friends, setFriends] = useState(false);
+  const [tidyConfirm, setTidyConfirm] = useState(false);
+  const [tidyCost, setTidyCost] = useState<RestoreCost | undefined>(undefined);
   const [activeSheet, setActiveSheet] = useState<HomeSheet | null>(initialSheet ?? null);
   const [closetInitialItem, setClosetInitialItem] = useState<StyleItem | undefined>(
     initialSheet === "closet" ? initialClosetItem : undefined
@@ -133,6 +199,7 @@ export function HomeScreen({
       ? lookWithStyle(closet.look, initialClosetItem)
       : undefined
   );
+  const closetButtonRef = useRef<View | null>(null);
   const markedInitialItem = useRef<string | undefined>(undefined);
   React.useEffect(() => {
     if (
@@ -142,8 +209,11 @@ export function HomeScreen({
       closet.unseen.includes(closetInitialItem.id) &&
       markedInitialItem.current !== closetInitialItem.id
     ) {
-      markedInitialItem.current = closetInitialItem.id;
-      closet.onSeen(closetInitialItem.id);
+      // P2-5: Keep acknowledgement pending if Store refuses the write so a retry/tap can complete it.
+      const accepted = closet.onSeen(closetInitialItem.id);
+      if (accepted !== false) {
+        markedInitialItem.current = closetInitialItem.id;
+      }
     }
   }, [activeSheet, closetInitialItem, closet]);
   const effectiveLook = previewLook ?? closet?.look;
@@ -235,7 +305,8 @@ export function HomeScreen({
     [window.width, window.height]
   );
   const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
-  const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Navigation is outside the scene revision.
+  const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]);
   // HC-02: ground-floor rooms have a beach whose shells can be picked up.
   const shoreRooms = useMemo(() => roomIds.slice(0, building.columns), [building.columns]);
   const scene = useMemo(() => withPortions(baseScene, shoreRooms), [baseScene, shoreRooms]);
@@ -263,9 +334,9 @@ export function HomeScreen({
   // F3: an undo note stays until the next message or a tap; reading is never timed.
   const [noteGone, setNoteGone] = useState<number>();
   const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
-  const live = useRef({ store, scene, selected, placing, room, designing, meals });
+  const live = useRef({ store, scene, selected, placing, room, designing, meals, activeSheet });
   useLayoutEffect(() => {
-    live.current = { store, scene, selected, placing, room, designing, meals };
+    live.current = { store, scene, selected, placing, room, designing, meals, activeSheet };
   });
   // H4: reactions, effects, sounds and cooking.
   const delight = useDelight({
@@ -605,10 +676,34 @@ export function HomeScreen({
     );
     if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
   };
+  const sheetHistoryPushed = useRef(false);
+  const suppressNextPop = useRef(false);
+  const popWebSheetHistory = useCallback(() => {
+    if (Platform.OS !== "web" || !sheetHistoryPushed.current) return;
+    sheetHistoryPushed.current = false;
+    const host = globalThis as { window?: { history?: { back?: () => void } } };
+    if (typeof host.window?.history?.back === "function") {
+      suppressNextPop.current = true;
+      host.window.history.back();
+    }
+  }, []);
+  const clearClosetDraft = useCallback(
+    (fromPopState = false) => {
+      markedInitialItem.current = undefined;
+      setPreviewLook(undefined);
+      setClosetInitialItem(undefined);
+      setActiveSheet(null);
+      onConsumeIntent?.();
+      if (!fromPopState) popWebSheetHistory();
+    },
+    [onConsumeIntent, popWebSheetHistory]
+  );
   const floorOf = useCallback((id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns), [building.columns]);
   const goRoom = useCallback((id: RoomId) => {
     const interaction = runtime.current!;
     interaction.cancelAll();
+    // P1-3: Switching rooms cancels any open Closet try-on draft so it never stays active offscreen.
+    if (live.current.activeSheet === "closet") clearClosetDraft();
     setSelected(undefined);
     setMore(false);
     setFriends(false);
@@ -618,7 +713,7 @@ export function HomeScreen({
     // HR-02: another floor is a door, not a jump; the same floor eases across.
     interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
       !overview && floorOf(id) !== floorOf(room));
-  }, [building, floorOf, overview, room, viewport]);
+  }, [building, clearClosetDraft, floorOf, overview, room, viewport]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     if (!designing && entity?.item && storageCapacity(entity.item.item) && !capabilityOf(entity.item.item).moveInPlay && !overview) {
@@ -647,28 +742,22 @@ export function HomeScreen({
       );
       setActiveSheet("closet");
       const hero = live.current.scene.entities["character/0"];
-      const targetRoom = hero?.room ?? live.current.room;
-      if (hero && hero.room !== live.current.room) setRoom(hero.room);
-      const aboveSheet = {
-        width: viewport.width,
-        height: Math.max(180, window.height * 0.55 - headerHeight),
-      };
+      const framed = closetCameraFor(hero, live.current.room, viewport, window.height, headerHeight, building);
+      if (framed.room !== live.current.room) setRoom(framed.room);
+      runtime.current?.animateCamera(framed.camera, false);
+    },
+    [building, closet, headerHeight, viewport, window.height]
+  );
+  const closeCloset = useCallback(
+    (fromPopState = false) => {
+      clearClosetDraft(fromPopState);
       runtime.current?.animateCamera(
-        focusCamera(roomIds.indexOf(targetRoom), aboveSheet, building, hero?.contact ?? { x: 400, y: 380 }),
+        focusCamera(roomIds.indexOf(live.current.room), viewport, building),
         false
       );
     },
-    [building, closet, headerHeight, viewport.width, window.height]
+    [building, clearClosetDraft, viewport]
   );
-  const closeCloset = useCallback(() => {
-    setPreviewLook(undefined);
-    setClosetInitialItem(undefined);
-    setActiveSheet(null);
-    runtime.current?.animateCamera(
-      focusCamera(roomIds.indexOf(live.current.room), viewport, building),
-      false
-    );
-  }, [building, viewport]);
   const openBadges = useCallback((badge?: BadgeId) => {
     runtime.current?.cancelAll();
     setDesigning(false);
@@ -681,10 +770,95 @@ export function HomeScreen({
     setBadgeInitial(badge);
     setActiveSheet("badges");
   }, []);
-  const closeBadges = useCallback(() => {
-    setBadgeInitial(undefined);
-    setActiveSheet(null);
+  const closeBadges = useCallback(
+    (fromPopState = false) => {
+      setBadgeInitial(undefined);
+      setActiveSheet(null);
+      onConsumeIntent?.();
+      if (!fromPopState) popWebSheetHistory();
+    },
+    [onConsumeIntent, popWebSheetHistory]
+  );
+  const goToMap = useCallback(() => {
+    const r = router as typeof router & { dismissTo?: (href: string) => void };
+    if (typeof r.dismissTo === "function") r.dismissTo("/");
+    else router.replace?.("/");
   }, []);
+  const handleBack = useCallback(() => {
+    // P1-1: First Back closes an open Closet/Badges sheet; second Back reaches `/` (Map).
+    if (activeSheet === "closet") {
+      closeCloset();
+      return;
+    }
+    if (activeSheet === "badges") {
+      closeBadges();
+      return;
+    }
+    goToMap();
+  }, [activeSheet, closeCloset, closeBadges, goToMap]);
+  // P1-1: Android hardware Back closes an open Closet/Badges sheet first.
+  React.useEffect(() => {
+    if (!activeSheet) return;
+    const bh = (
+      ReactNative as unknown as {
+        BackHandler?: {
+          addEventListener?: (event: string, handler: () => boolean) => { remove: () => void };
+        };
+      }
+    ).BackHandler;
+    if (!bh?.addEventListener) return;
+    const sub = bh.addEventListener("hardwareBackPress", () => {
+      if (activeSheet === "closet") closeCloset();
+      else if (activeSheet === "badges") closeBadges();
+      return true;
+    });
+    return () => sub.remove();
+  }, [activeSheet, closeCloset, closeBadges]);
+  // P1-1: Lightweight Web history sentinel so first browser Back dismisses an open sheet to Home.
+  React.useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const host = globalThis as {
+      window?: {
+        history?: { state?: unknown; pushState?: (data: unknown, unused: string, url?: string) => void };
+        location?: { href?: string };
+      };
+    };
+    const win = host.window;
+    if (!win || !activeSheet || sheetHistoryPushed.current || typeof win.history?.pushState !== "function") return;
+    sheetHistoryPushed.current = true;
+    const currentState = win.history.state && typeof win.history.state === "object" ? win.history.state : {};
+    win.history.pushState({ ...(currentState as Record<string, unknown>), __homeSheet: activeSheet }, "", win.location?.href ?? "");
+  }, [activeSheet]);
+  React.useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const host = globalThis as {
+      window?: {
+        addEventListener?: (type: string, listener: (event: PopStateEvent) => void, capture?: boolean) => void;
+        removeEventListener?: (type: string, listener: (event: PopStateEvent) => void, capture?: boolean) => void;
+      };
+    };
+    const win = host.window;
+    if (!win?.addEventListener) return;
+    const onPopState = (event: PopStateEvent) => {
+      if (suppressNextPop.current) {
+        suppressNextPop.current = false;
+        event.stopImmediatePropagation?.();
+        return;
+      }
+      if (sheetHistoryPushed.current && live.current.activeSheet) {
+        sheetHistoryPushed.current = false;
+        event.stopImmediatePropagation?.();
+        if (live.current.activeSheet === "closet") closeCloset(true);
+        else if (live.current.activeSheet === "badges") closeBadges(true);
+      }
+    };
+    win.addEventListener("popstate", onPopState, true);
+    return () => {
+      win.removeEventListener?.("popstate", onPopState, true);
+      sheetHistoryPushed.current = false;
+      suppressNextPop.current = false;
+    };
+  }, [closeCloset, closeBadges]);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
     // Overview room taps always navigate, even over an object or with a previous selection.
@@ -756,16 +930,27 @@ export function HomeScreen({
       }
     }
   };
+  const initialCamera =
+    initialSheet === "closet"
+      ? closetCameraFor(scene.entities["character/0"], room, viewport, window.height, headerHeight, building).camera
+      : focusCamera(roomIds.indexOf(room), viewport, building);
   const interaction = useInteraction({
     scene,
     building,
     viewport,
-    initialCamera: focusCamera(roomIds.indexOf(room), viewport, building),
+    initialCamera,
     reduced,
     designing,
     onCameraChange: (all, index) => {
       setOverview(all);
       if (index >= 0) setRoom(roomIds[index]);
+      // P1-3: Swiping or panning to another room / overview cancels an active Closet try-on draft.
+      if (live.current.activeSheet === "closet") {
+        const heroRoom = live.current.scene.entities["character/0"]?.room ?? live.current.room;
+        if (all || (index >= 0 && roomIds[index] !== heroRoom)) {
+          clearClosetDraft();
+        }
+      }
     },
     onPickup,
     onCommit,
@@ -779,6 +964,10 @@ export function HomeScreen({
     currentRoom: room,
     // HM-14: a carried thing held on a room button takes the child there, still carried.
     onRoomHover: (next) => {
+      if (live.current.activeSheet === "closet") {
+        const heroRoom = live.current.scene.entities["character/0"]?.room ?? live.current.room;
+        if (next !== heroRoom) clearClosetDraft();
+      }
       setOverview(false);
       setRoom(next);
       live.current.store.dispatch({ type: "room", room: next });
@@ -787,8 +976,9 @@ export function HomeScreen({
   const zoneRects = useRef<Record<string, { x: number; y: number; width: number; height: number }>>({});
   const publishZones = useCallback(() => runtime.current?.dropZones.set(Object.entries(zoneRects.current).map(([id, r]) =>
     id === "drawer" ? { kind: "drawer" as const, ...r } : { kind: "room" as const, room: id as RoomId, ...r })), []);
-  const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number }) => {
-    zoneRects.current[id] = rect;
+  const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number } | null) => {
+    if (rect) zoneRects.current[id] = rect;
+    else delete zoneRects.current[id];
     publishZones();
   }, [publishZones]);
   // HR-01: the Friends button is where a carried friend goes to wait.
@@ -865,6 +1055,13 @@ export function HomeScreen({
     const old = previousView.current;
     previousView.current = { viewport, building };
     if (old.viewport === viewport && old.building === building) return;
+    // P1-3: Keep above-sheet Islander framing intact when headerHeight/viewport settles while Closet is open.
+    if (activeSheet === "closet") {
+      const hero = live.current.scene.entities["character/0"];
+      const framed = closetCameraFor(hero, room, viewport, window.height, headerHeight, building);
+      interaction.camera.set(framed.camera);
+      return;
+    }
     const before = interaction.camera.get();
     const oldOrigin = roomOrigin(roomIds.indexOf(room), old.building),
       nextOrigin = roomOrigin(roomIds.indexOf(room), building);
@@ -892,7 +1089,7 @@ export function HomeScreen({
     );
     // Refit only on viewport changes. Ordinary edits and drops never move the camera.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewport, building]);
+  }, [viewport, building, activeSheet, window.height, headerHeight]);
   React.useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state !== "active") { interaction.cancelAll(); clearMealArt(); }
@@ -1077,7 +1274,7 @@ export function HomeScreen({
           setSelected(undefined);
         }}
         onHeaderLayout={setHeaderHeight}
-        onBack={() => (router.canGoBack?.() ? router.back() : router.replace?.("/"))}
+        onBack={handleBack}
         onUndo={() => {
           interaction.cancelAll();
           clearMealArt();
@@ -1102,10 +1299,11 @@ export function HomeScreen({
         }}
         onOverview={() => {
           interaction.cancelAll();
+          if (activeSheet === "closet") clearClosetDraft();
           setSelected(undefined);
           setMore(false);
           setFriends(false);
-          const next = true;
+          const next = !overview;
           setOverview(next);
           interaction.animateCamera(
             next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
@@ -1114,6 +1312,7 @@ export function HomeScreen({
         onDesign={() => {
           if (activeSheet === "closet") closeCloset();
           else if (activeSheet === "badges") closeBadges();
+          if (designing) onConsumeIntent?.();
           setDesigning(!designing);
           setPlacing(undefined);
         }}
@@ -1122,6 +1321,7 @@ export function HomeScreen({
         closetOpen={activeSheet === "closet"}
         badgesOpen={activeSheet === "badges"}
         hasNewCloset={hasNewCloset}
+        closetButtonRef={closetButtonRef}
         onRoom={goRoom}
         roomHover={interaction.roomHover}
         onRoomRect={onRoomRect}
@@ -1130,7 +1330,6 @@ export function HomeScreen({
         onDrawerRect={onDrawerRect}
         large={large}
         width={window.width}
-        saveStatus={saveStatus}
       />
       {/* Above the bars (zIndex 30) so carried art is never hidden under them; box-none keeps the bars touchable. */}
       <View pointerEvents="box-none" style={{ flex: 1, flexDirection: vertical ? "row" : "column", zIndex: 31 }}>
@@ -1234,7 +1433,10 @@ export function HomeScreen({
             interaction={interaction}
             offset={viewportOffset}
             dispatch={dispatch}
-            onClose={() => setDesigning(false)}
+            onClose={() => {
+              setDesigning(false);
+              onConsumeIntent?.();
+            }}
             large={large}
             restoreCost={() => store.restoreCost(room)}
             onRestoreAnyway={() => store.dispatch({ type: "reset", roomId: room } as HomeAction, { anyway: true })}
@@ -1299,6 +1501,24 @@ export function HomeScreen({
           setMore(false);
           setFriends(true);
         }}
+        overview={overview}
+        onOverview={() => {
+          interaction.cancelAll();
+          if (activeSheet === "closet") clearClosetDraft();
+          setSelected(undefined);
+          setMore(false);
+          setFriends(false);
+          const next = !overview;
+          setOverview(next);
+          interaction.animateCamera(
+            next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
+          );
+        }}
+        onFind={find}
+        onTidyUp={() => {
+          setTidyCost(store.restoreCost(room));
+          setTidyConfirm(true);
+        }}
         onZoom={(ratio) => {
           interaction.cancelAll();
           interaction.animateCamera(
@@ -1328,12 +1548,15 @@ export function HomeScreen({
       {closet && (
         <HomeClosetSheet
           visible={activeSheet === "closet"}
-          onClose={closeCloset}
+          onClose={() => closeCloset()}
           look={effectiveLook ?? closet.look}
           equipped={closet.look}
           earned={closet.earned}
           unseen={closet.unseen}
           initialItem={closetInitialItem}
+          saving={app.saving}
+          saveError={app.error}
+          returnFocusRef={closetButtonRef}
           onTryOn={(nextLook) => setPreviewLook(nextLook)}
           onWear={(nextLook) => {
             const saved = closet.onWear(nextLook);
@@ -1345,11 +1568,141 @@ export function HomeScreen({
       )}
       <HomeBadgesSheet
         visible={activeSheet === "badges"}
-        onClose={closeBadges}
+        onClose={() => closeBadges()}
         badges={ownership.badges ?? []}
         milestones={milestones}
         initialBadge={badgeInitial}
       />
+      {tidyConfirm && (
+        <View
+          testID="home-tidy-confirm"
+          accessibilityViewIsModal
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 90,
+            elevation: 90,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.scrim,
+            padding: 20,
+          }}
+        >
+          {tidyCost === "no-undo" || tidyCost === "drops-older" ? (
+            <View
+              testID="restore-anyway"
+              style={{
+                backgroundColor: theme.colors.bg,
+                padding: 24,
+                borderRadius: 24,
+                maxWidth: 340,
+                gap: 14,
+                alignItems: "center",
+              }}
+            >
+              <UndoGonePicture size={112} />
+              <Text
+                accessibilityRole="header"
+                accessibilityLiveRegion="polite"
+                maxFontSizeMultiplier={1.6}
+                style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "600", textAlign: "center" }}
+              >
+                {RESTORE_QUESTION[tidyCost]}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  store.dispatch({ type: "reset", roomId: room } as HomeAction, { anyway: true });
+                  setTidyConfirm(false);
+                }}
+                style={{
+                  padding: 12,
+                  minHeight: large ? 64 : 48,
+                  justifyContent: "center",
+                  alignSelf: "stretch",
+                  alignItems: "center",
+                  backgroundColor: "#F1E6CF",
+                  borderRadius: 14,
+                }}
+              >
+                <Text>Make it new</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setTidyConfirm(false)}
+                style={{
+                  padding: 12,
+                  minHeight: large ? 64 : 48,
+                  justifyContent: "center",
+                  alignSelf: "stretch",
+                  alignItems: "center",
+                  backgroundColor: "#CFE3D6",
+                  borderRadius: 14,
+                }}
+              >
+                <Text style={{ fontWeight: "600" }}>Keep my room</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ backgroundColor: theme.colors.bg, padding: 24, borderRadius: 24, maxWidth: 340, gap: 14 }}>
+              <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "600" }}>
+                Tidy up this room? Undo can bring it back.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  dispatch({ type: "reset" });
+                  setTidyConfirm(false);
+                }}
+                style={{
+                  padding: 12,
+                  minHeight: large ? 64 : 48,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: theme.colors.coral,
+                  borderRadius: theme.radius.full,
+                }}
+              >
+                <Text style={{ color: theme.colors.ink, fontWeight: "700" }}>Tidy up</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setTidyConfirm(false)}
+                style={{
+                  padding: 12,
+                  minHeight: large ? 64 : 48,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: theme.colors.lagoonSoft,
+                  borderRadius: theme.radius.full,
+                }}
+              >
+                <Text style={{ color: theme.colors.ink, fontWeight: "700" }}>Keep playing</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      )}
+      {/* P1-5: Render SaveStatus above scene (31) and undimmed sheets (50) so Retry is always touch-reachable. */}
+      {saveStatus && (
+        <View
+          testID="home-save-status"
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            right: 8,
+            maxWidth: Math.min(380, window.width - 16),
+            ...(activeSheet ? { top: headerHeight + 8 } : { bottom: inset.bottom + navigationHeight + 8 }),
+            zIndex: 100,
+            elevation: 100,
+          }}
+        >
+          {saveStatus}
+        </View>
+      )}
       {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {UNDO_NOTES.includes(store.message) || store.message === STORAGE_FULL_MESSAGE ? "" : store.message}

@@ -34,11 +34,26 @@ vi.mock("expo-haptics", () => ({ impactAsync: () => Promise.resolve(), ImpactFee
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
 vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
 vi.mock("../src/ui/icons", () => {
-  const glyph = (name: string) => () => React.createElement("Glyph", { name });
+  const glyph = (name: string) => {
+    const MockGlyph = () => React.createElement("Glyph", { name });
+    MockGlyph.displayName = name;
+    return MockGlyph;
+  };
   return Object.fromEntries(
-    ["ArrowCounterClockwise", "ArrowLeft", "CaretLeft", "CaretRight", "Check", "CoatHanger", "Medal", "PencilSimple", "X"].map(
-      (n) => [n, glyph(n)]
-    )
+    [
+      "ArrowClockwise",
+      "ArrowCounterClockwise",
+      "ArrowLeft",
+      "CaretLeft",
+      "CaretRight",
+      "Check",
+      "CoatHanger",
+      "DotsThree",
+      "PencilSimple",
+      "Star",
+      "UsersThree",
+      "X",
+    ].map((n) => [n, glyph(n)])
   );
 });
 vi.mock("../src/home/runtime/CarriedCharacter", () => ({ CarriedCharacter: () => <div /> }));
