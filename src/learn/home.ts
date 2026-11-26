@@ -79,11 +79,11 @@ export function ongoing(save: Save, id: ShelfId) {
   if (gameIds.includes(id as GameId)) { const s = save.sessions[id as GameId]; return !!s && !isFinished(s); }
   const a = save.activities?.[id as ActivityId]; return !!a && !activityFinished(a);
 }
-/** Reef Sweep Challenge drafts take priority; otherwise honor the active legacy marker. */
+/** Honor the active marker even after finishing; use Reef Sweep only when no marker is set. */
 export function homeContinue(save: Save): ShelfId | null {
-  if(progressFor(save,save.learning?.active??'family')?.paused.some(s=>s.game==='reef-sweep'&&!s.result&&!s.credited))return 'reef-sweep';
   const id = save.recentBoard ?? save.recentLearn ?? save.recentActivity ?? save.recent ?? save.arcade?.recent;
-  return id && ongoing(save, id) ? id : null;
+  if (id) return ongoing(save, id) ? id : null;
+  return ongoing(save, 'reef-sweep') ? 'reef-sweep' : null;
 }
 export function toggleShelfFavorite(save: Save, id: ShelfId): Save {
   if (![...gameIds, ...activityIds, ...learnIds, ...boardIds, ...arcadeIds].includes(id)) return save;

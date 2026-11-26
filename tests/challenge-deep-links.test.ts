@@ -63,3 +63,38 @@ it('continues Challenge Reef Sweep first and preserves the legacy-only board des
  }
  expect(legacy.board['reef-sweep']).toEqual(board);
 });
+
+it('honors newer recent markers over a paused Reef Sweep draft, including completed rounds', async () => {
+  const { createSession } = await import('../src/board');
+  const { createGame } = await import('../src/games');
+  const { defaultOptions } = await import('../src/games/types');
+  const { startSession } = await import('../src/learn/session');
+  const { engine, tapItem } = await import('../src/learn/games/hafa-adai/engine');
+  const { emptySave } = await import('../src/state/validation');
+  const { emptyChallenge } = await import('../src/state/challenge');
+  const { emptyArcade, arcadeIds } = await import('../src/arcade');
+  const { ongoing, homeContinue } = await import('../src/learn/home');
+  const entry = challengeEntries.find(e => e.game === 'reef-sweep')!;
+  const draft = entry.start(entry.puzzles[0].ref, 'family', 'reef-marker-priority', emptyChallenge(), {supportOff:false, ownRead:false}, []);
+  const save = {...emptySave(), challenge: {...emptyChallenge(), paused: [draft]}};
+  expect(homeContinue(save)).toBe('reef-sweep');
+  const learn = startSession('hafa-adai', {options: {mode: 'solo', pace: 'easy'}}, {}, 42);
+  const board = createSession('coconut-drop', {seed: 91});
+  const classic = createGame('memory', defaultOptions);
+  for (const newer of [
+    {...save, recentLearn: 'hafa-adai' as const, learn: {'hafa-adai': learn}},
+    {...save, recentBoard: 'coconut-drop' as const, board: {'coconut-drop': board}},
+    {...save, recent: 'memory' as const, sessions: {memory: classic}},
+    {...save, arcade: {...emptyArcade(), recent: arcadeIds[0]}},
+  ]) {
+    expect(homeContinue(newer)).toBe(newer.recentBoard ?? newer.recentLearn ?? newer.recent ?? newer.arcade?.recent);
+    // Game Hall uses this independently to show “Continue →” on Reef Sweep.
+    expect(ongoing(newer, 'reef-sweep')).toBe(true);
+  }
+  let completed = engine.create(learn.options, {skills: {}, rng: () => 0.5, starter: 0, today: 20_000});
+  for (const id of completed.items) completed = tapItem(completed, id);
+  expect(engine.outcome(completed, learn.options)).toBe('done');
+  expect(homeContinue({...save, recentLearn: 'hafa-adai', learn: {'hafa-adai': {...learn, state: completed}}})).toBeNull();
+  expect(homeContinue({...save, recentBoard: 'coconut-drop', board: {'coconut-drop': {...board, position: {...board.position, outcome: 'draw'}}}})).toBeNull();
+  expect(ongoing(save, 'reef-sweep')).toBe(true);
+});
