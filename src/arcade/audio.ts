@@ -1,7 +1,6 @@
 import { runEffects } from './games/lagoon-run/effects.generated';
 import { createAudioPlayer, useAudioPlayer, type AudioSource, type AudioPlayer } from "expo-audio";
 import { useCallback, useEffect, useState } from "react";
-import { Platform } from "react-native";
 import { useSoundControls } from "../components/Audio";
 import { feel } from "../components/feel";
 import type { Settings } from "../state/validation";
@@ -50,7 +49,7 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
     if (!active || sheetOpen) return;
     if (haptic) {
       if (key.startsWith("lagoon-")) {
-        if (Platform.OS === "ios") feel(key === "lagoon-thump" ? "warning" : key === "lagoon-power" ? "medium" : "tap");
+        feel(key === "lagoon-thump" ? "warning" : key === "lagoon-power" ? "medium" : "tap");
       } else if (key === "flight-flap" || key === "flight-fruit" || key === "flight-clear") feel("tap");
       else if (key === "flight-bump") feel("warning");
       else feel(key === "clear" || key === "sticker" ? "success" : "select");

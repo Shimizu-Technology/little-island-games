@@ -8,12 +8,28 @@ import { defaultLook, hairStyles, hats, outfits, accessories, skinTones, hairCol
 import * as active from '../src/islander/active';
 import { KITE_HANDS, KITE_STRINGS } from '../src/arcade/games/scrolling/runnerAnchors';
 import { runPoses, spritePoint } from '../src/arcade/games/scrolling/render';
-import { createRun, runLevels } from '../src/arcade/games/lagoon-run/engine';
+import { createRun, LANE_SECONDS, runLevels } from '../src/arcade/games/lagoon-run/engine';
+import { projectTrack } from '../src/arcade/games/lagoon-run/camera';
+import { RUNNER_KINETICS } from '../src/arcade/games/lagoon-run/kinetics';
 import { RUN_EXTRA } from '../src/arcade/games/scrolling/character';
+const { animatedView, view } = vi.hoisted(() => ({
+ animatedView: vi.fn(({ children }: { children: React.ReactNode; style: Record<string, unknown>[] }) => <div>{children}</div>),
+ view: vi.fn(({ children }: { children: React.ReactNode; style: { left: number; top: number } }) => <div>{children}</div>),
+}));
 vi.mock('../src/islander/active',async()=>{const {defaultLook}=await import('../src/islander/look');return {useActiveIslanderLook:()=>defaultLook};});
-vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:({children,index}: {children:React.ReactNode;index:number})=><div data-sprite={index}>{children}</div>}));
-vi.mock('react-native',()=>({View:()=>null}));
-vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));
+vi.mock('../src/arcade/Sprite',async(importOriginal)=>{
+ const { ArcadeSprite } = await importOriginal<typeof import('../src/arcade/Sprite')>();
+ return { ArcadeSprite: (props: React.ComponentProps<typeof ArcadeSprite>) =>
+  <div data-sprite={props.index}><ArcadeSprite {...props}/></div> };
+});
+vi.mock('react-native',()=>({View:view}));
+vi.mock('react-native-reanimated',()=>({
+ default:{View:animatedView,createAnimatedComponent:(c:unknown)=>c},
+ useAnimatedProps:()=>({}),
+ useAnimatedStyle:(style:()=>unknown)=>style(),
+ useSharedValue:(value:unknown)=>({value,set(next:unknown){this.value=next;}}),
+ useAnimatedReaction:(read:()=>unknown,update:(value:unknown)=>void)=>update(read()),
+}));
 vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 describe('Lagoon Run Islander integration',()=>{
  it('renders all 24 static frames for every wardrobe geometry combination',()=>{
@@ -48,6 +64,37 @@ describe('Lagoon Run Islander integration',()=>{
   const markup=renderToStaticMarkup(<RunnerRig poses={poses}/>);
   expect([...markup.matchAll(/data-sprite="(\d+)"/g)].map(m=>Number(m[1]))).toEqual([0,...backPoses.map((_,i)=>i<16?80+i:RUN_EXTRA+i-16)]);
   expect([...markup.matchAll(/<svg\b/g)]).toHaveLength(24);
+ });
+ it('keeps the full runner art viewport inside the Android root through the worst kinetic transforms',()=>{
+  const start=createRun(runLevels[0],42);
+  for(const direction of [-1,1])for(const hop of [-4,0]){
+   const s={...start,lane:1+direction,laneFrom:1,laneTime:LANE_SECONDS/2};
+   const poses=runPoses(s);
+   // Exercise all extrema together, including combinations stronger than a real jump or landing.
+   poses[RUNNER_KINETICS]={...poses[RUNNER_KINETICS],x:1.15,y:1.14,scale:hop};
+   animatedView.mockClear();view.mockClear();
+   const markup=renderToStaticMarkup(<RunnerRig poses={{value:poses} as React.ComponentProps<typeof RunnerRig>['poses']}/>);
+   const [,left,top,width,height]=markup.match(/viewBox="(-?\d+) (-?\d+) (\d+) (\d+)"/)!.map(Number);
+   const [root,motion]=animatedView.mock.calls.slice(0,2).map(([{style}])=>Object.assign({},...style));
+   const origin=view.mock.calls[0][0].style;
+   const [pivotX,pivotY]=motion.transformOrigin;
+   const [{translateY},{scaleX},{scaleY}]=motion.transform;
+   const angle=parseFloat(root.transform[2].rotate);
+   expect(angle).toBeCloseTo(direction*11*Math.PI/180);
+   expect(translateY).toBe(hop);expect(scaleX).toBe(1.15);expect(scaleY).toBe(1.14);
+   expect(root.left+origin.left).toBe(0);expect(root.top+origin.top).toBe(0);
+   expect(root.transformOrigin).toEqual([origin.left+40,origin.top+66,0]);
+   expect(motion.width).toBe(root.width);expect(motion.height).toBe(root.height);
+   for(const x of [left,left+width])for(const y of [top,top+height]){
+    const dx=(origin.left+x-pivotX)*scaleX,dy=(origin.top+y-pivotY)*scaleY+translateY;
+    const transformedX=pivotX+dx*Math.cos(angle)-dy*Math.sin(angle);
+    const transformedY=pivotY+dx*Math.sin(angle)+dy*Math.cos(angle);
+    expect(transformedX).toBeGreaterThan(0);expect(transformedX).toBeLessThan(root.width);
+    expect(transformedY).toBeGreaterThan(0);expect(transformedY).toBeLessThan(root.height);
+   }
+   const foot=spritePoint(poses[0],80,132,40,130),track=projectTrack(s.poseLane,1);
+   expect(foot.x).toBeCloseTo(track.x);expect(foot.y).toBeCloseTo(track.y);
+  }
  });
  it('uses the active look on both runner and front map/result portraits',()=>{
   const selected={...defaultLook,hairColor:'lagoon' as const,hat:'sunhat' as const,accessory:'backpack' as const};

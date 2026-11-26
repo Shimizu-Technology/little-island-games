@@ -1,22 +1,25 @@
 import { harborSceneryPose } from '../lagoon-run/scenery';
 import { CANOE_DEPTH, isCanoe, visualRunHeight } from "../lagoon-run/geometry";
 import { hazardBox, POWER_SECONDS } from "../lagoon-run/course";
-import { runnerKinetics, RUNNER_KINETICS } from "../lagoon-run/kinetics";
+import { CAMERA_SHAKING, impactMotion, IMPACT_MS, LANDING_DUST, LANDING_SECONDS, runnerKinetics, RUNNER_KINETICS } from "../lagoon-run/kinetics";
 import { HIDDEN_POSE, rankPainterPoses, type SpritePose } from "../../poses";
 import { runSpeed, runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
 import { CAMERA_SLOT, HERO_SCALE, TRACK_WIDTH, arrivalOpacity, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
+import { RUNNER_HEIGHT, RUNNER_SOLE, RUNNER_WIDTH } from "./runnerAnchors";
 import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
 export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, NEAR_START=37, RUN_SLOTS = CANOE_START+15*4+1;
-/** Where a pose's local point lands, for a w×h sprite scaled about its centre (as native draws it). */
+/** Where a pose's local point lands after its centre-based scale and rotation. */
 export function spritePoint(p: SpritePose, w: number, h: number, x: number, y: number) {
   "worklet";
-  const k = p.scale ?? 1;
-  return { x: p.x + w / 2 + (x - w / 2) * k, y: p.y + h / 2 + (y - h / 2) * k };
+  const k = p.scale ?? 1, angle = p.angle ?? 0;
+  const dx = x - w / 2, dy = y - h / 2;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  return { x: p.x + w / 2 + (dx * cos - dy * sin) * k, y: p.y + h / 2 + (dx * sin + dy * cos) * k };
 }
 /** The runner's drawn contact: its 80×132 frame's planted-shoe line (y 130), after HERO_SCALE. */
-export function heroContactY(p: SpritePose) { "worklet"; return spritePoint(p, 80, 132, 40, 130).y; }
+export function heroContactY(p: SpritePose) { "worklet"; return spritePoint(p, RUNNER_WIDTH, RUNNER_HEIGHT, RUNNER_WIDTH / 2, RUNNER_SOLE).y; }
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
@@ -24,9 +27,20 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   // The runner is drawn HERO_SCALE of track scale, scaled about its foot so contact never moves.
   const foot=contact.y-lift,hero=(x:number,y:number,w:number,h:number,extra?:Partial<SpritePose>):SpritePose=>{ "worklet";
     return {x:contact.x+(x+w/2-contact.x)*HERO_SCALE-w/2,y:foot+(y+h/2-foot)*HERO_SCALE-h/2,scale:HERO_SCALE,...extra}; };
-  p[0]=hero(contact.x-40+(reduced?0:Math.sin((1-s.edgeTime/.12)*Math.PI)*s.edge*6),contact.y-130-lift,80,132,{identity:s.lives.hit});
-  p[RUNNER_KINETICS] = runnerKinetics(s, reduced);
+  const kinetics = runnerKinetics(s, reduced);
+  const edge = reduced ? 0 : Math.sin((1 - s.edgeTime / .12) * Math.PI) * s.edge * 6;
+  const root = hero(contact.x - RUNNER_WIDTH / 2 + edge, foot - RUNNER_SOLE, RUNNER_WIDTH, RUNNER_HEIGHT, { identity: s.lives.hit, angle: kinetics.angle });
+  // Compensate for the centre-based rotation so the bank pivots around the planted shoe.
+  const soleOffset = (RUNNER_SOLE - RUNNER_HEIGHT / 2) * HERO_SCALE;
+  root.x += Math.sin(kinetics.angle) * soleOffset;
+  root.y += (1 - Math.cos(kinetics.angle)) * soleOffset;
+  p[0] = root;
+  p[RUNNER_KINETICS] = kinetics;
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
+  if (!reduced && s.landing > 0) {
+    const remaining = Math.min(1, s.landing / LANDING_SECONDS), age = 1 - remaining;
+    p[LANDING_DUST] = { x: contact.x - 24, y: foot - 8 - age * 9, scale: .72 + age * .63, opacity: remaining ** 2 };
+  }
   p[50]={x:contact.x-35,y:contact.y-7,scale:HERO_SCALE*(1-Math.min(2.7,runnerHeight(s))*.18),opacity:.8};
   s.rows.forEach((row,i)=>{
     const visible=!learn&&row.z> -1.2;
@@ -80,8 +94,11 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?(s.lives.invulnerable>0?.65:1):s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
   for(let i=0;i<SCENE_COUNT;i++)p[SCENE_START+i]=harborSceneryPose(s.travel,i);
   const lean = reduced ? 0 : s.lane-s.poseLane;
+  const impactAge = Math.max(0, Math.min(1, (.3 - s.cooldown) * 1000 / IMPACT_MS));
+  const cameraShaking = !reduced && s.status === "playing" && impactAge < 1;
+  const shake = impactMotion(impactAge, !cameraShaking);
   // Camera is always visible. Its scale field carries speed-line intensity, not zoom.
-  p[CAMERA_SLOT]={x:-(contact.x-195)*.3-lean*5,y:reduced?0:Math.sin(s.travel*32)*1.1,angle:lean*.018,opacity:1,scale:reduced?0:Math.min(.65,.09+Math.max(0,(runSpeed(s)-.42)*1.15)+boost*.31)};
+  p[CAMERA_SLOT]={x:-(contact.x-195)*.3-lean*5+shake.x,y:(reduced?0:Math.sin(s.travel*32)*1.1)+shake.y,angle:lean*.018,frame:cameraShaking?CAMERA_SHAKING:0,opacity:1,scale:reduced?0:Math.min(.65,.09+Math.max(0,(runSpeed(s)-.42)*1.15)+boost*.31)};
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
   // The cue's move rides in frame (same rule as runHud.teaching): pre-mounted variants switch by opacity, no render.

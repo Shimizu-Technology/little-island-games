@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import {lagoonMeasurement} from '../lagoon-run/measurement';
-import { LagoonFeedback, useRunFeedback, type RunFeedbackVisual } from '../lagoon-run/Feedback.tsx';
+import { LagoonFeedback, LandingDust, useRunFeedback, type RunFeedbackVisual } from '../lagoon-run/RunFeedback';
 import { runSwipe } from "../lagoon-run/swipe";
 import { RunHit, RunHitFlash } from "../lagoon-run/RunReaction";
 import { useLocalSearchParams } from "expo-router";
@@ -205,6 +205,7 @@ const RunRow=memo(function RunRow({poses,row,i,learn,reduced,front=false}:{poses
 /** Effects never depend on the course, so a spawn or crossing cannot re-render them. */
 const RunEffects = memo(function RunEffects({ poses }: { poses: SharedValue<SpritePose[]> }) {
   return <>
+    <LandingDust poses={poses}/>
     {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`splash${i}`} poses={poses} index={26 + i} width={12} height={12}><Svg width={12} height={12}><Path d="M6 0Q-3 9 6 12Q15 9 6 0Z" fill="#9BE9E8" stroke="#287984" strokeWidth={1}/></Svg></ArcadeSprite>)}
     {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`near${i}`} poses={poses} index={NEAR_START + i} width={12} height={12}><Particle/></ArcadeSprite>)}
     <ArcadeSprite poses={poses} index={56} width={64} height={30}><View style={{ width: 64, height: 30, borderRadius: 15, backgroundColor: "#FFF2CF", borderWidth: 2, borderColor: "#B76A20", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#5B4844", fontSize: 18, lineHeight: 22, fontWeight: "900" }}>+10</Text></View></ArcadeSprite>

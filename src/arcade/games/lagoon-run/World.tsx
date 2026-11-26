@@ -6,7 +6,7 @@ import type { WorldId } from '../../types';
 import { ArcadeSprite } from '../../Sprite';
 import { CAMERA_SLOT, CONTACT, FOV_KICK, HERO_ZOOM } from './camera';
 import { useStage } from './stage';
-import { impactMotion } from './kinetics';
+import { CAMERA_SHAKING, impactMotion } from './kinetics';
 import { TRAVEL_SLOT } from './Baked';
 import { Image } from 'react-native';
 import { propArt } from './art.generated';
@@ -15,16 +15,18 @@ import { SCENE_COUNT, SCENE_START } from '../scrolling/environmentPoses';
 
 /** Only presentation consumes this slot. Engine state and contact projection stay unchanged. */
 
-export function RunCamera({ poses, impact, reduced = false, children }: { poses: SharedValue<SpritePose[]>; impact?: SharedValue<number>; reduced?: boolean; children: React.ReactNode }) {
+export const RunCamera = memo(function RunCamera({ poses, impact, reduced = false, children }: { poses: SharedValue<SpritePose[]>; impact?: SharedValue<number>; reduced?: boolean; children: React.ReactNode }) {
   const stage = useStage(), offsetX = stage.x, offsetY = stage.y;
   const style = useAnimatedStyle(() => {
-    const p = poses.value[CAMERA_SLOT], shake = impactMotion(impact?.value ?? 1, reduced);
+    const p = poses.value[CAMERA_SLOT];
+    // Shield hits have no cooldown and a defeat freezes it, so those use the live impact clock.
+    const shake = impactMotion(impact?.value ?? 1, reduced || p?.frame === CAMERA_SHAKING);
     // Speed-line intensity (0..0.65, zero with Reduce Motion) widens the view a little: a small FOV kick.
     const zoom = HERO_ZOOM * (1 - FOV_KICK * Math.min(1, (p?.scale ?? 0) / .65));
     return { transform: [{ translateX: offsetX + (p?.x ?? 0) + shake.x }, { translateY: offsetY + (p?.y ?? 0) + shake.y - (zoom - 1) * (660 * CONTACT - 330) }, { rotate: `${p?.angle ?? 0}rad` }, { scale: zoom }] };
   });
   return <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 390, height: 660 }, style]}>{children}</Animated.View>;
-}
+});
 const HarborProp=memo(function HarborProp({index}:{index:number}) {
   const kind=Math.floor(index/2)%3;
   return <Svg width={100} height={240} viewBox="0 0 100 140" preserveAspectRatio="xMidYMax meet" accessible={false}><Ellipse cx={50} cy={135} rx={43} ry={5} fill="#165B5C" opacity={.25}/><G stroke="#164B53" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">

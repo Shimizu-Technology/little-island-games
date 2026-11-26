@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { Image, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import Animated, { useAnimatedReaction, useSharedValue, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
 import { projectTrack } from './camera';
@@ -81,8 +82,9 @@ export const BakedDeck=memo(function BakedDeck({poses,index,surface,incline=fals
 // projective pole. Its contact stays on the same front edge as the four-point hull footprint.
 const bowFrame = actorImageFrame(illustrated.canoe, 72, 74, 0);
 const wakeFoam = [
- { left: 18, top: 2, length: 28, angle: 21 }, { left: 10, top: 12, length: 19, angle: 29 },
- { left: 88, top: 2, length: 28, angle: -21 }, { left: 96, top: 12, length: 19, angle: -29 },
+ 'M33 9Q23 16 19 27', 'M17 17Q10 23 8 29',
+ 'M75 9Q85 16 89 27', 'M91 17Q98 23 100 29',
+ 'M26 27Q32 30 40 30', 'M68 30Q76 30 82 27',
 ];
 function CanoeWaterline({ poses, index, moving, reduced }: { poses: SharedValue<SpritePose[]>; index: number; moving: boolean; reduced: boolean }) {
  const style = useAnimatedStyle(() => {
@@ -91,16 +93,18 @@ function CanoeWaterline({ poses, index, moving, reduced }: { poses: SharedValue<
   const q: Quad = [d, c, b, a];
   const travel = poses.value[TRAVEL_SLOT]?.x ?? 0;
   return {
-   opacity: moving && !reduced ? .74 + .18 * Math.sin(travel * 48) : .72,
+   opacity: moving && !reduced ? .9 + .1 * Math.sin(travel * 48) : 1,
    transform: [{ matrix: matrix4(multiply3(quadHomography(q), [1 / 72, 0, -.25, 0, 1 / 32, 0, 0, 0, 1])) }],
   };
  });
- return <Animated.View style={[absolute, { width: 108, height: 32, transformOrigin: [0, 0, 0] }, style]}>
-  <View style={{ position: 'absolute', left: 19, top: 1, width: 70, height: 30, borderRadius: 16, backgroundColor: '#28797773' }}/>
-  {moving && wakeFoam.map(({ left, top, length, angle }) => <View key={left} style={{
-   position: 'absolute', left, top, width: 2, height: length, borderRadius: 2, backgroundColor: '#FFFDF8',
-   transform: [{ rotate: `${angle}deg` }],
-  }}/>)}
+ return <Animated.View testID="canoe-waterline" style={[absolute, { width: 108, height: 32, transformOrigin: [0, 0, 0] }, style]}>
+  <Svg width={108} height={32} accessible={false}>
+   {/* Trace the full footprint, with a solid stern cap and an open centre over the painted bow. */}
+   <Path d="M23 26Q22 10 45 2Q54 0 63 2Q86 10 85 26" fill="#216A69" fillOpacity={.24} stroke="#225757" strokeWidth={2}/>
+   <Path d="M30 12Q40 1 54 0Q68 1 78 12Q54 5 30 12Z" fill="#BC814B" stroke="#225757" strokeWidth={1.5}/>
+   <Path d="M26 22Q30 14 40 10M68 10Q78 14 82 22" fill="none" stroke="#7BC5B5" strokeWidth={1.5} strokeLinecap="round"/>
+   {moving && wakeFoam.map(d => <Path key={d} d={d} fill="none" stroke="#FFFDF8" strokeWidth={2.5} strokeLinecap="round"/>)}
+  </Svg>
  </Animated.View>;
 }
 export const BakedCanoe = memo(function BakedCanoe({ poses, index, moving, reduced = false }: { poses: SharedValue<SpritePose[]>; index: number; moving: boolean; reduced?: boolean }) {
@@ -110,10 +114,12 @@ export const BakedCanoe = memo(function BakedCanoe({ poses, index, moving, reduc
   const bow = canoeBow(a, b);
   return { opacity: 1, transform: [{ translateX: bow.x }, { translateY: bow.y - 74 }, { scale: bow.scale }] };
  });
- return <><CanoeWaterline poses={poses} index={index} moving={moving} reduced={reduced}/>
+ return <>
   <Animated.View style={[absolute, { width: 72, height: 74, transformOrigin: [0, 74, 0] }, style]}>
-   <Image accessible={false} source={illustrated.canoe.source()} style={[absolute, { ...bowFrame, top: bowFrame.top + 74 }]} resizeMode="stretch" fadeDuration={0}/>
-  </Animated.View></>;
+   <Image accessible={false} source={illustrated.canoe.source()} style={[absolute, { ...bowFrame, top: bowFrame.top + 74 }]} resizeMode="contain" fadeDuration={0}/>
+  </Animated.View>
+  <CanoeWaterline poses={poses} index={index} moving={moving} reduced={reduced}/>
+ </>;
 });
 
 /** Hazards, shells and power-ups as baked images (LG-S3 bake pipeline). A pre-mounted front twin
@@ -123,7 +129,7 @@ export const BakedHazard=memo(function BakedHazard({kind,width,height,poses,inde
  if (picture) {
   const frame = actorImageFrame(picture, width, picture.contactHeight, height);
   return <><View style={{ position: 'absolute', left: width * .07, bottom: 0, width: width * .86, height: 4, borderRadius: 10, backgroundColor: '#554638', opacity: .22 }}/>
-   <Image accessible={false} source={picture.source()} style={[absolute, frame]} resizeMode="stretch" fadeDuration={0}/></>;
+   <Image accessible={false} source={picture.source()} style={[absolute, frame]} resizeMode="contain" fadeDuration={0}/></>;
  }
  const art=hazardArt()[kind];
  if(!art)return null;
@@ -136,7 +142,9 @@ function CoconutBall({source,width,height,poses,index}:{source:number;width:numb
 }
 export function BakedShell({ size = 30 }: { size?: number }) {
  const ink = size * .93, inset = (size - ink) / 2;
- const frame = actorImageFrame(illustrated.shell, ink, ink, size - inset);
- return <Image accessible={false} source={illustrated.shell.source()} style={[absolute, { ...frame, left: frame.left + inset }]} resizeMode="stretch" fadeDuration={0}/>;
+ const [, , inkWidth, inkHeight] = illustrated.shell.ink;
+ const visibleHeight = ink * Math.min(1, inkHeight / inkWidth);
+ const frame = actorImageFrame(illustrated.shell, ink, ink, (size + visibleHeight) / 2);
+ return <Image accessible={false} source={illustrated.shell.source()} style={[absolute, { ...frame, left: frame.left + inset }]} resizeMode="contain" fadeDuration={0}/>;
 }
 export function BakedPower({kind,size=44}:{kind:string;size?:number}) { const source=powerArt()[kind]; return source===undefined?null:<Image accessible={false} source={source} style={{width:size,height:size}} fadeDuration={0}/>; }

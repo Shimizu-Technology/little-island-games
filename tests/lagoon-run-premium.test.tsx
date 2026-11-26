@@ -6,14 +6,15 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SharedValue } from 'react-native-reanimated';
 import { BakedCanoe, BakedHazard, BakedShell } from '../src/arcade/games/lagoon-run/Baked';
-import { LagoonFeedback, useRunFeedback } from '../src/arcade/games/lagoon-run/Feedback.tsx';
+import { LagoonFeedback, useRunFeedback } from '../src/arcade/games/lagoon-run/RunFeedback';
 import { actorImageFrame, illustrated, illustratedHazard } from '../src/arcade/games/lagoon-run/illustrated';
 import { impactMotion, runnerKinetics } from '../src/arcade/games/lagoon-run/kinetics';
 import { hazardBox } from '../src/arcade/games/lagoon-run/course';
 import { createRun, runLevels, type RunState } from '../src/arcade/games/lagoon-run/engine';
-import { projectTrack } from '../src/arcade/games/lagoon-run/camera';
-import { CANOE_DEPTH } from '../src/arcade/games/lagoon-run/geometry';
+import { HERO_SCALE, projectTrack } from '../src/arcade/games/lagoon-run/camera';
+import { CANOE_DEPTH, DUCK_MAX_ELEVATION } from '../src/arcade/games/lagoon-run/geometry';
 import { runPoses, spritePoint } from '../src/arcade/games/scrolling/render';
+import { RUNNER_SOLE } from '../src/arcade/games/scrolling/runnerAnchors';
 import { surfaceProfile } from '../src/arcade/games/lagoon-run/surface';
 import type { SpritePose } from '../src/arcade/poses';
 
@@ -105,16 +106,21 @@ describe('Lagoon Run illustrated actors', () => {
     for (const name of ['cooler', 'rock', 'runner', 'horizonMorning'] as const) expect(illustrated[name]).toBeUndefined();
   });
 
-  it('maps visible hazard edges and feet to their authored boxes at the ground and on raised decks', () => {
+  it('fits the visible hazard ink uniformly and plants its feet on the ground and raised decks', () => {
     for (const kind of ['crate', 'crab', 'log', 'banner'] as const) {
       const { width, height } = hazardBox(kind);
       const art = illustrated[kind];
       const frame = actorImageFrame(art, width, art.contactHeight, height);
       const [left, top, inkWidth, inkHeight] = art.ink;
-      expect(frame.left + left * frame.width / art.pixels).toBeCloseTo(0);
-      expect(frame.left + (left + inkWidth) * frame.width / art.pixels).toBeCloseTo(width);
+      expect(frame.width).toBe(frame.height);
+      const scale = frame.width / art.pixels;
+      const inkLeft = frame.left + left * scale, inkRight = inkLeft + inkWidth * scale;
+      expect(inkLeft).toBeGreaterThanOrEqual(-1e-8);
+      expect(inkRight).toBeLessThanOrEqual(width + 1e-8);
+      expect(inkLeft + inkRight).toBeCloseTo(width);
       expect(frame.top + (top + inkHeight) * frame.height / art.pixels).toBeCloseTo(height);
-      expect(frame.top + top * frame.height / art.pixels).toBeCloseTo(height - art.contactHeight);
+      expect(frame.top + top * scale).toBeGreaterThanOrEqual(height - art.contactHeight - 1e-8);
+      expect(Math.max((inkRight - inkLeft) / width, inkHeight * scale / art.contactHeight)).toBeCloseTo(1);
       expect(art.contactHeight).toBeLessThanOrEqual(height);
     }
     const start = createRun(runLevels[0], 771), box = hazardBox('crate');
@@ -128,6 +134,19 @@ describe('Lagoon Run illustrated actors', () => {
     }
     expect(illustratedHazard('cooler')).toBeUndefined();
     expect(illustratedHazard('rock')).toBeUndefined();
+  });
+
+  it('hangs the banner below the standing runner and above the highest safe rolling pose', () => {
+    const art = illustrated.banner, { width, height } = hazardBox('banner');
+    const frame = actorImageFrame(art, width, art.contactHeight, height);
+    const clearance = height - (frame.top + art.buntingBottom * frame.height / art.pixels);
+    // Top of the bare standing rig at y=12 and the highest rolling silhouette at y=99.
+    const standingHeight = (RUNNER_SOLE - 12) * HERO_SCALE;
+    const rollingHeight = (RUNNER_SOLE - 99) * HERO_SCALE + DUCK_MAX_ELEVATION * 85;
+    expect(clearance).toBeGreaterThanOrEqual(52);
+    expect(clearance).toBeLessThanOrEqual(58);
+    expect(clearance).toBeLessThan(standingHeight);
+    expect(clearance).toBeGreaterThan(rollingHeight);
   });
 
   it('mounts the projected canoe bow, illustrated shell, and the baked cooler and rock', async () => {
@@ -144,11 +163,41 @@ describe('Lagoon Run illustrated actors', () => {
     expect(images.map(n => n.props.source)).toEqual([
       illustrated.canoe.source(), illustrated.shell.source(), 'assets/arcade/lagoon/actors/cooler.png', 'assets/arcade/lagoon/actors/rock.png',
     ]);
+    for (const image of images.slice(0, 2)) {
+      expect(image.props.resizeMode).toBe('contain');
+      expect(sizeStyle(image).width).toBe(sizeStyle(image).height);
+    }
     const canoe = sizeStyle(images[0].parent!);
     const [x, y, scale] = canoe.transform;
     expect(x.translateX).toBeCloseTo(a.x);
     expect(y.translateY + canoe.transformOrigin[1]).toBeCloseTo(a.y);
     expect(scale.scale * canoe.width).toBeCloseTo(b.x - a.x);
+  });
+
+  it('draws the stern and moving foam in front of the bow throughout the collision interval', async () => {
+    for (const z of [1.01, 1.12, 1 + CANOE_DEPTH]) {
+      const a = projectTrack(.7, z), b = projectTrack(1.3, z);
+      const c = projectTrack(1.3, z - CANOE_DEPTH), d = projectTrack(.7, z - CANOE_DEPTH);
+      const poses = { value: [a, b, c, d] } as SharedValue<SpritePose[]>;
+      const canoe = (moving: boolean, reduced = false) => <BakedCanoe poses={poses} index={0} moving={moving} reduced={reduced}/>;
+      await act(async () => { if (tree) tree.update(canoe(true)); else tree = create(canoe(true)); });
+      const [bow, waterline] = host(tree!, 'AnimatedView');
+      expect(bow.findByType('Image' as React.ElementType).props.source).toBe(illustrated.canoe.source());
+      expect(waterline.props.testID).toBe('canoe-waterline');
+      expect(sizeStyle(waterline).opacity).toBeGreaterThanOrEqual(.8);
+      const [{ matrix }] = sizeStyle(waterline).transform;
+      const projectY = (x: number, y: number) => (matrix[1] * x + matrix[5] * y + matrix[13]) / (matrix[3] * x + matrix[7] * y + matrix[15]);
+      expect(projectY(54, 0)).toBeCloseTo(d.y);
+      expect(projectY(54, 32)).toBeCloseTo(a.y);
+      expect(projectY(54, 0)).toBeLessThanOrEqual(projectTrack(1, 1).y + 1e-8);
+      expect(host(tree!, 'Path').filter(path => path.props.stroke === '#FFFDF8')).toHaveLength(6);
+      await act(async () => tree!.update(canoe(true, true)));
+      expect(sizeStyle(host(tree!, 'AnimatedView')[1]).opacity).toBe(1);
+      expect(host(tree!, 'Path').filter(path => path.props.stroke === '#FFFDF8')).toHaveLength(6);
+      await act(async () => tree!.update(canoe(false)));
+      expect(host(tree!, 'Path').some(path => path.props.fill === '#BC814B')).toBe(true);
+      expect(host(tree!, 'Path').filter(path => path.props.stroke === '#FFFDF8')).toHaveLength(0);
+    }
   });
 });
 

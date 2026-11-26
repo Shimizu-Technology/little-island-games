@@ -3,10 +3,12 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, ReduceMotion, cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import Svg, { Ellipse, Path } from 'react-native-svg';
 import { Text } from '../../../components/Text';
+import { ArcadeSprite, type SpritePose } from '../../Sprite';
 import { HERO_SCALE, projectTrack } from './camera';
 import { runBumped, runSounds } from './feedback';
 import { runnerHeight, runLearning, type RunState } from './engine';
 import { visualRunHeight } from './geometry';
+import { IMPACT_MS, LANDING_DUST } from './kinetics';
 
 type Point = { x: number; y: number };
 type Burst = { origin: SharedValue<Point>; age: SharedValue<number> };
@@ -59,10 +61,12 @@ export function useRunFeedback(reduced: boolean, active: boolean, onTone: (key: 
     if (!reduced) {
       const lateral = after.lane !== before.lane && !before.jump && !before.kite && !before.fastDrop;
       const launched = after.jump > before.jump;
-      const landed = after.landing > before.landing || (before.fastDrop && !after.fastDrop)
+      const landed = after.landing > before.landing;
+      const dropContact = (before.fastDrop && !after.fastDrop)
         || (before.elevation > after.elevation && after.coyote > before.coyote);
-      if (lateral || launched || landed) {
-        const origin = runnerContact(landed ? after : before);
+      // Ordinary landings already have a pose slot. Keep event bursts for steps, takeoffs and deck drops.
+      if (!landed && (lateral || launched || dropContact)) {
+        const origin = runnerContact(dropContact ? after : before);
         burstAt(dust[cursor.value % dust.length], origin, 205);
         cursor.set(cursor.value + 1);
       }
@@ -74,7 +78,7 @@ export function useRunFeedback(reduced: boolean, active: boolean, onTone: (key: 
         burstAt(shells[n % shells.length], { x: contact.x + offset, y: contact.y - 60 * HERO_SCALE }, 330);
       }
     }
-    if (runBumped(before, after)) animateAge(impact, 120);
+    if (runBumped(before, after)) animateAge(impact, IMPACT_MS);
     const keys = runSounds(before, after);
     if (keys.length) runOnJS(playSounds)(keys);
   }, [dust, shells, impact, cursor, reduced, playSounds]);
@@ -83,6 +87,20 @@ export function useRunFeedback(reduced: boolean, active: boolean, onTone: (key: 
 }
 
 export type RunFeedbackVisual = ReturnType<typeof useRunFeedback>['visual'];
+
+function DustArt() {
+  return <Svg width={48} height={16} accessible={false}>
+    <Ellipse cx={13} cy={9} rx={10} ry={5} fill="#FFFDF8"/>
+    <Ellipse cx={24} cy={11} rx={13} ry={4} fill="#F6D5A1"/>
+    <Ellipse cx={35} cy={7} rx={8} ry={4} fill="#E6FFEF"/>
+    <Ellipse cx={6} cy={4} rx={2} ry={1.5} fill="#FFFDF8"/>
+    <Ellipse cx={44} cy={4} rx={2.5} ry={1.5} fill="#FFFDF8"/>
+  </Svg>;
+}
+
+export const LandingDust = memo(function LandingDust({ poses }: { poses: SharedValue<SpritePose[]> }) {
+  return <ArcadeSprite poses={poses} index={LANDING_DUST} width={48} height={16}><DustArt/></ArcadeSprite>;
+});
 
 const DustPuff = memo(function DustPuff({ origin, age, reduced }: Burst & { reduced: boolean }) {
   const style = useAnimatedStyle(() => {
@@ -93,13 +111,7 @@ const DustPuff = memo(function DustPuff({ origin, age, reduced }: Burst & { redu
     };
   });
   return <Animated.View testID="lagoon-dust" style={[styles.dust, style]}>
-    <Svg width={48} height={16} accessible={false}>
-      <Ellipse cx={13} cy={9} rx={10} ry={5} fill="#FFFDF8"/>
-      <Ellipse cx={24} cy={11} rx={13} ry={4} fill="#F6D5A1"/>
-      <Ellipse cx={35} cy={7} rx={8} ry={4} fill="#E6FFEF"/>
-      <Ellipse cx={6} cy={4} rx={2} ry={1.5} fill="#FFFDF8"/>
-      <Ellipse cx={44} cy={4} rx={2.5} ry={1.5} fill="#FFFDF8"/>
-    </Svg>
+    <DustArt/>
   </Animated.View>;
 });
 

@@ -6,6 +6,7 @@ type ActorArt = {
 };
 
 type GroundActorArt = ActorArt & { contactHeight: number };
+type BannerArt = GroundActorArt & { buntingBottom: number };
 
 type LagoonIllustrations = {
   canoe: ActorArt;
@@ -13,7 +14,7 @@ type LagoonIllustrations = {
   crab: GroundActorArt;
   shell: ActorArt;
   log: GroundActorArt;
-  banner: GroundActorArt;
+  banner: BannerArt;
   cooler?: GroundActorArt;
   rock?: GroundActorArt;
   runner?: () => number;
@@ -23,12 +24,13 @@ type LagoonIllustrations = {
 // Each source stays lazy and statically resolvable by Metro. The optional slots use the
 // current baked hazards, personalized vector runner and layered horizon until populated.
 export const illustrated: LagoonIllustrations = {
-  canoe: { source: () => require('../../../../assets/arcade/lagoon/illustrated/canoe.webp'), pixels: 384, ink: [25, 21, 334, 342] },
-  crate: { source: () => require('../../../../assets/arcade/lagoon/illustrated/crate.webp'), pixels: 256, ink: [13, 20, 230, 216], contactHeight: 41 },
+  canoe: { source: () => require('../../../../assets/arcade/lagoon/illustrated/canoe.webp'), pixels: 384, ink: [24, 21, 335, 342] },
+  crate: { source: () => require('../../../../assets/arcade/lagoon/illustrated/crate.webp'), pixels: 256, ink: [13, 19, 230, 217], contactHeight: 41 },
   crab: { source: () => require('../../../../assets/arcade/lagoon/illustrated/crab.webp'), pixels: 256, ink: [13, 41, 230, 174], contactHeight: 41 },
-  shell: { source: () => require('../../../../assets/arcade/lagoon/illustrated/shell.webp'), pixels: 192, ink: [10, 13, 172, 165] },
-  log: { source: () => require('../../../../assets/arcade/lagoon/illustrated/log.webp'), pixels: 320, ink: [17, 63, 286, 194], contactHeight: 42 },
-  banner: { source: () => require('../../../../assets/arcade/lagoon/illustrated/banner.webp'), pixels: 384, ink: [21, 51, 342, 282], contactHeight: 118 },
+  shell: { source: () => require('../../../../assets/arcade/lagoon/illustrated/shell.webp'), pixels: 192, ink: [9, 13, 174, 166] },
+  log: { source: () => require('../../../../assets/arcade/lagoon/illustrated/log.webp'), pixels: 320, ink: [17, 62, 286, 195], contactHeight: 42 },
+  // The lowest bunting pixel (row 121) has about 56 pt of deck clearance at contact.
+  banner: { source: () => require('../../../../assets/arcade/lagoon/illustrated/banner.webp'), pixels: 384, ink: [21, 51, 342, 282], contactHeight: 74, buntingBottom: 121 },
 };
 
 export function illustratedHazard(kind: string): GroundActorArt | undefined {
@@ -43,11 +45,16 @@ export function illustratedHazard(kind: string): GroundActorArt | undefined {
   }
 }
 
-/** Place visible ink inside the requested contact rectangle, compensating for alpha gutters. */
+/** Fit visible ink uniformly, centred across the box and planted on its contact line. */
 export function actorImageFrame(art: ActorArt, width: number, height: number, bottom: number) {
   const [left, top, inkWidth, inkHeight] = art.ink;
-  const sx = width / inkWidth, sy = height / inkHeight;
-  return { left: -left * sx, top: bottom - (top + inkHeight) * sy, width: art.pixels * sx, height: art.pixels * sy };
+  const scale = Math.min(width / inkWidth, height / inkHeight);
+  return {
+    left: (width - inkWidth * scale) / 2 - left * scale,
+    top: bottom - (top + inkHeight) * scale,
+    width: art.pixels * scale,
+    height: art.pixels * scale,
+  };
 }
 
 /** The bow occupies the original projected lane span. The rear corners still define the waterline. */
