@@ -1,6 +1,6 @@
 import React, { memo, useEffect } from 'react';
-import { View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { Image, View } from 'react-native';
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import type { WorldId } from '../../types';
 import { useReducedMotion } from '../../../components/motion';
@@ -10,6 +10,19 @@ import { illustrated } from './illustrated';
 import { HERO_ZOOM, WASH_SPAN, projectTrack, roadEdge, type StageLayout } from './camera';
 import { FLOOR_FAR } from './floorBands';
 
+const HORIZON_IMAGE_ASPECT = 960 / 540;
+/** Painted shoreline in horizon-morning.webp sits at y = 324 / 540 (60.0% from top). */
+const HORIZON_SHORELINE = 324 / 540;
+
+/** Place the full-bleed morning horizon so its 60% shoreline locks to the stage horizon on every aspect ratio. */
+export function morningHorizonFrame(layout: StageLayout, width: number, height: number) {
+  const hzScreen = height * (layout.horizon / layout.height);
+  const imageHeight = Math.max(hzScreen / HORIZON_SHORELINE, width / HORIZON_IMAGE_ASPECT);
+  const imageTop = hzScreen - imageHeight * HORIZON_SHORELINE;
+  const clipHeight = Math.min(height, Math.floor(imageTop + imageHeight), Math.ceil(hzScreen + Math.max(24, (height - hzScreen) * .08)));
+  return { hzScreen, imageHeight, imageTop, clipHeight };
+}
+
 /**
  * LG-S3 sky, hills and water, drawn once at the arena's real size (never upscaled) behind the
  * camera. The horizon sits at 34% of the stage on every screen. Nothing here changes per frame.
@@ -17,27 +30,38 @@ import { FLOOR_FAR } from './floorBands';
 export const RunBackdrop = memo(function RunBackdrop({ world, layout, width, height }: { world: WorldId; layout: StageLayout; width: number; height: number }) {
   const look = lagoonLook(world), W = layout.width, H = layout.height, hz = layout.horizon, cx = W / 2;
   const [sx, sy, core, glow] = look.sun, sun = { x: W * sx, y: hz * sy };
-  const horizon = look.id === 'morning' ? illustrated.horizonMorning?.() : undefined;
-  const horizonBand = hz * .46;
-  return <Svg width={width} height={height} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute' }} accessible={false}>
-    <Defs>
-      <LinearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.sky[0]}/><Stop offset=".72" stopColor={look.sky[1]}/><Stop offset="1" stopColor={look.sky[2]}/></LinearGradient>
-      <LinearGradient id="lr-water" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.water[0]}/><Stop offset="1" stopColor={look.water[1]}/></LinearGradient>
-      <RadialGradient id="lr-sun" cx="50%" cy="50%" r="50%"><Stop offset="0" stopColor={glow} stopOpacity={.9}/><Stop offset=".35" stopColor={glow} stopOpacity={.42}/><Stop offset="1" stopColor={glow} stopOpacity={0}/></RadialGradient>
-      <LinearGradient id="lr-haze" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.haze} stopOpacity={0}/><Stop offset="1" stopColor={look.haze} stopOpacity={look.hazeOpacity}/></LinearGradient>
-    </Defs>
-    <Rect width={W} height={hz + 2} fill="url(#lr-sky)"/>
-    <Circle cx={sun.x} cy={sun.y} r={Math.min(150, hz * .7)} fill="url(#lr-sun)"/>
-    <Circle cx={sun.x} cy={sun.y} r={look.id === 'festival' ? 20 : 26} fill={core}/>
-    <SkyDetail look={look} W={W} hz={hz}/>
-    {horizon === undefined ? <>
-      <Hills look={look} W={W} hz={hz}/>
-      <G transform={`translate(${cx - 195 * HERO_ZOOM} ${hz - 209 * HERO_ZOOM}) scale(${HERO_ZOOM})`}><Landmark world={world}/></G>
-    </> : <SvgImage href={horizon} x={0} y={hz - horizonBand} width={W} height={horizonBand} preserveAspectRatio="xMidYMax slice"/>}
-    <Rect y={hz - .5} width={W} height={H - hz + 1} fill="url(#lr-water)"/>
-    <Rect y={hz - 34} width={W} height={36} fill="url(#lr-haze)"/>
-    <Water look={look} W={W} H={H} hz={hz} sun={sun.x}/>
-  </Svg>;
+  const horizon = look.id === 'morning' ? illustrated.horizonMorning() : undefined;
+  const painted = horizon !== undefined ? morningHorizonFrame(layout, width, height) : undefined;
+  return <>
+    {painted && (
+      <View testID="run-horizon-morning" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width, height: painted.clipHeight, overflow: 'hidden' }}>
+        <Image source={horizon} resizeMode="cover" fadeDuration={0} accessible={false} style={{ position: 'absolute', left: 0, top: painted.imageTop, width, height: painted.imageHeight }}/>
+      </View>
+    )}
+    <Svg width={width} height={height} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute' }} accessible={false}>
+      <Defs>
+        {!painted && <>
+          <LinearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.sky[0]}/><Stop offset=".72" stopColor={look.sky[1]}/><Stop offset="1" stopColor={look.sky[2]}/></LinearGradient>
+          <RadialGradient id="lr-sun" cx="50%" cy="50%" r="50%"><Stop offset="0" stopColor={glow} stopOpacity={.9}/><Stop offset=".35" stopColor={glow} stopOpacity={.42}/><Stop offset="1" stopColor={glow} stopOpacity={0}/></RadialGradient>
+        </>}
+        {painted
+          ? <LinearGradient id="lr-water" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.water[0]} stopOpacity={0}/><Stop offset=".06" stopColor={look.water[0]} stopOpacity={1}/><Stop offset="1" stopColor={look.water[1]} stopOpacity={1}/></LinearGradient>
+          : <LinearGradient id="lr-water" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.water[0]}/><Stop offset="1" stopColor={look.water[1]}/></LinearGradient>}
+        <LinearGradient id="lr-haze" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.haze} stopOpacity={0}/><Stop offset="1" stopColor={look.haze} stopOpacity={look.hazeOpacity}/></LinearGradient>
+      </Defs>
+      {!painted && <>
+        <Rect width={W} height={hz + 2} fill="url(#lr-sky)"/>
+        <Circle cx={sun.x} cy={sun.y} r={Math.min(150, hz * .7)} fill="url(#lr-sun)"/>
+        <Circle cx={sun.x} cy={sun.y} r={look.id === 'festival' ? 20 : 26} fill={core}/>
+        <SkyDetail look={look} W={W} hz={hz}/>
+        <Hills look={look} W={W} hz={hz}/>
+        <G transform={`translate(${cx - 195 * HERO_ZOOM} ${hz - 209 * HERO_ZOOM}) scale(${HERO_ZOOM})`}><Landmark world={world}/></G>
+      </>}
+      <Rect y={hz - .5} width={W} height={H - hz + 1} fill="url(#lr-water)"/>
+      <Rect y={hz - 34} width={W} height={36} fill="url(#lr-haze)"/>
+      <Water look={look} W={W} H={H} hz={hz} sun={sun.x}/>
+    </Svg>
+  </>;
 });
 function SkyDetail({ look, W, hz }: { look: LagoonLook; W: number; hz: number }) {
   if (look.id === 'festival') {

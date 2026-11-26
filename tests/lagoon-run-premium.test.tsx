@@ -96,18 +96,21 @@ const sizeStyle = (node: ReactTestInstance) => Object.assign({}, ...[node.props.
 const host = (r: ReactTestRenderer, type: string) => r.root.findAll(n => String(n.type) === type);
 
 describe('Lagoon Run illustrated actors', () => {
-  it('loads all six WebPs by their static thunks and preserves the open slots', () => {
-    for (const name of ['canoe', 'crate', 'crab', 'shell', 'log', 'banner'] as const) {
+  it('loads all nine WebPs by their static thunks and keeps runner unset for the personalized Islander', () => {
+    for (const name of ['canoe', 'crate', 'crab', 'shell', 'log', 'banner', 'cooler', 'rock'] as const) {
       const path = `assets/arcade/lagoon/illustrated/${name}.webp`;
       expect(illustrated[name].source()).toBe(path);
       const bytes = readFileSync(path);
       expect(bytes.toString('ascii', 8, 12)).toBe('WEBP');
     }
-    for (const name of ['cooler', 'rock', 'runner', 'horizonMorning'] as const) expect(illustrated[name]).toBeUndefined();
+    const horizonPath = 'assets/arcade/lagoon/illustrated/horizon-morning.webp';
+    expect(illustrated.horizonMorning()).toBe(horizonPath);
+    expect(readFileSync(horizonPath).toString('ascii', 8, 12)).toBe('WEBP');
+    expect(illustrated.runner).toBeUndefined();
   });
 
   it('fits the visible hazard ink uniformly and plants its feet on the ground and raised decks', () => {
-    for (const kind of ['crate', 'crab', 'log', 'banner'] as const) {
+    for (const kind of ['crate', 'crab', 'log', 'banner', 'cooler', 'rock'] as const) {
       const { width, height } = hazardBox(kind);
       const art = illustrated[kind];
       const frame = actorImageFrame(art, width, art.contactHeight, height);
@@ -122,6 +125,7 @@ describe('Lagoon Run illustrated actors', () => {
       expect(frame.top + top * scale).toBeGreaterThanOrEqual(height - art.contactHeight - 1e-8);
       expect(Math.max((inkRight - inkLeft) / width, inkHeight * scale / art.contactHeight)).toBeCloseTo(1);
       expect(art.contactHeight).toBeLessThanOrEqual(height);
+      expect(illustratedHazard(kind)).toBe(art);
     }
     const start = createRun(runLevels[0], 771), box = hazardBox('crate');
     for (const surface of ['sand', 'boardwalk'] as const) {
@@ -132,8 +136,8 @@ describe('Lagoon Run illustrated actors', () => {
       expect(paintedFoot.x).toBeCloseTo(contact.x);
       expect(paintedFoot.y).toBeCloseTo(contact.y - surfaceProfile(row, 0, 1) * 85 * contact.scale);
     }
-    expect(illustratedHazard('cooler')).toBeUndefined();
-    expect(illustratedHazard('rock')).toBeUndefined();
+    expect(illustrated.cooler.contactHeight).toBeLessThan(hazardBox('cooler').height);
+    expect(illustrated.rock.contactHeight).toBeGreaterThan(illustrated.cooler.contactHeight);
   });
 
   it('hangs the banner below the standing runner and above the highest safe rolling pose', () => {
@@ -149,7 +153,7 @@ describe('Lagoon Run illustrated actors', () => {
     expect(clearance).toBeGreaterThan(rollingHeight);
   });
 
-  it('mounts the projected canoe bow, illustrated shell, and the baked cooler and rock', async () => {
+  it('mounts the projected canoe bow and illustrated shell, cooler, and rock with aspect-preserving framing', async () => {
     const lane = 1, z = 1, a = projectTrack(lane - .3, z), b = projectTrack(lane + .3, z);
     const c = projectTrack(lane + .3, z - CANOE_DEPTH), d = projectTrack(lane - .3, z - CANOE_DEPTH);
     const poses = { value: [a, b, c, d] } as SharedValue<SpritePose[]>;
@@ -161,9 +165,9 @@ describe('Lagoon Run illustrated actors', () => {
     </>); });
     const images = host(tree!, 'Image');
     expect(images.map(n => n.props.source)).toEqual([
-      illustrated.canoe.source(), illustrated.shell.source(), 'assets/arcade/lagoon/actors/cooler.png', 'assets/arcade/lagoon/actors/rock.png',
+      illustrated.canoe.source(), illustrated.shell.source(), illustrated.cooler.source(), illustrated.rock.source(),
     ]);
-    for (const image of images.slice(0, 2)) {
+    for (const image of images) {
       expect(image.props.resizeMode).toBe('contain');
       expect(sizeStyle(image).width).toBe(sizeStyle(image).height);
     }
