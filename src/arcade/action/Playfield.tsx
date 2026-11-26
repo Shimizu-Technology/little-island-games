@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, View, type ViewStyle } from "react-native";
 import Animated, {
-  useAnimatedStyle,
   runOnJS,
   useAnimatedReaction,
   useDerivedValue,
@@ -14,7 +13,7 @@ import { Text } from "../../components/Text";
 import { Button, Heading } from "../../components/ui";
 import { useReducedMotion } from "../../components/motion";
 import { beachWallContact } from "../feelArt";
-import { ArcadeSprite, type SpritePose } from "../Sprite";
+import { ArcadeSprite } from "../Sprite";
 import { uiThreadDrag, multiTouchDrag, type DragPoint, type TouchPoints } from "../Input";
 import { palmPoses, beachPoses, type PalmArtPose } from "./poses";
 import { HIDDEN_POSE } from "../poses";
@@ -23,12 +22,23 @@ import { useArcadeUiLoop } from "../uiLoop";
 import { HeartsHud, HitReaction } from "../LivesHud";
 import type { ArcadeResult } from "../types";
 import type { OutfitId } from "../progress";
-import { BallArt, NetArt, PalmIllustration, PalmSpark, Scene, TurtleArt } from "./Art";
-import { PalmBossFlash, PalmRecoil, usePalmSounds } from "./Motion";
+import { BeachIllustration, BeachSpark, BeachWallSplash, NetArt, PalmIllustration, PalmSpark, Scene, TurtleArt } from "./Art";
+import {
+  BeachBallMotion,
+  BeachPaddleMotion,
+  BeachPaddleShine,
+  BeachTurtleMotion,
+  PalmBossFlash,
+  PalmRecoil,
+  useBeachSounds,
+  usePalmSounds,
+  type BeachArtPose,
+} from "./Motion";
 import { palmActorLayout, type PalmActor } from "../games/palm-patrol/illustrated";
+import { beachBallLayout, beachPaddleLayout } from "../games/beach-ball/illustrated";
 import { palmWorkedHint, palmResult, type PalmState } from "../games/palm-patrol/engine";
-import { beachResult, type BeachState } from "../games/beach-ball/engine";
-import { arenaTransform, arenaTouch, type Arena, BALL_RADIUS, PALM_ACTOR_SIZE } from "./arena";
+import { beachResult, paddleWidth, type BeachState } from "../games/beach-ball/engine";
+import { arenaTransform, arenaTouch, type Arena, PALM_ACTOR_SIZE } from "./arena";
 import {
   aimPoint,
   mapSeatPointers,
@@ -96,7 +106,7 @@ const ArenaScene = memo(function ArenaScene({
         borderColor: "#FFFFFF44",
       }}
     >
-      <Scene palm={palm} world={world} width={camera.width} height={camera.height} />
+      <Scene palm={palm} world={world} width={camera.width} height={camera.height} court={!palm} />
     </View>
   );
 });
@@ -466,36 +476,68 @@ export function PalmBoard({
     </View>
   );
 }
-const BallStretch = memo(function BallStretch({
-  poses,
-  index,
-  scale,
+function BeachPill({
+  children,
+  label,
+  tone = "lagoon",
+  testID,
+  maxWidth,
 }: {
-  poses: SharedValue<SpritePose[]>;
-  index: number;
-  scale: number;
+  children: React.ReactNode;
+  label?: string;
+  tone?: "lagoon" | "coral" | "learn";
+  testID?: string;
+  maxWidth?: number;
 }) {
-  const style = useAnimatedStyle(() => {
-    const squash = poses.value[index]?.scale ?? 1;
-    return { transform: [{ scaleX: 1 / squash }, { scaleY: squash }] };
-  });
+  const backgroundColor = tone === "coral" ? "#6D2B3AEF" : tone === "learn" ? "#1E5954F2" : "#144859F0";
   return (
-    <Animated.View testID={`beach-ball-${index}`} style={style}>
-      <BallArt size={((BALL_RADIUS * 2) / 0.95) * scale} />
-    </Animated.View>
+    <View
+      testID={testID}
+      accessible
+      accessibilityLabel={label}
+      style={{
+        maxWidth,
+        paddingHorizontal: 11,
+        paddingVertical: 5,
+        borderRadius: 16,
+        backgroundColor,
+        borderWidth: 1.5,
+        borderColor: "#4D301E",
+        borderTopColor: "#FFF2C2",
+      }}
+    >
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        maxFontSizeMultiplier={1.3}
+        style={{ color: "#FFF7DC", fontSize: 15, lineHeight: 19, fontWeight: "800" }}
+      >
+        {children}
+      </Text>
+    </View>
   );
-});
+}
+
 const BeachSprites = memo(function BeachSprites({
   poses,
   scale,
   helper,
   together,
+  reduced,
 }: {
-  poses: SharedValue<SpritePose[]>;
+  poses: SharedValue<BeachArtPose[]>;
   scale: number;
   helper: boolean;
   together: boolean;
+  reduced: boolean;
 }) {
+  const ball = beachBallLayout(scale);
+  const turtleSize = 86 * scale;
+  const turtlePad = Math.ceil(turtleSize * 0.14);
+  const turtleCanvas = turtleSize + turtlePad * 2;
+  const sparkBox = 5 * scale;
+  const sparkPad = Math.ceil(3 * scale);
+  const sparkSize = sparkBox + sparkPad * 2;
   return (
     <>
       {[0, 1].map((i) => (
@@ -503,46 +545,106 @@ const BeachSprites = memo(function BeachSprites({
           key={`b${i}`}
           poses={poses}
           index={i}
-          width={((BALL_RADIUS * 2) / 0.95) * scale}
-          height={((BALL_RADIUS * 2) / 0.95) * scale}
+          width={ball.size}
+          height={ball.size}
+          padding={ball.padding}
         >
-          <BallStretch poses={poses} index={i} scale={scale} />
+          <BeachBallMotion poses={poses} index={i} canvas={ball.canvas} inkDiameter={ball.inkDiameter}>
+            <BeachIllustration kind="ball" frame={ball.image} testID={`beach-ball-${i}-image`} />
+          </BeachBallMotion>
         </ArcadeSprite>
       ))}
       {[0, 1].map((i) => {
-        const width = (helper && (i === 0 || together) ? 116 : 86) * scale;
+        const seat = i as 0 | 1;
+        const logicalWidth = helper && (i === 0 || together) ? 116 : 86;
+        const paddle = beachPaddleLayout(logicalWidth, scale, seat);
+        const badgeSize = 13 * scale;
         return (
-          <ArcadeSprite key={`p${i}`} poses={poses} index={2 + i} width={width} height={20 * scale}>
-            <View
-              testID={`beach-paddle-${i}`}
-              style={{
-                width,
-                height: 20 * scale,
-                borderRadius: 10 * scale,
-                borderWidth: 2 * scale,
-                borderColor: i ? "#773B45" : "#1B6372",
-                borderTopColor: "#FFF6D8",
-                backgroundColor: i ? "#EC8177" : "#3AC9C0",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+          <ArcadeSprite
+            key={`p${i}`}
+            poses={poses}
+            index={2 + i}
+            width={paddle.width}
+            height={paddle.height}
+            padding={paddle.padding}
+          >
+            <BeachPaddleMotion
+              poses={poses}
+              index={2 + i}
+              seat={seat}
+              scale={scale}
+              width={paddle.canvasWidth}
+              height={paddle.canvasHeight}
             >
-              <Text style={{ fontSize: 15 * scale, color: "#163F4B", lineHeight: 16 * scale }}>{i ? "◆" : "●"}</Text>
-            </View>
+              <BeachIllustration kind="paddle" frame={paddle.image} testID={`beach-paddle-${i}-image`} />
+              <BeachPaddleShine poses={poses} index={2 + i} seat={seat} inkBox={paddle.inkBox} />
+              <View
+                testID={`beach-paddle-badge-${i}`}
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  left: paddle.inkBox.left + paddle.inkBox.width * 0.12,
+                  top: paddle.inkBox.top + (paddle.inkBox.height - badgeSize) / 2,
+                  width: badgeSize,
+                  height: badgeSize,
+                  borderRadius: badgeSize / 2,
+                  backgroundColor: i ? "#BA4653" : "#1B6E7D",
+                  borderWidth: Math.max(1, 1.2 * scale),
+                  borderColor: "#FFF7DC",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={1.3}
+                  style={{ fontSize: 8.5 * scale, lineHeight: 10 * scale, color: "#FFF7DC", fontWeight: "800" }}
+                >
+                  {i ? "◆" : "●"}
+                </Text>
+              </View>
+            </BeachPaddleMotion>
           </ArcadeSprite>
         );
       })}
-      <ArcadeSprite poses={poses} index={12} width={86 * scale} height={86 * scale}>
-        <TurtleArt size={86 * scale} />
+      <ArcadeSprite
+        poses={poses}
+        index={12}
+        width={turtleSize}
+        height={turtleSize}
+        padding={{ left: turtlePad, right: turtlePad, top: turtlePad, bottom: turtlePad }}
+      >
+        <BeachTurtleMotion poses={poses} size={turtleCanvas}>
+          <View style={{ position: "absolute", left: turtlePad, top: turtlePad, width: turtleSize, height: turtleSize }}>
+            <TurtleArt size={turtleSize} />
+          </View>
+        </BeachTurtleMotion>
       </ArcadeSprite>
-      {Array.from({ length: 48 }, (_, i) => (
-        <ArcadeSprite key={`s${i}`} poses={poses} index={14 + i} width={5 * scale} height={5 * scale}>
-          <View style={{ width: 5 * scale, height: 5 * scale, borderRadius: 2 * scale, backgroundColor: "#FFE275" }} />
-        </ArcadeSprite>
-      ))}
+      {!reduced &&
+        Array.from({ length: 48 }, (_, i) => (
+          <ArcadeSprite
+            key={`s${i}`}
+            poses={poses}
+            index={14 + i}
+            width={sparkBox}
+            height={sparkBox}
+            padding={{ left: sparkPad, right: sparkPad, top: sparkPad, bottom: sparkPad }}
+          >
+            <View testID={`beach-spark-${i}`} style={{ width: sparkSize, height: sparkSize }}>
+              <BeachSpark size={sparkSize} kind={i % 3 === 0 ? "star" : i % 3 === 1 ? "drop" : "coral"} />
+            </View>
+          </ArcadeSprite>
+        ))}
     </>
   );
 });
+
+function selectBeachBoardHud(state: BeachState) {
+  "worklet";
+  const { event, cue, score, bestRally, ...hud } = beachHud(state);
+  return hud;
+}
+
 export function BeachBoard({
   initial,
   width = 360,
@@ -566,17 +668,39 @@ export function BeachBoard({
 }) {
   const { camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
-    poses = useSharedValue<SpritePose[]>(Array(72).fill(HIDDEN_POSE)),
-    walls = useSharedValue<{ time: number; balls: BeachState["balls"]; serial: number; sparks: { x: number; y: number; at: number }[] }>({ time: initial.time, balls: initial.balls, serial: 0, sparks: [] }),
+    poses = useSharedValue<BeachArtPose[]>(Array(72).fill(HIDDEN_POSE)),
+    feel = useSharedValue<{
+      time: number;
+      balls: BeachState["balls"];
+      spins: [number, number];
+      wallSquash: [number, number];
+      paddleHitAt: [number, number];
+      paddleHitOffset: [number, number];
+      turtleHitAt: number;
+      lastEvent: number;
+      serial: number;
+      sparks: { x: number; y: number; at: number }[];
+    }>({
+      time: initial.time,
+      balls: initial.balls,
+      spins: [0, 0],
+      wallSquash: [0, 0],
+      paddleHitAt: [-10, -10],
+      paddleHitOffset: [0, 0],
+      turtleHitAt: -10,
+      lastEvent: initial.event,
+      serial: 0,
+      sparks: [],
+    }),
     points = useSharedValue<TouchPoints>({}),
     mapping = useSharedValue<SeatPointers>({ owners: [null, null], seats: {} }),
     input = useSharedValue<BeachFrame>({ x: [null, null], helper, finish: false }),
     reported = useRef(false);
   const gesture = useMemo(() => multiTouchDrag(points).enabled(active), [points, active]);
   // Audio is an observer of the UI-owned wall serial; builders capture only worklet-safe values.
-  useAnimatedReaction(() => walls.value.serial, (serial, before) => {
+  useAnimatedReaction(() => feel.value.serial, (serial, before) => {
     if (before !== null && serial > before) runOnJS(onTone)("wall", false);
-  }, [walls, onTone]);
+  }, [feel, onTone]);
   useAnimatedReaction(
     () => points.value,
     (next) => {
@@ -592,22 +716,108 @@ export function BeachBoard({
   const build = useCallback(
     (s: BeachState) => {
       "worklet";
-      const previous = walls.value, dt = s.time - previous.time;
-      const sparks = previous.sparks.filter(e => s.time - e.at < 0.1);
+      const previous = feel.value,
+        dt = s.time - previous.time;
+      const sparks = previous.sparks.filter((e) => s.time - e.at < 0.14);
       let serial = previous.serial;
+      const spins: [number, number] = [previous.spins[0], previous.spins[1]];
+      const wallSquash: [number, number] = [
+        Math.max(0, previous.wallSquash[0] - Math.max(0, dt)),
+        Math.max(0, previous.wallSquash[1] - Math.max(0, dt)),
+      ];
+      const paddleHitAt: [number, number] = [previous.paddleHitAt[0], previous.paddleHitAt[1]];
+      const paddleHitOffset: [number, number] = [previous.paddleHitOffset[0], previous.paddleHitOffset[1]];
+      let turtleHitAt = previous.turtleHitAt;
       if (dt > 0) {
         for (let i = 0; i < s.balls.length; i++) {
-          const contact = previous.balls[i] && beachWallContact(previous.balls[i], s.balls[i], dt);
-          if (contact) { sparks.push({ ...contact, at: s.time }); serial++; }
+          const b = s.balls[i];
+          const contact = previous.balls[i] && beachWallContact(previous.balls[i], b, dt);
+          if (contact) {
+            sparks.push({ ...contact, at: s.time });
+            serial++;
+            wallSquash[i] = 0.14;
+          }
+          if (b.wait > 0) {
+            wallSquash[i] = 0;
+          } else if (!reduced) {
+            const speed = Math.hypot(b.vx, b.vy);
+            const dir = b.vx === 0 ? (b.vy < 0 ? -1 : 1) : b.vx > 0 ? 1 : -1;
+            spins[i] += (dir * Math.max(2.4, speed * 0.022) + b.spin * 0.12) * dt;
+          }
         }
-        walls.set({ time: s.time, balls: s.balls, serial, sparks: sparks.slice(-2) });
+        if (s.event !== previous.lastEvent) {
+          if (s.cue === "paddle") {
+            const seat: 0 | 1 = s.feedbackY > 300 ? 0 : 1;
+            paddleHitAt[seat] = s.time;
+            const halfWidth = paddleWidth(s, seat) / 2;
+            paddleHitOffset[seat] = Math.max(-1, Math.min(1, (s.feedbackX - s.paddles[seat]) / halfWidth));
+          } else if (s.cue === "turtle") {
+            turtleHitAt = s.time;
+          }
+        }
+        feel.set({
+          time: s.time,
+          balls: s.balls,
+          spins,
+          wallSquash,
+          paddleHitAt,
+          paddleHitOffset,
+          turtleHitAt,
+          lastEvent: s.event,
+          serial,
+          sparks: sparks.slice(-2),
+        });
       }
-      return beachPoses(s, arena.value, reduced, sparks.slice(-2));
+      const next = beachPoses(s, arena.value, reduced, sparks.slice(-2)) as BeachArtPose[];
+      for (let i = 0; i < s.balls.length; i++) {
+        const b = s.balls[i];
+        const padSquash = !reduced && b.squash > 0 ? Math.min(1, b.squash / 0.18) : 0;
+        const sideSquash = !reduced && wallSquash[i] > 0 ? Math.min(1, wallSquash[i] / 0.14) : 0;
+        next[i] = {
+          ...next[i],
+          angle: 0,
+          scale: 1,
+          spin: reduced ? 0 : spins[i],
+          squash: padSquash,
+          wallSquash: sideSquash,
+          glow: reduced ? 0 : Math.max(padSquash, sideSquash) * 0.72,
+        };
+      }
+      for (let seat = 0; seat < 2; seat++) {
+        const hitAge = s.time - paddleHitAt[seat];
+        const dip =
+          reduced || hitAge < 0 || hitAge >= 0.16
+            ? 0
+            : hitAge < 0.07
+              ? (1 - hitAge / 0.07) ** 2
+              : -0.22 * Math.max(0, 1 - Math.abs(hitAge - 0.115) / 0.045);
+        const shine = !reduced && hitAge >= 0 && hitAge < 0.22 ? (1 - hitAge / 0.22) ** 1.6 : 0;
+        const tilt =
+          !reduced && hitAge >= 0 && hitAge < 0.16
+            ? paddleHitOffset[seat] * 0.055 * (1 - hitAge / 0.16) * (seat === 0 ? 1 : -1)
+            : 0;
+        next[2 + seat] = { ...next[2 + seat], dip, tilt, shine };
+      }
+      if (next[12] && next[12].opacity !== 0) {
+        const tAge = s.time - turtleHitAt;
+        const bump = !reduced && tAge >= 0 && tAge < 0.2 ? Math.sin((1 - tAge / 0.2) * Math.PI) * (1 - tAge / 0.2) : 0;
+        next[12] = { ...next[12], bump };
+      }
+      return next;
     },
-    [arena, reduced, walls]
+    [arena, reduced, feel]
   );
   const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
-  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: beachFrameStep, result: beachResult, select: beachHud, pose });
+  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({
+    initial,
+    input,
+    active,
+    step: beachFrameStep,
+    result: beachResult,
+    select: selectBeachBoardHud,
+    pose,
+  });
+  useBeachSounds(state, onTone);
   useEffect(() => {
     input.set({ ...input.value, helper });
     if (!active) {
@@ -623,9 +833,6 @@ export function BeachBoard({
     }
   }, [s, outcome, active, onResult]);
   useEffect(() => {
-    if (s.event) onTone(s.cue === "point" ? "clear" : "shell-0", s.cue === "point");
-  }, [s.event, s.cue, onTone]);
-  useEffect(() => {
     if (!active || Platform.OS !== "web") return;
     const down = (e: KeyboardEvent) => {
       if (!["ArrowLeft", "ArrowRight", "a", "d", "A", "D"].includes(e.key)) return;
@@ -639,7 +846,13 @@ export function BeachBoard({
     return () => document.removeEventListener("keydown", down);
   }, [active, input, state]);
   const config = s.config,
-    scale = camera.scale;
+    scale = camera.scale,
+    wallSize = 18 * scale,
+    wallPad = Math.ceil(2 * scale),
+    sideHud = camera.x >= 130,
+    pillMaxWidth = sideHud ? Math.max(120, camera.x - 20) : Math.max(120, camera.width - 16),
+    learnTop = sideHud ? 10 : camera.y >= 38 ? 8 : camera.y + 42 * scale,
+    learnLeft = sideHud ? 10 : camera.x + 14 * scale;
   return (
     <GestureDetector gesture={gesture} touchAction="none">
       <Animated.View
@@ -647,7 +860,7 @@ export function BeachBoard({
         testID="beach-playfield"
         accessibilityLabel="Beach Ball court. Drag your paddle. Two players use opposite ends."
         onLayout={layout}
-        style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#173E50" }, gestureStyle]}
+        style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#1E5668" }, gestureStyle]}
       >
         <ArenaScene palm={false} world={config.world} camera={camera} />
         {(config.turtle || config.balls === 2
@@ -662,32 +875,84 @@ export function BeachBoard({
             pointerEvents="none"
             style={{
               position: "absolute",
-              left: camera.x + (p.x - 8) * scale,
-              top: camera.y + (p.y - 8) * scale,
-              width: 16 * scale,
-              height: 16 * scale,
-              borderRadius: 8 * scale,
+              left: camera.x + (p.x - 9) * scale,
+              top: camera.y + (p.y - 9) * scale,
+              width: 18 * scale,
+              height: 18 * scale,
+              borderRadius: 9 * scale,
               borderWidth: 2 * scale,
-              borderColor: "#FFFAE199",
+              borderColor: "#FFF8DCAA",
+              backgroundColor: "#FFF5C826",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
+          >
+            <View style={{ width: 4 * scale, height: 4 * scale, borderRadius: 2 * scale, backgroundColor: "#FFF8DCCC" }} />
+          </View>
         ))}
-        {[68, 69, 70, 71].map(i => <ArcadeSprite key={`trail${i}`} poses={poses} index={i} width={7 * scale} height={7 * scale}><View style={{ width: 7 * scale, height: 7 * scale, borderRadius: 4 * scale, backgroundColor: "#FFF5CB" }}/></ArcadeSprite>)}
-        <BeachSprites poses={poses} scale={scale} helper={s.helper} together={s.mode === "together"} />
-        {[0, 1].map(i => <ArcadeSprite key={`wall${i}`} poses={poses} index={66 + i} width={18 * scale} height={18 * scale}><Svg width={18 * scale} height={18 * scale} viewBox="0 0 18 18" accessible={false}><Path d="M9 1V5M9 13V17M1 9H5M13 9H17M4 4L6 6M12 12L14 14M4 14L6 12M12 6L14 4" stroke="#FFF0B1" strokeWidth={2} strokeLinecap="round"/></Svg></ArcadeSprite>)}
+        {!reduced &&
+          [68, 69, 70, 71].map((i) => (
+            <ArcadeSprite key={`trail${i}`} poses={poses} index={i} width={7 * scale} height={7 * scale}>
+              <View
+                testID={`beach-trail-${i - 68}`}
+                style={{
+                  width: 7 * scale,
+                  height: 7 * scale,
+                  borderRadius: 3.5 * scale,
+                  backgroundColor: "#FFF6D1",
+                  borderWidth: Math.max(0.5, 0.8 * scale),
+                  borderColor: "#E2A64F88",
+                }}
+              />
+            </ArcadeSprite>
+          ))}
+        <BeachSprites poses={poses} scale={scale} helper={s.helper} together={s.mode === "together"} reduced={reduced} />
+        {[0, 1].map((i) => (
+          <ArcadeSprite
+            key={`wall${i}`}
+            poses={poses}
+            index={66 + i}
+            width={wallSize}
+            height={wallSize}
+            padding={{ left: wallPad, right: wallPad, top: wallPad, bottom: wallPad }}
+          >
+            <View testID={`beach-wall-splash-${i}`} style={{ width: wallSize + wallPad * 2, height: wallSize + wallPad * 2 }}>
+              <BeachWallSplash size={wallSize + wallPad * 2} />
+            </View>
+          </ArcadeSprite>
+        ))}
         {[0, 1].map((i) => (
           <ArcadeSprite key={`pop${i}`} poses={poses} index={62 + i} width={65 * scale} height={26 * scale}>
-            <Text
+            <View
+              testID={`beach-pop-${i}`}
               style={{
-                color: "#FFF8CE",
-                fontSize: 22 * scale,
-                textAlign: "center",
-                textShadowColor: "#365063",
-                textShadowRadius: 3,
+                minWidth: 44 * scale,
+                paddingHorizontal: 6 * scale,
+                paddingVertical: 1 * scale,
+                borderRadius: 11 * scale,
+                backgroundColor: "#144859DD",
+                borderWidth: Math.max(1, 1.2 * scale),
+                borderColor: "#4D301E",
+                borderTopColor: "#FFF2C2",
+                alignSelf: "center",
+                alignItems: "center",
               }}
             >
-              +{config.countBy}
-            </Text>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                maxFontSizeMultiplier={1.3}
+                style={{
+                  color: "#FFF8CE",
+                  fontSize: 18 * scale,
+                  lineHeight: 22 * scale,
+                  fontWeight: "800",
+                  textAlign: "center",
+                }}
+              >
+                +{config.countBy}
+              </Text>
+            </View>
           </ArcadeSprite>
         ))}
         {[0, 1].map((i) => (
@@ -696,28 +961,63 @@ export function BeachBoard({
             pointerEvents="none"
             style={{
               position: "absolute",
-              top: camera.y + (i ? 5 : 562) * scale,
-              alignSelf: "center",
-              maxWidth: camera.width - 16,
+              ...(sideHud
+                ? i
+                  ? { right: 10, top: 10 }
+                  : { right: 10, bottom: 10 }
+                : i
+                  ? { top: Math.max(4, camera.y + 4 * scale), alignSelf: "center" }
+                  : { bottom: Math.max(4, camera.y + 4 * scale), alignSelf: "center" }),
+              maxWidth: pillMaxWidth,
               transform: i && s.mode === "together" ? [{ rotate: "180deg" }] : [],
             }}
           >
-            <Pill label={`${names[i]}, ${s.points[i] * config.countBy} points`}>
+            <BeachPill
+              testID={`beach-score-pill-${i}`}
+              tone={i ? "coral" : "lagoon"}
+              maxWidth={pillMaxWidth}
+              label={`${names[i]}, ${s.points[i] * config.countBy} points`}
+            >
               {i ? "◆" : "●"} {names[i]} · {s.points[i] * config.countBy}/{config.target * config.countBy}
-            </Pill>
+            </BeachPill>
           </View>
         ))}
         {config.countBy > 1 && (
-          <View pointerEvents="none" style={{ position: "absolute", left: 8, top: 8 }}>
-            <Pill>Count +{config.countBy}</Pill>
+          <View pointerEvents="none" style={{ position: "absolute", left: learnLeft, top: learnTop }}>
+            <BeachPill
+              testID="beach-learn-badge"
+              tone="learn"
+              maxWidth={sideHud ? Math.max(96, camera.x - 20) : Math.max(96, camera.width * 0.44)}
+              label={`Count by ${config.countBy}`}
+            >
+              Count +{config.countBy}
+            </BeachPill>
           </View>
         )}
         {s.tip && (
           <View
             pointerEvents="none"
-            style={{ position: "absolute", left: camera.x + 12 * scale, top: camera.y + 455 * scale }}
+            style={{ position: "absolute", left: camera.x + 16 * scale, top: camera.y + 458 * scale }}
           >
-            <Text style={{ color: "#FFF6D8", fontSize: 14 * scale }}>← Drag ● →</Text>
+            <View
+              style={{
+                paddingHorizontal: 10 * scale,
+                paddingVertical: 4 * scale,
+                borderRadius: 12 * scale,
+                backgroundColor: "#144859D9",
+                borderWidth: Math.max(1, scale),
+                borderColor: "#4D301E",
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                maxFontSizeMultiplier={1.3}
+                style={{ color: "#FFF7DC", fontSize: 13 * scale, fontWeight: "700" }}
+              >
+                ← Drag ● →
+              </Text>
+            </View>
           </View>
         )}
         {s.level === "endless" && (
@@ -729,7 +1029,7 @@ export function BeachBoard({
         )}
         {debug && (
           <Text style={{ position: "absolute", bottom: 2, left: 4, color: "white", fontSize: 10 }}>
-            UI loop · {clock.value.ticks} ticks · rally {s.bestRally}
+            UI loop · {clock.value.ticks} ticks · rally {state.value.bestRally}
           </Text>
         )}
       </Animated.View>

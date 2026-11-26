@@ -1,9 +1,10 @@
 import React, { memo, useId } from "react";
-import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { Image, View } from "react-native";
 import { PosePath, type ArtPose } from "../ArtPose";
 import type { SharedValue } from "react-native-reanimated";
 import { illustrated, palmActorLayout, type PalmActor } from "../games/palm-patrol/illustrated";
+import { beachIllustrated, beachStillFrame, type BeachActor } from "../games/beach-ball/illustrated";
 import type { OutfitId } from "../progress";
 import type { WorldId } from "../types";
 export const AmbientFriend = memo(function AmbientFriend({ night = false }: { night?: boolean }) {
@@ -180,34 +181,112 @@ export const PalmSpark = memo(function PalmSpark({ size, star }: { size: number;
     </Svg>
   );
 });
-export const BallArt = memo(function BallArt({ size, outline = 2 }: { size: number; outline?: number }) {
-  const clip = useId();
+export const BeachIllustration = memo(function BeachIllustration({
+  kind,
+  frame,
+  testID,
+}: {
+  kind: BeachActor;
+  frame: { position: "absolute"; left: number; top: number; width: number; height: number };
+  testID?: string;
+}) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 60 60" accessible={false}>
-      <Defs><ClipPath id={clip}><Circle cx={30} cy={30} r={28.5 - outline * 30 / size}/></ClipPath></Defs>
-      <G clipPath={`url(#${clip})`}>
-      <Circle cx={30} cy={30} r={30} fill="#FFF9DC" />
-      <Path d="M30 3Q9 31 30 57Q41 34 30 3" fill="#F27F72" />
-      <Path d="M30 3Q55 12 57 34L34 30Z" fill="#59CBBF" />
-      <Path d="M30 3Q10 4 4 26L24 20Z" fill="#F6C94E" />
+    <Image
+      testID={testID ?? `beach-${kind}-image`}
+      source={beachIllustrated[kind].source()}
+      resizeMode="contain"
+      accessible={false}
+      fadeDuration={0}
+      style={frame}
+    />
+  );
+});
 
-      <Ellipse cx={18} cy={15} rx={6} ry={3} fill="white" transform="rotate(-35 18 15)" />
-      </G>
-      <Circle cx={30} cy={30} r={28.5 - outline * 30 / size} fill="none" stroke="#234958" strokeWidth={outline * 60 / size} />
+function BeachStill({ kind, size }: { kind: BeachActor; size: number }) {
+  const frame = beachStillFrame(kind, size, size);
+  return (
+    <View style={{ width: size, height: size }}>
+      <BeachIllustration kind={kind} frame={frame} />
+    </View>
+  );
+}
+
+export const BeachSpark = memo(function BeachSpark({ size, kind }: { size: number; kind: "star" | "drop" | "coral" }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" accessible={false}>
+      {kind === "star" ? (
+        <Path
+          d="M7 0.8Q7.9 6.1 13.2 7Q7.9 7.9 7 13.2Q6.1 7.9 0.8 7Q6.1 6.1 7 0.8Z"
+          fill="#FFF7D1"
+          stroke="#D48A34"
+          strokeWidth={0.85}
+        />
+      ) : kind === "drop" ? (
+        <Path
+          d="M7 1.2C9.8 4.8 11.4 6.9 11.4 9A4.4 4.4 0 0 1 2.6 9C2.6 6.9 4.2 4.8 7 1.2Z"
+          fill="#D8FBF3"
+          stroke="#267D8A"
+          strokeWidth={0.9}
+        />
+      ) : (
+        <Circle cx={7} cy={7} r={3.6} fill="#FF9F7A" stroke="#6E3B28" strokeWidth={0.9} />
+      )}
     </Svg>
   );
 });
+
+export const BeachWallSplash = memo(function BeachWallSplash({ size }: { size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" accessible={false}>
+      <Circle cx={12} cy={12} r={8.5} fill="#FFF5C4" opacity={0.34} />
+      <Path
+        d="M12 1.8V6.2M12 17.8V22.2M1.8 12H6.2M17.8 12H22.2M4.8 4.8L7.9 7.9M16.1 16.1L19.2 19.2M4.8 19.2L7.9 16.1M16.1 7.9L19.2 4.8"
+        stroke="#FFF7D6"
+        strokeWidth={2.2}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M12 5.2Q13 11 18.8 12Q13 13 12 18.8Q11 13 5.2 12Q11 11 12 5.2Z"
+        fill="#FFE38A"
+        stroke="#A45E2A"
+        strokeWidth={0.8}
+      />
+    </Svg>
+  );
+});
+
+export const BallArt = memo(function BallArt({ size }: { size: number; outline?: number }) {
+  return <BeachStill kind="ball" size={size} />;
+});
+
 export const TurtleArt = memo(function TurtleArt({ size }: { size: number }) {
+  const id = useId().replace(/:/g, "");
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
-      <G fill="#A4D8A1" stroke="#285E53" strokeWidth={3}>
-        <Ellipse cx={50} cy={18} rx={13} ry={15} />
-        <Path d="M29 40Q2 23 10 53L27 58M71 40Q98 23 90 53L73 58M30 69L18 90L40 80M70 69L82 90L60 80" />
-        <Circle cx={50} cy={50} r={35} fill="#53A88F" />
-        <Path d="M50 30L69 46L61 71H39L31 46Z" fill="#BDE09D" />
+      <Defs>
+        <LinearGradient id={`turtle-shell-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#63C7A6" />
+          <Stop offset="1" stopColor="#2B7D6E" />
+        </LinearGradient>
+        <LinearGradient id={`turtle-scute-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#E4F4B5" />
+          <Stop offset="1" stopColor="#9ED28E" />
+        </LinearGradient>
+      </Defs>
+      <Circle cx={50} cy={52} r={43} fill="none" stroke="#E2FAF4" strokeWidth={2.2} opacity={0.55} />
+      <Ellipse cx={50} cy={56} rx={36} ry={34} fill="#1E525A" opacity={0.18} />
+      <G fill="#9AD497" stroke="#4D301E" strokeWidth={3} strokeLinejoin="round">
+        <Ellipse cx={50} cy={17} rx={12.5} ry={14} />
+        <Path d="M29 40Q3 24 10 53L27 58M71 40Q97 24 90 53L73 58M31 69L19 90L40 80M69 69L81 90L60 80" />
+        <Circle cx={50} cy={50} r={34} fill={`url(#turtle-shell-${id})`} />
+        <Path d="M50 28L69 45L61 70H39L31 45Z" fill={`url(#turtle-scute-${id})`} stroke="#386853" strokeWidth={2.4} />
       </G>
-      <Path d="M41 15L47 17M54 17L60 15" stroke="#285E53" strokeWidth={3} strokeLinecap="round" />
-      <Path d="M76 10H89L76 24H89" fill="none" stroke="#F8F6D0" strokeWidth={3} />
+      <Path d="M31 32Q46 20 66 30" fill="none" stroke="#E9FFF4" strokeWidth={3.4} strokeLinecap="round" opacity={0.85} />
+      <Path d="M50 28V16.5M31 45L18 42M69 45L82 42M39 70L30 78M61 70L70 78" stroke="#386853" strokeWidth={2} opacity={0.65} />
+      <Path d="M41.5 14.5Q44.5 17 47.5 15.5M52.5 15.5Q55.5 17 58.5 14.5" stroke="#4D301E" strokeWidth={2.6} strokeLinecap="round" fill="none" />
+      <Circle cx={40} cy={19} r={2.2} fill="#F49A83" opacity={0.75} />
+      <Circle cx={60} cy={19} r={2.2} fill="#F49A83" opacity={0.75} />
+      <Path d="M77 9H89L77 22H89" fill="none" stroke="#FFF6D2" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 });
@@ -286,87 +365,149 @@ function PalmGrove({ width, height, world, id }: { width: number; height: number
   );
 }
 
-export const Scene = memo(function Scene({
-  palm,
-  world = "w1",
+const beachPalettes = {
+  w1: { sky: ["#45A8C5", "#9EE4DE", "#FFF0BE"], water: ["#2596AA", "#6BD5C9"], sand: ["#FDE8AE", "#E1AB6B"], hill: "#8EC6B5" },
+  w2: { sky: ["#518EC4", "#AADEE8", "#FDE4B6"], water: ["#2E86AE", "#75C5D2"], sand: ["#FCE2A4", "#DDA668"], hill: "#8CBAC4" },
+  w3: { sky: ["#2D3F7B", "#817CBE", "#F2C397"], water: ["#275380", "#629EB5"], sand: ["#F4D79F", "#CE9E6B"], hill: "#6F79A7" },
+  w4: { sky: ["#43897E", "#9ED4BA", "#FAF0BC"], water: ["#29867F", "#72CBB5"], sand: ["#F8E4A5", "#DAAC6C"], hill: "#7EB9A2" },
+  w5: { sky: ["#675486", "#C39EC9", "#F8CEB8"], water: ["#496E94", "#89B3C1"], sand: ["#F7DAB0", "#D6A172"], hill: "#8D7EA6" },
+  w6: { sky: ["#B16857", "#ECAE82", "#FFE6AB"], water: ["#348795", "#76C0B7"], sand: ["#FDE5A7", "#DC9D60"], hill: "#B88C7B" },
+  learn: { sky: ["#389E8E", "#A7E0BC", "#FFF0BC"], water: ["#289B98", "#74D4BF"], sand: ["#FDEAB0", "#DFAD6E"], hill: "#80C4A9" },
+} satisfies Record<WorldId, { sky: [string, string, string]; water: [string, string]; sand: [string, string]; hill: string }>;
+
+function BeachCove({
   width,
   height,
+  world,
+  id,
+  court = false,
 }: {
-  palm: boolean;
-  world?: WorldId;
   width: number;
   height: number;
+  world: WorldId;
+  id: string;
+  court?: boolean;
 }) {
-  const p = palettes[world],
-    id = useId().replace(/:/g, "");
-  if (palm) return <PalmGrove width={width} height={height} world={world} id={id} />;
+  const c = beachPalettes[world];
   return (
     <Svg
       width={width}
       height={height}
       viewBox="0 0 360 600"
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid slice"
       style={{ position: "absolute" }}
       accessible={false}
     >
       <Defs>
-        <LinearGradient id={`action-sky-${id}`} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={p[0]} />
-          <Stop offset=".65" stopColor={p[1]} />
-          <Stop offset="1" stopColor={p[2]} />
+        <LinearGradient id={`beach-sky-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={c.sky[0]} />
+          <Stop offset=".42" stopColor={c.sky[1]} />
+          <Stop offset="1" stopColor={c.sky[2]} />
         </LinearGradient>
-        <LinearGradient id={`action-sand-${id}`} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FBE2A4" />
-          <Stop offset="1" stopColor="#DDA664" />
+        <LinearGradient id={`beach-water-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={c.water[0]} />
+          <Stop offset="1" stopColor={c.water[1]} />
+        </LinearGradient>
+        <LinearGradient id={`beach-sand-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={c.sand[0]} />
+          <Stop offset="1" stopColor={c.sand[1]} />
         </LinearGradient>
       </Defs>
-      <Rect width={360} height={600} fill={`url(#action-sky-${id})`} />
-      <G opacity={0.18}>
-      {/* Sky fills the arena; celestial discs keep a uniform scale on wide tablets. */}
-      <Ellipse cx={292} cy={90} rx={37 * Math.min(1, height * 360 / (width * 600))} ry={37 * Math.min(1, width * 600 / (height * 360))} fill={world === "w3" ? "#FFF1BE" : "#FFF3B2"} opacity={0.9} />
-      <Ellipse cx={292} cy={90} rx={49 * Math.min(1, height * 360 / (width * 600))} ry={49 * Math.min(1, width * 600 / (height * 360))} fill="#FFF4CE" opacity={0.13} />
+      <Rect width={360} height={600} fill={`url(#beach-sky-${id})`} />
       {world === "w3" &&
-        [22, 75, 135, 202, 330].map((x, i) => (
-          <Path key={x} d={star} fill="#FFE6B1" transform={`translate(${x} ${42 + (i % 3) * 35}) scale(.35)`} />
+        [28, 84, 146, 212, 326].map((x, i) => (
+          <Path key={x} d={star} fill="#FFF2CB" opacity={0.6 + (i % 3) * 0.16} transform={`translate(${x} ${36 + (i % 3) * 28}) scale(.36)`} />
         ))}
-      <Path d="M0 184Q62 160 124 182T248 182T372 182V600H0Z" fill="#228F9C" opacity={0.45} />
-      <Path d="M0 206Q80 188 162 208T360 202" fill="none" stroke="#C5F4E2" strokeWidth={3} opacity={0.5} />
-      <Path
-        d="M0 245Q95 221 180 244T360 231V600H0Z"
-        fill={`url(#action-sand-${id})`}
-      />
-      <Path
-        d="M0 244Q100 224 190 246T360 234"
-        fill="none"
-        stroke="#FFFAE4"
-        strokeWidth={8}
-        opacity={0.8}
-      />
+      {/* Warm tropical sun / moon halo and soft diagonal sunbeams */}
+      <G fill="#FFF6C9">
+        <Circle cx={288} cy={88} r={74} opacity={0.14} />
+        <Circle cx={288} cy={88} r={52} opacity={0.24} />
+        <Circle cx={288} cy={88} r={30} opacity={0.92} />
+        <Path d="M248 96L86 356L138 356L278 104ZM298 104L260 356L302 356L320 100Z" opacity={0.11} />
       </G>
-      <Rect x={18} y={48} width={324} height={504} rx={48} fill="#FFF0CB" opacity={0.09}/>
-      <Path d="M22 300H338" stroke="#FFF9DA" strokeWidth={2} strokeDasharray="8 10" opacity={0.35}/>
-      <Circle cx={180} cy={300} r={58} fill="none" stroke="#FFF9DA" strokeWidth={2} opacity={0.35}/>
-      {/* Rails mark the engine’s ball-centre reflection planes. End lines stay open. */}
-      <Path d="M12 0V600M348 0V600" stroke="#F8EFCE" opacity={0.8} strokeWidth={2}/>
-      <Path d="M12 0H348M12 600H348" stroke="#B5F1DF" opacity={0.5} strokeWidth={3} strokeDasharray="2 10"/>
-      <Path d="M172 16L180 8L188 16M172 584L180 592L188 584" stroke="#FFF4CF" strokeWidth={3} fill="none"/>
-      <Palm x={-8} y={377} scale={0.55} />
-      <Palm x={368} y={110} scale={0.55} />
-      {[28, 80, 145, 214, 295, 332].map((x, i) => (
-        <G key={x} opacity={0.4}>
-          <Ellipse cx={x} cy={570 - (i % 3) * 40} rx={3} ry={1.5} fill="#926841" />
-          <Circle cx={x + 7} cy={577 - (i % 3) * 40} r={1.5} fill="#FFF4D5" />
+      {/* Soft storybook clouds */}
+      <G fill="#FFF9E6" opacity={world === "w3" ? 0.34 : 0.62}>
+        <Path d="M36 96Q44 82 60 86Q72 72 90 82Q104 80 110 96Z" />
+        <Path d="M168 68Q176 57 188 61Q198 51 212 60Q222 59 226 68Z" opacity={0.78} />
+      </G>
+      {/* Distant coastal headlands */}
+      <Path d="M0 162Q64 128 134 156Q204 176 286 140Q328 124 360 144V210H0Z" fill={c.hill} opacity={0.5} />
+      {/* Sparkling turquoise lagoon */}
+      <Path d="M0 164Q88 150 180 164T360 158V290H0Z" fill={`url(#beach-water-${id})`} opacity={0.86} />
+      <Path d="M0 184Q80 172 168 186T360 180" fill="none" stroke="#E0FCF4" strokeWidth={2.4} opacity={0.55} />
+      <Path d="M0 206Q92 194 184 208T360 202" fill="none" stroke="#D3F8EE" strokeWidth={2} opacity={0.42} />
+      {/* Crisp sunlit water glints */}
+      <G fill="#FFF9DC" opacity={0.72}>
+        <Rect x={48} y={176} width={22} height={3} rx={1.5} />
+        <Rect x={144} y={192} width={28} height={3} rx={1.5} />
+        <Rect x={246} y={173} width={26} height={3} rx={1.5} />
+        <Rect x={274} y={196} width={18} height={2.5} rx={1.2} />
+        <Path d="M96 184Q97.5 188.5 102 190Q97.5 191.5 96 196Q94.5 191.5 90 190Q94.5 188.5 96 184Z" />
+        <Path d="M222 179Q223.2 182.8 227 184Q223.2 185.2 222 189Q220.8 185.2 217 184Q220.8 182.8 222 179Z" />
+      </G>
+      {/* Scalloped lagoon foam and sunlit golden sand cove */}
+      <Path d="M0 226Q92 206 182 226T360 216V600H0Z" fill="#C9EDE1" opacity={0.78} />
+      <Path d="M0 236Q96 218 186 238T360 226V600H0Z" fill={`url(#beach-sand-${id})`} />
+      <Path d="M0 234Q96 216 186 236T360 224" fill="none" stroke="#FFF9E6" strokeWidth={6} opacity={0.82} />
+      {court && (
+        <>
+          {/* Subtle warm sand court wash for crisp ball & paddle figure-ground contrast */}
+          <Rect x={14} y={36} width={332} height={528} rx={36} fill="#FFF7DE" opacity={0.22} />
+          <Path d="M22 300H338" stroke="#8A613B" strokeWidth={2.5} strokeDasharray="8 10" opacity={0.22} />
+          <Path d="M22 299H338" stroke="#FFF9DF" strokeWidth={2.2} strokeDasharray="8 10" opacity={0.78} />
+          <Circle cx={180} cy={300} r={56} fill="none" stroke="#8A613B" strokeWidth={2.4} opacity={0.18} />
+          <Circle cx={180} cy={299} r={56} fill="none" stroke="#FFF9DF" strokeWidth={2.2} opacity={0.72} />
+          {/* Rails mark the engine's exact ball-centre reflection planes (x = 12, x = 348). End lines stay open. */}
+          <Path d="M12 0V600M348 0V600" stroke="#5A3925" opacity={0.32} strokeWidth={4} />
+          <Path d="M12 0V600M348 0V600" stroke="#FFF6D8" opacity={0.92} strokeWidth={2.2} />
+          <Path d="M12 0H348M12 600H348" stroke="#CFF6E8" opacity={0.58} strokeWidth={3} strokeDasharray="2 10" />
+          <Path d="M172 16L180 8L188 16M172 584L180 592L188 584" stroke="#FFF7D6" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </>
+      )}
+      {/* Warm sunlit coastal palm framing */}
+      <Path d="M0 442Q46 432 76 456L0 472ZM360 156Q318 166 296 196L360 184Z" fill="#7D5435" opacity={0.12} />
+      <Palm x={-10} y={388} scale={0.62} />
+      <Palm x={370} y={108} scale={0.6} />
+      {/* Subtle coastal shell, starfish, and sand pebble motifs along outer margins */}
+      <G opacity={0.65}>
+        <Path d="M28 552Q34 542 40 552Q34 557 28 552Z" fill="#FFF2D6" stroke="#8B5A38" strokeWidth={1.1} />
+        <Path d="M322 558L325 552L328 558L334 559L329 563L330 569L325 566L320 569L321 563L316 559Z" fill="#F59B78" stroke="#7A422B" strokeWidth={0.9} />
+        <Path d="M324 252Q331 243 338 252Q331 257 324 252Z" fill="#FBE5B8" stroke="#8B5A38" strokeWidth={1} />
+      </G>
+      {[28, 76, 142, 218, 294, 334].map((x, i) => (
+        <G key={x} opacity={0.42}>
+          <Ellipse cx={x} cy={574 - (i % 3) * 34} rx={3.2} ry={1.6} fill="#966A43" />
+          <Circle cx={x + 7} cy={580 - (i % 3) * 34} r={1.5} fill="#FFF5D8" />
         </G>
       ))}
       <Path
-        d="M31 129Q37 122 43 129Q49 122 55 129M110 77Q116 70 122 77Q128 70 134 77"
+        d="M34 118Q40 111 46 118Q52 111 58 118M114 78Q120 71 126 78Q132 71 138 78"
         fill="none"
-        stroke="#E7F8DE"
+        stroke="#FFF8DF"
         strokeWidth={2}
-        opacity={0.65}
+        strokeLinecap="round"
+        opacity={0.72}
       />
     </Svg>
   );
+}
+
+export const Scene = memo(function Scene({
+  palm,
+  world = "w1",
+  width,
+  height,
+  court = false,
+}: {
+  palm: boolean;
+  world?: WorldId;
+  width: number;
+  height: number;
+  court?: boolean;
+}) {
+  const id = useId().replace(/:/g, "");
+  if (palm) return <PalmGrove width={width} height={height} world={world} id={id} />;
+  return <BeachCove width={width} height={height} world={world} id={id} court={court} />;
 });
 export function ChestArt({ size = 150, open = false }: { size?: number; open?: boolean }) {
   const id = useId().replace(/:/g, "");
