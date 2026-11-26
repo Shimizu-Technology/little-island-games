@@ -29,6 +29,7 @@ import { engine as e26 } from '../games/word-workshop/engine';
 import { engine as e27 } from '../games/story-studio/engine';
 import { engine as e28 } from '../games/slip-tide/engine';
 import { engine as e29 } from '../games/canoe-seats/engine';
+import { engine as e30 } from '../games/gate-crab/engine';
 import type { LearnEngine, LearnId } from '../types';
 export const registeredEngines: Record<LearnId, LearnEngine<unknown>> = {
   'reef-race': e0 as LearnEngine<unknown>,
@@ -61,4 +62,5 @@ export const registeredEngines: Record<LearnId, LearnEngine<unknown>> = {
   'story-studio': e27 as LearnEngine<unknown>,
   'slip-tide': e28 as LearnEngine<unknown>,
   'canoe-seats': e29 as LearnEngine<unknown>,
+  'gate-crab': e30 as LearnEngine<unknown>,
 };

@@ -21,6 +21,7 @@
     { "owner": "o1-slip-tide-inline", "first": 298, "last": 299 },
     { "owner": "other-originals", "first": 300, "last": 399, "note": "O2-O6: assigned per slice." },
     { "owner": "o2-canoe-seats", "first": 300, "last": 309, "note": "O2 Canoe Seats. Packed Endless Tide plus inline School/Deep Water banks; dares 2000-2099." },
+    { "owner": "o3-gate-crab", "first": 310, "last": 329, "note": "O3 Gate Crab. Packed Endless Tide plus inline Deep Water and dare banks; dares 2100-2199." },
     { "owner": "science", "first": 400, "last": 419, "note": "S1-S3: assigned per slice." },
     { "owner": "numbers", "first": 420, "last": 439, "note": "N1-N4: assigned per slice." },
     { "owner": "n1a", "first": 420, "last": 429 },

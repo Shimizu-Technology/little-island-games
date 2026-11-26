@@ -1,0 +1,23 @@
+{
+ "format": 1,
+ "family": "gate-crab",
+ "seedBase": 1,
+ "attempts": 462,
+ "rejects": {
+  "template-cap": 78,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "a": 16,
+  "b": 32,
+  "c": 44,
+  "d": 44,
+  "e": 160,
+  "f": 88
+ },
+ "sourceSha": "dd77651bfc7f82965dbcae616e628cfc2e4878bf",
+ "status": "complete"
+}
