@@ -1,0 +1,167 @@
+{
+ "format": 1,
+ "family": "picture-grid",
+ "slot": 111,
+ "catalogRevision": 33,
+ "band": "medium",
+ "ordinals": [
+  113664,
+  28
+ ],
+ "sourceSha": "4a972e4d67383421d2f768c32c4375233d8f971b",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "0d0e6cee43944eed96956d81d901930b7c9f8101e89cf01a0cf0ca786e226c47"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 78,
+  "kept": [
+   16777217,
+   16777218,
+   16777219,
+   16777220,
+   16777221,
+   16777222,
+   16777223,
+   16777224,
+   16777225,
+   16777226,
+   16777227,
+   16777228,
+   16777229,
+   16777230,
+   16777231,
+   16777232,
+   16777233,
+   16777234,
+   16777235,
+   16777236,
+   16777237,
+   16777238,
+   16777239,
+   16777240,
+   16777241,
+   16777242,
+   16777243,
+   16777244
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 28,
+  "semantic": 28
+ },
+ "histograms": {
+  "technique": {
+   "line-logic": 28
+  },
+  "template": {
+   "bananas": 1,
+   "blue-tang": 1,
+   "camp-tent": 1,
+   "campfire": 1,
+   "clam": 1,
+   "coconut-drink": 1,
+   "dragonfly": 1,
+   "footprint": 1,
+   "hermit-crab": 1,
+   "jellyfish": 1,
+   "lighthouse": 1,
+   "meteor": 1,
+   "octopus": 1,
+   "parrot": 1,
+   "pineapple": 1,
+   "popsicle": 1,
+   "pufferfish": 1,
+   "rain-cloud": 1,
+   "sail-on-the-lagoon": 1,
+   "sandcastle": 1,
+   "saturn": 1,
+   "sea-turtle": 1,
+   "shooting-star": 1,
+   "stingray": 1,
+   "teapot": 1,
+   "treasure-chest": 1,
+   "volcano": 1,
+   "watermelon": 1
+  },
+  "layout": {
+   "bananas": 1,
+   "blue-tang": 1,
+   "camp-tent": 1,
+   "campfire": 1,
+   "clam": 1,
+   "coconut-drink": 1,
+   "dragonfly": 1,
+   "footprint": 1,
+   "hermit-crab": 1,
+   "jellyfish": 1,
+   "lighthouse": 1,
+   "meteor": 1,
+   "octopus": 1,
+   "parrot": 1,
+   "pineapple": 1,
+   "popsicle": 1,
+   "pufferfish": 1,
+   "rain-cloud": 1,
+   "sail-on-the-lagoon": 1,
+   "sandcastle": 1,
+   "saturn": 1,
+   "sea-turtle": 1,
+   "shooting-star": 1,
+   "stingray": 1,
+   "teapot": 1,
+   "treasure-chest": 1,
+   "volcano": 1,
+   "watermelon": 1
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   25,
+   67
+  ],
+  "exact": 28
+ },
+ "proofHashes": {
+  "witness": "9722668931574576c400a5802d0c3a59530603ab43b568877e011e318213f257",
+  "trace": "2a160ced1d3bf50517176c1e94382b2149f8235c65f302631dd9d4b6553da980",
+  "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original pixel drawings. Exact line deductions and independently enumerated line placements certify each puzzle."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 5161,
+  "gzip": 1429
+ },
+ "sha256": "97a39726b029bff6190204927d12c521aa8a983c5b780b78fb60a2e8aabf0094",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

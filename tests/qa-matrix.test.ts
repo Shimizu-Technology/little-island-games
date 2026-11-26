@@ -43,15 +43,15 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     expect(() => validate(matrix, { ...inventory, [field]: [...inventory[field], 'new-registration'] })).toThrow(/missing/);
   });
   it('regenerates a newly registered planned game and its banks without any override or large JSON edit', () => fixture(root => {
-    const file = join(root,'src/challenge/registrations/picture-grid.ts');
-    writeFileSync(file,"export const qaMechanics = ['M03', 'M04'] as const;\n");
+    const file = join(root,'src/challenge/registrations/cross-sums.ts');
+    writeFileSync(file,"export const qaMechanics = ['M01'] as const;\n");
     const next = discoverInventory(root), generated = buildMatrix(root, scope, next);
     expect(() => validateMatrix(matrix,scope,next,index)).toThrow(/missing Challenge/);
     expect(() => validateMatrix(generated,scope,next,index)).not.toThrow();
-    expect(generated.rows.find(r => r.id === 'G-picture-grid')?.availability).toBe('registered');
-    expect(generated.rows.find(r => r.id === 'G-picture-grid')?.surfaces).toContain('Challenge:picture-grid');
-    expect(generated.rows.filter(r => r.id.startsWith('B-picture-grid-')).every(r => r.availability === 'registered')).toBe(true);
-    expect(generated.rows.find(r => r.id === 'M04')?.availability).toBe('registered');
+    expect(generated.rows.find(r => r.id === 'G-cross-sums')?.availability).toBe('registered');
+    expect(generated.rows.find(r => r.id === 'G-cross-sums')?.surfaces).toContain('Challenge:cross-sums');
+    expect(generated.rows.filter(r => r.id.startsWith('B-cross-sums-')).every(r => r.availability === 'registered')).toBe(true);
+    expect(generated.rows.find(r => r.id === 'M01')?.availability).toBe('registered');
   }));
   it('reads declared mechanics from real registration files, independently of the scope', () => fixture(root => {
     const path = join(root,'src/learn/games/reef-race/registration.json');
@@ -127,7 +127,8 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     const markdown = renderMatrix(matrix);
     expect(markdown).toContain(`${nativeCases(matrix)} device-dimension executions`);
     expect(markdown).toContain('[M01](#mechanics)');
-    expect(markdown).toContain('25×25');
+    expect(markdown).toContain('15×15');
+    expect(markdown).not.toContain('Picture Grid 25×25');
     expect(markdown).toContain('pass 2 not run');
     expect(markdown).toContain('host: passed (partial)');
   });

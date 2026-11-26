@@ -1,0 +1,21 @@
+{
+ "format": 1,
+ "family": "picture-grid",
+ "seedBase": 1,
+ "attempts": 78,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "easy": 30,
+  "medium": 28,
+  "hard": 9,
+  "expert": 11
+ },
+ "sourceSha": "4a972e4d67383421d2f768c32c4375233d8f971b",
+ "status": "complete"
+}

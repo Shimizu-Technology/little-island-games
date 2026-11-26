@@ -92,8 +92,8 @@ export const playLabel = (entry: ChallengeEntry, ref: PuzzleRef, tier: number) =
  * (`Lagoon 1`, `Shallows 1`, `Deep Channel 3`). Refs, bank facts and saves are untouched.
  */
 export function boardTitle(entry: ChallengeEntry, ref: PuzzleRef, tier: number): string {
-  const band = entry.packed?.bands.find(b => b.bank === ref.bank), name = band ? plainTitle(band.title) : '';
-  return [name && !DEPTH_WORD.test(name) ? name : '', difficultyWord(tier), bankSize(entry, ref)].filter(Boolean).join(' · ');
+  const band = entry.packed?.bands.find(b => b.bank === ref.bank), name = band ? plainTitle(band.title) : '', word = difficultyWord(tier);
+  return [name && !DEPTH_WORD.test(name) && name !== word ? name : '', word, bankSize(entry, ref)].filter(Boolean).join(' · ');
 }
 /** The tier a saved ref was dealt at. */
 export const tierOf = (entry: ChallengeEntry, ref: PuzzleRef) => cardFor(ref, [entry])?.tier ?? entry.packed?.bands.find(b => b.bank === ref.bank)?.tier;
@@ -107,7 +107,7 @@ export function bankNames(bands: readonly PackedBand[]): string[] {
   return plain.some(t => DEPTH.test(t) || !t) || new Set(plain).size < plain.length ? plain.map((_, i) => `Set ${i + 1}`) : plain;
 }
 
-const LATIN = Object.keys(latinRungs), EDGES = ['bridges', 'loop', 'pearl-loop'], TABLE = ['solitaire'];
+const LATIN = Object.keys(latinRungs), EDGES = ['bridges', 'loop', 'pearl-loop'], TABLE = ['solitaire'], PICTURE = ['picture-grid'];
 /**
  * What the HUD may send straight to an engine. A board that owns its help (`helpUI: 'board'`) hands the HUD its own
  * staged Hint and Undo through `BoardHud` instead, so nothing here can reveal or change a draft. Only a frame-help game
@@ -117,7 +117,7 @@ export function hudActions(entry: ChallengeEntry): { hint?: unknown } {
   return entry.helpUI === 'board' ? {} : { hint: entry.controls.help() };
 }
 /** Boards whose engine reset keeps the same attempt, its options and its help audit (Restart this puzzle). Word Search's `reset()` is an Undo, so it has none. */
-export const engineReset = (entry: ChallengeEntry): unknown => LATIN.includes(entry.game) || EDGES.includes(entry.game) || TABLE.includes(entry.game) ? entry.controls.reset() : undefined;
+export const engineReset = (entry: ChallengeEntry): unknown => LATIN.includes(entry.game) || EDGES.includes(entry.game) || TABLE.includes(entry.game) || PICTURE.includes(entry.game) ? entry.controls.reset() : undefined;
 /** Boards that read the Mistakes choice (Friendly, Check when I ask, Rewind) live. Others leave it out of More. */
 export const honorsMistakes = (entry: ChallengeEntry) => LATIN.includes(entry.game);
 
@@ -133,4 +133,5 @@ export const TIPS: Record<string, readonly string[]> = {
   'pearl-loop': ['Draw one loop through every pearl.', 'Turn on black pearls.', 'Go straight through white pearls.'],
   solitaire: ['Build down, red on black.', 'Move kings to empty spaces.', 'Put every card home, ace first.'],
   'word-search': ['Find every word in the grid.', 'Drag from the first letter to the last.'],
+  'picture-grid': ['Numbers count filled squares in each row and column.', 'Leave a gap between separate groups.', 'Cross out squares that stay empty.'],
 };

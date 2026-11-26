@@ -1,0 +1,173 @@
+{
+ "format": 1,
+ "family": "picture-grid",
+ "slot": 110,
+ "catalogRevision": 33,
+ "band": "easy",
+ "ordinals": [
+  112640,
+  30
+ ],
+ "sourceSha": "4a972e4d67383421d2f768c32c4375233d8f971b",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "0d0e6cee43944eed96956d81d901930b7c9f8101e89cf01a0cf0ca786e226c47"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 78,
+  "kept": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 30,
+  "semantic": 30
+ },
+ "histograms": {
+  "technique": {
+   "line-logic": 30
+  },
+  "template": {
+   "anchor": 1,
+   "bird": 1,
+   "butterfly": 1,
+   "cactus": 1,
+   "crab": 1,
+   "crown": 1,
+   "cup": 1,
+   "diamond-ring": 1,
+   "fish": 1,
+   "flower": 1,
+   "heart": 1,
+   "house": 1,
+   "ice-pop": 1,
+   "key": 1,
+   "kite": 1,
+   "moon": 1,
+   "mushroom": 1,
+   "palm": 1,
+   "paw-print": 1,
+   "pine": 1,
+   "rocket": 1,
+   "sailboat": 1,
+   "shell": 1,
+   "snail": 1,
+   "star": 1,
+   "sun": 1,
+   "sunglasses": 1,
+   "turtle": 1,
+   "umbrella": 1,
+   "whale": 1
+  },
+  "layout": {
+   "anchor": 1,
+   "bird": 1,
+   "butterfly": 1,
+   "cactus": 1,
+   "crab": 1,
+   "crown": 1,
+   "cup": 1,
+   "diamond-ring": 1,
+   "fish": 1,
+   "flower": 1,
+   "heart": 1,
+   "house": 1,
+   "ice-pop": 1,
+   "key": 1,
+   "kite": 1,
+   "moon": 1,
+   "mushroom": 1,
+   "palm": 1,
+   "paw-print": 1,
+   "pine": 1,
+   "rocket": 1,
+   "sailboat": 1,
+   "shell": 1,
+   "snail": 1,
+   "star": 1,
+   "sun": 1,
+   "sunglasses": 1,
+   "turtle": 1,
+   "umbrella": 1,
+   "whale": 1
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   8,
+   20
+  ],
+  "exact": 30
+ },
+ "proofHashes": {
+  "witness": "364a5dc50189c2e79c744d375cbff0e79b7c8d786db27401735d3d57c4717e91",
+  "trace": "8844d9afe816dd023a4f1060e8db654725507bffe3b3ab0d385a7cdb72c0d155",
+  "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original pixel drawings. Exact line deductions and independently enumerated line placements certify each puzzle."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 3852,
+  "gzip": 992
+ },
+ "sha256": "322a387da3ae17d2e5f720d8b3dac7bf9ddcb238e40e3432ce634a4537cb377a",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

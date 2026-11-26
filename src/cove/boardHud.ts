@@ -2,8 +2,10 @@ import { createContext, useContext, useLayoutEffect, useRef } from 'react';
 
 /** One command a board hands its host: what it does, whether it can run now, and optionally its spoken word. */
 export type HudCommand = { run: () => void; disabled?: boolean; label?: string };
-/** `hint` is the board's own first staged step (Look, never a move); `undo` and `reset` carry the board's own cleanup. */
-export type BoardCommands = { hint?: HudCommand; undo?: HudCommand; reset?: HudCommand };
+/** One board-specific row shown in Cove's single More sheet (icon names match `src/ui/icons.ts`). */
+export type BoardMoreAction = { label: string; run: () => void; disabled?: boolean; icon?: 'Sparkle' | 'PuzzlePiece' | 'Plus' | 'GridFour' };
+/** `hint` is the board's own first staged step (Look, never a move); `undo` and `reset` carry the board's own cleanup; `extraActions` adds board-specific More items; `localPlay` marks a local board (such as Picture Grid's family solver) whose HUD controls stay usable over a finished Cove round without touching the saved finish. */
+export type BoardCommands = { hint?: HudCommand; undo?: HudCommand; reset?: HudCommand; extraActions?: readonly BoardMoreAction[]; localPlay?: boolean };
 /**
  * A Puzzles round hosts its live board under this context. A hosted board hands the HUD its own staged Hint and its
  * own Undo and Start over, leaves its duplicate buttons out, and shows the host's plain title. Outside a host

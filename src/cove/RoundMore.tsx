@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Icon, PressTarget, Sheet, Text, glyphs, theme } from '../ui';
 import type { IconGlyph } from '../ui';
+import type { BoardMoreAction } from './boardHud';
 import type { Mistakes } from './local';
 import { CoveMotif } from './CoveArt';
 import { FaceButton } from './PeoplePicker';
@@ -20,12 +21,14 @@ function Row({ glyph, label, onPress, disabled }: { glyph: IconGlyph; label: str
 }
 type Step = 'main' | 'send' | 'tips' | 'roles' | 'restart';
 
+export type RoundMoreAction = { label: string; onPress: () => void; disabled?: boolean; icon?: BoardMoreAction['icon'] };
+
 /**
  * The board's More sheet: short, undimmed and over the bottom of the screen so the board stays in view above it.
  * Everything that is not playing lives here, each one tap away, with sub-steps (Send to…, How to play, Roles,
  * Restart) shown in place with a way back.
  */
-export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRestart, restartDisabled, onNew, onChoose, people, onSend, role, onGrownUps, busy, held }: {
+export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRestart, restartDisabled, extraActions, onNew, onChoose, people, onSend, role, onGrownUps, busy, held }: {
   visible: boolean;
   onClose: () => void;
   game: string;
@@ -34,6 +37,8 @@ export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRest
   onRestart?: () => void;
   /** The board has nothing to restart yet. */
   restartDisabled?: boolean;
+  /** Board-specific actions (e.g. Picture Grid's Draw a Puzzle) surfaced inside this single More sheet. */
+  extraActions?: readonly RoundMoreAction[];
   onNew?: () => void;
   onChoose?: () => void;
   /** People this puzzle can be sent to. */
@@ -66,6 +71,7 @@ export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRest
       </View>}
       {!!held && <Text variant="caption" tone="muted" accessibilityLiveRegion="polite">{held}</Text>}
       {onRestart && <Row glyph={glyphs.ArrowClockwise} label="Restart this puzzle" disabled={busy || !!held || restartDisabled} onPress={() => setView('restart')}/>}
+      {extraActions?.map(action => <Row key={action.label} glyph={action.icon ? glyphs[action.icon] : glyphs.Sparkle} label={action.label} disabled={busy || action.disabled} onPress={() => { close(); action.onPress(); }}/>)}
       {onNew && <Row glyph={glyphs.Plus} label="New puzzle" disabled={busy || !!held} onPress={() => { close(); onNew(); }}/>}
       {/* The chooser opens over the round; More steps aside meanwhile and returns when it closes. */}
       {onChoose && <Row glyph={glyphs.GridFour} label="Choose a puzzle" disabled={!!held} onPress={onChoose}/>}

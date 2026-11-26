@@ -1,0 +1,110 @@
+{
+ "format": 1,
+ "family": "picture-grid",
+ "slot": 112,
+ "catalogRevision": 33,
+ "band": "hard",
+ "ordinals": [
+  114688,
+  9
+ ],
+ "sourceSha": "4a972e4d67383421d2f768c32c4375233d8f971b",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "0d0e6cee43944eed96956d81d901930b7c9f8101e89cf01a0cf0ca786e226c47"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 78,
+  "kept": [
+   33554433,
+   33554434,
+   33554435,
+   33554436,
+   33554437,
+   33554438,
+   33554439,
+   33554440,
+   33554441
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 9,
+  "semantic": 9
+ },
+ "histograms": {
+  "technique": {
+   "line-logic": 9
+  },
+  "template": {
+   "coconut-palm": 1,
+   "gecko": 1,
+   "hibiscus": 1,
+   "koi": 1,
+   "manta-ray": 1,
+   "moon-over-guam": 1,
+   "nautilus": 1,
+   "reef-fish": 1,
+   "sea-star": 1
+  },
+  "layout": {
+   "coconut-palm": 1,
+   "gecko": 1,
+   "hibiscus": 1,
+   "koi": 1,
+   "manta-ray": 1,
+   "moon-over-guam": 1,
+   "nautilus": 1,
+   "reef-fish": 1,
+   "sea-star": 1
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   58,
+   91
+  ],
+  "exact": 9
+ },
+ "proofHashes": {
+  "witness": "839a62b5a632f89e4fe4e9323ce67c5436b33332ee18e708b2867efdd71e4a6f",
+  "trace": "dbcca3bf26c71445ea4ee6f2e1b02be58a48a1954d55bec9b06f7e1d3486fe90",
+  "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original pixel drawings. Exact line deductions and independently enumerated line placements certify each puzzle."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 2068,
+  "gzip": 713
+ },
+ "sha256": "de00a491b0d35c6325ffe69276a5b6ad14ce32b03e74bdaf41e4242cf4641f98",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

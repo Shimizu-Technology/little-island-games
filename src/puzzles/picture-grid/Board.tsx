@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useBoardHud } from '../../cove/boardHud';
 import { GridChromeContext } from '../grid/budget';
 import { GridFeedback } from '../grid/preferences';
 import { GridCanvas, gridLayout } from './GridCanvas';
 import { Control, Feedback, MoveGrid, controlRow, ink, paper } from './controls';
-import { CROSS, FILL, picturePalettes, solved, type Mark, type PictureBand, type PictureGrid } from './engine';
+import { CROSS, EMPTY, FILL, picturePalettes, solved, type Mark, type PictureBand, type PictureGrid } from './engine';
 import { pictureHint } from './help';
 import type { PictureDraft, PictureEvent } from './checkpoint';
 
@@ -71,6 +72,29 @@ export function Board({ picture, draft, dispatch, active, width, band, onBack, o
   const canEdit = active && !done;
   const movingGrid = moving && layout.movable;
   const title = band ? `${band.title} ${picture.size}×${picture.size}` : `${picture.size}×${picture.size}`;
+  const ask = () => {
+    setMoving(false);
+    if (draft.showingHint) return;
+    if (pictureHint(picture, draft.marks)) dispatch({ type: 'hint' });
+    else setAskedOn(draft);
+  };
+  const extraActions = [
+    ...(onBack ? [{ label: 'Back to puzzle', icon: 'PuzzlePiece' as const, run: onBack }] : []),
+    ...(onDraw ? [{ label: 'Draw a Puzzle', icon: 'Sparkle' as const, run: onDraw }] : []),
+  ];
+  const moreActions = extraActions.length ? extraActions : undefined;
+  const localPlay = Boolean(onBack);
+  const host = useBoardHud(done
+    ? { extraActions: moreActions, localPlay }
+    : {
+        hint: { run: ask, disabled: !canEdit || draft.showingHint },
+        undo: { run: () => dispatch({ type: 'undo' }), disabled: !canEdit || !draft.undo.length },
+        reset: { run: () => dispatch({ type: 'reset' }), disabled: !canEdit || (draft.marks.every(m => m === EMPTY) && !draft.undo.length) },
+        extraActions: moreActions,
+        localPlay,
+      });
+  const hosted = !!host;
+  const sheetOpen = !hosted && more;
   if (done) return <View style={styles.board}>
     <PictureReveal picture={picture} marks={draft.marks} width={Math.min(width, Math.max(150, usableHeight - 155))} />
     <View style={controlRow}>
@@ -80,34 +104,39 @@ export function Board({ picture, draft, dispatch, active, width, band, onBack, o
     </View>
   </View>;
 
-  const ask = () => {
-    setMoving(false);
-    if (draft.showingHint) return;
-    if (pictureHint(picture, draft.marks)) dispatch({ type: 'hint' });
-    else setAskedOn(draft);
-  };
   const close = () => setMore(false);
   return <View style={styles.board}>
-    <View style={[controlRow, styles.hud]}>
-      {onBack && <Control title="‹" label="Back to Puzzles" onPress={onBack} />}
-      <View style={styles.titleBlock}>
-        <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.title}>Picture Grid</Text>
-        <Text maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+    {hosted ? (
+      onBack ? (
+        <View style={controlRow}>
+          <Control title="‹" label="Back to puzzle" onPress={onBack} />
+          <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+        </View>
+      ) : (
+        <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+      )
+    ) : (
+      <View style={[controlRow, styles.hud]}>
+        {onBack && <Control title="‹" label="Back to Puzzles" onPress={onBack} />}
+        <View style={styles.titleBlock}>
+          <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.title}>Picture Grid</Text>
+          <Text maxFontSizeMultiplier={2} style={styles.subTitle}>{title}</Text>
+        </View>
+        <Control title="Undo" onPress={() => dispatch({ type: 'undo' })} disabled={!canEdit || !draft.undo.length} testID="picture-undo" />
+        <Control title="Hint" onPress={ask} disabled={!canEdit} testID="picture-hint" />
+        <Control title="•••" label="More" onPress={() => setMore(value => !value)} disabled={!canEdit} selected={more} testID="picture-more-button" />
       </View>
-      <Control title="Undo" onPress={() => dispatch({ type: 'undo' })} disabled={!canEdit || !draft.undo.length} testID="picture-undo" />
-      <Control title="Hint" onPress={ask} disabled={!canEdit} testID="picture-hint" />
-      <Control title="•••" label="More" onPress={() => setMore(value => !value)} disabled={!canEdit} selected={more} testID="picture-more-button" />
-    </View>
-    <GridCanvas layout={layout} size={picture.size} marks={draft.marks} clues={picture} mode={mode} active={canEdit && !more}
-      moving={movingGrid && !more} focusLine={clue ?? undefined} onPaint={dispatch} />
+    )}
+    <GridCanvas layout={layout} size={picture.size} marks={draft.marks} clues={picture} mode={mode} active={canEdit && !sheetOpen}
+      moving={movingGrid && !sheetOpen} focusLine={clue ?? undefined} onPaint={dispatch} />
     <View style={[controlRow, styles.tools]}>
-      <Control title="■ Fill" label="Fill" onPress={() => { setMode(FILL); setMoving(false); }} selected={mode === FILL && !movingGrid} disabled={!canEdit || more} />
-      <Control title="× Cross out" label="Cross out" onPress={() => { setMode(CROSS); setMoving(false); }} selected={mode === CROSS && !movingGrid} disabled={!canEdit || more} />
-      {!more && canEdit && <MoveGrid movable={layout.movable} moving={movingGrid} onToggle={() => setMoving(value => !value)} />}
+      <Control title="■ Fill" label="Fill" onPress={() => { setMode(FILL); setMoving(false); }} selected={mode === FILL && !movingGrid} disabled={!canEdit || sheetOpen} />
+      <Control title="× Cross out" label="Cross out" onPress={() => { setMode(CROSS); setMoving(false); }} selected={mode === CROSS && !movingGrid} disabled={!canEdit || sheetOpen} />
+      {!sheetOpen && canEdit && <MoveGrid movable={layout.movable} moving={movingGrid} onToggle={() => setMoving(value => !value)} />}
     </View>
     {clue && <Feedback>{clue.message}</Feedback>}
     {!clue && askedOn === draft && <Feedback>No sure move from these marks.</Feedback>}
-    {more && <More onClose={close} onRestart={() => { close(); dispatch({ type: 'reset' }); }} onDraw={onDraw} onChoose={onChoose} />}
+    {sheetOpen && <More onClose={close} onRestart={() => { close(); dispatch({ type: 'reset' }); }} onDraw={onDraw} onChoose={onChoose} />}
   </View>;
 }
 

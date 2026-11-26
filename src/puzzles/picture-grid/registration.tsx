@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, type ComponentType } from 'react';
 import type { ChallengeCard, PackedBand, RegisteredDare, TypedRegistration } from '../../challenge/types';
 import type { PackedOpen } from '../../cove/catalog';
 import { validChallengeSession, type ChallengeProgress, type ChallengeSession, type Dare, type PuzzleRef, type SaveCatalog, type SessionCodec, type Terminal } from '../../state/challenge';
@@ -9,6 +9,7 @@ import type { FamilyManifest } from '../bank';
 import { bankLoader } from '../catalog';
 import { BankError, type BankLoader } from '../loader';
 import { answerHash, pictureGridAdapter } from './adapter';
+import type { PictureBoardProps } from './Board';
 import { PICTURE_SAVE_BYTES, decodePicture, editPicture, encodePicture, freshPicture, validPictureEvent, type PictureDraft, type PictureEvent, type PictureSave } from './checkpoint';
 import { PICTURE_GRID, pictureBands, solved, type PictureBand, type PictureGrid } from './engine';
 import { pictureHint } from './help';
@@ -19,6 +20,120 @@ export type Payload = PictureSave;
 export type Action = PictureEvent;
 export type State = { picture: PictureGrid; draft: PictureDraft; band: PictureBand };
 export const pictureGridCodec = 'picture-grid-1';
+export type PlayScreenImporter = () => Promise<ComponentType<PictureBoardProps>>;
+export type ReactNativeImporter = () => Promise<typeof import('react-native')>;
+// The native view stays out of the Node registry/catalog tools until rendered.
+const defaultLoadPlayScreen: PlayScreenImporter = () => import('./PlayScreen').then(m => m.PlayScreen);
+const defaultLoadReactNative: ReactNativeImporter = () => import('react-native');
+// Cache only resolved modules (never rejected promises) so Try again genuinely retries a failed dynamic import.
+const loadedScreens = new WeakMap<PlayScreenImporter, ComponentType<PictureBoardProps>>();
+const loadedReactNative = new WeakMap<ReactNativeImporter, typeof import('react-native')>();
+const pendingReactNative = new WeakMap<ReactNativeImporter, Promise<typeof import('react-native')>>();
+
+function loadReactNative(importer: ReactNativeImporter): Promise<typeof import('react-native')> {
+  const cached = loadedReactNative.get(importer);
+  if (cached) return Promise.resolve(cached);
+  const pending = pendingReactNative.get(importer);
+  if (pending) return pending;
+  const next = importer().then(
+    m => {
+      loadedReactNative.set(importer, m);
+      pendingReactNative.delete(importer);
+      return m;
+    },
+    error => {
+      pendingReactNative.delete(importer);
+      throw error;
+    },
+  );
+  pendingReactNative.set(importer, next);
+  return next;
+}
+
+const MAX_RN_RETRIES = 2;
+
+export function PlayScreenLoader({
+  loadScreen = defaultLoadPlayScreen,
+  loadRN = defaultLoadReactNative,
+  ...props
+}: PictureBoardProps & { loadScreen?: PlayScreenImporter; loadRN?: ReactNativeImporter }) {
+  const [loadedRn, setLoadedRn] = useState<typeof import('react-native') | null>(() => loadedReactNative.get(loadRN) ?? null);
+  const [rnRetry, setRnRetry] = useState(0);
+  const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; attempt: number }>(() => ({
+    status: loadedScreens.has(loadScreen) ? 'ready' : 'loading',
+    attempt: 0,
+  }));
+
+  useEffect(() => {
+    if (loadedReactNative.has(loadRN)) return;
+    let cancelled = false;
+    void loadReactNative(loadRN).then(
+      m => {
+        if (!cancelled) setLoadedRn(m);
+      },
+      () => {
+        // Rejection cleared from pendingReactNative; retry bounded times so a late rejection after loadScreen failed still recovers.
+        if (!cancelled) setRnRetry(count => (count < MAX_RN_RETRIES ? count + 1 : count));
+      },
+    );
+    return () => { cancelled = true; };
+  }, [loadRN, state.status, state.attempt, rnRetry]);
+
+  useEffect(() => {
+    if (loadedScreens.has(loadScreen)) return;
+    let cancelled = false;
+    void loadScreen().then(
+      Loaded => {
+        loadedScreens.set(loadScreen, Loaded);
+        if (!cancelled) setState(current => ({ ...current, status: 'ready' }));
+      },
+      () => {
+        if (!cancelled) setState(current => ({ ...current, status: 'error' }));
+      },
+    );
+    return () => { cancelled = true; };
+  }, [loadScreen, state.attempt]);
+
+  const Ready = loadedScreens.get(loadScreen);
+  if (Ready) return React.createElement(Ready, props);
+  const rn = loadedReactNative.get(loadRN) ?? loadedRn;
+  if (!rn) return null;
+  if (state.status === 'error') {
+    return React.createElement(
+      rn.View,
+      {
+        testID: 'picture-grid-load-error',
+        accessibilityRole: 'alert',
+        style: { alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12, minHeight: 160 },
+      },
+      React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 17, fontWeight: '800', textAlign: 'center' } }, 'Picture Grid could not load.'),
+      React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 15, textAlign: 'center' } }, 'Your saved work is kept. Try again, or go back to Puzzles.'),
+      React.createElement(
+        rn.Pressable,
+        {
+          testID: 'picture-grid-retry',
+          accessibilityRole: 'button',
+          accessibilityLabel: 'Try again',
+          onPress: () => setState(current => ({ status: 'loading', attempt: current.attempt + 1 })),
+          style: { minWidth: 44, minHeight: 48, borderRadius: 24, paddingHorizontal: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F28270' },
+        },
+        React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 15, fontWeight: '700' } }, 'Try again'),
+      ),
+    );
+  }
+  return React.createElement(
+    rn.View,
+    {
+      testID: 'picture-grid-loading',
+      accessible: true,
+      accessibilityRole: 'progressbar',
+      accessibilityLabel: 'Loading Picture Grid…',
+      accessibilityLiveRegion: 'polite',
+      style: { alignItems: 'center', justifyContent: 'center', padding: 24, minHeight: 160 },
+    },
+    React.createElement(rn.Text, { style: { color: '#173A36', fontSize: 16, fontWeight: '700', textAlign: 'center' } }, 'Loading Picture Grid…'),
+  );
+}
 
 export function pictureGridBankFacts(manifest: FamilyManifest): PictureBank[] {
   if (manifest.family !== PICTURE_GRID || manifest.engine !== PICTURE_GRID) throw new Error('Expected a Picture Grid manifest.');
@@ -32,7 +147,12 @@ export function pictureGridBankFacts(manifest: FamilyManifest): PictureBank[] {
 /** Bind once the lead has baked and registered the immutable banks. Authored names stay off cards until solved. */
 export function definePictureGrid(
   facts: readonly PictureBank[],
-  { loader = bankLoader, cleanDares = [] }: { loader?: () => Pick<BankLoader, 'entry' | 'savedHash'>; cleanDares?: readonly PictureDare[] } = {},
+  { loader = bankLoader, cleanDares = [], loadScreen = defaultLoadPlayScreen, loadRN = defaultLoadReactNative }: {
+    loader?: () => Pick<BankLoader, 'entry' | 'savedHash'>;
+    cleanDares?: readonly PictureDare[];
+    loadScreen?: PlayScreenImporter;
+    loadRN?: ReactNativeImporter;
+  } = {},
 ): TypedRegistration<Payload, Action, State> {
   const banks = new Map<number, PackedBank>();
   const labels = new Map<number, PictureBand>();
@@ -172,11 +292,8 @@ export function definePictureGrid(
     render: (session, dispatch, active, width, host) => {
       const state = view(session);
       if (!state) return null;
-      // The native view stays out of the Node registry/catalog tools.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PlayScreen } = require('./PlayScreen') as typeof import('./PlayScreen');
-      return <PlayScreen key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
-        {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} />;
+      return <PlayScreenLoader key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
+        loadScreen={loadScreen} loadRN={loadRN} {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} />;
     },
   };
 }
