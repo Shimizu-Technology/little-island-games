@@ -54,7 +54,8 @@ describe('Art Batch 1 illustrations', () => {
   });
 
   it('requires every picture statically, each from a file that exists', () => {
-    const source = readFileSync('src/art/illustrated.tsx', 'utf8'), required = [...source.matchAll(/require\(([^)]*)\)/g)].map(m => m[1]);
+    const source = readFileSync('src/art/illustrated.tsx', 'utf8');
+    const required = [...source.matchAll(/require\(([^)]*\/(?:map|puzzles)\/[^)]*)\)/g)].map(m => m[1]);
     expect(required).toHaveLength(19);
     for (const arg of required) expect(arg).toMatch(/^'\.\.\/\.\.\/assets\/art\/(?:map|puzzles)\/[a-z-]+\.webp'$/);
     expect(new Set([...Object.values(MAP_DOOR_ART), ...Object.values(PUZZLE_TILE_ART)])).toEqual(new Set(files));

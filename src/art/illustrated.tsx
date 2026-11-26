@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { Image, type ImageSourcePropType, type ImageStyle, type StyleProp } from 'react-native';
+import type { ArcadeId } from '../arcade/types';
 
 /**
  * Art Batch 1 (approved 26 Nov 2026): transparent 512×512 storybook WebPs, about 448 KB in all. Every source is a
@@ -31,6 +32,23 @@ export const PUZZLE_TILE_ART: Readonly<Partial<Record<string, ImageSourcePropTyp
   'shell-scale': require('../../assets/art/puzzles/shell-scale.webp'),
 };
 export const puzzleArt = (game: string) => PUZZLE_TILE_ART[game];
+
+const arcadeArtSources: Readonly<Record<ArcadeId, ImageSourcePropType>> = {
+  'fruit-bat-flight': require('../../assets/art/arcade/fruit-bat-flight.webp'),
+  'lagoon-run': require('../../assets/art/arcade/lagoon-run.webp'),
+  'crab-crossing': require('../../assets/art/arcade/crab-crossing.webp'),
+  'palm-patrol': require('../../assets/art/arcade/palm-patrol.webp'),
+  'beach-ball': require('../../assets/art/arcade/beach-ball.webp'),
+  'rail-parade': require('../../assets/art/arcade/rail-parade.webp'),
+  'reef-builder': require('../../assets/art/arcade/reef-builder.webp'),
+  'canoe-cargo': require('../../assets/art/arcade/canoe-cargo.webp'),
+  'shell-song': require('../../assets/art/arcade/shell-song.webp'),
+};
+export const hasArcadeArt = (id: string): id is ArcadeId => Object.hasOwn(arcadeArtSources, id);
+
+export function ArcadeArt({ id, size }: { id: ArcadeId; size?: number }) {
+  return <IllustratedArt source={arcadeArtSources[id]} size={size}/>;
+}
 
 /** One illustration, square at `size` or filling `style`. Decorative: whatever holds it names it. */
 export const IllustratedArt = memo(function IllustratedArt({ source, size, style }: { source: ImageSourcePropType; size?: number; style?: StyleProp<ImageStyle> }) {
