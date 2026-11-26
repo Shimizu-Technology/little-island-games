@@ -14,11 +14,11 @@ import { DeckBase, DeckHaze, DeckLight } from '../lagoon-run/Backdrop';
 import { RunArena } from '../lagoon-run/Arena';
 import { useStage } from '../lagoon-run/stage';
 import { CONTACT, HERO_SCALE, HERO_ZOOM, TRACK_HEIGHT } from '../lagoon-run/camera';
-import { FlightPalm, FlightForest, FlightShore, FlightSky, FlightWideSky } from "../fruit-bat-flight/Art";
+import { FlightPalm, FlightForest, FlightShore, FlightWideSky, Fruit } from "../fruit-bat-flight/Art";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Platform, Pressable, View } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, View } from "react-native";
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
-import { runOnJS, runOnUI, useFrameCallback, useAnimatedReaction, useSharedValue, type SharedValue } from "react-native-reanimated";
+import { runOnJS, runOnUI, useFrameCallback, useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "../../../components/motion";
 import { Button } from "../../../components/ui";
 import { Text } from "../../../components/Text";
@@ -28,12 +28,12 @@ import Animated from "react-native-reanimated";
 import { enqueueCommand, drainCommands } from "../../mailbox";
 import { flightHud, runHud, type ScrollHud } from "../../publication";
 import { HIDDEN_POSE, samePublication } from "../../poses";
-import { HeartsHud, HitReaction } from "../../LivesHud";
+import { HeartsHud } from "../../LivesHud";
 import { useArcadeUiLoop } from "../../uiLoop";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import type { ArcadeResult, WorldId } from "../../types";
 import type { OutfitId } from "../../progress";
-import { createFlight, flightGap, flightLearning, flightResult, type FlightInput, type FlightState } from "../fruit-bat-flight/engine";
+import { createFlight, flightResult, type FlightInput } from "../fruit-bat-flight/engine";
 import { createRun, runLearning, runResult, type RunInput, type RunState } from "../lagoon-run/engine";
 import { isCanoe } from "../lagoon-run/geometry";
 import { Deck, Canoe, PowerRing, RunTeachingCue, KiteRig } from "../lagoon-run/Art";
@@ -42,12 +42,13 @@ import { DepthSprite } from "../lagoon-run/DepthSprite";
 
 import { hazardBox } from "../lagoon-run/course";
 import { equation, type ScrollGame, type ScrollLevel } from "./content";
-import { Fruit, palette } from "./Art";
 import { BatRig, RunnerRig, LastHit } from "./FeelArt";
-import { batAngle } from "../fruit-bat-flight/hull";
+import { FLIGHT_H, FLIGHT_W } from "../fruit-bat-flight/hull";
+import { FLIGHT_GATE_COUNT, FLIGHT_SLOT, FRUIT_SIZE, PALM_WIDTH, PORTAL_HEIGHTS, PORTAL_SIZE, flightPoses } from "../fruit-bat-flight/presentation";
+import { FlightEffects, FlightFlash, useFlightCamera, useFlightFeedback } from "../fruit-bat-flight/Feedback";
 import { runPoses, RUN_SLOTS, NEAR_START, CANOE_START, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
 
-import { flightFrame, runFrame, type Commands } from "./commands";
+import { runFrame, type Commands } from "./commands";
 export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean; overlayTop?: number };
 const W = 390, H = 660, still = HIDDEN_POSE;
 const Portal = memo(function Portal({ value, index }: { value: number; index: number }) { return <Svg width={64} height={64} viewBox="0 0 64 64"><Rect x={3} y={3} width={58} height={58} rx={16} fill={["#F6C76D", "#A9E7E1", "#DEB1EF"][index]} stroke="#374565" strokeWidth={3}/><SvgText x={32} y={45} textAnchor="middle" fill="#27364E" fontWeight="900" fontSize={36}>{value}</SvgText></Svg>; });
@@ -75,13 +76,6 @@ function useKeyboard(active: boolean, action: (key: string) => void) {
 function Control<I>({ label, glyph, mailbox, action, onPress, feedback, disabled = false, overlay = false }: { overlay?: boolean; label: string; glyph: string; mailbox: SharedValue<Commands<I>>; action: I; onPress: () => void; feedback: () => void; disabled?: boolean }) {
   return <UiPlayTarget mailbox={mailbox} action={action} active={!disabled} onFeedback={feedback} onAccessiblePress={onPress} accessibilityLabel={label} style={{ minWidth: overlay ? 44 : 58, minHeight: overlay ? 44 : 52, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: overlay ? "#FFF2CC99" : "#FFF2CC", borderWidth: overlay ? 1 : 2, borderBottomWidth: overlay ? 2 : 5, borderColor: "#725B66" }}><Text maxFontSizeMultiplier={overlay ? HUD_TEXT_MAX : undefined} style={{ fontSize: overlay ? 21 : 25, fontWeight: "900", color: "#34354D" }}>{glyph}</Text></UiPlayTarget>;
 }
-function Arena({ children, game, controls, hud, overlay, world }: { children: React.ReactNode; game: "run" | "flight"; world: WorldId; controls: React.ReactNode; hud: React.ReactNode; overlay?: React.ReactNode }) {
-  const [size, setSize] = useState({ w: W, h: H }), scale = Math.min(size.w / W, size.h / H);
-  const [sky,horizon,sea]=palette(game === "run" ? "lagoon-run" : "fruit-bat-flight",world);
-  const controlWidth=Math.min(size.w-24,Math.max(300,W*scale));
-  return <View testID={`${game}-field`} style={{ flex: 1, overflow: "hidden", backgroundColor: sea }} onLayout={e => { const { width, height } = e.nativeEvent.layout; if (width && height) setSize({ w: width, h: height }); }}>{game === "flight" ? <FlightWideSky/> : <Svg width="100%" height="100%" viewBox="0 0 1000 660" preserveAspectRatio="none" style={{position:"absolute"}}><Rect width={1000} height={660} fill={sky}/><Path d="M0 211Q100 148 200 211T400 211T600 211T800 211T1000 211" fill={horizon}/><Rect y={211} width={1000} height={449} fill={sea}/><Path d="M0 500Q180 430 300 500M700 500Q830 430 1000 500M0 610Q180 540 300 610M700 610Q830 540 1000 610" stroke={horizon} strokeWidth={4} opacity={.3} fill="none"/>{game === "run" && <><Path d="M0 660V375Q94 410 158 660M1000 660V375Q906 410 842 660" fill="#D8B87C"/><Path d="M0 360Q106 402 174 660M1000 360Q894 402 826 660" fill="none" stroke="#B8E9DB" strokeWidth={6}/><Path d="M25 660Q80 370 66 176M975 660Q920 370 934 176" fill="none" stroke="#527C68" strokeWidth={18}/><Path d="M66 183Q13 111 0 165Q38 162 66 183Q103 119 153 168Q105 160 66 183Q19 177 6 242Q42 207 66 183Q113 180 134 236Q99 207 66 183M934 183Q987 111 1000 165Q962 162 934 183Q897 119 847 168Q895 160 934 183Q981 177 994 242Q958 207 934 183Q887 180 866 236Q901 207 934 183" fill="#3D8F70"/></>}</Svg>}<View style={{ position: "absolute", width: W, height: H, left: (size.w - W) / 2, top: (size.h - H) / 2, transform: [{ scale }], overflow: "hidden" }}>{children}</View><View pointerEvents="box-none" style={{position:"absolute",top:0,bottom:0,left:game==="run"?(size.w-Math.min(size.w,W*scale))/2:0,width:game==="run"?Math.min(size.w,W*scale):size.w}}>{hud}</View>{overlay}<View pointerEvents="box-none" testID={`${game}-controls`} style={{position:"absolute",width:controlWidth,left:(size.w-controlWidth)/2,bottom:0,height:levelControlHeight(game)}}>{controls}</View></View>;
-}
-function levelControlHeight(game: string) { return game === "run" ? 62 : 90; }
 function useMailbox<I>(helper: boolean, active: boolean) {
   const input = useSharedValue<Commands<I>>({ helper, serial: 0, queue: [] }), enabled = useSharedValue(active);
   useEffect(() => { runOnUI((value: boolean, playing: boolean) => { "worklet"; enabled.set(playing); input.set({ ...input.value, helper: value, queue: playing ? input.value.queue : [] }); })(helper, active); }, [helper, active, input, enabled]);
@@ -100,46 +94,102 @@ function useOutcome(s: Pick<ScrollHud,"helped"> & Partial<Pick<ScrollHud,"event"
     const timer = setTimeout(report, result.outcome === "cleared" ? 380 : 320); return () => clearTimeout(timer);
   }, [result, active, onResult, s.helped]);
 }
-const FlightLayer = memo(function FlightLayer({ poses, facts, learn, storm, debug }: { poses: SharedValue<SpritePose[]>; facts: number[][]; learn: boolean; storm: boolean; debug: boolean }) {
-  return <View testID="flight-art" pointerEvents="none" style={{ position: "absolute", width: W, height: H }}><FlightSky storm={storm}/><FlightForest poses={poses} debug={debug}/>{Array.from({ length: 4 }, (_, i) => <React.Fragment key={i}><ArcadeSprite poses={poses} index={1 + i * 2} width={46} height={660}><FlightPalm/></ArcadeSprite><ArcadeSprite poses={poses} index={2 + i * 2} width={46} height={660}><FlightPalm bottom/></ArcadeSprite><ArcadeSprite poses={poses} index={9 + i} width={32} height={32}><Fruit size={32}/></ArcadeSprite>{learn && facts[i].map((n, c) => <ArcadeSprite key={c} poses={poses} index={13 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></ArcadeSprite>)}</React.Fragment>)}{Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`p${i}`} poses={poses} index={25 + i} width={12} height={12}><Particle/></ArcadeSprite>)}<ArcadeSprite poses={poses} index={33} width={70} height={30}><Text style={{ color: "#FFF2BD", fontSize: 23, fontWeight: "900" }}>+1</Text></ArcadeSprite><FlightShore poses={poses}/></View>;
+const FlightPortal = memo(function FlightPortal({ value }: { value: number }) {
+  return <View style={{ width: PORTAL_SIZE, height: PORTAL_SIZE, borderRadius: 19, backgroundColor: "#2A8C82", borderColor: "#88583E", borderWidth: 2, padding: 4 }}>
+    <View style={{ flex: 1, borderRadius: 13, backgroundColor: "#FFFDF8", borderColor: "#E4B774", borderWidth: 2, justifyContent: "center", alignItems: "center" }}>
+      <Text allowFontScaling={false} style={{ color: "#173D3A", fontSize: 30, fontWeight: "900" }}>{value}</Text>
+    </View>
+  </View>;
 });
+
+const FlightLayer = memo(function FlightLayer({ poses, facts, learn, storm }: { poses: SharedValue<SpritePose[]>; facts: number[][]; learn: boolean; storm: boolean }) {
+  return <View testID="flight-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
+    <FlightForest poses={poses} storm={storm}/>
+    {Array.from({ length: FLIGHT_GATE_COUNT }, (_, i) => learn ? facts[i]?.map((value, choice) => (
+      <ArcadeSprite key={`${i}-${choice}`} poses={poses} index={FLIGHT_SLOT.portal + i * PORTAL_HEIGHTS.length + choice} width={PORTAL_SIZE} height={PORTAL_SIZE}><FlightPortal value={value}/></ArcadeSprite>
+    )) : <React.Fragment key={i}>
+      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.palm + i * 2} width={PALM_WIDTH} height={FLIGHT_H}><FlightPalm/></ArcadeSprite>
+      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.palm + i * 2 + 1} width={PALM_WIDTH} height={FLIGHT_H}><FlightPalm bottom/></ArcadeSprite>
+      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.fruit + i} width={FRUIT_SIZE} height={FRUIT_SIZE}><Fruit size={FRUIT_SIZE}/></ArcadeSprite>
+    </React.Fragment>)}
+    <FlightShore poses={poses}/>
+  </View>;
+});
+
+const flightPill = {
+  backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#C98C56",
+  borderRadius: 22, paddingHorizontal: 14, paddingVertical: 5,
+};
+
 export function FlightBoard(props: BoardProps) {
-  const { level, seed, active, helper, outfit, onTone, debug } = props, reduced = useReducedMotion();
-  const [initial] = useState(() => createFlight(level, seed, helper)), poses = useSharedValue<SpritePose[]>(Array.from({ length: 38 }, () => still));
-  const { input, send } = useMailbox<FlightInput>(helper, active);
-  const build = useCallback((s: FlightState) => {
+  const { level, seed, active, helper, outfit, onTone, debug } = props;
+  const reduced = useReducedMotion();
+  const [initial] = useState(() => createFlight(level, seed, helper));
+  const [size, setSize] = useState({ width: FLIGHT_W, height: FLIGHT_H });
+  const poses = useSharedValue(flightPoses(initial, reduced));
+  const build = useCallback((state: typeof initial) => {
     "worklet";
-    const p: SpritePose[] = Array(38).fill(still), learn = flightLearning(s), gap = flightGap(s), x = W * .24, y = s.y * H + (s.waiting && !reduced ? Math.sin(s.hover * 4) * 7 : 0);
-    const tumble = !reduced && s.cooldown > 0 && s.cue === "bump" ? Math.sin((1 - s.cooldown / .3) * Math.PI) * .85 : 0;
-    const angle = s.status === "cleared" && !reduced ? -.2 : tumble || batAngle(s.vy);
-    p[0] = { identity: s.lives.hit, x: x - 48, y: y - 38, angle };
-    const wing = reduced ? .12 : s.wing;
-    // Real centred frames: top-left + (48,48) stays on the shoulder through every rotation.
-    p[31] = { x: 45 - 48, y: 32 - 48, angle: -.35 + wing * .65 };
-    p[32] = { x: 43 - 48, y: 38 - 48, angle: wing };
-    p[34]={x:-((s.travel*W*.11)%390),y:0};p[35]={x:-((s.travel*W*.28)%390),y:0};
-    const shore = (s.travel * W * .9) % 390; p[36] = { x: -shore, y: 638 }; p[37] = { x: 390 - shore, y: 638 };
-    s.gates.forEach((g, i) => {
-      p[1 + i * 2] = learn ? still : { identity: g.phase, x: g.x * W - 23, y: (g.center - gap / 2) * H - H, opacity: learn ? 0 : 1 };
-      p[2 + i * 2] = learn ? still : { identity: g.phase, x: g.x * W - 23, y: (g.center + gap / 2) * H, opacity: learn ? 0 : 1 };
-      p[9 + i] = learn || g.passed ? still : { identity: g.phase, x: g.x * W - 16, y: g.center * H - 16, opacity: !learn && !g.passed ? 1 : 0 };
-      if (learn && !g.passed) for (let c = 0; c < 3; c++) p[13 + i * 3 + c] = { x: g.x * W - 32, y: [.24, .5, .76][c] * H - 32, opacity: learn && !g.passed ? 1 : 0 };
-    });
-    const feedback = s.feedback / .45, scored = s.lastGain > 0, hit = s.cue === "bump";
-    p[33] = { x: W * .44, y: H * .2 - (1 - feedback) * 22, opacity: scored ? feedback : 0 };
-    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; p[25 + i] = { x: x + Math.cos(a) * (1 - feedback) * 55, y: y + Math.sin(a) * (1 - feedback) * 55, opacity: !reduced && (scored || hit) ? feedback : 0 }; }
-    return p;
+    return flightPoses(state, reduced);
   }, [reduced]);
   const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
-  const { snapshot: s, outcome: result } = useArcadeUiLoop({ initial, input, step: flightFrame, result: flightResult, pose, select: flightHud, drain: drainCommands, active });
-  useOutcome(s, result, props);
-  const flapTone = useCallback(() => { onTone("shell-2", false); }, [onTone]);
-  const flap = useCallback(() => { if (active) { send({ type: "flap" }); flapTone(); } }, [send, flapTone, active]);
-  useKeyboard(active, useCallback(() => flap(), [flap]));
-  const learn = level !== "endless" && level.world === "learn", factKey = JSON.stringify(s.facts), facts: number[][] = useMemo(() => JSON.parse(factKey), [factKey]);
-  const next = s.next;
-  const controls = <View style={{ position: "absolute", left: 12, right: 12, bottom: 10, flexDirection: "row", justifyContent: "flex-end", gap: 10 }}><Control label="Flap wings" glyph="↑ Flap" mailbox={input} action={{ type: "flap" }} feedback={flapTone} disabled={!active} onPress={flap}/>{level === "endless" && <Button compact quiet onPress={() => send({ type: "finish" })}>Finish free flight</Button>}</View>;
-  return <Arena game="flight" world={level === "endless" ? "w3" : level.world} controls={controls} hud={<><View pointerEvents="none" style={{position:"absolute",top:8,left:12,right:12,alignItems:"center"}}><Text testID="flight-score" style={{fontSize:54,fontWeight:"900",color:"#FFF8DF",textShadowColor:"#253348",textShadowOffset:{width:0,height:4},textShadowRadius:2}}>{s.score}</Text></View><View pointerEvents="none" style={{position:"absolute",top:15,left:12,backgroundColor:"#24394DBB",paddingHorizontal:10,paddingVertical:5,borderRadius:13}}><Text style={{color:"#FFF2D1",fontWeight:"800"}}>{s.passed}/{s.level === "endless" ? "∞" : s.level.target}</Text></View>{!learn && <View pointerEvents="none" style={{position:"absolute",right:12,top:15}}><HeartsHud lives={s.lives}/></View>}</>} overlay={<>{learn && next && <View pointerEvents="none" style={{ position: "absolute", top: 62, alignSelf: "center", padding: 8, borderRadius: 14, backgroundColor: "#192B49" }}><Text testID="math-fact" style={{ color: "#FFF4D3", fontSize: 28, fontWeight: "900" }}>{equation(next)}</Text></View>}{s.waiting && s.status === "playing" && !learn && <View pointerEvents="none" style={{ position: "absolute", top: "29%", alignSelf: "center", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 18, backgroundColor: "#192B49CC" }}><Text style={{ color: "#FFF4D3", fontSize: 30, fontWeight: "900", textAlign:"center" }}>Get Ready</Text><Text style={{ color: "#E5F1D9", fontSize: 17, fontWeight: "700", textAlign:"center" }}>✦  Tap anywhere to flap  ✦</Text></View>}</>}><FlightLayer poses={poses} facts={facts} learn={learn} storm={level !== "endless" && level.storm} debug={debug}/><HitReaction hit={s.lives.hit} onTone={onTone}><LastHit dead={s.lives.hearts === 0} x={W * .24} y={s.lives.hearts ? 0 : s.y * H} bat><BatRig poses={poses} outfit={outfit} debug={debug}/></LastHit></HitReaction><UiPlayTarget mailbox={input} action={{ type: "flap" }} onFeedback={flapTone} onAccessiblePress={flap} testID="flight-touch" accessibilityLabel="Flight sky. Tap to flap" active={active} style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}/>{debug && <Budget active={active}/>}</Arena>;
+  const { input, send } = useMailbox<FlightInput>(helper, active);
+  const feedback = useFlightFeedback(reduced, onTone);
+  const { snapshot: s, outcome: result, state } = useArcadeUiLoop({
+    initial, input, step: feedback.step, result: flightResult, pose, select: flightHud, drain: drainCommands, active,
+  });
+  useOutcome({ helped: s.helped }, result, props);
+
+  const canFly = active && s.status === "playing";
+  const flapTone = useCallback(() => { onTone("flight-flap", true); }, [onTone]);
+  const flap = useCallback(() => {
+    if (canFly) { send({ type: "flap" }); flapTone(); }
+  }, [canFly, send, flapTone]);
+  useKeyboard(canFly, useCallback(() => flap(), [flap]));
+
+  const world = level === "endless" ? "w1" : level.world;
+  const learn = world === "learn", storm = level !== "endless" && level.storm;
+  const factKey = JSON.stringify(s.facts);
+  const facts: number[][] = useMemo(() => JSON.parse(factKey), [factKey]);
+  const camera = useFlightCamera(feedback.impact, reduced);
+  const ready = useAnimatedStyle(() => ({ opacity: state.value.waiting && state.value.status === "playing" ? 1 : 0 }));
+  const scale = Math.min(size.width / FLIGHT_W, size.height / FLIGHT_H);
+  return <View testID="flight-field" style={{ flex: 1, overflow: "hidden", backgroundColor: "#A9DCD3" }} onLayout={event => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > 0 && height > 0) setSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
+  }}>
+    <FlightWideSky world={world} storm={storm}/>
+    <View pointerEvents="none" style={{ position: "absolute", width: FLIGHT_W, height: FLIGHT_H, left: (size.width - FLIGHT_W) / 2, top: (size.height - FLIGHT_H) / 2, transform: [{ scale }], overflow: "hidden" }}>
+      <Animated.View style={[StyleSheet.absoluteFill, camera]}>
+        <FlightLayer poses={poses} facts={facts} learn={learn} storm={storm}/>
+        <BatRig poses={poses} outfit={outfit} debug={debug}/>
+        <FlightEffects award={feedback.award} awardPulse={feedback.awardPulse} puffs={feedback.puffs} reduced={reduced}/>
+      </Animated.View>
+    </View>
+    <FlightFlash impact={feedback.impact} reduced={reduced}/>
+    <UiPlayTarget mailbox={input} action={{ type: "flap" }} onFeedback={flapTone} onAccessiblePress={flap}
+      testID="flight-touch" accessibilityLabel="Flight sky. Tap to flap" active={canFly} style={StyleSheet.absoluteFill}/>
+    <View pointerEvents="box-none" style={{ position: "absolute", top: 8, left: 8, right: 8, gap: 7, alignItems: "center" }}>
+      <View pointerEvents="box-none" style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", justifyContent: learn ? "center" : "space-between", gap: 6 }}>
+        {!learn && <View pointerEvents="none"><HeartsHud lives={s.lives} compact/></View>}
+        <View pointerEvents="none" accessible accessibilityLabel={s.level === "endless" ? `Score ${s.score}` : `Score ${s.score} of ${s.level.target}`} style={flightPill}>
+          <Text testID="flight-score" maxFontSizeMultiplier={1.5} style={{ color: "#173D3A", fontSize: 26, fontWeight: "900", fontVariant: ["tabular-nums"] }}>
+            {s.score}{s.level !== "endless" && <Text maxFontSizeMultiplier={1.5} style={{ fontSize: 15, color: "#47645D", fontWeight: "800" }}> / {s.level.target}</Text>}
+          </Text>
+        </View>
+      </View>
+      {learn && s.next && <View pointerEvents="none" style={flightPill}>
+        <Text testID="math-fact" maxFontSizeMultiplier={1.5} style={{ color: "#173D3A", fontSize: 23, fontWeight: "900" }}>{equation(s.next)}</Text>
+      </View>}
+    </View>
+    <Animated.View pointerEvents="none" accessibilityElementsHidden={!s.waiting} importantForAccessibility={s.waiting ? "auto" : "no-hide-descendants"}
+      style={[flightPill, { position: "absolute", top: learn ? "62%" : "31%", alignSelf: "center" }, ready]}>
+      <Text maxFontSizeMultiplier={1.5} style={{ color: "#173D3A", fontSize: 17, fontWeight: "900" }}>Tap to fly</Text>
+    </Animated.View>
+    <View pointerEvents="box-none" testID="flight-controls" style={{ position: "absolute", bottom: 8, right: 12, left: 12, alignItems: "flex-end" }}>
+      {level === "endless" && <Button compact quiet onPress={() => send({ type: "finish" })}>Finish free flight</Button>}
+    </View>
+    {debug && <Budget active={active}/>}
+  </View>;
 }
 type RunRowSpec=ReturnType<typeof runHud>["spec"][number];
 const RunRow=memo(function RunRow({poses,row,i,learn,front=false}:{poses:SharedValue<SpritePose[]>;row:RunRowSpec;i:number;learn:boolean;front?:boolean}) {

@@ -5,9 +5,10 @@ import Svg, { Path } from "react-native-svg";
 import { useReducedMotion } from "../components/motion";
 import type { Lives } from "./lives";
 /** One accessibility announcement rather than five individually focusable hearts. */
-export const HeartsHud = memo(function HeartsHud({ lives }: { lives: Lives }) {
-  return <View accessible accessibilityLabel={`${lives.hearts} of ${lives.maxHearts} hearts`} accessibilityLiveRegion="polite" testID="hearts-hud" style={{ flexDirection: "row", gap: 3, backgroundColor: "#24536A", padding: 8, borderRadius: 18 }}>
-    {Array.from({ length: lives.maxHearts }, (_, i) => <Svg key={i} width={24} height={24} viewBox="0 0 24 24" accessible={false}><Path d="M12 21C8 17 2 13 2 7C2 1 10 1 12 6C14 1 22 1 22 7C22 13 16 17 12 21Z" fill={i < lives.hearts ? "#F28B87" : "#486978"} stroke="#FFE8CE" strokeWidth={1.5}/></Svg>)}
+export const HeartsHud = memo(function HeartsHud({ lives, compact = false }: { lives: Lives; compact?: boolean }) {
+  const size = compact ? 17 : 24;
+  return <View accessible accessibilityLabel={`${lives.hearts} of ${lives.maxHearts} hearts`} accessibilityLiveRegion="polite" testID="hearts-hud" style={{ flexDirection: "row", gap: 3, backgroundColor: "#24536A", padding: compact ? 6 : 8, borderRadius: 18 }}>
+    {Array.from({ length: lives.maxHearts }, (_, i) => <Svg key={i} width={size} height={size} viewBox="0 0 24 24" accessible={false}><Path d="M12 21C8 17 2 13 2 7C2 1 10 1 12 6C14 1 22 1 22 7C22 13 16 17 12 21Z" fill={i < lives.hearts ? "#F28B87" : "#486978"} stroke="#FFE8CE" strokeWidth={1.5}/></Svg>)}
   </View>;
 });
 /** Wrap only the hero/board. The sound callback owns the existing audio/haptic policy. */
