@@ -25,13 +25,20 @@ const lagoonTones: Record<string, () => AudioSource> = {
   "run-near": () => runEffects.near,
   "run-edge": () => require("../../assets/audio/tap.wav"),
 };
+const crabTones: Record<string, () => AudioSource> = {
+  "crab-hop": () => require("../../assets/arcade/crab-sfx/hop.wav"),
+  "crab-splash": () => require("../../assets/arcade/crab-sfx/splash.wav"),
+  "crab-goal": () => require("../../assets/arcade/crab-sfx/goal.wav"),
+};
 const musicSources = { reef: require("../../assets/arcade/reef-loop.wav"), song: require("../../assets/arcade/song-loop.wav") };
 export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolean, active: boolean, sheetOpen = false) {
   // One preloaded player per effect. Swapping sources with replace() reloads the asset on the
   // main thread and stalled the frame on every flap/hop; rewinding a loaded player does not.
   const [effects] = useState<Record<string, AudioPlayer>>(() => {
     const players = Object.fromEntries(Object.entries(tones).map(([key, source]) => [key, createAudioPlayer(source)]));
-    const gameTones = game === "fruit-bat-flight" ? flightTones : game === "lagoon-run" ? lagoonTones : {};
+    const gameTones = game === "fruit-bat-flight" ? flightTones
+      : game === "lagoon-run" ? lagoonTones
+      : game === "crab-crossing" ? crabTones : {};
     for (const [key, source] of Object.entries(gameTones)) players[key] = createAudioPlayer(source());
     return players;
   });
@@ -52,6 +59,8 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
         feel(key === "lagoon-thump" ? "warning" : key === "lagoon-power" ? "medium" : "tap");
       } else if (key === "flight-flap" || key === "flight-fruit" || key === "flight-clear") feel("tap");
       else if (key === "flight-bump") feel("warning");
+      else if (key === "crab-hop" || key === "crab-splash") feel("tap");
+      else if (key === "crab-goal") feel("success");
       else feel(key === "clear" || key === "sticker" ? "success" : "select");
     }
     const player = effects[key];

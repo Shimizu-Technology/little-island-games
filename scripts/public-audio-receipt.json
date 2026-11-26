@@ -3,6 +3,9 @@
   "sha256": {
     "arcade/clear.wav": "052a5a109a0e16b5f837c34da070ad29c7e591134688936d8ccca83a1467340c",
     "arcade/coral.wav": "3cd083ffea7a85e94c011ec7a5140699498398ac44edc4417e7b645acebab208",
+    "arcade/crab-sfx/goal.wav": "0bd60a5259ed312cffc991544897df54744a59da6739df5cc23ebdca685eba7b",
+    "arcade/crab-sfx/hop.wav": "0aa64084df6e2fa2ebdbd5d790dfa2ef7c74e1392673d6646483e3b38aa107a6",
+    "arcade/crab-sfx/splash.wav": "4cb157dadc4e69b88811bb7212078c70988a9de6453847add2162563f6cec77c",
     "arcade/fruit-bat/bonk.wav": "13d7230854cbf14711e15ec343c30bc9027fded576dd70dd046d3ed3756d4124",
     "arcade/fruit-bat/clear.wav": "43d159510d9dea67ad399d1d25b65fb1822c7d0af7db109d2df76922c26a56c4",
     "arcade/fruit-bat/flap.wav": "856abac3bcbf3cf8ce6de885a4109d56979a4b0bfd44c22d300e9095ccacc2db",

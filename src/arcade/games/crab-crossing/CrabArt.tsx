@@ -1,6 +1,8 @@
 import React, { memo } from "react";
+import { Image, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
-import type { Lane } from "./engine";
+import { waterLane, type Lane } from "./engine";
+import { crabActorFrame, illustrated } from "./illustrated";
 import { safeLaneScenery, type CoastPropKind } from "./scenery";
 
 /** Scenery is painted into the lane only. The engine owns every walkable cell. */
@@ -40,84 +42,61 @@ export const CrabLane = memo(function CrabLane({ row, lane, learning, width, hei
   row: number; lane?: Lane; learning: boolean; width: number; height: number;
 }) {
   const terrainRow = Math.min(row, 10);
-  const water = learning ? row > 0 && row < 10 : !!lane && ["log", "turtle", "canoe", "island"].includes(lane.kind);
+  const water = learning ? row > 0 && row < 10 : !!lane && waterLane(lane);
   const road = !!lane && !water;
-  const grass = terrainRow === 0 || terrainRow === 5 || terrainRow === 10;
-  const boardwalk = terrainRow === 5;
-  const top = road ? "#536175" : water ? "#2CAAC4" : boardwalk ? "#CF9B63" : grass ? "#7EBA70" : "#EAC98D";
-  const front = road ? "#354358" : water ? "#147C9F" : boardwalk ? "#926745" : grass ? "#4C8A61" : "#B7835E";
+  const grass = terrainRow === 0 || row > 10;
+  const boardwalk = !water && terrainRow === 5;
+  const top = road ? "#59616E" : water ? "#33B9BC" : boardwalk ? "#D7A570" : grass ? "#79B866" : "#F2CB86";
+  const front = road ? "#394956" : water ? "#218D9E" : boardwalk ? "#9B6C4B" : grass ? "#4F8D59" : "#C8935D";
   return <Svg width={width} height={height} viewBox="0 0 900 100" preserveAspectRatio="none" accessible={false}>
     <Rect width={900} height={100} fill={front} />
     <Path d="M0 0H900V66L870 91H0Z" fill={top} />
     <Path d="M0 66H900L870 91H0Z" fill={front} />
     <Path d="M900 0V66L870 91V24Z" fill="#263E4C" opacity={0.16} />
-    <Path d="M0 0H900V9H0Z" fill={road ? "#69778A" : water ? "#74D9DC" : grass ? "#A4D88A" : "#F6DDA9"} opacity={0.72} />
+    <Path d="M0 0H900V9H0Z" fill={road ? "#80868B" : water ? "#8DE4D9" : boardwalk ? "#F4CF92" : grass ? "#B3DC81" : "#FFE5A9"} opacity={0.72} />
     {boardwalk ? <G>
-      {Array.from({ length: 10 }, (_, i) => <G key={i}><Path d={`M${i * 96} 12V75`} stroke="#8A603F" strokeWidth={5} opacity={0.55} /><Path d={`M${i * 96 + 7} 18V64`} stroke="#F4CD88" strokeWidth={3} opacity={0.75} /></G>)}
+      {Array.from({ length: 10 }, (_, i) => <G key={i}><Path d={`M${i * 96} 12V75`} stroke="#865B43" strokeWidth={5} opacity={0.7} /><Path d={`M${i * 96 + 7} 18V64`} stroke="#F4CD88" strokeWidth={3} opacity={0.75} /></G>)}
       <Path d="M0 65H900" stroke="#F1C886" strokeWidth={7} opacity={0.7} />
     </G> : road ? <G>
-      {Array.from({ length: 6 }, (_, i) => <Path key={i} d={`M${i * 165 + 30} 42h84l-10 7h-84Z`} fill="#EBDDB4" opacity={0.82} />)}
+      {Array.from({ length: 6 }, (_, i) => <Path key={i} d={`M${i * 165 + 30} 42h84l-10 7h-84Z`} fill="#FFF0CE" opacity={0.9} />)}
       <Path d="M0 70H900" stroke="#C9AB8C" strokeWidth={3} opacity={0.48} />
     </G> : water ? <G>
       {Array.from({ length: 10 }, (_, i) => <G key={i}>
-        <Path d={`M${(i * 137 + row * 61) % 920} ${18 + i % 3 * 18}h42l-10 5h-42Z`} fill="#D8F9DD" opacity={0.72} />
-        <Rect x={(i * 191 + row * 37) % 900} y={68 + i % 2 * 11} width={12} height={3} fill="#A4E9DC" />
+        <Path d={`M${(i * 137 + row * 61) % 920} ${18 + i % 3 * 18}h42l-10 5h-42Z`} fill="#E1FBE0" opacity={0.68} />
+        <Rect x={(i * 191 + row * 37) % 900} y={68 + i % 2 * 11} width={12} height={3} fill="#AFEDE0" />
       </G>)}
     </G> : <G>
-      {Array.from({ length: 13 }, (_, i) => <Rect key={i} x={(i * 143 + row * 47) % 900} y={19 + i % 4 * 14} width={i % 3 === 0 ? 17 : 9} height={i % 3 === 0 ? 7 : 4} fill={grass ? "#5B9E68" : "#CBAB74"} opacity={0.58} />)}
+      {Array.from({ length: 13 }, (_, i) => <Rect key={i} x={(i * 143 + row * 47) % 900} y={19 + i % 4 * 14} width={i % 3 === 0 ? 17 : 9} height={i % 3 === 0 ? 7 : 4} fill={grass ? "#4E9A60" : "#CD9D61"} opacity={0.58} />)}
     </G>}
     {safeLaneScenery(row, lane).map(([kind, x, y, scale], i) => <CoastProp key={i} kind={kind} x={x} y={y} scale={scale}/>)}
   </Svg>;
 });
 
-const paints = ["#ED826C", "#F3C85E", "#78BF9E", "#8FA9DA", "#D395C0", "#EAA969"];
-/** Traffic and floating decks are purely visual; hit boxes remain the engine's spans. */
-export const CrabVehicle = memo(function CrabVehicle({ kind, width, height, variant = 0, left = false }: {
-  kind: Lane["kind"]; width: number; height: number; variant?: number; left?: boolean;
+/** Floating actors sit over a continuous deck or wake so their usable width stays readable. */
+export const CrabVehicle = memo(function CrabVehicle({ kind, width, height, left = false }: {
+  kind: Lane["kind"]; width: number; height: number; left?: boolean;
 }) {
-  const color = paints[variant % paints.length];
-  const water = ["log", "turtle", "canoe", "island"].includes(kind);
-  return <Svg width={width} height={height} viewBox="0 0 160 100" preserveAspectRatio="none" accessible={false}>
-    <G transform={left ? "translate(160 0) scale(-1 1)" : undefined}>
-      <Ellipse cx={78} cy={82} rx={65} ry={10} fill="#163E52" opacity={water ? 0.16 : 0.3} />
-      {kind === "log" ? <G>
-        <Path d="M5 41L18 27H149L157 40V66L145 76H16L5 65Z" fill="#85553B" />
-        <Path d="M5 41L18 27H149L157 40H5Z" fill="#C89558" />
-        <Path d="M157 40V66L145 76V53Z" fill="#684436" />
-        <Path d="M31 34H128M22 48H138M38 60H119" stroke="#E8B876" strokeWidth={4} opacity={0.75} />
-      </G> : kind === "canoe" ? <G>
-        <Path d="M5 39H156L141 74H21Z" fill="#865A43" />
-        <Path d="M5 39L24 25H142L156 39L141 54H21Z" fill={color} />
-        <Path d="M29 39L39 32H129L137 39L127 46H38Z" fill="#684B45" />
-        <Path d="M66 30V55M97 30V55" stroke="#F8DF9E" strokeWidth={5} />
-      </G> : kind === "turtle" ? <G>
-        <Path d="M20 46L7 34L3 53L22 63M136 46L154 32L157 55L137 64" fill="#7FB887" />
-        <Path d="M26 60L12 74L35 76M124 60L143 75L120 77" fill="#86BD88" />
-        <Path d="M29 53L52 29H110L134 53L112 75H49Z" fill="#3B8164" />
-        <Path d="M52 29H110L134 53H29Z" fill="#8BC779" />
-        <Path d="M76 30L66 49L81 62L101 48L92 30" fill="#B7D984" />
-        <Circle cx={143} cy={48} r={10} fill="#9ACD91" /><Circle cx={147} cy={45} r={2} fill="#264B45" />
-      </G> : kind === "island" ? <G>
-        <Path d="M9 46L28 32H143L155 45V65L139 78H26L9 64Z" fill="#B78156" />
-        <Path d="M9 46L28 32H143L155 45H9Z" fill="#E5CD89" />
-        <Path d="M60 37V19H70V37" fill="#956849" /><Path d="M39 20L60 5H92L105 20L87 33H57Z" fill="#5AA96B" /><Path d="M60 5H92L105 20H39Z" fill="#91D27B" />
-      </G> : kind === "bike" ? <G>
-        <Ellipse cx={42} cy={69} rx={19} ry={10} fill="#31465C" /><Ellipse cx={118} cy={69} rx={19} ry={10} fill="#31465C" />
-        <Path d="M24 57L43 47L62 57L42 65Z M99 57L118 47L137 57L117 65Z" fill="#E1EEF0" />
-        <Path d="M35 51L59 28H106L126 51L109 61H51Z" fill={color} />
-        <Path d="M59 28H106L119 45H43Z" fill="#FFE7A8" />
-        <Path d="M106 28L119 45L126 51L109 61V39Z" fill="#AF7561" opacity={0.5} />
-      </G> : <G>
-        <Path d="M11 57L25 45H145L155 57V70L143 80H23L11 69Z" fill="#314960" />
-        <Path d="M11 57L25 45H145L155 57H11Z" fill={color} />
-        <Path d={kind === "bus" ? "M21 45L37 21H123L145 45Z" : "M31 45L50 29H106L125 45Z"} fill={color} />
-        <Path d={kind === "bus" ? "M37 23H120L134 41H25Z" : "M52 31H104L117 42H39Z"} fill="#BCE4E5" />
-        <Path d="M73 24L69 42M102 27L104 42" stroke="#6A8996" strokeWidth={4} />
-        <Path d="M145 45L155 57V70L143 80V55Z" fill="#9F685E" opacity={0.55} />
-        <Rect x={29} y={70} width={20} height={10} fill="#25374A" /><Rect x={116} y={70} width={20} height={10} fill="#25374A" />
-        <Rect x={17} y={55} width={9} height={6} fill="#FFF2B4" /><Rect x={140} y={55} width={9} height={6} fill="#FFF2B4" />
-        {kind === "bus" && [45,68,91].map(x => <Rect key={x} x={x} y={26} width={13} height={12} fill="#EAF5DB" opacity={0.7} />)}
-      </G>}
-    </G>
-  </Svg>;
+  const art = illustrated[kind === "pickup" ? "car" : kind];
+  const water = kind === "log" || kind === "turtle" || kind === "canoe" || kind === "island";
+  const bottom = height * 0.9;
+  const frame = crabActorFrame(art, width, height, bottom, left);
+  const inkWidth = frame.width * art.ink[2] / art.pixels[0];
+  const deckColor = kind === "island" ? "#ECD294" : kind === "turtle" ? "#86BE8A" : "#91D8BD";
+  return (
+    <View pointerEvents="none" style={{ width, height }}>
+      <View style={{
+        position: "absolute", left: width * (water ? 0 : 0.04), top: bottom - height * 0.09,
+        width: width * (water ? 1 : 0.92), height: height * 0.16, borderRadius: height,
+        backgroundColor: water ? "#1E59685C" : "#192C3E5C",
+      }}/>
+      {water && <View style={{ position: "absolute", left: 0, top: bottom - height * 0.28, width, height: height * 0.34 }}>
+        <Svg width={width} height={height * 0.34} viewBox="0 0 100 28" preserveAspectRatio="none" accessible={false}>
+          <Ellipse cx={50} cy={15} rx={50} ry={11} fill={deckColor} opacity={inkWidth < width * 0.8 ? 0.82 : 0.48}/>
+          <Path d="M2 16Q7 8 25 6M71 7Q91 8 98 15M5 20Q17 25 34 25M69 25Q87 25 96 20"
+            fill="none" stroke="#D8F5D8" strokeWidth={1.5} strokeLinecap="round" opacity={0.72}/>
+        </Svg>
+      </View>}
+      <Image accessible={false} fadeDuration={0} source={art.source()} resizeMode="contain" style={frame}/>
+    </View>
+  );
 });

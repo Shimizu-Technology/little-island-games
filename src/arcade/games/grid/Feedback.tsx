@@ -15,6 +15,7 @@ export function GridFeedback({
   kind,
   text = "",
   textWidth = 64,
+  showParticles = true,
 }: {
   event: number;
   x: number;
@@ -25,6 +26,7 @@ export function GridFeedback({
   kind: "splash" | "splat" | "score";
   text?: string;
   textWidth?: number;
+  showParticles?: boolean;
 }) {
   const age = useSharedValue(1),
     reduced = useReducedMotion();
@@ -46,7 +48,7 @@ export function GridFeedback({
       importantForAccessibility="no-hide-descendants"
       style={{ position: "absolute", left: 0, top: 0 }}
     >
-      <Animated.View
+      {showParticles && <Animated.View
         style={[
           { position: "absolute", left: (x - 0.5) * unit, top: (y - 0.5) * unit, width: unit * 2, height: unit * 2 },
           motion,
@@ -91,7 +93,7 @@ export function GridFeedback({
             </>
           )}
         </Svg>
-      </Animated.View>
+      </Animated.View>}
       {!!text && (
         <Animated.View
           style={[

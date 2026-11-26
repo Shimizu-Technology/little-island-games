@@ -23,10 +23,30 @@ export function useArcadeForeground() {
  * Memoize sprite art on primitive props; HUD snapshots must not redraw it.
  * An active=false sheet/focus/background cancels the frame and discards the remainder.
  */
-export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFrame, pose }: { initial: S; step: (s: S, input: I, dt: number) => S; reduce: (s: S, input: I) => S; input: I; active: boolean; onFrame?: (s: S) => void; pose?: PoseBuilder<S> }) {
-  const state = useRef(initial), previousPose = useRef<SpritePose[]>([]), currentPose = useRef<SpritePose[]>([]), live = useRef({ active, step, reduce, input, onFrame, pose });
+export function useArcadeLoop<S, I>({
+  initial, step, reduce, input, active, onFrame, pose, shouldPublish, measureBudget = true,
+}: {
+  initial: S; step: (s: S, input: I, dt: number) => S; reduce: (s: S, input: I) => S; input: I; active: boolean;
+  onFrame?: (s: S) => void; pose?: PoseBuilder<S>;
+  /** Opt in to publishing only the fields the React HUD reads. Poses and onFrame still receive every update. */
+  shouldPublish?: (published: S, current: S) => boolean;
+  measureBudget?: boolean;
+}) {
+  const state = useRef(initial), published = useRef(initial), previousPose = useRef<SpritePose[]>([]), currentPose = useRef<SpritePose[]>([]);
+  const live = useRef({ active, step, reduce, input, onFrame, pose, shouldPublish, measureBudget });
   const [snapshot, setSnapshot] = useState(initial), [budget, setBudget] = useState<FrameBudget>({ fps: 0, p95: 0, max: 0, dropped: 0, ticks: 0 });
-  useLayoutEffect(() => { live.current = { active, step, reduce, input, onFrame, pose }; }, [active, step, reduce, input, onFrame, pose]);
+  useLayoutEffect(() => {
+    live.current = { active, step, reduce, input, onFrame, pose, shouldPublish, measureBudget };
+  }, [active, step, reduce, input, onFrame, pose, shouldPublish, measureBudget]);
+  const publish = useCallback((defaultUpdate: boolean) => {
+    const current = state.current;
+    if (live.current.shouldPublish?.(published.current, current) ?? defaultUpdate) {
+      published.current = current;
+      setSnapshot(current);
+      return true;
+    }
+    return false;
+  }, []);
   useEffect(() => {
     if (!active) return;
     let id = 0, previous = 0, lastHud = 0, lastBudget = 0, samples: number[] = [], clock: FixedClock = { remainder: 0, ticks: 0, dropped: 0 };
@@ -34,20 +54,20 @@ export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFr
       if (!live.current.active) return;
       const builder = live.current.pose;
       if (builder && !currentPose.current.length) currentPose.current = previousPose.current = builder.build(state.current);
-      const beforeEvent = arcadeEvent(state.current);
+      const beforeEvent = live.current.shouldPublish ? "" : arcadeEvent(state.current);
       if (previous) {
         const elapsed = (now - previous) / 1000, advanced = advanceClock(clock, elapsed); clock = advanced.clock;
         for (let i = 0; i < advanced.steps; i++) {
           state.current = live.current.step(state.current, live.current.input, FIXED_DT);
           if (builder) { previousPose.current = currentPose.current; currentPose.current = builder.build(state.current); }
         }
-        samples.push(now - previous);
+        if (live.current.measureBudget) samples.push(now - previous);
       }
       previous = now;
       if (builder) builder.target.set(interpolatePoses(previousPose.current, currentPose.current, clock.remainder / FIXED_DT, builder.snapDistance));
       live.current.onFrame?.(state.current);
-      if (beforeEvent !== arcadeEvent(state.current) || now - lastHud >= 100) { setSnapshot(state.current); lastHud = now; }
-      if (now - lastBudget >= 1000 && samples.length) {
+      if (publish(!live.current.shouldPublish && (beforeEvent !== arcadeEvent(state.current) || now - lastHud >= 100))) lastHud = now;
+      if (live.current.measureBudget && now - lastBudget >= 1000 && samples.length) {
         const ordered = [...samples].sort((a, b) => a - b);
         setBudget({ fps: 1000 / (samples.reduce((a, b) => a + b) / samples.length), p95: ordered[Math.floor(ordered.length * .95)], max: ordered[ordered.length - 1], dropped: clock.dropped, ticks: clock.ticks }); samples = []; lastBudget = now;
       }
@@ -55,16 +75,16 @@ export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFr
     };
     id = requestAnimationFrame(frame);
     return () => { cancelAnimationFrame(id); previousPose.current = currentPose.current; };
-  }, [active]);
+  }, [active, publish]);
   const dispatch = useCallback((action: I) => {
     if (!live.current.active) return state.current;
     state.current = live.current.reduce(state.current, action);
     // Discrete controls (turn/rotate/drop) are immediate; reset history to avoid rewinding them.
     const builder = live.current.pose;
     if (builder) { currentPose.current = previousPose.current = builder.build(state.current); builder.target.set(currentPose.current); }
-    setSnapshot(state.current); live.current.onFrame?.(state.current);
+    publish(true); live.current.onFrame?.(state.current);
     return state.current;
-  }, []);
+  }, [publish]);
   return { snapshot, state, dispatch, budget };
 }
 /** Synchronous action ownership prevents fast queued taps from using an old board. */

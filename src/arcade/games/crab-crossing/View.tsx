@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useRef, memo, useMemo, useState } from "react";
 import { View, Platform, type ViewStyle } from "react-native";
-import { crabHopFrame } from "../../feelArt";
-import type { ArtPose } from "../../ArtPose";
 import Animated, { useAnimatedStyle, useSharedValue, useFrameCallback } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { HeartsHud, HitReaction } from "../../LivesHud";
@@ -12,10 +10,11 @@ import { useReducedMotion } from "../../../components/motion";
 
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { useArcadeLoop } from "../../loop";
-import { GridHero, GridObject } from "../grid/Art";
+import { GridObject } from "../grid/Art";
 import { CrabLane, CrabVehicle } from "./CrabArt";
+import { CAMERA, CRAB_FEET, CrabActor, CrabBursts, CrabKiko, HERO, SHADOW, TRAFFIC_PER_ROW, useCrabFeedback } from "./CrabMotion";
 import { crabFollow, crabFraming, crabProject, crabGroundTransform } from "./camera";
-import { GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
+import { GridBudget, Shake, useGridInput } from "../grid/Controls";
 import type { Direction } from "../grid/rules";
 import type { ArcadeResult } from "../../types";
 import type { OutfitId } from "../../progress";
@@ -23,6 +22,7 @@ import {
   crabConfig,
   crabPosition,
   CRAB_HOP,
+  CRAB_ROWS,
   crabLanes,
   crabLearning,
   crabResult,
@@ -36,6 +36,13 @@ import {
 /** Same cap as Lagoon's HUD: numbers and hints stop growing at 1.5x so the largest text keeps the road in view. */
 const HUD_TEXT_MAX = 1.5;
 const tick: CrabInput = { type: "tick" };
+const TRAFFIC_TOP = -0.18;
+
+function crabHudChanged(before: CrabState, after: CrabState) {
+  return before.phase !== after.phase || before.crossed !== after.crossed || before.cursor !== after.cursor ||
+    before.bumps !== after.bumps || before.lives.hit !== after.lives.hit || before.lives.hearts !== after.lives.hearts ||
+    before.lives.maxHearts !== after.lives.maxHearts;
+}
 /** The hint stays left of the arrow keys (three 44-pt keys, 4-pt gaps, 10 pt from the edge, 8-pt clearance). */
 const ARROWS_RIGHT = 10 + 44 * 3 + 4 * 2 + 8;
 export function CrabBoard({
@@ -63,22 +70,27 @@ export function CrabBoard({
   overlayTop?: number;
   debug: boolean;
 }) {
-  const touch = useGridTouch();
+  const touching = useRef(false);
+  const [releasedWin, setReleasedWin] = useState(false);
   const viewportWidth = Math.max(1, allottedSize);
   const viewportHeight = Math.max(1, availableHeight);
   const { unit, heroSize } = crabFraming(viewportWidth, viewportHeight);
   const worldWidth = unit * 9;
   const coastTiles = viewportWidth > unit * 8 ? [-1, 0, 1] : [0];
-  const poses = useSharedValue<ArtPose[]>([]), reduced = useReducedMotion();
+  const poses = useSharedValue<SpritePose[]>([]), reduced = useReducedMotion();
+  const [lanes] = useState(() => crabLanes(initial));
+  const feedback = useCrabFeedback(initial, lanes, active, reduced, onTone);
+  const hintVisible = feedback.hintVisible;
+  const hintStyle = useAnimatedStyle(() => ({ opacity: hintVisible.value ? 1 : 0 }));
   const start = crabPosition(initial);
   const startGround = crabProject((start.x + 0.5) * unit, (start.y + 0.5) * unit);
   const cameraIdentity = useSharedValue<string | number | undefined>(initial.lives.hit);
   const camera = useSharedValue({ x: viewportWidth / 2 - startGround.x, y: viewportHeight * 0.76 - startGround.y });
   // Follow ground contact, never the hop arc. Presentation cannot change the rules.
   useFrameCallback(frame => {
-    const target = poses.value[59];
+    const target = poses.value[CAMERA];
     if (!target || !active) return;
-    const identity = poses.value[0]?.identity;
+    const identity = poses.value[HERO]?.identity;
     const reset = cameraIdentity.value !== identity;
     if (reset) cameraIdentity.value = identity;
     const dt = (frame.timeSincePreviousFrame ?? 16.67) / 1000;
@@ -92,38 +104,36 @@ export function CrabBoard({
   // Kit v3: pose-only interpolation, including a respawn identity guard.
   const build = useCallback(
     (s: CrabState) => {
-      const hero = crabPosition(s),
-        bounce = s.hop ? Math.sin((s.hop.age / CRAB_HOP) * Math.PI) : 0,
-        lanes = crabLanes(s),
-        p: ArtPose[] = [
-          {
-            identity: s.lives.hit,
-            x: (hero.x + 0.5) * unit - heroSize / 2,
-            y: (hero.y + 0.5 - hero.arc) * unit - heroSize * 0.78,
-            scale: 1 + bounce * 0.08,
-            frame: reduced ? 0 : crabHopFrame(s.hop?.age, CRAB_HOP),
-            angle: reduced ? 0 : s.respawn > 0 ? 0.18 : Math.sin(s.time * 3) * 0.025,
-          },
-        ];
-      for (let row = 0; row < 9; row++) {
-        const l = lanes.find((l) => l.row === row),
-          objects = l ? laneObjects(l, s.travel) : [];
-        for (let i = 0; i < 6; i++)
+      const hero = crabPosition(s);
+      const progress = s.hop ? s.hop.age / CRAB_HOP : undefined;
+      const bounce = progress === undefined ? 0 : Math.sin(progress * Math.PI);
+      const lift = reduced ? 0 : bounce;
+      const tilt = s.hop ? Math.sign(s.hop.toX - s.hop.fromX) || (s.hops % 2 ? 1 : -1) : 0;
+      const x = (hero.x + 0.5) * unit, groundY = (hero.y + 0.6) * unit;
+      const p: SpritePose[] = [{
+        identity: s.lives.hit,
+        x: x - heroSize / 2,
+        y: groundY - hero.arc * unit - heroSize * CRAB_FEET,
+        scale: 1 + lift * 0.045,
+        frame: progress,
+        angle: tilt * lift * 0.14,
+      }];
+      for (let row = 0; row < CRAB_ROWS - 1; row++) {
+        const lane = lanes.find(l => l.row === row);
+        const objects = lane ? laneObjects(lane, s.travel) : [];
+        for (let i = 0; i < TRAFFIC_PER_ROW; i++)
           p.push({
-            x: ((objects[i] ?? 0) - (l?.span ?? 1) / 2 + 0.5) * unit,
-            y: row * unit,
-            opacity: l && i < objects.length ? 1 : 0,
+            x: ((objects[i] ?? 0) - (lane?.span ?? 1) / 2 + 0.5) * unit,
+            y: (row + TRAFFIC_TOP) * unit,
+            opacity: i < objects.length ? 1 : 0,
           });
       }
-      for (let i = 0; i < 3; i++)
-        p.push({ x: ((i * 3 + (reduced ? 0 : s.time * 0.4)) % 9) * unit, y: (2.4 + i * 0.6) * unit, opacity: 0.3 });
-      p.push({ x: hero.x * unit, y: hero.y * unit, scale: 1 - bounce * 0.24, opacity: 0.28 - bounce * 0.14 });
-      const ground = crabProject((hero.x + 0.5) * unit, (Math.max(3, hero.y) + 0.5) * unit);
-      p.push({ x: viewportWidth / 2 - ground.x, y: viewportHeight * 0.76 - ground.y });
-      p.push({ x: (hero.x + 0.5) * unit - heroSize * 0.65, y: (hero.y + 0.5) * unit, opacity: reduced ? 0 : s.hop ? Math.max(0, 0.7 - s.hop.age / CRAB_HOP) : 0 });
+      p[SHADOW] = { identity: s.lives.hit, x: x - heroSize * 0.38, y: groundY - heroSize * 0.09, scale: 1 - lift * 0.30, opacity: 0.42 - lift * 0.19 };
+      const ground = crabProject(x, (Math.max(3, hero.y) + 0.5) * unit);
+      p[CAMERA] = { x: viewportWidth / 2 - ground.x, y: viewportHeight * 0.76 - ground.y };
       return p;
     },
-    [reduced, unit, heroSize, viewportWidth, viewportHeight]
+    [reduced, lanes, unit, heroSize, viewportWidth, viewportHeight]
   );
   const pose = useMemo(() => ({ build, target: poses, snapDistance: unit * 2 }), [build, poses, unit]);
   const {
@@ -131,19 +141,29 @@ export function CrabBoard({
       dispatch,
       state,
       budget,
-    } = useArcadeLoop({ initial, step: crabStep, reduce: crabTransition, input: tick, active, pose }),
+    } = useArcadeLoop({
+      initial, step: crabStep, reduce: crabTransition, input: tick, active, pose,
+      onFrame: feedback.observe, shouldPublish: crabHudChanged, measureBudget: debug,
+    }),
     reported = useRef(false),
-    [homes, setHomes] = useState<{ crossed: number; slots: number[] }>({ crossed: initial.crossed, slots: [] }),
-    last = useRef({ crossed: 0, bumps: 0, cursor: 0 });
+    [homes, setHomes] = useState<{ crossed: number; slots: number[] }>({ crossed: initial.crossed, slots: [] });
+  const cleared = s.phase === "cleared";
+  const releaseTouch = useCallback(() => {
+    if (!touching.current) return;
+    touching.current = false;
+    if (cleared) setReleasedWin(true);
+  }, [cleared]);
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    window.addEventListener("blur", releaseTouch);
+    return () => window.removeEventListener("blur", releaseTouch);
+  }, [releaseTouch]);
   useEffect(() => {
     if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper });
   }, [active, helper, dispatch, state]);
   useEffect(() => {
-    if (s.crossed > last.current.crossed || s.cursor > last.current.cursor) onTone("coral");
-    if (crabLearning(s) && s.bumps > last.current.bumps) onTone("shell-0");
-    last.current = { crossed: s.crossed, bumps: s.bumps, cursor: s.cursor };
     const r = crabResult(s);
-    if (r && active && (!r.cleared || !touch.touching) && !reported.current) {
+    if (r && active && (!r.cleared || !touching.current) && !reported.current) {
       // Keep the winning control mounted through finger-up, then show the shared result.
       // This also gives the local clear pose/particles a brief, unobstructed beat.
       const timer = setTimeout(
@@ -157,29 +177,30 @@ export function CrabBoard({
       );
       return () => clearTimeout(timer);
     }
-  }, [s, active, touch.touching, onResult, onTone]);
+  }, [s, active, releasedWin, onResult]);
+  const splash = s.impact.kind === "splash";
+  const hitTone = useCallback((tone: string, haptic?: boolean) => {
+    onTone(splash ? "crab-splash" : tone, haptic);
+  }, [onTone, splash]);
   if (s.crossed > homes.crossed) {
     const slot = [1, 4, 7].reduce((best, x) => Math.abs(s.impact.x - x) < Math.abs(s.impact.x - best) ? x : best, 1);
     setHomes({ crossed: s.crossed, slots: [...(homes.crossed % 3 === 0 ? [] : homes.slots), slot] });
   }
   const move = useCallback(
     (direction: Direction) => {
-      if (active) {
-        dispatch({ type: "hop", direction });
-        onTone("shell-3", false);
-      }
+      if (active) dispatch({ type: "hop", direction });
     },
-    [active, dispatch, onTone]
+    [active, dispatch]
   );
   const pan = useGridInput(active, move, true, () => move("up")),
     learning = crabLearning(s),
-    l = crabConfig(s),
-    [lanes] = useState(() => crabLanes(initial));
+    l = crabConfig(s);
   const compactChip = { backgroundColor: "#102F39DC", borderRadius: 16, paddingHorizontal: 9, minHeight: 38, justifyContent: "center" as const };
   return (
-    <View {...touch.handlers} testID="crab-world" style={{ flex: 1, overflow: "hidden", backgroundColor: "#488A70" }}>
+    <View onTouchStart={() => { touching.current = true; }} onTouchEnd={releaseTouch} onTouchCancel={releaseTouch}
+      testID="crab-world" style={{ flex: 1, overflow: "hidden", backgroundColor: "#4F8D59" }}>
       <Shake event={s.bumps}>
-        <View {...pan} accessible accessibilityRole="button" accessibilityLabel={`Crab Crossing world. Tap to hop forward, swipe left, right, or back. ${s.hops} hops, ${s.bumps} bumps.`}
+        <View {...pan} accessible accessibilityRole="button" accessibilityLabel={`Crab Crossing world. Tap to hop forward, swipe left, right, or back. ${s.bumps} bumps.`}
           onAccessibilityTap={() => move("up")}
           style={{ width: viewportWidth, height: viewportHeight, overflow: "hidden", ...(Platform.OS === "web" ? ({ touchAction: "none" } as ViewStyle) : {}) }}>
           <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: worldWidth, height: unit * 11 }, cameraStyle]}>
@@ -195,7 +216,7 @@ export function CrabBoard({
             })}
             {[1, 4, 7].map(x => <View key={`burrow-${x}`} style={{ position: "absolute", left: x * unit - unit * 0.1, top: -unit * 0.1 }}>
               <GridObject kind="burrow" size={unit * 1.2}/>
-              {homes.slots.includes(x) && <View style={{ position: "absolute", left: unit * 0.3, top: unit * 0.38 }}><GridHero crab happy size={unit * 0.65}/></View>}
+              {homes.slots.includes(x) && <View style={{ position: "absolute", left: unit * 0.3, top: unit * 0.38 }}><CrabKiko size={unit * 0.65}/></View>}
             </View>)}
             {learning && l.numbers.map((n, i) => <React.Fragment key={i}>
               {[l.stones[i], (l.stones[i] + 3) % 9].map((x, j) => <View key={j} style={{ position: "absolute", top: (9 - i) * unit + 2, left: x * unit + 1, width: unit - 2, height: unit - 4, borderRadius: unit / 3, backgroundColor: i < s.cursor ? "#AEDCBA" : "#FFF0C7", borderWidth: 2, borderBottomWidth: 6, borderColor: i === s.cursor && j === 0 && helper ? "#E6A149" : "#7A9A91", justifyContent: "center", alignItems: "center" }}>
@@ -203,11 +224,17 @@ export function CrabBoard({
               </View>)}
             </React.Fragment>)}
             <CrabTraffic poses={poses} unit={unit} lanes={lanes} debug={debug}/>
-            <ArcadeSprite poses={poses} index={60} width={heroSize * 1.3} height={heroSize * 0.4}>
-              <View style={{ width: heroSize * 1.3, height: heroSize * 0.24, borderRadius: heroSize, borderWidth: 2, borderColor: lanes.some(item => item.row === Math.round(crabPosition(s).y) && waterLane(item)) ? "#D7FFFF" : "#F8E4B1", backgroundColor: "transparent" }}/>
+            {!reduced && <CrabBursts landing={feedback.landing} goal={feedback.goal} unit={unit}/>}
+            <ArcadeSprite poses={poses} index={SHADOW} width={heroSize * 0.76} height={heroSize * 0.18}>
+              <View style={{ width: heroSize * 0.76, height: heroSize * 0.18, borderRadius: unit, backgroundColor: "#214653" }}/>
             </ArcadeSprite>
-            <HitReaction hit={s.lives.hit} onTone={onTone}><CrabActor poses={poses} unit={unit} heroSize={heroSize} outfit={outfit} debug={debug} happy={s.phase === "cleared"}/></HitReaction>
-            <GridFeedback event={s.crossed + s.lives.hit} x={s.impact.x} y={s.impact.y} kind={s.impact.kind} unit={unit} cols={9} rows={11} text={s.impact.kind === "score" ? "+100" : s.impact.kind === "splash" ? "SPLASH!" : "BONK!"} textWidth={110}/>
+            <HitReaction hit={s.lives.hit} onTone={hitTone}>
+              <CrabActor poses={poses} unit={unit} size={heroSize} outfit={outfit} debug={debug} reduced={reduced}
+                landingAge={feedback.landing.age} facingLeft={feedback.facingLeft}/>
+            </HitReaction>
+            <GridFeedback event={s.crossed + s.lives.hit} x={s.impact.x} y={s.impact.y} kind={s.impact.kind} unit={unit} cols={9} rows={11}
+              text={s.impact.kind === "score" ? "+100" : s.impact.kind === "splash" ? "SPLASH!" : "BONK!"} textWidth={110}
+              showParticles={!reduced && s.impact.kind !== "score"}/>
             </View>
           </Animated.View>
         </View>
@@ -230,7 +257,12 @@ export function CrabBoard({
           <OverlayArrow label="Move right" glyph="→" onPress={() => move("right")} active={active}/>
         </View>
       </View>
-      {s.hops < 3 && <View testID="crab-hint" pointerEvents="none" style={{ position: "absolute", bottom: 12, left: 10, right: ARROWS_RIGHT, alignItems: "flex-start" }}><View style={{ backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }}><Copy maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ color: "#FFF4C7", fontSize: 13, lineHeight: 18 }}>Tap to hop · swipe to steer</Copy></View></View>}
+      {initial.hops < 3 && <View testID="crab-hint" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+        style={{ position: "absolute", bottom: 12, left: 10, right: ARROWS_RIGHT, alignItems: "flex-start" }}>
+        <Animated.View style={[{ backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }, hintStyle]}>
+          <Copy maxFontSizeMultiplier={HUD_TEXT_MAX} style={{ color: "#FFF4C7", fontSize: 13, lineHeight: 18 }}>Tap to hop · swipe to steer</Copy>
+        </Animated.View>
+      </View>}
       {s.level === "endless" && <View style={{ position: "absolute", left: 10, bottom: 48 }}><Button quiet compact maxFontSizeMultiplier={HUD_TEXT_MAX} disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish crossing</Button></View>}
       {debug && <View pointerEvents="none" style={{ position: "absolute", left: 10, bottom: 4 }}><GridBudget budget={budget}/></View>}
     </View>
@@ -241,53 +273,6 @@ function OverlayArrow({ label, glyph, onPress, active }: { label: string; glyph:
   return <PressableScale accessibilityRole="button" accessibilityLabel={label} disabled={!active} onPress={onPress} style={{ width: 44, height: 44, borderRadius: 13, justifyContent: "center", alignItems: "center", backgroundColor: "#102F39B8", borderWidth: 1, borderColor: "#DDF3D2A8" }}><Text maxFontSizeMultiplier={1} style={{ color: "#FFF7D9", fontSize: 27, fontWeight: "900" }}>{glyph}</Text></PressableScale>;
 }
 
-const CrabActor = memo(function CrabActor({
-  poses,
-  unit,
-  heroSize,
-  outfit,
-  happy,
-  debug,
-}: {
-  poses: SharedValue<SpritePose[]>;
-  unit: number;
-  heroSize: number;
-  outfit: OutfitId;
-  debug: boolean;
-  happy: boolean;
-}) {
-  const hopShape = useAnimatedStyle(() => {
-    const frame = poses.value[0]?.frame ?? 0;
-    const shape = frame === 1 || frame === 4 ? { x: 1.14, y: 0.84 } : frame === 2 ? { x: 0.86, y: 1.2 } : { x: 1, y: 1 };
-    return { transform: [{ scaleX: shape.x }, { scaleY: shape.y }] };
-  });
-  return (
-    <>
-    <ArcadeSprite poses={poses} index={58} width={unit} height={unit}>
-      <View style={{ position: "absolute", left: unit * 0.5 - heroSize * 0.36, top: unit * 0.5, width: heroSize * 0.72, height: heroSize * 0.18, borderRadius: unit, backgroundColor: "#163E4B" }} />
-    </ArcadeSprite>
-    <ArcadeSprite poses={poses} index={0} width={heroSize} height={heroSize}>
-      <Animated.View style={hopShape}>
-      <GridHero crab size={heroSize} outfit={outfit} happy={happy} poses={poses} />
-      </Animated.View>
-      {debug && (
-        <View
-          style={{
-            position: "absolute",
-            left: heroSize * 0.2,
-            top: heroSize * 0.38,
-            width: heroSize * 0.6,
-            height: heroSize * 0.44,
-            borderWidth: 1,
-            borderColor: "#FF3366",
-            borderRadius: unit * 0.2,
-          }}
-        />
-      )}
-    </ArcadeSprite>
-    </>
-  );
-});
 const CrabTraffic = memo(function CrabTraffic({
   poses,
   unit,
@@ -302,21 +287,21 @@ const CrabTraffic = memo(function CrabTraffic({
   return (
     <>
       {lanes.map((l) =>
-        Array.from({ length: 6 }, (_, i) => (
+        Array.from({ length: TRAFFIC_PER_ROW }, (_, i) => (
           <ArcadeSprite
             key={`${l.row}-${i}`}
             poses={poses}
-            index={1 + l.row * 6 + i}
+            index={1 + l.row * TRAFFIC_PER_ROW + i}
             width={unit * l.span}
             height={unit * 1.18}
           >
-            <CrabVehicle kind={l.kind} width={unit * l.span} height={unit * 1.18} variant={i + l.row} left={l.speed < 0} />
+            <CrabVehicle kind={l.kind} width={unit * l.span} height={unit * 1.18} left={l.speed < 0} />
             {debug && (
               <View
                 style={{
                   position: "absolute",
                   left: waterLane(l) ? 0 : unit * l.span * 0.04,
-                  top: unit * 0.26,
+                  top: unit * (0.26 - TRAFFIC_TOP),
                   width: unit * l.span * (waterLane(l) ? 1 : 0.92),
                   height: unit * 0.58,
                   borderWidth: 1,
