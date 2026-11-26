@@ -51,7 +51,7 @@ describe('Word Search through the real Cove Store',()=>{
    expect(paused().revision).toBe(2);
    await press(screen,'Undo');await settle();
    await press(screen,'Redo');await settle();
-   await press(screen,'Help · find one word');await settle();
+   for(const _ of [0,1,2]){await press(screen,['Hint','More hint','Show word'][_]);await settle();}
    const accepted=paused();expect(JSON.stringify(accepted.payload)).toContain('help');
    await act(async()=>{await store.backup();screen.unmount();});
    await act(async()=>{screen=create(<StoreProvider><Probe/><Ready/></StoreProvider>);});await settle();
@@ -95,9 +95,9 @@ describe('Word Search through the real Cove Store',()=>{
   try{
    await act(async()=>{screen=create(<WordSearchBoard state={state} dispatch={()=>{}} active width={353} resetKey="before"/>);});
    await act(async()=>{const h=surface(screen).props;h.onResponderGrant(event(0));h.onResponderRelease(event(0));});
-   expect(JSON.stringify(screen.toJSON())).toContain('Now choose the last letter.');
+   expect(JSON.stringify(screen.toJSON())).toContain('Now tap the last letter.');
    await act(async()=>screen.update(<WordSearchBoard state={state} dispatch={()=>{}} active width={353} resetKey="after"/>));
-   expect(JSON.stringify(screen.toJSON())).not.toContain('Now choose the last letter.');
+   expect(JSON.stringify(screen.toJSON())).not.toContain('Now tap the last letter.');
   }finally{if(screen)await act(async()=>screen.unmount());}
  });
 
