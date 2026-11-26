@@ -10,7 +10,7 @@ import type { OutfitId } from "../../progress";
 import type { SpritePose } from "../../poses";
 import { flightArt } from "../fruit-bat-flight/assets";
 import { BAT_RX, BAT_RY } from "../fruit-bat-flight/hull";
-import { BAT_SIZE, FLIGHT_SLOT } from "../fruit-bat-flight/presentation";
+import { BAT_CANVAS, BAT_SIZE, FLIGHT_SLOT } from "../fruit-bat-flight/presentation";
 /** Split palms move as whole static pieces: moving gaps never wait for a React render. */
 export const PalmPiece = memo(function PalmPiece({ bottom = false }: { bottom?: boolean }) {
   return <Svg width={46} height={660} viewBox="0 0 46 660"><G transform={bottom ? "translate(46 660) rotate(180)" : undefined}><Path d="M11-10H35L33 645H12Z" fill="#B77A73" stroke="#4A364F" strokeWidth={3}/>{Array.from({ length: 14 }, (_, i) => <Path key={i} d={`M12 ${i * 47}l22 8`} stroke="#744559" strokeWidth={3}/>)}<Path d="M23 640Q4 622 1 650L15 649Q23 668 30 650L45 651Q42 625 23 640" fill="#5E9D7E" stroke="#284E52" strokeWidth={3}/></G></Svg>;
@@ -29,7 +29,7 @@ const batFrames = [
 
 function BatFrame({ poses, frame, outfit }: { poses: SharedValue<SpritePose[]>; frame: number; outfit: OutfitId }) {
   const art = batFrames[frame];
-  const [left, top] = art.torso.map(value => BAT_SIZE / 2 - value * BAT_SIZE / 256);
+  const [left, top] = art.torso.map(value => BAT_CANVAS / 2 - value * BAT_SIZE / 256);
   const [hatX, hatY] = art.head.map(value => value * BAT_SIZE / 256);
   const style = useAnimatedStyle(() => ({ opacity: (poses.value[FLIGHT_SLOT.bat]?.frame ?? 0) === frame ? 1 : 0 }));
   return <Animated.View style={[{ position: "absolute", left, top, width: BAT_SIZE, height: BAT_SIZE }, style]}>
@@ -46,18 +46,18 @@ function BatFrame({ poses, frame, outfit }: { poses: SharedValue<SpritePose[]>; 
 export const BatRig = memo(function BatRig({ poses, outfit, debug = false }: { poses: SharedValue<SpritePose[]>; outfit: OutfitId; debug?: boolean }) {
   const flight = useAnimatedStyle(() => {
     const p = poses.value[FLIGHT_SLOT.bat];
-    return { transform: [{ translateX: p.x }, { translateY: p.y }, { rotate: `${p.angle ?? 0}rad` }] };
+    return { opacity: p.opacity ?? 1, transform: [{ translateX: p.x }, { translateY: p.y }, { rotate: `${p.angle ?? 0}rad` }] };
   });
   const impulse = useAnimatedStyle(() => {
     const kick = (poses.value[FLIGHT_SLOT.bat]?.scale ?? 1) - 1;
     return { transform: [{ scaleX: 1 + kick * .10 }, { scaleY: 1 - kick * .08 }] };
   });
-  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: BAT_SIZE, height: BAT_SIZE }, flight]}>
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: BAT_CANVAS, height: BAT_CANVAS }, flight]}>
     <Animated.View style={[StyleSheet.absoluteFill, impulse]}>
       {batFrames.map((_, frame) => <BatFrame key={frame} frame={frame} poses={poses} outfit={outfit}/>)}
     </Animated.View>
-    {debug && <Svg width={BAT_SIZE} height={BAT_SIZE} style={StyleSheet.absoluteFill} accessible={false}>
-      <Ellipse cx={BAT_SIZE / 2} cy={BAT_SIZE / 2} rx={BAT_RX} ry={BAT_RY} fill="#72FFB722" stroke="#368658" strokeWidth={1.5}/>
+    {debug && <Svg width={BAT_CANVAS} height={BAT_CANVAS} style={StyleSheet.absoluteFill} accessible={false}>
+      <Ellipse cx={BAT_CANVAS / 2} cy={BAT_CANVAS / 2} rx={BAT_RX} ry={BAT_RY} fill="#72FFB722" stroke="#368658" strokeWidth={1.5}/>
     </Svg>}
   </Animated.View>;
 });

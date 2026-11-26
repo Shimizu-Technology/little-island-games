@@ -26,7 +26,7 @@ import { UiPlayTarget } from "../../Input";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { enqueueCommand, drainCommands } from "../../mailbox";
-import { flightHud, runHud, type ScrollHud } from "../../publication";
+import { flightHud, runHud } from "../../publication";
 import { HIDDEN_POSE, samePublication } from "../../poses";
 import { HeartsHud } from "../../LivesHud";
 import { useArcadeUiLoop } from "../../uiLoop";
@@ -44,7 +44,7 @@ import { hazardBox } from "../lagoon-run/course";
 import { equation, type ScrollGame, type ScrollLevel } from "./content";
 import { BatRig, RunnerRig, LastHit } from "./FeelArt";
 import { FLIGHT_H, FLIGHT_W } from "../fruit-bat-flight/hull";
-import { FLIGHT_GATE_COUNT, FLIGHT_SLOT, FRUIT_SIZE, PALM_WIDTH, PORTAL_HEIGHTS, PORTAL_SIZE, flightPoses } from "../fruit-bat-flight/presentation";
+import { FLIGHT_CHROME_TINT, FLIGHT_GATE_COUNT, FLIGHT_SLOT, FRUIT_SIZE, PALM_CAP_WIDTH, PALM_COLUMN_HEIGHT, PORTAL_HEIGHTS, PORTAL_SIZE, flightPoses } from "../fruit-bat-flight/presentation";
 import { FlightEffects, FlightFlash, useFlightCamera, useFlightFeedback } from "../fruit-bat-flight/Feedback";
 import { runPoses, RUN_SLOTS, NEAR_START, CANOE_START, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
 
@@ -82,7 +82,8 @@ function useMailbox<I>(helper: boolean, active: boolean) {
   const send = useCallback((action: I) => { runOnUI((a: I) => { "worklet"; if (enabled.value) input.set(enqueueCommand(input.value, a)); })(action); }, [input, enabled]);
   return { input, send };
 }
-function useOutcome(s: Pick<ScrollHud,"helped"> & Partial<Pick<ScrollHud,"event"|"cue">>, result: ArcadeResult | null, props: BoardProps) {
+type OutcomeHud = ReturnType<typeof runHud>;
+function useOutcome(s: Pick<OutcomeHud, "helped"> & Partial<Pick<OutcomeHud, "event" | "cue">>, result: ArcadeResult | null, props: BoardProps) {
   const done = useRef(false), last = useRef(0), { active, onResult, onTone } = props;
   useEffect(() => {
     if (s.event !== undefined && s.cue !== undefined && s.event !== last.current) { last.current = s.event; if (["fruit", "answer"].includes(s.cue)) onTone("clear", true); else if (s.cue === "try") onTone("shell-0", false); }
@@ -102,19 +103,17 @@ const FlightPortal = memo(function FlightPortal({ value }: { value: number }) {
   </View>;
 });
 
-const FlightLayer = memo(function FlightLayer({ poses, facts, learn, storm }: { poses: SharedValue<SpritePose[]>; facts: number[][]; learn: boolean; storm: boolean }) {
+const FlightLayer = memo(function FlightLayer({ poses, facts, learn }: { poses: SharedValue<SpritePose[]>; facts: ReturnType<typeof flightHud>["facts"]; learn: boolean }) {
   return <View testID="flight-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
-    <FlightForest poses={poses} storm={storm}/>
     {Array.from({ length: FLIGHT_GATE_COUNT }, (_, i) => learn ? facts[i]?.map((value, choice) => (
       <ArcadeSprite key={`${i}-${choice}`} poses={poses} index={FLIGHT_SLOT.portal + i * PORTAL_HEIGHTS.length + choice} width={PORTAL_SIZE} height={PORTAL_SIZE}><FlightPortal value={value}/></ArcadeSprite>
     )) : <React.Fragment key={i}>
-      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.palm + i * 2} width={PALM_WIDTH} height={FLIGHT_H}><FlightPalm/></ArcadeSprite>
-      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.palm + i * 2 + 1} width={PALM_WIDTH} height={FLIGHT_H}><FlightPalm bottom/></ArcadeSprite>
+      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.palm + i * 2} width={PALM_CAP_WIDTH} height={PALM_COLUMN_HEIGHT}><FlightPalm/></ArcadeSprite>
+      <ArcadeSprite poses={poses} index={FLIGHT_SLOT.palm + i * 2 + 1} width={PALM_CAP_WIDTH} height={PALM_COLUMN_HEIGHT}><FlightPalm bottom/></ArcadeSprite>
       <ArcadeSprite poses={poses} index={FLIGHT_SLOT.fruit + i} width={FRUIT_SIZE} height={FRUIT_SIZE}><Fruit size={FRUIT_SIZE}/></ArcadeSprite>
     </React.Fragment>)}
-    <FlightShore poses={poses}/>
   </View>;
-});
+}, (a, b) => a.poses === b.poses && a.learn === b.learn && samePublication(a.facts, b.facts));
 
 const flightPill = {
   backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#C98C56",
@@ -148,19 +147,26 @@ export function FlightBoard(props: BoardProps) {
 
   const world = level === "endless" ? "w1" : level.world;
   const learn = world === "learn", storm = level !== "endless" && level.storm;
-  const factKey = JSON.stringify(s.facts);
-  const facts: number[][] = useMemo(() => JSON.parse(factKey), [factKey]);
   const camera = useFlightCamera(feedback.impact, reduced);
   const ready = useAnimatedStyle(() => ({ opacity: state.value.waiting && state.value.status === "playing" ? 1 : 0 }));
   const scale = Math.min(size.width / FLIGHT_W, size.height / FLIGHT_H);
-  return <View testID="flight-field" style={{ flex: 1, overflow: "hidden", backgroundColor: "#A9DCD3" }} onLayout={event => {
+  const extraTiles = scale === size.width / FLIGHT_W ? 0 : Math.ceil((size.width / scale - FLIGHT_W) / (2 * FLIGHT_W));
+  const sceneryTiles = 2 * extraTiles + 1, sceneryWidth = FLIGHT_W * sceneryTiles;
+  const arenaPosition = { position: "absolute" as const, height: FLIGHT_H, top: (size.height - FLIGHT_H) / 2, transform: [{ scale }], overflow: "hidden" as const };
+  const scoreLabel = level === "endless" ? `Score ${s.score}` : `Score ${s.score} of ${level.target}`;
+  return <View testID="flight-field" style={{ flex: 1, overflow: "hidden", backgroundColor: FLIGHT_CHROME_TINT }} onLayout={event => {
     const { width, height } = event.nativeEvent.layout;
     if (width > 0 && height > 0) setSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
   }}>
-    <FlightWideSky world={world} storm={storm}/>
-    <View pointerEvents="none" style={{ position: "absolute", width: FLIGHT_W, height: FLIGHT_H, left: (size.width - FLIGHT_W) / 2, top: (size.height - FLIGHT_H) / 2, transform: [{ scale }], overflow: "hidden" }}>
+    <FlightWideSky world={world} storm={storm} width={size.width} height={size.height}/>
+    <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={[arenaPosition, { width: sceneryWidth, left: (size.width - sceneryWidth) / 2 }]}>
+      <FlightForest poses={poses} storm={storm} tiles={sceneryTiles}/>
+      <FlightShore poses={poses} tiles={sceneryTiles}/>
+    </View>
+    <View pointerEvents="none" style={[arenaPosition, { width: FLIGHT_W, left: (size.width - FLIGHT_W) / 2 }]}>
       <Animated.View style={[StyleSheet.absoluteFill, camera]}>
-        <FlightLayer poses={poses} facts={facts} learn={learn} storm={storm}/>
+        <FlightLayer poses={poses} facts={s.facts} learn={learn}/>
         <BatRig poses={poses} outfit={outfit} debug={debug}/>
         <FlightEffects award={feedback.award} awardPulse={feedback.awardPulse} puffs={feedback.puffs} reduced={reduced}/>
       </Animated.View>
@@ -170,15 +176,15 @@ export function FlightBoard(props: BoardProps) {
       testID="flight-touch" accessibilityLabel="Flight sky. Tap to flap" active={canFly} style={StyleSheet.absoluteFill}/>
     <View pointerEvents="box-none" style={{ position: "absolute", top: 8, left: 8, right: 8, gap: 7, alignItems: "center" }}>
       <View pointerEvents="box-none" style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", justifyContent: learn ? "center" : "space-between", gap: 6 }}>
-        {!learn && <View pointerEvents="none"><HeartsHud lives={s.lives} compact/></View>}
-        <View pointerEvents="none" accessible accessibilityLabel={s.level === "endless" ? `Score ${s.score}` : `Score ${s.score} of ${s.level.target}`} style={flightPill}>
+        {s.lives && <View pointerEvents="none"><HeartsHud lives={s.lives} compact/></View>}
+        <View pointerEvents="none" accessible accessibilityLabel={scoreLabel} style={flightPill}>
           <Text testID="flight-score" maxFontSizeMultiplier={1.5} style={{ color: "#173D3A", fontSize: 26, fontWeight: "900", fontVariant: ["tabular-nums"] }}>
-            {s.score}{s.level !== "endless" && <Text maxFontSizeMultiplier={1.5} style={{ fontSize: 15, color: "#47645D", fontWeight: "800" }}> / {s.level.target}</Text>}
+            {s.score}{level !== "endless" && <Text maxFontSizeMultiplier={1.5} style={{ fontSize: 15, color: "#47645D", fontWeight: "800" }}> / {level.target}</Text>}
           </Text>
         </View>
       </View>
       {learn && s.next && <View pointerEvents="none" style={flightPill}>
-        <Text testID="math-fact" maxFontSizeMultiplier={1.5} style={{ color: "#173D3A", fontSize: 23, fontWeight: "900" }}>{equation(s.next)}</Text>
+        <Text testID="math-fact" maxFontSizeMultiplier={1.5} style={{ color: "#173D3A", fontSize: 23, fontWeight: "900" }}>{s.next}</Text>
       </View>}
     </View>
     <Animated.View pointerEvents="none" accessibilityElementsHidden={!s.waiting} importantForAccessibility={s.waiting ? "auto" : "no-hide-descendants"}

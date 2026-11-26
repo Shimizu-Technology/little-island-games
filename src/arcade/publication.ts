@@ -1,5 +1,6 @@
 import type { Lives } from "./lives";
 import { flightLearning, type FlightState } from "./games/fruit-bat-flight/engine";
+import { equation } from "./games/scrolling/content";
 import { runLearning, runSpeed, type RunState } from "./games/lagoon-run/engine";
 import { palmConfig, type PalmState } from "./games/palm-patrol/engine";
 import { beachConfig, type BeachState } from "./games/beach-ball/engine";
@@ -8,7 +9,12 @@ export function flightHud(s: FlightState) {
   "worklet";
   const learn = flightLearning(s);
   const next = learn ? s.gates.filter(g => !g.passed).sort((a, b) => a.x - b.x)[0]?.fact : undefined;
-  return { level: s.level === "endless" ? "endless" as const : { target: s.level.target }, passed: s.passed, score: s.score, lives: hearts(s.lives), helped: s.helped, status: s.status, waiting: s.waiting, event: s.event, cue: s.cue, y: s.lives.hearts ? 0 : s.y, facts: learn ? s.gates.map(g => g.fact.choices) : [], next };
+  return {
+    score: s.score, lives: learn ? null : hearts(s.lives), helped: s.helped, status: s.status, waiting: s.waiting,
+    // Mount portal labels just ahead of the right edge, before they enter the arena.
+    facts: learn ? s.gates.map(g => !g.passed && g.x <= 1.15 ? g.fact.choices : null) : [],
+    next: next ? equation(next) : undefined,
+  };
 }
 export function runHud(s: RunState) {
   "worklet";

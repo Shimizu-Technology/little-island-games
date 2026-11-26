@@ -50,7 +50,7 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
   const tone = useCallback((key: string, haptic = true) => {
     if (!active || sheetOpen) return;
     if (haptic) {
-      if (key === "flight-flap" || key === "flight-fruit") feel("tap");
+      if (key === "flight-flap" || key === "flight-fruit" || key === "flight-clear") feel("tap");
       else if (key === "flight-bump") feel("warning");
       else feel(key === "clear" || key === "sticker" ? "success" : "select");
     }

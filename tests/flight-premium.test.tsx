@@ -5,25 +5,27 @@ import { basename } from "node:path";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SharedValue } from "react-native-reanimated";
+import { HIT_SECONDS, stepLives } from "../src/arcade/lives";
 import { interpolatePoses, type SpritePose } from "../src/arcade/poses";
 import { flightArt } from "../src/arcade/games/fruit-bat-flight/assets";
-import { FlightPalm, FlightWideSky, Fruit } from "../src/arcade/games/fruit-bat-flight/Art";
+import { FlightForest, FlightPalm, FlightShore, FlightWideSky, Fruit } from "../src/arcade/games/fruit-bat-flight/Art";
 import { createFlight, flightGap, flightStep, flightTransition } from "../src/arcade/games/fruit-bat-flight/engine";
 import { batAngle, FLIGHT_H, FLIGHT_W, GROUND, TRUNK_HALF } from "../src/arcade/games/fruit-bat-flight/hull";
-import { BAT_X, FLIGHT_SLOT, PALM_CAP_HEIGHT, PALM_WIDTH, PORTAL_HEIGHTS, batArtMotion, flightAward, flightPoses, impactVisual } from "../src/arcade/games/fruit-bat-flight/presentation";
+import { BAT_X, FLIGHT_SLOT, PALM_WIDTH, PORTAL_HEIGHTS, batArtMotion, flightAward, flightPoses, impactVisual } from "../src/arcade/games/fruit-bat-flight/presentation";
 import { flightLevels } from "../src/arcade/games/scrolling/content";
 import { BatRig } from "../src/arcade/games/scrolling/FeelArt";
 
-vi.mock("react-native", () => ({ View: "View", Image: "Image", StyleSheet: { absoluteFill: {} } }));
+vi.mock("react-native", () => ({ View: "View", Image: "Image", StyleSheet: { absoluteFill: { position: "absolute", left: 0, top: 0, right: 0, bottom: 0 } } }));
 vi.mock("react-native-svg", () => ({
   default: "Svg", Circle: "Circle", Defs: "Defs", Ellipse: "Ellipse", G: "G",
-  LinearGradient: "Gradient", Path: "Path", Rect: "Rect", Stop: "Stop",
+  Image: "SvgImage", LinearGradient: "Gradient", Mask: "Mask", Path: "Path", Rect: "Rect", Stop: "Stop",
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "AnimatedView" },
   useAnimatedStyle: (style: () => unknown) => style(),
 }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
+vi.mock("../src/arcade/Sprite", () => ({ ArcadeSprite: "ArcadeSprite" }));
 vi.mock("../src/arcade/games/scrolling/CharacterArt", () => ({ RunnerRig: () => null }));
 vi.mock("../src/arcade/games/scrolling/Art", () => ({ palette: () => [] }));
 
@@ -76,7 +78,35 @@ describe("illustrated flight", () => {
     expect(batArtMotion({ ...flap, flap: 0 }, false).frame).toBe(0);
   });
 
-  it("keeps width and gap edges tied to the hull at a moving, eased-open gate", async () => {
+  it("keeps every nontransparent bat pixel inside both wrappers and preserves the torso pivot", async () => {
+    const state = createFlight("endless", 17);
+    const poses = { value: flightPoses(state, true) } as SharedValue<SpritePose[]>;
+    await act(async () => { tree = create(<BatRig poses={poses} outfit="sunhat" debug/>); });
+    // Measured with alpha > 0. The far edges are exclusive.
+    const bounds = [
+      { left: 24, top: 13, right: 233, bottom: 243, torso: [139, 191] },
+      { left: 24, top: 13, right: 232, bottom: 243, torso: [113, 131] },
+      { left: 13, top: 43, right: 243, bottom: 213, torso: [126, 152] },
+    ];
+    const frames = tree!.root.findAll(node => String(node.type) === "Image");
+    const [rig, impulse] = tree!.root.findAll(node => String(node.type) === "AnimatedView");
+    const rigBox = rig.props.style[0];
+    expect(impulse.props.style[0]).toMatchObject({ left: 0, top: 0, bottom: 0, right: 0 });
+    expect(frames).toHaveLength(bounds.length);
+    frames.forEach((frame, i) => {
+      const frameBox = frame.parent!.props.style[0];
+      const { left, top, right, bottom, torso } = bounds[i];
+      const scale = frameBox.width / 256;
+      expect(frameBox.left + left * scale).toBeGreaterThan(0);
+      expect(frameBox.top + top * scale).toBeGreaterThan(0);
+      expect(frameBox.left + right * scale).toBeLessThan(rigBox.width);
+      expect(frameBox.top + bottom * scale).toBeLessThan(rigBox.height);
+      expect(poses.value[FLIGHT_SLOT.bat].x + frameBox.left + torso[0] * scale).toBeCloseTo(BAT_X, 10);
+      expect(poses.value[FLIGHT_SLOT.bat].y + frameBox.top + torso[1] * scale).toBeCloseTo(state.y * FLIGHT_H, 10);
+    });
+  });
+
+  it("aligns both solid palm lips to a moving gate and covers the shaft with native-ratio tiles", async () => {
     const state = { ...createFlight(flightLevels.find(l => l.rank === 4)!, 17, true), time: .4 };
     const before = flightPoses(state, false);
     const next = flightStep(flightTransition(state, { type: "flap" }), { type: "idle" }, 1 / 60);
@@ -86,20 +116,89 @@ describe("illustrated flight", () => {
     const center = state.gates[0].center + (next.gates[0].center - state.gates[0].center) * fraction;
     const gap = flightGap(state) + (flightGap(next) - flightGap(state)) * fraction;
     const [top, bottom] = midpoint.slice(FLIGHT_SLOT.palm, FLIGHT_SLOT.palm + 2);
-    expect(top.x).toBeCloseTo(x - TRUNK_HALF, 10);
-    expect(bottom.x + PALM_WIDTH).toBeCloseTo(x + TRUNK_HALF, 10);
-    expect(top.y + FLIGHT_H).toBeCloseTo((center - gap / 2) * FLIGHT_H, 10);
-    expect(bottom.y).toBeCloseTo((center + gap / 2) * FLIGHT_H, 10);
-
     await act(async () => { tree = create(<><FlightPalm/><FlightPalm bottom/></>); });
     const images = tree!.root.findAll(node => String(node.type) === "Image");
-    const [upper, lower] = images.filter(node => node.props.source === "palm-top.webp").map(node => node.props.style);
-    expect(upper.top + upper.height).toBe(FLIGHT_H);
-    expect(upper.transform).toEqual([{ scaleY: -1 }]);
-    expect(lower.top).toBe(0);
-    expect(lower.height).toBe(PALM_CAP_HEIGHT);
-    expect(lower.transform).toEqual([{ scaleY: 1 }]);
-    expect(images.every(node => node.props.style.width === 2 * TRUNK_HALF)).toBe(true);
+    const caps = images.filter(node => node.props.source === "palm-top.webp");
+    expect(caps).toHaveLength(2);
+    caps.forEach((image, i) => {
+      const column = image.parent!;
+      const [firstTile, ...tiles] = column.findAll(node => node.props.source === "palm-shaft.webp");
+      const shaft = firstTile.parent!.props.style, cap = image.props.style;
+      const pose = i === 0 ? top : bottom;
+      expect(cap.transform).toEqual([{ scaleY: i === 0 ? -1 : 1 }]);
+      expect(cap.width).toBe(column.props.style.width);
+      expect(pose.x + shaft.left).toBeCloseTo(x - TRUNK_HALF, 10);
+      expect(pose.x + shaft.left + shaft.width).toBeCloseTo(x + TRUNK_HALF, 10);
+
+      // The alpha >= 128 collar base covers [46, 210), and the shaft covers [1, 191).
+      expect(cap.left + cap.width * 46 / 256).toBeLessThanOrEqual(shaft.left + shaft.width / 192);
+      expect(cap.left + cap.width * 210 / 256).toBeGreaterThanOrEqual(shaft.left + shaft.width * 191 / 192);
+      expect(cap.height / cap.width).toBeCloseTo(174 / 256, 10);
+      const solidLip = cap.height * 58 / 174;
+      const drawnLip = pose.y + cap.top + (i === 0 ? cap.height - solidLip : solidLip);
+      const collisionLip = (center + (i === 0 ? -1 : 1) * gap / 2) * FLIGHT_H;
+      expect(drawnLip - collisionLip).toBeCloseTo(0, 10);
+
+      let previousBottom = 0;
+      expect(firstTile.props.style.top).toBe(0);
+      for (const [j, tile] of [firstTile, ...tiles].entries()) {
+        const { width, height, top } = tile.props.style;
+        expect(width).toBe(PALM_WIDTH);
+        expect((height / width) / (280 / 192)).toBeCloseTo(1, 10);
+        if (j > 0) {
+          expect(previousBottom - top).toBeGreaterThanOrEqual(1);
+          expect(previousBottom - top).toBeLessThanOrEqual(2);
+        }
+        previousBottom = top + height;
+      }
+      expect(previousBottom).toBeGreaterThanOrEqual(shaft.height);
+      expect(shaft.overflow).toBe("hidden");
+    });
+  });
+
+  it("blinks only while flying with post-hit protection, with a steady reduced-motion cue", async () => {
+    const initial = { ...createFlight(flightLevels[0], 17), waiting: false, y: .02 };
+    const hit = flightStep(initial, { type: "idle" }, 1 / 60);
+    expect(hit.waiting).toBe(true);
+    expect(hit.lives.invulnerable).toBe(HIT_SECONDS);
+    const resumed = flightTransition(hit, { type: "flap" });
+    const later = { ...resumed, lives: { ...resumed.lives, invulnerable: HIT_SECONDS - .15 } };
+    let lives = resumed.lives;
+    for (let i = 0; i < 12; i++) lives = stepLives(lives, .1);
+    const expired = { ...resumed, lives: stepLives(lives, .01) };
+    const opacity = (s: typeof resumed, reduced = false) => flightPoses(s, reduced)[FLIGHT_SLOT.bat].opacity;
+    expect(opacity(hit)).toBe(1);
+    expect(opacity(resumed)).toBe(.45);
+    expect(opacity(later)).toBe(1);
+    expect(opacity(resumed, true)).toBe(.72);
+    expect(opacity(later, true)).toBe(.72);
+    expect(expired.lives.invulnerable).toBe(0);
+    expect(opacity(expired)).toBe(1);
+    expect(opacity(expired, true)).toBe(1);
+    const poses = { value: flightPoses(resumed, true) } as SharedValue<SpritePose[]>;
+    await act(async () => { tree = create(<BatRig poses={poses} outfit="island"/>); });
+    expect(tree!.root.findAll(node => String(node.type) === "AnimatedView")[0].props.style[1].opacity).toBe(.72);
+  });
+
+  it.each([[768, 920], [1024, 660], [852, 320]])("keeps the full backdrop height at %i × %i", async (width, height) => {
+    await act(async () => { tree = create(<FlightWideSky world="w4" width={width} height={height}/>); });
+    const image = tree!.root.find(node => String(node.type) === "SvgImage");
+    expect(image.props).toMatchObject({ href: "backdrop-sunset.webp", y: 0, height, preserveAspectRatio: "none" });
+    expect(image.props.x).toBeGreaterThan(0);
+    expect(image.props.x + image.props.width / 2).toBe(width / 2);
+    const gradient = tree!.root.findAll(node => String(node.type) === "Gradient")[0];
+    expect(gradient.props.y2).toBe("100%");
+    expect(image.props.mask).toMatch(/^url\(#.+-art\)$/);
+  });
+
+  it("continues moving shore and clouds beyond the central lane with one whole wrap tile", async () => {
+    const poses = { value: flightPoses(createFlight("endless", 17), false) } as SharedValue<SpritePose[]>;
+    await act(async () => { tree = create(<><FlightForest poses={poses} storm tiles={3}/><FlightShore poses={poses} tiles={3}/></>); });
+    const bands = tree!.root.findAll(node => String(node.type) === "ArcadeSprite");
+    expect(bands.map(node => node.props.width)).toEqual([4 * FLIGHT_W, 4 * FLIGHT_W, 4 * FLIGHT_W + 2]);
+    const shoreTiles = tree!.root.findAll(node => String(node.type) === "Rect");
+    expect(shoreTiles).toHaveLength(4);
+    expect(shoreTiles.every(node => node.props.width === FLIGHT_W + 2)).toBe(true);
   });
 
   it("reduces decorative motion while preserving flap and bonk frames, gate positions and the warm flash", () => {

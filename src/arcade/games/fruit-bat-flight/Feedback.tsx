@@ -1,10 +1,10 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { cancelAnimation, Easing, ReduceMotion, runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { Text } from "../../../components/Text";
 import { flightFrame, type Commands } from "../scrolling/commands";
-import type { FlightInput, FlightState } from "./engine";
+import { flightLearning, type FlightInput, type FlightState } from "./engine";
 import { FLIGHT_H } from "./hull";
 import { BAT_X, batArtMotion, flightAward, impactVisual } from "./presentation";
 
@@ -13,7 +13,8 @@ type Pulse = { origin: SharedValue<Point>; age: SharedValue<number> };
 type Award = ReturnType<typeof flightAward>;
 
 function usePulse(): Pulse {
-  return { origin: useSharedValue<Point>({ x: 0, y: 0 }), age: useSharedValue(1) };
+  const origin = useSharedValue<Point>({ x: 0, y: 0 }), age = useSharedValue(1);
+  return useMemo(() => ({ origin, age }), [origin, age]);
 }
 
 function playPulse({ origin, age }: Pulse, point: Point, duration: number) {
@@ -25,11 +26,19 @@ function playPulse({ origin, age }: Pulse, point: Point, duration: number) {
 }
 
 export function useFlightFeedback(reduced: boolean, onTone: (key: string, haptic?: boolean) => void) {
-  const { origin: puff1Origin, age: puff1Age } = usePulse();
-  const { origin: puff2Origin, age: puff2Age } = usePulse();
-  const { origin: puff3Origin, age: puff3Age } = usePulse();
-  const { origin: awardOrigin, age: awardAge } = usePulse();
+  const puff1 = usePulse(), puff2 = usePulse(), puff3 = usePulse();
+  const puffs = useMemo(() => [puff1, puff2, puff3], [puff1, puff2, puff3]);
+  const awardPulse = usePulse();
   const award = useSharedValue<Award>(null), impact = useSharedValue(1);
+
+  useEffect(() => () => {
+    for (const pulse of [...puffs, awardPulse]) {
+      cancelAnimation(pulse.age);
+      cancelAnimation(pulse.origin);
+    }
+    cancelAnimation(award);
+    cancelAnimation(impact);
+  }, [puffs, awardPulse, award, impact]);
 
   const step = useCallback((before: FlightState, input: Commands<FlightInput>, dt: number) => {
     "worklet";
@@ -38,17 +47,14 @@ export function useFlightFeedback(reduced: boolean, onTone: (key: string, haptic
     if (!reduced && before.command !== after.command) {
       for (const command of input.queue) {
         if (command.id <= before.command || command.id > after.command || command.action.type !== "flap") continue;
-        const slot = command.id % 3;
-        const pulse = slot === 0 ? { origin: puff1Origin, age: puff1Age }
-          : slot === 1 ? { origin: puff2Origin, age: puff2Age } : { origin: puff3Origin, age: puff3Age };
-        playPulse(pulse, { x: BAT_X - 23, y: batArtMotion(before, false).y + 8 }, 200);
+        playPulse(puffs[command.id % puffs.length], { x: BAT_X - 23, y: batArtMotion(before, false).y + 8 }, 200);
       }
     }
     const cleared = flightAward(before, after);
     if (cleared) {
       award.set(cleared);
-      playPulse({ origin: awardOrigin, age: awardAge }, cleared, 340);
-      runOnJS(onTone)(cleared.mango ? "flight-fruit" : "flight-clear", cleared.mango);
+      playPulse(awardPulse, cleared, 340);
+      runOnJS(onTone)(cleared.mango ? "flight-fruit" : "flight-clear", cleared.mango || flightLearning(after));
     }
     const bumped = after.bumps > before.bumps;
     if (after.status === "bumped" || (bumped && after.cue !== "try")) {
@@ -59,12 +65,9 @@ export function useFlightFeedback(reduced: boolean, onTone: (key: string, haptic
       runOnJS(onTone)("shell-0", false);
     }
     return after;
-  }, [reduced, onTone, puff1Origin, puff1Age, puff2Origin, puff2Age, puff3Origin, puff3Age, awardOrigin, awardAge, award, impact]);
+  }, [reduced, onTone, puffs, awardPulse, award, impact]);
 
-  return {
-    step, impact, award, awardPulse: { origin: awardOrigin, age: awardAge },
-    puffs: [{ origin: puff1Origin, age: puff1Age }, { origin: puff2Origin, age: puff2Age }, { origin: puff3Origin, age: puff3Age }],
-  };
+  return { step, impact, award, awardPulse, puffs };
 }
 
 export function useFlightCamera(impact: SharedValue<number>, reduced: boolean) {
@@ -130,11 +133,11 @@ const ScorePop = memo(function ScorePop({ award, age, reduced, points }: { award
   </Animated.View>;
 });
 
-export function FlightEffects({ award, awardPulse, puffs, reduced }: Pick<ReturnType<typeof useFlightFeedback>, "award" | "awardPulse" | "puffs"> & { reduced: boolean }) {
+export const FlightEffects = memo(function FlightEffects({ award, awardPulse, puffs, reduced }: Pick<ReturnType<typeof useFlightFeedback>, "award" | "awardPulse" | "puffs"> & { reduced: boolean }) {
   return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
     {puffs.map((pulse, i) => dropletColors.map((_, index) => <Puff key={i * 3 + index} {...pulse} index={index} reduced={reduced}/>))}
     {[0, 1, 2, 3, 4, 5].map(index => <Sparkle key={index} {...awardPulse} index={index} reduced={reduced}/>)}
     <ScorePop award={award} age={awardPulse.age} points={1} reduced={reduced}/>
     <ScorePop award={award} age={awardPulse.age} points={2} reduced={reduced}/>
   </View>;
-}
+});

@@ -11,7 +11,10 @@ export function mathGate(seed: number, index: number): { seed: number; fact: Mat
   [seed, n] = nextRandom(seed); const shift = Math.floor(n * 3);
   return { seed, fact: { a, b, subtract, answer, choices: [choices[shift], choices[(shift + 1) % 3], choices[(shift + 2) % 3]] } };
 }
-export const equation = (f: MathGate) => `${f.a} ${f.subtract ? "−" : "+"} ${f.b} = ?`;
+export function equation(f: MathGate) {
+  "worklet";
+  return `${f.a} ${f.subtract ? "−" : "+"} ${f.b} = ?`;
+}
 export function levelsFor(game: ScrollGame): readonly ScrollLevel[] {
   return allLevelIds.map(id => {
     const index = levelNumber(id), world = worldOf(id), rank = ({ w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 })[world], learn = world === "learn";

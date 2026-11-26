@@ -1,24 +1,55 @@
-/** L2 fix round: Lagoon's real RunBoard chrome with inert art (P2-1 controls, P2-2 header-relative HUD). */
-import React, { useRef } from 'react';
+/** Scrolling boards with inert art and a step-driven Reanimated mock. */
+import React, { useEffect, useRef } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { runLevels } from '../src/arcade/games/scrolling/content';
+import { flightLevels, runLevels } from '../src/arcade/games/scrolling/content';
+import { createFlight, flightStep, type FlightState } from '../src/arcade/games/fruit-bat-flight/engine';
+import { useFlightFeedback } from '../src/arcade/games/fruit-bat-flight/Feedback';
+import { flightHud } from '../src/arcade/publication';
 
-const probe = vi.hoisted(() => ({ commands: [] as unknown[], initials: new Set<unknown>() }));
-vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Image: 'Image', Platform: { OS: 'ios' }, AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) } }));
+type Frame = (info: { timestamp: number; timeSincePreviousFrame: number; timeSinceFirstFrame: number }) => void;
+const probe = vi.hoisted(() => ({
+  commands: [] as unknown[], initials: new Set<unknown>(), flightFrame: null as Frame | null,
+  flightState: null as { value: FlightState } | null, reducedMotion: vi.fn(() => false),
+  bridge: vi.fn(), cancelAnimation: vi.fn(),
+}));
+vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Image: 'Image', StyleSheet: { absoluteFill: {} }, Platform: { OS: 'ios' }, AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-svg', () => ({ default: 'Svg', Path: 'Path', Rect: 'Rect', Text: 'SvgText', Circle: 'Circle', G: 'G', Ellipse: 'Ellipse' }));
-vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, runOnJS: (f: unknown) => f, runOnUI: (f: unknown) => f, useFrameCallback: () => ({ setActive() {} }), useAnimatedReaction: () => {}, useSharedValue: (value: unknown) => useRef({ value, set(next: unknown) { this.value = next; } }).current }));
+vi.mock('react-native-reanimated', () => ({
+  default: { View: 'AnimatedView' }, runOnUI: (f: unknown) => f,
+  runOnJS: (f: (...args: unknown[]) => void) => (...args: unknown[]) => { probe.bridge(...args); f(...args); },
+  useFrameCallback: (f: Frame) => {
+    probe.flightFrame = f;
+    return useRef({ setActive() {} }).current;
+  },
+  useSharedValue: (value: unknown) => {
+    const shared = useRef({ value, set(next: unknown) { this.value = next; } }).current;
+    if (value && typeof value === 'object' && 'gates' in value) probe.flightState = shared as typeof probe.flightState;
+    return shared;
+  },
+  useAnimatedStyle: (style: () => unknown) => style(), useAnimatedReaction: () => {},
+  withTiming: (target: number) => target, cancelAnimation: probe.cancelAnimation,
+  Easing: { linear: vi.fn() }, ReduceMotion: { Never: 'never' },
+}));
 vi.mock('react-native-gesture-handler', () => ({ GestureDetector: ({ children }: { children: React.ReactNode }) => children }));
 vi.mock('expo-constants', () => ({ default: { expoConfig: {} } }));
 vi.mock('expo-router', () => ({ useLocalSearchParams: () => ({}) }));
 vi.mock('../src/components/Text', () => ({ Text: 'Text' }));
 vi.mock('../src/components/ui', () => ({ Button: 'Button' }));
-vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: probe.reducedMotion }));
 vi.mock('../src/arcade/Input', () => ({ UiPlayTarget: 'UiPlayTarget' }));
 vi.mock('../src/arcade/Sprite', () => ({ ArcadeSprite: () => null }));
 vi.mock('../src/arcade/LivesHud', () => ({ HeartsHud: () => null, HitReaction: ({ children }: { children: React.ReactNode }) => children }));
-vi.mock('../src/arcade/uiLoop', () => ({ useArcadeUiLoop: () => ({}) }));
-vi.mock('../src/arcade/mailbox', () => ({ enqueueCommand: (queue: unknown, action: unknown) => { probe.commands.push(action); return queue; }, drainCommands: () => [] }));
+vi.mock('../src/arcade/mailbox', async importOriginal => {
+  const mailbox = await importOriginal<typeof import('../src/arcade/mailbox')>();
+  return {
+    ...mailbox,
+    enqueueCommand: (...args: Parameters<typeof mailbox.enqueueCommand>) => {
+      probe.commands.push(args[1]);
+      return mailbox.enqueueCommand(...args);
+    },
+  };
+});
 vi.mock('../src/arcade/games/lagoon-run/measurement', () => ({ lagoonMeasurement: () => false }));
 vi.mock('../src/arcade/games/lagoon-run/feedback', () => ({ runSounds: () => [] }));
 vi.mock('../src/arcade/games/lagoon-run/swipe', () => ({ runSwipe: () => ({ enabled: () => ({}) }) }));
@@ -30,11 +61,11 @@ vi.mock('../src/arcade/games/lagoon-run/Backdrop', () => ({ DeckBase: () => null
 vi.mock('../src/arcade/games/lagoon-run/Art', () => ({ Deck: () => null, Canoe: () => null, PowerRing: 'PowerRing', RunTeachingCue: 'RunTeachingCue', KiteRig: () => null }));
 vi.mock('../src/arcade/games/lagoon-run/Baked', () => ({ BakedHazard: () => null, BakedPower: () => null, BakedShell: () => null }));
 vi.mock('../src/arcade/games/lagoon-run/DepthSprite', () => ({ DepthSprite: () => null }));
-vi.mock('../src/arcade/games/fruit-bat-flight/Art', () => ({ FlightPalm: () => null, FlightForest: () => null, FlightShore: () => null, FlightSky: () => null, FlightWideSky: () => null }));
-vi.mock('../src/arcade/games/scrolling/Art', () => ({ Fruit: () => null, palette: () => ['#000', '#000', '#000'] }));
+vi.mock('../src/arcade/games/fruit-bat-flight/Art', () => ({ FlightPalm: () => null, FlightForest: () => null, FlightShore: () => null, FlightWideSky: () => null, Fruit: () => null }));
+vi.mock('../src/arcade/games/scrolling/Art', () => ({ palette: () => ['#000', '#000', '#000'] }));
 vi.mock('../src/arcade/games/scrolling/FeelArt', () => ({ BatRig: () => null, RunnerRig: () => null, LastHit: ({ children }: { children: React.ReactNode }) => children }));
 
-const { RunBoard, OPTION_GAP, PAD_GAP } = await import('../src/arcade/games/scrolling/Board');
+const { FlightBoard, RunBoard, OPTION_GAP, PAD_GAP } = await import('../src/arcade/games/scrolling/Board');
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 type Style = Record<string, unknown>;
 const flat = (style: unknown): Style => Array.isArray(style) ? Object.assign({}, ...style.map(flat)) : (style ?? {}) as Style;
@@ -45,7 +76,15 @@ function ancestors(node: ReactTestInstance, stop: ReactTestInstance) {
   return out;
 }
 let root: ReactTestRenderer | undefined;
-afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; probe.commands.length = 0; probe.initials.clear(); });
+afterEach(async () => {
+  if (root) await act(async () => root!.unmount());
+  root = undefined;
+  probe.commands.length = 0;
+  probe.initials.clear();
+  probe.flightState = null;
+  probe.flightFrame = null;
+  vi.clearAllMocks();
+});
 async function board(level: (typeof runLevels)[number] | 'endless', overlayTop?: number) {
   await act(async () => { root = create(<RunBoard level={level} seed={7} active helper={false} outfit={'classic' as never} onResult={() => {}} onTone={() => {}} debug={false} overlayTop={overlayTop}/>); });
   await act(async () => { await new Promise(r => setTimeout(r, 150)); });
@@ -53,6 +92,85 @@ async function board(level: (typeof runLevels)[number] | 'endless', overlayTop?:
 }
 const toggle = (r: ReactTestRenderer) => r.root.find(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Arrow buttons');
 const finish = (r: ReactTestRenderer) => r.root.findAll(n => String(n.type) === 'Button' && n.props.children === 'Finish free run');
+
+describe('FlightBoard publication and feedback', () => {
+  it('renders when flight starts and skips React publication for ordinary flaps and a recycled gate', async () => {
+    const onTone = vi.fn();
+    await act(async () => {
+      root = create(<FlightBoard level={flightLevels[0]} seed={7} active helper={false} outfit="island" onResult={() => {}} onTone={onTone} debug={false}/>);
+    });
+    const target = root!.root.findByProps({ testID: 'flight-touch' });
+    const tap = () => target.props.onAccessiblePress();
+    const tick = (n: number) => probe.flightFrame!({ timestamp: n * 17, timeSincePreviousFrame: 17, timeSinceFirstFrame: n * 17 });
+    const firstRenderCount = probe.reducedMotion.mock.calls.length;
+    await act(async () => { tap(); tick(1); });
+    const flyingRenderCount = probe.reducedMotion.mock.calls.length;
+    expect(flyingRenderCount).toBeGreaterThan(firstRenderCount);
+    expect(probe.flightState!.value.waiting).toBe(false);
+    expect(probe.bridge).toHaveBeenCalledWith(expect.objectContaining({ waiting: false }), null);
+
+    probe.bridge.mockClear();
+    for (let n = 2; n <= 5; n++) {
+      await act(async () => { tap(); tick(n); });
+    }
+    expect(probe.flightState!.value.command).toBe(5);
+    expect(probe.reducedMotion).toHaveBeenCalledTimes(flyingRenderCount);
+    expect(probe.bridge).not.toHaveBeenCalled();
+    expect(onTone.mock.calls).toEqual(Array.from({ length: 5 }, () => ['flight-flap', true]));
+
+    const flying = probe.flightState!.value;
+    probe.flightState!.value = { ...flying, gates: flying.gates.map((gate, i) => i === 0 ? { ...gate, x: -.149, passed: true } : gate) };
+    await act(async () => tick(6));
+    expect(probe.flightState!.value.gates[0].phase).not.toBe(flying.gates[0].phase);
+    expect(probe.bridge).not.toHaveBeenCalled();
+    expect(probe.reducedMotion).toHaveBeenCalledTimes(flyingRenderCount);
+
+    const recycled = probe.flightState!.value;
+    probe.flightState!.value = { ...recycled, y: .5, vy: 0, gates: recycled.gates.map((gate, i) =>
+      i === 1 ? { ...gate, x: .13, center: .5, base: .5 } : gate) };
+    await act(async () => tick(7));
+    expect(probe.bridge).toHaveBeenCalledWith(expect.objectContaining({ score: 1 }), null);
+    expect(probe.reducedMotion.mock.calls.length).toBeGreaterThan(flyingRenderCount);
+    expect(root!.root.findByProps({ accessibilityLabel: `Score 1 of ${flightLevels[0].target}` })).toBeDefined();
+  });
+
+  it('keeps the current learning prompt and visible choices stable on a distant gate recycle', () => {
+    const initial = createFlight(flightLevels.find(level => level.world === 'learn')!, 7);
+    const before = { ...initial, waiting: false, gates: initial.gates.map((gate, i) =>
+      i === 0 ? { ...gate, x: -.149, passed: true } : i === 1 ? { ...gate, x: .8 } : gate) };
+    const after = flightStep(before, { type: 'idle' }, 1 / 60);
+    expect(after.gates[0].phase).not.toBe(before.gates[0].phase);
+    expect(flightHud(after)).toEqual(flightHud(before));
+    expect(flightHud(after).facts[1]).toEqual(after.gates[1].fact.choices);
+  });
+
+  it('gives learning answers the same tap feedback as a mango, and cancels every feedback value on unmount', async () => {
+    const onTone = vi.fn(), mount = vi.fn<(value: ReturnType<typeof useFlightFeedback>) => void>();
+    function FeedbackHarness() {
+      const feedback = useFlightFeedback(false, onTone);
+      useEffect(() => { mount(feedback); }, [feedback]);
+      return null;
+    }
+    await act(async () => { root = create(<FeedbackHarness/>); });
+    const [feedback] = mount.mock.calls[0];
+    const learn = createFlight(flightLevels.find(level => level.world === 'learn')!, 7);
+    const regular = createFlight(flightLevels[0], 7);
+    for (const [state, y] of [[learn, .24 + .26 * learn.gates[0].fact.choices.indexOf(learn.gates[0].fact.answer)], [regular, .5]] as const) {
+      const before = { ...state, waiting: false, y, gates: state.gates.map((gate, i) =>
+        i === 0 ? { ...gate, x: .13, center: .5, base: .5 } : gate) };
+      const after = feedback.step(before, { helper: false, queue: [], serial: 0 }, 1 / 60);
+      expect(after.score).toBe(1);
+    }
+    expect(onTone.mock.calls).toEqual([['flight-clear', true], ['flight-fruit', true]]);
+    await act(async () => root?.unmount());
+    root = undefined;
+    const shared = [...feedback.puffs, feedback.awardPulse].flatMap(pulse => [pulse.age, pulse.origin]);
+    expect(probe.cancelAnimation).toHaveBeenCalledTimes(10);
+    for (const value of [...shared, feedback.award, feedback.impact]) {
+      expect(probe.cancelAnimation.mock.calls.some(([cancelled]) => cancelled === value)).toBe(true);
+    }
+  });
+});
 
 describe('P2-1: arrow switch and Finish free run', () => {
   it('share one flex row with a gap wider than their touch slop, in both arrow states', async () => {
