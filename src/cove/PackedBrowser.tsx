@@ -6,11 +6,16 @@ import { ChooseGrid, type Filter } from './ChooseGrid';
 import { hiddenIn, isSolved, packedOpen } from './catalog';
 import { bankNames, difficultyOptionsFor, nearestTier } from './shelf';
 
+/** Numbered requests where only the latest may answer; `drop` makes every earlier one stale. */
+const requests = () => { let n = 0; return { next: () => ++n, latest: (token: number) => token === n, drop: () => { n++; } }; };
+
 /** Choose a puzzle for a packed game: one numbered grid per bank. Entries load only when one is chosen. */
 export function PackedBrowser({ entry, progress, initialBand, hidden = [], onChoose, onBand }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden?: readonly string[]; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void }) {
   const packed = entry.packed!, opener = packedOpen(entry);
   const [tier, setTier] = useState(() => nearestTier(entry, initialBand)), [bank, setBank] = useState<number>(), [filter, setFilter] = useState<Filter>('all');
   const [busy, setBusy] = useState(false), [message, setMessage] = useState('');
+  // A row that is still loading when the chooser closes or its difficulty or set changes is dropped, never opened.
+  const [request] = useState(requests), drop = () => { request.drop(); setBusy(false); };
   const codes = useMemo(() => new Map(packed.bands.map(b => [b.bank, unpack(progress.banks.find(r => r[0] === b.bank)?.[1] ?? '', b.count, 3) ?? Array<number>(b.count).fill(0)])), [packed, progress]);
   // Puzzles a grown-up hid on this device leave the grid. A saved attempt on one still continues from the Puzzles home.
   const [found, setFound] = useState<{ key: string; rows: ReadonlyMap<number, ReadonlySet<number>>; failed?: boolean }>({ key: '', rows: new Map() }), hiddenKey = hidden.join('|');
@@ -27,14 +32,16 @@ export function PackedBrowser({ entry, progress, initialBand, hidden = [], onCho
   const banks = packed.bands.filter(b => b.tier === tier), names = bankNames(banks), current = banks.find(b => b.bank === bank) ?? banks[0];
   const open = async (index: number) => {
     if (busy || !current) return;
+    const token = request.next();
     setBusy(true); setMessage('');
-    try { const card = opener?.open ? packed.card(await opener.open(current.bank, index)) : undefined; if (card) onChoose(card); else setMessage('This puzzle could not open. Try another.'); }
-    catch { setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
-    finally { setBusy(false); }
+    try { const card = opener?.open ? packed.card(await opener.open(current.bank, index)) : undefined; if (!request.latest(token)) return; if (card) onChoose(card); else setMessage('This puzzle could not open. Try another.'); }
+    catch { if (request.latest(token)) setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
+    finally { if (request.latest(token)) setBusy(false); }
   };
+  useEffect(() => () => request.drop(), [request]);
   const rows = !current || pendingHidden ? [] : Array.from({ length: current.count }, (_, i) => i).filter(i => !(skipped.get(current.bank)?.has(i)) && (filter !== 'finished' || isSolved(codes.get(current.bank)?.[i] ?? 0)));
-  return <ChooseGrid options={difficultyOptionsFor(entry)} tier={tier} onTier={t => { setTier(t); setBank(undefined); onBand(t); }}
-    sets={banks.map((b, i) => ({ key: String(b.bank), label: names[i], selected: b === current, onPress: () => setBank(b.bank) }))}
+  return <ChooseGrid options={difficultyOptionsFor(entry)} tier={tier} onTier={t => { drop(); setTier(t); setBank(undefined); onBand(t); }}
+    sets={banks.map((b, i) => ({ key: String(b.bank), label: names[i], selected: b === current, onPress: () => { drop(); setBank(b.bank); } }))}
     filters={[{ value: 'all', label: 'All' }, { value: 'finished', label: 'Finished' }]} filter={filter} onFilter={setFilter}
     status={busy ? 'Opening your puzzle…' : failed ? 'These puzzles could not be checked just now. Your saved work is kept. Close and try again.' : message} empty={filter === 'finished' ? 'Finished puzzles show here.' : pendingHidden ? '' : 'Nothing here yet.'}
     cells={rows.map(i => ({ key: `${current!.bank}:${i}`, number: i + 1, finished: isSolved(codes.get(current!.bank)?.[i] ?? 0), onPress: () => void open(i) }))}/>;

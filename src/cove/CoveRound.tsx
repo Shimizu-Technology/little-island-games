@@ -41,11 +41,13 @@ export type RoundChoices = {
 };
 
 /** All progress and autosave go through the existing owner/epoch-guarded Store. */
-export function CoveRound({ entry, card, partner, width, replace = false, onBrowse, onClose, remix, choosing = false, choices = {} }: {
+export function CoveRound({ entry, card, partner, width, replace = false, onBrowse, onClose, remix, choosing = false, choices = {}, onFinishHeld }: {
   remix?: string; entry: ChallengeEntry; card: ChallengeCard; partner: string | null; width: number; replace?: boolean; onBrowse: () => void; onClose: () => void;
   /** Choose a puzzle is open over this round: More steps aside and comes back when it closes. */
   choosing?: boolean;
   choices?: RoundChoices;
+  /** Told while a finish waits for its partner choice (and `false` on unmount), so the host drops any deal that would replace this round. */
+  onFinishHeld?: (held: boolean) => void;
 }) {
   const { height = 800 } = useWindowDimensions();
   const [chromeHeight, setChromeHeight] = useState(0), [boardHeight, setBoardHeight] = useState(0), [screenHeight, setScreenHeight] = useState(0), [more, setMore] = useState(false), [gridTouch, setGridTouch] = useState(false);
@@ -113,11 +115,22 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     } catch { if (mounted.current) setMessage('This change could not be made. Your accepted draft is kept. Try again.'); } finally { if (token === dispatchToken.current) { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); if (!accepted || !mounted.current || !canDrain.current || current.current?.result) hunterQueue.current = []; else { const next = hunterQueue.current.shift(); if (next !== undefined) void latestDispatch.current(next); } } }
   }
   useLayoutEffect(() => { latestDispatch.current = dispatch; });
-  async function confirmFinish(withPerson: string | null): Promise<boolean> {
-    if (!pending || lock.current || !current.current || !focused) return false;
+  const held = !!pending, heldTo = useRef(onFinishHeld);
+  useLayoutEffect(() => { heldTo.current = onFinishHeld; });
+  useLayoutEffect(() => { heldTo.current?.(held); }, [held]);
+  useLayoutEffect(() => () => heldTo.current?.(false), []);
+  // The finish save in flight, so leaving waits for it: a refused finish stays here, visible and retryable.
+  const finishing = useRef<Promise<boolean> | null>(null);
+  function confirmFinish(withPerson: string | null): Promise<boolean> {
+    if (!pending || lock.current || !current.current || !focused) return Promise.resolve(false);
+    const run = saveFinish(pending, withPerson).finally(() => { if (finishing.current === run) finishing.current = null; });
+    finishing.current = run;
+    return run;
+  }
+  async function saveFinish(solved: ChallengeSession, withPerson: string | null): Promise<boolean> {
     boundary.current = true; lock.current = true; setBusy(true); setMessage('');
     try {
-      const candidate = { ...pending, partner: withPerson };
+      const candidate = { ...solved, partner: withPerson };
       const next = { ...candidate, result: entry.catalog.codecs.get(candidate.codec)!.evaluate(candidate) };
       if (!next.result) throw new Error('The engine could not confirm this finish.');
       if (await store.challengeSave(next, expected(current.current))) { current.current = next; setFinished(next); setPending(undefined); return true; }
@@ -127,8 +140,15 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     return false;
   }
   const round = pending ?? saved ?? finished, actual = round ? entry.puzzles.find(p => sameRef(p.ref, round.puzzle)) ?? entry.packed?.card(round.puzzle) : card;
-  // Leaving a finish that is waiting for a partner choice keeps it as a solo finish.
-  const leaveThen = (next: () => void) => { if (pending && !lock.current) void confirmFinish(null).then(saved => { if (saved) next(); }); else next(); };
+  // Leaving a finish that is waiting for a partner choice keeps it as a solo finish. While its save is in flight,
+  // leaving waits for that save and happens only if it lands; any other held change keeps the finish here.
+  const leaveThen = (next: () => void) => {
+    const after = (saved: boolean) => { if (saved && mounted.current) next(); };
+    if (finishing.current) void finishing.current.then(after);
+    else if (!pending) next();
+    else if (lock.current) setMessage('Wait for this change to finish, then try again. Your accepted work is kept.');
+    else void confirmFinish(null).then(after);
+  };
   const close = () => leaveThen(onClose);
   const open = entry.packed ? async (e: Parameters<typeof store.challengeOpen>[0]) => { await entry.packed!.prepare(round!.puzzle); return store.challengeOpen(e); } : store.challengeOpen;
   const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);

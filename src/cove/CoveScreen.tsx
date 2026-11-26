@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -60,7 +60,9 @@ function CoveLocalGate() {
 }
 type Selection = { entry: ChallengeEntry; card: ChallengeCard; replace: boolean; partner: string | null; seq: number };
 /** A calm line for the sheet or screen that owns the action; `choose` offers Choose a puzzle when a difficulty has nothing new left. */
-type Notice = { text: string; choose?: { entry: ChallengeEntry; tier: number } };
+type Notice = { text: string; choose?: Browse };
+/** Choose a puzzle, with the partner its request started with (a Start sheet's Play together, or the mounted round's). */
+type Browse = { entry: ChallengeEntry; tier: number; partner: string | null };
 const schoolOriginals = shelfGames.filter(g => (learningGroups as Partial<Record<string, 'levels' | 'originals'>>)[g.id] === 'originals').map(g => ({ id: g.id, name: g.name }));
 const COULD_NOT_OPEN = 'This puzzle could not open. Your saved work is kept. Try again.';
 
@@ -75,11 +77,14 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const resumable = (entry: ChallengeEntry): Selection | null => { const s = pausedIn(entry.game), c = s && cardFor(s.puzzle, entries); return s && c ? { entry, card: c, replace: false, partner: s.partner, seq: 0 } : null; };
   const [first] = useState(() => linked && params.resume === '1' ? resumable(linked) : null);
   const [sheet, setSheet] = useState<ChallengeEntry | null>(first ? null : linked ?? null), [sheetOpen, setSheetOpen] = useState(!!linked && !first), [tier, setTier] = useState(() => linked ? nearestTier(linked, preferences.band) : 1), [partner, setPartner] = useState<string | null>(() => linked ? pausedIn(linked.game)?.partner ?? null : null);
-  const [selection, setSelection] = useState<Selection | null>(first), [browse, setBrowse] = useState<{ entry: ChallengeEntry; tier: number } | null>(null);
+  const [selection, setSelection] = useState<Selection | null>(first), [browse, setBrowse] = useState<Browse | null>(null);
   const [grownUps, setGrownUps] = useState(false), [adult, setAdult] = useState(false), [dealing, setDealing] = useState(false), [notice, setNotice] = useState<Notice | null>(null);
-  const seq = useRef(0), dealToken = useRef(0);
+  const seq = useRef(0), dealToken = useRef(0), finishHeld = useRef(false), browsing = useRef(browse);
+  useLayoutEffect(() => { browsing.current = browse; }, [browse]);
   /** Closing a sheet or changing its choices cancels an opening deal: a dismissed sheet never opens a board later. */
   const cancelDeal = () => { dealToken.current++; setDealing(false); };
+  /** A round whose finish waits for its partner choice cancels any deal still opening; none may replace it. */
+  const holdFinish = useCallback((held: boolean) => { finishHeld.current = held; if (held) { dealToken.current++; setDealing(false); } }, []);
   const openSheet = (entry: ChallengeEntry) => { cancelDeal(); setNotice(null); setSheet(entry); setSheetOpen(true); setTier(nearestTier(entry, preferences.band)); setPartner(pausedIn(entry.game)?.partner ?? null); };
   const closeSheet = () => { cancelDeal(); setNotice(null); setSheetOpen(false); };
   // A link that arrives while Puzzles is already open opens its game too (Continue reopens, a game link shows its sheet).
@@ -106,7 +111,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     setDealing(true); setNotice(null);
     try {
       const card = await pick();
-      if (token !== dealToken.current) return;
+      if (token !== dealToken.current || finishHeld.current) return;
       if (card) then(card);
       else setNotice(card === null ? { text: 'No other puzzle here.', choose: empty } : { text: COULD_NOT_OPEN });
     } catch { if (token === dealToken.current) setNotice({ text: COULD_NOT_OPEN }); }
@@ -133,14 +138,14 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     }
     return null;
   };
-  const start = (entry: ChallengeEntry, at: number, replace: boolean, withPerson: string | null, avoid?: PuzzleRef) => void deal(() => fresh(entry, at, avoid), card => play(entry, card, replace, withPerson), { entry, tier: at });
+  const start = (entry: ChallengeEntry, at: number, replace: boolean, withPerson: string | null, avoid?: PuzzleRef) => void deal(() => fresh(entry, at, avoid), card => play(entry, card, replace, withPerson), { entry, tier: at, partner: withPerson });
   /** Continue reopens the exact saved attempt with its own mode and partner, hidden or not. */
   const resume = (entry: ChallengeEntry, saved: ChallengeSession) => {
     const card = cardFor(saved.puzzle, entries);
     if (card) play(entry, card, false, saved.partner);
     else void deal(() => suggestedPacked(entry, progress, tierOf(entry, saved.puzzle) ?? 1, hidden), c => play(entry, c, false, saved.partner));
   };
-  const choose = (entry: ChallengeEntry, at: number) => { closeSheet(); setBrowse({ entry, tier: at }); };
+  const choose = (request: Browse) => { closeSheet(); setBrowse(request); };
   const leave = async (next: () => void) => { if (store.save.cove?.active && !await store.covePerson({ type: 'select', id: null }, store.epoch)) { setNotice({ text: 'Could not leave this person yet. Your saved work is kept.' }); return; } next(); };
   const goBack = () => void leave(() => router.canGoBack() ? router.back() : router.replace('/'));
   const openTile = (tile: ShelfTile) => {
@@ -160,7 +165,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const onToday = today && (() => {
     const entry = entries.find(e => e.game === today.entry.game) ?? today.entry, at = entry.packed?.bands.find(b => b.bank === today.bank)?.tier;
     if (today.card) play(entry, today.card, true);
-    else if (at) void deal(() => fresh(entry, at, undefined, today.bank), card => play(entry, card, true), { entry, tier: at });
+    else if (at) void deal(() => fresh(entry, at, undefined, today.bank), card => play(entry, card, true), { entry, tier: at, partner: null });
   });
   // Every paused puzzle and every pin, newest pause first. A pin resolves by its exact ref across the whole registry,
   // even when that puzzle is hidden from new choices or its game is not on the shelf.
@@ -177,7 +182,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const saved = selection && pausedIn(selection.entry.game), currentRef = saved?.puzzle ?? selection?.card.ref;
   const noticeLine = (dealing || !!notice) && <View style={styles.status}>
     <Text variant="caption" accessibilityLiveRegion="polite">{dealing ? 'Opening your puzzle…' : notice!.text}</Text>
-    {!dealing && notice?.choose && <Button label="Choose a puzzle" variant="quiet" target="adult" onPress={() => choose(notice.choose!.entry, notice.choose!.tier)}/>}
+    {!dealing && notice?.choose && <Button label="Choose a puzzle" variant="quiet" target="adult" onPress={() => choose(notice.choose!)}/>}
   </View>;
   // While the start sheet is up, its own status line speaks for it; the screen behind stays quiet.
   const status = <>{!!local.error && <View style={styles.status}><Text variant="caption" accessibilityLiveRegion="polite">{local.error}</Text><Button label="Try again" variant="quiet" target="adult" onPress={local.load}/></View>}
@@ -188,7 +193,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     // The round stays mounted under Choose a puzzle, so closing the chooser returns to exactly what was there.
     body = <>{status}<GridAdult.Provider value={adult}><GridPreferences.Provider value={preferences}>
       <CoveRound key={`${entry.game}:${card.ref.hash}:${selection.replace}:${selection.seq}`} entry={entry} card={card} replace={selection.replace} partner={selection.partner} width={Math.min(width, 960) - 2 * theme.space.lg}
-        onClose={() => setSelection(null)} onBrowse={() => setBrowse({ entry, tier: at })} choosing={!!browse}
+        onClose={() => setSelection(null)} onBrowse={() => setBrowse({ entry, tier: at, partner: selection.partner })} choosing={!!browse} onFinishHeld={holdFinish}
         choices={{
           mistakes: preferences.mistakes, onMistakes: mistakes => changePreferences({ mistakes }),
           onNext: () => start(entry, at, false, selection.partner, card.ref),
@@ -206,11 +211,11 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     {body}
     {sheet && <StartSheet entry={sheet} visible={sheetOpen} tier={tier} onTier={t => { cancelDeal(); setNotice(null); setTier(t); changeBand(t); }} saved={sheetSaved} savedLabel={savedLabel} partners={others} partner={partner} onPartner={p => { cancelDeal(); setNotice(null); setPartner(p); }}
       favorite={local.data.favorites.includes(sheet.game)} onFavorite={() => favorite(sheet.game)} busy={dealing} onClose={closeSheet}
-      status={dealing ? 'Opening your puzzle…' : notice?.text} onChoose={!dealing && notice?.choose ? () => choose(notice.choose!.entry, notice.choose!.tier) : undefined}
+      status={dealing ? 'Opening your puzzle…' : notice?.text} onChoose={!dealing && notice?.choose ? () => choose(notice.choose!) : undefined}
       onPlay={() => start(sheet, tier, false, partner)} onContinue={() => sheetSaved && resume(sheet, sheetSaved)} onNew={() => start(sheet, tier, true, partner, sheetSaved?.puzzle)}/>}
     {/* Choose a puzzle: a large sheet of its own over whatever is open (a round stays mounted under it). */}
     <Sheet mode="large" visible={!!browse} title="Choose a puzzle" onClose={() => setBrowse(null)}>
-      {browse && <PuzzleBrowser key={`${browse.entry.game}:${browse.tier}`} entry={browse.entry} progress={progress} initialBand={browse.tier} reader={preferences.reader} hidden={hidden} onBand={changeBand} onChoose={card => play(browse.entry, card, true, selection?.partner ?? null)}/>}
+      {browse && <PuzzleBrowser key={`${browse.entry.game}:${browse.tier}`} entry={browse.entry} progress={progress} initialBand={browse.tier} reader={preferences.reader} hidden={hidden} onBand={changeBand} onChoose={card => { if (browsing.current === browse) play(browse.entry, card, true, browse.partner); }}/>}
     </Sheet>
     <CoveGrownUps visible={grownUps} onClose={() => setGrownUps(false)} adult={adult} onAdult={() => setAdult(true)} preferences={preferences} onPreferences={changePreferences} error={local.error}
       canHide={!!currentRef} onHide={() => { if (currentRef) void local.change({ type: 'hide', hash: currentRef.hash }).then(ok => { if (ok) { setGrownUps(false); setSelection(null); } }); }}

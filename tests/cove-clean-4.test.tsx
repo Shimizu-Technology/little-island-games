@@ -56,6 +56,11 @@ const words = (n: ReactTestInstance | string): string => typeof n === 'string' ?
 const byLabel = (label: string) => screen!.root.findAll(n => n.props.accessibilityLabel === label && typeof n.type === 'string');
 const pressLabel = (label: string) => act(async () => { const b = byLabel(label)[0]; expect(b, label).toBeDefined(); b.props.onPress(); });
 const aside = (title: string) => screen!.root.findAll(n => n.type === ('aside' as never) && n.props['data-title'] === title)[0];
+/** The chooser's header (difficulty pills and set chips) is a FlatList header prop here: find the element whose props match. */
+const header = (match: (props: Record<string, unknown>) => boolean) => {
+  const walk = (el: unknown): Record<string, unknown> | undefined => { if (!el || typeof el !== 'object') return; if (Array.isArray(el)) { for (const c of el) { const f = walk(c); if (f) return f; } return; } const props = (el as { props?: Record<string, unknown> }).props; return props && (match(props) ? props : walk(props.children)); };
+  return walk(screen!.root.findByType('list' as never).props.ListHeaderComponent)!;
+};
 const settle = () => act(async () => { for (let i = 0; i < 6; i++) await new Promise(r => setTimeout(r, 0)); });
 /** A stand-in board that hands the HUD commands the way the real boards do. */
 function Board({ commands, onDispatch }: { commands: BoardCommands; onDispatch?: () => void }) { useBoardHud(commands); return React.createElement('button' as unknown as React.FC<Record<string, unknown>>, { testID: 'board-move', onPress: onDispatch }); }
@@ -201,6 +206,18 @@ describe('start sheet', () => {
     await press('start-play');
     expect(fixture.rounds.at(-1)!.partner).toBe('mele');
   });
+  it('Play together survives the chooser offered when a difficulty has nothing new left', async () => {
+    const sudoku = inline('sudoku', [1, 2]);
+    fixture.entries = [sudoku]; fixture.params = { game: 'sudoku' }; fixture.save = withLearner(); fixture.local.data.hidden = [sudoku.puzzles[0].ref.hash];
+    await mount();
+    await press('mode-Play together');
+    await press('start-play'); await settle();
+    expect(words(byTestID('start-status')[0])).toBe('No other puzzle here.');
+    await press('start-choose');
+    await act(async () => (header(p => typeof p.onChange === 'function').onChange as (k: number) => void)(2));
+    await act(async () => screen!.root.findByType('list' as never).props.data[0].onPress());
+    expect(fixture.rounds.at(-1)).toMatchObject({ card: { ref: sudoku.puzzles[1].ref }, partner: 'mele', replace: true });
+  });
 });
 
 describe('board HUD and More', () => {
@@ -270,6 +287,23 @@ describe('board HUD and More', () => {
     expect(words(byTestID('more-send-error')[0])).toBe('This puzzle could not be sent to Mele. They may have too many puzzles waiting. Nothing changed.');
     expect(byLabel('Send to Mele')).toHaveLength(1);
     expect(JSON.stringify(screen!.toJSON())).not.toContain('Sent to');
+  });
+  it('a Send reply from an earlier visit never shows in a reopened Send to…', async () => {
+    const replies: ((ok: boolean) => void)[] = [], onSend = vi.fn(() => new Promise<boolean>(resolve => { replies.push(resolve); }));
+    await round({ ...inline('sudoku'), helpUI: 'board' as const, render: () => <p>board</p> }, { onSend });
+    await press('hud-more'); await press('more-Send to…');
+    await pressLabel('Send to Mele');
+    await pressLabel('Back'); await press('more-Send to…');
+    await act(async () => replies[0](false)); await settle();
+    expect(byTestID('more-send-error')).toHaveLength(0); expect(byLabel('Send to Mele')).toHaveLength(1);
+    // A success from a closed visit does not replace the faces either; this visit's own reply still shows.
+    await pressLabel('Send to Mele');
+    await press('sheet-close'); await press('hud-more'); await press('more-Send to…');
+    await act(async () => replies[1](true)); await settle();
+    expect(JSON.stringify(screen!.toJSON())).not.toContain('Sent to'); expect(byLabel('Send to Mele')).toHaveLength(1);
+    await pressLabel('Send to Mele');
+    await act(async () => replies[2](false)); await settle();
+    expect(byTestID('more-send-error')).toHaveLength(1);
   });
   it('Roles are left out when playing alone', async () => {
     await round({ ...inline('sudoku'), helpUI: 'board' as const, render: () => <p>board</p> });
@@ -364,6 +398,27 @@ describe('new deals never reopen a hidden or identical puzzle', () => {
     expect(fixture.rounds).toHaveLength(0); expect(choose).not.toHaveBeenCalled();
     expect(words(byTestID('start-status')[0])).toBe('This puzzle could not open. Your saved work is kept. Try again.');
   });
+  it('a packed row still loading when the chooser closes or its set changes never opens', async () => {
+    const loads: ((r: ChallengeCard['ref']) => void)[] = [], saved = paused('bridges', ref(11, 0));
+    const entry = packedEntry([band(11, 3), band(13, 3)], async () => ref(11, 0), { open: (bank: number, i: number) => new Promise(resolve => { loads.push(() => resolve(ref(bank, i))); }) });
+    fixture.entries = [entry]; fixture.save = { ...emptySave(), challenge: { ...emptyChallenge(), paused: [saved] } };
+    await mount();
+    await press(`cove-continue-${saved.id}`);
+    const rounds = fixture.rounds.length, row = (i: number) => act(async () => screen!.root.findByType('list' as never).props.data[i].onPress());
+    await act(async () => fixture.rounds.at(-1)!.onBrowse());
+    await row(1);
+    await act(async () => aside('Choose a puzzle').findAll(n => n.props.testID === 'sheet-close')[0].props.onPress());
+    await act(async () => loads[0](ref(11, 1))); await settle();
+    expect(fixture.rounds.at(-1)!.card.ref).toEqual(saved.puzzle); expect(aside('Choose a puzzle')).toBeUndefined();
+    await act(async () => fixture.rounds.at(-1)!.onBrowse());
+    await row(2); await act(async () => (header(p => p.testID === 'set-13').onPress as () => void)());
+    await act(async () => loads[1](ref(11, 2))); await settle();
+    expect(fixture.rounds.at(-1)!.card.ref).toEqual(saved.puzzle); expect(aside('Choose a puzzle')).toBeDefined();
+    // The chooser still opens the row that is chosen and left to load.
+    await row(0);
+    await act(async () => loads[2](ref(13, 0))); await settle();
+    expect(fixture.rounds.length).toBeGreaterThan(rounds); expect(fixture.rounds.at(-1)!.card.ref).toEqual(ref(13, 0));
+  });
   it('closing the sheet while a packed deal is opening cancels it: no board opens later', async () => {
     let release!: (r: ChallengeCard['ref']) => void;
     const entry = packedEntry([band(11, 3)], () => new Promise(resolve => { release = resolve; }));
@@ -428,6 +483,43 @@ describe('a finish waiting for its partner choice, and the finished state', () =
     await press('hud-more');
     expect(byTestID('more-New puzzle')[0].props.disabled).toBe(true);
     expect(fixture.save.challenge!.paused).toHaveLength(1);
+  });
+  it('a New puzzle deal still loading when the round reaches its finish never replaces that finish', async () => {
+    let deliver!: (r: ChallengeCard['ref']) => void;
+    const base = solvable(), at = (puzzle: number) => ({ bank: 10, puzzle, engine: 'sudoku', rules: 1, hash: `c${puzzle}`.padEnd(64, 'c') });
+    const band = { kind: 'band' as const, bank: 10, path: 'endless' as const, tier: 1 as const, title: 'Set 10', count: 3 };
+    const entry: ChallengeEntry = { ...base, puzzles: [], packed: { bands: [band], choose: () => new Promise(resolve => { deliver = resolve; }), prepare: async () => {}, card: ref => ({ ref, tier: 1, title: `Set 10 ${ref.puzzle + 1}`, source: { kind: 'endless', bank: 10, puzzle: ref.puzzle }, path: 'endless', dares: [] }) } as ChallengeEntry['packed'] };
+    const saved = paused('sudoku', at(0));
+    fixture.realRound = true; fixture.entries = [entry]; applySaves();
+    fixture.save = { ...withLearner(), settings: { ...emptySave().settings, sound: false }, challenge: { ...emptyChallenge(), paused: [saved] } } as never;
+    await mount();
+    await press(`cove-continue-${saved.id}`);
+    await press('hud-more'); await press('more-New puzzle'); await settle();
+    expect(deliver).toBeDefined();
+    await press('board-move'); await settle();
+    expect(byLabel('Solved together with Mele')).toHaveLength(1);
+    await act(async () => deliver(at(1))); await settle();
+    expect(byLabel('Solved together with Mele')).toHaveLength(1);
+    expect(JSON.stringify(screen!.toJSON())).not.toContain('Start a new puzzle?');
+    expect(fixture.save.challenge!.paused).toEqual([saved]);
+  });
+  it('HUD Back during an in-flight finish save waits: a refused save stays retryable, a saved one leaves', async () => {
+    await open();
+    let reply!: (ok: boolean) => void;
+    const held = () => new Promise<boolean>(resolve => { reply = resolve; });
+    fixture.challengeSave.mockImplementationOnce(held);
+    await pressLabel('Solved together with Mele');
+    await press('hud-back');
+    expect(byLabel('Solved together with Mele')).toHaveLength(1);
+    await act(async () => reply(false)); await settle();
+    expect(byLabel('Solved together with Mele')).toHaveLength(1);
+    expect(JSON.stringify(screen!.toJSON())).toContain('Your finish has not saved yet. Keep this screen open and try again.');
+    fixture.challengeSave.mockImplementationOnce(held);
+    await pressLabel('Solved together with Mele');
+    await press('hud-back');
+    expect(byLabel('Solved together with Mele')).toHaveLength(1);
+    await act(async () => reply(true)); await settle();
+    expect(byLabel('Solved together with Mele')).toHaveLength(0); expect(byTestID('cove-finish')).toHaveLength(0); expect(byTestID('hud-more')).toHaveLength(0);
   });
   it('closing Choose a puzzle after a committed finish returns to the finished card and never restarts the puzzle', async () => {
     await open();

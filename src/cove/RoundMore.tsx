@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Icon, PressTarget, Sheet, Text, glyphs, theme } from '../ui';
 import type { IconGlyph } from '../ui';
@@ -47,9 +47,15 @@ export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRest
   held?: string;
 }) {
   const [view, setView] = useState<Step>('main'), [sent, setSent] = useState(''), [sendError, setSendError] = useState('');
-  const close = () => { setView('main'); setSent(''); setSendError(''); onClose(); };
-  const back = <Button label="Back" variant="quiet" target="adult" onPress={() => { setView('main'); setSent(''); setSendError(''); }}/>;
-  const send = (person: { id: string; name: string }) => { setSendError(''); void onSend?.(person.id).then(ok => { if (ok) setSent(person.name); else setSendError(`This puzzle could not be sent to ${person.name}. They may have too many puzzles waiting. Nothing changed.`); }); };
+  // Each Send to… visit, and each send in it, answers only for itself: an earlier visit's reply never shows in a later one.
+  const sendVisit = useRef(0);
+  const close = () => { sendVisit.current++; setView('main'); setSent(''); setSendError(''); onClose(); };
+  const back = <Button label="Back" variant="quiet" target="adult" onPress={() => { sendVisit.current++; setView('main'); setSent(''); setSendError(''); }}/>;
+  const send = (person: { id: string; name: string }) => {
+    const visit = ++sendVisit.current;
+    setSendError('');
+    void onSend?.(person.id).then(ok => { if (visit !== sendVisit.current) return; if (ok) setSent(person.name); else setSendError(`This puzzle could not be sent to ${person.name}. They may have too many puzzles waiting. Nothing changed.`); });
+  };
   const tips = TIPS[game] ?? [];
   return <Sheet mode="small" visible={visible} title={view === 'send' ? 'Send to…' : view === 'tips' ? 'How to play' : view === 'roles' ? 'Roles' : view === 'restart' ? 'Restart this puzzle?' : 'More'} onClose={close}>
     {view === 'main' && <>
@@ -63,7 +69,7 @@ export function RoundMore({ visible, onClose, game, mistakes, onMistakes, onRest
       {onNew && <Row glyph={glyphs.Plus} label="New puzzle" disabled={busy || !!held} onPress={() => { close(); onNew(); }}/>}
       {/* The chooser opens over the round; More steps aside meanwhile and returns when it closes. */}
       {onChoose && <Row glyph={glyphs.GridFour} label="Choose a puzzle" disabled={!!held} onPress={onChoose}/>}
-      {onSend && people.length > 0 && <Row glyph={glyphs.PaperPlaneTilt} label="Send to…" onPress={() => setView('send')}/>}
+      {onSend && people.length > 0 && <Row glyph={glyphs.PaperPlaneTilt} label="Send to…" onPress={() => { sendVisit.current++; setView('send'); }}/>}
       {!!role && <Row glyph={glyphs.UsersThree} label="Roles" onPress={() => setView('roles')}/>}
       {tips.length > 0 && <Row glyph={glyphs.Question} label="How to play" onPress={() => setView('tips')}/>}
       {onGrownUps && <Row glyph={glyphs.LockSimple} label="Grown-ups" disabled={!!held} onPress={() => { close(); onGrownUps(); }}/>}
