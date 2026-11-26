@@ -42,10 +42,13 @@ export const ui = {
   </div>,
   Sheet: ({ visible, title, mode = 'dim', onClose, children }: { visible: boolean; title?: string; mode?: string; onClose: () => void; children: React.ReactNode }) => visible ? h('aside', { testID: 'sheet', 'data-mode': mode, 'data-title': title }, title && <h2 key="t">{title}</h2>, button({ onPress: onClose, testID: 'sheet-close', accessibilityLabel: 'Close' }), children) : null,
 };
-/** Stand-in for `src/cove/CoveArt`, whose game pictures need the real SVG stack. */
+/** Stand-in for `src/cove/CoveArt`, whose game pictures need the real SVG stack and whose board feel needs Reanimated. */
 export const art = {
   MOTIF_SIZE: 56,
   motifFor: () => null,
+  hasTileArt: () => false,
+  BOARD_FEEL: null,
+  FinishBurst: () => h('i', { testID: 'cove-finish-burst' }),
   CoveMotif: ({ game }: { game: string }) => h('i', { testID: 'cove-motif', 'data-game': game }),
   TodayArt: () => h('i', { testID: 'cove-today-art' }),
   tileArt: (game: string) => h('i', { testID: 'cove-motif', 'data-game': game }),

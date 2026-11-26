@@ -9,6 +9,8 @@ import { TITLE_MAX, atLarge, sharedWordFit } from '../components/wordFit';
 
 export type ContinueItem = { key: string; game: string; name: string; pastel: Pastel; from?: { id: string; name: string }; onPress: () => void; onLongPress?: () => void };
 const MAX_WIDTH = 960, GUTTER = 16, GAP = 12;
+/** The width a Continue card's picture is sized against: an illustration fills about 54 of its 56 points. */
+const CARD_ART = 75;
 /** The strip shows this many cards; more open from "See all", so no paused puzzle or pin is ever out of reach. */
 export const STRIP = 4;
 /** Two columns on phones, three on small tablets, four on wide windows. */
@@ -68,7 +70,7 @@ function ContinueCard({ item, wide = false }: { item: ContinueItem; wide?: boole
   return <PressTarget target="child" haptic testID={`cove-continue-${item.key}`} accessibilityLabel={label} onPress={item.onPress} onLongPress={item.onLongPress}
     accessibilityActions={item.onLongPress ? [{ name: 'longpress', label: 'Put away' }] : undefined} onAccessibilityAction={e => { if (e.nativeEvent.actionName === 'longpress') item.onLongPress?.(); }}
     style={[styles.card, wide && styles.wide, theme.shadow]}>
-    <View style={[styles.cardArt, { backgroundColor: theme.pastels[item.pastel] }]}>{tileArt(item.game, 72)}</View>
+    <View style={[styles.cardArt, { backgroundColor: theme.pastels[item.pastel] }]}>{tileArt(item.game, CARD_ART)}</View>
     <View style={styles.cardWords}>
       <Text variant="small" tone="muted" numberOfLines={1}>{item.from ? 'From' : 'Continue'}</Text>
       <Text variant="caption" numberOfLines={1} style={styles.cardName}>{item.name}</Text>
@@ -77,15 +79,17 @@ function ContinueCard({ item, wide = false }: { item: ContinueItem; wide?: boole
   </PressTarget>;
 }
 
+/** A Continue card's crisp edge: a warm hairline with the tile's bottom rim. */
+const frame = { borderWidth: 1, borderColor: theme.colors.hairline, borderBottomWidth: 3, borderBottomColor: theme.colors.rim } as const;
 /** Plain style objects (React Native accepts them as they are). */
 const styles = {
   screen: { flex: 1, backgroundColor: theme.colors.bg },
   bar: { width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' },
   content: { width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', paddingHorizontal: GUTTER, paddingBottom: theme.space.xxl, gap: theme.space.xl },
   strip: { gap: GAP, paddingVertical: theme.space.xs },
-  card: { width: 220, flexDirection: 'row', alignItems: 'center', gap: theme.space.sm, padding: theme.space.sm, borderRadius: theme.radius.tile, backgroundColor: theme.colors.surface },
+  card: { width: 220, flexDirection: 'row', alignItems: 'center', gap: theme.space.sm, padding: theme.space.sm, borderRadius: theme.radius.tile, backgroundColor: theme.colors.surface, ...frame },
   wide: { width: '100%' },
-  more: { minWidth: 120, alignItems: 'center', justifyContent: 'center', padding: theme.space.md, borderRadius: theme.radius.tile, backgroundColor: theme.colors.surface },
+  more: { minWidth: 120, alignItems: 'center', justifyContent: 'center', padding: theme.space.md, borderRadius: theme.radius.tile, backgroundColor: theme.colors.surface, ...frame },
   list: { gap: theme.space.sm },
   cardArt: { width: 56, height: 56, borderRadius: theme.radius.tile - 8, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   cardWords: { flex: 1, minWidth: 0 },

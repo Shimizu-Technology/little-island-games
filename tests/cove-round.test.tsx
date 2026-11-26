@@ -11,6 +11,7 @@ import { registration, puzzle, solve, type Payload } from './helpers/challenge-r
 import { progressFor, selectedOwner } from '../src/state/challengeDrafts';
 import { completion } from '../src/cove/catalog';
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], fail: false, focused: true }));
+const sound = vi.hoisted(() => ({ play: (() => {}) as (key: string) => void }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { if (db.fail) throw new Error('disk'); db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async () => {} } }));
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 393, height: 852 }), AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
@@ -19,7 +20,7 @@ vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Headi
 vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
 vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
 vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
-vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: vi.fn() }) }));
+vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: (key: string) => sound.play(key) }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 let store: ReturnType<typeof useStore>;
 function Probe() { const value = useStore(); useLayoutEffect(() => { store = value; }, [value]); return null; }
@@ -100,4 +101,42 @@ it('G3 R1 saves a Family practice solo finish immediately and retains it across 
     await act(async () => { screen = create(<StoreProvider><Probe/></StoreProvider>); });
     expect(completion(progressFor(store.save, 'family')!, puzzle.ref, entry)).toBe(5);
   } finally { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
+});
+
+it('PR100 R1 cheers a finish once, only after it saves: never while attribution waits or after a refused save', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+  db.rows = []; db.raw = JSON.stringify({ ...emptySave(), learning: addLearner(undefined, 'A', 'a') }); let screen!: ReactTestRenderer;
+  const played: string[] = []; sound.play = key => { played.push(key); };
+  const wins = () => played.filter(k => k === 'win').length, bursts = () => screen.root.findAllByType('i').filter(n => n.props.testID === 'cove-finish-burst').length;
+  const solveAll = async () => { for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) await press(screen, 'Next legal step'); };
+  try {
+    await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
+    await solveAll();
+    // The partner question is up: no cue, no burst, nothing saved as a result.
+    expect(screen.root.findAllByType('button').some(n => n.props.accessibilityLabel === 'Solved together with Family practice')).toBe(true);
+    expect(wins()).toBe(0); expect(bursts()).toBe(0); expect(store.save.challenge!.paused[0].result).toBeNull();
+    db.fail = true; await press(screen, 'Save my finish');
+    expect(JSON.stringify(screen.toJSON())).toContain('Your finish has not saved yet.');
+    expect(wins()).toBe(0); expect(bursts()).toBe(0); expect(store.save.challenge!.paused).toHaveLength(1);
+    // Back on the board, the same final move asks again and still does not cheer.
+    await press(screen, 'Back to my board'); await solveAll();
+    expect(wins()).toBe(0); expect(bursts()).toBe(0);
+    db.fail = false; await press(screen, 'Save my finish');
+    expect(store.save.challenge!.paused).toEqual([]);
+    expect(wins()).toBe(1); expect(bursts()).toBe(1);
+    expect(JSON.stringify(screen.toJSON())).toContain('Puzzle solved');
+  } finally { db.fail = false; sound.play = () => {}; if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
+});
+
+it('PR100 R1 cheers a direct finish once, after its save', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+  db.rows = []; db.raw = JSON.stringify(emptySave()); let screen!: ReactTestRenderer;
+  const played: string[] = []; sound.play = key => { played.push(key); };
+  try {
+    await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
+    for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) await press(screen, 'Next legal step');
+    expect(store.save.challenge!.paused).toEqual([]);
+    expect(played.filter(k => k === 'win')).toHaveLength(1);
+    expect(screen.root.findAllByType('i').filter(n => n.props.testID === 'cove-finish-burst')).toHaveLength(1);
+  } finally { sound.play = () => {}; if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
 });

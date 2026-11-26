@@ -1,12 +1,14 @@
 import React, { useCallback, useContext, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
-import { GridInteraction } from '../grid/preferences';
+import { GridFeel, GridInteraction } from '../grid/preferences';
+import { theme } from '../../ui/theme';
 import { cellFloor, ink, paper } from './controls';
 import { CROSS, EMPTY, FILL, lineOf, lineSatisfied, type LineAxis, type Mark, type PictureClues } from './engine';
 import type { Paint } from './checkpoint';
 
-const filled = '#287A73', cross = '#637485', frame = '#6F8E89', edge = '#C4DAD4', focus = '#B04F2B';
+// A Puzzles round's firmer cell edge: 3.25:1 on paper.
+const filled = '#287A73', cross = '#637485', frame = '#6F8E89', edge = '#C4DAD4', firmEdge = '#7D928C', focus = '#B04F2B', TRIM = 3;
 const gestureStyle: ViewStyle = Platform.OS === 'web' ? ({ touchAction: 'none', userSelect: 'none' } as ViewStyle) : {};
 const markNames = ['empty', 'filled', 'crossed out'] as const;
 type FocusLine = { axis: LineAxis; index: number; cell?: number };
@@ -46,9 +48,21 @@ function includesCell(stroke: Preview, index: number, size: number) {
 }
 
 /** Clues stay pinned while the edit-size canvas pans. Each drag previews and commits one straight stroke. */
-export function GridCanvas({ layout, size, marks, clues, mode, active, moving, focusLine, onPaint }: Props) {
+export function GridCanvas({ layout, size, marks, clues, mode, active, moving, focusLine, onPaint: commit }: Props) {
   const { cell, left, top, viewportWidth, viewportHeight, grid } = layout;
-  const hold = useContext(GridInteraction);
+  const hold = useContext(GridInteraction), feel = useContext(GridFeel);
+  // With a host's feel (a Puzzles round) the board is framed, its lines and 5×5 blocks read firmer, and a square the player
+  // paints pops once it is accepted. Undo and Start over change marks without a pop; clearing the popped square removes its ring.
+  const [placing, setPlacing] = useState<Paint | null>(null);
+  const [seen, setSeen] = useState(marks), [pop, setPop] = useState<{ at: number; mark: Mark; nonce: number } | null>(null);
+  if (feel && seen !== marks && marks.some((m, i) => m !== seen[i])) {
+    setSeen(marks); setPlacing(null);
+    const at = placing && placing.mark !== EMPTY ? marks.findIndex((m, i) => m === placing.mark && m !== seen[i] && includesCell(placing, i, size)) : -1;
+    if (at >= 0) setPop(before => ({ at, mark: marks[at], nonce: (before?.nonce ?? 0) + 1 }));
+    else if (pop && marks[pop.at] !== pop.mark) setPop(null);
+  }
+  const onPaint = useCallback((paint: Paint) => { setPlacing(paint); commit(paint); }, [commit]);
+  const block = feel ? 2 : 1, cellEdge = feel ? firmEdge : edge;
   const [focusedCell, setFocusedCell] = useState<number | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [xOffset, setXOffset] = useState(0), [yOffset, setYOffset] = useState(0);
@@ -129,6 +143,8 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
       </View>
     </View>}
     <View style={{ flexDirection: 'row', height: viewportHeight }}>
+      {/* The wood frame sits around the viewport, under the clues, never over a square's focus outline. */}
+      {feel && <View pointerEvents="none" accessible={false} testID="picture-frame" style={[styles.frame, { left: left - TRIM, top: -TRIM, width: viewportWidth + 2 * TRIM, height: viewportHeight + 2 * TRIM }]}/>}
       {clues && <View style={{ width: left, height: viewportHeight, overflow: 'hidden' }}>
         <View style={{ transform: [{ translateY: -yOffset }] }}>{clues.rows.map((values, i) => renderClue('row', values, i))}</View>
       </View>}
@@ -143,9 +159,11 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
                 const shown = preview && includesCell(preview, index, size) ? preview.mark : mark;
                 const line = focusLine && (focusLine.axis === 'row' ? row : column) === focusLine.index;
                 const selected = focusLine?.cell === index;
+                const blockRight = column % 5 === 4 || column === size - 1, blockBottom = row % 5 === 4 || row === size - 1;
                 const border: ViewStyle = {
-                  borderRightColor: column % 5 === 4 || column === size - 1 ? frame : edge,
-                  borderBottomColor: row % 5 === 4 || row === size - 1 ? frame : edge,
+                  borderRightColor: blockRight ? frame : cellEdge,
+                  borderBottomColor: blockBottom ? frame : cellEdge,
+                  ...(blockRight && block > 1 ? { borderRightWidth: block } : {}), ...(blockBottom && block > 1 ? { borderBottomWidth: block } : {}),
                   borderTopWidth: row === 0 ? 1 : 0, borderLeftWidth: column === 0 ? 1 : 0,
                 };
                 const choose = (value: Mark) => onPaint({ type: 'paint', from: index, to: index, mark: value });
@@ -167,6 +185,7 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
                 </Pressable>;
               })}
             </View>)}
+            {feel && pop && <feel.Pop left={pop.at % size * cell} top={Math.floor(pop.at / size) * cell} size={cell} nonce={pop.nonce}/>}
             {active && !moving && <View {...responder.panHandlers} testID="picture-gesture-layer" collapsable={false}
               accessible={false} importantForAccessibility="no" style={[StyleSheet.absoluteFill, gestureStyle]} />}
           </View>
@@ -185,4 +204,5 @@ const styles = StyleSheet.create({
   clueFocus: { backgroundColor: '#FBD4BF', borderRadius: 6 },
   pill: { alignItems: 'center', justifyContent: 'center', borderRadius: 7, backgroundColor: '#EDE4F6', minHeight: 13 },
   matched: { backgroundColor: '#EDECED' },
+  frame: { position: 'absolute', borderWidth: TRIM, borderColor: theme.colors.frame, borderRadius: 4 + TRIM },
 });

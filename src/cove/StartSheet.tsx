@@ -4,7 +4,7 @@ import type { ChallengeEntry } from '../challenge/types';
 import type { ChallengeSession } from '../state/challenge';
 import { Button, DifficultyPills, Icon, IconButton, PressTarget, Sheet, Text, glyphs, theme } from '../ui';
 import { infoFor } from './catalog';
-import { CoveMotif } from './CoveArt';
+import { CoveMotif, hasTileArt } from './CoveArt';
 import { FaceButton } from './PeoplePicker';
 import { difficultyOptionsFor, pastelFor } from './shelf';
 
@@ -51,7 +51,7 @@ export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, pa
   const name = infoFor(entry.game).name, options = difficultyOptionsFor(entry), together = partner !== null;
   return <Sheet visible={visible} title={name} onClose={onClose}>
     <View style={styles.top}>
-      <View style={[styles.picture, { backgroundColor: theme.pastels[pastelFor(entry.game)] }]}><CoveMotif game={entry.game} size={88}/></View>
+      <View style={[styles.picture, { backgroundColor: theme.pastels[pastelFor(entry.game)] }]}><CoveMotif game={entry.game} size={hasTileArt(entry.game) ? 124 : 88}/></View>
       <IconButton testID="start-favorite" glyph={glyphs.Star} filled={favorite} accessibilityLabel={favorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`} onPress={onFavorite} style={styles.star}/>
     </View>
     {saved && <View style={styles.saved}>
@@ -75,7 +75,7 @@ export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, pa
 /** Plain style objects (React Native accepts them as they are). */
 const styles = {
   top: { alignItems: 'center' },
-  picture: { width: 160, height: 160, borderRadius: theme.radius.tile, alignItems: 'center', justifyContent: 'center' },
+  picture: { width: 160, height: 160, borderRadius: theme.radius.tile, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3, borderBottomColor: theme.colors.rim },
   star: { position: 'absolute', top: 0, right: 0 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
   chip: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm, paddingHorizontal: theme.space.lg, borderRadius: theme.radius.full },

@@ -7,7 +7,7 @@ import { progressFor, selectedOwner } from '../state/challengeDrafts';
 import type { ChallengeSession } from '../state/challenge';
 import type { ChallengeCard, ChallengeEntry } from '../challenge/types';
 import { useSoundControls } from '../components/Audio';
-import { GridFeedback, GridInteraction } from '../puzzles/grid/preferences';
+import { GridFeedback, GridFeel, GridInteraction } from '../puzzles/grid/preferences';
 import { SessionGate } from '../challenge/SessionGate';
 import { Button, Hud, Icon, Text, glyphs, sheetHeight, theme } from '../ui';
 import { infoFor, sameRef } from './catalog';
@@ -17,6 +17,7 @@ import { presentationFor } from './presentation';
 import type { Mistakes } from './local';
 import { RoundMore } from './RoundMore';
 import { boardTitle, engineReset, honorsMistakes, hudActions, playLabel } from './shelf';
+import { BOARD_FEEL, CoveMotif, FinishBurst, hasTileArt } from './CoveArt';
 import { BoardHud, type BoardCommands, type BoardMoreAction } from './boardHud';
 
 /** What the HUD shows of a hosted board's commands; their handlers stay in a ref. */
@@ -66,6 +67,10 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const sound = useSoundControls(store.save.settings.sound && focused);
   const progress = progressFor(store.save, owner), saved = progress?.paused.find(s => s.game === entry.game && !s.credited && !s.result);
   const [pending, setPending] = useState<ChallengeSession>(), [finished, setFinished] = useState<ChallengeSession>(), [message, setMessage] = useState(''), [busy, setBusy] = useState(false), [replacement, setReplacement] = useState<ChallengeSession>();
+  // A solve made here is cheered once, when its finish has saved: the success cue (haptic, and the tone when sound is on)
+  // and the finish card's burst. A finish waiting for its partner choice, or one whose save is refused, is not cheered yet.
+  const [cheered, setCheered] = useState(false), cheering = useRef(false);
+  const cheer = () => { if (cheering.current || !mounted.current) return; cheering.current = true; setCheered(true); sound.play('win'); };
   const current = useRef<ChallengeSession | undefined>(saved), lock = useRef(false), mounted = useRef(true), auto = useRef(false), boundary = useRef(false), dispatchToken = useRef(0);
   // Release draft input on acceptance, before disk I/O; launches/results stay serialized.
   useLayoutEffect(() => { if (saved && (!current.current || saved.id !== current.current.id || saved.revision >= current.current.revision)) { current.current = saved; if (!boundary.current) lock.current = false; } }, [saved]);
@@ -118,7 +123,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
       if (await store.challengeSave(next, expected(before))) {
         accepted = true;
         if (!current.current || current.current.id === next.id && current.current.revision <= next.revision) current.current = next;
-        if (next.result && mounted.current) setFinished(next);
+        if (next.result && mounted.current) { setFinished(next); cheer(); }
       } else if (mounted.current) setMessage('Keep the app open. Retry saving or export your accepted work in Settings.');
     } catch { if (mounted.current) setMessage('This change could not be made. Your accepted draft is kept. Try again.'); } finally { if (token === dispatchToken.current) { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); if (!accepted || !mounted.current || !canDrain.current || current.current?.result) hunterQueue.current = []; else { const next = hunterQueue.current.shift(); if (next !== undefined) void latestDispatch.current(next); } } }
   }
@@ -141,7 +146,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
       const candidate = { ...solved, partner: withPerson };
       const next = { ...candidate, result: entry.catalog.codecs.get(candidate.codec)!.evaluate(candidate) };
       if (!next.result) throw new Error('The engine could not confirm this finish.');
-      if (await store.challengeSave(next, expected(current.current))) { current.current = next; setFinished(next); setPending(undefined); return true; }
+      if (await store.challengeSave(next, expected(current.current))) { current.current = next; setFinished(next); setPending(undefined); cheer(); return true; }
       setMessage('Your finish has not saved yet. Keep this screen open and try again.');
     } catch { setMessage('Your finish has not saved yet. Keep this screen open and try again.'); }
     finally { boundary.current = false; lock.current = false; setBusy(false); }
@@ -177,8 +182,11 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   // inside this screen's own (safe-area) height, never below its minimum width.
   const room = (screenHeight || height) - sheetHeight(height, 'small') - chromeHeight - theme.space.xl, fit = boardHeight > room ? room / boardHeight : 1;
   const boardWidth = more && !choosing ? Math.max(Math.min(width, MIN_BOARD), Math.floor(width * fit)) : width;
-  const finishCard = (heading: string, children: React.ReactNode) => <View testID="cove-finish" style={[styles.card, theme.shadow]}>
-    <Icon glyph={glyphs.Sparkle} weight="fill" size={40} tone="lagoon"/>
+  const finishCard = (heading: string, children: React.ReactNode, burst: boolean) => <View testID="cove-finish" style={[styles.card, theme.shadow]}>
+    <View style={[styles.finishArt, !hasTileArt(entry.game) && styles.finishIcon]}>
+      {burst && <FinishBurst/>}
+      {hasTileArt(entry.game) ? <CoveMotif game={entry.game} size={104}/> : <Icon glyph={glyphs.Sparkle} weight="fill" size={40} tone="lagoon"/>}
+    </View>
     <Text variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">{heading}</Text>
     {children}
   </View>;
@@ -204,17 +212,17 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
           <View style={styles.faces}>{others.map(p => <FaceButton key={p.id} id={p.id} name={p.name} label={`Solved together with ${p.name}`} disabled={busy} onPress={() => void confirmFinish(p.id)}/>)}</View>
           <Button label="Save my finish" fill disabled={busy} onPress={() => void confirmFinish(null)}/>
           <Button label="Back to my board" variant="quiet" target="adult" disabled={busy} onPress={() => setPending(undefined)}/>
-        </>) : round.result ? <>
+        </>, false) : round.result ? <>
           {entry.helpUI === 'board' && <BoardHud.Provider value={host}>{entry.render(round, () => {}, false, boardWidth)}</BoardHud.Provider>}
           {finishCard(round.result.event === 'together' ? 'Solved together' : 'Puzzle solved', <>
             {together && <Text variant="caption" tone="muted">Together with {together}</Text>}
             <Text variant="body" style={styles.center}>{entry.completionText?.(round.puzzle, round.result, entry.completionFacts?.(round) ?? null) ?? 'Your finished puzzle is kept.'}</Text>
             {choices.onNext && <Button label="Next puzzle" fill onPress={choices.onNext}/>}
             <Button label="Puzzles" variant="secondary" target="adult" fill onPress={onClose}/>
-          </>)}
+          </>, cheered && !!finished && round.id === finished.id)}
         </> : <SessionGate key={`${owner}:${store.epoch}:${round.id}`} open={open} expected={expected(round)} onStartFresh={() => store.challengeDiscard(expected(round))} render={() => <>
           {entry.game === 'solitaire' && entry.full?.(round, entry.controls.reset()) && <Button label="Start this deal again" disabled={busy || !focused} onPress={() => void launch(true)}/>}
-          <SearchChrome.Provider value={{ top: 60, bottom: 34, bar: entry.game === 'word-search' ? chromeHeight + 28 : 0 }}><GridInteraction.Provider value={hold}><GridFeedback.Provider value={() => { sound.play('tap'); }}><View testID="cove-board" onLayout={e => { if (!more) setBoardHeight(e.nativeEvent.layout.height); }} style={styles.boardBox}><BoardHud.Provider value={host}>{entry.render(round, a => void dispatch(a), focused && !busy, boardWidth)}</BoardHud.Provider></View></GridFeedback.Provider></GridInteraction.Provider></SearchChrome.Provider>
+          <SearchChrome.Provider value={{ top: 60, bottom: 34, bar: entry.game === 'word-search' ? chromeHeight + 28 : 0 }}><GridInteraction.Provider value={hold}><GridFeedback.Provider value={() => { sound.play('tap'); }}><GridFeel.Provider value={BOARD_FEEL}><View testID="cove-board" onLayout={e => { if (!more) setBoardHeight(e.nativeEvent.layout.height); }} style={styles.boardBox}><BoardHud.Provider value={host}>{entry.render(round, a => void dispatch(a), focused && !busy, boardWidth)}</BoardHud.Provider></View></GridFeel.Provider></GridFeedback.Provider></GridInteraction.Provider></SearchChrome.Provider>
         </>}/>}
       </> : full ? question('Too many paused puzzles', 'Pick one to replace.', <>
         {progress?.paused.filter(s => !s.credited).map(s => <Button key={s.id} variant={replacement?.id === s.id ? 'secondary' : 'quiet'} target="adult" fill selected={replacement?.id === s.id} label={`Replace ${infoFor(s.game).name}`} onPress={() => setReplacement(s)}/>)}
@@ -247,6 +255,8 @@ const styles = {
   board: { alignItems: 'center', gap: theme.space.md, paddingHorizontal: theme.space.lg, paddingTop: theme.space.sm },
   card: { alignSelf: 'center', maxWidth: 520, width: '100%', alignItems: 'center', gap: theme.space.md, padding: theme.space.xl, borderRadius: theme.radius.sheet, backgroundColor: theme.colors.surface },
   boardBox: { alignSelf: 'stretch', alignItems: 'center' },
+  finishArt: { width: 200, height: 120, alignItems: 'center', justifyContent: 'center' },
+  finishIcon: { height: 64 },
   faces: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: theme.space.md },
   center: { textAlign: 'center' },
 } as const;
