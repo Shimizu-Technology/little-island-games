@@ -138,7 +138,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     canStart:(s:ChallengeSession)=>replay(s)!==null && ((s.payload as ReplayPayload<P,A>).actions.length===0 || config.prefilledStart?.(s.payload as ReplayPayload<P,A>)===true) && s.result===null,
     extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return (q.actions.length>p.actions.length || q.actions.length===p.actions.length && config.assistance?.idempotentHelp===true && !!replay(a)?.evidence.helpUsed) && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
   const catalog:SaveCatalog={banks,dares,codecs:new Map([[config.codec,codec]]),contexts:new Set([...config.puzzles,...packedBanks].map(p=>`${config.context}-${p.tier}`))};
-  const packed: PackedChallenge | undefined = config.packed && (() => {
+  const packed: (PackedChallenge & { open: (bank: number, index: number) => Promise<PuzzleRef> }) | undefined = config.packed && (() => {
     const spec = config.packed, loader = spec.loader ?? bankLoader;
     const bands: PackedBand[] = packedBanks.map(b => ({ kind: 'band', bank: b.slot, path: b.path, tier: b.tier, title: b.title, count: b.count }));
     const cardOf = (ref: PuzzleRef, b: (typeof packedBanks)[number]): ChallengeCard => {
@@ -166,6 +166,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     }
     return {
       bands,
+      open: (bank: number, index: number) => resolve({ bank, puzzle: index }),
       card: ref => { const b = bandOf(ref.bank); return b && ref.engine === config.game && ref.rules === b.rules && uint(ref.puzzle,b.count-1) ? cardOf(ref, b) : undefined; },
       prepare: async ref => { if (bandOf(ref.bank)) await resolve(ref); },
       /** Never-opened entries first, then unfinished ones, then the least recent, starting after the last played. */

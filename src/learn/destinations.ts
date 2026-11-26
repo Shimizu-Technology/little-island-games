@@ -7,7 +7,7 @@ import { learnIds, type LearnId } from './types';
 import type { ShelfId } from './home';
 /** One route table is shared by every shelf and the reachability gate. */
 export function gameDestination(id:ShelfId) {
-  return {pathname:isBoardId(id)?'/board':arcadeIds.includes(id as ArcadeId)?'/arcade':learnIds.includes(id as LearnId)?'/learn':gameIds.includes(id as GameId)?'/play':'/activity',params:{game:id}} as const;
+  return {pathname:id==='reef-sweep'?'/challenge':isBoardId(id)?'/board':arcadeIds.includes(id as ArcadeId)?'/arcade':learnIds.includes(id as LearnId)?'/learn':gameIds.includes(id as GameId)?'/play':'/activity',params:{game:id}} as const;
 }
 export const registeredDestinations = [
   ...learnIds.map(id=>({id,door:'school',shelf:id==='hafa-adai'?'chamoru':engines[id].island,taps:id==='hafa-adai'?2:3,route:gameDestination(id)})),

@@ -4,7 +4,7 @@ import { adjacentTide } from '../puzzles/flow';
 import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import { ratingDue, resultOffer } from './offers';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { type ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
@@ -46,7 +46,7 @@ export function challengeIntro(entry: ChallengeEntry): string {
 }
 const gameName = (game: string) => shelfGames.find(item=>item.id===(shelfIdOf[game]??game))?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
-export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;requestedPuzzle?:string}) {
+export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = false}:{entry:ChallengeEntry;requestedPuzzle?:string;requestedCard?:ChallengeCard;autoStart?:boolean}) {
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width,height,fontScale}=useWindowDimensions(), insets=useSafeAreaInsets();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
@@ -56,7 +56,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const choices=(path:ChallengePath)=>every.filter(p=>p.path===path);
   const cardOf=(ref:PuzzleRef)=>entry.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)??entry.packed?.card(ref);
   const choiceOf=(bank:number,puzzle:number):Choice|undefined=>playable.find(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle)??bands.find(b=>b.bank===bank);
-  const requested=playable.find(p=>`${p.ref.bank}:${p.ref.puzzle}`===requestedPuzzle);
+  const requested=requestedCard??playable.find(p=>`${p.ref.bank}:${p.ref.puzzle}`===requestedPuzzle);
   const [selection,setSelection]=useState<Choice>(()=>requested??every.find(p=>progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??every[0]);
   const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!!requested||!saved), [busy,setBusy]=useState(false), [launching,setLaunching]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [fresh,setFresh]=useState<'choose'|'confirm'|null>(null);
@@ -87,6 +87,12 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
     } catch {setMessage('This puzzle could not start. Your saved work is kept.');}
     finally {if(dispatchToken.current===token){lock.current=false;setBusy(false);setLaunching(false);}}
   }
+  const linkedStarted = useRef(false);
+  useEffect(() => {
+    if (!autoStart || !requestedCard || saved || linkedStarted.current) return;
+    linkedStarted.current = true;
+    void launch(requestedCard, []);
+  }, [autoStart, requestedCard, saved]); // eslint-disable-line react-hooks/exhaustive-deps -- Consume an exact route request once; never replace a saved attempt.
   const sessionKey=(s:ChallengeSession)=>`${owner}:${store.epoch}:${s.id}:${s.revision}`;
   async function dispatch(action:unknown):Promise<ChallengeSession|null> {
     const current=accepted.current;if(!current || lock.current || !focused || picking)return null;

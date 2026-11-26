@@ -11,7 +11,7 @@ import { emptySave, parseSave } from '../src/state/validation';
 import { migrateProfiles, encodeSave } from '../src/state/profiles';
 import { addLearner } from '../src/learn/learners';
 it('fails the route gate for missing routes, missing shelves, missing route files or >3 taps',()=>{
-  const ids=shelfGames.map(g=>g.id), paths=['/learn','/play','/board','/arcade','/activity'];
+  const ids=shelfGames.map(g=>g.id), paths=['/challenge','/learn','/play','/board','/arcade','/activity'];
   expect(()=>assertReachable(ids,registeredDestinations,shelfGames,paths)).not.toThrow();
   expect(()=>assertReachable(ids,registeredDestinations.slice(1),shelfGames,paths)).toThrow();
   expect(()=>assertReachable(ids,registeredDestinations,shelfGames.slice(1),paths)).toThrow();
