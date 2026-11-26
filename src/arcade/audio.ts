@@ -20,11 +20,23 @@ const tones: Record<string, AudioSource> = {
   bump: require("../../assets/arcade/shell-0.wav"), coral: require("../../assets/arcade/coral.wav"), clear: require("../../assets/arcade/clear.wav"), sticker: require("../../assets/arcade/sticker.wav"),
   "shell-0": require("../../assets/arcade/shell-0.wav"), "shell-1": require("../../assets/arcade/shell-1.wav"), "shell-2": require("../../assets/arcade/shell-2.wav"), "shell-3": require("../../assets/arcade/shell-3.wav"), "shell-4": require("../../assets/arcade/shell-4.wav"), "shell-5": require("../../assets/arcade/shell-5.wav"),
 };
+const flightTones: Record<string, () => AudioSource> = {
+  "flight-flap": () => require("../../assets/arcade/fruit-bat/flap.wav"),
+  "flight-fruit": () => require("../../assets/arcade/fruit-bat/fruit.wav"),
+  "flight-clear": () => require("../../assets/arcade/fruit-bat/clear.wav"),
+  "flight-bump": () => require("../../assets/arcade/fruit-bat/bonk.wav"),
+};
 const musicSources = { reef: require("../../assets/arcade/reef-loop.wav"), song: require("../../assets/arcade/song-loop.wav") };
 export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolean, active: boolean, sheetOpen = false) {
   // One preloaded player per effect. Swapping sources with replace() reloads the asset on the
   // main thread and stalled the frame on every flap/hop; rewinding a loaded player does not.
-  const [effects] = useState<Record<string, AudioPlayer>>(() => Object.fromEntries(Object.entries(tones).map(([key, source]) => [key, createAudioPlayer(source)])));
+  const [effects] = useState<Record<string, AudioPlayer>>(() => {
+    const players = Object.fromEntries(Object.entries(tones).map(([key, source]) => [key, createAudioPlayer(source)]));
+    if (game === "fruit-bat-flight") {
+      for (const [key, source] of Object.entries(flightTones)) players[key] = createAudioPlayer(source());
+    }
+    return players;
+  });
   useEffect(() => () => { for (const player of Object.values(effects)) { try { player.remove(); } catch { /* Already released. */ } } }, [effects]);
   const loop = useAudioPlayer(game === "shell-song" ? musicSources.song : musicSources.reef);
   const speech = useSoundControls(settings.sound && active);
@@ -37,9 +49,13 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
   useEffect(() => { if (!active || sheetOpen || !settings.sound || settings.effects === false) { for (const player of Object.values(effects)) { try { player.pause(); } catch { /* Disposed player. */ } } } }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const tone = useCallback((key: string, haptic = true) => {
     if (!active || sheetOpen) return;
-    if (haptic) feel(key === "clear" || key === "sticker" ? "success" : "select");
-    if (!settings.sound || settings.effects === false || !tones[key]) return;
+    if (haptic) {
+      if (key === "flight-flap" || key === "flight-fruit" || key === "flight-clear") feel("tap");
+      else if (key === "flight-bump") feel("warning");
+      else feel(key === "clear" || key === "sticker" ? "success" : "select");
+    }
     const player = effects[key];
+    if (!settings.sound || settings.effects === false || !player) return;
     try { void player.seekTo(0); player.play(); } catch { /* Visible feedback always accompanies a sound. */ }
   }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const say = useCallback((key: string, automatic = false) => { const played = speech.play(key, automatic); return played; }, [speech]);

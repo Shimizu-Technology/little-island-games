@@ -72,7 +72,8 @@ export function exportPublic(target) {
     const homeTones = [...readFileSync(join(root, 'src/home/runtime/homeSound.ts'), 'utf8')
       .matchAll(/require\("\.\.\/\.\.\/\.\.\/assets\/(home\/[a-z-]+\.wav)"\)/g)].map(m => m[1]);
     const tones = new Set(['audio/tap.wav', 'audio/match.wav', 'audio/win.wav', ...homeTones,
-      ...['song-loop', 'reef-loop', 'sticker', 'coral', 'clear', ...Array.from({ length: 6 }, (_, i) => `shell-${i}`)].map(n => `arcade/${n}.wav`)]);
+      ...['song-loop', 'reef-loop', 'sticker', 'coral', 'clear', ...Array.from({ length: 6 }, (_, i) => `shell-${i}`)].map(n => `arcade/${n}.wav`),
+      ...['bonk', 'clear', 'flap', 'fruit'].map(n => `arcade/fruit-bat/${n}.wav`)]);
     if (receipt.speechReceipt.engine !== 'Kokoro-82M v1.0' || receipt.speechReceipt.modelLicense !== 'Apache-2.0' || speech.size !== receipt.speechReceipt.keysPerVoice * 2)
       throw new Error('Neural speech receipt and source map disagree.');
     // Staged Library recordings have an isolated, complete warm-only receipt.

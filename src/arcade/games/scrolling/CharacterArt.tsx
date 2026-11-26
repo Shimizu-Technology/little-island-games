@@ -3,7 +3,6 @@ import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
 import type { SharedValue } from "react-native-reanimated";
 import type { OutfitId } from "../../progress";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
-import { BAT_RX, BAT_RY } from "../fruit-bat-flight/hull";
 import { RUN_EXTRA } from "./character";
 import { IslanderShape } from "../../../islander/rig/Islander";
 import { islanderSurface } from "../../../islander/rig/anchors";
@@ -49,14 +48,6 @@ function BatWing({ far = false }: { far?: boolean }) {
     <Path d="M-35-26L-31-17" stroke="#EEE1EF" strokeWidth={2} opacity={far ? .25 : .65}/>
   </G></Svg>;
 }
-export const BatRig = memo(function BatRig({ poses, outfit, debug = false }: { poses: SharedValue<SpritePose[]>; outfit: OutfitId; debug?: boolean }) {
-  return <ArcadeSprite poses={poses} index={0} width={96} height={76}>
-    <ArcadeSprite poses={poses} index={31} width={96} height={96}><BatWing far/></ArcadeSprite>
-    <Svg width={96} height={76} viewBox="0 0 96 76"><BatBody outfit={outfit}/></Svg>
-    <ArcadeSprite poses={poses} index={32} width={96} height={96}><BatWing/></ArcadeSprite>
-    {debug && <Svg width={96} height={76} style={{position:"absolute"}}><Ellipse cx={48} cy={38} rx={BAT_RX} ry={BAT_RY} stroke="#72FFB7" strokeWidth={1.5} fill="#72FFB722"/><Circle cx={45} cy={32} r={2} fill="#FFDC72"/><Circle cx={43} cy={38} r={2} fill="#FFDC72"/></Svg>}
-  </ArcadeSprite>;
-});
 export function CharacterPortrait({ bat, size, outfit, happy = false, dizzy = false, back = false, frame }: { bat: boolean; size: number; outfit: OutfitId; happy?: boolean; dizzy?: boolean; back?: boolean; frame?: number }) {
   const look = useActiveIslanderLook();
   return bat ? <Svg width={size} height={size} viewBox="-10 -14 100 100" accessible={false}><Ellipse cx={43} cy={77} rx={31} ry={4} fill="#374B5B" opacity={.18}/><G transform="translate(45 32) rotate(-35) translate(-48 -48)"><BatWing far/></G><BatBody outfit={outfit} happy={happy}/><G transform="translate(43 38) rotate(-14) translate(-48 -48)"><BatWing/></G></Svg> : <Svg width={size} height={size} viewBox="-26 -2 132 136" accessible={false}><Ellipse cx={40} cy={131} rx={29} ry={4} fill="#4C6171" opacity={.2}/><IslanderShape pose={back ? backPoses[frame ?? 0] : resolvePose("front", happy ? "cheer" : dizzy ? "try-again" : "idle")} look={look}/></Svg>;
