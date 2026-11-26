@@ -1,4 +1,7 @@
 import { backPoses } from '../../../islander/rig/poses';
+
+export const RUNNER_WIDTH = 80, RUNNER_HEIGHT = 132, RUNNER_SOLE = 130;
+
 /** Kite and runner origins relative to the same contact point, in track pixels.
  * The kite always selects apex frame 9. Resolve this once, outside the worklet. */
 export const KITE_HANDS = [backPoses[9].joints.leftHand, backPoses[9].joints.rightHand]

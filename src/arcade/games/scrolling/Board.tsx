@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import {lagoonMeasurement} from '../lagoon-run/measurement';
-import {runSounds} from '../lagoon-run/feedback';
+import { LagoonFeedback, LandingDust, useRunFeedback, type RunFeedbackVisual } from '../lagoon-run/RunFeedback';
 import { runSwipe } from "../lagoon-run/swipe";
 import { RunHit, RunHitFlash } from "../lagoon-run/RunReaction";
 import { useLocalSearchParams } from "expo-router";
@@ -11,7 +11,7 @@ import { runLevels } from "./content";
 import { RunHud, HUD_TEXT_MAX } from '../lagoon-run/Hud';
 import { HarborPlanks, HarborEnvironment, RunCamera, SpeedLines } from '../lagoon-run/World';
 import { DeckBase, DeckHaze, DeckLight } from '../lagoon-run/Backdrop';
-import { RunArena } from '../lagoon-run/Arena';
+import { RunArena, type LagoonInsets } from '../lagoon-run/Arena';
 import { useStage } from '../lagoon-run/stage';
 import { CONTACT, HERO_SCALE, HERO_ZOOM, TRACK_HEIGHT } from '../lagoon-run/camera';
 import { FlightPalm, FlightForest, FlightShore, FlightWideSky, Fruit } from "../fruit-bat-flight/Art";
@@ -49,7 +49,7 @@ import { FlightEffects, FlightFlash, useFlightCamera, useFlightFeedback } from "
 import { runPoses, RUN_SLOTS, NEAR_START, CANOE_START, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
 
 import { runFrame, type Commands } from "./commands";
-export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean; overlayTop?: number };
+export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean; overlayTop?: number; overlayInsets?: LagoonInsets };
 const W = 390, H = 660, still = HIDDEN_POSE;
 const Portal = memo(function Portal({ value, index }: { value: number; index: number }) { return <Svg width={64} height={64} viewBox="0 0 64 64"><Rect x={3} y={3} width={58} height={58} rx={16} fill={["#F6C76D", "#A9E7E1", "#DEB1EF"][index]} stroke="#374565" strokeWidth={3}/><SvgText x={32} y={45} textAnchor="middle" fill="#27364E" fontWeight="900" fontSize={36}>{value}</SvgText></Svg>; });
 const Particle = memo(function Particle() { return <Svg width={12} height={12}><Path d="M6 0L8 4L12 6L8 8L6 12L4 8L0 6L4 4Z" fill="#FFE294"/></Svg>; });
@@ -198,16 +198,26 @@ export function FlightBoard(props: BoardProps) {
   </View>;
 }
 type RunRowSpec=ReturnType<typeof runHud>["spec"][number];
-const RunRow=memo(function RunRow({poses,row,i,learn,front=false}:{poses:SharedValue<SpritePose[]>;row:RunRowSpec;i:number;learn:boolean;front?:boolean}) {
-  const actor=(kind:RunRowSpec["kind"],index:number,canoe:number)=>{const box=isCanoe(kind)?{width:390,height:660}:hazardBox(kind);return <DepthSprite front={front} poses={poses} index={index} rotate={kind!=="coconut"} width={box.width} height={box.height}>{isCanoe(kind)?<Canoe poses={poses} index={CANOE_START+canoe*4} moving={kind==="moving-canoe"}/>:<BakedHazard kind={kind} width={box.width} height={box.height} poses={poses} index={index}/>}</DepthSprite>;};
+const RunRow=memo(function RunRow({poses,row,i,learn,reduced,front=false}:{poses:SharedValue<SpritePose[]>;row:RunRowSpec;i:number;learn:boolean;reduced:boolean;front?:boolean}) {
+  const actor=(kind:RunRowSpec["kind"],index:number,canoe:number)=>{const box=isCanoe(kind)?{width:390,height:660}:hazardBox(kind);return <DepthSprite front={front} poses={poses} index={index} rotate={kind!=="coconut"} width={box.width} height={box.height}>{isCanoe(kind)?<Canoe poses={poses} index={CANOE_START+canoe*4} moving={kind==="moving-canoe"} reduced={reduced}/>:<BakedHazard kind={kind} width={box.width} height={box.height} poses={poses} index={index}/>}</DepthSprite>;};
   return <>{actor(row.kind,1+i*2,i*3)}{actor(row.secondKind,2+i*2,i*3+1)}{actor(row.kind,75+i,i*3+2)}<DepthSprite front={front} poses={poses} index={167+i} width={44} height={44}><BakedPower kind={row.power} size={44}/></DepthSprite>{[0, 1, 2].map(c => <DepthSprite key={c} front={front} poses={poses} index={11 + i * 3 + c} width={30} height={30}><BakedShell size={30}/></DepthSprite>)}{learn && !front && row.choices.map((n, c) => <DepthSprite key={`a${c}`} poses={poses} index={60 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></DepthSprite>)}</>;
-},(a,b)=>a.poses===b.poses && a.i===b.i && a.learn===b.learn && a.front===b.front && samePublication(a.row,b.row));
+},(a,b)=>a.poses===b.poses && a.i===b.i && a.learn===b.learn && a.reduced===b.reduced && a.front===b.front && samePublication(a.row,b.row));
 /** Effects never depend on the course, so a spawn or crossing cannot re-render them. */
-const RunEffects=memo(function RunEffects({poses}:{poses:SharedValue<SpritePose[]>}) {
-  return <>{Array.from({length:15},(_,i)=><ArcadeSprite key={`shell-burst${i}`} poses={poses} index={132+i} width={48} height={48}><Svg width={48} height={48}><Path d="M24 2L28 15L42 8L34 22L47 27L33 30L38 44L25 35L16 47L17 32L2 33L13 23L3 12L19 16Z" fill="#FFE9A7" stroke="#B76A20" strokeWidth={1}/><SvgText x={24} y={30} textAnchor="middle" fill="#5B4844" fontSize={14} fontWeight="900">+1</SvgText></Svg></ArcadeSprite>)}{Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`splash${i}`} poses={poses} index={26 + i} width={12} height={12}><Svg width={12} height={12}><Path d="M6 0Q-3 9 6 12Q15 9 6 0Z" fill="#9BE9E8" stroke="#287984" strokeWidth={1}/></Svg></ArcadeSprite>)}{Array.from({length:6},(_,i)=><ArcadeSprite key={`near${i}`} poses={poses} index={NEAR_START+i} width={12} height={12}><Particle/></ArcadeSprite>)}<ArcadeSprite poses={poses} index={55} width={80} height={30}><Svg width={80} height={30}><Path d="M2 22Q-1 10 15 13Q8 1 25 7L31 18M78 22Q81 10 65 13Q72 1 55 7L49 18" fill="#FFE5A1" opacity={.8}/><Path d="M9 25L22 23M58 23L71 25" stroke="#FFF5D4" strokeWidth={2}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={56} width={64} height={30}><View style={{ width: 64, height: 30, borderRadius: 15, backgroundColor: "#FFF2CF", borderWidth: 2, borderColor: "#B76A20", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#5B4844", fontSize: 18, lineHeight: 22, fontWeight: "900" }}>+10</Text></View></ArcadeSprite></>;
+const RunEffects = memo(function RunEffects({ poses }: { poses: SharedValue<SpritePose[]> }) {
+  return <>
+    <LandingDust poses={poses}/>
+    {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`splash${i}`} poses={poses} index={26 + i} width={12} height={12}><Svg width={12} height={12}><Path d="M6 0Q-3 9 6 12Q15 9 6 0Z" fill="#9BE9E8" stroke="#287984" strokeWidth={1}/></Svg></ArcadeSprite>)}
+    {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`near${i}`} poses={poses} index={NEAR_START + i} width={12} height={12}><Particle/></ArcadeSprite>)}
+    <ArcadeSprite poses={poses} index={56} width={64} height={30}><View style={{ width: 64, height: 30, borderRadius: 15, backgroundColor: "#FFF2CF", borderWidth: 2, borderColor: "#B76A20", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#5B4844", fontSize: 18, lineHeight: 22, fontWeight: "900" }}>+10</Text></View></ArcadeSprite>
+  </>;
 });
 const RunnerPowers=memo(function RunnerPowers({poses}:{poses:SharedValue<SpritePose[]>}) {
-  return <><ArcadeSprite poses={poses} index={POWER_AURA} width={112} height={154}><Svg width={112} height={154}><Path d="M20 127Q-12 72 17 29M95 127Q125 72 96 29" fill="none" stroke="#B1FFF2" strokeWidth={4} strokeDasharray="8 7"/><Path d="M6 72L17 66M101 66L110 72M12 105L22 99M91 99L103 105" stroke="#FFE49A" strokeWidth={3}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={POWER_AURA+1} width={86} height={28}><Svg width={86} height={28}><Path d="M10 22Q24 7 37 20M49 20Q62 7 78 22" stroke="#FFF5A3" strokeWidth={7} fill="none"/><Path d="M8 5L13 12M77 5L72 12" stroke="#FFF5A3" strokeWidth={3}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={172} width={72} height={110}><KiteRig/></ArcadeSprite><ArcadeSprite poses={poses} index={173} width={96} height={142}><Svg width={96} height={142}><Path d="M48 3C109 3 109 139 48 139C-13 139-13 3 48 3Z" fill="#AEE1BA" fillOpacity={.18} stroke="#E9FFD3" strokeWidth={3}/></Svg></ArcadeSprite></>;
+  return <><ArcadeSprite poses={poses} index={POWER_AURA + 2} width={104} height={132}>
+    <Svg width={104} height={132} accessible={false}>
+      <Path d="M25 121Q2 111 9 82M79 121Q102 111 95 82M19 55Q10 75 15 91M85 55Q94 75 89 91" fill="none" stroke="#F5C249" strokeWidth={3} strokeLinecap="round"/>
+      <Path d="M7 121L2 128M97 121l5 7M19 120l-3 9M85 120l3 9" stroke="#FFFDF8" strokeWidth={3} strokeLinecap="round"/>
+    </Svg>
+  </ArcadeSprite><ArcadeSprite poses={poses} index={POWER_AURA} width={112} height={154}><Svg width={112} height={154}><Path d="M20 127Q-12 72 17 29M95 127Q125 72 96 29" fill="none" stroke="#B1FFF2" strokeWidth={4} strokeDasharray="8 7"/><Path d="M6 72L17 66M101 66L110 72M12 105L22 99M91 99L103 105" stroke="#FFE49A" strokeWidth={3}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={POWER_AURA+1} width={86} height={28}><Svg width={86} height={28}><Path d="M10 22Q24 7 37 20M49 20Q62 7 78 22" stroke="#FFF5A3" strokeWidth={7} fill="none"/><Path d="M8 5L13 12M77 5L72 12" stroke="#FFF5A3" strokeWidth={3}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={172} width={72} height={110}><KiteRig/></ArcadeSprite><ArcadeSprite poses={poses} index={173} width={96} height={142}><Svg width={96} height={142}><Path d="M48 3C109 3 109 139 48 139C-13 139-13 3 48 3Z" fill="#AEE1BA" fillOpacity={.18} stroke="#E9FFD3" strokeWidth={3}/></Svg></ArcadeSprite></>;
 });
 const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
 /**
@@ -217,28 +227,29 @@ const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
  * front of the runner. Nothing reorders past the runner (see DepthSprite); a passing row hands
  * off between its pre-mounted twins by opacity only.
  */
-export const RunLayer = memo(function RunLayer({ poses, spec, learn, world, runner }: { poses: SharedValue<SpritePose[]>; spec: RunRowSpec[]; learn: boolean; world: WorldId; runner?: React.ReactNode }) {
-  return <RunCamera poses={poses}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><DeckBase world={world}/><HarborPlanks poses={poses} world={world}/><DeckHaze world={world}/><DeckLight world={world}/><HarborEnvironment poses={poses} world={world}/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite>
+export const RunLayer = memo(function RunLayer({ poses, spec, learn, world, runner, feedback }: { poses: SharedValue<SpritePose[]>; spec: RunRowSpec[]; learn: boolean; world: WorldId; runner?: React.ReactNode; feedback?: RunFeedbackVisual }) {
+  const reduced = feedback?.reduced ?? false;
+  return <RunCamera poses={poses} impact={feedback?.impact} reduced={reduced}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><DeckBase world={world}/><HarborPlanks poses={poses} world={world}/><DeckHaze world={world}/><DeckLight world={world}/><HarborEnvironment poses={poses} world={world}/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite>
     <View collapsable={false} style={LAYER}>{spec.map((row,i)=><React.Fragment key={i}><Deck poses={poses} index={147+i*4} surface={row.surface}/>{row.surface==="ramp"&&<Deck poses={poses} index={INCLINE_START+i*INCLINE_STRIDE} surface={row.surface} incline/>}</React.Fragment>)}</View>
-    <View collapsable={false} testID="run-behind" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn}/>)}</View>
+    <View collapsable={false} testID="run-behind" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn} reduced={reduced}/>)}</View>
     <RunEffects poses={poses}/>
-    <View collapsable={false} style={LAYER}>{runner}<RunnerPowers poses={poses}/></View>
-    <View collapsable={false} testID="run-front" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn} front/>)}</View>
+    <View collapsable={false} style={LAYER}>{runner}<RunnerPowers poses={poses}/>{feedback && <LagoonFeedback {...feedback}/>}</View>
+    <View collapsable={false} testID="run-front" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn} reduced={reduced} front/>)}</View>
     <SpeedLines poses={poses}/></View></RunCamera>;
 });
-function selectRun(s: RunState) { "worklet"; return {helped:s.helped,status:s.status,learned:s.learned}; }
+function selectRun(s: RunState) { "worklet"; return {helped:s.status !== "playing" && s.helped}; }
 function useRunSnapshot<T>(state:SharedValue<RunState>, select:(s:RunState)=>T) {
   const [snapshot,setSnapshot]=useState(()=>select(state.value));
   useAnimatedReaction(()=>select(state.value),(next,previous)=>{if(!samePublication(next,previous))runOnJS(setSnapshot)(next);},[state,select]);
   return snapshot;
 }
 function sceneSpec(s:RunState) { "worklet"; const h=runHud(s);return {spec:h.spec,dead:s.lives.hearts===0}; }
-const RunScene=memo(function RunScene({poses,state,learn,world}:{poses:SharedValue<SpritePose[]>;state:SharedValue<RunState>;learn:boolean;world:WorldId}) {
+const RunScene=memo(function RunScene({poses,state,learn,world,feedback}:{poses:SharedValue<SpritePose[]>;state:SharedValue<RunState>;learn:boolean;world:WorldId;feedback:RunFeedbackVisual}) {
   const s=useRunSnapshot(state,sceneSpec);
   // The runner is live vector art: supersample it to the stage's total zoom so it stays sharp.
   const stage=useStage(),sample=Math.max(1,Math.min(2,Math.ceil(HERO_ZOOM*HERO_SCALE*stage.scale*4)/4));
   const runner=useMemo(()=><LastHit dead={s.dead} x={195} y={TRACK_HEIGHT*CONTACT}><RunHit poses={poses}><RunnerRig poses={poses} sample={sample} wrap={frames=><View pointerEvents="none" style={{position:"absolute",left:-(80*sample-80)/2,top:-(132*sample-132)/2,width:80*sample,height:132*sample,transform:[{scale:1/sample}]}}>{frames}</View>}/></RunHit></LastHit>,[poses,s.dead,sample]);
-  return <><RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner}/><RunHitFlash poses={poses}/></>;
+  return <RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner} feedback={feedback}/>;
 });
 function displayRun(s:RunState) {"worklet";const h=runHud(s);return {level:h.level,passed:h.passed,score:h.score,lives:h.lives,powers:h.powers,next:h.next,shellNotes:runLearning(s)?0:s.shells};}
 /**
@@ -247,9 +258,9 @@ function displayRun(s:RunState) {"worklet";const h=runHud(s);return {level:h.lev
  * so nothing is placed by a fixed offset that larger text could overrun. The cue subscribes to
  * nothing: the pose carries the move.
  */
-export function RunTopChrome({state,learn,poses,top}:{state:SharedValue<RunState>;learn:boolean;poses:SharedValue<SpritePose[]>;top:number}) {
+export function RunTopChrome({state,learn,poses,top,insets}:{state:SharedValue<RunState>;learn:boolean;poses:SharedValue<SpritePose[]>;top:number;insets?:LagoonInsets}) {
   const s=useRunSnapshot(state,displayRun);
-  return <View pointerEvents="none" testID="run-top" style={{position:"absolute",left:10,right:10,top:top+4,gap:6}}>
+  return <View pointerEvents="none" testID="run-top" style={{position:"absolute",left:10+(insets?.left??0),right:10+(insets?.right??0),top:top+4,gap:6}}>
     <RunHud s={s} learning={learn}/>
     {learn&&s.next?<View style={{alignSelf:"center",padding:8,borderRadius:14,backgroundColor:"#192B49"}}><Text testID="math-fact" maxFontSizeMultiplier={HUD_TEXT_MAX} style={{color:"#FFF4D3",fontSize:28,fontWeight:"900"}}>{equation(s.next)}</Text></View>:null}
     <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"flex-start"}}><View style={{flexDirection:"row",gap:4}}>{(["magnet","kite","sandals","shield"] as const).filter(k=>s.powers[k]>0).map(k=><PowerRing key={k} kind={k} remaining={s.powers[k]} state={state}/>)}</View><RunTeachingCue poses={poses}/></View>
@@ -275,14 +286,15 @@ function ArrowToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void
  * labels stop growing at the HUD cap so the largest text never covers the runner.
  */
 export const OPTION_GAP = TOGGLE_SLOP + BUTTON_SLOP + 2, PAD_GAP = 24;
-export function RunControls({ arrows, onToggle, pad, finish }: { arrows: boolean; onToggle: () => void; pad: React.ReactNode; finish?: React.ReactNode }) {
-  return <View pointerEvents="box-none" testID="run-chrome-bottom" style={{ position: "absolute", left: 12, right: 12, bottom: 10, gap: PAD_GAP }}>
+export function RunControls({ arrows, onToggle, pad, finish, insets }: { arrows: boolean; onToggle: () => void; pad: React.ReactNode; finish?: React.ReactNode; insets?: LagoonInsets }) {
+  return <View pointerEvents="box-none" testID="run-chrome-bottom" style={{ position: "absolute", left: 12 + (insets?.left ?? 0), right: 12 + (insets?.right ?? 0), bottom: 10 + (insets?.bottom ?? 0), gap: PAD_GAP }}>
     <View pointerEvents="box-none" testID="run-option-row" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: OPTION_GAP }}>{finish ?? <View/>}<ArrowToggle shown={arrows} onToggle={onToggle}/></View>
     {arrows && <View pointerEvents="box-none" style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>{pad}</View>}
   </View>;
 }
 // Runtime-only teaching memory is deliberately outside saves; reload starts a new app session.
 let learnedRunMoves = 0;
+function rememberRunMoves(moves: number) { learnedRunMoves |= moves; }
 export function RunBoard(props: BoardProps) {
   const params = useLocalSearchParams<{replay?:string;witness?:string;quietHud?:string;level?:string}>(), replay = props.debug && params.replay === "1" && lagoonMeasurement(Constants.expoConfig,props.debug);
   const witness=replay && /^\d+$/.test(params.witness??'')?Math.min(10000,Number(params.witness)):0;
@@ -298,18 +310,19 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const active=props.active && ready;
   const level = replay ? replayLevel : props.level, seed = replay ? 771 : props.seed;
   const tick = useSharedValue(0), tags = useSharedValue<string[]>([]);
-  const playEvents=useCallback((sounds:string[])=>{for(const sound of sounds)onTone(sound,sound==="run-hit"||["run-magnet","run-kite","run-sandals","run-shield","clear"].includes(sound));},[onTone]);
-  const observe=useCallback((a:RunState,b:RunState)=>{ "worklet";
-    const sounds=runSounds(a,b);
-    if(sounds.length)runOnJS(playEvents)(sounds);
-  },[playEvents]);
-  const measure = useMemo(()=>({enabled:debug,tick,tags,events:runEventTags,onEvent:observe}),[debug,tick,tags,observe]);
-  const step = useCallback((s:RunState,i:Commands<RunInput>,dt:number)=>{ "worklet";
-    if (!replay) return runFrame(s,i,dt);
-    if(witness && Math.round(s.time*60)>=witness)return s;
-    if (runResult(s)) s=createRun(replayLevel,771,false);
-    return runFrame(s,{...i,helper:false,queue:[{id:s.command+1,action:fixtureInput(s)}]},dt);
-  },[replay,witness,replayLevel]);
+  const { observe, visual } = useRunFeedback(reduced, active, onTone);
+  const measure = useMemo(() => ({ enabled: debug, tick, tags, events: runEventTags }), [debug, tick, tags]);
+  const step = useCallback((before: RunState, i: Commands<RunInput>, dt: number) => {
+    "worklet";
+    if (replay && witness && Math.round(before.time * 60) >= witness) return before;
+    const start = replay && runResult(before) ? createRun(replayLevel, 771, false) : before;
+    const after = replay
+      ? runFrame(start, { ...i, helper: false, queue: [{ id: start.command + 1, action: fixtureInput(start) }] }, dt)
+      : runFrame(start, i, dt);
+    observe(start, after);
+    if (!replay && start.learned !== after.learned) runOnJS(rememberRunMoves)(after.learned);
+    return after;
+  }, [replay, witness, replayLevel, observe]);
   const resultFn = useCallback((s:RunState)=>{ "worklet"; return replay ? null : runResult(s); },[replay]);
   const [initial] = useState(() => ({...createRun(level, seed, replay?false:helper),learned:replay?0:learnedRunMoves})), poses = useSharedValue<SpritePose[]>(Array(RUN_SLOTS).fill(still));
   const { input, send } = useMailbox<RunInput>(helper, active);
@@ -318,7 +331,6 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const { snapshot: s, outcome: result, state } = useLagoonUiLoop({ initial, input, step, result: resultFn, pose, select: selectRun, drain: drainCommands, active, measure });
   const meterLabel=useRunMeter(lagoonMeasurement(Constants.expoConfig,debug), active, state,tick,tags,replay,seed);
   useOutcome(s, result, props);
-  useEffect(() => { if(!replay)learnedRunMoves |= s.learned; },[s.learned,replay]);
   const actionTone=useCallback((_a?:RunInput)=>{},[]); // Accepted actions emit from the fixed-step event observer.
   const action = useCallback((a:RunInput)=>{if(active)send(a);},[active,send]);
   useKeyboard(active, useCallback(key => action({ type: ["ArrowLeft", "KeyA"].includes(key) ? "left" : ["ArrowRight", "KeyD"].includes(key) ? "right" : ["ArrowDown", "KeyS"].includes(key) ? "duck" : "jump" }), [action]));
@@ -328,7 +340,7 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const [arrows,setArrows]=useRunArrows();
   const toggleArrows=useCallback(()=>setArrows(!arrows),[arrows,setArrows]);
   const pad = <><Control overlay disabled={!active} label="Move left" glyph="←" mailbox={input} action={{ type: "left" }} feedback={() => actionTone({ type: "left" })} onPress={() => action({ type: "left" })}/><Control overlay disabled={!active} label="Jump" glyph="↑" mailbox={input} action={{ type: "jump" }} feedback={() => actionTone({ type: "jump" })} onPress={() => action({ type: "jump" })}/><Control overlay disabled={!active} label="Roll or drop" glyph="↓" mailbox={input} action={{ type: "duck" }} feedback={() => actionTone({ type: "duck" })} onPress={() => action({ type: "duck" })}/><Control overlay disabled={!active} label="Move right" glyph="→" mailbox={input} action={{ type: "right" }} feedback={() => actionTone({ type: "right" })} onPress={() => action({ type: "right" })}/></>;
-  const controls = <RunControls arrows={arrows} onToggle={toggleArrows} pad={pad} finish={level === "endless" ? <Button compact quiet maxFontSizeMultiplier={HUD_TEXT_MAX} onPress={() => send({ type: "finish" })}>Finish free run</Button> : undefined}/>;
-  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<RunTopChrome state={state} learn={learn} poses={poses} top={props.overlayTop ?? 0}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`${replayLevel.id.toUpperCase()} / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
+  const controls = <RunControls insets={props.overlayInsets} arrows={arrows} onToggle={toggleArrows} pad={pad} finish={level === "endless" ? <Button compact quiet maxFontSizeMultiplier={HUD_TEXT_MAX} onPress={() => send({ type: "finish" })}>Finish free run</Button> : undefined}/>;
+  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} overlay={<RunHitFlash impact={visual.impact} reduced={reduced}/>} hud={quietHud?null:<RunTopChrome state={state} learn={learn} poses={poses} top={props.overlayTop ?? 0} insets={props.overlayInsets}/>}><RunScene poses={poses} state={state} learn={learn} feedback={visual} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`${replayLevel.id.toUpperCase()} / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
 }
 export function ScrollBoard({ game, ...props }: BoardProps & { game: ScrollGame }) { return game === "fruit-bat-flight" ? <FlightBoard {...props}/> : <RunBoard {...props}/>; }

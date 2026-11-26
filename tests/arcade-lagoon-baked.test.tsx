@@ -7,7 +7,8 @@ import type {SharedValue} from 'react-native-reanimated';
 import type {SpritePose} from '../src/arcade/poses';
 import {BakedDeck} from '../src/arcade/games/lagoon-run/Baked';
 import {RAMP_SECTIONS} from '../src/arcade/games/lagoon-run/surface';
-vi.mock('react-native',()=>({Image:'Image'}));
+vi.mock('react-native',()=>({Image:'Image',View:'View'}));
+vi.mock('react-native-svg',()=>({default:'Svg',Path:'Path'}));
 vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedReaction:vi.fn(),useSharedValue:vi.fn(),useAnimatedStyle:vi.fn()}));
 it('mounts both side skirts and a shadow for every rendered incline section',()=>{
  const component=(BakedDeck as unknown as {type:(props:unknown)=>React.ReactNode}).type;

@@ -1,18 +1,29 @@
 import React, { memo } from "react";
 import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
-import type { SharedValue } from "react-native-reanimated";
+import { Image, View } from "react-native";
+import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import type { OutfitId } from "../../progress";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { RUN_EXTRA } from "./character";
+import { RUNNER_HEIGHT, RUNNER_SOLE, RUNNER_WIDTH } from "./runnerAnchors";
+import { RUNNER_KINETICS } from "../lagoon-run/kinetics";
+import { illustrated } from "../lagoon-run/illustrated";
 import { IslanderShape } from "../../../islander/rig/Islander";
 import { islanderSurface } from "../../../islander/rig/anchors";
 import { backPoses, resolvePose } from "../../../islander/rig/poses";
 import { useActiveIslanderLook } from "../../../islander/active";
 import type { IslanderLook } from "../../../islander/look";
+// Give the full wardrobe and raised limbs room for the bank, stretch and landing squash on Android.
+const runnerPadding = { left: 44, right: 44, top: 40, bottom: 20 };
+const runnerCanvas = {
+  width: RUNNER_WIDTH + runnerPadding.left + runnerPadding.right,
+  height: RUNNER_HEIGHT + runnerPadding.top + runnerPadding.bottom,
+  transformOrigin: [runnerPadding.left + RUNNER_WIDTH / 2, runnerPadding.top + RUNNER_SOLE, 0] as [number, number, number],
+};
 /** Static art per (frame, look); only the enclosing sprite opacity changes at 16 Hz. */
-export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, look, size = 132, front = false }: { frame: number; look: IslanderLook; size?: number; front?: boolean }) {
+export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, look, size = RUNNER_HEIGHT, front = false }: { frame: number; look: IslanderLook; size?: number; front?: boolean }) {
   const joints=backPoses[frame].joints, shoulder=joints.rightShoulder,elbow=joints.rightElbow,head=joints.head;
-  return <Svg {...islanderSurface({width:80,height:132},size/132)} accessible={false}><IslanderShape pose={front ? resolvePose('front', frame === 15 ? 'cheer' : frame === 14 ? 'try-again' : 'idle') : backPoses[frame]} look={look}/>{!front&&<Path d={`M${head[0]+15} ${head[1]-14}q5 6 4 14 M${shoulder[0]+3} ${shoulder[1]-2}L${elbow[0]+3} ${elbow[1]-2}`} fill="none" stroke="#FFE8A3" strokeWidth={1.3} strokeLinecap="round" opacity={.7}/>}</Svg>;
+  return <Svg {...islanderSurface({width:RUNNER_WIDTH,height:RUNNER_HEIGHT},size/RUNNER_HEIGHT)} accessible={false}><IslanderShape pose={front ? resolvePose('front', frame === 15 ? 'cheer' : frame === 14 ? 'try-again' : 'idle') : backPoses[frame]} look={look}/>{!front&&<Path d={`M${head[0]+15} ${head[1]-14}q5 6 4 14 M${shoulder[0]+3} ${shoulder[1]-2}L${elbow[0]+3} ${elbow[1]-2}`} fill="none" stroke="#FFE8A3" strokeWidth={1.3} strokeLinecap="round" opacity={.7}/>}</Svg>;
 });
 /** One depth root and the same 24 opacity-switched frames; no limb worklets.
  * `sample` draws the vector frames larger and scales them back down, so a camera or arena zoom
@@ -20,9 +31,43 @@ export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, look, size =
 export const RunnerRig = memo(function RunnerRig({ poses, sample = 1, wrap }: { poses: SharedValue<SpritePose[]>; sample?: number; /** Scales the larger frames back down (supplied by the board). */ wrap?: (frames: React.ReactNode) => React.ReactNode }) {
   const look = useActiveIslanderLook();
   const k = wrap ? sample : 1;
-  const frames = backPoses.map((_,i) => <ArcadeSprite key={i} poses={poses} index={i<16?80+i:RUN_EXTRA+i-16} width={80*k} height={132*k}><RunnerFrameArt frame={i} look={look} size={132*k}/></ArcadeSprite>);
-  return <ArcadeSprite poses={poses} index={0} width={80} height={132}>{sample === 1 || !wrap ? frames : wrap(frames)}</ArcadeSprite>;
+  const source = illustrated.runner?.();
+  const motion = useAnimatedStyle(() => {
+    const pose = poses.value[RUNNER_KINETICS];
+    const shown = pose && pose.opacity !== 0;
+    return {
+      transform: [
+        { translateY: shown ? pose.scale ?? 0 : 0 },
+        { scaleX: shown ? pose.x : 1 },
+        { scaleY: shown ? pose.y : 1 },
+      ],
+    };
+  });
+  // A future illustrated gait can share the same kinetic wrapper. The authored jump, roll,
+  // stumble and clear frames remain available independently of the gait art.
+  const frames = backPoses.map((_, i) => source !== undefined && (i < 8 || i >= 16) ? null :
+    <ArcadeSprite key={i} poses={poses} index={i < 16 ? 80 + i : RUN_EXTRA + i - 16} width={RUNNER_WIDTH * k} height={RUNNER_HEIGHT * k}><RunnerFrameArt frame={i} look={look} size={RUNNER_HEIGHT * k}/></ArcadeSprite>);
+  return <ArcadeSprite poses={poses} index={0} width={RUNNER_WIDTH} height={RUNNER_HEIGHT} padding={runnerPadding}>
+    <Animated.View style={[runnerCanvas, motion]}>
+      <View style={{ position: 'absolute', left: runnerPadding.left, top: runnerPadding.top, width: RUNNER_WIDTH, height: RUNNER_HEIGHT }}>
+        {source !== undefined && <IllustratedGait source={source} poses={poses}/>}
+        {sample === 1 || !wrap ? frames : wrap(frames)}
+      </View>
+    </Animated.View>
+  </ArcadeSprite>;
 });
+function IllustratedGait({ source, poses }: { source: number; poses: SharedValue<SpritePose[]> }) {
+  const style = useAnimatedStyle(() => {
+    for (let i = 88; i < 96; i++) {
+      const frame = poses.value[i];
+      if (frame && frame.opacity !== 0) return { opacity: 0 };
+    }
+    return { opacity: 1 };
+  });
+  return <Animated.View style={[{ position: "absolute", bottom: 2, width: 80, height: 130 }, style]}>
+    <Image accessible={false} source={source} style={{ width: 80, height: 130 }} resizeMode="contain" fadeDuration={0}/>
+  </Animated.View>;
+}
 function BatBody({ outfit, happy = false }: { outfit: OutfitId; happy?: boolean }) {
   return <G stroke="#392D45" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
     <Ellipse cx={45} cy={41} rx={20} ry={21} fill="#B87569"/>

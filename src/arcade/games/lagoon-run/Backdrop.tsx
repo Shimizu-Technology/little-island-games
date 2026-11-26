@@ -1,11 +1,12 @@
 import React, { memo, useEffect } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import type { WorldId } from '../../types';
 import { useReducedMotion } from '../../../components/motion';
 import { Landmark } from '../scrolling/Environment';
 import { lagoonLook, type LagoonLook } from './look';
+import { illustrated } from './illustrated';
 import { HERO_ZOOM, WASH_SPAN, projectTrack, roadEdge, type StageLayout } from './camera';
 import { FLOOR_FAR } from './floorBands';
 
@@ -16,6 +17,8 @@ import { FLOOR_FAR } from './floorBands';
 export const RunBackdrop = memo(function RunBackdrop({ world, layout, width, height }: { world: WorldId; layout: StageLayout; width: number; height: number }) {
   const look = lagoonLook(world), W = layout.width, H = layout.height, hz = layout.horizon, cx = W / 2;
   const [sx, sy, core, glow] = look.sun, sun = { x: W * sx, y: hz * sy };
+  const horizon = look.id === 'morning' ? illustrated.horizonMorning?.() : undefined;
+  const horizonBand = hz * .46;
   return <Svg width={width} height={height} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute' }} accessible={false}>
     <Defs>
       <LinearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.sky[0]}/><Stop offset=".72" stopColor={look.sky[1]}/><Stop offset="1" stopColor={look.sky[2]}/></LinearGradient>
@@ -27,8 +30,10 @@ export const RunBackdrop = memo(function RunBackdrop({ world, layout, width, hei
     <Circle cx={sun.x} cy={sun.y} r={Math.min(150, hz * .7)} fill="url(#lr-sun)"/>
     <Circle cx={sun.x} cy={sun.y} r={look.id === 'festival' ? 20 : 26} fill={core}/>
     <SkyDetail look={look} W={W} hz={hz}/>
-    <Hills look={look} W={W} hz={hz}/>
-    <G transform={`translate(${cx - 195 * HERO_ZOOM} ${hz - 209 * HERO_ZOOM}) scale(${HERO_ZOOM})`}><Landmark world={world}/></G>
+    {horizon === undefined ? <>
+      <Hills look={look} W={W} hz={hz}/>
+      <G transform={`translate(${cx - 195 * HERO_ZOOM} ${hz - 209 * HERO_ZOOM}) scale(${HERO_ZOOM})`}><Landmark world={world}/></G>
+    </> : <SvgImage href={horizon} x={0} y={hz - horizonBand} width={W} height={horizonBand} preserveAspectRatio="xMidYMax slice"/>}
     <Rect y={hz - .5} width={W} height={H - hz + 1} fill="url(#lr-water)"/>
     <Rect y={hz - 34} width={W} height={36} fill="url(#lr-haze)"/>
     <Water look={look} W={W} H={H} hz={hz} sun={sun.x}/>
@@ -41,7 +46,7 @@ function SkyDetail({ look, W, hz }: { look: LagoonLook; W: number; hz: number })
       <Path d={`M${W * .52} ${hz * .5}q40-14 84-2q30-12 62 3q-60 10-146-1Z`} fill="#F7B48C" opacity={.55}/><Path d={`M${W * .05} ${hz * .66}q36-10 70 0q24-9 48 2q-58 8-118-2Z`} fill="#E89A8B" opacity={.45}/></G>;
   }
   // Long, flat paper-cut clouds catching the light.
-  return <G fill="#FFFFFF" opacity={look.id === 'rain' ? .25 : .5}><Path d={`M${W * .06} ${hz * .3}q22-15 48-3q16-10 34 1h40q-60 8-122 2Z`}/><Path d={`M${W * .5} ${hz * .46}q30-14 62-2q18-8 36 2h48q-74 7-146 0Z`}/><Path d={`M${W * .22} ${hz * .72}q16-8 34-1h30q-34 5-64 1Z`} opacity={.7}/></G>;
+  return <G fill="#FFFDF8" opacity={look.id === 'rain' ? .25 : .5}><Path d={`M${W * .06} ${hz * .3}q22-15 48-3q16-10 34 1h40q-60 8-122 2Z`}/><Path d={`M${W * .5} ${hz * .46}q30-14 62-2q18-8 36 2h48q-74 7-146 0Z`}/><Path d={`M${W * .22} ${hz * .72}q16-8 34-1h30q-34 5-64 1Z`} opacity={.7}/></G>;
 }
 function Hills({ look, W, hz }: { look: LagoonLook; W: number; hz: number }) {
   const [far, mid, near] = look.hills;
@@ -87,7 +92,7 @@ function Wash({ id, y, height, children }: { id: string; y: number; height: numb
 /** Near-deck light falloff: the boards darken gently toward the camera, away from the light. */
 export const DeckLight = memo(function DeckLight({ world }: { world: WorldId }) {
   const look = lagoonLook(world), c = projectTrack(1, .7), b = projectTrack(1, 1.62);
-  return <Wash id="lr-near" y={c.y} height={b.y - c.y + 40}><LinearGradient id="lr-near" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.shade} stopOpacity={0}/><Stop offset="1" stopColor={look.shade} stopOpacity={.22}/></LinearGradient></Wash>;
+  return <Wash id="lr-near" y={c.y} height={b.y - c.y + 40}><LinearGradient id="lr-near" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.shade} stopOpacity={0}/><Stop offset=".38" stopColor="#F5C249" stopOpacity={.14}/><Stop offset="1" stopColor={look.shade} stopOpacity={.18}/></LinearGradient></Wash>;
 });
 /** Over the deck but under every actor: the far deck and rails melt into the air. */
 export const DeckHaze = memo(function DeckHaze({ world }: { world: WorldId }) {

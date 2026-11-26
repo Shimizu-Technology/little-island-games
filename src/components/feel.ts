@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
-export type Feel = "tap" | "select" | "success" | "warning";
+export type Feel = "tap" | "select" | "success" | "warning" | "medium";
 
 /**
  * Light physical confirmation on iPhone. iPad has no Taptic Engine and the system
@@ -18,7 +18,7 @@ export function feel(kind: Feel) {
           ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
           : kind === "select"
             ? Haptics.selectionAsync()
-            : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            : Haptics.impactAsync(kind === "medium" ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
     void done.catch(() => {});
   } catch {
     /* Haptics are optional feedback. */

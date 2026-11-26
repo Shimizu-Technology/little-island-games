@@ -9,6 +9,8 @@ import { islanderAnchors, islanderOrigin } from '../src/islander/rig/anchors';
 import { rigActions, rigBases } from '../src/islander/rig/character';
 import { backPoses, frontPoses, poseBox, resolvePose } from '../src/islander/rig/poses';
 import { accessories, defaultLook, hairStyles, hats, outfits, type IslanderLook } from '../src/islander/look';
+vi.mock('react-native', () => ({ View: () => null }));
+vi.mock('react-native-reanimated', () => ({ default: { createAnimatedComponent: (c: unknown) => c }, useAnimatedProps: () => ({}) }));
 vi.mock('react-native-svg', () => ({ default: 'svg', G: 'g', Path: 'path', Circle: 'circle', Ellipse: 'ellipse', Rect: 'rect', Text: 'text' }));
 vi.mock('../src/arcade/Sprite', () => ({ ArcadeSprite: () => null }));
 vi.mock('../src/islander/active', () => ({ useActiveIslanderLook: () => ({}) }));

@@ -1,21 +1,25 @@
 import { harborSceneryPose } from '../lagoon-run/scenery';
 import { CANOE_DEPTH, isCanoe, visualRunHeight } from "../lagoon-run/geometry";
-import { hazardBox } from "../lagoon-run/course";
+import { hazardBox, POWER_SECONDS } from "../lagoon-run/course";
+import { CAMERA_SHAKING, impactMotion, IMPACT_MS, LANDING_DUST, LANDING_SECONDS, runnerKinetics, RUNNER_KINETICS } from "../lagoon-run/kinetics";
 import { HIDDEN_POSE, rankPainterPoses, type SpritePose } from "../../poses";
 import { runSpeed, runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
 import { CAMERA_SLOT, HERO_SCALE, TRACK_WIDTH, arrivalOpacity, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
+import { RUNNER_HEIGHT, RUNNER_SOLE, RUNNER_WIDTH } from "./runnerAnchors";
 import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
 export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, NEAR_START=37, RUN_SLOTS = CANOE_START+15*4+1;
-/** Where a pose's local point lands, for a w×h sprite scaled about its centre (as native draws it). */
+/** Where a pose's local point lands after its centre-based scale and rotation. */
 export function spritePoint(p: SpritePose, w: number, h: number, x: number, y: number) {
   "worklet";
-  const k = p.scale ?? 1;
-  return { x: p.x + w / 2 + (x - w / 2) * k, y: p.y + h / 2 + (y - h / 2) * k };
+  const k = p.scale ?? 1, angle = p.angle ?? 0;
+  const dx = x - w / 2, dy = y - h / 2;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  return { x: p.x + w / 2 + (dx * cos - dy * sin) * k, y: p.y + h / 2 + (dx * sin + dy * cos) * k };
 }
 /** The runner's drawn contact: its 80×132 frame's planted-shoe line (y 130), after HERO_SCALE. */
-export function heroContactY(p: SpritePose) { "worklet"; return spritePoint(p, 80, 132, 40, 130).y; }
+export function heroContactY(p: SpritePose) { "worklet"; return spritePoint(p, RUNNER_WIDTH, RUNNER_HEIGHT, RUNNER_WIDTH / 2, RUNNER_SOLE).y; }
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
@@ -23,9 +27,20 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   // The runner is drawn HERO_SCALE of track scale, scaled about its foot so contact never moves.
   const foot=contact.y-lift,hero=(x:number,y:number,w:number,h:number,extra?:Partial<SpritePose>):SpritePose=>{ "worklet";
     return {x:contact.x+(x+w/2-contact.x)*HERO_SCALE-w/2,y:foot+(y+h/2-foot)*HERO_SCALE-h/2,scale:HERO_SCALE,...extra}; };
-  p[0]=hero(contact.x-40+(reduced?0:Math.sin((1-s.edgeTime/.12)*Math.PI)*s.edge*6),contact.y-130-lift,80,132,{identity:s.lives.hit,angle:reduced||s.duck>0||s.kite>0?0:(s.lane-s.poseLane)*.14});
+  const kinetics = runnerKinetics(s, reduced);
+  const edge = reduced ? 0 : Math.sin((1 - s.edgeTime / .12) * Math.PI) * s.edge * 6;
+  const root = hero(contact.x - RUNNER_WIDTH / 2 + edge, foot - RUNNER_SOLE, RUNNER_WIDTH, RUNNER_HEIGHT, { identity: s.lives.hit, angle: kinetics.angle });
+  // Compensate for the centre-based rotation so the bank pivots around the planted shoe.
+  const soleOffset = (RUNNER_SOLE - RUNNER_HEIGHT / 2) * HERO_SCALE;
+  root.x += Math.sin(kinetics.angle) * soleOffset;
+  root.y += (1 - Math.cos(kinetics.angle)) * soleOffset;
+  p[0] = root;
+  p[RUNNER_KINETICS] = kinetics;
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
-  p[55]=reduced||s.landing<=0?HIDDEN_POSE:{x:contact.x-40,y:contact.y-15-lift,scale:HERO_SCALE*(1+(1-s.landing/.13)*.5),opacity:s.landing/.13};
+  if (!reduced && s.landing > 0) {
+    const remaining = Math.min(1, s.landing / LANDING_SECONDS), age = 1 - remaining;
+    p[LANDING_DUST] = { x: contact.x - 24, y: foot - 8 - age * 9, scale: .72 + age * .63, opacity: remaining ** 2 };
+  }
   p[50]={x:contact.x-35,y:contact.y-7,scale:HERO_SCALE*(1-Math.min(2.7,runnerHeight(s))*.18),opacity:.8};
   s.rows.forEach((row,i)=>{
     const visible=!learn&&row.z> -1.2;
@@ -44,13 +59,12 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
     p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind,i*3+1):HIDDEN_POSE;
     p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind,i*3+2):HIDDEN_POSE;
     for(let c=0;c<3;c++){
-      const z=row.z+c*.07,t=row.bursts[c]/.26;
+      const z=row.z+c*.07;
       const a=trackSprite(row.shellLane,z,30,30),h=s.kite>0?2.7:shellHeight(row,c);
       const pull=s.magnet>0?Math.max(0,Math.min(1,(z-.65)/.35)):0;
       if(pull>0){a.x+=(contact.x-15-a.x)*pull;a.y+=(contact.y-70-a.y)*pull;}
       p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z> -1.2&&z<1.18?{identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+3+c,y:a.y-visualRunHeight(h)*85*a.scale}:HIDDEN_POSE;
       if(learn&&!row.passed&&row.z> -1.2&&row.z<1.08)p[60+i*3+c]={identity:row.phase,...trackSprite(c,row.z,64,64)};
-      if(!learn&&t>0){const a=projectTrack(row.shellLane,1);p[132+i*3+c]={identity:`${row.phase}-${c}`,x:a.x-24,y:a.y-45-(1-t)*28,scale:reduced?1:1+(1-t)*.55,opacity:t};}
     }
     const power=trackSprite(row.shellLane,row.z+.23,44,44);
     p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,painterDepth:power.scale,painterKey:row.serial*7+6,y:power.y-(30+surfaceProfile(row,-.23)*85)*power.scale}:HIDDEN_POSE;
@@ -67,17 +81,24 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   });
   const aura=hero(contact.x-56,contact.y-144-lift,112,154,{opacity:s.magnet>0?.65:0});
   p[POWER_AURA]={...aura,scale:HERO_SCALE*(reduced?1:1+Math.sin(s.time*5)*.025)};
+  const powered = s.kite > 0 || s.sandals > 0;
+  const boost = Math.max(powerEnvelope(s.kite, POWER_SECONDS.kite), powerEnvelope(s.sandals, POWER_SECONDS.sandals));
   p[POWER_AURA+1]=hero(contact.x-43,contact.y-20-lift,86,28,{opacity:s.sandals>0?1:0});
+  p[POWER_AURA+2] = hero(contact.x - 52, foot - 122, 104, 132, {
+    opacity: powered ? (reduced ? .32 : boost * (.58 + Math.sin(s.time * 10) * .14)) : 0,
+  });
   p[172]=hero(contact.x-36,contact.y-200-lift,72,110,{opacity:s.kite>0?1:0});
   p[173]=hero(contact.x-48,contact.y-134-lift,96,142,{opacity:s.shield||s.protection>0?.7:0});
   // Always-visible travel carrier: never infer phase from a clipped decorative sprite.
   p[35]={x:s.travel,y:0,opacity:1};
-  p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?(s.cooldown>.14?.65:1):s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
+  p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?(s.lives.invulnerable>0?.65:1):s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
   for(let i=0;i<SCENE_COUNT;i++)p[SCENE_START+i]=harborSceneryPose(s.travel,i);
   const lean = reduced ? 0 : s.lane-s.poseLane;
-  const shake = reduced ? 0 : Math.max(0,s.cooldown/.3);
+  const impactAge = Math.max(0, Math.min(1, (.3 - s.cooldown) * 1000 / IMPACT_MS));
+  const cameraShaking = !reduced && s.status === "playing" && impactAge < 1;
+  const shake = impactMotion(impactAge, !cameraShaking);
   // Camera is always visible. Its scale field carries speed-line intensity, not zoom.
-  p[CAMERA_SLOT]={x:-(contact.x-195)*.3-lean*5+Math.sin(s.time*95)*shake*5,y:reduced?0:Math.sin(s.travel*32)*1.1+Math.cos(s.time*83)*shake*3,angle:lean*.018,opacity:1,scale:reduced?0:Math.max(0,Math.min(.65,(runSpeed(s)-.42)*2.5))};
+  p[CAMERA_SLOT]={x:-(contact.x-195)*.3-lean*5+shake.x,y:(reduced?0:Math.sin(s.travel*32)*1.1)+shake.y,angle:lean*.018,frame:cameraShaking?CAMERA_SHAKING:0,opacity:1,scale:reduced?0:Math.min(.65,.09+Math.max(0,(runSpeed(s)-.42)*1.15)+boost*.31)};
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
   // The cue's move rides in frame (same rule as runHud.teaching): pre-mounted variants switch by opacity, no render.
@@ -93,4 +114,9 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   // Inactive slots retain one canonical object and never send hidden native transforms.
   for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;
   return rankPainterPoses(p);
+}
+
+function powerEnvelope(remaining: number, duration: number) {
+  "worklet";
+  return Math.max(0, Math.min(1, (duration - remaining) / .16, remaining / .26));
 }
