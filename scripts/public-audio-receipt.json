@@ -3,6 +3,10 @@
   "sha256": {
     "arcade/clear.wav": "052a5a109a0e16b5f837c34da070ad29c7e591134688936d8ccca83a1467340c",
     "arcade/coral.wav": "3cd083ffea7a85e94c011ec7a5140699498398ac44edc4417e7b645acebab208",
+    "arcade/fruit-bat/bonk.wav": "13d7230854cbf14711e15ec343c30bc9027fded576dd70dd046d3ed3756d4124",
+    "arcade/fruit-bat/clear.wav": "43d159510d9dea67ad399d1d25b65fb1822c7d0af7db109d2df76922c26a56c4",
+    "arcade/fruit-bat/flap.wav": "856abac3bcbf3cf8ce6de885a4109d56979a4b0bfd44c22d300e9095ccacc2db",
+    "arcade/fruit-bat/fruit.wav": "0fd4e625696b90e37698c180ed5bafe9bb46118b396938dcfbae088d7fe6f86b",
     "arcade/reef-loop.wav": "76294e0d02f3ca58ca02958f4a3d851309c343d92ac0564459ad0228b391a818",
     "arcade/shell-0.wav": "89f0f527b3f55b8a660d73adda87ac6eb37516e2747f0eba45c72c63a1dccc58",
     "arcade/shell-1.wav": "b2c6f5e4a6d0bddfb22be63a96fc7969a4d1ca69dcf2f4066812fca41004bfb7",
