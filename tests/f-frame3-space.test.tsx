@@ -11,6 +11,7 @@ import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import { MEASURED_SCHOOL_BOARDS } from '../src/learn/boardGeometry';
 import type { LearnId } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const insets = vi.hoisted(() => ({ top: 59, bottom: 34, left: 0, right: 0 }));

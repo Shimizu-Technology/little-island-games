@@ -9,6 +9,7 @@ import * as canoes from "../src/board/hidden-canoes/engine";
 import * as pits from "../src/board/shell-pits/engine";
 import { computerTask } from "../src/playPolicies/decide";
 import { BoardScreen } from "../src/board/Screen";
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const fixture = vi.hoisted(() => ({
   push: vi.fn(),

@@ -12,6 +12,7 @@ import { startSession } from '../src/learn/session';
 import { engines } from '../src/learn/engines';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 /** Shipped sources, read from the generated require tables without loading native audio into Node. */
 const keysIn = (text: string) => new Set([...text.matchAll(/["']([^"']+)["']:\s*require\(/g)].map(m => m[1]));

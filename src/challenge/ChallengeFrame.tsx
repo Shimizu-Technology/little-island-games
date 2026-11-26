@@ -1,3 +1,6 @@
+import { styles as baseStyles, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , ToggleRow } from "../components/ui";
+import { useNunitoLoaded } from "../ui/fonts";
+
 import { GridScroll } from '../puzzles/grid/GridScroll';
 import { PuzzleEnding } from '../puzzles/ui/PuzzleEnding';
 import { adjacentTide } from '../puzzles/flow';
@@ -8,7 +11,6 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { type ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
-import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
 import { LARGE_TEXT, atLarge, wordFitMultiplier } from '../components/wordFit';
 import { GridChromeContext, challengeChrome } from '../puzzles/grid/budget';
 import { Settings } from '../components/Settings';
@@ -26,7 +28,7 @@ const isBand = (c: Choice | undefined): c is PackedBand => !!c && 'kind' in c &&
 /** Each dare chosen at Start stays named, quietly, through the round: no pressure wording and no clock. */
 export function ChosenDare({dare,maxScale=2}:{dare:RegisteredDare;maxScale?:number}) {
   const help=dare.help==='allowed'?'Help welcome':'On my own';
-  return <View testID="chosen-dare" accessible accessibilityRole="text" accessibilityLabel={`Your chosen dare: ${dare.label}. ${help}.`} style={{alignSelf:'flex-start',maxWidth:'100%',paddingHorizontal:12,paddingVertical:5,borderRadius:16,backgroundColor:'#F0F1E8'}}><Copy maxFontSizeMultiplier={maxScale} style={{fontSize:14,lineHeight:20}}>Dare: {dare.label} · {help}</Copy></View>;
+  return <View testID="chosen-dare" accessible accessibilityRole="text" accessibilityLabel={`Your chosen dare: ${dare.label}. ${help}.`} style={{alignSelf:'flex-start',maxWidth:'100%',paddingHorizontal:12,paddingVertical:5,borderRadius:16,backgroundColor:'#FFF0D2'}}><Copy maxFontSizeMultiplier={maxScale} style={{fontSize:14,lineHeight:20}}>Dare: {dare.label} · {help}</Copy></View>;
 }
 /** Challenge IDs that differ from the shelf game a child knows: Coconut Drop's puzzles register as "drop-puzzles". */
 const shelfIdOf: Record<string,string> = {'drop-puzzles':'coconut-drop'};
@@ -215,7 +217,7 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
     {!pinned&&<SaveStatus/>}
     {!pinned&&!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
     {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}
-    {picking ? <>
+    {picking ? <View style={{gap:16,padding:16,borderRadius:24,backgroundColor:'#FFFDF8',borderWidth:1,borderColor:'#E8D8BE'}}>
       {!isBand(selection)&&!choices(selection.path).includes(selection)&&<Copy testID="requested-puzzle">{selection.title} · Tide {selection.tier}</Copy>}
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>every.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(choices(path)[0]);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
       {choices(selection.path).map(p=>isBand(p)?<Button quiet key={`band-${p.bank}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{`${p.title} · Tide ${p.tier} · ${p.count} puzzles`}</Button>:<Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
@@ -229,7 +231,7 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
       {full&&!saved&&<View style={{gap:10}}><Heading style={{fontSize:20}}>Your paused spaces are full</Heading><Copy>Finish a saved puzzle, export a backup, or choose one to replace. Your marks stay kept.</Copy>{progress.paused.filter(s=>!s.credited).map(s=><View key={s.game} style={{gap:6}}><Button quiet onPress={()=>router.replace({pathname:'/challenge',params:{game:s.game}})}>Continue {gameName(s.game)}</Button><Chip selected={replacementGame===s.game} onPress={()=>setReplacementGame(replacementGame===s.game?undefined:s.game)}>Replace {gameName(s.game)}</Chip></View>)}<Button quiet onPress={()=>setSettings(true)}>Export backup in Settings</Button></View>}
       {!fresh&&(!saved || replace)&&(!full||!!saved||!!replacementGame) ? <Button disabled={busy} onPress={()=>void launch()}>Start this puzzle</Button>:null}
       <Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button>
-    </> : round ? <>
+    </View> : round ? <>
       {!pinned&&dareLines}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it.
           After a solve the finished board stays on the page, above the result, and takes no more moves. */}
@@ -251,4 +253,20 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
       {!pinned&&marksLine}
     </>:null}
   </GridScroll><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
+}
+
+const styles = { ...baseStyles, page: [baseStyles.page, { backgroundColor: '#FFF6E5' }], input: [baseStyles.input, { color: '#3D2B24', backgroundColor: '#FFFDF8', borderColor: '#E8D8BE' }] };
+function Heading(props: React.ComponentProps<typeof BaseHeading>) {
+ const loaded = useNunitoLoaded();
+ return <BaseHeading {...props} style={[{ color: '#3D2B24' }, props.style, loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {fontWeight: '800'}]}/>;
+}
+function Copy(props: React.ComponentProps<typeof BaseCopy>) {
+ const loaded = useNunitoLoaded();
+ return <BaseCopy {...props} style={[{ color: '#665247' }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+}
+function Button(props: React.ComponentProps<typeof BaseButton>) {
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderColor: props.selected ? '#3D2B24' : '#E8D8BE'}} textStyle={{...props.textStyle, color: '#3D2B24'}}/>;
+}
+function Chip(props: React.ComponentProps<typeof BaseChip>) {
+ return <Button {...props} quiet compact style={{borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
 }

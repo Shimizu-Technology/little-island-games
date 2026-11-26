@@ -18,6 +18,7 @@ import { migrateProfiles, encodeSave } from '../src/state/profiles';
 import { putProgress } from '../src/state/challengeDrafts';
 import { startSession } from '../src/learn/session';
 import { GridInteraction } from '../src/puzzles/grid/preferences';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const db=vi.hoisted(()=>({raw:null as string|null,block:null as Promise<void>|null,fail:false,boundaryBlock:null as Promise<void>|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{if(db.fail)throw new Error('disk full');if(db.boundaryBlock)await db.boundaryBlock;db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{if(db.block)await db.block;},discardSession:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:320,height:667}),AppState:{addEventListener:()=>({remove(){}})}}));

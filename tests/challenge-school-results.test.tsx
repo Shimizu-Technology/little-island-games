@@ -13,6 +13,7 @@ import { schoolContext } from '../src/challenge/catalog';
 import { completedSignal } from '../src/challenge/offers';
 import { optionsAtLevel } from '../src/learn/levels';
 import { router } from 'expo-router';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const route=vi.hoisted(()=>({focused:true}));
 const db=vi.hoisted(()=>({raw:null as string|null}));const sound=vi.hoisted(()=>vi.fn());
 const saveByteCap=vi.hoisted(()=>({max:null as number|null}));

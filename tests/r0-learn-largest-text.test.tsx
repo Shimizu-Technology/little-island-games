@@ -12,6 +12,7 @@ import { startSession } from '../src/learn/session';
 import { engines } from '../src/learn/engines';
 import { levelTitle, optionsAtLevel, type LearningLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));
@@ -108,7 +109,7 @@ it('AX5 phone landscape: the header scrolls with the page, with the same compact
   expect(level.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
   const mode = r.root.findAll(n => String(n.type) === 'Copy' && textOf(n) === 'On my own');
   expect(mode).toHaveLength(1);expect(mode[0].props.maxFontSizeMultiplier).toBe(1.5);
-  expect(mode[0].parent!.findAll(n => String(n.type) === 'LearnerChip')).toHaveLength(1);
+  expect(mode[0].parent!.parent!.findAll(n => String(n.type) === 'LearnerChip')).toHaveLength(1);
   expect(inside(byType(r, 'Board')[0], scroll)).toBe(true);
 });
 

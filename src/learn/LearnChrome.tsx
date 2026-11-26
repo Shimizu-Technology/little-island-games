@@ -1,19 +1,26 @@
+import { useNunitoLoaded } from "../ui/fonts";
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
-import { C, Copy } from "../components/ui";
+import { C as BaseC, Copy as BaseCopy } from "../components/ui";
 import { growthProgress, growthQuestions } from "./growth/engine";
 import { islandProgress } from "./games/hafa-adai/engine";
 import { dock } from "./games/float-sink/engine";
 import { boardEnd, reefRound } from "./games/reef-race/engine";
 import type { Island, LearnSession } from "./types";
 
+export const warmC = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
+export function WarmCopy(props: React.ComponentProps<typeof BaseCopy>) {
+ const loaded = useNunitoLoaded();
+ return <BaseCopy {...props} style={[{ color: warmC.muted }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+}
+const C = warmC, Copy = WarmCopy;
 export const subjectTheme: Record<Island, { sky: string; land: string; accent: string; ink: string }> = {
-  numbers: { sky: "#FFF1B9", land: "#F3C979", accent: "#B05B20", ink: "#563B22" },
-  reading: { sky: "#DDF4EF", land: "#91D3CC", accent: "#227B80", ink: "#174A51" },
-  science: { sky: "#E9F3CE", land: "#A9D385", accent: "#4F793B", ink: "#31512F" },
-  thinking: { sky: "#F0F3D8", land: "#B8D494", accent: "#57793D", ink: "#365034" },
-  coding: { sky: "#E3E9F7", land: "#9FB4E0", accent: "#3D5A9A", ink: "#2A3B63" },
+  numbers: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
+  reading: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
+  science: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
+  thinking: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
+  coding: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
 };
 
 /** Decorative island scenery keeps the question and touch targets on an opaque card. */

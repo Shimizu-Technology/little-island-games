@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import Home from '../src/app/index';
 import School from '../src/app/school';
 import Everything from '../src/app/everything';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 vi.mock('../src/hub/HubScreen', () => ({ default: () => <span>Living Island</span> }));
 vi.mock('../src/hub/SchoolScreen', () => ({ default: () => <span>Six subjects</span> }));
 vi.mock('../src/hub/EverythingScreen', () => ({ default: () => <span>All places and games</span> }));

@@ -14,6 +14,7 @@ import { optionsAtLevel } from '../src/learn/levels';
 import { addLearner } from '../src/learn/learners';
 import { hopOf } from '../src/learn/games/number-hop/items';
 import { createHop, hopMove, hopProgress, type HopRound } from '../src/learn/games/number-hop/round2';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async () => {} } }));

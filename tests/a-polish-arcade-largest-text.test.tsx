@@ -7,6 +7,7 @@ import { wordWidth } from '../src/components/wordFit';
 import { arcadeGames } from '../src/arcade/registry';
 import { emptyArcadeLearner } from '../src/arcade/progress';
 import { createCrab, crabLevel, crabLevels } from '../src/arcade/games/crab-crossing/engine';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const viewport=vi.hoisted(()=>({width:393,height:852,fontScale:3.12}));
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{}}}));

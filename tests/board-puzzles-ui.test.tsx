@@ -21,6 +21,7 @@ import * as coconutEngine from "../src/board/coconut-drop/engine";
 import * as nets from "../src/board/fishing-nets/engine";
 import { createSession, type BoardSession } from "../src/board";
 import { registration as coconutRegistration } from "../src/challenge/registrations/drop-puzzles";
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const fixture = vi.hoisted(() => ({
   push: vi.fn(),

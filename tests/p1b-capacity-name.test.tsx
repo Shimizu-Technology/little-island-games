@@ -7,6 +7,7 @@ import { challengeEntries } from '../src/challenge/catalog';
 import { emptyChallenge } from '../src/state/challenge';
 import { registration as coconut } from '../src/challenge/registrations/drop-puzzles';
 import { registration as nets } from '../src/challenge/registrations/fishing-nets';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const fixture=vi.hoisted(()=>({store:{epoch:0,save:{} as any}}));
 vi.mock('../src/puzzles/bankAssets',async()=>{const {readFileSync}=await import('node:fs');return {bankTransport:{read:async(name:string)=>readFileSync('src/content/puzzles/assets/'+name+'.lipuzzle','utf8')}};});
 vi.mock('../src/state/Store',()=>({useStore:()=>fixture.store}));

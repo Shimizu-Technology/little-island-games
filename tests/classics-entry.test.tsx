@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import Play from "../src/app/play";
 import { createTic } from "../src/games/tic";
 import { defaultOptions } from "../src/games/types";
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const fixture = vi.hoisted(() => ({ focused: true, game: "tic-tac-toe", push: vi.fn(), update: vi.fn(), sessions: {} as Record<string, unknown> }));
 vi.mock("expo-router", () => ({ Redirect: () => null, useIsFocused: () => fixture.focused, useLocalSearchParams: () => ({ game: fixture.game }), router: { push: fixture.push, canGoBack: () => true, back() {}, replace() {} } }));
 vi.mock("react-native", () => ({ View: "div", ScrollView: "section", TextInput: "input", AppState: { currentState: "active", addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1 }) }));

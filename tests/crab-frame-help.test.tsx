@@ -12,6 +12,7 @@ import { putProgress } from '../src/state/challengeDrafts';
 import { registration, type Action, type Payload } from '../src/challenge/registrations/crab-commands';
 import { crabPuzzles } from '../src/learn/games/crab-commands/challenge-content';
 import { cardCodes, solution } from '../src/learn/games/crab-commands/challenge-engine';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{},discardSession:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:390,height:844}),AppState:{addEventListener:()=>({remove(){}})}}));

@@ -1,8 +1,10 @@
+import { C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton , IconButton, PressableScale } from "../components/ui";
+import { useNunitoLoaded } from "../ui/fonts";
+
 import React, { useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, C, Copy, Heading, IconButton, PressableScale } from '../components/ui';
 import { TextFit, entryRegion } from '../components/Text';
 import { LARGE_TEXT } from '../components/wordFit';
 import { GameIcon } from '../components/GameIcon';
@@ -26,7 +28,7 @@ export default function EverythingScreen() {
  const [shuffle, setShuffle] = useState(0), [settings, setSettings] = useState(false);
  const favorites = store.save.favoriteGames ?? [], resume = homeContinue(store.save);
  const ideas = dailySuggestions(store.save, undefined, shuffle).map(id => shelfGames.find(game => game.id === id)!);
- const rows = (games: ShelfGame[]) => games.map(game => <View key={game.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderBottomWidth: 1, borderBottomColor: C.line, paddingVertical: 8 }}>
+ const rows = (games: ShelfGame[]) => games.map(game => <View key={game.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: C.line, backgroundColor: C.paper, borderRadius: 22, padding: 12, marginTop: 10 }}>
   <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}`} onPress={() => openGame(game.id)} style={{ flex: 1, flexDirection: narrow ? 'column' : 'row', gap: 12, alignItems: narrow ? 'flex-start' : 'center', paddingVertical: 6 }}><GameIcon id={game.id} size={52}/><View style={{ flex: 1, ...(narrow ? { width: '100%' as const } : {}) }}><Heading style={{ fontSize: 18 }}>{game.name}</Heading><Copy style={{ fontSize: 14, lineHeight: 20 }}>{game.description}</Copy></View></PressableScale>
   <IconButton icon={favorites.includes(game.id) ? 'star-filled' : 'star'} selected={favorites.includes(game.id)} label={`${favorites.includes(game.id) ? 'Remove favorite' : 'Favorite'} ${game.name}`} onPress={() => store.toggleGameFavorite(game.id)}/>
  </View>);
@@ -60,4 +62,17 @@ export default function EverythingScreen() {
    <Copy style={{ fontSize: 13, textAlign: 'center' }}>Made with aloha by Shimizu Technology</Copy>
   </ScrollView><Settings visible={settings} onClose={() => setSettings(false)}/>
  </SafeAreaView></TextFit.Provider>;
+}
+
+const C = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
+function Heading(props: React.ComponentProps<typeof BaseHeading>) {
+ const loaded = useNunitoLoaded();
+ return <BaseHeading {...props} style={[{ color: '#3D2B24' }, props.style, loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {fontWeight: '800'}]}/>;
+}
+function Copy(props: React.ComponentProps<typeof BaseCopy>) {
+ const loaded = useNunitoLoaded();
+ return <BaseCopy {...props} style={[{ color: '#665247' }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+}
+function Button(props: React.ComponentProps<typeof BaseButton>) {
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderColor: props.selected ? '#3D2B24' : '#E8D8BE'}} textStyle={{...props.textStyle, color: '#3D2B24'}}/>;
 }

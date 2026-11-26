@@ -14,6 +14,7 @@ import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const companion = vi.hoisted(()=>({event:'entry'}));

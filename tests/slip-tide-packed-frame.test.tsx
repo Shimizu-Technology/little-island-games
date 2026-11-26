@@ -18,6 +18,7 @@ import { ChallengeBoard } from '../src/learn/games/slip-tide/challengeBoard';
 import type { PlayfieldProps } from '../src/learn/games/slip-tide/field';
 import { dirOf, tuplePuzzle } from '../src/learn/games/slip-tide/rules';
 import type { ChallengeEntry, ChallengeViewProps } from '../src/challenge/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 let field: PlayfieldProps | undefined;

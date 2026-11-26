@@ -3,7 +3,7 @@ import { Animated, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { easeOut, nativeDriver, useReducedMotion } from "../components/motion";
 
-const COLORS = ["#E1B251", "#C56D50", "#246858", "#386C9A", "#79AB80", "#E58C8C"];
+const COLORS = ["#E1B251", "#C56D50", "#E1B251", "#F5DFAB", "#FF7A5C", "#E58C8C"];
 
 /**
  * A short burst of stars and a big check that plays once per `burst` change (a counter).
@@ -64,8 +64,8 @@ export function Celebrate({ burst, big = false, onDone }: { burst: number; big?:
         }}
       >
         <Svg width={big ? 56 : 40} height={big ? 56 : 40} viewBox="0 0 64 64">
-          <Circle cx={32} cy={32} r={29} fill="#246858" />
-          <Path d="M19 33l9 9 18-20" stroke="#FFFFFF" strokeWidth={6} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <Circle cx={32} cy={32} r={29} fill="#E1B251" />
+          <Path d="M19 33l9 9 18-20" stroke="#3D2B24" strokeWidth={6} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </Svg>
       </Animated.View>
     </View>

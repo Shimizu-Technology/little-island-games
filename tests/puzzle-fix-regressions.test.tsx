@@ -20,6 +20,7 @@ import { mazeRoute, mazeMove, mazeDone, directions, type MazeState } from '../sr
 import { choiceAnswerEngine, answerMissed, type ChoiceAction, type ChoiceState, type AnswerRules } from '../src/puzzles/wholeAnswer';
 import { WholeAnswerControls } from '../src/puzzles/ui/WholeAnswerControls';
 import { jsonBytes } from '../src/state/saveBits';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { db.raw = raw; }, preserve: async () => {}, writeDraft: async () => {}, discardSession: async () => {} } }));
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 320, height: 667 }), AppState: { addEventListener: () => ({ remove() {} }) } }));

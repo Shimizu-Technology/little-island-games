@@ -11,6 +11,7 @@ import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId, LearnMode } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const insets = vi.hoisted(() => ({ top: 59, bottom: 34, left: 0, right: 0 }));

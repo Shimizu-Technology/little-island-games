@@ -4,6 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { emptySave } from '../src/state/validation';
 import { createSession } from '../src/board';
 import Challenge from '../src/app/challenge';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const fixture = vi.hoisted(() => ({ save: {} as import('../src/state/validation').Save, params: {} as {game?: string; puzzle?: string|string[]} }));
 vi.mock('expo-router', () => ({ useLocalSearchParams: () => fixture.params, Redirect: 'redirect' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
