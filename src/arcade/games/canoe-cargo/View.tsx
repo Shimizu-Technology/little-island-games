@@ -2,7 +2,7 @@ import { Companion } from "../../../islander/Companion";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { Easing, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { Easing, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
 import { Text } from "../../../components/Text";
 import { useReducedMotion } from "../../../components/motion";
 import { PressControl, uiThreadDrag } from "../../Input";
@@ -15,8 +15,14 @@ import { COLS, ROWS, cargoRowPreview, cargoGoalValue, cargoResult, cargoStep, ca
 import { cargoPoses } from "./poses";
 import { CargoTouch } from "./Touch";
 const idle: CargoInput = { type: "idle" }, ink = "#FFF5D7";
-const SettledCargo = memo(function SettledCargo({ board, cell, learning }: { board: CargoState["board"]; cell: number; learning: boolean }) {
-  return <View pointerEvents="none" style={StyleSheet.absoluteFill}>{board.map((tile, i) => tile && <View key={i} style={{ position: "absolute", left: i % COLS * cell, top: Math.floor(i / COLS) * cell }}><CargoTile kind={tile.kind} value={learning ? tile.value : 0} stuck={tile.stuck} size={cell}/></View>)}</View>;
+export const SettledCargo = memo(function SettledCargo({ board, cell, learning, event, reduced }: { board: CargoState["board"]; cell: number; learning: boolean; event: number; reduced: boolean }) {
+  const settle = useSharedValue(0);
+  useEffect(() => {
+    settle.set(0);
+    if (event && !reduced) settle.set(withSequence(withTiming(1.5, { duration: 55 }), withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) })));
+  }, [event, reduced, settle]);
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: reduced ? 0 : ROWS * cell * settle.value * .003 }, { scaleY: reduced ? 1 : 1 - settle.value * .006 }] }));
+  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, style]}>{board.map((tile, i) => tile && <View key={i} style={{ position: "absolute", left: i % COLS * cell, top: Math.floor(i / COLS) * cell }}><CargoTile kind={tile.kind} value={learning ? tile.value : 0} stuck={tile.stuck} size={cell}/></View>)}</Animated.View>;
 });
 const Bundle = memo(function Bundle({ piece, cell, learning }: { piece: CargoPiece; cell: number; learning: boolean }) {
   const cells = pieceCells(piece);
@@ -52,7 +58,7 @@ function SoftDrop({ active, onChange, onTap }: { active: boolean; onChange: (hel
 export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, debug = false, width, height }: { width: number; height: number; initial: CargoState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void; debug?: boolean }) {
   const reduced = useReducedMotion(), wide = width > height, compact = height < 500, learning = initial.level !== "endless" && !!initial.level.targetSum;
   // The parent measures below its header and safe areas. Reserve all controls before sizing the grid.
-  const cell = Math.max(1, Math.min(43, (width - (wide ? 226 : 30)) / COLS, (height - (wide ? compact ? 142 : 110 : 262) - (learning ? 80 : 0) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
+  const cell = Math.max(1, Math.min(43, (width - (wide ? (compact ? 262 : 226) : 30)) / COLS, (height - (wide ? compact ? 142 : 110 : 262) - (learning ? 80 : 0) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
   const boardW = cell * COLS, boardH = cell * ROWS;
   const poses = useSharedValue<SpritePose[]>([]), reported = useRef(false), helped = useRef(helper);
   const build = useCallback((s: CargoState) => {
@@ -117,25 +123,25 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   </View>;
   const preview = <View style={{ flexDirection: wide && !compact ? "column" : "row", alignItems: "center", justifyContent: "center", gap: compact ? 8 : 12 }}>
     <PressControl testID="cargo-hold" disabled={!active || s.holdUsed} accessibilityLabel={`Hold cargo${s.holdUsed ? ", used until this piece lands" : ", swap once per piece"}`} onPress={() => act({ type: "hold" })} style={[ui.pill, { minWidth: compact ? 76 : 84, minHeight: compact ? 60 : 70, paddingVertical: compact ? 4 : 7, alignItems: "center", justifyContent: "center", gap: 4, opacity: s.holdUsed ? .55 : 1 }]}><Text style={ui.label}>HOLD{s.holdUsed ? " ✓" : ""}</Text>{s.held ? <Bundle piece={s.held} cell={14} learning={learning}/> : <Text style={{ color: ink, fontSize: 12 }}>Tap to store</Text>}</PressControl>
-    <View style={{ alignItems: "center", gap: 7 }}><Text style={ui.label}>NEXT</Text><View style={{ flexDirection: "row", gap: 10 }}>{s.next.map((p, i) => <Bundle key={i} piece={p} cell={compact ? 12 : 18} learning={learning}/>)}</View></View>
+    <View style={{ alignItems: "center", gap: 7, backgroundColor: "#225F68", borderRadius: 14, padding: compact ? 4 : 6, borderWidth: 1, borderColor: "#F7CD83" }}><Text style={ui.label}>NEXT</Text><View style={{ flexDirection: "row", gap: compact ? 6 : 10 }}>{s.next.map((p, i) => <Bundle key={i} piece={p} cell={compact ? 12 : 18} learning={learning}/>)}</View></View>
   </View>;
-  return <View testID="cargo-scene" style={{ flex: 1, width: "100%", justifyContent: "center", backgroundColor: "#2B6677", borderRadius: 24, overflow: "hidden", padding: 9, gap: 8 }}>
+  return <View testID="cargo-scene" style={{ flex: 1, width: "100%", justifyContent: "center", backgroundColor: "#2B6677", borderRadius: 24, overflow: "hidden", padding: wide && compact ? 4 : 9, gap: wide && compact ? 2 : 8 }}>
     <View pointerEvents="none" style={StyleSheet.absoluteFill}><CargoScene world={s.level === "endless" ? "w3" : s.level.world}/></View>
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 5 }}>
-      {(!wide || compact) && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 4, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={compact ? 48 : 64} active={active}/><CargoCaptain size={compact ? 32 : 40} outfit={outfit} happy={!!s.lastRows.length}/></View>}<View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} {s.level === "endless" || s.level.goal === "score" ? "points" : s.level.goal === "crates" ? "crates" : "canoes"}</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
+      {(!wide || compact) && !learning && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 4, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={wide && compact ? 32 : compact ? 48 : 64} active={active}/><CargoCaptain size={compact ? 32 : 40} outfit={outfit} happy={!!s.lastRows.length}/></View>}<View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} {s.level === "endless" || s.level.goal === "score" ? "points" : s.level.goal === "crates" ? "crates" : "canoes"}</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
     <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: wide ? 14 : 0 }}>
-      <View style={{ alignItems: "center", gap: 7 }}>{!wide && preview}<View testID="cargo-board" style={{ width: boardW + 10, height: boardH + 10, borderWidth: 5, borderColor: "#A8794B", borderRadius: 8, backgroundColor: "#193E4C", overflow: "hidden" }}><CargoTouch active={active && s.status === "playing"} cell={cell} width={boardW} height={boardH} onGrab={onGrab} onTouchDown={onTouchDown} onColumns={onColumns} onSoft={touchSoft} onDrop={touchDrop} onTap={touchTap}>
+      <View style={{ alignItems: "center", gap: 7 }}>{!wide && preview}<View testID="cargo-board" style={{ width: boardW + 10, height: boardH + 10, borderWidth: 5, borderColor: "#DFA751", borderRadius: 12, backgroundColor: "#205B65", overflow: "hidden" }}><CargoTouch active={active && s.status === "playing"} cell={cell} width={boardW} height={boardH} onGrab={onGrab} onTouchDown={onTouchDown} onColumns={onColumns} onSoft={touchSoft} onDrop={touchDrop} onTap={touchTap}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>{Array.from({ length: COLS * ROWS }, (_, i) => <View key={i} style={{ position: "absolute", left: i % COLS * cell, top: Math.floor(i / COLS) * cell, width: cell, height: cell, borderRightWidth: .5, borderBottomWidth: .5, borderColor: "#31546080" }}/>)}</View>
-        <SettledCargo board={s.board} cell={cell} learning={learning}/><MovingCargo poses={poses} piece={s.piece} value={learning ? s.piece.value : 0} cell={cell}/>
+        <SettledCargo board={s.board} cell={cell} learning={learning} event={s.event} reduced={reduced}/><MovingCargo poses={poses} piece={s.piece} value={learning ? s.piece.value : 0} cell={cell}/>
         {!!s.event && <LockEffects key={s.event} s={s} cell={cell} reduced={reduced}/>}
       </CargoTouch></View></View>
-      {wide && <View style={{ width: 200, alignItems: "center", gap: compact ? 8 : 20 }}>{!compact && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 5, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={100} active={active}/><CargoCaptain size={64} outfit={outfit} happy={!!s.lastRows.length}/></View>}{preview}{controls}</View>}
+      {wide && <View style={{ width: compact ? 236 : 200, alignItems: "center", gap: compact ? 8 : 20 }}>{!compact && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 5, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={100} active={active}/><CargoCaptain size={64} outfit={outfit} happy={!!s.lastRows.length}/></View>}{preview}{controls}</View>}
     </View>
-    {learning && <View accessibilityLiveRegion="polite" style={{ gap: 2 }}>{cargoRowPreview(s).map(p => <Text key={p.row} style={{ color: ink, textAlign: "center", fontSize: 13 }}>Row {p.row + 1}: {p.values.join(" + ")} = {p.sum}{p.missing ? ` · ${p.missing} spaces left` : ` · ${p.canoes} canoes`}</Text>)}</View>}
+    {learning && <View accessibilityLiveRegion="polite" style={{ gap: 2 }}>{cargoRowPreview(s).map(p => <Text key={p.row} style={{ color: ink, textAlign: "center", fontSize: 13, lineHeight: wide && compact ? 16 : undefined }}>Row {p.row + 1}: {p.values.join(" + ")} = {p.sum}{p.missing ? ` · ${p.missing} spaces left` : ` · ${p.canoes} canoes`}</Text>)}</View>}
     {!wide && controls}
     <Text style={{ color: ink, textAlign: "center", fontSize: 12 }}>{learning ? "Full row = 1 canoe. Exact target sum = 1 bonus canoe (2 total)." : "Tap to turn · drag to slide · pull & hold ↓ · flick to land"}</Text>
     {s.level === "endless" && <Pressable accessibilityRole="button" onPress={() => act({ type: "finish" })} style={{ minHeight: 44, justifyContent: "center", alignItems: "center" }}><CargoCanoe size={24}/><Text style={ui.label}>Dock my canoe · finish</Text></Pressable>}
     {debug && <Text testID="cargo-budget" style={{ color: ink, fontSize: 10, textAlign: "center" }}>{budget.fps.toFixed(1)} fps · p95 {budget.p95.toFixed(1)} ms · max {budget.max.toFixed(1)} ms · clamp {budget.dropped.toFixed(3)} s · {budget.ticks} ticks</Text>}
   </View>;
 }
-const ui = StyleSheet.create({ control: { minWidth: 48, minHeight: 48, paddingHorizontal: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#F5D894", borderRadius: 16, borderWidth: 2, borderBottomWidth: 4, borderColor: "#755535" }, symbol: { color: "#293F49", fontWeight: "900", fontSize: 24 }, pill: { backgroundColor: "#173E50", borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, borderWidth: 1, borderColor: "#7FB0B4" }, stat: { fontSize: 16, fontWeight: "900", color: ink }, label: { color: ink, fontSize: 12, fontWeight: "800" } });
+const ui = StyleSheet.create({ control: { minWidth: 48, minHeight: 48, paddingHorizontal: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#F5D894", borderRadius: 16, borderWidth: 2, borderBottomWidth: 4, borderColor: "#3D2B24" }, symbol: { color: "#3D2B24", fontWeight: "900", fontSize: 24 }, pill: { backgroundColor: "#225F68", borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, borderWidth: 1, borderColor: "#F7CD83" }, stat: { fontSize: 16, fontWeight: "900", color: ink }, label: { color: ink, fontSize: 12, fontWeight: "800" } });
