@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import type { ChallengeCard, PackedBand, RegisteredDare, TypedRegistration } from '../../challenge/types';
 import type { PackedOpen } from '../../cove/catalog';
 import { validChallengeSession, type ChallengeProgress, type ChallengeSession, type Dare, type PuzzleRef, type SaveCatalog, type SessionCodec, type Terminal } from '../../state/challenge';
@@ -19,6 +19,8 @@ export type Payload = PictureSave;
 export type Action = PictureEvent;
 export type State = { picture: PictureGrid; draft: PictureDraft; band: PictureBand };
 export const pictureGridCodec = 'picture-grid-1';
+// The native view stays out of the Node registry/catalog tools until rendered.
+const LazyPlayScreen = lazy(() => import('./PlayScreen').then(m => ({ default: m.PlayScreen })));
 
 export function pictureGridBankFacts(manifest: FamilyManifest): PictureBank[] {
   if (manifest.family !== PICTURE_GRID || manifest.engine !== PICTURE_GRID) throw new Error('Expected a Picture Grid manifest.');
@@ -172,11 +174,8 @@ export function definePictureGrid(
     render: (session, dispatch, active, width, host) => {
       const state = view(session);
       if (!state) return null;
-      // The native view stays out of the Node registry/catalog tools.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PlayScreen } = require('./PlayScreen') as typeof import('./PlayScreen');
-      return <PlayScreen key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
-        {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} />;
+      return <Suspense fallback={null}><LazyPlayScreen key={`${session.owner}:${session.id}:${session.ordinal}:${session.puzzle.hash}`}
+        {...state} dispatch={dispatch} active={active} width={width} onNext={host?.onFresh} /></Suspense>;
     },
   };
 }

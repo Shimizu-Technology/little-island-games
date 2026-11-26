@@ -1,0 +1,116 @@
+{
+ "format": 1,
+ "family": "picture-grid",
+ "slot": 113,
+ "catalogRevision": 33,
+ "band": "expert",
+ "ordinals": [
+  115712,
+  11
+ ],
+ "sourceSha": "4a972e4d67383421d2f768c32c4375233d8f971b",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "0d0e6cee43944eed96956d81d901930b7c9f8101e89cf01a0cf0ca786e226c47"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 78,
+  "kept": [
+   50331649,
+   50331650,
+   50331651,
+   50331652,
+   50331653,
+   50331654,
+   50331655,
+   50331656,
+   50331657,
+   50331658,
+   50331659
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 11,
+  "semantic": 11
+ },
+ "histograms": {
+  "technique": {
+   "line-logic": 11
+  },
+  "template": {
+   "angelfish": 1,
+   "forest-canopy": 1,
+   "frigatebird": 1,
+   "hermit-in-a-shell": 1,
+   "kite-festival": 1,
+   "night-owl": 1,
+   "orchid": 1,
+   "rocket-trail": 1,
+   "sailing-canoe": 1,
+   "spiral-shell": 1,
+   "wave-break": 1
+  },
+  "layout": {
+   "angelfish": 1,
+   "forest-canopy": 1,
+   "frigatebird": 1,
+   "hermit-in-a-shell": 1,
+   "kite-festival": 1,
+   "night-owl": 1,
+   "orchid": 1,
+   "rocket-trail": 1,
+   "sailing-canoe": 1,
+   "spiral-shell": 1,
+   "wave-break": 1
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   69,
+   156
+  ],
+  "exact": 11
+ },
+ "proofHashes": {
+  "witness": "fd0e46ca688179b32ec1a5642f687694acdb6c64b64adec7f48de676625f8848",
+  "trace": "bc51ed7efec86b6bf8680f2d30b7f0feb5d5f0d68e8a450ea8ee1fc6fbb86b9b",
+  "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original pixel drawings. Exact line deductions and independently enumerated line placements certify each puzzle."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 3166,
+  "gzip": 1029
+ },
+ "sha256": "24dcad7f7616a108cfa1e4ced58f66ade772d00db1bc99c14a44e226e8d7aacc",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

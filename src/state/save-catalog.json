@@ -912,6 +912,50 @@
       "cove": true
     },
     {
+      "slot": 110,
+      "count": 30,
+      "first": 112640,
+      "rules": 1,
+      "packHash": "322a387da3ae17d2e5f720d8b3dac7bf9ddcb238e40e3432ce634a4537cb377a",
+      "engine": "picture-grid",
+      "family": "picture-grid",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 111,
+      "count": 28,
+      "first": 113664,
+      "rules": 1,
+      "packHash": "97a39726b029bff6190204927d12c521aa8a983c5b780b78fb60a2e8aabf0094",
+      "engine": "picture-grid",
+      "family": "picture-grid",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 112,
+      "count": 9,
+      "first": 114688,
+      "rules": 1,
+      "packHash": "de00a491b0d35c6325ffe69276a5b6ad14ce32b03e74bdaf41e4242cf4641f98",
+      "engine": "picture-grid",
+      "family": "picture-grid",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 113,
+      "count": 11,
+      "first": 115712,
+      "rules": 1,
+      "packHash": "24dcad7f7616a108cfa1e4ced58f66ade772d00db1bc99c14a44e226e8d7aacc",
+      "engine": "picture-grid",
+      "family": "picture-grid",
+      "awards": 0,
+      "cove": true
+    },
+    {
       "slot": 200,
       "engine": "beep-bot",
       "rules": 1,
@@ -16529,6 +16573,10 @@
     "s31-2",
     "s31-3",
     "s31-4",
-    "s31-5"
+    "s31-5",
+    "picture-grid-1",
+    "picture-grid-2",
+    "picture-grid-3",
+    "picture-grid-4"
   ]
 }
