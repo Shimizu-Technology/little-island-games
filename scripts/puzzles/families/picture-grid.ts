@@ -14,7 +14,8 @@ export function unpackDrawing([name, palette, artwork]: Drawing) {
 }
 
 /** Add to the family index, then use the normal bake with seed 1 and the lead's reserved bank range.
- * Seeds select drawings in source order. Keep published entries append-only.
+ * Seeds select drawings in source order. The initial bands are ordered by
+ * deduction rounds, then board area, then layout ID. Keep published entries append-only.
  */
 export const pictureGridFamily: FamilySpec<PictureGrid> = {
   id: PICTURE_GRID,

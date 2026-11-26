@@ -15,9 +15,11 @@ export function pictureHint(clues: PictureClues, marks: readonly Mark[]): Pictur
   const line = axis === 'row' ? clues.rows[index] : clues.columns[index];
   const [cell, mark] = step.marks[0];
   const place = `${axis} ${index + 1}`;
-  const hint = mark === FILL ? 'Fill this square.' : 'Cross out this square.';
-  let reason = `Every fit for ${place} ${mark === FILL ? 'fills' : 'leaves'} this square${mark === FILL ? '.' : ' blank.'}`;
-  if (!line.length) reason = `${place[0].toUpperCase()}${place.slice(1)} is empty. ${hint}`;
-  else if (singlePlacement) reason = `Look at ${place}. ${line.length === 1 ? `The ${line[0]} fits` : 'The groups fit'} in one place. ${hint}`;
-  return { kind: 'deduction', axis, index, cell, mark, message: reason };
+  const row = Math.floor(cell / clues.size) + 1;
+  const column = cell % clues.size + 1;
+  const action = `Row ${row}, column ${column} must be ${mark === FILL ? 'filled' : 'crossed out'}.`;
+  let reason = `Every fit for ${place} ${mark === FILL ? 'fills this square' : 'leaves this square blank'}.`;
+  if (!line.length) reason = `${place[0].toUpperCase()}${place.slice(1)} is empty.`;
+  else if (singlePlacement) reason = `Look at ${place}. ${line.length === 1 ? `The ${line[0]} fits` : 'The groups fit'} in one place.`;
+  return { kind: 'deduction', axis, index, cell, mark, message: `${action} ${reason}` };
 }

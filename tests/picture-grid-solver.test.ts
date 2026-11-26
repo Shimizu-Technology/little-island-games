@@ -34,6 +34,18 @@ describe('Picture Grid certification', () => {
     expect(ctx.seenSemantic.size).toBe(counts.reduce((sum, count) => sum + count, 0));
   });
 
+  it('generates each band in ascending deduction rounds, board area and layout ID', () => {
+    pictureGridFamily.bands.forEach((band, bandIndex) => {
+      const difficulty = Array.from({ length: band.target }, (_, index) => {
+        const seed = pictureGridArtSeed + bandIndex * 0x1000000 + index;
+        const { payload, layout } = pictureGridFamily.generate(seed, band)!;
+        return { rounds: provePicture(payload).rounds, area: payload.size ** 2, layout };
+      });
+      expect(difficulty, band.id).toEqual([...difficulty].sort((a, b) =>
+        a.rounds - b.rounds || a.area - b.area || a.layout.localeCompare(b.layout, 'en')));
+    });
+  });
+
   it('matches brute force for each pattern of public marks on a five-cell line', () => {
     const size = 5;
     const partitions = new Map<string, Mark[][]>();
@@ -69,6 +81,18 @@ function twinDrawings() {
 }
 
 describe('Public hints and family play', () => {
+  it('names the exact cell and action for fill and cross-out deductions', () => {
+    const marks = emptyMarks(5);
+    const solution = emptyMarks(5);
+    solution.fill(FILL, 0, 5);
+    const clues = cluesOf(5, solution);
+    marks[0] = FILL;
+    expect(pictureHint(clues, marks)?.message).toMatch(/^Row 1, column 2 must be filled\./);
+    marks.fill(FILL, 0, 5);
+    marks[5] = CROSS;
+    expect(pictureHint(clues, marks)?.message).toMatch(/^Row 2, column 2 must be crossed out\./);
+  });
+
   it('gives identical cues under twin answers, including when one player mark rules out a twin', () => {
     const [a, b] = twinDrawings();
     const first = { ...cluesOf(5, a), solution: a }, second = { ...cluesOf(5, b), solution: b };

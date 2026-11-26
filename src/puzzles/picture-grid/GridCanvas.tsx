@@ -23,7 +23,7 @@ export function gridLayout(size: number, width: number, height: number, clues?: 
   return { cell, left, top, viewportWidth, viewportHeight, grid, movable: grid > viewportWidth || grid > viewportHeight };
 }
 
-type Drag = TouchStart & { x: number; y: number; seed: number; mark: Mark; axis: LineAxis | null; first: number; last: number };
+type Drag = TouchStart & { x: number; y: number; seed: number; mark: Mark; axis: LineAxis | null };
 type Preview = { from: number; to: number; mark: Mark };
 type Props = {
   layout: Layout; size: number; marks: readonly Mark[]; clues?: PictureClues;
@@ -37,9 +37,7 @@ function stretch(drag: Drag, size: number, cell: number, dx: number, dy: number)
   const start = axis === 'row' ? drag.seed % size : Math.floor(drag.seed / size);
   const end = drag.axis ? Math.max(0, Math.min(size - 1, Math.floor((axis === 'row' ? drag.x + dx : drag.y + dy) / cell))) : start;
   const at = drag.seed + (end - start) * stride;
-  drag.first = Math.min(drag.first, at);
-  drag.last = Math.max(drag.last, at);
-  return { from: drag.first, to: drag.last, mark: drag.mark };
+  return { from: Math.min(drag.seed, at), to: Math.max(drag.seed, at), mark: drag.mark };
 }
 
 function includesCell(stroke: Preview, index: number, size: number) {
@@ -73,7 +71,7 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
       const seed = Math.floor(y / cell) * size + Math.floor(x / cell);
       const { marks, mode, hold } = live.current;
       const mark = marks[seed] === mode ? EMPTY : mode;
-      drag.current = { ...startOf(event), x, y, seed, mark, axis: null, first: seed, last: seed };
+      drag.current = { ...startOf(event), x, y, seed, mark, axis: null };
       setPreview({ from: seed, to: seed, mark });
       hold(true);
     },

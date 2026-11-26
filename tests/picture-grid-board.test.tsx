@@ -32,7 +32,7 @@ function tap(id: string) { act(() => byID(id).props.onPress()); }
 function press(label: string) { act(() => byLabel(label).props.onPress()); }
 function cellLabel(index: number) { return byID(`picture-cell-${index}`).props.accessibilityLabel; }
 
-const star = unpackDrawing(artByBand.easy[1]);
+const star = unpackDrawing(artByBand.easy.find(([name]) => name === 'Star')!);
 function Game({ picture = star.picture, initial = freshPicture(picture.size), width = window.width }: {
   picture?: typeof star.picture; initial?: ReturnType<typeof freshPicture>; width?: number;
 }) {
@@ -78,6 +78,26 @@ describe('Picture Grid board', () => {
     expect(byID('picture-undo').props.disabled).toBe(true);
   });
 
+  it('retracts the preview and commits only the span from the anchor to the release point', () => {
+    render(<Game />);
+    const cellStyle = (index: number) =>
+      byID(`picture-cell-${index}`).props.style.find((style: { width?: number }) => style.width !== undefined);
+    const { width, backgroundColor } = cellStyle(0);
+    const handlers = byID('picture-gesture-layer').props;
+    act(() => handlers.onPanResponderGrant({ nativeEvent: { locationX: 8, locationY: 8, pageX: 20, pageY: 30 } }));
+    act(() => handlers.onPanResponderMove({}, { dx: 4 * width, dy: 0, numberActiveTouches: 1 }));
+    expect(cellStyle(4).backgroundColor).not.toBe(backgroundColor);
+    act(() => handlers.onPanResponderMove({}, { dx: 2 * width, dy: 3 * width, numberActiveTouches: 1 }));
+    expect(cellStyle(4).backgroundColor).toBe(backgroundColor);
+    expect(cellStyle(2).backgroundColor).not.toBe(backgroundColor);
+    act(() => handlers.onPanResponderRelease(
+      { nativeEvent: { changedTouches: [{ pageX: 20 + width, pageY: 30 + 3 * width }] } },
+      { dx: 2 * width, dy: 3 * width },
+    ));
+    [0, 1].forEach(cell => expect(cellLabel(cell)).toContain('filled'));
+    [2, 3, 4, 15, 16].forEach(cell => expect(cellLabel(cell)).toContain('empty'));
+  });
+
   it('drops interrupted gestures, supports accessible cell actions, and dismisses More with a downward swipe', () => {
     render(<Game />);
     const gesture = byID('picture-gesture-layer').props;
@@ -100,7 +120,7 @@ describe('Picture Grid board', () => {
     const initial = decodePicture(encodePicture(freshPicture(5)))!;
     render(<Game initial={initial} />);
     tap('picture-hint');
-    expect(JSON.stringify(mounted!.toJSON())).toContain('Every fit for row 2 fills this square.');
+    expect(JSON.stringify(mounted!.toJSON())).toContain('Row 2, column 3 must be filled. Every fit for row 2 fills this square.');
     expect(byID('picture-cell-7').props.style).toContainEqual(expect.objectContaining({ borderWidth: 3 }));
     expect(cellLabel(7)).toContain('empty');
     tap('picture-cell-7');
