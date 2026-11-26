@@ -20,6 +20,11 @@ export function spritePoint(p: SpritePose, w: number, h: number, x: number, y: n
 }
 /** The runner's drawn contact: its 80×132 frame's planted-shoe line (y 130), after HERO_SCALE. */
 export function heroContactY(p: SpritePose) { "worklet"; return spritePoint(p, RUNNER_WIDTH, RUNNER_HEIGHT, RUNNER_WIDTH / 2, RUNNER_SOLE).y; }
+function powerEnvelope(remaining: number, duration: number) {
+  "worklet";
+  return Math.max(0, Math.min(1, (duration - remaining) / .16, remaining / .26));
+}
+
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
@@ -114,9 +119,4 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   // Inactive slots retain one canonical object and never send hidden native transforms.
   for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;
   return rankPainterPoses(p);
-}
-
-function powerEnvelope(remaining: number, duration: number) {
-  "worklet";
-  return Math.max(0, Math.min(1, (duration - remaining) / .16, remaining / .26));
 }
