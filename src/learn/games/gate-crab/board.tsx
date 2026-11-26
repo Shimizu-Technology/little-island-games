@@ -73,6 +73,39 @@ export type GateCrabBoardProps = {
   readonly footer?: React.ReactNode;
 };
 
+/** Picks a balanced spread across every rule family in the level so all families are reachable in the Maker picker. */
+export function selectMakerPickerOptions(options: readonly RuleDef[], selectedRuleId?: string, limit = 18): RuleDef[] {
+  if (options.length <= limit) return [...options];
+  const byFamily = new Map<string, RuleDef[]>();
+  for (const rule of options) {
+    const bucket = byFamily.get(rule.family);
+    if (bucket) bucket.push(rule);
+    else byFamily.set(rule.family, [rule]);
+  }
+  const buckets = [...byFamily.values()];
+  const picked: RuleDef[] = [];
+  const seen = new Set<string>();
+  for (let round = 0; picked.length < limit; round++) {
+    let added = false;
+    for (const bucket of buckets) {
+      if (round < bucket.length && picked.length < limit) {
+        picked.push(bucket[round]);
+        seen.add(bucket[round].id);
+        added = true;
+      }
+    }
+    if (!added) break;
+  }
+  if (selectedRuleId && !seen.has(selectedRuleId)) {
+    const cur = options.find(r => r.id === selectedRuleId);
+    if (cur) {
+      const sameFamilyIdx = picked.findIndex(r => r.family === cur.family);
+      picked[sameFamilyIdx >= 0 ? sameFamilyIdx : picked.length - 1] = cur;
+    }
+  }
+  return picked;
+}
+
 function ShellStrip({ len, rowIdx, size }: { len: 2 | 3; rowIdx: number; size: number }) {
   const codes = rowCodes(len, rowIdx);
   return (
@@ -196,7 +229,7 @@ export function GateCrabBoard(props: GateCrabBoardProps) {
         )}
 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {together.options.slice(0, 18).map(rule => {
+          {selectMakerPickerOptions(together.options, puzzle.ruleId).map(rule => {
             const selected = rule.id === puzzle.ruleId;
             return (
               <PressableScale

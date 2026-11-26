@@ -247,6 +247,7 @@ export function checkQuiz(s: GateCrabState): { state: GateCrabState; correct: bo
       revealed,
       quizRows: nextQuizRows,
       quizChoices: [null, null, null, null, null],
+      undo: [],
       counterexample: {
         row: missedRow,
         actualPass,
@@ -386,6 +387,8 @@ export function validGateCrab(v: unknown, level?: number): v is GateCrabState {
   if (s.maker !== 0 && s.maker !== 1) return false;
   if (!validStages.has(s.stage)) return false;
   if (!s.together && s.stage !== 'play') return false;
+  if (s.stage === 'revealed' && !s.won) return false;
+  if (s.won && s.together && s.stage !== 'revealed') return false;
   if (!Array.isArray(s.puzzles) || s.puzzles.length !== ROUND || !nat(s.index, ROUND)) return false;
   if (!nat(s.checks) || !nat(s.misses) || s.misses > s.checks) return false;
   if (s.phase !== 'test' && s.phase !== 'quiz') return false;

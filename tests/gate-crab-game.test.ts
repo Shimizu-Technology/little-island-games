@@ -94,6 +94,9 @@ describe('Gate Crab School rounds & counterexamples', () => {
     // Revealed quiz row was replaced with a fresh unseen backup row.
     expect(res.state.quizRows[0]).not.toBe(originalRow0);
     expect(res.state.quizChoices.every(c => c === null)).toBe(true);
+    // Undo stack is cleared on miss so Undo cannot re-attach stale answers to the swapped row.
+    expect(res.state.undo).toEqual([]);
+    expect(undoStep(res.state)).toBe(res.state);
     expect(validGateCrab(res.state, 3)).toBe(true);
   });
 
@@ -124,6 +127,18 @@ describe('Gate Crab School rounds & counterexamples', () => {
     expect(() => validGateCrab(badTuple.state)).not.toThrow();
     expect(validGateCrab(badTuple.state)).toBe(false);
     expect(((badTuple.state as GateCrabState).puzzles[0] as unknown[])[0]).toBe('3');
+
+    // Together stage/won invariants: stage === 'revealed' requires won, and won && together requires stage === 'revealed'.
+    const togetherBase = startRound(2, rng, true, 0);
+    const forgedRevealedUnwon: GateCrabState = { ...togetherBase, stage: 'revealed', won: false };
+    expect(validGateCrab(forgedRevealedUnwon, 2)).toBe(false);
+
+    const solvedTogether = solveGate(startGuessing(lockSecretRule(openRulePicker(togetherBase))));
+    expect(solvedTogether.won).toBe(true);
+    expect(solvedTogether.stage).toBe('revealed');
+    expect(validGateCrab(solvedTogether, 2)).toBe(true);
+    const forgedWonWrongStage: GateCrabState = { ...solvedTogether, stage: 'play' };
+    expect(validGateCrab(forgedWonWrongStage, 2)).toBe(false);
   });
 });
 

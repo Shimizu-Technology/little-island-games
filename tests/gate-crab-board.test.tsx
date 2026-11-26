@@ -2,8 +2,8 @@ import React from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  checkQuiz, lockSecretRule, openRulePicker, pickSecretRule, puzzleAt, setPhase, setQuizChoice,
-  startGuessing, startRound, type GateCrabState,
+  checkQuiz, lockSecretRule, makerRuleOptions, openRulePicker, pickSecretRule, puzzleAt, setPhase,
+  setQuizChoice, startGuessing, startRound, type GateCrabState,
 } from '../src/learn/games/gate-crab/engine';
 import { evaluateRow, RULE_BY_ID } from '../src/learn/games/gate-crab/rules';
 import { builderShellSize, evidenceSideBySide, pickerColumns } from '../src/learn/games/gate-crab/layout';
@@ -47,6 +47,7 @@ vi.mock('../src/learn/games/gate-crab/art', () => ({
   ink: '#20474A',
 }));
 
+const { selectMakerPickerOptions } = await import('../src/learn/games/gate-crab/board');
 const { SchoolBoard } = await import('../src/learn/games/gate-crab/schoolBoard');
 const { ChallengeBoard } = await import('../src/learn/games/gate-crab/challengeBoard');
 const gateChallenge = await import('../src/learn/games/gate-crab/challenge');
@@ -193,5 +194,46 @@ describe('Gate Crab UI boards, Together privacy, row reading, and AX5 layouts', 
     });
     expect(evidenceSideBySide(760, true)).toBe(true);
     expect(builderShellSize(760, 3, 1133)).toBeGreaterThanOrEqual(60);
+  });
+
+  it('represents every rule family across Levels 3-5 (including unless in Level 5) in the Together Maker picker', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    for (const level of [3, 4, 5]) {
+      const all = makerRuleOptions(level);
+      const expectedFamilies = new Set(all.map(r => r.family));
+      const spread = selectMakerPickerOptions(all);
+      expect(spread.length).toBeLessThanOrEqual(18);
+      expect(new Set(spread.map(r => r.family))).toEqual(expectedFamilies);
+    }
+
+    // Verify Level 5 picker renders all 6 families including both "unless" families.
+    const l5All = makerRuleOptions(5);
+    const l5Spread = selectMakerPickerOptions(l5All);
+    expect(l5Spread.some(r => r.family === 'e-unless-pos')).toBe(true);
+    expect(l5Spread.some(r => r.family === 'e-unless-has')).toBe(true);
+    expect(l5Spread.some(r => r.label.toLowerCase().includes('unless'))).toBe(true);
+
+    const state = openRulePicker(startRound(5, rng, true, 0));
+    await act(async () => {
+      root = create(
+        <SchoolBoard
+          session={{ version: 1, id: 's-l5', game: 'gate-crab', options: { mode: 'together', pace: 'hard' }, names: ['Stassie', 'Leon'], state, revision: 0 }}
+          update={vi.fn()}
+          practice={vi.fn()}
+          notePractice={vi.fn()}
+          assistance={vi.fn()}
+          skills={{}}
+          sound={vi.fn()}
+          stopSound={vi.fn()}
+          soundOn
+          width={360}
+          height={760}
+          active
+          coach={{ active: false, done: vi.fn() }}
+          cheer={vi.fn()}
+        />,
+      );
+    });
+    expect(textOf(root!.root).toLowerCase()).toContain('unless');
   });
 });

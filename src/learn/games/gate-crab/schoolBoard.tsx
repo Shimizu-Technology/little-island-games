@@ -85,7 +85,7 @@ export function SchoolBoard({ session, update, practice, assistance, cheer, coac
   const rules = useMemo(() => {
     if (!puzzle) return null;
     const rule = RULE_BY_ID.get(puzzle.ruleId)!;
-    // In Together mode, Look/Think/One step work from public evidence; Show me stays off so Maker's rule isn't spoiled.
+    // In Together mode, Look and Think work from public evidence; One step and Show me stay off (allowShowMe: false) so Maker's rule isn't spoiled.
     return gateCrabHelpRules(row => evaluateRow(rule, puzzle.len, row), !state.together);
   }, [puzzle, state.together]);
 
