@@ -53,10 +53,12 @@ import { registration as r25 } from './registrations/sudoku';
 import type { Payload as P25, Action as A25, State as S25 } from './registrations/sudoku';
 import { registration as r26 } from './registrations/tic-tac-toe';
 import type { Payload as P26, Action as A26, State as S26 } from './registrations/tic-tac-toe';
-import { registration as r27 } from './registrations/turtle-draw';
-import type { Payload as P27, Action as A27, State as S27 } from './registrations/turtle-draw';
-import { registration as r28 } from './registrations/word-search';
-import type { Payload as P28, Action as A28, State as S28 } from './registrations/word-search';
+import { registration as r27 } from './registrations/tide-logic';
+import type { Payload as P27, Action as A27, State as S27 } from './registrations/tide-logic';
+import { registration as r28 } from './registrations/turtle-draw';
+import type { Payload as P28, Action as A28, State as S28 } from './registrations/turtle-draw';
+import { registration as r29 } from './registrations/word-search';
+import type { Payload as P29, Action as A29, State as S29 } from './registrations/word-search';
 import type { ChallengeEntry, TypedRegistration } from "./types";
 export type Registry = Record<never, never> & {
   'beep-bot': { Payload: P0; Action: A0; State: S0 };
@@ -86,7 +88,8 @@ export type Registry = Record<never, never> & {
   'sound-boat': { Payload: P24; Action: A24; State: S24 };
   'sudoku': { Payload: P25; Action: A25; State: S25 };
   'tic-tac-toe': { Payload: P26; Action: A26; State: S26 };
-  'turtle-draw': { Payload: P27; Action: A27; State: S27 };
-  'word-search': { Payload: P28; Action: A28; State: S28 };
+  'tide-logic': { Payload: P27; Action: A27; State: S27 };
+  'turtle-draw': { Payload: P28; Action: A28; State: S28 };
+  'word-search': { Payload: P29; Action: A29; State: S29 };
 };
-export const challengeEntries: readonly ChallengeEntry[] = [r0 satisfies TypedRegistration<P0, A0, S0>, r1 satisfies TypedRegistration<P1, A1, S1>, r2 satisfies TypedRegistration<P2, A2, S2>, r3 satisfies TypedRegistration<P3, A3, S3>, r4 satisfies TypedRegistration<P4, A4, S4>, r5 satisfies TypedRegistration<P5, A5, S5>, r6 satisfies TypedRegistration<P6, A6, S6>, r7 satisfies TypedRegistration<P7, A7, S7>, r8 satisfies TypedRegistration<P8, A8, S8>, r9 satisfies TypedRegistration<P9, A9, S9>, r10 satisfies TypedRegistration<P10, A10, S10>, r11 satisfies TypedRegistration<P11, A11, S11>, r12 satisfies TypedRegistration<P12, A12, S12>, r13 satisfies TypedRegistration<P13, A13, S13>, r14 satisfies TypedRegistration<P14, A14, S14>, r15 satisfies TypedRegistration<P15, A15, S15>, r16 satisfies TypedRegistration<P16, A16, S16>, r17 satisfies TypedRegistration<P17, A17, S17>, r18 satisfies TypedRegistration<P18, A18, S18>, r19 satisfies TypedRegistration<P19, A19, S19>, r20 satisfies TypedRegistration<P20, A20, S20>, r21 satisfies TypedRegistration<P21, A21, S21>, r22 satisfies TypedRegistration<P22, A22, S22>, r23 satisfies TypedRegistration<P23, A23, S23>, r24 satisfies TypedRegistration<P24, A24, S24>, r25 satisfies TypedRegistration<P25, A25, S25>, r26 satisfies TypedRegistration<P26, A26, S26>, r27 satisfies TypedRegistration<P27, A27, S27>, r28 satisfies TypedRegistration<P28, A28, S28>];
+export const challengeEntries: readonly ChallengeEntry[] = [r0 satisfies TypedRegistration<P0, A0, S0>, r1 satisfies TypedRegistration<P1, A1, S1>, r2 satisfies TypedRegistration<P2, A2, S2>, r3 satisfies TypedRegistration<P3, A3, S3>, r4 satisfies TypedRegistration<P4, A4, S4>, r5 satisfies TypedRegistration<P5, A5, S5>, r6 satisfies TypedRegistration<P6, A6, S6>, r7 satisfies TypedRegistration<P7, A7, S7>, r8 satisfies TypedRegistration<P8, A8, S8>, r9 satisfies TypedRegistration<P9, A9, S9>, r10 satisfies TypedRegistration<P10, A10, S10>, r11 satisfies TypedRegistration<P11, A11, S11>, r12 satisfies TypedRegistration<P12, A12, S12>, r13 satisfies TypedRegistration<P13, A13, S13>, r14 satisfies TypedRegistration<P14, A14, S14>, r15 satisfies TypedRegistration<P15, A15, S15>, r16 satisfies TypedRegistration<P16, A16, S16>, r17 satisfies TypedRegistration<P17, A17, S17>, r18 satisfies TypedRegistration<P18, A18, S18>, r19 satisfies TypedRegistration<P19, A19, S19>, r20 satisfies TypedRegistration<P20, A20, S20>, r21 satisfies TypedRegistration<P21, A21, S21>, r22 satisfies TypedRegistration<P22, A22, S22>, r23 satisfies TypedRegistration<P23, A23, S23>, r24 satisfies TypedRegistration<P24, A24, S24>, r25 satisfies TypedRegistration<P25, A25, S25>, r26 satisfies TypedRegistration<P26, A26, S26>, r27 satisfies TypedRegistration<P27, A27, S27>, r28 satisfies TypedRegistration<P28, A28, S28>, r29 satisfies TypedRegistration<P29, A29, S29>];

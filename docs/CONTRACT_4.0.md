@@ -62,6 +62,16 @@ The rule (program plan §5): contract changes go through the lead, one at a time
   **220–229** and dares **400–429** from the reserved ranges; no new envelope field,
   class, budget, dare rule, metric or path. Details and proofs: `docs/TURTLE_DEPTH.md`,
   `tests/c2c-turtle-*.test.ts*`.
+- **23 November 2026 — C4 Tide Logic (SC-05, BK-24), additions inside the frozen shapes:**
+  Tide Logic stays on the measured School boards (F-frame-2 list above). Fresh rounds are School
+  state version 3 (four certified belt numbers per level, checked against `content.json` at load);
+  saved versions 1 and 2 keep their seeded tasks and their board. One Challenge registration
+  (`tide-logic`, codec `tide-logic-replay-v1`, context `tide`) with inline banks **245–254**
+  (Endless Tide 245–250, Deep Water 251–254) and dares **650–685** from the reserved ranges
+  (banks 245–259, dares 650–799), a board-owned Help ladder with a certified reserve
+  (8 actions, 224 bytes, `idempotentHelp: false`), and Keep my plan through the existing
+  `full`/`restart` entry hooks. No new envelope field, class, budget, dare rule, metric or path.
+  Details and proofs: `docs/TIDE_LOGIC_DEPTH.md`, `tests/c4-tide-*.test.ts*`.
 - **15 November 2026 — reserved-slot claims below the high-water mark (lead, `lead/slot-claims`):**
   `root.json`'s `nextSlot` and `nextOrdinal` stay monotonic high-water marks and
   `assertRootAppendOnly` is unchanged. A bake may now claim explicit slots below them,
