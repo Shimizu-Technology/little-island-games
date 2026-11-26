@@ -15,14 +15,14 @@ type LagoonIllustrations = {
   shell: ActorArt;
   log: GroundActorArt;
   banner: BannerArt;
-  cooler?: GroundActorArt;
-  rock?: GroundActorArt;
+  cooler: GroundActorArt;
+  rock: GroundActorArt;
   runner?: () => number;
-  horizonMorning?: () => number;
+  horizonMorning: () => number;
 };
 
-// Each source stays lazy and statically resolvable by Metro. The optional slots use the
-// current baked hazards, personalized vector runner and layered horizon until populated.
+// Each source stays lazy and statically resolvable by Metro. `runner` intentionally stays
+// unset so Lagoon Run renders the player's personalized 24-frame animated Islander.
 export const illustrated: LagoonIllustrations = {
   canoe: { source: () => require('../../../../assets/arcade/lagoon/illustrated/canoe.webp'), pixels: 384, ink: [24, 21, 335, 342] },
   crate: { source: () => require('../../../../assets/arcade/lagoon/illustrated/crate.webp'), pixels: 256, ink: [13, 19, 230, 217], contactHeight: 41 },
@@ -31,6 +31,9 @@ export const illustrated: LagoonIllustrations = {
   log: { source: () => require('../../../../assets/arcade/lagoon/illustrated/log.webp'), pixels: 320, ink: [17, 62, 286, 195], contactHeight: 42 },
   // The lowest bunting pixel (row 121) has about 56 pt of deck clearance at contact.
   banner: { source: () => require('../../../../assets/arcade/lagoon/illustrated/banner.webp'), pixels: 384, ink: [21, 51, 342, 282], contactHeight: 74, buntingBottom: 121 },
+  cooler: { source: () => require('../../../../assets/arcade/lagoon/illustrated/cooler.webp'), pixels: 256, ink: [16, 36, 224, 183], contactHeight: 42 },
+  rock: { source: () => require('../../../../assets/arcade/lagoon/illustrated/rock.webp'), pixels: 320, ink: [107, 16, 106, 288], contactHeight: 104 },
+  horizonMorning: () => require('../../../../assets/arcade/lagoon/illustrated/horizon-morning.webp'),
 };
 
 export function illustratedHazard(kind: string): GroundActorArt | undefined {
