@@ -13,7 +13,7 @@ import { useStore } from '../state/Store';
 import { dailySuggestions, homeContinue, shelfGames, type ShelfGame } from '../learn/home';
 import { returnLabel } from '../arcade/presentation';
 import { Landmark } from './Landmarks';
-import { places } from './model';
+import { homeShortcuts, places } from './model';
 import { openGame, placeRoute } from './navigation';
 import { CoveLists } from '../cove/HubCove';
 export default function EverythingScreen() {
@@ -44,7 +44,14 @@ export default function EverythingScreen() {
    {section === 'favorites' ? <>{fav}<CoveLists favorites/></> : section === 'ideas' ? suggestions : <>
     <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Continue</Heading>{resume ? <><Copy>{returnLabel(resume)}</Copy>{rows([shelfGames.find(game => game.id === resume)!])}</> : <Copy>Saved games will be here when you’re ready.</Copy>}</View>
     {suggestions}{fav}<CoveLists/>
-    <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Places</Heading>{places.map(place => <PressableScale key={place.id} accessibilityRole="button" accessibilityLabel={`Visit ${place.name}`} onPress={() => router.push(placeRoute(place.id))} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8, borderBottomColor: C.line, borderBottomWidth: 1 }}><View style={{ width: 84, height: 66 }}><Landmark id={place.id}/></View><View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>{place.name}</Heading><Copy>{place.hint}</Copy></View></PressableScale>)}</View>
+    <View style={{ gap: 8 }}>
+     <Heading style={{ fontSize: 24 }}>Places</Heading>
+     {places.map(place => <PressableScale key={place.id} accessibilityRole="button" accessibilityLabel={`Visit ${place.name}`} onPress={() => router.push(placeRoute(place.id))} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8, borderBottomColor: C.line, borderBottomWidth: 1 }}><View style={{ width: 84, height: 66 }}><Landmark id={place.id}/></View><View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>{place.name}</Heading><Copy>{place.hint}</Copy></View></PressableScale>)}
+     <View style={{ gap: 6, marginTop: 6 }}>
+      <Heading style={{ fontSize: 18 }}>Inside Home</Heading>
+      {homeShortcuts.map(item => <PressableScale key={item.id} testID={`home-shortcut-${item.id}`} accessibilityRole="button" accessibilityLabel={`Open ${item.name} in Home`} onPress={() => router.push(item.route)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFE3D6' }}><View style={{ flex: 1 }}><Heading style={{ fontSize: 18 }}>{item.name}</Heading><Copy style={{ fontSize: 14, lineHeight: 20 }}>{item.hint}</Copy></View></PressableScale>)}
+     </View>
+    </View>
     <View testID="all-games"><Heading style={{ fontSize: 24 }}>All games</Heading>{rows(shelfGames)}</View>
    </>}
    {pocket && <Button quiet onPress={() => router.setParams({ section: 'all' })}>Everything →</Button>}

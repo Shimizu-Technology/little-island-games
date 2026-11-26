@@ -10,15 +10,17 @@ export const Palm = memo(function Palm() {
 });
 export const Terrain = memo(function Terrain({ wide = false, width, height }: { wide?: boolean; width: number; height: number }) {
  const palmScale = `${height*400/(width*660)*(wide ? 1.4 : 1)} ${wide ? 1.4 : 1}`;
- const paths = wide ? 'M68 191H332M68 409H332M132 627H268M200 191V627' : 'M108 157Q200 203 292 157M100 315Q200 278 300 315M104 473Q203 440 304 473M200 174V540Q201 593 208 617M108 627H292';
+ const paths = wide
+  ? 'M72 254H328M72 568H328M200 254V568'
+  : 'M108 174Q200 206 292 174M104 370Q200 340 296 370M108 574Q200 554 292 574M200 188V564';
  return <Svg width="100%" height="100%" viewBox="0 0 400 660" preserveAspectRatio="none" accessible={false}>
   <Path d="M23 84Q47 14 146 27Q207 -2 263 30Q363 9 379 112Q411 203 377 292Q411 405 359 489Q344 601 250 636Q155 677 78 606Q2 561 26 471Q-5 392 20 308Q-17 187 23 84Z" fill="#93C9C8"/>
   <Path d="M23 74Q47 4 146 17Q207 -12 263 20Q363 -1 379 102Q411 193 377 282Q411 395 359 479Q344 591 250 626Q155 667 78 596Q2 551 26 461Q-5 382 20 298Q-17 177 23 74Z" fill="#F0DFB2" stroke="#D7C594" strokeWidth={2.5}/>
   <Path d="M35 81Q57 20 147 30Q207 2 261 33Q350 14 366 108Q398 193 365 281Q399 394 346 474Q332 580 246 612Q159 652 89 585Q15 545 39 460Q8 381 33 297Q-3 179 35 81Z" fill="#D1DFAF"/>
   <Path d={paths} stroke="#B6C795" strokeWidth={26} fill="none" strokeLinecap="round"/>
   <Path d={paths} stroke="#F4E6BF" strokeWidth={21} fill="none" strokeLinecap="round"/>
-  <Path d="M226 351Q260 335 268 359Q282 382 251 397Q220 403 219 383Q202 365 226 351Z" fill="#7EB5A9" stroke="#90B78F" strokeWidth={5}/>
-  <Path d="M230 358Q251 351 258 365M230 381Q247 388 257 378" fill="none" stroke="#D7E7C9" strokeWidth={2.5}/>
+  <Path d="M226 443Q260 427 268 451Q282 474 251 489Q220 495 219 475Q202 457 226 443Z" fill="#7EB5A9" stroke="#90B78F" strokeWidth={5}/>
+  <Path d="M230 450Q251 443 258 457M230 473Q247 480 257 470" fill="none" stroke="#D7E7C9" strokeWidth={2.5}/>
   <G transform="translate(204 52) scale(.7)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
   <G transform="translate(43 231) scale(.69)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
   <G transform="translate(357 235) scale(.77)"><G transform={`scale(${palmScale})`}><Palm/></G></G>

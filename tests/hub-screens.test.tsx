@@ -27,14 +27,21 @@ describe('visible hub destinations and preserved list behavior', () => {
    ...['reading','numbers','science','thinking','coding'].map(island=>({pathname:'/shelf',params:{island}})), {pathname:'/learn',params:{game:'hafa-adai'}}]);
   await act(()=>screen.unmount());
  });
- it('renders every catalog item in All games, all eight places, and editable favorites', async () => {
+ it('renders every catalog item in All games, all six illustrated places, Inside Home shortcuts for Closet and Badge Wall, and editable favorites', async () => {
   fixture.store.save=emptySave(); fixture.params={}; let screen!:ReactTestRenderer;
   await act(()=>{ screen=create(<Everything/>); });
   const all=screen.root.findByProps({testID:'all-games'});
   expect(all.findAll(n=>n.type==='button' && n.props.accessibilityRole==='button').map(n=>n.props.accessibilityLabel)).toEqual(shelfGames.map(game=>`Play ${game.name}`));
-  expect(screen.root.findAll(n=>n.type==='button' && n.props.accessibilityLabel?.startsWith('Visit '))).toHaveLength(8);
-  // The six core doors show their approved illustrations; Locker and Badges keep their drawn silhouettes.
+  expect(screen.root.findAll(n=>n.type==='button' && n.props.accessibilityLabel?.startsWith('Visit '))).toHaveLength(6);
+  // All six map places render their approved storybook WebPs with zero vector fallback doors.
   expect(screen.root.findAll(n=>n.type==='img').map(n=>n.props.source)).toEqual(['learn','library','arcade','game-hall','home','puzzles'].map(door=>`assets/art/map/${door}.webp`));
+  // Closet and Badge Wall stay discoverable under Inside Home and route directly to their Home sheets.
+  const closet = screen.root.findByProps({ testID: 'home-shortcut-locker' });
+  const badges = screen.root.findByProps({ testID: 'home-shortcut-badges' });
+  await act(() => closet.props.onPress());
+  expect(fixture.push).toHaveBeenLastCalledWith('/locker');
+  await act(() => badges.props.onPress());
+  expect(fixture.push).toHaveBeenLastCalledWith('/badges');
   const star=all.findAll(n=>n.type==='button' && n.props.label?.startsWith('Favorite '))[0];
   await act(()=>star.props.onPress()); expect(fixture.store.toggleGameFavorite).toHaveBeenLastCalledWith(shelfGames[0].id);
   await act(()=>screen.unmount());

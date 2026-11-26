@@ -3,7 +3,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IslandScene } from '../src/hub/IslandScene';
 import { defaultLook } from '../src/islander/look';
-vi.mock('react-native', () => ({ View:'div', Pressable:'button', Platform:{OS:'web'} }));
+vi.mock('react-native', () => ({ View:'div', Pressable:'button', Image:'img', Platform:{OS:'web'} }));
 const motion = vi.hoisted(() => ({ values: [] as { value: number; get: () => number; set: (value: number) => void }[] }));
 vi.mock('react-native-reanimated', async () => {
  const { useRef } = await import('react');
@@ -17,11 +17,25 @@ vi.mock('react-native-reanimated', async () => {
 afterEach(()=>{vi.useRealTimers();motion.values=[];});
 vi.mock('../src/components/ui', () => ({ C:{},font:undefined }));
 vi.mock('../src/components/Text', () => ({ Text:'span' }));
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 vi.mock('../src/islander', () => ({ Islander:()=>null }));
-vi.mock('../src/hub/Landmarks', () => ({ Landmark:()=>null }));
 vi.mock('../src/hub/Terrain', () => ({ Terrain:()=>null }));
 vi.mock('../src/hub/IslandLife', () => ({ IslandLife:()=>null }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT=true;
+describe('six-door illustrated island map', () => {
+ it('renders exactly six illustrated doors and zero locker/badges SVG doors', async () => {
+  let screen!: ReactTestRenderer;
+  await act(() => { screen = create(<IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced={false} active door={null} onArrive={vi.fn()}/>); });
+  const doors = screen.root.findAll(n => n.type === 'button' && typeof n.props.testID === 'string' && n.props.testID.startsWith('place-'));
+  expect(doors.map(n => n.props.testID)).toEqual(['place-school', 'place-library', 'place-arcade', 'place-hall', 'place-home', 'place-cove']);
+  expect(screen.root.findAll(n => n.props.testID === 'place-locker' || n.props.testID === 'place-badges')).toHaveLength(0);
+  const art = screen.root.findAll(n => n.type === 'img' && n.props.testID === 'illustrated-art');
+  expect(art).toHaveLength(6);
+  expect(art.map(n => n.props.source)).toEqual(['learn', 'library', 'arcade', 'game-hall', 'home', 'puzzles'].map(door => `assets/art/map/${door}.webp`));
+  expect(screen.root.findAll(n => n.type === 'svg')).toHaveLength(0);
+  await act(() => screen.unmount());
+ });
+});
 describe('visible map input during route/sheet settling',()=>{
  it('opens a place immediately even while idle motion is paused by a closing sheet',async()=>{
   const open=vi.fn();let screen!:ReactTestRenderer;
