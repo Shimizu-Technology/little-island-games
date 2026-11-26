@@ -40,12 +40,12 @@ it('can re-snap after an early curve and cancels a stroke returned to its origin
  expect(core.dragRay(17,start,start,44,16,16,a.direction).cells).toEqual([17]);
 });
 it('hunters choose stable identities; taps never cross and another hunter drag preserves the first tap',async()=>{
- const dispatch=await mount();await tap(p.words[0].cells[0]);await press('Purple hunter · dotted');await tap(p.words[1].cells[0]);expect(dispatch).not.toHaveBeenCalled();
+ const dispatch=await mount();await tap(p.words[0].cells[0]);await press('Purple');await tap(p.words[1].cells[0]);expect(dispatch).not.toHaveBeenCalled();
  await tap(p.words[1].cells.at(-1)!);expect(dispatch).toHaveBeenLastCalledWith(['find',p.words[1].cells[0],p.words[1].cells.at(-1),1]);
- await press('Green hunter · solid');await tap(p.words[0].cells.at(-1)!);expect(dispatch).toHaveBeenLastCalledWith(['find',p.words[0].cells[0],p.words[0].cells.at(-1),0]);
+ await press('Green');await tap(p.words[0].cells.at(-1)!);expect(dispatch).toHaveBeenLastCalledWith(['find',p.words[0].cells[0],p.words[0].cells.at(-1),0]);
 });
 it('landscape phones retain turns rather than admitting two hunters',async()=>{
- env.width=852;env.height=393;await mount();expect(JSON.stringify(screen.toJSON())).toContain('Take turns.');expect(JSON.stringify(screen.toJSON())).not.toContain('Purple hunter · dotted');
+ env.width=852;env.height=393;await mount();expect(JSON.stringify(screen.toJSON())).toContain("Green's turn");expect(JSON.stringify(screen.toJSON())).not.toContain('Purple');
 });
 it('hearing is recorded once and undo, redo, help restore the right phone turn',()=>{
  let s=initial();s=searchEngine.step(s,['hear',0],p)!.state;expect(searchEngine.step(s,['hear',1],p)?.state.heard).toBe(true);
@@ -58,7 +58,7 @@ it('hearing is recorded once and undo, redo, help restore the right phone turn',
  s=searchEngine.step(s,['help'],p)!.state;expect(s.found.at(-1)?.[1]).toBe(1);expect(s.turn).toBe(0);
 });
 it('announces first/last choices and accepted finds on iOS, and has a hardware-keyboard selection path',async()=>{
- await mount();await tap(0);expect(env.announce).toHaveBeenCalledWith(expect.stringContaining('Now choose'));
+ await mount();await tap(0);expect(env.announce).toHaveBeenCalledWith(expect.stringContaining('Now tap'));
  const input=screen.root.findByType('input');expect(input.props.showSoftInputOnFocus).toBe(false);await act(async()=>input.props.onKeyPress({nativeEvent:{key:'ArrowRight'}}));await act(async()=>input.props.onKeyPress({nativeEvent:{key:' '}}));
  expect(screen.root.findAll(n=>n.props.accessibilityActions).length).toBe(0);
 });
@@ -169,7 +169,7 @@ it('board follows the finger vector rather than snapping to the first neighbour 
  expect(dispatch).toHaveBeenLastCalledWith(['find-many',[[28,7,0]]]);
 });
 it('second simultaneous pointer gets the other hunter even when purple was chosen first (M2)',async()=>{
- env.reader=false;const dispatch=await mount();await press('Purple hunter · dotted');const size=(surface().props.style.width-2)/6;
+ env.reader=false;const dispatch=await mount();await press('Purple');const size=(surface().props.style.width-2)/6;
  const at=(i:number,id:number)=>touch((i%6+.5)*size,(Math.floor(i/6)+.5)*size,id);
  await act(async()=>surface().props.onResponderGrant(at(p.words[0].cells[0],11)));
  await act(async()=>surface().props.onResponderStart(at(p.words[1].cells[0],12)));
@@ -209,7 +209,7 @@ it('reports capacity using the attempted two-find action, with no byte estimate'
  for(let n=0;n<3330;n++){
   const s={...base,id:'x'.repeat(n)},payload=s.payload as import('../src/challenge/types').ReplayPayload<unknown,unknown>;
   const next={...s,revision:s.revision+1,payload:{...payload,actions:[...payload.actions,action]}};
-  expect(fixtureRegistration.full(s,action)).toBe(new TextEncoder().encode(JSON.stringify(next)).length>3328);
+  expect(fixtureRegistration.full(s,action)).toBe(new TextEncoder().encode(JSON.stringify(next)).length>2896);
  }
 });
 
@@ -222,7 +222,7 @@ it('blurs the hidden native keyboard when the round becomes inactive',async()=>{
  const dispatch=await mount();await act(async()=>screen.update(<WordSearchBoard state={initial()} dispatch={dispatch} active={false} width={353} together/>));expect(env.blur).toHaveBeenCalled();
 });
 it('the selected purple hunter keeps purple colour and a dotted pattern',async()=>{
- await mount();await press('Purple hunter · dotted');const b=screen.root.findAllByType('button').find(n=>n.children.includes('Purple hunter · dotted'))!;
+ await mount();await press('Purple');const b=screen.root.findAllByType('button').find(n=>n.children.includes('Purple'))!;
  expect(b.props.style.backgroundColor).toBe('#8A4D81');expect(b.props.style.borderStyle).toBe('dotted');
 });
 
@@ -240,5 +240,5 @@ it('returning a real drag to its origin cancels quietly rather than choosing a f
  env.reader=false;const dispatch=await mount(),size=(surface().props.style.width-2)/6;
  const start=touch(size*4.5,size*4.5),far=touch(size*1.5,size*1.5);
  await act(async()=>surface().props.onResponderGrant(start));await act(async()=>surface().props.onResponderMove(far));await act(async()=>surface().props.onResponderMove(start));await act(async()=>surface().props.onResponderRelease(start));
- expect(dispatch).not.toHaveBeenCalled();expect(JSON.stringify(screen.toJSON())).not.toContain('Now choose the last letter.');
+ expect(dispatch).not.toHaveBeenCalled();expect(JSON.stringify(screen.toJSON())).not.toContain('Now tap the last letter.');
 });

@@ -62,6 +62,31 @@ export function findWord(p: SearchPuzzle, s: SearchState, [start, end, hunter]: 
   if (word < 0 || s.found.some(([i]) => i === word)) return s;
   return { found: [...s.found, [word, hunter]], turn: hunter === 0 ? 1 : 0, edits: s.edits + 1 };
 }
+const unfoundWords = (p: SearchPuzzle, found: readonly (readonly [number, ...unknown[]])[]) => p.words.map((_, i) => i).filter(i => !found.some(([j]) => j === i));
+/** The first answer still hidden: the one the full Hint would reveal. */
+export const hintWord = (p: SearchPuzzle, found: readonly (readonly [number, ...unknown[]])[]) => unfoundWords(p, found)[0] ?? -1;
+const rayOf = (p: SearchPuzzle, cells: number[]): Direction => { const columns = p.cells[0].length; return [Math.sign(Math.floor(cells[1] / columns) - Math.floor(cells[0] / columns)), Math.sign(cells[1] % columns - cells[0] % columns)]; };
+export const directionName = ([row, column]: Direction) => row === 0 ? column > 0 ? 'right' : 'left' : column === 0 ? row > 0 ? 'down' : 'up' : `${row > 0 ? 'down' : 'up'} and ${column > 0 ? 'right' : 'left'}`;
+/** The first letter, then the way the word runs. It never names the word, but both are part of the answer, so the engine records the press as help before the board draws either. */
+export function hintFor(p: SearchPuzzle, found: readonly (readonly [number, ...unknown[]])[], level: 1 | 2): { word: number; cell: number; next: number | null; direction: Direction | null; text: string } | null {
+  const word = hintWord(p, found); if (word < 0) return null;
+  const cells = p.words[word].cells, direction = rayOf(p, cells);
+  return level === 1 ? { word, cell: cells[0], next: null, direction: null, text: 'It starts here.' } : { word, cell: cells[0], next: cells[1], direction, text: `It starts here and goes ${directionName(direction)}.` };
+}
+/** A drag that ran one cell short or long still finds the word whose end it started on and whose way it took. */
+export function snapWord(p: SearchPuzzle, found: readonly (readonly [number, ...unknown[]])[], start: number, direction: Direction | null, length: number): { word: number; end: number } | null {
+  if (!direction || length < 2) return null;
+  let best: { word: number; end: number } | null = null, gap = 2, tied = false;
+  for (const i of unfoundWords(p, found)) {
+    const w = p.words[i].cells, ray = w[0] === start ? w : w.at(-1) === start ? [...w].reverse() : null;
+    if (!ray) continue;
+    const way = rayOf(p, ray), off = Math.abs(ray.length - length);
+    if (way[0] !== direction[0] || way[1] !== direction[1]) continue;
+    if (off < gap) { gap = off; best = { word: i, end: ray.at(-1)! }; tied = false; } else if (off === gap && best) tied = true;
+  }
+  // Two words equally near the drag: guessing would find the wrong one.
+  return tied ? null : best;
+}
 export const searchSolved = (p: SearchPuzzle, s: SearchState) => s.found.length === p.words.length;
 export const searchSolution = (p: SearchPuzzle) => sha256Hex(p.words.map(w => w.id).sort().join('|'));
 export function validSearch(x: unknown): x is SearchPuzzle {

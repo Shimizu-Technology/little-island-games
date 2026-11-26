@@ -8,6 +8,7 @@
   "crab-commands",
   "drop-puzzles",
   "fishing-nets",
+  "gate-crab",
   "greater-than",
   "hidden-canoes",
   "killer",
@@ -26,6 +27,7 @@
   "sound-boat",
   "sudoku",
   "tic-tac-toe",
+  "tide-logic",
   "turtle-draw",
   "word-search"
 ]

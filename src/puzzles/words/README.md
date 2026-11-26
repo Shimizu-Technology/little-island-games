@@ -8,6 +8,24 @@ Each iPad pointer owns a locked ray and a green solid or purple dotted trail. A 
 
 The picture dictionary supplies original pictures. A bank must have a picture and an existing recording for every answer before using picture mode. Existing recording keys may be derived from an admitted English answer without changing its reviewed word record. Missing recordings are never synthesized. CHamoru uses only its bound canonical recording and source-backed teaching spelling.
 
+## Clean 4.0 board
+
+The board shows a title, a count ("3 of 8", or the one short message of the moment), the grid, word pills and Undo, Redo and Hint. There are no instruction paragraphs. Words are pills, crossed off in their hunter's colour. Easy boards (6 columns) show a picture beside any word that has one. Picture rounds still show one for every word. Undo, Redo, Hint and Cancel are 48 pt tall; the other controls stay at least 44 pt.
+
+Plain difficulty labels live in `tiers.ts`: tier 1 Easy (6×6, across and down), 2 Medium (9×9, across and down), 3 Hard (12×12, adds slants), 4 Expert (15×15, every direction), 5 Master and 6 Master+ for later banks. This is presentation over the unchanged tiers and bands; saved refs and replays are untouched. A bank's description (`describe`) shows the size and directions the bank really holds: `SearchBank.size` and `directionCount` (written by the install from the baked puzzles), else the band `plan.mjs` bakes (6, 8, 10, 12, 15, 16; slants from Shallows), else the tier above.
+
+Dragging snaps to one of eight directions as before. It is also forgiving: a drag that starts on a hidden word's end, runs the word's way and stops one cell short or long finds that word (`snapWord`). Two cells off, a wrong way or a mid-word start finds nothing.
+
+Hint goes in steps, and every step is recorded as help before anything from the answer is drawn. The first press (`hint`) rings the first letter of the first hidden word, the second (`hint` again) adds the way it runs ("goes up and left"), and the third, labelled "Show word", dispatches the existing `help` action. The ring and direction are drawn from engine state (`State.hints`, one level per word), never from board state, and never name the word. A round with any hint finishes `helped`, so it cannot earn an independent or clean dare. `hintFor` shares `hintWord` with the engine's `help`, so the hint always points at the word help would reveal. The assistance reserve covers a ring, a direction and the word for all 24 possible words.
+
+Together: a phone shows a "Green's turn" or "Purple's turn" chip (solid or dotted border). An iPad shows Green and Purple hunter buttons and keeps two pointers. Neither shows points.
+
+## Starter themes (fixture, not shipped)
+
+`tests/fixtures/word-search/starter-packs.ts` defines 16 themes (Guam & Island Life, Ocean Creatures, Farm & Pets, Wild Animals, Birds & Nests, Sun, Moon & Stars, Nature & Weather, Baking & Kitchen, Cooking & Pantry, Fruit & Garden, Music & Sports, Travel & Plane, Family & Home, Bible & Faith Stories, Body & Health, Crafts & Play) by the four plain difficulties: 64 puzzles. Every answer is already in the picture-dictionary allowlist or the local editorial supplement, and `tests/word-search-starter.test.ts` proves it. The fixture approves nothing and reads no private policy; the lead's locked scan and review records still decide. It is never imported from `src` or `content`.
+
+`starter-plan.ts` writes a bake plan in `scripts/puzzles/words/bake.mjs` shape: banks 80–83, one per difficulty, word-list mode, one grid per theme and variant. The baker's floor is 512–2,048 distinct grids, so a real bake uses `variants` 8 (512 grids, 1/16 per theme). With one variant the plan holds the 64 curated puzzles. Dinosaur, astronaut, airport and pilot words are not in any permitted list yet, so those themes use Wild Animals, Sun, Moon & Stars and Travel & Plane words from the lists instead.
+
 ## Test and dev fixtures
 
 `tests/fixtures/word-search/bank.json` is labelled `fixture:true`, with no approval. It is imported only by tests and the separate `scripts/dev/word-search-entry.tsx` entry. Production Expo Router imports neither. Copying it into app content fails the existing W1 admission guard. There is no fixture switch on the shipping baker.

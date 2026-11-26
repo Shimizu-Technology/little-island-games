@@ -1,0 +1,7 @@
+{
+ "c4-tide-write-rules": "Read where the catches should go. Then build a rule with the blocks. Run tests every catch on the belt, one at a time. If your rule sends one the wrong way, the belt stops there, so you can change a block and run again.",
+ "c4-tide-find-rules": "Every catch on this belt is already sorted. Look at what the catches in each bucket share. Build a rule that sorts every catch the same way, then run it.",
+ "c4-tide-trace-rules": "The gate starts on one side. A catch that matches the rule flips the gate as it arrives, and the gate stays that way until the next flip. Send each catch where the gate points, then check.",
+ "c4-tide-bell": "The bell can ring on this catch, or on the catch before it. Watch which catch the bell changes.",
+ "c4-tide-not": "Not means a catch must not have that clue. No bell means a catch without a bell."
+}

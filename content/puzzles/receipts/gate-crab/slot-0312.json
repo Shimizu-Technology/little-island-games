@@ -1,0 +1,155 @@
+{
+ "format": 1,
+ "family": "gate-crab",
+ "slot": 312,
+ "catalogRevision": 24,
+ "band": "c",
+ "ordinals": [
+  319488,
+  44
+ ],
+ "sourceSha": "dd77651bfc7f82965dbcae616e628cfc2e4878bf",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "5792a734bda184946c4eeb925976f6874ab1a7a0bb778a7f600a10a586cf3bc3"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 462,
+  "kept": [
+   33554433,
+   33554438,
+   33554440,
+   33554445,
+   33554441,
+   33554448,
+   33554439,
+   33554454,
+   33554464,
+   33554456,
+   33554447,
+   33554460,
+   33554442,
+   33554458,
+   33554467,
+   33554466,
+   33554452,
+   33554463,
+   33554455,
+   33554462,
+   33554435,
+   33554436,
+   33554437,
+   33554451,
+   33554453,
+   33554470,
+   33554472,
+   33554473,
+   33554474,
+   33554461,
+   33554476,
+   33554459,
+   33554443,
+   33554457,
+   33554475,
+   33554469,
+   33554434,
+   33554444,
+   33554446,
+   33554449,
+   33554450,
+   33554465,
+   33554468,
+   33554471
+  ]
+ },
+ "rejects": {
+  "template-cap": 78,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 44,
+  "semantic": 44
+ },
+ "histograms": {
+  "technique": {
+   "position": 44
+  },
+  "template": {
+   "c-ends-have": 2,
+   "c-ends-not": 1,
+   "c-pos-0-shell": 6,
+   "c-pos-1-shell": 6,
+   "c-pos-2-shell": 6,
+   "c-pos-color": 8,
+   "c-pos-not-color": 9,
+   "c-pos-size": 6
+  },
+  "layout": {
+   "s0-0": 2,
+   "s0-1": 1,
+   "s0-2": 4,
+   "s0-3": 1,
+   "s1-0": 3,
+   "s1-1": 2,
+   "s1-3": 1,
+   "s2-0": 1,
+   "s2-1": 6,
+   "s2-2": 1,
+   "s3-0": 2,
+   "s3-1": 1,
+   "s3-2": 1,
+   "s3-3": 2,
+   "s4-0": 3,
+   "s4-2": 6,
+   "s5-0": 2,
+   "s5-1": 1,
+   "s5-3": 4
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   1,
+   4
+  ],
+  "exact": 8
+ },
+ "proofHashes": {
+  "witness": "810fe1412951ed75fe268a8d61329e32d09e8972e5155cccd7bb72736169067e",
+  "trace": "0f4edb5e83ab7c8b1f9db3a9d15a591d4b0db2b9f54203284f76c2f964c83612",
+  "claims": "c0230658703a0796d2f86280b7d26e775dd2f5443d33ecde1283c571235eada7"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Original inductive rule-discovery puzzles across the 216-row shell space (2-shell rows on Rung A, 3-shell rows on Rungs B-F). Rules are deduplicated canonically by their full 216-row truth table; quizzes select high-disagreement balanced rows that foil nearest-neighbor copying; hints use public evidence minimax splitting with proven twin-world non-leakage."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 7056,
+  "gzip": 1883
+ },
+ "sha256": "d98bbaab07e25fc1af2c756d289b8bd8d64d5e3e230e01e949bfa42b9cce5e83",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}
