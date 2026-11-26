@@ -10,6 +10,8 @@ import { wordWidth } from '../src/components/wordFit';
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const fixture = vi.hoisted(() => ({ params: {} as Record<string, string>, store: { ready: true, recovery: false, save: {} as ReturnType<typeof import('../src/state/validation').emptySave>, toggleGameFavorite: () => {} } }));
+const fonts = vi.hoisted(() => ({ loaded: false }));
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => fonts.loaded }));
 vi.mock('react-native', () => {
   class Value { constructor(public v: number) {} }
   return {
@@ -179,4 +181,30 @@ it.each([[3.12, 'column'], [1, 'row']])('Island Arcade lobby at text scale %s: a
   const name = sentence.find(n => String(n.type) === 'Text' && textOf(n) === NAME);
   expect(name.props.numberOfLines).toBe(1);
   expect(flat(name.props.style).flexShrink).toBe(1);
+});
+
+it('Game Hall uses the loaded Nunito bold face without synthetic weight', async () => {
+  Object.assign(viewport, { width: 390, fontScale: 1 }); fixture.params = { island: 'classic' }; fixture.store.save = emptySave();
+  fonts.loaded = true;
+  try {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const { default: Shelf } = await import('../src/app/shelf');
+    await act(async () => { root = create(<Shelf />); });
+    for (const name of ['Classic games', ...shelfGames.filter(g => g.island === 'classic').map(g => g.name)]) {
+      const style = flat(texts().find(t => textOf(t) === name)!.props.style);
+      expect(style.fontFamily).toBe('Nunito_800ExtraBold');
+      expect(style.fontWeight).toBe('normal');
+    }
+  } finally { fonts.loaded = false; }
+});
+
+it('Game Hall keeps the full title beside icon Back on a 320 pt phone at 1.35x text', async () => {
+  Object.assign(viewport, { width: 320, fontScale: 1.35 }); fixture.params = { island: 'classic' }; fixture.store.save = emptySave();
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const { default: Shelf } = await import('../src/app/shelf');
+  await act(async () => { root = create(<Shelf />); });
+  const title = texts().find(t => textOf(t) === 'Classic games')!;
+  expect(title.props.numberOfLines).toBe(2);
+  expect(title.props.adjustsFontSizeToFit).toBe(false);
+  expect(root!.root.findAll(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Back to islands')).toHaveLength(1);
 });
