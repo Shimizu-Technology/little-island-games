@@ -1,11 +1,11 @@
 import * as Linking from "expo-linking";
 import appConfig from "../../app.json";
 import React, { useState } from "react";
-import { TextInput, View } from "react-native";
+import { TextInput, View, StyleSheet } from "react-native";
 import { Text } from "./Text";
 import { useStore } from "../state/Store";
 import { exportBackup, importBackup } from "../state/backup";
-import { Button, C, Chip, Copy, Heading, Sheet, ToggleRow, font, styles } from "./ui";
+import { Button, C, Chip, Copy as BaseCopy, Heading as BaseHeading, Sheet, ToggleRow, font, styles } from "./ui";
 import { Gate, gateAccepts, makeGate } from "../state/grownUpGate";
 import { PreviousSaves } from "./PreviousSaves";
 import { practiceSummary } from "../learn/skills";
@@ -18,7 +18,22 @@ import { pendingAssignments } from "../state/profiles";
 import { useSoundControls } from "./Audio";
 import { emptyArcade } from "../arcade";
 import { learnerPractice } from "../learn/learners";
+import { theme } from "../ui/theme";
+import { useNunitoLoaded } from "../ui/fonts";
+
+function Heading(props: React.ComponentProps<typeof BaseHeading>) {
+  const loaded = useNunitoLoaded();
+  return <BaseHeading {...props} style={[{ color: "#3D2B24" }, props.style, loaded ? { fontFamily: theme.fontFamily['800'], fontWeight: 'normal' } : { fontWeight: '800' }]} />;
+}
+function Copy(props: React.ComponentProps<typeof BaseCopy>) {
+  const loaded = useNunitoLoaded();
+  return <BaseCopy {...props} style={[{ color: "#665247" }, loaded && { fontFamily: theme.fontFamily['600'], fontWeight: 'normal' }, props.style]} />;
+}
+const polish = StyleSheet.create({
+  section: { backgroundColor: '#FFFDF8', borderColor: '#E8D8BE', borderWidth: 1, borderRadius: 20, padding: 16, gap: 16 },
+});
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const loaded = useNunitoLoaded();
   const store = useStore(),
     [unlocked, setUnlocked] = useState(false),
     [message, setMessage] = useState(""),
@@ -79,6 +94,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
   }
   return (
     <Sheet visible={visible} onClose={close} title="Your little island">
+      <View style={polish.section}>
       <Heading style={{ fontSize: 19 }}>Make yourself comfortable</Heading>
       <ToggleRow
         label="Sound"
@@ -105,14 +121,15 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       <Copy>
         Games and Explore work without internet. Nearby family rooms use a local connection between approved devices. Saves stay on this device. There are no accounts, ads, trackers, or in-app purchases.
       </Copy>
-      <View style={{ height: 1, backgroundColor: C.line }} />
+      </View>
+      <View style={polish.section}>
       <Heading style={{ fontSize: 19 }}>For grown-ups</Heading>
       {!unlocked ? (
         <>
           <Copy>Practice notes, backups and About are for grown-ups. Type the answer to unlock.</Copy>
           {pendingAssignments(store.save).length > 0 && <Copy>Some older work is waiting for a grown-up to choose whose it is.</Copy>}
-          <View style={[styles.row, { gap: 10 }]}>
-            <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink }}>
+          <View style={[styles.row, { gap: 12, flexWrap: "wrap" }]}>
+            <Text style={{ fontFamily: loaded ? theme.fontFamily["800"] : font, fontSize: 20, fontWeight: loaded ? "normal" : "800", color: "#3D2B24" }}>
               {gate.a} × {gate.b} =
             </Text>
             <TextInput
@@ -126,7 +143,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
               textContentType="none"
               style={[styles.input, { width: 96, textAlign: "center", minHeight: 48, paddingVertical: 10 }]}
             />
-            <Button quiet compact disabled={!answer} onPress={check}>
+            <Button compact disabled={!answer} onPress={check}>
               Unlock
             </Button>
           </View>
@@ -216,6 +233,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           </Copy>
         </>
       )}
+      </View>
       {!!store.error && <Copy accessibilityRole="alert" style={{ color: C.ink }}>{store.error}</Copy>}
       {!!message && <Copy style={{ color: C.ink }}>{message}</Copy>}
     </Sheet>
