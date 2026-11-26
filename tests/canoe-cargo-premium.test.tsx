@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { act, create } from "react-test-renderer";
 import { expect, it, vi } from "vitest";
-import { SettledCargo } from "../src/arcade/games/canoe-cargo/View";
-import { ROWS } from "../src/arcade/games/canoe-cargo/engine";
+import { CargoBoard, SettledCargo } from "../src/arcade/games/canoe-cargo/View";
+import { ROWS, cargoLevel, createCargo, type CargoState } from "../src/arcade/games/canoe-cargo/engine";
 import { CargoTile } from "../src/arcade/games/canoe-cargo/Art";
 import { illustrated, cargoArtFrame } from "../src/arcade/games/canoe-cargo/illustrated";
 vi.mock("react-native", () => ({ Image: "Image", View: "View", Text: "Text", StyleSheet: { absoluteFill: {}, create: (s: unknown) => s }, Platform: { OS: "web" }, Pressable: "Pressable" }));
@@ -60,6 +60,7 @@ const animation = vi.hoisted(() => ({ value: 1.5, timing: vi.fn(), set: vi.fn() 
 vi.mock("react-native-reanimated", () => ({
   default: { View: "AnimatedView" },
   useSharedValue: () => ({ get value() { return animation.value; }, set: animation.set }),
+  useAnimatedReaction: vi.fn(),
   useAnimatedStyle: (callback: () => unknown) => callback(),
   withTiming: animation.timing, withSequence: vi.fn(),
   Easing: { out: () => undefined, quad: undefined },
@@ -68,9 +69,9 @@ vi.mock("../src/islander/Companion", () => ({ Companion: "Companion" }));
 vi.mock("react-native-gesture-handler", () => ({ GestureDetector: "GestureDetector" }));
 vi.mock("../src/components/Text", () => ({ Text: "Text" }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
-vi.mock("../src/arcade/Input", () => ({ PressControl: "PressControl", uiThreadDrag: vi.fn() }));
+vi.mock("../src/arcade/Input", () => ({ PressControl: "PressControl", uiThreadDrag: () => ({ enabled: () => ({}) }) }));
 vi.mock("../src/arcade/Sprite", () => ({ ArcadeSprite: "ArcadeSprite" }));
-vi.mock("../src/arcade/loop", () => ({ useArcadeLoop: vi.fn() }));
+vi.mock("../src/arcade/loop", () => ({ useArcadeLoop: ({ initial }: { initial: CargoState }) => ({ snapshot: initial, state: { current: initial }, dispatch: vi.fn(), budget: {} }) }));
 vi.mock("../src/arcade/games/canoe-cargo/Touch", () => ({ CargoTouch: "CargoTouch" }));
 
 it("keeps SVG digits within their pill and lock bounds separate at every tile size", async () => {
@@ -106,4 +107,51 @@ it("suppresses settle scheduling and displacement even with a nonzero shared val
   expect(animation.timing).toHaveBeenCalledTimes(2);
   expect(tree.root.findByType("AnimatedView" as never).props.style[1].transform).toEqual([{ translateY: 0 }, { scaleY: 1 }]);
   await act(async () => tree.unmount());
+});
+
+// Geometry budget from rendered styles; text uses a conservative 1.25× line box.
+// This checks intrinsic content without relying on Yoga shrinking/clipping it to fit.
+it("fits HOLD/NEXT and every mode within the 844×390 safe-area arena", async () => {
+  for (const level of [cargoLevel("w1-1"), cargoLevel("learn-1"), "endless"] as const) {
+    const initial = createCargo(level, 42, false);
+    initial.piece = { shape: 0, turn: 1, kind: "crate", value: 1 }; // Four learning rows.
+    initial.next = [0, 0].map(() => ({ shape: 0, turn: 0, kind: "crate", value: 1 })) as CargoState["next"];
+    let tree!: ReturnType<typeof create>;
+    await act(async () => { tree = create(<CargoBoard initial={initial} width={844} height={307} active={false} helper={false} outfit="island" onResult={vi.fn()} onTone={vi.fn()}/>); });
+    const hold = tree.root.findByProps({ testID: "cargo-hold" });
+    const preview = hold.parent!, sidebar = preview.parent!;
+    const holdStyle = Object.assign({}, ...hold.props.style);
+    const tray = preview.children[1] as typeof preview;
+    const queue = tray.children[1] as typeof preview;
+    const trayStyle = tray.props.style, previewStyle = preview.props.style;
+    const bundles = queue.children as (typeof preview)[];
+    const queueWidth = bundles.reduce((sum, bundle) => sum + bundle.findByType("View" as never).props.style.width, 0) + queue.props.style.gap * (bundles.length - 1);
+    const trayWidth = queueWidth + 2 * (trayStyle.padding + trayStyle.borderWidth);
+    expect(previewStyle.flexDirection).toBe("row");
+    // Include the empty HOLD prompt's text and padding, rather than just minWidth.
+    const prompt = hold.children[1] as typeof preview;
+    const promptWidth = "Tap to store".length * prompt.props.style.fontSize * .65;
+    const holdWidth = Math.max(holdStyle.minWidth, promptWidth + 2 * (holdStyle.paddingHorizontal + holdStyle.borderWidth), 4 * 14 + 2 * (holdStyle.paddingHorizontal + holdStyle.borderWidth));
+    expect(holdWidth + previewStyle.gap + trayWidth).toBeLessThanOrEqual(sidebar.props.style.width);
+    const trayHeight = 15 + trayStyle.gap + Math.max(...bundles.map(bundle => bundle.findByType("View" as never).props.style.height)) + 2 * (trayStyle.padding + trayStyle.borderWidth);
+    const previewHeight = Math.max(holdStyle.minHeight, trayHeight);
+    const controls = sidebar.children[1] as typeof preview;
+    const controlStyle = tree.root.findByProps({ testID: "cargo-left" }).findByType("PressControl" as never).props.style[0];
+    const columns = Math.floor((controls.props.style.maxWidth + controls.props.style.gap) / (controlStyle.minWidth + controls.props.style.gap));
+    const controlRows = Math.ceil(controls.children.length / columns);
+    const sidebarHeight = previewHeight + sidebar.props.style.gap + controlRows * controlStyle.minHeight + (controlRows - 1) * controls.props.style.gap;
+    const board = tree.root.findByProps({ testID: "cargo-board" });
+    const scene = tree.root.findByProps({ testID: "cargo-scene" });
+    const crew = tree.root.findAllByProps({ testID: "cargo-crew" });
+    const topHeight = crew.length ? crew[0].findByType("Companion" as never).props.size + crew[0].props.style.borderBottomWidth : 36;
+    const learning = level !== "endless" && !!level.targetSum;
+    const rows = tree.root.findAllByProps({ accessibilityLiveRegion: "polite" });
+    const learningHeight = learning ? rows[0].children.length * (rows[0].children[0] as typeof preview).props.style.lineHeight + (rows[0].children.length - 1) * rows[0].props.style.gap : 0;
+    if (learning) expect(rows[0].children).toHaveLength(4);
+    const finish = tree.root.findAllByType("Pressable" as never);
+    if (level === "endless") expect(finish[0].props.style.minHeight).toBe(44);
+    const totalHeight = scene.props.style.padding * 2 + topHeight + Math.max(board.props.style.height, sidebarHeight) + learningHeight + 15 + (level === "endless" ? finish[0].props.style.minHeight : 0) + scene.props.style.gap * (2 + Number(learning) + Number(level === "endless"));
+    expect(totalHeight).toBeLessThanOrEqual(307);
+    await act(async () => tree.unmount());
+  }
 });
