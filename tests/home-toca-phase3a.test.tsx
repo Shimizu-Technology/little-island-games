@@ -447,12 +447,44 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
     expect(env.back).not.toHaveBeenCalled();
     await act(async () => root!.unmount());
 
-    // Web browser Back (popstate): survives viewport rotation/refit while Closet is open, then handles double Back on cold, map, and game entries.
+    // Web browser Back (popstate): model a real browser history stack (entries + cursor + replaceState/pushState/back).
     env.os = "web";
-    const installFakeWebWindow = (href: string) => {
+    const installBrowserHistoryWindow = (initialEntries: { url: string; state?: unknown }[]) => {
+      const entries: { url: string; state: unknown }[] = initialEntries.map((entry) => ({
+        url: entry.url,
+        state: entry.state ?? null,
+      }));
+      let cursor = entries.length - 1;
       const popListeners: ((e: any) => void)[] = [];
-      const pushState = vi.fn();
-      const historyBack = vi.fn();
+      const resolveUrl = (url?: string) => {
+        if (!url) return entries[cursor].url;
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return new URL(url, entries[cursor].url).href;
+      };
+      const location = {
+        get href() {
+          return entries[cursor].url;
+        },
+        get pathname() {
+          return new URL(entries[cursor].url).pathname;
+        },
+      };
+      const pushState = vi.fn((data: unknown, _unused: string, url?: string) => {
+        entries.splice(cursor + 1);
+        entries.push({ url: resolveUrl(url), state: data });
+        cursor = entries.length - 1;
+      });
+      const replaceState = vi.fn((data: unknown, _unused: string, url?: string) => {
+        entries[cursor] = { url: resolveUrl(url), state: data };
+      });
+      const historyBack = vi.fn(() => {
+        if (cursor <= 0) return;
+        cursor -= 1;
+        const stopImmediatePropagation = vi.fn();
+        for (const fn of [...popListeners]) {
+          fn({ state: entries[cursor].state, stopImmediatePropagation });
+        }
+      });
       const addEventListener = vi.fn((type: string, fn: (e: any) => void) => {
         if (type === "popstate") popListeners.push(fn);
       });
@@ -460,83 +492,162 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
         const i = popListeners.indexOf(fn);
         if (type === "popstate" && i >= 0) popListeners.splice(i, 1);
       });
-      vi.stubGlobal("window", {
-        history: { state: { id: "entry-1" }, pushState, back: historyBack },
-        location: { href },
+      const history = {
+        get length() {
+          return entries.length;
+        },
+        get state() {
+          return entries[cursor].state;
+        },
+        pushState,
+        replaceState,
+        back: historyBack,
+      };
+      vi.stubGlobal("window", { history, location, addEventListener, removeEventListener });
+      const browserBack = async () => {
+        await act(async () => {
+          history.back();
+        });
+        await act(async () => {
+          vi.advanceTimersByTime(250);
+        });
+      };
+      return {
+        entries,
+        getCursor: () => cursor,
+        location,
+        history,
+        pushState,
+        replaceState,
+        historyBack,
         addEventListener,
         removeEventListener,
-      });
-      const firePop = async () => {
-        const stopImmediatePropagation = vi.fn();
-        await act(async () => {
-          for (const fn of [...popListeners]) fn({ stopImmediatePropagation });
-        });
-        await act(async () => { vi.advanceTimersByTime(250); });
-        return stopImmediatePropagation;
+        browserBack,
       };
-      return { popListeners, pushState, historyBack, addEventListener, removeEventListener, firePop };
     };
 
     try {
-      // 1) Cold /locker + viewport rotation/refit while Closet is open + double browser Back.
+      // 1) Cold /locker + viewport rotation/refit to 844×390 while Closet is open + two real window.history.back() steps.
       env.canGoBack = false;
       env.dismissTo = undefined;
       env.replace.mockReset();
-      const coldWin = installFakeWebWindow("http://localhost/locker?item=hat:sunhat");
+      const coldWin = installBrowserHistoryWindow([
+        { url: "http://localhost/locker?item=hat:sunhat", state: { id: "entry-1" } },
+      ]);
       await act(async () => { root = create(<LockerRoute />); });
-      expect(coldWin.pushState).toHaveBeenCalledTimes(1);
-      expect(coldWin.pushState).toHaveBeenCalledWith(expect.objectContaining({ __homeSheet: "closet" }), "", expect.any(String));
+      // Clean 2-step sequence seeded: [ "/" (map), "/island-home" (home), "/locker?item=hat:sunhat" (sheet) ]
+      expect(coldWin.entries.map((e) => new URL(e.url).pathname)).toEqual(["/", "/island-home", "/locker"]);
+      expect(coldWin.location.href).toBe("http://localhost/locker?item=hat:sunhat");
+      expect(coldWin.getCursor()).toBe(2);
+      expect(coldWin.history.state).toEqual(expect.objectContaining({ __homeSentinel: "sheet", __homeSheet: "closet" }));
       expect(coldWin.addEventListener).toHaveBeenCalledTimes(1);
 
-      // Rotate viewport portrait -> landscape while Closet is open -> popstate listener & sentinel MUST NOT reset!
+      // Rotate viewport portrait -> 844×390 landscape while Closet is open -> NO double-push, NO listener reset!
       env.window = { width: 844, height: 390, fontScale: 1 };
       await act(async () => { root!.update(<LockerRoute />); });
       expect(coldWin.removeEventListener).not.toHaveBeenCalled();
       expect(coldWin.addEventListener).toHaveBeenCalledTimes(1);
-      expect(coldWin.pushState).toHaveBeenCalledTimes(1);
+      expect(coldWin.entries).toHaveLength(3);
+      expect(coldWin.getCursor()).toBe(2);
 
-      const stop1 = await coldWin.firePop();
-      expect(stop1).toHaveBeenCalledOnce();
+      // 1st browser Back: closes Closet to Home at /island-home (does NOT navigate to Map yet).
+      await coldWin.browserBack();
+      expect(coldWin.getCursor()).toBe(1);
+      expect(coldWin.location.pathname).toBe("/island-home");
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
-      expect(coldWin.historyBack).not.toHaveBeenCalled();
       expect(env.replace).not.toHaveBeenCalled();
 
-      // Second browser Back reaches "/" Map via replace("/").
-      const stop2 = await coldWin.firePop();
-      expect(stop2).toHaveBeenCalledOnce();
+      // 2nd browser Back: lands on "/" Map via goToMap()!
+      await coldWin.browserBack();
+      expect(coldWin.getCursor()).toBe(0);
+      expect(coldWin.location.pathname).toBe("/");
       expect(env.replace).toHaveBeenCalledWith("/");
       expect(env.back).not.toHaveBeenCalled();
       await act(async () => root!.unmount());
 
-      // 2) Map -> /island-home, open Closet from dock, rotate, then double browser Back -> "/" Map.
+      // 2) Cold /locker WITHOUT rotation + StrictMode-style already-seeded remount never double-pushes.
+      env.window = { width: 393, height: 852, fontScale: 1 };
+      env.canGoBack = false;
+      env.dismissTo = undefined;
+      env.replace.mockReset();
+      const coldNoRotateWin = installBrowserHistoryWindow([{ url: "http://localhost/locker", state: { id: "entry-2" } }]);
+      await act(async () => { root = create(<LockerRoute />); });
+      expect(coldNoRotateWin.entries).toHaveLength(3);
+      await act(async () => root!.unmount());
+      // Remount while history already rests on __homeSentinel: "sheet" -> zero extra pushes!
+      await act(async () => { root = create(<LockerRoute />); });
+      expect(coldNoRotateWin.entries).toHaveLength(3);
+      expect(coldNoRotateWin.getCursor()).toBe(2);
+      await coldNoRotateWin.browserBack();
+      expect(coldNoRotateWin.location.pathname).toBe("/island-home");
+      expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+      expect(env.replace).not.toHaveBeenCalled();
+      await coldNoRotateWin.browserBack();
+      expect(coldNoRotateWin.location.pathname).toBe("/");
+      expect(env.replace).toHaveBeenCalledWith("/");
+      await act(async () => root!.unmount());
+
+      // 3) Cold /badges -> 1st browser Back closes Badge Wall to Home, 2nd browser Back reaches "/" Map.
+      env.window = { width: 844, height: 390, fontScale: 1 };
+      env.canGoBack = false;
+      env.dismissTo = undefined;
+      env.replace.mockReset();
+      const coldBadgesWin = installBrowserHistoryWindow([{ url: "http://localhost/badges?badge=math-1", state: { id: "entry-3" } }]);
+      await act(async () => { root = create(<BadgesRoute />); });
+      expect(coldBadgesWin.entries.map((e) => new URL(e.url).pathname)).toEqual(["/", "/island-home", "/badges"]);
+      await coldBadgesWin.browserBack();
+      expect(coldBadgesWin.location.pathname).toBe("/island-home");
+      expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
+      expect(env.replace).not.toHaveBeenCalled();
+      await coldBadgesWin.browserBack();
+      expect(coldBadgesWin.location.pathname).toBe("/");
+      expect(env.replace).toHaveBeenCalledWith("/");
+      await act(async () => root!.unmount());
+
+      // 4) Map "/" -> /island-home, open Closet from dock, rotate to 844×390, then two browser Backs -> "/" Map.
       env.window = { width: 393, height: 852, fontScale: 1 };
       env.canGoBack = true;
       env.dismissTo = vi.fn();
-      const mapWin = installFakeWebWindow("http://localhost/island-home");
+      const mapWin = installBrowserHistoryWindow([
+        { url: "http://localhost/", state: { id: "map-0" } },
+        { url: "http://localhost/island-home", state: { id: "home-1" } },
+      ]);
       await act(async () => { root = create(<IslandHomeRoute />); });
       expect(mapWin.pushState).not.toHaveBeenCalled();
+      expect(mapWin.entries).toHaveLength(2);
       await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
       expect(mapWin.pushState).toHaveBeenCalledTimes(1);
+      expect(mapWin.entries).toHaveLength(3);
       env.window = { width: 844, height: 390, fontScale: 1 };
       await act(async () => { root!.update(<IslandHomeRoute />); });
-      await mapWin.firePop();
+      expect(mapWin.entries).toHaveLength(3);
+      await mapWin.browserBack();
+      expect(mapWin.getCursor()).toBe(1);
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
       expect(env.dismissTo).not.toHaveBeenCalled();
-      await mapWin.firePop();
+      await mapWin.browserBack();
+      expect(mapWin.getCursor()).toBe(0);
+      expect(mapWin.location.pathname).toBe("/");
       expect(env.dismissTo).toHaveBeenCalledWith("/");
       await act(async () => root!.unmount());
 
-      // 3) Game-origin /badges alias (canGoBack=true): first popstate closes Badge Wall, second reaches "/" (never game).
+      // 5) Game-origin /badges alias (canGoBack=true): 1st Back closes Badge Wall to Home, 2nd Back reaches "/" (never game).
       env.window = { width: 393, height: 852, fontScale: 1 };
       env.canGoBack = true;
       env.dismissTo = vi.fn();
-      const gameWin = installFakeWebWindow("http://localhost/badges?badge=math-1");
+      const gameWin = installBrowserHistoryWindow([
+        { url: "http://localhost/", state: { id: "map-0" } },
+        { url: "http://localhost/play?game=sudoku", state: { id: "game-1" } },
+        { url: "http://localhost/badges?badge=math-1", state: { id: "badges-2" } },
+      ]);
       await act(async () => { root = create(<BadgesRoute />); });
-      expect(gameWin.pushState).toHaveBeenCalledWith(expect.objectContaining({ __homeSheet: "badges" }), "", expect.any(String));
-      await gameWin.firePop();
+      expect(gameWin.history.state).toEqual(expect.objectContaining({ __homeSentinel: "sheet", __homeSheet: "badges" }));
+      await gameWin.browserBack();
+      expect(gameWin.location.pathname).toBe("/island-home");
       expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
       expect(env.dismissTo).not.toHaveBeenCalled();
-      await gameWin.firePop();
+      await gameWin.browserBack();
+      expect(gameWin.location.pathname).toBe("/");
       expect(env.dismissTo).toHaveBeenCalledWith("/");
       expect(env.back).not.toHaveBeenCalled();
     } finally {
@@ -710,9 +821,36 @@ describe("Phase 3A: Closet camera framing, landscape layout, try-on, honest pers
     await act(async () => { root = create(<LockerRoute />); });
     expect(root!.root.findByProps({ testID: "live-room-scene" }).props.room).toBe("home");
 
-    // Verify exact head-to-feet screen bounds stay strictly inside [headerBottom, sheetTop] across all viewports including 844×390.
+    // Verify TRUE room-space head-to-feet screen bounds (hero.contact + hero.bounds) stay strictly inside [headerBottom, sheetTop]
+    // across all viewports including 844×390 (60 pt header, sheetTop=137), for both cold /locker and dock-open Closet after rotation!
     const scene = buildScene(starterHome());
     const hero = scene.entities["character/0"];
+    const heroRoomTop = hero.contact.y + hero.bounds.top;
+    const heroRoomBottom = heroRoomTop + hero.bounds.height;
+    const heroRoomLeft = hero.contact.x + hero.bounds.left;
+    const heroRoomRight = heroRoomLeft + hero.bounds.width;
+    const assertHeroFramed = (
+      camera: { a: number; d: number; tx: number; ty: number },
+      roomId: (typeof roomIds)[number],
+      width: number,
+      height: number,
+      headerHeight: number,
+      label: string
+    ) => {
+      const building = buildingLayout(roomIds.length, width / height > 1.8);
+      const metrics = closetSheetMetrics(height);
+      const sheetTop = height - metrics.sheetHeight;
+      const origin = roomOrigin(roomIds.indexOf(roomId), building);
+      const heroTopWindow = headerHeight + (origin.y + heroRoomTop) * camera.d + camera.ty;
+      const heroBottomWindow = headerHeight + (origin.y + heroRoomBottom) * camera.d + camera.ty;
+      const heroLeftWindow = (origin.x + heroRoomLeft) * camera.a + camera.tx;
+      const heroRightWindow = (origin.x + heroRoomRight) * camera.a + camera.tx;
+      expect(heroTopWindow, `${label} head >= headerBottom`).toBeGreaterThanOrEqual(headerHeight);
+      expect(heroBottomWindow, `${label} feet <= sheetTop`).toBeLessThanOrEqual(sheetTop);
+      expect(heroLeftWindow, `${label} left >= 0`).toBeGreaterThanOrEqual(0);
+      expect(heroRightWindow, `${label} right <= width`).toBeLessThanOrEqual(width);
+    };
+
     for (const [width, height] of [
       [320, 568],
       [390, 844],
@@ -728,17 +866,36 @@ describe("Phase 3A: Closet camera framing, landscape layout, try-on, honest pers
 
       const framed = closetCameraFor(hero, "kitchen", { width, height: height - headerHeight - 76 }, height, headerHeight, building);
       expect(framed.room).toBe("home");
-      const origin = roomOrigin(roomIds.indexOf(framed.room), building);
-      const heroTopCanvas = (origin.y + hero.bounds.top) * framed.camera.d + framed.camera.ty;
-      const heroBottomCanvas = (origin.y + hero.bounds.top + hero.bounds.height) * framed.camera.d + framed.camera.ty;
-      const heroTopWindow = headerHeight + heroTopCanvas;
-      const heroBottomWindow = headerHeight + heroBottomCanvas;
-      const heroCenterX = (origin.x + hero.contact.x) * framed.camera.a + framed.camera.tx;
-      expect(heroTopWindow, `${width}x${height} head below headerBottom`).toBeGreaterThanOrEqual(headerHeight);
-      expect(heroBottomWindow, `${width}x${height} feet above sheetTop`).toBeLessThanOrEqual(sheetTop);
-      expect(heroCenterX, `${width}x${height} x`).toBeGreaterThan(0);
-      expect(heroCenterX, `${width}x${height} x`).toBeLessThan(width);
+      assertHeroFramed(framed.camera, framed.room, width, height, headerHeight, `${width}x${height}`);
     }
+
+    // Live route check at 844×390 (60 pt header, sheetTop=137): cold /locker entry AND dock-open Closet after rotation.
+    await act(async () => root!.unmount());
+    env.window = { width: 844, height: 390, fontScale: 1 };
+    env.insets = { top: 0, bottom: 21, left: 0, right: 0 };
+    env.params = {};
+    env.cameraSet.mockReset();
+    await act(async () => { root = create(<LockerRoute />); });
+    // Trigger measured 60 pt header layout as in Chromium at 844×390.
+    const coldHeader = root!.root.findByProps({ testID: "home-top-bar" });
+    await act(async () => coldHeader.props.onLayout({ nativeEvent: { layout: { height: 60 } } }));
+    const coldCamera = env.cameraSet.mock.calls.at(-1)?.[0] ?? env.interactionOpts.initialCamera;
+    assertHeroFramed(coldCamera, "home", 844, 390, 60, "cold /locker 844x390");
+    await act(async () => root!.unmount());
+
+    // Start portrait on /island-home, rotate to 844×390, then open Closet from dock.
+    env.window = { width: 390, height: 844, fontScale: 1 };
+    env.insets = { top: 44, bottom: 34, left: 0, right: 0 };
+    env.animateCamera.mockReset();
+    env.cameraSet.mockReset();
+    await act(async () => { root = create(<IslandHomeRoute />); });
+    env.window = { width: 844, height: 390, fontScale: 1 };
+    env.insets = { top: 0, bottom: 21, left: 0, right: 0 };
+    await act(async () => { root!.update(<IslandHomeRoute />); });
+    await act(async () => root!.root.findByProps({ testID: "home-top-bar" }).props.onLayout({ nativeEvent: { layout: { height: 60 } } }));
+    await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
+    const dockCamera = env.animateCamera.mock.calls.at(-1)?.[0];
+    assertHeroFramed(dockCamera, "home", 844, 390, 60, "dock Closet after 844x390 rotation");
   });
 
   it("P1-3: switching rooms via arrows or canvas swipe while Closet is open cancels try-on draft and closes Closet", async () => {
@@ -858,23 +1015,52 @@ describe("Phase 3A: Closet camera framing, landscape layout, try-on, honest pers
     expect(flat(root!.root.findByProps({ testID: "sheet" }).props.style).width).toBe(theme.sheet.maxWidth);
   });
 
-  it("P1-5: Retry is reachable from Closet and inside Badge Wall Modal; Closet clears wear error once retry succeeds", async () => {
+  it("P1-5: SaveStatus Retry and Sheet Close have zero overlap and stay independently reachable in both Closet and Badge Wall at 844×390", async () => {
+    env.window = { width: 844, height: 390, fontScale: 1 };
+    env.insets = { top: 0, bottom: 21, left: 0, right: 0 };
     setupStore({ earned: ["hat:captain-cap"] });
     env.saveStatusVisible = true;
     await act(async () => { root = create(<IslandHomeRoute />); });
+    await act(async () => root!.root.findByProps({ testID: "home-top-bar" }).props.onLayout({ nativeEvent: { layout: { height: 60 } } }));
 
-    // Open Badge Wall -> SaveStatus Retry MUST render inside Badge Wall's Modal so touch users can tap it directly.
+    // When no sheet is open, SaveStatus renders normally on Home (single banner).
+    expect(hostById(root!.root, "home-save-status")).toHaveLength(1);
+    expect(hostById(root!.root, "save-retry-button")).toHaveLength(1);
+
+    // Open Badge Wall -> SaveStatus renders IN-FLOW inside Sheet directly BELOW the header bar (never absolute over Close!).
     await act(async () => root!.root.findByProps({ testID: "home-badges-button" }).props.onPress());
     const modal = root!.root.findByType("Modal" as never);
     expect(hostById(modal, "save-retry-button")).toHaveLength(1);
-    expect(hostById(root!.root, "home-save-status")).toHaveLength(1);
-    await act(async () => root!.root.findByProps({ accessibilityLabel: "Close badge wall" }).props.onPress());
+    expect(hostById(root!.root, "home-save-status")).toHaveLength(1); // zero duplicate banners!
+    const badgeSheetPanel = modal.findByProps({ testID: "sheet" });
+    const badgeSaveWrap = hostById(badgeSheetPanel, "home-save-status")[0];
+    expect(flat(badgeSaveWrap.props.style).position).not.toBe("absolute");
+    // In-flow child order inside Sheet panel: [0] header (contains sheet-close), [1] banner (contains home-save-status), [2] body.
+    const panelChildren = badgeSheetPanel.children.filter((c): c is ReactTestInstance => typeof c !== "string");
+    const headerIdx = panelChildren.findIndex((c) => hostById(c, "sheet-close").length > 0);
+    const bannerIdx = panelChildren.findIndex((c) => c.props.testID === "home-save-status");
+    expect(headerIdx).toBeGreaterThanOrEqual(0);
+    expect(bannerIdx).toBeGreaterThan(headerIdx);
+    // Close button stays independently reachable and closes Badge Wall while save error is active.
+    await act(async () => hostById(modal, "sheet-close")[0].props.onPress());
     await act(async () => { vi.advanceTimersByTime(250); });
+    expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
 
-    // Open Closet and verify SaveStatus wrapper is stacked above undimmed sheet (zIndex 100 > 50).
+    // Open Closet -> SaveStatus stays strictly inside [headerHeight + 4, sheetTop - 4] ABOVE Closet (zero intersection with sheet/Close!).
     await act(async () => root!.root.findByProps({ testID: "home-closet-button" }).props.onPress());
+    expect(hostById(root!.root, "home-save-status")).toHaveLength(1); // zero duplicate banners!
     const statusWrap = root!.root.findByProps({ testID: "home-save-status" });
-    expect(flat(statusWrap.props.style).zIndex).toBe(100);
+    const statusStyle = flat(statusWrap.props.style);
+    const closetMetrics = closetSheetMetrics(390, { bottomInset: 21 });
+    const sheetTop = 390 - closetMetrics.sheetHeight; // 137
+    expect(statusStyle.zIndex).toBe(100);
+    expect(statusStyle.top).toBe(64);
+    expect(statusStyle.bottom).toBe(closetMetrics.sheetHeight + 4);
+    const statusBottomWindow = 390 - statusStyle.bottom; // 133
+    expect(statusBottomWindow).toBeLessThan(sheetTop);
+    expect(statusBottomWindow - statusStyle.top).toBeGreaterThanOrEqual(52); // enough height for compact SaveStatus Retry (44pt button)
+    expect(hostById(root!.root, "save-retry-button")).toHaveLength(1);
+    expect(hostById(root!.root, "sheet-close")).toHaveLength(1);
 
     await act(async () => root!.root.findByProps({ testID: "closet-tab-hats" }).props.onPress());
     await act(async () => root!.root.findByProps({ testID: "closet-item-hat:captain-cap" }).props.onPress());
@@ -914,6 +1100,11 @@ describe("Phase 3A: Closet camera framing, landscape layout, try-on, honest pers
     expect(hostById(root!.root, "closet-wear-error")).toHaveLength(0);
     expect(hostById(root!.root, "closet-wear-saved")).toHaveLength(1);
     expect(env.announce).toHaveBeenCalledWith("Wearing your new look.");
+
+    // Close button on Closet works cleanly even while SaveStatus is visible!
+    await act(async () => hostById(root!.root, "sheet-close")[0].props.onPress());
+    await act(async () => { vi.advanceTimersByTime(250); });
+    expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
   });
 
   it("P2-2 & P3-1: sends native VoiceOver focus to an accessible header node on open & opener on close, and reserves 'trying on' for unsaved drafts", async () => {

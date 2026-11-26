@@ -38,7 +38,7 @@ export const shouldDismiss = (dy: number, vy: number) => dy > theme.sheet.dismis
  * board stays reachable by keyboard. iPhone start sheets use the native route presentation instead
  * (`nativeFormSheetOptions`).
  */
-export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, compactHeader = false, onTitleRef, headerAction, topOverlay, title, closeLabel = "Close", children }: {
+export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, compactHeader = false, onTitleRef, headerAction, banner, title, closeLabel = "Close", children }: {
   visible: boolean;
   onClose: () => void;
   mode?: SheetMode;
@@ -52,8 +52,8 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
   onTitleRef?: (node: unknown) => void;
   /** Optional compact action rendered in the header row between the title and Close button. */
   headerAction?: React.ReactNode;
-  /** Optional overlay rendered inside the sheet root (and inside Modal for dimmed sheets) above the panel. */
-  topOverlay?: React.ReactNode;
+  /** Optional in-flow banner rendered directly below the sheet header bar so it never covers Close. */
+  banner?: React.ReactNode;
   /** Spoken and shown first; it takes focus when the sheet opens on Web. */
   title?: string;
   closeLabel?: string;
@@ -185,9 +185,10 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
                 <View style={styles.title} />
               )}
               {headerAction}
-              <IconButton glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
+              <IconButton testID="sheet-close" glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
             </View>
           </View>
+          {banner}
           {!scrolls
             ? <View style={[styles.fill, { paddingBottom: insets.bottom }]}>{children}</View>
             : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: theme.space.lg + insets.bottom }]}>
@@ -195,7 +196,6 @@ export function Sheet({ visible, onClose, mode = "dim", heightRatio, scroll, com
             </ScrollView>}
         </Animated.View>
       </View>
-      {topOverlay}
     </View>
   );
 

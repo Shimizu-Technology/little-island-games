@@ -128,6 +128,7 @@ export function HomeRoute({
       ]}
       persist={(home) => store.personalize({ home }, expected)}
       saveStatus={<SaveStatus />}
+      sheetSaveStatus={<SaveStatus compact />}
     />
   );
 }

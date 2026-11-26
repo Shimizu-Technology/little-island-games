@@ -1,6 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { BadgeArt } from "../badges/BadgeArt";
 import { badgeInfo, progressForBadge, trackLabels, tracks, type BadgeId } from "../badges/engine";
 import { Sheet } from "../ui/Sheet";
@@ -39,8 +38,6 @@ export function HomeBadgesSheet({
   initialBadge,
   saveStatus,
 }: HomeBadgesSheetProps) {
-  const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<BadgeId | undefined>(initialBadge);
   const latestData = useRef({ badges, milestones });
   useLayoutEffect(() => {
@@ -82,19 +79,9 @@ export function HomeBadgesSheet({
       mode="large"
       title="Badge Wall"
       closeLabel="Close badge wall"
-      topOverlay={
+      banner={
         saveStatus ? (
-          <View
-            testID="home-save-status"
-            pointerEvents="box-none"
-            style={[
-              styles.saveStatusOverlay,
-              {
-                top: insets.top + 8,
-                maxWidth: Math.min(380, width - 16),
-              },
-            ]}
-          >
+          <View testID="home-save-status" style={styles.saveStatusBanner}>
             {saveStatus}
           </View>
         ) : undefined
@@ -267,10 +254,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "700",
   },
-  saveStatusOverlay: {
-    position: "absolute",
-    right: 8,
-    zIndex: 100,
-    elevation: 100,
+  saveStatusBanner: {
+    paddingHorizontal: theme.space.lg,
+    flexShrink: 0,
   },
 });

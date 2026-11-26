@@ -91,17 +91,21 @@ export function closetCameraFor(
   const safeHeight = Math.max(1, visibleHeight);
   const aboveSheet: Viewport = { width: viewport.width, height: safeHeight };
   const origin = roomOrigin(index, building);
+  // P1-3: hero.bounds is contact-relative (graph.ts); add hero.contact for the true room-space head-to-feet box.
+  const heroRoomLeft = hero ? hero.contact.x + hero.bounds.left : 360;
+  const heroRoomTop = hero ? hero.contact.y + hero.bounds.top : 320;
+  const heroRoomBottom = hero ? heroRoomTop + hero.bounds.height : 480;
   const at = hero
     ? {
-        x: hero.contact.x,
-        y: hero.bounds.top + hero.bounds.height * 0.52,
+        x: heroRoomLeft + hero.bounds.width * 0.5,
+        y: heroRoomTop + hero.bounds.height * 0.5,
       }
     : { x: 400, y: 400 };
   const margin = Math.min(8, Math.floor(safeHeight * 0.1));
   const baseScale = roomScale(aboveSheet);
   const heroHeight = hero ? Math.max(120, hero.bounds.height) : 160;
   const maxHeroScale = Math.max(0.05, (safeHeight - margin * 2) / heroHeight);
-  const scale = Math.max(fitCamera(aboveSheet, building).a, Math.min(baseScale, maxHeroScale));
+  const scale = Math.min(maxHeroScale, Math.max(fitCamera(aboveSheet, building).a, Math.min(baseScale, maxHeroScale)));
   const raw: CameraMatrix = {
     a: scale,
     b: 0,
@@ -112,12 +116,17 @@ export function closetCameraFor(
   };
   const bounded = boundCamera(raw, aboveSheet, building);
   if (hero) {
-    const heroTop = (origin.y + hero.bounds.top) * bounded.d + bounded.ty;
-    const heroBottom = (origin.y + hero.bounds.top + hero.bounds.height) * bounded.d + bounded.ty;
+    const heroTop = (origin.y + heroRoomTop) * bounded.d + bounded.ty;
+    const heroBottom = (origin.y + heroRoomBottom) * bounded.d + bounded.ty;
     let dy = 0;
     if (heroBottom > safeHeight - margin) dy = safeHeight - margin - heroBottom;
     if (heroTop + dy < margin) dy = margin - heroTop;
-    return { room, camera: dy ? { ...bounded, ty: bounded.ty + dy } : bounded };
+    const heroLeft = (origin.x + heroRoomLeft) * bounded.a + bounded.tx;
+    const heroRight = heroLeft + hero.bounds.width * bounded.a;
+    let dx = 0;
+    if (heroRight > aboveSheet.width - margin) dx = aboveSheet.width - margin - heroRight;
+    if (heroLeft + dx < margin) dx = margin - heroLeft;
+    return { room, camera: dx || dy ? { ...bounded, tx: bounded.tx + dx, ty: bounded.ty + dy } : bounded };
   }
   return { room, camera: bounded };
 }
@@ -150,6 +159,7 @@ export type HomeScreenProps = Ownership & {
   initialState?: unknown;
   persist?: (state: HomeStateV2) => boolean;
   saveStatus?: ReactNode;
+  sheetSaveStatus?: ReactNode;
   lab?: boolean;
 };
 export function HomeScreen({
@@ -163,6 +173,7 @@ export function HomeScreen({
   closet,
   persist,
   saveStatus,
+  sheetSaveStatus,
   renderCharacter,
   lab = false,
   ...ownership
@@ -677,6 +688,8 @@ export function HomeScreen({
   };
   const sheetHistoryPushed = useRef(false);
   const suppressNextPop = useRef(false);
+  const initialAliasSheet = useRef(initialSheet);
+  const coldBaseSeeded = useRef(false);
   const popWebSheetHistory = useCallback(() => {
     if (Platform.OS !== "web" || !sheetHistoryPushed.current) return;
     sheetHistoryPushed.current = false;
@@ -822,25 +835,74 @@ export function HomeScreen({
     });
     return () => sub.remove();
   }, []);
-  // P1-1: Tie the Web history sentinel strictly to whether a sheet is open; refs keep it intact across viewport refits.
+  // P1-1: Seed a clean 2-step Web history stack on cold/alias entries ([map "/"] -> [home "/island-home"] -> [sheet]),
+  // and push a single sheet sentinel when opened from the Home dock; never double-push across refits or StrictMode.
   const sheetOpen = activeSheet !== null;
   React.useEffect(() => {
-    if (Platform.OS !== "web" || !sheetOpen) return;
+    if (Platform.OS !== "web") return;
     const host = globalThis as {
       window?: {
-        history?: { state?: unknown; pushState?: (data: unknown, unused: string, url?: string) => void };
+        history?: {
+          length?: number;
+          state?: unknown;
+          pushState?: (data: unknown, unused: string, url?: string) => void;
+          replaceState?: (data: unknown, unused: string, url?: string) => void;
+        };
         location?: { href?: string };
       };
     };
     const win = host.window;
-    if (!win || sheetHistoryPushed.current || typeof win.history?.pushState !== "function") return;
-    sheetHistoryPushed.current = true;
-    const currentState = win.history.state && typeof win.history.state === "object" ? win.history.state : {};
-    win.history.pushState(
-      { ...(currentState as Record<string, unknown>), __homeSheet: live.current.activeSheet },
-      "",
-      win.location?.href ?? ""
-    );
+    const history = win?.history;
+    if (!win || typeof history?.pushState !== "function") return;
+    const currentState =
+      history.state && typeof history.state === "object" ? (history.state as Record<string, unknown>) : {};
+    const sentinel = currentState.__homeSentinel;
+    const currentHref = win.location?.href ?? "";
+
+    if (sheetOpen) {
+      if (sheetHistoryPushed.current || sentinel === "sheet") {
+        sheetHistoryPushed.current = true;
+        return;
+      }
+      sheetHistoryPushed.current = true;
+      const openedFromAlias = initialAliasSheet.current !== undefined && !coldBaseSeeded.current;
+      if (openedFromAlias) {
+        coldBaseSeeded.current = true;
+        if (sentinel !== "home") {
+          if (typeof history.replaceState === "function") {
+            history.replaceState({ __homeSentinel: "map" }, "", "/");
+          }
+          history.pushState({ __homeSentinel: "home" }, "", "/island-home");
+        }
+        history.pushState(
+          { ...currentState, __homeSentinel: "sheet", __homeSheet: live.current.activeSheet },
+          "",
+          currentHref
+        );
+        return;
+      }
+      if (!coldBaseSeeded.current && sentinel !== "home" && !router.canGoBack?.() && (history.length ?? 1) <= 1) {
+        coldBaseSeeded.current = true;
+        if (typeof history.replaceState === "function") {
+          history.replaceState({ __homeSentinel: "map" }, "", "/");
+          history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
+        }
+      }
+      history.pushState(
+        { ...currentState, __homeSentinel: "sheet", __homeSheet: live.current.activeSheet },
+        "",
+        currentHref
+      );
+      return;
+    }
+
+    if (!coldBaseSeeded.current && sentinel !== "home" && !router.canGoBack?.() && (history.length ?? 1) <= 1) {
+      coldBaseSeeded.current = true;
+      if (typeof history.replaceState === "function") {
+        history.replaceState({ __homeSentinel: "map" }, "", "/");
+        history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
+      }
+    }
   }, [sheetOpen]);
   React.useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -1586,9 +1648,9 @@ export function HomeScreen({
         badges={ownership.badges ?? []}
         milestones={milestones}
         initialBadge={badgeInitial}
-        saveStatus={saveStatus}
+        saveStatus={sheetSaveStatus ?? saveStatus}
       />
-      {/* P1-5: Render SaveStatus above scene (31) and undimmed sheets (50); Badge Wall renders it inside its Modal. */}
+      {/* P1-5: Keep SaveStatus strictly above Closet's sheetTop (never touching Close) and below Badge Wall's header inside its Modal. */}
       {saveStatus && activeSheet !== "badges" && (
         <View
           testID="home-save-status"
@@ -1597,12 +1659,19 @@ export function HomeScreen({
             position: "absolute",
             right: 8,
             maxWidth: Math.min(380, window.width - 16),
-            ...(activeSheet ? { top: headerHeight + 8 } : { bottom: inset.bottom + navigationHeight + 8 }),
+            ...(activeSheet === "closet"
+              ? {
+                  top: headerHeight + 4,
+                  bottom: Math.floor(window.height * closetSheetHeightRatio(window.height)) + 4,
+                  justifyContent: "flex-start",
+                  overflow: "hidden",
+                }
+              : { bottom: inset.bottom + navigationHeight + 8 }),
             zIndex: 100,
             elevation: 100,
           }}
         >
-          {saveStatus}
+          {activeSheet === "closet" ? (sheetSaveStatus ?? saveStatus) : saveStatus}
         </View>
       )}
       {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
