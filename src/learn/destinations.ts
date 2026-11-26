@@ -1,3 +1,5 @@
+import type { Save } from '../state/validation';
+import { progressFor } from '../state/challengeDrafts';
 import { boardIds, isBoardId } from '../board';
 import { gameIds, type GameId } from '../games';
 import { arcadeIds, type ArcadeId } from '../arcade/types';
@@ -22,4 +24,9 @@ export function assertReachable(ids:readonly string[], routes:readonly {id:strin
   if(new Set(routes.map(r=>r.id)).size!==routes.length || routes.length!==ids.length || routes.some(r=>!ids.includes(r.id)) || ids.some(id=>!routes.some(r=>r.id===id)))throw new Error('Every registered game needs one route.');
   for(const route of routes)if(route.taps>3 || route.taps<1 || !paths.includes(route.route.pathname) || !shelves.some(s=>s.id===route.id))throw new Error(`Unreachable game: ${route.id}`);
   if(shelves.some(s=>!routes.some(r=>r.id===s.id)))throw new Error('A shelf game has no route.');
+}
+
+/** Keep legacy board drafts reachable until the player starts a Challenge round. */
+export function legacyReefResume(save:Save) {
+  return save.board?.['reef-sweep']?.position.outcome===null&&!progressFor(save,save.learning?.active??'family')?.paused.some(s=>s.game==='reef-sweep'&&!s.result&&!s.credited);
 }

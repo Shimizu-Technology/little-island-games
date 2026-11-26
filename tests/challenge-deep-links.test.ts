@@ -46,3 +46,20 @@ it('keeps legacy Reef Sweep rounds alongside deduction progress through save/res
   expect(gameDestination('reef-sweep')).toEqual(SHORTCUTS['reef-sweep'].route);
   expect(entry.move(restored.challenge!.paused[0], entry.controls.help())).not.toBeNull();
 });
+
+it('continues Challenge Reef Sweep first and preserves the legacy-only board destination', async()=>{
+ const {createSession}=await import('../src/board');
+ const {emptySave}=await import('../src/state/validation');
+ const {emptyChallenge}=await import('../src/state/challenge');
+ const {ongoing,homeContinue}=await import('../src/learn/home');
+ const {legacyReefResume}=await import('../src/learn/destinations');
+ const board=createSession('reef-sweep',{seed:91});
+ const legacy={...emptySave(),board:{'reef-sweep':board},recentBoard:'reef-sweep' as const};
+ expect(ongoing(legacy,'reef-sweep')).toBe(true);expect(homeContinue(legacy)).toBe('reef-sweep');expect(legacyReefResume(legacy)).toBe(true);
+ const entry=challengeEntries.find(e=>e.game==='reef-sweep')!;
+ const session=entry.start(entry.puzzles[0].ref,'family','reef-continue',emptyChallenge(),{supportOff:false,ownRead:false},[]);
+ for(const save of [{...emptySave(),challenge:{...emptyChallenge(),paused:[session]}},{...legacy,challenge:{...emptyChallenge(),paused:[session]}}]){
+  expect(ongoing(save,'reef-sweep')).toBe(true);expect(homeContinue(save)).toBe('reef-sweep');expect(legacyReefResume(save)).toBe(false);
+ }
+ expect(legacy.board['reef-sweep']).toEqual(board);
+});

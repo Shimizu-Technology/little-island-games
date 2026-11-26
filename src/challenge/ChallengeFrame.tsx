@@ -46,7 +46,7 @@ export function challengeIntro(entry: ChallengeEntry): string {
 }
 const gameName = (game: string) => shelfGames.find(item=>item.id===(shelfIdOf[game]??game))?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
-export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = false}:{entry:ChallengeEntry;requestedPuzzle?:string;requestedCard?:ChallengeCard;autoStart?:boolean}) {
+export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = false,onLinkConsumed}:{entry:ChallengeEntry;requestedPuzzle?:string;requestedCard?:ChallengeCard;autoStart?:boolean;onLinkConsumed?:()=>void}) {
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width,height,fontScale}=useWindowDimensions(), insets=useSafeAreaInsets();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
@@ -71,6 +71,7 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
     const token=++dispatchToken.current;
     lock.current=true;setBusy(true);setLaunching(true);setMessage('');
     try {
+      if(entry.packed&&!isBand(choice))await entry.packed.prepare(choice.ref);
       // A band picks a concrete entry and verifies its content before anything is constructed.
       const target=isBand(choice)?entry.packed?.card(await entry.packed.choose(choice.bank,progress,(saved??completed)?.puzzle)):choice;
       if(!target)throw new Error('Unknown puzzle.');
@@ -89,8 +90,12 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
   }
   const linkedStarted = useRef(false);
   useEffect(() => {
-    if (!autoStart || !requestedCard || saved || linkedStarted.current) return;
+    if (linkedStarted.current) return;
     linkedStarted.current = true;
+    if(autoStart)onLinkConsumed?.();
+    if (!autoStart || !requestedCard || saved) return;
+    // Route entry is a one-time external request; launching also updates the picker status.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void launch(requestedCard, []);
   }, [autoStart, requestedCard, saved]); // eslint-disable-line react-hooks/exhaustive-deps -- Consume an exact route request once; never replace a saved attempt.
   const sessionKey=(s:ChallengeSession)=>`${owner}:${store.epoch}:${s.id}:${s.revision}`;
@@ -211,6 +216,7 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
     {!pinned&&!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
     {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}
     {picking ? <>
+      {!isBand(selection)&&<Copy testID="requested-puzzle">{selection.title} · Tide {selection.tier}</Copy>}
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>every.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(choices(path)[0]);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
       {choices(selection.path).map(p=>isBand(p)?<Button quiet key={`band-${p.bank}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{`${p.title} · Tide ${p.tier} · ${p.count} puzzles`}</Button>:<Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
       {!comfort.youngChild&&darable.length>0&&<><Heading style={{fontSize:20}}>{darable.length>1?'Optional dares':'An optional dare'}</Heading><Copy>{darable.length>MAX_DARES?'Choose up to three, or none. ':darable.length>1?'Choose any, or none. ':''}A miss leaves no mark and no penalty. Help is always here.{entry.dareHelp?` ${entry.dareHelp}`:''}</Copy>{darable.map(d=><Chip key={d.slot} selected={dares.includes(d.slot)} disabled={!dares.includes(d.slot)&&dares.length>=MAX_DARES} onPress={()=>toggleDare(d.slot)}>{d.label} · {d.help==='allowed'?'Help welcome':'On my own'}</Chip>)}</>}
