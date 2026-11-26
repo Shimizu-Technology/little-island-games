@@ -9,15 +9,19 @@ import { Text } from "./Text";
 import { X } from "./icons";
 import { theme } from "./theme";
 
-/** `dim`: start sheet, about 55% and dimmed. `small`: in-game sheet, at most 40% and undimmed so play can continue. */
-export type SheetMode = "dim" | "small";
+/**
+ * `dim`: start sheet, about 55% and dimmed. `small`: in-game sheet, at most 40% and undimmed so play can continue.
+ * `large`: a dimmed, nearly full-height sheet whose child fills it and scrolls itself (a long virtualized list).
+ */
+export type SheetMode = "dim" | "small" | "large";
+const LARGE = 0.92;
 
 const EXIT_MS = 180;
 const REDUCED_MS = 120;
 
 /** Sheet height in points: a share of the window, so a sheet never grows past its detent. */
 export const sheetHeight = (windowHeight: number, mode: SheetMode) =>
-  Math.floor(windowHeight * (mode === "dim" ? theme.sheet.start : theme.sheet.small));
+  Math.floor(windowHeight * (mode === "large" ? LARGE : mode === "dim" ? theme.sheet.start : theme.sheet.small));
 
 /** A swipe down closes the sheet when it went far enough or flicked fast enough. */
 export const shouldDismiss = (dy: number, vy: number) => dy > theme.sheet.dismissDistance || vy > theme.sheet.dismissVelocity;
@@ -46,7 +50,7 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
   const { width, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
-  const dim = mode === "dim";
+  const dim = mode !== "small", large = mode === "large";
   const height = sheetHeight(windowHeight, mode);
 
   const [shown, setShown] = useState(visible);
@@ -144,7 +148,7 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
           tabIndex={-1}
           accessibilityViewIsModal={dim}
           onAccessibilityEscape={onClose}
-          style={[styles.panel, theme.shadow, { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
+          style={[styles.panel, theme.shadow, large ? { height, width: Math.min(width, 960) } : { maxHeight: height, width: Math.min(width, theme.sheet.maxWidth) }, panel]}
         >
           <View {...pan.panHandlers} style={styles.top}>
             <View testID="sheet-grabber" style={styles.grabber} />
@@ -153,9 +157,11 @@ export function Sheet({ visible, onClose, mode = "dim", title, closeLabel = "Clo
               <IconButton glyph={X} accessibilityLabel={closeLabel} onPress={onClose} />
             </View>
           </View>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: theme.space.lg + insets.bottom }]}>
-            {children}
-          </ScrollView>
+          {large
+            ? <View style={[styles.fill, { paddingBottom: insets.bottom }]}>{children}</View>
+            : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: theme.space.lg + insets.bottom }]}>
+              {children}
+            </ScrollView>}
         </Animated.View>
       </View>
     </View>

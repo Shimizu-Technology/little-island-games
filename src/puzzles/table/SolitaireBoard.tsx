@@ -10,6 +10,7 @@ import {adviseAsync,type Advice} from './publicSolver';
 import {cardWords} from './solver';
 import {apply,columns,descending,legalMoves,rank,red,suit,won,type Move} from './solitaire';
 import type {TableAction,TableView} from './registration';
+import {useBoardHud} from '../../cove/boardHud';
 export type SolitaireBoardProps={view:TableView;dispatch:(a:TableAction)=>void;active:boolean;width:number};
 type Place={pile:number;index:number;card:number|null;covered:boolean;x:number;y:number};
 const suits=['♣','♦','♠','♥'];
@@ -119,6 +120,8 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
  </View>;
  const hintAction=()=>{if(!cueReady){ask();return;}if(help.stage===1){setHelp({...help,stage:2});return;}if(help.stage>=3&&advice?.kind==='move')showOne(advice.plan,4);else void oneStep(help.stage===2?3:4);};
  const hintLabel=thinking?'Looking…':!cueReady?'Hint':help.stage===1?'Think':help.stage===2?'One step':help.stage===3?'Show me':'Next step';
+ // In a Puzzles round the HUD owns this staged Hint and Undo; a full help log keeps the deal's own restart.
+ const host=useBoardHud({hint:{run:hintAction,disabled:!inputActive||thinking||!cueReady&&view.payload.audit.length>=128,label:hintLabel},undo:{run:()=>dispatch({type:'undo'}),disabled:!active||!read.history.length},reset:{run:()=>dispatch({type:'reset'}),disabled:!active}}),hosted=!!host,title=host?.title||view.title;
  const scrollHeight=Math.max(minimumTableHeight,Math.min(440,height*(large?0.42:0.55),room??440));
  const detail=rules||memory||message||cueReady||advice;
 
@@ -133,10 +136,10 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
    <Text maxFontSizeMultiplier={cap} style={{fontSize:12,color:C.ink}}>Foundations</Text>
   </View>;
  return <View style={{gap:short?3:7}}>
-  <Copy maxFontSizeMultiplier={short?controlCap:cap} style={short?{fontSize:12,lineHeight:18}:undefined}>{view.title}{short?` · ${status} · ${free?'Cells':'Stock / waste'} / foundations`:''}</Copy>
+  <Copy maxFontSizeMultiplier={short?controlCap:cap} style={short?{fontSize:12,lineHeight:18}:undefined}>{title}{short?` · ${status} · ${free?'Cells':'Stock / waste'} / foundations`:''}</Copy>
   <View style={{flexDirection:'row',flexWrap:'wrap',gap:7}}>
-   <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!active||!read.history.length} onPress={()=>dispatch({type:'undo'})}>Undo</Button>
-   <Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>
+   {!hosted&&<Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!active||!read.history.length} onPress={()=>dispatch({type:'undo'})}>Undo</Button>}
+   {!hosted&&<Button maxFontSizeMultiplier={controlCap} compact quiet disabled={!inputActive||thinking||!cueReady&&view.payload.audit.length>=128} onPress={hintAction}>{hintLabel}</Button>}
    <Button maxFontSizeMultiplier={controlCap} compact quiet label="How to play" onPress={()=>setRules(v=>!v)}>Rules</Button>
    {short&&drawControl}
    {short&&navigation}

@@ -5,7 +5,6 @@ import { unpack } from '../state/saveBits';
 import type { ChallengeProgress, PuzzleRef } from '../state/challenge';
 import { fnv1a32, validCivilDate } from '../puzzles/today';
 
-export const bands = ['Paddling', 'Shallows', 'Lagoon', 'Reef', 'Deep', 'Trench'] as const;
 export const readers = ['Little', 'Growing', 'Strong', 'Grown-up'] as const;
 export type Reader = typeof readers[number];
 export const rowNames = ['Words', 'Numbers', 'Logic', 'Cards', 'Island originals'] as const;

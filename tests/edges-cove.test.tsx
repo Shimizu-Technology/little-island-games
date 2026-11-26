@@ -8,6 +8,7 @@ import { catalogManifest } from '../src/state/catalogManifest';
 import { emptySave } from '../src/state/validation';
 import { progressFor } from '../src/state/challengeDrafts';
 import { completion, packedOpen } from '../src/cove/catalog';
+import { boardTitle } from '../src/cove/shelf';
 import { registration as bridgesRegistered } from '../src/challenge/registrations/bridges';
 import { registration as loopRegistered } from '../src/challenge/registrations/loop';
 import { BridgesBoard } from '../src/puzzles/edges/BridgesBoard';
@@ -29,6 +30,9 @@ vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: asy
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', G: 'g', Line: 'line', Rect: 'rect', Text: 'text', Path: 'path' }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: {} }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', C: {}, styles: {} }));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/feel', () => ({ feel: db.feel }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: db.play }) }));
@@ -85,7 +89,7 @@ describe('Bridges in the Cove, through the real Store and packed bank', () => {
       // Two taps on islands cycle the same link: two bridges become none.
       await gesture(screen, ax, ay); await gesture(screen, bx, by);
       await waitFor(() => marksOf('bridges')[e] === '0');
-      await press(screen, 'Hint: where should I look?');
+      await press(screen, 'Hint');
       await waitFor(() => text(screen).includes('Why?'));
       await press(screen, 'Show me');
       await waitFor(() => /[12]/.test(marksOf('bridges')));
@@ -156,6 +160,32 @@ describe('Loop in the Cove', () => {
       // The iOS 18.5 short-stroke regression runs against React Native's own PanResponder in edges-fix-round.test.tsx.
     } finally { if (screen) await act(async () => screen.unmount()); }
   });
+  it('hosted: the plain title, the board keeps Hint and Undo, and Start over moves to More Restart', async () => {
+    db.raw = JSON.stringify(emptySave());
+    const ref = await packedOpen(loopRegistered)!.open!(67, 2), card = loopRegistered.packed!.card(ref)!;
+    const byID = (screen: ReactTestRenderer, id: string) => screen.root.findAll(n => n.props.testID === id && typeof n.type === 'string');
+    let screen!: ReactTestRenderer;
+    try {
+      await act(async () => { screen = create(<StoreProvider><Probe/><Round entry={loop} card={card}/></StoreProvider>); });
+      await waitFor(() => !!paused('loop') && !!surface(screen));
+      const title = boardTitle(loopRegistered, ref, card.tier), shown = (byID(screen, 'puzzle-status')[0].findAllByType('p' as never)[0].children as string[]).join('');
+      expect(shown).toBe(title); expect(title).not.toBe('');
+      expect(shown).not.toMatch(/Paddling|Shallows|Lagoon|Reef|Deep|Trench/);
+      expect(byID(screen, 'hud-hint')).toHaveLength(0); expect(byID(screen, 'hud-undo')).toHaveLength(0);
+      expect(button(screen, 'Hint: where should I look?')).toBeDefined(); expect(button(screen, 'Undo')).toBeDefined();
+      expect(button(screen, 'Start over')).toBeUndefined();
+      const p = (loopRegistered.render(paused('loop'), () => {}, false, 353) as React.ReactElement<EdgeBoardProps<LinePuzzle>>).props.view.puzzle;
+      const cell = Math.max(22, Math.floor(Math.min(353 / (p.cols + 0.64), Math.max(300, 852 * 0.6) / (p.rows + 0.64)))), pad = Math.round(cell * 0.32);
+      await gesture(screen, pad, pad, cell * 3, 0);
+      await waitFor(() => marksOf('loop').slice(0, 3) === '111');
+      const id = paused('loop').id;
+      await act(async () => byID(screen, 'hud-more')[0].props.onPress());
+      await act(async () => byID(screen, 'more-Restart this puzzle')[0].props.onPress());
+      await act(async () => byID(screen, 'more-restart-confirm')[0].props.onPress());
+      await waitFor(() => /^0+$/.test(marksOf('loop')));
+      expect(paused('loop').id).toBe(id);
+    } finally { if (screen) await act(async () => screen.unmount()); }
+  });
   it('G5-04: hints solve a board; the solo finish saves at once and survives relaunch', async () => {
     db.raw = JSON.stringify(emptySave());
     const ref = await packedOpen(loopRegistered)!.open!(67, 0), card = loopRegistered.packed!.card(ref)!;
@@ -164,7 +194,7 @@ describe('Loop in the Cove', () => {
       await act(async () => { screen = create(<StoreProvider><Probe/><Round entry={loop} card={card}/></StoreProvider>); });
       await waitFor(() => !!surface(screen));
       for (let i = 0; i < 120 && !text(screen).includes('Puzzle solved'); i++) {
-        await press(screen, 'Hint: where should I look?');
+        await press(screen, 'Hint');
         await waitFor(() => !!button(screen, 'Show me') || !!button(screen, 'Fix it for me'));
         await press(screen, button(screen, 'Show me') ? 'Show me' : 'Fix it for me');
         await settle();
@@ -177,6 +207,39 @@ describe('Loop in the Cove', () => {
       await act(async () => { screen = create(<StoreProvider><Probe/></StoreProvider>); });
       await settle();
       expect(completion(progressFor(store.save, 'family')!, ref, loop)).toBe(code);
+    } finally { if (screen) await act(async () => screen.unmount()); }
+  });
+});
+
+describe('Bridges in a Puzzles round: the HUD Hint teaches first and never moves a bridge', () => {
+  it('HUD Hint on a blank and on an edited board only rings the island; Undo undoes; the help evidence stays', async () => {
+    db.raw = JSON.stringify(emptySave());
+    const ref = await packedOpen(bridgesRegistered)!.open!(62, 5), card = bridgesRegistered.packed!.card(ref)!;
+    let screen!: ReactTestRenderer;
+    try {
+      await act(async () => { screen = create(<StoreProvider><Probe/><Round entry={bridges} card={card}/></StoreProvider>); });
+      await waitFor(() => !!paused('bridges') && !!surface(screen));
+      const helps = () => (paused('bridges').payload as MarksPayload).audit.filter(a => a[0] === 'help').reduce((n, a) => n + a[1], 0);
+      // One Hint and one Undo: the HUD's. The board keeps Redo.
+      expect(button(screen, 'Hint: where should I look?')).toBeUndefined();
+      expect(screen.root.findAllByType('button').filter(b => (b.children as unknown[]).includes('Undo'))).toHaveLength(1);
+      expect(button(screen, 'Start over')).toBeUndefined();
+      const blank = marksOf('bridges');
+      await press(screen, 'Hint');
+      await waitFor(() => text(screen).includes('Why?'));
+      expect(marksOf('bridges')).toBe(blank); expect(helps()).toBe(1);
+      const p = (bridgesRegistered.render(paused('bridges'), () => {}, false, 353) as React.ReactElement<EdgeBoardProps<BridgesPuzzle>>).props.view.puzzle;
+      const { islands, links } = shapeOf(p), cell = Math.floor(Math.min(353 / (p.width + 0.4), Math.max(300, 852 * 0.62) / (p.height + 0.4))), rim = Math.round(cell * 0.2), at = (i: number) => [rim + (islands[i].x + 0.5) * cell, rim + (islands[i].y + 0.5) * cell];
+      const [ax, ay] = at(links[0].a), [bx, by] = at(links[0].b);
+      await gesture(screen, ax, ay, bx - ax, by - ay);
+      await waitFor(() => marksOf('bridges')[0] === '1');
+      const edited = marksOf('bridges');
+      await press(screen, 'Hint');
+      await waitFor(() => text(screen).includes('Why?'));
+      expect(marksOf('bridges')).toBe(edited); expect(helps()).toBe(2);
+      await press(screen, 'Undo');
+      await waitFor(() => marksOf('bridges') === blank);
+      expect(helps()).toBe(2); expect(bridgesRegistered.completionFacts!(paused('bridges'))).toEqual({ helpUsed: true, failed: false });
     } finally { if (screen) await act(async () => screen.unmount()); }
   });
 });

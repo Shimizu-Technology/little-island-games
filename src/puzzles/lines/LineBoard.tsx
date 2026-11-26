@@ -11,6 +11,7 @@ import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuz
 import { cueFor, techniqueNames, type Cue } from './teach';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
 import { PuzzleStatus, statusSentence, useStatusMax } from '../ui/PuzzleStatus';
+import { useBoardHud } from '../../cove/boardHud';
 
 const CROSSMARK = '#7E968F', DONEDISC = '#D3EBCF', PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -24,10 +25,12 @@ const rulesText: Record<LinePuzzle['kind'], string> = {
 export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<LinePuzzle>) {
   const p = view.puzzle, l = useMemo(() => latticeOf(p), [p]), marks = view.board.marks, pearl = p.kind === 'pearl-loop';
   const statusMax = useStatusMax();
+  // In a Puzzles round Start over moves to More (Restart) and the host's plain title replaces the adapter's; Hint and Undo stay on this board.
+  const host = useBoardHud({ reset: { run: () => dispatch({ type: 'reset' }), disabled: !active || marks.every(v => v === EMPTY) } }), hosted = !!host, title = host?.title || view.title;
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), chrome = useContext(GridChromeContext), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
   // At accessibility sizes the board shares one height budget with the safe areas, bar and status line; below them it is as it always was.
   const clueCount = p.kind === 'loop' ? p.clues.filter(n => n >= 0).length : p.pearls.filter(Boolean).length;
-  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false, sentence: statusSentence(view.title, view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined, `${clueCount}/${clueCount}`) }), Math.max(300, height * 0.6));
+  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false, sentence: statusSentence(title, view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined, `${clueCount}/${clueCount}`) }), Math.max(300, height * 0.6));
   // Loop dots sit on cell corners; Pearl Loop dots sit at cell centres.
   const span = pearl ? 0.5 : 0, cellsX = p.cols, cellsY = p.rows;
   // The board, its rim included, fits the column: no side overhang on a phone.
@@ -188,7 +191,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   });
 
   return <View style={{ gap: 12 }}>
-    <PuzzleStatus title={view.title} skill={view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined} count={`${done}/${total}`} countLabel={`${done} of ${total} ${pearl ? 'pearls' : 'numbers'} done`}>
+    <PuzzleStatus title={title} skill={view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined} count={`${done}/${total}`} countLabel={`${done} of ${total} ${pearl ? 'pearls' : 'numbers'} done`}>
       <Button quiet compact maxFontSizeMultiplier={statusMax} selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
       {/* Always present, so opening the card never re-wraps this row and moves the board. */}
       <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
@@ -220,7 +223,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
       <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
-      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || marks.every(v => v === EMPTY)} onPress={() => send({ type: 'reset' })}>Start over</Button>
+      {!hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || marks.every(v => v === EMPTY)} onPress={() => send({ type: 'reset' })}>Start over</Button>}
     </View>
   </View>;
 }

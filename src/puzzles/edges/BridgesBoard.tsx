@@ -13,6 +13,7 @@ import { cueFor, techniqueNames, type Cue } from './teach';
 import { releaseOffset, startOf, type TouchStart } from './touch';
 import { PRESS_SLOP } from '../../components/stillPress';
 import { PuzzleStatus, statusSentence, useStatusMax } from '../ui/PuzzleStatus';
+import { BoardHud, useBoardHud } from '../../cove/boardHud';
 
 const SEA = '#D4ECEE', DOT = '#A9D2D7', SAND = '#F7E8C4', SHORE = '#B48A55', PLANK = '#8E5F3A', DONE = '#D3EBCF', OVER = '#F8D3C8';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
@@ -22,10 +23,10 @@ const howTo = 'Each island’s number is how many bridges it needs. Bridges go s
 /** Bridges on a sea of dots. Drag from an island toward a neighbour, tap the water between two islands, or tap two islands. */
 export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<BridgesPuzzle>) {
   const p = view.puzzle, marks = view.board.marks, shape = useMemo(() => shapeOf(p), [p]), { islands, links, crosses } = shape;
-  const statusMax = useStatusMax();
+  const statusMax = useStatusMax(), title = useContext(BoardHud)?.title || view.title;
   const { width: windowWidth, height, fontScale } = useWindowDimensions(), chrome = useContext(GridChromeContext), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
   // At accessibility sizes the board shares one height budget with the safe areas, bar and status line; below them it is as it always was.
-  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false, sentence: statusSentence(view.title, view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined, `${islands.length}/${islands.length}`) }), Math.max(300, height * 0.62));
+  const room = edgeBoardHeight(boardRoom({ windowWidth, windowHeight: height, fontScale, chrome, pad: false, sentence: statusSentence(title, view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined, `${islands.length}/${islands.length}`) }), Math.max(300, height * 0.62));
   // A rim of water around the grid keeps rings and edge islands whole.
   const cell = bridgesCell(width, p.width, p.height, room), rim = Math.round(cell * 0.2);
   const W = cell * p.width + rim * 2, H = cell * p.height + rim * 2, r = cell * (cell < 40 ? 0.44 : 0.4);
@@ -128,6 +129,12 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
   const ask = () => { const cue = cueFor(p, marks); if (!cue) return; setSelected(null); setLadder({ stage: 1, cue, edits: view.board.edits, helpsAt: view.helps, placed: '' }); dispatch({ type: 'help' }); };
   const show = () => { if (!ladder.cue) return; setLadder(l => ({ ...l, placed: l.cue?.show ?? '' })); dispatch({ type: 'hint' }); };
   const send = (event: MarkEvent) => { setMessage(''); setSelected(null); dispatch(event); };
+  // In a Puzzles round the HUD owns Hint (this board's Look step, never a move) and Undo; Start over moves to More.
+  const hosted = !!useBoardHud({
+    hint: { run: ask, disabled: !active || waiting || shown },
+    undo: { run: () => send({ type: 'undo' }), disabled: !active || !view.board.undo.length },
+    reset: { run: () => send({ type: 'reset' }), disabled: !active || marks.every(v => !v) },
+  });
 
   const over = useMemo(() => new Set(overfull(p, marks)), [p, marks]);
   const finished = islands.filter((s, i) => degree(p, marks, i) === s.clue).length, first = [...over][0];
@@ -153,10 +160,10 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
   const actionsFor = (i: number) => shape.around[i].map(e => { const o = links[e].a === i ? links[e].b : links[e].a, s = islands[o], c = islands[i]; const dir = s.x > c.x ? 'right' : s.x < c.x ? 'left' : s.y > c.y ? 'down' : 'up'; return { name: `link-${e}`, label: `Bridge ${dir} to the ${s.clue}: ${marks[e]} now` }; });
 
   return <View style={{ gap: 12 }}>
-    <PuzzleStatus title={view.title} skill={view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined} count={`${finished}/${islands.length}`} countLabel={`${finished} of ${islands.length} islands finished`}>
+    <PuzzleStatus title={title} skill={view.teaches ? techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches : undefined} count={`${finished}/${islands.length}`} countLabel={`${finished} of ${islands.length} islands finished`}>
       <Button quiet compact maxFontSizeMultiplier={statusMax} selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
       {/* Always present, so opening the card never re-wraps this row and moves the board. */}
-      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
+      {!hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
     </PuzzleStatus>
     {rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{howTo}</Copy>}
     <View style={{ alignSelf: 'center', width: W, height: H }} {...responder.panHandlers} accessible={false}>
@@ -201,9 +208,9 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
     </View> : message ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{message}</Copy> : tooMany ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{tooMany}</Copy> : placed ? <Copy accessibilityLiveRegion="polite">{placed}</Copy> : null}
     </View>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
+      {!hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>}
       <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
-      <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || marks.every(v => !v)} onPress={() => send({ type: 'reset' })}>Start over</Button>
+      {!hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || marks.every(v => !v)} onPress={() => send({ type: 'reset' })}>Start over</Button>}
     </View>
   </View>;
 }

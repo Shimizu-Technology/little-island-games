@@ -53,7 +53,7 @@ export default function HubScreen() {
   </ScrollView>
   <CovePersonResume/>
   <View style={{ paddingHorizontal: 18, paddingVertical: 8, backgroundColor: '#AFDAD6' }}><View style={{ flexDirection: 'row', maxWidth: 520, width: '100%', alignSelf: 'center', backgroundColor: '#FFFAEB', borderRadius: 24, borderWidth: 1, borderColor: '#91B7A9', boxShadow: '0px 4px 12px rgba(43,80,67,.1)' }}>
-   {coveResume ? dock('Continue', 'right', () => router.push({ pathname: '/cove', params: { game: coveResume.game } }), infoFor(coveResume.game).name) : null}
+   {coveResume ? dock('Continue', 'right', () => router.push({ pathname: '/cove', params: { game: coveResume.game, resume: '1' } }), infoFor(coveResume.game).name) : null}
    {resume && dock('School', 'right', () => openGame(resume), shelfGames.find(game => game.id === resume)?.name)}
    {dock('Try today', 'refresh', () => router.push({ pathname: '/everything', params: { section: 'ideas' } }))}
    {dock('Favorites', 'star', () => router.push({ pathname: '/everything', params: { section: 'favorites' } }))}

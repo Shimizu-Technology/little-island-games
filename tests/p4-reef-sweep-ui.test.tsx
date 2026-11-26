@@ -82,6 +82,8 @@ vi.mock("../src/practice/useRoundPractice", () => ({ useRoundPractice: () => ({ 
 vi.mock("../src/board/Art", () => ({ BoardArt: () => null, Piece: () => null }));
 vi.mock("../src/hub/navigation", () => ({ openGame: fixture.openGame }));
 vi.mock("../src/hub/Landmarks", () => ({ Landmark: () => null }));
+vi.mock("../src/ui", async () => (await import("./helpers/cove-ui")).ui);
+vi.mock("../src/cove/CoveArt", async () => (await import("./helpers/cove-ui")).art);
 vi.mock("../src/cove/PeoplePicker", () => ({ PeoplePicker: () => null, solvingPeople: () => [{ id: "family", name: "Family" }] }));
 vi.mock("../src/cove/useCoveLocal", () => ({
   useCoveLocal: () => ({
@@ -256,29 +258,28 @@ describe("P4 Reef Sweep UI, fallback prompt, hint ladder, Cove shortcut & AX5 fi
     fixture.insets = { left: 0, right: 0, top: 0, bottom: 0 };
   });
 
-  it("CV-10: lists Reef Sweep under Puzzle Cove's 'Also here' shortcut and opens the exact same save record", async () => {
+  it("CV-10: Reef Sweep is a Logic tile on Puzzles that opens its own Challenge as the current learner", async () => {
     const CoveScreen = (await import("../src/cove/CoveScreen")).default;
     fixture.dims = { width: 390, height: 844, fontScale: 1 };
-    fixture.openGame.mockReset();
-
-    // With an active paused Reef Sweep session, Cove shows Continue status under 'Also here'.
-    const paused = { ...createSession("reef-sweep", { seed: 3, size: 6 }), taught: true };
-    fixture.store.save.board = { "reef-sweep": paused };
+    fixture.push.mockReset();
+    fixture.store.covePerson.mockClear();
 
     let r!: ReactTestRenderer;
     await act(() => {
       r = create(<CoveScreen />);
     });
-    const out = text(r);
-    expect(out).toContain("Also here · 1");
-    expect(out).toContain("Reef Sweep");
-    expect(out).toContain("Continue your saved reef · same save as Game Hall");
+    expect(text(r)).toContain("Logic");
+    const tile = r.root.find((n) => n.type === "button" && n.props.testID === "cove-tile-reef-sweep");
+    expect(tile.props.accessibilityLabel).toBe("Reef Sweep");
 
     await act(async () => {
-      button(r, "Reef Sweep").props.onPress();
+      tile.props.onPress();
       await Promise.resolve();
     });
-    expect(fixture.openGame).toHaveBeenCalledWith("reef-sweep");
+    // No Puzzles-only identity is active, so nothing is cleared, and the shortcut is the Hall's own route.
+    expect(fixture.store.covePerson).not.toHaveBeenCalled();
+    expect(fixture.push).toHaveBeenCalledWith({ pathname: "/challenge", params: { game: "reef-sweep" } });
+    expect(fixture.openGame).not.toHaveBeenCalled();
     await act(() => r.unmount());
   });
 

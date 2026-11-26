@@ -16,6 +16,9 @@ vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDi
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
 vi.mock('expo-router', () => ({ useIsFocused: () => db.focused, router: {} }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', styles: {} }));
+vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
+vi.mock('../src/personalization/Portrait', () => ({ Portrait: () => null }));
+vi.mock('../src/cove/CoveArt', async () => (await import('./helpers/cove-ui')).art);
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: vi.fn() }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 let store: ReturnType<typeof useStore>;
@@ -75,7 +78,7 @@ it('13 confirms Together at a solo finish and credits both people in one save', 
     await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
     for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) await press(screen, 'Next legal step');
     expect(store.save.challenge!.paused).toHaveLength(1);
-    const confirm = screen.root.findAllByType('button').find(b => b.children.join('') === 'Solved together with Family practice'); expect(confirm).toBeDefined();
+    const confirm = screen.root.findAllByType('button').find(b => b.props.accessibilityLabel === 'Solved together with Family practice'); expect(confirm).toBeDefined();
     await act(async () => confirm!.props.onPress());
     expect(store.save.challenge!.paused).toEqual([]);
     expect(completion(progressFor(store.save, 'a')!, puzzle.ref, entry)).toBe(3);

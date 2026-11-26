@@ -11,8 +11,11 @@ describe('Cove names and source boundary', () => {
     for (const entry of coveEntries()) expect(infoFor(entry.game).name).not.toMatch(forbidden);
   });
   it('does not move School shelves or create a second Reef Sweep save', () => {
-    const screen = readFileSync('src/cove/CoveScreen.tsx', 'utf8');
-    expect(screen).toContain("openGame('reef-sweep')"); expect(screen).not.toMatch(/maze|memory/);
+    // Reef Sweep is a shortcut into its own Challenge route as the current learner, never a Cove entry.
+    const screen = readFileSync('src/cove/CoveScreen.tsx', 'utf8'), shelf = readFileSync('src/cove/shelf.ts', 'utf8');
+    expect(shelf).toContain("'reef-sweep': { name: 'Reef Sweep', route: { pathname: '/challenge', params: { game: 'reef-sweep' } } }");
+    expect(screen).toContain('router.push(tile.route)'); expect(coveEntries().some(e => e.game === 'reef-sweep')).toBe(false);
+    expect(screen).not.toMatch(/maze|memory/);
     expect(readFileSync('src/learn/home.ts', 'utf8')).not.toContain("from '../cove/");
   });
 });
