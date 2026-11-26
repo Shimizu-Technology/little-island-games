@@ -13,6 +13,8 @@
     { "owner": "c2a-beep", "first": 200, "last": 219 },
     { "owner": "school-coding", "first": 220, "last": 259, "note": "C2b-C4: assigned per slice." },
     { "owner": "c2c-turtle", "first": 220, "last": 229 },
+    { "owner": "c3-code-lab", "first": 230, "last": 244 },
+    { "owner": "c4-tide-logic", "first": 245, "last": 259 },
     { "owner": "thinking", "first": 260, "last": 297, "note": "T1/T2; T1 keeps 260-279, T2 keeps 280-297." },
     { "owner": "t1-logic-lagoon", "first": 260, "last": 279 },
     { "owner": "t2-thinking", "first": 280, "last": 297, "note": "T2 Pattern Path, Shape Shift + Tangrams. Packed Endless Tide plus inline Deep Water/dares; dares 900-999." },

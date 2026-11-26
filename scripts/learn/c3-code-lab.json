@@ -1,0 +1,6 @@
+{
+  "c3-code-lab-predict": "Read the program. Choose what it prints before you run it. A wrong choice is crossed out. Your work stays here, and there is no timer.",
+  "c3-code-lab-build": "Tap a blank line, then choose a value or expression. Run checks your whole program. Undo takes back an edit. Look, One step, and Clear help you follow the real program.",
+  "c3-code-lab-return": "Return sends a value back to the place that called a function. Lines after that return do not run on that call.",
+  "c3-code-lab-list": "A list keeps values in order. Position zero is the first value. Append puts one more value at the end."
+}

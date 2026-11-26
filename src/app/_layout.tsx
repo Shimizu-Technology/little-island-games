@@ -7,6 +7,7 @@ import { TextLayoutProvider } from "../components/Text";
 import { useReducedMotion } from "../components/motion";
 import { StoreProvider } from "../state/Store";
 import { ScreenBoundary, UIBoundary } from "../components/LaunchError";
+import { NunitoProvider } from "../ui/fonts";
 type LibraryParams = { place?: string; id?: string } | undefined;
 /** No interactive pop where a stray swipe would cost a child their drawing or let a baby out. */
 export function libraryGestureEnabled(params: object | undefined) {
@@ -28,6 +29,8 @@ export default function Layout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider>
       <TextLayoutProvider>
+        {/* Nunito loads in the background; text shows in the system font until it arrives, so boot and Recovery never wait. */}
+        <NunitoProvider>
         <StoreProvider>
           {/* Try again here remounts only the navigator and screens. The Store and its writes stay mounted. */}
           <UIBoundary>
@@ -53,6 +56,7 @@ export default function Layout() {
           </Stack>
           </UIBoundary>
         </StoreProvider>
+        </NunitoProvider>
       </TextLayoutProvider>
     </SafeAreaProvider></GestureHandlerRootView>
   );

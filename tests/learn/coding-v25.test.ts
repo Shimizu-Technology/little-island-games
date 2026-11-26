@@ -3,8 +3,10 @@ import { optionsAtLevel, type LearningLevel } from '../../src/learn/levelOptions
 
 import { describe, expect, it } from 'vitest';
 import { execute, executionOutput, executionPlan, taskAt as labTask } from '../../src/learn/games/code-lab/engine';
-import { counterAt, engine as tide, advance as tideAdvance, taskAt as tideTask, matches, route } from '../../src/learn/games/tide-logic/engine';
+import { counterAt, engine as tide, advance as tideAdvance, taskAt as tideTask, matches, route, type LegacyTide } from '../../src/learn/games/tide-logic/engine';
 import { canWrap, wrapIssue, programIssue, replaceBlock, drawingFeedback, task as turtleTask, type Block, validBlock } from '../../src/learn/games/turtle-draw/engine';
+// New rounds are version 3 (C4); these regressions cover the saved version 1 and 2 rounds, which still play.
+const legacyRound = (level: number, version: 1 | 2 = 2): LegacyTide => ({ version, level, seed: 0, index: 0, total: 4, rule: { first: '', join: '', second: '', action: '' }, running: -1, helped: false });
 describe('2.5 coding regressions', () => {
   it('visits a function body once, regardless of its argument', () => {
     expect(executionPlan(labTask(3, 0, 0), '')).toEqual([0, 2, 1]);
@@ -44,7 +46,7 @@ describe('2.5 execution, editing and resume', () => {
   });
   it('counts processed catches exactly once and reconstructs after reload', () => {
     const o=optionsAtLevel({mode:'solo',pace:'easy'},4 as LearningLevel);
-    let s={...tide.create(o,{skills:{},rng:()=>0,starter:0,today:0}),index:1};
+    let s:LegacyTide={...legacyRound(4),index:1};
     const t=tideTask(4,0,1); s={...s,rule:t.target,running:0};
     let expected=0;
     for(const item of t.items) {
@@ -58,7 +60,7 @@ describe('2.5 execution, editing and resume', () => {
   });
   it('loads original version-1 belts unchanged and upgrades on the next belt', () => {
     const o=optionsAtLevel({mode:'solo',pace:'easy'},3 as LearningLevel);
-    const created=tide.create(o,{skills:{},rng:()=>0,starter:0,today:0});
+    const created=legacyRound(3);
     const legacy=tideTask(3,0,0,1),original={...created,version:1 as const,rule:{...legacy.target,join:'or'},running:legacy.items.length};
     expect(tide.validate(original,o)).toBe(true);
     expect(tideTask(3,0,0,1).items).toEqual(legacy.items);

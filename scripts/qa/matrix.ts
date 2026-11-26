@@ -16,8 +16,8 @@ export type Row = {
 export type Matrix = { schemaVersion: number; baseline: string; scope: string; passesRequired: number; rows: Row[] };
 export type Scope = {
   schemaVersion: number; source: string;
-  games: { id: string; name: string; family: string; strata: string[]; door: string; maxBoard: string; firstAction: string }[];
-  mechanics: { id: string; name: string; games: string[]; maxBoard: string }[]; registrationAliases: Record<string, string>;
+  games: { id: string; name: string; family: string; strata: string[]; door: string; maxBoard: string; firstAction: string; challengeSteps?: string }[];
+  mechanics: { id: string; name: string; games: string[]; maxBoard: string; steps?: string }[]; registrationAliases: Record<string, string>;
 };
 export type Inventory = { games: string[]; challenge: string[]; cove: string[]; mechanics: string[]; banks: { game: string; slot: number }[]; school: string[]; hall: string[]; boards: string[]; arcade: string[]; activities: string[] };
 export type EvidenceIndex = { reports: { path: string; sha256: string; testedHeads?: { sha: string; recordedHead: string; record: string }[] }[] };
@@ -156,12 +156,12 @@ export function buildMatrix(root = process.cwd(), scope = readScope(root), inven
     if (!spec) throw new Error(`QA matrix: missing Challenge scope ${adapter}`);
     add({ id: `C-${adapter}`, group: 'challenge', title: `${spec.name} / ${adapter}`, games: [game], surfaces: [`Challenge:${adapter}`], door: spec.door, maxBoard: spec.maxBoard,
       mechanics: scope.mechanics.filter(m => m.games.includes(game)).map(m => m.id), dimensions: phone, executor: 'Lead, private offline Release simulator',
-      steps: `Map → ${spec.door} → ${spec.name} → Challenge (${adapter}); choose teaching and hardest tier without stars. Start explicitly, make a legal action, wrong Check, edit, Help, Undo, quit/resume, finish, reopen, replay dare. Fill paused spaces and attempt another Start; cancel and retain every draft.`,
+      steps: spec.challengeSteps ?? `Map → ${spec.door} → ${spec.name} → Challenge (${adapter}); choose teaching and hardest tier without stars. Start explicitly, make a legal action, wrong Check, edit, Help, Undo, quit/resume, finish, reopen, replay dare. Fill paused spaces and attempt another Start; cancel and retain every draft.`,
       savedOutcome: 'Challenge ref, draft, help/miss/edit/run counters and owner resume exactly. One award; marks never decrease; helped replay cannot claim clean. Full paused spaces preserves drafts and School state.', evidenceRequired, gate: 'RC', source: 'Real src/challenge/registrations; PLAN §10 and Play P01–P04' });
   }
   for (const mechanic of scope.mechanics) add({ id: mechanic.id, group: 'mechanics', title: mechanic.name, games: mechanic.games, maxBoard: mechanic.maxBoard,
     dimensions: maxDimensions, executionCases: maxDimensions.length, executor: 'Lead, private offline Release simulator',
-    steps: `Fixture: ${mechanic.maxBoard}. Exercise ${mechanic.name} in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.`,
+    steps: mechanic.steps ?? `Fixture: ${mechanic.maxBoard}. Exercise ${mechanic.name} in every linked game; legal input, rejection, undo/cancel, rotate and force-close mid-draft. Check reachability and clipping with real gestures. Each dimension is a separate run; repeat for both passes.`,
     savedOutcome: 'Exact owner/draft/pending choices after force-close; no duplicate move, leaked secret or unsolicited help. Free creation remains ungraded.', evidenceRequired, gate: 'RC', source: 'PLAN §10 guarded mechanic contract; PLAN §9 maximum fixtures' });
   const cases = json(root, 'docs/qa-cases.json').cases as Row[];
   for (const original of cases) {
