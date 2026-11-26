@@ -1,4 +1,5 @@
 // Original Lagoon Run Foley and mallet cues. Run from the repository root.
+import { Buffer } from 'node:buffer';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
