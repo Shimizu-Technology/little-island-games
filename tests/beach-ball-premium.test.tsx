@@ -365,26 +365,47 @@ it.each([[390, 844], [844, 390], [1024, 768], [700, 430]])(
   }
 );
 
-it("keeps Learn count badge and two-digit score pills single-line with 1.3× font-scale safety in compact landscape", async () => {
+function pillHeightAtScale(pill: ReactTestInstance, fontScale: number) {
+  const box = styles(pill);
+  const textNode = pill.find((node) => String(node.type) === "Text");
+  const textStyle = styles(textNode);
+  const cap = textNode.props.maxFontSizeMultiplier ?? fontScale;
+  const effectiveScale = Math.min(fontScale, cap);
+  return (box.paddingVertical ?? 0) * 2 + (box.borderWidth ?? 0) * 2 + (textStyle.lineHeight ?? textStyle.fontSize) * effectiveScale;
+}
+
+it.each([
+  [844, 390],
+  [844, 328],
+])("keeps Learn count badge and two-digit score pills single-line with 1.3× font-scale safety in %i × %i landscape", async (width, height) => {
   const learn = beachLevels.find((level) => level.id === "learn-8")!;
   const state = { ...createBeach(learn, 42), points: [4, 3] as [number, number] };
-  await start(state, { width: 844, height: 328, names: ["Stassie-May", "Bibi"] });
+  await start(state, { width, height, names: ["Stassie-May", "Bibi"] });
 
   const badge = host("beach-learn-badge");
   const badgeText = badge.find((node) => String(node.type) === "Text");
   expect(badgeText.props.numberOfLines).toBe(1);
   expect(badgeText.props.adjustsFontSizeToFit).toBe(true);
   expect(badgeText.props.maxFontSizeMultiplier).toBe(1.3);
+  expect(badgeText.children.join("")).toBe(`Count +${learn.countBy}`);
   expect(styles(badge).maxWidth).toBeGreaterThanOrEqual(96);
+  const badgeSlot = styles(hostParent(badge));
+  expect(badgeSlot.position).toBe("absolute");
+  expect(badgeSlot.left).toBe(10);
+  expect(badgeSlot.top).toBe(10);
 
   for (const i of [0, 1]) {
     const pill = host(`beach-score-pill-${i}`);
     const pillText = pill.find((node) => String(node.type) === "Text");
+    const scoreValue = state.points[i] * learn.countBy;
+    const scoreTarget = learn.target * learn.countBy;
+    expect(scoreValue).toBeGreaterThanOrEqual(10);
     expect(pillText.props.numberOfLines).toBe(1);
     expect(pillText.props.adjustsFontSizeToFit).toBe(true);
     expect(pillText.props.maxFontSizeMultiplier).toBe(1.3);
+    expect(pillText.children.join("")).toContain(`${scoreValue}/${scoreTarget}`);
     expect(styles(pill).maxWidth).toBeGreaterThanOrEqual(120);
-    // In compact landscape (844×328), player pills move to the wide side margin clear of court paddles & bottom edge.
+    // In landscape (844×390 & 844×328), player pills move to the wide side margin clear of court paddles & bottom edge.
     const slot = styles(hostParent(pill));
     expect(slot.right).toBe(10);
     expect(i ? slot.top : slot.bottom).toBe(10);
@@ -394,6 +415,60 @@ it("keeps Learn count badge and two-digit score pills single-line with 1.3× fon
   expect(popText.props.numberOfLines).toBe(1);
   expect(popText.props.adjustsFontSizeToFit).toBe(true);
   expect(popText.props.maxFontSizeMultiplier).toBe(1.3);
+});
+
+it.each([
+  [320, 568, "solo"],
+  [320, 506, "solo"],
+  [320, 506, "together"],
+] as const)(
+  "stacks top score pill and Learn badge with zero vertical overlap at %i × %i (%s) under 1.3× text scale",
+  async (width, height, mode) => {
+    const learn = beachLevels.find((level) => level.id === "learn-8")!;
+    const state = { ...createBeach(learn, 42, false, mode), points: [4, 3] as [number, number] };
+    await start(state, { width, height, names: ["Stassie-May", "Bibi"] });
+
+    const stack = host("beach-top-hud");
+    const stackStyle = styles(stack);
+    const topScore = host("beach-score-pill-1");
+    const learnBadge = host("beach-learn-badge");
+    const scoreSlot = hostParent(topScore);
+    const learnSlot = hostParent(learnBadge);
+
+    expect(stackStyle.flexDirection).toBe("column");
+    expect(stackStyle.gap).toBeGreaterThanOrEqual(6);
+    expect(hostParent(scoreSlot)).toBe(stack);
+    expect(hostParent(learnSlot)).toBe(stack);
+    expect(styles(scoreSlot).position).toBeUndefined();
+    expect(styles(learnSlot).position).toBeUndefined();
+
+    // Direct flex children order: top score pill first, Learn badge second, separated by stack gap.
+    const childOrder = stack.children.filter((c): c is ReactTestInstance => typeof c !== "string");
+    expect(childOrder.indexOf(scoreSlot)).toBe(0);
+    expect(childOrder.indexOf(learnSlot)).toBe(1);
+
+    const scoreHeightAt130 = pillHeightAtScale(topScore, 1.3);
+    const learnHeightAt130 = pillHeightAtScale(learnBadge, 1.3);
+    const scoreTop = stackStyle.top;
+    const scoreBottom = scoreTop + scoreHeightAt130;
+    const learnTop = scoreBottom + stackStyle.gap;
+    expect(scoreHeightAt130).toBeCloseTo(37.7, 5);
+    expect(learnHeightAt130).toBeCloseTo(37.7, 5);
+    expect(learnTop - scoreBottom).toBeGreaterThanOrEqual(6);
+    expect(learnTop).toBeGreaterThan(scoreBottom);
+  }
+);
+
+it("keeps tall portrait letterbox Learn badge clear above the top score pill at 390 × 844 under 1.3× text scale", async () => {
+  const learn = beachLevels.find((level) => level.id === "learn-8")!;
+  const state = { ...createBeach(learn, 42), points: [4, 3] as [number, number] };
+  await start(state, { width: 390, height: 844, names: ["Stassie-May", "Bibi"] });
+
+  const stackStyle = styles(host("beach-top-hud"));
+  const learnBadge = host("beach-learn-badge");
+  const learnSlotStyle = styles(hostParent(learnBadge));
+  const learnBottomAt130 = learnSlotStyle.top + pillHeightAtScale(learnBadge, 1.3);
+  expect(stackStyle.top - learnBottomAt130).toBeGreaterThanOrEqual(6);
 });
 
 it("renders the verified illustrated ball in BallArt and does not regress Palm Patrol", async () => {

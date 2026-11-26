@@ -850,9 +850,11 @@ export function BeachBoard({
     wallSize = 18 * scale,
     wallPad = Math.ceil(2 * scale),
     sideHud = camera.x >= 130,
+    learnInLetterbox = !sideHud && camera.y >= 54,
     pillMaxWidth = sideHud ? Math.max(120, camera.x - 20) : Math.max(120, camera.width - 16),
-    learnTop = sideHud ? 10 : camera.y >= 38 ? 8 : camera.y + 42 * scale,
-    learnLeft = sideHud ? 10 : camera.x + 14 * scale;
+    learnMaxWidth = sideHud ? Math.max(96, camera.x - 20) : Math.max(96, camera.width * 0.44),
+    scoreEdge = Math.max(4, camera.y + 4 * scale),
+    stackLearn = !sideHud && !learnInLetterbox && config.countBy > 1;
   return (
     <GestureDetector gesture={gesture} touchAction="none">
       <Animated.View
@@ -955,39 +957,99 @@ export function BeachBoard({
             </View>
           </ArcadeSprite>
         ))}
-        {[0, 1].map((i) => (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            ...(sideHud ? { right: 10, bottom: 10 } : { bottom: scoreEdge, alignSelf: "center" }),
+            maxWidth: pillMaxWidth,
+          }}
+        >
+          <BeachPill
+            testID="beach-score-pill-0"
+            tone="lagoon"
+            maxWidth={pillMaxWidth}
+            label={`${names[0]}, ${s.points[0] * config.countBy} points`}
+          >
+            ● {names[0]} · {s.points[0] * config.countBy}/{config.target * config.countBy}
+          </BeachPill>
+        </View>
+        {sideHud ? (
           <View
-            key={i}
             pointerEvents="none"
             style={{
               position: "absolute",
-              ...(sideHud
-                ? i
-                  ? { right: 10, top: 10 }
-                  : { right: 10, bottom: 10 }
-                : i
-                  ? { top: Math.max(4, camera.y + 4 * scale), alignSelf: "center" }
-                  : { bottom: Math.max(4, camera.y + 4 * scale), alignSelf: "center" }),
+              right: 10,
+              top: 10,
               maxWidth: pillMaxWidth,
-              transform: i && s.mode === "together" ? [{ rotate: "180deg" }] : [],
+              transform: s.mode === "together" ? [{ rotate: "180deg" }] : [],
             }}
           >
             <BeachPill
-              testID={`beach-score-pill-${i}`}
-              tone={i ? "coral" : "lagoon"}
+              testID="beach-score-pill-1"
+              tone="coral"
               maxWidth={pillMaxWidth}
-              label={`${names[i]}, ${s.points[i] * config.countBy} points`}
+              label={`${names[1]}, ${s.points[1] * config.countBy} points`}
             >
-              {i ? "◆" : "●"} {names[i]} · {s.points[i] * config.countBy}/{config.target * config.countBy}
+              ◆ {names[1]} · {s.points[1] * config.countBy}/{config.target * config.countBy}
             </BeachPill>
           </View>
-        ))}
-        {config.countBy > 1 && (
-          <View pointerEvents="none" style={{ position: "absolute", left: learnLeft, top: learnTop }}>
+        ) : (
+          <View
+            testID="beach-top-hud"
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              top: scoreEdge,
+              left: camera.x,
+              width: camera.width,
+              paddingHorizontal: 8,
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <View
+              style={{
+                maxWidth: pillMaxWidth,
+                transform: s.mode === "together" ? [{ rotate: "180deg" }] : [],
+              }}
+            >
+              <BeachPill
+                testID="beach-score-pill-1"
+                tone="coral"
+                maxWidth={pillMaxWidth}
+                label={`${names[1]}, ${s.points[1] * config.countBy} points`}
+              >
+                ◆ {names[1]} · {s.points[1] * config.countBy}/{config.target * config.countBy}
+              </BeachPill>
+            </View>
+            {stackLearn && (
+              <View
+                testID="beach-learn-slot"
+                style={{ alignSelf: "flex-start", marginLeft: Math.max(0, 14 * scale - 8) }}
+              >
+                <BeachPill
+                  testID="beach-learn-badge"
+                  tone="learn"
+                  maxWidth={learnMaxWidth}
+                  label={`Count by ${config.countBy}`}
+                >
+                  Count +{config.countBy}
+                </BeachPill>
+              </View>
+            )}
+          </View>
+        )}
+        {config.countBy > 1 && !stackLearn && (
+          <View
+            pointerEvents="none"
+            style={{ position: "absolute", left: sideHud ? 10 : camera.x + 14 * scale, top: sideHud ? 10 : 8 }}
+          >
             <BeachPill
               testID="beach-learn-badge"
               tone="learn"
-              maxWidth={sideHud ? Math.max(96, camera.x - 20) : Math.max(96, camera.width * 0.44)}
+              maxWidth={learnMaxWidth}
               label={`Count by ${config.countBy}`}
             >
               Count +{config.countBy}
