@@ -44,8 +44,11 @@ const env = vi.hoisted(() => ({
     epoch: 1,
     saving: false,
     error: null as string | null,
+    setAside: [] as { owner: string; games: string[]; marks?: number }[],
     save: {} as any,
     personalize: vi.fn(),
+    retry: vi.fn(() => Promise.resolve()),
+    dismissSetAside: vi.fn(),
   },
   sceneProps: null as any,
   saveStatusVisible: false,
@@ -67,6 +70,8 @@ vi.mock("react-native", () => ({
   Pressable: "Pressable",
   ScrollView: "ScrollView",
   Modal: "Modal",
+  KeyboardAvoidingView: "KeyboardAvoidingView",
+  Switch: "Switch",
   FlatList: ({ data, renderItem }: any) => data.map((item: any) => renderItem({ item })),
   Platform: {
     get OS() {
@@ -163,7 +168,11 @@ vi.mock("expo-router", () => ({
   useFocusEffect: () => {},
 }));
 
-vi.mock("../src/components/motion", () => ({ useReducedMotion: () => env.reduced }));
+vi.mock("../src/components/motion", () => ({
+  useReducedMotion: () => env.reduced,
+  easeOut: (v: number) => v,
+  nativeDriver: false,
+}));
 vi.mock("../src/components/sheetPresence", () => ({ useSheetPresence: () => {} }));
 vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
 vi.mock("../src/ui/icons", () => {
@@ -303,6 +312,9 @@ function setupStore(overrides: {
   env.store.epoch = overrides.epoch ?? 1;
   env.store.saving = overrides.saving ?? false;
   env.store.error = overrides.error ?? null;
+  env.store.setAside = [];
+  env.store.retry = vi.fn(() => Promise.resolve());
+  env.store.dismissSetAside = vi.fn();
   env.store.save = {
     ...base,
     learning: { version: 1, active, people: [{ id: active, name: active }] },
@@ -535,11 +547,13 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
         { url: "http://localhost/locker?item=hat:sunhat", state: { id: "entry-1" } },
       ]);
       await act(async () => { root = create(<LockerRoute />); });
-      // Clean 2-step sequence seeded: [ "/" (map), "/island-home" (home), "/locker?item=hat:sunhat" (sheet) ]
-      expect(coldWin.entries.map((e) => new URL(e.url).pathname)).toEqual(["/", "/island-home", "/locker"]);
+      // Clean 2-step sequence seeded on the SAME URL (preserving Expo Router's state id so popstate never resets Store).
+      expect(coldWin.entries.map((e) => new URL(e.url).pathname)).toEqual(["/locker", "/locker", "/locker"]);
+      expect(coldWin.entries.map((e) => (e.state as Record<string, unknown>)?.__homeSentinel)).toEqual(["map", "home", "sheet"]);
+      expect(coldWin.entries.map((e) => (e.state as Record<string, unknown>)?.id)).toEqual(["entry-1", "entry-1", "entry-1"]);
       expect(coldWin.location.href).toBe("http://localhost/locker?item=hat:sunhat");
       expect(coldWin.getCursor()).toBe(2);
-      expect(coldWin.history.state).toEqual(expect.objectContaining({ __homeSentinel: "sheet", __homeSheet: "closet" }));
+      expect(coldWin.history.state).toEqual(expect.objectContaining({ id: "entry-1", __homeSentinel: "sheet", __homeSheet: "closet" }));
       expect(coldWin.addEventListener).toHaveBeenCalledTimes(1);
 
       // Rotate viewport portrait -> 844×390 landscape while Closet is open -> NO double-push, NO listener reset!
@@ -550,17 +564,18 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(coldWin.entries).toHaveLength(3);
       expect(coldWin.getCursor()).toBe(2);
 
-      // 1st browser Back: closes Closet to Home at /island-home (does NOT navigate to Map yet).
+      // 1st browser Back: closes Closet in-place without switching pathname to /island-home (keeps Store mounted).
       await coldWin.browserBack();
       expect(coldWin.getCursor()).toBe(1);
-      expect(coldWin.location.pathname).toBe("/island-home");
+      expect(coldWin.location.pathname).toBe("/locker");
+      expect(coldWin.history.state).toEqual(expect.objectContaining({ id: "entry-1", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
       expect(env.replace).not.toHaveBeenCalled();
 
       // 2nd browser Back: lands on "/" Map via goToMap()!
       await coldWin.browserBack();
       expect(coldWin.getCursor()).toBe(0);
-      expect(coldWin.location.pathname).toBe("/");
+      expect(coldWin.history.state).toEqual(expect.objectContaining({ id: "entry-1", __homeSentinel: "map" }));
       expect(env.replace).toHaveBeenCalledWith("/");
       expect(env.back).not.toHaveBeenCalled();
       await act(async () => root!.unmount());
@@ -579,28 +594,30 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(coldNoRotateWin.entries).toHaveLength(3);
       expect(coldNoRotateWin.getCursor()).toBe(2);
       await coldNoRotateWin.browserBack();
-      expect(coldNoRotateWin.location.pathname).toBe("/island-home");
+      expect(coldNoRotateWin.location.pathname).toBe("/locker");
+      expect(coldNoRotateWin.history.state).toEqual(expect.objectContaining({ id: "entry-2", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
       expect(env.replace).not.toHaveBeenCalled();
       await coldNoRotateWin.browserBack();
-      expect(coldNoRotateWin.location.pathname).toBe("/");
+      expect(coldNoRotateWin.history.state).toEqual(expect.objectContaining({ id: "entry-2", __homeSentinel: "map" }));
       expect(env.replace).toHaveBeenCalledWith("/");
       await act(async () => root!.unmount());
 
-      // 3) Cold /badges -> 1st browser Back closes Badge Wall to Home, 2nd browser Back reaches "/" Map.
+      // 3) Cold /badges -> 1st browser Back closes Badge Wall in-place, 2nd browser Back reaches "/" Map.
       env.window = { width: 844, height: 390, fontScale: 1 };
       env.canGoBack = false;
       env.dismissTo = undefined;
       env.replace.mockReset();
       const coldBadgesWin = installBrowserHistoryWindow([{ url: "http://localhost/badges?badge=math-1", state: { id: "entry-3" } }]);
       await act(async () => { root = create(<BadgesRoute />); });
-      expect(coldBadgesWin.entries.map((e) => new URL(e.url).pathname)).toEqual(["/", "/island-home", "/badges"]);
+      expect(coldBadgesWin.entries.map((e) => new URL(e.url).pathname)).toEqual(["/badges", "/badges", "/badges"]);
       await coldBadgesWin.browserBack();
-      expect(coldBadgesWin.location.pathname).toBe("/island-home");
+      expect(coldBadgesWin.location.pathname).toBe("/badges");
+      expect(coldBadgesWin.history.state).toEqual(expect.objectContaining({ id: "entry-3", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
       expect(env.replace).not.toHaveBeenCalled();
       await coldBadgesWin.browserBack();
-      expect(coldBadgesWin.location.pathname).toBe("/");
+      expect(coldBadgesWin.history.state).toEqual(expect.objectContaining({ id: "entry-3", __homeSentinel: "map" }));
       expect(env.replace).toHaveBeenCalledWith("/");
       await act(async () => root!.unmount());
 
@@ -631,7 +648,7 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(env.dismissTo).toHaveBeenCalledWith("/");
       await act(async () => root!.unmount());
 
-      // 5) Game-origin /badges alias (canGoBack=true): 1st Back closes Badge Wall to Home, 2nd Back reaches "/" (never game).
+      // 5) Game-origin /badges alias (canGoBack=true): 1st Back closes Badge Wall in-place, 2nd Back reaches "/" (never game).
       env.window = { width: 393, height: 852, fontScale: 1 };
       env.canGoBack = true;
       env.dismissTo = vi.fn();
@@ -641,15 +658,80 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
         { url: "http://localhost/badges?badge=math-1", state: { id: "badges-2" } },
       ]);
       await act(async () => { root = create(<BadgesRoute />); });
-      expect(gameWin.history.state).toEqual(expect.objectContaining({ __homeSentinel: "sheet", __homeSheet: "badges" }));
+      expect(gameWin.history.state).toEqual(expect.objectContaining({ id: "badges-2", __homeSentinel: "sheet", __homeSheet: "badges" }));
       await gameWin.browserBack();
-      expect(gameWin.location.pathname).toBe("/island-home");
+      expect(gameWin.location.pathname).toBe("/badges");
+      expect(gameWin.history.state).toEqual(expect.objectContaining({ id: "badges-2", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
       expect(env.dismissTo).not.toHaveBeenCalled();
       await gameWin.browserBack();
-      expect(gameWin.location.pathname).toBe("/");
+      expect(gameWin.history.state).toEqual(expect.objectContaining({ id: "badges-2", __homeSentinel: "map" }));
       expect(env.dismissTo).toHaveBeenCalledWith("/");
       expect(env.back).not.toHaveBeenCalled();
+      await act(async () => root!.unmount());
+
+      // 6) R4 P1 #1: Cold /locker?item=hat:cap with a failed Wear this write -> neither Close nor 1st browser Back
+      // changes location.pathname to /island-home or drops Store's pending look & Retry; 2nd Back still reaches "/" Map.
+      const runColdFailedSaveCase = async (dismissVia: "close" | "back") => {
+        env.window = { width: 844, height: 390, fontScale: 1 };
+        env.canGoBack = false;
+        env.dismissTo = undefined;
+        env.replace.mockReset();
+        env.params = { item: "hat:cap" };
+        setupStore({ look: { ...defaultLook, hat: "sunhat" } });
+        env.saveStatusVisible = false;
+        const win = installBrowserHistoryWindow([
+          { url: "http://localhost/locker?item=hat:cap", state: { id: `cold-${dismissVia}` } },
+        ]);
+        await act(async () => { root = create(<LockerRoute />); });
+        expect(root!.root.findByProps({ testID: "live-room-islander" }).props.look.hat).toBe("cap");
+
+        // Wear this updates Store in memory to Cap, then disk write fails (error + Retry banner active).
+        env.store.personalize = vi.fn((patch: Record<string, unknown>) => {
+          const current = env.store.save.personalization.people.family;
+          env.store.save = {
+            ...env.store.save,
+            personalization: {
+              ...env.store.save.personalization,
+              people: { family: { ...current, ...patch } },
+            },
+          };
+          env.store.error = "Your latest changes could not be saved. Keep the app open and try again.";
+          env.saveStatusVisible = true;
+          return true;
+        });
+        await act(async () => hostById(root!.root, "closet-wear-button")[0].props.onPress());
+        await act(async () => { root!.update(<LockerRoute />); });
+        expect(env.store.save.personalization.people.family.look.hat).toBe("cap");
+        expect(hostById(root!.root, "save-retry-button")).toHaveLength(1);
+
+        if (dismissVia === "close") {
+          await act(async () => hostById(root!.root, "sheet-close")[0].props.onPress());
+          await act(async () => { vi.advanceTimersByTime(250); });
+        } else {
+          await win.browserBack();
+        }
+
+        // URL stays on /locker (never /island-home) with original Expo Router id intact -> Store stays mounted with Cap & Retry!
+        expect(win.getCursor()).toBe(1);
+        expect(win.location.pathname).toBe("/locker");
+        expect(win.location.pathname).not.toBe("/island-home");
+        expect(win.history.state).toEqual(expect.objectContaining({ id: `cold-${dismissVia}`, __homeSentinel: "home" }));
+        expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+        expect(root!.root.findByProps({ testID: "live-room-islander" }).props.look.hat).toBe("cap");
+        expect(env.store.error).toBeTruthy();
+        expect(hostById(root!.root, "home-save-status")).toHaveLength(1);
+        expect(hostById(root!.root, "save-retry-button")).toHaveLength(1);
+        expect(env.replace).not.toHaveBeenCalled();
+
+        // 2nd browser Back still navigates cleanly to "/" Map.
+        await win.browserBack();
+        expect(win.getCursor()).toBe(0);
+        expect(env.replace).toHaveBeenCalledWith("/");
+        await act(async () => root!.unmount());
+      };
+      await runColdFailedSaveCase("close");
+      await runColdFailedSaveCase("back");
     } finally {
       vi.unstubAllGlobals();
       vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
@@ -1105,6 +1187,45 @@ describe("Phase 3A: Closet camera framing, landscape layout, try-on, honest pers
     await act(async () => hostById(root!.root, "sheet-close")[0].props.onPress());
     await act(async () => { vi.advanceTimersByTime(250); });
     expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+  });
+
+  it("R4 P1 #2: compact SaveStatus prioritizes Retry over set-aside notice so Retry never clips in Closet, then reveals set-aside once Retry clears", async () => {
+    const { SaveStatus: RealSaveStatus, setAsideLine } = await vi.importActual<typeof import("../src/components/SaveStatus")>(
+      "../src/components/SaveStatus"
+    );
+    const errorMsg = "Your latest changes could not be saved. Keep the app open and try again.";
+    const setAsideText = setAsideLine(["loop"], 1);
+    setupStore({ error: errorMsg });
+    env.store.setAside = [{ owner: "family", games: ["loop"], marks: 1 }];
+
+    // Compact mode (used inside Closet's y=64..133 landscape band) with BOTH error and set-aside active:
+    // renders ONLY the error / Retry banner so Retry is never pushed down or clipped.
+    await act(async () => { root = create(<RealSaveStatus compact />); });
+    expect(textOf(root!.root)).toContain(errorMsg);
+    expect(textOf(root!.root)).toContain("Try saving again");
+    expect(textOf(root!.root)).not.toContain(setAsideText);
+    expect(root!.root.findAll((n) => (n.type as unknown) === "Pressable" && textOf(n) === "OK")).toHaveLength(0);
+    const retryBtn = root!.root.find((n) => (n.type as unknown) === "Pressable" && textOf(n) === "Try saving again");
+    await act(async () => { retryBtn.props.onPress(); });
+    expect(env.store.retry).toHaveBeenCalledTimes(1);
+
+    // Once Retry succeeds and error clears, the set-aside notice immediately renders in the compact slot and can be dismissed.
+    env.store.error = null;
+    await act(async () => { root!.update(<RealSaveStatus compact />); });
+    expect(textOf(root!.root)).toContain(setAsideText);
+    expect(textOf(root!.root)).not.toContain("Try saving again");
+    const okBtn = root!.root.find((n) => (n.type as unknown) === "Pressable" && textOf(n) === "OK");
+    await act(async () => { okBtn.props.onPress(); });
+    expect(env.store.dismissSetAside).toHaveBeenCalledWith("family");
+    await act(async () => root!.unmount());
+
+    // Non-compact SaveStatus (Home screen with no sheet open) still displays BOTH notices normally.
+    env.store.error = errorMsg;
+    await act(async () => { root = create(<RealSaveStatus />); });
+    expect(textOf(root!.root)).toContain(setAsideText);
+    expect(textOf(root!.root)).toContain(errorMsg);
+    expect(textOf(root!.root)).toContain("OK");
+    expect(textOf(root!.root)).toContain("Try saving again");
   });
 
   it("P2-2 & P3-1: sends native VoiceOver focus to an accessible header node on open & opener on close, and reserves 'trying on' for unsaved drafts", async () => {

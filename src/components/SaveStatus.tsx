@@ -20,61 +20,60 @@ export function SaveStatus({ compact = false }: { compact?: boolean } = {}) {
   const owner = selectedOwner(store.save), aside = store.setAside.find(a => a.owner === owner);
   if (!store.error && !aside) return null;
   if (compact) {
+    if (store.error) {
+      return (
+        <View
+          accessibilityRole="alert"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            backgroundColor: "#FBE8DE",
+            borderRadius: 14,
+            gap: 8,
+            marginBottom: 6,
+          }}
+        >
+          <Copy numberOfLines={2} style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 16 }}>
+            {store.error}
+          </Copy>
+          <Button
+            quiet
+            compact
+            numberOfLines={1}
+            style={{ flexShrink: 0 }}
+            disabled={retrying}
+            onPress={() => {
+              setRetrying(true);
+              void store.retry().finally(() => setRetrying(false));
+            }}
+          >
+            {retrying ? "Trying to save…" : "Try saving again"}
+          </Button>
+        </View>
+      );
+    }
+    if (!aside) return null;
     return (
-      <>
-        {aside && (
-          <View
-            accessibilityLiveRegion="polite"
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              backgroundColor: "#FFF4D6",
-              borderRadius: 14,
-              gap: 8,
-              marginBottom: 6,
-            }}
-          >
-            <Copy numberOfLines={2} style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 16 }}>
-              {setAsideLine(aside.games, aside.marks)}
-            </Copy>
-            <Button quiet compact numberOfLines={1} style={{ flexShrink: 0 }} onPress={() => store.dismissSetAside(owner)}>OK</Button>
-          </View>
-        )}
-        {store.error && (
-          <View
-            accessibilityRole="alert"
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              backgroundColor: "#FBE8DE",
-              borderRadius: 14,
-              gap: 8,
-              marginBottom: 6,
-            }}
-          >
-            <Copy numberOfLines={2} style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 16 }}>
-              {store.error}
-            </Copy>
-            <Button
-              quiet
-              compact
-              numberOfLines={1}
-              style={{ flexShrink: 0 }}
-              disabled={retrying}
-              onPress={() => {
-                setRetrying(true);
-                void store.retry().finally(() => setRetrying(false));
-              }}
-            >
-              {retrying ? "Trying to save…" : "Try saving again"}
-            </Button>
-          </View>
-        )}
-      </>
+      <View
+        accessibilityLiveRegion="polite"
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          backgroundColor: "#FFF4D6",
+          borderRadius: 14,
+          gap: 8,
+          marginBottom: 6,
+        }}
+      >
+        <Copy numberOfLines={2} style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 16 }}>
+          {setAsideLine(aside.games, aside.marks)}
+        </Copy>
+        <Button quiet compact numberOfLines={1} style={{ flexShrink: 0 }} onPress={() => store.dismissSetAside(owner)}>OK</Button>
+      </View>
     );
   }
   return (

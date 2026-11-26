@@ -835,8 +835,9 @@ export function HomeScreen({
     });
     return () => sub.remove();
   }, []);
-  // P1-1: Seed a clean 2-step Web history stack on cold/alias entries ([map "/"] -> [home "/island-home"] -> [sheet]),
-  // and push a single sheet sentinel when opened from the Home dock; never double-push across refits or StrictMode.
+  // P1-1: Seed a clean 2-step Web history stack on cold/alias entries ([map] -> [home] -> [sheet]) on the SAME URL
+  // (keeping Expo Router's history.state id intact so closing or pressing Back never triggers a cross-route reset/reload
+  // that drops an in-memory pending save), and push a single sheet sentinel when opened from the Home dock.
   const sheetOpen = activeSheet !== null;
   React.useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -870,9 +871,9 @@ export function HomeScreen({
         coldBaseSeeded.current = true;
         if (sentinel !== "home") {
           if (typeof history.replaceState === "function") {
-            history.replaceState({ __homeSentinel: "map" }, "", "/");
+            history.replaceState({ ...currentState, __homeSentinel: "map" }, "", currentHref);
           }
-          history.pushState({ __homeSentinel: "home" }, "", "/island-home");
+          history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
         }
         history.pushState(
           { ...currentState, __homeSentinel: "sheet", __homeSheet: live.current.activeSheet },
@@ -884,7 +885,7 @@ export function HomeScreen({
       if (!coldBaseSeeded.current && sentinel !== "home" && !router.canGoBack?.() && (history.length ?? 1) <= 1) {
         coldBaseSeeded.current = true;
         if (typeof history.replaceState === "function") {
-          history.replaceState({ __homeSentinel: "map" }, "", "/");
+          history.replaceState({ ...currentState, __homeSentinel: "map" }, "", currentHref);
           history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
         }
       }
@@ -899,7 +900,7 @@ export function HomeScreen({
     if (!coldBaseSeeded.current && sentinel !== "home" && !router.canGoBack?.() && (history.length ?? 1) <= 1) {
       coldBaseSeeded.current = true;
       if (typeof history.replaceState === "function") {
-        history.replaceState({ __homeSentinel: "map" }, "", "/");
+        history.replaceState({ ...currentState, __homeSentinel: "map" }, "", currentHref);
         history.pushState({ ...currentState, __homeSentinel: "home" }, "", currentHref);
       }
     }
