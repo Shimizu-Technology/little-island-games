@@ -1,17 +1,21 @@
-import React, { createContext } from 'react';
+import React, { createContext, useState } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { WordSearchBoard } from '../src/puzzles/words/WordSearchBoard';
 import { searchEngine } from '../src/puzzles/words/game';
 import * as core from '../src/puzzles/words/core';
+import { defineWordSearch } from '../src/puzzles/words/registration';
+import { measureSearchBank } from '../src/puzzles/words/tiers';
+import { emptyChallenge } from '../src/state/challenge';
 import fixture from './fixtures/word-search/bank.json';
-const env = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1, reader: false, pictured: new Set<string>() }));
+import { fixturePuzzles } from './fixtures/word-search/registration';
+const env = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1, reader: false, pictured: new Set<string>(), failPictures: false }));
 vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: async () => env.reader, addEventListener: () => ({ remove() {} }), announceForAccessibility: () => {} }, ScrollView: 'scroll', View: 'view', TextInput: 'input', Platform: { OS: 'ios' }, useWindowDimensions: () => env }));
 vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Line: 'line', SvgXml: 'picture' }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'copy', Heading: 'heading', C: {} }));
 vi.mock('../src/components/Text', () => ({ Text: 'text' }));
 vi.mock('../src/components/Audio', () => ({ useSoundControls: () => ({ play: () => true }) }));
-vi.mock('../src/puzzles/words/picture-context', () => ({ SearchPicturesContext: createContext({ idFor: (spelling: string) => env.pictured.has(spelling) ? spelling.toLowerCase() : undefined, load: async () => '<svg/>' }) }));
+vi.mock('../src/puzzles/words/picture-context', () => ({ SearchPicturesContext: createContext({ idFor: (spelling: string) => env.pictured.has(spelling) ? spelling.toLowerCase() : undefined, load: async () => { if (env.failPictures) throw Error('offline'); return '<svg/>'; } }) }));
 let screen: ReactTestRenderer;
 const p = fixture.puzzles[0] as core.SearchPuzzle, crab = p.words[0], hintColor = '#B7791F';
 const initial = (puzzle = p) => searchEngine.create(puzzle, { version: 1 }, { ownRead: false, supportOff: false });
@@ -19,6 +23,17 @@ const mount = async (props: Partial<React.ComponentProps<typeof WordSearchBoard>
   const dispatch = vi.fn();
   await act(async () => { screen = create(<WordSearchBoard state={initial()} dispatch={dispatch} active width={353} {...props} />, { createNodeMock: () => ({ focus() {}, blur() {}, clear() {}, measureInWindow: () => {} }) }); });
   return dispatch;
+};
+/** A board wired to the real engine, so what it shows is what the engine accepted. */
+const mountLive = async (props: Partial<React.ComponentProps<typeof WordSearchBoard>> = {}) => {
+  const log: Parameters<typeof searchEngine.step>[1][] = [];
+  let engine = (props.state ?? initial()) as ReturnType<typeof initial>;
+  function Live() {
+    const [state, setState] = useState(engine);
+    return <WordSearchBoard {...props} state={state} dispatch={a => { const next = searchEngine.step(engine, a, p); if (!next) return; log.push(a); engine = next.state; setState(next.state); }} active width={353} />;
+  }
+  await act(async () => { screen = create(<Live />, { createNodeMock: () => ({ focus() {}, blur() {}, clear() {}, measureInWindow: () => {} }) }); });
+  return { log, state: () => engine };
 };
 const surface = () => screen.root.findAll(n => !!n.props.onResponderGrant)[0];
 const size = () => (surface().props.style.width - 2) / 6;
@@ -33,7 +48,7 @@ const press = async (label: string) => act(async () => { const b = screen.root.f
 const statusText = () => screen.root.findAll(n => n.props.accessibilityLiveRegion === 'polite')[0].children.join('');
 const texts = () => screen.root.findAll(n => ['copy', 'heading'].includes(n.type as string)).flatMap(n => n.children.filter(c => typeof c === 'string') as string[]);
 const hintRings = () => screen.root.findAllByType('circle' as React.ElementType).filter(n => n.props.stroke === hintColor);
-beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); env.width = 393; env.height = 852; env.fontScale = 1; env.reader = false; env.pictured = new Set(); });
+beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); env.width = 393; env.height = 852; env.fontScale = 1; env.reader = false; env.pictured = new Set(); env.failPictures = false; });
 afterEach(async () => { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); });
 
 describe('clean board: no paragraphs, plain words', () => {
@@ -99,32 +114,55 @@ describe('forgiving drag-snap', () => {
   });
 });
 
-describe('Hint reveals public information first, and the word only when asked', () => {
+describe('Hint reveals public information first, and every reveal is recorded as help', () => {
   const ranges = () => hintRings().map(n => [n.props.cx, n.props.cy]);
-  it('1st press rings the first letter, 2nd adds the way it runs, 3rd finds the word and counts as help', async () => {
-    const dispatch = await mount(), cell = crab.cells[0], at = [(cell % 6 + .5) * size(), (Math.floor(cell / 6) + .5) * size()];
+  const atCell = (cell: number) => [(cell % 6 + .5) * size(), (Math.floor(cell / 6) + .5) * size()];
+  const hintLines = () => screen.root.findAllByType('line' as React.ElementType).filter(l => l.props.stroke === hintColor);
+  it('1st press rings the first letter, 2nd adds the way it runs, 3rd finds the word; each press goes through the engine', async () => {
+    const live = await mountLive();
     await press('Hint');
-    expect(ranges()).toEqual([at]); expect(statusText()).toBe('It starts here.'); expect(dispatch).not.toHaveBeenCalled();
+    expect(live.log).toEqual([['hint']]); expect(live.state().helped).toBe(true);
+    expect(ranges()).toEqual([atCell(crab.cells[0])]); expect(statusText()).toBe('It starts here.'); expect(hintLines()).toHaveLength(0);
     await press('More hint');
-    expect(statusText()).toBe('It starts here and goes up and left.');
-    expect(screen.root.findAllByType('line' as React.ElementType).some(l => l.props.stroke === hintColor)).toBe(true);
-    expect(dispatch).not.toHaveBeenCalled();
+    expect(live.log).toEqual([['hint'], ['hint']]);
+    expect(statusText()).toBe('It starts here and goes up and left.'); expect(hintLines()).toHaveLength(1);
     await press('Show word');
-    expect(dispatch).toHaveBeenCalledTimes(1); expect(dispatch).toHaveBeenLastCalledWith(['help']);
+    expect(live.log).toEqual([['hint'], ['hint'], ['help']]); expect(live.state().found).toEqual([[0, 0]]);
+    expect(hintRings()).toHaveLength(0);
+  });
+  it('shows nothing from the answer until the engine has accepted the help record', async () => {
+    const dispatch = await mount();
+    await press('Hint');
+    expect(dispatch).toHaveBeenCalledWith(['hint']); expect(hintRings()).toHaveLength(0); expect(statusText()).toBe('0 of 4');
   });
   it('never spells an unfound word in the hint text, even when the list is hidden', async () => {
-    await mount({ state: initial({ ...p, list: 'hidden' }) });
+    await mountLive({ state: initial({ ...p, list: 'hidden' }) });
     await press('Hint'); await press('More hint');
     const all = JSON.stringify(screen.toJSON());
     for (const w of p.words) expect(all).not.toContain(w.spelling);
   });
-  it('aims at the first word still hidden and starts over once it is found', async () => {
-    const dispatch = await mount({ state: searchEngine.step(initial(), ['find', crab.cells[0], crab.cells.at(-1)!, 0], p)!.state }), next = p.words[1].cells[0];
+  it('aims at the first word still hidden and starts over for the next one', async () => {
+    const live = await mountLive({ state: searchEngine.step(initial(), ['find', crab.cells[0], crab.cells.at(-1)!, 0], p)!.state });
     await press('Hint');
-    expect(ranges()).toEqual([[(next % 6 + .5) * size(), (Math.floor(next / 6) + .5) * size()]]);
-    await act(async () => screen.update(<WordSearchBoard state={searchEngine.step(searchEngine.step(initial(), ['find', crab.cells[0], crab.cells.at(-1)!, 0], p)!.state, ['help'], p)!.state} dispatch={dispatch} active width={353} />));
+    expect(ranges()).toEqual([atCell(p.words[1].cells[0])]);
+    await press('More hint'); await press('Show word');
+    expect(live.state().found.map(([i]) => i)).toEqual([0, 1]);
     expect(hintRings()).toHaveLength(0);
     expect(screen.root.findAllByType('button').some(b => b.children.includes('Hint'))).toBe(true);
+    await press('Hint');
+    expect(ranges()).toEqual([atCell(p.words[2].cells[0])]);
+  });
+  it('drives the cue from engine state through Undo and Redo, never from stale local state', async () => {
+    const live = await mountLive({ state: searchEngine.step(initial(), ['find', crab.cells[0], crab.cells.at(-1)!, 0], p)!.state });
+    await press('Hint');
+    expect(ranges()).toEqual([atCell(p.words[1].cells[0])]);
+    await press('Undo');
+    expect(live.state().found).toEqual([]); expect(hintRings()).toHaveLength(0);
+    await press('Redo');
+    expect(live.state().found).toEqual([[0, 0]]);
+    // What the engine recorded is what is drawn: Hint level 1 was granted for word 1, so its ring is still earned.
+    expect(live.state().hints[1]).toBe(1); expect(ranges()).toEqual([atCell(p.words[1].cells[0])]);
+    expect(screen.root.findAllByType('button').some(b => b.children.includes('More hint'))).toBe(true);
   });
   it('is off once every word is found', async () => {
     let done = initial(); for (const w of p.words) done = searchEngine.step(done, ['find', w.cells[0], w.cells.at(-1)!, 0], p)!.state;
@@ -137,6 +175,101 @@ describe('Hint reveals public information first, and the word only when asked', 
     expect(p.words[hint.word].cells[0]).toBe(hint.cell); expect(revealed.found[0][0]).toBe(hint.word);
     expect(core.hintFor(p, p.words.map((_, i) => [i, 0] as [number, number]), 1)).toBeNull();
     expect(core.directionName([-1, 1])).toBe('up and right'); expect(core.directionName([0, -1])).toBe('left'); expect(core.directionName([1, 0])).toBe('down');
+  });
+});
+
+describe('Hint ring and direction are help in the engine', () => {
+  const clean = { ...fixturePuzzles[0], dares: [{ slot: 1500, id: 'synthetic-clean', label: 'Clean', rule: { kind: 'clean' as const }, help: 'independent' as const }] };
+  const entry = defineWordSearch([], [clean]);
+  const finishAll = (s: ReturnType<typeof entry.start>) => { for (const w of p.words) s = entry.move(s, ['find', w.cells[0], w.cells.at(-1), 0]) ?? s; return s; };
+  const start = (tag: string) => entry.start(clean.ref, 'family', tag, emptyChallenge(), { ownRead: false, supportOff: false }, [1500]);
+  it('a Level 1 ring marks the round helped, so it cannot finish independent or earn the clean dare', () => {
+    const control = finishAll(start('control'));
+    expect(control.result?.event).toBe('independent'); expect(control.result?.dares).toEqual([1500]);
+    const ringed = entry.move(start('ring'), ['hint'])!;
+    expect(ringed).not.toBeNull();
+    const done = finishAll(ringed);
+    expect(done.result?.event).toBe('helped'); expect(done.result?.dares).toEqual([]);
+  });
+  it('Level 2 direction and Level 3 show word work through engine state', () => {
+    let s = start('ladder'); for (const a of [['hint'], ['hint']]) s = entry.move(s, a)!;
+    expect(entry.move(s, ['hint'])).toBeNull();
+    s = entry.move(s, ['help'])!; expect(s).not.toBeNull();
+    const state = searchEngine.create(p, { version: 1 }, { ownRead: false, supportOff: false });
+    const one = searchEngine.step(state, ['hint'], p)!, two = searchEngine.step(one.state, ['hint'], p)!;
+    expect([one.event, two.event]).toEqual(['help', 'help']);
+    expect(core.hintFor(p, two.state.found, two.state.hints[0] as 1 | 2)?.next).toBe(p.words[0].cells[1]);
+    expect(searchEngine.step(two.state, ['hint'], p)).toBeNull();
+    expect(searchEngine.step(two.state, ['help'], p)!.state.found).toEqual([[0, 0]]);
+  });
+  it('the full ladder still fits after ordinary play has used everything it may', () => {
+    let s = start('reserve');
+    for (let n = 0; n < 600; n++) { const next = entry.move(s, ['find', crab.cells[0], crab.cells.at(-1), 0]) && entry.move(entry.move(s, ['find', crab.cells[0], crab.cells.at(-1), 0])!, ['undo']); if (!next) break; s = next; }
+    for (const w of p.words) { if (entry.move(s, ['find', w.cells[0], w.cells.at(-1), 0]) === null) break; }
+    let rounds = 0;
+    while (!s.result && rounds++ < 20) { const hinted = entry.move(s, ['hint']); if (hinted) { s = hinted; continue; } s = entry.move(s, ['help'])!; expect(s).not.toBeNull(); }
+    expect(s.result?.event).toBe('helped'); expect((s.payload as { actions: unknown[] }).actions.length).toBeLessThanOrEqual(512);
+  });
+  it('keeps saved logs without hints loading and playing unchanged', () => {
+    const state = searchEngine.create(p, { version: 1 }, { ownRead: false, supportOff: false });
+    expect(state.hints).toEqual(p.words.map(() => 0));
+    expect(searchEngine.validAction(['help'])).toBe(true); expect(searchEngine.validAction(['hint'])).toBe(true); expect(searchEngine.validAction(['hint', 1])).toBe(false);
+  });
+});
+
+describe('status line', () => {
+  const statusNode = () => screen.root.findAll(n => n.props.accessibilityLiveRegion === 'polite')[0];
+  it('wraps instead of clipping: a minimum height, never a fixed one, on every layout', async () => {
+    for (const fontScale of [1, 1.35]) {
+      env.fontScale = fontScale; env.width = 393;
+      await mount();
+      const node = statusNode();
+      expect(node.props.style.height).toBeUndefined(); expect(node.props.style.minHeight).toBe(33); expect(node.props.numberOfLines).toBeUndefined();
+      await act(async () => screen.unmount());
+    }
+  });
+  it('clears an old notice on Undo and Redo so the count shows again', async () => {
+    const live = await mountLive({ state: searchEngine.step(initial(), ['find', crab.cells[0], crab.cells.at(-1)!, 0], p)!.state });
+    await drag(p.words[1].cells[0], p.words[1].cells[0] === 0 ? 5 : 0);
+    expect(statusText()).toBe('Not a word. Try again.');
+    await press('Undo'); expect(live.state().found).toEqual([]);
+    expect(statusText()).toBe('0 of 4');
+    await drag(p.words[1].cells[0], p.words[1].cells[0] === 0 ? 5 : 0);
+    expect(statusText()).toBe('Not a word. Try again.');
+    await press('Redo'); expect(statusText()).toBe('1 of 4');
+  });
+});
+
+describe('snapWord ties', () => {
+  it('returns null when two unfound words match equally well, instead of guessing', () => {
+    const cells = Array.from({ length: 6 }, () => Array(6).fill('A')), row = (n: number) => Array.from({ length: n }, (_, i) => i);
+    const tie = { ...p, cells, words: [{ id: 'a', spelling: 'AAA', cells: row(3), audio: null }, { id: 'b', spelling: 'AAAAA', cells: row(5), audio: null }] } as core.SearchPuzzle;
+    expect(core.snapWord(tie, [], 0, [0, 1], 4)).toBeNull();
+    expect(core.snapWord(tie, [], 0, [0, 1], 3)).toEqual({ word: 0, end: 2 });
+    expect(core.snapWord(tie, [], 0, [0, 1], 6)?.word).toBe(1);
+  });
+});
+
+describe('bank descriptions', () => {
+  const bank = (extra: object) => ({ slot: 81, first: 0, count: 1, packHash: 'a'.repeat(64), rules: 1, band: 'shallows', title: 'Shallows', tier: 2 as const, ...extra });
+  const describeBank = (b: ReturnType<typeof bank>) => (defineWordSearch([b]).packed as unknown as { describe: (slot: number) => unknown }).describe(b.slot);
+  it('uses the real baked size and directions when the bank records them', () => {
+    expect(describeBank(bank({ size: 9, directionCount: 2 }))).toEqual({ size: '9×9', summary: 'Across and down' });
+    expect(describeBank(bank({ size: 16, directionCount: 8, band: 'trench', tier: 6 }))).toEqual({ size: '16×16', summary: 'Every direction' });
+  });
+  it('falls back to the real W2 bake bands, which differ from the starter tiers', () => {
+    const expected: [string, number, number, string][] = [['paddling', 1, 6, 'Across and down'], ['shallows', 2, 8, 'Across, down and slanted'], ['lagoon', 3, 10, 'Every direction'], ['reef', 4, 12, 'Every direction'], ['deep', 5, 15, 'Every direction'], ['trench', 6, 16, 'Every direction']];
+    for (const [band, tier, size, summary] of expected) expect(describeBank(bank({ band, tier }))).toEqual({ size: `${size}×${size}`, summary });
+  });
+  it('measures a baked set from its cells and answers', () => {
+    const grid = Array.from({ length: 8 }, () => Array(8).fill('A')), word = (a: number, b: number) => ({ cells: [a, b] });
+    expect(measureSearchBank([{ cells: grid, words: [word(0, 1), word(0, 8)] }])).toEqual({ size: 8, directionCount: 2 });
+    expect(measureSearchBank([{ cells: grid, words: [word(0, 1), word(1, 8)] }])).toEqual({ size: 8, directionCount: 4 });
+    expect(measureSearchBank([{ cells: grid, words: [word(0, 9), word(2, 1)] }])).toEqual({ size: 8, directionCount: 8 });
+    expect(measureSearchBank([{ cells: grid, words: [word(1, 0)] }])).toEqual({ size: 8, directionCount: 8 });
+  });
+  it('falls back to the plain tier for an unknown band', () => {
+    expect(describeBank(bank({ band: 'unknown', tier: 3 }))).toEqual({ size: '12×12', summary: 'Across, down and slanted' });
   });
 });
 
@@ -180,6 +313,19 @@ describe('two hunters, no score', () => {
     const lines = screen.root.findAllByType('line' as React.ElementType);
     expect(lines.some(l => l.props.stroke === '#28796B' && !l.props.strokeDasharray)).toBe(true);
     expect(lines.some(l => l.props.stroke === '#8A4D81' && l.props.strokeDasharray === '2 5')).toBe(true);
+  });
+});
+
+describe('picture fallback', () => {
+  const label = () => screen.root.findAll(n => typeof n.props.accessibilityLabel === 'string' && n.props.accessibilityLabel.startsWith('Picture unavailable')).map(n => n.props.accessibilityLabel);
+  it('mentions Hear word only when the word has audio', async () => {
+    env.pictured = new Set(['CRAB']); env.failPictures = true;
+    const easy = { ...p, list: 'words' as const }, withAudio = { ...easy, words: easy.words.map((w, i) => i === 0 ? { ...w, audio: 'crab' } : { ...w, audio: null }) };
+    await mount({ state: initial(withAudio) });
+    expect(label()).toEqual(['Picture unavailable. Use Hear word.']);
+    await act(async () => screen.unmount());
+    await mount({ state: initial({ ...easy, words: easy.words.map(w => ({ ...w, audio: null })) }) });
+    expect(label()).toEqual(['Picture unavailable.']);
   });
 });
 

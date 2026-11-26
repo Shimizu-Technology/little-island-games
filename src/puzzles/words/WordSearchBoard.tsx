@@ -13,11 +13,11 @@ import { atLarge, wordFitMultiplier, wordWidth } from '../../components/wordFit'
 import { SearchChrome, searchLayout } from './layout';
 import { themes } from './themes.json';
 const colors = ['#28796B', '#8A4D81'], hunterNames = ['Green', 'Purple'] as const, hintColor = '#B7791F', easyColumns = 6;
-function WordPicture({ spelling, size = 64, optional = false }: { spelling: string; size?: number; optional?: boolean }) {
+function WordPicture({ spelling, size = 64, optional = false, hasAudio = true }: { spelling: string; size?: number; optional?: boolean; hasAudio?: boolean }) {
   const pictures = useContext(SearchPicturesContext), id = pictures.idFor(spelling), [loaded, setLoaded] = useState<{id:string;xml:string}>();
   useEffect(() => { let live = true; if (id) void pictures.load(id).then(xml => { if (live) setLoaded({id,xml}); }).catch(() => {}); return () => { live = false; }; }, [id, pictures]);
   if (optional && !id) return null;
-  return loaded && loaded.id===id ? <SvgXml xml={loaded.xml} width={size} height={size} accessible={false}/> : <View accessible accessibilityLabel="Picture unavailable. Use Hear word." style={{ width: size, height: size, borderRadius: 12, backgroundColor: C.sand, alignItems: 'center', justifyContent: 'center' }}><Text maxFontSizeMultiplier={1}>◇</Text></View>;
+  return loaded && loaded.id===id ? <SvgXml xml={loaded.xml} width={size} height={size} accessible={false}/> : <View accessible accessibilityLabel={hasAudio ? 'Picture unavailable. Use Hear word.' : 'Picture unavailable.'} style={{ width: size, height: size, borderRadius: 12, backgroundColor: C.sand, alignItems: 'center', justifyContent: 'center' }}><Text maxFontSizeMultiplier={1}>◇</Text></View>;
 }
 const LetterCell = memo(function LetterCell({ letter, index, size, selected, focused, tap, described }: { letter: string; index: number; size: number; selected: boolean; focused: boolean; tap: (i: number) => void; described: string }) {
   return <View accessible accessibilityRole="button" accessibilityLabel={described} accessibilityState={{ selected }} onAccessibilityTap={() => tap(index)} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', borderWidth: selected || focused ? 2 : 0, borderColor: selected ? C.gold : C.blue, borderStyle: selected ? 'solid' : 'dashed' }}><Text maxFontSizeMultiplier={1.15} style={{ color: C.ink, fontSize: size * (letter.length > 1 ? .42 : .5), fontWeight: '700' }}>{letter}</Text></View>;
@@ -36,7 +36,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   useEffect(() => { if (!active) keyboard.current?.blur(); }, [active]);
   const cap = atLarge(fontScale, 1.3), copyCap = atLarge(fontScale, 1.5);
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), sound = useSoundControls(active);
-  const [first, setFirst] = useState<[number | null, number | null]>([null, null]), [previews, setPreviews] = useState<Pointer[]>([]), [zoom, setZoom] = useState(false), [notice, setNotice] = useState(''), [screenReader, setScreenReader] = useState(false), [hint, setHint] = useState<{ word: number; level: 0 | 1 | 2 }>({ word: -1, level: 0 });
+  const [first, setFirst] = useState<[number | null, number | null]>([null, null]), [previews, setPreviews] = useState<Pointer[]>([]), [zoom, setZoom] = useState(false), [notice, setNotice] = useState(''), [screenReader, setScreenReader] = useState(false);
   const pointers = useRef(new Map<string, Pointer>()), frame = useRef<View>(null), accepted = useRef(state.edits), firstRef = useRef(first);
   const rows = p.cells.length, columns = p.cells[0].length, pictures = useContext(SearchPicturesContext);
   // Easy boards offer a picture beside any word that has one; picture rounds show them for every word.
@@ -52,7 +52,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   const cancel = () => { pointers.current.clear(); setPreviews([]); interaction(false); };
   // Geometry/identity changes cancel native touches before another endpoint can be accepted.
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize the external touch session at this boundary.
-  useEffect(() => { pointers.current.clear(); firstRef.current=[null,null]; setPreviews([]); setFirst([null,null]); setNotice(''); setHint({ word: -1, level: 0 }); interaction(false); }, [resetKey, width, active, interaction, p]);
+  useEffect(() => { pointers.current.clear(); firstRef.current=[null,null]; setPreviews([]); setFirst([null,null]); setNotice(''); interaction(false); }, [resetKey, width, active, interaction, p]);
   useEffect(() => () => { interactionRef.current(false); }, []);
   const chooseFirst = useCallback((h: 0 | 1, value: number | null) => {
     const next: [number | null, number | null] = [...firstRef.current]; next[h] = value; firstRef.current = next; setFirst(next);
@@ -68,8 +68,9 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
       else { dispatch(['find', start, i, h]); setNotice(''); }
     }
   }, [active, currentHunter, p, state.found, dispatch, chooseFirst]);
-  const target = hintWord(p, state.found), level = hint.word === target ? hint.level : 0, hinting = level > 0 ? hintFor(p, state.found, level as 1 | 2) : null, message = notice || hinting?.text || '';
-  const askHint = () => { if (!active || target < 0) return; if (level === 2) { setHint({ word: -1, level: 0 }); setNotice(''); dispatch(['help']); } else { setNotice(''); setHint({ word: target, level: level === 0 ? 1 : 2 }); } };
+  // Ring and direction come only from hints the engine has accepted (and so recorded as help).
+  const target = hintWord(p, state.found), level = target < 0 ? 0 : state.hints[target], hinting = level > 0 ? hintFor(p, state.found, level as 1 | 2) : null, message = notice || hinting?.text || '';
+  const askHint = () => { if (!active || target < 0) return; setNotice(''); dispatch(level === 2 ? ['help'] : ['hint']); };
   const spoken = `${state.found.length === p.words.length ? 'Every word found.' : `${state.found.length} of ${p.words.length} words found.`}${message ? ` ${message}` : ''}`;
   const lastSpoken = useRef(''), announcedFound = useRef(state.found.map(([i]) => i));
   useEffect(() => {
@@ -90,7 +91,7 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   useEffect(() => {
     if (Platform.OS !== 'web' || !active) return;
     const handler = (e: KeyboardEvent) => { const target = e.target as HTMLElement | null; if (!target?.closest('[data-testid="word-search-keyboard"]') || e.altKey) return;
-      if (e.metaKey || e.ctrlKey) { if (e.key.toLowerCase() === 'z') { e.preventDefault(); dispatch([e.shiftKey ? 'redo' : 'undo']); } }
+      if (e.metaKey || e.ctrlKey) { if (e.key.toLowerCase() === 'z') { e.preventDefault(); setNotice(''); dispatch([e.shiftKey ? 'redo' : 'undo']); } }
       else if (keyAction(e.key)) e.preventDefault();
     };
     document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler);
@@ -159,12 +160,12 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
   </ScrollView>;
   // Each word is a pill: crossed off once found, in its hunter's colour.
   const answers = p.words.map((w, i) => { const found = state.found.find(([j]) => j === i), pic = hasPicture(w.spelling); return <View key={w.id} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: pic ? 20 : 999, backgroundColor: found ? '#E4EFE9' : '#F1EDDF', borderWidth: found ? 2 : 0, borderStyle: found?.[1] === 1 ? 'dotted' : 'solid', borderColor: colors[found?.[1] ?? 0], gap: pictureRow ? 8 : 4, flexDirection: pictureRow ? 'row' : 'column', alignItems: pictureRow ? 'center' : undefined, width: layout.large ? answerWidth + 20 : undefined, maxWidth: layout.large ? layout.listWidth : width }}>
-      {pic && <WordPicture spelling={w.spelling} optional={optionalPictures} size={layout.large ? Math.max(64, 16 * Math.min(fontScale, answerMax ?? 1.5) * 2) : 64}/>}
+      {pic && <WordPicture spelling={w.spelling} optional={optionalPictures} hasAudio={w.audio !== null} size={layout.large ? Math.max(64, 16 * Math.min(fontScale, answerMax ?? 1.5) * 2) : 64}/>}
       <View style={{ gap: 4, flex: pictureRow ? 1 : undefined }}><Copy style={{ ...(layout.large ? { fontSize: answerSize } : {}), ...(found ? { textDecorationLine: 'line-through' as const } : {}) }} testID="search-answer" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.4} maxFontSizeMultiplier={answerMax} accessibilityLabel={`${found ? 'Found. ' : ''}${w.spelling}`}>{found ? '✓ ' : ''}{w.spelling}</Copy>
       {w.audio && <Button maxFontSizeMultiplier={cap} quiet compact disabled={!active} label={`Hear ${w.spelling}`} onPress={() => { if (sound.play(w.audio!)) { if (!state.heard) dispatch(['hear', i]); } else setNotice('Could not play that. Your puzzle is kept.'); }}>Hear word</Button>}</View>
     </View>; });
   const wordList = list !== 'hidden' ? layout.large ? <ScrollView keyboardShouldPersistTaps="handled" horizontal={!layout.beside} style={{ maxWidth: layout.listWidth, maxHeight: layout.beside ? Math.max(layout.size * rows + 2, 180) : undefined, flexGrow: 0 }} contentContainerStyle={{ flexDirection: layout.beside ? 'column' : 'row', gap: 8 }}>{answers}</ScrollView> : <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{answers}</View> : <Copy maxFontSizeMultiplier={copyCap} style={{ maxWidth: layout.listWidth }}>{p.words.length} hidden words</Copy>;
-  const status = <Copy maxFontSizeMultiplier={cap} accessibilityLabel={spoken} accessibilityLiveRegion="polite" numberOfLines={1} adjustsFontSizeToFit style={{ height: 33 }}>{message || (allFound ? 'All found!' : `${state.found.length} of ${p.words.length}`)}</Copy>;
+  const status = <Copy maxFontSizeMultiplier={cap} accessibilityLabel={spoken} accessibilityLiveRegion="polite" style={{ minHeight: 33 }}>{message || (allFound ? 'All found!' : `${state.found.length} of ${p.words.length}`)}</Copy>;
   const hintLabel = ['Hint', 'More hint', 'Show word'][level];
   return <View ref={container} testID="word-search-keyboard" onLayout={e => {
     // A height change alone (including scrolling) must not resize a live board.
@@ -183,6 +184,6 @@ export function WordSearchBoard({ state, dispatch, active, width, together = fal
     {!layout.large && status}
     {!layout.large && wordList}
     {allFound && p.message && <View style={{ gap: 6 }}><Heading maxFontSizeMultiplier={atLarge(fontScale, 2)} style={{ fontSize: 22 }}>The letters left behind</Heading><Copy maxFontSizeMultiplier={copyCap}>{p.message}</Copy></View>}
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} disabled={!active || !state.found.length} onPress={() => dispatch(['undo'])}>Undo</Button><Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} disabled={!active || !state.redo.length} onPress={() => dispatch(['redo'])}>Redo</Button><Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} disabled={!active || allFound} onPress={askHint}>{hintLabel}</Button>{first.some(v => v !== null) && <Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} onPress={() => { chooseFirst(currentHunter, null); setNotice(''); }}>Cancel</Button>}</View>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} disabled={!active || !state.found.length} onPress={() => { setNotice(''); dispatch(['undo']); }}>Undo</Button><Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} disabled={!active || !state.redo.length} onPress={() => { setNotice(''); dispatch(['redo']); }}>Redo</Button><Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} disabled={!active || allFound} onPress={askHint}>{hintLabel}</Button>{first.some(v => v !== null) && <Button maxFontSizeMultiplier={cap} quiet compact style={{ minHeight: 48 }} onPress={() => { chooseFirst(currentHunter, null); setNotice(''); }}>Cancel</Button>}</View>
   </View>;
 }

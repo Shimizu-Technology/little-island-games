@@ -13,6 +13,7 @@ import { emptyRoot, catalogIssues, packAsset } from '../../../src/puzzles/bank';
 import type { DescriptorCore, FamilySpec } from '../../../src/puzzles/types';
 import type { SearchPuzzle } from '../../../src/puzzles/words/core';
 import type { SearchBank } from '../../../src/puzzles/words/registration';
+import { measureSearchBank } from '../../../src/puzzles/words/tiers';
 import { verifyByteModel } from '../byte-model';
 import { slotClaim } from '../slots';
 import { pictureBindings, pictureBindingsSource } from './picture-bindings.mjs';
@@ -55,7 +56,7 @@ try {
     if(verifyByteModel([{family:'word-search',entries:rows.length,rowBytes}]).length)throw Error('The real bank exceeds the existing byte model; lead must resolve before adoption.');
     const root={...existing.root,revision:existing.root.revision+1,nextSlot:Math.max(existing.root.nextSlot,baked.root.nextSlot),nextOrdinal:Math.max(existing.root.nextOrdinal,baked.root.nextOrdinal),families:[...existing.root.families,...baked.root.families]};
     const families=new Map([...existing.families,...baked.families]);if(catalogIssues(root,families.values()).length)throw Error('Combined catalog collision.');
-    const facts:SearchBank[]=family.packs.map(p=>{const band=family.bands[p[5]],r=rows.find(r=>r.band===band)!;return{slot:p[0],first:p[1],count:p[2],packHash:p[4],rules:p[6],band,title:band[0].toUpperCase()+band.slice(1),tier:r.tier};});
+    const facts:SearchBank[]=family.packs.map(p=>{const band=family.bands[p[5]],r=rows.find(r=>r.band===band)!;return{slot:p[0],first:p[1],count:p[2],packHash:p[4],rules:p[6],band,title:band[0].toUpperCase()+band.slice(1),tier:r.tier,...measureSearchBank(rows.filter(x=>x.band===band).map(x=>x.payload))};});
     // All checks above run before packed assets, refs or the catalog are adopted.
     for(const name of [...baked.root.families.map(f=>f[1]),...family.packs.map(p=>packAsset(p[0]))])copy(join(dirs.content,'assets',name+'.lipuzzle'),join('src/content/puzzles/assets',name+'.lipuzzle'));
     mkdirSync('content/puzzles/receipts/word-search',{recursive:true});

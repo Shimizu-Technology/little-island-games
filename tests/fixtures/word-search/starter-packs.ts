@@ -3,7 +3,7 @@
  *
  * Test and bake-planning input only. Never import this module from `src` or `content`: answers reach the app only
  * through the reviewed, scanned bake (W1 admission). Every answer below is already in a public repository list,
- * the picture dictionary allowlist or the local editorial supplement; `starter-packs.test.ts` proves it. This
+ * the picture dictionary allowlist or the local editorial supplement; `tests/word-search-starter.test.ts` proves it. This
  * module neither approves a word nor reads any private policy: the lead's locked w-guard scan and bake still decide.
  */
 export type StarterTierId = 'easy' | 'medium' | 'hard' | 'expert';

@@ -209,7 +209,7 @@ it('reports capacity using the attempted two-find action, with no byte estimate'
  for(let n=0;n<3330;n++){
   const s={...base,id:'x'.repeat(n)},payload=s.payload as import('../src/challenge/types').ReplayPayload<unknown,unknown>;
   const next={...s,revision:s.revision+1,payload:{...payload,actions:[...payload.actions,action]}};
-  expect(fixtureRegistration.full(s,action)).toBe(new TextEncoder().encode(JSON.stringify(next)).length>3328);
+  expect(fixtureRegistration.full(s,action)).toBe(new TextEncoder().encode(JSON.stringify(next)).length>2896);
  }
 });
 

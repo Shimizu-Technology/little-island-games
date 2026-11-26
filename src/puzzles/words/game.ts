@@ -1,15 +1,22 @@
 import type { ReplayEngine } from '../../challenge/types';
 import { uint } from '../../state/saveBits';
-import { findWord, initialSearch, searchSolution, searchSolved, type SearchPuzzle, type SearchState } from './core';
-export type Action = readonly ['find', number, number, 0 | 1] | readonly ['find-many', [number, number, 0 | 1][]] | readonly ['help'] | readonly ['hear', number] | readonly ['undo'] | readonly ['redo'];
+import { findWord, hintWord, initialSearch, searchSolution, searchSolved, type SearchPuzzle, type SearchState } from './core';
+export type Action = readonly ['find', number, number, 0 | 1] | readonly ['find-many', [number, number, 0 | 1][]] | readonly ['help'] | readonly ['hint'] | readonly ['hear', number] | readonly ['undo'] | readonly ['redo'];
 export type Initial = { version: 1 };
-export type State = SearchState & { puzzle: SearchPuzzle; helped: boolean; heard: boolean; redo: [number, 0 | 1][] };
+export type State = SearchState & { puzzle: SearchPuzzle; helped: boolean; heard: boolean; redo: [number, 0 | 1][];
+  /** Hint level already granted for each word: 0 none, 1 the first-letter ring, 2 also the direction. Both count as help. */
+  hints: (0 | 1 | 2)[] };
 export const searchEngine: ReplayEngine<SearchPuzzle, Initial, Action, State> = {
   initial: () => ({ version: 1 }), validInitial: (x): x is Initial => !!x && typeof x === 'object' && Object.keys(x).length === 1 && (x as Initial).version === 1,
-  create: puzzle => ({ ...initialSearch(), puzzle, helped: false, heard: false, redo: [] }),
-  validAction: (a): a is Action => Array.isArray(a) && (a.length === 1 && ['help', 'undo', 'redo'].includes(a[0]) || a.length === 2 && a[0] === 'find-many' && Array.isArray(a[1]) && a[1].length > 0 && a[1].length <= 2 && a[1].every((f: unknown) => Array.isArray(f) && f.length === 3 && uint(f[0], 255) && uint(f[1], 255) && uint(f[2], 1)) || a.length === 2 && a[0] === 'hear' && uint(a[1], 23) || a.length === 4 && a[0] === 'find' && uint(a[1], 255) && uint(a[2], 255) && uint(a[3], 1)),
+  create: puzzle => ({ ...initialSearch(), puzzle, helped: false, heard: false, redo: [], hints: puzzle.words.map(() => 0) }),
+  validAction: (a): a is Action => Array.isArray(a) && (a.length === 1 && ['help', 'hint', 'undo', 'redo'].includes(a[0]) || a.length === 2 && a[0] === 'find-many' && Array.isArray(a[1]) && a[1].length > 0 && a[1].length <= 2 && a[1].every((f: unknown) => Array.isArray(f) && f.length === 3 && uint(f[0], 255) && uint(f[1], 255) && uint(f[2], 1)) || a.length === 2 && a[0] === 'hear' && uint(a[1], 23) || a.length === 4 && a[0] === 'find' && uint(a[1], 255) && uint(a[2], 255) && uint(a[3], 1)),
   step: (s, a, p) => {
     if (a[0] === 'hear') return a[1] < p.words.length ? { state: { ...s, heard: true }, event: 'read-aloud' } : null;
+    if (a[0] === 'hint') {
+      const word = hintWord(p, s.found), level = word < 0 ? 2 : s.hints[word];
+      if (level >= 2) return null;
+      return { state: { ...s, helped: true, hints: s.hints.map((h, i) => i === word ? level + 1 as 1 | 2 : h) }, event: 'help' };
+    }
     if (a[0] === 'undo') return s.found.length ? { state: { ...s, found: s.found.slice(0, -1), redo: [...s.redo, s.found.at(-1)!], turn: s.found.at(-1)![1], edits: s.edits + 1 }, event: 'edit' } : null;
     if (a[0] === 'redo') { const next = s.redo.at(-1); return next ? { state: { ...s, found: [...s.found, next], redo: s.redo.slice(0, -1), turn: next[1] === 0 ? 1 : 0, edits: s.edits + 1 }, event: 'edit' } : null; }
     if (a[0] === 'find-many') { let next: SearchState = s; for (const f of a[1]) next = findWord(p, next, f); return next === s ? null : { state: { ...s, ...next, redo: [] }, event: 'edit' }; }
