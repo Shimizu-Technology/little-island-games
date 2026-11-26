@@ -13,6 +13,7 @@ import type { IslanderLook } from "../islander/look";
 import { lockedReason, lookWithStyle, styleCatalog, type StyleItem } from "../personalization/catalog";
 import { HomeClosetSheet, closetSheetHeightRatio } from "./HomeClosetSheet";
 import { HomeBadgesSheet } from "./HomeBadgesSheet";
+import { registerWebPopStateHandler } from "./webPopState";
 import { buildingLayout, roomOrigin, type Building } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
@@ -688,6 +689,7 @@ export function HomeScreen({
   };
   const sheetHistoryPushed = useRef(false);
   const suppressNextPop = useRef(false);
+  const navigatingToMap = useRef(false);
   const initialAliasSheet = useRef(initialSheet);
   const coldBaseSeeded = useRef(false);
   const popWebSheetHistory = useCallback(() => {
@@ -792,8 +794,9 @@ export function HomeScreen({
     [onConsumeIntent, popWebSheetHistory]
   );
   const goToMap = useCallback(() => {
+    navigatingToMap.current = true;
     const r = router as typeof router & { dismissTo?: (href: string) => void };
-    if (typeof r.dismissTo === "function") r.dismissTo("/");
+    if (router.canGoBack?.() && typeof r.dismissTo === "function") r.dismissTo("/");
     else router.replace?.("/");
   }, []);
   const handleBack = useCallback(() => {
@@ -907,36 +910,46 @@ export function HomeScreen({
   }, [sheetOpen]);
   React.useEffect(() => {
     if (Platform.OS !== "web") return;
+    navigatingToMap.current = false;
     const host = globalThis as {
       window?: {
-        addEventListener?: (type: string, listener: (event: PopStateEvent) => void, capture?: boolean) => void;
-        removeEventListener?: (type: string, listener: (event: PopStateEvent) => void, capture?: boolean) => void;
+        history?: { state?: unknown };
+        location?: { pathname?: string };
       };
     };
-    const win = host.window;
-    if (!win?.addEventListener) return;
-    const onPopState = (event: PopStateEvent) => {
+    const onPopState = (event: PopStateEvent): boolean => {
+      if (navigatingToMap.current) {
+        // Let Expo Router's own history.go(...) settle cleanly while dismissing to "/".
+        return false;
+      }
       if (suppressNextPop.current) {
         suppressNextPop.current = false;
-        event.stopImmediatePropagation?.();
-        return;
+        return true;
       }
       if (sheetHistoryPushed.current && live.current.activeSheet) {
         sheetHistoryPushed.current = false;
-        event.stopImmediatePropagation?.();
         if (live.current.activeSheet === "closet") closeClosetRef.current(true);
         else if (live.current.activeSheet === "badges") closeBadgesRef.current(true);
-        return;
+        return true;
       }
       // Second browser Back (no sheet open): always reach "/" (Map), never pop back into a game.
-      event.stopImmediatePropagation?.();
+      const state = (event.state ?? host.window?.history?.state) as Record<string, unknown> | null | undefined;
+      const isSeededMap = state?.__homeSentinel === "map";
+      const pathname = host.window?.location?.pathname ?? "";
+      if (!isSeededMap && pathname === "/") {
+        // Browser Back already landed on the real Map "/" entry; let Expo Router settle without double-popping.
+        navigatingToMap.current = true;
+        return false;
+      }
       goToMapRef.current();
+      return true;
     };
-    win.addEventListener("popstate", onPopState, true);
+    const unregister = registerWebPopStateHandler(onPopState);
     return () => {
-      win.removeEventListener?.("popstate", onPopState, true);
+      unregister();
       sheetHistoryPushed.current = false;
       suppressNextPop.current = false;
+      navigatingToMap.current = false;
     };
   }, []);
   const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {

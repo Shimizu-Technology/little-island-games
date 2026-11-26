@@ -17,6 +17,7 @@ import BadgesRoute from "../src/app/badges";
 import { HomeClosetSheet, closetSheetMetrics, nextClosetTabIndex } from "../src/home/HomeClosetSheet";
 import { HomeBadgesSheet } from "../src/home/HomeBadgesSheet";
 import { closetAboveSheetHeight, closetCameraFor } from "../src/home/HomeScreen";
+import { ensureWebPopStateInterceptor } from "../src/home/webPopState";
 
 const env = vi.hoisted(() => ({
   os: "ios" as "ios" | "android" | "web",
@@ -492,9 +493,13 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       const historyBack = vi.fn(() => {
         if (cursor <= 0) return;
         cursor -= 1;
-        const stopImmediatePropagation = vi.fn();
+        let stopped = false;
+        const stopImmediatePropagation = vi.fn(() => {
+          stopped = true;
+        });
         for (const fn of [...popListeners]) {
           fn({ state: entries[cursor].state, stopImmediatePropagation });
+          if (stopped) break;
         }
       });
       const addEventListener = vi.fn((type: string, fn: (e: any) => void) => {
@@ -515,7 +520,13 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
         replaceState,
         back: historyBack,
       };
-      vi.stubGlobal("window", { history, location, addEventListener, removeEventListener });
+      const win = { history, location, addEventListener, removeEventListener };
+      vi.stubGlobal("window", win);
+      // Mirror real Expo Router boot order: _layout.tsx installs the web popstate dispatcher
+      // BEFORE createMemoryHistory (useLinking) attaches Expo Router's own popstate listener.
+      ensureWebPopStateInterceptor();
+      const expoRouterPopState = vi.fn();
+      win.addEventListener("popstate", expoRouterPopState);
       const browserBack = async () => {
         await act(async () => {
           history.back();
@@ -534,6 +545,7 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
         historyBack,
         addEventListener,
         removeEventListener,
+        expoRouterPopState,
         browserBack,
       };
     };
@@ -554,28 +566,31 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(coldWin.location.href).toBe("http://localhost/locker?item=hat:sunhat");
       expect(coldWin.getCursor()).toBe(2);
       expect(coldWin.history.state).toEqual(expect.objectContaining({ id: "entry-1", __homeSentinel: "sheet", __homeSheet: "closet" }));
-      expect(coldWin.addEventListener).toHaveBeenCalledTimes(1);
+      // Boot interceptor + Expo Router listener only; HomeScreen never attaches a late listener behind Expo Router.
+      expect(coldWin.addEventListener).toHaveBeenCalledTimes(2);
 
       // Rotate viewport portrait -> 844×390 landscape while Closet is open -> NO double-push, NO listener reset!
       env.window = { width: 844, height: 390, fontScale: 1 };
       await act(async () => { root!.update(<LockerRoute />); });
       expect(coldWin.removeEventListener).not.toHaveBeenCalled();
-      expect(coldWin.addEventListener).toHaveBeenCalledTimes(1);
+      expect(coldWin.addEventListener).toHaveBeenCalledTimes(2);
       expect(coldWin.entries).toHaveLength(3);
       expect(coldWin.getCursor()).toBe(2);
 
-      // 1st browser Back: closes Closet in-place without switching pathname to /island-home (keeps Store mounted).
+      // 1st browser Back: closes Closet in-place and stops Expo Router's popstate listener so Store never remounts.
       await coldWin.browserBack();
       expect(coldWin.getCursor()).toBe(1);
       expect(coldWin.location.pathname).toBe("/locker");
       expect(coldWin.history.state).toEqual(expect.objectContaining({ id: "entry-1", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+      expect(coldWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.replace).not.toHaveBeenCalled();
 
-      // 2nd browser Back: lands on "/" Map via goToMap()!
+      // 2nd browser Back: lands on seeded [map] sentinel -> stops Expo Router resetRoot and navigates cleanly to "/".
       await coldWin.browserBack();
       expect(coldWin.getCursor()).toBe(0);
       expect(coldWin.history.state).toEqual(expect.objectContaining({ id: "entry-1", __homeSentinel: "map" }));
+      expect(coldWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.replace).toHaveBeenCalledWith("/");
       expect(env.back).not.toHaveBeenCalled();
       await act(async () => root!.unmount());
@@ -597,9 +612,11 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(coldNoRotateWin.location.pathname).toBe("/locker");
       expect(coldNoRotateWin.history.state).toEqual(expect.objectContaining({ id: "entry-2", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+      expect(coldNoRotateWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.replace).not.toHaveBeenCalled();
       await coldNoRotateWin.browserBack();
       expect(coldNoRotateWin.history.state).toEqual(expect.objectContaining({ id: "entry-2", __homeSentinel: "map" }));
+      expect(coldNoRotateWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.replace).toHaveBeenCalledWith("/");
       await act(async () => root!.unmount());
 
@@ -615,9 +632,11 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(coldBadgesWin.location.pathname).toBe("/badges");
       expect(coldBadgesWin.history.state).toEqual(expect.objectContaining({ id: "entry-3", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
+      expect(coldBadgesWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.replace).not.toHaveBeenCalled();
       await coldBadgesWin.browserBack();
       expect(coldBadgesWin.history.state).toEqual(expect.objectContaining({ id: "entry-3", __homeSentinel: "map" }));
+      expect(coldBadgesWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.replace).toHaveBeenCalledWith("/");
       await act(async () => root!.unmount());
 
@@ -641,11 +660,14 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       await mapWin.browserBack();
       expect(mapWin.getCursor()).toBe(1);
       expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
+      expect(mapWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.dismissTo).not.toHaveBeenCalled();
+      // 2nd Back lands on the real "/" Map entry: let Expo Router settle naturally (never double-pop via dismissTo).
       await mapWin.browserBack();
       expect(mapWin.getCursor()).toBe(0);
       expect(mapWin.location.pathname).toBe("/");
-      expect(env.dismissTo).toHaveBeenCalledWith("/");
+      expect(mapWin.expoRouterPopState).toHaveBeenCalledTimes(1);
+      expect(env.dismissTo).not.toHaveBeenCalled();
       await act(async () => root!.unmount());
 
       // 5) Game-origin /badges alias (canGoBack=true): 1st Back closes Badge Wall in-place, 2nd Back reaches "/" (never game).
@@ -663,15 +685,17 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
       expect(gameWin.location.pathname).toBe("/badges");
       expect(gameWin.history.state).toEqual(expect.objectContaining({ id: "badges-2", __homeSentinel: "home" }));
       expect(root!.root.findAllByProps({ testID: "home-badges-sheet" })).toHaveLength(0);
+      expect(gameWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.dismissTo).not.toHaveBeenCalled();
       await gameWin.browserBack();
       expect(gameWin.history.state).toEqual(expect.objectContaining({ id: "badges-2", __homeSentinel: "map" }));
+      expect(gameWin.expoRouterPopState).not.toHaveBeenCalled();
       expect(env.dismissTo).toHaveBeenCalledWith("/");
       expect(env.back).not.toHaveBeenCalled();
       await act(async () => root!.unmount());
 
-      // 6) R4 P1 #1: Cold /locker?item=hat:cap with a failed Wear this write -> neither Close nor 1st browser Back
-      // changes location.pathname to /island-home or drops Store's pending look & Retry; 2nd Back still reaches "/" Map.
+      // 6) R4 P1 #1 / R5: Cold /locker?item=hat:cap with a failed Wear this write -> neither Close nor 1st browser Back
+      // reaches Expo Router's popstate listener or drops Store's pending look & Retry; 2nd Back still reaches "/" Map.
       const runColdFailedSaveCase = async (dismissVia: "close" | "back") => {
         env.window = { width: 844, height: 390, fontScale: 1 };
         env.canGoBack = false;
@@ -712,11 +736,12 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
           await win.browserBack();
         }
 
-        // URL stays on /locker (never /island-home) with original Expo Router id intact -> Store stays mounted with Cap & Retry!
+        // URL stays on /locker (never /island-home) and Expo Router's popstate listener is NEVER invoked -> Store stays mounted with Cap & Retry!
         expect(win.getCursor()).toBe(1);
         expect(win.location.pathname).toBe("/locker");
         expect(win.location.pathname).not.toBe("/island-home");
         expect(win.history.state).toEqual(expect.objectContaining({ id: `cold-${dismissVia}`, __homeSentinel: "home" }));
+        expect(win.expoRouterPopState).not.toHaveBeenCalled();
         expect(root!.root.findAllByProps({ testID: "home-closet-sheet" })).toHaveLength(0);
         expect(root!.root.findByProps({ testID: "live-room-islander" }).props.look.hat).toBe("cap");
         expect(env.store.error).toBeTruthy();
@@ -724,9 +749,10 @@ describe("Phase 3A: Route compatibility & cold-link safety", () => {
         expect(hostById(root!.root, "save-retry-button")).toHaveLength(1);
         expect(env.replace).not.toHaveBeenCalled();
 
-        // 2nd browser Back still navigates cleanly to "/" Map.
+        // 2nd browser Back still navigates cleanly to "/" Map without invoking Expo Router's resetRoot popstate.
         await win.browserBack();
         expect(win.getCursor()).toBe(0);
+        expect(win.expoRouterPopState).not.toHaveBeenCalled();
         expect(env.replace).toHaveBeenCalledWith("/");
         await act(async () => root!.unmount());
       };
