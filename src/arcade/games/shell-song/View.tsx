@@ -193,7 +193,7 @@ export const SingingShell = memo(function SingingShell({
   const rippleSize = canvas * 0.66;
   const shadowWidth = canvas * 0.62;
   const shadowHeight = Math.max(7, canvas * 0.12);
-  const badgeSize = Math.max(18, Math.min(24, Math.round(canvas * 0.22)));
+  const badgeSize = Math.max(14, Math.min(24, Math.round(canvas * 0.22)));
   const noteWidth = Math.max(22, Math.min(36, Math.round(canvas * 0.3)));
   const noteHeight = Math.round(noteWidth * 1.28);
   const noteTop = Math.round(canvas * 0.22);
@@ -397,6 +397,329 @@ export const SingingShell = memo(function SingingShell({
   );
 });
 
+export type SongBoardChromeMeasurement = {
+  hud?: number;
+  header?: number;
+  progress?: number;
+  controls?: number;
+};
+
+export type SongBoardLayoutInput = {
+  width: number;
+  arenaHeight: number;
+  shells: number;
+  patternLength: number;
+  learning: boolean;
+  hasShortPhrases: boolean;
+  chunksOpen: boolean;
+  hasTwist: boolean;
+  isEndless: boolean;
+  measuredChrome?: SongBoardChromeMeasurement;
+};
+
+export type SongBoardLayout = {
+  wide: boolean;
+  compactWidth: boolean;
+  compactHeight: boolean;
+  ultraShort: boolean;
+  tight: boolean;
+  inlineControls: boolean;
+  compactHearts: boolean;
+  columns: number;
+  rows: number;
+  boardGap: number;
+  boardPadTop: number;
+  boardPadBottom: number;
+  hudPadH: number;
+  hudGap: number;
+  hudMaxWidth: number;
+  heroSize: number;
+  headingFontSize: number;
+  headingLineHeight: number;
+  subtitleFontSize: number;
+  subtitleLineHeight: number;
+  twistFontSize: number;
+  twistLineHeight: number;
+  headerTextGap: number;
+  showTwistInHeader: boolean;
+  inlineTwist: boolean;
+  showChunkCaptionInControls: boolean;
+  dotSize: number;
+  dotGap: number;
+  progressPadV: number;
+  progressPadH: number;
+  controlsGap: number;
+  colGap: number;
+  rowGap: number;
+  stagePadH: number;
+  stagePadV: number;
+  cardPadTop: number;
+  cardPadBottom: number;
+  badgeFontSize: number;
+  badgeLineHeight: number;
+  badgePadV: number;
+  badgeBorder: number;
+  shellCanvas: number;
+  shellCardWidth: number;
+  shellCardHeight: number;
+  stageMaxWidth: number;
+  stageHeight: number;
+  hudHeight: number;
+  headerHeight: number;
+  progressHeight: number;
+  controlsHeight: number;
+  totalHeight: number;
+  justifyContent: "flex-start" | "center";
+};
+
+/**
+ * Pure vertical and horizontal layout budget for SongBoard.
+ * Reserves the full HUD (including compact portrait wrap), heading, pattern progress,
+ * stage chrome, shell card borders/labels, and 44 px+ action targets before sizing shells.
+ */
+export function computeSongBoardLayout({
+  width,
+  arenaHeight,
+  shells,
+  patternLength,
+  learning,
+  hasShortPhrases,
+  chunksOpen,
+  hasTwist,
+  isEndless,
+  measuredChrome,
+}: SongBoardLayoutInput): SongBoardLayout {
+  const safeWidth = Math.max(240, width);
+  const safeArenaHeight = Math.max(240, arenaHeight);
+  const wide = safeWidth >= 560 && safeArenaHeight < 440;
+  const compactWidth = safeWidth < 380;
+  const compactHeight = safeArenaHeight < 560;
+  const ultraShort = !wide && safeArenaHeight < 480;
+  const tight = wide || compactHeight || compactWidth;
+  const inlineControls = wide || (safeWidth >= 540 && safeArenaHeight < 520);
+  const compactHearts = compactWidth || wide || compactHeight;
+
+  const columns = wide ? shells : shells === 4 ? (safeWidth >= 680 ? 4 : 2) : 3;
+  const rows = Math.max(1, Math.ceil(shells / columns));
+
+  const boardGap = wide ? 3 : ultraShort ? 3 : compactHeight ? 4 : 9;
+  const boardPadTop = wide ? 2 : ultraShort ? 2 : compactHeight ? 3 : 4;
+  const boardPadBottom = wide ? 4 : ultraShort ? 3 : compactHeight ? 5 : 8;
+  // Five vertical bands when !showPicture: HUD, Hero/Heading, Progress, Stage, Controls.
+  const gapsTotal = boardGap * 4;
+
+  const hudPadH = compactWidth ? 6 : 14;
+  const hudGap = compactWidth ? 4 : 6;
+  const hudMaxWidth = Math.min(safeWidth, wide ? 860 : 540);
+  // Conservatively reserve 2 wrapped rows on narrow portrait until onLayout measures exact height.
+  const estimatedHudHeight = !learning && compactWidth ? 44 + hudGap + 44 + 2 : 46;
+  const hudHeight = measuredChrome?.hud ?? estimatedHudHeight;
+
+  const heroSize = wide
+    ? 36
+    : ultraShort
+      ? 34
+      : compactHeight
+        ? chunksOpen
+          ? 36
+          : 42
+        : safeArenaHeight < 650
+          ? 56
+          : 66;
+  const headingFontSize = wide
+    ? 19
+    : ultraShort
+      ? 18
+      : compactHeight
+        ? chunksOpen
+          ? 18
+          : 22
+        : chunksOpen
+          ? 24
+          : 29;
+  const headingLineHeight = Math.round(headingFontSize * 1.2) + 2;
+  const subtitleFontSize = wide ? 13 : ultraShort ? 12 : compactHeight ? 13 : 15;
+  const subtitleLineHeight = subtitleFontSize + 4;
+  const twistFontSize = ultraShort ? 11 : 12;
+  const twistLineHeight = ultraShort ? 14 : 16;
+  const headerTextGap = wide || compactHeight ? 1 : 3;
+  // Avoid repeating twist instructions while short-phrase practice is open on compact viewports.
+  const showTwistInHeader = hasTwist && !(chunksOpen && (wide || compactHeight));
+  const inlineTwist = wide && showTwistInHeader;
+  const showChunkCaptionInControls = chunksOpen && !wide && !compactHeight;
+
+  const twistLines = !showTwistInHeader || inlineTwist ? 0 : compactWidth && !ultraShort ? 2 : 1;
+  const headerTextHeight =
+    headingLineHeight +
+    headerTextGap +
+    subtitleLineHeight +
+    (twistLines > 0 ? headerTextGap + twistLines * twistLineHeight : 0);
+  const estimatedHeaderHeight = Math.max(heroSize, headerTextHeight) + 2;
+  const headerHeight = measuredChrome?.header ?? estimatedHeaderHeight;
+
+  const dotSize = wide || compactHeight ? 10 : 13;
+  const dotGap = wide || compactHeight ? 5 : 7;
+  const progressPadV = wide || compactHeight ? 3 : 5;
+  const progressPadH = wide || compactHeight ? 10 : 14;
+  const innerProgressWidth = Math.max(120, safeWidth - 24 - progressPadH * 2);
+  const dotsPerRow = Math.max(1, Math.floor((innerProgressWidth + dotGap) / (dotSize + dotGap)));
+  const progressRows = Math.max(1, Math.ceil(Math.max(1, patternLength) / dotsPerRow));
+  const estimatedProgressHeight =
+    progressPadV * 2 + 2 + progressRows * dotSize + (progressRows - 1) * dotGap;
+  const progressHeight = measuredChrome?.progress ?? estimatedProgressHeight;
+
+  const controlsGap = wide || compactHeight ? 6 : 8;
+  // Button compact is >=44px (budget 46px); PlayButton compact renders Copy (25px lineHeight) + padding/border = 49px (budget 51px).
+  const buttonRowHeight = 46;
+  const playButtonHeight = 51;
+  let estimatedControlsHeight: number;
+  if (chunksOpen) {
+    estimatedControlsHeight = inlineControls
+      ? buttonRowHeight
+      : buttonRowHeight * 2 + controlsGap + (showChunkCaptionInControls ? 44 + controlsGap : 0);
+  } else if (inlineControls) {
+    estimatedControlsHeight = playButtonHeight;
+  } else {
+    estimatedControlsHeight =
+      playButtonHeight +
+      (hasShortPhrases ? controlsGap + buttonRowHeight : 0) +
+      (isEndless ? controlsGap + buttonRowHeight : 0);
+  }
+  const controlsHeight = measuredChrome?.controls ?? estimatedControlsHeight;
+
+  const safetySlack = ultraShort ? 4 : 6;
+  const nonStageHeight =
+    boardPadTop +
+    boardPadBottom +
+    gapsTotal +
+    hudHeight +
+    headerHeight +
+    progressHeight +
+    controlsHeight +
+    safetySlack;
+
+  const colGap = safeWidth >= 600 ? 10 : compactWidth ? 5 : 6;
+  const rowGap = wide ? 4 : ultraShort ? 4 : compactHeight ? 5 : 10;
+  const stagePadH = safeWidth >= 600 ? 14 : compactWidth ? 6 : 8;
+  const stagePadV = wide ? 4 : ultraShort ? 4 : compactHeight ? 5 : 10;
+  const stageBorderV = 4;
+
+  const availableStageHeight = Math.max(0, safeArenaHeight - nonStageHeight);
+  const availableRowsHeight = Math.max(
+    0,
+    availableStageHeight - stagePadV * 2 - stageBorderV - rowGap * (rows - 1),
+  );
+  const maxRowHeight = Math.floor(availableRowsHeight / rows);
+
+  const widthCap = safeWidth >= 600 ? (rows === 2 ? 148 : 176) : 114;
+  const stageOuterMax = Math.min(1080, safeWidth - 12);
+  const maxCardWidthFromWidth = Math.floor(
+    (stageOuterMax - stagePadH * 2 - 4 - colGap * (columns - 1)) / columns,
+  );
+  const maxCardWidth = Math.max(44, Math.min(widthCap, maxCardWidthFromWidth));
+
+  const ultraTightCards = maxRowHeight < 68;
+  const cardPadTop = wide || compactHeight ? 1 : 2;
+  const cardPadBottom = ultraTightCards ? 2 : wide || compactHeight ? 3 : 6;
+  const cardBorderV = 7; // borderTop (up to 2.5) + borderBottom (up to 4)
+  const badgePadV = ultraTightCards ? 0 : 1;
+  const badgeBorder = ultraTightCards ? 1 : 1.5;
+
+  const tentativeCanvas = Math.max(
+    32,
+    maxRowHeight - (cardPadTop + cardPadBottom + cardBorderV + (learning ? 30 : ultraTightCards ? 18 : 24)),
+  );
+  const badgeBasis = Math.min(maxCardWidth, tentativeCanvas + 6);
+  const badgeFontSize = learning
+    ? Math.min(32, Math.max(18, Math.round(badgeBasis * 0.28)))
+    : ultraTightCards
+      ? 13
+      : Math.min(22, Math.max(14, Math.round(badgeBasis * 0.22)));
+  const badgeLineHeight = badgeFontSize + (ultraTightCards ? 3 : 4);
+  const badgeHeight = badgeLineHeight + badgePadV * 2 + Math.ceil(badgeBorder * 2);
+  const cardChromeV = cardPadTop + cardPadBottom + cardBorderV + badgeHeight;
+
+  const maxCanvasByHeight = maxRowHeight - cardChromeV;
+  const maxCanvasByWidth = maxCardWidth - 6;
+  const shellCanvas = Math.floor(
+    Math.max(32, Math.min(widthCap - 6, maxCanvasByWidth, maxCanvasByHeight)),
+  );
+  const shellCardHeight = Math.max(44, shellCanvas + cardChromeV);
+  const shellCardWidth = Math.max(
+    44,
+    Math.min(maxCardWidth, Math.max(shellCanvas + 6, Math.min(maxCardWidth, shellCanvas + 18))),
+  );
+  const stageMaxWidth = Math.min(
+    stageOuterMax,
+    shellCardWidth * columns + colGap * (columns - 1) + stagePadH * 2 + 4,
+  );
+  const stageHeight = stagePadV * 2 + stageBorderV + rows * shellCardHeight + (rows - 1) * rowGap;
+  const totalHeight =
+    boardPadTop +
+    boardPadBottom +
+    gapsTotal +
+    hudHeight +
+    headerHeight +
+    progressHeight +
+    stageHeight +
+    controlsHeight;
+
+  return {
+    wide,
+    compactWidth,
+    compactHeight,
+    ultraShort,
+    tight,
+    inlineControls,
+    compactHearts,
+    columns,
+    rows,
+    boardGap,
+    boardPadTop,
+    boardPadBottom,
+    hudPadH,
+    hudGap,
+    hudMaxWidth,
+    heroSize,
+    headingFontSize,
+    headingLineHeight,
+    subtitleFontSize,
+    subtitleLineHeight,
+    twistFontSize,
+    twistLineHeight,
+    headerTextGap,
+    showTwistInHeader,
+    inlineTwist,
+    showChunkCaptionInControls,
+    dotSize,
+    dotGap,
+    progressPadV,
+    progressPadH,
+    controlsGap,
+    colGap,
+    rowGap,
+    stagePadH,
+    stagePadV,
+    cardPadTop,
+    cardPadBottom,
+    badgeFontSize,
+    badgeLineHeight,
+    badgePadV,
+    badgeBorder,
+    shellCanvas,
+    shellCardWidth,
+    shellCardHeight,
+    stageMaxWidth,
+    stageHeight,
+    hudHeight,
+    headerHeight,
+    progressHeight,
+    controlsHeight,
+    totalHeight,
+    justifyContent: totalHeight + 6 >= safeArenaHeight ? "flex-start" : "center",
+  };
+}
+
 export function SongBoard({
   initial,
   active,
@@ -565,34 +888,16 @@ export function SongBoard({
     }
   }
 
+  const [measuredHud, setMeasuredHud] = useState<{ key: string; height: number } | null>(null);
+  const [measuredHeader, setMeasuredHeader] = useState<{ key: string; height: number } | null>(null);
+  const [measuredProgress, setMeasuredProgress] = useState<{ key: string; height: number } | null>(null);
+  const [measuredControls, setMeasuredControls] = useState<{ key: string; height: number } | null>(null);
+
   // The parent arena is the space below the app chrome, not the entire display.
-  const wide = width >= 700 && arenaHeight < 440;
-  const columns = wide
-    ? s.shells
-    : s.shells === 4
-      ? width >= 680
-        ? 4
-        : 2
-      : 3;
-  const rows = Math.ceil(s.shells / columns);
-  const colGap = width >= 600 ? 10 : 6;
-  const rowGap = arenaHeight < 520 ? 6 : 10;
-  const stagePadH = width >= 600 ? 14 : 8;
-  const widthCap = width >= 600 ? (rows === 2 ? 148 : 176) : 114;
-  const widthBudget = (Math.min(1080, width) - 20 - stagePadH * 2 - colGap * (columns - 1)) / columns;
-  const chromeBudget = learning
-    ? 265
-    : chunks
-      ? 410
-      : s.level !== "endless" && ["w5", "w6"].includes(s.level.world)
-        ? 300
-        : 245;
-  const heightBudget = (arenaHeight - chromeBudget) / rows - 34;
-  const shellSize = Math.floor(Math.max(54, Math.min(widthCap, widthBudget, heightBudget)));
-  const stageMaxWidth = Math.min(
-    width - 16,
-    shellSize * columns + colGap * (columns - 1) + stagePadH * 2 + 4,
-  );
+  const hasShortPhrases =
+    s.level !== "endless" &&
+    ["w5", "w6"].includes(s.level.world) &&
+    !["over", "cleared", "rest"].includes(s.phase);
   const twistLabel =
     s.level === "endless"
       ? "Growing song"
@@ -603,6 +908,35 @@ export function SongBoard({
           : s.level.twist === "finale"
             ? "Two new notes each round"
             : "";
+  const isWideArena = width >= 560 && arenaHeight < 440;
+  const isCompactArena = arenaHeight < 560;
+  const hudMeasureKey = `${Math.round(width)}:${learning ? 1 : 0}:${s.lives.maxHearts}:${isWideArena ? 1 : 0}:${isCompactArena ? 1 : 0}`;
+  const headerMeasureKey = `${Math.round(width)}:${Math.round(arenaHeight)}:${chunks ? 1 : 0}:${twistLabel ? 1 : 0}:${s.phase}`;
+  const progressMeasureKey = `${Math.round(width)}:${isCompactArena ? 1 : 0}:${isWideArena ? 1 : 0}:${s.pattern.length}`;
+  const controlsMeasureKey = `${Math.round(width)}:${isCompactArena ? 1 : 0}:${isWideArena ? 1 : 0}:${chunks ? 1 : 0}:${hasShortPhrases ? 1 : 0}:${s.level === "endless" ? 1 : 0}`;
+
+  const layout = computeSongBoardLayout({
+    width,
+    arenaHeight,
+    shells: s.shells,
+    patternLength: s.pattern.length,
+    learning,
+    hasShortPhrases,
+    chunksOpen: chunks && hasShortPhrases,
+    hasTwist: !!twistLabel,
+    isEndless: s.level === "endless",
+    measuredChrome: {
+      hud: measuredHud?.key === hudMeasureKey ? measuredHud.height : undefined,
+      header: measuredHeader?.key === headerMeasureKey ? measuredHeader.height : undefined,
+      progress: measuredProgress?.key === progressMeasureKey ? measuredProgress.height : undefined,
+      controls: measuredControls?.key === controlsMeasureKey ? measuredControls.height : undefined,
+    },
+  });
+  const { wide } = layout;
+  const totalChunks = songChunks(s.pattern).length;
+  const phraseStart = chunk * 3 + 1;
+  const phraseEnd = Math.min(s.pattern.length, chunk * 3 + 3);
+  const phraseSummary = `Phrase ${chunk + 1}/${totalChunks} · notes ${phraseStart}–${phraseEnd}`;
   const phase = chunks
     ? "Short listening phrases"
     : s.phase === "watch"
@@ -616,28 +950,55 @@ export function SongBoard({
             : s.phase === "rest"
               ? "Again?"
               : "Your turn";
+  const subtitleBase = chunks
+    ? phraseSummary
+    : s.phase === "watch"
+      ? "Follow the glow"
+      : s.phase === "repeat"
+        ? "Play it back · no hurry"
+        : s.phase === "picture"
+          ? "Blend the sounds"
+          : s.phase === "cleared"
+            ? "A beautiful song"
+            : "A fresh song is waiting";
+  const subtitle =
+    layout.inlineTwist && twistLabel ? `${subtitleBase} · ${twistLabel}` : subtitleBase;
+  const compactButtonStyle = layout.compactWidth ? { paddingHorizontal: 10 } : undefined;
+  const compactButtonTextStyle = layout.compactWidth ? { fontSize: 14 } : undefined;
 
   return (
     <View
+      testID="shell-song-board"
       style={{
         flex: 1,
         width: "100%",
         alignItems: "center",
-        justifyContent: "center",
-        gap: arenaHeight < 440 ? 4 : 9,
-        paddingBottom: 8,
+        justifyContent: showPicture ? "center" : layout.justifyContent,
+        gap: layout.boardGap,
+        paddingTop: layout.boardPadTop,
+        paddingBottom: layout.boardPadBottom,
       }}
     >
       {!(wide && showPicture) && (
         <View
+          testID="shell-song-hud"
+          onLayout={event => {
+            const next = Math.ceil(event.nativeEvent.layout.height);
+            if (next <= 0) return;
+            setMeasuredHud(prev =>
+              prev?.key === hudMeasureKey && prev.height === next
+                ? prev
+                : { key: hudMeasureKey, height: next },
+            );
+          }}
           style={{
             width: "100%",
-            maxWidth: Math.max(stageMaxWidth, 320),
-            paddingHorizontal: 14,
+            maxWidth: layout.hudMaxWidth,
+            paddingHorizontal: layout.hudPadH,
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: 6,
+            gap: layout.hudGap,
             flexWrap: "wrap",
           }}
         >
@@ -648,50 +1009,85 @@ export function SongBoard({
                 ? `Pattern ${s.rounds + 1}`
                 : `${Math.min(s.rounds + 1, s.level.rounds)}/${s.level.rounds} tunes`}
           </HudPill>
-          {!learning && <HeartsHud lives={s.lives} />}
+          {!learning && <HeartsHud lives={s.lives} compact={layout.compactHearts} />}
           <HudPill>
             <MiniStars stars={s.slips === 0 ? 3 : s.slips <= 1 ? 2 : 1} />
           </HudPill>
         </View>
       )}
       <View
+        testID="shell-song-header"
+        onLayout={event => {
+          const next = Math.ceil(event.nativeEvent.layout.height);
+          if (next <= 0) return;
+          setMeasuredHeader(prev =>
+            prev?.key === headerMeasureKey && prev.height === next
+              ? prev
+              : { key: headerMeasureKey, height: next },
+          );
+        }}
         style={{
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          gap: 10,
+          gap: layout.tight ? 8 : 10,
+          paddingHorizontal: 8,
+          maxWidth: width,
         }}
       >
         <HitReaction hit={s.lives.hit} onTone={onTone}>
           <Hero
             game="shell-song"
-            size={wide ? 44 : arenaHeight < 650 ? 58 : 66}
+            size={layout.heroSize}
             outfit={outfit}
             cue={`${s.rounds}-${s.slips}-${s.cursor}`}
             mood={s.slips && s.cursor === 0 ? "dizzy" : s.cursor || s.rounds ? "happy" : "idle"}
             active={active}
           />
         </HitReaction>
-        <View accessibilityLiveRegion="polite" style={{ gap: 3 }}>
-          <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-            <Heading style={{ color: "#FFF3D4", fontSize: chunks ? 24 : 29, maxWidth: width - 110 }}>
+        <View accessibilityLiveRegion="polite" style={{ gap: layout.headerTextGap, flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <Heading
+              style={{
+                color: "#FFF3D4",
+                fontSize: layout.headingFontSize,
+                lineHeight: layout.headingLineHeight,
+                maxWidth: width - layout.heroSize - 36,
+              }}
+            >
               {phase}
             </Heading>
-            {status && <Copy style={{ color: "#FFDB8C", fontSize: 16 }}>{status.text}</Copy>}
+            {status && (
+              <Copy
+                style={{
+                  color: "#FFDB8C",
+                  fontSize: layout.tight ? 14 : 16,
+                  lineHeight: layout.tight ? 18 : 22,
+                }}
+              >
+                {status.text}
+              </Copy>
+            )}
           </View>
-          <Copy style={{ color: "#F5E5D9", fontSize: 15 }}>
-            {s.phase === "watch"
-              ? "Follow the glow"
-              : s.phase === "repeat"
-                ? "Play it back · no hurry"
-                : s.phase === "picture"
-                  ? "Blend the sounds"
-                  : s.phase === "cleared"
-                    ? "A beautiful song"
-                    : "A fresh song is waiting"}
+          <Copy
+            style={{
+              color: "#F5E5D9",
+              fontSize: layout.subtitleFontSize,
+              lineHeight: layout.subtitleLineHeight,
+              maxWidth: width - layout.heroSize - 36,
+            }}
+          >
+            {subtitle}
           </Copy>
-          {!!twistLabel && (
-            <Copy style={{ color: "#F5E5D9", fontSize: 12, maxWidth: width - 120 }}>
+          {layout.showTwistInHeader && !layout.inlineTwist && !!twistLabel && (
+            <Copy
+              style={{
+                color: "#F5E5D9",
+                fontSize: layout.twistFontSize,
+                lineHeight: layout.twistLineHeight,
+                maxWidth: width - layout.heroSize - 36,
+              }}
+            >
               {twistLabel}
             </Copy>
           )}
@@ -700,14 +1096,25 @@ export function SongBoard({
       {!showPicture ? (
         <>
           <View
+            testID="shell-song-progress"
+            onLayout={event => {
+              const next = Math.ceil(event.nativeEvent.layout.height);
+              if (next <= 0) return;
+              setMeasuredProgress(prev =>
+                prev?.key === progressMeasureKey && prev.height === next
+                  ? prev
+                  : { key: progressMeasureKey, height: next },
+              );
+            }}
             accessibilityLabel={`Pattern progress, ${s.cursor} of ${s.pattern.length}`}
             style={{
               flexDirection: "row",
-              gap: 7,
+              gap: layout.dotGap,
               justifyContent: "center",
               flexWrap: "wrap",
-              paddingHorizontal: 14,
-              paddingVertical: 5,
+              paddingHorizontal: layout.progressPadH,
+              paddingVertical: layout.progressPadV,
+              marginHorizontal: 12,
               borderRadius: 18,
               backgroundColor: "rgba(28, 34, 66, 0.42)",
               borderWidth: 1,
@@ -720,9 +1127,9 @@ export function SongBoard({
                 <View
                   key={i}
                   style={{
-                    width: 13,
-                    height: 13,
-                    borderRadius: reached ? 4 : 7,
+                    width: layout.dotSize,
+                    height: layout.dotSize,
+                    borderRadius: reached ? 4 : Math.ceil(layout.dotSize / 2),
                     backgroundColor: reached ? "#FFDB8C" : "#6D79A4",
                     borderWidth: 2,
                     borderColor: reached ? "#FFF7DF" : "#D4D0E0",
@@ -735,12 +1142,12 @@ export function SongBoard({
             testID="shell-shore-stage"
             style={{
               width: "100%",
-              maxWidth: stageMaxWidth,
+              maxWidth: layout.stageMaxWidth,
               alignItems: "center",
               position: "relative",
-              paddingHorizontal: stagePadH,
-              paddingVertical: arenaHeight < 520 ? 6 : 10,
-              borderRadius: 30,
+              paddingHorizontal: layout.stagePadH,
+              paddingVertical: layout.stagePadV,
+              borderRadius: layout.tight ? 24 : 30,
               backgroundColor: "rgba(32, 38, 72, 0.36)",
               borderWidth: 1.5,
               borderColor: "rgba(255, 236, 198, 0.28)",
@@ -751,8 +1158,8 @@ export function SongBoard({
                 flexDirection: "row",
                 flexWrap: "wrap",
                 justifyContent: "center",
-                columnGap: colGap,
-                rowGap: rowGap,
+                columnGap: layout.colGap,
+                rowGap: layout.rowGap,
                 width: "100%",
               }}
             >
@@ -771,11 +1178,11 @@ export function SongBoard({
                     accessibilityState={{ disabled, selected: lit }}
                     onPress={() => tap(index)}
                     style={{
-                      width: shellSize,
-                      minHeight: shellSize + 30,
-                      paddingBottom: 6,
-                      paddingTop: 2,
-                      borderRadius: 28,
+                      width: layout.shellCardWidth,
+                      minHeight: layout.shellCardHeight,
+                      paddingBottom: layout.cardPadBottom,
+                      paddingTop: layout.cardPadTop,
+                      borderRadius: layout.tight ? 22 : 28,
                       alignItems: "center",
                       justifyContent: "space-between",
                       borderWidth: lit || next ? 2.5 : 1.5,
@@ -794,7 +1201,7 @@ export function SongBoard({
                   >
                     <SingingShell
                       index={index}
-                      size={shellSize - 6}
+                      size={layout.shellCanvas}
                       lit={lit}
                       wrong={wrongShell === index}
                       cue={manualGlow === index ? `tap-${tapCue}` : noteKey}
@@ -802,16 +1209,17 @@ export function SongBoard({
                     />
                     <Heading
                       style={{
-                        fontSize: learning
-                          ? Math.min(32, Math.max(22, Math.round(shellSize * 0.3)))
-                          : Math.min(22, Math.max(16, Math.round(shellSize * 0.22))),
+                        fontSize: layout.badgeFontSize,
+                        lineHeight: layout.badgeLineHeight,
                         color: "#3D385F",
                         backgroundColor: lit ? "#FFF9E4" : "#FFF1D5",
-                        minWidth: learning ? 44 : 36,
-                        paddingHorizontal: 9,
-                        paddingVertical: 1,
+                        minWidth: learning
+                          ? Math.max(36, layout.badgeFontSize + 12)
+                          : Math.max(30, layout.badgeFontSize + 14),
+                        paddingHorizontal: layout.tight ? 7 : 9,
+                        paddingVertical: layout.badgePadV,
                         borderRadius: 14,
-                        borderWidth: 1.5,
+                        borderWidth: layout.badgeBorder,
                         borderColor: lit ? art.glow : "rgba(182, 152, 114, 0.55)",
                         textAlign: "center",
                       }}
@@ -898,74 +1306,140 @@ export function SongBoard({
           )}
         </View>
       )}
-      {s.level !== "endless" &&
-        ["w5", "w6"].includes(s.level.world) &&
-        !["over", "cleared", "rest"].includes(s.phase) && (
-          <View style={{ gap: 6, alignItems: "center", paddingHorizontal: 12 }}>
-            <Button
-              quiet
-              compact
-              disabled={!active}
-              onPress={() => {
-                if (chunks) closeChunks();
-                else {
+      <View
+        testID="shell-song-controls"
+        onLayout={event => {
+          const next = Math.ceil(event.nativeEvent.layout.height);
+          if (next <= 0) return;
+          setMeasuredControls(prev =>
+            prev?.key === controlsMeasureKey && prev.height === next
+              ? prev
+              : { key: controlsMeasureKey, height: next },
+          );
+        }}
+        style={{
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: layout.controlsGap,
+          paddingHorizontal: layout.compactWidth ? 6 : 12,
+          flexDirection: layout.inlineControls && !chunks ? "row" : "column",
+          flexWrap: layout.inlineControls && !chunks ? "wrap" : "nowrap",
+        }}
+      >
+        {hasShortPhrases && chunks ? (
+          <>
+            {layout.showChunkCaptionInControls && (
+              <Copy
+                style={{
+                  color: "#FFF3D4",
+                  textAlign: "center",
+                  fontSize: 14,
+                  lineHeight: 20,
+                }}
+              >
+                {phraseSummary}. Listen again whenever you like, then try the whole song.
+              </Copy>
+            )}
+            <View
+              style={{
+                flexDirection: "row",
+                gap: layout.controlsGap,
+                justifyContent: "center",
+                alignItems: "center",
+                flexWrap: layout.inlineControls ? "nowrap" : "wrap",
+              }}
+            >
+              <Button
+                quiet
+                compact
+                style={compactButtonStyle}
+                textStyle={compactButtonTextStyle}
+                disabled={!active || chunkPlaying}
+                onPress={playChunk}
+              >
+                Listen to this phrase
+              </Button>
+              <Button
+                quiet
+                compact
+                style={compactButtonStyle}
+                textStyle={compactButtonTextStyle}
+                disabled={!active || chunkPlaying}
+                onPress={() => setChunk(n => (n + 1) % totalChunks)}
+              >
+                Next phrase
+              </Button>
+              {layout.inlineControls && (
+                <Button quiet compact disabled={!active} onPress={closeChunks}>
+                  Back to the whole song
+                </Button>
+              )}
+            </View>
+            {!layout.inlineControls && (
+              <Button
+                quiet
+                compact
+                style={compactButtonStyle}
+                textStyle={compactButtonTextStyle}
+                disabled={!active}
+                onPress={closeChunks}
+              >
+                Back to the whole song
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            {hasShortPhrases && (
+              <Button
+                quiet
+                compact
+                style={compactButtonStyle}
+                textStyle={compactButtonTextStyle}
+                disabled={!active}
+                onPress={() => {
                   setChunk(0);
                   setChunks(true);
                   setManualGlow(null);
-                }
+                }}
+              >
+                Listen in short phrases
+              </Button>
+            )}
+            <PlayButton
+              quiet
+              compact
+              icon="refresh"
+              disabled={
+                !active ||
+                chunks ||
+                s.phase === "cleared" ||
+                s.phase === "rest" ||
+                s.phase === "over"
+              }
+              onPress={() => {
+                dispatch({ type: "replay" });
+                onTone("coral");
               }}
             >
-              {chunks ? "Back to the whole song" : "Listen in short phrases"}
-            </Button>
-            {chunks && (
-              <>
-                <Copy style={{ color: "#FFF3D4", textAlign: "center", fontSize: 14 }}>
-                  Phrase {chunk + 1}/{songChunks(s.pattern).length} · notes {chunk * 3 + 1}–
-                  {Math.min(s.pattern.length, chunk * 3 + 3)}. Listen again whenever you like, then
-                  try the whole song.
-                </Copy>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Button quiet compact disabled={!active || chunkPlaying} onPress={playChunk}>
-                    Listen to this phrase
-                  </Button>
-                  <Button
-                    quiet
-                    compact
-                    disabled={!active || chunkPlaying}
-                    onPress={() => setChunk(n => (n + 1) % songChunks(s.pattern).length)}
-                  >
-                    Next phrase
-                  </Button>
-                </View>
-              </>
+              Listen & watch again
+            </PlayButton>
+            {s.level === "endless" && (
+              <Button
+                quiet
+                compact
+                style={compactButtonStyle}
+                textStyle={compactButtonTextStyle}
+                disabled={!active}
+                onPress={() => dispatch({ type: "finish" })}
+              >
+                Finish my free-play song
+              </Button>
             )}
-          </View>
+          </>
         )}
-      {!chunks && (
-        <PlayButton
-          quiet
-          compact
-          icon="refresh"
-          disabled={
-            !active ||
-            chunks ||
-            s.phase === "cleared" ||
-            s.phase === "rest" ||
-            s.phase === "over"
-          }
-          onPress={() => {
-            dispatch({ type: "replay" });
-            onTone("coral");
-          }}
-        >
-          Listen & watch again
-        </PlayButton>
-      )}
-      {s.level === "endless" && (
-        <Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>
-          Finish my free-play song
-        </Button>
-      )}
+      </View>
       {debug && <BudgetOverlay budget={budget} />}
     </View>
   );

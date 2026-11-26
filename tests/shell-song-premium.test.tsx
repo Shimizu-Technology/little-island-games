@@ -12,7 +12,7 @@ import {
   shellStageMetrics,
   type ShellId,
 } from "../src/arcade/games/shell-song/illustrated";
-import { SingingShell, SongBoard } from "../src/arcade/games/shell-song/View";
+import { computeSongBoardLayout, SingingShell, SongBoard } from "../src/arcade/games/shell-song/View";
 
 const probe = vi.hoisted(() => ({
   reduced: vi.fn(() => false),
@@ -216,7 +216,7 @@ describe("Shell Song premium illustrated assets & layout", () => {
   });
 
   it("preserves aspect ratio and keeps full decoded WebP bounds inside the Android-safe padded canvas under peak bounce and shake", () => {
-    for (const size of [48, 84, 110, 148, 170]) {
+    for (const size of [32, 40, 48, 84, 110, 148, 170]) {
       const metrics = shellStageMetrics(size);
       const ox = metrics.canvas / 2;
       const oy = metrics.bottom;
@@ -459,5 +459,158 @@ describe("SingingShell & SongBoard rendering and Reduce Motion", () => {
     expect(findAllByTestID(`shell-ripple-${first}`)).toHaveLength(0);
     expect(probe.spring).not.toHaveBeenCalled();
     expect(probe.repeat).not.toHaveBeenCalled();
+  });
+});
+
+describe("SongBoard compact viewport & short-phrase layout budget", () => {
+  it.each([
+    { label: "320×568 portrait (default arena)", width: 320, arenaHeight: 506 },
+    { label: "320×568 portrait (short safe-area)", width: 320, arenaHeight: 450 },
+    { label: "844×390 landscape (default arena)", width: 844, arenaHeight: 328 },
+    { label: "844×390 landscape (short safe-area)", width: 844, arenaHeight: 290 },
+    { label: "390×844 portrait", width: 390, arenaHeight: 782 },
+    { label: "1024×768 tablet", width: 1024, arenaHeight: 706 },
+  ])(
+    "fits HUD, header, progress, 3/4/5/6 shells, Replay, and short-phrase controls inside $label",
+    ({ width, arenaHeight }) => {
+      const cases = [
+        { levelId: "w1-1" as const, shells: 3, hasShortPhrases: false, chunksOpen: false, hasTwist: false, patternLength: 4 },
+        { levelId: "w2-1" as const, shells: 4, hasShortPhrases: false, chunksOpen: false, hasTwist: false, patternLength: 6 },
+        { levelId: "w3-1" as const, shells: 5, hasShortPhrases: false, chunksOpen: false, hasTwist: false, patternLength: 7 },
+        { levelId: "w3-8" as const, shells: 6, hasShortPhrases: false, chunksOpen: false, hasTwist: false, patternLength: 9 },
+        { levelId: "w5-1" as const, shells: 6, hasShortPhrases: true, chunksOpen: false, hasTwist: true, patternLength: 10 },
+        { levelId: "w5-1" as const, shells: 6, hasShortPhrases: true, chunksOpen: true, hasTwist: true, patternLength: 10 },
+      ];
+
+      for (const scenario of cases) {
+        const layout = computeSongBoardLayout({
+          width,
+          arenaHeight,
+          shells: scenario.shells,
+          patternLength: scenario.patternLength,
+          learning: false,
+          hasShortPhrases: scenario.hasShortPhrases,
+          chunksOpen: scenario.chunksOpen,
+          hasTwist: scenario.hasTwist,
+          isEndless: false,
+        });
+
+        expect(layout.totalHeight).toBeLessThanOrEqual(arenaHeight);
+        expect(layout.stageMaxWidth).toBeLessThanOrEqual(width);
+        expect(layout.shellCardWidth).toBeGreaterThanOrEqual(44);
+        expect(layout.shellCardHeight).toBeGreaterThanOrEqual(44);
+        expect(layout.shellCanvas).toBeGreaterThanOrEqual(32);
+        expect(layout.controlsHeight).toBeGreaterThanOrEqual(44);
+
+        if (width === 844 && arenaHeight <= 328) {
+          expect(layout.wide).toBe(true);
+          expect(layout.columns).toBe(scenario.shells);
+          expect(layout.rows).toBe(1);
+          expect(layout.inlineControls).toBe(true);
+        }
+      }
+    },
+  );
+
+  it("re-budgets shells when onLayout reports a wrapped HUD on narrow portrait", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    probe.window = { width: 320, height: 568 };
+    const initial = createSong(songLevel("w5-1"), 42, true);
+
+    await act(async () => {
+      tree = create(
+        <SongBoard
+          initial={initial}
+          active
+          helper
+          outfit="island"
+          onResult={vi.fn()}
+          onTone={vi.fn()}
+          onSay={() => false}
+          width={320}
+          height={450}
+        />,
+      );
+    });
+
+    // Simulate a real wrapped HUD measurement (2 rows = 96px) and verify board avoids center-clipping.
+    await act(async () => {
+      host("shell-song-hud").props.onLayout({ nativeEvent: { layout: { width: 320, height: 96 } } });
+    });
+
+    const shellButtons = tree!.root.findAll(
+      node =>
+        String(node.type) === "PressControl" &&
+        typeof node.props.accessibilityLabel === "string" &&
+        node.props.accessibilityLabel.startsWith("Shell "),
+    );
+    expect(shellButtons).toHaveLength(6);
+    for (const button of shellButtons) {
+      const style = styles(button);
+      expect(style.width).toBeGreaterThanOrEqual(44);
+      expect(style.minHeight).toBeGreaterThanOrEqual(44);
+    }
+
+    // Open short-phrase helper and confirm all three helper actions render with compact touch targets.
+    const openHelper = tree!.root.find(
+      node => String(node.type) === "Button" && node.props.children === "Listen in short phrases",
+    );
+    await act(async () => {
+      openHelper.props.onPress();
+    });
+
+    for (const label of ["Listen to this phrase", "Next phrase", "Back to the whole song"]) {
+      const btn = tree!.root.find(
+        node => String(node.type) === "Button" && node.props.children === label,
+      );
+      expect(btn.props.compact).toBe(true);
+    }
+  });
+
+  it("arranges short-phrase helper controls in a single horizontal bar on 844×390 landscape", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    probe.window = { width: 844, height: 390 };
+    const initial = finishWatch(createSong(songLevel("w5-1"), 42, false));
+
+    await act(async () => {
+      tree = create(
+        <SongBoard
+          initial={initial}
+          active
+          helper={false}
+          outfit="island"
+          onResult={vi.fn()}
+          onTone={vi.fn()}
+          onSay={() => false}
+          width={844}
+          height={328}
+        />,
+      );
+    });
+
+    const controlsRegular = styles(host("shell-song-controls"));
+    expect(controlsRegular.flexDirection).toBe("row");
+
+    const openHelper = tree!.root.find(
+      node => String(node.type) === "Button" && node.props.children === "Listen in short phrases",
+    );
+    await act(async () => {
+      openHelper.props.onPress();
+    });
+
+    const helperButtons = ["Listen to this phrase", "Next phrase", "Back to the whole song"].map(
+      label =>
+        tree!.root.find(node => String(node.type) === "Button" && node.props.children === label),
+    );
+    // All three buttons share the same single-row parent View in landscape.
+    expect(helperButtons[0].parent).toBe(helperButtons[1].parent);
+    expect(helperButtons[1].parent).toBe(helperButtons[2].parent);
+    expect(styles(helperButtons[0].parent!).flexDirection).toBe("row");
   });
 });
