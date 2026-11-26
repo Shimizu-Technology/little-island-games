@@ -281,4 +281,39 @@ describe('HubScreen Clean 4.0 6-door map and dock', () => {
     const coveText = covePill.findByType('span');
     expect(coveText.props.numberOfLines).toBe(2);
   });
+
+  it.each([
+    [390, 844, 1.0],
+    [402, 874, 1.3],
+  ])('stacks the header at %s×%s (fontScale %s) so actions never wrap and Family practice fits cleanly', async (width, height, fontScale) => {
+    Object.assign(viewport, { width, height, fontScale });
+    await act(async () => { screen = create(<HubScreen/>); });
+
+    const headerRow = screen!.root.findByProps({ testID: 'hub-header-row' });
+    const learnerRow = screen!.root.findByProps({ testID: 'hub-header-learner' });
+    const chip = learnerRow.findByProps({ testID: 'learner-chip' });
+    expect(headerRow.findByProps({ testID: 'hub-brand' })).toBeDefined();
+    expect(headerRow.findByProps({ testID: 'hub-everything' })).toBeDefined();
+    expect(headerRow.findByProps({ testID: 'hub-settings' })).toBeDefined();
+    expect(flat(chip.props.style).minHeight).toBeGreaterThanOrEqual(44);
+    expect(chip.props.accessibilityLabel).toContain('Family practice');
+
+    const brandRoom = width - 28 - 44 - 44 - 12;
+    expect(wordWidth('little island') * 18 * Math.min(fontScale, 1.3)).toBeLessThanOrEqual(brandRoom);
+    const chipTextRoom = width - 28 - 24 - 36 - 8;
+    expect(wordWidth('Family practice ▾') * 13 * Math.min(fontScale, 1.3)).toBeLessThanOrEqual(chipTextRoom);
+  });
+
+  it('keeps the single-row header at 844×390 (fontScale 1.0) with ample room for the learner chip', async () => {
+    Object.assign(viewport, { width: 844, height: 390, fontScale: 1.0 });
+    await act(async () => { screen = create(<HubScreen/>); });
+
+    expect(screen!.root.findAll(n => n.props.testID === 'hub-header-row')).toHaveLength(0);
+    const header = screen!.root.findByProps({ testID: 'hub-header' });
+    expect(flat(header.props.style).flexDirection).toBe('row');
+    expect(header.findByProps({ testID: 'hub-brand' })).toBeDefined();
+    expect(header.findByProps({ testID: 'hub-header-learner' }).findByProps({ testID: 'learner-chip' })).toBeDefined();
+    expect(header.findByProps({ testID: 'hub-everything' })).toBeDefined();
+    expect(header.findByProps({ testID: 'hub-settings' })).toBeDefined();
+  });
 });

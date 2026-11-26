@@ -34,7 +34,8 @@ export default function HubScreen() {
  const focused = useIsFocused(), reduced = useReducedMotion(), clear = useSheetsClear();
  const [settings, setSettings] = useState(false), [door, setDoor] = useState<PlaceId | null>(null);
  const narrow = width < 360;
- const stackHeader = width < 380 || (fontScale >= 1.35 && width < 520);
+ const singleRowMinWidth = 120 + Math.ceil(190 * Math.min(fontScale, 1.3)) + 88 + 18 + 28;
+ const stackHeader = width < singleRowMinWidth || (fontScale >= 1.35 && width < 560);
  const sceneWidth = Math.min(width - insets.left - insets.right, 1100);
  const sceneHeight = Math.max(height - insets.top - insets.bottom - 134, 590);
  const learner = activeLearner(store.save.learning), resume = homeContinue(store.save), coveResume = coveContinue(store.save);
