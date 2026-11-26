@@ -66,8 +66,13 @@ export function SchoolBoard({ session, update, practice, assistance, partners, c
   const boardKey = `${state.index}:${state.puzzles[state.index]?.join('|') ?? ''}:${state.practice ? 'p' : 'c'}`;
   const commit = useCallback((next: ScaleState) => {
     if (next === latest.current) return false;
+    const prev = latest.current;
     latest.current = next;
-    update(next);
+    const res = (update as (state: ScaleState) => boolean | void)(next);
+    if (res === false) {
+      latest.current = prev;
+      return false;
+    }
     return true;
   }, [update]);
 
@@ -222,7 +227,7 @@ export function SchoolBoard({ session, update, practice, assistance, partners, c
   const chosenPartner = state.partner ? availablePartners.find(p => p.id === state.partner) ?? null : null;
   const finishLastBoard = state.index + 1 === state.puzzles.length;
   const returnToCertified = () => {
-    const next = exitRandomPractice(latest.current);
+    const next = exitRandomPractice(latest.current, Math.random);
     if (!commit(next)) return;
     setUnlockedHolderKey(null);
     setCue(null);
@@ -267,11 +272,9 @@ export function SchoolBoard({ session, update, practice, assistance, partners, c
             >
               Another random puzzle
             </Button>
-            {state.certified && (
-              <Button quiet compact maxFontSizeMultiplier={1.4} onPress={returnToCertified}>
-                Back to certified round
-              </Button>
-            )}
+            <Button quiet compact maxFontSizeMultiplier={1.4} onPress={returnToCertified}>
+              Back to certified round
+            </Button>
           </>
         ) : together && finishLastBoard ? (
           <>
@@ -364,7 +367,7 @@ export function SchoolBoard({ session, update, practice, assistance, partners, c
 
   const practiceControls = (
     <View testID="scale-practice-bar" style={{ gap: 8, alignSelf: 'stretch', paddingTop: 4 }}>
-      {state.practice && state.certified && (
+      {state.practice && (
         <Button
           compact
           maxFontSizeMultiplier={1.35}

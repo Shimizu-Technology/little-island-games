@@ -509,7 +509,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!ready || recovery || restoring.current || uncertainWrite.current) return false;
       const updated = applyLearnSave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
-      return commit({ ...recordLevelRound(latest.current, updated, game), recentBoard: null });
+      const recorded = recordLevelRound(latest.current, updated, game);
+      if (recorded === latest.current) {
+        admissionRejected.current = true;
+        writeFailures.current++;
+        setError('This change exceeds the save limit. Your saved work is kept. Export it before managing paused games or people.');
+        return false;
+      }
+      return commit({ ...recorded, recentBoard: null });
     },
     [commit, ready, recovery]
   );

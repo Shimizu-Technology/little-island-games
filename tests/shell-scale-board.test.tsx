@@ -388,6 +388,99 @@ describe('Scale-Holder privacy across handover, force-close resume & role swap (
     expect(state.undo).toHaveLength(1);
   });
 
+  it('R2 P1-2 UI: legacy R1 Random Practice save (without certified) still offers Back to certified round and starts a fresh certified round', () => {
+    const base = startRound(2, () => 0.25);
+    let state: ScaleState = { ...base, practice: true, index: 0, done: [], puzzles: [base.puzzles[0], base.puzzles[0], base.puzzles[0], base.puzzles[0]] };
+    delete state.certified;
+    const makeSession = (): LearnSession<ScaleState> => ({
+      game: 'shell-scale',
+      version: 1,
+      id: 'scale-r1-practice',
+      revision: 0,
+      options: { mode: 'solo', pace: 'medium' },
+      state,
+    });
+    const render = () => (
+      <SchoolBoard
+        session={makeSession()}
+        update={next => { state = next; }}
+        skills={{}}
+        practice={() => {}}
+        cheer={() => {}}
+        active
+        width={340}
+        height={640}
+        sound={() => {}}
+        stopSound={() => {}}
+        soundOn={false}
+        coach={{ active: false, done: () => {} }}
+      />
+    );
+    act(() => { root = create(render()); });
+    expect(findBtn('Back to certified round')).toBeDefined();
+    act(() => findBtn('Back to certified round')!.props.onPress());
+    act(() => root!.update(render()));
+    expect(state.practice).toBe(false);
+    expect(state.level).toBe(2);
+    expect(state.index).toBe(0);
+  });
+
+  it('R2 P2-2 UI: failed finish admission keeps SchoolBoard retryable without advancing local ref', () => {
+    let state: ScaleState = startRound(3, () => 0.25);
+    // Advance to board 4 won!
+    for (let i = 0; i < 4; i++) {
+      const t = state.puzzles[state.index];
+      const w = [...(t[3] as string)].map(Number);
+      const ord = trueSortOrder({ kind: 'sort', n: 4, cast: [0, 1, 2, 3], weights: w });
+      state = { ...state, order: ord, checks: 1, won: true };
+      if (i < 3) state = { ...state, index: state.index + 1, done: [...state.done, [0, false]], order: [-1, -1, -1, -1], checks: 0, won: false };
+    }
+    let allow = false;
+    const attempts: ScaleState[] = [];
+    const makeSession = (): LearnSession<ScaleState> => ({
+      game: 'shell-scale',
+      version: 1,
+      id: 'scale-retry-finish',
+      revision: 4,
+      options: { mode: 'together', pace: 'hard' },
+      names: ['Alex', 'Maya'],
+      starter: 0,
+      state,
+    });
+    const render = () => (
+      <SchoolBoard
+        session={makeSession()}
+        update={next => {
+          attempts.push(next);
+          if (!allow) return false;
+          state = next;
+          return true;
+        }}
+        partners={[{ id: 'b', name: 'Maya' }]}
+        skills={{}}
+        practice={() => {}}
+        cheer={() => {}}
+        active
+        width={340}
+        height={640}
+        sound={() => {}}
+        stopSound={() => {}}
+        soundOn={false}
+        coach={{ active: false, done: () => {} }}
+      />
+    );
+    act(() => { root = create(render()); });
+    act(() => findBtn('Finish together with Maya')!.props.onPress());
+    expect(attempts).toHaveLength(1);
+    expect(state.index).toBe(3);
+
+    allow = true;
+    act(() => findBtn('Finish together with Maya')!.props.onPress());
+    expect(attempts).toHaveLength(2);
+    expect(state.index).toBe(4);
+    expect(state.partner).toBe('b');
+  });
+
   it('P1-3 UI: Scale-Holder helped 4-board solve hides solo helped copy and credits BOTH saved learners via real finish path', async () => {
     const learners = selectLearner(addLearner(addLearner(undefined, 'Alex', 'a'), 'Maya', 'b'), 'a');
     let save = migrateProfiles({ ...emptySave(), learning: learners });

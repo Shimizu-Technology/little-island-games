@@ -170,6 +170,70 @@ function pickReplacement(
   return puzzleTuple(randomPracticePuzzle(current.kind, current.n, rng, curSecret));
 }
 
+/**
+ * Reconcile the remaining queued boards after replacing `puzzles[index]` so:
+ * 1. The swapped-in tuple is not duplicated later in the round, and
+ * 2. The immediately following board (`index + 1`) has a fresh secret and tuple for the
+ *    incoming Guesser (who just held `nextPuzzle` on `index` and may have weighed `oldTuple`).
+ */
+function reconcileQueueAfterSwap(
+  level: number,
+  puzzles: readonly ShellTuple[],
+  index: number,
+  oldTuple: ShellTuple,
+  nextPuzzle: ShellTuple,
+  rng: () => number,
+): ShellTuple[] {
+  const out = puzzles.map((t, i) => (i === index ? nextPuzzle : t));
+  if (index + 1 >= ROUND) return out;
+  const nextP = tuplePuzzle(nextPuzzle);
+  if (!nextP) return out;
+  const nextSecret = secretKey(nextP);
+  const nextKey = tupleKey(nextPuzzle);
+  const oldKey = tupleKey(oldTuple);
+  const all = setFor(level).rows.map(toTuple);
+
+  for (let k = index + 1; k < ROUND; k++) {
+    if (tupleKey(out[k]) === nextKey) {
+      const used = new Set(out.map(tupleKey));
+      const unused = all.filter(t => !used.has(tupleKey(t)));
+      if (unused.length) {
+        const pickIdx = Math.max(0, Math.min(unused.length - 1, Math.floor(rng() * unused.length)));
+        out[k] = unused[pickIdx];
+      } else {
+        out[k] = oldTuple;
+      }
+    }
+  }
+
+  const freshForFollowing = (t: ShellTuple) => {
+    const p = tuplePuzzle(t);
+    return !!p && tupleKey(t) !== nextKey && tupleKey(t) !== oldKey && secretKey(p) !== nextSecret;
+  };
+
+  if (!freshForFollowing(out[index + 1])) {
+    let swapped = false;
+    for (let k = index + 2; k < ROUND; k++) {
+      if (freshForFollowing(out[k])) {
+        [out[index + 1], out[k]] = [out[k], out[index + 1]];
+        swapped = true;
+        break;
+      }
+    }
+    if (!swapped) {
+      const prefixKeys = new Set(out.slice(0, index + 1).map(tupleKey));
+      const cands = all.filter(freshForFollowing);
+      const unusedCands = cands.filter(t => !prefixKeys.has(tupleKey(t)));
+      const pool = unusedCands.length ? unusedCands : cands;
+      if (pool.length) {
+        const pickIdx = Math.max(0, Math.min(pool.length - 1, Math.floor(rng() * pool.length)));
+        out[index + 1] = pool[pickIdx];
+      }
+    }
+  }
+  return out;
+}
+
 const sameComparison = (a: Pick<Weighing, 'left' | 'right'>, b: Pick<Weighing, 'left' | 'right'>) =>
   (a.left === b.left && a.right === b.right) || (a.left === b.right && a.right === b.left);
 
@@ -362,7 +426,7 @@ export function swapRoles(s: ScaleState, rng: () => number): ScaleState {
     : pickReplacement(s.level, p, new Set(s.puzzles.map(tupleKey)), rng);
   const puzzles = s.practice
     ? Array.from({ length: ROUND }, () => [...nextPuzzle] as ShellTuple)
-    : s.puzzles.map((t, i) => (i === s.index ? nextPuzzle : t));
+    : reconcileQueueAfterSwap(s.level, s.puzzles, s.index, s.puzzles[s.index], nextPuzzle, rng);
   return freshBoard(
     {
       level: s.level,
@@ -465,7 +529,7 @@ export function dealFresh(s: ScaleState, rng: () => number): ScaleState {
   if (!next || tupleKey(next) === tupleKey(s.puzzles[s.index])) return s;
   return freshBoard(
     { level: s.level, showLinks: s.showLinks, holder: s.holder, done: s.done, practice: false, partner: s.partner },
-    s.puzzles.map((t, i) => (i === s.index ? next : t)),
+    reconcileQueueAfterSwap(s.level, s.puzzles, s.index, s.puzzles[s.index], next, rng),
     s.index,
   );
 }
@@ -487,9 +551,10 @@ export function startRandomPractice(s: ScaleState, kind: PuzzleKind, n: number, 
   );
 }
 
-/** Return from Random Practice to the preserved certified School round (survives relaunch cleanly). */
-export function exitRandomPractice(s: ScaleState): ScaleState {
-  if (!s.practice || !s.certified) return s;
+/** Return from Random Practice to the preserved certified School round (or start a fresh certified round for R1 practice saves). */
+export function exitRandomPractice(s: ScaleState, rng: () => number = Math.random): ScaleState {
+  if (!s.practice) return s;
+  if (!s.certified) return startRound(s.level, rng, { ...s, puzzles: [] });
   const c = s.certified;
   return {
     version: 1,
@@ -571,34 +636,38 @@ export function validScale(v: unknown, level?: number): v is ScaleState {
   if (!s.practice) {
     if (s.certified !== undefined) return false;
   } else {
-    if (s.index >= ROUND || !s.certified || typeof s.certified !== 'object' || Array.isArray(s.certified)) return false;
-    if (Object.keys(s.certified).sort().join() !== CERTIFIED_KEY_SIG) return false;
-    const c = s.certified as CertifiedRoundSnapshot;
-    const restored: ScaleState = {
-      version: 1,
-      level: s.level,
-      showLinks: s.showLinks,
-      practice: false,
-      ...(s.partner !== undefined ? { partner: s.partner } : {}),
-      puzzles: c.puzzles,
-      index: c.index,
-      history: c.history,
-      order: c.order,
-      oddPick: c.oddPick,
-      oddDir: c.oddDir,
-      undo: c.undo,
-      checks: c.checks,
-      misses: c.misses,
-      checked: c.checked,
-      won: c.won,
-      helped: c.helped,
-      holder: c.holder,
-      phase: c.phase,
-      pendingWeigh: c.pendingWeigh,
-      holderPeeked: c.holderPeeked,
-      done: c.done,
-    };
-    if (!validScale(restored, s.level)) return false;
+    if (s.index >= ROUND) return false;
+    // R1 Random Practice saves serialized without `certified`; retain them cleanly without triggering recovery.
+    if (s.certified !== undefined) {
+      if (!s.certified || typeof s.certified !== 'object' || Array.isArray(s.certified)) return false;
+      if (Object.keys(s.certified).sort().join() !== CERTIFIED_KEY_SIG) return false;
+      const c = s.certified as CertifiedRoundSnapshot;
+      const restored: ScaleState = {
+        version: 1,
+        level: s.level,
+        showLinks: s.showLinks,
+        practice: false,
+        ...(s.partner !== undefined ? { partner: s.partner } : {}),
+        puzzles: c.puzzles,
+        index: c.index,
+        history: c.history,
+        order: c.order,
+        oddPick: c.oddPick,
+        oddDir: c.oddDir,
+        undo: c.undo,
+        checks: c.checks,
+        misses: c.misses,
+        checked: c.checked,
+        won: c.won,
+        helped: c.helped,
+        holder: c.holder,
+        phase: c.phase,
+        pendingWeigh: c.pendingWeigh,
+        holderPeeked: c.holderPeeked,
+        done: c.done,
+      };
+      if (!validScale(restored, s.level)) return false;
+    }
   }
 
   const cert = certifiedAt(s.level);

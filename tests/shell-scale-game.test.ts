@@ -16,17 +16,17 @@ import {
 } from '../src/learn/games/shell-scale/rules';
 import { scaleSpeechLines } from '../src/learn/games/shell-scale/speech';
 import { requestHint } from '../src/puzzles/hints';
-import { startSession, validLearnSession } from '../src/learn/session';
+import { finished as learnFinished, startSession, validLearnSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import { addLearner, selectLearner } from '../src/learn/learners';
 import { recordLevelRound } from '../src/learn/levelEvidence';
 import { creditSchool, roundStars } from '../src/learn/schoolProgress';
-import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
-import { encodeSave, migrateProfiles } from '../src/state/profiles';
+import { emptyChallenge, saveCatalog, type ChallengeSession } from '../src/state/challenge';
+import { encodeSave, migrateProfiles, projectProfile } from '../src/state/profiles';
 import { applyLearnSave } from '../src/state/learnAction';
-import { emptySave, parseSave } from '../src/state/validation';
+import { emptySave, MAX_SAVE_BYTES, parseSave } from '../src/state/validation';
 import { jsonBytes, unpack } from '../src/state/saveBits';
-import { progressFor } from '../src/state/challengeDrafts';
+import { progressFor, putProgress } from '../src/state/challengeDrafts';
 import '../src/challenge/catalog';
 import { productionDirs, readCatalog } from '../scripts/puzzles/pipeline';
 import speechLines from '../scripts/learn/o5-shell-scale.json';
@@ -270,9 +270,233 @@ describe('Scale-Holder co-play (OR-05b)', () => {
     expect(undoDraft(restored).order).toEqual(afterFirstPlace.order);
     expect(validScale(restored, 3)).toBe(true);
 
-    // Validator rejects practice without certified snapshot or certified attached to non-practice.
-    expect(validScale({ ...prac, certified: undefined }, 3)).toBe(false);
+    // R1 compatibility: practice without certified loads cleanly, while malformed certified or certified on non-practice is rejected.
+    expect(validScale({ ...prac, certified: undefined }, 3)).toBe(true);
+    expect(validScale({ ...prac, certified: null as unknown as undefined }, 3)).toBe(false);
+    expect(validScale({ ...prac, certified: {} as never }, 3)).toBe(false);
     expect(validScale({ ...cert, certified: prac.certified }, 3)).toBe(false);
+  });
+
+  it('R2 P1-1: Scale-Holder co-play at Levels 1 and 2 awards durable Together credit to BOTH players without mutating catalog or Level 3 banks', () => {
+    for (const level of [1, 2] as const) {
+      const learners = selectLearner(addLearner(addLearner(undefined, 'Alex', 'a'), 'Maya', 'b'), 'a');
+      let save = migrateProfiles({ ...emptySave(), learning: learners });
+      const opts = optionsAtLevel({ mode: 'together', pace: 'easy' }, level);
+      let session = { ...startSession('shell-scale', { options: opts, names: ['Alex', 'Maya'] }, {}, 190 + level), learner: 'a' };
+      save = applyLearnSave(save, 'shell-scale', session, { id: null, epoch: 1 }, 1);
+
+      let st = session.state as ScaleState;
+      for (let i = 0; i < ROUND; i++) {
+        st = markHelped(st);
+        st = solveSchoolBoard(st);
+        st = i < ROUND - 1 ? nextBoard(st) : nextBoard(setPartner(st, 'b'));
+        const nextSession = { ...session, revision: session.revision + 1, levelHelped: true, state: st };
+        const updated = applyLearnSave(save, 'shell-scale', nextSession, { id: session.id, revision: session.revision, epoch: 1 }, 1);
+        save = recordLevelRound(save, updated, 'shell-scale', 100);
+        session = nextSession;
+      }
+
+      // Survives full encode -> parse -> profile projection roundtrip for BOTH players!
+      const reloaded = parseSave(encodeSave(save));
+      expect(reloaded.schoolTogether?.['shell-scale']?.[level]).toEqual({ completed: 1, rounds: [session.id] });
+      const asMaya = projectProfile(reloaded, selectLearner(reloaded.learning, 'b'));
+      expect(asMaya.schoolTogether?.['shell-scale']?.[level]).toEqual({ completed: 1, rounds: [session.id] });
+
+      for (const person of ['a', 'b'] as const) {
+        expect(reloaded.profiles!.people[person].schoolTogether?.['shell-scale']?.[level]).toEqual({ completed: 1, rounds: [session.id] });
+        // School stars, learner notes, signals, recent, and Level 3 bank 362 remain completely untouched!
+        expect(reloaded.profiles!.people[person].school?.['shell-scale']).toBeUndefined();
+        expect(progressFor(reloaded, person)!.banks.find(b => b[0] === 362)).toBeUndefined();
+        expect(progressFor(reloaded, person)!.signals).toEqual([]);
+        expect(progressFor(reloaded, person)!.recent).toEqual([]);
+      }
+      expect(reloaded.school?.['shell-scale']).toBeUndefined();
+      expect(reloaded.learning!.people.every(p => Object.keys(p.notes).length === 0)).toBe(true);
+      expect(roundStars(session, 3)).toBe(0);
+
+      // Malformed schoolTogether is strictly rejected by save validation.
+      const tampered = JSON.parse(encodeSave(reloaded));
+      tampered.profiles.people.a.schoolTogether['shell-scale'][String(level)].completed = 0;
+      expect(() => parseSave(JSON.stringify(tampered))).toThrow();
+    }
+  });
+
+  it('R2 P1-2: exact R1 Random Practice save (without certified) loads cleanly without recovery and exits to a fresh certified round', () => {
+    const rng = mkRng(606);
+    const base = startRound(3, rng);
+    const r2Prac = startRandomPractice(base, 'sort', 4, rng);
+    // Exact R1-shaped serialized state: identical to R2 practice state except `certified` key is absent.
+    const { certified: _dropped, ...r1Raw } = r2Prac;
+    const r1Serialized = JSON.parse(JSON.stringify(r1Raw)) as ScaleState;
+    expect('certified' in r1Serialized).toBe(false);
+    expect(validScale(r1Serialized, 3)).toBe(true);
+
+    const learners = selectLearner(addLearner(undefined, 'Alex', 'a'), 'a');
+    const opts = optionsAtLevel({ mode: 'solo', pace: 'hard' }, 3);
+    const r1Session = {
+      ...startSession('shell-scale', { options: opts }, {}, 77),
+      learner: 'a',
+      state: r1Serialized,
+    };
+    expect(validLearnSession(r1Session, 'shell-scale')).toBe(true);
+
+    // Must load cleanly through BOTH legacy v1 save validation and v3 profile save validation (no recovery!).
+    const legacyRaw = JSON.stringify({ ...emptySave(), learning: learners, learn: { 'shell-scale': r1Session } });
+    expect(() => parseSave(legacyRaw)).not.toThrow();
+    const migrated = migrateProfiles(parseSave(legacyRaw));
+    const reloaded = parseSave(encodeSave(migrated));
+    expect((reloaded.learn?.['shell-scale']?.state as ScaleState).practice).toBe(true);
+    expect((reloaded.learn?.['shell-scale']?.state as ScaleState).certified).toBeUndefined();
+
+    // Exiting Random Practice on an R1 save cleanly starts a fresh valid certified round at the same level.
+    const exited = exitRandomPractice(reloaded.learn!['shell-scale']!.state as ScaleState, mkRng(707));
+    expect(exited.practice).toBe(false);
+    expect(exited.certified).toBeUndefined();
+    expect(exited.level).toBe(3);
+    expect(exited.index).toBe(0);
+    expect(exited.showLinks).toBe(r1Serialized.showLinks);
+    expect(validScale(exited, 3)).toBe(true);
+  });
+
+  it('R2 P2-1: after a full-pool role swap (including RNG () => 0), neither the swapped board nor the next board repeats a seen secret', () => {
+    for (const level of [1, 2] as const) {
+      for (const fixed of [0, 0.25, 0.5, 0.75, 0.99]) {
+        const rng = () => fixed;
+        let s = startRound(level, rng);
+        for (const swapIndex of [0, 1, 2] as const) {
+          // Advance to `swapIndex` cleanly.
+          let cur = startRound(level, rng);
+          for (let k = 0; k < swapIndex; k++) {
+            cur = nextBoard(solveSchoolBoard(cur));
+          }
+          const origPuzzle = puzzleAt(cur)!;
+          const origTuple = cur.puzzles[cur.index].join('|');
+          const origSecret = secretKey(origPuzzle);
+
+          // Outgoing Holder opens secret and completes handover.
+          cur = requestHolderWeigh(cur, 1 << 0, 1 << 1);
+          cur = openHolderScreen(cur);
+          cur = openGuesserScreen(answerHolderWeigh(cur, weighOnScale(origPuzzle, 1 << 0, 1 << 1)!));
+
+          // Swap with the exact same RNG -> new Holder gets replacement board.
+          const swapped = swapRoles(cur, rng);
+          const repPuzzle = puzzleAt(swapped)!;
+          const repTuple = swapped.puzzles[swapped.index].join('|');
+          const repSecret = secretKey(repPuzzle);
+          expect(repTuple).not.toBe(origTuple);
+          expect(repSecret).not.toBe(origSecret);
+          expect(validScale(swapped, level)).toBe(true);
+
+          // New Holder views replacement, Guesser solves it, then Next scale flips roles so former Holder is now Guesser!
+          let played = requestHolderWeigh(swapped, 1 << 0, 1 << 1);
+          played = openHolderScreen(played);
+          played = openGuesserScreen(answerHolderWeigh(played, weighOnScale(repPuzzle, 1 << 0, 1 << 1)!));
+          played = solveSchoolBoard(played);
+          const next = nextBoard(played);
+          const followingPuzzle = puzzleAt(next)!;
+          const followingTuple = next.puzzles[next.index].join('|');
+          const followingSecret = secretKey(followingPuzzle);
+          expect(followingTuple).not.toBe(repTuple);
+          expect(followingTuple).not.toBe(origTuple);
+          expect(followingSecret).not.toBe(repSecret);
+          expect(validScale(next, level)).toBe(true);
+        }
+        expect(validScale(s, level)).toBe(true);
+      }
+    }
+  });
+
+  it('R2 P2-2 & P2-3: Together credit preserves Challenge recent history verbatim and rejects finish atomically on save/per-person admission limits', () => {
+    const learners = selectLearner(addLearner(addLearner(undefined, 'Alex', 'a'), 'Maya', 'b'), 'a');
+    let save = migrateProfiles({ ...emptySave(), learning: learners });
+
+    // Build 64 valid Challenge recent entries (full cap) from existing catalog banks!
+    const validPairs: [number, number][] = [];
+    for (const [slot, bank] of saveCatalog.banks) {
+      if (bank.cove || slot === 362) continue;
+      const count = 'count' in bank ? bank.count : bank.entries.length;
+      for (let idx = 0; idx < count && validPairs.length < 64; idx++) validPairs.push([slot, idx]);
+      if (validPairs.length >= 64) break;
+    }
+    expect(validPairs).toHaveLength(64);
+    for (const person of ['a', 'b'] as const) {
+      const prog = { ...progressFor(save, person)!, recent: validPairs.map(([b, p]) => [b, p] as [number, number]) };
+      save = putProgress(save, person, prog);
+    }
+
+    const opts = optionsAtLevel({ mode: 'together', pace: 'hard' }, 3);
+    let session = { ...startSession('shell-scale', { options: opts, names: ['Alex', 'Maya'] }, {}, 212), learner: 'a' };
+    save = applyLearnSave(save, 'shell-scale', session, { id: null, epoch: 1 }, 1);
+    let st = session.state as ScaleState;
+    for (let i = 0; i < ROUND - 1; i++) {
+      st = nextBoard(solveSchoolBoard(st));
+      const ns = { ...session, revision: session.revision + 1, state: st };
+      save = applyLearnSave(save, 'shell-scale', ns, { id: session.id, revision: session.revision, epoch: 1 }, 1);
+      session = ns;
+    }
+    // Win board 4 but do NOT tap Finish yet -> `beforeFinish` is the unfinished retryable snapshot.
+    st = solveSchoolBoard(st);
+    const wonBoard4 = { ...session, revision: session.revision + 1, state: st };
+    const beforeFinish = applyLearnSave(save, 'shell-scale', wonBoard4, { id: session.id, revision: session.revision, epoch: 1 }, 1);
+    const finishSession = { ...wonBoard4, revision: wonBoard4.revision + 1, state: nextBoard(setPartner(st, 'b')) };
+    const afterFinish = applyLearnSave(beforeFinish, 'shell-scale', finishSession, { id: wonBoard4.id, revision: wonBoard4.revision, epoch: 1 }, 1);
+
+    // 1. P2-2a: Per-person limit exceeded on existing partner 'b' MUST reject atomically (return unfinished `before`, NO owner-only credit!).
+    const hugeSignals: [string, string, number, null, boolean][] = [];
+    const hugeBests: [number, number, number][] = [];
+    // Push partner 'b' ChallengeProgress past 104_000 bytes with valid-shape data (or invalid oversized progress).
+    const bloatedPartnerProg = {
+      ...progressFor(beforeFinish, 'b')!,
+      signals: hugeSignals,
+      bests: hugeBests,
+      // Add valid-sized dummy banks/paused? Easiest exact trigger: 26 paused-like bytes or pad valid solutions/bests to exceed 104_000!
+      // Valid solutions max 32, bests max 256; paused max 8 * 4096 = 32768; banks up to 512! Fill all catalog non-cove banks to exceed 104_000 bytes!
+      banks: [...saveCatalog.banks.values()]
+        .filter(b => !b.cove && b.slot !== 362)
+        .sort((a, b) => a.slot - b.slot)
+        .map(b => {
+          const n = 'count' in b ? b.count : b.entries.length;
+          return [b.slot, 'A'.repeat(Math.ceil((n * 3) / 6)), 'A'.repeat(Math.ceil((n * 2) / 6))] as [number, string, string];
+        }),
+    };
+    // Make sure partner's progress specifically exceeds 104_000 bytes when bank 362 is added (if already > 104_000 it fails validChallengeProgress too).
+    const oversizedPartnerProg = {
+      ...bloatedPartnerProg,
+      // Use a valid-length string pad in paused if banks alone are under 104_000; either way validChallengeProgress returns false on 'b'!
+      nextOrdinal: jsonBytes(bloatedPartnerProg) > 104_000 ? bloatedPartnerProg.nextOrdinal : 0,
+    };
+    const overPartnerBefore = putProgress(beforeFinish, 'b', oversizedPartnerProg);
+    const overPartnerAfter = putProgress(afterFinish, 'b', oversizedPartnerProg);
+    const rejectedPartner = recordLevelRound(overPartnerBefore, overPartnerAfter, 'shell-scale', 100);
+    expect(rejectedPartner).toBe(overPartnerBefore);
+    expect(learnFinished(rejectedPartner.learn!['shell-scale']!)).toBe(false);
+    expect(progressFor(rejectedPartner, 'a')!.banks.find(b => b[0] === 362)).toBeUndefined();
+    expect(rejectedPartner.schoolTogether).toBeUndefined();
+
+    // 2. P2-2b: Aggregate 2 MB save limit exceeded MUST reject atomically (return unfinished `before`, NOT `after` with dropped credit!).
+    const baseBytes = encodeSave(afterFinish).length;
+    const padSize = MAX_SAVE_BYTES - baseBytes + 20;
+    const fullBefore = { ...beforeFinish, saveRevision: 'r'.repeat(Math.max(8, padSize)) };
+    const fullAfter = { ...afterFinish, saveRevision: 'r'.repeat(Math.max(8, padSize)) };
+    const rejectedAggregate = recordLevelRound(fullBefore, fullAfter, 'shell-scale', 100);
+    expect(rejectedAggregate).toBe(fullBefore);
+    expect(learnFinished(rejectedAggregate.learn!['shell-scale']!)).toBe(false);
+    expect(progressFor(rejectedAggregate, 'a')!.banks.find(b => b[0] === 362)).toBeUndefined();
+    expect(progressFor(rejectedAggregate, 'b')!.banks.find(b => b[0] === 362)).toBeUndefined();
+
+    // 3. Retry once space is available -> succeeds and credits BOTH players, while keeping 64-entry `recent` history 100% UNCHANGED (P2-3)!
+    const credited = recordLevelRound(beforeFinish, afterFinish, 'shell-scale', 100);
+    expect(credited).not.toBe(beforeFinish);
+    expect(learnFinished(credited.learn!['shell-scale']!)).toBe(true);
+    for (const person of ['a', 'b'] as const) {
+      const prog = progressFor(credited, person)!;
+      expect(prog.recent).toEqual(validPairs);
+      const bankRow = prog.banks.find(b => b[0] === 362);
+      expect(bankRow).toBeDefined();
+      expect(unpack(bankRow![1], 6, 3)!.filter(c => c === 3)).toHaveLength(ROUND);
+      expect(credited.profiles!.people[person].schoolTogether?.['shell-scale']?.[3]).toEqual({ completed: 1, rounds: [finishSession.id] });
+    }
+    expect(parseSave(encodeSave(credited))).toBeTruthy();
   });
 
   it('P1-3: Scale-Holder co-play finish credits BOTH learners with Together (even when helped) and leaves School stars untouched', () => {

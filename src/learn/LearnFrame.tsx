@@ -257,7 +257,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, [saved, boardActive, practiceOwned, id, epoch, assistance, reactCompanion]);
   const update = useCallback(
     (state: unknown) => {
-      if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return;
+      if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return false;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
       if (save({ ...saved, state, revision })) {
         if (isGrowth(saved.state)) {
@@ -267,7 +267,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
             reactCompanion(progress.solved ? "correct" : "incorrect");
           }
         } else if (isMathGame(id) && (state as MathRound).wrong !== null && !(state as MathRound).solved) reactCompanion("incorrect");
+        return true;
       }
+      return false;
     },
     [saved, save, boardActive, store.epoch, epoch, id, reactCompanion]
   );
@@ -526,7 +528,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 </Heading>
                 <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>
                   {saved.game === "shell-scale" && saved.options.mode === "together"
-                    ? "Both people keep this Together finish. Ready for another round?"
+                    ? (() => {
+                        const partner = (saved.state as ScaleState).partner ?? null;
+                        const owner = saved.learner ?? "family";
+                        const creditedPartner = !!(partner && partner !== owner && store.save.learning?.people.some(p => p.id === partner));
+                        return creditedPartner
+                          ? "Both people keep this Together finish. Ready for another round?"
+                          : "Your Together finish is saved. Ready for another round?";
+                      })()
                     : notWon
                       ? "Ready to try the island again?"
                       : "Your stars are shining. Ready for another adventure?"}

@@ -11,6 +11,8 @@ import type { Learner } from './learners';
 const keptRounds = 6;
 export type LevelRecord = { stars: 1 | 2 | 3; completed: number; independent: number; days: number[]; rounds: string[] };
 export type SchoolProgress = Partial<Record<LearnId, Partial<Record<LearningLevel, LevelRecord>>>>;
+export type TogetherLevelRecord = { completed: number; rounds: string[] };
+export type SchoolTogetherProgress = Partial<Record<LearnId, Partial<Record<LearningLevel, TogetherLevelRecord>>>>;
 /** No clock, speed or score: completion, independent work, then a return on another day. Family practice is shared, so it isn't one child's independent work. */
 export function independentRound(round: LearnSession): boolean {
   if ((round.learner ?? 'family') === 'family' || round.options.mode !== 'solo' || round.levelHelped !== false || engines[round.game].notWon?.(round.state, round.options)) return false;
@@ -53,6 +55,38 @@ export function backfillSchool(learner: Learner, rounds: Partial<Record<LearnId,
     } } };
   }
   return progress;
+}
+export function creditSchoolTogether(
+  progress: SchoolTogetherProgress = {},
+  game: LearnId,
+  level: LearningLevel,
+  roundId: string,
+): SchoolTogetherProgress {
+  const before = progress[game]?.[level];
+  if (before?.rounds.includes(roundId)) return progress;
+  return {
+    ...progress,
+    [game]: {
+      ...progress[game],
+      [level]: {
+        completed: Math.min(99999, (before?.completed ?? 0) + 1),
+        rounds: [...(before?.rounds ?? []), roundId].slice(-keptRounds),
+      },
+    },
+  };
+}
+export function validSchoolTogether(v: unknown): v is SchoolTogetherProgress {
+  const obj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x);
+  const count = (x: unknown, max: number) => Number.isInteger(x) && Number(x) >= 0 && Number(x) <= max;
+  return obj(v) && Object.entries(v).every(([game, levels]) =>
+    learnIds.includes(game as LearnId) && obj(levels) && Object.entries(levels).every(([level, r]) =>
+      /^[1-5]$/.test(level) && obj(r) && Object.keys(r).sort().join() === 'completed,rounds' &&
+      count(r.completed, 99999) && Number(r.completed) > 0 &&
+      Array.isArray(r.rounds) && r.rounds.length > 0 && r.rounds.length <= keptRounds &&
+      new Set(r.rounds).size === r.rounds.length &&
+      r.rounds.every(id => typeof id === 'string' && id.length > 0 && id.length <= 120)
+    )
+  );
 }
 export function validSchool(v: unknown): v is SchoolProgress {
   const obj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x);
