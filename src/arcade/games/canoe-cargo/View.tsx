@@ -15,13 +15,13 @@ import { COLS, ROWS, cargoRowPreview, cargoGoalValue, cargoResult, cargoStep, ca
 import { cargoPoses } from "./poses";
 import { CargoTouch } from "./Touch";
 const idle: CargoInput = { type: "idle" }, ink = "#FFF5D7";
-const SettledCargo = memo(function SettledCargo({ board, cell, learning, event, reduced }: { board: CargoState["board"]; cell: number; learning: boolean; event: number; reduced: boolean }) {
+export const SettledCargo = memo(function SettledCargo({ board, cell, learning, event, reduced }: { board: CargoState["board"]; cell: number; learning: boolean; event: number; reduced: boolean }) {
   const settle = useSharedValue(0);
   useEffect(() => {
     settle.set(0);
     if (event && !reduced) settle.set(withSequence(withTiming(1.5, { duration: 55 }), withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) })));
   }, [event, reduced, settle]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scaleY: reduced ? 1 : 1 - settle.value * .006 }] }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: reduced ? 0 : ROWS * cell * settle.value * .003 }, { scaleY: reduced ? 1 : 1 - settle.value * .006 }] }));
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, style]}>{board.map((tile, i) => tile && <View key={i} style={{ position: "absolute", left: i % COLS * cell, top: Math.floor(i / COLS) * cell }}><CargoTile kind={tile.kind} value={learning ? tile.value : 0} stuck={tile.stuck} size={cell}/></View>)}</Animated.View>;
 });
 const Bundle = memo(function Bundle({ piece, cell, learning }: { piece: CargoPiece; cell: number; learning: boolean }) {
@@ -121,7 +121,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
     <SoftDrop active={active && s.status === "playing"} onChange={soft} onTap={() => act({ type: "down" })}/>
     <Control testID="cargo-drop" label="Hard drop cargo" text="⇓" onPress={() => act({ type: "drop" })} disabled={!active}/>
   </View>;
-  const preview = <View style={{ flexDirection: wide && !compact ? "column" : "row", alignItems: "center", justifyContent: "center", gap: compact ? 8 : 12 }}>
+  const preview = <View style={{ flexDirection: wide ? "column" : "row", alignItems: "center", justifyContent: "center", gap: compact ? 8 : 12 }}>
     <PressControl testID="cargo-hold" disabled={!active || s.holdUsed} accessibilityLabel={`Hold cargo${s.holdUsed ? ", used until this piece lands" : ", swap once per piece"}`} onPress={() => act({ type: "hold" })} style={[ui.pill, { minWidth: compact ? 76 : 84, minHeight: compact ? 60 : 70, paddingVertical: compact ? 4 : 7, alignItems: "center", justifyContent: "center", gap: 4, opacity: s.holdUsed ? .55 : 1 }]}><Text style={ui.label}>HOLD{s.holdUsed ? " ✓" : ""}</Text>{s.held ? <Bundle piece={s.held} cell={14} learning={learning}/> : <Text style={{ color: ink, fontSize: 12 }}>Tap to store</Text>}</PressControl>
     <View style={{ alignItems: "center", gap: 7, backgroundColor: "#225F68", borderRadius: 14, padding: 6, borderWidth: 1, borderColor: "#F7CD83" }}><Text style={ui.label}>NEXT</Text><View style={{ flexDirection: "row", gap: 10 }}>{s.next.map((p, i) => <Bundle key={i} piece={p} cell={compact ? 12 : 18} learning={learning}/>)}</View></View>
   </View>;

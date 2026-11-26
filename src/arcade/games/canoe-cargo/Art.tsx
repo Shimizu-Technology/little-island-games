@@ -1,7 +1,7 @@
 import React, { memo, useId } from "react";
-import { Image, View, Text } from "react-native";
+import { Image, View } from "react-native";
 import { illustrated, cargoArtFrame } from "./illustrated";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 import type { OutfitId } from "../../progress";
 import { pieceCells, type CargoPiece, type CargoKind } from "./engine";
 export const cargoPalette = { crate: ["#C88B4D", "#F7CD83"], coconut: ["#708F46", "#CFDA83"], fish: ["#618FAD", "#C7E4E3"], taro: ["#A17591", "#E3B4CB"] };
@@ -9,8 +9,8 @@ export const CargoTile = memo(function CargoTile({ kind, value = 0, stuck = fals
   const art = illustrated[kind];
   return <View testID={`cargo-tile-${kind}`} accessible={false} style={{ width: size, height: size }}>
     <Image source={art.source()} resizeMode="contain" fadeDuration={0} accessible={false} style={cargoArtFrame(art, size)}/>
-    {!!value && <View style={{ position: "absolute", left: size * .2, top: size * .28, width: size * .6, height: size * .56, borderRadius: size, backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#3D2B24", alignItems: "center", justifyContent: "center" }}><Text numberOfLines={1} style={{ color: "#3D2B24", fontSize: size * .42, lineHeight: size * .5, fontWeight: "900", textAlign: "center" }}>{value}</Text></View>}
-    {stuck && <View testID="cargo-stuck" style={{ position: "absolute", right: 1, bottom: 1, width: size * .36, height: size * .42, borderRadius: 3, backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#3D2B24", alignItems: "center", justifyContent: "center" }}><Svg width="90%" height="90%" viewBox="0 0 20 24"><Path d="M5 10V7a5 5 0 0110 0v3" fill="none" stroke="#3D2B24" strokeWidth={3}/><Rect x={2} y={10} width={16} height={12} rx={3} fill="#DFA751" stroke="#3D2B24" strokeWidth={2}/><Circle cx={10} cy={16} r={2} fill="#3D2B24"/></Svg></View>}
+    {!!value && <Svg testID="cargo-number" width={size * .6} height={size * .56} viewBox="0 0 60 56" style={{ position: "absolute", left: size * (stuck ? .08 : .2), top: size * (stuck ? .08 : .28) }} accessible={false}><Rect x={1} y={1} width={58} height={54} rx={27} fill="#FFFDF8" stroke="#3D2B24" strokeWidth={2}/><SvgText x={30} y={42} fontSize={42} fontWeight="900" textAnchor="middle" fill="#3D2B24">{value}</SvgText></Svg>}
+    {stuck && <View testID="cargo-stuck" style={{ position: "absolute", right: size * .02, bottom: size * .02, width: size * .36, height: size * .3, borderRadius: 3, backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#3D2B24", alignItems: "center", justifyContent: "center" }}><Svg width="90%" height="90%" viewBox="0 0 20 24"><Path d="M5 10V7a5 5 0 0110 0v3" fill="none" stroke="#3D2B24" strokeWidth={3}/><Rect x={2} y={10} width={16} height={12} rx={3} fill="#DFA751" stroke="#3D2B24" strokeWidth={2}/><Circle cx={10} cy={16} r={2} fill="#3D2B24"/></Svg></View>}
   </View>;
 });
 /** One exterior boundary for the whole bundle; no internal cell borders in this layer. */
