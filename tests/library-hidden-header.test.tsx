@@ -10,6 +10,7 @@ vi.mock('expo-router', () => ({ useIsFocused: () => true, useLocalSearchParams: 
 vi.mock('react-native', () => ({ View: 'View', ScrollView: 'ScrollView', TextInput: 'TextInput', Pressable: 'Pressable', FlatList: 'FlatList', Keyboard: {}, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, fontScale: 1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'SafeAreaView' }));
 vi.mock('../src/components/Text', () => ({ Text: 'Text' }));
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 vi.mock('../src/components/Recovery', () => ({ Recovery: () => null }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/library/useLibraryAudio', () => ({ useLibraryAudio: () => ({ stop: () => {}, speak: () => {}, word: () => {} }) }));
