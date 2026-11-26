@@ -23,14 +23,14 @@ it("Q7 identifies the grown-up choice for Books and other hidden collections, wh
 });
 describe("Q8 chrome scaling contract; reading remains uncapped",()=>{
   it.each([
-    ["src/hub/IslandScene.tsx", "{name}"], ["src/hub/HubScreen.tsx", "little island"], ["src/hub/HubScreen.tsx", "{label}"],
-    ["src/library/LibraryScreen.tsx", '{readerAvailable ? record.title'],
-    ["src/library/LibraryScreen.tsx", '{tab === "shelf" ? "My Shelf"'],
-    ["src/library/Reader.tsx", "Page {index + 1}"], ["src/home/runtime/HomeChrome.tsx", '{title ??'],
-  ])("%s keeps %s in capped, unbroken chrome",(path,label)=>{
+    ["src/hub/IslandScene.tsx", "{name}", 2], ["src/hub/HubScreen.tsx", "little island", 1], ["src/hub/HubScreen.tsx", "{label}", 1],
+    ["src/library/LibraryScreen.tsx", '{readerAvailable ? record.title', 1],
+    ["src/library/LibraryScreen.tsx", '{tab === "shelf" ? "My Shelf"', 1],
+    ["src/library/Reader.tsx", "Page {index + 1}", 1], ["src/home/runtime/HomeChrome.tsx", '{title ??', 1],
+  ])("%s keeps %s in capped, unbroken chrome",(path,label,lines)=>{
     const text=read(path);
     const tag=[...text.matchAll(/<Text\b([^>]+)>([\s\S]*?)<\/Text>/g)].find(match=>match[2].includes(label))?.[0].split('>')[0] ?? '';
-    expect(tag).toMatch(/maxFontSizeMultiplier=\{1\.[23]\}/);expect(tag).toContain('numberOfLines={1}');
+    expect(tag).toMatch(/maxFontSizeMultiplier=\{1\.[23]\}/);expect(tag).toContain(`numberOfLines={${lines}}`);
   });
   it("body and sentence text have no scaling ceiling",()=>{
     for(const path of ["src/library/Reader.tsx","src/library/Topics.tsx"]){

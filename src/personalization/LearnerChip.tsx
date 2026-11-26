@@ -9,7 +9,7 @@ import { personFor } from './model';
 export function LearnerChip({ compact = false }: { compact?: boolean }) {
   const store = useStore(), learner = activeLearner(store.save.learning), [open, setOpen] = useState(false);
   return <>
-    <PressableScale accessibilityRole="button" accessibilityLabel={`Who is playing: ${learner.name}. Switch learner`} onPress={() => setOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 3, backgroundColor: C.soft, borderRadius: 24, maxWidth: '100%' }}>
+    <PressableScale testID="learner-chip" accessibilityRole="button" accessibilityLabel={`Who is playing: ${learner.name}. Switch learner`} onPress={() => setOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 44, gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, backgroundColor: C.soft, borderRadius: 24, maxWidth: '100%' }}>
       <Portrait look={personFor(store.save).look} size={compact ? 36 : 44}/>
       <Copy maxFontSizeMultiplier={compact ? 1.3 : undefined} numberOfLines={compact ? 1 : undefined} style={{ fontSize: compact ? 13 : 16, flexShrink: 1 }}>{learner.name} ▾</Copy>
     </PressableScale>

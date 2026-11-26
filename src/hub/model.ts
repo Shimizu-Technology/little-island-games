@@ -32,6 +32,10 @@ export const homeShortcuts = [
   { id: 'badges', name: 'Badge Wall', hint: 'Things you have tried inside Home', route: directRoutes.badges },
 ] as const;
 export type Point = { x: number; y: number };
+export type PathSegment = readonly [Point, Point];
+export const TERRAIN_VIEWBOX = { width: 400, height: 660 } as const;
+export const SAND_PATH_STROKE_WIDTH = 21;
+export const SAND_PATH_RADIUS = SAND_PATH_STROKE_WIDTH / 2;
 const ART_ASPECT = 0.85;
 const MAX_ART_WIDTH = 256;
 const WIDE_POINTS: Record<PlaceId, readonly [number, number]> = {
@@ -46,7 +50,12 @@ const WIDE_POINTS: Record<PlaceId, readonly [number, number]> = {
 export function mapLayout(width: number, height: number, fontScale = 1) {
   const wide = width > height * 1.15;
   const scale = Math.max(1, fontScale);
-  const labelHeight = Math.round(Math.max(width < 280 ? 44 : 34, (scale > 1.5 ? 28 : 26) * Math.min(scale, 2.5)));
+  const labelHeight = Math.round(
+    Math.max(
+      width < 360 ? 48 : 34,
+      scale >= 1.25 ? Math.max(62, 28 * Math.min(scale, 2.5)) : 26 * Math.min(scale, 2.5),
+    ),
+  );
   const edgePad = 6, topPad = 6, bottomPad = 8, gapX = width < 260 ? 6 : 10, gapY = 10;
   const positioned = places.map(item => {
     const point = wide ? WIDE_POINTS[item.id] : null;
@@ -67,6 +76,59 @@ export function mapLayout(width: number, height: number, fontScale = 1) {
     width: artWidth, height: artHeight + labelHeight,
     door: { x: place.x * width, y: place.baseline - artHeight * .09 },
   })) };
+}
+export type MapLayout = ReturnType<typeof mapLayout>;
+/** Default guide rest position on the central sandy spine, always clamped between top and bottom door rows. */
+export function guideStartPoint(layout: MapLayout, width: number, height: number): Point {
+  const ys = layout.targets.map(target => target.door.y);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const preferredY = height * (layout.wide ? .62 : .55);
+  return { x: width * .5, y: Math.min(maxY, Math.max(minY, preferredY)) };
+}
+/** Shared sandy path centerlines in scene coordinates (pt), derived directly from actual door positions. */
+export function terrainBranches(layout: MapLayout, width: number, _height?: number): PathSegment[] {
+  const spineX = width * .5;
+  const ys = layout.targets.map(target => target.door.y);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const segments: PathSegment[] = [[{ x: spineX, y: minY }, { x: spineX, y: maxY }]];
+  const rows = new Map<number, { y: number; xs: number[] }>();
+  for (const target of layout.targets) {
+    const key = Math.round(target.door.y * 100);
+    const row = rows.get(key) ?? { y: target.door.y, xs: [spineX] };
+    row.xs.push(target.door.x);
+    rows.set(key, row);
+  }
+  for (const { y, xs } of rows.values()) {
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    if (maxX > minX) segments.push([{ x: minX, y }, { x: maxX, y }]);
+  }
+  return segments;
+}
+/** SVG path string for `terrainBranches` projected into Terrain's 400×660 viewBox. */
+export function terrainPathData(layout: MapLayout, width: number, height: number): string {
+  const sx = TERRAIN_VIEWBOX.width / width, sy = TERRAIN_VIEWBOX.height / height;
+  const fmt = (value: number) => Math.round(value * 100) / 100;
+  return terrainBranches(layout, width, height)
+    .map(([a, b]) => `M${fmt(a.x * sx)} ${fmt(a.y * sy)}L${fmt(b.x * sx)} ${fmt(b.y * sy)}`)
+    .join('');
+}
+/** Ordered polyline waypoints for the walking guide; every segment lies directly on `terrainBranches`. */
+export function guideWaypoints(from: Point, to: Point, layout: MapLayout, width: number, _height?: number): Point[] {
+  void layout;
+  const spineX = width * .5;
+  const points: Point[] = [from];
+  const push = (pt: Point) => {
+    const prev = points[points.length - 1];
+    if (Math.hypot(pt.x - prev.x, pt.y - prev.y) > 0.01) points.push(pt);
+  };
+  if (Math.abs(from.y - to.y) <= 0.01) {
+    push(to);
+  } else {
+    push({ x: spineX, y: from.y });
+    push({ x: spineX, y: to.y });
+    push(to);
+  }
+  return points;
 }
 export const WALK_MS = 380, ZOOM_MS = 160;
 /** One cancellable boundary timer. The second activation always wins immediately. */
