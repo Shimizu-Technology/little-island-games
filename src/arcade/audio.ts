@@ -30,6 +30,11 @@ const crabTones: Record<string, () => AudioSource> = {
   "crab-splash": () => require("../../assets/arcade/crab-sfx/splash.wav"),
   "crab-goal": () => require("../../assets/arcade/crab-sfx/goal.wav"),
 };
+const railTones: Record<string, () => AudioSource> = {
+  "rail-step": () => require("../../assets/arcade/rail-sfx/step.wav"),
+  "rail-chirp": () => require("../../assets/arcade/rail-sfx/chirp.wav"),
+  "rail-nest": () => require("../../assets/arcade/rail-sfx/nest.wav"),
+};
 const musicSources = { reef: require("../../assets/arcade/reef-loop.wav"), song: require("../../assets/arcade/song-loop.wav") };
 export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolean, active: boolean, sheetOpen = false) {
   // One preloaded player per effect. Swapping sources with replace() reloads the asset on the
@@ -38,7 +43,8 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
     const players = Object.fromEntries(Object.entries(tones).map(([key, source]) => [key, createAudioPlayer(source)]));
     const gameTones = game === "fruit-bat-flight" ? flightTones
       : game === "lagoon-run" ? lagoonTones
-      : game === "crab-crossing" ? crabTones : {};
+      : game === "crab-crossing" ? crabTones
+      : game === "rail-parade" ? railTones : {};
     for (const [key, source] of Object.entries(gameTones)) players[key] = createAudioPlayer(source());
     return players;
   });
@@ -61,6 +67,8 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
       else if (key === "flight-bump") feel("warning");
       else if (key === "crab-hop" || key === "crab-splash") feel("tap");
       else if (key === "crab-goal") feel("success");
+      else if (key === "rail-step" || key === "rail-chirp") feel("tap");
+      else if (key === "rail-nest") feel("success");
       else feel(key === "clear" || key === "sticker" ? "success" : "select");
     }
     const player = effects[key];
