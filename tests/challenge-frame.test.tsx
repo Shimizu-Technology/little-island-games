@@ -266,7 +266,8 @@ it.each([false,true])('exact links preserve paused and finished screens (paused=
   await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame linked/></StoreProvider>);});
   if(paused){
    expect(store.save.challenge!.paused[0].id).toBe('linked-saved');
-   expect(r.root.findAll(n=>n.props.testID==='requested-puzzle')).toHaveLength(1);
+   expect(r.root.findAll(n=>n.props.testID==='requested-puzzle')).toHaveLength(0);
+   expect(r.root.findAllByType('button').some(b=>b.props.selected===true&&b.children.join('').includes(puzzle.title))).toBe(true);
    await press(r,'Continue saved puzzle');
   }
   expect(store.save.challenge!.paused[0].puzzle).toEqual(puzzle.ref);
