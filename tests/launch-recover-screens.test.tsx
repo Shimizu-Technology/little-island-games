@@ -26,6 +26,7 @@ vi.mock('../src/challenge/ChallengeFrame', () => ({ ChallengeFrame: () => <artic
 vi.mock('../src/challenge/catalog', async () => ({ ...await vi.importActual<object>('../src/challenge/catalog'), challengeFor: (game: string) => game === 'fixture-game' ? { game } : undefined }));
 vi.mock('../src/state/backup', () => ({ exportBackup: vi.fn() }));
 vi.mock('../src/state/launchLog', () => ({ noteLaunch: fixture.noteLaunch }));
+vi.mock('../src/ui/fonts', () => ({ NunitoProvider: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock('../src/state/Store', () => ({ StoreProvider: 'div', useStore: () => fixture.store }));
 let view: ReactTestRenderer | undefined;
 afterEach(async () => { if (view) await act(async () => view!.unmount()); view = undefined; vi.unstubAllGlobals(); });
