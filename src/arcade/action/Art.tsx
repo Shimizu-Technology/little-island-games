@@ -1,7 +1,9 @@
 import React, { memo, useId } from "react";
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import { Image, View } from "react-native";
 import { PosePath, type ArtPose } from "../ArtPose";
 import type { SharedValue } from "react-native-reanimated";
+import { illustrated, palmActorLayout, type PalmActor } from "../games/palm-patrol/illustrated";
 import type { OutfitId } from "../progress";
 import type { WorldId } from "../types";
 export const AmbientFriend = memo(function AmbientFriend({ night = false }: { night?: boolean }) {
@@ -71,45 +73,35 @@ export const ActionHero = memo(function ActionHero({
   poses?: SharedValue<ArtPose[]>;
 }) {
   const id = useId().replace(/:/g, "");
+  if (palm) return <PalmStill kind="launcher" size={size} outfit={outfit} />;
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
       <Defs>
         <LinearGradient id={`action-hero-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={palm ? "#E8AF69" : "#FFFFFF"} />
-          <Stop offset="1" stopColor={palm ? "#A85D38" : "#FFAE77"} />
+          <Stop offset="0" stopColor="#FFFFFF" />
+          <Stop offset="1" stopColor="#FFAE77" />
         </LinearGradient>
       </Defs>
       <Ellipse cx={50} cy={91} rx={33} ry={5} fill="#194C5A" opacity={0.2} />
-      {/* Coco's feet stay planted; the throwing hand releases at arena (launcher, 532). */}
-      <Path d="M35 83L29 91H19M65 83L71 91H81" stroke={palm ? "#75432D" : "#23596E"} strokeWidth={7} strokeLinecap="round"/>
+      <Path d="M35 83L29 91H19M65 83L71 91H81" stroke="#23596E" strokeWidth={7} strokeLinecap="round"/>
       <Circle
         cx={50}
         cy={56}
         r={34}
         fill={`url(#action-hero-${id})`}
-        stroke={palm ? "#75432D" : "#23596E"}
+        stroke="#23596E"
         strokeWidth={4}
       />
-      {palm ? (
-        <Path
-          d="M24 42Q17 60 29 73M70 35Q82 55 75 73"
-          stroke="#F4D1A1"
-          strokeWidth={5}
-          fill="none"
-          strokeLinecap="round"
-        />
-      ) : (
-        <G>
-          <Path d="M50 23Q26 48 50 89Q59 65 50 23" fill="#F77E70" />
-          <Path d="M50 23Q78 44 81 68Q56 63 50 23" fill="#5CCCBF" />
-          <Path d="M50 23Q27 30 18 54Q34 44 50 23" fill="#F7CE5D" />
-        </G>
-      )}
+      <G>
+        <Path d="M50 23Q26 48 50 89Q59 65 50 23" fill="#F77E70" />
+        <Path d="M50 23Q78 44 81 68Q56 63 50 23" fill="#5CCCBF" />
+        <Path d="M50 23Q27 30 18 54Q34 44 50 23" fill="#F7CE5D" />
+      </G>
       <PosePath poses={poses} index={57} paths={[
         "M23 60L11 54M77 60L87 43L76 34",
         "M23 60L12 54M77 60L72 39L50 24.36",
         "M23 60L10 54M77 60L89 48L87 30",
-      ]} stroke={palm ? "#75432D" : "#23596E"} strokeWidth={7} strokeLinecap="round" fill="none"/>
+      ]} stroke="#23596E" strokeWidth={7} strokeLinecap="round" fill="none"/>
       <Circle cx={38} cy={54} r={5} fill="#FFFDF0" />
       <Circle cx={64} cy={54} r={5} fill="#FFFDF0" />
       <Circle cx={39} cy={55} r={2.8} fill="#253E46" />
@@ -123,44 +115,68 @@ export const ActionHero = memo(function ActionHero({
       />
       <Ellipse cx={30} cy={64} rx={6} ry={3} fill="#F59F7F" />
       <Ellipse cx={72} cy={64} rx={6} ry={3} fill="#F59F7F" />
-      {!palm && outfit === "island" ? <G stroke="#23596E" strokeWidth={2.5}><Path d="M24 30Q48 18 75 30L76 37Q50 29 24 37Z" fill="#F58070"/><Path d="M48 33Q68 26 83 36Q67 43 48 39Z" fill="#FFE4A2"/></G> : <Outfit outfit={outfit} />}
+      {outfit === "island" ? <G stroke="#23596E" strokeWidth={2.5}><Path d="M24 30Q48 18 75 30L76 37Q50 29 24 37Z" fill="#F58070"/><Path d="M48 33Q68 26 83 36Q67 43 48 39Z" fill="#FFE4A2"/></G> : <Outfit outfit={outfit} />}
     </Svg>
   );
 });
-export const BeetleArt = memo(function BeetleArt({ size, boss = false, poses, poseIndex = 0 }: { size: number; boss?: boolean; poses?: SharedValue<ArtPose[]>; poseIndex?: number }) {
-  const id = useId().replace(/:/g, "");
+export const PalmIllustration = memo(function PalmIllustration({
+  kind,
+  frame,
+  outfit = "island",
+  flash = false,
+}: {
+  kind: PalmActor;
+  frame: ReturnType<typeof palmActorLayout>["image"];
+  outfit?: OutfitId;
+  flash?: boolean;
+}) {
+  const badgeSize = frame.width * 0.24;
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
-      <Defs>
-        <LinearGradient id={`action-bug-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={boss ? "#CE95ED" : "#D39561"} />
-          <Stop offset="1" stopColor={boss ? "#764893" : "#7E4C38"} />
-        </LinearGradient>
-      </Defs>
-      <G stroke="#3E3640" strokeWidth={5} strokeLinecap="round">
-        <PosePath poses={poses} index={poseIndex} paths={[
-          "M27 36L13 26M25 51L10 52M27 65L13 77M73 36L87 26M75 51L90 52M73 65L87 77",
-          "M27 36L10 40M25 51L14 65M27 65L18 84M73 36L82 18M75 51L89 39M73 65L91 63",
-        ]}/>
-        <Ellipse cx={50} cy={52} rx={29} ry={34} fill={`url(#action-bug-${id})`} />
-        <Path d="M50 29V82" stroke="#6B4339" strokeWidth={3} />
-        <Path d="M35 29Q29 48 34 59" stroke="#F5CD9C" strokeWidth={5} />
-        <Path d="M39 25Q30 3 45 8L51 20Q63 9 65 17L62 31" fill={boss ? "#A56DB9" : "#BC855C"} />
-      </G>
-      <Circle cx={39} cy={35} r={6} fill="#FFF4D8" />
-      <Circle cx={62} cy={35} r={6} fill="#FFF4D8" />
-      <Circle cx={40} cy={37} r={3} fill="#303F4F" />
-      <Circle cx={61} cy={37} r={3} fill="#303F4F" />
-      <Path d="M44 47Q50 51 56 47" stroke="#402C30" strokeWidth={2.5} fill="none" />
-      {boss && <Path d="M28 14L24 2L39 8L50 0L61 8L76 2L72 17" fill="#FFDA65" stroke="#7D562A" strokeWidth={3} />}
-    </Svg>
+    <>
+      <Image
+        testID={flash ? "palm-boss-flash-image" : `palm-${kind}-image`}
+        source={illustrated[kind].source()}
+        resizeMode="contain"
+        accessible={false}
+        fadeDuration={0}
+        style={flash ? { ...frame, tintColor: "#FFE8AF" } : frame}
+      />
+      {kind === "launcher" && outfit !== "island" && (
+        <Svg
+          testID={`palm-outfit-${outfit}`}
+          width={badgeSize}
+          height={badgeSize}
+          viewBox="10 0 85 64"
+          style={{ position: "absolute", left: frame.left + frame.width * 0.55, top: frame.top + frame.height * 0.53 }}
+          accessible={false}
+        >
+          <Outfit outfit={outfit} />
+        </Svg>
+      )}
+    </>
   );
+});
+
+function PalmStill({ kind, size, outfit }: { kind: PalmActor; size: number; outfit?: OutfitId }) {
+  const { image, padding } = palmActorLayout(kind, size);
+  return (
+    <View style={{ width: size, height: size }}>
+      <PalmIllustration kind={kind} outfit={outfit} frame={{ ...image, left: image.left - padding.left, top: image.top - padding.top }} />
+    </View>
+  );
+}
+export const BeetleArt = memo(function BeetleArt({ size }: { size: number }) {
+  return <PalmStill kind="beetle" size={size} />;
 });
 export const HuskArt = memo(function HuskArt({ size }: { size: number }) {
+  return <PalmStill kind="coconut" size={size} />;
+});
+export const PalmSpark = memo(function PalmSpark({ size, star }: { size: number; star: boolean }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 40 40" accessible={false}>
-      <Ellipse cx={20} cy={20} rx={13} ry={17} fill="#DFA660" stroke="#6C4934" strokeWidth={3} />
-      <Path d="M13 10Q7 20 14 28M21 5Q16 19 22 34" stroke="#FFE2A6" strokeWidth={3} fill="none" />
+    <Svg width={size} height={size} viewBox="0 0 12 12" accessible={false}>
+      {star
+        ? <Path d="M6 0.5Q6.8 5.2 11.5 6Q6.8 6.8 6 11.5Q5.2 6.8 0.5 6Q5.2 5.2 6 0.5Z" fill="#FFF6D2" stroke="#D59438" strokeWidth={0.7} />
+        : <Circle cx={6} cy={6} r={3.25} fill="#FFE8A2" />}
     </Svg>
   );
 });
@@ -211,6 +227,62 @@ function Palm({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
     </G>
   );
 }
+const groveSkies = {
+  w1: ["#83BFC0", "#F9E7AC"],
+  w2: ["#7BADBA", "#F8D7A0"],
+  w3: ["#878BB6", "#F2CCA2"],
+  w4: ["#82AF9A", "#F8E2A1"],
+  w5: ["#9E9DB7", "#F4D3AD"],
+  w6: ["#DCAF94", "#FFE8AD"],
+  learn: ["#8DBF9F", "#F8EAB4"],
+} satisfies Record<WorldId, [string, string]>;
+
+function PalmGrove({ width, height, world, id }: { width: number; height: number; world: WorldId; id: string }) {
+  const [sky, horizon] = groveSkies[world];
+  return (
+    <Svg width={width} height={height} viewBox="0 0 360 600" style={{ position: "absolute" }} accessible={false}>
+      <Defs>
+        <LinearGradient id={`palm-sky-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={sky} />
+          <Stop offset=".68" stopColor={horizon} />
+        </LinearGradient>
+        <LinearGradient id={`palm-sand-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#FBE3A5" />
+          <Stop offset="1" stopColor="#D8A46A" />
+        </LinearGradient>
+      </Defs>
+      <Rect width={360} height={600} fill={`url(#palm-sky-${id})`} />
+      <G fill="#FFF5C5">
+        <Circle cx={285} cy={115} r={78} opacity={0.12} />
+        <Circle cx={285} cy={115} r={57} opacity={0.23} />
+        <Circle cx={285} cy={115} r={34} opacity={0.9} />
+        <Path d="M241 126L71 445L130 447L275 132ZM297 134L268 448L306 447L319 129Z" opacity={0.16} />
+      </G>
+      <Path d="M0 192C53 212 76 169 133 196S245 225 360 185V471H0Z" fill="#C7DABB" opacity={0.55} />
+      <Path d="M0 272Q71 233 141 258T273 252Q324 233 360 260V467H0Z" fill="#A9CCAC" opacity={0.66} />
+      <Path d="M0 345Q68 300 133 340Q201 355 274 314Q315 302 360 318V466H0Z" fill="#84B49C" opacity={0.55} />
+      <G opacity={0.24}>
+        <Palm x={12} y={295} scale={0.74} />
+        <Palm x={53} y={337} scale={0.47} />
+        <Palm x={348} y={260} scale={0.88} />
+        <Palm x={317} y={335} scale={0.55} />
+      </G>
+      <Path d="M0 404Q94 366 174 393T360 380V485H0Z" fill="#8FB984" />
+      <Path d="M0 446Q98 421 181 444T360 429V600H0Z" fill={`url(#palm-sand-${id})`} />
+      <Path d="M0 447Q94 422 175 444T360 430" stroke="#FFF2BD" strokeWidth={4} fill="none" opacity={0.68} />
+      <Path d="M0 507Q72 481 143 514L71 517L0 550ZM360 492Q315 507 279 555L360 528Z" fill="#986E50" opacity={0.12} />
+      <Palm x={-8} y={422} scale={0.83} />
+      <Palm x={361} y={409} scale={0.87} />
+      <Palm x={33} y={573} scale={0.47} />
+      <Palm x={330} y={581} scale={0.42} />
+      <Path d="M15 545Q58 535 87 541M277 557Q311 548 349 549M113 580Q174 563 236 575" stroke="#956745" strokeWidth={1.8} strokeLinecap="round" opacity={0.3} fill="none" />
+      {[42, 93, 138, 248, 294, 336].map((x, i) => (
+        <Ellipse key={x} cx={x} cy={589 - (i % 3) * 21} rx={3 + i % 2} ry={1.6} fill="#B28359" opacity={0.55} />
+      ))}
+    </Svg>
+  );
+}
+
 export const Scene = memo(function Scene({
   palm,
   world = "w1",
@@ -224,6 +296,7 @@ export const Scene = memo(function Scene({
 }) {
   const p = palettes[world],
     id = useId().replace(/:/g, "");
+  if (palm) return <PalmGrove width={width} height={height} world={world} id={id} />;
   return (
     <Svg
       width={width}
@@ -245,7 +318,7 @@ export const Scene = memo(function Scene({
         </LinearGradient>
       </Defs>
       <Rect width={360} height={600} fill={`url(#action-sky-${id})`} />
-      <G opacity={palm ? 1 : 0.18}>
+      <G opacity={0.18}>
       {/* Sky fills the arena; celestial discs keep a uniform scale on wide tablets. */}
       <Ellipse cx={292} cy={90} rx={37 * Math.min(1, height * 360 / (width * 600))} ry={37 * Math.min(1, width * 600 / (height * 360))} fill={world === "w3" ? "#FFF1BE" : "#FFF3B2"} opacity={0.9} />
       <Ellipse cx={292} cy={90} rx={49 * Math.min(1, height * 360 / (width * 600))} ry={49 * Math.min(1, width * 600 / (height * 360))} fill="#FFF4CE" opacity={0.13} />
@@ -256,38 +329,26 @@ export const Scene = memo(function Scene({
       <Path d="M0 184Q62 160 124 182T248 182T372 182V600H0Z" fill="#228F9C" opacity={0.45} />
       <Path d="M0 206Q80 188 162 208T360 202" fill="none" stroke="#C5F4E2" strokeWidth={3} opacity={0.5} />
       <Path
-        d={palm ? "M0 457Q95 437 180 452T360 445V600H0Z" : "M0 245Q95 221 180 244T360 231V600H0Z"}
+        d="M0 245Q95 221 180 244T360 231V600H0Z"
         fill={`url(#action-sand-${id})`}
       />
       <Path
-        d={palm ? "M0 458Q100 438 190 455T360 447" : "M0 244Q100 224 190 246T360 234"}
+        d="M0 244Q100 224 190 246T360 234"
         fill="none"
         stroke="#FFFAE4"
         strokeWidth={8}
         opacity={0.8}
       />
       </G>
-      {palm ? (
-        <>
-          <Palm x={-5} y={431} scale={0.85} />
-          <Palm x={355} y={428} scale={0.8} />
-          <Palm x={38} y={546} scale={0.4} />
-          <Palm x={320} y={541} scale={0.45} />
-          <Path d="M23 553Q180 530 336 553" stroke="#A97645" strokeWidth={3} strokeDasharray="2 13" fill="none" />
-        </>
-      ) : (
-        <>
-          <Rect x={18} y={48} width={324} height={504} rx={48} fill="#FFF0CB" opacity={0.09}/>
-          <Path d="M22 300H338" stroke="#FFF9DA" strokeWidth={2} strokeDasharray="8 10" opacity={0.35}/>
-          <Circle cx={180} cy={300} r={58} fill="none" stroke="#FFF9DA" strokeWidth={2} opacity={0.35}/>
-          {/* Rails mark the engine’s ball-centre reflection planes. End lines stay open. */}
-          <Path d="M12 0V600M348 0V600" stroke="#F8EFCE" opacity={0.8} strokeWidth={2}/>
-          <Path d="M12 0H348M12 600H348" stroke="#B5F1DF" opacity={0.5} strokeWidth={3} strokeDasharray="2 10"/>
-          <Path d="M172 16L180 8L188 16M172 584L180 592L188 584" stroke="#FFF4CF" strokeWidth={3} fill="none"/>
-          <Palm x={-8} y={377} scale={0.55} />
-          <Palm x={368} y={110} scale={0.55} />
-        </>
-      )}
+      <Rect x={18} y={48} width={324} height={504} rx={48} fill="#FFF0CB" opacity={0.09}/>
+      <Path d="M22 300H338" stroke="#FFF9DA" strokeWidth={2} strokeDasharray="8 10" opacity={0.35}/>
+      <Circle cx={180} cy={300} r={58} fill="none" stroke="#FFF9DA" strokeWidth={2} opacity={0.35}/>
+      {/* Rails mark the engine’s ball-centre reflection planes. End lines stay open. */}
+      <Path d="M12 0V600M348 0V600" stroke="#F8EFCE" opacity={0.8} strokeWidth={2}/>
+      <Path d="M12 0H348M12 600H348" stroke="#B5F1DF" opacity={0.5} strokeWidth={3} strokeDasharray="2 10"/>
+      <Path d="M172 16L180 8L188 16M172 584L180 592L188 584" stroke="#FFF4CF" strokeWidth={3} fill="none"/>
+      <Palm x={-8} y={377} scale={0.55} />
+      <Palm x={368} y={110} scale={0.55} />
       {[28, 80, 145, 214, 295, 332].map((x, i) => (
         <G key={x} opacity={0.4}>
           <Ellipse cx={x} cy={570 - (i % 3) * 40} rx={3} ry={1.5} fill="#926841" />

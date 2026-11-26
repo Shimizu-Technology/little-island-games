@@ -29,6 +29,8 @@ export const PADDLE_CONTACT = [535 - PADDLE_HEIGHT / 2 - BALL_RADIUS, 65 + PADDL
 export const BUG_RADIUS_X = 18,
   BUG_RADIUS_Y = 21,
   HUSK_RADIUS = 6;
+/** Pose canvases in logical units. Transparent padding is added by the illustrated sprites. */
+export const PALM_ACTOR_SIZE = { beetle: 58, boss: 87, launcher: 78, coconut: 20 } as const;
 /** Swept circle against the drawn capsule paddle (a segment with 10-unit round caps). */
 export function paddleContact(
   x0: number,

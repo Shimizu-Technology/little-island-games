@@ -1,65 +1,81 @@
 import { HIDDEN_POSE, type SpritePose } from "../poses";
 import type { ArtPose } from "../ArtPose";
-import { palmConfig, type PalmState } from "../games/palm-patrol/engine";
+import { FIRE_SECONDS, palmConfig, type PalmState } from "../games/palm-patrol/engine";
 import { beachConfig, paddleWidth, turtleX, type BeachState } from "../games/beach-ball/engine";
-import { type Arena, BALL_RADIUS } from "./arena";
+import { type Arena, BALL_RADIUS, PALM_ACTOR_SIZE } from "./arena";
+
+export type PalmArtPose = ArtPose & { recoil?: number; flash?: number };
 function position(a: Arena, x: number, y: number, w: number, h = w): SpritePose {
   "worklet";
   return { x: a.x + (x - w / 2) * a.scale, y: a.y + (y - h / 2) * a.scale, opacity: 1 };
 }
 /** Fixed-step art only. All arguments and callees are worklet-safe; no React/HUD objects. */
-export function palmPoses(s: PalmState, a: Arena, reduced: boolean, entry: number): ArtPose[] {
+export function palmPoses(s: PalmState, a: Arena, reduced: boolean, entry: number): PalmArtPose[] {
   "worklet";
-  const next: ArtPose[] = Array(88).fill(HIDDEN_POSE), group = `${s.wave}-${s.relay}-${s.fact}`;
+  const next: PalmArtPose[] = Array(88).fill(HIDDEN_POSE),
+    group = `${s.wave}-${s.relay}-${s.fact}`,
+    config = palmConfig(s),
+    learning = config.world === "learn",
+    impactAge = 0.45 - s.pulse,
+    bonking = !reduced && s.cue === "bonk" && impactAge < 0.16;
   for (const b of s.beetles) {
-    const size = b.boss ? 87 : 58,
-      p: ArtPose = position(a, b.x, b.y, size);
-    p.identity = `${group}:${b.id}:${b.boss}:${b.caught}`;
+    const size = b.boss ? PALM_ACTOR_SIZE.boss : PALM_ACTOR_SIZE.beetle,
+      catchAge = 0.45 - b.caught,
+      y = reduced && b.caught ? b.y + catchAge * 170 : b.y,
+      p: PalmArtPose = position(a, b.x, y, size);
+    p.identity = `${group}:${b.id}:${b.boss}:${!!b.caught}`;
     // Beetles stop stepping while a breather holds the formation.
     p.frame = !reduced && !b.caught && !b.diving && !s.waveWait ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
-    // Small, nonblocking entry gesture; never hide a collidable beetle off-screen.
-    if (!reduced && palmConfig(s).world !== "learn") {
-      p.x += entry * (s.relay % 3 === 0 ? 0 : s.relay % 2 ? -10 : 10) * a.scale;
-      p.y -= entry * (s.relay % 3 === 0 ? 12 : 6) * a.scale;
-      p.opacity = 1 - entry * 0.35;
+    if (!reduced && !learning) p.opacity = 1 - entry * 0.25;
+    p.angle = 0;
+    if (!reduced) {
+      if (b.caught) {
+        p.angle = Math.sin(catchAge * 29) * 0.24 * (b.caught / 0.45);
+        if (b.boss && catchAge < 0.16) p.flash = 0.36 * (1 - catchAge / 0.16) ** 2;
+      }
+      else if (b.diving) p.angle = Math.max(-0.24, Math.min(0.24, Math.atan2(b.diveX, config.diveSpeed)));
+      else if (!learning && !s.waveWait) p.angle = Math.sin(s.time * 22 + b.id) * 0.04;
+      if (!b.caught && bonking && Math.hypot(b.x - s.feedbackX, b.y - s.feedbackY) < 22) {
+        const remaining = 1 - impactAge / 0.16;
+        p.angle += Math.cos(impactAge * 74) * (b.boss ? 0.11 : 0.17) * remaining;
+        if (b.boss) p.flash = 0.36 * remaining ** 2;
+      }
     }
-    p.angle = reduced
-      ? 0
-      : b.caught
-        ? Math.sin(s.time * 20) * 0.25
-        : b.diving
-          ? Math.atan2(b.diveX, palmConfig(s).diveSpeed) + Math.sin(s.time * 6 + b.id) * 0.07
-          : s.direction * 0.035;
-    p.scale = b.caught ? 0.85 : 1;
     // A resting formation dims a little, so the pause shows without reading the label.
     if (s.waveWait > 0 && !b.caught) p.opacity = (p.opacity ?? 1) * 0.6;
     next[(b.boss ? 15 : 0) + b.id] = p;
-    if (b.caught) next[30 + b.id] = { ...position(a, b.x, b.y, 58), angle: p.angle, identity: p.identity };
+    if (b.caught) next[30 + b.id] = { ...position(a, b.x, y, PALM_ACTOR_SIZE.beetle), angle: p.angle, identity: p.identity };
     if (b.hp > 1 && !b.boss) next[73 + b.id] = { ...position(a, b.x, b.y - 12, 14, 7), identity: p.identity };
   }
   for (let i = 0; i < s.husks.length; i++)
-    next[45 + i] = { snap: true, ...position(a, s.husks[i].x, s.husks[i].y, 20), angle: reduced ? 0 : s.time * 8 };
+    next[45 + i] = { snap: true, ...position(a, s.husks[i].x, s.husks[i].y, PALM_ACTOR_SIZE.coconut), angle: reduced ? 0 : s.time * 11 };
+  const shotAge = FIRE_SECONDS - s.cooldown,
+    recoil = reduced ? 0 : shotAge < 0.065
+      ? (1 - shotAge / 0.065) ** 2
+      : -0.35 * Math.max(0, 1 - Math.abs(shotAge - 0.105) / 0.04);
   next[57] = {
-    ...position(a, s.launcher, 552 + (!reduced && s.lives.invulnerable > 1 ? 7 : 0), 78),
-    scale: !reduced && s.cooldown > 0.16 ? 0.94 : 1,
-    angle: 0,
+    ...position(a, s.launcher, 552 + (!reduced && s.lives.invulnerable > 1 ? 7 : 0), PALM_ACTOR_SIZE.launcher),
+    recoil,
     frame: reduced ? 0 : s.cooldown > 0.16 ? 1 : s.cooldown > 0.08 ? 2 : 0,
   };
   if (s.pulse > 0 && s.cue !== "fire") {
     const age = 1 - s.pulse / 0.45;
-    for (let i = 0; i < 8; i++)
-      next[58 + i] = {
-        ...position(
-          a,
-          s.feedbackX + Math.cos((i * Math.PI) / 4) * age * 42,
-          s.feedbackY + Math.sin((i * Math.PI) / 4) * age * 42,
-          6
-        ),
-        opacity: reduced ? 0 : 1 - age,
-      };
+    if (!reduced && (s.cue === "bonk" || s.cue === "net")) {
+      const burst = 1 - (1 - age) ** 2;
+      for (let i = 0; i < 8; i++) {
+        const angle = i * Math.PI / 4, radius = 9 + burst * (i % 2 ? 26 : 17);
+        next[58 + i] = {
+          ...position(a, s.feedbackX + Math.cos(angle) * radius, s.feedbackY + Math.sin(angle) * radius - burst * 13, 6),
+          identity: `${s.feedbackX}:${s.feedbackY}:${s.landed}`,
+          angle: burst * 0.5,
+          scale: (i % 2 ? 1.3 : 0.85) * (1 - age * 0.35),
+          opacity: (1 - age) ** 1.5,
+        };
+      }
+    }
     next[66] = {
-      ...position(a, Math.max(55, Math.min(300, s.feedbackX)), Math.max(76, s.feedbackY - 38 - age * 16), 110, 24),
-      opacity: s.pulse / 0.45,
+      ...position(a, Math.max(55, Math.min(300, s.feedbackX)), Math.max(76, s.feedbackY - 38 - (reduced ? 0 : age * 16)), 110, 24),
+      opacity: reduced ? 1 : s.pulse / 0.45,
     };
   }
   return next;

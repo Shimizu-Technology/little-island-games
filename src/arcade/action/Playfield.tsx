@@ -14,20 +14,21 @@ import { Text } from "../../components/Text";
 import { Button, Heading } from "../../components/ui";
 import { useReducedMotion } from "../../components/motion";
 import { beachWallContact } from "../feelArt";
-import type { ArtPose } from "../ArtPose";
 import { ArcadeSprite, type SpritePose } from "../Sprite";
 import { uiThreadDrag, multiTouchDrag, type DragPoint, type TouchPoints } from "../Input";
-import { palmPoses, beachPoses } from "./poses";
+import { palmPoses, beachPoses, type PalmArtPose } from "./poses";
 import { HIDDEN_POSE } from "../poses";
 import { palmHud, beachHud } from "../publication";
 import { useArcadeUiLoop } from "../uiLoop";
 import { HeartsHud, HitReaction } from "../LivesHud";
 import type { ArcadeResult } from "../types";
 import type { OutfitId } from "../progress";
-import { ActionHero, BallArt, BeetleArt, HuskArt, NetArt, Scene, TurtleArt } from "./Art";
+import { BallArt, NetArt, PalmIllustration, PalmSpark, Scene, TurtleArt } from "./Art";
+import { PalmBossFlash, PalmRecoil, usePalmSounds } from "./Motion";
+import { palmActorLayout, type PalmActor } from "../games/palm-patrol/illustrated";
 import { palmWorkedHint, palmResult, type PalmState } from "../games/palm-patrol/engine";
 import { beachResult, type BeachState } from "../games/beach-ball/engine";
-import { arenaTransform, arenaTouch, type Arena, BALL_RADIUS } from "./arena";
+import { arenaTransform, arenaTouch, type Arena, BALL_RADIUS, PALM_ACTOR_SIZE } from "./arena";
 import {
   aimPoint,
   mapSeatPointers,
@@ -99,24 +100,43 @@ const ArenaScene = memo(function ArenaScene({
     </View>
   );
 });
+const PalmSprite = memo(function PalmSprite({ kind, poses, index, scale, testID, outfit }: {
+  kind: PalmActor;
+  poses: SharedValue<PalmArtPose[]>;
+  index: number;
+  scale: number;
+  testID?: string;
+  outfit?: OutfitId;
+}) {
+  const size = PALM_ACTOR_SIZE[kind] * scale;
+  const { image, padding, canvas } = palmActorLayout(kind, size);
+  const art = <PalmIllustration kind={kind} frame={image} outfit={outfit} />;
+  return (
+    <ArcadeSprite poses={poses} index={index} width={size} height={size} padding={padding}>
+      <View testID={testID} style={{ width: canvas, height: canvas }}>
+        {kind === "launcher" ? <PalmRecoil poses={poses} scale={scale} canvas={canvas}>{art}</PalmRecoil> : art}
+        {kind === "boss" && (
+          <PalmBossFlash poses={poses} canvas={canvas}>
+            <PalmIllustration kind="boss" frame={image} flash />
+          </PalmBossFlash>
+        )}
+      </View>
+    </ArcadeSprite>
+  );
+});
+
 /** Stable layer: the HUD never rebuilds the beetles, nets, husks or impact art. */
-const PalmSprites = memo(function PalmSprites({ poses, scale }: { poses: SharedValue<SpritePose[]>; scale: number }) {
+const PalmSprites = memo(function PalmSprites({ poses, scale, reduced }: {
+  poses: SharedValue<PalmArtPose[]>;
+  scale: number;
+  reduced: boolean;
+}) {
   return (
     <>
       {Array.from({ length: 15 }, (_, i) => (
         <React.Fragment key={i}>
-          <ArcadeSprite poses={poses} index={i} width={58 * scale} height={58 * scale}>
-            <View testID={`palm-beetle-${i}`}>
-              <BeetleArt size={58 * scale} poses={poses} poseIndex={i} />
-            </View>
-          </ArcadeSprite>
-          {i === 0 && (
-            <ArcadeSprite poses={poses} index={15} width={87 * scale} height={87 * scale}>
-              <View testID="palm-boss-0">
-                <BeetleArt size={87 * scale} boss poses={poses} poseIndex={15} />
-              </View>
-            </ArcadeSprite>
-          )}
+          <PalmSprite kind="beetle" poses={poses} index={i} scale={scale} testID={`palm-beetle-${i}`} />
+          {i === 0 && <PalmSprite kind="boss" poses={poses} index={15} scale={scale} testID="palm-boss-0" />}
           <ArcadeSprite poses={poses} index={30 + i} width={58 * scale} height={58 * scale}>
             <NetArt size={58 * scale} />
           </ArcadeSprite>
@@ -135,20 +155,11 @@ const PalmSprites = memo(function PalmSprites({ poses, scale }: { poses: SharedV
         </React.Fragment>
       ))}
       {Array.from({ length: 12 }, (_, i) => (
-        <ArcadeSprite key={`h${i}`} poses={poses} index={45 + i} width={20 * scale} height={20 * scale}>
-          <HuskArt size={20 * scale} />
-        </ArcadeSprite>
+        <PalmSprite kind="coconut" key={i} poses={poses} index={45 + i} scale={scale} testID={`palm-coconut-${i}`} />
       ))}
-      {Array.from({ length: 8 }, (_, i) => (
+      {!reduced && Array.from({ length: 8 }, (_, i) => (
         <ArcadeSprite key={`p${i}`} poses={poses} index={58 + i} width={6 * scale} height={6 * scale}>
-          <View
-            style={{
-              width: 6 * scale,
-              height: 6 * scale,
-              borderRadius: 3 * scale,
-              backgroundColor: i % 2 ? "#FFE58C" : "#B6F7DF",
-            }}
-          />
+          <View testID={`palm-spark-${i}`}><PalmSpark size={6 * scale} star={i % 2 === 1} /></View>
         </ArcadeSprite>
       ))}
     </>
@@ -161,7 +172,7 @@ const PalmHero = memo(function PalmHero({
   hit,
   onTone,
 }: {
-  poses: SharedValue<SpritePose[]>;
+  poses: SharedValue<PalmArtPose[]>;
   scale: number;
   outfit: OutfitId;
   hit: number;
@@ -169,14 +180,15 @@ const PalmHero = memo(function PalmHero({
 }) {
   return (
     <HitReaction hit={hit} onTone={onTone}>
-      <ArcadeSprite poses={poses} index={57} width={78 * scale} height={78 * scale}>
-        <View testID="palm-launcher">
-          <ActionHero palm size={78 * scale} outfit={outfit} poses={poses} />
-        </View>
-      </ArcadeSprite>
+      <PalmSprite kind="launcher" poses={poses} index={57} scale={scale} outfit={outfit} testID="palm-launcher" />
     </HitReaction>
   );
 });
+function selectPalmBoardHud(state: PalmState) {
+  "worklet";
+  const { shots, event, cue, ...hud } = palmHud(state);
+  return hud;
+}
 export function PalmBoard({
   initial,
   width = 360,
@@ -203,7 +215,7 @@ export function PalmBoard({
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
     flags = useSharedValue({ helper, taps: 0, finish: false, help: false }),
     keyboard = useSharedValue({ x: 180, firing: false, used: false }),
-    poses = useSharedValue<ArtPose[]>(Array(88).fill(HIDDEN_POSE)),
+    poses = useSharedValue<PalmArtPose[]>(Array(88).fill(HIDDEN_POSE)),
     entrance = useSharedValue({ group: "", started: 0 }),
     reported = useRef(false);
   const gesture = useMemo(
@@ -241,8 +253,8 @@ export function PalmBoard({
     [arena, reduced, entrance]
   );
   const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
-  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, result: palmResult, select: palmHud, pose });
-  const sounds = useRef({ event: 0, shots: 0 });
+  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, result: palmResult, select: selectPalmBoardHud, pose });
+  usePalmSounds(state, onTone);
   useEffect(() => {
     flags.set({ ...flags.value, helper });
     if (!active) {
@@ -257,13 +269,6 @@ export function PalmBoard({
       onResult(r, s.helped);
     }
   }, [s, outcome, active, onResult]);
-  useEffect(() => {
-    const shots = s.shots - sounds.current.shots;
-    if (shots > 0) onTone("coral", false);
-    if (s.event - sounds.current.event > shots && s.cue !== "hit")
-      onTone(s.cue === "net" ? "clear" : s.cue === "shield" ? "shell-1" : "shell-2", true);
-    sounds.current = { shots: s.shots, event: s.event };
-  }, [s.event, s.shots, s.cue, onTone]);
   useEffect(() => {
     if (!active || Platform.OS !== "web") return;
     const down = (e: KeyboardEvent) => {
@@ -300,10 +305,10 @@ export function PalmBoard({
         testID="palm-playfield"
         accessibilityLabel={learning ? "Palm Patrol playfield. Slide to aim. Press once for each math fact." : "Palm Patrol playfield. Slide to aim. Hold to toss."}
         onLayout={layout}
-        style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#143E3D" }, gestureStyle]}
+        style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#335C4D" }, gestureStyle]}
       >
         <ArenaScene palm world={s.world} camera={camera} />
-        <PalmSprites poses={poses} scale={scale} />
+        <PalmSprites poses={poses} scale={scale} reduced={reduced} />
         {[72, 180, 288].map((x, i) => (
           <View
             key={i}
@@ -331,22 +336,32 @@ export function PalmBoard({
         <PalmHero poses={poses} scale={scale} outfit={outfit} hit={s.lives.hit} onTone={onTone} />
         {learning &&
           s.answers.map((b) => (
-            <ArcadeSprite poses={poses} index={b.id} width={58 * scale} height={58 * scale} key={b.id}><View
+            <ArcadeSprite
               key={b.id}
-              testID={`palm-answer-${b.id}`}
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                left: 4 * scale,
-                top: 48 * scale,
-                width: 50 * scale,
-                alignItems: "center",
-                backgroundColor: "#173F38",
-                borderRadius: 12,
-              }}
+              poses={poses}
+              index={b.id}
+              width={PALM_ACTOR_SIZE.beetle * scale}
+              height={PALM_ACTOR_SIZE.beetle * scale}
+              padding={{ left: 0, top: 0, right: 0, bottom: 28 * scale }}
             >
-              <Heading style={{ color: "#FFF4CD", fontSize: 22 * scale }}>{b.value}</Heading>
-            </View></ArcadeSprite>
+              <View
+                testID={`palm-answer-${b.id}`}
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  left: 12 * scale,
+                  top: 48 * scale,
+                  width: 34 * scale,
+                  alignItems: "center",
+                  backgroundColor: "#17382D",
+                  borderColor: "#FFE6A6",
+                  borderWidth: scale,
+                  borderRadius: 10 * scale,
+                }}
+              >
+                <Heading maxFontSizeMultiplier={1.3} style={{ color: "#FFF4CD", fontSize: 20 * scale }}>{b.value}</Heading>
+              </View>
+            </ArcadeSprite>
           ))}
         <ArcadeSprite poses={poses} index={66} width={110 * scale} height={24 * scale}>
           <Text
