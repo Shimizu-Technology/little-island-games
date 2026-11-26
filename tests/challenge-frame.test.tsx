@@ -30,7 +30,7 @@ vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
 vi.mock('../src/personalization/LearnerChip',()=>({LearnerChip:()=>null}));
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
-function ReadyFrame({selectedEntry=entry}:{selectedEntry?:ChallengeEntry}){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={selectedEntry}/>:null;}
+function ReadyFrame({selectedEntry=entry,linked=false}:{selectedEntry?:ChallengeEntry;linked?:boolean}){const s=useStore();const [consumed,setConsumed]=React.useState(false);return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={selectedEntry} autoStart={linked&&!consumed} onLinkConsumed={()=>setConsumed(true)} requestedCard={linked?selectedEntry.puzzles[0]:undefined}/>:null;}
 const entry={...registration,render:(session:Parameters<typeof registration.move>[0],dispatch:(a:unknown)=>void)=>{const actions=(solve(registration.start(puzzle.ref,'a','route',emptyChallenge(),{supportOff:false,ownRead:false},[])).payload as Payload).actions;const n=(session.payload as Payload).actions.filter(a=>a.type==='move').length;return <><button onClick={()=>dispatch({type:'read-aloud'} satisfies Action)}>Read aloud</button><button onClick={()=>dispatch(actions[n])}>Next maze step</button></>;}};
 const press=async(root:ReactTestRenderer,label:string)=>act(async()=>{const button=root.root.findAllByType('button').find(n=>n.children.filter(c=>typeof c==='string').join('')===label);expect(button,label).toBeDefined();(button!.props.onPress??button!.props.onClick)();});
 it('R2 P2-1: a stretch invitation clears a dare from the completed puzzle before Start',async()=>{
@@ -253,5 +253,41 @@ it('K7 a refused compact edit passes its real bytes to full and offers Keep my p
  expect(full).toHaveBeenCalledWith(expect.anything(),action);
  expect(r.root.findAllByType('button').some(b=>b.children.join('')==='Keep my plan in a new attempt')).toBe(true);
  expect(JSON.stringify(r.toJSON())).toContain('This attempt is full.');
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it.each([false,true])('exact links preserve paused and finished screens (paused=%s)',async(paused)=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
+ const initial=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
+ const draft=registration.start(puzzle.ref,'a','linked-saved',emptyChallenge(),{supportOff:false,ownRead:false},[]);
+ db.raw=encodeSave(paused?putProgress(initial,'a',{...emptyChallenge(),nextOrdinal:2,paused:[draft]}):initial);
+ let r!:ReactTestRenderer;
+ try {
+  await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame linked/></StoreProvider>);});
+  if(paused){
+   expect(store.save.challenge!.paused[0].id).toBe('linked-saved');
+   expect(r.root.findAll(n=>n.props.testID==='requested-puzzle')).toHaveLength(0);
+   expect(r.root.findAllByType('button').some(b=>b.props.selected===true&&b.children.join('').includes(puzzle.title))).toBe(true);
+   await press(r,'Continue saved puzzle');
+  }
+  expect(store.save.challenge!.paused[0].puzzle).toEqual(puzzle.ref);
+  const id=store.save.challenge!.paused[0].id;
+  for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
+  expect(store.save.challenge!.paused).toHaveLength(0);
+  expect(r.root.findAllByType('h2').some(n=>n.children.includes('Puzzle solved!'))).toBe(true);
+  expect(store.save.challenge!.nextOrdinal).toBe(2);
+  expect(id).toBe(paused?'linked-saved':'challenge-a-1');
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+it('consumes the exact link before a protected draft is discarded',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
+ const draft=registration.start(puzzle.ref,'a','discard-link',emptyChallenge(),{supportOff:false,ownRead:false},[]);
+ db.raw=encodeSave(putProgress(migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')}),'a',{...emptyChallenge(),nextOrdinal:2,paused:[draft]}));
+ let r!:ReactTestRenderer;
+ try{
+  await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame linked/></StoreProvider>);});
+  await act(async()=>{await store.challengeDiscard({owner:'a',game:entry.game,epoch:store.epoch,id:draft.id,revision:draft.revision});});
+  expect(store.save.challenge!.paused).toHaveLength(0);
+  expect(store.save.challenge!.nextOrdinal).toBe(2);
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });

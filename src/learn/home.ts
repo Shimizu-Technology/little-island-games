@@ -1,3 +1,4 @@
+import { progressFor } from '../state/challengeDrafts';
 import { BoardId, boardIds, catalog, isBoardId } from "../board";
 import { GameId, gameIds, games, isFinished } from "../games";
 import { random } from "../games/types";
@@ -71,16 +72,18 @@ export const shelfGames: ShelfGame[] = [
     filters: [...(e.modes.includes("solo") ? ["Play alone"] : []), ...(e.modes.some(m => m !== "solo") ? ["Play together"] : [])] }; }),
 ];
 export function ongoing(save: Save, id: ShelfId) {
+  if (id==='reef-sweep'&&progressFor(save,save.learning?.active??'family')?.paused.some(s=>s.game===id&&!s.result&&!s.credited))return true;
   if (isBoardId(id)) { const s = save.board?.[id]; return !!s && s.position.outcome === null; }
   if (arcadeIds.includes(id as ArcadeId)) return save.arcade?.recent === id;
   if (learnIds.includes(id as LearnId)) { const s = save.learn?.[id as LearnId]; return !!s && !finished(s); }
   if (gameIds.includes(id as GameId)) { const s = save.sessions[id as GameId]; return !!s && !isFinished(s); }
   const a = save.activities?.[id as ActivityId]; return !!a && !activityFinished(a);
 }
-/** The active marker wins even when its round just finished; never revive an older marker. */
+/** Honor the active marker even after finishing; use Reef Sweep only when no marker is set. */
 export function homeContinue(save: Save): ShelfId | null {
   const id = save.recentBoard ?? save.recentLearn ?? save.recentActivity ?? save.recent ?? save.arcade?.recent;
-  return id && ongoing(save, id) ? id : null;
+  if (id) return ongoing(save, id) ? id : null;
+  return ongoing(save, 'reef-sweep') ? 'reef-sweep' : null;
 }
 export function toggleShelfFavorite(save: Save, id: ShelfId): Save {
   if (![...gameIds, ...activityIds, ...learnIds, ...boardIds, ...arcadeIds].includes(id)) return save;
