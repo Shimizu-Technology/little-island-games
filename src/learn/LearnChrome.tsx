@@ -9,10 +9,10 @@ import { dock } from "./games/float-sink/engine";
 import { boardEnd, reefRound } from "./games/reef-race/engine";
 import type { Island, LearnSession } from "./types";
 
-export const warmC = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
-export function WarmCopy(props: React.ComponentProps<typeof BaseCopy>) {
+const warmC = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
+function WarmCopy(props: React.ComponentProps<typeof BaseCopy>) {
  const loaded = useNunitoLoaded();
- return <BaseCopy {...props} style={[{ color: warmC.muted }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+ return <BaseCopy {...props} style={[{ color: warmC.muted }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
 }
 const C = warmC, Copy = WarmCopy;
 export const subjectTheme: Record<Island, { sky: string; land: string; accent: string; ink: string }> = {

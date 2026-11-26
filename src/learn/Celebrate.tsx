@@ -3,7 +3,7 @@ import { Animated, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { easeOut, nativeDriver, useReducedMotion } from "../components/motion";
 
-const COLORS = ["#E1B251", "#C56D50", "#E1B251", "#F5DFAB", "#FF7A5C", "#E58C8C"];
+const COLORS = ["#E1B251", "#C56D50", "#9A641A", "#F5DFAB", "#FF7A5C", "#E58C8C"];
 
 /**
  * A short burst of stars and a big check that plays once per `burst` change (a counter).

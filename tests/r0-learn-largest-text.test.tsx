@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** R0: every School page at the largest text size. The shared Learn frame keeps its pinned header to one compact bar,
  * scrolls the rest with the page, and stops its header text where the words still fit, so the board stays reachable. */
 import React, { createContext, useLayoutEffect } from 'react';
@@ -109,7 +110,7 @@ it('AX5 phone landscape: the header scrolls with the page, with the same compact
   expect(level.props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
   const mode = r.root.findAll(n => String(n.type) === 'Copy' && textOf(n) === 'On my own');
   expect(mode).toHaveLength(1);expect(mode[0].props.maxFontSizeMultiplier).toBe(1.5);
-  expect(mode[0].parent!.parent!.findAll(n => String(n.type) === 'LearnerChip')).toHaveLength(1);
+  expect(mode[0].parent!.findAll(n => String(n.type) === 'LearnerChip')).toHaveLength(1);
   expect(inside(byType(r, 'Board')[0], scroll)).toBe(true);
 });
 

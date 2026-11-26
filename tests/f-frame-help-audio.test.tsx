@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** F-frame: "Hear a quick guide" never plays silence. The School frame offers it only when the engine's helpAudio has a
  * shipped recording in the chosen voice, the same lookup the player uses. Checked across every learning engine. */
 import React, { createContext } from 'react';

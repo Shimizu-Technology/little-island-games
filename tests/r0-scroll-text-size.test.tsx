@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** R0 review P2: crossing the large-text threshold mid-answer must not move the page. Only a real move to another
  * question or round repositions the board. */
 import React, { createContext, useLayoutEffect } from 'react';

@@ -28,5 +28,5 @@ function Heading(props: React.ComponentProps<typeof BaseHeading>) {
 }
 function Copy(props: React.ComponentProps<typeof BaseCopy>) {
  const loaded = useNunitoLoaded();
- return <BaseCopy {...props} style={[{ color: '#665247' }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
 }

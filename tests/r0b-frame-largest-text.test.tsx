@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** R0b: what the Learn frame gives each School board at the largest text size. The board and the result card get a
  * text region (2x, or where the words fit), step games can bring the board back into view, and a short landscape
  * phone folds the learner chip, mode and journey into one row beside the level line. */

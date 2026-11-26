@@ -67,11 +67,12 @@ function Heading(props: React.ComponentProps<typeof BaseHeading>) {
 }
 function Copy(props: React.ComponentProps<typeof BaseCopy>) {
  const loaded = useNunitoLoaded();
- return <BaseCopy {...props} style={[{ color: '#665247' }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
 }
 function Button(props: React.ComponentProps<typeof BaseButton>) {
- return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderColor: props.selected ? '#3D2B24' : '#E8D8BE'}} textStyle={{...props.textStyle, color: '#3D2B24'}}/>;
+ const loaded = useNunitoLoaded();
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}/>;
 }
 function Chip(props: React.ComponentProps<typeof BaseChip>) {
- return <Button {...props} quiet compact style={{borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
+ return <Button {...props} quiet compact textStyle={props.numberOfLines ? {flexShrink: 1} : undefined} style={{borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: props.numberOfLines ? 1 : 0, ...(props.numberOfLines ? {maxWidth: '100%'} : {}), borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
 }

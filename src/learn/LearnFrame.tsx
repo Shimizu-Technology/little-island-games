@@ -1,4 +1,5 @@
 import { styles as baseStyles, C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , GameHeader, Sheet, ToggleRow } from "../components/ui";
+import { Icon } from "../components/Icon";
 import { useNunitoLoaded } from "../ui/fonts";
 import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { LagoonHintScroll } from './LagoonHintScroll';
@@ -408,12 +409,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
     : { position: "absolute", top: 0, right: "100%", width: 240, height: 112, marginRight: 8, alignItems: "flex-end", justifyContent: "center" }}>{cheerPill}</View>}</View>;
   // Sheet text runs across the sheet (a 560-pt card on wide screens) inside its 22-pt padding.
   const sheetLine = (width >= 600 ? Math.min(560, width - 48) : width) - 44;
+  const fontsLoaded = useNunitoLoaded();
   const header = <View style={{ gap: 4 }}>
         <LearnerChip compact/>
         {bar}
         {level}
         {phone && saved && <View onLayout={fit("row")}>
-          <Copy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>
+          <BaseCopy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ ...(fontsLoaded ? {fontFamily: "Nunito_600SemiBold", fontWeight: "normal"} : {}), fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</BaseCopy>
           {phoneCheer}
         </View>}
 
@@ -429,7 +431,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <View testID="learn-header-cluster" style={{ flexGrow: 1, flexBasis: 260, gap: 4 }}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
             <LearnerChip compact/>
-            {saved && <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>}
+            {saved && <BaseCopy maxFontSizeMultiplier={small} style={{ ...(fontsLoaded ? {fontFamily: "Nunito_600SemiBold", fontWeight: "normal"} : {}), fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</BaseCopy>}
           </View>
           {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished} inline/>}
         </View>
@@ -437,7 +439,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {level}
         {saved && <View onLayout={fit("row")} style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           <View onLayout={fit("chip")} style={{ maxWidth: "100%" }}><LearnerChip compact/></View>
-          <Copy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>
+          <BaseCopy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ ...(fontsLoaded ? {fontFamily: "Nunito_600SemiBold", fontWeight: "normal"} : {}), fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</BaseCopy>
           {phoneCheer}
         </View>}
         {!saved && <LearnerChip compact/>}
@@ -686,17 +688,14 @@ function Heading(props: React.ComponentProps<typeof BaseHeading>) {
 }
 function Copy(props: React.ComponentProps<typeof BaseCopy>) {
  const loaded = useNunitoLoaded();
- return <BaseCopy {...props} style={[{ color: '#665247' }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
 }
 function Button(props: React.ComponentProps<typeof BaseButton>) {
- return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderColor: props.selected ? '#3D2B24' : '#E8D8BE'}} textStyle={{...props.textStyle, color: '#3D2B24'}}/>;
+ const loaded = useNunitoLoaded();
+ return <BaseButton {...props} icon={undefined} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}>{props.icon && <Icon name={props.icon} size={props.compact ? 18 : 20} color="#3D2B24"/>}{props.children}</BaseButton>;
 }
 function Chip(props: React.ComponentProps<typeof BaseChip>) {
- return <Button {...props} quiet compact style={{borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
+ return <Button {...props} quiet compact textStyle={props.numberOfLines ? {flexShrink: 1} : undefined} style={{borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: props.numberOfLines ? 1 : 0, ...(props.numberOfLines ? {maxWidth: '100%'} : {}), borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
 }
-
-
-
-
 
 const styles = { ...baseStyles, page: [baseStyles.page, { backgroundColor: "#FFF6E5" }] };

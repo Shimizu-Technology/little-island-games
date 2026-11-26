@@ -22,7 +22,7 @@ export function LevelPath({ game, level, onChoose, progress = {} }: { game: Lear
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 3 }} accessibilityRole="radiogroup" accessibilityLabel="Choose a learning level">
       <View pointerEvents="none" style={{ position: "absolute", left: 12, right: 12, top: 26, height: 5, borderRadius: 4, backgroundColor: "#D6C7A7" }}/>
       {levelNumbers.map(n => <PressableScale key={n} accessibilityRole="radio" accessibilityLabel={`Choose ${levelTitle(game, n)}, ${progress[game]?.[n] ? `${progress[game]![n]!.stars} earned stars, completed` : "not completed yet"}`} accessibilityState={{ checked: level === n }} aria-checked={level === n} onPress={() => onChoose(n)} style={{ minWidth: 45, minHeight: 72, flex: 1, maxWidth: 76, borderRadius: 22, borderWidth: level === n ? 3 : 2, borderColor: level === n ? C.ink : C.line, backgroundColor: level === n ? "#FFE4A3" : C.paper, alignItems: "center", justifyContent: "center", shadowColor: "#6A5A3A", shadowOpacity: 0.16, shadowOffset: { width: 0, height: 4 }, shadowRadius: 1, elevation: 3 }}>
-        <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 15, lineHeight: 20, color: "#9A641A" }}>{progress[game]?.[n] ? "★".repeat(progress[game]![n]!.stars) : "☆"}</Copy>
+        <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 15, lineHeight: 20, color: "#3D2B24" }}>{progress[game]?.[n] ? "★".repeat(progress[game]![n]!.stars) : "☆"}</Copy>
         <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 20, lineHeight: 24, fontWeight: "900", color: C.ink }}>{n}</Copy>
       </PressableScale>)}
     </View>
@@ -40,5 +40,5 @@ function Heading(props: React.ComponentProps<typeof BaseHeading>) {
 }
 function Copy(props: React.ComponentProps<typeof BaseCopy>) {
  const loaded = useNunitoLoaded();
- return <BaseCopy {...props} style={[{ color: '#665247' }, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}, props.style]}/>;
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
 }
