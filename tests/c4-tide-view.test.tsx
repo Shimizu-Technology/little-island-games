@@ -18,10 +18,9 @@ vi.mock('react-native-svg', () => ({ default: 'svg', Circle: 'circle', Path: 'pa
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'p', Heading: 'h', PressableScale: 'button', C: { ink: '#183F39', teal: '#246858', soft: '#E5EFE5', paper: '#FFF', cream: '#FFF8EA', line: '#DDD' } }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 const heard = vi.hoisted(() => ({ play: vi.fn(), stop: vi.fn() }));
-vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({ sound: true }), useSoundControls: () => ({ play: heard.play, stop: heard.stop }) }));
-vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 const sources = vi.hoisted(() => ({} as Record<string, number>));
-vi.mock('../src/content/learnAudio', () => ({ learnSources: sources }));
+vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({ sound: true }), useSoundControls: () => ({ play: heard.play, stop: heard.stop }), hasSpeech: (key: string) => !!sources[key] }));
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 
 let tree: ReactTestRenderer | undefined;
 beforeEach(() => { viewport.width = 393; viewport.height = 852; viewport.fontScale = 1; heard.play.mockClear(); });
@@ -156,7 +155,8 @@ it('Hear rules appears only once the lead has voiced its line', async () => {
   sources['c4-tide-find-rules'] = 1;
   await mount(<ChallengeBoard {...challengeProps(freshState(p))} />);
   await press('Hear rules');
-  expect(heard.play).toHaveBeenCalledWith('c4-tide-find-rules', true);
+  // An explicit tap is manual speech, so it still plays with automatic speech off.
+  expect(heard.play).toHaveBeenCalledWith('c4-tide-find-rules', false);
   delete sources['c4-tide-find-rules'];
 });
 it('at AX5 on a phone in portrait the belt stays one sideways row, with labels capped, so the rule and Run stay in view', async () => {
@@ -219,4 +219,53 @@ it('a miss is said by the belt (not a vague line), the counter never repeats the
   const running = must(run(setRuleState(s, row.target))).state;
   await act(async () => tree!.update(<Board {...asBoard(props({ ...running, running: 2 }))} />));
   expect(words().some(w => w.startsWith('Next:'))).toBe(false);
+});
+
+it('School Help on a rule that already sorts every catch records assistance before saying so', async () => {
+  const s = round(3), row = currentRow(s)!, p = props({ ...s, rule: [...row.target] });
+  await mount(<Board {...asBoard(p)} />);
+  await press('Help: look');
+  expect(p.assistance).toHaveBeenCalledTimes(1);
+  const saved = p.update.mock.calls.at(-1)![0] as TideV3;
+  expect(saved.helped).toBe(true); expect(saved.rule).toEqual(row.target);
+});
+it('Challenge Help stays enabled when the last edit makes the draft right, and the button never reveals it', async () => {
+  const p = tidePuzzles.find(x => x.descriptor.kind === 'write')!, d = p.descriptor, wrong = [...d.target]; wrong[wrong.length - 1] = 1 - wrong[wrong.length - 1];
+  const nearly = after(p, wrong.map((o, i) => setBlock(i, o))), correct = after(p, [...wrong.map((o, i) => setBlock(i, o)), setBlock(wrong.length - 1, d.target[wrong.length - 1])]);
+  await mount(<ChallengeBoard {...challengeProps(nearly)} />);
+  expect(labelled('Help')!.props.disabled).toBe(false);
+  await act(async () => tree!.update(<ChallengeBoard {...challengeProps(correct)} />));
+  expect(labelled('Help')!.props.disabled).toBe(false);
+});
+it('both Flip Gate arrow buttons keep a 44 pt width', async () => {
+  const p = tidePuzzles.find(x => x.descriptor.kind === 'trace')!;
+  await mount(<ChallengeBoard {...challengeProps(freshState(p))} />);
+  const arrows = buttons().filter(b => /^Send catch \d+ (left|right)/.test(String(b.props.label)));
+  expect(arrows.length).toBe(p.descriptor.belt.length * 2);
+  for (const a of arrows) expect(a.props.style.minWidth).toBeGreaterThanOrEqual(44);
+});
+it('a manual Hear tap plays as manual speech and follows the voice-aware lookup', async () => {
+  const p = tidePuzzles.find(x => x.descriptor.frame === 'not')!;
+  sources['c4-tide-not'] = 1;
+  await mount(<ChallengeBoard {...challengeProps(freshState(p))} />);
+  await press('Hear NOT');
+  expect(heard.play).toHaveBeenCalledWith('c4-tide-not', false);
+  delete sources['c4-tide-not'];
+});
+it('on a phone the belt follows the catch under test during playback, and a miss brings its counterexample into view', async () => {
+  vi.useFakeTimers();
+  const p = tidePuzzles.find(x => x.descriptor.kind === 'trace')!, d = p.descriptor, scrollTo = vi.fn();
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const wrong = answerOf(d).map(side => side as 0 | 1); wrong[d.belt.length - 1] = (1 - wrong[d.belt.length - 1]) as 0 | 1;
+  const draft = after(p, wrong.map((side, i) => pick(i, side)));
+  await act(async () => { tree = create(<ChallengeBoard {...challengeProps(draft)} />, { createNodeMock: el => String(el.type) === 'scroll' ? { scrollTo } : null }); });
+  // Lay the catches out 100 pt apart, as a sideways row would.
+  for (const c of tree!.root.findAll(n => n.props.accessibilityLabel?.startsWith('Catch ') && typeof n.props.onLayout === 'function' && n.props.style)) {
+    const i = Number(/^Catch (\d+)/.exec(c.props.accessibilityLabel)![1]) - 1; c.props.onLayout({ nativeEvent: { layout: { x: i * 100 } } });
+  }
+  await act(async () => tree!.update(<ChallengeBoard {...challengeProps(challengeEngine.step(draft, RUN, d)!.state)} />));
+  for (let i = 0; i < d.belt.length + 1; i++) await act(async () => { vi.advanceTimersByTime(30); });
+  const xs = scrollTo.mock.calls.map(c => c[0].x);
+  expect(xs.some(x => x >= (d.belt.length - 1) * 100 - 8)).toBe(true);
+  expect(xs.at(-1)).toBe((d.belt.length - 1) * 100 - 8);
 });

@@ -69,7 +69,8 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   const askHelp = () => {
     if (!row) return;
     const next = help(s);
-    if (!next) { setMessage("Your rule already sorts every catch. Press Run."); return; }
+    if (!next) return;
+    // Any answer confirmation is Help, so it is recorded before the child sees it.
     assistance?.(); update(next); setEditing(null); setFailure(null); setMessage(""); if (next.rule !== s.rule) setGuess(null);
   };
   // Help's words come from the saved rung, so a resumed round shows the same help it left with.

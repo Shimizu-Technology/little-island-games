@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ASSIST_ACTIONS, registration } from '../src/learn/games/tide-logic/challenge';
 import { FIRST_DARE, TIDE_BANKS, tidePuzzles } from '../src/learn/games/tide-logic/challenge-content';
-import { CLEAR, HELP, RUN, UNDO, answerOf, challengeEngine, helped, hintText, missOf, pick, right, setBlock, type Action, type Descriptor, type Payload, type State } from '../src/learn/games/tide-logic/challenge-engine';
+import { CLEAR, HELP, RUN, UNDO, answerOf, challengeEngine, helpLeft, helped, hintText, missOf, pick, right, setBlock, type Action, type Descriptor, type Payload, type State } from '../src/learn/games/tide-logic/challenge-engine';
 import { FRAMES } from '../src/learn/games/tide-logic/rules';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { jsonBytes } from '../src/state/saveBits';
@@ -115,6 +115,42 @@ describe('the replay engine', () => {
     }
     // One step reaches the answer one block at a time from any draft.
     for (const p of tidePuzzles) { const d = p.descriptor; let draft = wrongs(d)[1]; for (let i = 0; i < 8 && !right(d, draft); i++) draft = helped(d, draft, 2); expect(right(d, draft)).toBe(true); }
+  });
+  it('Help does not depend on the draft being wrong: it stays available on a right draft, records assistance, and the finish is never independent', () => {
+    for (const p of kinds) {
+      const d = p.descriptor, wrong = wrongs(d)[0];
+      // The last edit makes the draft right: the Help button must not change state, so it cannot reveal that.
+      let s = fill(start(p, p.dares.length ? [p.dares[0].slot] : []), d, wrong);
+      const beforeEdit = replayState(p, s);
+      expect(helpLeft(beforeEdit)).toBe(true);
+      const fixing = answerOf(d).map((o, i) => o === wrong[i] ? -1 : o);
+      s = fill(s, d, fixing);
+      const state = replayState(p, s);
+      expect(right(d, state.draft)).toBe(true); expect(helpLeft(state)).toBe(true);
+      // Asking Help on the right draft is accepted, changes no block, and marks the attempt helped.
+      s = move(s, HELP);
+      const helpedState = replayState(p, s);
+      expect(helpedState.draft).toEqual(state.draft); expect(helpedState.hints).toBe(1); expect(hintText(helpedState)).toMatch(/Press (Run|Check)/);
+      s = move(s, RUN);
+      expect(s.result?.event).toBe('helped'); expect(s.result?.dares).toEqual([]);
+    }
+  });
+  it('a Help-only Keep my plan finish is told it had help, not that it fixed a missed catch', () => {
+    const p = kinds[0], d = p.descriptor;
+    let s = fill(start(p), d, wrongs(d)[0].map(() => -1));
+    s = move(s, HELP);
+    const next = registration.restart!(s, 'round-2', emptyChallenge());
+    expect((next.payload as Payload).initial.prior).toMatchObject({ runs: 0, hints: 1 });
+    const done = move(fill(next, d, d.target.map((o, i) => o === replayState(p, s).draft[i] ? -1 : o)), RUN);
+    expect(done.result?.event).toBe('helped');
+    const facts = registration.completionFacts!(done)!;
+    expect(facts.helpUsed).toBe(true);
+    expect(registration.completionText!(p.ref, done.result!, facts)).not.toMatch(/read the bug/);
+    // A real miss with no Help still earns the bug-fix line.
+    let m = move(fill(start(p), d, wrongs(d)[0]), RUN);
+    m = registration.restart!(m, 'round-3', emptyChallenge());
+    const fixed = move(fill(m, d, d.target.map((o, i) => o === ((m.payload as Payload).initial.draft ?? [])[i] ? -1 : o)), RUN);
+    expect(registration.completionText!(p.ref, fixed.result!, registration.completionFacts!(fixed))).toMatch(/read the bug/);
   });
   it('refuses forged actions and work after the finish', () => {
     const p = kinds[0];

@@ -66,11 +66,13 @@ describe('School version 3 rounds', () => {
     expect(show.hint).toBe(3); expect(sorts(f, show.rule, row.target, row.belt)).toBe(true);
     expect(help(show)).toBeNull();
     expect(must(undo(show)).hint).toBe(0);
-    // A rule one block from right: One step finishes it, so Show rule is refused rather than recorded.
+    // A rule one block from right: One step finishes it, so Show rule only confirms and leaves the rule alone.
     const near = must(help(must(help(setRule(fresh(5), wrongRule(fresh(5)))))));
-    expect(sorts(f, near.rule, row.target, row.belt)).toBe(true); expect(help(near)).toBeNull();
-    // Once the rule sorts every catch, Help has nothing more to give.
-    expect(help(setRule(fresh(5), row.target))).toBeNull();
+    expect(sorts(f, near.rule, row.target, row.belt)).toBe(true); expect(must(help(near)).rule).toEqual(near.rule);
+    // Help on a rule that already sorts is never a free check: it records assistance and changes nothing else.
+    const confirmed = must(help(setRule(fresh(5), row.target)));
+    expect(confirmed.helped).toBe(true); expect(confirmed.hint).toBe(1); expect(confirmed.rule).toEqual(row.target);
+    expect(must(help(confirmed)).helped).toBe(true);
   });
   it('Undo walks back each block, Clear empties the rule, and the undo history stays bounded', () => {
     let s = fresh(3);

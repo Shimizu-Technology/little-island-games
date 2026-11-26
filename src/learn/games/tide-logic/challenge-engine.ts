@@ -24,6 +24,8 @@ export type Payload = ReplayPayload<Initial, Action>;
 export type State = {
   d: Descriptor; draft: number[]; undo: number[][]; last: string | null; runs: number; misses: number; edits: number;
   miss: number | null; hint: number; hints: number; won: boolean;
+  /** Help was pressed on a draft that was already right: it confirmed the answer, so the attempt counts as helped. */
+  confirmed: boolean;
 };
 /** The answer a draft is judged against: the target's rule, or (tracing) where the gate sends each catch. */
 export const answerOf = (d: Descriptor): number[] => d.kind === 'trace' ? routes(FRAMES[d.frame], d.target, d.belt) : d.target;
@@ -58,23 +60,24 @@ export function helped(d: Descriptor, draft: readonly number[], rung: number): n
   return rung >= 3 ? nearestAnswer(f, draft, d.target) : oneStep(f, draft, d.target, d.belt) ?? [...draft];
 }
 const keyOf = (draft: readonly number[]) => draft.join(',');
-const edited = (s: State, draft: number[], event: 'edit' | 'reset' = 'edit') => ({ state: { ...s, draft, undo: [...s.undo, s.draft].slice(-UNDO_DEPTH), edits: s.edits + 1, miss: null, hint: 0 }, event });
+const edited = (s: State, draft: number[], event: 'edit' | 'reset' = 'edit') => ({ state: { ...s, draft, undo: [...s.undo, s.draft].slice(-UNDO_DEPTH), edits: s.edits + 1, miss: null, hint: 0, confirmed: false }, event });
 export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> = {
   initial: () => ({ version: 1 }),
   validInitial: (v, d): v is Initial => plain(v) && v.version === 1 && Object.keys(v).every(k => ['version', 'draft', 'prior'].includes(k))
     && (!('draft' in v) || validDraft(d, v.draft))
     && (!('prior' in v) || plain(v.prior) && exactKeys(v.prior, ['runs', 'failed', 'hints']) && uint(v.prior.runs, 65535) && typeof v.prior.failed === 'boolean' && uint(v.prior.hints, 65535)),
-  create: (d, initial) => ({ d, draft: initial.draft ? [...initial.draft] : emptyDraft(d), undo: [], last: null, runs: 0, misses: 0, edits: 0, miss: null, hint: 0, hints: initial.prior?.hints ?? 0, won: false }),
+  create: (d, initial) => ({ d, draft: initial.draft ? [...initial.draft] : emptyDraft(d), undo: [], last: null, runs: 0, misses: 0, edits: 0, miss: null, hint: 0, hints: initial.prior?.hints ?? 0, won: false, confirmed: false }),
   // Help or a miss before Keep my plan stays on the record: the continued attempt is never independent after it.
   prior: initial => initial.prior ? { runs: initial.prior.runs, failed: initial.prior.failed || initial.prior.hints > 0 } : null,
   validAction: (v): v is Action => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= HELP,
   step: (s, a, d) => {
     if (s.won) return null;
     if (a === HELP) {
-      // A press that would add nothing (the ladder is used up, or the draft is already right) is refused, so Help cannot fill the log.
-      if (s.hint >= 3 || right(d, s.draft)) return null;
-      const rung = s.hint + 1, draft = helped(d, s.draft, rung), changed = keyOf(draft) !== keyOf(s.draft);
-      return { state: { ...s, draft, undo: changed ? [...s.undo, s.draft].slice(-UNDO_DEPTH) : s.undo, hint: rung, hints: s.hints + 1, miss: null }, event: 'help' };
+      // A press with the ladder used up is refused, so Help cannot fill the log. It never looks at the draft's correctness:
+      // confirming an already right draft is assistance too, so Help is no free check before Run.
+      if (s.hint >= 3) return null;
+      const rung = s.hint + 1, confirmed = right(d, s.draft), draft = confirmed ? [...s.draft] : helped(d, s.draft, rung), changed = keyOf(draft) !== keyOf(s.draft);
+      return { state: { ...s, draft, undo: changed ? [...s.undo, s.draft].slice(-UNDO_DEPTH) : s.undo, hint: rung, hints: s.hints + 1, miss: null, confirmed }, event: 'help' };
     }
     if (a === RUN) {
       // An unchanged rerun of a draft that already ran is a no-op, as is an unfinished one.
@@ -82,7 +85,7 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
       const ok = right(d, s.draft);
       return { state: { ...s, runs: s.runs + 1, misses: s.misses + (ok ? 0 : 1), last: keyOf(s.draft), won: ok, miss: ok ? null : missOf(d, s.draft) }, event: d.kind === 'trace' ? 'check' : 'run', correct: ok };
     }
-    if (a === UNDO) return s.undo.length ? { state: { ...s, draft: s.undo[s.undo.length - 1], undo: s.undo.slice(0, -1), edits: s.edits + 1, miss: null, hint: 0 }, event: 'edit' } : null;
+    if (a === UNDO) return s.undo.length ? { state: { ...s, draft: s.undo[s.undo.length - 1], undo: s.undo.slice(0, -1), edits: s.edits + 1, miss: null, hint: 0, confirmed: false }, event: 'edit' } : null;
     if (a === CLEAR) return s.draft.every(x => x === -1) ? null : edited(s, emptyDraft(d), 'reset');
     if (a >= PICK) {
       const i = (a - PICK) >> 1, side = (a - PICK) & 1;
@@ -95,12 +98,13 @@ export const challengeEngine: ReplayEngine<Descriptor, Initial, Action, State> =
   },
   inspect: s => ({ solved: s.won, metrics: {}, edits: s.edits, solution: s.won ? sha256Hex(`tide|${s.d.kind}|${keyOf(s.draft)}`) : null, objectives: [] }),
 };
-/** True while Help still has something to give. */
-export const helpLeft = (s: State) => !s.won && s.hint < 3 && !right(s.d, s.draft);
+/** True while Help still has a rung to give. Independent of whether the draft is right, so the button never hints at the answer. */
+export const helpLeft = (s: State) => !s.won && s.hint < 3;
 /** The words Help shows for the rung the attempt has reached. Pure, so a test can walk it. */
 export function hintText(s: State): string {
   const d = s.d, f = FRAMES[d.frame];
   if (s.hint <= 0) return '';
+  if (s.confirmed) return d.kind === 'trace' ? 'Every catch you traced matches the gate. Press Check.' : 'Your rule sorts every catch. Press Run.';
   if (d.kind === 'trace') {
     if (s.hint === 1) { const g = gateTrace(f, d.target, d.belt), first = g.findIndex(x => x.flips); return `Start at catch 1 with the gate pointing ${['left', 'right'][d.target[1]].toUpperCase()}. ${first < 0 ? 'No catch flips it.' : `Catch ${first + 1} is the first that flips it, as it arrives.`} After a flip the gate stays until the next flip.`; }
     return s.hint === 2 ? 'Help set one catch right. Keep following the gate from there.' : 'Help set every catch. Check to see the gate work.';

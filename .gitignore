@@ -47,3 +47,5 @@ yarn-error.*
 
 # Worktree-local simulator builds
 .derivedData/
+__pycache__/
+*.pyc

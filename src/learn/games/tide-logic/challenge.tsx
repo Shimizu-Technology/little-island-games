@@ -27,6 +27,12 @@ export const registration = defineReplayGame({
   Board: LazyBoard, controls: { help: (): Action => HELP, reset: (): Action => CLEAR },
   completionText: (_ref, result, facts) => result.event === 'independent' ? 'Your rule sorted every catch, first time on your own.' : facts?.failed && !facts.helpUsed ? 'You read the bug on the belt and fixed your rule.' : 'You kept going and the belt sorts right.',
 });
+// A continued attempt's earlier Help sits in its starting record, not in the new actions: it still counts as help, so a Help-only restart is never told it fixed a missed catch.
+const replayFacts = registration.completionFacts;
+registration.completionFacts = s => {
+  const facts = replayFacts?.(s) ?? null, prior = (s.payload as Payload).initial.prior;
+  return facts && prior && prior.hints > 0 ? { ...facts, helpUsed: true } : facts;
+};
 registration.dareHelp = 'Dares are optional. Help keeps your finish, but these dares need you to do it on your own.';
 const find = (s: ChallengeSession) => tidePuzzles.find(p => p.ref.bank === s.puzzle.bank && p.ref.puzzle === s.puzzle.puzzle && p.ref.hash === s.puzzle.hash);
 /** The attempt has used its ordinary room: the next edit could not be saved. Help can still finish; Keep my plan keeps editing. */

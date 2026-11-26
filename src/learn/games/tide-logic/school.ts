@@ -33,10 +33,11 @@ export function choose(s: TideV3, slot: number, option: number): TideV3 | null {
 }
 export function undo(s: TideV3): TideV3 | null { return s.running >= 0 || !s.undo.length ? null : { ...s, rule: s.undo[s.undo.length - 1], undo: s.undo.slice(0, -1), hint: 0 }; }
 export function clear(s: TideV3): TideV3 | null { return s.running >= 0 || s.rule.every(x => x < 0) ? null : withUndo(s, blank(frameOf(s.level))); }
-/** Help's ladder: Look, then One step (one block set right), then Show rule. Null when the rule already sorts every catch. */
+/** Help's ladder: Look, then One step (one block set right), then Show rule. Every press is assistance, even on a rule that already sorts: it then only confirms and leaves the rule alone. */
 export function help(s: TideV3): TideV3 | null {
   const row = currentRow(s), f = frameOf(s.level);
-  if (!row || s.running >= 0 || s.hint >= 3 || sorts(f, s.rule, row.target, row.belt)) return null;
+  if (!row || s.running >= 0 || s.hint >= 3) return null;
+  if (sorts(f, s.rule, row.target, row.belt)) return { ...s, hint: Math.max(1, s.hint), helped: true };
   const next = s.hint + 1, rule = next === 2 ? oneStep(f, s.rule, row.target, row.belt) ?? s.rule : next === 3 ? nearestAnswer(f, s.rule, row.target) : s.rule;
   return { ...s, rule, undo: rule === s.rule ? s.undo : [...s.undo, s.rule].slice(-UNDO_DEPTH), hint: next, helped: true };
 }
