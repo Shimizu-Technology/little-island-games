@@ -1,3 +1,4 @@
+import {roomIds} from '../src/home/catalogMore';
 import {describe,it,expect} from 'vitest';
 import {starterHome,migrateHome,instance,validHome,type HomeStateV2} from '../src/home/model';
 import {dropWorld,socketsOf} from '../src/home/interactions';
@@ -9,7 +10,7 @@ import {initializePersonalization} from '../src/personalization/model';
 import {emptySave,parseSave} from '../src/state/validation';
 import {preserveLearnerMigration} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
-const fixtures=()=>{const s=starterHome();s.version=3;delete s.rosterVersion;s.rooms.home={...s.rooms.home,characters:[{slot:0,anchor:'floor',pose:'stand',x:9,y:8}],instances:[instance('bed','bed',0,0)]};return s;};
+const fixtures=()=>{const s=starterHome();s.rooms=Object.fromEntries(roomIds.map(id=>[id,s.rooms[id]])) as typeof s.rooms;s.version=3;delete s.rosterVersion;s.rooms.home={...s.rooms.home,characters:[{slot:0,anchor:'floor',pose:'stand',x:9,y:8}],instances:[instance('bed','bed',0,0)]};return s;};
 const inside=(s:HomeStateV2,scale=1)=>{for(const room of Object.values(s.rooms))for(const i of room.instances){const p=itemPoint(i,room.instances),b=visualBox(i.item,i.rotation,i.mirrored);expect((p.x+b.left)*scale).toBeGreaterThanOrEqual(8*scale);expect((p.x+b.left+b.width)*scale).toBeLessThanOrEqual(792*scale);expect((p.y+b.top)*scale).toBeGreaterThanOrEqual(8*scale);expect((p.y+b.top+b.height)*scale).toBeLessThanOrEqual(552*scale);}};
 describe('native starter and repair acceptance',()=>{
  it.each([{width:390,height:844},{width:844,height:390},{width:402,height:874}])('contains every instance, including surface props, at $width×$height',viewport=>{

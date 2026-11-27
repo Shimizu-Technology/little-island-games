@@ -342,7 +342,7 @@ export function HomeScreen({
           (designing && !vertical ? portraitDrawerHeightFor(large) : 0)
       ),
     }),
-    [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight, large]
+    [window.width, window.height, vertical, designing, inset.bottom, headerHeight, navigationHeight, large]
   );
   const placeRoom = isGuamPlace(room) ? room : "home";
   const building = useMemo(
