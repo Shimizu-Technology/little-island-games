@@ -36,7 +36,9 @@ vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/ui', () => ({ C: {}, Button: 'key', Copy: 'p' }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const files = ['map', 'puzzles'].flatMap(dir => readdirSync(`assets/art/${dir}`).map(name => `assets/art/${dir}/${name}`));
+// Painted island backdrops are separate from the 19 Batch 1 square tiles.
+const files = ['map', 'puzzles'].flatMap(dir => readdirSync(`assets/art/${dir}`).map(name => `assets/art/${dir}/${name}`))
+  .filter(file => file !== 'assets/art/map/island-landscape.webp' && file !== 'assets/art/map/island-portrait.webp');
 async function mount(element: React.ReactElement) { let screen!: ReactTestRenderer; await act(async () => { screen = create(element); }); return screen; }
 const images = (screen: ReactTestRenderer) => screen.root.findAll(n => n.type === 'img');
 /** Mocked host names (`key`, `animated`, …) are plain strings, not JSX intrinsics. */

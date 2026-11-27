@@ -38,42 +38,48 @@ export const SAND_PATH_STROKE_WIDTH = 21;
 export const SAND_PATH_RADIUS = SAND_PATH_STROKE_WIDTH / 2;
 const ART_ASPECT = 0.85;
 const MAX_ART_WIDTH = 256;
-const WIDE_POINTS: Record<PlaceId, readonly [number, number]> = {
-  school: [.18, .40],
-  library: [.50, .40],
-  cove: [.82, .40],
-  home: [.18, .88],
-  arcade: [.50, .88],
-  hall: [.82, .88],
-};
 /** Common geometry for the 6-door scene, paths, hit targets and guide. Labels get their own space with zero overlap. */
 export function mapLayout(width: number, height: number, fontScale = 1) {
   const wide = width > height * 1.15;
   const scale = Math.max(1, fontScale);
   const labelHeight = Math.round(
     Math.max(
-      width < 360 ? 48 : 34,
+      48,
       scale >= 1.25 ? Math.max(62, 28 * Math.min(scale, 2.5)) : 26 * Math.min(scale, 2.5),
     ),
   );
   const edgePad = 6, topPad = 6, bottomPad = 8, gapX = width < 260 ? 6 : 10, gapY = 10;
+  const imageWidth = wide ? 1280 : 720, imageHeight = wide ? 720 : 1280;
+  const imageScale = Math.max(width / imageWidth, height / imageHeight);
+  const paintedPoints: Record<PlaceId, readonly [number, number]> = wide ? {
+    school: [.30, .36], library: [.505, .36], cove: [.715, .36],
+    home: [.30, .65], arcade: [.505, .65], hall: [.715, .65],
+  } : {
+    school: [.355, .31], library: [.66, .31], arcade: [.355, .50],
+    hall: [.66, .50], home: [.355, .69], cove: [.66, .69],
+  };
   const positioned = places.map(item => {
-    const point = wide ? WIDE_POINTS[item.id] : null;
-    const x = point?.[0] ?? item.x, y = point?.[1] ?? item.y;
+    const point = paintedPoints[item.id];
+    const x = Math.max(28 / width, Math.min(1 - 28 / width, (.5 * width + (point[0] - .5) * imageWidth * imageScale) / width));
+    const y = (.5 * height + (point[1] - .5) * imageHeight * imageScale) / height + .07;
     return { ...item, x, y, baseline: Math.min(y * height, height - labelHeight - bottomPad) };
   });
   const rowBaselines = [...new Set(positioned.map(p => p.baseline))].sort((a, b) => a - b);
   const minEdgeX = Math.min(...positioned.map(p => Math.min(p.x, 1 - p.x))) * width;
-  const minColDx = (wide ? .32 : .46) * width;
-  const maxArtWidthFromWidth = Math.min(width * (wide ? .29 : .44), 2 * (minEdgeX - edgePad), minColDx - gapX, MAX_ART_WIDTH);
+  const minColDx = (wide ? .205 * imageWidth : .305 * imageWidth) * imageScale;
+  const maxArtWidthFromWidth = Math.min(imageWidth * imageScale * (wide ? .17 : .26), 2 * (minEdgeX - edgePad), minColDx - gapX, MAX_ART_WIDTH);
   const verticalLimits = [rowBaselines[0] - topPad];
   for (let i = 1; i < rowBaselines.length; i++) verticalLimits.push(rowBaselines[i] - rowBaselines[i - 1] - labelHeight - gapY);
   const maxArtHeight = Math.max(44, Math.min(...verticalLimits));
-  const artWidth = Math.max(44, Math.min(maxArtWidthFromWidth, maxArtHeight / ART_ASPECT));
+  // Reserve a 30pt central corridor for the resting guide, independently of row height.
+  const horizontalBudget = wide ? Math.min(maxArtWidthFromWidth, minColDx - Math.min(96, width * .24, height * .20) * .607 - 8) : Math.min(maxArtWidthFromWidth, ...positioned.map(p => 2 * (Math.abs(p.x * width - width / 2) - 15)));
+  const labelWidth = Math.max(44, horizontalBudget);
+  const labelFontSize = width < 360 ? 12 : 14;
+  const artWidth = Math.max(44, Math.min(horizontalBudget, maxArtHeight / ART_ASPECT));
   const artHeight = artWidth * ART_ASPECT;
   return { wide, artWidth, artHeight, labelHeight, targets: positioned.map(place => ({ ...place,
     left: place.x * width - artWidth / 2, top: place.baseline - artHeight,
-    width: artWidth, height: artHeight + labelHeight,
+    width: artWidth, labelWidth, labelFontSize, height: artHeight + labelHeight,
     door: { x: place.x * width, y: place.baseline - artHeight * .09 },
   })) };
 }
@@ -82,7 +88,12 @@ export type MapLayout = ReturnType<typeof mapLayout>;
 export function guideStartPoint(layout: MapLayout, width: number, height: number): Point {
   const ys = layout.targets.map(target => target.door.y);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const preferredY = height * (layout.wide ? .62 : .55);
+  if (layout.wide) {
+    const left = layout.targets.find(target => target.id === 'school')!.door.x;
+    const center = layout.targets.find(target => target.id === 'library')!.door.x;
+    return { x: (left + center) / 2, y: (minY + maxY) / 2 };
+  }
+  const preferredY = height * .60;
   return { x: width * .5, y: Math.min(maxY, Math.max(minY, preferredY)) };
 }
 /** Shared sandy path centerlines in scene coordinates (pt), derived directly from actual door positions. */
@@ -90,6 +101,14 @@ export function terrainBranches(layout: MapLayout, width: number, _height?: numb
   const spineX = width * .5;
   const ys = layout.targets.map(target => target.door.y);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
+  if (layout.wide) {
+    const spineY = (minY + maxY) / 2;
+    const xs = layout.targets.map(target => target.door.x);
+    return [
+      [{ x: Math.min(...xs), y: spineY }, { x: Math.max(...xs), y: spineY }],
+      ...layout.targets.map(target => [target.door, { x: target.door.x, y: spineY }] as PathSegment),
+    ];
+  }
   const segments: PathSegment[] = [[{ x: spineX, y: minY }, { x: spineX, y: maxY }]];
   const rows = new Map<number, { y: number; xs: number[] }>();
   for (const target of layout.targets) {
@@ -114,13 +133,24 @@ export function terrainPathData(layout: MapLayout, width: number, height: number
 }
 /** Ordered polyline waypoints for the walking guide; every segment lies directly on `terrainBranches`. */
 export function guideWaypoints(from: Point, to: Point, layout: MapLayout, width: number, _height?: number): Point[] {
-  void layout;
+
   const spineX = width * .5;
   const points: Point[] = [from];
   const push = (pt: Point) => {
     const prev = points[points.length - 1];
     if (Math.hypot(pt.x - prev.x, pt.y - prev.y) > 0.01) points.push(pt);
   };
+  if (layout.wide) {
+    const ys = layout.targets.map(target => target.door.y);
+    const spineY = (Math.min(...ys) + Math.max(...ys)) / 2;
+    if (Math.abs(from.x - to.x) <= .01) push(to);
+    else {
+      push({ x: from.x, y: spineY });
+      push({ x: to.x, y: spineY });
+      push(to);
+    }
+    return points;
+  }
   if (Math.abs(from.y - to.y) <= 0.01) {
     push(to);
   } else {

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { startSession } from '../src/learn/session';
+import { IslandScene } from '../src/hub/IslandScene';
 import { mapLayout } from '../src/hub/model';
 import { wordWidth } from '../src/components/wordFit';
 
@@ -316,4 +317,41 @@ describe('HubScreen Clean 4.0 6-door map and dock', () => {
     expect(header.findByProps({ testID: 'hub-everything' })).toBeDefined();
     expect(header.findByProps({ testID: 'hub-settings' })).toBeDefined();
   });
+  it.each([[320, 568, 317], [320, 568, 297], [726, 390, 181], [568, 320, 180]])('scrolls without overlapping doors at %s×%s with %spt available', async (width, height, available) => {
+    Object.assign(viewport, { width, height, fontScale: 1 });
+    await act(async () => { screen = create(<HubScreen/>); });
+    await act(async () => screen!.root.findByType('section').props.onLayout({ nativeEvent: { layout: { height: available } } }));
+    const scene = screen!.root.findByType(IslandScene);
+    const sceneHeight = Number(scene.props.height);
+    expect(sceneHeight).toBe(width > height ? 245 : 355);
+    const layout = mapLayout(width, sceneHeight);
+    for (const a of layout.targets) for (const b of layout.targets) {
+      if (a.id === b.id) continue;
+      const horizontal = Math.min(a.x * width + a.labelWidth / 2, b.x * width + b.labelWidth / 2) - Math.max(a.x * width - a.labelWidth / 2, b.x * width - b.labelWidth / 2);
+      const vertical = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top);
+      expect(Math.max(0, horizontal) * Math.max(0, vertical)).toBe(0);
+    }
+  });
+
+  it('discards a measured portrait height immediately on rotation', async () => {
+    Object.assign(viewport, { width: 390, height: 844, fontScale: 1 });
+    await act(async () => { screen = create(<HubScreen/>); });
+    await act(async () => screen!.root.findByType('section').props.onLayout({ nativeEvent: { layout: { height: 654 } } }));
+    Object.assign(viewport, { width: 844, height: 390 });
+    await act(async () => screen!.update(<HubScreen/>));
+    expect(screen!.root.findByType(IslandScene).props.height).toBe(250);
+  });
+
+  it.each([[320, 568, 1], [320, 568, 1.35], [390, 844, 1], [844, 390, 1]])('keeps readable label words inside their independent pills at %s×%s scale %s', async (width, height, fontScale) => {
+    Object.assign(viewport, { width, height, fontScale });
+    await act(async () => { screen = create(<HubScreen/>); });
+    for (const id of ['cove', 'hall']) {
+      const pill = screen!.root.findByProps({ testID: `place-label-${id}` });
+      const text = pill.findByType('span');
+      const size = Number(flat(text.props.style).fontSize);
+      expect(size).toBeGreaterThanOrEqual(12);
+      for (const word of (text.props.children as string).split(' ')) expect(wordWidth(word) * size * Math.min(fontScale, 1.3)).toBeLessThanOrEqual(Number(flat(pill.props.style).width) - 7);
+    }
+  });
+
 });

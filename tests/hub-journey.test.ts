@@ -45,3 +45,16 @@ describe('map target geometry', () => {
   }
  });
 });
+
+describe('compact painted scene acceptance', () => {
+ it.each([[320,378],[844,250],[390,654],[1024,628]])('fits all six cottage and label bounds at %s×%s', (width, height) => {
+  const layout = mapLayout(width, height);
+  for (const a of layout.targets) {
+   expect(a.top).toBeGreaterThanOrEqual(0);
+   expect(a.top + a.height).toBeLessThanOrEqual(height);
+   for (const b of layout.targets.filter(b => b.id !== a.id)) {
+    expect(a.left < b.left + b.width && b.left < a.left + a.width && a.top < b.top + b.height && b.top < a.top + a.height).toBe(false);
+   }
+  }
+ });
+});
