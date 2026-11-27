@@ -1,13 +1,14 @@
 import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from 'expo-router';
 import { HomeScreen } from '../src/home/HomeScreen';
 import { instance, hydrateHome, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve } from '../src/home/scene/proposal';
 import { labFixtures } from '../src/home/runtime/lab';
 vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
-const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, design: {} as any, dest: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ focused: true, pop: undefined as undefined | ((event: any) => boolean), options: {} as any, chrome: {} as any, scene: {} as any, design: {} as any, dest: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
@@ -18,7 +19,9 @@ vi.mock('../src/home/runtime/homeSound', () => ({
       stop: () => {}, setLive: () => {}, silence: () => {}, dispose: () => {} };
   },
 }));
-vi.mock('expo-router', () => ({ router: { push: vi.fn() }, useFocusEffect: () => {} }));
+vi.mock('expo-router', () => ({ router: { push: vi.fn(), replace: vi.fn() }, useFocusEffect: () => {} }));
+vi.mock('../src/home/runtime/visibility', () => ({ useHomeVisible: () => harness.focused }));
+vi.mock('../src/home/webPopState', () => ({ registerWebPopStateHandler: (handler: any) => { harness.pop = handler; return () => { harness.pop = undefined; }; } }));
 vi.mock('react-native', () => ({ View: 'View', ScrollView: 'ScrollView', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }), AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
@@ -46,7 +49,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.focused = true; vi.mocked(router.replace).mockClear(); harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 async function open(state: HomeStateV2, persist: (state: HomeStateV2) => boolean = vi.fn((_s: HomeStateV2) => true)) {
   await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
@@ -170,4 +173,18 @@ it('Design accessible selection switches between props without moving the first 
   await act(async () => harness.scene.onSelect('home/item/second'));
   expect(harness.dest.selected).toBe('home/item/second');
   expect(persist).not.toHaveBeenCalled();
+});
+
+// A pushed Guam game must receive Back before Home becomes focused again.
+it('lets games return to their saved place without Home intercepting browser Back', async () => {
+  const state = hydrateHome(labFixtures['rig-menu-0']())!; state.current = 'tumon-beach';
+  const persist = await open(state);
+  harness.focused = false;
+  await act(async () => root.update(<HomeScreen initialState={state} persist={persist}/>));
+  expect(harness.pop!({ state: {} })).toBe(false);
+  expect(router.replace).not.toHaveBeenCalled();
+  harness.focused = true;
+  await act(async () => root.update(<HomeScreen initialState={state} persist={persist}/>));
+  expect(harness.pop!({ state: {} })).toBe(true);
+  expect(router.replace).toHaveBeenCalledWith('/');
 });

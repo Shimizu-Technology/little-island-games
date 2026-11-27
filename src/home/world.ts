@@ -64,7 +64,7 @@ export const capabilities: Partial<Record<ItemId, Capability>> = { ...Object.fro
  * a pan attempt must not move them. Cushions, plants, lamps and props stay movable.
  */
 export const anchoredInPlay: readonly ItemId[] = [
-  "bed", "bunk-bed", "hammock", "lounger", "sofa", "armchair", "chair", "rocking-chair", "bench", "stool", "bathtub", "bubble-bath",
+  "beach-blanket", "bbq-grill", "bed", "bunk-bed", "hammock", "lounger", "sofa", "armchair", "chair", "rocking-chair", "bench", "stool", "bathtub", "bubble-bath",
   "table", "kitchen-table", "coffee-table", "side-table", "desk", "computer-desk", "checkers",
   "cupboard", "shelf", "bookcase", "dresser", "books", "trophies", "toy-box",
   "fridge", "stove", "sink-counter", "tv", "aquarium", "arcade", "dollhouse",

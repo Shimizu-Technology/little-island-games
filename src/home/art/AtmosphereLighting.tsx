@@ -7,6 +7,8 @@ import { WeatherOverlay } from '../runtime/WeatherOverlay';
 
 /** Authored glass bounds in the painted 800 × 560 room. Curtains and wooden frames stay intact. */
 const windows: Record<RoomId, { x: number; y: number; width: number; height: number; round?: number }[]> = {
+  'tumon-beach': [],
+  'chamorro-village': [],
   home: [{ x: 174, y: 104, width: 57, height: 155 }, { x: 249, y: 104, width: 50, height: 155 }],
   kitchen: [{ x: 328, y: 99, width: 139, height: 133 }],
   treehouse: [{ x: 328, y: 106, width: 144, height: 144, round: 72 }],

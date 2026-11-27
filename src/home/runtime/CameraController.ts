@@ -97,6 +97,7 @@ export function roomAtScreen(x: number, y: number, camera: CameraMatrix, buildin
 /** HM-15 / HC-02: the sand below a ground-floor room, or -1. */
 export function shoreAtScreen(x: number, y: number, camera: CameraMatrix, building: Building): number {
   "worklet";
+  if (building.place !== undefined) return -1;
   const p = screenToRoom(screenPoint(x, y), camera, housePoint(0, 0));
   for (let i = 0; i < Math.min(building.columns, building.count); i++) {
     const origin = roomOrigin(i, building);

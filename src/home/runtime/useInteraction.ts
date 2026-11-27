@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
-import { roomIds, type RoomId } from "../catalogMore";
+import { locationIds as roomIds, type RoomId } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { transition, idleController, type ControllerState, type ControllerEvent } from "../scene/controller";
 import { screenToRoom, type CameraMatrix } from "../scene/camera";

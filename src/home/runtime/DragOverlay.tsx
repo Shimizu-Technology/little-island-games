@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, View } from "react-native";
 import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 import { paintedBounds } from "../art/silhouettes";
-import { roomIds } from "../catalogMore";
+import { locationIds as roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
 import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";

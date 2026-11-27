@@ -19,7 +19,7 @@ import type { Interaction } from "./useInteraction";
  */
 export const DRAWER_MS = 160;
 export { friendNames } from "../family";
-const roomIcon = { home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const;
+const roomIcon = { home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell", "tumon-beach": "shell", "chamorro-village": "lantern" } as const;
 export type FriendPlace = { waiting: boolean; room: RoomId };
 export function friendPlace(entity: SceneEntity): FriendPlace {
   return { waiting: entity.attachment.kind === "staging", room: entity.room };

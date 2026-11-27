@@ -1,5 +1,5 @@
 /** All building coordinates use the room art's 800-unit coordinate system. */
-export type Building = { columns:number; floors:number; width:number; height:number; roomHeight:number; roof:number; frame:number; gap:number; count:number };
+export type Building = { columns:number; floors:number; width:number; height:number; roomHeight:number; roof:number; frame:number; gap:number; count:number; locations?:boolean; place?:number };
 export function buildingLayout(count:number, wide=false):Building {
   const columns=Math.max(1,Math.min(count,wide?4:2)), floors=Math.max(1,Math.ceil(count/columns));
   return {columns,floors,count,width:columns*800+40,height:floors*560+(floors-1)*20+360,roomHeight:560,roof:120,frame:20,gap:20};
@@ -7,6 +7,8 @@ export function buildingLayout(count:number, wide=false):Building {
 /** Room order fills the ground floor first, then extends upwards. */
 export function roomOrigin(index:number,b:Building) {
   'worklet';
+  if (b.place !== undefined) return index === b.place ? { x: 0, y: 0 } : { x: -10000, y: -10000 };
+  if (b.locations && index >= 4) return { x: -10000, y: -10000 };
   return {x:b.frame+(index%b.columns)*800,y:b.roof+(b.floors-1-Math.floor(index/b.columns))*(b.roomHeight+b.gap)};
 }
 export function buildingRoomAt(x:number,y:number,b:Building) {
@@ -34,4 +36,11 @@ export function roomCamera(index:number,b:Building,scale:number,width:number,hei
   'worklet';
   const p=roomOrigin(index,b);
   return {x:boundedPan(width/2-(p.x+400)*scale,width,b.width*scale),y:boundedPan(height/2-(p.y+b.roomHeight/2)*scale,height,b.height*scale)};
+}
+
+/** House geometry remains exactly four rooms. Outdoor locations have their own 800 × 560 stage. */
+export function locationBuilding(index: number, wide = false): Building {
+  return index < 4 ? { ...buildingLayout(4, wide), count: 6, locations: true } : {
+    columns: 1, floors: 1, width: 800, height: 560, roomHeight: 560, roof: 0, frame: 0, gap: 0, count: 6, place: index,
+  };
 }

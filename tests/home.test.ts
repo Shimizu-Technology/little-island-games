@@ -18,7 +18,7 @@ const owned = { ownedItems:[...furnitureIds,'sticker:reef-fish'] };
 describe('versioned home saves and recovery', () => {
  it('starts with four independent valid rooms, free furniture and visiting characters', () => {
   const s=starterHome(); expect(validHome(s)).toBe(true); expect(validHome(clone(s))).toBe(true);
-  expect(Object.keys(s.rooms)).toEqual([...roomIds]); expect(room(s).instances.map(i=>i.item).sort()).toEqual(['bed','shelf','plant','lamp','rug','toy-box'].sort());
+  expect(Object.keys(s.rooms)).toEqual([...roomIds, "tumon-beach", "chamorro-village"]); expect(room(s).instances.map(i=>i.item).sort()).toEqual(['bed','shelf','plant','lamp','rug','toy-box'].sort());
   expect(room(s).characters).toHaveLength(6); expect(s.rooms.kitchen.characters).toEqual([]);
   expect(s.rooms.kitchen).not.toBe(s.rooms.beach);
  });
@@ -110,7 +110,7 @@ describe('room editing, stacking and colours',()=>{
   writeFileSync(`${process.env.POLISH_EVIDENCE}/fixture-surfaces.json`,JSON.stringify(save));
  });
  it('gives every new item an explicit scene size relative to the Islander',()=>{
-  expect(Object.keys(moreCatalog)).toHaveLength(64);
+  expect(Object.keys(moreCatalog)).toHaveLength(67);
   for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(Math.round(spec.itemSize*1.18));
   expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);

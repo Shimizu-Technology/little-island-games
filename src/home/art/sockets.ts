@@ -2,6 +2,7 @@ import type { Socket } from '../world';
 const socket = (id: string, kind: Socket['kind'], x: number, y: number, covered = true): Socket => ({ id, kind, at: [x / 150, y / 150], facing: kind === 'lie' ? 'left' : 'front', covered });
 /** Coordinates use the square SVG viewport, including its padding. */
 export const seatSockets: Record<string, readonly Socket[]> = {
+  'beach-blanket': [socket('left', 'sit', 49, 98, false), socket('right', 'sit', 104, 98, false), socket('lounge', 'lie', 34, 88, false)],
   bed: [socket('pillow', 'lie', 34, 73)],
   'bunk-bed': [socket('lower', 'lie', 34, 102), socket('upper', 'lie', 34, 42)],
   hammock: [socket('sling', 'lie', 35, 77)],

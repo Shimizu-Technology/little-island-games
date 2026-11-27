@@ -510,7 +510,7 @@ describe("audit property sweeps", () => {
               }
           }
     // The toy shelf no longer accepts new seats (HM-10); that is its 48 samples.
-    expect(samples).toBe(880);
+    expect(samples).toBe(1024);
   }, 120000);
   it("has no undefined or contact mismatch over the audit's dense starter-room grid (H15)", () => {
     let samples = 0;

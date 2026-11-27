@@ -1,3 +1,4 @@
+import { arrivalPoint, isGuamPlace } from "./locations";
 import { AtmospherePicker } from "./AtmospherePicker";
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as ReactNative from "react-native";
@@ -15,8 +16,8 @@ import { lockedReason, lookWithStyle, styleCatalog, type StyleItem } from "../pe
 import { HomeClosetSheet, closetSheetHeightRatio } from "./HomeClosetSheet";
 import { HomeBadgesSheet } from "./HomeBadgesSheet";
 import { registerWebPopStateHandler } from "./webPopState";
-import { buildingLayout, roomOrigin, type Building } from "./camera";
-import { roomIds, type RoomId } from "./catalogMore";
+import { locationBuilding, roomOrigin, type Building } from "./camera";
+import { locationIds as roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
 import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
 import {
@@ -138,6 +139,8 @@ function heroRoomInState(state: HomeStateV2): RoomId {
   return roomIds.find((id) => state.rooms[id].characters.some((c) => c.slot === 0)) ?? state.current;
 }
 
+const PlacesSheet = React.lazy(() => import("./PlacesSheet").then(module => ({ default: module.PlacesSheet })));
+
 export const REDO_VISIBLE_MS = 10000;
 export type HomeSheet = "closet" | "badges";
 export type HomeClosetConfig = {
@@ -199,6 +202,7 @@ export function HomeScreen({
     initialItem && itemIds.includes(initialItem) ? initialItem : undefined
   );
   const [atmosphereOpen, setAtmosphereOpen] = useState(false);
+  const [placesOpen, setPlacesOpen] = useState(false);
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState<RoomId>(() =>
       initialSheet === "closet" ? heroRoomInState(store.state) : store.state.current
@@ -341,14 +345,14 @@ export function HomeScreen({
     [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight, large]
   );
   const building = useMemo(
-    () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
-    [window.width, window.height]
+    () => locationBuilding(roomIds.indexOf(room), window.width / window.height > 1.8),
+    [room, window.width, window.height]
   );
   const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Navigation is outside the scene revision.
   const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]);
   // HC-02: ground-floor rooms have a beach whose shells can be picked up.
-  const shoreRooms = useMemo(() => roomIds.slice(0, building.columns), [building.columns]);
+  const shoreRooms = useMemo(() => building.place === undefined ? roomIds.slice(0, building.columns) : [], [building.place, building.columns]);
   const scene = useMemo(() => withPortions(baseScene, shoreRooms), [baseScene, shoreRooms]);
   const { sleeping, wake } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
@@ -374,9 +378,9 @@ export function HomeScreen({
   // F3: an undo note stays until the next message or a tap; reading is never timed.
   const [noteGone, setNoteGone] = useState<number>();
   const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
-  const live = useRef({ store, scene, selected, placing, room, designing, meals, activeSheet });
+  const live = useRef({ store, scene, selected, placing, room, designing, meals, activeSheet, visible });
   useLayoutEffect(() => {
-    live.current = { store, scene, selected, placing, room, designing, meals, activeSheet };
+    live.current = { store, scene, selected, placing, room, designing, meals, activeSheet, visible };
   });
   // H4: reactions, effects, sounds and cooking.
   const delight = useDelight({
@@ -748,15 +752,17 @@ export function HomeScreen({
     // P1-3: Switching rooms cancels any open Closet try-on draft so it never stays active offscreen.
     if (live.current.activeSheet === "closet") clearClosetDraft();
     setSelected(undefined);
+    setPlacesOpen(false);
     setMore(false);
     setFriends(false);
     setRoom(id);
     setOverview(false);
     live.current.store.dispatch({ type: "room", room: id });
     // HR-02: another floor is a door, not a jump; the same floor eases across.
-    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
+    const destinationBuilding = locationBuilding(roomIds.indexOf(id), window.width / window.height > 1.8);
+    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, destinationBuilding),
       !overview && floorOf(id) !== floorOf(room));
-  }, [building, clearClosetDraft, floorOf, overview, room, viewport]);
+  }, [clearClosetDraft, floorOf, overview, room, viewport, window.width, window.height]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     const current = live.current;
@@ -836,6 +842,12 @@ export function HomeScreen({
     },
     [onConsumeIntent, popWebSheetHistory]
   );
+  const openPlaces = useCallback(() => {
+    runtime.current?.cancelAll();
+    if (activeSheet === "closet") closeCloset();
+    else if (activeSheet === "badges") closeBadges();
+    setPlacesOpen(true); setAtmosphereOpen(false); setSelected(undefined); setFriends(false); setMore(false);
+  }, [activeSheet, closeCloset, closeBadges]);
   const goToMap = useCallback(() => {
     navigatingToMap.current = true;
     const r = router as typeof router & { dismissTo?: (href: string) => void };
@@ -843,6 +855,7 @@ export function HomeScreen({
     else router.replace?.("/");
   }, []);
   const handleBack = useCallback(() => {
+    if (placesOpen) { setPlacesOpen(false); return; }
     // P1-1: First Back closes an open Closet/Badges sheet; second Back reaches `/` (Map).
     if (activeSheet === "closet") {
       closeCloset();
@@ -853,7 +866,7 @@ export function HomeScreen({
       return;
     }
     goToMap();
-  }, [activeSheet, closeCloset, closeBadges, goToMap]);
+  }, [placesOpen, activeSheet, closeCloset, closeBadges, goToMap]);
   const closeClosetRef = useRef(closeCloset);
   const closeBadgesRef = useRef(closeBadges);
   const goToMapRef = useRef(goToMap);
@@ -876,6 +889,7 @@ export function HomeScreen({
         : undefined;
     if (!bh?.addEventListener) return;
     const sub = bh.addEventListener("hardwareBackPress", () => {
+      if (!live.current.visible) return false;
       handleBackRef.current();
       return true;
     });
@@ -961,6 +975,8 @@ export function HomeScreen({
       };
     };
     const onPopState = (event: PopStateEvent): boolean => {
+      // A game opened from a place owns Back until Home receives focus again.
+      if (!live.current.visible) return false;
       if (navigatingToMap.current) {
         // Let Expo Router's own history.go(...) settle cleanly while dismissing to "/".
         return false;
@@ -1201,6 +1217,10 @@ export function HomeScreen({
       interaction.camera.set(framed.camera);
       return;
     }
+    if (old.building.place !== building.place) {
+      interaction.camera.set(focusCamera(roomIds.indexOf(room), viewport, building));
+      return;
+    }
     const before = interaction.camera.get();
     const oldOrigin = roomOrigin(roomIds.indexOf(room), old.building),
       nextOrigin = roomOrigin(roomIds.indexOf(room), building);
@@ -1245,7 +1265,7 @@ export function HomeScreen({
   const hints = useRef<HintState>(freshHints(0));
   // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
   React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
-  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet && !atmosphereOpen;
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -1293,8 +1313,9 @@ export function HomeScreen({
       const c = interaction.camera.get();
       const start = !nearby && from
         ? screenToRoom(screenPoint(from.x - canvasOrigin.current.x, from.y - canvasOrigin.current.y), c, housePoint(0, 0)) : undefined;
+      const arrival = arrivalPoint(room, slot);
       runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
-        roomPoint(230 + (slot % 4) * 130, 490), { scale: c.a, release: true }), undefined, start);
+        roomPoint(arrival.x, arrival.y), { scale: c.a, release: true }), undefined, start);
     }
   };
   const find = () => {
@@ -1400,8 +1421,10 @@ export function HomeScreen({
   // Friends who are put away wait in the friends drawer, not in the basket (HR-01).
   const staged = Object.values(baseScene.entities).filter((e) => e.attachment.kind === "staging" && !e.character);
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }} onTouchStart={touched}>
+    <View style={{ flex: 1, overflow: "hidden", backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }} onTouchStart={touched}>
       <HomeChrome
+        onPlaces={openPlaces}
+        onGames={isGuamPlace(room) ? openPlaces : undefined}
         room={room}
         overview={overview}
         designing={designing}
@@ -1592,7 +1615,7 @@ export function HomeScreen({
           />
         )}
       </View>
-      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && (
         <Destinations
           scene={scene}
           selected={selected === storageId ? undefined : selected}
@@ -1616,7 +1639,8 @@ export function HomeScreen({
           }}
         />
       )}
-      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+      {placesOpen && <React.Suspense fallback={null}><PlacesSheet room={room} onRoom={goRoom} onClose={() => setPlacesOpen(false)} onGame={route => { interaction.cancelAll(); setPlacesOpen(false); router.push(route); }}/></React.Suspense>}
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
@@ -1642,6 +1666,7 @@ export function HomeScreen({
         onApply={pack => { dispatch({ type: "seasonal-pack", pack }); setAtmosphereOpen(false); }}
         onDecorate={item => { setAtmosphereOpen(false); setDesigning(true); setPlacing(item); }}/>}
       <HomePanels
+        outdoors={isGuamPlace(room)}
         more={more}
         friends={friends}
         bottom={inset.bottom + navigationHeight}
@@ -1681,7 +1706,7 @@ export function HomeScreen({
         onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
       <FriendDrawer
-        open={friends && !overview && !more && !activeSheet && !atmosphereOpen}
+        open={friends && !overview && !more && !activeSheet && !atmosphereOpen && !placesOpen}
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}

@@ -1,8 +1,9 @@
+import { defaultGuamRoom, guamPlaceIds, isGuamPlace } from "../locations";
 // Public contract: worklet resolution is independent of the JS validation/reducer graph.
 import { storageCapacity } from '../storage';
 import { itemSpec } from '../catalog';
 import type { DropProposal } from "./resolve";
-import { roomIds, type RoomId } from "../catalogMore";
+import { locationIds as roomIds, type RoomId } from "../catalogMore";
 import { validHome } from "../model";
 import { worldRevision } from "./spatial";
 import { characterEntityId, gridCell, gridToRoom, itemEntityId } from "./types";
@@ -15,9 +16,10 @@ export type { DropProposal, EntityMove, ResolveContext } from "./resolve";
 /** Resolve item/character IDs from the original room before atomically moving a group. */
 function locate(state: SceneState, id: EntityId): { room: RoomId; item?: Instance; character?: Character } | undefined {
   for (const room of roomIds) {
-    const character = state.rooms[room].characters.find((c) => characterEntityId(c.slot) === id);
+    const content = state.rooms[room] ?? (isGuamPlace(room) ? defaultGuamRoom(room) : state.rooms[room]);
+    const character = content.characters.find((c) => characterEntityId(c.slot) === id);
     if (character) return { room, character };
-    const item = state.rooms[room].instances.find((i) => itemEntityId(room, i.id) === id);
+    const item = content.instances.find((i) => itemEntityId(room, i.id) === id);
     if (item) return { room, item };
   }
 }
@@ -31,6 +33,7 @@ export function apply(
 ): { state: SceneState; identities: Record<EntityId, EntityId> } | { stale: true } {
   if (proposal.refusal === "storage-capacity") return { stale: true };
   if (worldRevision(state) !== proposal.revision || !roomIds.includes(proposal.room)) return { stale: true };
+  state = { ...state, rooms: { ...Object.fromEntries(guamPlaceIds.filter(id => !Object.hasOwn(state.rooms, id)).map(id => [id, defaultGuamRoom(id)])), ...state.rooms } };
   const moves = proposal.moves;
   if (!moves.length || new Set(moves.map((m) => m.id)).size !== moves.length) return { stale: true };
   const sources = new Map(moves.map((move) => [move.id, locate(state, move.id)]));

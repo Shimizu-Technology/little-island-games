@@ -1,7 +1,8 @@
+import { defaultGuamRoom, isGuamPlace } from "./locations";
 import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots } from "./family";
 import { itemSpec } from "./catalog";
-import { roomIds, type RoomId } from "./catalogMore";
+import { locationIds as roomIds, type RoomId } from "./catalogMore";
 import type { Character, HomeStateV2, Instance, RoomState } from "./model";
 
 /**
@@ -44,6 +45,7 @@ function canonical(v: unknown): unknown {
   if (!v || typeof v !== "object") return v;
   return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical((v as Record<string, unknown>)[k])]));
 }
+const roomAt = (state: HomeStateV2, id: RoomId): RoomState => state.rooms[id] ?? (isGuamPlace(id) ? defaultGuamRoom(id) : state.rooms[id]);
 const same = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
 function listPatch<T>(before: readonly T[], after: readonly T[], key: (v: T) => string | number) {
@@ -116,16 +118,16 @@ export function roomPatch(before: RoomState, after: RoomState): RoomPatch | unde
 export function undoStep(before: HomeStateV2, after: HomeStateV2): UndoStep {
   const step: UndoStep = {};
   for (const id of roomIds) {
-    const patch = roomPatch(before.rooms[id], after.rooms[id]);
+    const patch = roomPatch(roomAt(before, id), roomAt(after, id));
     if (patch) step[id] = patch;
   }
   if (!same(before.atmosphere, after.atmosphere)) step.atmosphere = before.atmosphere ?? null;
   return step;
 }
 export function applyUndoStep(after: HomeStateV2, step: UndoStep): HomeStateV2 {
-  const rooms = { ...after.rooms };
-  for (const id of roomIds) if (step[id]) rooms[id] = applyRoomPatch(after.rooms[id], step[id]!);
-  if (after.rosterVersion === 1 && roomIds.some(id => after.rooms[id].characters.some(c => c.slot >= 3))) {
+  const rooms = Object.fromEntries(roomIds.map(id => [id, roomAt(after, id)])) as HomeStateV2["rooms"];
+  for (const id of roomIds) if (step[id]) rooms[id] = applyRoomPatch(roomAt(after, id), step[id]!);
+  if (after.rosterVersion === 1 && roomIds.some(id => roomAt(after, id).characters.some(c => c.slot >= 3))) {
     const present = new Set(roomIds.flatMap(id => rooms[id].characters.map(c => c.slot)));
     const missing = familySlots.filter(slot => slot >= 3 && !present.has(slot));
     if (missing.length) rooms.home = { ...rooms.home, characters: [...rooms.home.characters,
@@ -140,7 +142,7 @@ export const undoBytes = (undo: HomeUndo) => JSON.stringify(undo).length;
 export type UndoEntry = { step: UndoStep; bytes: number; removal: boolean };
 /** Removed things: ids the step puts back that are nowhere in the home after the action. */
 export function undoEntry(step: UndoStep, after: HomeStateV2): UndoEntry {
-  const present = new Set(roomIds.flatMap((id) => after.rooms[id].instances.map((i) => i.id)));
+  const present = new Set(roomIds.flatMap((id) => roomAt(after, id).instances.map((i) => i.id)));
   const restored = roomIds.flatMap(id => { const patch = step[id]; return !patch ? [] : (
     "room" in patch! ? patch.room.instances.map((i) => i.id) : (patch.instances?.put ?? []).map((p) => p.value.id)); });
   return { step, bytes: JSON.stringify(step).length, removal: restored.some((id) => !present.has(id)) };

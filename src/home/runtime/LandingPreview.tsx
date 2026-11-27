@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { roomOrigin, type Building } from '../camera';
-import { roomIds } from '../catalogMore';
+import { locationIds as roomIds } from '../catalogMore';
 import type { Scene, SceneEntity } from '../scene/types';
 import type { CharacterRender } from './EntityArt';
 import type { Interaction } from './useInteraction';

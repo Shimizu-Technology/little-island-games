@@ -22,7 +22,7 @@ vi.mock('../src/arcade/Art', () => ({StickerArt: () => null}));
 const render = renderToStaticMarkup;
 describe('free home art contract', () => {
   it('supplies distinct, tintable art for every free item and each active reaction', () => {
-    expect(Object.keys(moreCatalog).filter(id=>moreCatalog[id].free)).toHaveLength(58);
+    expect(Object.keys(moreCatalog).filter(id=>moreCatalog[id].free)).toHaveLength(61);
     const silhouettes = new Set<string>();
     for (const [id, spec] of Object.entries(moreCatalog).filter(([,spec])=>spec.free)) {
       expect(spec.free).toBe(true);

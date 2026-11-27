@@ -1,6 +1,6 @@
 import { capabilityOf } from "../world";
 import { decorSpec, type ItemId } from "../catalog";
-import { roomIds } from "../catalogMore";
+import { locationIds as roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
 import type { DropProposal } from "../scene/resolve";
@@ -215,6 +215,8 @@ export const burps = (meal: number) => meal >= FIRST_BURP && (meal - FIRST_BURP)
 export const COOK_MS = 700;
 /** The stove whose pan this food is in. The save keeps it on the floor in front (see scene/pan). */
 export function stoveOf(scene: Scene, entity: SceneEntity): SceneEntity | undefined {
+  const parent = entity.attachment.kind === "surface" ? scene.entities[entity.attachment.parent] : undefined;
+  if (parent?.item?.item === "bbq-grill") return parent;
   const stove = entity.pan ? scene.entities[entity.pan] : undefined;
   return stove?.item?.item === "stove" ? stove : undefined;
 }
