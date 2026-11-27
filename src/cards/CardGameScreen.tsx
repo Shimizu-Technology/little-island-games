@@ -1,3 +1,4 @@
+import { C, Button, Copy, Heading } from "../board/WarmUI";
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { resultEvent } from "../islander/reactions";
@@ -10,7 +11,7 @@ import { PlayerNames, Scoreboard } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { GuidanceKey, QUALITY_GUIDANCE } from "../explore/guidance";
 import Svg, { Circle, Path, Polygon } from "react-native-svg";
-import { Button, C, Copy, GameHeader, Heading, Label, PressableScale, Sheet, font, ToggleRow } from "../components/ui";
+import { GameHeader, Label, PressableScale, Sheet, font, ToggleRow } from "../components/ui";
 import {
   Card,
   cardPublicView, goFishAdvice,

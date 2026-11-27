@@ -68,7 +68,7 @@ it.each([1,3.12])('plain Sudoku cells keep their original notes and geometry at 
  const before=JSON.stringify(screen!.toJSON());
  const first=screen!.root.findAllByType('button').find(b=>b.props.accessibilityLabel?.startsWith('Row 1, column 1,'))!;
  expect(first.props.style.width).toBe(42);
- expect(first.findByType('span').props.style).toEqual({color:undefined,fontSize:8,lineHeight:10.5,fontVariant:['tabular-nums'],textAlign:'center'});
+ expect(first.findByType('span').props.style).toEqual({color:'#3D2B24',fontSize:8,lineHeight:10.5,fontVariant:['tabular-nums'],textAlign:'center'});
  await act(async()=>screen!.update(render({cornerClues:()=>new Map()})));
  expect(JSON.stringify(screen!.toJSON())).toEqual(before);
 });

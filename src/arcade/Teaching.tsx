@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Animated, View } from "react-native";
-import { Button, C, Copy, Heading } from "../components/ui";
+import { Button, C, Copy, Heading } from "../board/WarmUI";
 import { nativeDriver, useReducedMotion } from "../components/motion";
 import { ReefFish, Shell } from "./Art";
 import { CargoTeaching } from "./games/canoe-cargo/Teaching";
@@ -17,7 +17,7 @@ export function Teaching({ game, learning, onPlay, onHear }: { game: ArcadeGame;
   }, [replay, reduced, move]);
   if (game.id === "canoe-cargo") return <CargoTeaching learning={learning} onHear={onHear} onPlay={onPlay}/>;
   const reef = game.id === "reef-builder";
-  return <View style={{ gap: 16, alignItems: "center" }}>
+  return <View style={{ gap: 16, alignItems: "center", backgroundColor: "#FFFDF8", padding: 16, borderRadius: 24 }}>
     <Heading>{reef ? learning ? "Two number friends make ten" : "A little coral. A happy fish." : learning ? "Sounds make a word" : "The shore sings. You echo."}</Heading>
     {reef ? <>
       <ReefFish size={100}/><View style={{ width: 288, height: 140, backgroundColor: "#D1E8DF", borderRadius: 18, overflow: "hidden", padding: 16 }}>

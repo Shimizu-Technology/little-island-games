@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Button, Chip, Copy, IconButton, Heading, styles } from "../components/ui";
+import { Chip } from "../board/WarmUI";
+import { Button, Copy, IconButton, Heading, styles } from "../components/ui";
 import { Text, TextFit, entryRegion } from "../components/Text";
 import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
 import { GameCards } from "../components/GameShelf";
@@ -37,7 +38,7 @@ function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "ex
   return <TextFit.Provider value={entryRegion(fontScale, line)}><SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}><ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 14 }]}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 }}>
       {large || wrapTitle ? <IconButton icon="back" label="Back to islands" onPress={() => router.canGoBack() ? router.back() : router.replace("/")} /> : <Button compact quiet icon="back" label="Back to islands" onPress={() => router.canGoBack() ? router.back() : router.replace("/")}>Islands</Button>}
-      <Text accessibilityRole="header" numberOfLines={large || wrapTitle ? 2 : 1} adjustsFontSizeToFit={!large && !wrapTitle} minimumFontScale={0.75} maxFontSizeMultiplier={large ? wordFitMultiplier(islandNames[island], 21, line - 56, 1.5) : undefined} style={{ flex: 1, fontSize: 21, color: "#3D2B24", ...bold }}>{islandNames[island]}</Text>
+      <Text accessibilityRole="header" numberOfLines={large || wrapTitle ? 2 : 1} adjustsFontSizeToFit={!large && !wrapTitle} minimumFontScale={0.75} maxFontSizeMultiplier={large ? wordFitMultiplier(islandNames[island], 21, line - 56, 1.5) : undefined} style={{ flex: 1, fontSize: 21, color: "#3D2B24", ...bold }}>{island === 'classic' ? 'Game Hall' : islandNames[island]}</Text>
     </View>
     <SaveStatus />
     <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]} accessible={false} importantForAccessibility="no">

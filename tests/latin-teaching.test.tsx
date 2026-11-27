@@ -206,6 +206,6 @@ describe('technique ids are never shown to children (lead rule)', () => {
   });
   it('the board header names the skill in words', async () => {
     const screen = await board(sudokuOf(4, corpus.find(r => r[1] === 4)![2]), undefined, 'Friendly', 'naked-pair');
-    try { expect(text(screen)).toContain('skill: A matching pair'); expect(text(screen)).not.toMatch(/naked/i); } finally { await act(async () => screen.unmount()); }
+    try { expect(text(screen)).toContain('A matching pair'); expect(text(screen)).not.toMatch(/naked/i); } finally { await act(async () => screen.unmount()); }
   });
 });

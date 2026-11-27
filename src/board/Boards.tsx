@@ -1,8 +1,9 @@
+import { C, Button, Copy } from "./WarmUI";
 import React, { useEffect, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Line, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
-import { Button, C, Copy, PressableScale, font } from "../components/ui";
+import { PressableScale, font } from "../components/ui";
 import { CHROME_MAX, atLarge } from "../components/wordFit";
 import { other } from "../games/match";
 import { Piece } from "./Art";

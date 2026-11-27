@@ -16,6 +16,7 @@ vi.mock("../src/components/ui", () => ({
   C: { ink: "#000", teal: "#0aa", sand: "#eee", paper: "#fff", muted: "#666", gold: "#c90" },
   Button: "button",
   Copy: "p",
+  Heading: "h2",
   Controls: "div",
   PressableScale: "button",
   Status: ({ title, detail }: { title: string; detail?: string }) => <p>{`${title} | ${detail ?? ""}`}</p>,

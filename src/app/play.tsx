@@ -1,3 +1,4 @@
+import { Chip, C, Button, Copy, Heading } from "../board/WarmUI";
 import { classicPaceLabel } from "../games/classics/labels";
 import { learnSources } from "../content/learnAudio";
 import { numberLimit, numbersStatus } from "../games/numbers";
@@ -37,7 +38,7 @@ import {
   WORDS,
 } from "../games/words";
 import { useStore } from "../state/Store";
-import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles, ToggleRow } from "../components/ui";
+import { GameHeader, Sheet, styles, ToggleRow } from "../components/ui";
 import { useSounds } from "../components/Audio";
 import { useRoundPractice } from "../practice/useRoundPractice";
 import { headStarts, rivalFor } from "../playPolicies/rivals";
@@ -74,6 +75,7 @@ function Game({ id }: { id: GameId }) {
     [xSeat, setXSeat] = useState<Seat>(0),
     [alternate, setAlternate] = useState(true),
     [human, setHuman] = useState<Mark>("X");
+  const [starterPairs, setStarterPairs] = useState<2 | 4 | undefined>(s?.game === "memory" ? s.starterPairs : undefined);
   const [memoryPack, setMemoryPack] = useState<MemoryPack>(s?.game === "memory" ? s.pack ?? "pictures" : "pictures");
   const [showSecret, setShowSecret] = useState(false),
     [clue, setClue] = useState("");
@@ -123,7 +125,7 @@ function Game({ id }: { id: GameId }) {
         }
         next = custom;
       } else next = createWord(options, category, s?.game === "word-rescue" ? s.seen : []);
-    } else if (id === "memory") next = createMemory(options, starter, memoryPack);
+    } else if (id === "memory") next = createMemory(options, starter, memoryPack, starterPairs);
     else next = createGame(id, options);
     if (next.game === "numbers" && s?.game === "numbers" && s.options.difficulty === options.difficulty && s.bestRemaining !== undefined) next = { ...next, bestRemaining: s.bestRemaining };
     if (next.game === "tic-tac-toe" || next.game === "memory" || next.game === "checkers") {
@@ -155,7 +157,10 @@ function Game({ id }: { id: GameId }) {
     });
   }
   function newRound() {
-    if (s?.game === "memory") setMemoryPack(s.pack ?? "pictures");
+    if (s?.game === "memory") {
+      setMemoryPack(s.pack ?? "pictures");
+      setStarterPairs(s.starterPairs);
+    }
     setOptions(
       s?.options ?? {
         ...defaultOptions,
@@ -246,7 +251,7 @@ function Game({ id }: { id: GameId }) {
         )}
         <SaveStatus />
         {s && s.options.mode === "solo" && (s.game === "memory" || s.game === "checkers") && <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}><IslanderPortrait look={look}/><Copy>You</Copy></View>}
-        <View style={{ backgroundColor: g.surface, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
+        <View style={{ backgroundColor: C.cream, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
           {s?.game === "tic-tac-toe" ? (
             <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
           ) : s?.game === "word-rescue" ? (
@@ -565,6 +570,8 @@ function Game({ id }: { id: GameId }) {
           ))}
         {id === "memory" && (
           <>
+          <Heading style={{ fontSize: 18 }}>Board size</Heading>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{([2, 4, undefined] as const).map(pairs => <Chip key={pairs ?? "standard"} selected={starterPairs === pairs} onPress={() => setStarterPairs(pairs)}>{pairs ? `${pairs} pairs · gentle start` : "6 / 8 / 12 pairs"}</Chip>)}</View>
           <Heading style={{ fontSize: 18 }}>Cards</Heading>
           <View style={[styles.row, { flexWrap: "wrap" }]}>
             <Chip selected={memoryPack === "pictures"} onPress={() => setMemoryPack("pictures")}>Pictures</Chip>
@@ -573,7 +580,7 @@ function Game({ id }: { id: GameId }) {
           </View>
           {memoryPack === "chamoru" && <Copy>Match each picture with its CHamoru word. Small English words help you compare. CHamoru words are text only.</Copy>}
           <Copy>
-            {options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"}{" "}
+            {starterPairs ? String(starterPairs) : options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"}{" "}
             {memoryPack !== "pictures" ? "picture and word pairs." : "picture pairs."}{" "}
             {options.mode === "solo"
               ? "Practice with a peek whenever you need one."

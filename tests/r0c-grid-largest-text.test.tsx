@@ -34,8 +34,8 @@ it('AX5: the status line is one capped sentence with the full spoken count, and 
   await mountBoard();
   const line = screen!.root.findByProps({ testID: 'puzzle-status-line' });
   expect(line.props.maxFontSizeMultiplier).toBe(1.3);
-  expect(line.props.accessibilityLabel).toBe('Sprout 1. Skill: One number left. 2 of 16 cells filled');
-  expect(textOf(line)).toBe('Sprout 1 · skill: One number left · 2/16');
+  expect(line.props.accessibilityLabel).toBe('Sprout 1. One number left. 2 of 16 cells filled');
+  expect(textOf(line)).toBe('Sprout 1 · One number left · 2/16');
   for (const label of ['How to play', 'Hint']) expect(named(label).props.maxFontSizeMultiplier, label).toBe(1.3);
   for (const label of ['Undo', 'Redo', 'Notes off', 'Number first off', 'Clashes shown', 'Start over']) expect(named(label).props.maxFontSizeMultiplier, label).toBeLessThanOrEqual(1.3);
 });
@@ -67,7 +67,7 @@ it('default size: status stays separate and the approved Erase word fit prevents
   await mountBoard();
   expect(screen!.root.findAllByProps({ testID: 'puzzle-status-line' })).toHaveLength(0);
   const facts = screen!.root.findByProps({ testID: 'puzzle-status' }).findAllByType('p' as never);
-  expect(facts.map(textOf)).toEqual(['Sprout 1', '· skill: One number left', '· 2/16']);
+  expect(facts.map(textOf)).toEqual(['Sprout 1', '· One number left', '· 2/16']);
   expect(facts[2].props.accessibilityLabel).toBe('2 of 16 cells filled');
   const erase = buttons().find(b => b.props.label === 'Erase')!;
   expect(erase.props.style.paddingHorizontal).toBe(4);
@@ -92,5 +92,5 @@ it.each([[393, 'full row'], [852, 'beside the buttons']])('PuzzleStatus at AX5 a
   await act(async () => { screen = create(<PuzzleStatus title="Harbour 3" skill="Only one place" count="13/36" countLabel="13 of 36 cells filled"><span>buttons</span></PuzzleStatus>); });
   const line = screen!.root.findByProps({ testID: 'puzzle-status-line' });
   expect(line.props.style).toEqual(width === 393 ? { width: '100%' } : { flex: 1, minWidth: 0 });
-  expect(textOf(line)).toBe('Harbour 3 · skill: Only one place · 13/36');
+  expect(textOf(line)).toBe('Harbour 3 · Only one place · 13/36');
 });

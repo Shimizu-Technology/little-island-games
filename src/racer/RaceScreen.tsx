@@ -1,10 +1,11 @@
+import { C, Button, Copy, Heading } from "../board/WarmUI";
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
-import { Button, C, Copy, GameHeader, Heading, PressableScale, Sheet } from "../components/ui";
+import { GameHeader, PressableScale, Sheet } from "../components/ui";
 import { useReducedMotion } from "../components/motion";
 import { COURSES, CourseId, raceCourse } from "./courses";
 import {
@@ -470,7 +471,8 @@ export function RaceScreen({ session, records = {}, earlierRecords = {}, onSave,
                   </Text>
                 ))}
               <View style={s.row}>
-                <Button onPress={() => begin(snapshot.course, "practice")}>Play again · untimed Practice</Button>
+                <Button onPress={() => begin(snapshot.course, snapshot.mode)}>{snapshot.mode === "race" ? "Race again" : "Play again · untimed Practice"}</Button>
+                {snapshot.mode === "race" && <Button quiet onPress={() => begin(snapshot.course, "practice")}>Untimed Practice</Button>}
                 <Button quiet onPress={() => { setMode("practice"); setChoosing(true); }}>
                   Choose a course
                 </Button>

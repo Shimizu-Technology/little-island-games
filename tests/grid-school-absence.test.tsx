@@ -32,7 +32,7 @@ const source = readFileSync('src/puzzles/grid/GridShell.tsx', 'utf8');
 const gestureHash = hash(source.slice(source.indexOf('  const responder ='), source.indexOf('  const panStyle =')));
 const cornerHash = hash(readFileSync('src/puzzles/grid/cornerNotes.ts', 'utf8'));
 type Baseline = { source: string; gestureHash: string; cornerHash: string; cases: Record<string, string> };
-const baseline: Baseline = capture ? { source: '23744722 (merged frame/R1a, before schoolLayout)', gestureHash, cornerHash, cases: {} } : JSON.parse(readFileSync(fixture, 'utf8'));
+const baseline: Baseline = capture ? { source: 'e799849 (Clean 4 warm GridShell palette; gestures and corner implementation unchanged)', gestureHash, cornerHash, cases: {} } : JSON.parse(readFileSync(fixture, 'utf8'));
 // Preserve missing-vs-undefined props and every layout value; callbacks compare
 // their callable signature rather than identities allocated by different renders.
 const signature = (tree: unknown) => JSON.stringify(tree, (_key, v) => typeof v === 'function' ? { function: v.name, arity: v.length } : v === undefined ? { undefined: true } : v);

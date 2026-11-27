@@ -1,11 +1,13 @@
+import { Status, C, Button, Copy } from "../../board/WarmUI";
 
 import { Text } from "../../components/Text";
 import React, { useEffect, useMemo, useState } from "react";
+import Svg, { Path } from "react-native-svg";
 import { View } from "react-native";
 
 import { checkersResultSeat, CheckersState, CheckersMove, checkersChoice, checkersRules, checkersLesson, checkersMoves, checkersMove, checkersUndo, finishCheckersLessons, LESSONS, row, col } from "../../games/checkers";
 
-import { Button, C, Controls, Copy, Status } from "../../components/ui";
+import { Controls } from "../../components/ui";
 import { Scoreboard } from "../../components/Match";
 import { newMatch } from "../../games/match";
 
@@ -242,9 +244,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
                       }}
                     >
                       {Math.abs(piece) === 2 ? (
-                        <Text style={{ fontSize: cellSize * 0.38, fontWeight: "900", color: "#FFF6DB" }}>
-                          K
-                        </Text>
+                        <Svg width={cellSize * .48} height={cellSize * .4} viewBox="0 0 30 24" accessible={false}><Path d="M3 5L9 11L15 2L21 11L27 5L24 21H6Z" fill="#FFD56A" stroke="#68451B" strokeWidth="2"/></Svg>
                       ) : (
                         <View
                           style={{
@@ -342,7 +342,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
         </Controls>
       )}
       <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 12 }}>
-        Kings have a K.{" "}
+        Kings wear a golden crown.{" "}
         {s.options.mode === "solo"
           ? "Your red pieces start at the bottom and move up."
           : "Red starts at the top and moves down."}{" "}

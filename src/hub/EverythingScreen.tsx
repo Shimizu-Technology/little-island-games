@@ -29,7 +29,7 @@ export default function EverythingScreen() {
  const favorites = store.save.favoriteGames ?? [], resume = homeContinue(store.save);
  const ideas = dailySuggestions(store.save, undefined, shuffle).map(id => shelfGames.find(game => game.id === id)!);
  const rows = (games: ShelfGame[]) => games.map(game => <View key={game.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: C.line, backgroundColor: C.paper, borderRadius: 22, padding: 12, marginTop: 10 }}>
-  <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}`} onPress={() => openGame(game.id)} style={{ flex: 1, flexDirection: narrow ? 'column' : 'row', gap: 12, alignItems: narrow ? 'flex-start' : 'center', paddingVertical: 6 }}><GameIcon id={game.id} size={52}/><View style={{ flex: 1, ...(narrow ? { width: '100%' as const } : {}) }}><Heading style={{ fontSize: 18 }}>{game.name}</Heading><Copy style={{ fontSize: 14, lineHeight: 20 }}>{game.description}</Copy></View></PressableScale>
+  <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}`} onPress={() => openGame(game.id)} style={{ flex: 1, flexDirection: narrow ? 'column' : 'row', gap: 12, alignItems: narrow ? 'flex-start' : 'center', paddingVertical: 6 }}><GameIcon id={game.id} size={52}/><View style={{ flex: 1, ...(narrow ? { width: '100%' as const } : {}) }}><Heading style={{ fontSize: 18 }}>{game.name}</Heading><Copy style={{ fontSize: 15, lineHeight: 21 }}>{game.description}</Copy></View></PressableScale>
   <IconButton icon={favorites.includes(game.id) ? 'star-filled' : 'star'} selected={favorites.includes(game.id)} label={`${favorites.includes(game.id) ? 'Remove favorite' : 'Favorite'} ${game.name}`} onPress={() => store.toggleGameFavorite(game.id)}/>
  </View>);
  const fav = <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Favorites</Heading>{favorites.length ? rows(shelfGames.filter(game => favorites.includes(game.id))) : <Copy>Tap a star beside a game to keep it here.</Copy>}</View>;
@@ -41,7 +41,7 @@ export default function EverythingScreen() {
  return <TextFit.Provider value={region}><SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
   {!scrollBar && bar}
   {!scrollBar && <SaveStatus/>}
-  <ScrollView contentContainerStyle={{ width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, gap: 28 }}>
+  <ScrollView contentContainerStyle={{ width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, gap: 32 }}>
    {scrollBar && <>{bar}<SaveStatus/></>}
    {section === 'favorites' ? <>{fav}<CoveLists favorites/></> : section === 'ideas' ? suggestions : <>
     <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Continue</Heading>{resume ? <><Copy>{returnLabel(resume)}</Copy>{rows([shelfGames.find(game => game.id === resume)!])}</> : <Copy>Saved games will be here when you’re ready.</Copy>}</View>
@@ -51,7 +51,7 @@ export default function EverythingScreen() {
      {places.map(place => <PressableScale key={place.id} accessibilityRole="button" accessibilityLabel={`Visit ${place.name}`} onPress={() => router.push(placeRoute(place.id))} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8, borderBottomColor: C.line, borderBottomWidth: 1 }}><View style={{ width: 84, height: 66 }}><Landmark id={place.id}/></View><View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>{place.name}</Heading><Copy>{place.hint}</Copy></View></PressableScale>)}
      <View style={{ gap: 6, marginTop: 6 }}>
       <Heading style={{ fontSize: 18 }}>Inside Home</Heading>
-      {homeShortcuts.map(item => <PressableScale key={item.id} testID={`home-shortcut-${item.id}`} accessibilityRole="button" accessibilityLabel={`Open ${item.name} in Home`} onPress={() => router.push(item.route)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFE3D6' }}><View style={{ flex: 1 }}><Heading style={{ fontSize: 18 }}>{item.name}</Heading><Copy style={{ fontSize: 14, lineHeight: 20 }}>{item.hint}</Copy></View></PressableScale>)}
+      {homeShortcuts.map(item => <PressableScale key={item.id} testID={`home-shortcut-${item.id}`} accessibilityRole="button" accessibilityLabel={`Open ${item.name} in Home`} onPress={() => router.push(item.route)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFE3D6' }}><View style={{ flex: 1 }}><Heading style={{ fontSize: 18 }}>{item.name}</Heading><Copy style={{ fontSize: 15, lineHeight: 21 }}>{item.hint}</Copy></View></PressableScale>)}
      </View>
     </View>
     <View testID="all-games"><Heading style={{ fontSize: 24 }}>All games</Heading>{rows(shelfGames)}</View>

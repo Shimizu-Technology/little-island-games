@@ -1,10 +1,11 @@
+import { C, Button, Copy, Heading } from "../board/WarmUI";
 import { BadgeResultCard } from '../badges/ResultCard';
 import type { RoundPractice } from "../practice/useRoundPractice";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
 import { AdventurePlay } from "./AdventurePlay";
 import { mysteryInstructions } from "./instructions";
-import { Button, C, Copy, Heading, Label, Sheet, Status, font, GameHeader } from "../components/ui";
+import { Label, Sheet, Status, font, GameHeader } from "../components/ui";
 import { nearby, nearbyUnavailable } from "../../modules/island-nearby";
 import { MysteryIntent, MysterySession, Role, playSoloIntent, createMysterySession, mysteryView, TASKS, PUMP, BELL } from "./engine";
 import { NearbyMystery, NearbyState } from "./nearby";

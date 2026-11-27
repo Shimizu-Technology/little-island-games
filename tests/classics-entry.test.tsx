@@ -10,7 +10,7 @@ vi.mock("expo-router", () => ({ Redirect: () => null, useIsFocused: () => fixtur
 vi.mock("react-native", () => ({ View: "div", ScrollView: "section", TextInput: "input", AppState: { currentState: "active", addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1 }) }));
 vi.mock("react-native-safe-area-context", () => ({ SafeAreaView: "main", useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 vi.mock("../src/state/Store", () => ({ useStore: () => ({ ready: true, recovery: false, epoch: 0, save: { sessions: fixture.sessions, settings: { sound: false, help: true } }, update: fixture.update, settings() {} }) }));
-vi.mock("../src/components/ui", () => ({ Button: "button", Chip: "button", Copy: "p", Heading: "h2", GameHeader: () => null, ToggleRow: () => null, C: {}, styles: { page: {}, content: {}, row: {} }, Sheet: ({ visible, children, footer }: { visible: boolean; children: React.ReactNode; footer?: React.ReactNode }) => visible ? <aside>{children}{footer}</aside> : null }));
+vi.mock("../src/components/ui", () => ({ Button: "button", PressableScale: "button", Chip: "button", Copy: "p", Heading: "h2", GameHeader: () => null, ToggleRow: () => null, C: {}, styles: { page: {}, content: {}, row: {} }, Sheet: ({ visible, children, footer }: { visible: boolean; children: React.ReactNode; footer?: React.ReactNode }) => visible ? <aside>{children}{footer}</aside> : null }));
 vi.mock("../src/components/Audio", () => ({ useSounds: () => () => {} }));
 vi.mock("../src/content/learnAudio", () => ({ learnSources: {} }));
 vi.mock("../src/components/Match", () => ({ PlayerNames: () => null }));

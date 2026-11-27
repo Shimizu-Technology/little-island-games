@@ -1,6 +1,7 @@
+import { Status, Button, Copy } from "../../board/WarmUI";
 import React, { useEffect, useState } from "react";
 import { MemoryState, closeMismatch, flipCard, memoryDone, memoryResult, memoryUndo } from "../../games/memory";
-import { Button, Controls, Copy, Status } from "../../components/ui";
+import { Controls } from "../../components/ui";
 import { Scoreboard } from "../../components/Match";
 import { newMatch } from "../../games/match";
 import { type Props, BoardArea, BoardLayout } from "./shared";
