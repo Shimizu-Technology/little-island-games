@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import React from "react";
+import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 import { Pip } from "../src/islander/rig/Companions";
 import { itemIds } from "../src/home/catalog";
-import { moreCatalog } from "../src/home/catalogMore";
 import { instance, starterHome, validHome, type HomeStateV2 } from "../src/home/model";
 import { characterPoint, itemPoint } from "../src/home/geometry";
 import { authoredHullIds, itemShapes } from "../src/home/art/silhouettes";
@@ -13,13 +13,23 @@ import { apply, faceRadius, magnetRadius, resolve } from "../src/home/scene/prop
 import { faceZone, handMagnet } from "../src/home/scene/resolve";
 import { anchorsFor } from "../src/home/scene/species";
 import { companionContacts, pipAnchors } from "../src/islander/rig/anchors";
-import { roomPoint, type RoomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
+import { roomPoint, type RoomPoint, type SceneEntity } from "../src/home/scene/types";
 import { pickEntity, prepareHits, shapeDistance } from "../src/home/runtime/pick";
 import { carriedCentre, carryLift } from "../src/home/runtime/carry";
 import { labFixtures } from "../src/home/runtime/lab";
 import { withPortions } from "../src/home/runtime/portions";
 
-vi.mock("react-native-svg", () => ({ default: "svg", G: "g", Circle: "circle", Ellipse: "ellipse", Path: "path" }));
+vi.mock("react-native-svg", () => ({
+  default: "svg",
+  G: "g",
+  Circle: "circle",
+  Ellipse: "ellipse",
+  Path: "path",
+  Defs: "defs",
+  LinearGradient: "linearGradient",
+  RadialGradient: "radialGradient",
+  Stop: "stop",
+}));
 
 const SCALE = 0.5025;
 function indexOf(state: HomeStateV2, room: keyof HomeStateV2["rooms"]) {
@@ -285,22 +295,23 @@ describe("HM-10 seats and landing", () => {
 
 describe("HC-03 companion anchors", () => {
   it("Pip's mouth and fin anchors are the drawn mouth and fin", () => {
-    type Props = { children?: React.ReactNode; [key: string]: unknown };
-    const nodes = (node: React.ReactNode): React.ReactElement<Props>[] => React.Children.toArray(node).flatMap(child => {
-      if (!React.isValidElement<Props>(child)) return [];
-      return [child, ...nodes(child.props.children)];
-    });
     // Inspect the rendered contact inputs, independent of JSX prop order.
     for (const action of [null, "eat", "drink"] as const) for (const reach of [0, 1]) {
       const meal = { reach, bite: !!reach, chew: false };
       const contacts = companionContacts("pip", "stand", action, meal);
-      const art = nodes(Pip({ action, meal, reduced: true }));
-      const mouthNode = art.find(n => typeof n.type === "function" && n.type.name === "PetMouth")!;
-      const heldNode = art.find(n => typeof n.type === "function" && n.type.name === "Held")!;
-      const fin = art.find(n => n.props["data-joint"] === "fin")!;
+      let renderer!: ReactTestRenderer;
+      act(() => {
+        renderer = create(React.createElement(Pip, { action, meal, reduced: true }));
+      });
+      const mouthNode = renderer.root.find(n => typeof n.type === "function" && n.type.name === "PetMouth");
+      const heldNode = renderer.root.find(n => typeof n.type === "function" && n.type.name === "Held");
+      const fin = renderer.root.find(n => n.props["data-joint"] === "fin");
       expect([mouthNode.props.x, mouthNode.props.y]).toEqual(contacts.mouth);
       expect(heldNode.props.at).toEqual(contacts.hand);
       expect(String(fin.props.d)).toContain(`${contacts.hand[0]} ${contacts.hand[1]}`);
+      act(() => {
+        renderer.unmount();
+      });
     }
     const { mouth, hand } = companionContacts("pip", "stand", null);
     expect(hand).toEqual([65, 116]);

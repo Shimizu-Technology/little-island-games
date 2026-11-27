@@ -29,16 +29,6 @@ export type CompanionProps = RigLife & {
 
 const ink = '#3B2418';
 
-let fallbackSvgId = 0;
-function useSafeSvgId(prefix: string): string {
-  try {
-    const raw = useId();
-    return `${prefix}-${raw.replace(/[^A-Za-z0-9_-]/g, '')}`;
-  } catch {
-    return `${prefix}-fn-${++fallbackSvgId}`;
-  }
-}
-
 function PetEyes({ x, y, face, blink, r = 3.8, gaze }: { x: number; y: number; face: string; blink: boolean; r?: number; gaze?: Gaze }) {
   const rad = face === 'surprised' ? r + .9 : r;
   return face === 'sleepy' || blink
@@ -69,7 +59,7 @@ function Held({ at, facing, children }: { at: readonly [number, number]; facing:
 
 /** Pure storybook coral crab puppet. Legs hang in carry; feeding moves one claw only. */
 export function RigCrab({ base = 'stand', action = null, face, facing = 'right', size = 120, held, tilt, limbLag, reduced = false, mood, clock, seed, blink, breath, gaze, meal, mealPlayback }: CompanionProps) {
-  const uid = useSafeSvgId('crab');
+  const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');
   const life = rigIdle(clock, seed, reduced), options = { action, tilt, limbLag, reduced, meal, gaze, breath: breath ?? life.breath };
   const box = crabAnchors(base, facing, options).bounds, origin = crabOrigin(base);
   const c = companionContacts('crab', base, action, meal), expression = rigFace(face, mood, action);
@@ -138,7 +128,7 @@ export function RigCrab({ base = 'stand', action = null, face, facing = 'right',
 /** Pip keeps ReefFish's honey body, coral tail, two pale stripes and one soulful eye.
  * Stand=float, sit/bathe=tucked bowl posture, lie=rest curl, carry=loose fins. */
 export function Pip({ base = 'stand', action = null, face, facing = 'right', size = 120, held, tilt, limbLag, reduced = false, mood, clock, seed, blink, breath, gaze, meal, mealPlayback, carryGrip }: CompanionProps) {
-  const uid = useSafeSvgId('pip');
+  const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');
   const life = rigIdle(clock, seed, reduced), options = { action, tilt, limbLag, reduced, meal, gaze, breath: breath ?? life.breath };
   const box = pipAnchors(base, facing, options).bounds, origin = pipOrigin(base);
   const c = companionContacts('pip', base, action, meal), expression = rigFace(face, mood, action);
