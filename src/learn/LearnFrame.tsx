@@ -1,5 +1,4 @@
 import { styles as baseStyles, C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , GameHeader, Sheet, ToggleRow } from "../components/ui";
-import { Icon } from "../components/Icon";
 import { useNunitoLoaded } from "../ui/fonts";
 import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { LagoonHintScroll } from './LagoonHintScroll';
@@ -692,7 +691,7 @@ function Copy(props: React.ComponentProps<typeof BaseCopy>) {
 }
 function Button(props: React.ComponentProps<typeof BaseButton>) {
  const loaded = useNunitoLoaded();
- return <BaseButton {...props} icon={undefined} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}>{props.icon && <Icon name={props.icon} size={props.compact ? 18 : 20} color="#3D2B24"/>}{props.children}</BaseButton>;
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}>{props.children}</BaseButton>;
 }
 function Chip(props: React.ComponentProps<typeof BaseChip>) {
  return <Button {...props} quiet compact textStyle={props.numberOfLines ? {flexShrink: 1} : undefined} style={{borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: props.numberOfLines ? 1 : 0, ...(props.numberOfLines ? {maxWidth: '100%'} : {}), borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
