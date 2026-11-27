@@ -13,6 +13,7 @@ import type { PictureBoardProps } from './Board';
 import { PICTURE_SAVE_BYTES, decodePicture, editPicture, encodePicture, freshPicture, validPictureEvent, type PictureDraft, type PictureEvent, type PictureSave } from './checkpoint';
 import { PICTURE_GRID, pictureBands, solved, type PictureBand, type PictureGrid } from './engine';
 import { pictureHint } from './help';
+import { loadNativeControls, type NativeControls } from './nativeControls';
 
 export type PictureBank = { slot: number; first: number; count: number; packHash: string; band: PictureBand['id']; rules: number; retired?: boolean };
 type PictureDare = { slot: number; bank: number; puzzle: number; id: string; label: string };
@@ -21,21 +22,22 @@ export type Action = PictureEvent;
 export type State = { picture: PictureGrid; draft: PictureDraft; band: PictureBand };
 export const pictureGridCodec = 'picture-grid-1';
 export type PlayScreenImporter = () => Promise<ComponentType<PictureBoardProps>>;
-export type ReactNativeImporter = () => Promise<typeof import('react-native')>;
+export type ReactNativeImporter = () => Promise<NativeControls>;
 // The native view stays out of the Node registry/catalog tools until rendered.
 const defaultLoadPlayScreen: PlayScreenImporter = () => import('./PlayScreen').then(m => m.PlayScreen);
-const defaultLoadReactNative: ReactNativeImporter = () => import('react-native');
+const defaultLoadReactNative: ReactNativeImporter = loadNativeControls;
 // Cache only resolved modules (never rejected promises) so Try again genuinely retries a failed dynamic import.
 const loadedScreens = new WeakMap<PlayScreenImporter, ComponentType<PictureBoardProps>>();
-const loadedReactNative = new WeakMap<ReactNativeImporter, typeof import('react-native')>();
-const pendingReactNative = new WeakMap<ReactNativeImporter, Promise<typeof import('react-native')>>();
+const loadedReactNative = new WeakMap<ReactNativeImporter, NativeControls>();
+const pendingReactNative = new WeakMap<ReactNativeImporter, Promise<NativeControls>>();
 
-function loadReactNative(importer: ReactNativeImporter): Promise<typeof import('react-native')> {
+function loadReactNative(importer: ReactNativeImporter): Promise<NativeControls> {
   const cached = loadedReactNative.get(importer);
   if (cached) return Promise.resolve(cached);
   const pending = pendingReactNative.get(importer);
   if (pending) return pending;
-  const next = importer().then(
+  // Expo's embedded-bundle import runtime can throw before returning a Promise.
+  const next = Promise.resolve().then(importer).then(
     m => {
       loadedReactNative.set(importer, m);
       pendingReactNative.delete(importer);
@@ -57,7 +59,7 @@ export function PlayScreenLoader({
   loadRN = defaultLoadReactNative,
   ...props
 }: PictureBoardProps & { loadScreen?: PlayScreenImporter; loadRN?: ReactNativeImporter }) {
-  const [loadedRn, setLoadedRn] = useState<typeof import('react-native') | null>(() => loadedReactNative.get(loadRN) ?? null);
+  const [loadedRn, setLoadedRn] = useState<NativeControls | null>(() => loadedReactNative.get(loadRN) ?? null);
   const [rnRetry, setRnRetry] = useState(0);
   const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; attempt: number }>(() => ({
     status: loadedScreens.has(loadScreen) ? 'ready' : 'loading',
@@ -82,7 +84,7 @@ export function PlayScreenLoader({
   useEffect(() => {
     if (loadedScreens.has(loadScreen)) return;
     let cancelled = false;
-    void loadScreen().then(
+    void Promise.resolve().then(loadScreen).then(
       Loaded => {
         loadedScreens.set(loadScreen, Loaded);
         if (!cancelled) setState(current => ({ ...current, status: 'ready' }));
