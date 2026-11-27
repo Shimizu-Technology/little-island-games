@@ -58,7 +58,7 @@ import { useInteraction, type Interaction, type Pickup, type CaptureToken } from
 import { groupIds, restingVisible } from "./runtime/group";
 import { anchorsFor, species } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
-import { isPortion, withPortions } from "./runtime/portions";
+import { createPortionsBuilder, isPortion, withPortions } from "./runtime/portions";
 import { freshHints, nextHintAt, takeHint, touchedHints, type HintState } from "./runtime/quietHints";
 import { useHomeVisible } from "./runtime/visibility";
 import type { ReleaseProbe } from "./runtime/frameProbe";
@@ -256,7 +256,7 @@ export function HomeScreen({
           const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
           return <HomeCharacter input={input} look={familyLook}/>;
         }
-        if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action) {
+        if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action || input.face || input.mood) {
           if (original) return original(input);
           // eslint-disable-next-line @typescript-eslint/no-require-imports -- load native rig only at the render boundary.
           const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
@@ -361,8 +361,9 @@ export function HomeScreen({
   const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]);
   // HC-02: ground-floor rooms have a beach whose shells can be picked up.
   const shoreRooms = useMemo(() => building.place === undefined ? roomIds.slice(0, building.columns) : [], [building.place, building.columns]);
-  const scene = useMemo(() => withPortions(baseScene, shoreRooms), [baseScene, shoreRooms]);
-  const { sleeping, wake } = useIdleCharacters(scene, pickups);
+  const buildPortions = useMemo(() => createPortionsBuilder(), []);
+  const scene = useMemo(() => buildPortions(baseScene, shoreRooms), [baseScene, shoreRooms, buildPortions]);
+  const { sleeping } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
     if (!focusId) return;
     const frame = requestAnimationFrame(() => {
@@ -537,7 +538,6 @@ export function HomeScreen({
     if (proposal.kind !== "mouth") return;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
     if (!target) return;
-    wake(target.owner);
     const action = proposal.consume === "drink" ? "drink" : "eat";
     const previousMeal=live.current.meals[target.owner];
     if(previousMeal?.source && previousMeal.capture)runtime.current?.completeMealHandoff(previousMeal.source,previousMeal.capture);
@@ -666,7 +666,6 @@ export function HomeScreen({
       const owner = captured?.attachment.kind === "hand" ? captured.attachment.character : undefined;
       for (const id of new Set([...groupIds(pickup.scene, pickup.id), ...(owner ? [owner] : [])])) {
         if (pickup.scene.entities[id]?.character) {
-          wake(id);
           clearTimeout(reactionTimers.current[id]);
           delete reactionTimers.current[id];
           delete mealFinishers.current[id];
@@ -682,7 +681,7 @@ export function HomeScreen({
       setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
       setSelected(undefined);
     },
-    [wake, delightPickup, watchCooking]
+    [delightPickup, watchCooking]
   );
   const onClear = useCallback(
     (index: number, id?: string, reason?: "capacity" | "storage-capacity") => {
@@ -765,11 +764,12 @@ export function HomeScreen({
     setFriends(false);
     setRoom(id);
     setOverview(false);
-    live.current.store.dispatch({ type: "room", room: id });
     // HR-02: another floor is a door, not a jump; the same floor eases across.
     const destinationBuilding = locationBuilding(roomIds.indexOf(id), window.width / window.height > 1.8);
     interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, destinationBuilding),
       !overview && floorOf(id) !== floorOf(room));
+    // Start the UI-thread camera before the durable Store admission/write work.
+    live.current.store.dispatch({ type: "room", room: id });
   }, [clearClosetDraft, floorOf, overview, room, viewport, window.width, window.height]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];

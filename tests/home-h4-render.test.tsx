@@ -109,7 +109,7 @@ describe('H4 resting friends: moods, the food notice and lamp shadows', () => {
 });
 
 describe('a friend who falls asleep never vanishes (found natively during H4)', () => {
-  it('the open-eyed art keeps its animated style, and it reads fully visible once the life clock is gone', async () => {
+  it('immediate sleep keeps its animated style fully visible without an awake/blink interval', async () => {
     const state = labFixtures['delight-rest'](), scene = withPortions(buildScene(state));
     const sleeper = Object.values(scene.entities).find((e) => e.character?.slot === 0)!;
     const interaction: any = { slots: { value: [{}, {}] }, camera: { value: { a: 1 } }, acknowledgeLayout: () => {}, acknowledgePose: () => {}, ready: () => {} };
@@ -119,17 +119,17 @@ describe('a friend who falls asleep never vanishes (found natively during H4)', 
       reduced: false, reactions: {}, onNode: () => {}, onSelect: () => {}, onMove: () => {}, liveRoom: 'home' };
     let tree!: TestRenderer.ReactTestRenderer;
     await act(async () => { tree = TestRenderer.create(<SceneView {...props} sleeping={{}} />); });
-    // The parent of the open-eyed copy (not the closed-eye blink copy, not the anticipating copy).
-    const openWrap = () => tree.root.findAll((n) => n.props.testID === 'character-0' && typeof n.type === 'string')[0]
+    // The main idle drawing, excluding blink and anticipation copies.
+    const idleArt = () => tree.root.findAll((n) => n.props.testID === 'character-0' && typeof n.type === 'string')[0]
       .findAll((n) => String(n.type) === 'EntityArt' && !n.props.preview && !n.props.blink)
       [0];
-    // Awake, mid-blink: the open-eyed copy is hidden by the life clock.
-    const life = tree.root.findAll((n) => n.props.life && n.props.entity?.id === sleeper.id)[0].props.life;
-    life.value = 7950;
-    expect(openWrap().props.idleStyle.evaluate().opacity).toBe(0);
-    // Asleep: no clock any more. The style must still be there and must show the friend.
+    // Build 8 regression: a lying friend is already asleep at t=0. The former
+    // 8-second awake interval is gone; the idle layer must never disappear.
+    expect(tree.root.findAll((n) => n.props.life && n.props.entity?.id === sleeper.id)).toHaveLength(0);
+    expect(idleArt().props.face).toBe('sleepy');
+    expect(idleArt().props.idleStyle.evaluate().opacity).toBe(1);
     await act(async () => tree.update(<SceneView {...props} sleeping={{ [sleeper.id]: true }} />));
-    expect(openWrap().props.idleStyle?.evaluate?.().opacity).toBe(1);
+    expect(idleArt().props.idleStyle?.evaluate?.().opacity).toBe(1);
     await act(async () => tree.unmount());
   });
 });

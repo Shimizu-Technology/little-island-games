@@ -1,3 +1,4 @@
+import { isRestingSleeper } from "./expressions";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RoomId } from "../catalogMore";
 import { capabilityOf } from "../world";
@@ -112,8 +113,8 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     }
     // HD-06: friends close by turn to greet a friend set down beside them, and both smile.
     const friend = landedId ? after.entities[landedId] : undefined;
-    if (friend?.character && proposal.kind !== "staging") {
-      const near = greeters(after, friend);
+    if (friend?.character && proposal.kind !== "staging" && !isRestingSleeper(friend)) {
+      const near = greeters(after, friend).filter(g => !isRestingSleeper(after.entities[g.id]));
       for (const g of near) { cueOn(g.id, "greet", g.dir); mood(g.id, "happy", GREET_MOOD_MS); }
       if (near.length) mood(friend.id, "happy", GREET_MOOD_MS);
     }
@@ -155,7 +156,7 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     const occupant = entity.item ? entity.children.map((id) => sceneNow().entities[id]).find((e) => e?.character) : undefined;
     if (occupant) entity = occupant;
     if (entity.character) {
-      if (sleeping[entity.id]) {
+      if (sleeping[entity.id] || isRestingSleeper(entity)) {
         // HD-09: a sleeping friend stirs and settles back to sleep.
         cueOn(entity.id, "stir");
         const head = friendPoint(entity, "head");

@@ -1,3 +1,4 @@
+import { activityFaceOf } from "./expressions";
 import { HomeMotionContext } from "./HomeMotionContext";
 import { defaultAtmosphere } from "../atmosphere";
 import { WeatherOverlay } from "./WeatherOverlay";
@@ -111,7 +112,7 @@ const RestingEntity = memo(function RestingEntity({
   onNode,
   life,
   mood,
-  shadow,
+  shadowKey,
   ownerId,
   ownerPivot,
 }: {
@@ -127,7 +128,7 @@ const RestingEntity = memo(function RestingEntity({
   /** H4: a short expression after eating, a greeting or a burp. */
   mood?: HomeMood;
   /** HD-08: a soft shadow thrown by a lit lamp nearby. */
-  shadow?: LampShadow;
+  shadowKey?: string;
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
   /** Accessible name; numbered when the room holds several of the same thing. */
@@ -154,6 +155,7 @@ const RestingEntity = memo(function RestingEntity({
   onMove: (id: string, action: string) => void;
   front?: boolean;
 }) {
+  const shadow = useMemo(() => shadowKey ? JSON.parse(shadowKey) as LampShadow : undefined, [shadowKey]);
   const bindNode = React.useCallback(
     (node: View | null) => {
       if (!front) onNode(entity.id, node);
@@ -172,6 +174,7 @@ const RestingEntity = memo(function RestingEntity({
   const from = restState.entity !== entity ? restFrom(restState.entity,entity) : restState.from;
   if (restState.entity !== entity) setRestState({entity,from});
   const finishSetDown=React.useCallback(()=>setRestState(current=>current.entity===entity && current.from ? {entity,from:undefined} : current),[entity]);
+  const effectiveFace = activityFaceOf(entity, sleeping, mood, false, !!meal || !!action);
   const frame = artFrame(entity);
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
   const drinkSize=entity.item ? itemSize(entity.item) : 0;
@@ -242,8 +245,8 @@ const RestingEntity = memo(function RestingEntity({
   // The mouth opens for food aimed at it, and (HD-06) for food carried close by.
   const anticipating = useDerivedValue(() => {
     if (!character || action || entity.action === "eat" || entity.action === "drink") return 0;
+    if (sleeping || effectiveFace === "sleepy") return 0;
     if (anyIn(restingFlags.value.targets, anticipationTargets)) return 1;
-    if (sleeping) return 0;
     for (const n of restingFlags.value.notice) if (n.id === id && n.food) return 1;
     return 0;
   });
@@ -274,20 +277,20 @@ const RestingEntity = memo(function RestingEntity({
             onMealPresented={presented}
             onMealFinished={finished}
             gaze={gaze}
-            faceOverride={sleeping ? "sleepy" : mood}
+            faceOverride={effectiveFace}
             front={front}
             reduced={reduced}
             renderCharacter={renderCharacter}
           />
         </View>
-        {cacheBlink && (
+        {cacheBlink && !sleeping && effectiveFace !== "sleepy" && (
           <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
             <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={mood} reduced={reduced} renderCharacter={renderCharacter} blink />
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={effectiveFace} reduced={reduced} renderCharacter={renderCharacter} blink />
             </Animated.View>
           </View>
         )}
-        {character && (
+        {character && !sleeping && effectiveFace !== "sleepy" && (
           <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
             <Animated.View style={anticipate}>
               <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
@@ -378,12 +381,17 @@ const RestingEntity = memo(function RestingEntity({
   );
 });
 /** Fix round 1: the friend holding this thing, and that friend's pivot in this thing's frame. */
+const heldCache = new WeakMap<SceneEntity, { owner: SceneEntity; value: { ownerId: string; ownerPivot: { x: number; y: number } } }>();
 function heldBy(entity: SceneEntity, scene: Scene): { ownerId?: string; ownerPivot?: { x: number; y: number } } {
   if (entity.attachment.kind !== "hand") return {};
   const owner = scene.entities[entity.attachment.character];
   if (!owner) return {};
+  const cached = heldCache.get(entity);
+  if (cached?.owner === owner) return cached.value;
   const frame = artFrame(entity);
-  return { ownerId: owner.id, ownerPivot: { x: owner.contact.x - entity.contact.x - frame.left, y: owner.contact.y - entity.contact.y - frame.top } };
+  const value = { ownerId: owner.id, ownerPivot: { x: owner.contact.x - entity.contact.x - frame.left, y: owner.contact.y - entity.contact.y - frame.top } };
+  heldCache.set(entity, { owner, value });
+  return value;
 }
 /** HD-08: a warm pool of light around a lit lamp and on the floor below it. Fades in once. */
 function LampGlow({ lamp, reduced }: { lamp: SceneEntity; reduced: boolean }) {
@@ -545,7 +553,7 @@ export const SceneView = React.memo(function SceneView({
   // One UI-thread clock for every friend on screen; nothing re-renders an SVG.
   const lifeClock = useSharedValue(0);
   // R3: the clock runs only while a friend on screen actually blinks and breathes with it.
-  const alive = (entity: SceneEntity) => !!entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
+  const alive = (entity: SceneEntity) => !!entity.character && entity.room === liveRoom && activityFaceOf(entity, !!sleeping[entity.id], moods[entity.id]) !== "sleepy" &&
     !reactions[entity.id] && !entity.action && restingVisible(entity, scene);
   const living = !reduced && !!liveRoom && Object.values(scene.rooms[liveRoom as RoomId]?.entities ?? {}).some(alive);
   React.useEffect(() => {
@@ -629,8 +637,8 @@ export const SceneView = React.memo(function SceneView({
                 onSelect={onSelect}
                 onMove={onMove}
                 life={living && !front && alive(entity) ? lifeClock : undefined}
-                mood={front ? undefined : moods[entity.id]}
-                shadow={front ? undefined : shadows[entity.id]}
+                mood={front ? undefined : activityFaceOf(entity, !!sleeping[entity.id], moods[entity.id], false, !!meals[entity.id] || !!reactions[entity.id])}
+                shadowKey={front ? undefined : shadows[entity.id] && JSON.stringify(shadows[entity.id])}
                 {...heldOwners[entity.id]}
               />
             );

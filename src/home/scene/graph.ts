@@ -421,7 +421,14 @@ export function buildScene(state: SceneState, cache?: SceneRoomCache): Scene {
     const key = JSON.stringify(content) + panSeatsTag(content);
     let cached = cache?.[room];
     if (!cached || cached.key !== key) {
-      cached = { key, index: buildRoomIndex(room, content, revision) };
+      const index = buildRoomIndex(room, content, revision);
+      // A room edit changes geometry only for affected entities. Keep untouched
+      // immutable drawings stable so React.memo can skip their SVG trees.
+      if (cached) for (const [id, entity] of Object.entries(index.entities)) {
+        const before = cached.index.entities[id];
+        if (before && JSON.stringify(before) === JSON.stringify(entity)) index.entities[id] = before;
+      }
+      cached = { key, index };
       if (cache) cache[room] = cached;
     }
     rooms[room] = cached.index.revision === revision ? cached.index : { ...cached.index, revision };

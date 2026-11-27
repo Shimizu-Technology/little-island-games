@@ -23,12 +23,17 @@ function cachedEntry(before: HomeStateV2, after: HomeStateV2): UndoEntry {
   return entry;
 }
 const bare = (state: HomeStateV2): HomeStateV2 => ({ version: state.version, ...(state.rosterVersion ? { rosterVersion: state.rosterVersion } : {}), current: state.current, rooms: state.rooms, ...(state.atmosphere ? { atmosphere: state.atmosphere } : {}) });
+const entriesCache = new WeakMap<History, UndoEntry[]>();
 function savedEntries(history: History): UndoEntry[] {
+  const cached = entriesCache.get(history);
+  if (cached) return cached;
   const states = [...history.past.slice(-HOME_UNDO_STEPS), history.present];
-  return states
+  const entries = states
     .slice(1)
     .map((after, i) => cachedEntry(states[i], after))
     .filter((entry) => Object.keys(entry.step).length);
+  entriesCache.set(history, entries);
+  return entries;
 }
 /** HM-18: what the save holds. The present plus the last 20 undo steps, bounded in bytes. */
 export function savedHistory(history: History, access?: HomeAccess): HomeStateV2 {

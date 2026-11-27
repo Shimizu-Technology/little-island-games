@@ -17,7 +17,7 @@ const pans=vi.hoisted(()=>[] as any[]);
 vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',Gesture:{Pan:()=>{
  const handlers:any={};const builder:any=new Proxy({}, {get:(_t,key)=> (...args:any[])=>{if(String(key).startsWith('on'))handlers[key]=args[0];return builder;}});pans.push(handlers);return builder;
 }}}));
-vi.mock('../src/home/runtime/EntityArt',()=>({EntityArt:(props:any)=>React.createElement('EntityArt',{blink:!!props.blink,entityId:props.entity.id}),artFrame:(e:any)=>e.bounds}));
+vi.mock('../src/home/runtime/EntityArt',()=>({EntityArt:(props:any)=>React.createElement('EntityArt',{blink:!!props.blink,entityId:props.entity.id,face:props.faceOverride,preview:props.preview,carry:props.carry}),artFrame:(e:any)=>e.bounds}));
 vi.mock('../src/home/runtime/SettleArt',()=>({SettleArt:()=>null}));
 vi.mock('../src/home/art/Room',()=>({RoomArt:()=>null,ShoreArt:()=>null,SkyArt:()=>null}));
 vi.mock('../src/home/art/More',()=>({RoomShellArt:()=>null,MoreItemArt:()=>null}));
@@ -62,4 +62,23 @@ describe('R3: the life clock runs only for a friend who uses it', () => {
     await act(async () => tree.unmount());
     vi.useRealTimers();
   });
+});
+
+
+it('frame-zero lying faces never mount an open-eyed blink or anticipation copy, for all six family actors', async () => {
+  vi.useFakeTimers();
+  const c = context(), state = labHome('silky-family'), built = buildScene(state);
+  const entities = Object.fromEntries(Object.entries(built.entities).map(([id,e])=>[id,e.character?{...e,base:'lie' as const,action:null}:e]));
+  const scene = {...built,entities,rooms:{...built.rooms,home:{...built.rooms.home,entities:Object.fromEntries(Object.keys(built.rooms.home.entities).map(id=>[id,entities[id]]))}}};
+  let tree!:TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<SceneView state={state} scene={scene} building={buildingLayout(4)} viewport={{width:390,height:844}}
+    interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} moods={{'character/0':'happy'}}
+    onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}} liveRoom="home"/>);});
+  for(const slot of [0,1,2,3,4,5]) {
+    const art=tree.root.findAll(n=>n.type==='EntityArt' && n.props.entityId===`character/${slot}` && !n.props.carry);
+    expect(art.length).toBeGreaterThan(0);
+    expect(art.every(n=>n.props.face==='sleepy' && !n.props.blink && !n.props.preview)).toBe(true);
+  }
+  expect(vi.getTimerCount()).toBe(0);
+  await act(async()=>tree.unmount());vi.useRealTimers();
 });

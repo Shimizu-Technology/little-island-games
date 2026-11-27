@@ -3,6 +3,11 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { performance } from 'node:perf_hooks';
 import { HomeRoute } from '../src/home/HomeRoute';
+import { resolve } from '../src/home/scene/proposal';
+import { roomPoint } from '../src/home/scene/types';
+import { poseToken } from '../src/home/runtime/poseBank';
+import { layoutToken } from '../src/home/runtime/layout';
+import { labFixtures } from '../src/home/runtime/lab';
 import { HomeScreen } from '../src/home/HomeScreen';
 import { AtmospherePicker } from '../src/home/AtmospherePicker';
 import { StoreProvider, useStore } from '../src/state/Store';
@@ -206,4 +211,72 @@ it.each([false, true])('native lighting crossfades opacity, keeps its window art
   await act(async () => tree!.update(<AtmosphereLighting room="home" atmosphere={{ timeOfDay: 'night', weather: 'snow' }} reduced={reduced} active={false}/>));
   expect(tree!.root.findAllByType('Svg' as any).slice(0, 4)).toEqual(skies);
   expect(h.timings).toEqual([reduced ? 0 : 160]);
+});
+
+
+it('bed → floor commit skips untouched drawings and an acknowledged handoff permits immediate re-grab', async () => {
+  h.reduced = true;
+  const save = initializePersonalization(emptySave());
+  const home = labFixtures['silky-family']();
+  // Keep observers far from the landing so this measures unchanged actors, not a greeting.
+  home.rooms.kitchen.characters = [...home.rooms.kitchen.characters, ...home.rooms.home.characters.filter(c => [1,2,5].includes(c.slot))];
+  home.rooms.home.characters = home.rooms.home.characters.filter(c => ![1,2,5].includes(c.slot));
+  personFor(save).home = home;
+  h.raw = encodeSave(save);
+  await mount();
+  const before = {...h.entityDrawings}, props = scene().props;
+  const doll = props.scene.entities['character/0'];
+  expect(doll.base).toBe('lie');
+  const proposal = resolve({...props.scene.rooms.home,entities:props.scene.entities}, doll, roomPoint(460,515), {scale:.5,release:true});
+  expect(proposal.kind).toBe('floor');
+  await act(async () => expect(props.interaction.animateProposal(proposal)).toBe(true));
+  const after = scene().props;
+  expect(after.scene.entities[doll.id].base).toBe('stand');
+  for (const [id, count] of Object.entries(before)) {
+    if (id !== doll.id && id !== doll.parent) expect(h.entityDrawings[id], id).toBe(count);
+  }
+  // Native onLayout acknowledges the already committed placement. No arbitrary timeout.
+  after.interaction.acknowledgeLayout(doll.id, layoutToken(after.scene.entities[doll.id]));
+  after.interaction.acknowledgePose(doll.id, poseToken(after.scene.entities[doll.id].base, after.scene.entities[doll.id].facing, after.scene.entities[doll.id].action), 1);
+  // Synthetic accessibility moves retain the three presented-tick opacity handoff.
+  const active = after.interaction.slots.value[0];
+  after.interaction.ready(0, doll.id, undefined, active.generation);
+  await act(async () => { for(let tick=0;tick<3;tick++) for (const frame of h.frames) frame.tick(); });
+  expect(scene().props.interaction.slots.value.every((s:any) => !s.id)).toBe(true);
+  const again = scene().props;
+  const next = resolve({...again.scene.rooms.home,entities:again.scene.entities}, again.scene.entities[doll.id], roomPoint(490,515), {scale:.5,release:true});
+  await act(async () => expect(again.interaction.animateProposal(next)).toBe(true));
+  expect((personFor(parseSave(h.raw!)).home as HomeStateV2).rooms.home.characters.find(c=>c.slot===0)?.pose).toBe('stand');
+});
+
+it('goRoom queues camera motion before Store admission, preserves untouched furniture, and saves Places selection', async () => {
+  await mount();
+  const props = screen().props, persist = props.persist;
+  const instrumented = vi.fn((value:HomeStateV2)=>{
+    // cancelAll and animateCamera must both be scheduled before synchronous persistence.
+    expect(h.queue.length).toBeGreaterThanOrEqual(2);
+    return persist(value);
+  });
+  await act(async()=>{ tree!.update(<StoreProvider><Probe/><HomeScreen {...props} persist={instrumented}/></StoreProvider>); });
+  const furniture = () => Object.fromEntries(Object.entries(h.entityDrawings).filter(([id])=>!id.startsWith('character/')));
+  const before = furniture();
+  for (const room of ['kitchen','home','tumon-beach','chamorro-village','home'] as const) {
+    h.defer = true; h.queue = [];
+    await act(async()=>h.chrome.onRoom(room));
+    expect(instrumented).toHaveBeenCalled();
+    expect((personFor(parseSave(h.raw!)).home as HomeStateV2).current).toBe(room);
+    flushUI(); h.defer = false;
+    if (room === 'kitchen') expect(furniture()).toEqual(before);
+  }
+});
+
+
+it('the real Home renderer forwards Crab sleeping, bathing, sitting and carry expressions to the expressive rig', async () => {
+  await mount();
+  const paint = scene().props.renderCharacter;
+  for (const [base, face] of [['lie','sleepy'],['bathe','happy'],['sit','happy'],['carry','happy']]) {
+    const element = paint({slot:2,familySlot:2,base,face,action:null,facing:'right',size:120,tilt:0,limbLag:0,reduced:true});
+    expect(element.type.name).toBe('HomeCharacter');
+    expect(element.props.input.face).toBe(face);
+  }
 });

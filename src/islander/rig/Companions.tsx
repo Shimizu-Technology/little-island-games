@@ -32,7 +32,7 @@ const ink = '#3B2418';
 function PetEyes({ x, y, face, blink, r = 3.8, gaze }: { x: number; y: number; face: string; blink: boolean; r?: number; gaze?: Gaze }) {
   const rad = face === 'surprised' ? r + .9 : r;
   return face === 'sleepy' || blink
-    ? <Path d={`M${x - r - 1} ${y}q${r + 1} ${r + 1.3} ${2 * r + 2} 0`} fill="none" strokeWidth={2.05}/>
+    ? <Path data-eyes="closed-arcs" d={`M${x - r - 1} ${y}q${r + 1} ${r + 1.3} ${2 * r + 2} 0`} fill="none" strokeWidth={2.05}/>
     : <G data-gaze="pupils" transform={`translate(${clampRig(gaze?.x, -1, 1) * 2} ${clampRig(gaze?.y, -1, 1) * 1.5})`}>
         <Circle cx={x} cy={y} r={rad} fill="#2A1A14" strokeWidth={0}/>
         <Path d={`M${x - rad * .66} ${y + rad * .28}Q${x} ${y + rad * 1.04} ${x + rad * .66} ${y + rad * .28}Q${x} ${y + rad * .68} ${x - rad * .66} ${y + rad * .28}Z`} fill="#7A4934" fillOpacity={.78} strokeWidth={0}/>
