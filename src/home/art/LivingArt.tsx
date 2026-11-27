@@ -1,9 +1,11 @@
 import React from 'react';
-import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Stop, Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 import type { ItemVisualState } from '../world';
 import type { TintId } from '../catalogMore';
 import { material, shade } from './Tint';
-import { HandProp } from './PropShape';
+import { HandProp, PaintedProp } from './PropShape';
+import { LivingAccent } from './Finish';
+import { paintedProp } from './illustrated';
 import { holdableIds, type HoldableId } from './living';
 
 const ink = '#4A3328',
@@ -286,6 +288,36 @@ export function LivingShape({ id, state = {}, tint = 'original', reduced = false
 }
 
 export function LivingArt({ id, size = 120, state, mirrored = false, rotation = 0, tint, reduced = false }: { id: string; size?: number; state?: ItemVisualState; mirrored?: boolean; rotation?: number; tint?: TintId; reduced?: boolean }) {
+  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, '');
+  const painted = id === 'fridge' ? (state?.on ? 'fridge-open' : 'fridge-closed') : paintedProp(id);
+  if (painted) return <PaintedProp id={painted} size={size} mirrored={mirrored} rotation={rotation} tint={tint} active={id === 'teddy' && state?.on}>
+    <Svg width={size} height={size} viewBox="0 0 384 384" style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
+      {['lamp', 'table-lamp', 'floor-lamp'].includes(id) && state?.on && <G data-light="warm">
+        <Defs><RadialGradient id={`lamp-${uid}`}><Stop offset="0" stopColor="#FFE8A3" stopOpacity={.65}/><Stop offset="1" stopColor="#FFD482" stopOpacity={0}/></RadialGradient></Defs>
+        <Ellipse cx={192} cy={124} rx={185} ry={150} fill={`url(#lamp-${uid})`}/>
+        <Ellipse cx={192} cy={350} rx={155} ry={30} fill={`url(#lamp-${uid})`}/>
+      </G>}
+      {id === 'stove' && state?.on && <G data-heat="on" fill="none" strokeLinecap="round">
+        <Ellipse cx={192} cy={101} rx={62} ry={10} fill="#FFBE56" opacity={.65}/>
+        {[152,180,208,236].map(x => <Path key={x} d={`M${x} 101q-9-10 0-20q9 13 0 20Z`} fill="#FFD67E" stroke="#EF8B45" strokeWidth={2}/>)}
+        {[164,220].map(x => <Path key={x} d={`M${x} 55q-12-12 0-24t0-24`} stroke="#FFF5DC" strokeWidth={5} opacity={.8}/>)}
+      </G>}
+      {id === 'sink-counter' && state?.on && <LivingAccent on reduced={reduced}><G data-water="running" strokeLinecap="round" fill="#D6FBFA">
+        <Path d="M225 65v46" stroke="#81C7D4" strokeWidth={10} opacity={.75}/><Path d="M224 66v44" stroke="#F1FFFF" strokeWidth={3}/>
+        <Ellipse cx={224} cy={117} rx={25} ry={5} fill="#AAE6E6"/>{[202,234,244].map((x,n)=><Circle key={x} cx={x} cy={104+n%2*8} r={3} stroke="#FFFFFF"/>)}
+        <Path d="M211 89h7m-3-4v9m21-16h8m-4-4v8" stroke="#FFFFFF" strokeWidth={2}/>
+      </G></LivingAccent>}
+      {id === 'tv' && <G data-screen={state?.on ? 'on' : 'off'}>
+        <Path d="M56 121Q151 104 248 120L250 279Q151 300 54 280Z" fill={state?.on ? '#B9FFF1' : '#263F43'} opacity={state?.on ? .12 : .96}/>
+        <Path d="M75 138q70-18 134-7" stroke="#FFFFFF" strokeWidth={4} opacity={.3} fill="none"/>
+      </G>}
+      {id === 'radio' && state?.on && <LivingAccent on reduced={reduced}><G data-notes={reduced ? 'static' : 'floating'} fill="#E9AF45" stroke="#80552F" strokeWidth={2}>
+        <Path d="M282 74V30l26-7v35m-26-18 26-7" fill="none" stroke="#E9AF45" strokeWidth={6}/><Ellipse cx={275} cy={75} rx={10} ry={7}/><Ellipse cx={301} cy={60} rx={10} ry={7}/>
+        <Path d="M71 62V30l21 7" fill="none" stroke="#E9AF45" strokeWidth={5}/><Ellipse cx={64} cy={64} rx={9} ry={6}/>
+      </G></LivingAccent>}
+      {id === 'coconut-drink' && state?.empty && <G data-empty="true"><Ellipse cx={194} cy={166} rx={81} ry={22} fill="#B9936D" stroke="#FFF2D9" strokeWidth={4}/><Path d="M180 255h28" stroke="#FFF2D9" strokeWidth={5} strokeLinecap="round"/></G>}
+    </Svg>
+  </PaintedProp>;
   const flip = mirrored !== (rotation === 180 || rotation === 270);
   return (
     <Svg width={size} height={size} viewBox="0 0 150 150" accessible={false}>

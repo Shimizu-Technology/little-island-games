@@ -1,5 +1,7 @@
 import React from 'react';
-import { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
+import { Image, View } from 'react-native';
+import { illustratedProps, type IllustratedProp } from './illustrated';
+import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 import { material, shade } from './Tint';
 import type { TintId } from '../catalogMore';
 import type { HoldableId } from './living';
@@ -161,4 +163,26 @@ export function HandProp({ id, state = {}, tint = 'original', longStraw = false 
       )}
     </G>
   );
+}
+
+/** Room-space bitmap only. HandProp above intentionally stays SVG for the rig's hand joint. */
+export function PaintedProp({ id, size, mirrored = false, rotation = 0, tint = 'original', active = false, children }: {
+  id: IllustratedProp; size: number; mirrored?: boolean; rotation?: number; tint?: TintId; active?: boolean; children?: React.ReactNode;
+}) {
+  const flip = mirrored !== (rotation === 180 || rotation === 270);
+  return <View pointerEvents="none" accessible={false} style={{ width: size, height: size, transform: [{ scaleX: flip ? -1 : 1 }] }}>
+    <Image testID={`painted-prop-${id}`} source={illustratedProps[id]()} resizeMode="contain" fadeDuration={0} accessible={false}
+      style={{ position: 'absolute', width: size, height: size }}/>
+    {tint !== 'original' && <PaintedTint id={id} size={size} tint={tint}/>}
+    {active && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}><Path d="M112 19v12m-6-6h12" fill="none" stroke="#FFE2A0" strokeWidth={3} strokeLinecap="round"/></Svg>}
+    {children}
+  </View>;
+}
+
+/** A translucent dye on the fabric/foliage, leaving the lower wooden frame intact. */
+export function PaintedTint({ id, size, tint }: { id: IllustratedProp; size: number; tint: TintId }) {
+  return <View pointerEvents="none" style={{ position:'absolute', left:0, top:0, width:size, height:size*.68, overflow:'hidden' }}>
+    <Image source={illustratedProps[id]()} resizeMode="contain" fadeDuration={0} accessible={false}
+      style={{ width:size, height:size, tintColor:material(tint, '#4FA99F'), opacity:.28 }}/>
+  </View>;
 }

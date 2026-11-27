@@ -138,6 +138,9 @@ export type CueKind = "tap" | "happy" | "burp" | "stir" | "greet" | "hop";
 export const REDUCED_CUE_MS = 260;
 export const REDUCED_CUE_DIM = 0.6;
 export type Cue = { at: number; kind: CueKind; dir: number };
+export const tapExpressions = ['happy', 'proud', 'surprised', 'cheer', 'yum', 'sleepy'] as const;
+export type HomeMood = import('../scene/types').Face | 'proud' | 'cheer' | 'yum';
+export function tapExpression(taps: number) { return tapExpressions[Math.max(0, taps) % tapExpressions.length]; }
 export const cueLength: Record<CueKind, number> = { tap: 260, happy: 640, burp: 760, stir: 760, greet: 900, hop: 320 };
 /** Degrees of rotation about the contact, a small rise, and a vertical squash, for one cue. */
 export function cueMotion(cue: Cue, now: number): { deg: number; dy: number; sy: number } | undefined {
@@ -159,7 +162,7 @@ export function cueMotion(cue: Cue, now: number): { deg: number; dy: number; sy:
       const lean = u < 0.2 ? u / 0.2 : u > 0.75 ? (1 - u) / 0.25 : 1;
       return { deg: 6 * cue.dir * lean * (u < 0.2 ? 1 : 1 + 0.15 * Math.sin((u - 0.2) * Math.PI * 4)), dy: 0, sy: 1 };
     }
-    case "hop": return { deg: 0, dy: -9 * Math.sin(u * Math.PI), sy: 1 };
+    case "hop": return { deg: Math.sin(u * Math.PI * 2) * 2 * (1-u), dy: -16 * Math.sin(u * Math.PI), sy: 1 - .09 * Math.cos(u * Math.PI * 3) * Math.sin(u * Math.PI) };
   }
 }
 

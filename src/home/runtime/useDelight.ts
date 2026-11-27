@@ -3,13 +3,13 @@ import type { RoomId } from "../catalogMore";
 import { capabilityOf } from "../world";
 import { anchorsFor } from "../scene/species";
 import type { DropProposal } from "../scene/resolve";
-import type { Face, Scene, SceneEntity } from "../scene/types";
+import type { Scene, SceneEntity } from "../scene/types";
 import type { StagePiece } from "../art/Stage";
-import { attaches, burps, COOK_MS, cookingIds, greeters, landingSound, materialOf } from "./delight";
+import { attaches, tapExpression, burps, COOK_MS, cookingIds, greeters, landingSound, materialOf } from "./delight";
 import { effectLength, type Effect, type EffectKind } from "./Effects";
 import { pieceSound, type Poke } from "./SetPieces";
 import { useHomeFeedback } from "./homeSound";
-import type { CueKind } from "./delight";
+import type { CueKind, HomeMood } from "./delight";
 
 const tubs = new Set(["bathtub", "bubble-bath"]);
 /** Where to put an effect on a friend: the mouth or the top of the head, in room units. */
@@ -47,7 +47,7 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
   const sceneNow = useCallback(() => outside.current.getScene(), []);
   const cookNow = useCallback((id: string, room: RoomId) => outside.current.cook(id, room), []);
   const heldNow = useCallback((id: string) => outside.current.isHeld(id), []);
-  const [moods, setMoods] = useState<Record<string, Face>>({});
+  const [moods, setMoods] = useState<Record<string, HomeMood>>({});
   const [effects, setEffects] = useState<Effect[]>([]);
   const [poke, setPoke] = useState<Poke>();
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
@@ -63,7 +63,7 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     later(effectLength[kind] + 80, () => setEffects((current) => current.filter((e) => e.key !== key)));
   }, [later]);
   const moodTokens = useRef<Record<string, number>>({});
-  const mood = useCallback((id: string, face: Face, ms: number) => {
+  const mood = useCallback((id: string, face: HomeMood, ms: number) => {
     const token = ++serial.current;
     moodTokens.current[id] = token;
     setMoods((current) => ({ ...current, [id]: face }));
@@ -72,6 +72,7 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
       setMoods((current) => { const next = { ...current }; delete next[id]; return next; });
     });
   }, [later]);
+  const taps = useRef<Record<string, number>>({});
   const meals = useRef<Record<string, number>>({});
   // Fix round 1: one action token per friend. Every delayed flourish checks it when it fires,
   // so a newer meal, a pickup or a tap always wins over an older meal's crumbs, smile or burp.
@@ -100,7 +101,7 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     const made = subject ?? (proposal.item ? ({ item: proposal.item } as SceneEntity) : undefined);
     const sound = landingSound(made, proposal, before);
     if (sound) feedback.play(sound);
-    if (attaches(proposal)) feedback.haptic("attach");
+    if (attaches(proposal) || proposal.kind === "floor") feedback.haptic("attach");
     if (proposal.kind === "socket" && proposal.base === "bathe") {
       effect("bubbles", proposal.room, proposal.contact.x, proposal.contact.y - 10);
       effect("splash", proposal.room, proposal.contact.x, proposal.contact.y);
@@ -163,9 +164,15 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
       } else {
         // Rule 42: a short greeting. It never changes where the friend is. It is the newest action.
         newAction(entity.id);
-        cueOn(entity.id, "hop");
-        mood(entity.id, "happy", 500);
-        feedback.play("lift");
+        const count = taps.current[entity.id] ?? 0;
+        taps.current[entity.id] = count + 1;
+        const expression = tapExpression(count);
+        const face = expression;
+        cueOn(entity.id, expression === 'proud' || expression === 'yum' ? 'happy' : 'hop');
+        mood(entity.id, face, 900);
+        const head = friendPoint(entity, 'head');
+        effect('bubbles', entity.room, head.x, head.y + 12);
+        feedback.play(expression === 'sleepy' ? 'rustle' : 'lift');
       }
       return;
     }

@@ -1,3 +1,5 @@
+import { paintedProp } from './illustrated';
+import { PaintedProp } from './PropShape';
 import { BeachPropArt } from '../BeachProps';
 import { LivingArt, hasLivingArt } from './LivingArt';
 import { SeatArt, hasSeatArt } from './SeatArt';
@@ -25,14 +27,16 @@ const ink = "#4A3328",
 
 const star = "M75 30L87 55L115 59L94 79L99 106L75 93L51 106L56 79L35 59L63 55Z";
 
-export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original", animated = false, reduced = false, layer = "all", state }: {
-  layer?: ArtLayer; state?: ItemVisualState; id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
+export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original", animated = false, reduced = false, layer = "all", state, occupied = false }: {
+  occupied?: boolean; layer?: ArtLayer; state?: ItemVisualState; id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
 }) {
   const uid = React.useId().replace(/[^A-Za-z0-9_-]/g, "");
   if (id === 'beach-towel' || id === 'lounger') return <BeachPropArt item={id} size={size} mirrored={mirrored} rotation={rotation} tint={tint} layer={layer} />;
   if (hasLivingArt(id)) return layer === 'front' ? null : <LivingArt id={id} size={size} state={state ?? { on: active }} mirrored={mirrored} rotation={rotation} tint={tint} reduced={reduced} />;
-  if (hasSeatArt(id)) return <SeatArt id={id} size={size} layer={layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? { on: active }} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>} />;
+  if (hasSeatArt(id)) return <SeatArt occupied={occupied} id={id} size={size} layer={layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? { on: active }} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>} />;
   if (layer === 'front') return null;
+  const painted = paintedProp(id);
+  if (painted) return <PaintedProp id={painted} size={size} mirrored={mirrored} rotation={rotation} tint={tint} active={active}/>;
 
   const color = material(tint, ['#4FA99F', '#FF7A5C', '#F5C249'][id.length % 3]);
   const light = shade(color, 0.34), dark = shade(color, -0.2);

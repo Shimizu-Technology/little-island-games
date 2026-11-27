@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createElement as nativeElement } from 'react';
 import {act,create,type ReactTestRenderer} from 'react-test-renderer';
 import {describe,it,expect,vi} from 'vitest';
 import {Islander} from '../src/islander/rig/Islander';
@@ -35,7 +35,8 @@ describe('native pose retention regression',()=>{
   await act(()=>{subject=create(<CrabFriend pose="lie" mirrored/>);fresh=create(<CrabFriend pose="stand"/>);});
   await act(()=>subject.update(<CrabFriend pose="stand"/>));
   expect(subject.toJSON()).toEqual(fresh.toJSON());
-  expect(subject.root.findAllByType('g').slice(0,2).map(g=>g.props.transform)).toEqual(['translate(0 0) rotate(0) scale(1 1)','translate(0 0) rotate(0) scale(1 1)']);
+  expect(subject.root.findByType('div').props.style.transform).toEqual([{scaleX:1}]);
+  expect(subject.root.findAllByType('path')).toHaveLength(0);
   await act(()=>{subject.unmount();fresh.unmount();});
  });
  it('does not let an old sleep reaction change any non-lying pose box',()=>{
@@ -43,3 +44,8 @@ describe('native pose retention regression',()=>{
   expect(homeCharacterPose('lie','lie-asleep')).toBe('lie-asleep');
  });
 });
+
+vi.mock('react-native', () => ({
+  View: ({children, ...p}: any) => nativeElement('div', p, children),
+  Image: ({source, ...p}: any) => nativeElement('img', {...p, src: typeof source === 'string' ? source : source?.uri}),
+}));

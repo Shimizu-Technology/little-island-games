@@ -18,6 +18,17 @@ import { capabilityOf } from "../world";
 import { carryDisplay, pickupTransform, footprintShadow, landingSquash } from "./handFeel";
 import { FRIEND_GIVE, materialGive, materialOf } from "./delight";
 
+/** Bounded spring flourish; ends before the overlay hands back to resting art. */
+export function pickupBounce(slot: ReturnType<typeof emptyDragSlot>, character: boolean, now: number, reduced: boolean) {
+  'worklet';
+  if (reduced || !character || !slot.ready) return 0;
+  const t = Math.max(0, now - slot.liftedAt) / 1000;
+  const spring = 1 - Math.exp(-15*t) * Math.cos(22*t);
+  const settling = slot.phase === 'settling' && slot.settleAt > 0 || slot.phase === 'pending' && slot.pausedElapsed > 0;
+  const elapsed = settling ? slot.phase === 'pending' ? slot.pausedElapsed : now - slot.settleAt : 0;
+  const release = settling ? Math.max(0, 1 - elapsed / 140) : 1;
+  return .04 * spring * release;
+}
 export type SocketBases = Record<string, readonly CharacterBase[]>;
 /** Character bases each room's furniture offers; standing is always reachable. */
 export function socketBasesOf(scene: Scene): SocketBases {
@@ -132,9 +143,9 @@ const OverlayGroup = memo(function OverlayGroup({
             motion.lift,
         },
         { translateY: up as unknown as number },
-        { rotate: `${motion.tilt}deg` },
-        { scaleX: motion.scaleX },
-        { scaleY: motion.scaleY },
+        { rotate: `${Math.max(-7, Math.min(7, motion.tilt))}deg` },
+        { scaleX: motion.scaleX + pickupBounce(slot, root.character !== undefined, clock.value, reduced) },
+        { scaleY: motion.scaleY + pickupBounce(slot, root.character !== undefined, clock.value, reduced) },
         { scale: shrink as unknown as number },
       ],
     };
@@ -190,7 +201,7 @@ const OverlayGroup = memo(function OverlayGroup({
             width: footprint.width,
             height: footprint.height,
             borderRadius: 30,
-            backgroundColor: "#284F4B",
+            backgroundColor: "#72503D",
           },
           shadow,
         ]}

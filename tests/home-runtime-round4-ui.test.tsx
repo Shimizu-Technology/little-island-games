@@ -48,9 +48,9 @@ describe('round4 rendered runtime contracts',()=>{
   const view=tree.root.findByProps({nativeID:`drag-overlay-${id}`});
   expect(view.props.style[1].evaluate().opacity).toBe(1);
   const scale=()=>view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX;
-  expect(scale()).toBe(id==='character/0'?1.04:1.08);
+  expect(scale()).toBeCloseTo(1.08, 5);
   c.slot.phase='settling';c.slot.settleAt=1000;c.clock.value=1070;
-  expect(scale()).toBeGreaterThan(1);expect(scale()).toBeLessThan(id==='character/0'?1.04:1.08);
+  expect(scale()).toBeGreaterThan(1);expect(scale()).toBeLessThan(1.081);
   c.clock.value=1240;expect(scale()).toBe(1);
   expect(tree.root.findByProps({testID:`drag-shadow-${id}`}).props.style[1].evaluate().opacity).toBe(0);
   await act(async()=>tree.unmount());

@@ -10,6 +10,7 @@ import React, { memo } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import Svg, { G } from 'react-native-svg';
+import { type HomeMood } from "./delight";
 import { HandProp } from '../art/PropShape';
 import { species } from '../scene/species';
 import type { HoldableId } from '../art/living';
@@ -19,7 +20,7 @@ import { moreCatalog } from "../catalogMore";
 import { itemSize, characterSize } from "../geometry";
 import { capabilityOf } from "../world";
 import { renderAnchors } from "./rigGeometry";
-import type { CharacterAction, Face, SceneEntity } from "../scene/types";
+import type { CharacterAction, SceneEntity } from "../scene/types";
 
 export type CharacterRender = CharacterRenderer;
 // Prewarm one small meal rig at scene load. It is hidden at rest and never clocks.
@@ -36,6 +37,7 @@ export const DecorArt = memo(function DecorArt({
 }) {
   const item = entity.item!;
   const props = {
+    occupied: entity.children.some(id => id.startsWith('character/')),
     size: itemSize(item),
     rotation: item.rotation,
     mirrored: item.mirrored,
@@ -101,7 +103,7 @@ export const EntityArt = memo(function EntityArt({
   renderCharacter?: CharacterRender;
   preview?: boolean;
   actionOverride?: CharacterAction;
-  faceOverride?: Face;
+  faceOverride?: HomeMood;
 }) {
   const frame = entity.character ? renderAnchors(carry && carryGrip && entity.character.slot === 1 ? {...entity,children:[]} : entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
   if (entity.item && entity.attachment.kind === 'hand' && capabilityOf(entity.item.item).edible === 'drink') {
@@ -149,7 +151,8 @@ export const EntityArt = memo(function EntityArt({
     slot: character.slot,
     base,
     action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
-    face: preview ? ("anticipate" as const) : (faceOverride ?? null),
+    face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? null),
+    ...(faceOverride === 'proud' || faceOverride === 'yum' || faceOverride === 'cheer' ? { mood: faceOverride === 'cheer' ? 'happy' as const : faceOverride } : {}),
     facing: entity.facing === "left" ? ("left" as const) : ("right" as const),
     size,
     tilt,

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "../components/motion";
 import { useDelight } from "./runtime/useDelight";
-import { pieceAt } from "./runtime/SetPieces";
+import { crabAnchors, crabOrigin } from '../islander/rig/anchors';
 import { useStore } from "../state/Store";
 import type { BadgeId } from "../badges/engine";
 import type { IslanderLook } from "../islander/look";
@@ -50,7 +50,7 @@ import { DebugOverlay } from "./runtime/DebugOverlay";
 import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
 import { MEAL_MS, type Meal } from "./runtime/meal";
 import { type CharacterRender } from "./runtime/EntityArt";
-import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera, type Viewport } from "./runtime/CameraController";
+import { boundCamera, fitCamera, cozyFocusCamera as focusCamera, cozyRoomScale as roomScale, roomAtScreen, zoomCamera, type Viewport } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { groupIds, restingVisible } from "./runtime/group";
 import { anchorsFor, species } from "./scene/species";
@@ -229,9 +229,25 @@ export function HomeScreen({
   }, [activeSheet, closetInitialItem, closet]);
   const effectiveLook = previewLook ?? closet?.look;
   const characterRenderer = useMemo<CharacterRender | undefined>(
-    () =>
-      renderCharacter ??
-      (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined),
+    () => {
+      const original = renderCharacter ?? (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined);
+      return function PaintedCharacter(input) {
+        if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action) {
+          if (original) return original(input);
+          // eslint-disable-next-line @typescript-eslint/no-require-imports -- load native rig only at the render boundary.
+          const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
+          return <HomeCharacter input={input}/>;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- keep native art lazy for engine-only embedders.
+        const { CrabFriend } = require('./art/CrabFriend') as typeof import('./art/CrabFriend');
+        const bounds = crabAnchors(input.base, input.facing, { tilt: input.tilt, limbLag: input.limbLag, reduced: input.reduced }).bounds, unit = input.size / 120;
+        return <View pointerEvents="none" style={{ width: bounds.width * unit, height: bounds.height * unit }}>
+          <View style={{ position: 'absolute', left: (-bounds.left - 60) * unit, top: (-bounds.top - crabOrigin(input.base)[1]) * unit }}>
+            <CrabFriend size={input.size} pose={input.base === 'carry' ? 'held' : input.base === 'lie' ? 'lie' : input.base === 'sit' || input.base === 'bathe' ? 'sit' : 'stand'} mirrored={input.facing === 'left'} reduced={input.reduced}/>
+          </View>
+        </View>;
+      };
+    },
     [renderCharacter, effectiveLook, closet]
   );
   const hasNewCloset = useMemo(
@@ -967,16 +983,6 @@ export function HomeScreen({
         openBadges();
         return;
       }
-      // HC-01: a painted jar, pan, book, plant or lantern answers the touch.
-      const camera = runtime.current!.camera.get(), index = roomAtScreen(point.x, point.y, camera, building);
-      if (index >= 0) {
-        const at = roomOrigin(index, building), there = screenToRoom(point, camera, housePoint(at.x, at.y));
-        const piece = pieceAt(roomIds[index], there.x, there.y);
-        if (piece) {
-          delight.touchedPiece(roomIds[index], piece);
-          return;
-        }
-      }
     }
     const entity = id ? current.scene.entities[id] : undefined;
     if (!id && !current.selected && !current.placing) {
@@ -984,7 +990,7 @@ export function HomeScreen({
       lastTap.current = { ...point, at: now };
       if (now - prior.at < 300 && Math.hypot(point.x - prior.x, point.y - prior.y) < 28) {
         const c = runtime.current!.camera.get();
-        const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : (viewport.height / 620) * 1.4;
+        const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : roomScale(viewport) * 1.4;
         interaction.animateCamera(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
         lastTap.current.at = 0;
         return;
@@ -1258,7 +1264,10 @@ export function HomeScreen({
     setRoom(hero.room);
     setOverview(false);
     store.dispatch({ type: "room", room: hero.room });
-    interaction.animateCamera(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact),
+    interaction.animateCamera(focusCamera(roomIds.indexOf(hero.room), viewport, building, {
+      x: hero.contact.x + hero.bounds.left + hero.bounds.width / 2,
+      y: hero.contact.y + hero.bounds.top + hero.bounds.height / 2,
+    }),
       !overview && floorOf(hero.room) !== floorOf(room));
     setSelected(undefined);
     setMore(false);

@@ -9,6 +9,7 @@ import { rigMatrix, companionMatrix, rigStoryboard, rigProofLooks, type ProofFra
 import { rigBases } from '../src/islander/rig/character';
 import { hairStyles, hats, outfits } from '../src/islander/look';
 import { HandProp } from '../src/home/art/PropShape';
+vi.mock('react-native', () => ({ View: 'View', Image: 'image' }));
 vi.mock('react-native-svg', () => ({ default: 'svg', G: 'g', Path: 'path', Circle: 'circle', Ellipse: 'ellipse', Rect: 'rect', Text: 'text' }));
 
 it('can export a standalone gallery using the production SVG rigs', () => {

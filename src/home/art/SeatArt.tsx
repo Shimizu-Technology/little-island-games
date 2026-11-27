@@ -1,4 +1,7 @@
 import React from 'react';
+import { Image, View } from 'react-native';
+import { PaintedTint } from './PropShape';
+import { illustratedProps } from './illustrated';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 import type { ArtLayer, ItemVisualState } from '../world';
 import { material, shade } from './Tint';
@@ -313,8 +316,36 @@ export function SeatShape({ id, layer = 'all', tint = 'original', state }: { id:
   );
 }
 
-export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotation = 0, tint, state, motion }: { id: string; size?: number; layer?: ArtLayer; mirrored?: boolean; rotation?: number; tint?: TintId; state?: ItemVisualState; motion?: (art: React.ReactNode) => React.ReactNode }) {
+export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotation = 0, tint, state, motion, occupied = false }: { occupied?: boolean; id: string; size?: number; layer?: ArtLayer; mirrored?: boolean; rotation?: number; tint?: TintId; state?: ItemVisualState; motion?: (art: React.ReactNode) => React.ReactNode }) {
   const flip = mirrored !== (rotation === 180 || rotation === 270);
+  if (['bed', 'sofa', 'bathtub', 'bubble-bath'].includes(id)) {
+    const key = id === 'bubble-bath' ? 'bathtub' : id as 'bed' | 'sofa' | 'bathtub';
+    // Pixel-registered front cutouts: the pillow/head remain behind the friend. The
+    // repeated quilt/tub body covers their lower body at the published socket height.
+    const top = id === 'bed' ? .47 : id === 'sofa' ? .55 : .43;
+    const left = id === 'bed' ? .27 : 0;
+    const sprite = <Image source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false}
+      style={{ position: 'absolute', width: size, height: size, left: -left * size, top: -top * size }}/>;
+    return <View pointerEvents="none" accessible={false} style={{ width: size, height: size, transform: [{ scaleX: flip ? -1 : 1 }] }}>
+      {layer !== 'front' && <Image testID={`painted-seat-${id}`} source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false} style={{ width: size, height: size }}/>}
+      {layer !== 'front' && tint && tint !== 'original' && <PaintedTint id={key} size={size} tint={tint}/>}
+      {occupied && layer !== 'back' && <View testID={`painted-seat-front-${id}`} style={{ position: 'absolute', left: left * size, top: top * size, width: (1-left) * size, height: (1-top) * size, overflow: 'hidden' }}>{sprite}</View>}
+      {occupied && layer !== 'back' && (id === 'bed' || id === 'sofa') && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}>
+        <G stroke="#326F66" strokeWidth={1.4} strokeLinejoin="round" fill="none">
+          <Path d={id === 'bed' ? 'M59 64Q71 49 91 57Q113 50 144 63L145 96Q103 107 59 96Z' : 'M59 72Q75 62 100 69L134 76V103Q97 111 59 102Z'} fill={material(tint ?? 'original', '#319C93')}/>
+          <Path d={id === 'bed' ? 'M61 65Q75 56 90 62Q111 56 141 65' : 'M61 74Q78 67 99 74L131 80'} stroke={shade(material(tint ?? 'original', '#319C93'), .35)} strokeWidth={3}/>
+          <Path d={id === 'bed' ? 'M79 61q-7 13-3 32m22-33q-7 14-3 36m23-34q-7 14-4 33M65 79q35 11 76 0' : 'M79 73q-4 12-2 29m23-27q-4 13-2 27M63 89q33 11 68 0'} stroke="#247D78" opacity={.75}/>
+          <Path d={id === 'bed' ? 'M112 58l15 1-7 41-16 1Z' : 'M112 73l12 2-5 30-12 1Z'} fill="#F18F71" stroke="#D47256"/>
+          <Path d="M68 91q14 5 29 3" stroke="#6CBDAA" strokeWidth={2}/>
+        </G>
+      </Svg>}
+      {occupied && layer !== 'back' && (id === 'bathtub' || id === 'bubble-bath') && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position: 'absolute' }} accessible={false}>
+        <G fill="#E5FFF5" stroke="#9CCDC4" strokeWidth={.7}>
+          {[24,42,112,130].map((x,n) => <G key={x}><Circle cx={x} cy={62 + n%2*6} r={n%2 ? 6 : 8} opacity={.86}/><Circle cx={x-2} cy={59+n%2*6} r={2} fill="#FFFFFF" stroke="none"/></G>)}
+        </G>
+      </Svg>}
+    </View>;
+  }
   const art = <SeatShape id={id} layer={layer} tint={tint} state={state} />;
   return (
     <Svg width={size} height={size} viewBox="0 0 150 150" accessible={false}>

@@ -15,10 +15,10 @@ import { roomOrigin, type Building } from "../camera";
 import type { BadgeId } from "../../badges/engine";
 import { tracks } from "../../badges/engine";
 import type { HomeStateV2 } from "../model";
-import type { Face, Scene, SceneEntity } from "../scene/types";
-import { lampShadow, litLamps, NOTICE_DEGREES, type LampShadow } from "./delight";
+import type { Scene, SceneEntity } from "../scene/types";
+import { type HomeMood, lampShadow, litLamps, NOTICE_DEGREES, type LampShadow } from "./delight";
 import { Effects, type Effect } from "./Effects";
-import { SetPieces, type Poke } from "./SetPieces";
+import { type Poke } from "./SetPieces";
 import { paintEntries, restingVisible } from "./group";
 import { SeatRimCue, TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
@@ -121,7 +121,7 @@ const RestingEntity = memo(function RestingEntity({
   /** Keep the visible room's static closed-eye drawing mounted across meals. */
   cacheBlink?: boolean;
   /** H4: a short expression after eating, a greeting or a burp. */
-  mood?: Face;
+  mood?: HomeMood;
   /** HD-08: a soft shadow thrown by a lit lamp nearby. */
   shadow?: LampShadow;
   onNode: (id: string, node: View | null) => void;
@@ -431,12 +431,12 @@ export function SceneView({
   liveRoom,
   moods = {},
   effects = [],
-  poke,
+  poke: _poke,
 }: {
   /** HC-01: the painted piece that was last touched. */
   poke?: Poke;
   /** H4: short expressions on friends at rest (after eating, greeting, a burp). */
-  moods?: Record<string, Face>;
+  moods?: Record<string, HomeMood>;
   /** H4: crumbs, bubbles, splashes and steam, drawn above the room's things. */
   effects?: readonly Effect[];
   /** HM-11: friends at rest in this room blink and breathe. None in the overview. */
@@ -644,7 +644,7 @@ export function SceneView({
                     <RoomShellArt room={roomId} theme={room.theme} live />
                   )}
                 </View>
-                <SetPieces room={roomId} poke={poke?.id.startsWith(`${roomId}-`) ? poke : undefined} reduced={reduced} />
+                {/* Painted room set dressing stays registered to the room; movable props are separate entities. */}
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
                   {index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />}
                 </View>

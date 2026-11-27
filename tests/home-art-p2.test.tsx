@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createElement as nativeElement } from 'react';
 import { renderToStaticMarkup as render } from 'react-dom/server';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { describe,it,expect,vi } from 'vitest';
@@ -12,7 +12,7 @@ import { moreCatalog } from '../src/home/catalogMore';
 import { defaultLook } from '../src/islander/look';
 import { starterHome } from '../src/home/model';
 import { itemSize, itemPoint } from '../src/home/geometry';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
+vi.mock('react-native-svg',()=>({default:'svg',Defs:'defs',RadialGradient:'radialGradient',Stop:'stop',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 describe('Phase 2 living art contract',()=>{
  it('declares free reusable holdables and all tap reactions',()=>{
   for(const id of holdableIds) {expect(moreCatalog[id].free).toBe(true);expect(moreCatalog[id].badge).toBeUndefined();expect(capabilityOf(id).holdable).toBe(true);}
@@ -70,3 +70,10 @@ describe('Phase 2 living art contract',()=>{
   if(process.env.V24_ART_P2) {mkdirSync(process.env.V24_ART_P2,{recursive:true});writeFileSync(`${process.env.V24_ART_P2}/living-gallery.html`,`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Island Home · living props</title><style>*{box-sizing:border-box}body{margin:0;background:#CDE6DF;color:#385451;font:14px system-ui}header{padding:20px}h1{font-size:22px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:12px}article{background:#FFF8E9;border-radius:16px;padding:16px;min-height:300px}article[data-item="kitchen"]{grid-column:1/-1}.scale{display:flex;align-items:end;justify-content:center}.kitchen{display:flex;align-items:end;justify-content:center;flex-wrap:wrap}h2{font-size:16px;margin:0 0 12px}svg{display:block;margin:auto;overflow:visible}</style><header><h1>Living props · all states and held nodes</h1><p>Original art; full/empty, toggles, hand attachments, unlimited dispensers.</p></header><main>${cards}</main>`);}
  });
 });
+
+vi.mock('react-native', () => ({
+  View: ({children, ...p}: any) => nativeElement('div', p, children),
+  Image: ({source, ...p}: any) => nativeElement('img', {...p, src: typeof source === 'string' ? source : source?.uri}),
+}));
+
+vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
