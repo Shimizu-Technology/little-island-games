@@ -33,7 +33,10 @@ export const C = {
   line: "#E8D8BE",
   teal: "#1E6B66",
   soft: "#FFF0D2",
-  coral: "#FF7A5C",
+  /** WCAG AA coral foreground for text, icons, and accents on paper/cream. */
+  coral: "#C0442B",
+  /** Bright coral fill surface (primary buttons, badges) paired with C.ink text. */
+  coralFill: "#FF7A5C",
   gold: "#E1B251",
   blue: "#386C9A",
   /** Success surface (finished rounds, matched cards, found letters). */
@@ -532,7 +535,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderBottomWidth: 3,
     borderColor: "#E06346",
-    backgroundColor: C.coral,
+    backgroundColor: C.coralFill,
     alignItems: "center",
     justifyContent: "center",
   },

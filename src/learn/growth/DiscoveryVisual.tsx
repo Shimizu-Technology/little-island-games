@@ -23,7 +23,7 @@ export function DiscoveryVisual({ question, showHelp, disabled, onHelp }: Growth
         {Array.from({ length: size }, (_, col) => {
           const here = col === position[0] && row === position[1];
           const goal = col === tx && row === ty;
-          return <View key={col} style={{ flex: 1, minHeight: 40, borderRadius: 10, backgroundColor: here ? C.coral : goal ? "#FFE4A3" : C.paper, alignItems: "center", justifyContent: "center", borderWidth: here || goal ? 2 : 1, borderColor: here || goal ? C.ink : C.line }}>
+          return <View key={col} style={{ flex: 1, minHeight: 40, borderRadius: 10, backgroundColor: here ? C.coralFill : goal ? "#FFE4A3" : C.paper, alignItems: "center", justifyContent: "center", borderWidth: here || goal ? 2 : 1, borderColor: here || goal ? C.ink : C.line }}>
             <Copy style={{ fontSize: 15, fontWeight: here || goal ? "900" : "600", color: C.ink }}>{here ? "★" : `${String.fromCharCode(65 + col)}${row + 1}`}</Copy>
           </View>;
         })}

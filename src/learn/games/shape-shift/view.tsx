@@ -509,7 +509,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               accessibilityLabel="Turn piece clockwise"
               disabled={!active || reveal}
               onPress={() => setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3)}
-              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
+              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 48, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>↻ Turn</Copy>
             </PressableScale>
@@ -521,7 +521,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               accessibilityLabel="Flip piece"
               disabled={!active || reveal}
               onPress={() => setFlipped(!flipped)}
-              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
+              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 48, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>⇄ Flip</Copy>
             </PressableScale>
@@ -538,7 +538,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 setSelectedPiece(last.pieceIndex);
                 setWrong(false);
               }}
-              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
+              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 48, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>Undo</Copy>
             </PressableScale>
@@ -557,7 +557,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 setSelectedPiece(next.hintPiece);
               }
             }}
-            style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
+            style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 48, justifyContent: "center" }}
           >
             <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>Help</Copy>
           </PressableScale>

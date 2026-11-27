@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
   label: { color: C.ink, fontSize: 17, fontWeight: "800", flexShrink: 1 },
   note: { color: C.ink, fontSize: 16, flexShrink: 1 },
   stone: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, borderWidth: 2, borderColor: "#D4B88B", backgroundColor: C.paper, maxWidth: "100%" },
-  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: C.coral, borderWidth: 1.5, borderColor: C.ink },
+  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: C.coralFill, borderWidth: 1.5, borderColor: C.ink },
   ten: { flexDirection: "row", borderRadius: 5, overflow: "hidden", borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.teal },
   unit: { width: 8, height: 18, borderRightWidth: 1, borderRightColor: C.cream },
 });

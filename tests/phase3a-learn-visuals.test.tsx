@@ -21,14 +21,22 @@ import * as shapeView from "../src/learn/games/shape-shift/view";
 import * as codeLabView from "../src/learn/games/code-lab/view";
 
 const { renderToStaticMarkup } = createRequire(import.meta.url)("react-dom/server");
-const render = (el: React.ReactElement) => renderToStaticMarkup(el).replaceAll("&quot;", '"');
+const renderRaw = (el: React.ReactElement) => renderToStaticMarkup(el);
+const render = (el: React.ReactElement) => renderRaw(el).replaceAll("&quot;", '"');
 
 const { tag } = vi.hoisted(() => ({
   tag: (name: string) =>
     function MockEl(props: Record<string, unknown>) {
-      const { children, style } = props;
+      const { children, style, testID } = props;
       const flat = Array.isArray(style) ? Object.assign({}, ...style.flat(Infinity).filter(Boolean)) : style;
-      return React.createElement(name, { "data-style": flat ? JSON.stringify(flat) : undefined }, children as React.ReactNode);
+      return React.createElement(
+        name,
+        {
+          "data-testid": typeof testID === "string" ? testID : undefined,
+          "data-style": flat ? JSON.stringify(flat) : undefined,
+        },
+        children as React.ReactNode,
+      );
     },
 }));
 
@@ -127,15 +135,38 @@ const board = (view: { Board: unknown }) => view.Board as React.ComponentType<Re
 
 const LEGACY_DARK_HEXES = ["#174A51", "#227B80", "#254B4B", "#23334D", "#315D88", "#287A82", "#277A87"];
 
+function relativeLuminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(a: string, b: string): number {
+  const [l1, l2] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (l1 + 0.05) / (l2 + 0.05);
+}
+
+function styleForTestId(rawHtml: string, testId: string): Record<string, unknown> {
+  const match = rawHtml.match(new RegExp(`data-testid="${testId}"[^>]*data-style="([^"]+)"`));
+  expect(match, `expected rendered element with testID="${testId}"`).toBeTruthy();
+  return JSON.parse(match![1].replaceAll("&quot;", '"')) as Record<string, unknown>;
+}
+
 describe("Phase 3A: Clean 4.0 core primitives & learning playfield visuals", () => {
-  it("uses Warm Island Storybook tokens and dark espresso ink on coral primary Button", () => {
+  it("uses Warm Island Storybook tokens with AA coral foreground and coralFill primary Button", () => {
     expect(C.ink).toBe("#3D2B24");
     expect(C.muted).toBe("#665247");
     expect(C.cream).toBe("#FFF6E5");
     expect(C.paper).toBe("#FFFDF8");
     expect(C.line).toBe("#E8D8BE");
-    expect(C.coral).toBe("#FF7A5C");
+    expect(C.coral).toBe("#C0442B");
+    expect(C.coralFill).toBe("#FF7A5C");
     expect(C.teal).toBe("#1E6B66");
+
+    expect(contrastRatio(C.coral, C.paper)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(C.coral, C.cream)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(C.ink, C.coralFill)).toBeGreaterThanOrEqual(4.5);
 
     const primaryHtml = render(<Button icon="star" onPress={() => {}}>Play</Button>);
     expect(primaryHtml).toContain("#FF7A5C");
@@ -158,7 +189,7 @@ describe("Phase 3A: Clean 4.0 core primitives & learning playfield visuals", () 
     }
   });
 
-  it("renders circular SVG food pie in Fraction Feast L1 and hides L5 answer spoiler", () => {
+  it("renders circular SVG food pie in Fraction Feast L1 and hides L5 answer spoiler across all extra modes", () => {
     const l1 = optionsAtLevel({ mode: "solo", pace: "easy" }, 1);
     const s1 = feast.create(l1, ctx(1)) as { tasks: { kind: string }[]; index: number };
     const shareIdx = Math.max(0, s1.tasks.findIndex((t) => t.kind === "share"));
@@ -167,12 +198,20 @@ describe("Phase 3A: Clean 4.0 core primitives & learning playfield visuals", () 
     expect(l1Html).toContain("<circle");
 
     const l5 = optionsAtLevel({ mode: "solo", pace: "easy" }, 5);
-    const s5 = feast.create(l5, ctx(4)) as { tasks: { kind: string }[]; index: number };
-    const pctIdx = Math.max(0, s5.tasks.findIndex((t) => t.kind === "percent"));
-    const l5Html = render(React.createElement(board(feastView), boardProps("fraction-feast", l5, { ...s5, index: pctIdx, pieces: 35 })));
-    expect(l5Html).toContain("35 of 100 squares shaded");
-    expect(l5Html).not.toContain("35/100 = 0.35");
-    expect(l5Html).not.toContain("= 35%");
+    const s5 = feast.create(l5, ctx(4));
+    expect(s5.tasks.every((t) => t.kind === "decimal")).toBe(true);
+    for (const extra of [0, 1, 2] as const) {
+      const idx = s5.tasks.findIndex((t) => t.kind === "decimal" && t.extra === extra);
+      expect(idx, `L5 decimal task with extra=${extra}`).toBeGreaterThanOrEqual(0);
+      const task = s5.tasks[idx];
+      const l5Html = render(React.createElement(board(feastView), boardProps("fraction-feast", l5, { ...s5, index: idx, pieces: 35 })));
+      if (extra === 0) expect(l5Html).toContain(`$0.${String(task.n).padStart(2, "0")}`);
+      if (extra === 1) expect(l5Html).toContain(`${task.n}/100`);
+      if (extra === 2) expect(l5Html).toContain(`${task.n}%`);
+      expect(l5Html).toContain("35 of 100 squares shaded");
+      expect(l5Html).not.toContain("35/100 = 0.35");
+      expect(l5Html).not.toContain("= 35%");
+    }
   });
 
   it("uses clean Add/Take off/Undo controls and SVG AreaGrid in Times Tide", () => {
@@ -209,15 +248,28 @@ describe("Phase 3A: Clean 4.0 core primitives & learning playfield visuals", () 
     }
   });
 
-  it("enlarges Letter Lagoon L4 trace checkpoints and Shape Shift tangram tray controls to >= 48pt", () => {
+  it("enlarges Letter Lagoon L4 trace checkpoints and Shape Shift tangram tray and action controls to >= 48pt", () => {
     const l4 = optionsAtLevel({ mode: "solo", pace: "easy" }, 4);
     const l4Html = render(React.createElement(board(letterView), boardProps("letter-lagoon", l4, letter.create(l4, ctx(2)))));
     expect(l4Html).not.toContain('font-size="4"');
     expect(l4Html).toContain('font-size="7.5"');
 
-    const l2 = optionsAtLevel({ mode: "solo", pace: "easy" }, 2);
-    const shapeHtml = render(React.createElement(board(shapeView), boardProps("shape-shift", l2, shapes.create(l2, ctx(3)))));
+    const l3 = optionsAtLevel({ mode: "solo", pace: "easy" }, 3);
+    const baseShape = shapes.create(l3, ctx(3));
+    const tangramWithPlaced = {
+      ...baseShape,
+      mode: "tangram" as const,
+      placed: [{ pieceIndex: 0, turns: 0 as const, flipped: false, x: 0, y: 0 }],
+    };
+    const shapeRawHtml = renderRaw(React.createElement(board(shapeView), boardProps("shape-shift", l3, tangramWithPlaced)));
+    const shapeHtml = shapeRawHtml.replaceAll("&quot;", '"');
     expect(shapeHtml).not.toContain('"width":43,"height":43');
-    expect(shapeHtml).toContain('"minWidth":48,"minHeight":48');
+    const trayStyle = styleForTestId(shapeRawHtml, "shape-tray-1");
+    expect(Number(trayStyle.minWidth)).toBeGreaterThanOrEqual(48);
+    expect(Number(trayStyle.minHeight)).toBeGreaterThanOrEqual(48);
+    for (const controlId of ["shape-turn", "shape-flip", "shape-undo", "shape-help-button"]) {
+      const style = styleForTestId(shapeRawHtml, controlId);
+      expect(Number(style.minHeight), `${controlId} minHeight`).toBeGreaterThanOrEqual(48);
+    }
   });
 });
