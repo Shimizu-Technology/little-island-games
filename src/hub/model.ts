@@ -38,75 +38,123 @@ export const SAND_PATH_STROKE_WIDTH = 21;
 export const SAND_PATH_RADIUS = SAND_PATH_STROKE_WIDTH / 2;
 const ART_ASPECT = 0.85;
 const MAX_ART_WIDTH = 256;
+/** Responsive hero scale for the Islander guide on the map, independent of narrow inter-column gaps. */
+export function guideSizeFor(wide: boolean, width: number, height: number): number {
+  if (wide) return Math.round(Math.max(58, Math.min(90, width * .10, height * .305)) * 10) / 10;
+  return Math.round(Math.max(54, Math.min(92, width * .19, height * .145)) * 10) / 10;
+}
 /** Common geometry for the 6-door scene, paths, hit targets and guide. Labels get their own space with zero overlap. */
 export function mapLayout(width: number, height: number, fontScale = 1) {
   const wide = width > height * 1.15;
   const scale = Math.max(1, fontScale);
-  const labelHeight = Math.round(
-    Math.max(
-      45,
-      scale >= 1.25 ? Math.max(62, 28 * Math.min(scale, 2.5)) : 26 * Math.min(scale, 2.5),
-    ),
-  );
-  const edgePad = 6, topPad = 6, bottomPad = 8, gapX = width < 260 ? 6 : 10, gapY = wide ? 10 : 4;
+  const edgePad = 6, topPad = 6, bottomPad = 8, gapX = width < 260 ? 6 : 10, gapY = wide ? 6 : 4;
   const imageWidth = wide ? 1280 : 720, imageHeight = wide ? 720 : 1280;
   const imageScale = Math.max(width / imageWidth, height / imageHeight);
   // Calibrated to the 6 golden sand clearings of the stylized Guam portrait & landscape maps.
   const paintedPoints: Record<PlaceId, readonly [number, number]> = wide ? {
-    school: [.30, .36], library: [.505, .36], cove: [.71, .36],
-    home: [.30, .64], arcade: [.505, .64], hall: [.71, .64],
+    school: [.295, .365], library: [.503, .365], cove: [.710, .365],
+    home: [.295, .655], arcade: [.503, .655], hall: [.710, .655],
   } : {
-    school: [.388, .336], library: [.662, .336], arcade: [.355, .505],
-    hall: [.645, .505], home: [.360, .674], cove: [.645, .674],
+    school: [.338, .312], library: [.678, .312], arcade: [.322, .508],
+    hall: [.678, .508], home: [.324, .704], cove: [.676, .704],
   };
-  const yOffset = wide ? .055 : .049;
-  const positioned = places.map(item => {
+  const yOffset = wide ? .065 : .060;
+  // Reserve enough horizontal space inside tall, narrow viewports for readable labels and >=48pt hit targets.
+  const maxColWidth = Math.max(0, (width - 2 * edgePad - (wide ? 2 : 1) * gapX) / (wide ? 3 : 2));
+  const reservedColWidth = Math.min(maxColWidth, wide ? 72 : 96);
+  const minEdge = Math.min(width / 2, Math.max(28, edgePad + reservedColWidth / 2));
+  const basePoints = places.map(item => {
     const point = paintedPoints[item.id];
-    const x = Math.max(28 / width, Math.min(1 - 28 / width, (.5 * width + (point[0] - .5) * imageWidth * imageScale) / width));
+    const x = Math.max(minEdge / width, Math.min(1 - minEdge / width, (.5 * width + (point[0] - .5) * imageWidth * imageScale) / width));
     const y = (.5 * height + (point[1] - .5) * imageHeight * imageScale) / height + yOffset;
-    return { ...item, x, y, baseline: Math.min(y * height, height - labelHeight - bottomPad) };
+    return { ...item, x, y };
   });
-  // On compact large-text viewports, ensure the 3 portrait rows keep minimum separation so labels and art never overlap.
-  if (!wide) {
-    const rawRows = [...new Set(positioned.map(p => p.baseline))].sort((a, b) => a - b);
-    if (rawRows.length === 3) {
-      const minStep = 44 * ART_ASPECT + labelHeight + gapY;
-      let [r0, r1, r2] = rawRows;
+  const minEdgeX = Math.min(...basePoints.map(p => Math.min(p.x, 1 - p.x))) * width;
+  const rowXs = new Map<number, number[]>();
+  for (const p of basePoints) {
+    const key = Math.round(p.y * 100);
+    const xs = rowXs.get(key) ?? [];
+    xs.push(p.x * width);
+    rowXs.set(key, xs);
+  }
+  let minColDx = Infinity;
+  for (const xs of rowXs.values()) {
+    xs.sort((a, b) => a - b);
+    for (let i = 1; i < xs.length; i++) minColDx = Math.min(minColDx, xs[i] - xs[i - 1]);
+  }
+  const baseGuideSize = guideSizeFor(wide, width, height);
+  const maxArtWidthFromWidth = Math.min(
+    imageWidth * imageScale * (wide ? .21 : .35),
+    2 * (minEdgeX - edgePad),
+    minColDx - gapX,
+    MAX_ART_WIDTH,
+  );
+  const horizontalBudget = wide
+    ? Math.min(maxArtWidthFromWidth, minColDx - baseGuideSize * .607 - 8)
+    : maxArtWidthFromWidth;
+  const labelFontSize = width < 360 || horizontalBudget < 108 ? 12 : 14;
+  const minSingleLineLabel = labelFontSize <= 12 ? 96 : 113;
+  const needsTwoLinesAtDefault = horizontalBudget < minSingleLineLabel;
+  const defaultMinLabelHeight = needsTwoLinesAtDefault ? (labelFontSize <= 12 ? 42 : 46) : 34;
+  const labelHeight = Math.round(
+    scale >= 1.25
+      ? Math.max(62, 28 * Math.min(scale, 2.5))
+      : Math.max(defaultMinLabelHeight, 28 * Math.min(scale, 2.5)),
+  );
+  const positioned = basePoints.map(item => ({
+    ...item,
+    baseline: Math.min(item.y * height, height - labelHeight - bottomPad),
+  }));
+  // Balance rows on compact or large-text viewports so buildings and labels never clip or overlap.
+  const rawRows = [...new Set(positioned.map(p => p.baseline))].sort((a, b) => a - b);
+  if (!wide && rawRows.length === 3) {
+    const minStep = 44 * ART_ASPECT + labelHeight + gapY;
+    let [r0, r1, r2] = rawRows;
+    r0 = Math.min(r0, r1 - minStep);
+    r2 = Math.max(r2, r1 + minStep);
+    const maxR2 = height - labelHeight - bottomPad;
+    if (r2 > maxR2) {
+      r2 = maxR2;
+      r1 = Math.min(r1, r2 - minStep);
       r0 = Math.min(r0, r1 - minStep);
-      r2 = Math.max(r2, r1 + minStep);
-      const maxR2 = height - labelHeight - bottomPad;
-      if (r2 > maxR2) {
-        r2 = maxR2;
-        r1 = Math.min(r1, r2 - minStep);
-        r0 = Math.min(r0, r1 - minStep);
-      }
-      const minR0 = topPad + 44 * ART_ASPECT;
-      if (r0 < minR0) {
-        r0 = minR0;
-        r1 = Math.max(r1, r0 + minStep);
-        r2 = Math.max(r2, r1 + minStep);
-      }
-      const remap = new Map([[rawRows[0], r0], [rawRows[1], r1], [rawRows[2], r2]]);
-      for (const p of positioned) p.baseline = remap.get(p.baseline) ?? p.baseline;
     }
+    const minR0 = topPad + 44 * ART_ASPECT;
+    if (r0 < minR0) {
+      r0 = minR0;
+      r1 = Math.max(r1, r0 + minStep);
+      r2 = Math.max(r2, r1 + minStep);
+    }
+    const remap = new Map([[rawRows[0], r0], [rawRows[1], r1], [rawRows[2], r2]]);
+    for (const p of positioned) p.baseline = remap.get(p.baseline) ?? p.baseline;
+  } else if (wide && rawRows.length === 2) {
+    let [r0, r1] = rawRows;
+    const maxR1 = height - labelHeight - bottomPad;
+    r1 = Math.min(r1, maxR1);
+    const idealArtH = (maxR1 - topPad - labelHeight - gapY) / 2;
+    const targetR0 = Math.min(topPad + Math.max(44 * ART_ASPECT, idealArtH), r1 - (idealArtH + labelHeight + gapY));
+    if (targetR0 > r0) r0 = targetR0;
+    const remap = new Map([[rawRows[0], r0], [rawRows[1], r1]]);
+    for (const p of positioned) p.baseline = remap.get(p.baseline) ?? p.baseline;
   }
   const rowBaselines = [...new Set(positioned.map(p => p.baseline))].sort((a, b) => a - b);
-  const minEdgeX = Math.min(...positioned.map(p => Math.min(p.x, 1 - p.x))) * width;
-  const minColDx = (wide ? .205 * imageWidth : .274 * imageWidth) * imageScale;
-  const maxArtWidthFromWidth = Math.min(imageWidth * imageScale * (wide ? .17 : .26), 2 * (minEdgeX - edgePad), minColDx - gapX, MAX_ART_WIDTH);
   const verticalLimits = [rowBaselines[0] - topPad];
   for (let i = 1; i < rowBaselines.length; i++) verticalLimits.push(rowBaselines[i] - rowBaselines[i - 1] - labelHeight - gapY);
   const maxArtHeight = Math.max(44 * ART_ASPECT, Math.min(...verticalLimits));
-  // Reserve a central corridor for the resting guide along the rows it shares (middle/lower rows on portrait).
-  const guideRows = wide ? positioned : positioned.filter(p => p.id !== 'school' && p.id !== 'library');
-  const horizontalBudget = wide
-    ? Math.min(maxArtWidthFromWidth, minColDx - Math.min(96, width * .24, height * .20) * .607 - 8)
-    : Math.min(maxArtWidthFromWidth, ...guideRows.map(p => 2 * (Math.abs(p.x * width - width / 2) - 13)));
-  const labelWidth = Math.max(44, horizontalBudget);
-  const labelFontSize = width < 360 ? 12 : 14;
   const artWidth = Math.max(44, Math.min(horizontalBudget, maxArtHeight / ART_ASPECT));
   const artHeight = artWidth * ART_ASPECT;
-  return { wide, artWidth, artHeight, labelHeight, targets: positioned.map(place => ({ ...place,
+  const maxLabelWidth = scale >= 1.25 ? Math.max(artWidth, 148) : 148;
+  const labelWidth = Math.max(Math.min(48, maxColWidth), Math.min(horizontalBudget, Math.max(artWidth * .96, minSingleLineLabel), maxLabelWidth));
+  // Keep portrait guide cleanly below Row 1's label pill and above Row 2's label pill even on compact large-text viewports.
+  let guideSize = baseGuideSize;
+  if (!wide && rowBaselines.length === 3) {
+    const midLabelBottom = rowBaselines[1] + labelHeight;
+    const botDoorY = rowBaselines[2] - artHeight * .09;
+    const corridorHeight = botDoorY - midLabelBottom;
+    if (corridorHeight > 0 && corridorHeight < guideSize) {
+      guideSize = Math.round(Math.max(40, corridorHeight) * 10) / 10;
+    }
+  }
+  return { wide, artWidth, artHeight, labelHeight, guideSize, targets: positioned.map(place => ({ ...place,
     left: place.x * width - artWidth / 2, top: place.baseline - artHeight,
     width: artWidth, labelWidth, labelFontSize, height: artHeight + labelHeight,
     door: { x: place.x * width, y: place.baseline - artHeight * .09 },
@@ -121,6 +169,12 @@ export function guideStartPoint(layout: MapLayout, width: number, height: number
     const left = layout.targets.find(target => target.id === 'school')!.door.x;
     const center = layout.targets.find(target => target.id === 'library')!.door.x;
     return { x: (left + center) / 2, y: (minY + maxY) / 2 };
+  }
+  const rows = [...new Set(layout.targets.map(target => target.baseline))].sort((a, b) => a - b);
+  if (rows.length === 3) {
+    const midLabelBottom = rows[1] + layout.labelHeight;
+    const centeredY = (midLabelBottom + maxY + layout.guideSize) / 2;
+    return { x: width * .5, y: Math.min(maxY, Math.max(minY, centeredY)) };
   }
   const preferredY = height * .60;
   return { x: width * .5, y: Math.min(maxY, Math.max(minY, preferredY)) };
@@ -189,7 +243,7 @@ export function guideWaypoints(from: Point, to: Point, layout: MapLayout, width:
   }
   return points;
 }
-export const WALK_MS = 380, ZOOM_MS = 160;
+export const WALK_MS = 110, ZOOM_MS = 50;
 /** One cancellable boundary timer. The second activation always wins immediately. */
 export function createJourney(open: (place: PlaceId) => void, schedule = (fn: () => void, ms: number) => setTimeout(fn, ms), cancel = (id: ReturnType<typeof setTimeout>) => clearTimeout(id)) {
   let timer: ReturnType<typeof setTimeout> | undefined, pending: PlaceId | null = null;

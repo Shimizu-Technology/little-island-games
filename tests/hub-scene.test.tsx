@@ -10,6 +10,8 @@ import {
   TERRAIN_VIEWBOX,
   terrainBranches,
   terrainPathData,
+  WALK_MS,
+  ZOOM_MS,
   type PathSegment,
   type Point,
 } from '../src/hub/model';
@@ -48,6 +50,18 @@ describe('six-door illustrated island map', () => {
   expect(screen.root.findAll(n => n.type === 'svg')).toHaveLength(0);
   await act(() => screen.unmount());
  });
+ it.each([false, true])('gives immediate press feedback on touch down and release (reduced=%s)', async (reduced) => {
+  let screen!: ReactTestRenderer;
+  await act(() => { screen = create(<IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced={reduced} active door={null} onArrive={vi.fn()}/>); });
+  const school = screen.root.findByProps({ testID: 'place-school' });
+  const schoolPress = motion.values[7];
+  expect(schoolPress.get()).toBe(0);
+  await act(() => school.props.onPressIn());
+  expect(schoolPress.get()).toBe(1);
+  await act(() => school.props.onPressOut());
+  expect(schoolPress.get()).toBe(0);
+  await act(() => screen.unmount());
+ });
 });
 describe('visible map input during route/sheet settling',()=>{
  it('opens a place immediately even while idle motion is paused by a closing sheet',async()=>{
@@ -70,7 +84,9 @@ describe('departure camera lifetime',()=>{
   const [x,y,,zoom,cameraX,cameraY]=motion.values;
   expect(zoom.get()).toBe(1.16);
   const camera=[zoom.get(),cameraX.get(),cameraY.get()];
-  await act(()=>{vi.advanceTimersByTime(540);});
+  await act(()=>{vi.advanceTimersByTime(WALK_MS);});
+  expect(open).not.toHaveBeenCalled();
+  await act(()=>{vi.advanceTimersByTime(ZOOM_MS);});
   expect(open).toHaveBeenCalledExactlyOnceWith('home');
   const door=[x.get(),y.get()];
   // HubScreen accepts the door in the same callback that pushes the Router route.
@@ -111,6 +127,7 @@ describe('shared sandy footpaths and guide waypoints', () => {
  const cases: [number, number, number][] = [
   [320, 378, 1], [844, 250, 1],
   [320, 568, 1], [320, 568, 1.5], [320, 568, 2],
+  [320, 1300, 2], [320, 1550, 2],
   [390, 844, 1], [390, 844, 1.5], [390, 844, 2],
   [844, 390, 1], [844, 390, 1.5], [844, 390, 2],
   [1024, 768, 1], [1024, 768, 1.5], [1024, 768, 2],
@@ -203,20 +220,61 @@ describe('wide horizontal crossroads', () => {
   expect(start.y).toBe((Math.min(...ys) + Math.max(...ys)) / 2);
   expect(terrainBranches(layout,width)[0].every(p => p.y === start.y)).toBe(true);
   for (const target of layout.targets) {
-   const size = Math.min(96,width*.24,height*.20);
+   const size = layout.guideSize;
    expect(start.x-size*.303 < target.left+target.width && target.left < start.x+size*.304 && start.y-size < target.top+target.height && target.top < start.y).toBe(false);
   }
  });
- it.each([[1024, 627], [844, 249], [568, 245], [390, 653], [320, 377]])('keeps the resting guide clear of label pills at %s×%s', (width, height) => {
+ it.each([[1024, 627], [844, 249], [568, 245], [390, 653], [320, 377], [390, 844], [390, 654]])('keeps the resting guide clear of label pills at %s×%s', (width, height) => {
   const layout = mapLayout(width, height);
   const start = guideStartPoint(layout, width, height);
-  const gap = layout.wide ? Infinity : Math.min(...layout.targets.filter(t => t.x > .5).map(t => t.x * width - t.labelWidth / 2)) - Math.max(...layout.targets.filter(t => t.x < .5).map(t => t.x * width + t.labelWidth / 2));
-  const size = Math.max(28, Math.min(96, width * .24, height * .20, (gap - 8) / .607));
+  const size = layout.guideSize;
   for (const t of layout.targets) {
    const horizontal = Math.min(start.x + size * .304, t.x * width + t.labelWidth / 2) - Math.max(start.x - size * .303, t.x * width - t.labelWidth / 2);
    const vertical = Math.min(start.y, t.top + t.height) - Math.max(start.y - size, t.baseline);
    expect(Math.max(0, horizontal) * Math.max(0, vertical)).toBe(0);
   }
+ });
+ it.each([[390, 844], [390, 654]])('renders prominent Islander guide (>= 60pt) and single-line Puzzle Cove & Game Hall pills at %s×%s', async (width, height) => {
+  const layout = mapLayout(width, height, 1);
+  expect(layout.artWidth).toBeGreaterThanOrEqual(110);
+  expect(layout.guideSize).toBeGreaterThanOrEqual(60);
+  let screen!: ReactTestRenderer;
+  await act(() => {
+   screen = create(<IslandScene width={width} height={height} fontScale={1} look={defaultLook} reduced={false} active door={null} onArrive={vi.fn()}/>);
+  });
+  const guide = screen.root.findByProps({ testID: 'island-guide' });
+  const guideStyle = Array.isArray(guide.props.style) ? Object.assign({}, ...guide.props.style) : guide.props.style;
+  expect(guideStyle.height).toBeGreaterThanOrEqual(60);
+  for (const id of ['cove', 'hall'] as const) {
+   const target = layout.targets.find(t => t.id === id)!;
+   const pill = screen.root.findByProps({ testID: `place-label-${id}` });
+   const pillStyle = pill.props.style as { paddingHorizontal: number; borderWidth: number };
+   const innerWidth = target.labelWidth - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
+   expect(wordWidth(target.name) * target.labelFontSize, `${target.name} single line at ${width}×${height}`).toBeLessThanOrEqual(innerWidth);
+  }
+  await act(() => screen.unmount());
+ });
+ it.each([[320, 1300, 2], [320, 1550, 2]] as const)('renders >= 48pt Pressable hit targets and >= 64pt inner label text widths at tall narrow %s×%s / fontScale %s', async (width, height, fontScale) => {
+  const layout = mapLayout(width, height, fontScale);
+  let screen!: ReactTestRenderer;
+  await act(() => {
+   screen = create(<IslandScene width={width} height={height} fontScale={fontScale} look={defaultLook} reduced={false} active door={null} onArrive={vi.fn()}/>);
+  });
+  for (const target of layout.targets) {
+   const button = screen.root.findByProps({ testID: `place-${target.id}` });
+   const buttonStyle = (Array.isArray(button.props.style) ? Object.assign({}, ...button.props.style) : button.props.style) as { left: number; width: number; minWidth: number };
+   expect(buttonStyle.minWidth, `${target.id} minWidth`).toBeGreaterThanOrEqual(48);
+   expect(buttonStyle.width, `${target.id} pressable width`).toBeGreaterThanOrEqual(48);
+   expect(buttonStyle.left, `${target.id} pressable left`).toBeGreaterThanOrEqual(0);
+   expect(buttonStyle.left + buttonStyle.width, `${target.id} pressable right`).toBeLessThanOrEqual(width);
+
+   const pill = screen.root.findByProps({ testID: `place-label-${target.id}` });
+   const pillStyle = pill.props.style as { width: number; paddingHorizontal: number; borderWidth: number };
+   const innerWidth = pillStyle.width - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
+   expect(pillStyle.width, `${target.id} labelWidth`).toBeGreaterThanOrEqual(72);
+   expect(innerWidth, `${target.id} innerWidth`).toBeGreaterThanOrEqual(64);
+  }
+  await act(() => screen.unmount());
  });
 
 });
