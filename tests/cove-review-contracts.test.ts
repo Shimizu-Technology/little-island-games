@@ -14,7 +14,7 @@ it('10 explicitly leaves edge input open for G2 instead of claiming shell suppor
   const s = read('puzzles/grid/README.md'); expect(s).toContain('Edge input: OPEN'); expect(s).toContain('nearestEdge');
 });
 it('11 keeps School Continue alongside Cove Continue', () => {
-  const s = read('hub/HubScreen.tsx'); expect(s).not.toContain(': resume && dock'); expect(s).toContain("dock('School'");
+  const s = read('hub/HubScreen.tsx'); expect(s).not.toContain(': resume && dock'); expect(s).toContain("dock(`Play ${shelfGames.find");
 });
 it('12 offers a last-person resume shortcut without making that person active at launch', () => {
   const s = read('cove/HubCove.tsx'); expect(s).toContain('lastCoveContinue'); expect(s).toContain('person:'); expect(read('cove/CoveScreen.tsx')).toContain('ResumeCovePerson');

@@ -5,7 +5,7 @@ import { Board } from './Board';
 import { GridCanvas, gridLayout } from './GridCanvas';
 import { Control, Feedback, MoveGrid, controlRow, ink } from './controls';
 import { editPicture, type PictureEvent } from './checkpoint';
-import { checkDrawing, drawingSizes, newDrawing, paintDrawing, passDrawing, revealDrawing, type DrawMode } from './drawMode';
+import { checkDrawing, drawingSizes, newDrawing, paintDrawing, passDrawing, revealDrawing, type DrawingSize, type DrawMode } from './drawMode';
 import { FILL } from './engine';
 
 function editFamilyPuzzle(state: Extract<DrawMode, { phase: 'solve' }>, event: PictureEvent): DrawMode {
@@ -15,6 +15,7 @@ function editFamilyPuzzle(state: Extract<DrawMode, { phase: 'solve' }>, event: P
 
 export function DrawBoard({ width, onBack, active = true }: { width: number; onBack?: () => void; active?: boolean }) {
   const [state, setState] = useState<DrawMode>(newDrawing);
+  const [pendingSize, setPendingSize] = useState<DrawingSize | null>(null);
   const [moving, setMoving] = useState(false);
   const { height, fontScale } = useWindowDimensions();
   const chrome = useContext(GridChromeContext);
@@ -39,9 +40,11 @@ export function DrawBoard({ width, onBack, active = true }: { width: number; onB
       {onBack && <Control title="‹" label="Back from drawing" onPress={onBack} />}
       <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.heading}>Draw a Puzzle</Text>
     </View>
+    <Text style={{ color: ink, fontSize: 13 }}>Just for this turn — hand over to play!</Text>
+    {pendingSize !== null && <View style={controlRow}><Text>Clear your drawing for a new size?</Text><Control title="Keep drawing" disabled={!active} onPress={() => setPendingSize(null)}/><Control title="Clear drawing" disabled={!active} onPress={() => { setState(newDrawing(pendingSize)); setPendingSize(null); setMoving(false); }}/></View>}
     <View style={controlRow}>{drawingSizes.map(size =>
       <Control key={size} title={`${size}×${size}`} selected={draft.size === size} disabled={!active}
-        onPress={() => { if (size !== draft.size) { setState(newDrawing(size)); setMoving(false); } }} />)}</View>
+        onPress={() => { if (size !== draft.size) { if (draft.undo.length) setPendingSize(size); else { setState(newDrawing(size)); setMoving(false); } } }} />)}</View>
     <GridCanvas key={draft.size} layout={layout} size={draft.size} marks={draft.marks} mode={FILL} active={active}
       moving={moving && layout.movable} focusLine={check?.kind === 'open' ? check.line : undefined}
       onPaint={event => setState(current => current.phase === 'draw' ? paintDrawing(current, event) : current)} />

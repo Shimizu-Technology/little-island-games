@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Animated, View } from "react-native";
 import { Text } from "../../../components/Text";
-import { Heading } from "../../../components/ui";
+import { Heading } from "../../../board/WarmUI";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import { GridHero } from "./Art";
 export function GridTeaching({ crab, learning }: { crab: boolean; learning: boolean }) {
@@ -30,12 +30,12 @@ export function GridTeaching({ crab, learning }: { crab: boolean; learning: bool
         height: 130,
         alignSelf: "center",
         borderRadius: 24,
-        backgroundColor: crab ? "#65AFB3" : "#6E9864",
+        backgroundColor: crab ? "#E8D8BE" : "#E8F1D8",
         justifyContent: "center",
         overflow: "hidden",
       }}
     >
-      <Text style={{ position: "absolute", left: 140, color: "#FFF0C1", fontSize: 35 }}>→</Text>
+      <Text style={{ position: "absolute", left: 140, color: "#3D2B24", fontSize: 35 }}>→</Text>
       <View
         style={{
           position: "absolute",

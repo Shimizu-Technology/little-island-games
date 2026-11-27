@@ -15,6 +15,7 @@ import {
 } from '../src/hub/model';
 import { defaultLook } from '../src/islander/look';
 import { wordWidth } from '../src/components/wordFit';
+vi.mock('../src/hub/foreground', () => ({ useAppForeground: () => true }));
 vi.mock('react-native', () => ({ View:'div', Pressable:'button', Image:'img', Platform:{OS:'web'} }));
 const motion = vi.hoisted(() => ({ values: [] as { value: number; get: () => number; set: (value: number) => void }[] }));
 vi.mock('react-native-reanimated', async () => {

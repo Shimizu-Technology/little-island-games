@@ -1,9 +1,9 @@
+import { C, Button, Copy } from "../../board/WarmUI";
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, PanResponder, Platform, Pressable, TextInput, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../../components/Text';
-import { Button, C, Copy } from '../../components/ui';
 import { LARGE_TEXT, atLarge, wordFitMultiplier, wordsFit } from '../../components/wordFit';
 import { acceptTouch, gridGeometry, moveSelection, nearestCell, paintLine, type GridAction, type GridSpec, type GridState } from './model';
 import type { Mistakes } from '../../cove/local';

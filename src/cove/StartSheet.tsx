@@ -54,6 +54,7 @@ export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, pa
       <View style={[styles.picture, { backgroundColor: theme.pastels[pastelFor(entry.game)] }]}><CoveMotif game={entry.game} size={hasTileArt(entry.game) ? 124 : 88}/></View>
       <IconButton testID="start-favorite" glyph={glyphs.Star} filled={favorite} accessibilityLabel={favorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`} onPress={onFavorite} style={styles.star}/>
     </View>
+    {entry.game === "killer" && <Text variant="caption" style={styles.center}>Starts at 6×6 · Try Sudoku first for 4×4 warm-ups</Text>}
     {saved && <View style={styles.saved}>
       <Button testID="start-continue" label="Continue" accessibilityLabel={savedLabel ? `Continue, ${savedLabel}` : 'Continue'} fill disabled={busy} onPress={onContinue}/>
       {!!savedLabel && <Text testID="start-saved" variant="caption" tone="muted" style={styles.center}>{savedLabel}</Text>}

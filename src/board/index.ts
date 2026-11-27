@@ -37,7 +37,7 @@ export const catalog: Record<
     description: "Tie the last rope. Gather a little reef.",
     surface: "#DEEDEF",
     sizes: [3, 4, 5],
-    rule: "Tap a rope between two dots. Close the fourth side of a box to claim it and go again. Most boxes wins after every rope is tied.",
+    rule: "Tap a dot, then a neighboring dot. Close the fourth side of a box to claim it and go again. Most boxes wins after every rope is tied.",
     lesson:
       "These three ropes leave one side open. Tie the glowing fourth rope to make a net. Closing a net earns another turn.",
   },

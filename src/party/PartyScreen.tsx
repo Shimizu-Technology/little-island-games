@@ -1,3 +1,4 @@
+import { C, Button, Copy, Heading } from "../board/WarmUI";
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import type { RoundPractice } from "../practice/useRoundPractice";
@@ -5,7 +6,7 @@ import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
-import { Button, C, Copy, GameHeader, Heading, IconButton, Label, Sheet } from "../components/ui";
+import { GameHeader, IconButton, Label, Sheet } from "../components/ui";
 import { PARTY_PACKS, PartyPackId, partyPack, partyWord } from "./content";
 import {
   createPartySession,

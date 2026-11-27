@@ -1,10 +1,11 @@
+import { Status, C, Button, Copy } from "../../board/WarmUI";
 
 import { Text } from "../../components/Text";
 import React, { useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 
 import { NumbersState, numberGoal, numberResultDetail, numberAdvice, remainingTotal, needsPracticeRoll, closeNumbers, numberChoices, numberLimit, numberTarget, numbersStatus, rollNumbers, selectNumber, undoNumbers } from "../../games/numbers";
-import { Button, C, Controls, Copy, Status } from "../../components/ui";
+import { Controls } from "../../components/ui";
 
 import { type Props, Cell, BoardArea, BoardLayout } from "./shared";
 function Die({ value, size = 72 }: { value: number; size?: number }) {

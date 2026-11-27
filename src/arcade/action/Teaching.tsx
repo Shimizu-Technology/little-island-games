@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { Heading } from "../../components/ui";
+import { Heading } from "../../board/WarmUI";
 import { BallArt, BeetleArt, HuskArt } from "./Art";
 import { Bob } from "./Motion";
 export const actionInstruction = (palm: boolean, learning: boolean, together = false) =>
@@ -21,7 +21,7 @@ export function Demo({ palm, learning }: { palm: boolean; learning: boolean }) {
         height: 160,
         overflow: "hidden",
         borderRadius: 24,
-        backgroundColor: "#266E78",
+        backgroundColor: "#FFF6E5",
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -31,17 +31,17 @@ export function Demo({ palm, learning }: { palm: boolean; learning: boolean }) {
           <View style={{ flexDirection: "row", gap: 38 }}>
             <View>
               <BeetleArt size={65} />
-              {learning && <Heading style={{ color: "#FFF5CF", textAlign: "center" }}>4</Heading>}
+              {learning && <Heading style={{ color: "#3D2B24", textAlign: "center" }}>4</Heading>}
             </View>
             <View>
               <BeetleArt size={65} />
-              {learning && <Heading style={{ color: "#FFF5CF", textAlign: "center" }}>5 ✓</Heading>}
+              {learning && <Heading style={{ color: "#3D2B24", textAlign: "center" }}>5 ✓</Heading>}
             </View>
           </View>
           <Bob>
             <HuskArt size={38} />
           </Bob>
-          <Heading style={{ color: "#FFF5CF", fontSize: 20 }}>{learning ? "2 + 3 = 5" : "↑ Slide & hold ↑"}</Heading>
+          <Heading style={{ color: "#3D2B24", fontSize: 20 }}>{learning ? "2 + 3 = 5" : "↑ Slide & hold ↑"}</Heading>
         </>
       ) : (
         <>
@@ -50,7 +50,7 @@ export function Demo({ palm, learning }: { palm: boolean; learning: boolean }) {
             <BallArt size={60} />
           </Bob>
           <View style={{ backgroundColor: "#56D7BE", width: 100, height: 16, borderRadius: 12 }} />
-          <Heading style={{ color: "#FFF5CF", fontSize: 20 }}>← Drag your paddle →</Heading>
+          <Heading style={{ color: "#3D2B24", fontSize: 20 }}>← Drag your paddle →</Heading>
         </>
       )}
     </View>

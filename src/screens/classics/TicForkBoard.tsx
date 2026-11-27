@@ -1,6 +1,6 @@
+import { C, Button, Copy } from "../../board/WarmUI";
 import React from "react";
 import { View } from "react-native";
-import { Button, C, Copy } from "../../components/ui";
 import { TicMark } from "../../components/Art";
 import { ticTurn } from "../../games/tic";
 import { Cell } from "./shared";

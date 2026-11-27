@@ -18,6 +18,7 @@ import { Icon as KitIcon, type IconGlyph } from '../ui/Icon';
 import { BookOpen, GridFour, LockSimple, Play, Sparkle, Star } from '../ui/icons';
 import { Text } from '../ui/Text';
 import { theme } from '../ui/theme';
+import { useAppForeground } from './foreground';
 import { IslandScene } from './IslandScene';
 import { openGame, placeRoute } from './navigation';
 import type { PlaceId } from './model';
@@ -31,6 +32,7 @@ function FirstIslander({ allowed }: { allowed: boolean }) {
 
 export default function HubScreen() {
  const store = useStore(), { width, height, fontScale } = useWindowDimensions(), insets = useSafeAreaInsets();
+ const foreground = useAppForeground();
  const focused = useIsFocused(), reduced = useReducedMotion(), clear = useSheetsClear();
  const [settings, setSettings] = useState(false), [door, setDoor] = useState<PlaceId | null>(null);
  const narrow = width < 360;
@@ -87,13 +89,13 @@ export default function HubScreen() {
   )}
   <SaveStatus/>
   <ScrollView onLayout={event => setViewport({ w: width, h: height, available: event.nativeEvent.layout.height })} style={{ flex: 1, backgroundColor: '#1F8EA0' }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
-   <IslandScene width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear} door={door} onArrive={arrive}/>
+   <IslandScene width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear && foreground} door={door} onArrive={arrive}/>
   </ScrollView>
   <CovePersonResume/>
   <View style={{ paddingHorizontal: narrow ? 10 : 18, paddingVertical: 8, backgroundColor: theme.colors.bg, borderTopWidth: 1, borderTopColor: theme.colors.hairline }}>
    <View testID="hub-dock" style={{ flexDirection: 'row', flexWrap: dockWrap ? 'wrap' : 'nowrap', gap: 4, padding: 4, maxWidth: 540, width: '100%', alignSelf: 'center', backgroundColor: theme.colors.bg, borderRadius: theme.radius.tile, borderWidth: 1, borderColor: '#91B7A9', ...theme.shadow }}>
     {coveResume ? dock('Continue', Play, () => router.push({ pathname: '/cove', params: { game: coveResume.game, resume: '1' } }), infoFor(coveResume.game).name, 'hub-dock-continue', true) : null}
-    {resume && dock('School', BookOpen, () => openGame(resume), shelfGames.find(game => game.id === resume)?.name, 'hub-dock-school')}
+    {resume && dock(`Play ${shelfGames.find(game => game.id === resume)?.name ?? 'game'}`, BookOpen, () => openGame(resume), shelfGames.find(game => game.id === resume)?.name, 'hub-dock-school')}
     {dock('Try today', Sparkle, () => router.push({ pathname: '/everything', params: { section: 'ideas' } }), undefined, 'hub-dock-ideas')}
     {dock('Favorites', Star, () => router.push({ pathname: '/everything', params: { section: 'favorites' } }), undefined, 'hub-dock-favorites')}
    </View>

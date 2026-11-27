@@ -1,9 +1,10 @@
+import { C, Button, Copy, Heading } from "../board/WarmUI";
 import { Companion } from "../islander/Companion";
 import { mysteryInstructions } from "./instructions";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
-import { Button, C, Copy, Heading, PressableScale } from "../components/ui";
+import { PressableScale } from "../components/ui";
 import { BELL, MysteryIntent, MysteryView, Point, PUMP, TASKS, TRICK_GOAL, pathStep, playerColor } from "./engine";
 import { IslandScene, LandmarkArt, PLACES, placeName } from "./IslandArt";
 import { IslandJob, PumpJob } from "./IslandJobs";

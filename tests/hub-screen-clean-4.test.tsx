@@ -1,15 +1,19 @@
 import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createCheckers } from '../src/games/checkers';
+import { defaultOptions } from '../src/games/types';
 import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { startSession } from '../src/learn/session';
 import { IslandScene } from '../src/hub/IslandScene';
 import { mapLayout } from '../src/hub/model';
 import { wordWidth } from '../src/components/wordFit';
+vi.mock('../src/hub/foreground', () => ({ useAppForeground: () => fixture.foreground }));
 
 const viewport = vi.hoisted(() => ({ width: 390, height: 844, fontScale: 1 }));
 const fixture = vi.hoisted(() => ({
+  foreground: true,
   push: vi.fn(),
   openGame: vi.fn(),
   save: {} as ReturnType<typeof emptySave>,
@@ -110,6 +114,7 @@ beforeEach(() => {
   fixture.openGame.mockReset();
   fixture.ready = true;
   fixture.recovery = null;
+  fixture.foreground = true;
   fixture.save = emptySave();
 });
 afterEach(async () => {
@@ -122,6 +127,19 @@ const flat = (style: unknown): Record<string, unknown> =>
   Array.isArray(style) ? Object.assign({}, ...style.map(flat)) : (style && typeof style === 'object' ? style as Record<string, unknown> : {});
 
 describe('HubScreen Clean 4.0 6-door map and dock', () => {
+  it('deactivates travel when the app backgrounds', async () => {
+    await act(async () => { screen = create(<HubScreen/>); });
+    fixture.foreground = false;
+    await act(async () => { screen!.update(<HubScreen/>); });
+    expect(screen!.root.findByType(IslandScene).props.active).toBe(false);
+  });
+  it('names a non-School saved game in the dock', async () => {
+    fixture.save = { ...fixture.save, sessions: { checkers: createCheckers(defaultOptions) }, recent: 'checkers' };
+    await act(async () => { screen = create(<HubScreen/>); });
+    const button = screen!.root.findByProps({ testID: 'hub-dock-school' });
+    expect(button.props.accessibilityLabel).toContain('Checkers');
+    expect(button.props.accessibilityLabel).not.toContain('School');
+  });
   it('renders exactly six illustrated doors, supports 1-tap Cove Continue, School resume, Everything, and Settings', async () => {
     fixture.save = {
       ...fixture.save,

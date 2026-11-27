@@ -225,7 +225,8 @@ export function validSession(v: unknown): v is GameState {
         return false;
       if (
         !strings(v.cards, v.pack === "chamoru" ? 80 : 20, 24) ||
-        ![12, 16, 24].includes(v.cards.length) ||
+        ![4, 8, 12, 16, 24].includes(v.cards.length) ||
+        (v.starterPairs !== undefined && v.starterPairs !== 2 && v.starterPairs !== 4) ||
         !nums(v.matched, 0, v.cards.length - 1, 24) ||
         !unique(v.matched) ||
         v.matched.length % 2 !== 0 ||
@@ -244,6 +245,7 @@ export function validSession(v: unknown): v is GameState {
         {},
       );
       const expectedCards =
+        v.starterPairs === 2 || v.starterPairs === 4 ? v.starterPairs * 2 :
         v.options.difficulty === "easy" ? 12 : v.options.difficulty === "medium" ? 16 : 24;
       return (
         v.cards.length === expectedCards &&

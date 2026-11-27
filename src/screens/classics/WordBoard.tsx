@@ -1,3 +1,4 @@
+import { Status, C, Button, Copy } from "../../board/WarmUI";
 
 import { Text } from "../../components/Text";
 import React, { useEffect, useRef, useState } from "react";
@@ -6,7 +7,7 @@ import { Animated, View, useWindowDimensions } from "react-native";
 import { WordState, wordTiles, wordRules, wordStatus, wrongLetters } from "../../games/words";
 import { HangmanFigure } from "../../components/HangmanFigure";
 
-import { Button, C, Controls, Copy, Status, font } from "../../components/ui";
+import { Controls, font } from "../../components/ui";
 
 import { feel } from "../../components/feel";
 import { nativeDriver, useReducedMotion } from "../../components/motion";

@@ -1,7 +1,7 @@
+import { C, Button, Copy } from "../../board/WarmUI";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { Text } from "../../components/Text";
-import { Button, C, Copy } from "../../components/ui";
 import { checkersMoves, row, col } from "../../games/checkers";
 import { coords, Cell } from "./shared";
 import type { ChallengeViewProps } from "../../challenge/types";

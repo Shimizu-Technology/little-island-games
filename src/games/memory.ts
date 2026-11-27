@@ -21,6 +21,7 @@ export type MemoryState = Base & {
   cards: string[];
   /** Absent in legacy rounds: identical picture pairs. */
   pack?: MemoryPack;
+  starterPairs?: 2 | 4;
   matched: number[];
   open: number[];
   turns: number;
@@ -30,13 +31,14 @@ export type MemoryState = Base & {
   match?: Match;
   starter?: Seat;
 };
-export function createMemory(options: Options, starter: Seat = 0, pack: MemoryPack = "pictures"): MemoryState {
-  const count = options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 8 : 12;
+export function createMemory(options: Options, starter: Seat = 0, pack: MemoryPack = "pictures", starterPairs?: 2 | 4): MemoryState {
+  const count = starterPairs ?? (options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 8 : 12);
   const symbols = shuffle(memorySymbols).slice(0, count);
   const words = pack === "chamoru" ? shuffle(chamoruRecords()).slice(0, count) : [];
   return {
     ...base("memory", options),
     game: "memory",
+    ...(starterPairs ? { starterPairs } : {}),
     cards: pack === "chamoru" ? shuffle(words.flatMap(w => [`ch:${w.id}:picture`, `ch:${w.id}:word`])) : pack === "words" ? shuffle(symbols.flatMap(w => [`en:${w}:picture`, `en:${w}:word`])) : shuffle([...symbols, ...symbols]),
     ...(pack !== "pictures" ? { pack } : {}),
     matched: [],
@@ -87,7 +89,7 @@ export function memoryResult(s: MemoryState): RoundResult {
 export function replayMemory(s: MemoryState): MemoryState {
   const match = settle(s.match ?? newMatch(), memoryResult(s)),
     starter = s.options.mode === "together" ? nextStarter(match, s.starter ?? 0) : 0;
-  return { ...createMemory(s.options, starter, s.pack), match };
+  return { ...createMemory(s.options, starter, s.pack, s.starterPairs), match };
 }
 
 export function memoryUndo(s: MemoryState): MemoryState {

@@ -1,6 +1,6 @@
+import { C, Button, Copy } from "../../board/WarmUI";
 import React from "react";
 import { View } from "react-native";
-import { Button, C, Copy } from "../../components/ui";
 import type { ChallengeViewProps } from "../../challenge/types";
 import type { Action, State } from "../../games/classics/memoryDares";
 import { MemoryCards } from "./MemoryCards";

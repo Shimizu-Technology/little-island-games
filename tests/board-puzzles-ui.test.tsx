@@ -135,7 +135,7 @@ describe("board puzzles on screen", () => {
     await act(() => labelled(r, `Drop in column ${answers(fork)[0] + 1}`).props.onPress());
     expect(text(r)).toMatch(/Ray dropped in column \d\. Your turn\./);
     // Ray's coconut is ringed and the legend says who is who.
-    expect(r.root.findAll((n) => n.props.style?.borderColor === "#0aa" && n.props.style?.borderWidth === 3).length).toBe(1);
+    expect(r.root.findAll((n) => n.props.style?.borderColor === "#9A641A" && n.props.style?.borderWidth === 3).length).toBe(1);
     expect(text(r)).toContain("You: brown circle coconuts · Ray: teal leaf coconuts · Ray's last drop has a ring");
     await act(() => r.unmount());
   });

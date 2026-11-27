@@ -1,6 +1,6 @@
+import { Button, Copy, Heading } from "../board/WarmUI";
 import React from "react";
 import { View } from "react-native";
-import { Button, Copy, Heading } from "../components/ui";
 
 export type ArcadeTeachProps = {
   learning: boolean; together: boolean; goal: string;
@@ -10,7 +10,7 @@ export type ArcadeTeachProps = {
 export function PlayTeaching({ children, goal, detail, onHear, onPlay }: {
   children: React.ReactNode; goal: string; detail: string; onHear: () => void; onPlay: () => void;
 }) {
-  return <View style={{ gap: 16, alignItems: "center" }}>{children}
+  return <View style={{ gap: 16, alignItems: "center", backgroundColor: "#FFFDF8", padding: 16, borderRadius: 24 }}>{children}
     <Heading style={{ textAlign: "center", fontSize: 23 }}>{goal}</Heading>
     <Copy style={{ textAlign: "center" }}>{detail}</Copy>
     <Button quiet onPress={onHear}>Hear how to play</Button>

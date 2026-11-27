@@ -1,3 +1,4 @@
+import { Status, C, Button } from "../../board/WarmUI";
 
 
 import React, { useState } from "react";
@@ -5,7 +6,7 @@ import { View } from "react-native";
 
 import { MazeState, directions, mazeDone, mazeMove, mazeRoute } from "../../games/maze";
 
-import { Button, C, Controls, Status, IconButton } from "../../components/ui";
+import { Controls, IconButton } from "../../components/ui";
 
 import { Icon } from "../../components/Icon";
 

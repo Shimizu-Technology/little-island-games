@@ -1,3 +1,4 @@
+import { Status, C, Button, Copy } from "../../board/WarmUI";
 
 
 import React, { useEffect, useState } from "react";
@@ -5,7 +6,7 @@ import { Animated, View, useWindowDimensions } from "react-native";
 
 import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, ticHintReason, ticResult, ticXSeat, lines } from "../../games/tic";
 
-import { Button, C, Controls, Copy, Status } from "../../components/ui";
+import { Controls } from "../../components/ui";
 import { Scoreboard } from "../../components/Match";
 import { newMatch } from "../../games/match";
 
