@@ -645,7 +645,7 @@ function TideClassifyBoard({
     const next = tideClassifyCheck(s);
     if (next === s) return;
     if (coach.active) coach.done();
-    if (!s.helped) {
+    if (!s.missed && !s.helped) {
       practice(m.skill, next.solved);
       practice("sci.predict", next.solved);
     }
@@ -665,6 +665,7 @@ function TideClassifyBoard({
             compact
             quiet
             disabled={!active}
+            style={{ minHeight: 48 }}
             onPress={() => {
               if (!active) return;
               assistance?.();

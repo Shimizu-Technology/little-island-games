@@ -452,7 +452,9 @@ export type TideClassifyState = {
   placed: (0 | 1 | null)[];
   /** True after a missed Check until the player changes an assignment. */
   checkedWrong: boolean;
-  /** True once the child tapped opt-in Help on this mission. */
+  /** True once a missed Check happened on this mission (does NOT auto-reveal opt-in Rule clue). */
+  missed: boolean;
+  /** True once the child explicitly tapped opt-in "Rule clue" Help on this mission. */
   helped: boolean;
   /** True once all specimens are correctly classified and checked. */
   solved: boolean;
@@ -484,6 +486,7 @@ export function createTideClassify(level: TideClassifyLevel, c: CreateContext<un
     index: 0,
     placed: picked[0].specimens.map(() => null),
     checkedWrong: false,
+    missed: false,
     helped: false,
     solved: false,
     clean: [],
@@ -510,7 +513,7 @@ export function tideClassifyCheck(s: TideClassifyState): TideClassifyState {
   if (allRight) {
     return { ...s, solved: true, checkedWrong: false };
   }
-  return { ...s, checkedWrong: true, helped: true };
+  return { ...s, checkedWrong: true, missed: true };
 }
 
 export function tideClassifyHelp(s: TideClassifyState): TideClassifyState {
@@ -527,14 +530,17 @@ export function tideClassifyNext(s: TideClassifyState): TideClassifyState {
     index: nextIndex,
     placed: nextMission ? nextMission.specimens.map(() => null) : [],
     checkedWrong: false,
+    missed: false,
     helped: false,
     solved: false,
-    clean: [...s.clean, !s.helped],
+    clean: [...s.clean, !s.missed && !s.helped],
   };
 }
 
 export function validTideClassify(v: unknown, level: TideClassifyLevel): v is TideClassifyState {
-  if (!exact(v, ["kind", "level", "starter", "ids", "index", "placed", "checkedWrong", "helped", "solved", "clean"])) {
+  if (
+    !exact(v, ["kind", "level", "starter", "ids", "index", "placed", "checkedWrong", "missed", "helped", "solved", "clean"])
+  ) {
     return false;
   }
   const s = v as unknown as TideClassifyState;
@@ -548,6 +554,7 @@ export function validTideClassify(v: unknown, level: TideClassifyLevel): v is Ti
     !s.ids.every((id) => tideClassifyById(id)?.level === level) ||
     !integer(s.index, 0, TIDE_CLASSIFY_ROUND) ||
     typeof s.checkedWrong !== "boolean" ||
+    typeof s.missed !== "boolean" ||
     typeof s.helped !== "boolean" ||
     typeof s.solved !== "boolean" ||
     !Array.isArray(s.clean) ||
@@ -557,7 +564,7 @@ export function validTideClassify(v: unknown, level: TideClassifyLevel): v is Ti
     return false;
   }
   if (s.index === TIDE_CLASSIFY_ROUND) {
-    return Array.isArray(s.placed) && s.placed.length === 0 && !s.checkedWrong && !s.helped && !s.solved;
+    return Array.isArray(s.placed) && s.placed.length === 0 && !s.checkedWrong && !s.missed && !s.helped && !s.solved;
   }
   const m = tideClassifyMission(s)!;
   if (
@@ -568,7 +575,7 @@ export function validTideClassify(v: unknown, level: TideClassifyLevel): v is Ti
     return false;
   }
   if (s.solved && !m.specimens.every((sp, i) => s.placed[i] === sp.bucket)) return false;
-  if (s.checkedWrong && (s.solved || !s.helped)) return false;
+  if (s.checkedWrong && (s.solved || !s.missed)) return false;
   return true;
 }
 

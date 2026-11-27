@@ -19,7 +19,7 @@ import {
   correct,
   currentTask,
   move,
-  tasks,
+  roundTasks,
   type Game,
   type ScienceState,
   type Task,
@@ -796,7 +796,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
       {/* At accessibility sizes the step count and "Build · Test · Notice" stack, so neither runs off the card. */}
       <View testID="science-steps" style={large ? { gap: 2 } : { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: green, fontWeight: "900", fontSize: 13 }}>
-          DISCOVERY {s.index + 1} / {tasks(game, s.level, s.seed).length}
+          DISCOVERY {s.index + 1} / {roundTasks(game, s).length}
         </Copy>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: ink, fontSize: 13 }}>Build · Test · Notice</Copy>
       </View>

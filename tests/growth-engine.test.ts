@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { learnIds, type LearnOptions } from "../src/learn/types";
 import { engines as sharedLevelEngines } from "../src/learn/engines";
-/** Games that use the shared Level 4–5 growth board (new 2.3 games own all five levels). */
-// A game with native replacement stages (Shell Math) keeps the shared board only for archived growth saves.
-const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels && !sharedLevelEngines[id].nativeStages);
 import { startSession, validLearnSession, outcomeOf, replaySession } from "../src/learn/session";
 import { createGrowth, growthMove, growthProgress, growthQuestions } from "../src/learn/growth/engine";
 import { random } from "../src/games/types";
@@ -15,6 +12,10 @@ import { addLearner, activeLearner, recordLearning, readyForNext, validLearners,
 import { createPracticeSession, practiceAnswer, practiceConfigKey } from "../src/practice/engine";
 import { defaultPracticeSettings } from "../src/practice/types";
 import { runArrowProgram } from "../src/learn/growth/discovery";
+
+/** Games that use the shared Level 4–5 growth board (new 2.3 games own all five levels). */
+// A game with native replacement stages (Shell Math) keeps the shared board only for archived growth saves.
+const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels && !sharedLevelEngines[id].nativeStages);
 
 describe("growth progression and preserved saves", () => {
   for (const game of sharedLevelGames) for (const stage of ["stretch", "deep"] as const) it(`${game} ${stage}: wrong, help, solve, next, resume and replay`, () => {

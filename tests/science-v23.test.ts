@@ -6,6 +6,8 @@ import { legacyEngine as space } from "../src/learn/games/space-station/engine";
 import {
   move,
   tasks,
+  roundTasks,
+  currentTask,
   correct,
   initialValues,
   type Game,
@@ -16,7 +18,7 @@ import { random } from "../src/games/types";
 import { validLearnSession, startSession } from "../src/learn/session";
 const engines = [weather, food, space];
 function build(game: Game, s: ScienceState, target: number[]) {
-  const q = tasks(game, s.level, s.seed)[s.index];
+  const q = currentTask(game, s);
   s = move(game, s, { type: "reset" });
   const multi = ["cycle", "chain", "web", "planets", "kit"].includes(q.kind);
   target.forEach((value, slot) => {
@@ -36,7 +38,7 @@ describe("Science hands-on levels", () => {
           expect(engine.outcome(s, options)).toBe(null);
           expect(move(game, s, { type: "test" })).toBe(s);
           expect(move(game, s, { type: "next" })).toBe(s);
-          const qs = tasks(game, level, s.seed);
+          const qs = roundTasks(game, s);
           expect(qs.length).toBeGreaterThanOrEqual(3);
           expect(qs.length).toBeLessThanOrEqual(8);
           for (const q of qs) {
@@ -63,7 +65,8 @@ describe("Science hands-on levels", () => {
       for (const bad of [
         null,
         {},
-        { ...s, version: 2 },
+        { ...s, version: 3 },
+        { ...s, version: s.version === 1 ? 2 : 1 },
         { ...s, seed: -1 },
         { ...s, index: 100 },
         { ...s, extra: 1 },
@@ -93,7 +96,7 @@ describe("Science hands-on levels", () => {
     expect(s.tested).toBe(true);
     expect(move("food-web", s, { type: "next" })).toBe(s);
     s = move("food-web", s, { type: "reset" });
-    expect(s.values).toEqual(initialValues(tasks("food-web", 1, s.seed)[0]));
+    expect(s.values).toEqual(initialValues(currentTask("food-web", s)));
   });
 });
 
@@ -125,7 +128,7 @@ it("owned upper levels record learner completion without reading a shared-quiz h
       const session = { ...startSession(game, { options }, {}, 123), learner: "a", state: engine.create(options, { skills: {}, rng: random(123), starter: 0, today: 0 }) };
       let state = session.state as ScienceState,
         beforeLast = state;
-      for (const q of tasks(game, level, state.seed)) {
+      for (const q of roundTasks(game, state)) {
         state = build(game, state, q.target);
         state = move(game, state, { type: "test" });
         beforeLast = state;

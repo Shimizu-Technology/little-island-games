@@ -96,7 +96,6 @@ export function picnicContextPick(
   return {
     ...s,
     wrong: [...s.wrong, choiceIndex].sort((a, b) => a - b),
-    helped: true,
   };
 }
 
@@ -157,7 +156,6 @@ export function validPicnicContext(
   if (!q) return false;
   const answerIdx = q.choices.findIndex((c) => c.value === q.answer);
   if (s.wrong.includes(answerIdx)) return false;
-  if (s.wrong.length > 0 && !s.helped) return false;
   return true;
 }
 

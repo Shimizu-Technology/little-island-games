@@ -201,7 +201,7 @@ function Basket({
               disabled={disabled}
               onPress={() => take(it.part)}
               amount={0.88}
-              style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+              style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" }}
             >
               {it.part === "tens" ? (
                 <Crate size={small ? 46 : 54} />
@@ -431,6 +431,7 @@ function MarketStallBoard({
             compact
             quiet
             disabled={!active}
+            style={{ minHeight: 48 }}
             onPress={() => {
               if (!active) return;
               assistance?.();

@@ -384,7 +384,7 @@ export const REEF_ROUTE_TASKS: readonly ReefRouteTask[] = [
     100,
     62,
     [
-      { delta: 14, label: "Twin dice +14", kind: "hop" },
+      { delta: 14, label: "Double jump +14", kind: "hop" },
       { delta: 7, label: "Wave +7", kind: "wave" },
       { delta: -5, label: "Crab −5", kind: "crab" },
     ],

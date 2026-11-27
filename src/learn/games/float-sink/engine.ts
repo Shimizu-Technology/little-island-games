@@ -239,7 +239,7 @@ export const engine: LearnEngine<FloatSinkState> = {
   },
   create: (o, c) => {
     if (o.stage) {
-      return createFloatLab(levelOf(o) as FloatLabLevel, c);
+      return createFloatLab(levelOf(o) as FloatLabLevel, o, c);
     }
     const pool = objects.filter((x) => x.pace <= paceRank[o.pace]);
     // Obvious first: a rock that sinks and a leaf that floats, in either order.
@@ -273,7 +273,7 @@ export const engine: LearnEngine<FloatSinkState> = {
     return { items: [...obvious, ...later], starter: c.starter, events: [] };
   },
   validate: (x, o): x is FloatSinkState => {
-    if (o.stage) return isFloatLab(x) && validFloatLab(x, levelOf(o) as FloatLabLevel);
+    if (o.stage) return isFloatLab(x) && validFloatLab(x, levelOf(o) as FloatLabLevel, o);
     if (isFloatLab(x)) return false;
     if (!exact(x, ["items", "starter", "events"])) return false;
     const s = x as FloatState;

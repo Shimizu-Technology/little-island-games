@@ -9,6 +9,9 @@ import type { Shape } from "./engine";
  * Pure engine with strict validation and opt-in Help that never leaks the answer.
  */
 export const FLOAT_LAB_ROUND = 5;
+export const FLOAT_LAB_VERSUS_ROUND = 6;
+export const floatLabRoundSize = (o: Pick<LearnOptions, "mode">): number =>
+  o.mode === "versus" ? FLOAT_LAB_VERSUS_ROUND : FLOAT_LAB_ROUND;
 export type FloatLabLevel = 4 | 5;
 
 export type FloatExperimentKind = "compare" | "cargo" | "fair-test";
@@ -98,7 +101,7 @@ export const FLOAT_EXPERIMENTS: readonly FloatExperiment[] = [
     title: "Island seed vs reef rock",
     question: "Both are about the same size on the beach. Which one can drift across the ocean?",
     objects: ["coconut", "rock"],
-    options: ["Husked coconut", "Solid reef rock"],
+    options: ["Whole coconut with fibrous husk", "Solid reef rock"],
     correctIndex: 0,
     hint: "Look inside: one has a fibrous air-filled husk and hollow center; the other is solid stone.",
     why: "Coconuts trap air in their fibrous husks and hollow shell, letting them drift to new islands.",
@@ -419,7 +422,9 @@ export type FloatLabState = {
   pebbles: number;
   /** True when a cargo hull sank before reaching targetCargo (lets player pick another hull). */
   sank: boolean;
-  /** True once the child tapped opt-in Help on this trial. */
+  /** True once a wrong option or sinking hull happened on this trial (does NOT auto-reveal Help). */
+  missed: boolean;
+  /** True once the child explicitly tapped opt-in "Lab clue" Help on this trial. */
   helped: boolean;
   /** True once this experiment has been tested/completed and ready for Next. */
   solved: boolean;
@@ -438,14 +443,19 @@ export const floatLabExperiment = (s: FloatLabState): FloatExperiment | undefine
 export const floatLabTurn = (s: FloatLabState): 0 | 1 =>
   ((s.starter + Math.min(s.index, Math.max(0, s.ids.length - 1))) % 2) as 0 | 1;
 
-export function createFloatLab(level: FloatLabLevel, c: CreateContext<unknown>): FloatLabState {
+export function createFloatLab(
+  level: FloatLabLevel,
+  o: Pick<LearnOptions, "mode">,
+  c: CreateContext<unknown>,
+): FloatLabState {
+  const roundSize = floatLabRoundSize(o);
   const prev = isFloatLab(c.previous) ? new Set(c.previous.ids) : new Set<string>();
   const pool = FLOAT_EXPERIMENTS.filter((e) => e.level === level);
   const fresh = pool.filter((e) => !prev.has(e.id));
-  const list = fresh.length >= FLOAT_LAB_ROUND ? fresh : pool;
+  const list = fresh.length >= roundSize ? fresh : pool;
   // Always include at least 1 cargo-load tank trial + compare + fair-test trials!
   const cargo = pickItems(list.filter((e) => e.kind === "cargo"), c.skills, 1, c.rng, c.today);
-  const others = pickItems(list.filter((e) => e.kind !== "cargo"), c.skills, FLOAT_LAB_ROUND - cargo.length, c.rng, c.today);
+  const others = pickItems(list.filter((e) => e.kind !== "cargo"), c.skills, roundSize - cargo.length, c.rng, c.today);
   const chosen = [...others.slice(0, 2), ...cargo, ...others.slice(2)];
   return {
     kind: "float-lab",
@@ -457,6 +467,7 @@ export function createFloatLab(level: FloatLabLevel, c: CreateContext<unknown>):
     shape: null,
     pebbles: 0,
     sank: false,
+    missed: false,
     helped: false,
     solved: false,
     clean: [],
@@ -469,7 +480,7 @@ export function floatLabPickOption(s: FloatLabState, optionIndex: number): Float
   if (optionIndex === exp.correctIndex) {
     return { ...s, picked: optionIndex, solved: true };
   }
-  return { ...s, picked: optionIndex, helped: true };
+  return { ...s, picked: optionIndex, missed: true };
 }
 
 export function floatLabChooseHull(s: FloatLabState, shape: Shape): FloatLabState {
@@ -477,7 +488,7 @@ export function floatLabChooseHull(s: FloatLabState, shape: Shape): FloatLabStat
   if (!exp || exp.kind !== "cargo" || s.solved) return s;
   const cap = exp.hullCapacities?.[shape] ?? 0;
   if (shape === "ball" || cap === 0) {
-    return { ...s, shape, pebbles: 0, sank: true, helped: true };
+    return { ...s, shape, pebbles: 0, sank: true, missed: true };
   }
   return { ...s, shape, pebbles: 0, sank: false };
 }
@@ -488,7 +499,7 @@ export function floatLabAddPebble(s: FloatLabState): FloatLabState {
   const cap = exp.hullCapacities?.[s.shape] ?? 0;
   const nextPebbles = s.pebbles + 1;
   if (nextPebbles > cap) {
-    return { ...s, pebbles: nextPebbles, sank: true, helped: true };
+    return { ...s, pebbles: nextPebbles, sank: true, missed: true };
   }
   const target = exp.targetCargo ?? 4;
   return {
@@ -518,32 +529,53 @@ export function floatLabNext(s: FloatLabState): FloatLabState {
     shape: null,
     pebbles: 0,
     sank: false,
+    missed: false,
     helped: false,
     solved: false,
-    clean: [...s.clean, !s.helped],
+    clean: [...s.clean, !s.missed && !s.helped],
   };
 }
 
 const VALID_SHAPES: readonly Shape[] = ["ball", "bowl", "wide", "foil"];
 
-export function validFloatLab(v: unknown, level: FloatLabLevel): v is FloatLabState {
+export function validFloatLab(
+  v: unknown,
+  level: FloatLabLevel,
+  o: Pick<LearnOptions, "mode"> = { mode: "solo" },
+): v is FloatLabState {
   if (
-    !exact(v, ["kind", "level", "starter", "ids", "index", "picked", "shape", "pebbles", "sank", "helped", "solved", "clean"])
+    !exact(v, [
+      "kind",
+      "level",
+      "starter",
+      "ids",
+      "index",
+      "picked",
+      "shape",
+      "pebbles",
+      "sank",
+      "missed",
+      "helped",
+      "solved",
+      "clean",
+    ])
   ) {
     return false;
   }
   const s = v as unknown as FloatLabState;
+  const roundSize = floatLabRoundSize(o);
   if (
     s.kind !== "float-lab" ||
     s.level !== level ||
     !prediction(s.starter) ||
     !Array.isArray(s.ids) ||
-    s.ids.length !== FLOAT_LAB_ROUND ||
-    new Set(s.ids).size !== FLOAT_LAB_ROUND ||
+    s.ids.length !== roundSize ||
+    new Set(s.ids).size !== roundSize ||
     !s.ids.every((id) => floatExperimentById(id)?.level === level) ||
-    !integer(s.index, 0, FLOAT_LAB_ROUND) ||
+    !integer(s.index, 0, roundSize) ||
     !integer(s.pebbles, 0, 10) ||
     typeof s.sank !== "boolean" ||
+    typeof s.missed !== "boolean" ||
     typeof s.helped !== "boolean" ||
     typeof s.solved !== "boolean" ||
     !Array.isArray(s.clean) ||
@@ -552,20 +584,33 @@ export function validFloatLab(v: unknown, level: FloatLabLevel): v is FloatLabSt
   ) {
     return false;
   }
-  if (s.index === FLOAT_LAB_ROUND) {
-    return s.picked === null && s.shape === null && s.pebbles === 0 && !s.sank && !s.helped && !s.solved;
+  if (s.index === roundSize) {
+    return s.picked === null && s.shape === null && s.pebbles === 0 && !s.sank && !s.missed && !s.helped && !s.solved;
   }
   const exp = floatLabExperiment(s)!;
   if (exp.kind === "cargo") {
     if (s.picked !== null) return false;
-    if (s.shape !== null && !VALID_SHAPES.includes(s.shape)) return false;
-    if (s.shape === null && (s.pebbles !== 0 || s.sank || s.solved)) return false;
-    if (s.solved && (s.sank || s.pebbles < (exp.targetCargo ?? 1))) return false;
-    return true;
+    if (s.shape === null) {
+      return s.pebbles === 0 && !s.sank && !s.solved;
+    }
+    if (!VALID_SHAPES.includes(s.shape)) return false;
+    const cap = exp.hullCapacities?.[s.shape] ?? 0;
+    const target = exp.targetCargo ?? 4;
+    if (s.shape === "ball" || cap === 0) {
+      return s.pebbles === 0 && s.sank && s.missed && !s.solved;
+    }
+    if (s.sank) {
+      return cap < target && s.pebbles === cap + 1 && s.missed && !s.solved;
+    }
+    if (s.solved) {
+      return cap >= target && s.pebbles === target;
+    }
+    return s.pebbles >= 0 && s.pebbles <= cap && s.pebbles < target;
   }
   if (s.shape !== null || s.pebbles !== 0 || s.sank) return false;
   if (s.picked !== null && !integer(s.picked, 0, exp.options.length - 1)) return false;
-  if (s.solved && s.picked !== exp.correctIndex) return false;
+  if (s.solved) return s.picked === exp.correctIndex;
+  if (s.picked !== null && (s.picked === exp.correctIndex || !s.missed)) return false;
   return true;
 }
 

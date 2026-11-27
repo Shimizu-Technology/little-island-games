@@ -5,7 +5,6 @@ import { levelOf } from "../../levelOptions";
 import { random } from "../../../games/types";
 import { bools, exact, integer, readingSkills, seat, tokens } from "../../kit/reading";
 import {
-  ISLAND_UPPER_STORIES,
   createPassage,
   inheritedUpperStories,
   isPassage,
@@ -161,20 +160,17 @@ export function taleFromLegacy(s: LegacyTaleState): TaleState {
 export type TurtleTalesState = TaleState | LegacyTaleState | PassageState;
 
 let cachedUpperStories: readonly UpperStory[] | undefined;
-/** All 16 Level 4–5 passage stories (8 pinned inherited + 8 Guam/island stories). */
+/** All 8 pinned, branded inherited Level 4–5 passage stories (4 stretch + 4 deep). */
 export function upperStories(): readonly UpperStory[] {
   if (!cachedUpperStories) {
     const tracks = readingGrowthTracks()["turtle-tales"];
-    cachedUpperStories = [
-      ...inheritedUpperStories(tracks?.stretch?.questions ?? [], tracks?.deep?.questions ?? []),
-      ...ISLAND_UPPER_STORIES,
-    ];
+    cachedUpperStories = inheritedUpperStories(tracks?.stretch?.questions ?? [], tracks?.deep?.questions ?? []);
   }
   return cachedUpperStories;
 }
 export const upperStoryById = (id: unknown): UpperStory | undefined =>
   typeof id === "string" ? upperStories().find((st) => st.id === id) : undefined;
-/** Total story catalog spanning Levels 1–5 (12 picture stories + 16 passage stories = 28 stories). */
+/** Total admitted story catalog spanning Levels 1–5 (12 picture stories + 8 inherited passage stories = 20). */
 export const totalStoryCount = () => readingPassages().length + upperStories().length;
 
 export const engine: LearnEngine<TurtleTalesState> = {

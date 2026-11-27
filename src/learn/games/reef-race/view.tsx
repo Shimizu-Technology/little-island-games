@@ -125,6 +125,13 @@ export function Board(props: BoardProps<ReefRaceState>) {
   return <ClassicReefBoard {...props} session={{ ...props.session, state: props.session.state }} />;
 }
 
+const L5_SECTIONS: readonly { section: number; label: string; aria: string }[] = [
+  { section: 0, label: "1–25", aria: "Show stones 1 to 25" },
+  { section: 1, label: "26–50", aria: "Show stones 26 to 50" },
+  { section: 2, label: "51–75", aria: "Show stones 51 to 75" },
+  { section: 3, label: "76–100", aria: "Show stones 76 to 100" },
+];
+
 /** Levels 4–5 native multi-step reef-hop & route-comparison board right on the ReefBoard track. */
 function ReefRouteBoard({
   session,
@@ -142,10 +149,19 @@ function ReefRouteBoard({
   const o = session.options;
   const task = reefRouteTask(s);
   const [wrongPulse, setWrongPulse] = useState({ n: 0, key: 0 });
+  const anchorSection = task ? sectionOf(task.anchor, task.end) : 0;
+  const solvedSection =
+    task && s.solved
+      ? sectionOf(task.kind === "route" && task.routes ? task.routes[task.target].landing : task.target, task.end)
+      : anchorSection;
+  const viewKey = `${task?.id ?? "done"}:${s.solved ? 1 : 0}`;
+  const [sectionChoice, setSectionChoice] = useState<{ key: string; section: number } | null>(null);
+  const viewSection = sectionChoice && sectionChoice.key === viewKey ? sectionChoice.section : solvedSection;
+  const setViewSection = (sec: number) => setSectionChoice({ key: viewKey, section: sec });
   useStepReveal(s.index);
 
   const side = useBoardColumns();
-  const reserved = 340 + (session.match ? 66 : 0);
+  const reserved = 340 + (task?.end === 100 ? 58 : 0) + (session.match ? 66 : 0);
   const pathH = Math.round(Math.max(250, Math.min(width * (width > 600 ? 0.56 : 1.1), height - reserved)));
   const geometry = useBoardGeometry("reef-race", pathH, SCHOOL_BOARD_MIN["reef-race"]);
 
@@ -171,7 +187,7 @@ function ReefRouteBoard({
     );
   }
 
-  const section = sectionOf(task.anchor, task.end);
+  const section = task.end === 100 ? viewSection : anchorSection;
   const [first, last] = sectionRange(section, task.end);
   const turnSeat = reefRouteTurn(s) ?? 0;
   const who = session.names?.[turnSeat] ?? `Player ${turnSeat + 1}`;
@@ -244,9 +260,13 @@ function ReefRouteBoard({
               compact
               quiet
               disabled={!active}
+              style={{ minHeight: 48 }}
               onPress={() => {
                 if (!active) return;
                 assistance?.();
+                if (task.end === 100 && task.kind !== "route") {
+                  setViewSection(sectionOf(task.midpoint, task.end));
+                }
                 update(reefRouteHelp(s));
               }}
             >
@@ -321,22 +341,69 @@ function ReefRouteBoard({
       <BoardColumns
         legacyDrawingLast
         drawing={
-          <View testID={geometry.testID} onLayout={geometry.onLayout}>
-            <ReefBoard
-              width={side ? width * 0.46 : width}
-              height={geometry.height}
-              first={first}
-              last={last}
-              end={task.end}
-              section={section}
-              tokens={tokens}
-              specials={specials}
-              next={s.helped && !s.solved && task.kind !== "route" ? task.midpoint : null}
-              wrong={wrongPulse}
-              disabled={!active || s.solved || task.kind === "route"}
-              onStone={(n) => task.kind !== "route" && submit(n)}
-              coach={coach.active && !s.solved && task.kind !== "route"}
-            />
+          <View style={{ gap: 8 }}>
+            {task.end === 100 && (
+              <View
+                accessibilityRole="tablist"
+                accessibilityLabel="Reef path sections"
+                style={{ flexDirection: "row", gap: 6 }}
+              >
+                {L5_SECTIONS.map((sec) => {
+                  const selected = section === sec.section;
+                  return (
+                    <PressableScale
+                      key={sec.section}
+                      testID={`reef-section-${sec.section}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={sec.aria}
+                      accessibilityState={{ selected }}
+                      onPress={() => setViewSection(sec.section)}
+                      style={{
+                        flex: 1,
+                        minWidth: 48,
+                        minHeight: 48,
+                        borderRadius: 12,
+                        borderWidth: selected ? 2.5 : 1.5,
+                        borderColor: selected ? C.teal : C.line,
+                        backgroundColor: selected ? "#DDF0EE" : C.paper,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingHorizontal: 4,
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <Copy
+                        style={{
+                          fontSize: 13,
+                          fontWeight: selected ? "900" : "700",
+                          color: ink,
+                          textAlign: "center",
+                        }}
+                      >
+                        {sec.label}
+                      </Copy>
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            )}
+            <View testID={geometry.testID} onLayout={geometry.onLayout}>
+              <ReefBoard
+                width={side ? width * 0.46 : width}
+                height={geometry.height}
+                first={first}
+                last={last}
+                end={task.end}
+                section={section}
+                tokens={tokens}
+                specials={specials}
+                next={s.helped && !s.solved && task.kind !== "route" ? task.midpoint : null}
+                wrong={wrongPulse}
+                disabled={!active || s.solved || task.kind === "route"}
+                onStone={(n) => task.kind !== "route" && submit(n)}
+                coach={coach.active && !s.solved && task.kind !== "route"}
+              />
+            </View>
           </View>
         }
       >

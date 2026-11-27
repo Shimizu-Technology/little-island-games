@@ -333,6 +333,7 @@ export function VoyagePartsBoard({
               icon="help"
               disabled={s.helped}
               label="Help: show a clue"
+              style={{ minHeight: 48 }}
               onPress={() => act({ type: "help" })}
             >
               Help
@@ -343,6 +344,7 @@ export function VoyagePartsBoard({
                 quiet
                 disabled={s.draft.length === 0}
                 label="Start this word over"
+                style={{ minHeight: 48 }}
                 onPress={() => act({ type: "reset" })}
               >
                 Start over

@@ -14,7 +14,7 @@ export type Task = {
   /** True for newly expanded Phase 4A bank items awaiting Phase 4B voice narration recording. */
   audioPending?: true;
 };
-export type ScienceState = {
+export type ScienceStateV1 = {
   version: 1;
   seed: number;
   level: number;
@@ -25,6 +25,20 @@ export type ScienceState = {
   actions: number;
   records: number[][];
 };
+export type ScienceStateV2 = {
+  version: 2;
+  seed: number;
+  level: number;
+  index: number;
+  /** Stable task IDs pinned at round creation so future bank additions never shift saved rounds. */
+  taskIds: string[];
+  items: number[];
+  values: number[];
+  tested: boolean;
+  actions: number;
+  records: number[][];
+};
+export type ScienceState = ScienceStateV1 | ScienceStateV2;
 export type Action =
   | { type: "set"; slot: number; value: number }
   | { type: "test" }
@@ -860,17 +874,37 @@ function curriculumTasks(game: Game, level: number, seed: number): Task[] {
     ),
   ];
 }
-/** Full unique task bank across Levels 1–5 for a science lab game (weather-watch: 38, food-web: 32, space-station: 21). */
-export function scienceBank(game: Game): Task[] {
-  const out: Task[] = [];
-  for (let level = 1; level <= 5; level++) {
-    out.push(...curriculumTasks(game, level, 1), ...extraCurriculumTasks(game, level, 1));
+const taskSlug = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/** Stable task identifier derived from game, level, and unique task title. */
+export const scienceTaskId = (game: Game, level: number, title: string) => `${game}-l${level}-${taskSlug(title)}`;
+
+function shuffleTaskPalette(q: Task, seed: number, taskIndex: number): Task {
+  if (!["cycle", "chain", "web", "planets", "kit"].includes(q.kind)) return q;
+  const order = q.labels.map((_, i) => i);
+  let word = (seed ^ ((taskIndex + 1) * 2654435761)) >>> 0;
+  for (let i = order.length - 1; i > 0; i--) {
+    word = (Math.imul(word, 1664525) + 1013904223) >>> 0;
+    const j = word % (i + 1);
+    [order[i], order[j]] = [order[j], order[i]];
   }
-  return out;
+  const labels = order.map((i) => q.labels[i]);
+  const target = q.target.map((i) => order.indexOf(i));
+  return t(q.title, q.goal, q.kind, labels, target, q.fact, q.notice, q.audioPending);
 }
 
-/** Seeded palettes make building a model a real arrangement task, rather than tapping cards left to right. */
-export function tasks(game: Game, level: number, seed: number): Task[] {
+function levelPool(game: Game, level: number, seed: number): { id: string; task: Task }[] {
+  return [...curriculumTasks(game, level, seed), ...extraCurriculumTasks(game, level, seed)].map((task) => ({
+    id: scienceTaskId(game, level, task.title),
+    task,
+  }));
+}
+
+function selectExpandedTaskIds(game: Game, level: number, seed: number): string[] {
   const base = curriculumTasks(game, level, seed);
   const extra = extraCurriculumTasks(game, level, seed);
   let selected: Task[];
@@ -881,19 +915,45 @@ export function tasks(game: Game, level: number, seed: number): Task[] {
     const start = Math.abs(seed) % rest.length;
     selected = [base[0], ...Array.from({ length: base.length - 1 }, (_, i) => rest[(start + i) % rest.length])];
   }
-  return selected.map((q, taskIndex) => {
-    if (!["cycle", "chain", "web", "planets", "kit"].includes(q.kind)) return q;
-    const order = q.labels.map((_, i) => i);
-    let word = (seed ^ ((taskIndex + 1) * 2654435761)) >>> 0;
-    for (let i = order.length - 1; i > 0; i--) {
-      word = (Math.imul(word, 1664525) + 1013904223) >>> 0;
-      const j = word % (i + 1);
-      [order[i], order[j]] = [order[j], order[i]];
-    }
-    const labels = order.map((i) => q.labels[i]);
-    const target = q.target.map((i) => order.indexOf(i));
-    return t(q.title, q.goal, q.kind, labels, target, q.fact, q.notice, q.audioPending);
-  });
+  return selected.map((q) => scienceTaskId(game, level, q.title));
+}
+
+/** Full unique task bank across Levels 1–5 for a science lab game (weather-watch: 38, food-web: 32, space-station: 21). */
+export function scienceBank(game: Game): Task[] {
+  const out: Task[] = [];
+  for (let level = 1; level <= 5; level++) {
+    out.push(...curriculumTasks(game, level, 1), ...extraCurriculumTasks(game, level, 1));
+  }
+  return out;
+}
+
+/**
+ * Pre-PR version-1 seeded task sequence. Immutable so existing `version: 1` saves always
+ * restore their exact original tasks, answer keys, and controls across every seed.
+ */
+export function tasks(game: Game, level: number, seed: number): Task[] {
+  return curriculumTasks(game, level, seed).map((q, taskIndex) => shuffleTaskPalette(q, seed, taskIndex));
+}
+
+/** Expanded task sequence for fresh version-2 rounds across the full bank. */
+export function expandedTasks(game: Game, level: number, seed: number): Task[] {
+  const byId = new Map(levelPool(game, level, seed).map((entry) => [entry.id, entry.task]));
+  return selectExpandedTaskIds(game, level, seed).map((id, taskIndex) =>
+    shuffleTaskPalette(byId.get(id)!, seed, taskIndex)
+  );
+}
+
+/** Resolve the exact ordered tasks belonging to a saved version-1 or version-2 science round. */
+export function roundTasks(game: Game, s: ScienceState): Task[] {
+  if (s.version === 1) return tasks(game, s.level, s.seed);
+  const byId = new Map(levelPool(game, s.level, s.seed).map((entry) => [entry.id, entry.task]));
+  const out: Task[] = [];
+  for (let i = 0; i < s.taskIds.length; i++) {
+    const q = byId.get(s.taskIds[i]);
+    if (!q) return [];
+    out.push(shuffleTaskPalette(q, s.seed, i));
+  }
+  return out;
 }
 export const initialValues = (q: Task) =>
   q.kind === "gravity"
@@ -910,7 +970,7 @@ export const correct = (q: Task, values: number[]) =>
   (q.kind === "web" || q.kind === "kit"
     ? new Set(values).size === values.length && values.every((n) => q.target.includes(n))
     : values.every((n, i) => n === q.target[i]));
-export const currentTask = (game: Game, s: ScienceState) => tasks(game, s.level, s.seed)[s.index];
+export const currentTask = (game: Game, s: ScienceState) => roundTasks(game, s)[s.index];
 function validValues(q: Task, values: unknown): values is number[] {
   if (
     !Array.isArray(values) ||
@@ -939,7 +999,8 @@ function validValues(q: Task, values: unknown): values is number[] {
   return values.length === b.length && values.every((n, i) => n <= b[i]);
 }
 export function move(game: Game, s: ScienceState, a: Action): ScienceState {
-  const q = currentTask(game, s);
+  const qs = roundTasks(game, s);
+  const q = qs[s.index];
   if (!q) return s;
   if (a.type === "reset") return { ...s, values: initialValues(q), tested: false };
   if (a.type === "test") return s.actions > 0 ? { ...s, tested: true } : s;
@@ -950,9 +1011,7 @@ export function move(game: Game, s: ScienceState, a: Action): ScienceState {
           index: s.index + 1,
           records: [...s.records, s.values],
           actions: 0,
-          values: tasks(game, s.level, s.seed)[s.index + 1]
-            ? initialValues(tasks(game, s.level, s.seed)[s.index + 1])
-            : [],
+          values: qs[s.index + 1] ? initialValues(qs[s.index + 1]) : [],
           tested: false,
         }
       : s;
@@ -998,26 +1057,57 @@ export function makeEngine(
     skills: { [`sci.${game}`]: name + " discoveries" },
     create: (o, c) => {
       const seed = Math.floor(c.rng() * 1000000),
-        level = levelOf(o),
-        qs = tasks(game, level, seed);
-      return {
-        version: 1,
+        level = levelOf(o);
+      if (game === "space-station") {
+        const qs = tasks(game, level, seed);
+        return {
+          version: 1,
+          seed,
+          level,
+          index: 0,
+          items: qs.map((_, i) => i),
+          values: initialValues(qs[0]),
+          tested: false,
+          actions: 0,
+          records: [],
+        };
+      }
+      const taskIds = selectExpandedTaskIds(game, level, seed);
+      const state: ScienceStateV2 = {
+        version: 2,
         seed,
         level,
         index: 0,
-        items: qs.map((_, i) => i),
-        values: initialValues(qs[0]),
+        taskIds,
+        items: taskIds.map((_, i) => i),
+        values: [],
         tested: false,
         actions: 0,
         records: [],
       };
+      const qs = roundTasks(game, state);
+      state.values = initialValues(qs[0]);
+      return state;
     },
     validate: (x, o): x is ScienceState => {
-      if (!exact(x, ["version", "seed", "level", "index", "items", "values", "tested", "actions", "records"]))
-        return false;
+      const isV1 = exact(x, ["version", "seed", "level", "index", "items", "values", "tested", "actions", "records"]);
+      const isV2 = exact(x, [
+        "version",
+        "seed",
+        "level",
+        "index",
+        "taskIds",
+        "items",
+        "values",
+        "tested",
+        "actions",
+        "records",
+      ]);
+      if (!isV1 && !isV2) return false;
       const s = x as ScienceState;
       if (
-        s.version !== 1 ||
+        (isV1 && s.version !== 1) ||
+        (isV2 && s.version !== 2) ||
         !integer(s.seed, 0, 999999) ||
         s.level !== levelOf(o) ||
         typeof s.tested !== "boolean" ||
@@ -1025,8 +1115,21 @@ export function makeEngine(
         (s.tested && s.actions === 0)
       )
         return false;
-      const qs = tasks(game, s.level, s.seed);
+      if (s.version === 2) {
+        const expectedCount = curriculumTasks(game, s.level, s.seed).length;
+        const poolIds = new Set(levelPool(game, s.level, s.seed).map((entry) => entry.id));
+        if (
+          !Array.isArray(s.taskIds) ||
+          Object.keys(s.taskIds).length !== s.taskIds.length ||
+          s.taskIds.length !== expectedCount ||
+          new Set(s.taskIds).size !== expectedCount ||
+          !s.taskIds.every((id) => typeof id === "string" && poolIds.has(id))
+        )
+          return false;
+      }
+      const qs = roundTasks(game, s);
       if (
+        qs.length === 0 ||
         !integer(s.index, 0, qs.length) ||
         !Array.isArray(s.items) ||
         s.items.length !== qs.length ||
@@ -1040,7 +1143,7 @@ export function makeEngine(
         ? Array.isArray(s.values) && s.values.length === 0 && !s.tested && s.actions === 0
         : validValues(qs[s.index], s.values);
     },
-    outcome: (s) => (s.index === tasks(game, s.level, s.seed).length ? "done" : null),
+    outcome: (s) => (s.index === roundTasks(game, s).length ? "done" : null),
   };
 }
 

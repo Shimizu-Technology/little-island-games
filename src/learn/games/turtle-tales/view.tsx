@@ -30,6 +30,7 @@ import {
   passageHelp,
   passageNext,
   passagePick,
+  passagePromptFromRecord,
   passageTurn,
   promptOptionOrder,
   splitEvidence,
@@ -193,21 +194,26 @@ function PassageBoard({
   const small = height < 730;
   useStepReveal(s.index);
 
-  if (!story) return <ReadingRefused />;
+  // Every passage record must come from the pinned, branded snapshot before anything is shown, spoken, or credited.
   if (
-    story.source === "inherited" &&
-    !story.prompts.every((p) => p.inheritedRecord && admittedReading(p.inheritedRecord, "Turtle Tales"))
+    !story ||
+    !Array.isArray(story.records) ||
+    story.records.length === 0 ||
+    story.records.length !== story.prompts.length ||
+    !story.records.every((rec): boolean => admittedReading(rec, "Turtle Tales"))
   ) {
     return <ReadingRefused />;
   }
 
+  const title = story.records[0].scene?.labels?.[0] ?? story.id;
+  const body = story.records[0].context ?? "";
   const done = passageDone(s, story);
   if (done) {
     return (
       <View style={{ alignItems: "center", gap: 12, padding: 12 }}>
-        <Swim page={story.prompts.length} pages={story.prompts.length} width={width} />
+        <Swim page={story.records.length} pages={story.records.length} width={width} />
         <PictureObject name="turtle" size={96} />
-        <Heading style={{ textAlign: "center" }}>You read “{story.title}”!</Heading>
+        <Heading style={{ textAlign: "center" }}>You read “{title}”!</Heading>
         <Copy style={{ color: C.ink, textAlign: "center" }}>
           Every answer was backed by clues right inside the story.
         </Copy>
@@ -215,22 +221,22 @@ function PassageBoard({
     );
   }
 
-  const prompt = story.prompts[s.index];
+  const prompt = passagePromptFromRecord(story.records[s.index]);
   const order = promptOptionOrder(prompt.id);
   const reader = session.names?.[passageTurn(s, story)] ?? `Player ${passageTurn(s, story) + 1}`;
   const highlightOn = s.showEvidence || s.solved;
-  const [beforeEv, evText, afterEv] = highlightOn ? splitEvidence(story.body, prompt.evidence) : [story.body, "", ""];
+  const [beforeEv, evText, afterEv] = highlightOn ? splitEvidence(body, prompt.evidence) : [body, "", ""];
 
   function pick(optionIndex: number) {
     if (!active) return;
     const next = passagePick(s, optionIndex, story);
     if (next === s) return;
     if (coach.active) coach.done();
-    if (s.wrong === null && !s.showEvidence) {
+    if (!s.missed && !s.showEvidence) {
       practice(prompt.skill, next.solved);
       practice("read.meaning", next.solved);
     }
-    if (next.solved) cheer(s.index === story!.prompts.length - 1 ? "big" : "right");
+    if (next.solved) cheer(s.index === story!.records.length - 1 ? "big" : "right");
     else sound("turtle-tales-look", true);
     update(next);
   }
@@ -241,7 +247,7 @@ function PassageBoard({
         {session.options.mode === "together" && (
           <Copy style={{ color: C.teal, fontWeight: "800", fontSize: 18, textAlign: "center" }}>{reader} reads</Copy>
         )}
-        <Swim page={s.index + (s.solved ? 1 : 0)} pages={story.prompts.length} width={width} />
+        <Swim page={s.index + (s.solved ? 1 : 0)} pages={story.records.length} width={width} />
       </View>
 
       <View
@@ -255,7 +261,7 @@ function PassageBoard({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <Heading style={{ fontSize: small ? 19 : 21, flex: 1 }}>{story.title}</Heading>
+          <Heading style={{ fontSize: small ? 19 : 21, flex: 1 }}>{title}</Heading>
           <View
             style={{
               backgroundColor: C.soft,
@@ -265,7 +271,7 @@ function PassageBoard({
             }}
           >
             <Copy style={{ fontSize: 12, fontWeight: "800", color: C.ink }}>
-              Question {s.index + 1} of {story.prompts.length}
+              Question {s.index + 1} of {story.records.length}
             </Copy>
           </View>
         </View>
@@ -298,6 +304,7 @@ function PassageBoard({
               compact
               quiet
               disabled={!active}
+              style={{ minHeight: 48 }}
               onPress={() => {
                 if (!active) return;
                 assistance?.();

@@ -111,7 +111,14 @@ vi.mock("../src/learn/games/which-one/engine", async (real) => {
 });
 vi.mock("../src/learn/games/turtle-tales/engine", async (real) => {
   const r = (await real()) as typeof import("../src/learn/games/turtle-tales/engine");
-  return { ...r, tale: (s: { id: string }) => (swap.on ? { ...r.tale(s), pages: r.tale(s).pages.map((p) => ({ ...p, text: SUNSET })) } : r.tale(s)) };
+  return {
+    ...r,
+    tale: (s: { id: string }) => (swap.on ? { ...r.tale(s), pages: r.tale(s).pages.map((p) => ({ ...p, text: SUNSET })) } : r.tale(s)),
+    upperStoryById: (id: unknown) => {
+      const st = r.upperStoryById(id);
+      return swap.on && st ? { ...st, title: "Sunset Story", body: SUNSET, records: st.records.map((rec) => ({ ...rec, context: SUNSET, prompt: SUNSET })) } : st;
+    },
+  };
 });
 vi.mock("../src/learn/games/sound-boat/engine", async (real) => {
   const r = (await real()) as typeof import("../src/learn/games/sound-boat/engine");
@@ -471,6 +478,30 @@ describe("a producer that hands a board an edited copy is refused: no word, no s
     dev.__DEV__ = true;
     const state = savedRound("which-one", 1).state as WhichState;
     expect(() => admittedReading(whichItem(state), "Which One")).toThrow(/Which One was given reading content that did not come from an admitted or pinned inherited record/);
+  });
+  it.each([4, 5] as const)("turtle-tales Level %i native PassageBoard refuses tampered passage records: no words, speech, or credit", async (level) => {
+    const options = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
+    const session = { ...startSession("turtle-tales", { options }, {}, 19), learner: "family", revision: 1 } as LearnSession;
+    await open("turtle-tales", session);
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+    expect(shownText()).not.toMatch(/sunset/i);
+    await act(async () => root!.unmount());
+    root = undefined;
+    played.length = 0;
+
+    swap.on = true;
+    await open("turtle-tales", session);
+    const before = savedNow();
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(words()).toContain(REFUSED_TASK_TEXT);
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused").length).toBeGreaterThan(0);
+    expect(shownText()).not.toMatch(/sunset/i);
+    expect(played, played.join()).toEqual([]);
+    const after = savedNow();
+    expect(after.learn?.["turtle-tales"]?.state).toEqual(before.learn?.["turtle-tales"]?.state);
+    expect(after.learn?.["turtle-tales"]?.revision).toBe(before.learn?.["turtle-tales"]?.revision);
+    expect(after.skills).toEqual(before.skills);
+    expect(after.learning).toEqual(before.learning);
   });
 });
 

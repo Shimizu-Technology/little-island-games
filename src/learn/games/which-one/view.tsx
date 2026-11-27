@@ -233,6 +233,7 @@ function WhichClueBoard({
               compact
               quiet
               disabled={!active}
+              style={{ minHeight: 48 }}
               onPress={() => {
                 if (!active) return;
                 assistance?.();

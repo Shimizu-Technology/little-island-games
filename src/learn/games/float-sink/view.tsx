@@ -255,7 +255,7 @@ function FloatLabBoard({
     const next = floatLabPickOption(s, idx);
     if (next === s) return;
     if (coach.active) coach.done();
-    if (!s.helped && s.picked === null) {
+    if (!s.missed && !s.helped && s.picked === null) {
       practice(exp.skill, next.solved);
       practice("sci.predict", next.solved);
     }
@@ -268,8 +268,10 @@ function FloatLabBoard({
     if (!active || s.solved || !exp) return;
     const next = floatLabChooseHull(s, shape);
     if (coach.active) coach.done();
-    if (next.sank) sound("float-sink-ball-sank", true);
-    else sound("tap");
+    if (next.sank) {
+      if (!s.missed && !s.helped) practice("sci.shape-buoyancy", false);
+      sound("float-sink-ball-sank", true);
+    } else sound("tap");
     update(next);
   }
 
@@ -277,10 +279,10 @@ function FloatLabBoard({
     if (!active || s.solved || !s.shape || s.sank || !exp) return;
     const next = floatLabAddPebble(s);
     if (next.sank) {
-      practice("sci.shape-buoyancy", false);
+      if (!s.missed && !s.helped) practice("sci.shape-buoyancy", false);
       sound("tap");
     } else if (next.solved) {
-      practice("sci.shape-buoyancy", true);
+      if (!s.missed && !s.helped) practice("sci.shape-buoyancy", true);
       cheer(s.index === s.ids.length - 1 ? "big" : "right");
     } else {
       sound(`float-sink-count-${Math.min(7, next.pebbles)}`, true);
@@ -392,6 +394,7 @@ function FloatLabBoard({
             compact
             quiet
             disabled={!active}
+            style={{ minHeight: 48 }}
             onPress={() => {
               if (!active) return;
               assistance?.();

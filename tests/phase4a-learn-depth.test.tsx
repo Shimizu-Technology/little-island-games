@@ -8,7 +8,8 @@ import { startSession, validLearnSession, outcomeOf, replaySession } from "../sr
 import { isGrowth, createGrowth } from "../src/learn/growth/engine";
 import { roundProgress } from "../src/learn/LearnChrome";
 import { random } from "../src/games/types";
-import { COINS } from "../src/learn/kit/numbers";
+import { COINS, sectionOf } from "../src/learn/kit/numbers";
+import { admittedReading } from "../src/learn/reading/admit";
 
 import { Board as SoundBoatBoard } from "../src/learn/games/sound-boat/view";
 import { voyagePartsItem } from "../src/learn/games/sound-boat/engine";
@@ -83,6 +84,7 @@ import {
 import { Board as FloatSinkBoard } from "../src/learn/games/float-sink/view";
 import {
   FLOAT_EXPERIMENTS,
+  FLOAT_LAB_VERSUS_ROUND,
   isFloatLab,
   floatLabAddPebble,
   floatLabChooseHull,
@@ -90,10 +92,22 @@ import {
   floatLabHelp,
   floatLabNext,
   floatLabPickOption,
+  validFloatLab,
   type FloatLabState,
 } from "../src/learn/games/float-sink/stages";
 
-import { scienceBank, tasks as scienceTasks, wrongFeedback, goalTranscript } from "../src/learn/games/weather-watch/model";
+import {
+  currentTask as scienceCurrentTask,
+  expandedTasks as scienceExpandedTasks,
+  move as scienceMove,
+  roundTasks as scienceRoundTasks,
+  scienceBank,
+  tasks as scienceTasks,
+  wrongFeedback,
+  goalTranscript,
+  type ScienceStateV1,
+  type ScienceStateV2,
+} from "../src/learn/games/weather-watch/model";
 import { allCertifiedScalePuzzles } from "../src/learn/games/shell-scale/engine";
 import {
   analyzeOdd,
@@ -534,14 +548,18 @@ describe("Phase 4A: expanded shallow Science, Reading & Thinking content banks",
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("turtle-tales has 24+ distinct stories spanning L1–5 (28 total, zero duplicates)", () => {
-    expect(totalStoryCount()).toBeGreaterThanOrEqual(24);
-    expect(totalStoryCount()).toBe(28);
+  it("turtle-tales has 20 admitted stories spanning L1–5 (12 picture + 8 pinned inherited upper stories, zero bypass)", () => {
+    expect(totalStoryCount()).toBe(20);
     const upper = upperStories();
+    expect(upper).toHaveLength(8);
     expect(new Set(upper.map((s) => s.id)).size).toBe(upper.length);
     for (const st of upper) {
       expect(st.body.length).toBeGreaterThan(100);
-      expect(st.prompts.length).toBeGreaterThanOrEqual(3);
+      expect(st.records.length).toBeGreaterThanOrEqual(3);
+      expect(st.prompts.length).toBe(st.records.length);
+      for (const rec of st.records) {
+        expect(admittedReading(rec, "Turtle Tales test")).toBe(true);
+      }
     }
   });
 
@@ -555,11 +573,11 @@ describe("Phase 4A: expanded shallow Science, Reading & Thinking content banks",
       expect(q.fact.length).toBeGreaterThan(25);
       expect(wrongFeedback(q, [0]).length).toBeGreaterThan(20);
     }
-    // Every expanded task surfaces across seeds.
+    // Every expanded task surfaces across seeds in version-2 expanded rounds.
     const seen = new Set<string>();
     for (let level = 1; level <= 5; level++) {
       for (let seed = 1; seed <= 12; seed++) {
-        for (const q of scienceTasks("food-web", level, seed)) seen.add(q.title);
+        for (const q of scienceExpandedTasks("food-web", level, seed)) seen.add(q.title);
       }
     }
     expect(seen.size).toBe(32);
@@ -605,5 +623,442 @@ describe("Phase 4A: expanded shallow Science, Reading & Thinking content banks",
       expect(solved).toBe(true);
       expect(history.length).toBeLessThanOrEqual(par);
     }
+  });
+});
+
+describe("Round 1 review regressions (R1-1 through R1-9)", () => {
+  it("R1-1: every Reef Race L4 and L5 target stone, hint stone, and solved route token is reachable through rendered controls", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    // Minor wording nit: rr5-mix-4 must not say "Twin dice +14"
+    const mix4 = REEF_ROUTE_TASKS.find((t) => t.id === "rr5-mix-4")!;
+    expect(mix4.steps.map((st) => st.label).join(" ")).not.toMatch(/twin dice/i);
+
+    for (const task of REEF_ROUTE_TASKS) {
+      const level = task.level;
+      const pool = REEF_ROUTE_TASKS.filter((t) => t.level === level && t.id !== task.id);
+      const ids = [task.id, ...pool.slice(0, 5).map((t) => t.id)];
+      const state: ReefRouteState = {
+        kind: "reef-route",
+        level,
+        starter: 0,
+        ids,
+        index: 0,
+        wrongCount: 0,
+        lastWrong: null,
+        helped: false,
+        solved: false,
+        clean: [],
+      };
+      const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
+      const baseSession = { ...startSession("reef-race", { options: opts }, {}, 7), state };
+      const update = vi.fn();
+
+      await act(async () => {
+        root = create(<ReefRaceBoard {...makeBoardProps(baseSession)} update={update} />);
+      });
+
+      if (task.end === 100) {
+        // Verify all 4 section buttons exist with neutral labels and >=48pt touch targets, defaulting to anchor's section.
+        const anchorSec = sectionOf(task.anchor, 100);
+        for (let sec = 0; sec < 4; sec++) {
+          const btn = root!.root.findByProps({ testID: `reef-section-${sec}` });
+          expect(btn.props.accessibilityState?.selected, `${task.id} sec ${sec}`).toBe(sec === anchorSec);
+          expect(btn.props.style.minHeight).toBeGreaterThanOrEqual(48);
+          expect(btn.props.style.minWidth).toBeGreaterThanOrEqual(48);
+        }
+      }
+
+      if (task.kind === "route") {
+        // Route comparison: tap the winning route card and verify solved token lands in the viewed section.
+        const winnerRoute = task.routes![task.target];
+        const routeBtn = root!.root
+          .findAll((n) => n.props.accessibilityRole === "button" && typeof n.props.accessibilityLabel === "string")
+          .find((n) => (n.props.accessibilityLabel as string).startsWith(winnerRoute.label));
+        expect(routeBtn, `${task.id} winning route button`).toBeDefined();
+        await act(async () => {
+          routeBtn!.props.onPress();
+        });
+        expect(update).toHaveBeenCalledWith(expect.objectContaining({ solved: true }));
+        const solvedSession = { ...baseSession, state: { ...state, solved: true } };
+        await act(async () => {
+          root!.update(<ReefRaceBoard {...makeBoardProps(solvedSession)} update={update} />);
+        });
+        const treeStr = JSON.stringify(root!.toJSON());
+        expect(treeStr, `${task.id} solved winning token visible`).toContain(`stone ${winnerRoute.landing}`);
+      } else {
+        // Navigate via rendered section control if target stone is in another L5 section, then tap the actual Stone button!
+        const targetSec = sectionOf(task.target, task.end);
+        if (task.end === 100 && targetSec !== sectionOf(task.anchor, 100)) {
+          const secBtn = root!.root.findByProps({ testID: `reef-section-${targetSec}` });
+          await act(async () => {
+            secBtn.props.onPress();
+          });
+        }
+        const stoneBtn = root!.root
+          .findAll((n) => n.props.accessibilityRole === "button" && typeof n.props.accessibilityLabel === "string")
+          .find((n) => new RegExp(`^Stone ${task.target}(?:,|$)`).test(n.props.accessibilityLabel as string));
+        expect(stoneBtn, `${task.id} Stone ${task.target} must be rendered & tappable`).toBeDefined();
+        await act(async () => {
+          stoneBtn!.props.onPress();
+        });
+        expect(update, `${task.id} tapping Stone ${task.target} solves`).toHaveBeenCalledWith(
+          expect.objectContaining({ solved: true }),
+        );
+
+        // Verify opt-in Step 1 hint highlights the midpoint stone cleanly in its section.
+        const helpedSession = { ...baseSession, state: { ...state, helped: true } };
+        await act(async () => {
+          root!.update(<ReefRaceBoard {...makeBoardProps(helpedSession)} update={update} />);
+        });
+        const midSec = sectionOf(task.midpoint, task.end);
+        if (task.end === 100) {
+          const midSecBtn = root!.root.findByProps({ testID: `reef-section-${midSec}` });
+          await act(async () => {
+            midSecBtn.props.onPress();
+          });
+        }
+        const midStone = root!.root
+          .findAll((n) => n.props.accessibilityRole === "button" && typeof n.props.accessibilityLabel === "string")
+          .find((n) => new RegExp(`^Stone ${task.midpoint}(?:,|$)`).test(n.props.accessibilityLabel as string));
+        expect(midStone, `${task.id} hint midpoint Stone ${task.midpoint} rendered`).toBeDefined();
+        expect(midStone!.props.accessibilityLabel).toContain("tap this one next");
+      }
+
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+  });
+
+  it("R1-2: pre-PR version-1 Weather Watch and Food Web saves keep exact original tasks across non-1 seeds; new rounds use version-2 pinned taskIds", () => {
+    // Exact reviewer reproduction: Weather Watch L1, seed 2, completed records [[0],[1],[2],[0]]
+    const wwOpts = optionsAtLevel({ mode: "solo", pace: "easy" }, 1);
+    const v1Repro: ScienceStateV1 = {
+      version: 1,
+      seed: 2,
+      level: 1,
+      index: 4,
+      items: [0, 1, 2, 3],
+      values: [],
+      tested: false,
+      actions: 0,
+      records: [[0], [1], [2], [0]],
+    };
+    expect(engines["weather-watch"].validate(v1Repro, wwOpts)).toBe(true);
+    expect(scienceRoundTasks("weather-watch", v1Repro).map((q) => q.title)).toEqual([
+      "Sunny beach",
+      "Rainy walk",
+      "Cold mountain",
+      "Stormy afternoon",
+    ]);
+
+    // Exhaustive pre-PR v1 compatibility across Weather Watch & Food Web, L1–5, multiple non-1 seeds, partial & completed
+    for (const game of ["weather-watch", "food-web"] as const) {
+      for (const level of [1, 2, 3, 4, 5] as const) {
+        const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
+        for (const seed of [2, 3, 7, 19]) {
+          const origTasks = scienceTasks(game, level, seed);
+          // Partial save (at index 1 with 1 completed record)
+          const partialV1: ScienceStateV1 = {
+            version: 1,
+            seed,
+            level,
+            index: 1,
+            items: origTasks.map((_, i) => i),
+            values: origTasks[1].target,
+            tested: false,
+            actions: 1,
+            records: [origTasks[0].target],
+          };
+          expect(engines[game].validate(partialV1, opts), `${game} L${level} seed ${seed} partial v1`).toBe(true);
+          expect(scienceCurrentTask(game, partialV1).title).toBe(origTasks[1].title);
+          // Advancing a v1 save stays v1 and finishes cleanly
+          let progressed = scienceMove(game, partialV1, { type: "test" });
+          progressed = scienceMove(game, progressed, { type: "next" });
+          expect(progressed.version).toBe(1);
+          expect(engines[game].validate(progressed, opts)).toBe(true);
+          // Completed v1 save
+          const doneV1: ScienceStateV1 = {
+            version: 1,
+            seed,
+            level,
+            index: origTasks.length,
+            items: origTasks.map((_, i) => i),
+            values: [],
+            tested: false,
+            actions: 0,
+            records: origTasks.map((q) => q.target),
+          };
+          expect(engines[game].validate(doneV1, opts), `${game} L${level} seed ${seed} done v1`).toBe(true);
+          expect(engines[game].outcome(doneV1, opts)).toBe("done");
+        }
+      }
+    }
+
+    // Fresh rounds use version 2 with strict taskIds validation
+    const freshWw = startSession("weather-watch", { options: wwOpts }, {}, 99).state as ScienceStateV2;
+    expect(freshWw.version).toBe(2);
+    expect(Array.isArray(freshWw.taskIds)).toBe(true);
+    expect(engines["weather-watch"].validate(freshWw, wwOpts)).toBe(true);
+    expect(engines["weather-watch"].validate({ ...freshWw, taskIds: ["unknown-id", ...freshWw.taskIds.slice(1)] }, wwOpts)).toBe(false);
+    expect(engines["weather-watch"].validate({ ...freshWw, taskIds: [freshWw.taskIds[0], freshWw.taskIds[0], ...freshWw.taskIds.slice(2)] }, wwOpts)).toBe(false);
+    expect(engines["weather-watch"].validate({ ...freshWw, taskIds: freshWw.taskIds.slice(0, 2) }, wwOpts)).toBe(false);
+  });
+
+  it("R1-4: Float/Sink L4–5 versus rounds give both players equal turns and tie on equal perfect play for both starters", () => {
+    for (const level of [4, 5] as const) {
+      for (const starter of [0, 1] as const) {
+        const opts = optionsAtLevel({ mode: "versus", pace: "easy" }, level);
+        const session = startSession("float-sink", { options: opts, starter }, {}, 42 + level);
+        let s = session.state as FloatLabState;
+        expect(s.ids).toHaveLength(FLOAT_LAB_VERSUS_ROUND);
+        expect(FLOAT_LAB_VERSUS_ROUND % 2).toBe(0);
+        const turns: number[] = [];
+        for (let i = 0; i < s.ids.length; i++) {
+          turns.push((s.starter + i) % 2);
+          const exp = floatLabExperiment(s)!;
+          if (exp.kind === "cargo") {
+            s = floatLabChooseHull(s, "wide");
+            for (let p = 0; p < (exp.targetCargo ?? 4); p++) s = floatLabAddPebble(s);
+          } else {
+            s = floatLabPickOption(s, exp.correctIndex);
+          }
+          s = floatLabNext(s);
+        }
+        expect(turns.filter((t) => t === 0)).toHaveLength(FLOAT_LAB_VERSUS_ROUND / 2);
+        expect(turns.filter((t) => t === 1)).toHaveLength(FLOAT_LAB_VERSUS_ROUND / 2);
+        expect(s.clean).toEqual(Array(FLOAT_LAB_VERSUS_ROUND).fill(true));
+        expect(validLearnSession({ ...session, state: s })).toBe(true);
+        expect(outcomeOf({ ...session, state: s })).toBe("draw");
+      }
+    }
+  });
+
+  it("R1-5: failed experiments never auto-reveal opt-in clues before Help is tapped (Float/Sink, Tide Pool, Which One, Håfa Adai) + coconut wording", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    // Minor wording nit on coconut experiment
+    const coco = FLOAT_EXPERIMENTS.find((e) => e.id === "fl4-cmp-coconut-rock")!;
+    expect(coco.options[0]).toBe("Whole coconut with fibrous husk");
+
+    // Exact reproduction on fl4-cargo-6: clay bowl + 4 pebbles -> sank, missed: true, helped: false, NO barge reveal until Lab clue tapped
+    const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, 4);
+    const cargo6Exp = FLOAT_EXPERIMENTS.find((e) => e.id === "fl4-cargo-6")!;
+    const baseState: FloatLabState = {
+      kind: "float-lab",
+      level: 4,
+      starter: 0,
+      ids: ["fl4-cargo-6", "fl4-cmp-clay", "fl4-cmp-bottle", "fl4-ft-clay", "fl4-ft-sponge"],
+      index: 0,
+      picked: null,
+      shape: null,
+      pebbles: 0,
+      sank: false,
+      missed: false,
+      helped: false,
+      solved: false,
+      clean: [],
+    };
+    const baseSession = { ...startSession("float-sink", { options: opts }, {}, 11), state: baseState };
+    // Pristine render: hint is NOT visible
+    await act(async () => {
+      root = create(<FloatSinkBoard {...makeBoardProps(baseSession)} />);
+    });
+    expect(JSON.stringify(root!.toJSON())).not.toContain(cargo6Exp.hint);
+    expect(JSON.stringify(root!.toJSON())).toContain("Lab clue");
+
+    // Wrong-answer path: bowl + 4 pebbles -> sinks, missed: true, helped stays false!
+    let s = floatLabChooseHull(baseState, "bowl");
+    for (let i = 0; i < 4; i++) s = floatLabAddPebble(s);
+    expect(s.sank).toBe(true);
+    expect(s.missed).toBe(true);
+    expect(s.helped).toBe(false);
+    expect(validFloatLab(s, 4, opts)).toBe(true);
+
+    await act(async () => {
+      root!.update(<FloatSinkBoard {...makeBoardProps({ ...baseSession, state: s })} />);
+    });
+    const sunkJson = JSON.stringify(root!.toJSON());
+    expect(sunkJson).not.toContain(cargo6Exp.hint);
+    expect(sunkJson).toContain("Lab clue");
+
+    // Only after explicit opt-in Help does the clue appear
+    const helpedState = floatLabHelp(s);
+    expect(helpedState.helped).toBe(true);
+    await act(async () => {
+      root!.update(<FloatSinkBoard {...makeBoardProps({ ...baseSession, state: helpedState })} />);
+    });
+    expect(JSON.stringify(root!.toJSON())).toContain(cargo6Exp.hint);
+    await act(async () => root!.unmount());
+    root = undefined;
+
+    // Cross-board audit: Tide Pool, Which One, and Håfa Adai also keep helped=false after a wrong try
+    const tpSession = startSession("tide-pool", { options: optionsAtLevel({ mode: "solo", pace: "easy" }, 4) }, {}, 41);
+    let tp = tpSession.state as TideClassifyState;
+    const tpMission = tideClassifyMission(tp)!;
+    tpMission.specimens.forEach((sp, i) => {
+      tp = tideClassifyPlace(tp, i, (1 - sp.bucket) as 0 | 1);
+    });
+    tp = tideClassifyCheck(tp);
+    expect(tp.checkedWrong).toBe(true);
+    expect(tp.missed).toBe(true);
+    expect(tp.helped).toBe(false);
+    expect(validLearnSession({ ...tpSession, state: tp })).toBe(true);
+
+    const woSession = startSession("which-one", { options: optionsAtLevel({ mode: "solo", pace: "easy" }, 4) }, {}, 63);
+    let wo = woSession.state as WhichClueState;
+    wo = whichCluePick(wo, (whichClueAnswer(wo) + 1) % 3);
+    expect(wo.wrong).toHaveLength(1);
+    expect(wo.helped).toBe(false);
+    expect(validLearnSession({ ...woSession, state: wo })).toBe(true);
+
+    const haSession = startSession("hafa-adai", { options: optionsAtLevel({ mode: "solo", pace: "easy" }, 4) }, {}, 88);
+    let ha = haSession.state as PicnicContextState;
+    const haQ = picnicContextItem(ha)!;
+    const wrongHa = haQ.choices.findIndex((c) => c.value !== haQ.answer);
+    ha = picnicContextPick(ha, wrongHa, haQ);
+    expect(ha.wrong).toHaveLength(1);
+    expect(ha.helped).toBe(false);
+    expect(validLearnSession({ ...haSession, state: ha })).toBe(true);
+  });
+
+  it("R1-6: validFloatLab rejects impossible cargo states (solid ball holding cargo, excess loads, unreachable sinks)", () => {
+    const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, 4);
+    const validBase: FloatLabState = {
+      kind: "float-lab",
+      level: 4,
+      starter: 0,
+      ids: ["fl4-cargo-4", "fl4-cmp-clay", "fl4-cmp-bottle", "fl4-ft-clay", "fl4-ft-sponge"],
+      index: 0,
+      picked: null,
+      shape: null,
+      pebbles: 0,
+      sank: false,
+      missed: false,
+      helped: false,
+      solved: false,
+      clean: [],
+    };
+    expect(validFloatLab(validBase, 4, opts)).toBe(true);
+    const corrupted: FloatLabState[] = [
+      // Exact reviewer probe: ball with 9 pebbles, sank: false, solved: true
+      { ...validBase, shape: "ball", pebbles: 9, sank: false, solved: true },
+      // Ball not marked sunk
+      { ...validBase, shape: "ball", pebbles: 0, sank: false, missed: true, solved: false },
+      // Ball with pebbles > 0
+      { ...validBase, shape: "ball", pebbles: 1, sank: true, missed: true, solved: false },
+      // Bowl (cap 3) claiming solved at 4 pebbles
+      { ...validBase, shape: "bowl", pebbles: 4, sank: false, solved: true },
+      // Wide boat (cap 6, target 4) claiming excess successful load of 6 pebbles
+      { ...validBase, shape: "wide", pebbles: 6, sank: false, solved: true },
+      // Wide boat (cap 6 >= target 4) marked sank (unreachable because target 4 solves first)
+      { ...validBase, shape: "wide", pebbles: 7, sank: true, missed: true, solved: false },
+      // Bowl (cap 3) marked sank at wrong pebble count (2 instead of 4)
+      { ...validBase, shape: "bowl", pebbles: 2, sank: true, missed: true, solved: false },
+      // Bowl (cap 3) marked sank without missed: true
+      { ...validBase, shape: "bowl", pebbles: 4, sank: true, missed: false, solved: false },
+      // No shape selected yet claiming solved
+      { ...validBase, shape: null, pebbles: 4, sank: false, solved: true },
+    ];
+    for (const bad of corrupted) {
+      expect(validFloatLab(bad, 4, opts), JSON.stringify(bad)).toBe(false);
+    }
+  });
+
+  it("R1-7: all new compact help/clue/evidence buttons and Island Market basket removal targets enforce >=48pt", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const nodeText = (node: unknown): string => {
+      if (typeof node === "string" || typeof node === "number") return String(node);
+      if (!node || typeof node !== "object") return "";
+      const inst = node as { children?: unknown[] };
+      return Array.isArray(inst.children) ? inst.children.map(nodeText).join(" ") : "";
+    };
+    const flatStyle = (st: unknown): Record<string, unknown> => {
+      if (!st) return {};
+      if (Array.isArray(st)) return Object.assign({}, ...st.map(flatStyle));
+      return typeof st === "object" ? (st as Record<string, unknown>) : {};
+    };
+    const checkHelpTargets: readonly [LearnId, React.ComponentType<BoardProps<any>>, string][] = [
+      ["reef-race", ReefRaceBoard, "Step 1 hint"],
+      ["float-sink", FloatSinkBoard, "Lab clue"],
+      ["tide-pool", TidePoolBoard, "Rule clue"],
+      ["turtle-tales", TurtleTalesBoard, "Show evidence"],
+      ["which-one", WhichOneBoard, "Clue helper"],
+      ["hafa-adai", HafaAdaiBoard, "Peek"],
+      ["island-market", IslandMarketBoard, "Step 1 hint"],
+      ["sound-boat", SoundBoatBoard, "Help"],
+    ];
+    for (const [id, Comp, label] of checkHelpTargets) {
+      const opts = optionsAtLevel({ mode: engines[id].modes[0], pace: "easy" }, 4);
+      const session = startSession(id, { options: opts }, {}, 105);
+      await act(async () => {
+        root = create(<Comp {...makeBoardProps(session)} />);
+      });
+      const buttons = root!.root.findAll(
+        (n) =>
+          n.type === "button" &&
+          n.props.accessibilityRole === "button" &&
+          (nodeText(n).includes(label) || String(n.props.accessibilityLabel ?? "").includes(label)),
+      );
+      expect(buttons.length, `${id} renders "${label}" button`).toBeGreaterThan(0);
+      const style = flatStyle(buttons[0].props.style);
+      expect(Number(style.minHeight), `${id} "${label}" minHeight >= 48`).toBeGreaterThanOrEqual(48);
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+
+    // Populated Island Market L4 basket removal buttons (crates, mangoes, and shell coins) must be >= 48x48
+    const mOpts = optionsAtLevel({ mode: "solo", pace: "easy" }, 4);
+    const mSession = startSession("island-market", { options: mOpts }, {}, 37);
+    let ms = mSession.state as MarketStallState;
+    ms = stallPackPiece(stallPackPiece(ms, "tens", 1), "ones", 1);
+    await act(async () => {
+      root = create(<IslandMarketBoard {...makeBoardProps({ ...mSession, state: ms })} />);
+    });
+    const takeBtns = root!.root.findAll(
+      (n) =>
+        n.type === "button" &&
+        n.props.accessibilityRole === "button" &&
+        typeof n.props.accessibilityLabel === "string" &&
+        (n.props.accessibilityLabel as string).startsWith("Take back"),
+    );
+    expect(takeBtns.length).toBeGreaterThanOrEqual(2);
+    for (const btn of takeBtns) {
+      const style = flatStyle(btn.props.style);
+      expect(Number(style.minWidth)).toBeGreaterThanOrEqual(48);
+      expect(Number(style.minHeight)).toBeGreaterThanOrEqual(48);
+    }
+    await act(async () => root!.unmount());
+    root = undefined;
+  });
+
+  it("R1-9: Turtle Tales preserves misses across a correct retry without Show evidence so clean records false", () => {
+    const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, 4);
+    const session = startSession("turtle-tales", { options: opts }, {}, 51);
+    let s = session.state as PassageState;
+    const story = upperStoryById(s.storyId)!;
+    const p = story.prompts[0];
+
+    // Wrong pick -> right pick -> Next WITHOUT calling passageHelp!
+    s = passagePick(s, (p.correctIndex + 1) % 3, story);
+    expect(s.missed).toBe(true);
+    expect(s.showEvidence).toBe(false);
+    expect(validLearnSession({ ...session, state: s })).toBe(true);
+
+    s = passagePick(s, p.correctIndex, story);
+    expect(s.solved).toBe(true);
+    expect(s.wrong).toBeNull();
+    expect(s.missed).toBe(true);
+    expect(s.showEvidence).toBe(false);
+    expect(validLearnSession({ ...session, state: s })).toBe(true);
+
+    s = passageNext(s, story);
+    expect(s.clean).toEqual([false]);
+    expect(s.missed).toBe(false);
+    expect(validLearnSession({ ...session, state: s })).toBe(true);
+
+    // Next question answered right on first try without Help records clean: true
+    const p1 = story.prompts[1];
+    s = passagePick(s, p1.correctIndex, story);
+    s = passageNext(s, story);
+    expect(s.clean).toEqual([false, true]);
   });
 });

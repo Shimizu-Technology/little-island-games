@@ -212,6 +212,7 @@ function PicnicContextBoard({
               compact
               icon="eye"
               disabled={!active}
+              style={{ minHeight: 48 }}
               onPress={() => {
                 if (!active) return;
                 assistance?.();

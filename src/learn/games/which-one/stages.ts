@@ -118,7 +118,6 @@ export function whichCluePick(s: WhichClueState, displayIndex: number): WhichClu
     ...s,
     wrong: [...s.wrong, displayIndex].sort((a, b) => a - b),
     crossed: s.crossed.filter((i) => i !== displayIndex),
-    helped: true,
   };
 }
 
@@ -180,7 +179,6 @@ export function validWhichClue(
   }
   const ans = whichClueAnswer(s);
   if (s.wrong.includes(ans)) return false;
-  if (s.wrong.length > 0 && !s.helped) return false;
   if (s.crossed.some((i) => s.wrong.includes(i))) return false;
   return true;
 }
