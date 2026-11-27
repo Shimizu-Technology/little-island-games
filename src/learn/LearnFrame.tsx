@@ -1,3 +1,4 @@
+import { useReducedMotion } from '../components/motion';
 import { styles as baseStyles, C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , GameHeader, Sheet, ToggleRow } from "../components/ui";
 import { useNunitoLoaded } from "../ui/fonts";
 import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
@@ -70,6 +71,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const engine = engines[id],
     view = views[id];
   const saved = store.save.learn?.[id];
+  const reduced = useReducedMotion();
   const scroll = useRef<ScrollView | null>(null), lagoonOffset = useRef(0);
   const lagoonScroll = useMemo(() => id === "logic-lagoon" ? { scroll, offset: lagoonOffset } : null, [id]);
   // A board that owns a touch (Slip Tide's water) holds the page scroll until release, as Cove grids do.
@@ -170,8 +172,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     earnedStars = saved ? roundStars(saved, store.save.school?.[id]?.[levelOf(saved.options)]?.stars ?? 1) : 0,
     wasFinished = useRef(finished);
   useLayoutEffect(() => {
-    if (finished) scroll.current?.scrollTo({ y: 0, animated: false });
-  }, [finished, saved?.id]);
+    if (finished) scroll.current?.scrollTo({ y: 0, animated: !reduced });
+  }, [finished, saved?.id, reduced]);
   // Celebrations: a small burst on right answers, a big one when the round is won or completed.
   // A round the island friend or tide won ends calmly; the board says who got there first.
   // `done` is the last burst that finished (or was never drawn), kept here so a remount of the board card, which crossing

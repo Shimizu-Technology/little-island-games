@@ -1,3 +1,4 @@
+import { useReducedMotion } from '../components/motion';
 import { Chip, C, Button, Copy, Heading } from "../board/WarmUI";
 import { classicPaceLabel } from "../games/classics/labels";
 import { learnSources } from "../content/learnAudio";
@@ -60,7 +61,8 @@ export default function Play() {
   return <Game key={`${id}:${store.save.learning?.active ?? "family"}:${store.epoch}`} id={id} />;
 }
 function Game({ id }: { id: GameId }) {
-  const look = useActiveIslanderLook();
+  const look = useActiveIslanderLook(), reduced = useReducedMotion();
+  const scrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets(),
     focused = useIsFocused();
   const { width, height } = useWindowDimensions(),
@@ -95,6 +97,9 @@ function Game({ id }: { id: GameId }) {
   const sound = useSounds(store.save.settings.sound && focused && !practice.pending),
     finished = s ? isFinished(s) : false,
     previousRound = useRef({ id: s?.id, epoch: store.epoch, finished });
+  useEffect(() => {
+    if (finished) scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
+  }, [finished, s?.id, reduced]);
   const lostWord = s?.game === "word-rescue" && wordStatus(s) === "lost";
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => setActive(state === "active"));
@@ -217,6 +222,7 @@ function Game({ id }: { id: GameId }) {
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
+        ref={scrollRef}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}
       >
@@ -251,7 +257,16 @@ function Game({ id }: { id: GameId }) {
         )}
         <SaveStatus />
         {s && s.options.mode === "solo" && (s.game === "memory" || s.game === "checkers") && <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}><IslanderPortrait look={look}/><Copy>You</Copy></View>}
-        <View style={{ backgroundColor: C.cream, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
+        {s && finished && <View testID="classic-finish-card" accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 22, borderWidth: 2, borderColor: C.coral, padding: 16, gap: 10, marginBottom: 12, boxShadow: "0 3px 0 #E8D8BE" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Companion size={48} event={s.game === "numbers" && numbersStatus(s) === "stuck" ? "complete" : classicEvent(s)} active={focused && active && !setup && !help}/>
+            <View style={{ flex: 1 }}><Heading style={{ fontSize: 22 }}>Round complete!</Heading><Copy>Your finished game is here to enjoy.</Copy></View>
+          </View>
+          <Button onPress={replay}>{s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}</Button>
+          <Button compact quiet onPress={newRound}>New round & options</Button>
+          <BadgeResultCard round={s.id}/>
+        </View>}
+        <View testID="classic-board" style={{ backgroundColor: C.cream, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
           {s?.game === "tic-tac-toe" ? (
             <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
           ) : s?.game === "word-rescue" ? (
@@ -306,18 +321,11 @@ function Game({ id }: { id: GameId }) {
               borderTopColor: C.line,
             }}
           >
-            {finished && <BadgeResultCard round={s.id}/>}
-            {finished && <Companion event={s.game === "numbers" && numbersStatus(s) === "stuck" ? "complete" : classicEvent(s)} active={focused && active && !setup && !help}/> }
-            {finished && (
-              <Button onPress={replay}>
-                {s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}
-              </Button>
-            )}
             {challengeLabel && <Button quiet compact onPress={openChallenge}>{challengeLabel}</Button>}
             {/* Kept small and quiet so it's never the obvious tap mid-game; Play again is the main action. */}
-            <Button compact quiet onPress={newRound}>
+            {!finished && <Button compact quiet onPress={newRound}>
               New round & options
-            </Button>
+            </Button>}
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>
               Your current round saves on this device.
             </Copy>

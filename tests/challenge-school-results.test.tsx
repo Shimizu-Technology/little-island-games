@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 import React, { createContext, useLayoutEffect } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';

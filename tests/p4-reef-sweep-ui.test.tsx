@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";

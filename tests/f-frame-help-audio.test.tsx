@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 /** F-frame: "Hear a quick guide" never plays silence. The School frame offers it only when the engine's helpAudio has a
  * shipped recording in the chosen voice, the same lookup the player uses. Also verifies F3 spoken Help exit and
  * background/visibility cancellation across LearnFrame. */

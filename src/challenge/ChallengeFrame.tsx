@@ -1,3 +1,4 @@
+import { useReducedMotion } from '../components/motion';
 import { styles as baseStyles, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , ToggleRow } from "../components/ui";
 import { useNunitoLoaded } from "../ui/fonts";
 
@@ -49,6 +50,7 @@ export function challengeIntro(entry: ChallengeEntry): string {
 const gameName = (game: string) => shelfGames.find(item=>item.id===(shelfIdOf[game]??game))?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
 export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = false,onLinkConsumed}:{entry:ChallengeEntry;requestedPuzzle?:string;requestedCard?:ChallengeCard;autoStart?:boolean;onLinkConsumed?:()=>void}) {
+  const reduced=useReducedMotion();
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width,height,fontScale}=useWindowDimensions(), insets=useSafeAreaInsets();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
@@ -169,9 +171,9 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
   const solvedRound=round?.result&&!settling?round.id:undefined;
   // A pinned board fills the page with scrolling off. Return to the top first: a page left scrolled far down the
   // picker (likely at the largest text) would otherwise keep showing empty space below the board. A solve also
-  // returns to the top, so the finished board stays in view above the result.
+  // returns to the top, so the finish card and next action come before the completed board.
   const page=useRef<ScrollView>(null);
-  useLayoutEffect(()=>{if(pinned||solvedRound)page.current?.scrollTo({y:0,animated:false});},[pinned,solvedRound]);
+  useLayoutEffect(()=>{if(pinned||solvedRound)page.current?.scrollTo({y:0,animated:!!solvedRound&&!reduced});},[pinned,solvedRound,reduced]);
   // Large titles stop growing where their longest word still fits the line, so none breaks mid-word.
   // A pinned board's chrome stays compact (Back stops at 1.3x), so its dare line stops at 1.5x.
   const PINNED_MAX=1.5;
@@ -197,7 +199,7 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
   const openedKey=open?`${owner}:${store.epoch}:${round.id}:${shortLarge?'short':'tall'}`:null;
   const resetBoard=useRef<string|null>(null);
   useLayoutEffect(()=>{resetBoard.current=openedKey;},[openedKey]);
-  const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:reveal?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
+  const boardReady=(event?:{nativeEvent?:{layout?:{y?:number}}})=>{if(openedKey&&resetBoard.current===openedKey){resetBoard.current=null;page.current?.scrollTo({y:reveal&&!round?.result?Math.max(0,event?.nativeEvent?.layout?.y??0):0,animated:false});}};
   // What a grid board shares the screen with, measured once for all of them: safe areas, the page's own padding, the bar
   // (when it stays above the page) and the learner chip (when large text moves it into the page).
   const chrome=useMemo(()=>challengeChrome({insets:{top:insets.top,bottom:insets.bottom,left:insets.left,right:insets.right},barPinned,short:shortLarge,chip:open&&!barChip&&!pinned}),[insets.top,insets.bottom,insets.left,insets.right,barPinned,shortLarge,open,barChip,pinned]);
@@ -233,8 +235,15 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
       <Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button>
     </View> : round ? <>
       {!pinned&&dareLines}
+      {round.result&&!settling ? <View testID="challenge-finish-card" accessibilityLiveRegion="polite" style={{padding:16,gap:10,borderRadius:22,backgroundColor:'#FFFDF8',borderWidth:2,borderColor:'#FF7A5C',boxShadow:'0 3px 0 #E8D8BE'}}><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
+        <PuzzleEnding primaryLabel="Next puzzle" praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
+          onChoose={chooseNext} onAnother={()=>chooseNext('same')}
+          onRest={back}/>
+        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
+        {showDirections&&harderNote&&<Copy testID="harder-destination">{harderNote}</Copy>}
+      </View> : null}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it.
-          After a solve the finished board stays on the page, above the result, and takes no more moves. */}
+          After a solve the finished board stays on the page, below the finish card, and takes no more moves. */}
       {!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><GridChromeContext.Provider value={chrome}><View testID="challenge-board-ready" onLayout={boardReady} style={{gap:pinned?8:14,...(pinned?{flex:1}:{})}}>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling)&&(!round.result||!!entry.animatedRuns),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
           header:<>{!barChip&&<LearnerChip compact/>}{dareLines}<SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{entry.game==='memory'?'Restart this board (keep spent turns)':keepPlan}</Button>}</>,
@@ -242,13 +251,6 @@ export function ChallengeFrame({entry,requestedPuzzle,requestedCard,autoStart = 
         }:{})})}
         {entry.helpUI!=='board'&&!round.result&&<Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </View></GridChromeContext.Provider>}/>}
-      {round.result&&!settling ? <><Heading maxFontSizeMultiplier={fit(solved,32)}>{solved}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
-        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
-        {showDirections&&harderNote&&<Copy testID="harder-destination">{harderNote}</Copy>}
-        <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
-          onChoose={chooseNext} onAnother={()=>chooseNext('same')}
-          onRest={back}/>
-      </> : null}
       {!pinned&&!round.result&&<><Button quiet maxFontSizeMultiplier={BELOW_MAX} disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet maxFontSizeMultiplier={BELOW_MAX} onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
       {!pinned&&marksLine}
     </>:null}
