@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, View, type LayoutChangeEvent } from 'react-native';
-import { Copy } from '../components/ui';
+import { C, Copy } from '../components/ui';
 import { useBoardColumns, useBoardSpace } from './BoardSpace';
 
 type CardProps = { onLayout?: (event: LayoutChangeEvent) => void; children?: React.ReactNode };
@@ -41,8 +41,8 @@ export function PlanStrip({ children, count, focus, cardHeight, gap, padding, dr
   const before = known.filter(c => c.y < offset - 1).length;
   const after = known.filter(c => c.y + c.height > offset + height + 1).length;
   return <View testID="plan-strip" onLayout={e => { setExtent(e.nativeEvent.layout.height); space.changed(); }} style={{ gap: 2 }}>
-    {before > 0 && <Copy testID="plan-more-above" maxFontSizeMultiplier={1.5} accessibilityLabel={`${more(before)} above. Scroll up.`} style={{ fontSize: 13, fontWeight: '700' }}>↑ {more(before)}</Copy>}
+    {before > 0 && <Copy testID="plan-more-above" maxFontSizeMultiplier={1.5} accessibilityLabel={`${more(before)} above. Scroll up.`} style={{ fontSize: 13, fontWeight: '700', color: C.muted }}>↑ {more(before)}</Copy>}
     <ScrollView ref={scroll} nestedScrollEnabled style={{ maxHeight, flexGrow: 0 }} onLayout={e => setHeight(e.nativeEvent.layout.height)} onContentSizeChange={(_w, h) => setContent(h)} onScroll={e => { offsetNow.current = e.nativeEvent.contentOffset.y; setOffset(offsetNow.current); }} scrollEventThrottle={16} accessibilityLabel="Your plan cards">{measured}</ScrollView>
-    {content > height + 1 && after > 0 && <Copy testID="plan-more-below" maxFontSizeMultiplier={1.5} accessibilityLabel={`${more(after)} below. Scroll down.`} style={{ fontSize: 13, fontWeight: '700' }}>↓ {more(after)}</Copy>}
+    {content > height + 1 && after > 0 && <Copy testID="plan-more-below" maxFontSizeMultiplier={1.5} accessibilityLabel={`${more(after)} below. Scroll down.`} style={{ fontSize: 13, fontWeight: '700', color: C.muted }}>↓ {more(after)}</Copy>}
   </View>;
 }

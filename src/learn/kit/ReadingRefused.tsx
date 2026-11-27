@@ -9,7 +9,7 @@ import { REFUSED_TASK_TEXT } from "../reading/admit";
  */
 export function ReadingRefused() {
   return (
-    <View testID="reading-content-refused" accessibilityLiveRegion="polite" style={{ padding: 12, alignSelf: "stretch" }}>
+    <View testID="reading-content-refused" accessibilityLiveRegion="polite" style={{ padding: 14, borderRadius: 16, backgroundColor: C.paper, borderWidth: 1, borderColor: C.line, alignSelf: "stretch" }}>
       <Copy maxFontSizeMultiplier={1.4} style={{ color: C.ink, textAlign: "center" }}>{REFUSED_TASK_TEXT}</Copy>
     </View>
   );

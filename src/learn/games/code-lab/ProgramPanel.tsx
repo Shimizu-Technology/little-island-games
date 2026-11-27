@@ -7,6 +7,14 @@ import type { LabProgram } from './content';
 import { FREE_EDITS, checkedDraft, hint, nearest, ready, sourceFor, type Action, type Attempt } from './attempt';
 import { pythonText, runPython } from './python';
 const face = Platform.select({ ios: 'Menlo', default: 'monospace' });
+const lineTint = (trimmed: string) =>
+  trimmed.startsWith('#')
+    ? '#7A6658'
+    : /^(def|for|if|elif|else|return|while)\b/.test(trimmed)
+      ? '#504A9E'
+      : trimmed.startsWith('print(')
+        ? '#1E6B66'
+        : '#3D2B24';
 /** Code and trace panes scroll vertically; code wraps without shrinking the type. */
 export function ProgramPanel({ d, state: s, send, active, width, onNext, coaching = false }: { d: LabProgram; state: Attempt; send: (a: Action) => void; active: boolean; width: number; coaching?: boolean; onNext?: () => void }) {
   const win = useWindowDimensions(), cap = atLarge(win.fontScale, 1.5), codeCap = atLarge(win.fontScale, 1.3);
@@ -27,23 +35,24 @@ export function ProgramPanel({ d, state: s, send, active, width, onNext, coachin
   const near = d.mode === 'build' && s.edits >= FREE_EDITS ? nearest(d, s.picks) : null;
   const paneHeight = Math.max(132, Math.min(wide ? win.height - 175 : win.height * 0.26, wide ? 350 : large ? 140 : 225));
   const code = <View style={{ flex: wide ? 1 : undefined, minWidth: 0, gap: 5 }}>
-    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, fontWeight: '800' }}>{s.won ? 'Scroll the finished program' : d.mode === 'predict' ? 'Read the program · scroll code' : 'Scroll code · tap a blank'}</Copy>
-    <ScrollView ref={scroll} nestedScrollEnabled style={{ height: paneHeight, flexGrow: 0, borderRadius: 12, backgroundColor: '#23334D' }} contentContainerStyle={{ padding: 8, gap: 2 }} accessibilityLabel="Python program, scroll for all lines">
+    <Copy maxFontSizeMultiplier={cap} style={{ fontSize: 15, fontWeight: '800', color: '#3D2B24' }}>{s.won ? 'Scroll the finished program' : d.mode === 'predict' ? 'Read the program · scroll code' : 'Scroll code · tap a blank'}</Copy>
+    <ScrollView ref={scroll} nestedScrollEnabled style={{ height: paneHeight, flexGrow: 0, borderRadius: 16, borderWidth: 1.5, borderBottomWidth: 3, borderColor: '#E8D8BE', backgroundColor: '#FFFDF8' }} contentContainerStyle={{ padding: 10, gap: 3 }} accessibilityLabel="Python program, scroll for all lines">
       {shown.map((line, i) => {
         const edit = d.slots.findIndex(s => s.line === i), chosen = d.mode === 'build' && edit === slot;
-        const backgroundColor = frame?.line === i ? '#425372' : 'transparent';
+        const backgroundColor = frame?.line === i ? '#FFEAA8' : 'transparent';
         const depth = (line.length - line.trimStart().length) / 4;
+        const trimmed = line.trimStart();
         const spoken = `Line ${i + 1}${depth ? `, inside ${depth} ${depth === 1 ? 'block' : 'blocks'}` : ''}: ${line.trim()}`;
         // A separate gutter keeps every wrapped continuation attached to its numbered statement.
         // Display indentation is compact; the spoken/source form retains the exact Python blocks.
         const measured = (event: import('react-native').LayoutChangeEvent) => { positions.current.set(i, event.nativeEvent.layout.y); if (i === focusLine) revealLine(i); };
-        const text = <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 7 }}>
-          <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#B9CADE', width: 25, textAlign: 'right' }}>{i + 1}</Copy>
-          <View testID="lab-code-statement" style={{ flex: 1, minWidth: 0, paddingLeft: depth * 12, borderLeftWidth: depth ? 1 : 0, borderLeftColor: '#657995' }}>
-            <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 21, color: '#FFFFFF' }}>{line.trimStart()}</Copy>
+        const text = <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+          <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 22, color: '#8A715F', width: 25, textAlign: 'right' }}>{i + 1}</Copy>
+          <View testID="lab-code-statement" style={{ flex: 1, minWidth: 0, paddingLeft: depth * 12, borderLeftWidth: depth ? 1.5 : 0, borderLeftColor: '#DFCEB4' }}>
+            <Copy maxFontSizeMultiplier={codeCap} style={{ fontFamily: face, fontSize: 14, lineHeight: 22, color: lineTint(trimmed), fontWeight: '700' }}>{trimmed}</Copy>
           </View>
         </View>;
-        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} onLayout={measured} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#F5D886' : 'transparent', borderRadius: 7, backgroundColor }}>{coaching && active && chosen ? <CoachSpot active>{text}</CoachSpot> : text}</PressableScale> : <View key={i} onLayout={measured} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 4, backgroundColor }}>{text}</View>;
+        return d.mode === 'build' && edit >= 0 && !s.won ? <PressableScale key={i} onLayout={measured} accessibilityRole="button" accessibilityLabel={`Edit ${spoken[0].toLowerCase() + spoken.slice(1)}`} accessibilityState={{ selected: chosen, disabled: !active }} disabled={!active} onPress={() => setSlot(edit)} style={{ minHeight: 44, padding: 6, borderWidth: 2, borderColor: chosen ? '#FF7A5C' : 'transparent', borderRadius: 10, backgroundColor }}>{coaching && active && chosen ? <CoachSpot active>{text}</CoachSpot> : text}</PressableScale> : <View key={i} onLayout={measured} accessible accessibilityRole="text" accessibilityLabel={spoken} style={{ padding: 5, borderRadius: 8, backgroundColor }}>{text}</View>;
 
       })}
     </ScrollView>

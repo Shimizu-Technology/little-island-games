@@ -5,15 +5,15 @@ import { C } from "../../components/ui";
 import type { GrowthScene, GrowthVisualProps } from "./types";
 
 const styles = StyleSheet.create({
-  board: { alignSelf: "center", gap: 12, padding: 12, borderRadius: 18, backgroundColor: C.soft },
+  board: { alignSelf: "center", gap: 12, padding: 14, borderRadius: 20, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.soft },
   row: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
-  panel: { padding: 10, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.cream, gap: 8, flexShrink: 1, maxWidth: "100%" },
-  label: { color: C.ink, fontSize: 17, fontWeight: "700", flexShrink: 1 },
+  panel: { padding: 12, borderRadius: 14, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.paper, gap: 8, flexShrink: 1, maxWidth: "100%" },
+  label: { color: C.ink, fontSize: 17, fontWeight: "800", flexShrink: 1 },
   note: { color: C.ink, fontSize: 16, flexShrink: 1 },
-  stone: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, borderWidth: 2, borderColor: C.teal, backgroundColor: C.paper, maxWidth: "100%" },
-  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: C.coral, borderWidth: 1, borderColor: C.ink },
-  ten: { flexDirection: "row", borderWidth: 1, borderColor: C.ink, backgroundColor: C.teal },
-  unit: { width: 7, height: 16, borderRightWidth: 1, borderRightColor: C.cream },
+  stone: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, borderWidth: 2, borderColor: "#D4B88B", backgroundColor: C.paper, maxWidth: "100%" },
+  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: C.coralFill, borderWidth: 1.5, borderColor: C.ink },
+  ten: { flexDirection: "row", borderRadius: 5, overflow: "hidden", borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.teal },
+  unit: { width: 8, height: 18, borderRightWidth: 1, borderRightColor: C.cream },
 });
 
 function Dots({ count }: { count: number }) {

@@ -55,12 +55,12 @@ function Swim({ page, pages, width }: { page: number; pages: number; width: numb
             cy={34}
             rx={9}
             ry={5}
-            fill={i < page ? "#79AB80" : "#C6D3C5"}
-            stroke="#183F39"
+            fill={i < page ? "#79AB80" : "#E8D8BE"}
+            stroke={C.ink}
             strokeWidth={1.5}
           />
         ))}
-        <Ellipse cx={w - 26} cy={34} rx={24} ry={8} fill="#E6D3AC" stroke="#183F39" strokeWidth={2} />
+        <Ellipse cx={w - 26} cy={34} rx={24} ry={8} fill="#E6D3AC" stroke={C.ink} strokeWidth={2} />
         <Path
           d={`M${w - 24} 30 L${w - 24} 8 M${w - 24} 8 Q${w - 42} 2 ${w - 38} 14 M${w - 24} 8 Q${w - 8} 1 ${w - 8} 14`}
           stroke={C.teal}

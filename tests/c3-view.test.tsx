@@ -53,12 +53,12 @@ it('moves the failed Build trace highlight between editable lines while keeping 
   });
   const buttons = () => tree!.root.findAllByType('button');
   const lineStyle = (line: number) => buttons().find(b => b.props.accessibilityLabel?.startsWith(`Edit line ${line}:`))!.props.style;
-  expect(lineStyle(1)).toMatchObject({ backgroundColor: '#425372', borderColor: '#F5D886' });
+  expect(lineStyle(1)).toMatchObject({ backgroundColor: '#FFEAA8', borderColor: '#FF7A5C' });
   expect(lineStyle(2).backgroundColor).toBe('transparent');
 
   await act(async () => buttons().find(b => text(b) === 'Next line')!.props.onPress());
-  expect(lineStyle(1)).toMatchObject({ backgroundColor: 'transparent', borderColor: '#F5D886' });
-  expect(lineStyle(2)).toMatchObject({ backgroundColor: '#425372', borderColor: 'transparent' });
+  expect(lineStyle(1)).toMatchObject({ backgroundColor: 'transparent', borderColor: '#FF7A5C' });
+  expect(lineStyle(2)).toMatchObject({ backgroundColor: '#FFEAA8', borderColor: 'transparent' });
 });
 
 it('touch selects a line/value, Undo sends an engine action, and saturated Help stays disabled through edits',async()=>{

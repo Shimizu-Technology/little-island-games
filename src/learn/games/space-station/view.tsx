@@ -10,7 +10,7 @@ import { isInquiry, type StationState } from "./engine";
 import { investigations } from "./investigations";
 import { StationScene, stationLegend } from "./Scene";
 
-const theme = { ink: "#254B4B", accent: "#4F793B", card: "#FFFCF1", line: "#CDD7BC", chosen: "#DDECCA" };
+const theme = { ink: "#3D2B24", accent: "#1E6B66", card: "#FFFDF8", line: "#E8D8BE", chosen: "#DFF2EC" };
 
 /** Fresh rounds are K6 inquiry rounds. A saved version-1 round keeps its shared science board and legacy layout (K8). */
 export function Board(props: BoardProps<StationState>) {

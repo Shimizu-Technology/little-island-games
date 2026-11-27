@@ -6,14 +6,14 @@ import { AudioPreferences, hasSpeech, useSoundControls } from '../../../componen
 import { useReducedMotion } from '../../../components/motion';
 import { LARGE_TEXT } from '../../../components/wordFit';
 import type { ChallengeViewProps } from '../../../challenge/types';
-import { Cargo, bucketLabel, itemOf } from './art';
+import { Cargo, ClueIcon, bucketLabel, itemOf } from './art';
 import { FRAMES, bell, catchWords, goalSentence, routes, ruleWords, type Side } from './rules';
 import { CLEAR, HELP, RUN, UNDO, answerOf, challengeEngine, helpLeft, hintText, pick, setBlock, type Action, type State } from './challenge-engine';
 
 const SIDE = ['left', 'right'] as const;
 /** Voiced by the lead in a later audio batch (scripts/learn/c4-tide-logic.json); each button appears only once its line resolves in the child's voice. */
 const RULES = { write: 'c4-tide-write-rules', find: 'c4-tide-find-rules', trace: 'c4-tide-trace-rules' } as const;
-const optionLabel = (kind: string, v: string) => kind === 'side' || kind === 'start' ? bucketLabel(v) : kind === 'when' ? (v === 'on' ? 'on this catch' : 'on the catch before') : kind === 'join' ? v.toUpperCase() : v === 'not bell' ? 'NO bell' : v.startsWith('not ') ? `NOT ${v.slice(4)}` : v === 'bell' ? '🔔 bell' : v;
+const optionLabel = (kind: string, v: string) => kind === 'side' || kind === 'start' ? bucketLabel(v) : kind === 'when' ? (v === 'on' ? 'on this catch' : 'on the catch before') : kind === 'join' ? v.toUpperCase() : v === 'not bell' ? 'NO bell' : v.startsWith('not ') ? `NOT ${v.slice(4)}` : v;
 export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeViewProps<State, Action>) {
   const d = s.d, f = FRAMES[d.frame], prefs = useContext(AudioPreferences), { play: tone, stop } = useSoundControls(prefs.sound ?? true), reduced = useReducedMotion();
   const win = useWindowDimensions(), large = win.fontScale >= LARGE_TEXT, wide = win.width > win.height && width >= 640;
@@ -52,50 +52,50 @@ export function ChallengeBoard({ state: s, dispatch, active, width }: ChallengeV
   // The first wrong catch, said by the belt itself so it stays in view with the outlined catch.
   const missLine = s.won || s.miss === null ? '' : d.kind === 'trace' ? `Catch ${s.miss + 1} is not where the gate sends it. Follow the gate from catch 1.` : `Catch ${s.miss + 1}, the ${catchWords(d.belt[s.miss])}, goes ${SIDE[(sorted ?? want)[s.miss]].toUpperCase()} with your rule, but it belongs ${SIDE[want[s.miss]].toUpperCase()}. Change a block and run again.`;
   const goal = d.kind === 'write' ? goalSentence(f, d.target) : d.kind === 'find' ? 'Read the sorted belt. Build a rule that sorts every catch the same way.' : '';
-  const belt = <View style={{ backgroundColor: '#E2F3F2', borderRadius: 18, padding: 10, gap: 8 }}>
+  const belt = <View style={{ backgroundColor: '#FFF6E5', borderWidth: 1.5, borderBottomWidth: 3, borderColor: '#E8D8BE', borderRadius: 20, padding: 10, gap: 8 }}>
     <ScrollView ref={beltScroll} horizontal={oneRow} scrollEnabled={oneRow} nestedScrollEnabled accessibilityLabel={oneRow ? 'Cargo belt. Scroll sideways to see every catch.' : undefined} contentContainerStyle={oneRow ? { gap: 6, paddingRight: 4 } : undefined}>
     <View testID="tide-challenge-belt" style={{ flexDirection: 'row', flexWrap: oneRow ? 'nowrap' : 'wrap', justifyContent: 'center', gap: 6 }}>
       {d.belt.map((c, i) => {
         const item = itemOf(c), tested = i < shown, wrong = s.miss === i && !playing && !s.won, landed = tested ? (d.kind === 'trace' ? s.draft[i] : sorted?.[i]) : undefined;
         const label = `Catch ${i + 1}: ${catchWords(c)}${d.kind === 'find' ? `, sorted ${SIDE[want[i]]}` : ''}${d.kind === 'trace' && s.draft[i] >= 0 ? `, you send it ${SIDE[s.draft[i]]}` : ''}${landed !== undefined && landed >= 0 ? `, ${landed === want[i] ? 'right' : 'wrong'} bucket` : ''}`;
-        return <View key={i} accessible={d.kind !== 'trace'} accessibilityLabel={label} onLayout={event => { catchX.current[i] = event.nativeEvent.layout.x; if (oneRow && follow === i) beltScroll.current?.scrollTo({ x: Math.max(0, event.nativeEvent.layout.x - 8), animated: false }); }} style={{ alignItems: 'center', minWidth: d.kind === 'trace' ? 96 : 64, padding: 3, borderRadius: 12, borderWidth: wrong || playing && i === shown ? 3 : 0, borderColor: wrong ? '#B74431' : '#287A82', backgroundColor: wrong ? '#FFE0D8' : playing && i === shown ? '#FFF2BA' : 'transparent' }}>
+        return <View key={i} accessible={d.kind !== 'trace'} accessibilityLabel={label} onLayout={event => { catchX.current[i] = event.nativeEvent.layout.x; if (oneRow && follow === i) beltScroll.current?.scrollTo({ x: Math.max(0, event.nativeEvent.layout.x - 8), animated: false }); }} style={{ alignItems: 'center', minWidth: d.kind === 'trace' ? 96 : 64, padding: 3, borderRadius: 14, borderWidth: wrong || playing && i === shown ? 3 : 0, borderColor: wrong ? '#B74431' : '#FF7A5C', backgroundColor: wrong ? '#FFE0D8' : playing && i === shown ? '#FFE8A8' : 'transparent' }}>
           <View style={{ height: catchSize, justifyContent: 'flex-end' }}><Cargo item={item} size={item.size === 'big' ? catchSize : catchSize * 49 / 64} /></View>
           <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '700' }}>{`${i + 1} · ${item.size}`}</Copy>
-          {d.kind === 'find' && <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '800', color: want[i] ? '#9A4A2E' : '#22686F' }}>{want[i] ? 'right →' : '← left'}</Copy>}
+          {d.kind === 'find' && <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '800', color: want[i] ? '#A3482C' : '#1E6B66' }}>{want[i] ? 'right →' : '← left'}</Copy>}
           {d.kind === 'trace' && <View style={{ flexDirection: 'row', gap: 4 }}>{([0, 1] as Side[]).map(side => <Button key={side} compact quiet style={{ minWidth: 44 }} maxFontSizeMultiplier={1.3} selected={s.draft[i] === side} disabled={idle} label={`Send catch ${i + 1} ${SIDE[side]}${s.draft[i] === side ? ', chosen' : ''}`} onPress={() => send(pick(i, side))}>{side ? '→' : '←'}</Button>)}</View>}
-          {landed !== undefined && landed >= 0 && <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '800', color: landed === want[i] ? '#22686F' : '#8D3528' }}>{`${landed ? 'R' : 'L'} ${landed === want[i] ? '✓' : '✗'}`}</Copy>}
+          {landed !== undefined && landed >= 0 && <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: 13, fontWeight: '800', color: landed === want[i] ? '#1E6B66' : '#A33B22' }}>{`${landed ? 'R' : 'L'} ${landed === want[i] ? '✓' : '✗'}`}</Copy>}
         </View>;
       })}
     </View>
     </ScrollView>
-    <View style={{ height: 9, borderRadius: 5, backgroundColor: '#B49C77' }} />
-    <View testID="tide-buckets" style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 8 }}><Copy maxFontSizeMultiplier={1.3} style={{ flexShrink: 1 }}>{'← LEFT BUCKET'}</Copy><Copy maxFontSizeMultiplier={1.3} style={{ flexShrink: 1, textAlign: 'right' }}>{'RIGHT BUCKET →'}</Copy></View>
-    {!playing && !!missLine && <Copy testID="tide-miss" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', color: '#8D3528', fontWeight: '800' }}>{missLine}</Copy>}
-    {playing && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', fontWeight: '700' }}>{`Testing catch ${shown + 1}${f.id === 'bell' && bell(d.belt[shown]) ? ' · 🔔 it rings' : ''}${f.id === 'bell' && shown > 0 && bell(d.belt[shown - 1]) ? ' · the catch before rang' : ''}`}</Copy>}
+    <View style={{ height: 9, borderRadius: 5, backgroundColor: '#D6BE94' }} />
+    <View testID="tide-buckets" style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 8 }}><Copy maxFontSizeMultiplier={1.3} style={{ flexShrink: 1, fontWeight: '800' }}>{'← LEFT BUCKET'}</Copy><Copy maxFontSizeMultiplier={1.3} style={{ flexShrink: 1, textAlign: 'right', fontWeight: '800' }}>{'RIGHT BUCKET →'}</Copy></View>
+    {!playing && !!missLine && <Copy testID="tide-miss" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', color: '#A33B22', fontWeight: '800' }}>{missLine}</Copy>}
+    {playing && <Copy accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.5} style={{ textAlign: 'center', fontWeight: '700' }}>{`Testing catch ${shown + 1}${f.id === 'bell' && bell(d.belt[shown]) ? ' · bell rings' : ''}${f.id === 'bell' && shown > 0 && bell(d.belt[shown - 1]) ? ' · the catch before rang' : ''}`}</Copy>}
   </View>;
   const rule = d.kind === 'trace'
-    ? <View testID="tide-rule" style={{ padding: 10, borderRadius: 14, borderWidth: 2, borderColor: '#287A82', backgroundColor: '#FFF9EA', gap: 4 }}><Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>THE RULE</Copy><Copy maxFontSizeMultiplier={1.5}>{ruleWords(f, d.target)}</Copy><Copy maxFontSizeMultiplier={1.5}>{goalSentence(f, d.target)}</Copy></View>
-    : <View testID="tide-rule" style={{ padding: 10, borderRadius: 14, borderWidth: 2, borderColor: '#287A82', backgroundColor: '#FFF9EA', gap: 6 }}>
-      <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>BUILD THE RULE</Copy>
+    ? <View testID="tide-rule" style={{ padding: 12, borderRadius: 18, borderWidth: 1.5, borderBottomWidth: 3, borderColor: '#E8D8BE', backgroundColor: '#FFFDF8', gap: 4 }}><Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', color: '#504A9E', fontSize: 13 }}>THE RULE</Copy><Copy maxFontSizeMultiplier={1.5}>{ruleWords(f, d.target)}</Copy><Copy maxFontSizeMultiplier={1.5}>{goalSentence(f, d.target)}</Copy></View>
+    : <View testID="tide-rule" style={{ padding: 12, borderRadius: 18, borderWidth: 1.5, borderBottomWidth: 3, borderColor: '#E8D8BE', backgroundColor: '#FFFDF8', gap: 6 }}>
+      <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '900', color: '#504A9E', fontSize: 13 }}>BUILD THE RULE</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-        {f.id === 'flip' ? <Copy maxFontSizeMultiplier={1.5}>GATE STARTS</Copy> : <Copy maxFontSizeMultiplier={1.5}>IF</Copy>}
-        {f.id === 'bell' && <Copy maxFontSizeMultiplier={1.5}>{'🔔 rings'}</Copy>}
+        {f.id === 'flip' ? <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>GATE STARTS</Copy> : <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>IF</Copy>}
+        {f.id === 'bell' && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><ClueIcon kind="bell" size={16} /><Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: '800' }}>rings</Copy></View>}
         {(f.id === 'flip' ? [1, 0] : f.slots.map((_, i) => i)).map(i => {
           const slot = f.slots[i], v = s.draft[i] >= 0 ? slot.options[s.draft[i]] : '';
           const empty = slot.kind === 'side' ? 'choose bucket' : slot.kind === 'start' ? 'which side? +' : slot.kind === 'join' ? 'AND/OR +' : slot.kind === 'when' ? 'on which catch? +' : 'clue +';
           return <React.Fragment key={i}>
             {f.id === 'flip' && i === 0 && <Copy maxFontSizeMultiplier={1.5}>· EVERY</Copy>}
             {f.id === 'bell' && i === 1 && <Copy maxFontSizeMultiplier={1.5}>AND</Copy>}
-            {f.id === 'three' && i === 2 && <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 28, fontWeight: '900', color: '#287A82' }}>(</Copy>}
+            {f.id === 'three' && i === 2 && <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 28, fontWeight: '900', color: '#504A9E' }}>(</Copy>}
             {slot.kind === 'side' && <Copy maxFontSizeMultiplier={1.5}>→</Copy>}
-            <Button compact quiet maxFontSizeMultiplier={1.5} selected={editing === i} disabled={idle} label={`Choose ${slot.name}, currently ${v || 'empty'}`} onPress={() => setEditing(editing === i ? null : i)}>{v ? optionLabel(slot.kind, v) : empty}</Button>
-            {f.id === 'three' && i === 4 && <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 28, fontWeight: '900', color: '#287A82' }}>)</Copy>}
+            <Button compact quiet leading={v === 'bell' ? <ClueIcon kind="bell" size={16} /> : undefined} maxFontSizeMultiplier={1.5} selected={editing === i} disabled={idle} label={`Choose ${slot.name}, currently ${v || 'empty'}`} onPress={() => setEditing(editing === i ? null : i)}>{v ? optionLabel(slot.kind, v) : empty}</Button>
+            {f.id === 'three' && i === 4 && <Copy maxFontSizeMultiplier={1.5} style={{ fontSize: 28, fontWeight: '900', color: '#504A9E' }}>)</Copy>}
             {f.id === 'flip' && i === 0 && <Copy maxFontSizeMultiplier={1.5}>FLIPS IT</Copy>}
           </React.Fragment>;
         })}
         {f.id !== 'flip' && <Copy maxFontSizeMultiplier={1.5}>{s.draft[f.slots.length - 1] < 0 ? 'ELSE\u00a0→ choose bucket' : `ELSE\u00a0→ ${SIDE[1 - s.draft[f.slots.length - 1]]} bucket`}</Copy>}
       </View>
-      {editing !== null && <View testID="tide-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{f.slots[editing].options.map((v, o) => <Button key={v} compact maxFontSizeMultiplier={1.5} selected={s.draft[editing] === o} disabled={idle} onPress={() => { send(setBlock(editing, o)); setEditing(null); }}>{optionLabel(f.slots[editing].kind, v)}</Button>)}</View>}
+      {editing !== null && <View testID="tide-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{f.slots[editing].options.map((v, o) => <Button key={v} compact leading={v === 'bell' ? <ClueIcon kind="bell" size={16} /> : undefined} maxFontSizeMultiplier={1.5} selected={s.draft[editing] === o} disabled={idle} onPress={() => { send(setBlock(editing, o)); setEditing(null); }}>{optionLabel(f.slots[editing].kind, v)}</Button>)}</View>}
     </View>;
   const filled = s.draft.every(x => x >= 0);
   const message = s.won ? (playing ? 'Watch every catch land.' : d.kind === 'trace' ? 'Every catch traced right.' : 'Your rule sorts every catch.')

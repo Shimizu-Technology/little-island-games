@@ -5,6 +5,7 @@ import { literacyTracks } from "../src/learn/growth/literacy";
 import type { GrowthQuestion, GrowthStage } from "../src/learn/growth/types";
 
 vi.mock("react-native", () => ({ View: "View", Text: "Text", StyleSheet: { create: (styles: unknown) => styles } }));
+vi.mock("../src/components/ui", () => ({ C: { soft: "soft", cream: "cream", ink: "ink", line: "line", teal: "teal", paper: "paper", muted: "muted", coral: "coral", coralFill: "coralFill" } }));
 const { LiteracyVisual } = await import("../src/learn/growth/LiteracyVisual");
 const games = ["sound-boat", "which-one", "turtle-tales", "hafa-adai"] as const;
 const stages: GrowthStage[] = ["stretch", "deep"];

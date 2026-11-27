@@ -22,7 +22,7 @@ export function SandCanvas({ width, goal, traced, point = START, wrongLine = nul
     {goal.map((a, i) => <Path key={i} d={`M${a.from.x} ${a.from.y}L${a.to.x} ${a.to.y}`} stroke={wrongLine === i ? '#AD4D35' : '#9B8868'} strokeWidth={wrongLine === i ? 10 : 7} strokeDasharray="2 7" strokeLinecap="round" fill="none" />)}
     {traced.map((a, i) => <Path key={i} d={`M${a.from.x} ${a.from.y}L${a.to.x} ${a.to.y}`} stroke={wrongLine === i ? '#AD4D35' : colorOf(a.color)} strokeWidth={4} strokeLinecap="round" fill="none" />)}
     {labels && labelled(goal).map(a => <SvgText key={`${a.from.x},${a.from.y}`} x={(a.from.x + a.to.x) / 2} y={(a.from.y + a.to.y) / 2 - font * .6} fontWeight="bold" fontSize={font} fill="#58462E">{lengthOf(a)}</SvgText>)}
-    <Circle cx={point.x} cy={point.y} r={10} fill="#6CB5A4" stroke="#2D756B" strokeWidth={2} /><Circle cx={point.x + 5} cy={point.y - 3} r={2} fill="#234B4F" />
+    <Circle cx={point.x} cy={point.y} r={10} fill="#6CB5A4" stroke="#3D2B24" strokeWidth={2} /><Circle cx={point.x + 5} cy={point.y - 3} r={2} fill="#3D2B24" />
   </Svg>;
 }
 /** One picture among four, drawn to the shared frame so size differences between the choices stay visible. */

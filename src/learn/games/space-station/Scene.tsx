@@ -5,7 +5,7 @@ import { describeSetup, type Investigation, type Observation } from "../../inqui
 import { EarthGlobe, MoonDisc, SkySun } from "../weather-watch/Illustrations";
 import { eclipseAt, eclipses, moonPaths, moonPlaces, newtons, planetSize, planets, seasonAt, seasons, sky, skyAt, tilts, weight, worlds } from "./model";
 
-const ink = "#254B4B", gold = "#E9B84D", night = "#263D59", soft = "#DCE5D9";
+const ink = "#3D2B24", gold = "#E8B448", night = "#3D3554", soft = "#EFE3CC";
 export const VIEW = { width: 360, height: 210 };
 const worldGround = ["#81B8A2", "#B6BDBB", "#CC8C6B", "#CBAD87"];
 const planetColour = ["#AA9D8A", "#D5A266", "#649CA9", "#C27D58", "#C9A57A", "#DCC994", "#8CCAC9", "#6E8FBF"];
@@ -138,7 +138,7 @@ export function StationScene({ q, settings, seen, height, label }: { q: Investig
   }
   return (
     <Svg width="100%" height={height} viewBox={`0 0 ${VIEW.width} ${VIEW.height}`} accessible accessibilityLabel={describeSetup(q, settings, seen)}>
-      <Rect width={VIEW.width} height={VIEW.height} rx={18} fill="#1F3550" opacity={0.06} />
+      <Rect width={VIEW.width} height={VIEW.height} rx={18} fill="#FFF6E5" />
       {body}
     </Svg>
   );

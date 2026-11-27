@@ -142,8 +142,8 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     onPress={() => dispatch(["k", idx])}
                     style={{
                       width: 54, minHeight: 54, alignItems: "center", justifyContent: "center",
-                      borderRadius: 14, backgroundColor: chosen ? "#DCEFD6" : "#FFF8E8",
-                      borderWidth: chosen ? 3 : 2, borderColor: chosen ? "#3D7E4A" : "#8CAD75",
+                      borderRadius: 14, backgroundColor: chosen ? "#DFF2EC" : "#FFFDF8",
+                      borderWidth: chosen ? 3 : 1.5, borderBottomWidth: 3, borderColor: chosen ? "#1E6B66" : "#E8D8BE",
                     }}
                   >
                     <Copy maxFontSizeMultiplier={1.4} style={{ fontSize: 22, fontWeight: "900", color: C.ink }}>{face}</Copy>
@@ -170,9 +170,10 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     onPress={() => dispatch(["k", idx])}
                     style={{
                       padding: 10, borderRadius: 16,
-                      backgroundColor: chosen ? "#DCEFD6" : "#FFFDF3",
-                      borderWidth: chosen ? 3 : 2,
-                      borderColor: chosen ? "#3D7E4A" : "#8CAD75",
+                      backgroundColor: chosen ? "#DFF2EC" : "#FFFDF8",
+                      borderWidth: chosen ? 3 : 1.5,
+                      borderBottomWidth: 3,
+                      borderColor: chosen ? "#1E6B66" : "#E8D8BE",
                       alignItems: "center", gap: 6,
                     }}
                   >
@@ -202,7 +203,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
           </View>
         )}
         {state.hintStage > 0 && !state.won && (
-          <View style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+          <View style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE" }}>
             <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 15 }}>{hintInfo.text}</Copy>
           </View>
         )}
@@ -274,7 +275,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
   return (
     <View style={{ gap: compact ? 9 : 12, paddingVertical: 4 }}>
       {state.descriptor.hint && (
-        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontSize: 14 }}>{state.descriptor.hint}</Copy>
+        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#665247", fontSize: 14 }}>{state.descriptor.hint}</Copy>
       )}
 
       <View
@@ -282,11 +283,11 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
         testID="shape-ch-board"
         style={{
           alignSelf: "center",
-          backgroundColor: "#E6EBD7",
-          borderRadius: 20,
+          backgroundColor: "#FFF0D2",
+          borderRadius: 22,
           padding: 4,
           borderWidth: 2,
-          borderColor: state.won ? "#3D7E4A" : "#B9CEAD",
+          borderColor: state.won ? "#2E7D54" : "#E8D8BE",
         }}
       >
         <View style={{ width: p.width * step + 8, height: p.height * step + 8 }}>
@@ -341,9 +342,10 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                     height: p.kind === "tangram" ? (compact ? 52 : 58) : undefined,
                     minWidth: 52, minHeight: 52, borderRadius: 14,
                     alignItems: "center", justifyContent: "center",
-                    backgroundColor: selected ? "#FFF1C8" : "#FFFDF3",
+                    backgroundColor: selected ? "#FFEBB0" : "#FFFDF8",
                     borderWidth: selected ? 3 : 1.5,
-                    borderColor: selected ? "#C6861E" : "#9BB593",
+                    borderBottomWidth: 3,
+                    borderColor: selected ? "#FF7A5C" : "#E8D8BE",
                   }}
                 >
                   <PiecePreview atoms={p.pieces[idx]} color={PIECE_COLORS[idx % PIECE_COLORS.length]} cellSize={p.kind === "tangram" ? 11 : 15} />

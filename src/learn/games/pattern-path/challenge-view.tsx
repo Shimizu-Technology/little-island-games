@@ -90,15 +90,15 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
 
   return (
     <View style={{ gap: compact ? 10 : 13, paddingVertical: 4 }}>
-      <View style={{ backgroundColor: "#E4EED9", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
-        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 16 }}>
+      <View style={{ backgroundColor: "#FFF0D2", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
+        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#C4573A", fontWeight: "900", alignSelf: "flex-start", marginLeft: 16 }}>
           {matrix ? "3 × 3 PATTERN GRID" : p.gaps.length > 1 ? "TWO-GAP TRAIL" : "PATTERN TRAIL"}
         </Copy>
         <View style={{ width: trailWidth, height: trailHeight, marginTop: compact ? 4 : 6 }}>
           {!matrix && (
             <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Path d={trailPath} fill="none" stroke="#A4C69B" strokeWidth={compact ? "16" : "18"} strokeLinecap="round" />
-              <Path d={trailPath} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#E5C996" strokeWidth={compact ? "16" : "18"} strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#FFFDF8" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
             </Svg>
           )}
           {p.tiles.map((tile, i) => {
@@ -125,8 +125,8 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                 ) : (
                   <PatternGlyph token={tile} size={tile.startsWith("shells:") ? (compact ? 34 : 38) : (compact ? 38 : 42)} />
                 )}
-                <View style={{ position: "absolute", right: -7, bottom: -7, width: 22, height: 22, borderRadius: 11, backgroundColor: selected ? "#B97D19" : "#3D6549", alignItems: "center", justifyContent: "center" }}>
-                  <Copy allowFontScaling={false} style={{ color: "#FFFDF3", fontSize: 11, lineHeight: 14, fontWeight: "900", includeFontPadding: false }}>{i + 1}</Copy>
+                <View style={{ position: "absolute", right: -7, bottom: -7, width: 22, height: 22, borderRadius: 11, backgroundColor: selected ? "#FF7A5C" : "#3D2B24", alignItems: "center", justifyContent: "center" }}>
+                  <Copy allowFontScaling={false} style={{ color: selected ? "#3D2B24" : "#FFFDF8", fontSize: 11, lineHeight: 14, fontWeight: "900", includeFontPadding: false }}>{i + 1}</Copy>
                 </View>
               </>
             );
@@ -140,9 +140,9 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
               borderRadius: compact ? 17 : 19,
               alignItems: "center" as const,
               justifyContent: "center" as const,
-              backgroundColor: state.won && isGap ? "#E2F4DF" : isGap ? (selected ? "#FFF0B8" : "#FFF8DB") : "#FFFDF3",
+              backgroundColor: state.won && isGap ? "#E2F2E4" : isGap ? (selected ? "#FFEBB0" : "#FFF8DB") : "#FFFDF8",
               borderWidth: selected ? 3.5 : isGap ? 2.5 : 2,
-              borderColor: state.won && isGap ? "#3D7E4A" : selected ? "#C6861E" : isGap ? "#D6A53C" : "#789C75",
+              borderColor: state.won && isGap ? "#2E7D54" : selected ? "#FF7A5C" : isGap ? "#D6A53C" : "#D8C09B",
             };
 
             if (isGap && p.gaps.length > 1) {
@@ -192,10 +192,10 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                   disabled={!active || state.won}
                   onPress={() => dispatch(ruleAction(idx))}
                   style={{
-                    paddingHorizontal: 12, paddingVertical: compact ? 8 : 11, borderRadius: 13, minHeight: compact ? 42 : 46,
-                    backgroundColor: chosen ? "#DCEFD6" : "#FFFDF4",
+                    paddingHorizontal: 12, paddingVertical: compact ? 8 : 11, borderRadius: 14, minHeight: compact ? 44 : 46,
+                    backgroundColor: chosen ? "#DFF2EC" : "#FFFDF8",
                     borderWidth: chosen ? 2.5 : 1.5,
-                    borderColor: chosen ? "#3D7E4A" : "#9BB593",
+                    borderColor: chosen ? "#1E6B66" : "#E8D8BE",
                     justifyContent: "center",
                   }}
                 >
@@ -229,9 +229,10 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
                   width: compact && p.choices.length === 6 ? "30%" : undefined,
                   minWidth: compact ? 58 : 66, minHeight: compact ? 50 : 62, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 16,
                   alignItems: "center", justifyContent: "center",
-                  backgroundColor: chosen ? "#DCEFD6" : "#FFFDF2",
-                  borderWidth: chosen ? 3 : 2,
-                  borderColor: chosen ? "#3D7E4A" : "#7C9C75",
+                  backgroundColor: chosen ? "#DFF2EC" : "#FFFDF8",
+                  borderWidth: chosen ? 3 : 1.5,
+                  borderBottomWidth: 3,
+                  borderColor: chosen ? "#1E6B66" : "#E8D8BE",
                 }}
               >
                 <PatternGlyph token={tile} size={compact ? 36 : 42} />
@@ -286,7 +287,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
       )}
 
       {state.hintStage > 0 && !state.won && (
-        <View testID="pattern-ch-hint" style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+        <View testID="pattern-ch-hint" style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE" }}>
           <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 15 }}>
             {hintInfo.text}
           </Copy>

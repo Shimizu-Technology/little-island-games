@@ -7,9 +7,9 @@ export { ALL_SHELL_CODES };
  * Gate Crab original vector art (PX-03).
  * Every shell differs in colour, silhouette AND surface marking, plus clear Small vs Big scale,
  * so colourblind players and small phones distinguish every feature at a glance.
- * Drawn on clean 100x100 / 260x140 boxes with the house ink outline (#20474A).
+ * Drawn on clean 100x100 / 260x140 boxes with the house ink outline (#3D2B24).
  */
-export const ink = '#20474A';
+export const ink = '#3D2B24';
 const line = { stroke: ink, strokeWidth: 3.4, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
 const hide = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
 
@@ -23,7 +23,7 @@ export const SHELL_PALETTE: Record<ColorIdx, { main: string; light: string; dark
 function ScallopBody({ col = 0 as ColorIdx }: { col?: ColorIdx }) {
   const p = SHELL_PALETTE[col];
   return <>
-    <Ellipse cx="50" cy="91" rx="28" ry="5.5" fill="#1C4A4C" opacity={0.16} />
+    <Ellipse cx="50" cy="91" rx="28" ry="5.5" fill="#3D2B24" opacity={0.16} />
     {/* Prominent hinge ears at bottom for crisp 34px silhouette */}
     <Path d="M32 74 L18 85 L43 85 Z M68 74 L82 85 L57 85 Z" fill={p.dark} {...line} strokeWidth={2.8} />
     {/* Scalloped fan silhouette */}
@@ -50,7 +50,7 @@ function ScallopBody({ col = 0 as ColorIdx }: { col?: ColorIdx }) {
 function NautilusBody({ col = 1 as ColorIdx }: { col?: ColorIdx }) {
   const p = SHELL_PALETTE[col];
   return <>
-    <Ellipse cx="50" cy="91" rx="28" ry="5.5" fill="#1C4A4C" opacity={0.16} />
+    <Ellipse cx="50" cy="91" rx="28" ry="5.5" fill="#3D2B24" opacity={0.16} />
     <Path
       d="M52 13 C76 13 89 30 89 52 C89 73 72 87 50 87 C28 87 13 73 13 52 C13 33 27 17 45 14 C48 13 50 13 52 13 Z"
       fill={p.main}
@@ -81,7 +81,7 @@ function NautilusBody({ col = 1 as ColorIdx }: { col?: ColorIdx }) {
 function ConchBody({ col = 2 as ColorIdx }: { col?: ColorIdx }) {
   const p = SHELL_PALETTE[col];
   return <>
-    <Ellipse cx="50" cy="91" rx="24" ry="5" fill="#1C4A4C" opacity={0.16} />
+    <Ellipse cx="50" cy="91" rx="24" ry="5" fill="#3D2B24" opacity={0.16} />
     <Path
       d="M50 9 L62 27 L77 21 L72 39 L85 44 L73 62 C68 74 59 86 50 88 C41 86 32 74 27 62 L15 44 L28 39 L23 21 L38 27 Z"
       fill={p.main}
@@ -212,7 +212,7 @@ export const GateCrabArt = memo(function GateCrabArt({ mood = 'idle', width = 26
 
       {/* The Gate Crab Guardian — cleanly in the FOREGROUND in every pose */}
       <G transform={open ? 'translate(130, 84) scale(0.92)' : 'translate(130, 89) scale(0.92)'}>
-        <Ellipse cx="0" cy="34" rx="34" ry="6" fill="#1C4A4C" opacity={0.2} />
+        <Ellipse cx="0" cy="34" rx="34" ry="6" fill="#3D2B24" opacity={0.2} />
         {/* Legs */}
         <G stroke="#A63A28" strokeWidth={5.5} strokeLinecap="round" fill="none">
           <Path d="M-24 18 Q-38 20 -42 32" />
@@ -299,7 +299,7 @@ function NeutralSizeShell({ big, x, y, s = 30 }: { big: SizeIdx; x: number; y: n
 
 /** Picture-first icon for any rule, cleanly centered in 120x44 pill for Rule-Maker menu & reveal. */
 export const RulePicture = memo(function RulePicture({ spec, width = 120, height = 44 }: { spec: RulePictureSpec; width?: number; height?: number }) {
-  const badge = (text: string, x: number, bg = '#20474A', w = 30, fontSize = 11.5) => (
+  const badge = (text: string, x: number, bg = '#3D2B24', w = 30, fontSize = 11.5) => (
     <G>
       <Rect x={x} y="10" width={w} height="24" rx="8" fill={bg} />
       <SvgText x={x + w / 2} y="26.5" fontSize={fontSize} fontWeight="900" fill="#FFFDF6" textAnchor="middle">{text}</SvgText>
@@ -396,7 +396,7 @@ export const RulePicture = memo(function RulePicture({ spec, width = 120, height
         ) : (
           <G>
             <NeutralSizeShell big={p.big} x={10} y={6} s={32} />
-            {badge(p.big ? 'BIG' : 'SMALL', 46, '#20474A', 38, 10.5)}
+            {badge(p.big ? 'BIG' : 'SMALL', 46, '#3D2B24', 38, 10.5)}
             {badge('✓', 88, '#2E8B57', 22, 12)}
           </G>
         );
@@ -524,7 +524,7 @@ export const RulePicture = memo(function RulePicture({ spec, width = 120, height
           // Stacked 2-line layout keeps all 3 position slots full-size and unmistakably legible.
           return (
             <G>
-              {badge(tag, 7, '#20474A', 28, 10.5)}
+              {badge(tag, 7, '#3D2B24', 28, 10.5)}
               {stackedClause(p.left, 4)}
               {stackedClause(p.right, 24)}
             </G>
@@ -533,7 +533,7 @@ export const RulePicture = memo(function RulePicture({ spec, width = 120, height
         return (
           <G>
             {compactClause(p.left, 6)}
-            {badge(tag, 46, '#20474A', 28)}
+            {badge(tag, 46, '#3D2B24', 28)}
             {compactClause(p.right, 77)}
           </G>
         );

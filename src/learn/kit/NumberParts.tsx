@@ -76,8 +76,8 @@ export function CrabIcon({ size = 24 }: { size?: number }) {
         <Path d="M8 17 Q1 9 5 5 L9 10 L11 4 Q17 11 8 17 M32 17 Q23 11 29 4 L31 10 L35 5 Q39 9 32 17" fill="#D9724F" />
         <Path d="M16 17 L15 11 M24 17 L25 11" />
         <Ellipse cx="20" cy="25" rx="13" ry="9" fill="#D9724F" />
-        <Circle cx="15" cy="10" r="2.6" fill="#FCFAF4" />
-        <Circle cx="25" cy="10" r="2.6" fill="#FCFAF4" />
+        <Circle cx="15" cy="10" r="2.6" fill="#FFFDF8" />
+        <Circle cx="25" cy="10" r="2.6" fill="#FFFDF8" />
         <Path d="M16 27 Q20 30 24 27" fill="none" />
       </G>
     </Svg>
@@ -241,14 +241,14 @@ function Stone({
             width: r * 2,
             height: r * 2,
             borderRadius: r,
-            backgroundColor: next ? "#FFF3C9" : special ? specialFill[special] : C.cream,
+            backgroundColor: next ? "#FFF3C9" : special ? specialFill[special] : C.paper,
             borderWidth: next ? 4 : 2.5,
-            borderColor: next ? "#D79A22" : "#7C9C93",
+            borderColor: next ? "#D79A22" : "#D4C3A3",
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#183F39",
-            shadowOpacity: 0.18,
-            shadowRadius: 2,
+            shadowColor: ink,
+            shadowOpacity: 0.16,
+            shadowRadius: 3,
             shadowOffset: { width: 0, height: 2 },
           }}
         >
@@ -338,7 +338,7 @@ export function ReefBoard({
               <Path key={k} d={`M${start.x - r * 1.35} ${start.y + k * r} H${start.x + r * 1.35}`} stroke="#8A5F3A" strokeWidth="2" />
             ))}
             <Rect x={start.x - r * 1.25} y={start.y + r * 1.2} width={r * 2.5} height={r * 0.85} rx="6" fill={C.cream} stroke={ink} strokeWidth="2" />
-            <SvgText x={start.x} y={start.y + r * 1.82} fontSize={r * 0.58} fontWeight="900" fontFamily="Avenir Next, Helvetica, Arial, sans-serif" fill={ink} textAnchor="middle">
+            <SvgText x={start.x} y={start.y + r * 1.82} fontSize={r * 0.58} fontWeight="900" fill={ink} textAnchor="middle">
               START
             </SvgText>
           </G>
@@ -464,7 +464,7 @@ function SpinnerFace({ size, lit }: { size: number; lit: number | null }) {
       {[0, 1, 2].map((i) => {
         const a = ((-90 + i * 120) * Math.PI) / 180;
         return (
-          <SvgText key={i} x={50 + 32 * Math.cos(a)} y={50 + 32 * Math.sin(a) + 8} fontSize="23" fontWeight="900" fontFamily="Avenir Next, Helvetica, Arial, sans-serif" fill={ink} textAnchor="middle">
+          <SvgText key={i} x={50 + 32 * Math.cos(a)} y={50 + 32 * Math.sin(a) + 8} fontSize="23" fontWeight="900" fill={ink} textAnchor="middle">
             {i + 1}
           </SvgText>
         );
@@ -616,7 +616,7 @@ export function ShellCoin({ size = 40, value }: { size?: number; value: number }
     <Svg width={size} height={size} viewBox="0 0 40 40" accessible={false}>
       <Path d="M20 37 L13 33 Q1 26 3 14 Q7 3 20 3 Q33 3 37 14 Q39 26 27 33 Z" fill={fill} stroke={ink} strokeWidth="2" strokeLinejoin="round" />
       <Circle cx="20" cy="19" r="11" fill={C.paper} stroke={ink} strokeWidth="1.5" />
-      <SvgText x="20" y={value >= 10 ? 23.5 : 24} fontSize={value >= 10 ? 12 : 14} fontWeight="900" fontFamily="Avenir Next, Helvetica, Arial, sans-serif" fill={ink} textAnchor="middle">
+      <SvgText x="20" y={value >= 10 ? 23.5 : 24} fontSize={value >= 10 ? 12 : 14} fontWeight="900" fill={ink} textAnchor="middle">
         {value}
       </SvgText>
     </Svg>

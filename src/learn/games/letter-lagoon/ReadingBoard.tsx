@@ -9,27 +9,41 @@ import { ReadingRefused } from "../../kit/ReadingRefused";
 import { admittedReading } from "../../reading/admit";
 import { choices, complete, current, move, type Action, type Bank, type State, type Task } from "./puzzle";
 
+const INK = "#3D2B24";
+const ACCENT = "#B84E5A";
+const CORAL = "#FF7A5C";
+const SAND_BORDER = "#E8D8BE";
+const WARM_CARD = "#FFFDF8";
+const WARM_WELL = "#FFF6E5";
+
 export function Creature({ size, letter = "a", kind = "lagoon" }: { size: number; letter?: string; kind?: string }) {
+  const body = kind === "workshop" ? "#F5C96B" : kind === "studio" ? "#FFA488" : "#96D0B4";
+  const belly = kind === "workshop" ? "#FFF2CC" : kind === "studio" ? "#FFE4D8" : "#E4F5EC";
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityLabel={`${letter} lagoon friend`}>
-      <Ellipse cx="50" cy="85" rx="39" ry="7" fill="#91D3CC" />
+      <Ellipse cx="50" cy="88" rx="34" ry="6" fill="#DFCAA8" opacity={0.65} />
       <Path
         d={
           kind === "studio"
-            ? "M18 20h64v60H18z"
+            ? "M18 22Q18 14 28 14h44Q82 14 82 22v56Q82 84 72 84H28Q18 84 18 78Z"
             : kind === "workshop"
-              ? "M15 34 50 13 85 34v45H15z"
-              : "M20 70Q2 40 28 22Q50 4 75 25Q98 48 78 73L88 83 62 77Q37 90 20 70"
+              ? "M16 36Q50 10 84 36v42Q84 84 76 84H24Q16 84 16 78Z"
+              : "M22 74Q8 46 28 24Q50 8 72 24Q92 46 78 74Q66 86 50 85Q34 86 22 74Z"
         }
-        fill={kind === "workshop" ? "#F3C979" : kind === "studio" ? "#EFB6A0" : "#A9D385"}
-        stroke="#174A51"
+        fill={body}
+        stroke={INK}
         strokeWidth="3"
         strokeLinejoin="round"
       />
-      <Circle cx="35" cy="34" r="4" fill="#174A51" />
-      <Circle cx="66" cy="34" r="4" fill="#174A51" />
-      <Path d="M42 40q8 8 16 0" stroke="#174A51" strokeWidth="2" fill="none" />
-      <SvgText x="50" y="72" textAnchor="middle" fontSize="32" fontWeight="bold" fill="#174A51">
+      <Ellipse cx="50" cy="64" rx="22" ry="17" fill={belly} opacity={0.85} />
+      <Circle cx="36" cy="34" r="5" fill="#FFFDF8" stroke={INK} strokeWidth="2" />
+      <Circle cx="64" cy="34" r="5" fill="#FFFDF8" stroke={INK} strokeWidth="2" />
+      <Circle cx="37" cy="34" r="2.5" fill={INK} />
+      <Circle cx="65" cy="34" r="2.5" fill={INK} />
+      <Circle cx="28" cy="42" r="4" fill="#FF7A5C" opacity={0.45} />
+      <Circle cx="72" cy="42" r="4" fill="#FF7A5C" opacity={0.45} />
+      <Path d="M43 42q7 7 14 0" stroke={INK} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      <SvgText x="50" y="72" textAnchor="middle" fontSize="30" fontWeight="900" fill={INK}>
         {letter}
       </SvgText>
     </Svg>
@@ -51,7 +65,7 @@ function ReadingPicture({ name, size }: { name: string; size: number }) {
   };
   return shapes[name] ? (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityLabel={name}>
-      <Path d={shapes[name]} stroke="#174A51" strokeWidth="3" fill="#F3C979" strokeLinejoin="round" />
+      <Path d={shapes[name]} stroke={INK} strokeWidth="3" fill="#F5C96B" strokeLinejoin="round" />
     </Svg>
   ) : (
     <PictureObject name={name} size={size} />
@@ -62,18 +76,19 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
     [trail, setTrail] = useState<[number, number][]>([]),
     [step, setStep] = useState(0);
   const path = task.trace!;
-  const size = 250;
+  const size = 256;
   return (
-    <View style={{ alignItems: "center", gap: 10 }}>
+    <View style={{ alignItems: "center", gap: 12 }}>
       <View
         accessibilityLabel={`Trace ${task.answer[0]} from the numbered start`}
         style={{
           width: size,
           height: size,
-          borderRadius: 24,
-          backgroundColor: "#FFF9E9",
+          borderRadius: 26,
+          backgroundColor: WARM_CARD,
           borderWidth: 2,
-          borderColor: "#227B80",
+          borderBottomWidth: 4,
+          borderColor: SAND_BORDER,
         }}
         onStartShouldSetResponder={() => !done}
         onMoveShouldSetResponder={() => !done}
@@ -100,41 +115,53 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
           <Polyline
             points={path.map((p) => p.join(",")).join(" ")}
             fill="none"
-            stroke="#B9DCD6"
-            strokeWidth="12"
+            stroke="#F2DFBA"
+            strokeWidth="15"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <Polyline
             points={path.map((p) => p.join(",")).join(" ")}
             fill="none"
-            stroke="#227B80"
-            strokeWidth="1"
-            strokeDasharray="2 3"
+            stroke="#C47A1E"
+            strokeWidth="1.4"
+            strokeDasharray="2.5 3.5"
           />
-          {path.map(([x, y], i) =>
-            path.slice(0, i).some(([px, py]) => px === x && py === y) ? null : (
+          {path.map(([x, y], i) => {
+            if (path.slice(0, i).some(([px, py]) => px === x && py === y)) return null;
+            const nums = path.flatMap(([px, py], n) => (px === x && py === y ? [n + 1] : []));
+            const activeStop = !done && nums.includes(step + 1);
+            const passed = done || nums.every((n) => n <= step);
+            return (
               <React.Fragment key={i}>
                 <Circle
                   cx={x}
                   cy={y}
-                  r="4"
-                  fill={done ? "#A9D385" : i === 0 ? "#F3C979" : "white"}
-                  stroke="#174A51"
-                  strokeWidth="0.6"
+                  r={activeStop ? "8" : "7"}
+                  fill={passed ? "#96D0B4" : activeStop ? "#FFE4A3" : WARM_CARD}
+                  stroke={activeStop ? CORAL : INK}
+                  strokeWidth={activeStop ? "1.6" : "1.1"}
                 />
-                <SvgText x={x} y={y + 1.5} fontSize="4" fill="#174A51" textAnchor="middle">
-                  {path.flatMap(([px, py], n) => (px === x && py === y ? [n + 1] : [])).join("·")}
+                <SvgText
+                  x={x}
+                  y={y + 2.6}
+                  fontSize={nums.length > 1 ? "6" : "7.5"}
+                  fontWeight="900"
+                  fill={INK}
+                  textAnchor="middle"
+                >
+                  {nums.join("·")}
                 </SvgText>
               </React.Fragment>
-            )
-          )}
+            );
+          })}
           <Polyline
             points={trail.map((p) => p.join(",")).join(" ")}
             fill="none"
-            stroke="#D17251"
-            strokeWidth="4"
+            stroke={CORAL}
+            strokeWidth="5.5"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </Svg>
       </View>
@@ -205,7 +232,7 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
           letter={kind === "lagoon" ? (t.picture ? t.picture[0] : t.answer[0]) : kind === "studio" ? "Aa" : "+"}
         />
         <View style={{ flex: 1 }}>
-          <Copy style={{ fontWeight: "800", fontSize: 13, color: "#227B80" }}>
+          <Copy style={{ fontWeight: "800", fontSize: 13, color: ACCENT }}>
             CREATION {s.index + 1} OF 4 · TAKE YOUR TIME
           </Copy>
           <Heading style={{ fontSize: s.level === 1 ? 26 : 21 }}>{t.prompt}</Heading>
@@ -237,15 +264,16 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
         <>
           <View
             style={{
-              backgroundColor: "#E9F5F0",
-              borderRadius: 20,
-              borderWidth: 2,
-              borderColor: "#91C6BF",
-              padding: 12,
-              gap: 8,
+              backgroundColor: WARM_CARD,
+              borderRadius: 22,
+              borderWidth: 1.5,
+              borderBottomWidth: 3,
+              borderColor: SAND_BORDER,
+              padding: 14,
+              gap: 10,
             }}
           >
-            <Copy style={{ fontSize: 12, fontWeight: "900", color: "#227B80" }}>
+            <Copy style={{ fontSize: 12, fontWeight: "900", color: ACCENT, letterSpacing: 0.6 }}>
               {kind === "studio" ? "YOUR STUDIO" : kind === "workshop" ? "WORD WORKBENCH" : "LETTER LANDING"}
             </Copy>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
@@ -254,25 +282,26 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
                   key={i}
                   accessibilityLabel={`${t.slots?.[i] ?? `Space ${i + 1}`}: ${s.placed[i] ?? "empty"}`}
                   style={{
-                    minWidth: t.answer.length === 1 ? 100 : 60,
-                    minHeight: 64,
+                    minWidth: t.answer.length === 1 ? 104 : 64,
+                    minHeight: 66,
                     flexGrow: t.slots ? 1 : 0,
                     padding: 10,
-                    borderRadius: 12,
+                    borderRadius: 16,
                     borderWidth: 2,
                     borderStyle: i === s.placed.length ? "dashed" : "solid",
-                    borderColor: i === s.placed.length ? "#174A51" : "#91C6BF",
-                    backgroundColor: s.placed[i] ? "#FFF9E9" : i === s.placed.length ? "#FFF0BB" : "#F6FBF8",
+                    borderColor: i === s.placed.length ? CORAL : SAND_BORDER,
+                    backgroundColor: s.placed[i] ? WARM_WELL : i === s.placed.length ? "#FFEBB8" : "#FAF3E4",
                     justifyContent: "center",
                     alignItems: "center",
                     maxWidth: "100%",
                   }}
                 >
-                  {t.slots && <Copy style={{ fontSize: 11, color: "#386C66", fontWeight: "800" }}>{t.slots[i]}</Copy>}
+                  {t.slots && <Copy style={{ fontSize: 11, color: C.muted, fontWeight: "800" }}>{t.slots[i]}</Copy>}
                   <Copy
                     style={{
                       fontSize: s.level === 1 && kind === "lagoon" ? 36 : 19,
                       fontWeight: "800",
+                      color: INK,
                       textAlign: "center",
                     }}
                   >
@@ -298,9 +327,10 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       borderRadius: 18,
-                      borderWidth: s.hint && value === expected ? 3 : 2,
-                      borderColor: "#174A51",
-                      backgroundColor: s.hint && value === expected ? "#F3C979" : C.paper,
+                      borderWidth: s.hint && value === expected ? 3 : 1.5,
+                      borderBottomWidth: 4,
+                      borderColor: s.hint && value === expected ? "#C47A1E" : SAND_BORDER,
+                      backgroundColor: s.hint && value === expected ? "#FFE4A3" : C.paper,
                       justifyContent: "center",
                       alignItems: "center",
                     }}
@@ -308,7 +338,7 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
                     {kind === "lagoon" && s.level === 3 ? (
                       <>
                         <ReadingPicture name={value} size={64} />
-                        <Copy style={{ fontSize: 13 }}>{value}</Copy>
+                        <Copy style={{ fontSize: 13, color: INK }}>{value}</Copy>
                       </>
                     ) : kind === "lagoon" && s.level <= 2 ? (
                       <Creature size={72} letter={value} />
@@ -317,7 +347,7 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
                         {t.panels && t.answer.indexOf(value) >= 0 && t.answer.indexOf(value) < 3 && (
                           <ReadingPicture name={t.panels[t.answer.indexOf(value)]} size={70} />
                         )}
-                        <Copy style={{ fontSize: kind === "lagoon" ? 30 : 18, fontWeight: "800", textAlign: "center" }}>
+                        <Copy style={{ fontSize: kind === "lagoon" ? 30 : 18, fontWeight: "800", color: INK, textAlign: "center" }}>
                           {value}
                         </Copy>
                       </View>
@@ -339,7 +369,7 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
           onPress={() => p.sound(t.completedAudio!)}>Hear the word</Button>
       </View>}
       <View accessibilityLiveRegion="polite">
-        <Copy style={{ textAlign: "center", fontWeight: "700", color: "#174A51" }}>
+        <Copy style={{ textAlign: "center", fontWeight: "700", color: INK }}>
           {done
             ? "You made it! Your creation is ready."
             : s.miss
@@ -352,7 +382,7 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Bank; kind: string }
         </Copy>
       </View>
       {(s.hint || s.miss || s.level > 2) && (
-        <Copy style={{ fontSize: 15, textAlign: "center", color: "#386C66" }}>{t.clue}</Copy>
+        <Copy style={{ fontSize: 15, textAlign: "center", color: C.muted }}>{t.clue}</Copy>
       )}
       {done ? (
         <Button onPress={() => act({ type: "next" })}>

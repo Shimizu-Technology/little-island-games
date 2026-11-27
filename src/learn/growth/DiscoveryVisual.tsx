@@ -8,9 +8,9 @@ export function DiscoveryVisual({ question, showHelp, disabled, onHelp }: Growth
   const scene = question.scene;
   const [steps, setSteps] = useState(0);
   if (!scene) return null;
-  if (scene.kind === "trials") return <View style={{ gap: 8, padding: 16, borderRadius: 16, backgroundColor: C.paper }}>
-    {(scene.text?.split("\n") ?? []).map((line, i) => <Copy key={i}>{scene.labels?.[i] ? `${scene.labels[i]}: ` : ""}{line}</Copy>)}
-    {!!scene.values?.length && scene.values.map((n, i) => <Copy key={i}>{scene.labels?.[i]}: {n} counters</Copy>)}
+  if (scene.kind === "trials") return <View style={{ gap: 8, padding: 16, borderRadius: 18, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.paper }}>
+    {(scene.text?.split("\n") ?? []).map((line, i) => <Copy key={i} style={{ color: C.ink }}>{scene.labels?.[i] ? `${scene.labels[i]}: ` : ""}{line}</Copy>)}
+    {!!scene.values?.length && scene.values.map((n, i) => <Copy key={i} style={{ color: C.ink }}>{scene.labels?.[i]}: {n} counters</Copy>)}
   </View>;
   if (scene.kind !== "program") return null;
   const [size, x, y, tx, ty] = scene.values ?? [5, 0, 0];
@@ -18,11 +18,15 @@ export function DiscoveryVisual({ question, showHelp, disabled, onHelp }: Growth
   const commands = Array.from({ length: repeats }, () => [...(scene.labels ?? [])]).flat();
   const position = runArrowProgram([x, y], commands.slice(0, steps), size) ?? [x, y];
   return <View style={{ gap: 10, alignItems: "center" }}>
-    <View accessibilityLabel={`Crab grid. Start ${String.fromCharCode(65 + x)}${y + 1}${tx === undefined ? "" : `, target ${String.fromCharCode(65 + tx)}${ty + 1}`}`} style={{ width: "100%", maxWidth: 330, gap: 3 }}>
-      {Array.from({ length: size }, (_, row) => <View key={row} style={{ flexDirection: "row", gap: 3 }}>
-        {Array.from({ length: size }, (_, col) => <View key={col} style={{ flex: 1, minHeight: 38, borderRadius: 8, backgroundColor: col === tx && row === ty ? C.gold : C.paper, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: C.line }}>
-          <Copy style={{ fontSize: 15, fontWeight: col === position[0] && row === position[1] ? "800" : "400" }}>{col === position[0] && row === position[1] ? "●" : `${String.fromCharCode(65 + col)}${row + 1}`}</Copy>
-        </View>)}
+    <View accessibilityLabel={`Crab grid. Start ${String.fromCharCode(65 + x)}${y + 1}${tx === undefined ? "" : `, target ${String.fromCharCode(65 + tx)}${ty + 1}`}`} style={{ width: "100%", maxWidth: 330, gap: 4, padding: 8, borderRadius: 18, backgroundColor: C.soft, borderWidth: 1.5, borderColor: C.line }}>
+      {Array.from({ length: size }, (_, row) => <View key={row} style={{ flexDirection: "row", gap: 4 }}>
+        {Array.from({ length: size }, (_, col) => {
+          const here = col === position[0] && row === position[1];
+          const goal = col === tx && row === ty;
+          return <View key={col} style={{ flex: 1, minHeight: 40, borderRadius: 10, backgroundColor: here ? C.coralFill : goal ? "#FFE4A3" : C.paper, alignItems: "center", justifyContent: "center", borderWidth: here || goal ? 2 : 1, borderColor: here || goal ? C.ink : C.line }}>
+            <Copy style={{ fontSize: 15, fontWeight: here || goal ? "900" : "600", color: C.ink }}>{here ? "★" : `${String.fromCharCode(65 + col)}${row + 1}`}</Copy>
+          </View>;
+        })}
       </View>)}
     </View>
     {!!scene.text && <Copy>{scene.text}</Copy>}

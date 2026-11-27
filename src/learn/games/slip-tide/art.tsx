@@ -10,7 +10,7 @@ export const crabLooks = [
   { fill: '#A77ACB', dark: '#6F4A91', mark: 'moon', name: crabNames[3] },
 ] as const;
 type Mark = (typeof crabLooks)[number]['mark'];
-const ink = '#20474A';
+const ink = '#3D2B24';
 const hide = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
 
 function ShellMark({ mark, size, color, x = 0, y = 0, line = '#FFF8EA' }: { mark: Mark; size: number; color: string; x?: number; y?: number; line?: string }) {
@@ -122,10 +122,10 @@ export function Arrow({ dir, size, color }: { dir: 0 | 1 | 2 | 3; size: number; 
 }
 export function ShelfArt({ size }: { size: number }) {
   return <Svg width={size} height={size} viewBox="0 0 100 100" {...hide}>
-    <Rect x="4" y="6" width="92" height="88" rx="20" fill="#6EC6C4" stroke="#20474A" strokeWidth="3" />
-    <Path d="M14 80Q24 73 34 80T54 80" fill="none" stroke="#E2F7F2" strokeWidth="3.5" strokeLinecap="round" opacity={0.8} />
-    <G transform="translate(62 58) scale(0.3)"><Circle cx="50" cy="50" r="42" fill="#E97356" stroke="#20474A" strokeWidth="4" /><Circle cx="50" cy="50" r="29" fill="#E4F6F1" /><ShellMark mark="flower" size={18} color="#B9472F" line="#FFF2CF" x={50} y={51} /></G>
+    <Rect x="4" y="6" width="92" height="88" rx="20" fill="#6EC6C4" stroke={ink} strokeWidth="3" />
+    <Path d="M14 80Q24 73 34 80T54 80" fill="none" stroke="#FFF6E5" strokeWidth="3.5" strokeLinecap="round" opacity={0.85} />
+    <G transform="translate(62 58) scale(0.3)"><Circle cx="50" cy="50" r="42" fill="#FF7A5C" stroke={ink} strokeWidth="4" /><Circle cx="50" cy="50" r="29" fill="#FFFDF8" /><ShellMark mark="flower" size={18} color="#B9472F" line="#FFF2CF" x={50} y={51} /></G>
     <G transform="translate(10 22) scale(0.6)"><CrabBody index={0} /></G>
-    <Path d="M58 28H84M76 19L86 28L76 37" stroke="#FFF8EA" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <Path d="M58 28H84M76 19L86 28L76 37" stroke="#FFFDF8" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </Svg>;
 }

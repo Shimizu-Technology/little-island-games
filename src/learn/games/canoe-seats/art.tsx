@@ -6,7 +6,7 @@ import type { Kind } from './rules';
  * Canoe Seats pictures, all original. Every friend, hat and fruit differs in shape as well as
  * colour, so no clue relies on colour alone. Drawn on a 100 x 100 box with the house ink outline.
  */
-export const ink = '#20474A';
+export const ink = '#3D2B24';
 const line = { stroke: ink, strokeWidth: 3.2, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
 const hide = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
 
@@ -21,7 +21,7 @@ function Eyes({ y = 40, dx = 11, r = 7, cx = 50 }: { y?: number; dx?: number; r?
   </>;
 }
 const Smile = ({ y = 54, w = 8, cx = 50 }: { y?: number; w?: number; cx?: number }) => <Path d={`M${cx - w} ${y}Q${cx} ${y + w * 0.9} ${cx + w} ${y}`} fill="none" {...line} strokeWidth={2.8} />;
-const Shadow = () => <Ellipse cx="50" cy="93" rx="30" ry="5" fill="#1C4A4C" opacity={0.16} />;
+const Shadow = () => <Ellipse cx="50" cy="93" rx="30" ry="5" fill="#3D2B24" opacity={0.14} />;
 
 /** The eight friends, as canoe passengers facing you. */
 function Turtle() {
@@ -391,10 +391,10 @@ export const CluePicture = memo(function CluePicture({ kind, x, y, seat, n, widt
         const a = tileCentre(4, 154, 3, 0), b = tileCentre(4, 154, 3, 2), m = tileCentre(4, 154, 3, 1);
         return <><MiniCanoe x={4} y={50} w={154} n={3} mark={i => (i === 1 ? 'skip' : null)} /><Mini {...x} cx={a} bottom={50} s={44} alone /><Mini {...y!} cx={b} bottom={50} s={44} alone />
           <Path d={`M${m - 14} 55h3M${m - 4} 55h3M${m + 6} 55h3`} stroke={ink} strokeWidth={3} strokeLinecap="round" />
-          <Path d={`M${m - 4} 14L${m - 12} 22L${m - 4} 30M${m + 6} 14L${m - 2} 22L${m + 6} 30M${m + 16} 14L${m + 8} 22L${m + 16} 30`} fill="none" stroke="#2F7E8D" strokeWidth={4.2} strokeLinecap="round" strokeLinejoin="round" /></>;
+          <Path d={`M${m - 4} 14L${m - 12} 22L${m - 4} 30M${m + 6} 14L${m - 2} 22L${m + 6} 30M${m + 16} 14L${m + 8} 22L${m + 16} 30`} fill="none" stroke="#1E6B66" strokeWidth={4.2} strokeLinecap="round" strokeLinejoin="round" /></>;
       }
       case 'gap': return <><Segment x={14} y={46} w={132} k={3} /><Mini {...x} cx={36} bottom={46} s={40} alone /><Someone cx={80} bottom={46} s={36} /><Mini {...y!} cx={124} bottom={46} s={40} alone />
-        <Path d="M36 64H124M36 58V69M124 58V69" stroke="#2F7E8D" strokeWidth={3.6} strokeLinecap="round" fill="none" /></>;
+        <Path d="M36 64H124M36 58V69M124 58V69" stroke="#1E6B66" strokeWidth={3.6} strokeLinecap="round" fill="none" /></>;
       case 'same':
       case 'diff': {
         const a = y && y.attr < x.attr ? y : x, b = a === x ? y! : x;

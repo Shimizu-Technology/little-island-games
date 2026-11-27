@@ -19,16 +19,16 @@ vi.mock("react-native", async () => {
     StyleSheet: { create: (styles: unknown) => styles },
     View: ({ children, accessibilityLabel, style }: { children?: React.ReactNode; accessibilityLabel?: string; style?: Record<string, unknown> }) =>
       createElement("div", { "data-label": accessibilityLabel,
-        "data-dot": style?.width === 12 && style?.height === 12 ? "yes" : undefined,
+        "data-dot": style?.width === 14 && style?.height === 14 ? "yes" : undefined,
         "data-ten": style?.backgroundColor === "teal" ? "yes" : undefined,
-        "data-unit": style?.width === 7 && style?.height === 16 ? "yes" : undefined }, children),
+        "data-unit": style?.width === 8 && style?.height === 18 ? "yes" : undefined }, children),
   };
 });
 vi.mock("../src/components/Text", async () => {
   const { createElement } = await import("react");
   return { Text: ({ children }: { children?: React.ReactNode }) => createElement("span", null, children) };
 });
-vi.mock("../src/components/ui", () => ({ C: { soft: "soft", cream: "cream", ink: "ink", line: "line", teal: "teal", paper: "paper", coral: "coral" } }));
+vi.mock("../src/components/ui", () => ({ C: { soft: "soft", cream: "cream", ink: "ink", line: "line", teal: "teal", paper: "paper", coral: "coral", coralFill: "coralFill" } }));
 
 const games = ["shell-math", "number-hop", "quick-practice", "reef-race", "island-market"] as const;
 const stages = ["stretch", "deep"] as const;

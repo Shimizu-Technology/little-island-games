@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "../../components/Text";
+import { C } from "../../components/ui";
 import type { GrowthVisualProps } from "./types";
 
 /** The Board owns the prompt, answers, help and feedback. This visual owns the
@@ -29,13 +30,13 @@ export function LiteracyVisual({ question, showHelp, width }: GrowthVisualProps)
   );
 }
 const styles = StyleSheet.create({
-  card: { alignSelf: "center", padding: 16, gap: 12, borderWidth: 1, borderColor: "#DBE3DA", borderRadius: 18, backgroundColor: "#FCFAF4" },
-  title: { color: "#246858", fontSize: 18, fontWeight: "700" },
-  context: { color: "#183F39", fontSize: 20, lineHeight: 30 },
+  card: { alignSelf: "center", padding: 18, gap: 12, borderWidth: 1.5, borderColor: C.line, borderRadius: 20, backgroundColor: C.paper },
+  title: { color: "#B84E5A", fontSize: 18, fontWeight: "800" },
+  context: { color: C.ink, fontSize: 20, lineHeight: 30 },
   workshop: { gap: 10, marginTop: 4 },
-  caption: { color: "#64716C", fontSize: 16 },
+  caption: { color: C.muted, fontSize: 16 },
   pieces: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  piece: { minWidth: 56, minHeight: 52, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderStyle: "dashed", borderColor: "#64716C", justifyContent: "center", alignItems: "center" },
-  helpPiece: { backgroundColor: "#E5EFE5", borderStyle: "solid", borderColor: "#246858" },
-  pieceText: { color: "#183F39", fontSize: 24, fontWeight: "700" },
+  piece: { minWidth: 56, minHeight: 52, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, borderStyle: "dashed", borderColor: C.muted, backgroundColor: C.cream, justifyContent: "center", alignItems: "center" },
+  helpPiece: { backgroundColor: C.soft, borderStyle: "solid", borderColor: C.teal },
+  pieceText: { color: C.ink, fontSize: 24, fontWeight: "800" },
 });
