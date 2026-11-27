@@ -285,7 +285,7 @@ export function countHint(s: SplashCountState): {
 
 export const engine: LearnEngine<SplashCountState> = {
   id: "splash-count",
-  name: "Splash Counting 1–10",
+  name: "Splash Count",
   island: "numbers",
   ages: [2, 4],
   ownLevels: true,
@@ -332,6 +332,7 @@ export const engine: LearnEngine<SplashCountState> = {
       !uint(s.index, 4) ||
       typeof s.helped !== "boolean" ||
       !(s.hintLevel === 0 || s.hintLevel === 1 || s.hintLevel === 2) ||
+      (s.hintLevel > 0 && !s.helped) ||
       !Array.isArray(s.tapped)
     ) {
       return false;

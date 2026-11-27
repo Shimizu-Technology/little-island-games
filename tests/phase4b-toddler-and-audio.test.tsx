@@ -1,7 +1,8 @@
-import React from "react";
+import React, { createContext } from "react";
 import { readFileSync } from "node:fs";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AudioPreferences } from "../src/components/Audio";
 import { engines } from "../src/learn/engines";
 import { shelfGames, toggleShelfFavorite, homeContinue } from "../src/learn/home";
 import { registeredDestinations } from "../src/learn/destinations";
@@ -9,10 +10,11 @@ import { roundProgress } from "../src/learn/LearnChrome";
 import { levelInfo, optionsAtLevel } from "../src/learn/levels";
 import { isGrowth } from "../src/learn/growth/engine";
 import { outcomeOf, replaySession, startSession, validLearnSession } from "../src/learn/session";
+import { SpeakButton } from "../src/learn/SpeakButton";
 import { learnIds, type BoardProps, type LearnId } from "../src/learn/types";
-import { speakText, stopSpeaking, subscribeVoice, type SpeakEvent } from "../src/learn/voice";
+import { speakText, stopSpeaking, subscribeVoice, useSpokenPrompt, type SpeakEvent } from "../src/learn/voice";
 import { hasGameArt } from "../src/components/GameIcon";
-import { emptySave, parseSave } from "../src/state/validation";
+import { emptySave, parseSave, type Settings } from "../src/state/validation";
 import { migrateProfiles } from "../src/state/profiles";
 
 import {
@@ -53,8 +55,47 @@ import { Board as TurtleDrawBoard } from "../src/learn/games/turtle-draw/view";
 import { Board as TideLogicBoard } from "../src/learn/games/tide-logic/view";
 import { Board as CodeLabBoard } from "../src/learn/games/code-lab/view";
 
+const speechMock = vi.hoisted(() => ({
+  speak: vi.fn(),
+  stop: vi.fn(() => Promise.resolve()),
+}));
+const appStateMock = vi.hoisted(() => ({
+  currentState: "active" as string,
+  listeners: new Set<(state: string) => void>(),
+  emit(next: string) {
+    this.currentState = next;
+    for (const fn of [...this.listeners]) fn(next);
+  },
+}));
+const platformMock = vi.hoisted(() => ({ OS: "ios" as "ios" | "android" | "web" }));
+
+vi.mock("expo-speech", () => ({
+  speak: (...args: unknown[]) => speechMock.speak(...args),
+  stop: () => speechMock.stop(),
+}));
+vi.mock("../src/components/Audio", () => ({
+  AudioPreferences: createContext<Partial<Settings> & { epoch?: number }>({}),
+}));
 vi.mock("react-native", () => ({
-  Platform: { OS: "web", select: (m: Record<string, unknown>) => m.web ?? m.default },
+  Platform: {
+    get OS() {
+      return platformMock.OS;
+    },
+    select: (m: Record<string, unknown>) => m[platformMock.OS] ?? m.default,
+  },
+  AppState: {
+    get currentState() {
+      return appStateMock.currentState;
+    },
+    addEventListener: (_event: string, fn: (state: string) => void) => {
+      appStateMock.listeners.add(fn);
+      return {
+        remove: () => {
+          appStateMock.listeners.delete(fn);
+        },
+      };
+    },
+  },
   View: "View",
   ScrollView: "ScrollView",
   Animated: {
@@ -145,6 +186,14 @@ const VOICED_8_IDS = [
 let activeRoot: ReactTestRenderer | undefined;
 let unsub: (() => void) | undefined;
 
+beforeEach(() => {
+  platformMock.OS = "ios";
+  appStateMock.currentState = "active";
+  appStateMock.listeners.clear();
+  speechMock.speak.mockReset();
+  speechMock.stop.mockReset().mockImplementation(() => Promise.resolve());
+});
+
 afterEach(async () => {
   if (activeRoot) {
     await act(async () => activeRoot!.unmount());
@@ -190,10 +239,18 @@ function makeBoardProps<S>(
   };
 }
 
-async function mountBoard(element: React.ReactElement) {
+async function mountBoard(
+  element: React.ReactElement,
+  prefs?: Partial<Settings> & { epoch?: number },
+) {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const wrapped = prefs ? (
+    <AudioPreferences.Provider value={prefs}>{element}</AudioPreferences.Provider>
+  ) : (
+    element
+  );
   await act(async () => {
-    activeRoot = create(element);
+    activeRoot = create(wrapped);
   });
   return activeRoot!;
 }
@@ -260,7 +317,7 @@ describe("Phase 4B: Registration, shelf integration, and zero save bloat", () =>
 });
 
 describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted save rejection)", () => {
-  it("island-colors plays cleanly across all 5 levels, respects opt-in hints, and rejects corrupt saves", () => {
+  it("island-colors plays cleanly across all 5 levels, respects opt-in hints, and rejects corrupt/contradictory saves", () => {
     for (const level of [1, 2, 3, 4, 5] as const) {
       const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
       let s = startSession("island-colors", { options: opts }, {}, 11 + level).state as IslandColorsState;
@@ -283,10 +340,12 @@ describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted sa
       // Opt-in Help step 1 gives clue (no glow); step 2 adds glow highlight
       const h1 = colorsHelp(s);
       expect(h1.hintLevel).toBe(1);
+      expect(h1.helped).toBe(true);
       expect(colorHint(h1).text.length).toBeGreaterThan(5);
       expect(colorHint(h1).highlightIndex).toBeNull();
       const h2 = colorsHelp(h1);
       expect(h2.hintLevel).toBe(2);
+      expect(h2.helped).toBe(true);
       expect(colorHint(h2).highlightIndex).toBe(firstTask.targetIndex);
 
       // Complete all 4 tasks
@@ -302,6 +361,7 @@ describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted sa
 
     const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, 1);
     const valid = startSession("island-colors", { options: opts }, {}, 7).state as IslandColorsState;
+    const contradictory = { version: 1, level: 1, seed: 1, index: 0, total: 4, helped: false, hintLevel: 2 };
     for (const bad of [
       null,
       {},
@@ -309,14 +369,21 @@ describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted sa
       { ...valid, level: 2 },
       { ...valid, index: 5 },
       { ...valid, hintLevel: 3 },
-      { ...valid, index: 4, hintLevel: 1 },
+      { ...valid, index: 4, hintLevel: 1, helped: true },
       { ...valid, total: 5 },
+      { ...valid, helped: false, hintLevel: 1 },
+      contradictory,
     ]) {
       expect(engines["island-colors"].validate(bad, opts)).toBe(false);
     }
+
+    // Contradictory helped:false + hintLevel:2 is also rejected by session validator & parseSave restore
+    const badSession = { ...startSession("island-colors", { options: opts }, {}, 1), state: contradictory };
+    expect(validLearnSession(badSession, "island-colors")).toBe(false);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), learn: { "island-colors": badSession } }))).toThrow(/invalid/i);
   });
 
-  it("reef-sounds plays cleanly across all 5 levels (including water/land habitats & riddles) and rejects corrupt saves", () => {
+  it("reef-sounds plays cleanly across all 5 levels (including water/land habitats & riddles) and rejects corrupt/contradictory saves", () => {
     for (const level of [1, 2, 3, 4, 5] as const) {
       const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
       let s = startSession("reef-sounds", { options: opts }, {}, 21 + level).state as ReefSoundsState;
@@ -349,19 +416,26 @@ describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted sa
 
     const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, 1);
     const valid = startSession("reef-sounds", { options: opts }, {}, 7).state as ReefSoundsState;
+    const contradictory = { version: 1, level: 1, seed: 1, index: 0, total: 4, helped: false, hintLevel: 2 };
     for (const bad of [
       null,
       {},
       { ...valid, version: 2 },
       { ...valid, level: 3 },
       { ...valid, index: -1 },
-      { ...valid, index: 4, hintLevel: 2 },
+      { ...valid, index: 4, hintLevel: 2, helped: true },
+      { ...valid, helped: false, hintLevel: 1 },
+      contradictory,
     ]) {
       expect(engines["reef-sounds"].validate(bad, opts)).toBe(false);
     }
+
+    const badSession = { ...startSession("reef-sounds", { options: opts }, {}, 1), state: contradictory };
+    expect(validLearnSession(badSession, "reef-sounds")).toBe(false);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), learn: { "reef-sounds": badSession } }))).toThrow(/invalid/i);
   });
 
-  it("splash-count plays cleanly across all 5 levels (1-3, 1-5, choose 1-5, count to 10, one more/less) and rejects corrupt saves", () => {
+  it("splash-count plays cleanly across all 5 levels and rejects corrupt/contradictory saves", () => {
     for (const level of [1, 2, 3, 4, 5] as const) {
       const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
       let s = startSession("splash-count", { options: opts }, {}, 31 + level).state as SplashCountState;
@@ -415,6 +489,7 @@ describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted sa
 
     const opts = optionsAtLevel({ mode: "solo", pace: "easy" }, 1);
     const valid = startSession("splash-count", { options: opts }, {}, 7).state as SplashCountState;
+    const contradictory = { version: 1, level: 1, seed: 1, index: 0, total: 4, tapped: [], helped: false, hintLevel: 2 };
     for (const bad of [
       null,
       {},
@@ -423,21 +498,248 @@ describe("Phase 4B: Toddler engines (L1–L5 pure logic, hints, and corrupted sa
       { ...valid, tapped: [-1] },
       { ...valid, index: 4, tapped: [0] },
       { ...valid, extra: true },
+      { ...valid, helped: false, hintLevel: 1 },
+      contradictory,
     ]) {
       expect(engines["splash-count"].validate(bad, opts)).toBe(false);
     }
+
+    const badSession = { ...startSession("splash-count", { options: opts }, {}, 1), state: contradictory };
+    expect(validLearnSession(badSession, "splash-count")).toBe(false);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), learn: { "splash-count": badSession } }))).toThrow(/invalid/i);
+  });
+});
+
+describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract, and >= 48pt SpeakButton", () => {
+  it("invokes expo-speech Speech.speak & Speech.stop with exact language/rate/pitch/volume and returns false on error or volume 0", () => {
+    const events: SpeakEvent[] = [];
+    unsub = subscribeVoice((e) => events.push(e));
+
+    // Suppressed cases do not call Speech.speak
+    expect(speakText("   ", { enabled: true, active: true })).toBe(false);
+    expect(speakText("Hello", { enabled: false, active: true })).toBe(false);
+    expect(speakText("Hello", { enabled: true, active: false })).toBe(false);
+    expect(speakText("Hello", { enabled: true, active: true, volume: 0 })).toBe(false);
+    expect(speakText("Hello", { enabled: true, active: true, volume: -0.2 })).toBe(false);
+    expect(speechMock.speak).not.toHaveBeenCalled();
+    expect(events).toHaveLength(0);
+
+    // Real call with interruption and custom volume/language/rate/pitch
+    expect(
+      speakText("Hello island!", {
+        enabled: true,
+        active: true,
+        language: "en-US",
+        rate: 0.9,
+        pitch: 1.05,
+        volume: 0.5,
+      }),
+    ).toBe(true);
+    expect(speechMock.stop).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak).toHaveBeenCalledWith("Hello island!", {
+      language: "en-US",
+      rate: 0.9,
+      pitch: 1.05,
+      volume: 0.5,
+    });
+    expect(events[0]).toMatchObject({
+      type: "speak",
+      text: "Hello island!",
+      language: "en-US",
+      rate: 0.9,
+      pitch: 1.05,
+      volume: 0.5,
+      interrupt: true,
+    });
+
+    // interrupt: false skips pre-speak Speech.stop()
+    speechMock.stop.mockClear();
+    expect(speakText("Second line", { interrupt: false, volume: 0.25 })).toBe(true);
+    expect(speechMock.stop).not.toHaveBeenCalled();
+    expect(speechMock.speak).toHaveBeenLastCalledWith("Second line", {
+      language: "en-US",
+      rate: 0.94,
+      pitch: 1.06,
+      volume: 0.25,
+    });
+
+    // Speech.speak throwing returns false cleanly and emits NO false diagnostic speak event
+    const eventCountBeforeFail = events.length;
+    speechMock.speak.mockImplementationOnce(() => {
+      throw new Error("TTS engine unavailable");
+    });
+    expect(speakText("Should fail cleanly", { volume: 0.75 })).toBe(false);
+    expect(events).toHaveLength(eventCountBeforeFail);
+
+    // Web browser with missing speechSynthesis returns false without calling Speech.speak
+    platformMock.OS = "web";
+    vi.stubGlobal("window", {});
+    speechMock.speak.mockClear();
+    expect(speakText("Web without synthesis", { volume: 0.75 })).toBe(false);
+    expect(speechMock.speak).not.toHaveBeenCalled();
+  });
+
+  it("useSpokenPrompt gates auto-speech on AudioPreferences.automaticSpeech, applies volume, and cancels on preference/epoch change", async () => {
+    let api!: ReturnType<typeof useSpokenPrompt>;
+    function Harness({
+      text,
+      promptKey,
+      soundOn,
+      active,
+    }: {
+      text: string;
+      promptKey: string;
+      soundOn: boolean;
+      active: boolean;
+    }) {
+      api = useSpokenPrompt(text, promptKey, { soundOn, active, rate: 0.92, pitch: 1.08 });
+      return null;
+    }
+
+    // 1. automaticSpeech: false (default) blocks auto-prompt on mount, allows explicit replay with volume 0.25
+    const root = await mountBoard(
+      <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />,
+      { sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.25, epoch: 1 },
+    );
+    expect(speechMock.speak).not.toHaveBeenCalled();
+    expect(api.replay()).toBe(true);
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak).toHaveBeenLastCalledWith("Tap the red hibiscus!", {
+      language: "en-US",
+      rate: 0.92,
+      pitch: 1.08,
+      volume: 0.25,
+    });
+
+    // 2. Changing narrationVolume (0.25 -> 0.5) immediately calls Speech.stop() and uses 0.5 on next replay
+    speechMock.stop.mockClear();
+    speechMock.speak.mockClear();
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider
+          value={{ sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.5, epoch: 1 }}
+        >
+          <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(speechMock.stop).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak).not.toHaveBeenCalled();
+    expect(api.replay()).toBe(true);
+    expect(speechMock.speak).toHaveBeenLastCalledWith("Tap the red hibiscus!", {
+      language: "en-US",
+      rate: 0.92,
+      pitch: 1.08,
+      volume: 0.5,
+    });
+
+    // 3. Turning automaticSpeech: true cancels stale speech and speaks the un-spoken prompt at volume 0.5
+    speechMock.stop.mockClear();
+    speechMock.speak.mockClear();
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider
+          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0.5, epoch: 1 }}
+        >
+          <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(speechMock.stop).toHaveBeenCalled();
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak).toHaveBeenLastCalledWith("Tap the red hibiscus!", {
+      language: "en-US",
+      rate: 0.92,
+      pitch: 1.08,
+      volume: 0.5,
+    });
+
+    // 4. Epoch change immediately calls Speech.stop()
+    speechMock.stop.mockClear();
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider
+          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0.5, epoch: 2 }}
+        >
+          <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(speechMock.stop).toHaveBeenCalledTimes(1);
+
+    // 5. narrationVolume: 0 cancels speech and blocks explicit replay & auto-speech
+    speechMock.stop.mockClear();
+    speechMock.speak.mockClear();
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider
+          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0, epoch: 2 }}
+        >
+          <Harness text="Tap the green turtle!" promptKey="r1:1" soundOn active />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(speechMock.stop).toHaveBeenCalled();
+    expect(speechMock.speak).not.toHaveBeenCalled();
+    expect(api.replay()).toBe(false);
+    expect(api.speak("One!")).toBe(false);
+
+    // 6. narration: false cancels speech and blocks replay
+    speechMock.stop.mockClear();
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider
+          value={{ sound: true, narration: false, automaticSpeech: true, narrationVolume: 0.75, epoch: 2 }}
+        >
+          <Harness text="Tap the blue wave!" promptKey="r1:2" soundOn active />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(speechMock.stop).toHaveBeenCalled();
+    expect(api.replay()).toBe(false);
+  });
+
+  it("SpeakButton meets >= 48pt touch target for BOTH compact and toddler variants and respects AudioPreferences", async () => {
+    const onPress = vi.fn();
+    const root = await mountBoard(
+      <>
+        <SpeakButton testID="btn-compact" size="compact" onPress={onPress} />
+        <SpeakButton testID="btn-toddler" size="toddler" onPress={onPress} />
+      </>,
+      { sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.75 },
+    );
+
+    const compactBtn = root.root.find((n) => String(n.type) === "PressableScale" && n.props?.testID === "btn-compact");
+    const toddlerBtn = root.root.find((n) => String(n.type) === "PressableScale" && n.props?.testID === "btn-toddler");
+    const compactStyle = flatStyle(compactBtn.props.style);
+    const toddlerStyle = flatStyle(toddlerBtn.props.style);
+
+    expect(Number(compactStyle.minHeight)).toBeGreaterThanOrEqual(48);
+    expect(Number(compactStyle.minWidth)).toBeGreaterThanOrEqual(48);
+    expect(Number(toddlerStyle.minHeight)).toBeGreaterThanOrEqual(48);
+    expect(Number(toddlerStyle.minWidth)).toBeGreaterThanOrEqual(48);
+    expect(compactBtn.props.disabled).toBe(false);
+    expect(toddlerBtn.props.disabled).toBe(false);
+
+    // Volume 0 disables SpeakButton
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider value={{ sound: true, narration: true, narrationVolume: 0 }}>
+          <SpeakButton testID="btn-compact" size="compact" onPress={onPress} />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(root.root.find((n) => String(n.type) === "PressableScale" && n.props?.testID === "btn-compact").props.disabled).toBe(true);
   });
 });
 
 describe("Phase 4B: Toddler UI touch targets (>= 64pt), voice prompts, mute respect, and counting aloud", () => {
-  it("island-colors renders >= 112pt cards, speaks prompts, respects mute, and never leaks answers", async () => {
-    const events: SpeakEvent[] = [];
-    unsub = subscribeVoice((e) => events.push(e));
-
+  it("island-colors renders >= 112pt cards, respects automaticSpeech off/on, replays on tap, and never leaks answers", async () => {
+    // With default AudioPreferences (automaticSpeech: false), mounting does NOT auto-speak
     const props = makeBoardProps<IslandColorsState>("island-colors", 1);
     const root = await mountBoard(<IslandColorsBoard {...props} />);
-    const spoke = events.filter((e) => e.type === "speak");
-    expect(spoke.length).toBeGreaterThanOrEqual(1);
+    expect(speechMock.speak).not.toHaveBeenCalled();
 
     // Every choice card >= 112pt (exceeding >= 64-72pt toddler requirement)
     const cards = root.root.findAll((n) => String(n.props?.testID ?? "").startsWith("island-colors-choice-"));
@@ -451,32 +753,52 @@ describe("Phase 4B: Toddler UI touch targets (>= 64pt), voice prompts, mute resp
     // No hint shown on initial render
     expect(root.root.findAll((n) => n.props?.testID === "island-colors-hint")).toHaveLength(0);
 
-    // Speaker replay button fires voice prompt again
-    const beforeReplay = events.filter((e) => e.type === "speak").length;
-    const speakBtn = root.root.findByProps({ testID: "island-colors-speak" });
+    // Speaker replay button STILL works when automaticSpeech is false!
+    const speakBtn = root.root.find((n) => String(n.type) === "PressableScale" && n.props?.testID === "island-colors-speak");
+    expect(Number(flatStyle(speakBtn.props.style).minHeight)).toBeGreaterThanOrEqual(48);
     await act(async () => speakBtn.props.onPress());
-    expect(events.filter((e) => e.type === "speak").length).toBe(beforeReplay + 1);
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
 
     // Unmount stops speech cleanly
+    speechMock.stop.mockClear();
     await act(async () => root.unmount());
     activeRoot = undefined;
-    expect(events.at(-1)?.type).toBe("stop");
+    expect(speechMock.stop).toHaveBeenCalled();
 
-    // Muted session emits zero speech utterances
-    events.length = 0;
+    // With automaticSpeech: true, opening auto-speaks immediately via expo-speech
+    speechMock.speak.mockClear();
+    await mountBoard(<IslandColorsBoard {...props} />, {
+      sound: true,
+      narration: true,
+      automaticSpeech: true,
+      narrationVolume: 0.75,
+    });
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
+    await act(async () => activeRoot!.unmount());
+    activeRoot = undefined;
+
+    // Muted session emits zero speech utterances even when automaticSpeech: true
+    speechMock.speak.mockClear();
     const mutedProps = makeBoardProps<IslandColorsState>("island-colors", 1, { soundOn: false });
-    await mountBoard(<IslandColorsBoard {...mutedProps} />);
-    expect(events.filter((e) => e.type === "speak")).toHaveLength(0);
+    await mountBoard(<IslandColorsBoard {...mutedProps} />, {
+      sound: true,
+      narration: true,
+      automaticSpeech: true,
+      narrationVolume: 0.75,
+    });
+    expect(speechMock.speak).not.toHaveBeenCalled();
   });
 
   it("reef-sounds renders giant animal cards, speaks sound clues, and respects opt-in help", async () => {
-    const events: SpeakEvent[] = [];
-    unsub = subscribeVoice((e) => events.push(e));
-
     const props = makeBoardProps<ReefSoundsState>("reef-sounds", 2);
-    const root = await mountBoard(<ReefSoundsBoard {...props} />);
-    const spoke = events.filter((e) => e.type === "speak");
-    expect(spoke.length).toBeGreaterThanOrEqual(1);
+    const root = await mountBoard(<ReefSoundsBoard {...props} />, {
+      sound: true,
+      narration: true,
+      automaticSpeech: true,
+      narrationVolume: 0.5,
+    });
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak.mock.calls[0][1]).toMatchObject({ volume: 0.5 });
 
     const cards = root.root.findAll((n) => String(n.props?.testID ?? "").startsWith("reef-sounds-choice-"));
     expect(cards).toHaveLength(3);
@@ -486,20 +808,22 @@ describe("Phase 4B: Toddler UI touch targets (>= 64pt), voice prompts, mute resp
       expect(Number(st.minHeight)).toBeGreaterThanOrEqual(72);
     }
 
-    // Tap Help -> assistance called & clue spoken
+    // Tap Help -> assistance called & clue spoken via expo-speech
     const helpBtn = root.root.findByProps({ testID: "reef-sounds-help" });
-    const countBeforeHelp = events.filter((e) => e.type === "speak").length;
     await act(async () => helpBtn.props.onPress());
     expect(props.assistance).toHaveBeenCalledTimes(1);
-    expect(events.filter((e) => e.type === "speak").length).toBeGreaterThan(countBeforeHelp);
+    expect(speechMock.speak).toHaveBeenCalledTimes(2);
   });
 
-  it("splash-count renders >= 68pt tappable items and >= 88pt dot+numeral cards, and counts aloud on tap", async () => {
-    const events: SpeakEvent[] = [];
-    unsub = subscribeVoice((e) => events.push(e));
-
+  it("splash-count renders >= 68pt tappable items and >= 88pt dot+numeral cards, and counts aloud on tap even when automaticSpeech is off", async () => {
     const props = makeBoardProps<SplashCountState>("splash-count", 3);
-    const root = await mountBoard(<SplashCountBoard {...props} />);
+    const root = await mountBoard(<SplashCountBoard {...props} />, {
+      sound: true,
+      narration: true,
+      automaticSpeech: false,
+      narrationVolume: 0.75,
+    });
+    expect(speechMock.speak).not.toHaveBeenCalled();
 
     const items = root.root.findAll((n) => String(n.props?.testID ?? "").startsWith("splash-count-item-"));
     expect(items.length).toBeGreaterThanOrEqual(1);
@@ -517,10 +841,10 @@ describe("Phase 4B: Toddler UI touch targets (>= 64pt), voice prompts, mute resp
       expect(Number(st.minHeight)).toBeGreaterThanOrEqual(72);
     }
 
-    // Tap first beach item -> counts aloud "One!"
+    // Tap first beach item -> counts aloud "One!" via expo-speech even with automaticSpeech off
     await act(async () => items[0].props.onPress());
-    const spokenLines = events.filter((e): e is Extract<SpeakEvent, { type: "speak" }> => e.type === "speak").map((e) => e.text);
-    expect(spokenLines.some((line) => line.includes(NUMBER_WORDS[1]))).toBe(true);
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
+    expect(String(speechMock.speak.mock.calls[0][0])).toContain(NUMBER_WORDS[1]);
     expect(props.sound).toHaveBeenCalledWith("tap", true);
   });
 });
@@ -539,91 +863,102 @@ describe("Phase 4B: Spoken prompt & help audio across all 8 newly voiced learnin
   };
 
   it.each(VOICED_8_IDS)(
-    "%s: speaks non-spoiling prompt on open, replays via Speaker button, respects mute, and stops on unmount",
+    "%s: stays quiet when automaticSpeech is off, auto-speaks when on, replays via >=48pt Speaker button, respects mute, and stops on unmount",
     async (id) => {
       const eng = engines[id];
       expect(eng.spokenIntro?.length).toBeGreaterThan(10);
       expect(eng.spokenHelp?.length).toBeGreaterThan(20);
       expect(eng.helpAudio).toBeUndefined();
 
-      const events: SpeakEvent[] = [];
-      unsub = subscribeVoice((e) => events.push(e));
       const Board = boardMap[id];
-
       const props = makeBoardProps<unknown>(id, 1);
-      const root = await mountBoard(<Board {...props} />);
 
-      // Auto-speaks prompt on mount
-      const initialSpeaks = events.filter((e): e is Extract<SpeakEvent, { type: "speak" }> => e.type === "speak");
-      expect(initialSpeaks.length, `${id} should speak prompt on open`).toBeGreaterThanOrEqual(1);
-      expect(initialSpeaks[0].text.length).toBeGreaterThan(10);
+      // 1. automaticSpeech: false -> zero auto-speech on mount, explicit replay still works
+      const quietRoot = await mountBoard(<Board {...props} />, {
+        sound: true,
+        narration: true,
+        automaticSpeech: false,
+        narrationVolume: 0.75,
+      });
+      expect(speechMock.speak, `${id} must not auto-speak when automaticSpeech is false`).not.toHaveBeenCalled();
+      const quietSpeakBtn = quietRoot.root.find((n) => String(n.type) === "PressableScale" && n.props?.testID === `${id}-speak`);
+      expect(Number(flatStyle(quietSpeakBtn.props.style).minHeight)).toBeGreaterThanOrEqual(48);
+      expect(quietSpeakBtn.props.disabled).toBe(false);
+      await act(async () => quietSpeakBtn.props.onPress());
+      expect(speechMock.speak).toHaveBeenCalledTimes(1);
+      await act(async () => quietRoot.unmount());
+      activeRoot = undefined;
 
-      // Speaker button exists and replays prompt
+      // 2. automaticSpeech: true -> auto-speaks prompt on mount
+      speechMock.speak.mockClear();
+      speechMock.stop.mockClear();
+      const root = await mountBoard(<Board {...props} />, {
+        sound: true,
+        narration: true,
+        automaticSpeech: true,
+        narrationVolume: 0.75,
+      });
+      expect(speechMock.speak, `${id} should speak prompt when automaticSpeech is true`).toHaveBeenCalledTimes(1);
+      expect(String(speechMock.speak.mock.calls[0][0]).length).toBeGreaterThan(10);
+
+      // Speaker button replays prompt
       const speakBtn = root.root.findByProps({ testID: `${id}-speak` });
-      expect(speakBtn.props.disabled).toBe(false);
       await act(async () => speakBtn.props.onPress());
-      expect(events.filter((e) => e.type === "speak").length).toBe(initialSpeaks.length + 1);
+      expect(speechMock.speak).toHaveBeenCalledTimes(2);
 
       // Unmount stops speech cleanly
+      speechMock.stop.mockClear();
       await act(async () => root.unmount());
       activeRoot = undefined;
-      expect(events.at(-1)?.type).toBe("stop");
+      expect(speechMock.stop).toHaveBeenCalled();
 
       // Muted board does NOT speak and disables Speaker button
-      events.length = 0;
+      speechMock.speak.mockClear();
       const mutedProps = makeBoardProps<unknown>(id, 1, { soundOn: false });
-      const mutedRoot = await mountBoard(<Board {...mutedProps} />);
-      expect(events.filter((e) => e.type === "speak")).toHaveLength(0);
+      const mutedRoot = await mountBoard(<Board {...mutedProps} />, {
+        sound: true,
+        narration: true,
+        automaticSpeech: true,
+        narrationVolume: 0.75,
+      });
+      expect(speechMock.speak).not.toHaveBeenCalled();
       const mutedSpeakBtn = mutedRoot.root.findByProps({ testID: `${id}-speak` });
       expect(mutedSpeakBtn.props.disabled).toBe(true);
     },
   );
 
   it("speaks opt-in Help/Hint clues across newly voiced games without spoiling on initial render", async () => {
-    const events: SpeakEvent[] = [];
-    unsub = subscribeVoice((e) => events.push(e));
+    const manualPrefs = { sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.75 };
 
     // Pattern Path: tap Help -> speaks rule clue
     const PatternBoard = boardMap["pattern-path"];
     const ppProps = makeBoardProps<unknown>("pattern-path", 1);
-    const ppRoot = await mountBoard(<PatternBoard {...ppProps} />);
-    const ppBefore = events.filter((e) => e.type === "speak").length;
+    const ppRoot = await mountBoard(<PatternBoard {...ppProps} />, manualPrefs);
+    expect(speechMock.speak).not.toHaveBeenCalled();
     await act(async () => ppRoot.root.findByProps({ testID: "pattern-help-button" }).props.onPress());
-    expect(events.filter((e) => e.type === "speak").length).toBeGreaterThan(ppBefore);
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
     await act(async () => ppRoot.unmount());
     activeRoot = undefined;
 
     // Times Tide: tap Hint -> speaks hint
+    speechMock.speak.mockClear();
     const TimesBoard = boardMap["times-tide"];
     const ttProps = makeBoardProps<unknown>("times-tide", 1);
-    const ttRoot = await mountBoard(<TimesBoard {...ttProps} />);
-    const ttBefore = events.filter((e) => e.type === "speak").length;
+    const ttRoot = await mountBoard(<TimesBoard {...ttProps} />, manualPrefs);
     const ttHint = ttRoot.root.findAll((n) => String(n.type) === "Button" && textOf(n).trim() === "Hint")[0];
     await act(async () => ttHint.props.onPress());
-    expect(events.filter((e) => e.type === "speak").length).toBeGreaterThan(ttBefore);
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
     await act(async () => ttRoot.unmount());
     activeRoot = undefined;
 
     // Code Lab: tap Look help -> speaks hint
+    speechMock.speak.mockClear();
     const CodeBoard = boardMap["code-lab"];
     const clProps = makeBoardProps<unknown>("code-lab", 1);
-    const clRoot = await mountBoard(<CodeBoard {...clProps} />);
-    const clBefore = events.filter((e) => e.type === "speak").length;
+    const clRoot = await mountBoard(<CodeBoard {...clProps} />, manualPrefs);
     const clLook = clRoot.root.findAll((n) => String(n.type) === "Button" && textOf(n).trim() === "Look")[0];
     await act(async () => clLook.props.onPress());
-    expect(events.filter((e) => e.type === "speak").length).toBeGreaterThan(clBefore);
-  });
-
-  it("speakText suppresses speech when disabled, inactive, or empty, and interrupts prior speech", () => {
-    const events: SpeakEvent[] = [];
-    unsub = subscribeVoice((e) => events.push(e));
-    expect(speakText("   ", { enabled: true, active: true })).toBe(false);
-    expect(speakText("Hello", { enabled: false, active: true })).toBe(false);
-    expect(speakText("Hello", { enabled: true, active: false })).toBe(false);
-    expect(events).toHaveLength(0);
-    expect(speakText("Hello island!", { enabled: true, active: true })).toBe(true);
-    expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ type: "speak", text: "Hello island!", interrupt: true });
+    expect(speechMock.speak).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -636,7 +971,7 @@ describe("Phase 4B EXPLICIT CONSTRAINT: hafa-adai stays 100% text-only for CHamo
     const viewSrc = readFileSync("src/learn/games/hafa-adai/view.tsx", "utf8");
     const engineSrc = readFileSync("src/learn/games/hafa-adai/engine.ts", "utf8");
     expect(viewSrc).toContain("CHamoru words are text only");
-    expect(viewSrc).not.toMatch(/speechSynthesis|speakText|useSpokenPrompt|SpeakButton|from\s+["']\.\.\/\.\.\/voice["']/);
-    expect(engineSrc).not.toMatch(/speechSynthesis|speakText|spokenIntro|spokenHelp/);
+    expect(viewSrc).not.toMatch(/speechSynthesis|speakText|useSpokenPrompt|SpeakButton|expo-speech|from\s+["']\.\.\/\.\.\/voice["']/);
+    expect(engineSrc).not.toMatch(/speechSynthesis|speakText|spokenIntro|spokenHelp|expo-speech/);
   });
 });

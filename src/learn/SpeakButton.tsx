@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useContext } from "react";
 import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { AudioPreferences } from "../components/Audio";
 import { Copy, PressableScale } from "../components/ui";
 
 /**
  * Reusable Warm Island Storybook speaker button for replaying spoken prompts or hints.
  * Built on PressableScale + Copy + inline SVG so it works cleanly in every board and test host.
+ * Both compact (>= 48pt) and toddler (>= 52pt) variants satisfy >= 48pt accessible touch targets.
  */
 export function SpeakButton({
   onPress,
@@ -22,6 +24,14 @@ export function SpeakButton({
   size?: "compact" | "toddler";
   testID?: string;
 }) {
+  const prefs = useContext(AudioPreferences);
+  const volume = prefs.narrationVolume ?? 0.75;
+  const prefsBlocked =
+    prefs.sound === false ||
+    prefs.narration === false ||
+    (Number.isFinite(volume) && volume <= 0);
+  const isDisabled = disabled || prefsBlocked;
+
   const big = size === "toddler";
   const iconSize = big ? 20 : 17;
   return (
@@ -29,12 +39,13 @@ export function SpeakButton({
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityState={{ disabled: isDisabled }}
+      disabled={isDisabled}
       onPress={onPress}
       {...({ maxFontSizeMultiplier: 1.5 } as Record<string, unknown>)}
       style={{
-        minHeight: big ? 52 : 44,
+        minWidth: 48,
+        minHeight: big ? 52 : 48,
         borderRadius: big ? 18 : 14,
         backgroundColor: "#FFFDF8",
         borderWidth: 1.5,
@@ -46,7 +57,7 @@ export function SpeakButton({
         alignItems: "center",
         justifyContent: "center",
         gap: 6,
-        opacity: disabled ? 0.45 : 1,
+        opacity: isDisabled ? 0.45 : 1,
       }}
     >
       <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

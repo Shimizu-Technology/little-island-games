@@ -16,6 +16,7 @@ vi.mock("react-native", () => ({
   Animated: { View: div, Value: class { setValue() {} stopAnimation() {} }, timing: () => ({ start() {}, stop() {} }) },
 }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("../src/components/ui", () => ({
   C: { ink: "#123", paper: "#fff", error: "#f00" },
   Copy: div, Heading: div, PressableScale: div,

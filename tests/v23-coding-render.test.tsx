@@ -18,6 +18,7 @@ vi.mock("../src/components/ui", () => ({
   PressableScale: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 vi.mock("../src/learn/Coach", () => ({ CoachSpot: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("../src/components/GameIcon", () => ({ GameIcon: ({ id }: { id: string }) => <svg data-game={id}/> }));
 vi.mock("react-native-svg", () => ({
   default: "svg", Circle: "circle", Ellipse: "ellipse", Path: "path", Rect: "rect", Text: "text", G: "g",

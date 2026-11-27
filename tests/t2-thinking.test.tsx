@@ -84,6 +84,7 @@ import type { Cell } from "../src/learn/games/shape-shift/legacy";
 const { Pass } = vi.hoisted(() => ({ Pass: ({ children }: { children?: unknown }) => children as never }));
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => true }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("react-native", () => ({
   View: Pass,
   ScrollView: Pass,

@@ -15,12 +15,12 @@ import { BadgeResultCard } from '../badges/ResultCard';
 import { isMathGame, type MathRound } from "./games/shell-math/round";
 import { Companion, LearningCompanion, PhoneLearningCompanion, useCompanionReaction } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppState, ScrollView, View, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useIsFocused } from "expo-router";
 import { useStore } from "../state/Store";
-import { hasSpeech, useSoundControls } from "../components/Audio";
+import { AudioPreferences, hasSpeech, useSoundControls } from "../components/Audio";
 import { SaveStatus } from "../components/SaveStatus";
 import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
 import { TextFit } from "../components/Text";
@@ -47,7 +47,7 @@ import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
 import { speakAfter } from "./frameClocks";
-import { speakText, stopSpeaking } from "./voice";
+import { speakText, stopSpeaking, useSpeechLifecycle } from "./voice";
 
 export const modeLabel: Record<LearnMode, string> = {
   solo: "On my own",
@@ -152,8 +152,17 @@ export function LearnFrame({ id }: { id: LearnId }) {
     const sub = AppState.addEventListener("change", (state) => setAppActive(state === "active"));
     return () => sub.remove();
   }, []);
-  const soundOn = store.save.settings.sound && (store.save.settings.narration ?? true);
-  const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused);
+  const audioPrefs = useContext(AudioPreferences);
+  const speechForeground = useSpeechLifecycle();
+  const narrationOn = audioPrefs.narration ?? store.save.settings.narration ?? true;
+  const soundEnabled = audioPrefs.sound ?? store.save.settings.sound;
+  const automaticSpeech = audioPrefs.automaticSpeech ?? store.save.settings.automaticSpeech ?? false;
+  const rawNarrationVolume = audioPrefs.narrationVolume ?? store.save.settings.narrationVolume ?? 0.75;
+  const narrationVolume = Number.isFinite(rawNarrationVolume) ? Math.min(1, Math.max(0, rawNarrationVolume)) : 0.75;
+  const speechEpoch = audioPrefs.epoch ?? epoch;
+  const soundOn = soundEnabled && narrationOn;
+  const canSpeakHelp = soundOn && narrationVolume > 0;
+  const { play: sound, stop: stopSound } = useSoundControls(soundEnabled && focused);
   const result = saved ? outcomeOf(saved) : null,
     finished = result !== null,
     notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
@@ -193,6 +202,32 @@ export function LearnFrame({ id }: { id: LearnId }) {
       stopSpeaking();
     }
   }, [boardActive, stopSound]);
+  useEffect(() => {
+    if (!focused || !appActive || !canSpeakHelp) {
+      stopSpeaking();
+    }
+  }, [focused, appActive, canSpeakHelp]);
+  const prevSpeechPrefs = useRef({ soundOn, narrationOn, automaticSpeech, narrationVolume, speechEpoch });
+  useLayoutEffect(() => {
+    const prev = prevSpeechPrefs.current;
+    if (
+      prev.soundOn !== soundOn ||
+      prev.narrationOn !== narrationOn ||
+      prev.automaticSpeech !== automaticSpeech ||
+      prev.narrationVolume !== narrationVolume ||
+      prev.speechEpoch !== speechEpoch
+    ) {
+      prevSpeechPrefs.current = { soundOn, narrationOn, automaticSpeech, narrationVolume, speechEpoch };
+      stopSpeaking();
+    }
+  }, [soundOn, narrationOn, automaticSpeech, narrationVolume, speechEpoch]);
+  const prevHelpOpen = useRef(help);
+  useEffect(() => {
+    if (prevHelpOpen.current && !help) {
+      stopSpeaking();
+    }
+    prevHelpOpen.current = help;
+  }, [help]);
   useEffect(() => () => {
     stopSpeaking();
   }, []);
@@ -290,7 +325,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     if (chosenPartner) next = { ...next, state: setScalePartner(next.state as ScaleState, chosenPartner.id) };
     next.learner = learner.id;
     if (options.mode !== "solo") store.rememberPlayers(startNames);
-    if (save(next)) { stopSound(); setBurst({ n: 0, big: false, done: 0 }); setSetup(false); }
+    if (save(next)) { stopSound(); stopSpeaking(); setBurst({ n: 0, big: false, done: 0 }); setSetup(false); }
   }
   function replay() {
     if (!saved || !finished) return;
@@ -299,7 +334,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       ? replaySession(saved, learningSkills, undefined, learner.id)
       : startSession(id, { options: learner.choices[id] ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) } }, learningSkills);
     next.learner = learner.id;
-    if (save(next)) { stopSound(); setBurst({ n: 0, big: false, done: 0 }); }
+    if (save(next)) { stopSound(); stopSpeaking(); setBurst({ n: 0, big: false, done: 0 }); }
   }
   function openSetup() {
     if (saved) {
@@ -313,6 +348,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
 
   function chooseLevel(level: LearningLevel, base = options) {
     stopSound();
+    stopSpeaking();
     sound(`learning-level-${level}`);
     setOptions(optionsAtLevel(base, level));
   }
@@ -329,7 +365,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // G1 supplies the Cove route. Until then there is no link to an unfinished surface.
   const bridge=bridgeFor(id,levelOf(saved?.options??options),coveReady);
   const changeWorking=(next:NonNullable<typeof challengeProgress>)=>store.challengeWorking({signal:next.signals.find(s=>s[0]===context)},{owner:learner.id,epoch,game:id,id:saved?.id??'',revision:saved?.revision??-1,kind:'school'});
-  const openChallenge=(same=false)=>{stopSound();setSetup(false);router.push({pathname:'/challenge',params:{game:id,...(same&&sameBeach?{puzzle:`${sameBeach.ref.bank}:${sameBeach.ref.puzzle}`}:{})}});};
+  const openChallenge=(same=false)=>{stopSound();stopSpeaking();setSetup(false);router.push({pathname:'/challenge',params:{game:id,...(same&&sameBeach?{puzzle:`${sameBeach.ref.bank}:${sameBeach.ref.puzzle}`}:{})}});};
   const back = () => (router.canGoBack() ? router.back() : router.replace("/"));
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
@@ -457,19 +493,26 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // Offered when the guide has a shipped recording in the chosen voice, or a spokenHelp script when no helpAudio key is set.
   const hasRecordedHelp = !!(engine.helpAudio && hasSpeech(engine.helpAudio, store.save.settings.voice));
   const hasSpokenHelp = !engine.helpAudio && !!engine.spokenHelp;
+  const hearEnabled = hasRecordedHelp ? soundOn : canSpeakHelp;
   const hear = !(saved && isGrowth(saved.state)) && (hasRecordedHelp || hasSpokenHelp) ? <>
             <Button
               icon="sound-on"
               maxFontSizeMultiplier={big}
               onPress={() => {
                 if (hasRecordedHelp) sound(engine.helpAudio!);
-                else if (engine.spokenHelp) speakText(engine.spokenHelp, { enabled: soundOn, active: true });
+                else if (engine.spokenHelp) {
+                  speakText(engine.spokenHelp, {
+                    enabled: canSpeakHelp,
+                    active: help && focused && appActive && speechForeground.current,
+                    volume: narrationVolume,
+                  });
+                }
               }}
-              disabled={!soundOn}
+              disabled={!hearEnabled}
             >
               Hear a quick guide
             </Button>
-            {!soundOn && <Copy maxFontSizeMultiplier={big}>Turn sound on to hear the instructions.</Copy>}
+            {!hearEnabled && <Copy maxFontSizeMultiplier={big}>Turn sound on to hear the instructions.</Copy>}
           </> : null;
 
   return (
@@ -673,6 +716,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             maxFontSizeMultiplier={big}
             onPress={() => {
               stopSound();
+              stopSpeaking();
               setHelp(false);
               assistance();
               setReplayCoach(true);
@@ -686,6 +730,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           maxFontSizeMultiplier={big}
           onPress={() => {
             stopSound();
+            stopSpeaking();
             setHelp(false);
             openSetup();
           }}

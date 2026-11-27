@@ -318,6 +318,7 @@ export const engine: LearnEngine<ReefSoundsState> = {
       uint(s.index, 4) &&
       typeof s.helped === "boolean" &&
       (s.hintLevel === 0 || s.hintLevel === 1 || s.hintLevel === 2) &&
+      (s.hintLevel === 0 || s.helped) &&
       (s.index < 4 || s.hintLevel === 0)
     );
   },

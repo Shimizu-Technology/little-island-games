@@ -196,6 +196,7 @@ vi.mock("../src/components/Icon", () => ({
   Icon: ({ name }: { name: string }) => React.createElement("span", { "data-icon": name }),
 }));
 vi.mock("../src/components/sheetPresence", () => ({ useSheetHold: () => {} }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("react-native-svg", () => ({
   default: "svg",
   Circle: "circle",

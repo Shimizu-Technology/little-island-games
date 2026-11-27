@@ -78,6 +78,7 @@ vi.mock("react-native-safe-area-context", () => ({
 }));
 vi.mock("expo-haptics", () => ({ impactAsync: () => Promise.resolve(), notificationAsync: () => Promise.resolve(), ImpactFeedbackStyle: {}, NotificationFeedbackType: {} }));
 vi.mock("expo-speech", () => ({ speak: () => {}, stop: () => {}, isSpeakingAsync: async () => false }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
 vi.mock("../src/components/sheetPresence", () => ({ useSheetHold: () => {} }));
 vi.mock("../src/components/Icon", () => ({
