@@ -335,16 +335,51 @@ function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
 }
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
-  const migrated = migrateValidatedHome(v);
+  const migrated = migrateSavedHome(v);
   if (!migrated) return undefined;
-  // First validate the original schema. Add only missing preset actors, waiting in the drawer.
+  if (migrated.rosterVersion === 1) return migrated;
+  return hydrateHome(migrated);
+}
+/** The mounted Home always offers the complete roster, including omitted drawer presets. */
+export function hydrateHome(v: unknown): HomeStateV2 | undefined {
+  const migrated = migrateSavedHome(v);
+  if (!migrated) return undefined;
+  // Runtime-only defaults: an untouched learner's saved Home need not pay for the drawer.
   // Undo patches are retained byte-for-byte; older rooms may legitimately omit the new actors.
-  const canonical: HomeStateV2 = migrated.rosterVersion === 1 ? migrated : {
+  const present = new Set(roomIds.flatMap(id => migrated.rooms[id].characters.map(c => c.slot)));
+  const missing = waitingFamily().filter(c => !present.has(c.slot));
+  const canonical: HomeStateV2 = migrated.rosterVersion === 1 && !missing.length ? migrated : {
     ...migrated, version: 4, rosterVersion: 1, rooms: { ...migrated.rooms, home: { ...migrated.rooms.home,
-      characters: [...migrated.rooms.home.characters, ...waitingFamily()],
+      characters: [...migrated.rooms.home.characters, ...missing],
     } },
   };
   return validHome(canonical) ? canonical : undefined;
+}
+/** Upgrade the stored schema without materializing runtime drawer defaults. */
+export function migrateSavedHome(v: unknown): HomeStateV2 | undefined {
+  const migrated = migrateValidatedHome(v);
+  if (!migrated) return undefined;
+  const canonical: HomeStateV2 = migrated.version === 4 ? migrated : { ...migrated, version: 4 };
+  return validHome(canonical) ? canonical : undefined;
+}
+/** Omit only exact, unused drawer presets. Placed actors and saved Undo remain lossless. */
+export function compactHome(state: HomeStateV2): HomeStateV2 {
+  if (state.rosterVersion !== 1) return state;
+  const characters = state.rooms.home.characters.filter(c => !waitingFamily().some(preset =>
+    Object.keys(c).length === Object.keys(preset).length &&
+    (Object.keys(preset) as (keyof Character)[]).every(key => c[key] === preset[key])));
+  const rooms = characters.length === state.rooms.home.characters.length ? state.rooms : {
+    ...state.rooms, home: { ...state.rooms.home, characters },
+  };
+  const family = roomIds.some(id => rooms[id].characters.some(c => c.slot >= 3)) ||
+    state.undo?.steps.some(step => Object.values(step).some(patch => patch && ("room" in patch
+      ? patch.room.characters.some(c => c.slot >= 3)
+      : patch.characters && (patch.characters.remove.some(slot => slot >= 3) ||
+        patch.characters.put.some(p => p.value.slot >= 3 || p.index >= 3)))));
+  if (family) return rooms === state.rooms ? state : { ...state, rooms };
+  const { rosterVersion: _roster, ...base } = state;
+  void _roster;
+  return { ...base, rooms };
 }
 function migrateValidatedHome(v: unknown): HomeStateV2 | undefined {
   if (!validHome(v)) return undefined;

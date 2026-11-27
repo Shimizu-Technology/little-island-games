@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   homeReducer,
   starterHome,
-  migrateHome,
+  hydrateHome,
   type HomeAccess,
   type HomeResult,
   type HomeAction,
@@ -121,9 +121,9 @@ export function editHistory(
  * Invalid initial input is exposed verbatim as recoveryOriginal and never overwritten.
  * Persist only HomeStateV2 through learner-scoped personalization, not session history. */
 export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persist?: (state: HomeStateV2) => boolean) {
-  const initialValid = useMemo(() => initial === undefined || !!migrateHome(initial), [initial]);
+  const initialValid = useMemo(() => initial === undefined || !!hydrateHome(initial), [initial]);
   const [session, setSession] = useState(() => {
-    const migrated = migrateHome(initial);
+    const migrated = hydrateHome(initial);
     const history = migrated ? restoredHistory(migrated) : ({ present: starterHome(), past: [], future: [] } as History);
     return {
       history,

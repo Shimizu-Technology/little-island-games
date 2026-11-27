@@ -446,19 +446,22 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       const targetPoint = target.kind === "socket" ? point : target.kind === "surface" || target.kind === "container" ? point : aim;
       const centre = face ?? target.contact;
       const bodyBounds = ctx.silhouette ?? translatedBounds(subject.bounds, point);
-      const bodyCentre = ctx.aim ?? roomPoint(bodyBounds.left + bodyBounds.width / 2, bodyBounds.top + bodyBounds.height / 2);
+      // A head/arm passing a seat is not a landing. The lower body can supplement the
+      // feet only on an authored cushion/blanket/water region, never a legacy point seat.
+      const lowerBody = { ...bodyBounds, top: bodyBounds.top + bodyBounds.height / 2, height: bodyBounds.height / 2 };
+      const bodyCentre = roomPoint(lowerBody.left + lowerBody.width / 2, lowerBody.top + lowerBody.height / 2);
       const socketBody = target.kind === "socket" && !!subject.character && !!(ctx.contact || ctx.aim || ctx.silhouette);
-      const distance = socketBody ? Math.min(
-        Math.hypot(point.x - centre.x, point.y - centre.y),
-        Math.hypot(bodyCentre.x - centre.x, bodyCentre.y - centre.y),
-        ctx.contact ? Math.hypot(ctx.contact.x - centre.x, ctx.contact.y - centre.y) : Infinity,
-      ) : Math.hypot(targetPoint.x - centre.x, targetPoint.y - centre.y);
       const activationHit =
         socketBody && !!target.activation && (
           contains(target.activation, point) || contains(target.activation, bodyCentre) ||
           (!!ctx.contact && contains(target.activation, ctx.contact)) ||
-          bodyOverlap(bodyBounds, target.activation) >= 0.2
+          bodyOverlap(lowerBody, target.activation) >= 0.2
         );
+      const distance = socketBody ? Math.min(
+        Math.hypot(point.x - centre.x, point.y - centre.y),
+        activationHit ? Math.hypot(bodyCentre.x - centre.x, bodyCentre.y - centre.y) : Infinity,
+        ctx.contact ? Math.hypot(ctx.contact.x - centre.x, ctx.contact.y - centre.y) : Infinity,
+      ) : Math.hypot(targetPoint.x - centre.x, targetPoint.y - centre.y);
       const exitRadius = ctx.previous?.target === target.id ? radius * 1.25 : radius;
       const onFace = !!face && !!subject.body?.edible && distance <= exitRadius;
       const core = contains(target.core, targetPoint) || activationHit || onFace;

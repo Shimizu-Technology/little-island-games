@@ -3,7 +3,7 @@ import Module from 'node:module';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
-import { starterHome, instance, validHome, type HomeStateV2 } from '../src/home/model';
+import { starterHome, instance, validHome, hydrateHome, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { roomToScreen } from '../src/home/scene/camera';
 import { housePoint, roomPoint } from '../src/home/scene/types';
@@ -631,7 +631,7 @@ describe('Round 1 appliance tap precision', () => {
     expect(harness.scene.selected).toBeUndefined();
   });
   it.each(['fridge', 'cupboard', 'toy-box', 'carry-basket', 'stove', 'sink-counter'].flatMap(item => [false, true].map(accessible => ({ item, accessible }))))('selected food targets $item (accessible=$accessible) instead of toggling it', async ({ item, accessible }) => {
-    const state = fixture(item, item !== 'stove' && item !== 'sink-counter');
+    const state = hydrateHome(fixture(item, item !== 'stove' && item !== 'sink-counter'))!;
     await open(state); await tap('home/item/food');
     const scene = harness.scene.scene;
     const target = scene.rooms.home.targets.find((t: any) => t.owner === 'home/item/target' && (t.kind === 'container' || t.kind === 'surface'))!;

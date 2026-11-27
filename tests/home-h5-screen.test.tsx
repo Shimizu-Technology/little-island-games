@@ -2,7 +2,7 @@ import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
-import { instance, type HomeStateV2 } from '../src/home/model';
+import { instance, hydrateHome, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve } from '../src/home/scene/proposal';
 import { labFixtures } from '../src/home/runtime/lab';
@@ -142,7 +142,7 @@ describe('H5 review: selection and explicit opening', () => {
 
 
 it.each(['fridge', 'stove', 'sink-counter', 'lamp', 'tv', 'radio'])('tapping %s beats a stale doll selection immediately', async kind => {
-  const s = labFixtures['rig-menu-0']();
+  const s = hydrateHome(labFixtures['rig-menu-0']())!;
   s.rooms.home.instances = [instance('appliance', kind, 10, 1)];
   const saves: HomeStateV2[] = [];
   await open(s, next => { saves.push(next); return true; });
