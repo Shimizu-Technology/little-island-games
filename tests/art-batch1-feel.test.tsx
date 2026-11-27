@@ -45,20 +45,20 @@ const images = (screen: ReactTestRenderer) => screen.root.findAll(n => n.type ==
 const host = (n: { type: unknown }) => n.type as string;
 
 describe('Art Batch 1 illustrations', () => {
-  it('bundles all 19 approved 512×512 WebPs, about 448 KB in all', () => {
-    expect(files).toHaveLength(19);
+  it('bundles all 24 approved 512×512 WebPs with valid VP8X alpha headers', () => {
+    expect(files).toHaveLength(24);
     for (const file of files) {
       const head = readFileSync(file).subarray(0, 30);
       expect(head.toString('latin1', 0, 4) + head.toString('latin1', 8, 16), file).toBe('RIFFWEBPVP8X');
       expect([head.readUIntLE(24, 3) + 1, head.readUIntLE(27, 3) + 1], file).toEqual([512, 512]);
     }
-    expect(files.reduce((sum, file) => sum + statSync(file).size, 0)).toBeLessThan(470_000);
+    expect(files.reduce((sum, file) => sum + statSync(file).size, 0)).toBeLessThan(650_000);
   });
 
   it('requires every picture statically, each from a file that exists', () => {
     const source = readFileSync('src/art/illustrated.tsx', 'utf8');
     const required = [...source.matchAll(/require\(([^)]*\/(?:map|puzzles)\/[^)]*)\)/g)].map(m => m[1]);
-    expect(required).toHaveLength(19);
+    expect(required).toHaveLength(24);
     for (const arg of required) expect(arg).toMatch(/^'\.\.\/\.\.\/assets\/art\/(?:map|puzzles)\/[a-z-]+\.webp'$/);
     expect(new Set([...Object.values(MAP_DOOR_ART), ...Object.values(PUZZLE_TILE_ART)])).toEqual(new Set(files));
   });
@@ -67,6 +67,11 @@ describe('Art Batch 1 illustrations', () => {
     const shelf = SECTIONS.flatMap(s => [...s.games]);
     expect(Object.keys(PUZZLE_TILE_ART).sort()).toEqual([...shelf].sort());
     expect(PUZZLE_TILE_ART.killer).toBe('assets/art/puzzles/cage-sudoku.webp');
+    expect(PUZZLE_TILE_ART['cage-math']).toBe('assets/art/puzzles/cage-math.webp');
+    expect(PUZZLE_TILE_ART['greater-than']).toBe('assets/art/puzzles/greater-than.webp');
+    expect(PUZZLE_TILE_ART.skyline).toBe('assets/art/puzzles/skyline.webp');
+    expect(PUZZLE_TILE_ART['pearl-loop']).toBe('assets/art/puzzles/pearl-loop.webp');
+    expect(PUZZLE_TILE_ART.freecell).toBe('assets/art/puzzles/freecell.webp');
     expect(places).toHaveLength(6);
     expect(places.filter(p => DOOR_ART[p.id]).map(p => p.id).sort()).toEqual(['arcade', 'cove', 'hall', 'home', 'library', 'school']);
     expect(MAP_DOOR_ART[DOOR_ART.cove!]).toBe('assets/art/map/puzzles.webp');
@@ -81,7 +86,7 @@ describe('Art Batch 1 illustrations', () => {
     expect(images(fallback)).toHaveLength(0);
     expect(fallback.root.findAll(n => host(n) === 'game-icon')).toHaveLength(1);
     // A game with neither stands in with the Puzzles door.
-    expect(images(await mount(<CoveMotif game="pearl-loop"/>)).map(n => n.props.source)).toEqual(['assets/art/map/puzzles.webp']);
+    expect(images(await mount(<CoveMotif game="cross-sums"/>)).map(n => n.props.source)).toEqual(['assets/art/map/puzzles.webp']);
   });
 });
 

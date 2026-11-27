@@ -5,9 +5,9 @@ import { presentationFor } from './presentation';
 import { PackedBrowser } from './PackedBrowser';
 import { ChooseGrid, type Filter } from './ChooseGrid';
 import { completionLookup, isSolved, mixedPack, type Reader } from './catalog';
-import { difficultyOptionsFor, nearestTier } from './shelf';
+import { difficultyOptionsFor, nearestTier, type SolitaireVariant } from './shelf';
 
-export type BrowserProps = { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden: readonly string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void };
+export type BrowserProps = { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; variant?: SolitaireVariant; hidden: readonly string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void };
 /** Choose a puzzle, for inline and packed games alike. */
 export function PuzzleBrowser(props: BrowserProps) {
   return props.entry.packed && !props.entry.puzzles.length ? <PackedBrowser {...props}/> : <CardBrowser {...props}/>;
