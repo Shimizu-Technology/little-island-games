@@ -47,6 +47,15 @@ export function variantOfRef(entry: ChallengeEntry, ref: PuzzleRef): SolitaireVa
 }
 export const variantLabel = (variant?: SolitaireVariant): string | undefined =>
   variant === 'freecell' ? 'FreeCell' : variant === 'draw-3' ? 'Draw 3' : variant === 'draw-1' ? 'Draw 1' : undefined;
+/** Display game id and visible/accessible name for a paused attempt or pin (keeps `solitaire` save id intact). */
+export function continueLabelFor(entry: ChallengeEntry, ref: PuzzleRef): { game: string; name: string } {
+  const variant = variantOfRef(entry, ref);
+  if (variant === 'freecell') return { game: 'freecell', name: tileInfoFor('freecell').name };
+  if (variant === 'draw-1' || variant === 'draw-3') {
+    return { game: entry.game, name: `${tileInfoFor(entry.game).name} · ${variantLabel(variant)}` };
+  }
+  return { game: entry.game, name: tileInfoFor(entry.game).name };
+}
 
 /** Reef Sweep stays a Challenge (`cove: false`): its tile opens the Hall's route as the current learner and is never a Cove entry. */
 export const SHORTCUTS: Record<string, { name: string; route: { pathname: '/challenge'; params: { game: string } } }> = {
@@ -119,25 +128,45 @@ export function isGrownUpTile(tile: ShelfTile): boolean {
 export function filterGrownUpSections(sections: readonly ShelfSection[]): ShelfSection[] {
   return sections.map(s => ({ ...s, tiles: s.tiles.filter(isGrownUpTile) })).filter(s => s.tiles.length > 0);
 }
-/** Date-only grown-up daily pick: deals a Tier 5–6 (Master / Master+) puzzle from the grown-up pool (falling back to Tier 4+ if a test fixture has no Tier 5+). */
-export function grownUpToday(date: string, entries = coveEntries()): TidePick | undefined {
-  if (!validCivilDate(date) || !entries.length) return undefined;
-  const withTier = (min: number) => entries.filter(e => e.puzzles.some(p => p.tier >= min) || (e.packed?.bands.some(b => b.tier >= min) ?? false));
-  const tier5 = withTier(5), pool = tier5.length ? tier5 : withTier(4), minTier = tier5.length ? 5 : 4;
-  if (!pool.length) return undefined;
-  const entry = pool[fnv1a32(`LI-COVE-GROWNUP-TODAY-V1|${date}`) % pool.length];
-  const cards = entry.puzzles.filter(p => p.tier >= minTier);
-  if (!cards.length && entry.packed?.bands.length) {
-    const banks = entry.packed.bands.filter(b => b.tier >= minTier);
-    if (!banks.length) return undefined;
-    const band = banks[fnv1a32(`${date}|grownup|${entry.game}`) % banks.length];
-    return { size: 'Large', entry, card: null, bank: band.bank, title: band.title };
+/** Deterministically ordered Tier 5+ (Master / Master+) daily candidates across all eligible entries and non-empty banks. */
+export function grownUpTodayPool(date: string, entries = coveEntries()): TidePick[] {
+  if (!validCivilDate(date) || !entries.length) return [];
+  const eligibleBands = (e: ChallengeEntry) => (e.packed?.bands ?? []).filter(b => b.tier >= 5 && b.count > 0);
+  const pool = entries.filter(e => e.puzzles.some(p => p.tier >= 5) || eligibleBands(e).length > 0);
+  if (!pool.length) return [];
+  const startEntry = fnv1a32(`LI-COVE-GROWNUP-TODAY-V1|${date}`) % pool.length;
+  const orderedEntries = [...pool.slice(startEntry), ...pool.slice(0, startEntry)];
+  const picks: TidePick[] = [];
+  for (const entry of orderedEntries) {
+    const cards = entry.puzzles.filter(p => p.tier >= 5);
+    if (cards.length) {
+      const start = fnv1a32(`${date}|grownup|${entry.game}`) % cards.length;
+      for (const card of [...cards.slice(start), ...cards.slice(0, start)]) {
+        picks.push({ size: 'Large', entry, card, title: card.title });
+      }
+      continue;
+    }
+    const banks = eligibleBands(entry);
+    if (!banks.length) continue;
+    const start = fnv1a32(`${date}|grownup|${entry.game}`) % banks.length;
+    for (const band of [...banks.slice(start), ...banks.slice(0, start)]) {
+      picks.push({ size: 'Large', entry, card: null, bank: band.bank, title: band.title });
+    }
   }
-  if (!cards.length) return undefined;
-  const card = cards[fnv1a32(`${date}|grownup|${entry.game}`) % cards.length];
-  return { size: 'Large', entry, card, title: card.title };
+  return picks;
+}
+/** Date-only grown-up daily pick: strictly deals a Tier 5–6 (Master / Master+) puzzle from non-empty banks, or `undefined` if none exist. */
+export function grownUpToday(date: string, entries = coveEntries()): TidePick | undefined {
+  return grownUpTodayPool(date, entries)[0];
 }
 const latinOf = (game: string, b: PackedBand) => (latinRungs as Partial<Record<string, readonly { title: string; summary: string; size: number }[]>>)[game as LatinKind]?.find(r => r.title === b.title);
+/** Accurate tier summaries for Picture Grid rungs (slots 110–113: 5×5, 8×8/10×10, 12×12, 15×15). */
+const PICTURE_GRID_SUMMARIES: Readonly<Record<number, string>> = {
+  1: '5×5 pictures solved straight from the row and column clues.',
+  2: '8×8 and 10×10 pictures with longer runs and more gaps to place.',
+  3: '12×12 pictures that combine several rounds of row and column logic.',
+  4: '15×15 pictures for grown-ups: deep line deductions, no guessing.',
+};
 /** A bank's board size and one-line summary, from its adapter or the Latin rung list. */
 export function bankFacts(entry: ChallengeEntry, b: PackedBand): { size: string; summary: string } | undefined {
   const own = packedOpen(entry)?.describe?.(b.bank);
@@ -151,6 +180,12 @@ export function tierSummary(entry: ChallengeEntry, tier: number, variant?: Solit
   for (const band of bands) {
     const summary = bankFacts(entry, band)?.summary?.trim();
     if (summary) return summary;
+  }
+  if (entry.game === 'picture-grid' && bands.length) {
+    const fallback = PICTURE_GRID_SUMMARIES[tier];
+    if (fallback) return fallback;
+    const size = bankFacts(entry, bands[0])?.size;
+    return size ? `${size} picture grid solved from row and column clues.` : undefined;
   }
   return undefined;
 }

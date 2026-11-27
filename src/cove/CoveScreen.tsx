@@ -25,7 +25,7 @@ import { PuzzleBrowser } from './PuzzleBrowser';
 import { CoveHome, type ContinueItem } from './CoveHome';
 import { StartSheet } from './StartSheet';
 import { CoveGrownUps } from './CoveGrownUps';
-import { filterGrownUpSections, grownUpTier, grownUpToday, isGrownUpTile, matchesVariant, nearestTier, pastelFor, playLabel, shelfEntries, shelfSections, tierOf, tileInfoFor, variantLabel, variantOfBand, variantOfRef, type ShelfTile, type SolitaireVariant } from './shelf';
+import { continueLabelFor, filterGrownUpSections, grownUpTier, grownUpTodayPool, isGrownUpTile, matchesVariant, nearestTier, pastelFor, playLabel, shelfEntries, shelfSections, tierOf, tileInfoFor, variantLabel, variantOfBand, variantOfRef, type ShelfTile, type SolitaireVariant } from './shelf';
 
 export default function CoveScreen() {
   const store = useStore();
@@ -122,15 +122,15 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
    * Packed content is verified before the round mounts. `null` means this difficulty has nothing new to offer, which
    * says so and offers Choose a puzzle; a failure keeps everything and says so calmly. A superseded deal is dropped.
    */
-  const deal = async (pick: () => Promise<ChallengeCard | null | undefined>, then: (card: ChallengeCard) => void, empty?: Notice['choose']) => {
+  const deal = async <T = ChallengeCard>(pick: () => Promise<T | null | undefined>, then: (picked: T) => void, empty?: Notice['choose']) => {
     if (dealing) return;
     const token = ++dealToken.current;
     setDealing(true); setNotice(null);
     try {
-      const card = await pick();
+      const picked = await pick();
       if (token !== dealToken.current || finishHeld.current) return;
-      if (card) then(card);
-      else setNotice(card === null ? { text: 'No other puzzle here.', choose: empty } : { text: COULD_NOT_OPEN });
+      if (picked) then(picked);
+      else setNotice(picked === null ? { text: 'No other puzzle here.', choose: empty } : { text: COULD_NOT_OPEN });
     } catch { if (token === dealToken.current) setNotice({ text: COULD_NOT_OPEN }); }
     finally { if (token === dealToken.current) setDealing(false); }
   };
@@ -179,11 +179,41 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const visibleEntries = shelfEntries(entries).map(e => ({ ...e, puzzles: e.puzzles.filter(p => !hidden.includes(p.ref.hash)) }));
   const allSections = shelfSections({ entries, hidden, originals: schoolOriginals, registered: game => !!challengeFor(game) });
   const sections = grownUpMode ? filterGrownUpSections(allSections) : allSections;
-  const playableToday = visibleEntries.filter(e => e.puzzles.length || e.packed?.bands.length);
+  const playableToday = visibleEntries.filter(e => e.puzzles.length || e.packed?.bands.some(b => b.count > 0));
+  const todayDate = civilDate(new Date());
+  const grownUpPool = grownUpMode ? grownUpTodayPool(todayDate, playableToday) : [];
   const today = grownUpMode
-    ? grownUpToday(civilDate(new Date()), playableToday)
-    : tideTable(civilDate(new Date()), playableToday).find(p => p.size === 'Medium');
+    ? grownUpPool[0]
+    : tideTable(todayDate, playableToday).find(p => p.size === 'Medium');
   const onToday = today && (() => {
+    if (grownUpMode) {
+      const firstEntry = entries.find(e => e.game === today.entry.game) ?? today.entry;
+      const firstBand = firstEntry.packed?.bands.find(b => b.bank === today.bank);
+      const fallbackBrowse: Notice['choose'] = firstBand ? { entry: firstEntry, tier: firstBand.tier, partner: null, variant: variantOfBand(firstBand) } : undefined;
+      void deal(async (): Promise<{ entry: ChallengeEntry; card: ChallengeCard } | null> => {
+        for (const cand of grownUpPool) {
+          const entry = entries.find(e => e.game === cand.entry.game) ?? cand.entry;
+          if (cand.card) {
+            if (cand.card.tier >= 5 && !hidden.includes(cand.card.ref.hash)) return { entry, card: cand.card };
+            continue;
+          }
+          const packed = entry.packed, band = packed?.bands.find(b => b.bank === cand.bank);
+          if (!packed || !band || band.tier < 5 || band.count <= 0) continue;
+          const skip = await hiddenIn(entry, band.bank, hidden);
+          if (skip.size >= band.count) continue;
+          const opener = packedOpen(entry);
+          const ref = skip.size && opener?.chooseVisible
+            ? await opener.chooseVisible(band.bank, progress, skip)
+            : await packed.choose(band.bank, progress);
+          const next = packed.card(ref);
+          if (next && next.tier >= 5 && next.ref.bank === band.bank && !hidden.includes(next.ref.hash)) {
+            return { entry, card: next };
+          }
+        }
+        return null;
+      }, picked => play(picked.entry, picked.card, true), fallbackBrowse);
+      return;
+    }
     const entry = entries.find(e => e.game === today.entry.game) ?? today.entry;
     const band = entry.packed?.bands.find(b => b.bank === today.bank), at = band?.tier, variant = variantOfBand(band);
     if (today.card) play(entry, today.card, true);
@@ -195,14 +225,14 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     ...progress.paused.filter(s => !s.result && !s.credited).sort((a, b) => b.ordinal - a.ordinal).flatMap(s => {
       const entry = entries.find(e => e.game === s.game);
       if (!entry) return [];
-      const displayGame = variantOfRef(entry, s.puzzle) === 'freecell' ? 'freecell' : s.game;
-      return [{ key: s.id, game: displayGame, name: tileInfoFor(displayGame).name, pastel: pastelFor(displayGame), onPress: () => resume(entry, s) }];
+      const { game: displayGame, name } = continueLabelFor(entry, s.puzzle);
+      return [{ key: s.id, game: displayGame, name, pastel: pastelFor(displayGame), onPress: () => resume(entry, s) }];
     }),
     ...(local.data.pins[owner] ?? []).flatMap(pin => {
       const entry = entries.find(e => e.game === pin.ref.engine), card = cardFor(pin.ref, entries), from = people.find(p => p.id === pin.from) ?? { id: pin.from, name: 'Family' };
       if (!entry || !card) return [];
-      const displayGame = variantOfRef(entry, pin.ref) === 'freecell' ? 'freecell' : entry.game;
-      return [{ key: `pin-${card.ref.hash}`, game: displayGame, name: tileInfoFor(displayGame).name, pastel: pastelFor(displayGame), from, onPress: () => play(entry, card, true), onLongPress: () => void local.change({ type: 'unpin', owner, hash: pin.ref.hash }) }];
+      const { game: displayGame, name } = continueLabelFor(entry, pin.ref);
+      return [{ key: `pin-${card.ref.hash}`, game: displayGame, name, pastel: pastelFor(displayGame), from, onPress: () => play(entry, card, true), onLongPress: () => void local.change({ type: 'unpin', owner, hash: pin.ref.hash }) }];
     }),
   ];
   const shelf = allSections.flatMap(s => s.tiles);

@@ -89,6 +89,7 @@ const makePackedStub = (entry: ChallengeEntry): ChallengeEntry => {
       ...packed,
       choose,
       chooseVisible: choose,
+      hiddenRows: async () => new Set<number>(),
       prepare: async () => {},
       open: async (bank: number, index: number) => ({
         bank,
@@ -288,5 +289,203 @@ describe('Grown-up Challenge mode and rich tier summaries', () => {
     expect(shelf.grownUpTier(real('pearl-loop'), 1)).toBe(5);
     expect(shelf.grownUpTier(real('solitaire'), 1, 'freecell')).toBe(5);
     expect(shelf.grownUpTier(real('solitaire'), 6, 'freecell')).toBe(6);
+  });
+});
+
+describe('R1–R5 review regressions', () => {
+  it('R1: PackedBrowser keeps draw-3, draw-1, and freecell locked across tier changes and selected cells', async () => {
+    const { PackedBrowser } = await import('../src/cove/PackedBrowser');
+    const { ChooseGrid } = await import('../src/cove/ChooseGrid');
+    const entry = makePackedStub(real('solitaire'));
+
+    const cases: readonly {
+      variant: 'draw-3' | 'draw-1' | 'freecell';
+      initial: number;
+      steps: readonly [tier: number, bank: number][];
+    }[] = [
+      { variant: 'draw-3', initial: 6, steps: [[6, 105], [3, 104], [1, 103]] },
+      { variant: 'draw-1', initial: 6, steps: [[6, 102], [3, 101], [1, 100]] },
+      { variant: 'freecell', initial: 6, steps: [[6, 109], [5, 108], [3, 107], [1, 106]] },
+    ];
+
+    for (const { variant, initial, steps } of cases) {
+      const chosen: ChallengeCard[] = [];
+      await act(async () => {
+        screen = create(<PackedBrowser entry={entry} progress={emptyChallenge()} initialBand={initial} variant={variant} onChoose={c => chosen.push(c)} onBand={vi.fn()}/>);
+      });
+      for (const [tier, bank] of steps) {
+        let grid = screen!.root.findByType(ChooseGrid);
+        if (grid.props.tier !== tier) {
+          await act(async () => grid.props.onTier(tier));
+          grid = screen!.root.findByType(ChooseGrid);
+        }
+        expect(grid.props.sets.map((s: { key: string }) => s.key), `${variant}@${tier}`).toEqual([String(bank)]);
+        expect(grid.props.cells[0].key, `${variant}@${tier}`).toBe(`${bank}:0`);
+        await act(async () => grid.props.cells[0].onPress());
+        await settle();
+        expect(chosen.at(-1)?.ref.bank, `${variant}@${tier} chosen`).toBe(bank);
+      }
+      await act(async () => screen!.unmount());
+      screen = undefined;
+    }
+  });
+
+  it('R3: grownUpToday / grownUpTodayPool enforce strict tier >= 5 and positive count > 0', () => {
+    const skyline = makePackedStub(real('skyline'));
+    expect(shelf.grownUpTodayPool('2026-11-27', [skyline])).toEqual([]);
+    expect(shelf.grownUpToday('2026-11-27', [skyline])).toBeUndefined();
+
+    const emptyTier5 = makePackedStub(real('sudoku'));
+    emptyTier5.packed = {
+      ...emptyTier5.packed!,
+      bands: emptyTier5.packed!.bands.filter(b => b.tier === 5).map(b => ({ ...b, count: 0 })),
+    };
+    expect(shelf.grownUpTodayPool('2026-11-27', [emptyTier5])).toEqual([]);
+    expect(shelf.grownUpToday('2026-11-27', [emptyTier5])).toBeUndefined();
+  });
+
+  it('R2: Grown-up Today falls back across remaining eligible tier >= 5 banks when 2026-01-04 bank 108 (64 hidden) is exhausted', async () => {
+    const { civilDate } = await import('../src/puzzles/today');
+    const entries = challengeEntries.filter(e => e.cove).map(entry => entry.packed ? makePackedStub(entry) : entry);
+    const eligible = shelf.shelfEntries(entries);
+    const date = '2026-01-04';
+    const primary = shelf.grownUpToday(date, eligible);
+    expect(primary?.entry.game).toBe('solitaire');
+    expect(primary?.bank).toBe(108);
+
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(`${date}T12:00:00Z`));
+    try {
+      expect(civilDate(new Date())).toBe(date);
+      fixture.entries = entries.map(entry => entry.game === 'solitaire' ? {
+        ...entry,
+        packed: { ...entry.packed!, hiddenRows: async (bank: number) => new Set(bank === 108 ? Array.from({ length: 64 }, (_, i) => i) : []) },
+      } as ChallengeEntry : entry);
+      fixture.local.data.hidden = Array.from({ length: 64 }, (_, i) => i.toString(16).padStart(64, '0'));
+      await mount();
+      await press('cove-mode-grownup');
+      await press('cove-today');
+      await settle();
+      expect(fixture.rounds).toHaveLength(1);
+      expect(fixture.rounds[0].card.tier).toBeGreaterThanOrEqual(5);
+      expect(fixture.rounds[0].card.ref.bank).not.toBe(108);
+
+      // Even if every tier >= 5 Solitaire bank is hidden, fallback moves to another adult game's tier >= 5 bank.
+      await act(async () => screen!.unmount()); screen = undefined; fixture.rounds = [];
+      fixture.entries = entries.map(entry => entry.game === 'solitaire' ? {
+        ...entry,
+        packed: { ...entry.packed!, hiddenRows: async (bank: number) => new Set(Array.from({ length: entry.packed!.bands.find(b => b.bank === bank)?.count ?? 0 }, (_, i) => i)) },
+      } as ChallengeEntry : entry);
+      await mount();
+      await press('cove-mode-grownup');
+      await press('cove-today');
+      await settle();
+      expect(fixture.rounds).toHaveLength(1);
+      expect(fixture.rounds[0].entry.game).not.toBe('solitaire');
+      expect(fixture.rounds[0].card.tier).toBeGreaterThanOrEqual(5);
+
+      // When the entire eligible tier >= 5 pool is hidden, reports "No other puzzle here." without opening a round.
+      await act(async () => screen!.unmount()); screen = undefined; fixture.rounds = [];
+      const sudokuOnly = makePackedStub(real('sudoku'));
+      fixture.entries = [{
+        ...sudokuOnly,
+        packed: { ...sudokuOnly.packed!, hiddenRows: async (bank: number) => new Set(Array.from({ length: sudokuOnly.packed!.bands.find(b => b.bank === bank)?.count ?? 0 }, (_, i) => i)) },
+      } as ChallengeEntry];
+      await mount();
+      await press('cove-mode-grownup');
+      await press('cove-today');
+      await settle();
+      expect(fixture.rounds).toHaveLength(0);
+      expect(words(screen!.root)).toContain('No other puzzle here.');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('R4: Continue cards and pins include exact Draw 1 / Draw 3 variant while keeping FreeCell and solitaire save id intact', async () => {
+    const solitaire = makePackedStub(real('solitaire'));
+    const refDraw3 = { bank: 104, puzzle: 0, engine: 'solitaire', rules: 1, hash: 'd'.repeat(64) };
+    const refDraw1 = { bank: 101, puzzle: 0, engine: 'solitaire', rules: 1, hash: '1'.repeat(64) };
+    const refFreeCell = { bank: 108, puzzle: 0, engine: 'solitaire', rules: 1, hash: 'f'.repeat(64) };
+    const pinDraw3 = { bank: 104, puzzle: 1, engine: 'solitaire', rules: 1, hash: 'e'.repeat(64) };
+    const pinDraw1 = { bank: 100, puzzle: 0, engine: 'solitaire', rules: 1, hash: 'a'.repeat(64) };
+
+    fixture.entries = [solitaire];
+    fixture.save = {
+      ...emptySave(),
+      challenge: {
+        ...emptyChallenge(),
+        paused: [
+          { version: 1, owner: 'family', game: 'solitaire', id: 'paused-d3', ordinal: 3, revision: 1, puzzle: refDraw3, codec: 'solitaire-v1', payload: {}, selectedDares: [], partner: null, result: null, credited: false },
+          { version: 1, owner: 'family', game: 'solitaire', id: 'paused-d1', ordinal: 2, revision: 1, puzzle: refDraw1, codec: 'solitaire-v1', payload: {}, selectedDares: [], partner: null, result: null, credited: false },
+          { version: 1, owner: 'family', game: 'solitaire', id: 'paused-fc', ordinal: 1, revision: 1, puzzle: refFreeCell, codec: 'solitaire-v1', payload: {}, selectedDares: [], partner: null, result: null, credited: false },
+        ],
+      },
+    };
+    fixture.local.data.pins.family = [
+      { from: 'family', ref: pinDraw3 },
+      { from: 'family', ref: pinDraw1 },
+    ];
+
+    await mount();
+    const d3Card = byTestID('cove-continue-paused-d3')[0];
+    expect(d3Card.props.accessibilityLabel).toBe('Continue · Solitaire · Draw 3');
+    expect(words(d3Card)).toContain('Solitaire · Draw 3');
+
+    const d1Card = byTestID('cove-continue-paused-d1')[0];
+    expect(d1Card.props.accessibilityLabel).toBe('Continue · Solitaire · Draw 1');
+    expect(words(d1Card)).toContain('Solitaire · Draw 1');
+
+    const fcCard = byTestID('cove-continue-paused-fc')[0];
+    expect(fcCard.props.accessibilityLabel).toBe('Continue · FreeCell');
+    expect(words(fcCard)).toContain('FreeCell');
+
+    const pinD3Card = byTestID(`cove-continue-pin-${pinDraw3.hash}`)[0];
+    expect(pinD3Card.props.accessibilityLabel).toBe('Solitaire · Draw 3, from Family practice');
+    expect(words(pinD3Card)).toContain('Solitaire · Draw 3');
+
+    // Open "See all" to check the 5th item (pinDraw1) too
+    await press('cove-continue-all');
+    const pinD1Card = byTestID(`cove-continue-pin-${pinDraw1.hash}`)[0];
+    expect(pinD1Card.props.accessibilityLabel).toBe('Solitaire · Draw 1, from Family practice');
+    expect(words(pinD1Card)).toContain('Solitaire · Draw 1');
+  });
+
+  it('R5: tierSummary returns a non-empty accurate description for every registered Cove shelf game, variant, and offered tier (including Picture Grid 1..4)', async () => {
+    const { coveEntries } = await import('../src/cove/catalog');
+    const shelfList = shelf.shelfEntries(coveEntries(challengeEntries));
+    expect(shelfList.length).toBeGreaterThan(0);
+    const missing: string[] = [];
+    for (const entry of shelfList) {
+      const variants: ('draw-1' | 'draw-3' | 'freecell' | undefined)[] = entry.game === 'solitaire'
+        ? [undefined, 'draw-1', 'draw-3', 'freecell']
+        : [undefined];
+      for (const variant of variants) {
+        const tiers = shelf.tiersOf(entry, variant);
+        expect(tiers.length, `${entry.game}:${variant ?? 'default'}`).toBeGreaterThan(0);
+        for (const tier of tiers) {
+          const summary = shelf.tierSummary(entry, tier, variant);
+          if (!summary?.trim()) missing.push(`${entry.game}:${variant ?? 'default'}:${tier}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+
+    // Explicit Picture Grid size accuracy check against manifest bands (slots 110–113)
+    const pic = real('picture-grid');
+    expect(shelf.tierSummary(pic, 1)).toContain('5×5');
+    expect(shelf.tierSummary(pic, 2)).toContain('8×8');
+    expect(shelf.tierSummary(pic, 2)).toContain('10×10');
+    expect(shelf.tierSummary(pic, 3)).toContain('12×12');
+    expect(shelf.tierSummary(pic, 4)).toContain('15×15');
+
+    // Verify StartSheet renders Picture Grid tier summaries for tiers 1..4
+    fixture.entries = [makePackedStub(pic)];
+    await mount();
+    await press('cove-tile-picture-grid');
+    for (const tier of [1, 2, 3, 4]) {
+      await press(`difficulty-${tier}`);
+      expect(words(byTestID('start-tier-summary')[0])).toBe(shelf.tierSummary(pic, tier));
+    }
   });
 });

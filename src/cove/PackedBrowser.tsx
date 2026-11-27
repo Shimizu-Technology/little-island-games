@@ -12,13 +12,12 @@ const requests = () => { let n = 0; return { next: () => ++n, latest: (token: nu
 /** Choose a puzzle for a packed game: one numbered grid per bank. Entries load only when one is chosen. */
 export function PackedBrowser({ entry, progress, initialBand, variant, hidden = [], onChoose, onBand }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; variant?: SolitaireVariant; hidden?: readonly string[]; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void }) {
   const packed = entry.packed!, opener = packedOpen(entry);
-  const availableBands = useMemo(() => {
-    if (variant === 'freecell') return packed.bands.filter(b => matchesVariant(b, 'freecell'));
-    if (variant === 'draw-1' || variant === 'draw-3') return packed.bands.filter(b => !matchesVariant(b, 'freecell'));
-    return packed.bands;
-  }, [packed, variant]);
+  const availableBands = useMemo(
+    () => (variant ? packed.bands.filter(b => matchesVariant(b, variant)) : packed.bands),
+    [packed, variant],
+  );
   const [tier, setTier] = useState(() => nearestTier(entry, initialBand, variant));
-  const [bank, setBank] = useState<number | undefined>(() => variant ? availableBands.find(b => b.tier === nearestTier(entry, initialBand, variant) && matchesVariant(b, variant))?.bank : undefined);
+  const [bank, setBank] = useState<number | undefined>(() => variant ? availableBands.find(b => b.tier === nearestTier(entry, initialBand, variant))?.bank : undefined);
   const [filter, setFilter] = useState<Filter>('all');
   const [busy, setBusy] = useState(false), [message, setMessage] = useState('');
   // A row that is still loading when the chooser closes or its difficulty or set changes is dropped, never opened.
