@@ -75,7 +75,7 @@ it('frame-zero lying faces never mount an open-eyed blink or anticipation copy, 
     interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} moods={{'character/0':'happy'}}
     onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}} liveRoom="home"/>);});
   for(const slot of [0,1,2,3,4,5]) {
-    const art=tree.root.findAll(n=>n.type==='EntityArt' && n.props.entityId===`character/${slot}` && !n.props.carry);
+    const art=tree.root.findAll(n=>String(n.type)==='EntityArt' && n.props.entityId===`character/${slot}` && !n.props.carry);
     expect(art.length).toBeGreaterThan(0);
     expect(art.every(n=>n.props.face==='sleepy' && !n.props.blink && !n.props.preview)).toBe(true);
   }
