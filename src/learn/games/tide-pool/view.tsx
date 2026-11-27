@@ -3,7 +3,7 @@ import { SCHOOL_BOARD_MIN } from '../../boardGeometry';
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Platform, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
-import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
+import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
 import { easeInOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
 import { CoachSpot } from "../../Coach";
@@ -15,17 +15,33 @@ import {
   current,
   guesser,
   happy,
+  isVoicedMission,
   makeChange,
   needFor,
   nextMission,
+  sceneForMission,
   toggle,
   upgrade,
   type AnswerPicture,
   type Control,
   type Creature,
+  type LegacyTideState,
   type MissionId,
   type TideSave,
+  type TideState,
 } from "./engine";
+import {
+  isTideClassify,
+  tideClassifyCheck,
+  tideClassifyDone,
+  tideClassifyHelp,
+  tideClassifyMission,
+  tideClassifyNext,
+  tideClassifyPlace,
+  tideClassifyReady,
+  tideClassifyTurn,
+  type TideClassifyState,
+} from "./missions";
 export function CreatureArt({
   kind,
   size = 48,
@@ -575,7 +591,267 @@ const controlArt: Record<Control, [React.ReactNode, React.ReactNode, string, str
     "Tide out",
   ],
 };
-export function Board({ session, update, practice, sound, width, active, coach, cheer }: BoardProps<TideSave>) {
+export function Board(props: BoardProps<TideSave>) {
+  if (isTideClassify(props.session.state)) {
+    return <TideClassifyBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+  }
+  return (
+    <ClassicTideBoard
+      {...props}
+      session={{ ...props.session, state: props.session.state as TideState | LegacyTideState }}
+    />
+  );
+}
+
+/** Levels 4–5 native multi-rule habitat & trait classification board right at the tide pool. */
+function TideClassifyBoard({
+  session,
+  update,
+  practice,
+  assistance,
+  sound,
+  width,
+  active,
+  coach,
+  cheer,
+}: BoardProps<TideSave> & { session: { state: TideClassifyState } }) {
+  const s = session.state;
+  const o = session.options;
+  const m = tideClassifyMission(s);
+  const [p] = useState(() => new Animated.Value(1));
+  useStepReveal(s.index);
+
+  if (tideClassifyDone(s) || !m) {
+    return (
+      <View style={{ gap: 12, alignItems: "center", padding: 12 }}>
+        <PoolScene mission="coral" watched look={{ sun: true, cool: true, high: true }} p={p} width={width} />
+        <Heading style={{ textAlign: "center" }}>Every reef habitat sorted!</Heading>
+        <Copy style={{ color: C.ink, textAlign: "center" }}>
+          You classified all {s.ids.length} Level {s.level} tide-pool missions.
+        </Copy>
+      </View>
+    );
+  }
+
+  const ready = tideClassifyReady(s);
+  const who = session.names?.[tideClassifyTurn(s)] ?? `Player ${tideClassifyTurn(s) + 1}`;
+  const counts: [number, number] = [
+    s.placed.filter((b) => b === 0).length,
+    s.placed.filter((b) => b === 1).length,
+  ];
+
+  function check() {
+    if (!active || !ready || !m) return;
+    const next = tideClassifyCheck(s);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    if (!s.helped) {
+      practice(m.skill, next.solved);
+      practice("sci.predict", next.solved);
+    }
+    if (next.solved) cheer(s.index === s.ids.length - 1 ? "big" : "right");
+    else sound("tap");
+    update(next);
+  }
+
+  return (
+    <View style={{ gap: 10, maxWidth: 620, width: "100%", alignSelf: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Copy style={{ fontSize: 13, fontWeight: "800", color: C.muted }}>
+          {o.mode === "together" ? `${who}’s mission · ` : ""}Mission {s.index + 1} of {s.ids.length}
+        </Copy>
+        {!s.solved && !s.helped && (
+          <Button
+            compact
+            quiet
+            disabled={!active}
+            onPress={() => {
+              if (!active) return;
+              assistance?.();
+              update(tideClassifyHelp(s));
+            }}
+          >
+            Rule clue
+          </Button>
+        )}
+      </View>
+
+      <BoardColumns
+        drawing={
+          <View style={{ gap: 8 }}>
+            <PoolScene mission="coral" watched look={{ sun: true, cool: true, high: true }} p={p} width={width} />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {m.buckets.map((bucket, idx) => (
+                <View
+                  key={`${m.id}-b-${idx}`}
+                  style={{
+                    flex: 1,
+                    backgroundColor: idx === 0 ? "#E4F1F4" : C.soft,
+                    borderRadius: 14,
+                    borderWidth: 2,
+                    borderColor: idx === 0 ? C.teal : C.gold,
+                    padding: 8,
+                    gap: 2,
+                  }}
+                >
+                  <Copy style={{ fontSize: 14, fontWeight: "900", color: C.ink }}>
+                    {bucket.label} ({counts[idx]})
+                  </Copy>
+                  <Copy style={{ fontSize: 12, color: C.muted }}>{bucket.rule}</Copy>
+                </View>
+              ))}
+            </View>
+          </View>
+        }
+      >
+        <View
+          style={{
+            backgroundColor: C.paper,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: C.line,
+            padding: 12,
+            gap: 4,
+          }}
+        >
+          <Heading style={{ fontSize: 18 }}>{m.title}</Heading>
+          <Copy style={{ fontSize: 15, color: C.ink, fontWeight: "600" }}>{m.prompt}</Copy>
+        </View>
+
+        {s.helped && !s.solved && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{
+              backgroundColor: C.soft,
+              borderRadius: 14,
+              borderWidth: 2,
+              borderColor: C.gold,
+              padding: 10,
+            }}
+          >
+            <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink }}>{m.hint}</Copy>
+          </View>
+        )}
+
+        {s.checkedWrong && !s.solved && (
+          <Copy accessibilityLiveRegion="polite" style={{ fontSize: 14, fontWeight: "800", color: C.coral }}>
+            Some creatures are in the wrong bucket — check the highlighted cards against both rules!
+          </Copy>
+        )}
+
+        <CoachSpot active={coach.active && !s.solved} handAt="none">
+          <View style={{ gap: 8 }}>
+            {m.specimens.map((sp, i) => {
+              const assigned = s.placed[i];
+              const isWrongAfterCheck = s.checkedWrong && assigned !== null && assigned !== sp.bucket;
+              const isRight = s.solved;
+              return (
+                <View
+                  key={`${m.id}-${sp.id}`}
+                  style={{
+                    backgroundColor: isRight ? C.success : isWrongAfterCheck ? C.coralFill : C.paper,
+                    borderRadius: 16,
+                    borderWidth: isRight || isWrongAfterCheck ? 2.5 : 2,
+                    borderColor: isRight ? C.teal : isWrongAfterCheck ? C.coral : C.line,
+                    padding: 10,
+                    gap: 8,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <CreatureArt kind={sp.creature} size={42} />
+                    <View style={{ flex: 1 }}>
+                      <Copy style={{ fontSize: 15, fontWeight: "800", color: C.ink }}>{sp.name}</Copy>
+                      <Copy style={{ fontSize: 13, color: C.muted }}>{sp.traits}</Copy>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    {([0, 1] as const).map((bucketIdx) => {
+                      const selected = assigned === bucketIdx;
+                      return (
+                        <PressableScale
+                          key={bucketIdx}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Sort ${sp.name} into ${m.buckets[bucketIdx].label}`}
+                          accessibilityState={{ selected, disabled: !active || s.solved }}
+                          disabled={!active || s.solved}
+                          onPress={() => {
+                            if (!active || s.solved) return;
+                            if (coach.active) coach.done();
+                            sound("tap");
+                            update(tideClassifyPlace(s, i, bucketIdx));
+                          }}
+                          style={{
+                            flex: 1,
+                            minHeight: 48,
+                            borderRadius: 12,
+                            borderWidth: selected ? 2.5 : 1.5,
+                            borderColor: selected ? (bucketIdx === 0 ? C.teal : C.coral) : C.line,
+                            backgroundColor: selected ? (bucketIdx === 0 ? "#DDF0EE" : C.soft) : C.cream,
+                            paddingHorizontal: 8,
+                            paddingVertical: 6,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Copy
+                            style={{
+                              fontSize: 13,
+                              fontWeight: selected ? "900" : "700",
+                              color: C.ink,
+                              textAlign: "center",
+                            }}
+                          >
+                            {selected ? "✓ " : ""}
+                            {m.buckets[bucketIdx].label}
+                          </Copy>
+                        </PressableScale>
+                      );
+                    })}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </CoachSpot>
+
+        {!s.solved ? (
+          <Button disabled={!active || !ready} onPress={check}>
+            Check sort
+          </Button>
+        ) : (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{
+              backgroundColor: C.success,
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: C.teal,
+              padding: 12,
+              gap: 8,
+            }}
+          >
+            <Copy style={{ fontSize: 16, fontWeight: "800", color: C.ink }}>Spot on!</Copy>
+            <Copy style={{ fontSize: 15, color: C.ink }}>{m.why}</Copy>
+            <Button icon="right" disabled={!active} onPress={() => update(tideClassifyNext(s))}>
+              {s.index === s.ids.length - 1 ? "Finish lab" : "Next mission"}
+            </Button>
+          </View>
+        )}
+      </BoardColumns>
+    </View>
+  );
+}
+
+function ClassicTideBoard({
+  session,
+  update,
+  practice,
+  sound,
+  width,
+  active,
+  coach,
+  cheer,
+}: BoardProps<TideSave> & { session: { state: TideState | LegacyTideState } }) {
   const o = session.options,
     s = upgrade(session.state, o),
     together = o.mode === "together",
@@ -596,7 +872,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     // Web reloads have no user activation yet; the speaker button stays available.
     const canAutoPlay =
       Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
-    if (!active || !m || !canAutoPlay || s.guesses.length > 0 || s.watched) return;
+    if (!active || !m || !isVoicedMission(m.id) || !canAutoPlay || s.guesses.length > 0 || s.watched) return;
     const wait = first.current ? 3300 : 250;
     first.current = false;
     const timer = setTimeout(() => sound(`tide-pool-q-${m.id}`, true), wait);
@@ -614,6 +890,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
         <PoolScene mission="coral" watched look={{ sun: true, cool: true, high: true }} p={p} width={width} />
       </View>
     );
+  const voiced = isVoicedMission(m.id);
   const pick = (choice: number) => {
     if (!active || s.guesses.length >= need) return;
     clearTimeout(questionTimer.current);
@@ -622,15 +899,15 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     practice(m.skill, ok);
     update(answer(s, choice, o));
     if (coach.active) coach.done();
-    if (s.guesses.length + 1 === need) sound(`tide-pool-do-${m.id}`, true);
+    if (s.guesses.length + 1 === need) sound(voiced ? `tide-pool-do-${m.id}` : "tap", voiced);
   };
   const doChange = () => {
     if (!active) return;
     clearTimeout(questionTimer.current);
     practice("sci.cause-effect", right);
     update(makeChange(s, o));
-    if (right) cheer("right", `tide-pool-right-${m.id}`);
-    else sound(`tide-pool-surprise-${m.id}`, true);
+    if (right) cheer("right", voiced ? `tide-pool-right-${m.id}` : undefined);
+    else sound(voiced ? `tide-pool-surprise-${m.id}` : "tap", voiced);
     if (reduced) return;
     setPlaying(true);
     p.setValue(0);
@@ -698,14 +975,14 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     <View style={{ gap: 10 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <Copy style={{ fontWeight: "700", color: C.ink, flex: 1, fontSize: 20 }}>{m.question}</Copy>
-        <IconButton icon="sound-on" label="Hear this" onPress={() => sound(promptKey)} />
+        {voiced && <IconButton icon="sound-on" label="Hear this" onPress={() => sound(promptKey)} />}
       </View>
       {together && m.kind === "guess" && !s.watched && (
         <Copy style={{ fontSize: 14, color: C.ink }}>
           {s.guesses.length < need ? `${name(guesser(s))} picks an answer` : `${name(s.starter)} makes the change`}
         </Copy>
       )}
-      <BoardColumns drawing={<PoolScene mission={m.id} watched={s.watched} look={s.pool} p={p} width={width} />}>
+      <BoardColumns drawing={<PoolScene mission={sceneForMission(m.id)} watched={s.watched} look={s.pool} p={p} width={width} />}>
       {m.kind === "fix" ? (
         <CoachSpot active={coach.active && !s.watched} handAt="none">
           <View testID="tide-controls" style={{ flexDirection: large ? "column" : "row", gap: 8 }}>

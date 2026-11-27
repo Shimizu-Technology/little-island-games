@@ -1,7 +1,17 @@
 import type { Seat } from "../../../games/match";
 import type { LearnEngine, LearnOptions, Outcome } from "../../types";
+import { levelOf } from "../../levelOptions";
 import { integer, keys, object } from "../../kit/numbers";
 import { focusSkill } from "../../skills";
+import {
+  createReefRoute,
+  isReefRoute,
+  reefRouteOutcome,
+  reefRouteTurn,
+  validReefRoute,
+  type ReefRouteLevel,
+  type ReefRouteState,
+} from "./stages";
 
 export type ReefAction = "roll" | "skip" | number;
 export type ReefState = { version: 1; starter: Seat; rolls: number[][]; history: ReefAction[]; focus: string };
@@ -126,27 +136,33 @@ export function reefNotWon(s: ReefState, o: LearnOptions): string | null {
   if (r.phase !== "done" || r.winner !== 1) return null;
   return o.mode === "together" ? "The tide won this time. Race again?" : "Island friend won this time. Race again?";
 }
-export const engine: LearnEngine<ReefState> = {
+export type ReefRaceState = ReefState | ReefRouteState;
+
+export const engine: LearnEngine<ReefRaceState> = {
   id: "reef-race",
   name: "Reef Race",
   island: "numbers",
   tagline: "Spin and hop your turtle to the island.",
   description:
-    "A board-game race along numbered stones. Spin, then tap each stone as your turtle hops and counts on. Race the island friend, the tide, or each other.",
-  help: "Tap the spinner (or the die). Then tap each next stone to hop your turtle, saying the numbers as you go. A wave pushes you 2 more stones. A crab pulls you back 1. A shell asks which number is bigger. First to the island wins. With a grown-up, share one turtle and race the tide, which moves 2 stones after each turn. There is no clock. For grown-ups: this practises counting on from any number, the number path, adding small amounts and comparing two-digit numbers.",
+    "A board-game race along numbered stones. Spin, then tap each stone as your turtle hops and counts on, or plan multi-step reef routes at Levels 4 and 5.",
+  help: "Tap the spinner (or the die). Then tap each next stone to hop your turtle, saying the numbers as you go. A wave pushes you 2 more stones. A crab pulls you back 1. A shell asks which number is bigger. At Levels 4 and 5, follow multi-step reef hops and currents right on the board or compare two reef routes to see which travels further. First to the island wins. There is no clock.",
   helpAudio: "reef-race-help",
   introAudio: "reef-race-intro",
   color: "#2F737C",
   surface: "#DDF0EE",
   modes: ["solo", "together", "versus"],
+  nativeStages: true,
   paceHelp: {
     easy: "Stones 1–30 · a spinner with 1, 2 and 3",
     medium: "Stones 1–60 · one die",
     hard: "Stones 1–100 · two dice",
   },
   skills: SKILLS,
-  notWon: reefNotWon,
+  notWon: (s, o) => (isReefRoute(s) ? null : reefNotWon(s, o)),
   create(o, ctx) {
+    if (o.stage) {
+      return createReefRoute(levelOf(o) as ReefRouteLevel, ctx);
+    }
     return {
       version: 1,
       starter: ctx.starter,
@@ -157,7 +173,9 @@ export const engine: LearnEngine<ReefState> = {
       history: [],
     };
   },
-  validate(v, o): v is ReefState {
+  validate(v, o): v is ReefRaceState {
+    if (o.stage) return isReefRoute(v) && validReefRoute(v, levelOf(o) as ReefRouteLevel);
+    if (isReefRoute(v)) return false;
     if (
       !object(v) ||
       !keys(v, ["version", "starter", "focus", "rolls", "history"]) ||
@@ -182,8 +200,9 @@ export const engine: LearnEngine<ReefState> = {
       r = initial(s);
     return s.history.every((a) => step(r, a, s, o));
   },
-  outcome: reefOutcome,
+  outcome: (s, o) => (isReefRoute(s) ? reefRouteOutcome(s, o) : reefOutcome(s, o)),
   turn: (s, o) => {
+    if (isReefRoute(s)) return reefRouteTurn(s);
     const r = reefRound(s, o);
     return r.phase === "done" ? null : r.turn;
   },

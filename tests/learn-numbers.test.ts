@@ -41,7 +41,7 @@ describe("Reef Race counting-on engine", () => {
     for (const pace of paces)
       it(`completes ${mode}/${pace} through each numbered step`, () => {
         const o: LearnOptions = { mode, pace };
-        let s = reef.create(o, ctx());
+        let s = reef.create(o, ctx()) as ReefState;
         expect(reef.turn!(s, o)).toBe(1);
         let moves = 0;
         while (reef.outcome(s, o) === null && moves++ < 1200) {
@@ -63,7 +63,7 @@ describe("Reef Race counting-on engine", () => {
       const o: LearnOptions = { mode, pace: "easy" };
       const seen = new Set<string>();
       for (let seed = 1; seed <= 40; seed++) {
-        let s = reef.create(o, ctx(seed));
+        let s = reef.create(o, ctx(seed)) as ReefState;
         for (let n = 0; reef.outcome(s, o) === null && n < 1200; n++) {
           const r = reefRound(s, o);
           s = reefMove(s, o, r.phase === "roll" ? "roll" : r.phase === "bonus" ? Math.max(...r.bonus!) : nextStone(r, o));
@@ -78,11 +78,11 @@ describe("Reef Race counting-on engine", () => {
       expect(seen).toEqual(new Set(["0", "1"]));
     }
     const o: LearnOptions = { mode: "solo", pace: "easy" };
-    expect(reefNotWon(reef.create(o, ctx()), o)).toBeNull();
+    expect(reefNotWon(reef.create(o, ctx()) as ReefState, o)).toBeNull();
   });
   it("rejects skipped stones and preserves the round after a miss", () => {
     const o: LearnOptions = { mode: "versus", pace: "easy" };
-    const s = reefMove(reef.create(o, ctx()), o, "roll");
+    const s = reefMove(reef.create(o, ctx()) as ReefState, o, "roll");
     expect(reefMove(s, o, 2)).toBe(s);
     expect(reefRound(reefMove(s, o, 1), o).positions[1]).toBe(1);
     expect(reef.validate({ ...s, history: ["roll", 2] }, o)).toBe(false);
@@ -90,7 +90,7 @@ describe("Reef Race counting-on engine", () => {
   it("counts current steps and uses each current only once per turtle", () => {
     const o: LearnOptions = { mode: "together", pace: "medium" };
     let s: ReefState = {
-      ...reef.create(o, ctx()),
+      ...(reef.create(o, ctx()) as ReefState),
       focus: "num.count-on",
       rolls: Array.from({ length: 256 }, () => [4]),
     };
@@ -108,7 +108,7 @@ describe("Reef Race counting-on engine", () => {
   });
   it("rejects malformed, oversized or impossible saves", () => {
     const o: LearnOptions = { mode: "solo", pace: "easy" },
-      s = reef.create(o, ctx());
+      s = reef.create(o, ctx()) as ReefState;
     for (const bad of [
       { ...s, starter: 2 },
       { ...s, positions: [999, 0] },
@@ -124,7 +124,7 @@ describe("Reef Race counting-on engine", () => {
   it("is deterministic and bounds even minimum rolls", () => {
     const o: LearnOptions = { mode: "versus", pace: "hard" };
     expect(reef.create(o, ctx())).toEqual(reef.create(o, ctx()));
-    let s = { ...reef.create(o, ctx()), rolls: Array.from({ length: 256 }, () => [1, 1]) };
+    let s: ReefState = { ...(reef.create(o, ctx()) as ReefState), rolls: Array.from({ length: 256 }, () => [1, 1]) };
     for (let n = 0; reef.outcome(s, o) === null && n < 1200; n++) {
       const r = reefRound(s, o);
       s = reefMove(s, o, r.phase === "roll" ? "roll" : r.phase === "bonus" ? "skip" : nextStone(r, o));
@@ -137,7 +137,7 @@ describe("Island Market engines and content", () => {
     for (const pace of paces)
       it(`completes and resumes ${mode}/${pace}`, () => {
         const o: LearnOptions = { mode, pace };
-        let s = market.create(o, ctx());
+        let s = market.create(o, ctx()) as MarketState;
         const allKinds = new Set(ORDERS.filter((q) => q.pace === pace).map((q) => q.kind));
         expect(new Set(s.orders.map((id) => ORDERS.find((q) => q.id === id)!.kind))).toEqual(allKinds);
         expect(s.phase).toBe("pack");
@@ -170,7 +170,7 @@ describe("Island Market engines and content", () => {
       });
   it("keeps errors reversible and packs ten loose mangoes into a crate", () => {
     const o: LearnOptions = { mode: "together", pace: "easy" };
-    let s = market.create(o, ctx());
+    let s = market.create(o, ctx()) as MarketState;
     expect(serve(s)).toBe(s);
     s = packPiece(s, o, "tens", 1);
     expect(packPiece(s, o, "tens", -1).pieces).toEqual(emptyPieces());
@@ -192,7 +192,7 @@ describe("Island Market engines and content", () => {
     for (let seed = 1; seed < 60; seed++)
       for (const pace of paces) {
         const o: LearnOptions = { mode: "solo", pace };
-        const s = market.create(o, ctx(seed));
+        const s = market.create(o, ctx(seed)) as MarketState;
         expect(market.validate(s, o)).toBe(true);
         const qs = s.orders.map((id) => ORDERS.find((q) => q.id === id)!);
         expect(qs.some((q) => q.retired)).toBe(false);
@@ -243,7 +243,7 @@ describe("Island Market engines and content", () => {
   });
   it("rejects forged quantities, completed answers, phases and coin counts", () => {
     const o: LearnOptions = { mode: "solo", pace: "hard" },
-      s = market.create(o, ctx());
+      s = market.create(o, ctx()) as MarketState;
     for (const bad of [
       { ...s, index: 99 },
       { ...s, phase: "done" },
@@ -318,7 +318,7 @@ describe("reef board layout", () => {
   });
   it("keeps old saved races valid, including a sailed-past shell", () => {
     const o: LearnOptions = { mode: "solo", pace: "easy" };
-    let s: ReefState = { ...reef.create(o, ctx()), focus: "num.count-on", rolls: Array.from({ length: 256 }, () => [1]) };
+    let s: ReefState = { ...(reef.create(o, ctx()) as ReefState), focus: "num.count-on", rolls: Array.from({ length: 256 }, () => [1]) };
     for (let i = 0; i < 40 && reefRound(s, o).phase !== "bonus"; i++) {
       const r = reefRound(s, o);
       s = reefMove(s, o, r.phase === "roll" ? "roll" : nextStone(r, o));

@@ -1,6 +1,7 @@
 import type { LearnEngine, LearnOptions, Outcome } from '../../types';
 import { levelOf } from '../../levelOptions';
 import sets from './sets.generated.json';
+import { EXTRA_SHELL_TUPLES } from './extra-puzzles';
 import {
   acceptsAnswer, analyzeOdd, draftComplete, emptyOrder, placeInOrder, provenPar, puzzleTuple, randomPracticePuzzle,
   secretKey, sortRelation, tuplePuzzle, validOrder, validPanPair, validPuzzle, weighOnScale,
@@ -105,6 +106,22 @@ export const rowPuzzle = (row: string): ShellPuzzle => {
 };
 
 export const setFor = (level: number): LevelSet => levelSets[String(level)] ?? { rows: [] };
+/** All certified School tuples for a level (catalog rows + Phase 4A expanded certified tuples). */
+export const allTuplesFor = (level: number): ShellTuple[] => [
+  ...setFor(level).rows.map(toTuple),
+  ...(EXTRA_SHELL_TUPLES[level] ?? []).map((t) => [...t] as ShellTuple),
+];
+/** Total certified School puzzle bank across Levels 1–5 (26 catalog rows + 20 expanded = 46 puzzles). */
+export const allCertifiedScalePuzzles = (): { level: number; tuple: ShellTuple; puzzle: ShellPuzzle }[] => {
+  const out: { level: number; tuple: ShellTuple; puzzle: ShellPuzzle }[] = [];
+  for (let level = 1; level <= 5; level++) {
+    for (const tuple of allTuplesFor(level)) {
+      const puzzle = tuplePuzzle(tuple);
+      if (puzzle) out.push({ level, tuple, puzzle });
+    }
+  }
+  return out;
+};
 export const puzzleAt = (s: Pick<ScaleState, 'puzzles' | 'index'>): ShellPuzzle | null =>
   s.puzzles[s.index] ? tuplePuzzle(s.puzzles[s.index]) : null;
 
@@ -131,8 +148,7 @@ export function scaleTogetherRefs(s: Pick<ScaleState, 'level' | 'puzzles' | 'pra
   return refs;
 }
 
-function pick(rows: readonly string[], rng: () => number, avoid: ReadonlySet<string>, count: number): ShellTuple[] {
-  const all = rows.map(toTuple);
+function pickTuples(all: readonly ShellTuple[], rng: () => number, avoid: ReadonlySet<string>, count: number): ShellTuple[] {
   const fresh = all.filter(t => !avoid.has(tupleKey(t)));
   const pool = fresh.length >= count ? fresh : all;
   const shuffled = pool.slice();
@@ -152,14 +168,13 @@ function pickReplacement(
 ): ShellTuple {
   const curSecret = secretKey(current);
   const curTuple = tupleKey(puzzleTuple(current));
-  const all = setFor(level).rows.map(toTuple);
+  const all = allTuplesFor(level);
   const diffSecret = all.filter(t => {
     const p = tuplePuzzle(t);
     return !!p && secretKey(p) !== curSecret && tupleKey(t) !== curTuple;
   });
-  // L1–L2 each have four certified tuples in alternating secret order. Cycle
-  // through them so two consecutive peek-and-swaps cannot restore the original
-  // tuple, even when the only available secret is one from an earlier board.
+  // L1–L2 cycle forward through their certified tuples so two consecutive peek-and-swaps
+  // cannot immediately restore the original spoiled tuple.
   if (level <= 2) {
     const currentIndex = all.findIndex(t => tupleKey(t) === curTuple);
     const inOrder = [...all.slice(currentIndex + 1), ...all.slice(0, currentIndex + 1)];
@@ -201,7 +216,7 @@ function reconcileQueueAfterSwap(
   const oldSecret = secretKey(tuplePuzzle(oldTuple)!);
   const nextKey = tupleKey(nextPuzzle);
   const oldKey = tupleKey(oldTuple);
-  const all = setFor(level).rows.map(toTuple);
+  const all = allTuplesFor(level);
 
   for (let k = index + 1; k < ROUND; k++) {
     if (tupleKey(out[k]) === nextKey) {
@@ -361,10 +376,10 @@ const freshBoard = (
   };
 };
 
-export function startRound(level: number, rng: () => number, previous?: ScaleState): ScaleState {
-  const set = setFor(level);
+export function startRound(level: number, rng: () => number, previous?: ScaleState, catalogOnly = false): ScaleState {
+  const pool = catalogOnly ? setFor(level).rows.map(toTuple) : allTuplesFor(level);
   const avoid = new Set((previous?.puzzles ?? []).map(tupleKey));
-  const puzzles = pick(set.rows, rng, avoid, ROUND);
+  const puzzles = pickTuples(pool, rng, avoid, ROUND);
   if (puzzles.length !== ROUND) throw new Error('Shell Scale has no certified boards for that level.');
   const showLinks = previous?.level === level ? previous.showLinks : linksByDefault(level);
   return freshBoard(
@@ -612,7 +627,7 @@ const certifiedCache = new Map<number, Set<string>>();
 const certifiedAt = (level: number) => {
   let set = certifiedCache.get(level);
   if (!set) {
-    set = new Set(setFor(level).rows.map(r => tupleKey(toTuple(r))));
+    set = new Set(allTuplesFor(level).map(tupleKey));
     certifiedCache.set(level, set);
   }
   return set;
@@ -744,7 +759,9 @@ export const engine: Omit<LearnEngine<ScaleState>, 'id'> & { id: 'shell-scale' }
   levelNames: levelInfo,
   skills: { 'think.scale-deduction': 'Using information on a balance scale' },
   create: (options: LearnOptions, ctx) => {
-    const base = startRound(levelOf(options), ctx.rng, ctx.previous);
+    const level = levelOf(options);
+    // Keep Together rounds on Levels 3–5 inside the catalog-backed banks (362–364) so shared co-play credits all 4 boards.
+    const base = startRound(level, ctx.rng, ctx.previous, options.mode === 'together' && level >= 3);
     return options.mode === 'together' ? base : { ...base, partner: undefined };
   },
   validate: (state: unknown, options: LearnOptions): state is ScaleState =>

@@ -11,10 +11,11 @@ import { learnIds } from "../src/learn/types";
 import { engines } from "../src/learn/engines";
 import { startSession, validLearnSession } from "../src/learn/session";
 import { dailySuggestions, homeContinue, shelfGames, toggleShelfFavorite } from "../src/learn/home";
-import { engine, chooseActivity, islandProgress, tapItem } from "../src/learn/games/hafa-adai/engine";
+import { engine, chooseActivity, islandProgress, tapItem, type IslandState } from "../src/learn/games/hafa-adai/engine";
 import { recordPractice } from "../src/learn/skills";
 
-const create = (seed = 41, pace = "easy" as "easy" | "medium" | "hard", mode = "solo" as "solo" | "versus") => engine.create({ pace, mode }, { skills: {}, rng: random(seed), starter: 1, today: 20_000 });
+const create = (seed = 41, pace = "easy" as "easy" | "medium" | "hard", mode = "solo" as "solo" | "versus") =>
+  engine.create({ pace, mode }, { skills: {}, rng: random(seed), starter: 1, today: 20_000 }) as IslandState;
 describe("Home and island shelf", () => {
   it("keeps eleven classic games and adds the learning engines to their declared islands", () => {
     expect(shelfGames.filter(g => g.island === "classic")).toHaveLength(16);
@@ -108,7 +109,7 @@ describe("Håfa Adai Island", () => {
   });
   it("selects mixed categories and brings recently missed skills into the next scene", () => {
     const missed = recordPractice({}, "ch.greetings", false, 20_000);
-    const selected = engine.create({ mode: "solo", pace: "easy" }, { skills: missed, rng: random(4), starter: 0, today: 20_000 });
+    const selected = engine.create({ mode: "solo", pace: "easy" }, { skills: missed, rng: random(4), starter: 0, today: 20_000 }) as IslandState;
     expect(new Set(selected.items.map(id => id.split(".")[0])).size).toBe(6);
     expect(selected.items.some(id => id.startsWith("greetings."))).toBe(true);
   });

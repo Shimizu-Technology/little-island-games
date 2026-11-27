@@ -1,13 +1,36 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import { Text } from "../../../components/Text";
-import { Button, C, IconButton, PressableScale } from "../../../components/ui";
+import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import { BasketShape, Crate, Customer, Mango, MarketArt, ShellCoin, ShellIcon, customerName, useShake } from "../../kit/NumberParts";
 import { COINS, pieceTotal, splitNumber, type Pieces } from "../../kit/numbers";
-import { marketMax, marketOrder, nextCustomer, packPiece, serve, server, type MarketState } from "./engine";
+import {
+  marketMax,
+  marketOrder,
+  nextCustomer,
+  packPiece,
+  serve,
+  server,
+  type IslandMarketState,
+  type MarketState,
+} from "./engine";
+import {
+  MARKET_STALL_MAX,
+  checkStallBasket,
+  coinCount,
+  isMarketStall,
+  stallHelp,
+  stallNextCustomer,
+  stallOrder,
+  stallPackPiece,
+  stallServe,
+  stallTurn,
+  type MarketStallState,
+  type StallCheckFeedback,
+} from "./stages";
 import type { MarketOrder } from "./orders";
 
 const ink = C.ink;
@@ -279,7 +302,279 @@ function CompareCard({ who, n, onPress, disabled, wrong, happy }: { who: number;
   );
 }
 
-export function Board({ session, update, practice, sound, active, width, coach, cheer }: BoardProps<MarketState>) {
+export function Board(props: BoardProps<IslandMarketState>) {
+  if (isMarketStall(props.session.state)) {
+    return <MarketStallBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+  }
+  return <ClassicMarketBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+}
+
+/** Levels 4–5 native interactive market stall for multi-item totals, change, and exact shell-coin orders. */
+function MarketStallBoard({
+  session,
+  update,
+  practice,
+  assistance,
+  sound,
+  active,
+  width,
+  coach,
+  cheer,
+}: BoardProps<IslandMarketState> & { session: { state: MarketStallState } }) {
+  const s = session.state;
+  const o = session.options;
+  const order = stallOrder(s);
+  const money = !!order?.money;
+  const total = pieceTotal(s.pieces, money);
+  const coinsUsed = coinCount(s.pieces);
+  useStepReveal(s.index);
+
+  const [feedback, setFeedback] = useState<Exclude<StallCheckFeedback, "ok"> | null>(null);
+  const [bump, setBump] = useState(0);
+  const shake = useShake(bump);
+
+  if (s.phase === "done" || !order) {
+    return (
+      <View style={{ gap: 12, alignItems: "center", padding: 12 }}>
+        <MarketArt size={Math.min(240, width)} />
+        <View style={{ flexDirection: "row", gap: 4 }}>
+          {[0, 1, 2, 3].map((w) => (
+            <Customer key={w} who={w} happy size={Math.min(68, width / 5)} />
+          ))}
+        </View>
+        <Text style={{ fontSize: 22, fontWeight: "900", color: ink, textAlign: "center" }}>
+          Every market customer is served!
+        </Text>
+      </View>
+    );
+  }
+
+  const served = s.phase === "served";
+  const compact = width < 360;
+  const turnSeat = stallTurn(s) ?? 0;
+  const turnName = o.mode === "together" ? session.names?.[turnSeat] ?? `Player ${turnSeat + 1}` : null;
+
+  function change(part: Part, delta: 1 | -1) {
+    if (!active || served) return;
+    const next = stallPackPiece(s, part, delta);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    setFeedback(null);
+    const nextTotal = pieceTotal(next.pieces, money);
+    if (nextTotal > 0 && nextTotal <= 100) sound(`reef-race-number-${nextTotal}`, true);
+    update(next);
+  }
+
+  function give() {
+    if (!active || served || !order) return;
+    const check = checkStallBasket(order, s.pieces);
+    practice(order.skill, check === "ok");
+    if (check !== "ok") {
+      setFeedback(check);
+      setBump((k) => k + 1);
+      sound(check === "over" ? "island-market-over" : "island-market-under", true);
+      return;
+    }
+    if (coach.active) coach.done();
+    setFeedback(null);
+    cheer(s.index === s.orders.length - 1 ? "big" : "right");
+    update(stallServe(s));
+  }
+
+  const promptText =
+    feedback === "under"
+      ? "A little more in the basket!"
+      : feedback === "over"
+        ? "Too many! Tap one in the basket to take back."
+        : feedback === "too-many-coins"
+          ? `Right total (${total}), now use ${order.maxCoins} coins or fewer!`
+          : feedback === "wrong-coin-count"
+            ? `Right total (${total}), now match exactly ${order.exactCoins} coins!`
+            : served
+              ? `Exact match: ${order.target} ${money ? "shells" : "mangoes"}!`
+              : money
+                ? "Tap shell coins into the basket, then tap Give it!"
+                : "Pack crates of 10 and loose mangoes, then tap Give it!";
+
+  const mangoPile = (
+    <Pile label="Add one mango" onPress={() => change("ones", 1)} disabled={!active || served || total + 1 > MARKET_STALL_MAX}>
+      <MangoPile />
+      <Text style={{ fontSize: 18, fontWeight: "900", color: ink }}>+1</Text>
+    </Pile>
+  );
+
+  return (
+    <View style={{ gap: 10, maxWidth: 560, width: "100%", alignSelf: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44 }}>
+        <View accessibilityLabel={`Customer ${s.index + 1} of ${s.orders.length}`} style={{ flexDirection: "row", gap: 5 }}>
+          {s.orders.map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 7,
+                borderWidth: 2,
+                borderColor: ink,
+                backgroundColor: i < s.served.length ? C.teal : i === s.index ? C.gold : "transparent",
+              }}
+            />
+          ))}
+        </View>
+        {turnName && (
+          <View style={{ backgroundColor: C.paper, borderRadius: 14, borderWidth: 2, borderColor: C.teal, paddingHorizontal: 10, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: ink }}>{turnName}’s turn</Text>
+          </View>
+        )}
+        {!served && !s.helped && (
+          <Button
+            compact
+            quiet
+            disabled={!active}
+            onPress={() => {
+              if (!active) return;
+              assistance?.();
+              update(stallHelp(s));
+            }}
+          >
+            Step 1 hint
+          </Button>
+        )}
+      </View>
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Person who={order.who} happy={served} size={compact ? 76 : 96} name={customerName(order.who)} />
+        <Bubble label={`${order.headline}. ${order.lines.join(". ")}`}>
+          <View style={{ gap: 4, alignItems: "flex-start" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <Copy style={{ fontSize: 13, fontWeight: "800", color: C.teal }}>{order.headline}</Copy>
+              {(order.maxCoins !== undefined || order.exactCoins !== undefined) && (
+                <View style={{ backgroundColor: C.soft, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Copy style={{ fontSize: 12, fontWeight: "800", color: ink }}>
+                    {order.exactCoins !== undefined
+                      ? `Exactly ${order.exactCoins} coins (${coinsUsed})`
+                      : `≤ ${order.maxCoins} coins (${coinsUsed})`}
+                  </Copy>
+                </View>
+              )}
+            </View>
+            {order.lines.map((line, i) => (
+              <Text
+                key={`${order.id}-line-${i}`}
+                style={{ fontSize: i === 0 ? 17 : 15, fontWeight: i === 0 ? "900" : "700", color: ink }}
+              >
+                {line}
+              </Text>
+            ))}
+          </View>
+        </Bubble>
+      </View>
+
+      {s.helped && !served && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.soft,
+            borderRadius: 14,
+            borderWidth: 2,
+            borderColor: C.gold,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+          }}
+        >
+          <Copy style={{ fontSize: 14, fontWeight: "700", color: ink }}>{order.hint}</Copy>
+        </View>
+      )}
+
+      <Text
+        accessibilityLiveRegion="polite"
+        style={{ fontSize: 18, fontWeight: "900", color: feedback ? C.error : ink, textAlign: "center", minHeight: 26 }}
+      >
+        {promptText}
+      </Text>
+
+      <Basket
+        pieces={s.pieces}
+        money={money}
+        total={total}
+        width={width}
+        disabled={!active || served}
+        take={(part) => change(part, -1)}
+        shake={shake}
+      />
+
+      {!served ? (
+        <>
+          <View style={{ flexDirection: "row", gap: 8, justifyContent: "center" }}>
+            {money ? (
+              COINS.map((value, i) => {
+                const pile = (
+                  <Pile
+                    key={value}
+                    label={`Add a ${value} shell`}
+                    onPress={() => change(i as Part, 1)}
+                    disabled={!active || total + value > MARKET_STALL_MAX}
+                  >
+                    <ShellCoin value={value} size={44} />
+                  </Pile>
+                );
+                return i === 0 ? (
+                  <CoachSpot key={value} active={coach.active} style={{ flex: 1 }}>
+                    {pile}
+                  </CoachSpot>
+                ) : (
+                  pile
+                );
+              })
+            ) : (
+              <>
+                <CoachSpot active={coach.active} style={{ flex: 1, maxWidth: 200 }}>
+                  {mangoPile}
+                </CoachSpot>
+                <Pile
+                  label="Add a crate of ten mangoes"
+                  onPress={() => change("tens", 1)}
+                  disabled={!active || total + 10 > MARKET_STALL_MAX}
+                >
+                  <Crate size={70} />
+                  <Text style={{ fontSize: 18, fontWeight: "900", color: ink }}>+10</Text>
+                </Pile>
+              </>
+            )}
+          </View>
+          <Button disabled={!active || total === 0} onPress={give} style={{ minHeight: 58, alignSelf: "stretch" }}>
+            Give it!
+          </Button>
+        </>
+      ) : (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.success,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: C.teal,
+            padding: 12,
+            gap: 8,
+          }}
+        >
+          <Copy style={{ fontSize: 15, fontWeight: "800", color: ink }}>{order.explain}</Copy>
+          <Button
+            disabled={!active}
+            onPress={() => {
+              setFeedback(null);
+              update(stallNextCustomer(s));
+            }}
+          >
+            {s.index === s.orders.length - 1 ? "Finish market" : "Next customer"}
+          </Button>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function ClassicMarketBoard({ session, update, practice, sound, active, width, coach, cheer }: BoardProps<IslandMarketState> & { session: { state: MarketState } }) {
   const s = session.state,
     o = session.options,
     order = marketOrder(s),

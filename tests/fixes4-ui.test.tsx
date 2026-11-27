@@ -5,7 +5,7 @@ import { Creator } from "../src/personalization/Creator";
 import { defaultLook } from "../src/islander/look";
 import { Board, LastPicnicWord } from "../src/learn/games/hafa-adai/view";
 import { chamoruWords, chamoruWord } from "../src/learn/content/chamoru";
-import type { IslandState } from "../src/learn/games/hafa-adai/engine";
+import type { HafaAdaiState, IslandState } from "../src/learn/games/hafa-adai/engine";
 import type { BoardProps } from "../src/learn/types";
 import { TopicPage } from "../src/library/Topics";
 import type { CatalogItem } from "../src/library/catalog";
@@ -59,7 +59,7 @@ describe("Q1 creator footer and completion",()=>{
 it("Q2 all six picture taps reveal the exact CHamoru word inside that picture, including the last tap",async()=>{
   const ids=["food","colors","numbers","greetings","family","body_parts"].map(c=>chamoruWords.find(w=>w.category===c)!.id);
   let state:IslandState={items:ids,activity:"explore",taps:[],starter:0};
-  const render=()=> <Board {...{session:{state,options:{mode:"solo",pace:"easy"},revision:1},width:340,active:true,soundOn:false,coach:{active:false},sound:vi.fn(),cheer:vi.fn(),practice:vi.fn(),update:(next:IslandState)=>{state=next;}} as unknown as BoardProps<IslandState>}/>;
+  const render=()=> <Board {...{session:{state,options:{mode:"solo",pace:"easy"},revision:1},width:340,active:true,soundOn:false,coach:{active:false},sound:vi.fn(),cheer:vi.fn(),practice:vi.fn(),update:(next:IslandState)=>{state=next;}} as unknown as BoardProps<HafaAdaiState>}/>;
   await act(async()=>{tree=create(render());});
   for(const id of ids){
     const word=chamoruWord(id)!;

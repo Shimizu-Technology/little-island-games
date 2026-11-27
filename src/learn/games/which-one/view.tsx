@@ -10,7 +10,29 @@ import { ReadingText } from "../../kit/ReadingText";
 import { ReadingRefused } from "../../kit/ReadingRefused";
 import { admittedReading } from "../../reading/admit";
 import { sceneLabel, wordAudio } from "../../kit/reading";
-import { whichAnswer, whichHelp, whichItem, whichNext, whichPick, type WhichState } from "./engine";
+import {
+  whichAnswer,
+  whichClueItem,
+  whichHelp,
+  whichItem,
+  whichNext,
+  whichPick,
+  type WhichOneState,
+  type WhichState,
+} from "./engine";
+import {
+  clueChips,
+  clueHintText,
+  isWhichClue,
+  whichClueAnswer,
+  whichClueDone,
+  whichClueHelp,
+  whichClueNext,
+  whichCluePick,
+  whichClueToggleCross,
+  whichClueTurn,
+  type WhichClueState,
+} from "./stages";
 
 /** A big picture card: wiggles and steps back when wrong, wears a check when right. */
 function Card({
@@ -86,7 +108,262 @@ function Card({
   );
 }
 
-export function Board({
+export function Board(props: BoardProps<WhichOneState>) {
+  if (isWhichClue(props.session.state)) {
+    return <WhichClueBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+  }
+  return <ClassicWhichBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+}
+
+/** Levels 4–5 native multi-clue visual elimination board. Completely untimed. */
+function WhichClueBoard({
+  session,
+  update,
+  practice,
+  sound,
+  width,
+  height,
+  active,
+  coach,
+  cheer,
+  assistance,
+}: BoardProps<WhichOneState> & { session: { state: WhichClueState } }) {
+  const s = session.state;
+  const small = height < 730;
+  useStepReveal(s.index);
+
+  if (whichClueDone(s)) {
+    return (
+      <View style={{ alignItems: "center", padding: 16, gap: 10 }}>
+        <PictureObject name="cat" size={96} />
+        <Heading style={{ textAlign: "center" }}>Every clue checked!</Heading>
+        <Copy style={{ color: C.ink, textAlign: "center" }}>
+          You solved all {s.ids.length} multi-clue puzzles.
+        </Copy>
+      </View>
+    );
+  }
+
+  const item = whichClueItem(s);
+  if (!admittedReading(item, "Which One")) return <ReadingRefused />;
+  const chips = clueChips(item);
+  const answer = whichClueAnswer(s);
+  const reader = session.names?.[whichClueTurn(s)] ?? `Player ${whichClueTurn(s) + 1}`;
+
+  function pick(displayIdx: number) {
+    if (!active) return;
+    const next = whichCluePick(s, displayIdx);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    if (!s.helped && s.wrong.length === 0) {
+      practice(item!.skill, next.solved);
+      practice("read.meaning", next.solved);
+    }
+    if (next.solved) cheer(s.index === s.ids.length - 1 ? "big" : "right");
+    else sound("which-one-look", true);
+    update(next);
+  }
+
+  return (
+    <View style={{ gap: small ? 8 : 12, maxWidth: Math.min(width, 620), width: "100%", alignSelf: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Copy style={{ fontSize: 13, fontWeight: "800", color: C.muted }}>
+          Clue {s.index + 1} of {s.ids.length}
+        </Copy>
+        <View style={{ backgroundColor: C.soft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 }}>
+          <Copy style={{ fontSize: 12, fontWeight: "800", color: C.teal }}>{item.skillLabel}</Copy>
+        </View>
+      </View>
+
+      {session.options.mode === "versus" && (
+        <Copy style={{ color: C.teal, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{reader}’s turn</Copy>
+      )}
+
+      <View
+        style={{
+          backgroundColor: C.paper,
+          borderRadius: 20,
+          borderWidth: 2,
+          borderColor: C.line,
+          padding: small ? 12 : 15,
+          gap: 8,
+        }}
+      >
+        <Copy style={{ fontSize: 13, fontWeight: "800", color: C.muted }}>READ EVERY CLUE</Copy>
+        <View style={{ gap: 6 }}>
+          {chips.map((clue, idx) => (
+            <View
+              key={`${item.id}-clue-${idx}`}
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 8,
+                backgroundColor: C.soft,
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 8,
+              }}
+            >
+              <View
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: C.coral,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Copy style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "900" }}>{idx + 1}</Copy>
+              </View>
+              <Copy style={{ flex: 1, fontSize: 16, lineHeight: 22, color: C.ink, fontWeight: "600" }}>{clue}</Copy>
+            </View>
+          ))}
+        </View>
+        <Copy style={{ fontSize: 18, fontWeight: "800", color: C.ink, marginTop: 2 }}>{item.prompt}</Copy>
+      </View>
+
+      {!s.solved && (
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <Copy style={{ flex: 1, fontSize: 13, color: C.muted }}>
+            Tap a card to choose it, or Cross out cards that break a clue.
+          </Copy>
+          {!s.helped && (
+            <Button
+              compact
+              quiet
+              disabled={!active}
+              onPress={() => {
+                if (!active) return;
+                assistance?.();
+                update(whichClueHelp(s));
+              }}
+            >
+              Clue helper
+            </Button>
+          )}
+        </View>
+      )}
+
+      {s.helped && !s.solved && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.soft,
+            borderRadius: 14,
+            borderWidth: 2,
+            borderColor: C.gold,
+            padding: 10,
+          }}
+        >
+          <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink }}>{clueHintText(item)}</Copy>
+        </View>
+      )}
+
+      <CoachSpot active={coach.active && !s.helped && !s.solved} handAt="none">
+        <View style={{ gap: 8 }}>
+          {s.orders[s.index].map((choiceIdx, displayIdx) => {
+            const choice = item.choices[choiceIdx];
+            const isRight = s.solved && displayIdx === answer;
+            const isWrong = s.wrong.includes(displayIdx);
+            const isCrossed = !s.solved && !isWrong && s.crossed.includes(displayIdx);
+            return (
+              <View
+                key={`${item.id}-${choiceIdx}`}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "stretch",
+                  gap: 8,
+                }}
+              >
+                <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel={`${choice.label}${isRight ? ", matches every clue" : isWrong ? ", does not fit" : isCrossed ? ", crossed out" : ""}`}
+                  accessibilityState={{ disabled: !active || s.solved || isWrong, selected: isRight }}
+                  disabled={!active || s.solved || isWrong}
+                  onPress={() => pick(displayIdx)}
+                  style={{
+                    flex: 1,
+                    minHeight: 56,
+                    borderRadius: 16,
+                    borderWidth: isRight || isWrong ? 3 : 2,
+                    borderColor: isRight ? C.teal : isWrong ? C.coral : C.line,
+                    backgroundColor: isRight ? C.success : isWrong ? C.coralFill : isCrossed ? C.cream : C.paper,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    opacity: isWrong ? 0.5 : isCrossed ? 0.6 : 1,
+                  }}
+                >
+                  <Copy
+                    style={{
+                      flex: 1,
+                      fontSize: 16,
+                      fontWeight: "700",
+                      color: C.ink,
+                      textDecorationLine: isCrossed || isWrong ? "line-through" : "none",
+                    }}
+                  >
+                    {choice.label}
+                  </Copy>
+                  {isRight && <Copy style={{ color: C.teal, fontSize: 20, fontWeight: "900" }}>✓</Copy>}
+                </PressableScale>
+                {!s.solved && !isWrong && (
+                  <PressableScale
+                    accessibilityRole="button"
+                    accessibilityLabel={isCrossed ? `Restore ${choice.label}` : `Cross out ${choice.label}`}
+                    accessibilityState={{ selected: isCrossed }}
+                    disabled={!active}
+                    onPress={() => active && update(whichClueToggleCross(s, displayIdx))}
+                    style={{
+                      minWidth: 52,
+                      minHeight: 56,
+                      borderRadius: 16,
+                      borderWidth: 2,
+                      borderColor: isCrossed ? C.teal : C.line,
+                      backgroundColor: isCrossed ? C.soft : C.paper,
+                      paddingHorizontal: 10,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Copy style={{ fontSize: 13, fontWeight: "800", color: isCrossed ? C.teal : C.muted }}>
+                      {isCrossed ? "Undo" : "✕"}
+                    </Copy>
+                  </PressableScale>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </CoachSpot>
+
+      {s.solved && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.success,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: C.teal,
+            padding: 12,
+            gap: 8,
+          }}
+        >
+          <Copy style={{ fontSize: 15, fontWeight: "700", color: C.ink }}>{item.explanation}</Copy>
+          <Button disabled={!active} onPress={() => update(whichClueNext(s))}>
+            {s.index === s.ids.length - 1 ? "Finish" : "Next clue"}
+          </Button>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function ClassicWhichBoard({
   session,
   update,
   practice,
@@ -98,7 +375,7 @@ export function Board({
   coach,
   cheer,
   assistance,
-}: BoardProps<WhichState>) {
+}: BoardProps<WhichOneState> & { session: { state: WhichState } }) {
   const s = session.state;
   // Pictures already tried on this sentence step back (the save keeps only the latest).
   const [out, setOut] = useState<{ index: number; picks: number[] }>({ index: s.index, picks: [] });

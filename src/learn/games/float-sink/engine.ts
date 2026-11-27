@@ -1,7 +1,17 @@
 /** Model review reference: https://www.acs.org/content/dam/acsorg/education/k-8/inquiry-in-action/fifth-grade/g5-l2.4-bkgd.pdf (reviewed 2026-10-25). */
 import type { LearnEngine, LearnOptions } from "../../types";
+import { levelOf } from "../../levelOptions";
 import { pickItems } from "../../skills";
 import { exact, prediction, same, scienceSkills, type Prediction } from "../../kit/science";
+import {
+  createFloatLab,
+  floatLabOutcome,
+  floatLabTurn,
+  isFloatLab,
+  validFloatLab,
+  type FloatLabLevel,
+  type FloatLabState,
+} from "./stages";
 export const objects = [
   {
     id: "leaf",
@@ -202,16 +212,19 @@ const legacyCounts = { easy: 3, medium: 4, hard: 5 } as const;
 const paceRank = { easy: 0, medium: 1, hard: 2 } as const;
 /** Boats offered at each pace. Gentle skips the solid ball so every first boat floats. */
 export const shapesFor = (p: LearnOptions["pace"]): Shape[] => (p === "easy" ? ["bowl", "wide", "foil"] : [...shapes]);
-export const engine: LearnEngine<FloatState> = {
+export type FloatSinkState = FloatState | FloatLabState;
+
+export const engine: LearnEngine<FloatSinkState> = {
   id: "float-sink",
   name: "Float or Sink Dock",
   island: "science",
   tagline: "Will it float or sink? Guess, then watch!",
-  description: "Guess float or sink and watch each thing drop in the water. Then fill a boat with pebbles until it sinks.",
-  help: "Tap Float or Sink to guess. The object drops in the water right away and goes onto the Floats or Sinks shelf by itself. A surprise is a discovery! Then pick a boat and tap the pebbles to load it, one at a time, until it sinks. How many can it hold? Taking turns, each player loads a boat and the one that holds more wins. In real life, material, size, trapped air and balance all change the result. These are example objects and equal pebbles.",
+  description: "Guess float or sink and watch each thing drop in the water. Load boats with pebbles or run fair-test buoyancy trials at Levels 4 and 5.",
+  help: "Tap Float or Sink to guess. The object drops in the water right away and goes onto the Floats or Sinks shelf by itself. Then pick a boat and tap the pebbles to load it until it sinks. At Levels 4 and 5, compare buoyancy pairs, engineer safe cargo loads, and design fair tests right in the tank.",
   helpAudio: "float-sink-help",
   introAudio: "float-sink-intro",
   modes: ["solo", "versus"],
+  nativeStages: true,
   color: "#3A6FA0",
   surface: "#E1ECF7",
   skills: {
@@ -225,6 +238,9 @@ export const engine: LearnEngine<FloatState> = {
     hard: "Eight things, with a shape-and-air pair. Smaller boats.",
   },
   create: (o, c) => {
+    if (o.stage) {
+      return createFloatLab(levelOf(o) as FloatLabLevel, c);
+    }
     const pool = objects.filter((x) => x.pace <= paceRank[o.pace]);
     // Obvious first: a rock that sinks and a leaf that floats, in either order.
     const obvious = c.rng() < 0.5 ? ["rock", "leaf"] : ["leaf", "rock"];
@@ -256,7 +272,9 @@ export const engine: LearnEngine<FloatState> = {
     later.sort((a, b) => objects.find(x => x.id === a)!.pace - objects.find(x => x.id === b)!.pace);
     return { items: [...obvious, ...later], starter: c.starter, events: [] };
   },
-  validate: (x, o): x is FloatState => {
+  validate: (x, o): x is FloatSinkState => {
+    if (o.stage) return isFloatLab(x) && validFloatLab(x, levelOf(o) as FloatLabLevel);
+    if (isFloatLab(x)) return false;
     if (!exact(x, ["items", "starter", "events"])) return false;
     const s = x as FloatState;
     return (
@@ -277,6 +295,7 @@ export const engine: LearnEngine<FloatState> = {
     );
   },
   outcome: (s, o) => {
+    if (isFloatLab(s)) return floatLabOutcome(s, o);
     const d = dock(s, o)!;
     return d.phase !== "done"
       ? null
@@ -288,5 +307,5 @@ export const engine: LearnEngine<FloatState> = {
             ? 0
             : 1;
   },
-  turn: (s, o) => ((s.starter + (dock(s, o)?.boat ?? 0)) % 2) as 0 | 1,
+  turn: (s, o) => (isFloatLab(s) ? floatLabTurn(s) : (((s.starter + (dock(s, o)?.boat ?? 0)) % 2) as 0 | 1)),
 };

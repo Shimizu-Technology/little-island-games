@@ -1,6 +1,17 @@
 import type { LearnEngine, LearnOptions } from "../../types";
 import { pickItems } from "../../skills";
-import { chamoruRecord as chamoruWord, chamoruRecords } from "../../reading/provenance";
+import { chamoruRecord as chamoruWord, chamoruRecords, readingGrowthTracks, type ReadingQuestion } from "../../reading/provenance";
+import { levelOf } from "../../levelOptions";
+import {
+  createPicnicContext,
+  isPicnicContext,
+  picnicContextDone,
+  picnicContextOutcome,
+  picnicContextTurn,
+  validPicnicContext,
+  type ContextLevel,
+  type PicnicContextState,
+} from "./stages";
 
 export type IslandState = {
   items: string[];
@@ -44,24 +55,47 @@ export function chooseActivity(s: IslandState, activity: IslandState["activity"]
   if (o.mode !== "solo" || s.activity === activity) return s;
   return { ...s, activity, taps: [] };
 }
-export const engine: LearnEngine<IslandState> = {
+export type HafaAdaiState = IslandState | PicnicContextState;
+
+const contextPool = (level: ContextLevel): readonly ReadingQuestion[] =>
+  readingGrowthTracks()["hafa-adai"]?.[level === 4 ? "stretch" : "deep"]?.questions ?? [];
+
+export const picnicContextItem = (s: Pick<PicnicContextState, "level" | "ids" | "index">): ReadingQuestion | undefined =>
+  contextPool(s.level).find((q) => q.id === s.ids[s.index]);
+
+export const engine: LearnEngine<HafaAdaiState> = {
   id: "hafa-adai", name: "Håfa Adai Island", island: "reading",
   tagline: "Explore a picnic full of CHamoru words.",
-  description: "Tap pictures to discover CHamoru words, or play I spy. Words are shown in CHamoru; instructions are spoken in English.",
-  help: "Explore: tap each picture at the picnic to see its CHamoru word and its English meaning. I spy: read the CHamoru word, then tap its picture. The pictures have no English names in I spy. Gentle shows a small English helper on the word card; Growing and Challenge keep it behind Peek. A different picture shows its own word so you can compare and try again. Take turns: finish one word, then pass the device. A first-try find earns a point. CHamoru words are text only.",
+  description: "Tap pictures to discover CHamoru words, play I spy, or match CHamoru words to everyday island moments. CHamoru words are text only.",
+  help: "Explore: tap each picture at the picnic to see its CHamoru word and its English meaning. I spy: read the CHamoru word, then tap its picture. Gentle shows a small English helper on the word card; Growing and Challenge keep it behind Peek. At Levels 4 and 5, read the everyday island moment and tap the matching CHamoru picture card on the picnic. A different picture shows its own meaning so you can compare and try again. Take turns: finish one word, then pass the device. A first-try find earns a point. CHamoru words are text only.",
   helpAudio: "hafa-adai-help",
   introAudio: "hafa-adai-intro", color: "#A04F38", surface: "#FBEADF", modes: ["solo", "versus"],
+  nativeStages: true,
   paceHelp: { easy: "Six pictures. A small English helper on the word card.", medium: "Eight pictures. Peek at English when you need it.", hard: "Twelve pictures. Read the CHamoru word, then find it." },
   skills: { "ch.colors": "CHamoru colors", "ch.numbers": "CHamoru numbers", "ch.food": "CHamoru food", "ch.body": "CHamoru body words", "ch.family": "CHamoru family words", "ch.greetings": "CHamoru greetings" },
   create(o, ctx) {
+    if (o.stage) {
+      const lvl = levelOf(o) as ContextLevel;
+      return createPicnicContext(lvl, contextPool(lvl), {
+        ...ctx,
+        starter: o.mode === "versus" ? ctx.starter : 0,
+      });
+    }
     const pool = chamoruRecords().filter((w) => o.pace !== "easy" || w.category !== "numbers" || ["One", "Two", "Three", "Four", "Five"].includes(w.english));
     const categories = ["colors", "numbers", "food", "body_parts", "family", "greetings"];
     const anchors = categories.map(category => pickItems(pool.filter(w => w.category === category), ctx.skills, 1, ctx.rng, ctx.today)[0]);
     const rest = pickItems(pool.filter(w => !anchors.includes(w)), ctx.skills, countFor(o) - anchors.length, ctx.rng, ctx.today);
     const items = pickItems([...anchors, ...rest], ctx.skills, countFor(o), ctx.rng, ctx.today).map(w => w.id);
-    return { items, activity: o.mode === "versus" ? "spy" : (ctx.previous?.activity ?? "explore"), taps: [], starter: o.mode === "versus" ? ctx.starter : 0 };
+    const prevActivity = !isPicnicContext(ctx.previous) && ctx.previous?.activity ? ctx.previous.activity : "explore";
+    return { items, activity: o.mode === "versus" ? "spy" : prevActivity, taps: [], starter: o.mode === "versus" ? ctx.starter : 0 };
   },
-  validate(v, o): v is IslandState {
+  validate(v, o): v is HafaAdaiState {
+    if (o.stage) {
+      const lvl = levelOf(o) as ContextLevel;
+      const pool = contextPool(lvl);
+      return isPicnicContext(v) && validPicnicContext(v, lvl, (id) => pool.find((q) => q.id === id), o);
+    }
+    if (isPicnicContext(v)) return false;
     if (!v || typeof v !== "object" || Array.isArray(v)) return false;
     const s = v as IslandState;
     if (Object.keys(s).sort().join() !== "activity,items,starter,taps" || !Array.isArray(s.items) || s.items.length !== countFor(o) || new Set(s.items).size !== s.items.length || !s.items.every(id => typeof id === "string" && !!chamoruWord(id)) || !["spy", "explore"].includes(s.activity) || ![0, 1].includes(s.starter) || (o.mode === "solo" && s.starter !== 0) || (o.mode === "versus" && s.activity !== "spy") || !Array.isArray(s.taps) || s.taps.length > MAX_TAPS) return false;
@@ -77,8 +111,9 @@ export const engine: LearnEngine<IslandState> = {
     return true;
   },
   outcome(s, o) {
+    if (isPicnicContext(s)) return picnicContextOutcome(s, o);
     const p = islandProgress(s);
     return !p.done ? null : o.mode !== "versus" ? "done" : p.scores[0] === p.scores[1] ? "draw" : p.scores[0] > p.scores[1] ? 0 : 1;
   },
-  turn: (s) => islandProgress(s).done ? null : islandProgress(s).player,
+  turn: (s) => (isPicnicContext(s) ? (picnicContextDone(s) ? null : picnicContextTurn(s)) : islandProgress(s).done ? null : islandProgress(s).player),
 };

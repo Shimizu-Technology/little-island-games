@@ -10,12 +10,30 @@ import { CoachSpot } from "../../Coach";
 import { chamoruRecord as chamoruWord, type ChamoruRecord as ChamoruWord } from "../../reading/provenance";
 import { admittedReading } from "../../reading/admit";
 import { ReadingRefused } from "../../kit/ReadingRefused";
-import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
+import {
+  chooseActivity,
+  IslandState,
+  islandProgress,
+  picnicContextItem,
+  tapItem,
+  type HafaAdaiState,
+} from "./engine";
+import {
+  contextHintText,
+  isPicnicContext,
+  picnicContextDone,
+  picnicContextHelp,
+  picnicContextNext,
+  picnicContextPick,
+  picnicContextTurn,
+  type PicnicContextState,
+} from "./stages";
 import { WordPicture } from "./pictures";
 export const wordAudioKey = (id: string) => `hafa-adai-word-${id.replaceAll(".", "-").replaceAll("_", "-")}`;
 const first = (english: string) => english.split(" / ")[0];
 /** Keep the sixth discovery visible when the round replaces its picture grid. */
-export function LastPicnicWord({ state }: { state: IslandState }) {
+export function LastPicnicWord({ state }: { state: HafaAdaiState }) {
+  if (isPicnicContext(state)) return null;
   const word = state.activity === "explore" && chamoruWord(state.taps.at(-1) ?? "");
   return word && admittedReading(word, "Håfa Adai's last word") ? <View accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
     <WordPicture word={word} size={54} caption={false} />
@@ -71,7 +89,285 @@ function Picnic({ tableTop, rowHeight, rows }: { tableTop: number; rowHeight: nu
     </View>
   );
 }
-export function Board({
+export function Board(props: BoardProps<HafaAdaiState>) {
+  if (isPicnicContext(props.session.state)) {
+    return <PicnicContextBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+  }
+  return <PicnicBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+}
+
+/**
+ * Levels 4–5 native CHamoru picnic context board.
+ * STRICT REQUIREMENT: TEXT-ONLY for CHamoru words — ZERO CHamoru audio synthesis.
+ */
+function PicnicContextBoard({
+  session,
+  update,
+  practice,
+  assistance,
+  active,
+  width,
+  coach,
+  cheer,
+}: BoardProps<HafaAdaiState> & { session: { state: PicnicContextState } }) {
+  const s = session.state;
+  const options = session.options;
+  const done = picnicContextDone(s);
+  const q = done ? undefined : picnicContextItem(s);
+  const qAdmitted = done || (!!q && admittedReading(q, "Håfa Adai Island"));
+  const cardsAdmitted =
+    done ||
+    (!!q && q.choices.every((choice) => admittedReading(chamoruWord(choice.value), "Håfa Adai Island")));
+
+  if (!qAdmitted || !cardsAdmitted) return <ReadingRefused />;
+
+  if (done) {
+    const scores: [number, number] = [0, 0];
+    s.clean.forEach((ok, idx) => {
+      if (ok) scores[(s.starter + idx) % 2]++;
+    });
+    return (
+      <View style={{ gap: 12 }}>
+        <View
+          style={{
+            backgroundColor: C.paper,
+            borderRadius: 18,
+            borderWidth: 2,
+            borderColor: C.line,
+            padding: 16,
+            gap: 6,
+            alignItems: "center",
+          }}
+        >
+          <Heading style={{ fontSize: 22, textAlign: "center" }}>
+            {options.mode === "versus"
+              ? scores[0] === scores[1]
+                ? "A good tie!"
+                : `${session.names?.[scores[0] > scores[1] ? 0 : 1] ?? "Player"} wins!`
+              : "You matched every picnic moment!"}
+          </Heading>
+          <Copy style={{ color: C.ink, textAlign: "center" }}>
+            You read all {s.ids.length} CHamoru picnic clues.
+          </Copy>
+          {options.mode === "versus" && (
+            <Copy style={{ fontSize: 14, color: C.muted }}>
+              {session.names?.[0] ?? "Player 1"}: {scores[0]} · {session.names?.[1] ?? "Player 2"}: {scores[1]} first-try matches
+            </Copy>
+          )}
+        </View>
+        <Copy style={{ fontSize: 11, lineHeight: 15, textAlign: "center" }}>
+          CHamoru words are text only.
+        </Copy>
+      </View>
+    );
+  }
+
+  const question = q!;
+  const order = s.orders[s.index];
+  const answerWord = chamoruWord(question.answer);
+  const lastWrongChoice = s.wrong.length > 0 ? question.choices[s.wrong[s.wrong.length - 1]] : undefined;
+  const lastWrongWord = lastWrongChoice ? chamoruWord(lastWrongChoice.value) : undefined;
+  const player = picnicContextTurn(s);
+  const turnLabel =
+    options.mode === "versus"
+      ? `${session.names?.[player] ?? `Player ${player + 1}`}’s turn · `
+      : "";
+  const tableTop = 28;
+  const rowHeight = 122;
+  const slotWidth = Math.max(92, Math.floor((Math.min(width, 540) - 28 - 16) / 3));
+
+  function pick(choiceIdx: number) {
+    if (!active) return;
+    const next = picnicContextPick(s, choiceIdx, question);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    if (!s.helped && s.wrong.length === 0) {
+      practice(question.skill, next.solved);
+    }
+    // Chime only on match — ZERO CHamoru speech synthesis.
+    if (next.solved) cheer(s.index === s.ids.length - 1 ? "big" : "right");
+    update(next);
+  }
+
+  return (
+    <View style={{ gap: 10, maxWidth: 560, width: "100%", alignSelf: "center" }}>
+      <View
+        style={{
+          backgroundColor: C.paper,
+          borderRadius: 18,
+          borderWidth: 2,
+          borderColor: C.line,
+          padding: 14,
+          gap: 6,
+        }}
+        accessibilityLiveRegion="polite"
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <Copy style={{ fontSize: 13, fontWeight: "800", color: C.muted }}>
+            {turnLabel}Moment {s.index + 1} of {s.ids.length}
+          </Copy>
+          {!s.solved && !s.helped && (
+            <Button
+              quiet
+              compact
+              icon="eye"
+              disabled={!active}
+              onPress={() => {
+                if (!active) return;
+                assistance?.();
+                update(picnicContextHelp(s));
+              }}
+            >
+              Peek
+            </Button>
+          )}
+        </View>
+        {!!question.context && (
+          <Copy style={{ fontSize: 16, lineHeight: 23, color: C.ink, fontWeight: "600" }}>
+            {question.context}
+          </Copy>
+        )}
+        <Heading style={{ fontSize: 19, lineHeight: 25 }}>{question.prompt}</Heading>
+        {s.helped && !s.solved && (
+          <View
+            style={{
+              backgroundColor: C.soft,
+              borderRadius: 12,
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              marginTop: 2,
+            }}
+          >
+            <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink }}>
+              {contextHintText(answerWord)}
+            </Copy>
+          </View>
+        )}
+      </View>
+
+      <CoachSpot active={coach.active && !s.solved && !s.helped} handAt="none">
+        <View
+          style={{
+            borderRadius: 20,
+            overflow: "hidden",
+            borderWidth: 2,
+            borderColor: "#DCC895",
+            paddingHorizontal: 10,
+            paddingTop: tableTop,
+            paddingBottom: 14,
+          }}
+        >
+          <Picnic tableTop={tableTop} rowHeight={rowHeight} rows={1} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+            {order.map((choiceIdx) => {
+              const choice = question.choices[choiceIdx];
+              const word = chamoruWord(choice.value)!;
+              const isAnswer = choice.value === question.answer;
+              const isRight = s.solved && isAnswer;
+              const isWrong = s.wrong.includes(choiceIdx);
+              return (
+                <PressableScale
+                  key={`${question.id}-${word.id}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${word.term}${isRight ? ", matches the picnic clue" : isWrong ? `, means ${word.english}` : ""}`}
+                  accessibilityState={{ disabled: !active || s.solved || isWrong, selected: isRight }}
+                  disabled={!active || s.solved || isWrong}
+                  onPress={() => pick(choiceIdx)}
+                  amount={0.94}
+                  style={{
+                    flex: 1,
+                    minWidth: Math.min(92, slotWidth),
+                    minHeight: rowHeight - 4,
+                    borderRadius: 16,
+                    borderWidth: 3,
+                    borderColor: isRight ? "#4F8A66" : isWrong ? C.coral : C.line,
+                    backgroundColor: isRight ? "#E3EFE3" : isWrong ? C.coralFill : C.paper,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 6,
+                    paddingVertical: 8,
+                    gap: 4,
+                    opacity: isWrong ? 0.58 : s.solved && !isRight ? 0.5 : 1,
+                  }}
+                >
+                  <WordPicture word={word} size={56} caption={false} />
+                  <Copy
+                    style={{
+                      fontSize: 15,
+                      lineHeight: 19,
+                      fontWeight: "800",
+                      color: C.ink,
+                      textAlign: "center",
+                    }}
+                  >
+                    {word.term}
+                  </Copy>
+                  {isRight && (
+                    <Copy style={{ fontSize: 12, fontWeight: "700", color: C.teal, textAlign: "center" }}>
+                      {first(word.english)}
+                    </Copy>
+                  )}
+                </PressableScale>
+              );
+            })}
+          </View>
+        </View>
+      </CoachSpot>
+
+      {lastWrongWord && !s.solved && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.paper,
+            borderRadius: 14,
+            borderWidth: 2,
+            borderColor: C.coral,
+            padding: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <WordPicture word={lastWrongWord} size={46} caption={false} />
+          <View style={{ flex: 1 }}>
+            <Copy style={{ fontSize: 15, fontWeight: "800", color: C.ink }}>
+              {lastWrongWord.term} means “{lastWrongWord.english}”.
+            </Copy>
+            <Copy style={{ fontSize: 13, color: C.muted }}>Compare with the picnic moment and try another card!</Copy>
+          </View>
+        </View>
+      )}
+
+      {s.solved && answerWord && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.success,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: C.teal,
+            padding: 12,
+            gap: 8,
+          }}
+        >
+          <Copy style={{ fontSize: 16, fontWeight: "800", color: C.ink }}>
+            {answerWord.term} — {answerWord.english}
+          </Copy>
+          <Copy style={{ fontSize: 14, color: C.ink }}>{question.explanation}</Copy>
+          <Button disabled={!active} onPress={() => update(picnicContextNext(s))}>
+            {s.index === s.ids.length - 1 ? "Finish picnic" : "Next moment"}
+          </Button>
+        </View>
+      )}
+
+      <Copy style={{ fontSize: 11, lineHeight: 15 }}>
+        CHamoru words are text only.
+      </Copy>
+    </View>
+  );
+}
+
+function PicnicBoard({
   session,
   update,
   practice,

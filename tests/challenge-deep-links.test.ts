@@ -4,6 +4,7 @@ import { challengeEntries } from '../src/challenge/catalog';
 import { gameDestination } from '../src/learn/destinations';
 import { SHORTCUTS } from '../src/cove/shelf';
 import { bankSize } from '../src/state/bankFacts';
+import type { IslandState } from '../src/learn/games/hafa-adai/engine';
 
 describe('exact Challenge links', () => {
   for (const game of ['sudoku', 'picture-grid', 'bridges', 'loop', 'reef-sweep']) {
@@ -91,7 +92,7 @@ it('honors newer recent markers over a paused Reef Sweep draft, including comple
     // Game Hall uses this independently to show “Continue →” on Reef Sweep.
     expect(ongoing(newer, 'reef-sweep')).toBe(true);
   }
-  let completed = engine.create(learn.options, {skills: {}, rng: () => 0.5, starter: 0, today: 20_000});
+  let completed = engine.create(learn.options, {skills: {}, rng: () => 0.5, starter: 0, today: 20_000}) as IslandState;
   for (const id of completed.items) completed = tapItem(completed, id);
   expect(engine.outcome(completed, learn.options)).toBe('done');
   expect(homeContinue({...save, recentLearn: 'hafa-adai', learn: {'hafa-adai': {...learn, state: completed}}})).toBeNull();

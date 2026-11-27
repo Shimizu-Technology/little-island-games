@@ -1,7 +1,23 @@
 import type { LearnEngine } from "../../types";
 import { pickItems } from "../../skills";
-import { readingSentence, readingSentences, type ReadingSentence } from "../../reading/provenance";
+import {
+  readingGrowthTracks,
+  readingSentence,
+  readingSentences,
+  type ReadingQuestion,
+  type ReadingSentence,
+} from "../../reading/provenance";
+import { levelOf } from "../../levelOptions";
 import { bools, exact, familyResult, integer, readingSkills, seat, shuffle } from "../../kit/reading";
+import {
+  createWhichClue,
+  isWhichClue,
+  validWhichClue,
+  whichClueOutcome,
+  whichClueTurn,
+  type ClueLevel,
+  type WhichClueState,
+} from "./stages";
 export type WhichState = {
   ids: string[];
   orders: number[][];
@@ -27,23 +43,37 @@ export function whichNext(s: WhichState): WhichState {
     ? s
     : { ...s, index: s.index + 1, clean: [...s.clean, !s.tried], tried: false, wrong: null, solved: false };
 }
-export const engine: LearnEngine<WhichState> = {
+export type WhichOneState = WhichState | WhichClueState;
+
+const cluePool = (level: ClueLevel): readonly ReadingQuestion[] =>
+  readingGrowthTracks()["which-one"]?.[level === 4 ? "stretch" : "deep"]?.questions ?? [];
+
+export const whichClueItem = (s: Pick<WhichClueState, "level" | "ids" | "index">): ReadingQuestion | undefined =>
+  cluePool(s.level).find((q) => q.id === s.ids[s.index]);
+
+export const engine: LearnEngine<WhichOneState> = {
   id: "which-one",
   name: "Which One?",
   island: "reading",
   tagline: "Every word changes the picture.",
   description:
-    "Read a short sentence, then choose its picture. Look closely: each other picture changes just one word.",
-  help: "Read every word, then tap the picture that matches. Look at the animal, its size and colour, and where it is. If you pick another picture, the word that tells them apart lights up. Look again and try. Ask to hear the sentence or any word whenever you need help. Helped reading counts. A right picture gets a cheer. Tap Next when you are ready for the next sentence. In take turns, a correct first try earns a point. There is no clock.",
+    "Read a short sentence, then choose its picture. Look closely: each other picture changes just one word, and later levels add multi-clue elimination.",
+  help: "Read every word, then tap the picture that matches. Look at the animal, its size and colour, and where it is. If you pick another picture, the word that tells them apart lights up. Look again and try. At Levels 4 and 5, read all the clues, cross out cards that break a rule, and choose the card that fits every clue. Ask to hear the sentence or tap Help whenever you need it. Helped reading counts. In take turns, a correct first try earns a point. There is no clock.",
   helpAudio: "reading-v25-which-help",
   introAudio: "which-one-intro",
   color: "#C56D50",
   surface: "#F5E7D9",
   modes: ["solo", "versus"],
+  nativeStages: true,
   skills: readingSkills,
   create(o, c) {
+    if (o.stage) {
+      const lvl = levelOf(o) as ClueLevel;
+      return createWhichClue(lvl, cluePool(lvl), c);
+    }
     const pool = readingSentences().filter((i) => i.pace === o.pace);
-    const fresh = pool.filter((i) => !c.previous?.ids.includes(i.id));
+    const prevIds = !isWhichClue(c.previous) && c.previous?.ids ? c.previous.ids : [];
+    const fresh = pool.filter((i) => !prevIds.includes(i.id));
     return {
       ids: pickItems(fresh.length >= 8 ? fresh : pool, c.skills, 8, c.rng, c.today).sort((a, b) => a.text.split(/\s+/).length - b.text.split(/\s+/).length).map((i) => i.id),
       orders: Array.from({ length: 8 }, () => shuffle([0, 1, 2], c.rng)),
@@ -55,7 +85,13 @@ export const engine: LearnEngine<WhichState> = {
       solved: false,
     };
   },
-  validate(v, o): v is WhichState {
+  validate(v, o): v is WhichOneState {
+    if (o.stage) {
+      const lvl = levelOf(o) as ClueLevel;
+      const pool = cluePool(lvl);
+      return isWhichClue(v) && validWhichClue(v, lvl, (id) => pool.find((q) => q.id === id));
+    }
+    if (isWhichClue(v)) return false;
     if (!exact(v, ["ids", "orders", "starter", "index", "clean", "tried", "wrong", "solved"])) return false;
     if (
       !Array.isArray(v.ids) ||
@@ -87,7 +123,8 @@ export const engine: LearnEngine<WhichState> = {
     return s.tried ? s.wrong === null || s.wrong !== whichAnswer(s) : s.wrong === null;
   },
   outcome(s, o) {
+    if (isWhichClue(s)) return whichClueOutcome(s, o);
     return s.index < 8 ? null : o.mode === "versus" ? familyResult(s.clean, s.starter) : "done";
   },
-  turn: (s) => ((s.starter + s.index) % 2) as 0 | 1,
+  turn: (s) => (isWhichClue(s) ? whichClueTurn(s) : (((s.starter + s.index) % 2) as 0 | 1)),
 };

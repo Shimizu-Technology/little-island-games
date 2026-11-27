@@ -4,9 +4,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import { Text } from "../../../components/Text";
-import { C, IconButton, PressableScale } from "../../../components/ui";
+import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
+import { useStepReveal } from "../../stepReveal";
 import { CoachSpot } from "../../Coach";
 import {
   FlagIcon,
@@ -22,7 +23,17 @@ import {
   type Token,
 } from "../../kit/NumberParts";
 import { sectionOf, sectionRange } from "../../kit/numbers";
-import { boardEnd, currents, nextStone, reefMove, reefRound, shellStops, type ReefState } from "./engine";
+import { boardEnd, currents, nextStone, reefMove, reefRound, shellStops, type ReefRaceState, type ReefState } from "./engine";
+import {
+  isReefRoute,
+  reefRouteDone,
+  reefRouteHelp,
+  reefRouteNext,
+  reefRoutePick,
+  reefRouteTask,
+  reefRouteTurn,
+  type ReefRouteState,
+} from "./stages";
 
 const ink = C.ink;
 
@@ -107,7 +118,302 @@ function Hops({ count, back }: { count: number; back: boolean }) {
   );
 }
 
-export function Board({ session, update, practice, sound, active, width, height, coach, cheer }: BoardProps<ReefState>) {
+export function Board(props: BoardProps<ReefRaceState>) {
+  if (isReefRoute(props.session.state)) {
+    return <ReefRouteBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+  }
+  return <ClassicReefBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+}
+
+/** Levels 4–5 native multi-step reef-hop & route-comparison board right on the ReefBoard track. */
+function ReefRouteBoard({
+  session,
+  update,
+  practice,
+  assistance,
+  sound,
+  active,
+  width,
+  height,
+  coach,
+  cheer,
+}: BoardProps<ReefRaceState> & { session: { state: ReefRouteState } }) {
+  const s = session.state;
+  const o = session.options;
+  const task = reefRouteTask(s);
+  const [wrongPulse, setWrongPulse] = useState({ n: 0, key: 0 });
+  useStepReveal(s.index);
+
+  const side = useBoardColumns();
+  const reserved = 340 + (session.match ? 66 : 0);
+  const pathH = Math.round(Math.max(250, Math.min(width * (width > 600 ? 0.56 : 1.1), height - reserved)));
+  const geometry = useBoardGeometry("reef-race", pathH, SCHOOL_BOARD_MIN["reef-race"]);
+
+  if (reefRouteDone(s) || !task) {
+    const scores: [number, number] = [0, 0];
+    s.clean.forEach((ok, idx) => {
+      if (ok) scores[(s.starter + idx) % 2]++;
+    });
+    return (
+      <View style={{ alignItems: "center", gap: 12, padding: 14 }}>
+        <IslandCheer />
+        <Heading style={{ textAlign: "center" }}>
+          {o.mode === "versus"
+            ? scores[0] === scores[1]
+              ? "A reef race tie!"
+              : `${session.names?.[scores[0] > scores[1] ? 0 : 1] ?? "Player"} wins the reef sprint!`
+            : "You charted every reef route!"}
+        </Heading>
+        <Copy style={{ color: C.ink, textAlign: "center" }}>
+          All {s.ids.length} Level {s.level} reef-hop challenges complete.
+        </Copy>
+      </View>
+    );
+  }
+
+  const section = sectionOf(task.anchor, task.end);
+  const [first, last] = sectionRange(section, task.end);
+  const turnSeat = reefRouteTurn(s) ?? 0;
+  const who = session.names?.[turnSeat] ?? `Player ${turnSeat + 1}`;
+
+  const specials: Record<number, Special> = { ...task.markers };
+  if (task.kind === "start") specials[task.anchor] = "shell";
+
+  const tokens: Token[] =
+    task.kind === "route" && task.routes
+      ? s.solved
+        ? [
+            { kind: "teal", at: task.routes[task.target].landing, label: `Route ${task.target === 0 ? "A" : "B"}`, active: true },
+            { kind: "coral", at: task.routes[1 - task.target].landing, label: `Route ${task.target === 0 ? "B" : "A"}`, active: false },
+          ]
+        : [{ kind: "teal", at: task.anchor, label: "Your turtle", active: true }]
+      : [
+          {
+            kind: "teal",
+            at: s.solved ? task.target : task.anchor,
+            label: task.kind === "start" ? (s.solved ? "Start stone" : "Finish stone") : "Your turtle",
+            active: true,
+          },
+        ];
+
+  function submit(value: number) {
+    if (!active || s.solved || !task) return;
+    const next = reefRoutePick(s, value);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    if (s.wrongCount === 0 && !s.helped) {
+      practice(task.skill, next.solved);
+      practice("num.number-line", next.solved);
+    }
+    if (next.solved) {
+      cheer(s.index === s.ids.length - 1 ? "big" : "right");
+    } else {
+      setWrongPulse((w) => ({ n: value, key: w.key + 1 }));
+      sound("reef-race-try", true);
+    }
+    update(next);
+  }
+
+  const wrongNote =
+    s.lastWrong !== null && !s.solved
+      ? task.kind === "route"
+        ? `Route ${s.lastWrong === 0 ? "A" : "B"} lands behind the other route — compare both totals and try again!`
+        : s.lastWrong < task.target
+          ? `Stone ${s.lastWrong} is a bit too low — check each hop and try again!`
+          : `Stone ${s.lastWrong} is a bit too high — check each hop and try again!`
+      : null;
+
+  return (
+    <View style={{ gap: 10 }}>
+      <View
+        style={{
+          backgroundColor: C.paper,
+          borderRadius: 18,
+          borderWidth: 2,
+          borderColor: C.line,
+          padding: 12,
+          gap: 8,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <Copy style={{ fontSize: 13, fontWeight: "800", color: C.muted }}>
+            {o.mode !== "solo" ? `${who}’s turn · ` : ""}Challenge {s.index + 1} of {s.ids.length}
+          </Copy>
+          {!s.solved && !s.helped && (
+            <Button
+              compact
+              quiet
+              disabled={!active}
+              onPress={() => {
+                if (!active) return;
+                assistance?.();
+                update(reefRouteHelp(s));
+              }}
+            >
+              Step 1 hint
+            </Button>
+          )}
+        </View>
+        <Text accessibilityLiveRegion="polite" style={{ fontSize: 18, fontWeight: "900", color: ink, lineHeight: 24 }}>
+          {task.prompt}
+        </Text>
+        {task.steps.length > 0 && (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <View
+              style={{
+                backgroundColor: C.soft,
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <Turtle size={20} />
+              <Copy style={{ fontSize: 13, fontWeight: "800", color: ink }}>
+                {task.kind === "start" ? `Landed on ${task.anchor}` : `Start ${task.anchor}`}
+              </Copy>
+            </View>
+            {task.steps.map((st, idx) => (
+              <View
+                key={`${task.id}-step-${idx}`}
+                style={{
+                  backgroundColor: st.kind === "crab" ? C.coralFill : st.kind === "wave" ? "#DDF0EE" : C.cream,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: st.kind === "crab" ? C.coral : st.kind === "wave" ? C.teal : C.line,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                {st.kind !== "hop" && specialIcon(st.kind, 18)}
+                <Copy style={{ fontSize: 13, fontWeight: "800", color: ink }}>{st.label}</Copy>
+              </View>
+            ))}
+          </View>
+        )}
+        {s.helped && !s.solved && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{
+              backgroundColor: C.soft,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              borderColor: C.gold,
+              paddingHorizontal: 10,
+              paddingVertical: 7,
+            }}
+          >
+            <Copy style={{ fontSize: 14, fontWeight: "700", color: ink }}>{task.hint}</Copy>
+          </View>
+        )}
+        {wrongNote && (
+          <Copy accessibilityLiveRegion="polite" style={{ fontSize: 14, fontWeight: "800", color: C.coral }}>
+            {wrongNote}
+          </Copy>
+        )}
+      </View>
+
+      <BoardColumns
+        legacyDrawingLast
+        drawing={
+          <View testID={geometry.testID} onLayout={geometry.onLayout}>
+            <ReefBoard
+              width={side ? width * 0.46 : width}
+              height={geometry.height}
+              first={first}
+              last={last}
+              end={task.end}
+              section={section}
+              tokens={tokens}
+              specials={specials}
+              next={s.helped && !s.solved && task.kind !== "route" ? task.midpoint : null}
+              wrong={wrongPulse}
+              disabled={!active || s.solved || task.kind === "route"}
+              onStone={(n) => task.kind !== "route" && submit(n)}
+              coach={coach.active && !s.solved && task.kind !== "route"}
+            />
+          </View>
+        }
+      >
+        {task.kind === "route" && task.routes ? (
+          <CoachSpot active={coach.active && !s.solved} handAt="none">
+            <View style={{ gap: 8 }}>
+              {task.routes.map((route, idx) => {
+                const isRight = s.solved && idx === task.target;
+                const isWrong = !s.solved && s.lastWrong === idx;
+                return (
+                  <PressableScale
+                    key={`${task.id}-route-${idx}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${route.label}${isRight ? ", wins" : ""}`}
+                    accessibilityState={{ disabled: !active || s.solved, selected: isRight }}
+                    disabled={!active || s.solved}
+                    onPress={() => submit(idx)}
+                    style={{
+                      minHeight: 62,
+                      borderRadius: 18,
+                      borderWidth: isRight || isWrong ? 3 : 2,
+                      borderColor: isRight ? C.teal : isWrong ? C.coral : C.line,
+                      backgroundColor: isRight ? C.success : isWrong ? C.coralFill : C.paper,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
+                  >
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Copy style={{ fontSize: 16, fontWeight: "800", color: ink }}>{route.label}</Copy>
+                      {s.solved && (
+                        <Copy style={{ fontSize: 13, fontWeight: "700", color: C.teal }}>
+                          Lands on stone {route.landing}
+                        </Copy>
+                      )}
+                    </View>
+                    {isRight && <Copy style={{ fontSize: 22, fontWeight: "900", color: C.teal }}>✓</Copy>}
+                  </PressableScale>
+                );
+              })}
+            </View>
+          </CoachSpot>
+        ) : (
+          !s.solved && (
+            <Copy style={{ fontSize: 15, fontWeight: "700", color: C.muted, textAlign: "center" }}>
+              Tap the exact stone on the reef path!
+            </Copy>
+          )
+        )}
+
+        {s.solved && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{
+              backgroundColor: C.success,
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: C.teal,
+              padding: 12,
+              gap: 8,
+            }}
+          >
+            <Copy style={{ fontSize: 15, fontWeight: "800", color: ink }}>{task.explain}</Copy>
+            <Button disabled={!active} onPress={() => update(reefRouteNext(s))}>
+              {s.index === s.ids.length - 1 ? "Finish race" : "Next challenge"}
+            </Button>
+          </View>
+        )}
+      </BoardColumns>
+    </View>
+  );
+}
+
+function ClassicReefBoard({ session, update, practice, sound, active, width, height, coach, cheer }: BoardProps<ReefRaceState> & { session: { state: ReefState } }) {
   const s = session.state,
     o = session.options,
     end = boardEnd(o);

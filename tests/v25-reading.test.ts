@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { bank as letters } from "../src/learn/games/letter-lagoon/engine";
 import { bank as stories } from "../src/learn/games/story-studio/engine";
 import { bank as words } from "../src/learn/games/word-workshop/engine";
-import { engine, whichHelp, whichNext, whichPick } from "../src/learn/games/which-one/engine";
+import { engine, whichHelp, whichNext, whichPick, type WhichState } from "../src/learn/games/which-one/engine";
 import { optionsAtLevel } from "../src/learn/levels";
 import { move, type State } from "../src/learn/games/letter-lagoon/puzzle";
 import { readingSpeech } from "../src/learn/kit/readingSpeech";
@@ -19,7 +19,7 @@ describe("2.5 reading repairs", () => {
   });
   it("offers valid, persisted reading help without a wrong answer or first-try point", () => {
     const o = optionsAtLevel({ mode: "versus", pace: "easy" }, 1);
-    const s = engine.create(o, {skills:{}, rng:()=>0.2, today:0, starter:0});
+    const s = engine.create(o, {skills:{}, rng:()=>0.2, today:0, starter:0}) as WhichState;
     const helped = whichHelp(s);
     expect(helped.wrong).toBeNull();
     expect(engine.validate(JSON.parse(JSON.stringify(helped)), o)).toBe(true);

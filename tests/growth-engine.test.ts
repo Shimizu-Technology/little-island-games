@@ -5,7 +5,8 @@ import { engines as sharedLevelEngines } from "../src/learn/engines";
 // A game with native replacement stages (Shell Math) keeps the shared board only for archived growth saves.
 const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels && !sharedLevelEngines[id].nativeStages);
 import { startSession, validLearnSession, outcomeOf, replaySession } from "../src/learn/session";
-import { growthMove, growthProgress, growthQuestions } from "../src/learn/growth/engine";
+import { createGrowth, growthMove, growthProgress, growthQuestions } from "../src/learn/growth/engine";
+import { random } from "../src/games/types";
 import { growthTrack } from "../src/learn/growth/content";
 import type { GrowthState } from "../src/learn/growth/types";
 import { applyLearnSave, applyOwnedPractice } from "../src/state/learnAction";
@@ -45,8 +46,12 @@ describe("growth progression and preserved saves", () => {
     expect(validLearnSession({ ...s, options: { ...options, stage: "unknown" } })).toBe(false);
     expect(validLearnSession({ ...s, state: { ...(s.state as GrowthState), ids: ["unknown", "unknown", "unknown"] } })).toBe(false);
   });
-  it("keeps equal turns and respects the starter", () => {
-    let s = startSession("which-one", { options: { mode: "versus", pace: "easy", stage: "deep" }, starter: 1 }, {}, 5);
+  it("keeps equal turns and respects the starter on archived growth saves", () => {
+    const options: LearnOptions = { mode: "versus", pace: "easy", stage: "deep" };
+    let s = {
+      ...startSession("which-one", { options, starter: 1 }, {}, 5),
+      state: createGrowth("which-one", options, { skills: {}, rng: random(5), starter: 1, today: 20000 }),
+    };
     const qs = growthQuestions(s.game, s.options, s.state as GrowthState);
     expect(qs).toHaveLength(4);
     for (const q of qs) {
@@ -57,11 +62,15 @@ describe("growth progression and preserved saves", () => {
     expect(outcomeOf(s)).toBe("draw");
     expect(validLearnSession(s)).toBe(true);
   });
-  it("credits accepted answers once and isolates owners/epochs", () => {
+  it("credits accepted answers once and isolates owners/epochs on archived growth saves", () => {
     const learning = addLearner(undefined, "Test learner", "test");
     let save: Save = { ...emptySave(), learning };
-    // Island Market still uses the shared Level 4 question board (Quick Practice moved to its own in N1b).
-    let s = { ...startSession("island-market", { options: { mode: "solo", pace: "easy", stage: "stretch" } }, {}, 10), learner: "test" };
+    const options: LearnOptions = { mode: "solo", pace: "easy", stage: "stretch" };
+    const s = {
+      ...startSession("island-market", { options }, {}, 10),
+      state: createGrowth("island-market", options, { skills: {}, rng: random(10), starter: 0, today: 20000 }),
+      learner: "test",
+    };
     save = applyLearnSave(save, s.game, s, { id: null, epoch: 1 }, 1);
     const qs = growthQuestions(s.game, s.options, s.state as GrowthState), q = qs[0];
     const answered = { ...s, revision: 1, state: growthMove(s.state as GrowthState, { type: "answer", value: q.answer }, qs) };

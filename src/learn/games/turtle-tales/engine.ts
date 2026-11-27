@@ -1,8 +1,21 @@
 import type { LearnEngine } from "../../types";
 import { pickItems } from "../../skills";
-import { readingPassage, readingPassages, type ReadingPassage } from "../../reading/provenance";
+import { readingGrowthTracks, readingPassage, readingPassages, type ReadingPassage } from "../../reading/provenance";
+import { levelOf } from "../../levelOptions";
 import { random } from "../../../games/types";
 import { bools, exact, integer, readingSkills, seat, tokens } from "../../kit/reading";
+import {
+  ISLAND_UPPER_STORIES,
+  createPassage,
+  inheritedUpperStories,
+  isPassage,
+  passageDone,
+  passageTurn,
+  validPassage,
+  type PassageLevel,
+  type PassageState,
+  type UpperStory,
+} from "./stories-upper";
 
 /**
  * Turtle Tales: read a page, then pick which of two pictures matches it. The other picture changes one
@@ -145,21 +158,44 @@ export function taleFromLegacy(s: LegacyTaleState): TaleState {
   };
 }
 
-export const engine: LearnEngine<TaleState | LegacyTaleState> = {
+export type TurtleTalesState = TaleState | LegacyTaleState | PassageState;
+
+let cachedUpperStories: readonly UpperStory[] | undefined;
+/** All 16 Level 4–5 passage stories (8 pinned inherited + 8 Guam/island stories). */
+export function upperStories(): readonly UpperStory[] {
+  if (!cachedUpperStories) {
+    const tracks = readingGrowthTracks()["turtle-tales"];
+    cachedUpperStories = [
+      ...inheritedUpperStories(tracks?.stretch?.questions ?? [], tracks?.deep?.questions ?? []),
+      ...ISLAND_UPPER_STORIES,
+    ];
+  }
+  return cachedUpperStories;
+}
+export const upperStoryById = (id: unknown): UpperStory | undefined =>
+  typeof id === "string" ? upperStories().find((st) => st.id === id) : undefined;
+/** Total story catalog spanning Levels 1–5 (12 picture stories + 16 passage stories = 28 stories). */
+export const totalStoryCount = () => readingPassages().length + upperStories().length;
+
+export const engine: LearnEngine<TurtleTalesState> = {
   id: "turtle-tales",
   name: "Turtle Tales",
   island: "reading",
   tagline: "Read a page, pick its picture.",
   description:
-    "Read a little island tale. On every page, pick the picture that matches what you read, and the turtle swims on.",
-  help: "Read the words on the page. Then tap the picture that matches. The two pictures are almost the same: one word on the page tells you which is right, so read every word. Tap any word to hear it. If you pick the other picture, a word lights up; look at it and try again, or tap Read it to me. A right pick swims the turtle forward. Tap Turn the page when you are ready. Together, take turns reading a page each. Go at your own pace; there is no clock.",
+    "Read a little island tale. On every page, pick the picture that matches what you read, and later explore full stories with evidence clues.",
+  help: "Read the words on the page. Then tap the picture that matches. The two pictures are almost the same: one word on the page tells you which is right, so read every word. Tap any word to hear it. If you pick the other picture, a word lights up; look at it and try again, or tap Read it to me. A right pick swims the turtle forward. At Levels 4 and 5, read the full story and answer sequence, motive, and evidence questions. Tap Show evidence to highlight the supporting sentence in the story. Together, take turns reading. Go at your own pace; there is no clock.",
   helpAudio: "turtle-tales-help",
   introAudio: "turtle-tales-intro",
   color: "#246858",
   surface: "#E5EFE5",
   modes: ["solo", "together"],
+  nativeStages: true,
   skills: readingSkills,
   create(o, c) {
+    if (o.stage) {
+      return createPassage(levelOf(o) as PassageLevel, upperStories(), c);
+    }
     const previous = c.previous as { id?: unknown } | undefined;
     const pool = readingPassages().filter((t) => t.pace === o.pace && t.id !== previous?.id);
     const id = pickItems(pool, c.skills, 1, c.rng, c.today)[0].id;
@@ -174,7 +210,9 @@ export const engine: LearnEngine<TaleState | LegacyTaleState> = {
       clean: [],
     };
   },
-  validate(v, o): v is TaleState | LegacyTaleState {
+  validate(v, o): v is TurtleTalesState {
+    if (o.stage) return isPassage(v) && validPassage(v, levelOf(o) as PassageLevel, upperStoryById);
+    if (isPassage(v)) return false;
     if (isLegacyTale(v)) return validLegacy(v, o.pace);
     if (!exact(v, ["id", "starter", "page", "sides", "wrong", "heard", "solved", "clean"])) return false;
     const t = readingPassages().find((t) => t.id === v.id && t.pace === o.pace);
@@ -194,6 +232,18 @@ export const engine: LearnEngine<TaleState | LegacyTaleState> = {
       return false;
     return v.page !== n || (!v.wrong && !v.heard && !v.solved);
   },
-  outcome: (s) => ((isLegacyTale(s) ? s.done : taleDone(s)) ? "done" : null),
-  turn: (s) => (isLegacyTale(s) ? legacyTurn(s) : taleReader(s)),
+  outcome: (s) =>
+    isPassage(s)
+      ? passageDone(s, upperStoryById(s.storyId))
+        ? "done"
+        : null
+      : (isLegacyTale(s) ? s.done : taleDone(s))
+        ? "done"
+        : null,
+  turn: (s) =>
+    isPassage(s)
+      ? passageTurn(s, upperStoryById(s.storyId))
+      : isLegacyTale(s)
+        ? legacyTurn(s)
+        : taleReader(s),
 };

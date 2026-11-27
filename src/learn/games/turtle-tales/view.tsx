@@ -20,9 +20,21 @@ import {
   talePick,
   taleReader,
   taleTurnPage,
-  type LegacyTaleState,
+  upperStoryById,
   type TaleState,
+  type TurtleTalesState,
 } from "./engine";
+import {
+  isPassage,
+  passageDone,
+  passageHelp,
+  passageNext,
+  passagePick,
+  passageTurn,
+  promptOptionOrder,
+  splitEvidence,
+  type PassageState,
+} from "./stories-upper";
 
 /** The turtle swims from stone to stone, one page at a time, toward the island. */
 function Swim({ page, pages, width }: { page: number; pages: number; width: number }) {
@@ -150,7 +162,7 @@ function Choice({
   );
 }
 
-export function Board(props: BoardProps<TaleState | LegacyTaleState>) {
+export function Board(props: BoardProps<TurtleTalesState>) {
   const { session, update } = props;
   const s = session.state;
   const legacy = isLegacyTale(s) ? s : null;
@@ -159,7 +171,211 @@ export function Board(props: BoardProps<TaleState | LegacyTaleState>) {
     if (legacy) update(taleFromLegacy(legacy));
   }, [legacy, update]);
   if (legacy) return null;
+  if (isPassage(s)) return <PassageBoard {...props} session={{ ...session, state: s }} />;
   return <Read {...props} session={{ ...session, state: s as TaleState }} />;
+}
+
+/** Levels 4–5 native interactive storybook passage board with opt-in evidence highlighting. */
+function PassageBoard({
+  session,
+  update,
+  practice,
+  assistance,
+  sound,
+  width,
+  height,
+  active,
+  coach,
+  cheer,
+}: BoardProps<TurtleTalesState> & { session: { state: PassageState } }) {
+  const s = session.state;
+  const story = upperStoryById(s.storyId);
+  const small = height < 730;
+  useStepReveal(s.index);
+
+  if (!story) return <ReadingRefused />;
+  if (
+    story.source === "inherited" &&
+    !story.prompts.every((p) => p.inheritedRecord && admittedReading(p.inheritedRecord, "Turtle Tales"))
+  ) {
+    return <ReadingRefused />;
+  }
+
+  const done = passageDone(s, story);
+  if (done) {
+    return (
+      <View style={{ alignItems: "center", gap: 12, padding: 12 }}>
+        <Swim page={story.prompts.length} pages={story.prompts.length} width={width} />
+        <PictureObject name="turtle" size={96} />
+        <Heading style={{ textAlign: "center" }}>You read “{story.title}”!</Heading>
+        <Copy style={{ color: C.ink, textAlign: "center" }}>
+          Every answer was backed by clues right inside the story.
+        </Copy>
+      </View>
+    );
+  }
+
+  const prompt = story.prompts[s.index];
+  const order = promptOptionOrder(prompt.id);
+  const reader = session.names?.[passageTurn(s, story)] ?? `Player ${passageTurn(s, story) + 1}`;
+  const highlightOn = s.showEvidence || s.solved;
+  const [beforeEv, evText, afterEv] = highlightOn ? splitEvidence(story.body, prompt.evidence) : [story.body, "", ""];
+
+  function pick(optionIndex: number) {
+    if (!active) return;
+    const next = passagePick(s, optionIndex, story);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    if (s.wrong === null && !s.showEvidence) {
+      practice(prompt.skill, next.solved);
+      practice("read.meaning", next.solved);
+    }
+    if (next.solved) cheer(s.index === story!.prompts.length - 1 ? "big" : "right");
+    else sound("turtle-tales-look", true);
+    update(next);
+  }
+
+  return (
+    <View style={{ gap: small ? 8 : 12, maxWidth: 620, width: "100%", alignSelf: "center" }}>
+      <View style={{ alignItems: "center", gap: 4 }}>
+        {session.options.mode === "together" && (
+          <Copy style={{ color: C.teal, fontWeight: "800", fontSize: 18, textAlign: "center" }}>{reader} reads</Copy>
+        )}
+        <Swim page={s.index + (s.solved ? 1 : 0)} pages={story.prompts.length} width={width} />
+      </View>
+
+      <View
+        style={{
+          backgroundColor: C.paper,
+          borderRadius: 20,
+          borderWidth: 2,
+          borderColor: C.line,
+          padding: small ? 12 : 16,
+          gap: 8,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <Heading style={{ fontSize: small ? 19 : 21, flex: 1 }}>{story.title}</Heading>
+          <View
+            style={{
+              backgroundColor: C.soft,
+              borderRadius: 12,
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+            }}
+          >
+            <Copy style={{ fontSize: 12, fontWeight: "800", color: C.ink }}>
+              Question {s.index + 1} of {story.prompts.length}
+            </Copy>
+          </View>
+        </View>
+        <Copy style={{ fontSize: small ? 16 : 17, lineHeight: small ? 24 : 26, color: C.ink }}>
+          {beforeEv}
+          {evText ? (
+            <Copy
+              style={{
+                backgroundColor: C.soft,
+                color: C.ink,
+                fontWeight: "800",
+                fontSize: small ? 16 : 17,
+                lineHeight: small ? 24 : 26,
+              }}
+            >
+              {evText}
+            </Copy>
+          ) : null}
+          {afterEv}
+        </Copy>
+      </View>
+
+      <View style={{ gap: 6 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <View style={{ backgroundColor: C.soft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 }}>
+            <Copy style={{ fontSize: 12, fontWeight: "800", color: C.teal }}>{prompt.skillLabel}</Copy>
+          </View>
+          {!s.solved && !s.showEvidence && (
+            <Button
+              compact
+              quiet
+              disabled={!active}
+              onPress={() => {
+                if (!active) return;
+                assistance?.();
+                update(passageHelp(s, story));
+              }}
+            >
+              Show evidence
+            </Button>
+          )}
+        </View>
+        <Copy style={{ fontSize: 18, fontWeight: "800", color: C.ink }}>{prompt.question}</Copy>
+        {s.showEvidence && !s.solved && (
+          <Copy style={{ fontSize: 14, color: C.teal, fontWeight: "700" }}>
+            Check the highlighted sentence in the story above.
+          </Copy>
+        )}
+      </View>
+
+      <CoachSpot active={coach.active && !s.solved && s.wrong === null} handAt="none">
+        <View style={{ gap: 8 }}>
+          {order.map((origIdx) => {
+            const label = prompt.options[origIdx];
+            const isRight = s.solved && origIdx === prompt.correctIndex;
+            const isWrong = s.wrong === origIdx;
+            const disabled = !active || s.solved || isWrong;
+            return (
+              <PressableScale
+                key={`${prompt.id}-${origIdx}`}
+                accessibilityRole="button"
+                accessibilityLabel={`${label}${isRight ? ", matches the story" : isWrong ? ", not supported by the story" : ""}`}
+                accessibilityState={{ disabled, selected: isRight }}
+                disabled={disabled}
+                onPress={() => pick(origIdx)}
+                style={{
+                  minHeight: 54,
+                  borderRadius: 16,
+                  borderWidth: isRight || isWrong ? 3 : 2,
+                  borderColor: isRight ? C.teal : isWrong ? C.coral : C.line,
+                  backgroundColor: isRight ? C.success : isWrong ? C.coralFill : C.paper,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  opacity: isWrong ? 0.55 : 1,
+                }}
+              >
+                <Copy style={{ flex: 1, fontSize: 16, fontWeight: "700", color: C.ink }}>{label}</Copy>
+                {isRight && (
+                  <Copy style={{ color: C.teal, fontSize: 20, fontWeight: "900" }}>✓</Copy>
+                )}
+              </PressableScale>
+            );
+          })}
+        </View>
+      </CoachSpot>
+
+      {s.solved && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            backgroundColor: C.success,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: C.teal,
+            padding: 12,
+            gap: 8,
+          }}
+        >
+          <Copy style={{ fontSize: 15, fontWeight: "700", color: C.ink }}>{prompt.reason}</Copy>
+          <Button disabled={!active} onPress={() => update(passageNext(s, story))}>
+            {s.index === story.prompts.length - 1 ? "Finish the story" : "Next question"}
+          </Button>
+        </View>
+      )}
+    </View>
+  );
 }
 
 function Read({
@@ -174,7 +390,7 @@ function Read({
   active,
   coach,
   cheer,
-}: BoardProps<TaleState | LegacyTaleState> & { session: { state: TaleState } }) {
+}: BoardProps<TurtleTalesState> & { session: { state: TaleState } }) {
   const s = session.state,
     t = tale(s),
     small = height < 730;

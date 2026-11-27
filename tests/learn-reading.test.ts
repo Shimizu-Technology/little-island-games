@@ -30,7 +30,7 @@ import {
   type BoatState,
   type LegacyBoatState,
 } from "../src/learn/games/sound-boat/engine";
-import { engine as which, whichAnswer, whichNext, whichPick } from "../src/learn/games/which-one/engine";
+import { engine as which, whichAnswer, whichNext, whichPick, type WhichState } from "../src/learn/games/which-one/engine";
 import {
   engine as tales,
   tale,
@@ -364,7 +364,7 @@ describe("Which One: careful first tries and untimed family turns", () => {
     for (const pace of paces)
       it(`${mode}/${pace}: completes and survives reload`, () => {
         const o = { mode, pace };
-        let s = which.create(o, ctx());
+        let s = which.create(o, ctx()) as WhichState;
         for (let i = 0; i < 8; i++) {
           expect(which.turn!(s, o)).toBe((1 + i) % 2);
           if (i === 0) {
@@ -383,7 +383,7 @@ describe("Which One: careful first tries and untimed family turns", () => {
       });
   it("rejects inconsistent answers, non-permutations and out-of-range values", () => {
     const o: LearnOptions = { mode: "solo", pace: "easy" };
-    const s = which.create(o, ctx());
+    const s = which.create(o, ctx()) as WhichState;
     for (const bad of [
       { ...s, solved: true, wrong: 0 },
       { ...s, tried: true, wrong: whichAnswer(s) },

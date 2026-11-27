@@ -1,7 +1,20 @@
 /** Model review reference: https://oceanservice.noaa.gov/facts/coral_bleach.html (reviewed 2026-10-25). */
 import type { LearnEngine, LearnOptions, Pace } from "../../types";
+import { levelOf } from "../../levelOptions";
 import { pickItems } from "../../skills";
 import { exact, integer, isRecord, prediction, scienceSkills } from "../../kit/science";
+import {
+  EXTRA_POOL_MISSIONS,
+  TIDE_CLASSIFY_MISSIONS,
+  createTideClassify,
+  isTideClassify,
+  tideClassifyOutcome,
+  tideClassifyTurn,
+  validTideClassify,
+  type ExtraPoolMission,
+  type TideClassifyLevel,
+  type TideClassifyState,
+} from "./missions";
 export const creatures = ["crab", "snail", "fish", "sea-star", "seaweed", "coral"] as const;
 export type Creature = (typeof creatures)[number];
 /** Pictures a child can name, used as answers. */
@@ -138,7 +151,31 @@ export const missions: Mission[] = [
     why: "Too much heat makes coral lose its tiny helpers and turn white. Returning to its usual reef temperature can help it recover. Water that is too cold can stress coral too.",
   },
 ];
-export const missionById = (id: string) => missions.find((m) => m.id === id);
+function adaptExtraMission(e: ExtraPoolMission): Mission {
+  return {
+    id: e.id as MissionId,
+    kind: e.kind,
+    pace: e.pace,
+    skill: e.skill,
+    question: e.question,
+    answers: e.options.slice(),
+    right: e.right,
+    change: e.change,
+    why: e.why,
+  };
+}
+/** All 15 Levels 1–3 pool missions (7 voiced core + 8 Guam observation missions). */
+export const poolMissions: readonly Mission[] = [...missions, ...EXTRA_POOL_MISSIONS.map(adaptExtraMission)];
+/** Complete Tide Pool Lab catalog across Levels 1–5 (15 L1–3 missions + 12 L4–5 classification missions = 27 total). */
+export const allTidePoolMissions = {
+  early: poolMissions,
+  upper: TIDE_CLASSIFY_MISSIONS,
+  total: poolMissions.length + TIDE_CLASSIFY_MISSIONS.length,
+} as const;
+export const isVoicedMission = (id: string) => missions.some((m) => m.id === id);
+export const sceneForMission = (id: string): MissionId =>
+  EXTRA_POOL_MISSIONS.find((e) => e.id === id)?.scene ?? (id as MissionId);
+export const missionById = (id: string) => poolMissions.find((m) => m.id === id);
 export type TideState = {
   missions: string[];
   index: number;
@@ -153,6 +190,8 @@ export type TideState = {
 export type Pool = { sun: boolean; cool: boolean; high: boolean; creatures: Creature[] };
 /** Who is in the pool for each mission, before and after the change. */
 export function creaturesFor(id: string | undefined, watched: boolean): Creature[] {
+  const extra = EXTRA_POOL_MISSIONS.find((e) => e.id === id);
+  if (extra) return [...(watched ? extra.afterCreatures : extra.beforeCreatures)];
   const before: Record<MissionId, Creature[]> = {
     snail: ["fish"],
     crab: ["sea-star", "seaweed"],
@@ -179,7 +218,7 @@ export type LegacyTideState = {
   rained: boolean;
   starter: 0 | 1;
 };
-export type TideSave = TideState | LegacyTideState;
+export type TideSave = TideState | LegacyTideState | TideClassifyState;
 export const paceNumber = (p: Pace) => ({ easy: 0, medium: 1, hard: 2 })[p];
 export const missionCount = (p: Pace) => 3 + paceNumber(p);
 export const needFor = (o: LearnOptions) => (o.mode === "together" ? 2 : 1);
@@ -273,7 +312,7 @@ function validLegacy(x: unknown, o: LearnOptions): x is LegacyTideState {
   );
 }
 /** Read any valid save as the current shape. */
-export function upgrade(x: TideSave, o: LearnOptions): TideState {
+export function upgrade(x: TideState | LegacyTideState, o: LearnOptions): TideState {
   if (!("action" in x)) return x;
   const ids = x.missions.map((id) => legacyIds[id]);
   return {
@@ -293,7 +332,7 @@ function validCurrent(x: unknown, o: LearnOptions): x is TideState {
     s.missions.length !== missionCount(o.pace) ||
     new Set(s.missions).size !== s.missions.length ||
     !s.missions.every(
-      (id) => typeof id === "string" && missions.some((m) => m.id === id && m.pace <= paceNumber(o.pace))
+      (id) => typeof id === "string" && poolMissions.some((m) => m.id === id && m.pace <= paceNumber(o.pace))
     ) ||
     !integer(s.index, 0, s.missions.length) ||
     !Array.isArray(s.guesses) ||
@@ -331,28 +370,39 @@ export const engine: LearnEngine<TideSave> = {
   color: "#2C6E8F",
   surface: "#DDEFF5",
   modes: ["solo", "together"],
+  nativeStages: true,
   skills: { ...scienceSkills, "sci.living-needs": "What living things need", "sci.ocean-habitat": "Ocean homes" },
   paceHelp: {
-    easy: "Snails, hermit crabs and a sad coral.",
-    medium: "Add sunshine and tide questions.",
-    hard: "Add how fish breathe and what heat does.",
+    easy: "Snails, hermit crabs, sea stars and a sad coral.",
+    medium: "Add sunshine, tide, shade and reef balance questions.",
+    hard: "Add how fish breathe, coral helpers and rain/heat effects.",
   },
   create: (o, c) => {
+    if (o.stage) {
+      return createTideClassify(levelOf(o) as TideClassifyLevel, c);
+    }
     const chosen = pickItems(
-      missions.filter((m) => m.pace <= paceNumber(o.pace)),
+      poolMissions.filter((m) => m.pace <= paceNumber(o.pace)),
       c.skills,
       missionCount(o.pace),
       c.rng,
       c.today
     );
-    // The easiest questions come first; the coral puzzle comes after a guess or two.
-    const order: MissionId[] = ["snail", "crab", "seaweed", "coral", "tide", "fish", "heat"];
-    const ids = chosen.map((m) => m.id).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    // Keep guess missions before the coral fix puzzle so the first mission is always a concrete guess.
+    const ids = chosen
+      .sort((a, b) => Number(a.kind === "fix") - Number(b.kind === "fix") || a.pace - b.pace)
+      .map((m) => m.id);
     return { missions: ids, index: 0, guesses: [], watched: false, pool: poolFor(ids[0], o.pace), starter: c.starter };
   },
-  validate: (x, o): x is TideSave => isRecord(x) && (validCurrent(x, o) || validLegacy(x, o)),
-  outcome: (s, o) => (upgrade(s, o).index === s.missions.length ? "done" : null),
+  validate: (x, o): x is TideSave => {
+    if (o.stage) return isTideClassify(x) && validTideClassify(x, levelOf(o) as TideClassifyLevel);
+    if (isTideClassify(x)) return false;
+    return isRecord(x) && (validCurrent(x, o) || validLegacy(x, o));
+  },
+  outcome: (s, o) =>
+    isTideClassify(s) ? tideClassifyOutcome(s, o) : upgrade(s, o).index === s.missions.length ? "done" : null,
   turn: (s, o) => {
+    if (isTideClassify(s)) return tideClassifyTurn(s);
     const n = upgrade(s, o),
       m = current(n);
     return m?.kind === "guess" && n.guesses.length < needFor(o) ? guesser(n) : n.starter;
