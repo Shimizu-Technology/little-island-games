@@ -408,7 +408,7 @@ function ShadowCast({ shadow, x, y, reduced }: { shadow: LampShadow; x: number; 
     height, borderRadius: height, backgroundColor: "#284F4B", transformOrigin: [0, height / 2, 0],
     transform: [{ rotate: `${shadow.angle}deg` }] }, style]} />;
 }
-export function SceneView({
+export const SceneView = React.memo(function SceneView({
   state,
   scene,
   building,
@@ -541,6 +541,7 @@ export function SceneView({
     return shadow ? [[e.id, shadow]] : [];
   }))), [scene]);
   const shadows = useMemo(() => JSON.parse(shadowKey) as Record<string, LampShadow>, [shadowKey]);
+  const heldOwners = useMemo(() => Object.fromEntries(Object.values(scene.entities).map(entity => [entity.id, heldBy(entity, scene)])), [scene]);
   // One UI-thread clock for every friend on screen; nothing re-renders an SVG.
   const lifeClock = useSharedValue(0);
   // R3: the clock runs only while a friend on screen actually blinks and breathes with it.
@@ -630,7 +631,7 @@ export function SceneView({
                 life={living && !front && alive(entity) ? lifeClock : undefined}
                 mood={front ? undefined : moods[entity.id]}
                 shadow={front ? undefined : shadows[entity.id]}
-                {...heldBy(entity, scene)}
+                {...heldOwners[entity.id]}
               />
             );
             return (
@@ -644,7 +645,7 @@ export function SceneView({
               >
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ width: 800, height: 560 }}>
                   {roomId === "home" ? (
-                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} live atmosphere={state.atmosphere} weatherActive={liveRoom === roomId} />
+                    <RoomArt theme={room.theme} badges={badges} reduced={reduced} live atmosphere={state.atmosphere} weatherActive={liveRoom === roomId} />
                   ) : (
                     <RoomShellArt room={roomId} theme={room.theme} live atmosphere={state.atmosphere} reduced={reduced} weatherActive={liveRoom === roomId} />
                   )}
@@ -715,7 +716,7 @@ export function SceneView({
       </View>
     </GestureDetector></HomeMotionContext.Provider>
   );
-}
+});
 /** Render-only stress fixture: never bypasses production save identity/capacity limits. */
 function StressCopies({
   entities,

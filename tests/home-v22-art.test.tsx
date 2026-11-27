@@ -9,6 +9,7 @@ import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { moreCatalog } from '../src/home/catalogMore';
 import { catalog } from '../src/home/catalog';
 import { Islander } from '../src/islander/rig/Islander';
+vi.mock('../src/home/art/AtmosphereLighting', () => ({ AtmosphereLighting: () => null }));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:React.ElementType)=>({animatedProps:_a,...props}:Record<string,unknown>)=>React.createElement(c,{...props,'data-animated':true})},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
 vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Image:'image',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',LinearGradient:'linearGradient',RadialGradient:'radialGradient',Stop:'stop',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
 vi.mock('../src/arcade/Art',()=>({StickerArt:()=>null}));

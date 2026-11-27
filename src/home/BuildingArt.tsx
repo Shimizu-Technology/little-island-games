@@ -2,7 +2,7 @@ import React, { useId } from 'react';
 import Svg, { Path, Rect, Circle, G, Defs, LinearGradient, Stop, Ellipse } from 'react-native-svg';
 import type { Building } from './camera';
 /** One roof, floor beams and shoreline tie the rooms into a single island house. */
-export function BuildingArt({building:b}:{building:Building}) {
+export const BuildingArt = React.memo(function BuildingArt({building:b}:{building:Building}) {
  const bottom=b.height-60;
  const id=`building-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
  const roof=`${id}-roof-grad`,glass=`${id}-porthole-grad`;
@@ -34,10 +34,10 @@ export function BuildingArt({building:b}:{building:Building}) {
   <Path d={`M0 ${bottom}Q${b.width*.3} ${bottom-18} ${b.width} ${bottom}V${b.height}H0Z`} fill="#ECD3A0"/>
   <Path d={`M0 ${b.height-12}Q${b.width*.25} ${b.height-36} ${b.width*.5} ${b.height-12}T${b.width} ${b.height-12}`} fill="none" stroke="#8EC8BE" strokeWidth={22}/>
  </Svg>;
-}
+});
 
 /** Upstairs has a timber terrace; the shoreline belongs below the ground floor. */
-export function TerraceArt() {
+export const TerraceArt = React.memo(function TerraceArt() {
  return <Svg width="100%" height="100%" viewBox="0 0 800 35" accessible={false}>
   <Rect width={800} height={35} fill="#C88E5B"/>
   <Path d="M0 4H800M0 26H800" stroke="#A87248" strokeWidth={2}/>
@@ -45,8 +45,8 @@ export function TerraceArt() {
   <Path d="M0 2H800" stroke="#FFE0A1" strokeWidth={4}/>
   <Path d="M0 32H800" stroke="#F3D3A1" strokeWidth={3}/>
  </Svg>;
-}
-export function BuildingTrim({building:b}:{building:Building}) {
+});
+export const BuildingTrim = React.memo(function BuildingTrim({building:b}:{building:Building}) {
  return <Svg width="100%" height="100%" viewBox={`0 0 ${b.width} ${b.height}`} accessible={false}>
   <Path d={`M12 120V${b.height-60}M${b.width-12} 120V${b.height-60}`} stroke="#4A3328" strokeWidth={18}/>
   <Path d={`M12 120V${b.height-60}M${b.width-12} 120V${b.height-60}`} stroke="#C88E5B" strokeWidth={11}/>
@@ -57,4 +57,4 @@ export function BuildingTrim({building:b}:{building:Building}) {
   })}
   {b.floors>1&&<G stroke="#4A3328" strokeLinecap="round"><Path d={`M${b.frame+800-14} ${b.roof+355}V${b.height-100}M${b.frame+800+14} ${b.roof+355}V${b.height-100}`} strokeWidth={10}/><Path d={`M${b.frame+786} ${b.roof+355}V${b.height-100}M${b.frame+814} ${b.roof+355}V${b.height-100}`} stroke="#C88E5B" strokeWidth={5}/>{Array.from({length:Math.floor((b.height-b.roof-455)/45)},(_,n)=><Path key={n} d={`M${b.frame+800-14} ${b.roof+380+n*45}h28`} strokeWidth={8}/>) }{Array.from({length:Math.floor((b.height-b.roof-455)/45)},(_,n)=><Path key={n} d={`M${b.frame+786} ${b.roof+379+n*45}h28`} stroke="#F4CE8F" strokeWidth={3}/>)}</G>}
  </Svg>;
-}
+});

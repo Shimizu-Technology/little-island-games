@@ -462,6 +462,6 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
   );
 }
 
-export function RoomShellArt({ room, theme, live, atmosphere, reduced, weatherActive }: { room: Exclude<RoomId, "home">; theme: HomeState["theme"]; live?: boolean; atmosphere?: Atmosphere; reduced?: boolean; weatherActive?: boolean }) {
+export const RoomShellArt = React.memo(function RoomShellArt({ room, theme, live, atmosphere, reduced, weatherActive }: { room: Exclude<RoomId, "home">; theme: HomeState["theme"]; live?: boolean; atmosphere?: Atmosphere; reduced?: boolean; weatherActive?: boolean }) {
   return <StageRoom room={room} theme={theme} live={live} atmosphere={atmosphere} reduced={reduced} weatherActive={weatherActive} />;
-}
+});

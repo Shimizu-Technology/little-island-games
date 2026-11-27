@@ -9,6 +9,7 @@ import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { cozyFocusCamera, cozyRoomScale, fitCamera, zoomCamera } from '../src/home/runtime/CameraController';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { tapExpression } from '../src/home/runtime/delight';
+vi.mock('../src/home/art/AtmosphereLighting', () => ({ AtmosphereLighting: () => null }));
 vi.mock('../src/home/runtime/WeatherOverlay', () => ({ WeatherOverlay: () => null }));
 vi.mock('react-native', () => ({View:'div', Image:'image'}));
 vi.mock('react-native-svg', () => Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Pattern','LinearGradient','Stop'].map(k => [k,k.toLowerCase()]).concat([['default','svg']])));

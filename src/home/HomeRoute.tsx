@@ -1,6 +1,6 @@
 import { completedLearningRounds, seasonalPacks, unlockedSeasonalPacks } from "./seasonal";
 import { themeRewards } from "./catalog";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { arcadeLearner } from "../arcade/progress";
@@ -22,7 +22,9 @@ import {
 } from "./catalog";
 import { HomeCharacter } from "./characterRenderer";
 import { validBadgeId } from "./HomeBadgesSheet";
-import { HomeScreen, type HomeSheet } from "./HomeScreen";
+import { HomeScreen, type HomeClosetConfig, type HomeSheet } from "./HomeScreen";
+
+const characterForLook: NonNullable<HomeClosetConfig["renderCharacter"]> = (look) => function DressedCharacter(input) { return <HomeCharacter input={input} look={look} />; };
 
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -71,6 +73,46 @@ export function HomeRoute({
     setConsumedIntentKey(intentKey);
   }, [intentKey]);
 
+  const latestStore = useRef(store);
+  useLayoutEffect(() => { latestStore.current = store; }, [store]);
+  const personalize = useCallback<typeof store.personalize>((patch, identity) => latestStore.current.personalize(patch, identity), []);
+  const { epoch } = store;
+  const expected = useMemo(() => ({ learner: owner, epoch }), [owner, epoch]);
+  const rounds = completedLearningRounds(store.save, owner);
+  const packs = useMemo(() => unlockedSeasonalPacks(rounds, store.save.settings.unlockSeasonalPacks),
+    [rounds, store.save.settings.unlockSeasonalPacks]);
+  const { look, earned, unseen, milestones } = person;
+  const closet = useMemo<HomeClosetConfig>(() => ({
+    look, earned, unseen,
+    onWear: (next) => personalize({ look: next, made: true }, expected),
+    onSeen: (id) => !unseen.includes(id) || personalize({ unseen: unseen.filter(entry => entry !== id) }, expected),
+    onSeenAll: () => {
+      const remaining = unseen.filter(id => {
+        const entry = styleCatalog.find(style => style.id === id);
+        return !entry || !!lockedReason(entry, earned);
+      });
+      return remaining.length === unseen.length || personalize({ unseen: remaining }, expected);
+    },
+    renderCharacter: characterForLook,
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Refresh admission closures when Store replaces its writer.
+  }), [look, earned, unseen, personalize, expected, store.personalize]);
+  const badges = useMemo(() => badgesFor(milestones), [milestones]);
+  const ownedWallpapers = useMemo(() => wallThemes.filter(id =>
+    (!themeRewards.some(r => r.id === id) && !seasonalPacks.some(p => p.wallpaper === id)) || earned.includes(id) || packs.some(p => p.wallpaper === id)), [earned, packs]);
+  const ownedFloors = useMemo(() => floorThemes.filter(id =>
+    (!themeRewards.some(r => r.id === id) && !seasonalPacks.some(p => p.floor === id)) || earned.includes(id) || packs.some(p => p.floor === id)), [earned, packs]);
+  const stickers = useMemo(() => arcadeLearner(store.save.arcade, owner).stickers, [store.save.arcade, owner]);
+  const ownedItems = useMemo(() => [
+    ...packs.flatMap(p => [...p.items]), ...homeStickerItems(stickers),
+    ...(earned.filter(id => furnitureIds.includes(id as (typeof furnitureIds)[number])) as ItemId[]),
+  ], [packs, stickers, earned]);
+  const persist = useCallback((home: import("./model").HomeStateV2) =>
+    personalize({ home }, expected), [personalize, expected]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Refresh the status slot on save/error edges, while ordinary edits reuse it.
+  const saveStatus = useMemo(() => <SaveStatus />, [store.saving, store.error]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Keep the compact slot in sync with the full status slot.
+  const sheetSaveStatus = useMemo(() => <SaveStatus compact />, [store.saving, store.error]);
+
   if (!store.ready) {
     return (
       <SafeAreaView style={styles.page}>
@@ -86,10 +128,6 @@ export function HomeRoute({
     );
   }
 
-  const expected = { learner: owner, epoch: store.epoch };
-  const rounds = completedLearningRounds(store.save, owner);
-  const packs = unlockedSeasonalPacks(rounds, store.save.settings.unlockSeasonalPacks);
-
   return (
     <HomeScreen
       key={`${owner}:${store.epoch}`}
@@ -101,41 +139,15 @@ export function HomeRoute({
       initialClosetItem={intentConsumed ? undefined : resolvedClosetItem}
       initialBadge={intentConsumed ? undefined : resolvedBadge}
       onConsumeIntent={consumeIntent}
-      badges={badgesFor(person.milestones)}
-      milestones={person.milestones}
-      closet={{
-        look: person.look,
-        earned: person.earned,
-        unseen: person.unseen,
-        onWear: (look) => store.personalize({ look, made: true }, expected),
-        onSeen: (id) => {
-          if (!person.unseen.includes(id)) return true;
-          return store.personalize({ unseen: person.unseen.filter((entry) => entry !== id) }, expected);
-        },
-        onSeenAll: () => {
-          const remaining = person.unseen.filter((id) => {
-            const entry = styleCatalog.find((style) => style.id === id);
-            return !entry || !!lockedReason(entry, person.earned);
-          });
-          if (remaining.length === person.unseen.length) return true;
-          return store.personalize({ unseen: remaining }, expected);
-        },
-        renderCharacter: (look) => (input) => <HomeCharacter input={input} look={look} />,
-      }}
-      ownedWallpapers={wallThemes.filter(
-        (id) => (!themeRewards.some(r => r.id === id) && !seasonalPacks.some(p => p.wallpaper === id)) || person.earned.includes(id) || packs.some(p => p.wallpaper === id)
-      )}
-      ownedFloors={floorThemes.filter(
-        (id) => (!themeRewards.some(r => r.id === id) && !seasonalPacks.some(p => p.floor === id)) || person.earned.includes(id) || packs.some(p => p.floor === id)
-      )}
-      ownedItems={[
-        ...packs.flatMap(p => [...p.items]),
-        ...homeStickerItems(arcadeLearner(store.save.arcade, owner).stickers),
-        ...(person.earned.filter((id) => furnitureIds.includes(id as (typeof furnitureIds)[number])) as ItemId[]),
-      ]}
-      persist={(home) => store.personalize({ home }, expected)}
-      saveStatus={<SaveStatus />}
-      sheetSaveStatus={<SaveStatus compact />}
+      badges={badges}
+      milestones={milestones}
+      closet={closet}
+      ownedWallpapers={ownedWallpapers}
+      ownedFloors={ownedFloors}
+      ownedItems={ownedItems}
+      persist={persist}
+      saveStatus={saveStatus}
+      sheetSaveStatus={sheetSaveStatus}
     />
   );
 }

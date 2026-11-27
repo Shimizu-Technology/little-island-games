@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import { Sheet } from '../ui/Sheet';
@@ -19,8 +19,8 @@ export function SkyPicture({ kind, size = 30 }: { kind: keyof typeof labels; siz
     </G> : kind === 'night' ? <G fill="#737CA9" stroke="#4D577F"><Path d="M19 3a13 13 0 1 0 10 19A13 13 0 0 1 19 3Z"/><Path d="M25 3v6m-3-3h6" stroke="#C79C54" strokeWidth={1.5}/></G> : kind === 'leaves' ? <G fill="#DCA15C" stroke="#AE744B" strokeWidth={1.2}><Path d="M5 25Q-1 4 27 4Q31 29 5 25M5 25L24 7"/><Path d="M13 18l-1-7m6 2 6 1"/></G> : kind === 'snow' ? <G stroke="#71A6BE" strokeWidth={2} strokeLinecap="round"><Path d="M16 3v26M5 9l22 14M5 23 27 9M12 6l4 4 4-4M12 26l4-4 4 4M6 14l5-1-1-5m12 16-1-5 5-1M6 18l5 1-1 5m12-16-1 5 5 1"/></G> : kind === 'rain' ? <G><Path d="M5 17Q0 10 8 9Q11 0 20 7Q31 5 29 17Z" fill="#A7C7D3" stroke="#718EA7"/><Path d="M10 21l-3 7m11-7-3 7m11-7-3 7" stroke="#72A7BF" strokeWidth={2} strokeLinecap="round"/></G> : <G>{[8,17,25].map((x, n) => <G key={x}><Circle cx={x} cy={9+n*7} r={6} fill="#F4CF6B" opacity={.3}/><Circle cx={x} cy={9+n*7} r={2.5} fill="#B48C35"/></G>)}</G>}
   </Svg>;
 }
-function Pill({ kind, selected, onPress }: { kind: keyof typeof labels; selected: boolean; onPress: () => void }) {
-  return <Pressable accessibilityRole="button" accessibilityLabel={labels[kind]} accessibilityState={{ selected }} onPress={onPress}
+function Pill({ kind, selected, onPress, onPreview, onRelease }: { kind: keyof typeof labels; selected: boolean; onPress: () => void; onPreview: () => void; onRelease: () => void }) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={labels[kind]} accessibilityState={{ selected }} onPressIn={onPreview} onPressOut={onRelease} onPress={onPress}
     style={({ pressed }) => ({ minHeight: 68, minWidth: 64, flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 3, padding: 6, borderRadius: 17,
       backgroundColor: selected ? '#F9E7BC' : '#F5EFE3', borderWidth: 2, borderColor: selected ? '#AC7C3C' : 'transparent', opacity: pressed ? .7 : 1 })}>
     <SkyPicture kind={kind}/><Text variant="caption" style={{ fontSize: 12, color: '#4F443B' }}>{labels[kind]}</Text>
@@ -29,12 +29,17 @@ function Pill({ kind, selected, onPress }: { kind: keyof typeof labels; selected
 export function AtmospherePicker({ atmosphere = defaultAtmosphere, rounds, grownUp, onChange, onApply, onDecorate, onClose }: {
   atmosphere?: Atmosphere; rounds: number; grownUp: boolean; onChange: (a: Atmosphere) => void; onApply: (id: SeasonalPackId) => void; onDecorate: (item: string) => void; onClose: () => void;
 }) {
+  // Feedback begins at touch-down, before release admits the synchronous durable edit.
+  // A cancelled gesture clears its preview and never writes a save or Undo entry.
+  const [preview, setPreview] = useState<Atmosphere>();
+  const selected = preview ?? atmosphere;
+  const release = () => setPreview(undefined);
   const unlocked = unlockedSeasonalPacks(rounds, grownUp);
   return <Sheet visible onClose={onClose} title="Sky & Weather" closeLabel="Close Sky & Weather" mode="large" scroll heightRatio={.78} compactHeader>
     <View style={{ gap: 16, paddingBottom: 20 }}>
       <Text variant="body" style={{ color: '#716151', fontSize: 14 }}>A little mood for your island home.</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>{timesOfDay.map(time => <Pill key={time} kind={time} selected={atmosphere.timeOfDay === time} onPress={() => onChange({ ...atmosphere, timeOfDay: time })}/>)}</View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>{weatherKinds.map(weather => <Pill key={weather} kind={weather} selected={atmosphere.weather === weather} onPress={() => onChange({ ...atmosphere, weather })}/>)}</View>
+      <View style={{ flexDirection: 'row', gap: 8 }}>{timesOfDay.map(time => <Pill key={time} kind={time} selected={selected.timeOfDay === time} onPreview={() => setPreview({ ...atmosphere, timeOfDay: time })} onRelease={release} onPress={() => onChange({ ...atmosphere, timeOfDay: time })}/>)}</View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>{weatherKinds.map(weather => <Pill key={weather} kind={weather} selected={selected.weather === weather} onPreview={() => setPreview({ ...atmosphere, weather })} onRelease={release} onPress={() => onChange({ ...atmosphere, weather })}/>)}</View>
       <Text variant="title" style={{ fontSize: 20 }}>Seasonal treasures</Text>
       <Text variant="body" style={{ fontSize: 13, color: '#716151' }}>Learning together opens little celebrations. Keep them forever.</Text>
       {seasonalPacks.map(pack => {

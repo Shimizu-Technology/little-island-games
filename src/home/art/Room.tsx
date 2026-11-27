@@ -5,12 +5,12 @@ import { StageRoom } from "./Stage";
 import type { BadgeId } from "../../badges/engine";
 import type { HomeState } from "../model";
 export { wallColors, floorColors } from "./roomPalette";
-export function RoomArt({theme, badges, onBadgePress, live, atmosphere, reduced, weatherActive}: {theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; reduced?: boolean; live?: boolean; atmosphere?: Atmosphere; weatherActive?: boolean}) {
+export const RoomArt = React.memo(function RoomArt({theme, badges, onBadgePress, live, atmosphere, reduced, weatherActive}: {theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; reduced?: boolean; live?: boolean; atmosphere?: Atmosphere; weatherActive?: boolean}) {
   return <StageRoom room="home" theme={theme} badges={badges} onBadgePress={onBadgePress} live={live} atmosphere={atmosphere} reduced={reduced} weatherActive={weatherActive}/>;
-}
+});
 
 /** Quiet outdoor layers extend the stage below its floor in tall layouts. */
-export function SkyArt({ time = defaultAtmosphere.timeOfDay, moon = true }: { time?: Atmosphere["timeOfDay"]; moon?: boolean }) {
+export const SkyArt = React.memo(function SkyArt({ time = defaultAtmosphere.timeOfDay, moon = true }: { time?: Atmosphere["timeOfDay"]; moon?: boolean }) {
   const palette = skyPalette[time];
   const orb = time !== "night" || moon;
   const id = "cottage-sky-" + React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -39,8 +39,8 @@ export function SkyArt({ time = defaultAtmosphere.timeOfDay, moon = true }: { ti
     <Path d="M90 1115h83m120 40h104m94-45h86m47 55h102m-666-1h44" stroke="#FDF4C9" opacity={.58} strokeWidth={4} strokeLinecap="round"/>
     <Path d="M0 1090Q230 1052 450 1093T800 1081" fill="none" stroke="#D9F3DC" strokeWidth={8} opacity={.6}/>
   </Svg>;
-}
-export function ShoreArt({ depth = 215 }: { depth?: number }) {
+});
+export const ShoreArt = React.memo(function ShoreArt({ depth = 215 }: { depth?: number }) {
   const id = "cottage-shore-" + React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return <Svg width="100%" height="100%" viewBox={`0 0 800 ${depth}`} accessible={false}>
     <Defs>
@@ -73,4 +73,4 @@ export function ShoreArt({ depth = 215 }: { depth?: number }) {
     <G fill="#C5A476" opacity={.65}>{Array.from({length:38},(_,n)=><Circle key={n} cx={31+(n*103)%739} cy={31+(n*47)%Math.max(70,depth-95)} r={n%5===0?2:1}/>)}</G>
     {/* HC-02: the beach shells are real objects (runtime/portions shoreShells), drawn above this art. */}
   </Svg>;
-}
+});

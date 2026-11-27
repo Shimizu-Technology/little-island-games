@@ -42,7 +42,7 @@ export function Tool({
         // In the larger mode every button shows its shape, so a 64 pt target looks like one.
         large && { minWidth: 64, minHeight: 64, borderRadius: 32, backgroundColor: "#F1E6CF" },
         selected && { backgroundColor: "#D6E9C8" },
-        { opacity: disabled ? 0.35 : pressed ? 0.65 : 1 },
+        { opacity: disabled ? 0.35 : pressed ? 0.65 : 1, transform: [{ scale: pressed && !disabled ? 0.94 : 1 }] },
       ]}
     >
       <RNText allowFontScaling={false} style={{ fontSize: large ? 30 : 25, color: ink }}>
