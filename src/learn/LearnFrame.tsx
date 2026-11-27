@@ -47,6 +47,7 @@ import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
 import { speakAfter } from "./frameClocks";
+import { speakText, stopSpeaking } from "./voice";
 
 export const modeLabel: Record<LearnMode, string> = {
   solo: "On my own",
@@ -187,8 +188,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const boardActive = appActive && focused && !setup && !help,
     savedId = saved?.id;
   useEffect(() => {
-    if (!boardActive) stopSound();
+    if (!boardActive) {
+      stopSound();
+      stopSpeaking();
+    }
   }, [boardActive, stopSound]);
+  useEffect(() => () => {
+    stopSpeaking();
+  }, []);
   // A falling object can retain a callback after mute, Help or a round change. Invalidate
   // that callback too, rather than only cancelling speech it had already scheduled.
   const audioSettings = store.save.settings;
@@ -447,9 +454,19 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const scrolled = phone ? (large ? largeLines : null) : large ? <View style={{ gap: 4 }}>{bar}{largeLines}</View> : header;
 
   const helpText = <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : id === "code-lab" ? codeLabHelp(saved?.state) : engine.help}</Copy>;
-  // Offered only when the guide has a shipped recording in the chosen voice; the written help is always here.
-  const hear = !(saved && isGrowth(saved.state)) && engine.helpAudio && hasSpeech(engine.helpAudio, store.save.settings.voice) ? <>
-            <Button icon="sound-on" maxFontSizeMultiplier={big} onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
+  // Offered when the guide has a shipped recording in the chosen voice, or a spokenHelp script when no helpAudio key is set.
+  const hasRecordedHelp = !!(engine.helpAudio && hasSpeech(engine.helpAudio, store.save.settings.voice));
+  const hasSpokenHelp = !engine.helpAudio && !!engine.spokenHelp;
+  const hear = !(saved && isGrowth(saved.state)) && (hasRecordedHelp || hasSpokenHelp) ? <>
+            <Button
+              icon="sound-on"
+              maxFontSizeMultiplier={big}
+              onPress={() => {
+                if (hasRecordedHelp) sound(engine.helpAudio!);
+                else if (engine.spokenHelp) speakText(engine.spokenHelp, { enabled: soundOn, active: true });
+              }}
+              disabled={!soundOn}
+            >
               Hear a quick guide
             </Button>
             {!soundOn && <Copy maxFontSizeMultiplier={big}>Turn sound on to hear the instructions.</Copy>}
@@ -645,7 +662,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           </>
         )}
       </Sheet>
-      <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
+      <Sheet visible={help} onClose={() => { stopSound(); stopSpeaking(); setHelp(false); }} title={`How to play ${engine.name}`}>
         {/* At accessibility sizes the instructions run several screens, so Hear comes first for a child who can't read them yet. */}
         {!large && helpText}
         {hear}

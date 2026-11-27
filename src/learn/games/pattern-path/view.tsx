@@ -5,8 +5,10 @@ import { useReducedMotion } from "../../../components/motion";
 import { C, Copy, PressableScale } from "../../../components/ui";
 import { atLarge } from "../../../components/wordFit";
 import type { BoardProps } from "../../types";
+import { SpeakButton } from "../../SpeakButton";
+import { useSpokenPrompt } from "../../voice";
 import { PatternGlyph, patternLabel, SeaGlyph } from "../thinkingArt";
-import { help, hintText, place, taskAt, type PatternState } from "./engine";
+import { engine, help, hintText, place, taskAt, type PatternState } from "./engine";
 import { LegacyBoard } from "./legacy-view";
 
 export function Board(props: BoardProps<PatternState>) {
@@ -16,7 +18,7 @@ export function Board(props: BoardProps<PatternState>) {
   return <PatternBoardV2 {...props} stateV2={props.session.state} />;
 }
 
-function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, active, width }: BoardProps<PatternState> & { stateV2: Extract<PatternState, { version: 2 }> }) {
+function PatternBoardV2({ session, stateV2: s, update, practice, assistance, sound, soundOn, cheer, coach, active, width }: BoardProps<PatternState> & { stateV2: Extract<PatternState, { version: 2 }> }) {
   const task = taskAt(s);
   const reduced = useReducedMotion();
   const { fontScale } = useWindowDimensions();
@@ -26,6 +28,12 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
   const [hopAt, setHopAt] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const wrong = wrongAt === s.index;
+
+  const promptLine = `${s.index === 0 && session.revision === 0 && engine.spokenIntro ? `${engine.spokenIntro} ` : ""}${task.title}. Which stone fills the glowing gap?`;
+  const { replay, speak } = useSpokenPrompt(promptLine, `${session.id}:${s.index}:${s.attempt}`, {
+    soundOn,
+    active: active && s.index < s.total,
+  });
 
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
 
@@ -51,16 +59,20 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
     const rightAnswer = tile === task.answer;
     practice("think.pattern", rightAnswer);
     if (!rightAnswer) {
+      sound("tap", true);
       setWrongAt(s.index);
       const next = place(s, tile);
       if (next !== s) {
         setFreshMsg(true);
+        speak("Good try! Here is a fresh trail. Find the rule from stone one.");
         update(next);
       } else {
         setFreshMsg(false);
+        speak("Good try. Follow the path from stone one and watch what changes.");
       }
       return;
     }
+    sound("tap", true);
     setWrongAt(null);
     setFreshMsg(false);
     const solvedState = place(s, tile);
@@ -89,12 +101,23 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
 
   const askHelp = () => {
     assistance?.();
-    update(help(s));
+    const next = help(s);
+    update(next);
+    sound("tap", true);
+    speak(hintText(next));
   };
 
   return (
     <View style={{ gap: compact ? 8 : 12, paddingVertical: compact ? 4 : 8 }}>
-      <Copy maxFontSizeMultiplier={1.65} style={{ color: C.ink, fontSize: compact ? 18 : 21, fontWeight: "900" }}>{task.title}</Copy>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Copy maxFontSizeMultiplier={1.65} style={{ flex: 1, color: C.ink, fontSize: compact ? 18 : 21, fontWeight: "900" }}>{task.title}</Copy>
+        <SpeakButton
+          testID="pattern-path-speak"
+          label="Hear pattern prompt"
+          disabled={!soundOn || !active}
+          onPress={replay}
+        />
+      </View>
       <View style={{ backgroundColor: "#FFF0D2", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
         <Copy maxFontSizeMultiplier={1.4} style={{ color: "#C4573A", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>
           TRAIL {s.index + 1} OF 4
@@ -194,10 +217,17 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
       </View>
 
       {s.hintLevel > 0 && (
-        <View testID="pattern-hint-box" style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE" }}>
-          <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 16 }}>
+        <View testID="pattern-hint-box" style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE", flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Copy accessibilityLiveRegion="polite" style={{ flex: 1, color: C.ink, fontSize: 16 }}>
             {hintText(s)}
           </Copy>
+          <SpeakButton
+            testID="pattern-path-speak-hint"
+            label="Hear rule clue"
+            text="Hear"
+            disabled={!soundOn || !active}
+            onPress={() => speak(hintText(s))}
+          />
         </View>
       )}
     </View>

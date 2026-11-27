@@ -30,6 +30,8 @@ export const engine: LearnEngine<FeastState> = {
   id: "fraction-feast", name: "Fraction Feast", island: "numbers", ages: [7, 13], ownLevels: true, tagline: "Share, fold and fill fractions.",
   description: "Share island food fairly, walk a fraction line and build decimals on a hundred grid.",
   help: "Choose a piece count or tap number-line steps to show the requested fraction. On the hundred grid, add ten squares or one square at a time. Count the shaded pieces and press Check. Tap Hint to see a worked clue.",
+  spokenIntro: "Share the island feast and show each fraction!",
+  spokenHelp: "Choose how many slices or squares to shade to match the fraction, then tap Serve it. On the hundred grid, add ten squares or one square at a time. Tap Hint whenever you want a clue.",
   color: "#AC5C26", surface: "#FFF0CF", modes: ["solo", "together"],
   levelNames: [
     { name: "Fair pie shares", description: "Cut halves and quarters, then serve equal slices." },

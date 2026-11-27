@@ -158,6 +158,8 @@ export const engine: LearnEngine<PatternState> = {
     { name: "Number reef", description: "Solve doubling, squares, growing steps, two-rule trails, and number grids." },
   ],
   help: "Look at the stones along the trail and find the rule. Tap a stone below to fill the gap. Tap Help once to hear the rule, and a second time if you want to see the stone.",
+  spokenIntro: "Look along the stone trail and find which stone fills the glowing gap!",
+  spokenHelp: "Look at the stones along the trail and find the rule. Tap a stone below to fill the glowing gap. Tap Help once for a rule clue, and a second time if you want to see the missing stone.",
   create: (o, ctx): PatternStateV2 => ({
     version: 2,
     level: levelOf(o),

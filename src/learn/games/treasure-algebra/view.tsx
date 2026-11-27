@@ -6,8 +6,10 @@ import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "reac
 import { useReducedMotion } from "../../../components/motion";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { SpeakButton } from "../../SpeakButton";
+import { useSpokenPrompt } from "../../voice";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
-import { initialValue, solved, workedHint, seaLineRange, type AlgebraState, type AlgebraTask } from "./engine";
+import { engine, initialValue, solved, workedHint, seaLineRange, type AlgebraState, type AlgebraTask } from "./engine";
 
 const ink = "#3D2B24", lagoon = "#1E6B66", coral = "#FF7A5C", sand = "#FFF0D2", warmLine = "#E8D8BE", amber = "#9A641A";
 
@@ -120,23 +122,14 @@ function StepControls({ value, balance, change, width }: { value: number; balanc
   return <View testID="algebra-steps" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>{steps.map(step => <PressableScale key={step} accessibilityRole="button" accessibilityLabel={`${step > 0 ? "Add" : "Subtract"} ${Math.abs(step)} ${balance ? "from x" : "steps"}`} onPress={() => change(Math.max(-20, Math.min(100, value + step)))} style={{ width: key, minHeight: 52, borderRadius: 15, backgroundColor: C.paper, borderWidth: 1.5, borderBottomWidth: 3, borderColor: warmLine, alignItems: "center", justifyContent: "center" }}><Copy maxFontSizeMultiplier={max} style={{ color: ink, fontSize: 18, fontWeight: "900" }}>{stepLabel(step)}</Copy></PressableScale>)}</View>;
 }
 
-export function Board({ session, update, practice, assistance, cheer, coach, width }: BoardProps<AlgebraState>) {
+export function Board({ session, update, practice, assistance, sound, soundOn, active, cheer, coach, width }: BoardProps<AlgebraState>) {
   const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
   const wide = useBoardColumns(), side = wide || !!space?.ready && width >= 304 && width < 600;
   const controlsWidth = side ? Math.max(160, width - (wide ? width * .46 : 144)) : width;
   const state = session.state, task = state.tasks[state.index];
   const [feedback, setFeedback] = useState(""), [hint, setHint] = useState(false);
-  if (!task) return null;
-  const balance = ["balance", "two-step", "inequality"].includes(task.kind);
-  const change = (patch: Partial<AlgebraState>) => { update({ ...state, ...patch }); setFeedback(""); coach.done(); };
-  const check = () => {
-    const right = solved(state);
-    practice(task.kind === "steps" || task.kind === "pattern" ? "num.patterns" : task.kind === "depth" ? "num.integers" : task.kind === "missing" || task.kind === "expression" ? "num.expressions" : task.kind === "balance" ? "num.balance" : "num.two-step", right);
-    if (!right) { setFeedback("The chest is still locked. Check the line or both pans and try again."); return; }
-    cheer("right"); setFeedback(""); setHint(false);
-    update({ ...state, index: state.index + 1, value: initialValue(state.tasks[state.index + 1]), offset: 0, divided: false });
-  };
-  const title = task.kind === "steps" || task.kind === "depth" ? `Start at ${task.a}. ${task.b > 0 ? "Climb" : "Dive"} ${Math.abs(task.b)} ${Math.abs(task.b) === 1 ? "step" : "steps"}.`
+  const balance = task ? ["balance", "two-step", "inequality"].includes(task.kind) : false;
+  const title = !task ? "" : task.kind === "steps" || task.kind === "depth" ? `Start at ${task.a}. ${task.b > 0 ? "Climb" : "Dive"} ${Math.abs(task.b)} ${Math.abs(task.b) === 1 ? "step" : "steps"}.`
     : task.kind === "missing" ? `□ + ${task.b} = ${task.a}`
     : task.kind === "balance" ? `x + ${task.a} = ${task.b}`
     : task.kind === "two-step" ? `${task.extra}x + ${task.a} = ${task.b}`
@@ -144,19 +137,38 @@ export function Board({ session, update, practice, assistance, cheer, coach, wid
     : task.kind === "pattern" ? `Continue ${task.a}, ${task.a+task.b}, ${task.a+2*task.b}, ...`
     : task.kind === "expression" ? `Find ${task.a} + ${task.b} × ${task.extra}`
     : `${task.extra}x + ${task.a} ≤ ${task.b}`;
-  const instruction = task.kind === "inequality" ? "Keep ≤ as you remove and divide both sides. Choose an integer that makes the inequality true." : task.kind === "pattern" ? "Find the repeated step. Move the diver to the next number after the last shown." : task.kind === "expression" ? "Multiply before adding. Move the diver to the result." : balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
+  const instruction = !task ? "" : task.kind === "inequality" ? "Keep ≤ as you remove and divide both sides. Choose an integer that makes the inequality true." : task.kind === "pattern" ? "Find the repeated step. Move the diver to the next number after the last shown." : task.kind === "expression" ? "Multiply before adding. Move the diver to the result." : balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
+  const spokenTitle = !task ? "" : title.replace("□", "what number").replace("×", "times").replace("≤", "is less than or equal to");
+  const spokenPrompt = !task ? null : `${state.index === 0 && session.revision === 0 && engine.spokenIntro ? `${engine.spokenIntro} ` : ""}${spokenTitle}. ${instruction.replace("≤", "less than or equal to")}`;
+  const { replay, speak } = useSpokenPrompt(spokenPrompt, `${session.id}:${state.index}`, { soundOn, active: active && !!task });
+  if (!task) return null;
+  const change = (patch: Partial<AlgebraState>) => { update({ ...state, ...patch }); setFeedback(""); sound("tap", true); coach.done(); };
+  const check = () => {
+    const right = solved(state);
+    practice(task.kind === "steps" || task.kind === "pattern" ? "num.patterns" : task.kind === "depth" ? "num.integers" : task.kind === "missing" || task.kind === "expression" ? "num.expressions" : task.kind === "balance" ? "num.balance" : "num.two-step", right);
+    if (!right) {
+      const msg = "The chest is still locked. Check the line or both pans and try again.";
+      setFeedback(msg);
+      sound("tap", true);
+      speak(msg);
+      return;
+    }
+    cheer("right"); setFeedback(""); setHint(false);
+    update({ ...state, index: state.index + 1, value: initialValue(state.tasks[state.index + 1]), offset: 0, divided: false });
+  };
+  const headerCard = <View style={{ backgroundColor: sand, borderRadius: 20, borderWidth: 1.5, borderColor: warmLine, padding: compact ? 12 : 16, gap: compact ? 4 : 7 }}><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}><Copy style={{ color: amber, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><SpeakButton testID="treasure-algebra-speak" label="Hear algebra prompt" disabled={!soundOn || !active} onPress={replay} /></View><Heading>{title}</Heading><Copy>{instruction}</Copy></View>;
   return <View style={{ gap: compact ? 8 : 14, paddingBottom: 20 }}>
 
-    {!wide && <View style={{ backgroundColor: sand, borderRadius: 20, borderWidth: 1.5, borderColor: warmLine, padding: compact ? 12 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: amber, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>}
+    {!wide && headerCard}
     {balance && <BalanceBoard task={task} state={state} remove={() => change({ offset: -task.a, divided: false })} divide={() => change({ divided: true })}/>}
     {!balance && task.kind === "substitution" && <View style={{ backgroundColor: "#FFFDF8", borderRadius: 20, borderWidth: 1.5, borderBottomWidth: 3, borderColor: warmLine, padding: 15, alignItems: "center" }}><Copy style={{ color: ink, fontSize: 26, fontWeight: "900" }}>{task.a} + {task.b} × {task.extra} = ?</Copy></View>}
     <BoardColumns side={side} drawingWidth={wide ? undefined : side ? 132 : undefined} drawing={<SeaLine narrow={side && !wide} value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>}>
-    {wide && <View style={{ backgroundColor: sand, borderRadius: 20, borderWidth: 1.5, borderColor: warmLine, padding: compact ? 12 : 16, gap: compact ? 4 : 7 }}><Copy style={{ color: amber, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>}
+    {wide && headerCard}
     <StepControls value={state.value} balance={balance} change={value => change({ value })} width={controlsWidth}/>
 <Button onPress={check}>Open chest</Button></BoardColumns>
-    {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 14, borderWidth: 1, borderColor: warmLine, padding: 12 }}><Copy style={{ fontWeight: "700", color: ink }}>{workedHint(task)}</Copy></View>}
+    {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 14, borderWidth: 1, borderColor: warmLine, padding: 12, flexDirection: "row", alignItems: "center", gap: 8 }}><Copy style={{ flex: 1, fontWeight: "700", color: ink }}>{workedHint(task)}</Copy><SpeakButton testID="treasure-algebra-speak-hint" label="Hear algebra hint" text="Hear" disabled={!soundOn || !active} onPress={() => speak(workedHint(task).replace("×", "times").replace("≤", "less than or equal to"))} /></View>}
     {!!feedback && <Copy style={{ color: C.error, fontWeight: "800" }}>{feedback}</Copy>}
-    <View style={{ flexDirection: "row", gap: 8 }}><Button quiet compact onPress={() => { if (!hint) assistance?.(); setHint(!hint); update({ ...state, helped: true }); }}>Hint</Button></View>
+    <View style={{ flexDirection: "row", gap: 8 }}><Button quiet compact onPress={() => { const nextOpen = !hint; if (!hint) assistance?.(); setHint(nextOpen); update({ ...state, helped: true }); sound("tap", true); if (nextOpen) speak(workedHint(task).replace("×", "times").replace("≤", "less than or equal to")); }}>Hint</Button></View>
   </View>;
 }
 

@@ -68,6 +68,10 @@ export type LearnEngine<S> = {
   helpAudio?: string;
   /** One short spoken line that says the goal, played when a new round starts (e.g. "Tap the letters to spell the word!"). */
   introAudio?: string;
+  /** Spoken intro line used by voice-led games when no bundled introAudio clip exists. */
+  spokenIntro?: string;
+  /** Spoken help guide used by the Help sheet when no bundled helpAudio clip exists. */
+  spokenHelp?: string;
   color: string;
   surface: string;
   modes: LearnMode[];

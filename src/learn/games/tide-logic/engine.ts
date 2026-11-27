@@ -79,6 +79,8 @@ export const engine: LearnEngine<TideState> = {
   id: "tide-logic", name: "Tide Logic", island: "coding", ages: [7, 12], ownLevels: true,
   tagline: "Build rules for the dock sorter.", description: "Write if/else rules, then run the belt to sort every catch.",
   help: "Read where the catches should go, then tap each empty rule block and choose a word. Press Run to test your rule on the whole belt. Every wrong rule fails somewhere on the belt, and the sorter shows the first catch it sends the wrong way. From Level 3 the goal is in everyday words: turn it into AND or OR yourself. At Level 4 the bell can ring on a catch or on the catch before it. Help shows a clue first, then fixes one block, then shows the whole rule. Undo takes back a block, and Clear empties the rule.",
+  spokenIntro: "Build a rule for the dock sorter, then run the belt!",
+  spokenHelp: "Read or hear where the catches should go, then tap each empty rule block to choose a clue. Press Run the belt to test every catch. Tap Help for a clue or a step.",
   color: "#287A82", surface: "#E6F3F2", modes: ["solo", "together"],
   skills: { "think.code-condition": "Making if and else rules", "think.code-events": "Reacting to events", "think.code-logic": "Joining conditions" },
   levelNames: [
