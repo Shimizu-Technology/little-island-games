@@ -51,6 +51,7 @@ vi.mock("../src/ui/icons", () => {
       "DotsThree",
       "PencilSimple",
       "Star",
+      "Sun",
       "UsersThree",
       "X",
     ].map((n) => [n, glyph(n)])
@@ -127,6 +128,7 @@ describe("round 2 pose and chrome", () => {
     });
     const bar = tree.root.findByProps({ testID: "home-bottom-bar" });
     expect(bar.findAllByType("Pressable" as never).map((n) => n.props.accessibilityLabel)).toEqual([
+      "Sky & Weather",
       "Closet",
       "Badges",
       "Decorate",

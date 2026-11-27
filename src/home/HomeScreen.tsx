@@ -1,3 +1,4 @@
+import { AtmospherePicker } from "./AtmospherePicker";
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as ReactNative from "react-native";
 import { AccessibilityInfo, Platform, AppState, Pressable, Text, View, useWindowDimensions } from "react-native";
@@ -149,6 +150,8 @@ export type HomeClosetConfig = {
   renderCharacter?: (look: IslanderLook) => CharacterRender;
 };
 export type HomeScreenProps = Ownership & {
+  completedRounds?: number;
+  unlockSeasonalPacks?: boolean;
   badges?: BadgeId[];
   milestones?: readonly string[];
   initialItem?: string;
@@ -178,6 +181,8 @@ export function HomeScreen({
   sheetSaveStatus,
   renderCharacter,
   lab = false,
+  completedRounds = 0,
+  unlockSeasonalPacks = false,
   ...ownership
 }: HomeScreenProps) {
   const window = useWindowDimensions(),
@@ -193,6 +198,7 @@ export function HomeScreen({
   const [placing, setPlacing] = useState<ItemId | undefined>(
     initialItem && itemIds.includes(initialItem) ? initialItem : undefined
   );
+  const [atmosphereOpen, setAtmosphereOpen] = useState(false);
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState<RoomId>(() =>
       initialSheet === "closet" ? heroRoomInState(store.state) : store.state.current
@@ -1403,6 +1409,7 @@ export function HomeScreen({
         canRedo={store.canRedo}
         top={inset.top}
         bottom={inset.bottom}
+        onAtmosphere={() => { interaction.cancelAll(); setMore(false); setFriends(false); setSelected(undefined); setAtmosphereOpen(true); }}
         onMore={() => {
           setMore(!more);
           setFriends(false);
@@ -1622,6 +1629,11 @@ export function HomeScreen({
         renderCharacter={characterRenderer}
         onSelect={setSelected}
       />
+      {atmosphereOpen && <AtmospherePicker atmosphere={store.state.atmosphere} rounds={completedRounds} grownUp={unlockSeasonalPacks}
+        onClose={() => setAtmosphereOpen(false)}
+        onChange={atmosphere => dispatch({ type: "atmosphere", atmosphere })}
+        onApply={pack => { dispatch({ type: "seasonal-pack", pack }); setAtmosphereOpen(false); }}
+        onDecorate={item => { setAtmosphereOpen(false); setDesigning(true); setPlacing(item); }}/>}
       <HomePanels
         more={more}
         friends={friends}

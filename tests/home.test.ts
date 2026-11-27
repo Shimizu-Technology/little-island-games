@@ -110,7 +110,7 @@ describe('room editing, stacking and colours',()=>{
   writeFileSync(`${process.env.POLISH_EVIDENCE}/fixture-surfaces.json`,JSON.stringify(save));
  });
  it('gives every new item an explicit scene size relative to the Islander',()=>{
-  expect(Object.keys(moreCatalog)).toHaveLength(58);
+  expect(Object.keys(moreCatalog)).toHaveLength(64);
   for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(Math.round(spec.itemSize*1.18));
   expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);
@@ -139,7 +139,7 @@ describe('room editing, stacking and colours',()=>{
  });
  it('allows free expanded catalogue and refuses unearned rewards',()=>{
   const s=empty(); expect(homeReducer(s,{type:'place',instance:instance('a','abacus',0,0)}).state).toBe(s);
-  for(const id of Object.keys(moreCatalog)) expect(homeReducer(s,{type:'place',instance:instance('a',id,0,0)}).state).not.toBe(s);
+  for(const id of Object.keys(moreCatalog).filter(id=>moreCatalog[id].free)) expect(homeReducer(s,{type:'place',instance:instance('a',id,0,0)}).state).not.toBe(s);
   expect(homeReducer(s,{type:'place',instance:instance('a','abacus',0,0)},owned).state).not.toBe(s);
  });
  it('uses half-cells, scaled footprints and a clear door with exact projection round-trips',()=>{

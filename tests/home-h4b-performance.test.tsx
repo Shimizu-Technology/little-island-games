@@ -13,7 +13,7 @@ import {instance} from '../src/home/model';
 const clock=vi.hoisted(()=>({shared:undefined as any,animations:0,deferJS:false,js:[]as any[],reactions:[] as any[],frames:[] as any[]}));
 vi.mock('react-native-gesture-handler',()=>({Gesture:{Manual:()=>({})}}));
 vi.mock('react-native',()=>({View:'view',Image:'image',Platform:{OS:'ios'}}));
-vi.mock('react-native-svg',()=>Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
+vi.mock('react-native-svg',()=>Object.fromEntries(['Image','G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Text','LinearGradient','Stop','Pattern'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
 vi.mock('react-native-reanimated',()=>({default:{View:'animated-view',createAnimatedComponent:()=> 'animated-g'},Easing:{linear:(t:number)=>t},ReduceMotion:{Never:'never'},withTiming:(v:number)=>{clock.animations++;return v;},useAnimatedReaction:(prepare:any,react:any)=>{
   const latest=React.useRef({prepare,react});React.useLayoutEffect(()=>{latest.current={prepare,react};});
   const entry=React.useRef({tick:()=>latest.current.react(latest.current.prepare(),null)}).current;
@@ -357,7 +357,7 @@ it('Pip drink standby retains its MealDrawing, Food and held recipe at the first
  const playback=render.mock.calls.at(-1)![0].mealPlayback;
  const preparedProps=tree.root.findAllByType(HomeCharacter)[0].props.input;
  const propsBefore=tree.root.findAllByType(HandProp);
- expect(propsBefore).toHaveLength(6);expect(propsBefore.map(n=>n.props.longStraw)).toEqual([true,false,false,true,false,false]);
+ expect(propsBefore).toHaveLength(9);expect(propsBefore.map(n=>n.props.longStraw)).toEqual([true,false,false,true,false,false,true,false,false]);
  expect(propsBefore[0].parent!.props.transform).toContain('scale(1.25)');
  render.mockClear();
  await act(async()=>tree.update(<MealArt input={{...input,action:'drink'}} meal={{...standby,key:31,food:{...standby.food,empty:true}}} reduced={false} renderCharacter={render}/>));
@@ -404,11 +404,11 @@ it('switches a prepared drink by clock without replacing either vessel drawing',
  let tree!:ReturnType<typeof create>;
  await act(async()=>{tree=create(<EntityArt prepareMeal entity={hero} mealStandby={coconut} reduced={false}/>);});
  const bank=()=>tree.root.findByProps({testID:'prepared-meal-drink'});
- const variants=bank().findAllByType(HandProp);expect(variants).toHaveLength(4);
+ const variants=bank().findAllByType(HandProp);expect(variants).toHaveLength(6);
  const food=bank().findByProps({testID:'meal-held-food'}).props.style;
  await act(async()=>tree.update(<EntityArt prepareMeal entity={hero} mealStandby={{...coconut,food:instance('juice','juice',0,0)}} reduced={false}/>));
  expect(bank().findByProps({testID:'meal-held-food'}).props.style).toBe(food);
- const next=bank().findAllByType(HandProp);for(let i=0;i<4;i++)expect(next[i]).toBe(variants[i]);
+ const next=bank().findAllByType(HandProp);for(let i=0;i<variants.length;i++)expect(next[i]).toBe(variants[i]);
  expect(bank().findByProps({testID:'meal-food-0-juice'}).props.style[1].evaluate().opacity).toBe(1);
  expect(bank().findByProps({testID:'meal-food-0-coconut-drink'}).props.style[1].evaluate().opacity).toBe(0);
  await act(async()=>tree.unmount());

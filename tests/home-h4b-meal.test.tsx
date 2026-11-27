@@ -8,7 +8,7 @@ import { characterPose } from '../src/islander/rig/character';
 import { instance } from '../src/home/model';
 const playback = vi.hoisted(() => ({ progress: undefined as any, timingCalls: 0, completion: undefined as undefined | ((done: boolean) => void), frames: new Map<number, () => void>(), serial: 0 }));
 vi.mock('react-native', () => ({ View: 'meal-stage' }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
+vi.mock('react-native-svg', () => Object.fromEntries(['Image','G','Circle','Ellipse','Rect','Path','Defs','ClipPath'].map(k=>[k,k.toLowerCase()]).concat([['default','svg']])));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'frame', createAnimatedComponent: () => 'frame' }, ReduceMotion: { Never: 'never' }, Easing: { linear: (t: number) => t }, runOnJS: (fn: any) => fn, cancelAnimation: () => {}, useDerivedValue: (fn: () => any) => ({get value(){return fn();}}), useAnimatedProps: (fn: () => any) => ({ evaluate: fn }), withTiming: (_to: any, _opts: any, done: any) => { playback.timingCalls++; playback.completion = done; return 0; },
   useSharedValue: (v: number) => { const ref = React.useRef({ value: v, set(n: number) { this.value = n; } }); playback.progress = ref.current; return ref.current; },
   useAnimatedStyle: (fn: () => any) => ({ evaluate: fn }) }));

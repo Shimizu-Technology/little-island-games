@@ -1,3 +1,5 @@
+import { completedLearningRounds, seasonalPacks, unlockedSeasonalPacks } from "./seasonal";
+import { themeRewards } from "./catalog";
 import React, { useCallback, useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -85,11 +87,15 @@ export function HomeRoute({
   }
 
   const expected = { learner: owner, epoch: store.epoch };
+  const rounds = completedLearningRounds(store.save, owner);
+  const packs = unlockedSeasonalPacks(rounds, store.save.settings.unlockSeasonalPacks);
 
   return (
     <HomeScreen
       key={`${owner}:${store.epoch}`}
       initialState={person.home}
+      completedRounds={rounds}
+      unlockSeasonalPacks={store.save.settings.unlockSeasonalPacks ?? false}
       initialItem={intentConsumed ? undefined : resolvedHomeItem}
       initialSheet={intentConsumed ? undefined : initialSheet}
       initialClosetItem={intentConsumed ? undefined : resolvedClosetItem}
@@ -117,12 +123,13 @@ export function HomeRoute({
         renderCharacter: (look) => (input) => <HomeCharacter input={input} look={look} />,
       }}
       ownedWallpapers={wallThemes.filter(
-        (id) => !["math-lab", "library", "night-sky", "arcade-neon"].includes(id) || person.earned.includes(id)
+        (id) => (!themeRewards.some(r => r.id === id) && !seasonalPacks.some(p => p.wallpaper === id)) || person.earned.includes(id) || packs.some(p => p.wallpaper === id)
       )}
       ownedFloors={floorThemes.filter(
-        (id) => !["island-breeze", "game-room"].includes(id) || person.earned.includes(id)
+        (id) => (!themeRewards.some(r => r.id === id) && !seasonalPacks.some(p => p.floor === id)) || person.earned.includes(id) || packs.some(p => p.floor === id)
       )}
       ownedItems={[
+        ...packs.flatMap(p => [...p.items]),
         ...homeStickerItems(arcadeLearner(store.save.arcade, owner).stickers),
         ...(person.earned.filter((id) => furnitureIds.includes(id as (typeof furnitureIds)[number])) as ItemId[]),
       ]}

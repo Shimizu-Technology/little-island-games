@@ -8,6 +8,13 @@ export const illustratedRooms = {
   'beach': (): ImageSourcePropType => require('../../../assets/home/rooms/beach.webp'),
 };
 export const illustratedProps = {
+  'christmas-tree': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/christmas-tree.webp'),
+  'gift-box': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/gift-box.webp'),
+  'hot-cocoa': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/hot-cocoa.webp'),
+  'pumpkin-pie': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/pumpkin-pie.webp'),
+  'fiesta-platter': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/fiesta-platter.webp'),
+  'autumn-wreath': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/autumn-wreath.webp'),
+
   'bed': (): ImageSourcePropType => require('../../../assets/home/props/bed.webp'),
   'sofa': (): ImageSourcePropType => require('../../../assets/home/props/sofa.webp'),
   'bathtub': (): ImageSourcePropType => require('../../../assets/home/props/bathtub.webp'),

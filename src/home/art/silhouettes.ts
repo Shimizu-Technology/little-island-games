@@ -48,6 +48,13 @@ const wallPicture: Prim = ["r", 20, 24, 112, 82];
 const STICKER: Hull = hull(150, ["e", 75, 75, 67, 67]);
 
 const hulls: Record<string, Hull> = {
+  // Seasonal WebP cutouts, read from the transparent 384-square artwork in a 150 box.
+  "christmas-tree": hull(150, ["p", 75, 8, 124, 108, 26, 108], ["r", 54, 108, 42, 37]),
+  "gift-box": hull(150, ["r", 22, 40, 108, 96], ["e", 75, 38, 35, 20]),
+  "hot-cocoa": hull(150, ["r", 21, 37, 95, 102], ["e", 119, 86, 25, 30], ["c", 16, 12, 43, 47, 7]),
+  "pumpkin-pie": hull(150, ["e", 75, 73, 68, 48], ["p", 18, 91, 130, 91, 117, 121, 40, 126]),
+  "fiesta-platter": hull(150, ["e", 76, 81, 68, 43], ["p", 9, 52, 102, 28, 142, 89, 116, 125, 14, 86]),
+  "autumn-wreath": hull(150, ["e", 75, 75, 60, 62]),
   // Beds, seats, baths (SeatArt, 150 box).
   bed: hull(150, ["p", 4, 37, 23, 31, 131, 31, 149, 48, 149, 112, 4, 112], ["c", 10, 110, 10, 117, 3], ["c", 142, 110, 142, 117, 3]),
   "bunk-bed": hull(150, ["r", 4, 8, 145, 134]),

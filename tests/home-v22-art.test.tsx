@@ -10,7 +10,7 @@ import { moreCatalog } from '../src/home/catalogMore';
 import { catalog } from '../src/home/catalog';
 import { Islander } from '../src/islander/rig/Islander';
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:React.ElementType)=>({animatedProps:_a,...props}:Record<string,unknown>)=>React.createElement(c,{...props,'data-animated':true})},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
-vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',LinearGradient:'linearGradient',RadialGradient:'radialGradient',Stop:'stop',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
+vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Image:'image',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',LinearGradient:'linearGradient',RadialGradient:'radialGradient',Stop:'stop',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
 vi.mock('../src/arcade/Art',()=>({StickerArt:()=>null}));
 vi.mock('../src/badges/BadgeArt',()=>({BadgeGlyph:()=>null}));
 const furniture: Record<'home'|'kitchen'|'treehouse'|'beach',readonly (readonly [string,number,number,number])[]> = {
@@ -21,7 +21,7 @@ const furniture: Record<'home'|'kitchen'|'treehouse'|'beach',readonly (readonly 
 };
 it('keeps every item art and the four furnished rooms renderable',()=>{
   const ids=[...Object.keys(catalog),...Object.keys(moreCatalog)];
-  expect(ids).toHaveLength(82);
+  expect(ids).toHaveLength(88);
   for(const id of ids) expect(render(id in moreCatalog?<MoreItemArt id={id}/>:<ItemArt item={id as keyof typeof catalog}/>)).toMatch(/<(svg|img)/);
   expect(render(<MoreItemArt id="sofa" active animated/>)).toBe(render(<MoreItemArt id="sofa" active animated reduced/>)); // occupied painted seats keep stable contact.
   expect(render(<ItemArt item="aquarium" active animated/>)).not.toBe(render(<ItemArt item="aquarium" active animated reduced/>));

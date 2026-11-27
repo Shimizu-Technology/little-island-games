@@ -25,7 +25,7 @@ export type MoreItemSpec = ItemSpec & {
   /** Illustrated height/footprint in the 800-unit scene; the Islander stands 163 units tall. */
   itemSize: number;
   /** Free for everyone (no track/badge). */
-  free: true;
+  free: boolean;
   /** Can be painted with tintPalette. */
   tintable: boolean;
   /** A surface other small items may sit on (table, shelf, counter, desk, dresser). */
@@ -49,6 +49,12 @@ const entry = (name: string, category: MoreItemSpec["category"], footprint: read
   free: true, tintable: true, rooms: ["home", "treehouse", "beach"], ...options,
 });
 export const moreCatalog: Record<string, MoreItemSpec> = {
+  "christmas-tree": entry("Christmas Tree", "lights", [2, 1], {itemSize: 220, free: false, tintable: false, interactive: "The holiday lights twinkle"}),
+  "gift-box": entry("Gift Box", "toys-fun", [1, 1], {itemSize: 85, free: false, small: true, tintable: false, interactive: "A gift full of wonder"}),
+  "hot-cocoa": entry("Hot Cocoa", "kitchen", [1, 1], {itemSize: 62, free: false, small: true, tintable: false}),
+  "pumpkin-pie": entry("Pumpkin Pie", "kitchen", [1, 1], {itemSize: 74, free: false, small: true, tintable: false}),
+  "fiesta-platter": entry("Fiesta Platter", "kitchen", [1, 1], {itemSize: 90, free: false, small: true, tintable: false}),
+  "autumn-wreath": entry("Autumn Wreath", "wall-art", [1, 1], {itemSize: 110, free: false, tintable: false, layer: "wall", rotations: [0], mirror: false}),
   "beach-towel": entry("Beach towel", "rugs-floor", [2, 1], {itemSize:145,layer:"ground",rooms:["beach"]}),
   "lounger": entry("Beach lounger", "beds-seats", [2, 1], {itemSize:200,rooms:["beach"]}),
   "tv": entry("Calm television", "toys-fun", [2, 1], {itemSize: 160, interactive: "The screen is on"}),

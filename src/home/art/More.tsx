@@ -1,3 +1,5 @@
+import { HolidayLights } from "./HolidayLights";
+import type { Atmosphere } from "../atmosphere";
 import { paintedProp } from './illustrated';
 import { PaintedProp } from './PropShape';
 import { BeachPropArt } from '../BeachProps';
@@ -36,7 +38,9 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
   if (hasSeatArt(id)) return <SeatArt occupied={occupied} id={id} size={size} layer={layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? { on: active }} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>} />;
   if (layer === 'front') return null;
   const painted = paintedProp(id);
-  if (painted) return <PaintedProp id={painted} size={size} mirrored={mirrored} rotation={rotation} tint={tint} active={active}/>;
+  if (painted) return <PaintedProp id={painted} size={size} mirrored={mirrored} rotation={rotation} tint={tint} active={active && id !== 'christmas-tree'}>
+    {id === 'christmas-tree' && <HolidayLights size={size} on={state?.on ?? active} reduced={reduced}/>}
+  </PaintedProp>;
 
   const color = material(tint, ['#4FA99F', '#FF7A5C', '#F5C249'][id.length % 3]);
   const light = shade(color, 0.34), dark = shade(color, -0.2);
@@ -457,6 +461,6 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
   );
 }
 
-export function RoomShellArt({ room, theme, live }: { room: Exclude<RoomId, "home">; theme: HomeState["theme"]; live?: boolean }) {
-  return <StageRoom room={room} theme={theme} live={live} />;
+export function RoomShellArt({ room, theme, live, atmosphere, reduced, weatherActive }: { room: Exclude<RoomId, "home">; theme: HomeState["theme"]; live?: boolean; atmosphere?: Atmosphere; reduced?: boolean; weatherActive?: boolean }) {
+  return <StageRoom room={room} theme={theme} live={live} atmosphere={atmosphere} reduced={reduced} weatherActive={weatherActive} />;
 }

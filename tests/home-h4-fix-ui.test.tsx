@@ -15,7 +15,7 @@ import type { Interaction } from '../src/home/runtime/useInteraction';
 
 const timing = vi.hoisted(() => ({ configs: [] as any[] }));
 vi.mock('react-native', () => ({ StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}}, View: 'View', Pressable: 'Pressable', Text: 'Text', Platform: { OS: 'ios' } }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
+vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k.toLowerCase()]).concat([['default', 'svg']])));
 vi.mock('react-native-reanimated', () => ({
   default: { View: 'AnimatedView' }, cancelAnimation:()=>{},
   useSharedValue: (v: any) => React.useRef({ value: v, set(n: any) { this.value = n; }, get() { return this.value; } }).current,

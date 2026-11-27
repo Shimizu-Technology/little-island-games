@@ -1,3 +1,4 @@
+import { seasonalItems } from "../home/seasonal";
 import { projectProfile } from "../state/profiles";
 import { newExploreProgress } from "../explore/progress";
 import { grantCatalog, MAX_MILESTONES, validMilestone } from '../badges/engine';
@@ -20,10 +21,12 @@ export function validPerson(v: unknown, stickers: readonly string[] = []): v is 
     && v.earned.every(id => grantCatalog().includes(id)) && v.milestones.every(validMilestone)
     && canWear(v.look, v.earned) && entitledHome(v.home, v.earned, stickers);
 }
+/** Seasonal creation is gated by Home ownership. Placed treasures and their Undo remain valid
+ * after a grown-up disables instant access; no duplicate permanent-grant ledger is needed. */
 export function entitledHome(home: HomeSave, earned: readonly string[], stickers: readonly string[] = []): boolean {
   const migrated = migrateHome(home);
   if (!migrated) return false;
-  return Object.values(migrated.rooms).every(room => room.instances.every(i => owns(i.item, { ownedItems: [...earned, ...stickers.map(id => `sticker:${id}`)] as import('../home/catalog').ItemId[] }))
+  return Object.values(migrated.rooms).every(room => room.instances.every(i => (seasonalItems as readonly string[]).includes(i.item) || owns(i.item, { ownedItems: [...earned, ...stickers.map(id => `sticker:${id}`)] as import('../home/catalog').ItemId[] }))
     && Object.values(room.theme).every(id => !themeRewards.some(r => r.id === id) || earned.includes(id)));
 }
 export function validPersonalization(v: unknown, learners?: Learners, arcade?: Save["arcade"]): v is Personalization {

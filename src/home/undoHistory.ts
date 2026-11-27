@@ -1,3 +1,4 @@
+import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots } from "./family";
 import { itemSpec } from "./catalog";
 import { roomIds, type RoomId } from "./catalogMore";
@@ -34,7 +35,7 @@ export type RoomPatch =
       characters?: { remove: number[]; put: Put<Character>[] };
       theme?: RoomState["theme"];
     };
-export type UndoStep = Partial<Record<RoomId, RoomPatch>>;
+export type UndoStep = Partial<Record<RoomId, RoomPatch>> & { atmosphere?: Atmosphere | null };
 export type HomeUndo = { version: 1; steps: UndoStep[] };
 
 /** Key order is not meaning: saves written by different code paths order keys differently. */
@@ -118,6 +119,7 @@ export function undoStep(before: HomeStateV2, after: HomeStateV2): UndoStep {
     const patch = roomPatch(before.rooms[id], after.rooms[id]);
     if (patch) step[id] = patch;
   }
+  if (!same(before.atmosphere, after.atmosphere)) step.atmosphere = before.atmosphere ?? null;
   return step;
 }
 export function applyUndoStep(after: HomeStateV2, step: UndoStep): HomeStateV2 {
@@ -130,7 +132,8 @@ export function applyUndoStep(after: HomeStateV2, step: UndoStep): HomeStateV2 {
       ...missing.map(slot => ({ slot, anchor: "floor" as const, pose: "stand" as const, x: 8, y: 8, staged: true })),
     ] };
   }
-  return { version: after.version, ...(after.rosterVersion ? { rosterVersion: after.rosterVersion } : {}), current: after.current, rooms };
+  const atmosphere = compactAtmosphere(Object.hasOwn(step, "atmosphere") ? step.atmosphere ?? undefined : after.atmosphere);
+  return { ...(atmosphere ? { atmosphere } : {}), version: after.version, ...(after.rosterVersion ? { rosterVersion: after.rosterVersion } : {}), current: after.current, rooms };
 }
 export const undoBytes = (undo: HomeUndo) => JSON.stringify(undo).length;
 /** One saved step, its size inside the saved list, and whether undoing it brings back removed things. */
@@ -138,9 +141,8 @@ export type UndoEntry = { step: UndoStep; bytes: number; removal: boolean };
 /** Removed things: ids the step puts back that are nowhere in the home after the action. */
 export function undoEntry(step: UndoStep, after: HomeStateV2): UndoEntry {
   const present = new Set(roomIds.flatMap((id) => after.rooms[id].instances.map((i) => i.id)));
-  const restored = Object.values(step).flatMap((patch) =>
-    "room" in patch! ? patch.room.instances.map((i) => i.id) : (patch!.instances?.put ?? []).map((p) => p.value.id)
-  );
+  const restored = roomIds.flatMap(id => { const patch = step[id]; return !patch ? [] : (
+    "room" in patch! ? patch.room.instances.map((i) => i.id) : (patch.instances?.put ?? []).map((p) => p.value.id)); });
   return { step, bytes: JSON.stringify(step).length, removal: restored.some((id) => !present.has(id)) };
 }
 const listBytes = (entries: readonly UndoEntry[]) =>
@@ -189,8 +191,10 @@ function validPuts(puts: unknown, max: number): boolean {
 export function validUndoShape(v: unknown, family = false): v is HomeUndo {
   if (!plain(v) || Object.keys(v).length !== 2 || v.version !== 1 || !Array.isArray(v.steps)) return false;
   if (!v.steps.length || v.steps.length > HOME_UNDO_STEPS || JSON.stringify(v).length > HOME_UNDO_READ_BYTES) return false;
-  return v.steps.every((step) => plain(step) && Object.keys(step).length > 0 && keysWithin(step, roomIds) &&
-    Object.values(step).every((patch) => {
+  return v.steps.every((step) => plain(step) && Object.keys(step).length > 0 && keysWithin(step, [...roomIds, "atmosphere"]) &&
+    (!Object.hasOwn(step, "atmosphere") || step.atmosphere === null || validAtmosphere(step.atmosphere)) &&
+    roomIds.every(id => {
+      const patch = step[id]; if (!Object.hasOwn(step, id)) return true;
       if (!plain(patch)) return false;
       if ("room" in patch) return Object.keys(patch).length === 1 && plain(patch.room);
       if (!Object.keys(patch).length || !keysWithin(patch, ["instances", "characters", "theme"])) return false;

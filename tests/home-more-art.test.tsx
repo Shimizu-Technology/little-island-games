@@ -14,7 +14,7 @@ import { instance, type RoomState } from '../src/home/model';
 import { SeatFront } from '../src/home/SeatFront';
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
 vi.mock('react-native-svg', () => {
-  const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text', RadialGradient:'radialGradient',LinearGradient: 'linearGradient', Stop: 'stop' };
+  const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Image: 'image', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text', RadialGradient:'radialGradient',LinearGradient: 'linearGradient', Stop: 'stop' };
   return Object.fromEntries(Object.entries(tags).map(([name, tag]) => [name, ({ children, accessible: _accessible, ...props }: Record<string, unknown>) => React.createElement(tag, props, children as React.ReactNode)]));
 });
 vi.mock('../src/home/art/Room', () => ({wallColors: {cream:'#F5E6C8', lagoon:'#C5DED3'}, floorColors: {sand:'#EBD7B2', honey:'#DDAE7D'}}));
@@ -22,9 +22,9 @@ vi.mock('../src/arcade/Art', () => ({StickerArt: () => null}));
 const render = renderToStaticMarkup;
 describe('free home art contract', () => {
   it('supplies distinct, tintable art for every free item and each active reaction', () => {
-    expect(Object.keys(moreCatalog)).toHaveLength(58);
+    expect(Object.keys(moreCatalog).filter(id=>moreCatalog[id].free)).toHaveLength(58);
     const silhouettes = new Set<string>();
-    for (const [id, spec] of Object.entries(moreCatalog)) {
+    for (const [id, spec] of Object.entries(moreCatalog).filter(([,spec])=>spec.free)) {
       expect(spec.free).toBe(true);
       expect(spec.footprint.every(n => Number.isInteger(n) && n > 0)).toBe(true);
       expect(id in catalog).toBe(false);

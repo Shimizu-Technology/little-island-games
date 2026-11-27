@@ -48,6 +48,7 @@ vi.mock("../src/ui/icons", () => {
       "DotsThree",
       "PencilSimple",
       "Star",
+      "Sun",
       "UsersThree",
       "X",
     ].map((n) => [n, glyph(n)])
@@ -102,7 +103,7 @@ describe("Phase 3A Toca Boca room chrome", () => {
     });
     const bar = tree.root.findByProps({ testID: "home-bottom-bar" });
     const dockButtons = bar.findAll((n) => (n.type as unknown) === "Pressable");
-    expect(dockButtons.map((n) => n.props.accessibilityLabel)).toEqual(["Closet", "Badges", "Decorate"]);
+    expect(dockButtons.map((n) => n.props.accessibilityLabel)).toEqual(["Sky & Weather", "Closet", "Badges", "Decorate"]);
     for (const button of dockButtons) {
       const style = flat(button.props.style);
       expect(style.minWidth ?? style.width).toBeGreaterThanOrEqual(64);

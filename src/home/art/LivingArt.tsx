@@ -292,6 +292,7 @@ export function LivingArt({ id, size = 120, state, mirrored = false, rotation = 
   const painted = id === 'fridge' ? (state?.on ? 'fridge-open' : 'fridge-closed') : paintedProp(id);
   if (painted) return <PaintedProp id={painted} size={size} mirrored={mirrored} rotation={rotation} tint={tint} active={id === 'teddy' && state?.on}>
     <Svg width={size} height={size} viewBox="0 0 384 384" style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
+      {id === 'hot-cocoa' && state?.empty && <G data-cocoa="empty"><Ellipse cx={177} cy={132} rx={92} ry={29} fill="#69483A" stroke="#D4BB99" strokeWidth={5}/><Path d="M125 137q47 15 93-1" fill="none" stroke="#98715B" strokeWidth={4}/></G>}
       {['lamp', 'table-lamp', 'floor-lamp'].includes(id) && state?.on && <G data-light="warm">
         <Defs><RadialGradient id={`lamp-${uid}`}><Stop offset="0" stopColor="#FFE8A3" stopOpacity={.65}/><Stop offset="1" stopColor="#FFD482" stopOpacity={0}/></RadialGradient></Defs>
         <Ellipse cx={192} cy={124} rx={185} ry={150} fill={`url(#lamp-${uid})`}/>

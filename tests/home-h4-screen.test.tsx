@@ -17,9 +17,10 @@ import { cozyRoomScale } from '../src/home/runtime/CameraController';
 import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
+vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
 const harness = vi.hoisted(() => ({ viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, proposals: [] as any[], slots: [{}, {}] as any[] }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
+vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/home/art/CrabFriend', () => ({ CrabFriend: 'CrabFriend' }));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
 vi.mock('../src/home/runtime/homeSound', () => ({

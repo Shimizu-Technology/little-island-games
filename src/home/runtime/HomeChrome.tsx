@@ -18,6 +18,7 @@ import {
   DotsThree,
   PencilSimple,
   Star,
+  Sun,
   UsersThree,
 } from "../../ui/icons";
 import { theme } from "../../ui/theme";
@@ -206,6 +207,7 @@ export function HomeChrome({
   onUndo,
   onRedo,
   onMore,
+  onAtmosphere,
   onFriends,
   onDesign,
   onRoom,
@@ -245,6 +247,7 @@ export function HomeChrome({
   top: number;
   bottom: number;
   onMore: () => void;
+  onAtmosphere?: () => void;
   onHeaderLayout: (height: number) => void;
   title?: string;
   saveStatus?: React.ReactNode;
@@ -370,6 +373,7 @@ export function HomeChrome({
 
       <View testID="home-bottom-bar" style={[styles.navigation, { bottom, height: barHeight }]}>
         <View style={styles.navigationItems}>
+          <DockButton testID="home-atmosphere-button" glyph={Sun} label="Sky" accessibilityLabel="Sky & Weather" selected={false} onPress={() => onAtmosphere?.()}/>
           <DockButton
             testID="home-closet-button"
             targetRef={closetButtonRef}

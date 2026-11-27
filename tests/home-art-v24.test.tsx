@@ -12,7 +12,7 @@ import { capabilityOf } from '../src/home/world';
 import { visualBox } from '../src/home/art/visualBox';
 import { itemIds, itemSpec } from '../src/home/catalog';
 import { itemSize } from '../src/home/geometry';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Image:'image',Text:'text'}));
 const ids = ['lie','lie-asleep','bathe','sit-front','sit-side','hold','eat','drink'];
 describe('2.4 art and socket contract',()=>{
  it('renders every wardrobe layer in each pose with finite joints and a stable complete lying transform',()=>{

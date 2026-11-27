@@ -5,6 +5,7 @@ import { HomeScreen } from '../src/home/HomeScreen';
 import { starterHome, instance, type HomeAction } from '../src/home/model';
 import { editHistory, restoredHistory, savedHistory, RESTORE_NOTE, UNDO_FULL_MESSAGE, UNDO_TRIMMED_NOTE } from '../src/home/useHomeStore';
 import twentySteps from './fixtures/home-undo-legacy/twenty-steps.json';
+vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
 const harness = vi.hoisted(() => ({ chrome: {} as any, design: {} as any, announce: [] as string[] }));
 vi.mock('expo-router', () => ({ router: {}, useFocusEffect: (effect: () => void | (() => void)) => { React.useEffect(() => effect(), [effect]); } }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'ios' },

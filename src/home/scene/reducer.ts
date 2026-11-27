@@ -1,3 +1,5 @@
+import { compactAtmosphere, validAtmosphere } from "../atmosphere";
+import { seasonalPacks } from "../seasonal";
 import { familySlots } from "../family";
 import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
 import { decorSpec, itemSpec } from "../catalog";
@@ -22,6 +24,30 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
   const fail = (message: string): HomeResult => ({ state: save, message });
   const finish = (next: HomeStateV2): HomeResult =>
     validHome(next) ? { state: next } : fail("Your original room has been kept.");
+  if (action.type === "atmosphere") {
+    if (!validAtmosphere(action.atmosphere)) return fail("Choose a sky and weather.");
+    const { atmosphere: _previous, ...base } = save; void _previous;
+    const atmosphere = compactAtmosphere(action.atmosphere);
+    if ((!atmosphere && !save.atmosphere) || (atmosphere?.timeOfDay === save.atmosphere?.timeOfDay && atmosphere?.weather === save.atmosphere?.weather)) return { state: save };
+    return finish({ ...base, version: 4, ...(atmosphere ? { atmosphere } : {}) });
+  }
+  if (action.type === "seasonal-pack") {
+    const pack = seasonalPacks.find(p => p.id === action.pack);
+    if (!pack || !ownership.ownedWallpapers?.includes(pack.wallpaper)) return fail("A grown-up can open seasonal packs in Settings, too.");
+    // Set the palette and mood, then use the ordinary placement engine for each new prop.
+    // One history entry; an existing arrangement is never reset or duplicated.
+    let next: HomeStateV2 = { ...save, version: 4, atmosphere: { ...pack.atmosphere }, rooms: { ...save.rooms,
+      [roomId]: { ...state, theme: { wallpaper: pack.wallpaper, floor: pack.floor } } } };
+    for (const [n, item] of pack.items.entries()) {
+      if (next.rooms[roomId].instances.some(i => i.item === item)) continue;
+      const created = instance(`pack-${pack.id}-${item}`, item, [13, 10, 6][n], [5, 9, 9][n]);
+      if (capabilityOf(item).toggle === "light") created.powered = true;
+      const placed = reduceSceneAction(next, { type: "place", instance: created, roomId }, ownership);
+      if (placed.state === next) return fail(placed.message ?? "Put something away to make room for these treasures.");
+      next = placed.state;
+    }
+    return finish(next);
+  }
   if (action.type === "apply-proposal") {
     if (action.proposal.refusal === "storage-capacity") return fail(STORAGE_FULL_MESSAGE);
     const candidate = action.proposal.item;
