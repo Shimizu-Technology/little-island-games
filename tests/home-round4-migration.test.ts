@@ -6,7 +6,7 @@ import {emptySave,parseSave} from '../src/state/validation';
 import {assertMigratedHomes,preserveLearnerMigration,preserveImportedLearners} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
 const envelope=(home:HomeStateV2)=>{const save=initializePersonalization(emptySave());save.personalization!.people.family.home=home;return save;};
-const fixture=(slot:Character['slot'])=>{const home=starterHome();home.version=2;home.rooms.home.instances=[instance('bed','bed',4,0),instance('toy','teddy',10,8)];home.rooms.home.characters=[{slot,anchor:'seat',pose:'sit',holding:'toy'}];return envelope(home);};
+const fixture=(slot:Character['slot'])=>{const home=starterHome();home.version=2;delete home.rosterVersion;home.rooms.home.instances=[instance('bed','bed',4,0),instance('toy','teddy',10,8)];home.rooms.home.characters=[{slot,anchor:'seat',pose:'sit',holding:'toy'}];return envelope(home);};
 describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',()=>{
  it.each([0,1,2] as const)('migrates implicit first-seat slot %i with its held prop and exact-byte preservation',async slot=>{
   const source=fixture(slot),raw=' \n'+JSON.stringify(source,null,3)+'\n',parsed=parseSave(raw),next=backfillRewards(parsed),h=next.personalization!.people.family.home as HomeStateV2;
@@ -19,7 +19,7 @@ describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',
   const source=fixture(0),home=source.personalization!.people.family.home as HomeStateV2;
   home.rooms.home.characters=[0,1,2].map(slot=>({slot:slot as Character['slot'],anchor:'seat',pose:'sit',holding:`toy-${slot}`}));home.rooms.home.instances=[instance('bed','bed',4,0),...[0,1,2].map(slot=>instance(`toy-${slot}`,'teddy',10,8))];
   const next=backfillRewards(parseSave(JSON.stringify(source))),h=next.personalization!.people.family.home as HomeStateV2;
-  expect(h.rooms.home.characters.map(c=>c.anchor)).toEqual(['seat','floor','seat']);expect(h.rooms.home.characters.map(c=>c.holding)).toEqual(['toy-0','toy-1','toy-2']);expect(parseSave(JSON.stringify(next))).toEqual(next);
+  expect(h.rooms.home.characters.filter(c=>c.slot<3).map(c=>c.anchor)).toEqual(['seat','floor','seat']);expect(h.rooms.home.characters.filter(c=>c.slot<3).map(c=>c.holding)).toEqual(['toy-0','toy-1','toy-2']);expect(parseSave(JSON.stringify(next))).toEqual(next);
  });
  it('keeps a pet and its held toy on valid floor when the historical first seat has only a human bath socket',()=>{
   const source=fixture(2),home=source.personalization!.people.family.home as HomeStateV2;home.rooms.home.instances[0]=instance('bath','bathtub',4,0);
@@ -31,7 +31,7 @@ describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',
   for(const version of [1,2])for(const slot of [0,1,2] as const)for(const anchor of anchors){
    const source=version===1?legacyStarterHome():{...starterHome(),version:2 as const};
    const c:Character={slot,anchor,pose:poseFor(anchor),...(anchor==='floor'?{x:4,y:4}:{})};
-   if('rooms' in source){for(const room of Object.values(source.rooms))room.characters=[];source.rooms.home.characters=[c];}else source.characters=[c];
+   if('rooms' in source){delete source.rosterVersion;for(const room of Object.values(source.rooms))room.characters=[];source.rooms.home.characters=[c];}else source.characters=[c];
    if(!validHome(source))continue;accepted++;const bytes=JSON.stringify(source),next=migrateHome(source);
    expect(next,`v${version} ${slot} ${anchor}`).toBeDefined();expect(next?.version).toBe(4);expect(validHome(next),`v${version} ${slot} ${anchor}`).toBe(true);expect(JSON.stringify(source)).toBe(bytes);
   }

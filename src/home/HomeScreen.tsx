@@ -39,6 +39,7 @@ import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity,
 import { screenToRoom, type CameraMatrix } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
+import { familyLooks } from "./family";
 import { FriendDrawer } from "./runtime/FriendDrawer";
 import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from './storage';
 import { StorageTray, StorageFullNote } from './runtime/StorageTray';
@@ -232,6 +233,12 @@ export function HomeScreen({
     () => {
       const original = renderCharacter ?? (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined);
       return function PaintedCharacter(input) {
+        const familyLook = input.familySlot !== undefined && familyLooks[input.familySlot];
+        if (familyLook) {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports -- native rig stays at render boundary.
+          const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
+          return <HomeCharacter input={input} look={familyLook}/>;
+        }
         if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action) {
           if (original) return original(input);
           // eslint-disable-next-line @typescript-eslint/no-require-imports -- load native rig only at the render boundary.
@@ -651,7 +658,7 @@ export function HomeScreen({
           setReactions(current => { const next = { ...current }; delete next[id]; return next; });
         }
       }
-      setStorageId(undefined);
+      if (captured?.attachment.kind !== "container") setStorageId(undefined);
       delightPickup(pickup.scene.entities[pickup.id]);
       watchCooking(live.current.scene);
       setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
@@ -746,9 +753,9 @@ export function HomeScreen({
   }, [building, clearClosetDraft, floorOf, overview, room, viewport]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
-    if (!designing && entity?.item && storageCapacity(entity.item.item) && !capabilityOf(entity.item.item).moveInPlay && !overview) {
+    if (!designing && !overview && entity?.item && ((storageCapacity(entity.item.item) && !capabilityOf(entity.item.item).moveInPlay) || ["fridge", "stove", "sink-counter", "lamp", "tv", "radio"].includes(entity.item.item))) {
       live.current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
-      setStorageId(storageOpen(entity.item) ? undefined : id);
+      if (storageCapacity(entity.item.item)) setStorageId(storageOpen(entity.item) ? undefined : id);
       setSelected(undefined);
       return;
     }
@@ -998,6 +1005,13 @@ export function HomeScreen({
     }
     if (current.placing) {
       insertAt(current.placing, point.x, point.y);
+      return;
+    }
+    if (!designing && entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle) {
+      setSelected(undefined);
+      current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
+      if (storageCapacity(entity.item.item)) setStorageId(storageOpen(entity.item) ? undefined : entity.id);
+      delight.tapped(entity, sleeping);
       return;
     }
     if (current.selected && current.selected !== id) {
@@ -1254,9 +1268,8 @@ export function HomeScreen({
       const start = !nearby && from
         ? screenToRoom(screenPoint(from.x - canvasOrigin.current.x, from.y - canvasOrigin.current.y), c, housePoint(0, 0)) : undefined;
       runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
-        roomPoint(350 + slot * 90, 490), { scale: c.a, release: true }), undefined, start);
+        roomPoint(230 + (slot % 4) * 130, 490), { scale: c.a, release: true }), undefined, start);
     }
-    setFriends(false);
   };
   const find = () => {
     const hero = scene.entities["character/0"];
@@ -1570,7 +1583,7 @@ export function HomeScreen({
         />
       )}
       {!overview && !more && !friends && !activeSheet && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
-        <StorageTray entity={scene.entities[storageId]} scene={scene} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
+        <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
             const e = scene.entities[id], owner = scene.entities[storageId];
@@ -1638,10 +1651,11 @@ export function HomeScreen({
         offset={viewportOffset}
         reduced={reduced}
         large={large}
+        compact={window.height < 480 && window.width >= 600}
         renderCharacter={characterRenderer}
         onBring={bring}
         onClose={() => setFriends(false)}
-        onCarry={(carrying) => { if (!carrying) setFriends(false); }}
+        onCarry={() => { /* Drawer returns after each carry so another family member is one drag away. */ }}
       />
       {closet && (
         <HomeClosetSheet

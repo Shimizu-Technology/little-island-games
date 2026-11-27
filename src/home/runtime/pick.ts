@@ -4,7 +4,7 @@ import type { Bounds, HitShape, RoomPoint, Scene } from "../scene/types";
 import { itemFrontShapes, unionBounds } from "../art/silhouettes";
 export { shapeDistance, onShapes } from "../scene/hitShapes";
 /** `pan`: food seated in a stove's pan names that stove (HD-07). */
-export type PickProxy = { id: string; shape: HitShape; depth: number; paintOrder: number; span: number; pan?: string };
+export type PickProxy = { id: string; shape: HitShape; depth: number; paintOrder: number; span: number; actor?: boolean; fallback?: boolean; occupantOf?: string; pan?: string };
 function translated(shape: HitShape, x: number, y: number): HitShape {
   switch (shape.kind) {
     case "box":
@@ -32,7 +32,19 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
           const outline: Bounds = unionBounds(shapes) ?? { left: 0, top: 0, width: 0, height: 0 };
           const depth = paintDepth(e, scene) + (front ? 2 : 0) - (e.item?.layer === "ground" ? 100000 : 0);
           const span = Math.min(outline.width, outline.height);
-          return shapes.map((shape): PickProxy => e.pan ? { id: e.id, shape, depth, paintOrder, span, pan: e.pan } : { id: e.id, shape, depth, paintOrder, span });
+          const result: PickProxy[] = shapes.map(shape => ({ id: e.id, shape, depth, paintOrder, span, actor: !!e.character, ...(e.pan ? { pan: e.pan } : {}) }));
+          if (e.character && !front) {
+            result.push({ id: e.id, shape: { kind: "box", ...outline }, depth, paintOrder, span, actor: true, fallback: true });
+            if (e.attachment.kind === "socket") {
+              const target = index.sockets.find(t => t.occupied === e.id);
+              // Only the occupied cushion/blanket/water region proxies its occupant.
+              // Empty furniture edges keep their appliance/design/pan semantics.
+              const region = target?.activation ?? target?.core;
+              if (region) result.push({ id: e.id, shape: { kind: "box", ...region }, depth, paintOrder, span,
+                actor: true, fallback: true, occupantOf: e.attachment.item });
+            }
+          }
+          return result;
         }),
     ])
   );
@@ -53,12 +65,12 @@ export function pickEntity(proxies: readonly PickProxy[], point: RoomPoint, scal
   let near: PickProxy | undefined, nearDistance = Infinity;
   for (const p of proxies) {
     const distance = shapeDistance(p.shape, point.x, point.y);
-    if (distance === 0) {
+    if (distance === 0 && !p.fallback) {
       if (!exact || p.paintOrder > exact.paintOrder) exact = p;
       continue;
     }
     if (movable && movable[p.id] === false) continue;
-    const reach = Math.min(8 / scale, Math.max(0, 22 / scale - p.span / 2));
+    const reach = p.actor ? 14 / Math.max(0.1, scale) : Math.min(8 / scale, Math.max(0, 22 / scale - p.span / 2));
     if (distance > reach) continue;
     if (!near || distance < nearDistance || (distance === nearDistance && p.paintOrder > near.paintOrder)) {
       near = p;
@@ -73,7 +85,13 @@ export function pickEntity(proxies: readonly PickProxy[], point: RoomPoint, scal
       if (p.id !== exact.id && (!under || p.paintOrder > under.paintOrder) && shapeDistance(p.shape, point.x, point.y) === 0) under = p;
     if (under && under.pan === exact.id && (!movable || movable[under.id] !== false)) return under.id;
   }
+  // An exact foreground movable prop always keeps the touch. Covered-body proxies
+  // may pierce only their own furniture front, never another prop or fixture.
   if (exact && (!movable || movable[exact.id] !== false)) return exact.id;
+  if (exact) {
+    const occupant = proxies.find(p => p.occupantOf === exact.id && shapeDistance(p.shape, point.x, point.y) === 0 && (!movable || movable[p.id] !== false));
+    if (occupant) return occupant.id;
+  }
   if (near && (!exact || near.paintOrder >= exact.paintOrder)) return near.id;
   return exact?.id;
 }

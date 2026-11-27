@@ -1,3 +1,4 @@
+import { familySlots, type FamilySlot } from "./family";
 import { storageCapacity, type StorageState } from './storage';
 import { MAX_INSTANCES } from "./limits";
 import { anchorsFor } from "./scene/species";
@@ -62,7 +63,7 @@ export const anchors = [
 export type Anchor = (typeof anchors)[number];
 export type Pose = WorldPose;
 export type Character = {
-  slot: 0 | 1 | 2;
+  slot: FamilySlot;
   anchor: Anchor;
   pose: Pose;
   x?: number;
@@ -86,6 +87,8 @@ export type HomeState = {
 export type RoomState = Pick<HomeState, "instances" | "characters" | "theme">;
 export type HomeStateV2 = {
   version: 2 | 3 | 4;
+  /** Versioned family extension within the v4 envelope, which existing restore gates require. */
+  rosterVersion?: 1;
   current: RoomId;
   rooms: Record<RoomId, RoomState>;
   /** v4 only. The last saved undo steps (HM-18, rule 57). Never part of history itself. */
@@ -214,7 +217,7 @@ export function placedInstances(room: Pick<RoomState, "instances" | "characters"
     return true;
   });
 }
-function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = false): v is RoomState {
+function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = false, family = false): v is RoomState {
   if (
     !exact(v, ["instances", "characters", "theme"]) ||
     !Array.isArray(v.instances) ||
@@ -258,9 +261,9 @@ function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = 
     return false;
   return (
     Array.isArray(v.characters) &&
-    v.characters.length <= 3 &&
+    v.characters.length <= (family ? 6 : 3) &&
     new Set(v.characters.map((c) => c?.slot)).size === v.characters.length &&
-    v.characters.every((c) => validCharacter(c, items, legacy, canonical, canonicalV4))
+    v.characters.every((c) => validCharacter(c, items, legacy, canonical, canonicalV4, family))
   );
 }
 function validContainers(items: readonly Instance[]): boolean {
@@ -287,7 +290,7 @@ export function validHome(v: unknown): v is HomeSave {
     if (!exact(v, ["version", "scene", "instances", "characters", "theme"]) || s.scene !== "room-1") return false;
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
   }
-  const optional = s.version === 4 ? (["undo", "access"] as const).filter((k) => Object.hasOwn(v, k)) : [];
+  const optional = s.version === 4 ? (["undo", "access", "rosterVersion"] as const).filter((k) => Object.hasOwn(v, k)) : [];
   if (
     !exact(v, ["version", "current", "rooms", ...optional]) ||
     ![2, 3, 4].includes(s.version) ||
@@ -296,14 +299,15 @@ export function validHome(v: unknown): v is HomeSave {
     !validRooms(s, roomIds)
   )
     return false;
-  if (s.version === 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
+  if (Object.hasOwn(v, "rosterVersion") && (s.version !== 4 || s.rosterVersion !== 1)) return false;
+  if (s.version >= 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
   // Every saved undo step must rebuild a valid earlier home; one bad step makes the save invalid.
   // A step only changes the rooms it names, so only those rooms are validated again. Each rebuilt
   // home is checked before it becomes the input to the next older step, and nothing a corrupt
   // step contains can throw out of this validator (R6).
-  if (s.version === 4 && s.undo !== undefined) {
-    if (!validUndoShape(s.undo)) return false;
-    let cursor: HomeStateV2 = { version: 4, current: s.current, rooms: s.rooms };
+  if (s.version >= 4 && s.undo !== undefined) {
+    if (!validUndoShape(s.undo, s.rosterVersion === 1)) return false;
+    let cursor: HomeStateV2 = { version: s.version, ...(s.rosterVersion ? { rosterVersion: s.rosterVersion } : {}), current: s.current, rooms: s.rooms };
     for (let i = s.undo.steps.length - 1; i >= 0; i--) {
       const step = s.undo.steps[i];
       try {
@@ -318,7 +322,7 @@ export function validHome(v: unknown): v is HomeSave {
 }
 /** Per-room validity plus the cross-room rules, for the rooms named in `changed`. */
 function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
-  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version === 4))) return false;
+  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version >= 4, s.rosterVersion === 1))) return false;
   // Friends may live in different rooms; duplicate slots across rooms are corrupt data.
   const slots = roomIds.flatMap((id) => s.rooms[id].characters.map((c) => c.slot));
   if (new Set(slots).size !== slots.length) return false;
@@ -333,7 +337,13 @@ function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
   const migrated = migrateValidatedHome(v);
   if (!migrated) return undefined;
-  const canonical: HomeStateV2 = migrated.version === 4 ? migrated : { ...migrated, version: 4 };
+  // First validate the original schema. Add only missing preset actors, waiting in the drawer.
+  // Undo patches are retained byte-for-byte; older rooms may legitimately omit the new actors.
+  const canonical: HomeStateV2 = migrated.rosterVersion === 1 ? migrated : {
+    ...migrated, version: 4, rosterVersion: 1, rooms: { ...migrated.rooms, home: { ...migrated.rooms.home,
+      characters: [...migrated.rooms.home.characters, ...waitingFamily()],
+    } },
+  };
   return validHome(canonical) ? canonical : undefined;
 }
 function migrateValidatedHome(v: unknown): HomeStateV2 | undefined {
@@ -344,9 +354,10 @@ function migrateValidatedHome(v: unknown): HomeStateV2 | undefined {
     return roomIds.every((id) => JSON.stringify(rooms[id]) === JSON.stringify(v.rooms[id])) ? v : { ...v, rooms };
   }
   if (v.version !== 1) return upgradeHome(v);
-  const base = starterHome();
+  const { rosterVersion: _roster, ...base } = starterHome();
+  void _roster;
   return upgradeHome({
-    ...base,
+    ...base, version: 3,
     rooms: {
       ...base.rooms,
       home: {
@@ -438,7 +449,8 @@ export function validCharacter(
   items: readonly Instance[],
   legacy = false,
   canonical = true,
-  canonicalV4 = false
+  canonicalV4 = false,
+  family = false
 ): c is Character {
   if (!c || typeof c !== "object" || (legacy && (c as Character).anchor === "seat")) return false;
   const v = c as Character;
@@ -477,7 +489,7 @@ export function validCharacter(
       ...(v.holding !== undefined ? ["holding"] : []),
       ...["at", "staged", "action", "facing"].filter((k) => canonicalV4 && Object.hasOwn(v, k)),
     ]) ||
-    !member([0, 1, 2], v.slot) ||
+    !member(family ? familySlots : [0, 1, 2], v.slot) ||
     !member(anchors, v.anchor) ||
     (!v.socket && v.pose !== poseFor(v.anchor))
   )
@@ -548,6 +560,9 @@ export function legacyStarterHome(): HomeState {
     ],
   };
 }
+function waitingFamily(): Character[] {
+  return ([3, 4, 5] as const).map(slot => ({ slot, anchor: "floor", pose: "stand", x: 8, y: 8, staged: true }));
+}
 export function starterHome(): HomeStateV2 {
   const positions: readonly [string, string, number, number][] = [
     ["bed", "bed", 4, 0],
@@ -613,14 +628,13 @@ export function starterHome(): HomeStateV2 {
       })),
     };
   };
-  return {
-    ...upgradeHome({
-      version: 3,
-      current: "home",
-      rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") },
-    }),
-    version: 4,
-  };
+  const base = upgradeHome({
+    version: 3, current: "home",
+    rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") },
+  });
+  return { ...base, version: 4, rosterVersion: 1, rooms: { ...base.rooms,
+    home: { ...base.rooms.home, characters: [...base.rooms.home.characters, ...waitingFamily()] },
+  } };
 }
 export type HomeAction = (
   | { type: "apply-proposal"; proposal: DropProposal }

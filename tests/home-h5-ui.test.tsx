@@ -45,3 +45,14 @@ describe('HS-01 storage controls', () => {
     await act(async () => root.unmount());
   });
 });
+
+
+it('an open empty fridge never draws a blocking zero-items shelf, including inspection', async () => {
+  const s = starterHome(); s.rooms.home.instances = [{ ...instance('fridge', 'fridge', 8, 1), storage: { version: 1, open: true } }];
+  s.rooms.home.characters = [];
+  const scene = buildScene(s), entity = scene.entities['home/item/fridge'];
+  let root!: ReturnType<typeof create>;
+  await act(async () => { root = create(<StorageTray entity={entity} scene={scene} inspect bottom={80} onTake={() => {}} onClose={() => {}}/>); });
+  expect(root.toJSON()).toBeNull();
+  await act(async () => root.unmount());
+});

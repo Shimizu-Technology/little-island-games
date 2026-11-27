@@ -49,10 +49,21 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
     style={[{ position: 'absolute', left: target.core.left, top: target.core.top, width: target.core.width, height: target.core.height, borderRadius: 16, borderWidth: 4, borderColor: target.closed ? '#A66A32' : '#477D60', backgroundColor: target.closed ? '#FFE4A888' : '#E8F7C855', alignItems: 'center', justifyContent: 'center' }, style]}>
     {target.closed ? <Svg width={32} height={32} viewBox="0 0 32 32"><Path d="M5 12H27L24 28H8ZM9 10V5H14V10M18 10V5H23V10" fill="#D7AE74" stroke="#A66A32" strokeWidth={3}/></Svg> : <Svg width={32} height={32} viewBox="0 0 32 32"><Path d="M16 3V23M8 15L16 23L24 15M5 25V29H27V25" fill="none" stroke="#FFF8E9" strokeWidth={7} strokeLinecap="round" strokeLinejoin="round"/><Path d="M16 3V23M8 15L16 23L24 15M5 25V29H27V25" fill="none" stroke="#477D60" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/></Svg>}
   </Animated.View>;
-  if (target.kind === 'socket') return <Animated.View testID="socket-landing-outline" pointerEvents="none"
-    accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-    style={[{ position: 'absolute', left: target.contact.x - 26, top: target.contact.y - 12, width: 52, height: 24,
-      borderRadius: 16, borderWidth: 3, borderColor: '#477D60' }, style]} />;
+  if (target.kind === 'socket') {
+    const region = target.rim ?? target.activation ?? target.core ?? { left: target.contact.x - 26, top: target.contact.y - 12, width: 52, height: 24 };
+    const pose = target.base === 'lie' ? 'M10 18a7 7 0 1 0 0 .1M21 22H58M25 22V32M54 22L63 32'
+      : target.base === 'bathe' ? 'M31 5a7 7 0 1 0 0 .1M29 20V33M12 30Q32 45 53 30M11 23h1m43-6h1M18 13h1'
+      : 'M27 5a7 7 0 1 0 0 .1M25 20V34H47V47';
+    return <Animated.View testID="socket-landing-outline" pointerEvents="none"
+      accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={[{ position: 'absolute', left: region.left - 5, top: region.top - 5, width: region.width + 10, height: region.height + 10,
+        borderRadius: 22, borderWidth: 5, borderColor: '#F5BF49', backgroundColor: '#FFD66B33' }, style]}>
+      <View testID={`hover-pose-${target.base}`} style={{ position: 'absolute', right: 8, top: -58,
+        width: 76, height: 62, borderRadius: 22, borderWidth: 3, borderColor: '#E6AB37', backgroundColor: '#FFF5D9', alignItems: 'center', justifyContent: 'center' }}>
+        <Svg width={68} height={52} viewBox="0 0 68 52"><Path d={pose} fill="none" stroke="#9C6528" strokeWidth={5} strokeLinecap="round" strokeLinejoin="round"/></Svg>
+      </View>
+    </Animated.View>;
+  }
   if (target.kind !== "surface") return null;
   return (
     <Animated.View

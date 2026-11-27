@@ -22,7 +22,7 @@ function cachedEntry(before: HomeStateV2, after: HomeStateV2): UndoEntry {
   if (!entry) inner.set(after, (entry = undoEntry(undoStep(before, after), after)));
   return entry;
 }
-const bare = (state: HomeStateV2): HomeStateV2 => ({ version: state.version, current: state.current, rooms: state.rooms });
+const bare = (state: HomeStateV2): HomeStateV2 => ({ version: state.version, ...(state.rosterVersion ? { rosterVersion: state.rosterVersion } : {}), current: state.current, rooms: state.rooms });
 function savedEntries(history: History): UndoEntry[] {
   const states = [...history.past.slice(-HOME_UNDO_STEPS), history.present];
   return states

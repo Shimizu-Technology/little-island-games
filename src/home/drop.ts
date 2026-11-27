@@ -73,7 +73,7 @@ export type DropResult = {
 /** Conservative standing silhouettes, in the same room units as the rendered rigs. */
 export function friendBounds(slot: number) {
   "worklet";
-  return slot === 0
+  return (slot === 0 || slot >= 3)
     ? { width: 136, height: 224 }
     : slot === 2
       ? { width: 98, height: 90 }

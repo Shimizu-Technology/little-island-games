@@ -113,8 +113,8 @@ describe("Phase 3A Toca Boca room chrome", () => {
     expect(starFrame.findAll((n) => n.props.name === "Star")).toHaveLength(1);
     expect(bar.findAll((n) => n.props.name === "Medal")).toHaveLength(0);
 
-    // Undo and Redo are hidden when not decorating and showRedo is false.
-    expect(tree.root.findAllByProps({ testID: "home-undo-button" })).toHaveLength(0);
+    // Undo is immediately available in Play; Redo still follows its explicit window.
+    expect(tree.root.findAllByProps({ testID: "home-undo-button" }).length).toBeGreaterThan(0);
     expect(tree.root.findAllByProps({ testID: "home-redo-button" })).toHaveLength(0);
 
     // P1-2: Friends drawer and More controls are reachable from the top bar.

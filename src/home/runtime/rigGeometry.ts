@@ -1,3 +1,4 @@
+import { rigSlot } from "../family";
 import { islanderAnchors, pipAnchors, crabAnchors, islanderPoint } from "../../islander/rig/anchors";
 import { characterPose } from "../../islander/rig/character";
 import { anchorsFor, species } from "../scene/species";
@@ -8,7 +9,7 @@ export function renderAnchors(entity: SceneEntity, carry = false, tilt = 0, limb
     base = carry ? "carry" : entity.base;
   const action = carry ? (entity.children.length ? "hold" : null) : entity.action;
   if (!tilt && !limbLag) return anchorsFor(slot, base, entity.facing, action);
-  const a = [islanderAnchors, pipAnchors, crabAnchors][slot](base, entity.facing === "left" ? "left" : "right", {
+  const a = [islanderAnchors, pipAnchors, crabAnchors][rigSlot(slot)](base, entity.facing === "left" ? "left" : "right", {
     action,
     tilt,
     limbLag,
@@ -30,7 +31,7 @@ export function renderAnchors(entity: SceneEntity, carry = false, tilt = 0, limb
 function markers(entity: SceneEntity, carry = false): Record<Marker, { x: number; y: number }> {
   const a = renderAnchors(entity, carry),
     b = a.bounds;
-  if (entity.character!.slot === 0) {
+  if (rigSlot(entity.character!.slot) === 0) {
     const base = carry ? "carry" : entity.base,
       pose = characterPose(base, carry ? (entity.children.length ? "hold" : null) : entity.action),
       unit = species[0].unit;
@@ -70,7 +71,7 @@ export function carrySample(sample: number) {
 /** Authored limb extremities, including shoe/hand stroke. The wardrobe hull
  * intentionally includes empty standing padding and is not a sitting foot. */
 export function limbBottom(entity: SceneEntity, carry = false): number {
-  if (entity.character!.slot !== 0) {
+  if (rigSlot(entity.character!.slot) !== 0) {
     const b = renderAnchors(entity, carry).bounds;
     return b.top + b.height;
   }

@@ -17,7 +17,7 @@ export function LandingPreview({ source, interaction, building, scene, reduced =
   const mask=React.useMemo(()=>floorCueMask(scene),[scene]);
   const style = useAnimatedStyle(() => {
     const slot = slots.value.find(s => s.id === source.id), p = slot?.proposal;
-    let visible = slot?.ready && slot.phase === 'dragging' && p?.kind === 'floor';
+    let visible = slot?.ready && slot.phase === 'dragging' && p?.kind === 'floor' && (!p.attachment || p.attachment.kind === 'floor');
     const origin = p ? roomOrigin(roomIds.indexOf(p.room), building) : { x: 0, y: 0 };
     if (visible && p) {
       const aim = {x:slot!.x-origin.x+(source.visual?.x ?? source.bounds.left+source.bounds.width/2),

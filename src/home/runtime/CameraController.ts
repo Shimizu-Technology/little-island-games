@@ -107,11 +107,11 @@ export function shoreAtScreen(x: number, y: number, camera: CameraMatrix, buildi
 export const EDGE_BAND = 48;
 export function edgeVelocity(x: number, width: number, elapsed: number): number {
   "worklet";
-  if (elapsed < 180) return 0;
+  if (elapsed < 120) return 0;
   // HM-14 (Leon's D7): a 48 pt band on every device, matching the carry gate.
   const band = EDGE_BAND;
-  if (x < band) return 360 * Math.min(1, (band - x) / band) ** 2;
-  if (x > width - band) return -360 * Math.min(1, (x - width + band) / band) ** 2;
+  if (x < band) return 520 * Math.min(1, (band - x) / band) ** 2;
+  if (x > width - band) return -520 * Math.min(1, (x - width + band) / band) ** 2;
   return 0;
 }
 

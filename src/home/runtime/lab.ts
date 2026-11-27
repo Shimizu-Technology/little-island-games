@@ -1,3 +1,4 @@
+import { characterForSocket, socketsOf } from "../interactions";
 import { roomPoint } from "../scene/types";
 import { instance, migrateHome, starterHome, type HomeStateV2, type Instance } from "../model";
 
@@ -33,6 +34,33 @@ function mealMenuRoom(slot: 0 | 1 | 2): HomeStateV2 {
 }
 /** Fixtures for recorded gesture QA. None of them can reach a learner's saved world. */
 export const labFixtures: Record<string, () => HomeStateV2> = {
+  "silky-family": () => {
+    const s = starterHome();
+    s.rooms.home.instances = [instance("family-bed", "bed", 3, 1), instance("family-sofa", "sofa", 11, 2), instance("family-rug", "rug", 8, 8)];
+    const [bed, sofa] = s.rooms.home.instances;
+    const actor = (slot: 0 | 1 | 2 | 3 | 4 | 5) => ({ slot, anchor: "floor" as const, pose: "stand" as const, x: 8, y: 9 });
+    s.rooms.home.characters = [
+      characterForSocket(actor(0), bed, socketsOf(bed).find(t => t.id === "pillow")!),
+      { ...actor(1), x: 17, y: 9 }, { ...actor(2), x: 2, y: 10 },
+      characterForSocket(actor(3), sofa, socketsOf(sofa).find(t => t.id === "left")!),
+      characterForSocket(actor(4), sofa, socketsOf(sofa).find(t => t.id === "right")!),
+      { ...actor(5), x: 8, y: 10 },
+    ];
+    return s;
+  },
+  "silky-kitchen": () => {
+    const s = starterHome(); s.current = "kitchen";
+    const hero = s.rooms.home.characters[0];
+    s.rooms.home.characters = s.rooms.home.characters.filter(c => c.slot !== 0);
+    s.rooms.kitchen.characters = [{ ...hero, x: 9, y: 9 }];
+    return s;
+  },
+  "silky-hover": () => {
+    const s = labFixtures["silky-family"]();
+    s.rooms.home.characters[0] = { slot: 0, anchor: "floor", pose: "stand", x: 6, y: 9 };
+    return s;
+  },
+
   // H4b: uncluttered, reachable meal and drink art at the normal room camera.
   "rig-meal": () => {
     const state = reviewRoom([

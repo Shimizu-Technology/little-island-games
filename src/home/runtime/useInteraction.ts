@@ -500,7 +500,9 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
     const anchor = index < 0 ? subject.contact : roomPoint(slot.x - origin.x, slot.y - origin.y);
-    const centre = subject.item && index >= 0 ? carriedCentre(subject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a, reduced) : undefined;
+    const carryBounds = subject.character ? anchorsFor(subject.character.slot, "carry", subject.facing, subject.children.length ? "hold" : null).bounds : subject.bounds;
+    const carrySubject = subject.character ? { ...subject, bounds: carryBounds, visual: { x: carryBounds.left + carryBounds.width / 2, y: carryBounds.top + carryBounds.height / 2 } } : subject;
+    const centre = index >= 0 ? carriedCentre(carrySubject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a, reduced) : undefined;
     const reservations: Record<string, string> = {};
     for (let i = 0; i < 2; i++) {
       const other = slots.value[i];
@@ -525,7 +527,7 @@ export function useInteraction({
       avoidFurnitureOverlap: designing,
       catalog: slot.catalog,
       silhouette:
-        index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? subject.bounds, anchor) : undefined,
+        index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? carryBounds, anchor) : undefined,
       previous: slot.proposal,
       pending: slot.proposal?.pending,
       now: eventTime(),

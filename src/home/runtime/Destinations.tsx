@@ -1,6 +1,6 @@
 import { storageCapacity, storageOpen } from '../storage';
 import React, { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { roomIds, roomNames } from "../catalogMore";
@@ -43,7 +43,7 @@ export function Destinations({
   designing?: boolean;
   scale: number;
   onChoose: (proposal: DropProposal) => void;
-  onSelect: (id: string) => void;
+  onSelect: (id: string | undefined) => void;
   bottom: number;
 }) {
   const subject = selected ? scene.entities[selected] : undefined;
@@ -119,6 +119,10 @@ export function Destinations({
       }, lift]}
     >
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxWidth: "100%" }} contentContainerStyle={{ gap: 8 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Put selection down" onPress={() => onSelect(undefined)}
+          style={{ width: cell, minHeight: cell, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#EEDDBA" }}>
+          <Text maxFontSizeMultiplier={1} style={{ fontSize: 28, color: "#284F4B" }}>×</Text>
+        </Pressable>
         {store && (
           <Pressable
             accessibilityRole="button"

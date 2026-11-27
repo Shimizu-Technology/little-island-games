@@ -13,6 +13,6 @@ export function carryLift(entity: SceneEntity, scale: number): number {
 /** Where the middle of a carried prop's art is drawn, for a drop anchor in the same space. */
 export function carriedCentre(entity: SceneEntity, x: number, y: number, gripX: number, gripY: number, scale: number, reduced = false) {
   "worklet";
-  const visual = entity.visual ?? { x: 0, y: 0 }, growth = reduced ? 1 : 1 + carriedPropGrowth;
+  const visual = entity.visual ?? { x: entity.bounds.left + entity.bounds.width / 2, y: entity.bounds.top + entity.bounds.height / 2 }, growth = reduced ? 1 : 1 + carriedPropGrowth;
   return { x: x + gripX + (visual.x - gripX) * growth, y: y + gripY + (visual.y - gripY) * growth - (reduced ? 0 : carryLift(entity, scale)) };
 }

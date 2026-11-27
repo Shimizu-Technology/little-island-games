@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {characterDropRoom,occlusion,resolveDrop} from '../src/home/drop';
 import {dropWorld,characterForSocket,socketsOf} from '../src/home/interactions';
-import {characterPoint,floorPoint,itemPoint} from '../src/home/geometry';
+import {characterPoint,floorPoint} from '../src/home/geometry';
 import {homeReducer,instance,migrateHome,settleFriends,starterHome,validHome,type Character} from '../src/home/model';
 import {editHistory} from '../src/home/useHomeStore';
 import {initializePersonalization,validPerson} from '../src/personalization/model';
@@ -90,12 +90,12 @@ describe('M1 complete-envelope canonical v3 validation',()=>{
  });
  it('accepts v2 only at the legacy boundary, canonicalizes compatible sockets, and deconflicts duplicate occupants',()=>{
   const save=envelope([{slot:0,anchor:'seat',pose:'sit',seatId:'bed'},{slot:1,anchor:'seat',pose:'sit',seatId:'bed'}],'bed');
-  save.personalization!.people.family.home.version=2;const raw=JSON.stringify(save),parsed=parseSave(raw),next=backfillRewards(parsed),home=next.personalization!.people.family.home;
+  save.personalization!.people.family.home.version=2;delete (save.personalization!.people.family.home as import('../src/home/model').HomeStateV2).rosterVersion;const raw=JSON.stringify(save),parsed=parseSave(raw),next=backfillRewards(parsed),home=next.personalization!.people.family.home;
   expect(home.version).toBe(4);expect(validHome(home)).toBe(true);expect('rooms' in home&&home.rooms.home.characters[0]).toMatchObject({pose:'lie',socket:{itemId:'bed',socketId:'pillow'}});expect('rooms' in home&&home.rooms.home.characters[1]).toMatchObject({anchor:'floor'});expect(JSON.stringify(save)).toBe(raw);
  });
 });
 describe('M2 successful restore byte preservation',()=>{
- const fixture=()=>{const before=envelope([{slot:0,anchor:'floor',pose:'stand',x:8,y:8}],'bed');const h=before.personalization!.people.family.home;if('rooms' in h){h.version=3;h.rooms.home.instances[0].x=0;}return before;};
+ const fixture=()=>{const before=envelope([{slot:0,anchor:'floor',pose:'stand',x:8,y:8}],'bed');const h=before.personalization!.people.family.home;if('rooms' in h){h.version=3;delete h.rosterVersion;h.rooms.home.instances[0].x=0;}return before;};
  it('awaits exact incoming whitespace, persisted device and latest device bytes before replacement; both originals are recoverable',async()=>{
   const incoming=' \n'+JSON.stringify(fixture(),null,3)+'\n\t',before=parseSave(incoming),after=backfillRewards(before);let stored='current-device-save';const recovery=new Map<string,string>(),events:string[]=[];
   const adapter:StorageAdapter={get:async()=>stored,set:async raw=>{events.push('set');stored=raw;},preserve:async raw=>{await Promise.resolve();events.push('preserve');recovery.set(String(recovery.size),raw);},listRecovery:async()=>[...recovery.keys()].map(key=>({key,createdAt:0,bytes:0})),readRecovery:async key=>recovery.get(key)??null};

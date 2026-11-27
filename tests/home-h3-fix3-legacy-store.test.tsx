@@ -11,7 +11,7 @@ import { encodeSave } from '../src/state/profiles';
 import { personFor } from '../src/personalization/model';
 import { useHomeStore, UNDO_TRIMMED_NOTE } from '../src/home/useHomeStore';
 import { HOME_UNDO_BYTES, undoBytes } from '../src/home/undoHistory';
-import type { HomeAction, HomeStateV2 } from '../src/home/model';
+import { migrateHome, type HomeAction, type HomeStateV2 } from '../src/home/model';
 
 const db = vi.hoisted(() => ({ raw: null as string | null, preserved: [] as string[] }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async (s: string) => { db.preserved.push(s); }, readDrafts: async () => [], discardSession: async () => {} } }));
@@ -51,7 +51,7 @@ it('startup: the old Home opens unchanged, and the first edit is saved within to
   await act(async () => { root = TestRenderer.create(<StoreProvider><Probe /><Route /></StoreProvider>); });
   expect(store.ready).toBe(true);
   expect(store.recovery).toBeNull();
-  expect(activeHome()).toEqual(legacyHome());
+  expect(activeHome()).toEqual(migrateHome(legacyHome()));
   expect(home!.recoveryOriginal).toBeUndefined();
   expect(home!.canUndo).toBe(true);
   await act(async () => home!.dispatch({ type: 'find-friends', roomId: 'home' } as HomeAction));
@@ -68,8 +68,8 @@ it('backup restore: the old backup restores, and the first edit afterwards is sa
   const backup = legacyBackup();
   await act(async () => { await store.restore(backup); });
   expect(store.recovery).toBeNull();
-  expect(activeHome()).toEqual(legacyHome());
-  expect(savedHome()).toEqual(legacyHome());
+  expect(activeHome()).toEqual(migrateHome(legacyHome()));
+  expect(savedHome()).toEqual(migrateHome(legacyHome()));
   // The route remounts Home for the restored save.
   await act(async () => { root!.update(<StoreProvider><Probe /><Route /></StoreProvider>); });
   await act(async () => home!.dispatch({ type: 'find-friends', roomId: 'home' } as HomeAction));

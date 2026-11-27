@@ -158,10 +158,10 @@ describe("settle acknowledgement and bounded contact", () => {
     expect(roomAtScreen(screen.x, screen.y, close, b)).toBe(0);
     expect(boundCamera({ ...c, tx: 100000, ty: 100000 }, view, b)).toEqual(c);
   });
-  it("arms edge pan only after 180 ms and exits trays across their scroll axis", () => {
-    expect(edgeVelocity(0, 768, 179)).toBe(0);
-    expect(edgeVelocity(0, 768, 180)).toBe(360);
-    expect(edgeVelocity(768, 768, 180)).toBe(-360);
+  it("arms edge pan only after 120 ms and exits trays across their scroll axis", () => {
+    expect(edgeVelocity(0, 768, 119)).toBe(0);
+    expect(edgeVelocity(0, 768, 120)).toBe(520);
+    expect(edgeVelocity(768, 768, 120)).toBe(-520);
     expect(edgeVelocity(384, 768, 1000)).toBe(0);
     expect(trayExit(18, 2, false)).toBe("scroll");
     expect(trayExit(2, -10, false)).toBe("pickup");

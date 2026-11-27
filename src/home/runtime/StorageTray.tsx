@@ -7,16 +7,18 @@ import type { Scene, SceneEntity } from '../scene/types';
 import { ItemArt } from '../art/Items';
 import { MoreItemArt } from '../art/More';
 import { moreCatalog } from '../catalogMore';
-
+import type { SharedValue } from 'react-native-reanimated';
+import type { Interaction } from './useInteraction';
 /** A real, bounded contents shelf. Taking one out uses the same resolver as a drag. */
-export function StorageTray({ entity, scene, bottom, large = false, inspect = false, onTake, onClose }: {
+export function StorageTray({ entity, scene, bottom, large = false, inspect = false, onTake, onClose, interaction, offset }: {
+  interaction?: Interaction; offset?: SharedValue<{ x: number; y: number }>;
   entity?: SceneEntity; scene: Scene; bottom: number; large?: boolean; inspect?: boolean;
   onTake: (id: string) => void; onClose: () => void;
 }) {
   if (!entity?.item || (!storageOpen(entity.item) && !inspect)) return null;
   const contents = entity.children.map(id => scene.entities[id]).filter(e => e?.attachment.kind === 'container');
   const capacity = storageCapacity(entity.item.item), cell = large ? 72 : 60;
-  if (!capacity) return null;
+  if (!capacity || contents.length === 0) return null;
   return <View testID="storage-tray" style={{ position: 'absolute', bottom, left: 10, right: 10, borderRadius: 20, backgroundColor: '#FFF8E9', borderWidth: 2, borderColor: '#D7C29A', padding: 8, zIndex: 38 }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <Text accessibilityLabel={`${itemSpec(entity.item.item).name}, ${storageDescription(entity)}`} maxFontSizeMultiplier={1.4} style={{ flex: 1, fontSize: 15, fontWeight: '600', color: '#284F4B' }}>
@@ -27,6 +29,11 @@ export function StorageTray({ entity, scene, bottom, large = false, inspect = fa
     <ScrollView horizontal contentContainerStyle={{ gap: 8, alignItems: 'center' }} showsHorizontalScrollIndicator>
       {Array.from({ length: capacity }, (_, n) => {
         const child = contents[n];
+        if (child && interaction?.externalDown && offset) {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports -- load gesture handoff only for live drag controls.
+          const { StoredCell } = require('./StoredCell') as typeof import('./StoredCell');
+          return <StoredCell key={child.id} child={child} cell={cell} onTake={onTake} interaction={interaction} offset={offset}/>;
+        }
         return child ? <Pressable key={child.id} accessibilityRole="button" accessibilityLabel={`Take out ${itemSpec(child.item!.item).name}`} onPress={() => onTake(child.id)}
           style={{ width: cell, height: cell, borderRadius: 14, backgroundColor: '#E3EBC9', alignItems: 'center', justifyContent: 'center' }}>
           <View pointerEvents="none">{moreCatalog[child.item!.item] ? <MoreItemArt id={child.item!.item} size={52} tint={child.item!.tint} state={{ on: child.item!.powered, empty: child.item!.empty }} reduced/> : <ItemArt item={child.item!.item} size={52} tint={child.item!.tint} reduced/>}</View>

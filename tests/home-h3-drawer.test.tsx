@@ -162,3 +162,24 @@ describe("HM-18 lab fixture", () => {
     expect(placedInstances(state.rooms.home)).toHaveLength(MAX_INSTANCES);
   });
 });
+
+
+it('offers six named family actors with separate accessible cells in a bounded drawer', async () => {
+  const scene = buildScene(starterHome()); let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(<FriendDrawer open scene={scene} here="home" bottom={70} interaction={interaction}
+    offset={offset} reduced onBring={() => {}} onClose={() => {}} onCarry={() => {}}/>); });
+  const cells = tree.root.findAll(n => (n.type as unknown) === 'Pressable' && n.props.testID?.startsWith('friend-cell-'));
+  expect(cells).toHaveLength(6);
+  for (const [index, name] of ['Islander', 'Pip', 'Crab', 'Mom', 'Dad', 'Little Sibling'].entries()) expect(cells[index].props.accessibilityLabel).toContain(name);
+  expect(flat(tree.root.findByProps({ testID: 'friend-drawer' }).props.style).width).toBeLessThan(390);
+  await act(async () => tree.unmount());
+});
+
+
+it('uses one family row in short landscape windows', async () => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(<FriendDrawer open compact scene={buildScene(starterHome())} here="home" bottom={70} interaction={interaction}
+    offset={offset} reduced onBring={() => {}} onClose={() => {}} onCarry={() => {}}/>); });
+  expect(flat(tree.root.findByProps({ testID: 'friend-drawer' }).props.style).width).toBe(520);
+  await act(async () => tree.unmount());
+});

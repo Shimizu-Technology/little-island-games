@@ -322,7 +322,7 @@ export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotat
     const key = id === 'bubble-bath' ? 'bathtub' : id as 'bed' | 'sofa' | 'bathtub';
     // Pixel-registered front cutouts: the pillow/head remain behind the friend. The
     // repeated quilt/tub body covers their lower body at the published socket height.
-    const top = id === 'bed' ? .47 : id === 'sofa' ? .55 : .43;
+    const top = id === 'bed' ? .47 : id === 'sofa' ? .77 : .43;
     const left = id === 'bed' ? .27 : 0;
     const sprite = <Image source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false}
       style={{ position: 'absolute', width: size, height: size, left: -left * size, top: -top * size }}/>;
@@ -330,7 +330,7 @@ export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotat
       {layer !== 'front' && <Image testID={`painted-seat-${id}`} source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false} style={{ width: size, height: size }}/>}
       {layer !== 'front' && tint && tint !== 'original' && <PaintedTint id={key} size={size} tint={tint}/>}
       {occupied && layer !== 'back' && <View testID={`painted-seat-front-${id}`} style={{ position: 'absolute', left: left * size, top: top * size, width: (1-left) * size, height: (1-top) * size, overflow: 'hidden' }}>{sprite}</View>}
-      {occupied && layer !== 'back' && (id === 'bed' || id === 'sofa') && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}>
+      {occupied && layer !== 'back' && id === 'bed' && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}>
         <G stroke="#326F66" strokeWidth={1.4} strokeLinejoin="round" fill="none">
           <Path d={id === 'bed' ? 'M59 64Q71 49 91 57Q113 50 144 63L145 96Q103 107 59 96Z' : 'M59 72Q75 62 100 69L134 76V103Q97 111 59 102Z'} fill={material(tint ?? 'original', '#319C93')}/>
           <Path d={id === 'bed' ? 'M61 65Q75 56 90 62Q111 56 141 65' : 'M61 74Q78 67 99 74L131 80'} stroke={shade(material(tint ?? 'original', '#319C93'), .35)} strokeWidth={3}/>

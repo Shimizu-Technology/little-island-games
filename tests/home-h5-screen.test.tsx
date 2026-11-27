@@ -124,7 +124,7 @@ describe('H5 review: selection and explicit opening', () => {
     expect(persist).not.toHaveBeenCalled();
     await act(async () => harness.scene.onMove('home/item/box', 'open'));
     expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(true);
-    expect(root.root.findAllByProps({ testID: 'storage-tray' }).length).toBeGreaterThan(0);
+    expect(root.root.findAllByProps({ testID: 'storage-tray' })).toHaveLength(0);
     await act(async () => harness.scene.onMove('home/item/box', 'open'));
     expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(false);
   });
@@ -138,4 +138,23 @@ describe('H5 review: selection and explicit opening', () => {
     await act(async () => harness.scene.onMove('home/item/box', 'open'));
     expect(saves.at(-1)!.rooms.home.instances[0].storage?.open).toBe(false);
   });
+});
+
+
+it.each(['fridge', 'stove', 'sink-counter', 'lamp', 'tv', 'radio'])('tapping %s beats a stale doll selection immediately', async kind => {
+  const s = labFixtures['rig-menu-0']();
+  s.rooms.home.instances = [instance('appliance', kind, 10, 1)];
+  const saves: HomeStateV2[] = [];
+  await open(s, next => { saves.push(next); return true; });
+  await tap('character/0');
+  expect(harness.dest.selected).toBe('character/0');
+  await tap('home/item/appliance');
+  expect(saves.at(-1)!.rooms.home.instances[0].powered).toBe(true);
+  expect(saves.at(-1)!.rooms.home.characters).toEqual(s.rooms.home.characters);
+  expect(harness.handoffs).toHaveLength(0);
+  expect(harness.dest.selected).toBeUndefined();
+  if (kind === 'fridge') expect(root.root.findAllByProps({ testID: 'storage-tray' })).toHaveLength(0);
+  await act(async () => harness.scene.onSelect('home/item/appliance'));
+  expect(saves.at(-1)!.rooms.home.instances[0].powered).toBe(false);
+  expect(harness.dest.selected).toBeUndefined();
 });

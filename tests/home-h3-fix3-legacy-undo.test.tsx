@@ -69,10 +69,10 @@ describe('R3-F1: the read limit is separate from the write limit', () => {
     fitsToday(saves[0]);
     // The newest steps are the ones kept, and the edit itself is the newest: Undo from the new
     // save passes the state just before the edit, then the loaded newest past states in order.
-    const loadedPast = restoredHistory(initial).past.map((h) => h.rooms);
+    const loadedPast = restoredHistory(migrateHome(initial)!).past.map((h) => h.rooms);
     const keptPast = restoredHistory(saves[0]).past.map((h) => h.rooms);
     expect(keptPast.length).toBeGreaterThan(1);
-    expect(keptPast.at(-1)).toEqual(initial.rooms);
+    expect(keptPast.at(-1)).toEqual(migrateHome(initial)!.rooms);
     expect(keptPast.slice(0, -1)).toEqual(loadedPast.slice(-(keptPast.length - 1)));
     expect(keptPast.length - 1).toBeLessThan(loadedPast.length);
     // Once: the next edit is ordinary again.
@@ -96,7 +96,7 @@ describe('R3-F1: the read limit is separate from the write limit', () => {
     expect(store().message).toBe(UNDO_TRIMMED_NOTE);
     fitsToday(saves[0]);
     // The newest step was undone, so the present is the state before it.
-    expect(saves[0].rooms).toEqual(restoredHistory(initial).past.at(-1)!.rooms);
+    expect(saves[0].rooms).toEqual(restoredHistory(migrateHome(initial)!).past.at(-1)!.rooms);
     await act(async () => store().dispatch({ type: 'undo' }));
     expect(store().message).toBe('Undone.');
     await unmount();

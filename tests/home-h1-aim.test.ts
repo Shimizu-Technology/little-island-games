@@ -150,10 +150,10 @@ describe("HM-02 hull table and picking", () => {
       ["mango-behind where it shows past her", m(at("mango-behind")), at("mango-behind").id],
       ["pip body", offset(pip, -10, -50), pip.id],
       ["crab shell", offset(crab, 0, -32), crab.id],
-      ["bed blanket", offset(at("bed"), 60, -120), at("bed").id],
+      ["occupied bed blanket", offset(at("bed"), 60, -120), hero.id],
       ["bed foot, not the rug", offset(at("bed"), 20, -40), at("bed").id],
-      ["rug edge", offset(at("rug"), -92, -56), at("rug").id],
-      ["rug middle", offset(at("rug"), 50, -68), at("rug").id],
+      ["covered body beside rug", offset(at("rug"), -92, -56), hero.id],
+      ["doll body over rug", offset(at("rug"), 50, -68), hero.id],
       ["below the rug is floor", offset(at("rug"), 0, 60), undefined],
       ["toy chest", offset(at("toys"), 0, -70), at("toys").id],
       ["shelf", offset(at("shelf"), 40, -90), at("shelf").id],
@@ -284,7 +284,7 @@ describe("HM-10 seats and landing", () => {
     const rugSeats = index.targets.filter((t) => t.owner === "home/item/rug" && t.kind === "socket");
     expect(rugSeats.length).toBeGreaterThan(0);
     for (const seat of rugSeats) expect(seat.rim).toBeDefined();
-    expect(index.targets.find((t) => t.owner === "home/item/bed" && t.kind === "socket")?.rim).toBeUndefined();
+    expect(index.targets.find((t) => t.owner === "home/item/bed" && t.kind === "socket")?.rim).toBeDefined();
   });
   it("floor picks still respect characterPoint for saved exact spots", () => {
     const state = starterHome();

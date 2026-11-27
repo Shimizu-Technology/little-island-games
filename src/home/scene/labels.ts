@@ -2,7 +2,7 @@ import { storageCapacity, storageOpen } from '../storage';
 import { itemSpec } from "../catalog";
 import type { EntityId, SceneEntity } from "./types";
 
-const friends = ["Islander", "Pip", "Crab"];
+import { friendNames as friends } from "../family";
 /** The spoken name of an entity before any numbering. */
 /** HD-07: food cooked on the stove says so. */
 const cookedNames: Record<string, string> = { mango: "Grilled mango", banana: "Fried banana", "rice-ball": "Toasted rice ball", cupcake: "Warm cupcake" };

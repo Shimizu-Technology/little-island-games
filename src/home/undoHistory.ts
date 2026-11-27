@@ -1,3 +1,4 @@
+import { familySlots } from "./family";
 import { itemSpec } from "./catalog";
 import { roomIds, type RoomId } from "./catalogMore";
 import type { Character, HomeStateV2, Instance, RoomState } from "./model";
@@ -122,7 +123,14 @@ export function undoStep(before: HomeStateV2, after: HomeStateV2): UndoStep {
 export function applyUndoStep(after: HomeStateV2, step: UndoStep): HomeStateV2 {
   const rooms = { ...after.rooms };
   for (const id of roomIds) if (step[id]) rooms[id] = applyRoomPatch(after.rooms[id], step[id]!);
-  return { version: after.version, current: after.current, rooms };
+  if (after.rosterVersion === 1 && roomIds.some(id => after.rooms[id].characters.some(c => c.slot >= 3))) {
+    const present = new Set(roomIds.flatMap(id => rooms[id].characters.map(c => c.slot)));
+    const missing = familySlots.filter(slot => slot >= 3 && !present.has(slot));
+    if (missing.length) rooms.home = { ...rooms.home, characters: [...rooms.home.characters,
+      ...missing.map(slot => ({ slot, anchor: "floor" as const, pose: "stand" as const, x: 8, y: 8, staged: true })),
+    ] };
+  }
+  return { version: after.version, ...(after.rosterVersion ? { rosterVersion: after.rosterVersion } : {}), current: after.current, rooms };
 }
 export const undoBytes = (undo: HomeUndo) => JSON.stringify(undo).length;
 /** One saved step, its size inside the saved list, and whether undoing it brings back removed things. */
@@ -178,7 +186,7 @@ function validPuts(puts: unknown, max: number): boolean {
 }
 /** Structure only; the save validator also checks every rebuilt state with `validHome`.
  * Size uses the read limit: what older builds wrote stays readable (R3-F1). */
-export function validUndoShape(v: unknown): v is HomeUndo {
+export function validUndoShape(v: unknown, family = false): v is HomeUndo {
   if (!plain(v) || Object.keys(v).length !== 2 || v.version !== 1 || !Array.isArray(v.steps)) return false;
   if (!v.steps.length || v.steps.length > HOME_UNDO_STEPS || JSON.stringify(v).length > HOME_UNDO_READ_BYTES) return false;
   return v.steps.every((step) => plain(step) && Object.keys(step).length > 0 && keysWithin(step, roomIds) &&
@@ -191,8 +199,8 @@ export function validUndoShape(v: unknown): v is HomeUndo {
           Array.isArray(instances.remove) && instances.remove.length <= 256 && instances.remove.every((id) => typeof id === "string") &&
           validPuts(instances.put, 256))) &&
         (characters === undefined || (plain(characters) && Object.keys(characters).length === 2 &&
-          Array.isArray(characters.remove) && characters.remove.length <= 3 && characters.remove.every((s) => s === 0 || s === 1 || s === 2) &&
-          validPuts(characters.put, 3))) &&
+          Array.isArray(characters.remove) && characters.remove.length <= (family ? 6 : 3) && characters.remove.every((s) => typeof s === "number" && Number.isInteger(s) && s >= 0 && s < (family ? 6 : 3)) &&
+          validPuts(characters.put, family ? 6 : 3))) &&
         (theme === undefined || plain(theme));
     }));
 }

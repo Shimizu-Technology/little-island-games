@@ -1,0 +1,45 @@
+import React from 'react';
+import { act, create } from 'react-test-renderer';
+import { describe, expect, it, vi } from 'vitest';
+import { StoredCell } from '../src/home/runtime/StoredCell';
+import { TargetCue } from '../src/home/runtime/TargetCue';
+import { starterHome, instance } from '../src/home/model';
+import { buildScene } from '../src/home/scene/graph';
+import type { Interaction } from '../src/home/runtime/useInteraction';
+const capture = vi.hoisted(() => ({ pan: {} as Record<string, (...args: any[]) => void> }));
+vi.mock('react-native', () => ({ Pressable: 'Pressable', View: 'View', Text: 'Text' }));
+vi.mock('react-native-svg', () => ({ default: 'Svg', Path: 'Path' }));
+vi.mock('../src/home/art/Items', () => ({ ItemArt: 'ItemArt' }));
+vi.mock('../src/home/art/More', () => ({ MoreItemArt: 'MoreItemArt' }));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (value: unknown) => ({ value, set(v: unknown) { this.value = v; } }), useAnimatedStyle: (fn: () => unknown) => fn() }));
+vi.mock('react-native-gesture-handler', () => ({ GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  Gesture: { Pan: () => { const chain: any = new Proxy({}, { get: (_t, name: string) => (fn: any) => { if (typeof fn === 'function') capture.pan[name] = fn; return chain; } }); return chain; } } }));
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+describe('silky furniture feedback and direct stored-item handoff', () => {
+  it.each(['bed', 'sofa', 'bathtub', 'chair'])('%s has a whole warm surface outline and a visible pose silhouette while targeted', async item => {
+    const s = starterHome(); s.rooms.home.instances = [instance('seat', item, 8, 2)]; s.rooms.home.characters = [];
+    const scene = buildScene(s), target = scene.rooms.home.sockets.find(t => !t.pet && !t.hidden)!;
+    const interaction = { restingFlags: { value: { dragTargets: [target.id] } } } as unknown as Interaction;
+    let tree!: ReturnType<typeof create>;
+    await act(async () => { tree = create(<TargetCue target={target} interaction={interaction}/>); });
+    const outline = tree.root.findAll(n => String(n.type) === 'AnimatedView' && n.props.testID === 'socket-landing-outline')[0];
+    expect(outline.props.style[1].opacity).toBe(1);
+    expect(outline.props.style[0].width).toBeGreaterThan(100);
+    expect(outline.props.style[0].borderColor).toBe('#F5BF49');
+    expect(tree.root.findAllByProps({ testID: `hover-pose-${target.base}` }).length).toBeGreaterThan(0);
+    await act(async () => tree.unmount());
+  });
+  it('stored food starts the same continuous external carry as Friends and still supports tap-to-take', async () => {
+    const s = starterHome(); s.rooms.home.instances = [{ ...instance('fridge', 'fridge', 12, 1), storage: { version: 1, open: true } }, { ...instance('food', 'mango', 0, 0), in: 'fridge' }]; s.rooms.home.characters = [];
+    const child = buildScene(s).entities['home/item/food'];
+    const interaction = { externalDown: vi.fn(), externalMove: vi.fn(), externalUp: vi.fn() };
+    const take = vi.fn(); let tree!: ReturnType<typeof create>;
+    await act(async () => { tree = create(<StoredCell child={child} cell={60} onTake={take} interaction={interaction as unknown as Interaction} offset={{ value: { x: 10, y: 100 } } as any}/>); });
+    capture.pan.onBegin({ absoluteX: 100, absoluteY: 700 }); capture.pan.onStart({ absoluteX: 104, absoluteY: 680 }); capture.pan.onUpdate({ absoluteX: 180, absoluteY: 500 }); capture.pan.onEnd(); capture.pan.onFinalize({}, true);
+    expect(interaction.externalDown).toHaveBeenCalledWith(-400, child.id, { x: 90, y: 600 }, undefined, { below: 0 });
+    expect(interaction.externalMove).toHaveBeenLastCalledWith(-400, { x: 170, y: 400 });
+    expect(interaction.externalUp).toHaveBeenCalledExactlyOnceWith(-400, false);
+    const button = tree.root.findByType('Pressable' as any); await act(async () => button.props.onPress()); expect(take).toHaveBeenCalledWith(child.id);
+    await act(async () => tree.unmount());
+  });
+});
