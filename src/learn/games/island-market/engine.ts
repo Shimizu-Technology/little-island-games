@@ -1,5 +1,6 @@
 import type { Seat } from "../../../games/match";
 import type { LearnEngine, LearnOptions } from "../../types";
+import { levelOf } from "../../levelOptions";
 import { pickItems } from "../../skills";
 import {
   adjustPieces,
@@ -12,6 +13,15 @@ import {
   type Pieces,
 } from "../../kit/numbers";
 import { ORDERS, ROUND_PLAN, planStep, type MarketOrder } from "./orders";
+import {
+  createMarketStall,
+  isMarketStall,
+  stallOutcome,
+  stallTurn,
+  validMarketStall,
+  type MarketStallLevel,
+  type MarketStallState,
+} from "./stages";
 export { ORDERS, ROUND_PLAN } from "./orders";
 export type MarketState = {
   version: 1;
@@ -79,20 +89,23 @@ const labels = {
   "num.subtract-within-100": "Taking away within one hundred",
   "num.make-change": "Making change with shell coins",
 };
-export const engine: LearnEngine<MarketState> = {
+export type IslandMarketState = MarketState | MarketStallState;
+
+export const engine: LearnEngine<IslandMarketState> = {
   id: "island-market",
   name: "Island Market",
   island: "numbers",
   tagline: "Fill each customer's basket with mangoes.",
   description:
-    "Customers come to the mango stall. Tap mangoes and crates of ten into the basket until it matches the order, then give it to them.",
-  help: "Each customer shows how many mangoes they want. Tap the mango pile to add one mango. Tap the crate pile to add a crate of ten. Tap anything in the basket to take it back. When the basket matches, tap Give it! Two customers? Tap the one who wants more. In Challenge you also take away and give change with pretend shell coins worth 1, 5, 10 and 25. They are never earned or kept. With a grown-up, take turns serving customers. There is no clock. For grown-ups: Gentle goes from counting 3–9 to teens as one ten and some ones, then adding two small amounts.",
+    "Customers come to the mango stall. Tap mangoes, crates of ten, and shell coins into the basket for multi-item totals and change.",
+  help: "Each customer shows how many mangoes or shell coins they need. Tap the mango pile to add one mango, the crate pile to add ten, or shell coins worth 1, 5, 10 and 25. Tap anything in the basket to take it back. When the basket matches the order and any coin rule, tap Give it! With a grown-up, take turns serving customers. There is no clock.",
   helpAudio: "island-market-help",
   introAudio: "island-market-intro",
   color: "#9A6A1F",
   surface: "#FBEFD3",
   modes: ["solo", "together"],
   modeLabels: { together: "Take turns with a grown-up" },
+  nativeStages: true,
   skills: labels,
   paceHelp: {
     easy: "Six customers · 3 to 9, then teens, then two friends",
@@ -100,6 +113,9 @@ export const engine: LearnEngine<MarketState> = {
     hard: "Eight customers · adding, taking away and giving change",
   },
   create(o, ctx) {
+    if (o.stage) {
+      return createMarketStall(levelOf(o) as MarketStallLevel, ctx);
+    }
     // Follow the round's ramp (easiest first); spacing picks which orders fill each step.
     const plan = ROUND_PLAN[o.pace],
       fresh = ORDERS.filter((q) => q.pace === o.pace && !q.retired);
@@ -124,7 +140,9 @@ export const engine: LearnEngine<MarketState> = {
       served: [],
     };
   },
-  validate(v, o): v is MarketState {
+  validate(v, o): v is IslandMarketState {
+    if (o.stage) return isMarketStall(v) && validMarketStall(v, levelOf(o) as MarketStallLevel);
+    if (isMarketStall(v)) return false;
     if (
       !object(v) ||
       !keys(v, ["version", "starter", "orders", "index", "phase", "pieces", "served"]) ||
@@ -158,6 +176,6 @@ export const engine: LearnEngine<MarketState> = {
       return pieceTotal(s.pieces) === 0 && s.pieces.coins.every((n) => n === 0);
     return s.phase !== "served" || pieceTotal(s.pieces, order?.kind === "change") === order?.target;
   },
-  outcome: (s) => (s.phase === "done" ? "done" : null),
-  turn: marketTurn,
+  outcome: (s) => (isMarketStall(s) ? stallOutcome(s) : s.phase === "done" ? "done" : null),
+  turn: (s) => (isMarketStall(s) ? stallTurn(s) : marketTurn(s)),
 };

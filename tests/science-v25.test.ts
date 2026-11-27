@@ -1,8 +1,9 @@
 import { expect, it } from 'vitest';
 import { learnIds } from '../src/learn/types';
 import { engines } from '../src/learn/engines';
+import { random } from '../src/games/types';
 import { startSession, outcomeOf, validLearnSession } from '../src/learn/session';
-import { growthMove, growthProgress, growthQuestions } from '../src/learn/growth/engine';
+import { createGrowth, growthMove, growthProgress, growthQuestions } from '../src/learn/growth/engine';
 import type { GrowthState } from '../src/learn/growth/types';
 import { taskAt as pattern, type PatternState } from '../src/learn/games/pattern-path/engine';
 import { taskAt as shape, type ShapeState } from '../src/learn/games/shape-shift/engine';
@@ -13,7 +14,11 @@ import { missions } from '../src/learn/games/tide-pool/engine';
 
 it('helped correct answers tie across every scored growth game and both stages, preserving assistance', () => {
  for (const game of learnIds.filter(id => !engines[id].ownLevels && engines[id].modes.includes('versus'))) for (const stage of ['stretch','deep'] as const) for (const starter of [0,1] as const) {
-  let s = startSession(game, { options: {mode:'versus',pace:'easy',stage}, starter }, {}, 25);
+  const options = { mode:'versus' as const, pace:'easy' as const, stage };
+  let s = {
+    ...startSession(game, { options, starter }, {}, 25),
+    state: createGrowth(game, options, { skills: {}, rng: random(25), starter, today: 20000 }),
+  };
   const qs = growthQuestions(game,s.options,s.state as GrowthState);
   for (const [i,q] of qs.entries()) {
    let state=s.state as GrowthState;
@@ -66,6 +71,11 @@ it('coral explanation teaches suitable temperature, including cold stress',()=>{
 it('registers every seeded science goal, fact and retry explanation for narration',()=>{
  const lines:Record<string,string>=speech;
  for(const game of ['weather-watch','food-web','space-station'] as const)for(let level=1;level<=5;level++)for(let seed=0;seed<30;seed++)for(const q of tasks(game,level,seed)) {
-  for(const text of [goalTranscript(q),q.fact,...Array.from({length:Math.max(q.labels.length,1)},(_,i)=>wrongFeedback(q,[i]))]) expect(lines[scienceSpeechKey(text)]).toBe(text);
+  const texts = [goalTranscript(q),q.fact,...Array.from({length:Math.max(q.labels.length,1)},(_,i)=>wrongFeedback(q,[i]))];
+  if (q.audioPending) {
+   for (const text of texts) expect(text.trim().length).toBeGreaterThan(20);
+  } else {
+   for (const text of texts) expect(lines[scienceSpeechKey(text)]).toBe(text);
+  }
  }
 });

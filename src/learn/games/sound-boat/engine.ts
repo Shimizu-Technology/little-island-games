@@ -12,7 +12,7 @@ import {
   wordEntry,
   wordsAt,
 } from "../../kit/reading";
-import { isLegacyWarmupWord, pictureWords, readingLadder, readingLadders } from "../../reading/provenance";
+import { isLegacyWarmupWord, pictureWords, readingGrowthTracks, readingLadder, readingLadders, type ReadingQuestion } from "../../reading/provenance";
 import { TILE_FAMILIES, TILE_TWINS, tileLabel } from "../../reading/graphemes";
 import { partsSkills } from "../../reading/scope";
 import { levelOf } from "../../levelOptions";
@@ -26,6 +26,15 @@ import {
   type PartsLevel,
   type PartsState,
 } from "./parts";
+import {
+  createVoyageParts,
+  isVoyageParts,
+  validVoyageParts,
+  voyagePartsOutcome,
+  voyagePartsTurn,
+  type VoyagePartsLevel,
+  type VoyagePartsState,
+} from "./voyage-parts";
 
 /**
  * Sound Boat: hear (and see) a word, then tap letter tiles into the boat's boxes, left to right.
@@ -310,12 +319,22 @@ export function boatFromLegacy(s: LegacyBoatState, o: LearnOptions, skills: Skil
   return createBoat(o, { skills, rng: random(seed), starter: s.starter, today });
 }
 
-export type SoundBoatState = BoatState | LegacyBoatState | PartsState;
+export type SoundBoatState = BoatState | LegacyBoatState | PartsState | VoyagePartsState;
+
+const voyagePool = (level: VoyagePartsLevel): readonly ReadingQuestion[] =>
+  readingGrowthTracks()["sound-boat"]?.[level === 4 ? "stretch" : "deep"]?.questions ?? [];
+
+/** Resolve a saved L4–5 voyage-parts word by id from the pinned branded reading snapshot. */
+export const voyagePartsItem = (s: Pick<VoyagePartsState, "level" | "ids" | "index">): ReadingQuestion | undefined =>
+  voyagePool(s.level).find((q) => q.id === s.ids[s.index]);
+
 /**
- * The Sound Boat engine. Levels 1-3 always use the words that have shipped since 3.0.0. Levels 4-5 use the new board
- * only when the admitted registry holds enough words to play (a reviewed bank has been admitted); otherwise they stay
- * on the older growth quiz, so nothing unreviewed is ever reachable. Words come only from `reading/tasks`, by id.
+ * The Sound Boat engine. Levels 1-3 use the letter-sound boat. Levels 4-5 use W1 `PartsBoard`
+ * when a reviewed W1 reading bank is admitted, and otherwise play native `VoyagePartsBoard`
+ * directly on the wooden boat using the pinned branded word-parts & word-family tracks.
  */
+export const hasAdmittedPartsBank = playable;
+
 export function createSoundBoat(): LearnEngine<SoundBoatState> {
   const native = playable();
   return {
@@ -324,24 +343,37 @@ export function createSoundBoat(): LearnEngine<SoundBoatState> {
     island: "reading",
     tagline: "Spell a word, sail to the island.",
     description:
-      "Hear a word and see its picture, then tap letters into the boat to spell it. Later, change one letter to make a new word.",
-    help: "Listen to the word and look at the picture. Tap a letter to fill the glowing box, left to right. A wrong letter wiggles and waits on the side; try another. Each finished word sails the boat closer to the island. Wide boxes hold two letters that make one sound, like sh in ship. In words like cake, the e at the end is already there: it is silent and helps the a say its name. In the second half, change one letter to make the new word, like cat to cot. The help button lights the right letter. Together, take turns word by word. Take turns with a score: a word built without help or a wrong letter earns a point. There is no clock.",
+      "Hear a word and see its picture, then tap letters into the boat to spell it. Later, build multi-syllable words, endings, and word families.",
+    help: "Listen to the word and look at the picture. Tap a letter to fill the glowing box, left to right. A wrong letter wiggles and waits on the side; try another. Each finished word sails the boat closer to the island. Wide boxes hold two letters that make one sound, like sh in ship. In words like cake, the e at the end is already there: it is silent and helps the a say its name. In the second half, change one letter to make the new word, like cat to cot. At Levels 4 and 5, build whole words from word parts on the boat and tap Check. The help button lights a helpful clue. Together, take turns word by word. Take turns with a score: a word built without help or a wrong letter earns a point. There is no clock.",
     helpAudio: "sound-boat-help",
     introAudio: "sound-boat-intro",
     color: "#386C9A",
     surface: "#E3EEF8",
     modes: ["solo", "together", "versus"],
     skills: { ...readingSkills, ...partsSkills },
-    nativeStages: native,
+    nativeStages: true,
     paceHelp: {
       easy: "Short vowel words: cat, hen, pig, dog, sun.",
       medium: "Two letters, one sound, and blends: fish, duck, crab, kite.",
       hard: "Vowel teams: sheep, boat, moon, star.",
     },
-    create: (o, c) => (o.stage && native ? createParts(levelOf(o) as PartsLevel, c) : createBoat(o, c)),
+    create: (o, c) =>
+      o.stage
+        ? native
+          ? createParts(levelOf(o) as PartsLevel, c)
+          : createVoyageParts(levelOf(o) as VoyagePartsLevel, voyagePool(levelOf(o) as VoyagePartsLevel), c)
+        : createBoat(o, c),
     validate(v, o): v is SoundBoatState {
-      if (o.stage) return native && isParts(v) && validParts(v, levelOf(o) as PartsLevel);
-      if (isParts(v)) return false;
+      if (o.stage) {
+        const lvl = levelOf(o) as PartsLevel;
+        if (isParts(v)) return native && validParts(v, lvl);
+        if (isVoyageParts(v)) {
+          const pool = voyagePool(lvl);
+          return validVoyageParts(v, lvl, (id) => pool.find((q) => q.id === id));
+        }
+        return false;
+      }
+      if (isParts(v) || isVoyageParts(v)) return false;
       if (isLegacyBoat(v)) return validLegacy(v, o);
       const keys = ["pictures", "ladders", "starter", "index", "filled", "out", "hint", "assisted", "clean"];
       const marked = !!v && typeof v === "object" && Object.hasOwn(v, "credit");
@@ -371,10 +403,11 @@ export function createSoundBoat(): LearnEngine<SoundBoatState> {
     },
     outcome(s, o) {
       if (isParts(s)) return partsOutcome(s, o.mode === "versus");
+      if (isVoyageParts(s)) return voyagePartsOutcome(s, o);
       const finished = isLegacyBoat(s) ? s.stage === "done" : s.index === WORDS_PER_ROUND;
       return !finished ? null : o.mode === "versus" ? familyResult(s.clean, s.starter) : "done";
     },
-    turn: (s, o) => (isParts(s) ? partsTurn(s) : boatTurn(s, o)),
+    turn: (s, o) => (isParts(s) ? partsTurn(s) : isVoyageParts(s) ? voyagePartsTurn(s) : boatTurn(s, o)),
   };
 }
 export const engine = createSoundBoat();

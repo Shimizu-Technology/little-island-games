@@ -34,7 +34,7 @@ const props = (state: unknown, update: (s: any) => void) => ({
   width: 335, height: 800, active: true, coach: { active: false, done: vi.fn() }, cheer: vi.fn(),
 });
 const whichState = (index = 0): WhichState => {
-  let s = whichEngine.create({ pace: "easy", mode: "solo" } as never, ctx as never);
+  let s = whichEngine.create({ pace: "easy", mode: "solo" } as never, ctx as never) as WhichState;
   for (let i = 0; i < index; i++) s = whichNext(whichPick(s, whichAnswer(s)));
   return s;
 };
@@ -42,7 +42,7 @@ const whichState = (index = 0): WhichState => {
 it("Which One waits for the child: a solved sentence never advances on its own, and Next does", async () => {
   vi.useFakeTimers();
   const update = vi.fn();
-  const state = whichEngine.create({ pace: "easy", mode: "solo" } as never, ctx as never);
+  const state = whichEngine.create({ pace: "easy", mode: "solo" } as never, ctx as never) as WhichState;
   const right = whichPick(state, whichAnswer(state));
   expect(right.solved).toBe(true);
   await mount(<WhichBoard {...props(right, update)} />);

@@ -17,6 +17,8 @@ import { admittedReading } from "../../reading/admit";
 import { PartsBoard } from "./parts-view";
 import { RefusedTask } from "./BuildBoat";
 import { isParts, type PartsState } from "./parts";
+import { VoyagePartsBoard } from "./voyage-parts-view";
+import { isVoyageParts, type VoyagePartsState } from "./voyage-parts";
 import {
   WORDS_PER_ROUND,
   boatBlanks,
@@ -35,6 +37,7 @@ import {
   silentE,
   startsLadder,
   tileLabel,
+  voyagePartsItem,
   type BoatAction,
   type BoatState,
   type SoundBoatState,
@@ -181,7 +184,18 @@ function Finished() {
 
 export function Board(props: BoardProps<SoundBoatState>) {
   const s = props.session.state;
-  return isParts(s) ? <PartsBoard {...props} session={{ ...props.session, state: s as PartsState }} /> : <Letters {...props} />;
+  if (isParts(s)) return <PartsBoard {...props} session={{ ...props.session, state: s as PartsState }} />;
+  if (isVoyageParts(s)) {
+    const vs = s as VoyagePartsState;
+    return (
+      <VoyagePartsBoard
+        {...props}
+        session={{ ...props.session, state: vs }}
+        question={voyagePartsItem(vs)}
+      />
+    );
+  }
+  return <Letters {...props} />;
 }
 function Letters(props: BoardProps<SoundBoatState>) {
   const { session, update, skills } = props;

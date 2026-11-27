@@ -2,14 +2,27 @@ import { BoardColumns, useBoardColumns, useBoardGeometry, useBoardSpace } from '
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
-import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
+import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
 import { easeInOut, easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
 import { useStepReveal } from "../../stepReveal";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import { CoachSpot } from "../../Coach";
 import type { Prediction } from "../../kit/science";
-import { act, capacity, dock, objects, shapesFor, truth, type FloatState, type Shape } from "./engine";
+import { act, capacity, dock, objects, shapes, shapesFor, truth, type FloatSinkState, type FloatState, type Shape } from "./engine";
+import {
+  floatLabAddPebble,
+  floatLabChooseHull,
+  floatLabDone,
+  floatLabExperiment,
+  floatLabHelp,
+  floatLabNext,
+  floatLabPickOption,
+  floatLabResetHull,
+  floatLabTurn,
+  isFloatLab,
+  type FloatLabState,
+} from "./stages";
 export function ObjectArt({ id, size = 62 }: { id: string; size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 80 80" accessible accessibilityLabel={id.replaceAll("-", " ")}>
@@ -183,7 +196,386 @@ function GuessPicture({ id, sink }: { id: string; sink: boolean }) {
   );
 }
 const shapeName: Record<Shape, string> = { ball: "Clay ball", bowl: "Clay bowl", wide: "Wide boat", foil: "Foil boat" };
-export function Board({ session, update, practice, sound, width, active, coach, cheer }: BoardProps<FloatState>) {
+export function Board(props: BoardProps<FloatSinkState>) {
+  if (isFloatLab(props.session.state)) {
+    return <FloatLabBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+  }
+  return <ClassicFloatBoard {...props} session={{ ...props.session, state: props.session.state }} />;
+}
+
+/** Levels 4–5 native buoyancy, shape, cargo-load, and fair-test lab right inside the live water tank. */
+function FloatLabBoard({
+  session,
+  update,
+  practice,
+  assistance,
+  sound,
+  width,
+  active,
+  coach,
+  cheer,
+}: BoardProps<FloatSinkState> & { session: { state: FloatLabState } }) {
+  const s = session.state;
+  const o = session.options;
+  const exp = floatLabExperiment(s);
+  useStepReveal(s.index);
+
+  if (floatLabDone(s) || !exp) {
+    const scores: [number, number] = [0, 0];
+    s.clean.forEach((ok, idx) => {
+      if (ok) scores[(s.starter + idx) % 2]++;
+    });
+    return (
+      <View style={{ gap: 12, alignItems: "center", padding: 12 }}>
+        <Water width={width}>
+          <View style={{ position: "absolute", top: 18, alignSelf: "center" }}>
+            <ObjectArt id="wide" size={90} />
+          </View>
+        </Water>
+        <Heading style={{ textAlign: "center" }}>
+          {o.mode === "versus"
+            ? scores[0] === scores[1]
+              ? "A buoyancy lab tie!"
+              : `${session.names?.[scores[0] > scores[1] ? 0 : 1] ?? "Player"} wins the dock lab!`
+            : "Every buoyancy trial complete!"}
+        </Heading>
+        <Copy style={{ color: C.ink, textAlign: "center" }}>
+          You tested all {s.ids.length} Level {s.level} dock experiments.
+        </Copy>
+      </View>
+    );
+  }
+
+  const who = session.names?.[floatLabTurn(s)] ?? `Player ${floatLabTurn(s) + 1}`;
+  const hullCap = s.shape && exp.hullCapacities ? exp.hullCapacities[s.shape] : 0;
+  const boatTop = !s.shape ? 16 : s.sank ? 64 : 14 + (s.pebbles / Math.max(1, hullCap + 1)) * 32;
+
+  function chooseOption(idx: number) {
+    if (!active || s.solved || !exp) return;
+    const next = floatLabPickOption(s, idx);
+    if (next === s) return;
+    if (coach.active) coach.done();
+    if (!s.missed && !s.helped && s.picked === null) {
+      practice(exp.skill, next.solved);
+      practice("sci.predict", next.solved);
+    }
+    if (next.solved) cheer(s.index === s.ids.length - 1 ? "big" : "right");
+    else sound("tap");
+    update(next);
+  }
+
+  function pickHull(shape: Shape) {
+    if (!active || s.solved || !exp) return;
+    const next = floatLabChooseHull(s, shape);
+    if (coach.active) coach.done();
+    if (next.sank) {
+      if (!s.missed && !s.helped) practice("sci.shape-buoyancy", false);
+      sound("float-sink-ball-sank", true);
+    } else sound("tap");
+    update(next);
+  }
+
+  function addPebble() {
+    if (!active || s.solved || !s.shape || s.sank || !exp) return;
+    const next = floatLabAddPebble(s);
+    if (next.sank) {
+      if (!s.missed && !s.helped) practice("sci.shape-buoyancy", false);
+      sound("tap");
+    } else if (next.solved) {
+      if (!s.missed && !s.helped) practice("sci.shape-buoyancy", true);
+      cheer(s.index === s.ids.length - 1 ? "big" : "right");
+    } else {
+      sound(`float-sink-count-${Math.min(7, next.pebbles)}`, true);
+    }
+    update(next);
+  }
+
+  const tankView = (
+    <Water width={width}>
+      {exp.kind === "cargo" ? (
+        s.shape ? (
+          <>
+            <View
+              accessible
+              accessibilityLabel={`${shapeName[s.shape]} with ${s.pebbles} pebbles${s.sank ? ", sunk" : ""}`}
+              style={{ position: "absolute", top: boatTop, alignSelf: "center" }}
+            >
+              <ObjectArt id={s.shape === "ball" ? "clay" : s.shape} size={88} />
+              <View
+                style={{
+                  position: "absolute",
+                  top: 24,
+                  left: 16,
+                  width: 56,
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                {Array.from({ length: Math.min(s.pebbles, 8) }, (_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: 10,
+                      height: 8,
+                      borderRadius: 4,
+                      margin: 0.5,
+                      backgroundColor: "#8E9692",
+                      borderWidth: 1,
+                      borderColor: C.ink,
+                    }}
+                  />
+                ))}
+              </View>
+            </View>
+            <View
+              style={{
+                position: "absolute",
+                right: 16,
+                top: 26,
+                minWidth: 64,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 12,
+                backgroundColor: C.paper,
+                borderWidth: 1.5,
+                borderColor: C.line,
+                alignItems: "center",
+              }}
+            >
+              <Copy style={{ fontSize: 18, fontWeight: "900", color: s.sank ? C.coral : C.ink }}>
+                {s.pebbles} / {exp.targetCargo ?? 4}
+              </Copy>
+            </View>
+          </>
+        ) : (
+          <View style={{ position: "absolute", top: 18, alignSelf: "center", alignItems: "center" }}>
+            <PebblePile size={58} />
+            <Copy style={{ fontSize: 13, fontWeight: "800", color: C.ink }}>
+              Goal: {exp.targetCargo} pebbles afloat
+            </Copy>
+          </View>
+        )
+      ) : (
+        <View
+          style={{
+            position: "absolute",
+            left: 24,
+            right: 24,
+            top: 0,
+            bottom: 0,
+            flexDirection: "row",
+            justifyContent: "space-around",
+            alignItems: "flex-start",
+          }}
+        >
+          {exp.objects.map((objId, idx) => {
+            const floatsAfter = exp.kind === "compare" ? idx === exp.correctIndex : truth(objId) === 0;
+            const y = s.solved ? (floatsAfter ? 28 : 74) : 14;
+            return (
+              <View key={`${exp.id}-${objId}-${idx}`} style={{ marginTop: y, alignItems: "center" }}>
+                <ObjectArt id={objId} size={64} />
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </Water>
+  );
+
+  return (
+    <View style={{ gap: 10, maxWidth: 620, width: "100%", alignSelf: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Copy style={{ fontSize: 13, fontWeight: "800", color: C.muted }}>
+          {o.mode === "versus" ? `${who}’s trial · ` : ""}Trial {s.index + 1} of {s.ids.length}
+        </Copy>
+        {!s.solved && !s.helped && (
+          <Button
+            compact
+            quiet
+            disabled={!active}
+            style={{ minHeight: 48 }}
+            onPress={() => {
+              if (!active) return;
+              assistance?.();
+              update(floatLabHelp(s));
+            }}
+          >
+            Lab clue
+          </Button>
+        )}
+      </View>
+
+      <BoardColumns drawing={tankView}>
+        <View
+          style={{
+            backgroundColor: C.paper,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: C.line,
+            padding: 12,
+            gap: 4,
+          }}
+        >
+          <Heading style={{ fontSize: 18 }}>{exp.title}</Heading>
+          <Copy style={{ fontSize: 15, fontWeight: "600", color: C.ink }}>{exp.question}</Copy>
+        </View>
+
+        {s.helped && !s.solved && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{
+              backgroundColor: C.soft,
+              borderRadius: 14,
+              borderWidth: 2,
+              borderColor: C.gold,
+              padding: 10,
+            }}
+          >
+            <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink }}>{exp.hint}</Copy>
+          </View>
+        )}
+
+        {exp.kind === "cargo" ? (
+          !s.solved && (
+            !s.shape ? (
+              <CoachSpot active={coach.active} handAt="none">
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {shapes.map((shape) => (
+                    <PressableScale
+                      key={shape}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Test ${shapeName[shape]}`}
+                      disabled={!active}
+                      onPress={() => pickHull(shape)}
+                      style={{
+                        flexGrow: 1,
+                        flexBasis: "45%",
+                        minHeight: 84,
+                        padding: 8,
+                        backgroundColor: C.paper,
+                        borderRadius: 16,
+                        borderWidth: 2,
+                        borderColor: C.line,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <ObjectArt id={shape === "ball" ? "clay" : shape} size={48} />
+                      <Copy style={{ fontSize: 14, fontWeight: "800", color: C.ink }}>{shapeName[shape]}</Copy>
+                    </PressableScale>
+                  ))}
+                </View>
+              </CoachSpot>
+            ) : s.sank ? (
+              <View
+                accessibilityLiveRegion="polite"
+                style={{
+                  backgroundColor: C.coralFill,
+                  borderRadius: 16,
+                  borderWidth: 2,
+                  borderColor: C.coral,
+                  padding: 12,
+                  gap: 8,
+                }}
+              >
+                <Copy style={{ fontSize: 15, fontWeight: "800", color: C.ink }}>
+                  Splash! The {shapeName[s.shape].toLowerCase()} sank before reaching {exp.targetCargo} pebbles.
+                </Copy>
+                <Button disabled={!active} onPress={() => update(floatLabResetHull(s))}>
+                  Try another hull
+                </Button>
+              </View>
+            ) : (
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={`Add a pebble. ${s.pebbles} of ${exp.targetCargo} loaded`}
+                disabled={!active}
+                onPress={addPebble}
+                style={{
+                  minHeight: 78,
+                  borderRadius: 18,
+                  backgroundColor: C.paper,
+                  borderWidth: 2.5,
+                  borderColor: C.teal,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <PebblePile size={56} />
+                <Copy style={{ fontSize: 18, fontWeight: "800", color: C.ink }}>
+                  Add a pebble ({s.pebbles}/{exp.targetCargo})
+                </Copy>
+              </PressableScale>
+            )
+          )
+        ) : (
+          <CoachSpot active={coach.active && !s.solved} handAt="none">
+            <View style={{ gap: 8 }}>
+              {exp.options.map((opt, idx) => {
+                const isRight = s.solved && idx === exp.correctIndex;
+                const isWrong = !s.solved && s.picked === idx && idx !== exp.correctIndex;
+                return (
+                  <PressableScale
+                    key={`${exp.id}-opt-${idx}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${opt}${isRight ? ", right" : isWrong ? ", try another" : ""}`}
+                    accessibilityState={{ disabled: !active || s.solved || isWrong, selected: isRight }}
+                    disabled={!active || s.solved || isWrong}
+                    onPress={() => chooseOption(idx)}
+                    style={{
+                      minHeight: 56,
+                      borderRadius: 16,
+                      borderWidth: isRight || isWrong ? 3 : 2,
+                      borderColor: isRight ? C.teal : isWrong ? C.coral : C.line,
+                      backgroundColor: isRight ? C.success : isWrong ? C.coralFill : C.paper,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      opacity: isWrong ? 0.58 : 1,
+                    }}
+                  >
+                    <Copy style={{ flex: 1, fontSize: 15, fontWeight: "700", color: C.ink }}>{opt}</Copy>
+                    {isRight && <Copy style={{ fontSize: 20, fontWeight: "900", color: C.teal }}>✓</Copy>}
+                  </PressableScale>
+                );
+              })}
+            </View>
+          </CoachSpot>
+        )}
+
+        {s.solved && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={{
+              backgroundColor: C.success,
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: C.teal,
+              padding: 12,
+              gap: 8,
+            }}
+          >
+            <Copy style={{ fontSize: 16, fontWeight: "800", color: C.ink }}>Discovery recorded!</Copy>
+            <Copy style={{ fontSize: 15, color: C.ink }}>{exp.why}</Copy>
+            <Button disabled={!active} onPress={() => update(floatLabNext(s))}>
+              {s.index === s.ids.length - 1 ? "Finish dock lab" : "Next trial"}
+            </Button>
+          </View>
+        )}
+      </BoardColumns>
+    </View>
+  );
+}
+
+function ClassicFloatBoard({ session, update, practice, sound, width, active, coach, cheer }: BoardProps<FloatSinkState> & { session: { state: FloatState } }) {
   const s = session.state,
     o = session.options,
     d = dock(s, o)!,

@@ -19,7 +19,7 @@ import {
   correct,
   currentTask,
   move,
-  tasks,
+  roundTasks,
   type Game,
   type ScienceState,
   type Task,
@@ -757,7 +757,9 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
   // Choice labels share one size: the largest at which every word fits the narrowest tile (8-pt padding, 2-pt border).
   const labelMax = large && q.labels.length ? Math.min(...q.labels.map(name => wordFitMultiplier(name, 13, controlWidth * (q.labels.length > 4 || compact && q.labels.length === 3 ? 0.29 : 0.44) - 20, 2))) : undefined;
   const ready = s.tested && correct(q, s.values);
-  const hearWhy = <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>;
+  const hearWhy = !q.audioPending ? (
+    <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>
+  ) : null;
   const result = s.tested && (
         <View
           accessibilityLiveRegion="polite"
@@ -794,7 +796,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
       {/* At accessibility sizes the step count and "Build · Test · Notice" stack, so neither runs off the card. */}
       <View testID="science-steps" style={large ? { gap: 2 } : { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: green, fontWeight: "900", fontSize: 13 }}>
-          DISCOVERY {s.index + 1} / {tasks(game, s.level, s.seed).length}
+          DISCOVERY {s.index + 1} / {roundTasks(game, s).length}
         </Copy>
         <Copy maxFontSizeMultiplier={large ? 1.5 : undefined} style={{ color: ink, fontSize: 13 }}>Build · Test · Notice</Copy>
       </View>
@@ -894,7 +896,7 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
         >
           Hint
         </Button></View>
-      <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(goalTranscript(q)))}>Hear the goal</Button>
+      {!q.audioPending && <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(goalTranscript(q)))}>Hear the goal</Button>}
       {space && ready && hearWhy}
       {hint && (
         <Copy style={{ padding: 12, backgroundColor: "#FFF3CE", borderRadius: 12, fontSize: 15 }}>

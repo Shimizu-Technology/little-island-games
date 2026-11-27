@@ -39,6 +39,8 @@ import { literacyTracks } from "../src/learn/growth/literacy";
 import { growthTrack, growthTracks, readingGrowth } from "../src/learn/growth/content";
 import { numberTracks } from "../src/learn/growth/numbers";
 import { discoveryTracks } from "../src/learn/growth/discovery";
+import { random } from "../src/games/types";
+import { createGrowth } from "../src/learn/growth/engine";
 import type { GrowthState } from "../src/learn/growth/types";
 import { dataExports, inheritedSourceDigests, inheritedSourceFile, inheritedSourceFiles, inheritedSourceModules, isInReadingFolder, sourceDigest } from "./helpers/inherited-sources";
 import { baselineIssues, currentBaseline, readBaseline } from "./helpers/inherited-baseline";
@@ -109,7 +111,14 @@ vi.mock("../src/learn/games/which-one/engine", async (real) => {
 });
 vi.mock("../src/learn/games/turtle-tales/engine", async (real) => {
   const r = (await real()) as typeof import("../src/learn/games/turtle-tales/engine");
-  return { ...r, tale: (s: { id: string }) => (swap.on ? { ...r.tale(s), pages: r.tale(s).pages.map((p) => ({ ...p, text: SUNSET })) } : r.tale(s)) };
+  return {
+    ...r,
+    tale: (s: { id: string }) => (swap.on ? { ...r.tale(s), pages: r.tale(s).pages.map((p) => ({ ...p, text: SUNSET })) } : r.tale(s)),
+    upperStoryById: (id: unknown) => {
+      const st = r.upperStoryById(id);
+      return swap.on && st ? { ...st, title: "Sunset Story", body: SUNSET, records: st.records.map((rec) => ({ ...rec, context: SUNSET, prompt: SUNSET })) } : st;
+    },
+  };
 });
 vi.mock("../src/learn/games/sound-boat/engine", async (real) => {
   const r = (await real()) as typeof import("../src/learn/games/sound-boat/engine");
@@ -470,6 +479,30 @@ describe("a producer that hands a board an edited copy is refused: no word, no s
     const state = savedRound("which-one", 1).state as WhichState;
     expect(() => admittedReading(whichItem(state), "Which One")).toThrow(/Which One was given reading content that did not come from an admitted or pinned inherited record/);
   });
+  it.each([4, 5] as const)("turtle-tales Level %i native PassageBoard refuses tampered passage records: no words, speech, or credit", async (level) => {
+    const options = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
+    const session = { ...startSession("turtle-tales", { options }, {}, 19), learner: "family", revision: 1 } as LearnSession;
+    await open("turtle-tales", session);
+    expect(shownText()).not.toContain(REFUSED_TASK_TEXT);
+    expect(shownText()).not.toMatch(/sunset/i);
+    await act(async () => root!.unmount());
+    root = undefined;
+    played.length = 0;
+
+    swap.on = true;
+    await open("turtle-tales", session);
+    const before = savedNow();
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(words()).toContain(REFUSED_TASK_TEXT);
+    expect(root!.root.findAll((n) => n.props.testID === "reading-content-refused").length).toBeGreaterThan(0);
+    expect(shownText()).not.toMatch(/sunset/i);
+    expect(played, played.join()).toEqual([]);
+    const after = savedNow();
+    expect(after.learn?.["turtle-tales"]?.state).toEqual(before.learn?.["turtle-tales"]?.state);
+    expect(after.learn?.["turtle-tales"]?.revision).toBe(before.learn?.["turtle-tales"]?.revision);
+    expect(after.skills).toEqual(before.skills);
+    expect(after.learning).toEqual(before.learning);
+  });
 });
 
 describe("live inherited data changed after the check", () => {
@@ -493,12 +526,18 @@ describe("live inherited data changed after the check", () => {
   });
 });
 
-// ---- R1a fix 5 (R5-1): the growth quiz's reading questions (Levels 4-5), which LearnFrame shows through GrowthBoard. ----
-/** Every reading game's Level 4 and 5 session that is a growth session, opened through the real registry. */
-const growthRounds = READING.flatMap((id) => ([4, 5] as const).map((level) => [id, level] as const))
-  .filter(([id, level]) => (startSession(id, { options: optionsAtLevel({ mode: "solo", pace: "easy" }, level) }, {}, 11).state as { type?: string }).type === "growth");
+// ---- R1a fix 5 (R5-1): the growth quiz's reading questions (Levels 4-5), which LearnFrame shows through GrowthBoard for archived saves. ----
+/** Every reading game's Level 4 and 5 archived growth session, opened through the real registry. */
+const growthRounds: readonly [LearnId, 4 | 5][] = (["hafa-adai", "sound-boat", "turtle-tales", "which-one"] as const)
+  .flatMap((id) => ([4, 5] as const).map((level) => [id, level] as [LearnId, 4 | 5]));
 function growthRound(id: LearnId, level: 4 | 5, revision = 1): LearnSession {
-  return { ...startSession(id, { options: optionsAtLevel({ mode: "solo", pace: "easy" }, level) }, {}, 11), learner: "family", revision } as LearnSession;
+  const options = optionsAtLevel({ mode: "solo", pace: "easy" }, level);
+  return {
+    ...startSession(id, { options }, {}, 11),
+    state: createGrowth(id, options, { skills: {}, rng: random(11 ^ 0x5bd1e995), starter: 0, today: 20000 }),
+    learner: "family",
+    revision,
+  } as LearnSession;
 }
 /** The session's first question as the real content serves it (`growthTracks` is never the swapped producer). */
 const firstQuestion = (session: LearnSession) => growthTracks[session.game]![session.options.stage!].questions.find((q) => q.id === (session.state as GrowthState).ids[0])!;
@@ -583,7 +622,13 @@ describe("R5-1: growth reading questions are inherited records, branded and froz
     expect(() => admittedReading(q, "The growth reading board")).toThrow(/The growth reading board was given reading content that did not come from an admitted or pinned inherited record/);
   });
   it("a maths growth round with unbranded questions still opens (the non-reading control)", async () => {
-    const session = { ...startSession("reef-race", { options: optionsAtLevel({ mode: "solo", pace: "easy" }, 4) }, {}, 11), learner: "family", revision: 1 } as LearnSession;
+    const options = optionsAtLevel({ mode: "solo", pace: "easy" }, 4);
+    const session = {
+      ...startSession("reef-race", { options }, {}, 11),
+      state: createGrowth("reef-race", options, { skills: {}, rng: random(11), starter: 0, today: 20000 }),
+      learner: "family",
+      revision: 1,
+    } as LearnSession;
     expect((session.state as { type?: string }).type).toBe("growth");
     await open("reef-race", session);
     expect(shownText()).toContain(firstQuestion(session).prompt);

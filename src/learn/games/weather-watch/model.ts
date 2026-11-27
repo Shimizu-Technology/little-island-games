@@ -11,8 +11,10 @@ export type Task = {
   fact: string;
   notice: string;
   hint: string;
+  /** True for newly expanded Phase 4A bank items awaiting Phase 4B voice narration recording. */
+  audioPending?: true;
 };
-export type ScienceState = {
+export type ScienceStateV1 = {
   version: 1;
   seed: number;
   level: number;
@@ -23,6 +25,20 @@ export type ScienceState = {
   actions: number;
   records: number[][];
 };
+export type ScienceStateV2 = {
+  version: 2;
+  seed: number;
+  level: number;
+  index: number;
+  /** Stable task IDs pinned at round creation so future bank additions never shift saved rounds. */
+  taskIds: string[];
+  items: number[];
+  values: number[];
+  tested: boolean;
+  actions: number;
+  records: number[][];
+};
+export type ScienceState = ScienceStateV1 | ScienceStateV2;
 export type Action =
   | { type: "set"; slot: number; value: number }
   | { type: "test" }
@@ -35,7 +51,8 @@ const t = (
   labels: string[],
   target: number[],
   fact: string,
-  notice: string
+  notice: string,
+  audioPending?: true
 ): Task => ({
   title,
   goal,
@@ -52,9 +69,357 @@ const t = (
         : kind === "eclipse"
           ? `${labels[target[0]]}, orbit offset ${target[1]}`
           : target.map((n) => labels[n] ?? String(n)).join(" → "),
+  ...(audioPending ? { audioPending } : {}),
 });
 const planets = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"];
 export { planets };
+
+/** Expanded Guam & island-flavored tasks added in Phase 4A (15 for weather-watch -> 38 total; 16 for food-web -> 32 total). */
+function extraCurriculumTasks(game: Game, level: number, seed: number): Task[] {
+  const v = seed % 3;
+  if (game === "weather-watch") {
+    if (level === 1)
+      return [
+        t(
+          "Midday reef walk",
+          "Bright sun reflects off the lagoon sand. Dress the explorer for strong sun.",
+          "dress",
+          ["Sunhat", "Raincoat", "Warm coat"],
+          [0],
+          "Sunlight reflects off bright sand and water, so shade and a sunhat help protect your face and eyes.",
+          "A sunhat shaded the bright glare.",
+          true
+        ),
+        t(
+          "Passing island shower",
+          "A quick warm trade-wind shower starts on the walk home. Keep the explorer dry.",
+          "dress",
+          ["Sunhat", "Raincoat", "Warm coat"],
+          [1],
+          "In Guam, brief tropical showers can roll in and pass within minutes while the air stays warm.",
+          "The raincoat kept the quick shower off.",
+          true
+        ),
+        t(
+          "Snowy mountain trip",
+          "Our explorer visits a frosty winter peak. Choose warm gear.",
+          "dress",
+          ["Sunhat", "Raincoat", "Warm coat"],
+          [2],
+          "High mountain towns and winter climates can drop below freezing, where thick coats trap body warmth.",
+          "The warm coat held in heat.",
+          true
+        ),
+        t(
+          "Lightning over the bay",
+          "You see a flash across the bay and hear thunder. Pick the safe spot.",
+          "safety",
+          ["Indoor drawing", "Ocean swim", "Under a tree"],
+          [0],
+          "Leave open beaches and water right away when thunder sounds, and wait indoors with a grown-up.",
+          "Moving indoors kept us safe from lightning.",
+          true
+        ),
+      ];
+    if (level === 2)
+      return [
+        t(
+          "Trade-wind months",
+          "Set the island garden to Guam's sunnier, breezier dry season.",
+          "tropical",
+          ["Drier season", "Wetter season"],
+          [0],
+          "Guam's drier season usually runs from January through May, with steady easterly trade winds and fewer heavy downpours.",
+          "Trade winds brought drier island days.",
+          true
+        ),
+        t(
+          "Waterfall flow",
+          "Guam's rivers and waterfalls rush fastest during one half of the year. Set that season.",
+          "tropical",
+          ["Drier season", "Wetter season"],
+          [1],
+          "Frequent rains during Guam's wetter season (roughly July to November) refill island streams and waterfalls.",
+          "Wetter months filled the island streams.",
+          true
+        ),
+        t(
+          "Golden hillside grass",
+          "Open southern hillsides turn tan when rainfall drops. Set that season.",
+          "tropical",
+          ["Drier season", "Wetter season"],
+          [0],
+          "Less rainfall during the drier season dries out hillside grass, which is why outdoor fire safety matters.",
+          "Less rain dried the hillside grass.",
+          true
+        ),
+      ];
+    if (level === 3)
+      return [
+        t(
+          "Lagoon mist to shower",
+          "Start at the warm lagoon and build a three-step island rain cycle.",
+          "cycle",
+          ["Heat sea", "Cool vapor", "Rain"],
+          [0, 1, 2],
+          "Warm lagoon water evaporates into invisible vapor, rises, cools into clouds, and returns as island rain.",
+          "Warm sea water fed the passing shower.",
+          true
+        ),
+        t(
+          "Ridge cloud builder",
+          "Moist sea air cools over the hills and flows back to the ocean. Order all four steps.",
+          "cycle",
+          ["Cool vapor", "Rain", "River to sea", "Heat sea"],
+          [0, 1, 2, 3],
+          "Air pushed upward over island hills cools and condenses into clouds; rain feeds streams back to the sea.",
+          "Rising air cooled and restarted the cycle.",
+          true
+        ),
+        t(
+          "Afternoon sea breeze cycle",
+          "Follow water from sunlit ocean to cloud, shower, and stream.",
+          "cycle",
+          ["Heat sea", "Cool vapor", "Rain", "River to sea"],
+          [0, 1, 2, 3],
+          "Solar heating drives evaporation all day, fueling puffy afternoon clouds and surface streams back to the coast.",
+          "Sun energy powered every stage of the loop.",
+          true
+        ),
+      ];
+    if (level === 4) return [];
+    return [
+      t(
+        "Rising pressure",
+        "Pressure is rising, clouds are breaking apart, and breezes are gentle. Set the forecast.",
+        "forecast",
+        ["Fair likely", "Rain or storm possible", "Snow certain"],
+        [0],
+        "Rising air pressure often goes with sinking air and clearer skies, though brief island showers can still pass.",
+        "Rising pressure favored calmer weather.",
+        true
+      ),
+      t(
+        "Gusty squall line",
+        "Pressure dips, dark anvil clouds approach from the east, and gusts pick up. Set a cautious forecast.",
+        "forecast",
+        ["Fair likely", "Rain or storm possible", "Snow certain"],
+        [1],
+        "Fast-building dark clouds and sudden cool gusts warn of heavy squalls; watch official weather alerts.",
+        "Cloud and wind clues pointed to rain or storms.",
+        true
+      ),
+      t(
+        "Warm sea breeze",
+        "Sea-level air is 29 °C with steady pressure and light trade winds. Set the forecast.",
+        "forecast",
+        ["Fair likely", "Rain or storm possible", "Snow certain"],
+        [0],
+        "Guam's tropical sea-level climate stays warm year-round, so snow does not form in a warm trade-wind pattern.",
+        "Steady tropical clues pointed to fair skies.",
+        true
+      ),
+      t(
+        "Typhoon supply shelf",
+        "Pack the three essentials every island home checks before a storm watch.",
+        "kit",
+        ["Water", "Flashlight", "Battery radio", "Beach ball"],
+        [0, 1, 2],
+        "Clean drinking water, safe battery light, and a battery radio keep families informed if power goes out.",
+        "Water, light, and a radio belong in every storm kit.",
+        true
+      ),
+      t(
+        "Flooded street alert",
+        "Heavy rain is flooding low roads and gusts are bending trees. Choose the safest place.",
+        "safety",
+        ["Sturdy indoor shelter", "Beach", "Under a tree"],
+        [0],
+        "Stay inside a sturdy building away from windows and floodwater; never shelter under tall trees in high winds.",
+        "Indoors is the safest shelter during storm alerts.",
+        true
+      ),
+    ];
+  }
+  if (game === "food-web") {
+    if (level === 1)
+      return [
+        t(
+          "Feed a turtle",
+          "Choose healthy food for the green sea turtle.",
+          "feed",
+          ["Algae", "Small fish", "Plastic"],
+          [0],
+          "Adult green sea turtles graze algae and seagrass. Floating plastic bags can harm turtles that mistake them for food.",
+          "The sea turtle grazed healthy algae.",
+          true
+        ),
+        t(
+          "Feed a triggerfish",
+          "Pick an animal food source for the reef triggerfish.",
+          "feed",
+          ["Algae", "Small fish", "Plastic"],
+          [1],
+          "Triggerfish have strong jaws and eat reef animals like urchins, crabs, and small fish.",
+          "The triggerfish ate an animal food source.",
+          true
+        ),
+        t(
+          "Feed an octopus",
+          "Send a reef meal to the hiding octopus.",
+          "feed",
+          ["Algae", "Small fish", "Plastic"],
+          [1],
+          "Reef octopuses are clever hunters that catch crabs and small fish among coral crevices.",
+          "The octopus caught a small fish.",
+          true
+        ),
+        t(
+          "Feed a crab",
+          "Help this tide-pool crab find algae to eat.",
+          "feed",
+          ["Algae", "Small fish", "Plastic"],
+          [0],
+          "Many shore and reef crabs nibble algae off rocks and help recycle small food scraps.",
+          "The crab grazed algae from the rock.",
+          true
+        ),
+      ];
+    if (level === 2)
+      return [
+        t(
+          "Build a turtle chain",
+          "Tap nodes in energy-flow order from sunlight to top predator.",
+          "chain",
+          ["Sun", "Algae", "Turtle", "Reef shark"],
+          [0, 1, 2, 3],
+          "Sunlight powers reef algae, sea turtles graze algae, and large sharks sit near the top of ocean food chains.",
+          "Energy flowed from Sun to algae to turtle to shark.",
+          true
+        ),
+        t(
+          "Build a crab chain",
+          "Order the tide-pool chain from sunlight to reef hunter.",
+          "chain",
+          ["Sun", "Algae", "Crab", "Octopus"],
+          [0, 1, 2, 3],
+          "Algae capture sunlight, reef crabs graze algae, and octopuses hunt crabs along rocky ledges.",
+          "Energy moved along the tide-pool chain.",
+          true
+        ),
+        t(
+          "Build an octopus chain",
+          "Follow energy from sunlight through small fish to an octopus.",
+          "chain",
+          ["Sun", "Algae", "Small fish", "Octopus"],
+          [0, 1, 2, 3],
+          "Each arrow points toward the eater receiving food energy, starting from sunlight and producers.",
+          "The reef energy arrows pointed to each eater.",
+          true
+        ),
+      ];
+    if (level === 3)
+      return [
+        t(
+          "Turtle and parrotfish",
+          "Connect algae to both reef grazers.",
+          "web",
+          ["Algae → Turtle", "Algae → Parrotfish", "Turtle → Algae"],
+          [0, 1],
+          "Several different reef herbivores can depend on the same sunlit algae beds.",
+          "Algae fed both turtles and parrotfish.",
+          true
+        ),
+        t(
+          "Octopus pantry",
+          "Link both reef prey animals to the octopus.",
+          "web",
+          ["Crab → Octopus", "Small fish → Octopus", "Octopus → Algae"],
+          [0, 1],
+          "Predators like octopuses often eat more than one kind of prey, linking branches of the reef web.",
+          "Two prey branches fed the reef octopus.",
+          true
+        ),
+        t(
+          "Shallow lagoon web",
+          "Connect all four feeding links between algae, grazers, and triggerfish.",
+          "web",
+          ["Algae → Crab", "Crab → Triggerfish", "Algae → Urchin", "Urchin → Triggerfish"],
+          [0, 1, 2, 3],
+          "Connected branches let energy travel along multiple pathways through a coral lagoon.",
+          "Both grazer branches linked up to the triggerfish.",
+          true
+        ),
+      ];
+    if (level === 4)
+      return [
+        t(
+          "Low grazer warning",
+          "Set grazers to 2. Run the model to see how quickly algae expands.",
+          "population",
+          [],
+          [2],
+          "When too few parrotfish and urchins remain, fast-growing algae can shade living coral.",
+          "Only 2 grazers left algae very high.",
+          true
+        ),
+        t(
+          "Healthy grazer school",
+          "Set grazers to 7 and compare coral health with the low-grazer test.",
+          "population",
+          [],
+          [7],
+          "A healthy population of grazing fish keeps turf algae cropped short so baby corals can grow.",
+          "Seven grazers raised coral health.",
+          true
+        ),
+        t(
+          "Peak reef grazing",
+          "Set grazers to 9 and observe the algae and coral health bars.",
+          "population",
+          [],
+          [9],
+          "Strong grazer numbers keep model algae low; real reefs still need clean water and safe temperatures too.",
+          "Nine grazers brought algae down sharply.",
+          true
+        ),
+      ];
+    const extraEnergy = [3000, 4000, 1000][v];
+    return [
+      t(
+        "Reef energy check",
+        `Reef producers capture ${extraEnergy} energy units. Fill the next two consumer levels at 10% per step.`,
+        "energy",
+        [],
+        [extraEnergy / 10, extraEnergy / 100],
+        "Because most energy powers movement and leaves as heat at each level, top predators require huge producer bases.",
+        `About ${extraEnergy / 100} units reached the third level.`,
+        true
+      ),
+      t(
+        "Detritus cleanup chain",
+        "Order how reef decomposers recycle dead matter back into ocean phytoplankton.",
+        "chain",
+        ["Dead matter", "Decomposers", "Nutrients", "Phytoplankton"],
+        [0, 1, 2, 3],
+        "Decomposers break down scraps and shells into dissolved nutrients that microscopic phytoplankton reuse.",
+        "Decomposers returned nutrients to phytoplankton.",
+        true
+      ),
+      t(
+        "Clean watershed test",
+        "Lower pollution runoff to 1, then run the model to check reef health.",
+        "pollution",
+        [],
+        [1],
+        "Planting hillside buffers and keeping storm drains clean reduces muddy runoff reaching coastal reefs.",
+        "Very low pollution kept the model reef strong.",
+        true
+      ),
+    ];
+  }
+  return [];
+}
 function curriculumTasks(game: Game, level: number, seed: number): Task[] {
   const v = seed % 3;
   if (game === "weather-watch") {
@@ -509,21 +874,86 @@ function curriculumTasks(game: Game, level: number, seed: number): Task[] {
     ),
   ];
 }
-/** Seeded palettes make building a model a real arrangement task, rather than tapping cards left to right. */
+const taskSlug = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/** Stable task identifier derived from game, level, and unique task title. */
+export const scienceTaskId = (game: Game, level: number, title: string) => `${game}-l${level}-${taskSlug(title)}`;
+
+function shuffleTaskPalette(q: Task, seed: number, taskIndex: number): Task {
+  if (!["cycle", "chain", "web", "planets", "kit"].includes(q.kind)) return q;
+  const order = q.labels.map((_, i) => i);
+  let word = (seed ^ ((taskIndex + 1) * 2654435761)) >>> 0;
+  for (let i = order.length - 1; i > 0; i--) {
+    word = (Math.imul(word, 1664525) + 1013904223) >>> 0;
+    const j = word % (i + 1);
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  const labels = order.map((i) => q.labels[i]);
+  const target = q.target.map((i) => order.indexOf(i));
+  return t(q.title, q.goal, q.kind, labels, target, q.fact, q.notice, q.audioPending);
+}
+
+function levelPool(game: Game, level: number, seed: number): { id: string; task: Task }[] {
+  return [...curriculumTasks(game, level, seed), ...extraCurriculumTasks(game, level, seed)].map((task) => ({
+    id: scienceTaskId(game, level, task.title),
+    task,
+  }));
+}
+
+function selectExpandedTaskIds(game: Game, level: number, seed: number): string[] {
+  const base = curriculumTasks(game, level, seed);
+  const extra = extraCurriculumTasks(game, level, seed);
+  let selected: Task[];
+  if (extra.length === 0 || seed === 1) {
+    selected = base;
+  } else {
+    const rest = [...base.slice(1), ...extra];
+    const start = Math.abs(seed) % rest.length;
+    selected = [base[0], ...Array.from({ length: base.length - 1 }, (_, i) => rest[(start + i) % rest.length])];
+  }
+  return selected.map((q) => scienceTaskId(game, level, q.title));
+}
+
+/** Full unique task bank across Levels 1–5 for a science lab game (weather-watch: 38, food-web: 32, space-station: 21). */
+export function scienceBank(game: Game): Task[] {
+  const out: Task[] = [];
+  for (let level = 1; level <= 5; level++) {
+    out.push(...curriculumTasks(game, level, 1), ...extraCurriculumTasks(game, level, 1));
+  }
+  return out;
+}
+
+/**
+ * Pre-PR version-1 seeded task sequence. Immutable so existing `version: 1` saves always
+ * restore their exact original tasks, answer keys, and controls across every seed.
+ */
 export function tasks(game: Game, level: number, seed: number): Task[] {
-  return curriculumTasks(game, level, seed).map((q, taskIndex) => {
-    if (!["cycle", "chain", "web", "planets", "kit"].includes(q.kind)) return q;
-    const order = q.labels.map((_, i) => i);
-    let word = (seed ^ ((taskIndex + 1) * 2654435761)) >>> 0;
-    for (let i = order.length - 1; i > 0; i--) {
-      word = (Math.imul(word, 1664525) + 1013904223) >>> 0;
-      const j = word % (i + 1);
-      [order[i], order[j]] = [order[j], order[i]];
-    }
-    const labels = order.map((i) => q.labels[i]);
-    const target = q.target.map((i) => order.indexOf(i));
-    return t(q.title, q.goal, q.kind, labels, target, q.fact, q.notice);
-  });
+  return curriculumTasks(game, level, seed).map((q, taskIndex) => shuffleTaskPalette(q, seed, taskIndex));
+}
+
+/** Expanded task sequence for fresh version-2 rounds across the full bank. */
+export function expandedTasks(game: Game, level: number, seed: number): Task[] {
+  const byId = new Map(levelPool(game, level, seed).map((entry) => [entry.id, entry.task]));
+  return selectExpandedTaskIds(game, level, seed).map((id, taskIndex) =>
+    shuffleTaskPalette(byId.get(id)!, seed, taskIndex)
+  );
+}
+
+/** Resolve the exact ordered tasks belonging to a saved version-1 or version-2 science round. */
+export function roundTasks(game: Game, s: ScienceState): Task[] {
+  if (s.version === 1) return tasks(game, s.level, s.seed);
+  const byId = new Map(levelPool(game, s.level, s.seed).map((entry) => [entry.id, entry.task]));
+  const out: Task[] = [];
+  for (let i = 0; i < s.taskIds.length; i++) {
+    const q = byId.get(s.taskIds[i]);
+    if (!q) return [];
+    out.push(shuffleTaskPalette(q, s.seed, i));
+  }
+  return out;
 }
 export const initialValues = (q: Task) =>
   q.kind === "gravity"
@@ -540,7 +970,7 @@ export const correct = (q: Task, values: number[]) =>
   (q.kind === "web" || q.kind === "kit"
     ? new Set(values).size === values.length && values.every((n) => q.target.includes(n))
     : values.every((n, i) => n === q.target[i]));
-export const currentTask = (game: Game, s: ScienceState) => tasks(game, s.level, s.seed)[s.index];
+export const currentTask = (game: Game, s: ScienceState) => roundTasks(game, s)[s.index];
 function validValues(q: Task, values: unknown): values is number[] {
   if (
     !Array.isArray(values) ||
@@ -569,7 +999,8 @@ function validValues(q: Task, values: unknown): values is number[] {
   return values.length === b.length && values.every((n, i) => n <= b[i]);
 }
 export function move(game: Game, s: ScienceState, a: Action): ScienceState {
-  const q = currentTask(game, s);
+  const qs = roundTasks(game, s);
+  const q = qs[s.index];
   if (!q) return s;
   if (a.type === "reset") return { ...s, values: initialValues(q), tested: false };
   if (a.type === "test") return s.actions > 0 ? { ...s, tested: true } : s;
@@ -580,9 +1011,7 @@ export function move(game: Game, s: ScienceState, a: Action): ScienceState {
           index: s.index + 1,
           records: [...s.records, s.values],
           actions: 0,
-          values: tasks(game, s.level, s.seed)[s.index + 1]
-            ? initialValues(tasks(game, s.level, s.seed)[s.index + 1])
-            : [],
+          values: qs[s.index + 1] ? initialValues(qs[s.index + 1]) : [],
           tested: false,
         }
       : s;
@@ -628,26 +1057,57 @@ export function makeEngine(
     skills: { [`sci.${game}`]: name + " discoveries" },
     create: (o, c) => {
       const seed = Math.floor(c.rng() * 1000000),
-        level = levelOf(o),
-        qs = tasks(game, level, seed);
-      return {
-        version: 1,
+        level = levelOf(o);
+      if (game === "space-station") {
+        const qs = tasks(game, level, seed);
+        return {
+          version: 1,
+          seed,
+          level,
+          index: 0,
+          items: qs.map((_, i) => i),
+          values: initialValues(qs[0]),
+          tested: false,
+          actions: 0,
+          records: [],
+        };
+      }
+      const taskIds = selectExpandedTaskIds(game, level, seed);
+      const state: ScienceStateV2 = {
+        version: 2,
         seed,
         level,
         index: 0,
-        items: qs.map((_, i) => i),
-        values: initialValues(qs[0]),
+        taskIds,
+        items: taskIds.map((_, i) => i),
+        values: [],
         tested: false,
         actions: 0,
         records: [],
       };
+      const qs = roundTasks(game, state);
+      state.values = initialValues(qs[0]);
+      return state;
     },
     validate: (x, o): x is ScienceState => {
-      if (!exact(x, ["version", "seed", "level", "index", "items", "values", "tested", "actions", "records"]))
-        return false;
+      const isV1 = exact(x, ["version", "seed", "level", "index", "items", "values", "tested", "actions", "records"]);
+      const isV2 = exact(x, [
+        "version",
+        "seed",
+        "level",
+        "index",
+        "taskIds",
+        "items",
+        "values",
+        "tested",
+        "actions",
+        "records",
+      ]);
+      if (!isV1 && !isV2) return false;
       const s = x as ScienceState;
       if (
-        s.version !== 1 ||
+        (isV1 && s.version !== 1) ||
+        (isV2 && s.version !== 2) ||
         !integer(s.seed, 0, 999999) ||
         s.level !== levelOf(o) ||
         typeof s.tested !== "boolean" ||
@@ -655,8 +1115,21 @@ export function makeEngine(
         (s.tested && s.actions === 0)
       )
         return false;
-      const qs = tasks(game, s.level, s.seed);
+      if (s.version === 2) {
+        const expectedCount = curriculumTasks(game, s.level, s.seed).length;
+        const poolIds = new Set(levelPool(game, s.level, s.seed).map((entry) => entry.id));
+        if (
+          !Array.isArray(s.taskIds) ||
+          Object.keys(s.taskIds).length !== s.taskIds.length ||
+          s.taskIds.length !== expectedCount ||
+          new Set(s.taskIds).size !== expectedCount ||
+          !s.taskIds.every((id) => typeof id === "string" && poolIds.has(id))
+        )
+          return false;
+      }
+      const qs = roundTasks(game, s);
       if (
+        qs.length === 0 ||
         !integer(s.index, 0, qs.length) ||
         !Array.isArray(s.items) ||
         s.items.length !== qs.length ||
@@ -670,7 +1143,7 @@ export function makeEngine(
         ? Array.isArray(s.values) && s.values.length === 0 && !s.tested && s.actions === 0
         : validValues(qs[s.index], s.values);
     },
-    outcome: (s) => (s.index === tasks(game, s.level, s.seed).length ? "done" : null),
+    outcome: (s) => (s.index === roundTasks(game, s).length ? "done" : null),
   };
 }
 

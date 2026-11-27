@@ -416,7 +416,7 @@ it.each([393,744])('Weather labels stay outside their art and wrap in bounded ro
  for(const fontScale of [1,3.12])for(const level of [1,2,3,5] as LearningLevel[]){
   const tasks=weatherTasks('weather-watch',level,7);
   for(const [index,task] of tasks.entries())for(let value=0;value<task.labels.length;value++){
-   const r=await mountPort('weather-watch',B7,500,{width,height:width===393?852:1133,fontScale},level,true,session=>({...session,state:{...session.state as ScienceState,seed:7,index,values:[value],tested:false}}));
+   const r=await mountPort('weather-watch',B7,500,{width,height:width===393?852:1133,fontScale},level,true,session=>({...session,state:{version:1,seed:7,level,index,items:tasks.map((_,i)=>i),values:[value],tested:false,actions:0,records:[]}}));
    const scene=r.root.findAll(n=>typeof n.type==='function'&&n.type.name==='Scene')[0];
    if(['dress','safety','forecast','kit'].includes(task.kind)){
     expect(scene.findAll(n=>String(n.type)==='SvgText'&&n.children.includes(task.labels[value]))).toHaveLength(0);

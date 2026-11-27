@@ -5,8 +5,13 @@ import Svg, { Circle, Ellipse, Path } from "react-native-svg";
 import { C as BaseC, Copy as BaseCopy } from "../components/ui";
 import { growthProgress, growthQuestions } from "./growth/engine";
 import { islandProgress } from "./games/hafa-adai/engine";
+import { isPicnicContext } from "./games/hafa-adai/stages";
 import { dock } from "./games/float-sink/engine";
+import { isFloatLab } from "./games/float-sink/stages";
 import { boardEnd, reefRound } from "./games/reef-race/engine";
+import { isReefRoute } from "./games/reef-race/stages";
+import { upperStoryById } from "./games/turtle-tales/engine";
+import { isPassage } from "./games/turtle-tales/stories-upper";
 import type { Island, LearnSession } from "./types";
 
 const warmC = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
@@ -54,16 +59,27 @@ export function roundProgress(session: LearnSession): { current: number; total: 
     return { current: Math.min(s.index, s.total as number), total: s.total as number };
   }
   if (session.game === "hafa-adai") {
+    if (isPicnicContext(s)) return { current: Math.min(s.index, s.ids.length), total: s.ids.length };
     const p = islandProgress(session.state as never);
     return { current: s.activity === "explore" ? p.visited.size : p.cursor, total: (s.items as unknown[]).length };
   }
   if (session.game === "float-sink") {
+    if (isFloatLab(s)) return { current: Math.min(s.index, s.ids.length), total: s.ids.length };
     const d = dock(session.state as never, session.options);
     return { current: d?.index ?? (s.items as unknown[]).length, total: (s.items as unknown[]).length };
   }
   if (session.game === "crab-commands") return { current: (s.completed as unknown[]).length, total: (s.levels as unknown[]).length };
-  if (session.game === "turtle-tales") return { current: s.page as number, total: (s.sides as unknown[]).length };
-  if (session.game === "reef-race") return { current: Math.max(...reefRound(session.state as never, session.options).positions), total: boardEnd(session.options) };
+  if (session.game === "turtle-tales") {
+    if (isPassage(s)) {
+      const total = upperStoryById(s.storyId)?.prompts.length ?? 3;
+      return { current: Math.min(s.index, total), total };
+    }
+    return { current: s.page as number, total: (s.sides as unknown[]).length };
+  }
+  if (session.game === "reef-race") {
+    if (isReefRoute(s)) return { current: Math.min(s.index, s.ids.length), total: s.ids.length };
+    return { current: Math.max(...reefRound(session.state as never, session.options).positions), total: boardEnd(session.options) };
+  }
   if (session.game === "code-lab" && s.version === 2 && Array.isArray(s.programs) && typeof s.index === "number") return { current: Math.min(s.index, s.programs.length), total: s.programs.length };
   const total = Array.isArray(s.tasks) ? s.tasks.length : Array.isArray(s.questions) ? s.questions.length : Array.isArray(s.missions) ? s.missions.length :
     Array.isArray(s.orders) ? s.orders.length : Array.isArray(s.ids) ? s.ids.length :

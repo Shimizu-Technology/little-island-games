@@ -8,7 +8,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { random } from "../src/games/types";
 import { challengeFor } from "../src/challenge/catalog";
 import { engines } from "../src/learn/engines";
-import { isGrowth } from "../src/learn/growth/engine";
+import { hasAdmittedPartsBank } from "../src/learn/games/sound-boat/engine";
+import { isVoyageParts } from "../src/learn/games/sound-boat/voyage-parts";
 import { optionsAtLevel, type LearningLevel } from "../src/learn/levels";
 import { BuildBoat } from "../src/learn/games/sound-boat/BuildBoat";
 import { ChallengeBoard } from "../src/learn/games/sound-boat/challenge-view";
@@ -78,10 +79,11 @@ const forged = reviewer.map(([label, code, toTask]) => {
 const inherited = () => letterTaskById("w-cat")!;
 
 describe("the shipped registry has no admitted reading bank", () => {
-  it("keeps Levels 4 and 5 on the older growth quiz and refuses any parts round", () => {
+  it("plays native voyage word-parts from pinned inherited tracks and refuses any unadmitted parts round", () => {
     const shipped = engines["sound-boat"];
-    expect(shipped.nativeStages).toBe(false);
-    for (const level of [4, 5] as const) expect(isGrowth(shipped.create(at(level), { skills: {}, rng: random(3), starter: 0, today: 1 }))).toBe(true);
+    expect(shipped.nativeStages).toBe(true);
+    expect(hasAdmittedPartsBank()).toBe(false);
+    for (const level of [4, 5] as const) expect(isVoyageParts(shipped.create(at(level), { skills: {}, rng: random(3), starter: 0, today: 1 }))).toBe(true);
     expect(shipped.validate({ kind: "parts" }, at(4))).toBe(false);
     expect(admittedPartsTasks()).toEqual([]);
   });
@@ -197,11 +199,11 @@ describe("the playable floor and slot arithmetic, through the real factory", () 
     vi.doUnmock("../src/learn/reading/admitted");
     return out;
   };
-  it("a bank below the floor does not switch the new board on; the full fixture does", async () => {
-    expect((await withDoor([])).engine.engine.nativeStages).toBe(false);
+  it("a bank below the floor does not switch the admitted parts bank on; the full fixture does", async () => {
+    expect((await withDoor([])).engine.hasAdmittedPartsBank()).toBe(false);
     const short = [...fixtureRecords.filter((r) => r.level === 4).slice(0, 11), ...fixtureRecords.filter((r) => r.level === 5)];
-    expect((await withDoor(short)).engine.engine.nativeStages).toBe(false);
-    expect((await withDoor(fixtureRecords)).engine.engine.nativeStages).toBe(true);
+    expect((await withDoor(short)).engine.hasAdmittedPartsBank()).toBe(false);
+    expect((await withDoor(fixtureRecords)).engine.hasAdmittedPartsBank()).toBe(true);
   });
   it("inherited words mint only while they match their pinned digest", async () => {
     vi.resetModules();

@@ -2,7 +2,7 @@ import { readFileSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { random } from "../src/games/types";
 import { engine, missions } from "../src/learn/games/tide-pool/engine";
-import { engine as floatEngine, objects } from "../src/learn/games/float-sink/engine";
+import { engine as floatEngine, objects, type FloatState } from "../src/learn/games/float-sink/engine";
 import { engine as crabEngine, commands } from "../src/learn/games/crab-commands/engine";
 const speech = JSON.parse(readFileSync(new URL("../scripts/learn/science.json", import.meta.url), "utf8")) as Record<
   string,
@@ -53,7 +53,7 @@ describe("science content delivery", () => {
         const s = floatEngine.create(
           { mode: "solo", pace },
           { skills: {}, rng: random(seed), today: 20000, starter: 0 }
-        );
+        ) as FloatState;
         expect(
           pace === "medium"
             ? s.items.some((x) => ["apple", "log", "coin"].includes(x))

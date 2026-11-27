@@ -411,9 +411,10 @@ describe('Scale-Holder co-play (OR-05b)', () => {
           expect(followingTuple).not.toBe(repTuple);
           expect(followingTuple).not.toBe(origTuple);
           expect(followingSecret).not.toBe(repSecret);
-          // The two certified keys are exhausted. The fallback reuses the older
-          // ordering only with a different cast, as checked above.
-          expect(followingSecret).toBe(origSecret);
+          // L1 only has two certified orderings (fallback reuses the older ordering with a different cast);
+          // L2 now spans all 6 distinct 3-shell orderings so the next board gets a completely unseen ordering!
+          if (level === 1) expect(followingSecret).toBe(origSecret);
+          else expect(followingSecret).not.toBe(origSecret);
           expect(validScale(next, level)).toBe(true);
         }
       }

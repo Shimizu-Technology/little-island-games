@@ -26,6 +26,7 @@ import {
   shapes,
   shapesFor,
   truth,
+  type FloatState,
 } from "../src/learn/games/float-sink/engine";
 import {
   commands,
@@ -190,7 +191,7 @@ describe("float dock", () => {
     for (const pace of paces)
       it(`guessing drops and shelves each object, then a boat sinks: ${mode}/${pace}`, () => {
         const o = { mode, pace };
-        let s = floats.create(o, ctx());
+        let s = floats.create(o, ctx()) as FloatState;
         expect(s.items).toHaveLength(counts[pace]);
         // Obvious first: a rock and a leaf.
         expect([...s.items.slice(0, 2)].sort()).toEqual(["leaf", "rock"]);
@@ -233,7 +234,7 @@ describe("float dock", () => {
   });
   it("strictly replays events and rejects forged phase skips or unexpected keys", () => {
     const o: LearnOptions = { mode: "solo", pace: "hard" },
-      s = floats.create(o, ctx());
+      s = floats.create(o, ctx()) as FloatState;
     for (const events of [
       [{ kind: "load" }],
       [{ kind: "predict", value: 3 }],
@@ -247,7 +248,7 @@ describe("float dock", () => {
   it("a solid clay ball sinks before any pebble is added", () => {
     for (const mode of floats.modes) {
       const o: LearnOptions = { mode, pace: "medium" };
-      let s = floats.create(o, ctx());
+      let s = floats.create(o, ctx()) as FloatState;
       for (const id of s.items) s = act(s, { kind: "predict", value: truth(id) }, o);
       s = act(s, { kind: "shape", value: "ball" }, o);
       expect(dock(s, o)?.phase).toBe(mode === "solo" ? "done" : "pass");
