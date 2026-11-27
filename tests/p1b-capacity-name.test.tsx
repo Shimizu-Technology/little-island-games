@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 // P1b review P3-1: the Challenge ID "drop-puzzles" must not leak into the paused-space controls.
 import React from 'react';
 import { act, create } from 'react-test-renderer';

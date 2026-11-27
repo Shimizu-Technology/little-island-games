@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 import React, { createContext, useLayoutEffect } from 'react';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -77,7 +78,7 @@ it('R8: Endless Tide starts, plays, finishes and reopens packed bank entries thr
   expect(store.save.challenge!.banks.find(b => b[0] === 3)).toBeDefined();
   expect(store.save.challenge!.recent.at(-1)).toEqual([3, 0]);
   // Another from the same band deals a different, never-opened entry.
-  await press(root, 'Try another');
+  await press(root, 'Next puzzle');
   await waitFor(() => store.save.challenge!.paused.length === 1);
   const second = store.save.challenge!.paused[0];
   expect(second.puzzle.bank).toBe(3);

@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 import React, { createContext, useLayoutEffect } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -106,22 +107,22 @@ it('F3: one offer replaces directions, and dismissing it does not reveal another
   await mount(e, prior); await press('Solve');
   expect(text()).toContain('Want something harder?'); expect(labels()).not.toContain('Harder');
   expect(labels()).not.toContain('Another puzzle'); expect(labels()).not.toContain('Easier choice · Levels 1–5');
-  await press('Stay here'); expect(labels()).not.toContain('Harder'); expect(labels()).toContain('Try another');
+  await press('Stay here'); expect(labels()).not.toContain('Harder'); expect(labels()).toContain('Next puzzle');
 });
 it.each([{ offers: false }, { youngChild: true }])('F3: comfort %j leaves plain replay without direction prompts', async comfort => {
   await mount(makeEntry(), emptyChallenge(), comfort); await press('Solve');
-  expect(labels()).not.toContain('Harder'); expect(labels()).not.toContain('Easier'); expect(labels()).not.toContain('Same'); expect(labels()).toContain('Try another');
+  expect(labels()).not.toContain('Harder'); expect(labels()).not.toContain('Easier'); expect(labels()).not.toContain('Same'); expect(labels()).toContain('Next puzzle');
 });
 it('F4: saved endings rotate the whole tier, including after remount, without carrying dares', async () => {
   const e = makeEntry(4); await mount(e); const seen: number[] = [];
-  for (let i = 0; i < 8; i++) { seen.push(store.save.challenge!.paused[0].puzzle.puzzle); await press('Solve'); await press('Try another'); }
+  for (let i = 0; i < 8; i++) { seen.push(store.save.challenge!.paused[0].puzzle.puzzle); await press('Solve'); await press('Next puzzle'); }
   expect(seen).toEqual([0, 1, 2, 3, 0, 1, 2, 3]); expect(store.save.challenge!.paused[0].selectedDares).toEqual([]);
   await act(async () => root.unmount());
   await act(async () => { root = create(<StoreProvider><Probe /><Ready entry={e} /></StoreProvider>); });
-  await press('Solve'); await press('Try another'); expect(store.save.challenge!.paused[0].puzzle.puzzle).toBe(1);
+  await press('Solve'); await press('Next puzzle'); expect(store.save.challenge!.paused[0].puzzle.puzzle).toBe(1);
 });
 it('F4: a one-card tier opens the chooser and does not redeal the demonstration', async () => {
-  await mount(makeEntry(1)); await press('Solve'); await press('Try another');
+  await mount(makeEntry(1)); await press('Solve'); await press('Next puzzle');
   expect(store.save.challenge!.paused).toEqual([]); expect(labels()).toContain('Start this puzzle');
 });
 it('F7: a saved helped finish receives honest outcome-dependent praise', async () => {

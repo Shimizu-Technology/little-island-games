@@ -1,3 +1,4 @@
+import { useReducedMotion } from '../components/motion';
 import { C as BaseC, styles as baseStyles, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , GameHeader, Label as BaseLabel, Sheet, Status, ToggleRow } from "../components/ui";
 import { useNunitoLoaded } from "../ui/fonts";
 
@@ -272,6 +273,11 @@ function Round({
     insets = useSafeAreaInsets(),
     { width, height, fontScale } = useWindowDimensions(),
     play = useSounds(store.save.settings.sound);
+  const reduced = useReducedMotion(), scrollRef = useRef<ScrollView>(null);
+  const finished = p.outcome !== null;
+  useEffect(() => {
+    if (finished) scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
+  }, [finished, s.id, reduced]);
   const wide = s.game === "reef-sweep" ? width >= 660 && width > height : width >= 900 && width > height;
   const large = fontScale >= 1.5;
   const reefCompactPortrait = s.game === "reef-sweep" && !wide && height < 920;
@@ -623,6 +629,12 @@ function Round({
       {notice}
     </Copy>
   );
+  const finishActions = finished && (
+    <View testID="board-finish-actions" style={{ gap: 8, marginTop: 10, alignSelf: "stretch" }}>
+      <Button maxFontSizeMultiplier={buttonCap} onPress={onReplay}>Play again</Button>
+      <Button quiet compact maxFontSizeMultiplier={buttonCap} onPress={() => { conceal(); onSetup(); }}>New game</Button>
+    </View>
+  );
   const actionButtons = (
     <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center", gap: reefCompact ? 6 : 8 }]}>
       {p.outcome === null && !concealed && (
@@ -671,8 +683,7 @@ function Round({
           Cover my turn
         </Button>
       )}
-      {p.outcome !== null && <Button maxFontSizeMultiplier={buttonCap} onPress={onReplay}>Play again</Button>}
-      <Button
+      {!finished && <Button
         quiet
         compact
         maxFontSizeMultiplier={buttonCap}
@@ -682,7 +693,7 @@ function Round({
         }}
       >
         New game
-      </Button>
+      </Button>}
     </View>
   );
   const reefFallbackCard = s.game === "reef-sweep" && fallbackOffer && (
@@ -740,6 +751,7 @@ function Round({
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.content,
           {
@@ -768,9 +780,10 @@ function Round({
         {reefCompactPortrait ? (
           <View style={{ width: "100%", gap: 6, alignItems: "center" }}>
             {p.outcome !== null && (
-              <View accessibilityLiveRegion="polite" style={[styles.status, { width: "100%" }, success && { backgroundColor: C.success }]}>
+              <View testID={finished ? "board-finish-card" : undefined} accessibilityLiveRegion="polite" style={[styles.status, { width: "100%" }, success && { backgroundColor: C.success }]}>
                 <Heading maxFontSizeMultiplier={copyCap} style={{ fontSize: 18 }}>{title}</Heading>
                 <Copy maxFontSizeMultiplier={copyCap} style={{ marginTop: 2, fontSize: 13, lineHeight: 18 }}>{statusDetail}</Copy>
+                {finishActions}
               </View>
             )}
             {p.outcome !== null && <BadgeResultCard round={s.id} />}
@@ -833,13 +846,14 @@ function Round({
         )}
         {s.game === "reef-sweep" ? (
           (!reefShortLandscape || p.outcome !== null) && (
-            <View accessibilityLiveRegion="polite" style={[styles.status, success && { backgroundColor: C.success }]}>
+            <View testID={finished ? "board-finish-card" : undefined} accessibilityLiveRegion="polite" style={[styles.status, success && { backgroundColor: C.success }]}>
               <Heading maxFontSizeMultiplier={copyCap} style={{ fontSize: 20 }}>{title}</Heading>
               <Copy maxFontSizeMultiplier={copyCap} style={{ marginTop: 4, fontSize: 14, lineHeight: 21 }}>{statusDetail}</Copy>
+              {finishActions}
             </View>
           )
         ) : (
-          <Status title={title} success={success} detail={statusDetail} />
+          <View testID={finished ? "board-finish-card" : undefined}><Status title={title} success={success} detail={statusDetail} />{finishActions}</View>
         )}
         {headStart && (
           <Copy accessibilityLabel={`Head start for ${headStartFor}: ${headStart}`} style={{ fontSize: 14, color: C.ink, padding: 10, backgroundColor: "#FFF4D6", borderRadius: 12 }}>

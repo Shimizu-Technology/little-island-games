@@ -1,3 +1,4 @@
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
 /** N1b fix P1-1: finishing Number Hop's last puzzle over par must not be credited as independent work. Real LearnFrame, Store and
  * Number Hop board; only the platform is mocked. The board is played through its own buttons. */
 import React, { createContext, useLayoutEffect } from 'react';

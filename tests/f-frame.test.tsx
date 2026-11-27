@@ -174,7 +174,7 @@ it('a pinned (animated) board: the bar holds Back, title and learner, and the bo
   expect(page().props.scrollEnabled).toBe(false);
 });
 
-it('the solved screen keeps the finished board above the result, takes no more moves, and starts at the top',async()=>{
+it('the solved screen keeps the finish action above the finished board, takes no more moves, and starts at the top',async()=>{
   await mount(mazeEntry,maze.start(mazePuzzle.ref,'a','solve-maze',emptyChallenge(),{supportOff:false,ownRead:false},[]));
   await vi.waitFor(()=>expect(all('maze-board')).toHaveLength(1),{timeout:5000,interval:20});
   for(let i=0;i<40&&!all('h2').some(h=>textOf(h)==='Puzzle solved!');i++)await press('Next maze step');
@@ -182,7 +182,7 @@ it('the solved screen keeps the finished board above the result, takes no more m
   expect(heading).toBeDefined();
   const board=all('maze-board');
   expect(board).toHaveLength(1);
-  expect(order(board[0])).toBeLessThan(order(heading));
+  expect(order(heading)).toBeLessThan(order(board[0]));
   expect(board[0].props.active).toBe(false);
   expect(buttonNamed('Help')).toBeUndefined();
   expect(scrolls.at(-1)).toEqual({y:0,animated:false});
