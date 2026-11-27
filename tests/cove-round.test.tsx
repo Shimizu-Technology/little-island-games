@@ -10,10 +10,10 @@ import { addLearner } from '../src/learn/learners';
 import { registration, puzzle, solve, type Payload } from './helpers/challenge-replay';
 import { progressFor, selectedOwner } from '../src/state/challengeDrafts';
 import { completion } from '../src/cove/catalog';
-const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], fail: false, focused: true }));
+const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], fail: false, focused: true, reduced: false }));
 const sound = vi.hoisted(() => ({ play: (() => {}) as (key: string) => void }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { if (db.fail) throw new Error('disk'); db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async () => {} } }));
-vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 393, height: 852 }), AppState: { addEventListener: () => ({ remove() {} }) } }));
+vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 393, height: 852 }), AppState: { addEventListener: () => ({ remove() {} }) }, AccessibilityInfo: { isReduceMotionEnabled: async () => db.reduced, addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
 vi.mock('expo-router', () => ({ useIsFocused: () => db.focused, router: {} }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', styles: {} }));
@@ -139,4 +139,82 @@ it('PR100 R1 cheers a direct finish once, after its save', async () => {
     expect(played.filter(k => k === 'win')).toHaveLength(1);
     expect(screen.root.findAllByType('i').filter(n => n.props.testID === 'cove-finish-burst')).toHaveLength(1);
   } finally { sound.play = () => {}; if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
+});
+
+describe('above-the-fold finish flow', () => {
+  it('renders cove-finish and Next puzzle BEFORE the completed board and smoothly scrolls to top on solve', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+    db.rows = []; db.reduced = false; db.raw = JSON.stringify(emptySave());
+    const boardEntry = {
+      ...entry,
+      helpUI: 'board' as const,
+      render: (session: Parameters<typeof registration.move>[0], dispatch: (a: unknown) => void) => {
+        const actions = (solve(registration.start(puzzle.ref, 'a', 'fixture', emptyChallenge(), { supportOff: false, ownRead: false }, [])).payload as Payload).actions;
+        return <div data-board="completed-grid"><button onClick={() => dispatch(actions[(session.payload as Payload).actions.length])}>Next legal step</button></div>;
+      },
+    };
+    const onNext = vi.fn();
+    const scrollTo = vi.fn();
+    function BoardReady() {
+      const s = useStore();
+      return s.ready ? <CoveRound key={`${selectedOwner(s.save)}:${s.epoch}`} entry={boardEntry} card={boardEntry.puzzles[0]} partner={null} width={353} onBrowse={() => {}} onClose={() => {}} choices={{ onNext }}/> : null;
+    }
+    let screen!: ReactTestRenderer;
+    try {
+      await act(async () => {
+        screen = create(<StoreProvider><Probe/><BoardReady/></StoreProvider>, {
+          createNodeMock: el => (el.type === 'section' ? { scrollTo } : null),
+        });
+      });
+      expect(scrollTo).not.toHaveBeenCalled();
+      for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) {
+        await press(screen, 'Next legal step');
+      }
+      expect(scrollTo).toHaveBeenCalledWith({ y: 0, animated: true });
+      const scroll = screen.root.findByType('section' as never);
+      const scrollChildren = scroll.children.filter(c => typeof c !== 'string');
+      const finishIndex = scrollChildren.findIndex(c => c.props.testID === 'cove-finish');
+      const boardIndex = scrollChildren.findIndex(c => c.props.testID === 'cove-solved-board');
+      expect(finishIndex).toBe(0);
+      expect(boardIndex).toBeGreaterThan(finishIndex);
+      const serialized = JSON.stringify(screen.toJSON());
+      expect(serialized.indexOf('cove-finish')).toBeLessThan(serialized.indexOf('Next puzzle'));
+      expect(serialized.indexOf('Next puzzle')).toBeLessThan(serialized.indexOf('cove-solved-board'));
+      expect(serialized).toContain('Puzzle solved!');
+      await press(screen, 'Next puzzle');
+      expect(onNext).toHaveBeenCalledTimes(1);
+    } finally {
+      if (screen) await act(async () => screen.unmount());
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('auto-scrolls to top without animation under Reduce Motion on partner prompt and confirmed finish', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+    db.rows = []; db.reduced = true; db.raw = JSON.stringify({ ...emptySave(), learning: addLearner(undefined, 'A', 'a') });
+    const scrollTo = vi.fn();
+    let screen!: ReactTestRenderer;
+    try {
+      await act(async () => {
+        screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>, {
+          createNodeMock: el => (el.type === 'section' ? { scrollTo } : null),
+        });
+      });
+      expect(scrollTo).not.toHaveBeenCalled();
+      for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) {
+        await press(screen, 'Next legal step');
+      }
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollTo).toHaveBeenLastCalledWith({ y: 0, animated: false });
+      await press(screen, 'Save my finish');
+      expect(scrollTo).toHaveBeenCalledTimes(2);
+      expect(scrollTo).toHaveBeenLastCalledWith({ y: 0, animated: false });
+    } finally {
+      db.reduced = false;
+      if (screen) await act(async () => screen.unmount());
+      vi.unstubAllGlobals();
+    }
+  });
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { SaveStatus } from '../components/SaveStatus';
 import { useStore } from '../state/Store';
@@ -37,6 +37,20 @@ const shapeOf = (c: BoardCommands | null): HudShape => c && {
 };
 /** A board shrunk above More never goes narrower than this (or the full width, when that is less): its keys and pads keep their minimums. */
 const MIN_BOARD = 280;
+
+/** Reads the system Reduce Motion setting without assuming full native mocks in unit tests. */
+function useReduceMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    let a11y: typeof AccessibilityInfo | undefined;
+    try { a11y = AccessibilityInfo; } catch { return; }
+    let live = true;
+    void a11y?.isReduceMotionEnabled?.()?.then(value => { if (live) setReduced(value); }).catch(() => {});
+    const sub = a11y?.addEventListener?.('reduceMotionChanged', setReduced);
+    return () => { live = false; sub?.remove?.(); };
+  }, []);
+  return reduced;
+}
 
 /** Board-side choices the Cove screen supplies. Each is optional; a missing one leaves its More item out. */
 export type RoundChoices = {
@@ -153,6 +167,17 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     return false;
   }
   const round = pending ?? saved ?? finished, actual = round ? entry.puzzles.find(p => sameRef(p.ref, round.puzzle)) ?? entry.packed?.card(round.puzzle) : card;
+  const scrollRef = useRef<ScrollView>(null);
+  const reduced = useReduceMotion(), reducedRef = useRef(reduced);
+  useLayoutEffect(() => { reducedRef.current = reduced; }, [reduced]);
+  const finishPhase: 'none' | 'pending' | 'solved' = pending ? 'pending' : round?.result ? 'solved' : 'none';
+  const prevFinishPhase = useRef<'none' | 'pending' | 'solved'>('none');
+  useEffect(() => {
+    if (finishPhase !== 'none' && prevFinishPhase.current !== finishPhase) {
+      scrollRef.current?.scrollTo?.({ y: 0, animated: !reducedRef.current });
+    }
+    prevFinishPhase.current = finishPhase;
+  }, [finishPhase]);
   // Leaving a finish that is waiting for a partner choice keeps it as a solo finish. While its save is in flight,
   // leaving waits for that save and happens only if it lands; any other held change keeps the finish here.
   const leaveThen = (next: () => void) => {
@@ -183,12 +208,12 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   // inside this screen's own (safe-area) height, never below its minimum width.
   const room = (screenHeight || height) - sheetHeight(height, 'small') - chromeHeight - theme.space.xl, fit = boardHeight > room ? room / boardHeight : 1;
   const boardWidth = more && !choosing ? Math.max(Math.min(width, MIN_BOARD), Math.floor(width * fit)) : width;
-  const finishCard = (heading: string, children: React.ReactNode, burst: boolean) => <View testID="cove-finish" style={[styles.card, theme.shadow]}>
+  const finishCard = (heading: string, children: React.ReactNode, burst: boolean) => <View testID="cove-finish" style={[styles.card, styles.finishCard, theme.shadow]}>
     <View style={[styles.finishArt, !hasTileArt(displayGame) && styles.finishIcon]}>
       {burst && <FinishBurst/>}
-      {hasTileArt(displayGame) ? <CoveMotif game={displayGame} size={104}/> : <Icon glyph={glyphs.Sparkle} weight="fill" size={40} tone="lagoon"/>}
+      {hasTileArt(displayGame) ? <CoveMotif game={displayGame} size={76}/> : <Icon glyph={glyphs.Sparkle} weight="fill" size={36} tone="lagoon"/>}
     </View>
-    <Text variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">{heading}</Text>
+    <Text variant="title" accessibilityRole="header" accessibilityLiveRegion="polite" style={styles.center}>{heading}</Text>
     {children}
   </View>;
   const question = (heading: string, line: string, children: React.ReactNode) => <View style={[styles.card, theme.shadow]}>
@@ -203,24 +228,24 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
         onMore={changeAttempt ? undefined : () => setMore(true)}/>
       <SaveStatus/>
     </View>
-    <ScrollView scrollEnabled={!gridTouch} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.board, { paddingBottom: more ? sheetHeight(height, 'small') + theme.space.lg : theme.space.xl }]}>
+    <ScrollView ref={scrollRef} scrollEnabled={!gridTouch} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.board, { paddingBottom: more ? sheetHeight(height, 'small') + theme.space.lg : theme.space.xl }]}>
       {changeAttempt ? question('Start a new puzzle?', 'Your paused puzzle will be replaced.', <>
         <Button label="New puzzle" fill disabled={busy} onPress={() => void launch()}/>
         <Button label="Keep my puzzle" variant="quiet" target="adult" fill onPress={choices.onKeep ?? onClose}/>
       </>) : round ? <>
-        {pending ? finishCard('Puzzle solved', <>
+        {pending ? finishCard('Puzzle solved!', <>
           <Text variant="caption" tone="muted">Solved together with…</Text>
           <View style={styles.faces}>{others.map(p => <FaceButton key={p.id} id={p.id} name={p.name} label={`Solved together with ${p.name}`} disabled={busy} onPress={() => void confirmFinish(p.id)}/>)}</View>
           <Button label="Save my finish" fill disabled={busy} onPress={() => void confirmFinish(null)}/>
           <Button label="Back to my board" variant="quiet" target="adult" disabled={busy} onPress={() => setPending(undefined)}/>
         </>, false) : round.result ? <>
-          {entry.helpUI === 'board' && <BoardHud.Provider value={host}>{entry.render(round, () => {}, false, boardWidth)}</BoardHud.Provider>}
-          {finishCard(round.result.event === 'together' ? 'Solved together' : 'Puzzle solved', <>
+          {finishCard(round.result.event === 'together' ? 'Solved together!' : 'Puzzle solved!', <>
             {together && <Text variant="caption" tone="muted">Together with {together}</Text>}
             <Text variant="body" style={styles.center}>{entry.completionText?.(round.puzzle, round.result, entry.completionFacts?.(round) ?? null) ?? 'Your finished puzzle is kept.'}</Text>
             {choices.onNext && <Button label="Next puzzle" fill onPress={choices.onNext}/>}
             <Button label="Puzzles" variant="secondary" target="adult" fill onPress={onClose}/>
           </>, cheered && !!finished && round.id === finished.id)}
+          {entry.helpUI === 'board' && <View testID="cove-solved-board" style={styles.boardBox}><BoardHud.Provider value={host}>{entry.render(round, () => {}, false, boardWidth)}</BoardHud.Provider></View>}
         </> : <SessionGate key={`${owner}:${store.epoch}:${round.id}`} open={open} expected={expected(round)} onStartFresh={() => store.challengeDiscard(expected(round))} render={() => <>
           {entry.game === 'solitaire' && entry.full?.(round, entry.controls.reset()) && <Button label="Start this deal again" disabled={busy || !focused} onPress={() => void launch(true)}/>}
           <SearchChrome.Provider value={{ top: 60, bottom: 34, bar: entry.game === 'word-search' ? chromeHeight + 28 : 0 }}><GridInteraction.Provider value={hold}><GridFeedback.Provider value={() => { sound.play('tap'); }}><GridFeel.Provider value={BOARD_FEEL}><View testID="cove-board" onLayout={e => { if (!more) setBoardHeight(e.nativeEvent.layout.height); }} style={styles.boardBox}><BoardHud.Provider value={host}>{entry.render(round, a => void dispatch(a), focused && !busy, boardWidth)}</BoardHud.Provider></View></GridFeel.Provider></GridFeedback.Provider></GridInteraction.Provider></SearchChrome.Provider>
@@ -255,9 +280,10 @@ const styles = {
   screen: { flex: 1 },
   board: { alignItems: 'center', gap: theme.space.md, paddingHorizontal: theme.space.lg, paddingTop: theme.space.sm },
   card: { alignSelf: 'center', maxWidth: 520, width: '100%', alignItems: 'center', gap: theme.space.md, padding: theme.space.xl, borderRadius: theme.radius.sheet, backgroundColor: theme.colors.surface },
+  finishCard: { paddingHorizontal: theme.space.lg, paddingVertical: theme.space.lg, gap: theme.space.md, borderWidth: 2, borderColor: 'rgba(255, 122, 92, 0.42)' },
   boardBox: { alignSelf: 'stretch', alignItems: 'center' },
-  finishArt: { width: 200, height: 120, alignItems: 'center', justifyContent: 'center' },
-  finishIcon: { height: 64 },
+  finishArt: { width: 160, height: 84, alignItems: 'center', justifyContent: 'center' },
+  finishIcon: { height: 52 },
   faces: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: theme.space.md },
   center: { textAlign: 'center' },
 } as const;
