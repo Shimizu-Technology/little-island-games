@@ -51,6 +51,9 @@ vi.mock('react-native', () => ({
   PanResponder: { create: (handlers: object) => ({ panHandlers: handlers }) },
   StyleSheet: { create: (styles: object) => styles, absoluteFill: {} },
 }));
+// Vite cannot intercept the native helper's deferred CommonJS require. Its real
+// export-selection behavior is exercised against lazy getters in native-module-loading.
+vi.mock('../src/puzzles/picture-grid/nativeControls', () => ({ loadNativeControls: () => import('react-native') }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true }));
 vi.mock('../src/components/ui', () => ({ Button: 'Button', Copy: 'Copy', Heading: 'Heading', C: {}, styles: {} }));
 vi.mock('../src/ui', async () => (await import('./helpers/cove-ui')).ui);
