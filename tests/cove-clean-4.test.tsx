@@ -95,34 +95,33 @@ describe('plain difficulty words', () => {
 });
 
 describe('the 4.0 shelf never hides saved work', () => {
-  it('lists only registered shelf games in five sections, with Reef Sweep as a Challenge shortcut and School originals', () => {
+  it('lists only registered shelf games in five sections, with Reef Sweep as a Challenge shortcut, FreeCell, and School originals', () => {
     const sections = shelf.shelfSections({ originals: [{ id: 'slip-tide', name: 'Slip Tide' }, { id: 'canoe-seats', name: 'Canoe Seats' }], registered: game => challengeEntries.some(e => e.game === game) });
     const ids = Object.fromEntries(sections.map(s => [s.title, s.tiles.map(t => `${t.kind}:${t.id}`)]));
-    expect(ids.Numbers).toEqual(['cove:sudoku', 'cove:killer']);
-    expect(ids.Logic).toEqual(['cove:bridges', 'cove:loop', 'cove:picture-grid', 'shortcut:reef-sweep']);
-    expect(ids.Cards).toEqual(['cove:solitaire']);
+    expect(ids.Numbers).toEqual(['cove:sudoku', 'cove:killer', 'cove:cage-math', 'cove:greater-than']);
+    expect(ids.Logic).toEqual(['cove:bridges', 'cove:loop', 'cove:pearl-loop', 'cove:skyline', 'cove:picture-grid', 'shortcut:reef-sweep']);
+    expect(ids.Cards).toEqual(['cove:solitaire', 'cove:freecell']);
     expect(ids.Originals).toEqual(['school:slip-tide', 'school:canoe-seats']);
-    // Deferred games stay registered Cove entries (saves, pins and links resolve), they are just not tiles.
     const all = sections.flatMap(s => s.tiles.map(t => t.id));
-    for (const deferred of ['cage-math', 'greater-than', 'skyline', 'pearl-loop']) { expect(all).not.toContain(deferred); expect(challengeEntries.some(e => e.game === deferred && e.cove)).toBe(true); }
+    for (const adult of ['cage-math', 'greater-than', 'skyline', 'pearl-loop']) { expect(all).toContain(adult); expect(challengeEntries.some(e => e.game === adult && e.cove)).toBe(true); }
     expect(shelf.SHORTCUTS['reef-sweep'].route).toEqual({ pathname: '/challenge', params: { game: 'reef-sweep' } });
   });
   it('a paused deferred game and a pin for it show in Continue, and its link opens its start sheet with Continue first', async () => {
-    const deferred = inline('cage-math'), saved = paused('cage-math', deferred.puzzles[1].ref);
+    const deferred = inline('cross-sums'), saved = paused('cross-sums', deferred.puzzles[1].ref);
     fixture.entries = [inline('sudoku'), deferred];
     fixture.save = { ...withLearner(), challenge: { ...emptyChallenge(), paused: [saved] } };
     fixture.local.data.pins.family = [{ from: 'mele', ref: deferred.puzzles[2].ref }];
     await mount();
-    expect(byTestID('cove-tile-cage-math')).toHaveLength(0);
-    expect(byTestID(`cove-continue-${saved.id}`)[0].props.accessibilityLabel).toBe('Continue · Cage Math');
-    expect(byTestID(`cove-continue-pin-${deferred.puzzles[2].ref.hash}`)[0].props.accessibilityLabel).toBe('Cage Math, from Mele');
+    expect(byTestID('cove-tile-cross-sums')).toHaveLength(0);
+    expect(byTestID(`cove-continue-${saved.id}`)[0].props.accessibilityLabel).toBe('Continue · Cross Sums');
+    expect(byTestID(`cove-continue-pin-${deferred.puzzles[2].ref.hash}`)[0].props.accessibilityLabel).toBe('Cross Sums, from Mele');
     // Continue reopens that exact attempt.
     await press(`cove-continue-${saved.id}`);
     expect(fixture.rounds.at(-1)).toMatchObject({ card: { ref: saved.puzzle }, replace: false });
     await act(async () => screen!.unmount()); screen = undefined;
-    fixture.params = { game: 'cage-math' };
+    fixture.params = { game: 'cross-sums' };
     await mount();
-    expect(screen!.root.findByType('aside').props['data-title']).toBe('Cage Math');
+    expect(screen!.root.findByType('aside').props['data-title']).toBe('Cross Sums');
     expect(byTestID('start-continue')).toHaveLength(1); expect(byTestID('start-new')).toHaveLength(1);
   });
   it('an unknown game link lands calmly on Puzzles with nothing preselected', async () => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
-import { Icon, PageHeader, PressTarget, Sheet, Text, Tile, theme } from '../ui';
+import { Icon, PageHeader, PressTarget, Sheet, Text, Tile, glyphs, theme } from '../ui';
 import type { Pastel } from '../ui/theme';
 import { SECTION_ICON, TodayArt, tileArt } from './CoveArt';
 import { Face, PeoplePicker } from './PeoplePicker';
@@ -21,7 +21,7 @@ export const tileWidth = (width: number) => { const columns = columnsFor(width),
  * Puzzles home: header, Continue strip (paused puzzles and family pins), Favorites, then Today and the shelf
  * sections as picture tiles. No counts, no band words, no buttons on tiles: tap opens, long-press favorites.
  */
-export function CoveHome({ sections, continueItems, favorites, isFavorite, onBack, onTile, onFavorite, onToday, status }: {
+export function CoveHome({ sections, continueItems, favorites, isFavorite, onBack, onTile, onFavorite, onToday, grownUpMode = false, onGrownUpMode, status }: {
   sections: readonly ShelfSection[];
   continueItems: readonly ContinueItem[];
   favorites: readonly (ShelfTile & { pastel: Pastel })[];
@@ -30,12 +30,16 @@ export function CoveHome({ sections, continueItems, favorites, isFavorite, onBac
   onTile: (tile: ShelfTile) => void;
   onFavorite: (id: string) => void;
   onToday?: () => void;
+  /** When true, shows Grown-up Challenge puzzles and Grown-up Today. */
+  grownUpMode?: boolean;
+  onGrownUpMode?: (value: boolean) => void;
   /** A calm one-line status (opening, could not open). */
   status?: React.ReactNode;
 }) {
   const { width, fontScale } = useWindowDimensions(), size = tileWidth(width), [all, setAll] = useState(false);
+  const todayLabel = grownUpMode ? 'Grown-up Today' : 'Today';
   // At accessibility sizes every tile name shares one size at which its longest word still fits the tile.
-  const nameMax = atLarge(fontScale, sharedWordFit([...sections.flatMap(s => s.tiles), ...favorites].map(t => t.name).concat('Today'), theme.type.caption.fontSize, size, TITLE_MAX));
+  const nameMax = atLarge(fontScale, sharedWordFit([...sections.flatMap(s => s.tiles), ...favorites].map(t => t.name).concat(todayLabel), theme.type.caption.fontSize, size, TITLE_MAX));
   const tile = (t: ShelfTile, pastel: Pastel, key = t.id) => <View key={key} style={{ width: size }}>
     <Tile testID={`cove-tile-${t.id}`} name={t.name} nameMax={nameMax} pastel={pastel} art={tileArt(t.id, size)} favorite={isFavorite(t.id)} onPress={() => onTile(t)} onLongPress={() => onFavorite(t.id)}/>
   </View>;
@@ -43,6 +47,17 @@ export function CoveHome({ sections, continueItems, favorites, isFavorite, onBac
     <View style={styles.bar}><PageHeader title="Puzzles" onBack={onBack} backLabel="Back to map" right={<PeoplePicker/>}/></View>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {status}
+      {onGrownUpMode && <View accessibilityRole="radiogroup" accessibilityLabel="Puzzle shelf" style={styles.modeRow}>
+        <PressTarget target="child" haptic role="radio" checked={!grownUpMode} testID="cove-mode-all" accessibilityLabel="All puzzles" onPress={() => onGrownUpMode(false)}
+          style={[styles.modePill, { backgroundColor: !grownUpMode ? theme.colors.lagoon : theme.colors.lagoonSoft }]}>
+          <Text variant="caption" tone={!grownUpMode ? 'surface' : 'ink'} maxFontSizeMultiplier={atLarge(fontScale, TITLE_MAX)} style={styles.modeWord}>All puzzles</Text>
+        </PressTarget>
+        <PressTarget target="child" haptic role="radio" checked={grownUpMode} testID="cove-mode-grownup" accessibilityLabel="Grown-up Challenge" onPress={() => onGrownUpMode(true)}
+          style={[styles.modePill, { backgroundColor: grownUpMode ? theme.colors.lagoon : theme.colors.lagoonSoft }]}>
+          <Icon glyph={glyphs.Sparkle} weight={grownUpMode ? 'fill' : 'bold'} size={16} tone={grownUpMode ? 'surface' : 'ink'}/>
+          <Text variant="caption" tone={grownUpMode ? 'surface' : 'ink'} maxFontSizeMultiplier={atLarge(fontScale, TITLE_MAX)} style={styles.modeWord}>Grown-up Challenge</Text>
+        </PressTarget>
+      </View>}
       {continueItems.length > 0 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip} testID="cove-continue">
         {continueItems.slice(0, STRIP).map(item => <ContinueCard key={item.key} item={item}/>)}
         {continueItems.length > STRIP && <PressTarget testID="cove-continue-all" accessibilityLabel={`See all ${continueItems.length} paused puzzles and pins`} onPress={() => setAll(true)} style={[styles.more, theme.shadow]}>
@@ -50,7 +65,7 @@ export function CoveHome({ sections, continueItems, favorites, isFavorite, onBac
         </PressTarget>}
       </ScrollView>}
       {favorites.length > 0 && <Section icon={<Icon glyph={SECTION_ICON.favorites} weight="fill"/>} title="Favorites">{favorites.map(t => tile(t, t.pastel, `favorite-${t.id}`))}</Section>}
-      {onToday && <View style={styles.grid}><View style={{ width: size }}><Tile testID="cove-today" name="Today" nameMax={nameMax} pastel="puzzles" art={<TodayArt size={Math.max(40, Math.min(96, Math.round(size * 0.5)))}/>} onPress={onToday}/></View></View>}
+      {onToday && <View style={styles.grid}><View style={{ width: size }}><Tile testID="cove-today" name={todayLabel} nameMax={nameMax} pastel="puzzles" art={<TodayArt size={Math.max(40, Math.min(96, Math.round(size * 0.5)))}/>} onPress={onToday}/></View></View>}
       {sections.map(s => <Section key={s.id} icon={<Icon glyph={SECTION_ICON[s.id]}/>} title={s.title}>{s.tiles.map(t => tile(t, s.pastel))}</Section>)}
     </ScrollView>
     <Sheet visible={all} title="Continue" onClose={() => setAll(false)}>
@@ -97,4 +112,7 @@ const styles = {
   section: { gap: theme.space.md },
   heading: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
+  modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
+  modePill: { flexDirection: 'row', alignItems: 'center', gap: theme.space.xs, paddingHorizontal: theme.space.lg, paddingVertical: theme.space.xs, borderRadius: theme.radius.full },
+  modeWord: { fontWeight: '800' },
 } as const;

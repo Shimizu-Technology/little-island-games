@@ -3,15 +3,14 @@ import { View } from 'react-native';
 import type { ChallengeEntry } from '../challenge/types';
 import type { ChallengeSession } from '../state/challenge';
 import { Button, DifficultyPills, Icon, IconButton, PressTarget, Sheet, Text, glyphs, theme } from '../ui';
-import { infoFor } from './catalog';
 import { CoveMotif, hasTileArt } from './CoveArt';
 import { FaceButton } from './PeoplePicker';
-import { difficultyOptionsFor, pastelFor } from './shelf';
+import { difficultyOptionsFor, pastelFor, tierSummary, tileInfoFor, type SolitaireVariant } from './shelf';
 
 type Person = { id: string; name: string };
 /** A mode chip: icon and a short word, one radio stop each. */
-function ModeChip({ glyph, label, selected, onPress }: { glyph: typeof glyphs.User; label: string; selected: boolean; onPress: () => void }) {
-  return <PressTarget target="child" haptic role="radio" checked={selected} testID={`mode-${label}`} accessibilityLabel={label} onPress={onPress} style={[styles.chip, { backgroundColor: selected ? theme.colors.lagoon : theme.colors.lagoonSoft }]}>
+function ModeChip({ glyph, label, selected, onPress, testID }: { glyph: typeof glyphs.User; label: string; selected: boolean; onPress: () => void; testID?: string }) {
+  return <PressTarget target="child" haptic role="radio" checked={selected} testID={testID ?? `mode-${label}`} accessibilityLabel={label} onPress={onPress} style={[styles.chip, { backgroundColor: selected ? theme.colors.lagoon : theme.colors.lagoonSoft }]}>
     <Icon glyph={glyph} tone={selected ? 'surface' : 'ink'}/>
     <Text variant="body" tone={selected ? 'surface' : 'ink'} style={styles.word}>{label}</Text>
   </PressTarget>;
@@ -23,8 +22,12 @@ function ModeChip({ glyph, label, selected, onPress }: { glyph: typeof glyphs.Us
  * modes under it are labelled as the choices for a quiet New puzzle, which is all they change. Opening, refusal and
  * "nothing left here" feedback shows in the sheet that owns the action.
  */
-export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, partners, partner, onPartner, favorite, onFavorite, busy, status, onChoose, onPlay, onContinue, onNew, onClose }: {
+export function StartSheet({ entry, variant, onVariant, visible, tier, onTier, saved, savedLabel, partners, partner, onPartner, favorite, onFavorite, busy, status, onChoose, onPlay, onContinue, onNew, onClose }: {
   entry: ChallengeEntry;
+  /** Solitaire table variant (`freecell`, `draw-1`, or `draw-3`). */
+  variant?: SolitaireVariant;
+  /** Switch Klondike Draw 1 / Draw 3 directly on the Solitaire start sheet. */
+  onVariant?: (variant: 'draw-1' | 'draw-3') => void;
   visible: boolean;
   tier: number;
   onTier: (tier: number) => void;
@@ -48,10 +51,12 @@ export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, pa
   onNew: () => void;
   onClose: () => void;
 }) {
-  const name = infoFor(entry.game).name, options = difficultyOptionsFor(entry), together = partner !== null;
-  return <Sheet visible={visible} title={name} onClose={onClose}>
+  const artGame = variant === 'freecell' ? 'freecell' : entry.game;
+  const name = tileInfoFor(artGame).name, options = difficultyOptionsFor(entry, variant), summary = tierSummary(entry, tier, variant), together = partner !== null;
+  const showDrawChoice = entry.game === 'solitaire' && variant !== 'freecell' && !!onVariant && (entry.packed?.bands.some(b => b.title.startsWith('Klondike draw 3')) ?? false);
+  return <Sheet visible={visible} title={name} heightRatio={0.68} onClose={onClose}>
     <View style={styles.top}>
-      <View style={[styles.picture, { backgroundColor: theme.pastels[pastelFor(entry.game)] }]}><CoveMotif game={entry.game} size={hasTileArt(entry.game) ? 124 : 88}/></View>
+      <View style={[styles.picture, { backgroundColor: theme.pastels[pastelFor(artGame)] }]}><CoveMotif game={artGame} size={hasTileArt(artGame) ? 108 : 80}/></View>
       <IconButton testID="start-favorite" glyph={glyphs.Star} filled={favorite} accessibilityLabel={favorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`} onPress={onFavorite} style={styles.star}/>
     </View>
     {entry.game === "killer" && <Text variant="caption" style={styles.center}>Starts at 6×6 · Try Sudoku first for 4×4 warm-ups</Text>}
@@ -60,7 +65,12 @@ export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, pa
       {!!savedLabel && <Text testID="start-saved" variant="caption" tone="muted" style={styles.center}>{savedLabel}</Text>}
     </View>}
     {saved && <Text testID="start-new-heading" variant="small" tone="muted" accessibilityRole="header">For a new puzzle</Text>}
+    {showDrawChoice && <View accessibilityRole="radiogroup" accessibilityLabel="Card draw" style={styles.row}>
+      <ModeChip glyph={glyphs.Cards} label="Draw 1" testID="variant-draw-1" selected={variant !== 'draw-3'} onPress={() => onVariant('draw-1')}/>
+      <ModeChip glyph={glyphs.Cards} label="Draw 3" testID="variant-draw-3" selected={variant === 'draw-3'} onPress={() => onVariant('draw-3')}/>
+    </View>}
     {options.length > 0 && <DifficultyPills options={options} value={tier} onChange={key => onTier(Number(key))}/>}
+    {!!summary && <Text testID="start-tier-summary" variant="caption" tone="muted" style={styles.summary}>{summary}</Text>}
     {partners.length > 0 && <View accessibilityRole="radiogroup" accessibilityLabel="Who plays" style={styles.row}>
       <ModeChip glyph={glyphs.User} label="On my own" selected={!together} onPress={() => onPartner(null)}/>
       <ModeChip glyph={glyphs.UsersThree} label="Play together" selected={together} onPress={() => { if (!together) onPartner(partners[0].id); }}/>
@@ -76,11 +86,12 @@ export function StartSheet({ entry, visible, tier, onTier, saved, savedLabel, pa
 /** Plain style objects (React Native accepts them as they are). */
 const styles = {
   top: { alignItems: 'center' },
-  picture: { width: 160, height: 160, borderRadius: theme.radius.tile, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3, borderBottomColor: theme.colors.rim },
+  picture: { width: 136, height: 136, borderRadius: theme.radius.tile, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3, borderBottomColor: theme.colors.rim },
   star: { position: 'absolute', top: 0, right: 0 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
   chip: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm, paddingHorizontal: theme.space.lg, borderRadius: theme.radius.full },
   word: { fontWeight: '800' },
   saved: { gap: theme.space.xs },
+  summary: { textAlign: 'center', paddingHorizontal: theme.space.xs },
   center: { textAlign: 'center' },
 } as const;

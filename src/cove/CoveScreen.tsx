@@ -15,7 +15,7 @@ import { openGame } from '../hub/navigation';
 import type { ShelfId } from '../learn/home';
 import { Button, Sheet, Text, theme } from '../ui';
 import { solvingPeople } from './PeoplePicker';
-import { cardFor, completionLookup, coveEntries, hiddenIn, infoFor, isSolved, packedOpen, sameRef, suggestedPacked, tideTable } from './catalog';
+import { cardFor, completionLookup, coveEntries, hiddenIn, isSolved, packedOpen, sameRef, suggestedPacked, tideTable } from './catalog';
 import { civilDate } from '../puzzles/today';
 import { defaults, type Preferences } from './local';
 import { useCoveLocal } from './useCoveLocal';
@@ -25,7 +25,7 @@ import { PuzzleBrowser } from './PuzzleBrowser';
 import { CoveHome, type ContinueItem } from './CoveHome';
 import { StartSheet } from './StartSheet';
 import { CoveGrownUps } from './CoveGrownUps';
-import { nearestTier, pastelFor, playLabel, shelfEntries, shelfSections, tierOf, type ShelfTile } from './shelf';
+import { filterGrownUpSections, grownUpTier, grownUpToday, isGrownUpTile, matchesVariant, nearestTier, pastelFor, playLabel, shelfEntries, shelfSections, tierOf, tileInfoFor, variantLabel, variantOfBand, variantOfRef, type ShelfTile, type SolitaireVariant } from './shelf';
 
 export default function CoveScreen() {
   const store = useStore();
@@ -62,7 +62,7 @@ type Selection = { entry: ChallengeEntry; card: ChallengeCard; replace: boolean;
 /** A calm line for the sheet or screen that owns the action; `choose` offers Choose a puzzle when a difficulty has nothing new left. */
 type Notice = { text: string; choose?: Browse };
 /** Choose a puzzle, with the partner its request started with (a Start sheet's Play together, or the mounted round's). */
-type Browse = { entry: ChallengeEntry; tier: number; partner: string | null };
+type Browse = { entry: ChallengeEntry; tier: number; partner: string | null; variant?: SolitaireVariant };
 const schoolOriginals = shelfGames.filter(g => (learningGroups as Partial<Record<string, 'levels' | 'originals'>>)[g.id] === 'originals').map(g => ({ id: g.id, name: g.name }));
 const COULD_NOT_OPEN = 'This puzzle could not open. Your saved work is kept. Try again.';
 
@@ -72,11 +72,23 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const preferences = local.data.people[owner] ?? defaults(), people = solvingPeople(store.save), others = people.filter(p => p.id !== owner), hidden = local.data.hidden;
   const pausedIn = (game: string) => progress.paused.find(s => s.game === game && !s.result && !s.credited);
   // Every registered game resolves here, shelf or not: deep links, Continue and pins never depend on the shelf.
-  const linked = entries.find(e => e.game === params.game);
+  const linkedVariant: SolitaireVariant | undefined = params.game === 'freecell' ? 'freecell' : undefined;
+  const linked = entries.find(e => e.game === (linkedVariant ? 'solitaire' : params.game));
+  const defaultVariant = (entry: ChallengeEntry, explicit?: SolitaireVariant): SolitaireVariant | undefined => {
+    if (explicit) return explicit;
+    if (entry.game !== 'solitaire' || !entry.packed?.bands.some(b => b.title.startsWith('Klondike'))) return undefined;
+    const saved = pausedIn('solitaire'), savedVariant = saved ? variantOfRef(entry, saved.puzzle) : undefined;
+    return savedVariant === 'draw-3' ? 'draw-3' : 'draw-1';
+  };
   /** An explicit Continue link (`resume=1`) reopens that game's exact paused attempt; a plain game link opens its sheet. */
   const resumable = (entry: ChallengeEntry): Selection | null => { const s = pausedIn(entry.game), c = s && cardFor(s.puzzle, entries); return s && c ? { entry, card: c, replace: false, partner: s.partner, seq: 0 } : null; };
+  const [grownUpMode, setGrownUpMode] = useState(false);
   const [first] = useState(() => linked && params.resume === '1' ? resumable(linked) : null);
-  const [sheet, setSheet] = useState<ChallengeEntry | null>(first ? null : linked ?? null), [sheetOpen, setSheetOpen] = useState(!!linked && !first), [tier, setTier] = useState(() => linked ? nearestTier(linked, preferences.band) : 1), [partner, setPartner] = useState<string | null>(() => linked ? pausedIn(linked.game)?.partner ?? null : null);
+  const [sheet, setSheet] = useState<ChallengeEntry | null>(first ? null : linked ?? null);
+  const [sheetVariant, setSheetVariant] = useState<SolitaireVariant | undefined>(() => linked && !first ? defaultVariant(linked, linkedVariant) : undefined);
+  const [sheetOpen, setSheetOpen] = useState(!!linked && !first);
+  const [tier, setTier] = useState(() => linked ? nearestTier(linked, preferences.band, defaultVariant(linked, linkedVariant)) : 1);
+  const [partner, setPartner] = useState<string | null>(() => linked ? pausedIn(linked.game)?.partner ?? null : null);
   const [selection, setSelection] = useState<Selection | null>(first), [browse, setBrowse] = useState<Browse | null>(null);
   const [grownUps, setGrownUps] = useState(false), [adult, setAdult] = useState(false), [dealing, setDealing] = useState(false), [notice, setNotice] = useState<Notice | null>(null);
   const seq = useRef(0), dealToken = useRef(0), finishHeld = useRef(false), browsing = useRef(browse);
@@ -85,7 +97,12 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const cancelDeal = () => { dealToken.current++; setDealing(false); };
   /** A round whose finish waits for its partner choice cancels any deal still opening; none may replace it. */
   const holdFinish = useCallback((held: boolean) => { finishHeld.current = held; if (held) { dealToken.current++; setDealing(false); } }, []);
-  const openSheet = (entry: ChallengeEntry) => { cancelDeal(); setNotice(null); setSheet(entry); setSheetOpen(true); setTier(nearestTier(entry, preferences.band)); setPartner(pausedIn(entry.game)?.partner ?? null); };
+  const openSheet = (entry: ChallengeEntry, explicitVariant?: SolitaireVariant) => {
+    const v = defaultVariant(entry, explicitVariant);
+    cancelDeal(); setNotice(null); setSheet(entry); setSheetVariant(v); setSheetOpen(true);
+    setTier(grownUpMode ? grownUpTier(entry, preferences.band, v) : nearestTier(entry, preferences.band, v));
+    setPartner(pausedIn(entry.game)?.partner ?? null);
+  };
   const closeSheet = () => { cancelDeal(); setNotice(null); setSheetOpen(false); };
   // A link that arrives while Puzzles is already open opens its game too (Continue reopens, a game link shows its sheet).
   const linkKey = `${params.game ?? ''}|${params.resume ?? ''}`, seenLink = useRef(linkKey);
@@ -94,7 +111,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     seenLink.current = linkKey;
     const again = linked && params.resume === '1' ? resumable(linked) : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- A new route link is an outside event; it opens its game once.
-    if (again) { closeSheet(); setSelection({ ...again, seq: ++seq.current }); } else if (linked) openSheet(linked);
+    if (again) { closeSheet(); setSelection({ ...again, seq: ++seq.current }); } else if (linked) openSheet(linked, linkedVariant);
   }, [linkKey]); // eslint-disable-line react-hooks/exhaustive-deps -- React to a new link only.
   useEffect(() => { if (owner.startsWith('cove-')) void local.change({ type: 'remember-person', owner }); }, [owner]); // eslint-disable-line react-hooks/exhaustive-deps -- Remember explicit identity changes only.
   const owners = people.map(p => p.id).sort().join('|');
@@ -123,13 +140,13 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
    * again before it is offered, so a chooser's own fallback can never reopen a hidden or identical puzzle; with nothing
    * left the answer is `null`, never another difficulty or the paused puzzle. A hidden-row lookup that fails throws.
    */
-  const fresh = async (entry: ChallengeEntry, at: number, avoid?: PuzzleRef, prefer = avoid?.bank): Promise<ChallengeCard | null> => {
+  const fresh = async (entry: ChallengeEntry, at: number, avoid?: PuzzleRef, prefer = avoid?.bank, variant?: SolitaireVariant): Promise<ChallengeCard | null> => {
     const allowed = (c: ChallengeCard | undefined): c is ChallengeCard => !!c && c.tier === at && !hidden.includes(c.ref.hash) && !(avoid && sameRef(c.ref, avoid));
     if (!entry.packed || entry.puzzles.length) {
       const code = completionLookup(progress, entry), level = entry.puzzles.filter(allowed);
       return level.find(p => !isSolved(code(p.ref))) ?? level[0] ?? null;
     }
-    const packed = entry.packed, opener = packedOpen(entry), bands = packed.bands.filter(b => b.tier === at).sort((a, b) => Number(b.bank === prefer) - Number(a.bank === prefer));
+    const packed = entry.packed, opener = packedOpen(entry), bands = packed.bands.filter(b => b.tier === at && matchesVariant(b, variant)).sort((a, b) => Number(b.bank === prefer) - Number(a.bank === prefer));
     for (const band of bands) {
       const skip = await hiddenIn(entry, band.bank, hidden);
       if (skip.size >= band.count) continue;
@@ -138,7 +155,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     }
     return null;
   };
-  const start = (entry: ChallengeEntry, at: number, replace: boolean, withPerson: string | null, avoid?: PuzzleRef) => void deal(() => fresh(entry, at, avoid), card => play(entry, card, replace, withPerson), { entry, tier: at, partner: withPerson });
+  const start = (entry: ChallengeEntry, at: number, replace: boolean, withPerson: string | null, avoid?: PuzzleRef, variant?: SolitaireVariant) => void deal(() => fresh(entry, at, avoid, avoid?.bank, variant), card => play(entry, card, replace, withPerson), { entry, tier: at, partner: withPerson, variant });
   /** Continue reopens the exact saved attempt with its own mode and partner, hidden or not. */
   const resume = (entry: ChallengeEntry, saved: ChallengeSession) => {
     const card = cardFor(saved.puzzle, entries);
@@ -149,7 +166,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const leave = async (next: () => void) => { if (store.save.cove?.active && !await store.covePerson({ type: 'select', id: null }, store.epoch)) { setNotice({ text: 'Could not leave this person yet. Your saved work is kept.' }); return; } next(); };
   const goBack = () => void leave(() => router.canGoBack() ? router.back() : router.replace('/'));
   const openTile = (tile: ShelfTile) => {
-    if (tile.kind === 'cove') openSheet(tile.entry);
+    if (tile.kind === 'cove') openSheet(tile.entry, tile.variant);
     // Reef Sweep opens its own Challenge as the current learner, never a Puzzles-only grown-up.
     else if (tile.kind === 'shortcut') void leave(() => router.push(tile.route));
     else void leave(() => openGame(tile.id as ShelfId));
@@ -160,24 +177,46 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
 
   // Today and every new choice draw from the shelf with hidden puzzles taken out first.
   const visibleEntries = shelfEntries(entries).map(e => ({ ...e, puzzles: e.puzzles.filter(p => !hidden.includes(p.ref.hash)) }));
-  const sections = shelfSections({ entries, hidden, originals: schoolOriginals, registered: game => !!challengeFor(game) });
-  const today = tideTable(civilDate(new Date()), visibleEntries.filter(e => e.puzzles.length || e.packed?.bands.length)).find(p => p.size === 'Medium');
+  const allSections = shelfSections({ entries, hidden, originals: schoolOriginals, registered: game => !!challengeFor(game) });
+  const sections = grownUpMode ? filterGrownUpSections(allSections) : allSections;
+  const playableToday = visibleEntries.filter(e => e.puzzles.length || e.packed?.bands.length);
+  const today = grownUpMode
+    ? grownUpToday(civilDate(new Date()), playableToday)
+    : tideTable(civilDate(new Date()), playableToday).find(p => p.size === 'Medium');
   const onToday = today && (() => {
-    const entry = entries.find(e => e.game === today.entry.game) ?? today.entry, at = entry.packed?.bands.find(b => b.bank === today.bank)?.tier;
+    const entry = entries.find(e => e.game === today.entry.game) ?? today.entry;
+    const band = entry.packed?.bands.find(b => b.bank === today.bank), at = band?.tier, variant = variantOfBand(band);
     if (today.card) play(entry, today.card, true);
-    else if (at) void deal(() => fresh(entry, at, undefined, today.bank), card => play(entry, card, true), { entry, tier: at, partner: null });
+    else if (at) void deal(() => fresh(entry, at, undefined, today.bank, variant), card => play(entry, card, true), { entry, tier: at, partner: null, variant });
   });
   // Every paused puzzle and every pin, newest pause first. A pin resolves by its exact ref across the whole registry,
   // even when that puzzle is hidden from new choices or its game is not on the shelf.
   const continueItems: ContinueItem[] = [
-    ...progress.paused.filter(s => !s.result && !s.credited).sort((a, b) => b.ordinal - a.ordinal).flatMap(s => { const entry = entries.find(e => e.game === s.game); return entry ? [{ key: s.id, game: s.game, name: infoFor(s.game).name, pastel: pastelFor(s.game), onPress: () => resume(entry, s) }] : []; }),
+    ...progress.paused.filter(s => !s.result && !s.credited).sort((a, b) => b.ordinal - a.ordinal).flatMap(s => {
+      const entry = entries.find(e => e.game === s.game);
+      if (!entry) return [];
+      const displayGame = variantOfRef(entry, s.puzzle) === 'freecell' ? 'freecell' : s.game;
+      return [{ key: s.id, game: displayGame, name: tileInfoFor(displayGame).name, pastel: pastelFor(displayGame), onPress: () => resume(entry, s) }];
+    }),
     ...(local.data.pins[owner] ?? []).flatMap(pin => {
       const entry = entries.find(e => e.game === pin.ref.engine), card = cardFor(pin.ref, entries), from = people.find(p => p.id === pin.from) ?? { id: pin.from, name: 'Family' };
-      return entry && card ? [{ key: `pin-${card.ref.hash}`, game: entry.game, name: infoFor(entry.game).name, pastel: pastelFor(entry.game), from, onPress: () => play(entry, card, true), onLongPress: () => void local.change({ type: 'unpin', owner, hash: pin.ref.hash }) }] : [];
+      if (!entry || !card) return [];
+      const displayGame = variantOfRef(entry, pin.ref) === 'freecell' ? 'freecell' : entry.game;
+      return [{ key: `pin-${card.ref.hash}`, game: displayGame, name: tileInfoFor(displayGame).name, pastel: pastelFor(displayGame), from, onPress: () => play(entry, card, true), onLongPress: () => void local.change({ type: 'unpin', owner, hash: pin.ref.hash }) }];
     }),
   ];
-  const shelf = sections.flatMap(s => s.tiles);
-  const favorites = local.data.favorites.flatMap(id => { const tile = shelf.find(t => t.id === id), entry = !tile && entries.find(e => e.game === id); return tile ? [{ ...tile, pastel: pastelFor(id) }] : entry ? [{ kind: 'cove' as const, id, name: infoFor(id).name, entry, pastel: pastelFor(id) }] : []; });
+  const shelf = allSections.flatMap(s => s.tiles);
+  const allFavorites = local.data.favorites.flatMap(id => {
+    const tile = shelf.find(t => t.id === id);
+    if (tile) return [{ ...tile, pastel: pastelFor(id) }];
+    if (id === 'freecell') {
+      const sol = entries.find(e => e.game === 'solitaire');
+      return sol ? [{ kind: 'cove' as const, id: 'freecell', name: tileInfoFor('freecell').name, entry: sol, variant: 'freecell' as const, pastel: pastelFor('freecell') }] : [];
+    }
+    const entry = entries.find(e => e.game === id);
+    return entry ? [{ kind: 'cove' as const, id, name: tileInfoFor(id).name, entry, pastel: pastelFor(id) }] : [];
+  });
+  const favorites = grownUpMode ? allFavorites.filter(isGrownUpTile) : allFavorites;
 
   const saved = selection && pausedIn(selection.entry.game), currentRef = saved?.puzzle ?? selection?.card.ref;
   const noticeLine = (dealing || !!notice) && <View style={styles.status}>
@@ -189,33 +228,35 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     {!sheetOpen && noticeLine}</>;
   let body: React.ReactNode;
   if (selection) {
-    const { entry, card } = selection, at = tierOf(entry, currentRef ?? card.ref) ?? card.tier;
+    const { entry, card } = selection, at = tierOf(entry, currentRef ?? card.ref) ?? card.tier, activeVariant = variantOfRef(entry, currentRef ?? card.ref);
     // The round stays mounted under Choose a puzzle, so closing the chooser returns to exactly what was there.
     body = <>{status}<GridAdult.Provider value={adult}><GridPreferences.Provider value={preferences}>
       <CoveRound key={`${entry.game}:${card.ref.hash}:${selection.replace}:${selection.seq}`} entry={entry} card={card} replace={selection.replace} partner={selection.partner} width={Math.min(width, 960) - 2 * theme.space.lg}
-        onClose={() => setSelection(null)} onBrowse={() => setBrowse({ entry, tier: at, partner: selection.partner })} choosing={!!browse} onFinishHeld={holdFinish}
+        onClose={() => setSelection(null)} onBrowse={() => setBrowse({ entry, tier: at, partner: selection.partner, variant: activeVariant })} choosing={!!browse} onFinishHeld={holdFinish}
         choices={{
           mistakes: preferences.mistakes, onMistakes: mistakes => changePreferences({ mistakes }),
-          onNext: () => start(entry, at, false, selection.partner, card.ref),
-          onNew: () => start(entry, at, true, selection.partner, currentRef),
+          onNext: () => start(entry, at, false, selection.partner, card.ref, activeVariant),
+          onNew: () => start(entry, at, true, selection.partner, currentRef, activeVariant),
           onKeep: () => { const s = pausedIn(entry.game); if (s) resume(entry, s); else setSelection(null); },
           onSend: (to, ref) => local.change({ type: 'pin', to, pin: { from: owner, ref } }),
           onGrownUps: () => setGrownUps(true),
         }}/>
     </GridPreferences.Provider></GridAdult.Provider></>;
-  } else body = <CoveHome sections={sections} continueItems={continueItems} favorites={favorites} isFavorite={id => local.data.favorites.includes(id)} onBack={goBack} onTile={openTile} onFavorite={favorite} onToday={onToday} status={<><SaveStatus/>{status}</>}/>;
+  } else body = <CoveHome sections={sections} continueItems={continueItems} favorites={favorites} isFavorite={id => local.data.favorites.includes(id)} onBack={goBack} onTile={openTile} onFavorite={favorite} onToday={onToday} grownUpMode={grownUpMode} onGrownUpMode={setGrownUpMode} status={<><SaveStatus/>{status}</>}/>;
 
   const sheetSaved = sheet ? pausedIn(sheet.game) : undefined;
-  const savedLabel = sheet && sheetSaved ? [playLabel(sheet, sheetSaved.puzzle, tierOf(sheet, sheetSaved.puzzle) ?? 1), sheetSaved.partner ? `with ${people.find(p => p.id === sheetSaved.partner)?.name ?? 'family'}` : 'On my own'].filter(Boolean).join(' · ') : undefined;
+  const savedVariant = sheet && sheetSaved ? variantOfRef(sheet, sheetSaved.puzzle) : undefined;
+  const savedLabel = sheet && sheetSaved ? [variantLabel(savedVariant), playLabel(sheet, sheetSaved.puzzle, tierOf(sheet, sheetSaved.puzzle) ?? 1), sheetSaved.partner ? `with ${people.find(p => p.id === sheetSaved.partner)?.name ?? 'family'}` : 'On my own'].filter(Boolean).join(' · ') : undefined;
+  const sheetFavId = sheet ? (sheetVariant === 'freecell' ? 'freecell' : sheet.game) : '';
   return <SafeAreaView style={styles.screen}>
     {body}
-    {sheet && <StartSheet entry={sheet} visible={sheetOpen} tier={tier} onTier={t => { cancelDeal(); setNotice(null); setTier(t); changeBand(t); }} saved={sheetSaved} savedLabel={savedLabel} partners={others} partner={partner} onPartner={p => { cancelDeal(); setNotice(null); setPartner(p); }}
-      favorite={local.data.favorites.includes(sheet.game)} onFavorite={() => favorite(sheet.game)} busy={dealing} onClose={closeSheet}
+    {sheet && <StartSheet entry={sheet} variant={sheetVariant} onVariant={v => { cancelDeal(); setNotice(null); setSheetVariant(v); setTier(grownUpMode ? grownUpTier(sheet, tier, v) : nearestTier(sheet, tier, v)); }} visible={sheetOpen} tier={tier} onTier={t => { cancelDeal(); setNotice(null); setTier(t); changeBand(t); }} saved={sheetSaved} savedLabel={savedLabel} partners={others} partner={partner} onPartner={p => { cancelDeal(); setNotice(null); setPartner(p); }}
+      favorite={local.data.favorites.includes(sheetFavId)} onFavorite={() => favorite(sheetFavId)} busy={dealing} onClose={closeSheet}
       status={dealing ? 'Opening your puzzle…' : notice?.text} onChoose={!dealing && notice?.choose ? () => choose(notice.choose!) : undefined}
-      onPlay={() => start(sheet, tier, false, partner)} onContinue={() => sheetSaved && resume(sheet, sheetSaved)} onNew={() => start(sheet, tier, true, partner, sheetSaved?.puzzle)}/>}
+      onPlay={() => start(sheet, tier, false, partner, undefined, sheetVariant)} onContinue={() => sheetSaved && resume(sheet, sheetSaved)} onNew={() => start(sheet, tier, true, partner, sheetSaved?.puzzle, sheetVariant)}/>}
     {/* Choose a puzzle: a large sheet of its own over whatever is open (a round stays mounted under it). */}
     <Sheet mode="large" visible={!!browse} title="Choose a puzzle" onClose={() => setBrowse(null)}>
-      {browse && <PuzzleBrowser key={`${browse.entry.game}:${browse.tier}`} entry={browse.entry} progress={progress} initialBand={browse.tier} reader={preferences.reader} hidden={hidden} onBand={changeBand} onChoose={card => { if (browsing.current === browse) play(browse.entry, card, true, browse.partner); }}/>}
+      {browse && <PuzzleBrowser key={`${browse.entry.game}:${browse.variant ?? ''}:${browse.tier}`} entry={browse.entry} progress={progress} initialBand={browse.tier} variant={browse.variant} reader={preferences.reader} hidden={hidden} onBand={changeBand} onChoose={card => { if (browsing.current === browse) play(browse.entry, card, true, browse.partner); }}/>}
     </Sheet>
     <CoveGrownUps visible={grownUps} onClose={() => setGrownUps(false)} adult={adult} onAdult={() => setAdult(true)} preferences={preferences} onPreferences={changePreferences} error={local.error}
       canHide={!!currentRef} onHide={() => { if (currentRef) void local.change({ type: 'hide', hash: currentRef.hash }).then(ok => { if (ok) { setGrownUps(false); setSelection(null); } }); }}

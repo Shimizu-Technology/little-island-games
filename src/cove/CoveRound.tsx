@@ -16,7 +16,7 @@ import { SearchChrome } from '../puzzles/words/layout';
 import { presentationFor } from './presentation';
 import type { Mistakes } from './local';
 import { RoundMore } from './RoundMore';
-import { boardTitle, engineReset, honorsMistakes, hudActions, playLabel } from './shelf';
+import { boardTitle, engineReset, honorsMistakes, hudActions, playLabel, tileInfoFor, variantOfRef } from './shelf';
 import { BOARD_FEEL, CoveMotif, FinishBurst, hasTileArt } from './CoveArt';
 import { BoardHud, type BoardCommands, type BoardMoreAction } from './boardHud';
 
@@ -166,9 +166,10 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const open = entry.packed ? async (e: Parameters<typeof store.challengeOpen>[0]) => { await entry.packed!.prepare(round!.puzzle); return store.challengeOpen(e); } : store.challengeOpen;
   const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);
   const people = solvingPeople(store.save), others = people.filter(p => p.id !== owner), together = round?.partner ? people.find(p => p.id === round.partner)?.name ?? 'family' : null;
-  const name = infoFor(entry.game).name, tier = actual?.tier ?? card.tier, frameHint = hudActions(entry).hint, playing = !!round && !round.result && !pending && !changeAttempt;
+  const ref = round?.puzzle ?? card.ref, displayGame = variantOfRef(entry, ref) === 'freecell' ? 'freecell' : entry.game;
+  const name = tileInfoFor(displayGame).name, tier = actual?.tier ?? card.tier, frameHint = hudActions(entry).hint, playing = !!round && !round.result && !pending && !changeAttempt;
   const localPlay = !!hud?.localPlay, hudActive = playing || localPlay;
-  const ref = round?.puzzle ?? card.ref, title = boardTitle(entry, ref, tier), host = { commands: register, title };
+  const title = boardTitle(entry, ref, tier), host = { commands: register, title };
   // Restart keeps this attempt: the board's own Start over (an engine reset that keeps its options and help audit).
   // A table whose log is full cannot take another reset, so it restarts the deal the documented way.
   // A local board (such as Picture Grid's family solver) keeps its own reset even over a finished Cove round.
@@ -183,9 +184,9 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const room = (screenHeight || height) - sheetHeight(height, 'small') - chromeHeight - theme.space.xl, fit = boardHeight > room ? room / boardHeight : 1;
   const boardWidth = more && !choosing ? Math.max(Math.min(width, MIN_BOARD), Math.floor(width * fit)) : width;
   const finishCard = (heading: string, children: React.ReactNode, burst: boolean) => <View testID="cove-finish" style={[styles.card, theme.shadow]}>
-    <View style={[styles.finishArt, !hasTileArt(entry.game) && styles.finishIcon]}>
+    <View style={[styles.finishArt, !hasTileArt(displayGame) && styles.finishIcon]}>
       {burst && <FinishBurst/>}
-      {hasTileArt(entry.game) ? <CoveMotif game={entry.game} size={104}/> : <Icon glyph={glyphs.Sparkle} weight="fill" size={40} tone="lagoon"/>}
+      {hasTileArt(displayGame) ? <CoveMotif game={displayGame} size={104}/> : <Icon glyph={glyphs.Sparkle} weight="fill" size={40} tone="lagoon"/>}
     </View>
     <Text variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">{heading}</Text>
     {children}
@@ -234,7 +235,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
       {!!message && <Text variant="caption" accessibilityLiveRegion="polite" style={styles.center}>{message}</Text>}
     </ScrollView>
     {/* A finish waiting for its partner choice lives only here, so nothing in More may replace this round until it is saved. */}
-    <RoundMore visible={more && !choosing} onClose={() => setMore(false)} game={entry.game} busy={busy} held={pending ? 'Save your finish first.' : undefined}
+    <RoundMore visible={more && !choosing} onClose={() => setMore(false)} game={displayGame} busy={busy} held={pending ? 'Save your finish first.' : undefined}
       mistakes={honorsMistakes(entry) ? choices.mistakes : undefined} onMistakes={honorsMistakes(entry) ? choices.onMistakes : undefined}
       onRestart={canRestart ? restart : undefined} restartDisabled={canRestart && !!hud?.reset?.disabled && (localPlay || !entry.full?.(saved!, reset))}
       extraActions={hud?.extraActions?.map((action, index) => ({
