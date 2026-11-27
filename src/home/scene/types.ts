@@ -88,6 +88,8 @@ export type Target = {
   facing: Facing;
   owner: EntityId;
   occupied?: EntityId;
+  /** Shared furniture space: a sofa recline uses both human cushions. */
+  conflicts?: EntityId[];
   slot?: number;
   pet?: boolean;
   hidden?: boolean;

@@ -322,7 +322,7 @@ export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotat
     const key = id === 'bubble-bath' ? 'bathtub' : id as 'bed' | 'sofa' | 'bathtub';
     // Pixel-registered front cutouts: the pillow/head remain behind the friend. The
     // repeated quilt/tub body covers their lower body at the published socket height.
-    const top = id === 'bed' ? .47 : id === 'sofa' ? .55 : .43;
+    const top = id === 'bed' ? .47 : id === 'sofa' ? .77 : .43;
     const left = id === 'bed' ? .27 : 0;
     const sprite = <Image source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false}
       style={{ position: 'absolute', width: size, height: size, left: -left * size, top: -top * size }}/>;
@@ -330,12 +330,12 @@ export function SeatArt({ id, size = 120, layer = 'all', mirrored = false, rotat
       {layer !== 'front' && <Image testID={`painted-seat-${id}`} source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false} style={{ width: size, height: size }}/>}
       {layer !== 'front' && tint && tint !== 'original' && <PaintedTint id={key} size={size} tint={tint}/>}
       {occupied && layer !== 'back' && <View testID={`painted-seat-front-${id}`} style={{ position: 'absolute', left: left * size, top: top * size, width: (1-left) * size, height: (1-top) * size, overflow: 'hidden' }}>{sprite}</View>}
-      {occupied && layer !== 'back' && (id === 'bed' || id === 'sofa') && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}>
+      {occupied && layer !== 'back' && id === 'bed' && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position:'absolute' }} accessible={false}>
         <G stroke="#326F66" strokeWidth={1.4} strokeLinejoin="round" fill="none">
-          <Path d={id === 'bed' ? 'M59 64Q71 49 91 57Q113 50 144 63L145 96Q103 107 59 96Z' : 'M59 72Q75 62 100 69L134 76V103Q97 111 59 102Z'} fill={material(tint ?? 'original', '#319C93')}/>
-          <Path d={id === 'bed' ? 'M61 65Q75 56 90 62Q111 56 141 65' : 'M61 74Q78 67 99 74L131 80'} stroke={shade(material(tint ?? 'original', '#319C93'), .35)} strokeWidth={3}/>
-          <Path d={id === 'bed' ? 'M79 61q-7 13-3 32m22-33q-7 14-3 36m23-34q-7 14-4 33M65 79q35 11 76 0' : 'M79 73q-4 12-2 29m23-27q-4 13-2 27M63 89q33 11 68 0'} stroke="#247D78" opacity={.75}/>
-          <Path d={id === 'bed' ? 'M112 58l15 1-7 41-16 1Z' : 'M112 73l12 2-5 30-12 1Z'} fill="#F18F71" stroke="#D47256"/>
+          <Path d='M59 64Q71 49 91 57Q113 50 144 63L145 96Q103 107 59 96Z' fill={material(tint ?? 'original', '#319C93')}/>
+          <Path d='M61 65Q75 56 90 62Q111 56 141 65' stroke={shade(material(tint ?? 'original', '#319C93'), .35)} strokeWidth={3}/>
+          <Path d='M79 61q-7 13-3 32m22-33q-7 14-3 36m23-34q-7 14-4 33M65 79q35 11 76 0' stroke="#247D78" opacity={.75}/>
+          <Path d='M112 58l15 1-7 41-16 1Z' fill="#F18F71" stroke="#D47256"/>
           <Path d="M68 91q14 5 29 3" stroke="#6CBDAA" strokeWidth={2}/>
         </G>
       </Svg>}

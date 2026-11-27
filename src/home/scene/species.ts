@@ -1,3 +1,4 @@
+import { rigSlot, type FamilySlot } from "../family";
 import { islanderAnchors, pipAnchors, crabAnchors, islanderPoint, companionPoint, companionContacts, type RigAnchors } from "../../islander/rig/anchors";
 import { characterPose } from "../../islander/rig/character";
 import type { Bounds, CharacterAction, CharacterBase, Facing, HitShape } from "./types";
@@ -10,7 +11,7 @@ export type PoseAnchors = {
   shapes: HitShape[];
 };
 export type SpeciesMeta = {
-  slot: 0 | 1 | 2;
+  slot: FamilySlot;
   name: string;
   standingHeight: number;
   unit: number;
@@ -88,7 +89,7 @@ const cache = makers.map((make, slot) =>
     ])
   )
 );
-export const species: Record<0 | 1 | 2, SpeciesMeta> = Object.fromEntries(
+const baseSpecies: Record<0 | 1 | 2, SpeciesMeta> = Object.fromEntries(
   makers.map((_, slot) => [
     slot,
     {
@@ -107,12 +108,17 @@ export const species: Record<0 | 1 | 2, SpeciesMeta> = Object.fromEntries(
     },
   ])
 ) as unknown as Record<0 | 1 | 2, SpeciesMeta>;
+export const species: Record<FamilySlot, SpeciesMeta> = { ...baseSpecies,
+  3: { ...baseSpecies[0], slot: 3, name: "Mom" },
+  4: { ...baseSpecies[0], slot: 4, name: "Dad" },
+  5: { ...baseSpecies[0], slot: 5, name: "Little Sibling" },
+};
 export function anchorsFor(
-  slot: 0 | 1 | 2,
+  slot: FamilySlot,
   base: CharacterBase,
   facing: Facing,
   action: CharacterAction = null
 ): PoseAnchors {
   "worklet";
-  return cache[slot][base][facing][action ?? "none"];
+  return cache[rigSlot(slot)][base][facing][action ?? "none"];
 }

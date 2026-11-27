@@ -92,6 +92,10 @@ describe('Track E2 Toca Boca Island Home props art contracts', () => {
     expect(render(<SeatArt id="bed" layer="front" tint="lagoon"/>)).not.toContain('painted-seat-front-bed');
     expect(render(<SeatArt id="bed" layer="front" occupied tint="lagoon"/>)).toContain('painted-seat-front-bed');
     expect(occupied).toContain('M59 64');
+    const sofa = render(<SeatArt id="sofa" layer="front" occupied/>);
+    expect(sofa).toContain('painted-seat-front-sofa');
+    expect(sofa).not.toContain('M59 64');
+    expect(sofa).not.toContain('M59 72');
     expect(render(<SeatArt id="bed" layer="front" occupied tint="lagoon"/>)).toContain('#58B9B1');
   });
 

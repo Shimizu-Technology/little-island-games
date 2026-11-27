@@ -1,3 +1,4 @@
+import { rigSlot } from "../family";
 import type { RoomId } from "../catalogMore";
 import { MAX_INSTANCES } from "../limits";
 import { anchorsFor, species } from "./species";
@@ -58,7 +59,7 @@ export type ResolveContext = {
   scale: number;
   /** Middle of the carried art in destination-room units. Hand and face are tested here. */
   aim?: RoomPoint;
-  /** Finger/contact in destination-room units. Body overlap cannot express drop intent. */
+  /** Finger/contact supplements the carried body, without replacing its anchor. */
   contact?: RoomPoint;
   /** Actual dragged art in destination room coordinates, after grip/camera conversion. */
   silhouette?: Bounds;
@@ -129,6 +130,7 @@ function eligible(
   )
     return false;
   if (ctx.kinds && !ctx.kinds.includes(target.kind)) return false;
+  if (target.conflicts?.some(id => id !== subject.id)) return false;
   const reserved = ctx.reservations?.[target.id];
   if (reserved && reserved !== subject.id) return false;
   if (target.occupied && target.occupied !== subject.id && !(target.kind === "hand" && ctx.replaceHand)) return false;
@@ -267,7 +269,7 @@ function displacedFriends(
     let distance = Infinity;
     const slot = friend.character!.slot;
     for (const location of index.floor) {
-      if (location.occlusion[slot] > 0.25) continue;
+      if (location.occlusion[rigSlot(slot)] > 0.25) continue;
       if (location.blockers.some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot)) continue;
       const contact = standingContact(location.contact, slot);
       if (
@@ -385,6 +387,14 @@ function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
   return true;
 }
 /** One query for hover, release, tap and accessibility. Always floor or staging fallback. */
+/** Require meaningful overlap, so a stray limb never steals a neighbouring cushion. */
+function bodyOverlap(a: Bounds, b: Bounds): number {
+  "worklet";
+  const width = Math.max(0, Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left));
+  const height = Math.max(0, Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top));
+  return width * height / Math.max(1, Math.min(a.width * a.height, b.width * b.height));
+}
+
 export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoint, ctx: ResolveContext): DropProposal {
   "worklet";
   const group = movingGroup(index, subject);
@@ -433,14 +443,25 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
           ? magnetRadius("hand", targetHeight(index, subject, target), ctx.scale)
           : magnetRadius(target.kind, targetHeight(index, subject, target), ctx.scale);
       const aim = ctx.aim && Number.isFinite(ctx.aim.x) && Number.isFinite(ctx.aim.y) ? ctx.aim : point;
-      const targetPoint = target.kind === "socket" ? (ctx.contact ?? point) : target.kind === "surface" || target.kind === "container" ? point : aim;
+      const targetPoint = target.kind === "socket" ? point : target.kind === "surface" || target.kind === "container" ? point : aim;
       const centre = face ?? target.contact;
-      const distance = Math.hypot(targetPoint.x - centre.x, targetPoint.y - centre.y);
+      const bodyBounds = ctx.silhouette ?? translatedBounds(subject.bounds, point);
+      // A head/arm passing a seat is not a landing. The lower body can supplement the
+      // feet only on an authored cushion/blanket/water region, never a legacy point seat.
+      const lowerBody = { ...bodyBounds, top: bodyBounds.top + bodyBounds.height / 2, height: bodyBounds.height / 2 };
+      const bodyCentre = roomPoint(lowerBody.left + lowerBody.width / 2, lowerBody.top + lowerBody.height / 2);
+      const socketBody = target.kind === "socket" && !!subject.character && !!(ctx.contact || ctx.aim || ctx.silhouette);
       const activationHit =
-        !!ctx.contact &&
-        target.kind === "socket" &&
-        !!target.activation &&
-        contains(target.activation, targetPoint);
+        socketBody && !!target.activation && (
+          contains(target.activation, point) || contains(target.activation, bodyCentre) ||
+          (!!ctx.contact && contains(target.activation, ctx.contact)) ||
+          bodyOverlap(lowerBody, target.activation) >= 0.2
+        );
+      const distance = socketBody ? Math.min(
+        Math.hypot(point.x - centre.x, point.y - centre.y),
+        activationHit ? Math.hypot(bodyCentre.x - centre.x, bodyCentre.y - centre.y) : Infinity,
+        ctx.contact ? Math.hypot(ctx.contact.x - centre.x, ctx.contact.y - centre.y) : Infinity,
+      ) : Math.hypot(targetPoint.x - centre.x, targetPoint.y - centre.y);
       const exitRadius = ctx.previous?.target === target.id ? radius * 1.25 : radius;
       const onFace = !!face && !!subject.body?.edible && distance <= exitRadius;
       const core = contains(target.core, targetPoint) || activationHit || onFace;
@@ -548,8 +569,10 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     "worklet";
     return floorCellAllowed(index, subject, group, cell, overlapProps);
   };
+  const boundedFloor = !!subject.character && !!(ctx.contact || ctx.aim || ctx.silhouette);
+  const maxFloorDistance = Math.min(160, 100 / Math.max(0.2, ctx.scale));
   const exact = !capacityOverflow && exactFloorMove(index, subject, point, group, ctx);
-  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending, catalogIntent };
+  if (exact && (!boundedFloor || Math.hypot(exact.contact.x - point.x, exact.contact.y - point.y) <= maxFloorDistance)) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending, catalogIntent };
   const floor = ctx.catalog ? [...index.floor].sort((a, b) => {
     const ac = wall ? gridToRoom(a.cell, true) : a.contact, bc = wall ? gridToRoom(b.cell, true) : b.contact;
     return (ac.x - point.x) ** 2 + (ac.y - point.y) ** 2 - (bc.x - point.x) ** 2 - (bc.y - point.y) ** 2;
@@ -561,7 +584,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     if (!allowed(cell)) continue;
     if (
       subject.character &&
-      (location.occlusion[subject.character.slot] > 0.25 ||
+      (location.occlusion[rigSlot(subject.character.slot)] > 0.25 ||
         location.blockers.some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot))
     )
       continue;
@@ -578,7 +601,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       cell
     );
     const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-    if (distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
+    if ((boundedFloor && distance > maxFloorDistance ** 2) || distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
     best = move;
     bestDistance = distance;
     if (ctx.catalog) break;
@@ -611,6 +634,10 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       pending,
       catalogIntent,
     };
+  if (boundedFloor && !capacityOverflow) return {
+    ...makeProposal(index, subject, rootMove(subject, subject.room, subject.attachment, subject.contact, subject.base, subject.facing), group,
+      subject.attachment.kind === "staging" ? "staging" : "floor", "No nearby legal floor; return to the original place"), pending,
+  };
   const staging = rootMove(
     subject,
     index.room,

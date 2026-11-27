@@ -258,6 +258,9 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       const occupied = Object.values(entities).find(
         (e) => e.attachment.kind === "socket" && e.attachment.item === entity.id && e.attachment.socket === socket.id
       )?.id;
+      const sofaConflicts = item.item === "sofa" && !socket.id.startsWith("pet-")
+        ? Object.values(entities).filter(e => e.attachment.kind === "socket" && e.attachment.item === entity.id &&
+          !e.attachment.socket.startsWith("pet-") && (socket.kind === "lie" || e.base === "lie")).map(e => e.id) : undefined;
       if (retiredSeat(item) && !occupied) continue;
       targets.push({
         id: `${entity.id}/socket/${socket.id}`,
@@ -267,12 +270,17 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         contact,
         core: rectCore(contact, Math.min(32, itemSize(item) * 0.12)),
         // Lying contacts are at the pillow. The visible blanket is also a destination.
-        activation: socket.kind === "lie" ? lyingActivation(item, socket.id) : undefined,
+        activation: socket.kind === "lie" ? lyingActivation(item, socket.id)
+          : socket.kind === "bathe" ? furnitureActivation(item, { left: 12, top: 48, width: 128, height: 65 })
+          : item.item === "sofa" ? furnitureActivation(item, { left: socket.id.includes("right") ? 77 : 20, top: 63, width: 55, height: 52 }) : undefined,
+        // Reclining remains an explicit pictorial destination; cushions naturally mean sitting.
+        hidden: item.item === "sofa" && socket.kind === "lie",
         base: socket.kind,
         facing,
         pet: socket.id.startsWith("pet-"),
-        ...(item.layer === "ground" ? { rim: paintedBounds(entity) } : {}),
+        rim: paintedBounds(entity),
         occupied,
+        conflicts: sofaConflicts,
       });
     }
     if (decorSpec(item.item).surface) {
@@ -380,11 +388,13 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
 
 /** Bounds from SeatShape's 150-unit bedding art, reflected exactly like SeatArt. */
 function lyingActivation(item: Instance, socket: string): Bounds {
-  const size = itemSize(item),
-    p = itemPoint(item);
   const bed = ["bed", "cloud-bed", "bunk-bed"].includes(item.item);
   const y = item.item === "bunk-bed" ? (socket === "upper" ? -31 : 29) : 0;
   const box = bed ? { left: 4, top: 40 + y, width: 143, height: 63 } : { left: 22, top: 48, width: 122, height: 64 };
+  return furnitureActivation(item, box);
+}
+function furnitureActivation(item: Instance, box: Bounds): Bounds {
+  const size = itemSize(item), p = itemPoint(item);
   const flip = item.mirrored !== (item.rotation === 180 || item.rotation === 270);
   return {
     left: p.x - size / 2 + ((flip ? 150 - box.left - box.width : box.left) * size) / 150,

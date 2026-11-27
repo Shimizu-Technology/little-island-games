@@ -28,14 +28,14 @@ describe('2.3 character regressions', () => {
     }
   });
   it('moves a crab dropped on a lamp to a visible unoccupied floor cell', () => {
-    const s=starterHome(), lamp=instance('lamp','lamp',10,6);s.rooms.home.instances=[lamp];s.rooms.home.characters=s.rooms.home.characters.map(c=>({slot:c.slot,anchor:"floor",pose:"stand",x:18,y:c.slot*3}));
+    const s=starterHome(), lamp=instance('lamp','lamp',10,6);s.rooms.home.instances=[lamp];s.rooms.home.characters=s.rooms.home.characters.filter(c=>c.slot<3).map(c=>({slot:c.slot,anchor:"floor",pose:"stand",x:18,y:c.slot*3}));
     const p=itemPoint(lamp), result=homeReducer(s,characterDrop(s.rooms.home,2,p.x,p.y));
     const c=result.state.rooms.home.characters.find(c=>c.slot===2)!;
     expect(c.anchor).toBe('floor');expect(c.x===10&&c.y===6).toBe(false);const point=characterPoint(result.state.rooms.home,c);expect(occlusion(dropWorld(result.state.rooms.home),2,point.x,point.y).fraction).toBeLessThanOrEqual(.25);
     expect(result.message).toBeUndefined();
   });
   it('also protects keyboard floor movement', () => {
-    const s=starterHome();s.rooms.home.instances=[instance('lamp','lamp',10,6)];s.rooms.home.characters=s.rooms.home.characters.map(c=>({slot:c.slot,anchor:'floor',pose:'stand',x:18,y:c.slot*3}));
+    const s=starterHome();s.rooms.home.instances=[instance('lamp','lamp',10,6)];s.rooms.home.characters=s.rooms.home.characters.filter(c=>c.slot<3).map(c=>({slot:c.slot,anchor:'floor',pose:'stand',x:18,y:c.slot*3}));
     const room=homeReducer(s,{type:'character',slot:0,anchor:'floor',x:10,y:6}).state.rooms.home,c=room.characters[0],p=characterPoint(room,c);expect(c.anchor).toBe('floor');expect(c.x===10&&c.y===6).toBe(false);expect(occlusion(dropWorld(room),0,p.x,p.y).fraction).toBeLessThanOrEqual(.25);
   });
 });
@@ -43,11 +43,11 @@ describe('2.3 character regressions', () => {
 describe('dollhouse room membership',()=>{
   it('transfers only the dragged friend, keeps themes/furniture and roundtrips version 2',()=>{
     const s=starterHome(), original=JSON.stringify(s), next=homeReducer(s,{type:'transfer',slot:0,room:'kitchen',x:8,y:8}).state;
-    expect(s.rooms.home.characters).toHaveLength(3);expect(JSON.stringify(s)).toBe(original);
-    expect(next.rooms.home.characters.map(c=>c.slot)).toEqual([1,2]);expect(next.rooms.kitchen.characters.map(c=>c.slot)).toEqual([0]);
+    expect(s.rooms.home.characters).toHaveLength(6);expect(JSON.stringify(s)).toBe(original);
+    expect(next.rooms.home.characters.map(c=>c.slot)).toEqual([1,2,3,4,5]);expect(next.rooms.kitchen.characters.map(c=>c.slot)).toEqual([0]);
     expect(next.rooms.kitchen.instances).toEqual(s.rooms.kitchen.instances);expect(validHome(JSON.parse(JSON.stringify(next)))).toBe(true);
     const back=homeReducer(next,{type:'transfer',roomId:'kitchen',room:'home',slot:0,x:0,y:5}).state;
-    expect(back.rooms.home.characters).toHaveLength(3);expect(validHome(back)).toBe(true);
+    expect(back.rooms.home.characters).toHaveLength(6);expect(validHome(back)).toBe(true);
   });
   it('edits a visible neighbouring room without changing camera or another room',()=>{
     const s=starterHome(), next=homeReducer(s,{type:'toggle',roomId:'kitchen',id:'starter-stove'}).state;
@@ -94,7 +94,7 @@ describe('building camera geometry',()=>{
 it('reset cannot duplicate friends living in another room',()=>{
  const s=homeReducer(starterHome(),{type:'transfer',slot:0,room:'kitchen',x:8,y:8}).state;
  const reset=homeReducer(s,{type:'reset',roomId:'home'}).state;
- expect(reset.rooms.home.characters.map(c=>c.slot)).toEqual([1,2]);expect(reset.rooms.kitchen.characters[0].slot).toBe(0);expect(validHome(reset)).toBe(true);
+ expect(reset.rooms.home.characters.map(c=>c.slot)).toEqual([1,2,3,4,5]);expect(reset.rooms.kitchen.characters[0].slot).toBe(0);expect(validHome(reset)).toBe(true);
 });
 
 it('exports an optional isolated QA save with the sample character positions',()=>{

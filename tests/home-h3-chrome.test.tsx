@@ -113,8 +113,8 @@ describe("Phase 3A Toca Boca room chrome", () => {
     expect(starFrame.findAll((n) => n.props.name === "Star")).toHaveLength(1);
     expect(bar.findAll((n) => n.props.name === "Medal")).toHaveLength(0);
 
-    // Undo and Redo are hidden when not decorating and showRedo is false.
-    expect(tree.root.findAllByProps({ testID: "home-undo-button" })).toHaveLength(0);
+    // Undo is immediately available in Play; Redo still follows its explicit window.
+    expect(tree.root.findAllByProps({ testID: "home-undo-button" }).length).toBeGreaterThan(0);
     expect(tree.root.findAllByProps({ testID: "home-redo-button" })).toHaveLength(0);
 
     // P1-2: Friends drawer and More controls are reachable from the top bar.
@@ -195,4 +195,16 @@ describe("Phase 3A Toca Boca room chrome", () => {
     expect(navigationHeightFor(true, 402)).toBe(largeNavigationHeight);
     await act(async () => tree.unmount());
   });
+});
+
+it.each(['home', 'kitchen', 'treehouse', 'beach'] as const)('390px Play Undo leaves %s title and full targets on separate rows', async room => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(chrome(false, { width: 390, room, canUndo: true })); });
+  const bar = tree.root.findByProps({ testID: 'home-top-bar' });
+  const primary = bar.findByProps({ testID: 'home-room-pill' }).parent!;
+  expect(primary.findAll(n => n.props.testID === 'home-undo-button')).toHaveLength(0);
+  const undo = tree.root.findAll(n => typeof n.type === 'string' && n.props.testID === 'home-undo-button')[0];
+  expect(flat(undo.props.style).minWidth).toBeGreaterThanOrEqual(44);
+  expect(flat(undo.props.style).minHeight).toBeGreaterThanOrEqual(44);
+  await act(async () => tree.unmount());
 });

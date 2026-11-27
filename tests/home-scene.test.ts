@@ -317,8 +317,8 @@ describe("canonical apply, migration and undo", () => {
   it("migrates v1/v2/v3 immutably; accepted v4 contacts are never repaired", () => {
     for (const old of [
       legacyStarterHome(),
-      { ...actors(), version: 2 as const },
-      { ...actors(), version: 3 as const },
+      (({ rosterVersion: _r, ...state }) => ({ ...state, version: 2 as const }))(actors()),
+      (({ rosterVersion: _r, ...state }) => ({ ...state, version: 3 as const }))(actors()),
     ]) {
       const bytes = JSON.stringify(old);
       const next = migrateHome(old)!;
@@ -510,7 +510,7 @@ describe("audit property sweeps", () => {
               }
           }
     // The toy shelf no longer accepts new seats (HM-10); that is its 48 samples.
-    expect(samples).toBe(784);
+    expect(samples).toBe(880);
   }, 120000);
   it("has no undefined or contact mismatch over the audit's dense starter-room grid (H15)", () => {
     let samples = 0;
@@ -648,7 +648,7 @@ it("ports every recorded Pip socket-boundary fixture and the shared bunk group",
     const state = empty();
     state.rooms.home.instances = [sample.inst as Instance];
     state.rooms.home.characters = [{ slot: 1, anchor: "floor", pose: "stand", x: 17, y: 8 }];
-    const canonical = migrateHome({...state,version:3})!;
+    delete state.rosterVersion; const canonical = migrateHome({...state,version:3})!;
     const index = buildScene(canonical).rooms.home;
     const target = index.sockets.find((t) => t.attachment.kind === "socket" && t.attachment.socket === sample.socket)!;
     const proposal = resolve(index, index.entities["character/1"], target.contact, {
@@ -701,7 +701,7 @@ it("rejects clipped v4 furniture while repairing the same historical v3 geometry
   state.rooms.home.instances = [instance("bed", "bed", 0, 0)];
   expect(validHome(state)).toBe(false);
   expect(migrateHome(state)).toBeUndefined();
-  state.version = 3;
+  state.version = 3; delete state.rosterVersion;
   const bytes = JSON.stringify(state),
     migrated = migrateHome(state)!;
   expect(validHome(migrated)).toBe(true);

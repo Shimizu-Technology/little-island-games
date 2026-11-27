@@ -19,7 +19,7 @@ describe('versioned home saves and recovery', () => {
  it('starts with four independent valid rooms, free furniture and visiting characters', () => {
   const s=starterHome(); expect(validHome(s)).toBe(true); expect(validHome(clone(s))).toBe(true);
   expect(Object.keys(s.rooms)).toEqual([...roomIds]); expect(room(s).instances.map(i=>i.item).sort()).toEqual(['bed','shelf','plant','lamp','rug','toy-box'].sort());
-  expect(room(s).characters).toHaveLength(3); expect(s.rooms.kitchen.characters).toEqual([]);
+  expect(room(s).characters).toHaveLength(6); expect(s.rooms.kitchen.characters).toEqual([]);
   expect(s.rooms.kitchen).not.toBe(s.rooms.beach);
  });
  it('uses room defaults only for new rooms and keeps explicit saved choices',()=>{const s=starterHome();for(const id of roomIds)expect(s.rooms[id].theme).toEqual(roomDefaultTheme[id]);s.rooms.kitchen.theme={wallpaper:'peach',floor:'rose'};expect(migrateHome(s)!.rooms.kitchen.theme).toEqual({wallpaper:'peach',floor:'rose'});expect(s.rooms.kitchen.instances.map(i=>i.item)).toEqual(['fridge','sink-counter','stove','fruit-bowl','kitchen-table','stool','stool']);expect(s.rooms.treehouse.instances.map(i=>i.item)).toEqual(['hammock','floor-cushion','floor-cushion','string-lights','lantern','teddy','book']);expect(s.rooms.beach.instances.map(i=>i.item)).toEqual(['bubble-bath','lounger','beach-towel','beach-towel','ball','shell','banana-plant']);});
@@ -49,7 +49,7 @@ describe('versioned home saves and recovery', () => {
  });
  it('rejects duplicate IDs, collisions, unsupported sticker transforms and mixed character shapes',()=>{
   for(const items of [[instance('a','bed',0,0),instance('b','plant',1,1)],[instance('a','plant',0,0),instance('a','plant',4,0)],[{...instance('s','sticker:reef-fish',0,0),mirrored:true}],[{...instance('s','sticker:reef-fish',0,0),tint:'coral' as const}]]) expect(validHome(patch(empty(),{instances:items}))).toBe(false);
-  for(const c of [null,{slot:4,anchor:'hello',pose:'stand'},{slot:0,anchor:'hello',pose:'sit'},{slot:0,anchor:'floor',pose:'stand',x:20,y:0},{slot:0,anchor:'floor',pose:'stand',x:0,y:0,seatId:'bed'}]) expect(validHome(patch(starterHome(),{characters:[c as never]}))).toBe(false);
+  for(const c of [null,{slot:6,anchor:'hello',pose:'stand'},{slot:0,anchor:'hello',pose:'sit'},{slot:0,anchor:'floor',pose:'stand',x:20,y:0},{slot:0,anchor:'floor',pose:'stand',x:0,y:0,seatId:'bed'}]) expect(validHome(patch(starterHome(),{characters:[c as never]}))).toBe(false);
   const s=starterHome(); s.rooms.beach.characters=[...room(s).characters]; expect(validHome(s)).toBe(false);
  });
  it('preserves malformed legacy data for recovery instead of normalizing it',()=>{const old=legacyStarterHome();old.instances[0].x=-1;const before=clone(old);expect(migrateHome(old)).toBeUndefined();expect(old).toEqual(before);expect(validHome({...legacyStarterHome(),instances:[instance('s','sofa',0,0)],characters:[]})).toBe(false);});
@@ -150,7 +150,7 @@ describe('room editing, stacking and colours',()=>{
  });
  it('jumps the camera without teleporting characters and keeps each layout and theme',()=>{
   let s=starterHome(); const before=clone(room(s).instances);
-  s=homeReducer(s,{type:'room',room:'kitchen'}).state; expect(room(s).characters).toHaveLength(0); expect(s.rooms.home.characters).toHaveLength(3);
+  s=homeReducer(s,{type:'room',room:'kitchen'}).state; expect(room(s).characters).toHaveLength(0); expect(s.rooms.home.characters).toHaveLength(6);
   s=homeReducer(s,{type:'tint',id:'starter-fridge',tint:'coral'}).state; s=homeReducer(s,{type:'room',room:'home'}).state;
   expect(room(s).instances).toEqual(before); expect(s.rooms.kitchen.instances[0].tint).toBe('coral'); expect(validHome(s)).toBe(true);
  });

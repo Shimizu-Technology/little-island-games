@@ -3,9 +3,10 @@ import Module from 'node:module';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
-import { starterHome, instance, type HomeStateV2 } from '../src/home/model';
+import { starterHome, instance, validHome, hydrateHome, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
-import { roomPoint } from '../src/home/scene/types';
+import { roomToScreen } from '../src/home/scene/camera';
+import { housePoint, roomPoint } from '../src/home/scene/types';
 import { apply, resolve } from '../src/home/scene/proposal';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { roomIds } from '../src/home/catalogMore';
@@ -17,7 +18,7 @@ import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
 const harness = vi.hoisted(() => ({ viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
-  handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
+  handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, proposals: [] as any[], slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/home/art/CrabFriend', () => ({ CrabFriend: 'CrabFriend' }));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
@@ -35,7 +36,7 @@ vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, u
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harness.settings } }) }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
-vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: () => {}, completeMealHandoff:(...args:any[])=>harness.handoffs.push(args),
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { animateProposal: (proposal: any) => { harness.proposals.push(proposal); return true; }, isCurrent: () => true, finish: () => {}, completeMealHandoff:(...args:any[])=>harness.handoffs.push(args),
   camera: { get: () => ({ a: cozyRoomScale(harness.options.viewport), b: 0, c: 0, d: cozyRoomScale(harness.options.viewport), tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: (camera: any) => { harness.zoom = camera; },
   showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
@@ -56,7 +57,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.proposals = []; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -609,4 +610,70 @@ it('honors a caller supplied character renderer for the crab', async () => {
   const input = { slot: 2, base: 'carry', facing: 'right', size: 120 };
   harness.scene.renderCharacter(input);
   expect(renderCharacter).toHaveBeenCalledWith(input);
+});
+
+
+describe('Round 1 appliance tap precision', () => {
+  function fixture(item: string, open = false) {
+    const state = starterHome();
+    state.rooms.home.instances = [{ ...instance('target', item, 8, 2), at: { x: 400, y: 450 } }, { ...instance('food', 'mango', 0, 0), at: { x: 650, y: 480 } }];
+    state.rooms.home.characters = [{ slot: 0, anchor: 'floor', pose: 'stand', x: 2, y: 8, at: roomPoint(100, 490) }];
+    if (open) state.rooms.home.instances[0].storage = { version: 1, open: true };
+    expect(validHome(state)).toBe(true);
+    return state;
+  }
+  it.each(['fridge', 'stove', 'sink-counter', 'cupboard', 'toy-box', 'tv'])('doll selection does not swallow the first %s toggle', async item => {
+    await open(fixture(item));
+    await tap('character/0'); await tap('home/item/target');
+    const target = harness.scene.scene.entities['home/item/target'].item;
+    expect(target.storage?.open ?? target.powered).toBe(true);
+    expect(harness.proposals).toHaveLength(0);
+    expect(harness.scene.selected).toBeUndefined();
+  });
+  it.each(['fridge', 'cupboard', 'toy-box', 'carry-basket', 'stove', 'sink-counter'].flatMap(item => [false, true].map(accessible => ({ item, accessible }))))('selected food targets $item (accessible=$accessible) instead of toggling it', async ({ item, accessible }) => {
+    const state = hydrateHome(fixture(item, item !== 'stove' && item !== 'sink-counter'))!;
+    await open(state); await tap('home/item/food');
+    const scene = harness.scene.scene;
+    const target = scene.rooms.home.targets.find((t: any) => t.owner === 'home/item/target' && (t.kind === 'container' || t.kind === 'surface'))!;
+    expect(target).toBeDefined();
+    const origin = roomOrigin(0, building);
+    if (accessible) await act(async () => harness.scene.onSelect('home/item/target'));
+    else await tap('home/item/target', roomToScreen(target.contact, { a: cozyRoomScale(harness.options.viewport), b: 0, c: 0, d: cozyRoomScale(harness.options.viewport), tx: 0, ty: 0 }, housePoint(origin.x, origin.y)));
+    expect(harness.proposals).toHaveLength(1);
+    const proposal = harness.proposals[0];
+    expect(proposal.kind).toBe(item === 'stove' || item === 'sink-counter' ? 'surface' : 'socket');
+    const result = apply(state, proposal);
+    expect('state' in result).toBe(true);
+    if ('state' in result) {
+      const food = result.state.rooms.home.instances.find(i => i.id === 'food')!;
+      if (proposal.attachment.kind === 'container') expect(food.in).toBe('target');
+      else if (item === 'stove') expect(proposal.target).toBe('home/item/target/pan');
+      else expect(food.on).toBe('target');
+    }
+  });
+  it.each(['fridge', 'cupboard', 'toy-box', 'carry-basket'])('selected food first opens a closed %s without moving', async item => {
+    await open(fixture(item)); await tap('home/item/food'); await tap('home/item/target');
+    expect(harness.scene.scene.entities['home/item/target'].item.storage.open).toBe(true);
+    expect(harness.proposals).toHaveLength(0);
+  });
+  it.each(['lamp', 'floor-lamp', 'table-lamp', 'radio', 'carry-basket'])('pointer and accessible selection toggle and select %s', async item => {
+    for (const accessible of [false, true]) {
+      await open(fixture(item));
+      if (accessible) await act(async () => harness.scene.onSelect('home/item/target'));
+      else await tap('home/item/target');
+      expect(harness.scene.selected).toBe('home/item/target');
+      const target = harness.scene.scene.entities['home/item/target'].item;
+      expect(!!(target.storage?.open ?? target.powered)).toBe(!(accessible && item === 'carry-basket'));
+      await act(async () => root.unmount());
+    }
+  });
+});
+it('custom rendering owns all six slots including the family looks', async () => {
+  const renderCharacter = vi.fn(() => null);
+  await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} renderCharacter={renderCharacter}/>); });
+  for (const slot of [0, 1, 2, 3, 4, 5]) {
+    const input = { slot: slot < 3 ? slot : 0, familySlot: slot, base: 'stand', facing: 'front', size: 120 };
+    harness.scene.renderCharacter(input);
+    expect(renderCharacter).toHaveBeenLastCalledWith(input);
+  }
 });

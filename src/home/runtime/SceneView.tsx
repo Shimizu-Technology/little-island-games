@@ -1,3 +1,4 @@
+import { familySlots } from "../family";
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { anchorsFor } from "../scene/species";
@@ -546,7 +547,7 @@ export function SceneView({
   React.useEffect(() => {
     if (!living) return;
     // A timer that wakes only at blink edges and breath steps, not a per-frame animation.
-    const start = Date.now(), seeds = [0, 1, 2].map(lifeSeed);
+    const start = Date.now(), seeds = familySlots.map(lifeSeed);
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       const clock = Date.now() - start;
@@ -659,11 +660,11 @@ export function SceneView({
                     {litLamps(scene, roomId).map((lamp) => <LampGlow key={`glow:${lamp.id}`} lamp={lamp} reduced={reduced} />)}
                     {paintEntries(entities, scene).flatMap(({ entity, front }, order, entries) => [
                       ...(order === entries.findIndex((entry) => entry.entity.item?.layer !== "ground")
-                        ? scene.rooms[roomId].targets.filter((target) => target.rim).map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
+                        ? scene.rooms[roomId].targets.filter((target) => target.rim && scene.entities[target.owner]?.item?.layer === "ground").map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
                         : []),
                       resting(entity, front),
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim).map((target) => (
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim || scene.entities[target.owner]?.item?.layer !== "ground").map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}

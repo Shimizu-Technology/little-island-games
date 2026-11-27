@@ -1,3 +1,4 @@
+import { familyLooks } from './family';
 import React, { type ReactNode } from 'react';
 import { Islander } from '../islander/rig/Islander';
 import { Pip, RigCrab } from '../islander/rig/Companions';
@@ -5,7 +6,8 @@ import type { IslanderLook } from '../islander/look';
 import type { CharacterRenderInput, RigLife } from '../islander/rig/character';
 import type { Pose } from './model';
 
-export type CharacterRenderer = (input: CharacterRenderInput) => ReactNode;
+export type HomeRenderInput = CharacterRenderInput & { familySlot?: import("./family").FamilySlot };
+export type CharacterRenderer = (input: HomeRenderInput) => ReactNode;
 export type LegacyCharacterRenderer = (slot: 0 | 1 | 2, pose: Pose, reaction?: string, size?: number, held?: ReactNode, reduced?: boolean) => ReactNode;
 /** The old screen's reaction vocabulary stops at this boundary. */
 export function homeRenderInput(slot: 0 | 1 | 2, base: Pose, reaction: string | undefined, size: number, held?: ReactNode, reduced = false): CharacterRenderInput {
@@ -17,9 +19,9 @@ export function adaptLegacyCharacterRenderer(renderer: LegacyCharacterRenderer):
 }
 /** Canonical renderer for RUNTIME. Size is rig scale: Islander /132, crab /120,
  * Pip /160. Position this SVG at anchor + bounds.left/top times that scale. */
-type HomeCharacterProps={ input: CharacterRenderInput; look?: IslanderLook } & RigLife;
+type HomeCharacterProps={ input: HomeRenderInput; look?: IslanderLook } & RigLife;
 function RigCharacter({ input, look, ...life }: HomeCharacterProps) {
-  return input.slot === 0 ? <Islander {...input} {...life} look={look}/> : input.slot === 1 ? <Pip {...input} {...life}/> : <RigCrab {...input} {...life}/>;
+  return input.slot === 0 ? <Islander {...input} {...life} look={input.familySlot !== undefined ? familyLooks[input.familySlot] ?? look : look}/> : input.slot === 1 ? <Pip {...input} {...life}/> : <RigCrab {...input} {...life}/>;
 }
 function mealBodySignature({input,look,...life}:HomeCharacterProps){
   const playback=input.mealPlayback!;

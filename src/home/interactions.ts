@@ -139,7 +139,7 @@ export function dropWorld(room: RoomState): DropWorld {
         ...contact,
         holding: c.holding,
         seatId: c.socket?.itemId ?? c.seatId,
-        ...(c.slot === 0 ? { handX: hand.x, handY: hand.y, mouthX: mouth.x, mouthY: mouth.y } : {}),
+        ...((c.slot === 0 || c.slot >= 3) ? { handX: hand.x, handY: hand.y, mouthX: mouth.x, mouthY: mouth.y } : {}),
       };
     }),
   };

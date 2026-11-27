@@ -1,5 +1,6 @@
+import { friendNames } from "../family";
 import React, { useEffect, useRef } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { roomNames, type RoomId } from "../catalogMore";
@@ -17,7 +18,7 @@ import type { Interaction } from "./useInteraction";
  * closing it never moves the camera and never removes anyone.
  */
 export const DRAWER_MS = 160;
-export const friendNames = ["Islander", "Pip", "Crab"] as const;
+export { friendNames } from "../family";
 const roomIcon = { home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const;
 export type FriendPlace = { waiting: boolean; room: RoomId };
 export function friendPlace(entity: SceneEntity): FriendPlace {
@@ -79,14 +80,17 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
           accessibilityRole="button"
           accessibilityLabel={friendLabel(entity, here)}
           onPress={() => cell.current?.measureInWindow((x, y, w, h) => onBring(entity.id, slot, { x: x + w / 2, y: y + h / 2 }))}
-          style={{ width: size, height: size + 10, borderRadius: 16, alignItems: "center", justifyContent: "flex-end", paddingBottom: 4,
+          style={{ width: size, height: size + 32, borderRadius: 16, alignItems: "center", justifyContent: "flex-end", paddingBottom: 4,
             backgroundColor: place.waiting ? "#F3E2C2" : place.room === here ? "#E3EBC9" : "#EEF0E2", overflow: "hidden" }}
         >
-          <View pointerEvents="none" style={{ width: frame.width * scale, height: frame.height * scale }}>
-            <View style={{ width: frame.width, height: frame.height, transform: [{ scale }], transformOrigin: "left top" }}>
-              <EntityArt entity={standing} reduced renderCharacter={renderCharacter} />
+          <View pointerEvents="none" style={{ height: size, alignItems: "center", justifyContent: "flex-end" }}>
+            <View style={{ width: frame.width * scale, height: frame.height * scale }}>
+              <View style={{ width: frame.width, height: frame.height, transform: [{ scale }], transformOrigin: "left top" }}>
+                <EntityArt entity={standing} reduced renderCharacter={renderCharacter} />
+              </View>
             </View>
           </View>
+          <Text maxFontSizeMultiplier={1} numberOfLines={2} style={{ width: "100%", height: 28, lineHeight: 14, textAlign: "center", fontSize: 11, color: "#284F4B", fontWeight: "600" }}>{friendNames[slot]}</Text>
           {held && (
             <View pointerEvents="none" style={{ position: "absolute", left: 3, top: 3, width: 22, height: 22, alignItems: "center", justifyContent: "center",
               borderRadius: 11, backgroundColor: "#FFF8E9" }}>
@@ -110,7 +114,7 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
     </GestureDetector>
   );
 }
-const badge = { position: "absolute" as const, right: 2, bottom: 2, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
+const badge = { position: "absolute" as const, right: 3, top: 3, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
   borderWidth: 1.5, borderColor: "#D7C29A", alignItems: "center" as const, justifyContent: "center" as const };
 /** A friend waiting in the drawer: the same woven basket as the tray, so "put away" always looks the same. */
 function WaitingBasket() {
@@ -121,7 +125,7 @@ function WaitingBasket() {
     </Svg>
   );
 }
-export function FriendDrawer({ open, scene, here, bottom, top, interaction, offset, reduced, large = false, renderCharacter, onBring, onClose, onCarry }: {
+export function FriendDrawer({ open, scene, here, bottom, top, interaction, offset, reduced, large = false, compact = false, renderCharacter, onBring, onClose, onCarry }: {
   open: boolean;
   scene: Scene;
   here: RoomId;
@@ -132,6 +136,7 @@ export function FriendDrawer({ open, scene, here, bottom, top, interaction, offs
   offset: SharedValue<{ x: number; y: number }>;
   reduced: boolean;
   large?: boolean;
+  compact?: boolean;
   renderCharacter?: CharacterRender;
   onBring: (id: string, slot: number, from?: { x: number; y: number }) => void;
   onClose: () => void;
@@ -153,9 +158,10 @@ export function FriendDrawer({ open, scene, here, bottom, top, interaction, offs
       pointerEvents={open ? "box-none" : "none"}
       importantForAccessibility={open ? "auto" : "no-hide-descendants"}
       accessibilityElementsHidden={!open}
-      style={[{ position: "absolute", ...(top === undefined ? { bottom } : { top }), alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
+      style={[{ position: "absolute", ...(top === undefined ? { bottom } : { top }), alignSelf: "center", width: compact ? (large ? 600 : 520) : large ? 292 : 256, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 8, padding: 8,
         borderRadius: 20, backgroundColor: "#FFF8E9", borderWidth: 2, borderColor: "#D7C29A", zIndex: 41 }, style]}
     >
+      <Text accessibilityRole="header" style={{ width: "100%", textAlign: "center", fontWeight: "700", color: "#284F4B" }}>Family & Friends</Text>
       {friends.map((entity) => (
         <FriendCell key={entity.id} entity={entity} scene={scene} here={here} size={size} offset={offset} interaction={interaction}
           renderCharacter={renderCharacter} onBring={onBring}

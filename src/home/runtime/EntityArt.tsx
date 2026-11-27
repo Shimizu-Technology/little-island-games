@@ -1,3 +1,4 @@
+import { rigSlot } from "../family";
 import { storageCapacity, storageOpen } from '../storage';
 import {instance} from '../model';
 import {heldDrinkScale} from '../art/heldDrink';
@@ -148,7 +149,8 @@ export const EntityArt = memo(function EntityArt({
   const size = characterSize(character.slot);
   const input = {
     gaze: carry ? { x: 0, y: -1 } : gaze,
-    slot: character.slot,
+    slot: rigSlot(character.slot),
+    familySlot: character.slot,
     base,
     action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
     face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? null),

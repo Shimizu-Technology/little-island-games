@@ -81,7 +81,7 @@ function importDimensions(i: Instance) {
   const [w, h] = itemSpec(i.item).footprint;
   return i.rotation % 180 ? [h * 2, w * 2] : [w * 2, h * 2];
 }
-export const characterSize = (slot: import("./model").Character["slot"]) => (slot === 0 ? 224 : slot === 2 ? 98 : 170);
+export const characterSize = (slot: import("./model").Character["slot"]) => ((slot === 0 || slot >= 3) ? 224 : slot === 2 ? 98 : 170);
 
 /** Match the convex floor drawn by RoomArt, before rounding to a grid cell. */
 const floorPolygon = [0, 350, 800, 350, 800, 560, 0, 560] as const;

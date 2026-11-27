@@ -162,3 +162,46 @@ describe("HM-18 lab fixture", () => {
     expect(placedInstances(state.rooms.home)).toHaveLength(MAX_INSTANCES);
   });
 });
+
+
+it('offers six named family actors with separate accessible cells in a bounded drawer', async () => {
+  const scene = buildScene(starterHome()); let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(<FriendDrawer open scene={scene} here="home" bottom={70} interaction={interaction}
+    offset={offset} reduced onBring={() => {}} onClose={() => {}} onCarry={() => {}}/>); });
+  const cells = tree.root.findAll(n => (n.type as unknown) === 'Pressable' && n.props.testID?.startsWith('friend-cell-'));
+  expect(cells).toHaveLength(6);
+  for (const [index, name] of ['Islander', 'Pip', 'Crab', 'Mom', 'Dad', 'Little Sibling'].entries()) expect(cells[index].props.accessibilityLabel).toContain(name);
+  expect(flat(tree.root.findByProps({ testID: 'friend-drawer' }).props.style).width).toBeLessThan(390);
+  await act(async () => tree.unmount());
+});
+
+
+it('uses one family row in short landscape windows', async () => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(<FriendDrawer open compact scene={buildScene(starterHome())} here="home" bottom={70} interaction={interaction}
+    offset={offset} reduced onBring={() => {}} onClose={() => {}} onCarry={() => {}}/>); });
+  expect(flat(tree.root.findByProps({ testID: 'friend-drawer' }).props.style).width).toBe(520);
+  await act(async () => tree.unmount());
+});
+
+it('reserves identical avatar and centered label slots with waiting and away badges above names', async () => {
+  const state = starterHome();
+  const hero = state.rooms.home.characters.shift()!; state.rooms.kitchen.characters.push(hero);
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(<FriendDrawer open scene={buildScene(state)} here="home" bottom={70} interaction={interaction}
+    offset={offset} reduced onBring={() => {}} onClose={() => {}} onCarry={() => {}}/>); });
+  const cells = tree.root.findAll(n => String(n.type) === 'Pressable' && n.props.testID?.startsWith('friend-cell-'));
+  const avatarHeights: number[] = [];
+  for (const cell of cells) {
+    const label = cell.findByType('Text' as any);
+    expect(label.props.style.textAlign).toBe('center'); expect(label.props.style.height).toBe(28);
+    avatarHeights.push((cell.children[0] as TestRenderer.ReactTestInstance).props.style.height);
+    for (const badge of cell.findAll(n => String(n.type) === 'View' && n.props.style?.width === 28)) {
+      expect(badge.props.style.top).toBe(3); expect(badge.props.style.bottom).toBeUndefined();
+      expect(badge.props.style.top + badge.props.style.height).toBeLessThan(cell.props.style.height - 32);
+    }
+  }
+  expect(new Set(avatarHeights).size).toBe(1);
+  expect(tree.root.findAllByProps({ testID: 'friend-waiting-5' }).length).toBeGreaterThan(0);
+  await act(async () => tree.unmount());
+});

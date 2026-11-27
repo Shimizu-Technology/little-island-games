@@ -5,13 +5,13 @@ import { themeRewards } from '../home/catalog';
 import { owns } from '../home/model';
 import { canWear } from './catalog';
 import { defaultLook, isValidLook, type IslanderLook } from '../islander/look';
-import { starterHome, validHome, migrateHome, type HomeSave } from '../home/model';
+import { starterHome, validHome, migrateHome, migrateSavedHome, compactHome, type HomeSave } from '../home/model';
 import { familyLearners, type Learners } from '../learn/learners';
 import type { Save } from '../state/validation';
 export type Person = { look: IslanderLook; made: boolean; earned: string[]; milestones: string[]; unseen: string[]; home: HomeSave };
 export type Personalization = { version: 1; catalogVersion: 1; people: Record<string, Person> };
 export type IdentityExpected = { learner: string; epoch: number };
-export const starterPerson = (family = false): Person => ({ look: { ...defaultLook }, made: family, earned: [], milestones: [], unseen: [], home: starterHome() });
+export const starterPerson = (family = false): Person => ({ look: { ...defaultLook }, made: family, earned: [], milestones: [], unseen: [], home: compactHome(starterHome()) });
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
 const exact = (v: Record<string, unknown>, keys: string[]) => Object.keys(v).length === keys.length && keys.every(k => Object.hasOwn(v, k));
 const ids = (v: unknown): v is string[] => Array.isArray(v) && v.length <= MAX_MILESTONES && new Set(v).size === v.length && v.every(id => typeof id === 'string' && /^[a-z0-9][a-z0-9:._-]{0,95}$/.test(id));
@@ -36,7 +36,7 @@ export function initializePersonalization(save: Save): Save {
   let changed = !save.personalization;
   for (const { id } of (save.learning ?? familyLearners()).people) if (!Object.hasOwn(people, id)) { people[id] = starterPerson(id === 'family'); changed = true; }
   for (const [id, person] of Object.entries(people)) {
-    const home = migrateHome(person.home);
+    const home = migrateSavedHome(person.home);
     if(!home)throw new Error('This home could not be migrated. Your original has been kept.');
     if (home !== person.home) { people[id] = { ...person, home }; changed = true; }
   }
@@ -51,6 +51,7 @@ export function applyPersonalization(save: Save, patch: Partial<Pick<Person, 'lo
   if (expected.epoch !== epoch || expected.learner !== (save.learning?.active ?? 'family')) return save;
   const initialized = initializePersonalization(save), p = personFor(initialized, expected.learner), next = { ...p, ...patch };
   if (!validPerson(next, save.arcade?.people[expected.learner]?.stickers) || patch.look && !canWear(patch.look, p.earned)) return save;
+  if (patch.home) next.home = compactHome(migrateSavedHome(patch.home)!);
   // A valid explicit save is acknowledged even when the look is unchanged (creator finish).
   return { ...initialized, personalization: { ...initialized.personalization!, people: { ...initialized.personalization!.people, [expected.learner]: next } } };
 }

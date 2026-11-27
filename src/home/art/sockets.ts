@@ -5,7 +5,7 @@ export const seatSockets: Record<string, readonly Socket[]> = {
   bed: [socket('pillow', 'lie', 34, 73)],
   'bunk-bed': [socket('lower', 'lie', 34, 102), socket('upper', 'lie', 34, 42)],
   hammock: [socket('sling', 'lie', 35, 77)],
-  sofa: [socket('pillow', 'lie', 34, 81)],
+  sofa: [socket('left', 'sit', 48, 100), socket('right', 'sit', 104, 100), socket('pillow', 'lie', 34, 81)],
   armchair: [socket('seat', 'sit', 75, 100)],
   beanbag: [socket('seat', 'sit', 75, 105)],
   chair: [socket('seat', 'sit', 75, 100, false)],
