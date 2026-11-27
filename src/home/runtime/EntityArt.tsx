@@ -1,3 +1,4 @@
+import { activityFaceOf } from "./expressions";
 import { rigSlot } from "../family";
 import { storageCapacity, storageOpen } from '../storage';
 import {instance} from '../model';
@@ -147,6 +148,7 @@ export const EntityArt = memo(function EntityArt({
   const character = entity.character!,
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
+  faceOverride = activityFaceOf(entity, false, faceOverride, carry, !!meal);
   const input = {
     gaze: carry ? { x: 0, y: -1 } : gaze,
     slot: rigSlot(character.slot),

@@ -6,7 +6,7 @@ import type { IslanderLook } from '../islander/look';
 import type { CharacterRenderInput, RigLife } from '../islander/rig/character';
 import type { Pose } from './model';
 
-export type HomeRenderInput = CharacterRenderInput & { familySlot?: import("./family").FamilySlot };
+export type HomeRenderInput = CharacterRenderInput & Pick<RigLife, 'mood' | 'blink'> & { familySlot?: import("./family").FamilySlot };
 export type CharacterRenderer = (input: HomeRenderInput) => ReactNode;
 export type LegacyCharacterRenderer = (slot: 0 | 1 | 2, pose: Pose, reaction?: string, size?: number, held?: ReactNode, reduced?: boolean) => ReactNode;
 /** The old screen's reaction vocabulary stops at this boundary. */

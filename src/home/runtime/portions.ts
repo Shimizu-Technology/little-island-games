@@ -12,7 +12,20 @@ export const SHORE_TOP = 560;
 export const shoreShellId = (room: RoomId, n: number) => itemEntityId(room, `portion-shore-${n}`);
 /** Authored shelves, inside the open source; no floating bubble menu. Beach shells, like the
  * fridge, never run out: picking one up leaves it on the sand, and placing it makes a new shell. */
-export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = []): Scene {
+type PortionCache = Map<string, { key: string; entity: SceneEntity }>;
+/** One mounted Home owns its generated food/shell identities too. */
+export function createPortionsBuilder() {
+  const cache: PortionCache = new Map();
+  return (scene: Scene, shoreRooms: readonly RoomId[] = []) => withPortions(scene, shoreRooms, cache);
+}
+function stablePortion(entity: SceneEntity, cache?: PortionCache): SceneEntity {
+  if (!cache) return entity;
+  const key = JSON.stringify(entity), before = cache.get(entity.id);
+  if (before?.key === key) return before.entity;
+  cache.set(entity.id, { key, entity });
+  return entity;
+}
+export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = [], cache?: PortionCache): Scene {
   let changed = false;
   const entities = { ...scene.entities },
     rooms = { ...scene.rooms };
@@ -37,13 +50,13 @@ export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = []): 
         source.contact.y - (source.item!.item === "fridge" ? itemSize(source.item!) * (0.85 - (row ? 111 : 60) / 150) : 28)
       );
       const seed = itemEntity(source.room, instance(`portion-${source.item!.id}-${item}`, item, 0, 0));
-      const entity: SceneEntity = {
+      const entity: SceneEntity = stablePortion({
         ...seed,
         contact,
         attachment: { kind: "floor", room: source.room, at: contact },
         depth: paintDepth(source, scene) + 3,
         band: "foreground",
-      };
+      }, cache);
       const bounds = translatedBounds(entity.bounds, contact);
       entities[id] = entity;
       index.entities[id] = entity;
@@ -59,7 +72,7 @@ export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = []): 
       const id = shoreShellId(room, n);
       const seed = itemEntity(index.room, instance(`portion-shore-${n}`, "shell", 0, 0));
       const contact = roomPoint(x, y);
-      const entity: SceneEntity = { ...seed, contact, attachment: { kind: "floor", room: index.room, at: contact }, depth: y, band: "foreground" };
+      const entity: SceneEntity = stablePortion({ ...seed, contact, attachment: { kind: "floor", room: index.room, at: contact }, depth: y, band: "foreground" }, cache);
       entities[id] = entity;
       index.entities[id] = entity;
       index.hitProxies.push({ id, bounds: translatedBounds(entity.bounds, contact), depth: entity.depth, band: entity.band });
@@ -67,6 +80,7 @@ export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = []): 
     rooms[room] = index;
     changed = true;
   }
+  if (cache) for (const id of cache.keys()) if (!(id in entities)) cache.delete(id);
   return changed ? { ...scene, entities, rooms } : scene;
 }
 export function isPortion(id: string): boolean {

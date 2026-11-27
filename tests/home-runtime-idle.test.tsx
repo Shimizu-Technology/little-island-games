@@ -39,66 +39,28 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-describe("per-character transient idle", () => {
-  it("keeps idle time across unrelated scene edits and wakes only the used actor", async () => {
-    let renderer: TestRenderer.ReactTestRenderer;
+describe("activity-derived sleep (Build 8 awake-in-bed regression)", () => {
+  it("sleeps on the very first render and schedules no delayed publication", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
     const scene = fixture();
-    await act(async () => {
-      renderer = TestRenderer.create(<Probe scene={scene} />);
-    });
-    await act(async () => {
-      vi.advanceTimersByTime(4000);
-    });
-    await act(async () => {
-      renderer!.update(<Probe scene={{ ...scene, revision: "unrelated-toggle" }} />);
-    });
-    await act(async () => {
-      vi.advanceTimersByTime(4000);
-    });
-    await act(async () => {
-      vi.advanceTimersByTime(0);
-    });
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
     expect(current.sleeping).toEqual({ "character/0": true, "character/1": true });
-    await act(async () => {
-      current.wake("character/0");
-    });
-    expect(current.sleeping).toEqual({ "character/0": false, "character/1": true });
-    await act(async () => {
-      renderer!.unmount();
-    });
+    expect(vi.getTimerCount()).toBe(0);
+    const before = current.sleeping;
+    await act(async () => { renderer.update(<Probe scene={scene} />); });
+    expect(current.sleeping).toBe(before);
+    await act(async () => { renderer.unmount(); });
   });
-  it("stays awake while carried and starts a fresh still interval after cancellation", async () => {
-    let renderer: TestRenderer.ReactTestRenderer;
+  it("wakes the captured group immediately, keeps others asleep, and sleeps on cancellation", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
     const scene = fixture();
-    await act(async () => {
-      renderer = TestRenderer.create(<Probe scene={scene} />);
-    });
     const pickup: Pickup = { id: "character/0", slot: 0, generation: 1, epoch: 0, scene };
-    await act(async () => {
-      renderer!.update(<Probe scene={scene} pickups={[pickup]} />);
-    });
-    await act(async () => {
-      vi.advanceTimersByTime(10000);
-    });
-    // Other faces remain frozen during a gesture.
-    expect(current.sleeping["character/1"]).not.toBe(true);
-    await act(async () => {
-      renderer!.update(<Probe scene={scene} />);
-    });
-    await act(async () => {
-      vi.advanceTimersByTime(7999);
-    });
-    expect(current.sleeping["character/0"]).toBe(false);
-    await act(async () => {
-      vi.advanceTimersByTime(1);
-    });
-    await act(async () => {
-      vi.advanceTimersByTime(0);
-    });
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} pickups={[pickup]} />); });
+    expect(current.sleeping).toEqual({ "character/0": false, "character/1": true });
+    expect(vi.getTimerCount()).toBe(0);
+    await act(async () => { renderer.update(<Probe scene={scene} />); });
     expect(current.sleeping["character/0"]).toBe(true);
     expect(scene.entities["character/0"].base).toBe("lie");
-    await act(async () => {
-      renderer!.unmount();
-    });
+    await act(async () => { renderer.unmount(); });
   });
 });
