@@ -78,9 +78,9 @@ export const objectNames = [
   "moth",
 ] as const;
 export type ObjectName = (typeof objectNames)[number];
-const ink = "#183F39";
+const ink = "#3D2B24";
 const colors: Record<string, string> = {
-  coral: "#D68A6B",
+  coral: "#FF7A5C",
   red: "#D64F43",
   blue: "#5B9ABA",
   green: "#79AB80",
@@ -103,7 +103,7 @@ const natural: Record<string, string> = {
   cub: "#A0704A",
   rat: "#A3A39C",
 };
-const cream = "#FCFAF4",
+const cream = "#FFFDF8",
   beakGold = "#E8A13A";
 /** Cat, dog and pig share one friendly body; their ears, faces and tails tell them apart. */
 const furry = ["cat", "dog", "pig"];
@@ -444,8 +444,8 @@ export function ObjectGlyph({
               d="M12 36 Q-3 18 7 14 L16 25 L22 11 Q35 28 12 36 M88 36 Q66 28 78 11 L84 25 L93 14 Q104 18 88 36"
               fill={fill}
             />
-            <Circle cx="39" cy="41" r="7" fill="#FCFAF4" />
-            <Circle cx="61" cy="41" r="7" fill="#FCFAF4" />
+            <Circle cx="39" cy="41" r="7" fill="#FFFDF8" />
+            <Circle cx="61" cy="41" r="7" fill="#FFFDF8" />
             <Circle cx="39" cy="40" r="2" fill={ink} />
             <Circle cx="61" cy="40" r="2" fill={ink} />
             <Path d="M40 67 Q50 75 60 67" fill="none" />
@@ -457,7 +457,7 @@ export function ObjectGlyph({
         shape = (
           <>
             <Path d="M7 64 L94 64 L77 88 L26 88 Z" fill={fill} />
-            <Path d="M49 64 L49 10 L83 53 L49 53" fill="#FCFAF4" />
+            <Path d="M49 64 L49 10 L83 53 L49 53" fill="#FFFDF8" />
             {name === "ship" && <Rect x="17" y="48" width="24" height="16" rx="3" fill="#E1B251" />}
             <Path d="M5 94 Q25 85 45 94 T95 94" fill="none" stroke="#5B9ABA" />
           </>
@@ -473,7 +473,7 @@ export function ObjectGlyph({
             <Path
               d="M29 17 L26 37 M46 17 L45 37 M63 17 L65 37 M80 17 L85 37"
               fill="none"
-              stroke="#FCFAF4"
+              stroke="#FFFDF8"
               strokeWidth="7"
             />
             <Path d="M11 37 L89 37" />
@@ -483,7 +483,7 @@ export function ObjectGlyph({
       case "chip":
         shape = (
           <>
-            <Ellipse cx="50" cy="80" rx="42" ry="12" fill="#FCFAF4" />
+            <Ellipse cx="50" cy="80" rx="42" ry="12" fill="#FFFDF8" />
             <Path d="M17 52 Q30 15 61 30 Q87 30 80 64 Q66 84 39 72 Q16 74 17 52 Z" fill="#E1B251" />
             <Path d="M28 50 Q47 33 68 44 M29 60 Q48 42 70 54" fill="none" stroke="#B8875C" />
           </>
@@ -504,7 +504,7 @@ export function ObjectGlyph({
           <>
             <Path d="M35 16 Q50 27 65 16 L91 88 Q70 82 50 93 Q30 82 9 88 Z" fill={fill} />
             <Path d="M35 16 Q50 3 65 16 M50 23 L42 36 M50 23 L58 36" fill="none" />
-            <Path d="M35 39 L27 77 M65 39 L73 77" fill="none" stroke="#FCFAF4" />
+            <Path d="M35 39 L27 77 M65 39 L73 77" fill="none" stroke="#FFFDF8" />
           </>
         );
         break;
@@ -512,7 +512,7 @@ export function ObjectGlyph({
         shape = (
           <>
             <Circle cx="45" cy="49" r="34" fill="#E1B251" />
-            <Circle cx="45" cy="49" r="19" fill="#FCFAF4" />
+            <Circle cx="45" cy="49" r="19" fill="#FFFDF8" />
             <Path d="M65 21 Q88 37 78 61 L69 84 L93 84 L93 94 L55 94 L67 61" fill="#E6D3AC" />
           </>
         );
@@ -632,7 +632,7 @@ export function ObjectGlyph({
             )}
             <Circle cx="50" cy="50" r="32" fill="#E1B251" />
             {name === "moon" && <Circle cx="68" cy="32" r="27" fill="#E3EEF8" stroke="none" />}
-            {name === "ring" && <Circle cx="50" cy="50" r="21" fill="#FCFAF4" />}
+            {name === "ring" && <Circle cx="50" cy="50" r="21" fill="#FFFDF8" />}
           </>
         );
         break;
@@ -640,7 +640,7 @@ export function ObjectGlyph({
         shape = (
           <>
             <Rect x="10" y="50" width="82" height="29" rx="6" fill={fill} />
-            <Rect x="14" y="35" width="28" height="23" rx="7" fill="#FCFAF4" />
+            <Rect x="14" y="35" width="28" height="23" rx="7" fill="#FFFDF8" />
             <Path d="M8 28 L8 94 M92 44 L92 94" />
           </>
         );
@@ -792,7 +792,7 @@ export function ObjectGlyph({
         shape = (
           <>
             <Rect x="15" y="39" width="70" height="48" rx="8" fill={fill} />
-            <Path d="M15 45 Q23 68 32 47 Q41 68 50 47 Q59 68 68 47 Q77 68 85 45" fill="#FCFAF4" />
+            <Path d="M15 45 Q23 68 32 47 Q41 68 50 47 Q59 68 68 47 Q77 68 85 45" fill="#FFFDF8" />
             <Path d="M50 39 L50 17" />
             <Path d="M50 17 Q35 6 50 1 Q64 7 50 17" fill="#E1B251" />
           </>
@@ -915,8 +915,8 @@ export function Scene({ scene, width = 180, height = 124 }: { scene: ReadingScen
   return (
     <View accessible accessibilityLabel={sceneLabel(scene)}>
       <Svg width={width} height={height} viewBox="0 0 180 140">
-        <Rect width="180" height="140" rx="16" fill="#FCFAF4" />
-        <Ellipse cx="91" cy="124" rx="78" ry="9" fill="#E5EFE5" />
+        <Rect width="180" height="140" rx="16" fill="#FFFDF8" />
+        <Ellipse cx="91" cy="124" rx="78" ry="9" fill="#EFE3CC" />
         <ObjectGlyph
           name={scene.object}
           x={scene.relation === "beside" ? 98 : 49}

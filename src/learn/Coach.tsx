@@ -16,11 +16,11 @@ export function Hand({ size = 54 }: { size?: number }) {
       <Path
         d="M24 30V12a5 5 0 0 1 10 0v15l2-1a5 5 0 0 1 6 2l1 1a5 5 0 0 1 6 2l1 1a5 5 0 0 1 6 3v12c0 9-7 15-16 15h-4c-6 0-10-3-13-8l-8-12a5 5 0 0 1 8-6z"
         fill="#FFF6E5"
-        stroke="#183F39"
+        stroke="#3D2B24"
         strokeWidth={3}
         strokeLinejoin="round"
       />
-      <Path d="M36 29v8M45 32v6" stroke="#183F39" strokeWidth={2.5} strokeLinecap="round" />
+      <Path d="M36 29v8M45 32v6" stroke="#3D2B24" strokeWidth={2.5} strokeLinecap="round" />
     </Svg>
   );
 }

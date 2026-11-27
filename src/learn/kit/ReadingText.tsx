@@ -50,10 +50,10 @@ export function ReadingText({
             style={{
               minWidth: 44,
               minHeight: 44,
-              paddingHorizontal: 6,
+              paddingHorizontal: 8,
               justifyContent: "center",
-              borderRadius: 9,
-              backgroundColor: next ? C.gold : marked ? "#F5D3BF" : read ? C.success : C.paper,
+              borderRadius: 12,
+              backgroundColor: next ? "#FFE4A3" : marked ? "#FFD8CC" : read ? C.success : C.paper,
               borderWidth: next || marked ? 2 : 1,
               borderColor: next || marked ? C.ink : C.line,
             }}

@@ -95,15 +95,15 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
   return (
     <View style={{ gap: compact ? 8 : 12, paddingVertical: compact ? 4 : 8 }}>
       <Copy maxFontSizeMultiplier={1.65} style={{ color: C.ink, fontSize: compact ? 18 : 21, fontWeight: "900" }}>{task.title}</Copy>
-      <View style={{ backgroundColor: "#E4EED9", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
-        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>
+      <View style={{ backgroundColor: "#FFF0D2", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE", borderRadius: 24, paddingVertical: compact ? 9 : 12, alignItems: "center", overflow: "hidden" }}>
+        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#C4573A", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>
           TRAIL {s.index + 1} OF 4
         </Copy>
         <View style={{ width: trailWidth, height: trailHeight, marginTop: compact ? 4 : 7 }}>
           {!matrix && (
             <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Path d={trailPath} fill="none" stroke="#A4C69B" strokeWidth={compact ? "16" : "18"} strokeLinecap="round" />
-              <Path d={trailPath} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#E5C996" strokeWidth={compact ? "16" : "18"} strokeLinecap="round" />
+              <Path d={trailPath} fill="none" stroke="#FFFDF8" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
             </Svg>
           )}
           {task.tiles.map((tile, i) => {
@@ -116,9 +116,9 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
                 style={{
                   position: "absolute", left: x - half, top: y - half, width: stoneBox, height: stoneBox, borderRadius: compact ? 17 : 19,
                   alignItems: "center", justifyContent: "center",
-                  backgroundColor: missing ? "#FFF5CC" : "#FFFDF3",
+                  backgroundColor: missing ? "#FFEBB0" : "#FFFDF8",
                   borderWidth: missing ? 3 : 2,
-                  borderColor: missing ? "#D6A53C" : "#789C75",
+                  borderColor: missing ? "#FF7A5C" : "#D8C09B",
                   shadowColor: missing ? "#E7B248" : "transparent",
                   shadowOpacity: missing ? 0.55 : 0, shadowRadius: 11, elevation: missing ? 5 : 0,
                 }}
@@ -126,13 +126,13 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
                 {missing ? (
                   <>
                     <CircleGap size={compact ? 35 : 39} />
-                    <Copy allowFontScaling={false} style={{ position: "absolute", color: "#8E6B2C", fontSize: compact ? 18 : 20, fontWeight: "900" }}>?</Copy>
+                    <Copy allowFontScaling={false} style={{ position: "absolute", color: "#9A641A", fontSize: compact ? 18 : 20, fontWeight: "900" }}>?</Copy>
                   </>
                 ) : (
                   <PatternGlyph token={tile} size={tile.startsWith("shells:") ? (compact ? 34 : 40) : (compact ? 38 : 42)} />
                 )}
-                <View style={{ position: "absolute", right: -7, bottom: -7, width: 22, height: 22, borderRadius: 11, backgroundColor: missing ? "#B97D19" : "#3D6549", alignItems: "center", justifyContent: "center" }}>
-                  <Copy allowFontScaling={false} style={{ color: "#FFFDF3", fontSize: 11, lineHeight: 14, fontWeight: "900", includeFontPadding: false }}>{i + 1}</Copy>
+                <View style={{ position: "absolute", right: -7, bottom: -7, width: 22, height: 22, borderRadius: 11, backgroundColor: missing ? "#FF7A5C" : "#3D2B24", alignItems: "center", justifyContent: "center" }}>
+                  <Copy allowFontScaling={false} style={{ color: missing ? "#3D2B24" : "#FFFDF8", fontSize: 11, lineHeight: 14, fontWeight: "900", includeFontPadding: false }}>{i + 1}</Copy>
                 </View>
               </View>
             );
@@ -162,7 +162,7 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
               width: compact && task.choices.length === 6 ? "30%" : undefined,
               minWidth: compact ? 60 : 68, minHeight: compact ? 52 : 64, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 16,
               alignItems: "center", justifyContent: "center",
-              backgroundColor: "#FFFDF2", borderWidth: 2, borderColor: "#7C9C75",
+              backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE",
             }}
           >
             <PatternGlyph token={tile} size={compact ? 36 : 44} />
@@ -171,7 +171,7 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
       </View>
 
       {wrong && (
-        <Copy accessibilityLiveRegion="polite" style={{ color: "#965633", fontWeight: "800" }}>
+        <Copy accessibilityLiveRegion="polite" style={{ color: "#A33B22", fontWeight: "800" }}>
           {freshMsg
             ? "Good try! Here is a fresh trail — find the rule from stone 1."
             : "Good try. Follow the path from stone 1 and watch what changes."}
@@ -185,16 +185,16 @@ function PatternBoardV2({ stateV2: s, update, practice, assistance, cheer, coach
           accessibilityLabel={s.hintLevel === 0 ? "Help me see the rule" : "Show the missing stone"}
           disabled={!active}
           onPress={askHelp}
-          style={{ paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, backgroundColor: "#E8F2DF", minHeight: 46, justifyContent: "center" }}
+          style={{ paddingHorizontal: 14, paddingVertical: 12, borderRadius: 16, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", minHeight: 46, justifyContent: "center" }}
         >
-          <Copy maxFontSizeMultiplier={buttonCap} style={{ color: "#365034", fontWeight: "800" }}>
+          <Copy maxFontSizeMultiplier={buttonCap} style={{ color: "#3D2B24", fontWeight: "800" }}>
             {s.hintLevel === 0 ? "Help me see the rule" : s.hintLevel === 1 ? "Show the missing stone" : "Rule shown"}
           </Copy>
         </PressableScale>
       </View>
 
       {s.hintLevel > 0 && (
-        <View testID="pattern-hint-box" style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+        <View testID="pattern-hint-box" style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE" }}>
           <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 16 }}>
             {hintText(s)}
           </Copy>
@@ -215,10 +215,10 @@ function CircleGap({ size }: { size: number }) {
 export function Art({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Path d="M7 75Q30 28 53 63T94 34" fill="none" stroke="#8EB5A0" strokeWidth="8" strokeLinecap="round" />
-      <Circle cx="17" cy="69" r="13" fill="#E9866A" stroke="#365034" strokeWidth="3" />
-      <Circle cx="50" cy="61" r="13" fill="#EDC654" stroke="#365034" strokeWidth="3" />
-      <Circle cx="82" cy="43" r="13" fill="#E9866A" stroke="#365034" strokeWidth="3" />
+      <Path d="M7 75Q30 28 53 63T94 34" fill="none" stroke="#E5C996" strokeWidth="8" strokeLinecap="round" />
+      <Circle cx="17" cy="69" r="13" fill="#FF7A5C" stroke="#3D2B24" strokeWidth="3" />
+      <Circle cx="50" cy="61" r="13" fill="#EDC654" stroke="#3D2B24" strokeWidth="3" />
+      <Circle cx="82" cy="43" r="13" fill="#FF7A5C" stroke="#3D2B24" strokeWidth="3" />
     </Svg>
   );
 }

@@ -3,7 +3,7 @@ import { View } from "react-native";
 import Svg, { Circle, Ellipse, Path, Rect } from "react-native-svg";
 import { C, Copy } from "../../components/ui";
 
-const ink = "#365034";
+const ink = "#3D2B24";
 const stones: Record<string, { fill: string; name: string; mark: React.ReactNode }> = {
   coral: { fill: "#DE795C", name: "coral ring", mark: <Circle cx="25" cy="25" r="8" fill="none" stroke="#FFF8E6" strokeWidth="4" /> },
   jade: { fill: "#5E9B75", name: "jade triangle", mark: <Path d="M25 15L35 33H15Z" fill="none" stroke="#FFF8E6" strokeWidth="3.5" strokeLinejoin="round" /> },
@@ -18,7 +18,7 @@ export function StoneGlyph({ color, size = 46, turn }: { color: string; size?: n
   const stone = stones[color] ?? stones.coral;
   const deg = turn ? turnDegrees[turn] : undefined;
   return <Svg width={size} height={size} viewBox="0 0 50 50" style={deg !== undefined ? { transform: [{ rotate: `${deg}deg` }] } : undefined} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-    <Circle cx="25" cy="26" r="22" fill="#B7C9A4" opacity={0.4} />
+    <Circle cx="25" cy="26" r="22" fill="#D8C5A6" opacity={0.45} />
     <Circle cx="25" cy="23" r="21" fill={stone.fill} stroke={ink} strokeWidth="2.5" />
     <Path d="M12 17Q16 9 25 8" fill="none" stroke="#FFF8E6" strokeWidth="3" strokeLinecap="round" opacity={0.65} />
     {stone.mark}
@@ -53,7 +53,7 @@ export function PatternGlyph({ token, size = 46 }: { token: string; size?: numbe
     return <StoneGlyph color={color} size={stoneSize} turn={turn} />;
   }
   if (token.startsWith("shells:")) { const count = Number(token.split(":")[1]); return <View style={{ width: size + 10, flexDirection: "row", flexWrap: "wrap", justifyContent: "center" }}>{Array.from({ length: count }, (_, i) => <SeaGlyph key={i} kind="shell" size={count > 4 ? 17 : 22} />)}</View>; }
-  if (token.startsWith("arrow:")) { const direction = token.split(":")[1], degrees = turnDegrees[direction] ?? 0; return <Svg width={size} height={size} viewBox="0 0 50 50" style={{ transform: [{ rotate: `${degrees}deg` }] }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Circle cx="25" cy="25" r="22" fill="#D6E6D4" stroke={ink} strokeWidth="2"/><Path d="M25 9L12 25H20V41H30V25H38Z" fill="#5E9B75" stroke={ink} strokeWidth="2.5" strokeLinejoin="round"/></Svg>; }
+  if (token.startsWith("arrow:")) { const direction = token.split(":")[1], degrees = turnDegrees[direction] ?? 0; return <Svg width={size} height={size} viewBox="0 0 50 50" style={{ transform: [{ rotate: `${degrees}deg` }] }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Circle cx="25" cy="25" r="22" fill="#FFF0D2" stroke={ink} strokeWidth="2"/><Path d="M25 9L12 25H20V41H30V25H38Z" fill="#5E9B75" stroke={ink} strokeWidth="2.5" strokeLinejoin="round"/></Svg>; }
   return <Copy maxFontSizeMultiplier={1.4} style={{ color: C.ink, fontSize: token.length > 3 ? 17 : token.length > 2 ? 21 : 25, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{token}</Copy>;
 }
 

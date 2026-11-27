@@ -12,7 +12,7 @@ export function ProgramList({ blocks, label, testID, compact = false }: { blocks
   const rows = (list: readonly Block[], path: number[]): React.ReactNode => list.map((b, i) => {
     const at = [...path, i];
     return <View key={at.join('.')} accessible accessibilityLabel={`Block ${at.map(n => n + 1).join('.')}: ${blockLabel(b)}${b.kind === 'repeat' ? `, holds ${b.body.length} ${b.body.length === 1 ? 'block' : 'blocks'}` : ''}`}
-      style={{ padding: 6, gap: 4, borderRadius: 10, backgroundColor: b.kind === 'repeat' ? '#F5D398' : '#DCE9E3', borderLeftWidth: path.length ? 3 : 0, borderColor: '#648B80' }}>
+      style={{ padding: 6, gap: 4, borderRadius: 12, backgroundColor: b.kind === 'repeat' ? '#FFE4A3' : '#FFF6E5', borderWidth: 1, borderColor: '#E8D8BE', borderLeftWidth: path.length ? 3 : 1, borderLeftColor: path.length ? '#C48A2A' : '#E8D8BE' }}>
       <Copy maxFontSizeMultiplier={1.5} style={{ fontWeight: b.kind === 'repeat' ? '800' : '600', color: C.ink }}>{b.kind === 'repeat' ? `↻ ${blockLabel(b)}` : blockLabel(b)}</Copy>
       {b.kind === 'repeat' && <View style={{ gap: 4 }}>{rows(b.body, at)}</View>}
     </View>;

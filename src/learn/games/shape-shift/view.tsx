@@ -159,12 +159,12 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
             disabled={!active || reveal}
             onPress={() => update(setMode(s, m))}
             style={{
-              paddingHorizontal: 14, paddingVertical: compact ? 6 : 8, borderRadius: 14, minHeight: compact ? 42 : 44, justifyContent: "center",
-              backgroundColor: on ? "#3D6549" : "#E6EFE2",
-              borderWidth: 2, borderColor: on ? "#2B4C35" : "#9BB593",
+              paddingHorizontal: 14, paddingVertical: compact ? 8 : 9, borderRadius: 16, minHeight: 44, justifyContent: "center",
+              backgroundColor: on ? "#1E6B66" : "#FFFDF8",
+              borderWidth: 1.5, borderBottomWidth: 3, borderColor: on ? "#144F4B" : "#E8D8BE",
             }}
           >
-            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: on ? "#FFFDF3" : C.ink, fontWeight: "800", fontSize: 14 }}>
+            <Copy maxFontSizeMultiplier={buttonCap} style={{ color: on ? "#FFFDF8" : C.ink, fontWeight: "800", fontSize: 14 }}>
               {m === "poly" ? "Island Shapes" : "Tangrams"}
             </Copy>
           </PressableScale>
@@ -182,7 +182,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
       <View style={{ gap: 14, paddingVertical: 6 }}>
         {modeSwitcher}
         <Copy style={{ color: C.ink, fontSize: 21, fontWeight: "900" }}>{task.title}</Copy>
-        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#365034", fontWeight: "800" }}>
+        <Copy maxFontSizeMultiplier={1.4} style={{ color: "#C4573A", fontWeight: "800" }}>
           PUZZLE {s.index + 1} OF 4 · {cube.kind === "opposite" ? cube.netName.toUpperCase() : "FOLD CHECK"}
         </Copy>
 
@@ -218,7 +218,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                     }}
                     style={{
                       width: 54, minHeight: 54, alignItems: "center", justifyContent: "center",
-                      borderRadius: 14, backgroundColor: "#FFF8E8", borderWidth: 2, borderColor: "#8CAD75",
+                      borderRadius: 14, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE",
                     }}
                   >
                     <Copy maxFontSizeMultiplier={1.4} style={{ fontSize: 22, fontWeight: "900", color: C.ink }}>{face}</Copy>
@@ -254,8 +254,8 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                     }
                   }}
                   style={{
-                    padding: 10, borderRadius: 18, backgroundColor: "#FFFDF3",
-                    borderWidth: 2, borderColor: "#8CAD75", alignItems: "center", gap: 6,
+                    padding: 10, borderRadius: 18, backgroundColor: "#FFFDF8",
+                    borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE", alignItems: "center", gap: 6,
                   }}
                 >
                   <CubeNetView cells={opt.cells} cellSize={24} />
@@ -282,12 +282,12 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
           accessibilityLabel="Help with cube net"
           disabled={!active}
           onPress={() => { assistance?.(); update(help(s)); setHintOpen(true); }}
-          style={{ alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#E8F2DF", borderRadius: 14, minHeight: 46, justifyContent: "center" }}
+          style={{ alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 16, minHeight: 46, justifyContent: "center" }}
         >
           <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Help</Copy>
         </PressableScale>
         {hintOpen && hintInfo && (
-          <View style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+          <View style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE" }}>
             <Copy accessibilityLiveRegion="polite" style={{ color: C.ink }}>{hintInfo.text}</Copy>
           </View>
         )}
@@ -363,12 +363,12 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
       {modeSwitcher}
       <Copy maxFontSizeMultiplier={1.65} style={{ fontSize: compact ? 17 : 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
       {reveal ? (
-        <Copy maxFontSizeMultiplier={1.4} style={{ fontWeight: "800", color: "#365034", fontSize: compact ? 13 : 14 }}>
+        <Copy maxFontSizeMultiplier={1.4} style={{ fontWeight: "800", color: "#2E7D54", fontSize: compact ? 13 : 14 }}>
           {`${task.picture.toUpperCase()} COMPLETE!`}
         </Copy>
       ) : (
         <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 2, alignItems: "center" }}>
-          <Copy maxFontSizeMultiplier={1.35} style={{ fontWeight: "800", color: "#365034", fontSize: compact ? 12 : 14 }}>
+          <Copy maxFontSizeMultiplier={1.35} style={{ fontWeight: "800", color: "#C4573A", fontSize: compact ? 12 : 14 }}>
             {`PUZZLE ${s.index + 1} OF 4 · ${s.placed.length}/${task.pieces.length} PLACED`}
           </Copy>
           <Copy maxFontSizeMultiplier={1.35} style={{ fontWeight: "900", color: C.ink, fontSize: compact ? 12 : 14 }}>
@@ -383,11 +383,11 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
         testID="shape-board"
         style={{
           alignSelf: "center",
-          backgroundColor: "#E6EBD7",
-          borderRadius: 20,
+          backgroundColor: "#FFF0D2",
+          borderRadius: 22,
           padding: 4,
           borderWidth: 2,
-          borderColor: reveal ? "#E3B657" : "#B9CEAD",
+          borderColor: reveal ? "#E3B657" : "#E8D8BE",
         }}
       >
         <View style={{ width: task.width * step + 8, height: task.height * step + 8 }}>
@@ -443,19 +443,20 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 disabled={!active}
                 onPress={() => setSelectedPiece(idx)}
                 style={{
-                  padding: task.kind === "tangram" ? (compact ? 3 : 5) : (compact ? 5 : 7),
-                  width: task.kind === "tangram" ? (compact ? 43 : 60) : undefined,
-                  height: task.kind === "tangram" ? (compact ? 43 : 60) : undefined,
-                  minWidth: compact ? 43 : 56,
-                  minHeight: compact ? 43 : 56,
-                  borderRadius: compact ? 11 : 14,
+                  padding: task.kind === "tangram" ? (compact ? 4 : 5) : (compact ? 5 : 7),
+                  width: task.kind === "tangram" ? (compact ? 50 : 60) : undefined,
+                  height: task.kind === "tangram" ? (compact ? 50 : 60) : undefined,
+                  minWidth: compact ? 48 : 56,
+                  minHeight: compact ? 48 : 56,
+                  borderRadius: compact ? 13 : 14,
                   alignItems: "center", justifyContent: "center",
-                  backgroundColor: selected ? "#FFF1C8" : "#FFFDF3",
+                  backgroundColor: selected ? "#FFEBB0" : "#FFFDF8",
                   borderWidth: selected ? 2.5 : 1.5,
-                  borderColor: selected ? "#C6861E" : "#9BB593",
+                  borderBottomWidth: 3,
+                  borderColor: selected ? "#FF7A5C" : "#E8D8BE",
                 }}
               >
-                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? (compact ? 8.5 : 11) : (compact ? 11 : 15)} />
+                <PiecePreview atoms={p.cells} color={p.color} cellSize={task.kind === "tangram" ? (compact ? 9.5 : 11) : (compact ? 11 : 15)} />
               </PressableScale>
             );
           })}
@@ -508,7 +509,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               accessibilityLabel="Turn piece clockwise"
               disabled={!active || reveal}
               onPress={() => setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3)}
-              style={{ backgroundColor: "#E2EFE2", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>↻ Turn</Copy>
             </PressableScale>
@@ -520,7 +521,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               accessibilityLabel="Flip piece"
               disabled={!active || reveal}
               onPress={() => setFlipped(!flipped)}
-              style={{ backgroundColor: "#E2EFE2", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>⇄ Flip</Copy>
             </PressableScale>
@@ -537,7 +538,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 setSelectedPiece(last.pieceIndex);
                 setWrong(false);
               }}
-              style={{ backgroundColor: "#F0ECE0", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+              style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>Undo</Copy>
             </PressableScale>
@@ -556,7 +557,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                 setSelectedPiece(next.hintPiece);
               }
             }}
-            style={{ backgroundColor: "#E8F2DF", borderRadius: 12, paddingHorizontal: compact ? 10 : 14, paddingVertical: compact ? 8 : 11, minHeight: 42, justifyContent: "center" }}
+            style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 44, justifyContent: "center" }}
           >
             <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>Help</Copy>
           </PressableScale>
@@ -572,13 +573,13 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
       </Copy>
 
       {wrong && (
-        <Copy accessibilityLiveRegion="polite" style={{ color: "#9A542E", fontWeight: "800", textAlign: "center" }}>
+        <Copy accessibilityLiveRegion="polite" style={{ color: "#A33B22", fontWeight: "800", textAlign: "center" }}>
           It did not fit at that spot. Try another square, turn, or flip!
         </Copy>
       )}
 
       {hintOpen && hintInfo && (
-        <View testID="shape-hint-box" style={{ backgroundColor: "#F4F8EC", borderRadius: 14, padding: 12, borderWidth: 1.5, borderColor: "#BFD4B4" }}>
+        <View testID="shape-hint-box" style={{ backgroundColor: "#FFF8DC", borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: "#E8D8BE" }}>
           <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 15 }}>{hintInfo.text}</Copy>
         </View>
       )}
@@ -589,9 +590,9 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
 export function Art({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Path d="M8 61L42 27L42 61Z" fill="#E9916F" stroke="#365034" strokeWidth="3" />
-      <Path d="M46 27L86 27L86 65L46 65Z" fill="#5C9FA0" stroke="#365034" strokeWidth="3" />
-      <Path d="M16 70L86 70L70 88L31 88Z" fill="#D8AE55" stroke="#365034" strokeWidth="3" />
+      <Path d="M8 61L42 27L42 61Z" fill="#FF7A5C" stroke="#3D2B24" strokeWidth="3" />
+      <Path d="M46 27L86 27L86 65L46 65Z" fill="#5C9FA0" stroke="#3D2B24" strokeWidth="3" />
+      <Path d="M16 70L86 70L70 88L31 88Z" fill="#E8B448" stroke="#3D2B24" strokeWidth="3" />
     </Svg>
   );
 }

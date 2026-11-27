@@ -24,10 +24,10 @@ import {
   type ScienceState,
   type Task,
 } from "./model";
-const ink = "#254B4B",
-  green = "#4F793B",
-  blue = "#4D85A1",
-  gold = "#E9B84D";
+const ink = "#3D2B24",
+  green = "#1E6B66",
+  blue = "#387C9E",
+  gold = "#E8B448";
 const multi = (q: Task) => ["cycle", "chain", "web", "planets", "kit"].includes(q.kind);
 const Sun = SkySun;
 function Fish({x,y,color=gold}:{x:number;y:number;color?:string}) { return <Creature name={color===blue?"reef shark":"small fish"} x={x} y={y} scale={.62}/>; }
@@ -625,12 +625,13 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     <View
       style={{
         alignSelf: space ? "stretch" : undefined,
-        backgroundColor: "#F1F5E4",
+        backgroundColor: "#FFFDF8",
         borderRadius: 22,
-        padding: 10,
+        padding: 12,
         gap: 8,
-        borderWidth: 1,
-        borderColor: "#C7D8AD",
+        borderWidth: 1.5,
+        borderBottomWidth: 3,
+        borderColor: "#E8D8BE",
       }}
     >
       <View testID={geometry.testID} onLayout={geometry.onLayout}>{space && q.kind === "kit" ? <View style={{ flexDirection:"row",flexWrap:"wrap",gap:8 }}>
@@ -687,16 +688,17 @@ function Dial({
             if (/^\d{0,3}$/.test(text)) onChange(Math.min(max, Number(text)));
           }}
           style={{
-            minHeight: 46,
-            minWidth: 78,
+            minHeight: 48,
+            minWidth: 82,
             padding: 8,
             textAlign: "center",
             fontSize: 18,
+            fontWeight: "800",
             color: ink,
-            backgroundColor: "#FFFCF1",
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: green,
+            backgroundColor: "#FFFDF8",
+            borderRadius: 14,
+            borderWidth: 1.5,
+            borderColor: "#E8D8BE",
           }}
         />
       </View>
@@ -829,12 +831,13 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
                         flexShrink: compact && q.labels.length === 3 ? 1 : 0,
                         minWidth: compact && q.labels.length === 3 ? 0 : undefined,
                         flexBasis: q.labels.length > 4 || compact && q.labels.length === 3 ? "29%" : "44%",
-                        minHeight: 82,
-                        padding: 8,
-                        borderRadius: 16,
+                        minHeight: 86,
+                        padding: 10,
+                        borderRadius: 18,
                         borderWidth: 2,
-                        borderColor: selected ? green : "#CDD7BC",
-                        backgroundColor: selected ? "#DDECCA" : "#FFFCF1",
+                        borderBottomWidth: 3,
+                        borderColor: selected ? green : "#E8D8BE",
+                        backgroundColor: selected ? "#DFF2EC" : "#FFFDF8",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 4,

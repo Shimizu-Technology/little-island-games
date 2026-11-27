@@ -60,8 +60,8 @@ const ALLOWED: Record<string, string> = {
   "src/islander/Companion.tsx#timeout#9a1382a92c37": "motion: the companion settles back to waiting after a reaction",
   "src/components/sheetPresence.ts#timeout#b4135a55719a": "motion: a closed sheet lets go of the shared sheet hold after its slide settles",
   "src/components/stillPress.ts#timeout#37fd4906b347": "touch: forgets a finished gesture after the press handler ran, so a cancelled drag cannot linger",
-  // Same Sheet closing-slide unmount callback; the BaseButton icon color edit in src/components/ui.tsx changed its local-declaration hash, with no new clocks.
-  "src/components/ui.tsx#animation-callback#beb994e2613f": "motion: a sheet unmounts once its closing slide finishes",
+  // Same Sheet closing-slide unmount callback; the Clean 4.0 Warm Storybook palette and font styling edits in src/components/ui.tsx changed its local-declaration hash, with no new clocks.
+  "src/components/ui.tsx#animation-callback#10620ff0355b": "motion: a sheet unmounts once its closing slide finishes",
   // Ids, seeds and calendar days: read once, never shown, never time on a task
   "src/games/types.ts#clock#b42bb04d953d": "identity: a new session id",
   "src/learn/session.ts#clock#f9db8a2716c5": "identity: the default seed for a new School round",

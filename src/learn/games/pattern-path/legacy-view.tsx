@@ -42,27 +42,27 @@ export function LegacyBoard({ session, update, practice, assistance, cheer, coac
   };
   return <View style={{ gap: 15, paddingVertical: 8 }}>
     <Copy style={{ color: C.ink, fontSize: 22, fontWeight: "900" }}>{task.title}</Copy>
-    <View style={{ backgroundColor: "#E4EED9", borderRadius: 25, paddingVertical: 13, alignItems: "center", overflow: "hidden" }}>
-      <Copy style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>TRAIL {s.index + 1} OF 4</Copy>
+    <View style={{ backgroundColor: "#FFF0D2", borderWidth: 1.5, borderColor: "#E8D8BE", borderRadius: 25, paddingVertical: 13, alignItems: "center", overflow: "hidden" }}>
+      <Copy style={{ color: "#C4573A", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>TRAIL {s.index + 1} OF 4</Copy>
       <View style={{ width: trailWidth, height: trailHeight, marginTop: 7 }}>
         {!matrix && <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth+3} 78 ${trailWidth+3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#A4C69B" strokeWidth="18" strokeLinecap="round" />
-          <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth+3} 78 ${trailWidth+3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
+          <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth+3} 78 ${trailWidth+3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#E5C996" strokeWidth="18" strokeLinecap="round" />
+          <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth+3} 78 ${trailWidth+3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#FFFDF8" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
         </Svg>}
         {task.tiles.map((tile, i) => {
           const [x,y] = points[i], missing = i === task.missing;
-          return <View key={i} accessible accessibilityLabel={missing ? "Missing stone" : `Stone ${i + 1}: ${patternLabel(tile)}`} style={{ position: "absolute", left: x - 29, top: y - 29, width: 58, height: 58, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: missing ? "#FFF5CC" : "#FFFDF3", borderWidth: missing ? 3 : 2, borderColor: missing ? "#D6A53C" : "#789C75", shadowColor: missing ? "#E7B248" : "transparent", shadowOpacity: missing ? .55 : 0, shadowRadius: 11, elevation: missing ? 5 : 0 }}>
-            {missing ? <><CircleGap size={39}/><Copy style={{ position: "absolute", color: "#8E6B2C", fontSize: 20, fontWeight: "900" }}>?</Copy></> : <PatternGlyph token={tile} size={tile.startsWith("shells:") ? 42 : 43} />}
-            <View style={{ position: "absolute", right: -7, bottom: -8, width: 20, height: 20, borderRadius: 10, backgroundColor: "#3D6549", alignItems: "center", justifyContent: "center" }}><Copy style={{ color: "#FFFDF3", fontSize: 11, fontWeight: "900" }}>{i + 1}</Copy></View>
+          return <View key={i} accessible accessibilityLabel={missing ? "Missing stone" : `Stone ${i + 1}: ${patternLabel(tile)}`} style={{ position: "absolute", left: x - 29, top: y - 29, width: 58, height: 58, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: missing ? "#FFEBB0" : "#FFFDF8", borderWidth: missing ? 3 : 2, borderColor: missing ? "#FF7A5C" : "#D8C09B", shadowColor: missing ? "#E7B248" : "transparent", shadowOpacity: missing ? .55 : 0, shadowRadius: 11, elevation: missing ? 5 : 0 }}>
+            {missing ? <><CircleGap size={39}/><Copy style={{ position: "absolute", color: "#9A641A", fontSize: 20, fontWeight: "900" }}>?</Copy></> : <PatternGlyph token={tile} size={tile.startsWith("shells:") ? 42 : 43} />}
+            <View style={{ position: "absolute", right: -7, bottom: -8, width: 20, height: 20, borderRadius: 10, backgroundColor: "#3D2B24", alignItems: "center", justifyContent: "center" }}><Copy style={{ color: "#FFFDF8", fontSize: 11, fontWeight: "900" }}>{i + 1}</Copy></View>
           </View>;
         })}
         {hopAt !== null && <View pointerEvents="none" style={{ position: "absolute", left: points[hopAt][0] - 16, top: points[hopAt][1] - 51 - (hopAt % 2 ? 8 : 0) }}><SeaGlyph kind="crab" size={34} /></View>}
       </View>
     </View>
     <Copy style={{ color: C.ink, fontWeight: "900", fontSize: 17 }}>Which stone fills the glowing gap?</Copy>
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>{task.choices.map((tile, i) => <PressableScale key={`${tile}-${i}`} accessibilityRole="button" accessibilityLabel={`Place ${patternLabel(tile)} in the gap`} disabled={!active || hopAt !== null} onPress={() => choose(tile)} style={{ width: 69, minHeight: 65, padding: 6, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFDF2", borderWidth: 2, borderColor: "#7C9C75" }}><PatternGlyph token={tile} size={46} /></PressableScale>)}</View>
-    {wrong && <Copy style={{ color: "#965633", fontWeight: "800" }}>Good try. Follow the path from stone 1 and watch what changes.</Copy>}
-    <PressableScale accessibilityRole="button" accessibilityLabel="Help with this pattern" onPress={() => { assistance?.(); update(help(s)); setHint(true); }} style={{ alignSelf: "flex-start", padding: 14, borderRadius: 14, backgroundColor: "#E8F2DF" }}><Copy style={{ color: "#365034", fontWeight: "800" }}>Help me see the rule</Copy></PressableScale>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>{task.choices.map((tile, i) => <PressableScale key={`${tile}-${i}`} accessibilityRole="button" accessibilityLabel={`Place ${patternLabel(tile)} in the gap`} disabled={!active || hopAt !== null} onPress={() => choose(tile)} style={{ width: 69, minHeight: 65, padding: 6, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE" }}><PatternGlyph token={tile} size={46} /></PressableScale>)}</View>
+    {wrong && <Copy style={{ color: "#A33B22", fontWeight: "800" }}>Good try. Follow the path from stone 1 and watch what changes.</Copy>}
+    <PressableScale accessibilityRole="button" accessibilityLabel="Help with this pattern" onPress={() => { assistance?.(); update(help(s)); setHint(true); }} style={{ alignSelf: "flex-start", padding: 14, borderRadius: 16, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E8D8BE" }}><Copy style={{ color: "#3D2B24", fontWeight: "800" }}>Help me see the rule</Copy></PressableScale>
     {hint && <Copy style={{ color: C.ink, fontSize: 17 }}>{task.hint} The missing stone is {patternLabel(task.answer)}.</Copy>}
   </View>;
 }

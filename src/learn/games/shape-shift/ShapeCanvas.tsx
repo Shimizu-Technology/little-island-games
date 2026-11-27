@@ -5,7 +5,7 @@ import { Copy } from "../../../components/ui";
 import type { Cell } from "./legacy";
 import { atomKey, isTriAtom, normalizeAtoms, translateAtoms, type Atom, type Quarter, type TriCell } from "./solver";
 
-const INK = "#365034";
+const INK = "#3D2B24";
 
 function triPoints(x: number, y: number, q: Quarter, step: number): string {
   const x0 = x * step, y0 = y * step, x1 = (x + 1) * step, y1 = (y + 1) * step;
@@ -144,8 +144,8 @@ export function SilhouetteSvg({
             width={step - 2}
             height={step - 2}
             rx={tri ? 2 : 6}
-            fill="#C6D9BF"
-            opacity={0.62}
+            fill="#EAD9BC"
+            opacity={0.55}
           />
         )),
       )}
@@ -163,8 +163,8 @@ export function SilhouetteSvg({
               width={step - (outlineOnly ? 0 : 2)}
               height={step - (outlineOnly ? 0 : 2)}
               rx={outlineOnly ? 0 : 6}
-              fill="#FFF9E9"
-              stroke={outlineOnly ? "none" : "#B5C9A8"}
+              fill="#FFFDF8"
+              stroke={outlineOnly ? "none" : "#DEC8A2"}
               strokeWidth={outlineOnly ? 0 : 1.5}
             />
           ))}
@@ -251,7 +251,7 @@ export function CubeNetView({
   cells.forEach(([x, y], i) => idxMap.set(`${x},${y}`, i));
 
   return (
-    <View style={{ alignSelf: "center", padding: 8, backgroundColor: "#E6EBD7", borderRadius: 16 }}>
+    <View style={{ alignSelf: "center", padding: 8, backgroundColor: "#FFF0D2", borderWidth: 1.5, borderColor: "#E8D8BE", borderRadius: 18 }}>
       {Array.from({ length: maxY }, (_, y) => (
         <View key={y} style={{ flexDirection: "row" }}>
           {Array.from({ length: maxX }, (_, x) => {
@@ -273,7 +273,7 @@ export function CubeNetView({
                 }}
               >
                 {idx !== undefined && faces && (
-                  <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: Math.round(cellSize * 0.44), fontWeight: "900", color: "#223624" }}>
+                  <Copy maxFontSizeMultiplier={1.3} style={{ fontSize: Math.round(cellSize * 0.44), fontWeight: "900", color: "#3D2B24" }}>
                     {faces[idx]}
                   </Copy>
                 )}

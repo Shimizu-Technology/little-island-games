@@ -9,6 +9,7 @@ import {
   Pressable,
   PressableProps,
   ScrollView,
+  StyleProp,
   StyleSheet,
   Switch,
   View,
@@ -19,29 +20,57 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as fonts from "../ui/fonts";
 import { Icon, IconName } from "./Icon";
 import { easeOut, nativeDriver, useReducedMotion } from "./motion";
 import { useSheetPresence } from "./sheetPresence";
 import { LARGE_TEXT } from "./wordFit";
 export const C = {
-  ink: "#183F39",
-  muted: "#64716C",
-  cream: "#FCFAF4",
-  paper: "#FFFFFF",
-  line: "#DBE3DA",
-  teal: "#246858",
-  soft: "#E5EFE5",
-  coral: "#C56D50",
+  ink: "#3D2B24",
+  muted: "#665247",
+  cream: "#FFF6E5",
+  paper: "#FFFDF8",
+  line: "#E8D8BE",
+  teal: "#1E6B66",
+  soft: "#FFF0D2",
+  coral: "#FF7A5C",
   gold: "#E1B251",
   blue: "#386C9A",
   /** Success surface (finished rounds, matched cards, found letters). */
-  success: "#E3EFE3",
+  success: "#E2F2E4",
   /** Neutral status surface. */
-  sand: "#F0F1E8",
+  sand: "#F6EBD4",
   /** Error text on cream. */
-  error: "#9C432D",
+  error: "#A33B22",
 };
 export const font = Platform.OS === "ios" ? "AvenirNext-Regular" : undefined;
+
+const readNunitoLoaded: () => boolean =
+  typeof fonts.useNunitoLoaded === "function" ? fonts.useNunitoLoaded : () => false;
+
+const nunitoFamily = {
+  "600": "Nunito_600SemiBold",
+  "700": "Nunito_700Bold",
+  "800": "Nunito_800ExtraBold",
+} as const;
+
+/** Guards Nunito until loaded and matches explicit bold weights without breaking monospace faces. */
+function useNunitoStyle(baseWeight: keyof typeof nunitoFamily, extraStyle?: StyleProp<TextStyle>): TextStyle | undefined {
+  const loaded = readNunitoLoaded();
+  if (!loaded) return undefined;
+  const flat = extraStyle ? (StyleSheet.flatten(extraStyle) as TextStyle | undefined) : undefined;
+  if (flat?.fontFamily && flat.fontFamily !== font) return undefined;
+  const w = flat?.fontWeight;
+  const family =
+    w === "900"
+      ? "Nunito_900Black"
+      : w === "800"
+        ? "Nunito_800ExtraBold"
+        : w === "700" || w === "bold"
+          ? "Nunito_700Bold"
+          : nunitoFamily[baseWeight];
+  return { fontFamily: family, fontWeight: "normal" };
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 /**
@@ -99,15 +128,18 @@ export function PressableScale({
     </AnimatedPressable>
   );
 }
-export function Label({ children, style }: { children: React.ReactNode; style?: object }) {
-  return <Text style={[styles.label, style]}>{children}</Text>;
+export function Label({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
+  const nunito = useNunitoStyle("800", style);
+  return <Text style={[styles.label, style, nunito]}>{children}</Text>;
 }
 export function Copy({ children, style, ...props }: TextProps) {
-  return <Text {...props} style={[styles.copy, style]}>{children}</Text>;
+  const nunito = useNunitoStyle("600", style);
+  return <Text {...props} style={[styles.copy, style, nunito]}>{children}</Text>;
 }
-export function Heading({ children, style, maxFontSizeMultiplier }: { children: React.ReactNode; style?: object; maxFontSizeMultiplier?: number }) {
+export function Heading({ children, style, maxFontSizeMultiplier }: { children: React.ReactNode; style?: StyleProp<TextStyle>; maxFontSizeMultiplier?: number }) {
+  const nunito = useNunitoStyle("800", style);
   return (
-    <Text accessibilityRole="header" maxFontSizeMultiplier={maxFontSizeMultiplier} style={[styles.heading, style]}>
+    <Text accessibilityRole="header" maxFontSizeMultiplier={maxFontSizeMultiplier} style={[styles.heading, style, nunito]}>
       {children}
     </Text>
   );
@@ -121,6 +153,7 @@ export function Button({
   compact = false,
   label,
   icon,
+  leading,
   style,
   textStyle,
   numberOfLines,
@@ -135,6 +168,7 @@ export function Button({
   compact?: boolean;
   label?: string;
   icon?: IconName;
+  leading?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
   numberOfLines?: number;
@@ -144,7 +178,8 @@ export function Button({
 }) {
   const [pressed, setPressed] = useState(false);
   const [still] = useState(stillGesture);
-  const textColor = selected ? C.paper : quiet ? C.ink : "#FFF";
+  const nunito = useNunitoStyle("800", textStyle);
+  const textColor = selected ? C.paper : C.ink;
   return (
     <PressableScale
       onPressIn={(e) => { setPressed(true); if (stillOnly) still.onPressIn(e); }}
@@ -163,15 +198,16 @@ export function Button({
         styles.button,
         quiet && styles.quiet,
         compact && { minHeight: 44, paddingHorizontal: 13, paddingVertical: 9 },
-        selected && { backgroundColor: C.teal, borderColor: C.teal },
+        selected && { backgroundColor: C.teal, borderColor: "#144F4B" },
         disabled && { opacity: 0.45 },
         pressed && { opacity: 0.85 },
-        icon ? { flexDirection: "row", gap: 7 } : null,
+        icon || leading ? { flexDirection: "row", gap: 7 } : null,
         style ?? null,
       ]}
     >
+      {leading}
       {icon && <Icon name={icon} size={compact ? 18 : 20} color={typeof textStyle?.color === "string" ? textStyle.color : textColor} />}
-      <Text maxFontSizeMultiplier={maxFontSizeMultiplier} numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle]}>{children}</Text>
+      <Text maxFontSizeMultiplier={maxFontSizeMultiplier} numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle, nunito]}>{children}</Text>
     </PressableScale>
   );
 }
@@ -268,10 +304,11 @@ export function ToggleRow({
 }) {
   // At accessibility text sizes a switch beside the words leaves them a word or two per line, so it moves below.
   const stacked = useWindowDimensions().fontScale >= LARGE_TEXT;
+  const nunito = useNunitoStyle("700");
   return (
     <View testID="toggle-row" style={[stacked ? { gap: 10 } : styles.row, { backgroundColor: C.paper, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 14 }, !stacked && { gap: 12 }]}>
       <View style={stacked ? undefined : { flex: 1 }}>
-        <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>{label}</Text>
+        <Text style={[{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }, nunito]}>{label}</Text>
         {detail && <Copy style={{ fontSize: 13, lineHeight: 18 }}>{detail}</Copy>}
       </View>
       <Switch
@@ -280,9 +317,9 @@ export function ToggleRow({
         value={value}
         disabled={disabled}
         onValueChange={onChange}
-        trackColor={{ true: C.teal, false: "#CBD3CA" }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor="#CBD3CA"
+        trackColor={{ true: C.teal, false: "#DFCEB4" }}
+        thumbColor="#FFFDF8"
+        ios_backgroundColor="#DFCEB4"
       />
     </View>
   );
@@ -313,14 +350,15 @@ export function GameHeader({
   titleMax?: number;
 }) {
   const backName = backLabel === "Leave" ? "Leave this round" : backLabel === "Back" ? "Go back" : `Back to ${backLabel.toLowerCase()}`;
+  const nunito = useNunitoStyle("800");
   return (
     <View style={[styles.row, { paddingVertical: 8, gap: 8 }]}>
       {titleMax ? <IconButton icon="back" label={backName} onPress={onBack} /> : <Button compact quiet icon="back" label={backName} onPress={onBack} style={{ paddingLeft: 9 }}>
         {backLabel}
       </Button>}
-      {titleMax ? <Text accessibilityRole="header" numberOfLines={2} maxFontSizeMultiplier={titleMax} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
+      {titleMax ? <Text accessibilityRole="header" numberOfLines={2} maxFontSizeMultiplier={titleMax} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }, nunito]}>
         {title}
-      </Text> : <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
+      </Text> : <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }, nunito]}>
         {title}
       </Text>}
       {children}
@@ -363,6 +401,7 @@ export function Sheet({
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
+  const nunito = useNunitoStyle("800");
   const wide = width >= 600;
   const [shown, setShown] = useState(visible);
   useSheetPresence(shown, presence);
@@ -411,7 +450,7 @@ export function Sheet({
       : [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [56, 0] }) }];
   return (
     <Modal visible={shown} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(18,40,34,.38)", opacity: progress }]}>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(61,43,36,.36)", opacity: progress }]}>
         <Pressable accessible={false} importantForAccessibility="no" tabIndex={-1} style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
       <KeyboardAvoidingView
@@ -440,7 +479,7 @@ export function Sheet({
           <View {...(wide ? {} : pan.panHandlers)} style={{ paddingTop: wide ? 20 : 8, paddingHorizontal: 22 }}>
             {!wide && <View style={styles.grabber} />}
             <View style={styles.row}>
-              <Text accessibilityRole="header" maxFontSizeMultiplier={1.3} style={[styles.heading, { fontSize: 24, flex: 1 }]}>{title}</Text>
+              <Text accessibilityRole="header" maxFontSizeMultiplier={1.3} style={[styles.heading, { fontSize: 24, flex: 1 }, nunito]}>{title}</Text>
               <Button maxFontSizeMultiplier={1.3} compact quiet onPress={onClose} label={`Close ${title}`}>
                 Close
               </Button>
@@ -489,25 +528,26 @@ export const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 15,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: C.teal,
-    backgroundColor: C.teal,
+    borderBottomWidth: 3,
+    borderColor: "#E06346",
+    backgroundColor: C.coral,
     alignItems: "center",
     justifyContent: "center",
   },
-  quiet: { backgroundColor: C.paper, borderColor: C.line },
-  buttonText: { fontFamily: font, fontSize: 15, fontWeight: "700", color: "#FFF" },
+  quiet: { backgroundColor: C.paper, borderColor: C.line, borderBottomWidth: 2 },
+  buttonText: { fontFamily: font, fontSize: 15, fontWeight: "800", color: C.ink },
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(18,40,34,.35)",
+    backgroundColor: "rgba(61,43,36,.36)",
     justifyContent: "center",
     alignItems: "center",
     padding: 18,
   },
   sheet: { width: "100%", maxWidth: 560, flexShrink: 1, borderRadius: 26, backgroundColor: C.cream, overflow: "hidden" },
-  grabber: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#CBD3CA", marginBottom: 10 },
+  grabber: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#D7C5AA", marginBottom: 10 },
   sheetFooter: { paddingHorizontal: 22, paddingTop: 12, gap: 10, backgroundColor: C.cream, borderTopWidth: 1, borderTopColor: C.line },
   status: { alignSelf: "stretch", padding: 12, borderRadius: 16, backgroundColor: C.sand, marginBottom: 12 },
   board: { alignSelf: "center", overflow: "hidden", borderRadius: 20, borderWidth: 2, borderColor: C.ink },

@@ -13,7 +13,7 @@ import { BoardSpaceProvider } from '../../BoardSpace';
 import { BoardV2 } from './view2';
 import { advance, canWrap, draw, drawingFeedback, initialProgram, programIssue, replaceBlock, solves, wrapIssue, type Block, type TurtleState } from './engine';
 const name = blockLabel;
-export function Art({ size }: { size: number }) { return <Svg width={size} height={size} viewBox="0 0 80 80"><Circle cx={40} cy={39} r={27} fill="#83BEAD" stroke="#315F60" strokeWidth={3}/><Path d="M20 43Q40 18 60 43M24 48h32M40 21v37" stroke="#5A9383" strokeWidth={3} fill="none"/><Circle cx={61} cy={37} r={3} fill="#315F60"/></Svg>; }
+export function Art({ size }: { size: number }) { return <Svg width={size} height={size} viewBox="0 0 80 80"><Circle cx={40} cy={39} r={27} fill="#83BEAD" stroke="#3D2B24" strokeWidth={3}/><Path d="M20 43Q40 18 60 43M24 48h32M40 21v37" stroke="#5A9383" strokeWidth={3} fill="none"/><Circle cx={61} cy={37} r={3} fill="#3D2B24"/></Svg>; }
 function LegacyBoard({ session, update, practice, assistance, cheer, sound, width, active, coach }: BoardProps<TurtleState>) {
   const s = session.state, task = s.tasks[Math.min(s.done, 3)], goal = draw(task.target) || [], fullTrace = draw(s.program) || [], traced = fullTrace.slice(0, s.cursor), steps = Math.max(1, fullTrace.length);
   const won = !s.free && s.done < 4 && !s.running && s.cursor > 0 && solves(task, s.program), reduced = useReducedMotion();
@@ -51,7 +51,7 @@ function LegacyBoard({ session, update, practice, assistance, cheer, sound, widt
     change([{ kind: 'repeat', times, body: s.program }]);
   };
   const size = Math.min(width - 36, 360), point = traced.at(-1)?.to || { x: 100, y: 80 };
-  const renderBlock = (block: Block, path: number[]): React.ReactNode => <View key={path.join('.')} style={{gap:5, padding:7, borderRadius:10, backgroundColor:block.kind === 'repeat' ? '#F5D398' : '#DCE9E3', borderLeftWidth:path.length>1?3:0,borderColor:'#648B80'}}>
+  const renderBlock = (block: Block, path: number[]): React.ReactNode => <View key={path.join('.')} style={{gap:5, padding:7, borderRadius:12, backgroundColor:block.kind === 'repeat' ? '#FFE4A3' : '#FFF6E5', borderWidth:1, borderColor:'#E8D8BE', borderLeftWidth:path.length>1?3:1, borderLeftColor:path.length>1?'#C48A2A':'#E8D8BE'}}>
     <View style={{flexDirection:'row',gap:6,alignItems:'center'}}>
       {block.kind === 'repeat' ? <Copy style={{flex:1,fontWeight:'800'}}>{name(block)} · body below</Copy> : <Button compact quiet style={{flex:1}} label={`Edit block ${path.map(i=>i+1).join('.')}: ${name(block)}`} disabled={!active || s.running || won} onPress={()=>setEditing({path,block})}>{name(block)} ✎</Button>}
       {path.length===1 && <Button compact quiet label={`Remove block ${path[0]+1}`} disabled={!active || s.running || won} onPress={()=>change(s.program.filter((_,i)=>i!==path[0]))}>✕</Button>}
@@ -69,7 +69,7 @@ function LegacyBoard({ session, update, practice, assistance, cheer, sound, widt
       {(s.free?[]:goal).map((a,i)=><Path key={i} d={`M${a.from.x} ${a.from.y}L${a.to.x} ${a.to.y}`} stroke={feedback?.segment===i?'#AD4D35':'#9B8868'} strokeWidth={feedback?.segment===i?10:7} strokeDasharray="2 7" strokeLinecap="round" fill="none"/>)}
       {traced.map((a,i)=><Path key={i} d={`M${a.from.x} ${a.from.y}L${a.to.x} ${a.to.y}`} stroke={feedback?.segment===i?'#AD4D35':a.color==='coral'?'#E68E82':a.color==='gold'?'#B9861E':'#348B7E'} strokeWidth={4} strokeLinecap="round" fill="none"/>)}
       {!s.free && goal.slice(0,4).map((a,i)=><SvgText key={i} x={(a.from.x+a.to.x)/2} y={(a.from.y+a.to.y)/2-9} fontWeight="bold" fontSize={15} fill="#58462E">{Math.round(Math.hypot(a.to.x-a.from.x,a.to.y-a.from.y))}</SvgText>)}
-      <Circle cx={point.x} cy={point.y} r={10} fill="#6CB5A4" stroke="#2D756B" strokeWidth={2}/><Circle cx={point.x+5} cy={point.y-3} r={2} fill="#234B4F"/>
+      <Circle cx={point.x} cy={point.y} r={10} fill="#6CB5A4" stroke="#3D2B24" strokeWidth={2}/><Circle cx={point.x+5} cy={point.y-3} r={2} fill="#3D2B24"/>
     </Svg>
     <Copy>1 grid square = 10 units · numbers label target lengths</Copy>
     <Copy style={{fontSize:15,color:C.ink}}>{message||`Your program: ${s.program.length} of ${task.limit} blocks`}</Copy>

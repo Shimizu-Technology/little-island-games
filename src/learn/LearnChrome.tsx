@@ -16,11 +16,11 @@ function WarmCopy(props: React.ComponentProps<typeof BaseCopy>) {
 }
 const C = warmC, Copy = WarmCopy;
 export const subjectTheme: Record<Island, { sky: string; land: string; accent: string; ink: string }> = {
-  numbers: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
-  reading: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
-  science: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
-  thinking: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
-  coding: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#9A641A", ink: "#3D2B24" },
+  reading: { sky: "#FFF4EE", land: "#F7D9C8", accent: "#B84E5A", ink: "#3D2B24" },
+  numbers: { sky: "#FFF6E5", land: "#F5DFAB", accent: "#A36614", ink: "#3D2B24" },
+  science: { sky: "#F1F9F4", land: "#CBE5D5", accent: "#1E6B66", ink: "#3D2B24" },
+  thinking: { sky: "#FFF3EB", land: "#FAD4BE", accent: "#C4573A", ink: "#3D2B24" },
+  coding: { sky: "#F3F2FC", land: "#D8D4F5", accent: "#504A9E", ink: "#3D2B24" },
 };
 
 /** Decorative island scenery keeps the question and touch targets on an opaque card. */

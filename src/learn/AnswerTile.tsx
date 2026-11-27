@@ -22,7 +22,7 @@ export function AnswerTile({ children, label, onPress, disabled, selected, wrong
   }, [wrong, correct, reduced, motion]);
   return <Animated.View style={{ flex: style?.flex ?? undefined, transform: [{ translateX: wrong && !reduced ? motion.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) : 0 }, { scale: correct && !reduced ? motion.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) : 1 }] }}>
     <PressableScale accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, selected }} disabled={disabled} onPress={onPress} amount={0.95}
-      style={[{ minHeight: 68, borderRadius: 20, borderWidth: 2, borderColor: correct ? "#4F8A66" : wrong ? C.gold : selected ? C.teal : C.line, backgroundColor: correct ? C.success : selected ? C.soft : C.paper, alignItems: "center", justifyContent: "center", padding: 10, shadowColor: C.ink, shadowOpacity: 0.18, shadowOffset: { width: 0, height: 5 }, shadowRadius: 0, elevation: 4 }, style]}>
+      style={[{ minHeight: 68, borderRadius: 20, borderWidth: 2, borderBottomWidth: 4, borderColor: correct ? "#2E7D54" : wrong ? C.gold : selected ? C.teal : C.line, backgroundColor: correct ? C.success : selected ? C.soft : C.paper, alignItems: "center", justifyContent: "center", padding: 10, shadowColor: C.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 3 }, shadowRadius: 6, elevation: 3 }, style]}>
       {children}
     </PressableScale>
   </Animated.View>;
