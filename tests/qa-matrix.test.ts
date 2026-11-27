@@ -27,9 +27,9 @@ describe('QA-25 reproducible scope and execution ledger', () => {
   it('covers the real registries, planned roster, mechanics and Challenge surfaces', () => {
     expect(() => validate()).not.toThrow();
     // Counts follow the registries, so a new registration only needs `npm run qa:matrix:generate`.
-    // The planned roster (92 games) and the 36 mechanics are fixed by PLAN section 10.
+    // The planned roster (95 games: PLAN §10 92 + Phase 4B 3 toddler games) and the 36 mechanics are fixed.
     const gameRows = matrix.rows.filter(r => r.group === 'games');
-    expect(gameRows).toHaveLength(92);
+    expect(gameRows).toHaveLength(95);
     expect(gameRows.filter(r => r.availability === 'registered')).toHaveLength(inventory.games.length);
     expect(inventory.games.length).toBeGreaterThanOrEqual(63);
     expect(matrix.rows.filter(r => r.group === 'challenge')).toHaveLength(inventory.challenge.length);
@@ -82,7 +82,7 @@ describe('QA-25 reproducible scope and execution ledger', () => {
     const rows = matrix.rows.filter(r => r.group === 'physical-sampling');
     expect(rows).toHaveLength(256);
     expect(new Set(rows.map(r => `${r.sampling?.target}/${r.sampling?.sample}`)).size).toBe(256);
-    expect(new Set(rows.flatMap(r => r.games)).size).toBe(92);
+    expect(new Set(rows.flatMap(r => r.games)).size).toBe(95);
     expect(new Set(rows.flatMap(r => r.mechanics ?? [])).size).toBe(35);
     expect(rows.every(r => r.dimensions.length === 2 && r.executor.includes('adult'))).toBe(true);
     expect(() => validate(edited(m => { m.rows.find(r => r.id === 'PH-001')!.sampling!.sample = 'unallocated'; }))).toThrow(/physical allocation/);

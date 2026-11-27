@@ -103,5 +103,3 @@ export function RoundProgress({ session, island, finished, colors, inline = fals
     <View style={{ flexDirection: "row", gap: 4 }}>{Array.from({ length: count }, (_, i) => <View key={i} style={{ flex: 1, height: 10, borderRadius: 8, backgroundColor: (finished || i < progress.current * count / progress.total) ? t.accent : C.paper, borderWidth: 1, borderColor: t.accent }}/>)}</View>
   </View>;
 }
-
-export { SpeakButton } from "./SpeakButton";

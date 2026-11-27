@@ -431,6 +431,51 @@
       "firstAction": "Start L1; answer one visible prompt or add one program card using the shared-engine legal action"
     },
     {
+      "id": "island-colors",
+      "name": "Island Colors",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "L5 match-the-pair with 4 color-and-shape cards and Hear it voice prompt",
+      "firstAction": "Start L1; hear prompt or tap Hear it and tap the matching island color picture"
+    },
+    {
+      "id": "reef-sounds",
+      "name": "Animal Friends",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "L5 animal riddle with 4 illustrated animal cards and Hear it voice prompt",
+      "firstAction": "Start L1; hear prompt or tap Hear it and tap the matching animal picture"
+    },
+    {
+      "id": "splash-count",
+      "name": "Splash Count",
+      "family": "school",
+      "strata": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "door": "School",
+      "maxBoard": "L5 one-more/one-less up to 10 tappable beach items with 3 dot-and-numeral cards and Hear it voice prompt",
+      "firstAction": "Start L1; tap each beach item to count aloud through the task"
+    },
+    {
       "id": "slip-tide",
       "name": "Slip Tide",
       "family": "original",
@@ -1721,7 +1766,10 @@
         "pattern-path",
         "shape-shift",
         "hafa-adai",
-        "gate-crab"
+        "gate-crab",
+        "island-colors",
+        "reef-sounds",
+        "splash-count"
       ],
       "maxBoard": "Last School level picture choices and full trace; Gate Crab F"
     },
