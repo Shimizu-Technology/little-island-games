@@ -12,10 +12,11 @@ export function HolidayLights({ size, on, reduced }: { size: number; on: boolean
   const glow = useSharedValue(.65);
   useEffect(() => {
     cancelAnimation(glow);
+    glow.value = .65;
     if (on && !still) glow.value = withRepeat(withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }), -1, true);
     return () => cancelAnimation(glow);
   }, [on, still, glow]);
-  const props = useAnimatedProps(() => ({ opacity: still ? 1 : glow.value }));
+  const props = useAnimatedProps(() => ({ opacity: !on || still ? 1 : glow.value }));
   return <Svg testID={on ? 'holiday-lights-on' : 'holiday-lights-off'} width={size} height={size} viewBox="0 0 384 384" style={{ position: 'absolute' }} accessible={false}><AnimatedGroup animatedProps={props}>
       {[[180,92],[216,118],[148,138],[233,160],[176,186],[127,214],[244,218],[185,250],[272,269],[123,281]].map(([x,y], n) => <G key={n}>
         {on && <Circle cx={x} cy={y} r={13} fill="#FFD67A" opacity={.2}/>}

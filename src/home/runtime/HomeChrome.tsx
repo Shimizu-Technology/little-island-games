@@ -213,6 +213,7 @@ export function HomeChrome({
   onRoom,
   onCloset,
   onBadges,
+  atmosphereOpen = false,
   closetOpen = false,
   badgesOpen = false,
   hasNewCloset = false,
@@ -248,6 +249,7 @@ export function HomeChrome({
   bottom: number;
   onMore: () => void;
   onAtmosphere?: () => void;
+  atmosphereOpen?: boolean;
   onHeaderLayout: (height: number) => void;
   title?: string;
   saveStatus?: React.ReactNode;
@@ -373,7 +375,7 @@ export function HomeChrome({
 
       <View testID="home-bottom-bar" style={[styles.navigation, { bottom, height: barHeight }]}>
         <View style={styles.navigationItems}>
-          <DockButton testID="home-atmosphere-button" glyph={Sun} label="Sky" accessibilityLabel="Sky & Weather" selected={false} onPress={() => onAtmosphere?.()}/>
+          <DockButton testID="home-atmosphere-button" glyph={Sun} label="Sky" accessibilityLabel="Sky & Weather" selected={atmosphereOpen} onPress={() => onAtmosphere?.()}/>
           <DockButton
             testID="home-closet-button"
             targetRef={closetButtonRef}
@@ -429,7 +431,7 @@ export function HomeChrome({
   );
 }
 
-/** Clean 4.0 bottom bar height: holds three 64 pt child buttons comfortably. */
+/** Clean 4.0 bottom bar height: holds four 64 pt child buttons within 328 pt. */
 export const navigationHeight = 76;
 export const largeNavigationHeight = 76;
 export function navigationHeightFor(_large: boolean, _width: number): number {
@@ -523,13 +525,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: theme.space.md,
-    paddingHorizontal: theme.space.md,
+    gap: theme.space.sm,
+    paddingHorizontal: theme.space.sm,
   },
   dockButton: {
-    minWidth: 88,
+    minWidth: 72,
     minHeight: theme.target.child,
-    paddingHorizontal: theme.space.md,
+    paddingHorizontal: theme.space.sm,
     paddingVertical: theme.space.xs,
     borderRadius: theme.radius.tile,
     alignItems: "center",

@@ -5,6 +5,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { CarriedCharacter } from '../src/home/runtime/CarriedCharacter';
 import {resolve} from '../src/home/scene/resolve';
 import {apply} from '../src/home/scene/proposal';
+import { RoomArt } from '../src/home/art/Room';
+import { RoomShellArt } from '../src/home/art/More';
+import { WeatherOverlay } from '../src/home/runtime/WeatherOverlay';
 import { SceneView } from '../src/home/runtime/SceneView';
 import { stagePieces, StageRoom } from '../src/home/art/Stage';
 import { pieceAt, pieceMotion, pieceLength, pieceSound } from '../src/home/runtime/SetPieces';
@@ -69,6 +72,12 @@ describe('H4 resting friends: moods, the food notice and lamp shadows', () => {
     await act(async () => { tree = TestRenderer.create(<SceneView state={{ ...state }} scene={scene} building={buildingLayout(4)} viewport={{ width: 402, height: 650 }}
       interaction={interaction as Interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} onNode={() => {}} onSelect={() => {}} onMove={() => {}}
       liveRoom={state.current} moods={moods} effects={[{ key: 'crumbs-1', kind: 'crumbs', room: state.current, x: 300, y: 300 }]} />); });
+    const roomArt = tree.root.findByType(RoomArt);
+    const shells = tree.root.findAllByType(RoomShellArt);
+    expect(roomArt.props.weatherActive).toBe(state.current === 'home');
+    for (const shell of shells) expect(shell.props.weatherActive).toBe(shell.props.room === state.current);
+    const foreground = tree.root.findByType(WeatherOverlay);
+    expect(foreground.props.foreground).toBe(true); expect(foreground.props.count).toBe(8);
     return { tree, scene };
   };
   it('a mood is drawn on the friend at rest, and is gone with it', async () => {

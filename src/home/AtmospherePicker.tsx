@@ -42,14 +42,14 @@ export function AtmospherePicker({ atmosphere = defaultAtmosphere, rounds, grown
         return <View key={pack.id} style={{ padding: 13, borderRadius: 20, backgroundColor: '#F7EFDF', gap: 9 }}>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
             <Image source={illustratedProps[pack.preview]()} style={{ width: 65, height: 65 }} resizeMode="contain"/>
-            <View style={{ flex: 1, gap: 3 }}><Text variant="title" style={{ fontSize: 18 }}>{pack.name}</Text><Text variant="caption" style={{ fontSize: 12, color: '#8E6747' }}>{pack.occasion}</Text></View>
+            <View style={{ flex: 1, gap: 3 }}><Text variant="title" style={{ fontSize: 18 }}>{pack.name}</Text><Text variant="caption" style={{ fontSize: 12, color: '#725840' }}>{pack.occasion}</Text></View>
           </View>
           <Text variant="body" style={{ fontSize: 14 }}>{pack.description}</Text>
           {open ? <>
             <Pressable accessibilityRole="button" accessibilityLabel={`Apply ${pack.name}`} onPress={() => onApply(pack.id)} style={({ pressed }) => ({ minHeight: 48, padding: 10, borderRadius: 14, backgroundColor: pressed ? '#315C56' : '#426E61', alignItems: 'center', justifyContent: 'center' })}>
               <Text variant="caption" style={{ color: '#FFF8E8', textAlign: 'center' }}>Set the scene · {labels[pack.atmosphere.timeOfDay]} + {labels[pack.atmosphere.weather]}</Text>
             </Pressable>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{pack.items.map(item => <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Decorate with ${itemSpec(item).name}`} onPress={() => onDecorate(item)} style={{ minHeight: 48, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#FFF9EC' }}><Text variant="caption" style={{ fontSize: 12 }}>{itemSpec(item).name}</Text></Pressable>)}</View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{pack.items.map(item => <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Decorate with ${itemSpec(item).name}`} onPress={() => onDecorate(item)} style={{ minWidth: 48, minHeight: 48, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#FFF9EC' }}><Text variant="caption" style={{ fontSize: 12 }}>{itemSpec(item).name}</Text></Pressable>)}</View>
           </> : <Text variant="body" style={{ fontSize: 13, color: '#725840' }}>Play {remaining} more learning {remaining === 1 ? 'round' : 'rounds'} to unlock, or ask a grown-up in Settings.</Text>}
         </View>;
       })}

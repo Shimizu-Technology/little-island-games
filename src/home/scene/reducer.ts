@@ -36,7 +36,9 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
     if (!pack || !ownership.ownedWallpapers?.includes(pack.wallpaper)) return fail("A grown-up can open seasonal packs in Settings, too.");
     // Set the palette and mood, then use the ordinary placement engine for each new prop.
     // One history entry; an existing arrangement is never reset or duplicated.
-    let next: HomeStateV2 = { ...save, version: 4, atmosphere: { ...pack.atmosphere }, rooms: { ...save.rooms,
+    const { atmosphere: _previous, ...base } = save; void _previous;
+    const atmosphere = compactAtmosphere(pack.atmosphere);
+    let next: HomeStateV2 = { ...base, version: 4, ...(atmosphere ? { atmosphere } : {}), rooms: { ...save.rooms,
       [roomId]: { ...state, theme: { wallpaper: pack.wallpaper, floor: pack.floor } } } };
     for (const [n, item] of pack.items.entries()) {
       if (next.rooms[roomId].instances.some(i => i.item === item)) continue;

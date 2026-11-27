@@ -11,27 +11,33 @@ import { entitledHome, initializePersonalization } from '../src/personalization/
 import { creditSchool, creditSchoolTogether } from '../src/learn/schoolProgress';
 import { startSession } from '../src/learn/session';
 import { finishMathRound } from './helpers/shell-rounds';
-import { WeatherOverlay, weatherRuns, WEATHER_PARTICLES } from '../src/home/runtime/WeatherOverlay';
+import { WeatherOverlay, weatherPosition, weatherRuns, WEATHER_PARTICLES } from '../src/home/runtime/WeatherOverlay';
+import { HolidayLights } from '../src/home/art/HolidayLights';
+import { AtmosphereLighting } from '../src/home/art/AtmosphereLighting';
+import { HomeMotionContext } from '../src/home/runtime/HomeMotionContext';
 import { useHomeVisible } from '../src/home/runtime/visibility';
 import { buildScene } from '../src/home/scene/graph';
 import { litLamps } from '../src/home/runtime/delight';
 import { illustratedProps } from '../src/home/art/illustrated';
 import { itemShapes } from '../src/home/art/silhouettes';
 
-const motion = vi.hoisted(() => ({ repeat: vi.fn(), cancel: vi.fn(), app: null as null | ((state: string) => void), blur: null as null | (() => void), removes: vi.fn() }));
+const motion = vi.hoisted(() => ({ repeat: vi.fn(), starts: [] as number[], cancel: vi.fn(), app: null as null | ((state: string) => void), blur: null as null | (() => void), removes: vi.fn() }));
 vi.mock('react-native', () => ({ View: 'View', Platform: { OS: 'ios' }, StyleSheet: { absoluteFill: {}, create: (v: unknown) => v }, AppState: {
   currentState: 'active', addEventListener: (_: string, fn: (s: string) => void) => { motion.app = fn; return { remove: motion.removes }; },
 } }));
 vi.mock('expo-router', () => ({ useFocusEffect: (fn: () => () => void) => useEffect(() => { const blur = fn(); motion.blur = blur; return blur; }, [fn]) }));
-vi.mock('react-native-svg', () => ({ default: 'Svg', Path: 'Path' }));
-vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' },
-  useSharedValue: (value: number) => React.useMemo(() => ({ value }), [value]), useAnimatedStyle: (fn: () => unknown) => fn(),
-  cancelAnimation: (...args: unknown[]) => motion.cancel(...args), withTiming: () => 1,
-  withRepeat: (...args: unknown[]) => { motion.repeat(...args); return 1; }, Easing: { linear: (n: number) => n },
+vi.mock('react-native-svg', () => Object.fromEntries(['Circle', 'G', 'Path', 'Defs', 'Ellipse', 'LinearGradient', 'RadialGradient', 'Rect', 'Stop'].map(k => [k, k]).concat([['default', 'Svg']])));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView', createAnimatedComponent: (v: unknown) => v },
+  useSharedValue: (value: number) => React.useMemo(() => {
+    let current = value;
+    return { get value() { return current; }, set value(next: number) { if (next === 1) motion.starts.push(current); current = next; } };
+  }, [value]), useAnimatedStyle: (fn: () => unknown) => fn(), useAnimatedProps: (fn: () => unknown) => fn(),
+  cancelAnimation: (v: { value: number }) => { motion.cancel(v); v.value = .99; }, withTiming: () => 1,
+  withRepeat: (...args: unknown[]) => { motion.repeat(...args); return 1; }, Easing: { linear: (n: number) => n, sin: (n: number) => n, inOut: (fn: unknown) => fn },
 }));
 vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 let tree: ReactTestRenderer | undefined;
-afterEach(async () => { if (tree) await act(async () => tree!.unmount()); tree = undefined; vi.clearAllMocks(); });
+afterEach(async () => { if (tree) await act(async () => tree!.unmount()); tree = undefined; motion.starts = []; vi.clearAllMocks(); });
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 const ownership: Ownership = { ownedItems: seasonalPacks.flatMap(p => [...p.items]), ownedWallpapers: seasonalPacks.map(p => p.wallpaper), ownedFloors: seasonalPacks.map(p => p.floor) };
 function emptyHome(): HomeStateV2 {
@@ -191,5 +197,62 @@ describe('bounded weather follows Reduce Motion and Home visibility', () => {
     await act(async () => motion.app!('active')); expect(motion.repeat).toHaveBeenCalledTimes(2);
     await act(async () => motion.blur!()); expect(motion.repeat).toHaveBeenCalledTimes(2);
     await act(async () => tree!.unmount()); tree = undefined; expect(motion.removes).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+describe('visible weather distribution and whole-house budget', () => {
+  it.each([2, 3, 4, 8, 24])('keeps all %s particles inside the pane at first paint and throughout the cycle', count => {
+    for (const phase of [0, .1, .49, .8, .99]) {
+      const positions = Array.from({ length: count }, (_, n) => weatherPosition(n, count, phase));
+      for (const p of positions) {
+        expect(p.x).toBeGreaterThanOrEqual(.08); expect(p.x).toBeLessThanOrEqual(.92);
+        expect(p.y).toBeGreaterThanOrEqual(.08); expect(p.y).toBeLessThanOrEqual(.92);
+      }
+      expect(new Set(positions.map(p => p.x)).size).toBe(count);
+      expect(new Set(positions.map(p => p.y)).size).toBe(count);
+    }
+  });
+  it.each(['snow', 'leaves', 'rain', 'fireflies'] as const)('shows distinct window and foreground accents even with Reduce Motion: %s', async weather => {
+    for (const reduced of [false, true]) {
+      await act(async () => { tree = create(<>
+        {(['home', 'kitchen', 'treehouse', 'beach'] as const).map(room => <AtmosphereLighting key={room} room={room} atmosphere={{ timeOfDay: 'night', weather }} reduced={reduced} active={room === 'home'}/>)}
+        <WeatherOverlay weather={weather} width={390} height={700} reduced={reduced} active count={8} foreground/>
+      </>); });
+      const particles = tree!.root.findAllByProps({ testID: 'weather-particle' });
+      expect(particles.length).toBeLessThanOrEqual(24);
+      const fields = tree!.root.findAllByProps({ testID: 'weather-overlay' });
+      for (const field of fields) {
+        expect(field.props.pointerEvents).toBe('none');
+        const accents = field.findAllByProps({ testID: 'weather-particle' });
+        expect(accents.length).toBeGreaterThan(0);
+        const xs = accents.map(p => p.props.style[1].transform[0].translateX);
+        expect(new Set(xs).size).toBe(accents.length);
+        for (const p of accents) expect(p.props.style[1].transform[1].translateY).toBeGreaterThan(0);
+      }
+      await act(async () => tree!.unmount()); tree = undefined;
+    }
+  });
+});
+
+describe('HolidayLights lifecycle and unlit opacity', () => {
+  it('resets twinkle after focus/toggle resume, cancels while hidden or reduced, and keeps unlit bulbs opaque', async () => {
+    const render = (active: boolean, on = true, reduced = false) => <HomeMotionContext.Provider value={active}><HolidayLights size={150} on={on} reduced={reduced}/></HomeMotionContext.Provider>;
+    const opacity = () => tree!.root.find(n => String(n.type) === 'G' && !!n.props.animatedProps).props.animatedProps.opacity;
+    await act(async () => { tree = create(render(true)); });
+    expect(motion.starts).toEqual([.65]);
+    await act(async () => tree!.update(render(false)));
+    expect(opacity()).toBe(1); expect(motion.repeat).toHaveBeenCalledTimes(1); expect(motion.cancel).toHaveBeenCalled();
+    await act(async () => tree!.update(render(true)));
+    expect(motion.starts).toEqual([.65, .65]);
+    await act(async () => tree!.update(render(true, false)));
+    expect(opacity()).toBe(1); expect(motion.repeat).toHaveBeenCalledTimes(2);
+    await act(async () => tree!.update(render(true)));
+    expect(motion.starts).toEqual([.65, .65, .65]);
+    await act(async () => tree!.update(render(true, true, true)));
+    expect(opacity()).toBe(1); expect(motion.repeat).toHaveBeenCalledTimes(3);
+    const cancelled = motion.cancel.mock.calls.length;
+    await act(async () => tree!.unmount()); tree = undefined;
+    expect(motion.cancel.mock.calls.length).toBeGreaterThan(cancelled);
   });
 });

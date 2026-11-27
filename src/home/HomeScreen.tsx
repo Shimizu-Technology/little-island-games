@@ -1245,7 +1245,7 @@ export function HomeScreen({
   const hints = useRef<HintState>(freshHints(0));
   // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
   React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
-  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet;
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet && !atmosphereOpen;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -1409,7 +1409,14 @@ export function HomeScreen({
         canRedo={store.canRedo}
         top={inset.top}
         bottom={inset.bottom}
-        onAtmosphere={() => { interaction.cancelAll(); setMore(false); setFriends(false); setSelected(undefined); setAtmosphereOpen(true); }}
+        atmosphereOpen={atmosphereOpen}
+        onAtmosphere={() => {
+          interaction.cancelAll();
+          if (activeSheet === "closet") closeCloset();
+          else if (activeSheet === "badges") closeBadges();
+          setMore(false); setFriends(false); setSelected(undefined); setPlacing(undefined);
+          setAtmosphereOpen(!atmosphereOpen);
+        }}
         onMore={() => {
           setMore(!more);
           setFriends(false);
@@ -1585,7 +1592,7 @@ export function HomeScreen({
           />
         )}
       </View>
-      {!overview && !more && !friends && !activeSheet && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && (
         <Destinations
           scene={scene}
           selected={selected === storageId ? undefined : selected}
@@ -1609,7 +1616,7 @@ export function HomeScreen({
           }}
         />
       )}
-      {!overview && !more && !friends && !activeSheet && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
@@ -1674,7 +1681,7 @@ export function HomeScreen({
         onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
       <FriendDrawer
-        open={friends && !overview && !more && !activeSheet}
+        open={friends && !overview && !more && !activeSheet && !atmosphereOpen}
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}
