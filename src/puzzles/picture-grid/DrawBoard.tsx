@@ -28,7 +28,7 @@ export function DrawBoard({ width, onBack, active = true }: { width: number; onB
   </View>;
 
   if (state.phase === 'solve') return <Board picture={state.puzzle} draft={state.draft} width={width} active={active} onBack={onBack}
-    onDraw={() => { setMoving(false); setState(newDrawing()); }}
+    onDraw={() => { setPendingSize(null); setMoving(false); setState(newDrawing()); }}
     dispatch={event => setState(current => current.phase === 'solve'
       ? editFamilyPuzzle(current, event) : current)} />;
 
@@ -41,7 +41,7 @@ export function DrawBoard({ width, onBack, active = true }: { width: number; onB
       <Text accessibilityRole="header" maxFontSizeMultiplier={2} style={styles.heading}>Draw a Puzzle</Text>
     </View>
     <Text style={{ color: ink, fontSize: 13 }}>Just for this turn — hand over to play!</Text>
-    {pendingSize !== null && <View style={controlRow}><Text>Clear your drawing for a new size?</Text><Control title="Keep drawing" disabled={!active} onPress={() => setPendingSize(null)}/><Control title="Clear drawing" disabled={!active} onPress={() => { setState(newDrawing(pendingSize)); setPendingSize(null); setMoving(false); }}/></View>}
+    {pendingSize !== null && <View style={controlRow}><Text style={{ color: ink }}>Clear your drawing for a new size?</Text><Control title="Keep drawing" disabled={!active} onPress={() => setPendingSize(null)}/><Control title="Clear drawing" disabled={!active} onPress={() => { setState(newDrawing(pendingSize)); setPendingSize(null); setMoving(false); }}/></View>}
     <View style={controlRow}>{drawingSizes.map(size =>
       <Control key={size} title={`${size}×${size}`} selected={draft.size === size} disabled={!active}
         onPress={() => { if (size !== draft.size) { if (draft.undo.length) setPendingSize(size); else { setState(newDrawing(size)); setMoving(false); } } }} />)}</View>
@@ -55,7 +55,7 @@ export function DrawBoard({ width, onBack, active = true }: { width: number; onB
         onPress={() => setState(current => current.phase === 'draw' ? paintDrawing(current, { type: 'undo' }) : current)} />
       {active && <MoveGrid movable={layout.movable} moving={moving} onToggle={() => setMoving(value => !value)} />}
       <Control title="Pass to solver" primary disabled={!active || check?.kind === 'empty'} testID="picture-pass"
-        onPress={() => setState(current => current.phase === 'draw' ? passDrawing(current) : current)} />
+        onPress={() => { setPendingSize(null); setState(current => current.phase === 'draw' ? passDrawing(current) : current); }} />
     </View>
   </View>;
 }

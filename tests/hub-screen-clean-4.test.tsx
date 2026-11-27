@@ -137,7 +137,7 @@ describe('HubScreen Clean 4.0 6-door map and dock', () => {
     fixture.save = { ...fixture.save, sessions: { checkers: createCheckers(defaultOptions) }, recent: 'checkers' };
     await act(async () => { screen = create(<HubScreen/>); });
     const button = screen!.root.findByProps({ testID: 'hub-dock-school' });
-    expect(button.props.accessibilityLabel).toContain('Checkers');
+    expect(button.props.accessibilityLabel).toBe('Play Checkers');
     expect(button.props.accessibilityLabel).not.toContain('School');
   });
   it('renders exactly six illustrated doors, supports 1-tap Cove Continue, School resume, Everything, and Settings', async () => {

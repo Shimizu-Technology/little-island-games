@@ -95,7 +95,7 @@ export default function HubScreen() {
   <View style={{ paddingHorizontal: narrow ? 10 : 18, paddingVertical: 8, backgroundColor: theme.colors.bg, borderTopWidth: 1, borderTopColor: theme.colors.hairline }}>
    <View testID="hub-dock" style={{ flexDirection: 'row', flexWrap: dockWrap ? 'wrap' : 'nowrap', gap: 4, padding: 4, maxWidth: 540, width: '100%', alignSelf: 'center', backgroundColor: theme.colors.bg, borderRadius: theme.radius.tile, borderWidth: 1, borderColor: '#91B7A9', ...theme.shadow }}>
     {coveResume ? dock('Continue', Play, () => router.push({ pathname: '/cove', params: { game: coveResume.game, resume: '1' } }), infoFor(coveResume.game).name, 'hub-dock-continue', true) : null}
-    {resume && dock(`Play ${shelfGames.find(game => game.id === resume)?.name ?? 'game'}`, BookOpen, () => openGame(resume), shelfGames.find(game => game.id === resume)?.name, 'hub-dock-school')}
+    {resume && dock(`Play ${shelfGames.find(game => game.id === resume)?.name ?? 'game'}`, BookOpen, () => openGame(resume), undefined, 'hub-dock-school')}
     {dock('Try today', Sparkle, () => router.push({ pathname: '/everything', params: { section: 'ideas' } }), undefined, 'hub-dock-ideas')}
     {dock('Favorites', Star, () => router.push({ pathname: '/everything', params: { section: 'favorites' } }), undefined, 'hub-dock-favorites')}
    </View>

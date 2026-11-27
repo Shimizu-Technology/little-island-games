@@ -19,15 +19,15 @@ vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play() {} }) }));
 
 const LINE = 32.5, GAP = 6, HOW_TO_PLAY = 142.2505, HINT = 67.936;
-/** Measured widths of the sentences ("Title · skill: Name · count") at the capped 1.3x: Full Cages 144's first and two-digit-count statuses, and the review's other long ones. */
+/** Conservative measured width upper bounds from the former skill-prefixed sentences ("Title · Name · count") at the capped 1.3x: Full Cages 144's first and two-digit-count statuses, and the review's other long ones. */
 const measured = [
-  { text: 'Full Cages 144 · skill: Pointing and claiming · 0/81', width: 476.4032 },
-  { text: 'Full Cages 144 · skill: Pointing and claiming · 12/81', width: 488.4672 },
-  { text: 'Tide Pool 100 · skill: Only one place · 12/36', width: 418.184 },
-  { text: 'Small Cages 100 · skill: Cage totals · 12/36', width: 410.1344 },
-  { text: 'High Town 100 · skill: Counting roofs · 12/36', width: 429.208 },
-  { text: 'Stepping Stones 100 · skill: Must reach · 12/36', width: 449.6752 },
-  { text: 'Steep 100 · skill: Greater and smaller · 12/36', width: 425.7968 },
+  { text: 'Full Cages 144 · Pointing and claiming · 0/81', width: 476.4032 },
+  { text: 'Full Cages 144 · Pointing and claiming · 12/81', width: 488.4672 },
+  { text: 'Tide Pool 100 · Only one place · 12/36', width: 418.184 },
+  { text: 'Small Cages 100 · Cage totals · 12/36', width: 410.1344 },
+  { text: 'High Town 100 · Counting roofs · 12/36', width: 429.208 },
+  { text: 'Stepping Stones 100 · Must reach · 12/36', width: 449.6752 },
+  { text: 'Steep 100 · Greater and smaller · 12/36', width: 425.7968 },
 ];
 let screen: ReactTestRenderer | undefined;
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
@@ -52,7 +52,7 @@ function statusRowHeight(status: ReactTestInstance, sentenceWidth: number, conte
 const mountStatus = async (width: number, height: number, text: string) => {
   Object.assign(viewport, { width, height });
   const [title, skill, count] = text.split(' · '), done = count;
-  await act(async () => { screen = create(<PuzzleStatus title={title} skill={skill.replace('skill: ', '')} count={done} countLabel={done}><span>How to play</span><span>Hint</span></PuzzleStatus>); });
+  await act(async () => { screen = create(<PuzzleStatus title={title} skill={skill} count={done} countLabel={done}><span>How to play</span><span>Hint</span></PuzzleStatus>); });
   return screen!.root.find(n => n.type === 'div' && n.props.testID === 'puzzle-status');
 };
 beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); });
@@ -75,7 +75,7 @@ it.each(measured)('AX5 at 852 pt: "$text" keeps the buttons in their own column 
   expect(height).toBeLessThanOrEqual(2 * LINE);
   // The budget covers what the row takes: the same sentence, at its widest count, in the same safe width.
   const [title, skill] = text.split(' · ');
-  expect(statusHeight(852, 59, statusSentence(title, skill.replace('skill: ', ''), '81/81'))).toBeGreaterThanOrEqual(height);
+  expect(statusHeight(852, 59, statusSentence(title, skill, '81/81'))).toBeGreaterThanOrEqual(height);
 });
 
 it('AX5 on a narrow window: the sentence is a full-width line and the buttons follow, as before', async () => {
@@ -89,7 +89,7 @@ it('default size in a wide window: the status is the three facts in the row it a
   Object.assign(viewport, { fontScale: 1 });
   const status = await mountStatus(852, 393, measured[0].text);
   expect(flat(status.props.style)).toEqual({ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, rowGap: 6 });
-  expect(status.findAll(n => n.type === 'p').map(textOf)).toEqual(['Full Cages 144', '· skill: Pointing and claiming', '· 0/81']);
+  expect(status.findAll(n => n.type === 'p').map(textOf)).toEqual(['Full Cages 144', '· Pointing and claiming', '· 0/81']);
   expect(status.findAll(n => n.props.testID === 'puzzle-status-buttons')).toHaveLength(0);
 });
 
@@ -104,7 +104,7 @@ it('review2 P1-1: real Full Cages 144 at AX5 on the landscape iPhone 15 shows th
   Object.assign(viewport, { width: 852, height: 393, fontScale: 3.12 });
   await act(async () => { screen = create(<GridChromeContext.Provider value={chrome}><LatinBoard view={view} dispatch={() => {}} active width={812}/></GridChromeContext.Provider>); });
   const status = screen!.root.find(n => n.type === 'div' && n.props.testID === 'puzzle-status');
-  expect(textOf(status.find(n => n.type === 'p' && n.props.testID === 'puzzle-status-line'))).toBe('Full Cages 144 · skill: Pointing and claiming · 0/81');
+  expect(textOf(status.find(n => n.type === 'p' && n.props.testID === 'puzzle-status-line'))).toBe('Full Cages 144 · Pointing and claiming · 0/81');
   const board = screen!.root.find(n => n.type === 'div' && n.props.style?.overflow === 'hidden' && n.props.style?.borderRadius === 8).props.style.height as number;
   const usable = 393 - insets.top - insets.bottom;
   // The registered first status and the two-digit playing one both fit with the whole board and the pad's first row, by their real (not optimistic) heights.

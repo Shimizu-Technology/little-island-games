@@ -157,7 +157,10 @@ function Game({ id }: { id: GameId }) {
     });
   }
   function newRound() {
-    if (s?.game === "memory") setMemoryPack(s.pack ?? "pictures");
+    if (s?.game === "memory") {
+      setMemoryPack(s.pack ?? "pictures");
+      setStarterPairs(s.starterPairs);
+    }
     setOptions(
       s?.options ?? {
         ...defaultOptions,

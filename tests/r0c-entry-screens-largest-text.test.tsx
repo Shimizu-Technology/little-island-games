@@ -90,7 +90,7 @@ it.each([[393, 3.12], [320, 3.12]])('Game Hall at %s pt, text scale %s: the titl
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const { default: Shelf } = await import('../src/app/shelf');
   await act(async () => { root = create(<Shelf />); });
-  const title = texts().find(t => textOf(t) === 'Classic games')!;
+  const title = texts().find(t => textOf(t) === 'Game Hall')!;
   expect(title.props.numberOfLines).toBe(2); expect(title.props.adjustsFontSizeToFit).toBeFalsy();
   expect(root!.root.findAll(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Back to islands')).toHaveLength(1);
   expect(shelfGames.filter(g => g.island === 'classic').every(g => texts().some(t => textOf(t) === g.name))).toBe(true);
@@ -109,7 +109,7 @@ it('Game Hall at default size keeps its bar, chips and cards uncapped', async ()
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const { default: Shelf } = await import('../src/app/shelf');
   await act(async () => { root = create(<Shelf />); });
-  const title = texts().find(t => textOf(t) === 'Classic games')!;
+  const title = texts().find(t => textOf(t) === 'Game Hall')!;
   expect(title.props.numberOfLines).toBe(1); expect(title.props.adjustsFontSizeToFit).toBe(true);
   expect(texts().filter(t => t.props.maxFontSizeMultiplier !== undefined)).toHaveLength(0);
 });
@@ -190,7 +190,7 @@ it('Game Hall uses the loaded Nunito bold face without synthetic weight', async 
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const { default: Shelf } = await import('../src/app/shelf');
     await act(async () => { root = create(<Shelf />); });
-    for (const name of ['Classic games', ...shelfGames.filter(g => g.island === 'classic').map(g => g.name)]) {
+    for (const name of ['Game Hall', ...shelfGames.filter(g => g.island === 'classic').map(g => g.name)]) {
       const style = flat(texts().find(t => textOf(t) === name)!.props.style);
       expect(style.fontFamily).toBe('Nunito_800ExtraBold');
       expect(style.fontWeight).toBe('normal');
@@ -203,7 +203,7 @@ it('Game Hall keeps the full title beside icon Back on a 320 pt phone at 1.35x t
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const { default: Shelf } = await import('../src/app/shelf');
   await act(async () => { root = create(<Shelf />); });
-  const title = texts().find(t => textOf(t) === 'Classic games')!;
+  const title = texts().find(t => textOf(t) === 'Game Hall')!;
   expect(title.props.numberOfLines).toBe(2);
   expect(title.props.adjustsFontSizeToFit).toBe(false);
   expect(root!.root.findAll(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Back to islands')).toHaveLength(1);
