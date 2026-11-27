@@ -322,6 +322,20 @@ describe("HM-12 explicit camera moves ease on the UI thread", () => {
     expect(registry.calls.at(-1)).toEqual([7, false]);
     await act(async () => renderer.unmount());
   });
+  it("a place/viewport reset cancels a live tween atomically and stays on screen on later frames", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    current.animateCamera({ ...to, tx: -10000, ty: -10000 });
+    vi.advanceTimersByTime(32); frame();
+    current.animateCamera(to, false, true);
+    for (let i = 0; i < 20; i++) { vi.advanceTimersByTime(16); frame(); expect(current.camera.get()).toEqual(to); }
+    expect(current.veil.get()).toBe(0);
+    current.animateCamera({ ...to, tx: -10000 }, true);
+    current.cancelAll();
+    for (let i = 0; i < 20; i++) { vi.advanceTimersByTime(16); frame(); expect(current.camera.get()).toEqual(to); }
+    expect(current.veil.get()).toBe(0);
+    await act(async () => renderer.unmount());
+  });
   it("is immediate under Reduced Motion", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} reduced />); });

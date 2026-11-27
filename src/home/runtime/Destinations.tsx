@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
-import { roomIds, roomNames } from "../catalogMore";
+import { locationIds as roomIds, roomNames } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import type { CameraMatrix } from "../scene/camera";
 import { PosePicture, posePlan, trayLift } from "./PosePicture";
@@ -98,7 +98,7 @@ export function Destinations({
   const choiceLabel = (index: number) => {
     const plain = choiceLabels[index];
     return choiceLabels.filter((label) => label === plain).length > 1
-      ? `${plain}, ${ownerNames[choices[index].target.owner] ?? ""}`
+      ? `${plain}, ${ownerNames[choices[index].target.owner] ?? ""}${choices.filter(c => c.target.owner === choices[index].target.owner && verbOf(c.target, c.proposal) === verbOf(choices[index].target, choices[index].proposal)).length > 1 ? `, ${choices[index].target.id.split("/").at(-1)}` : ""}`
       : plain;
   };
   const cell = large ? 72 : 60;

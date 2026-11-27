@@ -7,6 +7,7 @@ import { FriendsIcon, Tool } from "./HomeTool";
 
 /** Explicit controls only: room/background taps never open a picker. */
 export function HomePanels({
+  outdoors = false,
   more,
   friends,
   bottom,
@@ -23,6 +24,7 @@ export function HomePanels({
   onLarge,
 }: {
   /** HR-03: the larger-target mode, changed only behind the grown-up question. */
+  outdoors?: boolean;
   large?: boolean;
   onLarge?: (on: boolean) => boolean;
   more: boolean;
@@ -56,13 +58,13 @@ export function HomePanels({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Text style={{ flex: 1, color: "#284F4B", fontWeight: "700" }}>Home controls</Text>
+        <Text style={{ flex: 1, color: "#284F4B", fontWeight: "700" }}>{outdoors ? "Place controls" : "Home controls"}</Text>
         <Tool label="Close home controls" symbol="×" onPress={onClose} large={large} />
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-evenly", gap: 6 }}>
         {onOverview && (
           <Tool
-            label="Whole house"
+            label={outdoors ? "Whole place" : "Whole house"}
             symbol="⌂"
             selected={overview}
             onPress={() => {

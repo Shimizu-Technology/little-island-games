@@ -1,3 +1,4 @@
+import { isGuamPlace } from "../locations";
 import React, { useCallback, useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
@@ -203,6 +204,8 @@ export function HomeChrome({
   canUndo,
   canRedo,
   showRedo = false,
+  onPlaces,
+  onGames,
   onBack,
   onUndo,
   onRedo,
@@ -231,6 +234,8 @@ export function HomeChrome({
   large = false,
   width = 1024,
 }: {
+  onPlaces?: () => void;
+  onGames?: () => void;
   width?: number;
   friendsOpen?: boolean;
   drawerHover?: SharedValue<boolean>;
@@ -273,11 +278,12 @@ export function HomeChrome({
   const nextRoom = roomIds[(currentIndex + 1) % roomIds.length];
   const controlTarget = large ? "child" : "adult";
   const showRedoButton = designing || showRedo;
-  const wrapHeader = (large && width < 720) || (designing && width < 500) || ((showRedoButton || canUndo) && width < 430);
+  const wrapHeader = (isGuamPlace(room) && width < 600) || (large && width < 720) || (designing && width < 500) || ((showRedoButton || canUndo) && width < 430);
   const measureKey = `${room}:${width}:${large ? 1 : 0}:${designing ? 1 : 0}:${showRedoButton ? 1 : 0}:${canUndo ? 1 : 0}`;
 
   const actionControls = (
     <View style={styles.topActions}>
+      {onGames && <PressTarget testID="home-games-here-button" target={controlTarget} accessibilityLabel="Games here" onPress={onGames} style={{ paddingHorizontal: 12, borderRadius: 22, backgroundColor: '#F6E9CF', alignItems: "center", justifyContent: "center" }}><Text variant="caption" style={{ fontSize: 13 }}>Games here</Text></PressTarget>}
       {(designing || canUndo) && (
         <IconButton
           testID="home-undo-button"
@@ -336,7 +342,7 @@ export function HomeChrome({
             style={styles.topButton}
           />
           <View testID="home-room-pill" style={[styles.roomPill, theme.shadow]}>
-            <RoomArrowDropButton
+            {!isGuamPlace(room) && <RoomArrowDropButton
               testID="home-room-prev"
               glyph={CaretLeft}
               targetRoom={prevRoom}
@@ -346,7 +352,8 @@ export function HomeChrome({
               onPress={() => onRoom(prevRoom)}
               onRect={onRoomRect}
               measureKey={measureKey}
-            />
+            />}
+            <PressTarget testID="home-places-button" target={large ? "child" : "adult"} accessibilityLabel={`Places, ${roomNames[room]}`} accessibilityHint="Choose Our House, Tumon Beach or Chamorro Village." onPress={() => onPlaces?.()} style={{ flex: 1, minWidth: large ? 64 : 0, paddingHorizontal: 4, flexDirection: "row", gap: 4, alignItems: "center", justifyContent: "center" }}>
             <Text
               variant="body"
               maxFontSizeMultiplier={1.3}
@@ -354,9 +361,11 @@ export function HomeChrome({
               adjustsFontSizeToFit
               style={styles.title}
             >
-              {title ?? (overview ? "Our house" : roomNames[room])}
+              {title ?? (overview && !isGuamPlace(room) ? "Our house" : roomNames[room])}
             </Text>
-            <RoomArrowDropButton
+            {onPlaces && <Text variant="small" accessible={false} style={{ fontSize: 14 }}>⌄</Text>}
+            </PressTarget>
+            {!isGuamPlace(room) && <RoomArrowDropButton
               testID="home-room-next"
               glyph={CaretRight}
               targetRoom={nextRoom}
@@ -366,7 +375,7 @@ export function HomeChrome({
               onPress={() => onRoom(nextRoom)}
               onRect={onRoomRect}
               measureKey={measureKey}
-            />
+            />}
           </View>
           {!wrapHeader && actionControls}
         </View>
@@ -464,6 +473,9 @@ const styles = StyleSheet.create({
   },
   topActions: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    maxWidth: "100%",
+    justifyContent: "flex-end",
     alignItems: "center",
     gap: theme.space.xs,
   },
@@ -505,7 +517,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   title: {
-    flex: 1,
+    flexShrink: 1,
     textAlign: "center",
     fontWeight: "800",
     paddingHorizontal: 4,

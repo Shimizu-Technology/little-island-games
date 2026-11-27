@@ -1,8 +1,9 @@
+import { defaultGuamRoom, isGuamPlace } from "../locations";
 import { storageCapacity } from '../storage';
 import {heldDrinkGeometry,heldDrinkScale} from '../art/heldDrink';
 import { worldRevision, translatedBounds, standingContact, occludedFraction, catalogSamples, catalogNeighbours } from "./spatial";
 
-import { roomIds, type RoomId } from "../catalogMore";
+import { locationIds as roomIds, type RoomId } from "../catalogMore";
 import { decorSpec, itemSpec } from "../catalog";
 import { capabilityOf, visualBox } from "../world";
 import { canHold, retiredSeat, socketPoint, socketsOf } from "../interactions";
@@ -258,7 +259,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       const occupied = Object.values(entities).find(
         (e) => e.attachment.kind === "socket" && e.attachment.item === entity.id && e.attachment.socket === socket.id
       )?.id;
-      const sofaConflicts = item.item === "sofa" && !socket.id.startsWith("pet-")
+      const sofaConflicts = ["sofa", "beach-blanket"].includes(item.item) && !socket.id.startsWith("pet-")
         ? Object.values(entities).filter(e => e.attachment.kind === "socket" && e.attachment.item === entity.id &&
           !e.attachment.socket.startsWith("pet-") && (socket.kind === "lie" || e.base === "lie")).map(e => e.id) : undefined;
       if (retiredSeat(item) && !occupied) continue;
@@ -416,10 +417,11 @@ export function buildScene(state: SceneState, cache?: SceneRoomCache): Scene {
   const rooms = {} as Scene["rooms"];
   const entities: Scene["entities"] = {};
   for (const room of roomIds) {
-    const key = JSON.stringify(state.rooms[room]) + panSeatsTag(state.rooms[room]);
+    const content = state.rooms[room] ?? (isGuamPlace(room) ? defaultGuamRoom(room) : state.rooms[room]);
+    const key = JSON.stringify(content) + panSeatsTag(content);
     let cached = cache?.[room];
     if (!cached || cached.key !== key) {
-      cached = { key, index: buildRoomIndex(room, state.rooms[room], revision) };
+      cached = { key, index: buildRoomIndex(room, content, revision) };
       if (cache) cache[room] = cached;
     }
     rooms[room] = cached.index.revision === revision ? cached.index : { ...cached.index, revision };

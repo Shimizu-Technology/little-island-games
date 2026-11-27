@@ -3,7 +3,7 @@ import { seasonalPacks } from "../seasonal";
 import { familySlots } from "../family";
 import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
 import { decorSpec, itemSpec } from "../catalog";
-import { roomIds, tintIds } from "../catalogMore";
+import { locationIds as roomIds, tintIds } from "../catalogMore";
 import { capabilityOf } from "../world";
 import { floorPoint, itemPoint } from "../geometry";
 import { MAX_INSTANCES, instance, owns, placedInstances, starterHome, validHome, validInstance } from "../model";
@@ -82,7 +82,8 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
     // Only raw food still sitting on a lit stove cooks. A pan taken off the heat, a stove
     // turned off or food already cooked leaves the world exactly as it is (rule 49).
     const food = state.instances.find((i) => i.id === action.id);
-    const stove = food && panSeats(state).has(food.id) ? panStoveOf(food, state.instances) : undefined;
+    const grill = food?.on ? state.instances.find(i => i.id === food.on && i.item === "bbq-grill") : undefined;
+    const stove = grill ?? (food && panSeats(state).has(food.id) ? panStoveOf(food, state.instances) : undefined);
     if (!food || food.powered || capabilityOf(food.item).edible !== "food" || !stove?.powered)
       return { state: save };
     const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state,

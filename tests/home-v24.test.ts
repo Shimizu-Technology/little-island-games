@@ -1,7 +1,8 @@
+import {roomIds} from '../src/home/catalogMore';
 import { afterEach, describe, expect, it } from 'vitest';
 import { resolveDrop, type DropWorld } from '../src/home/drop';
 import { dropBody, dropWorld, socketPoint, socketsOf } from '../src/home/interactions';
-import { homeReducer, instance, legacyStarterHome, migrateHome, starterHome, validHome } from '../src/home/model';
+import { homeReducer, instance, legacyStarterHome, migrateHome, starterHome, validHome, type HomeStateV2 } from '../src/home/model';
 import { capabilities } from '../src/home/world';
 import { itemPoint } from '../src/home/geometry';
 import { editHistory } from '../src/home/useHomeStore';
@@ -39,7 +40,7 @@ describe('version 3 world invariants',()=>{
  it('migrates v1/v2 once, preserving original bytes, themes, identities and valid coordinates',()=>{
   const old=legacyStarterHome(),bytes=JSON.stringify(old),migrated=migrateHome(old)!;
   expect(migrated.version).toBe(4);expect(validHome(migrated)).toBe(true);expect(JSON.stringify(old)).toBe(bytes);expect(migrateHome(migrated)).toBe(migrated);
-  const v2={...starterHome(),version:2 as const};delete v2.rosterVersion;v2.rooms.home.instances.push(instance('chair','chair',12,8));v2.rooms.home.characters=[{slot:0,anchor:'chair',pose:'sit',seatId:'chair'}];
+  const v2={...starterHome(),version:2 as const};delete v2.rosterVersion;v2.rooms=Object.fromEntries(roomIds.map(id=>[id,v2.rooms[id]])) as HomeStateV2['rooms'];v2.rooms.home.instances.push(instance('chair','chair',12,8));v2.rooms.home.characters=[{slot:0,anchor:'chair',pose:'sit',seatId:'chair'}];
   const before=JSON.stringify(v2),v3=migrateHome(v2)!;expect(v3.rooms.home.characters[0].socket?.itemId).toBe('chair');expect(JSON.stringify(v2)).toBe(before);
  });
  it('normalizes starters with their conservative visual silhouettes',()=>{

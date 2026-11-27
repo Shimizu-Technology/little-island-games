@@ -2,6 +2,7 @@ import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 import { Destinations } from "../src/home/runtime/Destinations";
+import { starterHome } from "../src/home/model";
 import { labHome } from "../src/home/runtime/lab";
 import { withPortions } from "../src/home/runtime/portions";
 import { buildScene } from "../src/home/scene/graph";
@@ -12,6 +13,19 @@ vi.mock("react-native-reanimated", () => ({ default: { View: "AnimatedView" }, u
 vi.mock("../src/home/runtime/EntityArt", () => ({ EntityArt: () => null, artFrame: () => ({ width: 1, height: 1 }) }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 describe("tap tray destinations", () => {
+  it("offers the beach blanket across places as the same shared destination proposal", async () => {
+    const state = starterHome(), scene = buildScene(state), choose = vi.fn();
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Destinations scene={scene} selected="character/0" scale={1} bottom={0} onChoose={choose} onSelect={() => {}} />); });
+    const choices = renderer.root.findAll(n => String(n.type) === "Pressable" && String(n.props.accessibilityLabel).startsWith("Sit in Tumon Beach"));
+    expect(choices.length).toBeGreaterThan(0);
+    await act(async () => choices[0].props.onPress());
+    const proposal = choose.mock.calls[0][0];
+    expect(proposal).toMatchObject({ room: 'tumon-beach', kind: 'socket', base: 'sit' });
+    const result = apply(state, proposal); expect('state' in result).toBe(true);
+    if ('state' in result) expect(result.state.rooms['tumon-beach'].characters.some(c => c.slot === 0)).toBe(true);
+    await act(async () => renderer.unmount());
+  });
   it("commits an ordinary prop to the recoverable tray through its explicit proposal", async () => {
     const state = labHome(),
       scene = buildScene(state),

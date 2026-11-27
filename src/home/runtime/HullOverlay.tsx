@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import Svg, { Circle, Ellipse, G, Line, Polygon, Rect } from "react-native-svg";
-import { roomIds } from "../catalogMore";
+import { locationIds as roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { faceRadius, handMagnet } from "../scene/resolve";
 import { prepareHits } from "./pick";

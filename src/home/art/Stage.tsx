@@ -106,6 +106,7 @@ function lanternPiece(id: string, x: number, string = x): StagePiece {
     <Circle cx={x + 5} cy={153} r={10} fill="#FFF2BC"/></G> };
 }
 export const stagePieces: Record<Room, readonly StagePiece[]> = {
+  'tumon-beach': [], 'chamorro-village': [],
   home: [
     ...shelfPieces("home-shelf", 516, 224),
     plantPiece("home-plant", 732, 303),
@@ -168,7 +169,7 @@ function VectorRoom({ room, theme, badges = [], live = false }: { room: Room; th
     <Path d="M0 352H800V560H0Z" fill={paint("floor")} stroke={ink} strokeWidth={3}/>
     <Rect y={352} width={800} height={208} fill={theme.floor === "island-breeze" || theme.floor === "game-room"?paint(theme.floor):"none"}/>
     <Rect y={352} width={800} height={208} fill={paint("floor-lines")}/>
-    <RoomTrim room={room} prefix={prefix}/>
+    <RoomTrim room={room === "tumon-beach" || room === "chamorro-village" ? "beach" : room} prefix={prefix}/>
     <CottageFascia room={room}/>
     <Path d="M0 351H800" stroke={ivory} strokeWidth={13}/>
     <Path d="M0 360H800" stroke={wood} strokeWidth={6}/>
@@ -231,7 +232,7 @@ export function StageRoom({ room, theme, badges = [], onBadgePress, live = false
   const defaults = roomDefaultTheme[room];
   const [paintedRoom, setPaintedRoom] = React.useState<Room>();
   return <View style={{ width: '100%', height: '100%' }} accessible={false}>
-    {paintedRoom !== room && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
+    {paintedRoom !== room && room !== "tumon-beach" && room !== "chamorro-village" && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
     <Image testID={`painted-room-${room}`} source={illustratedRooms[room]()} onLoad={() => setPaintedRoom(room)} onError={() => setPaintedRoom(undefined)} resizeMode="cover" fadeDuration={0}
       accessible={false} style={{ position: 'absolute', width: '100%', height: '100%' }}/>
     <AtmosphereLighting room={room} atmosphere={atmosphere} reduced={reduced} active={weatherActive}/>

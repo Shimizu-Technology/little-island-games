@@ -1,3 +1,4 @@
+import { defaultGuamRoom, guamPlaceIds, untouchedGuamRoom } from "./locations";
 import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots, type FamilySlot } from "./family";
 import { storageCapacity, type StorageState } from './storage';
@@ -12,7 +13,7 @@ import { resolveDrop, occlusion } from "./drop";
 import { itemPoint, characterPoint } from "./geometry";
 import { freeFloor } from "./freeFloor";
 import { roomDefaultTheme } from "./art/roomDefaults";
-import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
+import { moreCatalog, locationIds as roomIds, roomIds as houseRoomIds, tintIds, type HouseRoomId, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
 import { applyUndoStep, validUndoShape, type HomeUndo } from "./undoHistory";
 import {
@@ -288,7 +289,7 @@ function validContainers(items: readonly Instance[]): boolean {
 }
 export function validHome(v: unknown): v is HomeSave {
   if (!v || typeof v !== "object") return false;
-  const s = v as HomeSave;
+  let s = v as HomeSave;
   if (s.version === 1) {
     if (!exact(v, ["version", "scene", "instances", "characters", "theme"]) || s.scene !== "room-1") return false;
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
@@ -297,11 +298,14 @@ export function validHome(v: unknown): v is HomeSave {
   if (
     !exact(v, ["version", "current", "rooms", ...optional]) ||
     ![2, 3, 4].includes(s.version) ||
-    !member(roomIds, s.current) ||
-    !exact(s.rooms, [...roomIds]) ||
-    !validRooms(s, roomIds)
+    !member(s.version === 4 ? roomIds : houseRoomIds, s.current) ||
+    !s.rooms || typeof s.rooms !== "object" || Array.isArray(s.rooms) ||
+    !houseRoomIds.every(id => Object.hasOwn((s as HomeStateV2).rooms, id)) ||
+    !Object.keys(s.rooms).every(id => (s.version === 4 ? roomIds : houseRoomIds).includes(id as RoomId))
   )
     return false;
+  s = { ...s, rooms: locationRooms(s.rooms) };
+  if (!validRooms(s, roomIds)) return false;
   if (Object.hasOwn(v, "rosterVersion") && (s.version !== 4 || s.rosterVersion !== 1)) return false;
   if (s.version >= 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
   if (Object.hasOwn(v, "atmosphere") && !validAtmosphere(s.atmosphere)) return false;
@@ -341,13 +345,15 @@ function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
   const migrated = migrateSavedHome(v);
   if (!migrated) return undefined;
-  if (migrated.rosterVersion === 1) return migrated;
+  if (migrated.rosterVersion === 1 && guamPlaceIds.every(id => Object.hasOwn(migrated.rooms, id))) return migrated;
   return hydrateHome(migrated);
 }
 /** The mounted Home always offers the complete roster, including omitted drawer presets. */
 export function hydrateHome(v: unknown): HomeStateV2 | undefined {
-  const migrated = migrateSavedHome(v);
-  if (!migrated) return undefined;
+  const saved = migrateSavedHome(v);
+  if (!saved) return undefined;
+  const rooms = locationRooms(saved.rooms);
+  const migrated = rooms === saved.rooms ? saved : { ...saved, rooms };
   // Runtime-only defaults: an untouched learner's saved Home need not pay for the drawer.
   // Undo patches are retained byte-for-byte; older rooms may legitimately omit the new actors.
   const present = new Set(roomIds.flatMap(id => migrated.rooms[id].characters.map(c => c.slot)));
@@ -364,14 +370,25 @@ export function migrateSavedHome(v: unknown): HomeStateV2 | undefined {
   const migrated = migrateValidatedHome(v);
   if (!migrated) return undefined;
   const canonical: HomeStateV2 = migrated.version === 4 ? migrated : { ...migrated, version: 4 };
-  return validHome(canonical) ? canonical : undefined;
+  const stored = migrated.version === 4 ? canonical : compactPlaces(canonical);
+  return validHome(stored) ? stored : undefined;
 }
 /** Omit only exact, unused drawer presets. Placed actors and saved Undo remain lossless. */
+function locationRooms(rooms: HomeStateV2["rooms"]): HomeStateV2["rooms"] {
+  if (guamPlaceIds.every(id => Object.hasOwn(rooms, id))) return rooms;
+  return { ...Object.fromEntries(guamPlaceIds.filter(id => !Object.hasOwn(rooms, id)).map(id => [id, defaultGuamRoom(id)])), ...rooms } as HomeStateV2["rooms"];
+}
+function compactPlaces(state: HomeStateV2): HomeStateV2 {
+  const rooms = { ...state.rooms };
+  for (const id of guamPlaceIds) if (rooms[id] && untouchedGuamRoom(id, rooms[id])) delete (rooms as Partial<typeof rooms>)[id];
+  return Object.keys(rooms).length === Object.keys(state.rooms).length ? state : { ...state, rooms };
+}
 export function compactHome(state: HomeStateV2): HomeStateV2 {
   if (state.atmosphere && !compactAtmosphere(state.atmosphere)) {
     const { atmosphere: _atmosphere, ...rest } = state; void _atmosphere; state = rest;
   }
-  if (state.rosterVersion !== 1) return state;
+  if (state.rosterVersion !== 1) return compactPlaces(state);
+  state = { ...state, rooms: locationRooms(state.rooms) };
   const characters = state.rooms.home.characters.filter(c => !waitingFamily().some(preset =>
     Object.keys(c).length === Object.keys(preset).length &&
     (Object.keys(preset) as (keyof Character)[]).every(key => c[key] === preset[key])));
@@ -383,19 +400,20 @@ export function compactHome(state: HomeStateV2): HomeStateV2 {
       ? patch.room.characters.some(c => c.slot >= 3)
       : patch.characters && (patch.characters.remove.some(slot => slot >= 3) ||
         patch.characters.put.some(p => p.value.slot >= 3 || p.index >= 3))); }));
-  if (family) return rooms === state.rooms ? state : { ...state, rooms };
+  if (family) return compactPlaces(rooms === state.rooms ? state : { ...state, rooms });
   const { rosterVersion: _roster, ...base } = state;
   void _roster;
-  return { ...base, rooms };
+  return compactPlaces({ ...base, rooms });
 }
 function migrateValidatedHome(v: unknown): HomeStateV2 | undefined {
   if (!validHome(v)) return undefined;
   if (v.version === 4) return v;
   if (v.version === 3) {
-    const rooms = Object.fromEntries(roomIds.map((id) => [id, normalizeRoom(v.rooms[id])])) as HomeStateV2["rooms"];
-    return roomIds.every((id) => JSON.stringify(rooms[id]) === JSON.stringify(v.rooms[id])) ? v : { ...v, rooms };
+    const source = { ...v, rooms: locationRooms(v.rooms) };
+    const rooms = Object.fromEntries(roomIds.map((id) => [id, normalizeRoom(source.rooms[id])])) as HomeStateV2["rooms"];
+    return roomIds.every((id) => JSON.stringify(rooms[id]) === JSON.stringify(source.rooms[id])) ? source : { ...source, rooms };
   }
-  if (v.version !== 1) return upgradeHome(v);
+  if (v.version !== 1) return upgradeHome({ ...v, rooms: locationRooms(v.rooms) });
   const { rosterVersion: _roster, ...base } = starterHome();
   void _roster;
   return upgradeHome({
@@ -626,8 +644,8 @@ export function starterHome(): HomeStateV2 {
       { slot: 2, anchor: "floor", pose: "stand", x: 6, y: 10 },
     ],
   };
-  const extra = (room: Exclude<RoomId, "home">): RoomState => {
-    const starters: Record<Exclude<RoomId, "home">, readonly [string, number, number][]> = {
+  const extra = (room: Exclude<HouseRoomId, "home">): RoomState => {
+    const starters: Record<Exclude<HouseRoomId, "home">, readonly [string, number, number][]> = {
       kitchen: [
         ["fridge", 14, 0],
         ["sink-counter", 8, 0],
@@ -672,7 +690,7 @@ export function starterHome(): HomeStateV2 {
   };
   const base = upgradeHome({
     version: 3, current: "home",
-    rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") },
+    rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach"), "tumon-beach": defaultGuamRoom("tumon-beach"), "chamorro-village": defaultGuamRoom("chamorro-village") },
   });
   return { ...base, version: 4, rosterVersion: 1, rooms: { ...base.rooms,
     home: { ...base.rooms.home, characters: [...base.rooms.home.characters, ...waitingFamily()] },

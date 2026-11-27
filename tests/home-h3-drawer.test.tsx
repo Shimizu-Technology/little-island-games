@@ -1,7 +1,7 @@
 import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
-import { FriendDrawer, DRAWER_MS } from "../src/home/runtime/FriendDrawer";
+import { FriendDrawer, friendLabel, DRAWER_MS } from "../src/home/runtime/FriendDrawer";
 import { GrownUpAccess } from "../src/home/runtime/HomePanels";
 import { labHome } from "../src/home/runtime/lab";
 import { buildScene } from "../src/home/scene/graph";
@@ -24,12 +24,29 @@ vi.mock("react-native-reanimated", () => ({
   runOnJS: (fn: (...a: unknown[]) => unknown) => fn,
 }));
 vi.mock("../src/home/runtime/EntityArt", () => ({ EntityArt: "EntityArt", artFrame: () => ({ left: -30, top: -200, width: 60, height: 200 }) }));
+vi.mock("../src/home/art/More", () => ({ MoreItemArt: "MoreItemArt" }));
 vi.mock("../src/home/art/Items", () => ({ ItemArt: "ItemArt" }));
 vi.mock("../src/home/runtime/HomeChrome", () => ({ Tool: "Tool", FriendsIcon: "FriendsIcon" }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 const interaction = { externalDown: vi.fn(), externalMove: vi.fn(), externalUp: vi.fn(), slots: { value: [{}, {}] } } as any;
 const offset = { value: { x: 0, y: 100 } } as any;
 const flat = (style: any): any => Array.isArray(style) ? Object.assign({}, ...style.map(flat)) : style ?? {};
+describe("Guam friend locations", () => {
+  it.each(['tumon-beach', 'chamorro-village'] as const)('names %s naturally and paints the actual Village badge', async room => {
+    const state = starterHome();
+    state.rooms[room].characters.push(state.rooms.home.characters.shift()!);
+    const scene = buildScene(state);
+    expect(friendLabel(scene.entities['character/0'], 'home')).toContain(`at ${room === 'tumon-beach' ? 'Tumon Beach' : 'Chamorro Village'}`);
+    let tree!: TestRenderer.ReactTestRenderer;
+    await act(async () => { tree = TestRenderer.create(<FriendDrawer open scene={scene} here="home" bottom={70} interaction={interaction} offset={offset} reduced onBring={() => {}} onClose={() => {}} onCarry={() => {}} />); });
+    const cell = tree.root.findByProps({ testID: 'friend-cell-0' });
+    if (room === 'chamorro-village') {
+      expect(cell.findAll(n => String(n.type) === 'MoreItemArt').map(n => n.props.id)).toEqual(['bbq-grill']);
+      expect(cell.findAll(n => String(n.type) === 'ItemArt')).toHaveLength(0);
+    }
+    await act(async () => tree.unmount());
+  });
+});
 describe("HR-01 the friends drawer (rules 4, 47)", () => {
   it("has a cell of at least 56 pt per friend, named by where they are, and a tap brings them", async () => {
     const state = labHome();
@@ -52,7 +69,7 @@ describe("HR-01 the friends drawer (rules 4, 47)", () => {
     const { friendLabel } = await import("../src/home/runtime/FriendDrawer");
     expect(friendLabel(scene.entities["character/1"], "kitchen")).toBe("Pip, in My room. Drag into the room, or tap to bring here.");
     // A friend elsewhere shows where they are, as a picture.
-    expect(cells[0].findAll((n) => (n.type as unknown) === "ItemArt")).toHaveLength(1);
+    expect(cells[0].findAll((n) => (n.type as unknown) === "MoreItemArt").map(n => n.props.id)).toEqual(["fridge"]);
     expect(cells[1].findAll((n) => (n.type as unknown) === "ItemArt")).toHaveLength(0);
     await act(async () => tree.unmount());
   });

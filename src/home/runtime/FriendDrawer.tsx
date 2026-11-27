@@ -3,8 +3,10 @@ import React, { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
-import { roomNames, type RoomId } from "../catalogMore";
+import { moreCatalog, roomNames, type RoomId } from "../catalogMore";
 import Svg, { Path } from "react-native-svg";
+import { isGuamPlace } from "../locations";
+import { MoreItemArt } from "../art/More";
 import { ItemArt } from "../art/Items";
 import { screenPoint, type Scene, type SceneEntity } from "../scene/types";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
@@ -19,7 +21,7 @@ import type { Interaction } from "./useInteraction";
  */
 export const DRAWER_MS = 160;
 export { friendNames } from "../family";
-const roomIcon = { home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const;
+const roomIcon = { home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell", "tumon-beach": "shell", "chamorro-village": "bbq-grill" } as const;
 export type FriendPlace = { waiting: boolean; room: RoomId };
 export function friendPlace(entity: SceneEntity): FriendPlace {
   return { waiting: entity.attachment.kind === "staging", room: entity.room };
@@ -28,6 +30,7 @@ export function friendLabel(entity: SceneEntity, here: RoomId): string {
   const name = friendNames[entity.character!.slot] ?? "Friend";
   const place = friendPlace(entity);
   const where = place.waiting ? "waiting in the drawer" : place.room === here ? "in this room"
+    : isGuamPlace(place.room) ? `at ${roomNames[place.room]}`
     : place.room === "home" ? `in ${roomNames.home}` : `in the ${roomNames[place.room]}`;
   return `${name}, ${where}. Drag into the room, or tap to bring here.`;
 }
@@ -101,7 +104,9 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
           )}
           {!place.waiting && place.room !== here && (
             <View pointerEvents="none" style={badge}>
-              <ItemArt item={roomIcon[place.room]} size={24} reduced />
+              {moreCatalog[roomIcon[place.room]]
+                ? <MoreItemArt id={roomIcon[place.room]} size={24} reduced />
+                : <ItemArt item={roomIcon[place.room]} size={24} reduced />}
             </View>
           )}
           {place.waiting && (

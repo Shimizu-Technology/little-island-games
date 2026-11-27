@@ -11,7 +11,7 @@ import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedSty
 import { capabilityOf } from '../world';
 import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
-import { roomIds, roomNames, type RoomId } from "../catalogMore";
+import { locationIds as roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt, SkyArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
 import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
@@ -576,7 +576,7 @@ export function SceneView({
             carried onto a room button or the Friends button stays visible above the bar. */}
         <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height,
           overflow: "hidden", backgroundColor: "#BEE4DD" }}>
-        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt time={(state.atmosphere ?? defaultAtmosphere).timeOfDay} /></View>
+        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt time={(state.atmosphere ?? defaultAtmosphere).timeOfDay} moon={building.place !== roomIds.indexOf("chamorro-village")} /></View>
         <Animated.View
           testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}
@@ -584,9 +584,10 @@ export function SceneView({
           style={[{ position: "absolute", width: building.width, height: building.height }, cameraStyle]}
         >
           <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
-            <BuildingArt building={building} />
+            {building.place === undefined && <BuildingArt building={building} />}
           </View>
           {roomIds.map((roomId, index) => {
+            if (building.place !== undefined ? index !== building.place : index >= 4) return null;
             const origin = roomOrigin(index, building),
               room = state.rooms[roomId];
             const all = Object.values(scene.rooms[roomId].entities)
@@ -650,7 +651,7 @@ export function SceneView({
                 </View>
                 {/* Painted room set dressing stays registered to the room; movable props are separate entities. */}
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
-                  {index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />}
+                  {building.place === undefined && (index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />)}
                 </View>
                 {roomId === "home" && <Pressable accessible accessibilityRole="button"
                   accessibilityLabel={`Badge board, ${badges.length} of ${tracks.length * 4} earned. Open My badges`}
@@ -690,7 +691,7 @@ export function SceneView({
             );
           })}
           <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
-            <BuildingTrim building={building} />
+            {building.place === undefined && <BuildingTrim building={building} />}
           </View>
           {debugLayer}
         </Animated.View>

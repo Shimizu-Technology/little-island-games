@@ -1,4 +1,5 @@
 import {describe,it,expect} from 'vitest';
+import {roomIds} from '../src/home/catalogMore';
 import {anchors,instance,legacyStarterHome,migrateHome,poseFor,starterHome,validHome,type Character,type HomeStateV2} from '../src/home/model';
 import {initializePersonalization} from '../src/personalization/model';
 import {backfillRewards} from '../src/badges/transitions';
@@ -6,7 +7,7 @@ import {emptySave,parseSave} from '../src/state/validation';
 import {assertMigratedHomes,preserveLearnerMigration,preserveImportedLearners} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
 const envelope=(home:HomeStateV2)=>{const save=initializePersonalization(emptySave());save.personalization!.people.family.home=home;return save;};
-const fixture=(slot:Character['slot'])=>{const home=starterHome();home.version=2;delete home.rosterVersion;home.rooms.home.instances=[instance('bed','bed',4,0),instance('toy','teddy',10,8)];home.rooms.home.characters=[{slot,anchor:'seat',pose:'sit',holding:'toy'}];return envelope(home);};
+const fixture=(slot:Character['slot'])=>{const home=starterHome();home.version=2;delete home.rosterVersion;home.rooms=Object.fromEntries(roomIds.map(id=>[id,home.rooms[id]])) as HomeStateV2['rooms'];home.rooms.home.instances=[instance('bed','bed',4,0),instance('toy','teddy',10,8)];home.rooms.home.characters=[{slot,anchor:'seat',pose:'sit',holding:'toy'}];return envelope(home);};
 describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',()=>{
  it.each([0,1,2] as const)('migrates implicit first-seat slot %i with its held prop and exact-byte preservation',async slot=>{
   const source=fixture(slot),raw=' \n'+JSON.stringify(source,null,3)+'\n',parsed=parseSave(raw),next=backfillRewards(parsed),h=next.personalization!.people.family.home as HomeStateV2;
@@ -31,7 +32,7 @@ describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',
   for(const version of [1,2])for(const slot of [0,1,2] as const)for(const anchor of anchors){
    const source=version===1?legacyStarterHome():{...starterHome(),version:2 as const};
    const c:Character={slot,anchor,pose:poseFor(anchor),...(anchor==='floor'?{x:4,y:4}:{})};
-   if('rooms' in source){delete source.rosterVersion;for(const room of Object.values(source.rooms))room.characters=[];source.rooms.home.characters=[c];}else source.characters=[c];
+   if('rooms' in source){delete source.rosterVersion;source.rooms=Object.fromEntries(roomIds.map(id=>[id,source.rooms[id]])) as HomeStateV2['rooms'];for(const room of Object.values(source.rooms))room.characters=[];source.rooms.home.characters=[c];}else source.characters=[c];
    if(!validHome(source))continue;accepted++;const bytes=JSON.stringify(source),next=migrateHome(source);
    expect(next,`v${version} ${slot} ${anchor}`).toBeDefined();expect(next?.version).toBe(4);expect(validHome(next),`v${version} ${slot} ${anchor}`).toBe(true);expect(JSON.stringify(source)).toBe(bytes);
   }

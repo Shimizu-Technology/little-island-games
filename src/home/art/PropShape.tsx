@@ -18,8 +18,8 @@ function Grill({ d }: { d: string }) {
 
 /** SVG content in a 24×24 box. Pass directly to Islander.held, without a View. */
 export function HandProp({ id, state = {}, tint = 'original', longStraw = false }: { longStraw?: boolean; id: HoldableId; state?: ItemVisualState; tint?: TintId }) {
-  if (['pumpkin-pie', 'fiesta-platter', 'hot-cocoa', 'gift-box'].includes(id)) return <G>
-    <SvgImage href={illustratedProps[id as IllustratedProp]()} x={0} y={0} width={24} height={24}/>
+  if (['pumpkin-pie', 'fiesta-platter', 'hot-cocoa', 'gift-box', 'shaved-ice', 'surfboard', 'beach-surfboard'].includes(id)) return <G>
+    <SvgImage href={illustratedProps[(id === "beach-surfboard" ? "surfboard" : id) as IllustratedProp]()} x={0} y={0} width={24} height={24}/>
     {id === 'hot-cocoa' && state.empty && <Ellipse cx={11.6} cy={10.5} rx={4.2} ry={1.8} fill="#6D493B" stroke="#E3C3A2" strokeWidth={.8}/>}
   </G>;
   const paint = (color: string) => material(tint, color);

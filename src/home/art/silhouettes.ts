@@ -47,12 +47,17 @@ const rug = (ry: number, cy: number): Prim => ["e", 75, cy, 69, ry];
 const wallPicture: Prim = ["r", 20, 24, 112, 82];
 const STICKER: Hull = hull(150, ["e", 75, 75, 67, 67]);
 
+const surfboardHull = hull(130, ["p", 74, 6, 95, 21, 104, 70, 101, 95, 84, 119, 73, 118, 51, 92, 47, 53, 55, 24]);
+
 const hulls: Record<string, Hull> = {
   // Seasonal WebP cutouts, read from the transparent 384-square artwork in a 150 box.
   "christmas-tree": hull(150, ["p", 75, 8, 124, 108, 26, 108], ["r", 54, 108, 42, 37]),
   "gift-box": hull(150, ["r", 22, 40, 108, 96], ["e", 75, 38, 35, 20]),
   "hot-cocoa": hull(150, ["r", 21, 37, 95, 102], ["e", 119, 86, 25, 30], ["c", 16, 12, 43, 47, 7]),
   "pumpkin-pie": hull(150, ["e", 75, 73, 68, 48], ["p", 18, 91, 130, 91, 117, 121, 40, 126]),
+  "beach-blanket": hull(150, ["p", 9, 71, 115, 51, 144, 105, 35, 130]),
+  "bbq-grill": hull(150, ["e", 75, 60, 62, 26], ["r", 34, 68, 84, 65]),
+  "shaved-ice": hull(150, ["e", 75, 51, 47, 37], ["p", 33, 60, 119, 60, 102, 137, 51, 137]),
   "fiesta-platter": hull(150, ["e", 76, 81, 68, 43], ["p", 9, 52, 102, 28, 142, 89, 116, 125, 14, 86]),
   "autumn-wreath": hull(150, ["e", 75, 75, 60, 62]),
   // Beds, seats, baths (SeatArt, 150 box).
@@ -113,7 +118,8 @@ const hulls: Record<string, Hull> = {
   chime: hull(130, ["c", 75, 10, 75, 80, 2], ["c", 43, 43, 75, 30, 2.5], ["c", 75, 30, 107, 43, 2.5], ["c", 48, 42, 48, 66, 2], ["c", 103, 42, 103, 58, 2], ["e", 48, 77, 15, 15], ["e", 75, 89, 15, 15], ["e", 103, 70, 15, 15]),
   "robot-buddy": hull(130, ["r", 40, 38, 70, 70], ["c", 75, 39, 75, 23, 4.5], ["c", 51, 107, 51, 118, 4], ["c", 99, 107, 99, 118, 4]),
   "computer-desk": hull(130, ["r", 19, 80, 112, 18], ["c", 31, 96, 31, 119, 4.5], ["c", 119, 96, 119, 119, 4.5], ["r", 41, 22, 68, 56], ["r", 58, 76, 34, 11]),
-  surfboard: hull(130, ["p", 74, 6, 95, 21, 104, 70, 101, 95, 84, 119, 73, 118, 51, 92, 47, 53, 55, 24]),
+  surfboard: surfboardHull,
+  "beach-surfboard": surfboardHull,
   // MoreItemArt (130 box).
   desk: hull(130, ...deskTop((x, y) => [x, y], true)),
   "side-table": hull(130, ...deskTop((x, y) => [20 + x * .73, y - 5], false)),
