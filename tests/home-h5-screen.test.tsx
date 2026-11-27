@@ -156,5 +156,17 @@ it.each(['fridge', 'stove', 'sink-counter', 'lamp', 'tv', 'radio'])('tapping %s 
   if (kind === 'fridge') expect(root.root.findAllByProps({ testID: 'storage-tray' })).toHaveLength(0);
   await act(async () => harness.scene.onSelect('home/item/appliance'));
   expect(saves.at(-1)!.rooms.home.instances[0].powered).toBe(false);
-  expect(harness.dest.selected).toBeUndefined();
+  expect(harness.dest.selected).toBe(['lamp', 'radio'].includes(kind) ? 'home/item/appliance' : undefined);
+});
+
+it('Design accessible selection switches between props without moving the first one', async () => {
+  const state = labFixtures['rig-menu-0']();
+  state.rooms.home.instances = [instance('first', 'carry-basket', 2, 7), instance('second', 'lamp', 10, 1)];
+  state.rooms.home.characters = [];
+  const persist = await open(state);
+  await act(async () => harness.chrome.onDesign());
+  await act(async () => harness.scene.onSelect('home/item/first'));
+  await act(async () => harness.scene.onSelect('home/item/second'));
+  expect(harness.dest.selected).toBe('home/item/second');
+  expect(persist).not.toHaveBeenCalled();
 });

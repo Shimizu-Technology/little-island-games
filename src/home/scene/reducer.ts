@@ -74,14 +74,12 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
           slot: c.slot,
           anchor: "floor" as const,
           pose: "stand" as const,
-          x: c.slot * 6,
+          x: 2 + c.slot * 3,
           y: 8,
         }
     );
-    return {
-      state: { ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...fresh, characters } } },
-      snapshot: save,
-    };
+    const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...fresh, characters } } });
+    return result.state === save ? result : { ...result, snapshot: save };
   }
   if (action.type === "theme") {
     if (action.wallpaper && !["cream", "lagoon", ...(ownership.ownedWallpapers ?? [])].includes(action.wallpaper))

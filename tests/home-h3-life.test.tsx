@@ -1,6 +1,7 @@
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
+import { familySlots } from '../src/home/family';
 import { SceneView } from '../src/home/runtime/SceneView';
 import { withPortions } from '../src/home/runtime/portions';
 import { labHome } from '../src/home/runtime/lab';
@@ -8,10 +9,10 @@ import { buildScene } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
 import type { Interaction } from '../src/home/runtime/useInteraction';
 import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
-import { LIFE_PERIOD, longestBlinkWait, lifeBlink, lifeSeed, BREATH_SCALE, nextLifeTick, BREATH_STEP_MS, LIFE_PERIOD as PERIOD, lifeBlink as blinkAt, lifeSeed as seedOf } from '../src/home/runtime/life';
+import { LIFE_PERIOD, longestBlinkWait, lifeBlink, lifeSeed, lifeBreath, BREATH_PERIOD, BREATH_SCALE, nextLifeTick, BREATH_STEP_MS, LIFE_PERIOD as PERIOD, lifeBlink as blinkAt, lifeSeed as seedOf } from '../src/home/runtime/life';
 vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
 // These scene tests replace native art; the mouth cue now also imports SVG.
-vi.mock('react-native-svg',()=>({default:'Svg',Path:'Path'}));
+vi.mock('react-native-svg',()=>({default:'Svg',Path:'Path',Circle:'Circle'}));
 vi.mock('react-native',()=>({StyleSheet:{absoluteFill:{position:'absolute',top:0,left:0,right:0,bottom:0}},View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
 vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useSharedValue:(v:any)=>React.useRef({value:v,set(n:any){this.value=n;},get(){return this.value;}}).current,withRepeat:(x:any)=>x,withTiming:(x:any)=>x,cancelAnimation:()=>{},Easing:{linear:(t:number)=>t},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn}));
 const pans=vi.hoisted(()=>[] as any[]);
@@ -60,10 +61,10 @@ describe('HM-11 friends blink and breathe at rest',()=>{
  });
  it('every friend blinks within 6 s of any moment, and never all at once',()=>{
   expect(longestBlinkWait()).toBeLessThan(6000);
-  for(const slot of [0,1,2]){
+  for(const slot of familySlots){
    for(let t=0;t<LIFE_PERIOD;t+=250){let wait=0;while(!lifeBlink(t+wait,lifeSeed(slot)))wait+=10;expect(wait).toBeLessThan(6000);}
   }
-  for(let t=0;t<LIFE_PERIOD;t+=10) expect([0,1,2].filter(s=>lifeBlink(t,lifeSeed(s))).length).toBeLessThan(3);
+  for(let t=0;t<LIFE_PERIOD;t+=10) expect(familySlots.filter(s=>lifeBlink(t,lifeSeed(s))).length).toBeLessThan(3);
  });
  it('friends in other rooms, the overview and Reduced Motion get no life clock',async()=>{
   for(const [room,reduced] of [[undefined,false],['home',true]] as const){
@@ -79,14 +80,24 @@ describe('HM-11 friends blink and breathe at rest',()=>{
 });
 describe('HM-11 / HM-13 the life clock wakes rarely', () => {
  it('ticks at every blink edge and at most every 250 ms, never per frame', () => {
-  const seeds = [0, 1, 2].map(seedOf), ticks: number[] = [];
+  const seeds = familySlots.map(seedOf), ticks: number[] = [];
   for (let t = 0; t < 3 * PERIOD;) { ticks.push(t); const wait = nextLifeTick(t, seeds); expect(wait).toBeGreaterThan(0); expect(wait).toBeLessThanOrEqual(BREATH_STEP_MS); t += wait; }
   // About 4 wakes a second plus blink edges, against 60 for a frame loop.
-  expect(ticks.length / (3 * PERIOD / 1000)).toBeLessThan(6);
+  expect(ticks.length / (3 * PERIOD / 1000)).toBeLessThan(7);
   for (const seed of seeds) for (let t = 0; t < 3 * PERIOD; t += 5) {
    // Whatever is shown between ticks is what the last tick showed: every blink is seen, and ends on time.
    const last = ticks.filter((x) => x <= t).at(-1)!;
    expect(blinkAt(last, seed), `${seed}@${t}`).toBe(blinkAt(t, seed));
   }
  });
+});
+
+it('all six family slots have distinct blink and breath phases', () => {
+  const seeds = familySlots.map(lifeSeed);
+  expect(new Set(seeds.map(s => s % LIFE_PERIOD)).size).toBe(6);
+  expect(new Set(seeds.map(s => s % BREATH_PERIOD)).size).toBe(6);
+  for (const a of familySlots) for (const b of familySlots) if (a !== b) {
+    expect(Array.from({ length: 72 }, (_, i) => lifeBlink(i * 250, seeds[a]))).not.toEqual(Array.from({ length: 72 }, (_, i) => lifeBlink(i * 250, seeds[b])));
+    expect([0, 450, 900].map(t => lifeBreath(t, seeds[a]))).not.toEqual([0, 450, 900].map(t => lifeBreath(t, seeds[b])));
+  }
 });

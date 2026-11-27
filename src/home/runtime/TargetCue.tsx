@@ -1,5 +1,5 @@
 import React from "react";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import type { Target } from "../scene/types";
@@ -51,16 +51,16 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
   </Animated.View>;
   if (target.kind === 'socket') {
     const region = target.rim ?? target.activation ?? target.core ?? { left: target.contact.x - 26, top: target.contact.y - 12, width: 52, height: 24 };
-    const pose = target.base === 'lie' ? 'M10 18a7 7 0 1 0 0 .1M21 22H58M25 22V32M54 22L63 32'
-      : target.base === 'bathe' ? 'M31 5a7 7 0 1 0 0 .1M29 20V33M12 30Q32 45 53 30M11 23h1m43-6h1M18 13h1'
-      : 'M27 5a7 7 0 1 0 0 .1M25 20V34H47V47';
+    const pose = target.base === 'lie' ? 'M23 25H54M28 25V35M51 25L59 35'
+      : target.base === 'bathe' ? 'M31 25V33M12 32Q32 46 54 32M12 24h1m41-5h1'
+      : 'M28 25V34H47V44';
     return <Animated.View testID="socket-landing-outline" pointerEvents="none"
       accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       style={[{ position: 'absolute', left: region.left - 5, top: region.top - 5, width: region.width + 10, height: region.height + 10,
         borderRadius: 22, borderWidth: 5, borderColor: '#F5BF49', backgroundColor: '#FFD66B33' }, style]}>
       <View testID={`hover-pose-${target.base}`} style={{ position: 'absolute', right: 8, top: -58,
         width: 76, height: 62, borderRadius: 22, borderWidth: 3, borderColor: '#E6AB37', backgroundColor: '#FFF5D9', alignItems: 'center', justifyContent: 'center' }}>
-        <Svg width={68} height={52} viewBox="0 0 68 52"><Path d={pose} fill="none" stroke="#9C6528" strokeWidth={5} strokeLinecap="round" strokeLinejoin="round"/></Svg>
+        <Svg width={68} height={52} viewBox="0 0 68 52"><Circle cx={target.base === 'lie' ? 14 : target.base === 'bathe' ? 31 : 28} cy={target.base === 'lie' ? 22 : 14} r={6} fill="none" stroke="#9C6528" strokeWidth={5}/><Path d={pose} fill="none" stroke="#9C6528" strokeWidth={5} strokeLinecap="round" strokeLinejoin="round"/></Svg>
       </View>
     </Animated.View>;
   }

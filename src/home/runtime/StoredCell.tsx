@@ -10,14 +10,14 @@ import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { screenPoint } from '../scene/types';
 import type { Interaction } from './useInteraction';
 
-export function StoredCell({ child, cell, onTake, interaction, offset }: {
-  child: SceneEntity; cell: number; onTake: (id: string) => void;
+export function StoredCell({ child, cell, index, onTake, interaction, offset }: {
+  child: SceneEntity; cell: number; index: number; onTake: (id: string) => void;
   interaction?: Interaction; offset?: SharedValue<{ x: number; y: number }>;
 }) {
   const { externalDown, externalMove, externalUp } = interaction ?? {};
   const start = useSharedValue({ x: 0, y: 0 }), carrying = useSharedValue(false);
-  // Pointer identity is local to this external cell; only one stored cell can own it.
-  const pointer = -400;
+  // Separate pointers let two stored cells be carried at the same time.
+  const pointer = -400 - index;
   const pan = Gesture.Pan().minDistance(8)
     .onBegin(e => { start.set({ x: e.absoluteX, y: e.absoluteY }); })
     .onStart(e => {

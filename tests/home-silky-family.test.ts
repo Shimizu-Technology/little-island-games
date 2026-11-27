@@ -136,3 +136,20 @@ describe('Phase 1 silky Home intent and family saves', () => {
     expect(validHome(savedHistory(restoredHistory(next)))).toBe(true);
   });
 });
+
+// Restore must stay persistable even when the destination has no starter actors.
+it.each(['home', 'kitchen', 'treehouse', 'beach'] as const)('reset %s keeps all six actors valid and permits the next write', roomId => {
+  const state = starterHome();
+  const characters = familySlots.map(slot => ({ slot, anchor: 'floor' as const, pose: 'stand' as const, x: 2 + slot * 3, y: 8 }));
+  state.rooms.home.characters = [];
+  state.rooms[roomId].characters = characters;
+  expect(validHome(state)).toBe(true);
+  const result = homeReducer(state, { type: 'reset', roomId }, {});
+  expect(result.message).toBeUndefined();
+  expect(validHome(result.state)).toBe(true);
+  expect(result.state.rooms[roomId].characters.map(c => c.slot)).toEqual(familySlots);
+  for (const c of result.state.rooms[roomId].characters) {
+    expect(c.x).toBeGreaterThanOrEqual(0); expect(c.x).toBeLessThanOrEqual(19);
+  }
+  expect(validHome(homeReducer(result.state, { type: 'theme', roomId, floor: 'honey' }, {}).state)).toBe(true);
+});

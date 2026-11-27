@@ -36,7 +36,7 @@ import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
-import { screenToRoom, type CameraMatrix } from "./scene/camera";
+import { roomToScreen, screenToRoom, type CameraMatrix } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
 import { familyLooks } from "./family";
@@ -234,7 +234,7 @@ export function HomeScreen({
       const original = renderCharacter ?? (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined);
       return function PaintedCharacter(input) {
         const familyLook = input.familySlot !== undefined && familyLooks[input.familySlot];
-        if (familyLook) {
+        if (familyLook && !renderCharacter) {
           // eslint-disable-next-line @typescript-eslint/no-require-imports -- native rig stays at render boundary.
           const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
           return <HomeCharacter input={input} look={familyLook}/>;
@@ -689,7 +689,7 @@ export function HomeScreen({
     []
   );
   const dispatch = (action: HomeAction) => store.dispatch({ ...action, roomId: room });
-  const moveTo = (id: string, target: SceneEntity | undefined, point: ScreenPoint) => {
+  const moveTo = useCallback((id: string, target: SceneEntity | undefined, point: ScreenPoint) => {
     const c = runtime.current!.camera.get();
     const index = target ? roomIds.indexOf(target.room) : roomAtScreen(point.x, point.y, c, building);
     if (index < 0) return;
@@ -709,7 +709,7 @@ export function HomeScreen({
       }
     );
     if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
-  };
+  }, [building, designing]);
   const sheetHistoryPushed = useRef(false);
   const suppressNextPop = useRef(false);
   const navigatingToMap = useRef(false);
@@ -753,16 +753,30 @@ export function HomeScreen({
   }, [building, clearClosetDraft, floorOf, overview, room, viewport]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
-    if (!designing && !overview && entity?.item && ((storageCapacity(entity.item.item) && !capabilityOf(entity.item.item).moveInPlay) || ["fridge", "stove", "sink-counter", "lamp", "tv", "radio"].includes(entity.item.item))) {
+    const current = live.current;
+    const selectedEntity = current.selected ? current.scene.entities[current.selected] : undefined;
+    const interceptToggle = current.selected && current.selected !== id
+      ? !!selectedEntity?.character || (!!entity?.item && !!storageCapacity(entity.item.item) && !storageOpen(entity.item))
+      : !!entity?.item && !capabilityOf(entity.item.item).moveInPlay;
+    if (!designing && !overview && interceptToggle && entity?.item && capabilityOf(entity.item.item).toggle) {
       live.current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
       if (storageCapacity(entity.item.item)) setStorageId(storageOpen(entity.item) ? undefined : id);
       setSelected(undefined);
       return;
     }
+    if (!designing && !overview && current.selected && current.selected !== id && entity) {
+      const origin = roomOrigin(roomIds.indexOf(entity.room), building);
+      const landing = current.scene.rooms[entity.room].targets.find(t => t.owner === id && (t.kind === 'container' || t.kind === 'surface'));
+      moveTo(current.selected, entity, roomToScreen(landing?.contact ?? entity.contact, runtime.current!.camera.get(), housePoint(origin.x, origin.y)));
+      return;
+    }
+    if (!designing && !overview && entity?.item && capabilityOf(entity.item.item).toggle && capabilityOf(entity.item.item).moveInPlay && !storageCapacity(entity.item.item)) {
+      live.current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
+    }
     if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
     else { setStorageId(undefined); setStorageInspect(undefined); setSelected(id); }
-  }, [designing, goRoom, overview]);
+  }, [building, designing, goRoom, moveTo, overview]);
   const openCloset = useCallback(
     (item?: StyleItem) => {
       runtime.current?.cancelAll();
@@ -1007,7 +1021,13 @@ export function HomeScreen({
       insertAt(current.placing, point.x, point.y);
       return;
     }
-    if (!designing && entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle) {
+    // A doll cannot land on an appliance, but a loose item can use its open storage
+    // or placement surface. Movable toggles still toggle AND select on an empty tap.
+    const selectedEntity = current.selected ? current.scene.entities[current.selected] : undefined;
+    const interceptToggle = current.selected && current.selected !== id
+      ? !!selectedEntity?.character || (!!entity?.item && !!storageCapacity(entity.item.item) && !storageOpen(entity.item))
+      : !!entity?.item && !capabilityOf(entity.item.item).moveInPlay;
+    if (!designing && interceptToggle && entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle) {
       setSelected(undefined);
       current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
       if (storageCapacity(entity.item.item)) setStorageId(storageOpen(entity.item) ? undefined : entity.id);

@@ -268,7 +268,7 @@ export function HomeChrome({
   const nextRoom = roomIds[(currentIndex + 1) % roomIds.length];
   const controlTarget = large ? "child" : "adult";
   const showRedoButton = designing || showRedo;
-  const wrapHeader = (large && width < 720) || (designing && width < 500) || (showRedoButton && width < 430);
+  const wrapHeader = (large && width < 720) || (designing && width < 500) || ((showRedoButton || canUndo) && width < 430);
   const measureKey = `${room}:${width}:${large ? 1 : 0}:${designing ? 1 : 0}:${showRedoButton ? 1 : 0}:${canUndo ? 1 : 0}`;
 
   const actionControls = (

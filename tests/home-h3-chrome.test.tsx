@@ -196,3 +196,15 @@ describe("Phase 3A Toca Boca room chrome", () => {
     await act(async () => tree.unmount());
   });
 });
+
+it.each(['home', 'kitchen', 'treehouse', 'beach'] as const)('390px Play Undo leaves %s title and full targets on separate rows', async room => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(chrome(false, { width: 390, room, canUndo: true })); });
+  const bar = tree.root.findByProps({ testID: 'home-top-bar' });
+  const primary = bar.findByProps({ testID: 'home-room-pill' }).parent!;
+  expect(primary.findAll(n => n.props.testID === 'home-undo-button')).toHaveLength(0);
+  const undo = tree.root.findAll(n => typeof n.type === 'string' && n.props.testID === 'home-undo-button')[0];
+  expect(flat(undo.props.style).minWidth).toBeGreaterThanOrEqual(44);
+  expect(flat(undo.props.style).minHeight).toBeGreaterThanOrEqual(44);
+  await act(async () => tree.unmount());
+});

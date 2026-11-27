@@ -32,7 +32,7 @@ export function StorageTray({ entity, scene, bottom, large = false, inspect = fa
         if (child && interaction?.externalDown && offset) {
           // eslint-disable-next-line @typescript-eslint/no-require-imports -- load gesture handoff only for live drag controls.
           const { StoredCell } = require('./StoredCell') as typeof import('./StoredCell');
-          return <StoredCell key={child.id} child={child} cell={cell} onTake={onTake} interaction={interaction} offset={offset}/>;
+          return <StoredCell key={child.id} child={child} cell={cell} index={n} onTake={onTake} interaction={interaction} offset={offset}/>;
         }
         return child ? <Pressable key={child.id} accessibilityRole="button" accessibilityLabel={`Take out ${itemSpec(child.item!.item).name}`} onPress={() => onTake(child.id)}
           style={{ width: cell, height: cell, borderRadius: 14, backgroundColor: '#E3EBC9', alignItems: 'center', justifyContent: 'center' }}>

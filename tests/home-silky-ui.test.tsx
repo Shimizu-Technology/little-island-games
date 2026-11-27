@@ -8,7 +8,7 @@ import { buildScene } from '../src/home/scene/graph';
 import type { Interaction } from '../src/home/runtime/useInteraction';
 const capture = vi.hoisted(() => ({ pan: {} as Record<string, (...args: any[]) => void> }));
 vi.mock('react-native', () => ({ Pressable: 'Pressable', View: 'View', Text: 'Text' }));
-vi.mock('react-native-svg', () => ({ default: 'Svg', Path: 'Path' }));
+vi.mock('react-native-svg', () => ({ default: 'Svg', Path: 'Path', Circle: 'Circle' }));
 vi.mock('../src/home/art/Items', () => ({ ItemArt: 'ItemArt' }));
 vi.mock('../src/home/art/More', () => ({ MoreItemArt: 'MoreItemArt' }));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (value: unknown) => ({ value, set(v: unknown) { this.value = v; } }), useAnimatedStyle: (fn: () => unknown) => fn() }));
@@ -27,18 +27,23 @@ describe('silky furniture feedback and direct stored-item handoff', () => {
     expect(outline.props.style[0].width).toBeGreaterThan(100);
     expect(outline.props.style[0].borderColor).toBe('#F5BF49');
     expect(tree.root.findAllByProps({ testID: `hover-pose-${target.base}` }).length).toBeGreaterThan(0);
+    const head = tree.root.findByType('Circle' as any).props;
+    expect(head.cx - head.r - head.strokeWidth / 2).toBeGreaterThanOrEqual(5);
+    expect(head.cy - head.r - head.strokeWidth / 2).toBeGreaterThanOrEqual(5);
+    expect(head.cx + head.r + head.strokeWidth / 2).toBeLessThanOrEqual(63);
+    expect(head.cy + head.r + head.strokeWidth / 2).toBeLessThanOrEqual(47);
     await act(async () => tree.unmount());
   });
-  it('stored food starts the same continuous external carry as Friends and still supports tap-to-take', async () => {
+  it.each([0, 1, 7])('stored cell %i starts the same continuous external carry as Friends and still supports tap-to-take', async index => {
     const s = starterHome(); s.rooms.home.instances = [{ ...instance('fridge', 'fridge', 12, 1), storage: { version: 1, open: true } }, { ...instance('food', 'mango', 0, 0), in: 'fridge' }]; s.rooms.home.characters = [];
     const child = buildScene(s).entities['home/item/food'];
     const interaction = { externalDown: vi.fn(), externalMove: vi.fn(), externalUp: vi.fn() };
     const take = vi.fn(); let tree!: ReturnType<typeof create>;
-    await act(async () => { tree = create(<StoredCell child={child} cell={60} onTake={take} interaction={interaction as unknown as Interaction} offset={{ value: { x: 10, y: 100 } } as any}/>); });
+    await act(async () => { tree = create(<StoredCell child={child} cell={60} index={index} onTake={take} interaction={interaction as unknown as Interaction} offset={{ value: { x: 10, y: 100 } } as any}/>); });
     capture.pan.onBegin({ absoluteX: 100, absoluteY: 700 }); capture.pan.onStart({ absoluteX: 104, absoluteY: 680 }); capture.pan.onUpdate({ absoluteX: 180, absoluteY: 500 }); capture.pan.onEnd(); capture.pan.onFinalize({}, true);
-    expect(interaction.externalDown).toHaveBeenCalledWith(-400, child.id, { x: 90, y: 600 }, undefined, { below: 0 });
-    expect(interaction.externalMove).toHaveBeenLastCalledWith(-400, { x: 170, y: 400 });
-    expect(interaction.externalUp).toHaveBeenCalledExactlyOnceWith(-400, false);
+    expect(interaction.externalDown).toHaveBeenCalledWith(-400 - index, child.id, { x: 90, y: 600 }, undefined, { below: 0 });
+    expect(interaction.externalMove).toHaveBeenLastCalledWith(-400 - index, { x: 170, y: 400 });
+    expect(interaction.externalUp).toHaveBeenCalledExactlyOnceWith(-400 - index, false);
     const button = tree.root.findByType('Pressable' as any); await act(async () => button.props.onPress()); expect(take).toHaveBeenCalledWith(child.id);
     await act(async () => tree.unmount());
   });

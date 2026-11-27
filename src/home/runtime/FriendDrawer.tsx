@@ -80,15 +80,17 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
           accessibilityRole="button"
           accessibilityLabel={friendLabel(entity, here)}
           onPress={() => cell.current?.measureInWindow((x, y, w, h) => onBring(entity.id, slot, { x: x + w / 2, y: y + h / 2 }))}
-          style={{ width: size, height: size + 27, borderRadius: 16, alignItems: "center", justifyContent: "flex-end", paddingBottom: 4,
+          style={{ width: size, height: size + 32, borderRadius: 16, alignItems: "center", justifyContent: "flex-end", paddingBottom: 4,
             backgroundColor: place.waiting ? "#F3E2C2" : place.room === here ? "#E3EBC9" : "#EEF0E2", overflow: "hidden" }}
         >
-          <View pointerEvents="none" style={{ width: frame.width * scale, height: frame.height * scale }}>
-            <View style={{ width: frame.width, height: frame.height, transform: [{ scale }], transformOrigin: "left top" }}>
-              <EntityArt entity={standing} reduced renderCharacter={renderCharacter} />
+          <View pointerEvents="none" style={{ height: size, alignItems: "center", justifyContent: "flex-end" }}>
+            <View style={{ width: frame.width * scale, height: frame.height * scale }}>
+              <View style={{ width: frame.width, height: frame.height, transform: [{ scale }], transformOrigin: "left top" }}>
+                <EntityArt entity={standing} reduced renderCharacter={renderCharacter} />
+              </View>
             </View>
           </View>
-          <Text maxFontSizeMultiplier={1} style={{ fontSize: 11, color: "#284F4B", fontWeight: "600" }}>{friendNames[slot]}</Text>
+          <Text maxFontSizeMultiplier={1} numberOfLines={2} style={{ width: "100%", height: 28, lineHeight: 14, textAlign: "center", fontSize: 11, color: "#284F4B", fontWeight: "600" }}>{friendNames[slot]}</Text>
           {held && (
             <View pointerEvents="none" style={{ position: "absolute", left: 3, top: 3, width: 22, height: 22, alignItems: "center", justifyContent: "center",
               borderRadius: 11, backgroundColor: "#FFF8E9" }}>
@@ -112,7 +114,7 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
     </GestureDetector>
   );
 }
-const badge = { position: "absolute" as const, right: 2, bottom: 2, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
+const badge = { position: "absolute" as const, right: 3, top: 3, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
   borderWidth: 1.5, borderColor: "#D7C29A", alignItems: "center" as const, justifyContent: "center" as const };
 /** A friend waiting in the drawer: the same woven basket as the tray, so "put away" always looks the same. */
 function WaitingBasket() {

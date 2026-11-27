@@ -10,7 +10,7 @@ export const BREATH_PERIOD = 3600;
 export const BREATH_SCALE = 0.004;
 const blinks = [[3100, 120], [7900, 150], [13700, 110], [17800, 140]] as const;
 /** Each friend starts at a different place in the cycle, so they never blink together. */
-export const lifeSeed = (slot: number) => [0, 5200, 10400][slot] ?? 0;
+export const lifeSeed = (slot: number) => [0, 5200, 10400, 2600, 7800, 13000][slot] ?? 0;
 export function lifeBlink(clock: number, seed: number): boolean {
   "worklet";
   const phase = (((clock + seed) % LIFE_PERIOD) + LIFE_PERIOD) % LIFE_PERIOD;

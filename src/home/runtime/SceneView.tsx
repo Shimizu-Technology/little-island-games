@@ -1,3 +1,4 @@
+import { familySlots } from "../family";
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { anchorsFor } from "../scene/species";
@@ -546,7 +547,7 @@ export function SceneView({
   React.useEffect(() => {
     if (!living) return;
     // A timer that wakes only at blink edges and breath steps, not a per-frame animation.
-    const start = Date.now(), seeds = [0, 1, 2].map(lifeSeed);
+    const start = Date.now(), seeds = familySlots.map(lifeSeed);
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       const clock = Date.now() - start;
