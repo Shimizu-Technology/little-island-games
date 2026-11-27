@@ -57,4 +57,8 @@ describe('compact painted scene acceptance', () => {
    }
   }
  });
+ it('keeps generous landmark art width (>= 80pt) on iPhone portrait 390×844 and its HubScreen scene 390×654', () => {
+  expect(mapLayout(390, 844).artWidth).toBeGreaterThanOrEqual(80);
+  expect(mapLayout(390, 654).artWidth).toBeGreaterThanOrEqual(80);
+ });
 });

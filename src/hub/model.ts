@@ -44,35 +44,64 @@ export function mapLayout(width: number, height: number, fontScale = 1) {
   const scale = Math.max(1, fontScale);
   const labelHeight = Math.round(
     Math.max(
-      48,
+      45,
       scale >= 1.25 ? Math.max(62, 28 * Math.min(scale, 2.5)) : 26 * Math.min(scale, 2.5),
     ),
   );
-  const edgePad = 6, topPad = 6, bottomPad = 8, gapX = width < 260 ? 6 : 10, gapY = 10;
+  const edgePad = 6, topPad = 6, bottomPad = 8, gapX = width < 260 ? 6 : 10, gapY = wide ? 10 : 4;
   const imageWidth = wide ? 1280 : 720, imageHeight = wide ? 720 : 1280;
   const imageScale = Math.max(width / imageWidth, height / imageHeight);
+  // Calibrated to the 6 golden sand clearings of the stylized Guam portrait & landscape maps.
   const paintedPoints: Record<PlaceId, readonly [number, number]> = wide ? {
-    school: [.30, .36], library: [.505, .36], cove: [.715, .36],
-    home: [.30, .65], arcade: [.505, .65], hall: [.715, .65],
+    school: [.30, .36], library: [.505, .36], cove: [.71, .36],
+    home: [.30, .64], arcade: [.505, .64], hall: [.71, .64],
   } : {
-    school: [.355, .31], library: [.66, .31], arcade: [.355, .50],
-    hall: [.66, .50], home: [.355, .69], cove: [.66, .69],
+    school: [.388, .336], library: [.662, .336], arcade: [.355, .505],
+    hall: [.645, .505], home: [.360, .674], cove: [.645, .674],
   };
+  const yOffset = wide ? .055 : .049;
   const positioned = places.map(item => {
     const point = paintedPoints[item.id];
     const x = Math.max(28 / width, Math.min(1 - 28 / width, (.5 * width + (point[0] - .5) * imageWidth * imageScale) / width));
-    const y = (.5 * height + (point[1] - .5) * imageHeight * imageScale) / height + .07;
+    const y = (.5 * height + (point[1] - .5) * imageHeight * imageScale) / height + yOffset;
     return { ...item, x, y, baseline: Math.min(y * height, height - labelHeight - bottomPad) };
   });
+  // On compact large-text viewports, ensure the 3 portrait rows keep minimum separation so labels and art never overlap.
+  if (!wide) {
+    const rawRows = [...new Set(positioned.map(p => p.baseline))].sort((a, b) => a - b);
+    if (rawRows.length === 3) {
+      const minStep = 44 * ART_ASPECT + labelHeight + gapY;
+      let [r0, r1, r2] = rawRows;
+      r0 = Math.min(r0, r1 - minStep);
+      r2 = Math.max(r2, r1 + minStep);
+      const maxR2 = height - labelHeight - bottomPad;
+      if (r2 > maxR2) {
+        r2 = maxR2;
+        r1 = Math.min(r1, r2 - minStep);
+        r0 = Math.min(r0, r1 - minStep);
+      }
+      const minR0 = topPad + 44 * ART_ASPECT;
+      if (r0 < minR0) {
+        r0 = minR0;
+        r1 = Math.max(r1, r0 + minStep);
+        r2 = Math.max(r2, r1 + minStep);
+      }
+      const remap = new Map([[rawRows[0], r0], [rawRows[1], r1], [rawRows[2], r2]]);
+      for (const p of positioned) p.baseline = remap.get(p.baseline) ?? p.baseline;
+    }
+  }
   const rowBaselines = [...new Set(positioned.map(p => p.baseline))].sort((a, b) => a - b);
   const minEdgeX = Math.min(...positioned.map(p => Math.min(p.x, 1 - p.x))) * width;
-  const minColDx = (wide ? .205 * imageWidth : .305 * imageWidth) * imageScale;
+  const minColDx = (wide ? .205 * imageWidth : .274 * imageWidth) * imageScale;
   const maxArtWidthFromWidth = Math.min(imageWidth * imageScale * (wide ? .17 : .26), 2 * (minEdgeX - edgePad), minColDx - gapX, MAX_ART_WIDTH);
   const verticalLimits = [rowBaselines[0] - topPad];
   for (let i = 1; i < rowBaselines.length; i++) verticalLimits.push(rowBaselines[i] - rowBaselines[i - 1] - labelHeight - gapY);
-  const maxArtHeight = Math.max(44, Math.min(...verticalLimits));
-  // Reserve a 30pt central corridor for the resting guide, independently of row height.
-  const horizontalBudget = wide ? Math.min(maxArtWidthFromWidth, minColDx - Math.min(96, width * .24, height * .20) * .607 - 8) : Math.min(maxArtWidthFromWidth, ...positioned.map(p => 2 * (Math.abs(p.x * width - width / 2) - 15)));
+  const maxArtHeight = Math.max(44 * ART_ASPECT, Math.min(...verticalLimits));
+  // Reserve a central corridor for the resting guide along the rows it shares (middle/lower rows on portrait).
+  const guideRows = wide ? positioned : positioned.filter(p => p.id !== 'school' && p.id !== 'library');
+  const horizontalBudget = wide
+    ? Math.min(maxArtWidthFromWidth, minColDx - Math.min(96, width * .24, height * .20) * .607 - 8)
+    : Math.min(maxArtWidthFromWidth, ...guideRows.map(p => 2 * (Math.abs(p.x * width - width / 2) - 13)));
   const labelWidth = Math.max(44, horizontalBudget);
   const labelFontSize = width < 360 ? 12 : 14;
   const artWidth = Math.max(44, Math.min(horizontalBudget, maxArtHeight / ART_ASPECT));
