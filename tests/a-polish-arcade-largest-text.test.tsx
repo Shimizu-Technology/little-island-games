@@ -10,6 +10,7 @@ import { createCrab, crabLevel, crabLevels } from '../src/arcade/games/crab-cros
 const viewport=vi.hoisted(()=>({width:393,height:852,fontScale:3.12}));
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{}}}));
+vi.mock('../src/ui/fonts',()=>({useNunitoLoaded:()=>false}));
 vi.mock('react-native',()=>({View:'View',Image:'Image',TextInput:'TextInput',ScrollView:'ScrollView',Switch:'Switch',Platform:{OS:'ios',select:(o:Record<string,unknown>)=>o.ios},useWindowDimensions:()=>viewport,AppState:{addEventListener:()=>({remove(){}})}}));
 vi.mock('react-native-safe-area-context',()=>({useSafeAreaInsets:()=>({top:59,bottom:34,left:0,right:0})}));
 vi.mock('react-native-svg',()=>({default:'Svg',Rect:'Rect',Path:'Path',Circle:'Circle'}));

@@ -58,6 +58,7 @@ const played = vi.hoisted(() => [] as string[]);
 /** While on, each game's producer hands its board an edited copy of the real record, the way REVIEW-4's patch did. */
 const swap = vi.hoisted(() => ({ on: false, word: null as string | null, growth: false, practice: false }));
 const SUNSET = "A sunset is red.";
+vi.mock("../src/ui/fonts", () => ({ useNunitoLoaded: () => false }));
 vi.mock("../src/state/storage", () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async () => {} } }));
 vi.mock("react-native", () => {
   class Value { v: number; constructor(v: number) { this.v = v; } setValue(v: number) { this.v = v; } interpolate() { return this; } }
