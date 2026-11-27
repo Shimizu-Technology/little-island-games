@@ -225,17 +225,19 @@ function VectorRoom({ room, theme, badges = [], live = false }: { room: Room; th
   </Svg>;
 }
 
-/** 960×672 and 800×560 share an exact aspect ratio: the painted baseboard stays at y=352. */
-export function StageRoom({ room, theme, badges = [], onBadgePress, live = false, atmosphere = defaultAtmosphere, reduced = false, weatherActive = false }: {
-  room: Room; theme: HomeState['theme']; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; live?: boolean; atmosphere?: Atmosphere; reduced?: boolean; weatherActive?: boolean;
-}) {
-  const defaults = roomDefaultTheme[room];
+type StageProps = { room: Room; theme: HomeState['theme']; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; live?: boolean };
+const EMPTY_BADGES: readonly BadgeId[] = [];
+const RoomPainting = React.memo(function RoomPainting({ room, theme, badges = EMPTY_BADGES, live = false }: StageProps) {
   const [paintedRoom, setPaintedRoom] = React.useState<Room>();
-  return <View style={{ width: '100%', height: '100%' }} accessible={false}>
+  return <>
     {paintedRoom !== room && room !== "tumon-beach" && room !== "chamorro-village" && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
     <Image testID={`painted-room-${room}`} source={illustratedRooms[room]()} onLoad={() => setPaintedRoom(room)} onError={() => setPaintedRoom(undefined)} resizeMode="cover" fadeDuration={0}
       accessible={false} style={{ position: 'absolute', width: '100%', height: '100%' }}/>
-    <AtmosphereLighting room={room} atmosphere={atmosphere} reduced={reduced} active={weatherActive}/>
+  </>;
+});
+const RoomFinish = React.memo(function RoomFinish({ room, theme, badges = EMPTY_BADGES, onBadgePress }: StageProps) {
+  const defaults = roomDefaultTheme[room];
+  return (
     <Svg width="100%" height="100%" viewBox="0 0 800 560" style={{ position: 'absolute' }} accessible={false}>
       {theme.wallpaper !== defaults.wallpaper && <Rect data-theme="wall" width={800} height={352} fill={wallColors[theme.wallpaper]} opacity={.28}/>}
       {theme.floor !== defaults.floor && <Rect data-theme="floor" y={352} width={800} height={208} fill={floorColors[theme.floor]} opacity={.3}/>}
@@ -251,5 +253,16 @@ export function StageRoom({ room, theme, badges = [], onBadgePress, live = false
         }))}
       </G>}
     </Svg>
+  );
+});
+
+/** 960×672 and 800×560 share an exact aspect ratio: the painted baseboard stays at y=352. */
+export function StageRoom({ room, theme, badges = EMPTY_BADGES, onBadgePress, live = false, atmosphere = defaultAtmosphere, reduced = false, weatherActive = false }: {
+  room: Room; theme: HomeState['theme']; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; live?: boolean; atmosphere?: Atmosphere; reduced?: boolean; weatherActive?: boolean;
+}) {
+  return <View style={{ width: '100%', height: '100%' }} accessible={false}>
+    <RoomPainting room={room} theme={theme} badges={badges} live={live}/>
+    <AtmosphereLighting room={room} atmosphere={atmosphere} reduced={reduced} active={weatherActive}/>
+    <RoomFinish room={room} theme={theme} badges={badges} onBadgePress={onBadgePress}/>
   </View>;
 }

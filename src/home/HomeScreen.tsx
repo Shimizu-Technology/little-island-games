@@ -139,6 +139,12 @@ function heroRoomInState(state: HomeStateV2): RoomId {
   return roomIds.find((id) => state.rooms[id].characters.some((c) => c.slot === 0)) ?? state.current;
 }
 
+function useSceneEvent<T extends (...args: never[]) => unknown>(callback: T): T {
+  const latest = useRef(callback);
+  useLayoutEffect(() => { latest.current = callback; });
+  return useCallback((...args: Parameters<T>) => latest.current(...args), []) as T;
+}
+
 const PlacesSheet = React.lazy(() => import("./PlacesSheet").then(module => ({ default: module.PlacesSheet })));
 
 export const REDO_VISIBLE_MS = 10000;
@@ -239,9 +245,10 @@ export function HomeScreen({
     }
   }, [activeSheet, closetInitialItem, closet]);
   const effectiveLook = previewLook ?? closet?.look;
+  const renderClosetCharacter = closet?.renderCharacter;
   const characterRenderer = useMemo<CharacterRender | undefined>(
     () => {
-      const original = renderCharacter ?? (effectiveLook && closet?.renderCharacter ? closet.renderCharacter(effectiveLook) : undefined);
+      const original = renderCharacter ?? (effectiveLook && renderClosetCharacter ? renderClosetCharacter(effectiveLook) : undefined);
       return function PaintedCharacter(input) {
         const familyLook = input.familySlot !== undefined && familyLooks[input.familySlot];
         if (familyLook && !renderCharacter) {
@@ -265,7 +272,7 @@ export function HomeScreen({
         </View>;
       };
     },
-    [renderCharacter, effectiveLook, closet]
+    [renderCharacter, effectiveLook, renderClosetCharacter]
   );
   const hasNewCloset = useMemo(
     () => !!closet?.unseen.some((id) => styleCatalog.some((item) => item.id === id)),
@@ -1378,6 +1385,9 @@ export function HomeScreen({
     },
     []
   );
+  const selectInScene = useSceneEvent(choose);
+  const showBadgesInScene = useSceneEvent(openBadges);
+  const sceneState = useMemo(() => ({ ...store.state, current: room }), [store.state, room]);
   function catalogSubject(item: ItemId, x: number, y: number, destination?: RoomId) {
     if (!owns(item, ownership)) { store.setMessage("This showpiece is in the Locker."); return; }
     const current = live.current.store.getState(), dest = destination ?? live.current.room;
@@ -1517,9 +1527,9 @@ export function HomeScreen({
       <View pointerEvents="box-none" style={{ flex: 1, flexDirection: vertical ? "row" : "column", zIndex: 31 }}>
         <View ref={canvas} onLayout={measure} style={{ width: viewport.width, height: viewport.height }}>
           <SceneView
-            state={{ ...store.state, current: room }}
+            state={sceneState}
             badges={ownership.badges}
-            onBadges={() => openBadges()}
+            onBadges={showBadgesInScene}
             scene={scene}
             building={building}
             viewport={viewport}
@@ -1541,7 +1551,7 @@ export function HomeScreen({
             poke={delight.poke}
             onNode={onNode}
             designing={designing}
-            onSelect={choose}
+            onSelect={selectInScene}
             onMove={moveAccessible}
             stress={stress}
           />
@@ -1713,24 +1723,23 @@ export function HomeScreen({
         }}
         overview={overview}
         onOverview={() => {
-          interaction.cancelAll();
-          if (activeSheet === "closet") clearClosetDraft();
-          setSelected(undefined);
-          setMore(false);
-          setFriends(false);
           const next = !overview;
-          setOverview(next);
           interaction.animateCamera(
-            next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
+            next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building),
+            false, false, true
           );
+          React.startTransition(() => {
+            if (activeSheet === "closet") clearClosetDraft();
+            setSelected(undefined);
+            setMore(false);
+            setFriends(false);
+            setOverview(next);
+          });
         }}
         onFind={find}
         onZoom={(ratio) => {
-          interaction.cancelAll();
-          interaction.animateCamera(
-            zoomCamera(interaction.camera.get(), ratio, viewport.width / 2, viewport.height / 2, viewport, building)
-          );
-          if (ratio > 1) setOverview(false);
+          interaction.zoomBy(ratio);
+          if (ratio > 1 && overview) React.startTransition(() => setOverview(false));
         }}
         onBring={bring}
         large={large}

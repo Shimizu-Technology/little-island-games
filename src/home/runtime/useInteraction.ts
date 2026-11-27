@@ -1431,11 +1431,14 @@ export function useInteraction({
       idleFrames.set(0);
     })();
   }, [frameCallback, frames, frameId, framesOn, idleFrames]);
-  const cancelAll = () => {
+  /** Cancel input and camera motion atomically on the UI thread. Never read a shared value on JS. */
+  const cancelInput = () => {
+    "worklet";
+    const held = slots.value.some(slot => !!slot.id);
     cameraTween.set(null);
     veil.set(0);
     revealPan.set(null);
-    epoch.set(epoch.get() + 1);
+    epoch.set(epoch.value + 1);
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
     queuedInput.set([]);
@@ -1445,9 +1448,9 @@ export function useInteraction({
     roomHover.set(null);
     restingFlags.set(emptyRestingFlags());
     restingMotion.set(emptyRestingMotion());
-    onClear(0);
-    onClear(1);
+    if (held) { runOnJS(onClear)(0); runOnJS(onClear)(1); }
   };
+  const cancelAll = () => { runOnUI(cancelInput)(); };
   /** `drawer`: carried out of the friends drawer; `below` puts the contact that far under the finger, in room units. */
   const externalDown = (pointer: number, id: string, point: ScreenPoint, subject?: SceneEntity, drawer?: { below: number }) => {
     "worklet";
@@ -1557,9 +1560,10 @@ export function useInteraction({
     return true;
   };
   /** HM-12: ease in 180 ms, or veil another floor. Immediate layout resets atomically cancel an earlier tween. */
-  const animateCamera = (to: CameraMatrix, door = false, immediate = false) => {
+  const animateCamera = (to: CameraMatrix, door = false, immediate = false, cancel = false) => {
     runOnUI(() => {
       "worklet";
+      if (cancel) cancelInput();
       revealPan.set(null);
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
       if (reduced || immediate) {
@@ -1571,6 +1575,19 @@ export function useInteraction({
       cameraTween.set({ from: camera.value, to, since: eventTime(), duration: door ? DOOR_MS : CAMERA_EASE_MS, door });
       wakeFrames();
     })();
+  };
+  /** Each tap composes from the pending target, but glides from the currently presented camera. */
+  const zoomBy = (ratio: number) => {
+    runOnUI((factor: number) => {
+      "worklet";
+      if (!Number.isFinite(factor) || factor <= 0) return;
+      const target = zoomCamera(cameraTween.value?.to ?? camera.value, factor,
+        viewport.width / 2, viewport.height / 2, viewport, building);
+      cancelInput();
+      if (reduced) { camera.set(target); return; }
+      cameraTween.set({ from: camera.value, to: target, since: eventTime(), duration: CAMERA_EASE_MS, door: false });
+      wakeFrames();
+    })(ratio);
   };
   /** HR-02: one quiet wiggle on `id`. The frame callback runs only for its 180 ms. */
   const showHint = (id: string) => {
@@ -1645,6 +1662,7 @@ export function useInteraction({
     clearCue,
     watchers,
     animateCamera,
+    zoomBy,
     veil,
     dropZones,
     roomHover,

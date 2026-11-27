@@ -12,6 +12,7 @@ import { defaultLook } from '../src/islander/look';
 import { characterPoint, itemPoint, itemSize, seatAnchor } from '../src/home/geometry';
 import { instance, type RoomState } from '../src/home/model';
 import { SeatFront } from '../src/home/SeatFront';
+vi.mock('../src/home/art/AtmosphereLighting', () => ({ AtmosphereLighting: () => null }));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
 vi.mock('react-native-svg', () => {
   const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Image: 'image', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text', RadialGradient:'radialGradient',LinearGradient: 'linearGradient', Stop: 'stop' };

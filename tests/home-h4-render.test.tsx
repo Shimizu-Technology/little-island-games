@@ -85,7 +85,7 @@ describe('H4 resting friends: moods, the food notice and lamp shadows', () => {
     const pip = Object.values(scene.entities).find((e) => e.character?.slot === 1)!;
     const node = () => tree.root.findAll((n) => n.props.testID === 'character-1' && typeof n.type === 'string')[0];
     expect(node().findAll((n) => String(n.type) === 'EntityArt').some((n) => n.props.face === 'happy')).toBe(false);
-    await act(async () => tree.update(<SceneView {...(tree.root.findByType(SceneView).props as any)} moods={{ [pip.id]: 'happy' }} />));
+    await act(async () => tree.update(<SceneView {...(tree.root.findByType(SceneView.type).props as any)} moods={{ [pip.id]: 'happy' }} />));
     expect(node().findAll((n) => String(n.type) === 'EntityArt').filter((n) => n.props.face === 'happy').length).toBeGreaterThanOrEqual(1);
     await act(async () => tree.unmount());
   });

@@ -46,7 +46,7 @@ function canonical(v: unknown): unknown {
   return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical((v as Record<string, unknown>)[k])]));
 }
 const roomAt = (state: HomeStateV2, id: RoomId): RoomState => state.rooms[id] ?? (isGuamPlace(id) ? defaultGuamRoom(id) : state.rooms[id]);
-const same = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+const same = (a: unknown, b: unknown) => a === b || JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
 function listPatch<T>(before: readonly T[], after: readonly T[], key: (v: T) => string | number) {
   const afterKeys = new Map(after.map((v) => [key(v), v]));
