@@ -1,21 +1,22 @@
+import { skyPalette, defaultAtmosphere, type Atmosphere } from "../atmosphere";
 import React from "react";
 import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { StageRoom } from "./Stage";
 import type { BadgeId } from "../../badges/engine";
 import type { HomeState } from "../model";
-export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0", "math-lab": "#B6CABE", library: "#E7CFAD", "night-sky": "#B5BDD3", "arcade-neon": "#C9C5DA" };
-export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA", "island-breeze": "#D9C79B", "game-room": "#BCCBC0" };
-export function RoomArt({theme, badges, onBadgePress, live}: {theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; reduced?: boolean; live?: boolean}) {
-  return <StageRoom room="home" theme={theme} badges={badges} onBadgePress={onBadgePress} live={live}/>;
+export { wallColors, floorColors } from "./roomPalette";
+export function RoomArt({theme, badges, onBadgePress, live, atmosphere, reduced, weatherActive}: {theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; reduced?: boolean; live?: boolean; atmosphere?: Atmosphere; weatherActive?: boolean}) {
+  return <StageRoom room="home" theme={theme} badges={badges} onBadgePress={onBadgePress} live={live} atmosphere={atmosphere} reduced={reduced} weatherActive={weatherActive}/>;
 }
 
 /** Quiet outdoor layers extend the stage below its floor in tall layouts. */
-export function SkyArt() {
+export function SkyArt({ time = defaultAtmosphere.timeOfDay }: { time?: Atmosphere["timeOfDay"] }) {
+  const palette = skyPalette[time];
   const id = "cottage-sky-" + React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return <Svg width="100%" height="100%" viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice" accessible={false}>
     <Defs>
       <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-        <Stop offset="0" stopColor="#77C8D9"/><Stop offset=".65" stopColor="#D4EEE0"/><Stop offset="1" stopColor="#FFE6AF"/>
+        <Stop offset="0" stopColor={palette[0]}/><Stop offset=".65" stopColor={palette[1]}/><Stop offset="1" stopColor={palette[2]}/>
       </LinearGradient>
       <RadialGradient id={id + "-halo"}>
         <Stop offset="0" stopColor="#FFF4B7"/><Stop offset="1" stopColor="#FFF4B7" stopOpacity={0}/>
@@ -24,7 +25,7 @@ export function SkyArt() {
     <Rect width={800} height={1200} fill={`url(#${id})`}/>
     <Circle cx={650} cy={190} r={155} fill={`url(#${id}-halo)`}/>
     <Path d="M0 0H800V690Q420 650 0 720Z" fill="#D8EEDE" opacity={.34}/>
-    <Circle cx={650} cy={190} r={56} fill="#FFF0BA"/>
+    {time === 'night' ? <G fill="#FFF1CA">{Array.from({length: 36}, (_, n) => <Circle key={n} cx={30+n*107%740} cy={40+n*79%780} r={n%3 ? 1.5 : 2.5}/>)}<Path d="M659 143a48 48 0 1 0 33 77a48 48 0 0 1-33-77Z"/></G> : <Circle cx={650} cy={190} r={56} fill="#FFF0BA"/>}
     <Circle cx={650} cy={190} r={78} fill="#FFF0BA" opacity={.13}/>
     <G fill="#F7F6E9" opacity={0.85}>
       <Path d="M50 185Q38 158 70 151Q75 116 111 131Q142 115 157 151Q189 151 187 177Q135 194 50 185Z"/>

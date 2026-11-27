@@ -1,3 +1,4 @@
+import { compactAtmosphere } from "../home/atmosphere";
 import { migrateNumberRecords, validNumberRecords } from "./numberRecords";
 import { emptyChallenge, validChallengeProgress, type ChallengeProgress } from './challenge';
 import { emptyCove } from './covePeople';
@@ -50,6 +51,18 @@ export function projectProfile(save: Save, learning: Learners = save.learning ??
 }
 /** No duplicate active round payload in storage/backups, leaving the same 2 MB envelope. */
 export function encodeSave(save: Save): string {
+  // Imported explicit day/clear values also serialize to the original zero-byte default.
+  const people = save.personalization?.people;
+  if (people && Object.values(people).some(p => p.home.version !== 1 && p.home.atmosphere && !compactAtmosphere(p.home.atmosphere))) {
+    save = { ...save, personalization: { ...save.personalization!, people: Object.fromEntries(Object.entries(people).map(([id, person]) => {
+      if (person.home.version === 1 || !person.home.atmosphere || compactAtmosphere(person.home.atmosphere)) return [id, person];
+      const { atmosphere: _day, ...home } = person.home; void _day;
+      return [id, { ...person, home }];
+    })) } };
+  }
+  if (save.settings.unlockSeasonalPacks === false) {
+    const { unlockSeasonalPacks: _off, ...settings } = save.settings; void _off; save = { ...save, settings };
+  }
   if (!save.profiles) return JSON.stringify(save);
   const next: Save = { ...syncProfile(save) };
   for (const field of fields) delete next[field];

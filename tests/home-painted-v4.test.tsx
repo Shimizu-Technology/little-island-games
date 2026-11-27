@@ -9,6 +9,7 @@ import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { cozyFocusCamera, cozyRoomScale, fitCamera, zoomCamera } from '../src/home/runtime/CameraController';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { tapExpression } from '../src/home/runtime/delight';
+vi.mock('../src/home/runtime/WeatherOverlay', () => ({ WeatherOverlay: () => null }));
 vi.mock('react-native', () => ({View:'div', Image:'image'}));
 vi.mock('react-native-svg', () => Object.fromEntries(['G','Circle','Ellipse','Rect','Path','Defs','ClipPath','Pattern','LinearGradient','Stop'].map(k => [k,k.toLowerCase()]).concat([['default','svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({BadgeGlyph:()=>null}));
@@ -16,12 +17,12 @@ const hashes = {"assets/home/rooms/beach.webp": "dc96bd11f33a803380f319958a2d894
 describe('painted Home integration', () => {
   it('ships all twenty verified images without re-encoding and lazy Metro-safe asset thunks', () => {
     expect(Object.keys(illustratedRooms)).toHaveLength(4);
-    expect(Object.keys(illustratedProps)).toHaveLength(16);
+    expect(Object.keys(illustratedProps)).toHaveLength(22);
     for (const [path, expected] of Object.entries(hashes)) {
       expect(createHash('sha256').update(readFileSync(path)).digest('hex')).toBe(expected);
     }
     for (const [id, source] of Object.entries(illustratedRooms)) expect(source()).toBe(`assets/home/rooms/${id}.webp`);
-    for (const [id, source] of Object.entries(illustratedProps)) expect(source()).toBe(`assets/home/props/${id}.webp`);
+    for (const [id, source] of Object.entries(illustratedProps)) expect(source()).toBe(`${['christmas-tree','gift-box','hot-cocoa','pumpkin-pie','fiesta-platter','autumn-wreath'].includes(id) ? 'assets/art/home/seasonal' : 'assets/home/props'}/${id}.webp`);
   });
   it('keeps a first-frame vector fallback and changes only non-default wall/floor washes', () => {
     for (const room of ['home','kitchen','treehouse','beach'] as const) {

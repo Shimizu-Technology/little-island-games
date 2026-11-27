@@ -1,3 +1,6 @@
+import { HomeMotionContext } from "./HomeMotionContext";
+import { defaultAtmosphere } from "../atmosphere";
+import { WeatherOverlay } from "./WeatherOverlay";
 import { familySlots } from "../family";
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
@@ -562,7 +565,7 @@ export function SceneView({
     transform: [{ translateX: camera.value.tx }, { translateY: camera.value.ty }, { scale: camera.value.a }],
   }));
   return (
-    <GestureDetector gesture={interaction.gesture} touchAction="none">
+    <HomeMotionContext.Provider value={!!liveRoom}><GestureDetector gesture={interaction.gesture} touchAction="none">
       <View
         testID={Platform.OS === "web" ? "house-viewport" : undefined}
         accessible={false}
@@ -573,7 +576,7 @@ export function SceneView({
             carried onto a room button or the Friends button stays visible above the bar. */}
         <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height,
           overflow: "hidden", backgroundColor: "#BEE4DD" }}>
-        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt /></View>
+        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt time={(state.atmosphere ?? defaultAtmosphere).timeOfDay} /></View>
         <Animated.View
           testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}
@@ -640,9 +643,9 @@ export function SceneView({
               >
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ width: 800, height: 560 }}>
                   {roomId === "home" ? (
-                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} live />
+                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} live atmosphere={state.atmosphere} weatherActive={liveRoom === roomId} />
                   ) : (
-                    <RoomShellArt room={roomId} theme={room.theme} live />
+                    <RoomShellArt room={roomId} theme={room.theme} live atmosphere={state.atmosphere} reduced={reduced} weatherActive={liveRoom === roomId} />
                   )}
                 </View>
                 {/* Painted room set dressing stays registered to the room; movable props are separate entities. */}
@@ -691,6 +694,9 @@ export function SceneView({
           </View>
           {debugLayer}
         </Animated.View>
+        {/* Eight gentle foreground accents remain visible when rooms cover the exterior sky.
+            Four panes/rooms × four window particles + eight here = 24 across the house. */}
+        <WeatherOverlay weather={(state.atmosphere ?? defaultAtmosphere).weather} width={viewport.width} height={viewport.height} reduced={reduced} active={!!liveRoom} count={8} foreground/>
         </View>
         <Animated.View accessible={false} importantForAccessibility="no" pointerEvents="none"
           style={[{ position: "absolute", width: building.width, height: building.height }, cameraStyle]}>
@@ -706,7 +712,7 @@ export function SceneView({
           />
         </Animated.View>
       </View>
-    </GestureDetector>
+    </GestureDetector></HomeMotionContext.Provider>
   );
 }
 /** Render-only stress fixture: never bypasses production save identity/capacity limits. */

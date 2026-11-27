@@ -17,9 +17,10 @@ import { cozyRoomScale } from '../src/home/runtime/CameraController';
 import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
+vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
 const harness = vi.hoisted(() => ({ viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, proposals: [] as any[], slots: [{}, {}] as any[] }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
+vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/home/art/CrabFriend', () => ({ CrabFriend: 'CrabFriend' }));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
 vi.mock('../src/home/runtime/homeSound', () => ({
@@ -42,7 +43,7 @@ vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options:
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
-vi.mock('../src/home/HomeClosetSheet', () => ({ HomeClosetSheet: () => null }));
+vi.mock('../src/home/HomeClosetSheet', () => ({ HomeClosetSheet: () => null, closetSheetHeightRatio: () => .5 }));
 vi.mock('../src/home/HomeBadgesSheet', () => ({ HomeBadgesSheet: () => null }));
 vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
@@ -676,4 +677,19 @@ it('custom rendering owns all six slots including the family looks', async () =>
     harness.scene.renderCharacter(input);
     expect(renderCharacter).toHaveBeenLastCalledWith(input);
   }
+});
+
+
+it.each(['closet', 'badges'] as const)('Sky replaces the %s sheet and suppresses quiet activity until closed', async sheet => {
+  await open(labFixtures.delight());
+  await act(async () => sheet === 'closet' ? harness.chrome.onCloset() : harness.chrome.onBadges());
+  expect(harness.chrome[sheet === 'closet' ? 'closetOpen' : 'badgesOpen']).toBe(true);
+  await act(async () => harness.chrome.onAtmosphere());
+  expect(harness.chrome.atmosphereOpen).toBe(true);
+  expect(harness.chrome.closetOpen).toBe(false); expect(harness.chrome.badgesOpen).toBe(false);
+  expect(root.root.findAllByProps({ testID: 'storage-tray' })).toHaveLength(0);
+  await act(async () => { vi.advanceTimersByTime(90000); });
+  expect(harness.scene.moods).toEqual({});
+  await act(async () => harness.chrome.onAtmosphere());
+  expect(harness.chrome.atmosphereOpen).toBe(false);
 });

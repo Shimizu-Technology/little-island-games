@@ -48,6 +48,7 @@ vi.mock("../src/ui/icons", () => {
       "DotsThree",
       "PencilSimple",
       "Star",
+      "Sun",
       "UsersThree",
       "X",
     ].map((n) => [n, glyph(n)])
@@ -102,7 +103,7 @@ describe("Phase 3A Toca Boca room chrome", () => {
     });
     const bar = tree.root.findByProps({ testID: "home-bottom-bar" });
     const dockButtons = bar.findAll((n) => (n.type as unknown) === "Pressable");
-    expect(dockButtons.map((n) => n.props.accessibilityLabel)).toEqual(["Closet", "Badges", "Decorate"]);
+    expect(dockButtons.map((n) => n.props.accessibilityLabel)).toEqual(["Sky & Weather", "Closet", "Badges", "Decorate"]);
     for (const button of dockButtons) {
       const style = flat(button.props.style);
       expect(style.minWidth ?? style.width).toBeGreaterThanOrEqual(64);
@@ -206,5 +207,18 @@ it.each(['home', 'kitchen', 'treehouse', 'beach'] as const)('390px Play Undo lea
   const undo = tree.root.findAll(n => typeof n.type === 'string' && n.props.testID === 'home-undo-button')[0];
   expect(flat(undo.props.style).minWidth).toBeGreaterThanOrEqual(44);
   expect(flat(undo.props.style).minHeight).toBeGreaterThanOrEqual(44);
+  await act(async () => tree.unmount());
+});
+
+
+it.each([360, 375, 390])('fits four dock targets within a 340 pt budget on a %s pt viewport and selects Sky', async width => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(chrome(false, { width, atmosphereOpen: true })); });
+  const bar = tree.root.findByProps({ testID: 'home-bottom-bar' });
+  const buttons = bar.findAll(n => (n.type as unknown) === 'Pressable');
+  const row = flat(bar.find(n => (n.type as unknown) === 'View' && flat(n.props.style).gap === 8 && flat(n.props.style).flexDirection === 'row').props.style);
+  const required = buttons.reduce((total, b) => total + flat(b.props.style).minWidth, 0) + row.gap * (buttons.length - 1) + 2 * row.paddingHorizontal;
+  expect(buttons).toHaveLength(4); expect(required).toBeLessThanOrEqual(340); expect(required).toBeLessThan(width);
+  expect(buttons[0].props.accessibilityState.selected).toBe(true);
   await act(async () => tree.unmount());
 });

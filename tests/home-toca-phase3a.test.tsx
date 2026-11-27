@@ -199,6 +199,7 @@ vi.mock("../src/ui/icons", () => {
       "PencilSimple",
       "Smiley",
       "Star",
+      "Sun",
       "Sunglasses",
       "TShirt",
       "UsersThree",

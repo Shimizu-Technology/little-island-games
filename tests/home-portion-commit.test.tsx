@@ -9,6 +9,7 @@ import { withPortions } from '../src/home/runtime/portions';
 import { resolve } from '../src/home/scene/proposal';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { roomIds } from '../src/home/catalogMore';
+vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
 const harness = vi.hoisted(() => ({ options: {} as any, finish: vi.fn() }));
 vi.mock('../src/home/runtime/SetPieces',()=>({SetPieces:()=>null,pieceAt:()=>undefined,pieceLength:{},pieceSound:{}}));
 vi.mock('expo-router', () => ({ router: {}, useFocusEffect: () => {} }));

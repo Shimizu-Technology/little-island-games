@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, View } from 'react-native';
 import { illustratedProps, type IllustratedProp } from './illustrated';
-import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
+import Svg, { Image as SvgImage, Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 import { material, shade } from './Tint';
 import type { TintId } from '../catalogMore';
 import type { HoldableId } from './living';
@@ -18,6 +18,10 @@ function Grill({ d }: { d: string }) {
 
 /** SVG content in a 24×24 box. Pass directly to Islander.held, without a View. */
 export function HandProp({ id, state = {}, tint = 'original', longStraw = false }: { longStraw?: boolean; id: HoldableId; state?: ItemVisualState; tint?: TintId }) {
+  if (['pumpkin-pie', 'fiesta-platter', 'hot-cocoa', 'gift-box'].includes(id)) return <G>
+    <SvgImage href={illustratedProps[id as IllustratedProp]()} x={0} y={0} width={24} height={24}/>
+    {id === 'hot-cocoa' && state.empty && <Ellipse cx={11.6} cy={10.5} rx={4.2} ry={1.8} fill="#6D493B" stroke="#E3C3A2" strokeWidth={.8}/>}
+  </G>;
   const paint = (color: string) => material(tint, color);
   return (
     <G fill="none" stroke={ink} strokeWidth={0.85} strokeLinecap="round" strokeLinejoin="round">

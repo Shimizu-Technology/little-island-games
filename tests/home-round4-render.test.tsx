@@ -5,7 +5,7 @@ import {Islander} from '../src/islander/rig/Islander';
 import {homeCharacterPose} from '../src/home/characterPose';
 import {CrabFriend} from '../src/home/art/CrabFriend';
 import {defaultLook} from '../src/islander/look';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Image:'image',Text:'text'}));
 (globalThis as typeof globalThis&{IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 describe('native pose retention regression',()=>{
  it.each([false,true])('stand after lie/asleep equals a fresh stand, including transforms, viewport and clip (Reduce Motion %s)',async reduced=>{

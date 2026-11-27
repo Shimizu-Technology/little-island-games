@@ -6,9 +6,10 @@ import { instance, hydrateHome, type HomeStateV2 } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve } from '../src/home/scene/proposal';
 import { labFixtures } from '../src/home/runtime/lab';
+vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
 const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, scene: {} as any, design: {} as any, dest: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, slots: [{}, {}] as any[] }));
-vi.mock('react-native-svg', () => Object.fromEntries(['G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
+vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/badges/BadgeArt', () => ({ BadgeGlyph: () => null }));
 vi.mock('../src/home/runtime/homeSound', () => ({
   useHomeFeedback: (live: boolean) => {

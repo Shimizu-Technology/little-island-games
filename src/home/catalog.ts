@@ -59,8 +59,8 @@ export function itemSpec(id: ItemId): ItemSpec {
     return { name: id.slice(8).replaceAll("-", " "), footprint: [1, 1], layer: "wall", rotations: [0], mirror: false };
   return moreCatalog[id] ?? catalog[id as FurnitureId];
 }
-export const wallThemes = ["cream", "lagoon", "night", "peach", "math-lab", "library", "night-sky", "arcade-neon"] as const;
-export const floorThemes = ["sand", "honey", "seafoam", "rose", "island-breeze", "game-room"] as const;
+export const wallThemes = ["cream", "lagoon", "night", "peach", "math-lab", "library", "night-sky", "arcade-neon", "harvest", "snow-cozy", "fiesta-night"] as const;
+export const floorThemes = ["sand", "honey", "seafoam", "rose", "island-breeze", "game-room", "harvest-wood", "snow-wood", "fiesta-wood"] as const;
 export const badgeIds = ["math", "reading", "science", "coding", "chamoru", "arcade", "classic"] as const;
 export type BadgeId = (typeof badgeIds)[number];
 

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
 import { starterHome } from '../src/home/model';
 import { HINT_IDLE_MS } from '../src/home/runtime/quietHints';
+vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
 const harness = vi.hoisted(() => ({
   hint: vi.fn(), scene: {} as any, appState: [] as ((s: string) => void)[], focus: [] as (() => void | (() => void))[], blur: [] as (() => void)[],
 }));

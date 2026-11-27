@@ -1,0 +1,2 @@
+export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0", "math-lab": "#B6CABE", library: "#E7CFAD", "night-sky": "#B5BDD3", "arcade-neon": "#C9C5DA", harvest: "#DF9873", "snow-cozy": "#849DB3", "fiesta-night": "#9474A2" };
+export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA", "island-breeze": "#D9C79B", "game-room": "#BCCBC0", "harvest-wood": "#BB744C", "snow-wood": "#B49C87", "fiesta-wood": "#A16F64" };

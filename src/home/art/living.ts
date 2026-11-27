@@ -1,14 +1,18 @@
 import type { Capability, ItemVisualState } from '../world';
 import type { ItemId } from '../catalog';
-export const foodIds = ['mango','banana','rice-ball','cupcake'] as const;
-export const drinkIds = ['coconut-drink','juice'] as const;
-export const toyIds = ['teddy','ball','book','shell'] as const;
+export const foodIds = ['mango','banana','rice-ball','cupcake','pumpkin-pie','fiesta-platter'] as const;
+export const drinkIds = ['coconut-drink','juice','hot-cocoa'] as const;
+export const toyIds = ['teddy','ball','book','shell','gift-box'] as const;
 export const holdableIds = [...foodIds,...drinkIds,...toyIds] as const;
 export type HoldableId = typeof holdableIds[number];
 export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   ...Object.fromEntries(foodIds.map(id=>[id,{moveInPlay:true,holdable:true,edible:'food'}])),
   ...Object.fromEntries(drinkIds.map(id=>[id,{moveInPlay:true,holdable:true,edible:'drink'}])),
   ...Object.fromEntries(toyIds.map(id=>[id,{moveInPlay:true,holdable:true}])),
+  'christmas-tree':{moveInPlay:true,toggle:'light'},
+  'lantern':{moveInPlay:true,toggle:'light'},
+  'island-lamp':{moveInPlay:true,toggle:'light'},
+  'string-lights':{moveInPlay:false,toggle:'light'},
   'floor-lamp':{moveInPlay:true,toggle:'light'},
   'table-lamp':{moveInPlay:true,toggle:'light'},
   lamp:{moveInPlay:true,toggle:'light'},

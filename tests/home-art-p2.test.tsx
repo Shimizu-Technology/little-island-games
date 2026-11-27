@@ -12,10 +12,10 @@ import { moreCatalog } from '../src/home/catalogMore';
 import { defaultLook } from '../src/islander/look';
 import { starterHome } from '../src/home/model';
 import { itemSize, itemPoint } from '../src/home/geometry';
-vi.mock('react-native-svg',()=>({default:'svg',Defs:'defs',RadialGradient:'radialGradient',Stop:'stop',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
+vi.mock('react-native-svg',()=>({default:'svg',Defs:'defs',RadialGradient:'radialGradient',Stop:'stop',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Image:'image',Text:'text'}));
 describe('Phase 2 living art contract',()=>{
  it('declares free reusable holdables and all tap reactions',()=>{
-  for(const id of holdableIds) {expect(moreCatalog[id].free).toBe(true);expect(moreCatalog[id].badge).toBeUndefined();expect(capabilityOf(id).holdable).toBe(true);}
+  for(const id of holdableIds) {expect(moreCatalog[id].free).toBe(!['pumpkin-pie','fiesta-platter','hot-cocoa','gift-box'].includes(id));expect(moreCatalog[id].badge).toBeUndefined();expect(capabilityOf(id).holdable).toBe(true);}
   for(const id of foodIds) expect(capabilityOf(id).edible).toBe('food');
   for(const id of drinkIds) expect(capabilityOf(id).edible).toBe('drink');
   for(const id of toyIds) expect(capabilityOf(id).edible).toBeUndefined();
@@ -27,7 +27,7 @@ describe('Phase 2 living art contract',()=>{
  it('shows empty drinks without changing their identity or removing the straw',()=>{
   for(const id of drinkIds) {
    const full=render(<LivingArt id={id}/>), empty=render(<LivingArt id={id} state={{empty:true}}/>);
-   expect(full).not.toBe(empty);expect(empty).toContain('<path');
+   expect(full).not.toBe(empty);expect(empty).toMatch(/<(path|image)/);
    expect(render(<Islander pose="drink" held={<HandProp id={id} state={{empty:true}}/>}/>)).not.toMatch(/NaN|Infinity/);
   }
  });

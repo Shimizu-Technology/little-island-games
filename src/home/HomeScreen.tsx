@@ -1,3 +1,4 @@
+import { AtmospherePicker } from "./AtmospherePicker";
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as ReactNative from "react-native";
 import { AccessibilityInfo, Platform, AppState, Pressable, Text, View, useWindowDimensions } from "react-native";
@@ -149,6 +150,8 @@ export type HomeClosetConfig = {
   renderCharacter?: (look: IslanderLook) => CharacterRender;
 };
 export type HomeScreenProps = Ownership & {
+  completedRounds?: number;
+  unlockSeasonalPacks?: boolean;
   badges?: BadgeId[];
   milestones?: readonly string[];
   initialItem?: string;
@@ -178,6 +181,8 @@ export function HomeScreen({
   sheetSaveStatus,
   renderCharacter,
   lab = false,
+  completedRounds = 0,
+  unlockSeasonalPacks = false,
   ...ownership
 }: HomeScreenProps) {
   const window = useWindowDimensions(),
@@ -193,6 +198,7 @@ export function HomeScreen({
   const [placing, setPlacing] = useState<ItemId | undefined>(
     initialItem && itemIds.includes(initialItem) ? initialItem : undefined
   );
+  const [atmosphereOpen, setAtmosphereOpen] = useState(false);
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState<RoomId>(() =>
       initialSheet === "closet" ? heroRoomInState(store.state) : store.state.current
@@ -1239,7 +1245,7 @@ export function HomeScreen({
   const hints = useRef<HintState>(freshHints(0));
   // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
   React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
-  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet;
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet && !atmosphereOpen;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -1403,6 +1409,14 @@ export function HomeScreen({
         canRedo={store.canRedo}
         top={inset.top}
         bottom={inset.bottom}
+        atmosphereOpen={atmosphereOpen}
+        onAtmosphere={() => {
+          interaction.cancelAll();
+          if (activeSheet === "closet") closeCloset();
+          else if (activeSheet === "badges") closeBadges();
+          setMore(false); setFriends(false); setSelected(undefined); setPlacing(undefined);
+          setAtmosphereOpen(!atmosphereOpen);
+        }}
         onMore={() => {
           setMore(!more);
           setFriends(false);
@@ -1578,7 +1592,7 @@ export function HomeScreen({
           />
         )}
       </View>
-      {!overview && !more && !friends && !activeSheet && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && (
         <Destinations
           scene={scene}
           selected={selected === storageId ? undefined : selected}
@@ -1602,7 +1616,7 @@ export function HomeScreen({
           }}
         />
       )}
-      {!overview && !more && !friends && !activeSheet && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onTake={id => {
@@ -1622,6 +1636,11 @@ export function HomeScreen({
         renderCharacter={characterRenderer}
         onSelect={setSelected}
       />
+      {atmosphereOpen && <AtmospherePicker atmosphere={store.state.atmosphere} rounds={completedRounds} grownUp={unlockSeasonalPacks}
+        onClose={() => setAtmosphereOpen(false)}
+        onChange={atmosphere => dispatch({ type: "atmosphere", atmosphere })}
+        onApply={pack => { dispatch({ type: "seasonal-pack", pack }); setAtmosphereOpen(false); }}
+        onDecorate={item => { setAtmosphereOpen(false); setDesigning(true); setPlacing(item); }}/>}
       <HomePanels
         more={more}
         friends={friends}
@@ -1662,7 +1681,7 @@ export function HomeScreen({
         onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
       <FriendDrawer
-        open={friends && !overview && !more && !activeSheet}
+        open={friends && !overview && !more && !activeSheet && !atmosphereOpen}
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}

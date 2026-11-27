@@ -32,7 +32,7 @@ vi.mock('react-native-svg', () => {
     Ellipse: 'ellipse',
     G: 'g',
     Path: 'path',
-    Rect: 'rect',
+    Rect: 'rect', Image: 'image',
     Defs: 'defs',
     Filter: 'filter',
     FeColorMatrix: 'feColorMatrix',

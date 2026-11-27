@@ -166,6 +166,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           </View>
           <View style={{ height: 1, backgroundColor: C.line }} />
           {/* Additive Arcade grown-up controls; neither reminder nor music is forced on. */}
+          <ToggleRow label="Unlock all seasonal packs" detail="Thanksgiving, Christmas and Fiesta are ready now. Placed decorations stay when this is off." value={store.save.settings.unlockSeasonalPacks ?? false} disabled={busy} onChange={unlockSeasonalPacks => store.settings({ unlockSeasonalPacks })} />
           <Heading style={{ fontSize: 19 }}>Arcade comfort</Heading>
           <ToggleRow label="Arcade music" detail="Quiet original loops during play" value={store.save.arcade?.music ?? false} disabled={busy} onChange={music => store.arcade({ type: "preferences", music }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" })} />
           <Copy>Arcade break reminder · appears only between levels</Copy>

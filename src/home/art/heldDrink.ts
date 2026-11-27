@@ -4,8 +4,10 @@ import type {HitShape} from '../scene/types';
 /** Same 24-unit HandProp scale in the meal, real container, aim and picking. */
 export const heldDrinkScale=(unit:number,slot:number)=>unit*(slot===1?1.25:1);
 export function heldDrinkGeometry(item:Instance,unit:number,longStraw:boolean){
- const x=(v:number)=>((v+45)/3.6-12)*unit, y=(v:number)=>((v+99.5)/3.6-12)*unit;
- const k=unit/3.6;
+ const painted=item.item==='hot-cocoa';
+ const x=(v:number)=>painted?v/6.25*unit:((v+45)/3.6-12)*unit;
+ const y=(v:number)=>painted?(v+52.5)/6.25*unit:((v+99.5)/3.6-12)*unit;
+ const k=unit/(painted?6.25:3.6);
  const shapes:HitShape[]=itemShapes({...item,rotation:0,mirrored:false},150).map(s=>{
   switch(s.kind){
    case 'box':return {...s,left:x(s.left),top:y(s.top),width:s.width*k,height:s.height*k};

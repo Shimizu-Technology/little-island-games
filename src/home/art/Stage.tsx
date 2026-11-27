@@ -1,3 +1,6 @@
+import { wallColors, floorColors } from "./roomPalette";
+import { defaultAtmosphere, type Atmosphere } from "../atmosphere";
+import { AtmosphereLighting } from "./AtmosphereLighting";
 import React from "react";
 import { Image, View } from "react-native";
 import { illustratedRooms } from "./illustrated";
@@ -13,8 +16,6 @@ import { CottageFascia } from "./ShellDetails";
 export const ink = "#4A3328";
 export const wood = "#C88E5B";
 export const ivory = "#FFF7E6";
-const wallColors: Record<HomeState["theme"]["wallpaper"], string> = {cream:"#F5E6C8",lagoon:"#C5DED3",night:"#A5ADC9",peach:"#F1CEC0","math-lab":"#B6CABE",library:"#E7CFAD","night-sky":"#B5BDD3","arcade-neon":"#C9C5DA"};
-const floorColors: Record<HomeState["theme"]["floor"], string> = {sand:"#EBD7B2",honey:"#DDAE7D",seafoam:"#AACDC1",rose:"#DCB9AA","island-breeze":"#D9C79B","game-room":"#BCCBC0"};
 type Room = RoomId;
 
 function Window({ room, prefix }: { room: Room; prefix: string }) {
@@ -224,8 +225,8 @@ function VectorRoom({ room, theme, badges = [], live = false }: { room: Room; th
 }
 
 /** 960×672 and 800×560 share an exact aspect ratio: the painted baseboard stays at y=352. */
-export function StageRoom({ room, theme, badges = [], onBadgePress, live = false }: {
-  room: Room; theme: HomeState['theme']; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; live?: boolean;
+export function StageRoom({ room, theme, badges = [], onBadgePress, live = false, atmosphere = defaultAtmosphere, reduced = false, weatherActive = false }: {
+  room: Room; theme: HomeState['theme']; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void; live?: boolean; atmosphere?: Atmosphere; reduced?: boolean; weatherActive?: boolean;
 }) {
   const defaults = roomDefaultTheme[room];
   const [paintedRoom, setPaintedRoom] = React.useState<Room>();
@@ -233,6 +234,7 @@ export function StageRoom({ room, theme, badges = [], onBadgePress, live = false
     {paintedRoom !== room && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
     <Image testID={`painted-room-${room}`} source={illustratedRooms[room]()} onLoad={() => setPaintedRoom(room)} onError={() => setPaintedRoom(undefined)} resizeMode="cover" fadeDuration={0}
       accessible={false} style={{ position: 'absolute', width: '100%', height: '100%' }}/>
+    <AtmosphereLighting room={room} atmosphere={atmosphere} reduced={reduced} active={weatherActive}/>
     <Svg width="100%" height="100%" viewBox="0 0 800 560" style={{ position: 'absolute' }} accessible={false}>
       {theme.wallpaper !== defaults.wallpaper && <Rect data-theme="wall" width={800} height={352} fill={wallColors[theme.wallpaper]} opacity={.28}/>}
       {theme.floor !== defaults.floor && <Rect data-theme="floor" y={352} width={800} height={208} fill={floorColors[theme.floor]} opacity={.3}/>}

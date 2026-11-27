@@ -1,3 +1,4 @@
+import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots, type FamilySlot } from "./family";
 import { storageCapacity, type StorageState } from './storage';
 import { MAX_INSTANCES } from "./limits";
@@ -77,6 +78,7 @@ export type Character = {
   facing?: Facing;
 };
 /** Room view retained for the immutable art contract’s HomeState["theme"] lookup. */
+export type { Atmosphere } from "./atmosphere";
 export type HomeState = {
   version: 1;
   scene: "room-1";
@@ -89,6 +91,7 @@ export type HomeStateV2 = {
   version: 2 | 3 | 4;
   /** Versioned family extension within the v4 envelope, which existing restore gates require. */
   rosterVersion?: 1;
+  atmosphere?: Atmosphere;
   current: RoomId;
   rooms: Record<RoomId, RoomState>;
   /** v4 only. The last saved undo steps (HM-18, rule 57). Never part of history itself. */
@@ -290,7 +293,7 @@ export function validHome(v: unknown): v is HomeSave {
     if (!exact(v, ["version", "scene", "instances", "characters", "theme"]) || s.scene !== "room-1") return false;
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
   }
-  const optional = s.version === 4 ? (["undo", "access", "rosterVersion"] as const).filter((k) => Object.hasOwn(v, k)) : [];
+  const optional = s.version === 4 ? (["undo", "access", "rosterVersion", "atmosphere"] as const).filter((k) => Object.hasOwn(v, k)) : [];
   if (
     !exact(v, ["version", "current", "rooms", ...optional]) ||
     ![2, 3, 4].includes(s.version) ||
@@ -301,18 +304,19 @@ export function validHome(v: unknown): v is HomeSave {
     return false;
   if (Object.hasOwn(v, "rosterVersion") && (s.version !== 4 || s.rosterVersion !== 1)) return false;
   if (s.version >= 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
+  if (Object.hasOwn(v, "atmosphere") && !validAtmosphere(s.atmosphere)) return false;
   // Every saved undo step must rebuild a valid earlier home; one bad step makes the save invalid.
   // A step only changes the rooms it names, so only those rooms are validated again. Each rebuilt
   // home is checked before it becomes the input to the next older step, and nothing a corrupt
   // step contains can throw out of this validator (R6).
   if (s.version >= 4 && s.undo !== undefined) {
     if (!validUndoShape(s.undo, s.rosterVersion === 1)) return false;
-    let cursor: HomeStateV2 = { version: s.version, ...(s.rosterVersion ? { rosterVersion: s.rosterVersion } : {}), current: s.current, rooms: s.rooms };
+    let cursor: HomeStateV2 = { version: s.version, ...(s.rosterVersion ? { rosterVersion: s.rosterVersion } : {}), current: s.current, rooms: s.rooms, ...(s.atmosphere ? { atmosphere: s.atmosphere } : {}) };
     for (let i = s.undo.steps.length - 1; i >= 0; i--) {
       const step = s.undo.steps[i];
       try {
         cursor = applyUndoStep(cursor, step);
-        if (!exact(cursor.rooms, [...roomIds]) || !validRooms(cursor, Object.keys(step) as RoomId[])) return false;
+        if (!exact(cursor.rooms, [...roomIds]) || !validRooms(cursor, roomIds.filter(id => Object.hasOwn(step, id)))) return false;
       } catch {
         return false;
       }
@@ -364,6 +368,9 @@ export function migrateSavedHome(v: unknown): HomeStateV2 | undefined {
 }
 /** Omit only exact, unused drawer presets. Placed actors and saved Undo remain lossless. */
 export function compactHome(state: HomeStateV2): HomeStateV2 {
+  if (state.atmosphere && !compactAtmosphere(state.atmosphere)) {
+    const { atmosphere: _atmosphere, ...rest } = state; void _atmosphere; state = rest;
+  }
   if (state.rosterVersion !== 1) return state;
   const characters = state.rooms.home.characters.filter(c => !waitingFamily().some(preset =>
     Object.keys(c).length === Object.keys(preset).length &&
@@ -372,10 +379,10 @@ export function compactHome(state: HomeStateV2): HomeStateV2 {
     ...state.rooms, home: { ...state.rooms.home, characters },
   };
   const family = roomIds.some(id => rooms[id].characters.some(c => c.slot >= 3)) ||
-    state.undo?.steps.some(step => Object.values(step).some(patch => patch && ("room" in patch
+    state.undo?.steps.some(step => roomIds.some(id => { const patch = step[id]; return patch && ("room" in patch
       ? patch.room.characters.some(c => c.slot >= 3)
       : patch.characters && (patch.characters.remove.some(slot => slot >= 3) ||
-        patch.characters.put.some(p => p.value.slot >= 3 || p.index >= 3)))));
+        patch.characters.put.some(p => p.value.slot >= 3 || p.index >= 3))); }));
   if (family) return rooms === state.rooms ? state : { ...state, rooms };
   const { rosterVersion: _roster, ...base } = state;
   void _roster;
@@ -703,6 +710,8 @@ export type HomeAction = (
       socketId?: string;
     }
   | { type: "theme"; wallpaper?: HomeState["theme"]["wallpaper"]; floor?: HomeState["theme"]["floor"] }
+  | { type: "atmosphere"; atmosphere: Atmosphere }
+  | { type: "seasonal-pack"; pack: import("./seasonal").SeasonalPackId }
   | { type: "find-friends" }
   | { type: "reset" }
 ) & { roomId?: RoomId };
