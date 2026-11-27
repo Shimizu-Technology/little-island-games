@@ -127,6 +127,7 @@ describe('shared sandy footpaths and guide waypoints', () => {
  const cases: [number, number, number][] = [
   [320, 378, 1], [844, 250, 1],
   [320, 568, 1], [320, 568, 1.5], [320, 568, 2],
+  [320, 1300, 2], [320, 1550, 2],
   [390, 844, 1], [390, 844, 1.5], [390, 844, 2],
   [844, 390, 1], [844, 390, 1.5], [844, 390, 2],
   [1024, 768, 1], [1024, 768, 1.5], [1024, 768, 2],
@@ -250,6 +251,28 @@ describe('wide horizontal crossroads', () => {
    const pillStyle = pill.props.style as { paddingHorizontal: number; borderWidth: number };
    const innerWidth = target.labelWidth - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
    expect(wordWidth(target.name) * target.labelFontSize, `${target.name} single line at ${width}×${height}`).toBeLessThanOrEqual(innerWidth);
+  }
+  await act(() => screen.unmount());
+ });
+ it.each([[320, 1300, 2], [320, 1550, 2]] as const)('renders >= 48pt Pressable hit targets and >= 64pt inner label text widths at tall narrow %s×%s / fontScale %s', async (width, height, fontScale) => {
+  const layout = mapLayout(width, height, fontScale);
+  let screen!: ReactTestRenderer;
+  await act(() => {
+   screen = create(<IslandScene width={width} height={height} fontScale={fontScale} look={defaultLook} reduced={false} active door={null} onArrive={vi.fn()}/>);
+  });
+  for (const target of layout.targets) {
+   const button = screen.root.findByProps({ testID: `place-${target.id}` });
+   const buttonStyle = (Array.isArray(button.props.style) ? Object.assign({}, ...button.props.style) : button.props.style) as { left: number; width: number; minWidth: number };
+   expect(buttonStyle.minWidth, `${target.id} minWidth`).toBeGreaterThanOrEqual(48);
+   expect(buttonStyle.width, `${target.id} pressable width`).toBeGreaterThanOrEqual(48);
+   expect(buttonStyle.left, `${target.id} pressable left`).toBeGreaterThanOrEqual(0);
+   expect(buttonStyle.left + buttonStyle.width, `${target.id} pressable right`).toBeLessThanOrEqual(width);
+
+   const pill = screen.root.findByProps({ testID: `place-label-${target.id}` });
+   const pillStyle = pill.props.style as { width: number; paddingHorizontal: number; borderWidth: number };
+   const innerWidth = pillStyle.width - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
+   expect(pillStyle.width, `${target.id} labelWidth`).toBeGreaterThanOrEqual(72);
+   expect(innerWidth, `${target.id} innerWidth`).toBeGreaterThanOrEqual(64);
   }
   await act(() => screen.unmount());
  });

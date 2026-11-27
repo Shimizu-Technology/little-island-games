@@ -31,7 +31,7 @@ describe('map target geometry', () => {
   [430,798,1],[744,999,1],
   [844,390,1],[844,390,1.5],[844,390,2],
   [1024,768,1],[1024,768,1.5],[1024,768,2],
-  [1100,590,1],[1100,610,1],[390,1240,2],[320,1550,2.5],
+  [1100,590,1],[1100,610,1],[390,1240,2],[320,1300,2],[320,1550,2],[320,1550,2.5],
  ])('separates all six illustrated targets with zero overlap at %s×%s / font scale %s', (width,height,scale) => {
   const { wide, targets } = mapLayout(width,height,scale);
   expect(targets.map(t => t.id)).toEqual(['school','library','arcade','hall','home','cove']);
@@ -71,6 +71,29 @@ describe('compact painted scene acceptance', () => {
      const lblH = Math.min(a.x * width + a.labelWidth / 2, b.x * width + b.labelWidth / 2) - Math.max(a.x * width - a.labelWidth / 2, b.x * width - b.labelWidth / 2);
      const lblV = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.baseline, b.baseline);
      expect(Math.max(0, lblH) * Math.max(0, lblV), `${width}×${height} label overlap ${a.id}/${b.id}`).toBe(0);
+    }
+   }
+  }
+ });
+ it.each([[320, 1300, 2], [320, 1550, 2]] as const)('preserves >= 72pt label pills, >= 48pt targets, and non-overlapping bounds on tall narrow %s×%s / fontScale %s', (width, height, fontScale) => {
+  const layout = mapLayout(width, height, fontScale);
+  expect(layout.targets).toHaveLength(6);
+  for (const a of layout.targets) {
+   expect(a.labelWidth, `${a.id} labelWidth`).toBeGreaterThanOrEqual(72);
+   expect(Math.max(a.width, a.labelWidth), `${a.id} target width`).toBeGreaterThanOrEqual(48);
+   const aLeft = a.x * width - a.labelWidth / 2;
+   const aRight = a.x * width + a.labelWidth / 2;
+   expect(aLeft, `${a.id} pill left`).toBeGreaterThanOrEqual(2);
+   expect(aRight, `${a.id} pill right`).toBeLessThanOrEqual(width - 2);
+   for (const b of layout.targets.filter(b => b.id !== a.id)) {
+    const bLeft = b.x * width - b.labelWidth / 2;
+    const bRight = b.x * width + b.labelWidth / 2;
+    const lblH = Math.min(aRight, bRight) - Math.max(aLeft, bLeft);
+    const lblV = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.baseline, b.baseline);
+    expect(Math.max(0, lblH) * Math.max(0, lblV), `pill overlap ${a.id}/${b.id}`).toBe(0);
+    if (Math.abs(a.baseline - b.baseline) < 1) {
+     const colGap = Math.max(aLeft, bLeft) - Math.min(aRight, bRight);
+     expect(colGap, `column gap ${a.id}/${b.id}`).toBeGreaterThanOrEqual(8);
     }
    }
   }

@@ -59,9 +59,13 @@ export function mapLayout(width: number, height: number, fontScale = 1) {
     hall: [.678, .508], home: [.324, .704], cove: [.676, .704],
   };
   const yOffset = wide ? .065 : .060;
+  // Reserve enough horizontal space inside tall, narrow viewports for readable labels and >=48pt hit targets.
+  const maxColWidth = Math.max(0, (width - 2 * edgePad - (wide ? 2 : 1) * gapX) / (wide ? 3 : 2));
+  const reservedColWidth = Math.min(maxColWidth, wide ? 72 : 96);
+  const minEdge = Math.min(width / 2, Math.max(28, edgePad + reservedColWidth / 2));
   const basePoints = places.map(item => {
     const point = paintedPoints[item.id];
-    const x = Math.max(28 / width, Math.min(1 - 28 / width, (.5 * width + (point[0] - .5) * imageWidth * imageScale) / width));
+    const x = Math.max(minEdge / width, Math.min(1 - minEdge / width, (.5 * width + (point[0] - .5) * imageWidth * imageScale) / width));
     const y = (.5 * height + (point[1] - .5) * imageHeight * imageScale) / height + yOffset;
     return { ...item, x, y };
   });
@@ -139,7 +143,7 @@ export function mapLayout(width: number, height: number, fontScale = 1) {
   const artWidth = Math.max(44, Math.min(horizontalBudget, maxArtHeight / ART_ASPECT));
   const artHeight = artWidth * ART_ASPECT;
   const maxLabelWidth = scale >= 1.25 ? Math.max(artWidth, 148) : 148;
-  const labelWidth = Math.max(44, Math.min(horizontalBudget, Math.max(artWidth * .96, minSingleLineLabel), maxLabelWidth));
+  const labelWidth = Math.max(Math.min(48, maxColWidth), Math.min(horizontalBudget, Math.max(artWidth * .96, minSingleLineLabel), maxLabelWidth));
   // Keep portrait guide cleanly below Row 1's label pill and above Row 2's label pill even on compact large-text viewports.
   let guideSize = baseGuideSize;
   if (!wide && rowBaselines.length === 3) {

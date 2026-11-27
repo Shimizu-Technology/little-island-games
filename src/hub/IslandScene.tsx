@@ -16,13 +16,13 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWi
   opacity: 1 - press.get() * .16,
   transform: [{ scale: 1 - press.get() * (reduced ? 0 : .05) }],
  }), [reduced]);
- const boxWidth = Math.max(width, labelWidth);
- const pillPadX = labelWidth < 110 ? 3 : labelWidth < 140 ? 5 : 12;
+ const boxWidth = Math.max(48, width, labelWidth);
+ const pillPadX = labelWidth < 80 ? 2 : labelWidth < 110 ? 3 : labelWidth < 140 ? 5 : 12;
  return <AnimatedPressable testID={`place-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${name}`} onPress={() => visit(id)}
   onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
   onPressIn={() => press.set(reduced ? 1 : withTiming(1, { duration: 40, easing: Easing.out(Easing.cubic) }))}
   onPressOut={() => press.set(reduced ? 0 : withTiming(0, { duration: 85, easing: Easing.out(Easing.cubic) }))}
-  style={[{ position: 'absolute', left: left + (width - boxWidth) / 2, top, width: boxWidth, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
+  style={[{ position: 'absolute', left: left + (width - boxWidth) / 2, top, minWidth: 48, width: boxWidth, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
    <View pointerEvents="none" style={{ width, height, alignItems: 'center', justifyContent: 'flex-end' }}>
     <View style={{ width, height, transform: [{ scale: 1.14 }, { translateY: Math.round(height * .03) }] }}><Landmark id={id}/></View>
    </View>
