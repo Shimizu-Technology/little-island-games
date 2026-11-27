@@ -13,6 +13,7 @@ import { GridShell } from '../src/puzzles/grid/GridShell';
 import { createGrid, gridAction, type GridAction, type GridSpec, type GridState } from '../src/puzzles/grid/model';
 import { isGridEvent } from '../src/puzzles/grid/checkpoint';
 import type { ChallengeEntry, ReplayEngine } from '../src/challenge/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], hold: null as null | (() => Promise<void>), envelopeHold: null as null | Promise<void>, play: vi.fn() }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { await db.envelopeHold; db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { await db.hold?.(); db.rows.push(raw); }, readDrafts: async () => db.rows } }));
 vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) }, ScrollView: 'section', View: 'div', TextInput: 'input', Pressable: 'button', Platform: { OS: 'ios' }, useWindowDimensions: () => ({ width: 393, height: 852 }), PanResponder: { create: (handlers: unknown) => ({ panHandlers: handlers }) }, AppState: { addEventListener: () => ({ remove() {} }) } }));

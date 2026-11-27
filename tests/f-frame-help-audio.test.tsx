@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** F-frame: "Hear a quick guide" never plays silence. The School frame offers it only when the engine's helpAudio has a
  * shipped recording in the chosen voice, the same lookup the player uses. Checked across every learning engine. */
 import React, { createContext } from 'react';
@@ -12,6 +13,7 @@ import { startSession } from '../src/learn/session';
 import { engines } from '../src/learn/engines';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 /** Shipped sources, read from the generated require tables without loading native audio into Node. */
 const keysIn = (text: string) => new Set([...text.matchAll(/["']([^"']+)["']:\s*require\(/g)].map(m => m[1]));

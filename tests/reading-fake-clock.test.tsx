@@ -20,6 +20,7 @@ import { whichAnswer, whichPick, type WhichState } from "../src/learn/games/whic
 import { talePick, type TaleState } from "../src/learn/games/turtle-tales/engine";
 import { partsMove, partsTask, type PartsState } from "../src/learn/games/sound-boat/parts";
 import type { LearnId, LearnOptions, LearnSession } from "../src/learn/types";
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 beforeEach(holdFrames);
 
 const db = vi.hoisted(() => ({ raw: null as string | null }));

@@ -1,5 +1,7 @@
+import { styles as baseStyles, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , ToggleRow } from "../components/ui";
+import { useNunitoLoaded } from "../ui/fonts";
+
 import { learningComfort } from '../state/validation';
-import { ToggleRow , Button, Chip, Copy, Heading, styles } from '../components/ui';
 import { EarlierWorkSettings } from "./EarlierWorkSettings";
 import React, { useState } from "react";
 import { TextInput, View } from "react-native";
@@ -56,4 +58,21 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
       return <Copy key={key}>{noteLabel(key, labels)}: {n.independent} independently · {n.helped} with help</Copy>;
     })}
   </View>;
+}
+
+const styles = { ...baseStyles, page: [baseStyles.page, { backgroundColor: '#FFF6E5' }], input: [baseStyles.input, { color: '#3D2B24', backgroundColor: '#FFFDF8', borderColor: '#E8D8BE' }] };
+function Heading(props: React.ComponentProps<typeof BaseHeading>) {
+ const loaded = useNunitoLoaded();
+ return <BaseHeading {...props} style={[{ color: '#3D2B24' }, props.style, loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {fontWeight: '800'}]}/>;
+}
+function Copy(props: React.ComponentProps<typeof BaseCopy>) {
+ const loaded = useNunitoLoaded();
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
+}
+function Button(props: React.ComponentProps<typeof BaseButton>) {
+ const loaded = useNunitoLoaded();
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}/>;
+}
+function Chip(props: React.ComponentProps<typeof BaseChip>) {
+ return <Button {...props} quiet compact textStyle={props.numberOfLines ? {flexShrink: 1} : undefined} style={{borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: props.numberOfLines ? 1 : 0, ...(props.numberOfLines ? {maxWidth: '100%'} : {}), borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
 }

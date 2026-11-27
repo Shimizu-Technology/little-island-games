@@ -8,6 +8,7 @@ import { createSession, type BoardSession } from "../src/board";
 import * as reef from "../src/board/reef-sweep/engine";
 import { coordinate } from "../src/board/reef-sweep/solver";
 import { wordsFit, wordFitMultiplier, CHROME_MAX } from "../src/components/wordFit";
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const fixture = vi.hoisted(() => ({
   push: vi.fn(),

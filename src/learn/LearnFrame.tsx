@@ -1,3 +1,6 @@
+import { styles as baseStyles, C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , GameHeader, Sheet, ToggleRow } from "../components/ui";
+import { useNunitoLoaded } from "../ui/fonts";
+import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { LagoonHintScroll } from './LagoonHintScroll';
 import { BoardSpaceProvider, BoardSpaceContent } from './BoardSpace';
 import { boardCardInner, boardCardPadding, cheerPillClear, companionBeside, layoutMatchesWindow, measuredBoardSpace, schoolEntryReveal, MEASURED_SCHOOL_BOARDS, type Box } from './boardGeometry';
@@ -19,7 +22,6 @@ import { router, useIsFocused } from "expo-router";
 import { useStore } from "../state/Store";
 import { hasSpeech, useSoundControls } from "../components/Audio";
 import { SaveStatus } from "../components/SaveStatus";
-import { Button, C, Chip, Copy, GameHeader, Heading, Sheet, ToggleRow, styles } from "../components/ui";
 import { LARGE_TEXT, wordFitMultiplier } from "../components/wordFit";
 import { TextFit } from "../components/Text";
 import { StepReveal } from "./stepReveal";
@@ -40,7 +42,6 @@ import { GridInteraction } from "../puzzles/grid/preferences";
 import { LastPicnicWord } from "./games/hafa-adai/view";
 import type { IslandState } from "./games/hafa-adai/engine";
 import { Celebrate } from "./Celebrate";
-import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { LearnArt } from "./LearnArt";
 import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
@@ -364,7 +365,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const resultFit = useMemo(() => large ? { width: width - insets.left - insets.right - 32 - 46, ceiling: 2, maxSize: 44 } : null, [large, width, insets.left, insets.right]);
   const Board = saved && isGrowth(saved.state) ? GrowthBoard : view.Board;
   const island = id === "hafa-adai" ? "reading" : engine.island;
-  const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
+  const theme = subjectTheme[island];
   const cheerText = companionEvent === "correct" ? "You got it!" : companionEvent === "incorrect" ? "Try again!" : companionEvent === "entry" ? "Let's play!" : null;
   const modeText = saved ? (engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
     (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
@@ -407,12 +408,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
     : { position: "absolute", top: 0, right: "100%", width: 240, height: 112, marginRight: 8, alignItems: "flex-end", justifyContent: "center" }}>{cheerPill}</View>}</View>;
   // Sheet text runs across the sheet (a 560-pt card on wide screens) inside its 22-pt padding.
   const sheetLine = (width >= 600 ? Math.min(560, width - 48) : width) - 44;
+  const fontsLoaded = useNunitoLoaded();
   const header = <View style={{ gap: 4 }}>
         <LearnerChip compact/>
         {bar}
         {level}
         {phone && saved && <View onLayout={fit("row")}>
-          <Copy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>
+          <BaseCopy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ ...(fontsLoaded ? {fontFamily: "Nunito_600SemiBold", fontWeight: "normal"} : {}), fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</BaseCopy>
           {phoneCheer}
         </View>}
 
@@ -428,7 +430,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <View testID="learn-header-cluster" style={{ flexGrow: 1, flexBasis: 260, gap: 4 }}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
             <LearnerChip compact/>
-            {saved && <Copy maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>}
+            {saved && <BaseCopy maxFontSizeMultiplier={small} style={{ ...(fontsLoaded ? {fontFamily: "Nunito_600SemiBold", fontWeight: "normal"} : {}), fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</BaseCopy>}
           </View>
           {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished} inline/>}
         </View>
@@ -436,7 +438,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {level}
         {saved && <View onLayout={fit("row")} style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           <View onLayout={fit("chip")} style={{ maxWidth: "100%" }}><LearnerChip compact/></View>
-          <Copy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</Copy>
+          <BaseCopy onLayout={fit("mode")} maxFontSizeMultiplier={small} style={{ ...(fontsLoaded ? {fontFamily: "Nunito_600SemiBold", fontWeight: "normal"} : {}), fontSize: 12, color: theme.ink, backgroundColor: theme.sky, paddingHorizontal: 8, borderRadius: 10, overflow: "hidden" }}>{modeText}</BaseCopy>
           {phoneCheer}
         </View>}
         {!saved && <LearnerChip compact/>}
@@ -473,7 +475,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
         {saved && !finished && <View testID="learn-board" onLayout={e => { const top = e.nativeEvent.layout.y; boardTop.current = top; setBoardLayout(old => old.top === top && old.topAt === width ? old : { ...old, top, topAt: width }); }}>
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={islanderCheer}>
-          <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: boardCardPadding(width), shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
+          <View style={{ backgroundColor: "#FFFDF8", borderRadius: 28, borderWidth: 2, borderColor: "#E8D8BE", padding: boardCardPadding(width), shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             {/* F-frame-3: the burst plays over the card's top edge, so it never holds space above the board or moves it. Where
                 the board is revealed at the top of the screen (AX, short landscape) that edge is under the pinned bar, and
                 the burst would land on the board's own words, so it isn't drawn; the board, the islander and the line say it. */}
@@ -546,7 +548,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                   else {chooseLevel(Math.max(1,Math.min(5,levelOf(saved.options)+(kind==='easier'?-1:1))) as LearningLevel,saved.options);setSetup(true);}
                 }}/>}
                 {ownsResult&&!hasOffer&&bridge&&!store.save.settings.learningBridges?.[learner.id]?.includes(id)&&!signal?.[4]&&comfort.offers&&!comfort.youngChild&&<View style={{gap:8}}><Button quiet onPress={()=>{if(store.challengeWorking({bridge:id},{owner:learner.id,epoch,game:id,id:saved.id,revision:saved.revision,kind:'school'}))router.push(bridge.route);}}>{bridge.label}</Button><Button quiet compact onPress={()=>store.challengeWorking({bridge:id},{owner:learner.id,epoch,game:id,id:saved.id,revision:saved.revision,kind:'school'})}>Not now</Button></View>}
-                <Button icon="right" onPress={replay} style={{ minWidth: 220, minHeight: 62, backgroundColor: theme.accent, borderColor: theme.accent }}>
+                <Button icon="right" onPress={replay} style={{ minWidth: 220, minHeight: 62, backgroundColor: "#FF7A5C", borderColor: "#FF7A5C" }}>
                   Keep going
                 </Button>
               </View>
@@ -568,7 +570,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         visible={focused && (setup || !saved)}
         onClose={() => (saved ? setSetup(false) : back())}
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
-        footer={<Button maxFontSizeMultiplier={big} onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
+        footer={<Button maxFontSizeMultiplier={big} onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: "#FF7A5C", borderColor: "#FF7A5C" }}>Play this level</Button>}
       >
         {/* At accessibility sizes the art sits above the name, so the name has the card's width and never breaks a word. */}
         <View testID="learn-setup-card" style={{ flexDirection: large ? "column" : "row", alignItems: large ? "flex-start" : "center", gap: large ? 4 : 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={large ? 56 : 72}/><View style={large ? { alignSelf: "stretch" } : { flex: 1 }}><Heading maxFontSizeMultiplier={large ? wordFitMultiplier(engine.name, 21, sheetLine - 24, 2) : undefined} style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy maxFontSizeMultiplier={big} style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
@@ -677,3 +679,22 @@ export function LearnFrame({ id }: { id: LearnId }) {
     </SafeAreaView>
   );
 }
+
+const C = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
+function Heading(props: React.ComponentProps<typeof BaseHeading>) {
+ const loaded = useNunitoLoaded();
+ return <BaseHeading {...props} style={[{ color: '#3D2B24' }, props.style, loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {fontWeight: '800'}]}/>;
+}
+function Copy(props: React.ComponentProps<typeof BaseCopy>) {
+ const loaded = useNunitoLoaded();
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
+}
+function Button(props: React.ComponentProps<typeof BaseButton>) {
+ const loaded = useNunitoLoaded();
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}>{props.children}</BaseButton>;
+}
+function Chip(props: React.ComponentProps<typeof BaseChip>) {
+ return <Button {...props} quiet compact textStyle={props.numberOfLines ? {flexShrink: 1} : undefined} style={{borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: props.numberOfLines ? 1 : 0, ...(props.numberOfLines ? {maxWidth: '100%'} : {}), borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
+}
+
+const styles = { ...baseStyles, page: [baseStyles.page, { backgroundColor: "#FFF6E5" }] };

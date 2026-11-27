@@ -13,6 +13,7 @@ import { roundProgress } from "../src/learn/LearnChrome";
 import { countResult, hopOf, landingOf } from "../src/learn/games/number-hop/items";
 import { createHop, hopProgress, validHop2, type HopRound } from "../src/learn/games/number-hop/round2";
 
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const viewport = vi.hoisted(() => ({ fontScale: 1, width: 393 }));
 vi.mock("react-native", () => ({ View: "div", ScrollView: "section", Pressable: "pressable", Animated: { Value: class { setValue() {} interpolate() { return 0; } }, View: "div", timing: () => ({ start() {}, stop() {} }), sequence: () => ({ start() {}, stop() {} }), createAnimatedComponent: (c: unknown) => c }, Platform: { OS: "ios" }, useWindowDimensions: () => ({ fontScale: viewport.fontScale, width: viewport.width, height: 852 }), StyleSheet: { create: (s: unknown) => s, flatten: (s: unknown) => s }, AccessibilityInfo: { isReduceMotionEnabled: async () => true, addEventListener: () => ({ remove() {} }) } }));
 vi.mock("react-native-svg", () => ({ default: "svg", Circle: "circle", Rect: "rect", Path: "path", G: "g", Line: "line", Text: "svgtext", Ellipse: "ellipse" }));

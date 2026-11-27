@@ -12,11 +12,14 @@ import { startSession } from '../src/learn/session';
 import { engines } from '../src/learn/engines';
 import { levelTitle, optionsAtLevel, type LearningLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => true }));
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async () => {} } }));
-vi.mock('react-native', () => ({ ScrollView: 'ScrollView', View: 'View', useWindowDimensions: () => viewport, AppState: { addEventListener: () => ({ remove() {} }) } }));
+vi.mock('react-native', () => ({ ScrollView: 'ScrollView', View: 'View', Text: 'NativeText', Platform: { OS: 'ios' }, Pressable: 'Pressable', Animated: { createAnimatedComponent: () => 'AnimatedPressable', Value: class {} }, StyleSheet: { create: (s: unknown) => s, flatten: (s: unknown) => Object.assign({}, ...[s].flat(Infinity).filter(Boolean)) }, useWindowDimensions: () => viewport, AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }) }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: { canGoBack: () => false, replace: vi.fn(), push: vi.fn() } }));
 vi.mock('../src/components/ui', () => ({ Button: 'Button', Chip: 'Chip', Heading: 'Heading', Copy: 'Copy', ToggleRow: 'ToggleRow', GameHeader: 'GameHeader', C: {}, styles: {},
@@ -165,4 +168,17 @@ it.each([[3.12, true], [1, false]])('Help at text scale %s puts Hear a quick gui
 it('AX5 setup sheet description stops at 2x so the level stones are near', async () => {
   const r = await mount('pattern-path', false);
   expect(r.root.find(n => String(n.type) === 'Copy' && textOf(n) === engines['pattern-path'].description).props.maxFontSizeMultiplier).toBe(2);
+});
+
+it('BaseButton keeps espresso icons beside plain label text with its row gap', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const { Button } = await vi.importActual<typeof import('../src/components/ui')>('../src/components/ui');
+  await act(async () => { root = create(<Button icon="sound-on" onPress={() => {}} textStyle={{ color: '#3D2B24' }}>Hear a quick guide</Button>); });
+  const icon = root!.root.findByType('Icon' as React.ElementType);
+  const text = root!.root.findByType('NativeText' as React.ElementType);
+  expect(icon.props.color).toBe('#3D2B24');
+  expect(inside(icon, text)).toBe(false);
+  expect(text.children).toEqual(['Hear a quick guide']);
+  const row = root!.root.findByType('AnimatedPressable' as React.ElementType);
+  expect(row.props.style.flat(Infinity)).toContainEqual({ flexDirection: 'row', gap: 7 });
 });

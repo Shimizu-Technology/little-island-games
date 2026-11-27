@@ -21,6 +21,7 @@ import { registration as slip, type Action as SlipAction, type State as SlipStat
 import { ChallengeBoard } from '../src/learn/games/slip-tide/challengeBoard';
 import { registration as maze, puzzle as mazePuzzle, solve, type Action as MazeAction, type Payload as MazePayload } from './helpers/challenge-replay';
 import type { ChallengeCard, ChallengeEntry, ChallengeViewProps } from '../src/challenge/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport=vi.hoisted(()=>({width:393,height:852,fontScale:1}));
 const db=vi.hoisted(()=>({raw:null as string|null}));

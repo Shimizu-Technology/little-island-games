@@ -16,6 +16,7 @@ import { registration as slip, type Action as SlipAction, type State as SlipStat
 import { ChallengeBoard } from '../src/learn/games/slip-tide/challengeBoard';
 import { wordWidth } from '../src/components/wordFit';
 import type { ChallengeCard, ChallengeEntry, ChallengeViewProps } from '../src/challenge/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{},discardSession:async()=>{}}}));
 vi.mock('../src/puzzles/bankAssets',async()=>{const {readFileSync:read}=await import('node:fs');return {bankTransport:{read:async(name:string)=>read(`src/content/puzzles/assets/${name}.lipuzzle`,'utf8')}};});

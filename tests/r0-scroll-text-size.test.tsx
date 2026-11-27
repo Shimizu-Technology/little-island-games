@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** R0 review P2: crossing the large-text threshold mid-answer must not move the page. Only a real move to another
  * question or round repositions the board. */
 import React, { createContext, useLayoutEffect } from 'react';
@@ -10,6 +11,7 @@ import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel, type LearningLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));

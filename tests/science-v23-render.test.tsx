@@ -1,3 +1,4 @@
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
@@ -35,6 +36,7 @@ vi.mock("../src/learn/Coach", () => ({
   CoachSpot: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock("../src/components/ui", () => ({
+  C: {},
   font: "Arial",
   Copy: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   Button: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,

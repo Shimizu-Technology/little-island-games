@@ -50,6 +50,7 @@ import { createPracticeRound, practiceAdmitted, practiceText, type PracticeQuest
 import { defaultPracticeSettings, type PracticeSettings } from "../src/practice/types";
 import { TreasureChest } from "../src/arcade/Chest";
 import { arcadeGames } from "../src/arcade/registry";
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 beforeEach(holdFrames);
 
 const practiceAdmittedProbe = (q: PracticeQuestion) => practiceAdmitted(q, "The Practice panel");

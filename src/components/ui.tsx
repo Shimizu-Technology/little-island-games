@@ -170,7 +170,7 @@ export function Button({
         style ?? null,
       ]}
     >
-      {icon && <Icon name={icon} size={compact ? 18 : 20} color={textColor} />}
+      {icon && <Icon name={icon} size={compact ? 18 : 20} color={typeof textStyle?.color === "string" ? textStyle.color : textColor} />}
       <Text maxFontSizeMultiplier={maxFontSizeMultiplier} numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle]}>{children}</Text>
     </PressableScale>
   );

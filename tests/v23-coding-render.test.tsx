@@ -1,3 +1,4 @@
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 import React from "react";
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";

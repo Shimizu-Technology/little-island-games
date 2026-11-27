@@ -1,3 +1,4 @@
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";

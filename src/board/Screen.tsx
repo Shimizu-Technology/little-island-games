@@ -1,3 +1,6 @@
+import { C as BaseC, styles as baseStyles, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton, Chip as BaseChip , GameHeader, Label as BaseLabel, Sheet, Status, ToggleRow } from "../components/ui";
+import { useNunitoLoaded } from "../ui/fonts";
+
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { resultEvent } from "../islander/reactions";
@@ -5,7 +8,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AppState, Platform, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { Button, C, Chip, Copy, GameHeader, Heading, Label, Sheet, Status, ToggleRow, styles } from "../components/ui";
 import { CHROME_MAX, atLarge, wordFitMultiplier } from "../components/wordFit";
 import { Celebrate } from "../learn/Celebrate";
 import { PlayerNames, Scoreboard } from "../components/Match";
@@ -130,7 +132,8 @@ function Setup({
     <SafeAreaView style={styles.page}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { maxWidth: 640, gap: 16 }]}
+        style={{ marginHorizontal: 12 }}
+        contentContainerStyle={[styles.content, { maxWidth: 640, gap: 20, backgroundColor: C.paper, borderWidth: 1, borderColor: C.line, borderRadius: 28, marginVertical: 12 }]}
       >
         <GameHeader title={info.name} titleMax={headerMax} onBack={previous ? onClose : back} backLabel={previous ? "Back" : "Games"} />
         <View style={{ alignItems: "center", gap: 8 }}>
@@ -929,7 +932,7 @@ function Round({
             </Button>
           </View>
         ) : concealed ? (
-          <View style={{ padding: 24, gap: 16, alignItems: "center", backgroundColor: "#DEEDEF", borderRadius: 24 }}>
+          <View style={{ padding: 24, gap: 16, alignItems: "center", backgroundColor: "#FFF0D2", borderRadius: 24 }}>
             <BoardArt game="hidden-canoes" size={110} />
             <Heading style={{ fontSize: 24, textAlign: "center" }}>Keep the lagoon private</Heading>
             <Copy style={{ textAlign: "center" }}>
@@ -1028,4 +1031,26 @@ function Round({
       </Sheet>
     </SafeAreaView>
   );
+}
+
+const C = { ...BaseC, cream: '#FFF6E5', paper: '#FFFDF8', line: '#E8D8BE', ink: '#3D2B24', muted: '#665247', teal: '#9A641A', soft: '#FFF0D2', coral: '#FF7A5C' };
+const styles = { ...baseStyles, page: [baseStyles.page, { backgroundColor: '#FFF6E5' }], input: [baseStyles.input, { color: '#3D2B24', backgroundColor: '#FFFDF8', borderColor: '#E8D8BE' }] };
+function Heading(props: React.ComponentProps<typeof BaseHeading>) {
+ const loaded = useNunitoLoaded();
+ return <BaseHeading {...props} style={[{ color: '#3D2B24' }, props.style, loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {fontWeight: '800'}]}/>;
+}
+function Copy(props: React.ComponentProps<typeof BaseCopy>) {
+ const loaded = useNunitoLoaded();
+ return <BaseCopy {...props} style={[{ color: '#665247' }, props.style, loaded && {fontFamily: 'Nunito_600SemiBold', fontWeight: 'normal'}]}/>;
+}
+function Button(props: React.ComponentProps<typeof BaseButton>) {
+ const loaded = useNunitoLoaded();
+ return <BaseButton {...props} style={{...props.style, backgroundColor: props.quiet ? '#FFFDF8' : '#FF7A5C', borderWidth: props.quiet ? (props.selected ? 2 : 1) : 0, borderColor: props.selected ? '#3D2B24' : props.quiet ? '#E8D8BE' : 'transparent'}} textStyle={{...props.textStyle, color: '#3D2B24', ...(loaded ? {fontFamily: 'Nunito_800ExtraBold', fontWeight: 'normal'} : {})}}/>;
+}
+function Chip(props: React.ComponentProps<typeof BaseChip>) {
+ return <Button {...props} quiet compact textStyle={props.numberOfLines ? {flexShrink: 1} : undefined} style={{borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: props.numberOfLines ? 1 : 0, ...(props.numberOfLines ? {maxWidth: '100%'} : {}), borderWidth: props.selected ? 2 : 1, backgroundColor: '#FFFDF8'}}/>;
+}
+
+function Label(props: React.ComponentProps<typeof BaseLabel>) {
+ return <BaseLabel {...props} style={{...props.style, color: '#3D2B24'}}/>;
 }

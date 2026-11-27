@@ -1,3 +1,4 @@
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** R0b: what the Learn frame gives each School board at the largest text size. The board and the result card get a
  * text region (2x, or where the words fit), step games can bring the board back into view, and a short landscape
  * phone folds the learner chip, mode and journey into one row beside the level line. */
@@ -14,6 +15,7 @@ import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { startSession } from '../src/learn/session';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId, LearnSession } from '../src/learn/types';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const companion = vi.hoisted(()=>({event:'entry'}));

@@ -3,6 +3,7 @@
 import React from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 vi.mock('react-native', () => {
