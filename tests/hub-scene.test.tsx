@@ -10,6 +10,8 @@ import {
   TERRAIN_VIEWBOX,
   terrainBranches,
   terrainPathData,
+  WALK_MS,
+  ZOOM_MS,
   type PathSegment,
   type Point,
 } from '../src/hub/model';
@@ -48,6 +50,18 @@ describe('six-door illustrated island map', () => {
   expect(screen.root.findAll(n => n.type === 'svg')).toHaveLength(0);
   await act(() => screen.unmount());
  });
+ it.each([false, true])('gives immediate press feedback on touch down and release (reduced=%s)', async (reduced) => {
+  let screen!: ReactTestRenderer;
+  await act(() => { screen = create(<IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced={reduced} active door={null} onArrive={vi.fn()}/>); });
+  const school = screen.root.findByProps({ testID: 'place-school' });
+  const schoolPress = motion.values[7];
+  expect(schoolPress.get()).toBe(0);
+  await act(() => school.props.onPressIn());
+  expect(schoolPress.get()).toBe(1);
+  await act(() => school.props.onPressOut());
+  expect(schoolPress.get()).toBe(0);
+  await act(() => screen.unmount());
+ });
 });
 describe('visible map input during route/sheet settling',()=>{
  it('opens a place immediately even while idle motion is paused by a closing sheet',async()=>{
@@ -70,7 +84,9 @@ describe('departure camera lifetime',()=>{
   const [x,y,,zoom,cameraX,cameraY]=motion.values;
   expect(zoom.get()).toBe(1.16);
   const camera=[zoom.get(),cameraX.get(),cameraY.get()];
-  await act(()=>{vi.advanceTimersByTime(540);});
+  await act(()=>{vi.advanceTimersByTime(WALK_MS);});
+  expect(open).not.toHaveBeenCalled();
+  await act(()=>{vi.advanceTimersByTime(ZOOM_MS);});
   expect(open).toHaveBeenCalledExactlyOnceWith('home');
   const door=[x.get(),y.get()];
   // HubScreen accepts the door in the same callback that pushes the Router route.

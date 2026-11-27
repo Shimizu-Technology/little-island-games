@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { Islander, type IslanderLook } from '../islander';
@@ -11,13 +11,17 @@ import { IslandLife } from './IslandLife';
 import { createJourney, guideStartPoint, guideWaypoints, mapLayout, WALK_MS, ZOOM_MS, type PlaceId } from './model';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWidth, labelFontSize, labelHeight, left, top, reduced, visit }: { id: PlaceId; name: string; width: number; height: number; labelWidth: number; labelFontSize: number; labelHeight: number; left: number; top: number; reduced: boolean; visit: (place: PlaceId) => void }) {
- const pressed = useSharedValue(1), [focused, setFocused] = useState(false);
- const style = useAnimatedStyle(() => ({ transform: [{ scale: pressed.get() }] }));
+ const press = useSharedValue(0), [focused, setFocused] = useState(false);
+ const style = useAnimatedStyle(() => ({
+  opacity: 1 - press.get() * .16,
+  transform: [{ scale: 1 - press.get() * (reduced ? 0 : .05) }],
+ }), [reduced]);
  const boxWidth = Math.max(width, labelWidth);
  const pillPadX = labelWidth < 110 ? 3 : labelWidth < 140 ? 5 : 12;
  return <AnimatedPressable testID={`place-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${name}`} onPress={() => visit(id)}
   onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-  onPressIn={() => pressed.set(reduced ? 1 : withTiming(.97, { duration: 90 }))} onPressOut={() => pressed.set(withTiming(1, { duration: 150 }))}
+  onPressIn={() => press.set(reduced ? 1 : withTiming(1, { duration: 40, easing: Easing.out(Easing.cubic) }))}
+  onPressOut={() => press.set(reduced ? 0 : withTiming(0, { duration: 85, easing: Easing.out(Easing.cubic) }))}
   style={[{ position: 'absolute', left: left + (width - boxWidth) / 2, top, width: boxWidth, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
    <View pointerEvents="none" style={{ width, height, alignItems: 'center', justifyContent: 'flex-end' }}>
     <View style={{ width, height, transform: [{ scale: 1.14 }, { translateY: Math.round(height * .03) }] }}><Landmark id={id}/></View>
@@ -36,11 +40,11 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const departing = useRef(false), wasActive = useRef(active);
  const guideSize = layout.guideSize;
  const settle = useMemo(() => (place: PlaceId) => {
-  const target = mapLayout(width, height, fontScale).targets.find(item => item.id === place)!.door;
+  const target = layout.targets.find(item => item.id === place)!.door;
   cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY);
   departing.current = true;
   x.set(target.x); y.set(target.y); bob.set(0); setWalking(false); onArrive(place);
- }, [width, height, fontScale, x, y, bob, zoom, cameraX, cameraY, onArrive]);
+ }, [layout, x, y, bob, zoom, cameraX, cameraY, onArrive]);
  // eslint-disable-next-line react-hooks/refs -- createJourney stores settle for input/timer callbacks; it never calls it during render.
  const journey = useMemo(() => createJourney(settle), [settle]);
  useEffect(() => () => journey.cancel(), [journey]);
@@ -56,7 +60,7 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
   departing.current = false;
   x.set(start.x); y.set(start.y); bob.set(0); zoom.set(1); cameraX.set(0); cameraY.set(0); opacity.set(active && reduced ? withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 120 })) : 1);
  }, [active, width, height, reduced, start.x, start.y, journey, x, y, bob, zoom, cameraX, cameraY, opacity]);
- const visit = (place: PlaceId) => {
+ const visit = useCallback((place: PlaceId) => {
   // A just-dismissed sheet can retain its presence token briefly. Never drop a visible tap.
   if (!active) { settle(place); return; }
   if (!journey.visit(place, reduced)) return;
@@ -80,11 +84,12 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
    x.set(xSteps.length === 1 ? xSteps[0] : withSequence(...xSteps));
    y.set(ySteps.length === 1 ? ySteps[0] : withSequence(...ySteps));
   }
-  bob.set(withSequence(...Array.from({ length: 3 }, () => withSequence(withTiming(-4, { duration: 62 }), withTiming(0, { duration: 64 })))));
+  const hopUp = Math.round(WALK_MS / 2), hopDown = WALK_MS - hopUp;
+  bob.set(withSequence(withTiming(-4, { duration: hopUp, easing: Easing.out(Easing.cubic) }), withTiming(0, { duration: hopDown })));
   zoom.set(withDelay(WALK_MS, withTiming(1.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
-  cameraX.set(withDelay(WALK_MS, withTiming((width/2-target.x)*.16, { duration: ZOOM_MS })));
-  cameraY.set(withDelay(WALK_MS, withTiming((height/2-target.y)*.16, { duration: ZOOM_MS })));
- };
+  cameraX.set(withDelay(WALK_MS, withTiming((width/2-target.x)*.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
+  cameraY.set(withDelay(WALK_MS, withTiming((height/2-target.y)*.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
+ }, [active, settle, journey, reduced, layout, width, height, x, y, bob, zoom, cameraX, cameraY]);
  const guide = useAnimatedStyle(() => ({ transform: [{ translateX: x.get()-guideSize*.303 }, { translateY: y.get()-guideSize+bob.get() }] }));
  const camera = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ translateX: cameraX.get() }, { translateY: cameraY.get() }, { scale: zoom.get() }] }));
  return <Animated.View accessible={false} importantForAccessibility="no" testID={Platform.OS === "web" ? "island-scene" : undefined} style={[{ width, height }, camera]}>

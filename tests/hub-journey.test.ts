@@ -7,7 +7,8 @@ describe('interruptible guide journey', () => {
   expect(journey.visit('school', false)).toBe(true);
   vi.advanceTimersByTime(WALK_MS); expect(open).not.toHaveBeenCalled();
   vi.advanceTimersByTime(ZOOM_MS); expect(open.mock.calls).toEqual([['school']]);
-  expect(WALK_MS+ZOOM_MS).toBeLessThanOrEqual(600);
+  expect(WALK_MS + ZOOM_MS).toBeLessThanOrEqual(180);
+  expect(WALK_MS + ZOOM_MS).toBeGreaterThan(100);
  });
  it.each(['school','home'] as const)('second tap immediately opens %s and cancels stale completion', place => {
   vi.useFakeTimers(); const open = vi.fn(), journey = createJourney(open);

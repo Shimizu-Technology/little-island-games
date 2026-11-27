@@ -239,7 +239,7 @@ export function guideWaypoints(from: Point, to: Point, layout: MapLayout, width:
   }
   return points;
 }
-export const WALK_MS = 380, ZOOM_MS = 160;
+export const WALK_MS = 110, ZOOM_MS = 50;
 /** One cancellable boundary timer. The second activation always wins immediately. */
 export function createJourney(open: (place: PlaceId) => void, schedule = (fn: () => void, ms: number) => setTimeout(fn, ms), cancel = (id: ReturnType<typeof setTimeout>) => clearTimeout(id)) {
   let timer: ReturnType<typeof setTimeout> | undefined, pending: PlaceId | null = null;
