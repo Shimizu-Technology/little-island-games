@@ -61,6 +61,6 @@ describe('Islander 2.2 compatibility and art',()=>{
   const expressions=frontPoses.map(p=>art(defaultLook,p).match(/data-expression="([^"]+)"/)![1]);
   expect(new Set(expressions)).toEqual(new Set(['happy','proud','thinking','focused','surprised','wink','star-eyes','sleepy','yum']));
   const boy=art({...defaultLook,...presentationPresets.boy}), girl=art({...defaultLook,...presentationPresets.girl});
-  expect(boy).not.toContain('M-12 7l-3-2M12 7l3-2');expect(girl).toContain('M-12 7l-3-2M12 7l3-2');
+  expect(boy).not.toContain('data-lashes="true"');expect(girl).toContain('data-lashes="true"');
  });
 });
