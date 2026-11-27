@@ -1,4 +1,3 @@
-vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** F-frame: "Hear a quick guide" never plays silence. The School frame offers it only when the engine's helpAudio has a
  * shipped recording in the chosen voice, the same lookup the player uses. Also verifies F3 spoken Help exit and
  * background/visibility cancellation across LearnFrame. */
@@ -14,6 +13,8 @@ import { startSession } from '../src/learn/session';
 import { engines } from '../src/learn/engines';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 /** Shipped sources, read from the generated require tables without loading native audio into Node. */
@@ -90,7 +91,14 @@ vi.mock('../src/badges/ResultCard', () => ({ BadgeResultCard: () => null }));
 
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 let root: ReactTestRenderer | undefined;
-function Ready({ id }: { id: LearnId }) { const s = useStore(); return s.ready ? <LearnFrame id={id} /> : null; }
+let latestStore: ReturnType<typeof useStore> | undefined;
+function Ready({ id }: { id: LearnId }) {
+  const s = useStore();
+  React.useEffect(() => {
+    latestStore = s;
+  }, [s]);
+  return s.ready ? <LearnFrame id={id} /> : null;
+}
 async function openHelp(id: LearnId, voice?: 'warm' | 'calm', extraSettings?: Partial<Settings>) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const save = migrateProfiles(emptySave());
@@ -217,4 +225,18 @@ it('F3: Help spoken guide respects narrationVolume and stops speech on onClose, 
   expect(expoSpeech.stop).toHaveBeenCalled();
   await act(async () => root!.unmount()); root = undefined;
   expect(visListeners.size).toBe(0);
+});
+
+it('F2: changing only narration voice with unchanged epoch cancels active spoken Help immediately', async () => {
+  const sheet = await openHelp('island-colors', 'warm', { narrationVolume: 0.5, automaticSpeech: false });
+  const epochBefore = latestStore!.epoch;
+  await act(async () => { hearIn(sheet)[0].props.onPress(); });
+  expect(expoSpeech.speak).toHaveBeenCalledTimes(1);
+  expoSpeech.stop.mockClear();
+  expoSpeech.speak.mockClear();
+
+  await act(async () => { latestStore!.settings({ voice: 'calm' }); });
+  expect(latestStore!.epoch).toBe(epochBefore);
+  expect(expoSpeech.stop).toHaveBeenCalledTimes(1);
+  expect(expoSpeech.speak).not.toHaveBeenCalled();
 });

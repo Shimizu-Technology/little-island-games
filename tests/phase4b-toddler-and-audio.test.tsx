@@ -524,12 +524,11 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
     expect(speechMock.speak).not.toHaveBeenCalled();
     expect(events).toHaveLength(0);
 
-    // Real call with interruption and custom volume/language/rate/pitch
+    // Real call with interruption and custom volume/rate/pitch (always en-US)
     expect(
       speakText("Hello island!", {
         enabled: true,
         active: true,
-        language: "en-US",
         rate: 0.9,
         pitch: 1.05,
         volume: 0.5,
@@ -600,7 +599,7 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
     // 1. automaticSpeech: false (default) blocks auto-prompt on mount, allows explicit replay with volume 0.25
     const root = await mountBoard(
       <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />,
-      { sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.25, epoch: 1 },
+      { sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.25, voice: "warm", epoch: 1 },
     );
     expect(speechMock.speak).not.toHaveBeenCalled();
     expect(api.replay()).toBe(true);
@@ -612,13 +611,28 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
       volume: 0.25,
     });
 
+    // 1b. Updating ONLY voice ("warm" -> "calm") with unchanged epoch immediately cancels active speech
+    speechMock.stop.mockClear();
+    speechMock.speak.mockClear();
+    await act(async () => {
+      root.update(
+        <AudioPreferences.Provider
+          value={{ sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.25, voice: "calm", epoch: 1 }}
+        >
+          <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
+        </AudioPreferences.Provider>,
+      );
+    });
+    expect(speechMock.stop).toHaveBeenCalledTimes(1);
+    expect(speechMock.speak).not.toHaveBeenCalled();
+
     // 2. Changing narrationVolume (0.25 -> 0.5) immediately calls Speech.stop() and uses 0.5 on next replay
     speechMock.stop.mockClear();
     speechMock.speak.mockClear();
     await act(async () => {
       root.update(
         <AudioPreferences.Provider
-          value={{ sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.5, epoch: 1 }}
+          value={{ sound: true, narration: true, automaticSpeech: false, narrationVolume: 0.5, voice: "calm", epoch: 1 }}
         >
           <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
         </AudioPreferences.Provider>,
@@ -640,7 +654,7 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
     await act(async () => {
       root.update(
         <AudioPreferences.Provider
-          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0.5, epoch: 1 }}
+          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0.5, voice: "calm", epoch: 1 }}
         >
           <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
         </AudioPreferences.Provider>,
@@ -660,7 +674,7 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
     await act(async () => {
       root.update(
         <AudioPreferences.Provider
-          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0.5, epoch: 2 }}
+          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0.5, voice: "calm", epoch: 2 }}
         >
           <Harness text="Tap the red hibiscus!" promptKey="r1:0" soundOn active />
         </AudioPreferences.Provider>,
@@ -674,7 +688,7 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
     await act(async () => {
       root.update(
         <AudioPreferences.Provider
-          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0, epoch: 2 }}
+          value={{ sound: true, narration: true, automaticSpeech: true, narrationVolume: 0, voice: "calm", epoch: 2 }}
         >
           <Harness text="Tap the green turtle!" promptKey="r1:1" soundOn active />
         </AudioPreferences.Provider>,
@@ -690,7 +704,7 @@ describe("Phase 4B F1/F2/F5: Real expo-speech adapter, AudioPreferences contract
     await act(async () => {
       root.update(
         <AudioPreferences.Provider
-          value={{ sound: true, narration: false, automaticSpeech: true, narrationVolume: 0.75, epoch: 2 }}
+          value={{ sound: true, narration: false, automaticSpeech: true, narrationVolume: 0.75, voice: "calm", epoch: 2 }}
         >
           <Harness text="Tap the blue wave!" promptKey="r1:2" soundOn active />
         </AudioPreferences.Provider>,

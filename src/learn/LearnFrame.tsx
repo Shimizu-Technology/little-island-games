@@ -159,6 +159,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const automaticSpeech = audioPrefs.automaticSpeech ?? store.save.settings.automaticSpeech ?? false;
   const rawNarrationVolume = audioPrefs.narrationVolume ?? store.save.settings.narrationVolume ?? 0.75;
   const narrationVolume = Number.isFinite(rawNarrationVolume) ? Math.min(1, Math.max(0, rawNarrationVolume)) : 0.75;
+  const narrationVoice = audioPrefs.voice ?? store.save.settings.voice ?? "warm";
   const speechEpoch = audioPrefs.epoch ?? epoch;
   const soundOn = soundEnabled && narrationOn;
   const canSpeakHelp = soundOn && narrationVolume > 0;
@@ -207,7 +208,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       stopSpeaking();
     }
   }, [focused, appActive, canSpeakHelp]);
-  const prevSpeechPrefs = useRef({ soundOn, narrationOn, automaticSpeech, narrationVolume, speechEpoch });
+  const prevSpeechPrefs = useRef({ soundOn, narrationOn, automaticSpeech, narrationVolume, narrationVoice, speechEpoch });
   useLayoutEffect(() => {
     const prev = prevSpeechPrefs.current;
     if (
@@ -215,12 +216,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
       prev.narrationOn !== narrationOn ||
       prev.automaticSpeech !== automaticSpeech ||
       prev.narrationVolume !== narrationVolume ||
+      prev.narrationVoice !== narrationVoice ||
       prev.speechEpoch !== speechEpoch
     ) {
-      prevSpeechPrefs.current = { soundOn, narrationOn, automaticSpeech, narrationVolume, speechEpoch };
+      prevSpeechPrefs.current = { soundOn, narrationOn, automaticSpeech, narrationVolume, narrationVoice, speechEpoch };
       stopSpeaking();
     }
-  }, [soundOn, narrationOn, automaticSpeech, narrationVolume, speechEpoch]);
+  }, [soundOn, narrationOn, automaticSpeech, narrationVolume, narrationVoice, speechEpoch]);
   const prevHelpOpen = useRef(help);
   useEffect(() => {
     if (prevHelpOpen.current && !help) {

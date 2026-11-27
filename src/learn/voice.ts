@@ -93,8 +93,6 @@ export type SpeakOptions = {
   enabled?: boolean;
   /** Whether the board/screen is active and foregrounded. When false, speech is suppressed. */
   active?: boolean;
-  /** BCP-47 language tag (default "en-US"). */
-  language?: string;
   /** Gentle speech rate (default 0.94 for warm clarity). */
   rate?: number;
   /** Cheerful pitch (default 1.06). */
@@ -106,8 +104,8 @@ export type SpeakOptions = {
 };
 
 /**
- * Speak a short, child-friendly prompt or help line via expo-speech (iOS AVSpeechSynthesizer,
- * Android TextToSpeech, and Web SpeechSynthesis).
+ * Speak a short, child-friendly English prompt or help line via expo-speech (iOS AVSpeechSynthesizer,
+ * Android TextToSpeech, and Web SpeechSynthesis). Strictly English-only (never CHamoru).
  * Respects mute (`enabled`), foreground (`active`), and `volume` (> 0), interrupts stale speech
  * by default, uses zero timers, and returns `true` ONLY when `Speech.speak` was genuinely invoked.
  */
@@ -117,7 +115,6 @@ export function speakText(text: string, opts: SpeakOptions = {}): boolean {
   if (!clean || opts.enabled === false || opts.active === false || volume <= 0) return false;
   if (isWebSpeechUnavailable() || typeof Speech?.speak !== "function") return false;
 
-  const language = opts.language ?? DEFAULT_LANGUAGE;
   const rate = opts.rate ?? 0.94;
   const pitch = opts.pitch ?? 1.06;
   const interrupt = opts.interrupt !== false;
@@ -136,7 +133,7 @@ export function speakText(text: string, opts: SpeakOptions = {}): boolean {
 
   try {
     const result: unknown = Speech.speak(clean, {
-      language,
+      language: DEFAULT_LANGUAGE,
       rate,
       pitch,
       volume,
@@ -153,7 +150,7 @@ export function speakText(text: string, opts: SpeakOptions = {}): boolean {
 
   for (const listener of listeners) {
     try {
-      listener({ type: "speak", text: clean, language, rate, pitch, volume, interrupt });
+      listener({ type: "speak", text: clean, language: DEFAULT_LANGUAGE, rate, pitch, volume, interrupt });
     } catch {
       /* Ignore observer errors. */
     }
@@ -201,10 +198,10 @@ export function useSpeechLifecycle() {
 }
 
 /**
- * Consumes AudioPreferences (`sound`, `narration`, `automaticSpeech`, `narrationVolume`, `epoch`).
+ * Consumes AudioPreferences (`sound`, `narration`, `automaticSpeech`, `narrationVolume`, `voice`, `epoch`).
  * Auto-speaks a task prompt once per `promptKey` ONLY when `automaticSpeech` is enabled,
  * keeps explicit replay/speak working on tap whenever narration is enabled with volume > 0,
- * and stops cleanly on mute, inactive, backgrounding, preference/epoch change, or unmount.
+ * and stops cleanly on mute, inactive, backgrounding, preference/voice/epoch change, or unmount.
  */
 export function useSpokenPrompt(
   text: string | null | undefined,
@@ -213,7 +210,6 @@ export function useSpokenPrompt(
     soundOn: boolean;
     active: boolean;
     autoSpeak?: boolean;
-    language?: string;
     rate?: number;
     pitch?: number;
   },
@@ -222,7 +218,6 @@ export function useSpokenPrompt(
     soundOn,
     active,
     autoSpeak = true,
-    language = DEFAULT_LANGUAGE,
     rate = 0.94,
     pitch = 1.06,
   } = opts;
@@ -231,12 +226,13 @@ export function useSpokenPrompt(
   const narration = prefs.narration ?? true;
   const automaticSpeech = prefs.automaticSpeech ?? false;
   const volume = clampVolume(prefs.narrationVolume);
+  const voice = prefs.voice ?? "warm";
   const epoch = prefs.epoch ?? 0;
   const enabled = soundOn && soundSetting && narration && volume > 0;
 
   const foreground = useSpeechLifecycle();
   const spokenKey = useRef<string | null>(null);
-  const prevPrefs = useRef({ enabled, narration, automaticSpeech, volume, epoch });
+  const prevPrefs = useRef({ enabled, narration, automaticSpeech, volume, voice, epoch });
 
   useLayoutEffect(() => {
     const prev = prevPrefs.current;
@@ -245,12 +241,13 @@ export function useSpokenPrompt(
       prev.narration !== narration ||
       prev.automaticSpeech !== automaticSpeech ||
       prev.volume !== volume ||
+      prev.voice !== voice ||
       prev.epoch !== epoch
     ) {
-      prevPrefs.current = { enabled, narration, automaticSpeech, volume, epoch };
+      prevPrefs.current = { enabled, narration, automaticSpeech, volume, voice, epoch };
       stopSpeaking();
     }
-  }, [enabled, narration, automaticSpeech, volume, epoch]);
+  }, [enabled, narration, automaticSpeech, volume, voice, epoch]);
 
   useEffect(() => {
     if (!enabled || !active || !foreground.current) {
@@ -260,8 +257,8 @@ export function useSpokenPrompt(
     if (!autoSpeak || !automaticSpeech || !text) return;
     if (spokenKey.current === promptKey) return;
     spokenKey.current = promptKey;
-    speakText(text, { enabled, active, language, rate, pitch, volume, interrupt: true });
-  }, [text, promptKey, enabled, active, autoSpeak, automaticSpeech, language, rate, pitch, volume, foreground]);
+    speakText(text, { enabled, active, rate, pitch, volume, interrupt: true });
+  }, [text, promptKey, enabled, active, autoSpeak, automaticSpeech, rate, pitch, volume, foreground]);
 
   useEffect(() => () => {
     stopSpeaking();
@@ -269,23 +266,22 @@ export function useSpokenPrompt(
 
   const replay = useCallback(() => {
     if (!text || !enabled || !active || !foreground.current) return false;
-    return speakText(text, { enabled, active, language, rate, pitch, volume, interrupt: true });
-  }, [text, enabled, active, language, rate, pitch, volume, foreground]);
+    return speakText(text, { enabled, active, rate, pitch, volume, interrupt: true });
+  }, [text, enabled, active, rate, pitch, volume, foreground]);
 
   const say = useCallback(
-    (line: string, lineOpts?: { language?: string; rate?: number; pitch?: number; interrupt?: boolean }) => {
+    (line: string, lineOpts?: { rate?: number; pitch?: number; interrupt?: boolean }) => {
       if (!enabled || !active || !foreground.current) return false;
       return speakText(line, {
         enabled,
         active,
-        language: lineOpts?.language ?? language,
         rate: lineOpts?.rate ?? rate,
         pitch: lineOpts?.pitch ?? pitch,
         volume,
         interrupt: lineOpts?.interrupt ?? true,
       });
     },
-    [enabled, active, language, rate, pitch, volume, foreground],
+    [enabled, active, rate, pitch, volume, foreground],
   );
 
   return { replay, speak: say, stop: stopSpeaking, canSpeak: enabled && active };
