@@ -25,14 +25,14 @@ export function arrivalPoint(room: RoomId, slot: number): { x: number; y: number
 /** Each location starts without dolls; Friends brings the child's own family here. */
 export function defaultGuamRoom(id: GuamPlaceId): RoomState {
   const rows: readonly [string, number, number][] = id === 'tumon-beach' ? [
-    ['beach-blanket', 8, 7], ['surfboard', 13, 3], ['coconut-drink', 6, 9],
+    ['beach-blanket', 8, 7], ['beach-surfboard', 13, 3], ['coconut-drink', 6, 9],
     ['ball', 12, 10], ['shell', 3, 8], ['shell-pile', 14, 7],
   ] : [
     ['bbq-grill', 4, 3], ['shaved-ice', 12, 8], ['fiesta-platter', 8, 9],
     ['lantern', 14, 3], ['bench', 10, 0], ['coconut-drink', 14, 10],
   ];
   return { theme: { wallpaper: 'cream', floor: 'sand' }, characters: [],
-    instances: rows.map(([item, x, y]) => ({ id: `place-${item}`, item, x, y,
+    instances: rows.map(([item, x, y]) => ({ id: `place-${item === "beach-surfboard" ? "surfboard" : item}`, item, x, y,
       rotation: 0, mirrored: false, layer: itemSpec(item).layer, state: 'rest',
       ...(item === 'lantern' ? { powered: true } : {}),
     })),

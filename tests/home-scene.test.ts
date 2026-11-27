@@ -16,6 +16,9 @@ import type { HomeStateV2, Instance } from "../src/home/model";
 import type { DropProposal } from "../src/home/scene/proposal";
 
 const starter = starterHome();
+function legacyRooms(state: HomeStateV2): HomeStateV2 {
+  return { ...state, rooms: Object.fromEntries(roomIds.map(id => [id, state.rooms[id]])) as HomeStateV2['rooms'] };
+}
 function empty(): HomeStateV2 {
   const state = structuredClone(starter);
   for (const room of roomIds) state.rooms[room] = { ...state.rooms[room], instances: [], characters: [] };
@@ -317,8 +320,8 @@ describe("canonical apply, migration and undo", () => {
   it("migrates v1/v2/v3 immutably; accepted v4 contacts are never repaired", () => {
     for (const old of [
       legacyStarterHome(),
-      (({ rosterVersion: _r, ...state }) => ({ ...state, version: 2 as const }))(actors()),
-      (({ rosterVersion: _r, ...state }) => ({ ...state, version: 3 as const }))(actors()),
+      (({ rosterVersion: _r, ...state }) => ({ ...state, version: 2 as const }))(legacyRooms(actors())),
+      (({ rosterVersion: _r, ...state }) => ({ ...state, version: 3 as const }))(legacyRooms(actors())),
     ]) {
       const bytes = JSON.stringify(old);
       const next = migrateHome(old)!;
@@ -648,7 +651,7 @@ it("ports every recorded Pip socket-boundary fixture and the shared bunk group",
     const state = empty();
     state.rooms.home.instances = [sample.inst as Instance];
     state.rooms.home.characters = [{ slot: 1, anchor: "floor", pose: "stand", x: 17, y: 8 }];
-    delete state.rosterVersion; const canonical = migrateHome({...state,version:3})!;
+    delete state.rosterVersion; const canonical = migrateHome({...legacyRooms(state),version:3})!;
     const index = buildScene(canonical).rooms.home;
     const target = index.sockets.find((t) => t.attachment.kind === "socket" && t.attachment.socket === sample.socket)!;
     const proposal = resolve(index, index.entities["character/1"], target.contact, {
@@ -701,7 +704,7 @@ it("rejects clipped v4 furniture while repairing the same historical v3 geometry
   state.rooms.home.instances = [instance("bed", "bed", 0, 0)];
   expect(validHome(state)).toBe(false);
   expect(migrateHome(state)).toBeUndefined();
-  state.version = 3; delete state.rosterVersion;
+  state.version = 3; delete state.rosterVersion; state.rooms = legacyRooms(state).rooms;
   const bytes = JSON.stringify(state),
     migrated = migrateHome(state)!;
   expect(validHome(migrated)).toBe(true);

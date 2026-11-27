@@ -22,7 +22,7 @@ vi.mock('../src/arcade/Art', () => ({StickerArt: () => null}));
 const render = renderToStaticMarkup;
 describe('free home art contract', () => {
   it('supplies distinct, tintable art for every free item and each active reaction', () => {
-    expect(Object.keys(moreCatalog).filter(id=>moreCatalog[id].free)).toHaveLength(61);
+    expect(Object.keys(moreCatalog).filter(id=>moreCatalog[id].free)).toHaveLength(62);
     const silhouettes = new Set<string>();
     for (const [id, spec] of Object.entries(moreCatalog).filter(([,spec])=>spec.free)) {
       expect(spec.free).toBe(true);
@@ -36,6 +36,13 @@ describe('free home art contract', () => {
     }
     expect(silhouettes.size).toBeGreaterThanOrEqual(54); // plants intentionally share the same painted monstera.
   }, 30000);
+  it('shares the painted surfboard asset without dropping Lagoon surfboard tint', () => {
+    const beach = render(<MoreItemArt id="beach-surfboard"/>);
+    expect(beach).toContain('assets/art/home/places/surfboard.webp');
+    const reward = render(<ItemArt item="surfboard"/>);
+    expect(reward).toContain('assets/art/home/places/surfboard.webp');
+    expect(render(<ItemArt item="surfboard" tint="lagoon"/>)).not.toBe(reward);
+  });
   it('keeps original legacy output by default and tints fabric without repainting wood', () => {
     for (const item of Object.keys(catalog) as (keyof typeof catalog)[]) expect(render(<ItemArt item={item}/>)).toBe(render(<ItemArt item={item} tint="original"/>));
     for (const item of ['bed','chair','rug','beanbag','lamp','toy-box'] as const) {

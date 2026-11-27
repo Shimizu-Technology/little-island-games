@@ -344,9 +344,10 @@ export function HomeScreen({
     }),
     [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight, large]
   );
+  const placeRoom = isGuamPlace(room) ? room : "home";
   const building = useMemo(
-    () => locationBuilding(roomIds.indexOf(room), window.width / window.height > 1.8),
-    [room, window.width, window.height]
+    () => locationBuilding(roomIds.indexOf(placeRoom), window.width / window.height > 1.8),
+    [placeRoom, window.width, window.height]
   );
   const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Navigation is outside the scene revision.
@@ -805,11 +806,16 @@ export function HomeScreen({
       );
       setActiveSheet("closet");
       const hero = live.current.scene.entities["character/0"];
-      const framed = closetCameraFor(hero, live.current.room, viewport, window.height, headerHeight, building);
-      if (framed.room !== live.current.room) setRoom(framed.room);
+      const targetRoom = hero?.room ?? live.current.room;
+      const targetBuilding = locationBuilding(roomIds.indexOf(targetRoom), window.width / window.height > 1.8);
+      const framed = closetCameraFor(hero, targetRoom, viewport, window.height, headerHeight, targetBuilding);
+      if (framed.room !== live.current.room) {
+        setRoom(framed.room);
+        live.current.store.dispatch({ type: "room", room: framed.room });
+      }
       runtime.current?.animateCamera(framed.camera, false);
     },
-    [building, closet, headerHeight, viewport, window.height]
+    [closet, headerHeight, viewport, window.width, window.height]
   );
   const closeCloset = useCallback(
     (fromPopState = false) => {
@@ -1214,11 +1220,11 @@ export function HomeScreen({
     if (activeSheet === "closet") {
       const hero = live.current.scene.entities["character/0"];
       const framed = closetCameraFor(hero, room, viewport, window.height, headerHeight, building);
-      interaction.camera.set(framed.camera);
+      interaction.animateCamera(framed.camera, false, true);
       return;
     }
     if (old.building.place !== building.place) {
-      interaction.camera.set(focusCamera(roomIds.indexOf(room), viewport, building));
+      interaction.animateCamera(focusCamera(roomIds.indexOf(room), viewport, building), false, true);
       return;
     }
     const before = interaction.camera.get();
@@ -1230,7 +1236,7 @@ export function HomeScreen({
       housePoint(oldOrigin.x, oldOrigin.y)
     );
     const scale = (before.a * roomScale(viewport)) / roomScale(old.viewport);
-    interaction.camera.set(
+    interaction.animateCamera(
       overview
         ? fitCamera(viewport, building)
         : boundCamera(
@@ -1244,7 +1250,9 @@ export function HomeScreen({
             },
             viewport,
             building
-          )
+          ),
+      false,
+      true
     );
     // Refit only on viewport changes. Ordinary edits and drops never move the camera.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1321,10 +1329,12 @@ export function HomeScreen({
   const find = () => {
     const hero = scene.entities["character/0"];
     if (!hero) return;
+    interaction.cancelAll();
+    const targetBuilding = locationBuilding(roomIds.indexOf(hero.room), window.width / window.height > 1.8);
     setRoom(hero.room);
     setOverview(false);
     store.dispatch({ type: "room", room: hero.room });
-    interaction.animateCamera(focusCamera(roomIds.indexOf(hero.room), viewport, building, {
+    interaction.animateCamera(focusCamera(roomIds.indexOf(hero.room), viewport, targetBuilding, {
       x: hero.contact.x + hero.bounds.left + hero.bounds.width / 2,
       y: hero.contact.y + hero.bounds.top + hero.bounds.height / 2,
     }),
@@ -1634,8 +1644,29 @@ export function HomeScreen({
             (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 10)
           }
           onChoose={(proposal) => {
-            if (runtime.current!.animateProposal(proposal)) { setSelected(undefined); setRoom(proposal.room); }
-
+            const targetBuilding = locationBuilding(roomIds.indexOf(proposal.room), window.width / window.height > 1.8);
+            if (targetBuilding.place !== building.place) {
+              // Places have separate coordinate spaces: commit the shared proposal before opening its place.
+              interaction.cancelAll();
+              const before = live.current.scene;
+              const result = commitAt(proposal.id, proposal.room, proposal.contact, proposal);
+              if (!result) return;
+              const destination = buildRuntimeScene(result.state);
+              if (result.proposal.attachment.kind === "container") setStorageId(result.proposal.attachment.parent);
+              const owner = before.rooms[proposal.room].targets.find(target => target.id === proposal.target)?.owner;
+              restoreFocus(proposal.kind === "mouth" ? owner : result.identities[proposal.id]);
+              showReaction(result.proposal, before.entities[proposal.id]?.item, true);
+              delightLanded(result.proposal, before.entities[proposal.id], before, destination, result.identities[proposal.id]);
+              watchCooking(destination);
+              setSelected(undefined);
+              setRoom(proposal.room);
+              store.dispatch({ type: "room", room: proposal.room });
+              interaction.animateCamera(focusCamera(roomIds.indexOf(proposal.room), viewport, targetBuilding), false, true);
+            } else if (runtime.current!.animateProposal(proposal)) {
+              setSelected(undefined);
+              setRoom(proposal.room);
+              store.dispatch({ type: "room", room: proposal.room });
+            }
           }}
         />
       )}

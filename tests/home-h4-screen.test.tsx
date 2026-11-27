@@ -8,8 +8,8 @@ import { buildScene } from '../src/home/scene/graph';
 import { roomToScreen } from '../src/home/scene/camera';
 import { housePoint, roomPoint } from '../src/home/scene/types';
 import { apply, resolve } from '../src/home/scene/proposal';
-import { buildingLayout, roomOrigin } from '../src/home/camera';
-import { roomIds } from '../src/home/catalogMore';
+import { buildingLayout, locationBuilding, roomOrigin } from '../src/home/camera';
+import { roomIds, locationIds } from '../src/home/catalogMore';
 import { labFixtures } from '../src/home/runtime/lab';
 import { COOK_MS } from '../src/home/runtime/delight';
 import { crabAnchors, crabOrigin } from '../src/islander/rig/anchors';
@@ -18,7 +18,7 @@ import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
 vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
-const harness = vi.hoisted(() => ({ viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ destinations: {} as any, cameraTargets: [] as any[], tween: null as any, viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, proposals: [] as any[], slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/home/art/CrabFriend', () => ({ CrabFriend: 'CrabFriend' }));
@@ -32,13 +32,13 @@ vi.mock('../src/home/runtime/homeSound', () => ({
 }));
 vi.mock('expo-router', () => ({ router: { push: vi.fn() }, useFocusEffect: () => {} }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => harness.viewport, AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
-vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
+vi.mock('react-native-safe-area-context', () => { const insets = { top: 0, bottom: 0 }; return { useSafeAreaInsets: () => insets }; });
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: harness.settings } }) }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: harness.sleeping, wake: () => {} }) }));
 vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { animateProposal: (proposal: any) => { harness.proposals.push(proposal); return true; }, isCurrent: () => true, finish: () => {}, completeMealHandoff:(...args:any[])=>harness.handoffs.push(args),
-  camera: { get: () => ({ a: cozyRoomScale(harness.options.viewport), b: 0, c: 0, d: cozyRoomScale(harness.options.viewport), tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => {}, animateCamera: (camera: any) => { harness.zoom = camera; },
+  camera: { get: () => ({ a: cozyRoomScale(harness.options.viewport), b: 0, c: 0, d: cozyRoomScale(harness.options.viewport), tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => { harness.tween = null; }, animateCamera: (camera: any, _door = false, immediate = false) => { harness.cameraTargets.push(camera); harness.zoom = camera; harness.tween = immediate ? null : camera; },
   showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
@@ -47,7 +47,7 @@ vi.mock('../src/home/HomeClosetSheet', () => ({ HomeClosetSheet: () => null, clo
 vi.mock('../src/home/HomeBadgesSheet', () => ({ HomeBadgesSheet: () => null }));
 vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
-vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
+vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: (props: any) => { harness.destinations = props; return null; } }));
 vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
 vi.mock('../src/home/runtime/FriendDrawer', () => ({ FriendDrawer: () => null }));
 vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: 'CapacityCue', CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
@@ -58,7 +58,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.proposals = []; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.cameraTargets = []; harness.tween = null; harness.proposals = []; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -692,4 +692,67 @@ it.each(['closet', 'badges'] as const)('Sky replaces the %s sheet and suppresses
   expect(harness.scene.moods).toEqual({});
   await act(async () => harness.chrome.onAtmosphere());
   expect(harness.chrome.atmosphereOpen).toBe(false);
+});
+
+
+describe('Guam cross-place camera transitions', () => {
+  it('keeps the shared house building stable so ordinary room navigation can finish its tween', async () => {
+    await open(starterHome());
+    const building = harness.options.building;
+    await act(async () => harness.chrome.onRoom('kitchen'));
+    expect(harness.options.building).toBe(building);
+    expect(harness.tween).not.toBeNull();
+  });
+  function expectFramed(room: typeof locationIds[number]) {
+    expect(harness.options.building.place).toBe(locationBuilding(locationIds.indexOf(room)).place);
+    for (const camera of harness.cameraTargets) {
+      for (const value of Object.values(camera)) expect(Number.isFinite(value)).toBe(true);
+      expect(Math.abs(camera.tx)).toBeLessThan(2000);
+      expect(Math.abs(camera.ty)).toBeLessThan(2000);
+    }
+    expect(harness.cameraTargets.length).toBeGreaterThan(0);
+    expect(harness.tween).toBeNull();
+    const hero = harness.scene.scene.entities['character/0'];
+    const origin = roomOrigin(locationIds.indexOf(room), harness.options.building), camera = harness.zoom;
+    const x = (origin.x + hero.contact.x + hero.bounds.left + hero.bounds.width / 2) * camera.a + camera.tx;
+    const y = (origin.y + hero.contact.y + hero.bounds.top + hero.bounds.height / 2) * camera.a + camera.ty;
+    expect(x).toBeGreaterThan(0); expect(x).toBeLessThan(harness.options.viewport.width);
+    expect(y).toBeGreaterThan(0); expect(y).toBeLessThan(harness.options.viewport.height);
+  }
+  it('opens Closet from Tumon Beach around the Islander in My room and saves the destination', async () => {
+    const state = starterHome(); state.current = 'tumon-beach';
+    const persist = await open(state);
+    await act(async () => harness.chrome.onCloset());
+    expectFramed('home');
+    expect(harness.chrome.closetOpen).toBe(true);
+    const hero = harness.scene.scene.entities['character/0'];
+    const origin = roomOrigin(0, harness.options.building), c = harness.zoom;
+    expect((origin.x + hero.contact.x + hero.bounds.left) * c.a + c.tx).toBeGreaterThanOrEqual(0);
+    expect((origin.y + hero.contact.y + hero.bounds.top) * c.a + c.ty).toBeGreaterThanOrEqual(0);
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    expect(persist.mock.calls.at(-1)?.[0].current).toBe('home');
+  });
+  it('finds the Islander in My room from Chamorro Village without retaining a camera tween', async () => {
+    const state = starterHome(); state.current = 'chamorro-village';
+    const persist = await open(state);
+    harness.tween = { tx: -10000, ty: -10000 };
+    await act(async () => harness.chrome.onFind());
+    expectFramed('home');
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    expect(persist.mock.calls.at(-1)?.[0].current).toBe('home');
+  });
+  it('selects a Tumon Beach destination for the house Islander and persists the shared proposal', async () => {
+    const persist = await open(starterHome());
+    await act(async () => harness.scene.onSelect('character/0'));
+    const scene = harness.scene.scene;
+    const target = scene.rooms['tumon-beach'].targets.find((t: any) => t.kind === 'socket')!;
+    const proposal = resolve({ ...scene.rooms['tumon-beach'], entities: scene.entities }, scene.entities['character/0'], target.contact, { scale: 1, target: target.id, release: true });
+    expect(proposal.target).toBe(target.id);
+    await act(async () => harness.destinations.onChoose(proposal));
+    expect(harness.proposals).toHaveLength(0);
+    expectFramed('tumon-beach');
+    expect(harness.scene.scene.entities['character/0']).toMatchObject({ room: 'tumon-beach', base: 'sit' });
+    await act(async () => { vi.advanceTimersByTime(1000); });
+    expect(persist.mock.calls.at(-1)?.[0].current).toBe('tumon-beach');
+  });
 });

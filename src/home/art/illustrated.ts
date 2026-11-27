@@ -41,6 +41,7 @@ export const illustratedProps = {
 export type IllustratedProp = keyof typeof illustratedProps;
 /** Aliases project existing catalog identities; saves and footprints are unchanged. */
 export function paintedProp(id: string): IllustratedProp | undefined {
+  if (id === "beach-surfboard") return "surfboard";
   if (id in illustratedProps) return id as IllustratedProp;
   if (['lamp', 'floor-lamp', 'table-lamp'].includes(id)) return 'lamp';
   if (['plant', 'potted-fern', 'banana-plant'].includes(id)) return 'monstera';

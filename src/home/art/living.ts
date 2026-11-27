@@ -4,7 +4,7 @@ export const foodIds = ['mango','banana','rice-ball','cupcake','pumpkin-pie','fi
 export const drinkIds = ['coconut-drink','juice','hot-cocoa'] as const;
 export const toyIds = ['teddy','ball','book','shell','gift-box'] as const;
 export const holdableIds = [...foodIds,...drinkIds,...toyIds] as const;
-export type HoldableId = typeof holdableIds[number] | "surfboard";
+export type HoldableId = typeof holdableIds[number] | "surfboard" | "beach-surfboard";
 export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   ...Object.fromEntries(foodIds.map(id=>[id,{moveInPlay:true,holdable:true,edible:'food'}])),
   ...Object.fromEntries(drinkIds.map(id=>[id,{moveInPlay:true,holdable:true,edible:'drink'}])),
@@ -19,6 +19,7 @@ export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   'sink-counter':{moveInPlay:false,toggle:'water'},
   tv:{moveInPlay:true,toggle:'power'}, radio:{moveInPlay:true,toggle:'power'},
   // HD-07: a tap lights the burner under the stove's pan; food in the pan cooks.
+  "beach-surfboard":{moveInPlay:true,holdable:true},
   surfboard:{moveInPlay:true,holdable:true},
   'bbq-grill':{moveInPlay:false,toggle:'power'},
   stove:{moveInPlay:false,toggle:'power'},

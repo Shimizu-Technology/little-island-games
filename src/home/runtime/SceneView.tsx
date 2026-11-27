@@ -576,7 +576,7 @@ export function SceneView({
             carried onto a room button or the Friends button stays visible above the bar. */}
         <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height,
           overflow: "hidden", backgroundColor: "#BEE4DD" }}>
-        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt time={(state.atmosphere ?? defaultAtmosphere).timeOfDay} /></View>
+        <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt time={(state.atmosphere ?? defaultAtmosphere).timeOfDay} moon={building.place !== roomIds.indexOf("chamorro-village")} /></View>
         <Animated.View
           testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}

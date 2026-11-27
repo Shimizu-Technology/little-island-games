@@ -2,15 +2,16 @@ import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
-import { compactHome, hydrateHome, migrateHome, starterHome, validHome, type HomeStateV2 } from '../src/home/model';
+import { owns, compactHome, hydrateHome, migrateHome, starterHome, validHome, type HomeStateV2 } from '../src/home/model';
 import { editHistory, restoredHistory, savedHistory, type History } from '../src/home/useHomeStore';
 import { buildScene } from '../src/home/scene/graph';
 import { resolve } from '../src/home/scene/proposal';
 import { arrivalPoint, gamesHere, guamPlaceIds, places } from '../src/home/locations';
-import { roomIds, type RoomId } from '../src/home/catalogMore';
+import { moreCatalog, roomIds, type RoomId } from '../src/home/catalogMore';
 import { cookingIds } from '../src/home/runtime/delight';
 import { locationBuilding, buildingLayout, roomOrigin } from '../src/home/camera';
 import { HomeChrome } from '../src/home/runtime/HomeChrome';
+import { SkyArt } from '../src/home/art/Room';
 import { PlacesSheet } from '../src/home/PlacesSheet';
 import { learnIds } from '../src/learn/types';
 import { arcadeIds } from '../src/arcade';
@@ -111,9 +112,46 @@ describe('Phase 5B family places: lossless houses, compact versioned saves and o
   });
 });
 
+describe('painted Village sky', () => {
+  it('suppresses only the duplicate crescent while keeping the night sky and stars', async () => {
+    for (const moon of [true, false]) {
+      await act(async () => { tree = create(<SkyArt time="night" moon={moon}/>); });
+      expect(tree!.root.findAll(n => String(n.type) === 'Path' && n.props.d === 'M659 143a48 48 0 1 0 33 77a48 48 0 0 1-33-77Z')).toHaveLength(moon ? 1 : 0);
+      expect(tree!.root.findAll(n => String(n.type) === 'Circle')).toHaveLength(moon ? 38 : 36);
+      await act(async () => tree!.unmount()); tree = undefined;
+    }
+  });
+});
+
+describe('Guam review save and entitlement regressions', () => {
+  it('keeps Lagoon surfboard earned while the beach prop is free, validated and playable', () => {
+    expect(owns('surfboard', {})).toBe(false);
+    expect(owns('surfboard', { ownedItems: ['surfboard'] })).toBe(true);
+    expect(owns('beach-surfboard', {})).toBe(true);
+    expect(moreCatalog['beach-surfboard']).toMatchObject({ free: true, tintable: false, rooms: ['tumon-beach'] });
+    const h = bring(start());
+    expect(validHome(h.present)).toBe(true);
+    expect(h.present.rooms['tumon-beach'].instances.find(i => i.id === 'place-surfboard')?.item).toBe('beach-surfboard');
+    expect(settle(h, 'tumon-beach/item/place-surfboard', 'character/0/hand').present.rooms['tumon-beach'].characters[0].holding).toBe('place-surfboard');
+  });
+  it.each([2, 3])('rejects Guam keys in v%s saves without modifying the source', version => {
+    const legacy = clone(compactHome(starterHome())); legacy.version = version as 2 | 3;
+    expect(validHome(legacy)).toBe(true);
+    for (const room of guamPlaceIds) {
+      const invalid = clone(legacy); invalid.rooms[room] = clone(starterHome().rooms[room]);
+      const bytes = JSON.stringify(invalid);
+      expect(validHome(invalid)).toBe(false); expect(hydrateHome(invalid)).toBeUndefined();
+      expect(JSON.stringify(invalid)).toBe(bytes);
+    }
+  });
+});
+
 describe('place picker and exact game routes', () => {
   it.each(guamPlaceIds)('provides four valid direct routes and one-tap launch callbacks at %s', async room => {
     const choose = vi.fn(), launch = vi.fn(); await act(async () => { tree = create(<PlacesSheet room={room} onRoom={choose} onClose={() => {}} onGame={launch}/>); });
+    const chips = tree!.root.findAll(n => String(n.type) === 'Pressable' && /^(Play |Visit (My room|Kitchen|Tree house|Beach hut)$)/.test(n.props.accessibilityLabel));
+    expect(chips).toHaveLength(8);
+    for (const chip of chips) expect(flat(chip.props.style)).toMatchObject({ flexBasis: '46%', flexGrow: 1 });
     for (const game of gamesHere[room]) {
       expect(existsSync(`src/app/${game.route.pathname.slice(1)}.tsx`)).toBe(true);
       if ('game' in game.route.params) expect(game.route.pathname === '/arcade' ? arcadeIds : learnIds).toContain(game.route.params.game);

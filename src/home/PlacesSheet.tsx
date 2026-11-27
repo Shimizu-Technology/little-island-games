@@ -15,14 +15,14 @@ export function PlacesSheet({ room, onRoom, onGame, onClose }: {
         <Text variant="title" style={{ fontSize: 19 }}>Games here</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {gamesHere[room].map(game => <Pressable key={game.name} accessibilityRole="button" accessibilityLabel={`Play ${game.name}`} onPress={() => onGame(game.route)}
-            style={({ pressed }) => ({ minHeight: 48, flexGrow: 1, padding: 12, borderRadius: 14, backgroundColor: pressed ? '#E4D5B4' : '#F6E9CF' })}>
+            style={({ pressed }) => ({ minHeight: 48, flexBasis: "46%", flexGrow: 1, padding: 12, borderRadius: 14, backgroundColor: pressed ? '#E4D5B4' : '#F6E9CF' })}>
             <Text variant="caption" style={{ color: '#315C56' }}>{game.name}</Text>
           </Pressable>)}
         </View>
       </View>}
       <Text variant="title" style={{ fontSize: 19 }}>Our House</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{roomIds.map(id => <Pressable key={id} accessibilityRole="button" accessibilityLabel={`Visit ${roomNames[id]}`} accessibilityState={{ selected: room === id }} onPress={() => onRoom(id)}
-        style={{ minHeight: 48, flexGrow: 1, padding: 12, borderRadius: 14, backgroundColor: room === id ? '#DAEAE0' : '#F2EBDD' }}>
+        style={{ minHeight: 48, flexBasis: "46%", flexGrow: 1, padding: 12, borderRadius: 14, backgroundColor: room === id ? '#DAEAE0' : '#F2EBDD' }}>
         <Text variant="caption">{id === 'beach' ? 'Beach deck' : roomNames[id]}</Text>
       </Pressable>)}</View>
       {(['tumon-beach', 'chamorro-village'] as const).map(id => <Pressable key={id} accessibilityRole="button" accessibilityLabel={`Visit ${roomNames[id]}`} accessibilityState={{ selected: room === id }} onPress={() => onRoom(id)}

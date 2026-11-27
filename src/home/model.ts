@@ -301,7 +301,7 @@ export function validHome(v: unknown): v is HomeSave {
     !member(s.version === 4 ? roomIds : houseRoomIds, s.current) ||
     !s.rooms || typeof s.rooms !== "object" || Array.isArray(s.rooms) ||
     !houseRoomIds.every(id => Object.hasOwn((s as HomeStateV2).rooms, id)) ||
-    !Object.keys(s.rooms).every(id => roomIds.includes(id as RoomId))
+    !Object.keys(s.rooms).every(id => (s.version === 4 ? roomIds : houseRoomIds).includes(id as RoomId))
   )
     return false;
   s = { ...s, rooms: locationRooms(s.rooms) };
@@ -736,7 +736,6 @@ export type HomeAction = (
 export type HomeResult = { state: HomeStateV2; message?: string; snapshot?: HomeStateV2; stale?: true };
 export function owns(item: ItemId, ownership: Ownership): boolean {
   return (
-    item === "surfboard" ||
     !!moreCatalog[item]?.free ||
     (starterItems as readonly string[]).includes(item) ||
     !!ownership.ownedItems?.includes(item)

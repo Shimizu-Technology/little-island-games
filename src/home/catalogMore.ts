@@ -52,6 +52,7 @@ const entry = (name: string, category: MoreItemSpec["category"], footprint: read
   free: true, tintable: true, rooms: ["home", "treehouse", "beach"], ...options,
 });
 export const moreCatalog: Record<string, MoreItemSpec> = {
+  "beach-surfboard": entry("Beach Surfboard", "toys-fun", [1, 1], { itemSize: 130, small: true, tintable: false, rooms: ["tumon-beach"] }),
   "beach-blanket": entry("Beach Blanket", "beds-seats", [3, 1], { itemSize: 235, layer: "ground", tintable: false, rooms: ["tumon-beach"] }),
   "bbq-grill": entry("Island BBQ Grill", "kitchen", [2, 1], { itemSize: 185, surface: true, tintable: false, rooms: ["chamorro-village"], interactive: "The coals glow" }),
   "shaved-ice": entry("Shaved Ice", "kitchen", [1, 1], { itemSize: 62, small: true, tintable: false, rooms: ["chamorro-village"] }),

@@ -1,4 +1,3 @@
-import { isGuamPlace } from "../locations";
 import { rigSlot } from "../family";
 import { storageCapacity, storageOpen } from '../storage';
 import {instance} from '../model';
@@ -13,7 +12,7 @@ import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import Svg, { G } from 'react-native-svg';
 import { type HomeMood } from "./delight";
-import { HandProp, PaintedProp } from '../art/PropShape';
+import { HandProp } from '../art/PropShape';
 import { species } from '../scene/species';
 import type { HoldableId } from '../art/living';
 import { ItemArt } from "../art/Items";
@@ -49,7 +48,6 @@ export const DecorArt = memo(function DecorArt({
     active: storageCapacity(item.item) ? storageOpen(item) : item.powered ?? item.state === "active",
     state: { on: storageCapacity(item.item) ? storageOpen(item) : item.powered ?? item.state === "active", empty: item.empty },
   };
-  if (item.item === "surfboard" && isGuamPlace(entity.room)) return layer === "front" ? null : <PaintedProp id="surfboard" size={itemSize(item)} mirrored={item.mirrored} rotation={item.rotation}/>;
   return moreCatalog[item.item] ? <MoreItemArt id={item.item} {...props} /> : <ItemArt item={item.item} {...props} />;
 });
 

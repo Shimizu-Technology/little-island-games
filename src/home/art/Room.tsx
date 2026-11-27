@@ -10,8 +10,9 @@ export function RoomArt({theme, badges, onBadgePress, live, atmosphere, reduced,
 }
 
 /** Quiet outdoor layers extend the stage below its floor in tall layouts. */
-export function SkyArt({ time = defaultAtmosphere.timeOfDay }: { time?: Atmosphere["timeOfDay"] }) {
+export function SkyArt({ time = defaultAtmosphere.timeOfDay, moon = true }: { time?: Atmosphere["timeOfDay"]; moon?: boolean }) {
   const palette = skyPalette[time];
+  const orb = time !== "night" || moon;
   const id = "cottage-sky-" + React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return <Svg width="100%" height="100%" viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice" accessible={false}>
     <Defs>
@@ -23,10 +24,10 @@ export function SkyArt({ time = defaultAtmosphere.timeOfDay }: { time?: Atmosphe
       </RadialGradient>
     </Defs>
     <Rect width={800} height={1200} fill={`url(#${id})`}/>
-    <Circle cx={650} cy={190} r={155} fill={`url(#${id}-halo)`}/>
+    {orb && <Circle cx={650} cy={190} r={155} fill={`url(#${id}-halo)`}/>}
     <Path d="M0 0H800V690Q420 650 0 720Z" fill="#D8EEDE" opacity={.34}/>
-    {time === 'night' ? <G fill="#FFF1CA">{Array.from({length: 36}, (_, n) => <Circle key={n} cx={30+n*107%740} cy={40+n*79%780} r={n%3 ? 1.5 : 2.5}/>)}<Path d="M659 143a48 48 0 1 0 33 77a48 48 0 0 1-33-77Z"/></G> : <Circle cx={650} cy={190} r={56} fill="#FFF0BA"/>}
-    <Circle cx={650} cy={190} r={78} fill="#FFF0BA" opacity={.13}/>
+    {time === 'night' ? <G fill="#FFF1CA">{Array.from({length: 36}, (_, n) => <Circle key={n} cx={30+n*107%740} cy={40+n*79%780} r={n%3 ? 1.5 : 2.5}/>)}{moon && <Path d="M659 143a48 48 0 1 0 33 77a48 48 0 0 1-33-77Z"/>}</G> : <Circle cx={650} cy={190} r={56} fill="#FFF0BA"/>}
+    {orb && <Circle cx={650} cy={190} r={78} fill="#FFF0BA" opacity={.13}/>}
     <G fill="#F7F6E9" opacity={0.85}>
       <Path d="M50 185Q38 158 70 151Q75 116 111 131Q142 115 157 151Q189 151 187 177Q135 194 50 185Z"/>
       <Path d="M490 320Q470 295 502 286Q510 252 541 271Q575 255 585 287Q618 289 611 312Z"/>

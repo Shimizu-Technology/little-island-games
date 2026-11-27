@@ -1432,6 +1432,8 @@ export function useInteraction({
     })();
   }, [frameCallback, frames, frameId, framesOn, idleFrames]);
   const cancelAll = () => {
+    cameraTween.set(null);
+    veil.set(0);
     revealPan.set(null);
     epoch.set(epoch.get() + 1);
     controller.set(idleController);
@@ -1554,13 +1556,13 @@ export function useInteraction({
     })();
     return true;
   };
-  /** HM-12: ease to `to` in 180 ms, or dip through the veil for another floor. Reduced Motion jumps. */
-  const animateCamera = (to: CameraMatrix, door = false) => {
+  /** HM-12: ease in 180 ms, or veil another floor. Immediate layout resets atomically cancel an earlier tween. */
+  const animateCamera = (to: CameraMatrix, door = false, immediate = false) => {
     runOnUI(() => {
       "worklet";
       revealPan.set(null);
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
-      if (reduced) {
+      if (reduced || immediate) {
         cameraTween.set(null);
         veil.set(0);
         camera.set(to);
