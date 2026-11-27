@@ -1,18 +1,20 @@
-vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 /** F-frame: "Hear a quick guide" never plays silence. The School frame offers it only when the engine's helpAudio has a
- * shipped recording in the chosen voice, the same lookup the player uses. Checked across every learning engine. */
+ * shipped recording in the chosen voice, the same lookup the player uses. Also verifies F3 spoken Help exit and
+ * background/visibility cancellation across LearnFrame. */
 import React, { createContext } from 'react';
 import { readFileSync, readdirSync } from 'node:fs';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { LearnFrame } from '../src/learn/LearnFrame';
 import { StoreProvider, useStore } from '../src/state/Store';
-import { emptySave } from '../src/state/validation';
+import { emptySave, type Settings } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { startSession } from '../src/learn/session';
 import { engines } from '../src/learn/engines';
 import { optionsAtLevel } from '../src/learn/levels';
 import type { LearnId } from '../src/learn/types';
+
+vi.mock('../src/components/Icon', () => ({ Icon: 'Icon' }));
 vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 
 /** Shipped sources, read from the generated require tables without loading native audio into Node. */
@@ -27,13 +29,52 @@ const knownMissing: string[] = ['canoe-help', 'gate-help', 'scale-help'];
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const db = vi.hoisted(() => ({ raw: null as string | null }));
 const speech = vi.hoisted(() => ({ has: ((_key: string, _voice?: 'warm' | 'calm') => true) as (key: string, voice?: 'warm' | 'calm') => boolean }));
+const expoSpeech = vi.hoisted(() => ({
+  speak: vi.fn(),
+  stop: vi.fn(() => Promise.resolve()),
+}));
+const soundCtrl = vi.hoisted(() => ({
+  play: vi.fn(() => true),
+  stop: vi.fn(),
+}));
+const appState = vi.hoisted(() => ({
+  currentState: 'active' as string,
+  listeners: new Set<(state: string) => void>(),
+  emit(next: string) {
+    this.currentState = next;
+    for (const fn of [...this.listeners]) fn(next);
+  },
+}));
+const platform = vi.hoisted(() => ({ OS: 'ios' as 'ios' | 'android' | 'web' }));
+
+vi.mock('expo-speech', () => ({
+  speak: (...args: unknown[]) => expoSpeech.speak(...args),
+  stop: () => expoSpeech.stop(),
+}));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (s: string) => { db.raw = s; }, preserve: async () => {} } }));
-vi.mock('react-native', () => ({ ScrollView: 'ScrollView', View: 'View', useWindowDimensions: () => viewport, AppState: { addEventListener: () => ({ remove() {} }) } }));
+vi.mock('react-native', () => ({
+  Platform: { get OS() { return platform.OS; } },
+  ScrollView: 'ScrollView',
+  View: 'View',
+  useWindowDimensions: () => viewport,
+  AppState: {
+    get currentState() { return appState.currentState; },
+    addEventListener: (_event: string, fn: (state: string) => void) => {
+      appState.listeners.add(fn);
+      return { remove: () => { appState.listeners.delete(fn); } };
+    },
+  },
+}));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }) }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: { canGoBack: () => false, replace: vi.fn(), push: vi.fn() } }));
 vi.mock('../src/components/ui', () => ({ Button: 'Button', Chip: 'Chip', Heading: 'Heading', Copy: 'Copy', ToggleRow: 'ToggleRow', GameHeader: 'GameHeader', C: {}, styles: {},
-  Sheet: ({ visible, children, footer }: { visible: boolean; children: React.ReactNode; footer: React.ReactNode }) => visible ? React.createElement('SheetBody', null, children, footer) : null }));
-vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: () => true, stop: () => {} }), hasSpeech: (key: string, voice?: 'warm' | 'calm') => speech.has(key, voice) }));
+  Sheet: ({ visible, onClose, title, children, footer }: { visible: boolean; onClose?: () => void; title?: string; children: React.ReactNode; footer: React.ReactNode }) =>
+    visible ? React.createElement('SheetBody', { onClose, title }, children, footer) : null }));
+vi.mock('../src/components/Audio', () => ({
+  AudioPreferences: createContext<Partial<Settings> & { epoch?: number }>({}),
+  useSoundControls: () => ({ play: soundCtrl.play, stop: soundCtrl.stop }),
+  hasSpeech: (key: string, voice?: 'warm' | 'calm') => speech.has(key, voice),
+}));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/components/Match', () => ({ Scoreboard: () => null, PlayerNames: () => null }));
 vi.mock('../src/components/feel', () => ({ feel: () => {} }));
@@ -50,11 +91,19 @@ vi.mock('../src/badges/ResultCard', () => ({ BadgeResultCard: () => null }));
 
 const textOf = (n: ReactTestInstance): string => n.children.map(c => typeof c === 'string' ? c : textOf(c)).join('');
 let root: ReactTestRenderer | undefined;
-function Ready({ id }: { id: LearnId }) { const s = useStore(); return s.ready ? <LearnFrame id={id} /> : null; }
-async function openHelp(id: LearnId, voice?: 'warm' | 'calm') {
+let latestStore: ReturnType<typeof useStore> | undefined;
+function Ready({ id }: { id: LearnId }) {
+  const s = useStore();
+  React.useEffect(() => {
+    latestStore = s;
+  }, [s]);
+  return s.ready ? <LearnFrame id={id} /> : null;
+}
+async function openHelp(id: LearnId, voice?: 'warm' | 'calm', extraSettings?: Partial<Settings>) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const save = migrateProfiles(emptySave());
   if (voice) save.settings = { ...save.settings, voice };
+  if (extraSettings) save.settings = { ...save.settings, ...extraSettings };
   save.learn = { [id]: { ...startSession(id, { options: optionsAtLevel({ mode: 'solo', pace: 'easy' }, 1) }, {}, 7), learner: 'family' } };
   db.raw = encodeSave(save);
   await act(async () => { root = create(<StoreProvider><Ready id={id} /></StoreProvider>, { createNodeMock: () => ({ scrollTo: () => {} }) }); });
@@ -63,6 +112,18 @@ async function openHelp(id: LearnId, voice?: 'warm' | 'calm') {
   return root!.root.findAll(n => String(n.type) === 'SheetBody').at(-1)!;
 }
 const hearIn = (sheet: ReactTestInstance) => sheet.findAll(n => String(n.type) === 'Button' && textOf(n).trim() === 'Hear a quick guide');
+const buttonIn = (sheet: ReactTestInstance, label: string) =>
+  sheet.findAll(n => String(n.type) === 'Button' && textOf(n).trim() === label)[0];
+
+beforeEach(() => {
+  platform.OS = 'ios';
+  appState.currentState = 'active';
+  appState.listeners.clear();
+  expoSpeech.speak.mockReset();
+  expoSpeech.stop.mockReset().mockImplementation(() => Promise.resolve());
+  soundCtrl.play.mockReset().mockImplementation(() => true);
+  soundCtrl.stop.mockReset();
+});
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; vi.unstubAllGlobals(); speech.has = () => true; });
 
 const withHelp = (Object.keys(engines) as LearnId[]).filter(id => engines[id].helpAudio);
@@ -98,4 +159,84 @@ it('the check uses the chosen voice', async () => {
   expect(asked).toContainEqual(['crab-commands-help', 'calm']);
   await act(async () => root!.unmount()); root = undefined;
   expect(hearIn(await openHelp('crab-commands', 'warm'))).toHaveLength(0);
+});
+
+it('F3: Help spoken guide respects narrationVolume and stops speech on onClose, Show me how, Choose a fresh round, AppState background, and web visibilitychange', async () => {
+  // 1. Help spoken guide uses narrationVolume and stops on Sheet onClose
+  let sheet = await openHelp('island-colors', undefined, { narrationVolume: 0.25 });
+  const hearBtn = hearIn(sheet)[0];
+  expect(hearBtn).toBeDefined();
+  await act(async () => { hearBtn.props.onPress(); });
+  expect(expoSpeech.speak).toHaveBeenCalledWith(engines['island-colors'].spokenHelp, {
+    language: 'en-US',
+    rate: 0.94,
+    pitch: 1.06,
+    volume: 0.25,
+  });
+  expoSpeech.stop.mockClear();
+  await act(async () => { sheet.props.onClose(); });
+  expect(expoSpeech.stop).toHaveBeenCalled();
+  await act(async () => root!.unmount()); root = undefined;
+
+  // 2. Help exit via "Show me how" stops speech
+  sheet = await openHelp('island-colors');
+  await act(async () => { hearIn(sheet)[0].props.onPress(); });
+  expoSpeech.stop.mockClear();
+  await act(async () => { buttonIn(sheet, 'Show me how').props.onPress(); });
+  expect(expoSpeech.stop).toHaveBeenCalled();
+  await act(async () => root!.unmount()); root = undefined;
+
+  // 3. Help exit via "Choose a fresh round" stops speech (even though boardActive stays false)
+  sheet = await openHelp('island-colors');
+  await act(async () => { hearIn(sheet)[0].props.onPress(); });
+  expoSpeech.stop.mockClear();
+  await act(async () => { buttonIn(sheet, 'Choose a fresh round').props.onPress(); });
+  expect(expoSpeech.stop).toHaveBeenCalled();
+  await act(async () => root!.unmount()); root = undefined;
+
+  // 4. AppState backgrounding while Help is open (boardActive already false) stops speech immediately
+  sheet = await openHelp('island-colors');
+  await act(async () => { hearIn(sheet)[0].props.onPress(); });
+  expoSpeech.stop.mockClear();
+  await act(async () => { appState.emit('background'); });
+  expect(expoSpeech.stop).toHaveBeenCalled();
+  await act(async () => root!.unmount()); root = undefined;
+  expect(appState.listeners.size).toBe(0);
+
+  // 5. Web document.visibilitychange (hidden) while Help is open stops speech and cleans up listener on unmount
+  platform.OS = 'web';
+  appState.currentState = 'active';
+  const visListeners = new Set<() => void>();
+  const fakeDoc = {
+    hidden: false,
+    addEventListener: vi.fn((event: string, fn: () => void) => {
+      if (event === 'visibilitychange') visListeners.add(fn);
+    }),
+    removeEventListener: vi.fn((event: string, fn: () => void) => {
+      if (event === 'visibilitychange') visListeners.delete(fn);
+    }),
+  };
+  vi.stubGlobal('document', fakeDoc);
+  sheet = await openHelp('island-colors');
+  await act(async () => { hearIn(sheet)[0].props.onPress(); });
+  expoSpeech.stop.mockClear();
+  fakeDoc.hidden = true;
+  await act(async () => { for (const fn of visListeners) fn(); });
+  expect(expoSpeech.stop).toHaveBeenCalled();
+  await act(async () => root!.unmount()); root = undefined;
+  expect(visListeners.size).toBe(0);
+});
+
+it('F2: changing only narration voice with unchanged epoch cancels active spoken Help immediately', async () => {
+  const sheet = await openHelp('island-colors', 'warm', { narrationVolume: 0.5, automaticSpeech: false });
+  const epochBefore = latestStore!.epoch;
+  await act(async () => { hearIn(sheet)[0].props.onPress(); });
+  expect(expoSpeech.speak).toHaveBeenCalledTimes(1);
+  expoSpeech.stop.mockClear();
+  expoSpeech.speak.mockClear();
+
+  await act(async () => { latestStore!.settings({ voice: 'calm' }); });
+  expect(latestStore!.epoch).toBe(epochBefore);
+  expect(expoSpeech.stop).toHaveBeenCalledTimes(1);
+  expect(expoSpeech.speak).not.toHaveBeenCalled();
 });

@@ -8,6 +8,7 @@ import { engine as weather } from "../src/learn/games/weather-watch/engine";
 import { optionsAtLevel } from "../src/learn/levels";
 import { random } from "../src/games/types";
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => true }));
+vi.mock("../src/components/Audio", async () => ({ AudioPreferences: (await import("react")).createContext({}) }));
 vi.mock("../src/islander/active", async () => {
   const { defaultLook } = await import("../src/islander/look");
   return { useActiveIslanderLook: () => defaultLook };

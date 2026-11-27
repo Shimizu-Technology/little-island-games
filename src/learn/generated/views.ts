@@ -31,6 +31,9 @@ import * as v28 from '../games/slip-tide/view';
 import * as v29 from '../games/canoe-seats/view';
 import * as v30 from '../games/gate-crab/view';
 import * as v31 from '../games/shell-scale/view';
+import * as v32 from '../games/island-colors/view';
+import * as v33 from '../games/reef-sounds/view';
+import * as v34 from '../games/splash-count/view';
 import type { LearnId } from '../types';
 import type { LearnView } from '../views';
 export const registeredViews: Record<LearnId, LearnView> = {
@@ -66,4 +69,7 @@ export const registeredViews: Record<LearnId, LearnView> = {
   'canoe-seats': v29 as LearnView,
   'gate-crab': v30 as LearnView,
   'shell-scale': v31 as LearnView,
+  'island-colors': v32 as LearnView,
+  'reef-sounds': v33 as LearnView,
+  'splash-count': v34 as LearnView,
 };

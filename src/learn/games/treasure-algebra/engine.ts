@@ -79,6 +79,8 @@ export const engine: LearnEngine<AlgebraState> = {
   id: "treasure-algebra", name: "Treasure Algebra", island: "numbers", ages: [9, 14], ownLevels: true,
   tagline: "Dive, balance, and open the chest.", description: "Travel above and below sea level, then balance treasure equations.",
   help: "Move the diver with the step buttons. For a balance, remove the same weight from both pans, then divide both sides if needed. Hint explains one move without ending the round.",
+  spokenIntro: "Dive along the sea line and unlock the treasure chest!",
+  spokenHelp: "Move the diver using the step buttons. On balance puzzles, take the same weight off both pans, then split both sides if needed, and choose the value of x. Tap Hint anytime for a worked clue.",
   color: "#AC5C26", surface: "#FFF0CF", modes: ["solo", "together"],
   levelNames: [
     { name: "Sunny steps", description: "Add and subtract positive steps on a line." },

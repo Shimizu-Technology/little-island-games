@@ -1,4 +1,3 @@
-vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 import React from "react";
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
@@ -8,7 +7,9 @@ import { engines } from "../src/learn/engines";
 import { roundProgress } from "../src/learn/LearnChrome";
 import { optionsAtLevel, type LearningLevel } from "../src/learn/levelOptions";
 import type { BoardProps, LearnId } from "../src/learn/types";
+
 const { renderToStaticMarkup } = createRequire(import.meta.url)("react-dom/server");
+vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 vi.mock("react-native", () => ({ View: ({ children }: { children: React.ReactNode }) => <div>{children}</div>, ScrollView: ({ children }: { children: React.ReactNode }) => <section>{children}</section>, Platform: { select: (o: Record<string, unknown>) => o.ios }, useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }) }));
 vi.mock("../src/components/ui", () => ({
   C: { ink: "#123", paper: "#fff" },
@@ -18,6 +19,7 @@ vi.mock("../src/components/ui", () => ({
   PressableScale: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 vi.mock("../src/learn/Coach", () => ({ CoachSpot: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("../src/components/GameIcon", () => ({ GameIcon: ({ id }: { id: string }) => <svg data-game={id}/> }));
 vi.mock("react-native-svg", () => ({
   default: "svg", Circle: "circle", Ellipse: "ellipse", Path: "path", Rect: "rect", Text: "text", G: "g",

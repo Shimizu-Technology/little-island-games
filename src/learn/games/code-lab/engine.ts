@@ -31,6 +31,8 @@ export const engine: LearnEngine<LabState> = {
   ...legacyEngine, notWon: undefined, turn: undefined,
   tagline: 'Read code. Build a working plan.', description: 'Predict what real Python prints, then build and fix programs with touch choices. Ages 9–14, with deeper puzzles for older learners and adults.',
   help: modernHelp,
+  spokenIntro: 'Read the Python program to predict what it prints, or fill the blanks to build a working plan!',
+  spokenHelp: 'In Predict, read the code and choose what it prints before checking. In Build, tap a blank line and choose a value, then run your code. Look, One step, and Clear help you trace every line.',
   levelNames: [
     { name: 'Say in order', description: 'Read the order of printed lines and build a short plan.' },
     { name: 'Scores and loops', description: 'Track changing values through every line of a loop.' },

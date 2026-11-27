@@ -31,7 +31,10 @@ export const learnIds = [
   "slip-tide",
   "canoe-seats",
   "gate-crab",
-  "shell-scale"
+  "shell-scale",
+  "island-colors",
+  "reef-sounds",
+  "splash-count"
 ] as const;
 export type LearnId = (typeof learnIds)[number];
 export const learningGroups = {
@@ -66,5 +69,8 @@ export const learningGroups = {
   "slip-tide": "originals",
   "canoe-seats": "originals",
   "gate-crab": "originals",
-  "shell-scale": "originals"
+  "shell-scale": "originals",
+  "island-colors": "levels",
+  "reef-sounds": "levels",
+  "splash-count": "levels"
 } as const;

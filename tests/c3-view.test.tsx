@@ -7,6 +7,7 @@ import { initialAttempt, step } from '../src/learn/games/code-lab/attempt';
 import { schoolPrograms, deepPrograms } from '../src/learn/games/code-lab/content';
 const win = vi.hoisted(()=>({width:393,height:852,fontScale:1}));
 vi.mock('react-native',()=>({Platform:{select:()=> 'Menlo'},View:'div',ScrollView:'scroll',useWindowDimensions:()=>win}));
+vi.mock('react-native-svg',()=>({default:'svg',Path:'path'}));
 vi.mock('../src/components/ui',()=>({Button:'button',Copy:'p',PressableScale:'button',C:{soft:'#eee'}}));
 vi.mock('../src/components/Audio', () => ({
   AudioPreferences: React.createContext({ sound: true }),

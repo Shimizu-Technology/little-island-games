@@ -31,6 +31,9 @@ import { engine as e28 } from '../games/slip-tide/engine';
 import { engine as e29 } from '../games/canoe-seats/engine';
 import { engine as e30 } from '../games/gate-crab/engine';
 import { engine as e31 } from '../games/shell-scale/engine';
+import { engine as e32 } from '../games/island-colors/engine';
+import { engine as e33 } from '../games/reef-sounds/engine';
+import { engine as e34 } from '../games/splash-count/engine';
 import type { LearnEngine, LearnId } from '../types';
 export const registeredEngines: Record<LearnId, LearnEngine<unknown>> = {
   'reef-race': e0 as LearnEngine<unknown>,
@@ -65,4 +68,7 @@ export const registeredEngines: Record<LearnId, LearnEngine<unknown>> = {
   'canoe-seats': e29 as LearnEngine<unknown>,
   'gate-crab': e30 as LearnEngine<unknown>,
   'shell-scale': e31 as LearnEngine<unknown>,
+  'island-colors': e32 as LearnEngine<unknown>,
+  'reef-sounds': e33 as LearnEngine<unknown>,
+  'splash-count': e34 as LearnEngine<unknown>,
 };

@@ -6,20 +6,26 @@ import { SCHOOL_BOARD_MIN } from "../../boardGeometry";
 import { Button, Copy, Heading } from "../../../components/ui";
 import { LARGE_TEXT, wordFitMultiplier } from "../../../components/wordFit";
 import type { BoardProps } from "../../types";
+import { SpeakButton } from "../../SpeakButton";
+import { useSpokenPrompt } from "../../voice";
 import { BucketPicture, Cargo, ClueIcon, bucketLabel, itemOf } from "./art";
 import { bell, complete, goalSentence, lookText, routes, catchWords, type Side } from "./rules";
 import { advance, choose, clear, counted, currentRow, frameOf, help, run, undo, type TideV3 } from "./school";
+import { engine } from "./engine";
 
 const SIDE = ["left", "right"] as const;
 const clueLabel = (v: string) => v;
 const clueIconFor = (v: string, level: number) =>
   (level === 1 && (v === "blue" || v === "coral")) || v === "bell" ? <ClueIcon kind={v} size={16} /> : undefined;
 const whenLabel = (v: string) => v === "on" ? "on this catch" : "on the catch before";
-export function BoardV3({ session, update, practice, assistance, cheer, coach, sound, active, width }: BoardProps<TideV3>) {
+export function BoardV3({ session, update, practice, assistance, cheer, coach, sound, soundOn, active, width }: BoardProps<TideV3>) {
   const bucketMax = useWindowDimensions().fontScale >= LARGE_TEXT ? wordFitMultiplier("RIGHT BUCKET→", 16, (width - 32) / 2, 2) : undefined;
   const space = useBoardSpace(), compact = !!space?.ready && space.width < 600;
   const sideBySide = useBoardColumns(), cargoWidth = sideBySide ? width * .46 : width;
   const s = session.state, row = currentRow(s), f = frameOf(s.level), done = !row;
+  const goalPrompt = row ? goalSentence(f, row.target) : "";
+  const promptSpeech = row ? `${s.index === 0 && session.revision === 0 && engine.spokenIntro ? `${engine.spokenIntro} ` : ""}${goalPrompt}` : null;
+  const { replay, speak } = useSpokenPrompt(promptSpeech, `${session.id}:${s.index}`, { soundOn, active: active && !done });
   // Version 3 belts run to eight catches: on a phone in portrait they stay on one sideways row at every text size, so the rule and Run stay in view.
   const singleRow = compact && !sideBySide;
   const cargoRows = singleRow ? 1 : Math.max(1, Math.ceil((row?.belt.length ?? 0) / Math.max(1, Math.floor((cargoWidth - 24 + 5) / (Math.ceil((width >= 600 ? 64 : 56) * 64 / 49) + 11)))));
@@ -56,7 +62,9 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
       setFailure(result.miss);
       practice(s.level === 4 ? "think.code-events" : s.level >= 3 ? "think.code-logic" : "think.code-condition", false);
       sound("wrong", true);
-      setMessage(""); setMissText(`Catch ${result.miss + 1}, the ${catchWords(row.belt[result.miss])}, would go ${SIDE[got].toUpperCase()}, but it belongs ${SIDE[1 - got].toUpperCase()}. Change a block and run again.`);
+      const miss = `Catch ${result.miss + 1}, the ${catchWords(row.belt[result.miss])}, would go ${SIDE[got].toUpperCase()}, but it belongs ${SIDE[1 - got].toUpperCase()}. Change a block and run again.`;
+      setMessage(""); setMissText(miss);
+      speak(miss);
       return;
     }
     setFailure(null); setMessage("Watch each catch reach its bucket."); cheer("right");
@@ -74,6 +82,10 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
     if (!next) return;
     // Any answer confirmation is Help, so it is recorded before the child sees it.
     assistance?.(); update(next); setEditing(null); setFailure(null); setMessage(""); if (next.rule !== s.rule) setGuess(null);
+    sound("tap", true);
+    const nextLook = next.hint === 1 ? lookText(f, next.rule, row.target, row.belt) : null;
+    const nextHelpLine = nextLook ? nextLook.text : next.hint === 2 ? "Help set one block right. Look at the rule, then press Run." : "Help filled the rule. Press Run to see why each catch goes there.";
+    speak(nextHelpLine);
   };
   // Help's words come from the saved rung, so a resumed round shows the same help it left with.
   const look = row && s.hint === 1 ? lookText(f, s.rule, row.target, row.belt) : null;
@@ -93,7 +105,10 @@ export function BoardV3({ session, update, practice, assistance, cheer, coach, s
   return <View style={{ gap: compact ? 4 : 12, paddingBottom: 20 }}>
     <Heading>{done ? "Dock sorter complete!" : `Belt ${s.index + 1} of 4`}</Heading>
     {row && <>
-      <Copy testID="tide-goal" maxFontSizeMultiplier={2}>{goalSentence(f, row.target)}</Copy>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Copy testID="tide-goal" maxFontSizeMultiplier={2} style={{ flex: 1 }}>{goalPrompt}</Copy>
+        <SpeakButton testID="tide-logic-speak" label="Hear sorter goal" disabled={!soundOn || !active} onPress={replay} />
+      </View>
       {/* The column centres its child; stretching keeps the belt inside the column so it wraps instead of spilling under the rule. */}
       <BoardColumns drawing={<View testID="tide-belt-panel" style={{ alignSelf: "stretch", backgroundColor: "#FFF6E5", borderWidth: 1.5, borderBottomWidth: 3, borderColor: "#E8D8BE", borderRadius: 20, padding: compact ? 8 : 12, gap: compact ? 6 : 8 }}>
         <CargoViewport {...(singleRow ? { ref: cargoScroll, horizontal: true, nestedScrollEnabled: true, testID: "tide-cargo-scroll", accessibilityLabel: "Cargo belt. Scroll sideways to see every catch." } : {})}>

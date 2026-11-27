@@ -10,8 +10,10 @@ import { ProgramEditor } from '../../program/ProgramEditor';
 import { encodeProgram, sessionBytes } from '../../program/codec';
 import { interpret } from '../../program/interpreter';
 import { useStepReveal } from '../../stepReveal';
+import { SpeakButton } from '../../SpeakButton';
+import { useSpokenPrompt } from '../../voice';
 import type { BoardProps } from '../../types';
-import { advance, draw, drawingFeedback, initialProgram, programIssue, replaceBlock, solves, wrapIssue, type Block, type TurtleState } from './engine';
+import { advance, draw, drawingFeedback, engine, initialProgram, programIssue, replaceBlock, solves, wrapIssue, type Block, type TurtleState } from './engine';
 import { blockCost } from './dsl';
 import { editText, editsToGo, nearestEdit } from './distance';
 import { applyCardsOp, cardsHint, cardsText, COUNTS as CARD_COUNTS } from './cards';
@@ -31,12 +33,14 @@ export function BoardV2(props: BoardProps<TurtleState>) {
   return <Round key={`${props.session.id}:${s.done}:${s.free}`} {...props} />;
 }
 
-function Round({ session, update, practice, assistance, cheer, sound, width, active, coach }: BoardProps<TurtleState>) {
+function Round({ session, update, practice, assistance, cheer, sound, soundOn, width, active, coach }: BoardProps<TurtleState>) {
   const s = session.state, task = s.tasks[Math.min(s.done, 3)], free = s.free, origin = free ? undefined : task.origin;
   useStepReveal(s.done);
   const reduced = useReducedMotion(), wide = useBoardColumns();
   const goal = free ? [] : draw(task.target, task.origin) || [], full = draw(s.program, origin) || [], traced = full.slice(0, s.cursor), steps = Math.max(1, full.length);
   const won = !free && s.done < 4 && !s.running && s.cursor > 0 && solves(task, s.program);
+  const promptSpeech = s.done < 4 && !free ? `${s.done === 0 && session.revision === 0 && engine.spokenIntro ? `${engine.spokenIntro} ` : ''}${goalWords(s.level, task.debug)}` : null;
+  const { replay, speak } = useSpokenPrompt(promptSpeech, `${session.id}:${s.done}:${s.free}`, { soundOn, active: active && !won && !free });
   const [blockMode, setBlocks] = useState(task.blockEditor === true), blocks = blockMode && task.blockEditor === true && !free;
   const draft = s.blockDraft ? readTurtleDraft(s.blockDraft) : null;
   const [message, setMessage] = useState(''), [editing, setEditing] = useState<{ path: number[]; block: Block } | null>(null);
@@ -48,7 +52,7 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   const finish = (state: TurtleState) => {
     if (state.free) { cheer('right'); setMessage('Your own turtle picture!'); }
     else if (solves(task, state.program)) { practice(state.level >= 3 ? 'think.loops' : 'think.geometry', true); cheer(state.done === 3 ? 'big' : 'right'); setMessage('Shape traced!'); }
-    else { practice('think.debug', false); setMessage(drawingFeedback(task, state.program).message); }
+    else { const msg = drawingFeedback(task, state.program).message; practice('think.debug', false); setMessage(msg); speak(msg); }
   };
   useEffect(() => {
     if (!active || !s.running) return;
@@ -80,16 +84,17 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
   const run = () => { const problem = programIssue(s.program); if (problem) { setMessage(problem); return; } update({ ...s, cursor: 0, running: true, attempts: s.attempts + 1 }); setEditing(null); setMessage('Watch the turtle draw!'); };
   const next = () => { const done = s.done + 1; const { blockDraft: _, ...legacy } = s; update({ ...legacy, done, program: done < 4 ? initialProgram(s.tasks[done]) : [], cursor: 0, running: false, free: false }); };
   const showMe = () => { assistance?.(); const { blockDraft: _, ...legacy } = s; update({ ...legacy, program: task.target, cursor: 0, helped: true }); setEditing(null); setHint(0); setMessage('Here is one way. Press Draw!'); };
-  const hintText = (): string => {
-    if (hint === 0) return '';
+  const hintTextFor = (levelNum: number, cardMove = move): string => {
+    if (levelNum === 0) return '';
     if (solves(task, s.program)) return 'Your blocks match the picture. Press Draw.';
     // The cards board can only add at the end, remove, change a block or count, and wrap: hint in those moves. The block editor can place a block anywhere.
     const near = nearestEdit(s.program, winners, { full: blockCost(s.program) >= limit });
-    if (!near && !move) return 'Your blocks match the picture. Press Draw.';
-    if (hint === 1) { const n = editsToGo(s.program, winners); return s.cursor > 0 && feedback ? feedback.message : !blocks ? 'Not there yet. The next hint shows what to tap.' : `You are ${n} ${n === 1 ? 'change' : 'changes'} from the picture.`; }
-    if (move) return cardsText(move);
+    if (!near && !cardMove) return 'Your blocks match the picture. Press Draw.';
+    if (levelNum === 1) { const n = editsToGo(s.program, winners); return s.cursor > 0 && feedback ? feedback.message : !blocks ? 'Not there yet. The next hint shows what to tap.' : `You are ${n} ${n === 1 ? 'change' : 'changes'} from the picture.`; }
+    if (cardMove) return cardsText(cardMove);
     return `${editText(near!.edit, s.program)}${!blocks && task.blockEditor ? ' The Block editor can make this change.' : ''}`;
   };
+  const hintText = () => hintTextFor(hint);
 
   const geometry = useBoardGeometry('turtle-draw', Math.min(Math.max(width, 120) * ASPECT, 288), SCHOOL_BOARD_MIN['turtle-draw'], !blocks);
   // Beside the controls the canvas keeps to its 46% column (BoardColumns), so it never reaches into them.
@@ -115,8 +120,9 @@ function Round({ session, update, practice, assistance, cheer, sound, width, act
       {!blocks && <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || !history.length} onPress={undo}>Undo</Button>}
     </>}
     {!won && !free && <>
-      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || hint >= 2} onPress={() => { assistance?.(); setHint(h => Math.min(2, h + 1)); sound('tap', true); }}>{hint === 0 ? 'Hint' : 'More hint'}</Button>
-      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={showMe}>Show me</Button>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff || hint >= 2} onPress={() => { assistance?.(); const nextHint = Math.min(2, hint + 1); setHint(nextHint); sound('tap', true); const nextMove = nextHint >= 2 && !blocks && !won && !free ? cardsHint(task, s.program) : null; const spoken = hintTextFor(nextHint, nextMove); if (spoken) speak(spoken); }}>{hint === 0 ? 'Hint' : 'More hint'}</Button>
+      <Button quiet compact maxFontSizeMultiplier={1.5} disabled={controlsOff} onPress={() => { showMe(); speak('Here is one way. Press Draw to watch the turtle trace it.'); }}>Show me</Button>
+      <SpeakButton testID="turtle-draw-speak" label="Hear turtle goal" disabled={!soundOn || controlsOff} onPress={replay} />
       {hear}
     </>}
   </View>;

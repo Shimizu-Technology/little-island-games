@@ -518,6 +518,8 @@ export const engine: LearnEngine<ShapeState> = {
     { name: "Fold & fit", description: "Solve varied cube nets, fold checks, and full silhouettes." },
   ],
   help: "Pick any piece from the tray. Tap Turn or Flip, then drag it onto the exact spot in the outline (or tap a square). Tap a placed piece to lift it back. Switch to Tangrams at the top anytime.",
+  spokenIntro: "Fit the shapes into the island outline!",
+  spokenHelp: "Pick any piece from the tray. Tap Turn or Flip, then drag it onto the exact spot in the outline, or tap a square. Tap a placed piece to lift it back.",
   create: (o, ctx): ShapeStateV2 => ({
     version: 2,
     level: levelOf(o),

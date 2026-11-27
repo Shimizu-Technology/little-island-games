@@ -196,6 +196,7 @@ vi.mock("../src/components/Icon", () => ({
   Icon: ({ name }: { name: string }) => React.createElement("span", { "data-icon": name }),
 }));
 vi.mock("../src/components/sheetPresence", () => ({ useSheetHold: () => {} }));
+vi.mock("../src/components/Audio", () => ({ AudioPreferences: React.createContext({}) }));
 vi.mock("react-native-svg", () => ({
   default: "svg",
   Circle: "circle",
@@ -256,8 +257,8 @@ function makeBoardProps<S>(session: ReturnType<typeof startSession>, sound = vi.
 }
 
 describe("Phase 4A: zero GrowthBoard quiz cliff across all 32 learning games", () => {
-  it("every single one of the 32 learning games plays natively across Levels 1–5 (zero fresh GrowthState)", () => {
-    expect(learnIds).toHaveLength(32);
+  it("every single one of the learning games plays natively across Levels 1–5 (zero fresh GrowthState)", () => {
+    expect(learnIds.length).toBeGreaterThanOrEqual(32);
     for (const id of learnIds) {
       const eng = engines[id];
       expect(Boolean(eng.ownLevels || eng.nativeStages), `${id} should own all 5 levels natively`).toBe(true);

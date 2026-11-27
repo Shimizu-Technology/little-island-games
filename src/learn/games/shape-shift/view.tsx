@@ -4,8 +4,11 @@ import Svg, { Path } from "react-native-svg";
 import { C, Copy, PressableScale } from "../../../components/ui";
 import { atLarge } from "../../../components/wordFit";
 import type { BoardProps } from "../../types";
+import { SpeakButton } from "../../SpeakButton";
+import { useSpokenPrompt } from "../../voice";
 import {
   chooseCube,
+  engine,
   help,
   place,
   placedToSolver,
@@ -34,7 +37,7 @@ export function Board(props: BoardProps<ShapeState>) {
   return <ShapeBoardV2 {...props} stateV2={props.session.state} />;
 }
 
-function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, active, width }: BoardProps<ShapeState> & { stateV2: Extract<ShapeState, { version: 2 }> }) {
+function ShapeBoardV2({ session, stateV2: s, update, practice, assistance, sound, soundOn, cheer, coach, active, width }: BoardProps<ShapeState> & { stateV2: Extract<ShapeState, { version: 2 }> }) {
   const task = taskAt(s);
   const { fontScale } = useWindowDimensions();
   const buttonCap = atLarge(fontScale, 1.35);
@@ -47,6 +50,21 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
 
   const [selectedPiece, setSelectedPiece] = useState<number>(unplaced[0] ?? 0);
   const [reveal, setReveal] = useState<boolean>(false);
+
+  const promptLine = useMemo(() => {
+    const intro = s.index === 0 && session.revision === 0 && engine.spokenIntro ? `${engine.spokenIntro} ` : "";
+    if (task.kind === "cube" && task.cube) {
+      return task.cube.kind === "opposite"
+        ? `${intro}When this net folds into a cube, which face is opposite ${task.cube.faces[task.cube.askIndex]}?`
+        : `${intro}Which net folds into a closed cube without overlapping faces?`;
+    }
+    return `${intro}${task.title}. ${task.showGoldCorner ? "Drag the piece onto the gold corner, or tap the gold corner." : "Drag a piece into the outline, or tap a square to place it."}`;
+  }, [s.index, session.revision, task]);
+
+  const { replay, speak } = useSpokenPrompt(promptLine, `${session.id}:${s.index}:${s.mode}`, {
+    soundOn,
+    active: active && !reveal && s.index < s.total,
+  });
 
   const boardRef = useRef<View>(null);
   const boardBox = useRef<{ left: number; top: number } | null>(null);
@@ -180,7 +198,10 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
     const cube = task.cube;
     return (
       <View style={{ gap: 14, paddingVertical: 6 }}>
-        {modeSwitcher}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          {modeSwitcher}
+          <SpeakButton testID="shape-shift-speak" label="Hear shape prompt" disabled={!soundOn || !active} onPress={replay} />
+        </View>
         <Copy style={{ color: C.ink, fontSize: 21, fontWeight: "900" }}>{task.title}</Copy>
         <Copy maxFontSizeMultiplier={1.4} style={{ color: "#C4573A", fontWeight: "800" }}>
           PUZZLE {s.index + 1} OF 4 · {cube.kind === "opposite" ? cube.netName.toUpperCase() : "FOLD CHECK"}
@@ -214,6 +235,8 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                         coach.done();
                       } else {
                         setWrong(true);
+                        sound("tap", true);
+                        speak("That face touches the highlighted square. Try picturing the folded cube.");
                       }
                     }}
                     style={{
@@ -251,6 +274,8 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
                       coach.done();
                     } else {
                       setWrong(true);
+                      sound("tap", true);
+                      speak("That net overlaps two faces when folded. Try another one.");
                     }
                   }}
                   style={{
@@ -281,7 +306,14 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
           accessibilityRole="button"
           accessibilityLabel="Help with cube net"
           disabled={!active}
-          onPress={() => { assistance?.(); update(help(s)); setHintOpen(true); }}
+          onPress={() => {
+            assistance?.();
+            const next = help(s);
+            update(next);
+            setHintOpen(true);
+            sound("tap", true);
+            speak(shapeHint(next).text);
+          }}
           style={{ alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 16, minHeight: 46, justifyContent: "center" }}
         >
           <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800" }}>Help</Copy>
@@ -323,6 +355,8 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
       }
     } else {
       setWrong(true);
+      sound("tap", true);
+      speak("It did not fit at that spot. Try another square, turn, or flip.");
     }
   };
 
@@ -360,7 +394,10 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
 
   return (
     <View style={{ gap: compact ? 6 : 11, paddingVertical: compact ? 2 : 6 }}>
-      {modeSwitcher}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        {modeSwitcher}
+        <SpeakButton testID="shape-shift-speak" label="Hear shape prompt" disabled={!soundOn || !active} onPress={replay} />
+      </View>
       <Copy maxFontSizeMultiplier={1.65} style={{ fontSize: compact ? 17 : 21, fontWeight: "900", color: C.ink }}>{task.title}</Copy>
       {reveal ? (
         <Copy maxFontSizeMultiplier={1.4} style={{ fontWeight: "800", color: "#2E7D54", fontSize: compact ? 13 : 14 }}>
@@ -508,7 +545,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               accessibilityRole="button"
               accessibilityLabel="Turn piece clockwise"
               disabled={!active || reveal}
-              onPress={() => setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3)}
+              onPress={() => { setTurns(((turns + 1) & 3) as 0 | 1 | 2 | 3); sound("tap", true); }}
               style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 48, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>↻ Turn</Copy>
@@ -520,7 +557,7 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               accessibilityRole="button"
               accessibilityLabel="Flip piece"
               disabled={!active || reveal}
-              onPress={() => setFlipped(!flipped)}
+              onPress={() => { setFlipped(!flipped); sound("tap", true); }}
               style={{ backgroundColor: "#FFFDF8", borderWidth: 1.5, borderBottomWidth: 2, borderColor: "#E8D8BE", borderRadius: 14, paddingHorizontal: compact ? 12 : 14, paddingVertical: compact ? 8 : 11, minHeight: 48, justifyContent: "center" }}
             >
               <Copy maxFontSizeMultiplier={buttonCap} style={{ color: C.ink, fontWeight: "800", fontSize: compact ? 13 : 15 }}>⇄ Flip</Copy>
@@ -553,6 +590,8 @@ function ShapeBoardV2({ stateV2: s, update, practice, assistance, cheer, coach, 
               const next = help(s);
               update(next);
               setHintOpen(true);
+              sound("tap", true);
+              speak(shapeHint(next).text);
               if (next.version === 2 && next.hintPiece !== null && task.freeOrder) {
                 setSelectedPiece(next.hintPiece);
               }

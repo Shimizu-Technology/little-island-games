@@ -42,6 +42,8 @@ export const engine: LearnEngine<TideState> = {
   id: "times-tide", name: "Times Tide", island: "numbers", ages: [6, 11], ownLevels: true,
   tagline: "Fill pools, build arrays, share fish.", description: "Move fish and shells to see how groups become multiplication and division.",
   help: "Tap a pool to add one fish. On array levels, fill each row with shells. Count the whole picture and enter the total. For sharing, give every friend the same number and leave extras in the last pool. Use Hint whenever you need it.",
+  spokenIntro: "Fill the tide pools and build equal groups!",
+  spokenHelp: "Tap a pool to add one fish, or fill each row with shells. Count the whole picture and enter the total. For sharing, give every friend the same number and put extras in the last pool.",
   color: "#AC5C26", surface: "#FFF0CF", modes: ["solo", "together"],
   levelNames: [
     { name: "Fish in equal pools", description: "Make equal groups of 2, 5 or 10 fish." },
