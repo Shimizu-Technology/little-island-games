@@ -57,8 +57,21 @@ describe('compact painted scene acceptance', () => {
    }
   }
  });
- it('keeps generous landmark art width (>= 80pt) on iPhone portrait 390×844 and its HubScreen scene 390×654', () => {
-  expect(mapLayout(390, 844).artWidth).toBeGreaterThanOrEqual(80);
-  expect(mapLayout(390, 654).artWidth).toBeGreaterThanOrEqual(80);
+ it('keeps bold landmark art (>= 110pt) and hero guide scale (>= 60pt) on iPhone portrait 390×844 and its HubScreen scene 390×654 with zero overlap', () => {
+  for (const [width, height] of [[390, 844], [390, 654]] as const) {
+   const layout = mapLayout(width, height);
+   expect(layout.artWidth, `${width}×${height} artWidth`).toBeGreaterThanOrEqual(110);
+   expect(layout.guideSize, `${width}×${height} guideSize`).toBeGreaterThanOrEqual(60);
+   expect(layout.labelHeight, `${width}×${height} labelHeight`).toBe(34);
+   for (const a of layout.targets) {
+    for (const b of layout.targets.filter(b => b.id !== a.id)) {
+     const artOverlap = a.left < b.left + b.width && b.left < a.left + a.width && a.top < b.top + b.height && b.top < a.top + a.height;
+     expect(artOverlap, `${width}×${height} building overlap ${a.id}/${b.id}`).toBe(false);
+     const lblH = Math.min(a.x * width + a.labelWidth / 2, b.x * width + b.labelWidth / 2) - Math.max(a.x * width - a.labelWidth / 2, b.x * width - b.labelWidth / 2);
+     const lblV = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.baseline, b.baseline);
+     expect(Math.max(0, lblH) * Math.max(0, lblV), `${width}×${height} label overlap ${a.id}/${b.id}`).toBe(0);
+    }
+   }
+  }
  });
 });

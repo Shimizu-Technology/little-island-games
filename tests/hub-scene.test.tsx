@@ -203,20 +203,39 @@ describe('wide horizontal crossroads', () => {
   expect(start.y).toBe((Math.min(...ys) + Math.max(...ys)) / 2);
   expect(terrainBranches(layout,width)[0].every(p => p.y === start.y)).toBe(true);
   for (const target of layout.targets) {
-   const size = Math.min(96,width*.24,height*.20);
+   const size = layout.guideSize;
    expect(start.x-size*.303 < target.left+target.width && target.left < start.x+size*.304 && start.y-size < target.top+target.height && target.top < start.y).toBe(false);
   }
  });
- it.each([[1024, 627], [844, 249], [568, 245], [390, 653], [320, 377]])('keeps the resting guide clear of label pills at %s×%s', (width, height) => {
+ it.each([[1024, 627], [844, 249], [568, 245], [390, 653], [320, 377], [390, 844], [390, 654]])('keeps the resting guide clear of label pills at %s×%s', (width, height) => {
   const layout = mapLayout(width, height);
   const start = guideStartPoint(layout, width, height);
-  const gap = layout.wide ? Infinity : Math.min(...layout.targets.filter(t => t.x > .5).map(t => t.x * width - t.labelWidth / 2)) - Math.max(...layout.targets.filter(t => t.x < .5).map(t => t.x * width + t.labelWidth / 2));
-  const size = Math.max(28, Math.min(96, width * .24, height * .20, (gap - 8) / .607));
+  const size = layout.guideSize;
   for (const t of layout.targets) {
    const horizontal = Math.min(start.x + size * .304, t.x * width + t.labelWidth / 2) - Math.max(start.x - size * .303, t.x * width - t.labelWidth / 2);
    const vertical = Math.min(start.y, t.top + t.height) - Math.max(start.y - size, t.baseline);
    expect(Math.max(0, horizontal) * Math.max(0, vertical)).toBe(0);
   }
+ });
+ it.each([[390, 844], [390, 654]])('renders prominent Islander guide (>= 60pt) and single-line Puzzle Cove & Game Hall pills at %s×%s', async (width, height) => {
+  const layout = mapLayout(width, height, 1);
+  expect(layout.artWidth).toBeGreaterThanOrEqual(110);
+  expect(layout.guideSize).toBeGreaterThanOrEqual(60);
+  let screen!: ReactTestRenderer;
+  await act(() => {
+   screen = create(<IslandScene width={width} height={height} fontScale={1} look={defaultLook} reduced={false} active door={null} onArrive={vi.fn()}/>);
+  });
+  const guide = screen.root.findByProps({ testID: 'island-guide' });
+  const guideStyle = Array.isArray(guide.props.style) ? Object.assign({}, ...guide.props.style) : guide.props.style;
+  expect(guideStyle.height).toBeGreaterThanOrEqual(60);
+  for (const id of ['cove', 'hall'] as const) {
+   const target = layout.targets.find(t => t.id === id)!;
+   const pill = screen.root.findByProps({ testID: `place-label-${id}` });
+   const pillStyle = pill.props.style as { paddingHorizontal: number; borderWidth: number };
+   const innerWidth = target.labelWidth - pillStyle.paddingHorizontal * 2 - pillStyle.borderWidth * 2;
+   expect(wordWidth(target.name) * target.labelFontSize, `${target.name} single line at ${width}×${height}`).toBeLessThanOrEqual(innerWidth);
+  }
+  await act(() => screen.unmount());
  });
 
 });

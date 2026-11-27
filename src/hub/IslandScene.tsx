@@ -13,13 +13,16 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWidth, labelFontSize, labelHeight, left, top, reduced, visit }: { id: PlaceId; name: string; width: number; height: number; labelWidth: number; labelFontSize: number; labelHeight: number; left: number; top: number; reduced: boolean; visit: (place: PlaceId) => void }) {
  const pressed = useSharedValue(1), [focused, setFocused] = useState(false);
  const style = useAnimatedStyle(() => ({ transform: [{ scale: pressed.get() }] }));
- const tight = width < 140;
+ const boxWidth = Math.max(width, labelWidth);
+ const pillPadX = labelWidth < 110 ? 3 : labelWidth < 140 ? 5 : 12;
  return <AnimatedPressable testID={`place-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${name}`} onPress={() => visit(id)}
   onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
   onPressIn={() => pressed.set(reduced ? 1 : withTiming(.97, { duration: 90 }))} onPressOut={() => pressed.set(withTiming(1, { duration: 150 }))}
-  style={[{ position: 'absolute', left: left + (width - labelWidth) / 2, top, width: labelWidth, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
-   <View pointerEvents="none" style={{ width, height }}><Landmark id={id}/></View>
-   <View testID={`place-label-${id}`} style={{ minHeight: labelHeight, width: labelWidth, maxWidth: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF7E4', paddingHorizontal: tight ? 1 : 12, paddingVertical: 3, borderRadius: 12, borderWidth: 1.5, borderColor: '#B59E76', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
+  style={[{ position: 'absolute', left: left + (width - boxWidth) / 2, top, width: boxWidth, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
+   <View pointerEvents="none" style={{ width, height, alignItems: 'center', justifyContent: 'flex-end' }}>
+    <View style={{ width, height, transform: [{ scale: 1.14 }, { translateY: Math.round(height * .03) }] }}><Landmark id={id}/></View>
+   </View>
+   <View testID={`place-label-${id}`} style={{ minHeight: labelHeight, width: labelWidth, maxWidth: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF7E4', paddingHorizontal: pillPadX, paddingVertical: 3, borderRadius: 12, borderWidth: 1.5, borderColor: '#B59E76', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
     <Text variant="section" maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ fontSize: labelFontSize, lineHeight: labelFontSize + 4, color: theme.colors.ink, textAlign: 'center' }}>{name}</Text>
    </View>
  </AnimatedPressable>;
@@ -31,8 +34,7 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const x = useSharedValue(start.x), y = useSharedValue(start.y), bob = useSharedValue(0), zoom = useSharedValue(1), cameraX = useSharedValue(0), cameraY = useSharedValue(0), opacity = useSharedValue(1);
  const [walking, setWalking] = useState(false);
  const departing = useRef(false), wasActive = useRef(active);
- const pathGap = layout.wide ? Infinity : Math.min(...layout.targets.filter(t => t.x > .5).map(t => t.x * width - Math.max(t.width, t.labelWidth) / 2)) - Math.max(...layout.targets.filter(t => t.x < .5).map(t => t.x * width + Math.max(t.width, t.labelWidth) / 2));
- const guideSize = Math.max(28, Math.min(96, width * .24, height * .20, (pathGap - 8) / .607));
+ const guideSize = layout.guideSize;
  const settle = useMemo(() => (place: PlaceId) => {
   const target = mapLayout(width, height, fontScale).targets.find(item => item.id === place)!.door;
   cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY);
