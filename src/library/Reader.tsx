@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Image, Modal, PanResponder, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
 import { libraryAssets } from "./assets.generated";
@@ -111,28 +111,18 @@ export function Reader({
   const progressPercent = Math.round(((index + 1) / Math.max(1, count)) * 100);
   const isLastPage = index === count - 1;
 
-  // Standalone sequential playback fallback when Reader is used without parent audio sequencing.
+  // Standalone user-driven active highlight when Reader is rendered without parent sequencing.
+  // Never uses reading timers.
   const currentPageKey = `${book.id ?? book.title}:${index}`;
   const [localState, setLocalState] = useState<{ pageKey: string; active: boolean; sentenceId: string }>({
     pageKey: "",
     active: false,
     sentenceId: "",
   });
-  const localTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const localToken = useRef(0);
-
-  const clearLocalTimer = useCallback(() => {
-    localToken.current++;
-    if (localTimer.current) {
-      clearTimeout(localTimer.current);
-      localTimer.current = null;
-    }
-  }, []);
 
   const stopLocalReading = useCallback(() => {
-    clearLocalTimer();
     setLocalState({ pageKey: "", active: false, sentenceId: "" });
-  }, [clearLocalTimer]);
+  }, []);
 
   const stopAllReading = useCallback(() => {
     stopLocalReading();
@@ -141,16 +131,9 @@ export function Reader({
 
   useEffect(() => {
     return () => {
-      clearLocalTimer();
-    };
-  }, [currentPageKey, clearLocalTimer]);
-
-  useEffect(() => {
-    return () => {
-      clearLocalTimer();
       onStopReading?.();
     };
-  }, [clearLocalTimer, onStopReading]);
+  }, [onStopReading]);
 
   const localReading = localState.pageKey === currentPageKey && localState.active;
   const localSelected = localState.pageKey === currentPageKey ? localState.sentenceId : "";
@@ -167,22 +150,10 @@ export function Reader({
       onReadPage(current.sentences);
       return;
     }
-    clearLocalTimer();
-    const token = localToken.current;
-    const playAt = (step: number) => {
-      if (token !== localToken.current) return;
-      if (step >= current.sentences.length) {
-        setLocalState({ pageKey: currentPageKey, active: false, sentenceId: "" });
-        return;
-      }
-      const nextSentence = current.sentences[step];
-      setLocalState({ pageKey: currentPageKey, active: true, sentenceId: nextSentence.id });
-      speak(nextSentence);
-      const waitMs = Math.max(1400, Math.min(6000, nextSentence.text.length * 70));
-      localTimer.current = setTimeout(() => playAt(step + 1), waitMs);
-    };
-    playAt(0);
-  }, [clearLocalTimer, current.sentences, currentPageKey, isReadingPage, onReadPage, speak, stopAllReading]);
+    const first = current.sentences[0];
+    setLocalState({ pageKey: currentPageKey, active: true, sentenceId: first.id });
+    speak(first);
+  }, [current.sentences, currentPageKey, isReadingPage, onReadPage, speak, stopAllReading]);
 
   const turnPage = useCallback(
     (nextPage: number) => {
@@ -263,7 +234,7 @@ export function Reader({
             />
           </View>
           <Text
-            maxFontSizeMultiplier={1.25}
+            maxFontSizeMultiplier={1.3}
             numberOfLines={1}
             style={[s?.small, { color: muted, fontWeight: "700", fontSize: 13 }]}
           >

@@ -12,6 +12,7 @@ import { SceneBackdrop } from "./SceneBackdrop";
 import { sceneCategory, sceneDecor } from "./sceneContext";
 import { sceneVector } from "./sceneVector";
 import { LibraryArt } from "./LibraryArt";
+import { PaintedLibraryCover } from "./illustratedCovers";
 import { libraryAssets } from "./assets.generated";
 import type { CatalogItem } from "./catalog";
 
@@ -106,6 +107,7 @@ export function ItemPicture({
 }) {
   const path = record.item?.image.path;
   const framed = !scene && !fill;
+  const legacyHeroScene = scene && !path && !!record.legacy;
   return (
     <View
       style={{
@@ -131,11 +133,38 @@ export function ItemPicture({
       >
         {scene && (
           <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-            <SceneBackdrop category={sceneCategory(record.id, record.category)} {...sceneDecor(record.id)} />
+            {legacyHeroScene ? (
+              <>
+                <PaintedLibraryCover
+                  category={record.category}
+                  kind={record.motif}
+                  fallback={<SceneBackdrop category={sceneCategory(record.id, record.category)} {...sceneDecor(record.id)} />}
+                />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255, 250, 238, 0.56)" }]} />
+              </>
+            ) : (
+              <SceneBackdrop category={sceneCategory(record.id, record.category)} {...sceneDecor(record.id)} />
+            )}
           </View>
         )}
         {/* A positioned foreground paints above the absolute scene on web and native. */}
-        <View style={scene ? [StyleSheet.absoluteFill, { zIndex: 1 }] : { flex: 1 }}>
+        <View
+          style={
+            legacyHeroScene
+              ? [
+                  StyleSheet.absoluteFill,
+                  {
+                    zIndex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 20,
+                  },
+                ]
+              : scene
+                ? [StyleSheet.absoluteFill, { zIndex: 1 }]
+                : { flex: 1 }
+          }
+        >
           {path && libraryVectors[path] ? (
             <SvgXml
               xml={scene ? sceneVector(libraryVectors[path]) : libraryVectors[path]}
@@ -152,11 +181,31 @@ export function ItemPicture({
             />
           ) : record.legacy ? (
             scene ? (
-              <Svg width="100%" height="100%" viewBox="0 0 160 140" accessible={false}>
-                <G transform="translate(20 10)">
-                  <Motif name={record.legacy.illustration} />
-                </G>
-              </Svg>
+              <View
+                testID="legacy-topic-storybook-frame"
+                style={{
+                  width: "78%",
+                  maxWidth: 320,
+                  height: "84%",
+                  maxHeight: 240,
+                  borderRadius: 26,
+                  backgroundColor: "rgba(255, 253, 248, 0.9)",
+                  borderWidth: 2,
+                  borderColor: "#E8D8BE",
+                  padding: 16,
+                  shadowColor: palette.ink,
+                  shadowOpacity: 0.14,
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowRadius: 14,
+                  elevation: 4,
+                }}
+              >
+                <Svg width="100%" height="100%" viewBox="0 0 160 140" accessible={false}>
+                  <G transform="translate(20 10)">
+                    <Motif name={record.legacy.illustration} />
+                  </G>
+                </Svg>
+              </View>
             ) : (
               <TopicArt topic={record.legacy} compact={!large} height={pictureHeight} />
             )

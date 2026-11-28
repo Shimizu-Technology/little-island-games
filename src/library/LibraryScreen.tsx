@@ -17,7 +17,7 @@ import { gameIds } from "../games";
 import { boardIds } from "../board";
 import { activityIds } from "../state/activities";
 import { arcadeIds } from "../arcade";
-import { type WorldId } from "../explore/content";
+import { WORLDS, type WorldId } from "../explore/content";
 import { labAction } from "../explore/activities";
 import { newExploreProgress } from "../explore/progress";
 import { libraryChild, libraryHoursOpen, type LibraryChildState } from "./state";
@@ -33,7 +33,7 @@ import {
   worldCategory,
   type CatalogItem,
 } from "./catalog";
-import { categoryAfterTyping, search, searchCategory } from "./search";
+import { buildIndex, categoryAfterTyping, search, searchCategory } from "./search";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
 import { WordLabel } from "./WordLabel";
 import { SoundSwitch } from "./SoundSwitch";
@@ -57,6 +57,8 @@ import type { ReadingLayer } from "./schema";
 type QuickFilter = "all" | "books" | "labs" | "saved";
 
 const extensions = new Map<string, number>();
+const sessionExplored = new Map<string, Set<string>>();
+const sessionSurpriseCycle = new Map<string, number>();
 
 const storyCard = {
   backgroundColor: "#FFFDF8",
@@ -75,6 +77,45 @@ const storyCard = {
 const overlayFill = { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 } as const;
 
 const categoryTitleById = new Map(categories.map((category) => [category.id, category.title]));
+
+const exhibitSearchIndex = buildIndex(
+  exhibits.map((exhibit) => {
+    const worldInfo = WORLDS.find((entry) => entry.id === exhibit.world);
+    return {
+      id: `lab-${exhibit.world}`,
+      title: exhibit.title,
+      category: exhibit.category,
+      aliases: [worldInfo?.title ?? "", worldInfo?.activity ?? "", exhibit.world, exhibit.motif].filter(Boolean),
+      tags: [categoryTitleById.get(exhibit.category) ?? "", worldInfo?.invitation ?? ""].filter(Boolean),
+    };
+  })
+);
+
+function positionDestinationId(key: string): string | undefined {
+  const parts = key.split(":");
+  if (parts.length < 2 || !parts[1] || parts[1] === "index") return undefined;
+  const [placeKind, targetId] = parts;
+  if (placeKind === "exhibit") return `lab-${targetId}`;
+  if (placeKind === "topic" || placeKind === "reader" || placeKind === "authored-exhibit") {
+    return canonicalLibraryId(targetId);
+  }
+  return undefined;
+}
+
+function collectDurableExplored(child: LibraryChildState, legacyVisited: readonly string[]): Set<string> {
+  const ids = new Set<string>();
+  const add = (raw?: string) => {
+    if (!raw || raw.startsWith("page-")) return;
+    ids.add(canonicalLibraryId(raw));
+  };
+  for (const id of child.recent) add(id);
+  for (const id of Object.keys(child.bookPages)) add(id);
+  for (const id of Object.keys(child.layers)) add(id);
+  for (const key of Object.keys(child.positions)) add(positionDestinationId(key));
+  for (const id of legacyVisited) add(id);
+  if (child.current) add(child.current);
+  return ids;
+}
 
 export default function LibraryScreen() {
   const store = useStore();
@@ -147,7 +188,7 @@ function LibraryReady() {
   const [notice, setNotice] = useState("");
   const [paused, setPaused] = useState(false);
   const [now, setNow] = useState(() => new Date());
-  const surpriseCursor = useRef(0);
+  const sessionKey = `${store.epoch}:${childId}`;
   const open = libraryHoursOpen(child.policy, now) || (extensions.get(childId) ?? 0) > now.getTime();
   const [enteredOpen] = useState(open);
   const currentOpen = useRef(open);
@@ -189,6 +230,12 @@ function LibraryReady() {
     setNotice("");
     if (nextId && !nextId.startsWith("page-")) {
       const destinationId = canonicalDestination(nextPlace, nextId);
+      let visited = sessionExplored.get(sessionKey);
+      if (!visited) {
+        visited = new Set<string>();
+        sessionExplored.set(sessionKey, visited);
+      }
+      visited.add(destinationId);
       update({
         recent: rememberLibraryDestination(live.current.recent, destinationId),
         current: destinationId,
@@ -351,6 +398,19 @@ function LibraryReady() {
     [child.policy.collections]
   );
 
+  const matchingExhibits = useMemo(() => {
+    if (child.query.trim()) {
+      const allowedLabIds = new Set(enabledExhibits.map((exhibit) => `lab-${exhibit.world}`));
+      const matchedLabIds = new Set(
+        search(exhibitSearchIndex, child.query, allowedLabIds, searchCategory(child.query, child.category)).map(
+          (entry) => entry.id
+        )
+      );
+      return enabledExhibits.filter((exhibit) => matchedLabIds.has(`lab-${exhibit.world}`));
+    }
+    return enabledExhibits.filter((exhibit) => child.category === "all" || exhibit.category === child.category);
+  }, [child.query, child.category, enabledExhibits]);
+
   const categoryStats = useMemo(() => {
     const map = new Map<string, { total: number; saved: number; explored: number }>();
     for (const item of allowed) {
@@ -404,19 +464,73 @@ function LibraryReady() {
   })();
 
   const surprisePick = () => {
-    const poolIds: string[] = [
-      ...allowed.map((item) => item.id),
-      ...enabledExhibits.map((exhibit) => `lab-${exhibit.world}`),
-    ];
+    if (!currentOpen.current) {
+      void pause();
+      return;
+    }
+    // Deduplicate authored exhibits and legacy lab destinations that open the same experience.
+    const authoredLabWorlds = new Map<WorldId, string>();
+    for (const item of allowed) {
+      if (item.item?.type === "exhibit") {
+        const world = resolveExhibitWorld(item);
+        if (world) authoredLabWorlds.set(world, canonicalLibraryId(item.id));
+      }
+    }
+    const poolIds: string[] = [];
+    const poolSet = new Set<string>();
+    const addCandidate = (candidateId: string) => {
+      const canon = canonicalLibraryId(candidateId);
+      if (!poolSet.has(canon)) {
+        poolSet.add(canon);
+        poolIds.push(canon);
+      }
+    };
+    for (const item of allowed) addCandidate(item.id);
+    for (const exhibit of enabledExhibits) {
+      if (!authoredLabWorlds.has(exhibit.world)) addCandidate(`lab-${exhibit.world}`);
+    }
     if (!poolIds.length) {
       setNotice("No stories or wonders are turned on yet. A grown-up can turn collections on.");
       return;
     }
-    const fresh = poolIds.filter((candidate) => !recentSet.has(canonicalLibraryId(candidate)));
-    const sourcePool = fresh.length > 0 ? fresh : poolIds;
-    const baseOffset = (child.recent.length * 7 + child.saved.length * 3 + surpriseCursor.current) % sourcePool.length;
-    surpriseCursor.current += 1;
-    const chosen = sourcePool[baseOffset];
+
+    const legacyVisited = store.save.explore?.progress?.history
+      ? store.save.explore.progress.history
+          .map((loc) => (loc.kind === "topic" ? loc.id : loc.kind === "activity" ? `lab-${loc.world}` : ""))
+          .filter(Boolean)
+      : [];
+    const durable = collectDurableExplored(live.current, legacyVisited);
+    if (durable.size === 0) {
+      sessionExplored.delete(sessionKey);
+      sessionSurpriseCycle.delete(sessionKey);
+    }
+
+    let visited = sessionExplored.get(sessionKey);
+    if (!visited) {
+      visited = new Set<string>();
+      sessionExplored.set(sessionKey, visited);
+    }
+    const seen = new Set<string>([...durable, ...visited]);
+    for (const [world, authoredId] of authoredLabWorlds.entries()) {
+      if (seen.has(authoredId)) seen.add(`lab-${world}`);
+      if (seen.has(`lab-${world}`)) seen.add(authoredId);
+    }
+
+    const fresh = poolIds.filter((candidate) => !seen.has(candidate));
+    let chosen: string;
+    if (fresh.length > 0) {
+      chosen = fresh[0];
+    } else {
+      // Explicit fallback once every eligible destination has been visited: start a fresh cycle
+      // without repeating the immediately preceding destination back-to-back.
+      const lastVisited = canonicalLibraryId(live.current.current ?? live.current.recent[0] ?? "");
+      const cyclePool = poolIds.length > 1 ? poolIds.filter((candidate) => candidate !== lastVisited) : poolIds;
+      const cycleIndex = sessionSurpriseCycle.get(sessionKey) ?? 0;
+      chosen = cyclePool[cycleIndex % cyclePool.length];
+      sessionSurpriseCycle.set(sessionKey, cycleIndex + 1);
+      visited.clear();
+    }
+    visited.add(chosen);
     remember();
     openItem(chosen);
   };
@@ -1131,13 +1245,13 @@ function LibraryReady() {
                   </View>
                 )}
 
-                {!child.query && (activeFilter === "all" || activeFilter === "labs") && enabledExhibits.length > 0 && (
+                {(activeFilter === "all" || activeFilter === "labs") && matchingExhibits.length > 0 && (
                   <View style={{ gap: 10 }}>
                     <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
                       Interactive Labs
                     </Text>
                     <View style={[s.row, { gap: 10 }]}>
-                      {enabledExhibits.map((exhibit) => (
+                      {matchingExhibits.map((exhibit) => (
                         <Pressable
                           key={exhibit.world}
                           testID={`library-lab-${exhibit.world}`}
@@ -1194,35 +1308,39 @@ function LibraryReady() {
                   </View>
                 )}
 
-                <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
-                  {child.query
-                    ? "Your discoveries"
-                    : activeFilter === "books"
-                      ? "Picture books"
-                      : activeFilter === "labs"
-                        ? "Reviewed exhibit guides"
-                        : activeFilter === "saved"
-                          ? "Saved pictures"
-                          : "Follow a picture"}
-                </Text>
+                {(activeFilter !== "labs" || results.length > 0) && (
+                  <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                    {child.query
+                      ? "Your discoveries"
+                      : activeFilter === "books"
+                        ? "Picture books"
+                        : activeFilter === "labs"
+                          ? "Reviewed exhibit guides"
+                          : activeFilter === "saved"
+                            ? "Saved pictures"
+                            : "Follow a picture"}
+                  </Text>
+                )}
               </View>
             )
           }
           ListEmptyComponent={
-            <View style={{ paddingHorizontal: 6, paddingTop: 4, maxWidth: 1060, width: "100%", alignSelf: "center" }}>
-              <View style={[storyCard, { padding: 20, gap: 14 }]}>
-                <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
-                  {place === "books"
-                    ? collectionEmptyMessage("books", child.policy.collections)
-                    : activeFilter === "saved"
-                      ? "No saved pictures yet. Tap the heart on any book or wonder to keep it here."
-                      : "No picture found yet. Try another word, or choose a picture above."}
-                </Text>
-                {place !== "books" && (
-                  <Action onPress={() => applyQuickFilter("all")}>Back to pictures</Action>
-                )}
+            place === "wonder" && (activeFilter === "labs" || activeFilter === "all") && matchingExhibits.length > 0 ? null : (
+              <View style={{ paddingHorizontal: 6, paddingTop: 4, maxWidth: 1060, width: "100%", alignSelf: "center" }}>
+                <View style={[storyCard, { padding: 20, gap: 14 }]}>
+                  <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
+                    {place === "books"
+                      ? collectionEmptyMessage("books", child.policy.collections)
+                      : activeFilter === "saved"
+                        ? "No saved pictures yet. Tap the heart on any book or wonder to keep it here."
+                        : "No picture found yet. Try another word, or choose a picture above."}
+                  </Text>
+                  {place !== "books" && (
+                    <Action onPress={() => applyQuickFilter("all")}>Back to pictures</Action>
+                  )}
+                </View>
               </View>
-            </View>
+            )
           }
         />
       ) : place === "reader" && record?.item?.type === "book" ? (

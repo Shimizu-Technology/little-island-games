@@ -238,21 +238,60 @@ describe("Upgraded Wonder browsing, Continue Reading, Surprise Me!, and Quick Fi
     expect(textOf(oceanCard)).toContain("1 explored");
   });
 
-  it("opens fresh discoveries via Surprise Me! without getting stuck on the same item", async () => {
+  it("opens >40 consecutive fresh discoveries via Surprise Me! across remounts without premature repeats (R1-04)", async () => {
+    const { default: LibraryScreen } = await import("../src/library/LibraryScreen");
+    const visitedIds: string[] = [];
+
+    // Repeatedly mount Wonder, tap Surprise Me!, preserve actual libraryPatch updates (recent capped at 24),
+    // unmount, and remount across 45 visits to verify durable/session unread tracking does not repeat at 25/35.
+    for (let i = 0; i < 45; i++) {
+      await act(async () => {
+        root = create(<LibraryScreen />);
+      });
+      const surprise = root!.root.findByProps({ testID: "library-surprise-me" });
+      await act(async () => surprise.props.onPress());
+      const lastCall = env.routerPush.mock.calls.at(-1)?.[0];
+      expect(lastCall?.params?.id).toBeTruthy();
+      const canonical =
+        lastCall.params.place === "exhibit" ? `lab-${lastCall.params.id}` : String(lastCall.params.id);
+      visitedIds.push(canonical);
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+
+    expect(visitedIds).toHaveLength(45);
+    expect(new Set(visitedIds).size).toBe(45);
+  });
+
+  it("finds playable Interactive Labs like Habitat detective when searching under Interactive Labs or All (R1-03)", async () => {
     const { default: LibraryScreen } = await import("../src/library/LibraryScreen");
     await act(async () => {
       root = create(<LibraryScreen />);
     });
 
-    const surprise = root!.root.findByProps({ testID: "library-surprise-me" });
-    await act(async () => surprise.props.onPress());
-    await act(async () => surprise.props.onPress());
-    expect(env.routerPush).toHaveBeenCalledTimes(2);
-    const firstId = env.routerPush.mock.calls[0][0].params.id;
-    const secondId = env.routerPush.mock.calls[1][0].params.id;
-    expect(firstId).toBeTruthy();
-    expect(secondId).toBeTruthy();
-    expect(secondId).not.toBe(firstId);
+    const labsChip = root!.root.findByProps({ testID: "library-filter-labs" });
+    await act(async () => labsChip.props.onPress());
+
+    // Type "Habitat detective" into search bar and re-render with updated child.query.
+    const input = root!.root.find((n) => String(n.type) === "TextInput" && n.props.accessibilityLabel === "Search the Library");
+    await act(async () => input.props.onChangeText("Habitat detective"));
+    await act(async () => root!.update(<LibraryScreen />));
+
+    const habitatLab = root!.root.findByProps({ testID: "library-lab-animals" });
+    expect(textOf(habitatLab)).toContain("Habitat detective");
+    expect(textOf(root!.toJSON())).not.toContain("No picture found yet");
+
+    // Clicking the matched playable lab opens it cleanly.
+    await act(async () => habitatLab.props.onPress());
+    expect(env.routerPush).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/library", params: { place: "exhibit", id: "animals" } })
+    );
+
+    // Respect collection restriction: removing "animals" hides Habitat detective.
+    env.store.save.library.profiles.family.policy.collections =
+      env.store.save.library.profiles.family.policy.collections.filter((c: string) => c !== "animals");
+    await act(async () => root!.update(<LibraryScreen />));
+    expect(root!.root.findAllByProps({ testID: "library-lab-animals" })).toHaveLength(0);
   });
 
   it("supports 1-tap quick filter chips (All, Books, Interactive Labs, Saved)", async () => {
@@ -310,11 +349,10 @@ describe("Elevated Picture Book Reader", () => {
     ],
   } as unknown as Extract<LibraryItem, { type: "book" }>;
 
-  it("renders visual page progress bar, sequential Read page playback, and clean stop on page turn", async () => {
-    vi.useFakeTimers();
+  it("renders visual page progress bar, delegates event-driven Read page playback with zero timers, and stops on page turn", async () => {
     const { Reader } = await import("../src/library/Reader");
     const onPage = vi.fn();
-    const speak = vi.fn();
+    const onReadPage = vi.fn();
     const onStopReading = vi.fn();
 
     await act(async () => {
@@ -324,8 +362,10 @@ describe("Elevated Picture Book Reader", () => {
           page={0}
           onPage={onPage}
           selected=""
-          speak={speak}
+          speak={vi.fn()}
           word={vi.fn()}
+          readingPage={false}
+          onReadPage={onReadPage}
           onStopReading={onStopReading}
         />
       );
@@ -338,18 +378,32 @@ describe("Elevated Picture Book Reader", () => {
     expect(readBtn.props.accessibilityLabel).toBe("Read page");
 
     await act(async () => readBtn.props.onPress());
-    expect(speak).toHaveBeenCalledWith(sentences[0]);
-    expect(root!.root.findByProps({ testID: "reader-read-page" }).props.accessibilityLabel).toBe("Stop reading");
+    expect(onReadPage).toHaveBeenCalledWith(sentences);
 
+    // While readingPage is active, tapping Stop reading calls onStopReading.
     await act(async () => {
-      vi.advanceTimersByTime(1500);
+      root!.update(
+        <Reader
+          book={book}
+          page={0}
+          onPage={onPage}
+          selected="s1"
+          speak={vi.fn()}
+          word={vi.fn()}
+          readingPage
+          onReadPage={onReadPage}
+          onStopReading={onStopReading}
+        />
+      );
     });
-    expect(speak).toHaveBeenCalledWith(sentences[1]);
+    expect(root!.root.findByProps({ testID: "reader-read-page" }).props.accessibilityLabel).toBe("Stop reading");
+    await act(async () => root!.root.findByProps({ testID: "reader-read-page" }).props.onPress());
+    expect(onStopReading).toHaveBeenCalledTimes(1);
 
     // Turning the page stops sequential reading cleanly.
     const nextBtn = root!.root.find((n) => String(n.type) === "Pressable" && n.props.accessibilityLabel === "Next page");
     await act(async () => nextBtn.props.onPress());
-    expect(onStopReading).toHaveBeenCalled();
+    expect(onStopReading).toHaveBeenCalledTimes(2);
     expect(onPage).toHaveBeenCalledWith(1);
   });
 
@@ -478,6 +532,7 @@ describe("Interactive Topics Wonder Cards & Category Banner", () => {
     });
 
     expect(root!.root.findByProps({ testID: "topic-category-banner" })).toBeDefined();
+    expect(root!.root.findByProps({ testID: "legacy-topic-storybook-frame" })).toBeDefined();
     expect(root!.root.findAllByProps({ testID: "topic-wonder-card-answer" })).toHaveLength(0);
 
     const toggle = root!.root.find((n) => String(n.props.testID).startsWith("wonder-card-toggle-"));
@@ -486,7 +541,10 @@ describe("Interactive Topics Wonder Cards & Category Banner", () => {
     expect(toggle.props.accessibilityState.expanded).toBe(true);
     expect(root!.root.findAllByProps({ testID: "topic-wonder-card-answer" })).toHaveLength(1);
 
-    const hearBtn = root!.root.find((n) => String(n.props.testID).startsWith("wonder-card-hear-"));
+    const hearBtn = root!.root.find(
+      (n) => String(n.type) === "Pressable" && String(n.props.testID).startsWith("wonder-card-hear-")
+    );
+    expect(hearBtn.props.accessibilityLabel).toBe("Hear discovery: How does a sea turtle breathe?");
     await act(async () => hearBtn.props.onPress());
     expect(speak).toHaveBeenCalled();
 
@@ -499,5 +557,88 @@ describe("Interactive Topics Wonder Cards & Category Banner", () => {
     const drawBtn = root!.root.find((n) => String(n.type) === "Pressable" && n.props.accessibilityLabel === "Draw About This");
     await act(async () => drawBtn.props.onPress());
     expect(make).toHaveBeenCalledOnce();
+  });
+
+  it("binds Wonder card visible clue, accessibilityLabel, and Hear aloud Sentence identically on authored topics (R1-05)", async () => {
+    const { TopicPage } = await import("../src/library/Topics");
+    const items = JSON.parse(readFileSync(resolve("content/library/items.json"), "utf8")) as LibraryItem[];
+
+    // 1. Authored topic without a ? sentence ("How does a sea turtle breathe?")
+    const turtleItem = items.find((item) => item.id === "turtle-breath" && item.type === "topic") as Extract<
+      LibraryItem,
+      { type: "topic" }
+    >;
+    expect(turtleItem).toBeDefined();
+    const expectedTurtleClue = turtleItem.layers.more[0];
+    const speakTurtle = vi.fn();
+
+    await act(async () => {
+      root = create(
+        <TopicPage
+          record={{ id: turtleItem.id, title: turtleItem.title, category: turtleItem.category, motif: "turtle", item: turtleItem }}
+          layer="tell"
+          onLayer={vi.fn()}
+          saved={false}
+          toggleSaved={vi.fn()}
+          collections={["ocean"]}
+          selected=""
+          speak={speakTurtle}
+          go={vi.fn()}
+          make={vi.fn()}
+        />
+      );
+    });
+
+    const turtleToggle = root!.root.find((n) => String(n.props.testID).startsWith("wonder-card-toggle-"));
+    await act(async () => turtleToggle.props.onPress());
+    const turtleAnswer = root!.root.findByProps({ testID: "topic-wonder-card-answer" });
+    expect(textOf(turtleAnswer)).toContain(expectedTurtleClue.text);
+
+    const turtleHear = root!.root.find(
+      (n) => String(n.type) === "Pressable" && String(n.props.testID).startsWith("wonder-card-hear-")
+    );
+    expect(turtleHear.props.accessibilityLabel).toBe(`Hear aloud: ${expectedTurtleClue.text}`);
+    await act(async () => turtleHear.props.onPress());
+    expect(speakTurtle).toHaveBeenCalledWith(expectedTurtleClue.speechKey, expectedTurtleClue);
+    await act(async () => root!.unmount());
+    root = undefined;
+
+    // 2. Authored topic WITH a ? sentence ("family-walk")
+    const walkItem = items.find((item) => item.id === "family-walk" && item.type === "topic") as Extract<
+      LibraryItem,
+      { type: "topic" }
+    >;
+    expect(walkItem).toBeDefined();
+    const speakWalk = vi.fn();
+
+    await act(async () => {
+      root = create(
+        <TopicPage
+          record={{ id: walkItem.id, title: walkItem.title, category: walkItem.category, motif: "globe", item: walkItem }}
+          layer="tell"
+          onLayer={vi.fn()}
+          saved={false}
+          toggleSaved={vi.fn()}
+          collections={["guam"]}
+          selected=""
+          speak={speakWalk}
+          go={vi.fn()}
+          make={vi.fn()}
+        />
+      );
+    });
+
+    const walkToggle = root!.root.find((n) => String(n.props.testID).startsWith("wonder-card-toggle-"));
+    await act(async () => walkToggle.props.onPress());
+    const walkAnswer = root!.root.findByProps({ testID: "topic-wonder-card-answer" });
+    const walkHear = root!.root.find(
+      (n) => String(n.type) === "Pressable" && String(n.props.testID).startsWith("wonder-card-hear-")
+    );
+    await act(async () => walkHear.props.onPress());
+    expect(speakWalk).toHaveBeenCalledTimes(1);
+    const [spokenKey, spokenSentence] = speakWalk.mock.calls[0] as [string, Sentence];
+    expect(spokenKey).toBe(spokenSentence.speechKey);
+    expect(textOf(walkAnswer)).toContain(spokenSentence.text);
+    expect(walkHear.props.accessibilityLabel).toBe(`Hear aloud: ${spokenSentence.text}`);
   });
 });

@@ -10,23 +10,41 @@ import type { Sentence } from "./schema";
 
 type CleanupFn = () => void;
 
-/** Bounded preloaded players. Replaying a line never reloads it with replace(). */
+/** Bounded preloaded players. Replaying a line never reloads it with replace().
+ * Sequential narration is purely event-driven (zero reading timers) with per-step
+ * monotonic tickets so delayed seekTo(0) callbacks can never overlap the next clip.
+ */
 export function useLibraryAudio(enabled: boolean, volume: number, scope: string) {
   const players = useRef(new Map<string, AudioPlayer>());
   const active = useRef(true);
   const playback = useRef(0);
+  const stepTicket = useRef(0);
+  const currentStepPlayer = useRef<AudioPlayer | null>(null);
   const sequenceCleanup = useRef<CleanupFn | null>(null);
   const [selected, setSelected] = useState("");
   const [notice, setNotice] = useState("");
   const [readingSequence, setReadingSequence] = useState(false);
 
-  const clearSequence = useCallback(() => {
+  const releaseCurrentStep = useCallback(() => {
+    stepTicket.current++;
     if (sequenceCleanup.current) {
       sequenceCleanup.current();
       sequenceCleanup.current = null;
     }
-    setReadingSequence(false);
+    if (currentStepPlayer.current) {
+      try {
+        currentStepPlayer.current.pause();
+      } catch {
+        /* Released native object. */
+      }
+      currentStepPlayer.current = null;
+    }
   }, []);
+
+  const clearSequence = useCallback(() => {
+    releaseCurrentStep();
+    setReadingSequence(false);
+  }, [releaseCurrentStep]);
 
   const stop = useCallback(() => {
     playback.current++;
@@ -125,12 +143,20 @@ export function useLibraryAudio(enabled: boolean, volume: number, scope: string)
       try {
         const player = acquirePlayer(key, source);
         const ticket = playback.current;
+        const myStep = ++stepTicket.current;
+        currentStepPlayer.current = player;
         void player
           .seekTo(0)
           .then(() => {
-            if (active.current && ticket === playback.current) player.play();
+            if (active.current && ticket === playback.current && myStep === stepTicket.current) {
+              player.play();
+            }
           })
-          .catch(() => setNotice("Audio could not start. Try again."));
+          .catch(() => {
+            if (active.current && ticket === playback.current && myStep === stepTicket.current) {
+              setNotice("Audio could not start. Try again.");
+            }
+          });
         setSelected(sentence?.id ?? key);
         setNotice("");
         return true;
@@ -151,42 +177,40 @@ export function useLibraryAudio(enabled: boolean, volume: number, scope: string)
       }
       if (!active.current || sentences.length === 0) return false;
 
+      const playable = sentences
+        .map((sentence) => ({ sentence, source: resolveSource(sentence.speechKey, sentence) }))
+        .filter((entry): entry is { sentence: Sentence; source: NonNullable<ReturnType<typeof resolveSource>> } => !!entry.source);
+
+      if (!playable.length) {
+        setSelected(sentences[0].id);
+        setNotice("This recording is not installed. The words are here to read together.");
+        return false;
+      }
+
       const ticket = playback.current;
       setReadingSequence(true);
       setNotice("");
 
       const playStep = (index: number) => {
+        // Explicitly pause any prior player and invalidate its step ticket before leaving it.
+        releaseCurrentStep();
         if (!active.current || ticket !== playback.current) return;
-        if (index >= sentences.length) {
+        if (index >= playable.length) {
           clearSequence();
           setSelected("");
           return;
         }
-        const sentence = sentences[index];
-        const source = resolveSource(sentence.speechKey, sentence);
-        if (!source) {
-          setSelected(sentence.id);
-          setNotice("This recording is not installed. The words are here to read together.");
-          const fallbackTimer = setTimeout(() => {
-            if (active.current && ticket === playback.current) playStep(index + 1);
-          }, 1600);
-          sequenceCleanup.current = () => clearTimeout(fallbackTimer);
-          return;
-        }
+
+        const { sentence, source } = playable[index];
+        const myStep = stepTicket.current;
+
         try {
           const player = acquirePlayer(sentence.speechKey, source);
+          currentStepPlayer.current = player;
           setSelected(sentence.id);
 
-          let done = false;
-          let breathTimer: ReturnType<typeof setTimeout> | null = null;
-          let safetyTimer: ReturnType<typeof setTimeout> | null = null;
           let subscription: { remove?: () => void } | null = null;
-
-          const teardown = () => {
-            if (breathTimer) clearTimeout(breathTimer);
-            if (safetyTimer) clearTimeout(safetyTimer);
-            breathTimer = null;
-            safetyTimer = null;
+          const detach = () => {
             try {
               subscription?.remove?.();
             } catch {
@@ -195,63 +219,44 @@ export function useLibraryAudio(enabled: boolean, volume: number, scope: string)
             subscription = null;
           };
 
-          const advance = () => {
-            if (done) return;
-            done = true;
-            teardown();
-            if (!active.current || ticket !== playback.current) return;
-            if (index + 1 >= sentences.length) {
-              clearSequence();
-              setSelected("");
-              return;
-            }
-            breathTimer = setTimeout(() => {
-              if (active.current && ticket === playback.current) playStep(index + 1);
-            }, 240);
-            sequenceCleanup.current = () => {
-              if (breathTimer) clearTimeout(breathTimer);
-            };
-          };
-
           if (typeof player.addListener === "function") {
             subscription = player.addListener("playbackStatusUpdate", (status: AudioStatus) => {
-              if (!active.current || ticket !== playback.current) {
-                teardown();
+              if (!active.current || ticket !== playback.current || myStep !== stepTicket.current) {
+                detach();
                 return;
               }
-              if (status?.didJustFinish) advance();
+              if (status?.didJustFinish) {
+                playStep(index + 1);
+              }
             });
           }
-
-          const estimatedMs = Math.max(3500, Math.min(20000, sentence.text.length * 95 + 2500));
-          const safetyMs =
-            typeof player.addListener === "function"
-              ? Math.max(14000, (player.duration || 0) * 1000 + 3000)
-              : estimatedMs;
-          safetyTimer = setTimeout(advance, safetyMs);
-          sequenceCleanup.current = teardown;
+          sequenceCleanup.current = detach;
 
           void player
             .seekTo(0)
             .then(() => {
-              if (active.current && ticket === playback.current) player.play();
+              if (active.current && ticket === playback.current && myStep === stepTicket.current) {
+                player.play();
+              }
             })
             .catch(() => {
-              if (active.current && ticket === playback.current) {
+              if (active.current && ticket === playback.current && myStep === stepTicket.current) {
                 setNotice("Audio could not start. Try again.");
                 clearSequence();
+                setSelected("");
               }
             });
         } catch {
           setNotice("Audio could not start. Try again.");
           clearSequence();
+          setSelected("");
         }
       };
 
       playStep(0);
       return true;
     },
-    [enabled, stop, clearSequence, resolveSource, acquirePlayer]
+    [enabled, stop, releaseCurrentStep, clearSequence, resolveSource, acquirePlayer]
   );
 
   const word = useCallback(

@@ -8,7 +8,8 @@ import { PaintedLibraryCover } from "./illustratedCovers";
 import { LibraryArt } from "./LibraryArt";
 import { SentenceLine } from "./Reader";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
-import { canOpen, categories, exhibits, itemById, recordSpeech, type CatalogItem } from "./catalog";
+import { canOpen, exhibits, itemById, type CatalogItem } from "./catalog";
+import categories from "../../content/library/categories.json";
 import type { LibraryLink, ReadingLayer, Sentence } from "./schema";
 
 const topicCard = {
@@ -26,6 +27,8 @@ interface WonderPrompt {
   id: string;
   question: string;
   answer: string;
+  hearButtonText: string;
+  hearAccessibilityLabel: string;
   speechKey: string;
   sentence?: Sentence;
 }
@@ -35,11 +38,13 @@ function buildWonderPrompts(record: CatalogItem): WonderPrompt[] {
   const topic = record.item?.type === "topic" ? record.item : undefined;
   const legacy = record.legacy;
 
-  if (legacy?.question) {
+  if (legacy?.question && !topic) {
     prompts.push({
       id: `wonder-legacy-${record.id}`,
       question: legacy.question,
       answer: legacy.deeper || legacy.short,
+      hearButtonText: "Hear discovery",
+      hearAccessibilityLabel: `Hear discovery: ${record.title}`,
       speechKey: topicSpeechKey(record.id),
     });
   }
@@ -49,35 +54,37 @@ function buildWonderPrompts(record: CatalogItem): WonderPrompt[] {
     for (const layerKey of layers) {
       for (const sentence of topic.layers[layerKey]) {
         if (sentence.text.includes("?") && prompts.length < 2) {
-          const companion =
+          const clueSentence =
             topic.layers[layerKey].find((item) => item.id !== sentence.id && !item.text.includes("?")) ??
-            topic.layers.tell[0];
+            topic.layers.tell[0] ??
+            sentence;
           prompts.push({
             id: `wonder-${sentence.id}`,
             question: sentence.text,
-            answer: companion?.text ?? "Share your own guess with someone nearby, then listen again!",
-            speechKey: sentence.speechKey,
-            sentence,
+            answer: clueSentence.text,
+            hearButtonText: "Hear aloud",
+            hearAccessibilityLabel: `Hear aloud: ${clueSentence.text}`,
+            speechKey: clueSentence.speechKey,
+            sentence: clueSentence,
           });
         }
       }
     }
     if (!prompts.length) {
-      const tellFirst = topic.layers.tell[0];
-      const deepFirst = topic.layers.more[0] ?? topic.layers.deep[0] ?? tellFirst;
-      const speech = recordSpeech(record);
-      prompts.push({
-        id: `wonder-explore-${record.id}`,
-        question: record.title.endsWith("?")
-          ? record.title
-          : `What surprised you most about ${record.title}?`,
-        answer:
-          deepFirst?.text ??
-          tellFirst?.text ??
-          "Try telling the story of this wonder in your own words!",
-        speechKey: tellFirst?.speechKey ?? speech.key,
-        sentence: tellFirst ?? speech.sentence,
-      });
+      const clueSentence = topic.layers.more[0] ?? topic.layers.tell[0] ?? topic.layers.deep[0];
+      if (clueSentence) {
+        prompts.push({
+          id: `wonder-explore-${record.id}`,
+          question: record.title.endsWith("?")
+            ? record.title
+            : `What surprised you most about ${record.title}?`,
+          answer: clueSentence.text,
+          hearButtonText: "Hear aloud",
+          hearAccessibilityLabel: `Hear aloud: ${clueSentence.text}`,
+          speechKey: clueSentence.speechKey,
+          sentence: clueSentence,
+        });
+      }
     }
   }
   return prompts;
@@ -163,13 +170,13 @@ function WonderQuestionCard({
           <View style={s.row}>
             <Action
               testID={`wonder-card-hear-${prompt.id}`}
-              label={`Hear aloud: ${prompt.question}`}
+              label={prompt.hearAccessibilityLabel}
               onPress={onHear}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <LibraryIcon name="sound" size={20} />
                 <Text maxFontSizeMultiplier={1.3} style={[s.actionText, headingBold, { color: "#3D2B24" }]}>
-                  Hear aloud
+                  {prompt.hearButtonText}
                 </Text>
               </View>
             </Action>
