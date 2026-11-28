@@ -1,3 +1,4 @@
+import { GameHallScreen } from '../gamehall/GameHallScreen';
 import { WordGamesCards } from '../wordgames/WordGamesCards';
 import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { learningGroups } from '../learn/generated/ids';
@@ -17,13 +18,13 @@ import { useStore } from "../state/Store";
 import { islandNames, shelfGames } from "../learn/home";
 import { theme } from "../ui/theme";
 import { useNunitoLoaded } from "../ui/fonts";
-const classicFilters = ["All games", "Play alone", "Play together", "Favorites", "Words & numbers", "Think & explore"];
 export default function Shelf() {
   const { island } = useLocalSearchParams<{ island?: string }>();
   if (!island || !["reading", "numbers", "science", "thinking", "coding", "classic"].includes(island)) return <Redirect href="/" />;
-  return <IslandShelf key={island} island={island as Exclude<keyof typeof islandNames, "explore">} />;
+  if (island === "classic") return <GameHallScreen wordGames={<WordGamesCards/>} />;
+  return <IslandShelf key={island} island={island as Exclude<keyof typeof islandNames, "explore" | "classic">} />;
 }
-function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "explore"> }) {
+function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "explore" | "classic"> }) {
   const loaded = useNunitoLoaded();
   const bold = loaded ? { fontFamily: theme.fontFamily["800"], fontWeight: "normal" as const } : { fontWeight: "800" as const };
   const store = useStore(), insets = useSafeAreaInsets(), { width, fontScale } = useWindowDimensions();
@@ -40,12 +41,11 @@ function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "ex
   return <TextFit.Provider value={entryRegion(fontScale, line)}><SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}><ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 14 }]}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8, paddingHorizontal: 8, marginHorizontal: -8 }}><AtmosphereHeader rounded/>
       {large || wrapTitle ? <IconButton icon="back" label="Back to islands" onPress={() => router.canGoBack() ? router.back() : router.replace("/")} /> : <Button compact quiet icon="back" label="Back to islands" onPress={() => router.canGoBack() ? router.back() : router.replace("/")}>Islands</Button>}
-      <Text accessibilityRole="header" numberOfLines={large || wrapTitle ? 2 : 1} adjustsFontSizeToFit={!large && !wrapTitle} minimumFontScale={0.75} maxFontSizeMultiplier={large ? wordFitMultiplier(islandNames[island], 21, line - 56, 1.5) : undefined} style={{ flex: 1, fontSize: 21, color: "#3D2B24", ...bold }}>{island === 'classic' ? 'Game Hall' : islandNames[island]}</Text>
+      <Text accessibilityRole="header" numberOfLines={large || wrapTitle ? 2 : 1} adjustsFontSizeToFit={!large && !wrapTitle} minimumFontScale={0.75} maxFontSizeMultiplier={large ? wordFitMultiplier(islandNames[island], 21, line - 56, 1.5) : undefined} style={{ flex: 1, fontSize: 21, color: "#3D2B24", ...bold }}>{islandNames[island]}</Text>
     </View>
     <SaveStatus />
-    {island === 'classic' && <WordGamesCards/>}
     <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]} accessible={false} importantForAccessibility="no">
-      {(island === "classic" ? classicFilters : ["All games", "Play alone", "Play together", "Favorites"]).map(f => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
+      {["All games", "Play alone", "Play together", "Favorites"].map(f => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
     </View>
     {!choices.length && <Copy>{filter === "Favorites" ? "Tap the star on a game to keep it close by." : "Try another way to play on this island."}</Copy>}
     {island === 'thinking' ? (['levels','originals'] as const).map(group=>{const games=choices.filter(g=>learningGroups[g.id as LearnId]===group);return games.length ? <View key={group} style={{gap:12}}><Heading style={{fontSize:23}}>{group==='levels'?'Levels':'Island originals'}</Heading><GameCards games={games} width={cardWidth}/></View>:null;}) : <GameCards games={choices} width={cardWidth} />}

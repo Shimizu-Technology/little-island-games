@@ -775,7 +775,22 @@ function Round({
             conceal();
             setHelp(true);
           }}
-        />
+        >
+          {!large && !reefShortLandscape && (
+            <Button
+              compact
+              quiet
+              maxFontSizeMultiplier={buttonCap}
+              label="New game and options"
+              onPress={() => {
+                conceal();
+                onSetup();
+              }}
+            >
+              Options
+            </Button>
+          )}
+        </GameHeader>
         <SaveStatus />
         {reefCompactPortrait ? (
           <View style={{ width: "100%", gap: 6, alignItems: "center" }}>

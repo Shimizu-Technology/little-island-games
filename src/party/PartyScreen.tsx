@@ -142,7 +142,36 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
   const namesValid = validPartyNames(players.map((p) => p.trim()));
   return (
     <View style={s.root}>
-      {onBack ? <GameHeader title="Secret Word" onBack={onBack} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { conceal(); setHelp(true); }} /> : <View style={s.row}><Heading style={{ flex: 1, fontSize: 24 }}>Secret Word</Heading><IconButton icon="help" label="How to play Secret Word" onPress={() => { conceal(); setHelp(true); }} /></View>}
+      {onBack ? (
+        <GameHeader
+          title="Secret Word"
+          onBack={onBack}
+          sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined}
+          onHelp={() => {
+            conceal();
+            setHelp(true);
+          }}
+        >
+          {session && !setup && (
+            <Button
+              compact
+              quiet
+              label="Change players, pack, or start a new game"
+              onPress={() => {
+                conceal();
+                setConfirmNew(true);
+              }}
+            >
+              Options
+            </Button>
+          )}
+        </GameHeader>
+      ) : (
+        <View style={s.row}>
+          <Heading style={{ flex: 1, fontSize: 24 }}>Secret Word</Heading>
+          <IconButton icon="help" label="How to play Secret Word" onPress={() => { conceal(); setHelp(true); }} />
+        </View>
+      )}
       {setup || !session ? (
         <Sheet visible={setup || !session} title={roundPractice?.pending ? "A little practice, then play" : "Secret Word · players & pack"} onClose={() => { if (roundPractice?.pending) roundPractice.cancel(); else if (session) setSetup(false); else onBack?.(); }} footer={roundPractice?.pending ? undefined :
           <Button disabled={!namesValid || !active} onPress={start}>Deal the secret roles</Button>
@@ -413,7 +442,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
 const s = StyleSheet.create({
   root: { width: "100%", gap: 16 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 10, alignItems: "center" },
-  panel: { padding: 18, borderRadius: 22, backgroundColor: C.soft, gap: 13 },
+  panel: { padding: 18, borderRadius: 24, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E4D5BF", gap: 13 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   playerNumber: { color: C.teal, fontSize: 18, fontWeight: "800", width: 20 },
   input: {
@@ -432,15 +461,15 @@ const s = StyleSheet.create({
   secret: {
     alignItems: "center",
     borderRadius: 26,
-    borderColor: "#BFCFB9",
-    borderWidth: 2,
-    backgroundColor: "#F0F3E6",
+    borderColor: "#E4D5BF",
+    borderWidth: 1.5,
+    backgroundColor: "#FFFDF8",
     padding: 22,
     gap: 16,
   },
   center: { textAlign: "center" },
   secretWord: { fontSize: 34, color: C.ink, fontWeight: "800", textAlign: "center" },
   word: { fontSize: 22, color: C.ink, fontWeight: "700" },
-  notice: { backgroundColor: "#F6EDD8", borderRadius: 16, padding: 14 },
-  result: { borderRadius: 24, padding: 20, backgroundColor: "#E5EFE5", alignItems: "center", gap: 16 },
+  notice: { backgroundColor: "#FFF5DF", borderWidth: 1, borderColor: "#E4D5BF", borderRadius: 16, padding: 14 },
+  result: { borderRadius: 24, padding: 20, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E4D5BF", alignItems: "center", gap: 16 },
 });

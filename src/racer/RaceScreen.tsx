@@ -352,7 +352,29 @@ export function RaceScreen({ session, records = {}, earlierRecords = {}, onSave,
   const best = records[`${snapshot.course}:${snapshot.mode}`];
   return (
     <View style={s.root}>
-      {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { pause(); setHelp(true); }} />}
+      {onExit && (
+        <GameHeader
+          title="Island Dash"
+          onBack={onExit}
+          sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined}
+          onHelp={() => {
+            pause();
+            setHelp(true);
+          }}
+        >
+          <Button
+            compact
+            quiet
+            label="Change course, mode, or difficulty"
+            onPress={() => {
+              pause();
+              setChoosing(true);
+            }}
+          >
+            Courses
+          </Button>
+        </GameHeader>
+      )}
       <View style={s.row}><Heading style={{ flex: 1, fontSize: 23 }}>{course.name}</Heading>{!onExit && <Button compact quiet onPress={() => { pause(); setHelp(true); }}>How to race</Button>}</View>
       {roundPractice?.panel}
       <Sheet visible={help} title="How to race" onClose={() => setHelp(false)} footer={<Button onPress={() => setHelp(false)}>Back to race</Button>}>

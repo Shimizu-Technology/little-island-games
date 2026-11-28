@@ -106,7 +106,7 @@ it('bundles exactly the nine shelf illustrations as 512×512 WebPs with alpha', 
 });
 
 it('shows decorative arcade images in fixed-size tiles and keeps the other shelf icons as SVGs', async () => {
-  const vectorIds = ['beep-bot', 'coconut-drop', 'tic-tac-toe', 'weather-watch'] as const;
+  const vectorIds = ['beep-bot', 'pattern-path', 'food-web', 'weather-watch'] as const;
   await mount(<>{[...games.map(game => game.id), ...vectorIds].map(id => <GameIcon key={id} id={id} size={120}/>)}</>);
   for (const icon of screen.root.findAllByType(GameIcon)) {
     const { id } = icon.props;

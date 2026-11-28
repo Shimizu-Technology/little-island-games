@@ -1,9 +1,22 @@
+import { arcadeDares } from '../arcade/dares';
+import { arcadeGames } from '../arcade/registry';
+import { badgeInfo, tracks as badgeTracks, type BadgeId } from '../badges/engine';
+import { catalog as boardCatalog } from '../board/index';
+import { HABITATS, PLACES } from '../explore/activities';
+import { TOPICS, WORLDS } from '../explore/content';
+import { QUALITY_GUIDANCE } from '../explore/guidance';
+import { games as classicGames } from '../games/index';
+import { FLOAT_EXPERIMENTS } from '../learn/games/float-sink/stages';
+import { tasks as scienceTasks, type Game as ScienceGame } from '../learn/games/weather-watch/model';
 import { discoveryTracks } from '../learn/growth/discovery';
 import { numberTracks } from '../learn/growth/numbers';
-import { tasks as scienceTasks, type Game as ScienceGame } from '../learn/games/weather-watch/model';
-import { FLOAT_EXPERIMENTS } from '../learn/games/float-sink/stages';
-import { legacyWordRescue } from '../../content/words/registry';
 import { catalog } from '../library/catalog';
+import { DISCOVERY_LABS } from '../library/labs/registry';
+import { mysteryInstructions } from '../mystery/instructions';
+import { PARTY_PACKS } from '../party/content';
+import { headStarts, rivalFor } from '../playPolicies/rivals';
+import { COURSES } from '../racer/courses';
+import { legacyWordRescue } from '../../content/words/registry';
 
 export interface TrieNode { children: Map<string, TrieNode>; word?: string }
 export function buildTrie(words: ReadonlySet<string>): TrieNode {
@@ -21,7 +34,7 @@ export function buildTrie(words: ReadonlySet<string>): TrieNode {
 }
 let lexicon: ReadonlySet<string> | undefined;
 let trie: TrieNode | undefined;
-/** Existing human-facing Library, Word Rescue, science and maths prose only.
+/** Existing human-facing Library, Explore, game help, Word Rescue, science and maths prose only.
  * Reading snapshots belong exclusively to their branded provenance boundary. Never read distractors, code or metadata. */
 export function getWordLexicon(): ReadonlySet<string> {
   if (lexicon) return lexicon;
@@ -65,6 +78,62 @@ export function getWordLexicon(): ReadonlySet<string> {
     if (item.type === 'topic') Object.values(item.layers).forEach(layer => layer.forEach(sentence => prose(sentence.text)));
     if (item.type === 'prayer') item.sentences.forEach(sentence => prose(sentence.text));
     if (item.type === 'book') item.pages.forEach(page => page.sentences.forEach(sentence => prose(sentence.text)));
+  }
+  for (const world of WORLDS) {
+    prose(world.title); prose(world.invitation); prose(world.activity);
+  }
+  for (const topic of TOPICS) {
+    prose(topic.title); prose(topic.short); prose(topic.deeper); prose(topic.question);
+  }
+  for (const [key, text] of Object.entries(QUALITY_GUIDANCE)) {
+    // Skip phonetic pronunciation guides like "fight oh plank ton".
+    if (!key.startsWith('term-')) prose(text);
+  }
+  for (const lab of DISCOVERY_LABS) {
+    prose(lab.title); prose(lab.tagline); lab.searchTags.forEach(prose);
+  }
+  for (const info of Object.values(boardCatalog)) {
+    prose(info.name); prose(info.description); prose(info.rule); prose(info.lesson);
+  }
+  for (const info of Object.values(classicGames)) {
+    prose(info.name); prose(info.tag); prose(info.description); prose(info.help);
+  }
+  for (const course of COURSES) {
+    prose(course.name); prose(course.subtitle); prose(course.lesson);
+  }
+  for (const text of Object.values(mysteryInstructions)) prose(text);
+  for (const pack of PARTY_PACKS) {
+    prose(pack.name); prose(pack.description);
+    for (const entry of pack.words) prose(entry.word);
+  }
+  for (const game of arcadeGames) {
+    prose(game.name); prose(game.tagline);
+    for (const world of game.worlds) { prose(world.name); prose(world.detail); }
+  }
+  for (const dare of arcadeDares) {
+    prose(dare.title); prose(dare.detail);
+  }
+  for (const habitat of HABITATS) {
+    prose(habitat.animal); prose(habitat.home); prose(habitat.why);
+  }
+  for (const place of PLACES) {
+    prose(place.name); prose(place.clue); prose(place.fact);
+  }
+  for (const game of ['coconut-drop', 'fishing-nets', 'hidden-canoes', 'shell-pits', 'checkers'] as const) {
+    for (const strength of ['gentle', 'growing', 'challenge'] as const) {
+      const rival = rivalFor(game, strength);
+      prose(rival.who); prose(rival.plays);
+    }
+    for (const edge of headStarts(game)) {
+      prose(edge.label); prose(edge.detail);
+    }
+  }
+  for (const track of badgeTracks) {
+    if (track === 'chamoru') continue;
+    for (const tier of [1, 2, 3, 4] as const) {
+      const info = badgeInfo(`${track}-${tier}` as BadgeId);
+      prose(info.name); prose(info.rule);
+    }
   }
   lexicon = words;
   return lexicon;

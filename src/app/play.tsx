@@ -52,6 +52,8 @@ import {
   TicBoard,
   WordBoard,
 } from "../screens/GameBoards";
+const backToGameHall = () =>
+  router.canGoBack() ? router.back() : router.replace({ pathname: "/shelf", params: { island: "classic" } });
 const checkersRival = { easy: "gentle", medium: "growing", hard: "challenge" } as const;
 export default function Play() {
   const store = useStore();
@@ -228,13 +230,20 @@ function Game({ id }: { id: GameId }) {
       >
         <GameHeader
           title={g.name}
-          onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+          backLabel="Games"
+          onBack={backToGameHall}
           sound={{
             on: store.save.settings.sound,
             toggle: () => store.settings({ sound: !store.save.settings.sound }),
           }}
           onHelp={() => setHelp(true)}
-        />
+        >
+          {s && (
+            <Button compact quiet label="New round and options" onPress={newRound}>
+              Options
+            </Button>
+          )}
+        </GameHeader>
         {s && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
             {s.game === "word-rescue"
@@ -266,7 +275,7 @@ function Game({ id }: { id: GameId }) {
           <Button compact quiet onPress={newRound}>New round & options</Button>
           <BadgeResultCard round={s.id}/>
         </View>}
-        <View testID="classic-board" style={{ backgroundColor: C.cream, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
+        <View testID="classic-board" style={{ backgroundColor: C.paper, borderRadius: 24, borderWidth: 1.5, borderColor: C.line, paddingVertical: 14, paddingHorizontal: 12, boxShadow: "0 4px 0 rgba(61, 43, 36, 0.08)" }}>
           {s?.game === "tic-tac-toe" ? (
             <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
           ) : s?.game === "word-rescue" ? (
@@ -334,7 +343,7 @@ function Game({ id }: { id: GameId }) {
       </ScrollView>
       <Sheet
         visible={focused && (setup || !s)}
-        onClose={() => practice.pending ? practice.cancel() : (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
+        onClose={() => practice.pending ? practice.cancel() : (s ? setSetup(false) : backToGameHall())}
         title={practice.pending ? "A little practice, then play" : s ? "A fresh little round" : `Let’s play ${g.name}`}
         footer={practice.pending ? undefined : <Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
       >
