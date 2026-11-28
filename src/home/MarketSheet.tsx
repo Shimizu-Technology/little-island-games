@@ -12,17 +12,18 @@ import type { HomeAction, HomeStateV2 } from './model';
 type Rect = { x: number; y: number; width: number; height: number };
 function Grocery({ item, onAdd, basket, reduced, dragPoint, onDrag }: { item: ItemId; onAdd: (item: ItemId) => void; basket: React.RefObject<Rect>; reduced: boolean; dragPoint: SharedValue<{x: number; y: number}>; onDrag: (item: ItemId | undefined) => void }) {
   const dx = useSharedValue(0), dy = useSharedValue(0), dragging = useSharedValue(false);
+  const lastDrag = useSharedValue(0);
   const style = useAnimatedStyle(() => ({ opacity: dragging.value ? .4 : 1, zIndex: dragging.value ? 20 : 0, transform: [{ translateX: dx.value }, { translateY: dy.value }, { scale: dragging.value ? 1.12 : 1 }] }));
   const acceptDrop = (x: number, y: number) => {
     const box = basket.current;
     if (x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height) onAdd(item);
   };
-  const pan = Gesture.Pan().minDistance(6).onStart(event => { dragging.set(true); dragPoint.set({x: event.absoluteX, y: event.absoluteY}); runOnJS(onDrag)(item); })
+  const pan = Gesture.Pan().minDistance(6).onStart(event => { lastDrag.set(Date.now()); dragging.set(true); dragPoint.set({x: event.absoluteX, y: event.absoluteY}); runOnJS(onDrag)(item); })
     .onUpdate(event => { dragPoint.set({x: event.absoluteX, y: event.absoluteY}); })
     .onEnd(event => { runOnJS(acceptDrop)(event.absoluteX, event.absoluteY); })
-    .onFinalize(() => { runOnJS(onDrag)(undefined); dragging.set(false); dx.set(withTiming(0, { duration: reduced ? 0 : 120 })); dy.set(withTiming(0, { duration: reduced ? 0 : 120 })); });
+    .onFinalize(() => { if (dragging.value) lastDrag.set(Date.now()); runOnJS(onDrag)(undefined); dragging.set(false); dx.set(withTiming(0, { duration: reduced ? 0 : 120 })); dy.set(withTiming(0, { duration: reduced ? 0 : 120 })); });
   return <GestureDetector gesture={pan}><Animated.View style={[{ width: '30%', minWidth: 80, alignItems: 'center', borderBottomWidth: 7, borderBottomColor: '#AC723F', backgroundColor: '#FFF8E9D9', borderRadius: 12, padding: 4, minHeight: 88 }, style]}>
-    <Pressable testID={`market-stock-${item}`} accessibilityRole="button" accessibilityLabel={`Add ${itemSpec(item).name} to Carry Basket`} onPress={() => onAdd(item)} style={{ alignItems: 'center', minWidth: 72, minHeight: 72 }}>
+    <Pressable testID={`market-stock-${item}`} accessibilityRole="button" accessibilityLabel={`Add ${itemSpec(item).name} to Carry Basket`} onPress={() => { if (!dragging.get() && Date.now() - lastDrag.get() > 250) onAdd(item); }} style={{ alignItems: 'center', minWidth: 72, minHeight: 72 }}>
       <MoreItemArt id={item} size={55} reduced/>
       <Text variant="small" numberOfLines={1} style={{ fontSize: 12 }}>{itemSpec(item).name}</Text>
     </Pressable>
@@ -38,12 +39,14 @@ export function MarketSheet({ state, dispatch, onHome, onClose, onUndo, canUndo,
   const ghost = useAnimatedStyle(() => ({transform: [{translateX: dragPoint.value.x - origin.value.x - 32}, {translateY: dragPoint.value.y - origin.value.y - 32}]}));
   const basket = useRef<Rect>({ x: 0, y: 0, width: 0, height: 0 });
   const basketNode = useRef<View>(null);
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
+  const compact = height < 520 && width > height;
   const measure = useCallback(() => { basketNode.current?.measureInWindow((x, y, width, height) => { basket.current = { x, y, width, height }; }); root.current?.measureInWindow((x, y) => origin.set({x, y})); }, [origin]);
   const add = (item: ItemId) => dispatch({ type: 'market-add', item });
   return <Sheet visible title="Little Island Market" closeLabel="Leave Market" mode="large" heightRatio={.96} compactHeader scroll={false} onClose={onClose}>
-    <View ref={root} onLayout={measure} testID="island-market" style={{ flex: 1, minHeight: 0, gap: 8 }}>
+    <View ref={root} onLayout={measure} testID="island-market" style={{ flex: 1, minHeight: 0, gap: 8, flexDirection: compact ? 'row' : 'column' }}>
       {dragged && <Animated.View pointerEvents="none" testID="market-drag-grocery" style={[{position: "absolute", left: 0, top: 0, width: 64, height: 64, zIndex: 100}, ghost]}><MoreItemArt id={dragged} size={64} reduced/></Animated.View>}
+      <View style={{ flex: 1, minHeight: 0, gap: 8 }}>
       <Text variant="small">Tap a grocery or drag it into your basket.</Text>
       <View style={{ flex: 1, minHeight: 80, borderRadius: 18, overflow: 'hidden', backgroundColor: '#E7C68D' }}>
         <Image source={require('../../assets/art/home/places/island-market.webp')} resizeMode="cover" style={{ position: 'absolute', width: '100%', height: '100%' }}/>
@@ -51,6 +54,8 @@ export function MarketSheet({ state, dispatch, onHome, onClose, onUndo, canUndo,
           {marketStock.map(item => <Grocery key={item} item={item} onAdd={add} basket={basket} reduced={reduced} dragPoint={dragPoint} onDrag={setDragged}/>)}
         </ScrollView>
       </View>
+      </View>
+      <View style={{ ...(compact ? { width: Math.min(300, width * .4) } : {}), gap: 8, justifyContent: 'flex-end' }}>
       <View ref={basketNode} collapsable={false} onLayout={measure} testID="market-carry-basket" style={{ padding: 8, borderRadius: 18, backgroundColor: '#F1E0BE', borderWidth: 2, borderColor: '#B58B55', gap: 4 }}>
         <Text variant="caption">Carry Basket · {contents.length}/4</Text>
         <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -63,6 +68,7 @@ export function MarketSheet({ state, dispatch, onHome, onClose, onUndo, canUndo,
       <View style={{ flexDirection: 'row', gap: 8, paddingBottom: 8 }}>
         <Button label="Carry Home" onPress={onHome} style={{ flex: 1 }}/>
         <Button label="Undo" variant="secondary" disabled={!canUndo} onPress={onUndo}/>
+      </View>
       </View>
     </View>
   </Sheet>;

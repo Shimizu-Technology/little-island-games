@@ -1,7 +1,8 @@
+import { defaultLook } from "../islander/look";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Platform, Pressable, FlatList, StyleSheet, View, useWindowDimensions } from "react-native";
 import Svg, { Defs, FeColorMatrix, Filter, G, Path } from "react-native-svg";
-import { defaultLook, IslanderShape, resolvePose, type IslanderLook } from "../islander";
+import { IslanderShape, resolvePose, type IslanderLook } from "../islander";
 import {
   canWear,
   lockedReason,

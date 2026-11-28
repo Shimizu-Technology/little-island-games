@@ -17,6 +17,8 @@ export function groupIds(scene: Pick<Scene, "entities">, id: string): string[] {
  * Supported children stay between their parent's back and front paint passes. */
 export function paintDepth(entity: SceneEntity, scene: Scene): number {
   if (entity.band === "foreground") return entity.depth;
+  // A pan seat is elevated visually but still belongs above its stove's paint pass.
+  if (entity.pan && scene.entities[entity.pan]) return paintDepth(scene.entities[entity.pan], scene) + 0.5;
   if (entity.parent && scene.entities[entity.parent]) {
     const parent = paintDepth(scene.entities[entity.parent], scene);
     return parent + (entity.attachment.kind === "socket" ? 1 : 0.5);

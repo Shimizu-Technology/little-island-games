@@ -1,4 +1,4 @@
-import { roomHopAt } from "./roomHops";
+import { roomHopAt, roomHops } from "./roomHops";
 import { marketContents } from "./market";
 import { arrivalPoint, isGuamPlace } from "./locations";
 import { isPointInCocosPalm } from "./waterZone";
@@ -20,7 +20,7 @@ import { HomeClosetSheet, closetSheetHeightRatio } from "./HomeClosetSheet";
 import { HomeBadgesSheet } from "./HomeBadgesSheet";
 import { registerWebPopStateHandler } from "./webPopState";
 import { locationBuilding, roomOrigin, type Building } from "./camera";
-import { locationIds as roomIds, type RoomId } from "./catalogMore";
+import { locationIds as roomIds, roomNames, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
 import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
 import {
@@ -1889,6 +1889,9 @@ export function HomeScreen({
           }}
         />
       )}
+      {!overview && !designing && !activeSheet && !more && !friends && !atmosphereOpen && !placesOpen && !marketOpen && selected && scene.entities[selected]?.character && <View testID="quick-room-hops" style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", maxWidth: "96%", flexDirection: "row", gap: 8, zIndex: 46 }}>
+        {roomHops(room).map(hop => <Pressable key={hop.kind} testID={`quick-room-hop-${hop.room}`} accessibilityRole="button" accessibilityLabel={`Move selected friend to ${roomNames[hop.room]}`} onPress={() => hopRoom(hop.room)} style={{ minHeight: 48, minWidth: 48, flexShrink: 1, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontSize: 14, fontWeight: "700", textAlign: "center" }}>{hop.kind === "ladder" ? "Climb" : "Hop"} · {roomNames[hop.room]}</Text></Pressable>)}
+      </View>}
       {marketOpen && <React.Suspense fallback={null}><MarketSheet state={store.state} dispatch={action => store.dispatch(action)} message={store.message} reduced={reduced} canUndo={store.canUndo} onUndo={() => store.dispatch({ type: "undo" })} onClose={() => setMarketOpen(false)} onHome={() => { setMarketOpen(false); goRoom("kitchen"); }}/></React.Suspense>}
       {!marketOpen && !placesOpen && !overview && !activeSheet && !friends && !more && !selected && !designing && room === "kitchen" && marketContents(store.state).length > 0 && <Pressable testID="unpack-market-basket" accessibilityRole="button" accessibilityLabel="Stock fridge from Carry Basket" onPress={() => store.dispatch({ type: "market-unpack" })} style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", zIndex: 46, padding: 12, minHeight: 48, borderRadius: 18, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontWeight: "700" }}>Carry Basket · {marketContents(store.state).length}/4 · Stock fridge</Text></Pressable>}
       {placesOpen && <React.Suspense fallback={null}><PlacesSheet room={room} discoveredPlaces={store.state.discoveredPlaces} onRoom={goRoom} onClose={() => setPlacesOpen(false)} onMarket={() => { interaction.cancelAll(); setPlacesOpen(false); setMarketOpen(true); }} onGame={route => { interaction.cancelAll(); setPlacesOpen(false); router.push(route); }}/></React.Suspense>}

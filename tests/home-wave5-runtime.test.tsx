@@ -164,3 +164,20 @@ it.each(['zero', 'cancel', 'pan'])('grounds an orphaned dragging avatar after %s
   expect(grounded.base).toBe('stand');
   await act(async () => tree.unmount());
 });
+it('a real character drag onto the ladder commits a grounded move to its connected floor', async () => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => { tree = TestRenderer.create(<Host initial={mealFixture()}/>); });
+  const actor = buildScene(settled).entities['character/0'], origin = roomOrigin(0, building);
+  const down = {id: 22, x: origin.x + actor.contact.x, y: origin.y + actor.contact.y - 70};
+  const overLadder = {...down, x: origin.x + 754, y: origin.y + 240};
+  await act(async () => harness.handlers.down({changedTouches:[down],numberOfTouches:1},{activate:()=>{}}));
+  await act(async () => harness.handlers.move({changedTouches:[overLadder],numberOfTouches:1}));
+  await flush(); await frames(3);
+  expect(current.slots.get().find(s=>s.id===actor.id)?.proposal).toMatchObject({kind:'transfer',room:'treehouse'});
+  await act(async () => harness.handlers.up({changedTouches:[overLadder],numberOfTouches:0},{end:()=>{}}));
+  await flush(); await frames(150);
+  expect(settled.rooms.treehouse.characters.find(c=>c.slot===0)).toMatchObject({pose:'stand',anchor:'floor'});
+  expect(settled.rooms.home.characters.some(c=>c.slot===0)).toBe(false);
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  await act(async()=>tree.unmount());
+});

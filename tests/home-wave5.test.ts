@@ -8,6 +8,7 @@ import { marketContents, marketStock, MARKET_BASKET_ID } from '../src/home/marke
 import { foodIds, drinkIds } from '../src/home/art/living';
 import { roomHopAt, roomHops } from '../src/home/roomHops';
 import { cookingIds } from '../src/home/runtime/delight';
+import { paintDepth } from '../src/home/runtime/group';
 import { thumbnailLook } from '../src/personalization/thumbnail';
 import { styleCatalog } from '../src/personalization/catalog';
 import { defaultLook } from '../src/islander/look';
@@ -56,6 +57,8 @@ describe('Wave 5 grocery loop', () => {
     h = drop(h, `kitchen/item/${food.id}`, 'kitchen/item/starter-stove/pan');
     expect(h.present.rooms.kitchen.instances.find(i => i.item === 'stove')?.powered).toBe(true);
     expect(cookingIds(buildScene(h.present))).toContain(`kitchen/item/${food.id}`);
+    const panScene = buildScene(h.present);
+    expect(paintDepth(panScene.entities[`kitchen/item/${food.id}`], panScene)).toBeGreaterThan(paintDepth(panScene.entities['kitchen/item/starter-stove'], panScene));
     h = editHistory(h, { type: 'cook', id: food.id });
     expect(h.present.rooms.kitchen.instances.find(i => i.id === food.id)?.powered).toBe(true);
     const cooked = h.present.rooms.kitchen;

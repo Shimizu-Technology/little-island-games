@@ -1,7 +1,8 @@
+import { defaultLook } from "../islander/look";
 import React, { memo } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, Filter, FeColorMatrix, G } from 'react-native-svg';
-import { defaultLook, IslanderShape, resolvePose, type IslanderLook } from '../islander';
+import { IslanderShape, resolvePose, type IslanderLook } from '../islander';
 import { C, Copy, PressableScale } from '../components/ui';
 import { audienceLabels, audienceOrder, lockedReason, selectedValue, styleCatalog, type Category, type StyleItem } from './catalog';
 import { LockBadge, LockIcon } from './LockBadge';

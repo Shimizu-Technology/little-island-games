@@ -47,7 +47,9 @@ export function dropBody(i: Instance): DropBody {
     bottom = box.top + box.height;
   const size = itemSize(i),
     unit = 224 / 132;
-  for (const socket of socketsOf(i).filter((s) => !s.id.startsWith("pet-"))) {
+  // The chef stands beside the fixed stove. Its independent actor bounds must not enlarge
+  // the stove silhouette or push a saved Kitchen counter out of its original position.
+  for (const socket of socketsOf(i).filter((s) => !s.id.startsWith("pet-") && s.id !== "chef")) {
     const rig = poseBox(resolvePose("front", socket.kind === "sit" ? "sit-front" : socket.kind === "stand" ? "idle" : socket.kind));
     const x = (socket.at[0] - 0.5) * size - rig.anchor[0] * unit,
       y = (socket.at[1] - 0.85) * size - rig.anchor[1] * unit;

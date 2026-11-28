@@ -441,3 +441,13 @@ it('Pip prebuilt carry fins preserve authored loose/holding paths and one canvas
   await act(async()=>tree.unmount());
  }
 });
+
+it('keeps an authored cooking prop attached to the actual holding pose', async () => {
+ const {CharacterDrawing}=await import('../src/home/runtime/CharacterDrawing');
+ const render=vi.fn((_input:any)=>null), held=React.createElement('spoon');
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<CharacterDrawing input={{slot:0,base:'stand',action:'hold',face:'happy',facing:'left',size:224,held}} renderCharacter={render}/>);});
+ expect(render.mock.lastCall?.[0]).toMatchObject({action:'hold',held});
+ expect(render.mock.lastCall?.[0].carryGrip).toBeUndefined();
+ await act(async()=>tree.unmount());
+});

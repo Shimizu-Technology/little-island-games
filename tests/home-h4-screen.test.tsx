@@ -780,3 +780,14 @@ it('keeps the live character component mounted while Closet changes its look thr
   expect(root.root.findByType('body-look' as any).props.look.hairColor).toBe('blonde');
   expect({mounts, unmounts}).toEqual({mounts: 1, unmounts: 0});
 });
+
+it('keeps selected-character room hops at phone-sized touch targets in landscape', async () => {
+  harness.viewport = {width:844,height:390};
+  await open(starterHome());
+  await act(async()=>harness.scene.onSelect('character/0'));
+  const hop = root.root.findByProps({testID:'quick-room-hop-treehouse'});
+  expect(hop.props.style.minHeight).toBeGreaterThanOrEqual(48);
+  await act(async()=>hop.props.onPress());
+  expect(harness.scene.state.rooms.treehouse.characters.some((c:any)=>c.slot===0)).toBe(true);
+  expect(harness.scene.state.rooms.home.characters.some((c:any)=>c.slot===0)).toBe(false);
+});

@@ -155,7 +155,7 @@ export const EntityArt = memo(function EntityArt({
     slot: rigSlot(character.slot),
     familySlot: character.slot,
     base,
-    ...(chef && !entity.children.length ? { held: <G><Path d="M12 21L12 -10" stroke="#99673E" strokeWidth={3} strokeLinecap="round"/><Ellipse cx={12} cy={-14} rx={4} ry={6} fill="#D8B180" stroke="#99673E" strokeWidth={1.5}/></G> } : {}),
+    ...(chef && !entity.children.length ? { held: <G><Path d="M12 21L-15 -14" stroke="#99673E" strokeWidth={3} strokeLinecap="round"/><Ellipse cx={-18} cy={-17} rx={4} ry={6} fill="#D8B180" stroke="#99673E" strokeWidth={1.5}/></G> } : {}),
     action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? (chef && !entity.action ? "hold" as const : entity.action)),
     face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? (chef ? "happy" as const : null)),
     ...(faceOverride === 'proud' || faceOverride === 'yum' || faceOverride === 'cheer' ? { mood: faceOverride === 'cheer' ? 'happy' as const : faceOverride } : {}),
