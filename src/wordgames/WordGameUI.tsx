@@ -33,19 +33,19 @@ export function ModePicker({ mode, setMode }: { mode: WordMode; setMode: (mode: 
 }
 export function RoundBar({ round }: { round: WordSession }) {
   const stats = roundStats(round.found[round.player]);
-  return <View style={[W.row, { justifyContent: 'space-between' }]}><Text style={W.big}>{stats.score.toLocaleString()} pts</Text><Text style={W.label}>{round.mode === 'chill' ? 'Chill · No timer' : `${Math.ceil(round.remainingMs / 1000)}s`}{round.mode === 'pass-play' ? ` · Player ${round.player + 1}` : ''}</Text><Text style={W.hint}>{stats.count} words{round.mode === 'pass-play' ? '' : ` · Best ${Math.max(round.best, stats.score).toLocaleString()}`}</Text></View>;
+  return <View style={[W.row, { justifyContent: 'space-between' }]}><Text style={W.big}>{stats.score.toLocaleString()} pts</Text><Text style={W.label}>{round.mode === 'chill' ? 'Chill · No timer' : `${Math.ceil(round.remainingMs / 1000)}s`}{round.mode === 'pass-play' ? ` · Player ${round.player + 1}` : ''}</Text><Text style={W.hint}>{stats.count} {stats.count === 1 ? 'word' : 'words'}{round.mode === 'pass-play' ? '' : ` · Best ${Math.max(round.best, stats.score).toLocaleString()}`}</Text></View>;
 }
 export function SetupCopy({ game, mode }: { game: WordGame; mode: WordMode }) {
   return <Copy>{mode === 'chill' ? 'Take your time. Hints give you a little nudge.' : mode === 'pass-play' ? `Two turns, the same ${game === 'word-hunt' ? 'board' : 'rack'}. Each player has ${roundDuration(game) / 1000} seconds. Keep your words secret until the scorecard!` : `${roundDuration(game) / 1000} seconds to find as many words as you can. Every word has at least three letters.`}</Copy>;
 }
 export function FinishSummary({ round, onAgain, onRematch, onBack }: { round: WordSession; onAgain: () => void; onRematch: () => void; onBack: () => void }) {
-  const stats = matchStats(round), own = stats[round.player];
+  const stats = matchStats(round), own = stats[round.player], bestWord = roundStats([...new Set(round.found.flat())]).longest;
   return <View testID="word-finish" style={W.panel}>
     <Text accessibilityRole="header" style={W.big}>{round.mode === 'pass-play' ? round.result?.winner === 'tie' ? 'A brilliant tie!' : `Player ${(round.result?.winner as number) + 1} wins!` : 'Lovely word finding!'}</Text>
-    <Text style={W.label}>{own.score.toLocaleString()} points · {own.count} words</Text>
-    <Text style={W.label}>Best word: {own.longest || 'A fresh start awaits'}</Text>
+    <Text style={W.label}>{round.mode === 'pass-play' ? `Player 1: ${stats[0].score.toLocaleString()} pts · Player 2: ${stats[1].score.toLocaleString()} pts` : `${own.score.toLocaleString()} points · ${own.count} ${own.count === 1 ? 'word' : 'words'}`}</Text>
+    <Text style={W.label}>Best word: {bestWord || 'A fresh start awaits'}</Text>
     <View style={W.row}><Button onPress={onAgain}>Play Again</Button><Button tone="quiet" onPress={onRematch}>Rematch Same {round.game === 'word-hunt' ? 'Board' : 'Rack'}</Button><Button tone="quiet" onPress={onBack}>Back</Button></View>
-    {round.mode === 'pass-play' && <View testID="word-scorecard" style={W.row}>{stats.map((stat, i) => <View key={i} style={[W.banner, { flex: 1, minWidth: 120 }]}><Text style={W.label}>Player {i + 1}</Text><Text style={W.label}>Total Score: {stat.score}</Text><Text style={W.hint}>Words Found: {stat.count}</Text><Text style={W.hint}>Unique Words: {stat.unique}</Text><Text style={W.hint}>Longest Word: {stat.longest || '—'}</Text></View>)}</View>}
+    {round.mode === 'pass-play' && <View testID="word-scorecard" style={[W.row, { alignItems: 'stretch' }]}>{stats.map((stat, i) => <View key={i} style={[W.banner, { flex: 1, minWidth: 120 }]}><Text style={W.label}>Player {i + 1}</Text><Text style={W.label}>Total Score: {stat.score}</Text><Text style={W.hint}>Words Found: {stat.count}</Text><Text style={W.hint}>Unique Words: {stat.unique}</Text><Text style={W.hint}>Longest Word: {stat.longest || '—'}</Text></View>)}</View>}
   </View>;
 }
 /** The newest discovery settles into the ribbon; Reduce Motion keeps it still. */

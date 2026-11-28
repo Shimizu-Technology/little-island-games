@@ -163,6 +163,8 @@ describe('real screen interactions', () => {
     expect(screen!.root.findAllByProps({testID:'anagrams-rack'})).toHaveLength(0);
     await press('Player 2 is ready'); expect(saved!.tiles).toEqual(initial.tiles); expect(saved!.remainingMs).toBe(60000);
     await press('Finish round'); expect(visible()).toContain('Player 1 wins!'); expect(screen!.root.findByProps({testID:'word-scorecard'})).toBeDefined();
+    const summaryText=screen!.root.findByProps({testID:'word-finish'}).findAllByType('Text' as React.ElementType).map(node=>[node.props.children].flat().join('')).join(' ');
+    expect(summaryText).toContain('Best word: '+word); expect(summaryText).toContain('Player 1: '+wordScore(word).toLocaleString()+' pts');
     await press('Rematch Same Rack'); expect(saved!.tiles).toEqual(initial.tiles);
   });
   it('restores behind a pause card, counts time during repeated input, and stops at zero', async () => {
