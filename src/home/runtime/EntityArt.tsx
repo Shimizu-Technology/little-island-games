@@ -11,7 +11,7 @@ import { type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import Svg, { G } from 'react-native-svg';
+import Svg, { G, Path, Ellipse } from 'react-native-svg';
 import { type HomeMood } from "./delight";
 import { HandProp } from '../art/PropShape';
 import { species } from '../scene/species';
@@ -148,14 +148,16 @@ export const EntityArt = memo(function EntityArt({
   const character = entity.character!,
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
+  const chef = !carry && character.socket?.socketId.replace(/^pet-/, "") === "chef";
   faceOverride = activityFaceOf(entity, false, faceOverride, carry, !!meal);
   const input = {
     gaze: carry ? { x: 0, y: -1 } : gaze,
     slot: rigSlot(character.slot),
     familySlot: character.slot,
     base,
-    action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
-    face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? null),
+    ...(chef && !entity.children.length ? { held: <G><Path d="M12 21L12 -10" stroke="#99673E" strokeWidth={3} strokeLinecap="round"/><Ellipse cx={12} cy={-14} rx={4} ry={6} fill="#D8B180" stroke="#99673E" strokeWidth={1.5}/></G> } : {}),
+    action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? (chef && !entity.action ? "hold" as const : entity.action)),
+    face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? (chef ? "happy" as const : null)),
     ...(faceOverride === 'proud' || faceOverride === 'yum' || faceOverride === 'cheer' ? { mood: faceOverride === 'cheer' ? 'happy' as const : faceOverride } : {}),
     facing: entity.facing === "left" ? ("left" as const) : ("right" as const),
     size,
@@ -194,6 +196,7 @@ export const EntityArt = memo(function EntityArt({
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&
+  a.entity.character?.socket?.socketId === b.entity.character?.socket?.socketId &&
   a.entity.character?.slot === b.entity.character?.slot && (a.entity.children.length === b.entity.children.length || !!a.carry && !!b.carry && !!a.carryGrip && a.carryGrip === b.carryGrip) &&
   JSON.stringify(a.entity.contents) === JSON.stringify(b.entity.contents) && JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));
 

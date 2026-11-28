@@ -6,7 +6,8 @@ import { illustratedRooms } from './art/illustrated';
 import { roomIds, roomNames, type RoomId } from './catalogMore';
 import { gamesHere, isGuamPlace, type GuamPlaceId, type PlaceGame } from './locations';
 
-export function PlacesSheet({ room, discoveredPlaces = [], onRoom, onGame, onClose }: {
+export function PlacesSheet({ room, discoveredPlaces = [], onRoom, onGame, onMarket, onClose }: {
+  onMarket?: () => void;
   room: RoomId; discoveredPlaces?: readonly GuamPlaceId[]; onRoom: (room: RoomId) => void; onGame: (route: PlaceGame['route']) => void; onClose: () => void;
 }) {
   const cocosUnlocked = room === 'cocos-island' || discoveredPlaces.includes('cocos-island');
@@ -29,6 +30,11 @@ export function PlacesSheet({ room, discoveredPlaces = [], onRoom, onGame, onClo
         style={{ minHeight: 48, flexBasis: "46%", flexGrow: 1, padding: 12, borderRadius: 14, backgroundColor: room === id ? '#DAEAE0' : '#F2EBDD' }}>
         <Text variant="caption">{id === 'beach' ? 'Beach deck' : roomNames[id]}</Text>
       </Pressable>)}</View>
+      <Pressable testID="places-card-island-market" accessibilityRole="button" accessibilityLabel="Visit Little Island Market" onPress={onMarket}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, minHeight: 84, borderRadius: 18, backgroundColor: '#F2EBDD' }}>
+        <Image source={require('../../assets/art/home/places/island-market.webp')} resizeMode="cover" style={{ width: 88, height: 64, borderRadius: 12 }}/>
+        <View style={{ flex: 1 }}><Text variant="caption">Little Island Market</Text><Text variant="small">Shop · Carry Home · Cook</Text></View>
+      </Pressable>
       {visibleGuamPlaces.map(id => <Pressable key={id} testID={`places-card-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${roomNames[id]}`} accessibilityState={{ selected: room === id }} onPress={() => onRoom(id)}
         style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, minHeight: 84, borderRadius: 18, backgroundColor: pressed || room === id ? '#DAEAE0' : '#F2EBDD' })}>
         <Image source={illustratedRooms[id]()} resizeMode="cover" style={{ width: 88, height: 64, borderRadius: 12 }}/>

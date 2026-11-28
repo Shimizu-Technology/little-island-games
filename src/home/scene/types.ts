@@ -96,6 +96,7 @@ export type Target = {
   closed?: boolean;
   /** HD-07: the stove's pan. Food lands on the saved floor point `attachment.at`, in `cell`. */
   pan?: boolean;
+  trash?: boolean;
   cell?: GridCell;
 };
 /** Prepared at settled edits, never a Map, function, class or native handle. */

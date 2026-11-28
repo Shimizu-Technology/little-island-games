@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, FlatList, StyleSheet, View, useWindowDimensions } from "react-native";
 import Svg, { Defs, FeColorMatrix, Filter, G, Path } from "react-native-svg";
-import { IslanderShape, resolvePose, type IslanderLook } from "../islander";
+import { defaultLook, IslanderShape, resolvePose, type IslanderLook } from "../islander";
 import {
   canWear,
   lockedReason,
@@ -11,7 +11,7 @@ import {
   type Category,
   type StyleItem,
 } from "../personalization/catalog";
-import { thumbnailFocus } from "../personalization/thumbnail";
+import { thumbnailFocus, thumbnailLook } from "../personalization/thumbnail";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { Sheet } from "../ui/Sheet";
@@ -141,7 +141,7 @@ const ClosetThumb = memo(function ClosetThumb({
   encoded: string;
   size: number;
 }) {
-  const shown = JSON.parse(encoded) as IslanderLook;
+  const shown = { ...defaultLook, ...JSON.parse(encoded) } as IslanderLook;
   const focus = thumbnailFocus(item);
   const pose = resolvePose(focus.view, focus.view === "back" ? 0 : "idle");
   const art = size - 8;
@@ -161,11 +161,11 @@ const ClosetThumb = memo(function ClosetThumb({
         />
       ) : (
         <Svg width={art} height={art} viewBox={focus.box} accessible={false}>
-          <Defs>
+          {locked && <Defs>
             <Filter id={`closet-muted-${item.id}`}>
               <FeColorMatrix type="saturate" values="0" />
             </Filter>
-          </Defs>
+          </Defs>}
           <G opacity={locked ? 0.38 : 1} filter={locked ? `url(#closet-muted-${item.id})` : undefined}>
             <IslanderShape pose={pose} look={shown} />
           </G>
@@ -222,7 +222,7 @@ export function HomeClosetSheet({
   const [wearPhase, setWearPhase] = useState<WearPhase>("idle");
   const wearAcceptedRef = useRef(false);
   const prevSaveErrorRef = useRef(saveError);
-  const gridRef = useRef<ScrollView>(null);
+  const gridRef = useRef<FlatList<StyleItem>>(null);
   const titleNodeRef = useRef<unknown>(null);
   const needsNativeFocusRef = useRef(false);
   const wasVisibleRef = useRef(false);
@@ -342,7 +342,7 @@ export function HomeClosetSheet({
   const selectTab = useCallback((nextTab: ClosetTab) => {
     setTab(nextTab);
     setLockedNote(undefined);
-    gridRef.current?.scrollTo?.({ y: 0, animated: false });
+    gridRef.current?.scrollToOffset?.({ offset: 0, animated: false });
   }, []);
 
   const onTabsKeyDown = useCallback(
@@ -489,15 +489,22 @@ export function HomeClosetSheet({
           </View>
         )}
 
-        <ScrollView
+        <FlatList
+          key={shortViewport ? "short" : "tall"}
           ref={gridRef}
+          data={items}
+          numColumns={shortViewport ? 5 : 4}
+          initialNumToRender={3}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          keyExtractor={item => item.id}
+          columnWrapperStyle={{ gap: shortViewport ? theme.space.xs : theme.space.sm }}
           testID="closet-grid"
           style={styles.gridScroll}
-          contentContainerStyle={[styles.grid, shortViewport && styles.gridCompact]}
+          contentContainerStyle={{ gap: shortViewport ? theme.space.xs : theme.space.sm, paddingBottom: theme.space.sm }}
           showsVerticalScrollIndicator={false}
           {...webTabpanelProps}
-        >
-          {items.map((item) => {
+          renderItem={({ item }) => {
             const reason = lockedReason(item, earned);
             const locked = !!reason;
             const selected = !locked && selectedValue(look, item.category) === item.value;
@@ -523,7 +530,7 @@ export function HomeClosetSheet({
                 <ClosetThumb
                   item={item}
                   locked={locked}
-                  encoded={JSON.stringify(lookWithStyle(look, item))}
+                  encoded={thumbnailLook(look, item)}
                   size={thumbSize}
                 />
                 {locked && (
@@ -549,8 +556,8 @@ export function HomeClosetSheet({
                 </Text>
               </Pressable>
             );
-          })}
-        </ScrollView>
+          }}
+        />
 
         <View testID="closet-wear-bar" style={[styles.footer, shortViewport && styles.footerCompact]}>
           {showWearError && (

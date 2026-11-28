@@ -1,3 +1,4 @@
+import { trashTarget } from "../kitchen";
 import { defaultGuamRoom, isGuamPlace } from "../locations";
 import { fridgeShelfOffset, storageCapacity, storageOpen } from '../storage';
 import {heldDrinkGeometry,heldDrinkScale} from '../art/heldDrink';
@@ -283,6 +284,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         // Lying contacts are at the pillow. The visible blanket is also a destination.
         activation: socket.kind === "lie" ? lyingActivation(item, socket.id)
           : socket.kind === "bathe" ? furnitureActivation(item, { left: 12, top: 48, width: 128, height: 65 })
+          : item.item === "stove" ? furnitureActivation(item, { left: 25, top: 95, width: 100, height: 55 })
           : item.item === "sofa" ? furnitureActivation(item, { left: socket.id.includes("right") ? 77 : 20, top: 63, width: 55, height: 52 }) : undefined,
         // Reclining remains an explicit pictorial destination; cushions naturally mean sitting.
         hidden: item.item === "sofa" && socket.kind === "lie",
@@ -380,6 +382,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       });
     }
   }
+  if (room === "kitchen") targets.push(trashTarget());
   targets.sort((a, b) => a.id.localeCompare(b.id));
   const buckets: RoomIndex["buckets"] = {};
   // 128 room-unit buckets, expanded by the maximum 48pt magnet at supported scale >= .2.

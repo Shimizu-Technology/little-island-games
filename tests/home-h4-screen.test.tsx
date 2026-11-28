@@ -18,7 +18,7 @@ import { stagePieces } from '../src/home/art/Stage';
 import { panFloorPoint } from '../src/home/scene/pan';
 import { floorPoint } from '../src/home/geometry';
 vi.mock('../src/home/AtmospherePicker', () => ({ AtmospherePicker: () => null }));
-const harness = vi.hoisted(() => ({ destinations: {} as any, cameraTargets: [] as any[], tween: null as any, viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
+const harness = vi.hoisted(() => ({ paintInput: null as any, destinations: {} as any, cameraTargets: [] as any[], tween: null as any, viewport: { width: 390, height: 844 }, zoom: undefined as any, options: {} as any, chrome: {} as any, scene: {} as any, cues: [] as any[], active: {} as Record<string, string>, played: [] as string[], haptics: [] as string[],
   handoffs: [] as any[], live: undefined as boolean | undefined, settings: { sound: true } as any, reduced: false, sleeping: {} as Record<string, boolean>, proposals: [] as any[], slots: [{}, {}] as any[] }));
 vi.mock('react-native-svg', () => Object.fromEntries(['Image', 'G', 'Circle', 'Ellipse', 'Rect', 'Path', 'Defs', 'ClipPath', 'Pattern', 'LinearGradient', 'Stop'].map((k) => [k, k]).concat([['default', 'Svg']])));
 vi.mock('../src/home/art/CrabFriend', () => ({ CrabFriend: 'CrabFriend' }));
@@ -40,7 +40,7 @@ vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () 
 vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { animateProposal: (proposal: any) => { harness.proposals.push(proposal); return true; }, isCurrent: () => true, finish: () => {}, completeMealHandoff:(...args:any[])=>harness.handoffs.push(args),
   camera: { get: () => ({ a: cozyRoomScale(harness.options.viewport), b: 0, c: 0, d: cozyRoomScale(harness.options.viewport), tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => harness.slots }, cancelAll: () => { harness.tween = null; }, animateCamera: (camera: any, _door = false, immediate = false) => { harness.cameraTargets.push(camera); harness.zoom = camera; harness.tween = immediate ? null : camera; },
   showHint: () => {}, showCue: (...args: any[]) => { harness.active[args[0]] = args[1]; return harness.cues.push(args); }, clearCue: (id: string) => { delete harness.active[id]; }, dropZones: { set: () => {} } }; } }));
-vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return null; } }));
+vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: (props: any) => { harness.scene = props; return harness.paintInput ? props.renderCharacter(harness.paintInput) : null; } }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
 vi.mock('../src/home/HomeClosetSheet', () => ({ HomeClosetSheet: () => null, closetSheetHeightRatio: () => .5 }));
@@ -58,7 +58,7 @@ vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGoneP
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});
 let root: ReturnType<typeof create>;
-beforeEach(() => { vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.cameraTargets = []; harness.tween = null; harness.proposals = []; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
+beforeEach(() => { harness.paintInput = null; vi.useFakeTimers(); harness.viewport = { width: 390, height: 844 }; harness.zoom = undefined; harness.cameraTargets = []; harness.tween = null; harness.proposals = []; harness.reduced = false; harness.handoffs=[]; harness.slots = [{}, {}]; harness.cues = []; harness.active = {}; harness.played = []; harness.haptics = []; harness.settings = { sound: true }; harness.sleeping = {}; });
 afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
 const building = buildingLayout(roomIds.length, false);
 async function open(state: HomeStateV2, persist = vi.fn((_s: HomeStateV2) => true)) {
@@ -511,7 +511,7 @@ it('H4b the committed drink stays empty and regrabbing its real container ends t
   expect(harness.scene.scene.entities['character/0'].action).not.toBe('drink');
 });
 
-it('H4b playback completion owns the meal end even after a long JS stall', async () => {
+it('H4b interrupted playback completes through its bounded fallback after a long JS stall', async () => {
   const state = labFixtures['rig-meal']();
   await open(state);
   const scene = harness.scene.scene;
@@ -523,8 +523,8 @@ it('H4b playback completion owns the meal end even after a long JS stall', async
   await act(async () => { vi.advanceTimersByTime(300); });
   await act(async () => harness.scene.onMealPresented('character/0', meal.key));
   await act(async () => { vi.advanceTimersByTime(2000); });
-  expect(harness.scene.meals['character/0']).toMatchObject({key:meal.key});
-  // A second layout must not extend the meal again.
+  expect(harness.scene.meals['character/0']).toBeUndefined();
+  // A late layout must not revive or extend a completed meal.
   await act(async () => harness.scene.onMealPresented('character/0', meal.key));
   await act(async () => harness.scene.onMealFinished('character/0', meal.key));
   expect(harness.scene.meals['character/0']).toBeUndefined();
@@ -545,7 +545,7 @@ it('H4b stale presentation and completion callbacks cannot finish a newer meal',
   const current = harness.scene.meals['character/0'];
   await act(async () => harness.scene.onMealPresented('character/0', current.key));
   await act(async () => harness.scene.onMealFinished('character/0', old.key));
-  await act(async () => { vi.advanceTimersByTime(2000); });
+  await act(async () => { vi.advanceTimersByTime(600); });
   expect(harness.scene.meals['character/0']).toMatchObject({key:current.key});
   await act(async () => harness.scene.onMealFinished('character/0', current.key));
   expect(harness.scene.meals['character/0']).toBeUndefined();
@@ -587,6 +587,12 @@ it('double tapping empty space zooms in on an 844×390 landscape phone', async (
   expect(harness.zoom.a).toBeGreaterThan(initial);
 });
 
+async function drawInput(input: any) {
+  harness.paintInput = input;
+  const props = root.root.findByType(HomeScreen).props;
+  await act(async () => root.update(<HomeScreen {...props}/>));
+}
+
 it('painted crab aligns each pose to its shared rig origin and respects tilted bounds', async () => {
   await open(starterHome());
   const loader = Module as any, originalLoad = loader._load;
@@ -596,8 +602,10 @@ it('painted crab aligns each pose to its shared rig origin and respects tilted b
   for (const base of ['stand', 'sit', 'lie', 'bathe', 'carry'] as const) {
     for (const tilt of [0, 4]) {
       const input = { slot: 2, base, facing: 'right', size: 240, tilt, limbLag: 3, reduced: false };
-      const tree = harness.scene.renderCharacter(input);
+      await drawInput(input);
       const bounds = crabAnchors(base, 'right', { tilt, limbLag: 3 }).bounds;
+      const tree = root.root.findAllByType("View" as any).find(n => n.props.style?.width === bounds.width * 2 && n.props.pointerEvents === "none")!;
+      expect(tree).toBeDefined();
       expect(tree.props.style.width).toBeCloseTo(bounds.width * 2);
       expect(tree.props.children.props.style.top + crabOrigin(base)[1] * 2).toBeCloseTo(-bounds.top * 2);
     }
@@ -609,7 +617,7 @@ it('honors a caller supplied character renderer for the crab', async () => {
   const renderCharacter = vi.fn(() => null);
   await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} renderCharacter={renderCharacter}/>); });
   const input = { slot: 2, base: 'carry', facing: 'right', size: 120 };
-  harness.scene.renderCharacter(input);
+  await drawInput(input);
   expect(renderCharacter).toHaveBeenCalledWith(input);
 });
 
@@ -674,7 +682,7 @@ it('custom rendering owns all six slots including the family looks', async () =>
   await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} renderCharacter={renderCharacter}/>); });
   for (const slot of [0, 1, 2, 3, 4, 5]) {
     const input = { slot: slot < 3 ? slot : 0, familySlot: slot, base: 'stand', facing: 'front', size: 120 };
-    harness.scene.renderCharacter(input);
+    await drawInput(input);
     expect(renderCharacter).toHaveBeenLastCalledWith(input);
   }
 });
@@ -755,4 +763,20 @@ describe('Guam cross-place camera transitions', () => {
     await act(async () => { vi.advanceTimersByTime(1000); });
     expect(persist.mock.calls.at(-1)?.[0].current).toBe('tumon-beach');
   });
+});
+
+it('keeps the live character component mounted while Closet changes its look through context', async () => {
+  const { defaultLook } = await import('../src/islander/look');
+  let mounts = 0, unmounts = 0;
+  function Body({ look }: { look: typeof defaultLook }) { React.useEffect(() => { mounts++; return () => { unmounts++; }; }, []); return React.createElement('body-look', { look }); }
+  const renderLook = (_input: any, look: typeof defaultLook) => <Body look={look}/>;
+  const closet = {look: defaultLook, earned: [], unseen: [], onWear: () => true, renderLook};
+  harness.paintInput = {slot: 0, familySlot: 0, base: 'stand', face: 'happy', facing: 'right', size: 120};
+  const initialState = starterHome();
+  await act(async () => { root = create(<HomeScreen initialState={initialState} closet={closet}/>); });
+  const paint = harness.scene.renderCharacter;
+  await act(async () => root.update(<HomeScreen initialState={initialState} closet={{...closet, look: {...defaultLook, hairColor: 'blonde'}}}/>));
+  expect(harness.scene.renderCharacter).toBe(paint);
+  expect(root.root.findByType('body-look' as any).props.look.hairColor).toBe('blonde');
+  expect({mounts, unmounts}).toEqual({mounts: 1, unmounts: 0});
 });

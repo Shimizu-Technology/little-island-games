@@ -7,6 +7,7 @@ export const seatSockets: Record<string, readonly Socket[]> = {
   'beach-surfboard': [socket('ride', 'stand', 75, 114, false)],
   'outrigger-canoe': [socket('paddle', 'sit', 74, 86, true)],
   'sea-turtle': [socket('swim-beside', 'sit', 112, 92, false)],
+  stove: [{ ...socket('chef', 'stand', 115, 148, false), facing: 'left' }],
   bed: [socket('pillow', 'lie', 34, 73)],
   'bunk-bed': [socket('lower', 'lie', 34, 102), socket('upper', 'lie', 34, 42)],
   hammock: [socket('sling', 'lie', 35, 77)],

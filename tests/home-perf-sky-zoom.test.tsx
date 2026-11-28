@@ -276,7 +276,7 @@ it('the real Home renderer forwards Crab sleeping, bathing, sitting and carry ex
   const paint = scene().props.renderCharacter;
   for (const [base, face] of [['lie','sleepy'],['bathe','happy'],['sit','happy'],['carry','happy']]) {
     const element = paint({slot:2,familySlot:2,base,face,action:null,facing:'right',size:120,tilt:0,limbLag:0,reduced:true});
-    expect(element.type.name).toBe('HomeCharacter');
+    expect(element.type.name).toBe('PaintedCharacter');
     expect(element.props.input.face).toBe(face);
   }
 });

@@ -78,7 +78,7 @@ it('P3-6 preview moves equal apply/rebuild results across floor, socket, surface
    const rebuilt=buildScene(result.state);kinds.add(p.kind);
    for(const move of p.moves){
     const entity=rebuilt.entities[result.identities[move.id]??move.id];
-    if(!entity && p.kind==='mouth')continue;
+    if(!entity && (p.kind==='mouth' || p.discard)) { expect(p.consume).toBe('food'); continue; }
     expect(entity,`${subject.id}/${p.kind}/${move.id}`).toBeDefined();
     expect(entity.contact.x).toBeCloseTo(move.contact.x,6);expect(entity.contact.y).toBeCloseTo(move.contact.y,6);
     expect(entity.base).toBe(move.base);expect(entity.facing).toBe(move.facing);expect(entity.attachment.kind).toBe(move.attachment.kind);checked++;

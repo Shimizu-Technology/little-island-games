@@ -1,3 +1,4 @@
+import { capabilityOf } from "../world";
 import { rigSlot } from "../family";
 import type { RoomId } from "../catalogMore";
 import { MAX_INSTANCES } from "../limits";
@@ -48,6 +49,7 @@ type ProposalData = EntityMove & {
   moves: EntityMove[];
   target?: string;
   consume?: "food" | "drink";
+  discard?: boolean;
   pending?: { target: string; since: number };
   /** Catalog/rotation adapters supply the complete authored item, never a second rule path. */
   item?: Instance;
@@ -138,6 +140,7 @@ function eligible(
   const reserved = ctx.reservations?.[target.id];
   if (reserved && reserved !== subject.id) return false;
   if (target.occupied && target.occupied !== subject.id && !(target.kind === "hand" && ctx.replaceHand)) return false;
+  if (target.trash) return !!subject.item && !!capabilityOf(subject.item.item).edible && group.length === 1;
   if (subject.character) {
     return (
       target.kind === "socket" &&
@@ -318,7 +321,8 @@ function makeProposal(
     reason,
     moves: [...movedGroup(index, subject, move, group), ...displacedFriends(index, subject, move, group)],
     target: target?.id,
-    consume: target?.kind === "mouth" ? subject.body?.edible : undefined,
+    consume: target?.trash ? "food" : target?.kind === "mouth" ? subject.body?.edible : undefined,
+    ...(target?.trash ? { discard: true } : {}),
     item: subject.item,
   };
 }
@@ -501,7 +505,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         );
         if (!contains(support, point) || overlap / supportWidth < 0.6) continue;
       }
-      if (!fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
+      if (!target.trash && !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
       candidates.push({
         target,
         distance,

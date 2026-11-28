@@ -4,12 +4,14 @@ import type { RoomState } from './model';
 
 export const guamPlaceIds = ['tumon-beach', 'chamorro-village', 'cocos-island'] as const;
 export type GuamPlaceId = typeof guamPlaceIds[number];
-export type PlaceId = 'our-house' | GuamPlaceId;
+export type PlaceId = 'our-house' | GuamPlaceId | typeof marketPlace.id;
 export type LocationDefinition = { id: RoomId; place: PlaceId; name: string; outdoors: boolean };
 export const locations: readonly LocationDefinition[] = locationIds.map(id => ({ id, name: roomNames[id],
   place: isGuamPlace(id) ? id : 'our-house', outdoors: isGuamPlace(id) }));
+export const marketPlace = { id: "island-market", name: "Little Island Market" } as const;
 export const places = [
   { id: 'our-house', name: 'Our House', locations: roomIds },
+  { ...marketPlace, locations: [] },
   { id: 'tumon-beach', name: 'Tumon Beach & Reef', locations: ['tumon-beach'] },
   { id: 'chamorro-village', name: 'Chamorro Village Night Market', locations: ['chamorro-village'] },
   { id: 'cocos-island', name: 'Secret Cocos Island', locations: ['cocos-island'] },

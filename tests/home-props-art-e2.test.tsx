@@ -70,7 +70,8 @@ describe('Track E2 Toca Boca Island Home props art contracts', () => {
       </div>,
     );
     const ids = [...html.matchAll(/<(?:linearGradient|filter)[^>]*\bid="([^"]+)"/g)].map((m) => m[1]);
-    expect(ids.length).toBeGreaterThanOrEqual(10);
+    expect(ids.length).toBeGreaterThanOrEqual(6);
+    expect(html).not.toContain("<filter");
     expect(html).toContain('assets/home/props/monstera.webp');
     expect(html).toContain('assets/home/props/bookcase.webp');
     expect(new Set(ids).size).toBe(ids.length);

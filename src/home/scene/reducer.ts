@@ -1,3 +1,4 @@
+import { shop } from "../market";
 import { guamPlaceIds } from "../locations";
 import { MAX_PALM_COCONUTS } from "../waterZone";
 import { compactAtmosphere, validAtmosphere } from "../atmosphere";
@@ -26,6 +27,10 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
   const fail = (message: string): HomeResult => ({ state: save, message });
   const finish = (next: HomeStateV2): HomeResult =>
     validHome(next) ? { state: next } : fail("Your original room has been kept.");
+  if (action.type === "market-add" || action.type === "market-return" || action.type === "market-unpack") {
+    const result = shop(save, action);
+    return validHome(result.state) ? result : fail("Your original groceries have been kept.");
+  }
   if (action.type === "atmosphere") {
     if (!validAtmosphere(action.atmosphere)) return fail("Choose a sky and weather.");
     const { atmosphere: _previous, ...base } = save; void _previous;

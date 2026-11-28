@@ -46,7 +46,7 @@ describe('Phase 5B family places: lossless houses, compact versioned saves and o
   it('switches all places without edits, changing the four house rooms or adding history', () => {
     let h = start('home'); const before = clone(h.present.rooms);
     for (const room of [...roomIds, ...guamPlaceIds, 'home'] as RoomId[]) { h = editHistory(h, { type: 'room', room }); expect(h.present.current).toBe(room); }
-    expect(h.present.rooms).toEqual(before); expect(h.past).toEqual([]); expect(places).toHaveLength(4);
+    expect(h.present.rooms).toEqual(before); expect(h.past).toEqual([]); expect(places).toHaveLength(5); expect(places.some(p => p.id === "island-market")).toBe(true);
     for (const place of guamPlaceIds) expect(new Set([0, 1, 2, 3, 4, 5].map(slot => JSON.stringify(arrivalPoint(place, slot)))).size).toBe(6);
     expect(arrivalPoint('home', 0)).toEqual({ x: 230, y: 490 });
     for (let n = 0; n < 4; n++) expect(roomOrigin(n, locationBuilding(n))).toEqual(roomOrigin(n, buildingLayout(4)));

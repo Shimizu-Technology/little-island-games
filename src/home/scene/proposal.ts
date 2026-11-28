@@ -35,6 +35,9 @@ export function apply(
   if (proposal.refusal === "storage-capacity") return { stale: true };
   if (worldRevision(state) !== proposal.revision || !roomIds.includes(proposal.room)) return { stale: true };
   state = { ...state, rooms: { ...Object.fromEntries(guamPlaceIds.filter(id => !Object.hasOwn(state.rooms, id)).map(id => [id, defaultGuamRoom(id)])), ...state.rooms } };
+  if (proposal.discard && (proposal.target !== 'kitchen/trash-can' || proposal.room !== 'kitchen' ||
+    proposal.moves.length !== 1 || proposal.consume !== 'food' || !locate(state, proposal.id)?.item ||
+    !capabilityOf(locate(state, proposal.id)!.item!.item).edible)) return { stale: true };
   const moves = proposal.moves;
   if (!moves.length || new Set(moves.map((m) => m.id)).size !== moves.length) return { stale: true };
   const sources = new Map(moves.map((move) => [move.id, locate(state, move.id)]));
@@ -180,6 +183,12 @@ export function apply(
     rooms[proposal.room].characters = rooms[proposal.room].characters.map((c) =>
       characterEntityId(c.slot) === ownerId ? { ...c, action: proposal.consume === "food" ? "eat" : "drink" } : c
     );
+  }
+  // Placing an ingredient in the pan lights the burner in the same undoable transaction.
+  if (proposal.target?.endsWith('/pan') && !proposal.discard) {
+    const stoveId = proposal.target.slice(0, -4).split('/item/')[1];
+    rooms[proposal.room].instances = rooms[proposal.room].instances.map(i => i.id === stoveId && i.item === 'stove'
+      ? { ...i, powered: true, state: 'active' } : i);
   }
   // Opening and storing are one accepted edit; hover/cancel never writes state.
   if (proposal.attachment.kind === "container") {

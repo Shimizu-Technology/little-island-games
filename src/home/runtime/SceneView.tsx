@@ -1,3 +1,5 @@
+import { RoomPortals } from "./RoomPortals";
+import { KitchenBin } from "./KitchenBin";
 import { COCOS_PALM_HOTSPOT, isEntitySwimming } from "../waterZone";
 import { activityFaceOf } from "./expressions";
 import { HomeMotionContext } from "./HomeMotionContext";
@@ -522,6 +524,7 @@ export const SceneView = React.memo(function SceneView({
   onNode,
   badges = [],
   onBadges,
+  onRoomHop,
   onShakePalm,
   debugLayer,
   liveRoom,
@@ -540,6 +543,7 @@ export const SceneView = React.memo(function SceneView({
   /** Lab-only layer in house space, under the carried object. */
   debugLayer?: React.ReactNode;
   badges?: readonly BadgeId[];
+  onRoomHop?: (room: RoomId) => void;
   onBadges?: () => void;
   onShakePalm?: () => void;
   onNode: (id: string, node: View | null) => void;
@@ -752,6 +756,7 @@ export const SceneView = React.memo(function SceneView({
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
                   {building.place === undefined && (index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />)}
                 </View>
+                <RoomPortals room={roomId} onHop={onRoomHop}/>
                 {roomId === "home" && <Pressable accessible accessibilityRole="button"
                   accessibilityLabel={`Badge board, ${badges.length} of ${tracks.length * 4} earned. Open My badges`}
                   onPress={onBadges} style={{ position: "absolute", left: 524, top: 26, width: 178, height: 172 }} />}
@@ -781,6 +786,7 @@ export const SceneView = React.memo(function SceneView({
                         />
                       );
                     })}
+                    {roomId === "kitchen" && <KitchenBin interaction={interaction} reduced={reduced}/>}
                     {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}
                     {stress && roomId === "home" && (
                       <StressCopies

@@ -469,9 +469,9 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
           <Stop offset="46%" stopColor={color} />
           <Stop offset="100%" stopColor={dark} />
         </LinearGradient>
-        <Filter id={mutedId}>
+        {muted && <Filter id={mutedId}>
           <FeColorMatrix type="saturate" values="0" />
-        </Filter>
+        </Filter>}
       </Defs>
       <G filter={muted ? `url(#${mutedId})` : undefined}>
         {!noFloorShadow && <Ellipse cx={75} cy={120} rx={54} ry={6} fill={ink} opacity={0.13} />}
