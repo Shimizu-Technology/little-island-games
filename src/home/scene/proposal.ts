@@ -2,6 +2,7 @@ import { defaultGuamRoom, guamPlaceIds, isGuamPlace } from "../locations";
 // Public contract: worklet resolution is independent of the JS validation/reducer graph.
 import { storageCapacity } from '../storage';
 import { itemSpec } from '../catalog';
+import { capabilityOf } from '../world';
 import type { DropProposal } from "./resolve";
 import { locationIds as roomIds, type RoomId } from "../catalogMore";
 import { validHome } from "../model";
@@ -85,14 +86,21 @@ export function apply(
     const item = move.id === proposal.id ? (proposal.item ?? source?.item) : source?.item;
     if (item) {
       if (proposal.consume === "food" && move.id === proposal.id) continue;
-      const { on, in: container, staged, at: lastDrop, ...rest } = item;
+      const { on, in: container, staged, at: lastDrop, empty: wasEmpty, ...rest } = item;
       void on;
       void container;
       void staged;
       void lastDrop;
       const attachment = move.attachment;
       const parent = attachment.kind === "surface" ? moves.find((m) => m.id === attachment.parent) : undefined;
-      const originalParent = attachment.kind === "surface" ? locate(state, attachment.parent)?.item : undefined;
+      const originalParent =
+        attachment.kind === "surface" || attachment.kind === "container"
+          ? locate(state, attachment.parent)?.item
+          : undefined;
+      const refilled =
+        !!wasEmpty &&
+        capabilityOf(item.item).edible === "drink" &&
+        (originalParent?.item === "sink-counter" || originalParent?.item === "fridge");
       const x =
         move.cell?.x ??
         (parent?.cell
@@ -116,7 +124,11 @@ export function apply(
         ...(attachment.kind === "container" ? { in: parentItemId(attachment.parent, names) } : {}),
         ...(attachment.kind === "staging" ? { staged: true } : {}),
         ...(exactDrop ? { at: { x: at.x, y: at.y } } : {}),
-        ...(proposal.consume === "drink" && move.id === proposal.id ? { empty: true } : {}),
+        ...(proposal.consume === "drink" && move.id === proposal.id
+          ? { empty: true }
+          : wasEmpty !== undefined && !refilled
+            ? { empty: wasEmpty }
+            : {}),
       };
       rooms[move.room].instances.push(next);
     } else if (source?.character) {

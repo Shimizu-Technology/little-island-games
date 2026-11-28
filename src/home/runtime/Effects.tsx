@@ -9,9 +9,9 @@ import type { RoomId } from "../catalogMore";
  * small views animated once on the UI thread, then removed by the screen. Nothing loops,
  * nothing waits, and under Reduce Motion each is a short fade in place.
  */
-export type EffectKind = "crumbs" | "bubbles" | "splash" | "steam" | "burp" | "zzz";
+export type EffectKind = "crumbs" | "bubbles" | "splash" | "steam" | "burp" | "zzz" | "sparkle";
 export type Effect = { key: string; kind: EffectKind; room: RoomId; x: number; y: number };
-export const effectLength: Record<EffectKind, number> = { crumbs: 700, bubbles: 1500, splash: 600, steam: 900, burp: 760, zzz: 1100 };
+export const effectLength: Record<EffectKind, number> = { crumbs: 700, bubbles: 1500, splash: 600, steam: 900, burp: 760, zzz: 1100, sparkle: 650 };
 type Particle = {
   x0: number;
   y0: number;
@@ -105,6 +105,21 @@ export function particlesOf(kind: EffectKind, seed: number): Particle[] {
         delay: i * 220,
         text: true,
       }));
+    case "sparkle":
+      return Array.from({ length: 5 }, (_, i) => {
+        const angle = (i / 5) * Math.PI * 2 + r(i) * 0.4;
+        const reach = 24 + r(i + 3) * 18;
+        return {
+          x0: Math.cos(angle) * 6,
+          y0: Math.sin(angle) * 6,
+          x1: Math.cos(angle) * reach,
+          y1: Math.sin(angle) * reach - 14,
+          size: 7 + r(i + 5) * 4,
+          color: ["#F5C249", "#FFE38A", "#7FC7BF", "#FF9A76"][i % 4],
+          delay: i * 35,
+          gloss: true,
+        };
+      });
   }
 }
 

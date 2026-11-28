@@ -1,6 +1,6 @@
 import React from "react";
 import Svg, { Circle, Path } from "react-native-svg";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import type { Target } from "../scene/types";
 import type { Interaction } from "./useInteraction";
@@ -25,7 +25,7 @@ export function SeatRimCue({ target, interaction }: { target: Target; interactio
   );
 }
 /** Rounded, pictorial contact cue. It has no input or collision geometry. */
-export function TargetCue({ target, interaction }: { target: Target; interaction: Interaction }) {
+export function TargetCue({ target, interaction, ownerName }: { target: Target; interaction: Interaction; ownerName?: string }) {
   const style = useCueStyle(target, interaction);
   if (target.kind === "mouth") return <Animated.View testID="mouth-target-halo" pointerEvents="none"
     accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
@@ -46,8 +46,15 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
   </Animated.View>;
   if (target.kind === 'container') return <Animated.View testID="storage-landing-cue" pointerEvents="none"
     accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-    style={[{ position: 'absolute', left: target.core.left, top: target.core.top, width: target.core.width, height: target.core.height, borderRadius: 16, borderWidth: 4, borderColor: target.closed ? '#A66A32' : '#477D60', backgroundColor: target.closed ? '#FFE4A888' : '#E8F7C855', alignItems: 'center', justifyContent: 'center' }, style]}>
+    style={[{ position: 'absolute', left: target.core.left, top: target.core.top, width: target.core.width, height: target.core.height, borderRadius: 16, borderWidth: 4, borderColor: target.closed ? '#A66A32' : '#477D60', backgroundColor: target.closed ? '#FFE4A888' : '#E8F7C855', alignItems: 'center', justifyContent: 'center', gap: 6 }, style]}>
     {target.closed ? <Svg width={32} height={32} viewBox="0 0 32 32"><Path d="M5 12H27L24 28H8ZM9 10V5H14V10M18 10V5H23V10" fill="#D7AE74" stroke="#A66A32" strokeWidth={3}/></Svg> : <Svg width={32} height={32} viewBox="0 0 32 32"><Path d="M16 3V23M8 15L16 23L24 15M5 25V29H27V25" fill="none" stroke="#FFF8E9" strokeWidth={7} strokeLinecap="round" strokeLinejoin="round"/><Path d="M16 3V23M8 15L16 23L24 15M5 25V29H27V25" fill="none" stroke="#477D60" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/></Svg>}
+    {ownerName && (
+      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#FFF8E9F2', borderWidth: 2, borderColor: target.closed ? '#A66A32' : '#477D60' }}>
+        <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 13, fontWeight: '700', color: target.closed ? '#8A4F1D' : '#284F4B' }}>
+          {target.closed ? `${ownerName} full` : `Put in ${ownerName}`}
+        </Text>
+      </View>
+    )}
   </Animated.View>;
   if (target.kind === 'socket') {
     const region = target.rim ?? target.activation ?? target.core ?? { left: target.contact.x - 26, top: target.contact.y - 12, width: 52, height: 24 };

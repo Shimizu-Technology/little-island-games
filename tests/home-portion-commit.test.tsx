@@ -56,7 +56,7 @@ function release(proposal: any, anchor = proposal.contact, index = 0) {
 }
 it('F2 HomeScreen feeds a portion released over the face and leaves the shelf stocked', async () => {
   const { scene, persist } = await setup();
-  const id = 'kitchen/item/portion-starter-fridge-mango', index = { ...scene.rooms.kitchen, entities: scene.entities };
+  const id = 'kitchen/item/portion-starter-fruit-bowl-mango', index = { ...scene.rooms.kitchen, entities: scene.entities };
   const mouth = index.targets.find(t => t.id === 'character/0/mouth')!;
   const preview = resolve(index, scene.entities[id], mouth.contact, { scale: .5, aim: roomPoint(mouth.face!.x, mouth.face!.y), now: 1000 });
   expect(preview.kind).toBe('mouth'); expect(preview.target).toBe('character/0/mouth');
@@ -70,8 +70,8 @@ it('F2 two simultaneous portions keep their preview destinations and reject an o
   const { scene, persist } = await setup();
   const index = { ...scene.rooms.kitchen, entities: scene.entities };
   const hand = index.targets.find(t => t.id === 'character/0/hand')!;
-  const mango = scene.entities['kitchen/item/portion-starter-fridge-mango'];
-  const banana = scene.entities['kitchen/item/portion-starter-fridge-banana'];
+  const mango = scene.entities['kitchen/item/portion-starter-fruit-bowl-mango'];
+  const banana = scene.entities['kitchen/item/portion-starter-fruit-bowl-banana'];
   const first = resolve(index, mango, hand.contact, { scale: .5, target: hand.id, release: true });
   const second = resolve(index, banana, hand.contact, { scale: .5, target: hand.id, release: true });
   expect(first.kind).toBe('hand'); expect(second.kind).toBe('hand');
@@ -85,7 +85,7 @@ it('F2 simultaneous portions can commit unchanged independent hands with distinc
   const proposal = (food: string, room: 'home' | 'kitchen', slot: number) => {
     const index = { ...scene.rooms[room], entities: scene.entities };
     const hand = index.targets.find(t => t.id === `character/${slot}/hand`)!;
-    return resolve(index, scene.entities[`kitchen/item/portion-starter-fridge-${food}`], hand.contact, { scale: .5, target: hand.id, release: true });
+    return resolve(index, scene.entities[`kitchen/item/portion-starter-fruit-bowl-${food}`], hand.contact, { scale: .5, target: hand.id, release: true });
   };
   const first = proposal('mango', 'kitchen', 0), second = proposal('banana', 'home', 1);
   await act(async () => { release(first); release(second, second.contact, 1); });
@@ -96,13 +96,13 @@ it('F2 simultaneous portions can commit unchanged independent hands with distinc
   expect(mango).toMatch(/^food-/); expect(banana).toMatch(/^food-/); expect(mango).not.toBe(banana);
   expect(saved.rooms.kitchen.instances.find((i: any) => i.id === mango)?.item).toBe('mango');
   expect(saved.rooms.home.instances.find((i: any) => i.id === banana)?.item).toBe('banana');
-  expect(withPortions(buildScene(saved)).entities['kitchen/item/portion-starter-fridge-mango']).toBeDefined();
+  expect(withPortions(buildScene(saved)).entities['kitchen/item/portion-starter-fruit-bowl-mango']).toBeDefined();
 });
-it('F2 a previewed mouth consumes only that food while the fridge restocks', async () => {
+it('F2 a previewed mouth consumes only that food while the dispenser keeps stock', async () => {
   const { scene, persist } = await setup();
   const index = { ...scene.rooms.kitchen, entities: scene.entities };
   const mouth = index.targets.find(t => t.id === 'character/0/mouth')!;
-  const preview = resolve(index, scene.entities['kitchen/item/portion-starter-fridge-mango'], mouth.contact, { scale: .5, target: mouth.id, release: true });
+  const preview = resolve(index, scene.entities['kitchen/item/portion-starter-fruit-bowl-mango'], mouth.contact, { scale: .5, target: mouth.id, release: true });
   expect(preview.consume).toBe('food');
   await act(async () => release(preview));
   expect(persist).toHaveBeenCalledOnce();

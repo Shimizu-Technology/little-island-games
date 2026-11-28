@@ -73,8 +73,9 @@ describe('R1: the newest removal survives the byte cap and a relaunch', () => {
     const saves: HomeStateV2[] = [];
     let store!: ReturnType<typeof useHomeStore>;
     // F2: 48 basket things each, as the cap is now derived from the whole-save envelope.
+    const starterKitchenCount = starterHome().rooms.kitchen.instances.length;
     const initial = basketHome(48, 'home', 'a');
-    initial.rooms.kitchen.instances.push(...basketHome(48, 'kitchen', 'b').rooms.kitchen.instances.slice(7));
+    initial.rooms.kitchen.instances.push(...basketHome(48, 'kitchen', 'b').rooms.kitchen.instances.slice(starterKitchenCount));
     expect(validHome(initial)).toBe(true);
     function Host() { store = useHomeStore({}, initial, (s) => { saves.push(roundTrip(s)); return true; }); return null; }
     let root!: ReactTestRenderer;
@@ -88,7 +89,7 @@ describe('R1: the newest removal survives the byte cap and a relaunch', () => {
       expect(canon(reopened.present)).toEqual(canon(initial));
     }
     expect(store.state.rooms.home.instances).toHaveLength(6);
-    expect(store.state.rooms.kitchen.instances).toHaveLength(55);
+    expect(store.state.rooms.kitchen.instances).toHaveLength(starterKitchenCount + 48);
     expect(store.message).toMatch(/Undo/);
     await act(async () => root.unmount());
   });

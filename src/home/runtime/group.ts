@@ -1,5 +1,6 @@
 import type { Scene, SceneEntity } from "../scene/types";
 import { capabilityOf } from "../world";
+import { storageOpen } from "../storage";
 export function groupIds(scene: Pick<Scene, "entities">, id: string): string[] {
   const result: string[] = [];
   const visit = (key: string) => {
@@ -42,14 +43,18 @@ export function paintEntries(
     );
 }
 
-/** Stored descendants are represented by their container and its pictorial contents chooser. */
+/** Stored descendants are represented by their container, except open-fridge shelves show real items directly. */
 export function restingVisible(entity: SceneEntity, scene: Pick<Scene, "entities">, capturedRoot?: string): boolean {
   let current: SceneEntity | undefined = entity;
   const visited = new Set<string>();
   while (current && !visited.has(current.id)) {
     visited.add(current.id);
     if (current.id === capturedRoot) return true;
-    if (current.attachment.kind === "staging" || current.attachment.kind === "container") return false;
+    if (current.attachment.kind === "staging") return false;
+    if (current.attachment.kind === "container") {
+      const parent = current.parent ? scene.entities[current.parent] : undefined;
+      if (!parent?.item || parent.item.item !== "fridge" || !storageOpen(parent.item)) return false;
+    }
     current = current.parent ? scene.entities[current.parent] : undefined;
   }
   return true;

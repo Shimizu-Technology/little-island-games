@@ -136,6 +136,7 @@ describe('Guam review save and entitlement regressions', () => {
   });
   it.each([2, 3])('rejects Guam keys in v%s saves without modifying the source', version => {
     const legacy = clone(compactHome(starterHome())); legacy.version = version as 2 | 3;
+    for (const room of Object.values(legacy.rooms)) room.instances = room.instances.filter(i => !i.in);
     expect(validHome(legacy)).toBe(true);
     for (const room of guamPlaceIds) {
       const invalid = clone(legacy); invalid.rooms[room] = clone(starterHome().rooms[room]);

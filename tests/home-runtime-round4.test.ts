@@ -18,7 +18,7 @@ describe("runtime round4", () => {
  });
  it("T3 changing starters never migrates an already saved kitchen", () => {
   const saved=starterHome();const positions:Record<string,[number,number]>={fridge:[6,0],'sink-counter':[11,0],stove:[2,0],'fruit-bowl':[12,6],'kitchen-table':[11,6],stool:[9,9]};
-  saved.rooms.kitchen.instances=saved.rooms.kitchen.instances.map(i=>({...i,x:i.id.endsWith('-6')?14:positions[i.item][0],y:i.id.endsWith('-6')?9:positions[i.item][1]}));
+  saved.rooms.kitchen.instances=saved.rooms.kitchen.instances.map(i=>i.in?{...i,x:positions.fridge[0],y:positions.fridge[1]}:({...i,x:i.id.endsWith('-6')?14:positions[i.item][0],y:i.id.endsWith('-6')?9:positions[i.item][1]}));
   expect(validHome(saved)).toBe(true);const original=JSON.stringify(saved);
   expect(migrateHome(saved)).toEqual(saved);expect(JSON.stringify(saved)).toBe(original);
  });

@@ -47,12 +47,17 @@ describe('HS-01 storage controls', () => {
 });
 
 
-it('an open empty fridge never draws a blocking zero-items shelf, including inspection', async () => {
+it('an open empty fridge shows its shelf with empty slots and a Restock fridge action', async () => {
   const s = starterHome(); s.rooms.home.instances = [{ ...instance('fridge', 'fridge', 8, 1), storage: { version: 1, open: true } }];
   s.rooms.home.characters = [];
   const scene = buildScene(s), entity = scene.entities['home/item/fridge'];
+  const onRestock = vi.fn();
   let root!: ReturnType<typeof create>;
-  await act(async () => { root = create(<StorageTray entity={entity} scene={scene} inspect bottom={80} onTake={() => {}} onClose={() => {}}/>); });
-  expect(root.toJSON()).toBeNull();
+  await act(async () => { root = create(<StorageTray entity={entity} scene={scene} inspect bottom={80} onTake={() => {}} onClose={() => {}} onRestock={onRestock}/>); });
+  expect(root.root.findByProps({ testID: 'storage-tray' })).toBeDefined();
+  const restock = root.root.findByProps({ testID: 'fridge-restock-button' });
+  expect(restock.props.accessibilityLabel).toBe('Restock fridge');
+  await act(async () => restock.props.onPress());
+  expect(onRestock).toHaveBeenCalledWith('fridge');
   await act(async () => root.unmount());
 });

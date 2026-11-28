@@ -7,12 +7,13 @@ const fixture=()=>{const s=starterHome();s.rooms.home={...s.rooms.home,instances
 const act=(s:HomeStateV2,a:HomeAction)=>homeReducer(s,a).state;
 describe('living world durable relationships',()=>{
  it('rejects closed/unknown/duplicate dispenser requests and never depletes an open source',()=>{
-  let s=fixture();const request={type:'dispense' as const,source:'fridge',item:'mango',id:'m1',x:500,y:500};
-  expect(act(s,request)).toEqual(s);s=act(s,{type:'toggle',id:'fridge'});
+  let s=fixture();s.rooms.home.instances.push(instance('bowl','fruit-bowl',8,0));
+  const request={type:'dispense' as const,source:'bowl',item:'mango',id:'m1',x:500,y:500};
+  expect(act(s,{...request,source:'fridge'})).toEqual(s);
   expect(act(s,{...request,item:'teddy'})).toEqual(s);
   s=act(s,request);expect(s.rooms.home.instances.some(i=>i.id==='m1')).toBe(true);
   expect(act(s,request)).toEqual(s);s=act(s,{...request,id:'m2',x:600});
-  expect(s.rooms.home.instances.filter(i=>i.item==='mango')).toHaveLength(2);expect(s.rooms.home.instances.find(i=>i.id==='fridge')?.powered).toBe(true);expect(validHome(s)).toBe(true);
+  expect(s.rooms.home.instances.filter(i=>i.item==='mango')).toHaveLength(2);expect(validHome(s)).toBe(true);
  });
  it('consumes food once, preserves a drink ID as empty and carries it through reload',()=>{
   let s=fixture();s.rooms.home.instances.push(instance('m','mango',10,8),instance('j','juice',12,8));

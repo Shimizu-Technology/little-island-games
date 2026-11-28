@@ -83,7 +83,7 @@ describe('HS-01 / HS-02 storage', () => {
     const result = apply(h.present, unpack);
     expect('state' in result && result.state.rooms.kitchen.instances.filter(i => i.in === basket.id)).toHaveLength(3);
   });
-  it('fridge portions, hulls and dispensing obey the revision-1 door state over legacy power', () => {
+  it('fridge hulls and bounded inventory obey the revision-1 door state without spawning virtual portions', () => {
     let s = fixture('fridge');
     s.rooms.home.instances[0].powered = true;
     s = homeReducer(s, { type: 'toggle', id: 'box', roomId: 'home' }).state;
@@ -94,7 +94,9 @@ describe('HS-01 / HS-02 storage', () => {
     const action = { type: 'dispense' as const, source: 'box', id: 'new-food', item: 'mango', x: 300, y: 520, roomId: 'home' as const };
     expect(homeReducer(s, action).state).toBe(s);
     s = homeReducer(s, { type: 'toggle', id: 'box', roomId: 'home' }).state;
-    expect(Object.keys(withPortions(buildScene(s)).entities).filter(id => id.includes('portion-'))).toHaveLength(4);
+    expect(storageOpen(s.rooms.home.instances[0])).toBe(true);
+    expect(Object.keys(withPortions(buildScene(s)).entities).filter(id => id.includes('portion-'))).toHaveLength(0);
+    expect(homeReducer(s, action).state).toBe(s);
   });
   it('a friend carries the basket and every child; stale/interrupted proposals preserve the complete source', () => {
     const s = fixture('carry-basket', 4);

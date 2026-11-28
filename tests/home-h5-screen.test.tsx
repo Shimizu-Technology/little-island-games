@@ -157,7 +157,7 @@ it.each(['fridge', 'stove', 'sink-counter', 'lamp', 'tv', 'radio'])('tapping %s 
   expect(saves.at(-1)!.rooms.home.characters).toEqual(s.rooms.home.characters);
   expect(harness.handoffs).toHaveLength(0);
   expect(harness.dest.selected).toBeUndefined();
-  if (kind === 'fridge') expect(root.root.findAllByProps({ testID: 'storage-tray' })).toHaveLength(0);
+  if (kind === 'fridge') expect(root.root.findAllByProps({ testID: 'fridge-restock-button' })).toHaveLength(1);
   await act(async () => harness.scene.onSelect('home/item/appliance'));
   expect(saves.at(-1)!.rooms.home.instances[0].powered).toBe(false);
   expect(harness.dest.selected).toBe(['lamp', 'radio'].includes(kind) ? 'home/item/appliance' : undefined);
