@@ -16,19 +16,21 @@ import { Button, Copy, GameHeader, styles } from "../components/ui";
 import { Recovery } from "../components/Recovery";
 import { useSoundControls } from "../components/Audio";
 import { useRoundPractice } from "../practice/useRoundPractice";
+const backToGameHall = () =>
+  router.canGoBack() ? router.back() : router.replace({ pathname: "/shelf", params: { island: "classic" } });
 export default function Activity() {
   const { game } = useLocalSearchParams<{ game?: string }>(),
     store = useStore();
   if (!activityIds.includes(game as ActivityId)) return <Redirect href="/" />;
   if (!store.ready)
     return (
-      <SafeAreaView style={styles.page}>
+      <SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}>
         <Copy>Opening your game…</Copy>
       </SafeAreaView>
     );
   if (store.recovery)
     return (
-      <SafeAreaView style={styles.page}>
+      <SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}>
         <Recovery />
       </SafeAreaView>
     );
@@ -50,7 +52,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const practiceEnabled = learnerPractice(store.save.learning, store.save.settings.practice).enabled;
   const [initialAllowed, setInitialAllowed] = useState(() => !!saved || !practiceEnabled);
   useEffect(() => {
-    if (freshCard && !saved && !initialAllowed) requestPractice(() => setInitialAllowed(true), () => router.canGoBack() ? router.back() : router.replace("/"));
+    if (freshCard && !saved && !initialAllowed) requestPractice(() => setInitialAllowed(true), backToGameHall);
   }, [freshCard, saved, initialAllowed, requestPractice, practiceEnabled]);
   const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused && !practice.pending);
   const activityUpdate = store.activityUpdate;
@@ -74,18 +76,18 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const cardChange = (next: CardSession, previous: CardSession) =>
     save(next, expectedId.current === null ? undefined : previous);
   const mysterySound = { on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) };
-  if (freshCard && !saved && !initialAllowed) return <SafeAreaView style={styles.page}>
+  if (freshCard && !saved && !initialAllowed) return <SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}>
     <ScrollView contentContainerStyle={styles.content}>
-      <GameHeader title={id === "go-fish" ? "Go Fish" : "Crazy Eights"} onBack={() => router.canGoBack() ? router.back() : router.replace("/")} />
+      <GameHeader title={id === "go-fish" ? "Go Fish" : "Crazy Eights"} onBack={backToGameHall} />
       <Copy>A little practice, then your new game. Your other games stay saved.</Copy>
-      <Button onPress={() => practice.request(() => setInitialAllowed(true), () => router.canGoBack() ? router.back() : router.replace("/"))}>Start practice</Button>
+      <Button onPress={() => practice.request(() => setInitialAllowed(true), backToGameHall)}>Start practice</Button>
     </ScrollView>{practice.panel}
   </SafeAreaView>;
   return (
-    <SafeAreaView style={styles.page}>
+    <SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}>
       <ScrollView
         ref={id === "island-mystery" ? mysteryScroll : undefined}
-        contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}
+        contentContainerStyle={[styles.content, { paddingHorizontal: 16, gap: 16 }]}
         keyboardShouldPersistTaps="handled"
       >
         <SaveStatus />
@@ -96,7 +98,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             menuHeader={
               <GameHeader
                 title="Picnic Mystery"
-                onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+                onBack={backToGameHall}
                 sound={mysterySound}
               />
             }
@@ -105,7 +107,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             state={saved?.game === "island-mystery" ? saved : null}
             onSave={(next, previous) => save(next, previous)}
             active={focused}
-            width={Math.min(width - 40, 1000)}
+            width={Math.min(width - 32, 1000)}
             sound={store.save.settings.sound}
             onFeedback={() => sound("tap")}
             onSpeakInstruction={(key) => sound(key)}
@@ -119,7 +121,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             records={store.save.raceRecords}
             earlierRecords={store.save.profiles?.earlier.raceRecords}
             onSave={(next) => save(next)}
-            onExit={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+            onExit={backToGameHall}
             sound={store.save.settings.sound}
             onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
             active={focused}
@@ -132,10 +134,10 @@ function ActivityGame({ id }: { id: ActivityId }) {
             session={saved?.game === "word-imposter" ? saved : null}
             onChange={(next, previous) => save(next, previous)}
             active={focused && !practice.pending}
-            width={Math.min(width - 40, 1000)}
+            width={Math.min(width - 32, 1000)}
             sound={store.save.settings.sound}
             onSpeakInstructions={() => sound("instructions-word-imposter")}
-            onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+            onBack={backToGameHall}
             onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
           />
         ) : cards ? (
@@ -145,13 +147,13 @@ function ActivityGame({ id }: { id: ActivityId }) {
             roundPractice={practice}
               state={cards}
               onChange={cardChange}
-              width={Math.min(width - 40, 1000)}
+              width={Math.min(width - 32, 1000)}
               active={focused && !practice.pending}
               sound={store.save.settings.sound}
               onFeedback={() => sound("tap")}
               onSpeakInstruction={(key) => sound(key)}
               onStopInstruction={stopSound}
-              onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+              onBack={backToGameHall}
               onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
             />
           </>

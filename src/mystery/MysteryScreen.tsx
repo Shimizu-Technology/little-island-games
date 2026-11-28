@@ -145,6 +145,11 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
         <GameHeader title="Picnic" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
           sound={soundControl}
           onHelp={() => { setShowRole(false); setHelp(true); }}>
+          {mode === "solo" && (
+            <Button compact quiet label="Role and game options" onPress={() => { setShowRole(false); setSetup(true); }}>
+              Options
+            </Button>
+          )}
           {mode === "nearby" && remote.mode === "host" && remote.pin && (
             <Button compact quiet onPress={() => { setShowRole(false); setRoomDetails(true); }}>Room details</Button>
           )}
@@ -180,7 +185,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
               </Button>
             )}
             <Button
-              quiet
+              quiet={!!state}
               onPress={() => {
                 setRole("crew");
                 setSetup(true);
@@ -447,8 +452,8 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
   );
 }
 const s = StyleSheet.create({
-  activity: { backgroundColor: "#F0F1E8", padding: 17, borderRadius: 20, gap: 12 },
-  role: { backgroundColor: "#E5EFE5", padding: 16, borderRadius: 20, gap: 10 },
+  activity: { backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E4D5BF", padding: 18, borderRadius: 24, gap: 12 },
+  role: { backgroundColor: "#FFF5DF", borderWidth: 1.5, borderColor: "#E4D5BF", padding: 16, borderRadius: 22, gap: 10 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center", alignItems: "center" },
   input: {
     borderWidth: 1,

@@ -3,7 +3,19 @@ import { learnIds, type LearnId } from '../learn/types';
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
-import { WordGameArt, hasWordArt, ArcadeArt, hasArcadeArt, hasLearnSubjectArt, LearnSubjectArt, type LearnSubjectId } from "../art/illustrated";
+import {
+  WordGameArt,
+  hasWordArt,
+  ArcadeArt,
+  hasArcadeArt,
+  GameHallArt,
+  hasGameHallArt,
+  IllustratedArt,
+  PUZZLE_TILE_ART,
+  hasLearnSubjectArt,
+  LearnSubjectArt,
+  type LearnSubjectId,
+} from "../art/illustrated";
 import type { ShelfId } from "../learn/home";
 
 // Original activity silhouettes. Keep one 100-unit canvas and a 3-unit outline:
@@ -118,12 +130,41 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
 }
 function Tile({ size, surface, children }: { size: number; surface: string; children: React.ReactNode }) { return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Rect x={3} y={3} width={94} height={94} rx={23} fill={surface} stroke={ink} strokeWidth={3}/><G stroke={ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">{children}</G></Svg>; }
 /** Whether a game has its own picture here; the rest show a plain "?" tile, so a caller can choose another motif. */
-export const hasGameArt = (id: string) => hasWordArt(id) || hasArcadeArt(id) || !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
+export const hasGameArt = (id: string) => hasWordArt(id) || hasArcadeArt(id) || hasGameHallArt(id) || id === "reef-sweep" || !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
-export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) {
-  if (hasWordArt(id)) return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-    style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#3D2B2433', alignItems: 'center', justifyContent: 'center' }}><WordGameArt id={id} size={size}/></View>;
+export function GameIcon({ id, size = 74, bare = false }: { id: IconId; size?: number; bare?: boolean }) {
+  if (hasWordArt(id)) {
+    const radius = bare ? Math.round(size * 0.2) : size / 4;
+    return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={{ width: size, height: size, flexShrink: 0, borderRadius: radius, overflow: 'hidden', borderWidth: bare ? 1.5 : 1, borderColor: bare ? 'rgba(61, 43, 36, 0.16)' : '#3D2B2433', alignItems: 'center', justifyContent: 'center' }}><WordGameArt id={id} size={size}/></View>;
+  }
   const surface = surfaces[id];
+  if (hasGameHallArt(id)) {
+    if (bare) {
+      return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+        style={{ width: size, height: size, flexShrink: 0, alignItems: "center", justifyContent: "center" }}>
+        <GameHallArt id={id} size={size}/>
+      </View>;
+    }
+    return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, borderWidth: 1, borderColor: "#3D2B2433",
+        backgroundColor: surface ?? cream, alignItems: "center", justifyContent: "center" }}>
+      <GameHallArt id={id} size={size * 0.92}/>
+    </View>;
+  }
+  if (id === "reef-sweep" && PUZZLE_TILE_ART["reef-sweep"]) {
+    if (bare) {
+      return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+        style={{ width: size, height: size, flexShrink: 0, alignItems: "center", justifyContent: "center" }}>
+        <IllustratedArt source={PUZZLE_TILE_ART["reef-sweep"]} size={size}/>
+      </View>;
+    }
+    return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, borderWidth: 1, borderColor: "#3D2B2433",
+        backgroundColor: surface ?? cream, alignItems: "center", justifyContent: "center" }}>
+      <IllustratedArt source={PUZZLE_TILE_ART["reef-sweep"]} size={size * 0.92}/>
+    </View>;
+  }
   if (hasArcadeArt(id)) {
     return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, borderWidth: 1, borderColor: "#3D2B2433",
@@ -151,6 +192,7 @@ export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?:
     </View>;
   }
   const representative: Record<Exclude<IslandIconId, LearnSubjectId>, IconId> = { classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
+  if (island === "classic") return <Tile size={size} surface="#DFECF7"><Scene id="tic-tac-toe"/></Tile>;
   if (island === "arcade") return <Tile size={size} surface="#CDE8E2"><G transform="translate(-4 -5) scale(.8)"><Blocks falling/></G><Circle cx={73} cy={72} r={17} fill={purple}/><Line d="M64 72H82M73 63V81" color={cream} width={5}/></Tile>;
   return <GameIcon id={representative[island]} size={size}/>;
 }

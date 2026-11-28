@@ -352,18 +352,32 @@ export function GameHeader({
    */
   titleMax?: number;
 }) {
+  const { width, fontScale } = useWindowDimensions();
   const backName = backLabel === "Leave" ? "Leave this round" : backLabel === "Back" ? "Go back" : `Back to ${backLabel.toLowerCase()}`;
   const nunito = useNunitoStyle("800");
-  return (
-    <View style={[styles.row, { paddingVertical: 8, gap: 8 }]}>
-      {titleMax ? <IconButton icon="back" label={backName} onPress={onBack} /> : <Button compact quiet icon="back" label={backName} onPress={onBack} style={{ paddingLeft: 9 }}>
-        {backLabel}
-      </Button>}
-      {titleMax ? <Text accessibilityRole="header" numberOfLines={2} maxFontSizeMultiplier={titleMax} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }, nunito]}>
-        {title}
-      </Text> : <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }, nunito]}>
-        {title}
-      </Text>}
+  const hasExtra = React.Children.toArray(children).length > 0;
+  const large = fontScale >= LARGE_TEXT;
+  const compactExtra = hasExtra && (width < 520 || large || !!titleMax);
+  const iconBack = !!titleMax || (compactExtra && large);
+  const effectiveTitleMax = titleMax ?? (compactExtra && large ? 1.5 : undefined);
+  const backButton = iconBack ? (
+    <IconButton icon="back" label={backName} onPress={onBack} />
+  ) : (
+    <Button compact quiet icon="back" label={backName} onPress={onBack} style={{ paddingLeft: 9 }}>
+      {backLabel}
+    </Button>
+  );
+  const heading = effectiveTitleMax ? (
+    <Text accessibilityRole="header" numberOfLines={2} maxFontSizeMultiplier={effectiveTitleMax} style={[styles.heading, { flex: 1, minWidth: 0, fontSize: 21, letterSpacing: -0.3 }, nunito]}>
+      {title}
+    </Text>
+  ) : (
+    <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, minWidth: 0, fontSize: 21, letterSpacing: -0.3 }, nunito]}>
+      {title}
+    </Text>
+  );
+  const trailing = (
+    <>
       {children}
       {sound && (
         <IconButton
@@ -373,6 +387,26 @@ export function GameHeader({
         />
       )}
       {onHelp && <IconButton icon="help" label={`How to play ${title}`} onPress={onHelp} />}
+    </>
+  );
+  if (compactExtra) {
+    return (
+      <View testID="game-header-compact" style={{ paddingVertical: 8, gap: 8 }}>
+        <View style={[styles.row, { gap: 8 }]}>
+          {backButton}
+          {heading}
+        </View>
+        <View style={[styles.row, { gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }]}>
+          {trailing}
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={[styles.row, { paddingVertical: 8, gap: 8 }]}>
+      {backButton}
+      {heading}
+      {trailing}
     </View>
   );
 }

@@ -79,6 +79,46 @@ export function LearnSubjectArt({ id, size }: { id: LearnSubjectId; size?: numbe
   return <IllustratedArt source={learnSubjectSources[id]()} size={size}/>;
 }
 
+export type GameHallArtId =
+  | 'coconut-drop'
+  | 'fishing-nets'
+  | 'hidden-canoes'
+  | 'shell-pits'
+  | 'tic-tac-toe'
+  | 'checkers'
+  | 'memory'
+  | 'maze'
+  | 'word-rescue'
+  | 'numbers'
+  | 'go-fish'
+  | 'crazy-eights'
+  | 'racer'
+  | 'island-mystery'
+  | 'word-imposter';
+
+export const GAME_HALL_TILE_ART: Readonly<Record<GameHallArtId, ImageSourcePropType>> = {
+  'coconut-drop': require('../../assets/art/game-hall/coconut-drop.webp'),
+  'fishing-nets': require('../../assets/art/game-hall/fishing-nets.webp'),
+  'hidden-canoes': require('../../assets/art/game-hall/hidden-canoes.webp'),
+  'shell-pits': require('../../assets/art/game-hall/shell-pits.webp'),
+  'tic-tac-toe': require('../../assets/art/game-hall/tic-tac-toe.webp'),
+  checkers: require('../../assets/art/game-hall/checkers.webp'),
+  memory: require('../../assets/art/game-hall/memory.webp'),
+  maze: require('../../assets/art/game-hall/maze.webp'),
+  'word-rescue': require('../../assets/art/game-hall/word-rescue.webp'),
+  numbers: require('../../assets/art/game-hall/numbers.webp'),
+  'go-fish': require('../../assets/art/game-hall/go-fish.webp'),
+  'crazy-eights': require('../../assets/art/game-hall/crazy-eights.webp'),
+  racer: require('../../assets/art/game-hall/racer.webp'),
+  'island-mystery': require('../../assets/art/game-hall/island-mystery.webp'),
+  'word-imposter': require('../../assets/art/game-hall/word-imposter.webp'),
+};
+export const hasGameHallArt = (id: string): id is GameHallArtId => Object.hasOwn(GAME_HALL_TILE_ART, id);
+
+export function GameHallArt({ id, size }: { id: GameHallArtId; size?: number }) {
+  return <IllustratedArt source={GAME_HALL_TILE_ART[id]} size={size}/>;
+}
+
 /** One illustration, square at `size` or filling `style`. Decorative: whatever holds it names it. */
 export const IllustratedArt = memo(function IllustratedArt({ source, size, style }: { source: ImageSourcePropType; size?: number; style?: StyleProp<ImageStyle> }) {
   return <Image testID="illustrated-art" source={source} resizeMode="contain" fadeDuration={0} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"

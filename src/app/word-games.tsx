@@ -19,6 +19,8 @@ export default function WordGames() {
   if (store.recovery) return <SafeAreaView style={styles.page}><Recovery/></SafeAreaView>;
   return <WordGameRound key={`${game}:${store.epoch}:${store.save.learning?.active ?? 'family'}`} game={game}/>;
 }
+const backToGameHall = () =>
+  router.canGoBack() ? router.back() : router.replace({ pathname: '/shelf', params: { island: 'classic' } });
 function WordGameRound({ game }: { game: WordGame }) {
   const store = useStore(), focused = useIsFocused(), { width } = useWindowDimensions();
   const [epoch] = useState(store.epoch), [owner] = useState(store.save.learning?.active ?? 'family');
@@ -28,11 +30,11 @@ function WordGameRound({ game }: { game: WordGame }) {
   const sound = useSoundControls(store.save.settings.sound && focused && !practice.pending);
   const Screen = game === 'word-hunt' ? WordHuntScreen : AnagramsScreen;
   const save = (next: WordSession, previous: WordSession | null) => store.wordGameUpdate(game, next, { owner, epoch, id: previous?.id ?? null, ...(previous ? { revision: previous.revision } : {}) });
-  return <SafeAreaView style={styles.page}>
-    <ScrollView ref={scroll} scrollEnabled={!tracing} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}>
+  return <SafeAreaView style={[styles.page, { backgroundColor: '#FFF6E5' }]}>
+    <ScrollView ref={scroll} scrollEnabled={!tracing} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingHorizontal: 16, gap: 16 }]}>
       <SaveStatus/>
-      <Screen session={saved} onSave={save} onBack={() => router.canGoBack() ? router.back() : router.replace('/')}
-        active={focused && !practice.pending} beforeNewRound={practice.request} sound={store.save.settings.sound} width={Math.min(width - 40, 420)}
+      <Screen session={saved} onSave={save} onBack={backToGameHall}
+        active={focused && !practice.pending} beforeNewRound={practice.request} sound={store.save.settings.sound} width={Math.min(width - 32, 420)}
         onActionFocus={() => scroll.current?.scrollTo({ y: 0, animated: false })} onTracingChange={setTracing}
         onFeedback={event => sound.play(event === 'finish' ? 'win' : event === 'word' ? 'match' : 'tap')}/>
     </ScrollView>{practice.panel}

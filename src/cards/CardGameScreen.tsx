@@ -257,10 +257,31 @@ function CardGameRound({
     setWild(null);
     setHelp(true);
   };
+  const openSetupSheet = () => {
+    setReveal(false);
+    setWild(null);
+    setMode(state.options.mode);
+    setRound(cardRound(state));
+    setPace(cardPace(state));
+    setNames(match.names);
+    setStarter(cardStarter(state));
+    setAlternate(match.alternate);
+    setSetup(true);
+  };
   return (
     <View style={s.root}>
-      {onBack && <GameHeader title={state.game === "go-fish" ? "Go Fish" : "Crazy Eights"} onBack={onBack}
-        sound={onToggleSound ? { on: sound, toggle: onToggleSound } : undefined} onHelp={openHelp} />}
+      {onBack && (
+        <GameHeader
+          title={state.game === "go-fish" ? "Go Fish" : "Crazy Eights"}
+          onBack={onBack}
+          sound={onToggleSound ? { on: sound, toggle: onToggleSound } : undefined}
+          onHelp={openHelp}
+        >
+          <Button compact quiet label="New round and options" onPress={openSetupSheet}>
+            Options
+          </Button>
+        </GameHeader>
+      )}
       <Scoreboard solo={state.options.mode === "solo"} match={match} result={cardMatchResult(state)} active={result ? null : state.turn} />
       {state.game === "crazy-eights" && <Copy style={s.small}>Match points · {name(0)} {cardMatchPoints(state)[0]} · {name(1)} {cardMatchPoints(state)[1]}</Copy>}
       <View accessibilityLiveRegion="polite" style={s.notice}>
@@ -599,12 +620,14 @@ function CardGameRound({
   );
 }
 const s = StyleSheet.create({
-  root: { width: "100%", maxWidth: 850, alignSelf: "center", gap: 10 },
-  notice: { backgroundColor: "#E7EFE3", padding: 12, borderRadius: 18, gap: 6 },
+  root: { width: "100%", maxWidth: 850, alignSelf: "center", gap: 12 },
+  notice: { backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E4D5BF", padding: 14, borderRadius: 20, gap: 6 },
   table: {
-    backgroundColor: "#F1ECD9",
-    padding: 12,
-    borderRadius: 18,
+    backgroundColor: "#FFF5DF",
+    borderWidth: 1.5,
+    borderColor: "#E4D5BF",
+    padding: 14,
+    borderRadius: 22,
     flexDirection: "row",
     gap: 12,
     alignItems: "center",
@@ -617,7 +640,7 @@ const s = StyleSheet.create({
   card: {
     width: 68,
     minHeight: 96,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: C.paper,
     padding: 7,
     justifyContent: "space-between",
@@ -626,16 +649,16 @@ const s = StyleSheet.create({
   },
   rank: { fontFamily: font, fontWeight: "800", fontSize: 22 },
   suit: { fontSize: 11, color: C.ink },
-  bookShelf: { padding: 10, backgroundColor: "#F5F0DF", borderRadius: 16, gap: 8 },
+  bookShelf: { padding: 12, backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E4D5BF", borderRadius: 18, gap: 8 },
   book: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFF8EC",
     borderWidth: 1,
-    borderColor: "#D5D8C8",
+    borderColor: "#E4D5BF",
     padding: 6,
-    borderRadius: 9,
+    borderRadius: 10,
     flexDirection: "row",
     gap: 4,
     alignItems: "center",
   },
-  cover: { backgroundColor: "#F0E8D5", padding: 16, borderRadius: 18, gap: 10 },
+  cover: { backgroundColor: "#FFFDF8", borderWidth: 1.5, borderColor: "#E4D5BF", padding: 18, borderRadius: 22, gap: 10 },
 });
