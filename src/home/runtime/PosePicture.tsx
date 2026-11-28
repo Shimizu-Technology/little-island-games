@@ -18,21 +18,31 @@ export type PosePlan = {
   dy: number;
   /** Whether the owner has a front piece (a blanket, a tub rim) drawn over the subject. */
   front: boolean;
+  /** A wearable is painted by its avatar, never again as loose furniture. */
+  hideOwner?: boolean;
+  hideSubject?: boolean;
   /** Bounding box of both pieces, relative to the owner's contact. */
   box: { left: number; top: number; width: number; height: number };
 };
 export function posePlan(owner: SceneEntity, subject: SceneEntity, target: Target, proposal: DropProposal): PosePlan {
+  const wearSubject = !!subject.character && target.kind === "socket" && owner.item?.item === "swim-ring";
+  const wearOwner = !!owner.character && target.kind === "floaty" && subject.item?.item === "swim-ring";
+  if (wearOwner) owner = { ...owner, floaty: true, action: null, children: [] };
   const posed: SceneEntity = subject.character
-    ? { ...subject, base: proposal.base, facing: proposal.facing, action: null, children: [] }
+    ? { ...subject, base: proposal.base, facing: proposal.facing, action: null, children: [],
+        floaty: target.kind === "socket" ? wearSubject : subject.floaty }
     : { ...subject, children: [] };
-  const at = target.kind === "hand" || (target.kind === "mouth" && proposal.consume === "drink")
+  const at = wearSubject ? proposal.contact : target.kind === "hand" || (target.kind === "mouth" && proposal.consume === "drink")
     ? target.projectedContact ?? target.contact : target.contact;
   const dx = at.x - owner.contact.x, dy = at.y - owner.contact.y;
   const of = artFrame(owner), sf = artFrame(posed);
-  const left = Math.min(of.left, dx + sf.left), top = Math.min(of.top, dy + sf.top);
-  const right = Math.max(of.left + of.width, dx + sf.left + sf.width), bottom = Math.max(of.top + of.height, dy + sf.top + sf.height);
-  const front = !!owner.item && !!capabilityOf(owner.item.item).sockets?.length && target.kind === "socket";
-  return { owner, subject: posed, dx, dy, front, box: { left, top, width: right - left, height: bottom - top } };
+  const left = wearSubject ? dx + sf.left : wearOwner ? of.left : Math.min(of.left, dx + sf.left);
+  const top = wearSubject ? dy + sf.top : wearOwner ? of.top : Math.min(of.top, dy + sf.top);
+  const right = wearSubject ? dx + sf.left + sf.width : wearOwner ? of.left + of.width : Math.max(of.left + of.width, dx + sf.left + sf.width);
+  const bottom = wearSubject ? dy + sf.top + sf.height : wearOwner ? of.top + of.height : Math.max(of.top + of.height, dy + sf.top + sf.height);
+  const front = !wearSubject && !!owner.item && !!capabilityOf(owner.item.item).sockets?.length && target.kind === "socket";
+  return { owner, subject: posed, dx, dy, front, ...(wearSubject ? { hideOwner: true } : {}),
+    ...(wearOwner ? { hideSubject: true } : {}), box: { left, top, width: right - left, height: bottom - top } };
 }
 export function PosePicture({ plan, size, renderCharacter }: { plan: PosePlan; size: number; renderCharacter?: CharacterRender }) {
   const { owner, subject, dx, dy, box } = plan;
@@ -43,13 +53,13 @@ export function PosePicture({ plan, size, renderCharacter }: { plan: PosePlan; s
     <View pointerEvents="none" accessible={false} style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
       <View style={{ width: box.width * scale, height: box.height * scale }}>
         <View style={{ width: box.width, height: box.height, transform: [{ scale }], transformOrigin: "left top" }}>
-          <View style={place(of.left, of.top)}>
-            <EntityArt entity={owner} reduced renderCharacter={renderCharacter}
+          {!plan.hideOwner && <View style={place(of.left, of.top)}>
+            <EntityArt entity={owner} standalone reduced renderCharacter={renderCharacter}
               faceOverride={owner.character ? "anticipate" : undefined} />
-          </View>
-          <View style={place(dx + sf.left, dy + sf.top)}>
-            <EntityArt entity={subject} reduced renderCharacter={renderCharacter} />
-          </View>
+          </View>}
+          {!plan.hideSubject && <View style={place(dx + sf.left, dy + sf.top)}>
+            <EntityArt entity={subject} standalone reduced renderCharacter={renderCharacter} />
+          </View>}
           {plan.front && (
             <View style={place(of.left, of.top)}>
               <EntityArt entity={owner} front reduced renderCharacter={renderCharacter} />

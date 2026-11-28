@@ -43,8 +43,8 @@ const COCOS_SHORE_KNOTS: readonly (readonly [number, number])[] = [
 
 export function waterFloorMinY(room: RoomId): number {
   "worklet";
-  if (room === 'tumon-beach') return 286;
-  if (room === 'cocos-island') return 308;
+  if (room === 'tumon-beach') return 256;
+  if (room === 'cocos-island') return 256;
   return 350;
 }
 

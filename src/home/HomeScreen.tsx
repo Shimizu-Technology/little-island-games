@@ -800,6 +800,12 @@ export function HomeScreen({
     }
     return false;
   }, []);
+  const takeOffFloaty = useCallback(() => {
+    const current = live.current;
+    const friend = current.selected && current.scene.entities[current.selected];
+    const ring = friend && friend.children.map(id => current.scene.entities[id]).find(e => e?.item?.item === "swim-ring");
+    if (ring) takeFromStorage(ring.id, friend.id);
+  }, [takeFromStorage]);
   const eatHeldItem = useCallback((entity: SceneEntity) => {
     if (entity.attachment.kind !== "hand" || !entity.body?.edible) return false;
     const holder = entity.attachment.character;
@@ -1894,7 +1900,8 @@ export function HomeScreen({
           }}
         />
       )}
-      {!overview && !designing && !activeSheet && !more && !friends && !atmosphereOpen && !placesOpen && !marketOpen && selected && scene.entities[selected]?.character && <View testID="quick-room-hops" style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", maxWidth: "96%", flexDirection: "row", gap: 8, zIndex: 46 }}>
+      {!overview && !designing && !activeSheet && !more && !friends && !atmosphereOpen && !placesOpen && !marketOpen && !discoveryToast && selected && scene.entities[selected]?.character && <View testID="quick-room-hops" style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", maxWidth: "96%", flexDirection: "row", gap: 8, zIndex: 46 }}>
+        {scene.entities[selected].floaty && <Pressable testID="take-off-floaty" accessibilityRole="button" accessibilityLabel="Take off floaty" onPress={takeOffFloaty} style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: 12, borderRadius: 16, backgroundColor: "#D4F5F2", borderWidth: 2, borderColor: "#438F91" }}><Text style={{ color: "#315C56", fontSize: 14, fontWeight: "700" }}>Take off floaty</Text></Pressable>}
         {roomHops(scene.entities[selected].room).map(hop => <Pressable key={hop.kind} testID={`quick-room-hop-${hop.room}`} accessibilityRole="button" accessibilityLabel={`Move selected friend to ${roomNames[hop.room]}`} onPress={() => hopRoom(hop.room)} style={{ minHeight: 48, minWidth: 48, flexShrink: 1, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontSize: 14, fontWeight: "700", textAlign: "center" }}>{hop.kind === "ladder" ? "Climb" : "Hop"} · {roomNames[hop.room]}</Text></Pressable>)}
       </View>}
       {marketOpen && <React.Suspense fallback={null}><MarketSheet state={store.state} dispatch={action => store.dispatch(action)} message={store.message} reduced={reduced} canUndo={store.canUndo} onUndo={() => store.dispatch({ type: "undo" })} onClose={() => setMarketOpen(false)} onHome={() => { setMarketOpen(false); goRoom("kitchen"); }}/></React.Suspense>}

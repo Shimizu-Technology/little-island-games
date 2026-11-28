@@ -227,7 +227,7 @@ const OverlayGroup = memo(function OverlayGroup({
           style={{ position: "absolute", opacity: 0, width: 1 + pickup.generation, height: 1 }} />
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: 1, height: 1, transformOrigin: [0, 0, 0] }, squash]}>
         {entities.map((entity) => {
-          const frame = artFrame(entity, entity.id === root.id && !!root.character);
+          const frame = artFrame(entity, entity.id === root.id && !!root.character, entity.id === root.id);
           const dx = entity.contact.x - root.contact.x,
             dy = entity.contact.y - root.contact.y;
           if (root.character && entity.attachment.kind === "hand")
@@ -271,6 +271,7 @@ const OverlayGroup = memo(function OverlayGroup({
               <EntityArt
                 entity={entity}
                 carry={entity.id === root.id && !!root.character}
+                standalone={entity.id === root.id}
                 reduced={reduced}
                 renderCharacter={renderCharacter}
               />

@@ -28,6 +28,9 @@ export function SeatRimCue({ target, interaction }: { target: Target; interactio
 export function TargetCue({ target, interaction, ownerName }: { target: Target; interaction: Interaction; ownerName?: string }) {
   const style = useCueStyle(target, interaction);
   if (target.trash) return null;
+  if (target.kind === "floaty") return <Animated.View testID="floaty-landing-cue" pointerEvents="none" accessible={false}
+    style={[{ position: "absolute", left: target.core.left - 8, top: target.core.top + target.core.height * .62,
+      width: target.core.width + 16, height: 34, borderRadius: 40, borderWidth: 4, borderColor: "#F59FBC", backgroundColor: "#FFDBEA66" }, style]}/>;
   if (target.kind === "mouth") return <Animated.View testID="mouth-target-halo" pointerEvents="none"
     accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={[{ position: "absolute", left: (target.face?.x ?? target.contact.x) - (target.face?.headRadius ?? 40) - 34, top: target.contact.y - 15, width: 24, height: 24 }, style]}>

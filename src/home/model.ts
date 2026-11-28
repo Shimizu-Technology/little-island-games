@@ -1,3 +1,4 @@
+import { waterFloorMinY } from "./waterZone";
 import { defaultGuamRoom, guamPlaceIds, untouchedGuamRoom, type GuamPlaceId } from "./locations";
 import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots, type FamilySlot } from "./family";
@@ -570,7 +571,7 @@ export function validCharacter(
     (!v.socket && v.pose !== poseFor(v.anchor))
   )
     return false;
-  const minCharacterY = roomId === "tumon-beach" ? 286 : roomId === "cocos-island" ? 308 : 350;
+  const minCharacterY = waterFloorMinY(roomId ?? "home");
   if (
     v.at !== undefined &&
     (!canonicalV4 ||

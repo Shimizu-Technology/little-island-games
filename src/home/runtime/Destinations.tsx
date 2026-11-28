@@ -141,7 +141,7 @@ export function Destinations({
           </Pressable>
         )}
         {contents.map((entity) => {
-          const frame = artFrame(entity),
+          const frame = artFrame(entity, false, true),
             size = Math.min(42 / frame.width, 42 / frame.height);
           return (
             <Pressable
@@ -152,7 +152,7 @@ export function Destinations({
               style={{ width: cell, height: cell, padding: 6, backgroundColor: "#EEDDBA", borderRadius: 14 }}
             >
               <View pointerEvents="none" style={{ transform: [{ scale: size }], transformOrigin: "left top" }}>
-                <EntityArt entity={entity} reduced />
+                <EntityArt entity={entity} standalone reduced />
               </View>
             </Pressable>
           );

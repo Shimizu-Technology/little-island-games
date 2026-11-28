@@ -1,3 +1,4 @@
+import { floatyFrame } from "../floaty";
 import { trashTarget } from "../kitchen";
 import { defaultGuamRoom, isGuamPlace } from "../locations";
 import { fridgeShelfOffset, storageCapacity, storageOpen } from '../storage';
@@ -89,6 +90,7 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
       small: !!decorSpec(item.item).small,
       holdable: canHold(item),
       edible: item.empty ? undefined : capability.edible,
+      discardable: !!capability.edible,
       portable: capability.moveInPlay,
       underfoot: capability.holdable === true,
     },
@@ -153,7 +155,10 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
   for (const character of state.characters) {
     const held = character.holding && entities[itemEntityId(room, character.holding)];
     const owner = entities[characterEntityId(character.slot)];
-    if (held) held.attachment = { kind: "hand", character: owner.id, side: "right" };
+    if (held) {
+      held.attachment = { kind: "hand", character: owner.id, side: "right" };
+      if (held.item?.item === "swim-ring") { owner.floaty = true; owner.action = null; }
+    }
   }
   for (const entity of Object.values(entities)) {
     entity.parent = parentId(entity.attachment);
@@ -175,6 +180,17 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       entity.contact = roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
       entity.band = parent.band;
       entity.depth = parent.depth + 0.1;
+      if (entity.item?.item === "swim-ring") {
+        const frame = floatyFrame(parent.character.slot, parent.base, parent.facing);
+        entity.contact = parent.contact;
+        entity.bounds = frame;
+        entity.hitProxies = [frame];
+        // Reachable side rims take off the ring; the torso still picks up the friend.
+        entity.shapes = [
+          { kind: "box", left: frame.left, top: frame.top + frame.height * .42, width: frame.width * .22, height: frame.height * .28 },
+          { kind: "box", left: frame.left + frame.width * .78, top: frame.top + frame.height * .42, width: frame.width * .22, height: frame.height * .28 },
+        ];
+      }
       if (entity.item && capabilityOf(entity.item.item).edible === 'drink') {
         const slot=parent.character.slot;
         Object.assign(entity,heldDrinkGeometry(entity.item,heldDrinkScale(species[slot].unit,slot),false));
@@ -241,6 +257,14 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       const hand = { x: entity.contact.x + anchors.hand.x, y: entity.contact.y + anchors.hand.y };
       const mouth = roomPoint(entity.contact.x + anchors.mouth.x, entity.contact.y + anchors.mouth.y);
       const face = { x: entity.contact.x + anchors.head.x, y: entity.contact.y + anchors.head.y, headRadius: species[c.slot].headRadius };
+      const waist = floatyFrame(c.slot, entity.base, entity.facing);
+      if (entity.attachment.kind !== "socket" && entity.base === "stand") targets.push({ id: `${entity.id}/wear-floaty`, kind: "floaty", owner: entity.id, floaty: true,
+        attachment: { kind: "hand", character: entity.id, side: "right" },
+        contact: entity.contact, projectedContact: entity.contact,
+        core: { left: entity.contact.x + entity.bounds.left, top: entity.contact.y + entity.bounds.top,
+          width: entity.bounds.width, height: Math.max(entity.bounds.height, waist.top + waist.height) },
+        base: entity.base, facing: entity.facing,
+        occupied: c.holding ? itemEntityId(room, c.holding) : undefined });
       for (const kind of ["hand", "mouth"] as const) {
         const point = kind === "hand" ? roomPoint(hand.x, hand.y) : mouth;
         const resultHand = anchorsFor(c.slot, entity.base, entity.facing, kind === "hand" ? "hold" : "drink").hand;

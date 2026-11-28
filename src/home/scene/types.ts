@@ -50,13 +50,15 @@ export type SceneEntity = {
   occluders?: Bounds[];
   /** Middle of the painted art, relative to contact. Food aims from here, not from its base. */
   visual?: { x: number; y: number };
-  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink"; portable?: boolean; container?: boolean; underfoot?: boolean };
+  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink"; discardable?: boolean; portable?: boolean; container?: boolean; underfoot?: boolean };
   item?: Instance;
   /** Direct stored items for pictorial peeks; copies stay outside the saved schema. */
   contents?: Instance[];
   /** HD-07: the stove whose pan this food is drawn in (saved on the floor in front of it). */
   pan?: EntityId;
   character?: Character;
+  /** Derived from holding a swim-ring; never an extra save field. */
+  floaty?: boolean;
 };
 export type Scene = {
   revision: string;
@@ -72,7 +74,7 @@ export type FloorLocation = {
 };
 export type Target = {
   id: string;
-  kind: "hand" | "mouth" | "socket" | "surface" | "container";
+  kind: "hand" | "mouth" | "socket" | "surface" | "container" | "floaty";
   attachment: Attachment;
   contact: RoomPoint;
   projectedContact?: RoomPoint;
@@ -97,6 +99,7 @@ export type Target = {
   /** HD-07: the stove's pan. Food lands on the saved floor point `attachment.at`, in `cell`. */
   pan?: boolean;
   trash?: boolean;
+  floaty?: boolean;
   cell?: GridCell;
 };
 /** Prepared at settled edits, never a Map, function, class or native handle. */
