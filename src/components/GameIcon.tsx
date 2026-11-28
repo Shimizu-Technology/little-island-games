@@ -3,14 +3,14 @@ import { learnIds, type LearnId } from '../learn/types';
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
-import { ArcadeArt, hasArcadeArt, hasLearnSubjectArt, LearnSubjectArt, type LearnSubjectId } from "../art/illustrated";
+import { WordGameArt, hasWordArt, ArcadeArt, hasArcadeArt, hasLearnSubjectArt, LearnSubjectArt, type LearnSubjectId } from "../art/illustrated";
 import type { ShelfId } from "../learn/home";
 
 // Original activity silhouettes. Keep one 100-unit canvas and a 3-unit outline:
 // tiny shelf tiles and large lobby tiles must tell the same story.
 const ink = "#254D49", cream = "#FFF9E9", coral = "#DC8062", gold = "#E8B958", blue = "#599CB4", green = "#6B9D70", purple = "#9679B7";
 export type IslandIconId = "reading" | "numbers" | "science" | "thinking" | "coding" | "classic" | "arcade" | "explore";
-type IconId = ShelfId | "explore";
+type IconId = ShelfId | "explore" | "word-hunt" | "anagrams";
 const surfaces: Partial<Record<IconId, string>> = {
   "tic-tac-toe": "#DFECF7", "word-rescue": "#F8DFD0", memory: "#EDE2F5", checkers: "#DCECD7", maze: "#F6E8BF", numbers: "#D5EDEE",
   "go-fish": "#D6EAF2", "crazy-eights": "#F6E7BE", racer: "#DFEBCB", "island-mystery": "#E8E6C7", "word-imposter": "#E7DDF2", explore: "#DAEAF1",
@@ -118,9 +118,11 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
 }
 function Tile({ size, surface, children }: { size: number; surface: string; children: React.ReactNode }) { return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Rect x={3} y={3} width={94} height={94} rx={23} fill={surface} stroke={ink} strokeWidth={3}/><G stroke={ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">{children}</G></Svg>; }
 /** Whether a game has its own picture here; the rest show a plain "?" tile, so a caller can choose another motif. */
-export const hasGameArt = (id: string) => hasArcadeArt(id) || !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
+export const hasGameArt = (id: string) => hasWordArt(id) || hasArcadeArt(id) || !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
 export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) {
+  if (hasWordArt(id)) return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+    style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#3D2B2433', alignItems: 'center', justifyContent: 'center' }}><WordGameArt id={id} size={size}/></View>;
   const surface = surfaces[id];
   if (hasArcadeArt(id)) {
     return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"

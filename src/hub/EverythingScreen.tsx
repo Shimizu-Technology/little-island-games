@@ -1,3 +1,4 @@
+import { WordGamesCards } from '../wordgames/WordGamesCards';
 import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton , IconButton, PressableScale } from "../components/ui";
 import { useNunitoLoaded } from "../ui/fonts";
@@ -44,6 +45,7 @@ export default function EverythingScreen() {
   {!scrollBar && <SaveStatus/>}
   <ScrollView contentContainerStyle={{ width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, gap: 32 }}>
    {scrollBar && <>{bar}<SaveStatus/></>}
+   <WordGamesCards/>
    {section === 'favorites' ? <>{fav}<CoveLists favorites/></> : section === 'ideas' ? suggestions : <>
     <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Continue</Heading>{resume ? <><Copy>{returnLabel(resume)}</Copy>{rows([shelfGames.find(game => game.id === resume)!])}</> : <Copy>Saved games will be here when you’re ready.</Copy>}</View>
     {suggestions}{fav}<CoveLists/>

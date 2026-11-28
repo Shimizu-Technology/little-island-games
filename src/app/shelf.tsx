@@ -1,3 +1,4 @@
+import { WordGamesCards } from '../wordgames/WordGamesCards';
 import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { learningGroups } from '../learn/generated/ids';
 import type { LearnId } from '../learn/types';
@@ -42,6 +43,7 @@ function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "ex
       <Text accessibilityRole="header" numberOfLines={large || wrapTitle ? 2 : 1} adjustsFontSizeToFit={!large && !wrapTitle} minimumFontScale={0.75} maxFontSizeMultiplier={large ? wordFitMultiplier(islandNames[island], 21, line - 56, 1.5) : undefined} style={{ flex: 1, fontSize: 21, color: "#3D2B24", ...bold }}>{island === 'classic' ? 'Game Hall' : islandNames[island]}</Text>
     </View>
     <SaveStatus />
+    {island === 'classic' && <WordGamesCards/>}
     <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]} accessible={false} importantForAccessibility="no">
       {(island === "classic" ? classicFilters : ["All games", "Play alone", "Play together", "Favorites"]).map(f => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
     </View>
