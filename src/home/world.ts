@@ -80,6 +80,7 @@ export const anchoredInPlay: readonly ItemId[] = [
   "rug", "mat", "round-rug", "striped-rug", "star-rug", "beach-towel",
   "chime", "string-lights", "kite", "sea-picture", "clock", "mirror", "world-map",
 ];
+capabilities["swim-ring"] = { ...capabilities["swim-ring"], moveInPlay: true, holdable: true };
 for (const id of anchoredInPlay) capabilities[id] = { ...capabilities[id], moveInPlay: false };
 
 /** Anything without an entry is a loose decoration or toy. Stickers live on the wall. */

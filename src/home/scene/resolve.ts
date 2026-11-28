@@ -1,4 +1,5 @@
-import { capabilityOf } from "../world";
+import { waterFloorMinY } from "../waterZone";
+import { floatyFrame } from "../floaty";
 import { rigSlot } from "../family";
 import type { RoomId } from "../catalogMore";
 import { MAX_INSTANCES } from "../limits";
@@ -90,7 +91,7 @@ type Candidate = {
   onHead: boolean;
   radius: number;
 };
-const priority: Record<Target["kind"], number> = { hand: 0, mouth: 1, socket: 2, container: 2, surface: 3 };
+const priority: Record<Target["kind"], number> = { hand: 0, floaty: 0, mouth: 1, socket: 2, container: 2, surface: 3 };
 
 export const faceZone = { minPt: 32, headFactor: 1.1 };
 export const handMagnet = { minPt: 24, heightFactor: 0.14, maxPt: 34 };
@@ -139,8 +140,11 @@ function eligible(
   if (target.conflicts?.some(id => id !== subject.id)) return false;
   const reserved = ctx.reservations?.[target.id];
   if (reserved && reserved !== subject.id) return false;
-  if (target.occupied && target.occupied !== subject.id && !(target.kind === "hand" && ctx.replaceHand)) return false;
-  if (target.trash) return !!subject.item && !!capabilityOf(subject.item.item).edible && group.length === 1;
+  const ring = subject.item?.item === "swim-ring";
+  if (target.floaty && !ring) return false;
+  if (ring && target.kind === "hand" && !target.floaty) return false;
+  if (target.occupied && target.occupied !== subject.id && !((target.kind === "hand" || target.kind === "floaty") && (ctx.replaceHand || ring))) return false;
+  if (target.trash) return !!subject.item && (!!subject.body?.edible || !!subject.body?.discardable) && group.length === 1;
   if (subject.character) {
     return (
       target.kind === "socket" &&
@@ -149,6 +153,7 @@ function eligible(
     );
   }
   if (!subject.body) return false;
+  if (target.kind === "floaty") return ring;
   if (target.kind === "hand") return !!subject.body.holdable;
   if (target.kind === "mouth") return !!subject.body.edible;
   // HD-07: the stove's pan takes food only; a toy dropped there lands on the floor as usual.
@@ -175,7 +180,7 @@ function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gr
       );
       if (child.attachment.kind === "hand" && oldParent.character) {
         const anchors = anchorsFor(oldParent.character.slot, parent.base, parent.facing, oldParent.action);
-        contact = roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
+        contact = child.item?.item === "swim-ring" ? parent.contact : roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
       }
     }
     if (child.item && root.cell && subject.item) {
@@ -202,7 +207,10 @@ function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gro
   return moves.every((move) => {
     const entity = move.id === subject.id ? subject : index.entities[move.id];
     if (move.attachment.kind === "container") return true;
-    const bounds = entity.character ? anchorsFor(entity.character.slot, move.base, move.facing).bounds : entity.bounds;
+    if (subject.floaty && root.attachment.kind === "socket" && entity.item?.item === "swim-ring") return true;
+    const owner = move.attachment.kind === "hand" ? index.entities[move.attachment.character] : undefined;
+    const bounds = entity.character ? anchorsFor(entity.character.slot, move.base, move.facing).bounds
+      : entity.item?.item === "swim-ring" && owner?.character ? floatyFrame(owner.character.slot, owner.base, owner.facing) : entity.bounds;
     const placed = translatedBounds(bounds, move.contact);
     if (!contained(placed)) return false;
     // Grid footprints alone do not describe tall/wide fixture silhouettes. A Design
@@ -368,7 +376,7 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
   "worklet";
   const slot = subject.character?.slot;
   if (slot === undefined && !(subject.body?.portable && (!subject.children.length || subject.body.container) && subject.body.layer !== "wall")) return;
-  const beachMinY = index.room === "tumon-beach" ? 286 : index.room === "cocos-island" ? 308 : 350;
+  const beachMinY = waterFloorMinY(index.room);
   const waterProp = !!subject.item && (subject.item.item === "swim-ring" || subject.item.item === "outrigger-canoe" || subject.item.item === "beach-surfboard" || subject.item.item === "sea-turtle");
   const contact = slot !== undefined ? standingContact(point, slot, beachMinY) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(waterProp ? beachMinY : 350, Math.min(552, point.y)));
   // The exact contact decides containment and visibility. The bounded grid cell only decides
@@ -516,7 +524,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       });
     }
   }
-  const actorTarget = (c: Candidate) => c.target.kind === "hand" || c.target.kind === "mouth";
+  const actorTarget = (c: Candidate) => c.target.kind === "hand" || c.target.kind === "floaty" || c.target.kind === "mouth";
   candidates.sort(
     (a, b) =>
       Number(b.core) - Number(a.core) ||
@@ -547,18 +555,37 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
   }
   if (winner) {
     const target = winner.target;
+    const ring = index.entities[target.owner];
+    if (subject.character && ring?.item?.item === "swim-ring" && target.kind === "socket") {
+      const contact = standingContact(ring.contact, subject.character.slot, waterFloorMinY(index.room));
+      const move = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, "stand");
+      const proposal = makeProposal(index, subject, move, group.filter(e => e.id === subject.id), "floor", "Put on floaty", target);
+      for (const child of group.slice(1)) {
+        const off = resolve(index, child, roomPoint(contact.x + 80, contact.y), { scale: ctx.scale, floorOnly: true, release: true });
+        proposal.moves.push(...off.moves);
+      }
+      proposal.moves.push(rootMove(ring, index.room, { kind: "hand", character: subject.id, side: "right" }, contact));
+      return proposal;
+    }
     const proposal = makeProposal(
       index,
       subject,
       targetMove(index, subject, target),
       group,
-      target.kind === "container" ? "socket" : target.kind,
+      target.kind === "container" ? "socket" : target.kind === "floaty" ? "hand" : target.kind,
       winner.core ? "Explicit target core" : "Compatible nearby target",
       target
     );
+    if (subject.floaty && subject.character && target.kind === "socket") {
+      const ring = group.find(e => e.item?.item === "swim-ring");
+      if (ring) {
+        const off = resolve(index, ring, roomPoint(subject.contact.x + 100, subject.contact.y), { scale: ctx.scale, floorOnly: true, release: true });
+        proposal.moves = [...proposal.moves.filter(m => m.id !== ring.id), ...off.moves];
+      }
+    }
     const owner = index.entities[target.owner]?.character;
     const previousHeld =
-      target.kind === "hand"
+      (target.kind === "hand" || target.kind === "floaty")
         ? target.occupied
         : target.kind === "mouth" && subject.body?.edible === "drink" && owner?.holding
           ? itemEntityId(index.room, owner.holding)

@@ -159,7 +159,9 @@ export function apply(
             };
       if (c.holding) {
         const heldId = itemEntityId(source.room, c.holding);
-        next.holding = names[heldId] ?? c.holding;
+        const heldMove = moves.find(m => m.id === heldId);
+        if (!heldMove || heldMove.attachment.kind === "hand" && heldMove.attachment.character === move.id)
+          next.holding = names[heldId] ?? c.holding;
       }
       if (c.action) next.action = c.action;
       rooms[move.room].characters.push(next);

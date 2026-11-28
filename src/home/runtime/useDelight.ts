@@ -127,10 +127,15 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
       effect("sparkle", proposal.room, proposal.contact.x, proposal.contact.y - 24);
     }
     // HD-06: friends close by turn to greet a friend set down beside them, and both smile.
-    const friend = landedId ? after.entities[landedId] : undefined;
+    const landed = landedId ? after.entities[landedId] : undefined;
+    const friend = landed?.item?.item === "swim-ring" && landed.attachment.kind === "hand" ? after.entities[landed.attachment.character] : landed;
     if (friend?.character?.socket?.socketId.replace(/^pet-/, "") === "chef") { cueOn(friend.id, "stir"); mood(friend.id, "happy", GREET_MOOD_MS); }
     if (friend?.character && proposal.kind !== "staging" && isEntitySwimming(friend, after)) {
       effect("splash", proposal.room, friend.contact.x, friend.contact.y - 6);
+      effect("bubbles", proposal.room, friend.contact.x, friend.contact.y - 12);
+      effect("sparkle", proposal.room, friend.contact.x, friend.contact.y - 32);
+      feedback.play("splash");
+      cueOn(friend.id, "hop");
       mood(friend.id, "happy", GREET_MOOD_MS);
     }
     if (friend?.character && proposal.kind !== "staging" && !isRestingSleeper(friend)) {
@@ -179,6 +184,16 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     const occupant = entity.item ? entity.children.map((id) => sceneNow().entities[id]).find((e) => e?.character) : undefined;
     if (occupant) entity = occupant;
     if (entity.character) {
+      if (isEntitySwimming(entity, sceneNow())) {
+        newAction(entity.id);
+        effect("splash", entity.room, entity.contact.x, entity.contact.y - 8);
+        effect("bubbles", entity.room, entity.contact.x, entity.contact.y - 14);
+        effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 34);
+        feedback.play("splash");
+        cueOn(entity.id, "hop");
+        mood(entity.id, "cheer", GREET_MOOD_MS);
+        return;
+      }
       if (sleeping[entity.id] || isRestingSleeper(entity)) {
         // HD-09: a sleeping friend stirs and settles back to sleep.
         cueOn(entity.id, "stir");

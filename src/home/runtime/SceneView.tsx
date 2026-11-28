@@ -1,3 +1,4 @@
+import { WaterRipples, SwimBobDriver } from "./Swimming";
 import { roomPortalsClear } from "../roomHops";
 import { RoomPortals } from "./RoomPortals";
 import { KitchenBin } from "./KitchenBin";
@@ -12,7 +13,7 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { anchorsFor } from "../scene/species";
 import { restFrom, restTransform } from "./restFrom";
 import type { Meal } from "./meal";
-import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withTiming, Easing, type SharedValue } from "react-native-reanimated";
+import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
 import { capabilityOf } from '../world';
 import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
@@ -89,70 +90,6 @@ function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:st
 const IdleEntityDrawing=memo(function IdleEntityDrawing({mealActive:_mealActive,...props}:React.ComponentProps<typeof EntityArt>&{mealActive:boolean}) {
   return <EntityArt {...props}/>;
 },(_previous,next)=>next.mealActive);
-/** Concentric glowing turquoise/white water ripples when a character is in the lagoon; gated by HomeMotionContext. */
-const WaterRipples = memo(function WaterRipples({ slot, width, height, reduced, live }: { slot: number; width: number; height: number; reduced: boolean; live: boolean }) {
-  const motionLive = React.useContext(HomeMotionContext);
-  const animating = motionLive && live && !reduced;
-  const pulse = useSharedValue(0);
-  React.useEffect(() => {
-    if (!animating) {
-      cancelAnimation(pulse);
-      pulse.set(0);
-      return;
-    }
-    pulse.set(withRepeat(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) }), -1, true));
-    return () => {
-      cancelAnimation(pulse);
-      pulse.set(0);
-    };
-  }, [pulse, animating]);
-  const outer = useAnimatedStyle(() => ({
-    opacity: animating ? 0.75 - pulse.value * 0.35 : 0.65,
-    transform: [{ scaleX: animating ? 0.92 + pulse.value * 0.22 : 1 }, { scaleY: animating ? 0.92 + pulse.value * 0.16 : 1 }],
-  }));
-  const inner = useAnimatedStyle(() => ({
-    opacity: animating ? 0.55 + pulse.value * 0.35 : 0.85,
-    transform: [{ scaleX: animating ? 1.06 - pulse.value * 0.14 : 1 }, { scaleY: animating ? 1.04 - pulse.value * 0.1 : 1 }],
-  }));
-  const ringW = Math.max(54, width * 0.86);
-  const ringH = Math.max(16, Math.min(26, height * 0.16));
-  const top = Math.max(height * 0.56, height - ringH * 1.15);
-  return (
-    <View testID={`water-ripples-${slot}`} pointerEvents="none" accessible={false}
-      style={{ position: "absolute", left: (width - ringW) / 2, top, width: ringW, height: ringH, alignItems: "center", justifyContent: "center" }}>
-      <Animated.View style={[{ position: "absolute", width: ringW, height: ringH, borderRadius: ringW / 2, borderWidth: 2.5, borderColor: "#7CEAE8", backgroundColor: "rgba(124, 234, 232, 0.22)" }, outer]} />
-      <Animated.View style={[{ position: "absolute", width: ringW * 0.72, height: ringH * 0.68, borderRadius: ringW / 2, borderWidth: 2, borderColor: "#F2FFFF" }, inner]} />
-    </View>
-  );
-});
-
-/** Drives the gentle swimming bob loop only for mounted swimming characters, gated by HomeMotionContext so resting furniture never re-renders on overview/room changes. */
-const SwimBobDriver = memo(function SwimBobDriver({
-  live,
-  reduced,
-  swimBob,
-}: {
-  live: boolean;
-  reduced: boolean;
-  swimBob: SharedValue<number>;
-}) {
-  const motionLive = React.useContext(HomeMotionContext);
-  const animating = motionLive && live && !reduced;
-  React.useEffect(() => {
-    if (!animating) {
-      cancelAnimation(swimBob);
-      swimBob.set(0);
-      return;
-    }
-    swimBob.set(withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }), -1, true));
-    return () => {
-      cancelAnimation(swimBob);
-      swimBob.set(0);
-    };
-  }, [animating, swimBob]);
-  return null;
-});
-
 const RestingEntity = memo(function RestingEntity({
   entity,
   name,
@@ -315,8 +252,8 @@ const RestingEntity = memo(function RestingEntity({
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
         { translateX: follow ? follow.dx : 0 },
-        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) + (swimming && !reduced ? (swimBob.value * 2 - 1) * 3.5 : 0) },
-        { rotate: `${follow ? follow.tilt : wobble}deg` },
+        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) + (swimming && !reduced ? (swimBob.value * 2 - 1) * (entity.floaty ? 5 : 3.5) : 0) },
+        { rotate: `${follow ? follow.tilt : wobble + (swimming && !reduced ? (swimBob.value * 2 - 1) * (entity.floaty ? 2 : 4) : 0)}deg` },
         { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
         { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
           (life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) * (bob?.sy ?? 1)) },
@@ -443,7 +380,7 @@ const RestingEntity = memo(function RestingEntity({
       {swimming && !front && entity.character && (
         <>
           <SwimBobDriver live={live} reduced={reduced} swimBob={swimBob} />
-          <WaterRipples slot={entity.character.slot} width={frame.width} height={frame.height} reduced={reduced} live={live} />
+          <WaterRipples slot={entity.character.slot} width={frame.width} height={frame.height} reduced={reduced} live={live} buoyant={!!entity.floaty} />
         </>
       )}
       {selected && !front && (

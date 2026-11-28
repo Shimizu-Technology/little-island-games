@@ -512,9 +512,9 @@ export function useInteraction({
     const wholeHouse = camera.value.a <= Math.min(viewport.width / building.width, viewport.height / building.height) * 1.15;
     const hop = subject.character && !designing && !overview && !wholeHouse && portalsEnabled && destination === activeRoom.value && roomPortalsClear(prepared.value, destination) && index >= 0 ? roomHopAt(destination,
       screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y))) : undefined;
-    if (hop) {
+    if (hop && prepared.value.rooms[hop.room]) {
       const proposal = resolve(prepared.value.rooms[hop.room], subject, roomPoint(350, 490), { scale: camera.value.a, floorOnly: true, release: true });
-      return { ...proposal, kind: "transfer", reason: `Room ${hop.kind} to ${hop.room}` };
+      if (proposal) return { ...proposal, kind: "transfer", reason: `Room ${hop.kind} to ${hop.room}` };
     }
     const carryBounds = subject.character ? anchorsFor(subject.character.slot, "carry", subject.facing, subject.children.length ? "hold" : null).bounds : subject.bounds;
     const carrySubject = subject.character ? { ...subject, bounds: carryBounds, visual: { x: carryBounds.left + carryBounds.width / 2, y: carryBounds.top + carryBounds.height / 2 } } : subject;
