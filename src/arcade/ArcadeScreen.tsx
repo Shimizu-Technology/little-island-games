@@ -10,7 +10,9 @@ import { Companion } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
 import { bestLabel, freePlayBest, nextStarGoal } from "./presentation";
 import { ShellMedal } from "./games/fruit-bat-flight/Art";
-import { FLIGHT_CHROME_TINT } from "./games/fruit-bat-flight/presentation";
+import { useIslandAtmosphere, atmosphereFlightPalette } from "../atmosphere/useIslandAtmosphere";
+import { AtmosphereHeader } from "../atmosphere/AtmosphereHeader";
+import { GlobalWeatherLayer } from "../atmosphere/GlobalWeatherLayer";
 import type { ReefState } from "./games/reef-builder/engine";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native";
@@ -95,7 +97,7 @@ export function ArcadeLobby({ nunitoLoaded = false }: { nunitoLoaded?: boolean }
         <ArcadeScene game="reef-builder" active={!sheet}/>
       </View>
       <ScrollView contentContainerStyle={[styles.content, { padding: 20, gap: 20, maxWidth: 1000 }]}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}><AtmosphereHeader/>
           <Button quiet compact icon="back" onPress={() => router.replace("/")}>Home</Button>
           <Button quiet compact onPress={() => setSheet("settings")}>Settings</Button>
         </View>
@@ -155,6 +157,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const { width, height, fontScale } = useWindowDimensions(), insets = useSafeAreaInsets(), play = arcadePlays[game.id];
   const [headerHeight, setHeaderHeight] = useState(62);
   const [arena, setArena] = useState({ width: width - insets.left - insets.right, height: height - insets.top - insets.bottom - 62 });
+  const { atmosphere } = useIslandAtmosphere(), flightPalette = atmosphereFlightPalette(atmosphere);
   const store = useStore(), owner = activeLearner(store.save.learning), expected = useMemo(() => ({ epoch: store.epoch, learner: owner.id }), [store.epoch, owner.id]);
   const person = arcadeLearner(store.save.arcade, owner.id), p = gameProgress(person, game.id), foreground = useArcadeForeground();
   const comfort = learningComfort(store.save, owner.id), marked = (slot: number) => dareMarked(store.save, owner.id, slot);
@@ -277,16 +280,16 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const flightChrome = playing && game.id === "fruit-bat-flight";
   const lagoonGame = game.id === "lagoon-run", lagoonChrome = playing && lagoonGame;
   const darkOverlayHeader = overlaid || lagoonChrome;
-  const headerBg = lagoonChrome ? "#204946CE" : overlaid ? "#173D4AAA" : flightChrome ? FLIGHT_CHROME_TINT : SHELL_BG;
-  const headerInk = darkOverlayHeader ? "#FFFDF8" : flightChrome ? "#173D3A" : SHELL_INK;
-  const headerSubInk = darkOverlayHeader ? "#EBF6F2" : flightChrome ? "#47645D" : SHELL_MUTED;
-  const board = level && playing ? <play.Board key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || (__DEV__ && !flightChrome)} {...arena} overlayTop={overlaid ? headerHeight : 0} overlayInsets={lagoonChrome ? insets : undefined} family={family}/> : null;
+  const headerBg = lagoonChrome ? "#204946CE" : overlaid ? "#173D4AAA" : flightChrome ? flightPalette.chrome : SHELL_BG;
+  const headerInk = darkOverlayHeader ? "#FFFDF8" : flightChrome ? flightPalette.ink : SHELL_INK;
+  const headerSubInk = darkOverlayHeader ? "#EBF6F2" : flightChrome ? flightPalette.muted : SHELL_MUTED;
+  const board = level && playing ? <play.Board atmosphere={atmosphere} key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || (__DEV__ && !flightChrome)} {...arena} overlayTop={overlaid ? headerHeight : 0} overlayInsets={lagoonChrome ? insets : undefined} family={family}/> : null;
   const showNextPrimary = !!(nextOpen && result?.cleared);
 
   return <View style={[{ flex: 1, backgroundColor: playing ? game.color : SHELL_BG }, lagoonGame && !playing && {
     paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right,
   }]}>
-    {playing && !flightChrome && <PlayScene Scene={play.Scene} game={game.id} world={level && level !== "endless" ? level.world : "w1"} active={foreground && !paused && !sheet}/>}
+    {playing && !flightChrome && <PlayScene atmosphere={{ ...atmosphere, weather: "clear" }} Scene={play.Scene} game={game.id} world={level && level !== "endless" ? level.world : "w1"} active={foreground && !paused && !sheet}/>}
 
     {/* Clean Sunlit Floating Header */}
     <View
@@ -309,6 +312,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         },
       ]}
     >
+      {!playing && <AtmosphereHeader/>}
       <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
         <PressableScale
           accessibilityRole="button"
@@ -395,7 +399,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     {playing ? <View testID="arcade-arena" style={{ flex: 1, minHeight: 0, overflow: "hidden" }} onLayout={event => {
       const { width, height } = event.nativeEvent.layout;
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
-    }}><SaveStatus/>{board}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingTop: 10, paddingBottom: 24, gap: 12 }}>
+    }}><SaveStatus/>{board}{!flightChrome && <GlobalWeatherLayer atmosphere={atmosphere} width={width} height={height} active={active} tint sky subtle/>}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingTop: 10, paddingBottom: 24, gap: 12 }}>
       <SaveStatus/>
       {!level ? <>
         {person.session?.game === game.id && (

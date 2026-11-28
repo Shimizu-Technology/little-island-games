@@ -12,6 +12,9 @@ import { wordWidth } from '../src/components/wordFit';
 import { subjects } from '../src/hub/model';
 import SchoolScreen from '../src/hub/SchoolScreen';
 import { theme } from '../src/ui/theme';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const routing = vi.hoisted(() => ({

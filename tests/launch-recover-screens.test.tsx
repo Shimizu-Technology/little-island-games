@@ -3,6 +3,9 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, expect, it, vi } from 'vitest';
 import { emptySave } from '../src/state/validation';
 import type { SessionOpenResult } from '../src/state/sessionContent';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 // Slice F-recover: every recovery or waiting state on the launch path is visible, never blank.
 const fixture = vi.hoisted(() => ({ store: {} as Record<string, unknown>, noteLaunch: vi.fn(), replace: vi.fn(), params: { game: 'sudoku' } as Record<string, string> }));

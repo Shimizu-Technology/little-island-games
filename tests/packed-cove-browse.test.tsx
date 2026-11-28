@@ -6,6 +6,9 @@ import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { emptyLocal } from '../src/cove/local';
 import type { ChallengeCard, ChallengeEntry } from '../src/challenge/types';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 const fixture = vi.hoisted(() => ({ local: {} as ReturnType<typeof import('../src/cove/useCoveLocal').useCoveLocal>, save: {} as ReturnType<typeof emptySave>, entries: [] as ChallengeEntry[], covePerson: vi.fn(), game:'solitaire' }));
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', TextInput: 'input', FlatList: 'list', useWindowDimensions: () => ({ width: 320, height: 667, fontScale: 1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));

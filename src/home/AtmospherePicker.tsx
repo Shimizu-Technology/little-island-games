@@ -37,7 +37,7 @@ export function AtmospherePicker({ atmosphere = defaultAtmosphere, rounds, grown
   const unlocked = unlockedSeasonalPacks(rounds, grownUp);
   return <Sheet visible onClose={onClose} title="Sky & Weather" closeLabel="Close Sky & Weather" mode="large" scroll heightRatio={.78} compactHeader>
     <View style={{ gap: 16, paddingBottom: 20 }}>
-      <Text variant="body" style={{ color: '#716151', fontSize: 14 }}>A little mood for your island home.</Text>
+      <Text variant="body" style={{ color: '#716151', fontSize: 14 }}>A little mood for your whole island.</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>{timesOfDay.map(time => <Pill key={time} kind={time} selected={selected.timeOfDay === time} onPreview={() => setPreview({ ...atmosphere, timeOfDay: time })} onRelease={release} onPress={() => onChange({ ...atmosphere, timeOfDay: time })}/>)}</View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>{weatherKinds.map(weather => <Pill key={weather} kind={weather} selected={selected.weather === weather} onPreview={() => setPreview({ ...atmosphere, weather })} onRelease={release} onPress={() => onChange({ ...atmosphere, weather })}/>)}</View>
       <Text variant="title" style={{ fontSize: 20 }}>Seasonal treasures</Text>

@@ -4,6 +4,9 @@ import { expect, it, vi } from 'vitest';
 import LibraryScreen from '../src/library/LibraryScreen';
 import { newLibraryChild } from '../src/library/state';
 import { emptySave } from '../src/state/validation';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 const fixture = vi.hoisted(() => ({ store: {} as any }));
 vi.mock('../src/state/Store', () => ({ useStore: () => fixture.store }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, useLocalSearchParams: () => ({ place: 'reader', id: 'busy-day' }), router: {} }));

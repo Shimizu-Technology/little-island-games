@@ -9,8 +9,10 @@ import { Terrain } from './Terrain';
 import { Landmark } from './Landmarks';
 import { IslandLife } from './IslandLife';
 import { createJourney, guideStartPoint, guideWaypoints, mapLayout, WALK_MS, ZOOM_MS, type PlaceId } from './model';
+import { GlobalWeatherLayer } from '../atmosphere/GlobalWeatherLayer';
+import { defaultAtmosphere, type Atmosphere } from '../atmosphere/palette';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWidth, labelFontSize, labelHeight, left, top, reduced, visit }: { id: PlaceId; name: string; width: number; height: number; labelWidth: number; labelFontSize: number; labelHeight: number; left: number; top: number; reduced: boolean; visit: (place: PlaceId) => void }) {
+const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWidth, labelFontSize, labelHeight, left, top, reduced, visit, night = false }: { id: PlaceId; name: string; width: number; height: number; labelWidth: number; labelFontSize: number; labelHeight: number; left: number; top: number; reduced: boolean; visit: (place: PlaceId) => void; night?: boolean }) {
  const press = useSharedValue(0), [focused, setFocused] = useState(false);
  const style = useAnimatedStyle(() => ({
   opacity: 1 - press.get() * .16,
@@ -24,14 +26,14 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWi
   onPressOut={() => press.set(reduced ? 0 : withTiming(0, { duration: 85, easing: Easing.out(Easing.cubic) }))}
   style={[{ position: 'absolute', left: left + (width - boxWidth) / 2, top, minWidth: 48, width: boxWidth, height: height + labelHeight, alignItems: 'center', borderRadius: 18, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
    <View pointerEvents="none" style={{ width, height, alignItems: 'center', justifyContent: 'flex-end' }}>
-    <View style={{ width, height, transform: [{ scale: 1.14 }, { translateY: Math.round(height * .03) }] }}><Landmark id={id}/></View>
+    <View style={{ width, height, transform: [{ scale: 1.14 }, { translateY: Math.round(height * .03) }] }}>{night && <View testID="island-lantern" style={{ position: 'absolute', left: width * .28, bottom: 0, width: width * .44, height: height * .3, borderRadius: 50, backgroundColor: '#FFD38370', boxShadow: '0 0 18px #FFD38399' }}/>}<Landmark id={id}/></View>
    </View>
    <View testID={`place-label-${id}`} style={{ minHeight: labelHeight, width: labelWidth, maxWidth: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF7E4', paddingHorizontal: pillPadX, paddingVertical: 3, borderRadius: 12, borderWidth: 1.5, borderColor: '#B59E76', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
     <Text variant="section" maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ fontSize: labelFontSize, lineHeight: labelFontSize + 4, color: theme.colors.ink, textAlign: 'center' }}>{name}</Text>
    </View>
  </AnimatedPressable>;
 });
-export function IslandScene({ width, height, fontScale, look, reduced, active, door, onArrive }: { width: number; height: number; fontScale: number; look: IslanderLook; reduced: boolean; active: boolean; door: PlaceId | null; onArrive: (place: PlaceId) => void }) {
+export function IslandScene({ width, height, fontScale, look, reduced, active, door, onArrive, atmosphere = defaultAtmosphere, weatherActive = active }: { width: number; height: number; fontScale: number; look: IslanderLook; reduced: boolean; active: boolean; door: PlaceId | null; onArrive: (place: PlaceId) => void; atmosphere?: Atmosphere; weatherActive?: boolean }) {
  const layout = useMemo(() => mapLayout(width, height, fontScale), [width, height, fontScale]);
  const doorPlace = door ? layout.targets.find(place => place.id === door) ?? null : null;
  const start = doorPlace?.door ?? guideStartPoint(layout, width, height);
@@ -94,8 +96,9 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const camera = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ translateX: cameraX.get() }, { translateY: cameraY.get() }, { scale: zoom.get() }] }));
  return <Animated.View accessible={false} importantForAccessibility="no" testID={Platform.OS === "web" ? "island-scene" : undefined} style={[{ width, height }, camera]}>
   <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: 'absolute', width, height }}><Terrain layout={layout} wide={layout.wide} width={width} height={height}/></View>
-  <IslandLife width={width} height={height} fontScale={fontScale} reduced={reduced} active={active}/>
-  {layout.targets.map(place => <PlaceButton key={place.id} {...place} height={layout.artHeight} labelHeight={layout.labelHeight} reduced={reduced} visit={visit}/>)}
+  <IslandLife atmosphere={atmosphere} width={width} height={height} fontScale={fontScale} reduced={reduced} active={active}/>
+  <GlobalWeatherLayer atmosphere={atmosphere} width={width} height={height} active={weatherActive} reduced={reduced} sky/>
+  {layout.targets.map(place => <PlaceButton key={place.id} {...place} height={layout.artHeight} labelHeight={layout.labelHeight} reduced={reduced} night={atmosphere.timeOfDay === 'night'} visit={visit}/>)}
   <Animated.View pointerEvents="none" testID="island-guide" accessibilityRole="image" accessibilityLabel={doorPlace ? `Your Islander at ${doorPlace.name}` : 'Your Islander on the island path'} style={[{ position: 'absolute', left: 0, top: 0, width: guideSize*.607, height: guideSize }, guide]}>
    <Islander look={look} view={walking && active ? 'back' : 'front'} pose={walking && active ? 0 : 'idle'} size={guideSize} reduced={reduced}/>
   </Animated.View>

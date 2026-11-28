@@ -1,3 +1,4 @@
+import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useIsFocused } from 'expo-router';
@@ -220,7 +221,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     <Text variant="section" accessibilityRole="header">{heading}</Text><Text variant="caption" tone="muted" style={styles.center}>{line}</Text>{children}
   </View>;
   return <View style={styles.screen} onLayout={e => setScreenHeight(e.nativeEvent.layout.height)}>
-    <View onLayout={e => setChromeHeight(e.nativeEvent.layout.height)}>
+    <View onLayout={e => setChromeHeight(e.nativeEvent.layout.height)}><AtmosphereHeader/>
       <Hud title={name} subtitle={[playLabel(entry, ref, tier), together && `with ${together}`].filter(Boolean).join(' · ')} onBack={close} backLabel="Save and leave"
         onUndo={hudActive && hud?.undo ? () => commands.current?.undo?.run() : undefined} canUndo={!hud?.undo?.disabled && !busy}
         onHint={hudActive && hud?.hint ? () => commands.current?.hint?.run() : playing && frameHint !== undefined ? () => void dispatch(frameHint, true) : undefined}

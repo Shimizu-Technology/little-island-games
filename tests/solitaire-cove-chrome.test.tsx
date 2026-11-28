@@ -4,6 +4,9 @@ import {expect,it,vi} from 'vitest';
 import {CoveRound} from '../src/cove/CoveRound';
 import type {ChallengeEntry} from '../src/challenge/types';
 import {useBoardHud,type BoardCommands} from '../src/cove/boardHud';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 const fixture=vi.hoisted(()=>({scale:1,game:'solitaire'}));
 vi.mock('react-native',()=>({View:'div',ScrollView:'section',useWindowDimensions:()=>({width:393,height:852,fontScale:fixture.scale})}));
 vi.mock('expo-router',()=>({useIsFocused:()=>true}));

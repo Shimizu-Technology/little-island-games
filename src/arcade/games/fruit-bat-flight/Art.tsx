@@ -1,3 +1,5 @@
+import { AtmosphereSky } from '../../../atmosphere/GlobalWeatherLayer';
+import { defaultAtmosphere, type Atmosphere } from '../../../atmosphere/palette';
 import React, { memo, useId } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import Svg, { Circle, Defs, G, Image as SvgImage, LinearGradient, Mask, Path, Rect, Stop } from "react-native-svg";
@@ -76,10 +78,10 @@ export const FlightShore = memo(function FlightShore({ poses, tiles }: { poses: 
 const dayHorizon = [[0, "#96DBD6"], [26, "#DEE6CF"], [54, "#F9E4C9"], [65, "#FCF6E4"], [79, "#77C9CB"], [92, "#8FD7CA"], [100, "#EFCA91"]] as const;
 const sunsetHorizon = [[0, "#C08794"], [40, "#FBAE80"], [68, "#FCDD9B"], [80, "#D5AC8C"], [94, "#91C9B8"], [100, "#D89361"]] as const;
 
-type SkyProps = { world?: WorldId; storm?: boolean; width?: number; height?: number };
-export const FlightWideSky = memo(function FlightWideSky({ world = "w1", storm = false, width = FLIGHT_W, height = FLIGHT_H }: SkyProps) {
+type SkyProps = { atmosphere?: Atmosphere; world?: WorldId; storm?: boolean; width?: number; height?: number };
+export const FlightWideSky = memo(function FlightWideSky({ world = "w1", storm = false, width = FLIGHT_W, height = FLIGHT_H, atmosphere = defaultAtmosphere }: SkyProps) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const sunset = storm || world === "w4" || world === "w5" || world === "w6";
+  const sunset = atmosphere.timeOfDay === 'sunset' || storm || world === "w4" || world === "w5" || world === "w6";
   const stops = sunset ? sunsetHorizon : dayHorizon;
   const source = sunset ? flightArt.sunset() : flightArt.day();
   const wide = width / height > FLIGHT_W / FLIGHT_H;
@@ -106,6 +108,7 @@ export const FlightWideSky = memo(function FlightWideSky({ world = "w1", storm =
       <Rect width={width} height={height} fill={`url(#${id}-horizon)`}/>
       <SvgImage href={source} x={artLeft} y={0} width={artWidth} height={height} preserveAspectRatio="none" mask={`url(#${id}-art)`}/>
     </Svg> : <Image source={source} accessible={false} fadeDuration={0} resizeMode="cover" style={{ width: "100%", height: "100%" }}/>}
+    {atmosphere.timeOfDay !== 'day' && <AtmosphereSky atmosphere={atmosphere} width={width} height={height} gradient/>}
     {storm && <View style={[StyleSheet.absoluteFill, { backgroundColor: "#47497424" }]}/>}
   </View>;
 });
