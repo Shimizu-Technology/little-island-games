@@ -5,6 +5,7 @@ import { TOPICS, WORLDS, type ExploreTopic, type WorldId } from "../explore/cont
 import type { LibraryItem, Sentence } from "./schema";
 import type { IndexedEntry } from "./search";
 import categoryData from "../../content/library/categories.json";
+import { discoveryLabById } from "./labs/registry";
 export const categories = categoryData;
 export const worldCategory: Record<WorldId, string> = {
   oceans: "ocean",
@@ -72,5 +73,9 @@ export function availableItems(collections: readonly string[]) {
 }
 export function canOpen(id: string, collections: readonly string[]) {
   if (id.startsWith("lab-")) return collections.includes(worldCategory[id.slice(4) as WorldId]);
+  if (id.startsWith("dlab-")) {
+    const lab = discoveryLabById(id.slice(5));
+    return !!lab && collections.includes(lab.category);
+  }
   return !!itemById(id) && collections.includes(itemById(id)!.category);
 }
