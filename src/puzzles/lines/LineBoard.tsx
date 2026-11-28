@@ -198,7 +198,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
       <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
     </PuzzleStatus>
     {rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{rulesText[p.kind]}</Copy>}
-    <BoardPanView style={{ alignSelf: 'center', width: W, height: H, ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}) }} pan={responder} enabled={active} {...(active ? responder.panHandlers : {})}>
+    <BoardPanView pan={responder} enabled={active}><View style={{ alignSelf: 'center', width: W, height: H, ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}) }} {...(active ? responder.panHandlers : {})}>
       <Svg width={W} height={H} pointerEvents="none">
         {background}
         {/* Pearls sit on top of the line that threads them; numbers sit under the loop's edges. */}
@@ -208,7 +208,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
         {dotMarks}
       </Svg>
       {a11y}
-    </BoardPanView>
+    </View></BoardPanView>
     {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
     <View style={{ minHeight: 24 }}>
       {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>

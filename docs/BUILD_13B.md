@@ -22,3 +22,15 @@ The native gesture adapter uses RNGH’s zero-distance Pan recognizer before the
 Agent QA uses isolated saves and a 375×812 Chromium viewport. Evidence is in the sibling artifacts folder `v4/b13b-water-and-scroll/`: Leon’s original screenshot, four requested scene captures, browser receipts and verification logs. Browser captures do not establish installed-iOS recognizer behavior. Native iPhone vertical/diagonal traces, two-person tablet Word Search, physical Reduce Motion and family acceptance remain lead/operator checks before release. No simulator or TestFlight build was produced.
 
 The final verification receipt records typecheck, Expo lint, Doctor, immutable save catalog, production worklet closure audit, web export/word guard, and the affected Home/Word Games/puzzle/Library/protected-test regressions. PR #150 paths and all protected tests remain untouched. Independent final review and CI belong to the lead; this PR remains a draft.
+
+## Independent R1 corrections
+
+Gemini 4 Neon’s review of `35a043c3` found native event-sequence errors and three failing suites omitted by the original affected-file filter. All seven findings are addressed in the follow-up:
+
+- Pan and Tap race with one shared grant/terminal transaction. A stationary iOS pan failure leaves Tap eligible; cancelled active drags terminate without committing.
+- Raw touch-up uses the remaining touch count, rather than the iOS list that still includes the lifted pointer.
+- Native hit regions reject starts outside exposed movable Solitaire cards or Bridges islands on the UI thread. Stock/empty-place/water taps remain available through Tap; their swipes can scroll. Earth uses horizontal activation and vertical failure criteria.
+- Web/Node adapters return the original child View. Adapter-only props never reach it; GridShell’s protected responder slice and Cove/Challenge render-tree hashes remain unchanged.
+- Mock-safe style helpers replace the two new Platform accesses. Seat/vehicle socket occupants do not receive swimmer geometry or overlays.
+
+The R1 receipt records the requested targeted run, the full `npm test` result, and every engineering gate. `tests/word-search-scroll.test.tsx` is absent from this checkout; the existing Word Search suites run in the full suite. Native event sequences are covered by component tests and native hit-gate callbacks; installed-device gesture arbitration still requires lead/operator acceptance.

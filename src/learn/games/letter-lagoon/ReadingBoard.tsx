@@ -1,6 +1,6 @@
-import { BoardTouchView } from '../../../gestures/BoardPan';
+import { BoardTouchView, boardTouchStyle } from '../../../gestures/BoardPan';
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import Svg, { Circle, Ellipse, Path, Polyline, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import { CoachSpot } from "../../Coach";
@@ -80,10 +80,8 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
   const size = 256;
   return (
     <View style={{ alignItems: "center", gap: 12 }}>
-      <BoardTouchView enabled={!done}
-        accessibilityLabel={`Trace ${task.answer[0]} from the numbered start`}
-        style={{
-          ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}),
+      <BoardTouchView enabled={!done}><View accessibilityLabel={`Trace ${task.answer[0]} from the numbered start`} style={{
+          ...boardTouchStyle,
           width: size,
           height: size,
           borderRadius: 26,
@@ -91,28 +89,20 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
           borderWidth: 2,
           borderBottomWidth: 4,
           borderColor: SAND_BORDER,
-        }}
-        onStartShouldSetResponder={() => !done}
-        onMoveShouldSetResponder={() => !done}
-        onResponderGrant={(e) => {
+        }} onStartShouldSetResponder={() => !done} onMoveShouldSetResponder={() => !done} onResponderGrant={(e) => {
           points.current = [[(e.nativeEvent.locationX / size) * 100, (e.nativeEvent.locationY / size) * 100]];
           setTrail([...points.current]);
-        }}
-        onResponderMove={(e) => {
+        }} onResponderMove={(e) => {
           if (points.current.length < 1200)
             points.current.push([(e.nativeEvent.locationX / size) * 100, (e.nativeEvent.locationY / size) * 100]);
           setTrail([...points.current]);
-        }}
-        onResponderRelease={() => {
+        }} onResponderRelease={() => {
           onTrace(points.current);
           setTrail([]);
-        }}
-        onResponderTerminationRequest={() => false}
-        onResponderTerminate={() => {
+        }} onResponderTerminationRequest={() => false} onResponderTerminate={() => {
           points.current = [];
           setTrail([]);
-        }}
-      >
+        }}>
         <Svg width={size} height={size} viewBox="0 0 100 100" pointerEvents="none">
           <Polyline
             points={path.map((p) => p.join(",")).join(" ")}
@@ -166,7 +156,7 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
             strokeLinejoin="round"
           />
         </Svg>
-      </BoardTouchView>
+      </View></BoardTouchView>
       <Copy style={{ fontSize: 14, textAlign: "center" }}>Finger trail, or use the numbered stops below.</Copy>
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, maxWidth: 320 }}>
         {path.map((_, i) => (

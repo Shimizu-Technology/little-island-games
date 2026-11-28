@@ -199,7 +199,7 @@ const RestingEntity = memo(function RestingEntity({
   }));
   const frame = artFrame(entity);
   const waterline = swimming && entity.character ? swimWaterline(entity.character.slot, entity.base, entity.facing, !!entity.floaty) : 0;
-  const sink = entity.waterOffset ?? -waterline;
+  const sink = entity.character ? swimming ? entity.waterOffset ?? -waterline : 0 : entity.waterOffset ?? 0;
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
   const drinkSize=entity.item ? itemSize(entity.item) : 0;
   const groundShadow={position:'absolute' as const,left:drinkSize*.32,top:drinkSize*.71,width:drinkSize*.36,height:drinkSize*.08,borderRadius:drinkSize*.1,backgroundColor:'#385451'};

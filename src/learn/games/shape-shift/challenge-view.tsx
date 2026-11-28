@@ -356,39 +356,27 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
           </View>
 
           {activePieceIdx >= 0 && (
-            <BoardTouchView enabled={active}
-              testID="shape-ch-active"
-              accessible
-              accessibilityLabel={`Drag piece ${activePieceIdx + 1} onto the outline`}
-              onStartShouldSetResponder={() => active}
-              onMoveShouldSetResponder={() => active}
-              onResponderTerminationRequest={() => false}
-              onResponderGrant={(e) => {
+            <BoardTouchView enabled={active}><View testID="shape-ch-active" accessible accessibilityLabel={`Drag piece ${activePieceIdx + 1} onto the outline`} onStartShouldSetResponder={() => active} onMoveShouldSetResponder={() => active} onResponderTerminationRequest={() => false} onResponderGrant={(e) => {
                 dragStart.current = [e.nativeEvent.pageX, e.nativeEvent.pageY];
                 boardRef.current?.measureInWindow((left, top) => {
                   boardBox.current = { left, top };
                 });
-              }}
-              onResponderMove={(e) => {
+              }} onResponderMove={(e) => {
                 setDragOffset([e.nativeEvent.pageX - dragStart.current[0], e.nativeEvent.pageY - dragStart.current[1]]);
                 if (boardBox.current) {
                   const { x, y } = dropGridCoord(e.nativeEvent.pageX, e.nativeEvent.pageY, boardBox.current.left, boardBox.current.top, step, activeCells);
                   setGhost({ x, y, valid: canPlaceAtoms(silSet, occSet, activeCells, x, y) });
                 }
-              }}
-              onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-              onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }}
-              style={[
+              }} onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)} onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }} style={[
                 {
                   alignSelf: "center", padding: 10, backgroundColor: "#FFF9E9", borderRadius: 18,
                   borderWidth: 2, borderColor: PIECE_COLORS[activePieceIdx % PIECE_COLORS.length],
                   transform: [{ translateX: dragOffset[0] }, { translateY: dragOffset[1] }], zIndex: 5,
                 },
                 Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : {},
-              ]}
-            >
+              ]}>
               <PiecePreview atoms={activeCells} color={PIECE_COLORS[activePieceIdx % PIECE_COLORS.length]} cellSize={Math.min(32, step - 4)} />
-            </BoardTouchView>
+            </View></BoardTouchView>
           )}
         </>
       )}

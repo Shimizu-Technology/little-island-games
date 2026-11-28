@@ -504,23 +504,12 @@ function ShapeBoardV2({ session, stateV2: s, update, practice, assistance, sound
       {/* Draggable Active Piece Stage + Controls (side-by-side on compact phone so everything stays above the fold!) */}
       <View style={compact ? { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "center" } : { gap: 10, alignItems: "center" }}>
         {!reveal && (
-          <BoardTouchView enabled={active}
-            testID="shape-active-piece"
-            accessible
-            accessibilityLabel={`Drag ${piece.name} to the outline`}
-            onStartShouldSetResponder={() => active}
-            onMoveShouldSetResponder={() => active}
-            onResponderTerminationRequest={() => false}
-            onResponderGrant={(e) => {
+          <BoardTouchView enabled={active}><View testID="shape-active-piece" accessible accessibilityLabel={`Drag ${piece.name} to the outline`} onStartShouldSetResponder={() => active} onMoveShouldSetResponder={() => active} onResponderTerminationRequest={() => false} onResponderGrant={(e) => {
               dragStart.current = [e.nativeEvent.pageX, e.nativeEvent.pageY];
               boardRef.current?.measureInWindow((left, top) => {
                 boardBox.current = { left, top };
               });
-            }}
-            onResponderMove={(e) => handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-            onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-            onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }}
-            style={[
+            }} onResponderMove={(e) => handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY)} onResponderRelease={(e) => handleDrop(e.nativeEvent.pageX, e.nativeEvent.pageY)} onResponderTerminate={() => { setDragOffset([0, 0]); setGhost(null); }} style={[
               {
                 alignSelf: "center",
                 padding: compact ? 6 : 10,
@@ -532,10 +521,9 @@ function ShapeBoardV2({ session, stateV2: s, update, practice, assistance, sound
                 zIndex: 5,
               },
               Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : {},
-            ]}
-          >
+            ]}>
             <PiecePreview atoms={currentCells} color={piece.color} cellSize={compact ? 16 : Math.min(32, Math.max(20, step - 4))} />
-          </BoardTouchView>
+          </View></BoardTouchView>
         )}
 
         {/* Controls: Turn, Flip, Undo, Help */}

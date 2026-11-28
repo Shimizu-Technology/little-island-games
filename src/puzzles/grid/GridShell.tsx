@@ -1,4 +1,4 @@
-import { createBoardPan, BoardPanView } from '../../gestures/BoardPan';
+import { boardPanResponder as PanResponder, BoardPanView } from '../../gestures/BoardPan';
 import { C, Button, Copy } from "../../board/WarmUI";
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, TextInput, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
@@ -167,7 +167,7 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
     document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key);
   }, [active, keyAction, send]);
   // eslint-disable-next-line react-hooks/refs -- PanResponder stores these event handlers; creation never reads the refs.
-  const responder = useMemo(() => createBoardPan({
+  const responder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => active,
     onMoveShouldSetPanResponder: (_e, g) => active && (spec.kind === 'paint' || zoom && g.numberActiveTouches >= 2),
     onPanResponderGrant: (e, g) => {
@@ -236,7 +236,7 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
         {feel && pop && <feel.Pop left={pop.at % spec.columns * cell} top={Math.floor(pop.at / spec.columns) * cell} size={cell} nonce={pop.nonce}/>}
       </Animated.View>
-      <BoardPanView testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} pan={responder} enabled={active} {...(active ? responder.panHandlers : {})} style={{ position: 'absolute', inset: 0 }}/>
+      <BoardPanView pan={responder} enabled={active}><View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/></BoardPanView>
     </View>
     </Framed>
     </View>

@@ -88,17 +88,9 @@ export function isWaterRideItem(itemId: string): boolean {
   return waterRideItems.has(itemId);
 }
 
-/** True when a character is wading/swimming in the lagoon or riding a floatie/canoe/board in water. */
-export function isEntitySwimming(entity: SceneEntity, scene?: Pick<Scene, 'entities'>): boolean {
-  if (!entity.character || !isBeachWaterRoom(entity.room)) return false;
-  if (entity.attachment.kind === 'staging') return false;
-  if (entity.attachment.kind === 'socket' && scene) {
-    const parent = scene.entities[entity.attachment.item];
-    if (parent?.item && isWaterRideItem(parent.item.item)) {
-      return isInWaterZone(entity.room, parent.contact) || isInWaterZone(entity.room, entity.contact);
-    }
-    return false;
-  }
+/** Only floor waders and worn-ring swimmers submerge. Vehicle/seat occupants stay above their hull. */
+export function isEntitySwimming(entity: SceneEntity, _scene?: Pick<Scene, 'entities'>): boolean {
+  if (!entity.character || !isBeachWaterRoom(entity.room) || entity.attachment.kind !== 'floor') return false;
   return isInWaterZone(entity.room, entity.contact);
 }
 

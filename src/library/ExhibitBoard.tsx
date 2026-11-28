@@ -1,4 +1,4 @@
-import { BoardPanView, createBoardPan, nativeBoardPan, boardTouchStyle } from '../gestures/BoardPan';
+import { BoardPanView, createBoardPan, nativeBoardPan, boardHorizontalTouchStyle } from '../gestures/BoardPan';
 import React, { useMemo, useRef, useState } from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
@@ -178,10 +178,7 @@ export function SkyBoard({ state, act }: { state: LabState; act: (action: LabAct
     [act]
   );
   return (
-    <BoardPanView pan={gesture} enabled={true}
-      {...gesture.panHandlers}
-      style={{ ...boardTouchStyle, backgroundColor: "#283E59", borderRadius: 28, overflow: "hidden", paddingTop: 16 }}
-    >
+    <BoardPanView pan={gesture} enabled={true} axis="horizontal"><View {...gesture.panHandlers} style={{ ...boardHorizontalTouchStyle, backgroundColor: "#283E59", borderRadius: 28, overflow: "hidden", paddingTop: 16 }}>
       <Svg width="100%" height={44} viewBox="0 0 400 44" accessible={false}>
         {[
           [24, 14],
@@ -207,7 +204,7 @@ export function SkyBoard({ state, act }: { state: LabState; act: (action: LabAct
         <SkyPicture turn={state.turn} />
       </Pressable>
       <Text style={[s.small, { color: "#FFF3D1", textAlign: "center", padding: 12 }]}>Tap or swipe Earth</Text>
-    </BoardPanView>
+    </View></BoardPanView>
   );
 }
 

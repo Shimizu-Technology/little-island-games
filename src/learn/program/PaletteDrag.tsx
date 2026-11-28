@@ -1,4 +1,5 @@
 import { createBoardPan, BoardPanView, boardTouchStyle } from '../../gestures/BoardPan';
+import { View } from 'react-native';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
 type Props = { children: React.ReactNode; disabled: boolean; start: () => void; move: (x: number, y: number) => void; drop: (x: number, y: number) => void; cancel: () => void; tap: () => void };
@@ -23,5 +24,5 @@ export function PaletteDrag(props: Props) {
     onPanResponderTerminationRequest: () => false,
     onPanResponderTerminate: () => {setPressed(false);latest.current.cancel();},
   }));
-  return <BoardPanView style={{...boardTouchStyle,opacity:pressed?0.6:1,transform:[{scale:pressed?0.96:1}]}} testID="program-palette-drag" pan={responder} enabled={!props.disabled} {...(!props.disabled ? responder.panHandlers : {})}>{props.children}</BoardPanView>;
+  return <BoardPanView pan={responder} enabled={!props.disabled}><View style={{...boardTouchStyle,opacity:pressed?0.6:1,transform:[{scale:pressed?0.96:1}]}} testID="program-palette-drag" {...(!props.disabled ? responder.panHandlers : {})}>{props.children}</View></BoardPanView>;
 }

@@ -167,7 +167,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       {!hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
     </PuzzleStatus>
     {rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{howTo}</Copy>}
-    <BoardPanView style={{ alignSelf: 'center', width: W, height: H, ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}) }} pan={responder} enabled={active} {...(active ? responder.panHandlers : {})} accessible={false}>
+    <BoardPanView pan={responder} enabled={active} nativeRegions={islands.map((_, i) => { const c = at(i), radius = cell * .62; return { left: c.x - radius, top: c.y - radius, width: radius * 2, height: radius * 2, radius }; })}><View style={{ alignSelf: 'center', width: W, height: H, ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}) }} {...(active ? responder.panHandlers : {})} accessible={false}>
       <Svg width={W} height={H} pointerEvents="none">
         <Rect x={0} y={0} width={W} height={H} rx={Math.min(16, cell * 0.4)} fill={SEA}/>
         {dots}
@@ -195,7 +195,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       {islands.map((s, i) => { const c = at(i); return <View key={i} accessible accessibilityRole="adjustable" accessibilityLabel={describe(i)} accessibilityActions={actionsFor(i)}
         onAccessibilityAction={(event: AccessibilityActionEvent) => { const e = Number(event.nativeEvent.actionName.replace('link-', '')); if (Number.isInteger(e)) cycle(e); }}
         style={{ position: 'absolute', left: c.x - r, top: c.y - r, width: r * 2, height: r * 2 }} pointerEvents="none"/>; })}
-    </BoardPanView>
+    </View></BoardPanView>
     {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
     <View style={{ minHeight: 24 }}>
       {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>

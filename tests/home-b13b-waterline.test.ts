@@ -34,3 +34,20 @@ it('keeps a published y=256 save valid while painting, picking and pickup bindin
   expect(carryBinding(swimmer, { x: 0, y: 0 }, 'head').y).toBeCloseTo(carryBinding({ ...swimmer, waterOffset: undefined }, { x: 0, y: 0 }, 'head').y + swimmer.waterOffset!);
   expect(buildScene(home).entities[`tumon-beach/item/${ring.id}`].waterOffset).toBe(swimmer.waterOffset);
 });
+
+it.each(['tumon-beach', 'cocos-island'] as const)('%s canoe passengers stay seated above the hull, without swimmer geometry', async roomId => {
+  const { starterHome, instance } = await import('../src/home/model');
+  const { buildScene } = await import('../src/home/scene/graph');
+  const { isEntitySwimming } = await import('../src/home/waterZone');
+  const home = starterHome();
+  for (const room of Object.values(home.rooms)) room.characters = [];
+  const room = home.rooms[roomId], canoe = room.instances.find(i => i.item === 'outrigger-canoe') ?? instance('r1-canoe', 'outrigger-canoe', 7, 0);
+  if (!room.instances.includes(canoe)) room.instances.push(canoe);
+  canoe.at = { x: 650, y: roomId === 'tumon-beach' ? 300 : 386 };
+  room.characters = [{ slot: 0, anchor: 'seat', pose: 'sit', seatId: canoe.id, socket: { itemId: canoe.id, socketId: 'paddle' } }];
+  const scene = buildScene(home), passenger = scene.entities['character/0'];
+  expect(isInWaterZone(roomId, canoe.at)).toBe(true);
+  expect(passenger.attachment.kind).toBe('socket');
+  expect(isEntitySwimming(passenger, scene)).toBe(false);
+  expect(passenger.waterOffset).toBeUndefined();
+});

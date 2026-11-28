@@ -187,8 +187,7 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
               })}
             </View>)}
             {feel && pop && <feel.Pop left={pop.at % size * cell} top={Math.floor(pop.at / size) * cell} size={cell} nonce={pop.nonce}/>}
-            {active && !moving && <BoardPanView pan={responder} enabled={active && !moving} {...(active && !moving ? responder.panHandlers : {})} testID="picture-gesture-layer" collapsable={false}
-              accessible={false} importantForAccessibility="no" style={[StyleSheet.absoluteFill, gestureStyle]} />}
+            {active && !moving && <BoardPanView pan={responder} enabled={active && !moving}><View {...(active && !moving ? responder.panHandlers : {})} testID="picture-gesture-layer" collapsable={false} accessible={false} importantForAccessibility="no" style={[StyleSheet.absoluteFill, gestureStyle]}/></BoardPanView>}
           </View>
         </ScrollView>
       </ScrollView>
