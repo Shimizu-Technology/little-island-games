@@ -1,52 +1,62 @@
 # Build 11 Wave 4: Word Hunt and Anagrams
 
-Implementation base: `db4d0ef15df451e77b361099e22c34ac905cdcbf`, `program/4.0`. Draft integration only; public distribution and family-device acceptance remain separate gates.
+Base: `db4d0ef15df451e77b361099e22c34ac905cdcbf`, `program/4.0`. R1 implementation: `b3b5f797`; final vocabulary correction: `c60dcaab`. Draft integration only; public distribution and physical family-device acceptance remain separate gates.
 
-## Product and scope
+## Product and architecture
 
-Kami asked for finger-traced word finding, and Leon approved Word Hunt and Anagrams. Both are offline activities for family solo play or two people sharing a device. They use the Game Hall and Everything shelves and the existing guarded activity-save path. Context: `docs/PRD.md`, `docs/QA.md`, the Wave 4 brief, and the Brain Dump portfolio audit dated 2026-11-26. That audit's historical release information is not treated as the current deployed build.
+Kami asked for finger-traced word finding, and Leon approved Word Hunt and Anagrams. Both games run offline for solo play or two people sharing a device. Context: `docs/PRD.md`, `docs/QA.md`, the Wave 4 brief and the independent R1 report. The cream, honey wood and lagoon palette, global atmosphere, sound controls and Reduced Motion behavior follow the app's existing conventions.
 
-The visual direction follows the existing cream, honey wood and lagoon palette. A traced word gives immediate color and score feedback; successful finds settle into a short word ribbon. Invalid traces shake gently and duplicate words pulse. Reduced Motion keeps feedback still. The header uses the global atmosphere. Existing sound controls supply the word/finish chimes.
+Game Hall and Everything show two prominent illustrated cards that open `/word-games?game=word-hunt|anagrams`. The dedicated route disables its parent ScrollView during tracing. `src/app/activity.tsx`, `src/state/activities.ts`, `src/learn/home.ts` and `src/state/profiles.ts` match the original base exactly, preserving the five-activity and eleven-classic-game rosters. Reading routes cannot reach the timer hook; clock advancement is separate from the pure model and validator.
 
 ## Vocabulary and engines
 
-The lazy lexicon reads explicit answers and prose fields from the eight inherited reading modules, the inherited Word Rescue pack through its admitted registry re-export, and Library catalog prose. It never traverses technical IDs, URL fields, speech keys, review metadata or object keys. No dictionary literal, dependency, policy exception or word-bank edit was added. The private policy file was not accessed.
+The lazy lexicon extracts only human-facing prose from the Library catalog, inherited Word Rescue pack through its admitted registry, growth discovery/number lessons, science tasks and Float or Sink experiments. It excludes answer choices, spelling distractors, affix glosses, abbreviated weekday chart labels, technical IDs, URLs and object keys. It does not import restricted reading snapshots. No dictionary literal, dependency, policy exception or word-bank edit was added. The private policy file was not accessed.
 
-This pinned shipping catalog contains 50 legacy Library entries and no authored Library items. Strict extraction yields **1,544** unique uppercase 3–8 letter words, rather than the approximately 2,300 in the planning estimate. The minimum acceptance requirement is 1,500. Changing which Library items ship may change the derived vocabulary.
+The pinned catalog yields **1,486** unique uppercase 3–8 letter words, meeting the revised 1,400-word requirement. Tests exclude `BLEU`, `ING`, `FUL`, `PRE`, `TELE`, `GEO` and `BIO`. Changing the catalog may change the vocabulary.
 
-A trie solves all eight directions without reusing tiles. Every returned 4×4 board has at least 25 answers and a five-letter answer; every 5×5 board has at least 45 answers. Seeded racks derive from a real six/seven-letter word and contain at least 12 answers. Generation refuses an uncertified board/rack. Both games share the scoring ladder and round state machine. Missed Word Hunt words retain canonical paths for interactive review.
-
-A local benchmark of 40 uncached board solves (seeds 100–119 at both sizes, reversed after generation to avoid cache hits) measured 0.046 ms mean and 0.132 ms maximum; board generation maximum was 4.862 ms on this Mac. These figures do not establish performance on family hardware.
+A trie solves all eight directions without reusing tiles. Every returned 4×4 board has at least 25 answers and a five-letter answer; every 5×5 board has at least 45 answers. Seeded six/seven-letter racks contain at least 12 answers and reject every valid full-length starting arrangement. Both games share scoring and round transitions. Missed Word Hunt words retain canonical paths.
 
 ## Saves and privacy
 
-Each activity has a bounded, strictly validated v1 session containing seed, exact letters, selected tile identities, rack ordering, two separate word sets, player, phase, remaining time, revision, round identity and personal best. New saves are additive. All 180 published save banks remain unchanged.
+Optional `save.wordGames` contains a strictly validated v1 `people` map. Each learner owns separate slots containing exact letters, selections, rack order, both word sets, player, phase, remaining time, revision, round identity and personal best. Owner, epoch, identity and revision guards reject stale writes. Removing a learner removes only that learner's slots. Older saves omit the field. All 180 published save banks remain unchanged.
 
-Rush lasts 80 seconds in Word Hunt and 60 seconds in Anagrams. Chill has no timer and optional hints. Pass & Play uses the same letters and a fresh timer for each player, with words and scores hidden behind the handoff card. The scorecard compares score, count, unique words and longest word. Restored running sessions open paused; backgrounding or leaving hides the board and pauses time. Rematches keep letters and use a new round identity; new games use a new seed. Restore epochs and revision guards reject stale callbacks.
+Rush lasts 80 seconds in Word Hunt and 60 seconds in Anagrams. Chill has no timer and optional hints. Pass & Play hides scores and words behind a handoff card, then gives Player 2 the same letters and a fresh timer. Restored running sessions open paused. Pause, backgrounding and unmount preserve fractional seconds. Rematches retain letters with a new identity and clean scores; new games use a new seed.
 
-## Acceptance ledger
+## R1 corrections
 
-Automated checks target `d3195ba920259f8377c8ec57e8a1cd51f281e30a`. Executor: implementation agent, isolated local browser storage. Affected flows only. Native touch, VoiceOver and physical family acceptance remain not run. The final browser evidence is bound to this source in `browser-results.json`.
+| Finding | Final behavior |
+| --- | --- |
+| R1-01 | Restricted-reading imports removed; provenance tests untouched and passing |
+| R1-02 | Parent scrolling locked during drag and reset on release, cancel, pause, preview replacement and unmount |
+| R1-03 | Only approved prose fields extracted; reported distractor and affix fragments absent |
+| R1-04 | Selected size alone uses primary coral and selected accessibility state; answer wrapping uses active round size |
+| R1-05 | Storybook icons use the neighboring tiles' rounded, clipped border frame |
+| R1-06 | Trail paints below crisp letters; racks reject all full-word permutations; pause/unmount flush fractional seconds |
 
-| Case | Starting fixture and action | Expected visible and saved outcome | Status |
-| --- | --- | --- | --- |
-| W01 | Open Game Hall and Everything | Both illustrated entries open their activity routes | Passed |
-| W02 | Fresh Word Hunt, trace diagonally, step back, release; repeat via taps | Exact letters follow finger; undo pops; score once; duplicates show Found | Passed |
-| W03 | Chill, request hint; pause/reload/resume | Starting tile highlighted; board concealed while paused; exact progress restored | Passed |
-| W04 | Finish Word Hunt; tap found/missed word; rematch | Summary/replay above fold; canonical ribbon path; exact same board with clean score | Passed |
-| W05 | Seven-tile Anagrams, build/remove/shuffle/clear/enter; reload | Rack multiset enforced; words score once; saved progress resumes behind pause | Passed |
-| W06 | Finish both Pass & Play turns | Private handoff; identical rack; fresh timer; correct winner and scorecard | Passed |
-| W07 | Seeded engine/state/save tests and affected regressions | Richness, legality, scoring, clock, match, restore and immutable-save checks pass | Passed — 192 tests / 16 files |
-| W08 | iOS/Android touch, VoiceOver, sound and physical family play | Comfortable tracing, audible feedback and accessible independent play | Not run; device acceptance required |
+The subsequent CI steer is implemented through the dedicated route, optional save namespace and independent shelf cards. No protected test was edited.
 
-Screenshots and logs: sibling `little-island-games-artifacts/v4/b11-word-hunt/`. Browser coverage uses 320×667, 390×844 and 1280×800 with mouse, Chromium touch events and keyboard. Both board sizes and rack sizes passed. The six-tile Rush round also accepted and saved a word with the browser offline after initial loading; cold offline installation is not claimed. Browser dimensions do not establish native behavior.
+## R1 acceptance ledger
 
-The T3 browser snapshot tool timed out twice, so browser journeys use isolated bundled Chromium. Browser QA exposed and corrected React Native Web automatically enabling tap mode, disabled tile buttons swallowing mouse-down, and an ambiguous match summary that showed only the last player's score. Passive drag tiles, synchronous board-local coordinates and explicit web tap mode fix the input boundary. The earlier touch test failure is preserved as `before-touch-first-move-fix.png`. Both player scores and the match best word now appear in the finish summary. Round transitions scroll to the header so compact screens retain the finish/handoff actions. The original drag failure is preserved as `before-drag-button-fix.png`. The browser run reported no page errors. Optional practice before starts and rematches is covered by route-level component tests; its existing lesson UI was not re-audited. Task-owned browser processes and the static server are cleaned before handoff.
+Executor: implementation agent. Affected flows in isolated Chromium storage, using the exported web build. Evidence: `little-island-games-artifacts/v4/b11-word-hunt/r1/`. The initial implementation screenshots and `REVIEW-R1.md` remain in the parent folder. Browser results identify the working source and final code commit; screenshots do not establish native acceptance.
 
-## Verification
+| Case | Action and expected result | Result |
+| --- | --- | --- |
+| RQA-01 | Open Game Hall and Everything; select new illustrated card and reach dedicated route | Passed |
+| RQA-02 | Trace diagonally, step back and release; repeat via taps | Passed: exact path, one score, duplicate feedback, crisp foreground letters |
+| RQA-03 | Hint, pause, reload and resume | Passed: starting tile shown, concealed paused board, exact saved progress |
+| RQA-04 | Finish, inspect missed path and rematch; repeat on 5×5 with touch input | Passed: visible replay, canonical path, exact same board; compact 320×667 finish |
+| RQA-05 | Seven-tile submit/remove/shuffle/clear/reload; keyboard six-tile play | Passed: multiset enforced, saved word retained, keyboard toggle and Rush clock |
+| RQA-06 | Complete both players, inspect handoff and scorecard | Passed: private handoff, same rack, fresh timer, correct winner |
+| RQA-07 | Choose six tiles after a seven-tile finish, then rematch | Passed: seven-tile round retained, answer/rack wrapping agree on phone |
+| RQA-08 | Disable network after loading and submit a valid rack word | Passed: local lexicon, scoring and save; cold offline installation not claimed |
+| RQA-09 | Physical iOS/Android tracing, VoiceOver, audible feedback and family play | Not run; device acceptance required |
 
-- Expo Doctor: 21/21 passed.
-- Save catalog: 180 immutable published banks passed.
-- Advisory Impeccable scan: `[]` for the changed UI (not usability acceptance).
-- TypeScript passed. Full repository lint passed with 0 errors and 274 existing warnings; changed-file lint passed without findings. The final affected Vitest sweep passed 192 tests across 16 files (`--maxWorkers=2`). Web export passed: offline shell `e75d7b4e6dfb`, 7,544 bundled resources. The local export word gate passed admission and guard checks with zero exceptions; the private policy was not supplied locally.
-- The local export word gate explicitly reports `policyDataChecked: false` because the private policy is supplied in CI. A local structural pass does not claim private-policy approval. The draft PR's CI remains the private-policy check.
+Browser dimensions: 320×667, 390×844 and 1280×800. Inputs: mouse, Chromium touch events and keyboard. No page errors. The T3 snapshot tool timed out twice, so isolated Chromium supplied the browser evidence. Two R1 browser probes needed harness corrections: phone wrapping was initially asserted at desktop width, and a Back selector matched both header and finish controls. Corrected probes passed; failed probe logs are retained.
+
+## Automated verification
+
+- Affected Vitest sweep: **388 tests / 23 files**, including all six previously failing files, reading runtime provenance, native module loading, activity/entry and save tests (`--maxWorkers=2`). Final focused interaction suite: **27 tests**. After excluding chart labels, the exact eight-file CI-regression command passed again: **135 tests / 8 files**.
+- TypeScript passed; final source recheck recorded in the R1 logs. Lint: **0 errors, 274 existing warnings**. Advisory Impeccable scan: `[]`.
+- Save catalog: **180 immutable published banks passed**.
+- Export: offline shell `a20209dffce0`, 7,544 resources. The final export word-policy gate passed admission and guard checks with zero exceptions; its result is recorded with the R1 artifacts. Local export has no private policy, so its structural result does not claim private-policy approval; CI supplies that policy.
+- Task-owned browser processes, tab and static server are cleaned before handoff. Native release acceptance and final-head CI/re-review remain separate from these local checks.
