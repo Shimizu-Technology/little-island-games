@@ -1,7 +1,8 @@
 import { canonicalLibraryId } from "./ids";
 import type { WorldId } from "../explore/content";
 import type { CatalogItem } from "./catalog";
-export const canonicalDestination = (place: string, id: string) => (place === "exhibit" ? `lab-${id}` : canonicalLibraryId(id));
+export const canonicalDestination = (place: string, id: string) =>
+  place === "exhibit" ? `lab-${id}` : place === "discovery-lab" ? `dlab-${id}` : canonicalLibraryId(id);
 export function exhibitWorld(record: CatalogItem | undefined): WorldId | undefined {
   if (record?.item?.type !== "exhibit") return undefined;
   const engines: Record<string, WorldId> = {
@@ -18,7 +19,7 @@ export function exhibitWorld(record: CatalogItem | undefined): WorldId | undefin
   return engines[record.item.model.engine];
 }
 export const mayFinishPage = (place: string, enteredDuringOpenHours: boolean) =>
-  enteredDuringOpenHours && ["topic", "reader", "make", "exhibit", "authored-exhibit"].includes(place);
+  enteredDuringOpenHours && ["topic", "reader", "make", "exhibit", "authored-exhibit", "discovery-lab"].includes(place);
 /** Wonder, Books, Make and My Shelf are the Library's four tab roots. */
 export const libraryTabs = ["wonder", "books", "make", "shelf"] as const;
 export type LibraryBack = "island" | "history";

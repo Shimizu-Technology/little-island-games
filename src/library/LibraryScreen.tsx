@@ -49,6 +49,9 @@ import { GrownUps } from "./GrownUps";
 import { LookListen } from "./LookListen";
 import { ReviewedNarration } from "./ReviewedNarration";
 import { Exhibit } from "./Exhibit";
+import { DISCOVERY_LABS, discoveryLabById, discoveryLabSearchIndex } from "./labs/registry";
+import { LabCoverArt } from "./labs/LabCoverArt";
+import { DiscoveryLabView } from "./labs/DiscoveryLabView";
 import { hasPendingPages, pageDraftKey, pendingPage } from "./drafts";
 import { canonicalDestination, exhibitWorld as resolveExhibitWorld, hearTitleLabel, libraryBack, mayFinishPage } from "./navigation";
 import { canonicalLibraryId, rememberLibraryDestination, rememberVisitedDestination } from "./ids";
@@ -96,6 +99,7 @@ function positionDestinationId(key: string): string | undefined {
   if (parts.length < 2 || !parts[1] || parts[1] === "index") return undefined;
   const [placeKind, targetId] = parts;
   if (placeKind === "exhibit") return `lab-${targetId}`;
+  if (placeKind === "discovery-lab") return `dlab-${targetId}`;
   if (placeKind === "topic" || placeKind === "reader" || placeKind === "authored-exhibit") {
     return canonicalLibraryId(targetId);
   }
@@ -298,6 +302,7 @@ function LibraryReady() {
       return;
     }
     if (itemId.startsWith("lab-")) visit("exhibit", itemId.slice(4));
+    else if (itemId.startsWith("dlab-")) visit("discovery-lab", itemId.slice(5));
     else {
       const item = itemById(itemId);
       visit(
@@ -330,13 +335,16 @@ function LibraryReady() {
     visit("make", creation.id);
   };
   const creation = child.creations.find((page) => page.id === id);
+  const activeDiscoveryLab = place === "discovery-lab" ? discoveryLabById(id) : undefined;
   const restricted =
     (place === "authored-exhibit" &&
       record?.item?.type === "exhibit" &&
       !child.policy.collections.includes(record.item.category)) ||
     (creation?.sourceId && !canOpen(creation.sourceId, child.policy.collections)) ||
     (record && !allowedIds.has(record.id)) ||
-    (place === "exhibit" && !child.policy.collections.includes(worldCategory[id as WorldId]));
+    (place === "exhibit" && !child.policy.collections.includes(worldCategory[id as WorldId])) ||
+    (place === "discovery-lab" &&
+      (!activeDiscoveryLab || !child.policy.collections.includes(activeDiscoveryLab.category)));
   const list = useRef<FlatList<CatalogItem>>(null);
   const scroll = useRef<ScrollView>(null);
   const queryKey = [...child.query].reduce((hash, letter) => (Math.imul(hash, 31) + letter.charCodeAt(0)) | 0, 0) >>> 0;
@@ -403,6 +411,11 @@ function LibraryReady() {
     [child.policy.collections]
   );
 
+  const enabledDiscoveryLabs = useMemo(
+    () => DISCOVERY_LABS.filter((lab) => child.policy.collections.includes(lab.category)),
+    [child.policy.collections]
+  );
+
   const matchingExhibits = useMemo(() => {
     if (child.query.trim()) {
       const allowedLabIds = new Set(enabledExhibits.map((exhibit) => `lab-${exhibit.world}`));
@@ -415,6 +428,19 @@ function LibraryReady() {
     }
     return enabledExhibits.filter((exhibit) => child.category === "all" || exhibit.category === child.category);
   }, [child.query, child.category, enabledExhibits]);
+
+  const matchingDiscoveryLabs = useMemo(() => {
+    if (child.query.trim()) {
+      const allowedLabIds = new Set(enabledDiscoveryLabs.map((lab) => lab.destinationId));
+      const matchedIds = new Set(
+        search(discoveryLabSearchIndex, child.query, allowedLabIds, searchCategory(child.query, child.category)).map(
+          (entry) => entry.id
+        )
+      );
+      return enabledDiscoveryLabs.filter((lab) => matchedIds.has(lab.destinationId));
+    }
+    return enabledDiscoveryLabs.filter((lab) => child.category === "all" || lab.category === child.category);
+  }, [child.query, child.category, enabledDiscoveryLabs]);
 
   const categoryStats = useMemo(() => {
     const map = new Map<string, { total: number; saved: number; explored: number }>();
@@ -432,6 +458,21 @@ function LibraryReady() {
   const continueTarget = (() => {
     for (const recentId of child.recent) {
       if (!canOpen(recentId, child.policy.collections)) continue;
+      if (recentId.startsWith("dlab-")) {
+        const lab = discoveryLabById(recentId.slice(5));
+        if (lab) {
+          return {
+            kind: "discovery-lab" as const,
+            id: lab.destinationId,
+            title: lab.title,
+            badge: "Discovery Lab",
+            subtitle: lab.tagline,
+            category: lab.category,
+            motif: "sparkles",
+            lab,
+          };
+        }
+      }
       if (recentId.startsWith("lab-")) {
         const world = recentId.slice(4) as WorldId;
         const exhibit = exhibits.find((entry) => entry.world === world);
@@ -493,6 +534,9 @@ function LibraryReady() {
     for (const item of allowed) addCandidate(item.id);
     for (const exhibit of enabledExhibits) {
       if (!authoredLabWorlds.has(exhibit.world)) addCandidate(`lab-${exhibit.world}`);
+    }
+    for (const lab of enabledDiscoveryLabs) {
+      addCandidate(lab.destinationId);
     }
     if (!poolIds.length) {
       setNotice("No stories or wonders are turned on yet. A grown-up can turn collections on.");
@@ -712,7 +756,7 @@ function LibraryReady() {
             { marginTop: 0, flex: 1, fontSize: headerFontSize, textAlign: "center", color: "#3D2B24" },
           ]}
         >
-          {readerAvailable ? record.title : "Island Library"}
+          {readerAvailable ? record.title : place === "discovery-lab" && activeDiscoveryLab && !restricted && !blocked ? activeDiscoveryLab.shortTitle : "Island Library"}
         </Text>
         {place === "make" && creation && !restricted && !blocked ? (
           <Action label="Done editing story" onPress={() => Keyboard.dismiss()}>
@@ -943,6 +987,8 @@ function LibraryReady() {
                     >
                       {continueTarget.kind === "item" && continueTarget.record ? (
                         <ItemPicture record={continueTarget.record} fill />
+                      ) : continueTarget.kind === "discovery-lab" && continueTarget.lab ? (
+                        <LabCoverArt labId={continueTarget.lab.id} />
                       ) : (
                         <LibraryArt kind={continueTarget.motif} category={continueTarget.category} />
                       )}
@@ -1250,68 +1296,126 @@ function LibraryReady() {
                   </View>
                 )}
 
-                {(activeFilter === "all" || activeFilter === "labs") && matchingExhibits.length > 0 && (
-                  <View style={{ gap: 10 }}>
-                    <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
-                      Interactive Labs
-                    </Text>
-                    <View style={[s.row, { gap: 10 }]}>
-                      {matchingExhibits.map((exhibit) => (
-                        <Pressable
-                          key={exhibit.world}
-                          testID={`library-lab-${exhibit.world}`}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Interactive Lab: ${exhibit.title}`}
-                          onPress={() => openExhibit(exhibit.world, exhibit.motif)}
-                          style={({ pressed }) => [
-                            storyCard,
-                            {
-                              width: labTileWidth,
-                              minWidth: 146,
-                              flexGrow: 1,
-                              overflow: "hidden",
-                              opacity: pressed ? 0.85 : 1,
-                            },
-                          ]}
-                        >
-                          <View style={{ width: "100%", height: 104, position: "relative", backgroundColor: "#DDF1EE" }}>
-                            <LibraryArt kind={exhibit.motif} category={exhibit.category} />
-                            <View
-                              pointerEvents="none"
-                              style={{
-                                position: "absolute",
-                                left: 8,
-                                top: 8,
-                                backgroundColor: "#FFFDF8F2",
-                                borderRadius: 999,
-                                borderWidth: 1,
-                                borderColor: "#9BC7C2",
-                                paddingHorizontal: 8,
-                                paddingVertical: 2,
-                              }}
-                            >
-                              <Text
-                                maxFontSizeMultiplier={1.2}
-                                style={[s.small, headingBold, { color: "#1E6B66", fontSize: 11, lineHeight: 14 }]}
+                {(activeFilter === "all" || activeFilter === "labs") &&
+                  (matchingDiscoveryLabs.length > 0 || matchingExhibits.length > 0) && (
+                    <View testID="library-interactive-labs-shelf" style={{ gap: 10 }}>
+                      <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                        Interactive Labs
+                      </Text>
+                      <View style={[s.row, { gap: 10 }]}>
+                        {matchingDiscoveryLabs.map((lab) => (
+                          <Pressable
+                            key={lab.id}
+                            testID={`library-discovery-lab-${lab.id}`}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Discovery Lab: ${lab.title}`}
+                            onPress={() => {
+                              remember();
+                              visit("discovery-lab", lab.id);
+                            }}
+                            style={({ pressed }) => [
+                              storyCard,
+                              {
+                                width: labTileWidth,
+                                minWidth: 154,
+                                flexGrow: 1,
+                                overflow: "hidden",
+                                borderColor: lab.borderColor,
+                                opacity: pressed ? 0.85 : 1,
+                              },
+                            ]}
+                          >
+                            <View style={{ width: "100%", height: 108, position: "relative", backgroundColor: lab.tintColor }}>
+                              <LabCoverArt labId={lab.id} />
+                              <View
+                                pointerEvents="none"
+                                style={{
+                                  position: "absolute",
+                                  left: 8,
+                                  top: 8,
+                                  backgroundColor: "#FFFDF8F5",
+                                  borderRadius: 999,
+                                  borderWidth: 1,
+                                  borderColor: lab.borderColor,
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                }}
                               >
-                                Interactive Lab
+                                <Text
+                                  maxFontSizeMultiplier={1.2}
+                                  style={[s.small, headingBold, { color: lab.accentColor, fontSize: 11, lineHeight: 14 }]}
+                                >
+                                  {lab.playCue}
+                                </Text>
+                              </View>
+                            </View>
+                            <View style={{ padding: 10, minHeight: 58, justifyContent: "center", gap: 2 }}>
+                              <Text
+                                maxFontSizeMultiplier={1.4}
+                                numberOfLines={2}
+                                style={[s.actionText, headingBold, { color: "#3D2B24", fontSize: 15.5, textAlign: "left" }]}
+                              >
+                                {lab.title}
                               </Text>
                             </View>
-                          </View>
-                          <View style={{ padding: 10, minHeight: 52, justifyContent: "center" }}>
-                            <Text
-                              maxFontSizeMultiplier={1.4}
-                              numberOfLines={2}
-                              style={[s.actionText, headingBold, { color: "#3D2B24", fontSize: 15.5, textAlign: "left" }]}
-                            >
-                              {exhibit.title}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      ))}
+                          </Pressable>
+                        ))}
+                        {matchingExhibits.map((exhibit) => (
+                          <Pressable
+                            key={exhibit.world}
+                            testID={`library-lab-${exhibit.world}`}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Interactive Lab: ${exhibit.title}`}
+                            onPress={() => openExhibit(exhibit.world, exhibit.motif)}
+                            style={({ pressed }) => [
+                              storyCard,
+                              {
+                                width: labTileWidth,
+                                minWidth: 146,
+                                flexGrow: 1,
+                                overflow: "hidden",
+                                opacity: pressed ? 0.85 : 1,
+                              },
+                            ]}
+                          >
+                            <View style={{ width: "100%", height: 104, position: "relative", backgroundColor: "#DDF1EE" }}>
+                              <LibraryArt kind={exhibit.motif} category={exhibit.category} />
+                              <View
+                                pointerEvents="none"
+                                style={{
+                                  position: "absolute",
+                                  left: 8,
+                                  top: 8,
+                                  backgroundColor: "#FFFDF8F2",
+                                  borderRadius: 999,
+                                  borderWidth: 1,
+                                  borderColor: "#9BC7C2",
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                }}
+                              >
+                                <Text
+                                  maxFontSizeMultiplier={1.2}
+                                  style={[s.small, headingBold, { color: "#1E6B66", fontSize: 11, lineHeight: 14 }]}
+                                >
+                                  Interactive Lab
+                                </Text>
+                              </View>
+                            </View>
+                            <View style={{ padding: 10, minHeight: 52, justifyContent: "center" }}>
+                              <Text
+                                maxFontSizeMultiplier={1.4}
+                                numberOfLines={2}
+                                style={[s.actionText, headingBold, { color: "#3D2B24", fontSize: 15.5, textAlign: "left" }]}
+                              >
+                                {exhibit.title}
+                              </Text>
+                            </View>
+                          </Pressable>
+                        ))}
+                      </View>
                     </View>
-                  </View>
-                )}
+                  )}
 
                 {(activeFilter !== "labs" || results.length > 0) && (
                   <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
@@ -1330,7 +1434,9 @@ function LibraryReady() {
             )
           }
           ListEmptyComponent={
-            place === "wonder" && (activeFilter === "labs" || activeFilter === "all") && matchingExhibits.length > 0 ? null : (
+            place === "wonder" &&
+            (activeFilter === "labs" || activeFilter === "all") &&
+            (matchingExhibits.length > 0 || matchingDiscoveryLabs.length > 0) ? null : (
               <View style={{ paddingHorizontal: 6, paddingTop: 4, maxWidth: 1060, width: "100%", alignSelf: "center" }}>
                 <View style={[storyCard, { padding: 20, gap: 14 }]}>
                   <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
@@ -1497,12 +1603,34 @@ function LibraryReady() {
               </Text>
               {child.saved
                 .filter((item) => canOpen(item, child.policy.collections))
-                .map((item) => (
-                  <View key={item} style={[storyCard, { padding: 12, gap: 10 }]}>
-                    {itemById(item) && card(itemById(item)!)}
-                    <Action onPress={() => toggleSaved(item)}>Remove from My Shelf</Action>
-                  </View>
-                ))}
+                .map((item) => {
+                  const savedLab = item.startsWith("dlab-") ? discoveryLabById(item.slice(5)) : undefined;
+                  return (
+                    <View key={item} style={[storyCard, { padding: 12, gap: 10 }]}>
+                      {itemById(item) ? (
+                        card(itemById(item)!)
+                      ) : savedLab ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`Open Discovery Lab: ${savedLab.title}`}
+                          onPress={() => {
+                            remember();
+                            visit("discovery-lab", savedLab.id);
+                          }}
+                          style={{ gap: 8 }}
+                        >
+                          <View style={{ width: "100%", height: 136, borderRadius: 16, overflow: "hidden" }}>
+                            <LabCoverArt labId={savedLab.id} />
+                          </View>
+                          <Text maxFontSizeMultiplier={1.5} style={[s.cardTitle, headingBold, { padding: 4, minHeight: 0, color: "#3D2B24" }]}>
+                            {savedLab.title}
+                          </Text>
+                        </Pressable>
+                      ) : null}
+                      <Action onPress={() => toggleSaved(item)}>Remove from My Shelf</Action>
+                    </View>
+                  );
+                })}
               {!child.saved.length && (
                 <View style={[storyCard, { padding: 18 }]}>
                   <Text style={[s.body, bodyFont, { fontSize: 18, lineHeight: 26, color: "#665247" }]}>
@@ -1562,7 +1690,9 @@ function LibraryReady() {
                   .filter((item) => canOpen(item, child.policy.collections))
                   .map((item) => (
                     <Action key={item} onPress={() => openItem(item)}>
-                      {itemById(item)?.title ?? exhibits.find((exhibit) => `lab-${exhibit.world}` === item)?.title}
+                      {itemById(item)?.title ??
+                        exhibits.find((exhibit) => `lab-${exhibit.world}` === item)?.title ??
+                        discoveryLabById(item)?.title}
                     </Action>
                   ))}
               </View>
@@ -1584,6 +1714,14 @@ function LibraryReady() {
                 router.replace("/library");
               }}
               onDone={() => router.replace("/library")}
+            />
+          ) : place === "discovery-lab" && !!activeDiscoveryLab ? (
+            <DiscoveryLabView
+              labId={activeDiscoveryLab.id}
+              sound={store.save.settings.sound}
+              active={focused}
+              saved={isSaved(activeDiscoveryLab.destinationId)}
+              onToggleSaved={() => toggleSaved(activeDiscoveryLab.destinationId)}
             />
           ) : !!exhibitWorld &&
             (place === "exhibit" || (place === "authored-exhibit" && !!authoredExhibit)) &&

@@ -28,6 +28,8 @@ vi.mock('../src/library/GrownUps', () => ({ GrownUps: () => null }));
 vi.mock('../src/library/LookListen', () => ({ LookListen: () => null }));
 vi.mock('../src/library/ReviewedNarration', () => ({ ReviewedNarration: () => null }));
 vi.mock('../src/library/Exhibit', () => ({ Exhibit: () => null }));
+vi.mock('../src/library/labs/LabCoverArt', () => ({ LabCoverArt: () => null }));
+vi.mock('../src/library/labs/DiscoveryLabView', () => ({ DiscoveryLabView: () => null }));
 vi.mock('../src/library/catalog.generated.json', async () => ({ default: { items: JSON.parse((await import('node:fs')).readFileSync('content/library/items.json', 'utf8')), index: [] } }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 it('F4 hides the reader title and actions, retaining saved data until Books is re-enabled', async () => {
