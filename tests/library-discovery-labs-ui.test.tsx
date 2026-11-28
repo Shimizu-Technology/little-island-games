@@ -634,4 +634,70 @@ describe("R1-01, R1-02, R1-04, R1-05, R1-06, R1-07 UI regressions", () => {
     await act(async () => root!.root.findByProps({ testID: "test-step-minus" }).props.onPress());
     expect(onChange).toHaveBeenCalledWith(2);
   });
+
+  it("R2-02: resets breathing phase timer on manual Next Breath Step, pause/resume, and Reset during auto mode", async () => {
+    const raf = installManualRaf();
+    try {
+      const { DiscoveryLabView } = await import("../src/library/labs/DiscoveryLabView");
+      await act(async () => {
+        root = create(<DiscoveryLabView labId="heartbeat-breath-lab" sound={false} />);
+      });
+
+      const bubbleText = () => textOf(root!.root.findByProps({ testID: "calm-breath-bubble-card" }));
+
+      // Enable Follow Calm Bubble (starts in Inhale, 3600ms)
+      await act(async () => root!.root.findByProps({ testID: "breath-auto-toggle" }).props.onPress());
+      expect(bubbleText()).toContain("Breathe In");
+
+      // Advance 3,000 ms into Inhale (60 x 50ms)
+      await raf.step(16);
+      for (let i = 0; i < 60; i++) {
+        await raf.step(50);
+      }
+      expect(bubbleText()).toContain("Breathe In");
+
+      // Tap Next Breath Step -> advances to Hold Gently (2200ms) and resets elapsed timer
+      await act(async () => root!.root.findByProps({ testID: "breath-next-step-btn" }).props.onPress());
+      expect(bubbleText()).toContain("Hold Gently");
+
+      // Next 20ms frame must NOT skip Hold Gently straight to Breathe Out!
+      await raf.step(20);
+      expect(bubbleText()).toContain("Hold Gently");
+
+      // Stay in Hold Gently across 2,000 ms (40 x 50ms -> 2020ms < 2200ms)
+      for (let i = 0; i < 40; i++) {
+        await raf.step(50);
+      }
+      expect(bubbleText()).toContain("Hold Gently");
+
+      // Crossing 2,200 ms cleanly transitions to Breathe Out
+      for (let i = 0; i < 5; i++) {
+        await raf.step(50);
+      }
+      expect(bubbleText()).toContain("Breathe Out");
+
+      // Advance 3,000 ms into Breathe Out (4200ms), then manual Next -> back to Breathe In with fresh clock
+      for (let i = 0; i < 60; i++) {
+        await raf.step(50);
+      }
+      await act(async () => root!.root.findByProps({ testID: "breath-next-step-btn" }).props.onPress());
+      expect(bubbleText()).toContain("Breathe In");
+      await raf.step(20);
+      expect(bubbleText()).toContain("Breathe In");
+
+      // Pause & resume resets elapsed clock; Reset restores defaults
+      await act(async () => root!.root.findByProps({ testID: "breath-auto-toggle" }).props.onPress());
+      await act(async () => root!.root.findByProps({ testID: "breath-auto-toggle" }).props.onPress());
+      await raf.step(20);
+      expect(bubbleText()).toContain("Breathe In");
+
+      await act(async () => root!.root.findByProps({ testID: "lab-reset-heartbeat-breath-lab" }).props.onPress());
+      expect(bubbleText()).toContain("Follow Calm Bubble");
+
+      await act(async () => root!.unmount());
+      root = undefined;
+    } finally {
+      raf.restore();
+    }
+  });
 });

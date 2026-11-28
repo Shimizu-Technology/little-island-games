@@ -56,7 +56,7 @@ import {
   type NativeSampleKey,
   type NativeTonePlayer,
 } from "../src/library/labs/soundSynth";
-import { javascriptStrings } from "../scripts/words/artifact-views.mjs";
+import { javascriptStrings, listString } from "../scripts/words/artifact-views.mjs";
 import { wordTokens } from "../scripts/words/density.mjs";
 
 describe("Discovery Labs registry, search, permissions, and navigation", () => {
@@ -104,7 +104,7 @@ describe("Discovery Labs registry, search, permissions, and navigation", () => {
 
 describe("1. Color & Light Mixing Studio engine", () => {
   it("mixes subtractive RYB paints accurately (Orange, Green, Purple, Pink, Teal, Brown, Sky Blue, Island Coral)", () => {
-    expect(computePaintMix({ red: 0, yellow: 0, blue: 0, white: 0, black: 0 }).colorName).toBe("Empty Mixing Bowl");
+    expect(computePaintMix({ red: 0, yellow: 0, blue: 0, white: 0, black: 0 }).colorName).toBe("Empty Bowl");
     expect(computePaintMix({ red: 1, yellow: 1, blue: 0, white: 0, black: 0 }).colorName).toBe("Sunset Orange");
     expect(computePaintMix({ red: 0, yellow: 1, blue: 1, white: 0, black: 0 }).colorName).toBe("Palm Green");
     expect(computePaintMix({ red: 1, yellow: 0, blue: 1, white: 0, black: 0 }).colorName).toBe("Hibiscus Purple");
@@ -122,10 +122,10 @@ describe("1. Color & Light Mixing Studio engine", () => {
     }
     expect(computePaintMix(state.drops).totalDrops).toBe(MAX_PAINT_DROPS);
 
-    expect(computeLightMix({ red: true, green: true, blue: false }, 30, false).colorName).toBe("Glowing Yellow Light");
-    expect(computeLightMix({ red: false, green: true, blue: true }, 30, false).colorName).toBe("Lagoon Cyan Light");
-    expect(computeLightMix({ red: true, green: false, blue: true }, 30, false).colorName).toBe("Bright Magenta Light");
-    expect(computeLightMix({ red: true, green: true, blue: true }, 30, false).colorName).toBe("Pure White Light!");
+    expect(computeLightMix({ red: true, green: true, blue: false }, 30, false).colorName).toBe("Yellow Light");
+    expect(computeLightMix({ red: false, green: true, blue: true }, 30, false).colorName).toBe("Cyan Light");
+    expect(computeLightMix({ red: true, green: false, blue: true }, 30, false).colorName).toBe("Magenta Light");
+    expect(computeLightMix({ red: true, green: true, blue: true }, 30, false).colorName).toBe("White Light!");
 
     const straightSun = computeLightMix({ red: false, green: false, blue: false }, 0, true);
     expect(straightSun.rainbowVisible).toBe(false);
@@ -287,19 +287,28 @@ describe("6. Heartbeat & Calm Breath Lab engine", () => {
   });
 });
 
-describe("R1-03 & R1-08 regression checks: native pitch differentiation and word-safety guard shape", () => {
-  it("maps every island drum, xylophone bar, and plucked string tension to a distinct native sample + playbackRate", () => {
-    const drumPlans = ISLAND_DRUMS.map((pad) => {
-      const plan = resolveNativeTonePlan(pad.frequencyHz, pad.voice);
-      return `${plan.sampleKey}@${plan.playbackRate}`;
-    });
-    expect(new Set(drumPlans).size).toBe(ISLAND_DRUMS.length);
+describe("R1-03, R2-01 & R1-08 regression checks: calibrated native pitch and word-safety guard shape", () => {
+  it("maps every island drum, xylophone bar, and plucked string tension to distinct, strictly ascending calibrated pitches", () => {
+    const drumPlans = ISLAND_DRUMS.map((pad) => resolveNativeTonePlan(pad.frequencyHz, pad.voice));
+    expect(new Set(drumPlans.map((p) => `${p.sampleKey}@${p.playbackRate}`)).size).toBe(ISLAND_DRUMS.length);
+    // Verified against real WAV spectral fundamentals (thump=109, shell-0=262, coral=392, tap=600)
+    expect(drumPlans.map((p) => p.sampleKey)).toEqual(["drum-thump", "drum-bamboo", "drum-coral", "drum-tap"]);
+    expect(drumPlans.map((p) => p.baseHz)).toEqual([109, 262, 392, 600]);
+    for (let i = 0; i < drumPlans.length; i++) {
+      const effectiveHz = drumPlans[i].baseHz * drumPlans[i].playbackRate;
+      expect(Math.abs(effectiveHz - ISLAND_DRUMS[i].frequencyHz)).toBeLessThan(1);
+      if (i > 0) {
+        expect(effectiveHz).toBeGreaterThan(drumPlans[i - 1].baseHz * drumPlans[i - 1].playbackRate);
+      }
+    }
 
-    const xyloPlans = XYLOPHONE_BARS.map((pad) => {
-      const plan = resolveNativeTonePlan(pad.frequencyHz, pad.voice);
-      return `${plan.sampleKey}@${plan.playbackRate}`;
-    });
-    expect(new Set(xyloPlans).size).toBe(XYLOPHONE_BARS.length);
+    const xyloPlans = XYLOPHONE_BARS.map((pad) => resolveNativeTonePlan(pad.frequencyHz, pad.voice));
+    expect(new Set(xyloPlans.map((p) => `${p.sampleKey}@${p.playbackRate}`)).size).toBe(XYLOPHONE_BARS.length);
+    for (let i = 1; i < xyloPlans.length; i++) {
+      expect(xyloPlans[i].baseHz * xyloPlans[i].playbackRate).toBeGreaterThan(
+        xyloPlans[i - 1].baseHz * xyloPlans[i - 1].playbackRate
+      );
+    }
 
     for (const str of PLUCK_STRINGS) {
       const loose = resolveNativeTonePlan(effectiveFrequency(str, "loose"), str.voice);
@@ -311,6 +320,8 @@ describe("R1-03 & R1-08 regression checks: native pitch differentiation and word
         `${tight.sampleKey}@${tight.playbackRate}`,
       ]);
       expect(signatures.size, `Distinct pitches for ${str.id} across loose/normal/tight`).toBe(3);
+      expect(loose.baseHz * loose.playbackRate).toBeLessThan(normal.baseHz * normal.playbackRate);
+      expect(normal.baseHz * normal.playbackRate).toBeLessThan(tight.baseHz * tight.playbackRate);
     }
   });
 
@@ -406,5 +417,13 @@ describe("R1-03 & R1-08 regression checks: native pitch differentiation and word
       });
       expect(plainBroadUnits, `${file} must not declare plain short-word arrays or numeric/boolean word maps`).toEqual([]);
     }
+
+    const colorSource = readFileSync("src/library/labs/colorLightEngine.ts", "utf8");
+    const colorViews = javascriptStrings(colorSource, [], "src/library/labs/colorLightEngine.ts");
+    const colorListStrings = colorViews.strings.filter((s: string) => listString(s));
+    expect(colorListStrings, "colorLightEngine.ts must have zero listString() hits").toEqual([]);
+    const worstCasePolicy = [...new Set(colorViews.strings.flatMap((s: string) => wordTokens(s).filter((w: string) => w.length >= 5)))];
+    const worstCaseListStrings = colorViews.strings.filter((s: string) => listString(s, worstCasePolicy));
+    expect(worstCaseListStrings, "colorLightEngine.ts must stay free of listString() hits even under worst-case broad policy").toEqual([]);
   });
 });

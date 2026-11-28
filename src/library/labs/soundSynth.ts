@@ -8,13 +8,15 @@ export type NativeSampleKey =
   | "shell-4"
   | "shell-5"
   | "drum-thump"
-  | "drum-tap"
-  | "drum-snap"
-  | "drum-coral";
+  | "drum-bamboo"
+  | "drum-coral"
+  | "drum-tap";
 
 export interface NativeTonePlan {
   sampleKey: NativeSampleKey;
+  baseHz: number;
   playbackRate: number;
+  effectiveHz: number;
 }
 
 type WebAudioContextCtor = new () => {
@@ -70,11 +72,16 @@ const MELODIC_ANCHORS: readonly { sampleKey: NativeSampleKey; baseHz: number }[]
   { sampleKey: "shell-5", baseHz: 523 },
 ];
 
+// Calibrated against the actual spectral fundamentals of the bundled offline WAVs:
+// - assets/arcade/lagoon-sfx/thump.wav: 109 Hz
+// - assets/arcade/shell-0.wav: 262 Hz (261.63 Hz wooden/shell tone)
+// - assets/arcade/coral.wav: 392 Hz dominant
+// - assets/audio/tap.wav: 600 Hz
 const DRUM_ANCHORS: readonly { sampleKey: NativeSampleKey; baseHz: number; maxHz: number }[] = [
-  { sampleKey: "drum-thump", baseHz: 110, maxHz: 165 },
-  { sampleKey: "drum-tap", baseHz: 220, maxHz: 320 },
-  { sampleKey: "drum-snap", baseHz: 410, maxHz: 520 },
-  { sampleKey: "drum-coral", baseHz: 660, maxHz: Infinity },
+  { sampleKey: "drum-thump", baseHz: 109, maxHz: 165 },
+  { sampleKey: "drum-bamboo", baseHz: 262, maxHz: 320 },
+  { sampleKey: "drum-coral", baseHz: 392, maxHz: 520 },
+  { sampleKey: "drum-tap", baseHz: 600, maxHz: Infinity },
 ];
 
 function clampRate(rate: number): number {
@@ -82,16 +89,20 @@ function clampRate(rate: number): number {
 }
 
 /**
- * Pure, deterministic native sample + playbackRate selector so every xylophone bar,
- * every island drum pad, and every plucked string length/tension plays a distinct audible pitch.
+ * Pure, deterministic native sample + playbackRate selector calibrated to real WAV fundamentals
+ * so every xylophone bar, every island drum pad, and every plucked string length/tension plays
+ * a pitch-accurate, strictly ordered audible frequency.
  */
 export function resolveNativeTonePlan(frequencyHz: number, voice: SynthVoice): NativeTonePlan {
   const safeHz = Math.max(55, Math.min(1800, frequencyHz));
   if (voice === "drum") {
     const drum = DRUM_ANCHORS.find((entry) => safeHz <= entry.maxHz) ?? DRUM_ANCHORS[DRUM_ANCHORS.length - 1];
+    const playbackRate = clampRate(safeHz / drum.baseHz);
     return {
       sampleKey: drum.sampleKey,
-      playbackRate: clampRate(safeHz / drum.baseHz),
+      baseHz: drum.baseHz,
+      playbackRate,
+      effectiveHz: Math.round(drum.baseHz * playbackRate * 10) / 10,
     };
   }
 
@@ -104,9 +115,12 @@ export function resolveNativeTonePlan(frequencyHz: number, voice: SynthVoice): N
       closest = anchor;
     }
   }
+  const playbackRate = clampRate(safeHz / closest.baseHz);
   return {
     sampleKey: closest.sampleKey,
-    playbackRate: clampRate(safeHz / closest.baseHz),
+    baseHz: closest.baseHz,
+    playbackRate,
+    effectiveHz: Math.round(closest.baseHz * playbackRate * 10) / 10,
   };
 }
 
@@ -126,12 +140,12 @@ function loadNativeSampleSource(key: NativeSampleKey): number {
       return require("../../../assets/arcade/shell-5.wav");
     case "drum-thump":
       return require("../../../assets/arcade/lagoon-sfx/thump.wav");
-    case "drum-tap":
-      return require("../../../assets/audio/tap.wav");
-    case "drum-snap":
-      return require("../../../assets/arcade/lagoon-sfx/snap.wav");
+    case "drum-bamboo":
+      return require("../../../assets/arcade/shell-0.wav");
     case "drum-coral":
       return require("../../../assets/arcade/coral.wav");
+    case "drum-tap":
+      return require("../../../assets/audio/tap.wav");
   }
 }
 

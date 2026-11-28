@@ -32,6 +32,7 @@ export function HeartbeatBreathLabView({
   const [oxygenPhase, setOxygenPhase] = useState(0);
   const [bubbleProgress, setBubbleProgress] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const bubbleElapsedMsRef = useRef(0);
   const isActive = useLabActive(active);
   const { displayBold, headingBold, bodyFont } = useLabFonts();
   const meta = DISCOVERY_LAB_MAP["heartbeat-breath-lab"];
@@ -84,13 +85,15 @@ export function HeartbeatBreathLabView({
 
   // Smooth requestAnimationFrame heart pulse, activity-driven lung breathing, oxygen flow,
   // and optional Calm Breath Bubble progression (zero setTimeout/setInterval).
-  // Cancels cleanly on blur/background and resets elapsed timestamps on resume.
+  // Cancels cleanly on blur/background and resets elapsed timestamps on resume or manual step.
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      bubbleElapsedMsRef.current = 0;
+      return;
+    }
     if (typeof requestAnimationFrame !== "function" || typeof cancelAnimationFrame !== "function") return;
     let rafId = 0;
     let lastTs = 0;
-    let bubbleElapsedMs = 0;
 
     const tick = (ts: number) => {
       if (lastTs === 0) lastTs = ts;
@@ -107,17 +110,17 @@ export function HeartbeatBreathLabView({
       }
 
       if (cur.autoBubble) {
-        bubbleElapsedMs += dtMs;
+        bubbleElapsedMsRef.current += dtMs;
         const phaseDuration = BREATH_PHASES[cur.breathPhaseIndex].durationMs;
-        if (bubbleElapsedMs >= phaseDuration) {
-          bubbleElapsedMs = 0;
+        if (bubbleElapsedMsRef.current >= phaseDuration) {
+          bubbleElapsedMsRef.current = 0;
           setBubbleProgress(0);
           dispatch({ type: "next-breath-phase" });
         } else {
-          setBubbleProgress(Math.min(1, bubbleElapsedMs / phaseDuration));
+          setBubbleProgress(Math.min(1, bubbleElapsedMsRef.current / phaseDuration));
         }
       } else {
-        bubbleElapsedMs = 0;
+        bubbleElapsedMsRef.current = 0;
         setBubbleProgress(0);
       }
 
@@ -125,8 +128,32 @@ export function HeartbeatBreathLabView({
     };
 
     rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      bubbleElapsedMsRef.current = 0;
+      cancelAnimationFrame(rafId);
+    };
   }, [isActive]);
+
+  const handleManualNextBreath = () => {
+    bubbleElapsedMsRef.current = 0;
+    setBubbleProgress(0);
+    dispatch({ type: "next-breath-phase" });
+  };
+
+  const handleToggleAutoBubble = () => {
+    bubbleElapsedMsRef.current = 0;
+    setBubbleProgress(0);
+    dispatch({ type: "toggle-auto-bubble" });
+  };
+
+  const handleReset = () => {
+    bubbleElapsedMsRef.current = 0;
+    setPulsePhase(0);
+    setBreathPhase(0);
+    setOxygenPhase(0);
+    setBubbleProgress(0);
+    dispatch({ type: "reset" });
+  };
 
   // Heartbeat scale thump (sharp lub-dub peak; calm static scale under reduced motion)
   const beatWave = reduceMotion ? 0 : Math.pow(Math.max(0, Math.sin(pulsePhase)), 4);
@@ -166,13 +193,7 @@ export function HeartbeatBreathLabView({
       challengeHint={challenge.hint}
       challengeDone={challengeDone}
       onNextChallenge={() => dispatch({ type: "next-challenge" })}
-      onReset={() => {
-        setPulsePhase(0);
-        setBreathPhase(0);
-        setOxygenPhase(0);
-        setBubbleProgress(0);
-        dispatch({ type: "reset" });
-      }}
+      onReset={handleReset}
       saved={saved}
       onToggleSaved={onToggleSaved}
     >
@@ -303,7 +324,7 @@ export function HeartbeatBreathLabView({
                 testID="breath-next-step-btn"
                 selected
                 accentColor="#1E6B66"
-                onPress={() => dispatch({ type: "next-breath-phase" })}
+                onPress={handleManualNextBreath}
               >
                 Next Breath Step
               </LabButton>
@@ -311,7 +332,7 @@ export function HeartbeatBreathLabView({
                 testID="breath-auto-toggle"
                 selected={state.autoBubble}
                 accentColor="#488261"
-                onPress={() => dispatch({ type: "toggle-auto-bubble" })}
+                onPress={handleToggleAutoBubble}
               >
                 {state.autoBubble ? "Pause Bubble" : "Follow Calm Bubble"}
               </LabButton>
