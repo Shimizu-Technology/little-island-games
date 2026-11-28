@@ -4,7 +4,7 @@ export type PlantHealthMood = "thriving" | "thirsty" | "shady" | "soaked";
 export interface PlantSpeciesMeta {
   id: IslandPlantId;
   title: string;
-  fruitLabel: string;
+  description: string;
   idealSunMin: number;
   idealWaterMin: number;
   idealWaterMax: number;
@@ -17,7 +17,7 @@ export const ISLAND_PLANTS: readonly PlantSpeciesMeta[] = [
   {
     id: "coconut-palm",
     title: "Coconut Palm",
-    fruitLabel: "Coconuts",
+    description: "Coconuts",
     idealSunMin: 3,
     idealWaterMin: 2,
     idealWaterMax: 4,
@@ -28,7 +28,7 @@ export const ISLAND_PLANTS: readonly PlantSpeciesMeta[] = [
   {
     id: "hibiscus",
     title: "Hibiscus Flower",
-    fruitLabel: "Bright Blooms",
+    description: "Bright Blooms",
     idealSunMin: 3,
     idealWaterMin: 3,
     idealWaterMax: 4,
@@ -39,7 +39,7 @@ export const ISLAND_PLANTS: readonly PlantSpeciesMeta[] = [
   {
     id: "mango-tree",
     title: "Mango Tree",
-    fruitLabel: "Sweet Mangoes",
+    description: "Sweet Mangoes",
     idealSunMin: 3,
     idealWaterMin: 2,
     idealWaterMax: 4,
@@ -91,7 +91,7 @@ export function stageTitle(stage: PlantStage, plantId: IslandPlantId): string {
     case 3:
       return plantId === "hibiscus" ? "Flower Buds Forming" : "Leafy Young Tree";
     case 4:
-      return `Full Grown with ${species.fruitLabel}!`;
+      return `Full Grown with ${species.description}!`;
   }
 }
 
@@ -199,7 +199,7 @@ export function reducePlantGrowth(state: PlantGrowthState, action: PlantGrowthAc
 
       if (!feedback) {
         if (nextStage === 4) {
-          feedback = `Hooray! Your ${species.title} grew ${species.fruitLabel}! ${species.fact}`;
+          feedback = `Hooray! Your ${species.title} grew ${species.description}! ${species.fact}`;
         } else if (nextStage > state.stage) {
           feedback = `Day ${nextDay}: New stage unlocked — ${stageTitle(nextStage, state.plantId)}!`;
         } else {

@@ -6,7 +6,7 @@ export type RhythmTrackId = "drum" | "bamboo" | "chime";
 export interface SoundPad {
   id: string;
   label: string;
-  sublabel: string;
+  description: string;
   frequencyHz: number;
   color: string;
   accentColor: string;
@@ -15,39 +15,59 @@ export interface SoundPad {
 }
 
 export const XYLOPHONE_BARS: readonly SoundPad[] = [
-  { id: "xylo-c4", label: "Do", sublabel: "262 Hz", frequencyHz: 262, color: "#E05A47", accentColor: "#9E2E20", barHeightRatio: 1.0, voice: "xylophone" },
-  { id: "xylo-d4", label: "Re", sublabel: "294 Hz", frequencyHz: 294, color: "#EB8A3E", accentColor: "#9E5317", barHeightRatio: 0.92, voice: "xylophone" },
-  { id: "xylo-e4", label: "Mi", sublabel: "330 Hz", frequencyHz: 330, color: "#E8B93A", accentColor: "#8F6D13", barHeightRatio: 0.84, voice: "xylophone" },
-  { id: "xylo-g4", label: "Sol", sublabel: "392 Hz", frequencyHz: 392, color: "#4BA36E", accentColor: "#25663E", barHeightRatio: 0.76, voice: "xylophone" },
-  { id: "xylo-a4", label: "La", sublabel: "440 Hz", frequencyHz: 440, color: "#2D8FA0", accentColor: "#185863", barHeightRatio: 0.68, voice: "xylophone" },
-  { id: "xylo-c5", label: "High Do", sublabel: "523 Hz", frequencyHz: 523, color: "#7A63B8", accentColor: "#4B387D", barHeightRatio: 0.6, voice: "xylophone" },
+  { id: "xylo-c4", label: "Do", description: "262 Hz", frequencyHz: 262, color: "#E05A47", accentColor: "#9E2E20", barHeightRatio: 1.0, voice: "xylophone" },
+  { id: "xylo-d4", label: "Re", description: "294 Hz", frequencyHz: 294, color: "#EB8A3E", accentColor: "#9E5317", barHeightRatio: 0.92, voice: "xylophone" },
+  { id: "xylo-e4", label: "Mi", description: "330 Hz", frequencyHz: 330, color: "#E8B93A", accentColor: "#8F6D13", barHeightRatio: 0.84, voice: "xylophone" },
+  { id: "xylo-g4", label: "Sol", description: "392 Hz", frequencyHz: 392, color: "#4BA36E", accentColor: "#25663E", barHeightRatio: 0.76, voice: "xylophone" },
+  { id: "xylo-a4", label: "La", description: "440 Hz", frequencyHz: 440, color: "#2D8FA0", accentColor: "#185863", barHeightRatio: 0.68, voice: "xylophone" },
+  { id: "xylo-c5", label: "High Do", description: "523 Hz", frequencyHz: 523, color: "#7A63B8", accentColor: "#4B387D", barHeightRatio: 0.6, voice: "xylophone" },
 ];
 
 export const ISLAND_DRUMS: readonly SoundPad[] = [
-  { id: "drum-bass", label: "Deep Drum", sublabel: "98 Hz", frequencyHz: 98, color: "#A85D3B", accentColor: "#6B361E", barHeightRatio: 1.0, voice: "drum" },
-  { id: "drum-slit", label: "Bamboo Tap", sublabel: "220 Hz", frequencyHz: 220, color: "#D19344", accentColor: "#82551C", barHeightRatio: 0.85, voice: "drum" },
-  { id: "drum-coconut", label: "Coconut Clack", sublabel: "410 Hz", frequencyHz: 410, color: "#588B68", accentColor: "#2F573C", barHeightRatio: 0.72, voice: "drum" },
-  { id: "drum-shaker", label: "Shell Chime", sublabel: "660 Hz", frequencyHz: 660, color: "#3B8899", accentColor: "#1D5663", barHeightRatio: 0.62, voice: "drum" },
+  { id: "drum-bass", label: "Deep Drum", description: "98 Hz", frequencyHz: 98, color: "#A85D3B", accentColor: "#6B361E", barHeightRatio: 1.0, voice: "drum" },
+  { id: "drum-slit", label: "Bamboo Tap", description: "220 Hz", frequencyHz: 220, color: "#D19344", accentColor: "#82551C", barHeightRatio: 0.85, voice: "drum" },
+  { id: "drum-coconut", label: "Coconut Clack", description: "410 Hz", frequencyHz: 410, color: "#588B68", accentColor: "#2F573C", barHeightRatio: 0.72, voice: "drum" },
+  { id: "drum-shaker", label: "Shell Chime", description: "660 Hz", frequencyHz: 660, color: "#3B8899", accentColor: "#1D5663", barHeightRatio: 0.62, voice: "drum" },
 ];
 
 export const PLUCK_STRINGS: readonly SoundPad[] = [
-  { id: "str-long", label: "Longest String", sublabel: "Low Pitch", frequencyHz: 196, color: "#C86B43", accentColor: "#7F3B1E", barHeightRatio: 1.0, voice: "string" },
-  { id: "str-mid-long", label: "Medium-Long", sublabel: "Warm Pitch", frequencyHz: 262, color: "#D69838", accentColor: "#865A16", barHeightRatio: 0.84, voice: "string" },
-  { id: "str-mid-short", label: "Medium-Short", sublabel: "Bright Pitch", frequencyHz: 330, color: "#4D9468", accentColor: "#285D3D", barHeightRatio: 0.68, voice: "string" },
-  { id: "str-short", label: "Shortest String", sublabel: "High Pitch", frequencyHz: 440, color: "#367E9A", accentColor: "#1C4D61", barHeightRatio: 0.54, voice: "string" },
+  { id: "str-long", label: "Longest String", description: "Low pitch", frequencyHz: 196, color: "#C86B43", accentColor: "#7F3B1E", barHeightRatio: 1.0, voice: "string" },
+  { id: "str-mid-long", label: "Medium-Long", description: "Warm pitch", frequencyHz: 262, color: "#D69838", accentColor: "#865A16", barHeightRatio: 0.84, voice: "string" },
+  { id: "str-mid-short", label: "Medium-Short", description: "Bright pitch", frequencyHz: 330, color: "#4D9468", accentColor: "#285D3D", barHeightRatio: 0.68, voice: "string" },
+  { id: "str-short", label: "Shortest String", description: "High pitch", frequencyHz: 440, color: "#367E9A", accentColor: "#1C4D61", barHeightRatio: 0.54, voice: "string" },
 ];
 
-export const LOUDNESS_AMPLITUDE: Record<LoudnessLevel, number> = {
-  soft: 0.35,
-  medium: 0.68,
-  loud: 1.0,
-};
+export interface LoudnessOption {
+  id: LoudnessLevel;
+  label: string;
+  amplitude: number;
+}
 
-export const TENSION_MULTIPLIER: Record<StringTension, number> = {
-  loose: 0.82,
-  normal: 1.0,
-  tight: 1.24,
-};
+export const LOUDNESS_OPTIONS: readonly LoudnessOption[] = [
+  { id: "soft", label: "Soft", amplitude: 0.35 },
+  { id: "medium", label: "Medium", amplitude: 0.68 },
+  { id: "loud", label: "Loud", amplitude: 1.0 },
+];
+
+export interface TensionOption {
+  id: StringTension;
+  label: string;
+  multiplier: number;
+}
+
+export const TENSION_OPTIONS: readonly TensionOption[] = [
+  { id: "loose", label: "Loose (Lower)", multiplier: 0.82 },
+  { id: "normal", label: "Normal", multiplier: 1.0 },
+  { id: "tight", label: "Tight (Higher)", multiplier: 1.24 },
+];
+
+export function loudnessAmplitude(level: LoudnessLevel): number {
+  return LOUDNESS_OPTIONS.find((opt) => opt.id === level)?.amplitude ?? 0.68;
+}
+
+export function tensionMultiplier(tension: StringTension): number {
+  return TENSION_OPTIONS.find((opt) => opt.id === tension)?.multiplier ?? 1.0;
+}
 
 export interface RhythmTrackMeta {
   id: RhythmTrackId;
@@ -107,11 +127,11 @@ export function createSoundRhythmState(): SoundRhythmState {
 
 export function effectiveFrequency(pad: SoundPad, tension: StringTension): number {
   if (pad.voice !== "string") return pad.frequencyHz;
-  return Math.round(pad.frequencyHz * TENSION_MULTIPLIER[tension]);
+  return Math.round(pad.frequencyHz * tensionMultiplier(tension));
 }
 
 export function waveMetrics(frequencyHz: number, loudness: LoudnessLevel) {
-  const amplitude = LOUDNESS_AMPLITUDE[loudness];
+  const amplitude = loudnessAmplitude(loudness);
   const cycles = Math.max(1.2, Math.min(7.5, frequencyHz / 82));
   const pitchCategory = frequencyHz < 220 ? "Low" : frequencyHz < 390 ? "Middle" : "High";
   const loudnessLabel = loudness === "soft" ? "Soft (short waves)" : loudness === "medium" ? "Medium waves" : "Loud (tall waves)";
@@ -140,7 +160,6 @@ export function buildWavePath(
   for (let i = 0; i <= samples; i++) {
     const t = i / samples;
     const x = t * width;
-    // Softly taper wave ends like a plucked string / gentle standing wave envelope.
     const envelope = Math.sin(t * Math.PI);
     const y = midY - Math.sin(t * cycles * Math.PI * 2 + phase) * maxAmp * (0.28 + 0.72 * envelope);
     parts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`);

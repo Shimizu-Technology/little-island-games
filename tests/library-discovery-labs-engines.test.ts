@@ -50,7 +50,14 @@ import {
   effectiveBpm,
   reduceHeartbeatBreath,
 } from "../src/library/labs/heartbeatBreathEngine";
-import { createLabSoundPlayer } from "../src/library/labs/soundSynth";
+import {
+  createLabSoundPlayer,
+  resolveNativeTonePlan,
+  type NativeSampleKey,
+  type NativeTonePlayer,
+} from "../src/library/labs/soundSynth";
+import { javascriptStrings } from "../scripts/words/artifact-views.mjs";
+import { wordTokens } from "../scripts/words/density.mjs";
 
 describe("Discovery Labs registry, search, permissions, and navigation", () => {
   it("registers all 6 unique Discovery Labs with valid canonical destinations and collection permissions", () => {
@@ -277,5 +284,127 @@ describe("6. Heartbeat & Calm Breath Lab engine", () => {
     expect(state.calmBreathsCompleted).toBe(2);
     expect(effectiveBpm(state)).toBeLessThan(calmBefore);
     expect(HEARTBEAT_CHALLENGES[1].check(state)).toBe(true);
+  });
+});
+
+describe("R1-03 & R1-08 regression checks: native pitch differentiation and word-safety guard shape", () => {
+  it("maps every island drum, xylophone bar, and plucked string tension to a distinct native sample + playbackRate", () => {
+    const drumPlans = ISLAND_DRUMS.map((pad) => {
+      const plan = resolveNativeTonePlan(pad.frequencyHz, pad.voice);
+      return `${plan.sampleKey}@${plan.playbackRate}`;
+    });
+    expect(new Set(drumPlans).size).toBe(ISLAND_DRUMS.length);
+
+    const xyloPlans = XYLOPHONE_BARS.map((pad) => {
+      const plan = resolveNativeTonePlan(pad.frequencyHz, pad.voice);
+      return `${plan.sampleKey}@${plan.playbackRate}`;
+    });
+    expect(new Set(xyloPlans).size).toBe(XYLOPHONE_BARS.length);
+
+    for (const str of PLUCK_STRINGS) {
+      const loose = resolveNativeTonePlan(effectiveFrequency(str, "loose"), str.voice);
+      const normal = resolveNativeTonePlan(effectiveFrequency(str, "normal"), str.voice);
+      const tight = resolveNativeTonePlan(effectiveFrequency(str, "tight"), str.voice);
+      const signatures = new Set([
+        `${loose.sampleKey}@${loose.playbackRate}`,
+        `${normal.sampleKey}@${normal.playbackRate}`,
+        `${tight.sampleKey}@${tight.playbackRate}`,
+      ]);
+      expect(signatures.size, `Distinct pitches for ${str.id} across loose/normal/tight`).toBe(3);
+    }
+  });
+
+  it("configures shouldCorrectPitch=false, setPlaybackRate, seekTo, play, stop, and dispose on native players", () => {
+    const created = new Map<
+      NativeSampleKey,
+      {
+        player: NativeTonePlayer;
+        rates: number[];
+        pitchFlags: boolean[];
+        plays: number;
+        pauses: number;
+        removes: number;
+      }
+    >();
+
+    const synth = createLabSoundPlayer((key) => {
+      const record = {
+        rates: [] as number[],
+        pitchFlags: [] as boolean[],
+        plays: 0,
+        pauses: 0,
+        removes: 0,
+        player: {
+          volume: 1,
+          playbackRate: 1,
+          shouldCorrectPitch: true,
+          setPlaybackRate(rate: number) {
+            record.rates.push(rate);
+            record.player.playbackRate = rate;
+          },
+          seekTo: async () => {},
+          play() {
+            record.pitchFlags.push(Boolean(record.player.shouldCorrectPitch));
+            record.plays += 1;
+          },
+          pause() {
+            record.pauses += 1;
+          },
+          remove() {
+            record.removes += 1;
+          },
+        } satisfies NativeTonePlayer,
+      };
+      created.set(key, record);
+      return record.player;
+    });
+
+    const lowDrum = ISLAND_DRUMS[0];
+    const highDrum = ISLAND_DRUMS[3];
+    const looseStr = effectiveFrequency(PLUCK_STRINGS[0], "loose");
+    const tightStr = effectiveFrequency(PLUCK_STRINGS[0], "tight");
+
+    expect(synth.playTone(lowDrum.frequencyHz, "drum", 0.8)).toBe(true);
+    expect(synth.playTone(highDrum.frequencyHz, "drum", 0.8)).toBe(true);
+    expect(synth.playTone(looseStr, "string", 0.7)).toBe(true);
+    expect(synth.playTone(tightStr, "string", 0.7)).toBe(true);
+
+    const lowDrumPlan = resolveNativeTonePlan(lowDrum.frequencyHz, "drum");
+    const highDrumPlan = resolveNativeTonePlan(highDrum.frequencyHz, "drum");
+    expect(lowDrumPlan.sampleKey).not.toBe(highDrumPlan.sampleKey);
+    expect(created.get(lowDrumPlan.sampleKey)?.plays).toBe(1);
+    expect(created.get(highDrumPlan.sampleKey)?.plays).toBe(1);
+    expect(created.get(lowDrumPlan.sampleKey)?.pitchFlags).toEqual([false]);
+
+    const loosePlan = resolveNativeTonePlan(looseStr, "string");
+    const tightPlan = resolveNativeTonePlan(tightStr, "string");
+    expect(created.get(loosePlan.sampleKey)?.rates).toContain(loosePlan.playbackRate);
+    expect(created.get(tightPlan.sampleKey)?.rates).toContain(tightPlan.playbackRate);
+
+    synth.stop();
+    expect(created.get(lowDrumPlan.sampleKey)?.pauses).toBe(1);
+
+    synth.dispose();
+    expect(created.get(lowDrumPlan.sampleKey)?.removes).toBe(1);
+  });
+
+  it("keeps Discovery Lab engines and registry free of plain English word-list arrays/maps that trip blocked-source-list", () => {
+    const checkedFiles = [
+      "src/library/labs/colorLightEngine.ts",
+      "src/library/labs/soundRhythmEngine.ts",
+      "src/library/labs/SoundRhythmLabView.tsx",
+      "src/library/labs/plantGrowthEngine.ts",
+      "src/library/labs/registry.ts",
+    ];
+    for (const file of checkedFiles) {
+      const source = readFileSync(file, "utf8");
+      const views = javascriptStrings(source, [], file);
+      const plainBroadUnits = views.units.filter((unit: any) => {
+        if (unit.compact || !Array.isArray(unit)) return false;
+        const words = unit.flatMap((entry: unknown) => wordTokens(String(entry)).filter((w: string) => w.length >= 5));
+        return new Set(words).size >= 3;
+      });
+      expect(plainBroadUnits, `${file} must not declare plain short-word arrays or numeric/boolean word maps`).toEqual([]);
+    }
   });
 });

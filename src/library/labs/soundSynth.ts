@@ -1,10 +1,28 @@
 export type SynthVoice = "xylophone" | "drum" | "string" | "chime";
 
+export type NativeSampleKey =
+  | "shell-0"
+  | "shell-1"
+  | "shell-2"
+  | "shell-3"
+  | "shell-4"
+  | "shell-5"
+  | "drum-thump"
+  | "drum-tap"
+  | "drum-snap"
+  | "drum-coral";
+
+export interface NativeTonePlan {
+  sampleKey: NativeSampleKey;
+  playbackRate: number;
+}
+
 type WebAudioContextCtor = new () => {
   state: string;
   currentTime: number;
   destination: unknown;
   resume?: () => Promise<void>;
+  suspend?: () => Promise<void>;
   close?: () => Promise<void>;
   createOscillator: () => {
     type: string;
@@ -26,8 +44,11 @@ type WebAudioContextCtor = new () => {
   };
 };
 
-type NativeTonePlayer = {
+export type NativeTonePlayer = {
   volume: number;
+  playbackRate?: number;
+  shouldCorrectPitch?: boolean;
+  setPlaybackRate?: (rate: number) => void;
   seekTo: (seconds: number) => Promise<void>;
   play: () => void;
   pause: () => void;
@@ -36,23 +57,88 @@ type NativeTonePlayer = {
 
 export interface LabSoundPlayer {
   playTone: (frequencyHz: number, voice: SynthVoice, loudness?: number) => boolean;
+  stop: () => void;
   dispose: () => void;
 }
 
-function loadNativeShellSources(): number[] {
-  return [
-    require("../../../assets/arcade/shell-0.wav"),
-    require("../../../assets/arcade/shell-1.wav"),
-    require("../../../assets/arcade/shell-2.wav"),
-    require("../../../assets/arcade/shell-3.wav"),
-    require("../../../assets/arcade/shell-4.wav"),
-    require("../../../assets/arcade/shell-5.wav"),
-  ];
+const MELODIC_ANCHORS: readonly { sampleKey: NativeSampleKey; baseHz: number }[] = [
+  { sampleKey: "shell-0", baseHz: 262 },
+  { sampleKey: "shell-1", baseHz: 294 },
+  { sampleKey: "shell-2", baseHz: 330 },
+  { sampleKey: "shell-3", baseHz: 392 },
+  { sampleKey: "shell-4", baseHz: 440 },
+  { sampleKey: "shell-5", baseHz: 523 },
+];
+
+const DRUM_ANCHORS: readonly { sampleKey: NativeSampleKey; baseHz: number; maxHz: number }[] = [
+  { sampleKey: "drum-thump", baseHz: 110, maxHz: 165 },
+  { sampleKey: "drum-tap", baseHz: 220, maxHz: 320 },
+  { sampleKey: "drum-snap", baseHz: 410, maxHz: 520 },
+  { sampleKey: "drum-coral", baseHz: 660, maxHz: Infinity },
+];
+
+function clampRate(rate: number): number {
+  return Math.round(Math.max(0.5, Math.min(2.0, rate)) * 1000) / 1000;
 }
 
-function loadNativeTapSource(): number {
-  return require("../../../assets/audio/tap.wav");
+/**
+ * Pure, deterministic native sample + playbackRate selector so every xylophone bar,
+ * every island drum pad, and every plucked string length/tension plays a distinct audible pitch.
+ */
+export function resolveNativeTonePlan(frequencyHz: number, voice: SynthVoice): NativeTonePlan {
+  const safeHz = Math.max(55, Math.min(1800, frequencyHz));
+  if (voice === "drum") {
+    const drum = DRUM_ANCHORS.find((entry) => safeHz <= entry.maxHz) ?? DRUM_ANCHORS[DRUM_ANCHORS.length - 1];
+    return {
+      sampleKey: drum.sampleKey,
+      playbackRate: clampRate(safeHz / drum.baseHz),
+    };
+  }
+
+  let closest = MELODIC_ANCHORS[0];
+  let bestDistance = Math.abs(safeHz - closest.baseHz);
+  for (const anchor of MELODIC_ANCHORS) {
+    const dist = Math.abs(safeHz - anchor.baseHz);
+    if (dist < bestDistance) {
+      bestDistance = dist;
+      closest = anchor;
+    }
+  }
+  return {
+    sampleKey: closest.sampleKey,
+    playbackRate: clampRate(safeHz / closest.baseHz),
+  };
 }
+
+function loadNativeSampleSource(key: NativeSampleKey): number {
+  switch (key) {
+    case "shell-0":
+      return require("../../../assets/arcade/shell-0.wav");
+    case "shell-1":
+      return require("../../../assets/arcade/shell-1.wav");
+    case "shell-2":
+      return require("../../../assets/arcade/shell-2.wav");
+    case "shell-3":
+      return require("../../../assets/arcade/shell-3.wav");
+    case "shell-4":
+      return require("../../../assets/arcade/shell-4.wav");
+    case "shell-5":
+      return require("../../../assets/arcade/shell-5.wav");
+    case "drum-thump":
+      return require("../../../assets/arcade/lagoon-sfx/thump.wav");
+    case "drum-tap":
+      return require("../../../assets/audio/tap.wav");
+    case "drum-snap":
+      return require("../../../assets/arcade/lagoon-sfx/snap.wav");
+    case "drum-coral":
+      return require("../../../assets/arcade/coral.wav");
+  }
+}
+
+const ALL_NATIVE_KEYS: readonly NativeSampleKey[] = [
+  ...MELODIC_ANCHORS.map((a) => a.sampleKey),
+  ...DRUM_ANCHORS.map((a) => a.sampleKey),
+];
 
 function getWebAudioCtor(): WebAudioContextCtor | null {
   if (typeof globalThis === "undefined") return null;
@@ -73,27 +159,37 @@ function isBrowserOrNodeRuntime(): boolean {
  * Offline instrument sound player:
  * - On Web (browsers with Web Audio API), synthesizes warm bamboo xylophone, island drum,
  *   and plucked ukulele/string timbres at the exact requested pitch & loudness.
- * - On native iOS/Android, preloads bundled offline WAV tones via expo-audio so kids get
- *   immediate zero-latency sound in the car without network access.
+ * - On native iOS/Android, preloads 10 distinct offline WAV samples via expo-audio and applies
+ *   uncorrected playbackRate pitch shifting (`shouldCorrectPitch = false`) so every xylophone
+ *   note, island drum pad, and string length/tension produces a measurably distinct pitch.
  * - In Vitest/headless environments or when muted, degrades cleanly to a silent no-op.
  */
-export function createLabSoundPlayer(): LabSoundPlayer {
+export function createLabSoundPlayer(customNativeFactory?: (key: NativeSampleKey) => NativeTonePlayer): LabSoundPlayer {
   let webCtx: InstanceType<WebAudioContextCtor> | null = null;
-  let nativeTones: NativeTonePlayer[] | null = null;
-  let nativeTap: NativeTonePlayer | null = null;
+  let nativePlayers: Map<NativeSampleKey, NativeTonePlayer> | null = null;
   let nativeFailed = false;
 
   const ensureNative = () => {
-    if (nativeTones || nativeFailed || isBrowserOrNodeRuntime()) return;
+    if (nativePlayers || nativeFailed) return;
+    if (!customNativeFactory && isBrowserOrNodeRuntime()) return;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy native-only fallback so pure Node tests never load expo-audio
-      const expoAudio = require("expo-audio") as { createAudioPlayer?: (src: number) => NativeTonePlayer };
-      if (typeof expoAudio?.createAudioPlayer !== "function") {
-        nativeFailed = true;
-        return;
+      const map = new Map<NativeSampleKey, NativeTonePlayer>();
+      if (customNativeFactory) {
+        for (const key of ALL_NATIVE_KEYS) {
+          map.set(key, customNativeFactory(key));
+        }
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy native-only fallback so pure Node tests never load expo-audio
+        const expoAudio = require("expo-audio") as { createAudioPlayer?: (src: number) => NativeTonePlayer };
+        if (typeof expoAudio?.createAudioPlayer !== "function") {
+          nativeFailed = true;
+          return;
+        }
+        for (const key of ALL_NATIVE_KEYS) {
+          map.set(key, expoAudio.createAudioPlayer(loadNativeSampleSource(key)));
+        }
       }
-      nativeTones = loadNativeShellSources().map((src) => expoAudio.createAudioPlayer!(src));
-      nativeTap = expoAudio.createAudioPlayer(loadNativeTapSource());
+      nativePlayers = map;
     } catch {
       nativeFailed = true;
     }
@@ -102,7 +198,7 @@ export function createLabSoundPlayer(): LabSoundPlayer {
   return {
     playTone(frequencyHz, voice, loudness = 0.7) {
       const clampedGain = Math.max(0.12, Math.min(0.85, loudness * 0.55));
-      const WebCtor = getWebAudioCtor();
+      const WebCtor = customNativeFactory ? null : getWebAudioCtor();
       if (WebCtor) {
         try {
           if (!webCtx) webCtx = new WebCtor();
@@ -153,18 +249,18 @@ export function createLabSoundPlayer(): LabSoundPlayer {
       }
 
       ensureNative();
-      if (!nativeTones || !nativeTones.length) return false;
+      if (!nativePlayers || nativePlayers.size === 0) return false;
+      const plan = resolveNativeTonePlan(frequencyHz, voice);
+      const player = nativePlayers.get(plan.sampleKey);
+      if (!player) return false;
       try {
-        const player =
-          voice === "drum" && nativeTap
-            ? nativeTap
-            : nativeTones[
-                Math.max(
-                  0,
-                  Math.min(nativeTones.length - 1, Math.round(((frequencyHz - 180) / 360) * (nativeTones.length - 1)))
-                )
-              ];
         player.volume = Math.max(0.2, Math.min(1, loudness));
+        player.shouldCorrectPitch = false;
+        if (typeof player.setPlaybackRate === "function") {
+          player.setPlaybackRate(plan.playbackRate);
+        } else {
+          player.playbackRate = plan.playbackRate;
+        }
         void player.seekTo(0).catch(() => {});
         player.play();
         return true;
@@ -173,30 +269,37 @@ export function createLabSoundPlayer(): LabSoundPlayer {
       }
     },
 
+    stop() {
+      if (webCtx && webCtx.state === "running" && typeof webCtx.suspend === "function") {
+        void webCtx.suspend().catch(() => {});
+      }
+      if (nativePlayers) {
+        for (const player of nativePlayers.values()) {
+          try {
+            player.pause();
+          } catch {
+            /* Already paused/disposed. */
+          }
+        }
+      }
+    },
+
     dispose() {
       if (webCtx && typeof webCtx.close === "function") {
         void webCtx.close().catch(() => {});
       }
       webCtx = null;
-      if (nativeTones) {
-        for (const p of nativeTones) {
+      if (nativePlayers) {
+        for (const player of nativePlayers.values()) {
           try {
-            p.pause();
-            p.remove();
+            player.pause();
+            player.remove();
           } catch {
             /* Already disposed. */
           }
         }
-        nativeTones = null;
-      }
-      if (nativeTap) {
-        try {
-          nativeTap.pause();
-          nativeTap.remove();
-        } catch {
-          /* Already disposed. */
-        }
-        nativeTap = null;
+        nativePlayers.clear();
+        nativePlayers = null;
       }
     },
   };

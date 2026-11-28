@@ -12,12 +12,15 @@ const env = vi.hoisted(() => ({
   width: 900,
   height: 1024,
   fontScale: 1,
+  focused: true,
   params: { place: "wonder" } as Record<string, string>,
   store: {} as any,
   routerPush: vi.fn(),
   routerReplace: vi.fn(),
   routerBack: vi.fn(),
   routerDismissTo: vi.fn(),
+  appStateListeners: new Set<(state: string) => void>(),
+  reduceMotion: false,
 }));
 
 vi.mock("react-native", () => ({
@@ -40,7 +43,21 @@ vi.mock("react-native", () => ({
   ),
   Keyboard: { dismiss: vi.fn() },
   PanResponder: { create: (handlers: object) => ({ panHandlers: handlers }) },
-  AppState: { addEventListener: () => ({ remove() {} }) },
+  AccessibilityInfo: {
+    isReduceMotionEnabled: vi.fn(async () => env.reduceMotion),
+    addEventListener: vi.fn(() => ({ remove() {} })),
+  },
+  AppState: {
+    currentState: "active",
+    addEventListener: (_event: string, cb: (state: string) => void) => {
+      env.appStateListeners.add(cb);
+      return {
+        remove() {
+          env.appStateListeners.delete(cb);
+        },
+      };
+    },
+  },
   Platform: { OS: "web" },
   StyleSheet: { create: (v: any) => v, absoluteFill: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } },
   useWindowDimensions: () => ({ width: env.width, height: env.height, fontScale: env.fontScale }),
@@ -58,7 +75,7 @@ vi.mock("react-native-svg", () => ({
   SvgXml: "SvgXml",
 }));
 vi.mock("expo-router", () => ({
-  useIsFocused: () => true,
+  useIsFocused: () => env.focused,
   useLocalSearchParams: () => env.params,
   router: {
     push: (...args: any[]) => env.routerPush(...args),
@@ -112,6 +129,9 @@ beforeEach(() => {
   env.width = 900;
   env.height = 1024;
   env.fontScale = 1;
+  env.focused = true;
+  env.reduceMotion = false;
+  env.appStateListeners.clear();
   env.params = { place: "wonder" };
   env.routerPush.mockReset();
   env.routerReplace.mockReset();
@@ -304,5 +324,314 @@ describe("Interactive UI tests for all 6 Discovery Labs", () => {
     expect(textOf(root!.root.findByProps({ testID: "calm-breath-bubble-card" }))).toContain("Hold Gently");
     await act(async () => bubbleBtn.props.onPress());
     expect(textOf(root!.root.findByProps({ testID: "calm-breath-bubble-card" }))).toContain("Breathe Out");
+  });
+});
+
+function findRawTextOutsideTextNodes(node: any, parentType = "ROOT", out: Array<{ parentType: string; value: string }> = []) {
+  if (node === null || node === undefined) return out;
+  if (Array.isArray(node)) {
+    for (const child of node) findRawTextOutsideTextNodes(child, parentType, out);
+    return out;
+  }
+  if (typeof node === "string" || typeof node === "number") {
+    const str = String(node);
+    if (str.trim().length > 0 && parentType !== "Text" && parentType !== "Copy" && parentType !== "Heading") {
+      out.push({ parentType, value: str });
+    }
+    return out;
+  }
+  if (typeof node === "object" && "type" in node) {
+    const nextParent = String(node.type);
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) findRawTextOutsideTextNodes(child, nextParent, out);
+    }
+  }
+  return out;
+}
+
+function flattenStyle(style: any): Record<string, any> {
+  if (!style) return {};
+  if (typeof style === "function") return flattenStyle(style({ pressed: false }));
+  if (Array.isArray(style)) return Object.assign({}, ...style.map(flattenStyle));
+  if (typeof style === "object") return style;
+  return {};
+}
+
+function installManualRaf() {
+  const origRaf = globalThis.requestAnimationFrame;
+  const origCancel = globalThis.cancelAnimationFrame;
+  let nextId = 1;
+  let now = 1000;
+  const pending = new Map<number, FrameRequestCallback>();
+  const cancelled: number[] = [];
+
+  globalThis.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+    const id = nextId++;
+    pending.set(id, cb);
+    return id;
+  }) as typeof requestAnimationFrame;
+
+  globalThis.cancelAnimationFrame = ((id: number) => {
+    cancelled.push(id);
+    pending.delete(id);
+  }) as typeof cancelAnimationFrame;
+
+  return {
+    pending,
+    cancelled,
+    async step(dtMs: number) {
+      now += dtMs;
+      const batch = [...pending.entries()];
+      pending.clear();
+      for (const [, cb] of batch) {
+        await act(async () => {
+          cb(now);
+        });
+      }
+    },
+    restore() {
+      globalThis.requestAnimationFrame = origRaf;
+      globalThis.cancelAnimationFrame = origCancel;
+    },
+  };
+}
+
+describe("R1-01, R1-02, R1-04, R1-05, R1-06, R1-07 UI regressions", () => {
+  it("R1-01: renders zero raw text nodes outside <Text> across all 6 Discovery Labs and LabButton primitive arrays", async () => {
+    const { DiscoveryLabView } = await import("../src/library/labs/DiscoveryLabView");
+    const { LabButton } = await import("../src/library/labs/LabShell");
+
+    // LabButton directly given a mixed primitive array child
+    await act(async () => {
+      root = create(
+        <LabButton onPress={vi.fn()}>
+          {"Coconut"} ({1})
+        </LabButton>
+      );
+    });
+    expect(findRawTextOutsideTextNodes(root!.toJSON())).toEqual([]);
+    await act(async () => root!.unmount());
+
+    for (const lab of DISCOVERY_LABS) {
+      await act(async () => {
+        root = create(<DiscoveryLabView labId={lab.id} sound={false} saved={false} onToggleSaved={vi.fn()} />);
+      });
+      expect(findRawTextOutsideTextNodes(root!.toJSON()), `${lab.id} default mode`).toEqual([]);
+
+      // Also check secondary modes
+      if (lab.id === "color-light-lab") {
+        await act(async () => root!.root.findByProps({ testID: "color-mode-light" }).props.onPress());
+        expect(findRawTextOutsideTextNodes(root!.toJSON()), "color-light-lab light mode").toEqual([]);
+      } else if (lab.id === "sound-rhythm-lab") {
+        await act(async () => root!.root.findByProps({ testID: "sound-mode-drums" }).props.onPress());
+        expect(findRawTextOutsideTextNodes(root!.toJSON()), "sound-rhythm-lab drums mode").toEqual([]);
+        await act(async () => root!.root.findByProps({ testID: "sound-mode-strings" }).props.onPress());
+        expect(findRawTextOutsideTextNodes(root!.toJSON()), "sound-rhythm-lab strings mode").toEqual([]);
+      } else if (lab.id === "ramp-balance-lab") {
+        await act(async () => root!.root.findByProps({ testID: "physics-mode-ramp" }).props.onPress());
+        expect(findRawTextOutsideTextNodes(root!.toJSON()), "ramp-balance-lab ramp mode").toEqual([]);
+      }
+
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+  });
+
+  it("R1-02: cancels rAF and pauses active lab loops on navigation blur without unmounting, and resumes cleanly", async () => {
+    const raf = installManualRaf();
+    try {
+      const { default: LibraryScreen } = await import("../src/library/LibraryScreen");
+
+      // 1. Sound & Rhythm Lab inside LibraryScreen
+      env.params = { place: "discovery-lab", id: "sound-rhythm-lab" };
+      env.focused = true;
+      await act(async () => {
+        root = create(<LibraryScreen />);
+      });
+      await act(async () => root!.root.findByProps({ testID: "rhythm-play-toggle" }).props.onPress());
+      expect(raf.pending.size).toBeGreaterThan(0);
+
+      // Blur without unmounting
+      env.focused = false;
+      await act(async () => root!.update(<LibraryScreen />));
+      expect(raf.pending.size).toBe(0);
+      expect(raf.cancelled.length).toBeGreaterThan(0);
+
+      // Resume focus cleanly
+      env.focused = true;
+      await act(async () => root!.update(<LibraryScreen />));
+      expect(raf.pending.size).toBeGreaterThan(0);
+
+      await act(async () => root!.unmount());
+      root = undefined;
+
+      // 2. Heartbeat & Calm Breath Lab inside LibraryScreen
+      env.params = { place: "discovery-lab", id: "heartbeat-breath-lab" };
+      env.focused = true;
+      await act(async () => {
+        root = create(<LibraryScreen />);
+      });
+      expect(raf.pending.size).toBeGreaterThan(0);
+
+      env.focused = false;
+      await act(async () => root!.update(<LibraryScreen />));
+      expect(raf.pending.size).toBe(0);
+
+      await act(async () => root!.unmount());
+      root = undefined;
+    } finally {
+      raf.restore();
+    }
+  });
+
+  it("R1-04: animates lungs smoothly with activity breathing rate, visibly faster when Running than Sleeping", async () => {
+    const raf = installManualRaf();
+    try {
+      const { DiscoveryLabView } = await import("../src/library/labs/DiscoveryLabView");
+      await act(async () => {
+        root = create(<DiscoveryLabView labId="heartbeat-breath-lab" sound={false} />);
+      });
+
+      const readLungScale = () => {
+        const g = root!.root.findByProps({ testID: "heartbeat-lungs-group" });
+        const match = /scale\(([0-9.]+)\)/.exec(String(g.props.transform));
+        expect(match).not.toBeNull();
+        return Number(match![1]);
+      };
+
+      // Switch to Sleeping (12 breaths/min) and measure total scale change over 2000ms (40 x 50ms)
+      await act(async () => root!.root.findByProps({ testID: "body-activity-sleeping" }).props.onPress());
+      await raf.step(16); // seed initial timestamp
+      let prev = readLungScale();
+      let sleepMotion = 0;
+      for (let i = 0; i < 40; i++) {
+        await raf.step(50);
+        const cur = readLungScale();
+        sleepMotion += Math.abs(cur - prev);
+        prev = cur;
+      }
+      expect(sleepMotion).toBeGreaterThan(0.05);
+
+      // Reset & switch to Running (34 breaths/min) and measure over the same 2000ms (40 x 50ms)
+      await act(async () => root!.root.findByProps({ testID: "lab-reset-heartbeat-breath-lab" }).props.onPress());
+      await act(async () => root!.root.findByProps({ testID: "body-activity-running" }).props.onPress());
+      prev = readLungScale();
+      let runMotion = 0;
+      for (let i = 0; i < 40; i++) {
+        await raf.step(50);
+        const cur = readLungScale();
+        runMotion += Math.abs(cur - prev);
+        prev = cur;
+      }
+      expect(runMotion).toBeGreaterThan(sleepMotion * 2);
+
+      await act(async () => root!.unmount());
+      root = undefined;
+    } finally {
+      raf.restore();
+    }
+  });
+
+  it("R1-05: animates the first ramp race after Reset both after a completed run and after an interrupted run", async () => {
+    const raf = installManualRaf();
+    try {
+      const { DiscoveryLabView } = await import("../src/library/labs/DiscoveryLabView");
+      await act(async () => {
+        root = create(<DiscoveryLabView labId="ramp-balance-lab" sound={false} />);
+      });
+
+      const readCarX = () => {
+        const rects = root!.root.findAll((n) => String(n.type) === "Rect" && n.props.fill === "#E05A47");
+        expect(rects.length).toBeGreaterThan(0);
+        return Number(rects[0].props.x);
+      };
+
+      // 1. Complete first ramp run
+      await act(async () => root!.root.findByProps({ testID: "physics-mode-ramp" }).props.onPress());
+      const startX = readCarX();
+      await act(async () => root!.root.findByProps({ testID: "ramp-roll-btn" }).props.onPress());
+      expect(raf.pending.size).toBeGreaterThan(0);
+      await raf.step(16);
+      await raf.step(1000);
+      const finishedX = readCarX();
+      expect(finishedX).toBeGreaterThan(startX + 100);
+
+      // Reset after completed run, switch back to ramp, and roll again!
+      await act(async () => root!.root.findByProps({ testID: "lab-reset-ramp-balance-lab" }).props.onPress());
+      await act(async () => root!.root.findByProps({ testID: "physics-mode-ramp" }).props.onPress());
+      expect(readCarX()).toBeCloseTo(startX, 1);
+      await act(async () => root!.root.findByProps({ testID: "ramp-roll-btn" }).props.onPress());
+      expect(raf.pending.size).toBeGreaterThan(0);
+      await raf.step(16);
+      await raf.step(400);
+      const midX = readCarX();
+      expect(midX).toBeGreaterThan(startX + 20);
+      expect(midX).toBeLessThan(finishedX);
+
+      // 2. Interrupt mid-flight with Reset, then roll again cleanly!
+      await act(async () => root!.root.findByProps({ testID: "lab-reset-ramp-balance-lab" }).props.onPress());
+      expect(raf.pending.size).toBe(0);
+      await act(async () => root!.root.findByProps({ testID: "physics-mode-ramp" }).props.onPress());
+      await act(async () => root!.root.findByProps({ testID: "ramp-roll-btn" }).props.onPress());
+      expect(raf.pending.size).toBeGreaterThan(0);
+      await raf.step(16);
+      await raf.step(1000);
+      expect(readCarX()).toBeGreaterThan(startX + 100);
+
+      await act(async () => root!.unmount());
+      root = undefined;
+    } finally {
+      raf.restore();
+    }
+  });
+
+  it("R1-06: stacks 4-beat rhythm tracks on compact 320px/375px phones while keeping >=48px beat touch targets", async () => {
+    const { DiscoveryLabView } = await import("../src/library/labs/DiscoveryLabView");
+
+    for (const phoneWidth of [320, 375]) {
+      env.width = phoneWidth;
+      await act(async () => {
+        root = create(<DiscoveryLabView labId="sound-rhythm-lab" sound={false} />);
+      });
+      const row = root!.root.findByProps({ testID: "rhythm-track-row-drum" });
+      expect(flattenStyle(row.props.style).flexDirection, `width=${phoneWidth}`).toBe("column");
+      for (let beat = 0; beat < 4; beat++) {
+        const cell = root!.root.findByProps({ testID: `rhythm-cell-drum-${beat}` });
+        const st = flattenStyle(cell.props.style);
+        expect(st.minWidth).toBeGreaterThanOrEqual(48);
+        expect(st.minHeight).toBeGreaterThanOrEqual(48);
+      }
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+
+    // Wide tablet keeps horizontal row layout
+    env.width = 900;
+    await act(async () => {
+      root = create(<DiscoveryLabView labId="sound-rhythm-lab" sound={false} />);
+    });
+    const wideRow = root!.root.findByProps({ testID: "rhythm-track-row-drum" });
+    expect(flattenStyle(wideRow.props.style).flexDirection).toBe("row");
+  });
+
+  it("R1-07: renders LabStepper indicator pills as non-interactive Views and keeps +/- targets >= 48px", async () => {
+    const { LabStepper } = await import("../src/library/labs/LabShell");
+    const onChange = vi.fn();
+    await act(async () => {
+      root = create(<LabStepper label="Magma Heat" value={3} min={1} max={5} onChange={onChange} testIDPrefix="test-step" />);
+    });
+
+    const pressables = root!.root.findAll((n) => String(n.type) === "Pressable");
+    expect(pressables).toHaveLength(2);
+    for (const p of pressables) {
+      const st = flattenStyle(p.props.style);
+      expect(st.minWidth).toBeGreaterThanOrEqual(48);
+      expect(st.minHeight).toBeGreaterThanOrEqual(48);
+    }
+
+    await act(async () => root!.root.findByProps({ testID: "test-step-plus" }).props.onPress());
+    expect(onChange).toHaveBeenCalledWith(4);
+    await act(async () => root!.root.findByProps({ testID: "test-step-minus" }).props.onPress());
+    expect(onChange).toHaveBeenCalledWith(2);
   });
 });

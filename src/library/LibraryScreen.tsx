@@ -1719,6 +1719,7 @@ function LibraryReady() {
             <DiscoveryLabView
               labId={activeDiscoveryLab.id}
               sound={store.save.settings.sound}
+              active={focused}
               saved={isSaved(activeDiscoveryLab.destinationId)}
               onToggleSaved={() => toggleSaved(activeDiscoveryLab.destinationId)}
             />

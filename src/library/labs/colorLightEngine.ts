@@ -65,12 +65,24 @@ export interface ColorLightState {
   challengeIndex: number;
 }
 
+export function emptyPaintDrops(): Record<PigmentId, number> {
+  const result = {} as Record<PigmentId, number>;
+  for (const option of PIGMENT_OPTIONS) result[option.id] = 0;
+  return result;
+}
+
+function initialLightBeams(): Record<LightBeamId, boolean> {
+  const result = {} as Record<LightBeamId, boolean>;
+  for (const option of LIGHT_BEAM_OPTIONS) result[option.id] = option.id === "red";
+  return result;
+}
+
 export function createColorLightState(): ColorLightState {
   return {
     mode: "paint",
-    drops: { red: 0, yellow: 0, blue: 0, white: 0, black: 0 },
+    drops: emptyPaintDrops(),
     stirCount: 0,
-    beams: { red: true, green: false, blue: false },
+    beams: initialLightBeams(),
     prismAngle: 30,
     sunlightThroughPrism: false,
     challengeIndex: 0,
@@ -96,14 +108,14 @@ function rgbToHex(r: number, g: number, b: number): string {
  * Red + Yellow yields warm Orange, and Red + Blue yields deep Purple, just like real paint!
  */
 function rybToRgb(r: number, y: number, b: number): [number, number, number] {
-  const c000 = [255, 255, 255]; // no pigment
-  const c100 = [235, 58, 52]; // red
-  const c010 = [250, 214, 42]; // yellow
-  const c001 = [34, 118, 216]; // blue
-  const c110 = [245, 130, 38]; // orange
-  const c011 = [44, 158, 84]; // green
-  const c101 = [132, 68, 178]; // purple
-  const c111 = [118, 84, 60]; // brown
+  const c000 = [255, 255, 255];
+  const c100 = [235, 58, 52];
+  const c010 = [250, 214, 42];
+  const c001 = [34, 118, 216];
+  const c110 = [245, 130, 38];
+  const c011 = [44, 158, 84];
+  const c101 = [132, 68, 178];
+  const c111 = [118, 84, 60];
 
   const out: [number, number, number] = [0, 0, 0];
   for (let i = 0; i < 3; i++) {
@@ -167,50 +179,50 @@ function describePaintMix(drops: Record<PigmentId, number>): { colorName: string
   const chroma = r + y + b;
 
   if (chroma === 0) {
-    if (w > 0 && k === 0) return { colorName: "Cloud White", discovery: "White paint makes other colors lighter and softer!" };
-    if (k > 0 && w === 0) return { colorName: "Night Black", discovery: "A tiny drop of black makes colors deeper and darker!" };
-    return { colorName: "Stormy Gray", discovery: "White and black mix together to make gray!" };
+    if (w > 0 && k === 0) return { colorName: "Cloud White", discovery: "White paint makes other colors feel lighter and softer!" };
+    if (k > 0 && w === 0) return { colorName: "Night Black", discovery: "A tiny drop of dark paint makes colors deeper and richer!" };
+    return { colorName: "Stormy Gray", discovery: "Light and dark paints blend together to create stormy gray!" };
   }
 
   if (r > 0 && y > 0 && b > 0) {
-    if (w > 0 && k === 0) return { colorName: "Warm Sand", discovery: "Red, yellow, blue, and white blend into cozy island sand!" };
-    return { colorName: "Coconut Brown", discovery: "Mixing red, yellow, and blue together makes earthy brown!" };
+    if (w > 0 && k === 0) return { colorName: "Warm Sand", discovery: "Blending all three primaries with a splash of light paint makes cozy island sand!" };
+    return { colorName: "Coconut Brown", discovery: "Blending all three primary paint colors together makes earthy brown!" };
   }
 
   if (r > 0 && y > 0 && b === 0) {
-    if (w > 0) return { colorName: "Island Coral", discovery: "Red, yellow, and white create warm Island Coral!" };
-    if (k > 0) return { colorName: "Cinnamon Rust", discovery: "Darkening orange with black makes cozy rust!" };
-    return { colorName: "Sunset Orange", discovery: "Red and yellow paint mix together to make Orange!" };
+    if (w > 0) return { colorName: "Island Coral", discovery: "Warm orange softened with a splash of white creates Island Coral!" };
+    if (k > 0) return { colorName: "Cinnamon Rust", discovery: "Shading warm orange with dark paint makes cozy cinnamon rust!" };
+    return { colorName: "Sunset Orange", discovery: "Red and yellow paint mix together to make Sunset Orange!" };
   }
 
   if (y > 0 && b > 0 && r === 0) {
-    if (b > y) return { colorName: "Lagoon Teal", discovery: "Extra blue with yellow makes sparkling Lagoon Teal!" };
-    if (w > 0) return { colorName: "Seafoam Mint", discovery: "Green softened with white looks like ocean foam!" };
-    if (k > 0) return { colorName: "Jungle Green", discovery: "Adding a little black makes deep rainforest green!" };
-    return { colorName: "Palm Green", discovery: "Yellow and blue paint mix together to make Green!" };
+    if (b > y) return { colorName: "Lagoon Teal", discovery: "Adding extra blue into your green mix makes sparkling Lagoon Teal!" };
+    if (w > 0) return { colorName: "Seafoam Mint", discovery: "Softening green paint with white looks just like ocean foam!" };
+    if (k > 0) return { colorName: "Jungle Green", discovery: "A tiny drop of dark paint turns bright green into deep jungle green!" };
+    return { colorName: "Palm Green", discovery: "Yellow and blue paint mix together to make Palm Green!" };
   }
 
   if (r > 0 && b > 0 && y === 0) {
-    if (w > 0) return { colorName: "Soft Lavender", discovery: "Purple lightened with white turns into gentle lavender!" };
-    if (k > 0) return { colorName: "Midnight Plum", discovery: "Darkening purple makes rich midnight plum!" };
-    return { colorName: "Hibiscus Purple", discovery: "Red and blue paint mix together to make Purple!" };
+    if (w > 0) return { colorName: "Soft Lavender", discovery: "Softening purple paint with white turns it into gentle lavender!" };
+    if (k > 0) return { colorName: "Midnight Plum", discovery: "Shading purple with dark paint makes rich midnight plum!" };
+    return { colorName: "Hibiscus Purple", discovery: "Red and blue paint mix together to make Hibiscus Purple!" };
   }
 
   if (r > 0) {
-    if (w > 0) return { colorName: "Blossom Pink", discovery: "Red and white paint mix together to make Pink!" };
-    if (k > 0) return { colorName: "Deep Maroon", discovery: "Adding black turns bright red into deep maroon!" };
-    return { colorName: "Bright Red", discovery: "Red is a primary paint color. Try adding yellow, blue, or white!" };
+    if (w > 0) return { colorName: "Blossom Pink", discovery: "Red and white paint mix together to make Blossom Pink!" };
+    if (k > 0) return { colorName: "Deep Maroon", discovery: "Shading bright red with dark paint turns it into deep maroon!" };
+    return { colorName: "Bright Red", discovery: "Red is a primary paint color. Try adding another drop to mix!" };
   }
 
   if (y > 0) {
-    if (w > 0) return { colorName: "Butter Cream", discovery: "Yellow and white make soft sunlit butter cream!" };
-    if (k > 0) return { colorName: "Olive Moss", discovery: "Yellow darkened with black turns into mossy olive!" };
-    return { colorName: "Sunshine Yellow", discovery: "Yellow is a primary paint color. Try adding blue or red!" };
+    if (w > 0) return { colorName: "Butter Cream", discovery: "Yellow softened with white makes sunlit butter cream!" };
+    if (k > 0) return { colorName: "Olive Moss", discovery: "Shading yellow with dark paint turns it into mossy olive!" };
+    return { colorName: "Sunshine Yellow", discovery: "Yellow is a primary paint color. Try adding another drop to mix!" };
   }
 
   if (w > 0) return { colorName: "Sky Blue", discovery: "Blue and white paint mix together to make Sky Blue!" };
-  if (k > 0) return { colorName: "Deep Ocean Navy", discovery: "Blue darkened with black looks like the deep Pacific!" };
-  return { colorName: "Pacific Blue", discovery: "Blue is a primary paint color. Try adding yellow, red, or white!" };
+  if (k > 0) return { colorName: "Deep Ocean Navy", discovery: "Shading blue with dark paint looks like the deep Pacific!" };
+  return { colorName: "Pacific Blue", discovery: "Blue is a primary paint color. Try adding another drop to mix!" };
 }
 
 export function computeLightMix(
@@ -244,7 +256,7 @@ export function computeLightMix(
     return {
       hex: "#1A2438",
       colorName: "Dark Night Room",
-      discovery: "Switch on Red, Green, or Blue flashlights to mix beams of light!",
+      discovery: "Switch on the colorful flashlights below to mix beams of light!",
       rainbowVisible: false,
       rainbowSpread: 0,
       activeCount: 0,
@@ -295,7 +307,7 @@ export function computeLightMix(
     return {
       hex: "#FF5252",
       colorName: "Red Light Beam",
-      discovery: "Add Green light or Blue light to see what glowing color appears!",
+      discovery: "Turn on a second flashlight beam to see what glowing color appears!",
       rainbowVisible: false,
       rainbowSpread: 0,
       activeCount: 1,
@@ -314,7 +326,7 @@ export function computeLightMix(
   return {
     hex: "#4A8CFF",
     colorName: "Blue Light Beam",
-    discovery: "Add Red or Green light to create glowing Magenta or Cyan!",
+    discovery: "Turn on a second flashlight beam to create glowing Magenta or Cyan!",
     rainbowVisible: false,
     rainbowSpread: 0,
     activeCount: 1,
@@ -326,14 +338,14 @@ export const COLOR_LIGHT_CHALLENGES: readonly ColorLightChallenge[] = [
     id: "make-green",
     mode: "paint",
     prompt: "Can you mix Palm Green paint in the bowl?",
-    hint: "Try adding Yellow and Blue paint drops!",
+    hint: "Try combining Yellow and Blue paint drops!",
     check: (state) => state.mode === "paint" && state.drops.yellow > 0 && state.drops.blue > 0 && state.drops.red === 0,
   },
   {
     id: "make-coral",
     mode: "paint",
     prompt: "Can you mix warm Island Coral paint?",
-    hint: "Combine Red, Yellow, and a splash of White!",
+    hint: "Make orange paint first, then soften it with a splash of White!",
     check: (state) =>
       state.mode === "paint" &&
       state.drops.red > 0 &&
@@ -345,7 +357,7 @@ export const COLOR_LIGHT_CHALLENGES: readonly ColorLightChallenge[] = [
     id: "make-white-light",
     mode: "light",
     prompt: "Switch to Prism & Light and make Pure White Light!",
-    hint: "Turn on Red, Green, and Blue light beams all at once!",
+    hint: "Turn on all three flashlight beams at the same time!",
     check: (state) => state.mode === "light" && state.beams.red && state.beams.green && state.beams.blue,
   },
   {
@@ -385,7 +397,7 @@ export function reduceColorLight(state: ColorLightState, action: ColorLightActio
     case "clear-bowl":
       return {
         ...state,
-        drops: { red: 0, yellow: 0, blue: 0, white: 0, black: 0 },
+        drops: emptyPaintDrops(),
         stirCount: 0,
       };
     case "toggle-beam":

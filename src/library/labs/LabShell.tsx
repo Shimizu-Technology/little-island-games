@@ -22,6 +22,22 @@ export function useLabFonts() {
   };
 }
 
+function isPrimitiveLabel(node: React.ReactNode): boolean {
+  if (typeof node === "string" || typeof node === "number") return true;
+  if (Array.isArray(node) && node.length > 0) {
+    return node.every((part) => part === null || part === undefined || typeof part === "boolean" || typeof part === "string" || typeof part === "number");
+  }
+  return false;
+}
+
+function flattenPrimitiveLabel(node: React.ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) {
+    return node.map((part) => (typeof part === "string" || typeof part === "number" ? String(part) : "")).join("");
+  }
+  return "";
+}
+
 export function LabButton({
   children,
   onPress,
@@ -43,11 +59,13 @@ export function LabButton({
 }) {
   const { headingBold } = useLabFonts();
   const activeBg = accentColor ?? palette.lagoonInk;
+  const primitiveText = isPrimitiveLabel(children);
+  const resolvedLabel = label ?? (primitiveText ? flattenPrimitiveLabel(children) : undefined);
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={label ?? (typeof children === "string" ? children : undefined)}
+      accessibilityLabel={resolvedLabel}
       accessibilityState={{ selected, disabled }}
       aria-selected={selected}
       disabled={disabled}
@@ -60,12 +78,12 @@ export function LabButton({
         style,
       ]}
     >
-      {typeof children === "string" || typeof children === "number" ? (
+      {primitiveText ? (
         <Text
           maxFontSizeMultiplier={1.35}
           style={[ls.buttonText, headingBold, selected && { color: "#FFFDF8" }]}
         >
-          {children}
+          {flattenPrimitiveLabel(children)}
         </Text>
       ) : (
         children
@@ -99,14 +117,18 @@ export function LabStepper({
   const count = Math.max(1, Math.floor((max - min) / step) + 1);
   const dots = Array.from({ length: count }, (_, i) => min + i * step);
   return (
-    <View style={ls.stepperBox}>
+    <View
+      style={ls.stepperBox}
+      accessibilityRole="adjustable"
+      accessibilityLabel={`${label}: ${value}${unit}`}
+      accessibilityValue={{ min, max, now: value }}
+    >
       <View style={ls.stepperHeader}>
         <Text maxFontSizeMultiplier={1.35} style={[ls.stepperLabel, headingBold]}>
           {label}
         </Text>
         <Text maxFontSizeMultiplier={1.3} style={[ls.stepperValue, bodyFont, { color: accentColor }]}>
-          {value}
-          {unit}
+          {`${value}${unit}`}
         </Text>
       </View>
       <View style={ls.stepperRow}>
@@ -119,13 +141,10 @@ export function LabStepper({
         >
           −
         </LabButton>
-        <View style={ls.dotsRow} accessible={false}>
+        <View style={ls.dotsRow} accessible={false} importantForAccessibility="no-hide-descendants">
           {dots.map((dotVal) => (
-            <Pressable
+            <View
               key={dotVal}
-              accessibilityRole="button"
-              accessibilityLabel={`Set ${label} to ${dotVal}${unit}`}
-              onPress={() => onChange(dotVal)}
               style={[
                 ls.dotPill,
                 {

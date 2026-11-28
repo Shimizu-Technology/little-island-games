@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Line, Path, Rect } from "react-native-svg";
 import { Text } from "../../components/Text";
 import { palette } from "../ui";
@@ -7,34 +7,40 @@ import { DISCOVERY_LAB_MAP } from "./registry";
 import { LabButton, LabShell, ls, useLabFonts } from "./LabShell";
 import {
   ISLAND_DRUMS,
-  LOUDNESS_AMPLITUDE,
+  LOUDNESS_OPTIONS,
   PLUCK_STRINGS,
   RHYTHM_TRACKS,
   SOUND_CHALLENGES,
+  TENSION_OPTIONS,
   XYLOPHONE_BARS,
   activeTracksOnBeat,
   buildWavePath,
   createSoundRhythmState,
   effectiveFrequency,
+  loudnessAmplitude,
   reduceSoundRhythm,
   waveMetrics,
-  type LoudnessLevel,
   type SoundPad,
-  type StringTension,
 } from "./soundRhythmEngine";
 import { createLabSoundPlayer } from "./soundSynth";
+import { useLabActive } from "./useLabActive";
 
 export function SoundRhythmLabView({
   sound,
+  active = true,
   saved,
   onToggleSaved,
 }: {
   sound: boolean;
+  active?: boolean;
   saved?: boolean;
   onToggleSaved?: () => void;
 }) {
   const [state, dispatch] = useReducer(reduceSoundRhythm, undefined, createSoundRhythmState);
   const [phase, setPhase] = useState(0);
+  const { width } = useWindowDimensions();
+  const stackTracks = width < 520;
+  const isActive = useLabActive(active);
   const { displayBold, headingBold, bodyFont } = useLabFonts();
   const meta = DISCOVERY_LAB_MAP["sound-rhythm-lab"];
 
@@ -48,8 +54,17 @@ export function SoundRhythmLabView({
     stateRef.current = state;
   }, [sound, state]);
 
-  // Smooth requestAnimationFrame wave motion & optional 4-beat rhythm loop (zero setTimeout/setInterval).
+  // Silence active lab audio immediately when blurred, backgrounded, or muted.
   useEffect(() => {
+    if (!isActive || !sound) {
+      synth.stop();
+    }
+  }, [isActive, sound, synth]);
+
+  // Smooth requestAnimationFrame wave motion & optional 4-beat rhythm loop (zero setTimeout/setInterval).
+  // Completely pauses and cancels on blur/background, resetting timestamps cleanly on resume.
+  useEffect(() => {
+    if (!isActive) return;
     if (typeof requestAnimationFrame !== "function" || typeof cancelAnimationFrame !== "function") return;
     let rafId = 0;
     let lastTs = 0;
@@ -72,7 +87,7 @@ export function SoundRhythmLabView({
           const nextBeat = (cur.currentBeat + 1) % 4;
           const hits = activeTracksOnBeat(cur.pattern, nextBeat);
           if (soundRef.current) {
-            const amp = LOUDNESS_AMPLITUDE[cur.loudness];
+            const amp = loudnessAmplitude(cur.loudness);
             for (const track of hits) {
               synth.playTone(track.frequencyHz, track.voice, amp);
             }
@@ -88,20 +103,20 @@ export function SoundRhythmLabView({
 
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [synth]);
+  }, [isActive, synth]);
 
   const playPad = (pad: SoundPad) => {
     const freq = effectiveFrequency(pad, state.tension);
-    if (sound) {
-      synth.playTone(freq, pad.voice, LOUDNESS_AMPLITUDE[state.loudness]);
+    if (sound && isActive) {
+      synth.playTone(freq, pad.voice, loudnessAmplitude(state.loudness));
     }
     dispatch({ type: "play-pad", pad });
   };
 
   const stepBeatManually = () => {
     const nextBeat = (state.currentBeat + 1) % 4;
-    if (sound) {
-      const amp = LOUDNESS_AMPLITUDE[state.loudness];
+    if (sound && isActive) {
+      const amp = loudnessAmplitude(state.loudness);
       for (const track of activeTracksOnBeat(state.pattern, nextBeat)) {
         synth.playTone(track.frequencyHz, track.voice, amp);
       }
@@ -126,7 +141,10 @@ export function SoundRhythmLabView({
       challengeHint={challenge.hint}
       challengeDone={challengeDone}
       onNextChallenge={() => dispatch({ type: "next-challenge" })}
-      onReset={() => dispatch({ type: "reset" })}
+      onReset={() => {
+        synth.stop();
+        dispatch({ type: "reset" });
+      }}
       saved={saved}
       onToggleSaved={onToggleSaved}
     >
@@ -137,18 +155,16 @@ export function SoundRhythmLabView({
             Live Sound Wave
           </Text>
           <Text maxFontSizeMultiplier={1.25} style={[bodyFont, { fontSize: 14, color: "#1E6B66" }]}>
-            {metrics.loudnessLabel} · {state.activeFrequencyHz} Hz
+            {`${metrics.loudnessLabel} · ${state.activeFrequencyHz} Hz`}
           </Text>
         </View>
         <View style={{ width: "100%", height: 132, borderRadius: 18, overflow: "hidden", backgroundColor: "#1A3238" }}>
           <Svg width="100%" height="100%" viewBox="0 0 320 120" accessible={false}>
             <Rect width={320} height={120} fill="#1A3238" />
-            {/* Reference midline & subtle grid */}
             <Line x1={0} y1={60} x2={320} y2={60} stroke="#4C7D85" strokeWidth={1.5} strokeDasharray="5 5" />
             <Line x1={80} y1={12} x2={80} y2={108} stroke="#2E545C" strokeWidth={1} />
             <Line x1={160} y1={12} x2={160} y2={108} stroke="#2E545C" strokeWidth={1} />
             <Line x1={240} y1={12} x2={240} y2={108} stroke="#2E545C" strokeWidth={1} />
-            {/* Glowing secondary harmonic trail */}
             <Path
               d={buildWavePath(state.activeFrequencyHz, state.loudness, phase - 0.35)}
               fill="none"
@@ -157,7 +173,6 @@ export function SoundRhythmLabView({
               strokeWidth={7}
               strokeLinecap="round"
             />
-            {/* Main crisp sound wave */}
             <Path d={wavePath} fill="none" stroke="#F8D26A" strokeWidth={4} strokeLinecap="round" />
             <Circle cx={12} cy={60} r={5} fill="#E06D53" />
             <Circle cx={308} cy={60} r={5} fill="#E06D53" />
@@ -171,7 +186,7 @@ export function SoundRhythmLabView({
             selected={state.mode === "xylophone"}
             accentColor="#1E6B66"
             onPress={() => dispatch({ type: "set-mode", mode: "xylophone" })}
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: 112 }}
           >
             Bamboo Xylophone
           </LabButton>
@@ -180,7 +195,7 @@ export function SoundRhythmLabView({
             selected={state.mode === "drums"}
             accentColor="#B75C49"
             onPress={() => dispatch({ type: "set-mode", mode: "drums" })}
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: 112 }}
           >
             Island Drums
           </LabButton>
@@ -189,7 +204,7 @@ export function SoundRhythmLabView({
             selected={state.mode === "strings"}
             accentColor="#9C6B21"
             onPress={() => dispatch({ type: "set-mode", mode: "strings" })}
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: 112 }}
           >
             Pluck Strings
           </LabButton>
@@ -200,15 +215,15 @@ export function SoundRhythmLabView({
           <Text maxFontSizeMultiplier={1.25} style={[headingBold, { fontSize: 15, color: palette.ink }]}>
             Loudness:
           </Text>
-          {(["soft", "medium", "loud"] as LoudnessLevel[]).map((level) => (
+          {LOUDNESS_OPTIONS.map((option) => (
             <LabButton
-              key={level}
-              testID={`sound-loudness-${level}`}
-              selected={state.loudness === level}
+              key={option.id}
+              testID={`sound-loudness-${option.id}`}
+              selected={state.loudness === option.id}
               accentColor="#1E6B66"
-              onPress={() => dispatch({ type: "set-loudness", loudness: level })}
+              onPress={() => dispatch({ type: "set-loudness", loudness: option.id })}
             >
-              {level === "soft" ? "Soft" : level === "medium" ? "Medium" : "Loud"}
+              {option.label}
             </LabButton>
           ))}
         </View>
@@ -219,15 +234,15 @@ export function SoundRhythmLabView({
             <Text maxFontSizeMultiplier={1.25} style={[headingBold, { fontSize: 15, color: palette.ink }]}>
               String Tension:
             </Text>
-            {(["loose", "normal", "tight"] as StringTension[]).map((t) => (
+            {TENSION_OPTIONS.map((option) => (
               <LabButton
-                key={t}
-                testID={`sound-tension-${t}`}
-                selected={state.tension === t}
+                key={option.id}
+                testID={`sound-tension-${option.id}`}
+                selected={state.tension === option.id}
                 accentColor="#9C6B21"
-                onPress={() => dispatch({ type: "set-tension", tension: t })}
+                onPress={() => dispatch({ type: "set-tension", tension: option.id })}
               >
-                {t === "loose" ? "Loose (Lower)" : t === "normal" ? "Normal" : "Tight (Higher)"}
+                {option.label}
               </LabButton>
             ))}
           </View>
@@ -247,7 +262,7 @@ export function SoundRhythmLabView({
                 style={({ pressed }) => [
                   {
                     flexGrow: 1,
-                    flexBasis: state.mode === "xylophone" ? 96 : 136,
+                    flexBasis: state.mode === "xylophone" ? 92 : 128,
                     minHeight: state.mode === "xylophone" ? Math.round(68 + pad.barHeightRatio * 56) : 76,
                     borderRadius: 20,
                     backgroundColor: pad.color,
@@ -267,7 +282,7 @@ export function SoundRhythmLabView({
                   {pad.label}
                 </Text>
                 <Text maxFontSizeMultiplier={1.2} style={[bodyFont, { fontSize: 12.5, color: "#FFFDF8", opacity: 0.92 }]}>
-                  {freq} Hz
+                  {`${freq} Hz`}
                 </Text>
               </Pressable>
             );
@@ -275,8 +290,8 @@ export function SoundRhythmLabView({
         </View>
       </View>
 
-      {/* 4-Beat Island Rhythm Loop Sequencer */}
-      <View style={ls.stageCard}>
+      {/* 4-Beat Island Rhythm Loop Sequencer — responsive stack on compact phones */}
+      <View testID="rhythm-sequencer-card" style={ls.stageCard}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <Text maxFontSizeMultiplier={1.35} style={[displayBold, { fontSize: 19, color: palette.ink }]}>
             4-Beat Island Rhythm Loop
@@ -299,35 +314,43 @@ export function SoundRhythmLabView({
           </View>
         </View>
 
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: stackTracks ? 12 : 8 }}>
           {RHYTHM_TRACKS.map((track) => (
-            <View key={track.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View
+              key={track.id}
+              testID={`rhythm-track-row-${track.id}`}
+              style={{
+                flexDirection: stackTracks ? "column" : "row",
+                alignItems: stackTracks ? "stretch" : "center",
+                gap: stackTracks ? 6 : 8,
+              }}
+            >
               <Text
                 maxFontSizeMultiplier={1.25}
-                style={[headingBold, { width: 98, fontSize: 14.5, color: palette.ink }]}
+                style={[headingBold, { width: stackTracks ? undefined : 98, fontSize: 14.5, color: palette.ink }]}
               >
                 {track.label}
               </Text>
-              <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
+              <View style={{ flex: stackTracks ? undefined : 1, flexDirection: "row", gap: stackTracks ? 6 : 8 }}>
                 {[0, 1, 2, 3].map((beat) => {
-                  const active = state.pattern[track.id][beat];
+                  const beatActive = state.pattern[track.id][beat];
                   const isNow = state.currentBeat === beat;
                   return (
                     <Pressable
                       key={beat}
                       testID={`rhythm-cell-${track.id}-${beat}`}
                       accessibilityRole="button"
-                      accessibilityLabel={`${track.label} beat ${beat + 1}, ${active ? "on" : "off"}`}
-                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${track.label} beat ${beat + 1}, ${beatActive ? "on" : "off"}`}
+                      accessibilityState={{ selected: beatActive }}
                       onPress={() => dispatch({ type: "toggle-beat", track: track.id, beat })}
                       style={({ pressed }) => ({
                         flex: 1,
                         minHeight: 48,
                         minWidth: 48,
                         borderRadius: 14,
-                        backgroundColor: active ? track.color : "#F7ECDA",
+                        backgroundColor: beatActive ? track.color : "#F7ECDA",
                         borderWidth: isNow ? 3 : 1.5,
-                        borderColor: isNow ? "#3D2B24" : active ? track.color : "#DFCFAF",
+                        borderColor: isNow ? "#3D2B24" : beatActive ? track.color : "#DFCFAF",
                         alignItems: "center",
                         justifyContent: "center",
                         opacity: pressed ? 0.78 : 1,
@@ -335,9 +358,9 @@ export function SoundRhythmLabView({
                     >
                       <Text
                         maxFontSizeMultiplier={1.2}
-                        style={[displayBold, { fontSize: 15, color: active ? "#FFFDF8" : palette.muted }]}
+                        style={[displayBold, { fontSize: 15, color: beatActive ? "#FFFDF8" : palette.muted }]}
                       >
-                        {beat + 1}
+                        {String(beat + 1)}
                       </Text>
                     </Pressable>
                   );

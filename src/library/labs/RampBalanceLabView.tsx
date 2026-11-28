@@ -16,6 +16,7 @@ import {
   reduceRampBalance,
   type WeightObjectId,
 } from "./rampBalanceEngine";
+import { useLabActive } from "./useLabActive";
 
 function IslandWeightIcon({ objectId, cx, cy }: { objectId: WeightObjectId; cx: number; cy: number }) {
   if (objectId === "coconut") {
@@ -52,40 +53,61 @@ function IslandWeightIcon({ objectId, cx, cy }: { objectId: WeightObjectId; cx: 
 }
 
 export function RampBalanceLabView({
+  active = true,
   saved,
   onToggleSaved,
 }: {
   sound: boolean;
+  active?: boolean;
   saved?: boolean;
   onToggleSaved?: () => void;
 }) {
   const [state, dispatch] = useReducer(reduceRampBalance, undefined, createRampBalanceState);
-  const [rollProgress, setRollProgress] = useState(1);
-  const animRunRef = useRef(0);
+  const [rollProgress, setRollProgress] = useState(0);
+  const [rollEpoch, setRollEpoch] = useState(0);
+  const completedEpochRef = useRef(0);
+  const isActive = useLabActive(active);
   const { displayBold, headingBold, bodyFont } = useLabFonts();
   const meta = DISCOVERY_LAB_MAP["ramp-balance-lab"];
 
   // Animate ramp racer smoothly with requestAnimationFrame whenever a new run is triggered.
+  // Uses a monotonic rollEpoch so Reset never collides with previous run counts and
+  // cancels cleanly on Reset, blur, or unmount.
   useEffect(() => {
-    if (state.runCount === 0 || state.runCount === animRunRef.current) return;
-    animRunRef.current = state.runCount;
+    if (!isActive || state.runCount === 0 || rollEpoch === 0 || rollEpoch === completedEpochRef.current) return;
     if (typeof requestAnimationFrame !== "function" || typeof cancelAnimationFrame !== "function") {
+      completedEpochRef.current = rollEpoch;
       return;
     }
     let rafId = 0;
     let startTs = 0;
     const durationMs = 950;
+    const targetEpoch = rollEpoch;
     const step = (ts: number) => {
       if (startTs === 0) startTs = ts;
       const t = Math.min(1, (ts - startTs) / durationMs);
-      // Ease-out deceleration curve
       const eased = 1 - Math.pow(1 - t, 3);
       setRollProgress(eased);
-      if (t < 1) rafId = requestAnimationFrame(step);
+      if (t < 1) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        completedEpochRef.current = targetEpoch;
+      }
     };
     rafId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafId);
-  }, [state.runCount]);
+  }, [rollEpoch, state.runCount, isActive]);
+
+  const handleRoll = () => {
+    setRollProgress(0);
+    setRollEpoch((prev) => prev + 1);
+    dispatch({ type: "roll" });
+  };
+
+  const handleReset = () => {
+    setRollProgress(0);
+    dispatch({ type: "reset" });
+  };
 
   const seesaw = computeSeesawPhysics(state.slots);
   const challenge = PHYSICS_CHALLENGES[state.challengeIndex];
@@ -136,7 +158,7 @@ export function RampBalanceLabView({
       challengeHint={challenge.hint}
       challengeDone={challengeDone}
       onNextChallenge={() => dispatch({ type: "next-challenge" })}
-      onReset={() => dispatch({ type: "reset" })}
+      onReset={handleReset}
       saved={saved}
       onToggleSaved={onToggleSaved}
     >
@@ -211,7 +233,7 @@ export function RampBalanceLabView({
                 onPress={() => dispatch({ type: "select-object", objectId: obj.id })}
                 style={{ flex: 1, minWidth: 120 }}
               >
-                {obj.label} ({obj.weight})
+                {`${obj.label} (${obj.weight})`}
               </LabButton>
             ))}
           </View>
@@ -413,7 +435,7 @@ export function RampBalanceLabView({
               testID="ramp-roll-btn"
               selected
               accentColor="#1E6B66"
-              onPress={() => dispatch({ type: "roll" })}
+              onPress={handleRoll}
               style={{ flex: 1 }}
             >
               Roll Down Ramp!

@@ -13,8 +13,8 @@ export const DISCOVERY_LABS: readonly DiscoveryLabMeta[] = [
     accentColor: "#C85A3F",
     tintColor: "#FDEEE4",
     borderColor: "#E8B79E",
-    searchAliases: ["paint mixing bowl", "rainbow prism light"],
-    searchTags: ["how colors mix in paint and rainbow sunlight"],
+    searchAliases: ["rainbow"],
+    searchTags: ["How do colors mix in a paint bowl or bend through a glass prism into light?"],
   },
   {
     id: "sound-rhythm-lab",
@@ -27,8 +27,8 @@ export const DISCOVERY_LABS: readonly DiscoveryLabMeta[] = [
     accentColor: "#1E6B66",
     tintColor: "#E1F3EE",
     borderColor: "#9BC7C2",
-    searchAliases: ["bamboo xylophone drum", "island music wave"],
-    searchTags: ["hear pitch waves loudness and build a 4 beat rhythm"],
+    searchAliases: ["xylophone"],
+    searchTags: ["Hear how pitch and loudness shape bamboo music waves and drums in a 4-beat rhythm!"],
   },
   {
     id: "volcano-island-lab",
@@ -41,8 +41,8 @@ export const DISCOVERY_LABS: readonly DiscoveryLabMeta[] = [
     accentColor: "#B75C49",
     tintColor: "#F9ECE3",
     borderColor: "#E3B89E",
-    searchAliases: ["pacific ocean volcano", "guam coral lagoon"],
-    searchTags: ["magma pressure eruption builds a tropical reef island"],
+    searchAliases: ["volcano"],
+    searchTags: ["How does an undersea magma eruption build a tropical coral lagoon reef island like Guam?"],
   },
   {
     id: "ramp-balance-lab",
@@ -55,8 +55,8 @@ export const DISCOVERY_LABS: readonly DiscoveryLabMeta[] = [
     accentColor: "#9C6B21",
     tintColor: "#FDF4DF",
     borderColor: "#E2C68A",
-    searchAliases: ["seesaw lever balance", "friction ramp race"],
-    searchTags: ["test weight torque balance and sliding ramp friction"],
+    searchAliases: ["seesaw"],
+    searchTags: ["Test how lever weight and torque balance a seesaw and how friction slows a ramp race!"],
   },
   {
     id: "plant-growth-lab",
@@ -69,8 +69,8 @@ export const DISCOVERY_LABS: readonly DiscoveryLabMeta[] = [
     accentColor: "#3D7A47",
     tintColor: "#E8F3E4",
     borderColor: "#A9CCA1",
-    searchAliases: ["coconut palm mango", "hibiscus seed sprout"],
-    searchTags: ["grow roots shoots flowers and island fruit day by day"],
+    searchAliases: ["hibiscus"],
+    searchTags: ["Watch a mango tree, hibiscus flower, or coconut palm seed sprout roots and fruit day by day!"],
   },
   {
     id: "heartbeat-breath-lab",
@@ -83,8 +83,8 @@ export const DISCOVERY_LABS: readonly DiscoveryLabMeta[] = [
     accentColor: "#B5485D",
     tintColor: "#FBEAF0",
     borderColor: "#E6B4C4",
-    searchAliases: ["heart bpm lungs", "calm breath bubble"],
-    searchTags: ["see oxygen flow and follow a gentle breathing bubble"],
+    searchAliases: ["heartbeat"],
+    searchTags: ["See how your heart and lungs pump oxygen and follow a calm breathing bubble!"],
   },
 ] as const;
 
