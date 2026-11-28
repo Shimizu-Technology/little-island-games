@@ -48,6 +48,12 @@ export function waterFloorMinY(room: RoomId): number {
   return 350;
 }
 
+/** New drops stay a little below the painted horizon. Validation keeps the published 256 floor. */
+export function waterSurfaceMinY(room: RoomId): number {
+  'worklet';
+  return room === 'tumon-beach' || room === 'cocos-island' ? 268 : waterFloorMinY(room);
+}
+
 export function waterShoreY(room: RoomId, x: number): number | undefined {
   if (room !== 'tumon-beach') return undefined;
   const clampedX = Math.max(0, Math.min(755, x));
@@ -65,7 +71,7 @@ export function isBeachWaterRoom(room: RoomId): boolean {
 
 export function isInWaterZone(room: RoomId, point: { x: number; y: number }): boolean {
   if (room === 'tumon-beach') {
-    if (point.x < 12 || point.x > 755 || point.y < 248) return false;
+    if (point.x < 12 || point.x > 755 || point.y < 256) return false;
     const shoreY = waterShoreY(room, point.x)!;
     return point.y <= shoreY;
   }
@@ -82,17 +88,9 @@ export function isWaterRideItem(itemId: string): boolean {
   return waterRideItems.has(itemId);
 }
 
-/** True when a character is wading/swimming in the lagoon or riding a floatie/canoe/board in water. */
-export function isEntitySwimming(entity: SceneEntity, scene?: Pick<Scene, 'entities'>): boolean {
-  if (!entity.character || !isBeachWaterRoom(entity.room)) return false;
-  if (entity.attachment.kind === 'staging') return false;
-  if (entity.attachment.kind === 'socket' && scene) {
-    const parent = scene.entities[entity.attachment.item];
-    if (parent?.item && isWaterRideItem(parent.item.item)) {
-      return isInWaterZone(entity.room, parent.contact) || isInWaterZone(entity.room, entity.contact);
-    }
-    return false;
-  }
+/** Only floor waders and worn-ring swimmers submerge. Vehicle/seat occupants stay above their hull. */
+export function isEntitySwimming(entity: SceneEntity, _scene?: Pick<Scene, 'entities'>): boolean {
+  if (!entity.character || !isBeachWaterRoom(entity.room) || entity.attachment.kind !== 'floor') return false;
   return isInWaterZone(entity.room, entity.contact);
 }
 

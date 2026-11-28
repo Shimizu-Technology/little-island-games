@@ -59,6 +59,8 @@ export type SceneEntity = {
   character?: Character;
   /** Derived from holding a swim-ring; never an extra save field. */
   floaty?: boolean;
+  /** Derived presentation only; saved contacts remain compatible with earlier builds. */
+  waterOffset?: number;
 };
 export type Scene = {
   revision: string;
@@ -100,6 +102,8 @@ export type Target = {
   pan?: boolean;
   trash?: boolean;
   floaty?: boolean;
+  /** Derived presentation only; saved contacts remain compatible with earlier builds. */
+  waterOffset?: number;
   cell?: GridCell;
 };
 /** Prepared at settled edits, never a Map, function, class or native handle. */

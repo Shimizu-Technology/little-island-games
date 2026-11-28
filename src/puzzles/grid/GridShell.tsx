@@ -1,6 +1,7 @@
+import { boardPanResponder as PanResponder, BoardPanView } from '../../gestures/BoardPan';
 import { C, Button, Copy } from "../../board/WarmUI";
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, PanResponder, Platform, Pressable, TextInput, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, TextInput, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../../components/Text';
@@ -235,7 +236,7 @@ export function GridShell({ spec, state, dispatch, width: outer, active, mistake
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
         {feel && pop && <feel.Pop left={pop.at % spec.columns * cell} top={Math.floor(pop.at / spec.columns) * cell} size={cell} nonce={pop.nonce}/>}
       </Animated.View>
-      <View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/>
+      <BoardPanView pan={responder} enabled={active}><View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/></BoardPanView>
     </View>
     </Framed>
     </View>

@@ -184,3 +184,38 @@ describe('R1-05: WaterRipples & swimBob respect HomeMotionContext visibility and
     expect(motion.shared.filter((s) => s.value === 'repeat')).toHaveLength(0);
   });
 });
+
+it.each(['tumon-beach', 'cocos-island'] as const)('clips swimming bodies with foreground underwater silhouette and foam only in %s water', async room => {
+  for (const [wet, floaty] of [[true, true], [true, false], [false, true]]) {
+    const state = starterHome(); state.current = room;
+    for (const r of Object.values(state.rooms)) r.characters = [];
+    const ring = state.rooms[room].instances.find(i => i.item === 'swim-ring')!;
+    state.rooms[room].characters = [{ slot: 0, anchor: 'floor', pose: 'stand', x: 7, y: 0,
+      at: { x: room === 'tumon-beach' ? 345 : wet ? 650 : 300, y: wet ? room === 'tumon-beach' ? 300 : 375 : 450 } as any,
+      ...(floaty ? { holding: ring.id } : {}) }];
+    const scene = buildScene(state);
+    const interaction = { gesture: {}, camera: { value: { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0 } }, slots: { value: [], get: () => [] }, restingFlags: { value: { hidden: [], pressed: null, targets: [], landing: [], notice: [] } }, restingMotion: { value: {} }, acknowledgeLayout() {}, dropZones: { value: [] }, veil: { value: 0 } } as any;
+    await act(async () => { tree = create(<SceneView state={state} scene={scene} building={locationBuilding(locationIds.indexOf(room), false)} viewport={{ width: 375, height: 812 }} interaction={interaction} designing={false} pickups={[]} reactions={{}} meals={{}} sleeping={{}} moods={{}} effects={[]} badges={[]} onSelect={() => {}} onMove={() => {}} onNode={() => {}} onMealPresented={() => {}} onMealFinished={() => {}} reduced liveRoom={room}/>); });
+    expect(tree!.root.findAllByProps({ testID: 'water-body-clip-0' })).toHaveLength(wet ? 1 : 0);
+    expect(tree!.root.findAllByProps({ testID: 'water-submerged-0' })).toHaveLength(wet ? 1 : 0);
+    expect(tree!.root.findAllByProps({ testID: 'water-ripples-0' })).toHaveLength(wet ? 1 : 0);
+    if (wet) {
+      const clip = tree!.root.findByProps({ testID: 'water-body-clip-0' });
+      const foreground = clip.parent!.children.filter(c => typeof c !== 'string');
+      expect(foreground.indexOf(clip)).toBeLessThan(foreground.length - 1);
+    }
+    await act(async () => tree!.unmount()); tree = undefined;
+  }
+});
+
+it('renders a seated lagoon canoe passenger with the full body and no swimmer overlays', async () => {
+  const state = starterHome(); state.current = 'cocos-island';
+  for (const room of Object.values(state.rooms)) room.characters = [];
+  const canoe = state.rooms['cocos-island'].instances.find(i => i.item === 'outrigger-canoe')!;
+  canoe.at = { x: 650, y: 386 };
+  state.rooms['cocos-island'].characters = [{ slot: 0, anchor: 'seat', pose: 'sit', seatId: canoe.id, socket: { itemId: canoe.id, socketId: 'paddle' } }];
+  const scene = buildScene(state), interaction = { gesture: {}, camera: { value: { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0 } }, slots: { value: [], get: () => [] }, restingFlags: { value: { hidden: [], pressed: null, targets: [], landing: [], notice: [] } }, restingMotion: { value: {} }, acknowledgeLayout() {}, dropZones: { value: [] }, veil: { value: 0 } } as any;
+  await act(async () => { tree = create(<SceneView state={state} scene={scene} building={locationBuilding(locationIds.indexOf('cocos-island'), false)} viewport={{ width: 375, height: 812 }} interaction={interaction} pickups={[]} reactions={{}} sleeping={{}} onSelect={() => {}} onMove={() => {}} onNode={() => {}} reduced liveRoom="cocos-island"/>); });
+  expect(tree!.root.findAllByProps({ testID: 'character-0' })).toHaveLength(1);
+  for (const id of ['water-body-clip-0', 'water-submerged-0', 'water-ripples-0']) expect(tree!.root.findAllByProps({ testID: id })).toHaveLength(0);
+});

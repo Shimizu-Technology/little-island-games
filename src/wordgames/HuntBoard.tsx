@@ -1,5 +1,6 @@
+import { createBoardPan, BoardPanView } from '../gestures/BoardPan';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, Platform, StyleSheet, View, type GestureResponderEvent } from 'react-native';
+import { Platform, StyleSheet, View, type GestureResponderEvent } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 import { PressableScale } from '../components/ui';
 import { Text } from '../components/Text';
@@ -27,7 +28,7 @@ export function HuntBoard({ tiles, size, path, hint, width, interactive = false,
   };
   // Stable responder callbacks read refs only when React Native dispatches a gesture.
   // eslint-disable-next-line react-hooks/refs
-  const pan = useMemo(() => PanResponder.create({
+  const pan = useMemo(() => createBoardPan({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderGrant: event => {
@@ -47,9 +48,7 @@ export function HuntBoard({ tiles, size, path, hint, width, interactive = false,
     onPanResponderTerminationRequest: () => false,
   }), []);
   const cell = measured / size;
-  return <View collapsable={false} testID="hunt-board" onLayout={event => { const value = event.nativeEvent.layout.width; if (value > 0) setMeasured(value); }}
-    {...(interactive && !tapMode ? pan.panHandlers : {})}
-    style={[styles.board, { width, height: width }, Platform.OS === 'web' && interactive && !tapMode ? { touchAction: 'none' } as never : undefined]}>
+  return <BoardPanView pan={pan} enabled={interactive && !tapMode}><View collapsable={false} testID="hunt-board" onLayout={event => { const value = event.nativeEvent.layout.width; if (value > 0) setMeasured(value); }} {...(interactive && !tapMode ? pan.panHandlers : {})} style={[styles.board, { width, height: width }, Platform.OS === 'web' && interactive && !tapMode ? { touchAction: 'none' } as never : undefined]}>
     {tiles.map((_, i) => <View key={i} testID={`hunt-background-${i}`} pointerEvents="none" accessible={false}
       style={[W.tile, { position: 'absolute', left: (i % size) * cell + 3, top: Math.floor(i / size) * cell + 3, width: cell - 6, height: cell - 6, minWidth: 0, minHeight: 0, backgroundColor: path.includes(i) ? '#F9C85F' : hint === i ? '#D6EBCA' : '#F3D49C', borderColor: path.includes(i) ? '#80521F' : '#A06A35' }]}/>)}
     <View testID="hunt-trail" pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill}><Svg width="100%" height="100%" viewBox={`0 0 ${measured} ${measured}`}>
@@ -66,6 +65,6 @@ export function HuntBoard({ tiles, size, path, hint, width, interactive = false,
           : <View key={i} testID={`hunt-tile-${i}`} pointerEvents="none" accessible={false} style={tileStyle}>{label}</View>;
       })}
     </View>
-  </View>;
+  </View></BoardPanView>;
 }
 const styles = StyleSheet.create({ board: { alignSelf: 'center', backgroundColor: '#C59C62', borderRadius: 16, overflow: 'hidden' } });

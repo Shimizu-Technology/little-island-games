@@ -1,0 +1,21 @@
+import React, { createRef } from 'react';
+import { View } from 'react-native';
+import { act, create } from 'react-test-renderer';
+import { expect, it, vi } from 'vitest';
+import { BoardPanView, BoardTouchView, createBoardPan } from '../src/gestures/BoardPan';
+vi.mock('react-native', () => ({ View: 'View', PanResponder: { create: (callbacks: object) => ({ panHandlers: callbacks }) } }));
+vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+it('web/Node boundaries strip every adapter prop while preserving the original host props, ref and callbacks', async () => {
+  const ref = createRef<View>(), release = vi.fn(), pan = createBoardPan({ onPanResponderRelease: release });
+  let tree!: ReturnType<typeof create>;
+  const child = <View ref={ref} testID="original-view" {...pan.panHandlers} style={{ width: 100 }}/>;
+  await act(async () => { tree = create(<BoardPanView pan={pan} enabled nativeRegions={[]} axis="horizontal">{child}</BoardPanView>); });
+  const host = tree.root.findByType('View' as React.ElementType);
+  expect(host.props).toEqual(child.props);
+  for (const prop of ['pan', 'enabled', 'multiTouch', 'nativeRegions', 'axis']) expect(host.props).not.toHaveProperty(prop);
+  expect(tree.root.findAllByProps({ testID: 'original-view' })).toHaveLength(1);
+  expect(host.props.onPanResponderRelease).toBe(release);
+  await act(async () => tree.update(<BoardTouchView enabled multiTouch>{child}</BoardTouchView>));
+  expect(tree.root.findByType('View' as React.ElementType).props).toEqual(child.props);
+  await act(async () => tree.unmount());
+});
