@@ -266,7 +266,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     for (const socket of socketsOf(item)) {
       const point = socketPoint(item, socket);
       const contact = roomPoint(point.x, point.y);
-      const facing = entity.facing;
+      const facing = socket.id.replace(/^pet-/, "") === "chef" ? (entity.facing === "left" ? "front" : "left") : entity.facing;
       const occupied = Object.values(entities).find(
         (e) => e.attachment.kind === "socket" && e.attachment.item === entity.id && e.attachment.socket === socket.id
       )?.id;

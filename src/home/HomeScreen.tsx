@@ -1,4 +1,4 @@
-import { roomHopAt, roomHops } from "./roomHops";
+import { roomHopAt, roomHops, roomPortalsClear } from "./roomHops";
 import { marketContents } from "./market";
 import { arrivalPoint, isGuamPlace } from "./locations";
 import { isPointInCocosPalm } from "./waterZone";
@@ -903,15 +903,18 @@ export function HomeScreen({
   }, [clearClosetDraft, floorOf, overview, room, viewport, window.width, window.height]);
   const lastHop = useRef(0);
   const hopRoom = useCallback((destination: RoomId) => {
+    if (live.current.designing || overview || live.current.activeSheet) return;
     if (Date.now() - lastHop.current < 350) return;
     lastHop.current = Date.now();
     const current = live.current;
     const chosen = current.selected && current.scene.entities[current.selected]?.character;
     const friend = chosen ?? current.store.getState().rooms[current.room].characters.find(c => c.slot === 0 && !c.staged)
       ?? current.store.getState().rooms[current.room].characters.find(c => !c.staged);
-    if (friend) current.store.dispatch({ type: "transfer", slot: friend.slot, room: destination, roomId: current.room, x: 9, y: 8 });
+    const sourceRoom = chosen ? current.scene.entities[current.selected!]!.room : current.room;
+    runtime.current?.cancelAll();
+    if (friend) current.store.dispatch({ type: "transfer", slot: friend.slot, room: destination, roomId: sourceRoom, x: 9, y: 8 });
     goRoom(destination);
-  }, [goRoom]);
+  }, [goRoom, overview]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     const current = live.current;
@@ -1181,7 +1184,7 @@ export function HomeScreen({
       if (index >= 0) goRoom(roomIds[index]);
       return;
     }
-    if (!current.placing && !current.designing) {
+    if (!id && !current.selected && !current.placing && !current.designing && !current.activeSheet && !friends && !more && !atmosphereOpen && !placesOpen && !marketOpen && roomPortalsClear(current.scene, current.room)) {
       const origin = roomOrigin(roomIds.indexOf(current.room), building);
       const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
       const hop = roomHopAt(current.room, local);
@@ -1305,6 +1308,8 @@ export function HomeScreen({
     initialCamera,
     reduced,
     designing,
+    overview,
+    portalsEnabled: !activeSheet && !friends && !more && !atmosphereOpen && !placesOpen && !marketOpen,
     onCameraChange: (all, index) => {
       setOverview(all);
       if (index >= 0) setRoom(roomIds[index]);
@@ -1737,7 +1742,7 @@ export function HomeScreen({
             state={sceneState}
             badges={ownership.badges}
             onBadges={showBadgesInScene}
-            onRoomHop={hopRoom}
+            onRoomHop={!overview && !designing && !activeSheet && !friends && !more && !atmosphereOpen && !placesOpen && !marketOpen ? hopRoom : undefined}
             onShakePalm={shakePalmInScene}
             scene={scene}
             building={building}
@@ -1890,7 +1895,7 @@ export function HomeScreen({
         />
       )}
       {!overview && !designing && !activeSheet && !more && !friends && !atmosphereOpen && !placesOpen && !marketOpen && selected && scene.entities[selected]?.character && <View testID="quick-room-hops" style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", maxWidth: "96%", flexDirection: "row", gap: 8, zIndex: 46 }}>
-        {roomHops(room).map(hop => <Pressable key={hop.kind} testID={`quick-room-hop-${hop.room}`} accessibilityRole="button" accessibilityLabel={`Move selected friend to ${roomNames[hop.room]}`} onPress={() => hopRoom(hop.room)} style={{ minHeight: 48, minWidth: 48, flexShrink: 1, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontSize: 14, fontWeight: "700", textAlign: "center" }}>{hop.kind === "ladder" ? "Climb" : "Hop"} · {roomNames[hop.room]}</Text></Pressable>)}
+        {roomHops(scene.entities[selected].room).map(hop => <Pressable key={hop.kind} testID={`quick-room-hop-${hop.room}`} accessibilityRole="button" accessibilityLabel={`Move selected friend to ${roomNames[hop.room]}`} onPress={() => hopRoom(hop.room)} style={{ minHeight: 48, minWidth: 48, flexShrink: 1, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontSize: 14, fontWeight: "700", textAlign: "center" }}>{hop.kind === "ladder" ? "Climb" : "Hop"} · {roomNames[hop.room]}</Text></Pressable>)}
       </View>}
       {marketOpen && <React.Suspense fallback={null}><MarketSheet state={store.state} dispatch={action => store.dispatch(action)} message={store.message} reduced={reduced} canUndo={store.canUndo} onUndo={() => store.dispatch({ type: "undo" })} onClose={() => setMarketOpen(false)} onHome={() => { setMarketOpen(false); goRoom("kitchen"); }}/></React.Suspense>}
       {!marketOpen && !placesOpen && !overview && !activeSheet && !friends && !more && !selected && !designing && room === "kitchen" && marketContents(store.state).length > 0 && <Pressable testID="unpack-market-basket" accessibilityRole="button" accessibilityLabel="Stock fridge from Carry Basket" onPress={() => store.dispatch({ type: "market-unpack" })} style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", zIndex: 46, padding: 12, minHeight: 48, borderRadius: 18, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontWeight: "700" }}>Carry Basket · {marketContents(store.state).length}/4 · Stock fridge</Text></Pressable>}

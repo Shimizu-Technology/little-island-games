@@ -6,7 +6,7 @@ import { useInteraction, type Pickup, type Interaction } from "../src/home/runti
 import { DragOverlay } from "../src/home/runtime/DragOverlay";
 import { buildingLayout, roomOrigin } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
-import { roomPoint, type SceneEntity } from "../src/home/scene/types";
+import { roomPoint, screenPoint, type SceneEntity } from "../src/home/scene/types";
 import { starterHome, instance, type HomeStateV2 } from "../src/home/model";
 import { buildScene } from "../src/home/scene/graph";
 import { apply, resolve } from "../src/home/scene/proposal";
@@ -79,14 +79,14 @@ const registry = { calls: [] as [number, boolean][], manageStateFrameCallback(id
 const building=buildingLayout(4,true), viewport={width:1000,height:600};
 let current: Interaction, settled:HomeStateV2, commits=0;
 let mealPending = false;
-function Host({initial}:{initial:HomeStateV2}) {
+function Host({initial,reduced=false,overview=false}:{initial:HomeStateV2;reduced?:boolean;overview?:boolean}) {
   const [state,setState]=React.useState(initial), [pickups,setPickups]=React.useState<(Pickup|undefined)[]>([undefined,undefined]);
   const scene=React.useMemo(()=>buildScene(state),[state]);
-  const interaction=useInteraction({scene,building,viewport,initialCamera:identityCamera,reduced:false,designing:false,onCameraChange:()=>{},onTap:id=>harness.taps.push(id),
+  const interaction=useInteraction({scene,building,viewport,initialCamera:identityCamera,reduced,overview,currentRoom:"home",designing:false,onCameraChange:()=>{},onTap:id=>harness.taps.push(id),
     onPickup:pickup=>setPickups(all=>all.map((p,i)=>i===pickup.slot?pickup:p)),
     onClear:index=>setPickups(all=>all.map((p,i)=>i===index?undefined:p)),
     onCommit:(index,proposal,_at,token)=>{
-      if(harness.deferCommit)return;
+      if(harness.deferCommit || !interaction.isCurrent(index, token))return;
       const result=apply(state,proposal); if(!('state' in result))throw Error('Rejected fixture');
       commits++;setState(result.state);
       interaction.finish(index,true,proposal,buildScene(result.state).revision,buildScene(result.state),token,result.identities[proposal.id], mealPending);
@@ -95,7 +95,7 @@ function Host({initial}:{initial:HomeStateV2}) {
     current=interaction;settled=state;
     for(const e of Object.values(scene.entities))if(e.attachment.kind!=='container')interaction.acknowledgeLayout(e.id,layoutToken(e));
   });
-  return <DragOverlay scene={scene} activeRoom="home" pickups={pickups} interaction={interaction} building={building} reduced={false}/>;
+  return <DragOverlay scene={scene} activeRoom="home" pickups={pickups} interaction={interaction} building={building} reduced={reduced}/>;
 }
 async function flush(){await act(async()=>{while(harness.js.length)harness.js.shift()!();});}
 async function frames(n:number){for(let i=0;i<n;i++){vi.advanceTimersByTime(16);harness.frames[0]({timeSincePreviousFrame:16.67});await flush();}}
@@ -180,4 +180,96 @@ it('a real character drag onto the ladder commits a grounded move to its connect
   expect(settled.rooms.home.characters.some(c=>c.slot===0)).toBe(false);
   expect(current.slots.get().every(s=>!s.id)).toBe(true);
   await act(async()=>tree.unmount());
+});
+
+it.each(['move', 'feed'])('Reduce Motion %s survives frames before its asynchronous commit', async kind => {
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<Host initial={mealFixture()} reduced/>);});
+  const scene=buildScene(settled), snack=scene.entities['home/item/snack0'];
+  const mouth=scene.rooms.home.targets.find(t=>t.id==='character/0/mouth')!;
+  const proposal=resolve(scene.rooms.home,snack,kind==='feed'?mouth.contact:roomPoint(600,520),{scale:1,release:true,...(kind==='feed'?{target:mouth.id}:{floorOnly:true})});
+  await act(async()=>{current.animateProposal(proposal);});
+  expect(current.slots.get()[0]).toMatchObject({commitRequested:true,commitAt:1000,settleAt:1000});
+  // Native ticks first; JS pickup/save callbacks have deliberately not been delivered yet.
+  await act(async()=>{vi.advanceTimersByTime(16);harness.frames[0]({timeSincePreviousFrame:16});});
+  expect(current.slots.get()[0].id).toBe(snack.id);
+  await flush();await frames(140);
+  expect(commits).toBe(1);
+  expect(settled.rooms.home.instances.some(i=>i.id==='snack0')).toBe(kind==='move');
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  await act(async()=>tree.unmount());
+});
+
+it('keeps a queued second-finger drop while the first commit waits for JS', async()=>{
+  let tree!:TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<Host initial={mealFixture()}/>);});
+  const snacks=buildScene(settled).entities, origin=roomOrigin(0,building);
+  const touch=(id:number, key:string)=>({id,x:origin.x+snacks[key].contact.x,y:origin.y+snacks[key].contact.y-20});
+  const first=touch(31,'home/item/snack0'), second=touch(32,'home/item/snack7');
+  await act(async()=>harness.handlers.down({changedTouches:[first,second],allTouches:[first,second],numberOfTouches:2},{activate:()=>{}}));
+  const end1={...first,x:first.x+60,y:first.y-30},end2={...second,x:second.x+40,y:second.y-30};
+  await act(async()=>harness.handlers.move({changedTouches:[end1,end2],numberOfTouches:2}));
+  await flush();await frames(3);
+  await act(async()=>harness.handlers.up({changedTouches:[end1],numberOfTouches:1},{end:()=>{}}));
+  // Advance travel without letting the queued JS commit run.
+  await act(async()=>{for(let n=0;n<32;n++){vi.advanceTimersByTime(16);harness.frames[0]({timeSincePreviousFrame:16});}});
+  expect(current.slots.get().some(s=>s.commitRequested&&!s.committed)).toBe(true);
+  await act(async()=>harness.handlers.up({changedTouches:[end2],numberOfTouches:0},{end:()=>{}}));
+  const pending=current.slots.get().find(s=>s.pointer===32)!;
+  expect(pending.phase).toBe('dragging');expect(pending.proposal).toBeDefined();
+  expect(current.controller.get().pointers.some(p=>p.pointer===32)).toBe(true);
+  await flush();await frames(180);
+  expect(commits).toBe(2);
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  expect(current.controller.get().pointers).toHaveLength(0);
+  await act(async()=>tree.unmount());
+});
+
+it.each([-500,-100,77])('canvas zero-touch events preserve external/drawer pointer %s until its own drop', async pointer=>{
+  let tree!:TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<Host initial={mealFixture()}/>);});
+  const actor=buildScene(settled).entities['character/0'],o=roomOrigin(0,building);
+  const start=screenPoint(o.x+actor.contact.x,o.y+actor.contact.y-40);
+  await act(async()=>{current.externalDown(pointer,actor.id,start,undefined,{below:40});current.externalMove(pointer,screenPoint(start.x+80,start.y-40));});
+  await flush();await frames(3);
+  const canvasTap={id:99,x:990,y:570};
+  await act(async()=>harness.handlers.down({changedTouches:[canvasTap],allTouches:[canvasTap],numberOfTouches:1},{activate:()=>{}}));
+  await act(async()=>harness.handlers.up({changedTouches:[canvasTap],numberOfTouches:0},{end:()=>{}}));
+  await act(async()=>harness.handlers.move({changedTouches:[],numberOfTouches:0}));
+  await act(async()=>harness.handlers.up({changedTouches:[],numberOfTouches:0},{end:()=>{}}));
+  await frames(3);
+  expect(current.slots.get().find(s=>s.pointer===pointer)?.phase).toBe('dragging');
+  expect(current.controller.get().pointers.some(p=>p.pointer===pointer)).toBe(true);
+  await act(async()=>current.externalUp(pointer,false));await flush();await frames(180);
+  expect(commits).toBe(1);expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  await act(async()=>tree.unmount());
+});
+
+it('Whole House drags cross room edges without being redirected through a ladder', async()=>{
+  let tree!:TestRenderer.ReactTestRenderer;
+  await act(async()=>{tree=TestRenderer.create(<Host initial={mealFixture()} overview/>);});
+  const actor=buildScene(settled).entities['character/0'],o=roomOrigin(0,building),dest=roomOrigin(1,building);
+  const down={id:25,x:o.x+actor.contact.x,y:o.y+actor.contact.y-70};
+  const end={...down,x:dest.x+20,y:dest.y+450};
+  await act(async()=>harness.handlers.down({changedTouches:[down],numberOfTouches:1},{activate:()=>{}}));
+  await act(async()=>harness.handlers.move({changedTouches:[end],numberOfTouches:1}));await flush();await frames(3);
+  const p=current.slots.get().find(s=>s.id===actor.id)?.proposal;
+  expect(p?.room).toBe('kitchen');expect(p?.reason).not.toContain('ladder');
+  await act(async()=>harness.handlers.up({changedTouches:[end],numberOfTouches:0},{end:()=>{}}));await flush();await frames(160);
+  expect(settled.rooms.kitchen.characters.some(c=>c.slot===0)).toBe(true);
+  await act(async()=>tree.unmount());
+});
+
+it('still recovers an external actor whose own controller pointer was lost',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<Host initial={mealFixture()}/>);});
+ const actor=buildScene(settled).entities['character/0'],o=roomOrigin(0,building);
+ const start=screenPoint(o.x+actor.contact.x,o.y+actor.contact.y-40);
+ await act(async()=>{current.externalDown(-100,actor.id,start);current.externalMove(-100,screenPoint(start.x+80,start.y-40));});
+ await flush();await frames(3);
+ current.controller.set({...current.controller.get(),pointers:[]});
+ await frames(150);
+ expect(current.slots.get().every(s=>!s.id)).toBe(true);
+ expect(buildScene(settled).entities[actor.id].contact).toEqual(actor.contact);
+ await act(async()=>tree.unmount());
 });

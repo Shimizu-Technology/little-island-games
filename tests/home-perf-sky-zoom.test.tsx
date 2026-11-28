@@ -280,3 +280,19 @@ it('the real Home renderer forwards Crab sleeping, bathing, sitting and carry ex
     expect(element.props.input.face).toBe(face);
   }
 });
+
+it('R1-03 renders portals only in the active single room, and hides them behind open appliances or other modes',async()=>{
+ const {RoomPortals}=await import('../src/home/runtime/RoomPortals');
+ await mount();
+ const portals=()=>tree!.root.findAllByType(RoomPortals);
+ expect(portals()).toHaveLength(1);expect(portals()[0].props.room).toBe('home');
+ await act(async()=>h.chrome.onRoom('kitchen'));
+ expect(portals()).toHaveLength(1);expect(portals()[0].props.room).toBe('kitchen');
+ await act(async()=>scene().props.onSelect('kitchen/item/starter-fridge'));
+ expect(portals()).toHaveLength(0);
+ await act(async()=>scene().props.onSelect('kitchen/item/starter-fridge'));
+ expect(portals()).toHaveLength(1);
+ await act(async()=>h.chrome.onOverview());expect(portals()).toHaveLength(0);
+ await act(async()=>h.chrome.onOverview());
+ await act(async()=>h.chrome.onDesign());expect(portals()).toHaveLength(0);
+});

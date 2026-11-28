@@ -791,3 +791,38 @@ it('keeps selected-character room hops at phone-sized touch targets in landscape
   expect(harness.scene.state.rooms.treehouse.characters.some((c:any)=>c.slot===0)).toBe(true);
   expect(harness.scene.state.rooms.home.characters.some((c:any)=>c.slot===0)).toBe(false);
 });
+
+it('R1-03 gives entity hits and a selected-object placement precedence over edge portals',async()=>{
+ const state=starterHome();state.rooms.home.instances=[instance('edge-food','banana',1,10)];
+ state.rooms.home.characters=[{slot:0,anchor:'floor',pose:'stand',x:8,y:8}];expect(validHome(state)).toBe(true);
+ await open(state);
+ const origin=roomOrigin(0,harness.options.building);
+ const point=roomToScreen(roomPoint(754,240),harness.scene.interaction.camera.get(),housePoint(origin.x,origin.y));
+ await tap('character/0',point);
+ expect(harness.scene.state.rooms.home.characters.some((c:any)=>c.slot===0)).toBe(true);
+ expect(root.root.findAllByProps({testID:'quick-room-hops'})).toHaveLength(1);
+ await act(async()=>harness.destinations.onSelect(undefined));
+ await act(async()=>harness.destinations.onSelect('home/item/edge-food'));
+ expect(harness.destinations.selected).toBe('home/item/edge-food');
+ await tap(undefined,point);
+ expect(harness.proposals.length).toBeGreaterThan(0);
+ expect(harness.scene.state.rooms.home.characters.some((c:any)=>c.slot===0)).toBe(true);
+});
+
+it('R1-03 disables scene portal callbacks in Whole House, Design, and overlay modes',async()=>{
+ await open(starterHome());expect(harness.scene.onRoomHop).toBeTypeOf('function');
+ await act(async()=>harness.chrome.onOverview());expect(harness.scene.onRoomHop).toBeUndefined();expect(harness.options.overview).toBe(true);
+ await act(async()=>harness.chrome.onOverview());
+ await act(async()=>harness.chrome.onDesign());expect(harness.scene.onRoomHop).toBeUndefined();
+ await act(async()=>harness.chrome.onDesign());
+ await act(async()=>harness.chrome.onFriends());expect(harness.scene.onRoomHop).toBeUndefined();expect(harness.options.portalsEnabled).toBe(false);
+});
+
+it('R1-03 room hops use the selected friend’s actual room after the camera changes rooms',async()=>{
+ const state=starterHome();state.current='kitchen';await open(state);
+ expect(harness.scene.state.rooms.home.characters.some((c:any)=>c.slot===0)).toBe(true);
+ await act(async()=>harness.scene.onSelect('character/0'));
+ await act(async()=>root.root.findByProps({testID:'quick-room-hop-treehouse'}).props.onPress());
+ expect(harness.scene.state.rooms.treehouse.characters.some((c:any)=>c.slot===0)).toBe(true);
+ expect(harness.scene.state.rooms.home.characters.some((c:any)=>c.slot===0)).toBe(false);
+});

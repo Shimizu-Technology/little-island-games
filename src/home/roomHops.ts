@@ -1,5 +1,11 @@
 import type { HouseRoomId, RoomId } from './catalogMore';
-import type { Bounds } from './scene/types';
+import type { Bounds, Scene } from './scene/types';
+import { storageOpen } from './storage';
+/** Open appliance doors take precedence over room-hop cues. */
+export function roomPortalsClear(scene: Pick<Scene, 'entities'>, room: RoomId): boolean {
+  'worklet';
+  return !Object.values(scene.entities).some(e => e.room === room && e.item?.item === 'fridge' && storageOpen(e.item));
+}
 export type RoomHop = { kind: 'ladder' | 'door'; room: HouseRoomId; box: Bounds };
 /** Room-space portals share their exact geometry with the drop resolver and tap affordances. */
 export function roomHops(room: RoomId): RoomHop[] {

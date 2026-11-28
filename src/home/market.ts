@@ -36,7 +36,10 @@ export function shop(save: HomeStateV2, action: MarketAction): HomeResult {
     const free = Math.max(0, storageCapacity('fridge') - instances.filter(i => i.in === fridge.id).length);
     if (!free) return { state: save, message: 'The fridge is full. Your groceries are safe in the basket.' };
     const unpack = new Set(contents.slice(0, free).map(i => i.id));
-    instances = instances.map(i => unpack.has(i.id) ? { ...i, in: fridge.id, x: fridge.x, y: fridge.y } : i.id === fridge.id ? { ...i, powered: true, storage: { version: 1 as const, open: true } } : i);
+    instances = instances.map(i => unpack.has(i.id) ? { ...i, in: fridge.id, x: fridge.x, y: fridge.y } : i.id === fridge.id ? { ...i, state: "active" as const, powered: true, storage: { version: 1 as const, open: true } } : i);
+    // A fully unpacked staged shopping basket has no reason to occupy every room's tray.
+    // A basket the child already placed in the room stays as their furnishing.
+    if (unpack.size === contents.length) instances = instances.filter(i => i.id !== MARKET_BASKET_ID || !i.staged);
     message = unpack.size < contents.length ? 'Fridge stocked! The rest stays in your basket.' : 'All stocked! Time to cook.';
   }
   return { state: { ...save, version: 4, rooms: { ...save.rooms, kitchen: { ...kitchen, instances } } }, message };

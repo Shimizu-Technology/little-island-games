@@ -109,3 +109,43 @@ it('does not rebuild hair thumbnails for unrelated outfit changes or swatches fo
   const color = styleCatalog.find(i => i.category === 'hairColor')!;
   expect(thumbnailLook(defaultLook, color)).toBe(thumbnailLook({...defaultLook, skinTone: 'shell'}, color));
 });
+
+it('R1-07 clears only a fully unpacked staged shopping basket, opens the fridge consistently, and preserves saved Undo',()=>{
+ let h=start(); h=editHistory(h,{type:'market-add',item:foodIds[0]});h=editHistory(h,{type:'market-add',item:foodIds[1]});
+ const before=h.present.rooms.kitchen;
+ h=editHistory(h,{type:'market-unpack'});
+ expect(h.present.rooms.kitchen.instances.find(i=>i.id==='starter-fridge')).toMatchObject({state:'active',powered:true,storage:{version:1,open:true}});
+ expect(h.present.rooms.kitchen.instances.some(i=>i.id===MARKET_BASKET_ID)).toBe(false);
+ expect(editHistory(roundtrip(h),{type:'undo'}).present.rooms.kitchen).toEqual(before);
+ let placed=start();placed=editHistory(placed,{type:'market-add',item:foodIds[0]});
+ const basket=placed.present.rooms.kitchen.instances.find(i=>i.id===MARKET_BASKET_ID)!;
+ delete basket.staged;
+ placed=editHistory(placed,{type:'market-unpack'});
+ expect(placed.present.rooms.kitchen.instances.some(i=>i.id===MARKET_BASKET_ID)).toBe(true);
+});
+
+it.each(['fridge','basket','other room'])('R1-06 accepts edible disposal from %s into a Kitchen at MAX_INSTANCES', source=>{
+ let h=start();h.present.current='kitchen';
+ h.present.rooms.kitchen.characters=[];
+ h.present.rooms.kitchen.instances=[instance('full-fridge','fridge',14,0),...Array.from({length:47},(_,n)=>({...instance(`full-${n}`,'banana',0,8),at:{x:60+n%12*55,y:440+Math.floor(n/12)*20}}))];
+ const food=instance('dispose-food','mango',1,8);
+ if(source==='other room'){h.present.rooms.home.instances=[food];}
+ else if(source==='fridge')h.present.rooms.kitchen.instances.push({...food,in:'full-fridge'});
+ else h.present.rooms.kitchen.instances.push({...instance('full-basket','carry-basket',1,8),staged:true},{...food,in:'full-basket'});
+ expect(validHome(h.present)).toBe(true);
+ const scene=buildScene(h.present),bin=scene.rooms.kitchen.targets.find(t=>t.trash)!;
+ const id=`${source==='other room'?'home':'kitchen'}/item/dispose-food`;
+ const p=resolve({...scene.rooms.kitchen,entities:scene.entities},scene.entities[id],bin.contact,{scale:1,release:true,target:bin.id});
+ expect(p).toMatchObject({discard:true,target:bin.id});
+ const result=editHistory(h,{type:'apply-proposal',proposal:p});
+ expect(result).not.toBe(h);expect(validHome(result.present)).toBe(true);
+ expect(Object.values(result.present.rooms).some(room=>room.instances.some(i=>i.id===food.id))).toBe(false);
+});
+
+it('R1-01 ignores zero-sentinel timestamps until a real commit or creation clock exists',async()=>{
+ const {expiredSlot,COMMIT_TIMEOUT_MS}=await import('../src/home/runtime/liveness');
+ const slot={id:'food',phase:'settling',committed:false,commitRequested:true,settleAt:0,createdAt:1000,ready:true};
+ expect(expiredSlot(slot,1016)).toBe(false);
+ expect(expiredSlot(slot,1000+COMMIT_TIMEOUT_MS)).toBe(true);
+ expect(expiredSlot({...slot,createdAt:undefined},Date.now())).toBe(false);
+});

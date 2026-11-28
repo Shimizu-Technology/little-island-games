@@ -450,7 +450,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     for (const i of nearby) {
       const target = index.targets[i];
       if (ctx.target && ctx.target !== target.id) continue;
-      if (capacityOverflow && target.kind === "surface") continue;
+      if (capacityOverflow && target.kind === "surface" && !target.trash) continue;
       if (!eligible(index, subject, target, ctx, group)) continue;
       const face = target.kind === "mouth" ? target.face : undefined;
       const radius = target.kind === "mouth" && face

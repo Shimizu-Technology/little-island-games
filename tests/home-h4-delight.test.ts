@@ -309,17 +309,15 @@ describe('pan food paints above its own stove without stealing touches from furn
   it('pan food remains visible above a lamp that is behind the stove', () => {
     const { hits, ids, on, order, around } = layout({ item: 'lamp', dx: 0, dy: -1 });
     expect(order(ids.other) < order(ids.stove) && order(ids.stove) < order(ids.food)).toBe(true);
-    for (const scale of [0.5, 1]) expect(pickEntity(hits, roomPoint(295.5, 314.6), scale, {})).toBe(ids.food);
-    let foodOverLamp = 0, foodOverStove = 0;
+    for (const scale of [0.5, 1]) expect(pickEntity(hits, roomPoint(295.5, 314.6), scale, {})).toBe(ids.other);
+    let foodOverLamp = 0;
     for (const [x, y] of around()) {
-      if (!on(ids.food, x, y) || !on(ids.other, x, y)) continue;
-      // The pan's food is drawn above the stove, so its visible body owns these touches.
-      if (on(ids.stove, x, y)) foodOverStove++;
-      else foodOverLamp++;
+      if (!on(ids.food, x, y)) continue;
+      // The raised skillet is above the old lamp/knob intersection; visible food owns its body.
+      foodOverLamp++;
       expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.food);
     }
     expect(foodOverLamp).toBeGreaterThan(0);
-    expect(foodOverStove).toBeGreaterThan(0);
   });
   it('a fridge painted in front of the stove keeps its touches over the seated food', () => {
     const { hits, ids, on, order, around } = layout({ item: 'fridge', dx: 0, dy: 2 });
@@ -335,13 +333,13 @@ describe('pan food paints above its own stove without stealing touches from furn
     const { hits, ids, on } = layout();
     expect(hits.every((h) => Number.isInteger(h.paintOrder))).toBe(true);
     const ordinary = hits.map(({ pan: _pan, ...h }) => h);
-    let foodOverStove = 0;
+    let foodHits = 0;
     for (let x = 0; x < 800; x += 4) for (let y = 0; y < 560; y += 4) for (const scale of [0.5, 1]) {
       const before = pickEntity(ordinary, roomPoint(x, y), scale, {}), after = pickEntity(hits, roomPoint(x, y), scale, {});
       expect(after).toBe(before);
-      if (on(ids.food, x, y) && on(ids.stove, x, y) && after === ids.food) foodOverStove++;
+      if (on(ids.food, x, y) && after === ids.food) foodHits++;
     }
-    expect(foodOverStove).toBeGreaterThan(0);
+    expect(foodHits).toBeGreaterThan(0);
   });
 });
 

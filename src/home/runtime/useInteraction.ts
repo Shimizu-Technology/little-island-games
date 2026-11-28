@@ -1,4 +1,4 @@
-import { roomHopAt } from "../roomHops";
+import { roomHopAt, roomPortalsClear } from "../roomHops";
 import { expiredSlot, orphanedSlot, MAX_QUEUED_INPUTS } from "./liveness";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Gesture } from "react-native-gesture-handler";
@@ -258,6 +258,8 @@ export function useInteraction({
   initialCamera,
   reduced,
   designing,
+  overview = false,
+  portalsEnabled = true,
   onCameraChange,
   onPickup,
   onCommit,
@@ -277,6 +279,8 @@ export function useInteraction({
   initialCamera: CameraMatrix;
   reduced: boolean;
   designing: boolean;
+  overview?: boolean;
+  portalsEnabled?: boolean;
   onCameraChange: (overview: boolean, index: number) => void;
   onPickup: (pickup: Pickup) => void;
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
@@ -505,7 +509,8 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
     const anchor = index < 0 ? subject.contact : roomPoint(slot.x - origin.x, slot.y - origin.y);
-    const hop = subject.character && !designing && index >= 0 ? roomHopAt(destination,
+    const wholeHouse = camera.value.a <= Math.min(viewport.width / building.width, viewport.height / building.height) * 1.15;
+    const hop = subject.character && !designing && !overview && !wholeHouse && portalsEnabled && destination === activeRoom.value && roomPortalsClear(prepared.value, destination) && index >= 0 ? roomHopAt(destination,
       screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y))) : undefined;
     if (hop) {
       const proposal = resolve(prepared.value.rooms[hop.room], subject, roomPoint(350, 490), { scale: camera.value.a, floorOnly: true, release: true });
@@ -546,7 +551,7 @@ export function useInteraction({
     });
     if (started !== undefined) catalogTimes.modify(times => { "worklet"; times.push(eventTime() - started); return times; });
     return proposal;
-  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes, dropZones]);
+  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes, dropZones, overview, portalsEnabled, viewport, activeRoom]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -1044,7 +1049,9 @@ export function useInteraction({
     "worklet";
     let healed = false;
     for (const slot of slots.value) {
-      if (!orphanedSlot(slot, controller.value.pointers, zeroTouches)) continue;
+      if (zeroTouches && (slot.pointer < 0 || drawerPointers.value.includes(slot.pointer)) ||
+        queuedInput.value.some(event => (event.type === "up" || event.type === "cancel") && event.pointer === slot.pointer) ||
+        !orphanedSlot(slot, controller.value.pointers, zeroTouches)) continue;
       healed = true;
       send({ type: "cancel", pointer: slot.pointer, now: eventTime() });
       // A missing controller pointer produces no restore effect. Restore directly as well.
@@ -1060,7 +1067,9 @@ export function useInteraction({
         return current;
       });
     }
-    if (zeroTouches) { controller.set({ ...controller.value, pointers: [], reservations: {}, phase: controller.value.settling.length ? "settling" : "idle" }); suppressed.set([]); }
+    // Queued releases and external recognizers retain their pointers and reservations
+    // until their own up/cancel transitions run after the pending commit acknowledges.
+    if (zeroTouches) suppressed.set([]);
     if (healed || zeroTouches) wakeFrames();
   };
   const gesture = Gesture.Manual()
@@ -1068,7 +1077,8 @@ export function useInteraction({
       manager.activate();
       if (event.allTouches) {
         const present = event.allTouches.map(t => t.id);
-        for (const p of controller.value.pointers) if (!present.includes(p.pointer)) send({ type: "cancel", pointer: p.pointer, now: eventTime() });
+        for (const p of controller.value.pointers) if (p.pointer >= 0 && !drawerPointers.value.includes(p.pointer) && !present.includes(p.pointer) &&
+          !queuedInput.value.some(event => (event.type === "up" || event.type === "cancel") && event.pointer === p.pointer)) send({ type: "cancel", pointer: p.pointer, now: eventTime() });
         sweepOrphans();
       }
       if (!controller.value.pointers.length) cameraGesture.set(false);
@@ -1610,7 +1620,7 @@ export function useInteraction({
       if (reduced) {
         slots.modify(current => { "worklet";
           current[index] = { ...current[index], ready: warm, painted: false, finished: true,
-            x: slot.targetX, y: slot.targetY, commitRequested: true };
+            x: slot.targetX, y: slot.targetY, commitRequested: true, commitAt: now, settleAt: now };
           return current;
         });
         runOnJS(onCommit)(index, proposal, from, { generation, epoch: slot.epoch });

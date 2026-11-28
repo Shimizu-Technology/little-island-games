@@ -1,3 +1,4 @@
+import { roomPortalsClear } from "../roomHops";
 import { RoomPortals } from "./RoomPortals";
 import { KitchenBin } from "./KitchenBin";
 import { COCOS_PALM_HOTSPOT, isEntitySwimming } from "../waterZone";
@@ -756,7 +757,7 @@ export const SceneView = React.memo(function SceneView({
                 <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
                   {building.place === undefined && (index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />)}
                 </View>
-                <RoomPortals room={roomId} onHop={onRoomHop}/>
+                {onRoomHop && !designing && liveRoom === roomId && roomPortalsClear(scene, roomId) && <RoomPortals room={roomId} onHop={onRoomHop}/>}
                 {roomId === "home" && <Pressable accessible accessibilityRole="button"
                   accessibilityLabel={`Badge board, ${badges.length} of ${tracks.length * 4} earned. Open My badges`}
                   onPress={onBadges} style={{ position: "absolute", left: 524, top: 26, width: 178, height: 172 }} />}

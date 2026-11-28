@@ -26,6 +26,7 @@ import type { CharacterAction, SceneEntity } from "../scene/types";
 
 export type CharacterRender = CharacterRenderer;
 // Prewarm one small meal rig at scene load. It is hidden at rest and never clocks.
+const chefSpoon = <G><Path d="M12 23L22 10" stroke="#99673E" strokeWidth={2.5} strokeLinecap="round"/><Ellipse cx={23} cy={6} rx={3.5} ry={5} fill="#D8B180" stroke="#99673E" strokeWidth={1.5}/></G>;
 const preparedMeal: Meal = {key:0,action:'eat',offered:true,food:instance('prepared-food','mango',0,0)};
 const preparedDrink: Meal = {key:0,action:'drink',offered:true,food:instance('prepared-drink','coconut-drink',0,0)};
 export const DecorArt = memo(function DecorArt({
@@ -155,7 +156,7 @@ export const EntityArt = memo(function EntityArt({
     slot: rigSlot(character.slot),
     familySlot: character.slot,
     base,
-    ...(chef && !entity.children.length ? { held: <G><Path d="M12 21L-15 -14" stroke="#99673E" strokeWidth={3} strokeLinecap="round"/><Ellipse cx={-18} cy={-17} rx={4} ry={6} fill="#D8B180" stroke="#99673E" strokeWidth={1.5}/></G> } : {}),
+    ...(chef && !entity.children.length ? { held: chefSpoon } : {}),
     action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? (chef && !entity.action ? "hold" as const : entity.action)),
     face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? (chef ? "happy" as const : null)),
     ...(faceOverride === 'proud' || faceOverride === 'yum' || faceOverride === 'cheer' ? { mood: faceOverride === 'cheer' ? 'happy' as const : faceOverride } : {}),

@@ -6,9 +6,11 @@ type Slot = { id: string; phase: string; committed: boolean; commitRequested?: b
 export function expiredSlot(slot: Slot, now: number): boolean {
   'worklet';
   if (!slot.id) return false;
-  if (slot.commitRequested && !slot.committed) return now - (slot.commitAt ?? slot.settleAt) >= COMMIT_TIMEOUT_MS;
-  if (!slot.ready && now - (slot.createdAt ?? slot.settleAt) >= PRESENTATION_TIMEOUT_MS) return true;
-  return slot.phase === 'settling' && slot.committed && now - slot.settleAt >= PRESENTATION_TIMEOUT_MS;
+  const since = slot.commitAt ?? (slot.settleAt || slot.createdAt);
+  if (slot.commitRequested && !slot.committed) return !!since && now - since >= COMMIT_TIMEOUT_MS;
+  const created = slot.createdAt || slot.settleAt;
+  if (!slot.ready && created && now - created >= PRESENTATION_TIMEOUT_MS) return true;
+  return slot.phase === 'settling' && slot.committed && slot.settleAt > 0 && now - slot.settleAt >= PRESENTATION_TIMEOUT_MS;
 }
 export function orphanedSlot(slot: Pick<Slot, 'id' | 'phase'> & { pointer: number; synthetic?: boolean }, pointers: readonly { pointer: number; entity?: string }[], zeroTouches = false): boolean {
   'worklet';
