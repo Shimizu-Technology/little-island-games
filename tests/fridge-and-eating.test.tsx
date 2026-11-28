@@ -296,6 +296,88 @@ describe('Real bounded fridge inventory (zero infinite duplicates)', () => {
     expect(state.rooms.kitchen.instances.filter((i) => i.in === 'starter-fridge')).toHaveLength(8);
   });
 
+  it('R1-01: returning an existing stored item to its own full (8/8) fridge keeps it stored (shelf & tray drags), preserves Undo/Redo, and still refuses an external 9th item with StorageFullNote', async () => {
+    // Open starter fridge and add 2 stored items to reach 8/8 capacity
+    const base = homeReducer(kitchenWithFriend(), {
+      type: 'toggle',
+      id: 'starter-fridge',
+      roomId: 'kitchen',
+    }).state;
+    base.rooms.kitchen.instances.push(
+      { ...instance('stored-shell', 'shell', 14, 0), in: 'starter-fridge' },
+      { ...instance('stored-teddy', 'teddy', 14, 0), in: 'starter-fridge' },
+      instance('external-book', 'book', 2, 8)
+    );
+    expect(validHome(base)).toBe(true);
+    expect(base.rooms.kitchen.instances.filter((i) => i.in === 'starter-fridge')).toHaveLength(8);
+
+    const scene = buildScene(base);
+    const index = { ...scene.rooms.kitchen, entities: scene.entities };
+    const fridgeTarget = index.targets.find((t) => t.id === 'kitchen/item/starter-fridge/container')!;
+    const fridgeEntity = scene.entities['kitchen/item/starter-fridge'];
+    const mango = scene.entities['kitchen/item/starter-fridge-mango'];
+    expect(fridgeTarget.closed).toBe(true);
+
+    // Release points: container contact, original shelf contact, painted mango center, and tray-originated drop on fridge center
+    const releasePoints = [
+      fridgeTarget.contact,
+      mango.contact,
+      roomPoint(mango.contact.x + mango.visual!.x, mango.contact.y + mango.visual!.y),
+      roomPoint(fridgeEntity.contact.x, fridgeEntity.contact.y - 160),
+    ];
+    for (const point of releasePoints) {
+      const proposal = resolve(index, mango, point, { scale: 0.5, aim: point, release: true });
+      expect(proposal.refusal).toBeUndefined();
+      expect(proposal.attachment).toEqual({ kind: 'container', parent: 'kitchen/item/starter-fridge' });
+      expect(proposal.contact).toEqual(mango.contact);
+
+      const applied = apply(base, proposal);
+      expect('state' in applied).toBe(true);
+      if (!('state' in applied)) return;
+      expect(validHome(applied.state)).toBe(true);
+      expect(applied.state.rooms.kitchen.instances.filter((i) => i.in === 'starter-fridge')).toHaveLength(8);
+      expect(applied.state.rooms.kitchen.instances.find((i) => i.id === 'starter-fridge-mango')?.in).toBe(
+        'starter-fridge'
+      );
+    }
+
+    // Undo/Redo round-trip after returning an existing stored item to a full fridge
+    const selfReturnProposal = resolve(index, mango, fridgeTarget.contact, {
+      scale: 0.5,
+      aim: fridgeTarget.contact,
+      release: true,
+    });
+    let history: History = { present: base, past: [], future: [] };
+    history = editHistory(history, { type: 'apply-proposal', proposal: selfReturnProposal });
+    expect(history.present.rooms.kitchen.instances.filter((i) => i.in === 'starter-fridge')).toHaveLength(8);
+    const undone = editHistory(history, { type: 'undo' });
+    expect(undone.present.rooms.kitchen.instances.filter((i) => i.in === 'starter-fridge')).toHaveLength(8);
+    const redone = editHistory(undone, { type: 'redo' });
+    expect(redone.present.rooms.kitchen.instances.filter((i) => i.in === 'starter-fridge')).toHaveLength(8);
+
+    // External 9th item dropped onto the same full (8/8) fridge still refuses with StorageFullNote on HomeScreen
+    const externalBook = scene.entities['kitchen/item/external-book'];
+    const refused = resolve(index, externalBook, fridgeTarget.contact, {
+      scale: 0.5,
+      aim: fridgeTarget.contact,
+      release: true,
+    });
+    expect(refused.refusal).toBe('storage-capacity');
+
+    const persist = vi.fn(() => true);
+    await act(async () => {
+      root = create(<HomeScreen initialState={base} persist={persist} />);
+    });
+    await act(async () => {
+      harness.options.onCommit(0, refused, fridgeTarget.contact, {});
+    });
+    expect(persist).not.toHaveBeenCalled();
+    expect(root!.root.findAllByProps({ testID: 'storage-full-note' }).length).toBeGreaterThan(0);
+    expect(
+      root!.root.findAll((n) => n.props.accessibilityLabel === 'Fridge is full. Take something out first.').length
+    ).toBeGreaterThan(0);
+  });
+
   it('shows Put in Fridge cue when hovering space and Fridge full when full', async () => {
     const s = starterHome();
     const scene = buildScene(s);

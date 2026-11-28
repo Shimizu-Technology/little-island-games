@@ -123,9 +123,13 @@ function eligible(
   group: SceneEntity[]
 ): boolean {
   "worklet";
+  const ownContainer =
+    target.kind === "container" &&
+    subject.attachment.kind === "container" &&
+    subject.attachment.parent === target.owner;
   if (
     (target.hidden && ctx.target !== target.id) ||
-    (target.closed && target.occupied !== subject.id) ||
+    (target.closed && target.occupied !== subject.id && !ownContainer) ||
     group.some((e) => e.id === target.owner)
   )
     return false;
@@ -325,13 +329,19 @@ function targetMove(index: RoomIndex, subject: SceneEntity, target: Target): Ent
     const parent = index.entities[target.attachment.parent]?.item;
     if (parent) cell = gridCell(parent.x + target.attachment.slot, parent.y);
   }
+  const ownContainer =
+    target.kind === "container" &&
+    subject.attachment.kind === "container" &&
+    subject.attachment.parent === target.owner;
   return rootMove(
     subject,
     index.room,
     target.attachment,
-    target.kind === "hand" || (target.kind === "mouth" && subject.body?.edible === "drink")
-      ? (target.projectedContact ?? target.contact)
-      : target.contact,
+    ownContainer
+      ? subject.contact
+      : target.kind === "hand" || (target.kind === "mouth" && subject.body?.edible === "drink")
+        ? (target.projectedContact ?? target.contact)
+        : target.contact,
     subject.character ? target.base : subject.base,
     subject.character ? target.facing : subject.facing,
     cell

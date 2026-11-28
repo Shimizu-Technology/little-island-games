@@ -1,4 +1,5 @@
 import type { Instance } from './model';
+import { drinkIds, foodIds } from './art/living';
 
 /** HS-01: immutable authored limits. Fridge retains the earlier v4 eight-item contract. */
 export function storageCapacity(item: string): number {
@@ -14,14 +15,7 @@ export function storageOpen(item: Pick<Instance, 'storage' | 'powered' | 'state'
 export const STORAGE_FULL_MESSAGE = 'This is full. Take something out first.';
 
 /** Real starter staples stocked inside a fresh kitchen fridge (leaving 2 of 8 slots open). */
-export const FRIDGE_STAPLES = [
-  'mango',
-  'banana',
-  'rice-ball',
-  'cupcake',
-  'juice',
-  'coconut-drink',
-] as const;
+export const FRIDGE_STAPLES = [...foodIds.slice(0, 4), drinkIds[1], drinkIds[0]] as const;
 
 export const FRIDGE_RESTOCK_TARGET = FRIDGE_STAPLES.length;
 
