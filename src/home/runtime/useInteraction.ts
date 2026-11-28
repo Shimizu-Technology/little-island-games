@@ -1384,7 +1384,8 @@ export function useInteraction({
             slot.liftedAt = now;
           }
           if (slot.phase === "settling" && slot.settleAt && slot.ready) {
-            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
+            // Once travel has completed, a fresh commit clock must not replay that travel.
+            const progress = slot.finished && slot.commitRequested ? 1 : settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
             if(slot.proposal?.kind !== "mouth")slot.tilt *= 1 - progress;
@@ -1396,6 +1397,7 @@ export function useInteraction({
             if (slot.finished && !slot.committed && !slot.commitRequested && slot.proposal) {
               slot.commitRequested = true;
               slot.commitAt = now;
+              slot.settleAt = now;
               runOnJS(onCommit)(i, slot.proposal, { x: slot.releaseX, y: slot.releaseY },
                 { generation: slot.generation, epoch: slot.epoch });
             }

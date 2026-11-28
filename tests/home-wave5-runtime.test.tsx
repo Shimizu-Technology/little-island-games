@@ -136,6 +136,11 @@ it('a lost JS commit acknowledgement releases queued taps without Undo', async (
   harness.deferCommit = true;
   await act(async () => { current.animateProposal(p); }); await flush(); await frames(45);
   expect(current.slots.get().some(s => s.commitRequested && !s.committed)).toBe(true);
+  const requested = current.slots.get().find(s=>s.commitRequested)!;
+  expect(requested.settleAt).toBe(requested.commitAt);
+  const end = {x:requested.x,y:requested.y};
+  await frames(2);
+  expect({x:current.slots.get()[0].x,y:current.slots.get()[0].y}).toEqual(end);
   const touch = {id: 44, x: 790, y: 550};
   await act(async () => harness.handlers.down({changedTouches:[touch],numberOfTouches:1},{activate:()=>{}}));
   await act(async () => harness.handlers.up({changedTouches:[touch],numberOfTouches:0},{end:()=>{}}));
