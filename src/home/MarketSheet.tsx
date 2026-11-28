@@ -10,6 +10,7 @@ import { itemSpec, type ItemId } from './catalog';
 import { marketStock, marketContents } from './market';
 import type { HomeAction, HomeStateV2 } from './model';
 type Rect = { x: number; y: number; width: number; height: number };
+function dragTime() { 'worklet'; return Date.now(); }
 function Grocery({ item, onAdd, basket, reduced, dragPoint, onDrag }: { item: ItemId; onAdd: (item: ItemId) => void; basket: React.RefObject<Rect>; reduced: boolean; dragPoint: SharedValue<{x: number; y: number}>; onDrag: (item: ItemId | undefined) => void }) {
   const dx = useSharedValue(0), dy = useSharedValue(0), dragging = useSharedValue(false);
   const lastDrag = useSharedValue(0);
@@ -18,10 +19,10 @@ function Grocery({ item, onAdd, basket, reduced, dragPoint, onDrag }: { item: It
     const box = basket.current;
     if (x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height) onAdd(item);
   };
-  const pan = Gesture.Pan().minDistance(6).onStart(event => { lastDrag.set(Date.now()); dragging.set(true); dragPoint.set({x: event.absoluteX, y: event.absoluteY}); runOnJS(onDrag)(item); })
+  const pan = Gesture.Pan().minDistance(6).onStart(event => { lastDrag.set(dragTime()); dragging.set(true); dragPoint.set({x: event.absoluteX, y: event.absoluteY}); runOnJS(onDrag)(item); })
     .onUpdate(event => { dragPoint.set({x: event.absoluteX, y: event.absoluteY}); })
     .onEnd(event => { runOnJS(acceptDrop)(event.absoluteX, event.absoluteY); })
-    .onFinalize(() => { if (dragging.value) lastDrag.set(Date.now()); runOnJS(onDrag)(undefined); dragging.set(false); dx.set(withTiming(0, { duration: reduced ? 0 : 120 })); dy.set(withTiming(0, { duration: reduced ? 0 : 120 })); });
+    .onFinalize(() => { if (dragging.value) lastDrag.set(dragTime()); runOnJS(onDrag)(undefined); dragging.set(false); dx.set(withTiming(0, { duration: reduced ? 0 : 120 })); dy.set(withTiming(0, { duration: reduced ? 0 : 120 })); });
   return <GestureDetector gesture={pan}><Animated.View style={[{ width: '30%', minWidth: 80, alignItems: 'center', borderBottomWidth: 7, borderBottomColor: '#AC723F', backgroundColor: '#FFF8E9D9', borderRadius: 12, padding: 4, minHeight: 88 }, style]}>
     <Pressable testID={`market-stock-${item}`} accessibilityRole="button" accessibilityLabel={`Add ${itemSpec(item).name} to Carry Basket`} onPress={() => { if (!dragging.get() && Date.now() - lastDrag.get() > 250) onAdd(item); }} style={{ alignItems: 'center', minWidth: 72, minHeight: 72 }}>
       <MoreItemArt id={item} size={55} reduced/>
