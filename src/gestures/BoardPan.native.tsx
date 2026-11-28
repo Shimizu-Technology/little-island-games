@@ -54,7 +54,7 @@ export function BoardPanView({ pan, enabled = true, nativeRegions, axis, childre
   const regionsKey = JSON.stringify(nativeRegions ?? null);
   const regions = useMemo(() => JSON.parse(regionsKey) as readonly DragRegion[] | null, [regionsKey]);
   const gesture = useMemo(() => {
-    const drag = Gesture.Pan().enabled(enabled).minDistance(0).shouldCancelWhenOutside(false)
+    const drag = Gesture.Pan().enabled(enabled).shouldCancelWhenOutside(false)
       .onTouchesDown((e, manager) => {
         'worklet';
         // Touch data can precede BEGAN (a rejected region can fail immediately).
@@ -63,7 +63,7 @@ export function BoardPanView({ pan, enabled = true, nativeRegions, axis, childre
         if (touch) runOnJS(begin)({ x: touch.x, y: touch.y, absoluteX: touch.absoluteX, absoluteY: touch.absoluteY, translationX: 0, translationY: 0, numberOfPointers: e.numberOfTouches });
         // Serialized geometry is evaluated on UI BEFORE UIScrollView's pan threshold.
         // A JS shouldSet result alone is too late to decide native ownership.
-        if (regions && (!touch || !regions.some(r => {
+        if (e.numberOfTouches === 1 && regions && (!touch || !regions.some(r => {
           const x = touch.x - r.left, y = touch.y - r.top;
           return r.radius === undefined ? x >= 0 && y >= 0 && x <= r.width && y <= r.height
             : (x - r.radius) ** 2 + (y - r.radius) ** 2 < r.radius ** 2;
@@ -74,6 +74,7 @@ export function BoardPanView({ pan, enabled = true, nativeRegions, axis, childre
       .onEnd((e, success) => { 'worklet'; runOnJS(end)(e, success); })
       .onFinalize(e => { 'worklet'; runOnJS(panFinalize)(e); });
     if (axis === 'horizontal') drag.activeOffsetX([-20, 20]).failOffsetY([-12, 12]);
+    else drag.minDistance(0);
     const tap = Gesture.Tap().enabled(enabled).maxDistance(8).maxDuration(30000)
       .onBegin(e => { 'worklet'; runOnJS(tapBegin)(e); })
       .onEnd((e, success) => { 'worklet'; runOnJS(tapEnd)(e, success); })

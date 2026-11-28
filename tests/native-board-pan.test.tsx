@@ -139,11 +139,11 @@ it('native hit regions fail non-draggable starts on UI, before JS shouldSet or s
   const regions = [{ left: 10, top: 10, width: 40, height: 40, radius: 20 }];
   await act(async () => { tree = create(<BoardPanView pan={pan} nativeRegions={regions}><View/></BoardPanView>); });
   const manager = { fail: vi.fn() };
-  config().onTouchesDown({ changedTouches: [{ x: 30, y: 30 }] }, manager);
+  config().onTouchesDown({ changedTouches: [{ x: 30, y: 30 }], numberOfTouches: 1 }, manager);
   expect(manager.fail).not.toHaveBeenCalled();
-  config().onTouchesDown({ changedTouches: [{ x: 10, y: 10 }] }, manager);
+  config().onTouchesDown({ changedTouches: [{ x: 10, y: 10 }], numberOfTouches: 1 }, manager);
   expect(manager.fail).toHaveBeenCalledOnce();
-  config().onTouchesDown({ changedTouches: [{ x: 50, y: 30 }] }, manager);
+  config().onTouchesDown({ changedTouches: [{ x: 50, y: 30 }], numberOfTouches: 1 }, manager);
   expect(manager.fail).toHaveBeenCalledTimes(2);
   const before = tree!.root.findByType('GestureDetector' as React.ElementType).props.gesture;
   await act(async () => tree!.update(<BoardPanView pan={pan} nativeRegions={[...regions]}><View/></BoardPanView>));
@@ -152,6 +152,7 @@ it('native hit regions fail non-draggable starts on UI, before JS shouldSet or s
 it('the Earth lab uses native horizontal activation and vertical failure criteria', async () => {
   await act(async () => { tree = create(<SkyBoard state={newLab()} act={() => {}}/>); });
   expect(config()).toMatchObject({ activeOffsetX: [-20, 20], failOffsetY: [-12, 12] });
+  expect(config().minDistance).toBeUndefined();
 });
 
 it('a hit-gate failure before Pan BEGAN still permits repeated stationary taps on stock or Bridges water', async () => {
@@ -165,4 +166,17 @@ it('a hit-gate failure before Pan BEGAN still permits repeated stationary taps o
     tap().onEnd(sample(), true); tap().onFinalize(sample(), true);
   });
   expect(release).toHaveBeenCalledTimes(2); expect(cancel).not.toHaveBeenCalled();
+});
+
+it('a stray second touch outside native regions cannot cancel an active card or island drag', async () => {
+  const release = vi.fn(), cancel = vi.fn(), pan = createBoardPan({ onPanResponderRelease: release, onPanResponderTerminate: cancel });
+  await act(async () => { tree = create(<BoardPanView pan={pan} nativeRegions={[{ left: 10, top: 10, width: 40, height: 40 }]}><View/></BoardPanView>); });
+  const manager = { fail: vi.fn() };
+  await act(async () => {
+    begin(); config().onUpdate(sample(35, 35));
+    config().onTouchesDown({ changedTouches: [{ id: 2, x: 200, y: 200, absoluteX: 210, absoluteY: 300 }], numberOfTouches: 2 }, manager);
+    finishPan(sample(40, 40), true);
+  });
+  expect(manager.fail).not.toHaveBeenCalled();
+  expect(release).toHaveBeenCalledOnce(); expect(cancel).not.toHaveBeenCalled();
 });
