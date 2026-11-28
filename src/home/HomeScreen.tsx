@@ -1,3 +1,5 @@
+import { roomHopAt, roomHops, roomPortalsClear } from "./roomHops";
+import { marketContents } from "./market";
 import { arrivalPoint, isGuamPlace } from "./locations";
 import { isPointInCocosPalm } from "./waterZone";
 import { AtmospherePicker } from "./AtmospherePicker";
@@ -18,7 +20,7 @@ import { HomeClosetSheet, closetSheetHeightRatio } from "./HomeClosetSheet";
 import { HomeBadgesSheet } from "./HomeBadgesSheet";
 import { registerWebPopStateHandler } from "./webPopState";
 import { locationBuilding, roomOrigin, type Building } from "./camera";
-import { locationIds as roomIds, type RoomId } from "./catalogMore";
+import { locationIds as roomIds, roomNames, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
 import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
 import {
@@ -146,6 +148,7 @@ function useSceneEvent<T extends (...args: never[]) => unknown>(callback: T): T 
   return useCallback((...args: Parameters<T>) => latest.current(...args), []) as T;
 }
 
+const MarketSheet = React.lazy(() => import("./MarketSheet").then(module => ({ default: module.MarketSheet })));
 const PlacesSheet = React.lazy(() => import("./PlacesSheet").then(module => ({ default: module.PlacesSheet })));
 
 export const REDO_VISIBLE_MS = 10000;
@@ -158,6 +161,7 @@ export type HomeClosetConfig = {
   onSeen?: (id: string) => boolean | void;
   onSeenAll?: () => boolean | void;
   renderCharacter?: (look: IslanderLook) => CharacterRender;
+  renderLook?: (input: Parameters<CharacterRender>[0], look: IslanderLook) => ReactNode;
 };
 export type HomeScreenProps = Ownership & {
   completedRounds?: number;
@@ -178,6 +182,34 @@ export type HomeScreenProps = Ownership & {
   sheetSaveStatus?: ReactNode;
   lab?: boolean;
 };
+const CharacterAppearance = React.createContext<{ look?: IslanderLook; renderer?: CharacterRender; factory?: HomeClosetConfig["renderCharacter"]; renderLook?: HomeClosetConfig["renderLook"] }>({});
+function PaintedCharacter({ input }: { input: Parameters<CharacterRender>[0] }) {
+  const { look: effectiveLook, renderer: renderCharacter, factory: renderClosetCharacter, renderLook } = React.useContext(CharacterAppearance);
+  const original = renderCharacter ?? (effectiveLook && renderClosetCharacter ? renderClosetCharacter(effectiveLook) : undefined);
+  const familyLook = input.familySlot !== undefined && familyLooks[input.familySlot];
+  if (familyLook && !renderCharacter) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- native rig stays at render boundary.
+    const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
+    return <HomeCharacter input={input} look={familyLook}/>;
+  }
+  if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action || input.face || input.mood) {
+    if (renderLook && effectiveLook && !renderCharacter) return renderLook(input, effectiveLook);
+    if (original) return original(input);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- load native rig only at the render boundary.
+    const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
+    return <HomeCharacter input={input}/>;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- keep native art lazy for engine-only embedders.
+  const { CrabFriend } = require('./art/CrabFriend') as typeof import('./art/CrabFriend');
+  const bounds = crabAnchors(input.base, input.facing, { tilt: input.tilt, limbLag: input.limbLag, reduced: input.reduced }).bounds, unit = input.size / 120;
+  return <View pointerEvents="none" style={{ width: bounds.width * unit, height: bounds.height * unit }}>
+    <View style={{ position: 'absolute', left: (-bounds.left - 60) * unit, top: (-bounds.top - crabOrigin(input.base)[1]) * unit }}>
+      <CrabFriend size={input.size} pose={input.base === 'carry' ? 'held' : input.base === 'lie' ? 'lie' : input.base === 'sit' || input.base === 'bathe' ? 'sit' : 'stand'} mirrored={input.facing === 'left'} reduced={input.reduced}/>
+    </View>
+  </View>;
+}
+const renderPaintedCharacter: CharacterRender = input => <PaintedCharacter input={input}/>;
+
 export function HomeScreen({
   initialState,
   initialRoom,
@@ -212,6 +244,7 @@ export function HomeScreen({
   );
   const [atmosphereOpen, setAtmosphereOpen] = useState(false);
   const [placesOpen, setPlacesOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState<RoomId>(() =>
       initialSheet === "closet" ? heroRoomInState(store.state) : (initialRoom ?? store.state.current)
@@ -258,34 +291,8 @@ export function HomeScreen({
   }, [activeSheet, closetInitialItem, closet]);
   const effectiveLook = previewLook ?? closet?.look;
   const renderClosetCharacter = closet?.renderCharacter;
-  const characterRenderer = useMemo<CharacterRender | undefined>(
-    () => {
-      const original = renderCharacter ?? (effectiveLook && renderClosetCharacter ? renderClosetCharacter(effectiveLook) : undefined);
-      return function PaintedCharacter(input) {
-        const familyLook = input.familySlot !== undefined && familyLooks[input.familySlot];
-        if (familyLook && !renderCharacter) {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports -- native rig stays at render boundary.
-          const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
-          return <HomeCharacter input={input} look={familyLook}/>;
-        }
-        if (renderCharacter || input.slot !== 2 || input.mealPlayback || input.action || input.face || input.mood) {
-          if (original) return original(input);
-          // eslint-disable-next-line @typescript-eslint/no-require-imports -- load native rig only at the render boundary.
-          const { HomeCharacter } = require('./characterRenderer') as typeof import('./characterRenderer');
-          return <HomeCharacter input={input}/>;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-require-imports -- keep native art lazy for engine-only embedders.
-        const { CrabFriend } = require('./art/CrabFriend') as typeof import('./art/CrabFriend');
-        const bounds = crabAnchors(input.base, input.facing, { tilt: input.tilt, limbLag: input.limbLag, reduced: input.reduced }).bounds, unit = input.size / 120;
-        return <View pointerEvents="none" style={{ width: bounds.width * unit, height: bounds.height * unit }}>
-          <View style={{ position: 'absolute', left: (-bounds.left - 60) * unit, top: (-bounds.top - crabOrigin(input.base)[1]) * unit }}>
-            <CrabFriend size={input.size} pose={input.base === 'carry' ? 'held' : input.base === 'lie' ? 'lie' : input.base === 'sit' || input.base === 'bathe' ? 'sit' : 'stand'} mirrored={input.facing === 'left'} reduced={input.reduced}/>
-          </View>
-        </View>;
-      };
-    },
-    [renderCharacter, effectiveLook, renderClosetCharacter]
-  );
+  const characterRenderer = renderPaintedCharacter;
+  const appearance = useMemo(() => ({ look: effectiveLook, renderer: renderCharacter, factory: renderClosetCharacter, renderLook: closet?.renderLook }), [effectiveLook, renderCharacter, renderClosetCharacter, closet?.renderLook]);
   const hasNewCloset = useMemo(
     () => !!closet?.unseen.some((id) => styleCatalog.some((item) => item.id === id)),
     [closet?.unseen]
@@ -298,7 +305,7 @@ export function HomeScreen({
   const [meals, setMeals] = useState<Record<string, Meal>>({});
   const [mealReady,setMealReady]=useState<Record<string,number>>({});
   const mealSerial = useRef(0);
-  const mealFinishers = useRef<Record<string, { key: number; finish: () => void; presented: boolean }>>({});
+  const mealFinishers = useRef<Record<string, { key: number; finish: () => void; release: () => void; presented: boolean }>>({});
   const entityNodes = useRef<Record<string, View>>({});
   const [focusId, restoreFocus] = useState<string>();
   const onNode = useCallback((id: string, node: View | null) => {
@@ -309,6 +316,7 @@ export function HomeScreen({
   React.useEffect(() => () => {
     Object.values(reactionTimers.current).forEach(clearTimeout);
     clearTimeout(discoveryTimer.current);
+    Object.values(mealFinishers.current).forEach(entry => entry.release());
     mealFinishers.current = {};
   }, []);
   // Deep-link entry (`/island-home?room=tumon-beach` or `cocos-island`): switch room and bring the Islander if empty.
@@ -353,6 +361,7 @@ export function HomeScreen({
   const clearMealArt = useCallback(() => {
     Object.values(reactionTimers.current).forEach(clearTimeout);
     reactionTimers.current = {};
+    Object.values(mealFinishers.current).forEach(entry => entry.release());
     mealFinishers.current = {};
     setMeals({});
     setMealReady({});
@@ -587,12 +596,12 @@ export function HomeScreen({
     [shoreRooms, showStorageFull]
   );
   const showReaction = (proposal: DropProposal, food?: Meal["food"], offered = false, source = proposal.id, capture?:Meal["capture"]) => {
-    if (proposal.kind !== "mouth") return;
+    if (proposal.kind !== "mouth") return false;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
-    if (!target) return;
+    if (!target) { if (capture) runtime.current?.completeMealHandoff?.(source, capture); return false; }
     const action = proposal.consume === "drink" ? "drink" : "eat";
-    const previousMeal=live.current.meals[target.owner];
-    if(previousMeal?.source && previousMeal.capture)runtime.current?.completeMealHandoff(previousMeal.source,previousMeal.capture);
+    mealFinishers.current[target.owner]?.release();
+    const release = () => { if (capture) runtime.current?.completeMealHandoff?.(source, capture); };
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
     const key = ++mealSerial.current;
@@ -605,11 +614,13 @@ export function HomeScreen({
     const eater = live.current.scene.entities[target.owner];
     if (eater?.character) delightAte(eater, action);
     const finish = () => {
+      release();
       if (mealFinishers.current[target.owner]?.key !== key) return;
+      clearTimeout(reactionTimers.current[target.owner]);
       delete mealFinishers.current[target.owner];
       delete reactionTimers.current[target.owner];
       const presentedMeal=live.current.meals[target.owner];
-      if(presentedMeal?.source && presentedMeal.capture)runtime.current?.completeMealHandoff(presentedMeal.source,presentedMeal.capture);
+      if(presentedMeal?.source && presentedMeal.capture)runtime.current?.completeMealHandoff?.(presentedMeal.source,presentedMeal.capture);
       setMeals(current => { const next = { ...current }; delete next[target.owner]; return next; });
       const owner = live.current.scene.entities[target.owner];
       if (owner?.character)
@@ -620,17 +631,17 @@ export function HomeScreen({
         return next;
       });
     };
-    mealFinishers.current[target.owner] = { key, finish, presented: false };
-    // Only an action without presentation uses a timer. Visible art completes from playback.
-    if (!food) reactionTimers.current[target.owner] = setTimeout(finish, MEAL_MS);
+    mealFinishers.current[target.owner] = { key, finish, release, presented: false };
+    // Playback finishes normally; a bounded fallback covers missing layout or interruption.
+    reactionTimers.current[target.owner] = setTimeout(finish, food ? MEAL_MS + 1200 : MEAL_MS);
+    return !!food;
   };
   const onMealPresented = useCallback((id: string, key: number) => {
     const entry = mealFinishers.current[id];
     if (!entry || entry.key !== key || entry.presented || live.current.meals[id]?.key !== key) return;
     entry.presented = true;
     setMealReady(current=>({...current,[id]:key}));
-    clearTimeout(reactionTimers.current[id]);
-    delete reactionTimers.current[id];
+    // Keep the bounded fallback even after native presentation: playback can be interrupted.
   }, []);
   const onMealFinished = useCallback((id: string, key: number) => {
     const entry = mealFinishers.current[id];
@@ -655,57 +666,70 @@ export function HomeScreen({
       const stillCurrent = () => runtime.current!.isCurrent(index, token);
       if (!stillCurrent()) return;
       if (proposal.refusal === "storage-capacity") { showStorageFull(proposal.target); runtime.current!.finish(index, false, undefined, undefined, undefined, token); return; }
-      const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
-      // Catalog seeds and detached portions may exist only in the captured slot.
-      const mealFood = live.current.scene.entities[proposal.id]?.item ??
-        runtime.current?.slots.get()[index]?.subject?.item ?? proposal.item;
-      const result = commitAt(
-        proposal.id,
-        proposal.room,
-        { x: at.x - origin.x, y: at.y - origin.y },
-        proposal,
-        stillCurrent
-      );
-      if (result) {
-        if (result.proposal.attachment.kind === "container") setStorageId(result.proposal.attachment.parent);
-        if (labKit && trace)
-          trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
-        showReaction(result.proposal, mealFood, true, proposal.id, token);
-        const before = live.current.scene;
-        const destination = buildRuntimeScene(result.state);
-        // A mouth release keeps the original carry drawing in place until the
-        // meal takes over. Only a landing needs the destination drawing.
-        if (result.proposal.kind !== "mouth") {
-          setPickups((current) =>
-            current.map((p, i) =>
-              i === index && p
-                ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
-                : p
-            )
-          );
-        }
-        runtime.current!.finish(
-          index,
-          true,
-          result.proposal,
-          destination.revision,
-          destination,
-          token,
-          result.identities[result.proposal.id],
-          result.proposal.kind === "mouth" && !!mealFood
+      let resolved = false;
+      try {
+        const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
+        // Catalog seeds and detached portions may exist only in the captured slot.
+        const mealFood = live.current.scene.entities[proposal.id]?.item ??
+          runtime.current?.slots.get()[index]?.subject?.item ?? proposal.item;
+        const result = commitAt(
+          proposal.id,
+          proposal.room,
+          { x: at.x - origin.x, y: at.y - origin.y },
+          proposal,
+          stillCurrent
         );
-        setRoom(result.proposal.room);
-        if (runtime.current!.slots.get()[index]?.synthetic) {
-          const owner = live.current.scene.rooms[result.proposal.room].targets.find(t => t.id === result.proposal.target)?.owner;
-          restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
+        if (result) {
+          if (result.proposal.attachment.kind === "container") setStorageId(result.proposal.attachment.parent);
+          if (labKit && trace)
+            trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
+          const mealPending = showReaction(result.proposal, mealFood, true, proposal.id, token);
+          const before = live.current.scene;
+          const destination = buildRuntimeScene(result.state);
+          // A mouth release keeps the original carry drawing in place until the
+          // meal takes over. Only a landing needs the destination drawing.
+          if (result.proposal.kind !== "mouth") {
+            setPickups((current) =>
+              current.map((p, i) =>
+                i === index && p
+                  ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
+                  : p
+              )
+            );
+          }
+          runtime.current!.finish(
+            index,
+            true,
+            result.proposal,
+            destination.revision,
+            destination,
+            token,
+            result.identities[result.proposal.id],
+            mealPending
+          );
+          if (result.proposal.kind === "transfer") {
+            runtime.current!.animateCamera(focusCamera(roomIds.indexOf(result.proposal.room), viewport, building), true);
+            setOverview(false);
+          }
+          setRoom(result.proposal.room);
+          if (runtime.current!.slots.get()[index]?.synthetic) {
+            const owner = live.current.scene.rooms[result.proposal.room].targets.find(t => t.id === result.proposal.target)?.owner;
+            restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
+          }
+          delightLanded(result.proposal, before.entities[proposal.id], before, destination, result.identities[result.proposal.id]);
+          // Rule 49: food dropped into a hot pan starts sizzling with the commit, not a render later.
+          watchCooking(destination);
+        } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
+        resolved = true;
+      } finally {
+        if (!resolved) {
+          runtime.current?.completeMealHandoff?.(proposal.id, token);
+          runtime.current?.finish(index, false, undefined, undefined, undefined, token);
         }
-        delightLanded(result.proposal, before.entities[proposal.id], before, destination, result.identities[result.proposal.id]);
-        // Rule 49: food dropped into a hot pan starts sizzling with the commit, not a render later.
-        watchCooking(destination);
-      } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- showReaction reads refs; the delight callbacks are stable.
-    [building, commitAt, delightLanded, delightAte, watchCooking, buildRuntimeScene, trace, showStorageFull]
+    [building, viewport, commitAt, delightLanded, delightAte, watchCooking, buildRuntimeScene, trace, showStorageFull]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {
@@ -720,9 +744,10 @@ export function HomeScreen({
         if (pickup.scene.entities[id]?.character) {
           clearTimeout(reactionTimers.current[id]);
           delete reactionTimers.current[id];
+          mealFinishers.current[id]?.release();
           delete mealFinishers.current[id];
           const interrupted=live.current.meals[id];
-          if(interrupted?.source && interrupted.capture)runtime.current?.completeMealHandoff(interrupted.source,interrupted.capture);
+          if(interrupted?.source && interrupted.capture)runtime.current?.completeMealHandoff?.(interrupted.source,interrupted.capture);
           setMeals(current => { const next = { ...current }; delete next[id]; return next; });
           setReactions(current => { const next = { ...current }; delete next[id]; return next; });
         }
@@ -876,6 +901,20 @@ export function HomeScreen({
     // Start the UI-thread camera before the durable Store admission/write work.
     live.current.store.dispatch({ type: "room", room: id });
   }, [clearClosetDraft, floorOf, overview, room, viewport, window.width, window.height]);
+  const lastHop = useRef(0);
+  const hopRoom = useCallback((destination: RoomId) => {
+    if (live.current.designing || overview || live.current.activeSheet) return;
+    if (Date.now() - lastHop.current < 350) return;
+    lastHop.current = Date.now();
+    const current = live.current;
+    const chosen = current.selected && current.scene.entities[current.selected]?.character;
+    const friend = chosen ?? current.store.getState().rooms[current.room].characters.find(c => c.slot === 0 && !c.staged)
+      ?? current.store.getState().rooms[current.room].characters.find(c => !c.staged);
+    const sourceRoom = chosen ? current.scene.entities[current.selected!]!.room : current.room;
+    runtime.current?.cancelAll();
+    if (friend) current.store.dispatch({ type: "transfer", slot: friend.slot, room: destination, roomId: sourceRoom, x: 9, y: 8 });
+    goRoom(destination);
+  }, [goRoom, overview]);
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     const current = live.current;
@@ -980,6 +1019,7 @@ export function HomeScreen({
     else router.replace?.("/");
   }, []);
   const handleBack = useCallback(() => {
+    if (marketOpen) { setMarketOpen(false); return; }
     if (placesOpen) { setPlacesOpen(false); return; }
     // P1-1: First Back closes an open Closet/Badges sheet; second Back reaches `/` (Map).
     if (activeSheet === "closet") {
@@ -991,7 +1031,7 @@ export function HomeScreen({
       return;
     }
     goToMap();
-  }, [placesOpen, activeSheet, closeCloset, closeBadges, goToMap]);
+  }, [placesOpen, marketOpen, activeSheet, closeCloset, closeBadges, goToMap]);
   const closeClosetRef = useRef(closeCloset);
   const closeBadgesRef = useRef(closeBadges);
   const goToMapRef = useRef(goToMap);
@@ -1144,6 +1184,12 @@ export function HomeScreen({
       if (index >= 0) goRoom(roomIds[index]);
       return;
     }
+    if (!id && !current.selected && !current.placing && !current.designing && !current.activeSheet && !friends && !more && !atmosphereOpen && !placesOpen && !marketOpen && roomPortalsClear(current.scene, current.room)) {
+      const origin = roomOrigin(roomIds.indexOf(current.room), building);
+      const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
+      const hop = roomHopAt(current.room, local);
+      if (hop) { hopRoom(hop.room); return; }
+    }
     if (!id && !current.selected && !current.placing) {
       const origin = roomOrigin(roomIds.indexOf("home"), building);
       const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
@@ -1262,6 +1308,8 @@ export function HomeScreen({
     initialCamera,
     reduced,
     designing,
+    overview,
+    portalsEnabled: !activeSheet && !friends && !more && !atmosphereOpen && !placesOpen && !marketOpen,
     onCameraChange: (all, index) => {
       setOverview(all);
       if (index >= 0) setRoom(roomIds[index]);
@@ -1433,7 +1481,7 @@ export function HomeScreen({
   const hints = useRef<HintState>(freshHints(0));
   // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
   React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
-  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen;
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && !marketOpen;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -1605,7 +1653,7 @@ export function HomeScreen({
   // Friends who are put away wait in the friends drawer, not in the basket (HR-01).
   const staged = Object.values(baseScene.entities).filter((e) => e.attachment.kind === "staging" && !e.character);
   return (
-    <View style={{ flex: 1, overflow: "hidden", backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }} onTouchStart={touched}>
+    <CharacterAppearance.Provider value={appearance}><View style={{ flex: 1, overflow: "hidden", backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }} onTouchStart={touched}>
       <HomeChrome
         onPlaces={openPlaces}
         onGames={isGuamPlace(room) ? openPlaces : undefined}
@@ -1694,6 +1742,7 @@ export function HomeScreen({
             state={sceneState}
             badges={ownership.badges}
             onBadges={showBadgesInScene}
+            onRoomHop={!overview && !designing && !activeSheet && !friends && !more && !atmosphereOpen && !placesOpen && !marketOpen ? hopRoom : undefined}
             onShakePalm={shakePalmInScene}
             scene={scene}
             building={building}
@@ -1800,7 +1849,7 @@ export function HomeScreen({
           />
         )}
       </View>
-      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && !marketOpen && (
         <Destinations
           scene={scene}
           selected={selected === storageId ? undefined : selected}
@@ -1845,7 +1894,12 @@ export function HomeScreen({
           }}
         />
       )}
-      {placesOpen && <React.Suspense fallback={null}><PlacesSheet room={room} discoveredPlaces={store.state.discoveredPlaces} onRoom={goRoom} onClose={() => setPlacesOpen(false)} onGame={route => { interaction.cancelAll(); setPlacesOpen(false); router.push(route); }}/></React.Suspense>}
+      {!overview && !designing && !activeSheet && !more && !friends && !atmosphereOpen && !placesOpen && !marketOpen && selected && scene.entities[selected]?.character && <View testID="quick-room-hops" style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", maxWidth: "96%", flexDirection: "row", gap: 8, zIndex: 46 }}>
+        {roomHops(scene.entities[selected].room).map(hop => <Pressable key={hop.kind} testID={`quick-room-hop-${hop.room}`} accessibilityRole="button" accessibilityLabel={`Move selected friend to ${roomNames[hop.room]}`} onPress={() => hopRoom(hop.room)} style={{ minHeight: 48, minWidth: 48, flexShrink: 1, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontSize: 14, fontWeight: "700", textAlign: "center" }}>{hop.kind === "ladder" ? "Climb" : "Hop"} · {roomNames[hop.room]}</Text></Pressable>)}
+      </View>}
+      {marketOpen && <React.Suspense fallback={null}><MarketSheet state={store.state} dispatch={action => store.dispatch(action)} message={store.message} reduced={reduced} canUndo={store.canUndo} onUndo={() => store.dispatch({ type: "undo" })} onClose={() => setMarketOpen(false)} onHome={() => { setMarketOpen(false); goRoom("kitchen"); }}/></React.Suspense>}
+      {!marketOpen && !placesOpen && !overview && !activeSheet && !friends && !more && !selected && !designing && room === "kitchen" && marketContents(store.state).length > 0 && <Pressable testID="unpack-market-basket" accessibilityRole="button" accessibilityLabel="Stock fridge from Carry Basket" onPress={() => store.dispatch({ type: "market-unpack" })} style={{ position: "absolute", top: headerHeight + 8, alignSelf: "center", zIndex: 46, padding: 12, minHeight: 48, borderRadius: 18, backgroundColor: "#FFF1CE", borderWidth: 2, borderColor: "#B58B55" }}><Text style={{ color: "#315C56", fontWeight: "700" }}>Carry Basket · {marketContents(store.state).length}/4 · Stock fridge</Text></Pressable>}
+      {placesOpen && <React.Suspense fallback={null}><PlacesSheet room={room} discoveredPlaces={store.state.discoveredPlaces} onRoom={goRoom} onClose={() => setPlacesOpen(false)} onMarket={() => { interaction.cancelAll(); setPlacesOpen(false); setMarketOpen(true); }} onGame={route => { interaction.cancelAll(); setPlacesOpen(false); router.push(route); }}/></React.Suspense>}
       {discoveryToast && (
         <Pressable
           testID="cocos-discovery-toast"
@@ -1871,7 +1925,7 @@ export function HomeScreen({
           </Text>
         </Pressable>
       )}
-      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
+      {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && !marketOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
           onRestock={fridgeId => {
@@ -1937,7 +1991,7 @@ export function HomeScreen({
         onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
       <FriendDrawer
-        open={friends && !overview && !more && !activeSheet && !atmosphereOpen && !placesOpen}
+        open={friends && !overview && !more && !activeSheet && !atmosphereOpen && !placesOpen && !marketOpen}
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}
@@ -2035,6 +2089,6 @@ export function HomeScreen({
             <ItemArt item={catalogItem} size={70} reduced={reduced} />
           ))}
       </Animated.View>
-    </View>
+    </View></CharacterAppearance.Provider>
   );
 }

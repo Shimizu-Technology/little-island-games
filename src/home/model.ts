@@ -730,6 +730,7 @@ export function starterHome(): HomeStateV2 {
   };
 }
 export type HomeAction = (
+  | import("./market").MarketAction
   | { type: "apply-proposal"; proposal: DropProposal }
   | { type: "finish-action"; slot: Character["slot"] }
   /** HD-07: food in the pan of a lit stove becomes cooked. Outside history, like finish-action. */

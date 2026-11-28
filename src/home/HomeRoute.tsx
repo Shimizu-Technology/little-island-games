@@ -25,7 +25,7 @@ import { HomeCharacter } from "./characterRenderer";
 import { validBadgeId } from "./HomeBadgesSheet";
 import { HomeScreen, type HomeClosetConfig, type HomeSheet } from "./HomeScreen";
 
-const characterForLook: NonNullable<HomeClosetConfig["renderCharacter"]> = (look) => function DressedCharacter(input) { return <HomeCharacter input={input} look={look} />; };
+const renderDressedCharacter = (input: Parameters<import("./characterRenderer").CharacterRenderer>[0], look: import("../islander").IslanderLook) => <HomeCharacter input={input} look={look} />;
 
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -102,7 +102,7 @@ export function HomeRoute({
       });
       return remaining.length === unseen.length || personalize({ unseen: remaining }, expected);
     },
-    renderCharacter: characterForLook,
+    renderLook: renderDressedCharacter,
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Refresh admission closures when Store replaces its writer.
   }), [look, earned, unseen, personalize, expected, store.personalize]);
   const badges = useMemo(() => badgesFor(milestones), [milestones]);

@@ -16,7 +16,8 @@ import { gridCell, itemEntityId, roomPoint, type GridCell, type RoomPoint } from
  * An older build simply shows it on the floor in front of the stove. A true pan attachment
  * waits for the versioned Home storage change (H5).
  */
-export const PAN_LIFT = 99;
+// Measured against the illustrated stove skillet, rather than the retired SVG knobs.
+export const PAN_LIFT = 132;
 const isStove = (i: Instance) => i.item === "stove" && !i.staged && !i.on && !i.in;
 /** The floor cell in front of the stove, in the stove's own column. */
 export function panCell(stove: Instance): GridCell {

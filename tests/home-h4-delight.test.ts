@@ -267,7 +267,7 @@ describe('HD-07 stove and pan (rules 48, 49)', () => {
     expect(cookingIds(buildScene(withFood(kitchen(), true, 'juice')))).toEqual([]);
     expect(entityName(buildScene(cooked.state).entities['kitchen/item/pan-food'])).toBe('Grilled mango');
   });
-  it('the whole of a food seated in the pan is its to touch, though the rim is drawn over its bottom', () => {
+  it('the whole of a food seated above the burner is visible and its to touch', () => {
     const scene = buildScene(withFood(kitchen(), true)), food = scene.entities['kitchen/item/pan-food'];
     const stove = Object.values(scene.entities).find((e) => e.item?.item === 'stove')!;
     const hits = prepareHits(scene).kitchen;
@@ -287,7 +287,7 @@ describe('HD-07 stove and pan (rules 48, 49)', () => {
   });
 });
 
-describe('fix round 2 (P2): food in its pan beats only its own stove, and only at selection', () => {
+describe('pan food paints above its own stove without stealing touches from furniture in front', () => {
   // The reviewer's layout: stove at (7,4), mango on its pan cell, and one other thing.
   const layout = (other?: { item: string; dx: number; dy: number }) => {
     const state = labFixtures['delight-stove']();
@@ -306,19 +306,18 @@ describe('fix round 2 (P2): food in its pan beats only its own stove, and only a
     const around = function* () { const c = scene.entities[ids.food].contact; for (let x = c.x - 40; x <= c.x + 40; x++) for (let y = c.y - 70; y <= c.y + 10; y++) yield [x, y] as const; };
     return { scene, hits, ids, on, order, around };
   };
-  it('a lamp painted between the food and its stove keeps every touch where it is in front', () => {
+  it('pan food remains visible above a lamp that is behind the stove', () => {
     const { hits, ids, on, order, around } = layout({ item: 'lamp', dx: 0, dy: -1 });
-    expect(order(ids.food) < order(ids.other) && order(ids.other) < order(ids.stove)).toBe(true);
+    expect(order(ids.other) < order(ids.stove) && order(ids.stove) < order(ids.food)).toBe(true);
     for (const scale of [0.5, 1]) expect(pickEntity(hits, roomPoint(295.5, 314.6), scale, {})).toBe(ids.other);
-    let lampOverFood = 0, stoveOverBoth = 0;
+    let foodOverLamp = 0;
     for (const [x, y] of around()) {
-      if (!on(ids.food, x, y) || !on(ids.other, x, y)) continue;
-      // The stove's rim drawn over both: the lamp is next under it, not the food, so the stove keeps it.
-      if (on(ids.stove, x, y)) { stoveOverBoth++; expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.stove); }
-      else { lampOverFood++; expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.other); }
+      if (!on(ids.food, x, y)) continue;
+      // The raised skillet is above the old lamp/knob intersection; visible food owns its body.
+      foodOverLamp++;
+      expect(pickEntity(hits, roomPoint(x, y), 0.5, {})).toBe(ids.food);
     }
-    expect(lampOverFood).toBeGreaterThan(0);
-    expect(stoveOverBoth).toBeGreaterThan(0);
+    expect(foodOverLamp).toBeGreaterThan(0);
   });
   it('a fridge painted in front of the stove keeps its touches over the seated food', () => {
     const { hits, ids, on, order, around } = layout({ item: 'fridge', dx: 0, dy: 2 });
@@ -330,19 +329,17 @@ describe('fix round 2 (P2): food in its pan beats only its own stove, and only a
     }
     expect(overlaps).toBeGreaterThan(100);
   });
-  it('paint order is the ordinary one; the only change is stove-to-own-food where the food is next', () => {
+  it('selection agrees with the visible pan paint order without a special stove override', () => {
     const { hits, ids, on } = layout();
     expect(hits.every((h) => Number.isInteger(h.paintOrder))).toBe(true);
     const ordinary = hits.map(({ pan: _pan, ...h }) => h);
-    let changed = 0;
+    let foodHits = 0;
     for (let x = 0; x < 800; x += 4) for (let y = 0; y < 560; y += 4) for (const scale of [0.5, 1]) {
       const before = pickEntity(ordinary, roomPoint(x, y), scale, {}), after = pickEntity(hits, roomPoint(x, y), scale, {});
-      if (before === after) continue;
-      changed++;
-      expect([before, after]).toEqual([ids.stove, ids.food]);
-      expect(on(ids.food, x, y)).toBe(true);
+      expect(after).toBe(before);
+      if (on(ids.food, x, y) && after === ids.food) foodHits++;
     }
-    expect(changed).toBeGreaterThan(0);
+    expect(foodHits).toBeGreaterThan(0);
   });
 });
 

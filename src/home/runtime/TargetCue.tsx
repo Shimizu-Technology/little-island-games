@@ -27,6 +27,7 @@ export function SeatRimCue({ target, interaction }: { target: Target; interactio
 /** Rounded, pictorial contact cue. It has no input or collision geometry. */
 export function TargetCue({ target, interaction, ownerName }: { target: Target; interaction: Interaction; ownerName?: string }) {
   const style = useCueStyle(target, interaction);
+  if (target.trash) return null;
   if (target.kind === "mouth") return <Animated.View testID="mouth-target-halo" pointerEvents="none"
     accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={[{ position: "absolute", left: (target.face?.x ?? target.contact.x) - (target.face?.headRadius ?? 40) - 34, top: target.contact.y - 15, width: 24, height: 24 }, style]}>

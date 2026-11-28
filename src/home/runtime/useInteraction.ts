@@ -1,3 +1,5 @@
+import { roomHopAt, roomPortalsClear } from "../roomHops";
+import { expiredSlot, orphanedSlot, MAX_QUEUED_INPUTS } from "./liveness";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
@@ -99,6 +101,8 @@ export type DragSlot = CaptureToken & {
   revision: string;
   finished: boolean;
   commitRequested?: boolean;
+  commitAt?: number;
+  createdAt?: number;
   /** Resting art and overlay overlap for two presented ticks before clearing. */
   revealFrame?: number;
   /** Latched room drop target so a room switch never cascades or shifts drop destination under one finger. */
@@ -210,6 +214,7 @@ export const emptyDragSlot = (): DragSlot => {
   return {
     generation: 0,
     epoch: 0,
+    createdAt: eventTime(),
     consumed: false,
     absoluteX: 0,
     absoluteY: 0,
@@ -253,6 +258,8 @@ export function useInteraction({
   initialCamera,
   reduced,
   designing,
+  overview = false,
+  portalsEnabled = true,
   onCameraChange,
   onPickup,
   onCommit,
@@ -272,6 +279,8 @@ export function useInteraction({
   initialCamera: CameraMatrix;
   reduced: boolean;
   designing: boolean;
+  overview?: boolean;
+  portalsEnabled?: boolean;
   onCameraChange: (overview: boolean, index: number) => void;
   onPickup: (pickup: Pickup) => void;
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
@@ -500,6 +509,13 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
     const anchor = index < 0 ? subject.contact : roomPoint(slot.x - origin.x, slot.y - origin.y);
+    const wholeHouse = camera.value.a <= Math.min(viewport.width / building.width, viewport.height / building.height) * 1.15;
+    const hop = subject.character && !designing && !overview && !wholeHouse && portalsEnabled && destination === activeRoom.value && roomPortalsClear(prepared.value, destination) && index >= 0 ? roomHopAt(destination,
+      screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y))) : undefined;
+    if (hop) {
+      const proposal = resolve(prepared.value.rooms[hop.room], subject, roomPoint(350, 490), { scale: camera.value.a, floorOnly: true, release: true });
+      return { ...proposal, kind: "transfer", reason: `Room ${hop.kind} to ${hop.room}` };
+    }
     const carryBounds = subject.character ? anchorsFor(subject.character.slot, "carry", subject.facing, subject.children.length ? "hold" : null).bounds : subject.bounds;
     const carrySubject = subject.character ? { ...subject, bounds: carryBounds, visual: { x: carryBounds.left + carryBounds.width / 2, y: carryBounds.top + carryBounds.height / 2 } } : subject;
     const centre = index >= 0 ? carriedCentre(carrySubject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a, reduced) : undefined;
@@ -535,7 +551,7 @@ export function useInteraction({
     });
     if (started !== undefined) catalogTimes.modify(times => { "worklet"; times.push(eventTime() - started); return times; });
     return proposal;
-  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes, dropZones]);
+  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes, dropZones, overview, portalsEnabled, viewport, activeRoom]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -582,7 +598,7 @@ export function useInteraction({
               // A refused stationary mouth drop still travels back to its source.
               duration: !committed && s.duration === 0 ? undefined : s.duration,
               mealPending: committed && mealPending,
-              consumed: s.catalog && !committed || committed && proposal?.kind === "mouth" && !restEntity,
+              consumed: s.catalog && !committed || committed && (proposal?.kind === "mouth" || !!proposal?.discard) && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
               subject: restEntity ?? s.subject,
               committed: true,
@@ -655,7 +671,10 @@ export function useInteraction({
     "worklet";
     if (!replay && event.type !== "settled" && (queuedInput.value.length ||
       slots.value.some((s) => s.id && s.commitRequested && !s.committed))) {
-      queuedInput.set([...queuedInput.value, event]);
+      if (queuedInput.value.length >= MAX_QUEUED_INPUTS) {
+        queuedInput.set([]);
+        controller.set(idleController);
+      } else queuedInput.set([...queuedInput.value, event]);
       return;
     }
     if (replay && event.type === "down" && event.entity) {
@@ -745,6 +764,7 @@ export function useInteraction({
         const slot = {
           ...emptyDragSlot(),
           id: effect.entity,
+          createdAt: eventTime(),
           generation: visible?.generation ?? captureSequence.value + 1,
           epoch: epoch.value,
           absoluteX: pointer.point.x + offset.value.x,
@@ -1025,9 +1045,42 @@ export function useInteraction({
       )
     );
   };
+  const sweepOrphans = (zeroTouches = false) => {
+    "worklet";
+    let healed = false;
+    for (const slot of slots.value) {
+      if (zeroTouches && (slot.pointer < 0 || drawerPointers.value.includes(slot.pointer)) ||
+        queuedInput.value.some(event => (event.type === "up" || event.type === "cancel") && event.pointer === slot.pointer) ||
+        !orphanedSlot(slot, controller.value.pointers, zeroTouches)) continue;
+      healed = true;
+      send({ type: "cancel", pointer: slot.pointer, now: eventTime() });
+      // A missing controller pointer produces no restore effect. Restore directly as well.
+      slots.modify(current => {
+        "worklet";
+        for (const s of current) if (s.id === slot.id && s.phase !== "settling") {
+          s.phase = "settling"; s.releaseX = s.x; s.releaseY = s.y;
+          s.targetX = s.sourceX; s.targetY = s.sourceY; s.settleAt = eventTime();
+          s.committed = true; s.commitRequested = false; s.mealPending = false;
+          s.proposal = undefined; s.revision = renderedRevision.value;
+          s.consumed = !!s.catalog;
+        }
+        return current;
+      });
+    }
+    // Queued releases and external recognizers retain their pointers and reservations
+    // until their own up/cancel transitions run after the pending commit acknowledges.
+    if (zeroTouches) suppressed.set([]);
+    if (healed || zeroTouches) wakeFrames();
+  };
   const gesture = Gesture.Manual()
     .onTouchesDown((event, manager) => {
       manager.activate();
+      if (event.allTouches) {
+        const present = event.allTouches.map(t => t.id);
+        for (const p of controller.value.pointers) if (p.pointer >= 0 && !drawerPointers.value.includes(p.pointer) && !present.includes(p.pointer) &&
+          !queuedInput.value.some(event => (event.type === "up" || event.type === "cancel") && event.pointer === p.pointer)) send({ type: "cancel", pointer: p.pointer, now: eventTime() });
+        sweepOrphans();
+      }
       if (!controller.value.pointers.length) cameraGesture.set(false);
       if (controller.value.pointers.length + event.changedTouches.length > 1 || suppressed.value.length) multiTouch.set(true);
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
@@ -1090,6 +1143,7 @@ export function useInteraction({
       }
     })
     .onTouchesMove((event) => {
+      if (event.numberOfTouches === 0) { sweepOrphans(true); return; }
       for (const touch of event.changedTouches) {
         if (suppressed.value.includes(touch.id)) continue;
         const capture = controller.value.pointers.find((p) => p.pointer === touch.id);
@@ -1137,6 +1191,7 @@ export function useInteraction({
         suppressed.set(suppressed.value.filter((id) => id !== touch.id));
       }
       if (event.numberOfTouches === 0) {
+        sweepOrphans(true);
         multiTouch.set(false);
         pinchDistance.set(0);
         manager.end();
@@ -1150,6 +1205,7 @@ export function useInteraction({
     })
     .onTouchesCancelled((event, manager) => {
       for (const touch of event.changedTouches) send({ type: "cancel", pointer: touch.id, now: eventTime() });
+      sweepOrphans(true);
       suppressed.set([]);
       multiTouch.set(false);
       pinchDistance.set(0);
@@ -1195,6 +1251,7 @@ export function useInteraction({
         if (event.type === "up") resumePending(event.pointer);
       }
     }
+    sweepOrphans();
     if (cameraTween.value) {
       const tween = cameraTween.value;
       const sample = cameraTweenSample(tween, eventTime());
@@ -1257,6 +1314,17 @@ export function useInteraction({
         for (let i = 0; i < 2; i++) {
           const slot = current[i];
           if (!slot.id) continue;
+          if (expiredSlot(slot, now)) {
+            const cleared = slot.id;
+            let recovered = { ...controller.value, pointers: controller.value.pointers.filter(p => p.pointer !== slot.pointer) };
+            for (const id of [cleared, slot.restId, slot.settledId]) if (id)
+              recovered = transition(recovered, { type: "settled", entity: id }, camera.value, housePoint(0, 0)).state;
+            controller.set(recovered);
+            if (slot.catalog) externalSubjects.modify(subjects => { "worklet"; delete subjects[cleared]; return subjects; });
+            current[i] = emptyDragSlot();
+            runOnJS(onClear)(i, cleared);
+            continue;
+          }
           if (slot.ready && !slot.painted) {
             if (slot.readyFrame > 0) slot.painted = true;
             else slot.readyFrame = now;
@@ -1316,7 +1384,8 @@ export function useInteraction({
             slot.liftedAt = now;
           }
           if (slot.phase === "settling" && slot.settleAt && slot.ready) {
-            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
+            // Once travel has completed, a fresh commit clock must not replay that travel.
+            const progress = slot.finished && slot.commitRequested ? 1 : settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
             if(slot.proposal?.kind !== "mouth")slot.tilt *= 1 - progress;
@@ -1327,6 +1396,8 @@ export function useInteraction({
             // the pre-mounted target remains visible while JS/native acknowledge.
             if (slot.finished && !slot.committed && !slot.commitRequested && slot.proposal) {
               slot.commitRequested = true;
+              slot.commitAt = now;
+              slot.settleAt = now;
               runOnJS(onCommit)(i, slot.proposal, { x: slot.releaseX, y: slot.releaseY },
                 { generation: slot.generation, epoch: slot.epoch });
             }
@@ -1551,7 +1622,7 @@ export function useInteraction({
       if (reduced) {
         slots.modify(current => { "worklet";
           current[index] = { ...current[index], ready: warm, painted: false, finished: true,
-            x: slot.targetX, y: slot.targetY, commitRequested: true };
+            x: slot.targetX, y: slot.targetY, commitRequested: true, commitAt: now, settleAt: now };
           return current;
         });
         runOnJS(onCommit)(index, proposal, from, { generation, epoch: slot.epoch });

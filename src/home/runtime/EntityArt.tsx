@@ -11,7 +11,7 @@ import { type CharacterRenderer } from "../characterRenderer";
 import React, { memo } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import Svg, { G } from 'react-native-svg';
+import Svg, { G, Path, Ellipse } from 'react-native-svg';
 import { type HomeMood } from "./delight";
 import { HandProp } from '../art/PropShape';
 import { species } from '../scene/species';
@@ -26,6 +26,7 @@ import type { CharacterAction, SceneEntity } from "../scene/types";
 
 export type CharacterRender = CharacterRenderer;
 // Prewarm one small meal rig at scene load. It is hidden at rest and never clocks.
+const chefSpoon = <G><Path d="M12 23L22 10" stroke="#99673E" strokeWidth={2.5} strokeLinecap="round"/><Ellipse cx={23} cy={6} rx={3.5} ry={5} fill="#D8B180" stroke="#99673E" strokeWidth={1.5}/></G>;
 const preparedMeal: Meal = {key:0,action:'eat',offered:true,food:instance('prepared-food','mango',0,0)};
 const preparedDrink: Meal = {key:0,action:'drink',offered:true,food:instance('prepared-drink','coconut-drink',0,0)};
 export const DecorArt = memo(function DecorArt({
@@ -148,14 +149,16 @@ export const EntityArt = memo(function EntityArt({
   const character = entity.character!,
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
+  const chef = !carry && character.socket?.socketId.replace(/^pet-/, "") === "chef";
   faceOverride = activityFaceOf(entity, false, faceOverride, carry, !!meal);
   const input = {
     gaze: carry ? { x: 0, y: -1 } : gaze,
     slot: rigSlot(character.slot),
     familySlot: character.slot,
     base,
-    action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
-    face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? null),
+    ...(chef && !entity.children.length ? { held: chefSpoon } : {}),
+    action: carry ? (carryGrip ? null : entity.children.length ? ("hold" as const) : null) : (actionOverride ?? (chef && !entity.action ? "hold" as const : entity.action)),
+    face: preview ? ("anticipate" as const) : (faceOverride === 'proud' || faceOverride === 'cheer' || faceOverride === 'yum' ? null : faceOverride ?? (chef ? "happy" as const : null)),
     ...(faceOverride === 'proud' || faceOverride === 'yum' || faceOverride === 'cheer' ? { mood: faceOverride === 'cheer' ? 'happy' as const : faceOverride } : {}),
     facing: entity.facing === "left" ? ("left" as const) : ("right" as const),
     size,
@@ -194,6 +197,7 @@ export const EntityArt = memo(function EntityArt({
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&
+  a.entity.character?.socket?.socketId === b.entity.character?.socket?.socketId &&
   a.entity.character?.slot === b.entity.character?.slot && (a.entity.children.length === b.entity.children.length || !!a.carry && !!b.carry && !!a.carryGrip && a.carryGrip === b.carryGrip) &&
   JSON.stringify(a.entity.contents) === JSON.stringify(b.entity.contents) && JSON.stringify(a.entity.item) === JSON.stringify(b.entity.item));
 

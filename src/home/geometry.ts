@@ -233,7 +233,8 @@ export function sceneItemDepth(state: import("./model").RoomState, i: Instance) 
 export function characterFrame(room: import("./model").RoomState, c: import("./model").Character, reaction?: string) {
   const contact = characterPoint(room, c),
     seat = room.instances.find((i) => i.id === (c.socket?.itemId ?? c.seatId));
-  const mirrored = seat ? seat.mirrored !== (seat.rotation === 180 || seat.rotation === 270) : c.facing === "left";
+  const chef = c.socket?.socketId.replace(/^pet-/, "") === "chef";
+  const mirrored = seat ? (seat.mirrored !== (seat.rotation === 180 || seat.rotation === 270)) !== chef : c.facing === "left";
   const base = c.pose;
   const action = reaction === "eat" || reaction === "drink" ? reaction : (c.action ?? (c.holding ? "hold" : null));
   const box = anchorsFor(c.slot, base, mirrored ? "left" : "front", action).bounds;

@@ -101,7 +101,11 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
   const landed = useCallback((proposal: DropProposal, subject: SceneEntity | undefined, before: Scene, after: Scene, landedId?: string) => {
     // A catalog piece has no scene entity yet; its instance says what it is made of.
     const made = subject ?? (proposal.item ? ({ item: proposal.item } as SceneEntity) : undefined);
-    const sound = landingSound(made, proposal, before);
+    if (proposal.discard) {
+      feedback.play('plop'); feedback.haptic('attach');
+      effect('sparkle', proposal.room, proposal.contact.x, proposal.contact.y - 28);
+    }
+    const sound = proposal.discard ? undefined : landingSound(made, proposal, before);
     if (sound) feedback.play(sound);
     if (attaches(proposal) || proposal.kind === "floor") feedback.haptic("attach");
     if (proposal.kind === "socket" && proposal.base === "bathe") {
@@ -124,6 +128,7 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     }
     // HD-06: friends close by turn to greet a friend set down beside them, and both smile.
     const friend = landedId ? after.entities[landedId] : undefined;
+    if (friend?.character?.socket?.socketId.replace(/^pet-/, "") === "chef") { cueOn(friend.id, "stir"); mood(friend.id, "happy", GREET_MOOD_MS); }
     if (friend?.character && proposal.kind !== "staging" && isEntitySwimming(friend, after)) {
       effect("splash", proposal.room, friend.contact.x, friend.contact.y - 6);
       mood(friend.id, "happy", GREET_MOOD_MS);

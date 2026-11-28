@@ -441,3 +441,25 @@ it('Pip prebuilt carry fins preserve authored loose/holding paths and one canvas
   await act(async()=>tree.unmount());
  }
 });
+
+it('keeps an authored cooking prop attached to the actual holding pose', async () => {
+ const {CharacterDrawing}=await import('../src/home/runtime/CharacterDrawing');
+ const render=vi.fn((_input:any)=>null), held=React.createElement('spoon');
+ let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<CharacterDrawing input={{slot:0,base:'stand',action:'hold',face:'happy',facing:'left',size:224,held}} renderCharacter={render}/>);});
+ expect(render.mock.lastCall?.[0]).toMatchObject({action:'hold',held});
+ expect(render.mock.lastCall?.[0].carryGrip).toBeUndefined();
+ await act(async()=>tree.unmount());
+});
+
+it('R1-05 reuses the authored chef spoon across equivalent character renders',async()=>{
+ const original=buildScene(labFixtures['delight-stove']()).entities['character/0'];
+ const hero={...original,character:{...original.character!,socket:{itemId:'stove',socketId:'chef'}},children:[]};
+ const render=vi.fn(()=>null);let tree!:ReturnType<typeof create>;
+ await act(async()=>{tree=create(<EntityArt entity={hero} reduced={false} renderCharacter={render}/>);});
+ const spoon=(render.mock.lastCall as any)?.[0].held;expect(spoon).toBeDefined();
+ await act(async()=>tree.update(<EntityArt entity={{...hero}} reduced={false} renderCharacter={render}/>));
+ expect(render).toHaveBeenCalledTimes(1);
+ expect((render.mock.lastCall as any)?.[0].held).toBe(spoon);
+ await act(async()=>tree.unmount());
+});

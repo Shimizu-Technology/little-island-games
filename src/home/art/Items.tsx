@@ -110,9 +110,9 @@ export function ItemArt({
           <Stop offset="45%" stopColor={teal} />
           <Stop offset="100%" stopColor={shade(teal, -0.18)} />
         </LinearGradient>
-        <Filter id={mutedFilter}>
+        {muted && <Filter id={mutedFilter}>
           <FeColorMatrix type="saturate" values="0" />
-        </Filter>
+        </Filter>}
       </Defs>
       <G filter={muted ? `url(#${mutedFilter})` : undefined}>
         {!["rug", "mat", "chime"].includes(item) && <Ellipse cx={75} cy={119} rx={57} ry={7} fill={ink} opacity={0.13} />}

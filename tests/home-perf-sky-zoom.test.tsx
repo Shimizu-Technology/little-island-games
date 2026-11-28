@@ -276,7 +276,23 @@ it('the real Home renderer forwards Crab sleeping, bathing, sitting and carry ex
   const paint = scene().props.renderCharacter;
   for (const [base, face] of [['lie','sleepy'],['bathe','happy'],['sit','happy'],['carry','happy']]) {
     const element = paint({slot:2,familySlot:2,base,face,action:null,facing:'right',size:120,tilt:0,limbLag:0,reduced:true});
-    expect(element.type.name).toBe('HomeCharacter');
+    expect(element.type.name).toBe('PaintedCharacter');
     expect(element.props.input.face).toBe(face);
   }
+});
+
+it('R1-03 renders portals only in the active single room, and hides them behind open appliances or other modes',async()=>{
+ const {RoomPortals}=await import('../src/home/runtime/RoomPortals');
+ await mount();
+ const portals=()=>tree!.root.findAllByType(RoomPortals);
+ expect(portals()).toHaveLength(1);expect(portals()[0].props.room).toBe('home');
+ await act(async()=>h.chrome.onRoom('kitchen'));
+ expect(portals()).toHaveLength(1);expect(portals()[0].props.room).toBe('kitchen');
+ await act(async()=>scene().props.onSelect('kitchen/item/starter-fridge'));
+ expect(portals()).toHaveLength(0);
+ await act(async()=>scene().props.onSelect('kitchen/item/starter-fridge'));
+ expect(portals()).toHaveLength(1);
+ await act(async()=>h.chrome.onOverview());expect(portals()).toHaveLength(0);
+ await act(async()=>h.chrome.onOverview());
+ await act(async()=>h.chrome.onDesign());expect(portals()).toHaveLength(0);
 });

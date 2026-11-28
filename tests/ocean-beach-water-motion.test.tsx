@@ -15,6 +15,7 @@ const motion = vi.hoisted(() => ({
   cancels: 0,
 }));
 
+vi.mock('react-native-svg', () => ({ default: 'Svg', Path: 'Path' }));
 vi.mock('react-native', () => ({
   View: 'View',
   Pressable: 'Pressable',
