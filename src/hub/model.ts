@@ -396,6 +396,11 @@ export function mapExtrasLayout(width: number, height: number, layout = mapLayou
   return { ocean, cocos, sailboat, dolphinReef, northernIslet, nightMoon, showCocosIslet: wide || !cocosPaintingVisible };
 }
 export const WALK_MS = 110, ZOOM_MS = 50;
+/** Shared excursion timing constants so one-shot glide/splash animations complete cleanly before route navigation. */
+export const COCOS_SAIL_ANIM_MS = 220;
+export const COCOS_SAIL_MS = 260;
+export const OCEAN_SPLASH_ANIM_MS = 160;
+export const OCEAN_SPLASH_MS = 180;
 /** One cancellable boundary timer. The second activation always wins immediately. */
 export function createJourney(open: (place: PlaceId) => void, schedule = (fn: () => void, ms: number) => setTimeout(fn, ms), cancel = (id: ReturnType<typeof setTimeout>) => clearTimeout(id)) {
   let timer: ReturnType<typeof setTimeout> | undefined, pending: PlaceId | null = null;

@@ -8,7 +8,7 @@ import { C } from '../components/ui';
 import { Terrain } from './Terrain';
 import { Landmark } from './Landmarks';
 import { IslandLife, type MapEasterEggEvent } from './IslandLife';
-import { createJourney, guideStartPoint, guideWaypoints, mapExtrasLayout, mapLayout, WALK_MS, ZOOM_MS, type MapExcursionId, type PlaceId } from './model';
+import { COCOS_SAIL_MS, createJourney, guideStartPoint, guideWaypoints, mapExtrasLayout, mapLayout, OCEAN_SPLASH_MS, WALK_MS, ZOOM_MS, type MapExcursionId, type PlaceId } from './model';
 import { GlobalWeatherLayer } from '../atmosphere/GlobalWeatherLayer';
 import { defaultAtmosphere, type Atmosphere } from '../atmosphere/palette';
 import type { HomeSound } from '../home/runtime/homeSound';
@@ -88,26 +88,32 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
   const dest = place === 'cocos-island' ? extras.cocos : extras.ocean;
   const boatOrigin = extras.sailboat ?? { x: Math.max(24, extras.cocos.x - 42), y: extras.cocos.y };
   onSound?.(place === 'cocos-island' ? 'shell' : 'splash');
-  if (place === 'cocos-island') triggerEgg('sail', boatOrigin.x, boatOrigin.y, extras.cocos.x, extras.cocos.y);
-  else triggerEgg('splash', extras.ocean.x, extras.ocean.y);
   if (!active || reduced || hadPending) {
+   // Under Reduce Motion or immediate replacement, navigate right away with zero dangling fade animation.
+   clearTimeout(eggTimer.current);
+   setEasterEgg(null);
    departing.current = true;
    x.set(dest.x); y.set(dest.y); bob.set(0); setWalking(false);
    onExcursion?.(place);
    return;
   }
+  if (place === 'cocos-island') triggerEgg('sail', boatOrigin.x, boatOrigin.y, extras.cocos.x, extras.cocos.y);
+  else triggerEgg('splash', extras.ocean.x, extras.ocean.y);
   setWalking(true);
   excursionPending.current = true;
+  const totalMs = place === 'cocos-island' ? COCOS_SAIL_MS : OCEAN_SPLASH_MS;
+  const travelMs = Math.max(WALK_MS, totalMs - ZOOM_MS);
   if (place === 'cocos-island') {
    // Hop to the little sailboat first, then glide across Cocos Lagoon to Secret Cocos Island!
-   x.set(withSequence(withTiming(boatOrigin.x, { duration: Math.round(WALK_MS * 0.55) }), withTiming(dest.x, { duration: Math.round(WALK_MS * 0.85) })));
-   y.set(withSequence(withTiming(boatOrigin.y, { duration: Math.round(WALK_MS * 0.55) }), withTiming(dest.y, { duration: Math.round(WALK_MS * 0.85) })));
+   const hopMs = Math.round(travelMs * 0.35);
+   const glideMs = travelMs - hopMs;
+   x.set(withSequence(withTiming(boatOrigin.x, { duration: hopMs }), withTiming(dest.x, { duration: glideMs })));
+   y.set(withSequence(withTiming(boatOrigin.y, { duration: hopMs }), withTiming(dest.y, { duration: glideMs })));
   } else {
-   x.set(withTiming(dest.x, { duration: WALK_MS }));
-   y.set(withTiming(dest.y, { duration: WALK_MS }));
+   x.set(withTiming(dest.x, { duration: travelMs }));
+   y.set(withTiming(dest.y, { duration: travelMs }));
   }
   bob.set(withSequence(withTiming(-5, { duration: Math.round(WALK_MS / 2), easing: Easing.out(Easing.cubic) }), withTiming(0, { duration: Math.round(WALK_MS / 2) })));
-  const travelMs = place === 'cocos-island' ? Math.round(WALK_MS * 1.4) : WALK_MS;
   zoom.set(withDelay(travelMs, withTiming(1.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
   cameraX.set(withDelay(travelMs, withTiming((width / 2 - dest.x) * 0.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
   cameraY.set(withDelay(travelMs, withTiming((height / 2 - dest.y) * 0.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
@@ -117,7 +123,7 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
    departing.current = true;
    setWalking(false);
    onExcursion?.(place);
-  }, travelMs + ZOOM_MS);
+  }, totalMs);
  }, [active, reduced, extras, journey, cancelExcursion, onSound, onExcursion, triggerEgg, width, height, x, y, bob, zoom, cameraX, cameraY]);
  const visit = useCallback((place: PlaceId) => {
   const interruptedExcursion = excursionPending.current;

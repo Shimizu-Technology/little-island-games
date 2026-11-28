@@ -3,7 +3,7 @@ import React, { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useAppForeground } from './foreground';
-import type { MapExtrasLayout } from './model';
+import { COCOS_SAIL_ANIM_MS, OCEAN_SPLASH_ANIM_MS, type MapExtrasLayout } from './model';
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 
 export type MapEasterEggEvent = {
@@ -43,9 +43,9 @@ const SailingBoat = memo(function SailingBoat({
     }
     progress.set(0);
     if (reduced) {
-      progress.set(withTiming(1, { duration: 220, easing: Easing.inOut(Easing.sin) }));
+      progress.set(withTiming(1, { duration: 160, easing: Easing.inOut(Easing.sin) }));
     } else {
-      progress.set(withTiming(1, { duration: 420, easing: Easing.inOut(Easing.sin) }));
+      progress.set(withTiming(1, { duration: COCOS_SAIL_ANIM_MS, easing: Easing.inOut(Easing.sin) }));
     }
     return () => {
       cancelAnimation(progress);
@@ -118,14 +118,14 @@ const EasterEggMotion = memo(function EasterEggMotion({
   const progress = useSharedValue(0);
   const live = active && foreground;
   const duration = reduced
-    ? 420
+    ? 360
     : event.kind === 'dolphin'
       ? 900
       : event.kind === 'hibiscus'
         ? 1050
         : event.kind === 'shooting-star'
           ? 800
-          : 550;
+          : OCEAN_SPLASH_ANIM_MS;
 
   useEffect(() => {
     if (!live) {

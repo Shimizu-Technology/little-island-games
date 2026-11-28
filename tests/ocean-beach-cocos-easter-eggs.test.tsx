@@ -21,7 +21,7 @@ import { landingMaterial, landingSound } from '../src/home/runtime/delight';
 import { PlacesSheet } from '../src/home/PlacesSheet';
 import { MoreItemArt } from '../src/home/art/More';
 import { AtmosphereLighting } from '../src/home/art/AtmosphereLighting';
-import { mapExtrasLayout, mapLayout, WALK_MS, ZOOM_MS } from '../src/hub/model';
+import { COCOS_SAIL_ANIM_MS, COCOS_SAIL_MS, mapExtrasLayout, mapLayout, OCEAN_SPLASH_ANIM_MS, OCEAN_SPLASH_MS } from '../src/hub/model';
 import { excursionRoute } from '../src/hub/navigation';
 import { IslandScene } from '../src/hub/IslandScene';
 import { IslandLife } from '../src/hub/IslandLife';
@@ -63,7 +63,7 @@ vi.mock('../src/components/ui', () => ({ C: { blue: '#3B82F6' }, font: undefined
 vi.mock('../src/hub/Terrain', () => ({ Terrain: () => null }));
 const motionMock = vi.hoisted(() => ({
   foreground: true,
-  timingTargets: [] as { shared: { value: number; get: () => number; set: (n: number) => void }; target: number }[],
+  timings: [] as number[],
   sharedValues: [] as { value: number; get: () => number; set: (n: number) => void }[],
   cancels: 0,
   freezeAtHalf: false,
@@ -97,7 +97,10 @@ vi.mock('react-native-reanimated', async () => {
       }
       return ref.current;
     },
-    withTiming: (v: number) => (motionMock.freezeAtHalf ? v * 0.5 : v),
+    withTiming: (v: number, cfg?: { duration?: number }) => {
+      if (typeof cfg?.duration === 'number') motionMock.timings.push(cfg.duration);
+      return motionMock.freezeAtHalf ? v * 0.5 : v;
+    },
     withSequence: (...vals: number[]) => vals.at(-1),
     withDelay: (_: number, v: number) => v,
     withRepeat: (v: number) => v,
@@ -113,6 +116,7 @@ afterEach(async () => {
   vi.useRealTimers();
   motionMock.foreground = true;
   motionMock.freezeAtHalf = false;
+  motionMock.timings = [];
   motionMock.sharedValues = [];
   motionMock.cancels = 0;
   if (tree) await act(async () => tree!.unmount());
@@ -615,7 +619,7 @@ describe('Guam Map interactive water, Secret Cocos Island boat trip & Easter egg
     expect(onSound).toHaveBeenCalledWith('splash');
     expect(tree!.root.findAllByProps({ testID: 'map-egg-splash' })).toHaveLength(1);
     await act(async () => {
-      vi.advanceTimersByTime(WALK_MS + ZOOM_MS + 10);
+      vi.advanceTimersByTime(OCEAN_SPLASH_MS + 10);
     });
     expect(onExcursion).toHaveBeenCalledWith('tumon-beach');
 
@@ -624,9 +628,93 @@ describe('Guam Map interactive water, Secret Cocos Island boat trip & Easter egg
     expect(onSound).toHaveBeenCalledWith('shell');
     expect(tree!.root.findAllByProps({ testID: 'map-egg-sail-wake' })).toHaveLength(1);
     await act(async () => {
-      vi.advanceTimersByTime(Math.round(WALK_MS * 1.4) + ZOOM_MS + 10);
+      vi.advanceTimersByTime(COCOS_SAIL_MS + 10);
     });
     expect(onExcursion).toHaveBeenCalledWith('cocos-island');
+  });
+
+  it('completes sailboat glide & ocean splash animations cleanly before navigation and skips dangling fades under Reduce Motion (R2-01)', async () => {
+    vi.useFakeTimers();
+    expect(COCOS_SAIL_ANIM_MS).toBeLessThanOrEqual(COCOS_SAIL_MS);
+    expect(OCEAN_SPLASH_ANIM_MS).toBeLessThanOrEqual(OCEAN_SPLASH_MS);
+
+    const onExcursion = vi.fn();
+    await act(async () => {
+      tree = create(
+        <IslandScene
+          width={390}
+          height={710}
+          fontScale={1}
+          look={defaultLook}
+          reduced={false}
+          active
+          door={null}
+          onArrive={vi.fn()}
+          onExcursion={onExcursion}
+        />
+      );
+    });
+
+    // 1. Ordinary motion: Cocos boat glide (220ms) finishes BEFORE onExcursion fires (260ms), and blur clears it cleanly
+    motionMock.timings = [];
+    await act(async () => tree!.root.findByProps({ testID: 'map-cocos-hotspot' }).props.onPress());
+    expect(tree!.root.findAllByProps({ testID: 'map-egg-sail-wake' })).toHaveLength(1);
+    expect(motionMock.timings).toContain(COCOS_SAIL_ANIM_MS);
+    expect(Math.max(...motionMock.timings)).toBeLessThanOrEqual(COCOS_SAIL_MS);
+    await act(async () => { vi.advanceTimersByTime(COCOS_SAIL_ANIM_MS); });
+    expect(onExcursion).not.toHaveBeenCalled();
+    await act(async () => { vi.advanceTimersByTime(COCOS_SAIL_MS - COCOS_SAIL_ANIM_MS); });
+    expect(onExcursion).toHaveBeenCalledExactlyOnceWith('cocos-island');
+    // Route push blurs the map -> clears excursion overlay cleanly
+    await act(async () => {
+      tree!.update(
+        <IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced={false} active={false} door={null} onArrive={vi.fn()} onExcursion={onExcursion} />
+      );
+    });
+    expect(tree!.root.findAllByProps({ testID: 'map-egg-sail-wake' })).toHaveLength(0);
+
+    // Return to map and verify Tumon Ocean splash (160ms) completes BEFORE onExcursion fires (180ms)
+    await act(async () => {
+      tree!.update(
+        <IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced={false} active door={null} onArrive={vi.fn()} onExcursion={onExcursion} />
+      );
+    });
+    onExcursion.mockClear();
+    motionMock.timings = [];
+    await act(async () => tree!.root.findByProps({ testID: 'map-ocean-hotspot' }).props.onPress());
+    expect(tree!.root.findAllByProps({ testID: 'map-egg-splash' })).toHaveLength(1);
+    expect(motionMock.timings).toContain(OCEAN_SPLASH_ANIM_MS);
+    expect(Math.max(...motionMock.timings)).toBeLessThanOrEqual(OCEAN_SPLASH_MS);
+    await act(async () => { vi.advanceTimersByTime(OCEAN_SPLASH_ANIM_MS); });
+    expect(onExcursion).not.toHaveBeenCalled();
+    await act(async () => { vi.advanceTimersByTime(OCEAN_SPLASH_MS - OCEAN_SPLASH_ANIM_MS); });
+    expect(onExcursion).toHaveBeenCalledExactlyOnceWith('tumon-beach');
+    await act(async () => {
+      tree!.update(
+        <IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced={false} active={false} door={null} onArrive={vi.fn()} onExcursion={onExcursion} />
+      );
+    });
+    expect(tree!.root.findAllByProps({ testID: 'map-egg-splash' })).toHaveLength(0);
+
+    // 2. Reduce Motion: immediate navigation with zero delay and zero dangling excursion animation!
+    await act(async () => {
+      tree!.update(
+        <IslandScene width={390} height={710} fontScale={1} look={defaultLook} reduced active door={null} onArrive={vi.fn()} onExcursion={onExcursion} />
+      );
+    });
+    onExcursion.mockClear();
+    motionMock.timings = [];
+    await act(async () => tree!.root.findByProps({ testID: 'map-cocos-hotspot' }).props.onPress());
+    expect(onExcursion).toHaveBeenCalledExactlyOnceWith('cocos-island');
+    expect(tree!.root.findAllByProps({ testID: 'map-egg-sail-wake' })).toHaveLength(0);
+    expect(motionMock.timings).toHaveLength(0);
+
+    onExcursion.mockClear();
+    motionMock.timings = [];
+    await act(async () => tree!.root.findByProps({ testID: 'map-ocean-hotspot' }).props.onPress());
+    expect(onExcursion).toHaveBeenCalledExactlyOnceWith('tumon-beach');
+    expect(tree!.root.findAllByProps({ testID: 'map-egg-splash' })).toHaveLength(0);
+    expect(motionMock.timings).toHaveLength(0);
   });
 
   it('triggers dolphin leap, northern islet hibiscus petals, and night-only shooting star while respecting Reduce Motion', async () => {
