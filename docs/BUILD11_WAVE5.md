@@ -70,11 +70,11 @@ The final `npm run check:words:export` passed against export `278901cba8d6` with
 
 ## R1 review response
 
-Reviewed head: `8644e453ed9a6747aac505e6f34035a61a375929`. Fix source: `61e3d23948cf60c38e00967542b8ef3315546009`. All seven findings were read and addressed. This records implementation and verification; the independent review remains REQUEST_CHANGES until the lead's re-review.
+Reviewed head: `8644e453ed9a6747aac505e6f34035a61a375929`. Fix sources: `61e3d23948cf60c38e00967542b8ef3315546009` and `a4e8a0322f8cb351f16439aeae2b7d993e52a61f`. All seven findings were read and addressed. This records implementation and verification; the independent review remains REQUEST_CHANGES until the lead's re-review.
 
 | Finding | Change and regression evidence |
 | --- | --- |
-| R1-01 | Reduce Motion stamps both commit and settle clocks before queuing JS. Watchdogs ignore zero sentinels and use a creation-clock fallback. Move/feed tests tick native frames before delivering JS and verify one valid commit; a separate test covers zero timestamps. |
+| R1-01 | Normal and Reduce Motion commit requests stamp both commit and settle clocks. Completed travel stays latched at its destination while JS acknowledges it. Watchdogs ignore zero sentinels and use a creation-clock fallback. Move/feed tests tick native frames before delivering JS and verify one valid commit; a separate test covers zero timestamps. |
 | R1-02 | Orphan sweeps retain queued up/cancel events and recognizer-owned external pointers. Canvas touch inventory no longer cancels drawer pointers. Tests cover both concurrent drops during a delayed commit, canvas taps during -500/-100/positive drawer drags, and recovery if an external pointer itself is lost. |
 | R1-03 | Entity hits and selected-item placement precede room-hop interception. Scene portals render only in the active single room and disappear in Overview, Design, overlays, or behind an open fridge. Drag interception also checks overview/camera scale and active room. Hops cancel captures and transfer from the selected friend's actual room. Screen, real SceneView, and runtime drag regressions cover these cases. |
 | R1-04 | Grocery dragging requires a 180 ms hold; taps stay immediate. Web tiles permit native vertical panning. A Market-scoped, nonpassive touch handler cancels scrolling only during an active held carry and is removed on unmount. Tests cover configuration, unsuppressed ordinary movement, held-only prevention, and one add per drop. |
@@ -88,7 +88,7 @@ Verification on the completed source:
 - Focused Market/runtime/model run: three files, 27 tests passed.
 - `npm run save:catalog`: passed, all 180 immutable published banks unchanged.
 - `npx tsc --noEmit` and `npx expo lint`: exit 0.
-- `npm run export:web && npm run check:words:export`: passed. Final offline export `d426b26c0d09`, 7,558 resources. Private policy checked; existing exception counts unchanged.
+- `npm run export:web && npm run check:words:export`: passed. Final offline export `500e787c0b4a`, 7,558 resources. Private policy checked; existing exception counts unchanged.
 - Impeccable advisory scan of changed UI files: `[]`.
 
 Browser QA used isolated Chromium, with 1024×768 Kitchen/room views and a 390×667 touch viewport. The four requested files were refreshed and inspected: `kitchen-cooking.png`, `kitchen-trash-open.png`, `kitchen-fridge-stocked.png`, and `ladder-room-hop.png`. The spoon clears the face, food sits in the skillet, the full trash label is visible, the open fridge has no portal overlay, and the empty basket bar is gone. A real drag discarded the cooked serving; Undo restored it. Unpacking two groceries produced eight fridge contents and removed the staged basket; a room hop grounded the Islander in Beach hut.
@@ -96,3 +96,6 @@ Browser QA used isolated Chromium, with 1024×768 Kitchen/room views and a 390×
 The final Market build was reloaded without temporary input overrides. A held touch added one Mango and a tap added one Banana. A vertical swipe starting on a grocery then scrolled shelves 116 px, left the two-item basket unchanged, and produced ten touch-move events with no default prevention and no carry ghost. An earlier swipe attempt left scroll position unchanged; the subsequent instrumented swipe confirmed normal scrolling without changing source. Physical iOS/Android testing remains separate from browser touch emulation. The final browser had no JavaScript page errors.
 
 Kitchen/room images were captured from export `2a9138c60f5e`; final Market touch checks used `d426b26c0d09`. The intervening source edits affect Market touch scrolling only. No protected tests, Library files, word-games route, or save banks were changed. The task-owned server, browser processes, and preview tab were cleaned; lifecycle session `01a2202e-90bb-79e2-b5a6-71f457fc86f2` reports no active owned resources. The draft branch/worktree is retained for lead review.
+
+
+The final normal-motion clock follow-up (`a4e8a032`) repeats the complete Home regression run: 1,016 passed, two skipped. Its delayed-JS regression asserts equal commit/settle timestamps and an unchanged finished position on later frames. TypeScript, Expo lint, the 180-bank catalog, export `500e787c0b4a`, and its private-policy word guard all passed again. This follow-up changes no artwork, portal geometry, or Market input behavior, so the inspected screenshots above remain applicable.
